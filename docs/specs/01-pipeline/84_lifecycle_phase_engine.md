@@ -145,6 +145,16 @@ A startup-time Zod `superRefine` rejects any `min > max` pair (operator-hotfix g
 - **Stall Alert Tile:** Highlights projects that just flipped `lifecycle_stalled = TRUE`, grouped by neighborhood.
 - **Transition Velocity Chart:** Displays the average days spent in each phase (powered by the ledger), allowing admins to spot municipal bottlenecks.
 
+### Inspector Lifecycle Timeline (Spec 76 §3.5)
+The admin Lead Detail Inspector consumes the `lifecycle.timeline[]` array assembled by `src/lib/leads/build-lifecycle-timeline.ts`. Each entry has:
+- `phase` (P1–P20, INTAKE_P3-P5, O1-O3) and `phase_name` (friendly name from §3 above)
+- `status`: `'completed' | 'current' | 'upcoming'` — discriminates past actuals from in-progress and forecast entries
+- `entered_at` / `exited_at` — actual ledger timestamps for completed; entered_at only for current; both null for upcoming
+- `days_in_phase` — actual delta for completed; `NOW() - phase_started_at` for current (clamped ≥0); `cohort_median_days` for upcoming
+- `cohort_{median,p25,p75}_days` + `cohort_sample_size` — populated from `phase_stay_calibration` (§7) for stall detection ("this permit's 87 days in P10 vs cohort p75 of 45 = stalled")
+
+Order: completed (chronological) → current → upcoming (canonical Spec 84 §3 order via `STANDARD_PHASE_PATH_BY_PERMIT_TYPE`). Terminal phases (P18/P19/P20/O3) produce no upcoming entries.
+
 ### App View (User Value & Leads)
 - **Verified Lifecycle Tracker:** A "UPS-style" progress bar for every lead, showing exactly which inspections have passed.
 - **"Next Trade" Prediction:** A "Coming Soon" badge for trades (e.g., "Insulation needed in ~14 days") based on calibration math.
@@ -174,7 +184,7 @@ The `assert-lifecycle-phase-distribution.js` script acts as the "Internal Audito
 | Bug ID | Issue & Fix Action | Status |
 |---|---|---|
 | 84-W1 | **Orphan Ordinal Gap:** Orphans (O1-O3) have no rank, so they never archive. Fix: Assign negative ordinals. | Pending Refactor |
-| 84-W4 | **Dead Transition Write:** Ledger is written but not used. Fix: Wire Spec 86 Calibration to read this ledger. | Pending Refactor |
+| 84-W4 | **Dead Transition Write:** Ledger is written but not used. Fix: Wire Spec 86 Calibration to read this ledger. | **Resolved (WF1 #B 2026-05-09)** — `scripts/compute-phase-calibration.js` now reads the ledger via `LAG()` window + `PERCENTILE_CONT` per `(permit_type, from_phase)` and writes `phase_stay_calibration`; the inspector's `lifecycle.timeline[]` reads that table for cohort comparison. See §7 below. |
 | 84-W11 | **ID Collision:** P3/P4/P5 mean different things in CoA vs Permits. Fix: Prefix Permit-Intake phases (e.g., `INTAKE_P3`). | Pending Refactor |
 | 84-W5 | **Magic Stall Numbers:** Thresholds (180/730 days) are hardcoded. Fix: Move to `Zod` validated `logic_variables`. | Pending Refactor |
 | 84-W3 | **Mega-Insert Risk (Spec 47 §6.1):** 237k-row backfill crashes DB on `.query()`. Fix: Wire `pipeline.streamQuery` and standard chunking with loop arrays. | Pending Refactor |
@@ -185,7 +195,48 @@ The `assert-lifecycle-phase-distribution.js` script acts as the "Internal Audito
 ---
 
 ## 7. Calibration Source
-Mandate that Spec 86 (Calibration) uses the `permit_phase_transitions` ledger as its primary data source for velocity math, directly resolving bug 84-W4.
+
+The `permit_phase_transitions` ledger is the canonical source for phase-stay velocity math. `scripts/compute-phase-calibration.js` (Permits chain step 23, advisory lock 93) consumes the ledger and writes the `phase_stay_calibration` table.
+
+### Schema — `phase_stay_calibration`
+| Column | Type | Description |
+|---|---|---|
+| `permit_type` | TEXT | The 18 permit_types observed in the ledger (residential structural, small res, plumbing, etc.) |
+| `phase` | TEXT | The phase the permit was IN (the LAG window's `from_phase`) — P1–P20, INTAKE_P3-P5, O1-O3 |
+| `median_days` | INTEGER | `ROUND(PERCENTILE_CONT(0.50))` over the cohort's days-in-phase — the "typical" stay |
+| `p25_days` | INTEGER | `ROUND(PERCENTILE_CONT(0.25))` — fastest 25% |
+| `p75_days` | INTEGER | `ROUND(PERCENTILE_CONT(0.75))` — slowest 25%; the stall-detection threshold |
+| `sample_size` | INTEGER | Cohort size; `< 30` flags the bucket as `unreliable` in audit_table |
+| `computed_at` | TIMESTAMPTZ | RUN_AT-parameterized (Spec 47 §R3.5) — every row in a single recompute shares the timestamp |
+
+PK: `(permit_type, phase)`. CHECK: `p25_days <= p75_days`. Full DELETE+INSERT inside a single transaction per recompute — consumers never see a partial table.
+
+### SQL pattern (LAG window + filtering POST-LAG)
+```sql
+WITH transitions_with_duration AS (
+  SELECT permit_num, revision_num, permit_type, from_phase, transitioned_at,
+    transitioned_at - LAG(transitioned_at) OVER (
+      PARTITION BY permit_num, revision_num ORDER BY transitioned_at
+    ) AS phase_duration
+  FROM permit_phase_transitions
+  -- NO filters here — the LAG window must see the unfiltered transition stream
+)
+SELECT permit_type, from_phase AS phase,
+  ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (...))::INTEGER AS median_days,
+  ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (...))::INTEGER AS p25_days,
+  ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (...))::INTEGER AS p75_days,
+  COUNT(*)::INTEGER AS sample_size
+FROM transitions_with_duration
+WHERE from_phase IS NOT NULL AND permit_type IS NOT NULL AND phase_duration IS NOT NULL
+GROUP BY permit_type, from_phase
+```
+
+ROUND() before ::INTEGER cast is mandatory — Postgres casts truncate, which would systematically bias every cohort downward (e.g. true median 10.9d → 10d).
+
+### Live behavior (2026-05-09 snapshot)
+- 109,981 source transitions evaluated → 164 buckets across 18 permit_types × 23 phases
+- 110 buckets have `sample_size < 30` (WARN — flagged as unreliable in `audit_table`)
+- `compute-phase-calibration` runtime: ~0.9s end-to-end, ~120k rows/sec
 
 ---
 

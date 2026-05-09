@@ -61,6 +61,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/classify-lifecycle-phase.js':     84,
   'scripts/compute-trade-forecasts.js':      85,
   'scripts/compute-timing-calibration-v2.js': 86,
+  'scripts/compute-phase-calibration.js':    93,
   // Wave 6 — Quality / Assert
   'scripts/quality/assert-schema.js':           102,
   'scripts/quality/assert-data-bounds.js':      103,

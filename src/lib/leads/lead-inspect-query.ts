@@ -19,6 +19,12 @@ import type {
   LeadInspectForecastRow,
   LeadInspectTradeRow,
 } from '@/lib/admin/lead-schemas';
+import { phaseName } from '@/lib/classification/phase-names';
+import {
+  buildTimeline,
+  type CalibrationRow,
+  type TransitionRow,
+} from '@/lib/leads/build-lifecycle-timeline';
 
 export interface FetchLeadInspectArgs {
   permit_num: string;
@@ -325,7 +331,7 @@ export async function fetchLeadInspect(
   const normalizedBuilder =
     m.builder_name != null ? normalizeBuilderName(m.builder_name) : null;
 
-  const [tradesRes, forecastsRes, entityRes, premiumTier] = await Promise.all([
+  const [tradesRes, forecastsRes, entityRes, premiumTier, transitionsRes, calibrationRes] = await Promise.all([
     pool.query<TradeRow>(TRADES_SQL, [args.permit_num, args.revision_num]),
     pool.query<ForecastRow>(FORECASTS_SQL, [args.permit_num, args.revision_num]),
     normalizedBuilder
@@ -342,7 +348,52 @@ export async function fetchLeadInspect(
         )
       : Promise.resolve({ rows: [] as Array<{ legal_name: string | null; name_normalized: string | null; is_wsib_registered: boolean | null }> }),
     fetchNeighbourhoodPremiumTier(pool, m.avg_household_income),
+    // WF1 #B 2026-05-09: lifecycle.timeline[] — historical transitions (the
+    // ledger written by classify-lifecycle-phase step 21).
+    pool.query<TransitionRow>(
+      `SELECT from_phase, to_phase, transitioned_at::text AS transitioned_at
+         FROM permit_phase_transitions
+        WHERE permit_num = $1 AND revision_num = $2
+        ORDER BY transitioned_at ASC`,
+      [args.permit_num, args.revision_num],
+    ),
+    // WF1 #B 2026-05-09: phase_stay_calibration cohort percentiles for THIS
+    // permit's permit_type — across all phases (timeline needs cohort
+    // for past + current + future entries). Returns ~10-20 rows; cheap.
+    pool.query<CalibrationRow>(
+      `SELECT phase, median_days, p25_days, p75_days, sample_size
+         FROM phase_stay_calibration
+        WHERE permit_type = $1`,
+      [m.permit_type],
+    ),
   ]);
+
+  // WF1 #B 2026-05-09: assemble lifecycle.timeline[] from the ledger +
+  // calibration table + canonical Spec 84 §3 path. Pure function call —
+  // no further DB access. Closes Spec 84 bug 84-W4.
+  const calibrationByPhase: Record<string, CalibrationRow> = {};
+  for (const row of calibrationRes.rows) {
+    calibrationByPhase[row.phase] = row;
+  }
+  const timeline = buildTimeline({
+    permitType: m.permit_type,
+    currentPhase: m.lifecycle_phase,
+    phaseStartedAt: m.phase_started_at,
+    transitions: transitionsRes.rows,
+    calibrationByPhase,
+    now: new Date(),
+  });
+
+  // Sugar fields derived from the timeline.
+  const currentEntry = timeline.find((e) => e.status === 'current');
+  const upcomingEntries = timeline.filter((e) => e.status === 'upcoming');
+  const predictedRemainingDays = upcomingEntries.reduce<number | null>(
+    (sum, e) => (e.cohort_median_days != null ? (sum ?? 0) + e.cohort_median_days : sum),
+    null,
+  );
+  const predictedCompletionAt = predictedRemainingDays != null
+    ? new Date(Date.now() + predictedRemainingDays * 86_400_000).toISOString()
+    : null;
 
   const trades: LeadInspectTradeRow[] = tradesRes.rows.map((r) => {
     const conf = Number(r.confidence);
@@ -502,9 +553,14 @@ export async function fetchLeadInspect(
     cost,
     lifecycle: {
       phase: m.lifecycle_phase,
+      phase_name: phaseName(m.lifecycle_phase),
       stalled: m.lifecycle_stalled,
       classified_at: m.lifecycle_classified_at,
       phase_started_at: m.phase_started_at,
+      current_phase_days_in: currentEntry?.days_in_phase ?? null,
+      predicted_remaining_days: predictedRemainingDays,
+      predicted_completion_at: predictedCompletionAt,
+      timeline,
     },
     forecast,
     engagement: {

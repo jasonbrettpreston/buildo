@@ -493,19 +493,21 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 45 tracked pipelines', () => {
+  it('has exactly 46 tracked pipelines', () => {
     // -1 v1 compute_timing_calibration removed (migration 106, 2026-04-21)
     // +1 backup_db added (WF3 2026-04-25, OP4 fix — spec 112)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(45);
+    // +1 compute_phase_calibration added (WF1 #B 2026-05-09, Spec 84 §7)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(46);
   });
 
-  it('groups are correct: 10 ingest, 14 link, 9 classify, 2 snapshot, 10 quality', () => {
+  it('groups are correct: 10 ingest, 14 link, 10 classify, 2 snapshot, 10 quality', () => {
     // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     // +1 snapshot: backup_db added (WF3 2026-04-25)
+    // +1 classify: compute_phase_calibration added (WF1 #B 2026-05-09)
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(10);
     expect(groups.filter((g) => g === 'link')).toHaveLength(14);
-    expect(groups.filter((g) => g === 'classify')).toHaveLength(9);
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(10);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(10);
   });
@@ -533,20 +535,23 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'entities', 'wsib', 'sources', 'deep_scrapes']);
   });
 
-  it('permits chain has 28 steps ending with backup_db', () => {
+  it('permits chain has 29 steps ending with backup_db', () => {
     // WF3 2026-04-13: v1 `compute_timing_calibration` removed per Path A.
     // WF2 2026-04-18: +2 steps (assert_lifecycle_phase_distribution step 22,
     // assert_entity_tracing step 26).
     // WF1 2026-04-19: +1 step (assert_global_coverage step 27).
     // WF3 2026-04-25: +1 step (backup_db step 28, OP4 fix).
+    // WF1 #B 2026-05-09: +1 step (compute_phase_calibration step 23).
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(28);
+    expect(permits.steps).toHaveLength(29);
     expect(permits!.steps[0]!.slug).toBe('assert_schema');
     expect(permits!.steps[1]!.slug).toBe('permits');
     expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('backup_db');
     expect(permits!.steps[permits.steps.length - 2]!.slug).toBe('assert_global_coverage');
     expect(permits!.steps[permits.steps.length - 3]!.slug).toBe('assert_entity_tracing');
-    expect(permits!.steps[permits.steps.length - 8]!.slug).toBe('classify_lifecycle_phase');
+    // WF1 #B 2026-05-09: tail grew by 1 (compute_phase_calibration step 23
+    // between assert_lifecycle_phase_distribution and compute_trade_forecasts).
+    expect(permits!.steps[permits.steps.length - 9]!.slug).toBe('classify_lifecycle_phase');
   });
 
   it('permits chain has link_wsib as indent-1 step (not sub-step)', () => {

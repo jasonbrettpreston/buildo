@@ -258,11 +258,34 @@ export const LeadInspectCostSchema = z.object({
   liar_gate: LeadInspectLiarGateSchema,
 });
 
+// WF1 #B 2026-05-09 — lifecycle.timeline[] entry schema. Same shape for
+// past/present/future entries; status field discriminates them.
+export const LeadInspectTimelineEntrySchema = z.object({
+  phase: z.string(),
+  phase_name: z.string().nullable(),
+  status: z.enum(['completed', 'current', 'upcoming']),
+  entered_at: z.string().nullable(),
+  exited_at: z.string().nullable(),
+  days_in_phase: z.number().nullable(),
+  cohort_median_days: z.number().nullable(),
+  cohort_p25_days: z.number().nullable(),
+  cohort_p75_days: z.number().nullable(),
+  cohort_sample_size: z.number(),
+});
+
 export const LeadInspectLifecycleSchema = z.object({
   phase: z.string().nullable(),
+  // WF1 #B 2026-05-09 — friendly name for the current phase from the
+  // PHASE_NAMES map (Spec 84 §3); null if phase code unknown.
+  phase_name: z.string().nullable(),
   stalled: z.boolean(),
   classified_at: z.string().nullable(),
   phase_started_at: z.string().nullable(),
+  // WF1 #B 2026-05-09 — sugar fields derived from the timeline.
+  current_phase_days_in: z.number().nullable(),
+  predicted_remaining_days: z.number().nullable(),
+  predicted_completion_at: z.string().nullable(),
+  timeline: z.array(LeadInspectTimelineEntrySchema),
 });
 
 export const LeadInspectForecastRowSchema = z.object({

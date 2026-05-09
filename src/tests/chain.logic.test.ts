@@ -13,7 +13,7 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
-  it('defines permits chain with 28 steps (no enrichment scripts)', () => {
+  it('defines permits chain with 29 steps (no enrichment scripts)', () => {
     // WF3 2026-04-13 — v1 `compute_timing_calibration` removed from chain
     // per user decision (Path A). v1's table `timing_calibration` will
     // go stale; the detail-page timing engine (spec 71) will be migrated
@@ -22,9 +22,11 @@ describe('Pipeline Chain Definitions', () => {
     // and assert_entity_tracing (step 26).
     // WF1 2026-04-19 — +1 step: assert_global_coverage (step 27).
     // WF3 2026-04-25 — +1 step: backup_db as final maintenance step (step 28).
+    // WF1 #B 2026-05-09 — +1 step: compute_phase_calibration (step 22.5,
+    // between assert_lifecycle_phase_distribution and compute_trade_forecasts).
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(28);
+    expect(chain!.steps).toHaveLength(29);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
@@ -73,10 +75,11 @@ describe('Pipeline Chain Definitions', () => {
     // WF3 2026-04-25 — backup_db appended as final maintenance step (step 28).
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     const slugs = chain.steps.map((s) => s.slug);
-    const tail = slugs.slice(-8);
+    const tail = slugs.slice(-9);
     expect(tail).toEqual([
       'classify_lifecycle_phase',
       'assert_lifecycle_phase_distribution',
+      'compute_phase_calibration',
       'compute_trade_forecasts',
       'compute_opportunity_scores',
       'update_tracked_projects',
@@ -131,7 +134,8 @@ describe('Pipeline Chain Definitions', () => {
     expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('backup_db');
     expect(permits!.steps[permits!.steps.length - 2]!.slug).toBe('assert_global_coverage');
     expect(permits!.steps[permits!.steps.length - 3]!.slug).toBe('assert_entity_tracing');
-    expect(permits!.steps[permits!.steps.length - 8]!.slug).toBe('classify_lifecycle_phase');
+    // WF1 #B 2026-05-09: tail grew by 1 (compute_phase_calibration step 23).
+    expect(permits!.steps[permits!.steps.length - 9]!.slug).toBe('classify_lifecycle_phase');
   });
 
   it('sources chain ends with assert_engine_health', () => {

@@ -3,6 +3,49 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF1 #B (2026-05-09) — Multi-Agent Review deferrals from lifecycle timeline data layer
+_Source: Gemini review of `compute-phase-calibration.js` + DeepSeek review of `build-lifecycle-timeline.ts` + worktree code-reviewer of full diff. Three reviewers; four BUGs applied this commit, several DEFERrals catalogued below._
+
+**Applied this commit:**
+- ✅ §R3.5 RUN_AT capture via `pipeline.getDbTimestamp` + parameter-bound `computed_at` (Gemini CRIT + worktree BUG 1) — eliminates inconsistent timestamps across recompute runs spanning a midnight boundary
+- ✅ `ROUND(PERCENTILE_CONT)` before `::INTEGER` cast on all three percentiles (Gemini CRIT) — eliminates systematic downward truncation bias on every cohort metric (e.g. true median 10.9d was being stored as 10d)
+- ✅ `records_total = SUM(sample_size)` (source rows evaluated) instead of `inserted` (164 buckets written) (Gemini HIGH) — `sys_velocity_rows_sec` now reports a meaningful 119k rows/sec instead of nonsensical 178 buckets/sec
+- ✅ `audit_table.phase = 84` (was `21.5`) — integer convention to match other audit_table entries
+- ✅ `Math.max(0, …)` clamp on `daysBetween` to prevent negative "days in phase" from clock skew or future-dated `phaseStartedAt` (DeepSeek MED)
+
+**Rejected:**
+- Worktree BUG 2 + Gemini HIGH "Lock 93 should be lock 84 per Spec 47 §5.2 (lock = owning spec)." Both reviewers missed the project's stricter Bundle G global-uniqueness invariant in `pipeline-advisory-lock.infra.test.ts:147–164`. Lock 84 is owned by `classify-lifecycle-phase.js` (the ledger writer this script consumes); the registry assigned 93 as the free ID. Updated the script docstring to explain this.
+- Gemini LOW "Replace `.passthrough()` with `.strict()` on the logicVars Zod schema." `loadMarketplaceConfigs` returns the entire shared 107-key marketplace bag; `.strict()` would reject every key this script doesn't consume. `.passthrough()` is the project's established pattern for shared-config scripts. The "silent typo" risk Gemini cites is real but mitigated by the per-key required-field semantics in the schema.
+
+**`compute-phase-calibration.js` — Gemini deferrals (3 remaining findings):**
+
+| Severity | Item | Rationale |
+|---|---|---|
+| MEDIUM | N+1 `INSERT` inside a `for` loop (164 round-trips) — Spec 47 §7.6 prefers single multi-row INSERT. | The table is bounded at ~165 rows total; each run is a full DELETE+INSERT inside one transaction (~50ms). A multi-row INSERT would be 1ms faster. Not blocking; defer if/when the bucket count grows >1000. |
+| MEDIUM | `audit_table` is missing `Calibration`-script-type metrics like `phase_pairs_computed`, `pairs_above_threshold`, `negative_gap_count` per Spec 47 §8.2. | Inspect Spec 47 §8.2 — those metrics are documented for transition-pair calibration scripts (compute-timing-calibration-v2.js semantic), not phase-stay calibration. The four metrics emitted (`total_buckets`, `permit_types_calibrated`, `phases_calibrated`, `unreliable_buckets`) cover the calibration-health questions an operator actually asks of this script. Defer permanently — different audit shape for a different calibration archetype. |
+| LOW | `phase_stay_calibration.computed_at` has `DEFAULT NOW()` column default; combined with §R3.5 RUN_AT the default is now redundant + a foot-gun if a future maintainer omits the column from an INSERT. | Cosmetic + future-proofing. WF2 candidate to drop the default in a follow-up migration. Defer. |
+
+**`build-lifecycle-timeline.ts` — DeepSeek deferrals (4 remaining findings):**
+
+| Severity | Item | Rationale |
+|---|---|---|
+| HIGH | A completed entry can have `exited_at: null` when the last transition's `to_phase` is not the current phase (i.e., the transition list and `currentPhase` are inconsistent). | Defensive guard against an upstream invariant violation that should never happen — the ledger always writes the entry-into-current-phase transition at step 21. If it ever did happen, the panel would render a "completed" entry with no exit timestamp, which is confusing but not corrupting. WF3 candidate to add an explicit invariant assertion + WARN log. Defer. |
+| HIGH | No validation that the transition list ends with a transition into `currentPhase`. Same root cause as above. | Same defer rationale. |
+| MEDIUM | `remainingPhases` may misbehave for a `currentPhase` not in the canonical path. | Already returns `[]` for unknown / off-path phases — the failure mode is a missing upcoming list, not a crash. Cosmetic. Defer. |
+| LOW | DST sensitivity from `MS_PER_DAY = 86_400_000` — spring-forward / fall-back days are 23h / 25h. | At most 1-day error per phase transition; cohort medians smooth this out. Defer permanently. |
+
+**Worktree code-reviewer — inherited limitations (catalogued, not fixed):**
+
+| Severity | Item | Rationale |
+|---|---|---|
+| INHERITED-BUG | Spec 84 bug 84-W11 — `classify-lifecycle-phase.js` writes unprefixed `P3/P4/P5` for permit intake instead of the spec'd `INTAKE_P3/P4/P5`. The new `STANDARD_PHASE_PATH_BY_PERMIT_TYPE` and the new live-DB test assertion `phase_name === 'CoA Approved'` for a building permit at phase `P3` both reflect this — building permits never go through CoA, so showing "CoA Approved" as a completed phase in the inspector is technically a UX bug. | The data layer cannot fix the labeling without first fixing the ledger writer (out of scope for WF1 #B). The new code documents the limitation in `phase-progression.ts` lines 8–14. WF3 candidate against bug 84-W11 — must be done before any user-visible release of the inspector lifecycle panel. |
+| DEFER | Spec 86 §4 chain-step table not updated with the new `compute_phase_calibration` row. | The script's `SPEC LINK` header and migration comment both reference `chain step 21.5`, but Spec 86 §4 was not amended this commit (separate spec-amendment WF). Will be picked up by the next Spec 86 housekeeping pass. Defer. |
+
+**Spec amendment followup (carry-forward):**
+- Cycle 7 (Spec 91 §3.5 CoA wire-up) — file as next WF after this ships, per user direction in plan-lock
+
+---
+
 ## WF2 #C (2026-05-09) — Multi-Agent Review deferrals from massing area backfill commit
 _Source: Gemini review of `load-massing.js` + DeepSeek review of `mig 122` + worktree code-reviewer of full diff. Worktree found 1 real CRITICAL fix (applied this commit). Gemini + DeepSeek findings are mostly pre-existing structural concerns + a few legitimate enhancements; bundling them in this WF2 #C would explode the blast radius._
 

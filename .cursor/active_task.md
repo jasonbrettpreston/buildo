@@ -1,171 +1,322 @@
-# Active Task: WF2 #C — backfill `building_footprints.footprint_area_sqm` (and execute deferred cost-model runbook)
-**Status:** Implementation
-**Workflow:** WF2 (Enhance — add the missing backfill mechanism + fix `load-massing.js` so future loads populate the column correctly + execute the deferred operator runbook for `compute-cost-estimates.js`)
-**Domain Mode:** Backend/Pipeline (migration + load-massing.js + post-merge operator runbook)
-**Rollback Anchor:** `779ec88` (current HEAD on `main` — realtor sub-gating)
-**Multi-Agent Review:** Default WF2 cadence (per project feedback) — Gemini + DeepSeek + worktree code-reviewer in parallel.
+# Active Task: WF1 #B — Lifecycle inspector enhancements (`lifecycle.timeline[]` data layer + phase calibration)
+**Status:** Done (committed 2026-05-09 — WF1 #B Green Light + R10 multi-agent review fixes applied: §R3.5 RUN_AT, ROUND() before ::INTEGER, records_total=source rows, daysBetween clamp ≥0)
+**Workflow:** WF1 (Genesis — new feature: phase_calibration table + chain step 21.5 + inspector timeline data; Path A: data-only, UI follows in separate WF)
+**Domain Mode:** Cross-Domain (Backend/Pipeline + Web Admin) — new migration + new pipeline script (chain step 21.5) + new shared modules + extended admin inspector query + Spec 84 / 86 / 76 amendments
+**Rollback Anchor:** `faca737` (current HEAD on `main` — WF2 #C massing backfill)
+**Multi-Agent Review:** REQUIRED per WF1 cadence — Gemini + DeepSeek + worktree code-reviewer in parallel.
 
 ## Context
 
-* **Bug:** `building_footprints.footprint_area_sqm` is NULL on all 427,077 rows. Same for `footprint_area_sqft`. Other columns (`max_height_m`, `min_height_m`, `estimated_stories`, `geometry`, `centroid_lat/lng`) are fully populated.
-* **Root cause:** `scripts/load-massing.js:327-328` detects the shapefile's Web Mercator projection (EPSG:3857 — coords like `-8821751.236, 5428977.45`) and **explicitly nulls** the area:
-  ```js
-  const isProjected = ring[0] && (Math.abs(ring[0][0]) > 180 || Math.abs(ring[0][1]) > 180);
-  const areaSqm = isProjected ? null : shoelaceArea(ring);
-  ```
-  The intent was "shoelaceArea only works on WGS84 — null when projected." The fallback (do something useful with the projected ring) was never written.
-* **Downstream impact (Spec 83 §3):** `compute-cost-estimates.js` SOURCE_SQL reads `bf.footprint_area_sqm AS footprint_area_sqm` and feeds it into the Brain's `computeGfa()` via the surgical Triangle. With NULL areas across all rows, the Brain falls back to the lot-size path for every permit (`lot_size × coverage_ratio × FALLBACK_*_FLOORS`) — silently wrong for ~237K cost estimates.
-* **PostGIS confirmed available** on the dev DB. Live verify: `ST_Area(ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)::geography)` returns 168.12 m² for sample row `id=6347216` (a Toronto building at 43.76°N). Raw Web Mercator area was 322.44 m²; distortion factor ~1.92 = `1/cos²(43.76°)` matches expected.
-* **Dependency chain unblocked by this WF:**
-  1. Backfill the 427K NULL rows → cost model has true geometric inputs
-  2. Re-run `compute-cost-estimates.js` (the WF3 73f3ae6 + 09e8828 + 779ec88 operator runbook step that has been deferred 3 commits) → ~237K `cost_estimates` rows rewrite with the corrected GFA path AND the corrected neighbourhood join AND the (already-shipped) Surgical Triangle gating
-* **Target Spec:** `docs/specs/01-pipeline/56_source_massing.md` §2 — amend to note (a) the JSONB geometry is stored in EPSG:3857 Web Mercator, (b) area is computed via PostGIS `ST_Area` post-load, (c) cross-reference Spec 83 §3's GFA dependency.
+* **Goal:** Surface phase-by-phase progression data on the admin Lead Detail Inspector (`/api/admin/leads/inspect/:id`), unifying past + present + future phases in a single `lifecycle.timeline[]` array. Each entry carries actual or predicted `days_in_phase` plus cohort percentiles (`(permit_type, phase)` median + p25 + p75) so operators can instantly see "is this permit on-pace, slow, or stalled?"
+* **Closes Spec 84 bug 84-W4** ("Dead Transition Write: Ledger is written but not used. Fix: Wire Spec 86 Calibration to read this ledger.") — this WF is exactly the wiring 84-W4 demands.
+* **The 5 user findings this addresses (from session context):**
+  - #3 Show how long the permit stayed at each phase ✓ (`days_in_phase` per timeline entry)
+  - #4 Phase NAME instead of "P7c" ✓ (`phase_name` from new `phase-names.ts` map)
+  - #5 Average days for this type of project per phase ✓ (`cohort_median_days` / `cohort_p25_days` / `cohort_p75_days` from new `phase_calibration` table)
+* **Path A (chosen):** ship the data layer only this WF — `lifecycle.timeline[]` on the inspector response. UI consumers (admin inspector React, future flight-center detail progression visual) follow in separate frontend WFs once the data shape is committed.
+* **Future surfaces (out of scope this WF):**
+  - Admin inspector React UI rendering the timeline (separate WF1)
+  - Admin flight-center detail "delivery-app-style progression bar" (separate WF1; user explicitly requested as next surface after this data layer ships)
+  - CoA inspect (Cycle 7 — out of scope; P1/P2 only become relevant when CoA inspector lands)
+* **Target Specs:**
+  - Spec 84 §3 (friendly-name map made authoritative)
+  - Spec 84 §5 (new "Phase Timeline (per-permit)" subsection)
+  - Spec 84 §6 (mark bug 84-W4 RESOLVED)
+  - Spec 84 §7 (formalize `phase_calibration` table source)
+  - Spec 86 §1 (reuse existing `calibration_freshness_warn_hours`; document phase_calibration alongside trade calibration)
+  - Spec 86 §4 (add chain step 21.5 `compute-phase-calibration` between step 21 lifecycle-phase classification and step 22 trade forecasts)
+  - Spec 76 §3.5 (inspector contract: `lifecycle.timeline[]` panel)
 
 ## Technical Implementation
 
-### Backfill mechanism: SQL migration (single UPDATE pass)
+### 1. New table: `phase_calibration`
 
-`migrations/122_building_footprints_area_backfill.sql` — idempotent, gated on `WHERE footprint_area_sqm IS NULL`. Runs once via the canonical migrate.js runner; subsequent loads can re-run safely (no-op for already-populated rows).
+`migrations/123_phase_calibration_table.sql` — pre-computed cohort stats per `(permit_type, phase)`. Read by the inspector; written once per chain run by step 21.5.
 
 ```sql
--- UP
-UPDATE building_footprints
-SET
-  footprint_area_sqm = ROUND(
-    (ST_Area(
-      ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)::geography
-    ))::numeric,
-    2
-  ),
-  footprint_area_sqft = ROUND(
-    (ST_Area(
-      ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)::geography
-    ) * 10.7639104167)::numeric,
-    2
-  )
-WHERE footprint_area_sqm IS NULL;
+CREATE TABLE phase_calibration (
+  permit_type   VARCHAR(100) NOT NULL,
+  phase         VARCHAR(20)  NOT NULL,
+  median_days   INTEGER,                    -- nullable: <30 sample → unreliable
+  p25_days      INTEGER,
+  p75_days      INTEGER,
+  sample_size   INTEGER NOT NULL,
+  computed_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (permit_type, phase)
+);
 
--- DOWN — comment-only per Rule 6 (mig 121 / commit 8b1c10b precedent)
--- UPDATE building_footprints SET footprint_area_sqm = NULL, footprint_area_sqft = NULL
---   WHERE TRUE;  -- intentionally not transactional; would erase a corrected backfill.
+CREATE INDEX idx_phase_calibration_lookup
+  ON phase_calibration (permit_type, phase);
 ```
 
-Idempotency: re-running mig 122 is a no-op (`WHERE footprint_area_sqm IS NULL` is empty after the first run).
+DOWN comment-only per Rule 6.
 
-Performance: 427K rows × `ST_Transform + ST_Area` ≈ 30-60 seconds on the dev DB. PostGIS `ST_Area` on geography is C-side; the JSONB-to-geom parsing is the dominant cost. One transactional pass; WAL writes are bounded by the row count.
+### 2. New script: `scripts/compute-phase-calibration.js` (chain step 21.5)
 
-### Future-load fix: post-INSERT PostGIS pass in `load-massing.js`
+Reads `permit_phase_transitions` (356,058 rows currently) joined to `permits.permit_type`; computes percentiles per `(permit_type, phase)` cohort:
 
-Add a single SQL UPDATE pass at the end of the script's batch loop (after all `INSERT ... ON CONFLICT DO UPDATE` batches complete):
-
-```js
-// After batch loop completes — DB-side area computation handles BOTH WGS84
-// and Web Mercator inputs uniformly (the previous JS-side `isProjected ?
-// null` shortcut nulled all 427K rows because the shapefile is EPSG:3857).
-// Idempotent: only updates rows where area is NULL.
-await pool.query(`
-  UPDATE building_footprints
-  SET
-    footprint_area_sqm = ROUND((ST_Area(
-      ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)::geography
-    ))::numeric, 2),
-    footprint_area_sqft = ROUND((ST_Area(
-      ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)::geography
-    ) * 10.7639104167)::numeric, 2)
-  WHERE footprint_area_sqm IS NULL
-`);
+```sql
+WITH transitions_with_duration AS (
+  SELECT
+    permit_num, from_phase, to_phase,
+    transitioned_at,
+    (transitioned_at - LAG(transitioned_at) OVER (
+      PARTITION BY permit_num ORDER BY transitioned_at
+    ))::interval AS phase_duration
+  FROM permit_phase_transitions
+  WHERE from_phase IS NOT NULL  -- exclude null→first transitions (no duration)
+),
+joined AS (
+  SELECT
+    p.permit_type,
+    t.from_phase AS phase,
+    EXTRACT(EPOCH FROM t.phase_duration) / 86400.0 AS days_in_phase
+  FROM transitions_with_duration t
+  JOIN permits p USING (permit_num)
+  WHERE t.phase_duration IS NOT NULL
+)
+SELECT
+  permit_type, phase,
+  PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY days_in_phase)::INTEGER AS median_days,
+  PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY days_in_phase)::INTEGER AS p25_days,
+  PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY days_in_phase)::INTEGER AS p75_days,
+  COUNT(*)::INTEGER AS sample_size
+FROM joined
+GROUP BY permit_type, phase;
 ```
 
-Remove the JS-side `areaSqm = isProjected ? null : ...` shortcut; let the INSERT body emit `null` for the area columns and let the DB-side pass populate them. This fixes future loads without adding a JS reprojection dependency (proj4) and keeps the source of truth in PostGIS.
+Pipeline conventions per Spec 47 §R1–R12:
+- Advisory lock 86 (matches "calibration" mental model — `compute_timing_calibration_v2` uses 86)
+- Wait — let me re-check. Existing `compute_timing_calibration_v2` (Spec 85/86) uses lock ID matching its spec number. For phase calibration, lock ID = ??? The spec the script is governed by is 86 (Calibration), but it's a NEW script. Per Spec 47 §R2 + §A.5, `scripts/quality/` uses sequential 100+ block; this isn't quality. **Decision:** lock ID = 93 (next available; document in §A.5 if Spec 47 has a registry). Verify no collision before R5.
+- Zod validation: `calibration_freshness_warn_hours` (existing logic_var, reused per user direction)
+- DELETE+INSERT atomicity inside `withTransaction` (recompute the entire table per run — small enough table, ~40 rows)
+- Audit table: `permit_types_calibrated`, `phases_calibrated`, `total_buckets`, `unreliable_buckets` (sample_size < 30)
 
-Alternative considered (rejected): JS-side proj4 reprojection. Rejected because (a) PostGIS is the project's canonical spatial library; (b) computation drift between JS and SQL would create a parity gap; (c) load-massing runs quarterly — perf cost of the post-INSERT UPDATE is negligible.
+### 3. New shared modules
 
-### Test layering
+**`src/lib/classification/phase-names.ts`** — single source of truth for the 23-entry phase friendly-name map per Spec 84 §3:
+```ts
+export const PHASE_NAMES: Readonly<Record<string, string>> = Object.freeze({
+  P1: 'CoA Intake',
+  P2: 'CoA Review',
+  P3: 'CoA Approved',
+  // ... 23 total entries
+  P7c: 'Issued (Late)',
+  // ...
+  O3: 'Orphan Stalled',
+});
 
-| File | New / extended assertions |
-|---|---|
-| **NEW** `src/tests/migration-122-building-footprints-area-backfill.infra.test.ts` | SQL-shape regression-lock — text regex over the migration body. Asserts (a) UPDATE references `building_footprints`, (b) reads `geometry::text`, (c) uses `ST_Transform` and `ST_SetSRID(..., 3857)` and `::geography`, (d) `WHERE footprint_area_sqm IS NULL` idempotency guard, (e) sets BOTH `footprint_area_sqm` and `footprint_area_sqft`, (f) sqft conversion factor `10.7639104167` is correct, (g) DOWN block is comment-only per Rule 6. Mirrors mig 121 test pattern. |
-| **NEW** `src/tests/db/building-footprints-area.db.test.ts` | Layer 2 live-DB regression-lock. Seeds a `building_footprints` row with a known Web Mercator polygon (e.g., 100m × 100m square in Toronto-ish coordinates); runs the backfill UPDATE; asserts area is within tolerance of 10,000 m² (small distortion at that latitude is acceptable; assert within ±5%). Then a second test seeds a row with a WGS84 polygon (lat/lng coords, deg) and asserts area is computed correctly via the same SQL — confirming the EPSG:3857 SetSRID assumption is robust against accidentally already-WGS84 inputs. |
-| **EXTEND** `src/tests/load-massing.infra.test.ts` (if exists; otherwise NEW) | SQL-shape regression-lock for the new post-INSERT UPDATE pass in load-massing.js — text regex assertion that the script contains the `UPDATE building_footprints SET footprint_area_sqm = ROUND(...)` pattern AND no longer contains the `isProjected ? null : shoelaceArea` shortcut. |
-| **MODIFIED** `src/tests/db/lead-inspect-query.db.test.ts` | One assertion update: `building_footprints.footprint_area_sqm` is no longer always NULL → the inspector's `spatial.massing.area_sqm` field comes back populated for the seeded chain. The current test already expects `pb_area_sqm` to come through (commit 76dd665 schema fix); now it expects a non-null value. |
+export function phaseName(phase: string | null | undefined): string | null {
+  if (phase == null) return null;
+  return PHASE_NAMES[phase] ?? null;
+}
+```
 
-### Spec 56 amendment
+Parity test against Spec 84 §3 table.
 
-`docs/specs/01-pipeline/56_source_massing.md` §2 — add a note:
+**`src/lib/classification/phase-progression.ts`** — canonical happy-path progression per `permit_type`:
+```ts
+export const STANDARD_PHASE_PATH_BY_PERMIT_TYPE: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  'New Building':                ['INTAKE_P3', 'INTAKE_P4', 'INTAKE_P5', 'P6', 'P7a', 'P7b', 'P7c', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'P14', 'P15', 'P16', 'P17', 'P18'],
+  'Building Additions/Alterations': [/* same — full structural path */],
+  'New Houses':                  [/* same */],
+  'Small Residential Projects':  ['INTAKE_P3', 'INTAKE_P4', 'INTAKE_P5', 'P6', 'P7a', 'P7b', 'P7c', 'P8', 'P12', 'P15', 'P18'],  // skips structural P9-P11
+  'Plumbing(PS)':                ['INTAKE_P3', 'P6', 'P7a', 'P7b', 'P7c', 'O1', 'O2', 'O3'],  // orphan-track
+  // ... 25 entries total mirroring mig 120's permit_type_classifications
+} as const);
 
-> **Geometry projection (WF2 #C 2026-05-09):** the shapefile's GeoJSON polygon is stored in EPSG:3857 (Web Mercator pseudo-meters), not WGS84. Area columns (`footprint_area_sqm`, `footprint_area_sqft`) are computed at load-time via PostGIS `ST_Area(ST_Transform(ST_SetSRID(geom, 3857), 4326)::geography)` — the JS-side `shoelaceArea` only handles WGS84 and was previously skipping Web Mercator inputs (the 427K-NULL bug class repaired in mig 122). The post-INSERT UPDATE pass in `load-massing.js` covers all rows; mig 122 is the one-shot fix for the legacy NULL state. Cross-reference Spec 83 §3 — the cost model's Surgical Triangle depends on `footprint_area_sqm` for GFA Step A.
+export function remainingPhases(permitType: string | null, currentPhase: string | null): readonly string[] {
+  // Returns the slice of the canonical path AFTER currentPhase, or [] if
+  // the type is unknown or the permit is in a terminal state (P18, P19, P20, O3).
+}
+```
 
-### Files (Modified / New)
+Parity test ensures every permit_type in `permit_type_classifications` has a path; no orphan codes referenced; first phase is always `INTAKE_P3` or `P6` (no P1/P2 — those are CoA-only).
 
-- **NEW** `migrations/122_building_footprints_area_backfill.sql` — the UPDATE migration
-- **MODIFIED** `scripts/load-massing.js` — remove `isProjected ? null` shortcut; add post-INSERT UPDATE pass; emitMeta declares the area columns as writes
-- **NEW** `src/tests/migration-122-building-footprints-area-backfill.infra.test.ts` — SQL-shape regression-lock (~7 assertions)
-- **NEW** `src/tests/db/building-footprints-area.db.test.ts` — Layer 2 live-DB regression-lock (2 fixtures: Web Mercator + WGS84; ±5% tolerance)
-- **MODIFIED** `src/tests/load-massing.infra.test.ts` (or NEW if absent) — extend with the post-INSERT-UPDATE shape lock + forbid the `isProjected ? null` shortcut
-- **MODIFIED** `src/tests/db/lead-inspect-query.db.test.ts` — flip the massing assertion to expect non-null area
-- **MODIFIED** `docs/specs/01-pipeline/56_source_massing.md` §2 — add Geometry projection note + Spec 83 §3 cross-reference
-- **MODIFIED** `docs/specs/01-pipeline/83_lead_cost_model.md` §3 — one-line note that the GFA Step A dependency is now end-to-end populated (footnote, not contract change)
+### 4. Inspector query extension — `src/lib/leads/lead-inspect-query.ts`
+
+Three new query stages threaded through the existing `Promise.all`:
+
+**A.** New `transitionsRes` query (parallel with existing trades/forecasts/entity/premium):
+```sql
+SELECT from_phase, to_phase, transitioned_at::text
+  FROM permit_phase_transitions
+ WHERE permit_num = $1 AND revision_num = $2
+ ORDER BY transitioned_at ASC
+```
+
+**B.** New `calibrationRes` query: looks up cohort stats for THIS permit's `permit_type` across ALL phases (inspector needs cohort for past + current + future entries):
+```sql
+SELECT phase, median_days, p25_days, p75_days, sample_size
+  FROM phase_calibration
+ WHERE permit_type = $1
+```
+Returns ~10-20 rows per permit_type — cheap.
+
+**C.** JS-side timeline assembly (in `fetchLeadInspect` body):
+```ts
+const timeline = buildTimeline({
+  permitType: m.permit_type,
+  currentPhase: m.lifecycle_phase,
+  phaseStartedAt: m.phase_started_at,
+  transitions: transitionsRes.rows,
+  calibrationByPhase: indexByPhase(calibrationRes.rows),
+  now: new Date(),
+});
+```
+
+`buildTimeline` is a pure function in `src/lib/leads/build-lifecycle-timeline.ts` (new module, fully unit-testable). Returns the `timeline[]` array per the agreed shape:
+
+```ts
+type TimelineEntry = {
+  phase: string;
+  phase_name: string | null;
+  status: 'completed' | 'current' | 'upcoming';
+  entered_at: string | null;
+  exited_at: string | null;
+  days_in_phase: number | null;
+  cohort_median_days: number | null;
+  cohort_p25_days: number | null;
+  cohort_p75_days: number | null;
+  cohort_sample_size: number;
+};
+```
+
+Top-level lifecycle additions:
+```ts
+lifecycle: {
+  // existing
+  phase: 'P7c',
+  stalled: false,
+  classified_at: '...',
+  phase_started_at: '...',
+  // NEW
+  phase_name: 'Issued (Late)',
+  current_phase_days_in: 159,
+  predicted_remaining_days: 245,           // sum of upcoming entries' median_days
+  predicted_completion_at: '2027-02-...',  // NOW + predicted_remaining_days
+  timeline: [/* TimelineEntry[] */],
+}
+```
+
+### 5. Schema + tests
+
+**MODIFIED `src/lib/admin/lead-schemas.ts`** — extend `LeadInspectSchema.lifecycle` with `timeline: z.array(TimelineEntrySchema)` + the 4 new top-level fields.
+
+**Test layering:**
+
+| File | Layer | Coverage |
+|---|---|---|
+| **NEW** `src/tests/migration-123-phase-calibration-table.infra.test.ts` | SQL-shape | CREATE TABLE shape; PK + index; DOWN comment-only |
+| **NEW** `src/tests/phase-names.logic.test.ts` | Unit | All 23 PHASE_NAMES entries match Spec 84 §3; parity test against the spec markdown table |
+| **NEW** `src/tests/phase-progression.logic.test.ts` | Unit | Every permit_type in mig 120's seeds has a path; no orphan codes; first phase ∈ {INTAKE_P3, P6}; `remainingPhases()` returns correct slice for sample inputs |
+| **NEW** `src/tests/build-lifecycle-timeline.logic.test.ts` | Unit | Pure function fixtures: completed-only, completed+current, completed+current+upcoming, terminal (P18 → no upcoming), unknown permit_type fallback (no upcoming) |
+| **NEW** `src/tests/compute-phase-calibration.infra.test.ts` | SQL-shape | Script structure (advisory lock, Zod, withTransaction, audit_table) per Spec 47 §R1–R12 |
+| **NEW** `src/tests/db/phase-calibration.db.test.ts` | Live-DB | Seed 50 transitions across (permit_type='TEST', phase='P7c') with known durations [10, 20, 30, ..., 500]; run compute-phase-calibration; assert median=255±5%, p25=130±5%, p75=380±5% |
+| **MODIFIED** `src/tests/db/lead-inspect-query.db.test.ts` | Live-DB | Extend with timeline assertions: seed permit + ledger transitions + calibration row; call fetchLeadInspect; assert timeline shape (≥1 completed, 1 current, ≥1 upcoming); current entry's `days_in_phase` matches seeded `phase_started_at` delta; cohort fields populated from seeded calibration |
+
+### 6. Spec amendments
+
+- **Spec 84 §3** — PHASE_NAMES module made authoritative; cross-reference `src/lib/classification/phase-names.ts`
+- **Spec 84 §5** — new "Phase Timeline (per-permit)" subsection documenting the inspector contract
+- **Spec 84 §6** — bug 84-W4 marked RESOLVED with this commit reference
+- **Spec 84 §7** — formalize: `phase_calibration` table populated by `compute-phase-calibration.js` reading the ledger
+- **Spec 86 §1** — append note that `calibration_freshness_warn_hours` (existing logic_var, default 48h) ALSO governs phase_calibration freshness
+- **Spec 86 §4** — chain step sequence amended:
+  ```
+  ... 21 classify-lifecycle-phase
+  → 21.5 compute-phase-calibration  (NEW)
+  → 22 compute-trade-forecasts
+  ...
+  ```
+- **Spec 76 §3.5** — Inspector `lifecycle` contract extended: 4 new top-level fields + `timeline[]` array
+
+### 7. Files (Modified / New) — summary
+
+- **NEW** `migrations/123_phase_calibration_table.sql`
+- **NEW** `scripts/compute-phase-calibration.js`
+- **NEW** `src/lib/classification/phase-names.ts`
+- **NEW** `src/lib/classification/phase-progression.ts`
+- **NEW** `src/lib/leads/build-lifecycle-timeline.ts`
+- **MODIFIED** `src/lib/leads/lead-inspect-query.ts` — 2 new queries + timeline assembly
+- **MODIFIED** `src/lib/admin/lead-schemas.ts` — extended `LeadInspectSchema`
+- **NEW** 6 test files (1 migration, 3 unit, 1 infra, 1 live-DB) + 1 modified live-DB
+- **MODIFIED** `scripts/manifest.json` — chain_permits insertion of step 21.5
+- **MODIFIED** Specs 84 (4 sections), 86 (2 sections), 76 (1 section)
 
 ### Database Impact
 
-ONE migration (mig 122) updating 427,077 rows. Single transactional UPDATE; PostGIS-side computation. WAL impact: ~427K row updates with two NUMERIC columns each. Estimated runtime: 30-60s on the dev DB; CONCURRENTLY-style chunking is unnecessary because the UPDATE doesn't touch any unique index column or constraint.
-
-After mig 122 lands, the operator runbook runs `node scripts/compute-cost-estimates.js`. The `IS DISTINCT FROM` UPSERT guard limits the WAL writes to rows whose `estimated_cost`/`premium_factor`/`effective_area_sqm`/`trade_contract_values` change under the corrected GFA path. Expected: a large share of the 237K rows rewrite (because nearly every cost estimate's GFA was on the lot-size fallback path).
+ONE new table (`phase_calibration`, ~40 rows post-population). No data backfill — table is populated by the new chain step on its first run. Existing queries unaffected (no column renames; no constraint changes). Mig 123 is purely additive.
 
 ## Standards Compliance
 
-* **§3.1 Zero-downtime migration:** mig 122's UPDATE on 427K rows is a transactional pass — does not touch unique constraints, indexes, or PK; safe at scale; idempotent via `WHERE ... IS NULL`. Add-Backfill-Drop pattern doesn't apply (no column add/drop).
-* **§9.1 Transaction Boundaries:** the new post-INSERT UPDATE in `load-massing.js` runs as a single statement (auto-commit); it doesn't need to be inside the existing batch transaction because it's idempotent and the rows are already committed.
-* **§9.3 Idempotent scripts:** both the migration and the load-massing post-pass use `WHERE footprint_area_sqm IS NULL` — re-running is a no-op once populated.
-* **Spec 47 §R*:** unchanged contract for load-massing.js — it remains a Pipeline SDK consumer; the new UPDATE is a single `pool.query` after the batch loop.
-* **Spec 56 §2:** amended to document the projection handling and the PostGIS-driven area pipeline.
-* **Rule 6 (commit 8b1c10b):** mig 122's DOWN block is comment-only.
+* **§2 Error handling:** new script throws on Zod validation failure (Spec 47 §R5 fail-fast). New JS modules pure-function, no throws.
+* **§3.1 Zero-downtime migration:** mig 123 creates a new empty table — no impact on existing rows. Index created concurrently — actually for a new table CONCURRENTLY isn't needed; simple `CREATE INDEX` is fine.
+* **§5.1 Typed factories:** test fixtures reuse existing `factories.ts` patterns where applicable; new live-DB fixture follows established `*.db.test.ts` shape.
+* **§7 Dual code path:** N/A — TS-only modules (TS classifier, TS shim). The pipeline script is JS but doesn't share logic with TS.
+* **§9 Pipeline safety:** `compute-phase-calibration.js` follows the canonical Spec 47 §R1–R12 skeleton (advisory lock, Zod, withTransaction, emitSummary, emitMeta).
+* **Spec 47 §R2 lock ID:** lock ID = 93 (next available — verify no collision in §A.5 registry at R2).
+* **Spec 47 §R10 audit_table:** rows include `permit_types_calibrated`, `phases_calibrated`, `total_buckets`, `unreliable_buckets`.
+* **Spec 47 §R11 emitMeta:** reads `permit_phase_transitions`, `permits`, `phase_calibration` (for delta detection); writes `phase_calibration`.
+* **Spec 80 §5:** orthogonal — phase calibration doesn't gate on `permit_type_class`; it cohorts on `permit_type`.
 
 ## State Verification (DONE before plan-lock)
 
-* Confirmed all 427,077 building_footprints rows have `geometry IS NOT NULL` (Web Mercator EPSG:3857 polygons), `max_height_m IS NOT NULL`, `centroid_lat/lng IS NOT NULL`, but `footprint_area_sqm IS NULL` and `footprint_area_sqft IS NULL`.
-* Confirmed PostGIS extension is installed.
-* Live verified `ST_Area(ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)::geography)` returns 168.12 m² for sample row id=6347216 — a Toronto building at 43.76°N. Web Mercator distortion factor matches expected (~1.92 = `1/cos²(43.76°)`).
-* Confirmed `load-massing.js:327-328` is the source of the NULL — `areaSqm = isProjected ? null : shoelaceArea(ring)`.
-* Confirmed `Spec 56 §2` does not currently document the projection.
+* `permit_phase_transitions` has 356,058 rows across 221,694 distinct permits — sufficient cohort sample sizes for the (permit_type, phase) buckets.
+* `permits.permit_type` is the right cohort dimension — confirmed by user direction.
+* Spec 84 §3 has the authoritative phase-name table for the 23 entries.
+* Spec 84 §6 lists bug 84-W4 ("Dead Transition Write: Ledger is written but not used") as Pending Refactor — this WF closes it.
+* Spec 86 §4 chain sequence currently has step 21 (lifecycle classification) → step 22 (trade forecasts) — step 21.5 is the natural insertion point per the user direction.
+* `calibration_freshness_warn_hours` already exists in `logic_variables` (default 48h, per `scripts/seeds/logic_variables.json`).
 
 ## Execution Plan
 
-- [ ] **R1** — Rollback anchor confirmed: `779ec88`. Branch: `main`.
-- [ ] **R2** — State verification: re-run the data-state queries for confirmation.
-- [ ] **R3** — Spec Review: re-read Spec 56 §2, Spec 83 §3 (the GFA Step A consumer), Spec 47 §R3.5 + §R6 (no DDL but the migration runner conventions).
+- [ ] **R1** — Rollback anchor confirmed: `faca737`. Branch: `main`.
+- [ ] **R2** — Verify advisory lock 93 is not in use (grep across `scripts/`); confirm `permit_phase_transitions` schema; confirm `permits.permit_type` value distribution.
+- [ ] **R3** — Spec Review: Spec 84 §3 + §5 + §6 + §7; Spec 86 §1 + §4; Spec 76 §3.5; Spec 47 §R1–R12 + §A.5 lock registry.
 - [ ] **R4** — Reproduction tests FIRST (Red Light), one file at a time:
-  - NEW `migration-122-building-footprints-area-backfill.infra.test.ts` — 7 assertions; run vitest → MUST fail (file doesn't exist yet).
-  - NEW `src/tests/db/building-footprints-area.db.test.ts` — 2 live-DB fixtures; run with DATABASE_URL → MUST fail (mig 122 not yet applied; the SQL UPDATE doesn't exist; future-form schema mismatch).
-  - EXTEND `src/tests/load-massing.infra.test.ts` (or NEW) — assertions on the post-INSERT UPDATE and forbidden `isProjected ? null` shortcut; MUST fail.
-  - MODIFY `lead-inspect-query.db.test.ts` — flip massing area assertion to expect non-null; current state still NULL → MUST fail.
-- [ ] **R5** — Implementation (one file at a time):
-  - `migrations/122_building_footprints_area_backfill.sql` — UPDATE migration
-  - `scripts/load-massing.js` — remove the `isProjected ? null` shortcut; add post-INSERT UPDATE pass; emit-meta entry
-  - `docs/specs/01-pipeline/56_source_massing.md` §2 — Geometry projection note
-  - `docs/specs/01-pipeline/83_lead_cost_model.md` §3 — one-line note about end-to-end GFA dependency
+  - `migration-123-phase-calibration-table.infra.test.ts`
+  - `phase-names.logic.test.ts`
+  - `phase-progression.logic.test.ts`
+  - `build-lifecycle-timeline.logic.test.ts`
+  - `compute-phase-calibration.infra.test.ts`
+  - `src/tests/db/phase-calibration.db.test.ts`
+  - extend `src/tests/db/lead-inspect-query.db.test.ts`
+  - Run vitest → ALL must fail.
+- [ ] **R5** — Implementation (one file at a time, in dependency order):
+  - `migrations/123_phase_calibration_table.sql`
+  - `src/lib/classification/phase-names.ts`
+  - `src/lib/classification/phase-progression.ts`
+  - `src/lib/leads/build-lifecycle-timeline.ts`
+  - `scripts/compute-phase-calibration.js`
+  - `scripts/manifest.json` (chain step 21.5)
+  - `src/lib/leads/lead-inspect-query.ts` extension
+  - `src/lib/admin/lead-schemas.ts` extension
+  - Spec 84 §3 + §5 + §6 + §7 amendments
+  - Spec 86 §1 + §4 amendments
+  - Spec 76 §3.5 amendment
 - [ ] **R6** — Green Light: targeted tests pass; `npm run typecheck && npm run lint -- --fix && npm run test`.
-- [ ] **R7** — Idempotency: apply mig 122 against the dev DB; verify all 427K rows have non-null area; re-apply mig 122 → no-op (`UPDATE 0 rows`).
+- [ ] **R7** — Idempotency: re-run live-DB tests 2× consecutively. Apply mig 123 + run `compute-phase-calibration` 2×; second run = no change to row content (timestamps update).
 - [ ] **R8** — Live verification:
-  - `npm run migrate` runs mig 122 successfully against dev DB; verify row sample (id=6347216) has the expected ~168 m².
-  - Sample 5 random rows; verify computed areas are reasonable (10-10,000 m² range for typical Toronto buildings).
-  - **Then execute the deferred runbook**: `node scripts/compute-cost-estimates.js` against the dev DB. Verify the audit_table reports a meaningful number of `permits_updated` rows (was likely 0-100 in prior runs since GFA was on lot-size fallback for everything; now should be meaningful).
+  - `npm run migrate` applies mig 123
+  - `node scripts/compute-phase-calibration.js` populates ~40 rows; verify a sample (e.g., New Houses + P7c) median is reasonable
+  - Hit `GET /api/admin/leads/inspect/<some-permit>` (or call `fetchLeadInspect` via debug script) — assert `lifecycle.timeline[]` populated with completed + current + upcoming entries
 - [ ] **R9** — Pre-Review Self-Checklist (5 items):
-  1. Mig 122 idempotent (`WHERE ... IS NULL`); DOWN comment-only?
-  2. `load-massing.js` post-INSERT UPDATE present; `isProjected ? null` shortcut removed; emit-meta declares the area columns?
-  3. Layer 2 live-DB test confirms area within ±5% tolerance for the seeded fixture?
-  4. `lead-inspect-query.db.test.ts` flipped expectation correctly (non-null area)?
-  5. Commit message documents BOTH the runbook step (re-run compute-cost-estimates) AND the migration applied (mig 122)?
-- [ ] **R10** — **Multi-Agent Review (default WF2 cadence per project feedback):**
-  - Gemini: review `scripts/load-massing.js` against `docs/specs/01-pipeline/56_source_massing.md`
-  - DeepSeek: review `migrations/122_building_footprints_area_backfill.sql` against `docs/specs/01-pipeline/47_pipeline_script_protocol.md` (migration conventions) + Spec 56
-  - Worktree code-reviewer: full diff against migration 109 / Rule 6 / Spec 56 amended contract; generate own checklist
+  1. PHASE_NAMES has all 23 entries matching Spec 84 §3 verbatim?
+  2. STANDARD_PHASE_PATH_BY_PERMIT_TYPE has every permit_type from mig 120's seeds; no entries reference P1/P2 (CoA-only)?
+  3. `buildTimeline` returns the canonical TimelineEntry shape; `status` field correctly identifies completed/current/upcoming; `days_in_phase` is null for upcoming entries (so they show "median X days" instead)?
+  4. compute-phase-calibration.js follows Spec 47 §R1–R12 skeleton; advisory lock 93 collision-checked; emitMeta declares both reads + writes?
+  5. Commit message documents BOTH operator runbook steps (mig 123 application + compute-phase-calibration first-run)?
+- [ ] **R10** — **Multi-Agent Review (REQUIRED — WF1 cadence + 3 parallel reviewers):**
+  - Gemini: review `scripts/compute-phase-calibration.js` against Spec 47 §R1–R12 + Spec 84 §7
+  - DeepSeek: review `src/lib/leads/build-lifecycle-timeline.ts` + `src/lib/leads/lead-inspect-query.ts` (timeline assembly + query extension) against Spec 76 §3.5 + Spec 84 §5
+  - Worktree code-reviewer: full diff against Spec 84 §3 (phase-name parity), Spec 84 §6 (bug 84-W4 closure), Spec 86 §4 (chain ordering)
   - Triage: BUG → file new WF3 before Green Light; DEFER → append to `docs/reports/review_followups.md`.
-- [ ] **R11** — Atomic commit on `main`: `feat(56_source_massing): WF2 — backfill 427K NULL footprint_area_sqm rows via PostGIS ST_Area + fix load-massing.js Web Mercator nulling`. Spec 05 §5 footer with operator runbook.
+- [ ] **R11** — Atomic commit on `main`: `feat(84_lifecycle_phase_engine): WF1 — phase_calibration table + compute-phase-calibration step 21.5 + lifecycle.timeline[] inspector data (closes bug 84-W4)`. Spec 05 §5 footer with operator runbook.
 - [ ] **R12** — Push `main`.
 
-§10 note: 2 sites bundled (mig 122 + load-massing.js) — same root cause (Web Mercator nulling); atomic revert is simpler than 2 commits. Multi-agent review default WF2 cadence; 3 parallel reviewers. Operator runbook step (post-merge re-run of compute-cost-estimates.js) is the deferred dependency this WF unblocks.
+§10 note: Path A (data only); UI for inspector + flight-center detail follows in separate frontend WFs. Multi-agent review required per WF1. Operator runbook = mig 123 + first-run of compute-phase-calibration; subsequent runs auto via chain step 21.5.
 
-> **PLAN LOCKED. Do you authorize this WF2 plan? (y/n)**
-> §10 note: SQL backfill mig 122 + load-massing.js post-INSERT UPDATE; deferred compute-cost-estimates runbook executed at R8; multi-agent review.
+> **PLAN LOCKED. Do you authorize this WF1 plan? (y/n)**
+> §10 note: data layer only this WF; phase_calibration table + chain step 21.5; closes bug 84-W4; multi-agent review required.
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.

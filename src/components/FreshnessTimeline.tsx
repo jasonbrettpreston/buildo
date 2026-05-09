@@ -49,6 +49,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   classify_scope:       { name: 'Scope Classification', group: 'classify' },
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
   classify_lifecycle_phase:   { name: 'Classify Lifecycle Phase', group: 'classify' },
+  compute_phase_calibration:  { name: 'Phase Calibration',        group: 'classify' },
   compute_cost_estimates:     { name: 'Cost Estimates',      group: 'classify' },
   compute_timing_calibration_v2: { name: 'Timing Calibration', group: 'classify' },
   compute_trade_forecasts:       { name: 'Trade Forecasts',       group: 'classify' },
@@ -120,6 +121,11 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       // WF2 2026-04-18 — phase distribution gate (spec 84 §3.3):
       // validates classifier output before marketplace tail reads it.
       { slug: 'assert_lifecycle_phase_distribution', indent: 0 },
+      // WF1 #B 2026-05-09 — phase calibration step 21.5 (Spec 84 §7,
+      // Spec 86 §4): aggregates permit_phase_transitions ledger into
+      // phase_stay_calibration table; consumed by the inspector
+      // lifecycle.timeline[] cohort fields. Closes Spec 84 bug 84-W4.
+      { slug: 'compute_phase_calibration',  indent: 0 },
       // WF2 2026-04-13 — marketplace tail (specs 81/82/85):
       // forecasts → scores → tracked projects. Depends on
       // classify_lifecycle_phase having stamped fresh lifecycle_phase

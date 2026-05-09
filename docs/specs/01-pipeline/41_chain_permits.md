@@ -12,7 +12,7 @@ As a business user, I expect this daily pipeline to ingest 237K+ raw Toronto bui
 
 **Trigger:** `node scripts/run-chain.js permits` or `POST /api/admin/pipelines/chain_permits`
 **Schedule:** Daily
-**Steps:** 28 (sequential, stop-on-failure)
+**Steps:** 29 (sequential, stop-on-failure)
 **Gate:** `permits` — if `records_new = 0`, downstream enrichment steps are skipped (infra steps still run)
 
 ```
@@ -22,7 +22,7 @@ link_neighbourhoods → link_massing → link_similar → classify_permits →
 compute_cost_estimates → compute_timing_calibration_v2 →
 link_coa → create_pre_permits → refresh_snapshot → assert_data_bounds →
 assert_engine_health → classify_lifecycle_phase → assert_lifecycle_phase_distribution →
-compute_trade_forecasts → compute_opportunity_scores → update_tracked_projects →
+compute_phase_calibration → compute_trade_forecasts → compute_opportunity_scores → update_tracked_projects →
 assert_entity_tracing → assert_global_coverage
 ```
 
@@ -57,11 +57,13 @@ assert_entity_tracing → assert_global_coverage
 | 20 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuples, seq scan ratio, update ping-pong | engine_health_snapshots |
 | 21 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Computes `lifecycle_phase` + `lifecycle_stalled` for dirty permits and CoA applications (CoA stall via `logic_variables.coa_stall_threshold`, migration 094 added `lifecycle_stalled` to `coa_applications`). Uses `pg_try_advisory_lock(84)`. | permits, coa_applications, permit_phase_transitions |
 | 22 | `assert_lifecycle_phase_distribution` | `quality/assert-lifecycle-phase-distribution.js` | Tier 3 CQA: verifies every lifecycle phase count is within expected ±10% band and unclassified count ≤ `lifecycle_unclassified_max`. Uses advisory lock 109 to skip gracefully if classifier is mid-write. Throws on failure (halting). | pipeline_runs |
-| 23 | `compute_trade_forecasts` | `compute-trade-forecasts.js` | Phase 4 flight tracker: bimodal routing + stall recalibration + urgency classification (expired threshold from `logic_variables.expired_threshold_days`). Needs fresh lifecycle_phase anchors from step 21 and `phase_calibration` from step 15. | trade_forecasts |
-| 24 | `compute_opportunity_scores` | `compute-opportunity-scores.js` | Intrinsic Value Engine: `clamp((tradeValue/divisor × perTradeMultiplier) − competitionPenalty, 0, 100)`. JOINs `trade_configurations` for per-trade `multiplier_bid`/`multiplier_work`. | trade_forecasts (opportunity_score) |
-| 25 | `update_tracked_projects` | `update-tracked-projects.js` | CRM Assistant: two-path routing, state-change alerts, auto-archive on `urgency='expired'` (WF3 2026-04-13), lead_analytics sync. | tracked_projects, lead_analytics |
-| 26 | `assert_entity_tracing` | `quality/assert-entity-tracing.js` | Tier 3 CQA: for permits seen in the last 26 hours, checks coverage rate across 5 downstream tables/columns (permit_trades ≥95%, cost_estimates ≥90%, trade_forecasts ≥90%, lifecycle_phase ≥95%, opportunity_score >0 rate ≥80%). Non-halting (observational). | pipeline_runs |
-| 27 | `assert_global_coverage` | `quality/assert-global-coverage.js` | Tier 3 CQA: field-level coverage profile for every step. One row per table.column in the denominator matrix. PASS/WARN/FAIL per configurable thresholds from logic_variables. Non-halting (observational). Uses advisory lock 111. | pipeline_runs |
+| 23 | `compute_phase_calibration` | `compute-phase-calibration.js` | WF1 #B 2026-05-09 — Spec 84 §7 + Spec 86 §4 calibration source. Aggregates `permit_phase_transitions` ledger into `phase_stay_calibration` table per `(permit_type, phase)` cohort (median/p25/p75 days in phase). Closes Spec 84 bug 84-W4 ("Dead Transition Write"). Consumed by the inspector `lifecycle.timeline[]` cohort fields per Spec 76 §3.5. Uses advisory lock 93. | phase_stay_calibration |
+| 24 | `compute_trade_forecasts` | `compute-trade-forecasts.js` | Phase 4 flight tracker: bimodal routing + stall recalibration + urgency classification (expired threshold from `logic_variables.expired_threshold_days`). Needs fresh lifecycle_phase anchors from step 21 and `phase_calibration` from step 15. | trade_forecasts |
+| 25 | `compute_opportunity_scores` | `compute-opportunity-scores.js` | Intrinsic Value Engine: `clamp((tradeValue/divisor × perTradeMultiplier) − competitionPenalty, 0, 100)`. JOINs `trade_configurations` for per-trade `multiplier_bid`/`multiplier_work`. | trade_forecasts (opportunity_score) |
+| 26 | `update_tracked_projects` | `update-tracked-projects.js` | CRM Assistant: two-path routing, state-change alerts, auto-archive on `urgency='expired'` (WF3 2026-04-13), lead_analytics sync. | tracked_projects, lead_analytics |
+| 27 | `assert_entity_tracing` | `quality/assert-entity-tracing.js` | Tier 3 CQA: for permits seen in the last 26 hours, checks coverage rate across 5 downstream tables/columns (permit_trades ≥95%, cost_estimates ≥90%, trade_forecasts ≥90%, lifecycle_phase ≥95%, opportunity_score >0 rate ≥80%). Non-halting (observational). | pipeline_runs |
+| 28 | `assert_global_coverage` | `quality/assert-global-coverage.js` | Tier 3 CQA: field-level coverage profile for every step. One row per table.column in the denominator matrix. PASS/WARN/FAIL per configurable thresholds from logic_variables. Non-halting (observational). Uses advisory lock 111. | pipeline_runs |
+| 29 | `backup_db` | `backup-db.js` | OP4 daily logical backup as final maintenance step (Spec 112 §3). | — |
 
 **Lifecycle classifier (step 21)** runs synchronously. The classifier's
 incremental predicate (`last_seen_at > lifecycle_classified_at`) keeps

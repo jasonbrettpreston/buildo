@@ -31,6 +31,7 @@ These are universal "Gravity" constants. They act as baseline rules, fallbacks, 
 | `staleness_max_stale_over_30d` | Staleness Monitor | **WF3 2026-05-08 (mig 121):** Operator-tunable FAIL gate for `assert-staleness` (Spec 44 step 7). Replaces the legacy hardcoded `> 0` halt. Stale count `1..threshold` inclusive → WARN; `> threshold` → FAIL. Default 10000 absorbs the 2026-05-08 snapshot (6,514 stale → WARN); tighten to <2000 once scrape coverage ≥50% per Spec 38. |
 | `staleness_min_coverage_pct` | Staleness Monitor | **WF3 2026-05-08 (mig 121):** Coverage floor (percent). Below this `assert-staleness` emits an informational WARN row; not a halt per Spec 44 §3.5. |
 | `staleness_max_days_stale` | Staleness Monitor | **WF3 2026-05-08 (mig 121):** Single-permit `max_days_stale` ceiling (days). Exceeding it emits an informational WARN row indicating one or more permits are aging beyond expectation. Not a halt. |
+| `calibration_freshness_warn_hours` | Phase Calibration | **WF1 #B 2026-05-09 (reused):** Hours since the last successful `compute-phase-calibration` run before the freshness gauge flips WARN. Same key already consumed by `compute-trade-forecasts` for transition-pair calibration freshness — single tunable governs both calibration archetypes. |
 
 > The table above is illustrative; the **single source of truth** for the full key set is `scripts/seeds/logic_variables.json`. Schema parity between that file, `scripts/lib/config-loader.js` (`FALLBACK_LOGIC_VARS`), and `src/lib/admin/control-panel.ts` (`LOGIC_VAR_DEFAULTS`) is enforced by `src/tests/control-panel.logic.test.ts`. Adding a new variable means appending to the JSON; the admin UI grouping lives in `src/features/admin-controls/components/GlobalConfigCard.tsx` `GROUPS`.
 
@@ -72,10 +73,12 @@ Refactor the scripts to load via `scripts/lib/config-loader.js`. They must execu
 |---|---|---|
 | **14** | `compute-cost-estimates` | Fetches `base_rate_sqft` + `structure_complexity_factor`. Applies `liar_gate_threshold_pct`, `commercial_shell_multiplier`, `placeholder_cost_threshold`, and `income_premium_tiers`. |
 | **15** | `compute_timing_calibrations` | Establishes the historical medians needed for forecasts. |
-| **21** | `classify-lifecycle-phase` | Reads `coa_stall_threshold` to flag `lifecycle_stalled = TRUE`. Updates `phase_started_at` anchors. |
-| **22** | `compute-trade-forecasts` | Reads `bid_phase_cutoff`, `work_phase_target`, `imminent_window_days`, stall penalties, and `expired_threshold_days` to stamp `target_window` and `urgency`. |
-| **23** | `compute-opportunity-scores` | Reads `multiplier_bid/work` based on the stamped window. Applies penalties for tracking/saving. |
-| **24** | `update-tracked-projects` | The CRM Assistant. Reads `imminent_window_days` for payload text, auto-archives dead leads, and syncs `lead_analytics`. |
+| **21** | `classify-lifecycle-phase` | Reads `coa_stall_threshold` to flag `lifecycle_stalled = TRUE`. Updates `phase_started_at` anchors. Writes `permit_phase_transitions` ledger consumed by step 23. |
+| **22** | `assert-lifecycle-phase-distribution` | Reads `lifecycle_band_*_min/max` (×36) + `lifecycle_cross_*_threshold` (×3) to gate the chain on classifier health. |
+| **23** | `compute-phase-calibration` | **NEW (WF1 #B 2026-05-09):** Reads the `permit_phase_transitions` ledger via LAG window + PERCENTILE_CONT, writes `phase_stay_calibration` (per-`(permit_type, phase)` median/p25/p75/sample_size). Closes Spec 84 bug 84-W4. The admin Lead Detail Inspector's `lifecycle.timeline[]` reads this table for cohort comparison (Spec 76 §3.5). Reuses `calibration_freshness_warn_hours`. |
+| **24** | `compute-trade-forecasts` | Reads `bid_phase_cutoff`, `work_phase_target`, `imminent_window_days`, stall penalties, and `expired_threshold_days` to stamp `target_window` and `urgency`. |
+| **25** | `compute-opportunity-scores` | Reads `multiplier_bid/work` based on the stamped window. Applies penalties for tracking/saving. |
+| **26** | `update-tracked-projects` | The CRM Assistant. Reads `imminent_window_days` for payload text, auto-archives dead leads, and syncs `lead_analytics`. |
 
 > **Cross-link to per-permit audit (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7) consumes the tunables defined here to render every cost-derivation input per permit. When an operator changes a tunable in the Control Panel (e.g., `urban_coverage_ratio`, a `scope_intensity_matrix` cell, or a `base_trade_rate`), the inspector renders the new value's effect on individual leads — closing the loop between marketplace-wide tuning and per-permit accuracy audit.
 

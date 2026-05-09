@@ -97,9 +97,14 @@ const VALID_LEAD_INSPECT = {
   },
   lifecycle: {
     phase: 'P9',
+    phase_name: 'Excavation',
     stalled: false,
     classified_at: '2026-05-08T11:00:00Z',
     phase_started_at: '2024-04-20T00:00:00Z',
+    current_phase_days_in: 750,
+    predicted_remaining_days: 360,
+    predicted_completion_at: '2027-05-04T00:00:00Z',
+    timeline: [],
   },
   forecast: [
     {

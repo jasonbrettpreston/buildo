@@ -227,4 +227,111 @@ describe.skipIf(!dbAvailable())('fetchLeadInspect — live-DB regression-lock (W
     expect(result!.spatial.neighbourhood!.name).toBe(SEED_NEIGHBOURHOOD_NAME);
     expect(result!.spatial.neighbourhood!.avg_household_income).toBe(SEED_AVG_HOUSEHOLD_INCOME);
   });
+
+  // ─── WF1 #B 2026-05-09 — lifecycle.timeline[] (closes Spec 84 bug 84-W4) ───
+
+  it('populates lifecycle.timeline[] from permit_phase_transitions + phase_stay_calibration (WF1 #B)', async () => {
+    if (!pool) return;
+
+    // Seed: 2 transitions for the inspector-test permit (already inserted in
+    // beforeAll). Also seed phase_stay_calibration cohort stats so the timeline's
+    // upcoming entries get cohort_median_days populated.
+    await pool.query(
+      `DELETE FROM permit_phase_transitions WHERE permit_num = $1 AND revision_num = $2`,
+      [PERMIT_NUM, PERMIT_REV],
+    );
+    await pool.query(
+      `INSERT INTO permit_phase_transitions
+         (permit_num, revision_num, from_phase, to_phase, transitioned_at, permit_type)
+       VALUES
+         ($1, $2, NULL,           'P3', '2025-01-01T00:00:00.000Z'::timestamptz, 'New Building'),
+         ($1, $2, 'P3',    'P7c',       '2025-12-01T00:00:00.000Z'::timestamptz, 'New Building')`,
+      [PERMIT_NUM, PERMIT_REV],
+    );
+
+    // The seeded permit's permit_type was 'New Building' in beforeAll;
+    // populate phase_stay_calibration for a few buckets so cohort fields land.
+    await pool.query(
+      `INSERT INTO phase_stay_calibration (permit_type, phase, median_days, p25_days, p75_days, sample_size)
+       VALUES
+         ('New Building', 'P3', 30, 14, 60, 1500),
+         ('New Building', 'P7c',      45, 22, 87, 12000),
+         ('New Building', 'P8',       30, 15, 60, 8000),
+         ('New Building', 'P18',      30, 10, 60, 5000)
+       ON CONFLICT (permit_type, phase) DO UPDATE
+         SET median_days = EXCLUDED.median_days,
+             p25_days = EXCLUDED.p25_days,
+             p75_days = EXCLUDED.p75_days,
+             sample_size = EXCLUDED.sample_size`,
+    );
+
+    // Set the permit's lifecycle_phase + phase_started_at so the inspector
+    // can compute current_phase_days_in.
+    await pool.query(
+      `UPDATE permits
+          SET lifecycle_phase = 'P7c',
+              phase_started_at = '2025-12-01T00:00:00.000Z'::timestamptz,
+              permit_type = 'New Building'
+        WHERE permit_num = $1 AND revision_num = $2`,
+      [PERMIT_NUM, PERMIT_REV],
+    );
+
+    const result = await fetchLeadInspect(pool, {
+      permit_num: PERMIT_NUM,
+      revision_num: PERMIT_REV,
+      adminUid: ADMIN_UID,
+    });
+    expect(result).not.toBeNull();
+
+    const timeline = (result as unknown as { lifecycle: { timeline: Array<{ phase: string; phase_name: string | null; status: 'completed' | 'current' | 'upcoming'; days_in_phase: number | null; cohort_median_days: number | null }> } }).lifecycle.timeline;
+
+    // 1 completed + 1 current + ≥1 upcoming (per New Building canonical path)
+    const completed = timeline.filter((e) => e.status === 'completed');
+    const current = timeline.filter((e) => e.status === 'current');
+    const upcoming = timeline.filter((e) => e.status === 'upcoming');
+
+    expect(completed.length).toBeGreaterThanOrEqual(1);
+    expect(current.length).toBe(1);
+    expect(upcoming.length).toBeGreaterThanOrEqual(1);
+
+    // P3 → P7c = 334 days (Jan 1 to Dec 1).
+    expect(completed[0]!.phase).toBe('P3');
+    expect(completed[0]!.phase_name).toBe('CoA Approved');
+    expect(completed[0]!.days_in_phase).toBe(334);
+
+    // Current = P7c, friendly name "Issued (Late)", cohort populated from
+    // the seeded phase_stay_calibration row.
+    expect(current[0]!.phase).toBe('P7c');
+    expect(current[0]!.phase_name).toBe('Issued (Late)');
+    expect(current[0]!.cohort_median_days).toBe(45);
+
+    // First upcoming entry uses cohort_median_days as predicted days_in_phase.
+    expect(upcoming[0]!.days_in_phase).toBe(upcoming[0]!.cohort_median_days);
+  });
+
+  it('lifecycle top-level fields populated: phase_name + current_phase_days_in + predicted_remaining_days (WF1 #B)', async () => {
+    if (!pool) return;
+    const result = await fetchLeadInspect(pool, {
+      permit_num: PERMIT_NUM,
+      revision_num: PERMIT_REV,
+      adminUid: ADMIN_UID,
+    });
+
+    const lifecycle = (result as unknown as { lifecycle: { phase_name: string | null; current_phase_days_in: number | null; predicted_remaining_days: number | null } }).lifecycle;
+
+    expect(lifecycle.phase_name).toBe('Issued (Late)');
+    // current_phase_days_in = NOW - phase_started_at; phase_started_at was
+    // 2025-12-01; today is 2026-05-09+ → 159+ days. Allow loose lower bound.
+    expect(lifecycle.current_phase_days_in).toBeGreaterThan(150);
+    // predicted_remaining_days = sum of upcoming entries' median_days; for
+    // New Building canonical path with seeded calibration > 0.
+    expect(lifecycle.predicted_remaining_days).toBeGreaterThan(0);
+  });
+
+  it('cleanup phase_stay_calibration test rows (afterAll-ish)', async () => {
+    if (!pool) return;
+    await pool.query(
+      `DELETE FROM phase_stay_calibration WHERE permit_type = 'New Building' AND phase IN ('P3', 'P7c', 'P8', 'P18')`,
+    );
+  });
 });
