@@ -128,14 +128,22 @@ const MAIN_SQL = `
     ce.modeled_gfa_sqm::text AS modeled_gfa_sqm,
     ce.trade_contract_values,
     ce.effective_area_sqm::text AS effective_area_sqm,
-    -- spatial: pick the primary parcel link
+    -- spatial: pick the primary parcel link.
+    -- WF3 2026-05-08: parcels (mig 011) exposes lot_size_sqm; the inspector
+    -- aliases that as parcel_area_sqm to keep the MainRow shape stable.
+    -- Mirrors compute-cost-estimates.js SOURCE_SQL.
     pp.parcel_id,
-    parc.area_sqm::text AS parcel_area_sqm,
+    parc.lot_size_sqm::text AS parcel_area_sqm,
     parc.centroid_lat::text AS parcel_lat,
     parc.centroid_lng::text AS parcel_lng,
-    -- spatial: pick the primary parcel_buildings row (massing)
-    pb.area_sqm::text AS pb_area_sqm,
-    pb.height_m::text AS pb_height_m,
+    -- spatial: pick the primary parcel_buildings row (massing).
+    -- WF3 2026-05-08: the LATERAL fetches building_id only; geometry lives
+    -- on building_footprints (mig 023) — parcel_buildings (migs 024 + 026)
+    -- is a join table with no area_sqm/height_m columns. Mirrors the
+    -- compute-cost-estimates.js SOURCE_SQL pattern (single source of truth
+    -- for permits → parcel_buildings → building_footprints chain).
+    bf.footprint_area_sqm::text AS pb_area_sqm,
+    bf.max_height_m::text       AS pb_height_m,
     -- neighbourhood
     p.neighbourhood_id,
     n.name AS neighbourhood_name,
@@ -165,13 +173,18 @@ const MAIN_SQL = `
   ) pp ON true
   LEFT JOIN parcels parc ON parc.id = pp.parcel_id
   LEFT JOIN LATERAL (
-    SELECT pb.area_sqm, pb.height_m
-      FROM parcel_buildings pb
-     WHERE pb.parcel_id = pp.parcel_id
-     ORDER BY pb.is_primary DESC NULLS LAST, pb.confidence DESC NULLS LAST
+    SELECT building_id
+      FROM parcel_buildings
+     WHERE parcel_id = pp.parcel_id
+     ORDER BY is_primary DESC NULLS LAST, confidence DESC NULLS LAST
      LIMIT 1
   ) pb ON true
-  LEFT JOIN neighbourhoods n ON n.id = p.neighbourhood_id
+  LEFT JOIN building_footprints bf ON bf.id = pb.building_id
+  -- WF3 2026-05-08: permits.neighbourhood_id references the city open-data
+  -- neighbourhoods.neighbourhood_id, NOT the SERIAL parcels.id. Joining on
+  -- the SERIAL silently miss-matches every row → neighbourhood panel shows
+  -- empty. Mirrors compute-cost-estimates.js SOURCE_SQL line 93.
+  LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
   -- Matrix lookup: scope_intensity_matrix (permit_type × structure_type → allocation %)
   -- per Spec 83 §3B. The other two cost.inputs fields (structure_complexity_factor,
   -- neighbourhood_premium_tier) are surfaced via separate paths:

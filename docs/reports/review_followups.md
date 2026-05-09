@@ -3,6 +3,15 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF3 (2026-05-08) — Live-DB infra-test harness for read-only SQL endpoints
+_Source: lead-inspect-query.ts column-drift bug (WF3 fix `<commit-pending>`) — caught only by manual repro, not by any existing test._
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| MEDIUM | WF3 lead-inspect column-drift fix | **No live-DB infra test exists for any read-only SQL endpoint.** The lead-inspect bug (`pb.area_sqm` referencing a column that doesn't exist on `parcel_buildings`) shipped silently in WF2 #4 commit `6683477` because `admin-leads-inspect.infra.test.ts` mocks `fetchLeadInspect` AND `admin-detail-inspectors.ui.test.tsx` mocks the API entirely. Across all 80+ `*.infra.test.ts` files in the project, every single one is text/regex-shape on file contents — none execute SQL against a live DB. A `DATABASE_URL`-gated harness that runs read-only inspect SQL against the dev DB with a known sample permit would catch column drift the moment a migration ALTERs/DROPs a column the inspector reads. Same mechanism could regression-lock other admin read-paths (lead-feed, flight-board detail) and the cost-model SOURCE_SQL. **Fix:** add a small `getInspectTestPool()` helper + a `lead-inspect-query.live.infra.test.ts` (skip when `DATABASE_URL` unset) that calls `fetchLeadInspect(pool, knownPermit)` and asserts no exception. Establishes the pattern; subsequent endpoints follow. | WF3 (separate) — pattern-setting work that exceeds the blast radius of the immediate bug fix. |
+
+---
+
 ## WF2 #3 (2026-05-08) — Multi-Agent Review deferrals
 _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared.js` + `compute-cost-estimates.js` for the `permit_type_class` cost-model gating commit._
 
