@@ -341,7 +341,7 @@ export async function fetchNeighbourhoods() {
          COUNT(*)::int AS permit_count,
          COALESCE(SUM(p.est_const_cost), 0)::bigint AS total_value
        FROM permits p
-       JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
+       JOIN neighbourhoods n ON n.id = p.neighbourhood_id
        WHERE p.issued_date >= CURRENT_DATE - INTERVAL '30 days'
          AND 'residential' = ANY(p.scope_tags)
        GROUP BY n.name, n.avg_household_income
@@ -355,7 +355,7 @@ export async function fetchNeighbourhoods() {
          COUNT(*)::int AS permit_count,
          COALESCE(SUM(p.est_const_cost), 0)::bigint AS total_value
        FROM permits p
-       JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
+       JOIN neighbourhoods n ON n.id = p.neighbourhood_id
        WHERE p.issued_date >= CURRENT_DATE - INTERVAL '395 days'
          AND p.issued_date < CURRENT_DATE - INTERVAL '365 days'
          AND 'residential' = ANY(p.scope_tags)

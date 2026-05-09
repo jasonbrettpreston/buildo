@@ -164,9 +164,14 @@ describe('LEAD_FEED_SQL — structure', () => {
   });
 
   // ---- Phase 3-iii widened SELECTs ----
-  it('joins permits to neighbourhoods (LEFT JOIN, NULL-safe)', () => {
+  // WF3 2026-05-08: assertion flipped to enforce the FK-correct join
+  // (n.id = p.neighbourhood_id) per migration 109 fk_permits_neighbourhoods.
+  // The original assertion codified the wrong join shape — the silent-miss
+  // bug class WF3 just repaired. See neighbourhoods-fk-join.infra.test.ts
+  // for the consolidated regression-lock across all 4 sites.
+  it('joins permits to neighbourhoods on the SERIAL FK (LEFT JOIN, NULL-safe)', () => {
     expect(LEAD_FEED_SQL).toMatch(
-      /LEFT JOIN neighbourhoods n ON n\.neighbourhood_id = p\.neighbourhood_id/,
+      /LEFT JOIN neighbourhoods n ON n\.id = p\.neighbourhood_id/,
     );
   });
 

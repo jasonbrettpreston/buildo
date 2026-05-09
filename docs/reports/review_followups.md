@@ -3,6 +3,42 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF3 (2026-05-08) — Multi-Agent Review deferrals from neighbourhoods FK-join repair commit
+_Source: Gemini review of `compute-cost-estimates.js` + DeepSeek review of `get-lead-feed.ts` + worktree code-reviewer of full diff. ALL findings below are pre-existing structural issues unrelated to the wrong-join fix; bundling into the WF3 would have exploded blast radius beyond the surgical correction. Each is a meaningful separate WF._
+
+**Applied this commit (worktree review FAILs in the new Layer 2 test):**
+- ✅ Item 8 (worktree, conf 82) — replaced misleading `expect(aSerialId).not.toBe(bSerialId)` with a meaningful `SELECT neighbourhood_id WHERE id = bSerialId` re-query that catches a future regression where the seed's overlap construction breaks. Test description corrected to `B.neighbourhood_id (city PK) equals A.id (SERIAL)`.
+- ✅ Item 14 (worktree, conf 88) — removed dead `B_CITY_ID = 999802` constant.
+
+### `scripts/compute-cost-estimates.js` — Gemini review deferrals (8 findings, ALL pre-existing)
+
+| Severity | Item | Why deferred |
+|---|---|---|
+| CRITICAL | **Spec 83 §8 mandates "pinned client" advisory lock pattern, not the SDK helper.** Project-wide convention is `pipeline.withAdvisoryLock` (matches every other pipeline script). The spec-vs-code gap is the spec, not the code. | Spec 83 §8 amendment to allow the SDK helper (or the project chooses to revert to per-script pinned client). Gemini doesn't have spec-evolution context. |
+| HIGH | **`trade_contract_values::text IS DISTINCT FROM` perf** at IS DISTINCT FROM WAL guard. Forces JSONB serialization per row; defeats GIN. | WF3 — switch to JSONB containment (`@>`/`<@`) once we have a perf benchmark on the bulk UPSERT. |
+| HIGH | **LATERAL parcel `ORDER BY parcel_id ASC LIMIT 1`** is non-deterministic on a permit that spans multiple parcels — picks the lowest-id parcel which may be a sliver. | WF3 — define the canonical primary-parcel choice (likely `lot_size_sqm DESC` or `is_primary` flag); pre-existing across `compute-cost-estimates.js` AND `lead-inspect-query.ts` AND `lead-detail-query.ts`. Bundle. |
+| HIGH | **`scopeMatrix` key built without `.trim()`** — Spec 83 §3 explicitly requires `.toLowerCase().trim()`; trailing whitespace in DB rows would silently fall through to matrix-miss → full-GFA fallback (the very inflation pattern WF2 #3 just gated). | WF3 — one-line `.trim()` add at scopeMatrix build. |
+| MEDIUM | **`data_quality_snapshots` UPDATE assumes the row exists** (created later in the chain by `refresh-snapshot.js`). Brittle if chain order changes. | WF3 — switch to `INSERT ... ON CONFLICT (snapshot_date) DO UPDATE`. |
+| MEDIUM | **SOURCE_SQL complexity** (9 tables × multiple LATERAL subqueries) — performance liability as data grows. | Defer indefinitely; pre-materialize aggregations only after `EXPLAIN ANALYZE` shows real degradation. |
+| LOW | **`BULK_COLUMN_COUNT = 15` manually maintained** — adding a column to the INSERT without updating the constant breaks `BATCH_SIZE`. | WF3 — derive from a column-list array. |
+| NIT | **`batch.length = 0` micro-optimization** — readability tradeoff; `batch = []` is more idiomatic. | DEFER permanently — style preference. |
+
+### `src/features/leads/lib/get-lead-feed.ts` — DeepSeek review deferrals (9 findings, ALL pre-existing)
+
+| Severity | Item | Why deferred |
+|---|---|---|
+| HIGH | **`clampedLimit = NaN` when `input.limit` undefined** — `Math.max(1, undefined) → NaN`; `LIMIT $5::int` then errors at PG. Breaks the entire feed for any request without explicit `limit`. | WF3 — add `?? DEFAULT_FEED_LIMIT` before clamp. Check whether route-handler validation already prevents undefined from reaching this code. |
+| HIGH | **`clampedKm = NaN` when `input.radius_km` undefined** — `ST_DWithin` with NaN meters silently returns false → empty feed. | WF3 — bundle with the limit fix. |
+| HIGH | **`builder_candidates` `LEFT JOIN wsib_per_entity` filtered by `WHERE w.business_size IS NOT NULL`** acts as INNER JOIN — silently drops 30-50% of builder leads (new contractors, GTA-condition failures). Pre-existing performance optimization that introduced a regression. | WF3 — remove the WHERE; UI handles NULL business_size. Verify against Spec 91 §4.3 builder-display contract. |
+| MEDIUM | **Cursor pagination NULL CASE** — malformed cursor with NULL lead_id → empty page → client thinks feed is exhausted. | WF3 — COALESCE the CASE or validate cursor in route handler. |
+| MEDIUM | **`competition_count` not trade-scoped** — counts saves across all trades; same user counted multiple times if they saved the same permit for different trades. | WF3 — add `AND lv2.trade_slug = $1` to the subquery. Verify Spec 91 expectation. |
+| MEDIUM | **`proximity_score` CASE re-evaluates `geography <->` 8× per row** — wasteful for 30-row feed; expensive for builder CTE aggregate. | WF3 — compute distance once in subquery, reference column in CASE. |
+| LOW | **lead_views LEFT JOIN redundant decomposed-column predicates** — claim is index-selectivity but actual index is `(user_id, lead_key)` only. | DEFER — verify against `EXPLAIN ANALYZE`; remove predicates if no `(user_id, permit_num, revision_num)` index exists. |
+| LOW | **`avg_project_cost` / `value_score` repeat the same `AVG(COALESCE(...))` expression three times** — DB doesn't cross-aggregate-position-optimize CSE. | DEFER — perf optimization; only matters at high load. |
+| NIT | Cursor `$6::int IS NULL` and `$8` cast — defensive coding around malformed cursors. | DEFER permanently. |
+
+---
+
 ## WF2 (2026-05-08) — Resolved: live-DB harness already existed; lead-inspect adopted it
 _Resolution commit: `<pending>` (test added at `src/tests/db/lead-inspect-query.db.test.ts`)._
 
@@ -12,7 +48,7 @@ The original WF3 commit `73f3ae6` deferral said "no live-DB infra test exists" �
 
 | Severity | Source | Item | Planned Home |
 |---|---|---|---|
-| HIGH | WF2 live-DB test (this commit) | **4 production code paths join `neighbourhoods` against the wrong column** (city PK `neighbourhood_id` instead of the SERIAL `id` that `permits.neighbourhood_id` actually FKs to per migration 109 `fk_permits_neighbourhoods`). Silent miss — both columns are INTEGER so PG never errors; every permit gets the WRONG neighbourhood (and therefore the wrong `avg_household_income`, wrong `period_of_construction`, wrong `tenure_renter_pct`). Live-verified for permit `21 173458 BLD`: city PK 121 = "Oakridge" but the SERIAL 121 = "Englemount-Lawrence". Affected sites: (a) `src/features/leads/lib/get-lead-feed.ts:224` — affects every lead in the mobile feed, (b) `scripts/compute-cost-estimates.js:94` — affects `neighbourhood_premium` for every cost estimate (~237K rows), (c) `src/lib/market-metrics/queries.ts:344, 358` — admin market-metrics dashboards. Truth-rooted in `src/lib/leads/lead-detail-query.ts:101` and `src/app/api/permits/[id]/route.ts:173` which use the correct `n.id = p.neighbourhood_id` shape. | WF3 — fix all 4 sites in one commit; add a corresponding `compute-cost-estimates.db.test.ts` (and per-affected-endpoint live-DB tests) to regression-lock. Blast radius is broad enough that this should run multi-agent review per project feedback memory. |
+| ✅ RESOLVED | WF3 commit `<pending>` | **4 production code paths join `neighbourhoods` against the wrong column** — fixed in this WF3. All 4 sites (`get-lead-feed.ts`, `compute-cost-estimates.js`, `market-metrics/queries.ts ×2`) now use the FK-correct `n.id = p.neighbourhood_id` per migration 109. Spec 57 §2 amended to clarify `id SERIAL` is the PK and `neighbourhood_id INTEGER UNIQUE` is the natural city key. Regression-locked by `neighbourhoods-fk-join.infra.test.ts` (Layer 1) + `neighbourhoods-fk-join.db.test.ts` (Layer 2 live-DB). Multi-Agent Review run. **Operator runbook step (post-merge):** re-run `node scripts/compute-cost-estimates.js` to rewrite `cost_estimates` rows whose `premium_factor` / `estimated_cost` change under the corrected join (~237K rows; the `IS DISTINCT FROM` UPSERT guard limits WAL writes to actually-changed rows). |
 | MEDIUM | WF2 live-DB test (this commit) | **Other admin read-path endpoints have no live-DB regression-lock.** Now that `lead-inspect-query.db.test.ts` proves the pattern, other admin SQL surfaces (lead-feed health, flight-board detail, market-metrics) should follow. Each new live-DB test averages ~120 LoC of fixture seeding + a handful of assertions. | WF1/WF2 (separate) — incremental; not all need to ship at once. Highest-priority next adopters: `compute-cost-estimates.db.test.ts` (would catch the HIGH above), then admin lead-feed health endpoint. |
 
 ---

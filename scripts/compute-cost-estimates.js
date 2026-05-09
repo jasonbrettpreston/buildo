@@ -91,7 +91,14 @@ const SOURCE_SQL = `
     LIMIT 1
   ) pb ON true
   LEFT JOIN building_footprints bf ON bf.id = pb.building_id
-  LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
+  -- permits.neighbourhood_id is a FK to neighbourhoods.id (the SERIAL) per
+  -- migration 109 fk_permits_neighbourhoods. Joining against
+  -- n.neighbourhood_id (the city open-data PK) silently miss-matches every
+  -- row → wrong avg_household_income → wrong premium tier → wrong cost
+  -- estimate for ~237K permits. WF3 2026-05-08 corrective fix; operator
+  -- runbook: re-run this script post-merge so the IS DISTINCT FROM guard
+  -- rewrites cost_estimates rows whose premium_factor / estimated_cost change.
+  LEFT JOIN neighbourhoods n ON n.id = p.neighbourhood_id
   LEFT JOIN LATERAL (
     SELECT ARRAY_AGG(t.slug) AS active_trades
     FROM permit_trades pt2

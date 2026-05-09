@@ -21,7 +21,8 @@ As the geographic aggregation layer, this script ingests 158 Toronto neighbourho
 ### Target Table: `neighbourhoods`
 | Column | Type | Notes |
 |--------|------|-------|
-| `neighbourhood_id` | INTEGER | PK |
+| `id` | SERIAL | **Internal PK** — auto-incremented surrogate. FK targets across the codebase reference this column (e.g. `permits.neighbourhood_id` → `neighbourhoods.id` per migration 109 `fk_permits_neighbourhoods`). |
+| `neighbourhood_id` | INTEGER | UNIQUE NOT NULL — natural city open-data identifier. Used as the upsert key by `load-neighbourhoods.js`. NOT the FK target. |
 | `name` | TEXT | Neighbourhood name |
 | `geometry` | JSONB | GeoJSON polygon/multipolygon |
 | `geom` | GEOMETRY | PostGIS column (parallel to JSONB) |
@@ -29,8 +30,11 @@ As the geographic aggregation layer, this script ingests 158 Toronto neighbourho
 | `avg_household_income` | NUMERIC | From Census XLSX |
 | `population` | INTEGER | From Census XLSX |
 
-**PK:** `(neighbourhood_id)`
-**Upsert:** `ON CONFLICT (neighbourhood_id) DO UPDATE` with `IS DISTINCT FROM` on geometry
+**Internal PK:** `(id)` (SERIAL surrogate — universal `id SERIAL PK` convention shared with `parcels`, `permit_parcels`, `parcel_buildings`, etc.)
+**Natural identity:** `(neighbourhood_id)` UNIQUE — the city open-data integer the load script keys on.
+**Upsert:** `ON CONFLICT (neighbourhood_id) DO UPDATE` with `IS DISTINCT FROM` on geometry — uses the UNIQUE constraint, NOT the SERIAL PK.
+
+> **JOIN guidance (WF3 2026-05-08):** queries that consume `permits` MUST join via `n.id = p.neighbourhood_id` because `permits.neighbourhood_id` is a FK to the SERIAL `neighbourhoods.id` per migration 109 step 4. Joining via `n.neighbourhood_id = p.neighbourhood_id` silently miss-matches every row (both columns are INTEGER; PG never errors). Truth-rooted reference shapes: `src/lib/leads/lead-detail-query.ts`, `src/lib/leads/lead-inspect-query.ts`, `src/app/api/permits/[id]/route.ts`. Repaired sites in commit `<pending>`: `get-lead-feed.ts`, `compute-cost-estimates.js`, `market-metrics/queries.ts`. Regression-locked by `src/tests/neighbourhoods-fk-join.infra.test.ts` (Layer 1) and `src/tests/db/neighbourhoods-fk-join.db.test.ts` (Layer 2 live-DB).
 </architecture>
 
 ---

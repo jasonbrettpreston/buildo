@@ -218,10 +218,12 @@ export const LEAD_FEED_SQL = `
     JOIN permit_trades pt USING (permit_num, revision_num)
     JOIN trades t ON t.id = pt.trade_id
     LEFT JOIN cost_estimates ce USING (permit_num, revision_num)
-    -- LEFT JOIN: permits.neighbourhood_id is non-FK and may be NULL on
-    -- permits the geocoder failed to bucket. neighbourhoods.neighbourhood_id
-    -- is UNIQUE (migration 013 line 3) so this JOIN cannot multiply rows.
-    LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
+    -- LEFT JOIN: permits.neighbourhood_id is a FK to neighbourhoods.id
+    -- (the SERIAL) per migration 109 fk_permits_neighbourhoods. Joining
+    -- against n.neighbourhood_id (the city open-data PK) silently
+    -- miss-matches every row (both columns are INTEGER; PG never errors).
+    -- WF3 2026-05-08 corrective fix.
+    LEFT JOIN neighbourhoods n ON n.id = p.neighbourhood_id
     -- Phase 3-vi saved-state JOIN: lead_views is UNIQUE on
     -- (user_id, lead_key, trade_slug) per migration 070 line 28.
     -- The JOIN MUST match on lead_key to use the actual unique
