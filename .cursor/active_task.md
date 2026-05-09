@@ -1,122 +1,210 @@
-# Active Task: WF3 — repair 4 production code paths joining `neighbourhoods` against the wrong column
+# Active Task: WF3 — refine `shouldAppendRealtor` gating (sub-axes: permit_type + scope_tags) and purge ~125K wrong realtor rows
 **Status:** Implementation
-**Workflow:** WF3 (Fix — same root cause across 4 sites; bundling per project feedback memory "WF3 cadence — per-finding... bundle only on override". Override granted: same one-line fix in 4 files; atomic revert is simpler than 4 separate commits.)
-**Domain Mode:** Cross-Domain (Backend/Pipeline + Web Admin) — pipeline cost script + mobile-shared lead-feed query + admin market-metrics queries
-**Rollback Anchor:** `76dd665` (current HEAD on `main` — live-DB harness ship + WF3 73f3ae6 inspector revert)
-**Multi-Agent Review:** REQUIRED (HIGH severity per blast radius; user explicitly requested in `review_followups.md` triage).
+**Workflow:** WF3 (Fix — same root cause across the realtor classifier surface; bundling the dual-path mirror + 4 call sites is one finding, not four)
+**Domain Mode:** Cross-Domain (Backend/Pipeline + Web Admin) — `scripts/classify-permits.js` + `scripts/lib/permit-type-classifier.js` (JS dual-path) + `src/lib/classification/classifier.ts` + `src/lib/classification/permit-type-class.ts` (TS dual-path) + parity test + live-DB regression-lock
+**Rollback Anchor:** `09e8828` (current HEAD on `main` — neighbourhoods FK-join repair)
+**Multi-Agent Review:** REQUIRED per user request — Gemini + DeepSeek + worktree code-reviewer in parallel.
 
 ## Context
 
-* **Bug:** `permits.neighbourhood_id` is a FK to `neighbourhoods.id` (the SERIAL primary key) per migration 109 step 4 (`fk_permits_neighbourhoods` — `ADD CONSTRAINT … FOREIGN KEY (neighbourhood_id) REFERENCES neighbourhoods(id)`; step 4b nullified non-matching rows; step 4c VALIDATEd against all 237K permits). Four production code paths join on `n.neighbourhood_id = p.neighbourhood_id` instead — that's joining the city open-data PK against the SERIAL FK. Both columns are `INTEGER` so PG raises no error; the join silently miss-matches every row.
-* **Live-verified miss:** for permit `21 173458 BLD` (`neighbourhood_id = 121`):
-  - Correct (`n.id = p.neighbourhood_id`): "Englemount-Lawrence", `avg_household_income = $96,300` etc. — what the FK guarantees.
-  - Wrong (`n.neighbourhood_id = p.neighbourhood_id`): "Oakridge", different income — silently returned by the 4 broken sites.
-* **Affected sites + impact:**
+* **Bug:** WF2 #2 (`9fdd31e`) gated realtor on `permit_type_class === 'construction'` per Spec 80 §5 — but the `construction` class (mig 120, WF2 #1) bundles too much. Live audit against the dev DB (2026-05-09):
 
-  | # | File:line | Column read off the wrong row | Blast radius |
+  | permit_type | class | realtor rows | Realtor-relevant? |
   |---|---|---|---|
-  | 1 | `src/features/leads/lib/get-lead-feed.ts:224` | `n.avg_household_income` | EVERY permit lead in the mobile feed gets the wrong neighbourhood income → wrong premium displayed in the lead card |
-  | 2 | `scripts/compute-cost-estimates.js:94` | `n.avg_household_income`, `n.tenure_renter_pct` | The Brain's `computePremiumFactor()` reads the wrong income → wrong tier → wrong cost estimate. ~237K cost_estimates rows currently store the wrong `premium_factor` and (consequently) `estimated_cost` |
-  | 3 | `src/lib/market-metrics/queries.ts:344` | `n.name`, demographic columns | Admin market-metrics dashboard groups by the wrong neighbourhood label |
-  | 4 | `src/lib/market-metrics/queries.ts:358` | Same | Same |
+  | Plumbing(PS) | construction | 50,763 | NO — trade-only fix permit |
+  | Small Residential Projects | construction | 50,662 | YES |
+  | Mechanical(MS) | construction | 41,877 | NO — HVAC trade-only |
+  | Building Additions/Alterations | construction | 36,326 | YES |
+  | Drain and Site Service | construction | 16,241 | NO — sewer/drain trade |
+  | New Houses | construction | 13,785 | YES |
+  | Residential Building Permit | construction | 3,386 | YES |
+  | New Building | construction | 2,761 | YES (when residential) |
+  | Demolition Folder (DM) | construction | 2,573 | NO — pre-construction; the new build gets realtor |
+  | Non-Residential Building Permit | construction | 875 | NO — commercial |
 
-  **Reference truth-rooted shapes (correct already):** `src/lib/leads/lead-detail-query.ts:101` (`n.id = p.neighbourhood_id`) and `src/app/api/permits/[id]/route.ts:173` (`WHERE id = $1`) — both verified at commit `76dd665`.
+  PLUS **75,795 realtor rows** sit on permits with `'commercial' = ANY(scope_tags)`. The current contract emits realtor for every construction-class permit; the right contract emits realtor only when the permit is plausibly a "home will be sold" signal.
 
-* **Target Spec:** `docs/specs/01-pipeline/57_source_neighbourhoods.md` §2 — **REQUIRES AMENDMENT**. Spec 57 currently says `neighbourhoods` PK is `(neighbourhood_id)`, but the actual schema (mig 013) makes `id SERIAL` the PK and `neighbourhood_id INTEGER UNIQUE NOT NULL` (the city open-data identifier). Mig 109 step 4 FKs `permits.neighbourhood_id` against `neighbourhoods.id` (the SERIAL), consistent with the project's universal `id SERIAL PK` convention (`parcels`, `permit_parcels`, `parcel_buildings`, etc.). The 4 wrong-join sites (`get-lead-feed.ts`, `compute-cost-estimates.js`, `market-metrics/queries.ts ×2`) appear to have been written from Spec 57's stated PK and never reconciled with the SERIAL. Spec 57 §2 amendment: clarify `id` is the SERIAL PK and `neighbourhood_id` is the natural city key (UNIQUE) used for upsert + load-neighbourhoods.js identity. Permits FK explicitly named.
-* **Spec 47 §18.2** confirms `permits.neighbourhood_id` is the canonical FK example for "Municipal / external source data → ON DELETE SET NULL" behaviour, matching mig 109's actual ADD CONSTRAINT.
-* No amendment needed in Spec 71 (mobile lead feed), Spec 83 (cost model), or Spec 76 (lead-feed health dashboard) — none prescribe the wrong-join shape; they reference the neighbourhood premium / display abstractly.
+* **Goal:** Refine `shouldAppendRealtor` from a 1-axis check (`permitClass === 'construction'`) to a 3-axis check:
+  1. `permitClass === 'construction'` (existing — keeps the safe-skip default for unclassified/non-construction)
+  2. `permit_type ∈ REALTOR_RELEVANT_TYPES` — NEW. The 5 residential building permit types: `New Building`, `Building Additions/Alterations`, `New Houses`, `Small Residential Projects`, `Residential Building Permit`. Excludes trade-only permits (PLB, MS, DSS), demolition (DM), and commercial (Non-Residential Building Permit).
+  3. `'commercial' ∉ scope_tags` — NEW. Filters mixed-use permits where the residential building type carries a commercial scope tag (e.g., a `Building Additions/Alterations` to a commercial unit). Catches the 75,795 row class regardless of permit_type.
 
-* **Behavioral expectation post-merge:** the 4 sites return correct neighbourhoods. The cost-estimates rows in production are still wrong until `compute-cost-estimates.js` runs again — the pipeline's `IS DISTINCT FROM` UPSERT guard will rewrite each row whose `premium_factor` (and therefore `estimated_cost`) changes. Re-run is a separate operator step (not part of this commit's blast radius).
+* **Behavioral expectation post-merge:** the contract emits realtor only for residential structural permits without commercial scope. The pipeline re-run (`classify-permits.js`) DELETE+INSERTs `permit_trades`, so ~125K wrong realtor rows disappear naturally and ~75K right realtor rows on residential additions/new builds are preserved.
+
+* **Target Spec:** `docs/specs/01-pipeline/80_taxonomies.md` §5 (Cost-model + Trade-matrix sub-tables already document the existing class gating; this WF amends to introduce sub-axes within the construction class for the realtor signal specifically). Spec 91 §3.5 (mobile lead feed realtor wire-up) is a downstream consumer that needs only a cross-reference, not a contract change.
 
 ## Technical Implementation
 
-### The fix (4 sites, same one-line change)
+### Design choice: code constant vs DB-driven taxonomy
 
-```sql
--- BEFORE (WRONG — silent miss)
-LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
+**Option A (code constant) — chosen.** `REALTOR_RELEVANT_TYPES` is a frozen Set in both TS and JS dual-path mirrors. Surgical fix; ships fast. Trade-off: adding a residential type requires a code deploy.
 
--- AFTER (FK-correct per mig 109)
-LEFT JOIN neighbourhoods n ON n.id = p.neighbourhood_id
+**Option B (DB-driven `permit_type_classifications.realtor_eligible BOOLEAN`).** Operator-tunable per Spec 86 §1. Bigger scope: migration + admin UI + lookup-map change in both surfaces. Filed as deferred follow-up in `review_followups.md`. Future WF when the residential type list churns or operator-side experimentation is needed.
+
+### The new contract
+
+```ts
+// TS — src/lib/classification/permit-type-class.ts
+export const REALTOR_RELEVANT_TYPES = new Set([
+  'New Building',
+  'Building Additions/Alterations',
+  'New Houses',
+  'Small Residential Projects',
+  'Residential Building Permit',
+] as const);
+
+export function shouldAppendRealtor(
+  permitClass: PermitTypeClass,
+  permitType: string | null | undefined,
+  scopeTags: readonly string[] | null | undefined,
+): boolean {
+  if (permitClass !== CONSTRUCTION) return false;
+  if (permitType == null || !REALTOR_RELEVANT_TYPES.has(permitType)) return false;
+  if (scopeTags?.includes('commercial')) return false;
+  return true;
+}
 ```
 
-Each site keeps its existing `LEFT JOIN` / `JOIN` keyword + alias. The only change is the join key. No SELECT list changes. No TS interface changes. No mapper changes.
+```js
+// JS mirror — scripts/lib/permit-type-classifier.js
+const REALTOR_RELEVANT_TYPES = Object.freeze(new Set([
+  'New Building',
+  'Building Additions/Alterations',
+  'New Houses',
+  'Small Residential Projects',
+  'Residential Building Permit',
+]));
 
-### Test layering — two layers
+function shouldAppendRealtor(permitClass, permitType, scopeTags) {
+  if (permitClass !== CONSTRUCTION) return false;
+  if (permitType == null || !REALTOR_RELEVANT_TYPES.has(permitType)) return false;
+  if (Array.isArray(scopeTags) && scopeTags.includes('commercial')) return false;
+  return true;
+}
+```
 
-**Layer 1 (always-on): SQL-shape regression-lock per site.**
-Single new test file `src/tests/neighbourhoods-fk-join.infra.test.ts` (text/regex over the 4 source files). Forbids `n.neighbourhood_id = p.neighbourhood_id` in any of the 4 files; requires `n.id = p.neighbourhood_id`. Cheap, no DB. Catches text regression. Mirrors the existing `lead-inspect-query.infra.test.ts` pattern.
+Edge cases:
+- `permit_type === null` — fail-closed (no realtor). Production data always has permit_type set (NOT NULL in mig 001's source-data shape, though the column itself allows NULL); fail-closed is the conservative default.
+- `scope_tags === null` — pass through. NULL means "no scope classified yet"; we don't assume commercial in absence of evidence. Aligns with Spec 80 §5 default-discipline (default-to-safe-skip applies to enum, not array).
+- `scope_tags === ['commercial', 'residential']` — fail-closed (commercial present). Mixed-use is rare; a future WF can add nuance if it surfaces.
 
-**Layer 2 (live-DB, gated on `DATABASE_URL`): one new live-DB test.**
-`src/tests/db/neighbourhoods-fk-join.db.test.ts` — seeds two neighbourhoods that have IDENTICAL SERIAL `id` and city PK `neighbourhood_id` values across them so the wrong-join would resolve to a different name. Then queries each of the 4 SQL surfaces (one assertion per file) and asserts the returned neighbourhood matches the FK-correct one. This is the regression-lock that proves the join is correct end-to-end.
+### Call-site updates (4 sites — same one-line change pattern)
 
-### Data correction — out of scope but documented
+| Surface | File:line | Current call | New call |
+|---|---|---|---|
+| TS classifier | `src/lib/classification/classifier.ts` (`appendRealtorMatch` callsite) | `shouldAppendRealtor(permitClass)` | `shouldAppendRealtor(permitClass, permit.permit_type, permit.scope_tags)` |
+| JS pipeline | `scripts/classify-permits.js` (`appendRealtorMatch` callsite) | same | same |
 
-Pre-existing `cost_estimates` rows for ~237K permits store the wrong `premium_factor` (and consequently a slightly-wrong `estimated_cost`). After this commit ships, the operator should re-run `node scripts/compute-cost-estimates.js` — the script is idempotent and the bulk UPSERT's `IS DISTINCT FROM` guard rewrites only the rows whose values actually changed (likely the vast majority). Filed as a runbook step in the commit message; not a separate WF.
+The `appendRealtorMatch` helper signatures may also need to thread `permit_type` and `scope_tags`. R5 walks each file to confirm.
+
+### Test layering
+
+| File | New / extended assertions |
+|---|---|
+| `src/tests/permit-type-class.logic.test.ts` | (extend) `shouldAppendRealtor` signature change — JS↔TS surface parity for every (class × permit_type × scope_tags) cell. Forbidden combinations: trade-only types, commercial scope, non-construction class. Allowed combinations: 5 residential types × construction × scope_tags without 'commercial'. |
+| `src/tests/classification.logic.test.ts` (or `realtor-availability-guard.logic.test.ts`) | (extend) `classifyPermit` integration tests for the new gating axes — every existing realtor-related fixture confirms the new contract; new fixtures cover the 4 reject cases (PLB, MS, DM, commercial-scoped). |
+| **NEW** `src/tests/db/realtor-gating.db.test.ts` | Live-DB regression-lock — seed 6 permits (one per permit_type × scope_tag combination above), run `classifyPermit` on each, assert the realtor TradeMatch is appended only on the 1 valid row. This is the test that would have caught the 75K commercial-realtor row class at WF2 #2 commit time. |
+| `src/tests/parity-battery.test.ts` (if it covers realtor) | (extend) verify the JS/TS Brain dual-path returns identical realtor decisions for the new 3-axis contract. |
 
 ### Files (Modified / New)
 
-- **MODIFIED** `src/features/leads/lib/get-lead-feed.ts` — line 224 join
-- **MODIFIED** `scripts/compute-cost-estimates.js` — line 94 join
-- **MODIFIED** `src/lib/market-metrics/queries.ts` — lines 344 + 358 joins
-- **NEW** `src/tests/neighbourhoods-fk-join.infra.test.ts` — Layer 1 SQL-shape regression-lock for all 4 sites
-- **NEW** `src/tests/db/neighbourhoods-fk-join.db.test.ts` — Layer 2 live-DB regression-lock proving each surface returns the FK-correct row
-- **MODIFIED** `docs/reports/review_followups.md` — strike the WF3 HIGH item (now resolved); preserve the MEDIUM ("extend live-DB coverage to other admin read-paths") for future incremental adopters
-- **MODIFIED** `docs/specs/01-pipeline/57_source_neighbourhoods.md` §2 — clarify `id SERIAL` PK vs `neighbourhood_id INTEGER UNIQUE` natural city key; cross-reference mig 109 fk_permits_neighbourhoods so future implementers don't repeat the same wrong-join mistake
+- **MODIFIED** `src/lib/classification/permit-type-class.ts` — add `REALTOR_RELEVANT_TYPES` + extend `shouldAppendRealtor` signature + JSDoc + cross-reference Spec 80 §5
+- **MODIFIED** `scripts/lib/permit-type-classifier.js` — JS mirror (Spec 7 §7.1 dual-path)
+- **MODIFIED** `src/lib/classification/classifier.ts` — flow `permit_type` + `scope_tags` into the realtor append callsite
+- **MODIFIED** `scripts/classify-permits.js` — same on the JS side; the in-memory fixture-loop already has the row's permit_type + scope_tags
+- **MODIFIED** `src/tests/permit-type-class.logic.test.ts` — JS↔TS surface parity for new contract
+- **MODIFIED** `src/tests/classification.logic.test.ts` (or `realtor-availability-guard.logic.test.ts`) — integration fixtures
+- **NEW** `src/tests/db/realtor-gating.db.test.ts` — live-DB regression-lock (7 fixtures + 1 smoke = 8 assertions)
+- **MODIFIED** `docs/specs/01-pipeline/80_taxonomies.md` §5 — append a "Realtor signal sub-gating" sub-table mirroring the existing Cost-model behaviors structure
+- **MODIFIED** `docs/specs/03-mobile/91_mobile_lead_feed.md` §3.5 — cross-reference (one-line note pointing back to Spec 80 §5)
+- **MODIFIED** `docs/reports/review_followups.md` — file deferred Option B (DB-driven `realtor_eligible` column) as a future WF candidate
 
 ### Database Impact
 
-NONE for schema. The pipeline re-run (post-merge) will rewrite `cost_estimates.premium_factor` + `estimated_cost` for permits whose neighbourhood premium tier changed. The bulk UPSERT's `IS DISTINCT FROM` guard limits WAL writes to the rows that actually changed. No migration. No DDL.
+NONE for schema. The pipeline re-run (post-merge) regenerates `permit_trades` via the existing DELETE+INSERT pattern in `classify-permits.js`. Expected impact: ~125K wrong realtor rows deleted (the trade-only / DM / commercial / non-residential rows), ~95K correct realtor rows preserved (the residential building types without commercial scope). No migration. No DDL.
 
 ## Standards Compliance
 
-* **§2 Error handling:** No new throws or catches; no error-pathway changes.
-* **§3 Database:** Pipeline-level data correction is incremental — one re-run rewrites only changed rows. No `ALTER TABLE` involved.
-* **§4.2 Parameterization:** All 4 sites use parameterized queries; this commit changes only the JOIN predicate string, not parameterization.
-* **§5.2 Test file pattern:** new infra test mirrors existing convention; new `*.db.test.ts` mirrors the just-shipped `lead-inspect-query.db.test.ts`.
-* **§6 Logging:** No new log sites.
-* **§7 Dual Code Path:** N/A — each site is in its own surface (TS read-path or JS pipeline).
-* **§9 Pipeline Safety:** `compute-cost-estimates.js` change preserves all existing transaction boundaries, batch sizing, advisory lock, IS DISTINCT FROM guard, and audit_table emission.
-* **Spec 47 §R*:** unchanged contract — pipeline script structure intact.
-* **Spec 80 §5 / Spec 83:** orthogonal; the fix doesn't touch permit_type_class gating or cost-model formula.
-* **No backwards-compat hacks:** literal text replacement; no shim, no flag, no removed-comment dance.
+* **§2 Error handling:** No new throws. The signature extension is a pure-function change.
+* **§5.1 Typed factories:** new live-DB test reuses the `getTestPool` + `dbAvailable` pattern proven by `lead-inspect-query.db.test.ts` and `neighbourhoods-fk-join.db.test.ts`.
+* **§5.2 Test file pattern:** new `*.db.test.ts` follows the established convention.
+* **§7 Dual Code Path:** `REALTOR_RELEVANT_TYPES` mirrored TS↔JS; parity regression-locked by `permit-type-class.logic.test.ts`.
+* **§9 Pipeline Safety:** classify-permits.js DELETE+INSERT transaction boundary preserved. The in-memory fixture loop already has `permit_type` and `scope_tags` (no extra DB read needed).
+* **Spec 47 §R*:** unchanged contract — no new logic_variables, no Zod schema changes.
+* **Spec 80 §5:** amended to introduce sub-axes within the construction class for the realtor signal. The trade-matrix gating (`filterTradesByClass`) and cost-model gating (`shouldApplyCostSlicing`) are unchanged.
+* **No backwards-compat hacks:** the extended signature requires updating every call site — same boundary churn that WF2 #2 accepted (existing tests need fixture updates to thread `permit_type` + `scope_tags`).
 
 ## State Verification (DONE before plan-lock)
 
-* Re-confirmed mig 109 step 4 (`fk_permits_neighbourhoods FOREIGN KEY (neighbourhood_id) REFERENCES neighbourhoods(id)`) at lines 147–171 — the FK is to the SERIAL.
-* Re-confirmed via live query against dev DB: permit `21 173458 BLD` joined `n.id = 121` → "Englemount-Lawrence" (correct); joined `n.neighbourhood_id = 121` → "Oakridge" (silently miss-matched).
-* `grep` across `src/` and `scripts/` confirmed exactly 4 wrong-join sites + 2 correct sites; no others.
-* Live-DB harness already proven by `src/tests/db/lead-inspect-query.db.test.ts` (commit `76dd665`).
+* Live DB query 2026-05-09 confirmed:
+  - 219,564 realtor rows on construction-class permits (the universe under the current contract)
+  - Top 10 permit_types by realtor count: 50K PLB, 50K Small Residential, 42K MS, 36K Building Add/Alt, 16K DSS, 14K New Houses, 3K Residential Building, 2.7K New Building, 2.5K DM, 875 Non-Residential
+  - 75,795 realtor rows have `'commercial' = ANY(scope_tags)`
+* WF2 #2 contract (commit `9fdd31e`) confirmed at `src/lib/classification/permit-type-class.ts` `shouldAppendRealtor` and `scripts/lib/permit-type-classifier.js` mirror.
+* The 5 residential building types are exactly the permit_types `permit_type_classifications` mig 120 classified as `construction` AND the user identified as residential structural work in this session.
+* `permit_type` is read in both classifier surfaces alongside `scope_tags` already; the call-site extension is a parameter-threading change, not a new DB read.
 
 ## Execution Plan
-- [ ] **R1** — Rollback anchor confirmed: `76dd665`. Branch: `main`.
-- [ ] **R2** — State verification: re-grep the 4 sites + 2 correct reference sites; copy exact line numbers into the test fixtures.
-- [ ] **R3** — Spec Review: skim Spec 71 §3 (mobile lead feed), Spec 83 §3 (cost-model neighbourhood premium tier), Spec 76 §3 (admin market-metrics dashboards) — confirm none of them prescribe the wrong-join shape (they don't; this is purely an implementation drift).
+
+- [ ] **R1** — Rollback anchor confirmed: `09e8828`. Branch: `main`.
+- [ ] **R2** — Re-grep both classifier surfaces for the existing `shouldAppendRealtor()` callsites; confirm exactly 2 (TS + JS); confirm the call sites have `permit_type` + `scope_tags` in scope.
+- [ ] **R3** — Spec Review: re-read Spec 80 §5, Spec 91 §3.5 (mobile realtor wire-up), Spec 7 §7.1 (dual-path).
 - [ ] **R4** — Reproduction tests FIRST (Red Light), one file at a time:
-  - `src/tests/neighbourhoods-fk-join.infra.test.ts` — 8 regex assertions (4 sites × 2 directions: forbid-wrong + require-correct). Run vitest → MUST fail (`n.neighbourhood_id` literals still in source).
-  - `src/tests/db/neighbourhoods-fk-join.db.test.ts` — seeds + queries each of the 4 SQL surfaces, asserts FK-correct neighbourhood comes back. Run with `DATABASE_URL=...` → MUST fail (current join returns wrong row).
-- [ ] **R5** — Implementation (one site at a time, atomic per-site):
-  - `src/features/leads/lib/get-lead-feed.ts` — flip line 224
-  - `src/lib/market-metrics/queries.ts` — flip line 344
-  - `src/lib/market-metrics/queries.ts` — flip line 358
-  - `scripts/compute-cost-estimates.js` — flip line 94 (BIG blast radius — last to keep rollback discipline clean)
-- [ ] **R6** — Green Light: targeted tests pass; `npm run typecheck && npm run lint -- --fix && npm run test` (live-DB tests skip without `DATABASE_URL`; full suite stays green).
-- [ ] **R7** — Idempotency: re-run live-DB test 2× consecutively — confirm fixture seed + cleanup repeatable.
-- [ ] **R8** — Live verification: with `DATABASE_URL=postgres://postgres:postgres@localhost:5432/buildo` set:
-  - `npx vitest run src/tests/db/neighbourhoods-fk-join.db.test.ts` → 4/4 pass
-  - Sample query against live DB: pick permit `21 173458 BLD` and verify `getLeadFeed` returns "Englemount-Lawrence" (not "Oakridge")
+  - Extend `permit-type-class.logic.test.ts` with the new 3-axis parity matrix (TS + JS).
+  - Extend `classification.logic.test.ts` (or `realtor-availability-guard.logic.test.ts`) with the 4 reject-case fixtures (PLB, MS, DM, commercial-scoped).
+  - Author `src/tests/db/realtor-gating.db.test.ts` — seeds 6 permits across the contract matrix; runs `classifyPermit` on each; asserts realtor appended only on the residential-non-commercial row.
+  - Run vitest with `DATABASE_URL` set → all new tests MUST fail.
+- [ ] **R5** — Implementation (one file at a time):
+  - `src/lib/classification/permit-type-class.ts` — add `REALTOR_RELEVANT_TYPES` + extend signature
+  - `scripts/lib/permit-type-classifier.js` — mirror
+  - `src/lib/classification/classifier.ts` — thread args at the realtor append callsite
+  - `scripts/classify-permits.js` — same on the JS side
+  - `docs/specs/01-pipeline/80_taxonomies.md` §5 — Realtor signal sub-gating sub-table
+  - `docs/specs/03-mobile/91_mobile_lead_feed.md` §3.5 — cross-reference
+  - `docs/reports/review_followups.md` — file Option B deferral
+- [ ] **R6** — Green Light: targeted tests pass; `npm run typecheck && npm run lint -- --fix && npm run test`.
+- [ ] **R7** — Idempotency: re-run live-DB test 2× consecutively.
+- [ ] **R8** — Live verification:
+  - Re-run live audit query: confirm the new contract would fire on a sample of seeded fixtures.
+  - Ad-hoc: pick one of each rejected permit_type from real dev DB, call `classifyPermit` on it via a debug script, confirm realtor is NOT in the matches.
 - [ ] **R9** — Pre-Review Self-Checklist (5 items):
-  1. All 4 sites flipped to `n.id = p.neighbourhood_id` and zero remaining `n.neighbourhood_id = p.neighbourhood_id` literals across `src/` + `scripts/`?
-  2. SQL-shape regression-lock test asserts both directions for each of the 4 files (forbid-wrong + require-correct)?
-  3. Live-DB test exercises all 4 surfaces?
-  4. `IS DISTINCT FROM` guard in `compute-cost-estimates.js` bulk UPSERT preserved (the WAL bloat guard from Spec 47 §6.4)?
-  5. Commit message documents the operator runbook step (re-run `compute-cost-estimates.js` to rewrite stale rows)?
-- [ ] **R10** — **Multi-Agent Review (REQUIRED — explicit user request per HIGH blast radius):** parallel Gemini + DeepSeek + worktree code-reviewer (single message, three parallel tool calls per `scripts/CLAUDE.md` Multi-Agent Review pattern). Files: `scripts/compute-cost-estimates.js` (Gemini, against Spec 83) + `src/features/leads/lib/get-lead-feed.ts` (DeepSeek, against Spec 71) + worktree code-reviewer covers the whole diff against migration 109's FK contract. Triage: BUG → file new WF3 before Green Light; DEFER → append to `docs/reports/review_followups.md`.
-- [ ] **R11** — Atomic commit on `main`: `fix(00-architecture): WF3 — repair 4 production paths that silently miss-join neighbourhoods on the city PK instead of the SERIAL FK (mig 109)`. Spec 05 §5 footer.
+  1. `REALTOR_RELEVANT_TYPES` is mirrored TS↔JS with identical entries (5 strings, exact case)?
+  2. The 3-axis check fires in correct order (`permitClass` → `permitType` → `scopeTags`); each axis has unit-level coverage?
+  3. Live-DB test seeds at least one fixture for each of the 4 reject classes (trade-only, demolition, non-residential, commercial-scope) + at least one allow class?
+  4. The DELETE+INSERT pattern in classify-permits.js is preserved (no transaction boundary disturbed by the parameter-threading change)?
+  5. Commit message documents the operator runbook step (re-run `classify-permits.js` post-merge)?
+- [ ] **R10** — **Multi-Agent Review (REQUIRED — user request, three parallel tool calls in a single message):**
+  - Gemini: review `scripts/classify-permits.js` against `docs/specs/01-pipeline/80_taxonomies.md`
+  - DeepSeek: review `src/lib/classification/classifier.ts` against `docs/specs/01-pipeline/80_taxonomies.md` + `docs/specs/03-mobile/91_mobile_lead_feed.md`
+  - Worktree code-reviewer (subagent_type `feature-dev:code-reviewer`, `isolation: "worktree"`): full diff vs. Spec 80 §5 amended contract — generate own checklist from the 3-axis contract + the live-data evidence (75K commercial rows, 50K PLB rows, etc.)
+  - Triage: BUG → file new WF3 before Green Light; DEFER → append to `docs/reports/review_followups.md`.
+- [ ] **R11** — Atomic commit on `main`: `fix(80_taxonomies): WF3 — refine shouldAppendRealtor with 3-axis gating (permit_type + scope_tags + class)`. Spec 05 §5 footer with operator runbook.
 - [ ] **R12** — Push `main`.
 
-§10 note: 4 sites bundled (override of WF3 per-finding default per project feedback memory) because they share one root cause + one literal fix; atomic revert is simpler than 4 commits. Pipeline data correction (re-running compute-cost-estimates.js to rewrite ~237K rows with the corrected `premium_factor`/`estimated_cost`) is OPERATOR work — documented in commit message, not in this commit's diff.
+§10 note: 5 sites bundled (extension of `shouldAppendRealtor` signature touches both dual-path mirrors + 2 call sites + 2 spec docs + 1 review_followups entry). Same root-cause; atomic revert simpler than 5 commits. Multi-agent review required per user; 3 parallel reviewers.
 
 > **PLAN LOCKED. Do you authorize this WF3 plan? (y/n)**
-> §10 note: 4 sites bundled, multi-agent review required (user request), pipeline data correction is operator work post-merge.
-> DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.
+> §10 note: 3-axis gating (class + permit_type + scope_tags), dual-path TS↔JS, live-DB test catches the 75K commercial class, multi-agent review required, post-merge runbook re-runs classify-permits.
+
+---
+
+## Next-steps preview (separate WFs after this one ships)
+
+These are **NOT** in scope for this WF3 — captured here so the user has the sequencing decision in front of them when this commit lands.
+
+### Next: WF2 #C — Backfill `building_footprints.footprint_area_sqm` (DATA-QUALITY blocker)
+**Severity:** HIGH — corrupts Spec 83 cost model for every permit (Surgical Triangle silently falls back to lot-size every time because all 427,077 building_footprints rows have `footprint_area_sqm = NULL`).
+**Approach:** investigate whether `building_footprints.geometry` (JSONB) holds the polygon — if so, a one-shot backfill computes `ST_Area(ST_GeomFromGeoJSON(geometry)::geography)` per row in a single migration. Otherwise re-fetch from the source CKAN dataset (Spec 50-style). Bonus: `max_height_m` and `min_height_m` may have the same gap — diagnose during the WF.
+**Then:** **execute the deferred runbook** (`node scripts/compute-cost-estimates.js`) to rewrite ~237K cost_estimates rows with both the corrected neighbourhood join (commit `09e8828`) AND the corrected GFA path (post-backfill). The `IS DISTINCT FROM` UPSERT guard limits WAL writes to changed rows.
+**Estimated scope:** small migration + one debug query + one runbook execution. Half a day.
+
+### Then: WF1 #B — Lifecycle inspector enhancements (Spec 84 §5 closure)
+**Closes Spec 84 bug 84-W4** — "Dead Transition Write: Ledger is written but not used."
+**Three additions to `LeadInspect.lifecycle` panel:**
+1. `transitions[]` — list of `{from_phase, to_phase, transitioned_at, duration_days_in_from_phase}` per permit (computed from the ledger; ledger has 356,058 rows across 221,694 permits).
+2. `phase_name` — friendly name per Spec 84 §3 (e.g., `P7c → "Issued (Late)"`). Static module-level map mirroring Spec 84 §3 table; 23 entries (P1-P20 × prefixes + O1-O3 + INTAKE_*).
+3. `phase_avg_days_by_permit_type` — median + p25 + p75 duration in the current phase, scoped to `permit_type` group. Cached via `phase_calibration` table if it exists (Spec 85 §2 references it) or computed lazily with a CTE.
+**Estimated scope:** SQL extension + JSDoc/TS interface extension + map module + Spec 84/76 cross-references + live-DB inspector test extension. One day.
+
+### Last: Option B realtor follow-up (DB-driven `realtor_eligible` column)
+**Filed as deferred** in this WF3's `review_followups.md` update. Operator-tunable per Spec 86 §1 if the residential-types list churns. Low priority; raise only when a 6th residential type emerges or the Spec 80 §5 sub-table becomes contentious.

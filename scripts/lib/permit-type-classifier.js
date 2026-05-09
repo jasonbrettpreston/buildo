@@ -137,14 +137,38 @@ function filterTradesByClass(matches, permitClass) {
 }
 
 /**
- * Realtor's "home will be sold" signal applies only to construction-class
- * permits. Mirror of TS-side `shouldAppendRealtor`.
+ * Residential building permit_types — WF3 2026-05-09 sub-axis 2 of
+ * `shouldAppendRealtor`. Mirror of TS-side `REALTOR_RELEVANT_TYPES`. Drift
+ * between this set and the TS counterpart breaks classification silently;
+ * regression-locked by permit-type-class.logic.test.ts.
+ */
+const REALTOR_RELEVANT_TYPES = Object.freeze(new Set([
+  'New Building',
+  'Building Additions/Alterations',
+  'New Houses',
+  'Small Residential Projects',
+  'Residential Building Permit',
+]));
+
+/**
+ * Realtor's "home will be sold" signal — 3-axis gate (WF3 2026-05-09):
+ *   1. permitClass === 'construction'   (class-level)
+ *   2. permit_type ∈ REALTOR_RELEVANT_TYPES   (residential structural only)
+ *   3. 'commercial' ∉ scope_tags          (catches mixed-use)
+ *
+ * Mirror of TS-side `shouldAppendRealtor`. See spec docs/specs/01-pipeline/
+ * 80_taxonomies.md §5 Realtor sub-gating sub-table for rationale.
  *
  * @param {string} permitClass
+ * @param {string|null|undefined} permitType
+ * @param {readonly string[]|null|undefined} scopeTags
  * @returns {boolean}
  */
-function shouldAppendRealtor(permitClass) {
-  return permitClass === CONSTRUCTION;
+function shouldAppendRealtor(permitClass, permitType, scopeTags) {
+  if (permitClass !== CONSTRUCTION) return false;
+  if (permitType == null || !REALTOR_RELEVANT_TYPES.has(permitType)) return false;
+  if (Array.isArray(scopeTags) && scopeTags.includes('commercial')) return false;
+  return true;
 }
 
 // ─── WF2 #3 (2026-05-08) — Cost-model gate per class ──────────────────────
@@ -167,6 +191,7 @@ module.exports = {
   filterTradesByClass,
   shouldAppendRealtor,
   shouldApplyCostSlicing,
+  REALTOR_RELEVANT_TYPES,
   PERMIT_TYPE_CLASSES,
   PERMIT_CLASS_TRADE_ALLOWLIST,
   CONSTRUCTION,

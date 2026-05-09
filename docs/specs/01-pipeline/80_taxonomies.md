@@ -132,6 +132,27 @@ Realtor's "home will be sold" signal applies only to construction-class permits.
 
 **Behavioral expectation** post-WF2 #2: a re-run of `classify-permits.js` produces a different `permit_trades` row set for the 4.5% non-construction permit_types. Existing wrong rows for these permits become orphans; an explicit one-shot DELETE pass is filed as a follow-up WF3 (orphan cleanup is not part of WF2 #2 to keep the rollback boundary clean).
 
+#### Realtor sub-gating within the construction class (WF3 2026-05-09)
+
+The construction class (mig 120) bundles too much for the realtor signal alone. A live audit against the dev DB found 219K realtor rows on construction-class permits — but 50K were on `Plumbing(PS)`, 42K on `Mechanical(MS)`, 16K on `Drain and Site Service`, 2.5K on `Demolition Folder (DM)`, and 75K on permits with `'commercial' = ANY(scope_tags)`. None of those signal "home will be sold."
+
+`shouldAppendRealtor` is therefore a 3-axis gate within the construction class:
+
+| Axis | Pass condition | Rationale |
+|---|---|---|
+| 1. Class | `permitClass === 'construction'` | Existing class-level gate (kept). |
+| 2. permit_type | `permit_type ∈ REALTOR_RELEVANT_TYPES` | The 5 residential structural building permit types: `New Building`, `Building Additions/Alterations`, `New Houses`, `Small Residential Projects`, `Residential Building Permit`. Excludes trade-only permits (PLB, MS, DSS), demolition (DM), non-residential. |
+| 3. scope_tags | `'commercial' ∉ scope_tags` | Catches mixed-use permits where the residential building type carries a commercial scope tag. Mixed `[residential, commercial]` is fail-closed. `null`/`undefined`/empty scope_tags is permissive (no commercial evidence). |
+
+`REALTOR_RELEVANT_TYPES` is a code constant mirrored TS↔JS via Spec 7 §7.1 dual-path (`src/lib/classification/permit-type-class.ts` + `scripts/lib/permit-type-classifier.js`). Parity regression-locked by `src/tests/permit-type-class.logic.test.ts` and live-DB regression-locked by `src/tests/db/realtor-gating.db.test.ts`. Contract null/undefined edge cases:
+- `permit_type === null/undefined` → fail-closed
+- `permit_type` not in `REALTOR_RELEVANT_TYPES` → fail-closed
+- `scope_tags === null/undefined/[]` → permissive
+
+**Behavioral expectation** post-WF3 (2026-05-09): a re-run of `classify-permits.js` produces a different `permit_trades` row set for ~125K wrong realtor rows (the trade-only / DM / commercial / non-residential rows). The classifier uses an **UPSERT + ghost-DELETE pattern** — `INSERT ... ON CONFLICT DO UPDATE` for every trade the classifier emits, then a targeted ghost-DELETE removes rows that the classifier no longer emits for each permit (the wrong realtor rows fall in this bucket post-fix). The two phases are separate `withTransaction` calls per batch; ~95K correct realtor rows on residential additions/new builds without commercial scope are preserved. Operator runbook: re-run `node scripts/classify-permits.js` post-merge.
+
+> **Future operator-tunable variant (deferred WF):** add `permit_type_classifications.realtor_eligible BOOLEAN` so the residential-types list lives in the DB and is editable via Spec 86 §1 admin Control Panel without a code deploy. Filed in `docs/reports/review_followups.md` as Option B.
+
 ### Cost-model behaviors (WF2 #3, 2026-05-08)
 
 `scripts/compute-cost-estimates.js` (the Muscle) and `src/features/leads/lib/cost-model-shared.js` (the Brain — single source of truth) gate the Surgical Triangle (Spec 83 §3) on `permit_type_class`. The Brain inlines the check (`row.permit_type_class === 'construction'`); both dual-path surfaces export a `shouldApplyCostSlicing(permitClass)` helper for downstream consumers and the parity test.

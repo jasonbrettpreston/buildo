@@ -235,25 +235,90 @@ describe('filterTradesByClass — pass-through / empty / narrow filtering', () =
   });
 });
 
-describe('shouldAppendRealtor — gates realtor on construction class only', () => {
-  it('construction → true', () => {
-    expect(shouldAppendRealtor('construction')).toBe(true);
+describe('shouldAppendRealtor — 3-axis gating (WF3 2026-05-09): class + permit_type + scope_tags', () => {
+  // Axis 1: class — only construction passes
+  describe('Axis 1 — permitClass', () => {
+    it('construction + residential type + no commercial scope → true', () => {
+      expect(shouldAppendRealtor('construction', 'New Houses', null)).toBe(true);
+    });
+
+    it('signage → false (signs do not generate listing opportunities)', () => {
+      expect(shouldAppendRealtor('signage', 'New Houses', null)).toBe(false);
+    });
+
+    it('administrative → false', () => {
+      expect(shouldAppendRealtor('administrative', 'New Houses', null)).toBe(false);
+    });
+
+    it('safety_upgrade → false', () => {
+      expect(shouldAppendRealtor('safety_upgrade', 'New Houses', null)).toBe(false);
+    });
+
+    it('unclassified → false (safe-skip default per Spec 80 §5)', () => {
+      expect(shouldAppendRealtor('unclassified', 'New Houses', null)).toBe(false);
+    });
   });
 
-  it('signage → false (signs do not generate listing opportunities)', () => {
-    expect(shouldAppendRealtor('signage')).toBe(false);
+  // Axis 2: permit_type — only the 5 residential building types pass
+  describe('Axis 2 — permit_type (WF3 2026-05-09 — eliminates trade-only / demolition / commercial classes)', () => {
+    it.each([
+      'New Building',
+      'Building Additions/Alterations',
+      'New Houses',
+      'Small Residential Projects',
+      'Residential Building Permit',
+    ])('residential type "%s" → true', (permitType) => {
+      expect(shouldAppendRealtor('construction', permitType, null)).toBe(true);
+    });
+
+    it.each([
+      'Plumbing(PS)',
+      'Mechanical(MS)',
+      'Drain and Site Service',
+      'Demolition Folder (DM)',
+      'Non-Residential Building Permit',
+    ])('non-residential / trade-only type "%s" → false', (permitType) => {
+      expect(shouldAppendRealtor('construction', permitType, null)).toBe(false);
+    });
+
+    it('null permit_type → false (fail-closed)', () => {
+      expect(shouldAppendRealtor('construction', null, null)).toBe(false);
+    });
+
+    it('undefined permit_type → false (fail-closed)', () => {
+      expect(shouldAppendRealtor('construction', undefined, null)).toBe(false);
+    });
+
+    it('unknown permit_type (not in REALTOR_RELEVANT_TYPES) → false', () => {
+      expect(shouldAppendRealtor('construction', 'Some Future Type', null)).toBe(false);
+    });
   });
 
-  it('administrative → false', () => {
-    expect(shouldAppendRealtor('administrative')).toBe(false);
-  });
+  // Axis 3: scope_tags — must NOT contain 'commercial'
+  describe('Axis 3 — scope_tags commercial filter (catches the 75K commercial-realtor row class)', () => {
+    it('null scope_tags → pass through (no commercial evidence)', () => {
+      expect(shouldAppendRealtor('construction', 'New Houses', null)).toBe(true);
+    });
 
-  it('safety_upgrade → false', () => {
-    expect(shouldAppendRealtor('safety_upgrade')).toBe(false);
-  });
+    it('undefined scope_tags → pass through', () => {
+      expect(shouldAppendRealtor('construction', 'New Houses', undefined)).toBe(true);
+    });
 
-  it('unclassified → false (safe-skip default)', () => {
-    expect(shouldAppendRealtor('unclassified')).toBe(false);
+    it('empty array scope_tags → pass through', () => {
+      expect(shouldAppendRealtor('construction', 'New Houses', [])).toBe(true);
+    });
+
+    it('residential scope_tags → pass through', () => {
+      expect(shouldAppendRealtor('construction', 'New Houses', ['residential'])).toBe(true);
+    });
+
+    it('commercial in scope_tags → false', () => {
+      expect(shouldAppendRealtor('construction', 'New Houses', ['commercial'])).toBe(false);
+    });
+
+    it('mixed-use [residential, commercial] → false (commercial evidence wins, fail-closed)', () => {
+      expect(shouldAppendRealtor('construction', 'Building Additions/Alterations', ['residential', 'commercial'])).toBe(false);
+    });
   });
 });
 
@@ -279,6 +344,44 @@ describe('shouldApplyCostSlicing — gates Surgical Triangle on construction onl
   it('unclassified → false (safe-skip default per Spec 80 §5)', () => {
     expect(shouldApplyCostSlicing('unclassified')).toBe(false);
   });
+});
+
+describe('shouldAppendRealtor — JS↔TS surface parity (3-axis WF3 2026-05-09)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const jsHelper = require('../../scripts/lib/permit-type-classifier') as {
+    shouldAppendRealtor: (cls: string, pt?: string | null, st?: readonly string[] | null) => boolean;
+    REALTOR_RELEVANT_TYPES?: ReadonlySet<string>;
+  };
+
+  it('JS helper exports REALTOR_RELEVANT_TYPES', () => {
+    expect(jsHelper.REALTOR_RELEVANT_TYPES).toBeDefined();
+  });
+
+  // Cross-product cases — every (class × permit_type × scope_tag presence)
+  // must agree byte-for-byte between TS and JS surfaces.
+  const PARITY_CASES: Array<[string, string | null, readonly string[] | null]> = [
+    ['construction', 'New Houses', null],
+    ['construction', 'New Building', ['residential']],
+    ['construction', 'Building Additions/Alterations', ['commercial']],
+    ['construction', 'Plumbing(PS)', null],
+    ['construction', 'Demolition Folder (DM)', null],
+    ['construction', null, null],
+    ['signage', 'New Houses', null],
+    ['administrative', 'New Houses', null],
+    ['unclassified', 'New Houses', null],
+    ['safety_upgrade', 'New Houses', null],
+  ];
+
+  it.each(PARITY_CASES)(
+    'JS and TS agree for (class=%s, type=%s, scope=%s)',
+    (cls, type, scope) => {
+      // The TS shouldAppendRealtor signature requires a PermitTypeClass; we
+      // pass the string through as PermitTypeClass for parity coverage.
+      expect(jsHelper.shouldAppendRealtor(cls, type, scope)).toBe(
+        shouldAppendRealtor(cls as PermitTypeClass, type, scope),
+      );
+    },
+  );
 });
 
 describe('shouldApplyCostSlicing — JS↔TS surface parity (Spec 7 §7.1)', () => {

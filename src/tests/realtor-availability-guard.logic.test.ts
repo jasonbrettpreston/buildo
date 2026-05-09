@@ -93,6 +93,104 @@ describe('classifyPermit — realtorAvailable option (WF3 startup-guard)', () =>
   });
 });
 
+// ─── WF3 2026-05-09 — Sub-axes within construction class ─────────────────
+//
+// The realtor signal "home will be sold" only fires for residential structural
+// permits without commercial scope. The construction-class bundle (mig 120,
+// WF2 #1) was too coarse: included trade-only permits (PLB/MS/DSS) and
+// demolition (DM). 75K rows on commercial-scoped permits ALSO got realtor.
+// Sub-axes added: permit_type ∈ REALTOR_RELEVANT_TYPES + 'commercial' ∉ scope_tags.
+
+describe('classifyPermit — realtor sub-gating (WF3 2026-05-09): permit_type and scope_tags axes', () => {
+  it('Plumbing(PS) construction permit → NO realtor (trade-only fix permit)', () => {
+    const plumbingPermit: Partial<Permit> = {
+      ...minimalPermit,
+      permit_type: 'Plumbing(PS)',
+    };
+    const matches = classifyPermit(plumbingPermit, noRules, undefined, {
+      permitClass: 'construction',
+    });
+    expect(matches.some((m) => m.trade_slug === 'realtor')).toBe(false);
+  });
+
+  it('Mechanical(MS) construction permit → NO realtor (HVAC trade-only)', () => {
+    const mechanicalPermit: Partial<Permit> = {
+      ...minimalPermit,
+      permit_type: 'Mechanical(MS)',
+    };
+    const matches = classifyPermit(mechanicalPermit, noRules, undefined, {
+      permitClass: 'construction',
+    });
+    expect(matches.some((m) => m.trade_slug === 'realtor')).toBe(false);
+  });
+
+  it('Demolition Folder (DM) construction permit → NO realtor (the new build gets realtor instead)', () => {
+    const demoPermit: Partial<Permit> = {
+      ...minimalPermit,
+      permit_type: 'Demolition Folder (DM)',
+    };
+    const matches = classifyPermit(demoPermit, noRules, undefined, {
+      permitClass: 'construction',
+    });
+    expect(matches.some((m) => m.trade_slug === 'realtor')).toBe(false);
+  });
+
+  it('Non-Residential Building Permit construction permit → NO realtor (commercial)', () => {
+    const nonResPermit: Partial<Permit> = {
+      ...minimalPermit,
+      permit_type: 'Non-Residential Building Permit',
+    };
+    const matches = classifyPermit(nonResPermit, noRules, undefined, {
+      permitClass: 'construction',
+    });
+    expect(matches.some((m) => m.trade_slug === 'realtor')).toBe(false);
+  });
+
+  it('Building Additions/Alterations with commercial scope_tag → NO realtor (75K row class)', () => {
+    const commercialAlteration: Partial<Permit> = {
+      ...minimalPermit,
+      permit_type: 'Building Additions/Alterations',
+    };
+    const matches = classifyPermit(commercialAlteration, noRules, ['commercial'], {
+      permitClass: 'construction',
+    });
+    expect(matches.some((m) => m.trade_slug === 'realtor')).toBe(false);
+  });
+
+  it('mixed-use [residential, commercial] → NO realtor (commercial wins, fail-closed)', () => {
+    const mixedPermit: Partial<Permit> = {
+      ...minimalPermit,
+      permit_type: 'New Houses',
+    };
+    const matches = classifyPermit(mixedPermit, noRules, ['residential', 'commercial'], {
+      permitClass: 'construction',
+    });
+    expect(matches.some((m) => m.trade_slug === 'realtor')).toBe(false);
+  });
+
+  it('New Houses with residential scope_tag → realtor appended (the canonical pass case)', () => {
+    const newHousePermit: Partial<Permit> = {
+      ...minimalPermit,
+      permit_type: 'New Houses',
+    };
+    const matches = classifyPermit(newHousePermit, noRules, ['residential'], {
+      permitClass: 'construction',
+    });
+    expect(matches.some((m) => m.trade_slug === 'realtor')).toBe(true);
+  });
+
+  it('Small Residential Projects with no scope_tags → realtor appended (null is permissive)', () => {
+    const smallResPermit: Partial<Permit> = {
+      ...minimalPermit,
+      permit_type: 'Small Residential Projects',
+    };
+    const matches = classifyPermit(smallResPermit, noRules, undefined, {
+      permitClass: 'construction',
+    });
+    expect(matches.some((m) => m.trade_slug === 'realtor')).toBe(true);
+  });
+});
+
 describe('checkRealtorAvailable helper — DB lookup with defensive failure mode', () => {
   // The helper lives at scripts/lib/pipeline-realtor-availability.js. We
   // require it via dynamic import per the existing pattern for testing

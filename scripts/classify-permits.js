@@ -442,7 +442,11 @@ function appendRealtorMatch(matches, permit, phase, runAt, realtorAvailable) {
  */
 function applyClassGating(matches, permit, phase, runAt, realtorAvailable, permitClass) {
   const filtered = filterTradesByClass(matches, permitClass);
-  if (!shouldAppendRealtor(permitClass)) return filtered;
+  // WF3 2026-05-09 — 3-axis gate: class + permit_type + scope_tags. The
+  // construction class alone is too coarse (mig 120 bundles trade-only
+  // permits, demolition, and non-residential). See Spec 80 §5 Realtor
+  // sub-gating sub-table.
+  if (!shouldAppendRealtor(permitClass, permit.permit_type, permit.scope_tags)) return filtered;
   return appendRealtorMatch(filtered, permit, phase, runAt, realtorAvailable);
 }
 

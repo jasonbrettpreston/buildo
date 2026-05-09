@@ -102,17 +102,53 @@ export function filterTradesByClass<T extends { trade_slug: string }>(
 }
 
 /**
- * Realtor's "home will be sold" signal applies only to construction-class
- * permits (renovations/additions/new builds). Sign permits, fee deferrals,
- * and fire-upgrade permits do NOT generate listing opportunities, so the
- * realtor TradeMatch should not be appended for those classes.
+ * Residential building permit_types that signal "home will be sold."
+ * WF3 2026-05-09 — sub-axis 2 of `shouldAppendRealtor`. The construction
+ * class (mig 120) bundles trade-only permits (PLB/MS/DSS), demolition (DM),
+ * and non-residential — none of which signal a real-estate listing
+ * opportunity. The 5 entries below are the residential structural permit
+ * types per a live-DB audit + Spec 80 §5 amended Realtor sub-table.
+ *
+ * Mirror lives at scripts/lib/permit-type-classifier.js per Spec 7 §7.1
+ * dual-path; parity regression-locked by permit-type-class.logic.test.ts.
+ */
+export const REALTOR_RELEVANT_TYPES: ReadonlySet<string> = new Set([
+  'New Building',
+  'Building Additions/Alterations',
+  'New Houses',
+  'Small Residential Projects',
+  'Residential Building Permit',
+]);
+
+/**
+ * Realtor's "home will be sold" signal — 3-axis gate (WF3 2026-05-09):
+ *   1. permitClass === 'construction'  (existing class-level gate)
+ *   2. permit_type ∈ REALTOR_RELEVANT_TYPES  (residential structural only)
+ *   3. 'commercial' ∉ scope_tags  (catches mixed-use)
+ *
+ * All three axes must pass. Trade-only permits (Plumbing(PS), Mechanical(MS),
+ * Drain and Site Service), demolition (DM), and commercially-scoped permits
+ * — even when classified as construction by mig 120 — do NOT generate listing
+ * opportunities.
+ *
+ * Edge cases:
+ *   - permit_type null/undefined → false (fail-closed)
+ *   - permit_type not in REALTOR_RELEVANT_TYPES → false
+ *   - scope_tags null/undefined/empty → permissive (no commercial evidence)
+ *   - 'commercial' in scope_tags (even alongside 'residential') → false
  *
  * Branches on `permit_type_class` (DB-derived, NOT account_preset). Spec 95
- * §2.5.1 anti-pattern (no persona-axis branching) preserved — `trade_slug`
- * + `permit_type_class` are both canonical algorithmic axes.
+ * §2.5.1 anti-pattern (no persona-axis branching) preserved.
  */
-export function shouldAppendRealtor(permitClass: PermitTypeClass): boolean {
-  return permitClass === CONSTRUCTION;
+export function shouldAppendRealtor(
+  permitClass: PermitTypeClass,
+  permitType: string | null | undefined,
+  scopeTags: readonly string[] | null | undefined,
+): boolean {
+  if (permitClass !== CONSTRUCTION) return false;
+  if (permitType == null || !REALTOR_RELEVANT_TYPES.has(permitType)) return false;
+  if (scopeTags?.includes('commercial')) return false;
+  return true;
 }
 
 // ─── WF2 #3 (2026-05-08) — Cost-model gate per class ─────────────────────

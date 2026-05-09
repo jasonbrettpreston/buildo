@@ -3,6 +3,52 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF3 (2026-05-09) — Multi-Agent Review deferrals from realtor sub-gating commit
+_Source: Gemini review of `classify-permits.js` + DeepSeek review of `classifier.ts` + worktree code-reviewer of full diff. Worktree review found 1 important fix (applied this commit). Gemini + DeepSeek findings are ALL pre-existing structural issues unrelated to the realtor sub-gating fix — bundling them in this WF3 would explode the blast radius. Each is a separate WF candidate._
+
+**Applied this commit (worktree IMPORTANT #1, conf 82):**
+- ✅ Spec 80 §5 corrected — replaced "DELETE+INSERT pattern" with "UPSERT + ghost-DELETE pattern" (the actual `classify-permits.js` mechanism: `INSERT ... ON CONFLICT DO UPDATE` followed by a targeted ghost-DELETE in a separate `withTransaction`).
+
+**Worktree deferred nits:**
+| Severity | Item | Rationale |
+|---|---|---|
+| NIT (worktree, conf 50) | DB test fixture doesn't cover "Non-Residential Building Permit" — covered by logic test only. | Logic test covers it; DB fixture covers the 4 primary audit-identified categories (PLB, MS, DM, commercial-scope). Defer. |
+| NIT (worktree, conf 40) | TS uses `scopeTags?.includes()` (optional chaining); JS uses `Array.isArray() && .includes()`. Cosmetic divergence. | Parity test regression-locks behavioral equivalence. Defer. |
+| NIT (worktree, conf 45) | `realtor-gating.db.test.ts` `afterAll` calls `pool.end()` — pre-existing pattern across all 3 db.test.ts files. | Not introduced by WF3; check `setup-testcontainer.ts` semantics if pattern surfaces flaky tests. |
+
+**`scripts/classify-permits.js` — Gemini deferrals (9 findings, ALL pre-existing):**
+| Severity | Item | Rationale |
+|---|---|---|
+| CRITICAL | `classifyPermit` only processes Tier 1 rules — Tier 2/3 DB rules silently discarded. The tag-trade matrix is hardcoded; DB-driven Tier 2/3 rules never run. | Pre-existing architectural choice. Tier 2 = hardcoded matrix in code; Tier 3 = dead code. Treat as a major refactor WF (move tag matrix to DB OR remove dead Tier 3 path). Not bundled here. |
+| HIGH | Phase determination uses `* 30` for month math — drifts at 3/9/18-month boundaries. | Pre-existing. Use `date-fns differenceInMonths` or day-based thresholds. WF3 candidate. |
+| HIGH | Ghost-trade cleanup uses multiple `unnest`-in-`IN`/`NOT EXISTS` clauses — Postgres planner anti-pattern. | Pre-existing. Replace with `DELETE WHERE (permit_num, revision_num) IN (...)` + `INSERT ON CONFLICT`. WF3 candidate. |
+| HIGH | `extractPermitCode` regex requires preceding space — fails on `24-12345-BLD` format. | Pre-existing. Loosen regex to `[-\s]` delimiter. WF3 candidate. |
+| MEDIUM | `statusBaseScore` uses `s.includes()` — "Application for Revocation" matches `'application'` (20) instead of `'revocation'` (5). | Pre-existing. Order checks most-specific first OR use `\b` word boundaries. WF3 candidate. |
+| MEDIUM | Work-field fallback assigned `tier: 1` — same precedence as direct rule match. | Pre-existing. Should be tier 3+. Defer. |
+| MEDIUM | Hardcoded `TRADES`/`TAG_TRADE_MATRIX`/`WORK_TRADE_FALLBACK` (line 42 admits "to avoid module resolution issues") — TS↔JS divergence risk. | Pre-existing architectural debt. WF1/WF2 candidate to centralize as JSON or shared lib. |
+| LOW | `try/catch` in Tier 3 regex match fails silently — invalid DB regex falls back to `includes()` without warning. | Pre-existing. Add `pipeline.log.warn` on regex compile failure. Defer. |
+| NIT × 2 | Tier precedence in merge logic; duplicated `days` calc in `calculateLeadScore`. | Pre-existing. Defer. |
+
+**`src/lib/classification/classifier.ts` — DeepSeek deferrals (7 findings; 1 misinformed; 6 pre-existing):**
+| Severity | Item | Rationale |
+|---|---|---|
+| (rejected as misinformed) | DeepSeek CRITICAL "`permitClass` defaults to `UNCLASSIFIED` silently empties output" | This is the **intended safe-skip default per Spec 80 §5** (WF2 #2 design). Defaulting to `'construction'` would silently over-classify unknown permits. Documented in JSDoc + Spec 80 §5. Defer permanently. |
+| HIGH | Dead `tier === 3` branch in `fieldMatches` executes user-supplied pattern as regex — ReDoS risk if a malicious admin pattern is inserted. | Pre-existing dead code (Tier 3 rules never reach this surface per Gemini's pre-existing finding above). Remove the dead branch. WF3 candidate. |
+| MEDIUM | `WORK_SCOPE_EXCLUSIONS` undocumented in spec — silent filter for `Fire Alarm`/`Sprinklers`/`Interior Alterations`. | Pre-existing. Document in Spec 80 OR remove. Defer. |
+| MEDIUM | `REALTOR_TRADE_ID = 33` hardcoded — risk if mig 118 row is ever renumbered. | Pre-existing. The constant matches mig 118's seed; renumbering is a breaking change requiring its own migration. Defer (matches the `REALTOR_TRADE_ID_JS` constant on the JS side). |
+| LOW × 2 | Redundant `'i'` flag on already-lowercased `fieldValue`; `getFieldValue` indexed-property prototype-pollution risk. | Pre-existing micro-issues. Defer. |
+| NIT × 2 | `applyClassGating` could be reordered for filter symmetry; `TradeMatch` factory duplication. | Pre-existing. Defer. |
+
+---
+
+## WF3 (2026-05-09) — Realtor sub-gating: Option B deferred (DB-driven `realtor_eligible` column)
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| LOW (future enhancement) | WF3 realtor sub-gating commit `<pending>` | **Make `REALTOR_RELEVANT_TYPES` operator-tunable via `permit_type_classifications.realtor_eligible BOOLEAN`.** Today the residential-types list is a code constant mirrored TS↔JS. If the residential type list churns (e.g., a new permit_type emerges or the policy contract changes), the change requires a code deploy. Per Spec 86 §1 the project pattern for taxonomies-with-policy is a DB column + admin Control Panel surface. Migration adds the column with a backfill of `TRUE` for the 5 currently-relevant types and `FALSE` for the rest; classifier loads via `loadPermitTypeClassMap` (already loaded once at startup); admin UI reuses the existing GlobalConfigCard pattern. | Future WF — not blocked by anything. Raise priority only when a 6th residential type emerges or operator-side experimentation is needed. |
+
+---
+
 ## WF3 (2026-05-08) — Multi-Agent Review deferrals from neighbourhoods FK-join repair commit
 _Source: Gemini review of `compute-cost-estimates.js` + DeepSeek review of `get-lead-feed.ts` + worktree code-reviewer of full diff. ALL findings below are pre-existing structural issues unrelated to the wrong-join fix; bundling into the WF3 would have exploded blast radius beyond the surgical correction. Each is a meaningful separate WF._
 

@@ -452,9 +452,15 @@ function applyClassGating(
   phase: string,
   realtorAvailable: boolean,
   permitClass: PermitTypeClass,
+  scopeTags: readonly string[] | undefined,
 ): TradeMatch[] {
   const filtered = filterTradesByClass(matches, permitClass);
-  if (!shouldAppendRealtor(permitClass)) return filtered;
+  // WF3 2026-05-09 — 3-axis gate: class + permit_type + scope_tags. The
+  // construction class alone is too coarse (mig 120 bundles trade-only
+  // permits, demolition, and non-residential). See Spec 80 §5 Realtor
+  // sub-gating sub-table. scope_tags arrives via classifyPermit's existing
+  // `scopeTags` arg (NOT on `Permit` — it's a separate axis from the row).
+  if (!shouldAppendRealtor(permitClass, permit.permit_type, scopeTags)) return filtered;
   return appendRealtorMatch(filtered, permit, phase, realtorAvailable);
 }
 
@@ -474,7 +480,7 @@ export function classifyPermit(
   if (isNarrowScope) {
     const tier1 = matchTier1Rules(permit, rules, phase);
     const limited = applyScopeLimit(tier1, permit.permit_num, permit.work);
-    if (limited.length > 0) return applyClassGating(limited, permit, phase, realtorAvailable, permitClass);
+    if (limited.length > 0) return applyClassGating(limited, permit, phase, realtorAvailable, permitClass, scopeTags);
 
     // Fallback: assign code's allowed trades at 0.80 confidence
     const allowed = NARROW_SCOPE_CODES[code!]!;
@@ -514,6 +520,7 @@ export function classifyPermit(
       phase,
       realtorAvailable,
       permitClass,
+      scopeTags,
     );
   }
 
@@ -558,6 +565,7 @@ export function classifyPermit(
     phase,
     realtorAvailable,
     permitClass,
+    scopeTags,
   );
 }
 
