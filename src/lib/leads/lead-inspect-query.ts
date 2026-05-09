@@ -180,11 +180,16 @@ const MAIN_SQL = `
      LIMIT 1
   ) pb ON true
   LEFT JOIN building_footprints bf ON bf.id = pb.building_id
-  -- WF3 2026-05-08: permits.neighbourhood_id references the city open-data
-  -- neighbourhoods.neighbourhood_id, NOT the SERIAL parcels.id. Joining on
-  -- the SERIAL silently miss-matches every row → neighbourhood panel shows
-  -- empty. Mirrors compute-cost-estimates.js SOURCE_SQL line 93.
-  LEFT JOIN neighbourhoods n ON n.neighbourhood_id = p.neighbourhood_id
+  -- WF2 2026-05-08 revert: permits.neighbourhood_id references the SERIAL
+  -- neighbourhoods.id per FK constraint fk_permits_neighbourhoods (mig 109
+  -- step 4b nullified non-matching rows then VALIDATEd). The previous WF3
+  -- 73f3ae6 commit changed this to n.neighbourhood_id based on the
+  -- compute-cost-estimates.js SOURCE_SQL pattern — but that pattern is
+  -- also wrong (silent miss; produces wrong neighbourhood per permit) and
+  -- is filed for separate WF3 cleanup. Lead-detail-query.ts has the
+  -- FK-correct shape. Live-DB test lead-inspect-query.db.test.ts pins
+  -- this contract from now on.
+  LEFT JOIN neighbourhoods n ON n.id = p.neighbourhood_id
   -- Matrix lookup: scope_intensity_matrix (permit_type × structure_type → allocation %)
   -- per Spec 83 §3B. The other two cost.inputs fields (structure_complexity_factor,
   -- neighbourhood_premium_tier) are surfaced via separate paths:

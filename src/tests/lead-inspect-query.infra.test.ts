@@ -89,16 +89,23 @@ describe('lead-inspect-query.ts — SQL-shape regression-lock (WF3 2026-05-08)',
     expect(src).toMatch(/parc\.lot_size_sqm[\s\S]*?AS\s+parcel_area_sqm/i);
   });
 
-  // ─── Drift #3: silent miss on neighbourhoods JOIN — n.id vs n.neighbourhood_id
+  // ─── Drift #3 (CORRECTED 2026-05-08): permits.neighbourhood_id is a
+  // FK to neighbourhoods.id (SERIAL) per migration 109 fk_permits_neighbourhoods.
+  // The earlier WF3 73f3ae6 commit incorrectly flipped this to n.neighbourhood_id
+  // based on compute-cost-estimates.js — but that script is ALSO wrong (separate
+  // WF3 deferred to review_followups.md). The truth: lead-detail-query.ts:101
+  // uses `n.id = p.neighbourhood_id` and that's the FK-correct join.
 
-  it('joins neighbourhoods on n.neighbourhood_id (city open-data PK), NOT n.id (SERIAL)', () => {
-    // permits.neighbourhood_id references the city open-data PK
-    // (neighbourhoods.neighbourhood_id), NOT the SERIAL primary key.
-    // Joining on n.id silently miss-matches every row.
-    expect(src).toMatch(/LEFT\s+JOIN\s+neighbourhoods\s+n\s+ON\s+n\.neighbourhood_id\s*=\s*p\.neighbourhood_id/i);
+  it('joins neighbourhoods on n.id = p.neighbourhood_id (the SERIAL FK per mig 109)', () => {
+    // Mig 109 step 4a-c: ALTER TABLE permits ADD CONSTRAINT fk_permits_neighbourhoods
+    //   FOREIGN KEY (neighbourhood_id) REFERENCES neighbourhoods(id);
+    // Step 4b nullified non-matching rows. Step 4c VALIDATEd. → permits.neighbourhood_id
+    // CONTAINS SERIAL `id` values. Joining on n.neighbourhood_id (the city
+    // open-data PK) returns the WRONG neighbourhood for every permit.
+    expect(src).toMatch(/LEFT\s+JOIN\s+neighbourhoods\s+n\s+ON\s+n\.id\s*=\s*p\.neighbourhood_id/i);
   });
 
-  it('does NOT join neighbourhoods on n.id (regression-lock against the silent-miss bug)', () => {
-    expect(src).not.toMatch(/JOIN\s+neighbourhoods\s+n\s+ON\s+n\.id\s*=\s*p\.neighbourhood_id/i);
+  it('does NOT join neighbourhoods on n.neighbourhood_id (regression-lock against the FK-wrong join)', () => {
+    expect(src).not.toMatch(/JOIN\s+neighbourhoods\s+n\s+ON\s+n\.neighbourhood_id\s*=\s*p\.neighbourhood_id/i);
   });
 });

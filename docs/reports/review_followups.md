@@ -3,12 +3,17 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
-## WF3 (2026-05-08) — Live-DB infra-test harness for read-only SQL endpoints
-_Source: lead-inspect-query.ts column-drift bug (WF3 fix `<commit-pending>`) — caught only by manual repro, not by any existing test._
+## WF2 (2026-05-08) — Resolved: live-DB harness already existed; lead-inspect adopted it
+_Resolution commit: `<pending>` (test added at `src/tests/db/lead-inspect-query.db.test.ts`)._
 
-| Severity | Source | Item | Why deferred |
+The original WF3 commit `73f3ae6` deferral said "no live-DB infra test exists" — that was wrong. The harness exists at `src/tests/db/setup-testcontainer.ts` (`getTestPool()` + `dbAvailable()` helpers + `*.db.test.ts` convention with 5 prior adopters). The actual gap was that WF2 #4 didn't add an inspector adopter. Fixed in this WF2.
+
+**Surfaced during the test work — files for follow-up:**
+
+| Severity | Source | Item | Planned Home |
 |---|---|---|---|
-| MEDIUM | WF3 lead-inspect column-drift fix | **No live-DB infra test exists for any read-only SQL endpoint.** The lead-inspect bug (`pb.area_sqm` referencing a column that doesn't exist on `parcel_buildings`) shipped silently in WF2 #4 commit `6683477` because `admin-leads-inspect.infra.test.ts` mocks `fetchLeadInspect` AND `admin-detail-inspectors.ui.test.tsx` mocks the API entirely. Across all 80+ `*.infra.test.ts` files in the project, every single one is text/regex-shape on file contents — none execute SQL against a live DB. A `DATABASE_URL`-gated harness that runs read-only inspect SQL against the dev DB with a known sample permit would catch column drift the moment a migration ALTERs/DROPs a column the inspector reads. Same mechanism could regression-lock other admin read-paths (lead-feed, flight-board detail) and the cost-model SOURCE_SQL. **Fix:** add a small `getInspectTestPool()` helper + a `lead-inspect-query.live.infra.test.ts` (skip when `DATABASE_URL` unset) that calls `fetchLeadInspect(pool, knownPermit)` and asserts no exception. Establishes the pattern; subsequent endpoints follow. | WF3 (separate) — pattern-setting work that exceeds the blast radius of the immediate bug fix. |
+| HIGH | WF2 live-DB test (this commit) | **4 production code paths join `neighbourhoods` against the wrong column** (city PK `neighbourhood_id` instead of the SERIAL `id` that `permits.neighbourhood_id` actually FKs to per migration 109 `fk_permits_neighbourhoods`). Silent miss — both columns are INTEGER so PG never errors; every permit gets the WRONG neighbourhood (and therefore the wrong `avg_household_income`, wrong `period_of_construction`, wrong `tenure_renter_pct`). Live-verified for permit `21 173458 BLD`: city PK 121 = "Oakridge" but the SERIAL 121 = "Englemount-Lawrence". Affected sites: (a) `src/features/leads/lib/get-lead-feed.ts:224` — affects every lead in the mobile feed, (b) `scripts/compute-cost-estimates.js:94` — affects `neighbourhood_premium` for every cost estimate (~237K rows), (c) `src/lib/market-metrics/queries.ts:344, 358` — admin market-metrics dashboards. Truth-rooted in `src/lib/leads/lead-detail-query.ts:101` and `src/app/api/permits/[id]/route.ts:173` which use the correct `n.id = p.neighbourhood_id` shape. | WF3 — fix all 4 sites in one commit; add a corresponding `compute-cost-estimates.db.test.ts` (and per-affected-endpoint live-DB tests) to regression-lock. Blast radius is broad enough that this should run multi-agent review per project feedback memory. |
+| MEDIUM | WF2 live-DB test (this commit) | **Other admin read-path endpoints have no live-DB regression-lock.** Now that `lead-inspect-query.db.test.ts` proves the pattern, other admin SQL surfaces (lead-feed health, flight-board detail, market-metrics) should follow. Each new live-DB test averages ~120 LoC of fixture seeding + a handful of assertions. | WF1/WF2 (separate) — incremental; not all need to ship at once. Highest-priority next adopters: `compute-cost-estimates.db.test.ts` (would catch the HIGH above), then admin lead-feed health endpoint. |
 
 ---
 
