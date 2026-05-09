@@ -3,6 +3,54 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF2 #C (2026-05-09) — Multi-Agent Review deferrals from massing area backfill commit
+_Source: Gemini review of `load-massing.js` + DeepSeek review of `mig 122` + worktree code-reviewer of full diff. Worktree found 1 real CRITICAL fix (applied this commit). Gemini + DeepSeek findings are mostly pre-existing structural concerns + a few legitimate enhancements; bundling them in this WF2 #C would explode the blast radius._
+
+**Applied this commit (worktree BUG-2, conf 92 — real concurrency window):**
+- ✅ Removed `footprint_area_sqm = EXCLUDED.footprint_area_sqm` and `footprint_area_sqft = EXCLUDED.footprint_area_sqft` from the `INSERT ... ON CONFLICT DO UPDATE SET` clause in `load-massing.js`. Also removed `footprint_area_sqm IS DISTINCT FROM EXCLUDED.footprint_area_sqm` from the WHERE guard. Without this fix, every quarterly re-load would NULL-overwrite the entire 427K-row column and create a window for `compute-cost-estimates.js` (lock 83, independent of lock 56) to read NULLs and silently fall back to lot-size GFA. The post-INSERT UPDATE pass is now sole authority for the area columns. Regression-locked by 2 new assertions in `load-massing.infra.test.ts`.
+
+**Rejected:**
+- Worktree BUG-1 (conf 100) "Migration 122 + 3 test files do not exist on disk." Misinformed — the worktree agent runs against the `779ec88` snapshot in an isolated git checkout; my new files exist in the main worktree (uncommitted) and were verified by 5106 vitest tests passing + the live mig 122 application + 218,996-row cost_estimates rewrite. The pre-commit Husky gate proves files exist.
+
+**`scripts/load-massing.js` — Gemini deferrals (11 findings, mostly pre-existing):**
+
+| Severity | Item | Rationale |
+|---|---|---|
+| CRITICAL | Unconditional `ST_SetSRID(... 3857)` assumption — if a future shapefile arrives in WGS84, area will be wildly wrong. | Pre-WF2 #C the data was always nulled; post-WF2 #C the pipeline always assumes 3857 (verified empirically — current 427K rows are EPSG:3857). Filename `3dmassingshapefile_2025_wgs84.zip` is misleading; the actual content is Web Mercator. WF candidate: read the `.prj` sidecar file at load-time to detect projection AND parameterize the SQL accordingly. Defer. |
+| CRITICAL | "Peek-and-delete" stale-row pattern reads only the first feature to decide ID format for entire dataset; could wipe production. | Pre-existing across all source-loader scripts. Architectural change requiring staging-table strategy. WF1/WF2 candidate. Defer. |
+| HIGH | `extractRing` only handles first polygon of MultiPolygon — silent data loss for building complexes. | Pre-existing. WF3 candidate to iterate all polygons + create compound source_id. Defer. |
+| HIGH | Hash-based `source_id` uses non-canonical `JSON.stringify` — could produce different hashes on identical geometries. | Pre-existing. Replace with `canonical-json` lib. Defer. |
+| HIGH | `.shp` finder only looks one level deep + uses `find` (first match wins). | Pre-existing. Use `glob` for recursive search + multi-match error. Defer. |
+| MEDIUM | `computeCentroid` is arithmetic mean of vertices, not true centroid; can fall outside polygon. | Pre-existing. Move to PostGIS `ST_Centroid` in the post-INSERT pass. Defer. |
+| MEDIUM | `execSync('unzip', 'powershell')` — non-portable. | Pre-existing. Use `yauzl`/`unzipper` lib. Defer. |
+| MEDIUM | `downloadFile` redirect handling has no depth limit. | Pre-existing. Add depth counter. Defer. |
+| MEDIUM | `processed < 400000` is hardcoded magic threshold. | Pre-existing. Make dynamic (95% of last run). Defer. |
+| LOW | `shoelaceArea` is now dead code. | Introduced as dead by WF2 #C. Cleanup follow-up. Defer. |
+| LOW | `SQM_TO_SQFT` constant unused. | Same — dead post-WF2-#C. Cleanup follow-up. Defer. |
+| LOW | MD5 hash truncated to 12 chars (48-bit collision risk). | Pre-existing. Use full digest. Defer. |
+| NIT | Progress reporting brittle on chunk boundaries. | Pre-existing. Defer. |
+
+**`migrations/122_*.sql` — DeepSeek deferrals (5 findings):**
+
+| Severity | Item | Rationale |
+|---|---|---|
+| CRITICAL | Invalid GeoJSON would abort the migration (no try/catch around `ST_GeomFromGeoJSON`). | All 427K rows verified `Polygon` type at WF2 #C planning; live mig 122 application succeeded in 114.9s. Defensive PL/pgSQL wrapping is a future hardening — not blocking. WF candidate. |
+| HIGH | Hardcoded EPSG:3857 with no verification (same as Gemini CRITICAL). | Same defer rationale. |
+| HIGH | "Destructive DOWN with no safety net." | By design per Rule 6 (commit 8b1c10b precedent — mig 119 + 121 use the same convention). The DOWN comment explicitly warns the operator. Defer permanently. |
+| MEDIUM | Duplicated SQL between mig 122 and load-massing.js post-INSERT UPDATE — DRY violation. | Fair point. Extract to a `CREATE FUNCTION compute_footprint_area_sqm(geom JSONB)` shared SQL helper. WF candidate. |
+| LOW | `::geography` cast after `ST_Transform(... 4326)` is redundant — could use `geom::geography` directly. | Functional equivalence; current form is more explicit about the projection chain. Defer. |
+| NIT | Doc reference `Spec 56 §2` doesn't match actual heading (the spec uses `## 2.` not `§2`). | Cosmetic. Defer. |
+
+**Worktree deferred nits:**
+| Severity | Item | Rationale |
+|---|---|---|
+| DEFER (worktree, conf 88) | `isProjected` variable is declared but never used after WF2 #C — true dead code. | Cleanup follow-up. Defer. |
+| DEFER (worktree, conf 88) | `shoelaceArea` function is now unused. | Same as Gemini LOW. Defer. |
+| DEFER (worktree, conf 85) | `SQM_TO_SQFT` constant unused. | Same as Gemini LOW. Defer. |
+| DEFER (worktree, conf 82) | Double `ST_Area` call in mig 122 + post-INSERT UPDATE — no CSE. CTE-based version would compute once. | Perf nit; 114.9s for 427K rows means current form is acceptable. Defer. |
+
+---
+
 ## WF3 (2026-05-09) — Multi-Agent Review deferrals from realtor sub-gating commit
 _Source: Gemini review of `classify-permits.js` + DeepSeek review of `classifier.ts` + worktree code-reviewer of full diff. Worktree review found 1 important fix (applied this commit). Gemini + DeepSeek findings are ALL pre-existing structural issues unrelated to the realtor sub-gating fix — bundling them in this WF3 would explode the blast radius. Each is a separate WF candidate._
 

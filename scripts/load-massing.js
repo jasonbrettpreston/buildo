@@ -264,8 +264,14 @@ pipeline.run('load-massing', async (pool) => {
         ) VALUES ${placeholders.join(', ')}
         ON CONFLICT (source_id) DO UPDATE SET
           geometry = EXCLUDED.geometry,
-          footprint_area_sqm = EXCLUDED.footprint_area_sqm,
-          footprint_area_sqft = EXCLUDED.footprint_area_sqft,
+          -- WF2 #C 2026-05-09: footprint_area_sqm/sqft INTENTIONALLY OMITTED
+          -- from the SET clause. EXCLUDED carries NULL (the JS-side area was
+          -- removed); without this omission, every existing row's computed
+          -- area would get NULL-overwritten on every quarterly re-load,
+          -- creating a window where compute-cost-estimates.js (advisory
+          -- lock 83 — independent of this lock 56) could read NULL and
+          -- silently fall back to the lot-size GFA path. The post-INSERT
+          -- UPDATE pass below is the SOLE authority for these columns.
           max_height_m = EXCLUDED.max_height_m,
           min_height_m = EXCLUDED.min_height_m,
           elev_z = EXCLUDED.elev_z,
@@ -275,7 +281,6 @@ pipeline.run('load-massing', async (pool) => {
         WHERE building_footprints.geometry IS DISTINCT FROM EXCLUDED.geometry
           OR building_footprints.max_height_m IS DISTINCT FROM EXCLUDED.max_height_m
           OR building_footprints.min_height_m IS DISTINCT FROM EXCLUDED.min_height_m
-          OR building_footprints.footprint_area_sqm IS DISTINCT FROM EXCLUDED.footprint_area_sqm
           OR building_footprints.centroid_lat IS DISTINCT FROM EXCLUDED.centroid_lat
           OR building_footprints.centroid_lng IS DISTINCT FROM EXCLUDED.centroid_lng
         RETURNING (xmax = 0) AS is_insert`,
@@ -323,10 +328,17 @@ pipeline.run('load-massing', async (pool) => {
       sourceId = 'hash_' + crypto.createHash('md5').update(JSON.stringify(feature.geometry)).digest('hex').substring(0, 12);
     }
 
-    // Detect projected coords (Web Mercator): values >> 180 means not WGS84 degrees
+    // Detect projected coords (Web Mercator): values >> 180 means not WGS84 degrees.
+    // WF2 #C 2026-05-09: the prior code nulled `areaSqm` when projected, leaving
+    // all 427K rows with NULL areas. The fix: emit NULL here for BOTH branches
+    // (projected and WGS84) and let the post-INSERT UPDATE pass below compute
+    // area uniformly via PostGIS ST_Transform(... 3857 → 4326)::geography. The
+    // DB-side path is more accurate than JS shoelace at this scale and handles
+    // both projections without requiring a JS reprojection library (proj4).
+    // The `isProjected` detection stays as a runtime sanity log only.
     const isProjected = ring[0] && (Math.abs(ring[0][0]) > 180 || Math.abs(ring[0][1]) > 180);
-    const areaSqm = isProjected ? null : shoelaceArea(ring);
-    const areaSqft = areaSqm != null ? Math.round(areaSqm * SQM_TO_SQFT * 100) / 100 : null;
+    const areaSqm = null; // DB-side via ST_Area in the post-INSERT UPDATE pass
+    const areaSqft = null;
     // Prefer explicit LONGITUDE/LATITUDE properties over computing from ring coords
     // (ring may be in projected CRS even if file claims WGS84)
     const centroid = (props.LONGITUDE != null && props.LATITUDE != null)
@@ -369,6 +381,25 @@ pipeline.run('load-massing', async (pool) => {
     pipeline.log.error('[load-massing]', err, { phase: 'final_flush' });
     errors++;
   }
+
+  // WF2 #C 2026-05-09: post-INSERT PostGIS pass — compute footprint_area_sqm
+  // and footprint_area_sqft via DB-side ST_Area on the stored Web Mercator
+  // (EPSG:3857) GeoJSON. Idempotent — only updates rows where area is still
+  // NULL (covers both this run's freshly-inserted rows and any legacy rows
+  // mig 122 didn't reach). See Spec 56 §2 + Spec 83 §3 (GFA Step A).
+  const areaUpdateRes = await pool.query(`
+    UPDATE building_footprints
+    SET
+      footprint_area_sqm = ROUND((ST_Area(
+        ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)::geography
+      ))::numeric, 2),
+      footprint_area_sqft = ROUND((ST_Area(
+        ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)::geography
+      ) * 10.7639104167)::numeric, 2)
+    WHERE footprint_area_sqm IS NULL
+      AND geometry IS NOT NULL
+  `);
+  pipeline.log.info('[load-massing]', `Post-INSERT area-backfill: ${areaUpdateRes.rowCount} rows updated`);
 
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[load-massing]', 'Load complete', {

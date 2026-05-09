@@ -88,6 +88,8 @@ Calculate the physical baseline of the structure.
   * Urban Coverage: 0.7x
   * Suburban Coverage: 0.4x
 
+> **WF2 #C 2026-05-09 — `footprint_area_sqm` is end-to-end populated.** Pre-fix, all 427K `building_footprints` rows had `footprint_area_sqm = NULL` (the load-massing.js Web Mercator nulling bug). The Brain's `computeGfa` consequently fell back to the parcel path for every permit. Mig 122 backfilled the legacy rows via PostGIS `ST_Area(ST_Transform(... 3857 → 4326)::geography)`; the load-massing.js post-INSERT UPDATE pass keeps future loads populated. See Spec 56 §2 "Geometry projection" for the projection handling.
+
 #### Step B: Determine Effective Work Area (Area_Eff)
 The "Surgical Triangle" lookup using `classify-scope.js` result, Permit Type, and Structure Type.
 **Area_Eff** = GFA * Permit Type Allocation %
