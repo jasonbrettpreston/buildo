@@ -25,6 +25,8 @@
 - `new Date()` is banned for timestamps written to DB — use `pipeline.getDbTimestamp(pool)`
 - `pool.query` for advisory lock acquire/release is wrong — locks are session-bound, use a pinned client
 - MAX_ROWS_PER_INSERT for permit_trades = 4000 (10 columns × 4000 = 40K params, under 65535 limit)
+- **A new pipeline script MUST be run end-to-end against the live DB before merge.** Spec 47 §R already mandates this; the discipline is enforcement. WF3 #realtor-backfill (2026-05-11) caught four bugs in `backfill-realtor-permit-trades.js` that all came from merging `2901fcd` (2026-05-06) without invoking the script even once: F1 NULL writes to a `NOT NULL DEFAULT` column → PG 23502 crash; F2 not registered in `scripts/manifest.json` so the chain orchestrator never invoked it; F3 advisory lock collision with another script (invisible until F2 was fixed because the Bundle G uniqueness test only iterates manifest entries); F4 SQL bypassed the 3-axis gate that the JS mirror applied (only observable once F1's crash was fixed). The unit-test suite was green on the original merge. **Green tests are not a substitute for running the script.** Sibling-bug check (WF3 §10 self-checklist) caught F4 only because R6 (Green Light → live verify) was scoped into the active task.
+- INSERT...SELECT in pipeline scripts must omit columns that have schema-side `NOT NULL DEFAULT X` rather than write literal `NULL` — the explicit NULL overrides the default and trips `23502`. Pattern used by every other Spec 47 script.
 
 ## API / Auth
 - The feed API validates `params.trade_slug === ctx.trade_slug` — both client and DB must match

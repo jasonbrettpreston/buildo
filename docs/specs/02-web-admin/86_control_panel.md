@@ -71,14 +71,16 @@ Refactor the scripts to load via `scripts/lib/config-loader.js`. They must execu
 
 | Step | Script | Role & Config Consumption |
 |---|---|---|
-| **14** | `compute-cost-estimates` | Fetches `base_rate_sqft` + `structure_complexity_factor`. Applies `liar_gate_threshold_pct`, `commercial_shell_multiplier`, `placeholder_cost_threshold`, and `income_premium_tiers`. |
-| **15** | `compute_timing_calibrations` | Establishes the historical medians needed for forecasts. |
-| **21** | `classify-lifecycle-phase` | Reads `coa_stall_threshold` to flag `lifecycle_stalled = TRUE`. Updates `phase_started_at` anchors. Writes `permit_phase_transitions` ledger consumed by step 23. |
-| **22** | `assert-lifecycle-phase-distribution` | Reads `lifecycle_band_*_min/max` (×36) + `lifecycle_cross_*_threshold` (×3) to gate the chain on classifier health. |
-| **23** | `compute-phase-calibration` | **NEW (WF1 #B 2026-05-09):** Reads the `permit_phase_transitions` ledger via LAG window + PERCENTILE_CONT, writes `phase_stay_calibration` (per-`(permit_type, phase)` median/p25/p75/sample_size). Closes Spec 84 bug 84-W4. The admin Lead Detail Inspector's `lifecycle.timeline[]` reads this table for cohort comparison (Spec 76 §3.5). Reuses `calibration_freshness_warn_hours`. |
-| **24** | `compute-trade-forecasts` | Reads `bid_phase_cutoff`, `work_phase_target`, `imminent_window_days`, stall penalties, and `expired_threshold_days` to stamp `target_window` and `urgency`. |
-| **25** | `compute-opportunity-scores` | Reads `multiplier_bid/work` based on the stamped window. Applies penalties for tracking/saving. |
-| **26** | `update-tracked-projects` | The CRM Assistant. Reads `imminent_window_days` for payload text, auto-archives dead leads, and syncs `lead_analytics`. |
+| **13** | `classify-permits` | Trade classification via tag-trade matrix (32 trades). Persona-realtor TradeMatch appended only when `shouldAppendRealtor` passes the 3-axis gate (construction class + REALTOR_RELEVANT_TYPES + non-commercial scope). Writes `permit_trades`. |
+| **14** | `backfill_realtor_permit_trades` | **NEW (WF3 #realtor-backfill 2026-05-09):** Spec 91 §3.5 item 4 — writes one `(permit_num, revision_num, realtor)` row per active residential-non-commercial-construction permit so realtor-feed users see leads end-to-end. Idempotent; applies the same 3-axis gate as step 13 via JOIN against `permit_type_classifications` + `permit_type IN REALTOR_RELEVANT_TYPES` + `'commercial' NOT IN scope_tags`. Advisory lock 114. |
+| **15** | `compute-cost-estimates` | Fetches `base_rate_sqft` + `structure_complexity_factor`. Applies `liar_gate_threshold_pct`, `commercial_shell_multiplier`, `placeholder_cost_threshold`, and `income_premium_tiers`. |
+| **16** | `compute_timing_calibrations` | Establishes the historical medians needed for forecasts. |
+| **22** | `classify-lifecycle-phase` | Reads `coa_stall_threshold` to flag `lifecycle_stalled = TRUE`. Updates `phase_started_at` anchors. Writes `permit_phase_transitions` ledger consumed by step 24. |
+| **23** | `assert-lifecycle-phase-distribution` | Reads `lifecycle_band_*_min/max` (×36) + `lifecycle_cross_*_threshold` (×3) to gate the chain on classifier health. |
+| **24** | `compute-phase-calibration` | **NEW (WF1 #B 2026-05-09):** Reads the `permit_phase_transitions` ledger via LAG window + PERCENTILE_CONT, writes `phase_stay_calibration` (per-`(permit_type, phase)` median/p25/p75/sample_size). Closes Spec 84 bug 84-W4. The admin Lead Detail Inspector's `lifecycle.timeline[]` reads this table for cohort comparison (Spec 76 §3.5). Reuses `calibration_freshness_warn_hours`. |
+| **25** | `compute-trade-forecasts` | Reads `bid_phase_cutoff`, `work_phase_target`, `imminent_window_days`, stall penalties, and `expired_threshold_days` to stamp `target_window` and `urgency`. |
+| **26** | `compute-opportunity-scores` | Reads `multiplier_bid/work` based on the stamped window. Applies penalties for tracking/saving. |
+| **27** | `update-tracked-projects` | The CRM Assistant. Reads `imminent_window_days` for payload text, auto-archives dead leads, and syncs `lead_analytics`. |
 
 > **Cross-link to per-permit audit (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7) consumes the tunables defined here to render every cost-derivation input per permit. When an operator changes a tunable in the Control Panel (e.g., `urban_coverage_ratio`, a `scope_intensity_matrix` cell, or a `base_trade_rate`), the inspector renders the new value's effect on individual leads — closing the loop between marketplace-wide tuning and per-permit accuracy audit.
 

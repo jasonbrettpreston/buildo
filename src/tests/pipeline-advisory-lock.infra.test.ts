@@ -62,6 +62,11 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/compute-trade-forecasts.js':      85,
   'scripts/compute-timing-calibration-v2.js': 86,
   'scripts/compute-phase-calibration.js':    93,
+  // WF3 #realtor-backfill (2026-05-09) — owning Spec 91 lock collides with
+  // link-massing.js's Wave-2 sequential 91; per WF1 #B compute-phase-calibration
+  // precedent (free-ID assignment when owning-spec slot taken), 114 is
+  // assigned from the post-Wave-7 free range.
+  'scripts/backfill-realtor-permit-trades.js': 114,
   // Wave 6 — Quality / Assert
   'scripts/quality/assert-schema.js':           102,
   'scripts/quality/assert-data-bounds.js':      103,

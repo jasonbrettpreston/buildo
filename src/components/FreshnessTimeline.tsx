@@ -48,6 +48,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   // Classify & Compute (5) — derive fields
   classify_scope:       { name: 'Scope Classification', group: 'classify' },
   classify_permits:     { name: 'Classify Trades',     group: 'classify' },
+  backfill_realtor_permit_trades: { name: 'Backfill Realtor Trades', group: 'classify' },
   classify_lifecycle_phase:   { name: 'Classify Lifecycle Phase', group: 'classify' },
   compute_phase_calibration:  { name: 'Phase Calibration',        group: 'classify' },
   compute_cost_estimates:     { name: 'Cost Estimates',      group: 'classify' },
@@ -110,6 +111,13 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_massing',         indent: 1 },
       { slug: 'link_similar',         indent: 1 },
       { slug: 'classify_permits',     indent: 1 },
+      // WF3 #realtor-backfill 2026-05-09 — Spec 91 §3.5 item 4: every
+      // realtor-eligible active permit (3-axis gate: construction class
+      // + REALTOR_RELEVANT_TYPES + non-commercial scope) gets a
+      // (permit_id, 'realtor') row so the realtor feed is non-empty
+      // end-to-end. Idempotent; the script's NOT EXISTS guard makes
+      // re-runs cheap.
+      { slug: 'backfill_realtor_permit_trades', indent: 1 },
       { slug: 'compute_cost_estimates',     indent: 1 },
       { slug: 'compute_timing_calibration_v2', indent: 1 },
       { slug: 'link_coa',             indent: 1 },

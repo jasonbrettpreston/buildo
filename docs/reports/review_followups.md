@@ -3,6 +3,46 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF3 #realtor-backfill (2026-05-11) — Multi-Agent Review deferrals
+_Source: Gemini + DeepSeek + worktree code-reviewer of `scripts/backfill-realtor-permit-trades.js` and 11 supporting files. Three reviewers caught 5 issues fixed in-loop; remaining items are catalogued here._
+
+**Applied in this commit (R9 in-loop fixes):**
+- ✅ **Worktree BUG 1** — `emitMeta` writes list dropped `phase` + `lead_score` (Finding 1 omits them from the INSERT so the schema defaults propagate; claiming we write them was inaccurate data lineage)
+- ✅ **Worktree BUG 2** — `emitMeta` reads list now includes `permit_type_classifications` + extended `permits` columns (`permit_type`, `scope_tags`) to reflect Finding 4's JOIN
+- ✅ **Gemini CRITICAL** — Spec 47 §R5 startup guards added on `ACTIVE_STATUSES` and `REALTOR_RELEVANT_TYPES` (empty array in `ANY()` predicate would silently match nothing and produce a 0-row backfill reporting "success")
+- ✅ **Worktree Nit 2** — file-level header docstring lock-id updated from "91" to "114" (Finding 3 alignment)
+- ✅ **Gemini LOW** — `realtorRelevantTypes = Array.from(...)` hoisted out of the while loop body (recomputed every iteration was sloppy)
+
+**Rejected:**
+- **Gemini HIGH "permit_products table"** — false positive. There is no `permit_products` table in the schema; the reviewer hallucinated a table from the related `permit_trades` name. The script's INSERT into `permit_trades` is the complete contract per Spec 91 §3.5 item 4.
+
+**Deferred — Spec 47 conformance:**
+
+| Severity | Item | Rationale |
+|---|---|---|
+| MED (worktree + Gemini agree) | §R3.5 RUN_AT captured AFTER `withAdvisoryLock` rather than before, contrary to the §6.1 skeleton. | Functional impact: nil. The callback only runs on lock-acquired; the RUN_AT-after-acquired pattern is semantically equivalent to RUN_AT-on-invocation for this script's use (the only DB write tagged with RUN_AT is the per-batch `classified_at`, which represents work-actually-done timestamp anyway). The literal-spec violation is a positional concern, not a correctness one. Defer to next-touch cleanup. |
+| LOW (Gemini) | Lock ID 114 deviates from Spec §5.2's "lock = owning spec number" (owning spec is 91). | Already documented in script comment + WF1 #B precedent (compute-phase-calibration took 93 instead of owning-spec 84). The deviation points to a systemic spec-gap that should be addressed by clarifying §5.2 to acknowledge "free-ID assignment when owning-spec slot taken by another script." Defer to a Spec 47 amendment WF2. |
+| NIT (Gemini) | NOT EXISTS + ON CONFLICT both present; reviewer notes potential reader confusion. | Both serve different purposes — NOT EXISTS makes batching efficient (the LIMIT only fetches uninserted rows), ON CONFLICT is a race-condition safety net between batches. Comment in the code already explains this. Defer. |
+
+**Deferred — DeepSeek drift concerns:**
+
+| Severity | Item | Rationale |
+|---|---|---|
+| HIGH | `ACTIVE_STATUSES` hardcoded literal not imported from `src/lib/quality/metrics.ts:473` (canonical source). | Real drift risk. The R9 §R5 startup guard catches the empty-array case but not the "wrong-values" case. Fix: extract `ACTIVE_STATUSES` to `scripts/lib/active-statuses.js` JS mirror with a parity test against the TS source. Defer to a follow-up WF3 that touches the canonical filter — bundling here would expand scope into the TS dual-path. |
+| HIGH | `REALTOR_RELEVANT_TYPES` imported from JS mirror; drift between JS and TS sets unchecked at runtime. | Already regression-locked by `src/tests/permit-type-class.logic.test.ts` — drift between JS and TS sets fails CI. The reviewer's concern was that this lock isn't visible from the backfill script; the comment now points at the mirror file but the test coverage is real. Defer. |
+| MED | `totalActivePermits` snapshot at startup races against concurrent classify-permits writes. | False-WARN/false-PASS risk on coverage comparison is real but small (the window is the few seconds between the count query and the final emitSummary, and the discrepancy at scale would be tens of rows out of ~95K — invisible at the verdict threshold). Defer; not worth the SQL complexity of a re-count. |
+| MED | Hardcoded `tier=1, confidence=1.0` not documented + not compared against classify-permits' realtor write. | Realtor rows have no signal-derived tier or confidence (every eligible permit gets the row regardless of permit content); 1.0 is the canonical "no signal" / "tier-1 default" value. Defer adding a comment to next-touch. |
+| LOW | No cleanup of stale realtor rows when a permit transitions out of the eligible set. | Already filed as Observation #6 below. |
+
+**Deferred — Observations from R6 live verify (not from review):**
+
+| # | Item | Rationale |
+|---|---|---|
+| #5 | Script's `emitSummary` uses `records_meta.backfill` shape instead of Spec 47 §R10's mandated `records_meta.audit_table`. Admin UI tile renders UNKNOWN verdict for this step. | Non-blocking telemetry. The script ran successfully and produced correct data; only the admin observability tile is cosmetically wrong. WF candidate for cleanup. |
+| #6 | ~150K realtor rows exist for permits no longer in the 3-axis-eligible set (219K total - 68K eligible). These accumulated from the classify-permits live path over weeks where the gate was looser (pre-WF3 `779ec88`) + permits that transitioned from active to closed. | Design question — does Spec 91 §3.5 item 4 require pruning, or is "every CURRENT-eligible permit has a row, plus some historical residue" acceptable? Stale rows don't break the realtor feed (the feed query joins on `permits.status = ANY(ACTIVE_STATUSES)` so closed permits are filtered out at read time). File as a Spec 91 §3.5 amendment WF that explicitly resolves the question. |
+
+---
+
 ## WF1 #B (2026-05-09) — Multi-Agent Review deferrals from lifecycle timeline data layer
 _Source: Gemini review of `compute-phase-calibration.js` + DeepSeek review of `build-lifecycle-timeline.ts` + worktree code-reviewer of full diff. Three reviewers; four BUGs applied this commit, several DEFERrals catalogued below._
 

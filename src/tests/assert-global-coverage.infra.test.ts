@@ -163,15 +163,18 @@ describe('manifest.json — chain wiring', () => {
     );
   });
 
-  it('assert_global_coverage is second-to-last in permits chain; backup_db is last (step 29)', () => {
+  it('assert_global_coverage is second-to-last in permits chain; backup_db is last (step 30)', () => {
     // WF3 2026-04-25: backup_db appended as final step 28 (OP4 fix).
     // WF1 #B 2026-05-09: compute_phase_calibration inserted between
     // assert_lifecycle_phase_distribution and compute_trade_forecasts;
     // chain length 28 → 29.
+    // WF3 #realtor-backfill 2026-05-09: backfill_realtor_permit_trades
+    // inserted between classify_permits and compute_cost_estimates;
+    // chain length 29 → 30.
     const permitsChain: string[] = manifest.chains.permits;
     expect(permitsChain[permitsChain.length - 1]).toBe('backup_db');
     expect(permitsChain[permitsChain.length - 2]).toBe('assert_global_coverage');
-    expect(permitsChain).toHaveLength(29);
+    expect(permitsChain).toHaveLength(30);
   });
 
   it('assert_global_coverage is last step in coa chain (step 12)', () => {
@@ -437,11 +440,13 @@ describe('assert-global-coverage.js — GC-1: Step 23 Denom G rows use infoRow (
 });
 
 describe('chain specs — step counts updated', () => {
-  it('41_chain_permits.md declares 29 steps', () => {
+  it('41_chain_permits.md declares 30 steps', () => {
     // WF3 2026-04-25: backup_db added as step 28 (OP4 fix).
     // WF1 #B 2026-05-09: compute_phase_calibration inserted; +1 step.
+    // WF3 #realtor-backfill 2026-05-09: backfill_realtor_permit_trades
+    // inserted between classify_permits and compute_cost_estimates; +1.
     const content = fs.readFileSync(CHAIN_PERMITS_SPEC, 'utf8');
-    expect(content).toContain('29 (sequential');
+    expect(content).toContain('30 (sequential');
   });
 
   it('42_chain_coa.md declares 12 steps', () => {

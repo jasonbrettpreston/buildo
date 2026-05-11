@@ -1,322 +1,131 @@
-# Active Task: WF1 #B — Lifecycle inspector enhancements (`lifecycle.timeline[]` data layer + phase calibration)
-**Status:** Done (committed 2026-05-09 — WF1 #B Green Light + R10 multi-agent review fixes applied: §R3.5 RUN_AT, ROUND() before ::INTEGER, records_total=source rows, daysBetween clamp ≥0)
-**Workflow:** WF1 (Genesis — new feature: phase_calibration table + chain step 21.5 + inspector timeline data; Path A: data-only, UI follows in separate WF)
-**Domain Mode:** Cross-Domain (Backend/Pipeline + Web Admin) — new migration + new pipeline script (chain step 21.5) + new shared modules + extended admin inspector query + Spec 84 / 86 / 76 amendments
-**Rollback Anchor:** `faca737` (current HEAD on `main` — WF2 #C massing backfill)
-**Multi-Agent Review:** REQUIRED per WF1 cadence — Gemini + DeepSeek + worktree code-reviewer in parallel.
+# Active Task: WF3 #realtor-backfill — Fix `backfill-realtor-permit-trades` (3 bundled findings)
+**Status:** Done (committed 2026-05-11 — 4 findings fixed + 5 R8 review fixes applied + Spec 41/86/91/95 amendments + lessons.md)
+**Workflow:** WF3 (Bug fix — bundled per user override; one root cause: "script merged but never verified end-to-end before chain orchestrator could touch it")
+**Domain Mode:** Backend/Pipeline (`scripts/`, `scripts/manifest.json`, infra tests, spec amendments) — `scripts/CLAUDE.md` ✓ + `docs/specs/01-pipeline/47_pipeline_script_protocol.md` (§R1–R12, §R2 lock ID convention) ✓ + `docs/specs/03-mobile/91_mobile_lead_feed.md` §3.5 (item 4 contract) ✓ + `docs/specs/03-mobile/95_mobile_user_profiles.md` §2.5.1 (persona vs trade_slug separation) ✓
+**Rollback Anchor:** `ada49fb` (current HEAD on `main` — WF1 #B lifecycle.timeline[] data layer + 84-W4 closure)
+**Multi-Agent Review:** REQUIRED — Gemini + DeepSeek + worktree code-reviewer in parallel post-Implementation. *WF3 default cadence is worktree-only; opting into adversarial models because (a) the user has consistently emphasized review depth across this and the parent WF, (b) the bundle is 3 findings touching the chain orchestrator + locking subsystem + INSERT discipline, (c) the original realtor-backfill merge that introduced these findings would have been caught by WF1's standard adversarial cadence.*
+
+---
 
 ## Context
 
-* **Goal:** Surface phase-by-phase progression data on the admin Lead Detail Inspector (`/api/admin/leads/inspect/:id`), unifying past + present + future phases in a single `lifecycle.timeline[]` array. Each entry carries actual or predicted `days_in_phase` plus cohort percentiles (`(permit_type, phase)` median + p25 + p75) so operators can instantly see "is this permit on-pace, slow, or stalled?"
-* **Closes Spec 84 bug 84-W4** ("Dead Transition Write: Ledger is written but not used. Fix: Wire Spec 86 Calibration to read this ledger.") — this WF is exactly the wiring 84-W4 demands.
-* **The 5 user findings this addresses (from session context):**
-  - #3 Show how long the permit stayed at each phase ✓ (`days_in_phase` per timeline entry)
-  - #4 Phase NAME instead of "P7c" ✓ (`phase_name` from new `phase-names.ts` map)
-  - #5 Average days for this type of project per phase ✓ (`cohort_median_days` / `cohort_p25_days` / `cohort_p75_days` from new `phase_calibration` table)
-* **Path A (chosen):** ship the data layer only this WF — `lifecycle.timeline[]` on the inspector response. UI consumers (admin inspector React, future flight-center detail progression visual) follow in separate frontend WFs once the data shape is committed.
-* **Future surfaces (out of scope this WF):**
-  - Admin inspector React UI rendering the timeline (separate WF1)
-  - Admin flight-center detail "delivery-app-style progression bar" (separate WF1; user explicitly requested as next surface after this data layer ships)
-  - CoA inspect (Cycle 7 — out of scope; P1/P2 only become relevant when CoA inspector lands)
-* **Target Specs:**
-  - Spec 84 §3 (friendly-name map made authoritative)
-  - Spec 84 §5 (new "Phase Timeline (per-permit)" subsection)
-  - Spec 84 §6 (mark bug 84-W4 RESOLVED)
-  - Spec 84 §7 (formalize `phase_calibration` table source)
-  - Spec 86 §1 (reuse existing `calibration_freshness_warn_hours`; document phase_calibration alongside trade calibration)
-  - Spec 86 §4 (add chain step 21.5 `compute-phase-calibration` between step 21 lifecycle-phase classification and step 22 trade forecasts)
-  - Spec 76 §3.5 (inspector contract: `lifecycle.timeline[]` panel)
+* **Goal:** Make the realtor backfill script actually work end-to-end. The script exists (`2901fcd`) and has correct 3-axis gating (WF3 `779ec88`), but it has never produced a single `permit_trades` row in the live DB. Three independent bugs prevent it. Fix all three in one commit because they share one root cause and Findings 2+3 are inextricably coupled (manifest registration unavoidably surfaces the lock collision via Bundle G uniqueness test).
+
+* **Why now:** WF1 #C (Cycle 7 admin Lifecycle Timeline panel UI + Maestro coverage) is parked at `.cursor/queued_task_wf1c_admin_inspector_ui.md` because its planned Maestro flow asserts a non-empty realtor feed end-to-end — currently impossible. This WF3 is the precondition.
+
+* **Three findings (R2 will reproduce each):**
+  1. **`lead_score: NULL` crashes the INSERT.** `scripts/backfill-realtor-permit-trades.js:142` writes `NULL` for `phase` and `lead_score`, but `permit_trades.lead_score` is `INTEGER NOT NULL DEFAULT 0` per `migrations/006_permit_trades.sql:14`. The explicit NULL overrides the column default and trips PG `23502` ("null value in column violates not-null constraint"). The transaction rolls back; zero rows persist; the script reports "Inserted 0 new rows" silently because the rollback aborts the loop early but PIPELINE_SUMMARY still emits success.
+  2. **Script not in `scripts/manifest.json`.** Therefore not in the `permits` chain. Therefore the chain orchestrator never invokes it. Therefore even if Finding 1 were fixed, the script would only run when invoked manually. Spec 91 §3.5 item 4 mandates "recurring job or pipeline trigger; mechanical; idempotent" — manual invocation does not satisfy that.
+  3. **Advisory lock 91 collision with `link-massing.js`.** Both scripts declare `ADVISORY_LOCK_ID = 91`. The Bundle G uniqueness test (`src/tests/pipeline-advisory-lock.infra.test.ts:147–164`) iterates only scripts present in `manifest.json` — so the collision is currently invisible. Fixing Finding 2 (manifest registration) would surface the collision and break the test. Per the WF1 #B precedent for `compute-phase-calibration` (owning spec 84, but lock 84 was taken by the ledger writer; registry assigned 93), the right fix is to assign the realtor backfill a free ID and document why — link-massing's 91 is part of the deliberate "Wave 2 — Link" sequential numbering (90, 91, 92, 94) and not a candidate for reassignment in this WF3.
+
+* **Target Specs (amendments planned in R5):**
+  - **Spec 91 §3.5** (item 4 status note) — flip from "pending" to "shipped (WF3 2026-05-09)"; record the free-ID assignment.
+  - **Spec 95 §2.5.1** — refresh the realtor wire-up dependency note ("backend wire-up of the 'realtor' trade row + permit_trades association is pending — see Spec 91 §3.5") with a status update.
+  - **Spec 41 (`docs/specs/01-pipeline/41_chain_permits.md`)** — chain table grows from 29 to 30 steps; all step numbers after the new insertion point shift by +1.
+  - **Spec 86 §4** — chain table mirror; same shift.
+  - **Spec 47** — no protocol change (Spec 47 already mandates the verification this script skipped). A short lessons-learned note will be added to `tasks/lessons.md` (per CLAUDE.md §8) instead — "merge-without-end-to-end-run" pattern. The lesson-routing protocol per `docs/specs/00-architecture/05_knowledge_operating_model.md` §7 calls for this kind of pattern to live in `lessons.md`, not the protocol spec itself.
+
+* **Key Files:**
+  - **MODIFY** `scripts/backfill-realtor-permit-trades.js` — Finding 1 (omit `lead_score` from the INSERT to let `DEFAULT 0` apply; same treatment for `phase` since the realtor row's phase is denormalized — neither field carries a meaningful value for realtor rows) + Finding 3 (lock ID 91 → 114).
+  - **MODIFY** `scripts/manifest.json` — Finding 2: add `backfill_realtor_permit_trades` entry + insert into the `permits` chain between `classify_permits` and `compute_cost_estimates`.
+  - **MODIFY** `src/tests/pipeline-advisory-lock.infra.test.ts` — Bundle G registry: add `'scripts/backfill-realtor-permit-trades.js': 114`.
+  - **MODIFY** `src/tests/backfill-realtor-permit-trades.infra.test.ts` — extend with regression-locks for Finding 1 (no NULL-write to lead_score) + Finding 3 (lock id is 114).
+  - **MODIFY** `src/tests/chain.logic.test.ts` — chain-step count assertion: 29 → 30; new step row at the insertion position.
+  - **MODIFY** `src/tests/quality.logic.test.ts` — chain-step count assertion mirror; same shift.
+  - **MODIFY** `src/tests/assert-global-coverage.infra.test.ts` — chain-step count assertions (Spec 41 / Spec 86 step count: 29 → 30).
+  - **MODIFY** `src/components/FreshnessTimeline.tsx` (PIPELINE_REGISTRY) — add the new step.
+  - **MODIFY** `src/lib/admin/funnel.ts` (STEP_DESCRIPTIONS + table mapping) — add the new step.
+  - **AMEND** `docs/specs/01-pipeline/41_chain_permits.md`, `docs/specs/02-web-admin/86_control_panel.md` §4, `docs/specs/03-mobile/91_mobile_lead_feed.md` §3.5, `docs/specs/03-mobile/95_mobile_user_profiles.md` §2.5.1.
+  - **APPEND** `tasks/lessons.md` — one short lesson on the "merged-but-never-end-to-end-verified" failure pattern.
 
 ## Technical Implementation
 
-### 1. New table: `phase_calibration`
-
-`migrations/123_phase_calibration_table.sql` — pre-computed cohort stats per `(permit_type, phase)`. Read by the inspector; written once per chain run by step 21.5.
-
-```sql
-CREATE TABLE phase_calibration (
-  permit_type   VARCHAR(100) NOT NULL,
-  phase         VARCHAR(20)  NOT NULL,
-  median_days   INTEGER,                    -- nullable: <30 sample → unreliable
-  p25_days      INTEGER,
-  p75_days      INTEGER,
-  sample_size   INTEGER NOT NULL,
-  computed_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (permit_type, phase)
-);
-
-CREATE INDEX idx_phase_calibration_lookup
-  ON phase_calibration (permit_type, phase);
-```
-
-DOWN comment-only per Rule 6.
-
-### 2. New script: `scripts/compute-phase-calibration.js` (chain step 21.5)
-
-Reads `permit_phase_transitions` (356,058 rows currently) joined to `permits.permit_type`; computes percentiles per `(permit_type, phase)` cohort:
-
-```sql
-WITH transitions_with_duration AS (
-  SELECT
-    permit_num, from_phase, to_phase,
-    transitioned_at,
-    (transitioned_at - LAG(transitioned_at) OVER (
-      PARTITION BY permit_num ORDER BY transitioned_at
-    ))::interval AS phase_duration
-  FROM permit_phase_transitions
-  WHERE from_phase IS NOT NULL  -- exclude null→first transitions (no duration)
-),
-joined AS (
-  SELECT
-    p.permit_type,
-    t.from_phase AS phase,
-    EXTRACT(EPOCH FROM t.phase_duration) / 86400.0 AS days_in_phase
-  FROM transitions_with_duration t
-  JOIN permits p USING (permit_num)
-  WHERE t.phase_duration IS NOT NULL
-)
-SELECT
-  permit_type, phase,
-  PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY days_in_phase)::INTEGER AS median_days,
-  PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY days_in_phase)::INTEGER AS p25_days,
-  PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY days_in_phase)::INTEGER AS p75_days,
-  COUNT(*)::INTEGER AS sample_size
-FROM joined
-GROUP BY permit_type, phase;
-```
-
-Pipeline conventions per Spec 47 §R1–R12:
-- Advisory lock 86 (matches "calibration" mental model — `compute_timing_calibration_v2` uses 86)
-- Wait — let me re-check. Existing `compute_timing_calibration_v2` (Spec 85/86) uses lock ID matching its spec number. For phase calibration, lock ID = ??? The spec the script is governed by is 86 (Calibration), but it's a NEW script. Per Spec 47 §R2 + §A.5, `scripts/quality/` uses sequential 100+ block; this isn't quality. **Decision:** lock ID = 93 (next available; document in §A.5 if Spec 47 has a registry). Verify no collision before R5.
-- Zod validation: `calibration_freshness_warn_hours` (existing logic_var, reused per user direction)
-- DELETE+INSERT atomicity inside `withTransaction` (recompute the entire table per run — small enough table, ~40 rows)
-- Audit table: `permit_types_calibrated`, `phases_calibrated`, `total_buckets`, `unreliable_buckets` (sample_size < 30)
-
-### 3. New shared modules
-
-**`src/lib/classification/phase-names.ts`** — single source of truth for the 23-entry phase friendly-name map per Spec 84 §3:
-```ts
-export const PHASE_NAMES: Readonly<Record<string, string>> = Object.freeze({
-  P1: 'CoA Intake',
-  P2: 'CoA Review',
-  P3: 'CoA Approved',
-  // ... 23 total entries
-  P7c: 'Issued (Late)',
-  // ...
-  O3: 'Orphan Stalled',
-});
-
-export function phaseName(phase: string | null | undefined): string | null {
-  if (phase == null) return null;
-  return PHASE_NAMES[phase] ?? null;
-}
-```
-
-Parity test against Spec 84 §3 table.
-
-**`src/lib/classification/phase-progression.ts`** — canonical happy-path progression per `permit_type`:
-```ts
-export const STANDARD_PHASE_PATH_BY_PERMIT_TYPE: Readonly<Record<string, readonly string[]>> = Object.freeze({
-  'New Building':                ['INTAKE_P3', 'INTAKE_P4', 'INTAKE_P5', 'P6', 'P7a', 'P7b', 'P7c', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'P14', 'P15', 'P16', 'P17', 'P18'],
-  'Building Additions/Alterations': [/* same — full structural path */],
-  'New Houses':                  [/* same */],
-  'Small Residential Projects':  ['INTAKE_P3', 'INTAKE_P4', 'INTAKE_P5', 'P6', 'P7a', 'P7b', 'P7c', 'P8', 'P12', 'P15', 'P18'],  // skips structural P9-P11
-  'Plumbing(PS)':                ['INTAKE_P3', 'P6', 'P7a', 'P7b', 'P7c', 'O1', 'O2', 'O3'],  // orphan-track
-  // ... 25 entries total mirroring mig 120's permit_type_classifications
-} as const);
-
-export function remainingPhases(permitType: string | null, currentPhase: string | null): readonly string[] {
-  // Returns the slice of the canonical path AFTER currentPhase, or [] if
-  // the type is unknown or the permit is in a terminal state (P18, P19, P20, O3).
-}
-```
-
-Parity test ensures every permit_type in `permit_type_classifications` has a path; no orphan codes referenced; first phase is always `INTAKE_P3` or `P6` (no P1/P2 — those are CoA-only).
-
-### 4. Inspector query extension — `src/lib/leads/lead-inspect-query.ts`
-
-Three new query stages threaded through the existing `Promise.all`:
-
-**A.** New `transitionsRes` query (parallel with existing trades/forecasts/entity/premium):
-```sql
-SELECT from_phase, to_phase, transitioned_at::text
-  FROM permit_phase_transitions
- WHERE permit_num = $1 AND revision_num = $2
- ORDER BY transitioned_at ASC
-```
-
-**B.** New `calibrationRes` query: looks up cohort stats for THIS permit's `permit_type` across ALL phases (inspector needs cohort for past + current + future entries):
-```sql
-SELECT phase, median_days, p25_days, p75_days, sample_size
-  FROM phase_calibration
- WHERE permit_type = $1
-```
-Returns ~10-20 rows per permit_type — cheap.
-
-**C.** JS-side timeline assembly (in `fetchLeadInspect` body):
-```ts
-const timeline = buildTimeline({
-  permitType: m.permit_type,
-  currentPhase: m.lifecycle_phase,
-  phaseStartedAt: m.phase_started_at,
-  transitions: transitionsRes.rows,
-  calibrationByPhase: indexByPhase(calibrationRes.rows),
-  now: new Date(),
-});
-```
-
-`buildTimeline` is a pure function in `src/lib/leads/build-lifecycle-timeline.ts` (new module, fully unit-testable). Returns the `timeline[]` array per the agreed shape:
-
-```ts
-type TimelineEntry = {
-  phase: string;
-  phase_name: string | null;
-  status: 'completed' | 'current' | 'upcoming';
-  entered_at: string | null;
-  exited_at: string | null;
-  days_in_phase: number | null;
-  cohort_median_days: number | null;
-  cohort_p25_days: number | null;
-  cohort_p75_days: number | null;
-  cohort_sample_size: number;
-};
-```
-
-Top-level lifecycle additions:
-```ts
-lifecycle: {
-  // existing
-  phase: 'P7c',
-  stalled: false,
-  classified_at: '...',
-  phase_started_at: '...',
-  // NEW
-  phase_name: 'Issued (Late)',
-  current_phase_days_in: 159,
-  predicted_remaining_days: 245,           // sum of upcoming entries' median_days
-  predicted_completion_at: '2027-02-...',  // NOW + predicted_remaining_days
-  timeline: [/* TimelineEntry[] */],
-}
-```
-
-### 5. Schema + tests
-
-**MODIFIED `src/lib/admin/lead-schemas.ts`** — extend `LeadInspectSchema.lifecycle` with `timeline: z.array(TimelineEntrySchema)` + the 4 new top-level fields.
-
-**Test layering:**
-
-| File | Layer | Coverage |
-|---|---|---|
-| **NEW** `src/tests/migration-123-phase-calibration-table.infra.test.ts` | SQL-shape | CREATE TABLE shape; PK + index; DOWN comment-only |
-| **NEW** `src/tests/phase-names.logic.test.ts` | Unit | All 23 PHASE_NAMES entries match Spec 84 §3; parity test against the spec markdown table |
-| **NEW** `src/tests/phase-progression.logic.test.ts` | Unit | Every permit_type in mig 120's seeds has a path; no orphan codes; first phase ∈ {INTAKE_P3, P6}; `remainingPhases()` returns correct slice for sample inputs |
-| **NEW** `src/tests/build-lifecycle-timeline.logic.test.ts` | Unit | Pure function fixtures: completed-only, completed+current, completed+current+upcoming, terminal (P18 → no upcoming), unknown permit_type fallback (no upcoming) |
-| **NEW** `src/tests/compute-phase-calibration.infra.test.ts` | SQL-shape | Script structure (advisory lock, Zod, withTransaction, audit_table) per Spec 47 §R1–R12 |
-| **NEW** `src/tests/db/phase-calibration.db.test.ts` | Live-DB | Seed 50 transitions across (permit_type='TEST', phase='P7c') with known durations [10, 20, 30, ..., 500]; run compute-phase-calibration; assert median=255±5%, p25=130±5%, p75=380±5% |
-| **MODIFIED** `src/tests/db/lead-inspect-query.db.test.ts` | Live-DB | Extend with timeline assertions: seed permit + ledger transitions + calibration row; call fetchLeadInspect; assert timeline shape (≥1 completed, 1 current, ≥1 upcoming); current entry's `days_in_phase` matches seeded `phase_started_at` delta; cohort fields populated from seeded calibration |
-
-### 6. Spec amendments
-
-- **Spec 84 §3** — PHASE_NAMES module made authoritative; cross-reference `src/lib/classification/phase-names.ts`
-- **Spec 84 §5** — new "Phase Timeline (per-permit)" subsection documenting the inspector contract
-- **Spec 84 §6** — bug 84-W4 marked RESOLVED with this commit reference
-- **Spec 84 §7** — formalize: `phase_calibration` table populated by `compute-phase-calibration.js` reading the ledger
-- **Spec 86 §1** — append note that `calibration_freshness_warn_hours` (existing logic_var, default 48h) ALSO governs phase_calibration freshness
-- **Spec 86 §4** — chain step sequence amended:
-  ```
-  ... 21 classify-lifecycle-phase
-  → 21.5 compute-phase-calibration  (NEW)
-  → 22 compute-trade-forecasts
-  ...
-  ```
-- **Spec 76 §3.5** — Inspector `lifecycle` contract extended: 4 new top-level fields + `timeline[]` array
-
-### 7. Files (Modified / New) — summary
-
-- **NEW** `migrations/123_phase_calibration_table.sql`
-- **NEW** `scripts/compute-phase-calibration.js`
-- **NEW** `src/lib/classification/phase-names.ts`
-- **NEW** `src/lib/classification/phase-progression.ts`
-- **NEW** `src/lib/leads/build-lifecycle-timeline.ts`
-- **MODIFIED** `src/lib/leads/lead-inspect-query.ts` — 2 new queries + timeline assembly
-- **MODIFIED** `src/lib/admin/lead-schemas.ts` — extended `LeadInspectSchema`
-- **NEW** 6 test files (1 migration, 3 unit, 1 infra, 1 live-DB) + 1 modified live-DB
-- **MODIFIED** `scripts/manifest.json` — chain_permits insertion of step 21.5
-- **MODIFIED** Specs 84 (4 sections), 86 (2 sections), 76 (1 section)
-
-### Database Impact
-
-ONE new table (`phase_calibration`, ~40 rows post-population). No data backfill — table is populated by the new chain step on its first run. Existing queries unaffected (no column renames; no constraint changes). Mig 123 is purely additive.
+* **New/Modified Components:** N/A (no UI; all backend/pipeline + tests + docs).
+* **Data Hooks/Libs:** `scripts/backfill-realtor-permit-trades.js` is the only logic file changed. `phase` + `lead_score` columns are dropped from the INSERT column list — DEFAULT propagation from the schema is the canonical pattern (seen across `compute-cost-estimates.js`, `compute-trade-forecasts.js`, etc.). Alternative ("write literal `0` for lead_score, literal `NULL` for phase") was considered and rejected — the omit-and-default approach is more declarative and the schema is the source of truth.
+* **Database Impact:** NO migration. The fix is purely script-side; the schema's `DEFAULT 0` was correct from mig 006.
+* **Operator runbook (in commit message):** After deploy, run `node scripts/backfill-realtor-permit-trades.js` manually once to backfill all currently-active permits. Subsequent runs are folded into the permits chain at the new position, so this manual step is not needed again.
 
 ## Standards Compliance
 
-* **§2 Error handling:** new script throws on Zod validation failure (Spec 47 §R5 fail-fast). New JS modules pure-function, no throws.
-* **§3.1 Zero-downtime migration:** mig 123 creates a new empty table — no impact on existing rows. Index created concurrently — actually for a new table CONCURRENTLY isn't needed; simple `CREATE INDEX` is fine.
-* **§5.1 Typed factories:** test fixtures reuse existing `factories.ts` patterns where applicable; new live-DB fixture follows established `*.db.test.ts` shape.
-* **§7 Dual code path:** N/A — TS-only modules (TS classifier, TS shim). The pipeline script is JS but doesn't share logic with TS.
-* **§9 Pipeline safety:** `compute-phase-calibration.js` follows the canonical Spec 47 §R1–R12 skeleton (advisory lock, Zod, withTransaction, emitSummary, emitMeta).
-* **Spec 47 §R2 lock ID:** lock ID = 93 (next available — verify no collision in §A.5 registry at R2).
-* **Spec 47 §R10 audit_table:** rows include `permit_types_calibrated`, `phases_calibrated`, `total_buckets`, `unreliable_buckets`.
-* **Spec 47 §R11 emitMeta:** reads `permit_phase_transitions`, `permits`, `phase_calibration` (for delta detection); writes `phase_calibration`.
-* **Spec 80 §5:** orthogonal — phase calibration doesn't gate on `permit_type_class`; it cohorts on `permit_type`.
-
-## State Verification (DONE before plan-lock)
-
-* `permit_phase_transitions` has 356,058 rows across 221,694 distinct permits — sufficient cohort sample sizes for the (permit_type, phase) buckets.
-* `permits.permit_type` is the right cohort dimension — confirmed by user direction.
-* Spec 84 §3 has the authoritative phase-name table for the 23 entries.
-* Spec 84 §6 lists bug 84-W4 ("Dead Transition Write: Ledger is written but not used") as Pending Refactor — this WF closes it.
-* Spec 86 §4 chain sequence currently has step 21 (lifecycle classification) → step 22 (trade forecasts) — step 21.5 is the natural insertion point per the user direction.
-* `calibration_freshness_warn_hours` already exists in `logic_variables` (default 48h, per `scripts/seeds/logic_variables.json`).
+* **Try-Catch Boundary:** N/A (no API routes; pipeline script error handling already routes through `pipeline.run` per Spec 47 §R6).
+* **Unhappy Path Tests:** Finding-1 regression-lock (no NULL writes to `lead_score`); Finding-3 regression-lock (lock id is 114; collision with link-massing's 91 cannot recur without breaking the Bundle G uniqueness test); Finding-2 regression-lock (manifest entry exists + chain position correct).
+* **logError Mandate:** N/A (script-side; `pipeline.log.warn/error` already used per existing pattern).
+* **UI Layout:** N/A.
 
 ## Execution Plan
 
-- [ ] **R1** — Rollback anchor confirmed: `faca737`. Branch: `main`.
-- [ ] **R2** — Verify advisory lock 93 is not in use (grep across `scripts/`); confirm `permit_phase_transitions` schema; confirm `permits.permit_type` value distribution.
-- [ ] **R3** — Spec Review: Spec 84 §3 + §5 + §6 + §7; Spec 86 §1 + §4; Spec 76 §3.5; Spec 47 §R1–R12 + §A.5 lock registry.
-- [ ] **R4** — Reproduction tests FIRST (Red Light), one file at a time:
-  - `migration-123-phase-calibration-table.infra.test.ts`
-  - `phase-names.logic.test.ts`
-  - `phase-progression.logic.test.ts`
-  - `build-lifecycle-timeline.logic.test.ts`
-  - `compute-phase-calibration.infra.test.ts`
-  - `src/tests/db/phase-calibration.db.test.ts`
-  - extend `src/tests/db/lead-inspect-query.db.test.ts`
-  - Run vitest → ALL must fail.
-- [ ] **R5** — Implementation (one file at a time, in dependency order):
-  - `migrations/123_phase_calibration_table.sql`
-  - `src/lib/classification/phase-names.ts`
-  - `src/lib/classification/phase-progression.ts`
-  - `src/lib/leads/build-lifecycle-timeline.ts`
-  - `scripts/compute-phase-calibration.js`
-  - `scripts/manifest.json` (chain step 21.5)
-  - `src/lib/leads/lead-inspect-query.ts` extension
-  - `src/lib/admin/lead-schemas.ts` extension
-  - Spec 84 §3 + §5 + §6 + §7 amendments
-  - Spec 86 §1 + §4 amendments
-  - Spec 76 §3.5 amendment
-- [ ] **R6** — Green Light: targeted tests pass; `npm run typecheck && npm run lint -- --fix && npm run test`.
-- [ ] **R7** — Idempotency: re-run live-DB tests 2× consecutively. Apply mig 123 + run `compute-phase-calibration` 2×; second run = no change to row content (timestamps update).
-- [ ] **R8** — Live verification:
-  - `npm run migrate` applies mig 123
-  - `node scripts/compute-phase-calibration.js` populates ~40 rows; verify a sample (e.g., New Houses + P7c) median is reasonable
-  - Hit `GET /api/admin/leads/inspect/<some-permit>` (or call `fetchLeadInspect` via debug script) — assert `lifecycle.timeline[]` populated with completed + current + upcoming entries
-- [ ] **R9** — Pre-Review Self-Checklist (5 items):
-  1. PHASE_NAMES has all 23 entries matching Spec 84 §3 verbatim?
-  2. STANDARD_PHASE_PATH_BY_PERMIT_TYPE has every permit_type from mig 120's seeds; no entries reference P1/P2 (CoA-only)?
-  3. `buildTimeline` returns the canonical TimelineEntry shape; `status` field correctly identifies completed/current/upcoming; `days_in_phase` is null for upcoming entries (so they show "median X days" instead)?
-  4. compute-phase-calibration.js follows Spec 47 §R1–R12 skeleton; advisory lock 93 collision-checked; emitMeta declares both reads + writes?
-  5. Commit message documents BOTH operator runbook steps (mig 123 application + compute-phase-calibration first-run)?
-- [ ] **R10** — **Multi-Agent Review (REQUIRED — WF1 cadence + 3 parallel reviewers):**
-  - Gemini: review `scripts/compute-phase-calibration.js` against Spec 47 §R1–R12 + Spec 84 §7
-  - DeepSeek: review `src/lib/leads/build-lifecycle-timeline.ts` + `src/lib/leads/lead-inspect-query.ts` (timeline assembly + query extension) against Spec 76 §3.5 + Spec 84 §5
-  - Worktree code-reviewer: full diff against Spec 84 §3 (phase-name parity), Spec 84 §6 (bug 84-W4 closure), Spec 86 §4 (chain ordering)
-  - Triage: BUG → file new WF3 before Green Light; DEFER → append to `docs/reports/review_followups.md`.
-- [ ] **R11** — Atomic commit on `main`: `feat(84_lifecycle_phase_engine): WF1 — phase_calibration table + compute-phase-calibration step 21.5 + lifecycle.timeline[] inspector data (closes bug 84-W4)`. Spec 05 §5 footer with operator runbook.
-- [ ] **R12** — Push `main`.
+- [ ] **R1 — Domain mode + spec reads.** Confirmed above.
 
-§10 note: Path A (data only); UI for inspector + flight-center detail follows in separate frontend WFs. Multi-agent review required per WF1. Operator runbook = mig 123 + first-run of compute-phase-calibration; subsequent runs auto via chain step 21.5.
+- [ ] **R2 — Reproduce all 3 findings.**
+  - Finding 1: Re-run `node scripts/backfill-realtor-permit-trades.js` and capture the `23502` error output (already done at audit; pin a screenshot/excerpt in the active task notes).
+  - Finding 2: `Grep` `manifest.json` for `backfill_realtor` (zero matches confirmed at audit).
+  - Finding 3: `Grep` for `ADVISORY_LOCK_ID = 91` across `scripts/` (two matches confirmed at audit: link-massing.js + backfill-realtor-permit-trades.js).
+  - Verify the live DB has 0 realtor `permit_trades` rows. (Blocked at audit by env-loading issue; will use the script's own startup query which logs `existing realtor rows: <N>` before the backfill loop.)
 
-> **PLAN LOCKED. Do you authorize this WF1 plan? (y/n)**
-> §10 note: data layer only this WF; phase_calibration table + chain step 21.5; closes bug 84-W4; multi-agent review required.
+- [ ] **R3 — Sibling-bug check (per WF3 cadence).** Three sibling-bug candidates to scan before fix:
+  - **Sibling A:** Are there OTHER scripts that write `NULL` to a NOT-NULL column with a DEFAULT? `Grep` `migrations/` for `NOT NULL DEFAULT` columns + cross-reference against script INSERTs.
+  - **Sibling B:** Are there OTHER scripts not in `manifest.json` that have `pipeline.run(...)` (= meant to be chained)? `Grep` `scripts/` for `pipeline\.run\(` and diff against manifest entries.
+  - **Sibling C:** Are there OTHER lock-ID collisions hiding behind manifest-gap? Scan for `ADVISORY_LOCK_ID = N` duplicates across all `scripts/`, even those not in manifest.
+  - Each finding either gets folded into this WF3 (if same root cause) OR filed as a separate WF3 in `review_followups.md`.
+
+- [ ] **R4 — Red Light tests.** Write the failing tests FIRST per WF3 cadence:
+  1. `src/tests/backfill-realtor-permit-trades.infra.test.ts` — 4 new assertions:
+     - INSERT block does not write `NULL` for `lead_score` or `phase` (regex-scan SQL string for those columns)
+     - `ADVISORY_LOCK_ID = 114` (post-fix value)
+     - SPEC LINK header references Spec 91 §3.5 + Spec 47 §R2
+     - Manifest-shape: this script's stem (`backfill-realtor-permit-trades`) is registered in `scripts/manifest.json`'s `scripts` map AND its key (`backfill_realtor_permit_trades`) appears in the `chains.permits` array between `classify_permits` and `compute_cost_estimates`
+  2. `src/tests/pipeline-advisory-lock.infra.test.ts` — Bundle G registry entry assertion (added to LOCK_ID_REGISTRY map). Existing uniqueness + manifest-coverage tests will then exercise the new entry automatically.
+  3. `src/tests/chain.logic.test.ts` — chain length 30 (was 29), new step position assertion.
+  4. `src/tests/quality.logic.test.ts` — chain length mirror.
+  5. `src/tests/assert-global-coverage.infra.test.ts` — Spec 41 / Spec 86 step count 30.
+  - **Verify all tests fail before R5.**
+
+- [ ] **R5 — Implementation + spec amendments.**
+  1. **Script fix (Finding 1 + 3):** Edit `scripts/backfill-realtor-permit-trades.js`. Drop `phase` + `lead_score` from the INSERT column list; reorder the `SELECT` to match. Update the `ADVISORY_LOCK_ID` comment to record the rationale ("Spec 47 §R2 owning-spec-91 collides with link-massing.js's Wave 2 sequential lock 91; per WF1 #B compute-phase-calibration precedent, free-ID assignment").
+  2. **Manifest fix (Finding 2):** Edit `scripts/manifest.json`. Add the script entry under `scripts` with `telemetry_tables: ["permit_trades"]`. Insert `"backfill_realtor_permit_trades"` into `chains.permits` between `"classify_permits"` and `"compute_cost_estimates"`.
+  3. **Bundle G registry update:** Edit `src/tests/pipeline-advisory-lock.infra.test.ts`. Add `'scripts/backfill-realtor-permit-trades.js': 114` to `LOCK_ID_REGISTRY`.
+  4. **PIPELINE_REGISTRY + STEP_DESCRIPTIONS:** Edit `src/components/FreshnessTimeline.tsx` and `src/lib/admin/funnel.ts` to add the new step at the correct chain position.
+  5. **Chain-count cascade:** Update the count assertions in `chain.logic.test.ts`, `quality.logic.test.ts`, `assert-global-coverage.infra.test.ts` (29 → 30; new step row).
+  6. **Spec amendments:** Update Spec 41 (chain table), Spec 86 §4 (chain table mirror), Spec 91 §3.5 (item 4 status note), Spec 95 §2.5.1 (realtor wire-up dependency note).
+  7. **Lesson:** Append to `tasks/lessons.md` — one short lesson on "merged-but-never-end-to-end-verified" pattern. Reference Spec 47 §R as the protocol that already mandates verification (no spec change needed).
+
+- [ ] **R6 — Green Light verification.**
+  - `npm run typecheck` clean.
+  - `npm run lint -- --fix` clean.
+  - `npm run test` — full vitest suite passes (5184+ baseline + ~6 new assertions).
+  - **Live verify:** `node scripts/backfill-realtor-permit-trades.js` runs without errors. Capture the PIPELINE_SUMMARY: `records_new` should be ~95K (the residential-non-commercial active subset per the WF3 `779ec88` 3-axis gate). Re-run; second invocation should report `records_new: 0` (idempotency).
+  - **Idempotency proof:** the NOT EXISTS guard + ON CONFLICT DO NOTHING in the existing INSERT should produce 0 inserts on re-run.
+  - **Chain integration smoke test:** dry-run `node scripts/run-chain.js permits` (or equivalent) to verify the orchestrator picks up the new step at the correct position. (If full chain run is too expensive, isolate to `npm run system-map` + manual diff inspection.)
+
+- [ ] **R7 — Pre-Review Self-Checklist (3 findings + sibling-bug coverage).** Walk each item against the actual diff. Output PASS/FAIL per item BEFORE invoking R8.
+  1. Finding 1 — INSERT no longer writes NULL for `lead_score` or `phase`
+  2. Finding 2 — `backfill_realtor_permit_trades` is in `manifest.json` AND in `chains.permits` between the right neighbors
+  3. Finding 3 — `ADVISORY_LOCK_ID` is 114 + Bundle G registry mirrors that
+  4. Spec 47 §R protocol — script is fully Spec-47-compliant (skeleton, advisory lock, withTransaction, emitSummary, emitMeta) — no regressions
+  5. Spec 91 §3.5 item 4 — wire-up status note now says shipped
+  6. Spec 95 §2.5.1 — realtor wire-up dependency note refreshed
+  7. Spec 41 / Spec 86 — chain count = 30; chain table renumbered cleanly
+  8. R3 sibling-bug findings — each one folded in OR filed in `review_followups.md`
+  9. WF3 cadence — single root cause documented in commit message; bundle override rationale recorded
+
+- [ ] **R8 — Multi-Agent Review (3 reviewers in parallel).**
+  1. **Gemini:** `npm run review:gemini -- review scripts/backfill-realtor-permit-trades.js --context docs/specs/01-pipeline/47_pipeline_script_protocol.md` — Spec 47 compliance + the INSERT pattern correctness.
+  2. **DeepSeek:** `npm run review:deepseek -- review scripts/backfill-realtor-permit-trades.js --context docs/specs/03-mobile/91_mobile_lead_feed.md` — Spec 91 §3.5 contract + idempotency + 3-axis gate correctness.
+  3. **Worktree code-reviewer (Agent + isolation:worktree):** Full diff vs Spec 91 §3.5 item 4 + Spec 47 §R2/§R6/§R9. Generates own checklist. PASS/FAIL with line numbers.
+  - Triage: BUG → fix in-loop before R9; DEFER → `docs/reports/review_followups.md`.
+
+- [ ] **R9 — Apply review fixes + re-verify.** Re-run `npm run test` + the live script run (which will be a no-op given idempotency, confirming the registry/chain integration didn't silently break anything).
+
+- [ ] **R10 — Atomic commit + push + close active task.**
+  - Commit message: `fix(91_mobile_lead_feed): WF3 — realtor backfill end-to-end (3 bundled findings)` with footer enumerating each finding.
+  - Operator runbook footer: `node scripts/backfill-realtor-permit-trades.js` once after deploy to land the initial backfill; subsequent runs handled by the chain.
+  - `git push origin main` after Husky pre-commit gate.
+  - Resume WF1 #C: copy `.cursor/queued_task_wf1c_admin_inspector_ui.md` → `.cursor/active_task.md` and continue from R3 (live verify timeline shapes — which now has a working realtor feed to test against).
+
+---
+
+> **PLAN LOCKED. Do you authorize this WF3 plan? (y/n)**
+>
+> §10 note: Bundle override is explicit (user authorization "C"). All 3 findings share the single root cause "script merged but never run end-to-end" and Findings 2+3 are coupled by the Bundle G uniqueness test. Spec amendments (47 N/A; 41/86/91/95 + lessons.md) are itemized in R5 step 6+7. Multi-agent review opt-in is documented in the **Multi-Agent Review** field above (overrides WF3-default-worktree-only).
+>
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.

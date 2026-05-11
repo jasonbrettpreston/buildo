@@ -116,7 +116,7 @@ All 5 columns are NOT NULL with safe defaults (set in migration 117 to match the
 | `account_preset` | `trade_slug` | Notes |
 |---|---|---|
 | `'tradesperson'` | one of 32 construction slugs from `src/lib/classification/trades.ts` | The dominant case |
-| `'realtor'` | `'realtor'` | Mobile onboarding wires this; backend wire-up of the `'realtor'` trade row + `permit_trades` association is pending — see Spec 91 §3.5 |
+| `'realtor'` | `'realtor'` | Mobile onboarding wires this; backend wire-up shipped end-to-end as of 2026-05-11 (WF3 #realtor-backfill closes the final coverage gap on `permit_trades`) — see Spec 91 §3.5 items 1-4. Maestro coverage (item 5) still queued. |
 | `'manufacturer'` | `NULL` (uses `trade_slugs_override` array) | Admin-managed B2B; bypasses the standard feed entirely |
 
 **Anti-pattern (rejected):** branching the algorithm on `account_preset`. Doing so would mean the same `trade_slug` value produces different feeds depending on the persona — undebuggable, untestable, and impossible to A/B from the admin Test Feed Tool. The `account_preset` axis exists for UX/billing/onboarding ONLY.

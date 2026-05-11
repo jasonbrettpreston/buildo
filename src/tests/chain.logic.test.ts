@@ -13,7 +13,7 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
-  it('defines permits chain with 29 steps (no enrichment scripts)', () => {
+  it('defines permits chain with 30 steps (no enrichment scripts)', () => {
     // WF3 2026-04-13 — v1 `compute_timing_calibration` removed from chain
     // per user decision (Path A). v1's table `timing_calibration` will
     // go stale; the detail-page timing engine (spec 71) will be migrated
@@ -24,12 +24,17 @@ describe('Pipeline Chain Definitions', () => {
     // WF3 2026-04-25 — +1 step: backup_db as final maintenance step (step 28).
     // WF1 #B 2026-05-09 — +1 step: compute_phase_calibration (step 22.5,
     // between assert_lifecycle_phase_distribution and compute_trade_forecasts).
+    // WF3 #realtor-backfill 2026-05-09 — +1 step: backfill_realtor_permit_trades
+    // (between classify_permits and compute_cost_estimates) so Spec 91 §3.5
+    // item 4's "every active permit gets a (permit_id, 'realtor') row" is
+    // an actual recurring chain step, not a one-shot operator script.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(29);
+    expect(chain!.steps).toHaveLength(30);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
+    expect(slugs).toContain('backfill_realtor_permit_trades');
   });
 
   it('permits chain runs v2 timing_calibration only (v1 removed)', () => {

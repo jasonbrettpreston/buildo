@@ -12,18 +12,19 @@ As a business user, I expect this daily pipeline to ingest 237K+ raw Toronto bui
 
 **Trigger:** `node scripts/run-chain.js permits` or `POST /api/admin/pipelines/chain_permits`
 **Schedule:** Daily
-**Steps:** 29 (sequential, stop-on-failure)
+**Steps:** 30 (sequential, stop-on-failure)
 **Gate:** `permits` — if `records_new = 0`, downstream enrichment steps are skipped (infra steps still run)
 
 ```
 assert_schema → permits → close_stale_permits → classify_permit_phase →
 classify_scope → builders → link_wsib → geocode_permits → link_parcels →
 link_neighbourhoods → link_massing → link_similar → classify_permits →
+backfill_realtor_permit_trades →
 compute_cost_estimates → compute_timing_calibration_v2 →
 link_coa → create_pre_permits → refresh_snapshot → assert_data_bounds →
 assert_engine_health → classify_lifecycle_phase → assert_lifecycle_phase_distribution →
 compute_phase_calibration → compute_trade_forecasts → compute_opportunity_scores → update_tracked_projects →
-assert_entity_tracing → assert_global_coverage
+assert_entity_tracing → assert_global_coverage → backup_db
 ```
 
 > **WF3 2026-04-13:** v1 `compute_timing_calibration` removed from the chain.
@@ -48,22 +49,23 @@ assert_entity_tracing → assert_global_coverage
 | 11 | `link_massing` | `link-massing.js` | Link parcels to 3D building footprint volumes | parcel_buildings |
 | 12 | `link_similar` | `link-similar.js` | Propagate scope tags between related permits at same address | permits |
 | 13 | `classify_permits` | `classify-permits.js` | Deep trade classification via tag-trade matrix (32 trades). **Gates on `permit_type_class` (Spec 80 §5, mig 120) — sign permits → only electrical+structural-steel (RESERVED); administrative permits → no trades; safety_upgrade → electrical+fire-protection; unclassified → safe-skip; construction → full matrix (default).** Realtor TradeMatch is appended only for `construction` class. Dual-path mirror at `src/lib/classification/classifier.ts` (Spec 7 §7.1). | permit_trades |
-| 14 | `compute_cost_estimates` | `compute-cost-estimates.js` | Pre-compute cost model estimates + Liar's Gate + 32-trade allocation slicer | cost_estimates |
-| 15 | `compute_timing_calibration_v2` | `compute-timing-calibration-v2.js` | Compute phase-to-phase calibration medians from inspection stage pairs (P11→P12, etc.) — feeds the **spec 85 flight tracker** (step 22). Sole calibration step since WF3 2026-04-13 removed v1. | phase_calibration |
-| 16 | `link_coa` | `link-coa.js` | Link CoA to permits via `street_name_normalized` + confidence matrix | coa_applications |
-| 17 | `create_pre_permits` | `create-pre-permits.js` | Generate pre-permit leads from approved CoA applications | — |
-| 18 | `refresh_snapshot` | `refresh-snapshot.js` | Update data_quality_snapshots for dashboard metrics | data_quality_snapshots |
-| 19 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Post-ingestion: cost outliers, null rates, duplicate PKs | pipeline_runs |
-| 20 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuples, seq scan ratio, update ping-pong | engine_health_snapshots |
-| 21 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Computes `lifecycle_phase` + `lifecycle_stalled` for dirty permits and CoA applications (CoA stall via `logic_variables.coa_stall_threshold`, migration 094 added `lifecycle_stalled` to `coa_applications`). Uses `pg_try_advisory_lock(84)`. | permits, coa_applications, permit_phase_transitions |
-| 22 | `assert_lifecycle_phase_distribution` | `quality/assert-lifecycle-phase-distribution.js` | Tier 3 CQA: verifies every lifecycle phase count is within expected ±10% band and unclassified count ≤ `lifecycle_unclassified_max`. Uses advisory lock 109 to skip gracefully if classifier is mid-write. Throws on failure (halting). | pipeline_runs |
-| 23 | `compute_phase_calibration` | `compute-phase-calibration.js` | WF1 #B 2026-05-09 — Spec 84 §7 + Spec 86 §4 calibration source. Aggregates `permit_phase_transitions` ledger into `phase_stay_calibration` table per `(permit_type, phase)` cohort (median/p25/p75 days in phase). Closes Spec 84 bug 84-W4 ("Dead Transition Write"). Consumed by the inspector `lifecycle.timeline[]` cohort fields per Spec 76 §3.5. Uses advisory lock 93. | phase_stay_calibration |
-| 24 | `compute_trade_forecasts` | `compute-trade-forecasts.js` | Phase 4 flight tracker: bimodal routing + stall recalibration + urgency classification (expired threshold from `logic_variables.expired_threshold_days`). Needs fresh lifecycle_phase anchors from step 21 and `phase_calibration` from step 15. | trade_forecasts |
-| 25 | `compute_opportunity_scores` | `compute-opportunity-scores.js` | Intrinsic Value Engine: `clamp((tradeValue/divisor × perTradeMultiplier) − competitionPenalty, 0, 100)`. JOINs `trade_configurations` for per-trade `multiplier_bid`/`multiplier_work`. | trade_forecasts (opportunity_score) |
-| 26 | `update_tracked_projects` | `update-tracked-projects.js` | CRM Assistant: two-path routing, state-change alerts, auto-archive on `urgency='expired'` (WF3 2026-04-13), lead_analytics sync. | tracked_projects, lead_analytics |
-| 27 | `assert_entity_tracing` | `quality/assert-entity-tracing.js` | Tier 3 CQA: for permits seen in the last 26 hours, checks coverage rate across 5 downstream tables/columns (permit_trades ≥95%, cost_estimates ≥90%, trade_forecasts ≥90%, lifecycle_phase ≥95%, opportunity_score >0 rate ≥80%). Non-halting (observational). | pipeline_runs |
-| 28 | `assert_global_coverage` | `quality/assert-global-coverage.js` | Tier 3 CQA: field-level coverage profile for every step. One row per table.column in the denominator matrix. PASS/WARN/FAIL per configurable thresholds from logic_variables. Non-halting (observational). Uses advisory lock 111. | pipeline_runs |
-| 29 | `backup_db` | `backup-db.js` | OP4 daily logical backup as final maintenance step (Spec 112 §3). | — |
+| 14 | `backfill_realtor_permit_trades` | `backfill-realtor-permit-trades.js` | WF3 #realtor-backfill 2026-05-09 — Spec 91 §3.5 item 4. Writes one `(permit_num, revision_num, realtor)` row in `permit_trades` for every active residential-non-commercial-construction permit so the realtor feed (`trade_slug='realtor'`) is non-empty end-to-end. Idempotent (NOT EXISTS guard + ON CONFLICT DO NOTHING). 3-axis gate matching `shouldAppendRealtor` (construction class + REALTOR_RELEVANT_TYPES + non-commercial scope). Uses advisory lock 114. | permit_trades |
+| 15 | `compute_cost_estimates` | `compute-cost-estimates.js` | Pre-compute cost model estimates + Liar's Gate + 32-trade allocation slicer | cost_estimates |
+| 16 | `compute_timing_calibration_v2` | `compute-timing-calibration-v2.js` | Compute phase-to-phase calibration medians from inspection stage pairs (P11→P12, etc.) — feeds the **spec 85 flight tracker** (step 23). Sole calibration step since WF3 2026-04-13 removed v1. | phase_calibration |
+| 17 | `link_coa` | `link-coa.js` | Link CoA to permits via `street_name_normalized` + confidence matrix | coa_applications |
+| 18 | `create_pre_permits` | `create-pre-permits.js` | Generate pre-permit leads from approved CoA applications | — |
+| 19 | `refresh_snapshot` | `refresh-snapshot.js` | Update data_quality_snapshots for dashboard metrics | data_quality_snapshots |
+| 20 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Post-ingestion: cost outliers, null rates, duplicate PKs | pipeline_runs |
+| 21 | `assert_engine_health` | `quality/assert-engine-health.js` | Dead tuples, seq scan ratio, update ping-pong | engine_health_snapshots |
+| 22 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Computes `lifecycle_phase` + `lifecycle_stalled` for dirty permits and CoA applications (CoA stall via `logic_variables.coa_stall_threshold`, migration 094 added `lifecycle_stalled` to `coa_applications`). Uses `pg_try_advisory_lock(84)`. | permits, coa_applications, permit_phase_transitions |
+| 23 | `assert_lifecycle_phase_distribution` | `quality/assert-lifecycle-phase-distribution.js` | Tier 3 CQA: verifies every lifecycle phase count is within expected ±10% band and unclassified count ≤ `lifecycle_unclassified_max`. Uses advisory lock 109 to skip gracefully if classifier is mid-write. Throws on failure (halting). | pipeline_runs |
+| 24 | `compute_phase_calibration` | `compute-phase-calibration.js` | WF1 #B 2026-05-09 — Spec 84 §7 + Spec 86 §4 calibration source. Aggregates `permit_phase_transitions` ledger into `phase_stay_calibration` table per `(permit_type, phase)` cohort (median/p25/p75 days in phase). Closes Spec 84 bug 84-W4 ("Dead Transition Write"). Consumed by the inspector `lifecycle.timeline[]` cohort fields per Spec 76 §3.5. Uses advisory lock 93. | phase_stay_calibration |
+| 25 | `compute_trade_forecasts` | `compute-trade-forecasts.js` | Phase 4 flight tracker: bimodal routing + stall recalibration + urgency classification (expired threshold from `logic_variables.expired_threshold_days`). Needs fresh lifecycle_phase anchors from step 22 and `phase_calibration` from step 16. | trade_forecasts |
+| 26 | `compute_opportunity_scores` | `compute-opportunity-scores.js` | Intrinsic Value Engine: `clamp((tradeValue/divisor × perTradeMultiplier) − competitionPenalty, 0, 100)`. JOINs `trade_configurations` for per-trade `multiplier_bid`/`multiplier_work`. | trade_forecasts (opportunity_score) |
+| 27 | `update_tracked_projects` | `update-tracked-projects.js` | CRM Assistant: two-path routing, state-change alerts, auto-archive on `urgency='expired'` (WF3 2026-04-13), lead_analytics sync. | tracked_projects, lead_analytics |
+| 28 | `assert_entity_tracing` | `quality/assert-entity-tracing.js` | Tier 3 CQA: for permits seen in the last 26 hours, checks coverage rate across 5 downstream tables/columns (permit_trades ≥95%, cost_estimates ≥90%, trade_forecasts ≥90%, lifecycle_phase ≥95%, opportunity_score >0 rate ≥80%). Non-halting (observational). | pipeline_runs |
+| 29 | `assert_global_coverage` | `quality/assert-global-coverage.js` | Tier 3 CQA: field-level coverage profile for every step. One row per table.column in the denominator matrix. PASS/WARN/FAIL per configurable thresholds from logic_variables. Non-halting (observational). Uses advisory lock 111. | pipeline_runs |
+| 30 | `backup_db` | `backup-db.js` | OP4 daily logical backup as final maintenance step (Spec 112 §3). | — |
 
 **Lifecycle classifier (step 21)** runs synchronously. The classifier's
 incremental predicate (`last_seen_at > lifecycle_classified_at`) keeps

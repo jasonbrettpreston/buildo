@@ -563,6 +563,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   // Classify
   classify_scope:       { summary: 'Classifies project_type and extracts scope_tags for new/changed permits, then propagates BLD scope to companion permits', table: 'permits' },
   classify_permits:     { summary: 'Assigns trade classifications using tag-trade matrix and rules', table: 'permit_trades' },
+  backfill_realtor_permit_trades: { summary: 'WF3 2026-05-09 — Spec 91 §3.5 item 4: writes one (permit_num, revision_num, realtor) row per active residential-non-commercial-construction permit so the realtor feed is non-empty. Idempotent; 3-axis gate (construction class + REALTOR_RELEVANT_TYPES + non-commercial scope).', table: 'permit_trades' },
   classify_lifecycle_phase: { summary: 'Computes lifecycle_phase + lifecycle_stalled for dirty permits and CoA applications. Runs as the final step of permits + coa chains. Uses pg_try_advisory_lock(84) to single-thread concurrent runs.', table: 'permits' },
   compute_timing_calibration_v2: { summary: 'Computes phase-to-phase median lead times from inspection history. Mines sequential passed-stage pairs, maps to lifecycle phases, stores in phase_calibration for the flight tracker.', table: 'phase_calibration' },
   compute_phase_calibration: { summary: 'WF1 #B 2026-05-09 — aggregates the permit_phase_transitions ledger into phase-stay percentile statistics per (permit_type, phase) cohort. Closes Spec 84 bug 84-W4. Consumed by the inspector lifecycle.timeline[] cohort fields.', table: 'phase_stay_calibration' },
@@ -813,6 +814,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   link_similar: 'permits', create_pre_permits: 'coa_applications',
   compute_centroids: 'parcels', classify_scope: 'permits',
   classify_permits: 'permit_trades',
+  backfill_realtor_permit_trades: 'permit_trades',
   compute_cost_estimates: 'cost_estimates',
   compute_timing_calibration_v2: 'phase_calibration',
   compute_phase_calibration: 'phase_stay_calibration',
