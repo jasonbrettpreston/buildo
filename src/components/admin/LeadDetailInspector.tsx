@@ -29,6 +29,7 @@ import type {
   LeadInspectTradeRow,
   LeadInspectForecastRow,
 } from '@/lib/admin/lead-schemas';
+import { LifecycleTimelinePanel } from '@/components/admin/lead-inspector/LifecycleTimelinePanel';
 
 interface Props {
   /** Optional pre-filled id (URL deep-link from Test Feed Tool). */
@@ -145,6 +146,29 @@ export function LeadDetailInspector({ initialId = null }: Props) {
 function StructuredLeadInspect({ data }: { data: LeadInspect }) {
   return (
     <div className="space-y-4">
+      {/* WF1 #C 2026-05-11 — Lifecycle Timeline panel (Cycle 7). Sits at the
+          TOP of the inspector per user direction at WF1 #B plan-lock —
+          gives operators a one-glance view of "is this permit on-pace,
+          slow, or stalled?" via cohort-band classification. The 8-panel
+          grid below continues to render the structured field-by-field
+          diagnostic shape; this panel is the visualized timeline above.
+          R8 worktree BUG 1 — NOT wrapped in <Section>: that component's
+          inner <dl className="grid md:grid-cols-2"> would crush the
+          full-width chevron timeline into a half-width grid cell on
+          desktop (Spec 33's primary target). Renders its own card. */}
+      <div
+        data-testid="panel-lifecycle-timeline"
+        className="rounded-md border border-gray-200 bg-white p-4"
+      >
+        <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          Lifecycle Timeline
+        </h4>
+        <LifecycleTimelinePanel
+          timeline={data.lifecycle.timeline}
+          permitType={data.source.permit_type ?? null}
+        />
+      </div>
+
       <Section title="Identity" testid="panel-identity">
         <Field label="lead_id" value={data.lead_id} />
         <Field label="lead_type" value={data.lead_type} />

@@ -272,6 +272,8 @@ export const LeadInspectTimelineEntrySchema = z.object({
   cohort_p75_days: z.number().nullable(),
   cohort_sample_size: z.number(),
 });
+// WF1 #C 2026-05-11 — exported type for the Cycle 7 LifecycleTimelinePanel.
+export type LeadInspectTimelineEntry = z.infer<typeof LeadInspectTimelineEntrySchema>;
 
 export const LeadInspectLifecycleSchema = z.object({
   phase: z.string().nullable(),

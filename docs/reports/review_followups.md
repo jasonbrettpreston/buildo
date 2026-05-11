@@ -3,6 +3,48 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF1 #C (2026-05-11) — Multi-Agent Review deferrals from admin Lifecycle Timeline panel
+_Source: pre-implementation R0 Gemini review of the plan itself (7 findings, 5 folded into plan) + post-implementation R8 multi-agent review of the component code (Gemini + DeepSeek + worktree code-reviewer). 8 BUGs fixed in-loop; remaining items catalogued below._
+
+**Applied in this commit (R9 in-loop fixes):**
+- ✅ **Worktree BUG 1** — `LifecycleTimelinePanel` was mounted inside `Section`'s `<dl className="grid md:grid-cols-2">` wrapper, which crammed the full-width chevron timeline into a half-width grid cell at md+ breakpoints (admin's primary target). Now rendered directly in `LeadDetailInspector` with its own card styling, NOT wrapped in `<Section>`.
+- ✅ **Worktree BUG 2** — `UnreliableMarker` now has `tabIndex={0}` + focus ring so keyboard users can Tab to it and the `title` tooltip fires on focus (was reachable only by mouse hover, violating Spec 33 §9 keyboard-nav mandate).
+- ✅ **Gemini CRITICAL** — `TERMINAL_PHASES = new Set(...)` hoisted from inside the render function to module scope (was being recreated on every render, GC pressure).
+- ✅ **Gemini HIGH (loading state)** — early-return `if (loading) return <LoadingSkeleton />` regardless of timeline shape (was guarded by `(timeline == null || length === 0)` which skipped the skeleton when stale data was present, producing content-pop on re-fetch resolution).
+- ✅ **Gemini MED** — magic number `30` extracted to `COHORT_MINIMUM_RELIABLE_SAMPLE_SIZE` named constant.
+- ✅ **Gemini LOW** — `CohortPill` `aria-label` now uses the user-facing label ("on track" / "trending slow" / "stalled" / "no cohort data") instead of internal band keys ("on-track" / "amber") so screen-reader output matches visible text.
+- ✅ **DeepSeek MED (84-W11 reference wrong)** — off-path tooltip now references "Spec 84 §3 canonical phase paths" instead of bug 84-W11 (which is about P3/P4/P5 ID collisions in CoA vs Permits, NOT off-path detection). Also dropped the visible "(84-W11)" suffix from the marker text.
+- ✅ **DeepSeek LOW (missing chevron edge case)** — chevron between completed and upcoming regions now renders when `(currentEntry || completed.length > 0)` (was only `currentEntry`, leaving a gap when timeline had completed + upcoming but no current).
+
+**Rejected:**
+- **Worktree BUG 3** — fixture files and Maestro flow "missing from repository": **false positive**. The worktree agent ran against `main` `1967733` which doesn't include WF1 #C's uncommitted new files. All 4 files (`src/tests/fixtures/lifecycle-timeline-{terminal,mid-pipeline,off-path}.fixture.json` + `mobile/maestro/realtor-end-to-end.yaml`) exist in this commit.
+- **Gemini HIGH (`title` attribute inaccessibility)** — fair principle in general but `title` is the de facto V1 standard without a tooltip library dependency. `lucide-react` + Radix Tooltip together belong in a future Spec-33-conformance WF that introduces the shared admin icon + tooltip primitives. The current implementation pairs `title` with `aria-label` + `tabIndex` so screen-reader users get the message via the aria channel even if `title` is announced inconsistently.
+- **DeepSeek HIGH (`h-11 w-11` too large)** — directly conflicts with Spec 33 §9 ("Touch targets ≥44px on tooltip triggers"). The 44×44 wrapper is the touchable area; the visible SVG is 14×14 centered inside it. Standard a11y pattern.
+- **DeepSeek MED (`classifyCohortBand` crashes on nulls)** — false positive; null inputs return `'no-data'` via the early-return at line 37. Regression-locked by 5 logic tests including explicit null-input cases.
+
+**Deferred — Gemini medium/low items not folded:**
+
+| Severity | Item | Rationale |
+|---|---|---|
+| MED | Three filter passes over `timeline` to split by status (`completed`/`current`/`upcoming`). | Timeline arrays are bounded at ~23 entries (Spec 84 §3 phase count) — micro-optimization with no measurable impact. Defer. |
+| MED | Multiple `status: 'current'` entries silently ignored (`current[0]` pick). | Spec 84 §5 invariant: at most one current entry per timeline. If the upstream data layer ever emits two, that's a data-quality bug worth surfacing, not a render-time concern. Defer; add a dev-mode assertion if it ever happens in practice. |
+| MED | `statusBg` mixes `opacity-70` with `bg-slate-50/50` (alpha-channel bg). | Cosmetic redundancy; visual outcome is the intended faded state. Defer. |
+| LOW | Array index in keys (`completed-${entry.phase}-${i}`). | Phase prefix already disambiguates; timeline is server-emitted in stable order, so React reconciliation is correct. Defer. |
+| LOW | Duplicate `aria-label` + `title` on `UnreliableMarker`. | Intentional — `aria-label` is the canonical signal for screen readers; `title` is the visible tooltip on focus/hover. Some screen readers announce both, which is mildly redundant but not broken. Defer. |
+| NIT | `Chevron` is a one-line abstraction over `ChevronRightIcon`. | Kept for naming consistency with the resolved-content shape (`<Chevron />` reads as "render a chevron" at every use site without distinguishing the underlying SVG). Defer. |
+
+**Deferred — DeepSeek minor items:**
+
+| Severity | Item | Rationale |
+|---|---|---|
+| NIT | Skeleton placeholders aren't chevron-shaped (just rounded rectangles). | V2 visual fidelity. The skeleton conveys "timeline is loading" correctly; chevron-shaped placeholders are aesthetic polish. Defer. |
+
+**Future Spec-33-conformance WF (carry-forward):**
+- Install `lucide-react` and replace the two inline-SVG icons (`ChevronRightIcon`, `InfoIcon`) with `<ChevronRight />` and `<Info />` from the library. Spec 33 §4 mandates `lucide-react` as the admin icon library; the inline SVGs in this WF are documented technical debt.
+- Add an accessible tooltip primitive (Radix Tooltip via shadcn/ui) and replace native `title` attributes on `UnreliableMarker` and the off-path marker. Spec 33 §9 keyboard-nav mandate is satisfied by the current `tabIndex` + `aria-label` pairing, but a real tooltip would improve UX for non-screen-reader keyboard users.
+
+---
+
 ## WF3 #realtor-backfill (2026-05-11) — Multi-Agent Review deferrals
 _Source: Gemini + DeepSeek + worktree code-reviewer of `scripts/backfill-realtor-permit-trades.js` and 11 supporting files. Three reviewers caught 5 issues fixed in-loop; remaining items are catalogued here._
 

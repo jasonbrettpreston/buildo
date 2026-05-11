@@ -1,0 +1,160 @@
+{
+  "permit_num": "21 227972 BLD",
+  "revision_num": "00",
+  "permit_type": "Building Additions/Alterations",
+  "lifecycle_phase": "P18",
+  "lifecycle_stalled": false,
+  "phase_started_at": "2026-05-08T15:06:33.215Z",
+  "lifecycle_classified_at": "2026-05-08T22:35:06.347Z",
+  "transitions": [
+    {
+      "from_phase": null,
+      "to_phase": "O3",
+      "transitioned_at": "2021-10-19T04:00:00.000Z"
+    },
+    {
+      "from_phase": "O3",
+      "to_phase": "O1",
+      "transitioned_at": "2026-04-16T01:10:30.699Z"
+    },
+    {
+      "from_phase": "O1",
+      "to_phase": "O3",
+      "transitioned_at": "2026-04-17T11:01:03.381Z"
+    },
+    {
+      "from_phase": "O3",
+      "to_phase": "O1",
+      "transitioned_at": "2026-04-18T11:50:50.195Z"
+    },
+    {
+      "from_phase": "O1",
+      "to_phase": "O3",
+      "transitioned_at": "2026-04-19T11:47:05.871Z"
+    },
+    {
+      "from_phase": "O3",
+      "to_phase": "P4",
+      "transitioned_at": "2026-05-07T19:25:37.149Z"
+    },
+    {
+      "from_phase": "P4",
+      "to_phase": "P18",
+      "transitioned_at": "2026-05-08T15:06:33.215Z"
+    }
+  ],
+  "calibration": [
+    {
+      "phase": "O1",
+      "median_days": 91,
+      "p25_days": 33,
+      "p75_days": 920,
+      "sample_size": 1683
+    },
+    {
+      "phase": "O2",
+      "median_days": 150,
+      "p25_days": 88,
+      "p75_days": 209,
+      "sample_size": 2242
+    },
+    {
+      "phase": "O3",
+      "median_days": 3662,
+      "p25_days": 1872,
+      "p75_days": 6001,
+      "sample_size": 32545
+    },
+    {
+      "phase": "P14",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 1
+    },
+    {
+      "phase": "P18",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 26
+    },
+    {
+      "phase": "P19",
+      "median_days": 26,
+      "p25_days": 17,
+      "p75_days": 34,
+      "sample_size": 3
+    },
+    {
+      "phase": "P20",
+      "median_days": 36,
+      "p25_days": 36,
+      "p75_days": 36,
+      "sample_size": 1
+    },
+    {
+      "phase": "P3",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 9
+    },
+    {
+      "phase": "P4",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 24
+    },
+    {
+      "phase": "P5",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 18
+    },
+    {
+      "phase": "P6",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 5
+    },
+    {
+      "phase": "P7a",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 4
+    },
+    {
+      "phase": "P7b",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 2
+    },
+    {
+      "phase": "P7c",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 14
+    },
+    {
+      "phase": "P7d",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 20
+    },
+    {
+      "phase": "P8",
+      "median_days": 1,
+      "p25_days": 1,
+      "p75_days": 1,
+      "sample_size": 4
+    }
+  ]
+}
