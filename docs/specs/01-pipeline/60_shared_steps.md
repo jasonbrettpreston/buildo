@@ -18,7 +18,7 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 | `link_massing` | `link-massing.js` | permits, sources | parcels, building_footprints | parcel_buildings |
 | `link_wsib` | `link-wsib.js` | permits, sources | entities, wsib_registry | entities |
 | `link_coa` | `link-coa.js` | permits, coa | coa_applications, permits | coa_applications |
-| `create_pre_permits` | `create-pre-permits.js` | permits, coa | coa_applications | — (read-only reporting) |
+| `create_pre_permits` | `create-pre-permits.js` | permits, coa | coa_applications | permits (synthesized `PRE-` rows) |
 | `refresh_snapshot` | `refresh-snapshot.js` | all chains | 9 tables (parallel counts) | data_quality_snapshots |
 </architecture>
 
@@ -106,7 +106,7 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 |------|--------|------------|
 | 1 | Exact street_num + street_name + ward | 0.95 |
 | 2 | Fuzzy stripped street name LIKE + ward | 0.60 |
-| 3 | Description FTS (not yet implemented) | 0.30-0.50 |
+| 3 | Description FTS (implemented; batched via unnest + CROSS JOIN LATERAL) | 0.30-0.50 |
 
 1. Query unlinked CoA applications
 2. Tier 1: exact match with `DISTINCT ON (ca.id) ORDER BY issued_date DESC`
@@ -120,15 +120,22 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 ---
 
 ### Create Pre-Permits (`create-pre-permits.js`)
-**Read-only reporting step** — queries and logs, does not mutate data.
+**Mutating step** — INSERTs synthesized `PRE-${application_number}` placeholder rows into the `permits` table for approved-but-unlinked CoAs, then DELETEs aging Pre-Permits past the 18-month threshold. Correction landed 2026-05-11 (WF2 #coa-spec-amendments) — prior spec text incorrectly described this as "read-only reporting."
 
-1. Query approved CoA applications where `linked_permit_num IS NULL`
-2. Filter to 18-month window (older = dead leads)
-3. Report pre-permit pool size (~408 qualifying leads)
+1. Query approved CoA applications where `linked_permit_num IS NULL`.
+2. **Step 1 — INSERT placeholders:** for each eligible CoA, `INSERT INTO permits (permit_num, revision_num, permit_type, status, …)` with `permit_num = 'PRE-' || application_number` and `revision_num = '00'`. Uses `ON CONFLICT (permit_num, revision_num) DO NOTHING` for idempotency — safe to re-run; existing PRE- rows pass through unchanged.
+3. **Step 2 — Expire aging Pre-Permits:** DELETEs `permits` rows where `permit_num LIKE 'PRE-%' AND created_at < NOW() - INTERVAL '<pre_permit_expiry_months> months'`. The expiry months are read from `logic_variables` (default 18). Also DELETEs the dependent `permit_trades` and `permit_parcels` rows in the same transaction to preserve FK integrity.
+4. Emit `records_meta` with `pre_permits_generated` + `aging_leads_expired` counts.
 
-**Edge Cases:** Application gets linked later → drops from pool naturally. >18 months → flagged by `assert_pre_permit_aging`.
+**Application gets linked to a real permit later** → the synthesized PRE- row remains in the `permits` table until the 18-month expiry; the corresponding CoA's `linked_permit_num` is updated to the REAL permit by `link-coa.js` on the next chain run.
 
-**Testing:** `coa.logic.test.ts`
+**Idempotency:** confirmed via `ON CONFLICT DO NOTHING` (line 95 of script) — re-running produces 0 new rows after the first invocation has covered all eligible CoAs.
+
+**Test coverage status (snapshot 2026-05-11):** the script's actual INSERT-into-permits mutation is currently **NOT covered** by any test. `coa.logic.test.ts` exercises the TS mapping helper `src/lib/coa/pre-permits.ts mapCoaToPermitDto()` — the pure function that translates a CoA row into a permit-DTO shape — but does not run the script's SQL. `pre-permit-aging.infra.test.ts` covers the script's `logic_variables.pre_permit_expiry_months` wiring and the "no hardcoded INTERVAL" regression but not the INSERT. Pre-existing gap; future WF should add an infra test that runs the script against a seeded fixture DB and asserts the PRE- row count + idempotency on re-run.
+
+**Edge Cases:** Application gets linked later → see paragraph above. >18 months → flagged by `assert_pre_permit_aging` AND removed by Step 2.
+
+**Testing:** `coa.logic.test.ts` (TS mapper only) + `pre-permit-aging.infra.test.ts` (logicVars wiring only); INSERT-mutation test pending.
 
 ---
 

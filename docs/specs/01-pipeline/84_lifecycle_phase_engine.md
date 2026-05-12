@@ -33,6 +33,8 @@ The engine mutates core tables and populates a historical transition ledger.
 | `to_phase` | VARCHAR | | The new stage |
 | `transitioned_at` | TIMESTAMPTZ | | Timestamp of the detected shift |
 
+> **Ledger key scope (added 2026-05-11):** the ledger is keyed on `(permit_num, revision_num)` — it captures permit-side transitions only. CoA-side lifecycle transitions are NOT written here; `coa_applications.lifecycle_phase` is the in-place column for CoA phase state and there's no CoA equivalent transition table. **Implication:** the WF1 #B/#C `lifecycle.timeline[]` panel (Spec 76 §3.5) reads `permit_phase_transitions` and therefore structurally cannot render meaningful history for CoA-only leads (`lead_id = COA-${application_number}` per Spec 91 §4.3.1). Cross-stream timeline rendering is the scope of Fix B WF1 (queued — see `.cursor/queued_task_coa_lifecycle_fixes.md`).
+
 ### Implementation
 - **Script:** `scripts/classify-lifecycle-phase.js`
 - **Logic Library:** `scripts/lib/lifecycle-phase.js` (Pure function `classifyLifecyclePhase`)
@@ -155,6 +157,20 @@ The admin Lead Detail Inspector consumes the `lifecycle.timeline[]` array assemb
 
 Order: completed (chronological) → current → upcoming (canonical Spec 84 §3 order via `STANDARD_PHASE_PATH_BY_PERMIT_TYPE`). Terminal phases (P18/P19/P20/O3) produce no upcoming entries.
 
+### CoA ↔ Permit Cross-Stream Patterns (snapshot 2026-05-11)
+
+The two data streams (`coa_applications` and `permits`) are reconciled post-hoc by `link-coa.js` (Spec 60). For the 6.6% of permits with a CoA antecedent (16,285 of 247K) the timeline has cross-stream history that the current panel does not yet surface. Temporal analysis of 41,424 linked pairs:
+
+| Pattern | Count | % | Description |
+|---|---|---|---|
+| **Pattern 1 (sequential)** | 32,207 | 77.8% | Homeowner files CoA → variance decision (median 23-day hearing→decision) → waits (median 1,078 days, p25 291, p75 2,140) → files permit. The CoA history is a true sequential precursor; UI should prepend P1→P2→P3→P4 as completed entries to the permit's timeline. |
+| **Pattern 2 (concurrent)** | 9,180 | 22.2% | Permit application filed BEFORE CoA decision. Typically: examiner discovers variance need during examination, homeowner files CoA in parallel. Permit sits in pre-issuance status ("Under Review" / "Application On Hold") while CoA's P1/P2 runs. UI should render the CoA as a concurrent in-progress entry, not a prepended completed entry. |
+| **Pattern 0 (same-day)** | 37 | <0.1% | Permit and CoA decision share a day. Edge case for Fix B design. |
+
+**Operationally significant — 171 permits currently blocked on a CoA decision** (`SELECT COUNT(*) FROM permits p JOIN coa_applications ca ON ca.linked_permit_num = p.permit_num WHERE p.issued_date IS NULL AND ca.decision IS NULL`). These permits sit at P6 "Permit Applied" — the inspector today gives no signal that issuance is externally blocked on an in-flight variance. Surfacing this is part of Fix B WF1 (queued).
+
+**The 1,078-day median post-approval wait is homeowner-side delay** (financing, contractor selection, plan finalization), not municipal process time. The actual variance decision (hearing → decision) median is only 23 days per Spec 51.
+
 ### App View (User Value & Leads)
 - **Verified Lifecycle Tracker:** A "UPS-style" progress bar for every lead, showing exactly which inspections have passed.
 - **"Next Trade" Prediction:** A "Coming Soon" badge for trades (e.g., "Insulation needed in ~14 days") based on calibration math.
@@ -191,6 +207,7 @@ The `assert-lifecycle-phase-distribution.js` script acts as the "Internal Audito
 | 84-W9 | **SQL/JS Drift:** CoA normalization is duplicated in two places. Fix: Consolidate into a single SQL helper function. | Pending Refactor |
 | 84-S47 | **SIGTERM Release (Spec 47 §5.5):** No lock release on container preemption. Fix: Add process `SIGTERM` trap. | Pending Refactor |
 | 84-S47 | **Midnight Drift (Spec 47 §8):** Multiple `NOW()` executions inside loops. Fix: Extract `RUN_TIMESTAMP` from a single query before streaming begins. | Pending Refactor |
+| 84-W12 | **CoA Classifier Silent No-Op:** 99.4% of `coa_applications` rows have `lifecycle_phase = NULL` despite the classifier code path existing in `classify-lifecycle-phase.js` (Spec 84 §3.1 P1/P2 triggers). Only 187 of 33,052 CoAs carry a phase tag (40 P1 + 147 P2) — and of the 1,690 in-flight CoAs (no decision, last 12mo) only 11% are classified. The classifier silently leaves 89% of in-flight CoAs uncovered, breaking the §3.8 distribution bands `lifecycle_band_coa_p1_min/max` + `lifecycle_band_coa_p2_min/max` (bands tuned around the broken baseline, so `assert-lifecycle-phase-distribution.js` PASSes only because the gate is set ridiculously low). Discovered 2026-05-11 via WF1 #C CoA investigation. Fix: Phase 2 of `.cursor/queued_task_coa_lifecycle_fixes.md` (Fix A WF3) — investigate the `coa_applications` UPDATE branch in `classify-lifecycle-phase.js` (likely cause: incremental watermark stuck OR filter predicate too narrow OR `classifyLifecyclePhase()` returning null for CoA inputs). After fix, re-band the `lifecycle_band_coa_p1/p2_min/max` `logic_variables` thresholds against the post-fix reality. | Pending Refactor (Fix A WF3 queued) |
 
 ---
 

@@ -59,6 +59,27 @@ As the system's foundational data source, this script ingests 237K+ raw building
 - `permits` table: 237K+ rows upserted
 - `sync_runs` table: execution log row
 
+### Pre-issuance permit visibility (snapshot 2026-05-11)
+
+The CKAN Active Building Permits feed is a **full-lifecycle feed** — it contains permits in every state from application through completion, not just issued permits. Reading this spec without that context would suggest `permits` is an "issued permits" table; in reality ~6.5% of rows (16,142 of 247,030 today) have an `application_date` but no `issued_date`.
+
+Pre-issuance status values observed in the feed (2026-05-11):
+
+| Status | Approx count | Stage |
+|---|---|---|
+| `Examiner's Notice Sent` | 2,757 | Examination |
+| `Issuance Pending` | 2,974 | Pre-issuance approval |
+| `Under Review` | 2,100 | Application review |
+| `Application On Hold` | 1,655 | Stalled application |
+| `Work Not Started` / `Not Started` | 1,093 / 1,063 | Issued, no construction |
+| `Refusal Notice` | 958 | Pre-refusal |
+| `Open` | 519 | Generic open state |
+| `Pending Cancellation` | 488 | Pre-cancellation |
+
+**Why this matters downstream:** the `link-coa` shared step (Spec 60) relies on permits appearing in this feed **before** issuance so an in-flight CoA can match them via fuzzy address. The 22.2% concurrent-flow pattern in Spec 84 §5 (permit application filed while CoA decision still pending) is only possible because of pre-issuance feed visibility.
+
+**Caveat (R0 DeepSeek MED, 2026-05-11):** the 7-value status set above is a snapshot. CKAN may add new pre-issuance statuses as Toronto's permit workflow evolves; reconcile periodically with live data via `SELECT status, COUNT(*) FROM permits WHERE issued_date IS NULL GROUP BY status`.
+
 ### Edge Cases
 - CKAN returns HTML instead of JSON (server error) → `safe_json_parse` returns null, treated as empty page
 - CKAN adds/removes columns → `assert_schema` (Tier 1) catches this before `load-permits` runs

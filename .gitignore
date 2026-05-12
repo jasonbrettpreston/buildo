@@ -94,3 +94,9 @@ reports/mutation/
 # ShareX / Win+Shift+S → Save As / Paint → here, then reference the
 # file path in chat)
 .screenshots/
+
+# ad-hoc review context files (e.g. live-DB query results passed to
+# the R0 plan-review templates via --data-context). Working-directory
+# only; the spec amendments themselves capture the grounded numbers.
+.review-*
+

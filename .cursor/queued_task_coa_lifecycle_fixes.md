@@ -90,9 +90,26 @@ Specs to amend:
 
 ## Suggested order
 
-1. **WF2 — Spec amendments** (Spec 50, 51, 60, 84 — doc-only, no code). Use the new R0 template review cadence to validate spec text.
-2. **WF3 — Fix A: CoA classifier coverage** (`scripts/classify-lifecycle-phase.js` CoA branch).
+1. **WF2 — Spec amendments** (Spec 50, 51, 60, 84 — doc-only, no code). Use the new R0 template review cadence to validate spec text. **STATUS: SHIPPED 2026-05-11** (commit forthcoming this turn).
+2. **WF3 — Fix A: CoA classifier coverage** (`scripts/classify-lifecycle-phase.js` CoA branch). Next in queue.
 3. **WF1 — Fix B: cross-identity timeline** (data-layer extension + UI panel update).
 4. **Re-band exercise** post Fix A: update `logic_variables.lifecycle_band_coa_p1_min/max` etc.
 
 Total estimated scope: ~3-5 days across all three WFs.
+
+---
+
+## Phase 3 (Fix B) — design considerations carried forward from WF2 R0 review
+
+From the WF2 #coa-spec-amendments R0 DeepSeek LOW deferral (2026-05-11):
+
+- **Pattern 0 (same-day) edge case — 37 of 41,424 linked pairs.** The `permit.application_date` and `coa_applications.decision_date` fall on the same day. Falls into neither Pattern 1 (sequential, prepend completed CoA history) nor Pattern 2 (concurrent, render concurrent CoA in-progress). Could be:
+  - A homeowner who filed both same-day (rare but possible)
+  - A late-bound CoA decision happening on the same day the permit application enters CKAN
+  - A data artifact (CKAN's date-rounding for older records)
+
+  Fix B design must decide: treat same-day as Pattern 1 (prepend completed history)? Pattern 2 (concurrent)? Or its own visual treatment? Default recommendation: same as Pattern 1 since the CoA decision IS already final on that day — just a tighter timeline. But verify against a couple of actual same-day cases first.
+
+- **PRE-${application_number} synthetic permits in the inspector.** When `create-pre-permits.js` has run (Spec 60 step), the `permits` table contains synthetic `PRE-` rows for approved-but-unlinked CoAs. The admin Lead Detail Inspector accepts a `permit_num` and would render these as regular permits with no real progression history. Fix B should add a render-time check: if `permit_num.startsWith('PRE-')`, render a CoA-style timeline (P1→P4 from the linked CoA), NOT a permit timeline (which would be empty).
+
+- **`linked_confidence` rendering.** Fix B's prepended CoA history should carry the link's `linked_confidence` score (0.30–0.95). Low-confidence links (Tier 3 FTS-only matches at 0.30) should render with a visual de-emphasis or warning tooltip so operators don't trust them as ground truth. The data is there; the UI just needs to expose it.

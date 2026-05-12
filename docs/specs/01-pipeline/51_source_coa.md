@@ -57,6 +57,35 @@ As a lead generator, I need Committee of Adjustment variance hearing records ing
 - `coa_applications` table: 32,625+ rows
 - Stats logged: total, new, updated
 
+### Cardinality + temporal patterns (snapshot 2026-05-11)
+
+The CoA stream parallels the permits stream — neither is a foreign key of the other; the `link-coa` shared step (Spec 60) reconciles them via fuzzy address + description matching.
+
+**Cardinality:**
+
+| Metric | Count | Notes |
+|---|---|---|
+| Total CoA applications | 33,052 | All-time |
+| Linked to a permit (`linked_permit_num IS NOT NULL`) | 32,845 | **99.4%** of CoAs eventually link |
+| Distinct permits with a CoA antecedent | 16,285 | **6.6%** of the 247K permits |
+| In-flight (no decision, last 12mo) | 1,690 | Operationally significant — see Spec 84 §5 |
+
+**Decision distribution** (top values):
+
+| Decision | Count | % |
+|---|---|---|
+| `Approved` (canonical + 5 string variants) | ~27,219 | 82.4% |
+| `Refused` | 2,802 | 8.5% |
+| (null, decision pending) | 1,690 | 5.1% |
+| `Withdrawn` | 711 | 2.2% |
+| `Deferred` | 492 | 1.5% |
+
+**Approval-like variants observed in CKAN:** `Approved`, `approved` (lowercase), `Approved with Conditions`, `Approved on Condition`, `Approved on condition`, `conditional approval`. Any downstream classifier of "approved-ness" must handle ≥5 string variants (or normalize at ingestion); the lifecycle classifier per Spec 84 §3.1 P3 trigger ("Decision: Approved or Approved with Conditions") needs to match all of them.
+
+**Hearing → decision timing:** median 23 days, mean 90 days across 30,828 decided CoAs.
+
+**Known data gap — `submission_date` does NOT exist:** the schema captures `decision_date` and `hearing_date` but not the city's intake/filing date. Buildo's `first_seen_at` is the ingestion timestamp, not the city's filing timestamp. Intake-to-hearing duration is therefore unmeasurable from current data. This blocks computing a full variance-decision-time metric beyond the hearing→decision portion.
+
 ### Edge Cases
 - `WARD_NUMBER` column exists in closed but not active resource → field mapper handles both
 - `C_OF_A_DESCISION` typo in CKAN → mapped as-is to `decision` column
