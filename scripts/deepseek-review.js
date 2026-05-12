@@ -25,6 +25,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const OpenAI = require('openai');
+const { splitTemplate, substitutePlaceholders } = require('./lib/review-template');
 
 const MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-reasoner';
 const BASE_URL = 'https://api.deepseek.com';
@@ -149,11 +150,51 @@ Be specific and cite section numbers. End with a list of 3-5 questions the autho
   printUsage(result.usage, result.durationMs);
 }
 
-async function cmdReviewPlan() {
+async function cmdReviewPlan({ templatePath = null, specPaths = [], dataContextPath = null } = {}) {
   const planPath = '.cursor/active_task.md';
   console.log(`📋 Reviewing active task plan: ${planPath}\n`);
   const plan = readFileOrFail(planPath);
 
+  // Template-mode: see scripts/gemini-review.js cmdReviewPlan for the
+  // template parsing contract. DeepSeek's template adds a third
+  // placeholder {{DATA_CONTEXT}} for live-DB query results that ground
+  // the plan's data assumptions.
+  if (templatePath) {
+    const template = readFileOrFail(templatePath);
+    console.log(`📐 Template: ${templatePath}`);
+    if (specPaths.length > 0) {
+      console.log(`📚 Specs: ${specPaths.join(', ')}`);
+    }
+    if (dataContextPath) {
+      console.log(`📊 Data context: ${dataContextPath}`);
+    }
+
+    const split = splitTemplate(template);
+    const systemInstruction = split.systemInstruction
+      ?? 'You are a focused plan reviewer. Follow the prompt\'s requested output format strictly. Be specific and cite line numbers.';
+
+    const specsBlock = specPaths.length === 0
+      ? '(no specs provided as context)'
+      : specPaths.map((p) => `### ${p}\n\n${readFileOrFail(p)}`).join('\n\n---\n\n');
+
+    const dataContextBlock = dataContextPath
+      ? readFileOrFail(dataContextPath)
+      : '(no live-DB context provided — flag every data assumption as UNVERIFIED PREMISE)';
+
+    const prompt = substitutePlaceholders(split.userTemplate, {
+      plan,
+      specs: specsBlock,
+      dataContext: dataContextBlock,
+    });
+
+    const result = await callDeepSeek(prompt, systemInstruction);
+    console.log(result.text);
+    printUsage(result.usage, result.durationMs);
+    return;
+  }
+
+  // Legacy mode (no --template) — preserves the original hardcoded prompt
+  // so existing callers don't break.
   const systemInstruction = `You are a senior engineering manager reviewing an active task plan adversarially. Your job is to find:
 - Steps that look complete but skip critical work
 - Missing rollback / safety considerations
@@ -191,7 +232,10 @@ Commands:
   review <file>                 Adversarial code review of a file
   review <file> --context <f>   Code review with extra context
   spec <spec-path>              Adversarial spec review
-  plan                          Review .cursor/active_task.md
+  plan                          Review .cursor/active_task.md (legacy hardcoded prompt)
+  plan --template <path>        Review with a structured template
+       [--specs <a,b,...>]      Comma-separated spec files to substitute for {{SPECS}}
+       [--data-context <path>]  File of live-DB query results to substitute for {{DATA_CONTEXT}}
 
 Override model with DEEPSEEK_MODEL env var:
   - deepseek-reasoner (R1, default — extended chain of thought)
@@ -202,6 +246,10 @@ Examples:
   node scripts/deepseek-review.js review scripts/link-coa.js
   node scripts/deepseek-review.js spec docs/specs/03-mobile/75_lead_feed_implementation_guide.md
   node scripts/deepseek-review.js plan
+  node scripts/deepseek-review.js plan \\
+    --template .claude/review-templates/plan-review-deepseek.md \\
+    --specs docs/specs/02-web-admin/76_lead_feed_health_dashboard.md \\
+    --data-context .review-data-context.md
 `);
     return;
   }
@@ -226,7 +274,15 @@ Examples:
       }
       await cmdReviewSpec(file);
     } else if (command === 'plan') {
-      await cmdReviewPlan();
+      const templateIdx = args.indexOf('--template');
+      const templatePath = templateIdx !== -1 ? args[templateIdx + 1] : null;
+      const specsIdx = args.indexOf('--specs');
+      const specPaths = specsIdx !== -1 && args[specsIdx + 1]
+        ? args[specsIdx + 1].split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+      const dataIdx = args.indexOf('--data-context');
+      const dataContextPath = dataIdx !== -1 ? args[dataIdx + 1] : null;
+      await cmdReviewPlan({ templatePath, specPaths, dataContextPath });
     } else {
       console.error(`❌ Unknown command: ${command}`);
       console.error('   Run with no args for help');

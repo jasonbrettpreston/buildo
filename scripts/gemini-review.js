@@ -28,6 +28,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenAI } = require('@google/genai');
+const { splitTemplate, substitutePlaceholders } = require('./lib/review-template');
 
 const MODEL = 'gemini-2.5-pro';
 
@@ -141,11 +142,48 @@ Be specific and cite section numbers. End with a list of 3-5 questions the autho
   }
 }
 
-async function cmdReviewPlan() {
+async function cmdReviewPlan({ templatePath = null, specPaths = [] } = {}) {
   const planPath = '.cursor/active_task.md';
   console.log(`📋 Reviewing active task plan: ${planPath}\n`);
   const plan = readFileOrFail(planPath);
 
+  // Template-mode: the template file carries the persona + axes + output
+  // contract. Templates that follow .claude/review-templates/ convention
+  // have two ## sections — "## System persona" (becomes systemInstruction)
+  // and "## User prompt" (becomes the user-facing prompt with placeholders
+  // substituted). Placeholders: {{PLAN}} = active_task.md, {{SPECS}} =
+  // concatenated --specs files.
+  if (templatePath) {
+    const template = readFileOrFail(templatePath);
+    console.log(`📐 Template: ${templatePath}`);
+    if (specPaths.length > 0) {
+      console.log(`📚 Specs: ${specPaths.join(', ')}`);
+    }
+
+    const split = splitTemplate(template);
+    const systemInstruction = split.systemInstruction
+      ?? 'You are a focused plan reviewer. Follow the prompt\'s requested output format strictly. Be specific and cite line numbers.';
+
+    const specsBlock = specPaths.length === 0
+      ? '(no specs provided as context)'
+      : specPaths.map((p) => `### ${p}\n\n${readFileOrFail(p)}`).join('\n\n---\n\n');
+
+    const prompt = substitutePlaceholders(split.userTemplate, {
+      plan,
+      specs: specsBlock,
+    });
+
+    const result = await callGemini(prompt, systemInstruction);
+    console.log(result.text);
+    console.log(`\n---\n⏱  ${result.durationMs}ms`);
+    if (result.usage) {
+      console.log(`📊 Tokens: ${result.usage.totalTokenCount}`);
+    }
+    return;
+  }
+
+  // Legacy mode (no --template) — preserves the original hardcoded prompt
+  // so existing callers don't break.
   const systemInstruction = `You are a senior engineering manager reviewing an active task plan adversarially. Your job is to find:
 - Steps that look complete but skip critical work
 - Missing rollback / safety considerations
@@ -186,13 +224,18 @@ Commands:
   review <file>                 Adversarial code review of a file
   review <file> --context <f>   Code review with extra context
   spec <spec-path>              Adversarial spec review
-  plan                          Review .cursor/active_task.md
+  plan                          Review .cursor/active_task.md (legacy hardcoded prompt)
+  plan --template <path>        Review with a structured template
+       [--specs <a,b,...>]      Comma-separated spec files to substitute for {{SPECS}}
 
 Examples:
   node scripts/gemini-review.js test
   node scripts/gemini-review.js review scripts/link-coa.js
   node scripts/gemini-review.js spec docs/specs/03-mobile/75_lead_feed_implementation_guide.md
   node scripts/gemini-review.js plan
+  node scripts/gemini-review.js plan \\
+    --template .claude/review-templates/plan-review-gemini.md \\
+    --specs docs/specs/02-web-admin/76_lead_feed_health_dashboard.md,docs/specs/02-web-admin/33_web_admin_engineering_protocol.md
 `);
     return;
   }
@@ -217,7 +260,13 @@ Examples:
       }
       await cmdReviewSpec(file);
     } else if (command === 'plan') {
-      await cmdReviewPlan();
+      const templateIdx = args.indexOf('--template');
+      const templatePath = templateIdx !== -1 ? args[templateIdx + 1] : null;
+      const specsIdx = args.indexOf('--specs');
+      const specPaths = specsIdx !== -1 && args[specsIdx + 1]
+        ? args[specsIdx + 1].split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+      await cmdReviewPlan({ templatePath, specPaths });
     } else {
       console.error(`❌ Unknown command: ${command}`);
       console.error('   Run with no args for help');
