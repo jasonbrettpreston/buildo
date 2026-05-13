@@ -43,6 +43,43 @@
 -- UP
 -- ═══════════════════════════════════════════════════════════════════
 
+-- ─── Prerequisite: seed the 17 trades that v10 introduces ────────────
+-- Migration 004 + migration 118 together seed 21 of the 38 trade slugs
+-- referenced by the v10 Universal Stream. The remaining 17 (interior
+-- finish trades, outdoor work, specialty) must exist BEFORE the signal
+-- INSERTs below because universal_stream_trade_signals.trade_slug has
+-- an FK to trades(slug). The runner wraps this whole file in a single
+-- BEGIN/COMMIT, so the trade INSERTs and signal INSERTs land atomically.
+--
+-- ON CONFLICT (slug) DO NOTHING — re-runs are safe; any operator-added
+-- name/icon/color overrides are preserved. sort_order continues from
+-- migration 118's realtor at 33 (21 + realtor at 33 = ranges 21-33; the
+-- new 17 take 34-50).
+--
+-- CI catch: the `db-tests` workflow runs all migrations against a fresh
+-- testcontainer; this migration originally failed with FK violations on
+-- the missing trades. Discovered in commit cd6d667 + R8 review.
+INSERT INTO trades (slug, name, icon, color, sort_order) VALUES
+  ('drain-plumbing',      'Drain & Plumbing',     'droplet',       '#4682B4', 34),
+  ('windows',             'Windows',              'square',        '#87CEEB', 35),
+  ('tiling',              'Tiling',               'grid',          '#D2B48C', 36),
+  ('trim-work',           'Trim Work',            'frame',         '#A0522D', 37),
+  ('millwork-cabinetry',  'Millwork & Cabinetry', 'cabinet',       '#8B4513', 38),
+  ('stone-countertops',   'Stone & Countertops',  'square-stack',  '#696969', 39),
+  ('security',            'Security Systems',     'shield',        '#2F4F4F', 40),
+  ('eavestrough-siding',  'Eavestrough & Siding', 'home',          '#778899', 41),
+  ('caulking',            'Caulking',             'wrench',        '#BDB76B', 42),
+  ('solar',               'Solar',                'sun',           '#FFD700', 43),
+  ('paving',              'Paving',               'road',          '#2F2F2F', 44),
+  ('decking-fences',      'Decking & Fences',     'fence',         '#8B7355', 45),
+  ('decks',               'Decks',                'square',        '#8B7355', 46),
+  ('back-yard-fences',    'Back-Yard Fences',     'fence',         '#8B7355', 47),
+  ('outdoor-patio',       'Outdoor Patio',        'umbrella',      '#CD853F', 48),
+  ('pool-installation',   'Pool Installation',    'waves',         '#4169E1', 49),
+  ('temporary-fencing',   'Temporary Fencing',    'fence',         '#A9A9A9', 50)
+ON CONFLICT (slug) DO NOTHING;
+
+-- ─── Universal stream trade signals (1,422 rows from v10) ────────────
 INSERT INTO universal_stream_trade_signals (seq, trade_slug, signal_type) VALUES
   (1, 'excavation', 'bid'),
   (1, 'shoring', 'bid'),

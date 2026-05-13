@@ -1,6 +1,6 @@
 # Active Task: WF1 #coa-pipeline-parity-phase-b — Schema Migrations
 
-**Status:** COMPLETE 2026-05-13 — Phase B landed in 6 commits (4b63793, 96d0bf9, 06ddb8b, 2fe04fd, d218de4, +R8 cleanup). 14 migrations, 14 test files, 174 new assertions. Operator action: R6 staging-DB replay (skipped due to no credentials in session).
+**Status:** Implementation (CI hotfix in progress — db-tests workflow failed after R8 push; 17 trade slugs missing from `trades` table caused FK violations on migration 131. Prepending trade seed to migration 131 in place.)
 **Workflow:** WF1 (Genesis — second phase of the larger WF2 #coa-pipeline-parity work)
 **Domain Mode:** Backend/Pipeline (migrations + seed data + schema parity tests)
 **Rollback Anchor:** `33d9b0a` (current HEAD on main — WF1 Phase A R8 fixes)

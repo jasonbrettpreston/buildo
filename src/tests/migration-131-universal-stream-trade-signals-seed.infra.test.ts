@@ -34,6 +34,28 @@ describe('migration 131 — universal_stream_trade_signals seed (WF1 #coa-pipeli
     expect(sql).not.toMatch(/CREATE\s+TABLE/i);
   });
 
+  it('prerequisite: seeds the 17 missing trades BEFORE the signal INSERTs (CI db-tests hotfix)', () => {
+    // Migration 004 + 118 seed 21 of the 38 trade slugs v10 references.
+    // The other 17 must be seeded here so the FK to trades(slug) holds
+    // when the signal rows below try to insert. ON CONFLICT (slug) DO
+    // NOTHING keeps the seed idempotent.
+    expect(sql).toMatch(/INSERT\s+INTO\s+trades\s*\(\s*slug\s*,\s*name\s*,\s*icon\s*,\s*color\s*,\s*sort_order\s*\)\s+VALUES[\s\S]+ON\s+CONFLICT\s*\(\s*slug\s*\)\s+DO\s+NOTHING/i);
+    // Spot-check the missing 17 are all present.
+    for (const slug of [
+      'drain-plumbing', 'windows', 'tiling', 'trim-work', 'millwork-cabinetry',
+      'stone-countertops', 'security', 'eavestrough-siding', 'caulking', 'solar',
+      'paving', 'decking-fences', 'decks', 'back-yard-fences', 'outdoor-patio',
+      'pool-installation', 'temporary-fencing',
+    ]) {
+      expect(sql).toMatch(new RegExp(`'${slug}'`));
+    }
+    // The trades INSERT must precede the signals INSERT in file order.
+    const tradesIdx = sql.search(/INSERT\s+INTO\s+trades\b/i);
+    const signalsIdx = sql.search(/INSERT\s+INTO\s+universal_stream_trade_signals\b/i);
+    expect(tradesIdx).toBeGreaterThan(0);
+    expect(signalsIdx).toBeGreaterThan(tradesIdx);
+  });
+
   it('declares all 3 columns in INSERT column list', () => {
     expect(sql).toMatch(/INSERT\s+INTO\s+universal_stream_trade_signals\s*\(\s*seq\s*,\s*trade_slug\s*,\s*signal_type\s*\)/i);
   });
