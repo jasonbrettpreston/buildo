@@ -100,19 +100,29 @@ Acceptance criteria for A.1.2: each QUESTIONABLE item has an explicit ACCEPT-wit
 
 * **`lifecycle_phase` column deprecation roadmap:** populated through Phase H for backward compat. Drop in a future cleanup WF once `assert-lifecycle-phase-distribution.js` and `compute-trade-forecasts.js` no longer reference it.
 
-#### A.1.7 — Distribution gate granular migration (NEW — was BUG-5 from R2 review)
+#### A.1.7 — Distribution gate granular migration (NEW — was BUG-5 from R2 review; reframed 2026-05-13 per user direction to seq-level)
 
 * `scripts/quality/assert-lifecycle-phase-distribution.js` currently validates `lifecycle_phase` (P-code) row counts against `logic_variables.lifecycle_band_p{N}_min/max` (36 keys). When Phase E ships the 84-W12 fix, CoA rows start emitting P2/P3/P4 — roughly +27,000 CoA rows that didn't exist in the historical distribution. The existing permit-sized bands will blow on first chain run after Phase E.
 
-* **Granular-first resolution:** the distribution gate pivots to validate **`lifecycle_block`** counts (~15 block keys) against new `logic_variables.lifecycle_band_block_<block_id>_min/max` keys. Block-level aggregation is the right granularity — per-seq bands (110 keys) are too noisy; per-phase bands (36 keys) collapse CoA + Permit into a single bucket which is exactly the bug. Block-level distinguishes CoA blocks (B1.A through B4.A) from Permit blocks (B5.A through B15.H) from Inspection blocks (B10.A through B13.C) naturally — no namespace patching needed.
+* **Terminology clarification:** `lifecycle_stage` (sub-letter within a block: 'a','b','c') is NOT unique across the Universal Stream — every block reuses the same stage letters. The truly granular unique identifier is `lifecycle_seq` (1–110). The 1-to-1 correspondence is `lifecycle_seq` ↔ `(lifecycle_block, lifecycle_stage)` tuple.
+
+* **Granular-first resolution: SEQ-level validation (110 keys).** Block-level aggregation was initially proposed but rejected on architectural grounds — block-level conflates outcome-diverse rows under one label. Concrete example: block **B2.C "Refused / Binding"** contains seq 13 (#82 `Refused`, DENIED) and seq 14 (#83 `Final and Binding`, APPROVED + appeal cleared). These are opposite outcomes; a block-level gate sees "B2.C had N rows" and can't distinguish refusal-rate spiking from approval lock-in slowing. Same problem in B3.x post-decision blocks (`Appeal Window` routine wait vs `TLAB Appeal` 4-9 month delay). The forecast cohort key already uses seq pairs `(from_seq, to_seq)` for exactly this reason — the distribution gate must validate at the same granularity to detect when seq-specific outcomes drift.
+
+* **Sample-size-aware tuning** addresses the "noisy low-count seq" concern that previously motivated block-level aggregation. Bands are tuned per seq based on historical row count:
+  * **High-volume seqs (≥ 1,000 rows):** tight bands (median ± 10–20%). Examples: seq 22 (#91 Closed, 28,948 rows), seq 47 (#25 Permit Issued, 52,403 rows), seq 50 (#31 Inspection, 138,546 rows).
+  * **Mid-volume seqs (100–999 rows):** moderate bands (± 30%). Examples: seq 9 (#78 Deferred, 270 rows), seq 13 (#82 Refused, 59 rows).
+  * **Low-volume seqs (10–99 rows):** loose floor + ceiling (e.g., `0 ≤ count ≤ max(20, recent_avg × 3)`).
+  * **Single-row outliers (Rows = 1 in snapshot — there are 12 such rows in the v10 CSV including seq 14 Final and Binding, seq 16 Appealed, etc.):** INFO-only, no FAIL/WARN trigger. The gate flags these as "informational" so operators see them but they don't halt the chain.
 
 * **Implementation across phases:**
-  * Phase A (this task): document the new band-key contract in Spec 86 (`86_master_configuration_list.md`) — add `lifecycle_band_block_<block_id>_min/max` (×~15) and `lifecycle_band_seq_<seq>_min/max` (×110) keys to the `logic_variables` schema documentation. Note that block-level is the primary; seq-level is optional finer-grain check available for diagnostic queries.
+  * Phase A (this task): document the new band-key contract in Spec 86 — primary gate keys `lifecycle_band_seq_<seq>_min/max` (×110, one pair per Universal Stream row) plus `lifecycle_band_seq_<seq>_sample_size_threshold` for the per-seq tuning curve. Document the sample-size-aware threshold scheme (high/mid/low/single-row tiers).
   * Phase B (schema): migration adds the new `logic_variables` rows seeded with `NULL` (recalibration in Phase E).
-  * Phase E (recalibration): after the classifier fix populates `lifecycle_block` on all rows, measure the actual block distribution, set `min/max` bands at median ± 30% per block (subject to operator tuning across 7-consecutive-green-runs gate).
+  * Phase E (recalibration): after the classifier fix populates `lifecycle_seq` on all rows, measure the actual seq distribution per (permit_type, project_type, coa_type_class) cohort, set `min/max` per seq using the tier's appropriate band-width formula. 7-consecutive-green-runs gate.
   * Phase H: the legacy `lifecycle_band_p{N}_min/max` keys (36 entries) are removed in cleanup.
 
-* **`Spec 86` amendment added to A.13 (cross-spec list):** see §A.13 below — was missing from §6.10 of Spec 42; was misclassified as Worktree DEFER1 ("§6.12 wording" — actually a deeper schema-key issue).
+* **Why seq, not stage:** "stage-level" alone is ambiguous because stage letters repeat across blocks. Seq is the canonical unique identifier. Going to seq-level matches the forecast engine's cohort granularity (`from_seq`, `to_seq`) and the classifier's emission level — no impedance mismatch.
+
+* **`Spec 86` amendment added to A.13a (cross-spec list):** see §A.13a — was missing from §6.10 of Spec 42; was misclassified as Worktree DEFER1 ("§6.12 wording" — actually a deeper schema-key issue).
 
 Acceptance criteria for A.1 (overall): 7 sub-edits land (A.1.1–A.1.7); regenerated v10 CSV manually patched (no production script changes — see §R0.5 below) at `docs/reports/spec_84_universal_stream_v10.csv`; §8.5 BUGS struck through with "RESOLVED IN PHASE A" notes; QUESTIONABLE items each have explicit ACCEPT/FIX status validated against live DB inspection-stage data (§R0.5).
 
@@ -265,17 +275,17 @@ Acceptance criteria: Spec 85 reflects CoA-stage routing rules. Bimodal routing l
 
 Acceptance criteria: Spec 91 documents the filter + sort + chip. Mirror schema in `mobile/src/lib/schemas.ts` (to be updated in Phase F).
 
-### A.13a — `docs/specs/02-web-admin/86_master_configuration_list.md` (NEW — added per §A.1.7 distribution-gate migration)
+### A.13a — `docs/specs/02-web-admin/86_master_configuration_list.md` (NEW — added per §A.1.7 distribution-gate migration; reframed to seq-level 2026-05-13)
 
 * Was missing from §6.10 cross-spec list. Spec 86 owns `logic_variables` schema documentation; it must reflect the new band-key contract.
 * Add to §X (logic_variables documentation): new band keys
-  * `lifecycle_band_block_<block_id>_min/max` (~15 keys, one per block in `universal_stream_catalog`)
-  * `lifecycle_band_seq_<seq>_min/max` (×110, optional finer-grain diagnostic — not consumed by the gate by default)
+  * `lifecycle_band_seq_<seq>_min/max` (×110 pairs, one per Universal Stream row) — **authoritative gate keys** consumed by `assert-lifecycle-phase-distribution.js` per §A.1.7
+  * `lifecycle_band_seq_<seq>_sample_size_threshold` (×110) — per-seq tuning curve selector (`'tight' | 'moderate' | 'loose' | 'info_only'`) driving band-width formula per the sample-size-aware scheme
 * Note that legacy `lifecycle_band_p{N}_min/max` keys (36) are retained during Phase C–G transition and removed in Phase H.
 * Cross-reference Spec 42 §6.7 step 4 (distribution-gate granular migration) for the implementation detail.
 * Update §6.10 of Spec 42 to include Spec 86 row.
 
-Acceptance criteria: Spec 86 documents the new block-level band-key namespace. `scripts/seeds/logic_variables.json` referenced as the seed source (NULL initially, populated during Phase E recalibration).
+Acceptance criteria: Spec 86 documents the new seq-level band-key namespace + tuning curve selector. `scripts/seeds/logic_variables.json` referenced as the seed source (NULL initially, populated during Phase E recalibration via the sample-size-aware tier selection).
 
 ### A.13 — `docs/specs/01-pipeline/49_global_data_completeness.md` (coverage matrix extension)
 
@@ -379,7 +389,7 @@ Acceptance criteria: `git diff docs/specs/00_system_map.md` shows additions for 
   - [ ] R5.5 — Spec 42 §2/§3/§5 extension.
   - [ ] R5.6 — Spec 47 adherence note.
   - [ ] R5.7 — Spec 49 coverage matrix extension.
-  - [ ] R5.7b — **Spec 86 amendments (NEW per R2.v2 DeepSeek BUG-6):** add `lifecycle_band_block_<block_id>_min/max` keys (~15), `lifecycle_band_seq_<seq>_min/max` keys (×110, optional diagnostic), and `lifecycle_status_history_retention_days` logic_variable. Note legacy `lifecycle_band_p{N}_min/max` keys are retained during Phase C–G transition and deprecated in Phase H.
+  - [ ] R5.7b — **Spec 86 amendments (NEW per R2.v2 DeepSeek BUG-6; reframed to seq-level 2026-05-13):** add `lifecycle_band_seq_<seq>_min/max` keys (×110, AUTHORITATIVE gate per §A.1.7), `lifecycle_band_seq_<seq>_sample_size_threshold` keys (×110, tier selector), and `lifecycle_status_history_retention_days` logic_variable. Note legacy `lifecycle_band_p{N}_min/max` keys are retained during Phase C–G transition and deprecated in Phase H.
   - [ ] R5.8 — Spec 76 §3.5 Lead Inspector CoA panel.
   - [ ] R5.9 — Spec 81 lead_id rekey documentation.
   - [ ] R5.10 — Spec 82 CoA Lead Handling section.
