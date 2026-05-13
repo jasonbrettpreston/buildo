@@ -124,11 +124,17 @@ describe.skipIf(!dbAvailable())('fetchLeadInspect — live-DB regression-lock (W
 
     // 7. cost_estimates — exercises the ce LEFT JOIN. cost_source='permit'
     //    so the cost panel populates without needing the full Surgical chain.
+    //
+    // Phase C migration 138 promoted cost_estimates.lead_id to NOT NULL —
+    // the fixture must supply it. Use the canonical Phase B derivation
+    // ('permit:' + permit_num + ':' + LPAD(revision_num,2,'0')) so the
+    // value matches what scripts/migrate-to-lead-id.js would compute.
     await pool.query(
       `INSERT INTO cost_estimates (permit_num, revision_num, estimated_cost,
                                    cost_source, cost_tier, premium_factor,
-                                   complexity_score, model_version)
-       VALUES ($1, $2, $3::float8, 'permit', 'large', 1.00, 50, 2)
+                                   complexity_score, model_version, lead_id)
+       VALUES ($1::text, $2::text, $3::float8, 'permit', 'large', 1.00, 50, 2,
+               'permit:' || $1::text || ':' || LPAD($2::text, 2, '0'))
        ON CONFLICT (permit_num, revision_num) DO UPDATE
          SET estimated_cost = EXCLUDED.estimated_cost`,
       [PERMIT_NUM, PERMIT_REV, SEED_ESTIMATED_COST],

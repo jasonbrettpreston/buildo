@@ -948,3 +948,23 @@ R5.1.f Multi-Agent Review on `scripts/lib/leads/lead-id.js` + `src/lib/leads/lea
 | 38 | LOW (DEFER) | DeepSeek-ts | `String(input.application_number)` is redundant when already string | Cosmetic. |
 | 39 | REJECT | DeepSeek-ts HIGH | "Dual-path TS↔JS is a maintenance time bomb" | Explicit Spec 84 §7 design. Parity test catches drift; existing codebase precedent in `scripts/lib/lifecycle-phase.js` ↔ `src/lib/classification/lifecycle-phase.ts`. |
 
+
+---
+
+## WF1 #coa-pipeline-parity-phase-c — R5.2 review deferrals (2026-05-13)
+
+R5.2.f Multi-Agent Review on `scripts/migrate-to-lead-id.js` + migrations 138–142. 3 BUGs fixed inline (emitSummary outside lock callback → double-emit; LPAD-truncation preflight missing; permit_num/revision_num NOT NULL guards on the cost_estimates + trade_forecasts UPDATEs). Other findings logged.
+
+| # | Severity | Source | Finding | Decision rationale |
+|---|---|---|---|---|
+| 40 | LOW (DEFER) | Worktree | Migration 140 DOWN block missing trailing semicolon on the final `CREATE INDEX` line | In a comment block — operators copying-pasting may notice the missing `;`. Cosmetic; track in a future spec cleanup. |
+| 41 | DEFER (Phase F) | Worktree | `src/tests/db/109_fk_hardening.db.test.ts` lines 184/196/209 INSERT into `tracked_projects` without `lead_id`. Safe today (NOT NULL deferred to Phase F per C.3); will break when Phase F promotes NOT NULL. | Phase F migration must include fixture updates as part of its plan. |
+| 42 | HIGH (DEFER) | Gemini-js | Phase B added nullable `lead_id` to consumer tables without BEFORE INSERT triggers. Gap between Phase C backfill + NOT NULL promotion lets new INSERTs land with NULL lead_id. | Operational mitigation: run migrate-to-lead-id.js then immediately apply migrations 138-141 with no production writes in between. Spec 42 §6.11 Phase C gate covers this implicitly. Adding triggers would be a Phase B addendum; defer unless production cadence shows the gap. |
+| 43 | MED (REJECT) | Gemini-js | `FROM ${table}` template-string interpolation in post-condition check is "SQL injection vulnerability" | **REJECT** — hardcoded array of literal table names; not user-controlled. Risk profile zero. |
+| 44 | MED (DEFER) | DeepSeek-js | The `deriveLeadId` import is dead code (only used in startup `typeof` check) | The import IS the dual-path sanity check — confirms the JS twin exists. Removing would lose the check; expanding to actual fixture comparison would slow startup. Current trade-off is reasonable. |
+| 45 | MED (DEFER) | DeepSeek-js | `lead_analytics` UPDATE doesn't validate `lead_key` format before copying to `lead_id` | R0.7 audit confirmed lead_analytics is empty; the CHECK constraint on `lead_id` (Phase B migration 134) would reject malformed values. Defensive validation worth adding when Phase D classifiers populate the table. |
+| 46 | NIT (DEFER) | DeepSeek-js | `pipeline.emitMeta` emits `lead_id` in BOTH the inputs and outputs maps | Cosmetic. Consistent with the Spec 47 §R11 convention used elsewhere (e.g., `classify-permits.js`). |
+| 47 | MED (DEFER) | DeepSeek-views | Migration 142 view body references `permit_num` + `revision_num` (in `source_row_id` concatenation) — these columns drop in Phase H | Real concern. The view body needs updating in the Phase H migration that drops those columns. Track. |
+| 48 | LOW (DEFER) | DeepSeek-views | Reused alias `lt` in migration 142 UNION branches (`lead_trades lt` + `lifecycle_transitions lt`) | Aliases are scoped per-branch in UNION ALL; no actual conflict. Cosmetic readability issue. |
+| 49 | HIGH (DEFER) | DeepSeek-views | UNION branches lack `AND <table>.lead_id IS NOT NULL` filter | Defensive — once migrations 138-141 promote NOT NULL, the columns can't be NULL so the filter is redundant. `tracked_projects` branch correctly has it (dual-key window). Other 7 branches don't need it post-promotion. |
+
