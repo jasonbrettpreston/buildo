@@ -798,6 +798,135 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 
 <!-- DB_SCHEMA_END -->
 
+## 3.A. Planned Schema Additions — WF1 #coa-pipeline-parity-phase-a (Spec 42 §6.6)
+
+The following tables and columns are **planned for Phase B migrations** as part of the CoA pipeline parity work. Definitions sourced from Spec 42 §6.6 — those definitions are the canonical source-of-truth. This section indexes them in the global schema document so future spec readers can locate them.
+
+Reading order: the new tables described below are introduced by Spec 42; the column additions extend existing tables documented above. None are live yet — these are forward-looking schema commitments.
+
+### New tables
+
+#### `lead_trades` (9 columns) — REPLACES `permit_trades`
+Universal trade-classification ledger keyed on `lead_id` (Option C from Spec 42 §6.6). Handles both permit-side and CoA-side trade tagging.
+- `id BIGSERIAL PRIMARY KEY`
+- `lead_id TEXT NOT NULL` — `'permit:<num>:<rev>'` or `'coa:<application_number>'`
+- `trade_id INTEGER NOT NULL REFERENCES trades(id)`
+- `tier INTEGER` — 1/2/3 for permits, always 3 for CoAs (description-only matching)
+- `confidence DECIMAL(3,2)`
+- `is_active BOOLEAN NOT NULL DEFAULT true`
+- `phase VARCHAR(20)` — P-code at classification time (legacy, kept for backward compat)
+- `lead_score INTEGER NOT NULL DEFAULT 0`
+- `classified_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- `UNIQUE (lead_id, trade_id)`
+- Indexes: `(trade_id)`, `(is_active)`, `(lead_id)`
+
+#### `lead_parcels` (5 columns) — REPLACES `permit_parcels`
+Universal spatial-linkage table keyed on `lead_id`.
+- `lead_id TEXT NOT NULL`
+- `parcel_id BIGINT NOT NULL REFERENCES parcels(id)`
+- `match_type VARCHAR(20) NOT NULL`
+- `confidence DECIMAL(3,2) NOT NULL CHECK (confidence >= 0 AND confidence <= 1)`
+- `matched_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- `PRIMARY KEY (lead_id, parcel_id)`
+- Indexes: `(parcel_id)`, `(lead_id)`
+
+#### `lifecycle_transitions` (12 columns) — REPLACES `permit_phase_transitions`
+Universal lifecycle ledger keyed on `lead_id`. Records phase-level transitions with both legacy P-codes AND new granular Universal Stream seq references.
+- `id SERIAL PRIMARY KEY`
+- `lead_id TEXT NOT NULL`
+- `from_phase VARCHAR(20)` — legacy P-code (current authoritative)
+- `to_phase VARCHAR(20) NOT NULL`
+- `from_seq INTEGER` — granular Universal Stream row reference; populated in Phase E
+- `to_seq INTEGER` — granular Universal Stream row reference; populated in Phase E
+- `transitioned_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- `permit_type VARCHAR(50)` — denormalized for cohort queries
+- `project_type VARCHAR(50)` — new cohort-key dimension
+- `coa_type_class VARCHAR(30)` — new cohort-key dimension
+- `neighbourhood_id BIGINT`
+- Indexes: `(lead_id)`, `(from_phase, to_phase)`, `(from_seq, to_seq) WHERE from_seq IS NOT NULL`
+
+#### `lifecycle_status_history` (16 columns) — NEW
+Status-level ledger paralleling `lifecycle_transitions`. Captures every status change (not just phase changes) plus CoA decision snapshots at each transition. Three writers: `load-permits.js`, `load-coa.js`, `classify-lifecycle-phase.js`. Critical for forecast cohort segmentation by traversal pattern. See Spec 42 §6.6.B for the "How lifecycle history works across CoA + Permit (unified)" rationale.
+- `id BIGSERIAL PRIMARY KEY`
+- `lead_id TEXT NOT NULL`
+- `from_status VARCHAR(60)` — previous source status (NULL on first observation)
+- `to_status VARCHAR(60) NOT NULL` — new source status
+- `from_seq INTEGER`, `to_seq INTEGER` — granular row references
+- `from_phase VARCHAR(20)`, `to_phase VARCHAR(20)` — legacy P-code (kept for backward compat)
+- `decision VARCHAR(60)` — CoA decision snapshot at time of status change (NULL for permits)
+- `decision_date DATE` — CoA decision_date snapshot
+- `transitioned_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- `detected_by VARCHAR(60) NOT NULL` — enum of three writers above
+- `permit_type VARCHAR(50)`, `project_type VARCHAR(50)`, `coa_type_class VARCHAR(30)`, `neighbourhood_id BIGINT` — denormalized cohort dims
+- Indexes: `(lead_id)`, `(from_seq, to_seq) WHERE from_seq IS NOT NULL`, `(decision) WHERE decision IS NOT NULL`, `(transitioned_at)`
+
+#### `universal_stream_catalog` (20 columns) — NEW
+Read-only reference table seeded from Spec 84 §2.5.h.2 (110 rows). The lifecycle classifier JOINs against this table to derive granular columns; the front-end JOINs through `lifecycle_seq` for rendering group/block/stage labels + colors + icons.
+- `seq INTEGER PRIMARY KEY` — 1-110
+- `source_row_num INTEGER NOT NULL`
+- `lifecycle_group VARCHAR(10) NOT NULL`, `group_label VARCHAR(60) NOT NULL`
+- `lifecycle_block VARCHAR(10) NOT NULL`, `block_label VARCHAR(60) NOT NULL`
+- `lifecycle_stage VARCHAR(5) NOT NULL`, `stage_label VARCHAR(120) NOT NULL`
+- `source VARCHAR(30) NOT NULL` — `'coa.status'` / `'permits.status'` / `'insp.stage'`
+- `status VARCHAR(60) NOT NULL`
+- `phase VARCHAR(40)` — legacy P-code
+- `bid_value DECIMAL(3,2)` — 0-1 importance score
+- `loop_marker VARCHAR(60)`
+- `group_color VARCHAR(7)`, `group_icon VARCHAR(8)`, `block_color VARCHAR(7)`, `block_icon VARCHAR(8)`, `stage_color VARCHAR(7)`, `stage_icon VARCHAR(8)` — Color & Icon Strategy per Spec 84 §2.5.h
+- `rows_count INTEGER` — snapshot count from §2.5.h.2 (informational)
+- Indexes: `(lifecycle_group)`, `(lifecycle_block)`
+
+#### `universal_stream_trade_signals` (3 columns) — NEW
+Decomposes the 152 per-trade × per-row signal columns from Spec 84 §2.5.h.2 into queryable relational form (~1,500 rows). Forecast engine queries this for granular bimodal routing per `(current_seq, trade)`.
+- `seq INTEGER NOT NULL REFERENCES universal_stream_catalog(seq)`
+- `trade_slug VARCHAR(50) NOT NULL REFERENCES trades(slug)`
+- `signal_type VARCHAR(20) NOT NULL CHECK (signal_type IN ('bid','work','fallback','last_minute'))`
+- `PRIMARY KEY (seq, trade_slug, signal_type)`
+- Indexes: `(trade_slug, signal_type)`, `(seq, signal_type)`
+
+### Column additions to existing tables
+
+#### `permits` — add 7 columns
+- `lead_id TEXT` — generated from `permit_num` + `revision_num` via trigger; promoted NOT NULL + UNIQUE after Phase C backfill
+- `linked_coa_application_number VARCHAR(50)` — back-reference to `coa_applications`; indexed; NOT FK (CoA may be retired before permit)
+- `lifecycle_seq INTEGER` — granular Universal Stream row reference; populated in Phase E
+- `lifecycle_group VARCHAR(10)`, `lifecycle_block VARCHAR(10)`, `lifecycle_stage VARCHAR(5)` — granular hierarchy
+- `bid_value DECIMAL(3,2)` — 0-1 importance score
+
+#### `coa_applications` — add 13 columns
+- `lead_id TEXT` — generated from `application_number` via trigger; NOT NULL + UNIQUE after Phase C backfill
+- `coa_type_class VARCHAR(30)` — residential / commercial / institutional / mixed
+- `project_type VARCHAR(50)` — Addition / NewConstruction / Alteration / Demolition / Severance / Mixed
+- `scope_tags TEXT[]`
+- `scope_classified_at TIMESTAMPTZ`, `scope_source VARCHAR(30)` — provenance
+- `structure_type VARCHAR(30)` — denormalized from `parcel_buildings`
+- `neighbourhood_id BIGINT`
+- `latitude DECIMAL(10,7)`, `longitude DECIMAL(10,7)` — geocoded
+- `modeled_gfa_sqm NUMERIC`, `estimated_cost NUMERIC`, `cost_source VARCHAR(20)` — geometric cost path
+- `cost_classified_at TIMESTAMPTZ`
+- `lifecycle_seq INTEGER`, `lifecycle_group VARCHAR(10)`, `lifecycle_block VARCHAR(10)`, `lifecycle_stage VARCHAR(5)`, `bid_value DECIMAL(3,2)` — granular hierarchy mirroring `permits`
+
+#### `cost_estimates`, `trade_forecasts`, `tracked_projects` — add `lead_id TEXT`
+Backfilled in Phase C from `permit_num` + `revision_num`. Eventually replaces legacy keys after Phase H legacy column drop. PKs migrate to `(lead_id, ...)`.
+
+#### `phase_stay_calibration` — add 4 columns for granular cohort key
+- `from_seq INTEGER`, `to_seq INTEGER` — granular cohort key dimensions
+- `project_type VARCHAR(50)`, `coa_type_class VARCHAR(30)` — new cohort-key dimensions
+
+#### `logic_variables` — add new keys
+- `lifecycle_band_block_<block_id>_min/max` (~15 keys) — per-block distribution bands replacing the legacy `lifecycle_band_p{N}_min/max` namespace
+- `lifecycle_band_seq_<seq>_min/max` (×110, optional diagnostic-only)
+- `lifecycle_status_history_retention_days` (default 1825 = 5 years)
+- `coa_stall_threshold_p2_days` (default 90), `coa_imminent_window_days` (default 7) — CoA CRM alert tuning
+
+### Retired tables (Phase H)
+
+After Phase G PRE-permit retirement + Phase H legacy-column cleanup, these tables/aliases are dropped:
+- `permit_trades` → replaced by `lead_trades`
+- `permit_parcels` → replaced by `lead_parcels`
+- `permit_phase_transitions` → replaced by `lifecycle_transitions`
+- `lifecycle_band_p{N}_min/max` keys (36) → replaced by `lifecycle_band_block_<block_id>_min/max`
+
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
 - **Logic:** Verify constraint enforcement -- NOT NULL on PK columns, CHECK constraints on tier/confidence, UNIQUE on slugs/normalized names/junction composites, and FK integrity across all junction tables.
