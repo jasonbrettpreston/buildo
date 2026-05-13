@@ -8,10 +8,20 @@
 -- the new cohort-dim columns contain NULL for every existing row, and
 -- PRIMARY KEY rejects NULLs by default.
 --
--- The new shape is claimed via UNIQUE NULLS NOT DISTINCT (PostgreSQL 15+
--- syntax; deployed PG is 16 per Spec 34) which allows multiple rows
--- with NULL cohort dims during the Phase B–E transition. Phase E
--- backfills the cohort dims and then swaps the PK over.
+-- The new shape is claimed via UNIQUE (default NULLS DISTINCT) on
+-- (permit_type, project_type, coa_type_class, from_seq, to_seq). During
+-- Phase B→E every row has NULL cohort dims; with default NULL semantics
+-- each NULL is considered unique, so legacy fixtures with multiple
+-- (permit_type, phase) rows continue to insert cleanly. The pre-existing
+-- PK on (permit_type, phase) enforces uniqueness during the transition.
+-- Phase E backfills the cohort dims and the constraint then enforces
+-- uniqueness on the new shape.
+--
+-- R6 CI hotfix: the prior revision used NULLS NOT DISTINCT, which
+-- collapsed every NULL-cohort row into the same key and broke
+-- lead-inspect-query.db.test.ts (it inserts multiple per-phase rows
+-- for the same permit_type with NULL cohort dims). Switched to the
+-- default NULLS DISTINCT semantics — see active task R6 hotfix log.
 --
 -- Transactional apply is provided by the migrate.js runner outer
 -- transaction (scripts/migrate.js lines 210-221). Per R8 review, the
@@ -29,15 +39,24 @@ ALTER TABLE phase_stay_calibration
   ADD COLUMN IF NOT EXISTS project_type VARCHAR(50),
   ADD COLUMN IF NOT EXISTS coa_type_class VARCHAR(30);
 
--- Claim the new cohort-key shape ahead of Phase E recalibration. The
--- NULLS NOT DISTINCT clause requires PG15+; verified deployed on PG16.
--- Multiple existing rows can share NULL cohort dims during the Phase B–E
--- window without violating uniqueness.
+-- Claim the new cohort-key shape ahead of Phase E recalibration with
+-- the DEFAULT NULLS DISTINCT semantics. During Phase B→E, every row
+-- has NULL cohort dims (project_type, coa_type_class, from_seq, to_seq);
+-- NULLS DISTINCT treats each NULL as unique so legacy fixtures with
+-- multiple (permit_type, phase) rows continue to insert cleanly. The
+-- pre-existing PK on (permit_type, phase) enforces uniqueness during
+-- the transition window. Once Phase E backfills cohort dims, this
+-- constraint enforces uniqueness on the new shape.
+--
+-- R6 CI hotfix: the prior revision used NULLS NOT DISTINCT, which
+-- collapsed all NULL-cohort rows into the same key and broke
+-- lead-inspect-query.db.test.ts (it inserts multiple per-phase
+-- calibration rows for the same permit_type with NULL cohort dims).
 DO $$
 BEGIN
     ALTER TABLE phase_stay_calibration
       ADD CONSTRAINT phase_stay_calibration_new_unique
-        UNIQUE NULLS NOT DISTINCT (permit_type, project_type, coa_type_class, from_seq, to_seq);
+        UNIQUE (permit_type, project_type, coa_type_class, from_seq, to_seq);
 EXCEPTION
     WHEN duplicate_object THEN NULL;
 END $$;

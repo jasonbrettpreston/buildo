@@ -1,6 +1,6 @@
 # Active Task: WF1 #coa-pipeline-parity-phase-b — Schema Migrations
 
-**Status:** COMPLETE 2026-05-13 — Phase B landed in 8 commits + 2 CI hotfixes. R6 verifier (51/51 PASS) confirms all 14 migrations apply cleanly against fresh local Postgres staging. CI db-tests should now pass with the 3 hotfix changes (trade seeds, IMMUTABLE date_trunc, logic_variables scope reduction).
+**Status:** COMPLETE 2026-05-13 — Phase B landed in 10 commits + 3 CI hotfixes. Local db-tests suite (`BUILDO_TEST_DB=1 npm run test:db`) now 55/55 green. CI db-tests should pass on next run.
 **Workflow:** WF1 (Genesis — second phase of the larger WF2 #coa-pipeline-parity work)
 **Domain Mode:** Backend/Pipeline (migrations + seed data + schema parity tests)
 **Rollback Anchor:** `33d9b0a` (current HEAD on main — WF1 Phase A R8 fixes)

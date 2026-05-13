@@ -37,8 +37,23 @@ describe('migration 135 — phase_stay_calibration cohort key extension (WF1 #co
     expect(sql).toMatch(/ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+coa_type_class\s+VARCHAR\s*\(\s*30\s*\)/i);
   });
 
-  it('adds UNIQUE NULLS NOT DISTINCT on the new cohort key shape (PG16+ syntax)', () => {
-    expect(sql).toMatch(/ADD\s+CONSTRAINT\s+phase_stay_calibration_new_unique\s+UNIQUE\s+NULLS\s+NOT\s+DISTINCT\s*\(\s*permit_type\s*,\s*project_type\s*,\s*coa_type_class\s*,\s*from_seq\s*,\s*to_seq\s*\)/i);
+  it('adds UNIQUE with default NULLS DISTINCT on the new cohort key shape', () => {
+    // R6 CI hotfix: the prior revision used NULLS NOT DISTINCT, which
+    // collapsed all Phase B-era NULL-cohort rows into the same key and
+    // broke lead-inspect-query.db.test.ts (multiple per-phase rows for
+    // the same permit_type with NULL cohort dims). Switched to default
+    // NULLS DISTINCT — pre-existing PK on (permit_type, phase) covers
+    // uniqueness through Phase B→E; the new UNIQUE only enforces once
+    // Phase E backfills the cohort dims.
+    expect(sql).toMatch(/ADD\s+CONSTRAINT\s+phase_stay_calibration_new_unique\s+UNIQUE\s*\(\s*permit_type\s*,\s*project_type\s*,\s*coa_type_class\s*,\s*from_seq\s*,\s*to_seq\s*\)/i);
+    // Anti-pattern: the NULLS NOT DISTINCT clause must be absent from
+    // executable SQL (narrative comments referencing the fix history
+    // are fine — strip lines starting with `--` before checking).
+    const executableOnly = sql
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('--'))
+      .join('\n');
+    expect(executableOnly).not.toMatch(/NULLS\s+NOT\s+DISTINCT/i);
   });
 
   it('R2.v3 Item 10 regression-lock: does NOT attempt to swap the PK (Phase E does that, not Phase B)', () => {
