@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS universal_stream_catalog (
     status              VARCHAR(60)     NOT NULL,
     phase               VARCHAR(40),
     bid_value           DECIMAL(3,2)    CHECK (bid_value IS NULL OR (bid_value >= 0 AND bid_value <= 1)),
-    loop_marker         VARCHAR(60),
+    loop_marker         VARCHAR(80),
     group_color         VARCHAR(7),
     group_icon          VARCHAR(8),
     block_color         VARCHAR(7),

@@ -1,18 +1,20 @@
-// 🔗 SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.7 (seq-level bands)
-//             docs/specs/02-web-admin/86_control_panel.md §1 (logic_variables surface)
+// 🔗 SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §1 (logic_variables surface)
 //             docs/specs/01-pipeline/82_crm_assistant_alerts.md (CoA stall + imminent)
+//             docs/specs/01-pipeline/42_chain_coa.md §6.6.A.1 (orphan-audit CQA gate)
 //
 // SQL-shape regression-lock for migration 136 (Phase B logic_variables seed).
 //
-// Seeds 333 new logic_variable rows for Phase E / F / G consumers:
-//   - 110 × 3 = 330 seq-level distribution band keys (min, max,
-//     sample_size_threshold per seq 1-110). All NULL until Phase E
-//     recalibration populates real values.
-//   - 5 standalone CoA / retention / orphan / preflight keys with
-//     Spec-86-aligned defaults.
+// Seeds 5 standalone logic_variables rows for Phase F / Phase C / Phase B
+// consumers. Original draft also seeded 330 seq-level distribution band
+// keys with NULL values — removed during R6 CI hotfix when the staging
+// migration revealed that logic_variables.variable_value is DECIMAL NOT
+// NULL (migration 092) and the _sample_size_threshold tier-selector
+// values are enum strings that don't fit DECIMAL anyway. The 330 band
+// keys are now Phase E's responsibility (recalibration script inserts
+// them ON CONFLICT DO UPDATE once observed values exist).
 //
-// ON CONFLICT (variable_key) DO NOTHING — re-runs are no-ops, and any
-// operator-tuned values already present in the DB are preserved.
+// ON CONFLICT (variable_key) DO NOTHING — re-runs are no-ops; operator-
+// tuned values already present in the DB are preserved.
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
@@ -41,83 +43,54 @@ describe('migration 136 — logic_variables Phase B seed (WF1 #coa-pipeline-pari
     expect(sql).toMatch(/ON\s+CONFLICT\s*\(\s*variable_key\s*\)\s+DO\s+NOTHING/i);
   });
 
-  // Helper: strip the `-- DOWN` block + all comment-only lines so key
-  // counts reflect ONLY executable INSERT rows (the DOWN block lists
-  // example key names in comments which would otherwise inflate counts).
-  const executableSql = () => {
-    const downIdx = sql.search(/--\s*DOWN\b/i);
-    const upBody = downIdx === -1 ? sql : sql.slice(0, downIdx);
-    return upBody
-      .split('\n')
-      .filter((line) => !line.trim().startsWith('--'))
-      .join('\n');
-  };
-
-  it('seeds lifecycle_band_seq_<N>_min for all 110 seqs', () => {
-    const minMatches = executableSql().match(/'lifecycle_band_seq_\d{1,3}_min'/g) ?? [];
-    expect(minMatches.length).toBe(110);
-  });
-
-  it('seeds lifecycle_band_seq_<N>_max for all 110 seqs', () => {
-    const maxMatches = executableSql().match(/'lifecycle_band_seq_\d{1,3}_max'/g) ?? [];
-    expect(maxMatches.length).toBe(110);
-  });
-
-  it('seeds lifecycle_band_seq_<N>_sample_size_threshold for all 110 seqs', () => {
-    const tierMatches = executableSql().match(/'lifecycle_band_seq_\d{1,3}_sample_size_threshold'/g) ?? [];
-    expect(tierMatches.length).toBe(110);
-  });
-
-  it('boundary seqs (1, 55, 110) all have min + max + sample_size_threshold', () => {
-    expect(sql).toMatch(/'lifecycle_band_seq_1_min'/);
-    expect(sql).toMatch(/'lifecycle_band_seq_1_max'/);
-    expect(sql).toMatch(/'lifecycle_band_seq_1_sample_size_threshold'/);
-    expect(sql).toMatch(/'lifecycle_band_seq_55_min'/);
-    expect(sql).toMatch(/'lifecycle_band_seq_55_max'/);
-    expect(sql).toMatch(/'lifecycle_band_seq_55_sample_size_threshold'/);
-    expect(sql).toMatch(/'lifecycle_band_seq_110_min'/);
-    expect(sql).toMatch(/'lifecycle_band_seq_110_max'/);
-    expect(sql).toMatch(/'lifecycle_band_seq_110_sample_size_threshold'/);
-  });
-
-  it('all band values are NULL initially (Phase E recalibration populates them)', () => {
-    // Find every executable INSERT row that looks like a seq-band row and
-    // assert the value field is NULL. Skip the DOWN block comments which
-    // reference the keys without supplying values.
-    const lines = executableSql()
-      .split('\n')
-      .filter((l) => /'lifecycle_band_seq_\d+_(min|max|sample_size_threshold)'/.test(l));
-    expect(lines.length).toBeGreaterThanOrEqual(330);
-    for (const line of lines) {
-      expect(line).toMatch(/'lifecycle_band_seq_\d+_(?:min|max|sample_size_threshold)'\s*,\s*NULL\s*,/i);
-    }
+  it('does NOT seed seq-level band keys (deferred to Phase E recalibration — CI hotfix)', () => {
+    // The original draft seeded 330 lifecycle_band_seq_<N>_* rows with
+    // NULL values, but logic_variables.variable_value is DECIMAL NOT NULL.
+    // Phase E recalibration writes the band rows once observed values
+    // exist. This test prevents the regression.
+    const executableUp = (() => {
+      const downIdx = sql.search(/--\s*DOWN\b/i);
+      const upBody = downIdx === -1 ? sql : sql.slice(0, downIdx);
+      return upBody
+        .split('\n')
+        .filter((line) => !line.trim().startsWith('--'))
+        .join('\n');
+    })();
+    expect(executableUp).not.toMatch(/'lifecycle_band_seq_\d+_(min|max|sample_size_threshold)'/);
   });
 
   it('seeds lifecycle_status_history_retention_days = 1825 (5 years, per Spec 86)', () => {
-    expect(sql).toMatch(/'lifecycle_status_history_retention_days'\s*,\s*'?1825'?\s*,/i);
+    expect(sql).toMatch(/'lifecycle_status_history_retention_days'\s*,\s*1825\s*,/i);
   });
 
   it('seeds coa_stall_threshold_p2_days = 90 (per Spec 82)', () => {
-    expect(sql).toMatch(/'coa_stall_threshold_p2_days'\s*,\s*'?90'?\s*,/i);
+    expect(sql).toMatch(/'coa_stall_threshold_p2_days'\s*,\s*90\s*,/i);
   });
 
   it('seeds coa_imminent_window_days = 7 (per Spec 82)', () => {
-    expect(sql).toMatch(/'coa_imminent_window_days'\s*,\s*'?7'?\s*,/i);
+    expect(sql).toMatch(/'coa_imminent_window_days'\s*,\s*7\s*,/i);
   });
 
   it('seeds coa_orphan_lead_id_warn_threshold = 0 (CQA gate)', () => {
-    expect(sql).toMatch(/'coa_orphan_lead_id_warn_threshold'\s*,\s*'?0'?\s*,/i);
+    expect(sql).toMatch(/'coa_orphan_lead_id_warn_threshold'\s*,\s*0\s*,/i);
   });
 
   it('seeds phase_b_revision_num_max_length = 2 (Phase B preflight)', () => {
-    expect(sql).toMatch(/'phase_b_revision_num_max_length'\s*,\s*'?2'?\s*,/i);
+    expect(sql).toMatch(/'phase_b_revision_num_max_length'\s*,\s*2\s*,/i);
+  });
+
+  it('uses unquoted numeric literals (variable_value column is DECIMAL NOT NULL)', () => {
+    // The original draft used quoted string literals ('1825', '90'); both
+    // forms work via implicit cast but the unquoted form makes the
+    // DECIMAL constraint explicit at the SQL layer.
+    expect(sql).not.toMatch(/'lifecycle_status_history_retention_days'\s*,\s*'1825'/i);
   });
 
   it('does NOT use CONCURRENTLY (seed-only migration, no indexes)', () => {
     expect(sql).not.toMatch(/CREATE\s+INDEX\s+CONCURRENTLY/i);
   });
 
-  it('comment-only DOWN block per Rule 6 — DELETE FROM enumerated explicitly (no wildcard)', () => {
+  it('comment-only DOWN block per Rule 6', () => {
     expect(sql).toMatch(/--\s*DOWN\b/i);
     const downIdx = sql.search(/--\s*DOWN\b/i);
     expect(downIdx).toBeGreaterThan(0);

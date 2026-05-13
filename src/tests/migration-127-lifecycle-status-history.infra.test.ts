@@ -103,7 +103,14 @@ describe('migration 127 — lifecycle_status_history table (WF1 #coa-pipeline-pa
     // load time. Without this UNIQUE INDEX, re-running over the same time window
     // would INSERT duplicate rows. Truncate to second so true-distinct events
     // at the same second are not deduplicated.
-    expect(sql).toMatch(/CREATE\s+UNIQUE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+uniq_lifecycle_status_history_natural_key\s+ON\s+lifecycle_status_history\s*\(\s*lead_id\s*,\s*to_status\s*,\s*date_trunc\s*\(\s*'second'\s*,\s*transitioned_at\s*\)\s*\)/i);
+    //
+    // CI db-tests hotfix: original expression `date_trunc('second',
+    // transitioned_at)` failed at index creation with "functions in index
+    // expression must be marked IMMUTABLE" because the 2-arg
+    // date_trunc(text, timestamptz) is STABLE (session-timezone dependent).
+    // Wrapping in `AT TIME ZONE 'UTC'` casts to TIMESTAMP and selects the
+    // IMMUTABLE overload.
+    expect(sql).toMatch(/CREATE\s+UNIQUE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+uniq_lifecycle_status_history_natural_key\s+ON\s+lifecycle_status_history\s*\(\s*lead_id\s*,\s*to_status\s*,\s*date_trunc\s*\(\s*'second'\s*,\s*transitioned_at\s+AT\s+TIME\s+ZONE\s+'UTC'\s*\)\s*\)/i);
   });
 
   it('uses bare CREATE INDEX (not CONCURRENTLY) — empty table at creation', () => {

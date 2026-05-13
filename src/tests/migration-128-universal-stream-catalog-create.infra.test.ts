@@ -73,8 +73,10 @@ describe('migration 128 — universal_stream_catalog create (WF1 #coa-pipeline-p
     expect(sql).toMatch(/CHECK\s*\(\s*bid_value\s+IS\s+NULL\s+OR\s*\(\s*bid_value\s*>=\s*0\s+AND\s+bid_value\s*<=\s*1\s*\)\s*\)/i);
   });
 
-  it('declares loop_marker VARCHAR(60) (e.g., "↩ #75" or "(terminal)")', () => {
-    expect(sql).toMatch(/loop_marker\s+VARCHAR\s*\(\s*60\s*\)/i);
+  it('declares loop_marker VARCHAR(80) (widened from 60 — seq 37 needs 65 chars: CI db-tests hotfix)', () => {
+    // seq 37 loop_marker is 65 chars: '↩ #17 (when applicant responds) or → #51 Cancelled (if abandoned)'.
+    // VARCHAR(60) was inherited from Spec 42 §6.6.B and rejected this row at seed time.
+    expect(sql).toMatch(/loop_marker\s+VARCHAR\s*\(\s*80\s*\)/i);
   });
 
   it('declares 6 color/icon columns: group_color/icon, block_color/icon, stage_color/icon', () => {

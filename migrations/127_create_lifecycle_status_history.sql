@@ -47,7 +47,15 @@ CREATE INDEX IF NOT EXISTS idx_lifecycle_status_history_lead         ON lifecycl
 CREATE INDEX IF NOT EXISTS idx_lifecycle_status_history_seq          ON lifecycle_status_history (from_seq, to_seq) WHERE from_seq IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_lifecycle_status_history_decision     ON lifecycle_status_history (decision) WHERE decision IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_lifecycle_status_history_transitioned ON lifecycle_status_history (transitioned_at);
-CREATE UNIQUE INDEX IF NOT EXISTS uniq_lifecycle_status_history_natural_key ON lifecycle_status_history (lead_id, to_status, date_trunc('second', transitioned_at));
+-- IMMUTABLE requirement on index expressions: `date_trunc(text, timestamptz)`
+-- is STABLE (result depends on session timezone), so Postgres rejects it
+-- in an index. Fix by casting to TIMESTAMP-at-UTC first; `date_trunc(text,
+-- timestamp)` IS IMMUTABLE. The `AT TIME ZONE 'UTC'` wrapper makes
+-- the truncation deterministic across sessions. Idempotency semantics
+-- are preserved: both load-permits.js and load-coa.js see the same
+-- TIMESTAMPTZ and project to the same UTC-second when checking
+-- ON CONFLICT.
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_lifecycle_status_history_natural_key ON lifecycle_status_history (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'));
 
 -- ═══════════════════════════════════════════════════════════════════
 -- DOWN — manual rollback only, intentionally not transactional

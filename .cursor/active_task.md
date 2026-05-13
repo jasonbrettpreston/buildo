@@ -1,6 +1,6 @@
 # Active Task: WF1 #coa-pipeline-parity-phase-b — Schema Migrations
 
-**Status:** Implementation (CI hotfix in progress — db-tests workflow failed after R8 push; 17 trade slugs missing from `trades` table caused FK violations on migration 131. Prepending trade seed to migration 131 in place.)
+**Status:** COMPLETE 2026-05-13 — Phase B landed in 8 commits + 2 CI hotfixes. R6 verifier (51/51 PASS) confirms all 14 migrations apply cleanly against fresh local Postgres staging. CI db-tests should now pass with the 3 hotfix changes (trade seeds, IMMUTABLE date_trunc, logic_variables scope reduction).
 **Workflow:** WF1 (Genesis — second phase of the larger WF2 #coa-pipeline-parity work)
 **Domain Mode:** Backend/Pipeline (migrations + seed data + schema parity tests)
 **Rollback Anchor:** `33d9b0a` (current HEAD on main — WF1 Phase A R8 fixes)
