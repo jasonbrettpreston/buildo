@@ -3,6 +3,48 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Spec 42 §6 — WF2 #coa-pipeline-parity R0 Multi-Agent Review Deferred Items (2026-05-13)
+
+Source: R0 plan review on `docs/specs/01-pipeline/42_chain_coa.md` §6 (Gemini + DeepSeek adversarial + worktree code-reviewer). Items below are accepted-and-deferred — either pre-existing pipeline concerns, operational hardening that fits a later WF, or specificity that resolves at WF1 plan-lock.
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| MEDIUM | Gemini #4 | **CKAN source schema-change resilience** — what if the CKAN provider fixes the `C_OF_A_DESCISION` typo or renames `WARD_NUMBER`/`WARD`? `assert_schema` (step 1) only validates metadata existence, not column-name stability. | Pre-existing concern across the pipeline; belongs in a global CKAN schema-drift hardening pass. |
+| MEDIUM | Gemini #6, DeepSeek #6 | **Geocoding failure behavior in `load-coa.js`** — ungeocoded CoAs silently skip parcel linking. No fallback (address-point-only) or retry strategy. | Skipped rows surface in `assert-global-coverage.js` as a parcel-coverage gap. Operational tuning during Phase D. |
+| MEDIUM | Gemini #7 | **Brittle keyword classifier — no operational playbook.** New `classify-coa-scope.js` + `classify-coa-trades.js` use heuristics with no dead-letter queue, no manual-review process, no post-launch monitoring/tuning plan. | Captured as Open Decision #1 in §6.13. Playbook lives in Phase D handoff doc, not the spec. |
+| LOW | Gemini #8, DeepSeek #5 | **Advisory lock timeout / deadlock recovery** — what if a script crashes holding 4201/4202? What lock-ordering prevents cross-chain deadlock between 84 and 4201? | Spec 47 §R6 already governs lock lifecycle for all scripts. Not unique to this WF. |
+| LOW | Gemini #9 | **Transactional integrity** — atomic-write boundary unclear for new scripts on bad-row failure. | Spec 47 §R9 (`withTransaction`) mandates full rollback. Not unique to this WF. |
+| HIGH | Gemini #10 | **Universal applicability of permit `trade_mapping_rules` to CoA descriptions** — assumes the Tier-3 rule set works for CoA prose as for permit prose. Vocabulary may diverge. | Testable during Phase D against fixtures. If accuracy < 80%, fall through to LLM v2 per Open Decision #1. |
+| MEDIUM | Gemini #11 | **Legacy column deprecation dependency audit** — Phase H drops `permit_num`/`revision_num` from hot-path tables without auditing external BI tools, analyst queries, downstream systems. | Add to Phase H gate as a precondition; tracked here as operational follow-up. |
+| MEDIUM | Gemini #13 | **Synchronous geocoding at ingest** couples primary ingestion with external API latency. | Open Decision #2 in §6.13 (recommendation: bundle; revisit if step 2 latency > 60s p95). |
+| HIGH | Gemini #14 | **`lead_id` backfill performance** — Phase C's `migrate-to-lead-id.js` updates millions of rows. No batched-update strategy documented. Naive `UPDATE` could lock tables for hours. | Add batched-update detail to Phase C deliverable at WF1 plan-lock (BATCH_SIZE, off-peak window, lock-acquisition timing). |
+| LOW | Gemini #15 | **Band recalibration heuristic (median ± 30%)** is arbitrary. | Tune iteratively per Phase E gate; final values committed to `scripts/seeds/logic_variables.json`. |
+| LOW | Gemini #16 | **"Sane" as a Phase C gate metric** — not quantitatively measurable. | Tighten gate to specific threshold (e.g., `opportunity_score` p50 within ±10% of pre-migration baseline) at WF1 plan-lock. |
+| MEDIUM | Gemini #5, partial | **PRE-permit cutover race** — what if a CoA gets a real permit linked during the Phase G one-time DELETE pass? | Add to Phase G operational runbook: run DELETE inside `withTransaction` after `link-coa.js` quiesces; or gate on advisory lock 4205. |
+| MEDIUM | DeepSeek #12 | **Downstream-consumer verification before PRE-permit retirement** — Phase G assumes the score engine, mobile feed, and CRM all handle `lead_type='coa'`. Not gated explicitly. | Add Phase G gate criterion: "every consumer integration test verified to read `lead_id` and dispatch correctly on `lead_type`." |
+| LOW | DeepSeek #4 | **`street_name_normalized` NULL handling** in `link-coa.js`. | Already handled: tier cascade falls through to Description FTS (Tier 3, 0.10–0.50 confidence). |
+| LOW | DeepSeek #7 | **CKAN API downtime / retry / backoff.** | Pre-existing global pipeline concern; covered by Spec 40 SDK retry semantics. |
+| LOW | DeepSeek #8 | **`effective_match_rate_pct` false-positive PASS** — gate passes when `potential_matches = 0`, even though unlinked CoAs may exist without matching permits yet. | Existing behavior; not introduced by this WF. |
+| LOW | DeepSeek #9 | **Phase-distribution skip accumulation** — `assert_lifecycle_phase_distribution` can skip multiple days on persistent lock conflict. | Existing behavior. Alerting on skipped-N-days-in-a-row is a separate observability WF. |
+| LOW | DeepSeek #10 | **Address-normalization version parity** — assumes `normalizeStreetName` returns identical output for CoA + permit. No contract test. | Add `address-normalization-parity.logic.test.ts` to Phase B test list. |
+| LOW | DeepSeek #13 | **CKAN SQL endpoint throttling** at full-load scale. | Pre-existing. |
+| LOW | DeepSeek #14 | **`link-coa.js` join complexity** — joins on `street_name_normalized + street_num` without explicit indexes. | Existing behavior; index audit in Phase B migration. |
+| LOW | DeepSeek #15 | **Advisory lock ID collision risk** between 4201–4205 (Spec 42 + suffix) and future scripts. | Mitigated by Spec 47 §R2 "lock ID = spec number" convention. |
+| LOW | Worktree DEFER1 | §6.12 item 3 wording on QUESTIONABLE sequencing review contradicts Phase A scope. | Minor wordsmithing in next spec amendment. |
+| LOW | Worktree DEFER2 | `lead_analytics.lead_key` alias view not tracked in any migration phase. | Add to Phase B migration concretization at WF1 plan-lock. |
+| LOW | Worktree DEFER3 | Spec 80 amendment description lacks decision-tree specificity (keyword count, regex-vs-ILIKE). | Resolves at WF1 plan-lock when classifier rules are enumerated. |
+| LOW | Worktree DEFER4 | **Spec 49 missing from §6.10 cross-spec changes** despite being a `lifecycle_phase IS NOT NULL ≥ 95%` audit gate consumer per Spec 84 §8.2. | Add Spec 49 row to §6.10 in next spec amendment pass. |
+
+**BUGs identified — recommend fixing in spec text before plan-lock (8 items):**
+1. §2 step-count framing — current 12 vs target 22; §3 Behavioral Contract still references pre-permit generation as core logic.
+2. `coa_parcels` / `coa_trades` stragglers in §6.5 lines 237/239/248 and Spec 84 §8.9 lines 1557/1559/1577 → rename to `lead_parcels` / `lead_trades`.
+3. `link-coa-neighbourhoods.js` shares advisory lock 4201 with `link-coa-to-parcels.js` (Spec 47 §R2 violation) → assign 4202 or formally bundle.
+4. `lifecycle_transitions.from_seq/to_seq` comment in §6.6.B says "nullable schema prep — populated by future lifecycle-engine WF" but §6.7 says this WF populates them. Comment fix.
+5. §6.5 step 12 `link_similar` row says "YES — NEW `link-coa-similar.js`" but §6.12 defers. Align to "DEFER — v2".
+6. `LPAD(revision_num::text, 2, '0')` cast missing in §6.4 test description and §6.9 lib description (inconsistent with §6.6.A canonical form). Standardize.
+7. 84-W11 P3/P4 namespace collision not in §6.10 Spec 84 amendment deliverable list. Add resolution to Phase A.
+8. CKAN `coa_applications.status` enumeration exhaustiveness — §6.7 lists specific status values; future CKAN additions would silently NULL `lifecycle_phase`. Add catchall fallback rule.
+
 ## WF1 #C (2026-05-11) — Multi-Agent Review deferrals from admin Lifecycle Timeline panel
 _Source: pre-implementation R0 Gemini review of the plan itself (7 findings, 5 folded into plan) + post-implementation R8 multi-agent review of the component code (Gemini + DeepSeek + worktree code-reviewer). 8 BUGs fixed in-loop; remaining items catalogued below._
 

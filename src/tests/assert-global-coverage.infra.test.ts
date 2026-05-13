@@ -449,9 +449,14 @@ describe('chain specs — step counts updated', () => {
     expect(content).toContain('30 (sequential');
   });
 
-  it('42_chain_coa.md declares 12 steps', () => {
+  it('42_chain_coa.md declares 12 steps (current state — target 22 per §6)', () => {
     const content = fs.readFileSync(CHAIN_COA_SPEC, 'utf8');
-    expect(content).toContain('12 (sequential');
+    // Current chain is 12 steps; §6 implementation plan expands to ~22.
+    // Spec 42 §2 declares the current state with "Steps: 12" — assert on the
+    // durable prefix, not the exact parenthetical wording (which now reads
+    // "12 (current state — sequential, stop-on-failure)").
+    expect(content).toMatch(/\*\*Steps:\*\*\s+12\b/);
+    expect(content).toContain('stop-on-failure');
   });
 });
 

@@ -1553,10 +1553,10 @@ The first implementation step is therefore to bring CoA applications up to parit
 
 | Permit-chain step | Source spec | Permit table | CoA equivalent (new) |
 |---|---|---|---|
-| Step 9 — link permits to parcels | Spec 41 §9 | `permit_parcels` | NEW `coa_parcels` table + `link-coa-to-parcels.js` script |
+| Step 9 — link permits to parcels | Spec 41 §9 | `permit_parcels` | Unified `lead_parcels` table (lead_id-keyed per Spec 42 §6.6.B Option C) + `link-coa-to-parcels.js` script for CoA side |
 | Step 11 — link parcels to buildings | Spec 41 §11 | `parcel_buildings` | reused — once CoA → parcel link succeeds, building lookup is shared |
 | Step 5 — classify permits (scope, project_type, residential/commercial class) | Spec 41 §5 + Spec 80 | `permits.scope_tags`, `.project_type`, `.permit_type_class` | NEW `classify-coa.js` writing equivalents on `coa_applications` |
-| Step 13 — classify permit trades | Spec 41 §13 + Spec 13 | `permit_trades` | NEW `coa_trades` table + reuse of trade-matrix logic on a CoA-specific feature set |
+| Step 13 — classify permit trades | Spec 41 §13 + Spec 13 | `permit_trades` | Unified `lead_trades` table (lead_id-keyed per Spec 42 §6.6.B Option C) + `classify-coa-trades.js` reusing `trade_mapping_rules` Tier-3 (description) only |
 | Step 15 — compute cost estimates | Spec 41 §15 + Spec 83 | `cost_estimates` | EXTEND `compute-cost-estimates.js` to also produce CoA cost rows, OR a parallel `compute-coa-cost-estimates.js` |
 
 **New columns on `coa_applications`:**
@@ -1573,10 +1573,13 @@ The first implementation step is therefore to bring CoA applications up to parit
 
 **New tables:**
 
-- `coa_parcels` — `(application_number, parcel_id, match_type, confidence, matched_at)`. Mirror of `permit_parcels` keyed on `application_number` instead of `permit_num`/`revision_num`.
-- `coa_trades` — `(application_number, trade_id, confidence, is_active, is_default_fallback)`. Mirror of `permit_trades` keyed on `application_number`.
+- `lead_parcels` — `(lead_id TEXT, parcel_id BIGINT, match_type, confidence, matched_at)`. Universal table replacing `permit_parcels`; CoA rows use `lead_id = 'coa:<application_number>'`.
+- `lead_trades` — `(id SERIAL, lead_id TEXT, trade_id, tier, confidence, is_active, phase, lead_score, classified_at, UNIQUE(lead_id, trade_id))`. Universal table replacing `permit_trades`.
+- `lifecycle_transitions` — `(id SERIAL, lead_id TEXT, from_phase, to_phase, from_seq, to_seq, transitioned_at, permit_type, project_type, coa_type_class, neighbourhood_id)`. Universal ledger replacing `permit_phase_transitions`.
+- `universal_stream_catalog` — 110-row reference table seeded from §2.5.h.2 (group/block/stage/labels/colors/icons/phase/bid_value).
+- `universal_stream_trade_signals` — `(seq, trade_slug, signal_type)` join table decomposing the 152 per-trade-per-row signals.
 
-(Cost output: either extend `cost_estimates` with an optional `application_number` column and nullable `permit_num`/`revision_num`, or add a separate `coa_cost_estimates` table mirroring the schema. Decision deferred to the implementation WF.)
+Cost output: `cost_estimates` rekeyed on `lead_id` (Option C — single unified table accepts both `'permit:...'` and `'coa:...'` lead_ids). See Spec 42 §6.6 for the full schema migration.
 
 **Reduced-information constraints (binding):**
 

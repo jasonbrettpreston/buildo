@@ -10,9 +10,11 @@ As a lead generator, I want Committee of Adjustment variance hearings imported, 
 <architecture>
 ## 2. Chain Definition
 
+> **Note (2026-05-13):** §2–§5 below describe the **current state** of the CoA chain (12 steps, PRE-permit placeholder, no scope/trade/cost classification on CoAs). The **target state** is defined in §6 Implementation Plan and ships in the WF2 #coa-pipeline-parity work — a ~22-step chain mirroring the permits pipeline with `lead_id`-keyed unified tables and granular Universal Stream lifecycle emission. Until that WF ships, the chain runs as documented in §2–§5.
+
 **Trigger:** `node scripts/run-chain.js coa` or `POST /api/admin/pipelines/chain_coa`
 **Schedule:** Daily
-**Steps:** 12 (sequential, stop-on-failure)
+**Steps:** 12 (current state — sequential, stop-on-failure). Target after §6: ~22 steps.
 **Gate:** `coa` — if `records_new = 0`, downstream enrichment steps are skipped
 
 ```
@@ -89,7 +91,7 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
    - Tier 2b: `street_name_normalized` only + permit ward NULL → 0.50
    - Tier 3: Description full-text search → 0.10-0.50 (ward as tiebreaker)
    - Audit: `effective_match_rate_pct` measures `high_confidence_linked / (high_confidence_linked + potential_matches)` where `high_confidence_linked` = Tiers 1a/1b/2a/2b only (0.50-0.95 confidence range), and `potential_matches` = unlinked CoAs with a real (non-Pre-Permit) permit at their exact address. Tier 1c (ward conflict, 0.10) and Tier 3 (description FTS, 0.10-0.50) are EXCLUDED from the numerator for consistency — both contain low-confidence matches. Tier 3 successes are tracked separately as INFO. Thresholds: `< 50%` = FAIL, `< 80%` = WARN, else PASS. When `potential_matches = 0` the verdict is PASS (steady state — nothing to link). The legacy `match_rate_pct` is preserved as INFO only.
-5. **Pre-permit generation** — approved CoA applications without linked permits become speculative leads
+5. **Pre-permit generation** — approved CoA applications without linked permits become speculative leads. **(Retired in §6 — see Phase G.)**
 6. **Aging check** — approved+unlinked applications older than 18 months flagged as expired (WARN)
 7. **Quality assertions** — CoA-scoped data bounds and engine health
 
@@ -136,7 +138,7 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
 ### Cross-Spec Dependencies
 - **Relies on:** `pipeline_system.md` (SDK, orchestrator)
 - **Relies on:** `chain_permits.md` (permits must be loaded first for linking)
-- **Shared steps:** `link_coa`, `create_pre_permits`, `refresh_snapshot` also appear in `chain_permits.md`
+- **Shared steps (current state):** `link_coa`, `create_pre_permits`, `refresh_snapshot` also appear in `chain_permits.md`. `create_pre_permits` is retired in §6 Phase G; the other two remain shared after the WF.
 </constraints>
 
 ---
@@ -200,7 +202,7 @@ Three layers, each with its own SPEC LINK header per Spec 47 §R12:
 
 **Logic tests (`*.logic.test.ts`):**
 - `classify-coa.logic.test.ts` — description-keyword classifier produces correct `(coa_type_class, project_type, scope_tags)` for canonical inputs (residential addition / commercial alteration / severance / etc.)
-- `classify-coa-trades.logic.test.ts` — `trade_mapping_rules` tier-3 filter produces correct `coa_trades` rows for known descriptions; default fallback fires when no rule matches; realtor inclusion gate (`shouldAppendRealtor` adapted for CoA features) fires for residential CoAs only
+- `classify-coa-trades.logic.test.ts` — `trade_mapping_rules` tier-3 filter produces correct `lead_trades` rows (lead_id = `'coa:' || application_number`) for known descriptions; default fallback fires when no rule matches; realtor inclusion gate (`shouldAppendRealtor` adapted for CoA features) fires for residential CoAs only
 - `link-coa-to-parcels.logic.test.ts` — address-normalization cascade matches the permit-side tiers (1a/1b/2a/2b/3); confidence floors and ward-booster logic identical
 - `compute-coa-cost-estimates.logic.test.ts` — geometric path produces non-null cost when `modeled_gfa_sqm` is non-null and `scope_tags` has at least one rateable tag; falls through to NULL otherwise (no Liar's-Gate equivalent)
 
@@ -212,7 +214,7 @@ Three layers, each with its own SPEC LINK header per Spec 47 §R12:
 - `bug-84-w12-regression.infra.test.ts` — load 1,000 CoA fixtures across all 22 `status` values; assert lifecycle classifier emits non-NULL phase for ≥ 95% of `decision IS NOT NULL` rows; assert P2/P3/P4 emit per `classifyCoaPhase()` rules
 
 **Schema parity & lead_id derivation tests (`*.logic.test.ts`):**
-- `lead-id-derivation.logic.test.ts` — for any `(permit_num, revision_num)` pair, derive `'permit:' || permit_num || ':' || LPAD(revision_num, 2, '0')` exactly; for any `application_number`, derive `'coa:' || application_number` exactly. Format is canonical and stable.
+- `lead-id-derivation.logic.test.ts` — for any `(permit_num, revision_num)` pair, derive `'permit:' || permit_num || ':' || LPAD(revision_num::text, 2, '0')` exactly (note the `::text` cast — `revision_num` is `SMALLINT` and PostgreSQL `LPAD` requires `text`); for any `application_number`, derive `'coa:' || application_number` exactly. Format is canonical and stable. Include fixture for `revision_num=5` asserting `'permit:XXXXX:05'` (zero-pad regression lock).
 - `lead-trades-schema-parity.logic.test.ts` — confirms unified `lead_trades` columns match the union of `permit_trades` + CoA needs. Same for `lead_parcels`.
 
 **CQA assertions extended (run inside the chain itself, not as separate test files):**
@@ -234,18 +236,18 @@ For each of the 30 steps in `chain_permits.md`, the disposition for the CoA pipe
 | 6 | `builders` (extract-builders.js) | SKIP v1 | CoA applicants are typically homeowners or designers, not builders. Builder identity only becomes meaningful at permit-application time. Decision: SKIP for v1; revisit if CoA applicant data proves useful. |
 | 7 | `link_wsib` | NO | Builders-only. CoA has no builder entity to link. |
 | 8 | `geocode_permits` | YES — NEW `geocode-coa.js` (or extension) | CoA address-linking (step 4) currently uses string normalization only. For parcel-spatial-linking we need lat/lng on CoAs. Either NEW SCRIPT or extend `load-coa.js` to geocode at ingest. |
-| 9 | `link_parcels` | YES — NEW `link-coa-to-parcels.js` | Spatial linkage to `parcels` polygons. Mirror of `link-parcels.js`. NEW table `coa_parcels` (same schema shape as `permit_parcels`, keyed on `application_number`). NEW SCRIPT. |
+| 9 | `link_parcels` | YES — NEW `link-coa-to-parcels.js` | Spatial linkage to `parcels` polygons. Mirror of `link-parcels.js`. Writes to **unified `lead_parcels` table** (lead_id = `'coa:' || application_number`) per §6.6.B Option C. Also writes `coa_applications.neighbourhood_id` as a final UPDATE step (bundled — no separate `link-coa-neighbourhoods.js` script). NEW SCRIPT. |
 | 10 | `link_neighbourhoods` | YES — NEW `link-coa-neighbourhoods.js` (or part of link-coa-to-parcels.js) | Point-in-polygon for `neighbourhoods`. Writes `coa_applications.neighbourhood_id`. Can be bundled into the parcels step. |
-| 11 | `link_massing` | YES — NO NEW SCRIPT | `parcel_buildings` is shared. CoA → parcel → buildings is a 2-hop JOIN through `coa_parcels`. No CoA-specific script needed; downstream scripts (cost, scope) JOIN through `coa_parcels` directly. |
-| 12 | `link_similar` | YES — NEW `link-coa-similar.js` (optional v2) | The permit-side step propagates `scope_tags` from BLD permits to companion HVA/PLB/etc. at the same address. For CoA the analog is propagating tags between sibling CoAs at the same address, OR propagating between a CoA and its eventually-linked permit. Decision: DEFER to v2 — initial CoA classification fires on description alone. |
-| 13 | `classify_permits` (trade matrix via `trade_mapping_rules`) | YES — NEW `classify-coa-trades.js` | **The previously-omitted "trade tags" step.** Uses `trade_mapping_rules` table (mig 005). The matrix has 3 tiers: Tier 1 keys on `permit_type` (DOES NOT APPLY to CoA — no permit_type), Tier 2 keys on `work` field (DOES NOT APPLY to CoA — no work field), Tier 3 keys on `description` ILIKE patterns (APPLIES — CoA has description). CoA classifier uses **tier-3 rules only** with the same `trade_mapping_rules` table — no separate matrix needed. Outputs to NEW `coa_trades` table mirroring `permit_trades` schema. Includes realtor-inclusion gate (`shouldAppendRealtor()` adapted to use `coa_type_class` + CoA description in place of `permit_type_class` + permit `work`). NEW SCRIPT. |
+| 11 | `link_massing` | YES — NO NEW SCRIPT | `parcel_buildings` is shared. CoA → parcel → buildings is a 2-hop JOIN through `lead_parcels` (filtered to `lead_id LIKE 'coa:%'`). No CoA-specific script needed; downstream scripts (cost, scope) JOIN through `lead_parcels` directly. |
+| 12 | `link_similar` | **DEFER to v2 (per §6.12)** | The permit-side step propagates `scope_tags` from BLD permits to companion HVA/PLB/etc. at the same address. For CoA the analog would propagate tags between sibling CoAs at the same address, OR between a CoA and its eventually-linked permit. Deferred: initial CoA classification fires on description alone for this WF; revisit if scope-tag coverage in audit_table reveals a meaningful gap. (Note: this is distinct from CoA→Permit linkage, which is delivered via existing `link-coa.js`.) |
+| 13 | `classify_permits` (trade matrix via `trade_mapping_rules`) | YES — NEW `classify-coa-trades.js` | **The previously-omitted "trade tags" step.** Uses `trade_mapping_rules` table (mig 005). The matrix has 3 tiers: Tier 1 keys on `permit_type` (DOES NOT APPLY to CoA — no permit_type), Tier 2 keys on `work` field (DOES NOT APPLY to CoA — no work field), Tier 3 keys on `description` ILIKE patterns (APPLIES — CoA has description). CoA classifier uses **tier-3 rules only** with the same `trade_mapping_rules` table — no separate matrix needed. Outputs to **unified `lead_trades` table** (lead_id = `'coa:' || application_number`) per §6.6.B Option C. Includes realtor-inclusion gate (`shouldAppendRealtor()` adapted to use `coa_type_class` + CoA description in place of `permit_type_class` + permit `work`). NEW SCRIPT. |
 | 14 | `backfill_realtor_permit_trades` | YES — bundled into `classify-coa-trades.js` | Realtor fan-out for CoA leads. Same logic as permit-side: insert one realtor row per residential CoA via `NOT EXISTS` guard + `ON CONFLICT DO NOTHING`. Decision: BUNDLE into the CoA trade classifier — no separate backfill script needed because we're not retrofitting historical rows. |
-| 15 | `compute_cost_estimates` (Spec 83) | YES — NEW `compute-coa-cost-estimates.js` | Geometric-only path (no applicant cost to anchor against). Reads `coa_parcels` → `parcel_buildings.modeled_gfa_sqm`, `coa_applications.scope_tags`, `coa_applications.project_type`, `trade_sqft_rates`, `scope_intensity_matrix` (Spec 83 Surgical Triangle). Writes `coa_applications.estimated_cost`, `.modeled_gfa_sqm`, `.cost_source='geometric'`. Decision: NEW SCRIPT (not extension of `compute-cost-estimates.js`) because the cost-source decision tree is simpler (no Liar's-Gate, no declared-cost anchor). NEW SCRIPT. |
+| 15 | `compute_cost_estimates` (Spec 83) | YES — NEW `compute-coa-cost-estimates.js` | Geometric-only path (no applicant cost to anchor against). Reads `lead_parcels` (filtered to CoA leads) → `parcel_buildings.modeled_gfa_sqm`, `coa_applications.scope_tags`, `coa_applications.project_type`, `trade_sqft_rates`, `scope_intensity_matrix` (Spec 83 Surgical Triangle). Writes `coa_applications.estimated_cost`, `.modeled_gfa_sqm`, `.cost_source='geometric'`. Decision: NEW SCRIPT (not extension of `compute-cost-estimates.js`) because the cost-source decision tree is simpler (no Liar's-Gate, no declared-cost anchor). NEW SCRIPT. |
 | 16 | `compute_timing_calibration_v2` | NO | Single calibration shared across all leads. CoA P1→P2→P3→P4 transitions feed the same `phase_calibration` table. No new script. |
 | 17 | `link_coa` | YES — already exists in CoA chain step 4 + EXTEND | Existing `link-coa.js` writes `coa_applications.linked_permit_num` + `linked_confidence`. EXTEND to also write `permits.linked_coa_application_number` (NEW column on permits). |
 | 18 | `create_pre_permits` | RETIRE | Eliminated as part of this work. Front-end reads CoA leads from `coa_applications` directly via `lead_type='coa'` lead identity. Existing PRE- rows in `permits` table cleared in a one-time migration. |
 | 19 | `refresh_snapshot` | YES — already exists + EXTEND | Existing `refresh-snapshot.js` aggregates dashboard metrics. EXTEND to add CoA classification coverage counts. |
-| 20 | `assert_data_bounds` | YES — already exists + EXTEND | EXTEND to add CoA-side bounds (e.g., `coa_applications.scope_tags` null rate, `coa_trades` row count). |
+| 20 | `assert_data_bounds` | YES — already exists + EXTEND | EXTEND to add CoA-side bounds (e.g., `coa_applications.scope_tags` null rate, `lead_trades WHERE lead_id LIKE 'coa:%'` row count). |
 | 21 | `assert_engine_health` | YES — already exists | CoA chain step 9 runs this. No change. |
 | 22 | `classify_lifecycle_phase` | YES — FIX bug 84-W12 + migrate to granular Universal Stream emission | (1) Wire `coa_applications.status` into `classifyCoaPhase()` — emit P2 on `status IN ('Internal Review', 'Public Hearing Scheduled')`, P3 on `decision IN ('Approved', 'Approved with Conditions', 'Conditional Consent')`, P4 on `decision = 'Final and Binding'`. (2) Extend classifier to also write granular Universal Stream columns (`lifecycle_seq`, `lifecycle_group`, `lifecycle_block`, `lifecycle_stage`, `bid_value`) by JOIN against `universal_stream_catalog`. (3) Write transitions to `lifecycle_transitions` ledger with both legacy phase codes AND new `from_seq` / `to_seq`. |
 | 23 | `assert_lifecycle_phase_distribution` | YES — RECALIBRATE | Distribution bands in `logic_variables.lifecycle_band_*_min/max` recalibrated against post-84-W12 production-shape data (CoA P1/P2/P3/P4 counts jump ~100×). New bands set on staging via iterative band-tuning passes. |
@@ -253,7 +255,7 @@ For each of the 30 steps in `chain_permits.md`, the disposition for the CoA pipe
 | 25 | `compute_trade_forecasts` (Spec 85) | YES — REKEY ON `lead_id` | Single unified script reads from both `permits` and `coa_applications` (UNION source SQL), writes rows keyed on `lead_id`. CoA-stage forecasts populate end-to-end (lifecycle classifier now emits non-NULL phase for CoAs). Bimodal routing for CoA-stage simplified: target always `bid_phase` (no construction yet — work phase doesn't apply); anchor priority `phase_started_at` → `decision_date` → `hearing_date` → application date. |
 | 26 | `compute_opportunity_scores` (Spec 81) | YES — REKEY ON `lead_id` | Same. CoA-stage opportunity scores now produce real values (was 0% under split plan). |
 | 27 | `update_tracked_projects` (Spec 82) | YES — EXTEND | `tracked_projects` already has `lead_type` column. EXTEND alert logic to handle `lead_type='coa'` rows: stall thresholds different (CoA at "Hearing Scheduled" for 1–3 months is normal, not a stall); auto-archive on `decision IN ('Refused','Withdrawn','Closed')`; imminent-alert window keyed on `hearing_date` instead of `predicted_start`. |
-| 28 | `assert_entity_tracing` | YES — EXTEND | 26-hour coverage matrix extended to CoA-side derivations (coa_trades, coa_parcels, scope_tags). |
+| 28 | `assert_entity_tracing` | YES — EXTEND | 26-hour coverage matrix extended to CoA-side derivations (`lead_trades WHERE lead_id LIKE 'coa:%'`, `lead_parcels WHERE lead_id LIKE 'coa:%'`, `coa_applications.scope_tags`). |
 | 29 | `assert_global_coverage` | YES — already exists in CoA chain step 12 + EXTEND | EXTEND with CoA-specific coverage thresholds (one row per new CoA column). |
 | 30 | `backup_db` | NO | Daily backup is global. |
 
@@ -305,8 +307,10 @@ CREATE INDEX idx_lead_parcels_parcel ON lead_parcels (parcel_id);
 CREATE INDEX idx_lead_parcels_lead ON lead_parcels (lead_id);
 
 -- Replaces permit_phase_transitions. Universal lifecycle ledger.
--- NEW from_seq/to_seq columns are nullable schema prep — populated by the
--- future lifecycle-engine WF; from_phase/to_phase remain authoritative until then.
+-- Both from_phase/to_phase (legacy P-codes) AND from_seq/to_seq (granular
+-- Universal Stream row references) populated by classify-lifecycle-phase.js
+-- as part of this WF — see §6.7. from_phase/to_phase remain populated for
+-- legacy-consumer compatibility during the Phase C-F consumer migration.
 CREATE TABLE lifecycle_transitions (
     id                  SERIAL          PRIMARY KEY,
     lead_id             TEXT            NOT NULL,
@@ -449,12 +453,15 @@ The bundled approach (chosen because the system is pre-live) migrates the lifecy
 
 **What this WF changes in the lifecycle engine:**
 
-1. **`scripts/lib/lifecycle-phase.js` — `classifyCoaPhase()` fix (bug 84-W12).** Wire `coa_applications.status` into phase routing. New rules:
-   - `status IN ('Internal Review', 'Public Hearing Scheduled')` → P2 (CoA Review)
-   - `decision IN ('Approved', 'Approved with Conditions', 'Conditional Consent')` → P3 (CoA Approved)
-   - `decision = 'Final and Binding'` → P4 (CoA Final)
-   - else (intake states, no decision) → P1 (CoA Intake)
+1. **`scripts/lib/lifecycle-phase.js` — `classifyCoaPhase()` fix (bug 84-W12).** Wire `coa_applications.status` into phase routing. New rules (precedence order):
    - dead decisions (`Refused`, `Withdrawn`, `Closed`) → NULL (terminal)
+   - `decision = 'Final and Binding'` → P4 (CoA Final)
+   - `decision IN ('Approved', 'Approved with Conditions', 'Conditional Consent')` → P3 (CoA Approved)
+   - `status IN ('Internal Review', 'Public Hearing Scheduled')` → P2 (CoA Review)
+   - `status IN ('Application Received', 'Accepted', 'Prepare Notice', …)` → P1 (CoA Intake)
+   - **catchall (unrecognized status, no decision)** → P1 + emit `unmapped_status` row in audit_table with the raw status string. Prevents silent NULL drift when CKAN adds new statuses (e.g., a future `'Deferred'` / `'Appealed'` enum value would otherwise fall to NULL — catchall ensures it lands in P1 and surfaces in audit metrics for triage).
+   
+   The catchall is critical: it converts an unknown-status failure mode from "silent data quality regression" into "loud audit signal." Coverage gate in `assert-lifecycle-phase-distribution.js` adds `unmapped_status_count` metric with threshold ≤ 5 WARN, ≤ 1 PASS so the team is alerted when CKAN drifts.
    
    Expected outcome: CoA `lifecycle_phase IS NOT NULL` rate climbs from 0.6% to ≥ 95% on active CoAs.
 
@@ -507,9 +514,8 @@ All new scripts adhere to Spec 47 §R1–§R12. Each writes to the unified `lead
 
 | Script | Advisory Lock | §R7 Read | §R9 Write (atomic) | §R10 audit_table key metrics |
 |---|---|---|---|---|
-| `link-coa-to-parcels.js` | 4201 | streamQuery `coa_applications` for rows with `latitude IS NOT NULL` | `withTransaction` → INSERT `lead_parcels` (lead_id = `'coa:' || application_number`) with `ON CONFLICT DO UPDATE` and IS DISTINCT FROM guards | `coa_parcels_linked_pct`, `confidence_distribution`, `unmatched_coa_count` (threshold: ≤ 5% WARN, ≤ 1% PASS) |
-| `link-coa-neighbourhoods.js` (or bundled into above) | 4201 | reads `lead_parcels WHERE lead_id LIKE 'coa:%'` JOIN `parcels` → point-in-polygon | UPDATE `coa_applications.neighbourhood_id` | `coa_neighbourhood_coverage_pct` |
-| `classify-coa-scope.js` | 4202 | streamQuery `coa_applications` for rows with `description IS NOT NULL AND scope_classified_at IS NULL OR < load_at` | `withTransaction` → UPDATE `coa_applications` `(coa_type_class, project_type, scope_tags, scope_classified_at, scope_source)` | `scope_classified_pct`, `unmapped_scope_count`, `project_type_distribution` |
+| `link-coa-to-parcels.js` (bundled with neighbourhood lookup) | 4201 | streamQuery `coa_applications` for rows with `latitude IS NOT NULL` | `withTransaction` → INSERT `lead_parcels` (lead_id = `'coa:' || application_number`) with `ON CONFLICT DO UPDATE` and IS DISTINCT FROM guards; final UPDATE `coa_applications.neighbourhood_id` via point-in-polygon on `parcels` ⋈ `neighbourhoods` | `coa_parcels_linked_pct`, `confidence_distribution`, `unmatched_coa_count` (threshold: ≤ 5% WARN, ≤ 1% PASS), `coa_neighbourhood_coverage_pct` |
+| `classify-coa-scope.js` | 4202 | streamQuery `coa_applications` for rows with `description IS NOT NULL AND (scope_classified_at IS NULL OR scope_classified_at < load_at)` | `withTransaction` → UPDATE `coa_applications` `(coa_type_class, project_type, scope_tags, scope_classified_at, scope_source)` | `scope_classified_pct`, `unmapped_scope_count`, `project_type_distribution` |
 | `classify-coa-trades.js` | 4203 | streamQuery `coa_applications` JOIN `trade_mapping_rules` (`tier=3 AND match_field='description'`) | `withTransaction` → INSERT `lead_trades` (lead_id = `'coa:' || application_number`) chunked (BATCH_SIZE = `floor(65535 / 8)`); ON CONFLICT DO UPDATE | `coa_trades_per_lead`, `default_fallback_pct` (≤ 20%), `unmapped_coa_count` (== 0 FAIL) |
 | `compute-coa-cost-estimates.js` | 4204 | streamQuery `coa_applications` JOIN `lead_parcels` JOIN `parcel_buildings` JOIN `trade_sqft_rates` JOIN `scope_intensity_matrix` | `withTransaction` → UPDATE `coa_applications` cost columns AND INSERT `cost_estimates` row keyed on lead_id | `cost_estimate_coverage_pct`, `null_cost_reasons` (no_parcel/no_building/no_scope_tags/no_rate), `cost_distribution_p25_p50_p75` |
 | (one-shot) `migrate-to-lead-id.js` | 4205 | reads every legacy permit-keyed table | `withTransaction` per table → backfill `lead_id` column from `permit_num`+`revision_num`; promote NOT NULL after success | `rows_migrated_per_table`, `lead_id_uniqueness_violation_count` (must == 0) |
@@ -530,7 +536,7 @@ Advisory-lock IDs 4201–4205 use the Spec 42 + suffix convention per Spec 47 §
 |---|---|---|
 | `scripts/link-coa.js` | (1) Write `permits.linked_coa_application_number` back-ref alongside existing `coa_applications.linked_permit_num`. (2) Both writes in the same `withTransaction`. | None — additional SQL in existing transaction. |
 | `scripts/create-pre-permits.js` | **RETIRE.** Replace body with a one-time DELETE of any existing `permit_type='Pre-Permit'` rows; thereafter no-op. Remove from chain definitions after Phase D confirms zero PRE- rows in production. | Script becomes a no-op shim during transition. |
-| `scripts/classify-permits.js` | REKEY writes from `permit_trades` to `lead_trades` (lead_id = `'permit:' || permit_num || ':' || LPAD(revision_num, 2, '0')`). Tier 1/2/3 logic unchanged. | None — write-target swap inside existing `withTransaction`. |
+| `scripts/classify-permits.js` | REKEY writes from `permit_trades` to `lead_trades` (lead_id = `'permit:' || permit_num || ':' || LPAD(revision_num::text, 2, '0')`). Tier 1/2/3 logic unchanged. | None — write-target swap inside existing `withTransaction`. |
 | `scripts/link-parcels.js` | REKEY writes from `permit_parcels` to `lead_parcels`. | Same. |
 | `scripts/compute-cost-estimates.js` | REKEY writes on `lead_id`. Read source unchanged (`permits` JOIN trades). | Schema-level change only. |
 | `scripts/compute-trade-forecasts.js` | (1) REKEY writes on `lead_id`. (2) Source-set read extended to UNION `permits` + `coa_applications` so CoA leads enter the loop (even though `WHERE lifecycle_phase IS NOT NULL` will continue to filter most of them out until 84-W12 is fixed). (3) Anchor-source priority list extended for CoA leads: `phase_started_at` → `decision_date` → `hearing_date` → application date. | Adds CoA branch in source SQL; output schema unchanged except for lead_id. |
@@ -557,10 +563,11 @@ Advisory-lock IDs 4201–4205 use the Spec 42 + suffix convention per Spec 47 §
 | `81_opportunity_score_engine.md` | Schema section: `trade_forecasts.opportunity_score` now keyed on `lead_id` (not `(permit_num, revision_num)`). Behavior unchanged. |
 | `82_crm_assistant_alerts.md` | Add section: "CoA Lead Handling". Documents CoA stall thresholds, hearing-date imminent window, decision-keyed auto-archive. `tracked_projects` keyed on `lead_id`. |
 | `83_Lead_cost_model.md` | Add section: "Geometric-Only Path (CoA)". Documents CoA cost estimates always `cost_source='geometric'`, Surgical Triangle without applicant-cost anchor, no Liar's-Gate equivalent. `cost_estimates` keyed on `lead_id`. |
-| `84_lifecycle_phase_engine.md` | (1) Fix the 3 BUGS in §2.5.h.2 Universal Stream (per §8.5: seq 14, seq 50 column-alignment, B9.C gap). (2) Review and accept-or-fix the 6 QUESTIONABLE construction-sequencing assignments per §8.5. (3) Update §3 Behavioral Contract to document the CoA P2/P3/P4 emission rules wired by this WF and the granular-column emission (`lifecycle_seq`/`group`/`block`/`stage`/`bid_value`). (4) Move the §8 Implementation Plan content to an archive section noting that Step 1 was delivered by this WF (Spec 42); subsequent items become follow-up WFs. (5) Update §8.7 cohort-key blind spot description to reflect resolution. |
+| `84_lifecycle_phase_engine.md` | (1) Fix the 3 BUGS in §2.5.h.2 Universal Stream (per §8.5: seq 14, seq 50 column-alignment, B9.C gap). (2) Review and accept-or-fix the 6 QUESTIONABLE construction-sequencing assignments per §8.5. (3) Update §3 Behavioral Contract to document the CoA P2/P3/P4 emission rules wired by this WF and the granular-column emission (`lifecycle_seq`/`group`/`block`/`stage`/`bid_value`). (4) Move the §8 Implementation Plan content to an archive section noting that Step 1 was delivered by this WF (Spec 42); subsequent items become follow-up WFs. (5) Update §8.7 cohort-key blind spot description to reflect resolution. (6) **Resolve 84-W11 (P3/P4 namespace collision)** — CoA P3/P4 and Permit P3/P4 share string-identical phase codes. Document that downstream consumers must disambiguate via either `lifecycle_seq` (granular — preferred), `lifecycle_group` (C2/C3 vs BP5), or co-tabling with `lead_type`. Update `SKIP_PHASES` references in `link-coa.js` and any other consumer that filters by phase code. |
 | `85_trade_forecast_engine.md` | Schema + inputs section: `trade_forecasts` keyed on `lead_id`. Documents CoA-stage source UNION extension, CoA-stage bimodal routing (target always `bid_phase`), and the anchor-priority extension for CoA leads (`phase_started_at` → `decision_date` → `hearing_date` → application date). |
 | `76_lead_feed_health_dashboard.md` | §3.5 Lead Inspector: add CoA classification panel showing `coa_type_class`, `project_type`, `scope_tags`, `structure_type`, `estimated_cost`, CoA-side `lead_trades` rows. Inspector reads on `lead_id`. |
-| `91_mobile_lead_feed.md` | §3 Backend contract: `LeadFeedItem` schema gets a `lead_id` field. CoA-side fields surface when `lead_type='coa'`. |
+| `91_mobile_lead_feed.md` | §3 Backend contract: `LeadFeedItem` schema gets a `lead_id` field. CoA-side fields surface when `lead_type='coa'`. **Add lead-type filter** (`?lead_type=coa` / `?lead_type=permit` / `?lead_type=all`) so trades can view CoA-only leads (early-bid stream). **Add sort by `lifecycle_seq` ASC** for chronological CoA browsing (e.g., "show me CoAs ordered by how far through approval they are"). Mobile UI: add a "Path A (CoA-stage)" filter chip alongside existing filters. Existing `lead_type='realtor'` filter pattern is the precedent. |
+| `49_global_data_completeness.md` | Coverage matrix extended: the `lifecycle_phase IS NOT NULL ≥ 95%` audit gate now applies to BOTH permits and CoAs. Add coverage rows for new `coa_applications` classification columns (scope_tags, project_type, coa_type_class, estimated_cost). |
 | `00_engineering_standards.md` | No change. |
 | `00_system_map.md` | Regenerate after migration (`npm run system-map`). |
 
@@ -578,6 +585,50 @@ Pre-live system — bundled approach. Spec amendments land **first** (the source
 | **Phase F — Forecast / opportunity / CRM CoA extensions** | `compute-trade-forecasts.js` source SQL UNION-extended to consume `coa_applications`; CoA-stage anchor priority wired; bimodal-routing simplification for CoA-stage. `compute-opportunity-scores.js` consumes CoA-stage forecasts. `update-tracked-projects.js` CoA branch (stall thresholds, hearing-date imminent window, decision-keyed auto-archive). Front-end Lead Inspector CoA panel (Spec 76 §3.5 extension). `assert-*` extensions for new coverage rows. | End-to-end staging run produces actionable CoA lead in admin Lead Detail Inspector with non-NULL key fields; CoA-stage forecast coverage ≥ 80%. |
 | **Phase G — PRE-permit retirement** | `create-pre-permits.js` becomes a one-shot DELETE-and-no-op shim. Remove step 5 from CoA chain and step 18 from permits chain. `assert-data-bounds.js` confirms `permits WHERE permit_type='Pre-Permit'` count = 0. Front-end queries switch to reading CoA leads directly via `lead_id LIKE 'coa:%'`. | Zero PRE-permit rows; no broken queries. |
 | **Phase H — Legacy column drop** | DROP `permit_num`/`revision_num` from `cost_estimates`, `trade_forecasts`, `tracked_projects`. Drop `permit_phase_transitions`/`permit_trades`/`permit_parcels` table aliases (replaced by `lifecycle_transitions`/`lead_trades`/`lead_parcels`). Drop `scripts/create-pre-permits.js` script file. | All consumer queries reference `lead_id` only; legacy aliases unused. |
+
+#### 6.11.1 Per-Phase Execution References
+
+Each phase below lists the specs to read first (design context), the key files that will be touched (implementation surface), and the protocol specs that govern the work (Spec 47 compliance, engineering standards, dual-path mirroring, etc.). A developer starting any phase should read the spec column top-to-bottom before opening any file in the file column.
+
+**Phase A — Spec amendments (FIRST)**
+- *Specs to read/amend:* `13_classify_permits.md`, `41_chain_permits.md`, `42_chain_coa.md` (this), `49_global_data_completeness.md`, `76_lead_feed_health_dashboard.md`, `80_permit_classification.md`, `81_opportunity_score_engine.md`, `82_crm_assistant_alerts.md`, `83_Lead_cost_model.md`, `84_lifecycle_phase_engine.md` (§2.5.h.2 BUGS + §3 Behavioral Contract + 84-W11 namespace + §8 archive), `85_trade_forecast_engine.md`, `91_mobile_lead_feed.md`, `00_engineering_standards.md` (no change — reference only), `00_system_map.md` (regenerate)
+- *Key files:* `docs/specs/01-pipeline/*.md`, `docs/specs/02-web-admin/*.md`, `docs/specs/03-mobile/*.md`, `docs/reports/spec_84_universal_stream_v9.csv` (becomes seed source for `universal_stream_catalog`)
+- *Protocols:* `00_engineering_standards.md` §Multi-Agent Review cadence (Gemini + DeepSeek + worktree per spec amendment); `47_pipeline_script_protocol.md` (no script changes — adherence noted in subsequent phases)
+
+**Phase B — Schema migrations**
+- *Specs to read:* `47_pipeline_script_protocol.md` §10 (migration protocol); `41_chain_permits.md` + `42_chain_coa.md` (table ownership); `83_Lead_cost_model.md` (cost_estimates schema); `85_trade_forecast_engine.md` (trade_forecasts schema); `84_lifecycle_phase_engine.md` (universal_stream_catalog seed source); `80_permit_classification.md` (permit_type_class column)
+- *Key files:* `migrations/NNN_add_lead_id_columns.sql`, `migrations/NNN_create_lead_trades.sql`, `migrations/NNN_create_lead_parcels.sql`, `migrations/NNN_create_lifecycle_transitions.sql`, `migrations/NNN_create_universal_stream_catalog.sql`, `migrations/NNN_create_universal_stream_trade_signals.sql`, `migrations/NNN_extend_coa_applications.sql`, `migrations/NNN_extend_permits.sql`, `migrations/NNN_extend_phase_stay_calibration.sql`, `migrations/NNN_seed_universal_stream_catalog.sql`, DOWN migrations for each
+- *Protocols:* Spec 47 §10 (migration UP/DOWN parity), `00_engineering_standards.md` §3 Database (DECIMAL not float, IS DISTINCT FROM guards, CHECK constraints documented)
+
+**Phase C — `lead_id` backfill + permit-side rekey**
+- *Specs to read:* Spec 47 §R1–§R12 (full skeleton — every new and modified script); `41_chain_permits.md` §13 (classify-permits), §9 (link-parcels), §15 (compute-cost-estimates), §25 (compute-trade-forecasts), §26 (compute-opportunity-scores), §27 (update-tracked-projects); `80_permit_classification.md` §5 (classifier gating still in force); `81_opportunity_score_engine.md` + `83_Lead_cost_model.md` + `85_trade_forecast_engine.md` (schemas now lead_id-keyed)
+- *Key files:* `scripts/migrate-to-lead-id.js` (NEW, one-shot, advisory lock 4205), `scripts/classify-permits.js` (REKEY), `scripts/link-parcels.js` (REKEY), `scripts/compute-cost-estimates.js` (REKEY), `scripts/compute-trade-forecasts.js` (REKEY), `scripts/compute-opportunity-scores.js` (REKEY), `scripts/update-tracked-projects.js` (REKEY), `scripts/lib/leads/lead-id.js` (NEW shared deriver), `src/lib/leads/lead-id.ts` (TS mirror per Spec 84 §7 dual-path), `src/lib/leads/lead-detail-query.ts` + `lead-inspect-query.ts` (read on lead_id)
+- *Protocols:* Spec 47 §R1–§R12 (every script); Spec 84 §7 (TS↔JS dual-path parity for `lead-id.js`); `00_engineering_standards.md` §Multi-Agent Review (WF2 cadence)
+
+**Phase D — CoA classification scripts**
+- *Specs to read:* `42_chain_coa.md` (this — §3 Behavioral Contract, §6.6 schema, §6.8 script catalog); `13_classify_permits.md` (Tier-3 description-only mode); `80_permit_classification.md` (CoA taxonomy section added in Phase A); `83_Lead_cost_model.md` (geometric-only path for CoA); Spec 47 §R1–§R12
+- *Key files:* `scripts/load-coa.js` (EXTEND with geocoding), `scripts/link-coa-to-parcels.js` (NEW, advisory lock 4201, bundled with neighbourhood lookup), `scripts/classify-coa-scope.js` (NEW, advisory lock 4202), `scripts/classify-coa-trades.js` (NEW, advisory lock 4203), `scripts/compute-coa-cost-estimates.js` (NEW, advisory lock 4204), `scripts/lib/coa-classifier.js` (NEW shared lib), `scripts/lib/coa-cost-model.js` (NEW shared lib), `scripts/link-coa.js` (EXTEND with `permits.linked_coa_application_number` back-ref write), `scripts/manifest.json` (register new chain steps)
+- *Protocols:* Spec 47 §R1–§R12 per new script; Spec 84 §7 (TS↔JS dual-path for any shared classification logic); `00_engineering_standards.md` §Multi-Agent Review (R0 plan review + R8 final review)
+
+**Phase E — Lifecycle engine migration + bug 84-W12 fix + cohort-key extension**
+- *Specs to read:* `84_lifecycle_phase_engine.md` (§3 Behavioral Contract — newly amended in Phase A; §2.5.h Universal Stream — BUGS resolved; §6 bug entries 84-W11 + 84-W12); `86_master_configuration_list.md` (`logic_variables` band keys); `80_permit_classification.md` (P3/P4 namespace per Phase A 84-W11 resolution); `47_pipeline_script_protocol.md` §R1–§R12
+- *Key files:* `scripts/lib/lifecycle-phase.js` (`classifyCoaPhase()` fix; new `mapToUniversalStream()` function; PHASE_ORDINAL preserved), `src/lib/classification/lifecycle-phase.ts` (TS mirror per Spec 84 §7), `scripts/classify-lifecycle-phase.js` (extended writes to granular columns + `lifecycle_transitions` ledger), `scripts/compute-phase-calibration.js` (GROUP BY cohort key extended), `scripts/seeds/logic_variables.json` (recalibrated bands), `scripts/quality/assert-lifecycle-phase-distribution.js` (validates against new bands)
+- *Protocols:* Spec 47 §R1–§R12; Spec 84 §7 (TS↔JS dual-path is critical — classifier is the highest-impact dual-path script); band recalibration via 7-consecutive-green-runs gate (Phase E exit criterion)
+
+**Phase F — Forecast / opportunity / CRM CoA extensions + UI**
+- *Specs to read:* `85_trade_forecast_engine.md` (CoA-stage routing simplification + UNION source SQL); `81_opportunity_score_engine.md` (CoA-stage scoring); `82_crm_assistant_alerts.md` (CoA stall thresholds + hearing-date imminent window); `76_lead_feed_health_dashboard.md` §3.5 (Lead Inspector CoA panel); `91_mobile_lead_feed.md` (lead_type filter + lifecycle_seq sort + Path A chip)
+- *Key files:* `scripts/compute-trade-forecasts.js` (UNION source extension), `scripts/compute-opportunity-scores.js`, `scripts/update-tracked-projects.js` (CoA branch), `src/components/admin/lead-inspector/CoaClassificationPanel.tsx` (NEW UI), `src/lib/leads/lead-inspect-query.ts` (CoA panel data layer), `src/lib/admin/lead-schemas.ts` (CoA schema fields), `mobile/src/components/feed/FlightCard.tsx` (CoA path-A chip), `mobile/src/lib/schemas.ts` (CoA mirror), `src/app/api/leads/feed/route.ts` + `mobile/src/api/*` (lead_type filter + lifecycle_seq sort), `scripts/quality/assert-global-coverage.js` + `assert-entity-tracing.js` (new coverage rows)
+- *Protocols:* Spec 47 §R1–§R12 (pipeline scripts); `00_engineering_standards.md` §UI Layout (admin desktop-first md: breakpoints; mobile mobile-first); Spec 84 §7 (TS↔JS schema parity for `lead-schemas.ts` ↔ `mobile/src/lib/schemas.ts`)
+
+**Phase G — PRE-permit retirement**
+- *Specs to read:* `42_chain_coa.md` §6.2 Background (PRE-permit mechanism description); `41_chain_permits.md` step 18 removal; current `scripts/create-pre-permits.js` source for the retirement logic
+- *Key files:* `scripts/create-pre-permits.js` (RETIRE — convert to one-shot DELETE shim), `scripts/manifest.json` (remove step from both chains), `scripts/quality/assert-data-bounds.js` (add `permit_type='Pre-Permit'` count = 0 gate), `src/lib/leads/lead-detail-query.ts` (switch to read CoA leads from `coa_applications` directly via `lead_id LIKE 'coa:%'`)
+- *Protocols:* Spec 47 §10 (one-shot migration safety — advisory lock during DELETE pass; runs after `link-coa.js` quiesces); operational runbook: verify zero in-flight CoA→Permit linkages during cutover window
+
+**Phase H — Legacy column drop**
+- *Specs to read:* `41_chain_permits.md` (consumer audit — which queries still reference `permit_num`/`revision_num` as PK); BI tools / analyst query inventory (external dependency audit — required gate)
+- *Key files:* `migrations/NNN_drop_legacy_permit_keys.sql` (DROP `permit_num`/`revision_num` from `cost_estimates`, `trade_forecasts`, `tracked_projects`), `migrations/NNN_drop_legacy_alias_tables.sql` (drop `permit_phase_transitions` / `permit_trades` / `permit_parcels` views/aliases), `scripts/create-pre-permits.js` (DELETE file entirely)
+- *Protocols:* Spec 47 §10 (migration UP/DOWN parity); `00_engineering_standards.md` §3 Database (consumer audit before destructive schema change — 30-day soak gate); zero non-archive query references `permit_num`/`revision_num`
 
 ### 6.12 Out of Scope (Explicitly Deferred to Follow-up Work)
 
