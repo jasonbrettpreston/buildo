@@ -823,7 +823,7 @@ Universal trade-classification ledger keyed on `lead_id` (Option C from Spec 42 
 #### `lead_parcels` (5 columns) — REPLACES `permit_parcels`
 Universal spatial-linkage table keyed on `lead_id`.
 - `lead_id TEXT NOT NULL`
-- `parcel_id BIGINT NOT NULL REFERENCES parcels(id)`
+- `parcel_id INTEGER NOT NULL REFERENCES parcels(id)` — type matches `parcels.id SERIAL` (INTEGER); BIGINT mismatch would cause FK rejection
 - `match_type VARCHAR(20) NOT NULL`
 - `confidence DECIMAL(3,2) NOT NULL CHECK (confidence >= 0 AND confidence <= 1)`
 - `matched_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`

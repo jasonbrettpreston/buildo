@@ -848,3 +848,36 @@ Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #
 
 **Followup WF3 candidate (carved out):** **Orphan cleanup of pre-existing wrong rows.** WF3 investigation 2026-05-08 found 14,090 wrong Fire/Security Upgrade trade rows + 12,026 Designated Structures trade rows + 3,657 DCs DeferredFees trade rows + ~10,141 wrong realtor rows on non-construction permits. WF2 #2's gating prevents NEW wrong rows from being written, but the existing rows persist until either (a) `classify-permits.js --full` re-runs (mass UPSERT path) or (b) an explicit DELETE pass scoped per non-construction permit_type. Filed as a small WF3 to run after WF2 #2 + #3 stabilize.
 
+
+
+---
+
+## WF1 #coa-pipeline-parity-phase-b — R5.1 review deferrals (2026-05-13)
+
+Adversarial findings from Multi-Agent Review of migrations 124–127 (`lead_trades`, `lead_parcels`, `lifecycle_transitions`, `lifecycle_status_history`). All findings triaged DEFER (logged here) or REJECT (design choice). None blocking R5.1 commit.
+
+| # | Severity | Source | File:line | Finding | Decision rationale |
+|---|---|---|---|---|---|
+| 1 | HIGH | Gemini+DeepSeek (multi) | All 4 migrations, `lead_id` CHECK | Regex `'^(permit\|coa):.+$'` too permissive — allows `'permit:foo'` with no rev, `'coa:'` near-empty | Spec 42 §6.6.A.1 R2.v3 chose `.+` deliberately. Strict regex (`'permit:[^:]+:[0-9]{2,}'`) would couple every CHECK in 8+ tables to permit-revision format details. App-layer `deriveLeadId()` is the canonical source. Revisit only if app-layer drift produces malformed lead_ids in production. |
+| 2 | HIGH | Gemini 126 | `lifecycle_transitions` | No UNIQUE constraint for idempotency (unlike `lifecycle_status_history`) | Single advisory-locked writer (`classify-lifecycle-phase.js` with lock 84) per Spec 42 §6.7 #3. App-layer `IS DISTINCT FROM` guards prevent dupes. Add UNIQUE in Phase E if observed; would constrain spec design. |
+| 3 | MED | Gemini 124 | `lead_trades:39` | `idx_lead_trades_active` on low-cardinality boolean is anti-pattern | Matches Spec 42 §6.6.B canonical DDL. Re-evaluate after query patterns observed in Phase D. |
+| 4 | MED | Gemini 124, DeepSeek 125 | `lead_trades:40`, `lead_parcels:29` | `idx_*_lead` redundant — UNIQUE/PK on `(lead_id, ...)` already covers lead_id-prefix queries | Matches spec canonical DDL. Drop if EXPLAIN ANALYZE in Phase D confirms primary-key-index satisfies the query. |
+| 5 | MED | Gemini 124 | `lead_trades:33` | `trade_id` FK missing explicit ON DELETE clause | Codebase convention; PG default NO ACTION = RESTRICT is the intended behavior. Make explicit project-wide later. |
+| 6 | MED | Gemini 125 | `lead_parcels:25` | `parcel_id` FK missing explicit ON DELETE clause | Same as #5. |
+| 7 | MED | Gemini 127 | `lifecycle_status_history:42` | `neighbourhood_id BIGINT` missing FK to `neighbourhoods(id)` | Existing codebase convention (`tracked_projects.neighbourhood_id` etc. also lack FK). Project-wide later. |
+| 8 | MED | DeepSeek 127 | `lifecycle_status_history:42` | `detected_by` CHECK hardcodes `.js` extensions; renaming a writer needs migration | Spec 42 §6.6.B intentionally enumerates 3 named writers. Adding a 4th is rare; explicit list catches accidental writer drift. |
+| 9 | MED | Gemini 126 | `lifecycle_transitions:34-37` | Denormalized cohort dims (`permit_type`, `project_type`, `coa_type_class`) become stale if source row reclassified | Accepted trade-off — Phase E recalibration handles drift. Document explicitly if drift observed. |
+| 10 | LOW | DeepSeek 124 | `lead_trades:24` | `confidence DECIMAL(3,2)` silently rounds 3-decimal values to 2 | Spec 42 §6.6.B uses (3,2). Phase D tier-3 FTS scoring already constrained to 2-decimal precision. |
+| 11 | LOW | DeepSeek 124 | `lead_trades:28` | `phase VARCHAR(20)` unvalidated free text | Legacy column kept for backward compat; phased out in Phase H. Not worth tightening. |
+| 12 | LOW | DeepSeek 124 | `lead_trades:23` | No length limit on `lead_id TEXT` (max 128 char CHECK suggested) | Defensive limit. Add project-wide CHECK in a future hardening WF. |
+| 13 | LOW | DeepSeek 127 | `lifecycle_status_history:30` | `from_status`/`to_status`/`decision` as VARCHAR(60) — "stringly-typed" | Source data (CKAN) is free-text strings; lookup tables would force taxonomy work outside this WF's scope. |
+| 14 | NIT | DeepSeek 127 | `lifecycle_status_history:54` | Missing composite index on `(lead_id, transitioned_at)` for chronological lead lookups | Performance tuning; add when query pattern observed. |
+| 15 | NIT | Gemini 126 | `lifecycle_transitions:38` | Missing index on `to_seq` alone (partial covers only `from_seq IS NOT NULL`) | Cohort calibration queries (Phase E) will reveal whether this is needed. |
+
+**Rejected (not added to followups):**
+- DOWN block manual/non-transactional — project Rule 6 (commit 8b1c10b); every existing migration follows this
+- `tier` should be NOT NULL — mirrors existing `permit_trades.tier` (migration 006)
+- `to_seq` should be NOT NULL — populated in Phase E; `to_phase` carries the through-Phase-D contract
+- `date_trunc` IMMUTABILITY hazard — 2-arg form IS IMMUTABLE in PG12+ (only 3-arg form is STABLE)
+- Idempotency key drops same-second events — explicitly accepted in R8 Gemini #11 design; same-second distinct events not expected from CKAN ingest
+

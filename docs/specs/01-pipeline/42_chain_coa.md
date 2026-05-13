@@ -215,7 +215,7 @@ Three layers, each with its own SPEC LINK header per Spec 47 §R12:
 - `bug-84-w12-regression.infra.test.ts` — load 1,000 CoA fixtures across all 22 `status` values; assert lifecycle classifier emits non-NULL phase for ≥ 95% of `decision IS NOT NULL` rows; assert P2/P3/P4 emit per `classifyCoaPhase()` rules
 
 **Schema parity & lead_id derivation tests (`*.logic.test.ts`):**
-- `lead-id-derivation.logic.test.ts` — for any `(permit_num, revision_num)` pair, derive `'permit:' || permit_num || ':' || LPAD(revision_num::text, 2, '0')` exactly (note the `::text` cast — `revision_num` is `SMALLINT` and PostgreSQL `LPAD` requires `text`); for any `application_number`, derive `'coa:' || application_number` exactly. Format is canonical and stable. Include fixture for `revision_num=5` asserting `'permit:XXXXX:05'` (zero-pad regression lock).
+- `lead-id-derivation.logic.test.ts` — for any `(permit_num, revision_num)` pair, derive `'permit:' || permit_num || ':' || LPAD(revision_num, 2, '0')` exactly. **`revision_num` is `VARCHAR(10)` in the live `permits` schema** (migrations 001 + 002 + 006 + 012, all declare `revision_num VARCHAR(10) NOT NULL`) — no `::text` cast is required because the column is already text. LPAD on a VARCHAR pads in place; values longer than 2 chars (e.g., `'100'`) pass through unmodified — uniqueness is preserved, lexicographic sortability is not (acceptable trade-off; the canonical sort path is `revision_num` itself, not `lead_id`). For any `application_number`, derive `'coa:' || application_number` exactly. Format is canonical and stable. Include fixtures: `revision_num='5'` asserting `'permit:XXXXX:05'` (zero-pad regression lock); `revision_num='10'` asserting `'permit:XXXXX:10'` (no-pad-needed lock); `revision_num='100'` asserting `'permit:XXXXX:100'` (over-width pass-through lock). **Preflight DB audit:** the `lead-id-schema-parity.infra.test.ts` companion test asserts `(SELECT MAX(LENGTH(revision_num)) FROM permits) <= 2` against the live schema before Phase B's `lead_id` generated column is added. If a non-numeric or >2-char revision exists, the test surfaces it for review — see §6.6.A "B.13 Integrity Constraint Design" and Phase B preflight in active task §R0.7.
 - `lead-trades-schema-parity.logic.test.ts` — confirms unified `lead_trades` columns match the union of `permit_trades` + CoA needs. Same for `lead_parcels`.
 
 **Downstream behavior tests (per R2 Gemini BUG-HIGH — coverage gap closed):**
@@ -275,12 +275,31 @@ This WF picks **Option C** from the three dual-identity options previously consi
 
 Every lead-bearing row in the system gets a `lead_id TEXT NOT NULL` column. Format is canonical:
 
-- Permit lead: `'permit:' || permit_num || ':' || LPAD(revision_num::text, 2, '0')` — e.g., `'permit:1234567:00'`
+- Permit lead: `'permit:' || permit_num || ':' || LPAD(revision_num, 2, '0')` — e.g., `'permit:1234567:00'`. `revision_num` is `VARCHAR(10)`; LPAD operates on the text directly without a cast. Over-width revisions (`'100'`) pass through unmodified — uniqueness preserved, lexicographic ordering not (acceptable, ordering is done on `revision_num` itself in queries).
 - CoA lead: `'coa:' || application_number` — e.g., `'coa:A0123-24'`
 
 This format matches the existing `lead_analytics.lead_key` convention (`scripts/lib/leads/lead-id.js` exists already as a shared derivation function). We standardize the rest of the stack on this same string.
 
-**Migration strategy:** add `lead_id` to each hot-path table as a nullable column populated by a backfill, then promoted to `NOT NULL` + UNIQUE INDEX after the backfill completes. The legacy `permit_num`/`revision_num` columns stay denormalized alongside `lead_id` for the duration of the consumer migration (read by some queries, written by triggers). After all consumers query on `lead_id`, the legacy columns are dropped in Phase E cleanup.
+**Migration strategy:** for `permits` and `coa_applications`, `lead_id` is added as a `GENERATED ALWAYS AS (...) STORED` column — populated automatically by Postgres at write time, no backfill needed. For the other hot-path tables (`cost_estimates`, `trade_forecasts`, `tracked_projects`, `lead_analytics`), `lead_id` is added as a nullable column populated by a Phase C backfill (`migrate-to-lead-id.js`), then promoted to `NOT NULL` + UNIQUE INDEX after the backfill completes. The legacy `permit_num`/`revision_num` columns stay denormalized alongside `lead_id` for the duration of the consumer migration (read by some queries, written by triggers). After all consumers query on `lead_id`, the legacy columns are dropped in Phase H cleanup.
+
+**6.6.A.1 — B.13 Integrity Constraint Design** _(committed during R2.v3 review 2026-05-13)_
+
+Because `lead_id` references rows on **two** parent tables (`permits` and `coa_applications`), a conventional FK constraint cannot enforce referential integrity — Postgres requires a single FK target. The accepted resolution:
+
+1. **CHECK constraint on every table carrying `lead_id`** to enforce format validity:
+   ```sql
+   ALTER TABLE <table_with_lead_id>
+     ADD CONSTRAINT chk_<table>_lead_id_format
+     CHECK (lead_id ~ '^(permit|coa):.+$');
+   ```
+   The regex uses `.+` not `.*` — disallows bare `'permit:'` or `'coa:'` with empty key suffix. Applies to: `lead_trades`, `lead_parcels`, `lifecycle_transitions`, `lifecycle_status_history`, `cost_estimates`, `trade_forecasts`, `tracked_projects`, `permits`, `coa_applications` (the latter two enforce their own derived format, but the CHECK is added defensively in case a future migration drops the GENERATED clause).
+
+2. **No cross-table FK on `lead_id`.** This is an **accepted limitation**. A `lead_id` value pointing to a non-existent `permits` row or `coa_applications` row is detectable only at query time. Compensating mitigations:
+   - Application-layer guarantee: every writer derives `lead_id` via the shared `scripts/lib/leads/lead-id.js` / `src/lib/leads/lead-id.ts` (Spec 84 §7 dual-path) — there is no other write path.
+   - Audit test: `lead-id-orphan-audit.infra.test.ts` runs in CI and asserts no row in any `lead_id`-bearing table references a non-existent parent (`LEFT JOIN permits/coa_applications ON ... WHERE parent.id IS NULL` returns zero rows).
+   - CQA gate: `assert-data-bounds.js` extension surfaces orphan counts as a daily metric with FAIL on >0 (post Phase C).
+
+3. **Generated `lead_id` on `permits` and `coa_applications`** uses Postgres trigger-based generation rather than `GENERATED ALWAYS AS (...) STORED`. Both forms produce the same result, but trigger-based is preferred because the existing `permits` table is 247K rows — adding a STORED generated column rewrites every row, requiring an `ACCESS EXCLUSIVE` lock for the rewrite duration. A `BEFORE INSERT OR UPDATE` trigger that sets `NEW.lead_id := derive(...)` plus a one-time `UPDATE permits SET lead_id = NULL` (which fires the trigger and populates lead_id without a table rewrite) achieves the same outcome with row-level locking. Phase B chooses trigger-based for both tables for consistency. **Phase B migration B.7/B.8** describes the exact DDL.
 
 **6.6.B — New unified tables (replace `permit_trades`, `permit_parcels`, `permit_phase_transitions`):**
 
@@ -305,7 +324,7 @@ CREATE INDEX idx_lead_trades_lead ON lead_trades (lead_id);
 -- Replaces permit_parcels. Holds spatial linkage for both permits and CoAs.
 CREATE TABLE lead_parcels (
     lead_id             TEXT           NOT NULL,
-    parcel_id           BIGINT         NOT NULL REFERENCES parcels(id),
+    parcel_id           INTEGER        NOT NULL REFERENCES parcels(id),
     match_type          VARCHAR(20)    NOT NULL,
     confidence          DECIMAL(3,2)   NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
     matched_at          TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
@@ -502,7 +521,14 @@ CREATE INDEX idx_universal_stream_trade_signals_seq_signal
     ON universal_stream_trade_signals (seq, signal_type);
 ```
 
-The catalog and signals tables are seeded from a single source: the finalized §2.5.h.2 Universal Stream table in Spec 84, exported as CSV and loaded via a one-shot seed migration. The v9 CSV (`docs/reports/spec_84_universal_stream_v9.csv`) is the working draft; Phase A spec amendments resolve the 3 BUGS / 6 QUESTIONABLE items per §6.7, and the final CSV becomes the canonical seed source.
+The catalog and signals tables are seeded from a single source: the finalized §2.5.h.2 Universal Stream table in Spec 84, exported as CSV and loaded via a one-shot seed migration. The v10 CSV (`docs/reports/spec_84_universal_stream_v10.csv`) is the locked canonical seed source after Phase A R0.6 validation (110 rows × 174 columns; all 3 BUGS resolved + all 6 QUESTIONABLE items reviewed-and-decided).
+
+**Seed migration contract (Phase B):**
+- Table creation (`B.5a`, `B.6a`) and data INSERT (`B.5b`, `B.6b`) are **split into separate migration files** so that a failed seed does not roll back the table create — re-running the seed only is then safe.
+- Every seed INSERT uses `ON CONFLICT DO NOTHING` on the PK so re-runs are idempotent.
+- Every seed migration includes a corresponding DOWN: `DELETE FROM universal_stream_catalog;` / `DELETE FROM universal_stream_trade_signals;` / per-row `DELETE FROM logic_variables WHERE variable_key IN (...);` for B.11.
+- Empty CSV cells map to SQL `NULL` (not empty string) for nullable columns (`bid_value`, `loop_marker`, `phase`, all six color/icon columns, `rows_count`). The seed-generator utility (`_tmp_phase_b_seed_catalog.mjs`) is responsible for the empty-cell → NULL transformation before emitting the INSERT batch.
+- Preflight validation: the seed generator MUST assert `csv.rows.length === 110` AND `csv.headers.length === 174` AND throw before emitting any INSERT if either check fails. Corrupt-CSV failure mode becomes loud, not silent.
 
 **6.6.C — Lead-id columns added to existing tables (Phase A migration):**
 
@@ -511,8 +537,8 @@ The catalog and signals tables are seeded from a single source: the finalized §
 | `cost_estimates` | `lead_id TEXT` | Backfilled from `permit_num`/`revision_num` during migration. UNIQUE INDEX added after backfill. Legacy keys retained during Phase A–D, dropped in Phase E. |
 | `trade_forecasts` | `lead_id TEXT` | Same. PK becomes `(lead_id, trade_slug)` after backfill. |
 | `tracked_projects` | `lead_id TEXT` | Same. Existing `lead_type` column already segregates 'permit' vs 'coa' rows; `lead_id` makes it queryable. |
-| `lead_analytics` | (already has `lead_key` TEXT) | Rename column to `lead_id` for consistency, OR add `lead_id` alias view. Decision deferred to migration drafting; format already matches. |
-| `permit_phase_transitions` | (replaced by `lifecycle_transitions`) | Existing rows migrated; permit-side `lead_id` derived from `(permit_num, revision_num)`. After migration, `permit_phase_transitions` becomes a view aliasing `lifecycle_transitions` filtered to `lead_id LIKE 'permit:%'` — preserves any external SQL queries during transition; dropped in Phase E. |
+| `lead_analytics` | (already has `lead_key` TEXT) | **Decision (R2.v3 2026-05-13):** add `lead_id TEXT` as a new column populated by Phase C backfill from `lead_key` (format already matches — pure column copy). `lead_key` is retained as an alias through Phase G; Phase H drops it. The rename approach was rejected because external BI tools and dashboards may still reference `lead_key`. Assigned to Phase B migration B.9. |
+| `permit_phase_transitions` | (replaced by `lifecycle_transitions` in Phase H) | **No Phase B view conversion.** The table remains a live, separately-written table through Phases B–G. `scripts/classify-lifecycle-phase.js` continues writing to it through Phase D. In Phase E the classifier rewrites to write `lifecycle_transitions` instead; existing rows are migrated by a one-shot migration. Phase H drops the table (or converts to a `SELECT`-only view aliasing `lifecycle_transitions WHERE lead_id LIKE 'permit:%'` if any external BI consumer still references it). **Rationale:** scripts `classify-lifecycle-phase.js`, `classify-permits.js`, `link-parcels.js`, `backfill-realtor-permit-trades.js`, `create-pre-permits.js`, `reclassify-all.js`, `seed-parcels.js` all execute INSERT/DELETE against `permit_phase_transitions`/`permit_trades`/`permit_parcels` by name — a Phase B view conversion would break every one of those writers immediately. The same constraint applies to `permit_trades` and `permit_parcels`: no Phase B view conversion. |
 
 **6.6.D — New columns on `coa_applications`:**
 
@@ -701,7 +727,7 @@ Pre-live system — bundled approach. Spec amendments land **first** (the source
 | Phase | Includes | Gate to next phase |
 |---|---|---|
 | **Phase A — Spec amendments (FIRST, before any code)** | Update all affected specs per §6.10 Cross-Spec Changes: 13, 41, 42 (this spec finalizes), 47 (none, just adherence noted), 80, 81, 82, 83, 84 (3 BUGS + 6 QUESTIONABLE in §2.5.h.2 resolved; §3 Behavioral Contract updated; §8 archived), 85, 76, 91. System map regenerated (`npm run system-map`). | All spec amendments reviewed and merged. Universal Stream §2.5.h.2 is internally consistent and accepted as the catalog source for the classifier. |
-| **Phase B — Schema migrations** | New tables (`lead_trades`, `lead_parcels`, `lifecycle_transitions`, `universal_stream_catalog`). New columns on `coa_applications`, `permits`, `cost_estimates`, `trade_forecasts`, `tracked_projects`, `phase_stay_calibration`. `lead_id` triggers / generated columns. Universal Stream catalog seed migration loading all 110 rows from finalized Spec 84 §2.5.h.2. DOWN migrations for every UP. | Migration applies cleanly to staging; type-checking + lint pass; `lead-id-derivation.logic.test.ts` and schema-parity tests green. |
+| **Phase B — Schema migrations** | New tables created **additively** (`lead_trades`, `lead_parcels`, `lifecycle_transitions`, `lifecycle_status_history`, `universal_stream_catalog`, `universal_stream_trade_signals`). New columns on `coa_applications`, `permits`, `cost_estimates`, `trade_forecasts`, `tracked_projects`, `phase_stay_calibration`, `lead_analytics`. `lead_id` triggers on `permits` + `coa_applications`. Universal Stream catalog seed (110 rows) + trade-signal seed (~1,500 rows) — **table creation and seed INSERT are split into separate migration files** so seed failure cannot roll back the table. Every UP has a tested DOWN. **No backward-compat views, no table renames, no aliases — the existing `permit_trades`, `permit_parcels`, `permit_phase_transitions` tables remain live writers through Phases C–G.** Phase H handles their retirement after every consumer has been rewritten in Phase C. CHECK constraints on every `lead_id`-bearing column enforce `'^(permit|coa):.+$'`. Preflight test asserts `MAX(LENGTH(revision_num)) <= 2` on live `permits` data. | Migration applies cleanly to staging; type-checking + lint pass; `lead-id-derivation.logic.test.ts` and `lead-trades-schema-parity.logic.test.ts` and `lead-id-orphan-audit.infra.test.ts` green; re-running migrations is a no-op (idempotency); DOWNs reverse cleanly on staging copy. |
 | **Phase C — `lead_id` backfill + permit-side rekey** | One-shot `migrate-to-lead-id.js` populates `lead_id` on every existing row. After success, columns promoted to `NOT NULL` with UNIQUE INDEX. Then `classify-permits.js`, `link-parcels.js`, `compute-cost-estimates.js`, `compute-trade-forecasts.js`, `compute-opportunity-scores.js`, `update-tracked-projects.js` updated to write to `lead_id`-keyed tables. Permit-stage outputs continue to produce correct values (not byte-identical — this is pre-live — but functionally equivalent). | Zero rows have NULL `lead_id`; 3 consecutive daily staging runs produce sane permit-side `opportunity_score` distributions. |
 | **Phase D — CoA classification scripts** | `load-coa.js` extended with geocoding. New scripts: `link-coa-to-parcels.js`, `link-coa-neighbourhoods.js`, `classify-coa-scope.js`, `classify-coa-trades.js`, `compute-coa-cost-estimates.js`. New shared libs in `scripts/lib/coa-classifier.js`, `scripts/lib/coa-cost-model.js`. CoA pipeline expands from 12 to ~22 steps. Existing `link-coa.js` extended to write `permits.linked_coa_application_number` back-ref. | CoA classification coverage targets in §6.3 met on staging snapshot; multi-agent review per `00_engineering_standards.md`. |
 | **Phase E — Lifecycle engine migration + bug 84-W12 fix + cohort-key extension** | (1) `scripts/lib/lifecycle-phase.js` `classifyCoaPhase()` wired to `coa_applications.status` per §6.7. (2) New `mapToUniversalStream()` pure function for granular column emission. (3) `scripts/classify-lifecycle-phase.js` UPDATE branches extended to write all granular columns and the `lifecycle_transitions` ledger. (4) `scripts/compute-phase-calibration.js` `GROUP BY` extended to the granular cohort key. (5) Phase distribution bands recalibrated in `scripts/seeds/logic_variables.json` via iterative band-tuning on staging. | `bug-84-w12-regression.infra.test.ts` green; `granular-lifecycle.infra.test.ts` green; `assert-lifecycle-phase-distribution.js` passes for 7 consecutive runs on staging; CoA `lifecycle_phase` non-NULL rate ≥ 95%. |

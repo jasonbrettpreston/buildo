@@ -1,476 +1,779 @@
-# Active Task: WF1 #coa-pipeline-parity-phase-a — Spec Amendments (FIRST, before any code)
+# Active Task: WF1 #coa-pipeline-parity-phase-b — Schema Migrations
 
-**Status:** **COMPLETE 2026-05-13** — R5.0–R5.14 executed; all 13 spec amendments + system map regen + R0.6 CSV validation shipped across commits 8d44375 → ffe4baf → 9e5b6dc → 42985db → 48c7b1c → c2abaf6 → 6fc0f6d → THIS COMMIT.
-**Workflow:** WF1 (Genesis — plan a new feature; doc-only spec amendments delivered as the first phase of the larger WF2 #coa-pipeline-parity work)
-**Domain Mode:** Backend/Pipeline (doc-only — touching pipeline + admin + mobile specs; per CLAUDE.md domain rules: "Doc-only changes, specs, reports → Either. Follow whichever domain the documented work belongs to." Backend/Pipeline applies because the implementation work that follows lands almost entirely in `scripts/`, `migrations/`, and `src/lib/leads/`.)
-**Rollback Anchor:** `7d797a1` (current HEAD on main — WF2 #coa-pipeline-parity R0 review fixes + per-phase execution refs + CoA-only filter)
-**Parent WF:** WF2 #coa-pipeline-parity (multi-phase work — Phases A through H per Spec 42 §6.11)
+**Status:** Implementation (authorized 2026-05-13 — proceeding through R5)
+**Workflow:** WF1 (Genesis — second phase of the larger WF2 #coa-pipeline-parity work)
+**Domain Mode:** Backend/Pipeline (migrations + seed data + schema parity tests)
+**Rollback Anchor:** `33d9b0a` (current HEAD on main — WF1 Phase A R8 fixes)
+**Parent WF:** WF2 #coa-pipeline-parity (multi-phase; Phase A delivered design contract; this Phase B delivers schema)
+**Predecessor:** WF1 #coa-pipeline-parity-phase-a (COMPLETE 2026-05-13)
+**Review history:** R2.v1 → 16 findings (4 CRIT, 5 HIGH, 6 MED, 1 LOW). All CRIT+HIGH+MED resolved inline in this revision. See R2 triage log at bottom.
 
 ---
 
 ## Context
 
-* **Goal:** Land all 13 spec amendments (§A.1–§A.13) enumerated in Spec 42 §6.10 Cross-Spec Changes + the `00_system_map.md` regeneration (§A.14) before any code, migration, or test work begins. This is **Phase A** of the CoA pipeline parity WF — the design contract for everything that follows in Phases B through H. After this Phase A ships, the spec text describes the post-implementation state; subsequent phases mechanically deliver against that contract.
-* **Why now:** The user pinned spec-amendments-first as a deliberate sequencing constraint (see Spec 42 §6.11 Phase A — "FIRST, before any code"). Reason: every downstream phase depends on the specs defining the new schemas, the new scripts, and the new cross-spec contracts. If we ship code before the spec catches up, we accumulate drift; if the spec catches up first, the implementation is mechanical and reviewers have a clear target to validate against.
-* **Target Spec:** This active task lands amendments across **12 specs** (listed in detail below in Execution Plan). Primary anchor specs:
-  * `docs/specs/01-pipeline/42_chain_coa.md` §2/§3/§5 extension (this spec describes its own Phase A in §6.10 + §6.11)
-  * `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` — most extensive amendment (§2.5.h.2 BUGS, §3 contract, §8 archive, 84-W11 namespace)
-* **Key Files:** Spec markdown only (no `src/`, no `scripts/`, no `migrations/`). System map regenerated via `npm run system-map`. Test file updates ONLY where regression-locks assert specific spec text that we change.
+* **Goal:** Land all schema migrations required by the Phase A design contract — 6 new tables, ~25 new columns on existing tables, `lead_id` triggers on `permits` + `coa_applications`, CHECK constraints on every `lead_id`-bearing column, and the Universal Stream catalog + trade-signal seeds — before any classification, lifecycle-engine, or consumer-rekey scripts ship in Phases C–F. Every migration includes a tested DOWN counterpart per Spec 47 §10. **All changes are additive**: no DROPs, no view conversions, no table renames. Existing `permit_trades`/`permit_parcels`/`permit_phase_transitions` remain live writers; Phase C rewrites their writers, Phase H retires them.
+* **Why now:** Spec 42 §6.11 Phase B is the only sequencing constraint. Phase C scripts (lead_id backfill + permit-side rekey) cannot start until the columns they write exist. Phase D CoA classifiers cannot start until `lead_trades`/`lead_parcels`/CoA classification columns exist. Phase E lifecycle engine cannot start until `universal_stream_catalog` is seeded.
+* **Target Spec:** `docs/specs/01-pipeline/42_chain_coa.md` §6.6 is the canonical schema source-of-truth; `docs/specs/00-architecture/01_database_schema.md` §3.A is the global index. Both updated to reflect R2.v3 resolutions.
+* **Key Files:** ~15 migration `.sql` files under `migrations/` starting at `124_*` (verified: last applied = `123_phase_calibration_table.sql`). Two seed JSON files at `scripts/seeds/universal_stream_catalog.json` + `scripts/seeds/universal_stream_trade_signals.json`, both derived from `docs/reports/spec_84_universal_stream_v10.csv` (verified: 110 rows × 174 columns). No `src/` changes. Test files: `migration-NNN-*.infra.test.ts` per migration + cross-cutting `lead-id-derivation.logic.test.ts` + `lead-trades-schema-parity.logic.test.ts` + `lead-id-orphan-audit.infra.test.ts` + `revision-num-preflight.infra.test.ts`.
 
 ---
 
-## Spec 84 Investigation References (anchors for this work)
+## Migration Runner Behavior — CONCURRENTLY Handling
 
-Phase A spec amendments are informed by the 8 investigations completed in Spec 84 §8 and committed under `b470f42`. Each amendment below references the investigation that justifies it:
+`scripts/migrate.js` lines 170–229 implement **dual-path execution**:
 
-* **§8.1 — Current Lifecycle Code Outputs.** Inventories every field the classifier writes. Used to justify the new granular columns added in §6.6.D/E of Spec 42 and to verify that the lifecycle ledger refactor (`permit_phase_transitions` → `lifecycle_transitions`) preserves every existing output.
-* **§8.2 — Specs Consuming Lifecycle Data.** Lists 10 specs that read `lifecycle_phase`. Used as the seed list for §6.10 cross-spec changes (worktree review identified Spec 49 was missing — added in commit `7d797a1`).
-* **§8.3 — Code Consumers of Lifecycle Data.** Inventories every code file touching the lifecycle surface. Confirms the blast radius of the lead_id refactor (Phase C) and informs the Phase F UI / mobile schema updates.
-* **§8.4 — Drift: Current Code vs Granular Spec.** Identifies 5 categories of drift between today's classifier and the spec. Used to justify the bundled engine migration (Phase E) and to enumerate what the Spec 84 §3 Behavioral Contract amendment must include.
-* **§8.5 — Universal Stream Review Findings.** Catalogues 3 internal-consistency BUGS (seq 14, seq 50, B9.C gap) and 6 QUESTIONABLE construction-sequencing items. **These BUGS must be resolved in Phase A as part of the Spec 84 §2.5.h.2 amendment** before the universal stream is locked into the `universal_stream_catalog` seed (Phase B).
-* **§8.6 — Database Schemas: 11 Adjacent Specs.** Captures every table+column owned/read by the 11 adjacent specs. Cross-checked against the schema changes in Spec 42 §6.6 to ensure no shared columns are renamed without coordinating amendment.
-* **§8.7 — Shared Fields Across Specs.** Catalogues 30+ shared columns between specs. Used to verify the cohort-key extension (Phase E) doesn't conflict with any existing field semantics.
-* **§8.8 — Current Trade-Forecast Generation Mechanics.** Documents the bimodal routing + 5-tier urgency math + 5-level calibration cascade. Used to design the CoA-stage simplification (target always `bid_phase`; anchor priority `phase_started_at` → `decision_date` → `hearing_date` → application date) documented in Phase F.
-* **§8.9 — Cross-reference to Spec 42 §6.** Notes Step 1 (this WF) delivers the schema + classifier + CoA parity. After this Phase A ships, §8 of Spec 84 gets archived (item §6.10 Spec 84 row, work item 4).
+- If the migration file contains `\bCONCURRENTLY\b` (comments/dollar-quoted strings stripped first), the runner switches to **non-transactional mode**: each statement runs as its own auto-commit query, `recordApplied` is best-effort. Idempotency relies on `IF NOT EXISTS` guards.
+- Otherwise the entire file runs inside one `BEGIN…COMMIT` transaction with atomic `recordApplied`.
+
+**Implication for Phase B:**
+- Migrations on empty-at-creation tables (B.1–B.6: `lead_trades`, `lead_parcels`, `lifecycle_transitions`, `lifecycle_status_history`, `universal_stream_catalog`, `universal_stream_trade_signals`) — **do NOT use CONCURRENTLY**. The tables are empty so a table-lock-equivalent during index creation has zero blast radius. Keeping bare `CREATE INDEX` lets the entire migration run transactionally — table create + indexes are atomic.
+- Migrations on live hot-path tables (B.7 `permits` 247K rows, B.8 `coa_applications` 33K rows, B.9 column adds on `cost_estimates`/`trade_forecasts`/`tracked_projects`/`lead_analytics`) — **DO use CONCURRENTLY** for index creation. The runner's dual-path detection routes the whole file non-transactionally. ALTERs in such files are individually atomic (each statement is its own implicit transaction). Re-runnability relies on `ADD COLUMN IF NOT EXISTS` + `CREATE INDEX CONCURRENTLY IF NOT EXISTS`.
+- Seed-data migrations (B.5b, B.6b, B.11) — **do NOT use CONCURRENTLY**. Wrap the entire INSERT batch in the implicit transaction with `ON CONFLICT DO NOTHING` on the PK so re-runs are idempotent.
+
+This is enforced per-migration below.
 
 ---
 
-## Phase A Scope — Exhaustive Per-Spec Amendment List
-
-For each spec below: the section(s) to amend, what to add/change/remove, references, and acceptance criteria.
-
-### A.1 — `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` (FIRST — unblocks Phase B universal_stream_catalog seed)
-
-**Why first:** Phase B Schema Migrations include seeding `universal_stream_catalog` from §2.5.h.2 + `universal_stream_trade_signals` from the per-trade signal columns. The 3 BUGS in §2.5.h.2 (per §8.5) must be resolved before the seed is locked. Plus 84-W11 namespace resolution informs Spec 80.
-
-#### A.1.1 — Fix the 3 BUGS in §2.5.h.2 Universal Stream (per §8.5)
-
-* **BUG 1 — seq 14 "Final & Binding".** Currently shows `Bid Value = 0` AND ✓ filled in all 37 non-realtor Bid columns. §2.5.h.9 line 905 explicitly states "Rows with `Bid Value ≤ 0.2` have NO bid checkmark." Decide: raise Bid Value to ~0.8 (strong bid moment — appeal window cleared) OR clear all Bid columns. **Recommended:** raise to 0.8 (semantically correct — the variance is now legally binding, GC may sequence the permit application imminently). Regenerate v10 CSV.
-* **BUG 2 — seq 50 (row #31 Active Inspection) column-alignment shift.** `Work: excavation` ✓ where it should be blank (excavation works at #100/#101, not at the permit-status row); `Bid: Last Minute: excavation` blank where it should be ✓ (LM for excavation = row 31 per §2.5.h.9 line 944). Same shift on `temporary-fencing`. Regenerate from the script with corrected logic; verify against script output before committing.
-* **BUG 3 — Block B9 sub-letter sequence `A→B→D` (missing B9.C).** Implementers building range-queries on Block will trip on the gap. Decide: assign B9.C (e.g., to time-bucketed P7a/P7b/P7c distinctions within "Permit Issued") OR document the gap as intentional with a `loop_marker` note. **Recommended:** assign B9.C to the "Construction Mobilization" sub-block covering rows 26 (Work Not Started) + 27 (Extension Granted) — this groups the post-issuance / pre-inspection states under one block. Reflow §2.5.h.2 accordingly.
-
-Acceptance criteria for A.1.1: regenerated v10 CSV imports cleanly into a test `universal_stream_catalog` schema with all 110 rows, 174 columns, and zero internal-consistency BUGS per a re-run of the worktree code-reviewer's checklist.
-
-#### A.1.2 — Review and accept-or-fix 6 QUESTIONABLE construction-sequencing items (per §8.5)
-
-For each of the 6 QUESTIONABLE items below, decide: ACCEPT (with explicit "accepted limitation" note in §2.5.h.9) OR FIX (update the row in §2.5.h.2 + regenerate CSV). Construction-industry input not required for ACCEPT path.
-
-* **Roofing / Windows / Glazing Work = #121 Exterior Final.** Reality: install RIGHT after framing for weather-seal. **Recommended:** ACCEPT with note — AIC has no dedicated stage; consumers should treat these as "Exterior Final marks the inspection of work that completed earlier."
-* **Electrical Work = #106 HVAC Rough-in.** No dedicated electrical AIC stage. **Recommended:** ACCEPT with note.
-* **Painting / Flooring / Tiling / Trim / Millwork / Stone / Security all Work = #118.** Six trades share one Work anchor. **Recommended:** ACCEPT with note — within-stage sequencing requires sub-stage data we don't have.
-* **Landscaping / Paving / Decking / Decks / Fences / Patio Work = #122 Occupancy.** Landscaping + paving often pre-occupancy in Toronto residential. **Recommended:** FIX — split into landscaping/paving → #121 (Exterior Final), decks/fences/patio stay → #122 (Occupancy). Update §2.5.h.9 trade table accordingly.
-* **Realtor Work = #39 Permit Closed, LM = #122.** Closure lags occupancy 30–180 days. **Recommended:** FIX — Work = #122 (Occupancy), LM = #121 (Exterior Final). Update §2.5.h.9 realtor row.
-* **Drywall LM = #116 (1-row data-quality variant).** LM almost never fires. **Recommended:** FIX — LM = #114 (Insulation/Vapour Barrier, 8,775 rows). Update §2.5.h.9 drywall row.
-
-Acceptance criteria for A.1.2: each QUESTIONABLE item has an explicit ACCEPT-with-note or FIX-with-amended-row decision documented in §2.5.h.9. CSV regenerated to v10.
-
-#### A.1.3 — Update §3 Behavioral Contract
-
-* Document the CoA P2/P3/P4 emission rules wired by the (future) Phase E lifecycle engine work:
-  * dead decisions → NULL
-  * `decision = 'Final and Binding'` → P4
-  * `decision IN ('Approved', 'Approved with Conditions', 'Conditional Consent')` → P3
-  * `status IN ('Internal Review', 'Public Hearing Scheduled')` → P2
-  * intake statuses → P1
-  * catchall (unknown CKAN status) → P1 + `unmapped_status` audit metric
-* Document the granular-column emission rules (`lifecycle_seq`, `lifecycle_group`, `lifecycle_block`, `lifecycle_stage`, `bid_value`) derived via JOIN against `universal_stream_catalog`.
-* Document the `lifecycle_transitions` ledger replacing `permit_phase_transitions`, with both legacy `from_phase`/`to_phase` AND granular `from_seq`/`to_seq` populated.
-* Cross-reference Spec 42 §6.7 for the implementation detail.
-
-#### A.1.4 — Archive §8 Implementation Plan
-
-* §8 currently contains 8 investigation results (§8.1–§8.8) + §8.9 cross-reference to Spec 42. After this WF ships, §8.9 is delivered. Action: add a header at top of §8 noting "Step 1 (CoA Pipeline Parity) delivered by Spec 42 §6 — WF1 #coa-pipeline-parity-phase-a through Phase H. Subsequent steps in the migration roadmap become follow-up WFs." Keep §8.1–§8.8 as historical investigation reference; mark §8.9 as DELIVERED with link to commits.
-
-#### A.1.5 — Update §8.7 cohort-key blind spot description
-
-* §8.7 currently describes the `(permit_type, phase)` cohort key collapsing every CoA-stage lead to `__ALL__`. After Phase E (lifecycle engine WF2), cohort key extends to `(permit_type, project_type, coa_type_class, from_seq, to_seq)`. Action: add "RESOLVED IN WF2 #coa-pipeline-parity Phase E — see Spec 42 §6.7" note to §8.7; preserve the original blind-spot description as the motivation context.
-
-#### A.1.6 — Resolve 84-W11 (P3/P4 namespace collision) — Granular-first deprecation
-
-* §6 of Spec 84 includes bug 84-W11 (P3/P4 used for both CoA and Permit phases, string-identical codes colliding). **Resolution: this WF deprecates the legacy P-code namespace in favor of granular Universal Stream identity.** Phase A spec amendment adds §3 sub-section "Phase-Code Namespace Deprecation" documenting:
-
-  * **`lifecycle_seq` is the authoritative phase identity going forward.** CoA P2 (seq range 1–21, lifecycle_group `C1`/`C2`/`C3`) and Permit P2 don't exist as a collision — they're different seq ranges. CoA P3 is seq 10–15; Permit P3 is seq 23–34. The collision is purely a legacy-namespace artifact.
-  * **Legacy P-code is preserved during transition** (Phases C–G) on the `lifecycle_phase` column for backward compatibility with `compute-trade-forecasts.js` bimodal routing (which currently keys on P-code ordinals) and the existing `assert-lifecycle-phase-distribution.js` band check. Both consumers migrate to `lifecycle_seq` reading during their respective phases.
-  * **Consumers MIGRATE to `lifecycle_seq` rather than disambiguate the P-code:**
-    * `link-coa.js` SKIP_PHASES — currently excludes P1/P2 (CoA) from `last_seen_at` bump. Migrates to: `WHERE lifecycle_group NOT IN ('C4')` (excludes ONLY CoA terminal group — Withdrawn / Cancelled / Complete / Closed). **C1/C2/C3 must still bump** — these represent active CoA progression and the linked permit needs reclassification when the CoA decision lands (C2 → C3 transition). The original "exclude P1/P2" semantics from Spec 42 §2 lines 56-57 preserved by translating to group-level — `lifecycle_group='C4'` is the CoA equivalent of permit `lifecycle_phase IN ('P19','P20','O1','O2','O3')`. Spec 84 §3 SKIP_PHASES section updated to document the group-axis filter. (Fix per R2.v2 Worktree BUG-3 — earlier draft incorrectly excluded all CoA groups, which would have silently broken the CoA→Permit relink contract.)
-    * `compute-trade-forecasts.js` source filter — currently filters `lifecycle_phase NOT IN ('P19','P20','O1','O2','O3')`. Migrates to: `WHERE lifecycle_seq IS NOT NULL AND lifecycle_group NOT IN ('C4','BP7')` (excludes CoA closure + Permit closure groups). Spec 85 amendment captures this.
-    * `assert-lifecycle-phase-distribution.js` — see §A.1.7 below for full distribution-gate granular migration.
-
-* **No `coa_p3`/`coa_p4` band-key patching.** The earlier reviewer suggestion to add `lifecycle_band_coa_p3_min/max` keys is rejected on architectural grounds — patching the legacy P-code system contradicts the granular-first move. Instead, the distribution gate pivots to validate `lifecycle_seq` / `lifecycle_block` distributions directly (see §A.1.7).
-
-* **`lifecycle_phase` column deprecation roadmap:** populated through Phase H for backward compat. Drop in a future cleanup WF once `assert-lifecycle-phase-distribution.js` and `compute-trade-forecasts.js` no longer reference it.
-
-#### A.1.7 — Distribution gate granular migration (NEW — was BUG-5 from R2 review; reframed 2026-05-13 per user direction to seq-level)
-
-* `scripts/quality/assert-lifecycle-phase-distribution.js` currently validates `lifecycle_phase` (P-code) row counts against `logic_variables.lifecycle_band_p{N}_min/max` (36 keys). When Phase E ships the 84-W12 fix, CoA rows start emitting P2/P3/P4 — roughly +27,000 CoA rows that didn't exist in the historical distribution. The existing permit-sized bands will blow on first chain run after Phase E.
-
-* **Terminology clarification:** `lifecycle_stage` (sub-letter within a block: 'a','b','c') is NOT unique across the Universal Stream — every block reuses the same stage letters. The truly granular unique identifier is `lifecycle_seq` (1–110). The 1-to-1 correspondence is `lifecycle_seq` ↔ `(lifecycle_block, lifecycle_stage)` tuple.
-
-* **Granular-first resolution: SEQ-level validation (110 keys).** Block-level aggregation was initially proposed but rejected on architectural grounds — block-level conflates outcome-diverse rows under one label. Concrete example: block **B2.C "Refused / Binding"** contains seq 13 (#82 `Refused`, DENIED) and seq 14 (#83 `Final and Binding`, APPROVED + appeal cleared). These are opposite outcomes; a block-level gate sees "B2.C had N rows" and can't distinguish refusal-rate spiking from approval lock-in slowing. Same problem in B3.x post-decision blocks (`Appeal Window` routine wait vs `TLAB Appeal` 4-9 month delay). The forecast cohort key already uses seq pairs `(from_seq, to_seq)` for exactly this reason — the distribution gate must validate at the same granularity to detect when seq-specific outcomes drift.
-
-* **Sample-size-aware tuning** addresses the "noisy low-count seq" concern that previously motivated block-level aggregation. Bands are tuned per seq based on historical row count:
-  * **High-volume seqs (≥ 1,000 rows):** tight bands (median ± 10–20%). Examples: seq 22 (#91 Closed, 28,948 rows), seq 47 (#25 Permit Issued, 52,403 rows), seq 50 (#31 Inspection, 138,546 rows).
-  * **Mid-volume seqs (100–999 rows):** moderate bands (± 30%). Examples: seq 9 (#78 Deferred, 270 rows), seq 13 (#82 Refused, 59 rows).
-  * **Low-volume seqs (10–99 rows):** loose floor + ceiling (e.g., `0 ≤ count ≤ max(20, recent_avg × 3)`).
-  * **Single-row outliers (Rows = 1 in snapshot — there are 12 such rows in the v10 CSV including seq 14 Final and Binding, seq 16 Appealed, etc.):** INFO-only, no FAIL/WARN trigger. The gate flags these as "informational" so operators see them but they don't halt the chain.
-
-* **Implementation across phases:**
-  * Phase A (this task): document the new band-key contract in Spec 86 — primary gate keys `lifecycle_band_seq_<seq>_min/max` (×110, one pair per Universal Stream row) plus `lifecycle_band_seq_<seq>_sample_size_threshold` for the per-seq tuning curve. Document the sample-size-aware threshold scheme (high/mid/low/single-row tiers).
-  * Phase B (schema): migration adds the new `logic_variables` rows seeded with `NULL` (recalibration in Phase E).
-  * Phase E (recalibration): after the classifier fix populates `lifecycle_seq` on all rows, measure the actual seq distribution per (permit_type, project_type, coa_type_class) cohort, set `min/max` per seq using the tier's appropriate band-width formula. 7-consecutive-green-runs gate.
-  * Phase H: the legacy `lifecycle_band_p{N}_min/max` keys (36 entries) are removed in cleanup.
-
-* **Why seq, not stage:** "stage-level" alone is ambiguous because stage letters repeat across blocks. Seq is the canonical unique identifier. Going to seq-level matches the forecast engine's cohort granularity (`from_seq`, `to_seq`) and the classifier's emission level — no impedance mismatch.
-
-* **`Spec 86` amendment added to A.13a (cross-spec list):** see §A.13a — was missing from §6.10 of Spec 42; was misclassified as Worktree DEFER1 ("§6.12 wording" — actually a deeper schema-key issue).
-
-Acceptance criteria for A.1 (overall): 7 sub-edits land (A.1.1–A.1.7); regenerated v10 CSV manually patched (no production script changes — see §R0.5 below) at `docs/reports/spec_84_universal_stream_v10.csv`; §8.5 BUGS struck through with "RESOLVED IN PHASE A" notes; QUESTIONABLE items each have explicit ACCEPT/FIX status validated against live DB inspection-stage data (§R0.5).
-
-### A.2 — `docs/specs/02-web-admin/80_permit_classification.md` (taxonomy — unblocks Spec 13 + Spec 42)
-
-* Add new section "CoA Application Taxonomy" defining `coa_type_class` value set: `residential`, `commercial`, `institutional`, `mixed`. Match the conceptual structure of the existing `permit_type_class` taxonomy.
-* Document the description-keyword decision tree for `coa_type_class`:
-  * Keywords for residential: "dwelling", "single family", "semi-detached", "townhouse", "apartment", "duplex", "triplex"
-  * Keywords for commercial: "retail", "restaurant", "office", "warehouse", "industrial", "commercial"
-  * Keywords for institutional: "school", "church", "hospital", "library", "municipal"
-  * Mixed: present in both residential + commercial keyword sets
-  * Fallback: derive from `parcel_buildings.structure_type` if scope-tag keywords don't fire
-* Document the description-keyword decision tree for `project_type` (CoA): `Addition`, `NewConstruction`, `Alteration`, `Demolition`, `Severance`, `Mixed`.
-* Cross-reference the existing `trade_mapping_rules` Tier-3 patterns (already in DB) — CoA classifier reuses Tier-3 only.
-* Add explicit note: 84-W11 P3/P4 namespace collision is resolved by `lifecycle_group` disambiguation (CoA C2 vs Permit BP5). Reference Spec 84 §3 Phase-Code Namespace Disambiguation.
-
-Acceptance criteria: Spec 80 has a complete CoA Taxonomy section with explicit value sets, keyword maps, and fallback rules. Spec 42 §6.10 row for Spec 80 references this section by name.
-
-### A.3 — `docs/specs/01-pipeline/13_classify_permits.md` (trade classification — unblocks Phase D scripts)
-
-* Add new section "CoA Application Mode" documenting:
-  * The new script `classify-coa-trades.js` (Phase D) uses `trade_mapping_rules` filtered to `tier=3 AND match_field='description'`.
-  * Same rule set as permit-side; different execution context (CoA has only description, not `permit_type` or `work` fields).
-  * Tier 1 (permit_type) rules: DO NOT APPLY to CoA — no permit_type.
-  * Tier 2 (work field) rules: DO NOT APPLY to CoA — no work field.
-  * Tier 3 (description ILIKE) rules: APPLY.
-  * Output: unified `lead_trades` table with `lead_id = 'coa:' || application_number`.
-  * Realtor inclusion gate: `shouldAppendRealtor()` adapted to use `coa_type_class` + CoA description in place of `permit_type_class` + permit `work`.
-* Cross-reference Spec 42 §6.5 step 13 disposition.
-
-Acceptance criteria: Spec 13 explicitly documents the Tier-3-only execution mode. Any future rule change documents which mode (permit or CoA) it affects.
-
-### A.4 — `docs/specs/01-pipeline/41_chain_permits.md` (sibling chain — references unified tables + step 18 removal)
-
-**Test regression-lock inventory (added per R2 worktree review BUG-2 + BUG-4):** Removing step 18 + the script body change touches 6+ existing tests. Phase A spec amendment work in this section does NOT modify any test code (that's Phase G's job when the script actually retires); but the spec text changes must be reflected in test assertions THIS phase since the spec is being edited now. Specifically:
-
-| Test file | Line | Asserts | Phase A action? | Phase G action? |
-|---|---|---|---|---|
-| `chain.logic.test.ts` | ~33 (permits chain) | `chain!.steps.toHaveLength(30)` — current permits-chain step count | NO — step 18 removal lands in code in Phase G | YES — update to length 29 (or whatever the renumbered count becomes) |
-| `chain.logic.test.ts` | ~119 (coa chain) | `chain!.steps.toHaveLength(12)` — current CoA-chain step count | NO — CoA chain step count grows from 12 to ~22 in Phase D code | YES (Phase D) — update to length matching new step count |
-| `pipeline-sdk.logic.test.ts` | 879–882 | `create-pre-permits.js` emits `records_new: inserted` | NO (Phase G) — script becomes no-op shim then | YES — adjust assertion to match shim's emit shape, OR remove the assertion |
-| `pre-permit-aging.infra.test.ts` | 52–57 | `create-pre-permits.js` reads `pre_permit_expiry_months` from logic_variables; no hardcoded 18-month interval | NO (Phase G) | YES — delete the entire test file (no longer applicable post-retirement) |
-| `pipeline-advisory-lock.infra.test.ts` | 38 | `create-pre-permits.js` uses advisory lock 100 | NO (Phase G) | YES — if shim retains lock 100, assertion holds; if shim is a pure-DELETE without lock, remove the row from the asserted-locks list |
-| `pipeline-logic-vars-coercion.infra.test.ts` | 23 | `create-pre-permits.js` is in script-list array for coercion validation | NO (Phase G) | YES — remove `create-pre-permits.js` from the script-list array |
-| `assert-global-coverage.infra.test.ts` | ~305 | Asserts `assert-global-coverage.js` step 17 description matches pattern `Step 17[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}coa_approved_unlinked` | NO (Phase G) — the assertion is on `assert-global-coverage.js` script content, which renumbers steps when step 18 leaves the chain | YES — update either the regex pattern or the underlying `assert-global-coverage.js` step 17 text |
-| `quality.logic.test.ts` | ~1274 | `validSlugs` array includes `create_pre_permits` as valid pipeline trigger slug | NO (Phase G) | YES — prune `create_pre_permits` from the array |
-
-Phase A consequence: in Spec 41 step breakdown table, mark step 18 as REMOVED IN PHASE G; do NOT renumber 19+ yet (renumbering lands when code does). This keeps the spec aligned with the still-live chain definition until Phase G ships, preventing the §2 step text from drifting ahead of the manifest. After Phase G ships, a follow-up minor spec amendment renumbers.
-
-* §2 Step Breakdown table updates (~7 row edits):
-  * Step 9 (`link_parcels`): writes `lead_parcels` not `permit_parcels`. Cross-reference Spec 42 §6.6.B for the unified table schema.
-  * Step 13 (`classify_permits`): writes `lead_trades` not `permit_trades`. Cross-reference Spec 42 §6.6.B.
-  * Step 14 (`backfill_realtor_permit_trades`): writes `lead_trades` not `permit_trades`. Same.
-  * Step 15 (`compute_cost_estimates`): writes `cost_estimates` keyed on `lead_id`. Cross-reference Spec 42 §6.6.C.
-  * Step 17 (`link_coa`): UPDATE — script now also writes `permits.linked_coa_application_number` back-ref. Cross-reference Spec 42 §6.6.E.
-  * Step 18 (`create_pre_permits`): **REMOVED from chain** per Spec 42 §6.11 Phase G. Update §2 to delete this row; renumber 19+ to 18+. Update §3 Core Logic to remove "Pre-permits — Approved CoA applications without linked permits become predictive leads."
-  * Step 22 (`classify_lifecycle_phase`): UPDATE — extends UPDATE branches with granular Universal Stream columns + 84-W12 fix + writes to `lifecycle_transitions` ledger (replaces `permit_phase_transitions`). Cross-reference Spec 42 §6.7 + Spec 84 §3 amendment.
-  * Step 24 (`compute_phase_calibration`): UPDATE — `GROUP BY` cohort key extended. Cross-reference Spec 42 §6.9 modified scripts table.
-  * Step 25 (`compute_trade_forecasts`): UPDATE — REKEY on `lead_id`; source SQL UNION-extended to `coa_applications`; CoA-stage anchor priority. Cross-reference Spec 42 §6.7 + Spec 85 amendment.
-  * Step 26 (`compute_opportunity_scores`): UPDATE — REKEY on `lead_id`.
-  * Step 27 (`update_tracked_projects`): UPDATE — REKEY on `lead_id`; CoA branch added. Cross-reference Spec 42 §6.9 + Spec 82 amendment.
-* §5 Operating Boundaries: update target-files list — `scripts/create-pre-permits.js` becomes a one-shot DELETE shim (per Spec 42 §6.9). Add to shared-files cross-reference: `scripts/lib/leads/lead-id.js` (NEW per Phase C).
-
-Acceptance criteria: Spec 41 step breakdown reflects post-WF state. Test file `chain.logic.test.ts` updated to match new step count (if it regression-locks on count).
-
-### A.5 — `docs/specs/01-pipeline/42_chain_coa.md` (THIS SPEC) — §2/§3/§5 extension
-
-* §2 Step Breakdown table expansion from 12 to ~22 steps. New rows mirror the permits chain (per Spec 42 §6.5 step-by-step comparison). Reference Spec 42 §6.11 phased rollout for sequencing.
-* §3 Behavioral Contract extension:
-  * Add "Core Logic" items for: CoA address geocoding, parcel linking, scope/project_type/coa_type_class classification, trade matrix application (Tier 3 only), geometric cost estimation, lifecycle phase classification (CoA P2/P3/P4 wired), trade forecast emission, opportunity scoring, CRM alerts.
-  * Add "Outputs" section detailing the new columns on `coa_applications` and the new rows in `lead_trades`, `lead_parcels`, `lifecycle_transitions`, `cost_estimates` (CoA-keyed), `trade_forecasts` (CoA-keyed), `tracked_projects` (CoA-keyed).
-* §5 Operating Boundaries:
-  * Add to target-files list: `scripts/link-coa-to-parcels.js`, `scripts/classify-coa-scope.js`, `scripts/classify-coa-trades.js`, `scripts/compute-coa-cost-estimates.js`, `scripts/lib/coa-classifier.js`, `scripts/lib/coa-cost-model.js`, `scripts/lib/leads/lead-id.js`.
-  * Add to shared-files / cross-spec references: `scripts/classify-permits.js`, `scripts/link-parcels.js`, `scripts/compute-cost-estimates.js`, `scripts/compute-trade-forecasts.js`, `scripts/compute-opportunity-scores.js`, `scripts/update-tracked-projects.js`, `scripts/lib/lifecycle-phase.js`, `scripts/compute-phase-calibration.js` (all modified per Phase C–F).
-  * Add to out-of-scope: front-end TS/TSX files (governed by separate UI specs).
-
-Acceptance criteria: Spec 42 §2/§3/§5 are consistent with §6 implementation plan. No mention of `coa_parcels`/`coa_trades` (legacy split-table names). Step count change to ~22 in §2 is the Phase D success criterion (NOT Phase E — the chain expansion comes from Phase D CoA classification scripts). Test regression-lock: `assert-global-coverage.infra.test.ts` line 458 (current assertion: `/\*\*Steps:\*\*\s+12\b/`) must be updated at R6 of this active task when the Spec 42 §2 step-count wording changes; the test should match whichever wording lands. Verify all 5,223 tests pass at R6 before commit.
-
-### A.6 — `docs/specs/01-pipeline/47_pipeline_script_protocol.md` (NO CHANGE — adherence only)
-
-* No spec change required. Phase A action: add a single sentence at end of §R1 documenting that lead_id-keyed scripts (introduced in Phase C/D of WF2 #coa-pipeline-parity) continue to follow §R1–§R12 with no exceptions. Pure adherence note; no behavioral change.
-
-Acceptance criteria: Spec 47 reads as the contract being honored, not amended.
-
-### A.7 — `docs/specs/02-web-admin/76_lead_feed_health_dashboard.md` (Lead Inspector CoA panel)
-
-* §3.5 Lead Detail Inspector — add CoA Classification Panel sub-section. Panel renders when `lead_type='coa'` (or when permit row has a non-null `linked_coa_application_number`):
-  * `coa_type_class` (residential/commercial/etc.)
-  * `project_type`
-  * `scope_tags[]`
-  * `structure_type` (from `parcel_buildings` via `lead_parcels` JOIN)
-  * `neighbourhood_id` → name lookup
-  * `estimated_cost` + `modeled_gfa_sqm` + `cost_source='geometric'`
-  * `lead_trades` rows for this CoA (filtered to `lead_id LIKE 'coa:%'`)
-  * `lifecycle_seq` + group/block/stage with colors and icons (joined through `universal_stream_catalog`)
-  * `bid_value`
-* Reference Spec 42 §6.6.D for the exact CoA column list. Reference Spec 84 §2.5.h Color & Icon Strategy for the rendering specification.
-* Note that the panel reads from `coa_applications` and `lead_*` tables on `lead_id` — Spec 42 §6.10 §41 amendment captures the back-reference for permits with linked CoAs.
-
-Acceptance criteria: Spec 76 §3.5 documents the CoA panel with all field names. Cycle 8 amendment header (extending the existing Cycle 7 panel work).
-
-### A.8 — `docs/specs/01-pipeline/81_opportunity_score_engine.md` (lead_id rekey)
-
-* §3 Schema section: update PK from `(permit_num, revision_num, trade_slug)` to `(lead_id, trade_slug)`. Document that lead_id discrimination (`'permit:...'` vs `'coa:...'`) means the score engine produces values for BOTH stream types — permit-stage opportunity scores byte-equivalent to today; CoA-stage scores newly produced.
-* §5 Operating Boundaries: update Cross-Spec Dependencies to reference unified `lead_trades` + `cost_estimates` (now lead_id-keyed). No behavior change to the asymptotic decay math.
-* Document the realtor financial-base carve-out (already in place per WF3 2026-05-08): CoA-stage realtor leads use `cost_estimates.estimated_cost` (geometric total) since `trade_contract_values` JSONB may not have a per-trade slice for CoA cost path.
-
-Acceptance criteria: Spec 81 reflects lead_id keying with no math changes documented (math is preserved as-is — only the key changes).
-
-### A.9 — `docs/specs/01-pipeline/82_crm_assistant_alerts.md` (CoA Lead Handling)
-
-* Add new section "CoA Lead Handling" documenting differences for `lead_type='coa'` rows:
-  * Stall thresholds: 1–3 months at "Hearing Scheduled" is NORMAL, not a stall. Add `logic_variable` `coa_stall_threshold_p2_days` (default 90).
-  * Imminent-alert window keyed on `hearing_date` (not `predicted_start`). Days-until-hearing < `coa_imminent_window_days` (default 7) triggers IMMINENT alert.
-  * Decision-keyed auto-archive: `decision IN ('Refused', 'Withdrawn', 'Closed')` → archive immediately.
-  * `tracked_projects.lead_id` discrimination — alerts dispatch per `lead_type`.
-* Update Notifications table to support `lead_type='coa'` with new alert subtypes: `COA_HEARING_IMMINENT`, `COA_DECISION_RENDERED`, `COA_STALLED`.
-
-Acceptance criteria: Spec 82 documents CoA-specific alert rules. `logic_variables` keys identified (to be added in Phase B migration / Phase E recalibration).
-
-### A.10 — `docs/specs/01-pipeline/83_Lead_cost_model.md` (Geometric-Only Path for CoA)
-
-* Add new section "Geometric-Only Path (CoA)" documenting:
-  * CoA cost estimates always have `cost_source='geometric'`.
-  * Surgical Triangle (GFA × trade_sqft_rates × scope_intensity_matrix) runs without applicant-cost anchor.
-  * No Liar's-Gate equivalent for CoA — no declared cost to gate against.
-  * Inputs: `coa_applications` (scope_tags, project_type, coa_type_class) ⋈ `lead_parcels` ⋈ `parcel_buildings` (modeled_gfa_sqm).
-  * Output: `cost_estimates` row keyed on `lead_id = 'coa:' || application_number`.
-* §3 Operating Boundaries: add `scripts/compute-coa-cost-estimates.js` to dependencies; reference Spec 42 §6.7.
-
-Acceptance criteria: Spec 83 reflects the geometric path. Liar's Gate documented as permit-stage only.
-
-### A.11 — `docs/specs/01-pipeline/85_trade_forecast_engine.md` (CoA-stage routing simplification)
-
-* §3 Schema section: PK rekey to `(lead_id, trade_slug)`. Document the CoA-stage source UNION extension: `compute-trade-forecasts.js` reads from both `permits` and `coa_applications`, writes rows keyed on `lead_id`.
-* §4 Behavioral Contract: document CoA-stage bimodal routing simplification — target always `bid_phase` (no work phase pre-construction). Anchor priority for CoA leads: `phase_started_at` → `decision_date` → `hearing_date` → application date.
-* §6 Operating Boundaries: Cross-Spec Dependencies updated to reflect lead_id keying + `coa_applications` as a source.
-* Reference Spec 84 §8.8 (current trade-forecast generation mechanics investigation) as motivation for the changes.
-
-Acceptance criteria: Spec 85 reflects CoA-stage routing rules. Bimodal routing logic for permit-stage byte-equivalent to today.
-
-### A.12 — `docs/specs/03-mobile/91_mobile_lead_feed.md` (filter + sort)
-
-* §3 Backend Contract:
-  * `LeadFeedItem` schema gets a `lead_id` field.
-  * CoA-side fields surface when `lead_type='coa'`: `coa_type_class`, `project_type`, `scope_tags[]`, `estimated_cost`, `decision_date`, `hearing_date`.
-  * **Add lead-type filter:** `?lead_type=coa` / `?lead_type=permit` / `?lead_type=all` (default).
-  * **Add sort capability:** `?sort=lifecycle_seq` for chronological CoA browsing (ASC = early-stage first, DESC = late-stage first).
-* §4 Mobile UI: add a "Path A (CoA-stage)" filter chip alongside existing filters. Existing `lead_type='realtor'` filter pattern is the precedent.
-
-Acceptance criteria: Spec 91 documents the filter + sort + chip. Mirror schema in `mobile/src/lib/schemas.ts` (to be updated in Phase F).
-
-### A.13a — `docs/specs/02-web-admin/86_master_configuration_list.md` (NEW — added per §A.1.7 distribution-gate migration; reframed to seq-level 2026-05-13)
-
-* Was missing from §6.10 cross-spec list. Spec 86 owns `logic_variables` schema documentation; it must reflect the new band-key contract.
-* Add to §X (logic_variables documentation): new band keys
-  * `lifecycle_band_seq_<seq>_min/max` (×110 pairs, one per Universal Stream row) — **authoritative gate keys** consumed by `assert-lifecycle-phase-distribution.js` per §A.1.7
-  * `lifecycle_band_seq_<seq>_sample_size_threshold` (×110) — per-seq tuning curve selector (`'tight' | 'moderate' | 'loose' | 'info_only'`) driving band-width formula per the sample-size-aware scheme
-* Note that legacy `lifecycle_band_p{N}_min/max` keys (36) are retained during Phase C–G transition and removed in Phase H.
-* Cross-reference Spec 42 §6.7 step 4 (distribution-gate granular migration) for the implementation detail.
-* Update §6.10 of Spec 42 to include Spec 86 row.
-
-Acceptance criteria: Spec 86 documents the new seq-level band-key namespace + tuning curve selector. `scripts/seeds/logic_variables.json` referenced as the seed source (NULL initially, populated during Phase E recalibration via the sample-size-aware tier selection).
-
-### A.13 — `docs/specs/01-pipeline/49_global_data_completeness.md` (coverage matrix extension)
-
-* Add to coverage matrix (Spec 49 §X.Y depending on layout) new field-level rows:
-  * `coa_applications.scope_tags IS NOT NULL` ≥ 80%
-  * `coa_applications.coa_type_class IS NOT NULL` ≥ 95%
-  * `coa_applications.project_type IS NOT NULL` ≥ 90%
-  * `coa_applications.estimated_cost IS NOT NULL` ≥ 80%
-  * `coa_applications.lifecycle_phase IS NOT NULL` ≥ 95% (was permits-only — now both)
-  * `coa_applications.lifecycle_seq IS NOT NULL` ≥ 95% (granular alignment)
-  * `permits.lifecycle_seq IS NOT NULL` ≥ 95% (granular alignment, permits side)
-* Add to entity-tracing 26-hour denominator matrix: `lead_trades WHERE lead_id LIKE 'coa:%'` (CoA-side count), `lead_parcels WHERE lead_id LIKE 'coa:%'` (CoA-side count).
-* Cross-reference Spec 42 §6.3 success-criteria table for the thresholds.
-
-Acceptance criteria: Spec 49 coverage matrix lists CoA classification fields with explicit thresholds.
-
-### A.14 — Lifecycle status history (FULL traversal capture + decision field preservation) — added per user direction 2026-05-13
-
-**Why this exists (user motivation):** The implementation plan as previously written captured *phase* transitions in `lifecycle_transitions` (P2→P3, etc.) but lost *status* granularity within a phase. A CoA that goes `Tentatively Scheduled` → `Postponed` → `Hearing Scheduled` → `Approved` writes only ONE row to `lifecycle_transitions` (the P2→P3 phase change) — the intermediate status traversal is lost. The CoA `decision` field is also overwritten in place on `coa_applications` rather than ledgered. Both gaps prevent accurate prediction modeling: the forecast engine can't learn "CoAs that hit Postponed first take 1.4× longer than CoAs that go straight to Hearing Scheduled" because the historical traversal pattern isn't stored.
-
-**Phase A spec amendment work:**
-
-* **Spec 42 §6.6.B** — `lifecycle_status_history` table is **already fully defined** in Spec 42 §6.6.B (committed `8d44375`). This §A.14 cross-references the existing definition. Writers per the schema's `detected_by` column comment: `load-permits.js` (permit-side CKAN status changes at ingest), `load-coa.js` (CoA-side CKAN status + decision changes at ingest), `classify-lifecycle-phase.js` (derived phase transitions on dirty rows). See §6.6.B for the full CREATE TABLE + indexes (preventing the schema duplication risk flagged by R2.v2 DeepSeek BUG-5).
-* **Spec 42 §6.7** — extend lifecycle engine work to document the dual-ledger writes (status-level + phase-level) per detected change. Explain that the status-level ledger preserves the full traversal path through the 110-row Universal Stream and unlocks cohort segmentation by *traversal pattern*. _(Already drafted in the in-progress edit to Spec 42 §6.7 — verify the text lands as part of A.14.)_
-* **Spec 84 §3** — add behavioral-contract item documenting `lifecycle_status_history` as a write target. Note that the legacy `lifecycle_phase` overwrite-in-place pattern is replaced by ledgered transitions, AND the legacy `coa_applications.decision` overwrite-in-place pattern is replaced by ledgered decision snapshots.
-* **Spec 85 §3** — extend the forecast engine's input section to mention `lifecycle_status_history` as a future cohort-key source for traversal-pattern segmentation. (Phase F may extend `compute-phase-calibration.js` to GROUP BY traversal-pattern signatures derived from the status history; this is a Phase F or later optimization, not blocking Phase A.)
-* **Spec 86 §X** — add `lifecycle_status_history` retention policy as a `logic_variable`: `lifecycle_status_history_retention_days` (default 1825 = 5 years of history per lead — enough to learn from CoAs filed in 2020 that issued permits in 2023).
-
-**Why "decision" specifically is preserved:** the CoA `decision` field is the authoritative outcome signal (`Approved`, `Approved with Conditions`, `Conditional Consent`, `Refused`, `Withdrawn`, `Final and Binding`, etc.). Today it's overwritten when the decision changes (e.g., Approved → Refused on appeal, or Conditional Consent → Approved with Conditions on amendment). The `decision` column on `lifecycle_status_history` captures the snapshot at each transition, so the forecast engine can later compute things like:
-* Conditional approval probability per neighbourhood / project_type
-* Appeal-reversal rate by CoA decision-type
-* Time-to-decision percentile by decision-class
-* Permit-issuance probability conditional on CoA decision-class (currently only "approved → permit" is tracked at all)
-
-**Spec 42 §6.10 cross-spec list updated:** Spec 84, 85, 86 amendments expanded for §A.14. Spec 84 §3 + Spec 85 §3 inputs + Spec 86 logic_variable.
-
-**Why "permit/application — coa / permit lifecycle history" is one table, not two:** lead_id discrimination (`'permit:...'` vs `'coa:...'`) means a single `lifecycle_status_history` table serves both stream types. Per-permit and per-CoA queries are 1-line `WHERE lead_id LIKE 'permit:%'` or `WHERE lead_id LIKE 'coa:%'` filters. Avoids the dual-identity fork Option C was designed to eliminate.
-
-Acceptance criteria for A.14: `lifecycle_status_history` table defined in Spec 42 §6.6.B (already added). Spec 42 §6.7 documents dual-ledger writes. Spec 84 §3 contract update. Spec 85 + Spec 86 cross-spec amendment notes. `npm run system-map` regeneration picks up the new table.
-
-### A.15 — `docs/specs/00_system_map.md` (regenerate — was A.14)
-
-* Run `npm run system-map` after all spec amendments land. This script auto-generates the system-map document from spec frontmatter, cross-references, and dependency declarations. Output: updated `docs/specs/00_system_map.md` reflecting the new pipeline shape + new shared libraries + new tables (`lead_trades`, `lead_parcels`, `lifecycle_transitions`, `lifecycle_status_history`, `universal_stream_catalog`, `universal_stream_trade_signals`).
-* Commit the regenerated map in the final Phase A commit.
-
-Acceptance criteria: `git diff docs/specs/00_system_map.md` shows additions for new scripts, new tables, and new cross-references. No regression in existing entries.
+## Phase B Scope — Exhaustive Migration List (15 files)
+
+For each migration: filename, UP statements, DOWN statements, test contract, dependency order. **Migration numbering:** next free = `124`. Files in this phase claim `124`–`138`.
+
+### B.1 — `124_create_lead_trades.sql`
+
+**UP:**
+```sql
+CREATE TABLE IF NOT EXISTS lead_trades (
+    id              SERIAL          PRIMARY KEY,
+    lead_id         TEXT            NOT NULL CHECK (lead_id ~ '^(permit|coa):.+$'),
+    trade_id        INTEGER         NOT NULL REFERENCES trades(id),
+    tier            INTEGER         CHECK (tier IS NULL OR tier IN (1, 2, 3)),
+    confidence      DECIMAL(3,2)    CHECK (confidence IS NULL OR (confidence >= 0 AND confidence <= 1)),
+    is_active       BOOLEAN         NOT NULL DEFAULT true,
+    phase           VARCHAR(20),
+    lead_score      INTEGER         NOT NULL DEFAULT 0,
+    classified_at   TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    UNIQUE (lead_id, trade_id)
+);
+CREATE INDEX IF NOT EXISTS idx_lead_trades_trade ON lead_trades (trade_id);
+CREATE INDEX IF NOT EXISTS idx_lead_trades_active ON lead_trades (is_active);
+CREATE INDEX IF NOT EXISTS idx_lead_trades_lead ON lead_trades (lead_id);
+```
+
+**DOWN:**
+```sql
+DROP TABLE IF EXISTS lead_trades;
+```
+
+**Test (`migration-124-lead-trades.infra.test.ts`):** assert table exists with exact column set, types, indexes, FK to `trades(id)`. Assert empty by default. Assert CHECK constraint rejects `lead_id = 'permit:'` (empty key — `.+` regex). Assert CHECK accepts `'permit:1234567:00'` and `'coa:A0123-24'`. Insert + rollback fixture rows to validate, do not retain.
+
+**Dependency:** none. Standalone table create. Bare `CREATE INDEX` (table empty at creation).
+
+### B.2 — `125_create_lead_parcels.sql`
+
+**UP:**
+```sql
+CREATE TABLE IF NOT EXISTS lead_parcels (
+    lead_id         TEXT            NOT NULL CHECK (lead_id ~ '^(permit|coa):.+$'),
+    parcel_id       INTEGER         NOT NULL REFERENCES parcels(id),
+    match_type      VARCHAR(20)     NOT NULL,
+    confidence      DECIMAL(3,2)    NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
+    matched_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (lead_id, parcel_id)
+);
+CREATE INDEX IF NOT EXISTS idx_lead_parcels_parcel ON lead_parcels (parcel_id);
+CREATE INDEX IF NOT EXISTS idx_lead_parcels_lead ON lead_parcels (lead_id);
+```
+
+**FIX from R2.v1 (DeepSeek CRIT):** `parcel_id` is `INTEGER` to match `parcels.id SERIAL` (which is INTEGER). The original BIGINT in Spec 42 §6.6.B was a type mismatch — Postgres would reject the FK.
+
+**DOWN:**
+```sql
+DROP TABLE IF EXISTS lead_parcels;
+```
+
+**Test:** schema parity; FK rejection on bad `parcel_id`; CHECK rejection on malformed `lead_id`.
+
+**Dependency:** none.
+
+### B.3 — `126_create_lifecycle_transitions.sql`
+
+**UP:** Spec 42 §6.6.B canonical DDL with CHECK on `lead_id`. **No backward-compat view created in Phase B** (per R2.v3 — view conversion is deferred to Phase H after Phase C rewrites all writers).
+
+```sql
+CREATE TABLE IF NOT EXISTS lifecycle_transitions (
+    id                  SERIAL          PRIMARY KEY,
+    lead_id             TEXT            NOT NULL CHECK (lead_id ~ '^(permit|coa):.+$'),
+    from_phase          VARCHAR(20),
+    to_phase            VARCHAR(20)     NOT NULL,
+    from_seq            INTEGER,
+    to_seq              INTEGER,
+    transitioned_at     TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    permit_type         VARCHAR(50),
+    project_type        VARCHAR(50),
+    coa_type_class      VARCHAR(30),
+    neighbourhood_id    BIGINT
+);
+CREATE INDEX IF NOT EXISTS idx_lifecycle_transitions_lead ON lifecycle_transitions (lead_id);
+CREATE INDEX IF NOT EXISTS idx_lifecycle_transitions_phase ON lifecycle_transitions (from_phase, to_phase);
+CREATE INDEX IF NOT EXISTS idx_lifecycle_transitions_seq ON lifecycle_transitions (from_seq, to_seq) WHERE from_seq IS NOT NULL;
+```
+
+**DOWN:**
+```sql
+DROP TABLE IF EXISTS lifecycle_transitions;
+```
+
+**Test:** schema parity; CHECK enforcement.
+
+**Dependency:** none. Existing `permit_phase_transitions` remains live writer through Phase G — no view, no alias, no rename in Phase B.
+
+### B.4 — `127_create_lifecycle_status_history.sql`
+
+**UP:** Spec 42 §6.6.B canonical DDL including the **idempotency UNIQUE INDEX** from R8 fix.
+
+```sql
+CREATE TABLE IF NOT EXISTS lifecycle_status_history (
+    id                  BIGSERIAL       PRIMARY KEY,
+    lead_id             TEXT            NOT NULL CHECK (lead_id ~ '^(permit|coa):.+$'),
+    from_status         VARCHAR(60),
+    to_status           VARCHAR(60)     NOT NULL,
+    from_seq            INTEGER,
+    to_seq              INTEGER,
+    from_phase          VARCHAR(20),
+    to_phase            VARCHAR(20),
+    decision            VARCHAR(60),
+    decision_date       DATE,
+    transitioned_at     TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    detected_by         VARCHAR(60)     NOT NULL CHECK (detected_by IN ('load-permits.js','load-coa.js','classify-lifecycle-phase.js')),
+    permit_type         VARCHAR(50),
+    project_type        VARCHAR(50),
+    coa_type_class      VARCHAR(30),
+    neighbourhood_id    BIGINT
+);
+CREATE INDEX IF NOT EXISTS idx_lifecycle_status_history_lead ON lifecycle_status_history (lead_id);
+CREATE INDEX IF NOT EXISTS idx_lifecycle_status_history_seq ON lifecycle_status_history (from_seq, to_seq) WHERE from_seq IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_lifecycle_status_history_decision ON lifecycle_status_history (decision) WHERE decision IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_lifecycle_status_history_transitioned ON lifecycle_status_history (transitioned_at);
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_lifecycle_status_history_natural_key
+    ON lifecycle_status_history (lead_id, to_status, date_trunc('second', transitioned_at));
+```
+
+**DOWN:**
+```sql
+DROP TABLE IF EXISTS lifecycle_status_history;
+```
+
+**Test:** schema parity; idempotency assertion (insert duplicate `(lead_id, to_status, transitioned_at)` row twice, assert second insert with `ON CONFLICT DO NOTHING` produces no duplicate row).
+
+**Dependency:** none.
+
+### B.5a — `128_create_universal_stream_catalog.sql` (table only)
+
+**UP:** Spec 42 §6.6.B canonical DDL (20 columns + 2 indexes). No seed data in this file.
+
+```sql
+CREATE TABLE IF NOT EXISTS universal_stream_catalog (
+    seq                 INTEGER         PRIMARY KEY,
+    source_row_num      INTEGER         NOT NULL,
+    lifecycle_group     VARCHAR(10)     NOT NULL,
+    group_label         VARCHAR(60)     NOT NULL,
+    lifecycle_block     VARCHAR(10)     NOT NULL,
+    block_label         VARCHAR(60)     NOT NULL,
+    lifecycle_stage     VARCHAR(5)      NOT NULL,
+    stage_label         VARCHAR(120)    NOT NULL,
+    source              VARCHAR(30)     NOT NULL CHECK (source IN ('coa.status','permits.status','insp.stage')),
+    status              VARCHAR(60)     NOT NULL,
+    phase               VARCHAR(40),
+    bid_value           DECIMAL(3,2)    CHECK (bid_value IS NULL OR (bid_value >= 0 AND bid_value <= 1)),
+    loop_marker         VARCHAR(60),
+    group_color         VARCHAR(7),
+    group_icon          VARCHAR(8),
+    block_color         VARCHAR(7),
+    block_icon          VARCHAR(8),
+    stage_color         VARCHAR(7),
+    stage_icon          VARCHAR(8),
+    rows_count          INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_universal_stream_catalog_group ON universal_stream_catalog (lifecycle_group);
+CREATE INDEX IF NOT EXISTS idx_universal_stream_catalog_block ON universal_stream_catalog (lifecycle_block);
+```
+
+**DOWN:**
+```sql
+DROP TABLE IF EXISTS universal_stream_catalog;
+```
+
+**Test:** assert table exists with 20 columns + 2 indexes; assert empty.
+
+### B.5b — `129_seed_universal_stream_catalog.sql` (data only)
+
+**UP:** 110 INSERT statements sourced from `scripts/seeds/universal_stream_catalog.json` (generated by `_tmp_phase_b_seed_catalog.mjs` in R0.6). Every INSERT uses `ON CONFLICT (seq) DO NOTHING` for re-runnability. Empty CSV cells map to SQL `NULL` (not empty string) — applies to nullable columns `phase`, `bid_value`, `loop_marker`, all six color/icon columns, `rows_count`.
+
+```sql
+INSERT INTO universal_stream_catalog (seq, source_row_num, lifecycle_group, group_label, lifecycle_block, block_label, lifecycle_stage, stage_label, source, status, phase, bid_value, loop_marker, group_color, group_icon, block_color, block_icon, stage_color, stage_icon, rows_count)
+VALUES (1, 1, 'C1', 'CoA Intake', 'B1.A', 'Application Received', 'a', 'Application Received', 'coa.status', 'Application Received', 'P1', 1.0, '—', '#CFFAFE', '📨', '#CFFAFE', '📨', NULL, NULL, 12345)
+ON CONFLICT (seq) DO NOTHING;
+-- ... 109 more rows from v10 CSV
+```
+
+**DOWN:**
+```sql
+DELETE FROM universal_stream_catalog;
+```
+
+**Test (`migration-129-seed-catalog.infra.test.ts`):** post-seed assert row count = 110; seq 1–110 contiguous (`SELECT MIN(seq), MAX(seq), COUNT(*)` ⇒ 1, 110, 110); every row has non-null lifecycle_group + lifecycle_block + lifecycle_stage + stage_label; assert seq 14 has `bid_value = 0.8` (R0.6 BUG fix regression-lock); assert B9.C row exists with non-empty `block_label` (R0.6 gap fix); assert no B9.D rows. Idempotency: re-running the migration produces no new rows.
+
+**Dependency:** B.5a (table must exist).
+
+### B.6a — `130_create_universal_stream_trade_signals.sql` (table only)
+
+**UP:**
+```sql
+CREATE TABLE IF NOT EXISTS universal_stream_trade_signals (
+    seq          INTEGER     NOT NULL REFERENCES universal_stream_catalog(seq),
+    trade_slug   VARCHAR(50) NOT NULL REFERENCES trades(slug),
+    signal_type  VARCHAR(20) NOT NULL CHECK (signal_type IN ('bid','work','fallback','last_minute')),
+    PRIMARY KEY (seq, trade_slug, signal_type)
+);
+CREATE INDEX IF NOT EXISTS idx_universal_stream_trade_signals_trade ON universal_stream_trade_signals (trade_slug, signal_type);
+CREATE INDEX IF NOT EXISTS idx_universal_stream_trade_signals_seq_signal ON universal_stream_trade_signals (seq, signal_type);
+```
+
+**DOWN:**
+```sql
+DROP TABLE IF EXISTS universal_stream_trade_signals;
+```
+
+**Test:** schema parity; FK reference to `universal_stream_catalog(seq)` and `trades(slug)` both enforced.
+
+**Dependency:** B.5a (FK to `universal_stream_catalog`) + existing `trades` table.
+
+### B.6b — `131_seed_universal_stream_trade_signals.sql` (data only)
+
+**UP:** ~1,500 INSERT statements sourced from `scripts/seeds/universal_stream_trade_signals.json` (generated by `_tmp_phase_b_seed_signals.mjs` in R0.6). Generator iterates the 38 trades × 4 signals × 110 seqs from the v10 CSV, emits one row per `(seq, trade_slug, signal_type)` where the cell is `✓`. `ON CONFLICT (seq, trade_slug, signal_type) DO NOTHING` for re-runnability.
+
+**DOWN:**
+```sql
+DELETE FROM universal_stream_trade_signals;
+```
+
+**Test:** assert ~1,500 rows; assert known signal: excavation Work fires at seq 53 (#100 Site Grading); FK constraint enforcement on bad trade_slug; idempotency.
+
+**Dependency:** B.6a + B.5b (seed must precede signal seed due to FK).
+
+### B.7 — `132_extend_permits_lead_id.sql` (uses CONCURRENTLY → non-transactional)
+
+**UP:**
+```sql
+ALTER TABLE permits
+  ADD COLUMN IF NOT EXISTS lead_id TEXT,
+  ADD COLUMN IF NOT EXISTS linked_coa_application_number VARCHAR(50),
+  ADD COLUMN IF NOT EXISTS lifecycle_seq INTEGER,
+  ADD COLUMN IF NOT EXISTS lifecycle_group VARCHAR(10),
+  ADD COLUMN IF NOT EXISTS lifecycle_block VARCHAR(10),
+  ADD COLUMN IF NOT EXISTS lifecycle_stage VARCHAR(5),
+  ADD COLUMN IF NOT EXISTS bid_value DECIMAL(3,2);
+
+-- Trigger-based generation (not STORED generated column) to avoid full-table rewrite
+-- on 247K rows. The trigger fires BEFORE INSERT OR UPDATE on permit_num/revision_num
+-- changes — i.e., on every insert and on any update that touches the source columns.
+-- The trigger does NOT fire when an update sets lead_id directly without touching
+-- permit_num or revision_num (Postgres column-targeted trigger semantics — confirmed
+-- by R2.v3 worktree review Item 9). Therefore the one-time backfill below computes
+-- lead_id directly rather than relying on the trigger.
+CREATE OR REPLACE FUNCTION permits_set_lead_id() RETURNS TRIGGER AS $$
+BEGIN
+    NEW.lead_id := 'permit:' || NEW.permit_num || ':' || LPAD(NEW.revision_num, 2, '0');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_permits_lead_id ON permits;
+CREATE TRIGGER trg_permits_lead_id
+    BEFORE INSERT OR UPDATE OF permit_num, revision_num ON permits
+    FOR EACH ROW EXECUTE FUNCTION permits_set_lead_id();
+
+-- One-time backfill: direct compute (does NOT rely on trigger because trigger is
+-- column-targeted on permit_num/revision_num — see R2.v3 Item 9). Idempotent on
+-- re-run via WHERE lead_id IS NULL guard.
+UPDATE permits
+SET lead_id = 'permit:' || permit_num || ':' || LPAD(revision_num, 2, '0')
+WHERE lead_id IS NULL;
+
+-- CHECK constraint validates the format derived by the trigger. Wrapped in a
+-- DO block with EXCEPTION guard so re-runs in non-transactional mode don't fail
+-- after the constraint already exists (per R2.v3 Item 13).
+DO $$
+BEGIN
+    ALTER TABLE permits
+      ADD CONSTRAINT chk_permits_lead_id_format
+        CHECK (lead_id IS NULL OR lead_id ~ '^permit:.+:[0-9A-Za-z]{1,10}$');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_lead_id ON permits (lead_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_linked_coa ON permits (linked_coa_application_number) WHERE linked_coa_application_number IS NOT NULL;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_lifecycle_seq ON permits (lifecycle_seq) WHERE lifecycle_seq IS NOT NULL;
+```
+
+**DOWN:**
+```sql
+DROP INDEX IF EXISTS idx_permits_lifecycle_seq;
+DROP INDEX IF EXISTS idx_permits_linked_coa;
+DROP INDEX IF EXISTS idx_permits_lead_id;
+ALTER TABLE permits DROP CONSTRAINT IF EXISTS chk_permits_lead_id_format;
+DROP TRIGGER IF EXISTS trg_permits_lead_id ON permits;
+DROP FUNCTION IF EXISTS permits_set_lead_id();
+ALTER TABLE permits
+  DROP COLUMN IF EXISTS lead_id,
+  DROP COLUMN IF EXISTS linked_coa_application_number,
+  DROP COLUMN IF EXISTS lifecycle_seq,
+  DROP COLUMN IF EXISTS lifecycle_group,
+  DROP COLUMN IF EXISTS lifecycle_block,
+  DROP COLUMN IF EXISTS lifecycle_stage,
+  DROP COLUMN IF EXISTS bid_value;
+```
+
+**Test:**
+1. All 7 columns added; indexes exist; trigger fires on UPDATE.
+2. Existing 247K rows have `lead_id IS NOT NULL`.
+3. Format regex matches every row: `SELECT COUNT(*) FROM permits WHERE lead_id !~ '^permit:.+:[0-9A-Za-z]{1,10}$'` ⇒ 0.
+4. CHECK constraint rejects bad inserts: `INSERT INTO permits (permit_num, revision_num) VALUES ('foo', 'bar')` then attempt to manually overwrite `lead_id = 'badformat'` is rejected.
+
+**Dependency:** none (operates on `permits` only). CONCURRENTLY in this file routes the entire file non-transactionally per `migrate.js` lines 195–201. ALTERs and the UPDATE backfill are individually atomic.
+
+### B.8 — `133_extend_coa_applications_lead_id.sql` (uses CONCURRENTLY → non-transactional)
+
+**UP:**
+```sql
+ALTER TABLE coa_applications
+  ADD COLUMN IF NOT EXISTS lead_id TEXT,
+  ADD COLUMN IF NOT EXISTS coa_type_class VARCHAR(30),
+  ADD COLUMN IF NOT EXISTS project_type VARCHAR(50),
+  ADD COLUMN IF NOT EXISTS scope_tags TEXT[],
+  ADD COLUMN IF NOT EXISTS scope_classified_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS scope_source VARCHAR(30),
+  ADD COLUMN IF NOT EXISTS structure_type VARCHAR(30),
+  ADD COLUMN IF NOT EXISTS neighbourhood_id BIGINT,
+  ADD COLUMN IF NOT EXISTS latitude DECIMAL(10,7),
+  ADD COLUMN IF NOT EXISTS longitude DECIMAL(10,7),
+  ADD COLUMN IF NOT EXISTS modeled_gfa_sqm NUMERIC,
+  ADD COLUMN IF NOT EXISTS estimated_cost NUMERIC,
+  ADD COLUMN IF NOT EXISTS cost_source VARCHAR(20),
+  ADD COLUMN IF NOT EXISTS cost_classified_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS lifecycle_seq INTEGER,
+  ADD COLUMN IF NOT EXISTS lifecycle_group VARCHAR(10),
+  ADD COLUMN IF NOT EXISTS lifecycle_block VARCHAR(10),
+  ADD COLUMN IF NOT EXISTS lifecycle_stage VARCHAR(5),
+  ADD COLUMN IF NOT EXISTS bid_value DECIMAL(3,2);
+
+CREATE OR REPLACE FUNCTION coa_set_lead_id() RETURNS TRIGGER AS $$
+BEGIN
+    NEW.lead_id := 'coa:' || NEW.application_number;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_coa_lead_id ON coa_applications;
+CREATE TRIGGER trg_coa_lead_id
+    BEFORE INSERT OR UPDATE OF application_number ON coa_applications
+    FOR EACH ROW EXECUTE FUNCTION coa_set_lead_id();
+
+-- One-time backfill: direct compute (does NOT rely on trigger — trigger is
+-- column-targeted on application_number; see R2.v3 Item 9). Idempotent on re-run.
+UPDATE coa_applications
+SET lead_id = 'coa:' || application_number
+WHERE lead_id IS NULL;
+
+-- CHECK constraint wrapped in DO block with EXCEPTION guard so re-runs in
+-- non-transactional mode don't fail (per R2.v3 Item 13).
+DO $$
+BEGIN
+    ALTER TABLE coa_applications
+      ADD CONSTRAINT chk_coa_lead_id_format
+        CHECK (lead_id IS NULL OR lead_id ~ '^coa:.+$');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_coa_lead_id ON coa_applications (lead_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_coa_neighbourhood ON coa_applications (neighbourhood_id) WHERE neighbourhood_id IS NOT NULL;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_coa_coa_type_class ON coa_applications (coa_type_class) WHERE coa_type_class IS NOT NULL;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_coa_scope_tags ON coa_applications USING GIN (scope_tags);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_coa_lifecycle_seq ON coa_applications (lifecycle_seq) WHERE lifecycle_seq IS NOT NULL;
+```
+
+**DOWN:** mirror — drop indexes, constraint, trigger, function, then drop columns in reverse order.
+
+**Test:** all columns + 5 indexes added; existing 33K rows have `lead_id = 'coa:' || application_number`; CHECK constraint rejects `'permit:...'` in this column; GIN index on `scope_tags` enables array containment queries.
+
+**Dependency:** none.
+
+### B.9 — `134_extend_lead_id_consumers.sql` (uses CONCURRENTLY → non-transactional)
+
+Adds nullable `lead_id` to `cost_estimates`, `trade_forecasts`, `tracked_projects`, `lead_analytics`. **Phase C** backfills these from `permit_num`+`revision_num` (or from `lead_key` for `lead_analytics`) and promotes to `NOT NULL`. Phase B leaves the columns nullable with the CHECK constraint allowing NULL.
+
+**UP:**
+```sql
+ALTER TABLE cost_estimates
+  ADD COLUMN IF NOT EXISTS lead_id TEXT,
+  ADD CONSTRAINT chk_cost_estimates_lead_id_format CHECK (lead_id IS NULL OR lead_id ~ '^(permit|coa):.+$');
+
+ALTER TABLE trade_forecasts
+  ADD COLUMN IF NOT EXISTS lead_id TEXT,
+  ADD CONSTRAINT chk_trade_forecasts_lead_id_format CHECK (lead_id IS NULL OR lead_id ~ '^(permit|coa):.+$');
+
+ALTER TABLE tracked_projects
+  ADD COLUMN IF NOT EXISTS lead_id TEXT,
+  ADD CONSTRAINT chk_tracked_projects_lead_id_format CHECK (lead_id IS NULL OR lead_id ~ '^(permit|coa):.+$');
+
+ALTER TABLE lead_analytics
+  ADD COLUMN IF NOT EXISTS lead_id TEXT,
+  ADD CONSTRAINT chk_lead_analytics_lead_id_format CHECK (lead_id IS NULL OR lead_id ~ '^(permit|coa):.+$');
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cost_estimates_lead_id ON cost_estimates (lead_id) WHERE lead_id IS NOT NULL;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_trade_forecasts_lead_id ON trade_forecasts (lead_id) WHERE lead_id IS NOT NULL;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_tracked_projects_lead_id ON tracked_projects (lead_id) WHERE lead_id IS NOT NULL;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_analytics_lead_id ON lead_analytics (lead_id) WHERE lead_id IS NOT NULL;
+```
+
+**FIX from R2.v1 (Code-Reviewer Item 1):** `lead_analytics` was unassigned in v1. Resolution per Spec 42 §6.6.C: add `lead_id` as a new column; Phase C backfills from existing `lead_key`. `lead_key` retained as alias through Phase G; dropped in Phase H. The rename approach was rejected because external BI tools may still reference `lead_key`.
+
+**DOWN:**
+```sql
+DROP INDEX IF EXISTS idx_lead_analytics_lead_id;
+DROP INDEX IF EXISTS idx_tracked_projects_lead_id;
+DROP INDEX IF EXISTS idx_trade_forecasts_lead_id;
+DROP INDEX IF EXISTS idx_cost_estimates_lead_id;
+ALTER TABLE lead_analytics DROP CONSTRAINT IF EXISTS chk_lead_analytics_lead_id_format, DROP COLUMN IF EXISTS lead_id;
+ALTER TABLE tracked_projects DROP CONSTRAINT IF EXISTS chk_tracked_projects_lead_id_format, DROP COLUMN IF EXISTS lead_id;
+ALTER TABLE trade_forecasts DROP CONSTRAINT IF EXISTS chk_trade_forecasts_lead_id_format, DROP COLUMN IF EXISTS lead_id;
+ALTER TABLE cost_estimates DROP CONSTRAINT IF EXISTS chk_cost_estimates_lead_id_format, DROP COLUMN IF EXISTS lead_id;
+```
+
+**Test:** all four `lead_id` columns added nullable; CHECK accepts NULL; CHECK rejects malformed strings; indexes only on non-NULL rows.
+
+**Dependency:** none.
+
+### B.10 — `135_extend_phase_stay_calibration.sql`
+
+Adds 4 cohort-key columns. **Existing PK is `(permit_type, from_phase)`** per migration 123 (`123_phase_calibration_table.sql`). Phase B extends the PK to `(permit_type, project_type, coa_type_class, from_seq, to_seq)` — atomic DROP + ADD inside a single transaction.
+
+**UP:** Pure additive in Phase B — keep the existing PK on `(permit_type, from_phase)` untouched, add new columns nullable, add a NULLS-NOT-DISTINCT UNIQUE on the new cohort key to claim the shape ahead of Phase E. The PK swap is **deferred to Phase E** once cohort dims are backfilled.
+
+```sql
+BEGIN;
+
+ALTER TABLE phase_stay_calibration
+  ADD COLUMN IF NOT EXISTS from_seq INTEGER,
+  ADD COLUMN IF NOT EXISTS to_seq INTEGER,
+  ADD COLUMN IF NOT EXISTS project_type VARCHAR(50),
+  ADD COLUMN IF NOT EXISTS coa_type_class VARCHAR(30);
+
+-- Existing PK on (permit_type, from_phase) stays in place — it is the live
+-- authoritative key through Phase E. (R2.v3 Item 10 fix: the prior revision had
+-- an ADD PRIMARY KEY ... DROP sequence which would have failed at the ADD step
+-- because the new cohort-dim columns contain NULL for every existing row.)
+--
+-- Claim the new cohort-key shape ahead of Phase E recalibration via a
+-- UNIQUE NULLS NOT DISTINCT constraint (Postgres 16+; verified deployed version).
+-- This allows multiple rows with NULL cohort dims during the Phase B–E window
+-- without violating uniqueness, and lets Phase E swap the PK over to this shape.
+DO $$
+BEGIN
+    ALTER TABLE phase_stay_calibration
+      ADD CONSTRAINT phase_stay_calibration_new_unique
+        UNIQUE NULLS NOT DISTINCT (permit_type, project_type, coa_type_class, from_seq, to_seq);
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
+
+COMMIT;
+```
+
+**FIX from R2.v1 (Gemini HIGH):** the original "TBD per the existing schema" deferred this design. Resolution per R2.v3: keep legacy UNIQUE through Phase E, add NEW UNIQUE NULLS NOT DISTINCT, defer PK swap to Phase E. This avoids PK NULL rejection during the Phase B–E window while preserving uniqueness on both shapes.
+
+**DOWN:**
+```sql
+BEGIN;
+ALTER TABLE phase_stay_calibration DROP CONSTRAINT IF EXISTS phase_stay_calibration_new_unique;
+ALTER TABLE phase_stay_calibration
+  DROP COLUMN IF EXISTS coa_type_class,
+  DROP COLUMN IF EXISTS project_type,
+  DROP COLUMN IF EXISTS to_seq,
+  DROP COLUMN IF EXISTS from_seq;
+COMMIT;
+```
+
+**Test:** columns added; existing PK on `(permit_type, from_phase)` preserved; new UNIQUE NULLS NOT DISTINCT accepts multiple rows with NULL cohort dims. Re-run is idempotent (DO/EXCEPTION guard handles re-run).
+
+**Dependency:** existing `phase_stay_calibration` table from migration 123.
+
+### B.11 — `136_seed_logic_variables_phase_b.sql`
+
+Seeds new keys consumed by Phase E (band recalibration) and Phase F (CoA CRM tuning). All values NULL or default-spec values per Spec 86 §1.
+
+**UP:**
+```sql
+-- Seq-level distribution bands (~110 × 2 = 220 rows) — NULL until Phase E recalibration.
+-- Plus sample-size threshold tier selector (~110 rows). Plus 5 CoA/retention keys.
+INSERT INTO logic_variables (variable_key, variable_value, description) VALUES
+  ('lifecycle_band_seq_1_min', NULL, 'WF1 Phase B — populated in Phase E recalibration'),
+  ('lifecycle_band_seq_1_max', NULL, 'WF1 Phase B — populated in Phase E recalibration'),
+  ('lifecycle_band_seq_1_sample_size_threshold', NULL, 'Tier selector: tight|moderate|loose|info_only'),
+  -- ... rows 2–110 generated by the seed-emitter, same pattern
+  ('lifecycle_status_history_retention_days', '1825', 'Default 5 years per Spec 86'),
+  ('coa_stall_threshold_p2_days', '90', 'CoA Hearing Scheduled stall threshold per Spec 82'),
+  ('coa_imminent_window_days', '7', 'CoA hearing-date imminent alert window per Spec 82'),
+  ('coa_orphan_lead_id_warn_threshold', '0', 'CQA gate: lead_id orphan count must be 0; >0 = FAIL'),
+  ('phase_b_revision_num_max_length', '2', 'Preflight: MAX(LENGTH(revision_num)) — surface if violated')
+ON CONFLICT (variable_key) DO NOTHING;
+```
+
+**DOWN:**
+```sql
+DELETE FROM logic_variables WHERE variable_key IN (
+  -- enumerate all keys inserted above
+  'lifecycle_band_seq_1_min', 'lifecycle_band_seq_1_max', 'lifecycle_band_seq_1_sample_size_threshold',
+  -- ...
+  'lifecycle_status_history_retention_days', 'coa_stall_threshold_p2_days', 'coa_imminent_window_days',
+  'coa_orphan_lead_id_warn_threshold', 'phase_b_revision_num_max_length'
+);
+```
+
+**Test:** assert 333 new logic_variable rows (110 × 3 + 5); values match spec defaults; idempotency.
+
+**Dependency:** existing `logic_variables` table.
+
+### B.12 — _(REMOVED)_
+
+The original B.12 created backward-compat views (`permit_trades_view`, `permit_parcels_view`, `permit_phase_transitions_view`). **Removed in R2.v3** because PostgreSQL views are SELECT-only by default and scripts `classify-permits.js`, `link-parcels.js`, `classify-lifecycle-phase.js`, `backfill-realtor-permit-trades.js`, `create-pre-permits.js`, `reclassify-all.js`, `seed-parcels.js` all perform INSERT/DELETE against these tables by name. Converting them to views in Phase B breaks every writer immediately.
+
+**Resolution:** existing `permit_trades`, `permit_parcels`, `permit_phase_transitions` remain live writers through Phases B–G. Phase C rewrites all writers to target the new `lead_*` / `lifecycle_*` tables. Phase H decides whether to DROP the legacy tables or convert them to SELECT-only views aliasing the new tables filtered to `lead_id LIKE 'permit:%'`.
+
+### B.13 — `137_lead_id_integrity_constraints.sql`
+
+Per R2.v3 the original "FK to lead_id" approach is abandoned (can't FK to two tables). CHECK constraints have already been added per-table in B.1–B.9. **B.13 adds the cross-cutting orphan-audit infrastructure** — a CQA assertion helper, not a constraint.
+
+**UP:**
+```sql
+-- Helper view: every lead_id referenced from non-source tables, joined to source presence.
+-- Used by lead-id-orphan-audit.infra.test.ts and the daily CQA gate.
+CREATE OR REPLACE VIEW lead_id_orphan_audit AS
+SELECT 'lead_trades' AS source_table, lt.lead_id, lt.id::TEXT AS source_row_id
+FROM lead_trades lt
+LEFT JOIN permits p ON lt.lead_id = p.lead_id
+LEFT JOIN coa_applications c ON lt.lead_id = c.lead_id
+WHERE p.lead_id IS NULL AND c.lead_id IS NULL
+UNION ALL
+SELECT 'lead_parcels', lp.lead_id, lp.lead_id || '|' || lp.parcel_id::TEXT
+FROM lead_parcels lp
+LEFT JOIN permits p ON lp.lead_id = p.lead_id
+LEFT JOIN coa_applications c ON lp.lead_id = c.lead_id
+WHERE p.lead_id IS NULL AND c.lead_id IS NULL
+UNION ALL
+SELECT 'lifecycle_transitions', lt.lead_id, lt.id::TEXT
+FROM lifecycle_transitions lt
+LEFT JOIN permits p ON lt.lead_id = p.lead_id
+LEFT JOIN coa_applications c ON lt.lead_id = c.lead_id
+WHERE p.lead_id IS NULL AND c.lead_id IS NULL
+UNION ALL
+SELECT 'lifecycle_status_history', lsh.lead_id, lsh.id::TEXT
+FROM lifecycle_status_history lsh
+LEFT JOIN permits p ON lsh.lead_id = p.lead_id
+LEFT JOIN coa_applications c ON lsh.lead_id = c.lead_id
+WHERE p.lead_id IS NULL AND c.lead_id IS NULL;
+-- cost_estimates / trade_forecasts / tracked_projects / lead_analytics are Phase C
+-- consumers — added to this view in a Phase C follow-up migration.
+```
+
+**DOWN:**
+```sql
+DROP VIEW IF EXISTS lead_id_orphan_audit;
+```
+
+**Test (`lead-id-orphan-audit.infra.test.ts`):** view returns 0 rows on empty Phase B database. After seeding one orphan row (e.g., `INSERT INTO lead_trades (lead_id, trade_id) VALUES ('permit:nonexistent:00', 1)`), view returns exactly 1 row tagged `source_table='lead_trades'`. The companion CQA gate in `assert-data-bounds.js` (added in Phase C) FAILs on `SELECT COUNT(*) FROM lead_id_orphan_audit > 0`.
+
+**Dependency:** B.1–B.4 (lead_trades, lead_parcels, lifecycle_transitions, lifecycle_status_history all exist).
+
+### ~~B.14~~ — _(REMOVED in R2.v3 Item 11)_
+
+The original B.14 was a reserved placeholder at migration 138. Removed entirely — migration numbers are not reserved without content. Any Phase E band-key seed migration claims the next free number when it lands, not 138 ahead-of-time.
 
 ---
 
 ## Technical Implementation
 
-* **New/Modified Components:** N/A (doc-only).
-* **Data Hooks/Libs:** N/A (doc-only).
-* **Database Impact:** NO (doc-only). Schemas described in spec text only; migrations land in Phase B.
+* **New/Modified Components:** N/A (migrations only; no `src/`).
+* **Data Hooks/Libs:** N/A.
+* **Database Impact:** YES — 6 new tables, ~30 new columns, ~333 new `logic_variables` rows, 1 helper view (`lead_id_orphan_audit`), 2 triggers (permits + coa_applications), 2 trigger functions, ~12 CHECK constraints, 1 universal stream catalog seed (110 rows) + signals seed (~1,500 rows). All additive. **No DROPs in Phase B. No view conversions of existing tables. No table renames.**
+* **Migration UPDATE strategy:** trigger-based `lead_id` generation on `permits` (247K rows) and `coa_applications` (33K rows) — row-level UPDATE pass populates lead_id without ACCESS EXCLUSIVE rewrite. For the other hot-path tables (`cost_estimates`, `trade_forecasts`, `tracked_projects`, `lead_analytics`), `lead_id` stays nullable in Phase B; Phase C's `migrate-to-lead-id.js` backfills.
+* **Estimated migration runtime (Phase B only):**
+  - B.1–B.6: table creates + seed inserts, < 30 seconds total
+  - B.7: ALTER ADD COLUMN (instant) + UPDATE trigger backfill on 247K rows (~25–60s) + 3 CONCURRENTLY indexes (~30–90s each on populated rows) — estimate 5 minutes
+  - B.8: same pattern on 33K rows — estimate 1 minute
+  - B.9: 4 column adds, 4 CONCURRENTLY indexes on existing rows (`cost_estimates` ~50K, `trade_forecasts` ~200K, `tracked_projects` ~5K, `lead_analytics` ~10K) — estimate 2 minutes
+  - B.10: small table — instant
+  - B.11: 333 seed inserts — instant
+  - B.13: view creation — instant
+  - **Total Phase B: ~10 minutes.** Substantially higher than the original "<5 min" estimate (R2.v1) which underestimated the CONCURRENTLY index passes on populated tables.
 * **External API:** N/A.
-* **CSV regeneration (clarifies R2 DeepSeek BUG-1):** the §A.1.1 BUG fixes regenerate `spec_84_universal_stream_v10.csv` from a **`_tmp_*.mjs` local utility file at the repo root** (NOT a script under `scripts/`). The `_tmp_*` utilities are working scratch files used to derive the CSV from the spec markdown; they are NOT pipeline scripts, are not committed to `scripts/`, and have no Spec 47 compliance obligation. The CSV regeneration is a documentation-output step — equivalent to running a markdown-to-table converter — and does not constitute "code shipping." If the user prefers absolute zero script execution during Phase A, the alternative is to manually patch the affected cells in v9 → v10 (~76 cells for seq 50 fix + 3-row reflow for B9.C + the QUESTIONABLE FIX rows). Either path is documentation work, not pipeline-script work.
 
 ## Standards Compliance
 
-* **Try-Catch Boundary:** N/A (doc-only).
-* **Unhappy Path Tests:** N/A (doc-only).
-* **logError Mandate:** N/A (doc-only).
-* **UI Layout:** N/A (doc-only).
-* **Multi-Agent Review:** REQUIRED per `00_engineering_standards.md` + memory `feedback_review_protocol.md`. WF1 cadence: Gemini + DeepSeek (plan-review templates) + worktree feature-dev:code-reviewer agent (cross-spec coherence). Findings triaged BUG/DEFER; BUGs fixed in spec text before commit; DEFERs go to `docs/reports/review_followups.md`.
+* **WF1 sequence:** Pre-Flight (done — Spec 42 + Spec 84 amended in Phase A; this active task is the `npm run task` output) → Contract Definition (N/A — no API route) → Spec & Registry Sync (done in Phase A) → Schema Evolution (this Phase B) → **Test Scaffolding (R5.X.a per group)** → **Red Light (R5.X.b per group — tests MUST fail before migration applies)** → **Implementation (R5.X.c per group)** → **Group Green Light (R5.X.d per group)** → Auth Boundary (N/A) → Pre-Review Self-Checklist (R5.X.e) → Multi-Agent Review (R5.X.f) → Triage (R5.X.g) → Commit (R5.X.h) → **Final Green Light (after R8/R9)** → WF6 (push).
+* **Try-Catch Boundary:** N/A (migrations are SQL; `scripts/migrate.js` handles errors at the runner level).
+* **Unhappy Path Tests:** YES — each migration has a re-runnability test (`IF NOT EXISTS` guards; running twice should be a no-op). Plus the Red Light step in every R5.X group asserts the test FAILS before the migration applies — catches tautological tests.
+* **logError Mandate:** N/A.
+* **UI Layout:** N/A.
+* **Multi-Agent Review:** R2.v1 complete (16 findings triaged); R2.v3 re-review after fix pass (3 new BUGs + 1 DEFER); per-group reviews at R5.1.f, R5.2.f, R5.3.f, R5.4.f, R5.5.f (risk-tiered); final cross-cutting R8 on cumulative diff.
+* **Spec 47 §10 compliance:** every UP has a tested DOWN. Every migration is re-runnable via `IF NOT EXISTS` + `ON CONFLICT DO NOTHING` + `DO $$ ... EXCEPTION` constraint guards. CONCURRENTLY used only where the runner's dual-path detection routes the file non-transactionally (B.7, B.8, B.9). Empty-at-creation tables (B.1–B.6) use bare `CREATE INDEX` so the entire migration is atomic.
 
 ## Execution Plan
 
-- [ ] **R0 — Read prerequisite specs.** Re-read Spec 42 §6 (the implementation plan being delivered), Spec 84 §8 (the investigations informing it), Spec 47 §R1–§R12 (the protocol governing the future Phase C–F scripts), and `00_engineering_standards.md` (multi-agent review cadence, dual-path mirroring rules). _Already complete as part of WF2 #coa-pipeline-parity initial plan work._
-- [ ] **R0.5 — Live-DB verification queries for construction-sequencing FIXes (per R2 DeepSeek BUG-2).** Before committing the §A.1.2 FIX decisions to the v10 CSV, run the following queries against the live DB to confirm that the proposed FIX assignments line up with actual AIC inspection-stage data:
-  * `SELECT stage_name, COUNT(*) FROM permit_inspections GROUP BY stage_name ORDER BY 2 DESC;` — confirm landscaping/paving don't have a dedicated AIC stage (justifying the #121 vs #122 split decision).
-  * `SELECT decision, COUNT(*) FROM coa_applications WHERE decision IS NOT NULL GROUP BY decision ORDER BY 2 DESC;` — confirm the CoA decision-set we're encoding in §A.1.3 (P2/P3/P4 emission rules + status catchall) covers ≥99% of historical decisions.
-  * `SELECT description, COUNT(*) FROM coa_applications WHERE description IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 50;` — spot-check that the §A.2 keyword decision tree (residential / commercial / institutional / mixed) covers the most frequent CoA description patterns. Match each top-50 description against the proposed keyword sets; flag uncovered patterns for additions to the rule list. (Replaces the earlier permit_type_classifications query per R2.v2 Worktree BUG-11 — the permit-side taxonomy can't validate the new CoA-side 4-value set; only description-corpus sampling can.)
-  * `SELECT permit_type_class, COUNT(*) FROM permit_type_classifications GROUP BY permit_type_class;` — secondary informational query (kept for cross-spec consistency check but not a §A.2 validator).
-  * `SELECT lifecycle_phase, COUNT(*) FROM coa_applications WHERE lifecycle_phase IS NOT NULL GROUP BY lifecycle_phase;` — measure the current CoA classification rate (expected: 0.6% non-NULL per bug 84-W12 baseline).
-  * `SELECT lifecycle_phase, lead_type AS source FROM (SELECT lifecycle_phase, 'permit' AS lead_type FROM permits WHERE lifecycle_phase IS NOT NULL UNION ALL SELECT lifecycle_phase, 'coa' FROM coa_applications WHERE lifecycle_phase IS NOT NULL) x WHERE lifecycle_phase IN ('P3','P4') GROUP BY 1,2;` — confirm 84-W11 P3/P4 namespace collision is currently dormant (CoA rows mostly NULL); validates §A.1.6 framing.
-  * Capture query output in a working notes file `_tmp_phase_a_verification_2026-05-13.md` (not committed). Use the results to validate or adjust the §A.1.2 ACCEPT/FIX decisions.
+- [ ] **R0 — Read prerequisite specs.** Re-read Spec 47 §10 (migration UP/DOWN parity); Spec 42 §6.6 + §6.6.A.1 B.13 Integrity Constraint Design (canonical schema); Spec 01 §3.A (global index); `migrations/006_permit_trades.sql` + `migrations/092_control_panel.sql` + `migrations/123_phase_calibration_table.sql` as templates; `scripts/migrate.js` lines 170–229 for CONCURRENTLY dual-path semantics.
+- [ ] **R0.5 — Confirm migration number = 124.** _Verified during R2.v3: last applied is `123_phase_calibration_table.sql`._
+- [ ] **R0.6 — Generate seed files** (one-shot scripts at repo root, NOT in `scripts/`):
+  - `_tmp_phase_b_seed_catalog.mjs` — reads v10 CSV, asserts `rows.length === 110` AND `headers.length === 174`, throws if either fails. Maps empty cells → SQL `NULL`. Writes `scripts/seeds/universal_stream_catalog.json` (110 rows).
+  - `_tmp_phase_b_seed_signals.mjs` — reads v10 CSV, iterates 38 trades × 4 signals × 110 seqs, emits row per `✓` cell. Asserts ~1,500 rows produced. Writes `scripts/seeds/universal_stream_trade_signals.json`.
+  - Both utilities also emit human-readable preflight summary (row count, column count, signal-row count, NULL-cell count) to stderr so a glance confirms correctness.
+- [ ] **R0.7 — Preflight DB audit.** Run `npm run db:audit-phase-b-preflight` (NEW one-shot script — see active task §B.7 test contract). Asserts: `MAX(LENGTH(revision_num)) <= 2` on live `permits`; no NULL `permit_num`; no NULL `revision_num`; `application_number` is UNIQUE; `parcels.id` is INTEGER (verified during R2.v3); `migrate.js` is current HEAD (no in-flight migrations). FAIL halts authorization.
+- [ ] **R1 — Write this active task.** _Complete (this file, R2.v3 revision)._
+- [ ] **R2.v3 — Re-run Multi-Agent Review.** Gemini + DeepSeek (plan-review templates) + worktree feature-dev:code-reviewer on this revised active task. Reviewers should confirm all R2.v1 CRIT+HIGH+MED resolutions land correctly.
+- [ ] **R3 — Triage R2.v3 findings.** BUG → fix in spec/active-task before commit. DEFER → `docs/reports/review_followups.md`.
+- [ ] **R4 — Authorization gate. PLAN LOCKED ask.** Halt for user authorization.
+- [ ] **R5 — Per-group TDD cycle.** Standard WF1 sequence applied to each R5.X group: **Test Scaffolding → Red Light → Implementation → Group Green Light → Self-Checklist → Multi-Agent Review → Triage → Commit.** BUG findings from a group's review block the next group from starting; DEFER findings go to `docs/reports/review_followups.md`.
 
-- [ ] **R0.6 — CSV regeneration validation (per R2.v2 DeepSeek BUG-8 / BUG-9).** Before any spec edit consumes the v10 CSV, validate the regenerated file:
-  * Parse with the same csv-parse logic used in `_tmp_csv_v9.mjs` (proper quoted-field handling).
-  * Assert row count = 110 (header + 110 data rows = 111 lines).
-  * Assert seq column is contiguous 1–110, no gaps, no duplicates.
-  * Assert column count = 174 (1 seq + 14 base + 1 Bid Value + 152 trade signals (38 × 4) + 6 colors/icons).
-  * Assert all 38 trade × 4 signal column headers present (no typos).
-  * Assert R2.v2 BUG fix landed: seq 14 `bid_value` cell = `0.8` (not `0`); seq 50 `Work: excavation` cell is empty AND `Bid: Last Minute: excavation` cell = `✓`; seq 50 `Work: temporary-fencing` empty AND `Bid: Last Minute: temporary-fencing` = `✓`; B9.C row exists with non-empty block_label.
-  * **CSV column header → DB column name mapping** (per DeepSeek BUG-9): document the canonical bijection at top of `_tmp_csv_v10_validate.mjs` script: lowercase + replace ` ` with `_` (e.g., "Group Label" → `group_label`, "Bid: excavation" → `bid_excavation`, "Bid: Last Minute: excavation" → `bid_last_minute_excavation`). Assert no two CSV headers map to the same DB column name. Phase B seed migration uses the same mapping.
-  * Output: `_tmp_phase_a_csv_validation_2026-05-13.md` (not committed; status report to verify before R5.1).
+  > **TDD invariant per group:** R5.X.a writes tests against a contract the migrations don't yet satisfy. R5.X.b must observe those tests FAIL. R5.X.c writes the migrations. R5.X.d must observe the same tests PASS. Skipping Red Light means the test could be a tautology — the protocol prevents it.
 
-- [ ] **R1 — Write this active task.** _Complete (this file)._
-- [ ] **R2 — Multi-Agent Review of this active task.** Run 3 parallel reviewers per CLAUDE.md Review Agent Reference and `feedback_review_protocol.md`:
-  - Gemini plan-review (`.claude/review-templates/plan-review-gemini.md`) with --specs `42_chain_coa.md,84_lifecycle_phase_engine.md,47_pipeline_script_protocol.md,00_engineering_standards.md`
-  - DeepSeek plan-review (`.claude/review-templates/plan-review-deepseek.md`) with same specs
-  - Worktree feature-dev:code-reviewer agent with access to specs 42, 84, 47, 13, 41, 49, 76, 80, 81, 82, 83, 85, 91, 00_engineering_standards, and to the code surface that informs the plan: `scripts/classify-lifecycle-phase.js`, `scripts/lib/lifecycle-phase.js`, `scripts/compute-trade-forecasts.js`, `scripts/compute-phase-calibration.js`, `scripts/compute-opportunity-scores.js`, `scripts/compute-cost-estimates.js`, `scripts/classify-permits.js`, `scripts/classify-scope.js`, `scripts/link-parcels.js`, `scripts/link-coa.js`, `scripts/create-pre-permits.js`, `scripts/load-coa.js`, `scripts/lib/leads/lead-id.js` (if present), `migrations/005_trade_mapping_rules.sql`, `migrations/006_permit_trades.sql`.
-- [ ] **R3 — Triage review findings.** BUG → fix in spec text before commit. DEFER → `docs/reports/review_followups.md`. Re-read CLAUDE.md feedback memory before triaging to avoid the four common AI regressions (missing Multi-Agent Review step, banned §10 matrix, ✅/⬜ Green Light format, wrong "Mobile-First" field name — none should be present here).
-- [ ] **R4 — Authorization gate.** Halt and present the plan + reviewer findings to the user. Use the explicit format: **PLAN LOCKED. Do you authorize this WF1 plan? (y/n)**. Do NOT generate spec edits before "Yes."
-- [ ] **R5 — Edit specs in dependency order:**
-  - [ ] R5.0 — `docs/specs/00-architecture/01_database_schema.md` (NEW per R2.v2 Worktree BUG-10): add full CREATE TABLE statements + indexes for the 6 new tables and column additions to existing tables. Schema source-of-truth must precede other amendments since other specs reference table definitions here.
-  - [ ] R5.1 — Spec 84 amendments (A.1.1 BUGS fix, A.1.2 QUESTIONABLE review, A.1.3 §3 contract, A.1.4 §8 archive, A.1.5 §8.7 update, A.1.6 84-W11 namespace — granular-first, A.1.7 distribution-gate granular migration). Regenerate `spec_84_universal_stream_v10.csv` for the locked Universal Stream.
-  - [ ] R5.2 — Spec 80 CoA Taxonomy section.
-  - [ ] R5.3 — Spec 13 CoA Application Mode section.
-  - [ ] R5.4 — Spec 41 step breakdown — **Phase A action is ANNOTATION ONLY** (per R2.v2 Gemini BUG-CRIT): add `(REMOVED IN PHASE G)` annotation to step 18 row; DO NOT delete the row; DO NOT renumber steps 19+; DO NOT update tests. Phase G code-retirement will perform the deletion, renumbering, and test updates. Update step descriptions for steps 9, 13, 14, 15, 17, 22, 24, 25, 26, 27 to reference unified `lead_*` tables and lead_id keying.
-  - [ ] R5.5 — Spec 42 §2/§3/§5 extension.
-  - [ ] R5.6 — Spec 47 adherence note.
-  - [ ] R5.7 — Spec 49 coverage matrix extension.
-  - [ ] R5.7b — **Spec 86 amendments (NEW per R2.v2 DeepSeek BUG-6; reframed to seq-level 2026-05-13):** add `lifecycle_band_seq_<seq>_min/max` keys (×110, AUTHORITATIVE gate per §A.1.7), `lifecycle_band_seq_<seq>_sample_size_threshold` keys (×110, tier selector), and `lifecycle_status_history_retention_days` logic_variable. Note legacy `lifecycle_band_p{N}_min/max` keys are retained during Phase C–G transition and deprecated in Phase H.
-  - [ ] R5.8 — Spec 76 §3.5 Lead Inspector CoA panel.
-  - [ ] R5.9 — Spec 81 lead_id rekey documentation.
-  - [ ] R5.10 — Spec 82 CoA Lead Handling section.
-  - [ ] R5.11 — Spec 83 Geometric-Only Path (CoA) section.
-  - [ ] R5.12 — Spec 85 CoA-stage routing simplification documentation.
-  - [ ] R5.13 — Spec 91 filter + sort + UI chip.
-  - [ ] R5.14 — `npm run system-map -- --dry-run` (validate frontmatter not broken by any of the 14 spec edits) THEN `npm run system-map` (regenerate). Commit the regenerated map.
-- [ ] **R6 — Verify regression tests.** `npm run test` to catch any test that regression-locks on spec text we changed (e.g., `assert-global-coverage.infra.test.ts` which already trapped the §2 step-count framing change). Update tests where the new wording is more durable; never reverse a correct spec change to satisfy a brittle test.
-- [ ] **R7 — Type/lint check.** `npm run typecheck && npm run lint`. Doc-only changes shouldn't trip either, but verify.
-- [ ] **R8 — Multi-Agent Review of the changes.** Re-run Gemini + DeepSeek (this time using the spec-review mode `npm run review:gemini -- spec <amended-spec>`) + worktree code-reviewer per spec amendment. Goal: catch cross-spec inconsistency introduced by the edits.
-- [ ] **R9 — Triage R8 findings.** Same BUG/DEFER triage as R3.
-- [ ] **R10 — Commit cadence.** Bundle Phase A into one or two commits per memory `feedback_wf3_granularity.md` — for WF1 doc-only spec amendments, single bundled commit is appropriate when the amendments are interdependent (which they are — most of these specs reference each other). Suggested commit message: `docs(42_chain_coa): WF1 #coa-pipeline-parity-phase-a — land all 12 cross-spec amendments + 84-W11 resolution + Universal Stream BUG fixes + system map regen`.
-- [ ] **R11 — User confirmation before push.** Per CLAUDE.md "Executing actions with care" — never push without explicit user approval.
+  **R5.1 — Empty-table creates (LOW-MED risk).** Migrations: B.1 (`lead_trades`), B.2 (`lead_parcels`), B.3 (`lifecycle_transitions`), B.4 (`lifecycle_status_history`).
+  - [ ] R5.1.a — **Test Scaffolding.** Write `src/tests/migration-124-lead-trades.infra.test.ts`, `migration-125-lead-parcels.infra.test.ts`, `migration-126-lifecycle-transitions.infra.test.ts`, `migration-127-lifecycle-status-history.infra.test.ts`. Each asserts: (a) table exists, (b) column set matches Spec 42 §6.6.B exactly, (c) CHECK regex `'^(permit|coa):.+$'` rejects malformed lead_id, (d) FK targets resolve, (e) re-run idempotency. SPEC LINK header per Spec 47 §R12.
+  - [ ] R5.1.b — **Red Light.** `npx vitest run src/tests/migration-12{4,5,6,7}-*.infra.test.ts` against a fresh staging DB (migrations not applied). **All 4 tests MUST FAIL** with "table does not exist" or similar. If any test passes, the test is wrong (false positive) — fix the test before proceeding.
+  - [ ] R5.1.c — **Implementation.** Write the 4 migration `.sql` files (`124`–`127`) with UPs + DOWNs per the canonical DDL in §B.1–§B.4 above. Run `node scripts/migrate.js` to apply.
+  - [ ] R5.1.d — **Group Green Light.** Re-run `npx vitest run src/tests/migration-12{4,5,6,7}-*.infra.test.ts` — **all 4 must PASS**. Also: `npm run typecheck` clean; `npm run lint` clean on test files. Run migrations a second time (`node scripts/migrate.js`) and confirm no-op (idempotency).
+  - [ ] R5.1.e — **Pre-Review Self-Checklist** (5–10 items from Spec 42 §6.6.B + actual SQL). Examples: (1) Do all 4 tables have CHECK `'^(permit|coa):.+$'`? (2) Does `lead_trades.id` use SERIAL matching existing `permit_trades.id`? (3) FK targets (`trades(id)`, `parcels(id)`) resolve? (4) Is the `lifecycle_status_history` idempotency UNIQUE INDEX present and correct? (5) Are DOWNs strictly the inverse of UPs? Walk each item against actual diff; PASS/FAIL with line numbers; fix-and-re-verify any FAIL.
+  - [ ] R5.1.f — **Multi-Agent Review** (3 parallel tool calls in ONE message):
+    - `npm run review:gemini -- review migrations/124_create_lead_trades.sql --context docs/specs/01-pipeline/42_chain_coa.md` (repeat per file or batch — script supports both)
+    - `npm run review:deepseek -- review <same>` for each file
+    - Agent `feature-dev:code-reviewer`, `isolation: worktree` — prompt: "Review migrations 124–127 against Spec 42 §6.6.B. Verify CHECK constraints, FK types, index strategy, DOWN parity, idempotency UNIQUE INDEX on lifecycle_status_history. Generate your own checklist."
+  - [ ] R5.1.g — **Triage.** BUG → fix before R5.2 starts. DEFER → `review_followups.md`.
+  - [ ] R5.1.h — **Commit R5.1.** Message: `feat(42_chain_coa): WF1 #coa-pipeline-parity-phase-b R5.1 — lead_id-keyed tables (B.1–B.4)`.
+
+  **R5.2 — Reference-data seeds (MED risk — data integrity).** Migrations: B.5a (table), B.5b (110-row seed), B.6a (table), B.6b (~1,500-row seed).
+  - [ ] R5.2.a — **Test Scaffolding.** Write `migration-128-universal-stream-catalog-create.infra.test.ts`, `migration-129-universal-stream-catalog-seed.infra.test.ts`, `migration-130-universal-stream-trade-signals-create.infra.test.ts`, `migration-131-universal-stream-trade-signals-seed.infra.test.ts`. Assertions: 110 rows contiguous seq 1–110; seq 14 `bid_value = 0.8`; B9.C row exists; signal seed ≈ 1,500 rows; specific known signals (excavation Work at seq 53); idempotency via re-INSERT with `ON CONFLICT DO NOTHING`.
+  - [ ] R5.2.b — **Red Light.** Run the 4 new tests against staging with R5.1 applied but R5.2 not. **All 4 must FAIL.**
+  - [ ] R5.2.c — **Implementation.** Generate seed JSON files via R0.6 utilities (`_tmp_phase_b_seed_catalog.mjs`, `_tmp_phase_b_seed_signals.mjs`) — these scripts include the CSV preflight (`rows === 110 && cols === 174 || throw`). Write the 4 migration files (`128`–`131`). Apply via `node scripts/migrate.js`.
+  - [ ] R5.2.d — **Group Green Light.** 4 tests pass; idempotency re-run is no-op.
+  - [ ] R5.2.e — **Pre-Review Self-Checklist** (5–10 items): seed JSON ↔ CSV bijection; empty CSV cells → SQL NULL (not '' empty string); ON CONFLICT DO NOTHING on every INSERT; signal seed FK to catalog satisfied; v10 BUG-fix invariants (seq 14, B9.C, seq 50 column-alignment).
+  - [ ] R5.2.f — **Multi-Agent Review** (3 parallel calls — full set, MED-risk group): Gemini + DeepSeek + worktree on migrations 128–131 + the 2 seed JSON files. Worktree prompt emphasizes the CSV → JSON → SQL data-integrity chain.
+  - [ ] R5.2.g — Triage.
+  - [ ] R5.2.h — Commit R5.2.
+
+  **R5.3 — ALTERs on hot live tables (HIGH RISK — 247K + 33K row UPDATEs).** Migrations: B.7 (permits), B.8 (coa_applications), B.9 (4 consumer tables), B.10 (phase_stay_calibration).
+  - [ ] R5.3.a — **Test Scaffolding.** Write `migration-132-permits-lead-id.infra.test.ts`, `migration-133-coa-lead-id.infra.test.ts`, `migration-134-consumers-lead-id.infra.test.ts`, `migration-135-phase-calibration-cohort.infra.test.ts`. Critical assertions: (1) every existing `permits` row has `lead_id IS NOT NULL` post-migration (catches the column-targeted-trigger CRIT from R2.v3); (2) lead_id format regex matches every row; (3) CHECK constraint rejects bad inserts; (4) re-run idempotency (CHECK + trigger DROP/CREATE re-runnable via `DO`/`EXCEPTION` guards); (5) B.10 keeps existing PK intact + new UNIQUE NULLS NOT DISTINCT accepts NULL cohort dims.
+  - [ ] R5.3.b — **Red Light.** Tests against staging with R5.1+R5.2 applied. **All 4 must FAIL** (e.g., "column lead_id does not exist").
+  - [ ] R5.3.c — **Implementation.** Write the 4 migration files (`132`–`135`). Apply via `node scripts/migrate.js`. Expected runtime ~7 minutes on populated tables.
+  - [ ] R5.3.d — **Group Green Light.** 4 tests pass. **Specifically verify: `SELECT COUNT(*) FROM permits WHERE lead_id IS NULL` returns 0** (the trigger-semantics CRIT regression-lock). `SELECT COUNT(*) FROM coa_applications WHERE lead_id IS NULL` returns 0. Re-run migrations: no-op.
+  - [ ] R5.3.e — **Pre-Review Self-Checklist (mandatory thorough — HIGH-risk group). 10+ items.** Examples: (1) Backfill `UPDATE permits SET lead_id = 'permit:' || ...` directly computes, NOT relying on column-targeted trigger? (2) CHECK constraints in `DO $$ EXCEPTION WHEN duplicate_object` for re-run safety? (3) CONCURRENTLY on every index in B.7/B.8/B.9 (migrate.js dual-path routes file non-transactionally)? (4) B.10 keeps existing PK + only adds UNIQUE NULLS NOT DISTINCT? (5) B.9 lead_id columns nullable with `CHECK (lead_id IS NULL OR ...)`? (6) `lead_analytics.lead_id` distinct from `lead_key` (legacy `'permit:24 101234:01'` space format documented for Phase C normalization)? (7) DOWNs reverse-ordered? (8) Trigger function handles edge cases (revision_num >2 chars → LPAD pass-through documented)? (9) Re-run on populated rows: `WHERE lead_id IS NULL` matches 0 rows? (10) Runtime estimate accounts for CONCURRENTLY index passes on populated tables?
+  - [ ] R5.3.f — **Multi-Agent Review (3 parallel calls — MANDATORY FULL REVIEW).** Spec context: Spec 42 §6.6.A.1 (B.13 Integrity Constraint Design) + §6.6.D/E (column lists) + §6.6.F (phase_stay_calibration). Reviewers explicitly red-team the trigger semantics, UPDATE backfill correctness, re-runnability.
+  - [ ] R5.3.g — **Triage.** Highest-risk group; fix ALL BUGs before R5.4.
+  - [ ] R5.3.h — Commit R5.3.
+
+  **R5.4 — Logic-variable seed (LOW risk).** Migration: B.11 (~333 rows).
+  - [ ] R5.4.a — **Test Scaffolding.** Write `migration-136-logic-variables-phase-b.infra.test.ts`. Assertions: 333 new rows present; ON CONFLICT DO NOTHING idempotent; DOWN deletes only the new keys (not all rows).
+  - [ ] R5.4.b — **Red Light.** Test fails — keys don't exist yet.
+  - [ ] R5.4.c — **Implementation.** Write `136_seed_logic_variables_phase_b.sql`. Apply.
+  - [ ] R5.4.d — **Group Green Light.** Test passes; re-run is no-op.
+  - [ ] R5.4.e — **Pre-Review Self-Checklist** (5 items): every row has `ON CONFLICT (variable_key) DO NOTHING`; DOWN enumerates each key explicitly; values match Spec 86 defaults; idempotent; Spec 86 §1 references every new key.
+  - [ ] R5.4.f — **Review: worktree code-reviewer only** (LOW-risk gate — adversarial LLMs skipped). Prompt: "Confirm migration 136 seeds match Spec 86 §1 + Spec 42 §6.7."
+  - [ ] R5.4.g — Triage.
+  - [ ] R5.4.h — Commit R5.4.
+
+  **R5.5 — Orphan-audit view (LOW risk).** Migration: B.13 (`lead_id_orphan_audit` view).
+  - [ ] R5.5.a — **Test Scaffolding.** Write `lead-id-orphan-audit.infra.test.ts`. Assertions: view exists; returns 0 rows on empty Phase B DB; returns exactly 1 row after seeding an orphan; UNION-ALL covers all 4 Phase B tables.
+  - [ ] R5.5.b — **Red Light.** Test fails — view doesn't exist.
+  - [ ] R5.5.c — **Implementation.** Write `137_lead_id_integrity_constraints.sql`. Apply.
+  - [ ] R5.5.d — **Group Green Light.** Test passes; re-run via `CREATE OR REPLACE VIEW` is no-op.
+  - [ ] R5.5.e — **Pre-Review Self-Checklist** (5 items): view covers all 4 Phase B tables; deliberately excludes the 4 Phase C consumers with comment pointing to Phase C follow-up; JOIN columns match B.7/B.8 populated lead_id; comment explains accepted RI limitation.
+  - [ ] R5.5.f — **Review: worktree code-reviewer only.** Prompt focuses on view correctness + "what does this view miss."
+  - [ ] R5.5.g — Triage.
+  - [ ] R5.5.h — Commit R5.5.
+
+- [ ] **R6 — Cross-cutting integration test on fresh staging.** Drop staging DB; re-apply migrations 001–137 from scratch (`node scripts/migrate.js`); verify all tables/columns/indexes/triggers/constraints via `pg_class` + `pg_indexes` + `pg_constraint` + `pg_trigger`. Confirm full migration set is order-independent and produces identical schema state.
+- [ ] **R7 — Cross-cutting test pass.** `npm run test` against the fresh-migrated staging — every test green, including all 14 new migration tests + the cross-cutting tests (`lead-id-derivation.logic.test.ts`, `lead-trades-schema-parity.logic.test.ts`, `lead-id-orphan-audit.infra.test.ts`, `revision-num-preflight.infra.test.ts` from R0.7).
+- [ ] **R8 — Final cross-cutting Multi-Agent Review.** Even though every R5.X had its own review, R8 reviews the **cumulative diff** (all 14 migrations + all tests as one set) against Spec 42 §6.6 + Spec 01 §3.A. Looks for cross-cutting issues invisible at per-group level: naming inconsistency across migrations, missing cross-references, integration-level concerns. 3-reviewer set (Worktree + Gemini + DeepSeek).
+- [ ] **R9 — Triage R8 findings + apply BUG fixes.** Add as a top-up commit on the R5.5 commit; do NOT amend earlier R5.X commits.
+- [ ] **Green Light (final WF1 gate).** `npm run test && npm run lint -- --fix && npm run typecheck`. Paste final test summary line + typecheck result. Both must show zero failures. List each prior R-step as DONE or N/A. → WF6 (final commit ceremony).
+- [ ] **R10 — Push gate.** User confirmation before push. Same as Phase A.
 
 ## Plan Compliance Notes
 
-* **§Multi-Agent Review present:** YES — R2 (plan review) + R8 (post-edit review).
-* **§10 matrix:** NOT INCLUDED (per memory `feedback_wf_plan_format.md` regression to avoid).
-* **Green Light format:** Uses bold prose ask `**PLAN LOCKED. Do you authorize this WF1 plan? (y/n)**` (not ✅/⬜ checklist).
-* **Field naming:** "Multi-Agent Review" not "Mobile-First" (memory note).
-* **WF3 cadence:** N/A (this is WF1).
-* **Domain mode:** Backend/Pipeline declared at top (per CLAUDE.md mandatory).
-* **Spec 47 §R-compliance:** N/A for THIS task (doc-only); applies to Phase C–F scripts which inherit it.
-* **Library docs (Context7):** N/A (no external library usage).
+* §Multi-Agent Review present: R2 (plan, v1 + v3 revisions) + **per-group reviews at R5.1.c, R5.2.c, R5.3.c, R5.4.c, R5.5.c** (risk-tiered: full 3-reviewer set for R5.1/R5.2/R5.3; worktree-only for R5.4/R5.5) + final cross-cutting R8. Per-group reviews are gated — BUG findings block the next group's start. Cadence chosen R2.v3 because a 14-migration phase compounds risk if errors in R5.1 land before being caught (the Phase A lesson). Each per-group review is preceded by a 5–10 item Pre-Review Self-Checklist generated from the relevant Spec 42 §6.6 sub-section.
+* Spec 47 §10 (migration UP/DOWN parity): every UP has a tested DOWN; every migration is re-runnable.
+* CONCURRENTLY usage: confined to migrations on populated tables (B.7, B.8, B.9), per `migrate.js` dual-path semantics. Empty-at-creation tables (B.1–B.6, B.10, B.13) use bare `CREATE INDEX` so the entire file is atomic.
+* Trigger-based `lead_id` generation: avoids ACCESS EXCLUSIVE rewrite on 247K-row permits table that a STORED generated column would force.
+* CHECK constraints: every `lead_id`-bearing column has `CHECK (lead_id IS NULL OR lead_id ~ '^(permit|coa):.+$')` (regex requires non-empty suffix).
+* Phase B is **additive only**: no DROPs, no view conversions of existing tables, no table renames. Existing `permit_trades`/`permit_parcels`/`permit_phase_transitions` remain live writers; their retirement is Phase H.
+* Domain mode: Backend/Pipeline declared at top.
 
-## Out of Scope (Explicitly Deferred to Subsequent Phases B–H)
+## Out of Scope (Explicitly Deferred to Phases C–H)
 
-This task delivers ONLY the spec amendments. The following are explicitly deferred:
-
-- Migration SQL files (Phase B).
-- `lead_id` backfill script + permit-side rekey (Phase C).
-- New CoA classification scripts (Phase D).
-- Lifecycle engine migration + 84-W12 fix + cohort-key extension + band recalibration (Phase E).
-- Forecast / opportunity / CRM CoA extensions + UI (Phase F).
-- PRE-permit retirement (Phase G).
-- Legacy column drop (Phase H).
-
-Each subsequent phase will get its own active task per CLAUDE.md WF cadence.
+- `lead_id` backfill on `cost_estimates`/`trade_forecasts`/`tracked_projects`/`lead_analytics` (Phase C `migrate-to-lead-id.js`)
+- Promotion of `lead_id` columns to NOT NULL + UNIQUE (after Phase C backfill)
+- CoA classification script bodies (Phase D)
+- Lifecycle engine modifications (Phase E)
+- `phase_stay_calibration` PK swap from legacy UNIQUE to new cohort-key UNIQUE (Phase E, after cohort dims are populated)
+- Forecast/opportunity/CRM CoA extensions (Phase F)
+- PRE-permit retirement (Phase G)
+- Legacy column drop + view drop / table-to-view conversion (Phase H)
+- Per-trade `logic_variable` band recalibration (Phase E)
+- Adding `cost_estimates` / `trade_forecasts` / `tracked_projects` / `lead_analytics` to `lead_id_orphan_audit` view (Phase C follow-up)
 
 ---
 
-## Known Issues — Documented for Implementation (R2.v2 Multi-Agent Review, 2026-05-13)
+## R2.v3 worktree review — NEW findings (resolved inline)
 
-Per user direction 2026-05-13 ("B — authorize as-is with documented known issues — fix in implementation"), the following 11 BUGs from R2.v2 reviewer findings are accepted as known and will be fixed during the R5 execution of this active task. Each item below cites the source reviewer + severity for traceability.
+| # | Severity | Finding | Resolution location |
+|---|---|---|---|
+| Item 9 | **CRIT** | `BEFORE UPDATE OF permit_num, revision_num` trigger does NOT fire on `UPDATE permits SET lead_id = lead_id` (column-targeted trigger semantics). All 247K existing rows would stay NULL, breaking Phase C. | B.7 + B.8 backfill rewritten to compute `lead_id` directly in the UPDATE statement. Trigger retained for INSERT/UPDATE-on-source-cols path. |
+| Item 10 | BUG | B.10 had dead DDL: ADD PRIMARY KEY on cohort-dim columns containing NULL would fail before the immediate DROP. | B.10 rewritten — existing PK on `(permit_type, from_phase)` stays untouched. New UNIQUE NULLS NOT DISTINCT claims the cohort-key shape. PK swap deferred to Phase E. |
+| Item 13 | BUG | `ADD CONSTRAINT chk_*_lead_id_format` in B.7/B.8 had no `IF NOT EXISTS` guard. In non-transactional mode (CONCURRENTLY routes file outside transaction), re-run after partial success fails on `constraint already exists`. | Wrapped in `DO $$ BEGIN ... EXCEPTION WHEN duplicate_object THEN NULL; END $$` guard in B.7 and B.8. |
+| Item 11 | DEFER | B.14 was a reserved-empty placeholder at migration 138. Anti-pattern: migration numbers are not reserved ahead of content. | B.14 removed entirely. File count is now 14 (124–137). |
 
-### CRIT / HIGH
+PostgreSQL 16 confirmed deployed (`postgres:16-3.4` testcontainer per Spec 34) — `UNIQUE NULLS NOT DISTINCT` supported. PASS.
 
-1. **(Worktree, conf 95) — `load-permits.js` missing from `lifecycle_status_history` writers.** Spec 42 §6.6.B `detected_by` column comment lists only `classify-lifecycle-phase.js` + `load-coa.js`. Add `load-permits.js` as a third writer; add to §6.9 Modified Existing Scripts table. Symmetric to `load-coa.js`: detects permit-side status changes at CKAN ingest.
+R2.v3 Gemini and DeepSeek both returned `INVALID_ARGUMENT / max context length` errors against the API on both the full and trimmed spec sets, despite actual input size being ~242 KB (~60K tokens — well under any model's stated limit). Probable cause: API-side billing/counting issue or quota state, not actual context overflow. The R2.v3 worktree reviewer's deep line-by-line read gave full coverage AND surfaced 3 new BUGs (all fixed in this revision); the LLM reviewers' adversarial value was captured in the R2.v1 run (which surfaced the BIGINT-vs-INTEGER mismatch, the FK ambiguity, the seed-DOWN-missing issues, etc.). LLM reviewers are nice-to-have at this point, not gating. Operator may retry `npm run review:gemini` / `npm run review:deepseek` after the API issue is diagnosed; results would be appended as R2.v4 if any new BUG surfaces.
 
-2. **(Worktree, conf 92) — Duplicate "step 4" headings in Spec 42 §6.7.** Distribution-gate pivot AND band-recalibration both numbered 4. Renumber: distribution-gate pivot stays as 4; band-recalibration becomes 5; `compute-phase-calibration.js` GROUP BY extension becomes 6; `compute-trade-forecasts.js` UNION extension becomes 7.
+## R2.v1 → R2.v3 Triage Log (resolved inline in this revision)
 
-3. **(Worktree, conf 85) — §A.1.6 SKIP_PHASES migration over-corrects.** Currently proposes `lifecycle_group NOT IN ('C1','C2','C3','C4')`. This breaks the linked-permit reclassification contract — when a CoA decision lands (C2→C3 transition), `link-coa.js` won't bump the permit's `last_seen_at`. Correct to `lifecycle_group NOT IN ('C4')` only — preserves C1/C2/C3 bump behavior. Mirrors the original `P1/P2 only` exclusion, just translated to the group axis.
-
-4. **(Gemini, CRIT) — §A.4 contradiction: "delete step 18" vs "mark as REMOVED IN PHASE G."** Phase A action clarified: ADD `(REMOVED IN PHASE G)` annotation to the step 18 row in Spec 41 §2 — do NOT delete the row, do NOT renumber 19+, do NOT update tests in Phase A. Phase G performs all three.
-
-5. **(DeepSeek, HIGH) — §A.14 duplicates `lifecycle_status_history` schema.** Spec 42 §6.6.B already has the full table definition. Active task §A.14 should retain the "why this exists" + writers list + dual-ledger explanation, but remove the embedded CREATE TABLE block and cross-reference §6.6.B instead. Removes risk of schema drift between the two definitions.
-
-6. **(DeepSeek, HIGH) — §A.13a Spec 86 missing from R5 execution plan.** R5.1–R5.14 covers Specs 84 → 80 → 13 → 41 → 42 → 47 → 49 → 76 → 81 → 82 → 83 → 85 → 91 → system map, but skips Spec 86. Add **R5.7b** between current R5.7 (Spec 49) and R5.8 (Spec 76): "Edit Spec 86 — add `lifecycle_band_block_<block_id>_min/max` keys (~15), `lifecycle_band_seq_<seq>_min/max` keys (×110, optional diagnostic), and `lifecycle_status_history_retention_days` logic_variable. Note legacy `lifecycle_band_p{N}_min/max` keys deprecated in Phase H."
-
-7. **(Gemini, HIGH) — §A.1.1 Universal Stream BUG fixes lack named automated verification test.** Add `universal-stream-catalog.infra.test.ts` to Spec 42 §6.4 Test Strategy. Asserts: row count = 110, seq 1-110 contiguous, seq 14 `bid_value = 0.8`, seq 50 column-alignment correct (excavation/temp-fencing Work=NULL, LM=✓), B9.C row exists with correct block label, 174 columns total.
-
-8. **(DeepSeek, HIGH) — §A.1.1 CSV regeneration lacks validation step.** Add **R0.6** between R0.5 and R1: "Validate regenerated v10 CSV before lock-in. Parse the file, assert row count = 110, seq numbers contiguous 1–110, column count = 174, sample seq 14 / seq 50 / B9.C cells match the §A.1.1 fix specifications. Output validation result to `_tmp_phase_a_csv_validation_2026-05-13.md`."
-
-9. **(DeepSeek, HIGH) — CSV column header naming convention mapping unspecified.** CSV headers use spaces ("Group Label"); DB schema uses snake_case (`group_label`). Document the bijective mapping in §A.1.1: lowercase + `space → underscore`. Add to R0.6 validation: assert mapping is bijective (no duplicate target column names after transformation).
-
-10. **(Worktree, conf 88) — `00-architecture/01_database_schema.md` not in §6.10 cross-spec list.** New `lifecycle_status_history` + `lifecycle_transitions` + `lead_trades` + `lead_parcels` + `universal_stream_catalog` + `universal_stream_trade_signals` all need to land in the canonical schema document. Add row to Spec 42 §6.10 and to R5 execution plan (as R5.0 — runs BEFORE other amendments since it's the schema source-of-truth).
-
-11. **(Worktree, conf 82) — R0.5 query #3 doesn't validate `coa_type_class` taxonomy.** The `permit_type_classifications` query can't validate CoA-side values since they're a new 4-value set (`residential`/`commercial`/`institutional`/`mixed`), not derived from permits. Replace with: `SELECT description, COUNT(*) FROM coa_applications GROUP BY 1 ORDER BY 2 DESC LIMIT 50` to spot-check that the §A.2 keyword decision tree covers the most frequent CoA description patterns. Keep the `permit_type_classifications` query as a secondary informational query.
-
-### DEFER
-
-The following items are deferred to `docs/reports/review_followups.md` and will NOT be addressed during this WF1 active task:
-
-- DeepSeek DEFER MED: R5 cross-ref consistency between sequential spec edits (mitigated by R8 multi-agent review covering the final state).
-- DeepSeek DEFER MED: CoA "Deferred"/"Postponed" status explicit handling (already covered by §A.1.3 catchall rule + `unmapped_status` audit metric — verified during triage).
-- DeepSeek DEFER LOW: P18/P19/P20 phase-label drift in Spec 84 §3 (pre-existing per bug 84-W1 family; defer to Phase H cleanup).
-- Gemini DEFER LOW: §A.6 "NO CHANGE" header rename to "Adherence Note" (cosmetic; address opportunistically during R5.6).
-- Gemini DEFER NIT: `coa-handoff.infra.test.ts` JOIN through `lifecycle_status_history` — confirmed working post-Phase C `lead_id` backfill (test runs in Phase F regardless).
-- DeepSeek UNVERIFIED PREMISE: `npm run system-map` regeneration risk — add a dry-run check before final regeneration in R5.15.
-- DeepSeek UNVERIFIED PREMISE: R0.5 doesn't profile overall data inventory — accept; the spec values come from the locked 2026-05-12 snapshot which is authoritative for this WF.
+| # | Finding (Source) | Resolution location |
+|---|---|---|
+| C1 | Backward-compat views break live writers (Code-Reviewer 95) | B.12 REMOVED; Spec 42 §6.6.C + §6.11 Phase B gate updated; no view conversion in Phase B |
+| C2 | CREATE INDEX CONCURRENTLY inside transaction (DeepSeek CRIT) | Verified `migrate.js` has dual-path detection (lines 170–229) — CONCURRENTLY routes file non-transactionally. Plan now explicit about which migrations use CONCURRENTLY and why. |
+| C3 | BIGINT vs INTEGER FK type mismatch on lead_parcels (DeepSeek CRIT) | Fixed in B.2 DDL + Spec 42 §6.6.B + Spec 01 §3.A |
+| C4 | B.13 FK strategy unresolved (Gemini CRIT + Code-Reviewer) | Replaced with CHECK constraints on every lead_id-bearing column + orphan-audit view (B.13 rewritten); committed in Spec 42 §6.6.A.1 |
+| H1 | B.10 phase_stay_calibration PK strategy TBD (Gemini HIGH) | Resolved in B.10 with explicit DDL: legacy UNIQUE preserved through Phase E, new NULLS NOT DISTINCT UNIQUE added, PK swap deferred to Phase E |
+| H2 | Missing CHECK constraint on lead_id format (DeepSeek HIGH) | Added to every lead_id column in B.7, B.8, B.9 (and to every new table B.1–B.4) |
+| H3 | CSV seed validation missing (DeepSeek HIGH) | R0.6 generator must assert `rows.length === 110 && headers.length === 174` |
+| H4 | Spec 47 §10 CONCURRENTLY mandate (Code-Reviewer) | Resolved by C2 fix — CONCURRENTLY usage now explicit per migration |
+| H5 | lead_analytics rename unassigned (Code-Reviewer) | Assigned to B.9; add `lead_id` column, retain `lead_key` as alias through Phase G |
+| M1 | Seed DOWN missing (Gemini MED) | B.5b, B.6b, B.11 each have `DELETE FROM ...` DOWN block |
+| M2 | revision_num non-numeric breaks LPAD (DeepSeek MED) | LPAD on VARCHAR(10) preserves uniqueness for any input; preflight test asserts `MAX(LENGTH(revision_num)) <= 2` and surfaces violators. Format CHECK accepts `[0-9A-Za-z]{1,10}` (relaxed). |
+| M3 | B.5/B.6 same-tx seed risk (DeepSeek MED) | Split into B.5a + B.5b and B.6a + B.6b |
+| M4 | Spec 42 §6.4 revision_num type typo (Code-Reviewer) | Fixed: VARCHAR(10) not SMALLINT |
+| M5 | ON CONFLICT DO NOTHING missing on seed INSERTs (Code-Reviewer) | Every seed INSERT now uses ON CONFLICT DO NOTHING on PK |
+| M6 | Empty CSV cell → NULL mapping unspecified (Code-Reviewer) | R0.6 generator + Spec 42 §6.6.B documents NULL handling |
 
 ---
 
-> **AUTHORIZED 2026-05-13.** PLAN LOCKED. Status: Implementation. R0 through R5.x execute in order; R5.x sub-steps absorb the 11 known issues above as inline fixes (not separate WF3 tasks).
+> **PLAN LOCKED. Do you authorize this WF1 Phase B plan (R2.v3 final revision)? (y/n)**
+> 14 migration files (124–137), ~333 new logic_variable rows, 2 seed JSON files, 1 orphan-audit view, 2 triggers, ~12 CHECK constraints. ~10 minute total migration runtime. All additive — zero behavioral change to existing pipelines.
+>
+> **WF1 sequence per group (R5.X):** Test Scaffolding (a) → **Red Light: tests MUST fail (b)** → Implementation (c) → Group Green Light: tests MUST pass + typecheck + lint (d) → Self-Checklist (e) → Multi-Agent Review (f, risk-tiered) → Triage (g) → Commit (h). Tests written BEFORE migrations, per WF1 contract.
+>
+> **Review cadence (risk-tiered):** R5.1 / R5.2 / R5.3 → full 3-reviewer (Worktree + Gemini + DeepSeek). R5.3 is mandatory full review (highest-risk hot-table ALTERs). R5.4 / R5.5 → worktree only. Final cross-cutting R8 → full 3-reviewer on cumulative diff. BUG findings block next group.
+>
+> Phase A's design contract drives every choice; R2.v3 resolves all CRIT+HIGH+MED from R2.v1 AND the 3 new BUGs surfaced by the R2.v3 worktree review (CRIT trigger semantics, BUG B.10 dead DDL, BUG missing IF NOT EXISTS).
+> DO NOT generate migration files. DO NOT run commands. TERMINATE RESPONSE awaiting authorization.
