@@ -61,9 +61,15 @@ describe('migration 135 — phase_stay_calibration cohort key extension (WF1 #co
     expect(sql).not.toMatch(/CREATE\s+INDEX\s+CONCURRENTLY/i);
   });
 
-  it('wraps the ALTERs + UNIQUE add in an explicit BEGIN/COMMIT for atomicity', () => {
-    expect(sql).toMatch(/BEGIN\s*;/i);
-    expect(sql).toMatch(/COMMIT\s*;/i);
+  it('does NOT contain explicit BEGIN/COMMIT — atomicity is provided by the migrate.js outer transaction', () => {
+    // R8 cross-cutting fix: explicit COMMIT in a non-CONCURRENTLY migration
+    // commits the runner's outer transaction prematurely, decoupling the DDL
+    // from the schema_migrations recordApplied INSERT. The runner already
+    // wraps non-CONCURRENTLY files in a single BEGIN/COMMIT.
+    // The substring "BEGIN" may appear in `DO $$ BEGIN ... END $$` blocks (PL/pgSQL),
+    // so we look only for top-level transaction-control statements.
+    expect(sql).not.toMatch(/^\s*BEGIN\s*;/m);
+    expect(sql).not.toMatch(/^\s*COMMIT\s*;/m);
   });
 
   it('comment-only DOWN block per Rule 6', () => {

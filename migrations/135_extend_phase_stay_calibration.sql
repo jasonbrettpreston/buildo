@@ -13,14 +13,15 @@
 -- with NULL cohort dims during the Phase B–E transition. Phase E
 -- backfills the cohort dims and then swaps the PK over.
 --
--- Bundled in BEGIN/COMMIT because no CONCURRENTLY indexes are involved —
--- this is a small reference table, transactional apply is safe.
+-- Transactional apply is provided by the migrate.js runner outer
+-- transaction (scripts/migrate.js lines 210-221). Per R8 review, the
+-- prior revision had an explicit BEGIN/COMMIT here, which committed the
+-- runner's outer transaction prematurely and decoupled the DDL from the
+-- schema_migrations record. Removed — the runner's wrapping is sufficient.
 
 -- ═══════════════════════════════════════════════════════════════════
 -- UP
 -- ═══════════════════════════════════════════════════════════════════
-
-BEGIN;
 
 ALTER TABLE phase_stay_calibration
   ADD COLUMN IF NOT EXISTS from_seq INTEGER,
@@ -41,8 +42,6 @@ EXCEPTION
     WHEN duplicate_object THEN NULL;
 END $$;
 
-COMMIT;
-
 -- ═══════════════════════════════════════════════════════════════════
 -- DOWN — manual rollback only, intentionally not transactional
 -- (Rule 6 / commit 8b1c10b)
@@ -53,11 +52,9 @@ COMMIT;
 --
 -- To roll back manually:
 --
---   BEGIN;
 --   ALTER TABLE phase_stay_calibration DROP CONSTRAINT IF EXISTS phase_stay_calibration_new_unique;
 --   ALTER TABLE phase_stay_calibration
 --     DROP COLUMN IF EXISTS coa_type_class,
 --     DROP COLUMN IF EXISTS project_type,
 --     DROP COLUMN IF EXISTS to_seq,
 --     DROP COLUMN IF EXISTS from_seq;
---   COMMIT;
