@@ -37,7 +37,7 @@ assert_entity_tracing → assert_global_coverage → backup_db
 | # | Slug | Script | Purpose | Writes To |
 |---|------|--------|---------|-----------|
 | 1 | `assert_schema` | `quality/assert-schema.js` | Pre-ingestion: validate CKAN metadata columns exist | pipeline_runs |
-| 2 | `permits` | `load-permits.js` | Fetch permits from CKAN API (paginated 10K/page), upsert to DB | permits |
+| 2 | `permits` | `load-permits.js` | Fetch permits from CKAN API (paginated 10K/page), upsert to DB. **WF1 Phase E extension:** also writes status-change rows to `lifecycle_status_history` (detected_by='load-permits.js') when CKAN status differs from existing permit row — captures permit-side status traversal at ingest, mirror of `load-coa.js` on the CoA side. | permits, lifecycle_status_history |
 | 3 | `close_stale_permits` | `close-stale-permits.js` | Mark permits not seen in 30+ days as stale | permits |
 | 4 | `classify_permit_phase` | `classify-permit-phase.js` | Assign construction phase (early/structural/finishing/landscaping) | permits |
 | 5 | `classify_scope` | `classify-scope.js` | Classify project type + scope tags from descriptions | permits |

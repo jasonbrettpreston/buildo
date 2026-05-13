@@ -1083,6 +1083,8 @@ Orphans (O1-O3) have no logical rank in the standard P1-P20 progression, prevent
 
 ### 8. Distribution Health Bands (CQA Tier 3)
 
+> **DEPRECATED IN PHASE A (WF1 #coa-pipeline-parity-phase-a, 2026-05-13):** The 36-key P-code band namespace documented in this section is being replaced by the granular **seq-level band namespace** in Spec 86 §1 (`lifecycle_band_seq_<seq>_min/max`, ×110 pairs + `lifecycle_band_seq_<seq>_sample_size_threshold` tier selector). The new authoritative gate validates per-seq distributions with sample-size-aware tuning. Block-level aggregation was rejected because outcome-diverse blocks like B2.C (containing both "Refused" and "Final and Binding" with opposite semantics) cannot be safely conflated. See active task §A.1.7 + Spec 42 §6.7 step 4 for the implementation contract. Legacy P-code bands remain populated through Phase H of WF2 #coa-pipeline-parity for backward compatibility with `compute-trade-forecasts.js` P-code routing; dropped in Phase H cleanup.
+
 `scripts/quality/assert-lifecycle-phase-distribution.js` is the canonical post-classifier health check. It compares the live row counts of every phase (`P3-P20`, `O1-O3`, CoA `P1-P2`, plus the synthetic `P9-P17` aggregate) against per-phase `[min, max]` bands and flags `FAIL`/`WARN` if any actual count drifts outside its band.
 
 **Externalization (WF2 2026-05-07, migration 119)** — every band bound and every cross-status drift threshold lives in `logic_variables`, not in code. Operators tune via the admin Control Panel ("Lifecycle Phase Distribution Bands" group, Spec 86 §1) without a redeploy.
@@ -1173,7 +1175,7 @@ The `assert-lifecycle-phase-distribution.js` script acts as the "Internal Audito
 |---|---|---|
 | 84-W1 | **Orphan Ordinal Gap:** Orphans (O1-O3) have no rank, so they never archive. Fix: Assign negative ordinals. | Pending Refactor |
 | 84-W4 | **Dead Transition Write:** Ledger is written but not used. Fix: Wire Spec 86 Calibration to read this ledger. | **Resolved (WF1 #B 2026-05-09)** — `scripts/compute-phase-calibration.js` now reads the ledger via `LAG()` window + `PERCENTILE_CONT` per `(permit_type, from_phase)` and writes `phase_stay_calibration`; the inspector's `lifecycle.timeline[]` reads that table for cohort comparison. See §7 below. |
-| 84-W11 | **ID Collision:** P3/P4/P5 mean different things in CoA vs Permits. Fix: Prefix Permit-Intake phases (e.g., `INTAKE_P3`). | Pending Refactor |
+| 84-W11 | **ID Collision:** P3/P4/P5 mean different things in CoA vs Permits. Fix: Prefix Permit-Intake phases (e.g., `INTAKE_P3`). | **Resolved (WF1 #coa-pipeline-parity-phase-a 2026-05-13)** — see §3 Phase-Code Namespace Deprecation. Granular-first move: `lifecycle_seq` (1–110) is authoritative; legacy `lifecycle_phase` deprecated through Phase H. |
 | 84-W5 | **Magic Stall Numbers:** Thresholds (180/730 days) are hardcoded. Fix: Move to `Zod` validated `logic_variables`. | Pending Refactor |
 | 84-W3 | **Mega-Insert Risk (Spec 47 §6.1):** 237k-row backfill crashes DB on `.query()`. Fix: Wire `pipeline.streamQuery` and standard chunking with loop arrays. | Pending Refactor |
 | 84-W9 | **SQL/JS Drift:** CoA normalization is duplicated in two places. Fix: Consolidate into a single SQL helper function. | Pending Refactor |

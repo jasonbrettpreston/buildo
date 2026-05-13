@@ -369,6 +369,17 @@ CREATE INDEX idx_lifecycle_status_history_lead ON lifecycle_status_history (lead
 CREATE INDEX idx_lifecycle_status_history_seq ON lifecycle_status_history (from_seq, to_seq) WHERE from_seq IS NOT NULL;
 CREATE INDEX idx_lifecycle_status_history_decision ON lifecycle_status_history (decision) WHERE decision IS NOT NULL;
 CREATE INDEX idx_lifecycle_status_history_transitioned ON lifecycle_status_history (transitioned_at);
+
+-- Idempotency guard against re-runs (per R8 Gemini review 2026-05-13).
+-- Both load-permits.js and load-coa.js write at CKAN ingest; without a unique
+-- key, re-running the same load over the same time window would INSERT
+-- duplicate transition rows. The natural key is (lead_id, to_status, transitioned_at)
+-- truncated to the second — two genuinely-distinct status changes for the
+-- same lead at the same second are not expected. ON CONFLICT DO NOTHING in
+-- ingest scripts prevents accidental duplication; classifier writes also
+-- respect this constraint since the classifier only fires once per chain run.
+CREATE UNIQUE INDEX uniq_lifecycle_status_history_natural_key
+    ON lifecycle_status_history (lead_id, to_status, date_trunc('second', transitioned_at));
 ```
 
 ##### How lifecycle history works across CoA + Permit (unified)

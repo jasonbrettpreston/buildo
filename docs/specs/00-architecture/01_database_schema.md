@@ -808,7 +808,7 @@ Reading order: the new tables described below are introduced by Spec 42; the col
 
 #### `lead_trades` (9 columns) — REPLACES `permit_trades`
 Universal trade-classification ledger keyed on `lead_id` (Option C from Spec 42 §6.6). Handles both permit-side and CoA-side trade tagging.
-- `id BIGSERIAL PRIMARY KEY`
+- `id SERIAL PRIMARY KEY` (matches Spec 42 §6.6.B canonical DDL; mirrors `permit_trades.id` from migration 006)
 - `lead_id TEXT NOT NULL` — `'permit:<num>:<rev>'` or `'coa:<application_number>'`
 - `trade_id INTEGER NOT NULL REFERENCES trades(id)`
 - `tier INTEGER` — 1/2/3 for permits, always 3 for CoAs (description-only matching)
@@ -859,6 +859,7 @@ Status-level ledger paralleling `lifecycle_transitions`. Captures every status c
 - `detected_by VARCHAR(60) NOT NULL` — enum of three writers above
 - `permit_type VARCHAR(50)`, `project_type VARCHAR(50)`, `coa_type_class VARCHAR(30)`, `neighbourhood_id BIGINT` — denormalized cohort dims
 - Indexes: `(lead_id)`, `(from_seq, to_seq) WHERE from_seq IS NOT NULL`, `(decision) WHERE decision IS NOT NULL`, `(transitioned_at)`
+- **Uniqueness:** `UNIQUE (lead_id, to_status, date_trunc('second', transitioned_at))` — idempotency guard against re-run duplicates from ingest scripts. Ingest writes use `ON CONFLICT DO NOTHING`.
 
 #### `universal_stream_catalog` (20 columns) — NEW
 Read-only reference table seeded from Spec 84 §2.5.h.2 (110 rows). The lifecycle classifier JOINs against this table to derive granular columns; the front-end JOINs through `lifecycle_seq` for rendering group/block/stage labels + colors + icons.
