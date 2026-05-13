@@ -908,3 +908,28 @@ Adversarial findings from Multi-Agent Review of migrations 128–131 (Universal 
 - "Use COPY FROM CSV instead of embedded INSERT" — project convention is embedded INSERT (see migration 092 precedent); preserves single-file commit + diff review
 - "Sacrificing lead_id referential integrity is a time bomb" — already explicitly accepted in Spec 42 §6.6.A.1 R2.v3 with compensating CHECK constraints + orphan-audit view (B.13)
 
+
+---
+
+## WF1 #coa-pipeline-parity-phase-b — R5.3 review deferrals (2026-05-13)
+
+Adversarial findings from Multi-Agent Review of migrations 132-135 (HIGH RISK hot-table ALTERs). 2 real BUGs fixed inline (B1 CHECK regex over-strict, B2 missing bid_value range CHECK). All other findings DEFER or REJECT.
+
+| # | Severity | Source | File:area | Finding | Decision rationale |
+|---|---|---|---|---|---|
+| 27 | CRIT (FIXED) | Worktree + Gemini-132 | Migration 132 CHECK regex | Over-strict `'^permit:.+:[0-9A-Za-z]+$'` rejects revision_num with hyphens/underscores | **FIXED inline**: aligned to Spec 42 §6.6.A.1 universal prefix-only `'^permit:.+$'`. |
+| 28 | HIGH (FIXED) | Gemini-132 + DeepSeek-133 | Migration 132/133 bid_value | DECIMAL(3,2) declaration alone allows -9.99..9.99 | **FIXED inline**: added `CHECK (bid_value IS NULL OR (bid_value >= 0 AND bid_value <= 1))` on both permits + coa_applications. universal_stream_catalog already had this CHECK; hot tables now match. |
+| 29 | HIGH (DEFER) | Gemini-132 + DeepSeek-133 | Migration 132 backfill | Unbatched UPDATE on 247K-row hot table; long ACCESS EXCLUSIVE locks + WAL churn | Correctness is OK; performance concern only. If staging run exceeds 5min Phase B estimate, refactor to batched UPDATE in DO loop. Cheap optimization deferred until needed. |
+| 30 | MED (DEFER) | Gemini-134 + Gemini-132 | Migration 132/134 CHECK | regex `.+` matches whitespace/control chars (e.g., `'permit:\n'` passes) | Spec 42 §6.6.A.1 chose universal `.+` pattern across all 8 lead_id-bearing tables. Tightening would break consistency. App-layer `deriveLeadId()` guards format. Revisit if production CKAN data introduces whitespace. |
+| 31 | MED (DEFER) | DeepSeek-133 | Migration 133 index | `idx_coa_lead_id` should be UNIQUE since application_number is UNIQUE | Promotion to UNIQUE happens after Phase C backfill confirms all rows have lead_id NOT NULL — deferred to Phase C follow-up migration per Spec 42 §6.6 migration strategy. |
+| 32 | HIGH (DEFER) | Gemini-135 | Spec 42 §6.4 | `revision_num` is VARCHAR(10); LPAD on non-numeric strings is brittle | Existing schema (migration 001). Preflight test asserts `MAX(LENGTH(revision_num)) <= 2`. Project-wide normalization to INTEGER would require broader migration; deferred. |
+| 33 | LOW (DEFER) | DeepSeek-133 | Migration 133 ADD CONSTRAINT | DO/EXCEPTION pattern could be replaced with NOT VALID + VALIDATE for lower-lock approach | Current pattern is consistent across all 4 hot-table migrations. Tightening to NOT VALID is a project-wide hardening pass — out of Phase B scope. |
+| 34 | NIT (DEFER) | Gemini-135 | Phase H | Plan to DROP legacy `permit_num`/`revision_num` columns | Out of Phase B scope; Phase H gate already requires consumer audit + 30-day soak per Spec 42 §6.11 + §6.13. |
+
+**Rejected (false positives or codebase convention):**
+- DeepSeek-134: "`CREATE INDEX CONCURRENTLY IF NOT EXISTS` is invalid PostgreSQL syntax" — **FALSE**. Valid since PG9.5; migration 119 in this repo uses the exact same pattern. Reviewer-side knowledge gap.
+- DeepSeek-133: "`lead_id` nullable deviates from spec" — Phase B nullable + Phase C backfill + Phase C promotion to NOT NULL is the documented strategy in Spec 42 §6.6.A.
+- DeepSeek-133: "DO/EXCEPTION swallows non-duplicate-object errors" — **FALSE**. The handler explicitly specifies `WHEN duplicate_object`; other exceptions propagate.
+- Gemini-134: "Entire migration non-transactional + manual DOWN" — Rule 6 / commit 8b1c10b convention; every existing migration follows this.
+- Gemini-135: "`UPDATE permits SET lead_id = NULL` is a clever-but-dangerous trigger-fire backfill" — **FALSE READING**. Our backfill is direct compute (`SET lead_id = 'permit:' || ...`), NOT trigger-fire. R2.v3 worktree CRIT was specifically about avoiding the trigger-fire pattern; the implementation correctly does so.
+
