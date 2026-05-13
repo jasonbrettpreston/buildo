@@ -147,11 +147,13 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
 
 ### 6.1 Objectives
 
-1. **Make CoA-stage leads first-class.** Eliminate the `PRE-permit` placeholder hack. CoA leads are identified by `application_number` and own their classification state on `coa_applications` (not on a synthetic row in `permits`).
-2. **Bring CoA classification to parity with permits**, within the constraint that CoA filings carry less structured data than permit applications (free-text `description` only, no `work` field, no applicant-declared cost, no `permit_type`).
-3. **Resolve the prediction-engine blind spot** documented in `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` §8.7: today's calibration cohort key `(permit_type, phase)` collapses every CoA-stage lead into the `__ALL__` bucket. After this work, CoA-stage leads have `coa_type_class`, `project_type`, `scope_tags`, `structure_type`, `estimated_cost`, and trade tagging — enough to extend the cohort key meaningfully.
-4. **Close bug 84-W12** (99.4% of `coa_applications.lifecycle_phase` is NULL). Root cause: `coa_applications.status` column is structurally ignored by `classifyCoaPhase()` despite holding the dominant routing signal. Fix lands as part of this work.
-5. **Preserve the CoA→Permit handoff without data loss.** When a permit links to a prior CoA, both rows persist; no destroy-and-rebuild like the current PRE-permit ghost-reconciliation flow.
+1. **Make CoA-stage leads first-class.** Eliminate the `PRE-permit` placeholder hack. CoA leads are identified by `application_number` and own their classification state on `coa_applications` (not on a synthetic row in `permits`). All hot-path tables rekey on `lead_id` (Option C — `'permit:<num>:<rev>'` or `'coa:<application_number>'`) so a single query path serves both entity types.
+2. **Bring CoA classification to parity with permits**, within the constraint that CoA filings carry less structured data than permit applications (free-text `description` only, no `work` field, no applicant-declared cost, no `permit_type`). Pipeline mirrors permits-chain step-for-step: parcels → buildings → scope → trades → cost, all writing to unified `lead_*` tables.
+3. **Ship the granular Universal Stream lifecycle model end-to-end.** The lifecycle classifier emits the new granular columns (`lifecycle_seq` 1–110, `lifecycle_group`, `lifecycle_block`, `lifecycle_stage`, `bid_value` 0–1) on every classified `permits` and `coa_applications` row, alongside the legacy P-code. A new `universal_stream_catalog` reference table is seeded from Spec 84 §2.5.h.2 as the canonical source of group/block/stage labels, colors, icons, and per-row Bid Value. A new `universal_stream_trade_signals` join table encodes the 152 per-trade × per-row signal columns from §2.5.h.2 (Bid / Work / Fallback / Bid:Last Minute) so the forecast engine can query row-level routing instead of using hardcoded P-code ordinals. The `lifecycle_transitions` ledger replaces `permit_phase_transitions` with universal `lead_id` keying and adds `from_seq` / `to_seq` columns populated on every detected transition.
+4. **Resolve the prediction-engine cohort blind spot** documented in `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` §8.7. Cohort key on `phase_stay_calibration` extends from `(permit_type, from_phase)` to `(permit_type, project_type, coa_type_class, from_seq, to_seq)`. Phase distribution bands in `logic_variables` recalibrated against the post-fix data.
+5. **Close bug 84-W12** (99.4% of `coa_applications.lifecycle_phase` is NULL). `classifyCoaPhase()` is wired to read `coa_applications.status` and emit P2/P3/P4 per the rules in §6.7. Distribution gate green post-recalibration.
+6. **Make the lifecycle catalog renderable end-to-end.** Group/Block/Stage colors and icons (from Spec 84 §2.5.h.2's Color & Icon Strategy) live in `universal_stream_catalog` as the schema source of truth, so the admin Lead Inspector, mobile FlightCard, and any future timeline UI query through `lifecycle_seq` to render correctly without hard-coded maps.
+7. **Preserve the CoA→Permit handoff without data loss.** When a permit links to a prior CoA, both rows persist; no destroy-and-rebuild like the current PRE-permit ghost-reconciliation flow. Permit takes priority for downstream consumers (cost, forecast, score) once linked; CoA classification stays as historical record on `coa_applications`.
 
 ### 6.2 Background — How Things Work Now and the Problem We Are Solving
 
@@ -323,8 +325,11 @@ CREATE INDEX idx_lifecycle_transitions_phase ON lifecycle_transitions (from_phas
 CREATE INDEX idx_lifecycle_transitions_seq ON lifecycle_transitions (from_seq, to_seq) WHERE from_seq IS NOT NULL;
 
 -- NEW reference table: read-only catalog of the 110 rows from Spec 84 §2.5.h.2.
--- Populated once via seed; the lifecycle engine will JOIN against it in a future WF.
--- Existing in schema now means downstream scripts can prepare to consume it.
+-- Populated once via seed migration sourcing from the finalized §2.5.h.2 table.
+-- The lifecycle classifier JOINs against this table to derive the granular
+-- columns (seq, group, block, stage, bid_value) it writes onto permits and
+-- coa_applications. The front-end JOINs through lifecycle_seq for rendering
+-- group/block/stage labels + colors + icons.
 CREATE TABLE universal_stream_catalog (
     seq                 INTEGER         PRIMARY KEY,
     source_row_num      INTEGER         NOT NULL,    -- the '#' column from §2.5.h.2
@@ -339,9 +344,41 @@ CREATE TABLE universal_stream_catalog (
     phase               VARCHAR(40),                 -- legacy P-code (e.g., 'P3', 'P7a/P7b/P7c')
     bid_value           DECIMAL(3,2),                -- 0-1 importance score (NULL for inspection/closure)
     loop_marker         VARCHAR(60),                 -- e.g., '↩ #75' or '(terminal)' or '—'
+    -- Color & Icon Strategy (Spec 84 §2.5.h Color & Icon Strategy) — 6 hierarchy columns.
+    -- Front-end renders phase badges/timeline by JOIN through lifecycle_seq.
+    group_color         VARCHAR(7),                  -- hex e.g. '#CFFAFE' (Group base palette)
+    group_icon          VARCHAR(8),                  -- emoji e.g. '📨' (Group icon)
+    block_color         VARCHAR(7),                  -- hex (Block override or same as group)
+    block_icon          VARCHAR(8),                  -- emoji (Block icon)
+    stage_color         VARCHAR(7),                  -- hex (Stage override for outliers like Postponed, Refused)
+    stage_icon          VARCHAR(8),                  -- emoji (Stage icon e.g. '⏸️', '❌')
     rows_count          INTEGER                      -- snapshot count from §2.5.h.2 (informational)
 );
+CREATE INDEX idx_universal_stream_catalog_group ON universal_stream_catalog (lifecycle_group);
+CREATE INDEX idx_universal_stream_catalog_block ON universal_stream_catalog (lifecycle_block);
+
+-- NEW join table: decomposes the 152 per-trade × per-row signal columns from
+-- §2.5.h.2 (Bid / Work / Fallback / Bid:Last Minute × 38 trades) into a
+-- queryable relational form. ~1,500 rows total (sum of all ✓ marks in the
+-- v9 CSV: 1,710 bid + 51 work + 38 fallback + 38 last-minute = 1,837 — a few
+-- compressed by the relational form since rows where the same seq+trade+signal
+-- repeats don't apply here; each row is unique).
+-- The forecast engine queries this for granular bimodal routing per
+-- (current_seq, trade), replacing the legacy PHASE_ORDINAL comparison against
+-- trade_configurations.bid_phase_cutoff / work_phase_target.
+CREATE TABLE universal_stream_trade_signals (
+    seq          INTEGER     NOT NULL REFERENCES universal_stream_catalog(seq),
+    trade_slug   VARCHAR(50) NOT NULL REFERENCES trades(slug),
+    signal_type  VARCHAR(20) NOT NULL CHECK (signal_type IN ('bid','work','fallback','last_minute')),
+    PRIMARY KEY (seq, trade_slug, signal_type)
+);
+CREATE INDEX idx_universal_stream_trade_signals_trade
+    ON universal_stream_trade_signals (trade_slug, signal_type);
+CREATE INDEX idx_universal_stream_trade_signals_seq_signal
+    ON universal_stream_trade_signals (seq, signal_type);
 ```
+
+The catalog and signals tables are seeded from a single source: the finalized §2.5.h.2 Universal Stream table in Spec 84, exported as CSV and loaded via a one-shot seed migration. The v9 CSV (`docs/reports/spec_84_universal_stream_v9.csv`) is the working draft; Phase A spec amendments resolve the 3 BUGS / 6 QUESTIONABLE items per §6.7, and the final CSV becomes the canonical seed source.
 
 **6.6.C — Lead-id columns added to existing tables (Phase A migration):**
 
