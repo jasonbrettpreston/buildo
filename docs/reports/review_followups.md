@@ -881,3 +881,30 @@ Adversarial findings from Multi-Agent Review of migrations 124–127 (`lead_trad
 - `date_trunc` IMMUTABILITY hazard — 2-arg form IS IMMUTABLE in PG12+ (only 3-arg form is STABLE)
 - Idempotency key drops same-second events — explicitly accepted in R8 Gemini #11 design; same-second distinct events not expected from CKAN ingest
 
+
+---
+
+## WF1 #coa-pipeline-parity-phase-b — R5.2 review deferrals (2026-05-13)
+
+Adversarial findings from Multi-Agent Review of migrations 128–131 (Universal Stream catalog + signals seeds). All findings triaged DEFER (logged) or REJECT (false positive / design choice / convention). None blocking R5.2 commit.
+
+| # | Severity | Source | File:area | Finding | Decision rationale |
+|---|---|---|---|---|---|
+| 16 | CRIT (REJECT) | Gemini 131 | Migration 131 | "Incomplete seed — max seq=90, missing 91-110" | **FALSE POSITIVE.** Seq 91-110 are BP7 closure/dead/revocation/cancellation states. No trade bids or works at these stages by v10 CSV design. Same pattern for seq 9 (Deferred), 13 (Refused), 16-22 (Appeals/CoA closure), 34-40 (Permit Notice & Response). The absence of a `(seq, trade, signal)` row IS the correct routing signal (forecast engine returns no recommendation at closure). 74 of 110 seqs have ≥1 signal — coverage validated against v10 CSV ground truth. Migration header documents this explicitly. |
+| 17 | CRIT (REJECT) | DeepSeek 131 | Migration 131 | "Missing seq 9, missing seq 34-40, 1,180 manual count vs 1,422 claim" | **FALSE POSITIVES.** Manual count was wrong (actual = 1,422 emitted, confirmed). Missing seqs are closure/pause/notice states (see #16). |
+| 18 | HIGH (REJECT) | DeepSeek 131 | Spec 42 §6.6.B | "1,295 bid signals vs spec's 1,710 — 415 missing" | **FALSE POSITIVE.** Spec quoted v9 CSV counts; v10 (locked source after Phase A R0.6 BUG fixes) has 1,144 raw ✓ bid marks per direct count, generator emits 1,295 after dual-path classifier. Spec text outdated — flagged for inline correction in the migration 131 header. |
+| 19 | CRIT (DEFER) | Gemini 128 | Migration 128, color/icon columns | `VARCHAR(8)` insufficient for complex ZWJ emojis (e.g., 👨‍👩‍👧‍👦 = 25+ bytes) | All v10 CSV emojis are single code points or 2-char with variation selectors (📨, ⚖️, 🏗️, etc.) — VARCHAR(8) accommodates them. Defensive widening to TEXT would be cheap; revisit if future CSV adds ZWJ emojis. |
+| 20 | HIGH (DEFER) | Gemini 128 | Migration 128, (source, status) | No UNIQUE constraint on `(source, status)` — classifier ambiguity risk | Verified naturally unique in v10 catalog (110/110 distinct pairs). Add `UNIQUE (source, status)` as defensive constraint in a future hardening migration. |
+| 21 | HIGH (DEFER) | DeepSeek 129 | Migration 129, seq 35 + 77-87 | `phase = 'UNMAPPED→null'` / `'UNMAPPED→P17 fallback'` — literal documentation strings in phase column | Authoring decision in v10 CSV (Spec 84 §2.5.h.2) to encode the unmapped-phase taxonomy directly in the column. The Phase E classifier explicitly handles these as the "unmapped catchall → P1 + audit signal" path. Worth a follow-up Spec 84 amendment to replace with `NULL` + dedicated `unmapped_notes` column. |
+| 22 | MED (DEFER) | DeepSeek 129 | Migration 129, seq 47 + 50 | Compound `phase` strings like `'P9-P17 (via stages 100-134) or P18'` | Same as #21 — v10 CSV encodes multi-phase routing here as documentation. Phase E classifier reads granular `lifecycle_seq` instead of this string. Worth a Spec 84 cleanup. |
+| 23 | LOW (DEFER) | DeepSeek 129 | Migration 129, loop_marker | `'—'` (em dash) used instead of `NULL` for "no loop" — semantic redundancy | v10 CSV uses `'—'` as the visible "no loop" marker. Consumers can `(loop_marker IS NULL OR loop_marker = '—')` or normalize at read time. Worth cleanup in a future generator pass. |
+| 24 | DEFER | worktree | `_tmp_phase_b_seed_signals.mjs` | Two-pass prefix classification is fragile (first pass mis-classifies `Bid: Last Minute: ...` as `bid`, re-scan corrects) | The emitted SQL artifact is correct (verified). Refactor: sort `SIGNAL_PREFIXES` by `csv.length` descending so the first pass is correct (eliminates the need for re-scan). One-shot utility, not production — low urgency. |
+| 25 | MED (DEFER) | Gemini 130 | Migration 130, trade_slug FK | Missing `ON UPDATE CASCADE` — slug rename in `trades` breaks rows | Codebase convention: `trades.slug` treated as stable identifier. Add `ON UPDATE CASCADE` project-wide in a future hardening pass. |
+| 26 | MED (DEFER) | Gemini 130 | Migration 130, indexes | `idx_trade` `(trade_slug, signal_type)` is redundant with PK `(seq, trade_slug, signal_type)` for some queries | Spec 42 §6.6.B canonical DDL. Performance tune after observing Phase F query patterns. |
+
+**Rejected (not added to followups):**
+- DOWN block manual — Rule 6 convention (commit 8b1c10b); every existing migration follows this
+- "Multiple INSERT statements aren't atomic" — `scripts/migrate.js` lines 210-227 wrap non-CONCURRENTLY files in single `BEGIN..COMMIT`; all 3 INSERTs are atomic
+- "Use COPY FROM CSV instead of embedded INSERT" — project convention is embedded INSERT (see migration 092 precedent); preserves single-file commit + diff review
+- "Sacrificing lead_id referential integrity is a time bomb" — already explicitly accepted in Spec 42 §6.6.A.1 R2.v3 with compensating CHECK constraints + orphan-audit view (B.13)
+

@@ -779,6 +779,34 @@ Each phase below lists the specs to read first (design context), the key files t
 - *Key files:* `migrations/NNN_drop_legacy_permit_keys.sql` (DROP `permit_num`/`revision_num` from `cost_estimates`, `trade_forecasts`, `tracked_projects`), `migrations/NNN_drop_legacy_alias_tables.sql` (drop `permit_phase_transitions` / `permit_trades` / `permit_parcels` views/aliases), `scripts/create-pre-permits.js` (DELETE file entirely)
 - *Protocols:* Spec 47 §10 (migration UP/DOWN parity); `00_engineering_standards.md` §3 Database (consumer audit before destructive schema change — 30-day soak gate); zero non-archive query references `permit_num`/`revision_num`
 
+#### 6.11.2 Template Extraction Pattern for Phase D/E Scripts
+
+The new scripts in Phase D (CoA classifier, parcel linker, cost estimator) and Phase E (lifecycle engine extension) have natural twins in the existing codebase. **The right approach is template extraction + parametrization, not greenfield re-writing.** Every twin has already absorbed the lessons of Spec 47 §R1–§R12 (advisory locks, getDbTimestamp, withTransaction envelopes, Zod validation, streamQuery, batched UPSERT with IS DISTINCT FROM guards, audit_table observability, emitMeta declarations). Copy and parametrize — do not re-derive.
+
+**Concrete pairings:**
+
+| New Phase D/E script | Existing twin (copy as skeleton) | What's reusable | What changes |
+|---|---|---|---|
+| `link-coa-to-parcels.js` | `scripts/link-parcels.js` | Spec 47 §R1–R12 skeleton, advisory-lock pattern, `withAdvisoryLock` + `withTransaction` envelope, `streamQuery` for source-set, batched UPSERT with IS DISTINCT FROM, audit_table rows, `emitMeta` declarations, parcel-spatial-match cascade (exact → fuzzy → buffer) | Source table swap (`coa_applications` not `permits`), key swap (`application_number` → `'coa:' \|\| application_number` lead_id), output table swap (`lead_parcels` not `permit_parcels`) |
+| `classify-coa-scope.js` | `scripts/classify-scope.js` | Description-keyword pattern matching, Zod logicVars schema, the TAG_PATTERNS regex matrix structure, propagation pass for same-address rows, audit_table coverage breakdown | New keyword sets per `coa_type_class` (residential/commercial/institutional/mixed), fewer input fields (no `permit_type`/`work`), output columns differ |
+| `classify-coa-trades.js` | `scripts/classify-permits.js` | The 3-tier rule cascade against `trade_mapping_rules`, `shouldAppendRealtor()` gating, dual-path mirror pattern (Spec 84 §7), audit per-class breakdown | Filter rules to `tier=3 AND match_field='description'` only (no Tier 1 `permit_type` or Tier 2 `work` field for CoAs), realtor gate uses `coa_type_class` instead of `permit_type_class` |
+| `compute-coa-cost-estimates.js` | `scripts/compute-cost-estimates.js` | Surgical Triangle math, `trade_sqft_rates` lookup, `scope_intensity_matrix` allocation, JSONB `trade_contract_values` writer, audit_table cost-distribution metrics | Skip Liar's Gate (no applicant cost on CoA), always set `cost_source='geometric'`, source from `coa_applications` JOIN `lead_parcels` JOIN `parcel_buildings` |
+| `compute-trade-forecasts.js` (extension) | itself — extend in place | All current logic preserved byte-for-byte for permit-side | UNION source SQL to add CoA leads, bimodal-routing simplification for CoA-stage (target always `bid_phase`), anchor priority extended |
+| `migrate-to-lead-id.js` | `scripts/seed-coa.js` (one-shot pattern) OR `scripts/backfill-realtor-permit-trades.js` (idempotent backfill pattern) | One-shot script structure, advisory-lock during destructive ops, audit_table for row-count verification, NOT-NULL promotion via `ALTER TABLE` after backfill | Touches multiple tables sequentially; specific to one-time data migration |
+
+**The mechanics — for each new Phase D/E script:**
+
+1. **Copy the most-similar existing script** as a skeleton (e.g., `cp scripts/link-parcels.js scripts/link-coa-to-parcels.js`).
+2. **Rename the slug**, change the advisory lock ID to the Spec 42 §6.8 allocated ID (4201–4205), update the `SPEC LINK` header.
+3. **Swap the source SQL** — change `permits` → `coa_applications`, add the `lead_id` derivation.
+4. **Swap the output table** — change `permit_parcels` → `lead_parcels`, `permit_trades` → `lead_trades`, etc.
+5. **Adapt the Zod schema** — usually the same `logic_variables` keys carry over; sometimes new ones (per Spec 42 §6.6 + §6.11.1 Phase D `Key files`).
+6. **Inherit observability for free** — `audit_table`, `emitSummary`, `emitMeta`, IS DISTINCT FROM guards, batched UPSERT all carry over unchanged.
+7. **Add the CoA-specific branch** — e.g., for `classify-coa-trades.js`, restrict to Tier 3 + use `coa_type_class` in `shouldAppendRealtor()`; for `compute-coa-cost-estimates.js`, branch out of Liar's Gate.
+8. **Inherit tests** — copy the twin's logic-test file (e.g., `link-parcels.logic.test.ts → link-coa-to-parcels.logic.test.ts`), adapt fixtures to CoA inputs and `lead_id`-keyed outputs.
+
+**Why this works:** The codebase already encodes this pattern. `scripts/compute-phase-calibration.js` (~150 lines) is mostly Spec 47 boilerplate + ~20 lines of unique GROUP-BY logic. The CoA twins will be similar — roughly 150 lines of borrowed Spec 47 scaffolding + 30 lines of CoA-specific logic. Every learning baked into the existing scripts (observability, atomicity, lock discipline, idempotency, dual-path mirroring) flows through for free. The risk of greenfield re-derivation is that Spec 47 violations (forgetting the advisory lock, swallowing errors, using `new Date()` for DB timestamps, missing IS DISTINCT FROM) creep back in via inattention.
+
 ### 6.12 Out of Scope (Explicitly Deferred to Follow-up Work)
 
 The bundled approach pulls most of the original out-of-scope list back in. What remains genuinely out of scope:
