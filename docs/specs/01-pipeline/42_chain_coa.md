@@ -211,6 +211,7 @@ Three layers, each with its own SPEC LINK header per Spec 47 §R12:
 - `coa-handoff.infra.test.ts` — simulate CoA linkage to a permit mid-pipeline; assert both `coa_applications` row and the new `permits` row retain their own classification fields; `permits.linked_coa_application_number` populated; both rows reachable via their respective `lead_id` (`'coa:<application_number>'` vs `'permit:<num>:<rev>'`); no row deletions
 - `lead-id-migration.infra.test.ts` — seed permits with existing `permit_num`/`revision_num`; run migration; assert every row in `cost_estimates`, `trade_forecasts`, `tracked_projects`, `lead_analytics`, `lifecycle_transitions` has a non-null `lead_id` matching the derivation rule
 - `granular-lifecycle.infra.test.ts` — assert classifier writes `lifecycle_seq` / `lifecycle_group` / `lifecycle_block` / `lifecycle_stage` / `bid_value` on `permits` and `coa_applications` derived from `universal_stream_catalog`; assert `lifecycle_transitions.from_seq` / `to_seq` populated on every new transition
+- `universal-stream-catalog.infra.test.ts` — regression-lock for §2.5.h.2 BUG fixes (per R2.v2 Gemini BUG-HIGH). After Phase B seeds the catalog from the locked v10 CSV, assert: row count = 110; seq 1-110 contiguous (no gaps); column count of source CSV = 174; seq 14 `bid_value = 0.8` AND `Bid: <trade>` columns all populated (Final & Binding row contradiction resolved); seq 50 (row #31 Active Inspection) has `Work: excavation = NULL`, `Bid: Last Minute: excavation = ✓`, same for `temporary-fencing` (column-alignment fix); block B9.C row exists with assigned block_label (not gap). Sample-checks the 38 trades × 4 signals = 152 columns are populated correctly
 - `bug-84-w12-regression.infra.test.ts` — load 1,000 CoA fixtures across all 22 `status` values; assert lifecycle classifier emits non-NULL phase for ≥ 95% of `decision IS NOT NULL` rows; assert P2/P3/P4 emit per `classifyCoaPhase()` rules
 
 **Schema parity & lead_id derivation tests (`*.logic.test.ts`):**
@@ -358,7 +359,7 @@ CREATE TABLE lifecycle_status_history (
     decision            VARCHAR(60),                 -- CoA decision snapshot at time of status change (NULL for permits / unmapped CoAs)
     decision_date       DATE,                        -- CoA decision_date snapshot (NULL for permits)
     transitioned_at     TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    detected_by         VARCHAR(60)     NOT NULL,    -- script that detected the change (e.g., 'classify-lifecycle-phase.js', 'load-coa.js')
+    detected_by         VARCHAR(60)     NOT NULL,    -- script that detected the change. Three writers: 'load-permits.js' (permit-side CKAN status changes at ingest), 'load-coa.js' (CoA-side CKAN status+decision changes at ingest), 'classify-lifecycle-phase.js' (derived phase transitions on dirty rows)
     permit_type         VARCHAR(50),                 -- denormalized for cohort queries
     project_type        VARCHAR(50),
     coa_type_class      VARCHAR(30),
@@ -579,15 +580,15 @@ The bundled approach (chosen because the system is pre-live) migrates the lifecy
 
 4. **Distribution gate pivots to granular Universal Stream.** `scripts/quality/assert-lifecycle-phase-distribution.js` extended to validate the `lifecycle_seq` (and `lifecycle_block`) distribution against bands keyed on `lifecycle_seq` ranges, not just legacy P-codes. Granular-first: the P-code distribution check (legacy) becomes a secondary cross-check during the Phase C–F transition; new authoritative validation is on `lifecycle_seq` distribution. Block-level aggregation (~15 keys: `lifecycle_band_block_<block_id>_min/max`) is preferred over per-seq bands (110 keys) for tractable operator tuning. The legacy `lifecycle_band_p{N}_min/max` band keys remain populated during transition for backward compatibility with `compute-trade-forecasts.js`'s P-code routing, but are deprecated and removed in Phase H.
 
-4. **Phase distribution bands recalibrated.** `logic_variables.lifecycle_band_*_min/max` (36 keys) re-set against post-84-W12 production-shape data. Procedure:
+5. **Phase distribution bands recalibrated.** `logic_variables.lifecycle_band_*_min/max` (36 keys) re-set against post-84-W12 production-shape data. Procedure:
    - Run new classifier against staging copy of full CKAN dataset.
    - Measure actual phase distribution (count per phase code).
    - Set each band's min/max to median ± 30%.
    - Iterate 2–3 times until `assert-lifecycle-phase-distribution.js` passes green for 7 consecutive runs.
 
-5. **`scripts/compute-phase-calibration.js` — cohort key extended.** `GROUP BY` changes from `(permit_type, from_phase)` to `(permit_type, project_type, coa_type_class, from_seq, to_seq)`. Output rows multiply ~4–5×. `min_sample_size` thresholds revisited so low-cardinality cohorts don't WARN spuriously.
+6. **`scripts/compute-phase-calibration.js` — cohort key extended.** `GROUP BY` changes from `(permit_type, from_phase)` to `(permit_type, project_type, coa_type_class, from_seq, to_seq)`. Output rows multiply ~4–5×. `min_sample_size` thresholds revisited so low-cardinality cohorts don't WARN spuriously.
 
-6. **`scripts/compute-trade-forecasts.js` — CoA source UNION.** Source SQL extended to UNION `permits` (existing) with `coa_applications` (new — filtered to non-NULL `lifecycle_phase`, `decision NOT IN ('Refused', 'Withdrawn', 'Closed')`). Anchor priority for CoA leads: `phase_started_at` → `decision_date` → `hearing_date` → application date. Bimodal routing simplified for CoA-stage: target always `bid_phase` (no work phase pre-construction).
+7. **`scripts/compute-trade-forecasts.js` — CoA source UNION.** Source SQL extended to UNION `permits` (existing) with `coa_applications` (new — filtered to non-NULL `lifecycle_phase`, `decision NOT IN ('Refused', 'Withdrawn', 'Closed')`). Anchor priority for CoA leads: `phase_started_at` → `decision_date` → `hearing_date` → application date. Bimodal routing simplified for CoA-stage: target always `bid_phase` (no work phase pre-construction).
 
 **Universal Stream prerequisites (must complete before classifier wiring):**
 
@@ -677,6 +678,7 @@ Advisory-lock IDs 4201–4205 use the Spec 42 + suffix convention per Spec 47 §
 | `85_trade_forecast_engine.md` | Schema + inputs section: `trade_forecasts` keyed on `lead_id`. Documents CoA-stage source UNION extension, CoA-stage bimodal routing (target always `bid_phase`), and the anchor-priority extension for CoA leads (`phase_started_at` → `decision_date` → `hearing_date` → application date). |
 | `76_lead_feed_health_dashboard.md` | §3.5 Lead Inspector: add CoA classification panel showing `coa_type_class`, `project_type`, `scope_tags`, `structure_type`, `estimated_cost`, CoA-side `lead_trades` rows. Inspector reads on `lead_id`. |
 | `91_mobile_lead_feed.md` | §3 Backend contract: `LeadFeedItem` schema gets a `lead_id` field. CoA-side fields surface when `lead_type='coa'`. **Add lead-type filter** (`?lead_type=coa` / `?lead_type=permit` / `?lead_type=all`) so trades can view CoA-only leads (early-bid stream). **Add sort by `lifecycle_seq` ASC** for chronological CoA browsing (e.g., "show me CoAs ordered by how far through approval they are"). Mobile UI: add a "Path A (CoA-stage)" filter chip alongside existing filters. Existing `lead_type='realtor'` filter pattern is the precedent. |
+| `00-architecture/01_database_schema.md` | Schema source-of-truth document. Add full CREATE TABLE statements + indexes for: `lead_trades`, `lead_parcels`, `lifecycle_transitions`, `lifecycle_status_history`, `universal_stream_catalog`, `universal_stream_trade_signals`. Add new columns to existing tables: `permits` (`lead_id`, `linked_coa_application_number`, granular lifecycle columns), `coa_applications` (classification + cost + geo + granular lifecycle columns), `cost_estimates` (`lead_id`), `trade_forecasts` (`lead_id`), `tracked_projects` (`lead_id`), `phase_stay_calibration` (granular cohort key columns). Reference Spec 42 §6.6 for the canonical schema definitions; this doc is the global index. (Added per R2.v2 Worktree BUG-3.) |
 | `49_global_data_completeness.md` | Coverage matrix extended: the `lifecycle_phase IS NOT NULL ≥ 95%` audit gate now applies to BOTH permits and CoAs. Add coverage rows for new `coa_applications` classification columns (scope_tags, project_type, coa_type_class, estimated_cost). |
 | `00_engineering_standards.md` | No change. |
 | `00_system_map.md` | Regenerate after migration (`npm run system-map`). |
