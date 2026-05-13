@@ -1,6 +1,6 @@
 # Active Task: WF1 #coa-pipeline-parity-phase-a — Spec Amendments (FIRST, before any code)
 
-**Status:** Implementation (authorized 2026-05-13 by user "B" — accept-as-is with documented known issues)
+**Status:** **COMPLETE 2026-05-13** — R5.0–R5.14 executed; all 13 spec amendments + system map regen + R0.6 CSV validation shipped across commits 8d44375 → ffe4baf → 9e5b6dc → 42985db → 48c7b1c → c2abaf6 → 6fc0f6d → THIS COMMIT.
 **Workflow:** WF1 (Genesis — plan a new feature; doc-only spec amendments delivered as the first phase of the larger WF2 #coa-pipeline-parity work)
 **Domain Mode:** Backend/Pipeline (doc-only — touching pipeline + admin + mobile specs; per CLAUDE.md domain rules: "Doc-only changes, specs, reports → Either. Follow whichever domain the documented work belongs to." Backend/Pipeline applies because the implementation work that follows lands almost entirely in `scripts/`, `migrations/`, and `src/lib/leads/`.)
 **Rollback Anchor:** `7d797a1` (current HEAD on main — WF2 #coa-pipeline-parity R0 review fixes + per-phase execution refs + CoA-only filter)

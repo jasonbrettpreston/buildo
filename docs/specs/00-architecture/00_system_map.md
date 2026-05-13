@@ -40,13 +40,13 @@
 | 54 | `01-pipeline/54_source_address_points.md` | Toronto Address Points | — | — | Done |
 | 55 | `01-pipeline/55_source_parcels.md` | Toronto Property Parcels | — | — | Done |
 | 56 | `01-pipeline/56_source_massing.md` | 3D Building Massing | — | — | Done |
-| 57 | `01-pipeline/57_source_neighbourhoods.md` | Toronto Neighbourhoods | — | — | Done |
+| 57 | `01-pipeline/57_source_neighbourhoods.md` | Toronto Neighbourhoods | `src/lib/leads/lead-detail-query.ts`, `src/lib/leads/lead-inspect-query.ts`, `src/app/api/permits/[id]/route.ts` | `src/tests/neighbourhoods-fk-join.infra.test.ts`, `src/tests/db/neighbourhoods-fk-join.db.test.ts` | Done |
 | 60 | `01-pipeline/60_shared_steps.md` | Shared Pipeline Steps | `scripts/geocode-permits.js`, `scripts/link-massing.js`, `scripts/create-pre-permits.js` | — | Done |
-| 80 | `01-pipeline/80_taxonomies.md` | Pipeline Taxonomies | `src/lib/classification/trades.ts`, `src/lib/classification/tag-trade-matrix.ts`, `src/lib/classification/phases.ts`, +3 more | `src/tests/permit-type-class.logic.test.ts` | Done |
+| 80 | `01-pipeline/80_taxonomies.md` | Pipeline Taxonomies | `src/lib/classification/trades.ts`, `src/lib/classification/tag-trade-matrix.ts`, `src/lib/classification/phases.ts`, +3 more | `src/tests/permit-type-class.logic.test.ts`, `src/tests/db/realtor-gating.db.test.ts` | Done |
 | 81 | `01-pipeline/81_opportunity_score_engine.md` | 81 Opportunity Score Engine | `src/lib/classification/scoring.ts` | `src/tests/compute-opportunity-scores.infra.test.ts` | Done |
 | 82 | `01-pipeline/82_crm_assistant_alerts.md` | 82 CRM Assistant & Alerts | — | `src/tests/tracked-projects.logic.test.ts`, `src/tests/tracked-projects.infra.test.ts` | Done |
 | 83 | `01-pipeline/83_lead_cost_model.md` | Spec 83: Surgical Estimation Engine — Valuation & Trade Slicing | — | `src/tests/cost-model.logic.test.ts`, `src/tests/cost-estimates.infra.test.ts` | ARCHITECTURE LOCKED |
-| 84 | `01-pipeline/84_lifecycle_phase_engine.md` | 84 Lifecycle Phase Engine — The "Strangler Fig" Classifier | — | `src/tests/control-panel.logic.test.ts` | Done |
+| 84 | `01-pipeline/84_lifecycle_phase_engine.md` | 84 Lifecycle Phase Engine — The "Strangler Fig" Classifier | `src/lib/leads/build-lifecycle-timeline.ts`, `src/app/api/leads/flight-board/route.ts`, `src/app/api/leads/flight-board/detail/[id]/route.ts`, +13 more | `src/tests/control-panel.logic.test.ts` | Done |
 | 85 | `01-pipeline/85_trade_forecast_engine.md` | 85 Trade Forecast Engine — The Flight Tracker | `scripts/compute-trade-forecasts.js`, `scripts/lib/lifecycle-phase.js` | `src/tests/trade-forecasts.logic.test.ts`, `src/tests/trade-forecasts.infra.test.ts` | Done |
 
 ## Web Admin
@@ -69,7 +69,7 @@
 |---|-----------|---------|---------------|-------|--------|
 | 77 | `03-mobile/77_mobile_crm_flight_board.md` | Mobile CRM Flight Board (Pillar 2) | `src/app/api/leads/flight-board/detail/[id]/types.ts` | — | Done |
 | 90 | `03-mobile/90_mobile_engineering_protocol.md` | Mobile Engineering Protocol & Architecture (The Pivot) | — | — | Done |
-| 91 | `03-mobile/91_mobile_lead_feed.md` | Mobile Lead Feed (Discovery Engine) | `src/lib/classification/trades.ts`, `src/app/api/leads/detail/[id]/types.ts` | — | ACTIVE (Mobile Pivot) |
+| 91 | `03-mobile/91_mobile_lead_feed.md` | Mobile Lead Feed (Discovery Engine) | `src/app/api/leads/detail/[id]/types.ts` | `src/tests/db/realtor-gating.db.test.ts` | ACTIVE (Mobile Pivot) |
 | 92 | `03-mobile/92_mobile_engagement_hardware.md` | Mobile Engagement & Hardware (Pillar 3) | — | — | Done |
 | 93 | `03-mobile/93_mobile_auth.md` | Mobile Authentication | `src/lib/auth/route-guard.ts` | — | ACTIVE |
 | 94 | `03-mobile/94_mobile_onboarding.md` | Mobile Onboarding | `src/app/api/onboarding/suppliers/route.ts`, `src/lib/auth/get-user.ts` | `src/tests/onboarding-suppliers.infra.test.ts` | ACTIVE |
