@@ -28,6 +28,8 @@ elaborates on one of them.
 Every new pipeline script MUST follow this exact structure. Items marked **MANDATORY** cannot
 be omitted. Items marked **IF APPLICABLE** may be omitted with a one-line comment explaining why.
 
+> **Adherence note (2026-05-13):** lead_id-keyed scripts introduced by WF1/WF2 #coa-pipeline-parity (Phases C–F: `link-coa-to-parcels.js`, `classify-coa-scope.js`, `classify-coa-trades.js`, `compute-coa-cost-estimates.js`, `migrate-to-lead-id.js`, plus extended `compute-trade-forecasts.js`, `compute-opportunity-scores.js`, `update-tracked-projects.js`, `classify-lifecycle-phase.js`) continue to follow §R1–§R12 with no exceptions. Lead identity (`'permit:...'` vs `'coa:...'`) is a data discriminator, not a protocol variation.
+
 ```js
 #!/usr/bin/env node
 /**

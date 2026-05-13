@@ -13,13 +13,18 @@ Calculate a stable "Intrinsic Value" (0-100) for every trade opportunity based o
 
 ## 2. Technical Architecture
 
+> **Lead-ID keying (WF1 #coa-pipeline-parity-phase-a, 2026-05-13):** `trade_forecasts` PK migrates from `(permit_num, revision_num, trade_slug)` to `(lead_id, trade_slug)` per Spec 42 §6.6.B Option C. Lead identity is `'permit:<num>:<rev>'` or `'coa:<application_number>'`. Opportunity score engine reads/writes on `lead_id`; the asymptotic decay math is unchanged. CoA-stage rows (`lead_id LIKE 'coa:%'`) now produce scores end-to-end once the lifecycle classifier emits CoA P2/P3/P4 (post-Phase E fix of bug 84-W12). Realtor financial-base carve-out (existing): CoA-stage realtor uses `cost_estimates.estimated_cost` total since the CoA cost path is geometric-only (no per-trade slice).
+
 ### Database Schema
 
 #### `trade_forecasts` (Updated)
 | Column | Type | Constraints |
 |---|---|---|
+| `lead_id` | TEXT | NOT NULL — `'permit:<num>:<rev>'` or `'coa:<application_number>'`. PK with `trade_slug`. |
 | `opportunity_score` | INTEGER | nullable, DEFAULT NULL, CHECK (0-100) — NULL means no cost data (see §3 Edge Cases) |
 | `target_window` | VARCHAR(20) | CHECK ('bid', 'work') |
+
+> Legacy `permit_num` + `revision_num` columns retained through Phase H of WF2 #coa-pipeline-parity for backward compat with consumer migration. Dropped in Phase H cleanup once all consumers query on `lead_id`.
 
 #### `logic_variables` (NEW - Manual Adjustments)
 | Column | Type | Constraints | Description |

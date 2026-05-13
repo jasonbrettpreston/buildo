@@ -160,6 +160,28 @@ All permit-based denominators exclude PRE-% synthetic permits: `permit_num NOT L
 | CoA Step 10 — classify_lifecycle_phase | coa_applications.lifecycle_classified_at | `lifecycle_classified_at IS NOT NULL AND linked_permit_num IS NULL` | `COUNT(*) FROM coa_applications WHERE linked_permit_num IS NULL` (unlinked only) |
 | CoA Step 11 — assert_lifecycle_phase_distribution | coa_applications.unclassified_count | `lifecycle_phase IS NULL` | `COUNT(*) FROM coa_applications` (INFO: target = 0) |
 
+#### CoA Pipeline Parity additions (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
+
+Added with the CoA pipeline parity rollout per Spec 42 §6. Coverage targets:
+
+| step_target | field | populated condition | denominator + threshold |
+|---|---|---|---|
+| CoA Step D — classify-coa-scope | coa_applications.coa_type_class | `coa_type_class IS NOT NULL` | `COUNT(*) FROM coa_applications WHERE decision NOT IN ('Refused','Withdrawn','Closed')` — target ≥ 95% |
+| CoA Step D — classify-coa-scope | coa_applications.project_type | `project_type IS NOT NULL` | same denominator — target ≥ 90% |
+| CoA Step D — classify-coa-scope | coa_applications.scope_tags | `scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0` | same — target ≥ 80% |
+| CoA Step D — link-coa-to-parcels | lead_parcels WHERE lead_id LIKE 'coa:%' | `EXISTS row` | `COUNT(*) FROM coa_applications WHERE latitude IS NOT NULL` — target ≥ 75% (parcel-match floor at confidence 0.50) |
+| CoA Step D — link-coa-to-parcels | coa_applications.structure_type | `structure_type IS NOT NULL` | denominator of CoAs with `lead_parcels` row — target ≥ 80% |
+| CoA Step D — link-coa-to-parcels | coa_applications.neighbourhood_id | `neighbourhood_id IS NOT NULL` | same denominator — target ≥ 95% |
+| CoA Step D — classify-coa-trades | lead_trades WHERE lead_id LIKE 'coa:%' | `EXISTS row` | `COUNT(*) FROM coa_applications` active — target ≥ 90% (default fallback allowed) |
+| CoA Step D — compute-coa-cost-estimates | coa_applications.estimated_cost | `estimated_cost IS NOT NULL` | active CoAs — target ≥ 80% |
+| CoA Step D — compute-coa-cost-estimates | coa_applications.modeled_gfa_sqm | `modeled_gfa_sqm IS NOT NULL` | active CoAs — target ≥ 80% |
+| CoA Step E — classify_lifecycle_phase (fixed) | coa_applications.lifecycle_phase | `lifecycle_phase IS NOT NULL` | `COUNT(*) FROM coa_applications WHERE decision NOT IN ('Refused','Withdrawn','Closed')` — target ≥ 95% (was 0.6% pre-84-W12 fix) |
+| CoA Step E — classify_lifecycle_phase (granular) | coa_applications.lifecycle_seq | `lifecycle_seq IS NOT NULL` | active CoAs — target ≥ 95% |
+| CoA Step E — classify_lifecycle_phase (granular) | permits.lifecycle_seq | `lifecycle_seq IS NOT NULL` | `COUNT(*) FROM permits WHERE lifecycle_phase IS NOT NULL` — target ≥ 95% |
+| CoA Step E — classify_lifecycle_phase | lifecycle_status_history | row count per active CoA over rolling 30-day window | `COUNT(DISTINCT lead_id) WHERE lead_id LIKE 'coa:%' AND transitioned_at > NOW() - 30 days` ≥ 1 per active CoA |
+| Universal — lead_id column population | cost_estimates.lead_id | `lead_id IS NOT NULL` | `COUNT(*) FROM cost_estimates` — target 100% post-Phase C backfill |
+| Universal — lead_id column population | trade_forecasts.lead_id | `lead_id IS NOT NULL` | same pattern across `tracked_projects`, `lifecycle_transitions`, `lifecycle_status_history` — all 100% post-Phase C |
+
 ---
 
 ## 5. Mobile & Responsive Behavior

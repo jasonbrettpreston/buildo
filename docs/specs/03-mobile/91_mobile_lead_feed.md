@@ -54,12 +54,42 @@ Tapping an already-active Feed tab scrolls the FlashList back to offset 0 (anima
 
 The feed acts as a "Dumb Glass" client. All heavy geospatial computations (Haversine) and algorithmic scoring are handled by the Next.js backend. The UI consumes the modernised pipeline payload:
 
+* `lead_id`: `string` — universal lead identity. `'permit:<num>:<rev>'` or `'coa:<application_number>'`. Discriminator for cross-stream UI behavior (e.g., CoA-only filter, lifecycle_seq sort, CoA classification panel).
+* `lead_type`: `'permit' | 'coa' | 'realtor'` — for chip styling + filter logic.
 * `opportunity_score`: `number` (0–100 bimodal score).
 * `target_window`: `'bid' | 'work'` (The bimodal routing flag).
 * `competition_count`: `number` (Tracks market saturation — count of other app users who have viewed or saved this permit). Zero means no tracked competition.
-* `lifecycle_phase`: `string` (Unified P1–P20 stage).
+* `lifecycle_phase`: `string` (legacy P1–P20 stage — preserved through Phase H of WF2 #coa-pipeline-parity for backward compat).
+* `lifecycle_seq`: `number | null` (granular Universal Stream row 1–110, per Spec 84 §2.5.h.2). Nullable until Phase E classifier emission ships.
+* `lifecycle_group`, `lifecycle_block`, `lifecycle_stage`: `string | null` (granular hierarchy, joined through `universal_stream_catalog` for rendering colors/icons).
+* `bid_value`: `number | null` (0–1 importance score for non-construction stages — drives UI emphasis on CoA-stage leads where appropriate).
 
-All four fields are required in the Zod schema (`PermitLeadFeedItemSchema`). `competition_count` must be `z.number().int().nonnegative()`.
+**CoA-side additional fields** (when `lead_type='coa'`):
+
+* `coa_type_class`: `'residential' | 'commercial' | 'institutional' | 'mixed'`
+* `project_type`: `string`
+* `scope_tags`: `string[]`
+* `estimated_cost`, `cost_source` (always `'geometric'` for CoA)
+* `decision`, `decision_date`, `hearing_date`
+
+All required fields are in the Zod schema (`PermitLeadFeedItemSchema`). `competition_count` must be `z.number().int().nonnegative()`.
+
+### 3.1 Lead-type filter + sort (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
+
+Trades can now filter the feed to view only CoA-stage leads (the early-bid stream, months/years before the permit drops). The feed API supports:
+
+* `?lead_type=coa` — returns only `lead_id LIKE 'coa:%'` rows
+* `?lead_type=permit` — returns only `lead_id LIKE 'permit:%'` rows
+* `?lead_type=all` — returns both (default for backward compat)
+* `?sort=lifecycle_seq` — orders by `lifecycle_seq ASC` with NULL last (chronological CoA browsing — earliest-stage to latest)
+* `?sort=lifecycle_seq_desc` — reverse order (latest-stage to earliest)
+* Existing sort modes (`opportunity_score`, `predicted_start`) unchanged.
+
+**Mobile UI:**
+
+* Add a **"Path A (CoA-stage)" filter chip** alongside the existing `lead_type='realtor'` chip (Cycle 7 precedent). When active, the feed is filtered to `?lead_type=coa` and the chip displays a count badge.
+* When in CoA-only mode, the default sort flips to `?sort=lifecycle_seq` so the trade sees CoAs ordered by approval-progress (most-likely-to-result-in-permit first).
+* Lead cards for `lead_type='coa'` get a distinct visual treatment: a "CoA Pre-Permit" badge in the corner + the `bid_value` rendered as a 5-bar signal strength (1.0 = 5 bars; 0.2 = 1 bar; 0 or NULL = hidden).
 
 ### 3.5 Wire-up dependencies for the realtor persona (Cycle 7 — items 1-4 SHIPPED 2026-05-11; item 5 pending)
 
