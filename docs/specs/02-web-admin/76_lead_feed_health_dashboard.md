@@ -238,6 +238,32 @@ Response 200: { data: { competition_count: number }, error: null, meta: null }
 
 **Endpoint:** `GET /api/admin/leads/inspect/:id`. Admin-only — `verifyAdminAuth` (Spec 33 §5) on first line. **No** `lead_views.saved=true` LATERAL gate (admin can inspect any permit, not just saved ones — closes the Cycle 3 line 234 caveat).
 
+#### Cycle 8 amendment (WF1 #coa-pipeline-parity-phase-a, 2026-05-13) — CoA Classification Panel
+
+When the inspector loads a lead with `lead_id LIKE 'coa:%'` (or a permit lead with a non-null `linked_coa_application_number` linking it to a prior CoA), a new **CoA Classification panel** renders alongside the 8 panels above. Fields:
+
+| Field | Source | Display |
+|---|---|---|
+| `coa_type_class` | `coa_applications.coa_type_class` (Phase D classifier) | Color-coded chip: residential (green) / commercial (blue) / institutional (purple) / mixed (orange) / unclassified (gray) |
+| `project_type` | `coa_applications.project_type` | Plain text: Addition / NewConstruction / Alteration / Demolition / Severance / Mixed |
+| `scope_tags[]` | `coa_applications.scope_tags` | Tag pills (reuses permit-side tag rendering) |
+| `structure_type` | `coa_applications.structure_type` (denormalized via `lead_parcels` → `parcel_buildings`) | Plain text |
+| `decision` (current + history) | `coa_applications.decision` + `lifecycle_status_history WHERE decision IS NOT NULL ORDER BY transitioned_at` | Decision evolution as a timeline — shows `Approved with Conditions → Final and Binding` etc. |
+| `decision_date`, `hearing_date` | `coa_applications` | Formatted dates |
+| `estimated_cost` (geometric only) | `cost_estimates` row keyed on `lead_id='coa:<num>'` | Total in dollars + `cost_source='geometric'` badge (no permit-side Liar's-Gate panel — geometric-only per Spec 83 §3.A) |
+| `modeled_gfa_sqm` | `coa_applications.modeled_gfa_sqm` | sqm + sqft conversion |
+| `lifecycle_seq` + group/block/stage | `coa_applications.lifecycle_seq` JOIN `universal_stream_catalog` | Renders Group/Block/Stage labels with their `group_color` / `block_color` / `stage_color` hex + emoji icons per Spec 84 §2.5.h Color & Icon Strategy. Granular timeline scrubber with all 110 seq positions; current position highlighted; bid_value rendered as 0-1 strength bar |
+| `bid_value` | `coa_applications.bid_value` | 0-1 importance score for non-construction stages — drives UI emphasis (high-value early-bid moments get prominent placement) |
+| Linked permit (if `coa_applications.linked_permit_num IS NOT NULL`) | JOIN `permits` ON `permits.permit_num = coa_applications.linked_permit_num` | Permit summary chip + "Jump to Permit Inspector" link. When the inspector is loaded for the CoA `lead_id`, the linked permit shows as a sibling; vice versa |
+| Cross-stream timeline | `lifecycle_status_history WHERE lead_id IN ('coa:<num>', 'permit:<linked>:<rev>') ORDER BY transitioned_at` | Single chronological merge of CoA + permit status history. Per Spec 42 §6.6.B Example 2 "Cross-stream timeline JOIN" — shows full project journey from CoA Application Received through Permit Closed across both entities |
+| CoA-side `lead_trades` rows | `lead_trades WHERE lead_id = 'coa:<num>'` | Renders alongside permit-side trades for handoff comparison (CoA-stage classifier emits Tier-3 only; permit-stage emits Tier 1+2+3) |
+
+**Endpoint behavior:** `GET /api/admin/leads/inspect/:id` accepts either a `'permit:...'` or `'coa:...'` `lead_id`. The CoA panel renders when:
+- `lead_id LIKE 'coa:%'` (primary case — inspecting a CoA-stage lead)
+- OR when inspecting a permit and `permits.linked_coa_application_number IS NOT NULL` (auto-fetch the linked CoA's classification for the cross-stream panel)
+
+Implementation hand-off: data layer at `src/lib/leads/lead-inspect-query.ts` adds the CoA-side JOIN; UI component at `src/components/admin/lead-inspector/CoaClassificationPanel.tsx` (NEW).
+
 **Goal (preserved from Cycle 3):** admin pastes a `lead_id` (or selects from the Test Feed Tool result set), sees the full Spec 91 §4.3 `LeadDetail` payload — `cost.modeled_gfa_sqm`, `cost.range_low`/`range_high`, `neighbourhood.avg_household_income`, `target_window`, `opportunity_score`, `competition_count`, `applicant`, `work_description`, `is_saved` (scoped to the admin uid).
 
 **Endpoint:** `GET /api/leads/detail/:id` (Spec 91 §4.3.1). Reuses unmodified — admin auth bypass already exists per §2.6 pattern.

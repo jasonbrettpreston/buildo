@@ -173,6 +173,64 @@ Eliminates the $29M-for-2-signs / $1.96B WESTON GOLF CLUB bug class where sign p
 
 **Behavioral expectation** post-WF2 #3: ~4.5% of permits (the non-construction tail) emit `cost_source='none'` on the next `compute-cost-estimates.js` run. Pre-existing wrong rows in `cost_estimates` become orphans (~10K rows); the orphan cleanup is filed as a separate WF3 (mirrors WF2 #2's clean rollback boundary).
 
+## 5.A CoA Taxonomy (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
+
+Parallel taxonomy for `coa_applications` mirroring the §5 `permit_type_class` work. CoA filings carry no `permit_type` field (variance applications are not permit applications), so the taxonomy uses a `coa_type_class` column populated by the description-keyword classifier.
+
+### `coa_type_class` value set
+
+| Class | Definition | Surgical Triangle (Spec 83) applied? | Trade matrix (Spec 13) applied? |
+|---|---|---|---|
+| `residential` | Single-family dwelling, semi-detached, townhouse, apartment, duplex, triplex, ADU | YES — geometric path only (no Liar's Gate; no applicant cost) | YES — Tier 3 description rules only; realtor included per `shouldAppendRealtor` |
+| `commercial` | Retail, restaurant, office, warehouse, industrial, hotel, business | YES — geometric path | YES — Tier 3 only; realtor EXCLUDED per existing 3-axis gate |
+| `institutional` | School, church, hospital, library, municipal, community centre | YES — geometric path | YES — Tier 3 only; realtor EXCLUDED |
+| `mixed` | Description matches BOTH residential AND commercial keyword sets | YES — geometric path with mixed-use intensity | YES — Tier 3 only; realtor INCLUDED only if residential subset dominant |
+| `unclassified` | Description matches no rule | NO — safe-skip default; `cost_source='none'`, `estimated_cost=null` | NO — safe-skip; emit default fallback trade only |
+
+### Description-keyword decision tree (Phase D `classify-coa-scope.js`)
+
+Single pass over `coa_applications.description`. First-match wins per class:
+
+**Residential keywords** (ILIKE `%<term>%`):
+- `dwelling`, `single family`, `single-family`, `semi-detached`, `semi detached`, `townhouse`, `apartment`, `duplex`, `triplex`, `accessory dwelling`, `ADU`, `secondary suite`, `garden suite`, `laneway`, `rooftop addition`, `basement apartment`
+
+**Commercial keywords:**
+- `retail`, `restaurant`, `cafe`, `office`, `warehouse`, `industrial`, `commercial`, `hotel`, `motel`, `storefront`, `mixed-use building`, `mixed use building`, `mixed-use development`, `business`, `bar`, `nightclub`
+
+**Institutional keywords:**
+- `school`, `church`, `synagogue`, `mosque`, `temple`, `hospital`, `clinic`, `library`, `community centre`, `community center`, `municipal`, `daycare`, `recreation`, `arena`, `pool` (when context = community pool, not residential)
+
+**Mixed-use detection:** description matches at least one residential AND one commercial keyword → `mixed`.
+
+**Fallback to parcel-derived class:** if description-only classification yields `unclassified` AND `lead_parcels` JOIN to `parcel_buildings.structure_type` resolves, derive `coa_type_class` from structure_type (e.g., `single_family_detached` → `residential`, `commercial_retail` → `commercial`). Audit_table tracks `coa_type_class_source IN ('description', 'parcel_fallback', 'unclassified')`.
+
+### `project_type` value set
+
+Separate column from `coa_type_class`. Captures WHAT is being built/changed (analogous to `permits.work`):
+
+| Class | Definition |
+|---|---|
+| `Addition` | New floor area added to existing structure (rear/side addition, second-storey addition, basement addition) |
+| `NewConstruction` | New building on a vacant lot OR demolition + new build (replaces existing structure) |
+| `Alteration` | Interior or exterior modification without floor-area addition (renovation, exterior facade, kitchen/bathroom refit) |
+| `Demolition` | Tear-down without new build (standalone demolition variance) |
+| `Severance` | Lot subdivision request — NOT a building variance, no construction follows |
+| `Mixed` | Description signals multiple project types (e.g., "demolish garage + new addition") |
+
+### Phase-code namespace disambiguation (84-W11 resolution cross-ref)
+
+CoA P3/P4 and Permit P3/P4 are string-identical phase codes (legacy artifact). Per Spec 84 §3 Phase-Code Namespace Deprecation:
+- New consumers should query `lifecycle_seq` (1–110, granular) for unambiguous phase identity.
+- Legacy P-code consumers can disambiguate via `lifecycle_group` (C1–C4 for CoA, BP1–BP7 for Permit) or `lead_type` discrimination.
+- `coa_type_class` is the CoA-side analog of `permit_type_class` — both serve as cohort dimensions for the granular `phase_stay_calibration` cohort key `(permit_type, project_type, coa_type_class, from_seq, to_seq)`.
+
+### Acceptance criteria (Phase D)
+
+- `coa_applications.coa_type_class IS NOT NULL ≥ 95%` of active CoAs (per Spec 49 coverage matrix).
+- `coa_applications.project_type IS NOT NULL ≥ 90%`.
+- Description-only classification accuracy ≥ 80% on a sample of 100 manually-classified CoAs (audit_table tracks ambiguity).
+- If accuracy < 80%, escalate to LLM-per-row v2 path per Spec 42 §6.13 Open Decision #1.
+
 ---
 
 <testing>
