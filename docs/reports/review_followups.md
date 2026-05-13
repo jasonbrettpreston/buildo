@@ -3,6 +3,24 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF1 #coa-pipeline-parity-phase-a R2.v2 Multi-Agent Review Deferred Items (2026-05-13)
+
+Source: R2.v2 re-review on `.cursor/active_task.md` + `docs/specs/01-pipeline/42_chain_coa.md` (Gemini + DeepSeek + worktree code-reviewer, after Round 1 BUG fixes + granular-first reframing + `lifecycle_status_history` unified table). 11 BUGs documented as known issues in the active task itself (under "Known Issues — Documented for Implementation"). Items below are accepted-and-deferred per user direction "B — authorize as-is with documented known issues."
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| MED | DeepSeek DEFER MED | R5 cross-ref consistency between sequential spec edits (e.g., Spec 84 → Spec 42 edits drift on table names) | Mitigated by R8 multi-agent review covering the final post-edit state. |
+| MED | DeepSeek DEFER MED | CoA "Deferred"/"Postponed" status explicit handling in §A.1.3 | Already covered by the catchall rule + `unmapped_status` audit metric documented in §A.1.3. Verified during triage. |
+| LOW | DeepSeek DEFER LOW | P18/P19/P20 phase-label drift in Spec 84 §3 (`INSPECTION_PIPELINE_P18_SET` vs spec text "Project Closed", etc.) | Pre-existing per bug 84-W1 family; documented in §6.5 step 22 disposition. Defer to Phase H cleanup. |
+| LOW | Gemini DEFER LOW | §A.6 "NO CHANGE" header rename to "Adherence Note" | Cosmetic; address opportunistically during R5.6. |
+| NIT | Gemini DEFER NIT | `coa-handoff.infra.test.ts` JOIN through `lifecycle_status_history` requires Phase C `lead_id` backfill | Confirmed working post-Phase C. Test runs in Phase F regardless. |
+| UNVERIFIED | DeepSeek | `npm run system-map` regeneration risk on frontmatter edits | Add dry-run check before final regeneration in R5.15. |
+| UNVERIFIED | DeepSeek | R0.5 doesn't profile overall data inventory (counts / null rates / status distribution) | Accept — spec values come from the locked 2026-05-12 snapshot. Profiling is operational hardening, not plan-blocking. |
+
+**HIGH/CRIT BUGs absorbed inline (documented in active task §Known Issues, not deferred to follow-up WF):** 11 items covering writer enumeration, step numbering, SKIP_PHASES correction, Phase A scope clarification, schema duplication removal, R5 plan completeness (Spec 86), seed-validation test naming, CSV regeneration validation, column-name mapping, schema doc inclusion, and R0.5 query #3 replacement. All addressed during R5 execution of WF1 #coa-pipeline-parity-phase-a.
+
+---
+
 ## Spec 42 §6 — WF2 #coa-pipeline-parity R0 Multi-Agent Review Deferred Items (2026-05-13)
 
 Source: R0 plan review on `docs/specs/01-pipeline/42_chain_coa.md` §6 (Gemini + DeepSeek adversarial + worktree code-reviewer). Items below are accepted-and-deferred — either pre-existing pipeline concerns, operational hardening that fits a later WF, or specificity that resolves at WF1 plan-lock.

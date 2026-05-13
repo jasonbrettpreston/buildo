@@ -217,10 +217,17 @@ Three layers, each with its own SPEC LINK header per Spec 47 §R12:
 - `lead-id-derivation.logic.test.ts` — for any `(permit_num, revision_num)` pair, derive `'permit:' || permit_num || ':' || LPAD(revision_num::text, 2, '0')` exactly (note the `::text` cast — `revision_num` is `SMALLINT` and PostgreSQL `LPAD` requires `text`); for any `application_number`, derive `'coa:' || application_number` exactly. Format is canonical and stable. Include fixture for `revision_num=5` asserting `'permit:XXXXX:05'` (zero-pad regression lock).
 - `lead-trades-schema-parity.logic.test.ts` — confirms unified `lead_trades` columns match the union of `permit_trades` + CoA needs. Same for `lead_parcels`.
 
+**Downstream behavior tests (per R2 Gemini BUG-HIGH — coverage gap closed):**
+- `coa-crm-alerts.logic.test.ts` — exercises `update-tracked-projects.js` CoA branch. Asserts: stall threshold for `status='Hearing Scheduled' AND days_since_status > coa_stall_threshold_p2_days` (default 90); imminent-alert window keyed on `hearing_date - NOW() < coa_imminent_window_days`; decision-keyed auto-archive on `decision IN ('Refused','Withdrawn','Closed')`; permit-branch byte-equivalent to pre-WF behavior (regression-lock).
+- `coa-feed-filter.infra.test.ts` — exercises mobile lead feed API filter + sort. Asserts: `?lead_type=coa` returns only `lead_id LIKE 'coa:%'` rows; `?lead_type=permit` returns only `lead_id LIKE 'permit:%'` rows; `?lead_type=all` (default) returns both; `?sort=lifecycle_seq` orders rows by `lifecycle_seq ASC` with NULL last.
+- `coa-inspector-query.infra.test.ts` — exercises `lead-inspect-query.ts` CoA panel data assembly. Asserts: CoA panel populates `coa_type_class`, `project_type`, `scope_tags`, `structure_type`, `estimated_cost`, `lead_trades` rows, and `lifecycle_seq` + group/block/stage + colors/icons (joined through `universal_stream_catalog`); panel renders when `lead_type='coa'` OR when permit row has `linked_coa_application_number IS NOT NULL` (linked-permit case shows historical CoA panel + current permit panel).
+- `coa-handoff.infra.test.ts` _(already listed in integration tests above)_ — extended to assert that when a CoA gets linked to a permit, both rows persist with their own classification state, `permits.linked_coa_application_number` is populated, and the inspector renders cross-stream timeline via the JOIN through `lifecycle_status_history` (CoA-side rows + permit-side rows ordered by `transitioned_at`).
+- `coa-lifecycle-history.infra.test.ts` — exercises `lifecycle_status_history` ledger. Asserts: every CoA status change writes a row (including same-phase same-seq transitions like `Tentatively Scheduled` → `Hearing Scheduled` within P2); every decision change writes a snapshot of the new decision + decision_date; permit status changes write rows too; full traversal of a CoA → permit lifecycle (e.g., 10+ rows for a complex path) reconstructs correctly via `SELECT * FROM lifecycle_status_history WHERE lead_id IN (...) ORDER BY transitioned_at`.
+
 **CQA assertions extended (run inside the chain itself, not as separate test files):**
-- `assert-global-coverage.js` — add CoA classification coverage as new field-level rows
-- `assert-entity-tracing.js` — extend 26-hour coverage matrix to CoA-side derivations
-- `assert-lifecycle-phase-distribution.js` — recalibrate bands post-fix; add CoA-specific P1/P2/P3/P4 bands
+- `assert-global-coverage.js` — add CoA classification coverage as new field-level rows; add `lifecycle_status_history` row-count coverage (target: ≥ 1 row per active CoA per 30-day window).
+- `assert-entity-tracing.js` — extend 26-hour coverage matrix to CoA-side derivations.
+- `assert-lifecycle-phase-distribution.js` — pivots to validate `lifecycle_block` distribution against new `lifecycle_band_block_<block>_min/max` keys (per §6.7 step 4). Legacy P-code band validation runs as secondary cross-check during Phase C–G transition.
 
 ### 6.5 Step-by-Step: Permit-Pipeline Comparison
 
@@ -316,8 +323,8 @@ CREATE TABLE lifecycle_transitions (
     lead_id             TEXT            NOT NULL,
     from_phase          VARCHAR(20),    -- legacy P-code (current authoritative)
     to_phase            VARCHAR(20)     NOT NULL,
-    from_seq            INTEGER,        -- granular-lifecycle prep: NULL until lifecycle-engine WF ships
-    to_seq              INTEGER,        -- granular-lifecycle prep: NULL until lifecycle-engine WF ships
+    from_seq            INTEGER,        -- granular Universal Stream row reference; populated in Phase E
+    to_seq              INTEGER,        -- granular Universal Stream row reference; populated in Phase E
     transitioned_at     TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     permit_type         VARCHAR(50),
     project_type        VARCHAR(50),    -- new dimension for cohort key
@@ -328,6 +335,107 @@ CREATE INDEX idx_lifecycle_transitions_lead ON lifecycle_transitions (lead_id);
 CREATE INDEX idx_lifecycle_transitions_phase ON lifecycle_transitions (from_phase, to_phase);
 CREATE INDEX idx_lifecycle_transitions_seq ON lifecycle_transitions (from_seq, to_seq) WHERE from_seq IS NOT NULL;
 
+-- NEW lifecycle status history ledger — captures EVERY status change, not just
+-- phase changes. Critical for accurate forecasting:
+--   - lifecycle_transitions captures phase-level transitions (P2→P3, etc.)
+--   - lifecycle_status_history captures status-level transitions
+--     (Tentatively Scheduled → Hearing Scheduled → Postponed, all within P2)
+-- The status-level granularity preserves the FULL traversal path through the
+-- 110-row Universal Stream, enabling cohort calibration on (from_seq, to_seq)
+-- with full fidelity. Also captures the CoA decision field at every status
+-- change — currently the decision is overwritten in place on coa_applications,
+-- so we lose the history of how a decision evolved (e.g., Postponed →
+-- Approved with Conditions → Final and Binding).
+CREATE TABLE lifecycle_status_history (
+    id                  BIGSERIAL       PRIMARY KEY,
+    lead_id             TEXT            NOT NULL,
+    from_status         VARCHAR(60),                 -- previous source status (NULL on first observation)
+    to_status           VARCHAR(60)     NOT NULL,    -- new source status (permits.status / coa_applications.status / inspection stage_name)
+    from_seq            INTEGER,                     -- previous Universal Stream row (granular)
+    to_seq              INTEGER,                     -- new Universal Stream row (granular)
+    from_phase          VARCHAR(20),                 -- previous P-code (legacy, kept for backward compat)
+    to_phase            VARCHAR(20),                 -- new P-code (legacy)
+    decision            VARCHAR(60),                 -- CoA decision snapshot at time of status change (NULL for permits / unmapped CoAs)
+    decision_date       DATE,                        -- CoA decision_date snapshot (NULL for permits)
+    transitioned_at     TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    detected_by         VARCHAR(60)     NOT NULL,    -- script that detected the change (e.g., 'classify-lifecycle-phase.js', 'load-coa.js')
+    permit_type         VARCHAR(50),                 -- denormalized for cohort queries
+    project_type        VARCHAR(50),
+    coa_type_class      VARCHAR(30),
+    neighbourhood_id    BIGINT
+);
+CREATE INDEX idx_lifecycle_status_history_lead ON lifecycle_status_history (lead_id);
+CREATE INDEX idx_lifecycle_status_history_seq ON lifecycle_status_history (from_seq, to_seq) WHERE from_seq IS NOT NULL;
+CREATE INDEX idx_lifecycle_status_history_decision ON lifecycle_status_history (decision) WHERE decision IS NOT NULL;
+CREATE INDEX idx_lifecycle_status_history_transitioned ON lifecycle_status_history (transitioned_at);
+```
+
+##### How lifecycle history works across CoA + Permit (unified)
+
+`lifecycle_status_history` is a **single table** that captures the full traversal of *both* CoA applications and permits. The discriminator is the `lead_id` prefix:
+
+- CoA-side rows: `lead_id = 'coa:' || application_number` (e.g., `'coa:A0123-24'`)
+- Permit-side rows: `lead_id = 'permit:' || permit_num || ':' || LPAD(revision_num::text, 2, '0')` (e.g., `'permit:1234567:00'`)
+
+**A project that starts as a CoA and ends as a permit produces TWO sequences of rows in this table**, one per `lead_id`. They are NOT collapsed into a single conceptual lead — each lead keeps its own identity, its own traversal, and its own decision/status history. The link between them is established by `coa_applications.linked_permit_num` (and the back-reference `permits.linked_coa_application_number` added in Phase D), joined at query time.
+
+```sql
+-- Example 1: Reconstruct a single CoA's full status traversal
+SELECT to_status, decision, transitioned_at
+FROM lifecycle_status_history
+WHERE lead_id = 'coa:A0123-24'
+ORDER BY transitioned_at;
+
+-- Result for a typical Path A CoA:
+-- 'Application Received'    | NULL                       | 2024-01-15
+-- 'Accepted'                | NULL                       | 2024-01-22
+-- 'Prepare Notice'          | NULL                       | 2024-02-01
+-- 'Notice Prepared'         | NULL                       | 2024-02-14
+-- 'Tentatively Scheduled'   | NULL                       | 2024-02-20
+-- 'Hearing Scheduled'       | NULL                       | 2024-03-05
+-- 'Postponed'               | NULL                       | 2024-03-21  ← detour
+-- 'Hearing Scheduled'       | NULL                       | 2024-04-12  ← rescheduled
+-- 'Approved with Conditions'| 'Approved with Conditions' | 2024-04-18  ← decision lands here
+-- 'Final and Binding'       | 'Final and Binding'        | 2024-05-08  ← appeal window cleared
+-- 'Closed'                  | 'Final and Binding'        | 2024-05-15
+
+-- Example 2: Cross-stream timeline for a CoA→Permit project
+SELECT *
+FROM lifecycle_status_history
+WHERE lead_id IN ('coa:A0123-24', 'permit:1234567:00')
+ORDER BY transitioned_at;
+-- Returns interleaved CoA + permit rows. The CoA may finish in 2024;
+-- the permit may not be filed until 2026 (median 1,078-day lag);
+-- the permit then runs through Permit Intake → Inspection → Closed.
+-- The full project journey is a single chronological query.
+
+-- Example 3: Forecast-cohort segmentation by traversal pattern
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1 FROM lifecycle_status_history h2
+    WHERE h2.lead_id = h.lead_id AND h2.to_status = 'Postponed'
+  ) THEN 'had_postponement' ELSE 'straight_through' END AS pattern,
+  AVG(decided_at - opened_at) AS avg_days_to_decision
+FROM (
+  SELECT lead_id,
+         MIN(CASE WHEN to_status = 'Application Received' THEN transitioned_at END) AS opened_at,
+         MIN(CASE WHEN decision IS NOT NULL THEN transitioned_at END) AS decided_at
+  FROM lifecycle_status_history
+  WHERE lead_id LIKE 'coa:%'
+  GROUP BY lead_id
+) h
+WHERE opened_at IS NOT NULL AND decided_at IS NOT NULL
+GROUP BY 1;
+-- Cohort A (had_postponement): 312 days avg
+-- Cohort B (straight_through): 187 days avg
+-- → Forecast engine can now condition predicted_start on traversal pattern.
+```
+
+**The "unified" design choice**: a separate `coa_status_history` table would have forced every cross-stream query to UNION across two tables. Single table + `lead_id` prefix is the same Option C trade-off applied to the ledger — one query path, one schema parity test, one place to add new lead types in the future (e.g., builder leads). The `(lead_id)` index makes the prefix filter cheap.
+
+**Decision field capture**: today `coa_applications.decision` is overwritten in place on every CoA status change. `lifecycle_status_history.decision` snapshots the decision at each transition, so an appeal-reversal (`Approved` → `Refused`) or amendment (`Conditional Consent` → `Approved with Conditions`) is preserved as ordered history rather than lost to overwrite. The forecast engine and CRM alerts can both consume this to learn from decision-evolution patterns.
+
+```sql
 -- NEW reference table: read-only catalog of the 110 rows from Spec 84 §2.5.h.2.
 -- Populated once via seed migration sourcing from the finalized §2.5.h.2 table.
 -- The lifecycle classifier JOINs against this table to derive the granular
@@ -467,7 +575,9 @@ The bundled approach (chosen because the system is pre-live) migrates the lifecy
 
 2. **`scripts/lib/lifecycle-phase.js` — granular Universal Stream emission.** New pure function `mapToUniversalStream(phase, status, source)` returns `{seq, group, block, stage, bid_value}` by lookup against `universal_stream_catalog`. Called by `classifyPermitPhase()` and `classifyCoaPhase()` after the P-code is decided. Both legacy P-code AND granular row reference get written.
 
-3. **`scripts/classify-lifecycle-phase.js` — extended writes.** UPDATE branches for `permits` and `coa_applications` extended to write `lifecycle_seq`, `lifecycle_group`, `lifecycle_block`, `lifecycle_stage`, `bid_value` alongside the legacy `lifecycle_phase`. Transitions ledger writes both `from_phase`/`to_phase` and `from_seq`/`to_seq` on every detected change.
+3. **`scripts/classify-lifecycle-phase.js` — extended writes.** UPDATE branches for `permits` and `coa_applications` extended to write `lifecycle_seq`, `lifecycle_group`, `lifecycle_block`, `lifecycle_stage`, `bid_value` alongside the legacy `lifecycle_phase`. **Writes to TWO ledgers per detected change:** (a) `lifecycle_transitions` — phase-level changes (`from_phase`/`to_phase`/`from_seq`/`to_seq`) for cohort calibration consumers; (b) `lifecycle_status_history` — every status-level change (`from_status`/`to_status` including same-phase same-seq transitions like `Tentatively Scheduled` → `Hearing Scheduled`) plus snapshot of `decision` + `decision_date` for CoAs. The status-level ledger preserves the full traversal path through the 110-row Universal Stream — a CoA that goes `P2 [Tentatively Scheduled]` → `P2 [Postponed]` → `P2 [Hearing Scheduled]` → `P3 [Approved]` writes 3 rows to `lifecycle_status_history` (one per status change) and 1 row to `lifecycle_transitions` (the P2→P3 phase change). This dual-ledger design unlocks forecast cohort segmentation by *traversal pattern*, not just by phase position: "median days for CoAs that went Tentatively Scheduled → Approved directly" vs "median days for CoAs that hit Postponed first" — these are different cohorts with different lag distributions.
+
+4. **Distribution gate pivots to granular Universal Stream.** `scripts/quality/assert-lifecycle-phase-distribution.js` extended to validate the `lifecycle_seq` (and `lifecycle_block`) distribution against bands keyed on `lifecycle_seq` ranges, not just legacy P-codes. Granular-first: the P-code distribution check (legacy) becomes a secondary cross-check during the Phase C–F transition; new authoritative validation is on `lifecycle_seq` distribution. Block-level aggregation (~15 keys: `lifecycle_band_block_<block_id>_min/max`) is preferred over per-seq bands (110 keys) for tractable operator tuning. The legacy `lifecycle_band_p{N}_min/max` band keys remain populated during transition for backward compatibility with `compute-trade-forecasts.js`'s P-code routing, but are deprecated and removed in Phase H.
 
 4. **Phase distribution bands recalibrated.** `logic_variables.lifecycle_band_*_min/max` (36 keys) re-set against post-84-W12 production-shape data. Procedure:
    - Run new classifier against staging copy of full CKAN dataset.
