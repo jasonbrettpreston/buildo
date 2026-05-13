@@ -34,7 +34,9 @@ Predict actionable work dates for all 32 trades by marrying current lifecycle st
 ## 3. Behavioral Contract
 
 ### Inputs
-Active `permit_trades`, `permits` with lifecycle data, and `phase_calibration` results.
+Active `lead_trades` (filtered to `is_active = true`), `permits` AND `coa_applications` with lifecycle data, and `phase_calibration` / `phase_stay_calibration` results. PK on `trade_forecasts` migrates from `(permit_num, revision_num, trade_slug)` to `(lead_id, trade_slug)` per Spec 42 §6.6.B Option C — CoA-stage rows produce forecasts end-to-end once the lifecycle classifier emits CoA P2/P3/P4 (post Phase E 84-W12 fix).
+
+**Source SQL** extended to UNION the two streams: `permits` (lead_id = `'permit:<num>:<rev>'`) ⋃ `coa_applications` (lead_id = `'coa:<application_number>'`), each contributing its own classification + anchor fields.
 
 ### Core Logic
 - **Bimodal Routing:**
@@ -53,6 +55,15 @@ When any fallback is used, `calibration_method` is stamped `'fallback_issued'` t
 - **Historic Snowplow (WF3 April 2026):** Applied immediately after the initial `predictedStart = anchor + cal.median` calculation. If `anchorIsFallback` is `true` AND `predictedStart < today` (the calculated date landed in the past), snap `predictedStart` forward to `today + logic_variables.snowplow_buffer_days` (default 7, DB-driven per spec 47 §4.1). This converts rescued fallback-anchor leads from `expired` urgency to `imminent/upcoming` — treating them as Rescue Missions rather than dead leads. Only fires for fallback anchors; real `phase_started_at` anchors are never touched. Tracked via `snowplow_applied` in `records_meta`.
 - ~~**Instant Stall Recalibration:**~~ *(Removed WF3 2026-04-22)* The per-row stall penalty block was deleted as dead code after the Stalled Gate was added to SOURCE_SQL. Since `AND p.lifecycle_stalled = false` is now in the WHERE clause, every row reaching the stream has `lifecycle_stalled = false`; the `if (lifecycle_stalled)` branch was permanently unreachable. **Product trade-off:** this means ALL stalled permits are excluded — including recently-stalled ones that would have produced a non-expired `predictedStart` after penalty adjustment. This is an accepted product simplification: a stalled permit's lead disappears from the feed while stalled, rather than showing a penalty-adjusted future date. `stall_penalty_precon` and `stall_penalty_active` remain in `logic_variables` and `LOGIC_VARS_SCHEMA` for potential future use.
 - **Calibration Fallback:** Exact Match -> Permit Type Fallback -> Issued Date Fallback -> Default (30 days).
+
+#### CoA-stage routing simplification (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
+
+For CoA-stage rows (`lead_id LIKE 'coa:%'`, `lifecycle_group IN ('C1','C2','C3')`), the bimodal routing simplifies because there is no work phase pre-construction. Routing rules:
+
+- **target_window = 'bid' ALWAYS** for CoA-stage. No work-window leads exist before construction starts.
+- **Anchor priority extended** for CoA leads: `phase_started_at` → `decision_date` → `hearing_date` → `application_date` (CoA's analog of permits' issued_date).
+- **Calibration cohort key** extended to `(permit_type, project_type, coa_type_class, from_seq, to_seq)` — the granular Universal Stream seq pair lets the engine learn CoA-stage cohorts separately from permit-stage cohorts (resolves Spec 84 §8.7 blind spot). CoA-stage cohort lookup keyed on `coa_type_class` instead of `permit_type` (which doesn't exist for CoAs); the legacy `permit_type` column falls through to `__ALL__` for CoA rows during the Phase E transition.
+- **`linked_permit_num` carry-forward**: when a CoA gets linked to a permit (the C → BP handoff), the permit's forecast supersedes the CoA's. Old CoA forecasts purged via the stale-purge mechanism on next run (the CoA row's `lifecycle_phase` doesn't change but the linked permit becomes the authoritative lead). Cross-stream timeline reconstruction via `lifecycle_status_history` JOIN — see Spec 42 §6.6.B query examples.
 
 ### Inputs Filter — Stalled Gate (WF3 2026-04-22)
 `SOURCE_SQL` includes `AND p.lifecycle_stalled = false` in the top-level WHERE clause (applies to both Branch A P1/P2 and Branch B active construction). Stalled permits have ancient `phase_started_at` anchors that produce `predictedStart` deep in the past → expired urgency → grace_purge deletes → stream regenerates (zombie loop). Excluding them at SQL level breaks the loop at source. `lifecycle_stalled` is `BOOLEAN NOT NULL DEFAULT false` (migration 085).

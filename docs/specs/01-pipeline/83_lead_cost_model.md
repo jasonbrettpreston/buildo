@@ -115,6 +115,32 @@ Final audit against city `est_const_cost`:
 * **Mixed-Use**: Requires multi-variable intensity matching for commercial/residential split.
 * **Shell Permits**: Applies an additional `commercial_shell_multiplier` (0.60x) to interior trades.
 
+### Geometric-Only Path for CoA Leads (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
+
+CoA applications carry no applicant-declared construction cost (the `est_const_cost` field is permit-side only). The CoA cost path is therefore **geometric-only** — there is no Liar's Gate equivalent for CoA leads because there is no applicant declaration to gate against.
+
+**Inputs (CoA):**
+- `coa_applications.scope_tags` (Phase D classifier output)
+- `coa_applications.project_type` (Addition / NewConstruction / Alteration / Demolition / Severance / Mixed)
+- `coa_applications.coa_type_class` (residential / commercial / institutional / mixed)
+- `lead_parcels` (filtered to CoA leads) ⋈ `parcel_buildings.modeled_gfa_sqm` (the geometric anchor)
+- `trade_sqft_rates` (base rates per trade per sqft)
+- `scope_intensity_matrix` (allocation percentages — the Surgical Triangle)
+- `neighbourhoods.avg_household_income` (income premium adjustment)
+
+**Output (CoA):**
+- `cost_estimates` row keyed on `lead_id = 'coa:' || application_number` per Spec 42 §6.6.C
+- `cost_source = 'geometric'` ALWAYS (no applicant-declared anchor available)
+- `is_geometric_override = true` ALWAYS
+- `estimated_cost = effective_area_sqm × Σ(trade_rate × scope_intensity)` — no city-declared cost to weight against
+- `trade_contract_values` JSONB populated via Surgical Triangle allocation across active CoA trades
+
+**No-Liar's-Gate semantics:** the permit-side Liar's-Gate compares declared vs geometric within a `liar_gate_threshold_pct` window. With no declared CoA cost, the geometric output is the authoritative value — there is no rejection path. This means CoA estimates are inherently noisier than permit estimates (no double-check), but they fill a structural gap (cost estimates didn't exist for CoA-stage leads before this work).
+
+**Per-trade slicing for realtor:** the realtor financial-base carve-out (existing per WF3 2026-05-08) applies — CoA-stage realtor rows use the total `estimated_cost` rather than a `trade_contract_values` per-trade slice (since CoA classifier may not always allocate to realtor explicitly). See Spec 81 §3 realtor carve-out.
+
+**Acceptance:** CoA-stage `cost_estimates.estimated_cost IS NOT NULL` ≥ 80% (per Spec 42 §6.3 success criteria + Spec 49 coverage matrix).
+
 ### Step-by-Step Defense
 **Step 1: Input Sanitization (Avoiding W12, W21)**
 * **Numeric Guard**: Apply `Number.isFinite(row.est_const_cost)` to prevent NaN values from corrupting Path 2 logic.

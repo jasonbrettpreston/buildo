@@ -75,7 +75,31 @@ The CRM Assistant must `INSERT` into the `notifications` table using the standar
 Leads automatically leave a user's board when:
 1. **Target Completion:** The project ordinal has exceeded the trade's `work_phase_target`.
 2. **Lead Expiry:** The project timeline has drifted beyond the platform's `lead_expiry_days` threshold.
-3. **Global Closure:** The project has reached terminal phases P19 or P20.
+3. **Global Closure:** The project has reached terminal phases P19 or P20 (or `lifecycle_group IN ('C4','BP7')` post-Phase E).
+
+### CoA Lead Handling (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
+
+CoA-stage leads (`lead_id LIKE 'coa:%'`) require different stall thresholds, alert windows, and disappearance rules than permit-stage leads. The script branches on `lead_type`:
+
+**Stall thresholds for CoA-stage:**
+- `status = 'Hearing Scheduled'` (Universal Stream B1.B / P2) can sit for 1–3 months as normal hearing-prep — NOT a stall. Use `coa_stall_threshold_p2_days` (Spec 86 logic_variable, default 90) instead of the global `coa_stall_threshold` (default 30 — which is the intake-stall threshold).
+- `status IN ('Postponed','Deferred')` triggers stall on > 60 days at that status.
+
+**Imminent-alert window for CoA-stage:**
+- Keyed on `coa_applications.hearing_date - NOW()` rather than `trade_forecasts.predicted_start - NOW()` (permit-stage anchor).
+- New `logic_variable` `coa_imminent_window_days` (Spec 86, default 7).
+- Alert fires when `0 < (hearing_date - NOW()) <= coa_imminent_window_days` AND `last_notified_urgency != 'imminent'`.
+
+**Decision-keyed auto-archive:**
+- `decision IN ('Refused', 'Withdrawn', 'Closed')` → archive immediately. No `lead_expiry_days` wait.
+- `decision = 'Final and Binding'` → keep the lead; the linked permit (if any) will surface as a new lead with `lead_type='permit'` once it lands in CKAN.
+
+**Notification subtypes (extensions to `notifications` table):**
+- `COA_HEARING_IMMINENT`: "Your variance hearing is in N days — confirm crew availability for likely-approved trade."
+- `COA_DECISION_RENDERED`: "Variance approved — permit application expected within 12 months (typical lag)."
+- `COA_STALLED`: "CoA stalled at <status> for > <threshold> days — project may be on hold."
+
+**`tracked_projects` keying:** `lead_id` field (added Phase B) holds `'coa:<application_number>'`. Existing `lead_type` column already discriminates permits vs CoAs.
 
 ### Outputs & Notification Payload
 Mutates `tracked_projects` (status/memory) and `lead_analytics`. Generates an entry in the `notifications` table:
