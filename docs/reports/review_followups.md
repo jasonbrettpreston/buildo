@@ -933,3 +933,18 @@ Adversarial findings from Multi-Agent Review of migrations 132-135 (HIGH RISK ho
 - Gemini-134: "Entire migration non-transactional + manual DOWN" — Rule 6 / commit 8b1c10b convention; every existing migration follows this.
 - Gemini-135: "`UPDATE permits SET lead_id = NULL` is a clever-but-dangerous trigger-fire backfill" — **FALSE READING**. Our backfill is direct compute (`SET lead_id = 'permit:' || ...`), NOT trigger-fire. R2.v3 worktree CRIT was specifically about avoiding the trigger-fire pattern; the implementation correctly does so.
 
+
+---
+
+## WF1 #coa-pipeline-parity-phase-c — R5.1 review deferrals (2026-05-13)
+
+R5.1.f Multi-Agent Review on `scripts/lib/leads/lead-id.js` + `src/lib/leads/lead-id.ts` + parity test. 3 BUGs fixed inline (LPAD trigger-parity drift on empty + over-width; missing numeric-0 fixture). Other findings logged here.
+
+| # | Severity | Source | Finding | Decision rationale |
+|---|---|---|---|---|
+| 35 | MED (DEFER) | Gemini-js + DeepSeek-ts | Whitespace-only `permit_num='   '` produces `'permit:   :00'` | **REJECT trim**: Phase B trigger does NOT trim either (`NEW.lead_id := 'permit:' \|\| NEW.permit_num \|\| ...`). Deriver must match trigger byte-for-byte; trimming would create new drift. Defensive trimming belongs in the ingest layer (load-permits.js), not the deriver. |
+| 36 | MED (DEFER) | DeepSeek-ts, Gemini-ts | `LeadInput` type union is verbose: `(PermitLeadInput & Partial<CoaLeadInput>) \| ...` | Simpler `Partial<PermitLeadInput & CoaLeadInput>` would lose some compile-time hints. Cosmetic; revisit if a future caller trips on the type. |
+| 37 | MED (DEFER) | Gemini-js MED | Boolean/array input not rejected by `typeof !== 'object'` (typeof [] is 'object'; subsequent property access produces undefined → throws at the end) | Practical risk near-zero — pg types preclude boolean/array values reaching this function. Add `Array.isArray()` guard in a future hardening pass. |
+| 38 | LOW (DEFER) | DeepSeek-ts | `String(input.application_number)` is redundant when already string | Cosmetic. |
+| 39 | REJECT | DeepSeek-ts HIGH | "Dual-path TS↔JS is a maintenance time bomb" | Explicit Spec 84 §7 design. Parity test catches drift; existing codebase precedent in `scripts/lib/lifecycle-phase.js` ↔ `src/lib/classification/lifecycle-phase.ts`. |
+
