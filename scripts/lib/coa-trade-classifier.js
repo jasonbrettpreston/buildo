@@ -19,11 +19,23 @@
  * makes pass-through explicit.
  *
  * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase D R5.1
+ *
+ * DUAL PATH NOTE (Spec 47 §9.1): src/lib/classification/coa-trade-classifier.ts
+ * is the functional twin of this module. Parity is locked-in by
+ * src/tests/coa-trade-classifier.logic.test.ts (JS↔TS fixture-matrix tests
+ * over lookupTradesForTags, TAG_TRADE_MATRIX keys, TAG_ALIASES, PHASE_TRADES,
+ * isTradeActiveInPhase, shouldAppendRealtor).
  */
 
 // ──────────────────────────────────────────────────────────────────────
 // TAG_ALIASES (verbatim from classify-permits.js:168)
 // ──────────────────────────────────────────────────────────────────────
+// R5.4 R8 fold #4: CoA-side TAG_ALIASES additions to cover high-frequency R5.3
+// emissions that have no direct matrix entry. `dwelling` is the meta-tag for
+// residential structures (build-sfd is the closest matrix trade-set); `renovation`
+// is the meta-tag for interior renovation work (interior is the matrix entry).
+// Variance-only tags (severance, setback, parking, lot-coverage, minor-variance)
+// intentionally remain unmapped — they represent no construction work.
 const TAG_ALIASES = {
   'roofing': 'roof',
   'laneway-suite': 'laneway',
@@ -41,10 +53,36 @@ const TAG_ALIASES = {
   '2nd-floor': 'addition',
   '3rd-floor': 'addition',
   'convert-unit': 'unit-conversion',
+  // R5.4 R8 fold #4 — CoA-side coverage gap fills (initial set):
+  'dwelling': 'build-sfd',
+  'renovation': 'interior',
+  // R5.4 review fold (Worktree#2 IMP-6 CRIT) — additional R5.3-emitted tag
+  // coverage gaps confirmed by walking coa-scope-classifier.js TAG_PATTERNS:
+  //   - `secondary-suite` → `second-suite` (hyphen-spelling mismatch: matrix
+  //     entry exists but unreachable without alias; high-frequency Toronto
+  //     CoA type — secondary suite additions in residential basements)
+  //   - `accessory-structure` → `accessory-building` (matrix key uses
+  //     `building`; R5.3 emits `structure`)
+  //   - `new-construction` → `build-sfd` (project-type tag fires when desc
+  //     says "construct a new ..." without the word "dwelling" — most
+  //     defensible universal mapping; build-sfd's 15-trade set is the
+  //     superset for residential new construction)
+  //   - `service-shop` → `retail` (commercial fitout — auto-repair, personal
+  //     service shops typically involve retail-equivalent trades)
+  //   - `mixed-use` → `tenant-fitout` (combined res+commercial; fitout
+  //     trades are the common subset)
+  'secondary-suite': 'second-suite',
+  'accessory-structure': 'accessory-building',
+  'new-construction': 'build-sfd',
+  'service-shop': 'retail',
+  'mixed-use': 'tenant-fitout',
 };
 
+// R5.4 R8 fold #6 (Gemini CRIT): defensive lowercase normalization. R5.3 emits
+// lowercase tags today, but upstream changes could regress. Single .toLowerCase()
+// at function entry makes the matrix lookup case-insensitive.
 function normalizeTag(tag) {
-  let base = tag.replace(/^(new|alter|sys|scale|exp):/, '');
+  let base = tag.toLowerCase().replace(/^(new|alter|sys|scale|exp):/, '');
   base = base.replace(/^houseplex-\d+-unit$/, 'houseplex');
   return TAG_ALIASES[base] ?? base;
 }
@@ -122,6 +160,10 @@ function lookupTradesForTags(scopeTags) {
   if (scopeTags == null || !Array.isArray(scopeTags)) return [];
   const best = new Map();
   for (const tag of scopeTags) {
+    // R5.4 R8 fold #7 (Gemini HIGH): defensive type guard. Upstream data
+    // quality is never guaranteed; a non-string element would crash on
+    // .replace() inside normalizeTag.
+    if (typeof tag !== 'string' || tag === '') continue;
     const key = normalizeTag(tag);
     const entries = TAG_TRADE_MATRIX[key];
     if (!entries) continue;

@@ -356,6 +356,13 @@
     "min": 0,
     "max": 100
   },
+  "coa_trades_unmapped_threshold_pct": {
+    "default": 20,
+    "type": "number",
+    "description": "Day-1 threshold (percent) for CoAs with non-NULL scope_tags but zero trade matches in classify-coa-trades (Spec 42 §6.8 row 667; R5.4 R8 fold #1). Variance-only CoAs (severance, setback, minor-variance) legitimately produce zero trades, so a non-zero threshold is the correct semantic — the spec literal `== 0 FAIL` would be a permanent FAIL. Set to 20% for first burn-in; recalibrate post-prod once tag distribution is known.",
+    "min": 0,
+    "max": 100
+  },
   "massing_shed_threshold_sqm": {
     "default": 20,
     "type": "number",

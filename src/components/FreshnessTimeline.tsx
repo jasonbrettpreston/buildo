@@ -35,6 +35,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   link_coa:           { name: 'Link CoA',              group: 'link' },
   link_coa_to_parcels:{ name: 'Link CoA to Parcels',   group: 'link' },
   classify_coa_scope: { name: 'Classify CoA Scope',    group: 'classify' },
+  classify_coa_trades:{ name: 'Classify CoA Trades',   group: 'classify' },
   enrich_wsib_builders: { name: 'Enrich WSIB Matched',   group: 'link' },
   enrich_named_builders:{ name: 'Enrich Web Entities',   group: 'link' },
   enrich_wsib_registry: { name: 'Enrich WSIB Registry',  group: 'link' },
@@ -169,6 +170,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       // link_coa_to_parcels per §6.8 lock-ID ordering (4201 → 4202) and
       // BEFORE classify_coa_trades (R5.4) which gates on scope_classified_at.
       { slug: 'classify_coa_scope',      indent: 1 },
+      { slug: 'classify_coa_trades',     indent: 1 },
       { slug: 'link_coa',                indent: 1 },
       { slug: 'create_pre_permits',      indent: 1 },
       { slug: 'assert_pre_permit_aging', indent: 0 },
