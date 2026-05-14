@@ -72,6 +72,24 @@ pipeline.run('migrate-to-lead-id', async (pool) => {
       throw new Error(`${TAG} preflight FAIL: ${overWide} permit row(s) have revision_num longer than 2 chars. LPAD-truncation would cause lead_id collisions. Investigate before retrying.`);
     }
 
+    // ── WF3 2026-05-14 one-shot preflight (Worktree C3) ──────────────
+    // tracked_projects.permit_num and revision_num are NOT NULL at schema
+    // level (NOT NULL drop deferred to Phase F). Phase D classifiers
+    // populate lead_id on new rows automatically; this Phase C backfill
+    // must not re-run after Phase D begins inserting CoA rows or the
+    // permit-side derivation would corrupt them with 'permit:<linked>:
+    // <rev>' lead_ids instead of 'coa:<application_number>'. The R5.3
+    // trigger-based dual-write pivot retired the discriminator-column
+    // design that earlier protected the re-run path; one-shot enforcement
+    // moves to this preflight (WF3 #migrate-to-lead-id drift fix).
+    const tpPreflight = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM tracked_projects`,
+    );
+    const tpRowCount = tpPreflight.rows[0]?.n ?? 0;
+    if (tpRowCount > 0) {
+      throw new Error(`${TAG} preflight FAIL: migrate-to-lead-id is one-shot. tracked_projects has ${tpRowCount} rows — Phase D classifiers populate lead_id on new rows automatically. Do not re-run.`);
+    }
+
     // §R9 — single withTransaction envelope wraps ALL 4 UPDATEs.
     // Partial failure rolls back every table to pre-Phase-C state.
     const counts = await pipeline.withTransaction(pool, async (client) => {
@@ -115,17 +133,18 @@ pipeline.run('migrate-to-lead-id', async (pool) => {
       result.trade_forecasts = tf.rowCount ?? 0;
       pipeline.log.info(TAG, `trade_forecasts backfilled: ${result.trade_forecasts} rows`);
 
-      // ── tracked_projects: lead_type-aware ──────────────────────────
-      // Permit-side rows (lead_type='permit' OR NULL) get permit:...
-      // CoA-side rows (lead_type='coa') stay NULL — Phase D/F populates
-      // them with coa:... lead_ids after CoA classifiers ship. The
-      // partial UNIQUE in migration 140 (WHERE lead_id IS NOT NULL)
-      // accommodates this dual-key window.
+      // ── tracked_projects: permit-side derivation only ──────────────
+      // No discriminator column exists on this table (the spec-text
+      // discriminator concept was never added by any migration; R5.3
+      // trigger-based dual-write pivot retired the design). Re-run
+      // protection lives in the tracked_projects-empty preflight above
+      // — Phase D CoA-row insertion is the boundary after which this
+      // script must not run. Until then, every row this script sees is
+      // permit-side and gets the canonical 'permit:...' derivation.
       const tp = await client.query(`
         UPDATE tracked_projects
         SET lead_id = 'permit:' || permit_num || ':' || LPAD(revision_num, 2, '0')
         WHERE lead_id IS NULL
-          AND (lead_type IS NULL OR lead_type = 'permit')
           AND permit_num IS NOT NULL
           AND revision_num IS NOT NULL
       `);
@@ -197,7 +216,7 @@ pipeline.run('migrate-to-lead-id', async (pool) => {
       {
         cost_estimates: ['permit_num', 'revision_num', 'lead_id'],
         trade_forecasts: ['permit_num', 'revision_num', 'lead_id'],
-        tracked_projects: ['permit_num', 'revision_num', 'lead_id', 'lead_type'],
+        tracked_projects: ['permit_num', 'revision_num', 'lead_id'],
         lead_analytics: ['lead_key', 'lead_id'],
       },
       {

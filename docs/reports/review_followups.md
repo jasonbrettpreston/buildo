@@ -3,6 +3,26 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## migrate-to-lead-id.js — Phase C hardening followups (WF3 2026-05-14)
+
+Source: 3-reviewer adversarial plan review on the lead_type-drift WF3 (Gemini + DeepSeek + worktree code-reviewer, user-requested adversarial). 14 findings total — 5 BUGs folded into WF3 commit, 1 INCORRECT (DeepSeek CRIT advisory-lock claim, see below), 8 DEFER below. All DEFER items are pre-existing weaknesses in `scripts/migrate-to-lead-id.js` not introduced by the WF3 fix — appropriate destination is a future Phase C hardening WF or `tasks/lessons.md` if a pattern emerges.
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| HIGH | Gemini | `lead_analytics` backfill blindly trusts `lead_key` format — should regex-check `lead_key ~ '^(permit|coa):.+$'` before copying | Pre-existing. `lead_analytics` is empty per R0.7 audit so no immediate exposure. The `chk_lead_analytics_lead_id_format` CHECK constraint (mig 134) would catch malformed values at write time even without the regex pre-filter, but the failure would be opaque (constraint violation instead of pre-filter skip). Worth hardening when `lead_analytics` starts getting populated in Phase D. |
+| HIGH | DeepSeek | Preflight only validates `permits.revision_num` length, not consumer tables — silent LPAD truncation if consumer tables have wider values | Transitively enforced: `cost_estimates.revision_num` and `trade_forecasts.revision_num` come from `permits` via FK + INSERT...SELECT, so their values mirror `permits`. Worth adding the explicit cross-table assertion if Phase E/F changes any of those write paths. |
+| MEDIUM | Gemini | Empty-string guards missing on `permit_num`/`revision_num` — could produce `'permit::01'` malformed lead_ids | Pre-existing. `chk_*_lead_id_format` CHECK (`~ '^(permit|coa):.+$'`) requires non-empty content after the colon so an empty `permit_num` would surface as a CHECK violation rather than silent corruption. Cleaner pre-filter is `AND permit_num <> ''` but not blocking. |
+| MEDIUM | Gemini | Preflight full table scan on `permits.LENGTH(revision_num) > 2` will degrade as table grows | 247K rows scans in ms today. Operational concern that emerges at 10M+ rows. |
+| MEDIUM | Gemini | `deriveLeadId` JS twin imported but not used in script (inline SQL LPAD instead) — TS/JS dual-path drift risk | Partially mitigated by the existing typeof import check at startup. Full drift-test belongs to a Spec 84 §7 follow-up that exercises the JS twin and a database wrapper function against the same input matrix. |
+| MEDIUM | DeepSeek | Post-backfill null-count check exempts `tracked_projects` without log/comment explaining why | Documentation-only — the exemption is correct (Phase D CoA rows expected to land with NULL `lead_id` until classification) but a future operator troubleshooting may misread the omission. |
+| NIT | Gemini | Spec §6.6.A LPAD truncation description contradicts implementation behavior | Spec-text edit, low blast radius. Schedule with the Phase E spec hardening pass. |
+| NIT | Gemini | Template literal `${table}` interpolation in post-backfill loop — safe here (hardcoded array) but normalizes a risky pattern | Add `// SAFETY:` comment when next-touched, or refactor to use `pg-format` `%I` identifier quoting. |
+
+**Rejected from this WF3 (DeepSeek CRITICAL — incorrect finding):**
+DeepSeek flagged the advisory-lock-vs-transaction client mismatch as a CRITICAL concurrency bug. This is incorrect: `pg_try_advisory_lock` is session-level on the lock-holding client. Any concurrent invocation of the script tries `pg_try_advisory_lock` on its own client, fails because the lock is held by another session, and exits via the §R12 SKIP path (`acquired=false`). The callback's queries running on different pool clients does not break serialization — only the database-level lock matters for cross-process serialization. Standard Spec 47 pattern shipped on 50+ scripts. No action.
+
+---
+
 ## WF1 #coa-pipeline-parity-phase-a R2.v2 Multi-Agent Review Deferred Items (2026-05-13)
 
 Source: R2.v2 re-review on `.cursor/active_task.md` + `docs/specs/01-pipeline/42_chain_coa.md` (Gemini + DeepSeek + worktree code-reviewer, after Round 1 BUG fixes + granular-first reframing + `lifecycle_status_history` unified table). 11 BUGs documented as known issues in the active task itself (under "Known Issues — Documented for Implementation"). Items below are accepted-and-deferred per user direction "B — authorize as-is with documented known issues."
