@@ -1,14 +1,20 @@
 -- 140: Phase C — add PARTIAL UNIQUE on tracked_projects.lead_id.
 --
--- Per R2 Gemini finding + Phase C C.3 dual-key consideration:
---   tracked_projects has a `lead_type` column that distinguishes permit
---   from CoA rows. Phase C backfills only permit-side lead_id. CoA-side
---   rows remain NULL until Phase D/F populates them. NOT NULL promotion
---   would fail on those NULL rows, so it is DEFERRED to Phase F.
+-- WF3 2026-05-14 amendment: prior rationale text cited a `lead_type`
+-- column on tracked_projects to justify the partial design. That column
+-- was a spec-text artifact never added by any migration; the only
+-- `lead_type` column in the schema lives on `lead_views` (migration 070,
+-- values 'permit'|'builder'). The R5.3 trigger-based dual-write pivot
+-- (commit 872ec73) retired the discriminator-column design entirely —
+-- `lead_id` prefix encoding (`permit:` vs `coa:`) is the canonical
+-- permit-vs-CoA distinction.
 --
---   The UNIQUE constraint MUST be partial (WHERE lead_id IS NOT NULL)
---   so Phase D inserts (CoA rows with NULL lead_id pre-classification)
---   don't violate it.
+-- The partial-UNIQUE design (WHERE lead_id IS NOT NULL) remains correct
+-- and is required because Phase D may insert CoA-side rows whose
+-- `lead_id` remains NULL until the CoA classifiers complete. Partial
+-- UNIQUE accommodates that pre-classification NULL window. NOT NULL
+-- promotion is therefore deferred to Phase F, after CoA classification
+-- has populated all CoA-side `lead_id` values.
 --
 -- R0.8 audit (2026-05-13): tracked_projects is currently empty (0 rows).
 -- Both the NULL pre-check and the duplicate pre-check are trivially

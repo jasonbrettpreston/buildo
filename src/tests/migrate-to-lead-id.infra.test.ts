@@ -65,8 +65,25 @@ describe('migrate-to-lead-id.js — Spec 47 §R1-R12 + Phase C R5.2 contract', (
     expect(src).toMatch(/UPDATE\s+trade_forecasts[\s\S]*?SET\s+lead_id\s*=\s*'permit:'\s*\|\|\s*permit_num\s*\|\|\s*':'\s*\|\|\s*LPAD\s*\(\s*revision_num\s*,\s*2\s*,\s*'0'\s*\)[\s\S]*?WHERE\s+lead_id\s+IS\s+NULL/i);
   });
 
-  it('backfills tracked_projects with lead_type-aware derivation (CoA rows handled by Phase D)', () => {
+  it('backfills tracked_projects with permit-side derivation; no lead_type column exists on this table', () => {
     expect(src).toMatch(/UPDATE\s+tracked_projects[\s\S]*?WHERE\s+lead_id\s+IS\s+NULL/i);
+  });
+
+  it('does not reference the nonexistent tracked_projects.lead_type column (WF3 2026-05-14 regression-lock)', () => {
+    // tracked_projects.lead_type was a spec-text artifact never added by any migration.
+    // R5.3 trigger-based dual-write pivot retired the discriminator design; lead_id
+    // prefix ('permit:' vs 'coa:') is the canonical distinction.
+    expect(src).not.toMatch(/\blead_type\b/i);
+  });
+
+  it('asserts tracked_projects is empty before backfill (one-shot preflight per Worktree C3)', () => {
+    // Script must abort with a clear error if tracked_projects has rows.
+    // tracked_projects.permit_num and revision_num are NOT NULL at schema level,
+    // so Phase D CoA rows would have valid values that the IS NOT NULL guard
+    // would not filter out. Re-running this script after Phase D classifiers
+    // populate the table would corrupt CoA rows with 'permit:...' lead_ids.
+    expect(src).toMatch(/SELECT\s+COUNT\s*\(\s*\*\s*\)[\s\S]*?FROM\s+tracked_projects/i);
+    expect(src).toMatch(/one-shot|tracked_projects[\s\S]*?has\s+rows/i);
   });
 
   it('backfills lead_analytics from lead_key (R0.7 audit: format already matches)', () => {

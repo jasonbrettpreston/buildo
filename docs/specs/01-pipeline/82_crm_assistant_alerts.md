@@ -79,7 +79,7 @@ Leads automatically leave a user's board when:
 
 ### CoA Lead Handling (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
 
-CoA-stage leads (`lead_id LIKE 'coa:%'`) require different stall thresholds, alert windows, and disappearance rules than permit-stage leads. The script branches on `lead_type`:
+CoA-stage leads (`lead_id LIKE 'coa:%'`) require different stall thresholds, alert windows, and disappearance rules than permit-stage leads. The script branches on `lead_id` prefix (`permit:` vs `coa:`):
 
 **Stall thresholds for CoA-stage:**
 - `status = 'Hearing Scheduled'` (Universal Stream B1.B / P2) can sit for 1–3 months as normal hearing-prep — NOT a stall. Use `coa_stall_threshold_p2_days` (Spec 86 logic_variable, default 90) instead of the global `coa_stall_threshold` (default 30 — which is the intake-stall threshold).
@@ -99,7 +99,7 @@ CoA-stage leads (`lead_id LIKE 'coa:%'`) require different stall thresholds, ale
 - `COA_DECISION_RENDERED`: "Variance approved — permit application expected within 12 months (typical lag)."
 - `COA_STALLED`: "CoA stalled at <status> for > <threshold> days — project may be on hold."
 
-**`tracked_projects` keying:** `lead_id` field (added Phase B) holds `'coa:<application_number>'`. Existing `lead_type` column already discriminates permits vs CoAs.
+**`tracked_projects` keying:** `lead_id` field (added Phase B) holds `'coa:<application_number>'` for CoA-side rows and `'permit:<num>:<rev>'` for permit-side rows. The `lead_id` prefix is the canonical discriminator — no `lead_type` column exists on this table (WF3 2026-05-14 amendment: the prior `lead_type` reference was a spec-text artifact; the R5.3 trigger-based dual-write pivot, commit `872ec73`, retired the discriminator-column design).
 
 ### Outputs & Notification Payload
 Mutates `tracked_projects` (status/memory) and `lead_analytics`. Generates an entry in the `notifications` table:
