@@ -106,6 +106,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'snapshot_coa_conf_high',
   'spatial_match_max_distance_m',  // E18
   'spatial_match_confidence',      // E18
+  'coa_unmatched_threshold_pct',   // WF2 R5.2 — day-1 unmatched threshold for link-coa-to-parcels
+  'coa_parcel_conf_tier1a',        // WF2 R5.2 — Tier 1a parcel match confidence
+  'coa_parcel_conf_tier1b',        // WF2 R5.2 — Tier 1b parcel match confidence
   'massing_shed_threshold_sqm',    // E19
   'massing_garage_max_sqm',        // E19
   'massing_nearest_max_distance_m', // E19

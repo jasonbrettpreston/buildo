@@ -328,6 +328,27 @@
     "min": 0.01,
     "max": 1.0
   },
+  "coa_unmatched_threshold_pct": {
+    "default": 10,
+    "type": "number",
+    "description": "Day-1 threshold (percent) for unmatched CoAs in link-coa-to-parcels (Spec 42 §6.5 step 9). Above this, audit_table verdict is WARN (not FAIL). Recalibrate post-burn-in.",
+    "min": 0,
+    "max": 100
+  },
+  "coa_parcel_conf_tier1a": {
+    "default": 0.95,
+    "type": "number",
+    "description": "Confidence score for CoA Tier 1a exact-address parcel match in link-coa-to-parcels (addr_num + street_name_normalized both match). DISTINCT from coa_match_conf_high which is consumed by link-coa.js for CoA→permit matching.",
+    "min": 0.01,
+    "max": 1.0
+  },
+  "coa_parcel_conf_tier1b": {
+    "default": 0.80,
+    "type": "number",
+    "description": "Confidence score for CoA Tier 1b name-only parcel match in link-coa-to-parcels (street_num absent, only street_name_normalized matches). DISTINCT from coa_match_conf_medium which is consumed by link-coa.js.",
+    "min": 0.01,
+    "max": 1.0
+  },
   "massing_shed_threshold_sqm": {
     "default": 20,
     "type": "number",

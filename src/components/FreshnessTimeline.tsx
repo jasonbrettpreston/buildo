@@ -33,6 +33,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   link_neighbourhoods:{ name: 'Link Neighbourhoods',   group: 'link' },
   link_massing:       { name: 'Link Massing',          group: 'link' },
   link_coa:           { name: 'Link CoA',              group: 'link' },
+  link_coa_to_parcels:{ name: 'Link CoA to Parcels',   group: 'link' },
   enrich_wsib_builders: { name: 'Enrich WSIB Matched',   group: 'link' },
   enrich_named_builders:{ name: 'Enrich Web Entities',   group: 'link' },
   enrich_wsib_registry: { name: 'Enrich WSIB Registry',  group: 'link' },
@@ -159,6 +160,10 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'assert_schema',           indent: 0 },
       { slug: 'coa',                     indent: 0 },
       { slug: 'assert_coa_freshness',   indent: 0 },
+      // WF2 R5.2 (Spec 42 §6.5 step 9) — CoA-to-parcels linking + bundled
+      // neighbourhood lookup + lat/lng back-fill. Must run BEFORE link_coa
+      // so link_coa can read parcel-derived signals if needed.
+      { slug: 'link_coa_to_parcels',     indent: 1 },
       { slug: 'link_coa',                indent: 1 },
       { slug: 'create_pre_permits',      indent: 1 },
       { slug: 'assert_pre_permit_aging', indent: 0 },

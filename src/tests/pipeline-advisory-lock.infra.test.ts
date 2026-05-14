@@ -67,6 +67,9 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // precedent (free-ID assignment when owning-spec slot taken), 114 is
   // assigned from the post-Wave-7 free range.
   'scripts/backfill-realtor-permit-trades.js': 114,
+  // Phase D Wave 4 — CoA classifiers (Spec 42 §6.8 allocation 4201-4205)
+  'scripts/link-coa-to-parcels.js':            4201,
+  // 'scripts/migrate-to-lead-id.js' = 4205 is one-shot (not a chain step; not in manifest)
   // Wave 6 — Quality / Assert
   'scripts/quality/assert-schema.js':           102,
   'scripts/quality/assert-data-bounds.js':      103,
