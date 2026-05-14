@@ -349,6 +349,13 @@
     "min": 0.01,
     "max": 1.0
   },
+  "coa_scope_unmapped_threshold_pct": {
+    "default": 10,
+    "type": "number",
+    "description": "Day-1 threshold (percent) for unmapped scope_tags in classify-coa-scope (Spec 42 §6.5 step 5). Above this, audit_table verdict is WARN (not FAIL). Recalibrate post-burn-in once production-shape data is known.",
+    "min": 0,
+    "max": 100
+  },
   "massing_shed_threshold_sqm": {
     "default": 20,
     "type": "number",

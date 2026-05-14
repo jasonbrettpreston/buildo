@@ -18,6 +18,7 @@
     "link_massing":         { "file": "scripts/link-massing.js",          "supports_full": true,  "supports_dry_run": false, "chain_args": { "sources": ["--full"] }, "telemetry_tables": ["parcel_buildings"] },
     "link_coa":             { "file": "scripts/link-coa.js",              "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["coa_applications"], "telemetry_null_cols": { "coa_applications": ["linked_permit_num"] } },
     "link_coa_to_parcels":  { "file": "scripts/link-coa-to-parcels.js",   "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["lead_parcels", "coa_applications"], "telemetry_null_cols": { "coa_applications": ["parcel_linked_at"] } },
+    "classify_coa_scope":   { "file": "scripts/classify-coa-scope.js",    "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["coa_applications"], "telemetry_null_cols": { "coa_applications": ["scope_classified_at", "scope_tags", "coa_type_class"] } },
     "enrich_wsib_builders": { "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_WSIB_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
     "enrich_named_builders":{ "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_UNMATCHED_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
     "load_wsib":            { "file": "scripts/load-wsib.js",             "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["wsib_registry"], "telemetry_null_cols": { "wsib_registry": ["trade_name", "mailing_address"] } },
@@ -71,7 +72,7 @@
       "backup_db"
     ],
     "coa": [
-      "assert_schema", "coa", "assert_coa_freshness", "link_coa_to_parcels", "link_coa", "create_pre_permits",
+      "assert_schema", "coa", "assert_coa_freshness", "link_coa_to_parcels", "classify_coa_scope", "link_coa", "create_pre_permits",
       "assert_pre_permit_aging", "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
       "classify_lifecycle_phase", "assert_lifecycle_phase_distribution", "assert_global_coverage"
     ],

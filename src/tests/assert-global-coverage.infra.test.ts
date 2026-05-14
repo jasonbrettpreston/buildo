@@ -177,13 +177,12 @@ describe('manifest.json — chain wiring', () => {
     expect(permitsChain).toHaveLength(30);
   });
 
-  it('assert_global_coverage is last step in coa chain (step 13 after R5.2 link_coa_to_parcels insertion)', () => {
-    // WF2 2026-05-14 R5.2 — +1 step (link_coa_to_parcels) inserted between
-    // assert_coa_freshness and link_coa per Spec 42 §6.5 step 9. CoA chain
-    // length is now 13.
+  it('assert_global_coverage is last step in coa chain (step 14 after R5.3 classify_coa_scope insertion)', () => {
+    // WF2 2026-05-14 R5.2 — +1 step (link_coa_to_parcels). Chain length 13.
+    // WF1 2026-05-14 R5.3 — +1 step (classify_coa_scope). Chain length now 14.
     const coaChain: string[] = manifest.chains.coa;
     expect(coaChain[coaChain.length - 1]).toBe('assert_global_coverage');
-    expect(coaChain).toHaveLength(13);
+    expect(coaChain).toHaveLength(14);
   });
 
   it('assert_global_coverage comes after assert_entity_tracing in permits chain', () => {

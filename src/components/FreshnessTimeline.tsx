@@ -34,6 +34,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   link_massing:       { name: 'Link Massing',          group: 'link' },
   link_coa:           { name: 'Link CoA',              group: 'link' },
   link_coa_to_parcels:{ name: 'Link CoA to Parcels',   group: 'link' },
+  classify_coa_scope: { name: 'Classify CoA Scope',    group: 'classify' },
   enrich_wsib_builders: { name: 'Enrich WSIB Matched',   group: 'link' },
   enrich_named_builders:{ name: 'Enrich Web Entities',   group: 'link' },
   enrich_wsib_registry: { name: 'Enrich WSIB Registry',  group: 'link' },
@@ -161,9 +162,13 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'coa',                     indent: 0 },
       { slug: 'assert_coa_freshness',   indent: 0 },
       // WF2 R5.2 (Spec 42 §6.5 step 9) — CoA-to-parcels linking + bundled
-      // neighbourhood lookup + lat/lng back-fill. Must run BEFORE link_coa
-      // so link_coa can read parcel-derived signals if needed.
+      // neighbourhood lookup + lat/lng back-fill. Must run BEFORE link_coa.
       { slug: 'link_coa_to_parcels',     indent: 1 },
+      // WF1 R5.3 (Spec 42 §6.5 step 5) — description-keyword scope classifier
+      // (coa_type_class, project_type, scope_tags). Must run AFTER
+      // link_coa_to_parcels per §6.8 lock-ID ordering (4201 → 4202) and
+      // BEFORE classify_coa_trades (R5.4) which gates on scope_classified_at.
+      { slug: 'classify_coa_scope',      indent: 1 },
       { slug: 'link_coa',                indent: 1 },
       { slug: 'create_pre_permits',      indent: 1 },
       { slug: 'assert_pre_permit_aging', indent: 0 },
