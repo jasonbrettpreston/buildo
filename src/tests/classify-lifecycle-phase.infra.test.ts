@@ -58,14 +58,18 @@ describe('scripts/classify-lifecycle-phase.js — pipeline shape', () => {
     expect(content).not.toMatch(/const\s+(?:now|RUN_AT)\s*=\s*new Date\(\)/);
   });
 
-  it('derives PERMIT_BATCH_SIZE from Math.floor formula (not a hardcoded magic number)', () => {
-    // §6.3: batch sizes MUST be computed via Math.floor(65535 / column_count).
-    // Hardcoded magic numbers (e.g. 500, 1000) bypass the guard and become
-    // stale when column counts change.
+  it('derives PERMIT_BATCH_SIZE from Math.floor formula; COA_BATCH_SIZE is heap-bounded (E.2 unnest form)', () => {
+    // §6.3: VALUES-form batch sizes MUST be computed via Math.floor(65535 / column_count).
+    // PERMIT_BATCH_SIZE still uses VALUES form — formula required.
     expect(content).toMatch(/PERMIT_BATCH_SIZE\s*=\s*Math\.floor\(/);
-    expect(content).toMatch(/COA_BATCH_SIZE\s*=\s*Math\.floor\(/);
     expect(content).not.toMatch(/const PERMIT_BATCH_SIZE\s*=\s*\d+;/);
-    expect(content).not.toMatch(/const COA_BATCH_SIZE\s*=\s*\d+;/);
+    // Phase E.2: COA_BATCH_SIZE uses unnest array form — 13 fixed bind params
+    // regardless of batch size, so the 65535 param-count formula does NOT apply.
+    // Batch size is memory-bounded (5000 rows × ~3 MB heap per batch); the
+    // const is intentionally a heap-tuned number, not a Math.floor formula.
+    // Documented in scripts/classify-lifecycle-phase.js header comment.
+    expect(content).toMatch(/COA_BATCH_SIZE\s*=\s*5000/);
+    expect(content).toMatch(/heap-bounded/);
   });
 
   it('uses pipeline.run wrapper with correct name', () => {
@@ -152,10 +156,14 @@ describe('scripts/classify-lifecycle-phase.js — pipeline shape', () => {
     );
   });
 
-  it('uses IS DISTINCT FROM guard for CoA UPDATE idempotency', () => {
-    expect(content).toMatch(
-      /ca\.lifecycle_phase IS DISTINCT FROM v\.phase/,
-    );
+  it('uses IS DISTINCT FROM guard for CoA UPDATE idempotency (E.2 unnest form, alias upd)', () => {
+    // Phase E.2: VALUES-form alias `v` replaced with unnest alias `upd`.
+    // IS DISTINCT FROM expanded to cover all 11 catalog-derived columns
+    // (catalog evolution may shift seq/group/block/stage without phase change).
+    expect(content).toMatch(/ca\.lifecycle_phase\s+IS DISTINCT FROM upd\.phase/);
+    expect(content).toMatch(/ca\.lifecycle_seq\s+IS DISTINCT FROM upd\.lifecycle_seq/);
+    expect(content).toMatch(/ca\.matched_status\s+IS DISTINCT FROM upd\.matched_status/);
+    expect(content).toMatch(/ca\.matched_rule\s+IS DISTINCT FROM upd\.matched_rule/);
   });
 
   it('bumps lifecycle_classified_at on already-correct rows to prevent re-examination', () => {
