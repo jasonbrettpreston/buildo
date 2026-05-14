@@ -3,6 +3,26 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## migrate-to-lead-id.js + deriveLeadId — LPAD-collision WF3 follow-ups (2026-05-14)
+
+Source: 3-reviewer adversarial plan review on WF3 #lpad-revision-num-collision (Gemini + DeepSeek + worktree feature-dev:code-reviewer, user-requested adversarial). 14 findings total — 6 BUGs folded into the WF3 commit (administrative-exclusion + LPAD-collision preflight + Spec 42 §6.6.A.1 truncation correction + 4 plan refinements), 1 REJECTED (see below), 8 DEFER below.
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| HIGH | Gemini | tracked_projects-empty preflight (from prior WF3 #migrate-to-lead-id-lead-type-drift) is "overly restrictive — remove it; per-UPDATE `WHERE` clauses are sufficient" | **REJECTED**: the preflight was added by the prior WF3 as the Worktree C3 fix to enforce one-shot semantics after the R5.3 trigger-based dual-write pivot. Removing it would re-introduce the corruption risk for future Phase D CoA rows that have valid permit_num/revision_num (schema NOT NULL) but should not be backfilled with `'permit:...'` lead_ids. The per-UPDATE guards alone are insufficient because the schema permits valid permit_num/revision_num on CoA rows. Documented here so the finding isn't re-raised. |
+| MED | Gemini | tracked_projects post-backfill null-count check is asymmetric — should also detect rows that SHOULD have been backfilled but weren't | Observability gap, not introduced by this WF3. Add a positive assertion (`COUNT(*) WHERE lead_id IS NULL AND permit_num IS NOT NULL AND revision_num IS NOT NULL = 0`) when next-touched. |
+| LOW | Gemini | `LPAD(revision_num, 2, '0')` takes implicit cast on a text column — explicit `::text` cast would be more robust | Schema confirms `revision_num VARCHAR(10)`; implicit cast is safe. Style improvement to apply when next-touched. |
+| NIT | Gemini | Multiple separate COUNT preflight queries — combine into a single round-trip with UNION/CASE | Micro-optimization for a one-shot script that runs in seconds. |
+| MED | DeepSeek | `deriveLeadId` does not `.trim()` `permit_num` / `application_number` — silent corruption risk on whitespace-bearing values | Pre-existing data-hygiene concern. No evidence of whitespace in production data; CHECK constraints on lead_id format would catch most cases. |
+| MED | DeepSeek | `typeof input === 'object'` allows arrays (`typeof [] === 'object'`). Defensive guard recommended | Style. Array inputs are not produced by any caller in the current codebase. |
+| LOW | DeepSeek | Mixed use of `String(...)` wrapping — consistency suggests applying it to all three input fields | Style; both forms work for the validated-truthy inputs. |
+| NIT | DeepSeek | JSDoc on `deriveLeadId` missing `@throws`; consider enriching error messages with the bad value | Documentation polish. |
+
+**Documented invariant (carried forward to future LPAD-policy hardening WFs):**
+The canonical `permit:<num>:LPAD(rev,2,'0')` form requires `LENGTH(revision_num) ≤ 2` AND `revision_num` to be a 2-char zero-padded string for the "first revision" (`'00'` not `'0'`). Production ingestion must produce values in this canonical form. The migrate-to-lead-id.js script enforces both invariants at preflight. Future ingestion scripts that write to `permits.revision_num` (e.g. `scripts/load-permits.js`) should normalize to the 2-char zero-padded form upstream — this work was DEFERRED to a future Phase C/H hardening WF.
+
+---
+
 ## migrate-to-lead-id.js — Phase C hardening followups (WF3 2026-05-14)
 
 Source: 3-reviewer adversarial plan review on the lead_type-drift WF3 (Gemini + DeepSeek + worktree code-reviewer, user-requested adversarial). 14 findings total — 5 BUGs folded into WF3 commit, 1 INCORRECT (DeepSeek CRIT advisory-lock claim, see below), 8 DEFER below. All DEFER items are pre-existing weaknesses in `scripts/migrate-to-lead-id.js` not introduced by the WF3 fix — appropriate destination is a future Phase C hardening WF or `tasks/lessons.md` if a pattern emerges.

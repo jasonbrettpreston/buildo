@@ -72,6 +72,36 @@ pipeline.run('migrate-to-lead-id', async (pool) => {
       throw new Error(`${TAG} preflight FAIL: ${overWide} permit row(s) have revision_num longer than 2 chars. LPAD-truncation would cause lead_id collisions. Investigate before retrying.`);
     }
 
+    // ── WF3 #lpad-revision-num-collision preflight (2026-05-14) ─────────
+    // Detects future drift: when two non-administrative permits share a
+    // permit_num and their revision_num values LPAD to the same canonical
+    // form (e.g. '0' and '00' both → '00'), they collide on lead_id.
+    // Administrative-class permits are excluded here because they no
+    // longer participate in the lead_id ecosystem after migration 138_a
+    // — their permit_type_class filter is applied below in the UPDATE
+    // statements as well.
+    //
+    // R8 review fix (Worktree #3): LEFT JOIN + IS DISTINCT FROM. The
+    // prior INNER JOIN + `!= 'administrative'` would silently exclude
+    // any permits whose permit_type has no row in permit_type_classifications
+    // (currently zero such rows per R0 audit, but defensive against
+    // future drift — a new permit_type ingested without a classification
+    // row would otherwise bypass the collision check).
+    const lpadCollision = await pool.query(`
+      SELECT COUNT(*)::int AS n FROM (
+        SELECT p.permit_num, LPAD(p.revision_num, 2, '0') AS canonical_rev
+          FROM permits p
+          LEFT JOIN permit_type_classifications ptc ON ptc.permit_type = p.permit_type
+         WHERE ptc.class IS DISTINCT FROM 'administrative'
+         GROUP BY p.permit_num, LPAD(p.revision_num, 2, '0')
+        HAVING COUNT(*) > 1
+      ) c
+    `);
+    const collisionCount = lpadCollision.rows[0]?.n ?? 0;
+    if (collisionCount > 0) {
+      throw new Error(`${TAG} preflight FAIL: ${collisionCount} LPAD collision group(s) detected in non-administrative permits. Two distinct revision_num values normalize to the same LPAD-canonical form. Investigate before retrying.`);
+    }
+
     // ── WF3 2026-05-14 one-shot preflight (Worktree C3) ──────────────
     // tracked_projects.permit_num and revision_num are NOT NULL at schema
     // level (NOT NULL drop deferred to Phase F). Phase D classifiers
@@ -111,24 +141,50 @@ pipeline.run('migrate-to-lead-id', async (pool) => {
       // either column produces zero rows updated rather than a
       // NULL-propagated 'permit:NULL:00' value that would silently
       // pass the post-condition.
+      //
+      // WF3 #lpad-revision-num-collision (2026-05-14): exclude
+      // administrative-class permits. Mig 138_a has already deleted
+      // them from cost_estimates; this filter is defensive against
+      // future ingestion. Completes the pattern already established by
+      // classify-permits.js (gate on construction class for trade writes)
+      // and compute-cost-estimates.js (cost_source='none' for admin).
       const ce = await client.query(`
-        UPDATE cost_estimates
-        SET lead_id = 'permit:' || permit_num || ':' || LPAD(revision_num, 2, '0')
-        WHERE lead_id IS NULL
-          AND permit_num IS NOT NULL
-          AND revision_num IS NOT NULL
+        UPDATE cost_estimates ce
+        SET lead_id = 'permit:' || ce.permit_num || ':' || LPAD(ce.revision_num, 2, '0')
+        WHERE ce.lead_id IS NULL
+          AND ce.permit_num IS NOT NULL
+          AND ce.revision_num IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM permits p
+              JOIN permit_type_classifications ptc ON ptc.permit_type = p.permit_type
+             WHERE p.permit_num = ce.permit_num
+               AND p.revision_num = ce.revision_num
+               AND ptc.class = 'administrative'
+          )
       `);
       result.cost_estimates = ce.rowCount ?? 0;
       pipeline.log.info(TAG, `cost_estimates backfilled: ${result.cost_estimates} rows`);
 
       // ── trade_forecasts: same shape (heaviest table, ~654K rows) ────
       // Same defensive NOT NULL guards as cost_estimates.
+      // R8 Gemini CRIT (2026-05-14): mirror the admin-class NOT EXISTS
+      // exclusion from cost_estimates. R0 audit confirmed zero admin
+      // rows exist in trade_forecasts today (classify-permits.js gate
+      // on construction class prevents them upstream), so this filter
+      // is defensive — it enforces the invariant at this write site too.
       const tf = await client.query(`
-        UPDATE trade_forecasts
-        SET lead_id = 'permit:' || permit_num || ':' || LPAD(revision_num, 2, '0')
-        WHERE lead_id IS NULL
-          AND permit_num IS NOT NULL
-          AND revision_num IS NOT NULL
+        UPDATE trade_forecasts tf
+        SET lead_id = 'permit:' || tf.permit_num || ':' || LPAD(tf.revision_num, 2, '0')
+        WHERE tf.lead_id IS NULL
+          AND tf.permit_num IS NOT NULL
+          AND tf.revision_num IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM permits p
+              JOIN permit_type_classifications ptc ON ptc.permit_type = p.permit_type
+             WHERE p.permit_num = tf.permit_num
+               AND p.revision_num = tf.revision_num
+               AND ptc.class = 'administrative'
+          )
       `);
       result.trade_forecasts = tf.rowCount ?? 0;
       pipeline.log.info(TAG, `trade_forecasts backfilled: ${result.trade_forecasts} rows`);
@@ -142,11 +198,18 @@ pipeline.run('migrate-to-lead-id', async (pool) => {
       // script must not run. Until then, every row this script sees is
       // permit-side and gets the canonical 'permit:...' derivation.
       const tp = await client.query(`
-        UPDATE tracked_projects
-        SET lead_id = 'permit:' || permit_num || ':' || LPAD(revision_num, 2, '0')
-        WHERE lead_id IS NULL
-          AND permit_num IS NOT NULL
-          AND revision_num IS NOT NULL
+        UPDATE tracked_projects tp
+        SET lead_id = 'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num, 2, '0')
+        WHERE tp.lead_id IS NULL
+          AND tp.permit_num IS NOT NULL
+          AND tp.revision_num IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM permits p
+              JOIN permit_type_classifications ptc ON ptc.permit_type = p.permit_type
+             WHERE p.permit_num = tp.permit_num
+               AND p.revision_num = tp.revision_num
+               AND ptc.class = 'administrative'
+          )
       `);
       result.tracked_projects = tp.rowCount ?? 0;
       pipeline.log.info(TAG, `tracked_projects backfilled: ${result.tracked_projects} rows`);
@@ -166,12 +229,13 @@ pipeline.run('migrate-to-lead-id', async (pool) => {
       pipeline.log.info(TAG, `lead_analytics backfilled: ${result.lead_analytics} rows`);
 
       // ── Post-backfill invariant checks ────────────────────────────
-      // After backfill, the only NULL lead_id rows that should remain
-      // are tracked_projects rows for which permit_num/revision_num are
-      // both NULL (impossible per current schema) OR future CoA rows
-      // (not yet inserted). The cost_estimates / trade_forecasts /
-      // lead_analytics tables must have zero NULLs.
-      for (const table of ['cost_estimates', 'trade_forecasts', 'lead_analytics']) {
+      // After backfill, ALL non-administrative rows in every consumer
+      // table must have a populated lead_id. tracked_projects is
+      // checked too — the WF3 one-shot preflight aborts before
+      // backfill if tracked_projects has any rows, so post-backfill it
+      // should also have zero NULL lead_id rows (R8 Gemini MED 2026-05-14
+      // tightening of the prior asymmetric check).
+      for (const table of ['cost_estimates', 'trade_forecasts', 'tracked_projects', 'lead_analytics']) {
         const check = await client.query(
           `SELECT COUNT(*)::int AS n FROM ${table} WHERE lead_id IS NULL`,
         );
