@@ -26,16 +26,32 @@ describe('migration 139 — promote trade_forecasts.lead_id NOT NULL + UNIQUE (P
     expect(sql).toMatch(/SELECT\s+COUNT\(\*\)\s+INTO\s+null_count\s+FROM\s+trade_forecasts\s+WHERE\s+lead_id\s+IS\s+NULL[\s\S]*?RAISE\s+EXCEPTION/i);
   });
 
-  it('Stage 2: duplicate pre-check', () => {
-    expect(sql).toMatch(/DO\s+\$\$[\s\S]*?trade_forecasts[\s\S]*?GROUP\s+BY\s+lead_id\s+HAVING\s+COUNT\(\*\)\s*>\s*1[\s\S]*?RAISE\s+EXCEPTION/i);
+  it('Stage 2: composite duplicate pre-check on (lead_id, trade_slug) per Spec 42 §6.6.C (WF3 #mig-139-composite-unique)', () => {
+    expect(sql).toMatch(/DO\s+\$\$[\s\S]*?trade_forecasts[\s\S]*?GROUP\s+BY\s+lead_id\s*,\s*trade_slug\s+HAVING\s+COUNT\(\*\)\s*>\s*1[\s\S]*?RAISE\s+EXCEPTION/i);
+  });
+
+  it('Stage 2: dup pre-check surfaces a sample of dup (lead_id, trade_slug) pairs (R8 DeepSeek LOW)', () => {
+    // Operator debugging needs the actual values, not just the count.
+    expect(sql).toMatch(/string_agg[\s\S]*?lead_id[\s\S]*?trade_slug/i);
+    expect(sql).toMatch(/Sample:/i);
   });
 
   it('ALTERs trade_forecasts.lead_id SET NOT NULL', () => {
     expect(sql).toMatch(/ALTER\s+TABLE\s+trade_forecasts\s+ALTER\s+COLUMN\s+lead_id\s+SET\s+NOT\s+NULL/i);
   });
 
-  it('creates uniq_trade_forecasts_lead_id CONCURRENTLY', () => {
-    expect(sql).toMatch(/CREATE\s+UNIQUE\s+INDEX\s+CONCURRENTLY\s+IF\s+NOT\s+EXISTS\s+uniq_trade_forecasts_lead_id\s+ON\s+trade_forecasts\s*\(\s*lead_id\s*\)/i);
+  it('drops the prior single-column uniq_trade_forecasts_lead_id (stale-local-state cleanup, R8 Worktree #3)', () => {
+    // Defensive against any local DB that applied the broken pre-WF3 version
+    // against an empty trade_forecasts (trivially passed Stage-2 pre-check).
+    expect(sql).toMatch(/DROP\s+INDEX\s+CONCURRENTLY\s+IF\s+EXISTS\s+uniq_trade_forecasts_lead_id\b(?!_trade)/i);
+  });
+
+  it('creates uniq_trade_forecasts_lead_id_trade with composite (lead_id, trade_slug) CONCURRENTLY (Spec 42 §6.6.C)', () => {
+    expect(sql).toMatch(/CREATE\s+UNIQUE\s+INDEX\s+CONCURRENTLY\s+IF\s+NOT\s+EXISTS\s+uniq_trade_forecasts_lead_id_trade\s+ON\s+trade_forecasts\s*\(\s*lead_id\s*,\s*trade_slug\s*\)/i);
+  });
+
+  it('does NOT create a single-column UNIQUE on lead_id (anti-regression — Spec 42 §6.6.C requires composite)', () => {
+    expect(sql).not.toMatch(/CREATE\s+UNIQUE\s+INDEX\s+CONCURRENTLY\s+IF\s+NOT\s+EXISTS\s+uniq_trade_forecasts_lead_id\s+ON\s+trade_forecasts\s*\(\s*lead_id\s*\)/i);
   });
 
   it('drops Phase B partial idx_trade_forecasts_lead_id CONCURRENTLY', () => {
