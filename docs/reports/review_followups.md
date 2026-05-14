@@ -3,6 +3,47 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## mig 139 — Phase C composite-UNIQUE WF3 follow-ups (2026-05-14)
+
+Source: 3-reviewer reviews across two passes (plan + diff). Plan-review findings already triaged in the active task. Diff-review (post-Fix) findings appended below:
+
+**Diff-review (post-Fix) triage (Gemini + DeepSeek + worktree, 2026-05-14):**
+
+Worktree verdict: **GO** with no issues found (all 8 checklist items PASS).
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| **CRIT** | Gemini diff | Race condition: CREATE UNIQUE INDEX CONCURRENTLY runs in its own implicit transaction; a concurrent insert between Stage-2 pre-check and index validation could introduce a dup pair, failing the build mid-stream | **DEFER (already covered in plan-review)**: deploys run quiet; chain orchestrator advisory locks prevent concurrent pipeline writes. The composite Stage-2 check now matches the index shape exactly, so any racy insert that *could* land a dup would also have to bypass the existing PK `(permit_num, revision_num, trade_slug)` which is impossible by construction. |
+| **HIGH** | Gemini diff | `ALTER TABLE ... SET NOT NULL` acquires ACCESS EXCLUSIVE and full-scans 654K rows → service outage on a live system. Suggested pattern: `ADD CONSTRAINT ... CHECK (col IS NOT NULL) NOT VALID` → `VALIDATE CONSTRAINT` → `SET NOT NULL` (now metadata-only) → `DROP CONSTRAINT` | **DEFER project-wide**: sibling mig 138 (already shipped at commit `4b9ff32`) uses the same direct `SET NOT NULL` pattern; changing only mig 139 to the zero-downtime pattern is inconsistent. File a project-wide hardening WF that retrofits all Phase B/C NOT NULL promotions (mig 138/139/140/141) to the NOT VALID + VALIDATE pattern in one atomic change. |
+| MED | Gemini diff | Stage-2 dup pre-check executes the same `GROUP BY (lead_id, trade_slug) HAVING COUNT > 1` twice (count + sample lookup) — wasteful on 654K-row scans in the abort path | **DEFER**: the dup-sample path only runs on Stage-2 FAILURE (the rare error case). The healthy path runs the GROUP BY once. A CTE/MATERIALIZED rewrite would have to be carefully shaped because CTE scope ends at statement boundary — Gemini's suggested form `WITH duplicates AS (...) SELECT COUNT(*) FROM duplicates; IF ... SELECT ... FROM duplicates` is invalid SQL (the CTE doesn't persist across the IF boundary). |
+| MED | Gemini diff | Order: ALTER SET NOT NULL before CREATE UNIQUE INDEX CONCURRENTLY — if the index build fails (which is the most likely step), the table is left half-migrated | **BUG → folded**: reordered to run CREATE INDEX before ALTER SET NOT NULL. If CREATE fails, table stays nullable for easier rollback. |
+| MED | DeepSeek diff | `SET LOCAL statement_timeout` "persists for the remainder of the database connection" | **REJECTED — incorrect**: `SET LOCAL` is scoped to the current transaction and reverts on commit/rollback per PostgreSQL semantics. DeepSeek conflated with `SET` (session-level). The migration runner's connection-reuse behavior is irrelevant. |
+| MED | DeepSeek diff | `CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS` could leave an "INVALID" index after racy insert | **DEFER**: same as Gemini CRIT — race-condition concern at deploy time. Project's existing deploy contract (quiet maintenance window + advisory lock orchestration) covers this. |
+| LOW | DeepSeek diff | `DROP INDEX CONCURRENTLY` could block on a conflicting lock | **DEFER**: operational concern; `IF EXISTS` already handles missing-index case. |
+| LOW | DeepSeek diff | DOWN block irreversible (comment-only) | **DEFER**: project convention per Rule 6 / commit 8b1c10b — all migrations use comment-only DOWN. Consistent with mig 132, 138, 140, 142, 145. |
+| HIGH | DeepSeek diff | Composite UNIQUE not yet promoted to PRIMARY KEY → Phase H gap | **DEFER**: Spec 42 §6.6 explicitly plans the PK swap in Phase H. This migration is the prerequisite that creates the index in the correct shape; the PK swap will use `ALTER TABLE ... ADD PRIMARY KEY USING INDEX uniq_trade_forecasts_lead_id_trade` in Phase H. Working as designed. |
+| LOW | Gemini diff | Redundant `WHERE lead_id IS NOT NULL` in Stage 2 pre-check (Stage 1 already guarantees no NULLs) | **DEFER**: belt-and-suspenders defensive coding — Stage 1 aborts if NULLs present, but the explicit WHERE in Stage 2 makes the query stand alone if it's ever copied to another context. Style preference. |
+| NIT | DeepSeek diff | Colon separator `lead_id || ':' || trade_slug` in dup sample is ambiguous if either contains a colon | **DEFER**: trade_slug values are slugified (no colons). Cosmetic. |
+| NIT | DeepSeek diff | `IF NOT EXISTS` on `CREATE INDEX CONCURRENTLY` not standard SQL | **DEFER**: PostgreSQL extension, supported on all targeted versions. Style. |
+
+**Plan-review triage (carried over):**
+12 findings — 4 BUGs folded inline, 2 REJECTED (see below), 6 DEFER (5 below + 1 documented in #7).
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| HIGH | DeepSeek | `SET LOCAL statement_timeout` doesn't apply because the file runs non-transactionally (per `scripts/migrate.js:195`, CONCURRENTLY-containing files split into individual statements, each in its own implicit transaction; `SET LOCAL` scope is the current transaction only) | **DEFER**: technically correct but no real impact in practice — sibling mig 138 has the same structure and applied in 1366ms. Project-wide cleanup opportunity: either (a) move `SET LOCAL` into each DO block that needs it, or (b) drop the SET LOCAL and rely on database default. Either way is bigger than this WF3. |
+| NIT | DeepSeek | 5min timeout estimate is stale; production table may have grown | **DEFER**: 654K rows builds in <60s on dev hardware; 5min is generous. Re-evaluate before any prod-equivalent deploy. |
+| NIT | DeepSeek | SET LOCAL placement before the DO blocks is logically inconsistent | **DEFER**: subsumed by HIGH SET LOCAL no-op finding. |
+| MED | Gemini | Race condition between pre-checks and DDL (concurrent inserts could land between Stage-2 check passing and CREATE UNIQUE INDEX building) | **DEFER**: deploys run against quiet systems with chain orchestrator advisory locks preventing concurrent pipeline writes. The CONCURRENTLY index build itself is concurrent-safe; if a writer slips in a duplicate during the build window, the CONCURRENTLY operation marks the index invalid and the migration runner surfaces the error rather than committing a corrupt index. |
+| LOW | Gemini | DOWN block restores the partial index but original may have been a full index | **DEFER**: original index was the Phase B partial `WHERE lead_id IS NOT NULL` (verified via mig 134 line 69 — not a full index). DOWN is correct. |
+| CRIT/HIGH/MED/LOW | Gemini | Spec §6.6.A LPAD truncation / dual-ledger / DEFAULT NOW() / Phase H big-bang / lifecycle_status_history idempotency | **OUT OF SCOPE**: these are Spec 42 §6.6.B + Spec 84 + Spec 85 architectural concerns; mig 139 doesn't touch them. Spec §6.6.A LPAD finding was already addressed in prior WF3 commit `4b9ff32` (Spec 42 §6.6.A.1 amended to document actual truncation semantics). |
+
+**REJECTED findings (2):**
+- **DeepSeek CRIT** *"`CREATE UNIQUE INDEX CONCURRENTLY` cannot run inside a transaction block — the migration will fail"*: **INCORRECT**. `scripts/migrate.js:195` explicitly detects `CONCURRENTLY` keyword and routes the file non-transactionally (splits top-level statements; each runs in its own implicit transaction). Same pattern as mig 132 + mig 138 which both applied cleanly. DeepSeek assumed a generic migration runner that wraps everything in BEGIN/COMMIT.
+- **DeepSeek MED** *"`DROP INDEX CONCURRENTLY` same transaction concern"*: REJECTED for the same reason as above — derivative of the (rejected) CRIT finding.
+
+---
+
 ## migrate-to-lead-id.js + deriveLeadId — LPAD-collision WF3 follow-ups (2026-05-14)
 
 Source: 3-reviewer adversarial plan review on WF3 #lpad-revision-num-collision (Gemini + DeepSeek + worktree feature-dev:code-reviewer, user-requested adversarial). 14 findings total — 6 BUGs folded into the WF3 commit (administrative-exclusion + LPAD-collision preflight + Spec 42 §6.6.A.1 truncation correction + 4 plan refinements), 1 REJECTED (see below), 8 DEFER below.
