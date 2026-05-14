@@ -237,7 +237,9 @@ Source field: `coa_applications.decision` (CoA portal feed). Read by `classifyCo
 
 Source field: `coa_applications.status` (CoA portal feed). The Committee of Adjustment is a quasi-judicial body that hears minor-variance and consent (lot-severance) applications. Workflow is parallel to permits but ends with a public-hearing decision instead of an issuance, and the post-decision appeal track has its own multi-month run-times.
 
-> **CRITICAL FLAG:** This column is **passed into `classifyCoaPhase()` but never read** — `input.status` is unreferenced in the function body (`scripts/lib/lifecycle-phase.js:371-401`). Every value below has the same "Current code maps to" because the column is structurally ignored. The spec §3.1 text mentioning "Internal Review" and "Public Hearing Scheduled" was written against this column's values but never wired up. Resolved in queued WF3 #coa-classifier-coverage Fix A.
+> **HISTORICAL FLAG (RESOLVED 2026-05-14 in Phase E.1):** This column was **passed into `classifyCoaPhase()` but never read** pre-E.1 — `input.status` was unreferenced in the function body. Every value below shows "NOT READ" in the "Current code maps to" column as a historical record of the pre-E.1 state. **As of Phase E.1 (2026-05-14, commit anchor TBD), the column IS READ** and maps to the "Definition / Spec-intended" target via Spec 42 §6.7 step 1 (9-rule precedence). The "Current code maps to" cells should now be interpreted as "Pre-E.1 mapping" — the active mapping is the spec column.
+>
+> **Post-E.1 mapping summary (matches spec column exactly):** intake (rows 70-71) → P1 (rule 8); review/scheduling (72-78) → P2 (rule 7); approved (79-81) → P3 (rule 5); refused (82) → P19 (rule 2); Final and Binding (83) → P4 (rule 3); post-decision appeal (84-87) → P3 (rule 4); terminal P19 (88-89) → P19 (rule 2); terminal P20 (90-91) → P20 (rule 1).
 
 **Unified row numbering:** Rows are numbered **70–91** (22 statuses) to share a single namespace with §2.5.a (permits, rows 1–53). The gap 54–69 is reserved for permit-side expansion (e.g., the `INTAKE_P3/P4/P5` split when bug 84-W11 is resolved).
 
@@ -364,7 +366,7 @@ These six columns shape the output of `classifyLifecyclePhase()` / `classifyCoaP
 | 1 | `permits.issued_date` | `classifyBldLed()` | Drives time-bucketing of `Permit Issued` into P7a (≤30d), P7b (31-90d), P7c (>90d). Threshold values from `logic_variables.lifecycle_p7a_max_days` / `_p7b_max_days`. |
 | 2 | `permit_inspections.inspection_date` | `computeStalled()` | When permit `status = 'Inspection'` and most-recent inspection_date is older than `logic_variables.lifecycle_inspection_stall_days` (default 180), the row's `lifecycle_stalled` flips to `true`. Does not change phase; sets the stall flag. |
 | 3 | `coa_applications.last_seen_at` | `classifyCoaPhase()` | Stall detection for in-flight CoAs (P1/P2 only): `daysSinceActivity > logic_variables.coa_stall_threshold` (default 30) → `lifecycle_stalled = true`. |
-| 4 | `coa_applications.linked_permit_num` | `classifyCoaPhase()` | **The 84-W12 root cause.** When non-null, the function short-circuits and returns `phase = null` regardless of decision. 99.4% of CoAs have this set, so 32,865 of 33,052 CoAs have NULL `lifecycle_phase`. Slated for removal in queued Fix A. |
+| 4 | `coa_applications.linked_permit_num` | `classifyCoaPhase()` | **The 84-W12 root cause — REMOVED 2026-05-14 in Phase E.1.** Pre-E.1 logic short-circuited when this column was non-null, returning `phase = null` regardless of decision/status. 99.4% of CoAs had this set, causing 32,865 of 33,052 CoAs to receive NULL `lifecycle_phase`. The fix removes Rule 0 entirely — a linked CoA has its own lifecycle (Spec 42 §6.6.X two-flow design: linked CoAs are valid Flow B applications with independent classifications, NOT terminal states). See E.1 commit anchor + 84-W12 resolution note. The `linked_permit_num` column itself is preserved — it now drives lead-identity continuity (lat/long/ward inheritance per Spec 42 §6.6.X) but no longer short-circuits the classifier. |
 | 5 | `permits.permit_num` suffix + prefix structure | `computeIsOrphan()` | Two-stage check: (1) if the permit_num `endsWith(' BLD')` or `endsWith(' CMB')`, it is a parent permit and never an orphan; (2) otherwise (HVA, PLB, MS, DSS, etc.), the first two space-delimited tokens form a `YY NNNNNN` prefix that is looked up against the BLD/CMB sibling map — if no sibling parent exists at that prefix, the row is an orphan (O1/O2/O3) and follows a different progression track entirely. |
 | 6 | `permits.enriched_status = 'Stalled'` | `computeStalled()` | Single sentinel value (1,532 of 247,030 rows). Overrides the date-based stall computation: when present, sets `lifecycle_stalled = true` regardless of `issued_date` or `inspection_date`. |
 
@@ -1017,16 +1019,32 @@ Source: `scripts/lib/lifecycle-phase.js` `TRADE_TARGET_PHASE_FALLBACK` (compile-
 
 ### 1. The Planning & Variance Block (Pre-Permit)
 
-**CoA-side phase emission rules** (Phase E classifier — `classifyCoaPhase()` in `scripts/lib/lifecycle-phase.js`):
+**CoA-side phase emission rules** (Phase E.1 classifier — `classifyCoaPhase()` in `scripts/lib/lifecycle-phase.js`, rewritten 2026-05-14 per Spec 42 §6.7 step 1 9-rule precedence).
 
-| Phase | Name | Trigger Signal / Logic (precedence order) |
+Rules are top-down, first match wins. Decision-driven rules derive `matchedStatus` via `NORMALIZED_DECISION_TO_STATUS_MAP` (18 explicit entries) so E.2's catalog lookup always resolves to a canonical CoA status.
+
+| Rule | Phase | Name | Trigger Signal / Logic |
+|---|---|---|---|
+| 1 | P20 | CoA Terminal (Closed) | `status IN {'Closed', 'Complete'}` OR `decision IN {'closed', 'application closed', 'delegated consent closed'}` |
+| 2 | P19 | CoA Terminal (Refused / Withdrawn / Cancelled) | `status IN {'Refused', 'Application Withdrawn', 'Cancelled'}` OR `decision IN {'refused', 'withdrawn', 'application withdrawn', 'delegated consent refused'}` |
+| 3 | P4 | CoA Final and Binding | `status = 'Final and Binding'` OR `decision = 'final and binding'` (appeal period cleared, legally binding) |
+| 4 | P3 | CoA Post-Decision (Appealed / TLAB / OMB / Await Expiry) | `status IN {'Await Expiry Date', 'Appealed', 'TLAB Appeal', 'OMB Appeal'}` — reordered above rule 5 because post-decision states are MORE RECENT than the approval that preceded them |
+| 5 | P3 | CoA Approved | `status IN {'Approved', 'Approved with Conditions', 'Conditional Consent'}` OR `decision IN NORMALIZED_APPROVED_DECISIONS` (18 variants incl. typos: 'conditional consent', 'consent with conditions', + 16 existing) |
+| 6 | P2 | CoA Deferred (decision-driven) | `isDeferredDecisionVariant(decision)` — canonical `'deferred'` / `'deffered'` (§2.5.b row 53 typo) + 505 date-stamped variants via `startsWith('deferred ')` + `'decision not made'` outlier (§2.5.b row 54). Negative-guarded against P19/P20/FaB/Approved sets. Reordered above rule 7 because decision is more authoritative than scheduling status |
+| 7 | P2 | CoA Review (status-driven) | `status IN {'Prepare Notice', 'Notice Prepared', 'Tentatively Scheduled', 'Hearing Scheduled', 'Hearing Rescheduled', 'Postponed', 'Deferred'}` |
+| 8 | P1 | CoA Intake | `status IN {'Application Received', 'Accepted'}` |
+| 9 | P1 | catchall (unmapped) | All other inputs → P1 + `unmappedStatus: true` (if status non-null) and/or `unmappedDecision: true` (if decision non-null) + `matchedStatus: null` (NOT a sentinel — drives `mapToUniversalStream` to return null → E.2 writes `lifecycle_seq = NULL` correctly). Surfaces in `unmapped_status_count` / `unmapped_decision_count` audit metrics for triage. |
+
+**Return shape:** `{phase, stalled, matchedStatus, matchedRule (1..9 or 0=defensive sentinel), unmappedStatus, unmappedDecision}`. Existing destructure `{phase, stalled}` continues to work.
+
+**Stall detection:** `stalled = false` for non-{P1, P2} phases (terminal / post-decision / final-and-binding cannot stall). Rule 9 catchall → P1 DOES compute stall.
+
+**Same-Sprint Mitigation (Option 2 — active 2026-05-14 → E.2 ship):** `classifyCoaPhaseLegacy(input)` adapter narrows `{phase: P3|P4|P19|P20}` → `{phase: null}` so v1 consumer `scripts/classify-lifecycle-phase.js` preserves its 0.6% non-NULL coverage in the E.1↔E.2 gap window. The adapter preserves OLD RETURN SHAPE, NOT OLD BUGGY BEHAVIOR (the buggy v1 mapping `decision='Approved' → P2` was wrong; we are not preserving wrongness).
+
+**Permit-side cross-reference (transition):**
+
+| Phase | Name | Trigger Signal / Logic |
 |---|---|---|
-| (NULL) | Terminal | `decision IN ('Refused', 'Withdrawn', 'Closed')` — terminal state, no phase code emitted |
-| P4 | CoA Final | `decision = 'Final and Binding'` (appeal period cleared) |
-| P3 | CoA Approved | `decision IN ('Approved', 'Approved with Conditions', 'Conditional Consent')` |
-| P2 | CoA Review | `status IN ('Internal Review', 'Public Hearing Scheduled')` |
-| P1 | CoA Intake | `status IN ('Application Received', 'Accepted', 'Prepare Notice', ...)` — early intake states |
-| P1 | catchall | Unknown CKAN status (not in any rule above) → P1 + `unmapped_status` metric in `assert-lifecycle-phase-distribution.js` audit_table for triage. Prevents silent NULL drift when CKAN adds new statuses. |
 | P5 | Zoning Review | Transition phase where CoA links to a Building Permit application. |
 
 ### 2. The Permit Intake Block (Unified ID Space)
@@ -1175,13 +1193,13 @@ The `assert-lifecycle-phase-distribution.js` script acts as the "Internal Audito
 |---|---|---|
 | 84-W1 | **Orphan Ordinal Gap:** Orphans (O1-O3) have no rank, so they never archive. Fix: Assign negative ordinals. | Pending Refactor |
 | 84-W4 | **Dead Transition Write:** Ledger is written but not used. Fix: Wire Spec 86 Calibration to read this ledger. | **Resolved (WF1 #B 2026-05-09)** — `scripts/compute-phase-calibration.js` now reads the ledger via `LAG()` window + `PERCENTILE_CONT` per `(permit_type, from_phase)` and writes `phase_stay_calibration`; the inspector's `lifecycle.timeline[]` reads that table for cohort comparison. See §7 below. |
-| 84-W11 | **ID Collision:** P3/P4/P5 mean different things in CoA vs Permits. Fix: Prefix Permit-Intake phases (e.g., `INTAKE_P3`). | **Resolved (WF1 #coa-pipeline-parity-phase-a 2026-05-13)** — see §3 Phase-Code Namespace Deprecation. Granular-first move: `lifecycle_seq` (1–110) is authoritative; legacy `lifecycle_phase` deprecated through Phase H. |
+| 84-W11 | **ID Collision:** P3/P4/P5 mean different things in CoA vs Permits. Fix: Prefix Permit-Intake phases (e.g., `INTAKE_P3`). | **Resolved (WF1 #coa-pipeline-parity-phase-a 2026-05-13; transitional consumer guards in Phase E.2 2026-05-14)** — see §3 Phase-Code Namespace Deprecation. Granular-first move: `lifecycle_seq` (1–110) is authoritative; legacy `lifecycle_phase` deprecated through Phase H. **Transitional consumer guards (Phase E.2 v4 scope expansion — MOVED FROM Phase F into E.2 per Gemini v3 CRIT):** `scripts/compute-trade-forecasts.js` `PRE_CONSTRUCTION_PHASES.has(lifecycle_phase)` lookup and `scripts/update-tracked-projects.js` `PHASE_ORDINAL[lifecycle_phase]` lookup require `lead_id LIKE 'coa:%'` guards to prevent CoA-P3/P4 rows from misrouting through permit-side calibration / ordinal paths. Lands in E.2 alongside the producer (`classify-lifecycle-phase.js` consumer wiring) so CoA-P3/P4 rows never exist in production without their consumers being guarded. Phase F retains only the CoA UNION source extension + per-seq cohort key work. |
 | 84-W5 | **Magic Stall Numbers:** Thresholds (180/730 days) are hardcoded. Fix: Move to `Zod` validated `logic_variables`. | Pending Refactor |
 | 84-W3 | **Mega-Insert Risk (Spec 47 §6.1):** 237k-row backfill crashes DB on `.query()`. Fix: Wire `pipeline.streamQuery` and standard chunking with loop arrays. | Pending Refactor |
 | 84-W9 | **SQL/JS Drift:** CoA normalization is duplicated in two places. Fix: Consolidate into a single SQL helper function. | Pending Refactor |
 | 84-S47 | **SIGTERM Release (Spec 47 §5.5):** No lock release on container preemption. Fix: Add process `SIGTERM` trap. | Pending Refactor |
 | 84-S47 | **Midnight Drift (Spec 47 §8):** Multiple `NOW()` executions inside loops. Fix: Extract `RUN_TIMESTAMP` from a single query before streaming begins. | Pending Refactor |
-| 84-W12 | **CoA Classifier Silent No-Op:** 99.4% of `coa_applications` rows have `lifecycle_phase = NULL` despite the classifier code path existing in `classify-lifecycle-phase.js` (Spec 84 §3.1 P1/P2 triggers). Only 187 of 33,052 CoAs carry a phase tag (40 P1 + 147 P2) — and of the 1,690 in-flight CoAs (no decision, last 12mo) only 11% are classified. The classifier silently leaves 89% of in-flight CoAs uncovered, breaking the §3.8 distribution bands `lifecycle_band_coa_p1_min/max` + `lifecycle_band_coa_p2_min/max` (bands tuned around the broken baseline, so `assert-lifecycle-phase-distribution.js` PASSes only because the gate is set ridiculously low). Discovered 2026-05-11 via WF1 #C CoA investigation. Fix: Phase 2 of `.cursor/queued_task_coa_lifecycle_fixes.md` (Fix A WF3) — investigate the `coa_applications` UPDATE branch in `classify-lifecycle-phase.js` (likely cause: incremental watermark stuck OR filter predicate too narrow OR `classifyLifecyclePhase()` returning null for CoA inputs). After fix, re-band the `lifecycle_band_coa_p1/p2_min/max` `logic_variables` thresholds against the post-fix reality. | Pending Refactor (Fix A WF3 queued) |
+| 84-W12 | **CoA Classifier Silent No-Op:** 99.4% of `coa_applications` rows have `lifecycle_phase = NULL`. Root cause (confirmed): `classifyCoaPhase()` Rule 0 short-circuited on `linked_permit_num IS NOT NULL` (§2.5.f row 4), AND `coa_applications.status` was structurally ignored (passed in but never read). Combined effect: 32,865 of 33,052 CoAs had NULL phase. | **Closed at substrate level in Phase E.1 (WF1 #lifecycle-phase-engine-migration-E.1, 2026-05-14, commit anchor TBD).** Rule 0 removed; `coa_applications.status` wired via 9-rule precedence (Spec 42 §6.7 step 1; mirrored in §3 above). New return shape: `{phase, stalled, matchedStatus, matchedRule, unmappedStatus, unmappedDecision}`. Phase domain widened to `{P1, P2, P3, P4, P19, P20, null}`. Same-Sprint Mitigation Option 2 active: `classify-lifecycle-phase.js` consumer wrapped in `classifyCoaPhaseLegacy` (preserves v1 return shape) until E.2 wires the full new shape. **Coverage gate fires on E.2 ship:** CoA `lifecycle_phase IS NOT NULL` rate climbs from 0.6% → ≥ 95% (~30,000+ row reclassification on first production run). E.2 also adds persisted columns `matched_status` / `matched_rule` / `unmapped_status` / `unmapped_decision` to `coa_applications` (improves diagnosability — direct queries instead of audit-log archaeology) + downstream `lead_id LIKE 'coa:%'` guards in `compute-trade-forecasts.js` + `update-tracked-projects.js`. Audit gate `assert-lifecycle-phase-distribution.js` band recalibration in E.4. |
 
 ---
 

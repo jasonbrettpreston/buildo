@@ -1,5 +1,5 @@
-// 🔗 SPEC LINK: docs/reports/lifecycle_phase_implementation.md §3.1
-// 🔗 ACTIVE TASK: .cursor/active_task.md (WF2 Lifecycle Phase V1)
+// 🔗 SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3 (CoA-side phase emission rules) + Spec 42 §6.7 (9-rule precedence)
+// 🔗 ACTIVE TASK: .cursor/active_task.md (WF1 Phase E.1 — bug 84-W12 fix + mapToUniversalStream + TS twin extension)
 //
 // Pure-function unit tests for the lifecycle phase classifier.
 // Every branch in the decision tree (§1.1-§1.6 of the target spec) must
@@ -18,7 +18,12 @@ import { describe, test, expect } from 'vitest';
 import {
   classifyLifecyclePhase,
   classifyCoaPhase,
+  classifyCoaPhaseLegacy,
+  mapToUniversalStream,
   normalizeCoaDecision,
+  normalizeCoaStatus,
+  isDeferredDecisionVariant,
+  computeStallFromActivity,
   DEAD_STATUS_SET,
   TERMINAL_P20_SET,
   WINDDOWN_P19_SET,
@@ -29,8 +34,20 @@ import {
   REVISION_P8_SET,
   NOT_STARTED_P7D_SET,
   NORMALIZED_APPROVED_DECISIONS,
-  NORMALIZED_DEAD_DECISIONS,
+  NORMALIZED_P19_DECISIONS,
+  NORMALIZED_P20_DECISIONS,
+  NORMALIZED_FINAL_AND_BINDING_DECISIONS,
+  NORMALIZED_DEFERRED_DECISIONS,
+  NORMALIZED_DECISION_TO_STATUS_MAP,
+  COA_REVIEW_STATUSES,
+  COA_INTAKE_STATUSES,
+  COA_TERMINAL_P20_STATUSES,
+  COA_TERMINAL_P19_STATUSES,
+  COA_APPROVED_STATUSES,
+  COA_FINAL_AND_BINDING_STATUSES,
+  COA_POST_DECISION_STATUSES,
   VALID_PHASES,
+  type UniversalStreamRow,
 } from '@/lib/classification/lifecycle-phase';
 
 // ─────────────────────────────────────────────────────────────────
@@ -764,175 +781,550 @@ function coa(overrides: CoaInput = {}) {
   };
 }
 
-describe('classifyCoaPhase — CoA branch', () => {
-  test('linked CoA returns null (phase lives on permit)', () => {
-    const result = classifyCoaPhase(
-      coa({ decision: 'Approved', linked_permit_num: '25 123456 BLD' }),
-    );
-    expect(result.phase).toBeNull();
+// ─────────────────────────────────────────────────────────────────
+// Phase E.1 (84-W12) — 22-status × 7-decision matrix
+// Spec 84 §2.5.c canonical statuses + expected (phase, rule) per the
+// 9-rule precedence. Source-of-truth for test #1 + regression for
+// "rule 9 never fires when status is canonical and decision is null".
+// ─────────────────────────────────────────────────────────────────
+
+interface ExpectedPhaseRule { phase: string; rule: number; }
+
+const STATUS_EXPECTATIONS: ReadonlyArray<readonly [string, ExpectedPhaseRule]> = Object.freeze([
+  // Intake → P1 (rule 8)
+  ['Application Received',     { phase: 'P1', rule: 8 }],
+  ['Accepted',                 { phase: 'P1', rule: 8 }],
+  // Review → P2 (rule 7)
+  ['Prepare Notice',           { phase: 'P2', rule: 7 }],
+  ['Notice Prepared',          { phase: 'P2', rule: 7 }],
+  ['Tentatively Scheduled',    { phase: 'P2', rule: 7 }],
+  ['Hearing Scheduled',        { phase: 'P2', rule: 7 }],
+  ['Hearing Rescheduled',      { phase: 'P2', rule: 7 }],
+  ['Postponed',                { phase: 'P2', rule: 7 }],
+  ['Deferred',                 { phase: 'P2', rule: 7 }],
+  // Approved → P3 (rule 5)
+  ['Conditional Consent',      { phase: 'P3', rule: 5 }],
+  ['Approved',                 { phase: 'P3', rule: 5 }],
+  ['Approved with Conditions', { phase: 'P3', rule: 5 }],
+  // Refused → P19 (rule 2)
+  ['Refused',                  { phase: 'P19', rule: 2 }],
+  // Final and Binding → P4 (rule 3)
+  ['Final and Binding',        { phase: 'P4', rule: 3 }],
+  // Post-decision → P3 (rule 4)
+  ['Await Expiry Date',        { phase: 'P3', rule: 4 }],
+  ['Appealed',                 { phase: 'P3', rule: 4 }],
+  ['TLAB Appeal',              { phase: 'P3', rule: 4 }],
+  ['OMB Appeal',               { phase: 'P3', rule: 4 }],
+  // Terminal P19 status (refused/withdrawn/cancelled)
+  ['Application Withdrawn',    { phase: 'P19', rule: 2 }],
+  ['Cancelled',                { phase: 'P19', rule: 2 }],
+  // Terminal P20 (closed)
+  ['Closed',                   { phase: 'P20', rule: 1 }],
+  ['Complete',                 { phase: 'P20', rule: 1 }],
+]);
+
+describe('classifyCoaPhase — Phase E.1 bug 84-W12 fix', () => {
+  // ─────────────────────────────────────────────────────────────
+  // Test #1: 22-status regression (decision=null) — Appendix A in plan
+  // Catches v1 bug: rule 9 catchall must NEVER fire for any canonical status.
+  // ─────────────────────────────────────────────────────────────
+  describe('22 canonical status values map to expected (phase, rule)', () => {
+    for (const [status, expected] of STATUS_EXPECTATIONS) {
+      test(`status='${status}' + decision=null → ${expected.phase} (rule ${expected.rule})`, () => {
+        const r = classifyCoaPhase(coa({ status, decision: null }));
+        expect(r.phase).toBe(expected.phase);
+        expect(r.matchedRule).toBe(expected.rule);
+        expect(r.unmappedStatus).toBe(false);
+        expect(r.matchedRule).not.toBe(9); // explicit anti-catchall regression
+      });
+    }
   });
 
-  test('canonical Approved → P2', () => {
-    const result = classifyCoaPhase(coa({ decision: 'Approved' }));
-    expect(result.phase).toBe('P2');
+  // ─────────────────────────────────────────────────────────────
+  // Test #2: Decision-only matrix (status=null × 9 decisions)
+  // ─────────────────────────────────────────────────────────────
+  describe('decision-only paths (status=null)', () => {
+    test.each([
+      [null,                       'P1',  9],   // catchall (no inputs)
+      ['Approved',                 'P3',  5],
+      ['Approved With Conditions', 'P3',  5],
+      ['Final and Binding',        'P4',  3],
+      ['Refused',                  'P19', 2],
+      ['Deferred',                 'P2',  6],
+      ['closed',                   'P20', 1],
+      ['conditional consent',      'P3',  5],
+      // Date-stamped Deferred variant (v4 fold: Rule 6 hardcoded fallback)
+      ['Deferred Aug 18, 2016 (Orig Mark Kehler)', 'P2', 6],
+    ])('decision="%s" → %s (rule %d)', (decision, expectedPhase, expectedRule) => {
+      const r = classifyCoaPhase(coa({ status: null, decision }));
+      expect(r.phase).toBe(expectedPhase);
+      expect(r.matchedRule).toBe(expectedRule);
+    });
   });
 
-  test('lowercase approved → P2', () => {
-    const result = classifyCoaPhase(coa({ decision: 'approved' }));
-    expect(result.phase).toBe('P2');
-  });
-
-  test('all-caps APPROVED → P2', () => {
-    const result = classifyCoaPhase(coa({ decision: 'APPROVED' }));
-    expect(result.phase).toBe('P2');
-  });
-
-  test.each([
-    'conditional approval',
-    'Approved on Condition',
-    'Approved with Conditions',
-    'Approved wih Conditions', // typo variant from real DB
-    'Approved with condition',
-    'approved on condition',
-    'CONDITIONAL APPROVAL',
-    'modified approval',
-    'Conditional Approved',
-    'Approved on conditional',
-    'Approved on condation', // typo
-    'approved on condtion', // typo
-    'Approved, as amended, on Condition',
-    'Partially Approved',
-    'Conditionally Approved',
-    'conitional approval', // typo
-  ])('canonical approved variant "%s" → P2', (decision) => {
-    const result = classifyCoaPhase(coa({ decision }));
-    expect(result.phase).toBe('P2');
-  });
-
-  test.each(['Refused', 'refused', 'REFUSED'])(
-    'Refused variants → null (dead)',
-    (decision) => {
-      const result = classifyCoaPhase(coa({ decision }));
-      expect(result.phase).toBeNull();
-    },
-  );
-
-  test.each(['Withdrawn', 'withdrawn', 'application withdrawn'])(
-    'Withdrawn variants → null (dead)',
-    (decision) => {
-      const result = classifyCoaPhase(coa({ decision }));
-      expect(result.phase).toBeNull();
-    },
-  );
-
-  test('delegated consent refused → null (dead)', () => {
-    const result = classifyCoaPhase(coa({ decision: 'DELEGATED CONSENT REFUSED' }));
-    expect(result.phase).toBeNull();
-  });
-
-  test('"closed" or "application closed" → null (dead)', () => {
-    expect(classifyCoaPhase(coa({ decision: 'closed' })).phase).toBeNull();
-    expect(classifyCoaPhase(coa({ decision: 'application closed' })).phase).toBeNull();
-  });
-
-  test('NULL decision → P1 (Variance Requested)', () => {
-    const result = classifyCoaPhase(coa({ decision: null }));
-    expect(result.phase).toBe('P1');
-  });
-
-  test('Deferred → P1 (still pending)', () => {
-    const result = classifyCoaPhase(coa({ decision: 'Deferred' }));
-    expect(result.phase).toBe('P1');
-  });
-
-  test.each([
-    'Deferred Jun 4, 2015',
-    'Deferred Aug 18, 2016 (Orig Mark Kehler)',
-    'deferred feb 2',
-    'DEFFERED', // typo
-  ])('Deferred date-suffix variant "%s" → P1', (decision) => {
-    const result = classifyCoaPhase(coa({ decision }));
-    expect(result.phase).toBe('P1');
-  });
-
-  test('Postponed → P1 (still pending)', () => {
-    const result = classifyCoaPhase(coa({ decision: 'Postponed' }));
-    expect(result.phase).toBe('P1');
-  });
-
-  test('garbage/unparseable decision → P1 (treat as undecided)', () => {
-    const result = classifyCoaPhase(coa({ decision: 'Oct 29, 2019' }));
-    expect(result.phase).toBe('P1');
-  });
-
-  test('"decision not made - appeal was made due to that" → P1', () => {
-    const result = classifyCoaPhase(
-      coa({ decision: 'decision not made - appeal was made due to that' }),
-    );
-    expect(result.phase).toBe('P1');
-  });
-
-  // ─── WF3 2026-04-13: Stall detection ─────────────────────────────
-  // coa_stall_threshold from logic_variables drives lifecycle_stalled
-  // on in-flight CoAs (P1/P2). Adversarial Probe 6 + Independent CL-10.
-  describe('stall detection via coa_stall_threshold', () => {
-    test('P1 stalls when daysSinceActivity exceeds threshold', () => {
-      const result = classifyCoaPhase(
-        coa({ decision: null, daysSinceActivity: 35, stallThresholdDays: 30 }),
-      );
-      expect(result.phase).toBe('P1');
-      expect(result.stalled).toBe(true);
+  // ─────────────────────────────────────────────────────────────
+  // Test #3: Precedence tiebreaker tests (7 cases)
+  // ─────────────────────────────────────────────────────────────
+  describe('precedence tiebreakers', () => {
+    test("decision='Approved' + status='Hearing Scheduled' → rule 5 wins (P3, status-driven)", () => {
+      const r = classifyCoaPhase(coa({ status: 'Hearing Scheduled', decision: 'Approved' }));
+      // R5 fires status-side first (status IN COA_APPROVED_STATUSES? No → fall through to decision-side)
+      // But status='Hearing Scheduled' is in COA_REVIEW_STATUSES (R7) — would fire R7 if R5 decision-side didn't fire first.
+      // R5 decision-side fires BEFORE R7 status-side → R5 wins.
+      expect(r.phase).toBe('P3');
+      expect(r.matchedRule).toBe(5);
     });
 
-    test('P2 (approved) stalls when daysSinceActivity exceeds threshold', () => {
-      const result = classifyCoaPhase(
-        coa({ decision: 'Approved', daysSinceActivity: 45, stallThresholdDays: 30 }),
-      );
-      expect(result.phase).toBe('P2');
-      expect(result.stalled).toBe(true);
+    test("status='Final and Binding' + decision='Approved' → rule 3 wins (P4)", () => {
+      const r = classifyCoaPhase(coa({ status: 'Final and Binding', decision: 'Approved' }));
+      expect(r.phase).toBe('P4');
+      expect(r.matchedRule).toBe(3);
+    });
+
+    test("status='Refused' + decision=null → rule 2 wins (P19) — v1 bug regression", () => {
+      const r = classifyCoaPhase(coa({ status: 'Refused', decision: null }));
+      expect(r.phase).toBe('P19');
+      expect(r.matchedRule).toBe(2);
+    });
+
+    test("status='Closed' + decision='Approved' → rule 1 wins (P20, terminal overrides approval)", () => {
+      const r = classifyCoaPhase(coa({ status: 'Closed', decision: 'Approved' }));
+      expect(r.phase).toBe('P20');
+      expect(r.matchedRule).toBe(1);
+    });
+
+    test("status='Appealed' + decision='Approved' → rule 4 wins (P3, post-decision more recent than approval)", () => {
+      const r = classifyCoaPhase(coa({ status: 'Appealed', decision: 'Approved' }));
+      expect(r.phase).toBe('P3');
+      expect(r.matchedRule).toBe(4);
+    });
+
+    test("status='Hearing Scheduled' + decision='Deferred' → rule 6 wins (P2, decision more authoritative)", () => {
+      const r = classifyCoaPhase(coa({ status: 'Hearing Scheduled', decision: 'Deferred' }));
+      expect(r.phase).toBe('P2');
+      expect(r.matchedRule).toBe(6);
+      expect(r.matchedStatus).toBe('Deferred');
+    });
+
+    test("decision='deferred but refused' → rule 6 wins (P2) — startsWith catches it; negative guard only blocks exact-match variants", () => {
+      // The isDeferredDecisionVariant negative guard rejects only EXACT matches
+      // in NORMALIZED_P19_DECISIONS / P20 / Approved / FaB. 'deferred but refused'
+      // is not exact-match in any other set, so startsWith('deferred ') triggers
+      // rule 6 (P2 + matchedStatus='Deferred'). Documents current behavior; if
+      // operators want this routed differently (e.g., to P19 via substring match),
+      // that is an E.2+ design discussion.
+      const r = classifyCoaPhase(coa({ status: null, decision: 'deferred but refused' }));
+      expect(r.phase).toBe('P2');
+      expect(r.matchedRule).toBe(6);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Test #4: Normalization edge cases
+  // ─────────────────────────────────────────────────────────────
+  describe('normalization', () => {
+    test("status='  Hearing Scheduled  ' (whitespace) → trimmed, rule 7 → P2", () => {
+      const r = classifyCoaPhase(coa({ status: '  Hearing Scheduled  ', decision: null }));
+      expect(r.phase).toBe('P2');
+      expect(r.matchedRule).toBe(7);
+      expect(r.matchedStatus).toBe('Hearing Scheduled');
+    });
+
+    test("status='' (empty) → normalized to null → rule 9 catchall", () => {
+      const r = classifyCoaPhase(coa({ status: '', decision: null }));
+      expect(r.phase).toBe('P1');
+      expect(r.matchedRule).toBe(9);
+      expect(r.matchedStatus).toBeNull();
+      expect(r.unmappedStatus).toBe(false); // status was empty, normalized to null
+    });
+
+    test("decision='FINAL AND BINDING' (uppercase) → normalized, rule 3 → P4", () => {
+      const r = classifyCoaPhase(coa({ status: null, decision: 'FINAL AND BINDING' }));
+      expect(r.phase).toBe('P4');
+      expect(r.matchedRule).toBe(3);
+      expect(r.matchedStatus).toBe('Final and Binding');
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Test #5/6: Stall behavior — in-flight + forced-false
+  // ─────────────────────────────────────────────────────────────
+  describe('stall detection', () => {
+    test('stall-in-catchall: rule 9 P1 still computes stall', () => {
+      const r = classifyCoaPhase(coa({
+        status: 'UNRECOGNIZED_STATUS_XYZ',
+        decision: null,
+        daysSinceActivity: 100,
+        stallThresholdDays: 30,
+      }));
+      expect(r.phase).toBe('P1');
+      expect(r.matchedRule).toBe(9);
+      expect(r.unmappedStatus).toBe(true);
+      expect(r.stalled).toBe(true);
+    });
+
+    test("stalled=false for P20 (status='Closed', large daysSinceActivity)", () => {
+      const r = classifyCoaPhase(coa({
+        status: 'Closed', decision: null,
+        daysSinceActivity: 10000, stallThresholdDays: 30,
+      }));
+      expect(r.phase).toBe('P20');
+      expect(r.stalled).toBe(false);
+    });
+
+    test("stalled=false for P3 (status='Approved', large daysSinceActivity)", () => {
+      const r = classifyCoaPhase(coa({
+        status: 'Approved', decision: null,
+        daysSinceActivity: 10000, stallThresholdDays: 30,
+      }));
+      expect(r.phase).toBe('P3');
+      expect(r.stalled).toBe(false);
+    });
+
+    test("stalled=false for P19 (status='Refused', large daysSinceActivity)", () => {
+      const r = classifyCoaPhase(coa({
+        status: 'Refused', decision: null,
+        daysSinceActivity: 10000, stallThresholdDays: 30,
+      }));
+      expect(r.phase).toBe('P19');
+      expect(r.stalled).toBe(false);
+    });
+
+    test('null daysSinceActivity + threshold=30 → stalled=false (no crash)', () => {
+      const r = classifyCoaPhase(coa({
+        status: 'Hearing Scheduled',
+        decision: null,
+        daysSinceActivity: null,
+        stallThresholdDays: 30,
+      }));
+      expect(r.stalled).toBe(false);
+    });
+
+    test('P1 stalls when daysSinceActivity > threshold', () => {
+      const r = classifyCoaPhase(coa({
+        status: 'Application Received',
+        decision: null,
+        daysSinceActivity: 35, stallThresholdDays: 30,
+      }));
+      expect(r.phase).toBe('P1');
+      expect(r.stalled).toBe(true);
+    });
+
+    test('P2 stalls when daysSinceActivity > threshold', () => {
+      const r = classifyCoaPhase(coa({
+        status: 'Hearing Scheduled', decision: null,
+        daysSinceActivity: 45, stallThresholdDays: 30,
+      }));
+      expect(r.phase).toBe('P2');
+      expect(r.stalled).toBe(true);
     });
 
     test('days === threshold is NOT stalled (strict greater-than)', () => {
-      const result = classifyCoaPhase(
-        coa({ decision: null, daysSinceActivity: 30, stallThresholdDays: 30 }),
-      );
-      expect(result.stalled).toBe(false);
+      const r = classifyCoaPhase(coa({
+        status: 'Application Received', decision: null,
+        daysSinceActivity: 30, stallThresholdDays: 30,
+      }));
+      expect(r.stalled).toBe(false);
     });
 
-    test('linked CoA is never stalled (terminal)', () => {
-      const result = classifyCoaPhase(
-        coa({ linked_permit_num: '25 123 BLD', daysSinceActivity: 999, stallThresholdDays: 30 }),
-      );
-      expect(result.stalled).toBe(false);
+    test('zero threshold → stalled=false (feature off)', () => {
+      const r = classifyCoaPhase(coa({
+        status: 'Application Received', decision: null,
+        daysSinceActivity: 100, stallThresholdDays: 0,
+      }));
+      expect(r.stalled).toBe(false);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Test #7: Two-flow regression — Rule 0 removal validation
+  // ─────────────────────────────────────────────────────────────
+  describe('two-flow regression (Spec 42 §6.6.X)', () => {
+    test("linked CoA + status='Hearing Scheduled' → P2 (NOT null, Rule 0 removed)", () => {
+      const r = classifyCoaPhase(coa({
+        linked_permit_num: 'PERM12345',
+        status: 'Hearing Scheduled',
+        decision: null,
+      }));
+      expect(r.phase).toBe('P2');
     });
 
-    test('dead-decision CoA is never stalled (terminal)', () => {
-      const result = classifyCoaPhase(
-        coa({ decision: 'application closed', daysSinceActivity: 999, stallThresholdDays: 30 }),
-      );
-      expect(result.stalled).toBe(false);
+    test("unlinked CoA + status='Hearing Scheduled' → P2 (same result, flow irrelevant)", () => {
+      const r = classifyCoaPhase(coa({
+        linked_permit_num: null,
+        status: 'Hearing Scheduled',
+        decision: null,
+      }));
+      expect(r.phase).toBe('P2');
     });
 
-    test('null daysSinceActivity → not stalled (unknown activity)', () => {
-      const result = classifyCoaPhase(
-        coa({ decision: null, daysSinceActivity: null, stallThresholdDays: 30 }),
-      );
-      expect(result.stalled).toBe(false);
+    test("linked CoA + status='Approved' → P3 (was null under buggy v1)", () => {
+      const r = classifyCoaPhase(coa({
+        linked_permit_num: 'PERM12345',
+        status: 'Approved',
+        decision: null,
+      }));
+      expect(r.phase).toBe('P3');
+      expect(r.matchedRule).toBe(5);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Test #8: NORMALIZED_DECISION_TO_STATUS_MAP completeness
+  // Every key in the union of decision sets must have a map entry;
+  // every map value must map to a canonical CoA status.
+  // ─────────────────────────────────────────────────────────────
+  describe('NORMALIZED_DECISION_TO_STATUS_MAP completeness', () => {
+    test('every key in P19/P20/FaB/Approved/Deferred decision sets is in the map', () => {
+      const allDecisions = new Set<string>([
+        ...NORMALIZED_P19_DECISIONS,
+        ...NORMALIZED_P20_DECISIONS,
+        ...NORMALIZED_FINAL_AND_BINDING_DECISIONS,
+        ...NORMALIZED_APPROVED_DECISIONS,
+        ...NORMALIZED_DEFERRED_DECISIONS,
+      ]);
+      for (const decision of allDecisions) {
+        expect(NORMALIZED_DECISION_TO_STATUS_MAP.has(decision)).toBe(true);
+      }
     });
 
-    test('null threshold → not stalled (feature off)', () => {
-      const result = classifyCoaPhase(
-        coa({ decision: null, daysSinceActivity: 100, stallThresholdDays: null }),
-      );
-      expect(result.stalled).toBe(false);
+    test('every map value is in a canonical CoA status set', () => {
+      const allStatuses = new Set<string>([
+        ...COA_REVIEW_STATUSES,
+        ...COA_INTAKE_STATUSES,
+        ...COA_TERMINAL_P20_STATUSES,
+        ...COA_TERMINAL_P19_STATUSES,
+        ...COA_APPROVED_STATUSES,
+        ...COA_FINAL_AND_BINDING_STATUSES,
+        ...COA_POST_DECISION_STATUSES,
+      ]);
+      for (const value of NORMALIZED_DECISION_TO_STATUS_MAP.values()) {
+        expect(allStatuses.has(value)).toBe(true);
+      }
     });
 
-    test('zero threshold → not stalled (feature off, prevents thrashing)', () => {
-      const result = classifyCoaPhase(
-        coa({ decision: null, daysSinceActivity: 100, stallThresholdDays: 0 }),
-      );
-      expect(result.stalled).toBe(false);
+    test('typo variants map to canonical Approved with Conditions', () => {
+      expect(NORMALIZED_DECISION_TO_STATUS_MAP.get('approved on condation')).toBe('Approved with Conditions');
+      expect(NORMALIZED_DECISION_TO_STATUS_MAP.get('conitional approval')).toBe('Approved with Conditions');
+      expect(NORMALIZED_DECISION_TO_STATUS_MAP.get('approved wih conditions')).toBe('Approved with Conditions');
     });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Test #9: Defensive input
+  // ─────────────────────────────────────────────────────────────
+  describe('defensive input', () => {
+    test('null input → sentinel {phase:null, matchedRule:0, ...}', () => {
+      const r = classifyCoaPhase(null as unknown as never);
+      expect(r.phase).toBeNull();
+      expect(r.matchedRule).toBe(0);
+      expect(r.stalled).toBe(false);
+      expect(r.unmappedStatus).toBe(false);
+      expect(r.unmappedDecision).toBe(false);
+    });
+
+    test('undefined input → sentinel {phase:null, matchedRule:0, ...}', () => {
+      const r = classifyCoaPhase(undefined as unknown as never);
+      expect(r.phase).toBeNull();
+      expect(r.matchedRule).toBe(0);
+    });
+
+    test('string input → sentinel {phase:null, matchedRule:0, ...}', () => {
+      const r = classifyCoaPhase('garbage' as unknown as never);
+      expect(r.phase).toBeNull();
+      expect(r.matchedRule).toBe(0);
+    });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// Phase E.1 (84-W12) — mapToUniversalStream lookup tests
+// ─────────────────────────────────────────────────────────────────
+describe('mapToUniversalStream', () => {
+  function fixtureCatalog(): Map<string, UniversalStreamRow> {
+    return new Map<string, UniversalStreamRow>([
+      ['coa.status:Application Received',     {seq:  1, group:'C1', block:'B1.A', stage:'S1', phase:'P1',  bid_value: 0.1}],
+      ['coa.status:Approved',                 {seq: 11, group:'C2', block:'B2.B', stage:'S2', phase:'P3',  bid_value: 0.6}],
+      ['coa.status:Final and Binding',        {seq: 14, group:'C2', block:'B2.C', stage:'S2', phase:'P4',  bid_value: 0.7}],
+      ['coa.status:Refused',                  {seq: 13, group:'C3', block:'B3.A', stage:'S3', phase:'P19', bid_value: 0.0}],
+      ['coa.status:Closed',                   {seq: 22, group:'C3', block:'B3.B', stage:'S3', phase:'P20', bid_value: 0.0}],
+      // Poisoned rows (v4 fold #5 — post-lookup phase validation)
+      ['permits.status:Notice Sent',          {seq: 35, group:'P4', block:'B4.A', stage:'S4', phase:'UNMAPPED→null', bid_value: null}],
+      ['permits.status:Multi-Phase Row',      {seq: 47, group:'P4', block:'B4.B', stage:'S4', phase:'P7a/P7b/P7c (or P9-P17)', bid_value: 0.3}],
+    ]);
+  }
+
+  test('direct hit returns frozen catalog row', () => {
+    const cat = fixtureCatalog();
+    const r = mapToUniversalStream(cat, 'Approved', 'coa.status');
+    expect(r).not.toBeNull();
+    expect(r!.seq).toBe(11);
+    expect(r!.phase).toBe('P3');
+    expect(Object.isFrozen(r)).toBe(true);
+  });
+
+  test('miss returns null (no wildcard fallback)', () => {
+    const r = mapToUniversalStream(fixtureCatalog(), 'No Such Status', 'coa.status');
+    expect(r).toBeNull();
+  });
+
+  test('null matchedStatus returns null (catchall rule 9 case)', () => {
+    const r = mapToUniversalStream(fixtureCatalog(), null, 'coa.status');
+    expect(r).toBeNull();
+  });
+
+  test('poisoned row with .phase="UNMAPPED→null" returns null (post-lookup validation)', () => {
+    const r = mapToUniversalStream(fixtureCatalog(), 'Notice Sent', 'permits.status');
+    expect(r).toBeNull();
+  });
+
+  test('multi-value catalog .phase like "P7a/P7b/P7c" returns null', () => {
+    const r = mapToUniversalStream(fixtureCatalog(), 'Multi-Phase Row', 'permits.status');
+    expect(r).toBeNull();
+  });
+
+  test('source must match exact catalog key (CoA callsite invariant)', () => {
+    const cat = fixtureCatalog();
+    // Approved is in 'coa.status:Approved' but not 'permits.status:Approved'
+    expect(mapToUniversalStream(cat, 'Approved', 'permits.status')).toBeNull();
+  });
+
+  test('non-Map catalog argument returns null defensively', () => {
+    const r = mapToUniversalStream(
+      {} as unknown as ReadonlyMap<string, UniversalStreamRow>,
+      'Approved',
+      'coa.status',
+    );
+    expect(r).toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// Phase E.1 (84-W12) — classifyCoaPhaseLegacy (Same-Sprint Option 2)
+// ─────────────────────────────────────────────────────────────────
+describe('classifyCoaPhaseLegacy', () => {
+  test('P1 from new shape → P1 in legacy shape', () => {
+    const r = classifyCoaPhaseLegacy(coa({ status: 'Application Received', decision: null }));
+    expect(r).toEqual({ phase: 'P1', stalled: false });
+  });
+
+  test('P2 from new shape → P2 in legacy shape', () => {
+    const r = classifyCoaPhaseLegacy(coa({ status: 'Hearing Scheduled', decision: null }));
+    expect(r).toEqual({ phase: 'P2', stalled: false });
+  });
+
+  test('P3 narrows to null (preserves old return shape, not old buggy behavior)', () => {
+    const r = classifyCoaPhaseLegacy(coa({ status: 'Approved', decision: null }));
+    expect(r).toEqual({ phase: null, stalled: false });
+  });
+
+  test('P4 narrows to null', () => {
+    const r = classifyCoaPhaseLegacy(coa({ status: 'Final and Binding', decision: null }));
+    expect(r).toEqual({ phase: null, stalled: false });
+  });
+
+  test('P19 narrows to null', () => {
+    const r = classifyCoaPhaseLegacy(coa({ status: 'Refused', decision: null }));
+    expect(r).toEqual({ phase: null, stalled: false });
+  });
+
+  test('P20 narrows to null', () => {
+    const r = classifyCoaPhaseLegacy(coa({ status: 'Closed', decision: null }));
+    expect(r).toEqual({ phase: null, stalled: false });
+  });
+
+  test('preserves stalled flag for P1/P2 (catchall stall propagates)', () => {
+    const r = classifyCoaPhaseLegacy(coa({
+      status: 'UNRECOGNIZED', decision: null,
+      daysSinceActivity: 100, stallThresholdDays: 30,
+    }));
+    expect(r.phase).toBe('P1');
+    expect(r.stalled).toBe(true);
+  });
+
+  test('returned shape has exactly 2 keys (phase + stalled, no extras)', () => {
+    const r = classifyCoaPhaseLegacy(coa({ status: 'Application Received', decision: null }));
+    expect(Object.keys(r).sort()).toEqual(['phase', 'stalled']);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// Phase E.1 (84-W12) — Helpers
+// ─────────────────────────────────────────────────────────────────
+describe('normalizeCoaStatus', () => {
+  test("trims and returns null for empty", () => {
+    expect(normalizeCoaStatus('  Hearing Scheduled  ')).toBe('Hearing Scheduled');
+    expect(normalizeCoaStatus('')).toBeNull();
+    expect(normalizeCoaStatus('   ')).toBeNull();
+    expect(normalizeCoaStatus(null)).toBeNull();
+    expect(normalizeCoaStatus(undefined)).toBeNull();
+  });
+
+  test('preserves case (unlike normalizeCoaDecision)', () => {
+    expect(normalizeCoaStatus('HEARING SCHEDULED')).toBe('HEARING SCHEDULED');
+  });
+});
+
+describe('isDeferredDecisionVariant', () => {
+  test('canonical and typo deferred values match', () => {
+    expect(isDeferredDecisionVariant('deferred')).toBe(true);
+    expect(isDeferredDecisionVariant('deffered')).toBe(true);
+  });
+
+  test('date-stamped variants match via startsWith', () => {
+    expect(isDeferredDecisionVariant('deferred aug 18, 2016 (orig mark kehler)')).toBe(true);
+    expect(isDeferredDecisionVariant('deferred feb 2')).toBe(true);
+  });
+
+  test("'decision not made...' outlier matches", () => {
+    expect(isDeferredDecisionVariant('decision not made - appeal was made due to that')).toBe(true);
+  });
+
+  test('null/empty does not match', () => {
+    expect(isDeferredDecisionVariant(null)).toBe(false);
+    expect(isDeferredDecisionVariant(undefined)).toBe(false);
+  });
+
+  test('negative guard: exact-match approved variant does not match', () => {
+    expect(isDeferredDecisionVariant('approved')).toBe(false);
+    expect(isDeferredDecisionVariant('conditional consent')).toBe(false);
+  });
+
+  test('negative guard: exact-match P19/P20 variant does not match', () => {
+    expect(isDeferredDecisionVariant('refused')).toBe(false);
+    expect(isDeferredDecisionVariant('closed')).toBe(false);
+  });
+
+  test('non-deferred unknown decision does not match', () => {
+    expect(isDeferredDecisionVariant('garbage 123')).toBe(false);
+    expect(isDeferredDecisionVariant('approved-ish')).toBe(false);
+  });
+});
+
+describe('computeStallFromActivity', () => {
+  test('returns true when days > threshold', () => {
+    expect(computeStallFromActivity(35, 30)).toBe(true);
+  });
+  test('returns false when days === threshold (strict)', () => {
+    expect(computeStallFromActivity(30, 30)).toBe(false);
+  });
+  test('returns false when days < threshold', () => {
+    expect(computeStallFromActivity(20, 30)).toBe(false);
+  });
+  test('null/undefined inputs return false (no crash)', () => {
+    expect(computeStallFromActivity(null, 30)).toBe(false);
+    expect(computeStallFromActivity(30, null)).toBe(false);
+    expect(computeStallFromActivity(undefined, undefined)).toBe(false);
+  });
+  test('NaN inputs return false', () => {
+    expect(computeStallFromActivity(NaN, 30)).toBe(false);
+    expect(computeStallFromActivity(30, NaN)).toBe(false);
+  });
+  test('zero threshold returns false (feature off)', () => {
+    expect(computeStallFromActivity(100, 0)).toBe(false);
+  });
+  test('negative threshold returns false', () => {
+    expect(computeStallFromActivity(100, -1)).toBe(false);
   });
 });
 
@@ -1027,7 +1419,7 @@ describe('classifyLifecyclePhase — fuzzing', () => {
     }
   });
 
-  test('1000 random CoA inputs — no crashes', () => {
+  test('1000 random CoA inputs — no crashes, phase in widened E.1 domain', () => {
     const RANDOM_DECISIONS = [
       null,
       'Approved',
@@ -1036,24 +1428,41 @@ describe('classifyLifecyclePhase — fuzzing', () => {
       'Withdrawn',
       'Deferred',
       'conditional approval',
+      'conditional consent',
+      'final and binding',
+      'closed',
       'Oct 29, 2019',
       '',
       'Garbage 123',
     ];
+    const RANDOM_STATUSES = [
+      null, '',
+      'Application Received', 'Accepted',
+      'Hearing Scheduled', 'Deferred',
+      'Approved', 'Approved with Conditions', 'Final and Binding',
+      'Refused', 'Application Withdrawn', 'Closed', 'Complete',
+      'Appealed', 'TLAB Appeal',
+      'UNKNOWN_STATUS_FOOBAR',
+    ];
+    const VALID_COA_PHASES = new Set<string | null>([
+      'P1', 'P2', 'P3', 'P4', 'P19', 'P20', null,
+    ]);
     for (let i = 0; i < 1000; i++) {
       const row = {
         decision: pickRandom(RANDOM_DECISIONS),
         linked_permit_num: Math.random() < 0.5 ? '25 123456 BLD' : null,
-        status: null,
+        status: pickRandom(RANDOM_STATUSES),
       };
-      let result;
+      let result: ReturnType<typeof classifyCoaPhase> | undefined;
       expect(() => {
         result = classifyCoaPhase(row);
       }).not.toThrow();
       expect(result).toBeDefined();
-      expect(
-        result!.phase === null || result!.phase === 'P1' || result!.phase === 'P2',
-      ).toBe(true);
+      expect(VALID_COA_PHASES.has(result!.phase)).toBe(true);
+      expect(typeof result!.stalled).toBe('boolean');
+      expect(typeof result!.matchedRule).toBe('number');
+      expect(result!.matchedRule).toBeGreaterThanOrEqual(0);
+      expect(result!.matchedRule).toBeLessThanOrEqual(9);
     }
   });
 });
