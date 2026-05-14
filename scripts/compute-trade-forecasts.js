@@ -282,7 +282,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
        WHERE status = 'Passed'
        GROUP BY permit_num
     )
-    SELECT p.permit_num, p.revision_num, t.slug AS trade_slug,
+    SELECT p.permit_num, p.revision_num, p.lead_id, t.slug AS trade_slug,
            p.lifecycle_phase, p.phase_started_at, p.permit_type,
            p.lifecycle_stalled, p.issued_date, p.application_date,
            lp.last_passed_inspection_date
@@ -316,6 +316,15 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   let upserted = 0;
   let anchorFallbackCount = 0;
   let snowplowCount = 0;
+  // Phase E.2 (v4 scope expansion per Gemini v3 CRIT 2 + user authorization):
+  // defensive guard against CoA-side rows entering PRE_CONSTRUCTION_PHASES.has()
+  // lookup. CoA-P3/P4 is post-approval (~1000+ days before permit filing);
+  // permit-P3 is pre-issuance — calibrating CoA-P3 via permit-P3 medians is
+  // semantically wrong. INERT today (source_SQL JOIN against permit_trades has
+  // no CoA rows); ships defensively so Phase F's UNION extension can drop in
+  // without touching the calibration code.
+  let coaSkippedCount = 0;
+  let coaSkippedFirstWarned = false;
   // WF3 B2-H3: per-source breakdown for calibration_distribution audit.
   // Incremented after the Phase-Past-Target Guard passes — consistent with
   // anchorFallbackCount so "used" means "produced a forecast."
@@ -342,6 +351,21 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   pipeline.log.info('[trade-forecasts]', 'Streaming active permit-trade pairs...');
   for await (const row of pipeline.streamQuery(pool, SOURCE_SQL, [])) {
     totalRows++;
+
+    // Phase E.2 defensive guard: skip CoA rows from ISSUED calibration path.
+    // Inert today (SOURCE_SQL UNION extension lands in Phase F); ships now so
+    // Phase F is a clean drop-in.
+    if (typeof row.lead_id === 'string' && row.lead_id.startsWith('coa:')) {
+      coaSkippedCount++;
+      if (!coaSkippedFirstWarned) {
+        pipeline.log.warn('[trade-forecasts]',
+          `Skipping CoA row from forecast generation (lead_id=${row.lead_id}, phase=${row.lifecycle_phase}). ` +
+          `Inert in E.2 (no CoA UNION source yet) — Phase F replaces this with proper CoA-side logic.`);
+        coaSkippedFirstWarned = true;
+      }
+      continue;
+    }
+
     const {
       permit_num, revision_num, trade_slug,
       lifecycle_phase, phase_started_at, permit_type,
@@ -721,6 +745,9 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       status: expiredPct >= 60 ? 'FAIL' : expiredPct >= 30 ? 'WARN' : 'PASS',
     },
     { metric: 'total_forecast_rows', value: postRowCount, threshold: null, status: 'INFO' },
+    // Phase E.2 — defensive guard telemetry. Inert today (no CoA UNION source yet);
+    // first non-zero value appears when Phase F adds CoA rows to SOURCE_SQL.
+    { metric: 'coa_skipped_count', value: coaSkippedCount, threshold: null, status: 'INFO' },
   ];
   const auditVerdict =
     auditRows.some((r) => r.status === 'FAIL') ? 'FAIL' :

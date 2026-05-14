@@ -137,6 +137,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
       tp.trade_slug,
       tp.permit_num,
       tp.revision_num,
+      p.lead_id AS permit_lead_id,
       p.lifecycle_phase,
       p.lifecycle_stalled,
       tf.predicted_start,
@@ -180,8 +181,31 @@ pipeline.run('update-tracked-projects', async (pool) => {
   let unknown_phase_skipped = 0;
   const unknownPhasesSeen = new Set();
 
+  // Phase E.2 (v4 scope expansion per Gemini v3 CRIT 2 + user authorization):
+  // defensive guard against CoA-side rows entering PHASE_ORDINAL[] lookup.
+  // PHASE_ORDINAL['P3'] = -6 (permit pre-issuance ordinal); CoA-P3 is
+  // post-approval — different semantic. INERT today (tracked_projects has
+  // only permits today; Phase F's deeper refactor adds CoA-side rows AND
+  // restructures the JOIN). Ships now so Phase F is a clean drop-in.
+  let coaSkippedCount = 0;
+  let coaSkippedFirstWarned = false;
+
   for await (const row of pipeline.streamQuery(pool, SQL, [])) {
     totalRows++;
+
+    // Phase E.2 defensive guard: skip CoA-side rows.
+    if (typeof row.permit_lead_id === 'string' && row.permit_lead_id.startsWith('coa:')) {
+      coaSkippedCount++;
+      if (!coaSkippedFirstWarned) {
+        pipeline.log.warn('[tracked-projects]',
+          `Skipping CoA row (permit_lead_id=${row.permit_lead_id}, phase=${row.lifecycle_phase}). ` +
+          `Inert in E.2; Phase F handoff: tracked_projects JOIN is structurally permit-only today ` +
+          `(no coa_application_id FK or lead_id column on tracked_projects). Phase F needs deeper ` +
+          `SELECT refactor to accommodate CoA-side rows, not just a UNION on the source.`);
+        coaSkippedFirstWarned = true;
+      }
+      continue;
+    }
 
     const targets = TRADE_TARGET_PHASE[row.trade_slug];
     if (!targets) { unmappedTrade++; continue; } // unmapped trade — skip
@@ -660,6 +684,9 @@ pipeline.run('update-tracked-projects', async (pool) => {
     { metric: 'delivery_errors',   value: deliveryErrors, threshold: 0, status: deliveryErrors > 0 ? 'FAIL' : 'PASS' },
     { metric: 'projects_archived', value: archived,     threshold: null, status: 'INFO' },
     { metric: 'unknown_phase',     value: unknown_phase_skipped, threshold: null, status: 'INFO' },
+    // Phase E.2 — defensive guard telemetry. Inert today (tracked_projects has
+    // no CoA-side rows yet); first non-zero value appears when Phase F adds them.
+    { metric: 'coa_skipped_count', value: coaSkippedCount, threshold: null, status: 'INFO' },
   ];
   const auditVerdict =
     auditTableRows.some((r) => r.status === 'FAIL') ? 'FAIL' :

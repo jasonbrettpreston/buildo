@@ -26,13 +26,12 @@ const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const {
   classifyLifecyclePhase,
-  // Phase E.1 (84-W12) Same-Sprint Mitigation Option 2: until E.2 wires the
-  // expanded return shape (`matchedStatus` / `matchedRule` / `unmappedStatus` /
-  // `unmappedDecision` + new phase domain P3/P4/P19/P20), this consumer uses
-  // the Legacy adapter which preserves the v1 return shape `{phase: 'P1'|'P2'|null, stalled}`.
-  // Narrowing P3/P4/P19/P20 → null matches pre-E.1 production state (0.6%
-  // non-NULL coverage). E.2 plan-lock will swap this to `classifyCoaPhase`.
-  classifyCoaPhaseLegacy: classifyCoaPhase,
+  // Phase E.2 (2026-05-14): consumer switched back from classifyCoaPhaseLegacy
+  // to the full E.1 substrate classifyCoaPhase. Now writes 11 columns per row
+  // (phase + stalled + lifecycle_seq/group/block/stage + bid_value + 4 audit cols).
+  // Drives the 0.6% → ≥95% non-NULL coverage jump on first E.2 production run.
+  classifyCoaPhase,
+  mapToUniversalStream,
   DEAD_STATUS_ARRAY,
   NORMALIZED_DEAD_DECISIONS_ARRAY,
 } = require('./lib/lifecycle-phase');
@@ -389,10 +388,13 @@ const LIFECYCLE_CONFIG_SCHEMA = z.object({
 const PERMIT_TRANSITION_COLS = 7;
 const PERMIT_BATCH_SIZE = Math.floor((65535 - 1) / PERMIT_TRANSITION_COLS); // = 9362
 
-// COA_BATCH_SIZE: 3 data cols (id, phase, stalled) + 1 RUN_AT appended = 4 params/row.
-// (65535 - 1) / 4 = 16383.
-const COA_COLS = 3;
-const COA_BATCH_SIZE = Math.floor((65535 - 1) / (COA_COLS + 1)); // = 16383
+// Phase E.2 — COA_BATCH_SIZE is heap-bounded, NOT param-bounded.
+// With unnest array form, total bind params = 13 (12 arrays + 1 RUN_AT)
+// regardless of batch size. PG 65535 param limit does NOT apply.
+// 5000 rows × 12 columns × ~50 bytes ≈ 3 MB per batch — comfortable for
+// Node default heap. Chosen for round-trip efficiency: 5K rows = ~7 batches
+// on 33K first-run.
+const COA_BATCH_SIZE = 5000;
 // ─────────────────────────────────────────────────────────────────
 
 function buildPermitUpdateSQL(batchSize) {
@@ -432,29 +434,99 @@ function buildPermitUpdateSQL(batchSize) {
   `;
 }
 
-function buildCoaUpdateSQL(batchSize) {
-  const tuples = [];
-  for (let i = 0; i < batchSize; i++) {
-    const base = i * 3;
-    tuples.push(`($${base + 1}::int, $${base + 2}::varchar, $${base + 3}::boolean)`);
+// Phase E.2 — unnest array-param form. 12 array params + 1 RUN_AT = 13 bind params
+// regardless of batch size. Writes 11 columns + lifecycle_classified_at per row.
+// IS DISTINCT FROM clauses cover all 11 columns to capture catalog-evolution
+// scenarios (a catalog row's lifecycle_group could change while seq stays the same).
+const COA_UPDATE_SQL = `
+  UPDATE coa_applications ca SET
+    lifecycle_phase           = upd.phase,
+    lifecycle_stalled         = upd.stalled,
+    lifecycle_seq             = upd.lifecycle_seq,
+    lifecycle_group           = upd.lifecycle_group,
+    lifecycle_block           = upd.lifecycle_block,
+    lifecycle_stage           = upd.lifecycle_stage,
+    bid_value                 = upd.bid_value,
+    matched_status            = upd.matched_status,
+    matched_rule              = upd.matched_rule,
+    unmapped_status           = upd.unmapped_status,
+    unmapped_decision         = upd.unmapped_decision,
+    lifecycle_classified_at   = $13::timestamptz
+  FROM (
+    SELECT * FROM unnest(
+      $1::int[],          -- ids
+      $2::text[],         -- phases (nullable)
+      $3::boolean[],      -- stalleds
+      $4::int[],          -- seqs (nullable)
+      $5::text[],         -- groups (nullable)
+      $6::text[],         -- blocks (nullable)
+      $7::text[],         -- stages (nullable)
+      $8::decimal[],      -- bid_values (nullable)
+      $9::text[],         -- matched_statuses (nullable)
+      $10::smallint[],    -- matched_rules
+      $11::boolean[],     -- unmapped_status flags
+      $12::boolean[]      -- unmapped_decision flags
+    ) AS u(id, phase, stalled, lifecycle_seq, lifecycle_group, lifecycle_block,
+           lifecycle_stage, bid_value, matched_status, matched_rule,
+           unmapped_status, unmapped_decision)
+  ) upd
+  WHERE ca.id = upd.id
+    AND (ca.lifecycle_phase           IS DISTINCT FROM upd.phase
+      OR ca.lifecycle_stalled         IS DISTINCT FROM upd.stalled
+      OR ca.lifecycle_seq             IS DISTINCT FROM upd.lifecycle_seq
+      OR ca.lifecycle_group           IS DISTINCT FROM upd.lifecycle_group
+      OR ca.lifecycle_block           IS DISTINCT FROM upd.lifecycle_block
+      OR ca.lifecycle_stage           IS DISTINCT FROM upd.lifecycle_stage
+      OR ca.bid_value                 IS DISTINCT FROM upd.bid_value
+      OR ca.matched_status            IS DISTINCT FROM upd.matched_status
+      OR ca.matched_rule              IS DISTINCT FROM upd.matched_rule
+      OR ca.unmapped_status           IS DISTINCT FROM upd.unmapped_status
+      OR ca.unmapped_decision         IS DISTINCT FROM upd.unmapped_decision)
+`;
+
+// Phase E.2 transitions INSERT — ON CONFLICT idempotency via mig 146's
+// uix_lifecycle_transitions_idempotency UNIQUE INDEX on (lead_id, transitioned_at).
+const COA_TRANSITIONS_INSERT_SQL = `
+  INSERT INTO lifecycle_transitions
+    (lead_id, from_phase, to_phase, from_seq, to_seq,
+     transitioned_at, permit_type, project_type,
+     coa_type_class, neighbourhood_id)
+  SELECT * FROM unnest(
+    $1::text[],     -- lead_ids
+    $2::text[],     -- from_phases (nullable, from JS batch.old_phase)
+    $3::text[],     -- to_phases
+    $4::int[],      -- from_seqs (nullable, from JS batch.old_seq)
+    $5::int[],      -- to_seqs (nullable)
+    $6::timestamptz[],
+    $7::text[],     -- permit_types
+    $8::text[],     -- project_types
+    $9::text[],     -- coa_type_classes
+    $10::bigint[]   -- neighbourhood_ids
+  ) AS t(lead_id, from_phase, to_phase, from_seq, to_seq,
+         transitioned_at, permit_type, project_type, coa_type_class, neighbourhood_id)
+  ON CONFLICT (lead_id, transitioned_at) DO NOTHING
+`;
+
+// Phase E.2 audit_table helpers.
+// computeWarnableAuditStatus is for "lower-is-better" thresholds (e.g., unmapped counts).
+// For zero-tolerance metrics (catalog_invalid_phase_count), use inline ternary
+// (`count === 0 ? 'PASS' : 'FAIL'`) — two patterns coexist intentionally.
+function computeWarnableAuditStatus(value, { passAt, warnAt }) {
+  if (value <= passAt) return 'PASS';
+  if (value <= warnAt) return 'WARN';
+  return 'FAIL';
+}
+
+// Build top-N matched-status distribution + __other__ bucket for records_meta.
+function buildTop20WithOther(map) {
+  const sorted = [...map.entries()].sort((a, b) => b[1] - a[1]);
+  const top = sorted.slice(0, 20);
+  const tail = sorted.slice(20);
+  const result = Object.fromEntries(top);
+  if (tail.length > 0) {
+    result.__other__ = tail.reduce((sum, [, v]) => sum + v, 0);
   }
-  // WF3 2026-04-13 — lifecycle_stalled added (migration 094).
-  // IS DISTINCT FROM guard on EITHER phase or stalled so we don't
-  // bump lifecycle_classified_at when nothing actually changed.
-  //
-  // §14.2: RUN_AT ($runAtParam) appended as last parameter — same clock
-  // source as the permit path, preventing Midnight Cross drift.
-  const runAtParam = batchSize * 3 + 1;
-  return `
-    UPDATE coa_applications ca
-       SET lifecycle_phase = v.phase,
-           lifecycle_stalled = v.stalled,
-           lifecycle_classified_at = $${runAtParam}::timestamptz
-      FROM (VALUES ${tuples.join(', ')}) AS v(id, phase, stalled)
-     WHERE ca.id = v.id
-       AND (ca.lifecycle_phase IS DISTINCT FROM v.phase
-            OR ca.lifecycle_stalled IS DISTINCT FROM v.stalled)
-  `;
+  return result;
 }
 
 function flattenPermitBatch(rows) {
@@ -465,12 +537,22 @@ function flattenPermitBatch(rows) {
   return out;
 }
 
-function flattenCoaBatch(rows) {
-  const out = [];
-  for (const r of rows) {
-    out.push(r.id, r.phase, r.stalled);
-  }
-  return out;
+// Phase E.2 — build 12 unnest array params from coaBatch rows (one array per column).
+function buildCoaUpdateArrays(rows) {
+  return [
+    rows.map((r) => r.id),
+    rows.map((r) => r.phase),
+    rows.map((r) => r.stalled),
+    rows.map((r) => r.lifecycle_seq),
+    rows.map((r) => r.lifecycle_group),
+    rows.map((r) => r.lifecycle_block),
+    rows.map((r) => r.lifecycle_stage),
+    rows.map((r) => r.bid_value),
+    rows.map((r) => r.matched_status),
+    rows.map((r) => r.matched_rule),
+    rows.map((r) => r.unmapped_status),
+    rows.map((r) => r.unmapped_decision),
+  ];
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -540,6 +622,72 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   const P7A_MAX_DAYS                   = logicVars.lifecycle_p7a_max_days;
   const P7B_MAX_DAYS                   = logicVars.lifecycle_p7b_max_days;
   const ORPHAN_STALL_DAYS              = logicVars.lifecycle_orphan_stall_days;
+
+  // ═══════════════════════════════════════════════════════════
+  // Phase E.2 — Migration-existence guard + Universal Stream catalog Map
+  // ═══════════════════════════════════════════════════════════
+  // Both run INSIDE the lock callback to preserve the existing invariant
+  // (§4 above: all state-dependent initialization is lock-isolated).
+  //
+  // Guard #1 (migration 146): fail fast if mig 146 hasn't been applied —
+  // would otherwise crash later with confusing column-doesn't-exist errors.
+  const { rows: colCheck } = await pool.query(
+    `SELECT column_name FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'coa_applications'
+        AND column_name IN ('matched_status','matched_rule','unmapped_status','unmapped_decision')`,
+  );
+  const expectedCols = new Set(['matched_status', 'matched_rule', 'unmapped_status', 'unmapped_decision']);
+  const foundCols = new Set(colCheck.map((r) => r.column_name));
+  const missing = [...expectedCols].filter((c) => !foundCols.has(c));
+  if (missing.length > 0) {
+    throw new Error(
+      `[classify-lifecycle-phase] migration 146 not applied — missing columns on coa_applications: ` +
+      `${missing.join(', ')}. Apply migrations/146_e2_coa_audit_columns.sql before running.`,
+    );
+  }
+
+  // Build universal_stream_catalog lookup Map (column aliases bridge schema names).
+  // NOTE: bid_value DECIMAL(3,2) parsed as float; 0-1 range non-financial use case.
+  //       parseFloat + isFinite guard avoids Number('') = 0 trap.
+  const catalogByStatusSource = new Map();
+  const { rows: catalogRows } = await pool.query(
+    `SELECT seq,
+            lifecycle_group AS "group",
+            lifecycle_block AS "block",
+            lifecycle_stage AS "stage",
+            phase, bid_value, source, status
+       FROM universal_stream_catalog`,
+  );
+  for (const r of catalogRows) {
+    const bvNum = r.bid_value === null ? null : parseFloat(r.bid_value);
+    const bidValueSafe = (bvNum === null || !Number.isFinite(bvNum)) ? null : bvNum;
+    catalogByStatusSource.set(`${r.source}:${r.status}`, Object.freeze({
+      seq: r.seq,
+      group: r.group,
+      block: r.block,
+      stage: r.stage,
+      phase: r.phase,
+      bid_value: bidValueSafe,
+    }));
+  }
+  if (catalogByStatusSource.size === 0) {
+    throw new Error(
+      '[classify-lifecycle-phase] universal_stream_catalog returned 0 rows — ' +
+      'CoA classification cannot proceed. Verify migration 129 seed.',
+    );
+  }
+  // Guard #2: catalog must have at least one coa.status row.
+  // Defends against catalog source rename in a future migration silently
+  // disabling CoA classification.
+  const hasCoaStatusRows = Array.from(catalogByStatusSource.keys())
+    .some((k) => k.startsWith('coa.status:'));
+  if (!hasCoaStatusRows) {
+    throw new Error(
+      '[classify-lifecycle-phase] universal_stream_catalog has no coa.status rows — ' +
+      'CoA classification cannot proceed.',
+    );
+  }
   // ═══════════════════════════════════════════════════════════
   // Phase 1: classify dirty permit rows
   // ═══════════════════════════════════════════════════════════
@@ -875,21 +1023,70 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   );
 
   let dirtyCoAsCount = 0;
-  let coasUpdated = 0;
+  let coasUpdated = 0;                  // total rows where any column changed (Phase E.2: renamed coa_rows_updated metric)
+  let coaPhaseTransitionsCount = 0;     // E.2: actual phase OR seq changes that produced a lifecycle_transitions row
+  let coaStalledCount = 0;              // E.2: CoA-side stall count (separate from permit-side stalled_count)
+  let unmappedStatusCount = 0;          // E.2: rule 9 catchall OR data-drift signal
+  let unmappedDecisionCount = 0;        // E.2: decision non-null but not in any decision set
+  let catalogStatusMissingCount = 0;    // E.2: matchedStatus not in catalog Map (CKAN drift)
+  let catalogInvalidPhaseCount = 0;     // E.2: status present but catalog row has non-standard phase
+
+  // E.2 distribution accumulators — stored in pipeline_runs.records_meta only.
+  // NOT passed to DeepSeek narrative (Spec 48 observer's contextJson excludes
+  // records_meta distributions; deferred to Spec 48 Improvement D). Operators
+  // query records_meta directly via the SQL in the operator pre-ack.
+  const coaRuleDistribution = new Map();
+  const coaPhaseDistributionLive = new Map();
+  const coaMatchedStatusCounts = new Map();
 
   const flushCoaBatch = async (batch) => {
     if (batch.length === 0) return;
 
-    const sql = buildCoaUpdateSQL(batch.length);
-    // RUN_AT appended as last param — matches $${batchSize*3+1}::timestamptz.
-    const params = [...flattenCoaBatch(batch), RUN_AT];
+    const updateArrays = buildCoaUpdateArrays(batch);
     const batchIds = batch.map((r) => r.id);
 
+    // v4 fold v3-5: phase OR seq change filter (catalog evolution may shift
+    // seq without phase). Mirrors the IS DISTINCT FROM coverage in the UPDATE.
+    // First-classification rows have old_phase + old_seq NULL — they pass the
+    // filter so a ledger row is recorded with from_phase=NULL (matches existing
+    // Phase 2c permit-side pattern).
+    const phaseChangedBatch = batch.filter((b) => {
+      const phaseChanged = (b.old_phase ?? null) !== (b.phase ?? null);
+      const seqChanged   = (b.old_seq   ?? null) !== (b.lifecycle_seq ?? null);
+      return phaseChanged || seqChanged;
+    });
+
     await pipeline.withTransaction(pool, async (client) => {
-      const result = await client.query(sql, params);
+      // (a) Main UPDATE — 11 cols + classified_at, single statement with
+      //     IS DISTINCT FROM dead-update guard on all 11 cols. RUN_AT is $13.
+      const result = await client.query(COA_UPDATE_SQL, [...updateArrays, RUN_AT]);
       coasUpdated += result.rowCount || 0;
 
-      // §14.2: $2 is RUN_AT — same snapshot as the phase UPDATE above.
+      // (b) lifecycle_transitions INSERT for rows where phase or seq changed.
+      //     ON CONFLICT (lead_id, transitioned_at) DO NOTHING via mig 146's
+      //     UNIQUE INDEX — idempotent against crash-and-retry within the same run.
+      //     Counter uses insertResult.rowCount (NOT phaseChangedBatch.length) so
+      //     the audit metric reflects DB-committed rows even when ON CONFLICT fires
+      //     — matches the permit-side pattern at line 898.
+      if (phaseChangedBatch.length > 0) {
+        const transInsertResult = await client.query(COA_TRANSITIONS_INSERT_SQL, [
+          phaseChangedBatch.map((b) => b.lead_id),
+          phaseChangedBatch.map((b) => b.old_phase),
+          phaseChangedBatch.map((b) => b.phase),
+          phaseChangedBatch.map((b) => b.old_seq),
+          phaseChangedBatch.map((b) => b.lifecycle_seq),
+          phaseChangedBatch.map(() => RUN_AT),
+          phaseChangedBatch.map((b) => b.permit_type),
+          phaseChangedBatch.map((b) => b.project_type),
+          phaseChangedBatch.map((b) => b.coa_type_class),
+          phaseChangedBatch.map((b) => b.neighbourhood_id),
+        ]);
+        coaPhaseTransitionsCount += transInsertResult.rowCount || 0;
+      }
+
+      // (c) Stamp classified_at for every row in this batch that is
+      //     still dirty (last_seen_at > classified_at). Matches existing
+      //     permit-side pattern (step (c) at line ~760).
       await client.query(
         `UPDATE coa_applications
             SET lifecycle_classified_at = $2::timestamptz
@@ -904,14 +1101,32 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   let coaBatch = [];
   for await (const row of pipeline.streamQuery(
     pool,
-    `SELECT id, decision, linked_permit_num, status, last_seen_at,
+    // Phase E.2 — extended SELECT carries lead_id + old_phase + old_seq
+    // + cohort dimensions for lifecycle_transitions INSERT.
+    // Backfill predicate uses `OR ca.matched_rule IS NULL` (NOT matched_status —
+    // catchall rule 9 writes matched_status=NULL forever, would create infinite
+    // re-classification loop). matched_rule is null only pre-classification;
+    // monotonic NULL→non-NULL after first run, breaking the loop.
+    `SELECT ca.id,
+            ca.lead_id,
+            ca.decision,
+            ca.linked_permit_num,
+            ca.status,
+            ca.last_seen_at,
+            ca.lifecycle_phase  AS old_phase,
+            ca.lifecycle_seq    AS old_seq,
+            ca.permit_type,
+            ca.project_type,
+            ca.coa_type_class,
+            ca.neighbourhood_id,
             CASE
-              WHEN last_seen_at IS NULL THEN NULL
-              ELSE GREATEST(0, EXTRACT(EPOCH FROM ($1::timestamptz - last_seen_at)) / 86400.0)
+              WHEN ca.last_seen_at IS NULL THEN NULL
+              ELSE GREATEST(0, EXTRACT(EPOCH FROM ($1::timestamptz - ca.last_seen_at)) / 86400.0)
             END::float AS days_since_activity
-       FROM coa_applications
-      WHERE lifecycle_classified_at IS NULL
-         OR last_seen_at > lifecycle_classified_at`,
+       FROM coa_applications ca
+      WHERE ca.lifecycle_classified_at IS NULL
+         OR ca.last_seen_at > ca.lifecycle_classified_at
+         OR ca.matched_rule IS NULL`,
     [RUN_AT],
   )) {
     dirtyCoAsCount++;
@@ -922,7 +1137,59 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       daysSinceActivity: row.days_since_activity,
       stallThresholdDays: COA_STALL_THRESHOLD_DAYS,
     });
-    coaBatch.push({ id: row.id, phase: result.phase, stalled: result.stalled });
+    // E.1 substrate authoritative phase (NEVER catalogRow.phase per Observability v4 fold #104).
+    const catalogRow = mapToUniversalStream(catalogByStatusSource, result.matchedStatus, 'coa.status');
+
+    // Catalog poisoning telemetry — split into 2 counters for triage clarity:
+    //   - catalog_status_missing_count: status not in catalog Map (CKAN drift; add to seed)
+    //   - catalog_invalid_phase_count:  status present but catalog phase non-standard (fix seed)
+    // Rule 9 catchall has matchedStatus=null and is skipped here (correct).
+    if (result.matchedStatus != null) {
+      const rawCatalogRow = catalogByStatusSource.get(`coa.status:${result.matchedStatus}`);
+      if (rawCatalogRow == null) {
+        catalogStatusMissingCount++;
+      } else if (catalogRow == null) {
+        catalogInvalidPhaseCount++;
+      }
+    }
+
+    coaBatch.push({
+      id: row.id,
+      lead_id: row.lead_id,
+      old_phase: row.old_phase,
+      old_seq: row.old_seq,
+      permit_type: row.permit_type,
+      project_type: row.project_type,
+      coa_type_class: row.coa_type_class,
+      neighbourhood_id: row.neighbourhood_id,
+      // E.1 substrate authoritative — lifecycle_phase write target
+      phase: result.phase,
+      stalled: result.stalled,
+      // Granular Universal Stream columns (catalogRow.* — null on catchall or catalog miss)
+      lifecycle_seq: catalogRow?.seq ?? null,
+      lifecycle_group: catalogRow?.group ?? null,
+      lifecycle_block: catalogRow?.block ?? null,
+      lifecycle_stage: catalogRow?.stage ?? null,
+      bid_value: catalogRow?.bid_value ?? null,
+      // New persisted audit columns (mig 146)
+      matched_status: result.matchedStatus,
+      matched_rule: result.matchedRule,
+      unmapped_status: result.unmappedStatus,
+      unmapped_decision: result.unmappedDecision,
+    });
+
+    // Distribution accumulators (NOT passed to DeepSeek — records_meta only).
+    coaRuleDistribution.set(result.matchedRule, (coaRuleDistribution.get(result.matchedRule) || 0) + 1);
+    coaPhaseDistributionLive.set(result.phase ?? 'null', (coaPhaseDistributionLive.get(result.phase ?? 'null') || 0) + 1);
+    if (result.matchedStatus != null) {
+      coaMatchedStatusCounts.set(
+        result.matchedStatus,
+        (coaMatchedStatusCounts.get(result.matchedStatus) || 0) + 1,
+      );
+    }
+    if (result.stalled) coaStalledCount++;
+    if (result.unmappedStatus) unmappedStatusCount++;
+    if (result.unmappedDecision) unmappedDecisionCount++;
 
     if (coaBatch.length >= COA_BATCH_SIZE) {
       await flushCoaBatch(coaBatch);
@@ -1085,11 +1352,15 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // can silently leave rows with NULL phase if the decision-matching
   // logic breaks. Dead CoA decisions are excluded via the shared
   // NORMALIZED_DEAD_DECISIONS_ARRAY.
+  //
+  // Phase E.2 (DeepSeek diff HIGH 2): removed `AND linked_permit_num IS NULL`
+  // filter — that was pre-E.1 carve-out for the now-removed Rule 0 short-circuit.
+  // Post-E.1, linked CoAs are CLASSIFIED (not skipped), so any linked CoA with
+  // NULL lifecycle_phase represents a real classification failure and must count.
   const { rows: unclCoaRows } = await pool.query(
     `SELECT COUNT(*)::int AS n
        FROM coa_applications
       WHERE lifecycle_phase IS NULL
-        AND linked_permit_num IS NULL
         AND lower(trim(regexp_replace(COALESCE(decision,''), '\\s+', ' ', 'g')))
             <> ALL($1::text[])
         AND decision IS NOT NULL
@@ -1099,12 +1370,46 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   const unclassifiedCount = unclPermitRows[0].n + unclCoaRows[0].n;
 
   // Build audit_table rows for the admin dashboard
+  // Phase E.2: 7 new CoA-side metrics (4 thresholded scalars + 2 INFO + 1 split-from-existing).
+  // Spec 48 observer reads `audit_table.rows` for automated WARN/FAIL via extractIssues().
+  // The 3 distributions live in records_meta only (manual operator inspection via SQL).
   const auditRows = [
+    // Existing permit-side rows (unchanged)
     { metric: 'permits_dirty', value: dirtyPermitsCount, threshold: null, status: 'INFO' },
     { metric: 'permits_updated', value: permitsUpdated, threshold: null, status: 'INFO' },
+    // CoA-side existing (renamed: coa_phase_changes was misleading — counts ANY column change)
     { metric: 'coa_evaluated', value: dirtyCoAsCount, threshold: null, status: 'INFO' },
-    { metric: 'coa_phase_changes', value: coasUpdated, threshold: null, status: 'INFO' },
+    { metric: 'coa_rows_updated', value: coasUpdated, threshold: null, status: 'INFO' },
+    { metric: 'coa_phase_transitions_count', value: coaPhaseTransitionsCount, threshold: null, status: 'INFO' },
+    // Existing permit-side stall (kept distinct from coa_stalled_count per Observability v4 fold #105)
     { metric: 'stalled_count', value: stalledCount, threshold: null, status: 'INFO' },
+    // Phase E.2 NEW — 4 thresholded scalars + 1 INFO
+    { metric: 'coa_stalled_count', value: coaStalledCount, threshold: null, status: 'INFO' },
+    {
+      metric: 'unmapped_status_count',
+      value: unmappedStatusCount,
+      threshold: '<=3 WARN, <=1 PASS',
+      status: computeWarnableAuditStatus(unmappedStatusCount, { passAt: 1, warnAt: 3 }),
+    },
+    {
+      metric: 'unmapped_decision_count',
+      value: unmappedDecisionCount,
+      threshold: '<=5 WARN, <=3 PASS',
+      status: computeWarnableAuditStatus(unmappedDecisionCount, { passAt: 3, warnAt: 5 }),
+    },
+    {
+      metric: 'catalog_status_missing_count',
+      value: catalogStatusMissingCount,
+      threshold: '<=3 WARN, <=1 PASS',
+      status: computeWarnableAuditStatus(catalogStatusMissingCount, { passAt: 1, warnAt: 3 }),
+    },
+    {
+      metric: 'catalog_invalid_phase_count',
+      value: catalogInvalidPhaseCount,
+      threshold: '=0 PASS, >0 FAIL',
+      status: catalogInvalidPhaseCount === 0 ? 'PASS' : 'FAIL',
+    },
+    // Existing CQA gate
     {
       metric: 'unclassified_count',
       value: unclassifiedCount,
@@ -1142,6 +1447,12 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     pipeline.log.warn('[classify-lifecycle-phase/push]', 'dispatchStartDateUrgentPushes threw unexpectedly', { err: err.message });
   }
 
+  // Phase E.2: audit_table.verdict computed from row statuses per Spec 47 §R10.
+  // FAIL if any row is FAIL; else WARN if any is WARN; else PASS.
+  const hasFail = auditRows.some((r) => r.status === 'FAIL');
+  const hasWarn = auditRows.some((r) => r.status === 'WARN');
+  const auditVerdict = hasFail ? 'FAIL' : (hasWarn ? 'WARN' : 'PASS');
+
   pipeline.emitSummary({
     records_total: dirtyPermitsCount,
     records_new: 0,
@@ -1156,10 +1467,18 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       coa_distribution: coaDistribution,
       stalled_count: stalledCount,
       unclassified_count: unclassifiedCount,
+      // Phase E.2 NEW — 3 distributions in records_meta (NOT in audit_table.rows).
+      // Surfaced for manual operator inspection only — Spec 48 observer reads
+      // audit_table.rows for automated WARN/FAIL; distributions land in
+      // pipeline_runs.records_meta but are NOT passed to DeepSeek narrative
+      // until Spec 48 Improvement D ships.
+      coa_rule_distribution: Object.fromEntries(coaRuleDistribution),
+      coa_phase_distribution_live: Object.fromEntries(coaPhaseDistributionLive),
+      coa_matched_status_top20: buildTop20WithOther(coaMatchedStatusCounts),
       audit_table: {
         phase: 21, // visual ordering in admin dashboard, after assert_engine_health
         name: 'Classify Lifecycle Phase',
-        verdict: unclassifiedCount <= 100 ? 'PASS' : 'FAIL',
+        verdict: auditVerdict,
         rows: auditRows,
       },
     },
@@ -1179,17 +1498,32 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       permit_inspections: ['permit_num', 'stage_name', 'status', 'inspection_date'],
       coa_applications: [
         'id',
+        'lead_id',
         'decision',
         'linked_permit_num',
         'status',
         'last_seen_at',
+        'lifecycle_phase',         // E.2: read as old_phase
+        'lifecycle_seq',           // E.2: read as old_seq
+        'permit_type',             // E.2: cohort dimension for transitions
+        'project_type',
+        'coa_type_class',
+        'neighbourhood_id',
+        'matched_rule',            // E.2: backfill predicate
         'lifecycle_classified_at',
       ],
+      universal_stream_catalog: ['seq', 'lifecycle_group', 'lifecycle_block', 'lifecycle_stage', 'phase', 'bid_value', 'source', 'status'],
     },
     {
       permits: ['lifecycle_phase', 'lifecycle_stalled', 'lifecycle_classified_at', 'phase_started_at'],
       permit_phase_transitions: ['permit_num', 'revision_num', 'from_phase', 'to_phase', 'transitioned_at', 'permit_type', 'neighbourhood_id'],
-      coa_applications: ['lifecycle_phase', 'lifecycle_stalled', 'lifecycle_classified_at'],
+      // Phase E.2: extended write list (mig 146 columns + granular Universal Stream)
+      coa_applications: [
+        'lifecycle_phase', 'lifecycle_stalled', 'lifecycle_classified_at',
+        'lifecycle_seq', 'lifecycle_group', 'lifecycle_block', 'lifecycle_stage', 'bid_value',
+        'matched_status', 'matched_rule', 'unmapped_status', 'unmapped_decision',
+      ],
+      lifecycle_transitions: ['lead_id', 'from_phase', 'to_phase', 'from_seq', 'to_seq', 'transitioned_at', 'permit_type', 'project_type', 'coa_type_class', 'neighbourhood_id'],
     },
   );
 
