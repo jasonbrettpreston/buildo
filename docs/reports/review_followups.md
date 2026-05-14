@@ -968,3 +968,19 @@ R5.2.f Multi-Agent Review on `scripts/migrate-to-lead-id.js` + migrations 138–
 | 48 | LOW (DEFER) | DeepSeek-views | Reused alias `lt` in migration 142 UNION branches (`lead_trades lt` + `lifecycle_transitions lt`) | Aliases are scoped per-branch in UNION ALL; no actual conflict. Cosmetic readability issue. |
 | 49 | HIGH (DEFER) | DeepSeek-views | UNION branches lack `AND <table>.lead_id IS NOT NULL` filter | Defensive — once migrations 138-141 promote NOT NULL, the columns can't be NULL so the filter is redundant. `tracked_projects` branch correctly has it (dual-key window). Other 7 branches don't need it post-promotion. |
 
+
+---
+
+## WF1 #coa-pipeline-parity-phase-c — R5.3 review deferrals (2026-05-13)
+
+R5.3 design pivot from app-layer dual-write (6 scripts) to trigger-based mirroring (2 migrations) was approved by user. R5.3.f Multi-Agent Review on migrations 143/144 + db.test.ts surfaced 1 BUG (UPDATE branch silent miss + key-change orphan, fixed inline via INSERT ON CONFLICT + EXCEPTION guard). Other findings logged below.
+
+| # | Severity | Source | Finding | Decision rationale |
+|---|---|---|---|---|
+| 50 | DEFER | Worktree | UPDATE branch write amplification (2x writes per source UPDATE) at 250K rows/run | Acceptable cost — classify-permits.js is scheduled (not hot-path). Phase H drops legacy tables eliminating the write multiplier. |
+| 51 | DEFER | Worktree | Bulk DELETE fan-out (1000 source DELETEs → 1000 trigger fires on lead_trades) | Per-row trigger design is correct for the use case. Statement-level triggers can't access OLD row data. Worth Phase H performance review. |
+| 52 | REJECT | DeepSeek-144 | match_type VARCHAR(30→20) truncation risk | Audited — MAX(LENGTH(match_type))=15 in production, all fit VARCHAR(20). |
+| 53 | REJECT | DeepSeek-144 | linked_at NULL → matched_at NOT NULL violation | migration 012 declares `linked_at TIMESTAMPTZ NOT NULL DEFAULT NOW()` |
+| 54 | REJECT | DeepSeek-144 | DELETE cascade concerns | No FK references lead_parcels; no cascading DELETE paths |
+| 55 | NIT (DEFER) | DeepSeek-144 | Comment hardcodes "MAX=15" production invariant in migration | Re-grep on future ingestion change; CHECK constraint on permit_parcels.match_type if data grows |
+

@@ -312,13 +312,17 @@ Phase B's view (migration 137) covers only the 4 Phase B tables. Phase C extends
   - Multi-Agent Review: full 3-reviewer (HIGH-risk)
   - Triage + Commit
 
-  **R5.3 — Permit-side writer dual-write extensions (HIGH risk): classify-permits.js + link-parcels.js + 4 ancillary writers per C.8 table**
-  - Scaffold updated tests for all 6 writers (logic + infra + new `.db.test.ts`)
-  - Red Light: tests fail (scripts only write the legacy tables)
-  - Implement the dual-write: KEEP every existing `INSERT INTO permit_trades` / `permit_parcels` write; ADD parallel `INSERT INTO lead_trades` / `lead_parcels` writes within the SAME `withTransaction` envelope. For `create-pre-permits.js`, KEEP every existing `DELETE FROM permit_trades` / `permit_parcels`; ADD parallel `DELETE FROM lead_trades` / `lead_parcels` for the same lead_id.
-  - Green Light: full test suite + db-tests green; staging run shows BOTH legacy tables AND new tables populated with matching row counts post-classification
-  - Self-Checklist: 12+ items (every write-pair audited, both INSERTs inside same withTransaction, IS DISTINCT FROM guards preserved, tier 1/2/3 logic unchanged, realtor backfill behavior preserved, dual-DELETE in create-pre-permits.js, no orphaned writes left, lead_id derived from permits.lead_id when joined OR via deriveLeadId lib when not)
-  - Multi-Agent Review: full 3-reviewer (HIGH-risk; biggest writer surface in the codebase)
+  **R5.3 — Permit-side dual-write via trigger mirroring (HIGH risk) — DESIGN PIVOT 2026-05-13**
+  - **Pivot rationale:** the locked plan called for app-layer dual-write across 6 scripts (~180 lines of code change spread across `classify-permits.js`, `link-parcels.js`, `backfill-realtor-permit-trades.js`, `reclassify-all.js`, `seed-parcels.js`, `create-pre-permits.js`). The R2 worktree review flagged "missed writer" as the #1 risk. After R5.2 ships, trigger-based mirroring became the simpler design: 2 new migrations create AFTER INSERT/UPDATE/DELETE triggers on `permit_trades` + `permit_parcels` that auto-mirror every write to `lead_trades` + `lead_parcels`. **Net change: 0 script files modified, 2 migrations added.** Zero risk of missed writer; eliminates the C.8 ancillary audit entirely.
+  - **Schema mapping:**
+    - `permit_trades` → `lead_trades`: `(permit_num, revision_num)` → `lead_id` via `'permit:' || NEW.permit_num || ':' || LPAD(NEW.revision_num, 2, '0')`. All other columns map 1:1.
+    - `permit_parcels` → `lead_parcels`: same prefix derivation. Column `linked_at` → `matched_at` (renamed). `match_type` types differ (VARCHAR(30) → VARCHAR(20)) — R0.6.1 audit confirmed all production values fit (max length 15).
+  - Scaffold 2 migration tests (143 + 144) asserting trigger function + AFTER trigger DDL + INSERT/UPDATE/DELETE handling
+  - Red Light: tests fail (migrations don't exist)
+  - Implement migrations 143 + 144 — `CREATE OR REPLACE FUNCTION` + `CREATE TRIGGER ... AFTER INSERT OR UPDATE OR DELETE ON <legacy> FOR EACH ROW`
+  - Green Light: tests + typecheck + full db.test.ts suite green; live-DB end-to-end: INSERT into permit_trades, observe parallel row appears in lead_trades; DELETE source, observe lead_trades row disappears
+  - Self-Checklist: 12+ items (INSERT/UPDATE/DELETE branches all present, ON CONFLICT (lead_id, trade_id) DO UPDATE for re-runs, lead_id derivation matches Phase B trigger byte-for-byte, AFTER trigger semantics preserve source-write atomicity)
+  - Multi-Agent Review: full 3-reviewer
   - Triage + Commit
 
   **R5.4 — Compute-pipeline rekeys (HIGH risk): compute-cost-estimates.js + compute-trade-forecasts.js + compute-opportunity-scores.js**
