@@ -18,7 +18,7 @@
  *
  * Usage: node scripts/link-coa.js [--dry-run]
  *
- * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.6.D + §6.9 + §6.11 Phase D R5.6 + §6.6.X Lead-Identity Continuity
  * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
  * SPEC LINK: docs/specs/01-pipeline/60_shared_steps.md
  */
@@ -31,6 +31,9 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-load
 const LOGIC_VARS_SCHEMA = z.object({
   coa_match_conf_high:   z.coerce.number().finite().positive().max(1),
   coa_match_conf_medium: z.coerce.number().finite().positive().max(1),
+  // R5.6 Indep M2 fold: explicit field (NOT relying on .passthrough()) so a
+  // typo in the key surfaces at Zod validation, not at runtime as NaN.
+  coa_inherit_from_permit_min_confidence: z.coerce.number().finite().positive().max(1),
 }).passthrough();
 
 const ADVISORY_LOCK_ID = 12;
@@ -43,6 +46,7 @@ pipeline.run('link-coa', async (pool) => {
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   const confHigh   = logicVars.coa_match_conf_high;
   const confMedium = logicVars.coa_match_conf_medium;
+  const inheritConfMin = logicVars.coa_inherit_from_permit_min_confidence;
 
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
@@ -74,9 +78,14 @@ pipeline.run('link-coa', async (pool) => {
         },
       },
     });
+    // R5.6 emitMeta extension also applies to the early-exit path: while no
+    // unlinked CoAs means no new fuzzy-matches, the enrichment fields are part
+    // of the script's overall I/O surface and should be declared consistently
+    // for spec 48 observer cross-run trend stability.
     pipeline.emitMeta(
-      { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name_normalized", "ward", "issued_date", "description"] },
-      { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"] }
+      { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num", "linked_confidence", "latitude", "longitude"],
+        "permits": ["permit_num", "revision_num", "street_num", "street_name_normalized", "ward", "issued_date", "application_date", "description", "latitude", "longitude"] },
+      { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at", "latitude", "longitude", "ward"] }
     );
     return;
   }
@@ -89,9 +98,26 @@ pipeline.run('link-coa', async (pool) => {
   // ------------------------------------------------------------------
   // Pre-pass: Unlink cross-ward mismatches from previous runs
   // ------------------------------------------------------------------
+  // R5.6 DeepSeek CRITICAL fold: also clear stale `permits.linked_coa_application_number`
+  // back-refs when their CoA is unlinked here. Without this, the back-ref
+  // points at an application_number that no longer references the permit
+  // (lead-identity continuity violation visible to downstream consumers).
   pipeline.log.info('[link-coa]', 'Pre-pass: Checking for cross-ward mismatches...');
+  let staleBackRefsCleared = 0;
   if (!dryRun) {
     crossWardCleaned = await pipeline.withTransaction(pool, async (client) => {
+      // Step 1: capture the application_numbers being unlinked (need to NULL
+      // back-refs for permits whose only link was this CoA).
+      const unlinking = await client.query(`
+        SELECT ca.application_number, ca.linked_permit_num AS permit_num
+          FROM coa_applications ca
+          JOIN permits p ON p.permit_num = ca.linked_permit_num
+         WHERE ca.ward IS NOT NULL AND p.ward IS NOT NULL
+           AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')
+           AND ca.linked_confidence != 0.10
+      `);
+
+      // Step 2: unlink the CoAs (existing behavior).
       const result = await client.query(`
         UPDATE coa_applications ca
         SET linked_permit_num = NULL,
@@ -102,6 +128,40 @@ pipeline.run('link-coa', async (pool) => {
           AND LTRIM(ca.ward, '0') != LTRIM(p.ward, '0')
           AND ca.linked_confidence != 0.10
       `);
+
+      // Step 3 (R5.6 DeepSeek CRITICAL fold): clear stale back-refs.
+      // For each (permit_num, application_number) pair we just unlinked,
+      // NULL the permit's back-ref ONLY IF no other CoA still references it.
+      //
+      // Diff-review fold (Obs L7) — transient state note: when a permit
+      // has BOTH a now-unlinked high-confidence CoA AND a retained Tier 1c
+      // CoA (confidence 0.10, excluded from the unlinking step), the
+      // NOT EXISTS gate below sees the Tier 1c CoA and SKIPS the back-ref
+      // clear — so the permit's back-ref still points at the unlinked
+      // high-confidence CoA. This is a transient state: the back-ref pass
+      // at lines ~480-510 (Phase D R5.1) runs LATER in this same script
+      // invocation and re-derives the back-ref from the surviving links,
+      // picking up the Tier 1c CoA as the new back-ref target. By the time
+      // link-coa.js exits, the permit's back-ref is consistent.
+      if (unlinking.rows.length > 0) {
+        const permitNums = unlinking.rows.map((r) => r.permit_num);
+        const appNums = unlinking.rows.map((r) => r.application_number);
+        const staleResult = await client.query(
+          `UPDATE permits p
+              SET linked_coa_application_number = NULL
+             FROM (SELECT unnest($1::text[]) AS pn, unnest($2::text[]) AS an) cleared
+            WHERE p.permit_num = cleared.pn
+              AND p.linked_coa_application_number = cleared.an
+              AND NOT EXISTS (
+                SELECT 1 FROM coa_applications other
+                 WHERE other.linked_permit_num = p.permit_num
+                   AND other.application_number IS DISTINCT FROM cleared.an
+              )`,
+          [permitNums, appNums],
+        );
+        staleBackRefsCleared = staleResult.rowCount || 0;
+      }
+
       return result.rowCount || 0;
     });
   } else {
@@ -447,6 +507,222 @@ pipeline.run('link-coa', async (pool) => {
   }
 
   // ------------------------------------------------------------------
+  // Phase D R5.6 Part A: permit→CoA enrichment (lead-identity continuity)
+  // ------------------------------------------------------------------
+  // When link-coa.js's fuzzy-match writes coa.linked_permit_num with high
+  // confidence (Tier 1a/1b/2a at conf ≥ coa_inherit_from_permit_min_confidence,
+  // default 0.60), inherit the permit's authoritative lat/long + ward into
+  // coa_applications. This closes the lead-identity continuity gap where a
+  // user who saw the lead via the permit feed would later see the linked CoA
+  // with slightly-different attributes.
+  //
+  // The DISTINCT ON subquery (Indep C1 CRIT fold) disambiguates permit
+  // revisions — coa_applications.linked_permit_num stores only permit_num,
+  // but permits has many revisions per permit_num each with potentially
+  // different lat/long. We pick the same revision link-coa.js's Tier 1a
+  // logic would pick (most recent issue/application date, then highest rev).
+  //
+  // Atomic lat/long pair guard (Gemini HIGH fold): WHERE checks BOTH
+  // p.latitude IS NOT NULL AND p.longitude IS NOT NULL — never writes half
+  // a coordinate pair.
+  //
+  // IS DISTINCT FROM guards: idempotent re-run + dead-tuple bloat prevention.
+  // Re-applies when permit's lat/long changes between chain runs.
+  //
+  // Ward COALESCE (Indep M5 + checklist e): CoA's own ward authoritative
+  // when non-null (CoA data is reliable for ward); permit ward used only
+  // to FILL NULL CoA ward.
+  //
+  // SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.6.D + §6.6.X Lead-Identity Continuity + §6.11 Phase D R5.6
+  let coaInheritedFromPermit = 0;
+  let coaLatLngUpgradedFromPermit = 0;
+  let coaWardFilledFromPermit = 0;
+  let coaWardMismatchWithPermit = 0;
+  let coaBelowConfidenceFloor = 0;
+  let leadIdentityLatLngMismatch = 0;
+  // Diff-review fold (Obs L3): enrichment_eligible_count distinguishes
+  // "fresh staging DB / no CoAs linked yet" from "enrichment code is
+  // silently broken" on first run. If eligible > 0 but inherited == 0, the
+  // enrichment UPDATE is broken; if both 0, simply no CoAs are eligible yet.
+  let enrichmentEligible = 0;
+  if (!dryRun) {
+    // R5.6 Indep H3 fold: enrichment in its own withTransaction (post-tier
+    // writes). link-coa.js's tier UPDATEs each have their own transaction;
+    // we don't try to share one envelope.
+    const enrichmentCounts = await pipeline.withTransaction(pool, async (client) => {
+      // Pre-count rows where ca.ward != p.ward (both non-null) — Obs L3-4
+      // fold: data-quality signal independent of inheritance writes.
+      const mismatchRes = await client.query(
+        `WITH best_permit AS (
+           SELECT DISTINCT ON (p.permit_num) p.permit_num, p.ward
+             FROM permits p
+            ORDER BY p.permit_num,
+                     COALESCE(p.issued_date, p.application_date) DESC NULLS LAST,
+                     p.revision_num DESC
+         )
+         SELECT COUNT(*)::int AS n
+           FROM coa_applications ca
+           JOIN best_permit bp ON bp.permit_num = ca.linked_permit_num
+          WHERE ca.linked_confidence >= $1::numeric
+            AND ca.ward IS NOT NULL AND bp.ward IS NOT NULL
+            AND LTRIM(ca.ward, '0') != LTRIM(bp.ward, '0')`,
+        [inheritConfMin],
+      );
+      const wardMismatch = mismatchRes.rows[0].n || 0;
+
+      // Pre-count CoAs where the ward fill would fire — Obs L3-4 fold:
+      // accurate count independent of the lat/long UPDATE rowCount.
+      //
+      // Diff-review CRIT fold (3-way concur: DeepSeek MED + Indep H2 + Obs
+      // L10): MUST filter `p.latitude IS NOT NULL AND p.longitude IS NOT NULL`
+      // to match the main UPDATE's best_permit CTE. Without this, the
+      // pre-count overcounts ward fills for permits that have ward but no
+      // geocode (those permits are excluded from the main UPDATE entirely).
+      const wardFillRes = await client.query(
+        `WITH best_permit AS (
+           SELECT DISTINCT ON (p.permit_num) p.permit_num, p.ward
+             FROM permits p
+            WHERE p.ward IS NOT NULL
+              AND p.latitude IS NOT NULL
+              AND p.longitude IS NOT NULL
+            ORDER BY p.permit_num,
+                     COALESCE(p.issued_date, p.application_date) DESC NULLS LAST,
+                     p.revision_num DESC
+         )
+         SELECT COUNT(*)::int AS n
+           FROM coa_applications ca
+           JOIN best_permit bp ON bp.permit_num = ca.linked_permit_num
+          WHERE ca.linked_confidence >= $1::numeric
+            AND ca.ward IS NULL`,
+        [inheritConfMin],
+      );
+      const wardFill = wardFillRes.rows[0].n || 0;
+
+      // Pre-count lat/lng upgrades — Obs L3-4 fold: separate from ward.
+      const latLngRes = await client.query(
+        `WITH best_permit AS (
+           SELECT DISTINCT ON (p.permit_num) p.permit_num, p.latitude, p.longitude
+             FROM permits p
+            WHERE p.latitude IS NOT NULL AND p.longitude IS NOT NULL
+            ORDER BY p.permit_num,
+                     COALESCE(p.issued_date, p.application_date) DESC NULLS LAST,
+                     p.revision_num DESC
+         )
+         SELECT COUNT(*)::int AS n
+           FROM coa_applications ca
+           JOIN best_permit bp ON bp.permit_num = ca.linked_permit_num
+          WHERE ca.linked_confidence >= $1::numeric
+            AND (ca.latitude  IS DISTINCT FROM bp.latitude
+              OR ca.longitude IS DISTINCT FROM bp.longitude)`,
+        [inheritConfMin],
+      );
+      const latLngUpgrade = latLngRes.rows[0].n || 0;
+
+      // Main enrichment UPDATE — DISTINCT ON subquery (Indep C1 CRIT fold)
+      // + atomic lat/long pair guard (Gemini HIGH fold) + IS DISTINCT FROM
+      // guards (idempotent / no WAL bloat).
+      const enrichRes = await client.query(
+        `WITH best_permit AS (
+           SELECT DISTINCT ON (p.permit_num)
+                  p.permit_num, p.latitude, p.longitude, p.ward
+             FROM permits p
+            WHERE p.latitude IS NOT NULL
+              AND p.longitude IS NOT NULL
+            ORDER BY p.permit_num,
+                     COALESCE(p.issued_date, p.application_date) DESC NULLS LAST,
+                     p.revision_num DESC
+         )
+         UPDATE coa_applications ca
+            SET latitude  = bp.latitude,
+                longitude = bp.longitude,
+                -- Indep M5 + checklist (e): CoA ward authoritative; permit fills NULL only.
+                ward      = COALESCE(ca.ward, bp.ward)
+           FROM best_permit bp
+          WHERE ca.linked_permit_num = bp.permit_num
+            AND ca.linked_confidence >= $1::numeric
+            AND (
+                 ca.latitude  IS DISTINCT FROM bp.latitude
+              OR ca.longitude IS DISTINCT FROM bp.longitude
+              OR (ca.ward IS NULL AND bp.ward IS NOT NULL)
+            )`,
+        [inheritConfMin],
+      );
+      const inheritedTotal = enrichRes.rowCount || 0;
+
+      return {
+        inheritedTotal,
+        latLngUpgrade,
+        wardFill,
+        wardMismatch,
+      };
+    });
+    coaInheritedFromPermit = enrichmentCounts.inheritedTotal;
+    coaLatLngUpgradedFromPermit = enrichmentCounts.latLngUpgrade;
+    coaWardFilledFromPermit = enrichmentCounts.wardFill;
+    coaWardMismatchWithPermit = enrichmentCounts.wardMismatch;
+
+    // Obs L1-1 CRIT fold: gate-misconfig detection. Count of linked CoAs
+    // whose confidence is BELOW the inheritance floor — non-zero is
+    // informational; a sudden spike vs 7-day baseline indicates the floor
+    // was tightened or many low-confidence links got created.
+    //
+    // Diff-review fold (Obs L8): this query runs on `pool` (outside the
+    // enrichment transaction). Correctness depends on ADVISORY_LOCK_ID = 12
+    // preventing concurrent link-coa.js runs from racing the count.
+    const belowFloorRes = await pool.query(
+      `SELECT COUNT(*)::int AS n
+         FROM coa_applications
+        WHERE linked_permit_num IS NOT NULL
+          AND linked_confidence < $1::numeric`,
+      [inheritConfMin],
+    );
+    coaBelowConfidenceFloor = belowFloorRes.rows[0].n || 0;
+
+    // Diff-review fold (Obs L3): count CoAs eligible for enrichment (linked
+    // + confidence >= floor) — surfaces a non-zero signal even when no
+    // upgrades actually fire (e.g., already-converged state), distinguishing
+    // it from a "no CoAs linked yet" first-run state.
+    const eligibleRes = await pool.query(
+      `SELECT COUNT(*)::int AS n
+         FROM coa_applications
+        WHERE linked_permit_num IS NOT NULL
+          AND linked_confidence >= $1::numeric`,
+      [inheritConfMin],
+    );
+    enrichmentEligible = eligibleRes.rows[0].n || 0;
+
+    // Obs L1-3 HIGH fold: post-inheritance consistency check. Non-zero
+    // means either the enrichment UPDATE has a bug, OR the permit's
+    // lat/long was updated between this script's enrichment step and the
+    // check (which would re-enrich on the next chain run via IS DISTINCT
+    // FROM guard). Threshold == 0 FAIL.
+    const mismatchRes = await pool.query(
+      `WITH best_permit AS (
+         SELECT DISTINCT ON (p.permit_num)
+                p.permit_num, p.latitude, p.longitude
+           FROM permits p
+          WHERE p.latitude IS NOT NULL AND p.longitude IS NOT NULL
+          ORDER BY p.permit_num,
+                   COALESCE(p.issued_date, p.application_date) DESC NULLS LAST,
+                   p.revision_num DESC
+       )
+       SELECT COUNT(*)::int AS n
+         FROM coa_applications ca
+         JOIN best_permit bp ON bp.permit_num = ca.linked_permit_num
+        WHERE ca.linked_confidence >= $1::numeric
+          AND (ca.latitude  IS DISTINCT FROM bp.latitude
+            OR ca.longitude IS DISTINCT FROM bp.longitude)`,
+      [inheritConfMin],
+    );
+    leadIdentityLatLngMismatch = mismatchRes.rows[0].n || 0;
+
+    pipeline.log.info(
+      '[link-coa]',
+      `R5.6 enrichment: ${coaInheritedFromPermit} CoAs updated (${coaLatLngUpgradedFromPermit} lat/long + ${coaWardFilledFromPermit} ward fills); ${coaWardMismatchWithPermit} ward mismatches; ${coaBelowConfidenceFloor} below confidence floor`,
+    );
+  }
+
+  // ------------------------------------------------------------------
   // Summary
   // ------------------------------------------------------------------
   const durationMs = Date.now() - startTime;
@@ -558,9 +834,26 @@ pipeline.run('link-coa', async (pool) => {
     { metric: 'unlinked_remaining', value: noMatch, threshold: null, status: 'INFO' },
     { metric: 'links_to_pre_permits', value: prePermitLinkCount, threshold: '== 0', status: prePermitLinkCount > 0 ? 'FAIL' : 'PASS' },
     { metric: 'cross_ward_links', value: crossWardCount, threshold: '== 0', status: crossWardCount > 0 ? 'WARN' : 'PASS' },
+    // R5.6 audit metric extensions (folds Obs L1-1, L1-3, L3-4 + DeepSeek + diff-review Obs L3)
+    { metric: 'enrichment_eligible_count', value: enrichmentEligible, threshold: null, status: 'INFO' },
+    { metric: 'coa_inherited_from_permit_count', value: coaInheritedFromPermit, threshold: null, status: 'INFO' },
+    { metric: 'coa_lat_lng_upgraded_from_permit_count', value: coaLatLngUpgradedFromPermit, threshold: null, status: 'INFO' },
+    { metric: 'coa_ward_filled_from_permit_count', value: coaWardFilledFromPermit, threshold: null, status: 'INFO' },
+    { metric: 'coa_ward_mismatch_with_permit_count', value: coaWardMismatchWithPermit, threshold: null, status: 'INFO' },
+    { metric: 'coa_below_confidence_floor_count', value: coaBelowConfidenceFloor, threshold: null, status: 'INFO' },
+    // Diff-review fold (Indep H1 + Obs L1 + L11): demoted FAIL → WARN.
+    // Non-zero only fires when geocode-permits.js commits a permit lat/long
+    // update between the enrichment commit and this post-check (both use
+    // different advisory locks — no cross-script mutex). The next CoA chain
+    // run repairs via the IS DISTINCT FROM guard. FAIL was too aggressive
+    // for a race-condition signal that has no actionable operator response
+    // beyond "re-run CoA chain."
+    { metric: 'lead_identity_lat_lng_mismatch_count', value: leadIdentityLatLngMismatch, threshold: '== 0 (WARN — usually concurrent geocode-permits race; resolves next run)', status: leadIdentityLatLngMismatch > 0 ? 'WARN' : 'PASS' },
+    { metric: 'stale_back_refs_cleared_count', value: staleBackRefsCleared, threshold: null, status: 'INFO' },
+    { metric: 'inherited_confidence_floor', value: inheritConfMin, threshold: null, status: 'INFO' },
   ];
   const linkAuditHasFails = prePermitLinkCount > 0 || effectiveRateStatus === 'FAIL';
-  const linkAuditHasWarns = descErrors > 0 || crossWardCount > 0 || tier1c > 0 || effectiveRateStatus === 'WARN';
+  const linkAuditHasWarns = descErrors > 0 || crossWardCount > 0 || tier1c > 0 || effectiveRateStatus === 'WARN' || leadIdentityLatLngMismatch > 0;
   const chainId = process.env.PIPELINE_CHAIN || null;
   const linkAuditTable = {
     phase: chainId === 'coa' ? 4 : 12,
@@ -586,9 +879,14 @@ pipeline.run('link-coa', async (pool) => {
     audit_table: linkAuditTable,
   };
   pipeline.emitSummary({ records_total: totalLinked, records_new: 0, records_updated: totalLinked, records_meta: meta });
+  // R5.6 Indep M4 + Obs L3-7 fold: emitMeta extended for permit→CoA enrichment.
+  // Reads add permits.latitude/longitude/revision_num/application_date (for
+  // the DISTINCT ON subquery). Writes add coa_applications.latitude/longitude/ward.
   pipeline.emitMeta(
-    { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name_normalized", "ward", "issued_date", "description"] },
-    { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"], "permits": ["last_seen_at", "linked_coa_application_number"] }
+    { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num", "linked_confidence", "latitude", "longitude"],
+      "permits": ["permit_num", "revision_num", "street_num", "street_name_normalized", "ward", "issued_date", "application_date", "description", "latitude", "longitude"] },
+    { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at", "latitude", "longitude", "ward"],
+      "permits": ["last_seen_at", "linked_coa_application_number"] }
   );
   });
   if (!lockResult.acquired) return;

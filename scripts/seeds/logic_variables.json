@@ -370,6 +370,13 @@
     "min": 0,
     "max": 100
   },
+  "coa_inherit_from_permit_min_confidence": {
+    "default": 0.60,
+    "type": "number",
+    "description": "Minimum fuzzy-match confidence for link-coa.js to inherit a linked permit's authoritative lat/long + ward into the matched CoA (R5.6 Part A — lead-identity continuity, Spec 42 §6.X). Default 0.60 covers Tier 1a (0.95), Tier 1b (0.85), and Tier 2a (0.60) but EXCLUDES Tier 2b (0.50, name-only + permit ward NULL — too speculative for dense urban streets) and Tier 3 (≤0.50, description FTS). Raised from initial 0.50 design per 4-reviewer plan-review (Gemini + DeepSeek + observability worktree converged on Tier 2b risk).",
+    "min": 0.01,
+    "max": 1.0
+  },
   "massing_shed_threshold_sqm": {
     "default": 20,
     "type": "number",

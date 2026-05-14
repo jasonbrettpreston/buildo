@@ -1,418 +1,280 @@
-# Active Task: WF1 #coa-pipeline-parity-phase-d-R5.5 — compute-coa-cost-estimates.js (geometric-only cost path producing coa_applications cost cols + lead_id-keyed cost_estimates rows)
+# Active Task: WF1 #coa-pipeline-parity-phase-d-R5.6 — Lead-identity continuity (Part A only) + Phase D close-out
 
-**Status:** Implementation (4-reviewer plan review complete; 14 folds applied; user authorized 2026-05-14 with Spec 48 observability reference)
-**Workflow:** WF1 (New Feature — NEW consumer script for the R5.1 substrate at `scripts/lib/coa-cost-model.js`; reuses existing Brain at `src/features/leads/lib/cost-model-shared.js` unchanged)
-**Domain Mode:** Backend/Pipeline (`scripts/`, `src/lib/cost/`, `docs/specs/`)
-**Rollback Anchor:** `d474208` (R5.4 classify-coa-trades shipped)
-**Parent WF:** WF1 #coa-pipeline-parity-phase-d (R5.1 ✅ → R5.2 ✅ → R5.3 ✅ → R5.4 ✅ → **R5.5** → R5.6 manifest registration)
-**Predecessor:** R5.4 (commit `d474208`)
-**Adversarial review:** USER-REQUESTED — 4 reviewers: independent worktree + Gemini + DeepSeek + an ADDITIONAL adversarial focused on observability + integration + logic.
+**Status:** Implementation (4-reviewer plan-review complete; 14 folds applied to Part A; Part B deferred to Spec 48 final phase; user authorized 2026-05-14)
+**Workflow:** WF1 (New Feature — extends `scripts/link-coa.js` with permit→CoA data inheritance; spec amendments for Phase D close-out)
+**Domain Mode:** Backend/Pipeline (`scripts/`, `docs/specs/`)
+**Rollback Anchor:** `fdbb669` (R5.5 compute-coa-cost-estimates shipped)
+**Parent WF:** WF1 #coa-pipeline-parity-phase-d (R5.1 ✅ → R5.2 ✅ → R5.3 ✅ → R5.4 ✅ → R5.5 ✅ → **R5.6 + Phase D close-out**)
+**Predecessor:** R5.5 (commit `fdbb669`)
+**Adversarial review:** USER-REQUESTED — 4 reviewers (Gemini + DeepSeek + independent worktree + observability worktree using Spec 48 lens) at BOTH plan stage AND diff stage.
+
+## Scope decision (post 4-reviewer plan-review, 2026-05-14)
+
+The original two-part plan (Part A = CoA enrichment from linked permit; Part B = `permits.coa_anticipated` flag) received 28 reviewer findings. Part B drew 3 CRITICALs + 5 HIGHs across all 4 reviewers — pattern indicated structurally weaker design (semantic conflict between name + behavior, redundancy with PRE-permit retiring in Phase G, no operational wiring into link-coa.js, regex placeholder needing R0 audit gate). Per user decision: **Part B deferred to Spec 48 implementation as a new final phase**, capturing the operator-visibility intent in its proper observability context (cross-pipeline anticipation tracking). R5.6 now ships only Part A + Phase D close-out spec amendments.
+
+## Why this scope (the actual problem)
+
+A property can enter the pipeline via either side (permit OR CoA). When `link-coa.js` fuzzy-matches them, both records retain their own independently-derived data — CoA gets parcel-centroid lat/long (~10-50m, R5.2); permit got `address_points` lat/long (~5-10m, geocode-permits.js via GEO_ID). A user who saw the lead via the permit feed may later see the linked CoA as a *different* lead with slightly-different attributes, defeating lead-identity continuity.
+
+**R5.6 Part A** closes that gap: when link-coa.js writes `linked_permit_num` with high confidence, inherit the permit's authoritative lat/long + ward into `coa_applications`. The bigger win is *data consistency*, not absolute lat/long accuracy.
+
+**Plus Phase D close-out**: spec amendments to §6.6.D (writer attribution correction), §6.9 (link-coa.js row), §6.11 Phase D (delivery note), and a new §6.X section documenting the lead-identity continuity architecture.
 
 ## Context
-* **Goal:** Build `scripts/compute-coa-cost-estimates.js` — the CoA-side cost estimator. Streams CoAs joined with parcel/building/neighbourhood/trade context through the existing `estimateCostShared` Brain (configured for geometric-only mode via R5.1 substrate `scripts/lib/coa-cost-model.js`), writing 4 cost columns to `coa_applications` plus an UPSERT into `cost_estimates` keyed on `lead_id` (Phase D PK per mig 145).
-* **Target Spec:** `docs/specs/01-pipeline/42_chain_coa.md` §6.5 (step 12 — cost) + §6.6.D (column table rows for `modeled_gfa_sqm`/`estimated_cost`/`cost_source`/`cost_classified_at`) + §6.8 row 668 (Spec 47 compliance contract) + `docs/specs/01-pipeline/83_lead_cost_model.md` §Geometric-Only Path for CoA + §7 Engine Mechanics + `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §R1-R12.
-* **Key Files (read at plan time):**
-  - `docs/specs/01-pipeline/42_chain_coa.md` §6.5, §6.6.D, §6.7, §6.8 (lock 4204 row), §6.11 Phase D R5.5
-  - `docs/specs/01-pipeline/83_lead_cost_model.md` §Geometric-Only Path for CoA (lines 118-130) + §7 Engine Mechanics
-  - `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §R1-R12 + §6.3 BATCH_SIZE + §8.1 records_updated
-  - `migrations/138_promote_cost_estimates_lead_id_not_null.sql` (lead_id NOT NULL)
-  - `migrations/145_phase_d_classifier_substrate.sql` (cost_estimates PK swap to lead_id + cost_source CHECK extension)
-  - `scripts/compute-cost-estimates.js` (twin — read for pattern, NOT byte parity; permit-side is still PK on (permit_num, revision_num) until §6.9 REKEY)
-  - `scripts/lib/coa-cost-model.js` (R5.1 substrate — already shipped at cea6d47; reuse as-is)
-  - `src/features/leads/lib/cost-model-shared.js` (Brain — reused unchanged)
-  - `src/tests/coa-cost-model.logic.test.ts` (R5.1 substrate tests — extend if needed)
+* **Goal:** Lead-identity continuity for permit↔CoA matched records + Phase D close-out.
+* **Target Spec:**
+  - `docs/specs/01-pipeline/42_chain_coa.md` §6.6.D + §6.9 + §6.11 Phase D + NEW §6.X
+  - `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §R1-R12
+  - `docs/specs/01-pipeline/48_pipeline_observability.md` (downstream observer consumer + future-phase note for Part B)
 
-## Technical Implementation
-* **New Components:**
-  - **NEW** `scripts/compute-coa-cost-estimates.js` — consumer script (~300 lines)
-  - **NEW** `src/tests/compute-coa-cost-estimates.infra.test.ts` — Spec 47 §R1-R12 + R5.5 contract regression-lock
-  - **EXTEND** `src/tests/coa-cost-model.logic.test.ts` — add fixtures covering scope_tags-rateable vs non-rateable paths (per Spec 42 line 207 test contract)
-* **Data Hooks/Libs:** Reuses existing `scripts/lib/coa-cost-model.js` (buildCoaConfig + mapCoaRowToBrainInput) — no new lib code.
-* **Database Impact:** NO — schema unchanged; mig 145 already enabled CoA-side writes (lead_id PK + 'geometric' cost_source + nullable permit_num/revision_num). Write target: `coa_applications` (4 cols) + `cost_estimates` (15 cols via existing schema).
+## Technical Implementation — Part A only
+
+### `scripts/link-coa.js` — permit→CoA enrichment pass (post link-coa.js's existing tier writes)
+
+The enrichment runs as a single `withTransaction` AFTER all tier write passes (Tier 1a/1b/1c/2a/2b/3), AFTER the per-permit `last_seen_at` bump, AFTER the existing back-ref write to `permits.linked_coa_application_number`. It is idempotent via IS DISTINCT FROM guards — safe to re-run on every chain invocation.
+
+**Critical fold (Independent C1):** `coa_applications.linked_permit_num` stores only `permit_num`, not `(permit_num, revision_num)`. The permits table has multiple revisions per permit_num, each potentially with different lat/long. JOIN must disambiguate via DISTINCT ON + ORDER BY (mirroring the existing Tier 1a logic at lines 232-247 of link-coa.js):
+
+```sql
+-- Subquery picks the "best" revision per linked_permit_num — same convention
+-- link-coa.js Tier 1a uses (most recent issue/application date, then highest revision).
+WITH best_permit AS (
+  SELECT DISTINCT ON (p.permit_num)
+         p.permit_num, p.latitude, p.longitude, p.ward
+    FROM permits p
+   WHERE p.latitude IS NOT NULL
+     AND p.longitude IS NOT NULL
+   ORDER BY p.permit_num,
+            COALESCE(p.issued_date, p.application_date) DESC NULLS LAST,
+            p.revision_num DESC
+)
+UPDATE coa_applications ca
+   SET latitude  = bp.latitude,
+       longitude = bp.longitude,
+       ward      = COALESCE(ca.ward, bp.ward)   -- CoA ward authoritative when set
+  FROM best_permit bp
+ WHERE ca.linked_permit_num = bp.permit_num
+   AND ca.linked_confidence >= $1::numeric
+   -- IS DISTINCT FROM guard: idempotent + dead-tuple-bloat prevention
+   AND (
+        ca.latitude  IS DISTINCT FROM bp.latitude
+     OR ca.longitude IS DISTINCT FROM bp.longitude
+     OR (ca.ward IS NULL AND bp.ward IS NOT NULL)
+   );
+```
+
+**Fold-driven design notes:**
+- **Independent C1 (CRITICAL):** revision_num disambiguation via DISTINCT ON subquery. Mirrors existing Tier 1a pattern.
+- **Gemini HIGH + Obs L3-3 + DeepSeek HIGH:** confidence floor raised from 0.50 → **0.60** to exclude Tier 2b (0.50, name-only) and Tier 3 (caps at 0.50). Only Tier 1a (0.95) + 1b (0.85) + 2a (0.60) qualify for inheritance. Name-only matches on dense streets ("KING ST W") are too risky.
+- **Gemini HIGH:** WHERE now includes both `p.latitude IS NOT NULL AND p.longitude IS NOT NULL` (atomic pair guard) — verified PASS by Independent re-check.
+- **Gemini HIGH:** re-enrichment safety. Because the UPDATE is idempotent (IS DISTINCT FROM guard) and runs every chain, it WILL re-apply when permit's lat/long changes. No explicit `last_enriched_at` column needed.
+- **Indep H3 (HIGH):** Wraps in its own `withTransaction` (single-pass, AFTER tier transactions complete). Documented explicitly; not "inside existing withTransaction" (link-coa.js has per-tier transactions, not one outer).
+- **Obs L2-1 (CRITICAL → resolved as doc note):** lat/long overwrite happens AFTER classifiers (R5.3-R5.5) ran for this chain. Verified: R5.3/R5.4/R5.5 consume `lead_parcels.parcel_id` (spatial), NOT `coa_applications.latitude/longitude` directly. No re-trigger needed. Documented in spec amendment + locked by infra test.
+- **Indep H1 (REJECT):** §R3.5 deferral note removed — `getDbTimestamp` at top of `withAdvisoryLock` callback IS Spec 47 §15 compliant. No spurious WF3 needed.
+
+### DeepSeek CRITICAL — stale back-ref fix (existing link-coa.js bug)
+
+The pre-pass cross-ward cleanup (link-coa.js lines ~90-110) UNLINKS CoAs from permits when ward conflicts but does NOT clear `permits.linked_coa_application_number` for the affected permits. R5.6 folds the fix:
+
+```sql
+-- Pre-pass extension: clear stale back-refs for permits whose CoA link was just removed
+UPDATE permits p
+   SET linked_coa_application_number = NULL,
+       last_seen_at = $1::timestamptz
+  FROM (SELECT permit_num FROM <cross-ward unlinked CoAs this pass>) cleared
+ WHERE p.permit_num = cleared.permit_num
+   AND p.linked_coa_application_number IS NOT NULL
+   AND NOT EXISTS (
+     SELECT 1 FROM coa_applications other
+      WHERE other.linked_permit_num = p.permit_num
+        AND other.application_number IS DISTINCT FROM <cleared CoA>
+   );
+```
+
+### Audit metrics (extends existing link-coa.js `audit_table`)
+
+**Plan-review fold-driven additions:**
+
+- `coa_inherited_from_permit_count` (INFO) — total CoAs that received at least one upgraded column (lat OR long OR ward) — Obs L3-4 fold: count by DISTINCT CoA, not by SQL rowCount
+- `coa_lat_lng_upgraded_from_permit_count` (INFO) — subset where lat/long specifically changed — separate query for accurate split
+- `coa_ward_filled_from_permit_count` (INFO) — subset where ward changed NULL→non-NULL (was `coa_ward_upgraded`; renamed to reflect that ward only fills, never overwrites)
+- `coa_ward_mismatch_with_permit_count` (INFO) — Obs L3-4 fold: data-quality signal — CoAs where both ca.ward and p.ward are non-null but differ; surfaces typos in either dataset
+- `coa_below_confidence_floor_count` (INFO, NEW per Obs L1-1) — count of CoAs with `linked_permit_num IS NOT NULL` but `linked_confidence < coa_inherit_from_permit_min_confidence` — gate-misconfig detection
+- `lead_identity_lat_lng_mismatch_count` (NEW per Obs L1-3, threshold `== 0` FAIL) — post-inheritance consistency check; non-zero indicates either inheritance bug or permit lat/long changed between runs without re-enrichment firing
+- `stale_back_refs_cleared_count` (INFO) — DeepSeek CRITICAL fold — count of permits whose `linked_coa_application_number` was NULLed because their CoA was unlinked in this run's cross-ward cleanup
+- `inherited_confidence_floor` (INFO) — the logic_var value used for the gate
+
+### New logic_variable
+
+`coa_inherit_from_permit_min_confidence` — default **0.60** (raised from initial 0.50 per Gemini + DeepSeek + Obs L3-3 fold). Covers Tier 1a (0.95) + 1b (0.85) + 2a (0.60). Excludes Tier 2b (0.50) + Tier 3 (≤0.50).
+
+## Phase D close-out + Spec 42 lead-identity continuity section
+
+Spec 42 amendments (broken into 4 distinct edits):
+
+**Amendment 1 — §6.6.D writer attribution correction (Indep M1 fold)**
+
+The current spec says `load-coa.js (geocode at ingest)` writes `latitude` and `longitude`. The actual implementation has NEVER been load-coa.js (CKAN's CoA dataset has no GEO_ID, verified live from API; load-coa can't twin the permit pipeline's geocode-by-FK pattern).
+
+Fix the table row (full replacement text):
+
+| `latitude` | DECIMAL(10,7) | **primary:** `link-coa-to-parcels.js` (parcel centroid via address-text match, R5.2). **secondary upgrade:** `link-coa.js` (inherits from linked permit when confidence ≥ `coa_inherit_from_permit_min_confidence`, R5.6 Part A) | YES |
+| `longitude` | DECIMAL(10,7) | (same writers as above) | YES |
+| `ward` | TEXT | **primary:** `load-coa.js` (CKAN WARD/WARD_NUMBER). **fallback fill-only:** `link-coa.js` (when CoA's ward is NULL, R5.6 Part A) | YES |
+
+Plus a downstream-consumer note appended to §6.6.D: "Consumers reading `coa_applications.latitude/longitude` should note: for CoAs with `linked_permit_num IS NOT NULL AND linked_confidence ≥ 0.60`, value is permit-derived (~5-10m accuracy); for other CoAs with parcel match, value is parcel-centroid (~10-50m); for unmatched CoAs, value is NULL."
+
+**Amendment 2 — §6.9 link-coa.js row extension**
+
+Current spec describes link-coa.js as: writes `coa_applications.linked_permit_num` + `linked_confidence` + `permits.linked_coa_application_number` back-ref. R5.6 adds:
+- Permit→CoA enrichment of `latitude`/`longitude`/`ward` (gated on confidence ≥ logic_var)
+- Pre-pass stale back-ref cleanup (DeepSeek CRITICAL fix — clears `permits.linked_coa_application_number` when CoA gets unlinked due to ward conflict)
+- 6 new audit_table rows (see Audit Metrics above)
+
+**Amendment 3 — NEW subsection §6.X: "Lead-Identity Continuity for Permit-CoA Matched Records"**
+
+> ### 6.X Lead-Identity Continuity for Permit-CoA Matched Records
+>
+> A real-world property can enter the pipeline via either side. Toronto's CKAN datasets treat both flows identically — there is no source field that distinguishes them — so the pipeline must reconcile them downstream.
+>
+> **Flow A — CoA-first** (most CoAs): applicant files variance hearing → if approved, *later* files building permit. The permit may not exist at the time of CoA ingest.
+>
+> **Flow B — Permit-first via Examiner's Notice**: applicant files building permit → examiner identifies need for variance → applicant files CoA in response to Examiner's Notice. The permit exists *before* the CoA at time of ingest.
+>
+> **Why this matters**: a user who already saw the lead via the permit feed may later see the linked CoA. Without continuity, both records hold independently-derived data (CoA gets parcel-centroid lat/long ≈ 10-50m; permit got `address_points` lat/long ≈ 5-10m), and the user sees the same physical property as two visually-different leads.
+>
+> **Resolution strategy** (implemented in R5.6 Part A):
+>
+> 1. **Linkage detection** — `link-coa.js` runs at end of CoA chain. Tier 1a (address + ward, conf 0.95), Tier 1b (address + permit-ward-NULL, conf 0.85), Tier 2a (name-only + ward, conf 0.60) reach the inheritance floor.
+> 2. **Data inheritance** — when linkage confidence ≥ `coa_inherit_from_permit_min_confidence` (logic_variable, default 0.60), inherit `latitude`/`longitude`/`ward` from permit into CoA. Inheritance uses a DISTINCT ON subquery to disambiguate revision_num within a permit_num. Inheritance is one-directional (permit → CoA); CoA's classification fields (scope_tags, project_type, decision, hearing_date, applicant) are NEVER overwritten.
+> 3. **Two-lead-id model is intentional** (Obs L2-4 fold) — `coa_applications.lead_id = 'coa:...'` and `permits.lead_id = 'permit:...'` remain distinct after matching. Cross-property queries use `coa.linked_permit_num` and `permits.linked_coa_application_number` for the join. This is by design per §6.6.B; UI display unification is Phase F work.
+>
+> **What this does NOT do** (deferred):
+> - Unified `lead_id` across permit + CoA records — Phase F-level work.
+> - Pre-emptive `permits.coa_anticipated` flag for Examiner's Notice permits — **deferred to Spec 48 implementation as a new final phase** (cross-pipeline observability tracking). The flag was originally scoped for R5.6 Part B but 4-reviewer plan-review identified design tensions (semantic conflict between flag name and behavior, redundancy with PRE-permit retirement in Phase G, no operational wiring) that warrant its own dedicated WF1.
+> - Bidirectional propagation — changes to the permit's lat/long DO refresh the linked CoA's inherited fields on the next chain run (because the enrichment UPDATE is idempotent via IS DISTINCT FROM guard), but this requires the CoA chain to run after the permit chain. Cross-chain triggering is Phase H work.
+
+**Amendment 4 — §6.11 Phase D close-out**
+
+Append delivery note:
+
+> **Phase D — DELIVERED 2026-05-14.** Commit chain:
+> - `f5062f8` — R5.2 link-coa-to-parcels.js (CoA address-text → parcel centroid; bundled neighbourhood lookup + lat/lng back-fill)
+> - `c74619b` + `61d80d1` — R5.3 classify-coa-scope.js (description-keyword classifier; observability fixes follow-up)
+> - `d474208` — R5.4 classify-coa-trades.js (TAG_TRADE_MATRIX consumer + realtor gate)
+> - `fdbb669` — R5.5 compute-coa-cost-estimates.js (geometric-only cost path)
+> - `<R5.6 sha>` — R5.6 lead-identity continuity (Part A: link-coa.js permit→CoA enrichment) + Phase D close-out spec amendments
+>
+> §6.3 coverage gates measurable post-staging-run. Multi-agent reviewers (Gemini + DeepSeek + independent worktree + observability worktree using Spec 48 lens) ran at both plan and diff stages for every R5.x deliverable.
+>
+> **Deferred to follow-up WF**: `permits.coa_anticipated` flag — moved into Spec 48 implementation as a new final phase (cross-pipeline observability tracking). Tracked in `docs/reports/review_followups.md`.
 
 ## Standards Compliance
-* **Try-Catch Boundary:** Pipeline SDK handles top-level; per-batch failures propagated via `withTransaction` rollback.
-* **Unhappy Path Tests:** (1) CoA with no `lead_parcels` row → NULL cost + reason='no_parcel'; (2) CoA with parcel but no `parcel_buildings`/`building_footprints` → NULL cost + reason='no_building'; (3) CoA with `scope_tags=NULL` → NULL cost + reason='no_scope_tags'; (4) CoA with `scope_tags` non-NULL but zero rateable tags → NULL cost + reason='no_rate'; (5) idempotency — re-run with no source changes produces 0 records_updated.
-* **logError Mandate:** N/A — no new catch blocks (SDK-managed via withTransaction).
-* **UI Layout:** N/A (backend script).
 
-## Spec 42 §6.8 row 668 Contract
+* **Try-Catch Boundary:** N/A — extension to existing script; SDK handles errors via withTransaction rollback.
+* **Unhappy Path Tests:**
+  - (1) CoA links to permit with confidence 0.10 (Tier 1c ward-conflict) → NOT inherited
+  - (2) CoA links to permit with confidence 0.55 → NOT inherited (below 0.60 floor)
+  - (3) CoA links to permit with confidence 0.60 (Tier 2a) → inherited
+  - (4) CoA links to permit with NULL lat/long → no overwrite (guard)
+  - (5) Permit has multiple revisions with different lat/long → DISTINCT ON picks most-recent
+  - (6) Re-run idempotency: 0 records_updated on second pass (no source changes)
+  - (7) Pre-pass cross-ward cleanup unlinks a CoA → permit's back-ref also cleared (DeepSeek fold)
+  - (8) `lead_parcels.parcel_id` unchanged after enrichment (no side effect on R5.2 outputs) — Obs L2-1 + Indep H5 test
+  - (9) Post-enrichment: `lead_identity_lat_lng_mismatch_count` == 0 for all linked CoAs
 
-| Field | Requirement | Plan compliance |
-|---|---|---|
-| Advisory lock | 4204 | `const ADVISORY_LOCK_ID = 4204;` |
-| §R7 Read | streamQuery 6-table LEFT JOIN: `coa_applications ca → lead_parcels lp ON lp.lead_id = ca.lead_id → parcels p → parcel_buildings pb → building_footprints bf → neighbourhoods n → lead_trades lt LATERAL filtered ON lt.lead_id = ca.lead_id`. All JOINs use `ca.lead_id` directly | Mirrored. `lead_trades lt` aggregated via LATERAL `ARRAY_AGG(t.slug) FILTER (WHERE lt.is_active = true)` |
-| §R7 Cursor predicate | (none in spec literal — design choice) | Plan choice: `WHERE cost_classified_at IS NULL OR cost_classified_at < trade_classified_at` — re-fetches when R5.4 produces new trade outputs |
-| §R9 Write atomicity | `withTransaction` → UPDATE `coa_applications` cost columns AND INSERT `cost_estimates` row keyed on `lead_id`. Atomic | Single `withTransaction` per batch: (a) bulk UPSERT `cost_estimates`, (b) bulk UPDATE `coa_applications` |
-| §R9 cost_source | `'geometric'` always (permitted by mig 145 CHECK) | Plan: transform Brain's `cost_source='model'`/`'none'` → `'geometric'` for CoAs producing a non-null estimate; preserve `'none'` for skip cases |
-| §R9 permit_num/revision_num | NULL (permitted by mig 145 DROP NOT NULL) | Plan: pass NULL through to `cost_estimates` rows |
-| §R10 audit_table | `cost_estimate_coverage_pct`, `null_cost_reasons` (no_parcel/no_building/no_scope_tags/no_rate), `cost_distribution_p25_p50_p75` | All three emitted as audit rows (coverage_pct with WARN threshold from `coa_cost_coverage_threshold_pct` logic_var) |
+* **logError Mandate:** N/A — no new catch blocks.
+* **UI Layout:** N/A (backend).
 
-## Classifier output (per CoA → 0..1 cost_estimates row + always 1 coa_applications UPDATE)
+## Spec 47 §R1-R12 Compliance
 
-For each CoA processed:
-- **Always:** UPDATE `coa_applications` SET `cost_classified_at = $RUN_AT`, plus `modeled_gfa_sqm`/`estimated_cost`/`cost_source` (NULL if no estimate produced).
-- **When estimate produced (non-NULL):** UPSERT into `cost_estimates` with:
-  - `lead_id` = `ca.lead_id`
-  - `permit_num` = NULL
-  - `revision_num` = NULL
-  - `estimated_cost` = Brain output
-  - `cost_source` = `'geometric'` (transformed from Brain's `'model'`)
-  - `cost_tier`, `cost_range_low`, `cost_range_high`, `premium_factor`, `complexity_score`, `model_version`, `is_geometric_override`, `modeled_gfa_sqm`, `effective_area_sqm`, `trade_contract_values`, `computed_at` — pass-through from Brain
-- **When no estimate (no_parcel / no_building / no_scope_tags / no_rate):** `coa_applications` still gets `cost_classified_at = $RUN_AT` to advance the cursor + `cost_source = 'none'`; NO `cost_estimates` row written (avoids polluting the cost-distribution percentile).
+* §R1 — link-coa.js already imports pipeline SDK ✓
+* §R2 — `ADVISORY_LOCK_ID = 12` unchanged
+* §R3.5 — `getDbTimestamp` at top of `withAdvisoryLock` callback IS compliant per Spec 47 §15 (Indep H1 REJECT — earlier deferral note removed)
+* §R4 — Zod: NEW logic_var `coa_inherit_from_permit_min_confidence` added as explicit field to `LOGIC_VARS_SCHEMA` (NOT relying on `.passthrough()` per Indep M2 fold)
+* §R6 — `pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, ...)` — unchanged
+* §R7 — extend existing batched SELECT pattern
+* §R9 — enrichment runs in its OWN `withTransaction` (post-tier; per Indep H3 fold — link-coa.js has per-tier transactions, not single outer)
+* §R10 — extend existing `emitSummary` `audit_table.rows` with 8 new metrics (see Audit Metrics)
+* §R11 — `emitMeta`: reads add `permits.latitude/longitude/ward/permit_num/revision_num/issued_date/application_date`; writes add `coa_applications.latitude/longitude/ward` + the existing `permits.linked_coa_application_number` already declared (Indep M4 + Obs L3-7 fold — explicit test assertion)
+* §R12 — `lockResult.acquired` SKIP guard — unchanged
 
-### NULL-reason buckets (R5.4 lesson — actionable observability)
+## Pre-Review Self-Checklist (15 items)
 
-| Reason | Detection condition | Notes |
-|---|---|---|
-| `no_parcel` | `coaRow.parcel_id IS NULL` (LEFT JOIN miss on `lead_parcels`) | R5.2 link-coa-to-parcels didn't link |
-| `no_building` | `coaRow.parcel_id NOT NULL` but `building_footprint.footprint_area_sqm IS NULL` | Parcel linked but no massing |
-| `no_scope_tags` | `coaRow.scope_tags IS NULL OR LENGTH = 0` | R5.3 classify-coa-scope didn't classify |
-| `no_rate` | All other failure modes (Brain returned null cost) — typically: scope_tags exist but no matching `trade_sqft_rates` row, or `active_trade_slugs` empty (R5.4 produced no trades) | Catch-all reason |
+- (a) Confidence floor 0.60 covers only Tier 1a + 1b + 2a (excludes 2b name-only + 3 FTS)
+- (b) DISTINCT ON subquery disambiguates revision_num within a permit_num (Indep C1 critical fold)
+- (c) Atomic pair guard: `p.latitude IS NOT NULL AND p.longitude IS NOT NULL` (Gemini HIGH fold)
+- (d) IS DISTINCT FROM guards on lat/long + ward — idempotent, no dead-tuple bloat
+- (e) Ward COALESCE direction: CoA ward authoritative when non-null; permit ward used to fill NULL only (Indep M5 clarity fold)
+- (f) Enrichment in its own `withTransaction` post-tier-writes (Indep H3 fold)
+- (g) Pre-pass extension: stale `permits.linked_coa_application_number` cleared when CoA unlinked (DeepSeek CRITICAL fold)
+- (h) 8 new audit_table rows including `coa_below_confidence_floor_count` (Obs L1-1) + `lead_identity_lat_lng_mismatch_count == 0 FAIL` (Obs L1-3) + `coa_ward_mismatch_with_permit_count` (Obs L3-4)
+- (i) Audit row split between lat/long upgrade vs ward fill — separate queries for accurate counts (Obs L3-4 + DeepSeek LOW fold)
+- (j) New Zod field `coa_inherit_from_permit_min_confidence` is explicit (NOT relying on passthrough) — Indep M2 fold
+- (k) emitMeta extended for new column reads + writes — Indep M4 + Obs L3-7 fold
+- (l) Test: `lead_parcels.parcel_id` unchanged after enrichment (no side effect on R5.2 outputs) — Indep H5 + Obs L2-1 fold
+- (m) Test: re-run idempotency (0 records_updated on second pass with no source changes)
+- (n) Test: DISTINCT ON correctness — multiple permit revisions with different lat/long
+- (o) Spec amendments: §6.6.D writer correction + §6.9 row + new §6.X + §6.11 Phase D close-out all included
 
-Emitted as `records_meta.null_cost_reasons = { no_parcel: N, no_building: N, no_scope_tags: N, no_rate: N }` PLUS an audit_table row per reason (4 INFO rows) so the dashboard surfaces the breakdown.
+## Execution Plan (per WF1 in `.claude/workflows.md`)
 
-### Cost-distribution percentiles
+- [ ] **Contract Definition:** N/A — extending existing script.
+- [ ] **Spec & Registry Sync:** Apply Amendments 1-4 to `docs/specs/01-pipeline/42_chain_coa.md`. Run `npm run system-map`.
+- [ ] **Schema Evolution:** N/A — no new tables or columns (Part B's migration is deferred).
+- [ ] **Test Scaffolding:** Add `src/tests/link-coa-enrichment.infra.test.ts` (~15 assertions covering: SPEC LINK header, DISTINCT ON subquery presence, atomic lat/long pair guard, confidence floor 0.60 gate, IS DISTINCT FROM guards, ward COALESCE direction, 8 new audit rows, stale back-ref cleanup pre-pass, lead_parcels safety, Zod explicit field, emitMeta reads + writes).
+- [ ] **Red Light:** New tests fail before implementation.
+- [ ] **Implementation:**
+  - Extend link-coa.js (~50 lines) — enrichment UPDATE in own withTransaction; stale back-ref cleanup in pre-pass; new Zod field; 8 new audit rows.
+  - Update `scripts/seeds/logic_variables.json` — add `coa_inherit_from_permit_min_confidence` default 0.60.
+  - Update `src/tests/control-panel.logic.test.ts` — new logic_var key in EXPECTED_LOGIC_VAR_KEYS.
+- [ ] **Auth Boundary & Secrets:** N/A.
+- [ ] **Pre-Review Self-Checklist (15 items above):** Walk each item against actual diff. PASS/FAIL per item.
+- [ ] **Multi-Agent Review (4 reviewers parallel — diff stage):**
+  - Gemini: `npm run review:gemini -- review scripts/link-coa.js --context docs/specs/01-pipeline/42_chain_coa.md`
+  - DeepSeek: `npm run review:deepseek -- review scripts/link-coa.js --context scripts/link-coa-to-parcels.js`
+  - Independent code-reviewer (worktree)
+  - Observability worktree (Spec 48 lens)
+- [ ] **Green Light:** `npm run test && npm run lint -- --fix` + `npm run typecheck`. Pre-commit footgun + typecheck + full test pass.
+- [ ] **WF6 commit:** Single commit covering Part A + Phase D close-out spec amendments. Commit message: `feat(42_chain_coa): WF1 R5.6 — Lead-identity continuity (Part A: permit→CoA enrichment) + Phase D close-out`.
+- [ ] **Followups append:** add `permits.coa_anticipated` flag (former Part B) to `docs/reports/review_followups.md` under a new section "Spec 48 Implementation — Cross-Pipeline Anticipation Tracking" with the 28-finding triage summary preserved for the future WF1.
 
-For all CoAs with non-NULL `estimated_cost` in this run:
-- `cost_distribution_p25_p50_p75` = `{ p25, p50, p75 }` (using JS percentile-rank from sorted array — bounded by INSERT_BATCH_SIZE × number of batches, finite memory)
+## Plan-Review Triage Summary — APPLIED INLINE
 
-Emitted as `records_meta.cost_distribution = { p25, p50, p75 }` PLUS a single audit_table row with value formatted as `"$X / $Y / $Z"`.
-
-## Audit table
-
-| Metric | Value | Threshold | Status |
-|---|---|---|---|
-| `coa_eligible` | processed (CoA count) | `> 0` | WARN if 0 (Worktree#2 IMP-1 lesson from R5.4) |
-| `coa_with_cost` | count of CoAs producing non-NULL estimated_cost | null | INFO |
-| `coa_without_cost` | count of CoAs producing NULL estimated_cost | null | INFO |
-| `cost_estimate_coverage_pct` | (coa_with_cost / processed) * 100 | `>= coa_cost_coverage_threshold_pct%` | PASS / WARN |
-| `null_reason_no_parcel` | count | null | INFO |
-| `null_reason_no_building` | count | null | INFO |
-| `null_reason_no_scope_tags` | count | null | INFO |
-| `null_reason_no_rate` | count | null | INFO |
-| `cost_distribution_p25_p50_p75` | `"$X / $Y / $Z"` (or `"N/A"` when coa_with_cost=0) | null | INFO |
-| `records_new` | xmax-derived (Spec 47 §8.1) | null | INFO |
-| `records_updated` | xmax-derived (Spec 47 §8.1) | null | INFO |
-| `records_skipped` | rows_processed - rows_returned (IS DISTINCT FROM short-circuited) | null | INFO |
-
-## SQL shape
-
-### Source SELECT (streamQuery)
-
-```sql
-SELECT
-  ca.id,
-  ca.lead_id,
-  ca.application_number,
-  ca.coa_type_class,
-  ca.project_type,
-  ca.scope_tags,
-  ca.structure_type,
-  ca.dwelling_units_proposed,
-  ca.storeys_proposed,
-  lp.parcel_id,
-  p.lot_size_sqm::float8       AS lot_size_sqm,
-  p.frontage_m::float8         AS frontage_m,
-  bf.footprint_area_sqm::float8 AS footprint_area_sqm,
-  bf.estimated_stories         AS estimated_stories,
-  n.avg_household_income::float8 AS avg_household_income,
-  n.tenure_renter_pct::float8  AS tenure_renter_pct,
-  COALESCE(lt_agg.active_trades, ARRAY[]::text[]) AS active_trade_slugs
-FROM coa_applications ca
-LEFT JOIN LATERAL (
-  SELECT lp.parcel_id
-  FROM lead_parcels lp
-  WHERE lp.lead_id = ca.lead_id
-  ORDER BY lp.confidence DESC NULLS LAST, lp.parcel_id ASC
-  LIMIT 1
-) lp ON true
-LEFT JOIN parcels p ON p.id = lp.parcel_id
-LEFT JOIN LATERAL (
-  SELECT building_id
-  FROM parcel_buildings
-  WHERE parcel_id = lp.parcel_id AND is_primary = true
-  LIMIT 1
-) pb ON true
-LEFT JOIN building_footprints bf ON bf.id = pb.building_id
-LEFT JOIN neighbourhoods n ON n.id = ca.neighbourhood_id
-LEFT JOIN LATERAL (
-  SELECT ARRAY_AGG(t.slug ORDER BY t.slug) FILTER (WHERE lt.is_active = true) AS active_trades
-  FROM lead_trades lt
-  JOIN trades t ON t.id = lt.trade_id
-  WHERE lt.lead_id = ca.lead_id
-) lt_agg ON true
-WHERE ca.cost_classified_at IS NULL
-   OR ca.cost_classified_at < ca.trade_classified_at
-ORDER BY ca.id ASC;
-```
-
-### Per-batch UPSERT into cost_estimates
-
-```sql
-INSERT INTO cost_estimates (
-  lead_id, permit_num, revision_num,
-  estimated_cost, cost_source, cost_tier,
-  cost_range_low, cost_range_high, premium_factor, complexity_score,
-  model_version, is_geometric_override, modeled_gfa_sqm,
-  effective_area_sqm, trade_contract_values, computed_at
-)
-VALUES <unrolled $N batch>
-ON CONFLICT (lead_id) DO UPDATE SET
-  estimated_cost        = EXCLUDED.estimated_cost,
-  cost_source           = EXCLUDED.cost_source,
-  cost_tier             = EXCLUDED.cost_tier,
-  cost_range_low        = EXCLUDED.cost_range_low,
-  cost_range_high       = EXCLUDED.cost_range_high,
-  premium_factor        = EXCLUDED.premium_factor,
-  complexity_score      = EXCLUDED.complexity_score,
-  model_version         = EXCLUDED.model_version,
-  is_geometric_override = EXCLUDED.is_geometric_override,
-  modeled_gfa_sqm       = EXCLUDED.modeled_gfa_sqm,
-  effective_area_sqm    = EXCLUDED.effective_area_sqm,
-  trade_contract_values = EXCLUDED.trade_contract_values,
-  computed_at           = EXCLUDED.computed_at
-WHERE EXCLUDED.estimated_cost     IS DISTINCT FROM cost_estimates.estimated_cost
-   OR EXCLUDED.cost_source        IS DISTINCT FROM cost_estimates.cost_source
-   OR EXCLUDED.cost_tier          IS DISTINCT FROM cost_estimates.cost_tier
-   OR EXCLUDED.modeled_gfa_sqm    IS DISTINCT FROM cost_estimates.modeled_gfa_sqm
-   OR EXCLUDED.effective_area_sqm IS DISTINCT FROM cost_estimates.effective_area_sqm
-   OR EXCLUDED.trade_contract_values::text IS DISTINCT FROM cost_estimates.trade_contract_values::text
-RETURNING (xmax = 0) AS is_insert;
-```
-
-### Per-batch UPDATE of coa_applications
-
-```sql
-UPDATE coa_applications
-   SET modeled_gfa_sqm    = v.modeled_gfa_sqm,
-       estimated_cost     = v.estimated_cost,
-       cost_source        = v.cost_source,
-       cost_classified_at = $2::timestamptz
-  FROM (VALUES <unrolled $N batch>) AS v(id, modeled_gfa_sqm, estimated_cost, cost_source)
- WHERE coa_applications.id = v.id;
-```
-
-(No IS DISTINCT FROM guard on the coa_applications UPDATE — cost_classified_at must advance unconditionally to prevent infinite re-fetch per R5.4 WF3 BUG-5 lesson.)
-
-## BATCH_SIZE
-
-Per Spec 47 §6.3: `BATCH_SIZE = Math.floor(65535 / COL_COUNT)`. `cost_estimates` INSERT has 15 columns + shared `computed_at` → `Math.min(1000, Math.floor(65535 / 15)) = Math.min(1000, 4369) = 1000`. The cap is memory-bounded (in-process row staging).
-
-## Standards Compliance (Spec 47 §R1-R12)
-
-* §R1 — `require('./lib/pipeline')` + `require('./lib/coa-cost-model')` + `require('../src/features/leads/lib/cost-model-shared')` + `require('./lib/pipeline-realtor-availability')` skipped (no realtor)
-* §R2 — `ADVISORY_LOCK_ID = 4204`
-* §R3 — `pipeline.run('compute-coa-cost-estimates', async (pool) => {...})`
-* §R3.5 — `RUN_AT = await pipeline.getDbTimestamp(pool)` BEFORE withAdvisoryLock
-* §R4 — Zod schema validates `liar_gate_threshold`, `model_range_pct`, `fallback_range_pct`, `coa_cost_coverage_threshold_pct`
-* §R5 — Pre-flight: load `trade_sqft_rates` + `scope_intensity_matrix` at startup
-* §R6 — `pipeline.withAdvisoryLock(pool, 4204, async () => {...})`
-* §R7 — `pipeline.streamQuery` for the 6-table LEFT JOIN (~32K CoAs)
-* §R8 — Brain logic delegated to `estimateCostShared` (existing — unchanged); config built via `buildCoaConfig`
-* §R9 — Single `withTransaction` per batch: UPSERT `cost_estimates` + UPDATE `coa_applications`
-* §R10 — `emitSummary` with `audit_table` per §6.8 row 668; phase=42; verdict aggregated from row statuses
-* §R10 + §8.1 — `records_new`/`records_updated` from `RETURNING (xmax = 0)` (lesson 81-W5/82-W6/85-W6/R5.4 fold #10)
-* §R11 — `emitMeta` declares 7 source tables read + 2 target tables written
-* §R12 — `if (!lockResult.acquired) return;` after withAdvisoryLock
-
-## Pre-Review Self-Checklist (16 items)
-
-- (a) §6.8 lock 4204
-- (b) §6.8 idempotency cursor `cost_classified_at IS NULL OR < trade_classified_at`
-- (c) §6.8 audit metrics all present (3 spec-mandated + 4 null-reason buckets + 3 records_* + coverage scalar)
-- (d) `cost_source='geometric'` transform (Brain's 'model' → 'geometric' on the way to DB)
-- (e) `ON CONFLICT (lead_id) DO UPDATE SET` includes computed_at (re-runs refresh timestamp)
-- (f) Spec 47 §R3 BATCH_SIZE formula
-- (g) Spec 47 §R7 streamQuery
-- (h) Spec 47 §R9 withTransaction wraps cost_estimates UPSERT + coa_applications UPDATE
-- (i) Spec 47 §R10 + §8.1 records_new/_updated from RETURNING (xmax = 0)
-- (j) WF3 BUG-5 lesson: `cost_classified_at` advances unconditionally on UPDATE coa_applications (no IS DISTINCT FROM trap)
-- (k) Spec 84 §7 dual-path: Brain unchanged; config-builder is JS-only (no TS twin needed — pure config object, not consumed by mobile/admin)
-- (l) Cross-script dependency: SELECT requires `trade_classified_at IS NOT NULL` (R5.4 must run first) — enforced via cursor predicate
-- (m) Full CoA chain order in manifest: `link_coa_to_parcels → classify_coa_scope → classify_coa_trades → compute_coa_cost_estimates → link_coa → ...`
-- (n) RUN_AT captured BEFORE `withAdvisoryLock` per Spec 47 §R3.5
-- (o) Zod ConfigSchema covers new key `coa_cost_coverage_threshold_pct`; audit row references config, not literal
-- (p) `cost_source` Brain→DB transform actually fires (defensive test: assert Brain output of 'model' is mapped to 'geometric' before INSERT)
-
-## R5.4 lessons applied prophylactically
-
-| Lesson | Application here |
-|---|---|
-| Batch threshold on rows.length, not coaIds.length | N/A — this script is 1 CoA → 1 cost_estimates row (1:1). batch.length is unambiguous. |
-| TAG_ALIASES coverage gaps | N/A — this script consumes `active_trade_slugs` (R5.4 output) and `scope_tags` (R5.3 output) but doesn't do tag lookups itself. |
-| coa_eligible WARN audit row | INCLUDED — first row in auditRows table. |
-| slug_resolution_misses array | N/A — Brain handles trade_slug lookups; misses already counted in R5.4 audit. |
-| `lead_score = Math.round(confidence * 100)` formula | N/A — cost_estimates has no lead_score column. |
-| DUAL PATH NOTE on Brain lib | N/A — Brain is permit+CoA-shared (already documented as such). No new TS twin in scope. |
-| Realtor availability guard | N/A — no realtor writes from this script. |
-| ON CONFLICT classified_at | Equivalent: `computed_at = EXCLUDED.computed_at` included. |
-| Per-batch UPDATE for state col | INCLUDED — `coa_applications.cost_classified_at` updated in same withTransaction. |
-| xmax-derived records_new/updated | INCLUDED — `RETURNING (xmax = 0)` per Spec 47 §8.1 + R5.4 fold #10. |
-
-## Plan-Review (4-reviewer plan review — completed 2026-05-14)
-
-Reviewers: Gemini + DeepSeek + Independent worktree (general) + Worktree (observability + integration + logic).
-
-### Triage Table — 13 FOLDs, 5 REJECTs, 4 DEFERs
-
-| # | Sev | Conf | Source | Finding | Decision |
-|---|---|---|---|---|---|
-| 1 | **CRIT** | 100 | W#1 L-1 + W#2 CRIT-1 | R5.1 substrate ships with config field-name MISMATCH: `buildCoaConfig` returns `tradeRateBySlug` (Map) + `scopeIntensity` (Map). Brain (`cost-model-shared.js:233,286`) reads `config.tradeRates[slug]` + `config.scopeMatrix[matrixKey]` (plain-object bracket access). Defensive guards return undefined → every trade missed → surgicalTotal=0 → Zero-Total Bypass → 100% null cost. | **FOLD as R5.1 SUBSTRATE FIX**: rename to `tradeRates`/`scopeMatrix`; convert Maps to plain objects. |
-| 2 | **CRIT** | 95 | W#2 CRIT-3 | R5.1 substrate misses `urbanCoverageRatio` + `suburbanCoverageRatio` config keys. Brain (lines 200-201) falls back to hardcoded 0.7/0.4 — operators can't tune CoA-side coverage ratios via Control Panel (Spec 47 §4.1 violation). | **FOLD as R5.1 SUBSTRATE FIX**: pass both from logicVars in `buildCoaConfig`; add to Zod ConfigSchema. |
-| 3 | **CRIT** | 95 | Gemini + W#2 HIGH-3 + W#1 M-4 | `cost_distribution_p25_p50_p75` plan accumulates all estimated_cost values in JS array across batches. Independent confirmed array sort step also missing. Post-run `PERCENTILE_CONT` SQL is the correct pattern. | **FOLD**: replace JS accumulation with post-run `SELECT PERCENTILE_CONT(0.25/0.50/0.75) WITHIN GROUP (ORDER BY estimated_cost) FROM cost_estimates WHERE lead_id LIKE 'coa:%' AND computed_at = $RUN_AT`. |
-| 4 | HIGH | 90 | Gemini | `parcel_buildings` LATERAL has `LIMIT 1` without `ORDER BY` → non-deterministic if multiple primary buildings exist (data anomaly). | **FOLD**: add `ORDER BY building_id ASC LIMIT 1`. |
-| 5 | HIGH | 95 | W#2 HIGH-5 | R5.1 substrate sets `skipPermitTypeClassGating: true` in config — Brain never reads this flag. The actual mechanism is the `permit_type_class: 'construction'` sentinel in `mapCoaRowToBrainInput`. Dead-code risk: future dev removes sentinel trusting flag → silent breakage. | **FOLD as R5.1 SUBSTRATE FIX**: remove the flag; add explanatory comment at sentinel site. |
-| 6 | HIGH | 92 | W#1 H-2 + W#2 HIGH-4 | Spec literal `null_cost_reasons = {no_parcel/no_building/no_scope_tags/no_rate}` but `no_building` does NOT cause null cost (Brain falls back to lot-size path); `no_rate` is a catch-all conflating "no active trades" + "no matching rate". | **FOLD**: restructure to `no_parcel` / `no_scope_tags` / `no_active_trades` / `no_matching_rate`. Track `cost_with_fallback_pct` (lot-size fallback fired) as separate INFO metric. |
-| 7 | HIGH | 92 | W#2 HIGH-1 | `cost_estimate_coverage_pct` threshold WARN fires when `processed=0` (denominator path returns 0% < threshold). False WARN on healthy empty-cursor first-run. | **FOLD**: emit value as `'N/A'` + status `'INFO'` when `processed=0`. `coa_eligible` row already covers the empty-cursor signal. |
-| 8 | HIGH | 90 | W#2 MED-1 | Spec 83 claims `is_geometric_override=true ALWAYS` but Brain returns `false` on Zero-Total Bypass path. Plan transforms `cost_source` but not `is_geometric_override`. | **FOLD**: explicit transform — non-null estimate: `cost_source='geometric'`, `is_geometric_override=true` (override Brain output); null estimate: `cost_source='none'`, no cost_estimates row written (cleaner than writing 'none' with is_geometric_override=false). |
-| 9 | MED | 80 | Gemini | `trade_contract_values::text IS DISTINCT FROM ...::text` cast is redundant. PostgreSQL JSONB has canonical storage; direct `IS DISTINCT FROM` on JSONB compares canonically. | **FOLD**: drop `::text` casts. (Twin pattern matches; could be a follow-up cleanup on permit twin.) |
-| 10 | MED | 88 | DeepSeek CRIT + W#1 H-1 | Plan claims 15 cols but actually 16 (lead_id + 15 others). `Math.floor(65535/15)=4369` would parameter-overflow if cap removed; correct: `Math.floor((65535-1)/16)=4095`. | **FOLD**: correct column count to 16; use `Math.min(1000, Math.floor((65535-1)/16))`. Cap at 1000 still active — runtime safe. |
-| 11 | MED | 85 | DeepSeek HIGH-1 | `records_new`/`records_updated` semantics ambiguous when script writes to TWO target tables. cost_estimates is the primary (xmax-tracked); coa_applications UPDATE is side-effect. | **FOLD**: explicit doc comment + separate `coa_applications_updated` INFO audit row. records_new/_updated reflect cost_estimates UPSERT only (matches Spec 47 §8.1 primary-write convention). |
-| 12 | MED | 90 | W#2 MED-3 | Self-checklist item (l) says "cursor enforces R5.4 must run first" — factually wrong. Cursor's `cost_classified_at IS NULL` branch fetches CoAs even when R5.4 hasn't run. Behavior is safe; doc is wrong. | **FOLD**: rewrite item (l) — "CoAs without `trade_classified_at` fetched on first run, produce `no_active_trades`/`no_scope_tags`, advance `cost_classified_at`. Re-fetched after R5.4 runs (`cost_classified_at < trade_classified_at`). Cursor does NOT gate on R5.4 completion." |
-| 13 | MED | 82 | W#2 MED-4 | Zod schema references `coa_cost_coverage_threshold_pct` but plan doesn't seed the key. Zod throws on startup if absent. | **FOLD**: add `coa_cost_coverage_threshold_pct` to `scripts/seeds/logic_variables.json` (default 70 — below the §6.3 success target of 80 to allow first-run latitude). |
-| 14 | MED | 78 | DeepSeek HIGH-3 | Twin script supports `--dry-run` and `--limit=N` CLI flags; plan omits them. Operator-safety improvement. | **FOLD**: add both flags. |
-| 15 | LOW (REJECT) | 50 | Gemini CRIT-2 | LPAD revision_num collision. | **REJECT — out of R5.5 scope** — already fixed by WF3 #lpad-revision-num-collision / mig 146. |
-| 16 | NIT (REJECT) | 60 | Gemini NIT | Transaction isolation level not specified. | **REJECT** — default READ COMMITTED acceptable; drift mid-stream is by-design re-fetch. |
-| 17 | CRIT (REJECT) | 30 | DeepSeek CRIT-2 | Cursor `cost_classified_at < trade_classified_at` becomes NULL when trade_classified_at IS NULL → "permanently stuck". | **REJECT** — claim is wrong. SQL NULL semantics + `IS NULL` first branch correctly handle the case. Chain order guarantees R5.4 → R5.5 always. |
-| 18 | MED (REJECT) | 40 | DeepSeek MED-1 | Multiple CoAs per lead_id → UPSERT collision overwrites prior estimate. | **REJECT** — `coa_applications.application_number` is unique; `lead_id = 'coa:' || application_number` is consequently 1:1 with CoA row. |
-| 19 | MED (REJECT) | 50 | DeepSeek MED-2 | RUN_AT captured outside lock (twin captures inside). | **REJECT** — Spec 47 §R3.5 mandates BEFORE-lock capture. Twin behavior is a spec violation; our plan is correct. |
-| 20 | HIGH (REJECT) | 60 | W#1 H-3 | No TS twin for `coa-cost-model.js` substrate. | **REJECT** — no client-side consumer exists. Brain itself has TS twin (`cost-model.ts`). The substrate is pipeline-internal. |
-| 21 | HIGH (DEFER) | 75 | W#1 H-4 | Plan does not commit explicitly to xmax pattern from R5.4 fold #10. | **DEFER** as ALREADY ADDRESSED: plan §R10 + checklist (i) already specify `RETURNING (xmax = 0)` per Spec 47 §8.1 + R5.4 fold #10. |
-| 22 | LOW (DEFER) | 70 | Gemini LOW + W#2 MED-2 | `no_rate` sub-split distinguishability (no_active_trades vs no_matching_rate). | **DEFER** — fold #6 partially addresses by splitting `no_rate` into `no_active_trades` + `no_matching_rate`. Further sub-split (e.g., "rate missing for slug X") deferred to post-burn-in instrumentation. |
-| 23 | LOW (DEFER) | 60 | W#2 HIGH-4 | `no_building` sub-split (`no_primary_building` vs `no_building_footprint`). | **DEFER** — fold #6 removes `no_building` from null-bucket entirely; tracked separately as `cost_with_fallback_pct`. Sub-split unnecessary. |
-| 24 | LOW (DEFER) | 75 | W#2 LOW-2 | `is_geometric_override` omitted from `IS DISTINCT FROM` WHERE guard. | **DEFER** — for CoA non-null path, `is_geometric_override` is always `true` (post-fold #8). Never differs → guard never fires unnecessarily. |
-| 25 | DOC (DEFER) | 75 | W#2 MED-5 | Chain manifest order should explicitly document geocoding dependency. | **DEFER** — checklist (m) already lists the chain order; documenting the geocoding gate in spec §6.11 is a separate doc-only commit. |
-
-### Revised Technical Design (post-plan-review)
-
-#### R5.1 substrate fixes (`scripts/lib/coa-cost-model.js`)
-
-```js
-// REPLACE buildCoaConfig output:
-const tradeRates = {};
-for (const row of tradeRatesInput) {
-  tradeRates[row.trade_slug] = {
-    base_rate_sqft: Number(row.base_rate_sqft) || 0,
-    structure_complexity_factor: Number(row.structure_complexity_factor) || 1.0,
-  };
-}
-
-const scopeMatrix = {};
-for (const row of scopeMatrixInput) {
-  scopeMatrix[`${row.permit_type}::${row.structure_type}`] = Number(row.gfa_allocation_percentage) || 0;
-}
-
-return {
-  tradeRates,             // R5.5 review fold #1: rename from tradeRateBySlug + plain object
-  scopeMatrix,            // R5.5 review fold #1: rename from scopeIntensity + plain object
-  liarGateThreshold:    Number(lv.liar_gate_threshold) || DEFAULT_LIAR_GATE_THRESHOLD,
-  modelRangePct:        Number(lv.model_range_pct)      || DEFAULT_MODEL_RANGE_PCT,
-  fallbackRangePct:     Number(lv.fallback_range_pct)   || DEFAULT_FALLBACK_RANGE_PCT,
-  urbanCoverageRatio:   Number(lv.urban_coverage_ratio) || 0.7,    // R5.5 review fold #2
-  suburbanCoverageRatio:Number(lv.suburban_coverage_ratio) || 0.4, // R5.5 review fold #2
-  coaContext: true,
-  // R5.5 review fold #5: skipPermitTypeClassGating removed — was dead code.
-  // The Brain doesn't read it; CoA rows pass the gate via the
-  // permit_type_class:'construction' sentinel in mapCoaRowToBrainInput.
-};
-```
-
-#### Source SQL (revised — fold #4)
-
-```sql
-LEFT JOIN LATERAL (
-  SELECT building_id
-  FROM parcel_buildings
-  WHERE parcel_id = lp.parcel_id AND is_primary = true
-  ORDER BY building_id ASC   -- R5.5 review fold #4 (Gemini HIGH)
-  LIMIT 1
-) pb ON true
-```
-
-#### Audit table (revised — folds #3, #6, #7, #8, #11)
-
-| Metric | Value | Threshold | Status |
-|---|---|---|---|
-| `coa_eligible` | processed | `> 0` | WARN if 0 |
-| `coa_with_cost` | count | null | INFO |
-| `coa_without_cost` | count | null | INFO |
-| `cost_estimate_coverage_pct` | `processed > 0 ? pct : 'N/A'` | `>= coa_cost_coverage_threshold_pct%` (skipped when N/A) | PASS / WARN / **INFO when N/A** (fold #7) |
-| `null_reason_no_parcel` | count | null | INFO |
-| `null_reason_no_scope_tags` | count | null | INFO |
-| `null_reason_no_active_trades` | count | null | INFO (fold #6) |
-| `null_reason_no_matching_rate` | count | null | INFO (fold #6) |
-| `cost_with_fallback_pct` | % of non-null estimates that used lot-size fallback path | null | INFO (fold #6) |
-| `cost_distribution_p25_p50_p75` | `"$X / $Y / $Z"` from post-run PERCENTILE_CONT (fold #3) | null | INFO |
-| `records_new` | xmax-derived for cost_estimates UPSERT | null | INFO |
-| `records_updated` | xmax-derived for cost_estimates UPSERT | null | INFO |
-| `records_skipped` | rows_processed - rows_returned (IS DISTINCT FROM short-circuited) | null | INFO |
-| `coa_applications_updated` | rowCount sum of coa_applications UPDATE batches | null | INFO (fold #11) |
-
-#### Cost-source transform (revised — fold #8)
-
-```js
-let dbCostSource, dbIsGeometricOverride;
-if (brainOutput.estimated_cost != null && brainOutput.cost_source === 'model') {
-  dbCostSource = 'geometric';
-  dbIsGeometricOverride = true;
-} else if (brainOutput.estimated_cost != null && brainOutput.cost_source === 'permit') {
-  // Unreachable for CoA (est_const_cost is always null) but defensive.
-  dbCostSource = 'geometric';
-  dbIsGeometricOverride = true;
-} else {
-  // Brain returned cost_source='none' or null estimated_cost — skip cost_estimates row entirely.
-  // Only coa_applications gets cost_classified_at=$RUN_AT (cursor advancement) + cost_source='none'.
-  dbCostSource = 'none';
-  dbIsGeometricOverride = false;
-}
-```
-
-#### Cost percentiles query (post-run — fold #3)
-
-```sql
--- Run AFTER streamQuery completes. Bounded-memory (DB-side).
-SELECT
-  PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY estimated_cost) AS p25,
-  PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY estimated_cost) AS p50,
-  PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY estimated_cost) AS p75
-FROM cost_estimates
-WHERE lead_id LIKE 'coa:%'
-  AND computed_at = $RUN_AT
-  AND estimated_cost IS NOT NULL;
-```
-
-#### Self-checklist item (l) (revised — fold #12)
-
-> **(l) Cross-script dependency:** On first run, CoAs without `trade_classified_at` (R5.4 not yet run) ARE fetched via the `cost_classified_at IS NULL` cursor branch, produce `no_active_trades`/`no_scope_tags`, and advance `cost_classified_at`. After R5.4 runs and sets `trade_classified_at > cost_classified_at`, they are re-fetched via the `<` cursor branch. Cursor does NOT gate on R5.4 completion — the chain manifest order is the gate.
-
-### BATCH_SIZE (revised — fold #10)
-
-```js
-const COL_COUNT = 16; // lead_id + permit_num + revision_num + 13 cost cols incl. computed_at
-const INSERT_BATCH_SIZE = Math.min(1000, Math.floor((65535 - 1) / COL_COUNT)); // = 1000 (cap < formula)
-```
-
-### DEFERS (4 — appended to `docs/reports/review_followups.md` after authorization)
-
-- DeepSeek HIGH-3 fold rejection: cursor predicate (chain order guarantees)
-- Spec 83 `is_geometric_override=true ALWAYS` text vs Brain behavior — spec amendment candidate
-- `no_rate` further sub-distinguishability (per-slug rate-miss tracking)
-- compute-trade-forecasts.js Phase H gap (same as R5.4 — already documented in §6.11 Phase H)
+| # | Sev | Source | Finding | Decision |
+|---|---|---|---|---|
+| 1 | CRIT | Indep C1 | UPDATE joins on `permit_num` only — nondeterministic across revisions | **FOLDED** — DISTINCT ON subquery |
+| 2 | CRIT | Indep C2 + Gemini | `coa_anticipated` semantic conflict | **DEFERRED to Spec 48 final phase** |
+| 3 | CRIT | Obs L2-1 | Part A overwrites lat/long after classifiers consumed parcel-centroid | **FOLDED** — verified classifiers don't consume coa.lat/long directly; documented + tested |
+| 4 | CRIT | Obs L3-2 + Indep H2 | No IS DISTINCT FROM on `coa_anticipated` UPDATE | **N/A** — Part B deferred |
+| 5 | CRIT | Obs L1-1 | No `coa_below_confidence_floor_count` audit metric | **FOLDED** — added to audit_table |
+| 6 | CRIT | DeepSeek | Stale `permits.linked_coa_application_number` after CoA pre-pass cross-ward unlink | **FOLDED** — pre-pass extension |
+| 7 | HIGH | DeepSeek + Obs L3-3 | Threshold 0.50 risky | **FOLDED** — raised to 0.60 |
+| 8 | HIGH | Gemini | Re-enrichment cursor | **FOLDED** — IS DISTINCT FROM guard makes UPDATE idempotent; re-applies on chain re-run |
+| 9 | HIGH | Gemini | Ward COALESCE redundant | **FOLDED** — clarity in plan + comment |
+| 10 | HIGH | Indep H3 | `withTransaction` ambiguity | **FOLDED** — enrichment in own transaction |
+| 11 | HIGH | Indep H4 | R0 audit ordering | **N/A** — R0 audit was Part B's; deferred |
+| 12 | HIGH | Indep H5 | No lead_parcels safety test | **FOLDED** — explicit test assertion |
+| 13 | HIGH | Obs L1-2 | `coa_anticipated_count` decay-detection | **N/A** — Part B deferred |
+| 14 | HIGH | Obs L1-3 | No `lead_identity_lat_lng_mismatch_count` consistency check | **FOLDED** — added (`== 0 FAIL`) |
+| 15 | HIGH | Obs L2-2 | `coa_anticipated` no operational effect | **N/A** — Part B deferred |
+| 16 | HIGH | Obs L2-3 | `coa_anticipated` redundant with PRE-permit | **N/A** — Part B deferred |
+| 17 | HIGH | Obs L3-4 | `coa_ward_upgraded` near-zero metric | **FOLDED** — renamed `coa_ward_filled_from_permit_count` + added `coa_ward_mismatch_with_permit_count` |
+| 18 | MED | Obs L1-4 | Regex precision | **N/A** — Part B deferred |
+| 19 | MED | Obs L1-5 + Indep H4 | R0 audit as hard gate | **N/A** — Part B deferred |
+| 20 | MED | Obs L3-7 + Indep M4 | emitMeta declaration completeness | **FOLDED** — explicit test assertion |
+| 21 | MED | Indep M1 | §6.6.D `Populated by this WF?` column | **FOLDED** — full table replacement text in Amendment 1 |
+| 22 | MED | Indep M2 | Zod explicit field | **FOLDED** — explicit z.coerce.number() field |
+| 23 | MED | Indep M3 | Migration 147 numbering | **N/A** — Part B's migration deferred |
+| 24 | MED | Indep M5 | Ward COALESCE comment | **FOLDED** — checklist (e) + comment in SQL |
+| 25 | REJECT | Indep H1 | §R3.5 false positive | **REJECTED** — pattern matches Spec 47 §15 "at top of withAdvisoryLock callback" |
+| 26 | LOW | Obs L1, L2, L3 | Tier 3 ambiguity, early-exit emitMeta, Spec 76/91 grep | **FOLDED inline** (raised threshold to 0.60 resolves Tier 3; early-exit emitMeta updated; Spec 76/91 grep already verified by Independent reviewer) |
+| 27 | PASS | Gemini (longitude guard) | Independent verified guard present | PASS |
+| 28 | DEFERRED | Independent + Observability misc | Stale-detection mechanisms, dirty-mark verification, etc. | Captured in followups |
 
 ---
 
-> **PLAN LOCKED — 4-reviewer plan review complete; 14 BUGs folded, 4 DEFERs queued, 5 REJECTs documented.**
+> **PLAN LOCKED — 4-reviewer plan-review complete; 14 folds applied to Part A; Part B deferred to Spec 48 final phase implementation.**
 >
-> Spec 42 alignment: **on plan** with one acknowledged spec text vs implementation gap (`is_geometric_override` ALWAYS true — deferred to spec amendment).
->
-> Files to modify (after authorization):
-> - NEW `scripts/compute-coa-cost-estimates.js` (~350 lines after fold)
-> - MODIFY `scripts/lib/coa-cost-model.js` (3 fold-driven substrate fixes: rename keys to plain objects, add coverage ratios, remove dead flag)
-> - MODIFY `scripts/seeds/logic_variables.json` (add `coa_cost_coverage_threshold_pct`)
-> - NEW `src/tests/compute-coa-cost-estimates.infra.test.ts` (Spec 47 §R1-R12 + R5.5 contract regression-lock)
-> - EXTEND `src/tests/coa-cost-model.logic.test.ts` (add fold #1+#2+#5 regression coverage — config field names, coverage ratios, dead-flag removal)
-> - MODIFY 6-7 collateral files (manifest, FreshnessTimeline, funnel, chain.logic, quality.logic, assert-global-coverage, control-panel.logic, pipeline-advisory-lock LOCK_ID_REGISTRY)
->
-> **Do you authorize this WF1 plan with all 14 review folds? (y/n)**
-> DO NOT generate code. DO NOT run pipeline scripts. TERMINATE RESPONSE until authorization.
+> Do you authorize this WF1 plan (Part A only + Phase D close-out)? (y/n)
+> DO NOT generate code. DO NOT modify scripts. TERMINATE RESPONSE until authorization.
