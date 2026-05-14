@@ -108,17 +108,18 @@ describe('Pipeline Chain Definitions', () => {
     expect(coaSlugs).not.toContain('compute_timing_calibration_v2');
   });
 
-  it('defines coa chain with 13 steps', () => {
+  it('defines coa chain with 14 steps', () => {
     // WF2 2026-04-11 — added classify_lifecycle_phase as the final
     // step so every CoA chain run reclassifies permits whose
     // last_seen_at was just bumped by link-coa.
     // WF2 2026-04-18 — +1 step: assert_lifecycle_phase_distribution (step 11).
     // WF1 2026-04-19 — +1 step: assert_global_coverage (step 12).
-    // WF2 2026-05-14 R5.2 — +1 step: link_coa_to_parcels (step 4, inserted
-    //   after assert_coa_freshness, before link_coa). Spec 42 §6.5 step 9.
+    // WF2 2026-05-14 R5.2 — +1 step: link_coa_to_parcels (step 4). Spec 42 §6.5 step 9.
+    // WF1 2026-05-14 R5.3 — +1 step: classify_coa_scope (step 5, between
+    //   link_coa_to_parcels and link_coa). Spec 42 §6.5 step 5.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(13);
+    expect(chain!.steps).toHaveLength(14);
   });
 
   it('defines sources chain with 15 steps', () => {
@@ -351,11 +352,12 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     const disabledSlugs = new Set(['enrich_wsib_builders', 'enrich_named_builders']);
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
     const activeSteps = coa.steps.filter((s) => !disabledSlugs.has(s.slug));
-    // CoA chain has no enrichment steps — all 13 remain
+    // CoA chain has no enrichment steps — all 14 remain
     // (WF2 2026-04-18 added assert_lifecycle_phase_distribution as step 11;
     //  WF1 2026-04-19 added assert_global_coverage as step 12;
-    //  WF2 2026-05-14 R5.2 inserted link_coa_to_parcels — total 13)
-    expect(activeSteps).toHaveLength(13);
+    //  WF2 2026-05-14 R5.2 inserted link_coa_to_parcels — total 13;
+    //  WF1 2026-05-14 R5.3 inserted classify_coa_scope — total 14)
+    expect(activeSteps).toHaveLength(14);
   });
 
   it('empty disabled set leaves all steps active', () => {

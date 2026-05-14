@@ -493,25 +493,27 @@ describe('Pipeline Registry', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 48 tracked pipelines', () => {
+  it('has exactly 49 tracked pipelines', () => {
     // -1 v1 compute_timing_calibration removed (migration 106, 2026-04-21)
     // +1 backup_db added (WF3 2026-04-25, OP4 fix — spec 112)
     // +1 compute_phase_calibration added (WF1 #B 2026-05-09, Spec 84 §7)
     // +1 backfill_realtor_permit_trades added (WF3 2026-05-09, Spec 91 §3.5 item 4)
     // +1 link_coa_to_parcels added (WF2 2026-05-14 R5.2, Spec 42 §6.5 step 9)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(48);
+    // +1 classify_coa_scope added (WF1 2026-05-14 R5.3, Spec 42 §6.5 step 5)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(49);
   });
 
-  it('groups are correct: 10 ingest, 15 link, 11 classify, 2 snapshot, 10 quality', () => {
+  it('groups are correct: 10 ingest, 15 link, 12 classify, 2 snapshot, 10 quality', () => {
     // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     // +1 snapshot: backup_db added (WF3 2026-04-25)
     // +1 classify: compute_phase_calibration added (WF1 #B 2026-05-09)
     // +1 classify: backfill_realtor_permit_trades added (WF3 2026-05-09)
     // +1 link:     link_coa_to_parcels added (WF2 2026-05-14 R5.2)
+    // +1 classify: classify_coa_scope added (WF1 2026-05-14 R5.3)
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(10);
     expect(groups.filter((g) => g === 'link')).toHaveLength(15);
-    expect(groups.filter((g) => g === 'classify')).toHaveLength(11);
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(12);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(10);
   });
@@ -573,13 +575,14 @@ describe('Pipeline Chains', () => {
     expect(indent2plus).toHaveLength(0);
   });
 
-  it('coa chain has 13 steps ending with assert_global_coverage', () => {
+  it('coa chain has 14 steps ending with assert_global_coverage', () => {
     // WF2 2026-04-11: +1 (classify_lifecycle_phase) — was 9 before.
     // WF2 2026-04-18: +1 (assert_lifecycle_phase_distribution as step 11).
     // WF1 2026-04-19: +1 (assert_global_coverage as step 12).
     // WF2 2026-05-14 R5.2: +1 (link_coa_to_parcels at step 4).
+    // WF1 2026-05-14 R5.3: +1 (classify_coa_scope at step 5).
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
-    expect(coa.steps).toHaveLength(13);
+    expect(coa.steps).toHaveLength(14);
     expect(coa!.steps[0]!.slug).toBe('assert_schema');
     expect(coa!.steps[1]!.slug).toBe('coa');
     expect(coa!.steps[coa.steps.length - 1]!.slug).toBe('assert_global_coverage');

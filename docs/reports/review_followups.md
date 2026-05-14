@@ -3,6 +3,28 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## classify-coa-scope.js R5.3 — plan-review + Pre-Review deferrals (2026-05-14)
+
+Source: 3-reviewer adversarial plan review (Gemini + DeepSeek + worktree feature-dev:code-reviewer) on the WF1 R5.3 plan, plus Pre-Review Self-Checklist item (l) verification against the live script.
+
+**Plan-review DEFERs (7 items, mostly out-of-scope spec concerns):**
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| CRIT | DeepSeek | lead_id LPAD truncation collision risk | **ALREADY FIXED**: WF3 #lpad-revision-num-collision (commit `4b9ff32`) corrected Spec 42 §6.6.A.1 + added mig 138_a admin-exclusion. DeepSeek didn't have visibility into the most recent commits. |
+| CRIT | DeepSeek | lifecycle_status_history natural key `date_trunc('second')` allows silent drops within same second | Out of R5.3 scope (separate spec section + separate script `classify-lifecycle-phase.js`). File as follow-up to Spec 84 hardening WF. |
+| HIGH | DeepSeek | `assert_coa_freshness` WARN-only — won't halt chain on prolonged CKAN outage | Operational concern, out of R5.3 scope. |
+| HIGH | DeepSeek | `permits.linked_coa_application_number` single-value column loses data on multi-CoA-to-permit linkage | Out of R5.3 scope (link_coa.js concern). |
+| MED | DeepSeek | Phase distribution gate edge case on Seq with row_count=1 | Out of R5.3 scope (assert-lifecycle-phase-distribution.js). |
+| MED/LOW | DeepSeek | lead_id format CHECK regex tightness; advisory lock deadlock potential | Operational concerns; one already mitigated. |
+| LOW | DeepSeek | Mobile API should expose `lead_type` field derived from prefix | Out of R5.3 scope (Spec 91 mobile concern). |
+
+**Pre-Review Self-Checklist (l) — RESOLVED during Green Light (not a defer):**
+
+The initial verdict on item (l) was based on a search for `load_at` updates in `load-coa.js`. During Green Light live-run, discovered that **`load_at` does NOT EXIST** as a column on `coa_applications` — Spec 42 §6.8 row 666 names the idempotency anchor `load_at` but the actual column is `last_seen_at`. `load-coa.js:282` bumps `last_seen_at` ONLY when `data_hash IS DISTINCT FROM EXCLUDED.data_hash` (i.e., source content changed). That's exactly the contract the classifier needs: `scope_classified_at < last_seen_at` correctly fires re-classification after CKAN amendments. The script's filter was updated to use `last_seen_at` (spec-drift correction documented inline). **NO follow-up WF3 needed.**
+
+---
+
 ## mig 139 — Phase C composite-UNIQUE WF3 follow-ups (2026-05-14)
 
 Source: 3-reviewer reviews across two passes (plan + diff). Plan-review findings already triaged in the active task. Diff-review (post-Fix) findings appended below:

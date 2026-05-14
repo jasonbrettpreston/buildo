@@ -554,6 +554,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   link_massing:         { summary: 'Links permits to 3D building footprints via parcel intersection', table: 'parcel_buildings' },
   link_coa:             { summary: 'Links CoA applications to building permits by address and ward', table: 'coa_applications' },
   link_coa_to_parcels:  { summary: 'Tier 1a/1b address-matches CoA applications to parcels; bundled neighbourhood lookup + lat/lng back-fill', table: 'lead_parcels' },
+  classify_coa_scope:   { summary: 'Description-keyword classifier producing coa_type_class + project_type + scope_tags per Spec 42 §6.6.D', table: 'coa_applications' },
   link_wsib:            { summary: 'Matches extracted entities against WSIB registry by name', table: 'entities' },
   enrich_wsib_builders: { summary: 'Web-scrapes contact info for WSIB-matched entities via Serper API', table: 'entities' },
   enrich_named_builders:{ summary: 'Web-scrapes contact info for unmatched entities via Serper API', table: 'entities' },
