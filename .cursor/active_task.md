@@ -1,6 +1,6 @@
 # Active Task: WF1 #coa-pipeline-parity-phase-c — `lead_id` Backfill + Permit-Side Rekey
 
-**Status:** Implementation (authorized 2026-05-13 — R2.v2 review complete with 14 findings resolved; proceeding through R5)
+**Status:** COMPLETE 2026-05-13 — Phase C delivered in 4 commits (`fdf505d` R5.1 + `27b3c3f` R5.2 + `872ec73` R5.3 + post-R8 spec amendments). Gate satisfied per Spec 42 §6.11 — zero NULL lead_id; R6 verifier 64/64; full suite 5,604/5,609 (60/60 db.test.ts). R5.4-R5.6 deferred to Phase H prep WF. R8 final review returned 0 BUGs, 2 documentation DEFERs (both fixed inline in this commit).
 **Workflow:** WF1 (Genesis — third phase of the larger WF2 #coa-pipeline-parity work)
 **Domain Mode:** Cross-Domain (backend pipeline scripts + shared lib + admin UI read queries)
 **Rollback Anchor:** `8d5ce16` (current HEAD on main — Phase B + 3 CI hotfixes complete)
