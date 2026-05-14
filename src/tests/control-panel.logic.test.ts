@@ -111,6 +111,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'coa_parcel_conf_tier1b',        // WF2 R5.2 — Tier 1b parcel match confidence
   'coa_scope_unmapped_threshold_pct',  // WF1 R5.3 — day-1 unmapped threshold for classify-coa-scope
   'coa_trades_unmapped_threshold_pct', // WF1 R5.4 — day-1 unmapped threshold for classify-coa-trades (R8 fold #1)
+  'coa_cost_coverage_threshold_pct',   // WF1 R5.5 — day-1 coverage threshold for compute-coa-cost-estimates (review fold #13)
   'massing_shed_threshold_sqm',    // E19
   'massing_garage_max_sqm',        // E19
   'massing_nearest_max_distance_m', // E19

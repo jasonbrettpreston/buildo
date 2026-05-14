@@ -363,6 +363,13 @@
     "min": 0,
     "max": 100
   },
+  "coa_cost_coverage_threshold_pct": {
+    "default": 70,
+    "type": "number",
+    "description": "Day-1 threshold (percent) for CoAs producing a non-NULL estimated_cost in compute-coa-cost-estimates (Spec 42 §6.8 row 668; R5.5 fold #13). Below threshold → audit_table verdict WARN. Set to 70% for first burn-in (Spec 42 §6.3 success target is 80% — threshold gives latitude for early-run coverage gaps from missing parcel links, scope tags, or trade rates). Tune up to 80% once R5.2-R5.4 are at steady-state coverage.",
+    "min": 0,
+    "max": 100
+  },
   "massing_shed_threshold_sqm": {
     "default": 20,
     "type": "number",

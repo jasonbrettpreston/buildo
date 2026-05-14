@@ -36,6 +36,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   link_coa_to_parcels:{ name: 'Link CoA to Parcels',   group: 'link' },
   classify_coa_scope: { name: 'Classify CoA Scope',    group: 'classify' },
   classify_coa_trades:{ name: 'Classify CoA Trades',   group: 'classify' },
+  compute_coa_cost_estimates: { name: 'Compute CoA Cost Estimates', group: 'classify' },
   enrich_wsib_builders: { name: 'Enrich WSIB Matched',   group: 'link' },
   enrich_named_builders:{ name: 'Enrich Web Entities',   group: 'link' },
   enrich_wsib_registry: { name: 'Enrich WSIB Registry',  group: 'link' },
@@ -171,6 +172,10 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       // BEFORE classify_coa_trades (R5.4) which gates on scope_classified_at.
       { slug: 'classify_coa_scope',      indent: 1 },
       { slug: 'classify_coa_trades',     indent: 1 },
+      // WF1 R5.5 (Spec 42 §6.5 step 12, §6.8 row 668) — geometric-only cost
+      // estimator. Reads lead_parcels + parcel_buildings + lead_trades; writes
+      // coa_applications cost cols + lead_id-keyed cost_estimates row.
+      { slug: 'compute_coa_cost_estimates', indent: 1 },
       { slug: 'link_coa',                indent: 1 },
       { slug: 'create_pre_permits',      indent: 1 },
       { slug: 'assert_pre_permit_aging', indent: 0 },
