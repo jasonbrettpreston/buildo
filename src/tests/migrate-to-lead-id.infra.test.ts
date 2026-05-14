@@ -58,11 +58,12 @@ describe('migrate-to-lead-id.js — Spec 47 §R1-R12 + Phase C R5.2 contract', (
   });
 
   it('backfills cost_estimates with canonical permit: lead_id derivation', () => {
-    expect(src).toMatch(/UPDATE\s+cost_estimates[\s\S]*?SET\s+lead_id\s*=\s*'permit:'\s*\|\|\s*permit_num\s*\|\|\s*':'\s*\|\|\s*LPAD\s*\(\s*revision_num\s*,\s*2\s*,\s*'0'\s*\)[\s\S]*?WHERE\s+lead_id\s+IS\s+NULL/i);
+    // Permit-suffix `(ce\.)?` accommodates the post-WF3-LPAD alias form `ce.permit_num`
+    expect(src).toMatch(/UPDATE\s+cost_estimates[\s\S]*?SET\s+lead_id\s*=\s*'permit:'\s*\|\|\s*(?:ce\.)?permit_num\s*\|\|\s*':'\s*\|\|\s*LPAD\s*\(\s*(?:ce\.)?revision_num\s*,\s*2\s*,\s*'0'\s*\)[\s\S]*?WHERE\s+(?:ce\.)?lead_id\s+IS\s+NULL/i);
   });
 
   it('backfills trade_forecasts with canonical derivation', () => {
-    expect(src).toMatch(/UPDATE\s+trade_forecasts[\s\S]*?SET\s+lead_id\s*=\s*'permit:'\s*\|\|\s*permit_num\s*\|\|\s*':'\s*\|\|\s*LPAD\s*\(\s*revision_num\s*,\s*2\s*,\s*'0'\s*\)[\s\S]*?WHERE\s+lead_id\s+IS\s+NULL/i);
+    expect(src).toMatch(/UPDATE\s+trade_forecasts[\s\S]*?SET\s+lead_id\s*=\s*'permit:'\s*\|\|\s*(?:tf\.)?permit_num\s*\|\|\s*':'\s*\|\|\s*LPAD\s*\(\s*(?:tf\.)?revision_num\s*,\s*2\s*,\s*'0'\s*\)[\s\S]*?WHERE\s+(?:tf\.)?lead_id\s+IS\s+NULL/i);
   });
 
   it('backfills tracked_projects with permit-side derivation; no lead_type column exists on this table', () => {
@@ -89,6 +90,46 @@ describe('migrate-to-lead-id.js — Spec 47 §R1-R12 + Phase C R5.2 contract', (
   it('backfills lead_analytics from lead_key (R0.7 audit: format already matches)', () => {
     // Per R0.7 audit: lead_analytics is empty. UPDATE pattern matches.
     expect(src).toMatch(/UPDATE\s+lead_analytics[\s\S]*?SET\s+lead_id\s*=\s*lead_key[\s\S]*?WHERE\s+lead_id\s+IS\s+NULL/i);
+  });
+
+  it('excludes administrative-class permits from cost_estimates backfill (WF3 #lpad-revision-num-collision)', () => {
+    // permit_type_class='administrative' permits (e.g. 'DCs DeferredFees') produce
+    // LPAD collisions ('0' and '00' both → '00'). Excluded at the write site to
+    // complete the pattern already established by classify-permits.js (trade gate)
+    // and compute-cost-estimates.js (cost_source='none').
+    const ceUpdateBlock = src.match(/UPDATE\s+cost_estimates[\s\S]*?(?=UPDATE\s+trade_forecasts|UPDATE\s+tracked_projects|UPDATE\s+lead_analytics|$)/i);
+    expect(ceUpdateBlock).not.toBeNull();
+    expect(ceUpdateBlock?.[0]).toMatch(/permit_type_classifications/i);
+    expect(ceUpdateBlock?.[0]).toMatch(/administrative/);
+  });
+
+  it('excludes administrative-class permits from trade_forecasts + tracked_projects backfills (R8 Gemini CRIT)', () => {
+    // Defensive layer — admin permits should have zero rows in these tables
+    // upstream (classify-permits gate), but the NOT EXISTS filter enforces
+    // the invariant at every write site.
+    const tfBlock = src.match(/UPDATE\s+trade_forecasts[\s\S]*?(?=UPDATE\s+tracked_projects|UPDATE\s+lead_analytics|$)/i);
+    expect(tfBlock).not.toBeNull();
+    expect(tfBlock?.[0]).toMatch(/permit_type_classifications/i);
+    expect(tfBlock?.[0]).toMatch(/administrative/);
+
+    const tpBlock = src.match(/UPDATE\s+tracked_projects[\s\S]*?(?=UPDATE\s+lead_analytics|$)/i);
+    expect(tpBlock).not.toBeNull();
+    expect(tpBlock?.[0]).toMatch(/permit_type_classifications/i);
+    expect(tpBlock?.[0]).toMatch(/administrative/);
+  });
+
+  it('runs LPAD-collision preflight before backfill (WF3 #lpad-revision-num-collision)', () => {
+    // Preflight that detects future drift: groups by (permit_num, LPAD(rev,2,'0'))
+    // and aborts if any group has > 1 row in non-administrative permits.
+    expect(src).toMatch(/LPAD\s*\(\s*revision_num[\s\S]*?GROUP\s+BY[\s\S]*?HAVING\s+COUNT/i);
+  });
+
+  it('LPAD-collision preflight uses LEFT JOIN + IS DISTINCT FROM to include unclassified permits (R8 Worktree #3)', () => {
+    // INNER JOIN with `!= 'administrative'` would silently skip any permit_type
+    // missing from permit_type_classifications. LEFT JOIN + IS DISTINCT FROM
+    // includes those permits in the collision scan (NULL-class permits ARE
+    // in the lead_id ecosystem).
+    expect(src).toMatch(/LEFT\s+JOIN\s+permit_type_classifications[\s\S]*?IS\s+DISTINCT\s+FROM\s+'administrative'/i);
   });
 
   it('§R10 — emits audit_table with per-table row counts', () => {
