@@ -191,7 +191,7 @@ const TAG_PATTERNS: Array<{ tag: string; patterns: RegExp[] }> = [
   // Project-type signal tags
   { tag: 'addition',           patterns: ADDITION_PATTERNS },
   { tag: 'new-construction',   patterns: NEW_CONSTRUCTION_PATTERNS },
-  { tag: 'renovation',         patterns: [/\brenovat(e|ion|ing)\b/i, /\bremodel(ing|ed)?\b/i] },
+  { tag: 'renovation',         patterns: [/\brenovat\w*\b/i, /\bremodel(ing|ed)?\b/i] },   // WF3 #r5-3-observability-fixes BUG-2 — catch-all aligns with ALTERATION_PATTERNS
   { tag: 'demolition',         patterns: DEMOLITION_PATTERNS },
   { tag: 'severance',          patterns: SEVERANCE_PATTERNS },
   { tag: 'change-of-use',      patterns: CHANGE_OF_USE_PATTERNS },

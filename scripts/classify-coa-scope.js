@@ -41,7 +41,13 @@ const LOGIC_VARS_SCHEMA = z.object({
   coa_scope_unmapped_threshold_pct: z.coerce.number().finite().nonnegative().max(100),
 }).passthrough();
 
-const UPDATE_BATCH_SIZE = 1000;
+// WF3 #r5-3-observability-fixes BUG-4: Spec 47 §6.3 mandates the formula
+// `Math.floor(65535 / COL_COUNT)` to prevent silent param-limit violations
+// as columns are added. flushBatch emits 4 params per row (id, coa_type_class,
+// project_type, scope_tags) + 1 shared RUN_AT. The Math.min(1000, ...) cap is
+// memory-bounded, not param-bounded — keeping in-memory batch staging modest.
+const COA_SCOPE_COL_COUNT = 4;
+const UPDATE_BATCH_SIZE = Math.min(1000, Math.floor(65535 / COA_SCOPE_COL_COUNT));
 
 pipeline.run('classify-coa-scope', async (pool) => {
   // §R3.5 + §R5 — capture RUN_AT + validate config BEFORE lock contention
@@ -63,6 +69,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
     let unmappedScope = 0;       // scope_tags IS NULL (no keyword fired)
     let noClass = 0;             // coa_type_class IS NULL (no class keyword)
     let noProjectType = 0;       // project_type IS NULL
+    let totalUpdated = 0;        // WF3 BUG-1: actual rowCount sum from flushBatch (NOT JS classifier count) per Spec 47 §8.1
     const projectTypeDist = new Map();
     const coaTypeClassDist = new Map();
 
@@ -110,7 +117,18 @@ pipeline.run('classify-coa-scope', async (pool) => {
       params.push(RUN_AT);
 
       await pipeline.withTransaction(pool, async (client) => {
-        await client.query(
+        // WF3 BUG-1: capture result.rowCount for accurate records_updated metric
+        // (Spec 47 §8.1 mandate; lessons 81-W5/82-W6/85-W6).
+        //
+        // No IS DISTINCT FROM guard: live re-run discovered an infinite-
+        // re-processing bug — when classifier output is all-NULL (rows with
+        // unmatchable descriptions), IS DISTINCT FROM correctly identifies
+        // "no substantive change" → UPDATE skipped → scope_classified_at
+        // never advances → row re-fetched forever via `scope_classified_at <
+        // last_seen_at` cursor. The SELECT cursor already gates re-fetch on
+        // content change, so IS DISTINCT FROM is redundant (Spec 47 §9.3
+        // dead-tuple bloat concern is dominated by the cursor pre-filter).
+        const result = await client.query(
           `UPDATE coa_applications ca
               SET coa_type_class      = v.coa_type_class,
                   project_type        = v.project_type,
@@ -118,12 +136,10 @@ pipeline.run('classify-coa-scope', async (pool) => {
                   scope_classified_at = $${runAtParam}::timestamptz,
                   scope_source        = 'description'
              FROM (VALUES ${valuesParts.join(', ')}) AS v(id, coa_type_class, project_type, scope_tags)
-            WHERE ca.id = v.id
-              AND (ca.coa_type_class IS DISTINCT FROM v.coa_type_class
-                OR ca.project_type   IS DISTINCT FROM v.project_type
-                OR ca.scope_tags     IS DISTINCT FROM v.scope_tags)`,
+            WHERE ca.id = v.id`,
           params
         );
+        totalUpdated += result.rowCount ?? 0;
       });
       batch.ids = [];
       batch.typeClasses = [];
@@ -196,7 +212,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
     const auditRows = [
       { metric: 'coa_processed',         value: processed,                                        threshold: null,                                       status: 'INFO' },
       { metric: 'scope_classified',      value: scopeClassified,                                  threshold: null,                                       status: 'INFO' },
-      { metric: 'unmapped_scope_count',  value: unmappedScope,                                    threshold: `<= ${unmappedThresholdPct}%`,              status: unmappedPct <= unmappedThresholdPct ? 'PASS' : 'WARN' },
+      { metric: 'unmapped_scope_count',  value: unmappedPct.toFixed(1) + '%',                     threshold: `<= ${unmappedThresholdPct}%`,              status: unmappedPct <= unmappedThresholdPct ? 'PASS' : 'WARN' },
       { metric: 'scope_classified_pct',  value: scopeClassifiedPct.toFixed(1) + '%',              threshold: `>= ${100 - unmappedThresholdPct}%`,        status: unmappedPct <= unmappedThresholdPct ? 'PASS' : 'WARN' },
       { metric: 'no_class',              value: noClass,                                          threshold: null,                                       status: 'INFO' },
       { metric: 'no_project_type',       value: noProjectType,                                    threshold: null,                                       status: 'INFO' },
@@ -209,7 +225,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
     pipeline.emitSummary({
       records_total: processed,
       records_new: 0,
-      records_updated: scopeClassified,
+      records_updated: totalUpdated,    // WF3 BUG-1: actual DB rowCount sum, not JS-side count
       records_meta: {
         duration_ms: durationMs,
         coa_processed: processed,

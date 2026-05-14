@@ -154,6 +154,23 @@ describe('coa-scope-classifier — live R0 sample regression', () => {
   });
 });
 
+describe('coa-scope-classifier — renovation regex consistency (WF3 #r5-3-observability-fixes BUG-2)', () => {
+  it('"renovated dwelling" fires both project_type=Alteration AND renovation scope tag', () => {
+    // R8 follow-up review BUG-2: prior regex `/\brenovat(e|ion|ing)\b/i` missed
+    // "renovated" / "renovates" past tense, so project_type fired (via the
+    // ALTERATION_PATTERNS catch-all `\brenovat\w*\b`) but the `renovation`
+    // scope_tag did NOT. The fix makes both regexes use the same catch-all.
+    const out = classifyCoaScope({ description: 'Permit use of the renovated dwelling for a secondary suite.' });
+    expect(out.project_type).toBe('Alteration');
+    expect(out.scope_tags).toContain('renovation');
+  });
+
+  it('"renovates the office" fires renovation scope tag', () => {
+    const out = classifyCoaScope({ description: 'Owner renovates the office space.' });
+    expect(out.scope_tags).toContain('renovation');
+  });
+});
+
 describe('coa-scope-classifier — Mixed type-class precedence', () => {
   it('residential + commercial keywords → mixed (per spec enum)', () => {
     const out = classifyCoaScope({

@@ -123,4 +123,29 @@ describe('classify-coa-scope.js — Spec 47 §R1-R12 + R5.3 contract', () => {
   it('scope_source is constant "description" per Spec 42 §6.6.D', () => {
     expect(src).toMatch(/scope_source[\s\S]{0,40}['"]description['"]/i);
   });
+
+  it('§R10 + §8.1 — flushBatch captures client.query() rowCount into a totalUpdated accumulator (WF3 #r5-3-observability-fixes BUG-1)', () => {
+    // Lessons 81-W5 / 82-W6 / 85-W6: records_updated MUST sum result.rowCount,
+    // not JS-side classification counts. The IS DISTINCT FROM guard means
+    // JS-side counts overstate writes on idempotent re-runs.
+    expect(src).toMatch(/const\s+result\s*=\s*await\s+client\.query/i);
+    expect(src).toMatch(/totalUpdated\s*\+?=\s*result\.rowCount/i);
+    expect(src).toMatch(/records_updated:\s*totalUpdated/i);
+  });
+
+  it('§R3 — BATCH_SIZE computed via Math.floor(65535 / N) formula (WF3 #r5-3-observability-fixes BUG-4)', () => {
+    // Spec 47 §6.3 mandates the formula to prevent silent violations as
+    // columns are added. The Math.min(1000, ...) cap is documented as
+    // memory-bounded, not param-bounded.
+    expect(src).toMatch(/Math\.floor\s*\(\s*65535/i);
+  });
+
+  it('audit_table unmapped_scope_count value matches threshold format (WF3 #r5-3-observability-fixes BUG-3)', () => {
+    // Prior: value = raw integer count, threshold = "<= 10%" → operator-confusing.
+    // Fix: value emits percentage to match threshold semantics.
+    // The audit row construction should compute and display unmappedPct.
+    const unmappedRow = src.match(/metric:\s*['"]unmapped_scope_count['"][\s\S]{0,300}/);
+    expect(unmappedRow).not.toBeNull();
+    expect(unmappedRow?.[0]).toMatch(/unmappedPct/);
+  });
 });
