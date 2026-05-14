@@ -1101,3 +1101,22 @@ R5.3 design pivot from app-layer dual-write (6 scripts) to trigger-based mirrori
 
 _Filed by scheduled remote agent 2026-05-15; commit SHA: TBD (this commit). Original CRITICAL details preserved in the planning notes; pick up via `WF3` in a future session._
 
+---
+
+## WF1 R5.4 classify-coa-trades — diff-review deferrals (2026-05-14)
+
+R5.4 4-reviewer diff-review (Gemini + DeepSeek + Worktree-independent + Worktree-observability) surfaced 1 CRITICAL bug (batch threshold), 5 functional coverage gaps (TAG_ALIASES), and 4 observability improvements — all folded inline. DEFERs below.
+
+| # | Severity | Source | Finding | Decision rationale |
+|---|---|---|---|---|
+| 56 | DEFER | Worktree#2 CRIT-1 + IMP-4 | `classify-coa-scope.js` unconditionally bumps `scope_classified_at` even when classifier output is unchanged → on next R5.4 run, every CoA re-enters cursor → `records_updated` inflated daily | Real concern. Cross-script fix needed in `classify-coa-scope.js`: use `scope_classified_at = CASE WHEN scope_tags IS DISTINCT FROM v.scope_tags THEN $runAt ELSE scope_classified_at END`. Preserves the all-NULL infinite-re-fetch fix while breaking the daily full-re-classify cycle. Open as separate WF3 on classify-coa-scope.js. |
+| 57 | DEFER | Worktree#2 IMP-5 + Indep H-1/M-1 | Spec 42 §6.8 row 667 literal `unmapped_coa_count (== 0 FAIL)` + `default_fallback_pct (≤ 20%)` slugs absent | R8 fold #1 deliberately replaced with `unmapped_scope_pct <= coa_trades_unmapped_threshold_pct%` to avoid permanent FAIL on variance-only CoAs. Spec text needs amendment to reflect this. Open a §6.8 amendment commit. |
+| 58 | DEFER | Worktree#2 IMP-7 | `dwelling → build-sfd` alias fires on variance/change-of-use CoAs ("permit use of dwelling for commercial") producing spurious excavation+concrete trades at 0.80 confidence | Architectural: requires multi-tag context (cross-reference `project_type` or co-occurring tags like `severance`/`setback`) which the lib's lookupTradesForTags doesn't have. Fix would require: (a) two-stage classification (lib produces matches, script filters by project_type), or (b) tag-context guard in TAG_ALIASES. Defer until first production audit reveals scale. |
+| 59 | DEFER | Worktree#2 IMP-2 + Indep | `emitSummary` cross-granularity — `records_total: processed` (CoA count) but `records_new/_updated: recordsNew/recordsUpdated` (lead_trades row counts) — dashboard misleads | Spec 47 §8.1 mandates these fields. Re-design would need a parallel `child_records_*` field set. Track. |
+| 60 | DEFER | Gemini MED | `realtorConfidence = 0.7` hardcoded — could be `coa_realtor_confidence` logic_variable | Consistent with permit-side `backfill-realtor-permit-trades.js` which also hardcodes. Spec 47 §4.1 test ("could operator tune?") suggests structural, not business-logic. Fold cross-spec to logic_variables if/when permit-side adopts. |
+| 61 | DEFER | Gemini MED | Zod `LOGIC_VARS_SCHEMA.passthrough()` instead of `.strict()` | Site-wide pattern across all classify-* scripts. Strict mode would require auditing every script. Open as separate WF2 refactor. |
+| 62 | DEFER | Gemini LOW | Hardcoded `'realtor'` string in `tradeSlugDist` (line 235) — should derive from `tradesResult` row matching `REALTOR_TRADE_ID` | Cosmetic; trades.id=33↔slug='realtor' is enforced by `checkRealtorAvailable` startup guard. |
+| 63 | DEFER | Indep L-2 | Realtor `tradeId` bypasses `SLUG_TO_ID` validation that all matrix trades go through | Defensive at startup via `checkRealtorAvailable` which queries `trades WHERE id = 33 AND slug = 'realtor'`. FK enforces. |
+| 64 | REJECT | Indep H-3 | `IS DISTINCT FROM` guard absent on `trade_classified_at` UPDATE → dead-tuple bloat on re-runs | Theoretical. Within a single run, each CoA appears at most once. Across runs, `$2 = RUN_AT` changes, so IS DISTINCT FROM never short-circuits. Zero practical benefit. |
+| 65 | DEFER | DeepSeek #2-#9 | 8 findings targeting `scripts/classify-permits.js` twin (date-parsing, ghost-cleanup atomicity, SELECT/WHERE column dependencies, hardcoded REALTOR_TRADE_ID, classCounters fixed keys, lookupTradesForTags dedup semantics, scope_tags JSON parsing concerns, emitMeta key inconsistency) | Out of R5.4 scope (twin reference only). File a separate WF3 epic for classify-permits.js hardening once R5.4 ships. |
+
