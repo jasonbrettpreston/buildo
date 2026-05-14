@@ -1182,3 +1182,32 @@ The original R5.6 plan had two parts. Part B (`permits.coa_anticipated` flag for
 ### Phase D close-out
 Phase D DELIVERED 2026-05-14. R5.1 → R5.5 → R5.6 commit chain captured in Spec 42 §6.11 Phase D delivery note. All §6.3 coverage gates measurable post-staging-run.
 
+---
+
+## Phase E.1 diff-stage 4-reviewer findings (2026-05-14)
+
+Phase E.1 (#lifecycle-phase-engine-migration-E.1) commit covers bug 84-W12 substrate fix + `mapToUniversalStream` + TS twin extension + 14 spec amendments. 4-reviewer diff-stage review surfaced these PRE-EXISTING bugs (NOT introduced by E.1) — filed as future WF3 candidates rather than blocking commit.
+
+| # | Triage | Source | Issue | Reason for DEFER |
+|---|---|---|---|---|
+| 93 | DEFER | DeepSeek diff HIGH | `classifyOrphan` uses `issued_date` for `'Inspection'` / `'Revision Issued'` / `'Revised'` statuses; if `issued_date` is null, `daysBetween(null, ...)` produces NaN-like behavior. Orphan branch untouched by E.1. | Pre-existing; orphan stall logic predates Phase D. Separate WF3 candidate. |
+| 94 | DEFER | DeepSeek diff HIGH | Permit-side status sets are case-sensitive (`DEAD_STATUS_SET`, `TERMINAL_P20_SET`, etc.). If CKAN feed lowercase-drifts, 40% of permits could become unclassified. | Pre-existing design; affects 84-W14-class drift hardening. Separate WF3 candidate. |
+| 95 | DEFER | DeepSeek diff MEDIUM | `'Cancelled'` (1 row) + `'Revoked'` (2 rows) currently map to `null` via `DEAD_STATUS_SET`; spec §2.5.a argues they should map to P19/P20. | Spec drift, 3 rows; separate WF3 hardening candidate. |
+| 96 | DEFER | DeepSeek diff MEDIUM | `mapInspectionStageToPhase` first-match `.includes()` ordering may misroute compound stage names. | No current data triggers; defensive hardening candidate. |
+| 97 | DEFER | Gemini diff HIGH | `PHASE_ORDINAL` assigns all P7 sub-phases (P7a/b/c/d) the same ordinal `-2`. Downstream progression detection collapsed. | Pre-existing; affects forecast routing — separate WF3 to redesign ordinal map. |
+| 98 | DEFER | Gemini diff HIGH | `PHASE_ORDINAL['P18'] = 3.5` floating-point ordinal. Existing comment justifies (magnitude comparisons only). | Pre-existing; works for current consumers. Hardening candidate. |
+| 99 | DEFER | Gemini diff MEDIUM | Hardcoded fallback values in `classifyOrphan` / `classifyBldLed` (`?? 180` / `?? 30` / `?? 90`) mask missing config. | Pre-existing; pipeline always passes DB-loaded value. Defensive hardening candidate. |
+| 100 | DEFER | Gemini diff MEDIUM | `classifyBldLed` precedence (REVIEW_P4 → HOLD_P5 → READY_P6 → INTAKE_P3) is unintuitive. | Pre-existing; documented behavior — add explanatory comment in a follow-up. |
+| 101 | DEFER | Gemini diff LOW | `SKIP_PHASES_SQL` hardcoded string is error-prone for future phase additions. | Pre-existing; generate programmatically in a follow-up. |
+| 102 | DEFER | Gemini diff LOW | `NORMALIZED_DEAD_DECISIONS_ARRAY` exported alongside the deprecated legacy union encourages continued use. | Pre-existing; remove in Phase F when all consumers migrate to split sets. |
+| 103 | DEFER | DeepSeek diff MEDIUM | `unmappedDecision` flag in rule 9 catchall uses `!isDeferredDecisionVariant` instead of `!inAnyDecisionSet` — narrower than necessary but works due to precedence guarantees. | Functional; tightening would be defensive — separate hardening candidate. |
+| 104 | FOLDED | Observability diff HIGH | `mapToUniversalStream.phase` field is descriptive (multi-value / sentinel / NULL possible); E.2 must use `classifyCoaPhase().phase` as write target, never the catalog `.phase`. | **FOLDED** into `.cursor/queued_task_phase_e2_consumer_wiring.md` "Critical write-target invariant" addition. |
+| 105 | FOLDED | Observability diff MEDIUM | E.2 `stalled_count` audit metric ambiguous between permit-side and CoA-side. | **FOLDED** into `.cursor/queued_task_phase_e2_consumer_wiring.md` — split into `stalled_count` (permit) + `coa_stalled_count` (CoA-side). |
+| 106 | FOLDED | Gemini diff NIT | Dead variables `statusMatched` / `decisionMatched` declared but never read in `classifyCoaPhase`. | **FOLDED** — removed in diff cleanup pass. |
+| 107 | FOLDED | Gemini diff LOW | `STANDARD_LIFECYCLE_PHASES` duplicates existing `VALID_PHASES` set. | **FOLDED** — `STANDARD_LIFECYCLE_PHASES` removed; `mapToUniversalStream` uses `VALID_PHASES`. |
+| 108 | FOLDED | Independent diff HIGH | Test file SPEC LINK header pointed to non-existent `docs/reports/lifecycle_phase_implementation.md`. | **FOLDED** — corrected to `docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3` + Spec 42 §6.7. |
+| 109 | N/A | Independent diff | Worktree did not see uncommitted E.1 changes (worktree isolation defaults to last-commit HEAD `cea6d47` Phase D close-out). Independent reviewer's "missing implementation" findings are non-actionable. | Procedural artifact of `isolation: "worktree"` — not a real finding. |
+
+### Phase E.1 close-out
+Phase E.1 DELIVERED 2026-05-14. Substrate-only commit per Spec 42 §6.11. Same-Sprint Mitigation Option 2 active: `scripts/classify-lifecycle-phase.js` consumer uses `classifyCoaPhaseLegacy` adapter until E.2 ships. v4 plan-lock authorized after 4 rounds of plan-review (v1/v2/v3/v4) + 4-reviewer diff-stage round; 0 new CRITICALs introduced; 4 diff-stage findings folded inline; 17 pre-existing bugs deferred (filed above). E.2 plan-lock follows (queued at `.cursor/queued_task_phase_e2_consumer_wiring.md` — locks user-authorized v4 scope expansion: `coa_applications` columns migration + downstream `lead_id` guards in `compute-trade-forecasts.js` + `update-tracked-projects.js`).
+

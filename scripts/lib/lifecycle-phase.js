@@ -124,8 +124,17 @@ const NORMALIZED_APPROVED_DECISIONS = new Set([
   'partially approved',
   'conitional approval',
   'modified approval',
+  // Phase E.1 (84-W12) fold #3: 'conditional consent' was previously encoded only
+  // in coa_applications.status; adding it to the decision set so rule 5 fires for
+  // both status- and decision-driven cases.
+  'conditional consent',
+  'consent with conditions',
 ]);
 
+// Phase E.1 (84-W12): legacy union — backward-compat for any consumer that
+// imports NORMALIZED_DEAD_DECISIONS. Split into P19/P20 below (the new precedence
+// distinguishes terminal-refused/withdrawn from terminal-closed). Will be
+// removed in Phase F when all consumers migrate to the split sets.
 const NORMALIZED_DEAD_DECISIONS = new Set([
   'refused',
   'withdrawn',
@@ -134,6 +143,142 @@ const NORMALIZED_DEAD_DECISIONS = new Set([
   'closed',
   'delegated consent refused',
 ]);
+
+// Phase E.1 (84-W12) Spec 84 §2.5.b: decisions semantically equivalent to
+// status='Refused'/'Withdrawn' → P19 (refused/withdrawn terminal).
+const NORMALIZED_P19_DECISIONS = new Set([
+  'refused',
+  'withdrawn',
+  'application withdrawn',
+  'delegated consent refused',
+]);
+
+// Phase E.1 (84-W12) Spec 84 §2.5.b: decisions semantically equivalent to
+// status='Closed' → P20 (closed terminal).
+const NORMALIZED_P20_DECISIONS = new Set([
+  'closed',
+  'application closed',
+  'delegated consent closed',
+]);
+
+// Phase E.1 (84-W12) Spec 84 §2.5.b row 83: 'Final and Binding' is a distinct
+// post-approval terminal phase (P4). Single canonical variant; not in
+// NORMALIZED_APPROVED_DECISIONS to keep rule 3 (P4) above rule 5 (P3) cleanly.
+const NORMALIZED_FINAL_AND_BINDING_DECISIONS = new Set(['final and binding']);
+
+// Phase E.1 (84-W12) Spec 84 §2.5.b rows 40-54: 505 free-text deferred variants
+// (most date-stamped: 'deferred aug 18, 2016 (orig mark kehler)'). The canonical
+// values 'deferred' / 'deffered' (row 53 typo) are in this set; date-stamped
+// variants resolve via isDeferredDecisionVariant() below.
+const NORMALIZED_DEFERRED_DECISIONS = new Set([
+  'deferred',
+  'deffered', // §2.5.b row 53 typo — preserved literal
+]);
+
+// Phase E.1 (84-W12) Universal Stream catalog (migration 129 CoA-side seq 1-22):
+// When a decision-driven rule (1, 2, 3, 5, 6) fires, this map provides the
+// canonical CoA status string for mapToUniversalStream lookup. Every key in the
+// union of {P19, P20, FaB, Approved, Deferred} decision sets has an explicit
+// entry; test #8 (decision-to-status map completeness) asserts:
+//   - every key in the union has a map entry
+//   - every value appears in a CoA-side status set
+const NORMALIZED_DECISION_TO_STATUS_MAP = new Map([
+  // P19 decision-side → catalog seq 13 / 19 / 20
+  ['refused',                              'Refused'],
+  ['withdrawn',                            'Application Withdrawn'],
+  ['application withdrawn',                'Application Withdrawn'],
+  ['delegated consent refused',            'Refused'],
+  // P20 decision-side → catalog seq 21 / 22
+  ['closed',                               'Closed'],
+  ['application closed',                   'Closed'],
+  ['delegated consent closed',             'Closed'],
+  // P4 decision-side → catalog seq 14
+  ['final and binding',                    'Final and Binding'],
+  // P3 decision-side — all 16 existing approved variants + 2 new → catalog seq 10/11/12
+  ['approved',                             'Approved'],
+  ['conditional approval',                 'Approved with Conditions'],
+  ['conditional approved',                 'Approved with Conditions'],
+  ['conditionally approved',               'Approved with Conditions'],
+  ['approved conditionally',               'Approved with Conditions'],
+  ['approved on condition',                'Approved with Conditions'],
+  ['approved on conditional',              'Approved with Conditions'],
+  ['approved on condation',                'Approved with Conditions'],
+  ['approved on condtion',                 'Approved with Conditions'],
+  ['approved with conditions',             'Approved with Conditions'],
+  ['approved with condition',              'Approved with Conditions'],
+  ['approved wih conditions',              'Approved with Conditions'],
+  ['approved, as amended, on condition',   'Approved with Conditions'],
+  ['partially approved',                   'Approved'],
+  ['conitional approval',                  'Approved with Conditions'],
+  ['modified approval',                    'Approved'],
+  ['conditional consent',                  'Conditional Consent'],
+  ['consent with conditions',              'Conditional Consent'],
+  // P2 decision-side → catalog seq 9 (date-stamped variants resolve via
+  // isDeferredDecisionVariant + hardcoded 'Deferred' fallback in rule 6)
+  ['deferred',                             'Deferred'],
+  ['deffered',                             'Deferred'],
+]);
+
+// Phase E.1 (84-W12) Spec 84 §2.5.c: status sets matching the 22 canonical
+// CKAN CoA status values. Each maps 1:1 to a catalog row.
+
+// CoA-3..CoA-6 — review/scheduling/paused-review (rows 72-78) → P2 (seq 3-9)
+const COA_REVIEW_STATUSES = new Set([
+  'Prepare Notice',
+  'Notice Prepared',
+  'Tentatively Scheduled',
+  'Hearing Scheduled',
+  'Hearing Rescheduled',
+  'Postponed',
+  'Deferred',
+]);
+
+// CoA-1, CoA-2 — intake (rows 70-71) → P1 (seq 1-2)
+const COA_INTAKE_STATUSES = new Set([
+  'Application Received',
+  'Accepted',
+]);
+
+// CoA-14 P20 — terminal closed (rows 90-91) → seq 21-22
+const COA_TERMINAL_P20_STATUSES = new Set([
+  'Closed',
+  'Complete',
+]);
+
+// CoA-14 P19 — terminal refused/withdrawn/cancelled (rows 82, 88-89) → seq 13/19/20
+const COA_TERMINAL_P19_STATUSES = new Set([
+  'Application Withdrawn',
+  'Cancelled',
+  'Refused',
+]);
+
+// CoA-7, CoA-8 — approved (rows 79-81) → P3 (seq 10/11/12)
+const COA_APPROVED_STATUSES = new Set([
+  'Approved',
+  'Approved with Conditions',
+  'Conditional Consent',
+]);
+
+// CoA-9 — final and binding (row 83) → P4 (seq 14)
+const COA_FINAL_AND_BINDING_STATUSES = new Set([
+  'Final and Binding',
+]);
+
+// CoA-10..CoA-13 — post-decision in-appeal (rows 84-87) → P3 (seq 15-18)
+const COA_POST_DECISION_STATUSES = new Set([
+  'Await Expiry Date',
+  'Appealed',
+  'TLAB Appeal',
+  'OMB Appeal',
+]);
+
+// Phase E.1 (84-W12) fold #5: post-lookup phase validation in mapToUniversalStream
+// uses the existing VALID_PHASES set (defined earlier; matches Universal Stream
+// catalog post-Phase-B). Catalog rows like seq 35 (permits.status='Notice Sent')
+// have phase='UNMAPPED→null', and some permit-side rows have multi-value phase
+// like 'P7a/P7b/P7c (or P9-P17)'. mapToUniversalStream returns null when the
+// lookup hits such a poisoned row, driving E.2 to emit catalog_invalid_phase_count
+// audit metric (7th metric).
 
 // ─────────────────────────────────────────────────────────────────
 // Helpers
@@ -155,6 +300,43 @@ function normalizeCoaDecision(d) {
   if (d == null) return null;
   const trimmed = String(d).trim().toLowerCase().replace(/\s+/g, ' ');
   return trimmed.length === 0 ? null : trimmed;
+}
+
+// Phase E.1 (84-W12): trim + empty→null for input.status. Mirrors normalizeStatus
+// but exported with a CoA-specific name so consumers can grep traceably.
+function normalizeCoaStatus(s) {
+  if (s == null) return null;
+  const trimmed = String(s).trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+// Phase E.1 (84-W12): hoisted from inline classifyCoaPhase logic (was lines 388-398)
+// so the JS↔TS parity test asserts identical behavior across both implementations.
+// Preserves the existing null-safety guards (adversarial Probe 6: Number(null) === 0
+// would silently disable stall detection for rows with NULL last_seen_at).
+function computeStallFromActivity(daysSinceActivity, stallThresholdDays) {
+  if (daysSinceActivity == null || stallThresholdDays == null) return false;
+  const d = Number(daysSinceActivity);
+  const t = Number(stallThresholdDays);
+  if (!Number.isFinite(d) || !Number.isFinite(t) || t <= 0) return false;
+  return d > t;
+}
+
+// Phase E.1 (84-W12) Spec 84 §2.5.b rows 40-54: 505 free-text deferred variants.
+// Negative guard (v4 fold #7): explicitly excludes variants in the other decision
+// sets so e.g. 'deferred but refused' (hypothetical) falls through to rule 9 catchall
+// rather than masquerading as P2-deferred.
+function isDeferredDecisionVariant(normalized) {
+  if (normalized == null) return false;
+  if (NORMALIZED_APPROVED_DECISIONS.has(normalized)) return false;
+  if (NORMALIZED_P19_DECISIONS.has(normalized)) return false;
+  if (NORMALIZED_P20_DECISIONS.has(normalized)) return false;
+  if (NORMALIZED_FINAL_AND_BINDING_DECISIONS.has(normalized)) return false;
+  return (
+    NORMALIZED_DEFERRED_DECISIONS.has(normalized) ||
+    normalized.startsWith('deferred ') ||      // 'deferred aug 18, 2016 (orig...)'
+    normalized.includes('decision not made')    // §2.5.b row 54 outlier
+  );
 }
 
 function mapInspectionStageToPhase(stageLower) {
@@ -361,43 +543,249 @@ function classifyBldLed(input, status, stalled) {
   return { phase: null, stalled: false };
 }
 
-// WF3 2026-04-13 — `stalled` flag added. Operator can tune the
-// threshold via `logic_variables.coa_stall_threshold`. The classifier
-// script passes `daysSinceActivity` (derived from last_seen_at) and
-// `stallThresholdDays` (from control panel) into the pure function.
+// Phase E.1 (84-W12) — REWRITTEN per Spec 42 §6.7 corrected 9-rule precedence.
+// Bug 84-W12 root cause: pre-E.1 logic ignored coa_applications.status entirely
+// (read only decision) AND short-circuited on linked_permit_num. Combined effect:
+// 99.4% of CoAs received lifecycle_phase = NULL. Spec 84 §2.5.f line 367 names
+// Rule 0 (linked_permit_num short-circuit) as "THE 84-W12 root cause."
 //
-// Stall rule: only P1 (Intake) / P2 (Review) phases can stall. Approved,
-// dead, or linked CoAs don't stall — they're terminal or have moved on.
+// New 9-rule precedence (top-down, first match wins). Reordering rationale:
+//   R1 (status/decision terminal P20) before R2 (P19) — Closed is the most
+//     recent state and overrides any intermediate decision.
+//   R4 (post-decision: Appealed/TLAB/OMB/Await Expiry) before R5 (Approved) —
+//     post-decision states are MORE RECENT than the approval that preceded them.
+//   R6 (decision-deferred) before R7 (status-review) — decision is more
+//     authoritative than scheduling status (a hearing can be scheduled but
+//     subsequently deferred via decision update).
+//
+// matchedStatus derivation: when a decision-driven rule fires (R1/R2/R3/R5/R6),
+// matchedStatus is derived from NORMALIZED_DECISION_TO_STATUS_MAP so E.2's
+// mapToUniversalStream lookup always returns a valid catalog row (or null when
+// the catalog has no entry — driving lifecycle_seq=NULL + audit increment).
+//
+// Stall detection: forced false for non-{P1, P2} phases (terminal/post-decision
+// can't stall). Rule 9 catchall → P1 DOES compute stall (an in-flight CoA with
+// an unrecognized status may still be stuck).
 function classifyCoaPhase(input) {
-  if (input.linked_permit_num != null && String(input.linked_permit_num).trim() !== '') {
-    return { phase: null, stalled: false };
+  // Defensive guard: null/non-object input → sentinel return with matchedRule=0
+  if (typeof input !== 'object' || input === null) {
+    return {
+      phase: null,
+      stalled: false,
+      matchedStatus: null,
+      matchedRule: 0,
+      unmappedStatus: false,
+      unmappedDecision: false,
+    };
   }
 
-  const normalized = normalizeCoaDecision(input.decision);
+  const status = normalizeCoaStatus(input.status);
+  const decision = normalizeCoaDecision(input.decision);
 
-  if (normalized != null && NORMALIZED_DEAD_DECISIONS.has(normalized)) {
-    return { phase: null, stalled: false };
+  // ─────────────────────────────────────────────────────────────
+  // Rule 1 — Terminal P20 (Closed / Complete; or decision='closed')
+  // ─────────────────────────────────────────────────────────────
+  if (status != null && COA_TERMINAL_P20_STATUSES.has(status)) {
+    return finalize({phase: 'P20', matchedRule: 1, matchedStatus: status,
+                     unmappedStatus: false, unmappedDecision: decision != null && !inAnyDecisionSet(decision),
+                     input});
+  }
+  if (decision != null && NORMALIZED_P20_DECISIONS.has(decision)) {
+    return finalize({phase: 'P20', matchedRule: 1,
+                     matchedStatus: NORMALIZED_DECISION_TO_STATUS_MAP.get(decision) ?? null,
+                     unmappedStatus: status != null && !inAnyStatusSet(status),
+                     unmappedDecision: false,
+                     input});
   }
 
-  const phase = normalized != null && NORMALIZED_APPROVED_DECISIONS.has(normalized)
-    ? 'P2'
-    : 'P1';
+  // ─────────────────────────────────────────────────────────────
+  // Rule 2 — Terminal P19 (Refused / Withdrawn / Cancelled)
+  // ─────────────────────────────────────────────────────────────
+  if (status != null && COA_TERMINAL_P19_STATUSES.has(status)) {
+    return finalize({phase: 'P19', matchedRule: 2, matchedStatus: status,
+                     unmappedStatus: false,
+                     unmappedDecision: decision != null && !inAnyDecisionSet(decision),
+                     input});
+  }
+  if (decision != null && NORMALIZED_P19_DECISIONS.has(decision)) {
+    return finalize({phase: 'P19', matchedRule: 2,
+                     matchedStatus: NORMALIZED_DECISION_TO_STATUS_MAP.get(decision) ?? null,
+                     unmappedStatus: status != null && !inAnyStatusSet(status),
+                     unmappedDecision: false,
+                     input});
+  }
 
-  // Stall detection: only for in-flight phases (P1/P2). A CoA that has
-  // had no activity for longer than the threshold is treated as stuck.
-  // Guard against Number(null) = 0 which would silently disable stall
-  // detection for rows with NULL last_seen_at (adversarial Probe 6).
-  const days = input.daysSinceActivity == null
-    ? null
-    : Number(input.daysSinceActivity);
-  const threshold = input.stallThresholdDays == null
-    ? null
-    : Number(input.stallThresholdDays);
-  const stalled = days != null && threshold != null
-    && Number.isFinite(days) && Number.isFinite(threshold)
-    && threshold > 0 && days > threshold;
+  // ─────────────────────────────────────────────────────────────
+  // Rule 3 — Final and Binding (P4)
+  // ─────────────────────────────────────────────────────────────
+  if (status != null && COA_FINAL_AND_BINDING_STATUSES.has(status)) {
+    return finalize({phase: 'P4', matchedRule: 3, matchedStatus: status,
+                     unmappedStatus: false,
+                     unmappedDecision: decision != null && !inAnyDecisionSet(decision),
+                     input});
+  }
+  if (decision != null && NORMALIZED_FINAL_AND_BINDING_DECISIONS.has(decision)) {
+    return finalize({phase: 'P4', matchedRule: 3, matchedStatus: 'Final and Binding',
+                     unmappedStatus: status != null && !inAnyStatusSet(status),
+                     unmappedDecision: false,
+                     input});
+  }
 
-  return { phase, stalled };
+  // ─────────────────────────────────────────────────────────────
+  // Rule 4 — Post-decision in-appeal (P3) — reordered ABOVE R5 (approved)
+  //   because post-decision states (Appealed/TLAB/OMB/Await Expiry) are
+  //   MORE RECENT than the approval that preceded them.
+  // ─────────────────────────────────────────────────────────────
+  if (status != null && COA_POST_DECISION_STATUSES.has(status)) {
+    return finalize({phase: 'P3', matchedRule: 4, matchedStatus: status,
+                     unmappedStatus: false,
+                     unmappedDecision: decision != null && !inAnyDecisionSet(decision),
+                     input});
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Rule 5 — Approved (P3)
+  // ─────────────────────────────────────────────────────────────
+  if (status != null && COA_APPROVED_STATUSES.has(status)) {
+    return finalize({phase: 'P3', matchedRule: 5, matchedStatus: status,
+                     unmappedStatus: false,
+                     unmappedDecision: decision != null && !inAnyDecisionSet(decision),
+                     input});
+  }
+  if (decision != null && NORMALIZED_APPROVED_DECISIONS.has(decision)) {
+    return finalize({phase: 'P3', matchedRule: 5,
+                     matchedStatus: NORMALIZED_DECISION_TO_STATUS_MAP.get(decision) ?? null,
+                     unmappedStatus: status != null && !inAnyStatusSet(status),
+                     unmappedDecision: false,
+                     input});
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Rule 6 — Decision-deferred (P2) — reordered ABOVE R7 (status-review)
+  //   because decision is more authoritative than scheduling status.
+  //   Date-stamped variants (505 in §2.5.g) return undefined from the
+  //   map; the hardcoded 'Deferred' fallback handles them.
+  // ─────────────────────────────────────────────────────────────
+  if (isDeferredDecisionVariant(decision)) {
+    const mapped = NORMALIZED_DECISION_TO_STATUS_MAP.get(decision);
+    return finalize({phase: 'P2', matchedRule: 6, matchedStatus: mapped ?? 'Deferred',
+                     unmappedStatus: status != null && !inAnyStatusSet(status),
+                     unmappedDecision: false,
+                     input});
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Rule 7 — Review/scheduling/paused-review statuses (P2)
+  // ─────────────────────────────────────────────────────────────
+  if (status != null && COA_REVIEW_STATUSES.has(status)) {
+    return finalize({phase: 'P2', matchedRule: 7, matchedStatus: status,
+                     unmappedStatus: false,
+                     unmappedDecision: decision != null && !inAnyDecisionSet(decision),
+                     input});
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Rule 8 — Intake statuses (P1)
+  // ─────────────────────────────────────────────────────────────
+  if (status != null && COA_INTAKE_STATUSES.has(status)) {
+    return finalize({phase: 'P1', matchedRule: 8, matchedStatus: status,
+                     unmappedStatus: false,
+                     unmappedDecision: decision != null && !inAnyDecisionSet(decision),
+                     input});
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Rule 9 — Catchall (P1, unmappedStatus/Decision flags set)
+  //   matchedStatus = null (NOT a sentinel — drives mapToUniversalStream
+  //   to return null → E.2 writes lifecycle_seq = NULL correctly).
+  //   Stall is computed (catchall P1 may still be stuck).
+  // ─────────────────────────────────────────────────────────────
+  return finalize({phase: 'P1', matchedRule: 9, matchedStatus: null,
+                   unmappedStatus: status != null,
+                   unmappedDecision: decision != null && !isDeferredDecisionVariant(decision),
+                   input});
+}
+
+// Helper: did the input.status fall into any of the canonical status sets?
+function inAnyStatusSet(status) {
+  return (
+    COA_REVIEW_STATUSES.has(status) ||
+    COA_INTAKE_STATUSES.has(status) ||
+    COA_TERMINAL_P20_STATUSES.has(status) ||
+    COA_TERMINAL_P19_STATUSES.has(status) ||
+    COA_APPROVED_STATUSES.has(status) ||
+    COA_FINAL_AND_BINDING_STATUSES.has(status) ||
+    COA_POST_DECISION_STATUSES.has(status)
+  );
+}
+
+// Helper: did the input.decision fall into any decision set/helper?
+function inAnyDecisionSet(decision) {
+  return (
+    NORMALIZED_P19_DECISIONS.has(decision) ||
+    NORMALIZED_P20_DECISIONS.has(decision) ||
+    NORMALIZED_FINAL_AND_BINDING_DECISIONS.has(decision) ||
+    NORMALIZED_APPROVED_DECISIONS.has(decision) ||
+    isDeferredDecisionVariant(decision)
+  );
+}
+
+// Finalize: attach stall flag (forced false for non-P1/P2) + freeze.
+function finalize({phase, matchedRule, matchedStatus, unmappedStatus, unmappedDecision, input}) {
+  const isInFlight = (phase === 'P1' || phase === 'P2');
+  const stalled = isInFlight
+    ? computeStallFromActivity(input.daysSinceActivity, input.stallThresholdDays)
+    : false;
+  return Object.freeze({phase, stalled, matchedStatus, matchedRule, unmappedStatus, unmappedDecision});
+}
+
+// Phase E.1 (84-W12) Same-Sprint Mitigation Option 2: legacy adapter for v1
+// consumers that destructure only {phase, stalled} and assume phase ∈ {P1, P2, null}.
+//
+// PRESERVES OLD RETURN SHAPE, NOT OLD BUGGY BEHAVIOR. The buggy v1 mapping
+// (decision='Approved' → P2) was wrong — we are not preserving wrongness. The
+// adapter narrows P3/P4/P19/P20 → null so v1 consumers' switch statements
+// continue to write null for those cases (matching pre-E.1 production state)
+// until E.2 wires the full new shape.
+//
+// scripts/classify-lifecycle-phase.js uses this adapter until E.2 ships.
+function classifyCoaPhaseLegacy(input) {
+  const r = classifyCoaPhase(input);
+  return {
+    phase: (r.phase === 'P1' || r.phase === 'P2') ? r.phase : null,
+    stalled: r.stalled,
+  };
+}
+
+// Phase E.1 (84-W12): Universal Stream catalog lookup. Pure function — catalog
+// passed in as pre-built Map by caller (E.2 builds it once at script startup).
+//
+// Key invariant: catalogByStatusSource keys are `${source}:${matchedStatus}` strings.
+// Match the migration 128 source CHECK constraint: 'coa.status' | 'permits.status' | 'insp.stage'.
+//
+// Returns null when:
+//   1. matchedStatus is null/undefined (catchall rule 9 case — drives lifecycle_seq=NULL)
+//   2. matchedStatus is a string but not in catalog (data drift)
+//   3. catalog row has a non-standard .phase value (e.g., seq 35 'UNMAPPED→null',
+//      multi-value 'P7a/P7b/P7c'). Post-lookup phase validation prevents poisoned
+//      catalog rows from corrupting E.2's lifecycle_phase write. Drives
+//      catalog_invalid_phase_count audit metric (7th metric).
+//
+// ⚠️ The returned `.phase` field is the catalog's DESCRIPTIVE label and must
+//    NOT be used as the lifecycle_phase write target — that comes from
+//    classifyCoaPhase().phase / classifyLifecyclePhase().phase. The catalog
+//    `.phase` is for cross-reference / audit only.
+function mapToUniversalStream(catalogByStatusSource, matchedStatus, source) {
+  if (matchedStatus == null) return null;
+  if (!(catalogByStatusSource instanceof Map)) return null;
+  const key = `${source}:${matchedStatus}`;
+  const row = catalogByStatusSource.get(key);
+  if (!row) return null;
+  // Post-lookup phase validation (v4 fold #5):
+  if (row.phase != null && !VALID_PHASES.has(row.phase)) {
+    return null; // poisoned row → E.2 emits catalog_invalid_phase_count
+  }
+  return Object.freeze({...row});
 }
 
 // Frozen array form of DEAD_STATUS_SET — for SQL parameterization in
@@ -552,14 +940,23 @@ const PHASE_ORDINAL = Object.freeze({
 });
 
 module.exports = {
+  // Permit + CoA classifiers
   classifyLifecyclePhase,
   classifyCoaPhase,
+  // Phase E.1 (84-W12) — Same-Sprint Mitigation Option 2 + Universal Stream substrate
+  classifyCoaPhaseLegacy,
+  mapToUniversalStream,
+  // Normalization helpers
   normalizeCoaDecision,
+  normalizeCoaStatus,
+  computeStallFromActivity,
+  isDeferredDecisionVariant,
+  // Phase ordinals + skip lists
   PHASE_ORDINAL,
   SKIP_PHASES_SQL,
+  // Permit-side status sets
   DEAD_STATUS_SET,
   DEAD_STATUS_ARRAY,
-  NORMALIZED_DEAD_DECISIONS_ARRAY,
   TERMINAL_P20_SET,
   WINDDOWN_P19_SET,
   INTAKE_P3_SET,
@@ -569,8 +966,24 @@ module.exports = {
   REVISION_P8_SET,
   NOT_STARTED_P7D_SET,
   INSPECTION_PIPELINE_P18_SET,
+  // Phase E.1 (84-W12) — CoA-side status sets matching §2.5.c 22 values
+  COA_REVIEW_STATUSES,
+  COA_INTAKE_STATUSES,
+  COA_TERMINAL_P20_STATUSES,
+  COA_TERMINAL_P19_STATUSES,
+  COA_APPROVED_STATUSES,
+  COA_FINAL_AND_BINDING_STATUSES,
+  COA_POST_DECISION_STATUSES,
+  // CoA-side decision sets + map
   NORMALIZED_APPROVED_DECISIONS,
-  NORMALIZED_DEAD_DECISIONS,
+  NORMALIZED_DEAD_DECISIONS,                 // legacy union (deprecated — split into P19/P20)
+  NORMALIZED_DEAD_DECISIONS_ARRAY,
+  NORMALIZED_P19_DECISIONS,
+  NORMALIZED_P20_DECISIONS,
+  NORMALIZED_FINAL_AND_BINDING_DECISIONS,
+  NORMALIZED_DEFERRED_DECISIONS,
+  NORMALIZED_DECISION_TO_STATUS_MAP,
+  // Domain + legacy
   VALID_PHASES,
   TRADE_TARGET_PHASE_FALLBACK,
   TRADE_TARGET_PHASE, // legacy alias — see comment near definition

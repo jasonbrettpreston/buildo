@@ -26,7 +26,13 @@ const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const {
   classifyLifecyclePhase,
-  classifyCoaPhase,
+  // Phase E.1 (84-W12) Same-Sprint Mitigation Option 2: until E.2 wires the
+  // expanded return shape (`matchedStatus` / `matchedRule` / `unmappedStatus` /
+  // `unmappedDecision` + new phase domain P3/P4/P19/P20), this consumer uses
+  // the Legacy adapter which preserves the v1 return shape `{phase: 'P1'|'P2'|null, stalled}`.
+  // Narrowing P3/P4/P19/P20 → null matches pre-E.1 production state (0.6%
+  // non-NULL coverage). E.2 plan-lock will swap this to `classifyCoaPhase`.
+  classifyCoaPhaseLegacy: classifyCoaPhase,
   DEAD_STATUS_ARRAY,
   NORMALIZED_DEAD_DECISIONS_ARRAY,
 } = require('./lib/lifecycle-phase');
