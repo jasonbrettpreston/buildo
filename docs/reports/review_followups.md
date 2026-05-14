@@ -1120,3 +1120,27 @@ R5.4 4-reviewer diff-review (Gemini + DeepSeek + Worktree-independent + Worktree
 | 64 | REJECT | Indep H-3 | `IS DISTINCT FROM` guard absent on `trade_classified_at` UPDATE → dead-tuple bloat on re-runs | Theoretical. Within a single run, each CoA appears at most once. Across runs, `$2 = RUN_AT` changes, so IS DISTINCT FROM never short-circuits. Zero practical benefit. |
 | 65 | DEFER | DeepSeek #2-#9 | 8 findings targeting `scripts/classify-permits.js` twin (date-parsing, ghost-cleanup atomicity, SELECT/WHERE column dependencies, hardcoded REALTOR_TRADE_ID, classCounters fixed keys, lookupTradesForTags dedup semantics, scope_tags JSON parsing concerns, emitMeta key inconsistency) | Out of R5.4 scope (twin reference only). File a separate WF3 epic for classify-permits.js hardening once R5.4 ships. |
 
+
+
+---
+
+## WF1 R5.5 compute-coa-cost-estimates — diff-review deferrals (2026-05-14)
+
+R5.5 4-reviewer diff-review (Gemini + DeepSeek + Worktree-independent + Worktree-observability-w/spec-48) surfaced 3 CRITICAL + 3 HIGH + 7 MED-level findings — all folded inline. DEFERs below.
+
+| # | Severity | Source | Finding | Decision rationale |
+|---|---|---|---|---|
+| 66 | DEFER | W#1 H1 + W#2 L1-4 + DeepSeek M2 | Spec 42 §6.8 row 668 still lists null_cost_reasons as `(no_parcel/no_building/no_scope_tags/no_rate)` — code emits `(no_parcel/no_scope_tags/no_active_trades/no_matching_rate)` per fold #6. | Spec text amendment scheduled as separate doc-only commit. Code is correct; spec is lagging. |
+| 67 | DEFER | W#2 L1-5 | `records_total` reflects all CoAs processed; `records_new + records_updated` reflect cost_estimates UPSERT only — cross-granularity mismatch in observer's step-verdict rollup. | Operator can read `records_meta.coa_with_cost` for the explanation. Semantic redesign would need a parallel `child_records_*` field set in Spec 47 §8.1. |
+| 68 | DEFER | Gemini HIGH | Cross-script deadlock risk on coa_applications (R5.3 + R5.4 + R5.5 all update same table). | CoA chain runs sequentially with distinct advisory locks (4202, 4203, 4204) — no concurrent UPDATEs possible within the chain. Cross-chain risk nil (only CoA chain writes to coa_applications). |
+| 69 | DEFER | Gemini LOW | Unbounded `trade_sqft_rates` + `scope_intensity_matrix` queries. | Both tables have ~25 + ~10 rows respectively in production; OOM risk theoretical. Defensive LIMIT cap can be added if tables grow unexpectedly. |
+| 70 | DEFER | Gemini LOW + W#2 L1-5 | `coa_eligible` metric name + records_total context. | Operator context surfaces via `records_meta.row_limit` (when --limit flag used). Name change would require dashboard updates. |
+| 71 | DEFER | Gemini NIT | Zod `.passthrough()` vs `.strict()` for logic_var schema. | Site-wide pattern across all classify-*/compute-* scripts. Refactor would require auditing every script. Open as separate WF2 once spec 48 observability surfaces a real misconfiguration incident. |
+| 72 | DEFER | DeepSeek MED-1 | percentile query uses `lead_id LIKE 'coa:%'` — hardcoded prefix assumption. | Spec 42 §6.6.A.1 mandates the `coa:` / `permit:` prefix convention. Migration 124's CHECK constraint enforces it. Stable convention; many other places break first if format changes. |
+| 73 | DEFER | DeepSeek MED-2 | `::text` cast inconsistency between R5.5 (drops cast) and permit twin (keeps cast). | Separate WF2 to remove ::text casts from `compute-cost-estimates.js` permit twin. Twin pattern is the suboptimal one; R5.5 sets the new direction. |
+| 74 | DEFER | DeepSeek LOW-3 | Stream error propagation may bypass `emitSummary`. | pipeline.run SDK handles top-level errors; audit_table emission on partial-batch failure is a Spec 47 §R12 concern. Track in observability spec. |
+| 75 | REJECT | DeepSeek HIGH-1 | dry-run mode skips counter increments. | False positive — reviewer conflated with permit twin pattern. R5.5 dry-run only short-circuits inside `flushBatch`; counters increment normally in the loop. |
+| 76 | REJECT | DeepSeek HIGH-2 | Cursor predicate misses CoAs with `trade_classified_at IS NULL`. | Proposed fix (`OR trade_classified_at IS NULL`) would cause infinite re-fetch on legitimately tradeless CoAs (variance-only). Edge case handled by chain order (R5.4 → R5.5 always sequential). |
+| 77 | REJECT | DeepSeek LOW-2 | `coa_applications.cost_source` CHECK constraint might not allow 'none'. | Verified mig 133: column has no CHECK constraint (just `VARCHAR(20)`). |
+| 78 | REJECT | W#1 L1 | audit_table `phase: 42` vs Spec 47 §8.2 chain-step-number convention. | Spec 42 §6.8 footer explicitly mandates `phase: 42` for all CoA Phase D scripts (grouping in FreshnessTimeline UI). Spec 47 template is overridden here per spec 42. |
+

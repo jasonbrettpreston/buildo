@@ -71,6 +71,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/link-coa-to-parcels.js':            4201,
   'scripts/classify-coa-scope.js':             4202,
   'scripts/classify-coa-trades.js':            4203,
+  'scripts/compute-coa-cost-estimates.js':     4204,
   // 'scripts/migrate-to-lead-id.js' = 4205 is one-shot (not a chain step; not in manifest)
   // Wave 6 — Quality / Assert
   'scripts/quality/assert-schema.js':           102,

@@ -16,6 +16,7 @@
  * `est_const_cost: null` routes cleanly through the model-only path.
  *
  * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase D R5.1
+ * SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §Geometric-Only Path for CoA (Brain consumer)
  */
 
 const DEFAULT_LIAR_GATE_THRESHOLD = 0.25;
@@ -27,41 +28,53 @@ const DEFAULT_FALLBACK_RANGE_PCT  = 0.40;
 // consumes. Mirrors the shape that `scripts/compute-cost-estimates.js`
 // builds (lines 265-272 of the twin), but with CoA-specific defaults.
 // ──────────────────────────────────────────────────────────────────────
-function buildCoaConfig({ tradeRates, scopeMatrix, logicVars }) {
-  if (!Array.isArray(tradeRates)) tradeRates = [];
-  if (!Array.isArray(scopeMatrix)) scopeMatrix = [];
+function buildCoaConfig({ tradeRates: tradeRatesInput, scopeMatrix: scopeMatrixInput, logicVars }) {
+  if (!Array.isArray(tradeRatesInput)) tradeRatesInput = [];
+  if (!Array.isArray(scopeMatrixInput)) scopeMatrixInput = [];
   const lv = logicVars || {};
 
-  // Index trade rates by slug for O(1) lookup inside the Brain.
-  const tradeRateBySlug = new Map();
-  for (const row of tradeRates) {
-    tradeRateBySlug.set(row.trade_slug, {
+  // R5.5 review fold #1 (W#1 L-1 + W#2 CRIT-1 — 4-reviewer convergence):
+  // The Brain (cost-model-shared.js:233,286) reads `config.tradeRates[slug]`
+  // and `config.scopeMatrix[matrixKey]` via plain-object bracket access. The
+  // original R5.1 substrate returned `tradeRateBySlug` and `scopeIntensity`
+  // as JS Maps — wrong field names AND wrong type. Both would silently miss
+  // every lookup → 100% null cost on every CoA. Fix: plain objects with
+  // the Brain's expected key names.
+  const tradeRates = {};
+  for (const row of tradeRatesInput) {
+    tradeRates[row.trade_slug] = {
       base_rate_sqft: Number(row.base_rate_sqft) || 0,
       structure_complexity_factor: Number(row.structure_complexity_factor) || 1.0,
-    });
+    };
   }
 
   // Index scope intensity matrix by (permit_type, structure_type). For CoA
   // we don't have permit_type, so the lookup degrades to a default GFA
   // allocation. Phase E may revisit this.
-  const scopeIntensity = new Map();
-  for (const row of scopeMatrix) {
+  const scopeMatrix = {};
+  for (const row of scopeMatrixInput) {
     const key = `${row.permit_type}::${row.structure_type}`;
-    scopeIntensity.set(key, Number(row.gfa_allocation_percentage) || 0);
+    scopeMatrix[key] = Number(row.gfa_allocation_percentage) || 0;
   }
 
   return {
-    tradeRateBySlug,
-    scopeIntensity,
+    tradeRates,    // R5.5 review fold #1 — renamed from tradeRateBySlug + Map → plain object
+    scopeMatrix,   // R5.5 review fold #1 — renamed from scopeIntensity + Map → plain object
     liarGateThreshold: Number(lv.liar_gate_threshold) || DEFAULT_LIAR_GATE_THRESHOLD,
     modelRangePct:    Number(lv.model_range_pct)      || DEFAULT_MODEL_RANGE_PCT,
     fallbackRangePct: Number(lv.fallback_range_pct)   || DEFAULT_FALLBACK_RANGE_PCT,
-    // CoA-specific flag: skip the permit_type_class gating in the Brain.
-    skipPermitTypeClassGating: true,
-    // CoA-specific intent: Brain will write 'model' cost_source, but the
-    // pipeline script transforms it to 'geometric' on the way to
-    // cost_estimates / coa_applications.cost_source. The Brain itself does
-    // not need to know about 'geometric'.
+    // R5.5 review fold #2 (W#2 CRIT-3): Brain (cost-model-shared.js:200-201)
+    // reads urbanCoverageRatio + suburbanCoverageRatio with hardcoded fallbacks
+    // (0.7/0.4). Operators must be able to tune these via Control Panel per
+    // Spec 47 §4.1. Pass them through from logicVars.
+    urbanCoverageRatio:    Number(lv.urban_coverage_ratio)    || 0.7,
+    suburbanCoverageRatio: Number(lv.suburban_coverage_ratio) || 0.4,
+    // R5.5 review fold #5 (W#2 HIGH-5): the previously-present
+    // `skipPermitTypeClassGating: true` flag was DEAD CODE — the Brain never
+    // read it. CoA rows pass the Brain's permit_type_class gate via the
+    // `permit_type_class: 'construction'` sentinel set in
+    // mapCoaRowToBrainInput (see comment there). Removing the dead flag
+    // prevents future developers from trusting an inert escape hatch.
     coaContext: true,
   };
 }
@@ -106,9 +119,12 @@ function mapCoaRowToBrainInput(coaRow) {
     revision_num: null,
     lead_id: coaRow.lead_id || null,
 
-    // CoA carries no permit_type_class — pass 'construction' as a benign
-    // sentinel so the Brain's gating (when skipPermitTypeClassGating is
-    // not set or as defensive default) does not block.
+    // R5.5 review fold #5 (W#2 HIGH-5): this sentinel is the ACTUAL mechanism
+    // that routes CoA rows through the Brain's Surgical Triangle. The Brain's
+    // permit_type_class gate (`cost-model-shared.js:484`) compares
+    // `row.permit_type_class !== COST_SLICING_CLASS` where COST_SLICING_CLASS
+    // is 'construction'. Setting 'construction' here ensures the gate passes.
+    // DO NOT REMOVE without removing the gate itself in the Brain.
     permit_type_class: 'construction',
   };
 }

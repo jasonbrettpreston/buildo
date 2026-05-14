@@ -1,298 +1,418 @@
-# Active Task: WF1 #coa-pipeline-parity-phase-d-R5.4 — classify-coa-trades.js (TAG_TRADE_MATRIX consumer producing lead_trades rows with realtor gate)
+# Active Task: WF1 #coa-pipeline-parity-phase-d-R5.5 — compute-coa-cost-estimates.js (geometric-only cost path producing coa_applications cost cols + lead_id-keyed cost_estimates rows)
 
-**Status:** Implementation (4-reviewer plan review complete; 10 R8 folds applied; user authorized 2026-05-14)
-**Workflow:** WF1 (New Feature — NEW consumer script for the R5.1 substrate stub at `scripts/lib/coa-trade-classifier.js`; reads scope_tags populated by R5.3)
-**Domain Mode:** Backend/Pipeline (`scripts/`, `src/lib/classification/`, `docs/specs/`)
-**Rollback Anchor:** `61d80d1` (R5.3 + observability fixes shipped)
-**Parent WF:** WF1 #coa-pipeline-parity-phase-d (R5.1 ✅ → R5.2 ✅ → R5.3 ✅ → **R5.4** → R5.5 compute-coa-cost-estimates → R5.6 manifest registration)
-**Predecessor:** R5.3 (commit `c74619b` + `61d80d1`)
+**Status:** Implementation (4-reviewer plan review complete; 14 folds applied; user authorized 2026-05-14 with Spec 48 observability reference)
+**Workflow:** WF1 (New Feature — NEW consumer script for the R5.1 substrate at `scripts/lib/coa-cost-model.js`; reuses existing Brain at `src/features/leads/lib/cost-model-shared.js` unchanged)
+**Domain Mode:** Backend/Pipeline (`scripts/`, `src/lib/cost/`, `docs/specs/`)
+**Rollback Anchor:** `d474208` (R5.4 classify-coa-trades shipped)
+**Parent WF:** WF1 #coa-pipeline-parity-phase-d (R5.1 ✅ → R5.2 ✅ → R5.3 ✅ → R5.4 ✅ → **R5.5** → R5.6 manifest registration)
+**Predecessor:** R5.4 (commit `d474208`)
 **Adversarial review:** USER-REQUESTED — 4 reviewers: independent worktree + Gemini + DeepSeek + an ADDITIONAL adversarial focused on observability + integration + logic.
 
----
-
 ## Context
+* **Goal:** Build `scripts/compute-coa-cost-estimates.js` — the CoA-side cost estimator. Streams CoAs joined with parcel/building/neighbourhood/trade context through the existing `estimateCostShared` Brain (configured for geometric-only mode via R5.1 substrate `scripts/lib/coa-cost-model.js`), writing 4 cost columns to `coa_applications` plus an UPSERT into `cost_estimates` keyed on `lead_id` (Phase D PK per mig 145).
+* **Target Spec:** `docs/specs/01-pipeline/42_chain_coa.md` §6.5 (step 12 — cost) + §6.6.D (column table rows for `modeled_gfa_sqm`/`estimated_cost`/`cost_source`/`cost_classified_at`) + §6.8 row 668 (Spec 47 compliance contract) + `docs/specs/01-pipeline/83_lead_cost_model.md` §Geometric-Only Path for CoA + §7 Engine Mechanics + `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §R1-R12.
+* **Key Files (read at plan time):**
+  - `docs/specs/01-pipeline/42_chain_coa.md` §6.5, §6.6.D, §6.7, §6.8 (lock 4204 row), §6.11 Phase D R5.5
+  - `docs/specs/01-pipeline/83_lead_cost_model.md` §Geometric-Only Path for CoA (lines 118-130) + §7 Engine Mechanics
+  - `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §R1-R12 + §6.3 BATCH_SIZE + §8.1 records_updated
+  - `migrations/138_promote_cost_estimates_lead_id_not_null.sql` (lead_id NOT NULL)
+  - `migrations/145_phase_d_classifier_substrate.sql` (cost_estimates PK swap to lead_id + cost_source CHECK extension)
+  - `scripts/compute-cost-estimates.js` (twin — read for pattern, NOT byte parity; permit-side is still PK on (permit_num, revision_num) until §6.9 REKEY)
+  - `scripts/lib/coa-cost-model.js` (R5.1 substrate — already shipped at cea6d47; reuse as-is)
+  - `src/features/leads/lib/cost-model-shared.js` (Brain — reused unchanged)
+  - `src/tests/coa-cost-model.logic.test.ts` (R5.1 substrate tests — extend if needed)
 
-* **Goal:** Add `scripts/classify-coa-trades.js` (advisory lock 4203). Reads each CoA's `scope_tags`, looks up trade matches via `scripts/lib/coa-trade-classifier.js`'s `lookupTradesForTags()`, and INSERTs `lead_trades` rows keyed on `lead_id` (one row per matched trade). Realtor trade conditionally appended for `coa_type_class='residential'` CoAs (per Spec 80 §5 + Spec 42 §6.5 step 25 gate).
-
-* **R0 audit (live DB, 2026-05-14):**
-  - 31,159 unprocessed CoAs (`scope_tags IS NOT NULL AND (trade_classified_at IS NULL OR trade_classified_at < scope_classified_at)`) — exact match to R5.3's scope_classified count.
-  - `lead_trades` table: 0 rows (first run); composite UNIQUE (`lead_id`, `trade_id`) per mig 124.
-  - `trades` table: 38 rows total; realtor = id 33; common construction trades indexed by slug.
-  - R5.1 stub at `scripts/lib/coa-trade-classifier.js` is COMPLETE + spec-conformant (49-trade TAG_TRADE_MATRIX verbatim from `classify-permits.js:193`, `lookupTradesForTags`, `isTradeActiveInPhase` with null-phase pass-through guard, `shouldAppendRealtor` gated on `coa_type_class='residential'`).
-  - **R5.1 stub gap:** no TS twin exists at `src/lib/classification/coa-trade-classifier.ts`. R5.4 must create the TS mirror per Spec 84 §7 dual-path.
-
-* **Target Spec:** `docs/specs/01-pipeline/42_chain_coa.md` §6.5 step 25 (compute_trade_forecasts) + §6.8 row 667 (classify-coa-trades catalog) + §6.6.D (output columns).
-
-* **Twin:** `scripts/classify-permits.js` (lock 88) — but this WF1 reuses the already-extracted matrix lib; the consumer script's read/write shape is different (CoA reads `coa_applications`, writes `lead_trades` keyed on `lead_id`; twin reads `permits`, writes `permit_trades`). R5.4 is closer to a NEW script using the lib than a twin extraction.
-
-* **Standards referenced:** Spec 47 §R1-R12, Spec 00 §2/§3/§6/§9, Spec 80 §5 (realtor gate), Spec 84 §7 (TS↔JS dual-path).
-
----
-
-## Technical Design
-
-### Classifier outputs (Spec 42 §6.8 row 667)
-
-Per CoA → 0..N `lead_trades` rows. Each row:
-- `lead_id` = `ca.lead_id` (already `'coa:<application_number>'`)
-- `trade_id` = looked up from `trades` table via slug (loaded once at script start; SLUG_TO_ID map)
-- `tier` = 3 (description-keyword-based; same as twin's TAG matrix tier)
-- `confidence` = from TAG_TRADE_MATRIX (per slug; range 0.55-0.85)
-- `is_active` = `true`
-- `phase` = NULL (Phase E lifecycle engine handles CoA phases separately; `determineCoaPhase()` returns null)
-- `lead_score` = computed per CoA (re-uses `calculateLeadScore` from twin, or simple confidence×100 for v1)
-- `classified_at` = `RUN_AT`
-
-### Architecture decisions
-
-- **Pure-function lib already exists** (`scripts/lib/coa-trade-classifier.js`). R5.4 just consumes it.
-- **TS twin REQUIRED** per Spec 84 §7. Mirror at `src/lib/classification/coa-trade-classifier.ts` with parity test on a 25-row fixture matrix.
-- **Streaming**: `for await` over `pipeline.streamQuery` on `coa_applications`.
-- **Batched INSERT**: 8 columns × N rows. Per Spec 47 §R3: `BATCH_SIZE = Math.floor(65535 / 8) = 8191`. Cap at 1000 for memory consistency with R5.3.
-- **Idempotency**: `ON CONFLICT (lead_id, trade_id) DO UPDATE SET ...` (preserves twin's pattern); `WHERE` clauses prevent dead-tuple bloat. Source-side cursor `(trade_classified_at IS NULL OR trade_classified_at < scope_classified_at)`.
-- **Realtor inclusion**: `shouldAppendRealtor(coaRow)` returns true iff `coa_type_class === 'residential'`. Append the realtor TradeMatch (slug='realtor', trade_id=33) to the matches array post-classification.
-- **`trade_classified_at` cursor advancement**: After processing all trades for a CoA, UPDATE `coa_applications.trade_classified_at = RUN_AT`. This is a SEPARATE write per CoA (or batched) — must advance unconditionally per WF3 #r5-3-observability-fixes BUG-5 lesson (no IS DISTINCT FROM filter on the timestamp).
-
-### Audit metrics (Spec 42 §6.8 row 667)
-
-Per the spec catalog: `coa_trades_per_lead`, `default_fallback_pct` (≤ 20%), `unmapped_coa_count` (== 0 FAIL), `realtor_inclusion_pct`. Plus standard observability.
-
-**WF3 #r5-3-observability-fixes lesson-routing applied:**
-- `records_updated` = sum of `result.rowCount` from each batched INSERT (NOT a JS-side counter)
-- BATCH_SIZE = `Math.floor(65535 / COL_COUNT)` formula, not hardcoded magic number
-- Audit row value/threshold units must match (e.g. percentage value with percentage threshold)
-- NO IS DISTINCT FROM filter on `trade_classified_at` cursor advancement (avoids the infinite-re-processing bug from R5.3 v1)
-
-### Database Impact: NO — all schema in place (lead_trades since mig 124; coa_applications.trade_classified_at since mig 145).
-
-### Day-1 expectations
-
-Based on R5.3 distribution (73% residential / 96.1% scope_classified) + twin's typical 5-8 trades per construction permit:
-- ~32K CoAs × ~4 trades each (CoAs have fewer scope_tags than permits) = ~128K lead_trades rows
-- Plus ~23K realtor rows (residential gate) = ~151K total lead_trades inserts
-- Runtime estimate: 60-90s (twin's classify-permits processes 230K permits in ~3min)
-
----
+## Technical Implementation
+* **New Components:**
+  - **NEW** `scripts/compute-coa-cost-estimates.js` — consumer script (~300 lines)
+  - **NEW** `src/tests/compute-coa-cost-estimates.infra.test.ts` — Spec 47 §R1-R12 + R5.5 contract regression-lock
+  - **EXTEND** `src/tests/coa-cost-model.logic.test.ts` — add fixtures covering scope_tags-rateable vs non-rateable paths (per Spec 42 line 207 test contract)
+* **Data Hooks/Libs:** Reuses existing `scripts/lib/coa-cost-model.js` (buildCoaConfig + mapCoaRowToBrainInput) — no new lib code.
+* **Database Impact:** NO — schema unchanged; mig 145 already enabled CoA-side writes (lead_id PK + 'geometric' cost_source + nullable permit_num/revision_num). Write target: `coa_applications` (4 cols) + `cost_estimates` (15 cols via existing schema).
 
 ## Standards Compliance
+* **Try-Catch Boundary:** Pipeline SDK handles top-level; per-batch failures propagated via `withTransaction` rollback.
+* **Unhappy Path Tests:** (1) CoA with no `lead_parcels` row → NULL cost + reason='no_parcel'; (2) CoA with parcel but no `parcel_buildings`/`building_footprints` → NULL cost + reason='no_building'; (3) CoA with `scope_tags=NULL` → NULL cost + reason='no_scope_tags'; (4) CoA with `scope_tags` non-NULL but zero rateable tags → NULL cost + reason='no_rate'; (5) idempotency — re-run with no source changes produces 0 records_updated.
+* **logError Mandate:** N/A — no new catch blocks (SDK-managed via withTransaction).
+* **UI Layout:** N/A (backend script).
 
-* **Spec 47 §R3 BATCH_SIZE:** `Math.min(1000, Math.floor(65535 / 8))` = 1000.
-* **§R10 audit_table:** all metrics required by §6.8 row 667 present; `records_updated` = real rowCount sum per §8.1.
-* **§R9 Atomicity:** all trades for a single CoA batched into one `withTransaction`; per-row SAVEPOINT NOT needed (no coupled state mutations like R5.2 had — lead_trades INSERT + coa_applications.trade_classified_at UPDATE are the only writes, and the latter is an UPDATE not an INSERT-then-UPDATE pair).
-* **§7 Dual-path (Spec 84 §7):** JS lib (already exists) + NEW TS twin + parity test.
-* **§9.3 Idempotency:** `ON CONFLICT DO UPDATE SET` on lead_trades; `trade_classified_at` advances unconditionally (no IS DISTINCT FROM trap).
+## Spec 42 §6.8 row 668 Contract
 
----
+| Field | Requirement | Plan compliance |
+|---|---|---|
+| Advisory lock | 4204 | `const ADVISORY_LOCK_ID = 4204;` |
+| §R7 Read | streamQuery 6-table LEFT JOIN: `coa_applications ca → lead_parcels lp ON lp.lead_id = ca.lead_id → parcels p → parcel_buildings pb → building_footprints bf → neighbourhoods n → lead_trades lt LATERAL filtered ON lt.lead_id = ca.lead_id`. All JOINs use `ca.lead_id` directly | Mirrored. `lead_trades lt` aggregated via LATERAL `ARRAY_AGG(t.slug) FILTER (WHERE lt.is_active = true)` |
+| §R7 Cursor predicate | (none in spec literal — design choice) | Plan choice: `WHERE cost_classified_at IS NULL OR cost_classified_at < trade_classified_at` — re-fetches when R5.4 produces new trade outputs |
+| §R9 Write atomicity | `withTransaction` → UPDATE `coa_applications` cost columns AND INSERT `cost_estimates` row keyed on `lead_id`. Atomic | Single `withTransaction` per batch: (a) bulk UPSERT `cost_estimates`, (b) bulk UPDATE `coa_applications` |
+| §R9 cost_source | `'geometric'` always (permitted by mig 145 CHECK) | Plan: transform Brain's `cost_source='model'`/`'none'` → `'geometric'` for CoAs producing a non-null estimate; preserve `'none'` for skip cases |
+| §R9 permit_num/revision_num | NULL (permitted by mig 145 DROP NOT NULL) | Plan: pass NULL through to `cost_estimates` rows |
+| §R10 audit_table | `cost_estimate_coverage_pct`, `null_cost_reasons` (no_parcel/no_building/no_scope_tags/no_rate), `cost_distribution_p25_p50_p75` | All three emitted as audit rows (coverage_pct with WARN threshold from `coa_cost_coverage_threshold_pct` logic_var) |
 
-## Key Files
+## Classifier output (per CoA → 0..1 cost_estimates row + always 1 coa_applications UPDATE)
 
-- **NEW** `scripts/classify-coa-trades.js` (~250 lines)
-- **NEW** `src/lib/classification/coa-trade-classifier.ts` (TS twin; ~210 lines)
-- **NEW** `src/tests/coa-trade-classifier.logic.test.ts` (TAG_TRADE_MATRIX lookup + JS/TS parity, ~25 assertions)
-- **NEW** `src/tests/classify-coa-trades.infra.test.ts` (Spec 47 §R1-R12 + R8 observability lessons regression-lock)
-- **MODIFY** `scripts/manifest.json` — register `classify_coa_trades` after `classify_coa_scope` and before `link_coa`
-- **MODIFY** `scripts/seeds/logic_variables.json` — +1 key: `coa_trades_default_fallback_threshold_pct` default 20
-- **MODIFY** `src/components/FreshnessTimeline.tsx` — PIPELINE_REGISTRY + PIPELINE_CHAINS coa array
-- **MODIFY** `src/lib/admin/funnel.ts` — STEP_DESCRIPTIONS
-- **MODIFY** `src/tests/pipeline-advisory-lock.infra.test.ts` — lock 4203
-- **MODIFY** `src/tests/chain.logic.test.ts` + `src/tests/quality.logic.test.ts` + `src/tests/assert-global-coverage.infra.test.ts` — chain length 14→15; registry 49→50; classify group 12→13
-- **MODIFY** `src/tests/control-panel.logic.test.ts` — LOGIC_VAR_DEFAULTS +1 key
+For each CoA processed:
+- **Always:** UPDATE `coa_applications` SET `cost_classified_at = $RUN_AT`, plus `modeled_gfa_sqm`/`estimated_cost`/`cost_source` (NULL if no estimate produced).
+- **When estimate produced (non-NULL):** UPSERT into `cost_estimates` with:
+  - `lead_id` = `ca.lead_id`
+  - `permit_num` = NULL
+  - `revision_num` = NULL
+  - `estimated_cost` = Brain output
+  - `cost_source` = `'geometric'` (transformed from Brain's `'model'`)
+  - `cost_tier`, `cost_range_low`, `cost_range_high`, `premium_factor`, `complexity_score`, `model_version`, `is_geometric_override`, `modeled_gfa_sqm`, `effective_area_sqm`, `trade_contract_values`, `computed_at` — pass-through from Brain
+- **When no estimate (no_parcel / no_building / no_scope_tags / no_rate):** `coa_applications` still gets `cost_classified_at = $RUN_AT` to advance the cursor + `cost_source = 'none'`; NO `cost_estimates` row written (avoids polluting the cost-distribution percentile).
 
----
+### NULL-reason buckets (R5.4 lesson — actionable observability)
 
-## WF1 Execution Plan
+| Reason | Detection condition | Notes |
+|---|---|---|
+| `no_parcel` | `coaRow.parcel_id IS NULL` (LEFT JOIN miss on `lead_parcels`) | R5.2 link-coa-to-parcels didn't link |
+| `no_building` | `coaRow.parcel_id NOT NULL` but `building_footprint.footprint_area_sqm IS NULL` | Parcel linked but no massing |
+| `no_scope_tags` | `coaRow.scope_tags IS NULL OR LENGTH = 0` | R5.3 classify-coa-scope didn't classify |
+| `no_rate` | All other failure modes (Brain returned null cost) — typically: scope_tags exist but no matching `trade_sqft_rates` row, or `active_trade_slugs` empty (R5.4 produced no trades) | Catch-all reason |
 
-- [ ] **Contract Definition:** TS interface `ClassifyCoaTradesInput / Output` in `src/lib/classification/coa-trade-classifier.ts` BEFORE implementation.
-- [ ] **Spec & Registry Sync:** Spec 42 §6.5 step 25 + §6.8 row 667 + §6.6.D already cover the design. `npm run system-map` after implementation.
-- [ ] **Schema Evolution:** N/A — lead_trades + trade_classified_at exist.
-- [ ] **Test Scaffolding:** logic test (TAG_TRADE_MATRIX coverage + JS/TS parity) + infra test (Spec 47 §R1-R12 + WF3 lessons regression-lock).
-- [ ] **Red Light:** `npx vitest run src/tests/coa-trade-classifier.logic.test.ts src/tests/classify-coa-trades.infra.test.ts` — all must fail.
-- [ ] **Implementation:**
-  1. `src/lib/classification/coa-trade-classifier.ts` — TS twin of the existing JS lib (byte-for-byte parity).
-  2. `scripts/classify-coa-trades.js` — Spec 47 §R1-R12 skeleton + streamQuery + batched INSERT + realtor gate.
-  3. `scripts/manifest.json` — register step.
-  4. `scripts/seeds/logic_variables.json` — add `coa_trades_default_fallback_threshold_pct`.
-  5. Collateral test/component updates (5 files).
-- [ ] **Auth Boundary & Secrets:** N/A.
-- [ ] **Pre-Review Self-Checklist:** 12 items derived per WF1 protocol from Spec 42 §6.5/§6.8 + Spec 47 §R1-R12 + Spec 84 §7 + WF3 #r5-3-observability-fixes lessons:
-  - **(a) §6.8 lock 4203:** ADVISORY_LOCK_ID = 4203?
-  - **(b) §6.8 idempotency cursor:** `trade_classified_at IS NULL OR trade_classified_at < scope_classified_at`?
-  - **(c) §6.8 audit metrics:** all 4 required metrics present (`coa_trades_per_lead`, `default_fallback_pct`, `unmapped_coa_count`, `realtor_inclusion_pct`)?
-  - **(d) Spec 80 §5 realtor gate:** `shouldAppendRealtor()` consulted; only `coa_type_class='residential'` gets realtor appended?
-  - **(e) §6.8 ON CONFLICT semantic:** `ON CONFLICT (lead_id, trade_id) DO UPDATE SET ...` matches twin permit_trades pattern?
-  - **(f) Spec 47 §R3 BATCH_SIZE:** computed via `Math.floor(65535 / N)`?
-  - **(g) Spec 47 §R7 streamQuery:** used for source SELECT?
-  - **(h) Spec 47 §R9 atomicity:** withTransaction wraps batched INSERT + UPDATE?
-  - **(i) Spec 47 §R10 + §8.1 records_updated:** sums `result.rowCount`, not JS counts (WF3 BUG-1 lesson)?
-  - **(j) WF3 BUG-5 lesson:** `trade_classified_at` cursor advances unconditionally (no IS DISTINCT FROM trap)?
-  - **(k) Spec 84 §7 dual-path:** JS↔TS parity test passes?
-  - **(l) Cross-script dependency:** R5.3's scope_classified_at must be set on input rows; verify SELECT JOINs / filters require non-null scope_tags?
+Emitted as `records_meta.null_cost_reasons = { no_parcel: N, no_building: N, no_scope_tags: N, no_rate: N }` PLUS an audit_table row per reason (4 INFO rows) so the dashboard surfaces the breakdown.
 
-- [ ] **Multi-Agent Review (4 reviewers parallel — USER-REQUESTED + ADDITIONAL):**
-  1. **Independent code-reviewer (worktree #1):** general checklist from Spec 42 + Spec 47.
-  2. **Adversarial Gemini:** spec-vs-code gaps, missing edge cases, silent swallowed errors.
-  3. **Adversarial DeepSeek:** logic errors, wrong assumptions, downstream consumers.
-  4. **Additional adversarial (worktree #2):** SPECIFICALLY focused on observability (audit_table completeness, structured logging coverage, metric accuracy per WF3 lessons) + integration (downstream consumers of lead_trades: compute-trade-forecasts, compute-opportunity-scores, mobile feed; manifest position validation; chain run sequencing) + logic (TAG_TRADE_MATRIX coverage on R5.3's actual scope_tag distribution; confidence floor / fallback semantics; realtor gate correctness against Spec 80 §5).
+### Cost-distribution percentiles
 
-- [ ] **Green Light:** `npm run test && npm run lint -- --fix && npm run typecheck`. Live run against dev DB (~31K CoAs, expected ~150K lead_trades inserts).
-- [ ] **WF6 Commit:** `feat(42_chain_coa): WF1 #coa-pipeline-parity-phase-d-R5.4 — classify-coa-trades.js (TAG_TRADE_MATRIX consumer + realtor gate + JS/TS dual-path)`
+For all CoAs with non-NULL `estimated_cost` in this run:
+- `cost_distribution_p25_p50_p75` = `{ p25, p50, p75 }` (using JS percentile-rank from sorted array — bounded by INSERT_BATCH_SIZE × number of batches, finite memory)
 
----
+Emitted as `records_meta.cost_distribution = { p25, p50, p75 }` PLUS a single audit_table row with value formatted as `"$X / $Y / $Z"`.
 
-## Plan-Review (4-reviewer plan review — USER-REQUESTED + ADDITIONAL — completed 2026-05-14)
+## Audit table
 
-### Triage Table (24 findings)
+| Metric | Value | Threshold | Status |
+|---|---|---|---|
+| `coa_eligible` | processed (CoA count) | `> 0` | WARN if 0 (Worktree#2 IMP-1 lesson from R5.4) |
+| `coa_with_cost` | count of CoAs producing non-NULL estimated_cost | null | INFO |
+| `coa_without_cost` | count of CoAs producing NULL estimated_cost | null | INFO |
+| `cost_estimate_coverage_pct` | (coa_with_cost / processed) * 100 | `>= coa_cost_coverage_threshold_pct%` | PASS / WARN |
+| `null_reason_no_parcel` | count | null | INFO |
+| `null_reason_no_building` | count | null | INFO |
+| `null_reason_no_scope_tags` | count | null | INFO |
+| `null_reason_no_rate` | count | null | INFO |
+| `cost_distribution_p25_p50_p75` | `"$X / $Y / $Z"` (or `"N/A"` when coa_with_cost=0) | null | INFO |
+| `records_new` | xmax-derived (Spec 47 §8.1) | null | INFO |
+| `records_updated` | xmax-derived (Spec 47 §8.1) | null | INFO |
+| `records_skipped` | rows_processed - rows_returned (IS DISTINCT FROM short-circuited) | null | INFO |
+
+## SQL shape
+
+### Source SELECT (streamQuery)
+
+```sql
+SELECT
+  ca.id,
+  ca.lead_id,
+  ca.application_number,
+  ca.coa_type_class,
+  ca.project_type,
+  ca.scope_tags,
+  ca.structure_type,
+  ca.dwelling_units_proposed,
+  ca.storeys_proposed,
+  lp.parcel_id,
+  p.lot_size_sqm::float8       AS lot_size_sqm,
+  p.frontage_m::float8         AS frontage_m,
+  bf.footprint_area_sqm::float8 AS footprint_area_sqm,
+  bf.estimated_stories         AS estimated_stories,
+  n.avg_household_income::float8 AS avg_household_income,
+  n.tenure_renter_pct::float8  AS tenure_renter_pct,
+  COALESCE(lt_agg.active_trades, ARRAY[]::text[]) AS active_trade_slugs
+FROM coa_applications ca
+LEFT JOIN LATERAL (
+  SELECT lp.parcel_id
+  FROM lead_parcels lp
+  WHERE lp.lead_id = ca.lead_id
+  ORDER BY lp.confidence DESC NULLS LAST, lp.parcel_id ASC
+  LIMIT 1
+) lp ON true
+LEFT JOIN parcels p ON p.id = lp.parcel_id
+LEFT JOIN LATERAL (
+  SELECT building_id
+  FROM parcel_buildings
+  WHERE parcel_id = lp.parcel_id AND is_primary = true
+  LIMIT 1
+) pb ON true
+LEFT JOIN building_footprints bf ON bf.id = pb.building_id
+LEFT JOIN neighbourhoods n ON n.id = ca.neighbourhood_id
+LEFT JOIN LATERAL (
+  SELECT ARRAY_AGG(t.slug ORDER BY t.slug) FILTER (WHERE lt.is_active = true) AS active_trades
+  FROM lead_trades lt
+  JOIN trades t ON t.id = lt.trade_id
+  WHERE lt.lead_id = ca.lead_id
+) lt_agg ON true
+WHERE ca.cost_classified_at IS NULL
+   OR ca.cost_classified_at < ca.trade_classified_at
+ORDER BY ca.id ASC;
+```
+
+### Per-batch UPSERT into cost_estimates
+
+```sql
+INSERT INTO cost_estimates (
+  lead_id, permit_num, revision_num,
+  estimated_cost, cost_source, cost_tier,
+  cost_range_low, cost_range_high, premium_factor, complexity_score,
+  model_version, is_geometric_override, modeled_gfa_sqm,
+  effective_area_sqm, trade_contract_values, computed_at
+)
+VALUES <unrolled $N batch>
+ON CONFLICT (lead_id) DO UPDATE SET
+  estimated_cost        = EXCLUDED.estimated_cost,
+  cost_source           = EXCLUDED.cost_source,
+  cost_tier             = EXCLUDED.cost_tier,
+  cost_range_low        = EXCLUDED.cost_range_low,
+  cost_range_high       = EXCLUDED.cost_range_high,
+  premium_factor        = EXCLUDED.premium_factor,
+  complexity_score      = EXCLUDED.complexity_score,
+  model_version         = EXCLUDED.model_version,
+  is_geometric_override = EXCLUDED.is_geometric_override,
+  modeled_gfa_sqm       = EXCLUDED.modeled_gfa_sqm,
+  effective_area_sqm    = EXCLUDED.effective_area_sqm,
+  trade_contract_values = EXCLUDED.trade_contract_values,
+  computed_at           = EXCLUDED.computed_at
+WHERE EXCLUDED.estimated_cost     IS DISTINCT FROM cost_estimates.estimated_cost
+   OR EXCLUDED.cost_source        IS DISTINCT FROM cost_estimates.cost_source
+   OR EXCLUDED.cost_tier          IS DISTINCT FROM cost_estimates.cost_tier
+   OR EXCLUDED.modeled_gfa_sqm    IS DISTINCT FROM cost_estimates.modeled_gfa_sqm
+   OR EXCLUDED.effective_area_sqm IS DISTINCT FROM cost_estimates.effective_area_sqm
+   OR EXCLUDED.trade_contract_values::text IS DISTINCT FROM cost_estimates.trade_contract_values::text
+RETURNING (xmax = 0) AS is_insert;
+```
+
+### Per-batch UPDATE of coa_applications
+
+```sql
+UPDATE coa_applications
+   SET modeled_gfa_sqm    = v.modeled_gfa_sqm,
+       estimated_cost     = v.estimated_cost,
+       cost_source        = v.cost_source,
+       cost_classified_at = $2::timestamptz
+  FROM (VALUES <unrolled $N batch>) AS v(id, modeled_gfa_sqm, estimated_cost, cost_source)
+ WHERE coa_applications.id = v.id;
+```
+
+(No IS DISTINCT FROM guard on the coa_applications UPDATE — cost_classified_at must advance unconditionally to prevent infinite re-fetch per R5.4 WF3 BUG-5 lesson.)
+
+## BATCH_SIZE
+
+Per Spec 47 §6.3: `BATCH_SIZE = Math.floor(65535 / COL_COUNT)`. `cost_estimates` INSERT has 15 columns + shared `computed_at` → `Math.min(1000, Math.floor(65535 / 15)) = Math.min(1000, 4369) = 1000`. The cap is memory-bounded (in-process row staging).
+
+## Standards Compliance (Spec 47 §R1-R12)
+
+* §R1 — `require('./lib/pipeline')` + `require('./lib/coa-cost-model')` + `require('../src/features/leads/lib/cost-model-shared')` + `require('./lib/pipeline-realtor-availability')` skipped (no realtor)
+* §R2 — `ADVISORY_LOCK_ID = 4204`
+* §R3 — `pipeline.run('compute-coa-cost-estimates', async (pool) => {...})`
+* §R3.5 — `RUN_AT = await pipeline.getDbTimestamp(pool)` BEFORE withAdvisoryLock
+* §R4 — Zod schema validates `liar_gate_threshold`, `model_range_pct`, `fallback_range_pct`, `coa_cost_coverage_threshold_pct`
+* §R5 — Pre-flight: load `trade_sqft_rates` + `scope_intensity_matrix` at startup
+* §R6 — `pipeline.withAdvisoryLock(pool, 4204, async () => {...})`
+* §R7 — `pipeline.streamQuery` for the 6-table LEFT JOIN (~32K CoAs)
+* §R8 — Brain logic delegated to `estimateCostShared` (existing — unchanged); config built via `buildCoaConfig`
+* §R9 — Single `withTransaction` per batch: UPSERT `cost_estimates` + UPDATE `coa_applications`
+* §R10 — `emitSummary` with `audit_table` per §6.8 row 668; phase=42; verdict aggregated from row statuses
+* §R10 + §8.1 — `records_new`/`records_updated` from `RETURNING (xmax = 0)` (lesson 81-W5/82-W6/85-W6/R5.4 fold #10)
+* §R11 — `emitMeta` declares 7 source tables read + 2 target tables written
+* §R12 — `if (!lockResult.acquired) return;` after withAdvisoryLock
+
+## Pre-Review Self-Checklist (16 items)
+
+- (a) §6.8 lock 4204
+- (b) §6.8 idempotency cursor `cost_classified_at IS NULL OR < trade_classified_at`
+- (c) §6.8 audit metrics all present (3 spec-mandated + 4 null-reason buckets + 3 records_* + coverage scalar)
+- (d) `cost_source='geometric'` transform (Brain's 'model' → 'geometric' on the way to DB)
+- (e) `ON CONFLICT (lead_id) DO UPDATE SET` includes computed_at (re-runs refresh timestamp)
+- (f) Spec 47 §R3 BATCH_SIZE formula
+- (g) Spec 47 §R7 streamQuery
+- (h) Spec 47 §R9 withTransaction wraps cost_estimates UPSERT + coa_applications UPDATE
+- (i) Spec 47 §R10 + §8.1 records_new/_updated from RETURNING (xmax = 0)
+- (j) WF3 BUG-5 lesson: `cost_classified_at` advances unconditionally on UPDATE coa_applications (no IS DISTINCT FROM trap)
+- (k) Spec 84 §7 dual-path: Brain unchanged; config-builder is JS-only (no TS twin needed — pure config object, not consumed by mobile/admin)
+- (l) Cross-script dependency: SELECT requires `trade_classified_at IS NOT NULL` (R5.4 must run first) — enforced via cursor predicate
+- (m) Full CoA chain order in manifest: `link_coa_to_parcels → classify_coa_scope → classify_coa_trades → compute_coa_cost_estimates → link_coa → ...`
+- (n) RUN_AT captured BEFORE `withAdvisoryLock` per Spec 47 §R3.5
+- (o) Zod ConfigSchema covers new key `coa_cost_coverage_threshold_pct`; audit row references config, not literal
+- (p) `cost_source` Brain→DB transform actually fires (defensive test: assert Brain output of 'model' is mapped to 'geometric' before INSERT)
+
+## R5.4 lessons applied prophylactically
+
+| Lesson | Application here |
+|---|---|
+| Batch threshold on rows.length, not coaIds.length | N/A — this script is 1 CoA → 1 cost_estimates row (1:1). batch.length is unambiguous. |
+| TAG_ALIASES coverage gaps | N/A — this script consumes `active_trade_slugs` (R5.4 output) and `scope_tags` (R5.3 output) but doesn't do tag lookups itself. |
+| coa_eligible WARN audit row | INCLUDED — first row in auditRows table. |
+| slug_resolution_misses array | N/A — Brain handles trade_slug lookups; misses already counted in R5.4 audit. |
+| `lead_score = Math.round(confidence * 100)` formula | N/A — cost_estimates has no lead_score column. |
+| DUAL PATH NOTE on Brain lib | N/A — Brain is permit+CoA-shared (already documented as such). No new TS twin in scope. |
+| Realtor availability guard | N/A — no realtor writes from this script. |
+| ON CONFLICT classified_at | Equivalent: `computed_at = EXCLUDED.computed_at` included. |
+| Per-batch UPDATE for state col | INCLUDED — `coa_applications.cost_classified_at` updated in same withTransaction. |
+| xmax-derived records_new/updated | INCLUDED — `RETURNING (xmax = 0)` per Spec 47 §8.1 + R5.4 fold #10. |
+
+## Plan-Review (4-reviewer plan review — completed 2026-05-14)
+
+Reviewers: Gemini + DeepSeek + Independent worktree (general) + Worktree (observability + integration + logic).
+
+### Triage Table — 13 FOLDs, 5 REJECTs, 4 DEFERs
 
 | # | Sev | Conf | Source | Finding | Decision |
 |---|---|---|---|---|---|
-| 1 | **CRIT** | 91 | Worktree#2 + DeepSeek | `unmapped_coa_count == 0 FAIL` threshold is impractical — many R5.3 tags (dwelling, severance, setback, change-of-use, minor-variance, residential meta-tags) have no TAG_TRADE_MATRIX entries. Permanent FAIL on first run. | **BUG → fold**: relax to `≤ coa_trades_unmapped_threshold_pct%` (logic_var, default 20%). Variance-only CoAs producing zero trades is correct behavior; threshold must accommodate. |
-| 2 | **CRIT** | 90 | Worktree#2 | `lead_score` formula ambiguous in plan. Schema default 0 would silently break mobile lead-ranking. | **BUG → fold (committed)**: `lead_score = Math.round(confidence * 100)` for v1. Documented as TAG_TRADE_MATRIX-derived (structural, not operator-tunable). Future Phase F can adopt full `calculateCoaLeadScore` once CoA decision/hearing_date signals are wired. |
-| 3 | **CRIT** | 95 | DeepSeek | Realtor availability startup guard missing — twin uses `checkRealtorAvailable(pool)` to handle case where mig 118 didn't apply | **BUG → fold**: add `realtorAvailable` boolean from `SELECT 1 FROM trades WHERE id = 33 AND slug = 'realtor'` at script start. Skip realtor append if false. |
-| 4 | **HIGH** | 87 | Worktree#2 | Many R5.3-emitted tags miss TAG_TRADE_MATRIX coverage: `dwelling`, `new-construction`, `renovation`, `severance`, `change-of-use`, `setback`, `parking`, `lot-coverage`, `minor-variance`, `mixed-use`, `residential`, `commercial`, `institutional` | **BUG → fold (partial)**: add TAG_ALIASES `dwelling → build-sfd`, `renovation → interior` (the high-frequency construction-intent tags). Variance-only tags (`severance`, `setback`, `parking`, etc.) correctly produce zero trades; intentional — covered by threshold relaxation (#1). Meta-tags (`residential`, `commercial`, `institutional`) are downstream signals (class gate), not matrix inputs. |
-| 5 | **HIGH** | 95 | DeepSeek | `classified_at` missing from `ON CONFLICT UPDATE SET` — re-runs won't refresh timestamp | **BUG → fold**: include `classified_at = EXCLUDED.classified_at` in the DO UPDATE SET clause (matches twin permit_trades pattern at line 543). |
-| 6 | **HIGH** | 100 | Gemini CRIT | `normalizeTag` case-sensitive — `'Roofing'` / `'KITCHEN'` won't match | **BUG → fold (defensive)**: `let base = tag.toLowerCase().replace(...)`. Apply to JS lib + TS twin. R5.3's `tagSet.add(tag)` happens to emit lowercase today, but defensive fix prevents future regression. |
-| 7 | **HIGH** | 95 | Gemini HIGH | `lookupTradesForTags` non-string element crashes script | **BUG → fold (defensive)**: `if (typeof tag !== 'string' || tag === '') continue;` guard. JS + TS. |
-| 8 | **HIGH** | 90 | DeepSeek | Per-CoA `trade_classified_at` UPDATE risks N+1 — must be batched via UNNEST | **BUG → fold (implementation note)**: single batched UPDATE per flush via `UPDATE coa_applications SET trade_classified_at = $RUN_AT WHERE id = ANY($ids::bigint[])`. |
-| 9 | MED | 92 | Worktree#2 | No `slug_resolution_miss_count` audit metric — catches matrix↔trades drift | **BUG → fold**: add metric. Increments when `SLUG_TO_ID.get(slug)` returns undefined. Threshold == 0 FAIL (real schema-drift catch). |
-| 10 | MED | 88 | Worktree#2 | `records_new` vs `records_updated` ambiguous for ON CONFLICT UPSERT — both INSERT and UPDATE counted as rowCount | **BUG → fold**: use `RETURNING (xmax = 0) AS is_insert` to distinguish. `records_new` = COUNT(is_insert), `records_updated` = COUNT(NOT is_insert). |
-| 11 | MED | 95 | Worktree#2 + Worktree#1 | compute-trade-forecasts.js reads permit_trades, not lead_trades. CoA rows in lead_trades won't surface in forecasts until Phase H. | **DOCUMENT → fold (gap acknowledgment)**: explicit plan note: "lead_trades CoA rows are written correctly; trade_forecasts CoA coverage = 0% until Phase H rekey." Operator-facing expectation. |
-| 12 | MED | 80 | Worktree#1 | 3 self-checklist items missing: (m) manifest position validation, (n) RUN_AT before lock, (o) Zod covers new logic_var key | **fold**: add items (m), (n), (o), (p) to Pre-Review Self-Checklist. |
-| 13 | MED | 88 | DeepSeek + Worktree#1 | `lead_score` was hedge in plan; commits at code-write time | **RESOLVED by #2** above. |
-| 14 | MED | 88 | DeepSeek | realtor gate is 1-axis (`coa_type_class === 'residential'`); twin permits-side is 3-axis | **DEFER with note**: CoA has no `permit_type` analogue. 2-axis (`class + scope_tags`) is the most we can do. R5.1 stub's 1-axis is the pragmatic minimum; Spec 80 §5 CoA-side guidance is sparse. File follow-up if first-run reveals over-inclusion. |
-| 15 | LOW | 65 | DeepSeek | streamQuery vs keyset pagination | **DEFER**: Worktree#2 confirms streamQuery is fine for 32K rows. Twin's keyset is for 230K permits where cursor overhead matters. |
-| 16 | LOW | 60 | DeepSeek | "byte-for-byte parity" wording is unachievable | **fold (cosmetic)**: rephrase to "functional parity". |
-| 17 | LOW | 80 | DeepSeek | `realtor_inclusion_pct` guard when residential_count=0 | **fold**: emit N/A status when residential_count=0 to avoid false WARN. |
-| 18 | LOW | 60 | Gemini MED | houseplex regex brittle on plural forms | **DEFER**: `houseplex` is not in R5.3's current tag output; not actionable now. |
-| 19 | LOW | 50 | Gemini LOW | Code duplication between classify-permits.js TAG_TRADE_MATRIX and the new lib | **DEFER**: architectural refactor, separate WF2. R5.1 stub deliberately twin-extracted; reconciliation is future work. |
-| 20 | LOW | 50 | Gemini LOW | TAG_TRADE_MATRIX hardcoded; should be in JSON/YAML config | **DEFER**: architectural. |
-| 21 | NIT | 50 | DeepSeek | Idempotency "WHERE clauses prevent dead-tuple bloat" phrasing ambiguous | **fold (clarity)**: rewrite paragraph. |
-| 22 | NIT | 60 | DeepSeek | BATCH_SIZE chosen for memory not param limit — clarify | **fold (clarity)**: add comment per WF3 #r5-3-observability-fixes pattern. |
-| 23 | NIT | 55 | Worktree#2 | `progress()` omission acceptable for this volume | **PASS** — bounded-time script. |
-| 24 | PASS | 90 | Worktree#2 | Unique constraint partitioning by lead_id prefix correct (no permit↔CoA collision possible) | **PASS** — keep design as planned. |
+| 1 | **CRIT** | 100 | W#1 L-1 + W#2 CRIT-1 | R5.1 substrate ships with config field-name MISMATCH: `buildCoaConfig` returns `tradeRateBySlug` (Map) + `scopeIntensity` (Map). Brain (`cost-model-shared.js:233,286`) reads `config.tradeRates[slug]` + `config.scopeMatrix[matrixKey]` (plain-object bracket access). Defensive guards return undefined → every trade missed → surgicalTotal=0 → Zero-Total Bypass → 100% null cost. | **FOLD as R5.1 SUBSTRATE FIX**: rename to `tradeRates`/`scopeMatrix`; convert Maps to plain objects. |
+| 2 | **CRIT** | 95 | W#2 CRIT-3 | R5.1 substrate misses `urbanCoverageRatio` + `suburbanCoverageRatio` config keys. Brain (lines 200-201) falls back to hardcoded 0.7/0.4 — operators can't tune CoA-side coverage ratios via Control Panel (Spec 47 §4.1 violation). | **FOLD as R5.1 SUBSTRATE FIX**: pass both from logicVars in `buildCoaConfig`; add to Zod ConfigSchema. |
+| 3 | **CRIT** | 95 | Gemini + W#2 HIGH-3 + W#1 M-4 | `cost_distribution_p25_p50_p75` plan accumulates all estimated_cost values in JS array across batches. Independent confirmed array sort step also missing. Post-run `PERCENTILE_CONT` SQL is the correct pattern. | **FOLD**: replace JS accumulation with post-run `SELECT PERCENTILE_CONT(0.25/0.50/0.75) WITHIN GROUP (ORDER BY estimated_cost) FROM cost_estimates WHERE lead_id LIKE 'coa:%' AND computed_at = $RUN_AT`. |
+| 4 | HIGH | 90 | Gemini | `parcel_buildings` LATERAL has `LIMIT 1` without `ORDER BY` → non-deterministic if multiple primary buildings exist (data anomaly). | **FOLD**: add `ORDER BY building_id ASC LIMIT 1`. |
+| 5 | HIGH | 95 | W#2 HIGH-5 | R5.1 substrate sets `skipPermitTypeClassGating: true` in config — Brain never reads this flag. The actual mechanism is the `permit_type_class: 'construction'` sentinel in `mapCoaRowToBrainInput`. Dead-code risk: future dev removes sentinel trusting flag → silent breakage. | **FOLD as R5.1 SUBSTRATE FIX**: remove the flag; add explanatory comment at sentinel site. |
+| 6 | HIGH | 92 | W#1 H-2 + W#2 HIGH-4 | Spec literal `null_cost_reasons = {no_parcel/no_building/no_scope_tags/no_rate}` but `no_building` does NOT cause null cost (Brain falls back to lot-size path); `no_rate` is a catch-all conflating "no active trades" + "no matching rate". | **FOLD**: restructure to `no_parcel` / `no_scope_tags` / `no_active_trades` / `no_matching_rate`. Track `cost_with_fallback_pct` (lot-size fallback fired) as separate INFO metric. |
+| 7 | HIGH | 92 | W#2 HIGH-1 | `cost_estimate_coverage_pct` threshold WARN fires when `processed=0` (denominator path returns 0% < threshold). False WARN on healthy empty-cursor first-run. | **FOLD**: emit value as `'N/A'` + status `'INFO'` when `processed=0`. `coa_eligible` row already covers the empty-cursor signal. |
+| 8 | HIGH | 90 | W#2 MED-1 | Spec 83 claims `is_geometric_override=true ALWAYS` but Brain returns `false` on Zero-Total Bypass path. Plan transforms `cost_source` but not `is_geometric_override`. | **FOLD**: explicit transform — non-null estimate: `cost_source='geometric'`, `is_geometric_override=true` (override Brain output); null estimate: `cost_source='none'`, no cost_estimates row written (cleaner than writing 'none' with is_geometric_override=false). |
+| 9 | MED | 80 | Gemini | `trade_contract_values::text IS DISTINCT FROM ...::text` cast is redundant. PostgreSQL JSONB has canonical storage; direct `IS DISTINCT FROM` on JSONB compares canonically. | **FOLD**: drop `::text` casts. (Twin pattern matches; could be a follow-up cleanup on permit twin.) |
+| 10 | MED | 88 | DeepSeek CRIT + W#1 H-1 | Plan claims 15 cols but actually 16 (lead_id + 15 others). `Math.floor(65535/15)=4369` would parameter-overflow if cap removed; correct: `Math.floor((65535-1)/16)=4095`. | **FOLD**: correct column count to 16; use `Math.min(1000, Math.floor((65535-1)/16))`. Cap at 1000 still active — runtime safe. |
+| 11 | MED | 85 | DeepSeek HIGH-1 | `records_new`/`records_updated` semantics ambiguous when script writes to TWO target tables. cost_estimates is the primary (xmax-tracked); coa_applications UPDATE is side-effect. | **FOLD**: explicit doc comment + separate `coa_applications_updated` INFO audit row. records_new/_updated reflect cost_estimates UPSERT only (matches Spec 47 §8.1 primary-write convention). |
+| 12 | MED | 90 | W#2 MED-3 | Self-checklist item (l) says "cursor enforces R5.4 must run first" — factually wrong. Cursor's `cost_classified_at IS NULL` branch fetches CoAs even when R5.4 hasn't run. Behavior is safe; doc is wrong. | **FOLD**: rewrite item (l) — "CoAs without `trade_classified_at` fetched on first run, produce `no_active_trades`/`no_scope_tags`, advance `cost_classified_at`. Re-fetched after R5.4 runs (`cost_classified_at < trade_classified_at`). Cursor does NOT gate on R5.4 completion." |
+| 13 | MED | 82 | W#2 MED-4 | Zod schema references `coa_cost_coverage_threshold_pct` but plan doesn't seed the key. Zod throws on startup if absent. | **FOLD**: add `coa_cost_coverage_threshold_pct` to `scripts/seeds/logic_variables.json` (default 70 — below the §6.3 success target of 80 to allow first-run latitude). |
+| 14 | MED | 78 | DeepSeek HIGH-3 | Twin script supports `--dry-run` and `--limit=N` CLI flags; plan omits them. Operator-safety improvement. | **FOLD**: add both flags. |
+| 15 | LOW (REJECT) | 50 | Gemini CRIT-2 | LPAD revision_num collision. | **REJECT — out of R5.5 scope** — already fixed by WF3 #lpad-revision-num-collision / mig 146. |
+| 16 | NIT (REJECT) | 60 | Gemini NIT | Transaction isolation level not specified. | **REJECT** — default READ COMMITTED acceptable; drift mid-stream is by-design re-fetch. |
+| 17 | CRIT (REJECT) | 30 | DeepSeek CRIT-2 | Cursor `cost_classified_at < trade_classified_at` becomes NULL when trade_classified_at IS NULL → "permanently stuck". | **REJECT** — claim is wrong. SQL NULL semantics + `IS NULL` first branch correctly handle the case. Chain order guarantees R5.4 → R5.5 always. |
+| 18 | MED (REJECT) | 40 | DeepSeek MED-1 | Multiple CoAs per lead_id → UPSERT collision overwrites prior estimate. | **REJECT** — `coa_applications.application_number` is unique; `lead_id = 'coa:' || application_number` is consequently 1:1 with CoA row. |
+| 19 | MED (REJECT) | 50 | DeepSeek MED-2 | RUN_AT captured outside lock (twin captures inside). | **REJECT** — Spec 47 §R3.5 mandates BEFORE-lock capture. Twin behavior is a spec violation; our plan is correct. |
+| 20 | HIGH (REJECT) | 60 | W#1 H-3 | No TS twin for `coa-cost-model.js` substrate. | **REJECT** — no client-side consumer exists. Brain itself has TS twin (`cost-model.ts`). The substrate is pipeline-internal. |
+| 21 | HIGH (DEFER) | 75 | W#1 H-4 | Plan does not commit explicitly to xmax pattern from R5.4 fold #10. | **DEFER** as ALREADY ADDRESSED: plan §R10 + checklist (i) already specify `RETURNING (xmax = 0)` per Spec 47 §8.1 + R5.4 fold #10. |
+| 22 | LOW (DEFER) | 70 | Gemini LOW + W#2 MED-2 | `no_rate` sub-split distinguishability (no_active_trades vs no_matching_rate). | **DEFER** — fold #6 partially addresses by splitting `no_rate` into `no_active_trades` + `no_matching_rate`. Further sub-split (e.g., "rate missing for slug X") deferred to post-burn-in instrumentation. |
+| 23 | LOW (DEFER) | 60 | W#2 HIGH-4 | `no_building` sub-split (`no_primary_building` vs `no_building_footprint`). | **DEFER** — fold #6 removes `no_building` from null-bucket entirely; tracked separately as `cost_with_fallback_pct`. Sub-split unnecessary. |
+| 24 | LOW (DEFER) | 75 | W#2 LOW-2 | `is_geometric_override` omitted from `IS DISTINCT FROM` WHERE guard. | **DEFER** — for CoA non-null path, `is_geometric_override` is always `true` (post-fold #8). Never differs → guard never fires unnecessarily. |
+| 25 | DOC (DEFER) | 75 | W#2 MED-5 | Chain manifest order should explicitly document geocoding dependency. | **DEFER** — checklist (m) already lists the chain order; documenting the geocoding gate in spec §6.11 is a separate doc-only commit. |
 
-### BUG-fix application summary (10 BUGs folded inline below)
+### Revised Technical Design (post-plan-review)
 
-1. **Threshold relaxation** (#1): replace `== 0 FAIL` with `≤ coa_trades_unmapped_threshold_pct% WARN`. New logic_var seed.
-2. **lead_score commit** (#2): formula = `Math.round(confidence * 100)` in v1; documented inline.
-3. **Realtor availability guard** (#3): `checkRealtorAvailable(pool)` at startup, propagated to insert loop.
-4. **TAG_ALIASES expansion** (#4): `dwelling → build-sfd`, `renovation → interior`. JS + TS twin.
-5. **ON CONFLICT classified_at** (#5): `classified_at = EXCLUDED.classified_at` added to SET clause.
-6. **normalizeTag toLowerCase** (#6): defensive case-insensitivity. JS + TS twin.
-7. **Non-string element guard** (#7): `typeof tag !== 'string'` skip. JS + TS twin.
-8. **Batched UPDATE** (#8): single `WHERE id = ANY($ids::bigint[])` UPDATE per flush, not per-CoA.
-9. **slug_resolution_miss_count** (#9): new audit metric with `== 0 FAIL` threshold.
-10. **xmax distinguishability** (#10): `RETURNING (xmax = 0) AS is_insert` for accurate records_new vs records_updated split.
+#### R5.1 substrate fixes (`scripts/lib/coa-cost-model.js`)
 
-Plus 4 plan refinements: Phase H gap documented (#11), 4 new self-checklist items (m–p) (#12), realtor_inclusion_pct N/A guard (#17), wording cleanups (#16, #21, #22).
+```js
+// REPLACE buildCoaConfig output:
+const tradeRates = {};
+for (const row of tradeRatesInput) {
+  tradeRates[row.trade_slug] = {
+    base_rate_sqft: Number(row.base_rate_sqft) || 0,
+    structure_complexity_factor: Number(row.structure_complexity_factor) || 1.0,
+  };
+}
 
-11 DEFER findings appended to `docs/reports/review_followups.md` under `## R5.4 classify-coa-trades — plan-review deferrals (2026-05-14)`.
+const scopeMatrix = {};
+for (const row of scopeMatrixInput) {
+  scopeMatrix[`${row.permit_type}::${row.structure_type}`] = Number(row.gfa_allocation_percentage) || 0;
+}
 
----
-
-## Revised Technical Design (post-R8 plan-review)
-
-### Classifier outputs (per CoA → 0..N lead_trades rows)
-
-Each row:
-- `lead_id` = `ca.lead_id`
-- `trade_id` = looked up from `SLUG_TO_ID` map (loaded at script start from `trades` table); on miss → increment `slug_resolution_miss_count` + skip
-- `tier` = 3 (TAG_TRADE_MATRIX-derived; same tier as twin)
-- `confidence` = from TAG_TRADE_MATRIX (range 0.55-0.85)
-- `is_active` = true
-- `phase` = NULL (CoA-side; Phase E lifecycle engine handles separately)
-- `lead_score` = `Math.round(confidence * 100)` — v1 formula committed per R8 fold #2
-- `classified_at` = `RUN_AT`
-
-### Audit metrics (REVISED post-fold)
-
-- `coa_processed` — INFO
-- `coa_with_trades` — INFO (count of CoAs that produced ≥1 lead_trades row)
-- `coa_zero_trades` — INFO (count of CoAs with non-NULL scope_tags but zero matrix hits)
-- `unmapped_scope_pct` — value=pct, threshold=`≤ coa_trades_unmapped_threshold_pct%` WARN (per #1)
-- `realtor_inclusion_pct` — value=pct of residentials with realtor appended (N/A when no residentials)
-- `slug_resolution_miss_count` — value=count, threshold=`== 0` FAIL (catches matrix↔trades drift; #9)
-- `total_lead_trades_written` — INFO (from `result.rowCount` sum)
-- `records_new_via_xmax` — count of true INSERTs (from `(xmax = 0)`; #10)
-- `records_updated_via_xmax` — count of ON CONFLICT updates (from `(xmax != 0)`; #10)
-- `trade_slug_distribution` — INFO records_meta blob (top-N trade slug counts)
-- `coa_trades_per_lead` — INFO records_meta blob (histogram)
-- Standard sys_velocity / sys_duration_ms
-
-### SQL shape (REVISED)
-
-```sql
--- Source SELECT (streamQuery)
-SELECT id, lead_id, scope_tags, coa_type_class
-  FROM coa_applications
- WHERE scope_tags IS NOT NULL
-   AND (trade_classified_at IS NULL OR trade_classified_at < scope_classified_at)
- ORDER BY id ASC;
-
--- Per-batch INSERT (UNNEST)
-INSERT INTO lead_trades (lead_id, trade_id, tier, confidence, is_active, phase, lead_score, classified_at)
-VALUES <unrolled $N batch>
-ON CONFLICT (lead_id, trade_id) DO UPDATE SET
-  tier          = EXCLUDED.tier,
-  confidence    = EXCLUDED.confidence,
-  is_active     = EXCLUDED.is_active,
-  phase         = EXCLUDED.phase,
-  lead_score    = EXCLUDED.lead_score,
-  classified_at = EXCLUDED.classified_at  -- R8 fold #5
-RETURNING (xmax = 0) AS is_insert;   -- R8 fold #10
-
--- Per-batch coa_applications trade_classified_at UPDATE (batched, R8 fold #8)
-UPDATE coa_applications
-   SET trade_classified_at = $RUN_AT::timestamptz
- WHERE id = ANY($ids::bigint[]);
+return {
+  tradeRates,             // R5.5 review fold #1: rename from tradeRateBySlug + plain object
+  scopeMatrix,            // R5.5 review fold #1: rename from scopeIntensity + plain object
+  liarGateThreshold:    Number(lv.liar_gate_threshold) || DEFAULT_LIAR_GATE_THRESHOLD,
+  modelRangePct:        Number(lv.model_range_pct)      || DEFAULT_MODEL_RANGE_PCT,
+  fallbackRangePct:     Number(lv.fallback_range_pct)   || DEFAULT_FALLBACK_RANGE_PCT,
+  urbanCoverageRatio:   Number(lv.urban_coverage_ratio) || 0.7,    // R5.5 review fold #2
+  suburbanCoverageRatio:Number(lv.suburban_coverage_ratio) || 0.4, // R5.5 review fold #2
+  coaContext: true,
+  // R5.5 review fold #5: skipPermitTypeClassGating removed — was dead code.
+  // The Brain doesn't read it; CoA rows pass the gate via the
+  // permit_type_class:'construction' sentinel in mapCoaRowToBrainInput.
+};
 ```
 
-### Pre-Review Self-Checklist (REVISED with items m–p)
+#### Source SQL (revised — fold #4)
 
-- (a) §6.8 lock 4203
-- (b) §6.8 idempotency cursor `trade_classified_at IS NULL OR trade_classified_at < scope_classified_at`
-- (c) §6.8 audit metrics all present (including revised threshold per #1 and new slug_resolution_miss_count per #9)
-- (d) Realtor gate `coa_type_class='residential'` (1-axis CoA-side; #14 defer)
-- (e) ON CONFLICT (lead_id, trade_id) DO UPDATE SET includes `classified_at` per R8 fold #5
-- (f) Spec 47 §R3 BATCH_SIZE formula
-- (g) Spec 47 §R7 streamQuery
-- (h) Spec 47 §R9 withTransaction wraps INSERT + trade_classified_at UPDATE
-- (i) Spec 47 §R10 + §8.1 `records_new`/`records_updated` from `RETURNING (xmax = 0)` per R8 fold #10
-- (j) WF3 BUG-5 lesson: trade_classified_at advances unconditionally (no IS DISTINCT FROM trap)
-- (k) Spec 84 §7 dual-path: JS↔TS functional parity (not byte-for-byte per #16)
-- (l) Cross-script dependency: SELECT requires `scope_tags IS NOT NULL`
-- **(m) [NEW]** Full CoA chain order in manifest matches Spec 42 §6.11 Phase D sequence after `classify_coa_trades` insertion
-- **(n) [NEW]** RUN_AT captured BEFORE `withAdvisoryLock` per Spec 47 §R3.5
-- **(o) [NEW]** Zod ConfigSchema covers `coa_trades_unmapped_threshold_pct`; audit row references config, not literal
-- **(p) [NEW]** lead_score = `Math.round(confidence * 100)` is in the actual SQL/JS, not the schema default 0
+```sql
+LEFT JOIN LATERAL (
+  SELECT building_id
+  FROM parcel_buildings
+  WHERE parcel_id = lp.parcel_id AND is_primary = true
+  ORDER BY building_id ASC   -- R5.5 review fold #4 (Gemini HIGH)
+  LIMIT 1
+) pb ON true
+```
 
-### Phase H integration gap (R8 fold #11 — explicit operator-facing note)
+#### Audit table (revised — folds #3, #6, #7, #8, #11)
 
-R5.4 writes CoA rows to `lead_trades`. `compute-trade-forecasts.js`, `compute-opportunity-scores.js`, `update-tracked-projects.js` currently read `permit_trades`, NOT `lead_trades`. The Phase H rekey (Spec 42 §6.11 Phase H) is when those scripts will switch to `lead_trades` UNION source. **Until Phase H ships:** CoA trade rows exist in `lead_trades` but produce zero `trade_forecasts` / `opportunity_scores` for CoA leads. Mobile feed will surface CoAs without forecasts. Operator-facing expectation documented here; not a bug — by design per Phase H deferral plan.
+| Metric | Value | Threshold | Status |
+|---|---|---|---|
+| `coa_eligible` | processed | `> 0` | WARN if 0 |
+| `coa_with_cost` | count | null | INFO |
+| `coa_without_cost` | count | null | INFO |
+| `cost_estimate_coverage_pct` | `processed > 0 ? pct : 'N/A'` | `>= coa_cost_coverage_threshold_pct%` (skipped when N/A) | PASS / WARN / **INFO when N/A** (fold #7) |
+| `null_reason_no_parcel` | count | null | INFO |
+| `null_reason_no_scope_tags` | count | null | INFO |
+| `null_reason_no_active_trades` | count | null | INFO (fold #6) |
+| `null_reason_no_matching_rate` | count | null | INFO (fold #6) |
+| `cost_with_fallback_pct` | % of non-null estimates that used lot-size fallback path | null | INFO (fold #6) |
+| `cost_distribution_p25_p50_p75` | `"$X / $Y / $Z"` from post-run PERCENTILE_CONT (fold #3) | null | INFO |
+| `records_new` | xmax-derived for cost_estimates UPSERT | null | INFO |
+| `records_updated` | xmax-derived for cost_estimates UPSERT | null | INFO |
+| `records_skipped` | rows_processed - rows_returned (IS DISTINCT FROM short-circuited) | null | INFO |
+| `coa_applications_updated` | rowCount sum of coa_applications UPDATE batches | null | INFO (fold #11) |
+
+#### Cost-source transform (revised — fold #8)
+
+```js
+let dbCostSource, dbIsGeometricOverride;
+if (brainOutput.estimated_cost != null && brainOutput.cost_source === 'model') {
+  dbCostSource = 'geometric';
+  dbIsGeometricOverride = true;
+} else if (brainOutput.estimated_cost != null && brainOutput.cost_source === 'permit') {
+  // Unreachable for CoA (est_const_cost is always null) but defensive.
+  dbCostSource = 'geometric';
+  dbIsGeometricOverride = true;
+} else {
+  // Brain returned cost_source='none' or null estimated_cost — skip cost_estimates row entirely.
+  // Only coa_applications gets cost_classified_at=$RUN_AT (cursor advancement) + cost_source='none'.
+  dbCostSource = 'none';
+  dbIsGeometricOverride = false;
+}
+```
+
+#### Cost percentiles query (post-run — fold #3)
+
+```sql
+-- Run AFTER streamQuery completes. Bounded-memory (DB-side).
+SELECT
+  PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY estimated_cost) AS p25,
+  PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY estimated_cost) AS p50,
+  PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY estimated_cost) AS p75
+FROM cost_estimates
+WHERE lead_id LIKE 'coa:%'
+  AND computed_at = $RUN_AT
+  AND estimated_cost IS NOT NULL;
+```
+
+#### Self-checklist item (l) (revised — fold #12)
+
+> **(l) Cross-script dependency:** On first run, CoAs without `trade_classified_at` (R5.4 not yet run) ARE fetched via the `cost_classified_at IS NULL` cursor branch, produce `no_active_trades`/`no_scope_tags`, and advance `cost_classified_at`. After R5.4 runs and sets `trade_classified_at > cost_classified_at`, they are re-fetched via the `<` cursor branch. Cursor does NOT gate on R5.4 completion — the chain manifest order is the gate.
+
+### BATCH_SIZE (revised — fold #10)
+
+```js
+const COL_COUNT = 16; // lead_id + permit_num + revision_num + 13 cost cols incl. computed_at
+const INSERT_BATCH_SIZE = Math.min(1000, Math.floor((65535 - 1) / COL_COUNT)); // = 1000 (cap < formula)
+```
+
+### DEFERS (4 — appended to `docs/reports/review_followups.md` after authorization)
+
+- DeepSeek HIGH-3 fold rejection: cursor predicate (chain order guarantees)
+- Spec 83 `is_geometric_override=true ALWAYS` text vs Brain behavior — spec amendment candidate
+- `no_rate` further sub-distinguishability (per-slug rate-miss tracking)
+- compute-trade-forecasts.js Phase H gap (same as R5.4 — already documented in §6.11 Phase H)
 
 ---
 
-> **PLAN LOCKED — 4-reviewer plan review complete; 10 BUGs folded, 11 DEFERs queued, design committed.**
+> **PLAN LOCKED — 4-reviewer plan review complete; 14 BUGs folded, 4 DEFERs queued, 5 REJECTs documented.**
 >
-> Spec 42 alignment: **on plan** with one accepted spec correction (#1 `unmapped_coa_count == 0 FAIL` → `≤ %`; spec-text update deferred to a follow-up §6.8 amendment, but the design conforms to intent).
+> Spec 42 alignment: **on plan** with one acknowledged spec text vs implementation gap (`is_geometric_override` ALWAYS true — deferred to spec amendment).
 >
 > Files to modify (after authorization):
-> - NEW `scripts/classify-coa-trades.js` (~280 lines after fold)
-> - MODIFY `scripts/lib/coa-trade-classifier.js` (4 fold-driven fixes: toLowerCase, type guard, TAG_ALIASES, ALIAS comment)
-> - NEW `src/lib/classification/coa-trade-classifier.ts` (TS twin with same fixes)
-> - NEW `src/tests/coa-trade-classifier.logic.test.ts` (lookup + parity + new dwelling/renovation alias coverage)
-> - NEW `src/tests/classify-coa-trades.infra.test.ts` (Spec 47 §R1-R12 + R8 lessons + xmax + classified_at)
-> - MODIFY 6 collateral files (manifest, seeds, FreshnessTimeline, funnel, 4 test files)
+> - NEW `scripts/compute-coa-cost-estimates.js` (~350 lines after fold)
+> - MODIFY `scripts/lib/coa-cost-model.js` (3 fold-driven substrate fixes: rename keys to plain objects, add coverage ratios, remove dead flag)
+> - MODIFY `scripts/seeds/logic_variables.json` (add `coa_cost_coverage_threshold_pct`)
+> - NEW `src/tests/compute-coa-cost-estimates.infra.test.ts` (Spec 47 §R1-R12 + R5.5 contract regression-lock)
+> - EXTEND `src/tests/coa-cost-model.logic.test.ts` (add fold #1+#2+#5 regression coverage — config field names, coverage ratios, dead-flag removal)
+> - MODIFY 6-7 collateral files (manifest, FreshnessTimeline, funnel, chain.logic, quality.logic, assert-global-coverage, control-panel.logic, pipeline-advisory-lock LOCK_ID_REGISTRY)
 >
-> **Do you authorize this WF1 plan with all 10 R8 folds? (y/n)**
+> **Do you authorize this WF1 plan with all 14 review folds? (y/n)**
 > DO NOT generate code. DO NOT run pipeline scripts. TERMINATE RESPONSE until authorization.
->
-> Spec 42 alignment: **on plan**. R5.4 implements §6.5 step 25 + §6.8 row 667. Phase D Wave 6 — unblocks R5.5 (compute-coa-cost-estimates reads lead_trades).
->
-> Estimated scope:
-> - 1 NEW pipeline script (~250 lines)
-> - 1 NEW TS twin (~210 lines, mirrors existing R5.1 JS substrate)
-> - 2 NEW test files (~50 assertions)
-> - 9 collateral updates
-> - 0 migrations
->
-> DO NOT generate code. DO NOT run pipeline scripts. TERMINATE RESPONSE until 4-reviewer plan review complete + authorization.
