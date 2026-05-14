@@ -1144,3 +1144,41 @@ R5.5 4-reviewer diff-review (Gemini + DeepSeek + Worktree-independent + Worktree
 | 77 | REJECT | DeepSeek LOW-2 | `coa_applications.cost_source` CHECK constraint might not allow 'none'. | Verified mig 133: column has no CHECK constraint (just `VARCHAR(20)`). |
 | 78 | REJECT | W#1 L1 | audit_table `phase: 42` vs Spec 47 §8.2 chain-step-number convention. | Spec 42 §6.8 footer explicitly mandates `phase: 42` for all CoA Phase D scripts (grouping in FreshnessTimeline UI). Spec 47 template is overridden here per spec 42. |
 
+
+
+---
+
+## WF1 R5.6 link-coa.js enrichment — diff-review deferrals + Phase D close-out (2026-05-14)
+
+R5.6 4-reviewer diff-review (Gemini fetch-failed; DeepSeek + Independent + Observability worktree using Spec 48 lens) surfaced 1 cross-reviewer CRITICAL (`wardFillRes` CTE filter inconsistency, 3-way concur), 2 HIGHs, 5 MEDs — all critical/high folds applied inline. DEFERs below.
+
+| # | Severity | Source | Finding | Decision |
+|---|---|---|---|---|
+| 79 | DEFER | Obs L2 | `inherited_confidence_floor` is config-constant noise in 7-day baseline | Acceptable — INFO status produces no FAIL/WARN signal; baseline-stable framing is documented in §6.6.X audit metric list. Future Spec 48 observer can baseline-exclude. |
+| 80 | DEFER | Obs L5 | Chain-order race documentation (step 4 parcel-centroid → step 6 cost-estimate → step 8 permit-geocode overwrite) — cost-estimate uses pre-enrichment coordinates | Documented in §6.6.X; cost model uses `lead_parcels.parcel_id` (not lat/long), so coordinate precision change doesn't affect cost output. Recompute trigger after enrichment is Phase H work. |
+| 81 | DEFER | Obs L6 | No `lat_lng_source` column on `coa_applications` — `SELECT *` consumers can't distinguish parcel-centroid from permit-geocoded coordinates | Phase F work — UI display unification. Today no consumer makes precision-sensitive decisions. |
+| 82 | DEFER | Indep M1 | Obs L2-1 fold "documented + tested that classifiers don't consume coa.lat/long directly" — test only asserts no lead_parcels writes, classifier read-path not asserted | Classifier read-path verified in plan-review against R5.3/R5.4/R5.5 source code; spec amendment §6.6.X documents the dependency. Adding explicit test assertion deferred (would require parsing 3 separate script sources). |
+| 83 | DEFER | Indep L1 | Pre-count sums can exceed UPDATE rowCount due to rows satisfying both lat/lng-differs AND ward-is-NULL conditions (double-counting) | Documentation only — metrics labeled INFO so operator can interpret independently. |
+| 84 | DEFER | Indep L2 | `IS DISTINCT FROM cleared.an` redundant in Step 3 since Step 2 already nulled `linked_permit_num` | Cosmetic — preserves defensive style. |
+| 85 | DEFER | Obs L9 | Pre-pass return pattern uses outer-scope variable assignment for `staleBackRefsCleared` | Cosmetic — works correctly, defensible style. |
+| 86 | DEFER | Obs L13 | `coa_below_confidence_floor_count` counts all historical below-floor links, not current-run | Documented behavior in §6.6.X as "gate-misconfig detector" — sudden spike vs baseline is the signal. |
+| 87 | DEFER | DeepSeek LOW | Deduplicate unlinking.rows arrays before `unnest` | Cosmetic — PostgreSQL handles duplicates correctly. |
+| 88 | DEFER | DeepSeek LOW | `LOGIC_VARS_SCHEMA .passthrough()` allows typos in unknown keys | Site-wide pattern — separate WF2 site-wide audit. |
+| 89 | DEFER | DeepSeek NIT | `actualCandidates` variable name + dry-run log message wording | Cosmetic. |
+| 90 | OUT-OF-SCOPE | DeepSeek (link-coa-to-parcels.js CRITICAL pre-pass design + HIGH SAVEPOINT scope + MED neighbourhood lookup) | All findings target R5.2's `link-coa-to-parcels.js` | Not touched by R5.6. File as separate WF3 against R5.2 if operationally validated. |
+| 91 | DEFER | Independent L3 | Phase D close-out grep step for `load-coa.js` / `geocod` references in other specs | Independent verified Spec 76 + 91 don't reference the abandoned attribution. No grep step needed. |
+| 92 | FAILED | Gemini | API fetch failed during diff-review | Re-run on Gemini availability; non-blocking for commit. |
+
+### Diff-review folds applied inline (5):
+1. **3-way concur CRITICAL**: `wardFillRes` CTE adds `AND p.latitude IS NOT NULL AND p.longitude IS NOT NULL` filter to match main UPDATE's `best_permit`
+2. **Indep H1 + Obs L1 + L11**: `lead_identity_lat_lng_mismatch_count` demoted from FAIL→WARN, race-condition documented
+3. **Obs L3**: `enrichment_eligible_count` INFO audit row added (first-run distinguishability)
+4. **Obs L7**: Tier 1c + high-confidence transient back-ref state documented in pre-pass Step 3 comment
+5. **Indep M2**: SPEC LINK references corrected `§6.X` → `§6.6.X` in script + test
+
+### Plus Part B fully deferred to Spec 48 implementation as new final phase
+The original R5.6 plan had two parts. Part B (`permits.coa_anticipated` flag for Examiner's Notice detection) was deferred during plan-review (28-finding triage, 13 Part-B-specific findings across all 4 reviewers including semantic conflict between flag name and "stays TRUE forever" behavior, regex placeholder pending R0 audit, redundancy with PRE-permit retirement in Phase G, no operational wiring into link-coa.js's tiebreaker). Part B should be picked up as a "Cross-Pipeline Anticipation Tracking" phase of Spec 48 implementation.
+
+### Phase D close-out
+Phase D DELIVERED 2026-05-14. R5.1 → R5.5 → R5.6 commit chain captured in Spec 42 §6.11 Phase D delivery note. All §6.3 coverage gates measurable post-staging-run.
+

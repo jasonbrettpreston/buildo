@@ -112,6 +112,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'coa_scope_unmapped_threshold_pct',  // WF1 R5.3 — day-1 unmapped threshold for classify-coa-scope
   'coa_trades_unmapped_threshold_pct', // WF1 R5.4 — day-1 unmapped threshold for classify-coa-trades (R8 fold #1)
   'coa_cost_coverage_threshold_pct',   // WF1 R5.5 — day-1 coverage threshold for compute-coa-cost-estimates (review fold #13)
+  'coa_inherit_from_permit_min_confidence', // WF1 R5.6 — fuzzy-match confidence floor for link-coa.js permit→CoA enrichment (Spec 42 §6.X)
   'massing_shed_threshold_sqm',    // E19
   'massing_garage_max_sqm',        // E19
   'massing_nearest_max_distance_m', // E19
