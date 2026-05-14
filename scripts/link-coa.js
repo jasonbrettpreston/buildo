@@ -403,6 +403,50 @@ pipeline.run('link-coa', async (pool) => {
   }
 
   // ------------------------------------------------------------------
+  // Phase D R5.1: permits.linked_coa_application_number back-ref pass
+  // ------------------------------------------------------------------
+  // Bidirectional linkage so Phase E lifecycle JOINs can navigate from
+  // permits → coa without a re-lookup against coa_applications. Writes
+  // permits.linked_coa_application_number for every permit that has at
+  // least one CoA pointing at it via coa_applications.linked_permit_num.
+  //
+  // IS DISTINCT FROM guard prevents WAL bloat on re-runs (no-op when the
+  // back-ref is already up-to-date).
+  //
+  // SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase D R5.1
+  let permitsBackRefUpdated = 0;
+  if (!dryRun) {
+    permitsBackRefUpdated = await pipeline.withTransaction(pool, async (client) => {
+      // R5.1.g Worktree HIGH-3 fix: tiebreaker preference for APPROVED
+      // decisions before falling back to decision_date / application_number.
+      // Most CoAs that resolve to a real permit are approved; preferring
+      // approved-decision rows over NULL-date undecided rows makes the
+      // back-ref reflect the authoritative outcome.
+      const backRefResult = await client.query(
+        `UPDATE permits p
+            SET linked_coa_application_number = src.application_number
+           FROM (
+             SELECT DISTINCT ON (linked_permit_num)
+                    linked_permit_num, application_number
+               FROM coa_applications
+              WHERE linked_permit_num IS NOT NULL
+              ORDER BY linked_permit_num,
+                       (decision ILIKE 'approved%')::int DESC,
+                       decision_date DESC NULLS LAST,
+                       application_number
+           ) src
+          WHERE p.permit_num = src.linked_permit_num
+            AND p.linked_coa_application_number IS DISTINCT FROM src.application_number`
+      );
+      return backRefResult.rowCount || 0;
+    });
+    pipeline.log.info(
+      '[link-coa]',
+      `Wrote permits.linked_coa_application_number back-ref on ${permitsBackRefUpdated.toLocaleString()} permits`,
+    );
+  }
+
+  // ------------------------------------------------------------------
   // Summary
   // ------------------------------------------------------------------
   const durationMs = Date.now() - startTime;
@@ -498,6 +542,7 @@ pipeline.run('link-coa', async (pool) => {
   // Build audit_table — match_rate_pct demoted to INFO, effective_match_rate_pct drives verdict
   const auditRows = [
     { metric: 'permits_bumped_last_seen_at', value: permitsBumped, threshold: null, status: 'INFO' },
+    { metric: 'permits_back_ref_updated', value: permitsBackRefUpdated, threshold: null, status: 'INFO' },
     { metric: 'cross_ward_cleaned', value: crossWardCleaned, threshold: null, status: crossWardCleaned > 0 ? 'INFO' : 'PASS' },
     { metric: 'total_candidates', value: actualCandidates, threshold: null, status: 'INFO' },
     { metric: 'potential_matches', value: potentialMatches, threshold: null, status: 'INFO' },
@@ -543,7 +588,7 @@ pipeline.run('link-coa', async (pool) => {
   pipeline.emitSummary({ records_total: totalLinked, records_new: 0, records_updated: totalLinked, records_meta: meta });
   pipeline.emitMeta(
     { "coa_applications": ["id", "application_number", "street_num", "street_name_normalized", "ward", "description", "decision_date", "linked_permit_num"], "permits": ["permit_num", "street_num", "street_name_normalized", "ward", "issued_date", "description"] },
-    { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"] }
+    { "coa_applications": ["linked_permit_num", "linked_confidence", "last_seen_at"], "permits": ["last_seen_at", "linked_coa_application_number"] }
   );
   });
   if (!lockResult.acquired) return;
