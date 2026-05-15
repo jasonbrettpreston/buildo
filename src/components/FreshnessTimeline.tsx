@@ -185,6 +185,10 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'classify_lifecycle_phase', indent: 0 },
       // WF2 2026-04-18 — phase distribution gate after CoA classifier run.
       { slug: 'assert_lifecycle_phase_distribution', indent: 0 },
+      // WF1 2026-05-14 Phase E.3 — compute_phase_calibration now runs in BOTH chains
+      // (permits + coa) so CoA-only chain runs trigger calibration refresh on the
+      // newly-classified lifecycle_transitions. Spec 42 §6.7 step 6 + §6.11 Phase E.3.
+      { slug: 'compute_phase_calibration', indent: 0 },
       // WF1 2026-04-19 — global field-level coverage profile (spec 49).
       { slug: 'assert_global_coverage',     indent: 0 },
     ],

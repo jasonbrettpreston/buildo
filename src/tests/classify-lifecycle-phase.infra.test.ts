@@ -544,16 +544,19 @@ describe('scripts/manifest.json — chain integration', () => {
     expect(steps.indexOf('update_tracked_projects')).toBeGreaterThan(classifierIdx);
   });
 
-  it('coa chain ends with assert_global_coverage; assert_lifecycle_phase_distribution is penultimate', () => {
+  it('coa chain ends with assert_global_coverage; compute_phase_calibration is penultimate (Phase E.3)', () => {
     // WF2 2026-04-18: phase distribution gate added as final CoA step (step 11).
     // WF1 2026-04-19: assert_global_coverage appended as new final step (step 12).
+    // WF1 2026-05-15 Phase E.3: compute_phase_calibration inserted between
+    //   assert_lifecycle_phase_distribution and assert_global_coverage; tail shape shifts.
     const coaChain = manifest.chains.coa;
     expect(coaChain).toBeDefined();
     expect(Array.isArray(coaChain)).toBe(true);
     const steps = coaChain as string[];
     expect(steps[steps.length - 1]).toBe('assert_global_coverage');
-    expect(steps[steps.length - 2]).toBe('assert_lifecycle_phase_distribution');
-    expect(steps[steps.length - 3]).toBe('classify_lifecycle_phase');
+    expect(steps[steps.length - 2]).toBe('compute_phase_calibration');
+    expect(steps[steps.length - 3]).toBe('assert_lifecycle_phase_distribution');
+    expect(steps[steps.length - 4]).toBe('classify_lifecycle_phase');
     expect(steps).not.toContain('trigger_lifecycle_sync');
   });
 });

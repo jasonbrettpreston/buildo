@@ -1,942 +1,823 @@
-# Active Task: WF1 #lifecycle-phase-engine-migration-E.2 — Consumer wiring + persisted columns + downstream `lead_id` guards
+# Active Task: WF1 #lifecycle-phase-engine-migration-E.3 — `compute-phase-calibration.js` CoA-side granular cohort calibration
 
-**Status:** Implementation (authorized 2026-05-14 via "proceed"; v4 plan locked after 3 plan-review rounds; trajectory v1=21 → v2=16 → v3=12 → v4 = all folded)
-**Workflow:** WF1 (consumer wiring + DB migration + downstream guard hardening)
-**Domain Mode:** Backend/Pipeline (`scripts/`, `migrations/`, `docs/specs/`)
-**Rollback Anchor:** `7003683` (Phase E.1 substrate ship)
+**Status:** Implementation (PLAN LOCKED v5 — v4 plan-review surfaced 1 CRIT + 4 HIGH + 4 MED + 3 LOW + 1 NIT; v5 folds all of them. Per user authorization: PLAN LOCK directly without further plan-review round. Diff-stage 4-reviewer round will catch any remaining issues before commit.)
+**Workflow:** WF1 (script extension — CoA-side granular cohort calibration; permit-side preserved; legacy verdict bug fix; CoA chain manifest add)
+**Domain Mode:** Backend/Pipeline (`scripts/`, `scripts/manifest.json`, `docs/specs/`)
+**Rollback Anchor:** `ad0c178` (Phase E.2 consumer wiring ship)
 **Parent WF:** Phase E — Lifecycle engine migration + bug 84-W12 fix + cohort-key extension (Spec 42 §6.11)
-**Sub-deliverable position:** E.1 (substrate — DELIVERED `7003683`) → **E.2 (THIS task)** → E.3 → E.4 → E.5
-**Scope source:** `.cursor/queued_task_phase_e2_consumer_wiring.md` (locked during E.1 v4 plan-lock).
-**Adversarial review:** USER-REQUESTED — 4 reviewers (Gemini + DeepSeek + Independent worktree + Observability worktree using Spec 48 lens) at BOTH plan stage AND diff stage.
+**Sub-deliverable position:** E.1 (substrate `7003683`) → E.2 (consumer wiring `ad0c178`) → **E.3 (CoA-side granular cohorts — THIS task)** → E.4 (per-seq bands) → E.5 (band recalibration)
+**Adversarial review:** USER-REQUESTED — 4 reviewers (Gemini + DeepSeek + Independent + Observability) at BOTH plan + diff stages.
+**Standards adherence (user-mandated):** Spec 47 §R1-R12; Spec 48 (observer); `00_engineering_standards.md` §2 (try-catch boundary), §3 (database), §6 (logError), §7 (dual code path — N/A), §9 (pipeline safety — transaction boundaries, parameter limits, idempotent); **TDD cadence** per WF1 Red Light/Green Light gate.
+
+## v4 → v5 Revision Summary
+
+v4 plan-review (4 reviewers — Gemini + DeepSeek + Independent worktree + Observability worktree) surfaced 13 actionable findings. The decisive convergence: all 4 reviewers independently flagged the same CRIT — `coaTypeClassNullTransitionCount` declared but never populated (the cohort-loop iterates aggregate buckets which collapse NULL coa_type_class rows into a single bucket, losing per-transition NULL visibility). Additional 3-of-4 convergence on the `coa_transition_count` query missing the seq-range filter that the revision table claimed was applied. Convergence trajectory: v1=18 → v2=14 → v3=15 → v4=13. Per user authorization, v5 folds all 13 and PLAN LOCKs directly; the diff-stage 4-reviewer round will catch any new issues introduced by the folds before commit.
+
+| # | Finding | Reviewer(s) | Severity | v5 Resolution |
+|---|---|---|---|---|
+| v4-C1 | `coaTypeClassNullTransitionCount` declared but NEVER populated — the for-loop iterates `allBuckets` (aggregate output) but NULL coa_type_class rows collapse into one bucket, losing per-transition visibility. Result: metric permanently emits 0; >5% WARN gate is dead code; the observability replacement for the removed `coa_type_class IS NOT NULL` filter has zero signal. | Gemini CRIT + DeepSeek CRIT + Independent E (conf 88) + Observability I (conf 97) — **4/4 convergent** | CRITICAL | **FOLD** — replace the dead loop increment with a separate SQL query: `SELECT COUNT(*)::int AS n FROM lifecycle_transitions WHERE lead_id LIKE 'coa:%' AND coa_type_class IS NULL AND (from_seq BETWEEN 1 AND 22 OR to_seq BETWEEN 1 AND 22)`. Filter matches `coa_transition_count` query for consistency. |
+| v4-H1 | `coa_transition_count` query at line 339-341 missing seq-range filter — regression of v3-DS-MED-3 fold. Revision summary table claims filter applied; code block shows old form. | Gemini HIGH + DeepSeek HIGH + Independent F (conf 87) — **3/4** | HIGH | **FOLD** — add `AND (from_seq BETWEEN 1 AND 22 OR to_seq BETWEEN 1 AND 22)` to the count query. Filter now matches `coaAggSql` exactly. |
+| v4-H2 | `coa_applications` project_type coverage query at line 347-352 has no table-exists guard. v3-DS-HIGH-2 fold applied to `lifecycle_transitions` only. If `coa_applications` missing → relation-not-exist crash + advisory lock leak. | DeepSeek HIGH + Independent G (conf 82) — **2/4** | HIGH | **FOLD** — wrap with `information_schema.tables` EXISTS check. WARN log + set `projectTypeCoveragePct = null` if missing. Skip the dual-source `lifecycle_transitions` coverage query if `lifecycle_transitions` is missing too. |
+| v4-H3 | `<1ms` pre-ack wording is technically misleading — empty-window is **zero** (readers blocked by ACCESS EXCLUSIVE for the full transaction duration), not `<1ms`. Operator could mis-attribute reader latency to a "known sub-ms window" that doesn't exist. | Observability J (conf 82) — **1/4** | HIGH | **FOLD** — rewrite pre-ack vector #6 to: "Transient empty-table window for `phase_stay_calibration` is **zero** (readers blocked by ACCESS EXCLUSIVE for the full transaction duration; table never visible as empty)." |
+| v4-H4 | GROUP BY 5-tuple includes `to_seq` (not just `from_seq`) — cohort cardinality could explode (theoretical max ~48K vs. claimed ~1000). Permit-side groups only by `from_phase`. Plan needs explicit semantics justification + parameter-limit reconciliation. | DeepSeek HIGH — **1/4** | HIGH | **FOLD as documentation** — the 5-tuple `(NULL, project_type, coa_type_class, from_seq, to_seq)` IS the spec-mandated cohort key per Spec 42 §6.7 step 6 (granular CoA cohorts for trade-forecast use). Practical cardinality bound: ~6 project_types × ~7 coa_type_class × 22 from_seq × 22 to_seq = ~20K theoretical max, but observed CoA transitions concentrate on a handful of `(from_seq, to_seq)` paths (linear status progression). Plan adds: explicit upper-bound bucket count assertion in script (FAIL on `allBuckets.length > 5000`) + reconciles with parameter limit: 11 cols × 5000 = 55K params (< 65535). |
+| v4-M1 | mig 147 DOWN step missing `DELETE FROM ... WHERE phase IS NULL` — only handles `permit_type IS NULL`. Any row with NULL `phase` would block `ALTER COLUMN phase SET NOT NULL` rollback. | Gemini MED — **1/4** | MED | **FOLD** — DOWN comment block step 1 split: (1a) `DELETE FROM phase_stay_calibration WHERE permit_type IS NULL;` (remove CoA-side rows); (1b) `DELETE FROM phase_stay_calibration WHERE phase IS NULL;` (defensive — catch any remaining NULL-phase permit-side row). |
+| v4-M2 | UNION ALL fold mismatch — v3 revision table claims `permitAggSql + coaAggSql` combined into single UNION ALL + direct INSERT INTO staging; code in Parts 1-2 still shows two separate `pool.query` calls + JS concat (`allBuckets = [...permitBuckets, ...coaBuckets]`). | DeepSeek MED + Observability — **2/4** | MED | **FOLD as documentation** — update v3 fold v3-G-MED-2 entry: actual decision was to keep two separate queries (clearer error attribution per side; permit-side bucket count and CoA-side bucket count remain separately accessible for `permitCohortCount`/`coaCohortCount` derivation). The JS concat is intentional. The v3 revision claim was aspirational; v5 corrects the documentation. |
+| v4-M3 | Param-limit guard missing for staging INSERT — bucket count could exceed 5955 (65535÷11 ceiling) without runtime check. | DeepSeek MED — **1/4** | MED | **FOLD** — startup guard added: assert `allBuckets.length <= 5000` (well under 5955 hard limit). On overage: FAIL the run with explicit error. Sub-batching deferred to Phase F if CoA cardinality grows. |
+| v4-M4 | `coaAggSql` WHERE `OR` on from_seq/to_seq is brittle — `lead_id LIKE 'coa:%'` is canonical; the seq-range `OR` could pull in a future bug's mis-labeled permit row with a seq in 1-22. Logic should be `AND` with logged assertion, not `OR` broadening. | Gemini MED — **1/4** | MED — defer | **DEFER** — current logic uses `AND lead_id LIKE 'coa:%' AND (from_seq ... OR to_seq ...)` which is defense-in-depth, NOT an `OR` broadening. Both conditions must hold (LIKE + seq-range). The Gemini concern is misread: there is no scenario where the `lead_id` filter is bypassed. No fold needed. |
+| v4-L1 | `coa_type_class_null_transition_count` threshold descriptor says "5%" but stores absolute count; descriptor is misleading even though the status computation correctly divides. | DeepSeek LOW — **1/4** | LOW | **FOLD** — descriptor updated to: `'ratio <= 0.05 PASS, > 0.05 WARN (relative to coa_transition_count); value field stores absolute count for triage'`. |
+| v4-L2 | Self-Checklist item (j) at line 679 still says "4 existing + 7 new INFO + 1 thresholded" (totals 12, not 15); Execution Plan Contract Definition step still says "audit_table 12-row shape"; one more "12-row" reference in Audit Observability paragraph. | Observability + Independent (3 stale locations) — **2/4** | LOW | **FOLD** — all 3 locations corrected to "15 rows / 6 thresholded". Self-Checklist (j) rewritten: "15 audit_table rows: 4 existing + 6 new INFO + 5 thresholded WARN/FAIL gates". |
+| v4-L3 | Pre-ack lacks co-firing guidance — if Phase D is incomplete, vectors #4 + #5 + (optionally #unknown_cohort_count) co-fire WARN, audit verdict = WARN. Operator may file unnecessary WF3. | Observability — **1/4** | LOW | **FOLD** — pre-ack appends: "Note on co-firing: if `verdict=WARN` on first E.3 run with vectors #4 + #5 (and optionally `unknown_cohort_count`) simultaneously WARN, this is the expected co-firing pattern when Phase D is incomplete. No WF3 action; verify Phase D execution." |
+| v4-N1 | Test for `unknown_cohort_count` uses "impossible injection" wording — implies the test contradicts the documented reachable case (Phase D never ran for the underlying CoA record). | Gemini NIT — **1/4** | NIT | **FOLD** — test rewritten: seed a `coa_applications` record with NULL `project_type` AND NULL `coa_type_class`, run E.2 writer to produce a valid `lifecycle_transitions` row from it (no constraint violation; both columns nullable on the transition row), then assert E.3 buckets it into `unknown_cohort_count >= 1` and `audit_table.verdict = 'WARN'`. Validates the realistic Phase D-incomplete failure mode. |
+
+**v5 load-bearing changes** (in addition to v3→v4 changes already applied): (1) `coaTypeClassNullTransitionCount` populated via separate SQL query (CRITICAL fix — metric was permanently zero); (2) `coa_transition_count` query gets seq-range filter (HIGH regression fix); (3) `coa_applications` query gets table-exists guard (HIGH defensive); (4) pre-ack vector #6 wording corrected from `<1ms` to `zero` (HIGH accuracy); (5) mig 147 DOWN adds `phase IS NULL` DELETE step (MED rollback safety); (6) bucket-count upper-bound assertion + parameter-limit reconciliation (MED defensive); (7) all 3 stale doc-count locations corrected to 15/6 (LOW consistency); (8) co-firing guidance added to pre-ack (LOW operator clarity); (9) `unknown_cohort_count` test rewritten as realistic Phase D-incomplete fixture (NIT semantic correctness).
 
 ## v3 → v4 Revision Summary
 
-v3 plan-review (4 reviewers) surfaced 12 findings. Trajectory: v1=21 → v2=16 → v3=12 → expected v4 ≤4 (all caught at diff-stage). User authorized direct PLAN LOCK at v4 (no v4 reviewer round).
+v3 plan-review (4 reviewers) surfaced 15 actionable findings. Three CRITs were real implementation bugs that would have shipped — caught by plan-review exactly as intended. Convergence trajectory: v1=18 → v2=14 → v3=15 (not tight; each iteration adds structural design which surfaces new issues).
 
-| # | Finding | Reviewers | Severity | v4 Resolution |
+| # | Finding | Reviewer(s) | Severity | v4 Resolution |
 |---|---|---|---|---|
-| v3-1 | `lifecycle_transitions` INSERT not idempotent (JS filter only) | Gemini + DeepSeek (2-way) | CRITICAL | **FOLD** — mig 146 adds `CREATE UNIQUE INDEX uix_lifecycle_transitions_idempotency ON lifecycle_transitions (lead_id, transitioned_at)`; INSERT adds `ON CONFLICT (lead_id, transitioned_at) DO NOTHING`. Defense-in-depth + JS filter both active. |
-| v3-2 | Backfill predicate `OR matched_status IS NULL` creates infinite loop for catchall rows (rule 9 writes NULL → predicate matches forever) | Gemini only | CRITICAL | **FOLD** — predicate changed to `OR matched_rule IS NULL`. Rule 9 catchall writes `matched_rule = 9` (non-null), breaking the loop. Defensive sentinel (rule 0, null input) is unreachable from stream SELECT (always provides valid input object). |
-| v3-3 | 3 stale `migrations/146_*_DOWN.sql` references in Key Files / Execution Plan / Operating Boundaries — implementer would create spurious file | Independent only | CRITICAL | **FOLD** — all 3 references removed/corrected to single file `migrations/146_e2_coa_audit_columns.sql` with embedded DOWN comment block. |
-| v3-4 | Migration test `migration-146-coa-audit-columns.infra.test.ts` plan says "rolls back via DOWN script" but DOWN is commented-block (project convention) | DeepSeek only | HIGH | **FOLD** — test rewritten to forward-only: applies migration, asserts 4 columns + 2 indices + CHECK + UNIQUE INDEX present. Documents that DOWN is manual-rollback-only. |
-| v3-5 | `coaPhaseTransitionsCount` referenced in audit_table but never initialized/incremented in plan body — ReferenceError | Independent only | HIGH | **FOLD** — Part 2 implementation walkthrough now declares `let coaPhaseTransitionsCount = 0;` alongside `dirtyCoAsCount` and increments via `coaPhaseTransitionsCount += phaseChangedBatch.length;` after the INSERT. |
-| v3-6 | First-run pre-ack lacks SQL example for manually inspecting distributions (since DeepSeek doesn't receive them) | Observability suggestion | HIGH | **FOLD** — pre-ack text adds the explicit query: `SELECT records_meta->>'coa_rule_distribution', records_meta->>'coa_phase_distribution', records_meta->>'coa_matched_status_top20' FROM pipeline_runs WHERE pipeline LIKE '%classify_lifecycle_phase' ORDER BY started_at DESC LIMIT 1;` |
-| v3-7 | First-classification null-phase edge case (defensive sentinel returns) | DeepSeek only | HIGH (low-impact) | **DOCUMENT** — defensive sentinel (rule 0) only fires for `typeof input !== 'object'` per E.1 substrate. The stream SELECT always provides a valid object, so rule 0 is unreachable in practice. No transition row for these — accepted limitation. |
-| v3-8 | `computeAuditStatus` helper insufficient genericity (covers only "lower-is-better"); inline ternary used for "equals 0" pattern | Gemini + DeepSeek (2-way) | MEDIUM | **FOLD** — helper renamed `computeWarnableAuditStatus(value, {passAt, warnAt})` to make scope explicit; added inline doc note that `=== 0 ? 'PASS' : 'FAIL'` is the binary pattern for zero-tolerance metrics. |
-| v3-9 | `coa_skipped_count` guards inert today (permits.lead_id is always `permit:*`); metric purely decorative | DeepSeek only | MEDIUM | **DOCUMENT** — metric retains `status: 'INFO'`; Part 3 comment updated to note "decorative until Phase F UNION ships; will start counting then." |
-| v3-10 | v2-6 triage table entry says "added ON CONFLICT" but the actual SQL pivoted to JS-filter; corrected by v4 v3-1 fold anyway | Independent only | LOW | **MOOT** — v4 fold v3-1 (above) adds ON CONFLICT back per Gemini+DeepSeek convergent CRIT. The v2-6 triage entry now becomes accurate. |
-| v3-11 | `parseFloat(bid_value)` documentation around precision tradeoff | Gemini only | LOW | **FOLD** — comment added to catalog Map build: `// NOTE: bid_value DECIMAL parsed as float; 0-1 range non-financial use case` |
-| v3-12 | NIT: "one-shot" terminology already removed in v3; int-key string coercion in buildTop20WithOther; minor doc cleanups | Multiple | NIT | **FOLD/N/A** — terminology audit; coercion is acceptable for JSON serialization (operator queries the column as JSONB); no action. |
+| v3-IF | Mig 147 has explicit `BEGIN`/`COMMIT` — documented recurring failure mode (mig 135's R8 CI hotfix removed exactly this; runner provides outer transaction; explicit BEGIN/COMMIT commits the outer prematurely → split-brain schema state) | Independent F | CRITICAL | **FOLD** — `BEGIN;` and `COMMIT;` removed from mig 147. Runner's outer transaction wrapping is sufficient. Mirrors mig 135 pattern. |
+| v3-DS-1 / Indep-A | Permit-side 2-tuple `(permit_type, phase)` uniqueness lost after mig 147 drops legacy PK — 5-tuple UNIQUE with NULLS DISTINCT treats NULL granular dims as distinct → duplicates possible from external/future writers | DeepSeek CRIT + Independent A (2-way) | CRITICAL | **FOLD** — mig 147 adds partial unique index: `CREATE UNIQUE INDEX phase_stay_calibration_permit_legacy_unique ON phase_stay_calibration (permit_type, phase) WHERE permit_type IS NOT NULL`. Restores structural uniqueness for permit-side rows while permitting CoA-side rows (permit_type NULL) to coexist. |
+| v3-G-CRIT | DELETE+INSERT race window — Gemini upgrades from Independent v2's accept to CRIT. Atomic temp-table swap protects downstream consumers from transient empty table | Gemini CRIT (Independent v2 disagreed) | CRITICAL | **FOLD** — write path replaced with `CREATE TEMP TABLE` + `INSERT INTO temp SELECT ...` + `BEGIN; TRUNCATE phase_stay_calibration; INSERT INTO phase_stay_calibration SELECT * FROM temp; COMMIT;`. Reduces empty-table window to milliseconds (metadata-only lock). |
+| v3-G-HIGH-2 | LAG composite index for performance scaling | Gemini HIGH | HIGH | **FOLD** — mig 147 adds `CREATE INDEX phase_stay_calibration_lt_lag_idx ON lifecycle_transitions (lead_id, transitioned_at, id) WHERE lead_id LIKE 'coa:%'`. Partial index keeps it small; covers the LAG window correctly. |
+| v3-G-HIGH-3 / DS-MED-1 | `coa_type_class IS NOT NULL` filter inconsistent with v3's removal of the parallel `project_type IS NOT NULL` filter — data-destructive for unclassified CoA rows | Gemini HIGH + DeepSeek MED (2-way convergent) | HIGH | **FOLD** — filter REMOVED from CoA aggregate. Add `coa_type_class_null_transition_count` audit row (WARN at >5%) for observability. The `unknown_cohort_count` defensive metric (v3 fold v2-G-3) now becomes reachable for legitimate cases (CoA rows with both project_type AND coa_type_class NULL) rather than dead code. |
+| v3-DS-HIGH-2 | Startup guard queries `coa_applications` without verifying table exists | DeepSeek HIGH | HIGH | **FOLD** — `information_schema.tables` check added before the project_type coverage query, with WARN log on missing table. |
+| v3-O-HIGH-Indep | "15 audit_table rows" stale in 3 doc locations (Self-Checklist item j, Spec 48 section, Audit Observability section) — actual is 14 rows after v3 promotions | Observability HIGH + Independent (convergent) | HIGH | **FOLD** — all 3 locations corrected to "14 rows, 5 thresholded." With v4 adding `coa_type_class_null_transition_count` (v3-G-HIGH-3 fold), total becomes 15 rows. Numbers updated to match. |
+| v3-G-MED-1 | `flattenBuckets` order-coupled to SQL column order — silent corruption risk on future column reorder | Gemini MED | MED | **FOLD** — `flattenBuckets` rewritten as `buckets.flatMap(b => COHORT_INSERT_COLS.map(col => b[col] ?? null))` — name-based lookup, order-independent. |
+| v3-G-MED-2 | UNION ALL in SQL not JS concat (memory/perf optimization) | Gemini MED | MED | **FOLD** — `permitAggSql` and `coaAggSql` combined into single `WITH ... UNION ALL ... INSERT INTO temp SELECT ...` statement; eliminates the `allBuckets = [...permitBuckets, ...coaBuckets]` JS round-trip. |
+| v3-G-MED-3 / DS-LOW-6 | DOWN script unsafe — only safe if no CoA-side rows present; doesn't delete CoA rows before re-adding PK | Gemini MED + DeepSeek LOW (2-way) | MED | **FOLD** — DOWN comment block adds explicit `DELETE FROM phase_stay_calibration WHERE permit_type IS NULL` as first step (operator must run before ALTER COLUMN ... SET NOT NULL or ADD PRIMARY KEY). |
+| v3-DS-MED-2 | `unknown_cohort_count` was dead code under v3's `coa_type_class IS NOT NULL` filter | DeepSeek MED | MED | **FOLD** — resolved by v3-G-HIGH-3 fold (filter removal). `unknown_cohort_count` now reachable; tests need updating to reflect this. |
+| v3-DS-MED-3 | `coa_transition_count` count query doesn't apply seq-range filter that aggregate uses → metric/aggregate mismatch | DeepSeek MED | MED | **FOLD** — `coa_transition_count` query updated: `SELECT COUNT(*) FROM lifecycle_transitions WHERE lead_id LIKE 'coa:%' AND (from_seq BETWEEN 1 AND 22 OR to_seq BETWEEN 1 AND 22)`. Filters match. |
+| v3-DS-LOW-5 | `unreliable_buckets` threshold descriptor text contradicts the gate | DeepSeek LOW | LOW | **FOLD** — descriptor fixed to `'> 0 triggers WARN (count of buckets with sample_size < 30; equals low+outlier by definition)'`. |
+| v3-Indep-A-advisory | Mig 147 should comment that DELETE+INSERT pattern (now: atomic temp-table swap) is the runtime enforcement of legacy 2-tuple uniqueness — advisory only since partial unique index now in place | Independent A advisory | LOW | **FOLD** — comment added in mig 147; redundant now with the partial unique index from v3-DS-1 fold but documented for traceability. |
+| v3-O-LOW-K | Pre-ack format dense (5 anomaly vectors in one paragraph) — operator parseability | Observability LOW | LOW | **FOLD** — pre-ack reformatted as numbered list with one-line action per vector. |
 
 ## v2 → v3 Revision Summary
 
-v2 plan-review (4 reviewers) surfaced 16 new findings — 4 CRITs were real bugs my v2 fold pass introduced or missed. v3 corrects them. The v2 reviewer outputs are at `tasks/b6m81ewer.output` (Gemini), `tasks/boyp1rp7b.output` (DeepSeek), `tasks/a88aea8f46db3b0f7.output` (Independent), `tasks/a9512af70f676540f.output` (Observability).
+v2 plan-review (4 reviewers) surfaced 14 actionable findings. The most critical was **Independent G** (conf 92): `phase_stay_calibration` retains its original `PRIMARY KEY (permit_type, phase)` from mig 123; my v2 claimed "no migrations needed" but CoA-side INSERTs with `permit_type = NULL` would violate the PK on first production run. Mig 135 added a 5-tuple UNIQUE INDEX but did NOT drop the old PK. Mig 135's own comment foreshadowed this: "*The pre-existing PK on (permit_type, phase) enforces uniqueness during the transition*" — implying Phase E was expected to handle the PK drop.
 
-| # | Finding | Reviewers | Severity | v3 Resolution |
+v3 adds **migration 147** to drop the legacy PK + make `permit_type` and `phase` nullable + fold the other 13 findings.
+
+| # | Finding | Reviewer(s) | Severity | v3 Resolution |
 |---|---|---|---|---|
-| v2-1 | `coaBatch.push` object missing `old_seq` field — downstream INSERT reads `b.old_seq` → undefined → corrupts `from_seq` for every row | Gemini only | CRITICAL | **FOLD** — added `old_seq: row.old_seq` to coaBatch.push (Part 2) |
-| v2-2 | DOWN-file convention fabricated — no `*_DOWN.sql` files exist in project; actual convention is embedded commented-block in same file (Rule 6 / commit 8b1c10b) | Independent only | CRITICAL | **FOLD** — DOWN reverted to embedded commented SQL block in `migrations/146_e2_coa_audit_columns.sql`; separate `*_DOWN.sql` file removed from plan |
-| v2-3 | Spec 48 §3.2 claim is architecturally wrong — observer code (`scripts/observe-chain.js` lines 200-230) builds DeepSeek `contextJson` from `stepSummaries` containing only audit_table.rows verdicts + duration metrics + failed_sample, NOT `records_meta` distributions | Observability only | CRITICAL | **FOLD** — Spec 48 §3.2 walkthrough rewritten: distributions are STORED in `pipeline_runs.records_meta` but NOT currently passed to DeepSeek context. Surfacing distributions to DeepSeek is deferred to Spec 48 Improvement D (queued-not-authorized). |
-| v2-4 | Spec 48 §3.3 report file wrong — `classify_lifecycle_phase` runs in BOTH `permits` chain (manifest line 70) AND `coa` chain (manifest line 79); observer writes to `{chainId}-followup.md` so coa-chain runs write to `coa-followup.md`, NOT `permits-followup.md` | Observability only | CRITICAL | **FOLD** — Spec 48 §3.3 walkthrough corrected: E.2 audit metrics appear in BOTH `docs/reports/pipeline-observability/permits-followup.md` (permits-chain runs) AND `coa-followup.md` (coa-chain runs). Operator pre-ack must reference both. |
-| v2-5 | Catalog Map build + startup assertion run BEFORE `withAdvisoryLock` — contradicts existing code invariant at script line 502: "ALL state-dependent initialization (getDbTimestamp, loadMarketplaceConfigs, validateLogicVars) MUST execute inside the lock callback to ensure absolute isolation" | Independent only | HIGH | **FOLD** — Catalog Map build + startup assertion moved INSIDE `withAdvisoryLock` callback after `getDbTimestamp` + `loadMarketplaceConfigs`. Preserves existing race-condition prevention. |
-| v2-6 | `lifecycle_transitions` bare INSERT missing `ON CONFLICT` per Spec 47 §6.5 mandate | Independent only | HIGH | **FOLD** — added `ON CONFLICT DO NOTHING` to the unnest INSERT. Idempotent against legitimate re-runs where phase data hasn't changed in CKAN since last run. |
-| v2-7 | `Number()` coercion unsafe for `bid_value` — `Number('')` = 0 (silently coerces empty string to 0 instead of null) | Gemini only | HIGH | **FOLD** — `parseFloat(r.bid_value)` + `Number.isFinite()` guard; non-finite → null |
-| v2-8 | `catalog_invalid_phase_count` conflates 2 distinct failure modes (status missing from catalog vs catalog row has non-standard phase) — operators can't triage from single counter | DeepSeek only | HIGH | **FOLD** — split into `catalog_status_missing_count` (status not in catalog Map; threshold `<=3 WARN, <=1 PASS`) + `catalog_invalid_phase_count` (status present but phase non-standard; threshold `0 FAIL`) |
-| v2-9 | No migration-existence startup guard — if `classify-lifecycle-phase.js` runs before mig 146 is applied, silent column-doesn't-exist error on UPDATE | DeepSeek only | HIGH | **FOLD** — startup check via `information_schema.columns` for `matched_status` existence on `coa_applications`; throws clear error if mig 146 not applied |
-| v2-10 | `phaseChangedBatch` filter only checks phase — misses seq-only catalog updates that the main UPDATE captures (transitions ledger incompleteness) | Gemini MED + DeepSeek MED + Independent (3-way convergent) | HIGH | **FOLD** — filter expanded to detect phase OR seq change: `(b.old_phase ?? null) !== (b.phase ?? null) || (b.old_seq ?? null) !== (b.lifecycle_seq ?? null)`. Ledger now captures both phase-level AND seq-only transitions. |
-| v2-11 | `computeAuditStatus` boundary tests missing — no test asserts PASS/WARN/FAIL transitions at exact thresholds | Independent only | HIGH | **FOLD** — added test #7: parametric boundary cases for `value === passAt`, `value === passAt + 1`, `value === warnAt`, `value === warnAt + 1` |
-| v2-12 | `coa_phase_changes` metric name misleading — `coasUpdated` counts ALL row updates (including audit-only column changes), not just phase changes | DeepSeek only | MEDIUM | **FOLD** — metric renamed to `coa_rows_updated`. Add separate `coa_phase_transitions_count` for actual phase changes (derived from `phaseChangedBatch.length` accumulator). |
-| v2-13 | `buildTop20WithOther` referenced but never defined — runtime crash | DeepSeek only | LOW | **FOLD** — inline definition added in Part 4 |
-| v2-14 | Backfill OR predicate scalability concern at million-row scale | Gemini only | MEDIUM | **DOCUMENT** — added scalability comment in Part 1 (current ~33K is fine; future million-row scale may require a dedicated backfill script) |
-| v2-15 | Backfill predicate "one-shot" terminology misleading (predicate is structurally permanent but only matches rows on first post-mig run) | Observability only | LOW | **FOLD** — terminology changed to "first-run-effective" in Part 1 |
-| v2-16 | §R3.5 RUN_AT-position deviation: existing script runs `getDbTimestamp` INSIDE the lock callback (line 514), not before per the Spec 47 §6.1 skeleton | Independent MEDIUM | LOW | **DOCUMENT** — Spec 47 §R3.5 walkthrough acknowledges the deviation: getDbTimestamp inside the lock is intentional because the lock-acquired transaction's commit timestamp is what the audit metadata should reference. Existing code is correct; the skeleton's pre-lock RUN_AT is for scripts that don't take a transaction-scoped lock. |
+| v2-G | `phase_stay_calibration` PRIMARY KEY (permit_type, phase) blocks CoA-side INSERT (permit_type NULL on CoA rows) | Independent G | CRITICAL/BLOCKING | **FOLD via NEW migration 147**: drop legacy PK on (permit_type, phase); make permit_type + phase nullable; mig 135's 5-tuple UNIQUE INDEX becomes the de facto integrity constraint. |
+| v2-E | `MIN(from_phase)` returns NULL for all-NULL partitions; `phase` column is NOT NULL → INSERT violation | Independent E | HIGH | **FOLD** — same migration 147 makes `phase` nullable. CoA cohorts with all-null `from_phase` propagate NULL through the INSERT cleanly. |
+| v2-DS-1 | `project_type IS NOT NULL` filter in v2 CoA aggregate is data-destructive (NULLS DISTINCT collision argument was wrong) | DeepSeek HIGH | HIGH | **FOLD** — filter removed from `coaAggSql` WHERE clause. CoA rows with NULL project_type bucket together under SQL NULL-grouping semantics. Migration 147 makes the row insertable. |
+| v2-DS-2 | "Permit-side UNCHANGED" plan claim contradicts SQL block which adds `, id` tiebreaker | DeepSeek HIGH | HIGH | **FOLD** — plan text corrected: permit-side IS modified (LAG tiebreaker added per v2 fold #8). The change is small but explicit. |
+| v2-G-1 | Gemini's "LAG off-by-one CRITICAL" | Gemini CRIT | — | **FALSE POSITIVE** verified via timeline trace — `from_phase` is the phase being EXITED (the cohort's phase); LAG of `transitioned_at` against current row gives the duration of that phase correctly. |
+| v2-G-2 | Duration-attribution test missing from test plan | Gemini HIGH | HIGH | **FOLD** — new test #6 in Part 7: seed lead A with known durations (Phase A→B at Day 10, B→C at Day 30); assert `phase_stay_calibration.median_days = 10` for cohort A and `20` for cohort B. |
+| v2-O-J | Pre-ack missing `coa_transition_count` step-change annotation | Observability HIGH | HIGH | **FOLD** — pre-ack runbook adds explicit note: "*The new `coa_transition_count` metric will jump from 0 (pre-E.2 baseline) to ~30K on first E.3 run — expected. INFO row only; will not trigger automated WARN/FAIL but DeepSeek narrative may flag the velocity jump.*" |
+| v2-G-3 | `unknown_cohort_count` defensive metric for `permit_type=NULL AND coa_type_class=NULL` edge case | Gemini MED | MED | **FOLD** — new audit row added. WARN gate at >0 (signals data corruption or aggregate bug). |
+| v2-DS-3 | EXPLAIN ANALYZE assertion too strict (OR condition defeats single-column indexes; would FAIL on staging without composite index) | DeepSeek MED | MED | **FOLD** — assertion relaxed: at ~30K row scale sequential scan is acceptable. Test now asserts `execution_time_ms < 5000` (5 second budget) instead of "no Seq Scan." Composite index deferred to Phase H if/when CoA volume justifies. |
+| v2-O-L / Indep F | `unreliable_buckets` = `low_volume_buckets + outlier_buckets` redundancy undocumented; operator dashboard double-count risk | Observability L + Independent F (2-way) | MED | **FOLD** — `unreliable_buckets` threshold descriptor extended: `'< 30 sample_size triggers WARN if > 0 — NOTE: equals low_volume_buckets + outlier_buckets by definition; do not sum tier metrics with this'`. Plus pre-ack runbook note. |
+| v2-O-M | `coa_project_type_coverage_pct` lives in records_meta direct keys → observer's automated WARN/FAIL gate blind to Phase D coverage degradation | Observability MED | MED | **FOLD** — promoted to 13th `audit_table.rows` entry: `{ metric: 'coa_project_type_coverage_pct', value: pct, threshold: '>= 50 PASS, < 50 WARN', status: pct >= 50 ? 'PASS' : 'WARN' }`. records_meta keeps the value for triage context. |
+| v2-I-B | DELETE+INSERT race window when calibration runs in both chains (transient empty table between lock release + re-acquire) | Independent B | MED | **FOLD as documentation** — operator pre-ack adds note: "*Calibration now runs in BOTH permits + coa chains. Lock 93 serializes concurrent execution, but lock-release-then-re-acquire creates a millisecond transient empty-table window for `phase_stay_calibration` consumers (inspector read path). Acceptable operational risk; INSERT-then-DELETE atomic swap deferred to a future hardening WF.*" |
+| v2-I-D | `coa_applications.project_type` coverage guard reads wrong source — should ALSO check `lifecycle_transitions.project_type` directly | Independent D | MED | **FOLD** — second startup guard added querying `lifecycle_transitions WHERE lead_id LIKE 'coa:%'` for project_type coverage. Logs both percentages so operators can distinguish "Phase D hasn't run" vs "Phase D ran but old transitions predate it." |
+| v2-O-doc | Self-doc inconsistency: plan says "5 thresholded scalars" but Part 4 has only 3 thresholded (now 4 with the `coa_project_type_coverage_pct` promotion in v2-O-M) | Observability doc | LOW | **FOLD** — plan text corrected. With v3's promotion, 4 thresholded: `total_buckets` (FAIL gate), `unreliable_buckets` (WARN gate), `coa_cohort_presence` (WARN gate), `coa_project_type_coverage_pct` (WARN gate). |
+| v2-I-C | `lifecycle_transitions.id` documented as BIGSERIAL but mig 126 has it as SERIAL | Independent LOW | LOW | **DOCUMENT** — no E.3 impact (LAG tiebreaker works on either type). Spec amendment to correct Spec 42 §6.6.B to match mig 126's actual `SERIAL` type. Phase H concern if table exceeds ~2.1B rows. |
+| v2-G-LOW | `MIN(from_phase)` ambiguity telemetry — flag cohorts with multiple distinct `from_phase` strings (e.g., 'P7a' vs 'P7-A' bad data) | Gemini LOW | LOW | **DEFER** — defensive observability; defer to follow-up. |
+| v2-G-NIT | `cohort_dimension_coverage` SQL optimization (compute via `COUNT(*) FILTER` in SQL instead of JS filter) | Gemini NIT | NIT | **DEFER** — implementation detail. |
+| v2-DS-MED-4 | `lead_id` format dependency note in startup guard | DeepSeek MED | NIT | **Already in plan** — startup guard comment notes the format dependency. |
 
 ## v1 → v2 Revision Summary
 
-v1 plan-review surfaced 21 findings — 4 CRITs are 4-way convergent (Gemini + DeepSeek + Observability + Independent), 3 CRITs are single-reviewer runtime-blockers, plus 5 HIGHs and 9 MEDIUMs. All folded below.
+v1 plan-review (4 reviewers — Gemini, DeepSeek, Independent worktree, Observability worktree) surfaced 18 findings. The decisive finding was **Independent C-1**: `universal_stream_catalog.phase` stores DESCRIPTIVE labels like `'P7a/P7b/P7c (or P9-P17)'`, NOT P-codes. v1's plan joined `cat.phase = permit_phase_transitions.from_phase` (P-code) — would have produced NULL `from_seq` for nearly every permit-side row, silently destroying the existing ~165-bucket calibration. The catalog maps `(source, status) → seq`, but `permit_phase_transitions` lacks a status column.
 
-| # | Finding | Reviewers | Severity | v2 Resolution |
+v2 reframes the scope: **CoA-side cohorts only get the granular 5-tuple key**. Permit-side calibration remains on the legacy 2-tuple `(permit_type, from_phase)` until Phase H consolidates `permit_phase_transitions` into `lifecycle_transitions` (which has `from_seq`/`to_seq` populated by E.2).
+
+| # | Finding | Reviewer(s) | Severity | v2 Resolution |
 |---|---|---|---|---|
-| 1 | Batch size formula uses VALUES-form param math on unnest pattern (65535/N is meaningless for unnest) | Gemini + DeepSeek + Observability + Independent (**4-way**) | CRITICAL | **FOLD** — batch size is heap-bounded; replace with `COA_BATCH_SIZE = 5000` constant + per-batch memory budget commentary. With unnest, total bind params = 13 (12 arrays + 1 timestamp) regardless of batch size. |
-| 2 | `lifecycle_transitions.from_phase` always NULL on subsequent runs (RETURNING returns POST-update value) | Gemini + DeepSeek + Observability + Independent (**4-way**) | CRITICAL | **FOLD** — adopt permit-side pattern (existing code line 702-751): SELECT `lifecycle_phase AS old_phase` from stream, carry through JS batch, INSERT into `lifecycle_transitions` from batch (not RETURNING). |
-| 3 | Catalog SELECT uses non-existent column names (`group`/`block`/`stage` — actual is `lifecycle_group`/`lifecycle_block`/`lifecycle_stage`) | Independent only (conf 95) | CRITICAL | **FOLD** — SQL: `SELECT seq, lifecycle_group AS "group", lifecycle_block AS "block", lifecycle_stage AS "stage", phase, bid_value, source, status FROM universal_stream_catalog`. |
-| 4 | DOWN migration commented out (not executable) | Gemini only | CRITICAL | **FOLD** — DOWN block becomes valid SQL in a separate `migrations/146_e2_coa_audit_columns_DOWN.sql` file per project convention. |
-| 5 | `catalog_invalid_phase_count` scoping ambiguous (13 non-CoA poisoned rows would false-positive a full scan) | Observability only | CRITICAL | **FOLD** — explicit scoping: counter increments ONLY when `mapToUniversalStream()` returns null due to non-standard `catalogRow.phase` during live CoA classification. No catalog scan. |
-| 6 | P19 first-run estimate 4.5K is wrong (actual ~964: 59 Refused + 904 Application Withdrawn + 1 Cancelled); P4 missing from distribution | Observability only | CRITICAL | **FOLD** — observability table corrected: `P20: 28,956; P19: 964; P3: 1,716; P2: 1,126; P1: 289; P4: 1`. Operator pre-ack language updated. |
-| 7 | audit_table sample code emits static `status: 'INFO'` — contradicts threshold contract | DeepSeek only | HIGH | **FOLD** — dynamic status computation via helper: `computeWarnableAuditStatus(value, {warnAt, failAt})` returns 'PASS'/'WARN'/'FAIL'. Applied to all 3 thresholded rows. |
-| 8 | `unmapped_decision_count` baseline is 2 (not 3) — row 54 (`'decision not made...'`) routes via rule 6 `.includes('decision not made')` to P2 | DeepSeek + Observability | HIGH | **FOLD** — threshold values OK (`≤ 5 WARN, ≤ 3 PASS` still applies, baseline 2 gives 1-step drift headroom). Justification text updated to remove row 54 reference. |
-| 9 | `lead_id` populated assertion missing (plan claims Phase B trigger populates `permits.lead_id` but doesn't cite migration or add test) | Observability only | HIGH | **FOLD** — cite `migrations/132_extend_permits_lead_id.sql` (Phase B trigger); add fixture-level assertion in `compute-trade-forecasts.infra.test.ts` + `update-tracked-projects.infra.test.ts`. |
-| 10 | Migration 146 CHECK constraint scans the table (no `NOT VALID` pattern) | Independent only | HIGH | **FOLD** — use `ADD CONSTRAINT ... NOT VALID` + `VALIDATE CONSTRAINT` two-step pattern. Practically safe today (all `matched_rule` are NULL on first run) but pattern future-proofs against rollback-and-rerun scenarios. |
-| 11 | `ADVISORY_LOCK_ID` typo: plan said 21, actual is 84 | DeepSeek (verified via grep at line 495) | HIGH | **FOLD** — plan reference corrected to lock ID 84 throughout. |
-| 12 | `catalog_invalid_phase_count` duplicated in `audit_table` AND `records_meta` (single source of truth violation) | Gemini + DeepSeek | MEDIUM | **FOLD** — `audit_table.rows` only (canonical scalar location per Spec 47 §R10). Removed from `records_meta`. |
-| 13 | Inconsistent guard telemetry: `compute-trade-forecasts.js` silently `continue`s; `update-tracked-projects.js` tracks `unknown_phase_skipped` counter | Gemini only | MEDIUM | **FOLD** — both guards emit a `coa_skipped_count` counter + first-occurrence WARN log. |
-| 14 | `IS DISTINCT FROM` clause omits 4 catalog-derived columns (`lifecycle_group`/`block`/`stage`/`bid_value`); catalog evolution silent miss | DeepSeek + Independent | MEDIUM | **FOLD** — include all 5 catalog-derived columns in the OR-chain. Documented: small added cost on steady-state runs; pays back on catalog evolution. |
-| 15 | Catalog source literal startup assertion missing (`'coa.status'` membership) | DeepSeek only | MEDIUM | **FOLD** — startup check after Map build: `if (!Array.from(catalogByStatusSource.keys()).some(k => k.startsWith('coa.status:'))) throw new Error('universal_stream_catalog has no coa.status rows')`. |
-| 16 | No test for subsequent phase changes (from_phase non-null in 2nd run) | DeepSeek + Independent | MEDIUM | **FOLD** — integration test #4 added: run consumer twice, modify input between runs, assert `from_phase` matches previous phase on 2nd batch. |
-| 17 | CHECK rule 0-9 over-couples schema to spec rule count | DeepSeek only | MEDIUM | **FOLD** — relaxed to `matched_rule >= 0 AND matched_rule <= 99`. Comment in migration documents current max-rule = 9 in Spec 42 §6.7. |
-| 18 | CoA stream SELECT missing `lead_id` (needed for `lifecycle_transitions` INSERT) | Independent only | MEDIUM | **FOLD** — SELECT extended: adds `lead_id` + `lifecycle_phase AS old_phase` + `permit_type` + `project_type` + `coa_type_class` + `neighbourhood_id` (the JOIN dimensions for `lifecycle_transitions`). |
-| 19 | Distribution metrics aren't automated (observer reads only `audit_table.rows`; `records_meta` distributions feed DeepSeek narrative only) | Observability only | MEDIUM | **FOLD** — observability table reframed: scalar metrics drive automated WARN/FAIL; distribution metrics are surfaced to DeepSeek for narrative analysis only (automated drift detection deferred to Spec 48 Improvement C/D). |
-| 20 | `tracked_projects` JOIN structurally permit-only (no `coa_application_id` FK) — Phase F needs deeper refactor, not just UNION | Observability only | LOW | **DEFER to Phase F handoff** — added explicit note in §6.9 modified-scripts table row for `update-tracked-projects.js`. |
-| 21 | Backfill strategy relies on manual operator UPDATE — fragile | Gemini LOW | LOW | **FOLD** — backfill auto-trigger: classifier predicate extended one-shot: `OR matched_status IS NULL` for first-post-mig-146 run. Idempotent (NULL → not-NULL is monotonic). |
+| v1-1 | Catalog JOIN column mismatch — `cat.phase = ppt.from_phase` joins P-code against descriptive label; permit-side seq derivation produces NULL for nearly all rows | Independent C-1 | CRITICAL | **REFRAME** — v2 narrows scope to CoA-side only (already has from_seq/to_seq from E.2). Permit-side legacy 2-tuple cohorts preserved unchanged. Granular permit-side seq derivation deferred to Phase H when permit_phase_transitions is retired. |
+| v1-2 | `HAVING COUNT(*) >= 3` contradicts tier plan — destroys cohorts with sample 3-9 that "low/outlier" tiers claim to track | Gemini CRIT, DeepSeek LOW (convergent direction) | CRITICAL | **FOLD** — HAVING removed. Tier counters (`high/mid/low/outlier_volume_buckets`) provide observability; consumer-side decision whether to use low-sample cohorts. |
+| v1-3 | INNER JOIN permits silently drops orphan transitions | DeepSeek CRIT, Gemini HIGH (permits index risk) | CRITICAL | **N/A** under reframed scope — v2 does NOT modify permit-side calibration path. |
+| v1-4 | Manual `$${base + N}` placeholder arithmetic fragile (off-by-one risk if columns change) | DeepSeek CRIT | CRITICAL | **FOLD** — column list extracted to `COHORT_INSERT_COLUMNS` constant; placeholder generation uses `cols.map((c, i) => '$${base + i + 1}').join(', ')` helper. |
+| v1-5 | Catalog poisoned rows (seq 35, 47, 50, 77-87, 99-110) silently included in cohort key | Observability K | CRITICAL | **N/A** under reframed scope — CoA-side rows live in seq 1-22 only (verified clean against mig 129). |
+| v1-6 | `audit_table.verdict` hardcoded from `inserted`/`unreliable` counters at script line 155 — Spec 47 §R10 violation (pre-existing bug) | Observability N | CRITICAL pre-existing | **FOLD** — v2 fixes this in the same commit: `verdict` derived from `auditRows.some(r => r.status === 'FAIL' \|\| 'WARN')` per §R10. |
+| v1-7 | `from_phase` in GROUP BY subverts 5-tuple key — same (project_type, coa_type_class, from_seq, to_seq) with different legacy `from_phase` strings would split into two cohorts | Gemini HIGH | HIGH | **FOLD** — `from_phase` removed from GROUP BY; `MIN(from_phase) AS from_phase` aggregate keeps the legacy column populated for backward-compat. |
+| v1-8 | LAG `ORDER BY transitioned_at` non-deterministic on tied timestamps → breaks idempotency | DeepSeek HIGH | HIGH | **FOLD** — tiebreaker added: `ORDER BY lt.transitioned_at, lt.id`. Idempotency restored. |
+| v1-9 | `lead_id LIKE 'coa:%'` brittle (E.2 writer format may change) + scan-risk at scale | DeepSeek HIGH, Gemini MED (convergent) | HIGH | **FOLD** — primary filter switches to `WHERE lt.from_seq BETWEEN 1 AND 22 OR lt.to_seq BETWEEN 1 AND 22` (CoA-side seq range per §2.5.c is intrinsic — 22 CoA statuses → seq 1-22). Backup `lead_id LIKE 'coa:%'` retained as a second predicate for defense-in-depth. |
+| v1-10 | Startup guard `information_schema.tables` only checks table existence — doesn't distinguish "E.2 never ran" vs "E.2 ran but partial" | DeepSeek HIGH | HIGH | **FOLD** — startup guard extended: `SELECT COUNT(*) FROM lifecycle_transitions WHERE lead_id LIKE 'coa:%'`; logs "table empty (pre-E.2 first-run)" vs "table populated (NNN rows)" so operators can distinguish states. |
+| v1-11 | `unreliable_buckets` metric (existing 4th audit row) silently dropped without explanation; arithmetic claim "9 rows" but plan listed 10 | Independent H-1 | HIGH | **FOLD** — `unreliable_buckets` PRESERVED as a 4th existing INFO row (semantics unchanged: WARN when `sample_size < 30`). The new tier counters (`high/mid/low/outlier`) provide finer granularity ALONGSIDE the legacy metric. Total audit rows now 11. |
+| v1-12 | `compute_phase_calibration` runs only in permits chain per `scripts/manifest.json` line 71 — CoA-only chain runs produce CoA transitions in `lifecycle_transitions` but never trigger calibration recompute | Independent H-2 | HIGH | **FOLD** — add `compute_phase_calibration` to the CoA chain in `scripts/manifest.json` (alongside its existing permits-chain entry). After E.3, calibration runs in BOTH chains; CoA-only chain runs trigger calibration refresh. |
+| v1-13 | `coa_applications.project_type` Phase D gate not documented — if Phase D shipped but classify-coa-scope hasn't run yet, project_type is NULL on CoA rows and the 5-tuple collapses | Independent H-3 | HIGH | **FOLD** — startup guard added: `SELECT COUNT(*) FROM coa_applications WHERE project_type IS NOT NULL` / total. WARN log if coverage < 50%. Documents Phase D prerequisite in Context. |
+| v1-14 | Observer pre-ack targets `total_buckets` jump — wrong metric. Observer's `vs_baseline` anomaly fires on `duration_ms` (and `records_total`), NOT bucket count | Observability L | HIGH | **FOLD** — operator pre-ack language rewritten: "*Expected first-E.3-run batch — duration_ms may regress 2-3× while query processes UNION-ALL + 5-tuple GROUP BY. Annotate `permits-followup.md` AND `coa-followup.md` (E.3 now runs in both chains per v1-12 fold) first-E.3-run as `[expected granular-key SQL expansion, not a performance regression]`.*" |
+| v1-15 | `coa_cohort_presence=0` can't differentiate "E.2 not run" vs "E.2 ran but cohorts too sparse" | Observability M | HIGH | **FOLD** — new `coa_transition_count` scalar audit row: counts raw `lifecycle_transitions` source rows where `lead_id LIKE 'coa:%'` BEFORE the cohort filter. Operators can distinguish: `coa_transition_count=0` → E.2 hasn't run; `coa_transition_count>0 AND coa_cohort_count=0` → E.2 ran but data too sparse for cohorts. |
+| v1-16 | Catalog miss telemetry needed (`catalog_join_misses` counter) | Gemini MED, DeepSeek MED (convergent) | MEDIUM | **N/A** under reframed scope — v2 doesn't do permit-side catalog JOIN. |
+| v1-17 | NULLS DISTINCT edge case — if both `project_type=NULL` on permit-side AND CoA-side, the 5-tuple collapses and UNIQUE INDEX fires | DeepSeek MED | MEDIUM | **FOLD** — v2 startup guards `coa_applications.project_type` coverage AND permit-side preserves legacy 2-tuple (no granular row insertion with NULL project_type from permit-side). |
+| v1-18 | EXPLAIN ANALYZE missing from test plan | Gemini MED | MEDIUM | **FOLD** — added to Test #5: `EXPLAIN (ANALYZE, BUFFERS)` invocation in the test suite (staging-DB only) asserts query plan does not include sequential scan on `lifecycle_transitions`. |
+| v1-19 | Redundant `EXTRACT(EPOCH FROM ...)` expression × 3 in PERCENTILE_CONT calls | Gemini NIT | LOW | **FOLD** — extracted to a single CTE subquery `duration_calc` that computes `duration_days` once, then PERCENTILE_CONT references it. |
 
-## Why this task exists (and why most of its content is pre-reviewed)
+## Why this task exists
 
-E.1 shipped pure-function substrate. The consumer (`scripts/classify-lifecycle-phase.js`) is currently wrapped in the Legacy adapter — preserving pre-E.1 0.6% non-NULL coverage in the E.1↔E.2 gap window. E.2 fires the real coverage jump (0.6% → ≥95%).
+Spec 42 §6.1 objective #4: *"Resolve the prediction-engine cohort blind spot documented in Spec 84 §8.7. Cohort key on phase_stay_calibration extends from (permit_type, from_phase) to (permit_type, project_type, coa_type_class, from_seq, to_seq)."*
 
-The **scope content** is the locked union of 6 E.2 deliverables in `.cursor/queued_task_phase_e2_consumer_wiring.md` + contract invariants from Observability v4 diff review. The **implementation detail** here is novel and was scrutinized by 4 plan-stage reviewers + the user-approved fold of 21 findings.
+Spec 84 §8.7 cohort blind-spot: for CoA-stage rows the legacy 2-tuple `(permit_type, from_phase)` lookup falls through to `__ALL__` defaults because CoA `permit_type` is NULL or `'Pre-Permit'`. The median 1,078-day CoA-decision-to-permit-filing lag is invisible to `compute-trade-forecasts.js`. E.3 closes this by producing granular CoA-side cohort buckets keyed on `(NULL, project_type, coa_type_class, from_seq, to_seq)`.
+
+Spec 84 84-W4 ("Dead Transition Write: Ledger written but not used") was previously resolved for `permit_phase_transitions`; E.3 extends consumption to `lifecycle_transitions` (the E.2 writer for CoA-side phase transitions).
+
+**Scope reframe (v2):** the permit-side cohort key extension is BLOCKED on a schema gap (`permit_phase_transitions` lacks a status column, so seq cannot be derived from the catalog). Per v2 fold #1, permit-side calibration remains on the legacy 2-tuple key until Phase H. E.3 delivers ONLY the CoA-side granular cohorts (which already have from_seq/to_seq populated by E.2 — no JOIN needed).
 
 ## Context
 
 ### Goal
 
-Land the consumer wiring + DB migration + downstream defensive guards that cash the CoA `lifecycle_phase IS NOT NULL` 0.6% → ≥95% coverage jump promised by E.1.
+1. **Add CoA-side granular cohort rows** to `phase_stay_calibration` by reading `lifecycle_transitions` (E.2 writer). GROUP BY 5-tuple `(NULL permit_type, project_type, coa_type_class, from_seq, to_seq)` with `MIN(from_phase)` for legacy column.
 
-1. **Migration 146** — ADD 4 audit columns + 2 partial indices + CHECK constraint (NOT VALID + VALIDATE pattern).
-2. **`scripts/classify-lifecycle-phase.js` consumer rewrite** — switch back to full `classifyCoaPhase`; build `universal_stream_catalog` Map; write 11 columns per row + `lifecycle_transitions` ledger with old/new phase; emit 7-metric audit_table with dynamic status.
-3. **Defensive `lead_id LIKE 'coa:%'` guards** — `compute-trade-forecasts.js` + `update-tracked-projects.js`. Inert until Phase F UNION; both emit consistent telemetry.
-4. **First-E.2-run baseline mitigation** — operator pre-ack with corrected first-run distribution estimates (P19 ~964, P4 = 1).
-5. **Spec amendments** — anchor placeholders → `7003683` (E.1) + `[E.2-ANCHOR]` (this commit).
+2. **Preserve permit-side legacy 2-tuple cohorts** — existing aggregate against `permit_phase_transitions` unchanged. Both shapes coexist in `phase_stay_calibration` via mig 135's NULLS DISTINCT UNIQUE INDEX.
+
+3. **Fix existing `audit_table.verdict` bug** — derive from row statuses per Spec 47 §R10 instead of hardcoded counter logic (Observability N pre-existing bug, conf 97).
+
+4. **Add `compute_phase_calibration` to the CoA chain** (`scripts/manifest.json`) — currently permits-only; CoA-only chain runs leave calibration stale until next permits run.
+
+5. **Sample-size tier counters + new observability metrics**: `high/mid/low/outlier_volume_buckets`, `permit_cohort_count`, `coa_cohort_count`, `coa_transition_count` (raw source count for triage), `coa_cohort_presence` (WARN gate), plus 2 distribution maps in `records_meta`.
+
+6. **Operator pre-ack runbook** rewritten to target duration regression (the actual anomaly trip vector per Observability L).
 
 ### Target Specs
 
-- `docs/specs/01-pipeline/47_pipeline_script_protocol.md` — §R1–R12; `classify-lifecycle-phase.js` already pre-compliant.
-- `docs/specs/01-pipeline/42_chain_coa.md` — §6.3 figure, §6.7 threshold strike, §6.9 row updates, §6.11 Phase E row.
-- `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` — §2.5.f row 4, 84-W12 + 84-W11 resolution notes.
-- `docs/specs/01-pipeline/48_pipeline_observability.md` — 7-metric audit_table contract; observer reads `audit_table.rows` for automated WARN/FAIL; `records_meta` distributions feed DeepSeek narrative only.
-- `docs/specs/00_engineering_standards.md` — §3 IS DISTINCT FROM guards; §6 logError; §9 pipeline safety; §10 boundary.
+- `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §R1-R12 (script is pre-compliant; E.3 extends within envelope)
+- `docs/specs/01-pipeline/42_chain_coa.md` §6.7 step 6 (cohort key extension — v2 scope-limited to CoA-side per fold #1), §6.9 modified-scripts row, §6.11 Phase E row, §6.11 Phase I (NEW — E.2 deferrals)
+- `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` §7 + §8.7 + 84-W4
+- `docs/specs/01-pipeline/48_pipeline_observability.md`
+- `docs/specs/00_engineering_standards.md` §2 + §3 + §6 + §9
 
 ### Key Files
 
-- `migrations/146_e2_coa_audit_columns.sql` (NEW — UP block + embedded commented DOWN per project convention; v4 fold v3-3)
-- `scripts/classify-lifecycle-phase.js` (target — lines 27-40, ~495 lock ID, ~880-940 CoA stream loop, ~1107 audit_table)
-- `scripts/compute-trade-forecasts.js` (target — lines 45-50 PRE_CONSTRUCTION_PHASES; lines 278-308 SOURCE_SQL — add `p.lead_id`)
-- `scripts/update-tracked-projects.js` (target — line 132-157 SELECT — add `p.lead_id AS permit_lead_id`; line 189 PHASE_ORDINAL lookup — guard insertion)
-- `scripts/lib/lifecycle-phase.js` + `src/lib/classification/lifecycle-phase.ts` (E.1 substrate consumed — NO CHANGE)
-- `src/tests/classify-lifecycle-phase.infra.test.ts` (NEW or EXTEND)
-- `src/tests/compute-trade-forecasts.infra.test.ts` + `src/tests/update-tracked-projects.infra.test.ts` (EXTEND)
-- `src/tests/migration-146-coa-audit-columns.infra.test.ts` (NEW)
-- `docs/reports/review_followups.md` (E.2 close-out note)
-- `.cursor/queued_task_phase_e2_consumer_wiring.md` → move to `.cursor/closed_task_phase_e2_consumer_wiring.md`
-
-## Technical Implementation
-
-### Part 1 — Migration 146: `coa_applications` audit columns
-
-```sql
--- migrations/146_e2_coa_audit_columns.sql
--- Phase E.2 — persist matchedStatus / matchedRule / unmappedStatus / unmappedDecision
--- on coa_applications. Improves diagnosability vs audit-log archaeology.
-
-BEGIN;
-
-ALTER TABLE coa_applications
-  ADD COLUMN IF NOT EXISTS matched_status     TEXT,
-  ADD COLUMN IF NOT EXISTS matched_rule       SMALLINT,
-  ADD COLUMN IF NOT EXISTS unmapped_status    BOOLEAN NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS unmapped_decision  BOOLEAN NOT NULL DEFAULT false;
-
--- Domain CHECK with NOT VALID + VALIDATE pattern (v1 fold #10).
--- NOT VALID skips the full-table validation pass on ADD; VALIDATE CONSTRAINT
--- (separate statement) does the scan with a SHARE UPDATE EXCLUSIVE lock that
--- does NOT block concurrent reads/writes.
---
--- Range 0..99 (v1 fold #17): allows ~10x rule expansion in Spec 42 §6.7
--- without a follow-up migration. Current spec defines rules 1-9.
-ALTER TABLE coa_applications
-  DROP CONSTRAINT IF EXISTS chk_coa_matched_rule_range,
-  ADD  CONSTRAINT chk_coa_matched_rule_range
-       CHECK (matched_rule IS NULL OR (matched_rule >= 0 AND matched_rule <= 99))
-       NOT VALID;
-ALTER TABLE coa_applications
-  VALIDATE CONSTRAINT chk_coa_matched_rule_range;
-
--- Partial indices on the unmapped flags (predominantly false in steady state).
-CREATE INDEX IF NOT EXISTS idx_coa_unmapped_status
-  ON coa_applications (unmapped_status)
-  WHERE unmapped_status = true;
-CREATE INDEX IF NOT EXISTS idx_coa_unmapped_decision
-  ON coa_applications (unmapped_decision)
-  WHERE unmapped_decision = true;
-
--- v4 fold v3-1: UNIQUE INDEX on lifecycle_transitions for ON CONFLICT idempotency.
--- (lead_id, transitioned_at) is a sufficient natural key — within a single classify run,
--- transitioned_at = RUN_AT (constant), so a row can only be inserted once per
--- (lead_id, run). Across runs, transitioned_at advances monotonically, so duplicate
--- ledger rows for the same lead in the same run are impossible. Defense-in-depth
--- complements the JS phaseChangedBatch filter (the primary idempotency mechanism).
-CREATE UNIQUE INDEX IF NOT EXISTS uix_lifecycle_transitions_idempotency
-  ON lifecycle_transitions (lead_id, transitioned_at);
-
-COMMIT;
-
--- ─────────────────────────────────────────────────────────────────
--- DOWN — manual rollback only, intentionally not transactional
--- (Rule 6 / commit 8b1c10b — established convention across migrations 128/132/133).
--- The migration runner only processes the UP block above; this DOWN is
--- documentation for operators executing a manual rollback.
--- ─────────────────────────────────────────────────────────────────
--- DROP INDEX IF EXISTS idx_coa_unmapped_status;
--- DROP INDEX IF EXISTS idx_coa_unmapped_decision;
--- DROP INDEX IF EXISTS uix_lifecycle_transitions_idempotency;
--- ALTER TABLE coa_applications DROP CONSTRAINT IF EXISTS chk_coa_matched_rule_range;
--- ALTER TABLE coa_applications
---   DROP COLUMN IF EXISTS matched_status,
---   DROP COLUMN IF EXISTS matched_rule,
---   DROP COLUMN IF EXISTS unmapped_status,
---   DROP COLUMN IF EXISTS unmapped_decision;
-```
-
-**DOWN convention (v2 fold #2):** No separate `*_DOWN.sql` files exist anywhere in `migrations/` — every migration (128, 132, 133, 140-144) embeds the DOWN as a commented-out block with manual-rollback note. v3 reverts to that established pattern.
-
-**ADD COLUMN safety on 33K-row table.** PG 11+ optimizes `ADD COLUMN ... DEFAULT false NOT NULL` (constant default) to no rewrite — the default is stored in `pg_attrdef` and materialized lazily. Expected migration time: `<100ms`.
-
-**Backfill strategy** (v4 fold v3-2 — Gemini CRIT): auto-trigger via classifier predicate extension. The CoA stream query gets a first-run-effective predicate addition:
-
-```sql
-WHERE lifecycle_classified_at IS NULL
-   OR last_seen_at > lifecycle_classified_at
-   OR matched_rule IS NULL    -- v4 fold v3-2: USE matched_rule (NOT matched_status)
-                              -- matched_status can be null permanently for rule-9 catchall rows;
-                              -- matched_rule is null ONLY pre-mig (until first classification),
-                              -- breaking the infinite-loop catchall-reprocesses-forever risk.
-```
-
-**Why `matched_rule IS NULL` (not `matched_status IS NULL`)** (v3 Gemini CRIT):
-- Rule 9 catchall returns `matchedStatus: null` (per E.1 substrate design — drives `lifecycle_seq = NULL` correctly).
-- The UPDATE writes that NULL to `coa_applications.matched_status`.
-- If the backfill predicate uses `OR matched_status IS NULL`, every catchall row matches the predicate on every subsequent run → reprocessed forever → poison-pill loop.
-- All rules (1-9) write a non-NULL `matched_rule` (1-9 respectively); rule 0 (defensive sentinel) is unreachable from the stream SELECT (always provides a valid object). So `matched_rule IS NULL` matches only rows pre-classification — monotonically transitions to non-null after first classification — breaking the loop.
-
-Idempotent: NULL → non-NULL on `matched_rule` is monotonic. On second run, only `last_seen_at > lifecycle_classified_at` predicate matches.
-
-**Scalability note** (v2 fold #14 — Gemini MEDIUM): the `OR` predicate may not optimize well at >1M rows. Current 33K is comfortable. If `coa_applications` grows past ~500K, consider extracting the backfill into a dedicated one-shot script (`scripts/backfill-coa-matched-rule.js`) with explicit LIMIT-based batching.
-
-### Part 2 — `scripts/classify-lifecycle-phase.js` consumer rewrite
-
-**Imports (line 27-40):** revert the v4 Same-Sprint Mitigation Option 2:
-
-```js
-const {
-  classifyLifecyclePhase,
-  classifyCoaPhase,        // v2 fold: revert Legacy adapter wrap (E.1 substrate consumer activated)
-  mapToUniversalStream,    // E.1 substrate
-  DEAD_STATUS_ARRAY,
-  NORMALIZED_DEAD_DECISIONS_ARRAY,
-} = require('./lib/lifecycle-phase');
-```
-
-**ADVISORY_LOCK_ID** (v1 fold #11): unchanged at **84** (Spec 47 §A.5 registry; line 495 in current script).
-
-**Catalog Map build** (v1 folds #3 + #15; v2 folds #5 + #7 + #9) — runs **INSIDE `pipeline.withAdvisoryLock` callback** per existing code invariant at line 502 ("ALL state-dependent initialization MUST execute inside the lock callback"); column aliasing bridges schema names to `mapToUniversalStream` contract; `bid_value` uses `parseFloat` + `isFinite` guard (not `Number()` which coerces `''` to 0); migration-existence guard ensures mig 146 has been applied before any column reads:
-
-```js
-// Inside pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => { ... })
-// AFTER getDbTimestamp + loadMarketplaceConfigs + validateLogicVars (existing).
-
-// v2 fold #9: migration-existence guard. Throws cleanly if mig 146 not applied yet.
-const { rows: colCheck } = await pool.query(
-  `SELECT column_name FROM information_schema.columns
-    WHERE table_name = 'coa_applications'
-      AND column_name IN ('matched_status','matched_rule','unmapped_status','unmapped_decision')`,
-);
-const expectedCols = new Set(['matched_status','matched_rule','unmapped_status','unmapped_decision']);
-const foundCols = new Set(colCheck.map((r) => r.column_name));
-const missing = [...expectedCols].filter((c) => !foundCols.has(c));
-if (missing.length > 0) {
-  throw new Error(
-    `[classify-lifecycle-phase] migration 146 not applied — missing columns on coa_applications: ` +
-    `${missing.join(', ')}. Apply migrations/146_e2_coa_audit_columns.sql before running E.2.`,
-  );
-}
-
-// Build universal_stream_catalog lookup Map (column aliases bridge schema names).
-// v2 fold #7: parseFloat + isFinite guard for bid_value avoids Number('') = 0 trap.
-const catalogByStatusSource = new Map();
-const { rows: catalogRows } = await pool.query(
-  `SELECT seq,
-          lifecycle_group AS "group",
-          lifecycle_block AS "block",
-          lifecycle_stage AS "stage",
-          phase, bid_value, source, status
-     FROM universal_stream_catalog`,
-);
-for (const r of catalogRows) {
-  // v4 fold v3-11: bid_value is DECIMAL(3,2) in DB but parsed as float here.
-  // Acceptable: 0-1 range, non-financial use case, used for forecast weighting only.
-  // If precision requirements ever increase, migrate to decimal.js or string handling.
-  const bvNum = r.bid_value === null ? null : parseFloat(r.bid_value);
-  const bidValueSafe = (bvNum === null || !Number.isFinite(bvNum)) ? null : bvNum;
-  catalogByStatusSource.set(`${r.source}:${r.status}`, Object.freeze({
-    seq: r.seq,
-    group: r.group,
-    block: r.block,
-    stage: r.stage,
-    phase: r.phase,
-    bid_value: bidValueSafe,
-  }));
-}
-
-// Startup assertion: catalog has at least one coa.status row.
-const hasCoaStatusRows = Array.from(catalogByStatusSource.keys())
-  .some((k) => k.startsWith('coa.status:'));
-if (!hasCoaStatusRows) {
-  throw new Error(
-    '[classify-lifecycle-phase] universal_stream_catalog has no coa.status rows — ' +
-    'CoA classification cannot proceed. Verify migration 129 seed.',
-  );
-}
-```
-
-**CoA stream SELECT** (v1 fold #18) — extended to carry `lead_id`, old phase, and the cohort-key dimensions for `lifecycle_transitions`:
-
-```js
-for await (const row of pipeline.streamQuery(
-  pool,
-  `SELECT ca.id,
-          ca.lead_id,
-          ca.decision,
-          ca.linked_permit_num,
-          ca.status,
-          ca.last_seen_at,
-          ca.lifecycle_phase  AS old_phase,        -- v2 fold #2: carry old phase for transitions INSERT
-          ca.lifecycle_seq    AS old_seq,
-          ca.permit_type,
-          ca.project_type,
-          ca.coa_type_class,
-          ca.neighbourhood_id,
-          ca.matched_rule,                          -- v4 fold v3-2: backfill predicate (NOT matched_status — see Part 1)
-          CASE
-            WHEN ca.last_seen_at IS NULL THEN NULL
-            ELSE GREATEST(0, EXTRACT(EPOCH FROM ($1::timestamptz - ca.last_seen_at)) / 86400.0)
-            -- Note: GREATEST(0, ...) handles clock-skew / future-dated last_seen_at defensively.
-          END::float AS days_since_activity
-     FROM coa_applications ca
-    WHERE ca.lifecycle_classified_at IS NULL
-       OR ca.last_seen_at > ca.lifecycle_classified_at
-       OR ca.matched_rule IS NULL`,
-  [RUN_AT],
-)) {
-  // ...
-}
-```
-
-**Classifier call + batch push** (v1 folds #1, #2, #3):
-
-```js
-const result = classifyCoaPhase({
-  decision: row.decision,
-  linked_permit_num: row.linked_permit_num,
-  status: row.status,
-  daysSinceActivity: row.days_since_activity,
-  stallThresholdDays: COA_STALL_THRESHOLD_DAYS,
-});
-// E.1 substrate authoritative phase (NEVER catalogRow.phase per Observability v4 fold #104).
-const catalogRow = mapToUniversalStream(catalogByStatusSource, result.matchedStatus, 'coa.status');
-
-// Telemetry — catalog poisoning detected on a live classification.
-// v2 fold #8: split into TWO counters so operators can distinguish triage paths:
-//   - catalog_status_missing_count: CKAN status not in catalog (add to seed)
-//   - catalog_invalid_phase_count:  status present but catalogRow.phase non-standard (fix seed)
-// Discrimination via post-lookup check (re-query the Map directly — cheap).
-if (result.matchedStatus != null) {
-  const rawCatalogRow = catalogByStatusSource.get(`coa.status:${result.matchedStatus}`);
-  if (rawCatalogRow == null) {
-    catalogStatusMissingCount++;       // (a) status missing from catalog
-  } else if (catalogRow == null) {
-    catalogInvalidPhaseCount++;        // (b) catalog row found but phase non-standard
-  }
-  // (Note: rule 9 catchall returns matchedStatus=null, so this whole block is skipped — correct.)
-}
-
-coaBatch.push({
-  id: row.id,
-  lead_id: row.lead_id,
-  old_phase: row.old_phase,                          // v1 fold #2: for transitions INSERT
-  old_seq:   row.old_seq,                            // v2 fold #1 (CRIT): missing in v2 → undefined → corrupted from_seq
-  permit_type: row.permit_type,
-  project_type: row.project_type,
-  coa_type_class: row.coa_type_class,
-  neighbourhood_id: row.neighbourhood_id,
-  // E.1 substrate authoritative — used as lifecycle_phase write target
-  phase: result.phase,
-  stalled: result.stalled,
-  // Granular Universal Stream columns (catalogRow.* — null on catchall or catalog miss)
-  lifecycle_seq:   catalogRow?.seq ?? null,
-  lifecycle_group: catalogRow?.group ?? null,
-  lifecycle_block: catalogRow?.block ?? null,
-  lifecycle_stage: catalogRow?.stage ?? null,
-  bid_value:       catalogRow?.bid_value ?? null,
-  // New persisted audit columns (mig 146)
-  matched_status:  result.matchedStatus,
-  matched_rule:    result.matchedRule,
-  unmapped_status: result.unmappedStatus,
-  unmapped_decision: result.unmappedDecision,
-});
-
-// Distribution accumulators (NOT passed to DeepSeek — stored in pipeline_runs.records_meta only).
-ruleDistribution.set(result.matchedRule, (ruleDistribution.get(result.matchedRule) || 0) + 1);
-phaseDistribution.set(result.phase ?? 'null', (phaseDistribution.get(result.phase ?? 'null') || 0) + 1);
-if (result.matchedStatus != null) {
-  matchedStatusCounts.set(
-    result.matchedStatus,
-    (matchedStatusCounts.get(result.matchedStatus) || 0) + 1,
-  );
-}
-if (result.stalled) coaStalledCount++;
-if (result.unmappedStatus) unmappedStatusCount++;
-if (result.unmappedDecision) unmappedDecisionCount++;
-```
-
-**Counter declarations** (v4 fold v3-5 — Independent HIGH; `coaPhaseTransitionsCount` was referenced in the audit_table block but never initialized in v3 plan body): the following counters are declared alongside the existing `dirtyCoAsCount` / `coasUpdated` variables (script line ~877-878), and incremented at the points indicated:
-
-```js
-// Existing — unchanged
-let dirtyCoAsCount = 0;
-let coasUpdated = 0;          // RENAMED conceptually to "rows updated" per v2 fold #12; metric emitted as `coa_rows_updated`
-
-// NEW counters introduced by E.2
-let coaStalledCount = 0;            // incremented per row in stream loop
-let unmappedStatusCount = 0;        // incremented per row
-let unmappedDecisionCount = 0;      // incremented per row
-let catalogStatusMissingCount = 0;  // incremented per row (status missing from catalog Map)
-let catalogInvalidPhaseCount = 0;   // incremented per row (catalog row exists but phase non-standard)
-let coaPhaseTransitionsCount = 0;   // v4 fold v3-5: incremented += phaseChangedBatch.length inside withTransaction (after INSERT)
-const ruleDistribution = new Map();
-const phaseDistribution = new Map();
-const matchedStatusCounts = new Map();
-```
-
-And inside the `withTransaction` callback, after the `lifecycle_transitions` INSERT block:
-
-```js
-coaPhaseTransitionsCount += phaseChangedBatch.length;
-```
-
-**Batch size** (v1 fold #1 — 4-way convergent):
-
-```js
-// v2 fold #1: with unnest array params, total bind count = 13 (12 arrays + 1 timestamp)
-// regardless of batch size. Param limit (65535) does NOT constrain batch size in
-// unnest form. Memory budget at 5000 rows × 12 columns × ~50 bytes ≈ 3 MB per batch
-// (cold heap allocation), comfortable for Node default heap. Chosen for round-trip
-// efficiency: 5K rows per batch = ~7 batches on 33K-row first-run.
-const COA_BATCH_SIZE = 5000;
-```
-
-**`buildCoaUpdateSQL` rewrite** — combines main UPDATE + `lifecycle_classified_at` UPDATE into ONE statement via single `withTransaction` (v1 fold on `flushCoaBatch` two-statement merge), AND emits `lifecycle_transitions` rows from the batch (NOT from RETURNING — fold #2):
-
-```sql
--- Main UPDATE: 11 data columns + lifecycle_classified_at, with full IS DISTINCT FROM
--- on all catalog-derived columns (v1 fold #14: explicit catalog evolution coverage).
-WITH updated AS (
-  UPDATE coa_applications ca SET
-    lifecycle_phase           = upd.phase,
-    lifecycle_stalled         = upd.stalled,
-    lifecycle_seq             = upd.lifecycle_seq,
-    lifecycle_group           = upd.lifecycle_group,
-    lifecycle_block           = upd.lifecycle_block,
-    lifecycle_stage           = upd.lifecycle_stage,
-    bid_value                 = upd.bid_value,
-    matched_status            = upd.matched_status,
-    matched_rule              = upd.matched_rule,
-    unmapped_status           = upd.unmapped_status,
-    unmapped_decision         = upd.unmapped_decision,
-    lifecycle_classified_at   = $13::timestamptz
-  FROM (
-    SELECT * FROM unnest(
-      $1::int[],          -- ids
-      $2::text[],         -- phases (nullable)
-      $3::boolean[],      -- stalleds
-      $4::int[],          -- seqs (nullable)
-      $5::text[],         -- groups (nullable)
-      $6::text[],         -- blocks (nullable)
-      $7::text[],         -- stages (nullable)
-      $8::decimal[],      -- bid_values (nullable)
-      $9::text[],         -- matched_statuses (nullable)
-      $10::smallint[],    -- matched_rules
-      $11::boolean[],     -- unmapped_status flags
-      $12::boolean[]      -- unmapped_decision flags
-    ) AS u(id, phase, stalled, lifecycle_seq, lifecycle_group, lifecycle_block,
-           lifecycle_stage, bid_value, matched_status, matched_rule,
-           unmapped_status, unmapped_decision)
-  ) upd
-  WHERE ca.id = upd.id
-    AND (ca.lifecycle_phase           IS DISTINCT FROM upd.phase
-      OR ca.lifecycle_stalled         IS DISTINCT FROM upd.stalled
-      OR ca.lifecycle_seq             IS DISTINCT FROM upd.lifecycle_seq
-      OR ca.lifecycle_group           IS DISTINCT FROM upd.lifecycle_group
-      OR ca.lifecycle_block           IS DISTINCT FROM upd.lifecycle_block
-      OR ca.lifecycle_stage           IS DISTINCT FROM upd.lifecycle_stage
-      OR ca.bid_value                 IS DISTINCT FROM upd.bid_value
-      OR ca.matched_status            IS DISTINCT FROM upd.matched_status
-      OR ca.matched_rule              IS DISTINCT FROM upd.matched_rule
-      OR ca.unmapped_status           IS DISTINCT FROM upd.unmapped_status
-      OR ca.unmapped_decision         IS DISTINCT FROM upd.unmapped_decision)
-  RETURNING ca.id
-)
-SELECT 1 FROM updated;  -- materialize the CTE so PG executes the UPDATE
-```
-
-**`lifecycle_transitions` INSERT** — separate SQL statement in the SAME `withTransaction`. Uses old_phase from the JS batch (NOT RETURNING):
-
-```js
-await pipeline.withTransaction(pool, async (client) => {
-  // Step A: main UPDATE (above)
-  const upd = await client.query(MAIN_UPDATE_SQL, [...arrays, RUN_AT]);
-  coasUpdated += upd.rowCount || 0;
-
-  // Step B: lifecycle_transitions INSERT for rows where phase OR seq changed.
-  // v2 fold #10 (3-way convergent): filter expanded to include seq changes so
-  // catalog evolution that updates seq-without-phase still produces ledger rows.
-  // Mirrors the IS DISTINCT FROM coverage in the main UPDATE (phase + seq are
-  // the two ledger-meaningful columns; group/block/stage/bid_value derive from seq).
-  // For first-classification rows, old_phase + old_seq are NULL — that's the
-  // correct from_phase per Spec 42 §6.6.B (matches Phase 2c permit-side line 992).
-  const phaseChangedBatch = batch.filter((b) => {
-    const phaseChanged = (b.old_phase ?? null) !== (b.phase ?? null);
-    const seqChanged   = (b.old_seq   ?? null) !== (b.lifecycle_seq ?? null);
-    return phaseChanged || seqChanged;
-  });
-  if (phaseChangedBatch.length > 0) {
-    // v4 fold v3-1 (Gemini + DeepSeek CRIT convergent): ON CONFLICT DO NOTHING
-    // per Spec 47 §6.5. Idempotency model:
-    //   - PRIMARY:   JS phaseChangedBatch filter (only inserts on phase/seq change vs DB snapshot)
-    //   - DEFENSE:   DB UNIQUE INDEX uix_lifecycle_transitions_idempotency (lead_id, transitioned_at)
-    //                added in mig 146; ON CONFLICT (lead_id, transitioned_at) DO NOTHING
-    // Within a single run, transitioned_at = RUN_AT (constant) — only one row per lead can land.
-    // Across runs, transitioned_at advances; legit re-classifications still produce new rows.
-    // Crash-and-retry: withTransaction rolls back UPDATE + INSERT atomically; on retry, the
-    // stream re-reads the unchanged DB state (lifecycle_classified_at still NULL) and reapplies.
-    await client.query(
-      `INSERT INTO lifecycle_transitions
-         (lead_id, from_phase, to_phase, from_seq, to_seq,
-          transitioned_at, permit_type, project_type,
-          coa_type_class, neighbourhood_id)
-       SELECT * FROM unnest(
-         $1::text[],     -- lead_ids
-         $2::text[],     -- from_phases (nullable, from JS batch.old_phase)
-         $3::text[],     -- to_phases
-         $4::int[],      -- from_seqs (nullable)
-         $5::int[],      -- to_seqs (nullable)
-         $6::timestamptz[],
-         $7::text[],     -- permit_types
-         $8::text[],     -- project_types
-         $9::text[],     -- coa_type_classes
-         $10::bigint[]   -- neighbourhood_ids
-       ) AS t(lead_id, from_phase, to_phase, from_seq, to_seq,
-              transitioned_at, permit_type, project_type, coa_type_class, neighbourhood_id)
-       ON CONFLICT (lead_id, transitioned_at) DO NOTHING`,
-      [
-        phaseChangedBatch.map((b) => b.lead_id),
-        phaseChangedBatch.map((b) => b.old_phase),
-        phaseChangedBatch.map((b) => b.phase),
-        phaseChangedBatch.map((b) => b.old_seq),
-        phaseChangedBatch.map((b) => b.lifecycle_seq),
-        phaseChangedBatch.map(() => RUN_AT),
-        phaseChangedBatch.map((b) => b.permit_type),
-        phaseChangedBatch.map((b) => b.project_type),
-        phaseChangedBatch.map((b) => b.coa_type_class),
-        phaseChangedBatch.map((b) => b.neighbourhood_id),
-      ],
-    );
-  }
-});
-```
-
-The two-statement merge: instead of running a third UPDATE for `lifecycle_classified_at`, the new main UPDATE includes it in the SET clause. Eliminates a round-trip per batch.
-
-### Part 3 — Defensive `lead_id LIKE 'coa:%'` guards (with consistent telemetry)
-
-**`scripts/compute-trade-forecasts.js`:**
-
-SELECT extension (v1 fold #9 — cite Phase B mig 132 trigger): add `p.lead_id` to the SOURCE_SQL. `permits.lead_id` is populated by a `BEFORE INSERT OR UPDATE` trigger installed by `migrations/132_extend_permits_lead_id.sql` (Phase B); guaranteed non-NULL for all permit rows.
-
-Guard (v1 fold #13 — consistent telemetry):
-
-```js
-// v2 fold #13: consistent telemetry across both downstream guards.
-// E.2 ships the producer of CoA-side P3/P4/P19/P20 on coa_applications.lifecycle_phase
-// (via classify-lifecycle-phase.js). compute-trade-forecasts.js doesn't UNION CoA rows
-// today, so this guard is inert — but it ships now so Phase F's UNION is a drop-in
-// (no consumer code change needed).
-let coaSkippedCount = 0;
-let coaSkippedFirstWarned = false;
-
-// In per-row loop:
-if (typeof row.lead_id === 'string' && row.lead_id.startsWith('coa:')) {
-  coaSkippedCount++;
-  if (!coaSkippedFirstWarned) {
-    pipeline.log.warn('[compute-trade-forecasts]',
-      `Skipping CoA row from forecast generation (lead_id=${row.lead_id}, phase=${row.lifecycle_phase}). ` +
-      `Inert in E.2 (no CoA UNION source yet) — Phase F replaces this with proper CoA-side logic.`);
-    coaSkippedFirstWarned = true;
-  }
-  continue;
-}
-```
-
-`coaSkippedCount` is emitted in the audit_table:
-
-```js
-{ metric: 'coa_skipped_count', value: coaSkippedCount, threshold: null, status: 'INFO' }
-```
-
-**`scripts/update-tracked-projects.js`:**
-
-SELECT extension: add `p.lead_id AS permit_lead_id` (aliased to distinguish from a future `tracked_projects.lead_id` column — flagged in Phase F note for fold #20).
-
-Guard at line 189 (before `PHASE_ORDINAL[row.lifecycle_phase]`):
-
-```js
-// v2 fold #13: consistent telemetry pattern (matches compute-trade-forecasts.js).
-if (typeof row.permit_lead_id === 'string' && row.permit_lead_id.startsWith('coa:')) {
-  coaSkippedCount++;
-  if (!coaSkippedFirstWarned) {
-    pipeline.log.warn('[tracked-projects]',
-      `Skipping CoA row (permit_lead_id=${row.permit_lead_id}, phase=${row.lifecycle_phase}). ` +
-      `Inert in E.2; Phase F handoff: tracked_projects JOIN is structurally permit-only today ` +
-      `(no coa_application_id FK or lead_id column on tracked_projects) — Phase F needs deeper ` +
-      `SELECT refactor to accommodate CoA-side rows, not just a UNION on the source.`);
-    coaSkippedFirstWarned = true;
-  }
-  continue;
-}
-```
-
-Audit row addition: `{ metric: 'coa_skipped_count', value: coaSkippedCount, threshold: null, status: 'INFO' }`.
-
-### Part 4 — 7-metric audit_table contract (dynamic status + corrected baselines)
-
-**Dynamic status helper** (v1 fold #7 + v4 fold v3-8 — rename for scope clarity):
-
-```js
-// v4 fold v3-8 (Gemini + DeepSeek convergent MED): renamed to make scope explicit.
-// This helper covers ONLY "lower-is-better" thresholds (e.g., unmapped counts).
-// For zero-tolerance metrics (catalog_invalid_phase_count), use inline ternary:
-//   status: count === 0 ? 'PASS' : 'FAIL'
-// Two patterns coexist intentionally; documented to prevent drift.
-function computeWarnableAuditStatus(value, { passAt, warnAt }) {
-  if (value <= passAt) return 'PASS';
-  if (value <= warnAt) return 'WARN';
-  return 'FAIL';
-}
-```
-
-**Audit rows** — the 7 CoA-side metrics + existing rows:
-
-```js
-const auditRows = [
-  // Existing permit-side (unchanged from current script)
-  { metric: 'permits_dirty',           value: dirtyPermitsCount, threshold: null,       status: 'INFO' },
-  { metric: 'permits_updated',         value: permitsUpdated,    threshold: null,       status: 'INFO' },
-  // CoA-side existing
-  { metric: 'coa_evaluated',           value: dirtyCoAsCount,    threshold: null,       status: 'INFO' },
-  // v2 fold #12: rename from coa_phase_changes (misleading — counted ALL column changes,
-  // not just phase changes). coa_rows_updated = total row-UPDATEs (audit cols + phase + etc.).
-  // coa_phase_transitions_count = actual phase changes (from phaseChangedBatch filter).
-  { metric: 'coa_rows_updated',              value: coasUpdated,             threshold: null, status: 'INFO' },
-  { metric: 'coa_phase_transitions_count',   value: coaPhaseTransitionsCount, threshold: null, status: 'INFO' },
-  // Existing permit-side stall (kept separate per Observability v4 fold #105)
-  { metric: 'stalled_count',           value: permitStalledCount, threshold: null,      status: 'INFO' },
-  // E.2 NEW — 7 CoA-side observability metrics
-  { metric: 'coa_stalled_count',
-    value: coaStalledCount, threshold: null, status: 'INFO' },
-  { metric: 'unmapped_status_count',
-    value: unmappedStatusCount,
-    threshold: '<=3 WARN, <=1 PASS',
-    status: computeWarnableAuditStatus(unmappedStatusCount, { passAt: 1, warnAt: 3 }) },
-  { metric: 'unmapped_decision_count',
-    value: unmappedDecisionCount,
-    threshold: '<=5 WARN, <=3 PASS',
-    status: computeWarnableAuditStatus(unmappedDecisionCount, { passAt: 3, warnAt: 5 }) },
-  // v2 fold #8: split into 2 metrics for triage clarity
-  { metric: 'catalog_status_missing_count',
-    value: catalogStatusMissingCount,
-    threshold: '<=3 WARN, <=1 PASS',
-    status: computeWarnableAuditStatus(catalogStatusMissingCount, { passAt: 1, warnAt: 3 }) },
-  { metric: 'catalog_invalid_phase_count',
-    value: catalogInvalidPhaseCount,
-    threshold: '=0 PASS, >0 FAIL',
-    status: catalogInvalidPhaseCount === 0 ? 'PASS' : 'FAIL' },
-  // Existing CQA
-  { metric: 'unclassified_count', value: unclassifiedCount, threshold: '<= 100', status: 'PASS' },
-  { metric: 'sys_velocity_rows_sec', value: velocity, threshold: null, status: 'INFO' },
-  { metric: 'sys_duration_ms', value: durationMs, threshold: null, status: 'INFO' },
-];
-```
-
-**Threshold justification** (v1 fold #8 corrected):
-- `unmapped_status_count` (≤3 WARN, ≤1 PASS): all 22 §2.5.c statuses are mapped → baseline 0; threshold accommodates CKAN drift.
-- `unmapped_decision_count` (≤5 WARN, ≤3 PASS): §2.5.b row 52 (`'Postponed'`, 1 row) + row 53 (`'Oct 29, 2019'`, 1 row) = **baseline 2**. Row 54 (`'decision not made - appeal was made due to that'`) is correctly classified by rule 6 via `.includes('decision not made')` → P2 (NOT in catchall). Threshold `≤3 PASS` gives 1-step drift headroom above baseline; `≤5 WARN` gives 3-step drift before FAIL.
-- `catalog_invalid_phase_count` (=0 PASS): **scoping (v1 fold #5)**: this metric is incremented ONLY when `mapToUniversalStream()` returns null due to non-standard `catalogRow.phase` during live CoA classification. The 13 non-CoA poisoned catalog rows (seq 35, 47, 50, 77-87, 99-110) are NEVER counted because they're not reachable via `source='coa.status'` lookups. Steady state = 0; any non-zero indicates CKAN added a CoA status whose catalog row has a non-standard `.phase` (catalog seed bug).
-
-**Distribution metrics** (v1 fold #19 — surfaced for DeepSeek narrative; observer-automated drift detection is deferred to Spec 48 Improvement C/D):
-
-```js
-records_meta: {
-  // ... existing keys
-  coa_rule_distribution:        Object.fromEntries(ruleDistribution),
-  coa_phase_distribution:       Object.fromEntries(phaseDistribution),
-  coa_matched_status_top20:     buildTop20WithOther(matchedStatusCounts),
-  // NOTE (v1 fold #19): records_meta distributions feed DeepSeek narrative analysis
-  // via `scripts/observe-chain.js` context JSON. The observer does NOT compute
-  // automated drift % for these — that's deferred to Spec 48 Improvement D
-  // (queued-not-authorized). Operators should treat distribution anomalies as
-  // narrative signals from the observer, not as PASS/WARN/FAIL gates.
-},
-```
-
-`buildTop20WithOther` (v2 fold #13 — inline helper definition):
-
-```js
-function buildTop20WithOther(map) {
-  const sorted = [...map.entries()].sort((a, b) => b[1] - a[1]);
-  const top = sorted.slice(0, 20);
-  const tail = sorted.slice(20);
-  const result = Object.fromEntries(top);
-  if (tail.length > 0) {
-    result.__other__ = tail.reduce((sum, [, v]) => sum + v, 0);
-  }
-  return result;
-}
-```
-
-**`catalog_invalid_phase_count` is in `audit_table.rows` ONLY** (v1 fold #12 — single source of truth). Not duplicated in `records_meta`.
-
-### Part 5 — Spec amendments (12 — anchor-resolution-heavy)
-
-(Same as v1 — 11 anchor-resolution edits for E.1 placeholders + 1 threshold replacement. Anchors filled post-commit: `7003683` (E.1) + `[E.2-ANCHOR]` (this commit).)
-
-### Database Impact
-
-**YES — migration 146 ships.** All 4 columns + 2 partial indices + CHECK (NOT VALID + VALIDATE pattern). Migration time `<100ms` on 33K rows (no rewrite). Backfill auto-triggered via classifier predicate `OR matched_status IS NULL` (v2 fold #21).
-
-### Audit Observability (Spec 48 lens)
-
-**Corrected first-run distribution estimates** (v1 fold #6 — Observability CRIT):
-
-| Phase | First-run row count (post-E.2) | Source |
-|---|---|---|
-| `P20` (Closed/Complete) | **28,956** | §2.5.c rows 90+91 (28,948 + 8) |
-| `P19` (Refused/Withdrawn/Cancelled) | **964** | §2.5.c rows 82+88+89 (59 + 904 + 1) |
-| `P4` (Final and Binding) | **1** | §2.5.c row 83 |
-| `P3` (Approved/Conditional Consent/post-decision) | **1,716** | §2.5.c rows 79+80+81+84+85+86+87 (326+246+554+24+1+347+218) |
-| `P2` (Review/Deferred) | **1,126** | §2.5.c rows 72-78 (54+74+118+317+1+292+270) |
-| `P1` (Intake) | **289** | §2.5.c rows 70+71 (10+279) |
-
-**Sum: 33,052 rows** = total `coa_applications` row count. No row is unmapped under §2.5.c (the catchall fires only on drift).
-
-**First-E.2-run mitigation:** before authorizing the first staging E.2 run, operator pre-ack in commit message / PR description:
-
-> _Expected first-classified-run batch — Phase E.2 introduces ~33,052 CoA reclassification from NULL → P1/P2/P3/P4/P19/P20. Expected distribution: P20: ~28,956; P19: ~964; P3: ~1,716; P2: ~1,126; P1: ~289; P4: 1. Spec 48 observer step-change anomalies on velocity/duration/records_total for `classify-lifecycle-phase` step are expected on first E.2 run and should be manually annotated as "first-classified-run baseline-establish, not a regression." **Annotation must appear in BOTH `docs/reports/pipeline-observability/permits-followup.md` AND `docs/reports/pipeline-observability/coa-followup.md`** since `classify-lifecycle-phase.js` runs in both chains and each chain produces its own observer report. Distribution-level drift (`coa_*_distribution` in records_meta) is NOT currently surfaced to DeepSeek narrative — operators query `pipeline_runs` directly for distribution comparison using:_
->
-> ```sql
-> -- v4 fold v3-6 — manual distribution inspection (until Spec 48 Improvement D ships).
-> -- Surfaces the 3 records_meta distributions for the most-recent classify-lifecycle-phase run.
-> SELECT
->   pipeline,
->   started_at,
->   records_meta->'coa_rule_distribution'         AS rule_distribution,
->   records_meta->'coa_phase_distribution'        AS phase_distribution,
->   records_meta->'coa_matched_status_top20'      AS matched_status_top20
-> FROM pipeline_runs
-> WHERE pipeline LIKE '%:classify_lifecycle_phase'
-> ORDER BY started_at DESC
-> LIMIT 1;
-> ```
->
-> _Run this query manually after the first E.2 production run on BOTH chains (`permits:classify_lifecycle_phase` AND `coa:classify_lifecycle_phase`). Spec 48 Improvement C (pinned baseline) + Improvement D (records_meta to DeepSeek) are queued-not-authorized — manual annotation + manual query are the active mitigations._
-
-**Observer integration clarification** (v1 fold #19): the Spec 48 observer (`scripts/observe-chain.js`) reads `audit_table.rows` for automated WARN/FAIL detection. `records_meta` distributions (`coa_rule_distribution` etc.) are surfaced to DeepSeek's narrative context only — no automated drift-percent computation today. Operators should treat distribution anomalies as DeepSeek narrative signals, not gate failures.
-
-### Tests
-
-1. **`src/tests/lifecycle-phase.logic.test.ts`** — NO CHANGE (substrate-only).
-
-2. **`src/tests/classify-lifecycle-phase.infra.test.ts`** (NEW or EXTEND) — integration tests:
-   - **First-classification run** (5 fixture rows × representative status+decision producing P1/P2/P3/P4/P19/P20): assert 11 columns populated + `lifecycle_transitions` inserted with `from_phase=NULL` + audit_table emits all 7 new metrics.
-   - **Second-classification run with phase change** (v1 fold #16): modify 2 fixture rows' status/decision to drive a different phase; re-run; assert `lifecycle_transitions` 2nd-batch rows have `from_phase` = first-run's phase (NOT NULL).
-   - **Catchall regression**: `status='UNKNOWN_XYZ'` → `unmapped_status: true`, `matched_status: null`, `matched_rule: 9`, `lifecycle_seq: null`, audit `unmapped_status_count: 1` with computed `status: 'WARN'`.
-   - **Catalog source assertion** (v1 fold #15): mock catalog with 0 `coa.status` rows; assert classifier throws at startup.
-   - **Catalog column-name correctness** (v1 fold #3): assert the catalog Map build SQL doesn't reference `group`/`block`/`stage` literally (i.e., the SELECT aliases are present).
-   - **IS DISTINCT FROM coverage** (v1 fold #14): run twice with NO input changes — assert 2nd run has 0 UPDATEs (dead-update guard fires).
-
-3. **`src/tests/compute-trade-forecasts.infra.test.ts`** (EXTEND): synthetic CoA-style row in source → no forecast generated; `coa_skipped_count` audit row > 0 with first-row WARN logged.
-
-4. **`src/tests/update-tracked-projects.infra.test.ts`** (EXTEND): same pattern; `coa_skipped_count` audit row > 0.
-
-5. **`src/tests/migration-146-coa-audit-columns.infra.test.ts`** (NEW; v4 fold v3-4): applies migration on a clean schema fixture; asserts 4 new columns on `coa_applications` (`matched_status`, `matched_rule`, `unmapped_status`, `unmapped_decision`) + 2 partial indices (`idx_coa_unmapped_status`, `idx_coa_unmapped_decision`) + CHECK constraint `chk_coa_matched_rule_range` (range 0-99) + UNIQUE INDEX `uix_lifecycle_transitions_idempotency` on `lifecycle_transitions(lead_id, transitioned_at)`. **Forward-only test** — DOWN is documented as manual-rollback-only per project convention (embedded comment block); no automated DOWN test (Spec 47 §10 migration UP/DOWN parity is the operator's responsibility, validated by review of the commented DOWN block).
-
-6. **`lead_id` populated assertion** (v1 fold #9): fixture-level assertion in #3 and #4 that `permits.lead_id IS NOT NULL` (trigger from Phase B mig 132).
-
-7. **`computeAuditStatus` boundary tests** (v2 fold #11 — Independent HIGH): parametric test for boundary conditions:
-   - `computeWarnableAuditStatus(0, {passAt: 1, warnAt: 3})` → `'PASS'`
-   - `computeWarnableAuditStatus(1, {passAt: 1, warnAt: 3})` → `'PASS'`  (exact passAt boundary)
-   - `computeWarnableAuditStatus(2, {passAt: 1, warnAt: 3})` → `'WARN'`  (passAt + 1)
-   - `computeWarnableAuditStatus(3, {passAt: 1, warnAt: 3})` → `'WARN'`  (exact warnAt boundary)
-   - `computeWarnableAuditStatus(4, {passAt: 1, warnAt: 3})` → `'FAIL'`  (warnAt + 1)
-   - Off-by-one in boundary semantics would silently miscategorize all 3 thresholded metrics; explicit test prevents drift.
-
-8. **Catalog Map runtime invariant** (v2 fold via DeepSeek LOW): assert `catalogByStatusSource.get('coa.status:Hearing Scheduled')` returns an object with exactly `{seq, group, block, stage, phase, bid_value}` keys (catches a spelling error in SQL aliases that would pass compilation but break runtime mapping).
-
-9. **Migration-existence guard test** (v2 fold #9): mock the pool to return 0 rows from `information_schema.columns` query; assert classifier throws with the migration-missing error message.
-
-10. **Catalog status-missing vs invalid-phase split** (v2 fold #8): fixture with status `'NEW_CKAN_STATUS_XYZ'` NOT in catalog → assert `catalog_status_missing_count++`, NOT `catalog_invalid_phase_count`. Fixture with status that maps to a catalog row with `phase='UNMAPPED→null'` → assert `catalog_invalid_phase_count++`, NOT `catalog_status_missing_count`.
-
-### Standards Compliance
-
-- **Try-Catch Boundary**: existing `pipeline.withAdvisoryLock` envelope; new `withTransaction` wraps UPDATE + lifecycle_transitions INSERT atomically.
-- **Unhappy Path Tests**: catalog source assertion fails → throw before lock acquisition; UPDATE fails mid-batch → transaction rollback covers transitions INSERT; `mapToUniversalStream` returns null on poisoned row → `catalog_invalid_phase_count++`.
-- **logError Mandate**: new catch blocks use `pipeline.log.error('[classify-lifecycle-phase]', err, { context })`.
-- **UI Layout**: N/A.
-- **IS DISTINCT FROM guards on UPDATE** (Engineering Standards §3): all 11 catalog-derived + audit columns in OR-chain (v1 fold #14).
-
-### Spec 47 §R1–R12 Compliance (explicit walkthrough)
-
-`classify-lifecycle-phase.js` is EXTENDED in E.2, not rewritten — every §R1-R12 obligation continues to be satisfied. Explicit per-section adherence:
-
-- **§R1 — SDK imports (MANDATORY):** unchanged. `pipeline = require('./lib/pipeline')`; `loadMarketplaceConfigs`; new addition of `classifyCoaPhase` + `mapToUniversalStream` from `./lib/lifecycle-phase` (E.1 substrate).
-- **§R2 — Advisory lock ID:** `ADVISORY_LOCK_ID = 84` (line 495 — Spec 47 §A.5 registry). NO CHANGE.
-- **§R3 — Batch size constants:** `COA_BATCH_SIZE = 5000` — heap-bounded (v1 fold #1). Replaces v1's incorrect `Math.floor(65535 / N)` reasoning. With unnest array form, total bind params = 13 (12 arrays + 1 timestamp), regardless of batch size. **§9.2 (max param limit) does NOT constrain unnest** — the formula in §9.2 applies to VALUES (...), ... form.
-- **§R3.5 — Startup timestamp (DB clock):** `RUN_AT = await pipeline.getDbTimestamp(pool)` already at line 514. **v2 fold #16 note:** existing script runs `getDbTimestamp` INSIDE the `withAdvisoryLock` callback (line 506 → line 514), not before the lock per the Spec 47 §6.1 generic skeleton. This is INTENTIONAL for transaction-scoped advisory locks: the timestamp must reflect the post-lock-acquired transaction state to keep audit metadata consistent with the writes that the lock protects. Spec 47 skeleton's pre-lock RUN_AT is for scripts that don't take a transaction-scoped lock. All UPDATE/INSERT timestamps in the rewritten flushCoaBatch reference `$13::timestamptz = RUN_AT` — no `NOW()` or `new Date()` in the loop.
-- **§R4 — Config load + Zod validation:** `loadMarketplaceConfigs(pool, 'classify-lifecycle-phase')` already in place. E.2 adds NO new logic_variables (thresholds for the 3 new audit metrics are STRUCTURAL constants per Spec 47 §4.1 — operator should NOT tune them via Control Panel; tuning would require coordinated migration + spec amendment).
-- **§R5 — Startup guards:** existing guards preserved. **E.2 adds new startup guards INSIDE the `withAdvisoryLock` callback** (v2 fold #5 — preserves the existing invariant at script line 502 that ALL state-dependent initialization runs inside the lock callback for absolute isolation):
-  - Migration 146 existence check (v2 fold #9): query `information_schema.columns` for the 4 new columns; throw with clear error if mig 146 not yet applied.
-  - Catalog Map build returns 0 rows → throw.
-  - Catalog has 0 `coa.status` rows → throw (v1 fold #15).
-  Guards execute INSIDE the lock callback after `getDbTimestamp` + `loadMarketplaceConfigs` + `validateLogicVars`. Concurrent script instances serialize on the lock; the second instance gets `acquired: false` and exits via §R12.
-- **§R6 — Advisory lock via SDK helper:** `pipeline.withAdvisoryLock(pool, 84, async () => {...})` envelope unchanged. All new code lands inside the callback.
-- **§R7 — Data read (streamQuery for >10K rows):** existing CoA stream loop unchanged structurally. SELECT column list expanded (v1 fold #18: +`lead_id`, `lifecycle_phase AS old_phase`, `lifecycle_seq AS old_seq`, `permit_type`, `project_type`, `coa_type_class`, `neighbourhood_id`, `matched_status`). Stream remains `pipeline.streamQuery` — full 33,052-row scan on first run requires streaming (per §6.1: "tables expected to return >10K rows MUST use streamQuery").
-- **§R8 — Computation (pure functions in scripts/lib/):** E.1 substrate (`classifyCoaPhase`, `mapToUniversalStream`, `computeStallFromActivity`, `isDeferredDecisionVariant`, `normalizeCoaStatus`) is consumed unchanged. No new pure function added in E.2.
-- **§R9 — Atomic write:** the new flushCoaBatch combines the main UPDATE + `lifecycle_transitions` INSERT in a single `pipeline.withTransaction(pool, async (client) => {...})`. If the INSERT fails after the UPDATE, the transaction rollback restores `coa_applications` to pre-batch state — preserves §1's first non-negotiable: "Never leave the DB in partial state."
-- **§R10 — PIPELINE_SUMMARY with audit_table:** extended per Part 4. 7 new CoA-side audit rows (4 scalars with thresholds + 3 distribution keys in records_meta). audit_table verdict computed as `'FAIL'` if any row has `status='FAIL'`, else `'WARN'` if any has `status='WARN'`, else `'PASS'` (existing logic preserved).
-- **§R11 — PIPELINE_META:** existing `pipeline.emitMeta` already lists permits + coa_applications reads and writes. E.2 expands the `coa_applications` writes list to include `matched_status`, `matched_rule`, `unmapped_status`, `unmapped_decision`, `lifecycle_seq`, `lifecycle_group`, `lifecycle_block`, `lifecycle_stage`, `bid_value`. Adds `lifecycle_transitions` to writes (new table writer). Existing `permit_phase_transitions` writer entry continues unchanged.
-- **§R12 — CQA gate:** existing `unclassified_count > 100` gate at end-of-run preserved unchanged. E.2 does NOT add a new throw-to-FAIL gate (the new audit metrics fail via threshold status in the audit_table, not via runtime throw).
-
-**Spec 47 §1 non-negotiables explicit check:**
-- "Never leave the DB in partial state" → §R9 atomic write covers the main UPDATE + transitions INSERT. The catalog Map build is read-only.
-- "Never let an unknown value silently become a wrong value" → rule 9 catchall returns `matchedStatus: null` (NOT a sentinel); `mapToUniversalStream` returns null on poisoned catalog rows; `unmapped_status`/`unmapped_decision`/`catalog_invalid_phase_count` audit metrics surface every drift signal LOUDLY.
-
-### Spec 48 Pipeline Observability Adherence (explicit alignment)
-
-E.2 is the first pipeline run that produces CoA-side audit metrics. Explicit per-section alignment with Spec 48's observer contract:
-
-**Spec 48 §3.1 — DB reads:** the observer reads `pipeline_runs.records_meta.audit_table.rows` for the completed E.2 run + 7-day historical baseline. E.2's audit_table emits **4 scalar rows** with non-null `threshold` and computed `status`:
-1. `unmapped_status_count` (threshold `<=3 WARN, <=1 PASS`, status dynamic)
-2. `unmapped_decision_count` (threshold `<=5 WARN, <=3 PASS`, status dynamic)
-3. `catalog_invalid_phase_count` (threshold `=0 PASS, >0 FAIL`, status dynamic)
-4. `coa_stalled_count` (threshold `null`, status `INFO` — informational, no automated gate)
-
-Plus existing pre-E.2 rows (permits_dirty, permits_updated, coa_evaluated, coa_phase_changes, stalled_count, unclassified_count, sys_velocity_rows_sec, sys_duration_ms) — UNCHANGED.
-
-**Spec 48 §3.2 — DeepSeek narrative context (CORRECTED in v3 per Observability v2 CRIT-1):** the observer's actual code (`scripts/observe-chain.js` lines 200-230) builds the DeepSeek `contextJson` from `stepSummaries` which contain ONLY: `step`, `status`, `verdict` (from `audit_table.verdict`), `duration_ms`, `records_total`, `issues` (WARN/FAIL `audit_table.rows` extracted via `extractIssues()`), `failed_sample`, `vs_baseline`. The raw `records_meta` object — including `coa_rule_distribution`, `coa_phase_distribution`, `coa_matched_status_top20` — is **NOT currently passed to DeepSeek**.
-
-E.2 will write distributions to `pipeline_runs.records_meta` (so the data is queryable post-hoc), but DeepSeek narrative analysis of distributions is **deferred to Spec 48 Improvement D** (queued-not-authorized — see `.cursor/queued_task_spec48_observer_loop_closure.md`). Until Improvement D ships, distribution drift detection is **manual** (operator queries `pipeline_runs` directly or via a one-off SQL).
-
-This invalidates an earlier v2 claim. Operators reading the first-run observer report should NOT expect DeepSeek narrative to discuss `coa_*_distribution` values — those will appear in raw `pipeline_runs.records_meta` only.
-
-**Spec 48 §3.3 — Output format (CORRECTED in v3 per Observability v2 CRIT-2):** `classify-lifecycle-phase.js` runs as a step in BOTH the `permits` chain AND the `coa` chain (per `scripts/manifest.json` lines 70 + 79). The observer derives report path as `${chainId}-followup.md`, so:
-- Permits-chain runs of `classify-lifecycle-phase.js` → audit entries appear in `docs/reports/pipeline-observability/permits-followup.md`
-- Coa-chain runs of `classify-lifecycle-phase.js` → audit entries appear in `docs/reports/pipeline-observability/coa-followup.md`
-
-**Operator pre-ack and first-run annotation apply to BOTH files.** First E.2 production run will produce step-change anomalies in BOTH chains' followup reports (each chain produces its own observer report). Format and anomaly-detection logic identical across both.
-
-**First-E.2-run baseline mitigation (Spec 48 §3.1 baseline behavior + plan Part 4):**
-- Spec 48 Improvement C (`pipeline_baselines` pinned baseline) is queued-not-authorized — see `.cursor/queued_task_spec48_observer_loop_closure.md`.
-- Active mitigation: operator pre-ack in commit message (text in Part 4) + manual annotation of first-run observer report as `[expected first-classified-run batch — not a regression]`.
-- The pre-ack details the CORRECTED first-run distribution estimates (v1 fold #6): P20: 28,956; P19: 964; P3: 1,716; P2: 1,126; P1: 289; P4: 1 — preventing operator misclassification of expected values as anomalies.
-
-**Spec 48 §3.4 — Error handling:** observer wraps all logic in try-catch and never propagates errors to E.2's chain run. NO CHANGE — E.2 doesn't touch the observer.
-
-**Spec 48 §3.5 — PIPELINE_SUMMARY emission (observer's own):** observer emits its own audit_table per Spec 47 §R10. NO IMPACT — E.2 is the producer of the analyzed data, not the observer.
-
-**Spec 48 §2.4 — Trigger:** observer spawned as detached fire-and-forget by `run-chain.js` after the chain lock is released. E.2's `classify-lifecycle-phase.js` runs as a chain step; observer fires after the chain completes. NO IMPACT on E.2's runtime.
-
-**Observer-readable metric naming convention:**
-- Scalar metrics that the observer should threshold-check live in `audit_table.rows[].metric` (CoA-prefixed: `coa_stalled_count`, `unmapped_status_count`, `unmapped_decision_count`, `catalog_invalid_phase_count`).
-- Distribution metrics for DeepSeek narrative live in `records_meta` direct keys (`coa_rule_distribution`, `coa_phase_distribution`, `coa_matched_status_top20`). Distinguished from `audit_table.rows` by JSON structural location.
-
-This separation matches Spec 47 §R10 (scalars only in audit_table.rows) AND Spec 48 §3.1 + §3.2 (observer thresholds scalars; DeepSeek narrates everything else).
-
-### Spec 84 §7 + Engineering Standards §7 Dual Code Path
-
-No new pure functions; TS twin already mirrors substrate. NO CHANGE in E.2.
-
-### Pre-Review Self-Checklist (33 items — v3 expansion)
-
-- (a) Migration 146 ADDs 4 columns + CHECK with NOT VALID + VALIDATE pattern (v1 fold #10); CHECK range 0..99 (v1 fold #17)
-- (b) Migration 146 idempotent (`IF NOT EXISTS`); **DOWN is embedded commented block** in the same SQL file per project convention (v2 fold #2 — separate `*_DOWN.sql` file convention does not exist in this project)
-- (b2) **Migration-existence startup guard** in classify-lifecycle-phase.js checks `information_schema.columns` for the 4 new columns; throws clear error if mig 146 not applied (v2 fold #9)
-- (b3) **Catalog Map build + startup assertions run INSIDE `withAdvisoryLock` callback** (v2 fold #5 — preserves existing race-condition prevention)
-- (c) `classify-lifecycle-phase.js` import block reverts the Option 2 destructure rename
-- (d) Catalog Map built once at startup with **aliased SQL** (`lifecycle_group AS "group"`, etc. — v1 fold #3); **`parseFloat` + `isFinite` guard for `bid_value`** (v2 fold #7 — `Number()` coerces `''` to 0); frozen rows; **catalog source-literal startup assertion** present (v1 fold #15)
-- (e) `classifyCoaPhase` (NOT `classifyCoaPhaseLegacy`) consumed; `mapToUniversalStream` called with `'coa.status'` source
-- (f) **`mapToUniversalStream().phase` NEVER used as `lifecycle_phase` write target** (Observability v4 fold #104 invariant)
-- (g) UPDATE writes 11 columns + `lifecycle_classified_at` **in ONE statement** (v1 fold on `flushCoaBatch` two-statement merge); transitions INSERT in same withTransaction
-- (h) IS DISTINCT FROM on **all 11 columns** (v1 fold #14 — catalog evolution coverage)
-- (i) `COA_BATCH_SIZE = 5000` (heap-bounded, NOT 65535/N — v1 fold #1); unnest takes 13 fixed params regardless of batch size
-- (j) `lifecycle_transitions` INSERT uses **`old_phase` AND `old_seq` from JS batch** (NOT RETURNING — v1 fold #2; **v2 fold #1 CRIT — `old_seq` MUST be in `coaBatch.push`**); first-classification rows have `from_phase=NULL`; subsequent runs have correct `from_phase`
-- (j2) **`phaseChangedBatch` filter checks BOTH phase AND seq changes** (v2 fold #10 — 3-way convergent finding; catalog evolution that updates seq-without-phase still produces ledger rows)
-- (j3) **`lifecycle_transitions` INSERT uses `ON CONFLICT` for idempotency** OR plan documents that the JS filter is the sole idempotency mechanism (v2 fold #6 — Spec 47 §6.5 mandate)
-- (k) Phase 2c initial transitions backfill extended to CoA rows; idempotent
-- (l) 7-metric audit_table emitted: 4 scalars in `audit_table.rows` + 3 distributions in `records_meta`
-- (m) `coa_stalled_count` is SEPARATE row from permit-side `stalled_count` (Observability v4 fold #105)
-- (n) Thresholds with **dynamic status computation** via `computeAuditStatus` helper (v1 fold #7); justification text says baseline=2 not 3 (v1 fold #8)
-- (o) `catalog_invalid_phase_count`: scoping **explicit** — live CoA classifications only (v1 fold #5); single-source in `audit_table.rows` (v1 fold #12); **SPLIT into 2 metrics** (v2 fold #8): `catalog_status_missing_count` (status not in Map) + `catalog_invalid_phase_count` (status present but phase non-standard)
-- (o2) `coa_phase_changes` metric **renamed to `coa_rows_updated`** + new `coa_phase_transitions_count` (v2 fold #12 — `coasUpdated` counts ALL column changes, not just phase changes)
-- (o3) `buildTop20WithOther` helper **defined inline** in Part 4 (v2 fold #13)
-- (p) `compute-trade-forecasts.js` guard: SELECT extended with `p.lead_id` citing Phase B mig 132 (v1 fold #9); **consistent telemetry** (`coa_skipped_count` counter + first-occurrence WARN — v1 fold #13)
-- (q) `update-tracked-projects.js` guard: SELECT extended with `p.lead_id AS permit_lead_id`; same telemetry pattern
-- (r) CoA stream SELECT extended with `lead_id`, `old_phase`, `old_seq`, `permit_type`, `project_type`, `coa_type_class`, `neighbourhood_id`, `matched_status` (v1 folds #18, #21)
-- (s) Backfill predicate extended: `OR matched_status IS NULL` for one-shot first-post-mig run (v1 fold #21)
-- (t) **First-run distribution estimates corrected**: P20: 28,956; P19: 964; P3: 1,716; P2: 1,126; P1: 289; P4: 1 (v1 fold #6)
-- (u) ADVISORY_LOCK_ID = **84** (v1 fold #11, verified at line 495)
-- (v) 12 spec amendments + queued task → closed_task move
-- (w) Tests cover: 1st-run + 2nd-run phase change (v1 fold #16); catalog source assertion (v1 fold #15); IS DISTINCT FROM dead-update (v1 fold #14); migration parity; `permits.lead_id IS NOT NULL` fixture (v1 fold #9)
-- (x) Observer integration framed correctly: scalars drive automated WARN/FAIL via `extractIssues()` reading `audit_table.rows`. **Distributions are STORED in `pipeline_runs.records_meta` but NOT currently passed to DeepSeek `contextJson`** (v2 fold #3 corrects v1 mis-framing). DeepSeek narrative analysis of distributions is deferred to Spec 48 Improvement D (queued-not-authorized).
-- (x2) Operator pre-ack references **BOTH `permits-followup.md` AND `coa-followup.md`** (v2 fold #4): `classify-lifecycle-phase.js` runs in both chains → both followup files receive E.2 metrics.
-- (y) Operator pre-ack of first-classified-run anomaly in commit message
-- (z) Phase F handoff note: `tracked_projects` JOIN is structurally permit-only (v1 fold #20)
-
-### Execution Plan (per WF1 in `.claude/workflows.md`)
-
-- [ ] **Contract Definition:** Migration 146 schema (UP + DOWN); `lifecycle_transitions` row shape (from_phase non-null on subsequent runs).
-- [ ] **Spec & Registry Sync:** 12 spec amendments. Move queued task to closed_task. `npm run system-map`.
-- [ ] **Schema Evolution:** `migrations/146_e2_coa_audit_columns.sql` (single file, UP + commented DOWN block per project convention). Apply to staging copy + verify forward-only via `migration-146-coa-audit-columns.infra.test.ts`.
-- [ ] **Test Scaffolding:** ~7 new/extended tests per Tests section. Red Light: all new tests fail.
-- [ ] **Red Light:** New tests fail; existing test suite green; typecheck passes.
-- [ ] **Implementation:**
-  - Migration 146 (~40 lines, UP + DOWN files)
-  - `classify-lifecycle-phase.js` rewrite (~150 lines: catalog Map build + source assertion + stream SELECT extension + classifier call + flushCoaBatch SQL refactor + lifecycle_transitions INSERT + Phase 2c CoA extension + audit_table extension with dynamic status)
-  - `compute-trade-forecasts.js` guard + SELECT extension + telemetry (~15 lines)
-  - `update-tracked-projects.js` guard + SELECT extension + telemetry (~15 lines)
-- [ ] **Auth Boundary & Secrets:** N/A.
-- [ ] **Pre-Review Self-Checklist (26 items):** PASS/FAIL per item.
-- [ ] **Multi-Agent Review (4 reviewers parallel — diff stage):** Gemini + DeepSeek + Independent worktree + Observability worktree.
-- [ ] **Green Light:** `npm run typecheck && npm run lint && npm run test`; pre-commit hook full-suite pass; staging dry-run.
-- [ ] **Operator pre-ack:** record in commit message.
-- [ ] **WF6 commit:** Single commit. Message: `feat(84_lifecycle_phase_engine): WF1 Phase E.2 — classify-lifecycle-phase consumer rewrite + mig 146 audit columns + 7-metric audit_table + downstream lead_id guards (defensive) + 12 spec amendments`.
-- [ ] **Followups append:** `docs/reports/review_followups.md`.
+- `scripts/compute-phase-calibration.js` (target — 173 lines today; v2 extends aggregate SQL + audit_table + verdict bug fix)
+- `scripts/manifest.json` (target — add `compute_phase_calibration` to CoA chain)
+- `migrations/135_extend_phase_stay_calibration.sql` (Phase B mig — schema already in place)
+- `migrations/128_create_universal_stream_catalog.sql` + `migrations/129_seed_universal_stream_catalog.sql` (read-only — CoA seq 1-22 verified clean)
+- `src/tests/compute-phase-calibration.infra.test.ts` (NEW or EXTEND)
+- `src/tests/compute-phase-calibration.logic.test.ts` (NEW — tier helper boundary tests)
 
 ### Operating Boundaries
 
-**Target Files:** (unchanged from v1; v4 fold v3-3 removes the separate `_DOWN.sql` file reference — DOWN is now an embedded commented block in `migrations/146_e2_coa_audit_columns.sql` per project convention)
+**Target Files:**
+- `migrations/147_phase_stay_calibration_drop_legacy_pk.sql` (NEW — v3 fold v2-G/v2-E)
+- `scripts/compute-phase-calibration.js` (EXTEND — CoA-side CTE + 5-tuple GROUP BY append + verdict bug fix + new audit rows + tier counters)
+- `scripts/manifest.json` (ADD `compute_phase_calibration` to coa chain)
+- `src/tests/compute-phase-calibration.infra.test.ts` (NEW or EXTEND)
+- `src/tests/compute-phase-calibration.logic.test.ts` (NEW)
+- `docs/specs/01-pipeline/42_chain_coa.md` §6.9 anchor resolution (post-commit)
+- `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` 84-W4 entry update
+- `docs/reports/review_followups.md` (E.3 close-out note)
 
-**Out-of-Scope Files:** (unchanged from v1)
+**Out-of-Scope Files:**
+- `scripts/lib/lifecycle-phase.js` + `src/lib/classification/lifecycle-phase.ts` (E.1 substrate — UNCHANGED)
+- `scripts/classify-lifecycle-phase.js` (E.2 consumer — UNCHANGED)
+- `scripts/compute-trade-forecasts.js` + `scripts/update-tracked-projects.js` (E.2 defensive guards — UNCHANGED)
+- `migrations/` (no new migration — mig 135 already shipped schema)
+- `permit_phase_transitions` schema (UNCHANGED — Phase H concern)
+- Permit-side calibration path (UNCHANGED per v2 fold #1 reframe)
 
-**Cross-Spec Dependencies:** (unchanged from v1)
+**Cross-Spec Dependencies:**
+- Spec 42 §6.6.B `lifecycle_transitions` (E.2 INSERT writer; E.3 reader)
+- Spec 84 §7 (calibration source — extended to include `lifecycle_transitions`)
+- Spec 84 §8.7 (CoA cohort blind-spot — closed by E.3 for CoA-stage only; permit-side blind-spot remains until Phase H)
+- Spec 48 first-E.3-run observer behavior (mitigation via operator pre-ack — duration regression annotation)
+- Phase D dependency: `coa_applications.project_type` + `coa_type_class` populated by `classify-coa-scope.js` (must have shipped before E.3 first run)
+
+## Technical Implementation
+
+### Part 1 — Aggregate SQL extension (CoA-side ADD; permit-side preserved)
+
+The existing aggregate query (`compute-phase-calibration.js` lines 74-105) reads `permit_phase_transitions` and groups by `(permit_type, from_phase)`. v2 PRESERVES this aggregate unchanged and ADDS a SECOND aggregate for CoA-side reading `lifecycle_transitions`.
+
+```js
+// E.3 v3: TWO independent aggregates, both producing rows for phase_stay_calibration.
+// Permit-side: legacy 2-tuple structure PRESERVED, but LAG receives `, id` tiebreaker
+// for determinism (v2 fold #8 + v2-DS-2 plan contradiction fold — the change is small
+// but explicit). CoA-side ADDED (granular 5-tuple).
+
+// Permit-side — `, id` tiebreaker added to LAG (v3 documents this explicitly).
+// All other aspects (table, columns, GROUP BY, percentile aggregation) PRESERVED.
+const permitAggSql = `
+  WITH transitions_with_duration AS (
+    SELECT permit_num, revision_num, permit_type, from_phase, transitioned_at,
+           transitioned_at - LAG(transitioned_at) OVER (
+             PARTITION BY permit_num, revision_num ORDER BY transitioned_at, id  -- v2 fold #8 tiebreaker added
+           ) AS phase_duration
+      FROM permit_phase_transitions
+  )
+  SELECT permit_type, from_phase AS phase,
+         ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS median_days,
+         ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS p25_days,
+         ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS p75_days,
+         COUNT(*)::INTEGER AS sample_size
+    FROM (
+      SELECT *, EXTRACT(EPOCH FROM phase_duration) / 86400.0 AS duration_days  -- v2 fold #19: extracted once
+        FROM transitions_with_duration
+       WHERE from_phase IS NOT NULL AND permit_type IS NOT NULL AND phase_duration IS NOT NULL
+    ) twd
+   GROUP BY permit_type, from_phase
+`;
+
+// CoA-side — NEW. Read from lifecycle_transitions where lead_id is a CoA lead.
+// 5-tuple cohort key (NULL permit_type, project_type, coa_type_class, from_seq, to_seq).
+// v2 fold #9: WHERE clause uses from_seq/to_seq range (CoA seq 1-22 per §2.5.c) AS PRIMARY,
+//              with lead_id LIKE 'coa:%' as defense-in-depth.
+const coaAggSql = `
+  WITH coa_transitions_with_duration AS (
+    SELECT
+      lt.lead_id,
+      lt.project_type,
+      lt.coa_type_class,
+      lt.from_seq,
+      lt.to_seq,
+      lt.from_phase,
+      lt.transitioned_at,
+      lt.transitioned_at - LAG(lt.transitioned_at) OVER (
+        PARTITION BY lt.lead_id
+        ORDER BY lt.transitioned_at, lt.id  -- v2 fold #8: tiebreaker on id (deterministic across tied timestamps)
+      ) AS phase_duration
+    FROM lifecycle_transitions lt
+    WHERE lt.lead_id LIKE 'coa:%'
+      AND (lt.from_seq BETWEEN 1 AND 22 OR lt.to_seq BETWEEN 1 AND 22)  -- v2 fold #9: intrinsic CoA seq range
+  )
+  SELECT
+    NULL::VARCHAR(50)        AS permit_type,
+    project_type,
+    coa_type_class,
+    from_seq,
+    to_seq,
+    MIN(from_phase)          AS from_phase,        -- v2 fold #7: MIN aggregate, not GROUP BY column
+    ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS median_days,
+    ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS p25_days,
+    ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS p75_days,
+    COUNT(*)::INTEGER        AS sample_size
+  FROM (
+    SELECT *, EXTRACT(EPOCH FROM phase_duration) / 86400.0 AS duration_days  -- v2 fold #19
+      FROM coa_transitions_with_duration
+     WHERE phase_duration IS NOT NULL
+       AND from_seq IS NOT NULL AND to_seq IS NOT NULL
+       -- v4 fold v3-G-HIGH-3 + v3-DS-MED-1: BOTH `project_type IS NOT NULL` AND
+       -- `coa_type_class IS NOT NULL` filters REMOVED. Same data-destructive logic
+       -- as v3 fold v2-DS-1 applies to coa_type_class — dropping unclassified CoA
+       -- rows produces skewed calibration. Under NULLS DISTINCT (mig 135), CoA-side
+       -- rows with NULL coa_type_class collapse to a single NULL-bucket — acceptable
+       -- triage signal via the new `coa_type_class_null_transition_count` audit metric.
+       --
+       -- Unknown_cohort_count metric (v3 fold v2-G-3) is now REACHABLE — covers the
+       -- legitimate case where both project_type AND coa_type_class are NULL on a
+       -- CoA transition (Phase D never ran for the underlying CoA record).
+  ) ctwd
+  GROUP BY project_type, coa_type_class, from_seq, to_seq
+  -- v2 fold #2: NO HAVING COUNT(*) >= 3 — tier counters provide observability for low/outlier sample sizes
+`;
+
+const permitRes = await pool.query(permitAggSql);
+const coaRes    = await pool.query(coaAggSql);
+
+const permitBuckets = permitRes.rows;
+const coaBuckets    = coaRes.rows;
+const allBuckets    = [...permitBuckets, ...coaBuckets];
+```
+
+**Why NO HAVING (v2 fold #2):** Gemini flagged the v1 `HAVING COUNT(*) >= 3` as data-destructive — it directly contradicted the plan's tier counters (low: 10-29, outlier: <10) which CLAIM to track those sample sizes. v2 removes the filter and lets the tier counters do their job. PERCENTILE_CONT on 1-row groups returns degenerate values but they're flagged as `outlier` in audit; consumers can decide whether to use them.
+
+### Part 2 — Bulk INSERT with helper (v2 fold #4)
+
+```js
+// v2 fold #4: column list extracted to a constant; placeholder generation via helper.
+// Eliminates off-by-one risk from manual $${base + N} arithmetic.
+const COHORT_INSERT_COLS = [
+  'permit_type', 'project_type', 'coa_type_class',
+  'from_seq', 'to_seq', 'phase',
+  'median_days', 'p25_days', 'p75_days',
+  'sample_size', 'computed_at',
+];
+
+function buildBulkInsertSQL(table, cols, rowCount) {
+  const tuples = [];
+  for (let i = 0; i < rowCount; i++) {
+    const base = i * cols.length;
+    const placeholders = cols.map((_, j) => `$${base + j + 1}`).join(', ');
+    tuples.push(`(${placeholders})`);
+  }
+  return `INSERT INTO ${table} (${cols.join(', ')}) VALUES ${tuples.join(', ')}`;
+}
+
+// v4 fold v3-G-MED-1: name-based lookup (NOT order-based) — robust against
+// future SQL SELECT-list reordering. The aliasing in the SELECT must use the
+// COHORT_INSERT_COLS names exactly; the order is irrelevant.
+function flattenBuckets(buckets, runAt) {
+  return buckets.flatMap((b) =>
+    COHORT_INSERT_COLS.map((col) => col === 'computed_at' ? runAt : (b[col] ?? null))
+  );
+}
+
+// v4 fold v3-G-CRIT (Gemini) + v5 fold v4-H3 (Observability accuracy):
+// atomic temp-table swap pattern eliminates the consumer-visible empty-table
+// window that DELETE+INSERT exposes to downstream consumers (inspector read
+// path). TRUNCATE acquires ACCESS EXCLUSIVE for the full transaction; readers
+// BLOCK on the lock and never see an empty table. Empty-state visibility
+// window = zero (corrected from inaccurate "<1ms" in v4 draft — readers do
+// experience lock-wait latency for the transaction duration, but never see
+// an empty `phase_stay_calibration`).
+await pipeline.withTransaction(pool, async (client) => {
+  if (allBuckets.length === 0) {
+    // Edge case: no source data → empty table. TRUNCATE only.
+    await client.query('TRUNCATE phase_stay_calibration');
+    return;
+  }
+  // Step 1: stage data in temp table OUTSIDE the lock-critical section.
+  await client.query('CREATE TEMP TABLE phase_stay_calibration_staging (LIKE phase_stay_calibration INCLUDING DEFAULTS) ON COMMIT DROP');
+  const stagingInsertSql = buildBulkInsertSQL('phase_stay_calibration_staging', COHORT_INSERT_COLS, allBuckets.length);
+  const params = flattenBuckets(allBuckets, RUN_AT);
+  await client.query(stagingInsertSql, params);
+  // Step 2: atomic swap — TRUNCATE + INSERT FROM staging. Readers wait on ACCESS EXCLUSIVE; no empty visibility.
+  await client.query('TRUNCATE phase_stay_calibration');
+  await client.query('INSERT INTO phase_stay_calibration SELECT * FROM phase_stay_calibration_staging');
+  // Temp table dropped on COMMIT (ON COMMIT DROP).
+});
+```
+
+**Spec 47 §9.2 compliance:** 11 cols × max ~1000 rows ≈ 11000 params (well under 65535). No sub-batching.
+
+### Part 3 — Tier counters + new audit metrics
+
+```js
+// Counters declared once.
+let highVolumeBuckets    = 0;  // sample_size >= 100
+let midVolumeBuckets     = 0;  // 30 <= sample_size < 100
+let lowVolumeBuckets     = 0;  // 10 <= sample_size < 30
+let outlierBuckets       = 0;  // sample_size < 10
+let permitCohortCount    = 0;  // permit-side cohorts (permit_type non-NULL)
+let coaCohortCount       = 0;  // CoA-side cohorts (coa_type_class non-NULL)
+let unreliableBuckets    = 0;  // v2 fold #11: PRESERVED — existing metric, sample_size < 30
+let unknownCohortCount   = 0;  // v3 fold v2-G-3: defensive metric for permit_type=NULL AND coa_type_class=NULL buckets
+// v5 fold v4-C1 (CRITICAL — 4/4 reviewers): coaTypeClassNullTransitionCount MUST be
+// populated by a separate SQL query against `lifecycle_transitions` source rows.
+// Aggregate buckets collapse NULL coa_type_class rows into ONE bucket → cannot count
+// individual NULL transitions from the loop. Declaration moved below; assigned from query.
+
+for (const b of allBuckets) {
+  if (b.permit_type != null) permitCohortCount++;
+  else if (b.coa_type_class != null) coaCohortCount++;
+  else unknownCohortCount++;  // v3 fold v2-G-3: defensive — both NULL means SQL bug or data corruption
+  if (b.sample_size >= 100)         highVolumeBuckets++;
+  else if (b.sample_size >= 30)     midVolumeBuckets++;
+  else if (b.sample_size >= 10)     lowVolumeBuckets++;
+  else                               outlierBuckets++;
+  if (b.sample_size < 30)            unreliableBuckets++;
+}
+
+// v5 fold v4-M3: bucket-count upper-bound assertion (param-limit defense).
+// 11 cols × 5000 rows = 55000 params < 65535 hard limit; ample headroom.
+// On overage: FAIL the run with explicit error rather than silent parameter-limit truncation.
+if (allBuckets.length > 5000) {
+  throw new Error(
+    `[compute-phase-calibration] bucket count ${allBuckets.length} exceeds 5000-row safety cap ` +
+    `(param-limit headroom). CoA cardinality has grown; sub-batching deferred to Phase F.`
+  );
+}
+
+// v5 fold v4-H1 (HIGH — 3/4): seq-range filter added to match coaAggSql population.
+// Without this, the count includes CoA rows outside the spec-defined seq 1-22 range,
+// making `coa_transition_count` and `coa_cohort_count` non-reconcilable for operators.
+const { rows: [{ n: coaTransitionCount }] } = await pool.query(
+  `SELECT COUNT(*)::int AS n FROM lifecycle_transitions
+    WHERE lead_id LIKE 'coa:%'
+      AND (from_seq BETWEEN 1 AND 22 OR to_seq BETWEEN 1 AND 22)`
+);
+
+// v5 fold v4-C1 (CRITICAL — 4/4 reviewers): separate SQL query populates
+// coaTypeClassNullTransitionCount. Filter matches `coa_transition_count` query
+// (same seq-range gate) so the >5% ratio is reconcilable.
+const { rows: [{ n: coaTypeClassNullTransitionCount }] } = await pool.query(
+  `SELECT COUNT(*)::int AS n FROM lifecycle_transitions
+    WHERE lead_id LIKE 'coa:%'
+      AND coa_type_class IS NULL
+      AND (from_seq BETWEEN 1 AND 22 OR to_seq BETWEEN 1 AND 22)`
+);
+
+// v2 fold #13 + v5 fold v4-H2 (HIGH — 3/4 convergent): Phase D project_type coverage guard.
+// v5 wraps the coa_applications query with information_schema.tables EXISTS check (the
+// v3-DS-HIGH-2 fold was applied to lifecycle_transitions but missed coa_applications,
+// caught by DeepSeek + Independent v4 convergent finding). Missing table → WARN + null,
+// not advisory-lock-leaking crash.
+// Source 1 — coa_applications: measures whether Phase D classify-coa-scope.js has populated
+// the column on the source rows. The threshold WARN at <50% indicates Phase D hasn't run
+// (or didn't classify ≥50% of rows). This is the metric exposed in audit_table.rows post-v3 promotion.
+const { rows: [{ exists: coaAppsExists }] } = await pool.query(
+  `SELECT EXISTS (SELECT 1 FROM information_schema.tables
+                   WHERE table_schema = 'public' AND table_name = 'coa_applications') AS exists`
+);
+let projectTypeCoveragePct = null;
+let ltProjectTypeCoveragePct = null;
+if (coaAppsExists) {
+  const { rows: [{ pct }] } = await pool.query(
+    `SELECT COALESCE(
+       ROUND(100.0 * COUNT(*) FILTER (WHERE project_type IS NOT NULL) / NULLIF(COUNT(*), 0))::int,
+       0) AS pct
+       FROM coa_applications`
+  );
+  projectTypeCoveragePct = pct;
+  // Source 2 — lifecycle_transitions: measures what the CoA aggregate ACTUALLY reads.
+  // A CoA application could have project_type=set today (Source 1=100%) but ALL its historical
+  // lifecycle_transitions rows were written by E.2 before Phase D ran → those transition rows
+  // have project_type=NULL → CoA aggregate sees 0% project_type coverage on the source data.
+  // This differentiates "Phase D ran today" from "Phase D ran before E.2 wrote the transitions".
+  const { rows: [{ pct: ltPct }] } = await pool.query(
+    `SELECT COALESCE(
+       ROUND(100.0 * COUNT(*) FILTER (WHERE project_type IS NOT NULL) / NULLIF(COUNT(*), 0))::int,
+       0) AS pct
+       FROM lifecycle_transitions
+      WHERE lead_id LIKE 'coa:%'`
+  );
+  ltProjectTypeCoveragePct = ltPct;
+} else {
+  pipeline.log.warn('[compute-phase-calibration]',
+    'coa_applications table missing — Phase D migrations not yet applied. ' +
+    'Skipping project_type coverage guard; audit metric will report null.');
+}
+if (projectTypeCoveragePct != null && projectTypeCoveragePct < 50) {
+  pipeline.log.warn('[compute-phase-calibration]',
+    `coa_applications.project_type coverage ${projectTypeCoveragePct}% (< 50%) — ` +
+    `Phase D classify-coa-scope.js may not have run. Verify Phase D execution.`);
+}
+if (
+  ltProjectTypeCoveragePct != null && projectTypeCoveragePct != null &&
+  ltProjectTypeCoveragePct < projectTypeCoveragePct - 10
+) {
+  pipeline.log.warn('[compute-phase-calibration]',
+    `lifecycle_transitions.project_type coverage ${ltProjectTypeCoveragePct}% lags ` +
+    `coa_applications by >10% — old transitions predate Phase D. CoA cohort buckets ` +
+    `may be sparse until E.2 reclassifies all CoA rows (next dirty run).`);
+}
+```
+
+### Part 4 — Audit_table with verdict fix (Spec 47 §R10 compliant)
+
+```js
+const auditRows = [
+  // EXISTING — preserved unchanged
+  { metric: 'total_buckets',           value: allBuckets.length,    threshold: '>= 1', status: allBuckets.length >= 1 ? 'PASS' : 'FAIL' },
+  { metric: 'permit_types_calibrated', value: permitTypesSeen.size, threshold: null,   status: 'INFO' },
+  { metric: 'phases_calibrated',       value: phasesSeen.size,      threshold: null,   status: 'INFO' },
+  // v2 fold #11 + v3 fold v2-O-L/Indep F: unreliable_buckets PRESERVED + documented overlap.
+  // NOTE: by definition `unreliable_buckets = low_volume_buckets + outlier_buckets` (both = sample_size < 30).
+  // Operator dashboards: do NOT sum tier metrics with this. unreliable retained for Spec 48 observer 7-day baseline continuity.
+  { metric: 'unreliable_buckets',      value: unreliableBuckets,    threshold: '< 30 sample_size triggers WARN; equals low+outlier by definition (do not sum)', status: unreliableBuckets > 0 ? 'WARN' : 'INFO' },
+  // E.3 NEW — granular cohort observability
+  { metric: 'permit_cohort_count',     value: permitCohortCount,    threshold: null,   status: 'INFO' },
+  { metric: 'coa_cohort_count',        value: coaCohortCount,       threshold: null,   status: 'INFO' },
+  { metric: 'coa_transition_count',    value: coaTransitionCount,   threshold: null,   status: 'INFO' },  // v2 fold #15
+  { metric: 'high_volume_buckets',     value: highVolumeBuckets,    threshold: null,   status: 'INFO' },
+  { metric: 'mid_volume_buckets',      value: midVolumeBuckets,     threshold: null,   status: 'INFO' },
+  { metric: 'low_volume_buckets',      value: lowVolumeBuckets,     threshold: null,   status: 'INFO' },
+  { metric: 'outlier_buckets',         value: outlierBuckets,       threshold: null,   status: 'INFO' },
+  // Sanity gate — WARN on 0 (operator triage via coa_transition_count)
+  { metric: 'coa_cohort_presence',     value: coaCohortCount,       threshold: '>= 1 post-E.2 first-run', status: coaCohortCount >= 1 ? 'PASS' : 'WARN' },
+  // v3 fold v2-O-M: PROMOTED from records_meta to audit_table.rows so observer's automated
+  // gate fires on Phase D coverage degradation.
+  { metric: 'coa_project_type_coverage_pct', value: projectTypeCoveragePct, threshold: '>= 50 PASS, < 50 WARN', status: projectTypeCoveragePct >= 50 ? 'PASS' : 'WARN' },
+  // v3 fold v2-G-3 (reachable post-v4): defensive observability for cohort buckets that have
+  // NEITHER permit_type NOR coa_type_class non-NULL. Reachable cases: CoA transitions where
+  // Phase D never classified the underlying CoA → both columns NULL → bucket lands here.
+  { metric: 'unknown_cohort_count',    value: unknownCohortCount,   threshold: '== 0 PASS, > 0 WARN', status: unknownCohortCount === 0 ? 'PASS' : 'WARN' },
+  // v4 fold v3-G-HIGH-3: new metric counts source CoA transitions with NULL coa_type_class.
+  // Replaces the data-destructive `AND coa_type_class IS NOT NULL` filter removed from the
+  // CoA aggregate. Operators see how many transitions are unclassified by Phase D.
+  // v5 fold v4-L1: descriptor clarified — value stores absolute count, threshold computes ratio.
+  { metric: 'coa_type_class_null_transition_count', value: coaTypeClassNullTransitionCount, threshold: 'ratio <= 0.05 PASS, > 0.05 WARN (relative to coa_transition_count); value field stores absolute count for triage', status: coaTransitionCount === 0 || (coaTypeClassNullTransitionCount / coaTransitionCount) <= 0.05 ? 'PASS' : 'WARN' },
+];
+// TOTAL: 15 rows. Composition: 4 existing (total_buckets, permit_types_calibrated,
+// phases_calibrated, unreliable_buckets) + 7 new INFO (permit_cohort_count, coa_cohort_count,
+// coa_transition_count, high_volume_buckets, mid_volume_buckets, low_volume_buckets,
+// outlier_buckets) + 4 new thresholded WARN gates (coa_cohort_presence,
+// coa_project_type_coverage_pct, unknown_cohort_count, coa_type_class_null_transition_count).
+// Thresholded total: 6 (total_buckets FAIL gate + unreliable_buckets WARN gate +
+// 4 new thresholded WARN gates above).
+
+// v2 fold #6: verdict DERIVED from row statuses per Spec 47 §R10 (replaces existing hardcoded bug).
+const auditVerdict =
+  auditRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
+  auditRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+```
+
+### Part 5 — `records_meta` distributions (Spec 48 §3.2 — NOT to DeepSeek)
+
+```js
+records_meta: {
+  audit_table: { phase: 84, name: 'Phase Calibration', verdict: auditVerdict, rows: auditRows },
+  // E.3 NEW — distributions for operator manual SQL inspection only
+  sample_size_distribution: { high: highVolumeBuckets, mid: midVolumeBuckets, low: lowVolumeBuckets, outlier: outlierBuckets },
+  cohort_dimension_coverage: {
+    permit_type_non_null:    permitCohortCount,           // by definition equal to permit-side cohort count
+    coa_type_class_non_null: coaCohortCount,              // by definition equal to CoA-side cohort count
+    project_type_non_null:   allBuckets.filter((b) => b.project_type != null).length,
+    from_seq_non_null:       allBuckets.filter((b) => b.from_seq != null).length,
+    to_seq_non_null:         allBuckets.filter((b) => b.to_seq != null).length,
+  },
+  // For triage when coa_cohort_presence WARNs
+  coa_project_type_coverage_pct: projectTypeCoveragePct,
+},
+```
+
+### Part 6 — `emitMeta` extension
+
+```js
+pipeline.emitMeta(
+  {
+    permit_phase_transitions: ['permit_num', 'revision_num', 'from_phase', 'to_phase', 'transitioned_at', 'permit_type', 'id'],  // v2 fold #8: id needed for LAG tiebreaker
+    lifecycle_transitions:    ['lead_id', 'from_phase', 'to_phase', 'from_seq', 'to_seq', 'transitioned_at', 'project_type', 'coa_type_class', 'id'],
+    coa_applications:         ['project_type'],  // v2 fold #13: project_type coverage guard read
+  },
+  {
+    phase_stay_calibration: COHORT_INSERT_COLS,
+  },
+);
+```
+
+### Part 7 — `scripts/manifest.json` CoA chain add (v2 fold #12)
+
+```json
+{
+  "name": "coa",
+  "steps": [
+    "load_coa", "link_coa", "link_coa_to_parcels", "classify_coa_scope",
+    "classify_coa_trades", "compute_coa_cost_estimates", "classify_lifecycle_phase",
+    "compute_phase_calibration",     // <-- NEW — added after classify_lifecycle_phase
+    "assert_global_coverage"
+    // ... etc
+  ]
+}
+```
+
+After E.3 ships, calibration runs in BOTH chains. CoA-only chain runs trigger calibration refresh on the same advisory lock — so concurrent permits+coa-chain runs serialise at the calibration step (correct per existing lock 93).
+
+### Part 8 — Startup guards (Spec 47 §R5 + E.2 Independent H-1 convention)
+
+```js
+// v2 fold #10: differentiated table-empty vs partial-data
+const { rows: [{ exists }] } = await pool.query(
+  `SELECT EXISTS (SELECT 1 FROM information_schema.tables
+                   WHERE table_schema = 'public' AND table_name = 'lifecycle_transitions') AS exists`
+);
+if (!exists) throw new Error('[compute-phase-calibration] lifecycle_transitions table missing — apply Phase B mig 134 first');
+
+const { rows: [{ n: coaCount }] } = await pool.query(
+  `SELECT COUNT(*)::int AS n FROM lifecycle_transitions WHERE lead_id LIKE 'coa:%'`
+);
+if (coaCount === 0) {
+  pipeline.log.warn('[compute-phase-calibration]',
+    'lifecycle_transitions has zero CoA-side rows — E.2 first run has not yet produced CoA transitions. ' +
+    'coa_cohort_count will be 0 (expected pre-E.2 first-run state).');
+} else {
+  pipeline.log.info('[compute-phase-calibration]',
+    `lifecycle_transitions has ${coaCount.toLocaleString()} CoA-side rows; expecting CoA cohorts.`);
+}
+```
+
+### Database Impact
+
+**YES — migration 147 ships in E.3** (v3 reframe per Independent G CRIT).
+
+```sql
+-- migrations/147_phase_stay_calibration_drop_legacy_pk.sql
+-- Phase E.3 — drop legacy PRIMARY KEY (permit_type, phase) from
+-- phase_stay_calibration; make permit_type + phase nullable; mig 135's
+-- 5-tuple UNIQUE INDEX phase_stay_calibration_new_unique remains as the
+-- de facto integrity constraint.
+--
+-- Background: mig 123 created the table with PK (permit_type, phase).
+-- Mig 135 added 4 granular columns + UNIQUE INDEX with NULLS DISTINCT but
+-- did NOT drop the old PK. Mig 135's comment: "The pre-existing PK on
+-- (permit_type, phase) enforces uniqueness during the transition" —
+-- foreshadowing Phase E's responsibility to drop it.
+--
+-- v3 fold v2-G + v2-E: CoA-side rows have permit_type=NULL (CoA leads
+-- don't have a permit_type) and may have phase=NULL (MIN(from_phase) over
+-- all-NULL partition). PK + NOT NULL constraints reject these INSERTs.
+--
+-- SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.7 step 6 + §6.11 Phase E
+-- SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §7
+--
+-- v4 fold v3-IF: NO explicit BEGIN/COMMIT in this migration. Mig 135's
+-- header documents the recurring failure mode — the runner's outer
+-- transaction wraps each migration; an explicit BEGIN/COMMIT inside the
+-- migration commits the outer transaction prematurely, decoupling the
+-- DDL from the schema_migrations record (R8 CI hotfix on mig 135).
+
+-- UP
+
+-- Drop the legacy PRIMARY KEY. Mig 135's UNIQUE INDEX on
+-- (permit_type, project_type, coa_type_class, from_seq, to_seq) with
+-- NULLS DISTINCT enforces row uniqueness on the new shape.
+ALTER TABLE phase_stay_calibration
+  DROP CONSTRAINT IF EXISTS phase_stay_calibration_pkey;
+
+-- Make permit_type nullable so CoA-side rows (permit_type=NULL) can insert.
+ALTER TABLE phase_stay_calibration
+  ALTER COLUMN permit_type DROP NOT NULL;
+
+-- Make phase nullable so cohorts with MIN(from_phase)=NULL (all-null
+-- partition: first-classification rows where E.2 wrote from_phase=NULL)
+-- can insert.
+ALTER TABLE phase_stay_calibration
+  ALTER COLUMN phase DROP NOT NULL;
+
+-- v4 fold v3-DS-1 + v3-Indep-A: partial unique index restores structural
+-- 2-tuple uniqueness for permit-side rows (where permit_type IS NOT NULL).
+-- CoA-side rows have permit_type NULL → not covered by this index → can
+-- coexist with permit-side rows under mig 135's 5-tuple UNIQUE INDEX
+-- (NULLS DISTINCT). External writers or future bugs cannot create duplicate
+-- (permit_type, phase) rows for legacy permit-side cohorts.
+CREATE UNIQUE INDEX IF NOT EXISTS phase_stay_calibration_permit_legacy_unique
+  ON phase_stay_calibration (permit_type, phase)
+  WHERE permit_type IS NOT NULL;
+
+-- v4 fold v3-G-HIGH-2: partial composite index on lifecycle_transitions
+-- to support the CoA aggregate's LAG window (PARTITION BY lead_id ORDER BY
+-- transitioned_at, id). Partial filter keeps the index small (CoA rows only).
+-- Critical for performance scaling beyond ~30K rows.
+CREATE INDEX IF NOT EXISTS lifecycle_transitions_coa_lag_idx
+  ON lifecycle_transitions (lead_id, transitioned_at, id)
+  WHERE lead_id LIKE 'coa:%';
+
+-- v4 fold v3-Indep-A advisory: future direct writers to phase_stay_calibration
+-- bypassing compute-phase-calibration's atomic temp-table swap pattern MUST
+-- preserve legacy 2-tuple uniqueness. The partial unique index above is the
+-- structural enforcement; the script's CREATE TEMP TABLE + TRUNCATE + INSERT
+-- pattern is the runtime enforcement on every E.3 run.
+
+-- DOWN — manual rollback only, intentionally not transactional
+-- (Rule 6 / commit 8b1c10b convention; v4 fold v3-G-MED-3 + v3-DS-LOW-6:
+-- DELETE step added so rollback is correct against post-E.3 data state.
+-- v5 fold v4-M1: DELETE step #2 added to catch any NULL-phase row that
+-- would otherwise block ALTER COLUMN phase SET NOT NULL).
+-- Operator rollback order (manual, NOT auto-executed):
+-- 1a. DELETE FROM phase_stay_calibration WHERE permit_type IS NULL;  -- remove CoA-side rows
+-- 1b. DELETE FROM phase_stay_calibration WHERE phase IS NULL;        -- v5 fold v4-M1: catch any legacy NULL-phase row
+-- 2.  DROP INDEX IF EXISTS lifecycle_transitions_coa_lag_idx;
+-- 3.  DROP INDEX IF EXISTS phase_stay_calibration_permit_legacy_unique;
+-- 4.  ALTER TABLE phase_stay_calibration ALTER COLUMN phase SET NOT NULL;
+-- 5.  ALTER TABLE phase_stay_calibration ALTER COLUMN permit_type SET NOT NULL;
+-- 6.  ALTER TABLE phase_stay_calibration ADD PRIMARY KEY (permit_type, phase);
+```
+
+**Migration safety**: at ~165 existing rows the DROP CONSTRAINT + ALTER COLUMN operations are O(1) metadata-only changes. No table rewrite. Expected runtime < 100ms.
+
+### Audit Observability (Spec 48 lens)
+
+**15-row `audit_table.rows`** (v5 fold v4-L2: 4 existing + 7 new INFO + 4 new thresholded WARN gates; 6 thresholded total including the 2 existing thresholded rows `total_buckets` FAIL + `unreliable_buckets` WARN).
+
+**3 distribution maps in `records_meta`** (`sample_size_distribution`, `cohort_dimension_coverage`, `coa_project_type_coverage_pct`) — surfaced for manual operator SQL inspection only (Spec 48 §3.2: NOT passed to DeepSeek `contextJson`).
+
+**Observer report file routing**: `compute_phase_calibration` post-E.3 runs in BOTH chains (`permits` + `coa` per fold #12). Observer writes to BOTH `permits-followup.md` AND `coa-followup.md`.
+
+**First-E.3-run mitigation** (v2 fold #14 — rewritten per Observability L):
+
+**First-E.3-run anomaly checklist (v4 fold v3-O-LOW-K reformat — numbered list for operator scanability):**
+>
+> 1. **`duration_ms` regression** (2-3× expected). Cause: UNION-ALL of two aggregates + 5-tuple GROUP BY on CoA-side. Action: annotate as expected; do not file WF3.
+> 2. **`records_total` increase** by CoA transition count (~30K post-E.2). Cause: ledger now consumed. Action: annotate as expected.
+> 3. **`coa_transition_count` jump** from 0 to ~30K. Cause: new INFO metric, baseline=0. Action: DeepSeek narrative may flag; INFO row only, no automated FAIL/WARN; no operator action.
+> 4. **`coa_project_type_coverage_pct` WARN** (if <50%). Cause: Phase D `classify-coa-scope.js` incomplete. Action: verify Phase D succeeded; do NOT treat as regression unless Phase D was expected complete.
+> 5. **`coa_type_class_null_transition_count` WARN** (if >5% of `coa_transition_count`). Cause: similar — Phase D not classifying some CoA records. Action: verify Phase D coverage.
+> 6. **Transient empty-table window** for `phase_stay_calibration` is now **zero** (v5 fold v4-H3 — corrected from inaccurate "<1ms"; the atomic TRUNCATE + INSERT inside one transaction holds ACCESS EXCLUSIVE for the full transaction, so readers block but never observe an empty table). Reader latency during the run is normal lock-wait behavior, not an empty-state visibility window.
+>
+> **Co-firing note (v5 fold v4-L3 — Observability)**: if `verdict=WARN` on first E.3 run with vectors #4 + #5 (and optionally `unknown_cohort_count`) simultaneously WARN, this is the **expected co-firing pattern** when Phase D is incomplete. Multiple WARN signals collapse to a single root cause (Phase D classify-coa-scope.js coverage). No WF3 action required; verify Phase D execution and re-run E.3 after Phase D completes.
+>
+> **Annotation target files**: BOTH `permits-followup.md` AND `coa-followup.md` (calibration runs in both chains post-v3 fold #12).
+> **Annotation text**: `[expected CoA-side granular cohort SQL expansion + Phase D coverage gate signals, not a performance/data regression]`.
+> **Note**: Spec 48 Improvement C (pinned baseline) is queued-not-authorized — manual annotation is the active mitigation._
+
+### Tests (TDD cadence per WF1 Red Light/Green Light)
+
+1. **`src/tests/compute-phase-calibration.infra.test.ts`** (NEW or EXTEND) — integration tests:
+   - **Fixture seed**: 30 `permit_phase_transitions` rows (existing permit-side path) + 20 `lifecycle_transitions` CoA-side rows (with from_seq/to_seq in 1-22 range, populated project_type + coa_type_class).
+   - **Forward-only run**: assert `phase_stay_calibration` has:
+     - Permit-side rows: `permit_type` non-null, `coa_type_class IS NULL`, `from_seq IS NULL`, `to_seq IS NULL` (legacy shape preserved).
+     - CoA-side rows: `permit_type IS NULL`, `project_type` non-null, `coa_type_class` non-null, `from_seq` IN 1-22, `to_seq` IN 1-22 (granular shape).
+   - **Idempotency**: run twice; assert byte-identical output.
+   - **LAG tiebreaker** (v2 fold #8): insert 2 transition rows with IDENTICAL `transitioned_at` for the same `lead_id` (different `id`); assert calibration is deterministic across runs (verifies the `, id` tiebreaker eliminates non-determinism).
+   - **`coa_transition_count` triage** (v2 fold #15): scenario A — zero CoA rows in `lifecycle_transitions` → `coa_transition_count=0`, `coa_cohort_count=0`, `coa_cohort_presence=WARN`. Scenario B — 5 CoA rows but all in 2-row partitions (HAVING removed; tier counters track) → `coa_transition_count=5`, `coa_cohort_count>=1`, `outlier_buckets>=1`, `coa_cohort_presence=PASS`.
+   - **Tier counter boundaries**: bucket-sample-size = 100, 99, 30, 29, 10, 9 → assert correct tier assignment.
+   - **Audit verdict derivation** (v2 fold #6): inject a WARN row; assert `verdict='WARN'`. Inject a FAIL row; assert `verdict='FAIL'`.
+   - **`unreliable_buckets` preservation** (v2 fold #11): assert the metric still exists with old semantics (`sample_size < 30 → WARN if > 0`).
+   - **EXPLAIN ANALYZE** (v2 fold #18, staging only — v3 fold v2-DS-3 relaxes the assertion): execute `EXPLAIN (ANALYZE, BUFFERS) <coaAggSql>`; assert `execution_time_ms < 5000` (5-second budget). Sequential scan on `lifecycle_transitions` is acceptable at ~30K row scale; composite index on `(lead_id, from_seq, to_seq)` deferred to Phase H or later if CoA volume grows past ~1M rows.
+   - **`project_type` coverage guard** (v2 fold #13): scenario where coverage = 30% → assert WARN log emitted. v3 extends: dual-source guard (coa_applications + lifecycle_transitions) — assert both pct values logged.
+   - **Duration-attribution test** (v3 fold v2-G-2 — Gemini HIGH): seed Lead 'A' with known transitions: P1→P2 at Day 0, P2→P3 at Day 10, P3→P4 at Day 30. Run E.3. Assert: cohort `(NULL, project_type, coa_type_class, from_seq=P2-seq, to_seq=P3-seq)` has `median_days = 10` (duration of P2 = Day 10 - Day 0). Assert: cohort `(..., from_seq=P3-seq, ...)` has `median_days = 20` (duration of P3 = Day 30 - Day 10). Validates LAG-based duration attribution — guards against the off-by-one Gemini hypothesized in v2 (which we verified false-positive but the test cements the contract).
+   - **`unknown_cohort_count` realistic test** (v3 fold v2-G-3 + v5 fold v4-N1 — Gemini): seed a `coa_applications` record with NULL `project_type` AND NULL `coa_type_class` (legitimate Phase D-incomplete state — both columns are nullable on coa_applications until classify-coa-scope.js runs). Run the E.2 writer to produce a corresponding `lifecycle_transitions` row (also NULL on both columns; no constraint violation since lifecycle_transitions inherits nullability). Then run E.3. Assert: aggregate produces a bucket with both columns NULL → `unknown_cohort_count >= 1`; assert `audit_table.verdict = 'WARN'`. Validates the realistic Phase D-incomplete failure mode rather than an "impossible injection" scenario.
+   - **Migration 147 forward test**: apply mig 147 against fresh schema; assert `phase_stay_calibration_pkey` constraint absent; assert `permit_type` and `phase` columns nullable; assert mig 135's `phase_stay_calibration_new_unique` UNIQUE INDEX still present; assert new `phase_stay_calibration_permit_legacy_unique` partial unique index present; assert new `lifecycle_transitions_coa_lag_idx` partial composite index present.
+   - **`coa_type_class_null_transition_count` population test** (v5 fold v4-C1 — addresses the 4/4 convergent CRIT bug that the metric was never populated): seed 100 CoA `lifecycle_transitions` rows; set `coa_type_class = NULL` on 10 of them (10% rate); run E.3; assert `coa_type_class_null_transition_count = 10` AND `audit_table.verdict = 'WARN'` (since 10/100 = 0.10 > 0.05 threshold). Re-seed with only 3 NULL out of 100 (3% rate); assert `coa_type_class_null_transition_count = 3` AND verdict = `'PASS'` for this row.
+   - **`coa_applications` table-missing guard test** (v5 fold v4-H2): execute the script against a database where `coa_applications` is dropped (mock schema); assert no crash, WARN log emitted, `coa_project_type_coverage_pct` audit row value = `null`.
+   - **`coa_transition_count` seq-range filter test** (v5 fold v4-H1): seed 20 CoA transitions of which 5 have seqs outside 1-22 range; assert `coa_transition_count = 15` (matches CoA aggregate population), not 20 (raw `LIKE 'coa:%'` count).
+   - **Bucket-count safety cap test** (v5 fold v4-M3): mock or fixture a scenario producing 5001 buckets; assert the script throws with the explicit param-limit error message; assert no INSERT executed (transaction rolled back).
+
+2. **`src/tests/compute-phase-calibration.logic.test.ts`** (NEW) — pure-function helper tests:
+   - `buildBulkInsertSQL('t', ['a','b','c'], 2)` → exact string with `$1, $2, $3, $4, $5, $6` placeholders.
+   - `flattenBuckets([{...},{...}], RUN_AT)` → exact param array order and length.
+   - Tier classification: `classifyTier(100) → 'high'`, etc.
+
+3. **Manifest test** (v2 fold #12): assert `scripts/manifest.json` `coa` chain includes `compute_phase_calibration` after `classify_lifecycle_phase`.
+
+4. **`migration-135-phase-stay-calibration.infra.test.ts`** (existing — preserve passing): NULLS DISTINCT UNIQUE INDEX permits coexistence of permit-side (coa_type_class NULL) + CoA-side (permit_type NULL) rows.
+
+### Standards Compliance
+
+- **Try-Catch Boundary** (§2.2 + Spec 47 §R6): existing `pipeline.withAdvisoryLock(pool, 93, async () => {...})` envelope. `withTransaction` rollback on inner failure.
+- **Unhappy Path Tests** (§2.1): EXPLAIN ANALYZE failure path; project_type coverage 0% path; CoA-side seq out-of-range path.
+- **logError Mandate** (§6.1): new catch blocks use `pipeline.log.error('[compute-phase-calibration]', err, { context })`.
+- **Database — Add-Backfill-Drop** (§3.1): N/A — no new columns; mig 135 already shipped.
+- **Database — Pagination** (§3.2): N/A — bounded query output (~1000 rows max).
+- **Pipeline Safety — Transaction Boundaries** (§9.1): DELETE + INSERT in single `pipeline.withTransaction`.
+- **Pipeline Safety — Parameter Limit** (§9.2): 11 cols × 1000 max rows ≈ 11000 params (< 65535). Single batch.
+- **Pipeline Safety — Idempotent Scripts** (§9.3): DELETE+INSERT fully idempotent. Re-run produces identical output.
+
+### Spec 47 §R1-R12 Compliance (explicit walkthrough)
+
+- **§R1**: SDK imports unchanged.
+- **§R2**: ADVISORY_LOCK_ID = 93 unchanged.
+- **§R3**: Batch size implicit (single INSERT for ~1000 rows; 11000 params << 65535).
+- **§R3.5**: `RUN_AT = await pipeline.getDbTimestamp(pool)` unchanged.
+- **§R4**: Zod config validation unchanged. No new logic_variables.
+- **§R5**: Startup guards EXTENDED (v2 fold #10) — table existence + CoA-side count + project_type coverage.
+- **§R6**: `pipeline.withAdvisoryLock` unchanged.
+- **§R7**: `pool.query` (output bounded ~1000 rows; no streaming needed).
+- **§R8**: SQL-side computation (PERCENTILE_CONT, LAG).
+- **§R9**: Atomic DELETE + bulk INSERT in single `pipeline.withTransaction`.
+- **§R10**: PIPELINE_SUMMARY with `audit_table.verdict` DERIVED from row statuses (v2 fold #6 — fixes pre-existing bug).
+- **§R11**: emitMeta extended (Part 6).
+- **§R12**: existing `total_buckets >= 1 FAIL` gate preserved; new `coa_cohort_presence` WARN-only.
+
+### Spec 48 Pipeline Observability Adherence
+
+- **§3.1**: observer reads `audit_table.rows` for automated WARN/FAIL. E.3 emits 15 scalar rows; 6 thresholded (1 FAIL gate `total_buckets` + 5 WARN gates: `unreliable_buckets`, `coa_cohort_presence`, `coa_project_type_coverage_pct`, `unknown_cohort_count`, `coa_type_class_null_transition_count`).
+- **§3.2**: distributions in `records_meta` NOT passed to DeepSeek context. Manual operator inspection via SQL.
+- **§3.3**: post-E.3 (v2 fold #12), `compute_phase_calibration` runs in BOTH chains; observer writes to BOTH followup files.
+- **§3.4-§3.5**: observer fire-and-forget; emits its own audit_table. NO E.3 impact.
+
+### Pre-Review Self-Checklist (22 items)
+
+- (a) Scope is CoA-side only per v2 fold #1; permit-side aggregate UNCHANGED.
+- (b) `HAVING COUNT(*) >= 3` removed (v2 fold #2); tier counters handle low/outlier observability.
+- (c) `lifecycle_transitions` filter uses primary `from_seq/to_seq BETWEEN 1 AND 22` (intrinsic CoA range) + defensive `lead_id LIKE 'coa:%'`.
+- (d) LAG `ORDER BY ..., id` tiebreaker on both permit-side AND CoA-side CTEs (v2 fold #8).
+- (e) `from_phase` removed from GROUP BY; `MIN(from_phase) AS from_phase` aggregate (v2 fold #7).
+- (f) `EXTRACT(EPOCH FROM ...)` computed once in inner subquery, referenced thrice by PERCENTILE_CONT (v2 fold #19).
+- (g) BOTH `project_type IS NOT NULL` AND `coa_type_class IS NOT NULL` filters REMOVED from CoA aggregate WHERE clause (v3 fold v2-DS-1 + v4 fold v3-G-HIGH-3); NULLS DISTINCT (mig 135) handles permit-vs-CoA coexistence; new audit metrics `coa_type_class_null_transition_count` + `coa_project_type_coverage_pct` provide observability.
+- (h) Bulk INSERT uses `COHORT_INSERT_COLS` constant + `buildBulkInsertSQL` helper (v2 fold #4 — eliminates manual placeholder arithmetic).
+- (i) `audit_table.verdict` DERIVED from row statuses per §R10 (v2 fold #6 — fixes pre-existing bug at script line 155).
+- (j) 15 audit_table rows / 6 thresholded (v5 fold v4-L2): 4 existing (`total_buckets` FAIL, `permit_types_calibrated` INFO, `phases_calibrated` INFO, `unreliable_buckets` WARN — PRESERVED per v2 fold #11) + 7 new INFO (`permit_cohort_count`, `coa_cohort_count`, `coa_transition_count`, `high_volume_buckets`, `mid_volume_buckets`, `low_volume_buckets`, `outlier_buckets`) + 4 new thresholded WARN gates (`coa_cohort_presence`, `coa_project_type_coverage_pct`, `unknown_cohort_count`, `coa_type_class_null_transition_count`).
+- (k) `coa_transition_count` audit row (v2 fold #15) — triage signal to distinguish E.2-not-run vs E.2-ran-sparse.
+- (l) 3 records_meta distributions: `sample_size_distribution`, `cohort_dimension_coverage`, `coa_project_type_coverage_pct`.
+- (m) Startup guards: table-exists + CoA-row-count + project_type-coverage WARN (v2 folds #10, #13).
+- (n) `scripts/manifest.json` CoA chain includes `compute_phase_calibration` after `classify_lifecycle_phase` (v2 fold #12).
+- (o) Operator pre-ack targets duration regression (v2 fold #14 — Observability L).
+- (p) NULLS DISTINCT coexistence: permit-side `(permit_type, NULL, NULL, NULL, NULL, from_phase)` + CoA-side `(NULL, project_type, coa_type_class, from_seq, to_seq, from_phase)` — distinct under NULLS DISTINCT.
+- (q) emitMeta extended with `lifecycle_transitions`, `coa_applications`, and `id` columns added to existing tables for LAG tiebreaker (v2 fold #8).
+- (r) Spec 47 §R1-R12 walkthrough complete; Spec 48 §3.1-§3.5 alignment documented.
+- (s) Engineering Standards §2/3/6/9 explicit walkthrough complete.
+- (t) Tests in 4 files: infra (integration) + logic (helpers) + manifest assertion + mig-135 regression. EXPLAIN ANALYZE staging-only test (v2 fold #18).
+- (u) Phase F readiness: granular CoA cohorts ready for `compute-trade-forecasts.js` UNION extension.
+- (v) Spec amendments: §6.9 anchor; §6.11 Phase E E.3 anchor; §7 calibration-source extension; 84-W4 entry update; Phase I row anchor (Spec 42 §6.11).
+
+### Execution Plan (per WF1 in `.claude/workflows.md`)
+
+- [x] **Contract Definition:** COHORT_INSERT_COLS constant; audit_table 15-row shape (6 thresholded — v5 fold v4-L2); verdict derivation pattern.
+- [x] **Schema Evolution:** migration 147 (drop legacy PK + partial unique index + LAG composite index).
+- [x] **Test Scaffolding (TDD Red Light):** Added infra + logic + migration shape + manifest tests. 37/249 failed Red Light.
+- [x] **Red Light:** confirmed failing (37 failures).
+- [x] **Implementation:**
+  - Aggregate SQL extension (Part 1 — CoA-side ADD; permit-side preserved + `, id` tiebreaker).
+  - Bulk INSERT helper + COHORT_INSERT_COLS + flattenBuckets (Part 2 — name-based lookup).
+  - Tier counters + new audit metrics + dedicated SQL queries for coaTransitionCount + coaTypeClassNullTransitionCount (Part 3).
+  - Audit_table extension (15 rows / 6 thresholded) + verdict fix per Spec 47 §R10 (Part 4).
+  - records_meta distributions (Part 5).
+  - emitMeta extension (Part 6).
+  - `scripts/manifest.json` CoA chain add + `FreshnessTimeline.tsx` CoA chain add (Part 7).
+  - Startup guards: lifecycle_transitions + coa_applications + phase_stay_calibration EXISTS checks; bucket-count safety cap at 5000 (Part 8).
+- [x] **Multi-Agent Review (4 reviewers parallel — diff stage):**
+  - Gemini: 1 CRIT + 1 HIGH false positives (recurring from v2); 2 MED + 1 LOW deferred; 1 NIT folded.
+  - DeepSeek: 2 HIGH (1 interpretive disagreement deferred, 1 EXISTS-guard gap folded); 2 MED + 6 LOW/NIT deferred.
+  - Independent worktree: 0 CRIT, 2 IMPORTANT folded (`buildBulkInsertSQL(rowCount=0)` guard + `unknownCohortCount` misclassification convergent with Observability).
+  - Observability worktree: 0 CRIT, 2 IMPORTANT folded (descriptor wording + classification convergent with Independent).
+  - **Triage (v6):** 5 real findings folded inline; 2 verified false positives; 6 deferrals filed at `docs/reports/review_followups.md` items #119-#131.
+- [x] **Green Light:** `npm run verify` clean (typecheck + lint + test — 249 tests pass).
+- [ ] **Operator pre-ack:** commit message includes duration regression annotation guidance.
+- [ ] **WF6 commit:** Single commit. Message: `feat(84_lifecycle_phase_engine): WF1 Phase E.3 — CoA-side granular cohort calibration (lifecycle_transitions reader) + audit_table verdict bug fix (Spec 47 §R10) + manifest CoA chain add + mig 147 drop legacy PK + 15-row audit + 4 spec amendments`.
+- [x] **Followups append:** `docs/reports/review_followups.md` items #119-#131.
+
+### Spec Amendments (4)
+
+1. **Spec 42 §6.9 modified-scripts table — `scripts/compute-phase-calibration.js` row** — replace placeholder with `[E.3-COMMIT]` post-commit. Append note: "v2 scope reframe (Independent C-1): permit-side calibration unchanged; CoA-side granular cohort added via UNION ALL with `lifecycle_transitions`. Permit-side granular seq derivation deferred to Phase H."
+
+2. **Spec 42 §6.11 Phase E E.3 row** — fill `[E.3-COMMIT]` post-commit.
+
+3. **Spec 84 §7 calibration source** — append: "E.3 (commit `[E.3-COMMIT]`) extended consumption to include CoA-side `lifecycle_transitions` (E.2 INSERT writer). CoA-side data drives granular 5-tuple cohort calibration `(NULL, project_type, coa_type_class, from_seq, to_seq)`. Permit-side data retains legacy 2-tuple `(permit_type, from_phase)` until Phase H consolidates `permit_phase_transitions` into `lifecycle_transitions`."
+
+4. **Spec 84 84-W4 entry** — append: "E.3 (commit `[E.3-COMMIT]`) extended ledger consumption to `lifecycle_transitions` for CoA-side cohort calibration. Spec 84 §8.7 cohort blind-spot CLOSED for CoA-stage rows; permit-side blind-spot remains until Phase H."
 
 ---
 
-> **PLAN LOCKED (v4)** — convergence trajectory: v1=21 findings → v2=16 → v3=12 → v4 folded all 12 v3 findings (3 CRIT + 4 HIGH + 2 MED + 3 LOW/NIT) per user authorization. No further plan-review rounds — diff-stage 4-reviewer round will catch any residuals.
+> **PLAN LOCKED (v5)** — v4 plan-review 4-reviewer round surfaced 13 actionable findings, including a 4/4-convergent CRITICAL: `coaTypeClassNullTransitionCount` was declared but never populated (dead metric — would emit 0 every run, defeating the v4 observability replacement for the removed `coa_type_class IS NOT NULL` filter). Also a 3/4-convergent HIGH regression of the v3-DS-MED-3 fold (`coa_transition_count` query missing seq-range filter that the v4 revision table claimed was applied). v5 folds ALL 13 findings.
 >
-> **Top-3 critical folds applied in v4:**
-> 1. `lifecycle_transitions` UNIQUE INDEX `(lead_id, transitioned_at)` + `ON CONFLICT DO NOTHING` (mig 146 + INSERT) — fixes Gemini + DeepSeek 2-way convergent CRIT on non-idempotency.
-> 2. Backfill predicate `OR matched_rule IS NULL` (was `OR matched_status IS NULL`) — fixes Gemini CRIT on catchall infinite-loop poison-pill.
-> 3. 3 stale `*_DOWN.sql` references cleaned up — fixes Independent CRIT on doc contradiction.
+> v1→v2→v3→v4→v5 trajectory: 18 → 14 → 15 → 13 → v5 folds all. Per user authorization (response: "Fold all v4 + PLAN LOCK v5 directly"), v5 PLAN LOCKs without an additional plan-review round. The diff-stage 4-reviewer round (Gemini + DeepSeek + Independent worktree + Observability worktree) executed AFTER implementation will validate that all 13 folds correctly transferred from plan pseudocode to actual code.
 >
-> Do you authorize this WF1 Phase E.2 plan? (y/n)
+> §10 note (v5 load-bearing changes on top of v4): (1) `coaTypeClassNullTransitionCount` now populated by a dedicated SQL query (CRITICAL fix — was emitting 0 silently); (2) `coa_transition_count` query gets the seq-range filter to match the aggregate population (HIGH regression fix); (3) `coa_applications` query wrapped in `information_schema.tables` EXISTS guard (HIGH defensive — prevents advisory-lock leak on missing-table crash); (4) pre-ack vector #6 wording corrected from `<1ms` to `zero` since TRUNCATE+INSERT inside one transaction holds ACCESS EXCLUSIVE for the full duration (HIGH accuracy); (5) bucket-count upper-bound assertion at 5000 rows with explicit FAIL error message (MED defensive against param-limit overflow); (6) mig 147 DOWN block adds `DELETE WHERE phase IS NULL` step before re-adding `SET NOT NULL` (MED rollback safety); (7) all 3 stale doc-count locations corrected to 15/6 (LOW consistency); (8) co-firing guidance added to pre-ack runbook (LOW operator clarity for verdict=WARN with multiple Phase D-incomplete signals); (9) `unknown_cohort_count` test rewritten as realistic Phase D-incomplete fixture instead of "impossible injection" (NIT semantic accuracy).
 >
-> §10 note: §R10 `audit_table` now has 5 thresholded scalar rows (was 3 in v3): `unmapped_status_count`, `unmapped_decision_count`, `catalog_status_missing_count` (NEW), `catalog_invalid_phase_count` (split), `coa_stalled_count`. Plus 2 INFO rows (`coa_rows_updated`, `coa_phase_transitions_count`). Plus 3 distributions in `records_meta` (not in audit_table.rows). Observer (Spec 48) reads only `audit_table.rows` for automated WARN/FAIL; distributions inspected manually via SQL example in operator pre-ack.
->
-> DO NOT generate code. DO NOT modify scripts. TERMINATE RESPONSE until authorization.
+> The plan is authorized for implementation. Next step: scaffold tests (TDD Red Light), confirm failing, then implement.

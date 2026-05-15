@@ -76,7 +76,7 @@
     "coa": [
       "assert_schema", "coa", "assert_coa_freshness", "link_coa_to_parcels", "classify_coa_scope", "classify_coa_trades", "compute_coa_cost_estimates", "link_coa", "create_pre_permits",
       "assert_pre_permit_aging", "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
-      "classify_lifecycle_phase", "assert_lifecycle_phase_distribution", "assert_global_coverage"
+      "classify_lifecycle_phase", "assert_lifecycle_phase_distribution", "compute_phase_calibration", "assert_global_coverage"
     ],
     "sources": [
       "assert_schema", "address_points", "geocode_permits", "parcels",

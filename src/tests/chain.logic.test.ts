@@ -108,7 +108,7 @@ describe('Pipeline Chain Definitions', () => {
     expect(coaSlugs).not.toContain('compute_timing_calibration_v2');
   });
 
-  it('defines coa chain with 16 steps', () => {
+  it('defines coa chain with 17 steps', () => {
     // WF2 2026-04-11 — added classify_lifecycle_phase as the final
     // step so every CoA chain run reclassifies permits whose
     // last_seen_at was just bumped by link-coa.
@@ -121,9 +121,23 @@ describe('Pipeline Chain Definitions', () => {
     //   classify_coa_scope and link_coa). Spec 42 §6.5 step 5 + §6.8 row 667.
     // WF1 2026-05-14 R5.5 — +1 step: compute_coa_cost_estimates (step 7, after
     //   classify_coa_trades). Spec 42 §6.5 step 12 + §6.8 row 668.
+    // WF1 2026-05-14 Phase E.3 — +1 step: compute_phase_calibration
+    //   (after assert_lifecycle_phase_distribution, before assert_global_coverage).
+    //   Spec 42 §6.7 step 6 + §6.11 Phase E.3 + Spec 84 §7. Calibration now runs in
+    //   BOTH chains; observer writes audit_table to both followup files.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(16);
+    expect(chain!.steps).toHaveLength(17);
+  });
+
+  it('coa chain includes compute_phase_calibration after assert_lifecycle_phase_distribution (Phase E.3 v5 fold #12)', () => {
+    const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
+    const slugs = chain.steps.map((s) => s.slug);
+    expect(slugs).toContain('compute_phase_calibration');
+    const distIdx = slugs.indexOf('assert_lifecycle_phase_distribution');
+    const calibIdx = slugs.indexOf('compute_phase_calibration');
+    expect(distIdx).toBeGreaterThanOrEqual(0);
+    expect(calibIdx).toBeGreaterThan(distIdx);
   });
 
   it('defines sources chain with 15 steps', () => {
@@ -137,11 +151,15 @@ describe('Pipeline Chain Definitions', () => {
     // WF1 2026-04-19 — CoA ends with assert_global_coverage (step 12).
     // WF3 2026-04-25 — Permits chain now ends with backup_db (step 28, OP4 fix).
     //   CoA chain does not include backup_db — backup runs once per daily permits chain.
+    // WF1 2026-05-14 Phase E.3 — compute_phase_calibration inserted between
+    //   assert_lifecycle_phase_distribution and assert_global_coverage, shifting
+    //   the CoA tail anchors.
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('assert_global_coverage');
-    expect(coa!.steps[coa!.steps.length - 2]!.slug).toBe('assert_lifecycle_phase_distribution');
-    expect(coa!.steps[coa!.steps.length - 3]!.slug).toBe('classify_lifecycle_phase');
+    expect(coa!.steps[coa!.steps.length - 2]!.slug).toBe('compute_phase_calibration');
+    expect(coa!.steps[coa!.steps.length - 3]!.slug).toBe('assert_lifecycle_phase_distribution');
+    expect(coa!.steps[coa!.steps.length - 4]!.slug).toBe('classify_lifecycle_phase');
     // Permits chain: backup_db is last; assert_global_coverage is second-to-last
     expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('backup_db');
     expect(permits!.steps[permits!.steps.length - 2]!.slug).toBe('assert_global_coverage');
@@ -356,14 +374,15 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     const disabledSlugs = new Set(['enrich_wsib_builders', 'enrich_named_builders']);
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
     const activeSteps = coa.steps.filter((s) => !disabledSlugs.has(s.slug));
-    // CoA chain has no enrichment steps — all 16 remain
+    // CoA chain has no enrichment steps — all 17 remain
     // (WF2 2026-04-18 added assert_lifecycle_phase_distribution as step 11;
     //  WF1 2026-04-19 added assert_global_coverage as step 12;
     //  WF2 2026-05-14 R5.2 inserted link_coa_to_parcels — total 13;
     //  WF1 2026-05-14 R5.3 inserted classify_coa_scope — total 14;
     //  WF1 2026-05-14 R5.4 inserted classify_coa_trades — total 15;
-    //  WF1 2026-05-14 R5.5 inserted compute_coa_cost_estimates — total 16)
-    expect(activeSteps).toHaveLength(16);
+    //  WF1 2026-05-14 R5.5 inserted compute_coa_cost_estimates — total 16;
+    //  WF1 2026-05-14 Phase E.3 inserted compute_phase_calibration — total 17)
+    expect(activeSteps).toHaveLength(17);
   });
 
   it('empty disabled set leaves all steps active', () => {
@@ -1424,11 +1443,15 @@ describe('Entity Tracing + Phase Distribution Wiring', () => {
     expect(alpdIdx).toBe(lcpIdx + 1);
   });
 
-  it('manifest: assert_global_coverage is the final step of the coa chain (assert_lifecycle_phase_distribution is penultimate)', () => {
+  it('manifest: assert_global_coverage is the final step of the coa chain (compute_phase_calibration is penultimate)', () => {
     // WF1 2026-04-19: assert_global_coverage appended as new step 12.
+    // WF1 2026-05-14 Phase E.3: compute_phase_calibration inserted between
+    //   assert_lifecycle_phase_distribution and assert_global_coverage, shifting
+    //   the penultimate slot.
     const chain: string[] = manifest.chains.coa;
     expect(chain[chain.length - 1]).toBe('assert_global_coverage');
-    expect(chain[chain.length - 2]).toBe('assert_lifecycle_phase_distribution');
+    expect(chain[chain.length - 2]).toBe('compute_phase_calibration');
+    expect(chain[chain.length - 3]).toBe('assert_lifecycle_phase_distribution');
   });
 
   it('manifest: backup_db is the final step of the permits chain (assert_global_coverage is penultimate)', () => {

@@ -46,7 +46,7 @@
 | 81 | `01-pipeline/81_opportunity_score_engine.md` | 81 Opportunity Score Engine | `src/lib/classification/scoring.ts` | `src/tests/compute-opportunity-scores.infra.test.ts` | Done |
 | 82 | `01-pipeline/82_crm_assistant_alerts.md` | 82 CRM Assistant & Alerts | — | `src/tests/tracked-projects.logic.test.ts`, `src/tests/tracked-projects.infra.test.ts` | Done |
 | 83 | `01-pipeline/83_lead_cost_model.md` | Spec 83: Surgical Estimation Engine — Valuation & Trade Slicing | — | `src/tests/cost-model.logic.test.ts`, `src/tests/cost-estimates.infra.test.ts` | ARCHITECTURE LOCKED |
-| 84 | `01-pipeline/84_lifecycle_phase_engine.md` | 84 Lifecycle Phase Engine — The "Strangler Fig" Classifier | `src/lib/leads/build-lifecycle-timeline.ts`, `src/app/api/leads/flight-board/route.ts`, `src/app/api/leads/flight-board/detail/[id]/route.ts`, +13 more | `src/tests/control-panel.logic.test.ts` | Done |
+| 84 | `01-pipeline/84_lifecycle_phase_engine.md` | 84 Lifecycle Phase Engine — The "Strangler Fig" Classifier | `src/lib/leads/build-lifecycle-timeline.ts`, `src/components/FreshnessTimeline.tsx`, `src/app/api/leads/flight-board/route.ts`, +13 more | `src/tests/control-panel.logic.test.ts` | Done |
 | 85 | `01-pipeline/85_trade_forecast_engine.md` | 85 Trade Forecast Engine — The Flight Tracker | `scripts/compute-trade-forecasts.js`, `scripts/lib/lifecycle-phase.js` | `src/tests/trade-forecasts.logic.test.ts`, `src/tests/trade-forecasts.infra.test.ts` | Done |
 
 ## Web Admin

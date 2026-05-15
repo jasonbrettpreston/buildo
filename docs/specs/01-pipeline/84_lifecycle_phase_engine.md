@@ -1192,7 +1192,7 @@ The `assert-lifecycle-phase-distribution.js` script acts as the "Internal Audito
 | Bug ID | Issue & Fix Action | Status |
 |---|---|---|
 | 84-W1 | **Orphan Ordinal Gap:** Orphans (O1-O3) have no rank, so they never archive. Fix: Assign negative ordinals. | Pending Refactor |
-| 84-W4 | **Dead Transition Write:** Ledger is written but not used. Fix: Wire Spec 86 Calibration to read this ledger. | **Resolved (WF1 #B 2026-05-09)** — `scripts/compute-phase-calibration.js` now reads the ledger via `LAG()` window + `PERCENTILE_CONT` per `(permit_type, from_phase)` and writes `phase_stay_calibration`; the inspector's `lifecycle.timeline[]` reads that table for cohort comparison. See §7 below. |
+| 84-W4 | **Dead Transition Write:** Ledger is written but not used. Fix: Wire Spec 86 Calibration to read this ledger. | **Resolved (WF1 #B 2026-05-09)** — `scripts/compute-phase-calibration.js` now reads the ledger via `LAG()` window + `PERCENTILE_CONT` per `(permit_type, from_phase)` and writes `phase_stay_calibration`; the inspector's `lifecycle.timeline[]` reads that table for cohort comparison. **Phase E.3 extension (DELIVERED 2026-05-15 commit `[E.3-COMMIT]`):** ledger consumption extended to `lifecycle_transitions` (the E.2 INSERT writer for CoA-side phase transitions). Spec 84 §8.7 cohort blind-spot CLOSED for CoA-stage rows via granular 5-tuple cohort key `(NULL permit_type, project_type, coa_type_class, from_seq, to_seq)`; permit-side blind-spot remains until Phase H consolidates `permit_phase_transitions` into `lifecycle_transitions`. See §7 below. |
 | 84-W11 | **ID Collision:** P3/P4/P5 mean different things in CoA vs Permits. Fix: Prefix Permit-Intake phases (e.g., `INTAKE_P3`). | **Resolved (WF1 #coa-pipeline-parity-phase-a 2026-05-13; transitional consumer guards in Phase E.2 2026-05-14)** — see §3 Phase-Code Namespace Deprecation. Granular-first move: `lifecycle_seq` (1–110) is authoritative; legacy `lifecycle_phase` deprecated through Phase H. **Transitional consumer guards (Phase E.2 v4 scope expansion — MOVED FROM Phase F into E.2 per Gemini v3 CRIT):** `scripts/compute-trade-forecasts.js` `PRE_CONSTRUCTION_PHASES.has(lifecycle_phase)` lookup and `scripts/update-tracked-projects.js` `PHASE_ORDINAL[lifecycle_phase]` lookup require `lead_id LIKE 'coa:%'` guards to prevent CoA-P3/P4 rows from misrouting through permit-side calibration / ordinal paths. Lands in E.2 alongside the producer (`classify-lifecycle-phase.js` consumer wiring) so CoA-P3/P4 rows never exist in production without their consumers being guarded. Phase F retains only the CoA UNION source extension + per-seq cohort key work. |
 | 84-W5 | **Magic Stall Numbers:** Thresholds (180/730 days) are hardcoded. Fix: Move to `Zod` validated `logic_variables`. | Pending Refactor |
 | 84-W3 | **Mega-Insert Risk (Spec 47 §6.1):** 237k-row backfill crashes DB on `.query()`. Fix: Wire `pipeline.streamQuery` and standard chunking with loop arrays. | Pending Refactor |
@@ -1205,7 +1205,13 @@ The `assert-lifecycle-phase-distribution.js` script acts as the "Internal Audito
 
 ## 7. Calibration Source
 
-The `permit_phase_transitions` ledger is the canonical source for phase-stay velocity math. `scripts/compute-phase-calibration.js` (Permits chain step 23, advisory lock 93) consumes the ledger and writes the `phase_stay_calibration` table.
+The `permit_phase_transitions` ledger is the canonical source for permit-side phase-stay velocity math. `scripts/compute-phase-calibration.js` (Permits chain step 23, advisory lock 93) consumes the ledger and writes the `phase_stay_calibration` table.
+
+**Phase E.3 extension (DELIVERED 2026-05-15 commit `[E.3-COMMIT]`):** `compute-phase-calibration.js` now reads TWO ledgers:
+1. `permit_phase_transitions` (legacy permit-side; PRESERVED) — produces 2-tuple `(permit_type, from_phase)` cohort rows in `phase_stay_calibration`.
+2. `lifecycle_transitions` WHERE `lead_id LIKE 'coa:%'` (NEW — the E.2 INSERT writer) — produces granular 5-tuple `(NULL permit_type, project_type, coa_type_class, from_seq, to_seq)` cohort rows in `phase_stay_calibration`. Closes the Spec 84 §8.7 cohort blind-spot for CoA-stage rows. Permit-side granular seq derivation remains deferred to Phase H when `permit_phase_transitions` is consolidated into `lifecycle_transitions`.
+
+`compute_phase_calibration` now runs in BOTH the `permits` and `coa` chains (per `scripts/manifest.json` + `src/components/FreshnessTimeline.tsx` — added in E.3 commit). The Spec 48 observer writes audit_table to both `permits-followup.md` and `coa-followup.md` post-E.3.
 
 ### Schema — `phase_stay_calibration`
 | Column | Type | Description |
