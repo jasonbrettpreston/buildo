@@ -579,7 +579,7 @@ describe('Pipeline Chains', () => {
     expect(indent2plus).toHaveLength(0);
   });
 
-  it('coa chain has 16 steps ending with assert_global_coverage', () => {
+  it('coa chain has 17 steps ending with assert_global_coverage', () => {
     // WF2 2026-04-11: +1 (classify_lifecycle_phase) — was 9 before.
     // WF2 2026-04-18: +1 (assert_lifecycle_phase_distribution as step 11).
     // WF1 2026-04-19: +1 (assert_global_coverage as step 12).
@@ -587,12 +587,15 @@ describe('Pipeline Chains', () => {
     // WF1 2026-05-14 R5.3: +1 (classify_coa_scope at step 5).
     // WF1 2026-05-14 R5.4: +1 (classify_coa_trades at step 6).
     // WF1 2026-05-14 R5.5: +1 (compute_coa_cost_estimates at step 7).
+    // WF1 2026-05-15 Phase E.3: +1 (compute_phase_calibration inserted between
+    //   assert_lifecycle_phase_distribution and assert_global_coverage). Total 17.
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
-    expect(coa.steps).toHaveLength(16);
+    expect(coa.steps).toHaveLength(17);
     expect(coa!.steps[0]!.slug).toBe('assert_schema');
     expect(coa!.steps[1]!.slug).toBe('coa');
     expect(coa!.steps[coa.steps.length - 1]!.slug).toBe('assert_global_coverage');
-    expect(coa!.steps[coa.steps.length - 2]!.slug).toBe('assert_lifecycle_phase_distribution');
+    expect(coa!.steps[coa.steps.length - 2]!.slug).toBe('compute_phase_calibration');
+    expect(coa!.steps[coa.steps.length - 3]!.slug).toBe('assert_lifecycle_phase_distribution');
   });
 
   it('sources chain has 15 steps including WSIB, compute_centroids and assert_engine_health', () => {

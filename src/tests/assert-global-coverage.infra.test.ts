@@ -177,14 +177,17 @@ describe('manifest.json — chain wiring', () => {
     expect(permitsChain).toHaveLength(30);
   });
 
-  it('assert_global_coverage is last step in coa chain (step 16 after R5.5 compute_coa_cost_estimates insertion)', () => {
+  it('assert_global_coverage is last step in coa chain (step 17 after Phase E.3 compute_phase_calibration insertion)', () => {
     // WF2 2026-05-14 R5.2 — +1 step (link_coa_to_parcels). Chain length 13.
     // WF1 2026-05-14 R5.3 — +1 step (classify_coa_scope). Chain length now 14.
     // WF1 2026-05-14 R5.4 — +1 step (classify_coa_trades). Chain length now 15.
     // WF1 2026-05-14 R5.5 — +1 step (compute_coa_cost_estimates). Chain length now 16.
+    // WF1 2026-05-15 Phase E.3 — +1 step (compute_phase_calibration inserted
+    //   between assert_lifecycle_phase_distribution and assert_global_coverage).
+    //   Chain length now 17. Spec 42 §6.7 step 6 + §6.11 Phase E.3.
     const coaChain: string[] = manifest.chains.coa;
     expect(coaChain[coaChain.length - 1]).toBe('assert_global_coverage');
-    expect(coaChain).toHaveLength(16);
+    expect(coaChain).toHaveLength(17);
   });
 
   it('assert_global_coverage comes after assert_entity_tracing in permits chain', () => {
@@ -195,12 +198,16 @@ describe('manifest.json — chain wiring', () => {
     expect(globalIdx).toBe(entityIdx + 1);
   });
 
-  it('assert_global_coverage comes after assert_lifecycle_phase_distribution in coa chain', () => {
+  it('assert_global_coverage comes after compute_phase_calibration in coa chain (Phase E.3)', () => {
+    // Phase E.3 (2026-05-15): compute_phase_calibration inserted between
+    // assert_lifecycle_phase_distribution and assert_global_coverage.
+    // assert_global_coverage is now immediately after compute_phase_calibration
+    // (not assert_lifecycle_phase_distribution).
     const coaChain: string[] = manifest.chains.coa;
-    const distIdx = coaChain.indexOf('assert_lifecycle_phase_distribution');
+    const calibIdx = coaChain.indexOf('compute_phase_calibration');
     const globalIdx = coaChain.indexOf('assert_global_coverage');
-    expect(distIdx).toBeGreaterThan(-1);
-    expect(globalIdx).toBe(distIdx + 1);
+    expect(calibIdx).toBeGreaterThan(-1);
+    expect(globalIdx).toBe(calibIdx + 1);
   });
 });
 
