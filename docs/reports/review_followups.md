@@ -984,3 +984,17 @@ R5.3 design pivot from app-layer dual-write (6 scripts) to trigger-based mirrori
 | 54 | REJECT | DeepSeek-144 | DELETE cascade concerns | No FK references lead_parcels; no cascading DELETE paths |
 | 55 | NIT (DEFER) | DeepSeek-144 | Comment hardcodes "MAX=15" production invariant in migration | Re-grep on future ingestion change; CHECK constraint on permit_parcels.match_type if data grows |
 
+---
+
+## WF2 Spec 93 RNFirebase migration — Round 2 review (commit: TBD, 2026-04-30)
+
+### WF3 candidates — FILED 2026-05-15
+
+| WF3 | Item | Planning note |
+|---|---|---|
+| WF3-A | Backup-email persistence bridge missing | `.cursor/deferred_task_spec93_backup_email_persistence.md` |
+| WF3-B | Auth-state reset placement leaks data on forced sign-out | `.cursor/deferred_task_spec93_authstate_reset_placement.md` |
+| WF3-C | @sentry/react-native v7→v8 upgrade for RN 0.81 + New Architecture | `.cursor/deferred_task_spec93_sentry_v8_upgrade.md` |
+
+_Filed by scheduled remote agent 2026-05-15; commit SHA: TBD (this commit). Original CRITICAL details preserved in the planning notes; pick up via `WF3` in a future session._
+
