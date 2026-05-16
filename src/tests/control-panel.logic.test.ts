@@ -174,6 +174,14 @@ const EXPECTED_LOGIC_VAR_KEYS = [
     `lifecycle_seq_band_${n}_max`,
   ]),
   'lifecycle_seq_unclassified_max',
+
+  // ── Phase E.5 per-kind posture flags (WF1 2026-05-XX, migration 150) ──
+  // Spec 47 §R4 + Spec 84 §3.4 + Spec 48 §3.1.
+  // 3 keys: lifecycle_seq_band_promote_to_fail_<kind> for each violation kind.
+  // Operator-driven WARN→FAIL routing gate; default 0; values 0 or 1.
+  'lifecycle_seq_band_promote_to_fail_band_violation',
+  'lifecycle_seq_band_promote_to_fail_no_band_configured',
+  'lifecycle_seq_band_promote_to_fail_expected_data_missing',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

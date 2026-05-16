@@ -1127,6 +1127,103 @@ The 110-row per-seq distribution map ships in `records_meta.seq_distribution` (N
 
 **`linked_permit_num` post-E.1:** E.1 removed Rule 0; `classifyCoaPhase()` now writes `lifecycle_seq` (and `lifecycle_phase`) to ALL CoA rows regardless of `linked_permit_num`. The new `seq_unclassified_count` gate correctly does NOT filter on `linked_permit_num IS NULL`. The legacy phase-keyed `unclassified_count` DELIBERATELY KEEPS the filter for legacy-shape baseline continuity (Spec 48 §3.4 7-day historical baseline preservation during the Strangler Fig transition window).
 
+**Phase E.5 per-kind posture-flag mechanism (DELIVERED 2026-05-16 commit `[E.5-COMMIT]`):** band recalibration operational gate via **3 per-kind integer logic_variables** (mig 150) that allow operators to independently promote each violation kind from WARN routing (E.4 default) to FAIL routing:
+
+- `lifecycle_seq_band_promote_to_fail_band_violation` — gates `band_violation` kind (data shifted within configured band). The canonical regression-detection gate; promote first after pre-promotion checklist passes.
+- `lifecycle_seq_band_promote_to_fail_no_band_configured` — gates `no_band_configured` kind (seq present in data but no band loaded — operator config gap). Usually kept at WARN through Phase F.
+- `lifecycle_seq_band_promote_to_fail_expected_data_missing` — gates `expected_data_missing` kind (data deletion / classifier-skip signal). Promote after structural-absence audit (Step 3 of checklist below).
+
+Each flag is integer 0/1; Zod validates `.int().min(0).max(1)` at script startup. PostgreSQL CHECK constraints scoped by `variable_key` are not natively supported; Zod is the source of truth per Spec 47 §R4.
+
+**Branch routing**: each violation push site reads ONLY its kind's flag (`promoteToFail_band_violation` in the main loop; `promoteToFail_no_band_configured` in Direction 1; `promoteToFail_expected_data_missing` in Direction 2). When flag is 1, push goes to `seqBandsFailing++` + `failures.push(...)` → verdict FAIL → throw halt path. When flag is 0, push goes to `seqBandsWarn++` (E.4 WARN-only routing preserved).
+
+**Per-violation prefix selection**: `renderPrefix(kind)` helper consults `POSTURE_FLAG_BY_KIND[kind]` so each preview line gets its own kind-specific prefix. Mixed-posture state (e.g., `flag_band_violation=1`, `flag_no_band_configured=0`) correctly renders `band_violation` violations with `[E.5 FAIL POSTURE — 'band_violation' kind halts the pipeline]` and `no_band_configured` violations with `[E.4 WARN-ONLY POSTURE]`. The FAIL prefix includes the kind name for operator incident-response triage.
+
+**3 separate posture audit_table.rows entries** (total 32 rows): each `lifecycle_seq_band_promote_to_fail_<kind>` audit row transitions INFO→WARN when its flag is 1, so the Spec 48 observer's `extractIssues()` surfaces armed-posture rows in every post-promotion run's DeepSeek narrative (operator visibility on PASS runs too — without this, post-promotion clean runs would have no record that the gate is armed).
+
+**Verdict-cascade clarification**: WARN-status posture rows surface in observer narrative for operator visibility but do NOT cascade to verdict WARN. The script's verdict derives from the `failures[]`/`warnings[]` arrays per Spec 47 §R10 (`failures.length > 0 ? 'FAIL' : warnings.length > 0 ? 'WARN' : 'PASS'`), NOT from `auditRows.some(r => r.status === 'WARN')`. PASS verdict remains achievable on clean runs with armed posture. `audit_table.verdict` reflects RUN health; armed-posture audit rows reflect POSTURE state.
+
+**`emitSummary` BEFORE `throw` (load-bearing ordering)**: `pipeline.emitSummary(...)` is called BEFORE the `if (failures.length > 0) throw new Error(...)` halt path so the audit_table (including the WARN-status posture rows + FAIL-status `seq_bands_failing` row) is persisted to `pipeline_runs` even on FAIL runs. The observer relies on this for DeepSeek narrative construction.
+
+**`seq_violations.posture` field** (Phase F forward-compat): each violation object gains `posture: 'warn'|'fail'` derived from `POSTURE_FLAG_BY_KIND[kind]` at write time. Phase F consumers self-route on this field without needing a separate `logic_variables` query.
+
+**Operator pre-promotion checklist (Spec 84 §3.4.E.5):**
+
+1. **7 consecutive PASS runs on staging** — verify via:
+   ```sql
+   SELECT id, started_at, records_meta->'audit_table'->>'verdict' AS verdict
+     FROM pipeline_runs
+    WHERE pipeline LIKE '%:assert-lifecycle-phase-distribution'
+      AND status = 'completed'
+    ORDER BY started_at DESC LIMIT 7;
+   ```
+   All 7 rows must show `verdict = 'PASS'`. Note: `pipeline_runs.status='completed'` only filters out failed/skipped runs from the sample; the inner `audit_table.verdict` is the actual gate signal. Checking `pipeline_runs.status` alone is incorrect — `'completed'` runs can have WARN/FAIL `audit_table.verdict`.
+
+2. **Phase D + E.2 fully ramped** — `seq_unclassified_count < 100` for 3 consecutive days. Query:
+   ```sql
+   SELECT id, started_at,
+          jsonb_path_query_first(
+            records_meta->'audit_table'->'rows',
+            '$[*] ? (@.metric == "seq_unclassified_count").value'
+          )::int AS unclassified_count
+     FROM pipeline_runs
+    WHERE pipeline LIKE '%:assert-lifecycle-phase-distribution'
+      AND status = 'completed'
+      AND started_at >= NOW() - INTERVAL '3 days'
+    ORDER BY started_at DESC;
+   ```
+   All values must be `< 100`. (The `::int` cast unwraps the `jsonb_path_query_first(...)` return value; otherwise the result renders as a JSON-formatted string.)
+
+3. **No `expected_data_missing` violations for >24h** — query:
+   ```sql
+   SELECT id, started_at, records_meta->'seq_violations' AS violations
+     FROM pipeline_runs
+    WHERE pipeline LIKE '%:assert-lifecycle-phase-distribution'
+      AND status = 'completed'
+      AND started_at >= NOW() - INTERVAL '24 hours'
+      AND records_meta->'seq_violations' IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM jsonb_array_elements(records_meta->'seq_violations') AS v
+         WHERE v->>'kind' = 'expected_data_missing'
+      )
+    ORDER BY started_at DESC;
+   ```
+   Zero rows expected. If rows return AND the absence is **structurally caused** (catalog seq has NULL rows_count by design, classifier never produces it), keep `_expected_data_missing` flag at 0 (WARN) OR reset the affected seq's `band.min` to 0 via Control Panel before promoting that flag.
+
+4. **Dual-gate cascade note**: if `unclassified_count` (phase-keyed) is FAILing on the same runs, resolve THAT gate first — per-seq band gates are only diagnosable once classifier coverage is stable. Phase-keyed `unclassified_count` is the coarse safety net; per-seq bands are the fine-grained gate.
+
+5. **Operator authorizes per-kind promotion — recommended sequencing**:
+   1. **`band_violation` FIRST** — most aggressive regression detector; promote after the pre-promotion checklist passes (Steps 1-4 all green).
+   2. **`expected_data_missing` SECOND** — promote AFTER auditing structural absences (Step 3 query returns zero rows on most-recent 7 runs).
+   3. **`no_band_configured` LAST** — rare; usually kept at WARN as a config-gap signal.
+
+   ```sql
+   -- Promote band_violation only (recommended first step):
+   UPDATE logic_variables SET variable_value = 1
+    WHERE variable_key = 'lifecycle_seq_band_promote_to_fail_band_violation';
+   -- Or promote all three at once (only if ops team treats unconfigured-seq as halt-worthy):
+   UPDATE logic_variables SET variable_value = 1
+    WHERE variable_key IN (
+      'lifecycle_seq_band_promote_to_fail_band_violation',
+      'lifecycle_seq_band_promote_to_fail_no_band_configured',
+      'lifecycle_seq_band_promote_to_fail_expected_data_missing'
+    );
+   ```
+   OR uses Spec 86 Control Panel (`/admin/control-panel → marketplace constants → [select key] → 1 → Save`) — one click per flag.
+
+6. **Rollback path (spurious FAIL in production):**
+   - **IMMEDIATE incident response (seconds):** demote the offending flag(s) via Control Panel single-click OR:
+     ```sql
+     UPDATE logic_variables SET variable_value = 0
+      WHERE variable_key IN (
+        'lifecycle_seq_band_promote_to_fail_band_violation',
+        'lifecycle_seq_band_promote_to_fail_no_band_configured',
+        'lifecycle_seq_band_promote_to_fail_expected_data_missing'
+      );
+     ```
+     The next pipeline run reverts to WARN-only routing.
+   - **SAFEST rollback (full restoration):** (1) `git revert` of the WF1 Phase E.5 commit; (2) redeploy the application; (3) **run mig 150's DOWN block manually** to remove the 3 orphan `logic_variables` rows (the DOWN block is comment-only per project Rule 6; operator runs the `DELETE` statement from the comment block manually). Without step 3, the 3 keys remain in the DB unused — not functionally breaking (the reverted code doesn't read them) but leaves stale config visible in Spec 86 Control Panel.
+
 ---
 
 ## 4. System Logic & Edge Cases
