@@ -2,17 +2,21 @@
 /**
  * Assert Lifecycle Phase Distribution — Tier 3 CQA check.
  *
- * Runs after the lifecycle classifier. Asserts that every phase's
- * count is within ±5% of the expected value, and that the unclassified
- * count is at most 100 rows (the strongest correctness gate).
+ * Phase E.4 v4 extension (this commit) — adds per-seq distribution band
+ * assertion alongside the existing 19 phase-keyed bands. The per-seq bands
+ * are derived from `universal_stream_catalog.rows_count` via mig 148; index
+ * builds for the lifecycle_seq columns ship in mig 149.
  *
- * Designed to be included in the permits/coa pipeline chains as a
- * separate assert step, OR invoked standalone after a manual
- * classifier run.
+ * Per-seq posture is WARN-only on first deploy (Phase D/E.2 ramp-up state
+ * is expected to violate). E.5 (separate WF) tightens to FAIL after 7
+ * consecutive PASS runs on staging.
  *
  * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
+ * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase E.4
  * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3.4
+ * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §R1-R12
+ * SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.1-§3.2
  */
 'use strict';
 
@@ -25,25 +29,13 @@ const {
 } = require('./../lib/lifecycle-phase');
 
 // Advisory lock ID — unique to this assert script (§47 §A.5, ID 109).
-// Prevents two concurrent chain runs from executing the distribution
-// check simultaneously. If the classifier (lock 84) is concurrently
-// mid-write, the skipEmit-false pattern below still guards via the
-// lock-is-held check on the shared lock (see WF3 Bug #10 rationale).
 const ADVISORY_LOCK_ID = 109;
 
 // ──────────────────────────────────────────────────────────────────
 // Phase distribution bands — externalized to logic_variables (WF2 2026-05-07).
 //
 // Audit-table display labels → snake-case logic_variables key suffixes.
-// Migration 119 seeded `lifecycle_band_<suffix>_min/_max` rows. Bounds
-// are operator-tunable via the admin Control Panel (Spec 86 §1) without
-// a code deploy. Defaults are set in scripts/seeds/logic_variables.json
-// and mirrored into the DB by migration 119.
-//
-// Bands assume the classifier has recently run on fresh data. If it
-// hasn't, most counts will be 0 and the assertion will fail — correct
-// behaviour (the feature is unhealthy until the classifier populates
-// the column).
+// Migration 119 seeded `lifecycle_band_<suffix>_min/_max` rows.
 // ──────────────────────────────────────────────────────────────────
 const PHASE_TO_LOGIC_VAR_SUFFIX = {
   // permits — pre-issuance
@@ -56,28 +48,29 @@ const PHASE_TO_LOGIC_VAR_SUFFIX = {
   'P9-P17': 'p9_p17_agg',
   // orphans
   O1: 'o1', O2: 'o2', O3: 'o3',
-  // CoA (no namespace collision with permits — permits never store P1/P2)
+  // CoA (no namespace collision with permits)
   P1: 'coa_p1', P2: 'coa_p2',
 };
 
-// Build Zod schema dynamically — every phase contributes a min/max key.
-// Bands are integer row counts; .int() rejects accidental fractional operator
-// edits (e.g. 500.5) that would otherwise round-trip through DECIMAL silently.
+// Build Zod schema for phase-keyed bands dynamically.
 const _bandShape = {};
 for (const suffix of Object.values(PHASE_TO_LOGIC_VAR_SUFFIX)) {
   _bandShape[`lifecycle_band_${suffix}_min`] = z.coerce.number().finite().nonnegative().int();
   _bandShape[`lifecycle_band_${suffix}_max`] = z.coerce.number().finite().nonnegative().int();
 }
 
+// Phase E.4 v4 — Stage 1 module-level static schema. Per-seq band keys pass
+// through `.passthrough()` and are validated dynamically at runtime (Stage 2)
+// against the catalog query (which determines the actual valid seq list).
 const LOGIC_VARS_SCHEMA = z.object({
   lifecycle_unclassified_max: z.coerce.number().finite().nonnegative().int(),
+  lifecycle_seq_unclassified_max: z.coerce.number().finite().nonnegative().int(),
   lifecycle_cross_stalled_threshold: z.coerce.number().finite().nonnegative().int(),
   lifecycle_cross_active_inspection_threshold: z.coerce.number().finite().nonnegative().int(),
   lifecycle_cross_issued_threshold: z.coerce.number().finite().nonnegative().int(),
   ..._bandShape,
 }).passthrough().superRefine((data, ctx) => {
-  // Operator-hotfix guard: a min > max pair would silently make the
-  // band un-matchable and the assertion would PASS on a dead phase.
+  // Existing min>max guard for phase bands (preserved).
   for (const suffix of Object.values(PHASE_TO_LOGIC_VAR_SUFFIX)) {
     const min = data[`lifecycle_band_${suffix}_min`];
     const max = data[`lifecycle_band_${suffix}_max`];
@@ -90,16 +83,17 @@ const LOGIC_VARS_SCHEMA = z.object({
   }
 });
 
+// Phase E.4 v4 — band key pattern for orphan detection.
+const BAND_KEY_PATTERN = /^lifecycle_seq_band_(\d+)_(min|max)$/;
+// Cap on structured violations array in records_meta to prevent payload bloat.
+const SEQ_VIOLATIONS_CAP = 50;
+
 // Phases that roll into the P9-P17 aggregate bucket
 const ACTIVE_SUBPHASES = new Set([
   'P9', 'P10', 'P11', 'P12', 'P13', 'P14', 'P15', 'P16', 'P17',
 ]);
 
-// Startup validation — `<> ALL(ARRAY[]::text[])` is vacuously true
-// in Postgres (every value is not-equal to every element of an empty
-// array), which would make the unclassified gate pass silently even
-// if the classifier is completely broken. Guard against accidental
-// empty arrays from a future bad edit to lifecycle-phase.js.
+// Startup validation — `<> ALL(ARRAY[]::text[])` is vacuously true in Postgres.
 if (DEAD_STATUS_ARRAY.length === 0) {
   throw new Error('DEAD_STATUS_ARRAY is empty — refusing to run with a vacuously-true unclassified gate');
 }
@@ -108,281 +102,551 @@ if (NORMALIZED_DEAD_DECISIONS_ARRAY.length === 0) {
 }
 
 pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
-  // ─── Advisory lock awareness — pipeline.withAdvisoryLock (Phase 2 migration) ──
-  // If the classifier is mid-write we skip gracefully (reason: 'classifier_running')
-  // rather than reading half-updated distribution counts. skipEmit:false preserves
-  // the custom reason — the helper's default SKIP emit omits it.
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-  // §4: config reads MUST execute inside the lock callback
-  const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-lifecycle-phase-distribution');
-  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-lifecycle-phase-distribution');
-  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
-  const unclassifiedMax = logicVars.lifecycle_unclassified_max;
-  const stalledThreshold = logicVars.lifecycle_cross_stalled_threshold;
-  const activeInspectionThreshold = logicVars.lifecycle_cross_active_inspection_threshold;
-  const issuedThreshold = logicVars.lifecycle_cross_issued_threshold;
+    // §4: config reads MUST execute inside the lock callback.
+    const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-lifecycle-phase-distribution');
+    const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-lifecycle-phase-distribution');
+    if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+    const unclassifiedMax = logicVars.lifecycle_unclassified_max;
+    const seqUnclassifiedMax = logicVars.lifecycle_seq_unclassified_max;
+    const stalledThreshold = logicVars.lifecycle_cross_stalled_threshold;
+    const activeInspectionThreshold = logicVars.lifecycle_cross_active_inspection_threshold;
+    const issuedThreshold = logicVars.lifecycle_cross_issued_threshold;
 
-  // Resolve the per-phase distribution bands from logic_variables.
-  // Spec 47 §R4 — no hardcoded thresholds; operator-tunable via Spec 86 Control Panel.
-  const EXPECTED_BANDS = {};
-  for (const [label, suffix] of Object.entries(PHASE_TO_LOGIC_VAR_SUFFIX)) {
-    EXPECTED_BANDS[label] = {
-      min: logicVars[`lifecycle_band_${suffix}_min`],
-      max: logicVars[`lifecycle_band_${suffix}_max`],
-    };
-  }
-  // Distribution from permits.lifecycle_phase
-  const { rows: permitRows } = await pool.query(
-    `SELECT lifecycle_phase, COUNT(*)::int AS n
-       FROM permits
-      GROUP BY lifecycle_phase`,
-  );
-  const permitCounts = Object.fromEntries(
-    permitRows.map((r) => [
-      r.lifecycle_phase === null ? 'null' : r.lifecycle_phase,
-      r.n,
-    ]),
-  );
+    // Resolve the per-phase distribution bands from logic_variables.
+    const EXPECTED_BANDS = {};
+    for (const [label, suffix] of Object.entries(PHASE_TO_LOGIC_VAR_SUFFIX)) {
+      EXPECTED_BANDS[label] = {
+        min: logicVars[`lifecycle_band_${suffix}_min`],
+        max: logicVars[`lifecycle_band_${suffix}_max`],
+      };
+    }
 
-  // CoA distribution
-  const { rows: coaRows } = await pool.query(
-    `SELECT lifecycle_phase, COUNT(*)::int AS n
-       FROM coa_applications
-      GROUP BY lifecycle_phase`,
-  );
-  const coaCounts = Object.fromEntries(
-    coaRows.map((r) => [
-      r.lifecycle_phase === null ? 'null' : r.lifecycle_phase,
-      r.n,
-    ]),
-  );
+    // ─── Phase E.4 — startup guard: universal_stream_catalog table exists ───
+    const { rows: [{ exists: catalogExists }] } = await pool.query(
+      `SELECT EXISTS (SELECT 1 FROM information_schema.tables
+                       WHERE table_schema = 'public' AND table_name = 'universal_stream_catalog') AS exists`,
+    );
+    if (!catalogExists) {
+      pipeline.log.warn('[assert-lifecycle-phase-distribution]',
+        'universal_stream_catalog table missing — Phase B migrations 128/129 not applied. ' +
+        'Per-seq assertion DISABLED for this run; phase-keyed assertion continues.');
+    }
 
-  // WF3 Bug #6: merge by SUMMING shared keys, not overwriting.
-  // Both maps have a 'null' key (from lifecycle_phase IS NULL).
-  // Object spread would silently overwrite permits' ~50K null count
-  // with CoAs' ~50 null count — a 1000× undercount.
-  const allCounts = { ...permitCounts };
-  for (const [phase, count] of Object.entries(coaCounts)) {
-    allCounts[phase] = (allCounts[phase] || 0) + count;
-  }
+    // v4 fold v3-DS-CRIT: conditional catalog query — Part 6 startup guard
+    // logs WARN if catalogExists=false but does NOT throw. Unconditional
+    // SELECT would crash with `relation does not exist`. Guard it.
+    let catalogRows = [];
+    if (catalogExists) {
+      const res = await pool.query(
+        `SELECT seq, rows_count FROM universal_stream_catalog ORDER BY seq`,
+      );
+      catalogRows = res.rows;
+    }
+    const catalogSeqs = catalogRows.map((r) => r.seq);
+    // v4 fold v3-G-LOW: catalog-derived INFO-only set (source of truth);
+    // independent of logic_variables (which can be operator-tampered).
+    const catalogNullCountSeqs = new Set(
+      catalogRows.filter((r) => r.rows_count == null || r.rows_count === 0).map((r) => r.seq),
+    );
 
-  // Compute active sub-stage aggregate
-  let p9p17Total = 0;
-  for (const phase of ACTIVE_SUBPHASES) {
-    p9p17Total += allCounts[phase] || 0;
-  }
-  allCounts['P9-P17'] = p9p17Total;
+    // v4 fold v3-Indep-MED-A: empty-catalog guard — catalogExists=true but
+    // catalogRows.length=0 (mig 128 applied, mig 129 seed not applied).
+    // Without this, seq_bands_total: 0 === 0 → PASS would silently hide the
+    // misapplied-migration state.
+    const catalogEmptyButPresent = catalogExists && catalogRows.length === 0;
+    if (catalogEmptyButPresent) {
+      pipeline.log.warn('[assert-lifecycle-phase-distribution]',
+        'universal_stream_catalog table exists but is empty (mig 129 seed not applied) — ' +
+        'per-seq assertion DISABLED for this run.');
+    }
 
-  // Unclassified count — uses DEAD_STATUS_ARRAY from the shared lib
-  // (single source of truth). WF3 Bug #4 + #8.
-  const { rows: unclPermitRows } = await pool.query(
-    `SELECT COUNT(*)::int AS n
-       FROM permits
-      WHERE lifecycle_phase IS NULL
-        AND status <> ALL($1::text[])
-        AND status IS NOT NULL
-        AND TRIM(status) <> ''`,
-    [DEAD_STATUS_ARRAY],
-  );
-  // WF3 Bug #8: also check CoA unclassified. If the CoA classifier
-  // breaks and leaves 5K rows with NULL phase, the assert script must
-  // catch it — not silently PASS.
-  const { rows: unclCoaRows } = await pool.query(
-    `SELECT COUNT(*)::int AS n
-       FROM coa_applications
-      WHERE lifecycle_phase IS NULL
-        AND linked_permit_num IS NULL
-        AND lower(trim(regexp_replace(COALESCE(decision,''), '\\s+', ' ', 'g')))
-            <> ALL($1::text[])
-        AND decision IS NOT NULL
-        AND TRIM(decision) <> ''`,
-    [NORMALIZED_DEAD_DECISIONS_ARRAY],
-  );
-  const unclassifiedCount = unclPermitRows[0].n + unclCoaRows[0].n;
+    // ─── Load per-seq bands from logicVars ───────────────────────────
+    const seqBands = {};
+    let seqBandKeysLoaded = 0;
+    for (const seq of catalogSeqs) {
+      const minKey = `lifecycle_seq_band_${seq}_min`;
+      const maxKey = `lifecycle_seq_band_${seq}_max`;
+      if (logicVars[minKey] != null) {
+        seqBands[seq] = {
+          min: Number(logicVars[minKey]),
+          max: logicVars[maxKey] != null ? Number(logicVars[maxKey]) : null,  // null = no upper bound
+        };
+        seqBandKeysLoaded++;
+      }
+    }
+    if (catalogSeqs.length > 0 && seqBandKeysLoaded < catalogSeqs.length) {
+      pipeline.log.warn('[assert-lifecycle-phase-distribution]',
+        `Only ${seqBandKeysLoaded}/${catalogSeqs.length} per-seq band keys loaded — ` +
+        `mig 148 may not have applied. Per-seq assertion will be partial.`);
+    }
 
-  const auditRows = [];
-  const failures = [];
-  const warnings = [];
-
-  for (const [phase, band] of Object.entries(EXPECTED_BANDS)) {
-    const actual = allCounts[phase] || 0;
-    const inBand = actual >= band.min && actual <= band.max;
-    const status = inBand ? 'PASS' : 'FAIL';
-    if (!inBand) {
-      failures.push(
-        `${phase}: ${actual} outside expected band [${band.min}, ${band.max}]`,
+    // ─── v4 fold v3-G-CRIT: orphan-key detection ─────────────────────
+    // Catches typos (e.g. `_mx` instead of `_max`) that .passthrough() would
+    // otherwise silently accept. Throws at startup with explicit recovery hint.
+    const catalogSeqSet = new Set(catalogSeqs);
+    const orphanKeys = [];
+    for (const key of Object.keys(logicVars)) {
+      const m = key.match(BAND_KEY_PATTERN);
+      if (m) {
+        const seqNum = Number(m[1]);
+        if (!catalogSeqSet.has(seqNum)) {
+          orphanKeys.push(key);
+        }
+      }
+    }
+    if (catalogExists && catalogRows.length > 0 && orphanKeys.length > 0) {
+      // v4 fold v3-Indep-MED-C: explicit DELETE recovery path. Re-seeding via
+      // mig 148 does NOT fix orphans (ON CONFLICT DO NOTHING preserves them).
+      throw new Error(
+        `[assert-lifecycle-phase-distribution] Orphan band keys in logic_variables ` +
+        `(no matching seq in universal_stream_catalog): ${orphanKeys.slice(0, 10).join(', ')}` +
+        (orphanKeys.length > 10 ? ` ... (+${orphanKeys.length - 10} more)` : '') +
+        `. Likely cause: typo in operator-edited key (e.g. _mx instead of _max), ` +
+        `or stale band for a seq removed by a future catalog migration. ` +
+        `RECOVERY: delete the orphan key directly — either (a) via Spec 86 ` +
+        `Control Panel (/admin/control-panel → marketplace constants → delete), ` +
+        `or (b) DELETE FROM logic_variables WHERE variable_key IN (` +
+        orphanKeys.slice(0, 3).map((k) => `'${k}'`).join(', ') +
+        (orphanKeys.length > 3 ? ', ...' : '') +
+        `). Re-seeding via mig 148 does NOT fix orphan keys — ON CONFLICT DO NOTHING ` +
+        `preserves them. After deletion, re-run this script to confirm recovery.`,
       );
     }
+
+    // ─── v4 fold v3-G-HIGH: Stage 2 dynamic per-seq band validation ──
+    // Static Zod schema can't enumerate runtime catalog keys; validate shape
+    // + nonnegativity + min<=max here. Parity with .nonnegative() on phase bands.
+    for (const seq of catalogSeqs) {
+      const min = logicVars[`lifecycle_seq_band_${seq}_min`];
+      const max = logicVars[`lifecycle_seq_band_${seq}_max`];
+      if (min != null && (!Number.isFinite(Number(min)) || Number(min) < 0)) {
+        throw new Error(`lifecycle_seq_band_${seq}_min: invalid value '${min}' — expected non-negative integer`);
+      }
+      if (max != null && (!Number.isFinite(Number(max)) || Number(max) < 0)) {
+        throw new Error(`lifecycle_seq_band_${seq}_max: invalid value '${max}' — expected non-negative integer or NULL`);
+      }
+      if (min != null && max != null && Number(min) > Number(max)) {
+        throw new Error(`lifecycle_seq_band_${seq}: min (${min}) > max (${max}) — band would never match`);
+      }
+    }
+
+    // Distribution from permits.lifecycle_phase
+    const { rows: permitRows } = await pool.query(
+      `SELECT lifecycle_phase, COUNT(*)::int AS n
+         FROM permits
+        GROUP BY lifecycle_phase`,
+    );
+    const permitCounts = Object.fromEntries(
+      permitRows.map((r) => [r.lifecycle_phase === null ? 'null' : r.lifecycle_phase, r.n]),
+    );
+
+    // CoA distribution
+    const { rows: coaRows } = await pool.query(
+      `SELECT lifecycle_phase, COUNT(*)::int AS n
+         FROM coa_applications
+        GROUP BY lifecycle_phase`,
+    );
+    const coaCounts = Object.fromEntries(
+      coaRows.map((r) => [r.lifecycle_phase === null ? 'null' : r.lifecycle_phase, r.n]),
+    );
+
+    // WF3 Bug #6: merge by SUMMING shared keys, not overwriting.
+    const allCounts = { ...permitCounts };
+    for (const [phase, count] of Object.entries(coaCounts)) {
+      allCounts[phase] = (allCounts[phase] || 0) + count;
+    }
+
+    // Compute active sub-stage aggregate
+    let p9p17Total = 0;
+    for (const phase of ACTIVE_SUBPHASES) {
+      p9p17Total += allCounts[phase] || 0;
+    }
+    allCounts['P9-P17'] = p9p17Total;
+
+    // ─── Phase E.4 — per-seq distribution UNION ALL ──────────────────
+    // Reads via the partial indices added by mig 149 (idx_*_lifecycle_seq).
+    const { rows: seqRows } = await pool.query(`
+      SELECT lifecycle_seq, COUNT(*)::int AS n
+        FROM (
+          SELECT lifecycle_seq FROM permits          WHERE lifecycle_seq IS NOT NULL
+          UNION ALL
+          SELECT lifecycle_seq FROM coa_applications WHERE lifecycle_seq IS NOT NULL
+        ) u
+       GROUP BY lifecycle_seq
+       ORDER BY lifecycle_seq
+    `);
+    const seqDistribution = {};
+    for (const r of seqRows) {
+      seqDistribution[r.lifecycle_seq] = r.n;
+    }
+
+    // ─── Aggregate counter classification per seq ────────────────────
+    let seqBandsPassing          = 0;
+    let seqBandsWarn             = 0;
+    let seqBandsFailing          = 0;  // v1 posture: hardwired to 0; E.5 promotion hook.
+    let seqBandsNullCatalogCount = 0;  // v2 fold v1-I-HIGH-1: INFO-only bands count.
+    const seqViolations          = [];  // structured: {seq, actual, band_min, band_max, kind}
+
+    for (const seq of catalogSeqs) {
+      const band = seqBands[seq];
+      if (!band) continue;  // partial-migration case
+      const actual = seqDistribution[seq] || 0;
+      // v4 fold v3-G-LOW: use catalog-derived INFO-only set, not band.max === null.
+      if (catalogNullCountSeqs.has(seq)) {
+        seqBandsNullCatalogCount++;
+        seqBandsPassing++;
+        continue;
+      }
+      // v4 fold v3-G-CRIT-formula: null-aware comparison (operator-tampered
+      // null max still defers to catalog-null check above).
+      const inBand = actual >= band.min && (band.max === null || actual <= band.max);
+      if (inBand) {
+        seqBandsPassing++;
+      } else {
+        seqBandsWarn++;
+        seqViolations.push({
+          seq,
+          actual,
+          band_min: band.min,
+          band_max: band.max,
+          kind: 'band_violation',
+        });
+      }
+    }
+
+    // ─── v2 fold v1-DS-HIGH-2 + v3 fold v2-G-HIGH-3: bidirectional symmetric-diff ─
+    const distributionSeqs = new Set(Object.keys(seqDistribution).map(Number));
+    const bandSeqs = new Set(Object.keys(seqBands).map(Number));
+    // Direction 1: seqs in data but not in bands → no_band_configured WARN.
+    for (const seq of distributionSeqs) {
+      if (!bandSeqs.has(seq)) {
+        seqBandsWarn++;
+        seqViolations.push({
+          seq,
+          actual: seqDistribution[seq],
+          band_min: null,
+          band_max: null,
+          kind: 'no_band_configured',
+        });
+      }
+    }
+    // Direction 2: seqs in bands but not in data with band.min > 0 →
+    // expected_data_missing WARN (data deletion / classifier-skip detection).
+    //
+    // Diff-review v4 fold (Independent I3): use catalog-derived
+    // `catalogNullCountSeqs` set (source of truth) instead of `band.max === null`.
+    // Operator-tampered max values must not change the INFO-only classification —
+    // it's a property of the catalog, not the band config. Consistent with the
+    // main-loop convention (lines above) that uses `catalogNullCountSeqs.has(seq)`.
+    for (const seq of bandSeqs) {
+      if (!distributionSeqs.has(seq)) {
+        const band = seqBands[seq];
+        if (band && !catalogNullCountSeqs.has(seq) && band.min > 0) {
+          seqBandsWarn++;
+          seqViolations.push({
+            seq,
+            actual: 0,
+            band_min: band.min,
+            band_max: band.max,
+            kind: 'expected_data_missing',
+          });
+        }
+      }
+    }
+
+    // v3 fold v1-DS-MED-4: cap structured violations at 50 to prevent
+    // records_meta payload bloat. Truncated overflow surfaced as scalar.
+    const seqViolationsTruncatedCount = Math.max(0, seqViolations.length - SEQ_VIOLATIONS_CAP);
+    const seqViolationsCapped = seqViolations.slice(0, SEQ_VIOLATIONS_CAP);
+
+    // ─── Per-seq unclassified count (NULL lifecycle_seq) ─────────────
+    const { rows: [{ n: seqUnclassifiedPermits }] } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM permits
+        WHERE lifecycle_seq IS NULL
+          AND status <> ALL($1::text[])
+          AND status IS NOT NULL
+          AND TRIM(status) <> ''`,
+      [DEAD_STATUS_ARRAY],
+    );
+    // v2 fold v1-I-HIGH-3: linked_permit_num IS NULL filter REMOVED
+    // (E.1 fold v1-1 removed Rule 0; classifier now writes lifecycle_seq to
+    // ALL CoA rows regardless of link state).
+    const { rows: [{ n: seqUnclassifiedCoa }] } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM coa_applications
+        WHERE lifecycle_seq IS NULL
+          AND lower(trim(regexp_replace(COALESCE(decision,''), '\\s+', ' ', 'g')))
+              <> ALL($1::text[])
+          AND decision IS NOT NULL
+          AND TRIM(decision) <> ''`,
+      [NORMALIZED_DEAD_DECISIONS_ARRAY],
+    );
+    const seqUnclassifiedCount = seqUnclassifiedPermits + seqUnclassifiedCoa;
+
+    // ─── Phase-keyed unclassified (existing) ─────────────────────────
+    const { rows: unclPermitRows } = await pool.query(
+      `SELECT COUNT(*)::int AS n
+         FROM permits
+        WHERE lifecycle_phase IS NULL
+          AND status <> ALL($1::text[])
+          AND status IS NOT NULL
+          AND TRIM(status) <> ''`,
+      [DEAD_STATUS_ARRAY],
+    );
+    // Diff-review v4 fold (Gemini MED + DeepSeek MED convergent): the phase-keyed
+    // `unclassified_count` query DELIBERATELY KEEPS `linked_permit_num IS NULL`
+    // for legacy-shape baseline continuity. The newer per-seq `seq_unclassified_count`
+    // query above REMOVES this filter because E.1 fold v1-1 removed Rule 0 and the
+    // classifier now writes lifecycle_seq to ALL CoA rows. The phase-keyed counter's
+    // 7-day historical baseline (Spec 48 §3.4) would shift if we removed the filter
+    // here too — the seq-keyed counter is the post-E.1 correct shape; the phase-keyed
+    // counter preserves baseline for the Strangler Fig transition window.
+    const { rows: unclCoaRows } = await pool.query(
+      `SELECT COUNT(*)::int AS n
+         FROM coa_applications
+        WHERE lifecycle_phase IS NULL
+          AND linked_permit_num IS NULL
+          AND lower(trim(regexp_replace(COALESCE(decision,''), '\\s+', ' ', 'g')))
+              <> ALL($1::text[])
+          AND decision IS NOT NULL
+          AND TRIM(decision) <> ''`,
+      [NORMALIZED_DEAD_DECISIONS_ARRAY],
+    );
+    const unclassifiedCount = unclPermitRows[0].n + unclCoaRows[0].n;
+
+    // ─── Phase-keyed band evaluation (existing) ──────────────────────
+    const auditRows = [];
+    const failures = [];
+    const warnings = [];
+
+    for (const [phase, band] of Object.entries(EXPECTED_BANDS)) {
+      const actual = allCounts[phase] || 0;
+      const inBand = actual >= band.min && actual <= band.max;
+      const status = inBand ? 'PASS' : 'FAIL';
+      if (!inBand) {
+        failures.push(`${phase}: ${actual} outside expected band [${band.min}, ${band.max}]`);
+      }
+      auditRows.push({
+        metric: `phase_${phase}_count`,
+        value: actual,
+        threshold: `${band.min}..${band.max}`,
+        status,
+      });
+    }
+
     auditRows.push({
-      metric: `phase_${phase}_count`,
-      value: actual,
-      threshold: `${band.min}..${band.max}`,
-      status,
+      metric: 'unclassified_count',
+      value: unclassifiedCount,
+      threshold: `<= ${unclassifiedMax}`,
+      status: unclassifiedCount <= unclassifiedMax ? 'PASS' : 'FAIL',
     });
-  }
+    if (unclassifiedCount > unclassifiedMax) {
+      failures.push(`unclassified_count ${unclassifiedCount} exceeds hard limit ${unclassifiedMax}`);
+    }
 
-  auditRows.push({
-    metric: 'unclassified_count',
-    value: unclassifiedCount,
-    threshold: `<= ${unclassifiedMax}`,
-    status: unclassifiedCount <= unclassifiedMax ? 'PASS' : 'FAIL',
-  });
-  if (unclassifiedCount > unclassifiedMax) {
-    failures.push(
-      `unclassified_count ${unclassifiedCount} exceeds hard limit ${unclassifiedMax}`,
+    // ─── Cross-status checks (preserved) ─────────────────────────────
+    const { rows: crossCheck1 } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM permits
+        WHERE LOWER(enriched_status) = 'stalled' AND lifecycle_stalled IS NOT TRUE`,
     );
-  }
-
-  // Cross-check vs enriched_status (spec §3.5)
-  //
-  // WF3 Bug #9 (Strangler Fig contradiction): the enriched_status
-  // column was set by the legacy classify-inspection-status.js which
-  // aggressively flags permits as 'Stalled'. The new lifecycle
-  // classifier uses more accurate date math. Holding the new logic
-  // hostage to legacy bugs produces false FAILs. Downgraded to WARN
-  // with a threshold of 1000 before escalating to FAIL.
-  // WF3 2026-05-08 — silent-failure-mode hardening (Spec 84 §3.5 + Spec 47 §10.3 + Spec 85 §3.5):
-  //   - `lifecycle_stalled IS NOT TRUE` (NULL-safe; consistent with cross-checks #2/#3 below)
-  //   - `LOWER(enriched_status)` (case-insensitive; consistent with the CoA unclassified
-  //      query at ~L195 which uses `lower(trim(...))` on `decision`)
-  // Today `lifecycle_stalled` is `BOOLEAN NOT NULL DEFAULT false` (mig 085) and the
-  // legacy classifier only writes `'Stalled'` — neither variant manifests in current
-  // data. The fix regression-locks the query against any future schema relaxation or
-  // operator-driven case drift, before downstream consumers (Spec 85 trade-forecast
-  // engine) compound on bad state.
-  const { rows: crossCheck1 } = await pool.query(
-    `SELECT COUNT(*)::int AS n FROM permits
-      WHERE LOWER(enriched_status) = 'stalled' AND lifecycle_stalled IS NOT TRUE`,
-  );
-  const crossStalled = crossCheck1[0].n;
-  const stalledStatus = crossStalled === 0
-    ? 'PASS'
-    : crossStalled < stalledThreshold ? 'WARN' : 'FAIL';
-  auditRows.push({
-    metric: 'cross_check_stalled',
-    value: crossStalled,
-    threshold: `< ${stalledThreshold} (WARN), >= ${stalledThreshold} (FAIL)`,
-    status: stalledStatus,
-  });
-  if (crossStalled >= stalledThreshold) {
-    failures.push(
-      `${crossStalled} permits have enriched_status=Stalled but lifecycle_stalled=false (exceeds ${stalledThreshold} threshold)`,
-    );
-  } else if (crossStalled > 0) {
-    warnings.push(
-      `${crossStalled} permits have enriched_status=Stalled but lifecycle_stalled=false (Strangler Fig drift — legacy column is less accurate)`,
-    );
-  }
-
-  // WF3 Bug #7: SQL NOT IN ignores NULL values. `lifecycle_phase NOT IN
-  // ('P9',...,'P18')` evaluates to NULL (not TRUE) when lifecycle_phase
-  // IS NULL, silently excluding rows the cross-check should catch. Fix:
-  // add `OR lifecycle_phase IS NULL`.
-  // Cross-check 2: enriched_status='Active Inspection' should map to
-  // either the P9-P18 construction sub-stages OR the O1-O3 orphan
-  // branch (orphan trade permits with status='Inspection' get routed
-  // to O2/O3 by the decision tree — that's correct behavior, not a
-  // classification failure). Also includes IS NULL guard per WF3 Bug #7.
-  // WF3 2026-05-08 — `LOWER(enriched_status)` for the same case-insensitivity reason
-  // as cross-check #1 (sibling concern, same root cause).
-  const { rows: crossCheck2 } = await pool.query(
-    `SELECT COUNT(*)::int AS n FROM permits
-      WHERE LOWER(enriched_status) = 'active inspection'
-        AND (lifecycle_phase NOT IN (
-          'P9','P10','P11','P12','P13','P14','P15','P16','P17','P18',
-          'O1','O2','O3'
-        ) OR lifecycle_phase IS NULL)`,
-  );
-  const crossActive = crossCheck2[0].n;
-  // Small drift (<500) is expected: permits whose status changed to a
-  // terminal state after the legacy enriched_status was set will have
-  // lifecycle_phase=P19/P20/null even though enriched_status still says
-  // 'Active Inspection'. That's correct Strangler Fig behavior.
-  auditRows.push({
-    metric: 'cross_check_active_inspection',
-    value: crossActive,
-    threshold: `< ${activeInspectionThreshold} (WARN), >= ${activeInspectionThreshold} (FAIL)`,
-    status: crossActive === 0 ? 'PASS' : crossActive < activeInspectionThreshold ? 'WARN' : 'FAIL',
-  });
-  if (crossActive >= activeInspectionThreshold) {
-    failures.push(
-      `${crossActive} permits with enriched_status=Active Inspection are not in P9-P18/O1-O3 (exceeds ${activeInspectionThreshold} threshold)`,
-    );
-  } else if (crossActive > 0) {
-    warnings.push(
-      `${crossActive} permits with enriched_status=Active Inspection are not in P9-P18/O1-O3 (Strangler Fig drift — legacy column is less accurate)`,
-    );
-  }
-
-  // Cross-check 3: same orphan inclusion + IS NULL guard as cross-check 2.
-  // WF3 2026-05-08 — `LOWER(enriched_status)` (sibling concern from cross-check #1).
-  const { rows: crossCheck3 } = await pool.query(
-    `SELECT COUNT(*)::int AS n FROM permits
-      WHERE LOWER(enriched_status) = 'permit issued'
-        AND (lifecycle_phase NOT IN ('P7a','P7b','P7c','P7d','P8','P18',
-             'O1','O2','O3')
-             OR lifecycle_phase IS NULL)`,
-  );
-  const crossIssued = crossCheck3[0].n;
-  auditRows.push({
-    metric: 'cross_check_permit_issued',
-    value: crossIssued,
-    threshold: `< ${issuedThreshold} (WARN), >= ${issuedThreshold} (FAIL)`,
-    status: crossIssued === 0 ? 'PASS' : crossIssued < issuedThreshold ? 'WARN' : 'FAIL',
-  });
-  if (crossIssued >= issuedThreshold) {
-    failures.push(
-      `${crossIssued} permits with enriched_status=Permit Issued are not in P7a/b/c/d/P8/P18/O1-O3 (exceeds ${issuedThreshold} threshold)`,
-    );
-  }
-
-  const verdict = failures.length > 0 ? 'FAIL' : warnings.length > 0 ? 'WARN' : 'PASS';
-
-  if (failures.length > 0) {
-    pipeline.log.error('[assert-lifecycle-phase-distribution]', 'FAILURES', {
-      failures,
+    const crossStalled = crossCheck1[0].n;
+    const stalledStatus = crossStalled === 0 ? 'PASS' : crossStalled < stalledThreshold ? 'WARN' : 'FAIL';
+    auditRows.push({
+      metric: 'cross_check_stalled',
+      value: crossStalled,
+      threshold: `< ${stalledThreshold} (WARN), >= ${stalledThreshold} (FAIL)`,
+      status: stalledStatus,
     });
-  }
-  if (warnings.length > 0) {
-    pipeline.log.warn('[assert-lifecycle-phase-distribution]', 'WARNINGS', {
-      warnings,
-    });
-  }
+    if (crossStalled >= stalledThreshold) {
+      failures.push(`${crossStalled} permits have enriched_status=Stalled but lifecycle_stalled=false (exceeds ${stalledThreshold} threshold)`);
+    } else if (crossStalled > 0) {
+      warnings.push(`${crossStalled} permits have enriched_status=Stalled but lifecycle_stalled=false (Strangler Fig drift — legacy column is less accurate)`);
+    }
 
-  pipeline.emitSummary({
-    // Exclude the synthetic 'P9-P17' aggregate key to avoid double-
-    // counting those phases (they exist individually AND as the sum).
-    records_total: Object.entries(allCounts)
-      .filter(([k]) => k !== 'P9-P17')
-      .reduce((sum, [, n]) => sum + n, 0),
-    records_new: 0,
-    records_updated: 0,
-    records_meta: {
-      phase_distribution: allCounts,
-      unclassified_count: unclassifiedCount,
-      audit_table: {
-        phase: 22,
-        name: 'Assert Lifecycle Phase Distribution',
-        verdict,
-        rows: auditRows,
+    const { rows: crossCheck2 } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM permits
+        WHERE LOWER(enriched_status) = 'active inspection'
+          AND (lifecycle_phase NOT IN (
+            'P9','P10','P11','P12','P13','P14','P15','P16','P17','P18',
+            'O1','O2','O3'
+          ) OR lifecycle_phase IS NULL)`,
+    );
+    const crossActive = crossCheck2[0].n;
+    auditRows.push({
+      metric: 'cross_check_active_inspection',
+      value: crossActive,
+      threshold: `< ${activeInspectionThreshold} (WARN), >= ${activeInspectionThreshold} (FAIL)`,
+      status: crossActive === 0 ? 'PASS' : crossActive < activeInspectionThreshold ? 'WARN' : 'FAIL',
+    });
+    if (crossActive >= activeInspectionThreshold) {
+      failures.push(`${crossActive} permits with enriched_status=Active Inspection are not in P9-P18/O1-O3 (exceeds ${activeInspectionThreshold} threshold)`);
+    } else if (crossActive > 0) {
+      warnings.push(`${crossActive} permits with enriched_status=Active Inspection are not in P9-P18/O1-O3 (Strangler Fig drift — legacy column is less accurate)`);
+    }
+
+    const { rows: crossCheck3 } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM permits
+        WHERE LOWER(enriched_status) = 'permit issued'
+          AND (lifecycle_phase NOT IN ('P7a','P7b','P7c','P7d','P8','P18',
+               'O1','O2','O3')
+               OR lifecycle_phase IS NULL)`,
+    );
+    const crossIssued = crossCheck3[0].n;
+    auditRows.push({
+      metric: 'cross_check_permit_issued',
+      value: crossIssued,
+      threshold: `< ${issuedThreshold} (WARN), >= ${issuedThreshold} (FAIL)`,
+      status: crossIssued === 0 ? 'PASS' : crossIssued < issuedThreshold ? 'WARN' : 'FAIL',
+    });
+    if (crossIssued >= issuedThreshold) {
+      failures.push(`${crossIssued} permits with enriched_status=Permit Issued are not in P7a/b/c/d/P8/P18/O1-O3 (exceeds ${issuedThreshold} threshold)`);
+    }
+
+    // ─── Phase E.4 — 6 new audit_table rows ──────────────────────────
+    // v4 fold v3-Indep-MED-A + v3-DS-MED-threshold: empty-catalog override +
+    // bifurcated threshold message.
+    const seqBandsTotalStatus =
+      catalogEmptyButPresent ? 'WARN' :
+      Object.keys(seqBands).length === catalogSeqs.length ? 'PASS' : 'WARN';
+    const seqBandsTotalThreshold = catalogEmptyButPresent
+      ? '0 rows in universal_stream_catalog — verify mig 129 seed applied (expected ~110)'
+      : `== ${catalogSeqs.length} expected (dynamic from universal_stream_catalog; WARN on partial mig 148 apply)`;
+    auditRows.push({
+      metric: 'seq_bands_total',
+      value: Object.keys(seqBands).length,
+      threshold: seqBandsTotalThreshold,
+      status: seqBandsTotalStatus,
+    });
+    // v3 fold v2-Obs-HIGH-2 + v4 fold: posture-prefixed warning when WARN.
+    if (seqBandsTotalStatus === 'WARN') {
+      if (catalogEmptyButPresent) {
+        warnings.push(
+          '[E.4 STARTUP STATE] universal_stream_catalog table exists but is empty ' +
+          '(mig 129 seed not applied) — per-seq assertion DISABLED for this run. ' +
+          'Apply mig 129 to enable per-seq gating.',
+        );
+      } else {
+        warnings.push(
+          '[E.4 WARN-ONLY POSTURE — partial mig 148 apply expected during ramp-up] ' +
+          `seq_bands_total ${Object.keys(seqBands).length}/${catalogSeqs.length} band keys loaded — ` +
+          'verify mig 148 applied cleanly. Per-seq assertion will be partial until next migration apply.',
+        );
+      }
+    }
+    auditRows.push({
+      metric: 'seq_bands_passing',
+      value: seqBandsPassing,
+      threshold: null,
+      status: 'INFO',
+    });
+    // v2 fold v1-I-HIGH-1: decomposition signal — distinguishes "real PASS"
+    // from "INFO-only PASS" (NULL rows_count catalog branch).
+    auditRows.push({
+      metric: 'seq_bands_null_catalog_count',
+      value: seqBandsNullCatalogCount,
+      threshold: null,
+      status: 'INFO',
+    });
+    auditRows.push({
+      metric: 'seq_bands_warn',
+      value: seqBandsWarn,
+      threshold: '== 0 PASS, > 0 WARN (E.4 first-deploy posture; E.5 tightens to FAIL)',
+      status: seqBandsWarn === 0 ? 'PASS' : 'WARN',
+    });
+    auditRows.push({
+      metric: 'seq_bands_failing',
+      value: seqBandsFailing,
+      threshold: '== 0 PASS, > 0 FAIL (E.5 promotion hook; always 0 in E.4 v1)',
+      status: seqBandsFailing === 0 ? 'PASS' : 'FAIL',
+    });
+    auditRows.push({
+      metric: 'seq_unclassified_count',
+      value: seqUnclassifiedCount,
+      threshold: `<= ${seqUnclassifiedMax} (WARN above)`,
+      status: seqUnclassifiedCount <= seqUnclassifiedMax ? 'PASS' : 'WARN',
+    });
+
+    // v3 fold v1-O-CRIT + v4 fold v3-Indep-HIGH-F: surface top-10 violations
+    // via warnings[] (visible to followup file). Truncation math corrected.
+    if (seqBandsWarn > 0) {
+      const previewCount = Math.min(10, seqViolationsCapped.length);
+      const renderViolation = (v) => {
+        if (v.kind === 'no_band_configured') {
+          return `seq ${v.seq}: ${v.actual} rows but NO BAND configured`;
+        }
+        if (v.kind === 'expected_data_missing') {
+          // v4 fold v3-Indep+Obs-MED: neutral rendering (4-hypothesis prompt).
+          return `seq ${v.seq}: 0 rows observed (band expects min=${v.band_min}) — verify classifier coverage, source freshness, or catalog vs production data drift`;
+        }
+        return `seq ${v.seq}: ${v.actual} outside [${v.band_min}, ${v.band_max ?? '∞'}]`;
+      };
+      const preview = seqViolationsCapped.slice(0, previewCount).map(renderViolation).join('; ');
+      const remainderInRecordsMeta = seqViolationsCapped.length - previewCount;
+      const truncatedSuffix = seqViolationsTruncatedCount > 0
+        ? ` (${seqViolationsTruncatedCount} additional violations TRUNCATED — see records_meta.seq_violations_truncated_count)`
+        : '';
+      warnings.push(
+        '[E.4 WARN-ONLY POSTURE — expected during first-deploy / Phase D ramp-up] ' +
+        `${seqBandsWarn} per-seq bands outside expected range — first ${previewCount}: ${preview}` +
+        (remainderInRecordsMeta > 0 ? ` ... (+${remainderInRecordsMeta} more in records_meta.seq_violations)` : '') +
+        truncatedSuffix,
+      );
+    }
+    if (seqUnclassifiedCount > seqUnclassifiedMax) {
+      warnings.push(
+        `[E.4 WARN-ONLY POSTURE] seq_unclassified_count ${seqUnclassifiedCount} exceeds ${seqUnclassifiedMax} — ` +
+        'Phase D/E.2 first-run state likely; verify classifier coverage. ' +
+        '(In steady state seq_unclassified_count >= unclassified_count; the two converge as E.5 ramps up.)',
+      );
+    }
+
+    const verdict = failures.length > 0 ? 'FAIL' : warnings.length > 0 ? 'WARN' : 'PASS';
+
+    if (failures.length > 0) {
+      pipeline.log.error('[assert-lifecycle-phase-distribution]', 'FAILURES', { failures });
+    }
+    if (warnings.length > 0) {
+      pipeline.log.warn('[assert-lifecycle-phase-distribution]', 'WARNINGS', { warnings });
+    }
+
+    pipeline.emitSummary({
+      // Exclude the synthetic 'P9-P17' aggregate key to avoid double-counting.
+      records_total: Object.entries(allCounts)
+        .filter(([k]) => k !== 'P9-P17')
+        .reduce((sum, [, n]) => sum + n, 0),
+      records_new: 0,
+      records_updated: 0,
+      records_meta: {
+        phase_distribution: allCounts,
+        unclassified_count: unclassifiedCount,
+        // Phase E.4 — per Spec 48 §3.2: distributions in records_meta, NOT
+        // in audit_table.rows. Observer's extractIssues() reads only audit rows.
+        seq_distribution: seqDistribution,
+        seq_violations: seqViolationsCapped,
+        seq_violations_truncated_count: seqViolationsTruncatedCount,
+        audit_table: {
+          phase: 22,
+          name: 'Assert Lifecycle Phase Distribution',
+          verdict,
+          rows: auditRows,
+        },
       },
-    },
-  });
+    });
 
-  pipeline.emitMeta(
-    { permits: ['lifecycle_phase', 'lifecycle_stalled', 'enriched_status', 'status'],
-      coa_applications: ['lifecycle_phase', 'linked_permit_num', 'decision'] },
-    {},
-  );
-
-  if (failures.length > 0) {
-    throw new Error(
-      `Distribution sanity check FAILED (${failures.length} failures):\n${failures.join('\n')}`,
+    pipeline.emitMeta(
+      {
+        permits: ['lifecycle_phase', 'lifecycle_seq', 'lifecycle_stalled', 'enriched_status', 'status'],
+        coa_applications: ['lifecycle_phase', 'lifecycle_seq', 'linked_permit_num', 'decision'],
+        universal_stream_catalog: ['seq', 'rows_count'],
+      },
+      {},
     );
-  }
+
+    if (failures.length > 0) {
+      throw new Error(`Distribution sanity check FAILED (${failures.length} failures):\n${failures.join('\n')}`);
+    }
   }, { skipEmit: false }); // end withAdvisoryLock
 
-  // Classifier is mid-write — skip assertion to avoid false-positive band violations.
   if (!lockResult.acquired) {
     pipeline.log.info(
       '[assert-lifecycle-phase-distribution]',
