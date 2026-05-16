@@ -1127,7 +1127,7 @@ The 110-row per-seq distribution map ships in `records_meta.seq_distribution` (N
 
 **`linked_permit_num` post-E.1:** E.1 removed Rule 0; `classifyCoaPhase()` now writes `lifecycle_seq` (and `lifecycle_phase`) to ALL CoA rows regardless of `linked_permit_num`. The new `seq_unclassified_count` gate correctly does NOT filter on `linked_permit_num IS NULL`. The legacy phase-keyed `unclassified_count` DELIBERATELY KEEPS the filter for legacy-shape baseline continuity (Spec 48 §3.4 7-day historical baseline preservation during the Strangler Fig transition window).
 
-**Phase E.5 per-kind posture-flag mechanism (DELIVERED 2026-05-16 commit `[E.5-COMMIT]`):** band recalibration operational gate via **3 per-kind integer logic_variables** (mig 150) that allow operators to independently promote each violation kind from WARN routing (E.4 default) to FAIL routing:
+**Phase E.5 per-kind posture-flag mechanism (DELIVERED 2026-05-16 commit `0d90571`):** band recalibration operational gate via **3 per-kind integer logic_variables** (mig 150) that allow operators to independently promote each violation kind from WARN routing (E.4 default) to FAIL routing:
 
 - `lifecycle_seq_band_promote_to_fail_band_violation` — gates `band_violation` kind (data shifted within configured band). The canonical regression-detection gate; promote first after pre-promotion checklist passes.
 - `lifecycle_seq_band_promote_to_fail_no_band_configured` — gates `no_band_configured` kind (seq present in data but no band loaded — operator config gap). Usually kept at WARN through Phase F.
