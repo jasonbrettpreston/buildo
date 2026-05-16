@@ -68,6 +68,12 @@ const LOGIC_VARS_SCHEMA = z.object({
   lifecycle_cross_stalled_threshold: z.coerce.number().finite().nonnegative().int(),
   lifecycle_cross_active_inspection_threshold: z.coerce.number().finite().nonnegative().int(),
   lifecycle_cross_issued_threshold: z.coerce.number().finite().nonnegative().int(),
+  // Phase E.5 v4 — 3 per-kind posture flags (operator-driven WARN→FAIL gate).
+  // Each gates routing for its violation kind; 0=WARN (E.4 default), 1=FAIL (E.5 promotion).
+  // See Spec 84 §3.4 pre-promotion checklist.
+  lifecycle_seq_band_promote_to_fail_band_violation:        z.coerce.number().int().min(0).max(1),
+  lifecycle_seq_band_promote_to_fail_no_band_configured:    z.coerce.number().int().min(0).max(1),
+  lifecycle_seq_band_promote_to_fail_expected_data_missing: z.coerce.number().int().min(0).max(1),
   ..._bandShape,
 }).passthrough().superRefine((data, ctx) => {
   // Existing min>max guard for phase bands (preserved).
@@ -112,6 +118,37 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     const stalledThreshold = logicVars.lifecycle_cross_stalled_threshold;
     const activeInspectionThreshold = logicVars.lifecycle_cross_active_inspection_threshold;
     const issuedThreshold = logicVars.lifecycle_cross_issued_threshold;
+
+    // ─── Phase E.5 v4 — per-kind posture-flag extraction ──────────────
+    // Operator-driven gate: each per-kind flag independently promotes its
+    // violation kind from WARN routing (E.4 default) to FAIL routing.
+    const promoteToFail_band_violation        = logicVars.lifecycle_seq_band_promote_to_fail_band_violation === 1;
+    const promoteToFail_no_band_configured    = logicVars.lifecycle_seq_band_promote_to_fail_no_band_configured === 1;
+    const promoteToFail_expected_data_missing = logicVars.lifecycle_seq_band_promote_to_fail_expected_data_missing === 1;
+    const anyPromotePostureActive =
+      promoteToFail_band_violation ||
+      promoteToFail_no_band_configured ||
+      promoteToFail_expected_data_missing;
+
+    // Per-violation posture lookup map. Used by renderPrefix() and at violation
+    // push sites to write the `posture` field for Phase F forward-compat.
+    const POSTURE_FLAG_BY_KIND = {
+      band_violation:        promoteToFail_band_violation,
+      no_band_configured:    promoteToFail_no_band_configured,
+      expected_data_missing: promoteToFail_expected_data_missing,
+    };
+
+    // Per-violation prefix renderer (v4 fold v2-Obs-J-prefix + v3-G-MED-prefix-kind).
+    // Each violation in the preview gets its OWN kind-specific prefix — NOT a
+    // run-level prefix. Mixed-posture state (e.g., flag_band_violation=1,
+    // flag_no_band_configured=0) renders correctly: band_violation violations
+    // get [E.5 FAIL POSTURE]; no_band_configured violations get [E.4 WARN-ONLY
+    // POSTURE]. Unknown kind falls back to WARN-only (defensive default).
+    function renderPrefix(kind) {
+      return POSTURE_FLAG_BY_KIND[kind]
+        ? `[E.5 FAIL POSTURE — '${kind}' kind halts the pipeline]`
+        : '[E.4 WARN-ONLY POSTURE — expected during first-deploy / Phase D ramp-up]';
+    }
 
     // Resolve the per-phase distribution bands from logic_variables.
     const EXPECTED_BANDS = {};
@@ -284,9 +321,14 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     // ─── Aggregate counter classification per seq ────────────────────
     let seqBandsPassing          = 0;
     let seqBandsWarn             = 0;
-    let seqBandsFailing          = 0;  // v1 posture: hardwired to 0; E.5 promotion hook.
+    let seqBandsFailing          = 0;  // v4 fold v3-conv-CRIT-body: per-kind reachable in E.5 v4.
     let seqBandsNullCatalogCount = 0;  // v2 fold v1-I-HIGH-1: INFO-only bands count.
-    const seqViolations          = [];  // structured: {seq, actual, band_min, band_max, kind}
+    const seqViolations          = [];  // structured: {seq, actual, band_min, band_max, kind, posture}
+    // v4 fold v3-conv-CRIT-body: failures/warnings arrays hoisted here (was line 462) so
+    // per-kind branch routing can push to them inside the per-seq loop.
+    const auditRows = [];
+    const failures = [];
+    const warnings = [];
 
     for (const seq of catalogSeqs) {
       const band = seqBands[seq];
@@ -304,31 +346,46 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
       if (inBand) {
         seqBandsPassing++;
       } else {
-        seqBandsWarn++;
+        // v4 fold v3-conv-CRIT-body: per-kind branch routing — read THIS kind's flag.
         seqViolations.push({
           seq,
           actual,
           band_min: band.min,
           band_max: band.max,
           kind: 'band_violation',
+          posture: POSTURE_FLAG_BY_KIND['band_violation'] ? 'fail' : 'warn',
         });
+        if (promoteToFail_band_violation) {
+          seqBandsFailing++;
+          failures.push(`${renderPrefix('band_violation')} seq ${seq}: ${actual} outside expected band [${band.min}, ${band.max ?? '∞'}]`);
+        } else {
+          seqBandsWarn++;
+        }
       }
     }
 
     // ─── v2 fold v1-DS-HIGH-2 + v3 fold v2-G-HIGH-3: bidirectional symmetric-diff ─
     const distributionSeqs = new Set(Object.keys(seqDistribution).map(Number));
     const bandSeqs = new Set(Object.keys(seqBands).map(Number));
-    // Direction 1: seqs in data but not in bands → no_band_configured WARN.
+    // Direction 1: seqs in data but not in bands → no_band_configured WARN/FAIL.
+    // v4 fold v3-conv-CRIT-body: per-kind branch routing — read THIS kind's flag.
     for (const seq of distributionSeqs) {
       if (!bandSeqs.has(seq)) {
-        seqBandsWarn++;
+        const actual = seqDistribution[seq];
         seqViolations.push({
           seq,
-          actual: seqDistribution[seq],
+          actual,
           band_min: null,
           band_max: null,
           kind: 'no_band_configured',
+          posture: POSTURE_FLAG_BY_KIND['no_band_configured'] ? 'fail' : 'warn',
         });
+        if (promoteToFail_no_band_configured) {
+          seqBandsFailing++;
+          failures.push(`${renderPrefix('no_band_configured')} seq ${seq}: ${actual} rows but NO BAND configured`);
+        } else {
+          seqBandsWarn++;
+        }
       }
     }
     // Direction 2: seqs in bands but not in data with band.min > 0 →
@@ -339,18 +396,25 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     // Operator-tampered max values must not change the INFO-only classification —
     // it's a property of the catalog, not the band config. Consistent with the
     // main-loop convention (lines above) that uses `catalogNullCountSeqs.has(seq)`.
+    // v4 fold v3-conv-CRIT-body: per-kind branch routing for Direction 2.
     for (const seq of bandSeqs) {
       if (!distributionSeqs.has(seq)) {
         const band = seqBands[seq];
         if (band && !catalogNullCountSeqs.has(seq) && band.min > 0) {
-          seqBandsWarn++;
           seqViolations.push({
             seq,
             actual: 0,
             band_min: band.min,
             band_max: band.max,
             kind: 'expected_data_missing',
+            posture: POSTURE_FLAG_BY_KIND['expected_data_missing'] ? 'fail' : 'warn',
           });
+          if (promoteToFail_expected_data_missing) {
+            seqBandsFailing++;
+            failures.push(`${renderPrefix('expected_data_missing')} seq ${seq}: 0 rows observed (band expects min=${band.min}) — verify classifier coverage, source freshness, or catalog vs production data drift`);
+          } else {
+            seqBandsWarn++;
+          }
         }
       }
     }
@@ -415,9 +479,7 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     const unclassifiedCount = unclPermitRows[0].n + unclCoaRows[0].n;
 
     // ─── Phase-keyed band evaluation (existing) ──────────────────────
-    const auditRows = [];
-    const failures = [];
-    const warnings = [];
+    // (auditRows/failures/warnings hoisted above for per-kind branch routing)
 
     for (const [phase, band] of Object.entries(EXPECTED_BANDS)) {
       const actual = allCounts[phase] || 0;
@@ -556,8 +618,30 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     auditRows.push({
       metric: 'seq_bands_failing',
       value: seqBandsFailing,
-      threshold: '== 0 PASS, > 0 FAIL (E.5 promotion hook; always 0 in E.4 v1)',
+      threshold: '== 0 PASS, > 0 FAIL (E.5 posture-gated — fires when any of the 3 lifecycle_seq_band_promote_to_fail_* flags is 1 and a matching violation occurs)',
       status: seqBandsFailing === 0 ? 'PASS' : 'FAIL',
+    });
+    // ─── Phase E.5 v4 — 3 per-kind posture audit rows ────────────────
+    // Each row's status flips INFO→WARN per its own flag (so extractIssues()
+    // surfaces armed-posture rows in every post-promotion run's DeepSeek
+    // narrative for operator visibility).
+    auditRows.push({
+      metric: 'lifecycle_seq_band_promote_to_fail_band_violation',
+      value: promoteToFail_band_violation ? 1 : 0,
+      threshold: '0=WARN routing (E.4 default), 1=FAIL routing (E.5 promotion). Gates `band_violation` kind. See Spec 84 §3.4.',
+      status: promoteToFail_band_violation ? 'WARN' : 'INFO',
+    });
+    auditRows.push({
+      metric: 'lifecycle_seq_band_promote_to_fail_no_band_configured',
+      value: promoteToFail_no_band_configured ? 1 : 0,
+      threshold: '0=WARN routing (E.4 default), 1=FAIL routing (E.5 promotion). Gates `no_band_configured` kind (operator config gap). See Spec 84 §3.4.',
+      status: promoteToFail_no_band_configured ? 'WARN' : 'INFO',
+    });
+    auditRows.push({
+      metric: 'lifecycle_seq_band_promote_to_fail_expected_data_missing',
+      value: promoteToFail_expected_data_missing ? 1 : 0,
+      threshold: '0=WARN routing (E.4 default), 1=FAIL routing (E.5 promotion). Gates `expected_data_missing` kind (data deletion / classifier-skip signal). See Spec 84 §3.4.',
+      status: promoteToFail_expected_data_missing ? 'WARN' : 'INFO',
     });
     auditRows.push({
       metric: 'seq_unclassified_count',
@@ -566,9 +650,11 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
       status: seqUnclassifiedCount <= seqUnclassifiedMax ? 'PASS' : 'WARN',
     });
 
-    // v3 fold v1-O-CRIT + v4 fold v3-Indep-HIGH-F: surface top-10 violations
-    // via warnings[] (visible to followup file). Truncation math corrected.
-    if (seqBandsWarn > 0) {
+    // v3 fold v1-O-CRIT + v4 fold v3-Indep-HIGH-F + v4 fold v3-conv-CRIT-body:
+    // surface top-10 violations via warnings[] (visible to followup file).
+    // Emit guard expanded to fire under FAIL posture too (seqBandsFailing > 0
+    // when anyPromotePostureActive — per-kind promotion paths increment it).
+    if (seqBandsWarn > 0 || (anyPromotePostureActive && seqBandsFailing > 0)) {
       const previewCount = Math.min(10, seqViolationsCapped.length);
       const renderViolation = (v) => {
         if (v.kind === 'no_band_configured') {
@@ -580,14 +666,18 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
         }
         return `seq ${v.seq}: ${v.actual} outside [${v.band_min}, ${v.band_max ?? '∞'}]`;
       };
-      const preview = seqViolationsCapped.slice(0, previewCount).map(renderViolation).join('; ');
+      // v4 fold v2-Obs-J-prefix: per-violation prefix selection (NOT per-run).
+      // Mixed-posture state: each violation gets its OWN kind-specific prefix.
+      const preview = seqViolationsCapped.slice(0, previewCount).map((v) =>
+        `${renderPrefix(v.kind)} ${renderViolation(v)}`
+      ).join('; ');
       const remainderInRecordsMeta = seqViolationsCapped.length - previewCount;
       const truncatedSuffix = seqViolationsTruncatedCount > 0
         ? ` (${seqViolationsTruncatedCount} additional violations TRUNCATED — see records_meta.seq_violations_truncated_count)`
         : '';
+      const totalViolations = seqBandsWarn + seqBandsFailing;
       warnings.push(
-        '[E.4 WARN-ONLY POSTURE — expected during first-deploy / Phase D ramp-up] ' +
-        `${seqBandsWarn} per-seq bands outside expected range — first ${previewCount}: ${preview}` +
+        `${totalViolations} per-seq bands outside expected range (${seqBandsFailing} FAIL, ${seqBandsWarn} WARN) — first ${previewCount}: ${preview}` +
         (remainderInRecordsMeta > 0 ? ` ... (+${remainderInRecordsMeta} more in records_meta.seq_violations)` : '') +
         truncatedSuffix,
       );

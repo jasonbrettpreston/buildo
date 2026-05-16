@@ -213,13 +213,16 @@ describe('Phase E.4 v4 — per-seq band assertion extension', () => {
 
   it('seq_bands_failing is hardwired to 0 in E.4 v1 posture (E.5 promotion hook)', () => {
     // The variable should be declared with `let ... = 0` but never incremented
-    // anywhere in the script (v4 reserves the FAIL path for E.5 promotion).
+    // anywhere in the script (E.4 reserved the FAIL path for E.5 promotion).
     expect(SRC).toMatch(/let\s+seqBandsFailing\s*=\s*0/);
-    // The status descriptor must explicitly reference the E.5 hook.
-    expect(SRC).toMatch(/E\.5\s+promotion\s+hook/i);
-    // Negative regression: no `seqBandsFailing++` or `seqBandsFailing +=`.
-    expect(SRC).not.toMatch(/seqBandsFailing\s*\+\+/);
-    expect(SRC).not.toMatch(/seqBandsFailing\s*\+=/);
+    // E.5 v4 update: the descriptor now references the per-kind flags (the
+    // E.4 "always 0 in E.4 v1" wording was retired by v4 fold v2-conv-MED-descriptor).
+    // The seq_bands_failing audit row block must reference the per-kind posture mechanism.
+    const sbfBlock = SRC.match(/metric:\s*['"]seq_bands_failing['"][\s\S]*?threshold:\s*['"][^'"]+['"]/)?.[0] ?? '';
+    expect(sbfBlock).toMatch(/E\.5/);
+    // E.5 v4 makes the FAIL path REACHABLE — `seqBandsFailing++` is now expected
+    // in the per-kind branch routing (was forbidden in the E.4 regression-lock).
+    expect(SRC).toMatch(/seqBandsFailing\s*\+\+/);
   });
 
   // ─── records_meta — seq_distribution + structured violations + truncated count ─
@@ -339,5 +342,170 @@ describe('Phase E.4 v4 — scripts/seeds/logic_variables.json completeness', () 
     const nullMaxKeys = Object.entries(seed)
       .filter(([k, v]) => k.startsWith('lifecycle_seq_band_') && k.endsWith('_max') && v.default === null);
     expect(nullMaxKeys.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase E.5 v4 — band recalibration operational gate (per-kind posture flags)
+// SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase E.5
+// SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3.4
+// SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.1
+//
+// v4 plan trajectory: v1=12 → v2=14 → v3=10 plan-review findings folded across
+// 3 rounds. v4 = mechanical scrub of remaining v1 leftovers + Observability's
+// 3 MEDs + Gemini MED (kind-specific prefix) + Gemini LOW (rollback DOWN).
+// ---------------------------------------------------------------------------
+
+describe('Phase E.5 v4 — per-kind posture flag promotion gate', () => {
+  // ─── Zod schema — 3 new required keys ───────────────────────────────
+
+  it('LOGIC_VARS_SCHEMA declares all 3 per-kind posture keys with .int().min(0).max(1)', () => {
+    expect(SRC).toMatch(/lifecycle_seq_band_promote_to_fail_band_violation\s*:\s*z\.coerce\.number\(\)\.int\(\)\.min\(0\)\.max\(1\)/);
+    expect(SRC).toMatch(/lifecycle_seq_band_promote_to_fail_no_band_configured\s*:\s*z\.coerce\.number\(\)\.int\(\)\.min\(0\)\.max\(1\)/);
+    expect(SRC).toMatch(/lifecycle_seq_band_promote_to_fail_expected_data_missing\s*:\s*z\.coerce\.number\(\)\.int\(\)\.min\(0\)\.max\(1\)/);
+  });
+
+  // ─── Per-kind flag extraction + anyPromotePostureActive ──────────────
+
+  it('extracts 3 per-kind booleans from logicVars', () => {
+    expect(SRC).toMatch(/const\s+promoteToFail_band_violation\s*=\s*logicVars\.lifecycle_seq_band_promote_to_fail_band_violation\s*===\s*1/);
+    expect(SRC).toMatch(/const\s+promoteToFail_no_band_configured\s*=\s*logicVars\.lifecycle_seq_band_promote_to_fail_no_band_configured\s*===\s*1/);
+    expect(SRC).toMatch(/const\s+promoteToFail_expected_data_missing\s*=\s*logicVars\.lifecycle_seq_band_promote_to_fail_expected_data_missing\s*===\s*1/);
+  });
+
+  it('computes anyPromotePostureActive as OR of the 3 per-kind flags', () => {
+    expect(SRC).toMatch(/const\s+anyPromotePostureActive\s*=[\s\S]*?promoteToFail_band_violation[\s\S]*?promoteToFail_no_band_configured[\s\S]*?promoteToFail_expected_data_missing/);
+  });
+
+  it('defines POSTURE_FLAG_BY_KIND map with 3 kind→flag entries', () => {
+    expect(SRC).toMatch(/POSTURE_FLAG_BY_KIND/);
+    // Each kind key maps to its corresponding boolean. The map is consulted
+    // by renderPrefix() and at violation push sites.
+    const block = SRC.match(/POSTURE_FLAG_BY_KIND\s*=\s*\{[\s\S]*?\}/)?.[0] ?? '';
+    expect(block).toMatch(/band_violation\s*:\s*promoteToFail_band_violation/);
+    expect(block).toMatch(/no_band_configured\s*:\s*promoteToFail_no_band_configured/);
+    expect(block).toMatch(/expected_data_missing\s*:\s*promoteToFail_expected_data_missing/);
+  });
+
+  // ─── 3 separate per-kind posture audit rows ──────────────────────────
+
+  it('emits 3 separate per-kind posture audit rows', () => {
+    expect(SRC).toMatch(/['"]lifecycle_seq_band_promote_to_fail_band_violation['"]/);
+    expect(SRC).toMatch(/['"]lifecycle_seq_band_promote_to_fail_no_band_configured['"]/);
+    expect(SRC).toMatch(/['"]lifecycle_seq_band_promote_to_fail_expected_data_missing['"]/);
+  });
+
+  it('each posture audit row transitions INFO↔WARN per its own flag (status: flag ? WARN : INFO)', () => {
+    // Each row's status must depend on its specific kind's flag — checking the
+    // pattern `promoteToFail_<kind> ? 'WARN' : 'INFO'` appears for each kind.
+    expect(SRC).toMatch(/promoteToFail_band_violation\s*\?\s*['"]WARN['"]\s*:\s*['"]INFO['"]/);
+    expect(SRC).toMatch(/promoteToFail_no_band_configured\s*\?\s*['"]WARN['"]\s*:\s*['"]INFO['"]/);
+    expect(SRC).toMatch(/promoteToFail_expected_data_missing\s*\?\s*['"]WARN['"]\s*:\s*['"]INFO['"]/);
+  });
+
+  // ─── Per-kind branch routing at violation push sites ─────────────────
+
+  it('main loop band_violation push reads promoteToFail_band_violation (not a shared flag)', () => {
+    // Find the kind='band_violation' push block and assert the SAME block reads the band_violation flag.
+    expect(SRC).toMatch(/kind\s*:\s*['"]band_violation['"][\s\S]{0,400}?promoteToFail_band_violation/);
+  });
+
+  it('Direction 1 no_band_configured push reads promoteToFail_no_band_configured', () => {
+    expect(SRC).toMatch(/kind\s*:\s*['"]no_band_configured['"][\s\S]{0,400}?promoteToFail_no_band_configured/);
+  });
+
+  it('Direction 2 expected_data_missing push reads promoteToFail_expected_data_missing', () => {
+    expect(SRC).toMatch(/kind\s*:\s*['"]expected_data_missing['"][\s\S]{0,400}?promoteToFail_expected_data_missing/);
+  });
+
+  // ─── renderPrefix(kind) helper for per-violation prefix selection ────
+
+  it('renderPrefix(kind) helper exists + uses POSTURE_FLAG_BY_KIND lookup + includes kind name in FAIL prefix', () => {
+    expect(SRC).toMatch(/function\s+renderPrefix\s*\(\s*kind\s*\)/);
+    expect(SRC).toMatch(/POSTURE_FLAG_BY_KIND\s*\[\s*kind\s*\]/);
+    // v4 fold v3-G-MED-prefix-kind: kind name in the FAIL prefix string for operator triage.
+    expect(SRC).toMatch(/\$\{kind\}.*kind\s+halts/);
+    expect(SRC).toMatch(/E\.5\s+FAIL\s+POSTURE/);
+    expect(SRC).toMatch(/E\.4\s+WARN-ONLY\s+POSTURE/);
+  });
+
+  // ─── seq_violations gains posture field ──────────────────────────────
+
+  it('violation push includes posture field derived from POSTURE_FLAG_BY_KIND', () => {
+    // At least one push site must include the posture field. The kind lookup
+    // can be either `POSTURE_FLAG_BY_KIND[kind]` (bare variable) or
+    // `POSTURE_FLAG_BY_KIND['<kind>']` (string literal, more explicit).
+    expect(SRC).toMatch(/posture\s*:\s*POSTURE_FLAG_BY_KIND\s*\[\s*(?:kind|['"][a-z_]+['"])\s*\]\s*\?\s*['"]fail['"]\s*:\s*['"]warn['"]/);
+  });
+
+  // ─── seq_bands_failing descriptor updated ────────────────────────────
+
+  it('seq_bands_failing audit row descriptor references the 3 per-kind flags (NOT "always 0 in E.4 v1")', () => {
+    // Find the seq_bands_failing audit row and inspect its threshold descriptor.
+    const block = SRC.match(/metric:\s*['"]seq_bands_failing['"][\s\S]*?threshold:\s*['"][^'"]+['"]/)?.[0] ?? '';
+    expect(block, 'seq_bands_failing audit row block not found').toBeTruthy();
+    expect(block).toMatch(/E\.5/);
+    expect(block).not.toMatch(/always\s+0\s+in\s+E\.4\s+v1/i);
+  });
+
+  // ─── Emit guard expansion + emitSummary BEFORE throw ─────────────────
+
+  it('emit guard fires on seqBandsWarn > 0 OR (anyPromotePostureActive && seqBandsFailing > 0)', () => {
+    expect(SRC).toMatch(/seqBandsWarn\s*>\s*0[\s\S]{0,80}anyPromotePostureActive[\s\S]{0,80}seqBandsFailing\s*>\s*0/);
+  });
+
+  it('emitSummary call appears BEFORE the failures-throw check in the source', () => {
+    // The script has TWO `if (failures.length > 0)` blocks:
+    //   1. LOG block (pipeline.log.error) — fires regardless of emit ordering
+    //   2. THROW block (throw new Error) — MUST be after emitSummary so the
+    //      audit_table is persisted to pipeline_runs even on FAIL runs.
+    // The test specifically targets the THROW block via the `throw new Error` pattern.
+    const emitIdx = SRC.search(/pipeline\.emitSummary\(/);
+    const throwIdx = SRC.search(/if\s*\(\s*failures\.length\s*>\s*0\s*\)\s*\{[\s\S]{0,120}throw\s+new\s+Error/);
+    expect(emitIdx).toBeGreaterThan(0);
+    expect(throwIdx).toBeGreaterThan(0);
+    expect(emitIdx).toBeLessThan(throwIdx);
+  });
+
+  // ─── Reachability of seqBandsFailing under per-kind posture ──────────
+
+  it('seqBandsFailing is incremented when the matching per-kind flag is 1 (not hardwired to 0)', () => {
+    // E.4 had `let seqBandsFailing = 0` with NO increment path. E.5 v4 adds
+    // increment paths gated on per-kind flags.
+    expect(SRC).toMatch(/let\s+seqBandsFailing\s*=\s*0/);
+    // At least one `seqBandsFailing++` or `seqBandsFailing +=` somewhere in the script.
+    expect(SRC).toMatch(/seqBandsFailing\s*\+\+/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase E.5 v4 — seed JSON completeness for 3 per-kind posture flags
+// ---------------------------------------------------------------------------
+
+describe('Phase E.5 v4 — scripts/seeds/logic_variables.json — 3 posture flag entries', () => {
+  let seed: Record<string, { default: unknown }>;
+
+  beforeAll(() => {
+    seed = JSON.parse(
+      fs.readFileSync(
+        path.resolve(__dirname, '../../scripts/seeds/logic_variables.json'),
+        'utf-8',
+      ),
+    ) as Record<string, { default: unknown }>;
+  });
+
+  it('seed contains lifecycle_seq_band_promote_to_fail_band_violation with default 0', () => {
+    expect(seed.lifecycle_seq_band_promote_to_fail_band_violation).toBeDefined();
+    expect(seed.lifecycle_seq_band_promote_to_fail_band_violation!.default).toBe(0);
+  });
+
+  it('seed contains lifecycle_seq_band_promote_to_fail_no_band_configured with default 0', () => {
+    expect(seed.lifecycle_seq_band_promote_to_fail_no_band_configured).toBeDefined();
+    expect(seed.lifecycle_seq_band_promote_to_fail_no_band_configured!.default).toBe(0);
+  });
+
+  it('seed contains lifecycle_seq_band_promote_to_fail_expected_data_missing with default 0', () => {
+    expect(seed.lifecycle_seq_band_promote_to_fail_expected_data_missing).toBeDefined();
+    expect(seed.lifecycle_seq_band_promote_to_fail_expected_data_missing!.default).toBe(0);
   });
 });
