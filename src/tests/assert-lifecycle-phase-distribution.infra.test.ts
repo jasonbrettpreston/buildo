@@ -11,7 +11,7 @@
 // EXPECTED_BANDS used to be a hardcoded constant; promoted to logic_variables
 // in migration 119 so operators can tune via the admin Control Panel without a
 // redeploy.
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -142,5 +142,202 @@ describe('assert-lifecycle-phase-distribution.js — unclassified threshold exte
     // error-message templates (which legitimately contain the literal phrase).
     expect(SRC).not.toMatch(/WHERE\s+enriched_status\s*=\s*'Active Inspection'/);
     expect(SRC).not.toMatch(/WHERE\s+enriched_status\s*=\s*'Permit Issued'/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase E.4 v4 — per-seq distribution band assertion extension
+// SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase E.4
+// SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3.4
+// SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.1-§3.2
+//
+// v4 plan trajectory: v1=14 → v2=8 → v3=9 plan-review findings folded across
+// 3 rounds. 2 CRITs from v3 round: (a) catalog query crashes if table missing;
+// (b) formula consistency between mig SQL + seed examples + parity test.
+// ---------------------------------------------------------------------------
+
+describe('Phase E.4 v4 — per-seq band assertion extension', () => {
+  // ─── Dynamic catalog query + guard (v4 fold v3-DS-CRIT) ─────────────
+
+  it('queries universal_stream_catalog dynamically for the seq list (no hardcoded 110)', () => {
+    expect(SRC).toMatch(/SELECT\s+seq\s*,\s*rows_count\s+FROM\s+universal_stream_catalog/i);
+  });
+
+  it('guards the catalog query behind catalogExists check (v4 fold v3-DS-CRIT)', () => {
+    // v3 fold defeated by unconditional catalog SELECT; v4 wraps it.
+    expect(SRC).toMatch(/if\s*\(\s*catalogExists\s*\)/i);
+  });
+
+  it('does NOT contain a hardcoded `expectedSeqCount = 110` or `for.*n.*110` loop', () => {
+    expect(SRC).not.toMatch(/expectedSeqCount\s*=\s*110/);
+    expect(SRC).not.toMatch(/for\s*\(\s*let\s+n\s*=\s*1\s*;\s*n\s*<=\s*110\s*;/);
+  });
+
+  // ─── Orphan-key detection (v4 fold v3-G-CRIT) ────────────────────────
+
+  it('detects orphan band keys via BAND_KEY_PATTERN regex + throws with explicit recovery (v4 fold v3-G-CRIT)', () => {
+    expect(SRC).toMatch(/BAND_KEY_PATTERN/);
+    expect(SRC).toMatch(/lifecycle_seq_band_/);
+    expect(SRC).toMatch(/Orphan band keys/i);
+    expect(SRC).toMatch(/DELETE\s+FROM\s+logic_variables/i);  // recovery hint
+  });
+
+  // ─── 2-branch continuous formula (v4 fold v3-G-CRIT-formula) ─────────
+
+  it('uses null-aware band classification (band.max === null short-circuits assertion)', () => {
+    expect(SRC).toMatch(/band\.max\s*===\s*null\s*\|\|\s*actual\s*<=\s*band\.max/i);
+  });
+
+  // ─── Bidirectional symmetric-difference (v4 fold v3-G-HIGH + v2 fold v1-DS-HIGH-2) ─
+
+  it('Direction 1: seqs in data but not in bands emit kind: no_band_configured', () => {
+    expect(SRC).toMatch(/no_band_configured/);
+  });
+
+  it('Direction 2: seqs in bands but not in data with band.min > 0 emit kind: expected_data_missing', () => {
+    expect(SRC).toMatch(/expected_data_missing/);
+    expect(SRC).toMatch(/!distributionSeqs\.has\(\s*seq\s*\)/);
+    expect(SRC).toMatch(/band\.min\s*>\s*0/);
+  });
+
+  // ─── 6 new audit_table rows (v4: 29 total = 23 existing + 6 new) ─────
+
+  it('audit_table.rows includes the 6 new aggregate counters', () => {
+    expect(SRC).toMatch(/['"]seq_bands_total['"]/);
+    expect(SRC).toMatch(/['"]seq_bands_passing['"]/);
+    expect(SRC).toMatch(/['"]seq_bands_null_catalog_count['"]/);  // v2 fold v1-I-HIGH-1
+    expect(SRC).toMatch(/['"]seq_bands_warn['"]/);
+    expect(SRC).toMatch(/['"]seq_bands_failing['"]/);
+    expect(SRC).toMatch(/['"]seq_unclassified_count['"]/);
+  });
+
+  it('seq_bands_failing is hardwired to 0 in E.4 v1 posture (E.5 promotion hook)', () => {
+    // The variable should be declared with `let ... = 0` but never incremented
+    // anywhere in the script (v4 reserves the FAIL path for E.5 promotion).
+    expect(SRC).toMatch(/let\s+seqBandsFailing\s*=\s*0/);
+    // The status descriptor must explicitly reference the E.5 hook.
+    expect(SRC).toMatch(/E\.5\s+promotion\s+hook/i);
+    // Negative regression: no `seqBandsFailing++` or `seqBandsFailing +=`.
+    expect(SRC).not.toMatch(/seqBandsFailing\s*\+\+/);
+    expect(SRC).not.toMatch(/seqBandsFailing\s*\+=/);
+  });
+
+  // ─── records_meta — seq_distribution + structured violations + truncated count ─
+
+  it('emits seq_distribution map in records_meta (NOT in audit_table.rows per Spec 48 §3.2)', () => {
+    expect(SRC).toMatch(/seq_distribution/);
+  });
+
+  it('emits structured seq_violations array (objects, not strings) in records_meta', () => {
+    expect(SRC).toMatch(/seq_violations\b/);
+    // Structured shape: {seq, actual, band_min, band_max, kind} — JS shorthand
+    // form `{ seq, actual, ... }` is equivalent to `{ seq: seq, actual: actual }`.
+    expect(SRC).toMatch(/\bband_min\b/);
+    expect(SRC).toMatch(/\bband_max\b/);
+    expect(SRC).toMatch(/kind\s*:\s*['"](band_violation|no_band_configured|expected_data_missing)['"]/);
+  });
+
+  it('caps seq_violations at SEQ_VIOLATIONS_CAP (50) + surfaces truncated count', () => {
+    expect(SRC).toMatch(/SEQ_VIOLATIONS_CAP/);
+    expect(SRC).toMatch(/seq_violations_truncated_count/);
+  });
+
+  // ─── Truncation math fix (v4 fold v3-Indep-HIGH-F) ───────────────────
+
+  it('warnings preview uses seqViolationsCapped.length (not seqViolations.length) for "in records_meta" count', () => {
+    // The warning suffix must reference the CAPPED array length, not the
+    // uncapped full violations array. Otherwise operators see misleading
+    // "+N more in records_meta" counts.
+    expect(SRC).toMatch(/seqViolationsCapped\.length\s*-\s*previewCount/);
+  });
+
+  // ─── Empty-catalog override (v4 fold v3-Indep-MED-A) ─────────────────
+
+  it('detects empty-catalog state (catalogExists && rows.length === 0) and forces WARN', () => {
+    expect(SRC).toMatch(/catalogEmptyButPresent/);
+  });
+
+  // ─── Posture-prefixed warnings (v4 fold v3-Obs-HIGH-2) ───────────────
+
+  it('warnings include the [E.4 WARN-ONLY POSTURE] prefix for first-deploy operator triage', () => {
+    expect(SRC).toMatch(/\[E\.4 WARN-ONLY POSTURE/);
+  });
+
+  it('empty-catalog WARN uses distinct [E.4 STARTUP STATE] prefix', () => {
+    expect(SRC).toMatch(/\[E\.4 STARTUP STATE\]/);
+  });
+
+  // ─── Removed linked_permit_num filter (v2 fold v1-I-HIGH-3) ──────────
+
+  it('seqUnclassifiedCoa query does NOT filter linked_permit_num IS NULL (post-E.1 Rule 0 removal)', () => {
+    // The phase-keyed unclassified_count query keeps the filter; the new
+    // seq_unclassified_count query removes it. Find the seq-keyed query
+    // (which references lifecycle_seq IS NULL) and assert NO linked_permit_num
+    // predicate in the same block.
+    const seqUnclassifiedBlock = SRC.match(
+      /seqUnclassifiedCoa[\s\S]*?WHERE\s+lifecycle_seq\s+IS\s+NULL[\s\S]*?NORMALIZED_DEAD_DECISIONS_ARRAY/i,
+    )?.[0] ?? '';
+    expect(seqUnclassifiedBlock, 'seqUnclassifiedCoa block not found').toBeTruthy();
+    expect(seqUnclassifiedBlock).not.toMatch(/linked_permit_num\s+IS\s+NULL/i);
+  });
+
+  // ─── lifecycle_seq_unclassified_max (v4 fold v1-I-MED-3) ─────────────
+
+  it('reads lifecycle_seq_unclassified_max from logicVars + validates via Zod', () => {
+    expect(SRC).toMatch(/lifecycle_seq_unclassified_max/);
+  });
+
+  // ─── universal_stream_catalog EXISTS guard (v2 fold from R5) ─────────
+
+  it('startup guard: information_schema.tables EXISTS check for universal_stream_catalog', () => {
+    expect(SRC).toMatch(/information_schema\.tables[\s\S]*?universal_stream_catalog/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase E.4 v4 — seed JSON completeness
+// ---------------------------------------------------------------------------
+
+describe('Phase E.4 v4 — scripts/seeds/logic_variables.json completeness', () => {
+  let seed: Record<string, { default: unknown; type?: string }>;
+
+  beforeAll(() => {
+    seed = JSON.parse(
+      fs.readFileSync(
+        path.resolve(__dirname, '../../scripts/seeds/logic_variables.json'),
+        'utf-8',
+      ),
+    ) as Record<string, { default: unknown; type?: string }>;
+  });
+
+  it('seed contains all 110 lifecycle_seq_band_<N>_min entries (seqs 1-110)', () => {
+    const missing: string[] = [];
+    for (let n = 1; n <= 110; n++) {
+      const key = `lifecycle_seq_band_${n}_min`;
+      if (!(key in seed)) missing.push(key);
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it('seed contains all 110 lifecycle_seq_band_<N>_max entries (seqs 1-110)', () => {
+    const missing: string[] = [];
+    for (let n = 1; n <= 110; n++) {
+      const key = `lifecycle_seq_band_${n}_max`;
+      if (!(key in seed)) missing.push(key);
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it('seed contains lifecycle_seq_unclassified_max with default 5000', () => {
+    expect(seed.lifecycle_seq_unclassified_max).toBeDefined();
+    expect(seed.lifecycle_seq_unclassified_max!.default).toBe(5000);
+  });
+
+  it('lifecycle_seq_band_<N>_max may be null for NULL-rows_count seqs (v4 fold v3-G-CRIT-formula)', () => {
+    // v4 uses NULL (not magic 999999) for no-upper-bound seqs. At least one
+    // band in the catalog snapshot has NULL rows_count → seed max must be null.
+    const nullMaxKeys = Object.entries(seed)
+      .filter(([k, v]) => k.startsWith('lifecycle_seq_band_') && k.endsWith('_max') && v.default === null);
+    expect(nullMaxKeys.length).toBeGreaterThan(0);
   });
 });

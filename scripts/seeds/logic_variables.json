@@ -4,14 +4,14 @@
     "type": "number",
     "description": "LoS score multiplier applied when a lead is in active bidding phase",
     "min": 0.5,
-    "max": 10.0
+    "max": 10
   },
   "los_multiplier_work": {
     "default": 1.5,
     "type": "number",
     "description": "LoS score multiplier applied when a lead is in active work phase",
     "min": 0.5,
-    "max": 10.0
+    "max": 10
   },
   "los_penalty_tracking": {
     "default": 50,
@@ -67,7 +67,7 @@
     "type": "number",
     "description": "Minimum fraction of active permits with cost estimate before the Liar's Gate override triggers (Spec 83 §4)",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "coa_stall_threshold": {
     "default": 30,
@@ -140,32 +140,32 @@
     "max": 100
   },
   "urban_coverage_ratio": {
-    "default": 0.70,
+    "default": 0.7,
     "type": "number",
     "description": "GFA coverage ratio applied to urban parcels when estimating construction area (Spec 83 §3)",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "suburban_coverage_ratio": {
-    "default": 0.40,
+    "default": 0.4,
     "type": "number",
     "description": "GFA coverage ratio applied to suburban parcels when estimating construction area (Spec 83 §3)",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "trust_threshold_pct": {
     "default": 0.25,
     "type": "number",
     "description": "Minimum fraction of permits with parcel-linked cost data before a coverage ratio is trusted (Spec 83 §4)",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "commercial_shell_multiplier": {
-    "default": 0.60,
+    "default": 0.6,
     "type": "number",
     "description": "Discount multiplier applied to commercial shell-and-core permits for cost estimation (Spec 86)",
     "min": 0.1,
-    "max": 2.0
+    "max": 2
   },
   "placeholder_cost_threshold": {
     "default": 1000,
@@ -294,25 +294,25 @@
     "max": 100
   },
   "coa_match_conf_high": {
-    "default": 0.90,
+    "default": 0.9,
     "type": "number",
     "description": "CoA→permit match confidence at or above which the link is classified as 'high confidence' in the link-coa run summary",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "coa_match_conf_medium": {
-    "default": 0.50,
+    "default": 0.5,
     "type": "number",
     "description": "CoA→permit match confidence floor for the 'medium confidence' bucket (link-coa summary: >= this AND < high); also used as the low-confidence boundary in the CoA snapshot",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "snapshot_coa_conf_high": {
-    "default": 0.80,
+    "default": 0.8,
     "type": "number",
     "description": "Minimum linked_confidence for a CoA application to be counted as 'high_confidence' in the refresh-snapshot dashboard metrics",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "spatial_match_max_distance_m": {
     "default": 100,
@@ -326,7 +326,7 @@
     "type": "number",
     "description": "Confidence score assigned to a permit→parcel spatial match (Strategy 3); upgraded to 0.90 if permit geocode falls inside the parcel polygon",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "coa_unmatched_threshold_pct": {
     "default": 10,
@@ -340,14 +340,14 @@
     "type": "number",
     "description": "Confidence score for CoA Tier 1a exact-address parcel match in link-coa-to-parcels (addr_num + street_name_normalized both match). DISTINCT from coa_match_conf_high which is consumed by link-coa.js for CoA→permit matching.",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "coa_parcel_conf_tier1b": {
-    "default": 0.80,
+    "default": 0.8,
     "type": "number",
     "description": "Confidence score for CoA Tier 1b name-only parcel match in link-coa-to-parcels (street_num absent, only street_name_normalized matches). DISTINCT from coa_match_conf_medium which is consumed by link-coa.js.",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "coa_scope_unmapped_threshold_pct": {
     "default": 10,
@@ -371,11 +371,11 @@
     "max": 100
   },
   "coa_inherit_from_permit_min_confidence": {
-    "default": 0.60,
+    "default": 0.6,
     "type": "number",
     "description": "Minimum fuzzy-match confidence for link-coa.js to inherit a linked permit's authoritative lat/long + ward into the matched CoA (R5.6 Part A — lead-identity continuity, Spec 42 §6.X). Default 0.60 covers Tier 1a (0.95), Tier 1b (0.85), and Tier 2a (0.60) but EXCLUDES Tier 2b (0.50, name-only + permit ward NULL — too speculative for dense urban streets) and Tier 3 (≤0.50, description FTS). Raised from initial 0.50 design per 4-reviewer plan-review (Gemini + DeepSeek + observability worktree converged on Tier 2b risk).",
     "min": 0.01,
-    "max": 1.0
+    "max": 1
   },
   "massing_shed_threshold_sqm": {
     "default": 20,
@@ -403,7 +403,7 @@
     "type": "number",
     "description": "pg_trgm similarity threshold for Tier 3 fuzzy builder→WSIB name matching; controls both the GIN index filter and the WHERE similarity() comparison",
     "min": 0.1,
-    "max": 1.0
+    "max": 1
   },
   "snowplow_buffer_days": {
     "default": 7,
@@ -489,7 +489,6 @@
     "min": 7,
     "max": 365
   },
-
   "lifecycle_band_p3_min": {
     "default": 716,
     "type": "number",
@@ -742,7 +741,6 @@
     "min": 0,
     "max": 10000
   },
-
   "lifecycle_cross_stalled_threshold": {
     "default": 1000,
     "type": "number",
@@ -764,7 +762,6 @@
     "min": 0,
     "max": 100000
   },
-
   "staleness_max_stale_over_30d": {
     "default": 10000,
     "type": "number",
@@ -785,5 +782,1552 @@
     "description": "Single-permit max_days_stale ceiling (days). Above this assert-staleness emits an informational WARN row indicating permits are aging beyond expectation. Not a halt.",
     "min": 0,
     "max": 365
+  },
+  "lifecycle_seq_band_1_min": {
+    "default": 7,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=1 (Received). Catalog snapshot rows_count=10; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_1_max": {
+    "default": 33,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=1 (Received). Catalog snapshot rows_count=10; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_2_min": {
+    "default": 195,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=2 (Accepted). Catalog snapshot rows_count=279; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_2_max": {
+    "default": 383,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=2 (Accepted). Catalog snapshot rows_count=279; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_3_min": {
+    "default": 37,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=3 (Notice Prep). Catalog snapshot rows_count=54; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_3_max": {
+    "default": 91,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=3 (Notice Prep). Catalog snapshot rows_count=54; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_4_min": {
+    "default": 51,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=4 (Notice Prepared). Catalog snapshot rows_count=74; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_4_max": {
+    "default": 117,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=4 (Notice Prepared). Catalog snapshot rows_count=74; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_5_min": {
+    "default": 82,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=5 (Tentatively Scheduled). Catalog snapshot rows_count=118; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_5_max": {
+    "default": 174,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=5 (Tentatively Scheduled). Catalog snapshot rows_count=118; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_6_min": {
+    "default": 221,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=6 (Hearing Scheduled). Catalog snapshot rows_count=317; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_6_max": {
+    "default": 433,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=6 (Hearing Scheduled). Catalog snapshot rows_count=317; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_7_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=7 (Hearing Rescheduled). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_7_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=7 (Hearing Rescheduled). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_8_min": {
+    "default": 204,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=8 (Postponed). Catalog snapshot rows_count=292; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_8_max": {
+    "default": 400,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=8 (Postponed). Catalog snapshot rows_count=292; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_9_min": {
+    "default": 189,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=9 (Deferred). Catalog snapshot rows_count=270; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_9_max": {
+    "default": 371,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=9 (Deferred). Catalog snapshot rows_count=270; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_10_min": {
+    "default": 228,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=10 (Conditional Consent). Catalog snapshot rows_count=326; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_10_max": {
+    "default": 444,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=10 (Conditional Consent). Catalog snapshot rows_count=326; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_11_min": {
+    "default": 172,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=11 (Approved). Catalog snapshot rows_count=246; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_11_max": {
+    "default": 340,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=11 (Approved). Catalog snapshot rows_count=246; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_12_min": {
+    "default": 387,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=12 (Approved + Conditions). Catalog snapshot rows_count=554; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_12_max": {
+    "default": 741,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=12 (Approved + Conditions). Catalog snapshot rows_count=554; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_13_min": {
+    "default": 41,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=13 (Refused). Catalog snapshot rows_count=59; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_13_max": {
+    "default": 97,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=13 (Refused). Catalog snapshot rows_count=59; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_14_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=14 (Final & Binding). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_14_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=14 (Final & Binding). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_15_min": {
+    "default": 16,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=15 (Awaiting Expiry). Catalog snapshot rows_count=24; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_15_max": {
+    "default": 52,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=15 (Awaiting Expiry). Catalog snapshot rows_count=24; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_16_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=16 (Appealed). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_16_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=16 (Appealed). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_17_min": {
+    "default": 242,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=17 (TLAB Appeal). Catalog snapshot rows_count=347; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_17_max": {
+    "default": 472,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=17 (TLAB Appeal). Catalog snapshot rows_count=347; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_18_min": {
+    "default": 152,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=18 (OMB Appeal). Catalog snapshot rows_count=218; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_18_max": {
+    "default": 304,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=18 (OMB Appeal). Catalog snapshot rows_count=218; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_19_min": {
+    "default": 632,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=19 (Withdrawn). Catalog snapshot rows_count=904; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_19_max": {
+    "default": 1196,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=19 (Withdrawn). Catalog snapshot rows_count=904; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_20_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=20 (Cancelled). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_20_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=20 (Cancelled). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_21_min": {
+    "default": 5,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=21 (Complete). Catalog snapshot rows_count=8; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_21_max": {
+    "default": 31,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=21 (Complete). Catalog snapshot rows_count=8; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_22_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=22 (Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_22_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=22 (Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_23_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=23 (Request Received). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_23_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=23 (Request Received). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_24_min": {
+    "default": 152,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=24 (Application Received). Catalog snapshot rows_count=218; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_24_max": {
+    "default": 304,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=24 (Application Received). Catalog snapshot rows_count=218; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_25_min": {
+    "default": 325,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=25 (Application Acceptable). Catalog snapshot rows_count=465; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_25_max": {
+    "default": 625,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=25 (Application Acceptable). Catalog snapshot rows_count=465; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_26_min": {
+    "default": 363,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=26 (Open). Catalog snapshot rows_count=519; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_26_max": {
+    "default": 695,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=26 (Open). Catalog snapshot rows_count=519; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_27_min": {
+    "default": 16,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=27 (Active). Catalog snapshot rows_count=24; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_27_max": {
+    "default": 52,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=27 (Active). Catalog snapshot rows_count=24; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_28_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=28 (Not Started). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_28_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=28 (Not Started). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_29_min": {
+    "default": 64,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=29 (Not Started - Express). Catalog snapshot rows_count=92; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_29_max": {
+    "default": 140,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=29 (Not Started - Express). Catalog snapshot rows_count=92; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_30_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=30 (Under Review). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_30_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=30 (Under Review). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_31_min": {
+    "default": 21,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=31 (Examination). Catalog snapshot rows_count=30; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_31_max": {
+    "default": 59,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=31 (Examination). Catalog snapshot rows_count=30; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_32_min": {
+    "default": 39,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=32 (Plan Review Complete). Catalog snapshot rows_count=57; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_32_max": {
+    "default": 95,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=32 (Plan Review Complete). Catalog snapshot rows_count=57; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_33_min": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=33 (Consultation Completed). Catalog snapshot rows_count=2; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_33_max": {
+    "default": 23,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=33 (Consultation Completed). Catalog snapshot rows_count=2; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_34_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=34 (Examiner's Notice Sent). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_34_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=34 (Examiner's Notice Sent). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_35_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=35 (Notice Sent). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_35_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=35 (Notice Sent). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_36_min": {
+    "default": 81,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=36 (Deficiency Notice). Catalog snapshot rows_count=117; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_36_max": {
+    "default": 173,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=36 (Deficiency Notice). Catalog snapshot rows_count=117; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_37_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=37 (On Hold). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_37_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=37 (On Hold). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_38_min": {
+    "default": 2,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=38 (On Hold (variant)). Catalog snapshot rows_count=4; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_38_max": {
+    "default": 26,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=38 (On Hold (variant)). Catalog snapshot rows_count=4; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_39_min": {
+    "default": 305,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=39 (Response Received). Catalog snapshot rows_count=436; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_39_max": {
+    "default": 587,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=39 (Response Received). Catalog snapshot rows_count=436; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_40_min": {
+    "default": 23,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=40 (Parent Folder Pending). Catalog snapshot rows_count=33; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_40_max": {
+    "default": 63,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=40 (Parent Folder Pending). Catalog snapshot rows_count=33; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_41_min": {
+    "default": 16,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=41 (Approved). Catalog snapshot rows_count=23; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_41_max": {
+    "default": 50,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=41 (Approved). Catalog snapshot rows_count=23; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_42_min": {
+    "default": 163,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=42 (Ready for Issuance). Catalog snapshot rows_count=233; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_42_max": {
+    "default": 323,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=42 (Ready for Issuance). Catalog snapshot rows_count=233; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_43_min": {
+    "default": 2,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=43 (Forwarded for Issuance). Catalog snapshot rows_count=3; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_43_max": {
+    "default": 24,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=43 (Forwarded for Issuance). Catalog snapshot rows_count=3; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_44_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=44 (Issuance Pending). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_44_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=44 (Issuance Pending). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_45_min": {
+    "default": 7,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=45 (Agreement in Progress). Catalog snapshot rows_count=10; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_45_max": {
+    "default": 33,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=45 (Agreement in Progress). Catalog snapshot rows_count=10; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_46_min": {
+    "default": 2,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=46 (Licence Issued). Catalog snapshot rows_count=4; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_46_max": {
+    "default": 26,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=46 (Licence Issued). Catalog snapshot rows_count=4; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_47_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=47 (Permit Issued). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_47_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=47 (Permit Issued). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_48_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=48 (Work Not Started). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_48_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=48 (Work Not Started). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_49_min": {
+    "default": 2,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=49 (Extension Granted). Catalog snapshot rows_count=3; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_49_max": {
+    "default": 24,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=49 (Extension Granted). Catalog snapshot rows_count=3; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_50_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=50 (Inspection). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_50_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=50 (Inspection). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_51_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=51 (Forward to Inspector). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_51_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=51 (Forward to Inspector). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_52_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=52 (Rescheduled). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_52_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=52 (Rescheduled). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_53_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=53 (Site Grading). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_53_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=53 (Site Grading). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_54_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=54 (Excavation/Shoring). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_54_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=54 (Excavation/Shoring). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_55_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=55 (Demolition). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_55_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=55 (Demolition). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_56_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=56 (Footings/Foundations). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_56_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=56 (Footings/Foundations). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_57_min": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=57 (Foundation). Catalog snapshot rows_count=2; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_57_max": {
+    "default": 23,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=57 (Foundation). Catalog snapshot rows_count=2; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_58_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=58 (Structural Framing). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_58_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=58 (Structural Framing). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_59_min": {
+    "default": 618,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=59 (HVAC Rough-in). Catalog snapshot rows_count=883; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_59_max": {
+    "default": 1168,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=59 (HVAC Rough-in). Catalog snapshot rows_count=883; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_60_min": {
+    "default": 621,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=60 (Water Service). Catalog snapshot rows_count=888; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_60_max": {
+    "default": 1175,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=60 (Water Service). Catalog snapshot rows_count=888; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_61_min": {
+    "default": 637,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=61 (Water Distribution). Catalog snapshot rows_count=911; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_61_max": {
+    "default": 1205,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=61 (Water Distribution). Catalog snapshot rows_count=911; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_62_min": {
+    "default": 637,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=62 (Drain/Waste/Vents). Catalog snapshot rows_count=910; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_62_max": {
+    "default": 1203,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=62 (Drain/Waste/Vents). Catalog snapshot rows_count=910; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_63_min": {
+    "default": 623,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=63 (Sewers/Drains/Sewage). Catalog snapshot rows_count=890; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_63_max": {
+    "default": 1177,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=63 (Sewers/Drains/Sewage). Catalog snapshot rows_count=890; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_64_min": {
+    "default": 622,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=64 (Fire Service). Catalog snapshot rows_count=889; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_64_max": {
+    "default": 1176,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=64 (Fire Service). Catalog snapshot rows_count=889; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_65_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=65 (Fire Access Routes). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_65_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=65 (Fire Access Routes). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_66_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=66 (Fire Protection Systems). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_66_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=66 (Fire Protection Systems). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_67_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=67 (Insulation/Vapour Barrier). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_67_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=67 (Insulation/Vapour Barrier). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_68_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=68 (Insulation). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_68_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=68 (Insulation). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_69_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=69 (Insulation & AirBarrier). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_69_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=69 (Insulation & AirBarrier). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_70_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=70 (Fire Separations). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_70_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=70 (Fire Separations). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_71_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=71 (Interior Final). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_71_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=71 (Interior Final). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_72_min": {
+    "default": 639,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=72 (Plumbing Final). Catalog snapshot rows_count=914; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_72_max": {
+    "default": 1209,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=72 (Plumbing Final). Catalog snapshot rows_count=914; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_73_min": {
+    "default": 618,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=73 (HVAC Final). Catalog snapshot rows_count=883; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_73_max": {
+    "default": 1168,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=73 (HVAC Final). Catalog snapshot rows_count=883; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_74_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=74 (Exterior Final). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_74_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=74 (Exterior Final). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_75_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=75 (Occupancy). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_75_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=75 (Occupancy). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_76_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=76 (Final Inspection). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_76_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=76 (Final Inspection). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_77_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=77 (Pool Suction/Gravity). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_77_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=77 (Pool Suction/Gravity). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_78_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=78 (Pool Circulation). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_78_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=78 (Pool Circulation). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_79_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=79 (Repair/Retrofit). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_79_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=79 (Repair/Retrofit). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_80_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=80 (Change of Use). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_80_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=80 (Change of Use). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_81_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=81 (System). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_81_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=81 (System). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_82_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=82 (Security Device). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_82_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=82 (Security Device). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_83_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=83 (Tent/Portable Classroom). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_83_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=83 (Tent/Portable Classroom). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_84_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=84 (Final Interior). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_84_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=84 (Final Interior). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_85_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=85 (HVAC Permit?). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_85_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=85 (HVAC Permit?). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_86_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=86 (Survey). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_86_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=86 (Survey). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_87_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=87 (Survey Submitted?). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_87_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=87 (Survey Submitted?). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_88_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=88 (Revision Issued). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_88_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=88 (Revision Issued). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_89_min": {
+    "default": 18,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=89 (Revised). Catalog snapshot rows_count=27; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_89_max": {
+    "default": 56,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=89 (Revised). Catalog snapshot rows_count=27; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_90_min": {
+    "default": 15,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=90 (Order Complied). Catalog snapshot rows_count=22; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_90_max": {
+    "default": 49,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=90 (Order Complied). Catalog snapshot rows_count=22; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_91_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=91 (Pending Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_91_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=91 (Pending Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_92_min": {
+    "default": 341,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=92 (Pending Cancellation). Catalog snapshot rows_count=488; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_92_max": {
+    "default": 655,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=92 (Pending Cancellation). Catalog snapshot rows_count=488; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_93_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=93 (Inspection Request to Cancel). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_93_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=93 (Inspection Request to Cancel). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_94_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=94 (Revocation Pending). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_94_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=94 (Revocation Pending). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_95_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=95 (Revocation Notice Sent). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_95_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=95 (Revocation Notice Sent). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_96_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=96 (Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_96_max": {
+    "default": null,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=96 (Closed). Catalog snapshot rows_count=NULL; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_97_min": {
+    "default": 4,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=97 (File Closed). Catalog snapshot rows_count=6; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_97_max": {
+    "default": 28,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=97 (File Closed). Catalog snapshot rows_count=6; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_98_min": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=98 (Permit Issued/Close File). Catalog snapshot rows_count=2; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_98_max": {
+    "default": 23,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=98 (Permit Issued/Close File). Catalog snapshot rows_count=2; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_99_min": {
+    "default": 670,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=99 (Refusal Notice). Catalog snapshot rows_count=958; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_99_max": {
+    "default": 1266,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=99 (Refusal Notice). Catalog snapshot rows_count=958; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_100_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=100 (Refused). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_100_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=100 (Refused). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_101_min": {
+    "default": 85,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=101 (Abandoned). Catalog snapshot rows_count=122; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_101_max": {
+    "default": 179,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=101 (Abandoned). Catalog snapshot rows_count=122; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_102_min": {
+    "default": 34,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=102 (Application Withdrawn). Catalog snapshot rows_count=49; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_102_max": {
+    "default": 84,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=102 (Application Withdrawn). Catalog snapshot rows_count=49; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_103_min": {
+    "default": 6,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=103 (Not Accepted). Catalog snapshot rows_count=9; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_103_max": {
+    "default": 32,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=103 (Not Accepted). Catalog snapshot rows_count=9; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_104_min": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=104 (Permit Revoked). Catalog snapshot rows_count=2; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_104_max": {
+    "default": 23,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=104 (Permit Revoked). Catalog snapshot rows_count=2; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_105_min": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=105 (Revoked). Catalog snapshot rows_count=2; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_105_max": {
+    "default": 23,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=105 (Revoked). Catalog snapshot rows_count=2; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_106_min": {
+    "default": 12,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=106 (Work Suspended). Catalog snapshot rows_count=18; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_106_max": {
+    "default": 44,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=106 (Work Suspended). Catalog snapshot rows_count=18; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_107_min": {
+    "default": 11,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=107 (VIOLATION). Catalog snapshot rows_count=16; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_107_max": {
+    "default": 41,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=107 (VIOLATION). Catalog snapshot rows_count=16; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_108_min": {
+    "default": 4,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=108 (Order Issued). Catalog snapshot rows_count=7; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_108_max": {
+    "default": 30,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=108 (Order Issued). Catalog snapshot rows_count=7; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_109_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=109 (Cancelled). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_109_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=109 (Cancelled). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_110_min": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 99999,
+    "description": "Min row count for lifecycle_seq=110 (Follow-up Required). Catalog snapshot rows_count=1; 2-branch continuous formula. Recalibrated in E.5."
+  },
+  "lifecycle_seq_band_110_max": {
+    "default": 22,
+    "type": "number",
+    "min": 0,
+    "max": 999999,
+    "description": "Max row count for lifecycle_seq=110 (Follow-up Required). Catalog snapshot rows_count=1; 2-branch continuous formula (NULL=no upper bound, INFO-only). Recalibrated in E.5."
+  },
+  "lifecycle_seq_unclassified_max": {
+    "default": 5000,
+    "type": "number",
+    "min": 0,
+    "max": 100000,
+    "description": "Max row count where lifecycle_seq IS NULL on permits or coa_applications. WARN threshold (E.4); Phase D + E.2 first-run state expected to violate. Tighten via E.5 after ramp-up."
   }
 }

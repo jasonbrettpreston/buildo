@@ -1,823 +1,1020 @@
-# Active Task: WF1 #lifecycle-phase-engine-migration-E.3 — `compute-phase-calibration.js` CoA-side granular cohort calibration
+# Active Task: WF1 #lifecycle-phase-engine-migration-E.4 — per-seq distribution bands + `assert-lifecycle-phase-distribution.js` extension
 
-**Status:** Implementation (PLAN LOCKED v5 — v4 plan-review surfaced 1 CRIT + 4 HIGH + 4 MED + 3 LOW + 1 NIT; v5 folds all of them. Per user authorization: PLAN LOCK directly without further plan-review round. Diff-stage 4-reviewer round will catch any remaining issues before commit.)
-**Workflow:** WF1 (script extension — CoA-side granular cohort calibration; permit-side preserved; legacy verdict bug fix; CoA chain manifest add)
-**Domain Mode:** Backend/Pipeline (`scripts/`, `scripts/manifest.json`, `docs/specs/`)
-**Rollback Anchor:** `ad0c178` (Phase E.2 consumer wiring ship)
+**Status:** Implementation — v4 complete + 2 diff-review folds applied; correcting pre-commit hook TS error (missing `beforeAll` import) before WF6 commit.
+**Workflow:** WF1 (script extension — quality CQA gate granularity upgrade; migration 148 adds per-seq band keys to `logic_variables`; no business-table schema changes)
+**Domain Mode:** Backend/Pipeline (`scripts/quality/`, `scripts/seeds/`, `migrations/`, `src/tests/`, `docs/specs/`)
+**Rollback Anchor:** `9902860` (Phase E.3 SHIP — CoA-side granular cohort calibration)
 **Parent WF:** Phase E — Lifecycle engine migration + bug 84-W12 fix + cohort-key extension (Spec 42 §6.11)
-**Sub-deliverable position:** E.1 (substrate `7003683`) → E.2 (consumer wiring `ad0c178`) → **E.3 (CoA-side granular cohorts — THIS task)** → E.4 (per-seq bands) → E.5 (band recalibration)
+**Sub-deliverable position:** E.1 (substrate `7003683`) → E.2 (consumer wiring `ad0c178`) → E.3 (CoA-side granular cohorts `9902860`) → **E.4 (per-seq bands — THIS task)** → E.5 (band recalibration operational gate)
 **Adversarial review:** USER-REQUESTED — 4 reviewers (Gemini + DeepSeek + Independent + Observability) at BOTH plan + diff stages.
-**Standards adherence (user-mandated):** Spec 47 §R1-R12; Spec 48 (observer); `00_engineering_standards.md` §2 (try-catch boundary), §3 (database), §6 (logError), §7 (dual code path — N/A), §9 (pipeline safety — transaction boundaries, parameter limits, idempotent); **TDD cadence** per WF1 Red Light/Green Light gate.
-
-## v4 → v5 Revision Summary
-
-v4 plan-review (4 reviewers — Gemini + DeepSeek + Independent worktree + Observability worktree) surfaced 13 actionable findings. The decisive convergence: all 4 reviewers independently flagged the same CRIT — `coaTypeClassNullTransitionCount` declared but never populated (the cohort-loop iterates aggregate buckets which collapse NULL coa_type_class rows into a single bucket, losing per-transition NULL visibility). Additional 3-of-4 convergence on the `coa_transition_count` query missing the seq-range filter that the revision table claimed was applied. Convergence trajectory: v1=18 → v2=14 → v3=15 → v4=13. Per user authorization, v5 folds all 13 and PLAN LOCKs directly; the diff-stage 4-reviewer round will catch any new issues introduced by the folds before commit.
-
-| # | Finding | Reviewer(s) | Severity | v5 Resolution |
-|---|---|---|---|---|
-| v4-C1 | `coaTypeClassNullTransitionCount` declared but NEVER populated — the for-loop iterates `allBuckets` (aggregate output) but NULL coa_type_class rows collapse into one bucket, losing per-transition visibility. Result: metric permanently emits 0; >5% WARN gate is dead code; the observability replacement for the removed `coa_type_class IS NOT NULL` filter has zero signal. | Gemini CRIT + DeepSeek CRIT + Independent E (conf 88) + Observability I (conf 97) — **4/4 convergent** | CRITICAL | **FOLD** — replace the dead loop increment with a separate SQL query: `SELECT COUNT(*)::int AS n FROM lifecycle_transitions WHERE lead_id LIKE 'coa:%' AND coa_type_class IS NULL AND (from_seq BETWEEN 1 AND 22 OR to_seq BETWEEN 1 AND 22)`. Filter matches `coa_transition_count` query for consistency. |
-| v4-H1 | `coa_transition_count` query at line 339-341 missing seq-range filter — regression of v3-DS-MED-3 fold. Revision summary table claims filter applied; code block shows old form. | Gemini HIGH + DeepSeek HIGH + Independent F (conf 87) — **3/4** | HIGH | **FOLD** — add `AND (from_seq BETWEEN 1 AND 22 OR to_seq BETWEEN 1 AND 22)` to the count query. Filter now matches `coaAggSql` exactly. |
-| v4-H2 | `coa_applications` project_type coverage query at line 347-352 has no table-exists guard. v3-DS-HIGH-2 fold applied to `lifecycle_transitions` only. If `coa_applications` missing → relation-not-exist crash + advisory lock leak. | DeepSeek HIGH + Independent G (conf 82) — **2/4** | HIGH | **FOLD** — wrap with `information_schema.tables` EXISTS check. WARN log + set `projectTypeCoveragePct = null` if missing. Skip the dual-source `lifecycle_transitions` coverage query if `lifecycle_transitions` is missing too. |
-| v4-H3 | `<1ms` pre-ack wording is technically misleading — empty-window is **zero** (readers blocked by ACCESS EXCLUSIVE for the full transaction duration), not `<1ms`. Operator could mis-attribute reader latency to a "known sub-ms window" that doesn't exist. | Observability J (conf 82) — **1/4** | HIGH | **FOLD** — rewrite pre-ack vector #6 to: "Transient empty-table window for `phase_stay_calibration` is **zero** (readers blocked by ACCESS EXCLUSIVE for the full transaction duration; table never visible as empty)." |
-| v4-H4 | GROUP BY 5-tuple includes `to_seq` (not just `from_seq`) — cohort cardinality could explode (theoretical max ~48K vs. claimed ~1000). Permit-side groups only by `from_phase`. Plan needs explicit semantics justification + parameter-limit reconciliation. | DeepSeek HIGH — **1/4** | HIGH | **FOLD as documentation** — the 5-tuple `(NULL, project_type, coa_type_class, from_seq, to_seq)` IS the spec-mandated cohort key per Spec 42 §6.7 step 6 (granular CoA cohorts for trade-forecast use). Practical cardinality bound: ~6 project_types × ~7 coa_type_class × 22 from_seq × 22 to_seq = ~20K theoretical max, but observed CoA transitions concentrate on a handful of `(from_seq, to_seq)` paths (linear status progression). Plan adds: explicit upper-bound bucket count assertion in script (FAIL on `allBuckets.length > 5000`) + reconciles with parameter limit: 11 cols × 5000 = 55K params (< 65535). |
-| v4-M1 | mig 147 DOWN step missing `DELETE FROM ... WHERE phase IS NULL` — only handles `permit_type IS NULL`. Any row with NULL `phase` would block `ALTER COLUMN phase SET NOT NULL` rollback. | Gemini MED — **1/4** | MED | **FOLD** — DOWN comment block step 1 split: (1a) `DELETE FROM phase_stay_calibration WHERE permit_type IS NULL;` (remove CoA-side rows); (1b) `DELETE FROM phase_stay_calibration WHERE phase IS NULL;` (defensive — catch any remaining NULL-phase permit-side row). |
-| v4-M2 | UNION ALL fold mismatch — v3 revision table claims `permitAggSql + coaAggSql` combined into single UNION ALL + direct INSERT INTO staging; code in Parts 1-2 still shows two separate `pool.query` calls + JS concat (`allBuckets = [...permitBuckets, ...coaBuckets]`). | DeepSeek MED + Observability — **2/4** | MED | **FOLD as documentation** — update v3 fold v3-G-MED-2 entry: actual decision was to keep two separate queries (clearer error attribution per side; permit-side bucket count and CoA-side bucket count remain separately accessible for `permitCohortCount`/`coaCohortCount` derivation). The JS concat is intentional. The v3 revision claim was aspirational; v5 corrects the documentation. |
-| v4-M3 | Param-limit guard missing for staging INSERT — bucket count could exceed 5955 (65535÷11 ceiling) without runtime check. | DeepSeek MED — **1/4** | MED | **FOLD** — startup guard added: assert `allBuckets.length <= 5000` (well under 5955 hard limit). On overage: FAIL the run with explicit error. Sub-batching deferred to Phase F if CoA cardinality grows. |
-| v4-M4 | `coaAggSql` WHERE `OR` on from_seq/to_seq is brittle — `lead_id LIKE 'coa:%'` is canonical; the seq-range `OR` could pull in a future bug's mis-labeled permit row with a seq in 1-22. Logic should be `AND` with logged assertion, not `OR` broadening. | Gemini MED — **1/4** | MED — defer | **DEFER** — current logic uses `AND lead_id LIKE 'coa:%' AND (from_seq ... OR to_seq ...)` which is defense-in-depth, NOT an `OR` broadening. Both conditions must hold (LIKE + seq-range). The Gemini concern is misread: there is no scenario where the `lead_id` filter is bypassed. No fold needed. |
-| v4-L1 | `coa_type_class_null_transition_count` threshold descriptor says "5%" but stores absolute count; descriptor is misleading even though the status computation correctly divides. | DeepSeek LOW — **1/4** | LOW | **FOLD** — descriptor updated to: `'ratio <= 0.05 PASS, > 0.05 WARN (relative to coa_transition_count); value field stores absolute count for triage'`. |
-| v4-L2 | Self-Checklist item (j) at line 679 still says "4 existing + 7 new INFO + 1 thresholded" (totals 12, not 15); Execution Plan Contract Definition step still says "audit_table 12-row shape"; one more "12-row" reference in Audit Observability paragraph. | Observability + Independent (3 stale locations) — **2/4** | LOW | **FOLD** — all 3 locations corrected to "15 rows / 6 thresholded". Self-Checklist (j) rewritten: "15 audit_table rows: 4 existing + 6 new INFO + 5 thresholded WARN/FAIL gates". |
-| v4-L3 | Pre-ack lacks co-firing guidance — if Phase D is incomplete, vectors #4 + #5 + (optionally #unknown_cohort_count) co-fire WARN, audit verdict = WARN. Operator may file unnecessary WF3. | Observability — **1/4** | LOW | **FOLD** — pre-ack appends: "Note on co-firing: if `verdict=WARN` on first E.3 run with vectors #4 + #5 (and optionally `unknown_cohort_count`) simultaneously WARN, this is the expected co-firing pattern when Phase D is incomplete. No WF3 action; verify Phase D execution." |
-| v4-N1 | Test for `unknown_cohort_count` uses "impossible injection" wording — implies the test contradicts the documented reachable case (Phase D never ran for the underlying CoA record). | Gemini NIT — **1/4** | NIT | **FOLD** — test rewritten: seed a `coa_applications` record with NULL `project_type` AND NULL `coa_type_class`, run E.2 writer to produce a valid `lifecycle_transitions` row from it (no constraint violation; both columns nullable on the transition row), then assert E.3 buckets it into `unknown_cohort_count >= 1` and `audit_table.verdict = 'WARN'`. Validates the realistic Phase D-incomplete failure mode. |
-
-**v5 load-bearing changes** (in addition to v3→v4 changes already applied): (1) `coaTypeClassNullTransitionCount` populated via separate SQL query (CRITICAL fix — metric was permanently zero); (2) `coa_transition_count` query gets seq-range filter (HIGH regression fix); (3) `coa_applications` query gets table-exists guard (HIGH defensive); (4) pre-ack vector #6 wording corrected from `<1ms` to `zero` (HIGH accuracy); (5) mig 147 DOWN adds `phase IS NULL` DELETE step (MED rollback safety); (6) bucket-count upper-bound assertion + parameter-limit reconciliation (MED defensive); (7) all 3 stale doc-count locations corrected to 15/6 (LOW consistency); (8) co-firing guidance added to pre-ack (LOW operator clarity); (9) `unknown_cohort_count` test rewritten as realistic Phase D-incomplete fixture (NIT semantic correctness).
+**Standards adherence (user-mandated):** `00_engineering_standards.md` §2 (try-catch), §3 (database), §6 (logError), §9 (pipeline safety); Spec 47 §R1-R12; Spec 48 (observer) §3.1 (audit_table) + §3.2 (records_meta distributions); TDD cadence per WF1 Red Light/Green Light gate.
 
 ## v3 → v4 Revision Summary
 
-v3 plan-review (4 reviewers) surfaced 15 actionable findings. Three CRITs were real implementation bugs that would have shipped — caught by plan-review exactly as intended. Convergence trajectory: v1=18 → v2=14 → v3=15 (not tight; each iteration adds structural design which surfaces new issues).
+v3 plan-review (4 reviewers) surfaced 9 actionable findings (2 CRITs, 1 HIGH, 6 MEDs). All folded in v4. Per user authorization: v4 PLAN LOCKs directly without another plan-review round; diff-stage 4-reviewer round runs AFTER implementation. Convergence trajectory: v1=14 → v2=8 → v3=9 (slight uptick due to v3 introducing more surface area, but each round caught real defects).
 
 | # | Finding | Reviewer(s) | Severity | v4 Resolution |
 |---|---|---|---|---|
-| v3-IF | Mig 147 has explicit `BEGIN`/`COMMIT` — documented recurring failure mode (mig 135's R8 CI hotfix removed exactly this; runner provides outer transaction; explicit BEGIN/COMMIT commits the outer prematurely → split-brain schema state) | Independent F | CRITICAL | **FOLD** — `BEGIN;` and `COMMIT;` removed from mig 147. Runner's outer transaction wrapping is sufficient. Mirrors mig 135 pattern. |
-| v3-DS-1 / Indep-A | Permit-side 2-tuple `(permit_type, phase)` uniqueness lost after mig 147 drops legacy PK — 5-tuple UNIQUE with NULLS DISTINCT treats NULL granular dims as distinct → duplicates possible from external/future writers | DeepSeek CRIT + Independent A (2-way) | CRITICAL | **FOLD** — mig 147 adds partial unique index: `CREATE UNIQUE INDEX phase_stay_calibration_permit_legacy_unique ON phase_stay_calibration (permit_type, phase) WHERE permit_type IS NOT NULL`. Restores structural uniqueness for permit-side rows while permitting CoA-side rows (permit_type NULL) to coexist. |
-| v3-G-CRIT | DELETE+INSERT race window — Gemini upgrades from Independent v2's accept to CRIT. Atomic temp-table swap protects downstream consumers from transient empty table | Gemini CRIT (Independent v2 disagreed) | CRITICAL | **FOLD** — write path replaced with `CREATE TEMP TABLE` + `INSERT INTO temp SELECT ...` + `BEGIN; TRUNCATE phase_stay_calibration; INSERT INTO phase_stay_calibration SELECT * FROM temp; COMMIT;`. Reduces empty-table window to milliseconds (metadata-only lock). |
-| v3-G-HIGH-2 | LAG composite index for performance scaling | Gemini HIGH | HIGH | **FOLD** — mig 147 adds `CREATE INDEX phase_stay_calibration_lt_lag_idx ON lifecycle_transitions (lead_id, transitioned_at, id) WHERE lead_id LIKE 'coa:%'`. Partial index keeps it small; covers the LAG window correctly. |
-| v3-G-HIGH-3 / DS-MED-1 | `coa_type_class IS NOT NULL` filter inconsistent with v3's removal of the parallel `project_type IS NOT NULL` filter — data-destructive for unclassified CoA rows | Gemini HIGH + DeepSeek MED (2-way convergent) | HIGH | **FOLD** — filter REMOVED from CoA aggregate. Add `coa_type_class_null_transition_count` audit row (WARN at >5%) for observability. The `unknown_cohort_count` defensive metric (v3 fold v2-G-3) now becomes reachable for legitimate cases (CoA rows with both project_type AND coa_type_class NULL) rather than dead code. |
-| v3-DS-HIGH-2 | Startup guard queries `coa_applications` without verifying table exists | DeepSeek HIGH | HIGH | **FOLD** — `information_schema.tables` check added before the project_type coverage query, with WARN log on missing table. |
-| v3-O-HIGH-Indep | "15 audit_table rows" stale in 3 doc locations (Self-Checklist item j, Spec 48 section, Audit Observability section) — actual is 14 rows after v3 promotions | Observability HIGH + Independent (convergent) | HIGH | **FOLD** — all 3 locations corrected to "14 rows, 5 thresholded." With v4 adding `coa_type_class_null_transition_count` (v3-G-HIGH-3 fold), total becomes 15 rows. Numbers updated to match. |
-| v3-G-MED-1 | `flattenBuckets` order-coupled to SQL column order — silent corruption risk on future column reorder | Gemini MED | MED | **FOLD** — `flattenBuckets` rewritten as `buckets.flatMap(b => COHORT_INSERT_COLS.map(col => b[col] ?? null))` — name-based lookup, order-independent. |
-| v3-G-MED-2 | UNION ALL in SQL not JS concat (memory/perf optimization) | Gemini MED | MED | **FOLD** — `permitAggSql` and `coaAggSql` combined into single `WITH ... UNION ALL ... INSERT INTO temp SELECT ...` statement; eliminates the `allBuckets = [...permitBuckets, ...coaBuckets]` JS round-trip. |
-| v3-G-MED-3 / DS-LOW-6 | DOWN script unsafe — only safe if no CoA-side rows present; doesn't delete CoA rows before re-adding PK | Gemini MED + DeepSeek LOW (2-way) | MED | **FOLD** — DOWN comment block adds explicit `DELETE FROM phase_stay_calibration WHERE permit_type IS NULL` as first step (operator must run before ALTER COLUMN ... SET NOT NULL or ADD PRIMARY KEY). |
-| v3-DS-MED-2 | `unknown_cohort_count` was dead code under v3's `coa_type_class IS NOT NULL` filter | DeepSeek MED | MED | **FOLD** — resolved by v3-G-HIGH-3 fold (filter removal). `unknown_cohort_count` now reachable; tests need updating to reflect this. |
-| v3-DS-MED-3 | `coa_transition_count` count query doesn't apply seq-range filter that aggregate uses → metric/aggregate mismatch | DeepSeek MED | MED | **FOLD** — `coa_transition_count` query updated: `SELECT COUNT(*) FROM lifecycle_transitions WHERE lead_id LIKE 'coa:%' AND (from_seq BETWEEN 1 AND 22 OR to_seq BETWEEN 1 AND 22)`. Filters match. |
-| v3-DS-LOW-5 | `unreliable_buckets` threshold descriptor text contradicts the gate | DeepSeek LOW | LOW | **FOLD** — descriptor fixed to `'> 0 triggers WARN (count of buckets with sample_size < 30; equals low+outlier by definition)'`. |
-| v3-Indep-A-advisory | Mig 147 should comment that DELETE+INSERT pattern (now: atomic temp-table swap) is the runtime enforcement of legacy 2-tuple uniqueness — advisory only since partial unique index now in place | Independent A advisory | LOW | **FOLD** — comment added in mig 147; redundant now with the partial unique index from v3-DS-1 fold but documented for traceability. |
-| v3-O-LOW-K | Pre-ack format dense (5 anomaly vectors in one paragraph) — operator parseability | Observability LOW | LOW | **FOLD** — pre-ack reformatted as numbered list with one-line action per vector. |
+| v3-DS-CRIT | Catalog `SELECT` query (Part 3) is executed unconditionally even when `catalogExists === false` — defeats the Part 6 startup guard. Script crashes with `relation "universal_stream_catalog" does not exist`. | DeepSeek CRIT | CRITICAL | **FOLD** — wrap the catalog `SELECT` in `if (catalogExists) { ... }`. Fallback to `catalogRows = []` produces graceful degradation (no per-seq assertion; phase-keyed assertions continue). |
+| v3-G-CRIT | Formula inconsistency — v3's mig 148 SQL uses the new 2-branch continuous formula `[FLOOR(rows_count*0.7), CEIL(rows_count*1.3)+20]`, but Part 2 seed-JSON examples + Test #4 parity test spec still reference the OLD 3-branch formula (`1-29 → max*5`; `>=30 → ±30%`). Parity test would falsely PASS/FAIL with conflicting computations. | Gemini CRIT + Independent + Observability (convergent 3/4) | CRITICAL | **FOLD** — corrected all 3 locations to the 2-branch continuous formula. Seq 1 example now [7, 33] (was [0, 50]); seq 19 now [632, 1196] (was [632, 1176]); parity test spec uses `Math.floor(rows_count*0.7)` + `Math.ceil(rows_count*1.3) + 20` JS formula matching SQL. Added edge-case test asserting continuity at the former rows_count=30 boundary. |
+| v3-G-HIGH | Stage 2 dynamic Zod validation (Part 7) checks `!Number.isFinite(Number(min/max))` but NOT `< 0`. A negative band value (e.g., `min=-10` from operator tampering or DB drift) would pass validation, silently making `actual >= -10` always true, disabling the lower-bound check. Parity gap with static schema's `.nonnegative()`. | Gemini HIGH | HIGH | **FOLD** — added explicit `Number(min/max) < 0` checks in Stage 2 throws. Parity restored with the `.nonnegative()` enforcement on phase-keyed bands. |
+| v3-G-NIT + v3-DS-MED (convergent) | `catalogNullCountSeqs` declared (Part 3 catalog query block) but never used — dead code from v2 holdover. | Gemini NIT + DeepSeek MED (convergent 2/4) | MED | **FOLD** — repurposed (per Gemini LOW alt) to identify INFO-only seqs by the CATALOG (source of truth) rather than `band.max === null` (which depends on mutable logic_variables). Used in Part 3's classification loop for robustness against operator-tampered null-max values. |
+| v3-Indep-MED + v3-Obs-MED | `expected_data_missing` rendering "possible data deletion" is too alarming for the common first-deploy case (often the cause is classifier-never-wrote, source-coverage gap, or catalog vs production data drift — not actual deletion). | Independent + Observability (convergent 2/4) | MED | **FOLD** — neutral rendering: `"seq N: 0 rows observed (band expects min=X) — verify classifier coverage, source freshness, or catalog vs production data drift"`. Operator-triage decision now requires checking all four hypotheses rather than jumping to "data deletion" assumption. |
+| v3-Indep-MED-C | Orphan-key throw error message says "Fix the orphan keys or re-seed via mig 148." Re-seeding does NOT fix orphans (`ON CONFLICT DO NOTHING` preserves them). Operator follows the bad advice → throw persists → confusion. | Independent MED | MED | **FOLD** — error message rewritten with explicit recovery path: (a) Spec 86 Control Panel delete, OR (b) `DELETE FROM logic_variables WHERE variable_key IN (...)` with the offending keys quoted. Removed misleading "re-seed via mig 148" guidance. |
+| v3-Indep-MED-D | rows_count=1 boundary behavior — band = [0, 22], so actual=0 is always in-band. INTENTIONAL per the continuous formula design (rows_count=1 baseline is statistically equivalent to zero), but UNDOCUMENTED. Operator seeing seq with rows_count=1 actual=0 and zero WARN would be confused. | Independent MED | MED-doc | **FOLD as doc** — added explicit comment block in mig 148 header explaining the rows_count=1 behavior + flagging it as an E.5 revisit point for regulatory-critical low-volume seqs. |
+| v3-Indep-MED-A | Mig 149 failure-mode description imprecise — plan said "each statement runs in its own implicit transaction" but the `recordApplied` call after the CONCURRENTLY statements is a SEPARATE pool.query that can fail independently. If it fails, the migration re-runs (idempotent via IF NOT EXISTS). | Independent MED (Concern A) | MED-doc | **FOLD as doc** — Part 1.5 description clarified: explicitly documents the `recordApplied` separate-pool.query failure mode + the automatic re-run recovery via IF NOT EXISTS idempotency. |
+| v3-DS-MED-threshold | Empty-catalog `seq_bands_total` threshold message renders as `"== 0 expected"` — technically true but misleading (looks like harmless empty state, not missing-migration). | DeepSeek MED | MED | **FOLD** — bifurcated threshold string per status: empty-catalog case renders `'0 rows in universal_stream_catalog — verify mig 129 seed applied (expected ~110)'`; partial-mig case keeps the dynamic `${catalogSeqs.length}` form. Operators see the right diagnostic for each scenario. |
+
+**v4 load-bearing changes on top of v3:**
+1. Catalog `SELECT` guarded by `if (catalogExists)` (CRIT) — no more crash on missing catalog table.
+2. All formula references aligned to 2-branch continuous formula (CRIT) — mig 148 SQL, seed examples (Part 2), parity test spec (Test #4), revision summary.
+3. Stage 2 Zod validation gains `< 0` checks (HIGH) — parity with static schema's `.nonnegative()`.
+4. `catalogNullCountSeqs` repurposed (MED) — INFO-only identification routes through catalog (source of truth), not mutable logic_variables.
+5. `expected_data_missing` neutral rendering (MED) — operator-triage UX.
+6. Orphan-key error explicit recovery path (MED) — no more misleading "re-seed via mig 148."
+7. rows_count=1 always-PASS behavior documented (MED-doc).
+8. Mig 149 recordApplied failure-mode clarified (MED-doc).
+9. Empty-catalog threshold message bifurcated (MED) — distinct from partial-mig case.
 
 ## v2 → v3 Revision Summary
 
-v2 plan-review (4 reviewers) surfaced 14 actionable findings. The most critical was **Independent G** (conf 92): `phase_stay_calibration` retains its original `PRIMARY KEY (permit_type, phase)` from mig 123; my v2 claimed "no migrations needed" but CoA-side INSERTs with `permit_type = NULL` would violate the PK on first production run. Mig 135 added a 5-tuple UNIQUE INDEX but did NOT drop the old PK. Mig 135's own comment foreshadowed this: "*The pre-existing PK on (permit_type, phase) enforces uniqueness during the transition*" — implying Phase E was expected to handle the PK drop.
-
-v3 adds **migration 147** to drop the legacy PK + make `permit_type` and `phase` nullable + fold the other 13 findings.
+v2 plan-review (4 reviewers) surfaced 8 actionable findings (1 CRIT, 6 HIGHs, 1 MED). All folded in v3. Convergence trajectory: v1=14 → v2=8 — tightening but each round catches real defects.
 
 | # | Finding | Reviewer(s) | Severity | v3 Resolution |
 |---|---|---|---|---|
-| v2-G | `phase_stay_calibration` PRIMARY KEY (permit_type, phase) blocks CoA-side INSERT (permit_type NULL on CoA rows) | Independent G | CRITICAL/BLOCKING | **FOLD via NEW migration 147**: drop legacy PK on (permit_type, phase); make permit_type + phase nullable; mig 135's 5-tuple UNIQUE INDEX becomes the de facto integrity constraint. |
-| v2-E | `MIN(from_phase)` returns NULL for all-NULL partitions; `phase` column is NOT NULL → INSERT violation | Independent E | HIGH | **FOLD** — same migration 147 makes `phase` nullable. CoA cohorts with all-null `from_phase` propagate NULL through the INSERT cleanly. |
-| v2-DS-1 | `project_type IS NOT NULL` filter in v2 CoA aggregate is data-destructive (NULLS DISTINCT collision argument was wrong) | DeepSeek HIGH | HIGH | **FOLD** — filter removed from `coaAggSql` WHERE clause. CoA rows with NULL project_type bucket together under SQL NULL-grouping semantics. Migration 147 makes the row insertable. |
-| v2-DS-2 | "Permit-side UNCHANGED" plan claim contradicts SQL block which adds `, id` tiebreaker | DeepSeek HIGH | HIGH | **FOLD** — plan text corrected: permit-side IS modified (LAG tiebreaker added per v2 fold #8). The change is small but explicit. |
-| v2-G-1 | Gemini's "LAG off-by-one CRITICAL" | Gemini CRIT | — | **FALSE POSITIVE** verified via timeline trace — `from_phase` is the phase being EXITED (the cohort's phase); LAG of `transitioned_at` against current row gives the duration of that phase correctly. |
-| v2-G-2 | Duration-attribution test missing from test plan | Gemini HIGH | HIGH | **FOLD** — new test #6 in Part 7: seed lead A with known durations (Phase A→B at Day 10, B→C at Day 30); assert `phase_stay_calibration.median_days = 10` for cohort A and `20` for cohort B. |
-| v2-O-J | Pre-ack missing `coa_transition_count` step-change annotation | Observability HIGH | HIGH | **FOLD** — pre-ack runbook adds explicit note: "*The new `coa_transition_count` metric will jump from 0 (pre-E.2 baseline) to ~30K on first E.3 run — expected. INFO row only; will not trigger automated WARN/FAIL but DeepSeek narrative may flag the velocity jump.*" |
-| v2-G-3 | `unknown_cohort_count` defensive metric for `permit_type=NULL AND coa_type_class=NULL` edge case | Gemini MED | MED | **FOLD** — new audit row added. WARN gate at >0 (signals data corruption or aggregate bug). |
-| v2-DS-3 | EXPLAIN ANALYZE assertion too strict (OR condition defeats single-column indexes; would FAIL on staging without composite index) | DeepSeek MED | MED | **FOLD** — assertion relaxed: at ~30K row scale sequential scan is acceptable. Test now asserts `execution_time_ms < 5000` (5 second budget) instead of "no Seq Scan." Composite index deferred to Phase H if/when CoA volume justifies. |
-| v2-O-L / Indep F | `unreliable_buckets` = `low_volume_buckets + outlier_buckets` redundancy undocumented; operator dashboard double-count risk | Observability L + Independent F (2-way) | MED | **FOLD** — `unreliable_buckets` threshold descriptor extended: `'< 30 sample_size triggers WARN if > 0 — NOTE: equals low_volume_buckets + outlier_buckets by definition; do not sum tier metrics with this'`. Plus pre-ack runbook note. |
-| v2-O-M | `coa_project_type_coverage_pct` lives in records_meta direct keys → observer's automated WARN/FAIL gate blind to Phase D coverage degradation | Observability MED | MED | **FOLD** — promoted to 13th `audit_table.rows` entry: `{ metric: 'coa_project_type_coverage_pct', value: pct, threshold: '>= 50 PASS, < 50 WARN', status: pct >= 50 ? 'PASS' : 'WARN' }`. records_meta keeps the value for triage context. |
-| v2-I-B | DELETE+INSERT race window when calibration runs in both chains (transient empty table between lock release + re-acquire) | Independent B | MED | **FOLD as documentation** — operator pre-ack adds note: "*Calibration now runs in BOTH permits + coa chains. Lock 93 serializes concurrent execution, but lock-release-then-re-acquire creates a millisecond transient empty-table window for `phase_stay_calibration` consumers (inspector read path). Acceptable operational risk; INSERT-then-DELETE atomic swap deferred to a future hardening WF.*" |
-| v2-I-D | `coa_applications.project_type` coverage guard reads wrong source — should ALSO check `lifecycle_transitions.project_type` directly | Independent D | MED | **FOLD** — second startup guard added querying `lifecycle_transitions WHERE lead_id LIKE 'coa:%'` for project_type coverage. Logs both percentages so operators can distinguish "Phase D hasn't run" vs "Phase D ran but old transitions predate it." |
-| v2-O-doc | Self-doc inconsistency: plan says "5 thresholded scalars" but Part 4 has only 3 thresholded (now 4 with the `coa_project_type_coverage_pct` promotion in v2-O-M) | Observability doc | LOW | **FOLD** — plan text corrected. With v3's promotion, 4 thresholded: `total_buckets` (FAIL gate), `unreliable_buckets` (WARN gate), `coa_cohort_presence` (WARN gate), `coa_project_type_coverage_pct` (WARN gate). |
-| v2-I-C | `lifecycle_transitions.id` documented as BIGSERIAL but mig 126 has it as SERIAL | Independent LOW | LOW | **DOCUMENT** — no E.3 impact (LAG tiebreaker works on either type). Spec amendment to correct Spec 42 §6.6.B to match mig 126's actual `SERIAL` type. Phase H concern if table exceeds ~2.1B rows. |
-| v2-G-LOW | `MIN(from_phase)` ambiguity telemetry — flag cohorts with multiple distinct `from_phase` strings (e.g., 'P7a' vs 'P7-A' bad data) | Gemini LOW | LOW | **DEFER** — defensive observability; defer to follow-up. |
-| v2-G-NIT | `cohort_dimension_coverage` SQL optimization (compute via `COUNT(*) FILTER` in SQL instead of JS filter) | Gemini NIT | NIT | **DEFER** — implementation detail. |
-| v2-DS-MED-4 | `lead_id` format dependency note in startup guard | DeepSeek MED | NIT | **Already in plan** — startup guard comment notes the format dependency. |
+| v2-G-CRIT | Zod `.passthrough()` silently accepts typo'd band keys (e.g. `lifecycle_seq_band_42_mx` instead of `_max`). The static schema doesn't catch the typo; runtime band-loading reads `undefined`; `?? null` converts undefined → null → INFO-only band. The assertion is silently disabled for that seq. | Gemini CRIT | CRITICAL | **FOLD** — explicit orphan-key detection after Stage 1 Zod parsing: iterate `Object.keys(logicVars)` matching `/^lifecycle_seq_band_(\d+)_(min\|max)$/` and assert each `<N>` is in `catalogSeqs`. Throw at startup on any orphan. The typo + missing-min case both fail the same check. |
+| v2-conv-HIGH | UNION ALL aggregate query risks full table scan on `permits` and `coa_applications` if `lifecycle_seq` is not indexed (mig 132/133 added the column but no index). At ~250K + 33K rows, the query could take tens of seconds and block the pipeline. | Gemini HIGH + DeepSeek HIGH (convergent 2/4) | HIGH | **FOLD** — mig 148 adds `CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_lifecycle_seq ON permits(lifecycle_seq) WHERE lifecycle_seq IS NOT NULL` + same for `coa_applications`. Partial indices (filtered on non-NULL) keep size small. CONCURRENTLY required per Engineering Standards §3.1 for tables > 100K rows. |
+| v2-G-HIGH-2 | Tolerance formula discontinuous at `rows_count = 30` boundary: 29 → max=145 (low-volume), 30 → max=39 (±30%). Tiny data growth triggers spurious WARN cascade. | Gemini HIGH | HIGH | **FOLD** — replace the 3-branch CASE with a 2-branch continuous formula: `[FLOOR(rows_count * 0.7), CEIL(rows_count * 1.3) + 20]` for `rows_count >= 1`; `[0, NULL]` for `rows_count IS NULL OR 0`. Additive +20 buffer absorbs low-volume statistical noise. At rows_count=29: [20, 58]; at 30: [21, 59] — continuous. At 100: [70, 150]; at 1000: [700, 1320]. |
+| v2-G-HIGH-3 | Symmetric-difference asymmetric — checks "seqs in data but not in bands" (catches NEW unexpected seqs) but NOT "seqs in bands but not in data" (data deletion / classifier-skip bugs invisible — if `band.min > 0` and `actual = 0`, expected data has disappeared but the gate cannot detect it since the seq isn't in the aggregate result). | Gemini HIGH | HIGH | **FOLD** — second loop after the first symmetric-difference check: iterate `bandSeqs`; if seq not in `distributionSeqs` AND `band.min > 0` AND `band.max !== null` (excluding INFO-only NULL-catalog bands), emit `kind: 'expected_data_missing'` violation + increment `seqBandsWarn`. Distinguishes "missing data" from "null-catalog informational" via the existing kind discriminator. |
+| v2-I-HIGH-F | Truncation math error in warnings preview suffix: uses `seqViolations.length - previewCount` but `seqViolations` is the UNCAPPED full array. With 200 violations: message says "+190 more in records_meta.seq_violations" but records_meta only has 40 more (50 cap - 10 preview). Misleads operator triage. | Independent HIGH (Concern F) | HIGH | **FOLD** — change preview suffix to `seqViolationsCapped.length - previewCount` for "in records_meta" count; separately surface `seqViolationsTruncatedCount` (already in records_meta) with explicit message: "+N more in records_meta.seq_violations" + "(M additional truncated — see seq_violations_truncated_count)". |
+| v2-O-HIGH-1 | Stale "28 rows / 5 new" references in 2 plan sections (line 70 Goal point 4, line 635 Spec 48 Adherence) — v2 added `seq_bands_null_catalog_count` (6th new row → 29 total) but didn't update these locations. An infra test author reading line 70 might write the assertion for 5 new rows, missing the 6th. | Observability HIGH (FINDING-1) | HIGH | **FOLD** — both locations corrected to "29 rows / 6 new aggregates". |
+| v2-O-HIGH-2 | `seq_bands_total` WARN lacks the `[E.4 WARN-ONLY POSTURE]` prefix that all other E.4 WARNs carry. Co-firing scenario: mig 148 partially applied + first deploy → `seq_bands_total: 95/110 WARN` appears alarming without context, while `seq_bands_warn: 47` is correctly prefixed. Operator triage inconsistency → unnecessary WF3s. | Observability HIGH (FINDING-2) | HIGH | **FOLD** — when `seqBandKeysLoaded < catalogSeqs.length`, push a `warnings[]` entry alongside the audit row WARN: `[E.4 WARN-ONLY POSTURE — partial mig 148 apply expected during ramp-up] seq_bands_total ${loaded}/${expected} — verify mig 148 applied cleanly. Per-seq assertion will be partial until next migration apply.` |
+| v2-I-MED-A | Empty catalog edge case: `catalogExists && catalogRows.length === 0` (mig 128 applied but mig 129 seed not run) → `catalogSeqs = []`, `seqBands = {}`, `seq_bands_total` evaluates `0 === 0 → PASS`. Hides the misapplied-migration state. | Independent MED (Concern A) | MED | **FOLD** — add explicit guard after catalog query: if `catalogExists && catalogRows.length === 0`, emit `pipeline.log.warn` AND override `seq_bands_total` status to WARN (independent of the loaded vs expected comparison) AND push to `warnings[]` with `[E.4 STARTUP STATE]` prefix: "universal_stream_catalog table exists but is empty (mig 129 seed not yet applied) — per-seq assertion DISABLED for this run." |
+
+**v3 load-bearing changes on top of v2:**
+1. Orphan-key detection (CRIT) — typo prevention.
+2. Partial indices on `lifecycle_seq` columns (HIGH-perf) — full-table-scan prevention.
+3. Continuous 2-branch tolerance formula (HIGH-correctness) — no boundary discontinuity.
+4. Bidirectional symmetric-difference (HIGH-coverage) — data-deletion detection.
+5. Truncation math fix (HIGH-correctness) — accurate operator triage info.
+6. Doc consistency (HIGH-test-author-safety) — 29/6 throughout.
+7. `[E.4 WARN-ONLY POSTURE]` prefix on `seq_bands_total` WARN (HIGH-UX).
+8. Empty-catalog state explicit handling (MED-correctness).
 
 ## v1 → v2 Revision Summary
 
-v1 plan-review (4 reviewers — Gemini, DeepSeek, Independent worktree, Observability worktree) surfaced 18 findings. The decisive finding was **Independent C-1**: `universal_stream_catalog.phase` stores DESCRIPTIVE labels like `'P7a/P7b/P7c (or P9-P17)'`, NOT P-codes. v1's plan joined `cat.phase = permit_phase_transitions.from_phase` (P-code) — would have produced NULL `from_seq` for nearly every permit-side row, silently destroying the existing ~165-bucket calibration. The catalog maps `(source, status) → seq`, but `permit_phase_transitions` lacks a status column.
-
-v2 reframes the scope: **CoA-side cohorts only get the granular 5-tuple key**. Permit-side calibration remains on the legacy 2-tuple `(permit_type, from_phase)` until Phase H consolidates `permit_phase_transitions` into `lifecycle_transitions` (which has `from_seq`/`to_seq` populated by E.2).
+v1 plan-review (4 reviewers — Gemini + DeepSeek + Independent worktree + Observability worktree) surfaced 14 actionable findings (2 CRITs, 7 HIGHs, 5 MEDs). All folded in v2.
 
 | # | Finding | Reviewer(s) | Severity | v2 Resolution |
 |---|---|---|---|---|
-| v1-1 | Catalog JOIN column mismatch — `cat.phase = ppt.from_phase` joins P-code against descriptive label; permit-side seq derivation produces NULL for nearly all rows | Independent C-1 | CRITICAL | **REFRAME** — v2 narrows scope to CoA-side only (already has from_seq/to_seq from E.2). Permit-side legacy 2-tuple cohorts preserved unchanged. Granular permit-side seq derivation deferred to Phase H when permit_phase_transitions is retired. |
-| v1-2 | `HAVING COUNT(*) >= 3` contradicts tier plan — destroys cohorts with sample 3-9 that "low/outlier" tiers claim to track | Gemini CRIT, DeepSeek LOW (convergent direction) | CRITICAL | **FOLD** — HAVING removed. Tier counters (`high/mid/low/outlier_volume_buckets`) provide observability; consumer-side decision whether to use low-sample cohorts. |
-| v1-3 | INNER JOIN permits silently drops orphan transitions | DeepSeek CRIT, Gemini HIGH (permits index risk) | CRITICAL | **N/A** under reframed scope — v2 does NOT modify permit-side calibration path. |
-| v1-4 | Manual `$${base + N}` placeholder arithmetic fragile (off-by-one risk if columns change) | DeepSeek CRIT | CRITICAL | **FOLD** — column list extracted to `COHORT_INSERT_COLUMNS` constant; placeholder generation uses `cols.map((c, i) => '$${base + i + 1}').join(', ')` helper. |
-| v1-5 | Catalog poisoned rows (seq 35, 47, 50, 77-87, 99-110) silently included in cohort key | Observability K | CRITICAL | **N/A** under reframed scope — CoA-side rows live in seq 1-22 only (verified clean against mig 129). |
-| v1-6 | `audit_table.verdict` hardcoded from `inserted`/`unreliable` counters at script line 155 — Spec 47 §R10 violation (pre-existing bug) | Observability N | CRITICAL pre-existing | **FOLD** — v2 fixes this in the same commit: `verdict` derived from `auditRows.some(r => r.status === 'FAIL' \|\| 'WARN')` per §R10. |
-| v1-7 | `from_phase` in GROUP BY subverts 5-tuple key — same (project_type, coa_type_class, from_seq, to_seq) with different legacy `from_phase` strings would split into two cohorts | Gemini HIGH | HIGH | **FOLD** — `from_phase` removed from GROUP BY; `MIN(from_phase) AS from_phase` aggregate keeps the legacy column populated for backward-compat. |
-| v1-8 | LAG `ORDER BY transitioned_at` non-deterministic on tied timestamps → breaks idempotency | DeepSeek HIGH | HIGH | **FOLD** — tiebreaker added: `ORDER BY lt.transitioned_at, lt.id`. Idempotency restored. |
-| v1-9 | `lead_id LIKE 'coa:%'` brittle (E.2 writer format may change) + scan-risk at scale | DeepSeek HIGH, Gemini MED (convergent) | HIGH | **FOLD** — primary filter switches to `WHERE lt.from_seq BETWEEN 1 AND 22 OR lt.to_seq BETWEEN 1 AND 22` (CoA-side seq range per §2.5.c is intrinsic — 22 CoA statuses → seq 1-22). Backup `lead_id LIKE 'coa:%'` retained as a second predicate for defense-in-depth. |
-| v1-10 | Startup guard `information_schema.tables` only checks table existence — doesn't distinguish "E.2 never ran" vs "E.2 ran but partial" | DeepSeek HIGH | HIGH | **FOLD** — startup guard extended: `SELECT COUNT(*) FROM lifecycle_transitions WHERE lead_id LIKE 'coa:%'`; logs "table empty (pre-E.2 first-run)" vs "table populated (NNN rows)" so operators can distinguish states. |
-| v1-11 | `unreliable_buckets` metric (existing 4th audit row) silently dropped without explanation; arithmetic claim "9 rows" but plan listed 10 | Independent H-1 | HIGH | **FOLD** — `unreliable_buckets` PRESERVED as a 4th existing INFO row (semantics unchanged: WARN when `sample_size < 30`). The new tier counters (`high/mid/low/outlier`) provide finer granularity ALONGSIDE the legacy metric. Total audit rows now 11. |
-| v1-12 | `compute_phase_calibration` runs only in permits chain per `scripts/manifest.json` line 71 — CoA-only chain runs produce CoA transitions in `lifecycle_transitions` but never trigger calibration recompute | Independent H-2 | HIGH | **FOLD** — add `compute_phase_calibration` to the CoA chain in `scripts/manifest.json` (alongside its existing permits-chain entry). After E.3, calibration runs in BOTH chains; CoA-only chain runs trigger calibration refresh. |
-| v1-13 | `coa_applications.project_type` Phase D gate not documented — if Phase D shipped but classify-coa-scope hasn't run yet, project_type is NULL on CoA rows and the 5-tuple collapses | Independent H-3 | HIGH | **FOLD** — startup guard added: `SELECT COUNT(*) FROM coa_applications WHERE project_type IS NOT NULL` / total. WARN log if coverage < 50%. Documents Phase D prerequisite in Context. |
-| v1-14 | Observer pre-ack targets `total_buckets` jump — wrong metric. Observer's `vs_baseline` anomaly fires on `duration_ms` (and `records_total`), NOT bucket count | Observability L | HIGH | **FOLD** — operator pre-ack language rewritten: "*Expected first-E.3-run batch — duration_ms may regress 2-3× while query processes UNION-ALL + 5-tuple GROUP BY. Annotate `permits-followup.md` AND `coa-followup.md` (E.3 now runs in both chains per v1-12 fold) first-E.3-run as `[expected granular-key SQL expansion, not a performance regression]`.*" |
-| v1-15 | `coa_cohort_presence=0` can't differentiate "E.2 not run" vs "E.2 ran but cohorts too sparse" | Observability M | HIGH | **FOLD** — new `coa_transition_count` scalar audit row: counts raw `lifecycle_transitions` source rows where `lead_id LIKE 'coa:%'` BEFORE the cohort filter. Operators can distinguish: `coa_transition_count=0` → E.2 hasn't run; `coa_transition_count>0 AND coa_cohort_count=0` → E.2 ran but data too sparse for cohorts. |
-| v1-16 | Catalog miss telemetry needed (`catalog_join_misses` counter) | Gemini MED, DeepSeek MED (convergent) | MEDIUM | **N/A** under reframed scope — v2 doesn't do permit-side catalog JOIN. |
-| v1-17 | NULLS DISTINCT edge case — if both `project_type=NULL` on permit-side AND CoA-side, the 5-tuple collapses and UNIQUE INDEX fires | DeepSeek MED | MEDIUM | **FOLD** — v2 startup guards `coa_applications.project_type` coverage AND permit-side preserves legacy 2-tuple (no granular row insertion with NULL project_type from permit-side). |
-| v1-18 | EXPLAIN ANALYZE missing from test plan | Gemini MED | MEDIUM | **FOLD** — added to Test #5: `EXPLAIN (ANALYZE, BUFFERS)` invocation in the test suite (staging-DB only) asserts query plan does not include sequential scan on `lifecycle_transitions`. |
-| v1-19 | Redundant `EXTRACT(EPOCH FROM ...)` expression × 3 in PERCENTILE_CONT calls | Gemini NIT | LOW | **FOLD** — extracted to a single CTE subquery `duration_calc` that computes `duration_days` once, then PERCENTILE_CONT references it. |
+| v1-G-CRIT | `999999` magic-number sentinel for "no upper bound" defeats the assertion gate — a true regression sending >999,999 rows to a single seq would silently PASS. Plan's `[0, NULL]` description contradicted the actual `999999` SQL. | Gemini CRIT | CRITICAL | **FOLD** — mig 148 INSERTs NULL for the max bound (not `999999`); assertion logic uses null-aware comparison `band.max === null || actual <= band.max`. Seed JSON entries use `null` for `max` in the low-volume/NULL-rows_count branches. |
+| v1-O-CRIT | `seq_violations_preview` placed in `records_meta` is INVISIBLE to the Spec 48 followup file consumer — the observer's `extractIssues()` only reads `audit_table.rows` for the DeepSeek narrative. Operators seeing `seq_bands_warn: 47` cannot triage from the followup. | Observability CRIT-1 + CRIT-2 | CRITICAL | **FOLD** — primary surfacing is via `warnings[]` array (which IS captured in `pipeline.log.warn` and visible to operators). Cap top 10 violations in the warning message with structured `{seq, actual, min, max}` summary; full structured array (capped at 50) lives in `records_meta.seq_violations` for DB-side inspection only — documented as DB-only, not observer-surfaced. |
+| v1-conv-HIGH | Hardcoded `expectedSeqCount = 110` brittle — future catalog expansion (seq 111+) silently ignored; seq removal causes misleading partial-load WARN. | Gemini MED + DeepSeek HIGH + Independent (convergent 3/4) | HIGH | **FOLD** — query `SELECT seq FROM universal_stream_catalog ORDER BY seq` at startup to build the list of expected seqs dynamically. `seq_bands_total` audit row reports actual catalog count. Zod schema extension iterates loaded keys, not 1..110. |
+| v1-DS-HIGH-2 | Unseen seqs — seqs present in data but NOT in loaded bands are silently ignored. A seq that exists in production but has no band key (partial migration apply, future catalog addition pre-bands) contributes nothing to passing/warn/failing. | DeepSeek HIGH | HIGH | **FOLD** — symmetric difference detection: after loading bands and computing `seqDistribution`, compute `Set(distribution_seqs) − Set(band_seqs)`. Each orphan emits a WARN entry `"seq N: row count NNN observed but no band key configured"` + adds to `seq_bands_warn` counter. |
+| v1-G-HIGH | Mig-vs-seed-JSON parity drift risk — the `_tmp_phase_e4_seed_bands.mjs` helper generates JSON; no automated parity test ensures values match mig 148's SQL output. A future tolerance-formula tweak in one place but not the other creates env-specific divergence. | Gemini HIGH | HIGH | **FOLD** — new infra test reads `migrations/129_seed_universal_stream_catalog.sql` for catalog `rows_count` values, applies the tolerance formula in JS, and asserts equality with `scripts/seeds/logic_variables.json` entries for all 220 keys. Programmatic enforcement of parity; tweaking the formula in either side fails the test. |
+| v1-I-HIGH-3 | `linked_permit_num IS NULL` filter in `seqUnclassifiedCoa` silently excludes 99.4% of CoA rows from the gate — E.1 removed Rule 0 (the original justification), so linked CoAs now ALSO receive `lifecycle_seq` writes. Without this fix, large-scale classification failures on linked CoAs are invisible. | Independent HIGH-3 | HIGH | **FOLD** — remove the `linked_permit_num IS NULL` filter from `seqUnclassifiedCoa` query. Matches post-E.1 reality (`classifyCoaPhase()` writes phase + seq to ALL CoAs). Existing `unclassified_count` (phase-keyed) is documented as legacy-shape and untouched to preserve baseline continuity; the new `seq_unclassified_count` IS the correct shape. |
+| v1-I-MED-3 | `lifecycle_seq_unclassified_max` not seeded by mig 148 (only in JSON seed file). If assert script runs between migration apply and `seed-logic-variables.js` run, the Zod schema (non-optional key) throws and breaks the pipeline health check. | Independent MED-3 (consequential — promoted to HIGH for fold purpose) | HIGH | **FOLD** — add a single `INSERT INTO logic_variables ('lifecycle_seq_unclassified_max', 5000, '...') ON CONFLICT DO NOTHING` statement to mig 148. Ensures DB-side default exists immediately after migration apply, before any seed-script run. |
+| v1-O-HIGH-2 | `records_total` (phase-keyed sum) vs `sum(seq_distribution.values())` divergence during Phase D ramp-up not documented. Future scripts comparing the two will see a gap that looks like a pipeline integrity failure. | Observability HIGH-2 | HIGH | **FOLD as doc** — Spec 84 §3.4 amendment adds: "During Phase D/E.2 ramp-up, `sum(records_meta.seq_distribution.values()) < records_total` because many rows have `lifecycle_phase` set but not yet `lifecycle_seq`. Expected; not a pipeline integrity failure. Convergence is the operational gate for E.5 promotion." |
+| v1-I-HIGH-1 | NULL-derived `[0, NULL]` bands inflate the PASS count (~40-50 of 110 seqs) — operator seeing `seq_bands_passing: 95` cannot distinguish first-run-noise PASSes from real PASSes. The `seq_bands_warn: 47` flood on first deploy looks alarming without context. | Independent HIGH-1 | HIGH | **FOLD** — new `seq_bands_null_catalog_count` INFO metric tracks how many of the 110 bands had `rows_count IS NULL` (informational only — always PASS by construction). Operators decompose total via: `passing = real_passing + null_catalog`. Improves first-deploy operator narrative. |
+| v1-G-MED-1 | Hardcoded `1..110` loop range in Zod schema generation (Part 7). | Gemini MED | MED | **FOLD (cascade)** — same dynamic catalog query as v1-conv-HIGH; Zod schema iterates `seqs_in_catalog` array, not a hardcoded range. |
+| v1-DS-MED-3 | `seqUnclassifiedMax` extraction missing from plan code snippet — reader cannot tell where the variable comes from. | DeepSeek MED-3 | MED | **FOLD** — code snippet in Part 3 shows explicit `const seqUnclassifiedMax = logicVars.lifecycle_seq_unclassified_max;` extraction. |
+| v1-DS-MED-4 | Large `seqViolations` array in `records_meta` can exceed tens of KB in catastrophic-failure scenarios → observer DeepSeek prompt bloat. | DeepSeek MED-4 | MED | **FOLD** — cap `seq_violations` array at 50 structured entries; beyond that, emit only `seq_violations_truncated_count` scalar (also in records_meta) for triage awareness. |
+| v1-O-MED-2 | `seq_violations` shape brittleness — string format requires regex parsing for any future structured consumer (E.5 promotion logic). | Observability MED-2 | MED | **FOLD** — emit structured `{seq: N, actual: NNN, band_min: M, band_max: K}` objects (not strings). Warning-message human-readable rendering happens at display time, not in the data shape. |
+| v1-I-MED-2 | Plan's illustrative seed example for seq 1 (rows_count=10) shows ±30% values (7, 13) — wrong; should show [0, 50] from the low-volume branch. | Independent MED-2 | MED (doc-only) | **FOLD as doc** — corrected example with inline note explaining the branch. |
+| v1-O-MED-1 | `seq_unclassified_count` vs `unclassified_count` relationship not documented in plan or code comments. | Observability MED-1 | MED (doc-only) | **FOLD as doc** — explicit doc note added: "In steady state, `seq_unclassified_count >= unclassified_count` (seq is finer-grained; a row can have `lifecycle_phase NOT NULL` but `lifecycle_seq IS NULL` during E.2 ramp-up). Phase D/E.2 first-run state will reflect this; convergence is the E.5 operational gate." |
+
+**v2 load-bearing changes:**
+1. NULL upper-bound (not `999999`); assertion logic null-aware (CRIT).
+2. Violations surfaced via `warnings[]` (not `records_meta.seq_violations_preview` alone); structured object shape; capped at 50 (CRIT + 3 HIGHs/MEDs cascade).
+3. Dynamic catalog seq list (no hardcoded 110); Zod schema iterates loaded keys (HIGH + cascade).
+4. Symmetric-difference detection for data-seqs-not-in-bands (HIGH).
+5. Mig-vs-seed parity test (HIGH).
+6. `linked_permit_num IS NULL` filter removed from `seqUnclassifiedCoa` (HIGH — post-E.1 correctness).
+7. `lifecycle_seq_unclassified_max` ALSO seeded by mig 148 (HIGH — startup safety).
+8. `seq_bands_null_catalog_count` INFO metric added (HIGH — operator UX).
+9. Spec 84 §3.4 amendment documents `records_total` vs `seq_distribution` sum gap (HIGH-doc).
+10. Total audit_table.rows: 23 (existing) + 6 (NEW — 5 from v1 + `seq_bands_null_catalog_count`) = 29 rows.
 
 ## Why this task exists
 
-Spec 42 §6.1 objective #4: *"Resolve the prediction-engine cohort blind spot documented in Spec 84 §8.7. Cohort key on phase_stay_calibration extends from (permit_type, from_phase) to (permit_type, project_type, coa_type_class, from_seq, to_seq)."*
+Spec 42 §6.11 Phase E.4: *"phase distribution bands recalibrated in `scripts/seeds/logic_variables.json` via iterative band-tuning on staging."*
 
-Spec 84 §8.7 cohort blind-spot: for CoA-stage rows the legacy 2-tuple `(permit_type, from_phase)` lookup falls through to `__ALL__` defaults because CoA `permit_type` is NULL or `'Pre-Permit'`. The median 1,078-day CoA-decision-to-permit-filing lag is invisible to `compute-trade-forecasts.js`. E.3 closes this by producing granular CoA-side cohort buckets keyed on `(NULL, project_type, coa_type_class, from_seq, to_seq)`.
+Pre-E.4 state (post-E.3 SHIP):
 
-Spec 84 84-W4 ("Dead Transition Write: Ledger written but not used") was previously resolved for `permit_phase_transitions`; E.3 extends consumption to `lifecycle_transitions` (the E.2 writer for CoA-side phase transitions).
+- `scripts/quality/assert-lifecycle-phase-distribution.js` asserts 19 **phase**-keyed bands (P3–P8, P7a–d, P18–P20, P9–P17 aggregate, O1–O3, CoA P1/P2) against row counts in `permits.lifecycle_phase` + `coa_applications.lifecycle_phase`.
+- Coverage gap: the 19 phase keys collapse 110 distinct Universal Stream catalog sequences (`universal_stream_catalog.seq` 1-110) into ≤19 buckets. The granular **seq**-level distribution (now persisted via Phase E.2 in `permits.lifecycle_seq` + `coa_applications.lifecycle_seq` per migrations 132+133) is observable but not asserted.
+- Operational consequence: a regression that shifts row counts WITHIN a phase but maintains the phase total (e.g., classifier silently re-routes seq 8 'Postponed' rows to seq 9 'Deferred' rows — both `P2`) is invisible to the existing phase-keyed assertion. This is the exact failure-class that bug 84-W12 was for status-level routing; the granular gate is the structural complement.
 
-**Scope reframe (v2):** the permit-side cohort key extension is BLOCKED on a schema gap (`permit_phase_transitions` lacks a status column, so seq cannot be derived from the catalog). Per v2 fold #1, permit-side calibration remains on the legacy 2-tuple key until Phase H. E.3 delivers ONLY the CoA-side granular cohorts (which already have from_seq/to_seq populated by E.2 — no JOIN needed).
+Phase E.4 closes the gap by extending the assertion to per-seq bands (Universal Stream seq 1-110) while preserving the existing phase-keyed bands as the coarse safety net. Bands are seeded from `universal_stream_catalog.rows_count` (the production snapshot baseline embedded in mig 129; provenance: `docs/reports/spec_84_universal_stream_v10.csv`) with ±30% tolerance, and remain operator-tunable via Spec 86 Control Panel. Bands begin life as **WARN-only gates** (not FAIL) on first deploy; E.5 (separate WF) is the operational gate that tightens them to FAIL after 7 consecutive PASS runs on staging.
+
+This task does NOT add new business-table schema, does NOT modify the classifier, does NOT modify `compute-phase-calibration.js`. It's a CQA gate granularity upgrade with one new migration adding logic_variable keys.
 
 ## Context
 
 ### Goal
 
-1. **Add CoA-side granular cohort rows** to `phase_stay_calibration` by reading `lifecycle_transitions` (E.2 writer). GROUP BY 5-tuple `(NULL permit_type, project_type, coa_type_class, from_seq, to_seq)` with `MIN(from_phase)` for legacy column.
+1. **Per-seq distribution assertion** — extend `assert-lifecycle-phase-distribution.js` to compute the union distribution of `lifecycle_seq` across `permits` + `coa_applications` and assert each seq's row count against per-seq bands loaded from `logic_variables`.
 
-2. **Preserve permit-side legacy 2-tuple cohorts** — existing aggregate against `permit_phase_transitions` unchanged. Both shapes coexist in `phase_stay_calibration` via mig 135's NULLS DISTINCT UNIQUE INDEX.
+2. **Migration 148 — derive per-seq bands from `universal_stream_catalog.rows_count`** — INSERT...SELECT pattern reads the catalog (the seeded production snapshot from mig 129) and computes `lifecycle_seq_band_<N>_min/_max` keys with ±30% tolerance for seqs with `rows_count >= 30`; wider `[0, max*5]` bands for low-volume seqs (`rows_count` between 1 and 29); `[0, NULL]` INFO-only entries for `rows_count IS NULL` or 0 (no upper bound — informational tracking only).
 
-3. **Fix existing `audit_table.verdict` bug** — derive from row statuses per Spec 47 §R10 instead of hardcoded counter logic (Observability N pre-existing bug, conf 97).
+3. **WARN-only first-deploy posture** — per-seq band violations emit `WARN` (not `FAIL`) on first deploy. Phase D + E.2 may have shifted the distribution since the 2026-05-12 catalog snapshot; E.5 tightens to FAIL after stability.
 
-4. **Add `compute_phase_calibration` to the CoA chain** (`scripts/manifest.json`) — currently permits-only; CoA-only chain runs leave calibration stale until next permits run.
+4. **records_meta-side observability per Spec 48 §3.2** — the full 110-row per-seq distribution map ships in `records_meta.seq_distribution` (NOT in `audit_table.rows`, which would balloon to ~130 rows and degrade the DeepSeek observer narrative). `audit_table.rows` gets 6 NEW aggregate counters: `seq_bands_total`, `seq_bands_passing`, `seq_bands_null_catalog_count` (v2 addition per v1-I-HIGH-1), `seq_bands_warn`, `seq_bands_failing`, `seq_unclassified_count`. Total `audit_table.rows` count: 23 (existing) + 6 (NEW) = 29.
 
-5. **Sample-size tier counters + new observability metrics**: `high/mid/low/outlier_volume_buckets`, `permit_cohort_count`, `coa_cohort_count`, `coa_transition_count` (raw source count for triage), `coa_cohort_presence` (WARN gate), plus 2 distribution maps in `records_meta`.
-
-6. **Operator pre-ack runbook** rewritten to target duration regression (the actual anomaly trip vector per Observability L).
+5. **Spec 42 §6.11 Phase E.4 anchor + Spec 84 §3.4 band-design extension** — 2 spec amendments post-commit.
 
 ### Target Specs
 
-- `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §R1-R12 (script is pre-compliant; E.3 extends within envelope)
-- `docs/specs/01-pipeline/42_chain_coa.md` §6.7 step 6 (cohort key extension — v2 scope-limited to CoA-side per fold #1), §6.9 modified-scripts row, §6.11 Phase E row, §6.11 Phase I (NEW — E.2 deferrals)
-- `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` §7 + §8.7 + 84-W4
-- `docs/specs/01-pipeline/48_pipeline_observability.md`
-- `docs/specs/00_engineering_standards.md` §2 + §3 + §6 + §9
+- `docs/specs/00_engineering_standards.md` §2 (try-catch boundary), §3 (database — mig pattern), §6 (logError), §9 (pipeline safety — transaction boundaries, parameter limits, idempotent)
+- `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §R1-R12 (script is pre-compliant; E.4 extends within envelope)
+- `docs/specs/01-pipeline/48_pipeline_observability.md` §3.1 (audit_table.rows), §3.2 (records_meta distributions NOT passed to DeepSeek)
+- `docs/specs/01-pipeline/42_chain_coa.md` §6.11 Phase E.4 (anchor fill post-commit)
+- `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` §3.4 (band design — extend)
 
 ### Key Files
 
-- `scripts/compute-phase-calibration.js` (target — 173 lines today; v2 extends aggregate SQL + audit_table + verdict bug fix)
-- `scripts/manifest.json` (target — add `compute_phase_calibration` to CoA chain)
-- `migrations/135_extend_phase_stay_calibration.sql` (Phase B mig — schema already in place)
-- `migrations/128_create_universal_stream_catalog.sql` + `migrations/129_seed_universal_stream_catalog.sql` (read-only — CoA seq 1-22 verified clean)
-- `src/tests/compute-phase-calibration.infra.test.ts` (NEW or EXTEND)
-- `src/tests/compute-phase-calibration.logic.test.ts` (NEW — tier helper boundary tests)
+**Targets:**
+- `scripts/quality/assert-lifecycle-phase-distribution.js` (EXTEND — add per-seq SELECT + band assertion loop + 5 new audit rows + `seq_distribution` records_meta map)
+- `scripts/seeds/logic_variables.json` (ADD — per-seq band key defaults matching mig 148 inserts)
+- `migrations/148_lifecycle_seq_bands_logic_variables.sql` (NEW — INSERT...SELECT from `universal_stream_catalog` populates `lifecycle_seq_band_<N>_min/_max` keys for all 110 seqs)
+- `src/tests/assert-lifecycle-phase-distribution.infra.test.ts` (EXTEND — shape regression for per-seq logic)
+- `src/tests/migration-148-lifecycle-seq-bands.infra.test.ts` (NEW — mig 148 shape regression)
+- `docs/specs/01-pipeline/42_chain_coa.md` §6.11 anchor resolution (post-commit)
+- `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` §3.4 band-design extension (post-commit)
+- `docs/reports/review_followups.md` (E.4 close-out note)
+
+**Out-of-Scope:**
+- `scripts/classify-lifecycle-phase.js` (E.2 consumer — UNCHANGED; reads + writes `lifecycle_seq` already)
+- `scripts/lib/lifecycle-phase.js` (E.1 substrate — UNCHANGED)
+- `scripts/compute-phase-calibration.js` (E.3 reader — UNCHANGED)
+- `universal_stream_catalog` schema (mig 128 — UNCHANGED; mig 129 seed UNCHANGED — read by mig 148 INSERT...SELECT)
+- `permits` / `coa_applications` schema (already has `lifecycle_seq` from migs 132+133 — UNCHANGED)
+- `permit_phase_transitions` / `lifecycle_transitions` schemas (UNCHANGED — Phase H concern)
+- Permit-side seq-keyed cohort calibration (deferred to Phase H per E.3 v2 reframe)
 
 ### Operating Boundaries
 
-**Target Files:**
-- `migrations/147_phase_stay_calibration_drop_legacy_pk.sql` (NEW — v3 fold v2-G/v2-E)
-- `scripts/compute-phase-calibration.js` (EXTEND — CoA-side CTE + 5-tuple GROUP BY append + verdict bug fix + new audit rows + tier counters)
-- `scripts/manifest.json` (ADD `compute_phase_calibration` to coa chain)
-- `src/tests/compute-phase-calibration.infra.test.ts` (NEW or EXTEND)
-- `src/tests/compute-phase-calibration.logic.test.ts` (NEW)
-- `docs/specs/01-pipeline/42_chain_coa.md` §6.9 anchor resolution (post-commit)
-- `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` 84-W4 entry update
-- `docs/reports/review_followups.md` (E.3 close-out note)
-
-**Out-of-Scope Files:**
-- `scripts/lib/lifecycle-phase.js` + `src/lib/classification/lifecycle-phase.ts` (E.1 substrate — UNCHANGED)
-- `scripts/classify-lifecycle-phase.js` (E.2 consumer — UNCHANGED)
-- `scripts/compute-trade-forecasts.js` + `scripts/update-tracked-projects.js` (E.2 defensive guards — UNCHANGED)
-- `migrations/` (no new migration — mig 135 already shipped schema)
-- `permit_phase_transitions` schema (UNCHANGED — Phase H concern)
-- Permit-side calibration path (UNCHANGED per v2 fold #1 reframe)
-
 **Cross-Spec Dependencies:**
-- Spec 42 §6.6.B `lifecycle_transitions` (E.2 INSERT writer; E.3 reader)
-- Spec 84 §7 (calibration source — extended to include `lifecycle_transitions`)
-- Spec 84 §8.7 (CoA cohort blind-spot — closed by E.3 for CoA-stage only; permit-side blind-spot remains until Phase H)
-- Spec 48 first-E.3-run observer behavior (mitigation via operator pre-ack — duration regression annotation)
-- Phase D dependency: `coa_applications.project_type` + `coa_type_class` populated by `classify-coa-scope.js` (must have shipped before E.3 first run)
+- Spec 42 §6.6.B `coa_applications.lifecycle_seq` (mig 133 writer) + `permits.lifecycle_seq` (mig 132 writer) populated by `classify-lifecycle-phase.js` (E.2 consumer)
+- Spec 84 §3.4 (band design — extended with per-seq pattern)
+- Spec 47 §R5 (startup guards — table-exists check for `universal_stream_catalog` since mig 148's INSERT...SELECT depends on its presence)
+- Spec 48 §3.1-§3.2 (audit_table.rows for automated WARN/FAIL gates; records_meta distributions NOT passed to DeepSeek)
+- Phase D dependency: `coa_applications.lifecycle_seq` populated by E.2; first-run state may have low `lifecycle_seq` coverage (most rows NULL) → reflected in `seq_unclassified_count` audit metric.
 
 ## Technical Implementation
 
-### Part 1 — Aggregate SQL extension (CoA-side ADD; permit-side preserved)
-
-The existing aggregate query (`compute-phase-calibration.js` lines 74-105) reads `permit_phase_transitions` and groups by `(permit_type, from_phase)`. v2 PRESERVES this aggregate unchanged and ADDS a SECOND aggregate for CoA-side reading `lifecycle_transitions`.
-
-```js
-// E.3 v3: TWO independent aggregates, both producing rows for phase_stay_calibration.
-// Permit-side: legacy 2-tuple structure PRESERVED, but LAG receives `, id` tiebreaker
-// for determinism (v2 fold #8 + v2-DS-2 plan contradiction fold — the change is small
-// but explicit). CoA-side ADDED (granular 5-tuple).
-
-// Permit-side — `, id` tiebreaker added to LAG (v3 documents this explicitly).
-// All other aspects (table, columns, GROUP BY, percentile aggregation) PRESERVED.
-const permitAggSql = `
-  WITH transitions_with_duration AS (
-    SELECT permit_num, revision_num, permit_type, from_phase, transitioned_at,
-           transitioned_at - LAG(transitioned_at) OVER (
-             PARTITION BY permit_num, revision_num ORDER BY transitioned_at, id  -- v2 fold #8 tiebreaker added
-           ) AS phase_duration
-      FROM permit_phase_transitions
-  )
-  SELECT permit_type, from_phase AS phase,
-         ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS median_days,
-         ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS p25_days,
-         ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS p75_days,
-         COUNT(*)::INTEGER AS sample_size
-    FROM (
-      SELECT *, EXTRACT(EPOCH FROM phase_duration) / 86400.0 AS duration_days  -- v2 fold #19: extracted once
-        FROM transitions_with_duration
-       WHERE from_phase IS NOT NULL AND permit_type IS NOT NULL AND phase_duration IS NOT NULL
-    ) twd
-   GROUP BY permit_type, from_phase
-`;
-
-// CoA-side — NEW. Read from lifecycle_transitions where lead_id is a CoA lead.
-// 5-tuple cohort key (NULL permit_type, project_type, coa_type_class, from_seq, to_seq).
-// v2 fold #9: WHERE clause uses from_seq/to_seq range (CoA seq 1-22 per §2.5.c) AS PRIMARY,
-//              with lead_id LIKE 'coa:%' as defense-in-depth.
-const coaAggSql = `
-  WITH coa_transitions_with_duration AS (
-    SELECT
-      lt.lead_id,
-      lt.project_type,
-      lt.coa_type_class,
-      lt.from_seq,
-      lt.to_seq,
-      lt.from_phase,
-      lt.transitioned_at,
-      lt.transitioned_at - LAG(lt.transitioned_at) OVER (
-        PARTITION BY lt.lead_id
-        ORDER BY lt.transitioned_at, lt.id  -- v2 fold #8: tiebreaker on id (deterministic across tied timestamps)
-      ) AS phase_duration
-    FROM lifecycle_transitions lt
-    WHERE lt.lead_id LIKE 'coa:%'
-      AND (lt.from_seq BETWEEN 1 AND 22 OR lt.to_seq BETWEEN 1 AND 22)  -- v2 fold #9: intrinsic CoA seq range
-  )
-  SELECT
-    NULL::VARCHAR(50)        AS permit_type,
-    project_type,
-    coa_type_class,
-    from_seq,
-    to_seq,
-    MIN(from_phase)          AS from_phase,        -- v2 fold #7: MIN aggregate, not GROUP BY column
-    ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS median_days,
-    ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS p25_days,
-    ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY duration_days))::INTEGER AS p75_days,
-    COUNT(*)::INTEGER        AS sample_size
-  FROM (
-    SELECT *, EXTRACT(EPOCH FROM phase_duration) / 86400.0 AS duration_days  -- v2 fold #19
-      FROM coa_transitions_with_duration
-     WHERE phase_duration IS NOT NULL
-       AND from_seq IS NOT NULL AND to_seq IS NOT NULL
-       -- v4 fold v3-G-HIGH-3 + v3-DS-MED-1: BOTH `project_type IS NOT NULL` AND
-       -- `coa_type_class IS NOT NULL` filters REMOVED. Same data-destructive logic
-       -- as v3 fold v2-DS-1 applies to coa_type_class — dropping unclassified CoA
-       -- rows produces skewed calibration. Under NULLS DISTINCT (mig 135), CoA-side
-       -- rows with NULL coa_type_class collapse to a single NULL-bucket — acceptable
-       -- triage signal via the new `coa_type_class_null_transition_count` audit metric.
-       --
-       -- Unknown_cohort_count metric (v3 fold v2-G-3) is now REACHABLE — covers the
-       -- legitimate case where both project_type AND coa_type_class are NULL on a
-       -- CoA transition (Phase D never ran for the underlying CoA record).
-  ) ctwd
-  GROUP BY project_type, coa_type_class, from_seq, to_seq
-  -- v2 fold #2: NO HAVING COUNT(*) >= 3 — tier counters provide observability for low/outlier sample sizes
-`;
-
-const permitRes = await pool.query(permitAggSql);
-const coaRes    = await pool.query(coaAggSql);
-
-const permitBuckets = permitRes.rows;
-const coaBuckets    = coaRes.rows;
-const allBuckets    = [...permitBuckets, ...coaBuckets];
-```
-
-**Why NO HAVING (v2 fold #2):** Gemini flagged the v1 `HAVING COUNT(*) >= 3` as data-destructive — it directly contradicted the plan's tier counters (low: 10-29, outlier: <10) which CLAIM to track those sample sizes. v2 removes the filter and lets the tier counters do their job. PERCENTILE_CONT on 1-row groups returns degenerate values but they're flagged as `outlier` in audit; consumers can decide whether to use them.
-
-### Part 2 — Bulk INSERT with helper (v2 fold #4)
-
-```js
-// v2 fold #4: column list extracted to a constant; placeholder generation via helper.
-// Eliminates off-by-one risk from manual $${base + N} arithmetic.
-const COHORT_INSERT_COLS = [
-  'permit_type', 'project_type', 'coa_type_class',
-  'from_seq', 'to_seq', 'phase',
-  'median_days', 'p25_days', 'p75_days',
-  'sample_size', 'computed_at',
-];
-
-function buildBulkInsertSQL(table, cols, rowCount) {
-  const tuples = [];
-  for (let i = 0; i < rowCount; i++) {
-    const base = i * cols.length;
-    const placeholders = cols.map((_, j) => `$${base + j + 1}`).join(', ');
-    tuples.push(`(${placeholders})`);
-  }
-  return `INSERT INTO ${table} (${cols.join(', ')}) VALUES ${tuples.join(', ')}`;
-}
-
-// v4 fold v3-G-MED-1: name-based lookup (NOT order-based) — robust against
-// future SQL SELECT-list reordering. The aliasing in the SELECT must use the
-// COHORT_INSERT_COLS names exactly; the order is irrelevant.
-function flattenBuckets(buckets, runAt) {
-  return buckets.flatMap((b) =>
-    COHORT_INSERT_COLS.map((col) => col === 'computed_at' ? runAt : (b[col] ?? null))
-  );
-}
-
-// v4 fold v3-G-CRIT (Gemini) + v5 fold v4-H3 (Observability accuracy):
-// atomic temp-table swap pattern eliminates the consumer-visible empty-table
-// window that DELETE+INSERT exposes to downstream consumers (inspector read
-// path). TRUNCATE acquires ACCESS EXCLUSIVE for the full transaction; readers
-// BLOCK on the lock and never see an empty table. Empty-state visibility
-// window = zero (corrected from inaccurate "<1ms" in v4 draft — readers do
-// experience lock-wait latency for the transaction duration, but never see
-// an empty `phase_stay_calibration`).
-await pipeline.withTransaction(pool, async (client) => {
-  if (allBuckets.length === 0) {
-    // Edge case: no source data → empty table. TRUNCATE only.
-    await client.query('TRUNCATE phase_stay_calibration');
-    return;
-  }
-  // Step 1: stage data in temp table OUTSIDE the lock-critical section.
-  await client.query('CREATE TEMP TABLE phase_stay_calibration_staging (LIKE phase_stay_calibration INCLUDING DEFAULTS) ON COMMIT DROP');
-  const stagingInsertSql = buildBulkInsertSQL('phase_stay_calibration_staging', COHORT_INSERT_COLS, allBuckets.length);
-  const params = flattenBuckets(allBuckets, RUN_AT);
-  await client.query(stagingInsertSql, params);
-  // Step 2: atomic swap — TRUNCATE + INSERT FROM staging. Readers wait on ACCESS EXCLUSIVE; no empty visibility.
-  await client.query('TRUNCATE phase_stay_calibration');
-  await client.query('INSERT INTO phase_stay_calibration SELECT * FROM phase_stay_calibration_staging');
-  // Temp table dropped on COMMIT (ON COMMIT DROP).
-});
-```
-
-**Spec 47 §9.2 compliance:** 11 cols × max ~1000 rows ≈ 11000 params (well under 65535). No sub-batching.
-
-### Part 3 — Tier counters + new audit metrics
-
-```js
-// Counters declared once.
-let highVolumeBuckets    = 0;  // sample_size >= 100
-let midVolumeBuckets     = 0;  // 30 <= sample_size < 100
-let lowVolumeBuckets     = 0;  // 10 <= sample_size < 30
-let outlierBuckets       = 0;  // sample_size < 10
-let permitCohortCount    = 0;  // permit-side cohorts (permit_type non-NULL)
-let coaCohortCount       = 0;  // CoA-side cohorts (coa_type_class non-NULL)
-let unreliableBuckets    = 0;  // v2 fold #11: PRESERVED — existing metric, sample_size < 30
-let unknownCohortCount   = 0;  // v3 fold v2-G-3: defensive metric for permit_type=NULL AND coa_type_class=NULL buckets
-// v5 fold v4-C1 (CRITICAL — 4/4 reviewers): coaTypeClassNullTransitionCount MUST be
-// populated by a separate SQL query against `lifecycle_transitions` source rows.
-// Aggregate buckets collapse NULL coa_type_class rows into ONE bucket → cannot count
-// individual NULL transitions from the loop. Declaration moved below; assigned from query.
-
-for (const b of allBuckets) {
-  if (b.permit_type != null) permitCohortCount++;
-  else if (b.coa_type_class != null) coaCohortCount++;
-  else unknownCohortCount++;  // v3 fold v2-G-3: defensive — both NULL means SQL bug or data corruption
-  if (b.sample_size >= 100)         highVolumeBuckets++;
-  else if (b.sample_size >= 30)     midVolumeBuckets++;
-  else if (b.sample_size >= 10)     lowVolumeBuckets++;
-  else                               outlierBuckets++;
-  if (b.sample_size < 30)            unreliableBuckets++;
-}
-
-// v5 fold v4-M3: bucket-count upper-bound assertion (param-limit defense).
-// 11 cols × 5000 rows = 55000 params < 65535 hard limit; ample headroom.
-// On overage: FAIL the run with explicit error rather than silent parameter-limit truncation.
-if (allBuckets.length > 5000) {
-  throw new Error(
-    `[compute-phase-calibration] bucket count ${allBuckets.length} exceeds 5000-row safety cap ` +
-    `(param-limit headroom). CoA cardinality has grown; sub-batching deferred to Phase F.`
-  );
-}
-
-// v5 fold v4-H1 (HIGH — 3/4): seq-range filter added to match coaAggSql population.
-// Without this, the count includes CoA rows outside the spec-defined seq 1-22 range,
-// making `coa_transition_count` and `coa_cohort_count` non-reconcilable for operators.
-const { rows: [{ n: coaTransitionCount }] } = await pool.query(
-  `SELECT COUNT(*)::int AS n FROM lifecycle_transitions
-    WHERE lead_id LIKE 'coa:%'
-      AND (from_seq BETWEEN 1 AND 22 OR to_seq BETWEEN 1 AND 22)`
-);
-
-// v5 fold v4-C1 (CRITICAL — 4/4 reviewers): separate SQL query populates
-// coaTypeClassNullTransitionCount. Filter matches `coa_transition_count` query
-// (same seq-range gate) so the >5% ratio is reconcilable.
-const { rows: [{ n: coaTypeClassNullTransitionCount }] } = await pool.query(
-  `SELECT COUNT(*)::int AS n FROM lifecycle_transitions
-    WHERE lead_id LIKE 'coa:%'
-      AND coa_type_class IS NULL
-      AND (from_seq BETWEEN 1 AND 22 OR to_seq BETWEEN 1 AND 22)`
-);
-
-// v2 fold #13 + v5 fold v4-H2 (HIGH — 3/4 convergent): Phase D project_type coverage guard.
-// v5 wraps the coa_applications query with information_schema.tables EXISTS check (the
-// v3-DS-HIGH-2 fold was applied to lifecycle_transitions but missed coa_applications,
-// caught by DeepSeek + Independent v4 convergent finding). Missing table → WARN + null,
-// not advisory-lock-leaking crash.
-// Source 1 — coa_applications: measures whether Phase D classify-coa-scope.js has populated
-// the column on the source rows. The threshold WARN at <50% indicates Phase D hasn't run
-// (or didn't classify ≥50% of rows). This is the metric exposed in audit_table.rows post-v3 promotion.
-const { rows: [{ exists: coaAppsExists }] } = await pool.query(
-  `SELECT EXISTS (SELECT 1 FROM information_schema.tables
-                   WHERE table_schema = 'public' AND table_name = 'coa_applications') AS exists`
-);
-let projectTypeCoveragePct = null;
-let ltProjectTypeCoveragePct = null;
-if (coaAppsExists) {
-  const { rows: [{ pct }] } = await pool.query(
-    `SELECT COALESCE(
-       ROUND(100.0 * COUNT(*) FILTER (WHERE project_type IS NOT NULL) / NULLIF(COUNT(*), 0))::int,
-       0) AS pct
-       FROM coa_applications`
-  );
-  projectTypeCoveragePct = pct;
-  // Source 2 — lifecycle_transitions: measures what the CoA aggregate ACTUALLY reads.
-  // A CoA application could have project_type=set today (Source 1=100%) but ALL its historical
-  // lifecycle_transitions rows were written by E.2 before Phase D ran → those transition rows
-  // have project_type=NULL → CoA aggregate sees 0% project_type coverage on the source data.
-  // This differentiates "Phase D ran today" from "Phase D ran before E.2 wrote the transitions".
-  const { rows: [{ pct: ltPct }] } = await pool.query(
-    `SELECT COALESCE(
-       ROUND(100.0 * COUNT(*) FILTER (WHERE project_type IS NOT NULL) / NULLIF(COUNT(*), 0))::int,
-       0) AS pct
-       FROM lifecycle_transitions
-      WHERE lead_id LIKE 'coa:%'`
-  );
-  ltProjectTypeCoveragePct = ltPct;
-} else {
-  pipeline.log.warn('[compute-phase-calibration]',
-    'coa_applications table missing — Phase D migrations not yet applied. ' +
-    'Skipping project_type coverage guard; audit metric will report null.');
-}
-if (projectTypeCoveragePct != null && projectTypeCoveragePct < 50) {
-  pipeline.log.warn('[compute-phase-calibration]',
-    `coa_applications.project_type coverage ${projectTypeCoveragePct}% (< 50%) — ` +
-    `Phase D classify-coa-scope.js may not have run. Verify Phase D execution.`);
-}
-if (
-  ltProjectTypeCoveragePct != null && projectTypeCoveragePct != null &&
-  ltProjectTypeCoveragePct < projectTypeCoveragePct - 10
-) {
-  pipeline.log.warn('[compute-phase-calibration]',
-    `lifecycle_transitions.project_type coverage ${ltProjectTypeCoveragePct}% lags ` +
-    `coa_applications by >10% — old transitions predate Phase D. CoA cohort buckets ` +
-    `may be sparse until E.2 reclassifies all CoA rows (next dirty run).`);
-}
-```
-
-### Part 4 — Audit_table with verdict fix (Spec 47 §R10 compliant)
-
-```js
-const auditRows = [
-  // EXISTING — preserved unchanged
-  { metric: 'total_buckets',           value: allBuckets.length,    threshold: '>= 1', status: allBuckets.length >= 1 ? 'PASS' : 'FAIL' },
-  { metric: 'permit_types_calibrated', value: permitTypesSeen.size, threshold: null,   status: 'INFO' },
-  { metric: 'phases_calibrated',       value: phasesSeen.size,      threshold: null,   status: 'INFO' },
-  // v2 fold #11 + v3 fold v2-O-L/Indep F: unreliable_buckets PRESERVED + documented overlap.
-  // NOTE: by definition `unreliable_buckets = low_volume_buckets + outlier_buckets` (both = sample_size < 30).
-  // Operator dashboards: do NOT sum tier metrics with this. unreliable retained for Spec 48 observer 7-day baseline continuity.
-  { metric: 'unreliable_buckets',      value: unreliableBuckets,    threshold: '< 30 sample_size triggers WARN; equals low+outlier by definition (do not sum)', status: unreliableBuckets > 0 ? 'WARN' : 'INFO' },
-  // E.3 NEW — granular cohort observability
-  { metric: 'permit_cohort_count',     value: permitCohortCount,    threshold: null,   status: 'INFO' },
-  { metric: 'coa_cohort_count',        value: coaCohortCount,       threshold: null,   status: 'INFO' },
-  { metric: 'coa_transition_count',    value: coaTransitionCount,   threshold: null,   status: 'INFO' },  // v2 fold #15
-  { metric: 'high_volume_buckets',     value: highVolumeBuckets,    threshold: null,   status: 'INFO' },
-  { metric: 'mid_volume_buckets',      value: midVolumeBuckets,     threshold: null,   status: 'INFO' },
-  { metric: 'low_volume_buckets',      value: lowVolumeBuckets,     threshold: null,   status: 'INFO' },
-  { metric: 'outlier_buckets',         value: outlierBuckets,       threshold: null,   status: 'INFO' },
-  // Sanity gate — WARN on 0 (operator triage via coa_transition_count)
-  { metric: 'coa_cohort_presence',     value: coaCohortCount,       threshold: '>= 1 post-E.2 first-run', status: coaCohortCount >= 1 ? 'PASS' : 'WARN' },
-  // v3 fold v2-O-M: PROMOTED from records_meta to audit_table.rows so observer's automated
-  // gate fires on Phase D coverage degradation.
-  { metric: 'coa_project_type_coverage_pct', value: projectTypeCoveragePct, threshold: '>= 50 PASS, < 50 WARN', status: projectTypeCoveragePct >= 50 ? 'PASS' : 'WARN' },
-  // v3 fold v2-G-3 (reachable post-v4): defensive observability for cohort buckets that have
-  // NEITHER permit_type NOR coa_type_class non-NULL. Reachable cases: CoA transitions where
-  // Phase D never classified the underlying CoA → both columns NULL → bucket lands here.
-  { metric: 'unknown_cohort_count',    value: unknownCohortCount,   threshold: '== 0 PASS, > 0 WARN', status: unknownCohortCount === 0 ? 'PASS' : 'WARN' },
-  // v4 fold v3-G-HIGH-3: new metric counts source CoA transitions with NULL coa_type_class.
-  // Replaces the data-destructive `AND coa_type_class IS NOT NULL` filter removed from the
-  // CoA aggregate. Operators see how many transitions are unclassified by Phase D.
-  // v5 fold v4-L1: descriptor clarified — value stores absolute count, threshold computes ratio.
-  { metric: 'coa_type_class_null_transition_count', value: coaTypeClassNullTransitionCount, threshold: 'ratio <= 0.05 PASS, > 0.05 WARN (relative to coa_transition_count); value field stores absolute count for triage', status: coaTransitionCount === 0 || (coaTypeClassNullTransitionCount / coaTransitionCount) <= 0.05 ? 'PASS' : 'WARN' },
-];
-// TOTAL: 15 rows. Composition: 4 existing (total_buckets, permit_types_calibrated,
-// phases_calibrated, unreliable_buckets) + 7 new INFO (permit_cohort_count, coa_cohort_count,
-// coa_transition_count, high_volume_buckets, mid_volume_buckets, low_volume_buckets,
-// outlier_buckets) + 4 new thresholded WARN gates (coa_cohort_presence,
-// coa_project_type_coverage_pct, unknown_cohort_count, coa_type_class_null_transition_count).
-// Thresholded total: 6 (total_buckets FAIL gate + unreliable_buckets WARN gate +
-// 4 new thresholded WARN gates above).
-
-// v2 fold #6: verdict DERIVED from row statuses per Spec 47 §R10 (replaces existing hardcoded bug).
-const auditVerdict =
-  auditRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
-  auditRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
-```
-
-### Part 5 — `records_meta` distributions (Spec 48 §3.2 — NOT to DeepSeek)
-
-```js
-records_meta: {
-  audit_table: { phase: 84, name: 'Phase Calibration', verdict: auditVerdict, rows: auditRows },
-  // E.3 NEW — distributions for operator manual SQL inspection only
-  sample_size_distribution: { high: highVolumeBuckets, mid: midVolumeBuckets, low: lowVolumeBuckets, outlier: outlierBuckets },
-  cohort_dimension_coverage: {
-    permit_type_non_null:    permitCohortCount,           // by definition equal to permit-side cohort count
-    coa_type_class_non_null: coaCohortCount,              // by definition equal to CoA-side cohort count
-    project_type_non_null:   allBuckets.filter((b) => b.project_type != null).length,
-    from_seq_non_null:       allBuckets.filter((b) => b.from_seq != null).length,
-    to_seq_non_null:         allBuckets.filter((b) => b.to_seq != null).length,
-  },
-  // For triage when coa_cohort_presence WARNs
-  coa_project_type_coverage_pct: projectTypeCoveragePct,
-},
-```
-
-### Part 6 — `emitMeta` extension
-
-```js
-pipeline.emitMeta(
-  {
-    permit_phase_transitions: ['permit_num', 'revision_num', 'from_phase', 'to_phase', 'transitioned_at', 'permit_type', 'id'],  // v2 fold #8: id needed for LAG tiebreaker
-    lifecycle_transitions:    ['lead_id', 'from_phase', 'to_phase', 'from_seq', 'to_seq', 'transitioned_at', 'project_type', 'coa_type_class', 'id'],
-    coa_applications:         ['project_type'],  // v2 fold #13: project_type coverage guard read
-  },
-  {
-    phase_stay_calibration: COHORT_INSERT_COLS,
-  },
-);
-```
-
-### Part 7 — `scripts/manifest.json` CoA chain add (v2 fold #12)
-
-```json
-{
-  "name": "coa",
-  "steps": [
-    "load_coa", "link_coa", "link_coa_to_parcels", "classify_coa_scope",
-    "classify_coa_trades", "compute_coa_cost_estimates", "classify_lifecycle_phase",
-    "compute_phase_calibration",     // <-- NEW — added after classify_lifecycle_phase
-    "assert_global_coverage"
-    // ... etc
-  ]
-}
-```
-
-After E.3 ships, calibration runs in BOTH chains. CoA-only chain runs trigger calibration refresh on the same advisory lock — so concurrent permits+coa-chain runs serialise at the calibration step (correct per existing lock 93).
-
-### Part 8 — Startup guards (Spec 47 §R5 + E.2 Independent H-1 convention)
-
-```js
-// v2 fold #10: differentiated table-empty vs partial-data
-const { rows: [{ exists }] } = await pool.query(
-  `SELECT EXISTS (SELECT 1 FROM information_schema.tables
-                   WHERE table_schema = 'public' AND table_name = 'lifecycle_transitions') AS exists`
-);
-if (!exists) throw new Error('[compute-phase-calibration] lifecycle_transitions table missing — apply Phase B mig 134 first');
-
-const { rows: [{ n: coaCount }] } = await pool.query(
-  `SELECT COUNT(*)::int AS n FROM lifecycle_transitions WHERE lead_id LIKE 'coa:%'`
-);
-if (coaCount === 0) {
-  pipeline.log.warn('[compute-phase-calibration]',
-    'lifecycle_transitions has zero CoA-side rows — E.2 first run has not yet produced CoA transitions. ' +
-    'coa_cohort_count will be 0 (expected pre-E.2 first-run state).');
-} else {
-  pipeline.log.info('[compute-phase-calibration]',
-    `lifecycle_transitions has ${coaCount.toLocaleString()} CoA-side rows; expecting CoA cohorts.`);
-}
-```
-
-### Database Impact
-
-**YES — migration 147 ships in E.3** (v3 reframe per Independent G CRIT).
+### Part 1 — Migration 148 (per-seq band keys; INSERT...SELECT derivation from catalog)
 
 ```sql
--- migrations/147_phase_stay_calibration_drop_legacy_pk.sql
--- Phase E.3 — drop legacy PRIMARY KEY (permit_type, phase) from
--- phase_stay_calibration; make permit_type + phase nullable; mig 135's
--- 5-tuple UNIQUE INDEX phase_stay_calibration_new_unique remains as the
--- de facto integrity constraint.
+-- migrations/148_lifecycle_seq_bands_logic_variables.sql
+-- Phase E.4 — per-seq distribution band keys for assert-lifecycle-phase-distribution.js.
 --
--- Background: mig 123 created the table with PK (permit_type, phase).
--- Mig 135 added 4 granular columns + UNIQUE INDEX with NULLS DISTINCT but
--- did NOT drop the old PK. Mig 135's comment: "The pre-existing PK on
--- (permit_type, phase) enforces uniqueness during the transition" —
--- foreshadowing Phase E's responsibility to drop it.
+-- Derives lifecycle_seq_band_<N>_min/_max keys from
+-- universal_stream_catalog.rows_count (the production snapshot baseline
+-- embedded in mig 129 via docs/reports/spec_84_universal_stream_v10.csv).
 --
--- v3 fold v2-G + v2-E: CoA-side rows have permit_type=NULL (CoA leads
--- don't have a permit_type) and may have phase=NULL (MIN(from_phase) over
--- all-NULL partition). PK + NOT NULL constraints reject these INSERTs.
+-- Tolerance schedule (per band) — v3 fold v2-G-HIGH-2: continuous 2-branch formula
+-- (no boundary discontinuity); v2 fold v1-G-CRIT: NULL (not 999999) for "no upper bound":
+--   rows_count IS NULL OR 0:  band = (0, NULL)                                            — INFO-only
+--   rows_count >= 1:          band = (FLOOR(rows_count * 0.7), CEIL(rows_count * 1.3) + 20) — ±30% + additive buffer
 --
--- SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.7 step 6 + §6.11 Phase E
--- SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §7
+-- Continuity property: at rows_count=N, max - min ≈ N * 0.6 + 20 (always positive,
+-- monotonically increasing). At N=1: [0, 22]. At N=29: [20, 58]. At N=30: [21, 59].
+-- At N=100: [70, 150]. At N=1000: [700, 1320]. No cliffs; tiny data growth never
+-- triggers spurious WARN cascade. The +20 additive buffer absorbs low-volume
+-- statistical noise (Poisson sqrt-N variance dominates ±30% below ~50 rows).
 --
--- v4 fold v3-IF: NO explicit BEGIN/COMMIT in this migration. Mig 135's
--- header documents the recurring failure mode — the runner's outer
--- transaction wraps each migration; an explicit BEGIN/COMMIT inside the
--- migration commits the outer transaction prematurely, decoupling the
--- DDL from the schema_migrations record (R8 CI hotfix on mig 135).
+-- v4 fold v3-Indep-MED: explicit note on rows_count=1 behavior. FLOOR(1*0.7)=0,
+-- so a seq with rows_count=1 baseline has band [0, 22]. Actual=0 is in-band
+-- (PASS). This is INTENTIONAL — rows_count=1 means the snapshot baseline saw
+-- a single occurrence, which is statistically equivalent to zero (Poisson
+-- variance dominates). Treating actual=0 as a WARN here would generate noise.
+-- E.5 calibration may revisit this for regulatory-critical low-volume seqs.
+--
+-- Assertion logic on the JS side (v2 fold v1-G-CRIT):
+--   const inBand = actual >= band.min && (band.max === null || actual <= band.max);
+-- A NULL max means "no upper bound" — INFO-only tracking. A real regression sending
+-- 999,999+ rows to such a seq will still surface via `seq_bands_null_catalog_count`
+-- + `seq_distribution` records_meta inspection, but is NOT a WARN/FAIL gate (no
+-- baseline to compare against; that's what E.5 calibration produces).
+--
+-- WARN-only on first deploy. E.5 (separate WF) tightens to FAIL after
+-- 7 consecutive PASS runs on staging.
+--
+-- v2 fold v1-I-MED-3: ALSO seeds lifecycle_seq_unclassified_max in this migration
+-- (not just the JSON seed file) so the assert script's Zod validation doesn't
+-- throw if the script runs between migration apply and seed-script run.
+--
+-- v3 fold v2-conv-HIGH: ALSO creates partial indices on lifecycle_seq columns
+-- to prevent full-table scans in the UNION ALL aggregate query at scale.
+-- Partial indices (filtered on non-NULL) keep size small (~30% of permits +
+-- ~100% of post-E.2 coa_applications).
+--
+-- SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase E.4
+-- SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3.4
+-- SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.2
+--
+-- v4 fold (recurring across phases): NO explicit BEGIN/COMMIT (mig 135 R8 hotfix
+-- convention — runner provides outer transaction).
 
 -- UP
 
--- Drop the legacy PRIMARY KEY. Mig 135's UNIQUE INDEX on
--- (permit_type, project_type, coa_type_class, from_seq, to_seq) with
--- NULLS DISTINCT enforces row uniqueness on the new shape.
-ALTER TABLE phase_stay_calibration
-  DROP CONSTRAINT IF EXISTS phase_stay_calibration_pkey;
+-- v3 fold v2-G-HIGH-2: 2-branch continuous formula (no discontinuity).
+INSERT INTO logic_variables (variable_key, variable_value, description)
+SELECT
+  'lifecycle_seq_band_' || seq || '_min' AS variable_key,
+  CASE
+    WHEN rows_count IS NULL OR rows_count = 0 THEN 0
+    ELSE GREATEST(0, FLOOR(rows_count * 0.7)::INTEGER)
+  END AS variable_value,
+  'Min row count for lifecycle_seq=' || seq || ' (' || COALESCE(stage_label, source || ':' || status) || '). E.4 default from universal_stream_catalog snapshot; recalibrated in E.5.' AS description
+FROM universal_stream_catalog
+ON CONFLICT (variable_key) DO NOTHING;
 
--- Make permit_type nullable so CoA-side rows (permit_type=NULL) can insert.
-ALTER TABLE phase_stay_calibration
-  ALTER COLUMN permit_type DROP NOT NULL;
+INSERT INTO logic_variables (variable_key, variable_value, description)
+SELECT
+  'lifecycle_seq_band_' || seq || '_max' AS variable_key,
+  CASE
+    WHEN rows_count IS NULL OR rows_count = 0 THEN NULL  -- v2 fold v1-G-CRIT: NULL == "no upper bound"
+    ELSE (CEIL(rows_count * 1.3)::INTEGER + 20)          -- v3 fold v2-G-HIGH-2: +20 additive buffer for continuity
+  END AS variable_value,
+  'Max row count for lifecycle_seq=' || seq || ' (' || COALESCE(stage_label, source || ':' || status) || '). E.4 default from universal_stream_catalog snapshot; recalibrated in E.5. NULL=no upper bound (INFO-only).' AS description
+FROM universal_stream_catalog
+ON CONFLICT (variable_key) DO NOTHING;
 
--- Make phase nullable so cohorts with MIN(from_phase)=NULL (all-null
--- partition: first-classification rows where E.2 wrote from_phase=NULL)
--- can insert.
-ALTER TABLE phase_stay_calibration
-  ALTER COLUMN phase DROP NOT NULL;
+-- v2 fold v1-I-MED-3: seed lifecycle_seq_unclassified_max in the migration too,
+-- so the assert script's Zod validation has a DB-side default immediately after
+-- migration apply (independent of `seed-logic-variables.js` run order).
+INSERT INTO logic_variables (variable_key, variable_value, description) VALUES
+  ('lifecycle_seq_unclassified_max', 5000,
+   'Max row count where lifecycle_seq IS NULL on permits or coa_applications. WARN threshold (E.4); Phase D + E.2 first-run state expected to violate. Tighten via E.5 after ramp-up.')
+ON CONFLICT (variable_key) DO NOTHING;
 
--- v4 fold v3-DS-1 + v3-Indep-A: partial unique index restores structural
--- 2-tuple uniqueness for permit-side rows (where permit_type IS NOT NULL).
--- CoA-side rows have permit_type NULL → not covered by this index → can
--- coexist with permit-side rows under mig 135's 5-tuple UNIQUE INDEX
--- (NULLS DISTINCT). External writers or future bugs cannot create duplicate
--- (permit_type, phase) rows for legacy permit-side cohorts.
-CREATE UNIQUE INDEX IF NOT EXISTS phase_stay_calibration_permit_legacy_unique
-  ON phase_stay_calibration (permit_type, phase)
-  WHERE permit_type IS NOT NULL;
-
--- v4 fold v3-G-HIGH-2: partial composite index on lifecycle_transitions
--- to support the CoA aggregate's LAG window (PARTITION BY lead_id ORDER BY
--- transitioned_at, id). Partial filter keeps the index small (CoA rows only).
--- Critical for performance scaling beyond ~30K rows.
-CREATE INDEX IF NOT EXISTS lifecycle_transitions_coa_lag_idx
-  ON lifecycle_transitions (lead_id, transitioned_at, id)
-  WHERE lead_id LIKE 'coa:%';
-
--- v4 fold v3-Indep-A advisory: future direct writers to phase_stay_calibration
--- bypassing compute-phase-calibration's atomic temp-table swap pattern MUST
--- preserve legacy 2-tuple uniqueness. The partial unique index above is the
--- structural enforcement; the script's CREATE TEMP TABLE + TRUNCATE + INSERT
--- pattern is the runtime enforcement on every E.3 run.
+-- v3 fold v2-conv-HIGH: partial indices on lifecycle_seq columns are added
+-- by a SEPARATE migration (mig 149 — non-transactional CONCURRENTLY) per
+-- the failure-mode-isolation reasoning in Part 1.5. Mig 148 stays purely
+-- transactional + atomic; mig 149 handles the index builds non-transactionally.
 
 -- DOWN — manual rollback only, intentionally not transactional
--- (Rule 6 / commit 8b1c10b convention; v4 fold v3-G-MED-3 + v3-DS-LOW-6:
--- DELETE step added so rollback is correct against post-E.3 data state.
--- v5 fold v4-M1: DELETE step #2 added to catch any NULL-phase row that
--- would otherwise block ALTER COLUMN phase SET NOT NULL).
--- Operator rollback order (manual, NOT auto-executed):
--- 1a. DELETE FROM phase_stay_calibration WHERE permit_type IS NULL;  -- remove CoA-side rows
--- 1b. DELETE FROM phase_stay_calibration WHERE phase IS NULL;        -- v5 fold v4-M1: catch any legacy NULL-phase row
--- 2.  DROP INDEX IF EXISTS lifecycle_transitions_coa_lag_idx;
--- 3.  DROP INDEX IF EXISTS phase_stay_calibration_permit_legacy_unique;
--- 4.  ALTER TABLE phase_stay_calibration ALTER COLUMN phase SET NOT NULL;
--- 5.  ALTER TABLE phase_stay_calibration ALTER COLUMN permit_type SET NOT NULL;
--- 6.  ALTER TABLE phase_stay_calibration ADD PRIMARY KEY (permit_type, phase);
+-- (Rule 6 / commit 8b1c10b; matches mig 119 convention — a transactional
+-- DOWN would destroy operator-tuned values applied via admin Control Panel
+-- after deployment).
+--
+-- To roll back manually:
+--   DELETE FROM logic_variables
+--    WHERE variable_key LIKE 'lifecycle_seq_band_%_min'
+--       OR variable_key LIKE 'lifecycle_seq_band_%_max';
+--
+-- Then revert the assert-lifecycle-phase-distribution.js extension + the
+-- scripts/seeds/logic_variables.json additions in one commit.
 ```
 
-**Migration safety**: at ~165 existing rows the DROP CONSTRAINT + ALTER COLUMN operations are O(1) metadata-only changes. No table rewrite. Expected runtime < 100ms.
+### Part 1.5 — Migration 149 (partial indices on `lifecycle_seq` columns; non-transactional)
 
-### Audit Observability (Spec 48 lens)
+```sql
+-- migrations/149_lifecycle_seq_indices.sql
+-- Phase E.4 — partial indices on permits.lifecycle_seq + coa_applications.lifecycle_seq
+-- to support assert-lifecycle-phase-distribution.js's UNION ALL aggregate query
+-- without triggering full table scans at scale.
+--
+-- v3 fold v2-conv-HIGH (Gemini + DeepSeek convergent): added per Engineering
+-- Standards §3.1 "CREATE INDEX on tables >100K rows should use CONCURRENTLY".
+--
+-- Partial filter on `WHERE lifecycle_seq IS NOT NULL` keeps the index small.
+-- For permits (~247K rows), only the post-E.2-classified subset is indexed
+-- (gradually growing to ~70%+ as Phase D+E.2 ramps up). For coa_applications
+-- (~33K rows), classifier coverage is higher (~99%+ post-E.1).
+--
+-- migrate.js detects CONCURRENTLY and routes this file through the non-
+-- transactional path (line 195 of scripts/migrate.js). The runner does NOT
+-- wrap CONCURRENTLY migrations in BEGIN/COMMIT; each statement runs in its
+-- own implicit transaction. Idempotent via IF NOT EXISTS.
+--
+-- SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase E.4
+-- SPEC LINK: docs/specs/00_engineering_standards.md §3.1
 
-**15-row `audit_table.rows`** (v5 fold v4-L2: 4 existing + 7 new INFO + 4 new thresholded WARN gates; 6 thresholded total including the 2 existing thresholded rows `total_buckets` FAIL + `unreliable_buckets` WARN).
+-- UP
 
-**3 distribution maps in `records_meta`** (`sample_size_distribution`, `cohort_dimension_coverage`, `coa_project_type_coverage_pct`) — surfaced for manual operator SQL inspection only (Spec 48 §3.2: NOT passed to DeepSeek `contextJson`).
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_permits_lifecycle_seq
+  ON permits (lifecycle_seq)
+  WHERE lifecycle_seq IS NOT NULL;
 
-**Observer report file routing**: `compute_phase_calibration` post-E.3 runs in BOTH chains (`permits` + `coa` per fold #12). Observer writes to BOTH `permits-followup.md` AND `coa-followup.md`.
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_coa_applications_lifecycle_seq
+  ON coa_applications (lifecycle_seq)
+  WHERE lifecycle_seq IS NOT NULL;
 
-**First-E.3-run mitigation** (v2 fold #14 — rewritten per Observability L):
+-- DOWN — manual rollback only, intentionally not transactional (Rule 6).
+-- To roll back manually:
+--   DROP INDEX CONCURRENTLY IF EXISTS idx_coa_applications_lifecycle_seq;
+--   DROP INDEX CONCURRENTLY IF EXISTS idx_permits_lifecycle_seq;
+```
 
-**First-E.3-run anomaly checklist (v4 fold v3-O-LOW-K reformat — numbered list for operator scanability):**
->
-> 1. **`duration_ms` regression** (2-3× expected). Cause: UNION-ALL of two aggregates + 5-tuple GROUP BY on CoA-side. Action: annotate as expected; do not file WF3.
-> 2. **`records_total` increase** by CoA transition count (~30K post-E.2). Cause: ledger now consumed. Action: annotate as expected.
-> 3. **`coa_transition_count` jump** from 0 to ~30K. Cause: new INFO metric, baseline=0. Action: DeepSeek narrative may flag; INFO row only, no automated FAIL/WARN; no operator action.
-> 4. **`coa_project_type_coverage_pct` WARN** (if <50%). Cause: Phase D `classify-coa-scope.js` incomplete. Action: verify Phase D succeeded; do NOT treat as regression unless Phase D was expected complete.
-> 5. **`coa_type_class_null_transition_count` WARN** (if >5% of `coa_transition_count`). Cause: similar — Phase D not classifying some CoA records. Action: verify Phase D coverage.
-> 6. **Transient empty-table window** for `phase_stay_calibration` is now **zero** (v5 fold v4-H3 — corrected from inaccurate "<1ms"; the atomic TRUNCATE + INSERT inside one transaction holds ACCESS EXCLUSIVE for the full transaction, so readers block but never observe an empty table). Reader latency during the run is normal lock-wait behavior, not an empty-state visibility window.
->
-> **Co-firing note (v5 fold v4-L3 — Observability)**: if `verdict=WARN` on first E.3 run with vectors #4 + #5 (and optionally `unknown_cohort_count`) simultaneously WARN, this is the **expected co-firing pattern** when Phase D is incomplete. Multiple WARN signals collapse to a single root cause (Phase D classify-coa-scope.js coverage). No WF3 action required; verify Phase D execution and re-run E.3 after Phase D completes.
->
-> **Annotation target files**: BOTH `permits-followup.md` AND `coa-followup.md` (calibration runs in both chains post-v3 fold #12).
-> **Annotation text**: `[expected CoA-side granular cohort SQL expansion + Phase D coverage gate signals, not a performance/data regression]`.
-> **Note**: Spec 48 Improvement C (pinned baseline) is queued-not-authorized — manual annotation is the active mitigation._
+**Why split into two migrations:** the runner's `CONCURRENTLY` detection (line 195 of scripts/migrate.js) routes the ENTIRE file through the non-transactional path. If mig 148's INSERTs and the CREATE INDEX CONCURRENTLY shared one file, the INSERT failure mode would lose atomicity (partial INSERTs not rolled back). Splitting preserves: mig 148 transactional + atomic INSERTs; mig 149 non-transactional CONCURRENTLY + idempotent via IF NOT EXISTS.
 
-### Tests (TDD cadence per WF1 Red Light/Green Light)
+**Mig 149 failure-mode (v4 fold v3-Indep-MED-A clarification):** the non-transactional path runs each statement via separate `pool.query` calls (`scripts/migrate.js` lines 196-198), THEN issues `recordApplied()` as a separate pool.query (line 200). If the second `CREATE INDEX CONCURRENTLY` succeeds but `recordApplied` fails (pool exhaustion, network drop, schema_migrations table lock), the migration is NOT recorded in `schema_migrations` and WILL re-run on the next deploy. Both index statements use `IF NOT EXISTS`, so the re-run is idempotent (no-ops both creates). This failure mode is well-defined and benign — there is no "stronger atomicity" than this; the recovery is automatic via the next run.
 
-1. **`src/tests/compute-phase-calibration.infra.test.ts`** (NEW or EXTEND) — integration tests:
-   - **Fixture seed**: 30 `permit_phase_transitions` rows (existing permit-side path) + 20 `lifecycle_transitions` CoA-side rows (with from_seq/to_seq in 1-22 range, populated project_type + coa_type_class).
-   - **Forward-only run**: assert `phase_stay_calibration` has:
-     - Permit-side rows: `permit_type` non-null, `coa_type_class IS NULL`, `from_seq IS NULL`, `to_seq IS NULL` (legacy shape preserved).
-     - CoA-side rows: `permit_type IS NULL`, `project_type` non-null, `coa_type_class` non-null, `from_seq` IN 1-22, `to_seq` IN 1-22 (granular shape).
-   - **Idempotency**: run twice; assert byte-identical output.
-   - **LAG tiebreaker** (v2 fold #8): insert 2 transition rows with IDENTICAL `transitioned_at` for the same `lead_id` (different `id`); assert calibration is deterministic across runs (verifies the `, id` tiebreaker eliminates non-determinism).
-   - **`coa_transition_count` triage** (v2 fold #15): scenario A — zero CoA rows in `lifecycle_transitions` → `coa_transition_count=0`, `coa_cohort_count=0`, `coa_cohort_presence=WARN`. Scenario B — 5 CoA rows but all in 2-row partitions (HAVING removed; tier counters track) → `coa_transition_count=5`, `coa_cohort_count>=1`, `outlier_buckets>=1`, `coa_cohort_presence=PASS`.
-   - **Tier counter boundaries**: bucket-sample-size = 100, 99, 30, 29, 10, 9 → assert correct tier assignment.
-   - **Audit verdict derivation** (v2 fold #6): inject a WARN row; assert `verdict='WARN'`. Inject a FAIL row; assert `verdict='FAIL'`.
-   - **`unreliable_buckets` preservation** (v2 fold #11): assert the metric still exists with old semantics (`sample_size < 30 → WARN if > 0`).
-   - **EXPLAIN ANALYZE** (v2 fold #18, staging only — v3 fold v2-DS-3 relaxes the assertion): execute `EXPLAIN (ANALYZE, BUFFERS) <coaAggSql>`; assert `execution_time_ms < 5000` (5-second budget). Sequential scan on `lifecycle_transitions` is acceptable at ~30K row scale; composite index on `(lead_id, from_seq, to_seq)` deferred to Phase H or later if CoA volume grows past ~1M rows.
-   - **`project_type` coverage guard** (v2 fold #13): scenario where coverage = 30% → assert WARN log emitted. v3 extends: dual-source guard (coa_applications + lifecycle_transitions) — assert both pct values logged.
-   - **Duration-attribution test** (v3 fold v2-G-2 — Gemini HIGH): seed Lead 'A' with known transitions: P1→P2 at Day 0, P2→P3 at Day 10, P3→P4 at Day 30. Run E.3. Assert: cohort `(NULL, project_type, coa_type_class, from_seq=P2-seq, to_seq=P3-seq)` has `median_days = 10` (duration of P2 = Day 10 - Day 0). Assert: cohort `(..., from_seq=P3-seq, ...)` has `median_days = 20` (duration of P3 = Day 30 - Day 10). Validates LAG-based duration attribution — guards against the off-by-one Gemini hypothesized in v2 (which we verified false-positive but the test cements the contract).
-   - **`unknown_cohort_count` realistic test** (v3 fold v2-G-3 + v5 fold v4-N1 — Gemini): seed a `coa_applications` record with NULL `project_type` AND NULL `coa_type_class` (legitimate Phase D-incomplete state — both columns are nullable on coa_applications until classify-coa-scope.js runs). Run the E.2 writer to produce a corresponding `lifecycle_transitions` row (also NULL on both columns; no constraint violation since lifecycle_transitions inherits nullability). Then run E.3. Assert: aggregate produces a bucket with both columns NULL → `unknown_cohort_count >= 1`; assert `audit_table.verdict = 'WARN'`. Validates the realistic Phase D-incomplete failure mode rather than an "impossible injection" scenario.
-   - **Migration 147 forward test**: apply mig 147 against fresh schema; assert `phase_stay_calibration_pkey` constraint absent; assert `permit_type` and `phase` columns nullable; assert mig 135's `phase_stay_calibration_new_unique` UNIQUE INDEX still present; assert new `phase_stay_calibration_permit_legacy_unique` partial unique index present; assert new `lifecycle_transitions_coa_lag_idx` partial composite index present.
-   - **`coa_type_class_null_transition_count` population test** (v5 fold v4-C1 — addresses the 4/4 convergent CRIT bug that the metric was never populated): seed 100 CoA `lifecycle_transitions` rows; set `coa_type_class = NULL` on 10 of them (10% rate); run E.3; assert `coa_type_class_null_transition_count = 10` AND `audit_table.verdict = 'WARN'` (since 10/100 = 0.10 > 0.05 threshold). Re-seed with only 3 NULL out of 100 (3% rate); assert `coa_type_class_null_transition_count = 3` AND verdict = `'PASS'` for this row.
-   - **`coa_applications` table-missing guard test** (v5 fold v4-H2): execute the script against a database where `coa_applications` is dropped (mock schema); assert no crash, WARN log emitted, `coa_project_type_coverage_pct` audit row value = `null`.
-   - **`coa_transition_count` seq-range filter test** (v5 fold v4-H1): seed 20 CoA transitions of which 5 have seqs outside 1-22 range; assert `coa_transition_count = 15` (matches CoA aggregate population), not 20 (raw `LIKE 'coa:%'` count).
-   - **Bucket-count safety cap test** (v5 fold v4-M3): mock or fixture a scenario producing 5001 buckets; assert the script throws with the explicit param-limit error message; assert no INSERT executed (transaction rolled back).
+**Migration safety:** 221 row inserts in mig 148 (110 seqs × 2 bounds + 1 unclassified-max key). Pure logic_variables INSERTs. Idempotent via `ON CONFLICT (variable_key) DO NOTHING` — operator-tuned values applied via admin Control Panel after deployment are preserved on re-apply. No business-table writes. Expected runtime < 100ms. Mig 149: two CONCURRENTLY index builds, expected runtime ~5-30s on permits (~70K post-E.2 rows) + ~1s on coa_applications (~33K rows). Both idempotent via IF NOT EXISTS.
 
-2. **`src/tests/compute-phase-calibration.logic.test.ts`** (NEW) — pure-function helper tests:
-   - `buildBulkInsertSQL('t', ['a','b','c'], 2)` → exact string with `$1, $2, $3, $4, $5, $6` placeholders.
-   - `flattenBuckets([{...},{...}], RUN_AT)` → exact param array order and length.
-   - Tier classification: `classifyTier(100) → 'high'`, etc.
+**Startup guard requirement:** the migration assumes `universal_stream_catalog` exists with 110 rows (created by mig 128 + seeded by mig 129). If those didn't run, mig 148 produces 0 INSERTs into the per-seq band keys but DOES insert `lifecycle_seq_unclassified_max` (the catalog dependency is only in the SELECT, not the VALUES clause). The assert script's startup guard (Part 6) catches the catalog absence.
 
-3. **Manifest test** (v2 fold #12): assert `scripts/manifest.json` `coa` chain includes `compute_phase_calibration` after `classify_lifecycle_phase`.
+**Dynamic seq count (v2 fold v1-conv-HIGH):** the migration does NOT hardcode a seq count anywhere. It iterates the catalog via `FROM universal_stream_catalog`. If the catalog grows to 111 or shrinks to 90 rows in a future migration, mig 148 re-apply will insert/skip rows accordingly. The assert script likewise queries the catalog at startup for the expected seq list (Part 3).
 
-4. **`migration-135-phase-stay-calibration.infra.test.ts`** (existing — preserve passing): NULLS DISTINCT UNIQUE INDEX permits coexistence of permit-side (coa_type_class NULL) + CoA-side (permit_type NULL) rows.
+### Part 2 — `scripts/seeds/logic_variables.json` extension
 
-### Standards Compliance
+Add 221 new entries matching mig 148 outputs (220 band keys + 1 unclassified-max key). Each entry follows the existing seed format. v4 fold v3-G-CRIT-formula: examples updated to the v3 2-branch continuous formula `[FLOOR(rows_count*0.7), CEIL(rows_count*1.3) + 20]` for `rows_count >= 1`:
 
-- **Try-Catch Boundary** (§2.2 + Spec 47 §R6): existing `pipeline.withAdvisoryLock(pool, 93, async () => {...})` envelope. `withTransaction` rollback on inner failure.
-- **Unhappy Path Tests** (§2.1): EXPLAIN ANALYZE failure path; project_type coverage 0% path; CoA-side seq out-of-range path.
-- **logError Mandate** (§6.1): new catch blocks use `pipeline.log.error('[compute-phase-calibration]', err, { context })`.
-- **Database — Add-Backfill-Drop** (§3.1): N/A — no new columns; mig 135 already shipped.
-- **Database — Pagination** (§3.2): N/A — bounded query output (~1000 rows max).
-- **Pipeline Safety — Transaction Boundaries** (§9.1): DELETE + INSERT in single `pipeline.withTransaction`.
-- **Pipeline Safety — Parameter Limit** (§9.2): 11 cols × 1000 max rows ≈ 11000 params (< 65535). Single batch.
-- **Pipeline Safety — Idempotent Scripts** (§9.3): DELETE+INSERT fully idempotent. Re-run produces identical output.
+```json
+"lifecycle_seq_band_1_min": {
+  "default": 0,
+  "type": "number",
+  "min": 0,
+  "max": 99999,
+  "description": "Min row count for lifecycle_seq=1 (Received). rows_count=10 → 2-branch continuous formula: FLOOR(10*0.7)=7, CEIL(10*1.3)+20=33 → [7, 33]. Recalibrated in E.5."
+},
+"lifecycle_seq_band_1_max": {
+  "default": 33,
+  "type": "number",
+  "min": 0,
+  "max": 999999,
+  "description": "Max row count for lifecycle_seq=1 (Received). Continuous formula upper bound; recalibrated in E.5."
+},
+```
 
-### Spec 47 §R1-R12 Compliance (explicit walkthrough)
+For high-volume seqs (e.g., seq 19 'Application Withdrawn' with `rows_count=904`), the formula yields `[FLOOR(904*0.7), CEIL(904*1.3) + 20] = [632, 1196]`:
 
-- **§R1**: SDK imports unchanged.
-- **§R2**: ADVISORY_LOCK_ID = 93 unchanged.
-- **§R3**: Batch size implicit (single INSERT for ~1000 rows; 11000 params << 65535).
-- **§R3.5**: `RUN_AT = await pipeline.getDbTimestamp(pool)` unchanged.
-- **§R4**: Zod config validation unchanged. No new logic_variables.
-- **§R5**: Startup guards EXTENDED (v2 fold #10) — table existence + CoA-side count + project_type coverage.
-- **§R6**: `pipeline.withAdvisoryLock` unchanged.
-- **§R7**: `pool.query` (output bounded ~1000 rows; no streaming needed).
-- **§R8**: SQL-side computation (PERCENTILE_CONT, LAG).
-- **§R9**: Atomic DELETE + bulk INSERT in single `pipeline.withTransaction`.
-- **§R10**: PIPELINE_SUMMARY with `audit_table.verdict` DERIVED from row statuses (v2 fold #6 — fixes pre-existing bug).
-- **§R11**: emitMeta extended (Part 6).
-- **§R12**: existing `total_buckets >= 1 FAIL` gate preserved; new `coa_cohort_presence` WARN-only.
+```json
+"lifecycle_seq_band_19_min": { "default": 632,  ... },
+"lifecycle_seq_band_19_max": { "default": 1196, ... },
+```
+
+For NULL `rows_count` seqs (e.g., seq 22 'Closed', many inspection-stage seqs), the max is `null` (v2 fold v1-G-CRIT — NULL means "no upper bound", INFO-only tracking):
+
+```json
+"lifecycle_seq_band_22_min": { "default": 0, ... },
+"lifecycle_seq_band_22_max": { "default": null, ... },
+```
+
+The defaults are deterministically derived from mig 129's `rows_count` column using the same tolerance formula as mig 148. The seeds file serves as the canonical authoritative source for fresh-database setup (read by `scripts/seed-logic-variables.js` which uses `INSERT ... ON CONFLICT DO UPDATE` semantics to apply seeds onto live DB).
+
+**Implementation note:** the seed JSON additions are generated by a one-shot helper (`_tmp_phase_e4_seed_bands.mjs`) that reads `migrations/129_seed_universal_stream_catalog.sql`, extracts the 110-row tuples, applies the tolerance formula, and emits JSON. The helper is NOT committed to `scripts/` — it's a `_tmp_*.mjs` scratch file per project convention.
+
+**Parity test (v2 fold v1-G-HIGH):** a NEW infra test reads `migrations/129_seed_universal_stream_catalog.sql`, applies the tolerance formula in JS (mirroring mig 148's SQL CASE), and asserts equality with `scripts/seeds/logic_variables.json` entries for all 220 band keys. Programmatic parity gate — tweaking the formula in only one place fails the test. See Test Plan #4 for spec.
+
+### Part 3 — Aggregate counter logic + per-seq band assertion (in `assert-lifecycle-phase-distribution.js`)
+
+```js
+// ─── Per-seq band logic (Phase E.4 v3) ───────────────────────────────
+
+// v2 fold v1-conv-HIGH: query catalog dynamically for expected seq list
+// (no hardcoded 1..110). Future catalog grow/shrink is automatically tracked.
+//
+// v4 fold v3-DS-CRIT: conditional execution — Part 6 startup guard logs WARN
+// if catalogExists=false but does NOT throw; the catalog SELECT below would
+// crash with `relation does not exist` if we ran it unconditionally. Guard it.
+let catalogRows = [];
+if (catalogExists) {
+  const res = await pool.query(
+    `SELECT seq, rows_count FROM universal_stream_catalog ORDER BY seq`
+  );
+  catalogRows = res.rows;
+}
+const catalogSeqs = catalogRows.map((r) => r.seq);
+// v4 fold v3-G-LOW: identifies INFO-only seqs via the catalog (source of truth)
+// rather than via band.max === null (which depends on mutable logic_variables).
+// Used in Part 3's classification loop to avoid operator-tampered null-max
+// values incorrectly classifying real bands as INFO-only.
+const catalogNullCountSeqs = new Set(
+  catalogRows.filter((r) => r.rows_count == null || r.rows_count === 0).map((r) => r.seq)
+);
+
+// v3 fold v2-I-MED-A: explicit empty-catalog guard. If the catalog table exists
+// (Part 6 startup check passed) but is empty (mig 128 applied, mig 129 seed not
+// applied — a misapplied-migration state), force seq_bands_total to WARN AND
+// emit a posture-prefixed warning. Without this, `catalogSeqs.length === 0`
+// makes `seq_bands_total: 0 === 0 → PASS` and silently hides the bug.
+const catalogEmptyButPresent = catalogExists && catalogRows.length === 0;
+if (catalogEmptyButPresent) {
+  pipeline.log.warn('[assert-lifecycle-phase-distribution]',
+    'universal_stream_catalog table exists but is empty (mig 129 seed not applied) — ' +
+    'per-seq assertion DISABLED for this run.');
+}
+
+// Load per-seq bands from logicVars. v2 fold v1-G-CRIT: band.max may be NULL
+// (== "no upper bound" — INFO-only tracking; not a WARN/FAIL gate).
+const seqBands = {};
+let seqBandKeysLoaded = 0;
+for (const seq of catalogSeqs) {
+  const minKey = `lifecycle_seq_band_${seq}_min`;
+  const maxKey = `lifecycle_seq_band_${seq}_max`;
+  if (logicVars[minKey] != null) {
+    // max can legitimately be null (NULL-rows_count branch). min must exist.
+    seqBands[seq] = {
+      min: logicVars[minKey],
+      max: logicVars[maxKey] ?? null,  // null = no upper bound
+    };
+    seqBandKeysLoaded++;
+  }
+}
+if (seqBandKeysLoaded < catalogSeqs.length) {
+  pipeline.log.warn('[assert-lifecycle-phase-distribution]',
+    `Only ${seqBandKeysLoaded}/${catalogSeqs.length} per-seq band keys loaded — ` +
+    `mig 148 may not have applied. Per-seq assertion will be partial.`);
+}
+
+// v3 fold v2-G-CRIT: orphan-key detection. Catches the typo silent-failure
+// mode (e.g. `lifecycle_seq_band_42_mx` instead of `_max`) that `.passthrough()`
+// would otherwise allow. Any key matching the band pattern whose `<N>` is NOT
+// in catalogSeqs is a typo OR a stale band for a removed seq — fail-fast at
+// startup rather than silently degrade an assertion.
+const BAND_KEY_PATTERN = /^lifecycle_seq_band_(\d+)_(min|max)$/;
+const catalogSeqSet = new Set(catalogSeqs);
+const orphanKeys = [];
+for (const key of Object.keys(logicVars)) {
+  const m = key.match(BAND_KEY_PATTERN);
+  if (m) {
+    const seqNum = Number(m[1]);
+    if (!catalogSeqSet.has(seqNum)) {
+      orphanKeys.push(key);
+    }
+  }
+}
+if (orphanKeys.length > 0) {
+  // v4 fold v3-Indep-MED: explicit recovery path. "Re-seed via mig 148" is
+  // INCORRECT — `ON CONFLICT DO NOTHING` does not delete or rename the
+  // orphan key. Operators must explicitly DELETE the bad row.
+  throw new Error(
+    `[assert-lifecycle-phase-distribution] Orphan band keys in logic_variables ` +
+    `(no matching seq in universal_stream_catalog): ${orphanKeys.slice(0, 10).join(', ')}` +
+    (orphanKeys.length > 10 ? ` ... (+${orphanKeys.length - 10} more)` : '') +
+    `. Likely cause: typo in operator-edited key (e.g. _mx instead of _max), ` +
+    `or stale band for a seq removed from a future catalog migration. ` +
+    `RECOVERY: delete the orphan key directly — either (a) via Spec 86 ` +
+    `Control Panel (/admin/control-panel → marketplace constants → delete), ` +
+    `or (b) DELETE FROM logic_variables WHERE variable_key IN (${orphanKeys.slice(0, 3).map((k) => `'${k}'`).join(', ')}${orphanKeys.length > 3 ? ', ...' : ''}). ` +
+    `Re-seeding via mig 148 does NOT fix orphan keys — ON CONFLICT DO NOTHING ` +
+    `preserves them. After deletion, re-run this script to confirm recovery.`
+  );
+}
+
+// v2 fold v1-DS-MED-3: explicit extraction of unclassified threshold.
+const seqUnclassifiedMax = logicVars.lifecycle_seq_unclassified_max;
+
+// Per-seq distribution: UNION ALL of permits + coa_applications.
+const { rows: seqRows } = await pool.query(`
+  SELECT lifecycle_seq, COUNT(*)::int AS n
+    FROM (
+      SELECT lifecycle_seq FROM permits          WHERE lifecycle_seq IS NOT NULL
+      UNION ALL
+      SELECT lifecycle_seq FROM coa_applications WHERE lifecycle_seq IS NOT NULL
+    ) u
+   GROUP BY lifecycle_seq
+   ORDER BY lifecycle_seq
+`);
+
+const seqDistribution = {};
+for (const r of seqRows) {
+  seqDistribution[r.lifecycle_seq] = r.n;
+}
+
+// Aggregate counter classification per seq.
+// v2 fold v1-O-MED-2: structured violation objects (not strings) — Phase F /
+// E.5 consumers can parse without regex; warning-message rendering is at
+// display time, not in the data shape.
+let seqBandsPassing          = 0;
+let seqBandsWarn             = 0;
+let seqBandsFailing          = 0;
+let seqBandsNullCatalogCount = 0;  // v2 fold v1-I-HIGH-1: track INFO-only bands
+const seqViolations          = [];  // structured: { seq, actual, band_min, band_max, kind }
+
+for (const seq of catalogSeqs) {
+  const band = seqBands[seq];
+  if (!band) continue;  // partial-migration case — skip unloaded seqs
+
+  const actual = seqDistribution[seq] || 0;
+
+  // v2 fold v1-G-CRIT: null-aware upper-bound comparison.
+  const inBand = actual >= band.min && (band.max === null || actual <= band.max);
+
+  if (band.max === null) {
+    // NULL-rows_count catalog branch — INFO-only band; always PASS by construction.
+    seqBandsNullCatalogCount++;
+    seqBandsPassing++;
+  } else if (inBand) {
+    seqBandsPassing++;
+  } else {
+    // Phase E.4 v1 posture — WARN, not FAIL. E.5 (operational gate) promotes
+    // by routing increments to `seqBandsFailing` instead of `seqBandsWarn`.
+    seqBandsWarn++;
+    seqViolations.push({
+      seq,
+      actual,
+      band_min: band.min,
+      band_max: band.max,
+      kind: 'band_violation',
+    });
+  }
+  // seqBandsFailing stays 0 in v1; reserved for E.5 promotion path.
+}
+
+// v2 fold v1-DS-HIGH-2: symmetric difference — seqs present in DATA but NOT in
+// loaded bands. Without this, a seq observed in production but missing a band
+// key (partial migration, future catalog addition pre-bands, dropped seq with
+// orphan rows) is invisible to all aggregate counters.
+//
+// v3 fold v2-G-HIGH-3: BIDIRECTIONAL — also catch "seqs in bands but not in
+// data" with band.min > 0. This detects data-deletion bugs (classifier started
+// skipping a seq, upstream source dropped a status, etc.) that would otherwise
+// surface as `actual = 0` which is in-band for any [0, N] low-volume band.
+const distributionSeqs = new Set(Object.keys(seqDistribution).map(Number));
+const bandSeqs = new Set(Object.keys(seqBands).map(Number));
+
+// Direction 1: seqs in data but not in bands → no_band_configured WARN.
+for (const seq of distributionSeqs) {
+  if (!bandSeqs.has(seq)) {
+    seqBandsWarn++;
+    seqViolations.push({
+      seq,
+      actual: seqDistribution[seq],
+      band_min: null,
+      band_max: null,
+      kind: 'no_band_configured',
+    });
+  }
+}
+
+// Direction 2 (v3 fold v2-G-HIGH-3): seqs in bands but not in data, with
+// band.min > 0 (expecting data) → expected_data_missing WARN.
+// Skip NULL-bound bands (band.max === null) since they are INFO-only.
+for (const seq of bandSeqs) {
+  if (!distributionSeqs.has(seq)) {
+    const band = seqBands[seq];
+    if (band.max !== null && band.min > 0) {
+      seqBandsWarn++;
+      seqViolations.push({
+        seq,
+        actual: 0,
+        band_min: band.min,
+        band_max: band.max,
+        kind: 'expected_data_missing',
+      });
+    }
+  }
+}
+
+// v2 fold v1-DS-MED-4: cap violations at 50 to prevent records_meta payload bloat.
+const SEQ_VIOLATIONS_CAP = 50;
+const seqViolationsTruncatedCount = Math.max(0, seqViolations.length - SEQ_VIOLATIONS_CAP);
+const seqViolationsCapped = seqViolations.slice(0, SEQ_VIOLATIONS_CAP);
+
+// v2 fold v1-I-HIGH-3: REMOVED `linked_permit_num IS NULL` filter from coa
+// unclassified query. E.1 removed Rule 0; linked CoAs now receive lifecycle_seq
+// writes too. Keeping the filter would silently exclude 99.4% of CoAs from the
+// gate. Phase-keyed `unclassified_count` (existing) keeps its legacy filter
+// for baseline continuity; seq_unclassified is the corrected shape.
+const { rows: [{ n: seqUnclassifiedPermits }] } = await pool.query(
+  `SELECT COUNT(*)::int AS n FROM permits
+    WHERE lifecycle_seq IS NULL
+      AND status <> ALL($1::text[])
+      AND status IS NOT NULL
+      AND TRIM(status) <> ''`,
+  [DEAD_STATUS_ARRAY],
+);
+const { rows: [{ n: seqUnclassifiedCoa }] } = await pool.query(
+  `SELECT COUNT(*)::int AS n FROM coa_applications
+    WHERE lifecycle_seq IS NULL
+      -- v2 fold v1-I-HIGH-3: linked_permit_num IS NULL filter REMOVED
+      -- (E.1 fold v1-1 removed Rule 0; classifier now writes lifecycle_seq
+      -- to ALL CoA rows regardless of link state).
+      AND lower(trim(regexp_replace(COALESCE(decision,''), '\\s+', ' ', 'g')))
+          <> ALL($1::text[])
+      AND decision IS NOT NULL
+      AND TRIM(decision) <> ''`,
+  [NORMALIZED_DEAD_DECISIONS_ARRAY],
+);
+const seqUnclassifiedCount = seqUnclassifiedPermits + seqUnclassifiedCoa;
+```
+
+**v2 fold v1-O-MED-1 (relationship doc):** In steady state, `seq_unclassified_count >= unclassified_count` is expected — the seq column is finer-grained (every row with a non-NULL phase MIGHT still have NULL seq during E.2 ramp-up). The two metrics measure different ramp-up windows: `unclassified_count` is the phase-keyed legacy CQA gate (FAIL on threshold); `seq_unclassified_count` is the seq-keyed observability signal (WARN-only in E.4 v1; E.5 promotes after stability). Convergence of the two counters is the E.5 operational gate.
+
+### Part 4 — 6 new audit_table.rows entries (v2 fold v1-I-HIGH-1 adds `seq_bands_null_catalog_count`)
+
+Appended to the existing 23-row audit_table (totals 29 rows):
+
+```js
+// v3 fold v2-I-MED-A: empty-catalog state forces WARN regardless of loaded
+// count equality (0 === 0 would otherwise incorrectly pass).
+// v3 fold v2-O-HIGH-2: when this row WARNs, ALSO push a posture-prefixed entry
+// to warnings[] so the followup file carries the "[E.4 WARN-ONLY POSTURE]"
+// signal consistent with other E.4 WARNs.
+const seqBandsTotalStatus =
+  catalogEmptyButPresent ? 'WARN' :
+  Object.keys(seqBands).length === catalogSeqs.length ? 'PASS' : 'WARN';
+// v4 fold v3-DS-MED-threshold: empty-catalog case uses a distinct threshold
+// message so the audit row doesn't render as a misleading "0/0 expected — WARN."
+const seqBandsTotalThreshold = catalogEmptyButPresent
+  ? '0 rows in universal_stream_catalog — verify mig 129 seed applied (expected ~110)'
+  : `== ${catalogSeqs.length} expected (dynamic from universal_stream_catalog; WARN on partial mig 148 apply)`;
+auditRows.push({
+  metric: 'seq_bands_total',
+  value: Object.keys(seqBands).length,
+  threshold: seqBandsTotalThreshold,
+  status: seqBandsTotalStatus,
+});
+if (seqBandsTotalStatus === 'WARN') {
+  if (catalogEmptyButPresent) {
+    warnings.push(
+      `[E.4 STARTUP STATE] universal_stream_catalog table exists but is empty ` +
+      `(mig 129 seed not applied) — per-seq assertion DISABLED for this run. ` +
+      `Apply mig 129 to enable per-seq gating.`
+    );
+  } else {
+    warnings.push(
+      `[E.4 WARN-ONLY POSTURE — partial mig 148 apply expected during ramp-up] ` +
+      `seq_bands_total ${Object.keys(seqBands).length}/${catalogSeqs.length} band keys loaded — ` +
+      `verify mig 148 applied cleanly. Per-seq assertion will be partial until next migration apply.`
+    );
+  }
+}
+auditRows.push({
+  metric: 'seq_bands_passing',
+  value: seqBandsPassing,
+  threshold: null,
+  status: 'INFO',
+});
+// v2 fold v1-I-HIGH-1: operator-decomposition signal — distinguishes "real PASS"
+// (band matched non-NULL rows_count) from "INFO-only PASS" (NULL rows_count
+// catalog branch, always PASS by construction; not a meaningful gate signal).
+// passing = real_passing + null_catalog. Operators reading `seq_bands_passing:
+// 95` can now subtract `seq_bands_null_catalog_count: 42` → 53 real PASSes.
+auditRows.push({
+  metric: 'seq_bands_null_catalog_count',
+  value: seqBandsNullCatalogCount,
+  threshold: null,
+  status: 'INFO',
+});
+auditRows.push({
+  metric: 'seq_bands_warn',
+  value: seqBandsWarn,
+  threshold: '== 0 PASS, > 0 WARN (E.4 first-deploy posture; E.5 tightens to FAIL)',
+  status: seqBandsWarn === 0 ? 'PASS' : 'WARN',
+});
+auditRows.push({
+  metric: 'seq_bands_failing',
+  value: seqBandsFailing,
+  threshold: '== 0 PASS, > 0 FAIL (E.5 promotion hook; always 0 in E.4 v1)',
+  status: seqBandsFailing === 0 ? 'PASS' : 'FAIL',
+});
+auditRows.push({
+  metric: 'seq_unclassified_count',
+  value: seqUnclassifiedCount,
+  threshold: `<= ${seqUnclassifiedMax} (WARN above)`,
+  status: seqUnclassifiedCount <= seqUnclassifiedMax ? 'PASS' : 'WARN',
+});
+
+// v2 fold v1-O-CRIT: surface top 10 violations DIRECTLY in the warnings[] array
+// (which IS captured by pipeline.log.warn → followup file). Structured objects
+// are rendered to human-readable strings at this display layer; the underlying
+// data lives in records_meta.seq_violations for DB-side programmatic inspection.
+//
+// v3 fold v2-I-HIGH-F: corrected truncation math. The "more in records_meta"
+// count must reference seqViolationsCapped.length (what's actually IN records_meta)
+// not seqViolations.length (the full uncapped array). Separately surface the
+// truncated overflow count.
+if (seqBandsWarn > 0) {
+  const previewCount = Math.min(10, seqViolationsCapped.length);
+  const renderViolation = (v) => {
+    if (v.kind === 'no_band_configured') {
+      return `seq ${v.seq}: ${v.actual} rows but NO BAND configured`;
+    }
+    if (v.kind === 'expected_data_missing') {
+      // v4 fold v3-Indep-Obs-MED: neutral rendering — "possible data deletion"
+      // was alarming for first-deploy state where the cause is more often
+      // (a) classifier hasn't yet written this seq, (b) upstream source hasn't
+      // produced this status, or (c) catalog adds preceded data — not actual
+      // data loss. Operator triage decision needs all four hypotheses.
+      return `seq ${v.seq}: 0 rows observed (band expects min=${v.band_min}) — verify classifier coverage, source freshness, or catalog vs production data drift`;
+    }
+    return `seq ${v.seq}: ${v.actual} outside [${v.band_min}, ${v.band_max ?? '∞'}]`;
+  };
+  const preview = seqViolationsCapped.slice(0, previewCount).map(renderViolation).join('; ');
+  const remainderInRecordsMeta = seqViolationsCapped.length - previewCount;
+  const truncatedSuffix = seqViolationsTruncatedCount > 0
+    ? ` (${seqViolationsTruncatedCount} additional violations TRUNCATED — see records_meta.seq_violations_truncated_count)`
+    : '';
+  warnings.push(
+    `[E.4 WARN-ONLY POSTURE — expected during first-deploy / Phase D ramp-up] ` +
+    `${seqBandsWarn} per-seq bands outside expected range — first ${previewCount}: ${preview}` +
+    (remainderInRecordsMeta > 0 ? ` ... (+${remainderInRecordsMeta} more in records_meta.seq_violations)` : '') +
+    truncatedSuffix
+  );
+}
+if (seqUnclassifiedCount > seqUnclassifiedMax) {
+  warnings.push(
+    `[E.4 WARN-ONLY POSTURE] seq_unclassified_count ${seqUnclassifiedCount} exceeds ${seqUnclassifiedMax} — Phase D/E.2 first-run state likely; verify classifier coverage. ` +
+    `(In steady state seq_unclassified_count >= unclassified_count; the two converge as E.5 ramps up.)`
+  );
+}
+```
+
+`verdict` cascade is unchanged: `FAIL` if any row has `status==='FAIL'`, else `WARN` if any has `status==='WARN'`, else `'PASS'`. Per the v1 posture, only `total_buckets`-style FAIL gates can produce FAIL; `seq_bands_failing` exists as a future-promotion hook but starts at 0 in E.4 v1. The "[E.4 WARN-ONLY POSTURE — expected during first-deploy / Phase D ramp-up]" prefix on the warning string makes the operator-facing followup report immediately readable as expected first-run noise rather than alarming WARN cascade.
+
+### Part 5 — `records_meta.seq_distribution` + structured violations (v2 fold v1-O-CRIT + v1-DS-MED-4 + v1-O-MED-2)
+
+```js
+pipeline.emitSummary({
+  records_total: ...,  // existing — phase-keyed sum; preserved
+  records_new: 0,
+  records_updated: 0,
+  records_meta: {
+    phase_distribution: allCounts,           // existing
+    unclassified_count: unclassifiedCount,    // existing
+    // E.4 NEW — per Spec 48 §3.2: distributions in records_meta, NOT in
+    // audit_table.rows (DeepSeek observer doesn't ingest these fields).
+    seq_distribution: seqDistribution,
+    // v2 fold v1-O-MED-2: STRUCTURED violation objects (not strings).
+    // Phase F / E.5 can parse without regex. Display rendering happens at
+    // operator-narrative time in the warnings[] array (Part 4).
+    // v2 fold v1-DS-MED-4: capped at 50 entries; overflow tracked via
+    // seq_violations_truncated_count to prevent records_meta JSONB bloat.
+    seq_violations: seqViolationsCapped,                        // up to 50 structured objects
+    seq_violations_truncated_count: seqViolationsTruncatedCount, // 0 in normal cases
+    // v2 fold v1-O-CRIT documentation: these records_meta fields are DB-side
+    // only — the Spec 48 observer's extractIssues() reads ONLY audit_table.rows.
+    // Operator-facing followup-file violations come from the warnings[] array
+    // (Part 4). For full violation inspection: query pipeline_runs.records_meta.
+    audit_table: {
+      phase: 22,
+      name: 'Assert Lifecycle Phase Distribution',
+      verdict,
+      rows: auditRows,
+    },
+  },
+});
+```
+
+**v2 fold v1-O-HIGH-2 (records_total vs seq_distribution sum gap):** the existing `records_total` calculation continues to sum phase-keyed `allCounts` (excluding the synthetic `P9-P17` aggregate). The new `seq_distribution` map sums to a SMALLER number during Phase D/E.2 ramp-up because rows with `lifecycle_phase NOT NULL` may still have `lifecycle_seq IS NULL`. This gap is EXPECTED, not a pipeline integrity failure. Spec 84 §3.4 amendment (Spec Amendments Part 9) documents this for future consumers comparing the two.
+
+### Part 6 — Startup guards
+
+```js
+// Existing — DEAD_STATUS_ARRAY + NORMALIZED_DEAD_DECISIONS_ARRAY guards (preserved)
+
+// E.4 NEW — universal_stream_catalog table-exists check.
+// Defensive: if the catalog migration (128/129) hasn't run, mig 148 would
+// have produced 0 inserts and seqBandKeysLoaded === 0 (handled gracefully in
+// Part 3). But it's clearer to detect the upstream migration gap explicitly.
+const { rows: [{ exists: catalogExists }] } = await pool.query(
+  `SELECT EXISTS (SELECT 1 FROM information_schema.tables
+                   WHERE table_schema = 'public' AND table_name = 'universal_stream_catalog') AS exists`
+);
+if (!catalogExists) {
+  pipeline.log.warn('[assert-lifecycle-phase-distribution]',
+    'universal_stream_catalog table missing — Phase B migrations 128/129 not applied. ' +
+    'Per-seq bands will be empty (seqBandKeysLoaded=0); only phase-keyed assertions will run.');
+}
+```
+
+### Part 7 — Zod schema extension (v2 fold v1-G-MED-1: dynamic iteration via passthrough discovery)
+
+The Zod schema cannot generate per-seq keys at module-load time because the catalog query (which returns the list of seqs) happens at runtime inside the `withAdvisoryLock` block. Two-stage validation pattern:
+
+**Stage 1 — module-level static schema** (validates known fixed keys):
+
+```js
+const LOGIC_VARS_SCHEMA = z.object({
+  lifecycle_unclassified_max: z.coerce.number().finite().nonnegative().int(),
+  // v2 fold v1-I-MED-3: required key (also seeded by mig 148, so always present).
+  lifecycle_seq_unclassified_max: z.coerce.number().finite().nonnegative().int(),
+  lifecycle_cross_stalled_threshold: z.coerce.number().finite().nonnegative().int(),
+  lifecycle_cross_active_inspection_threshold: z.coerce.number().finite().nonnegative().int(),
+  lifecycle_cross_issued_threshold: z.coerce.number().finite().nonnegative().int(),
+  ..._bandShape,  // existing phase-keyed bands
+}).passthrough().superRefine((data, ctx) => {
+  // Existing min>max guard for phase bands (preserved unchanged).
+  for (const suffix of Object.values(PHASE_TO_LOGIC_VAR_SUFFIX)) {
+    const min = data[`lifecycle_band_${suffix}_min`];
+    const max = data[`lifecycle_band_${suffix}_max`];
+    if (Number.isFinite(min) && Number.isFinite(max) && min > max) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `lifecycle_band_${suffix}: min (${min}) > max (${max}) — band would never match`,
+      });
+    }
+  }
+});
+```
+
+The `.passthrough()` modifier means the 220 per-seq band keys pass through validation silently (they are not part of the static schema). Stage 2 validates them dynamically.
+
+**Stage 2 — runtime per-seq validation** (inside `withAdvisoryLock`, after catalog query):
+
+```js
+// After catalogSeqs is loaded (Part 3), validate per-seq band shape.
+// v4 fold v3-G-HIGH: explicit nonnegative checks — parity with the static
+// Zod schema's `.nonnegative()` modifier on phase-keyed bands. Without this,
+// an operator-edited band with `min=-10` would pass shape validation but
+// silently disable the lower-bound check (`actual >= -10` is always true).
+for (const seq of catalogSeqs) {
+  const min = logicVars[`lifecycle_seq_band_${seq}_min`];
+  const max = logicVars[`lifecycle_seq_band_${seq}_max`];
+  // min must be present (cannot be null — bands without min are unusable).
+  if (min != null && (!Number.isFinite(Number(min)) || Number(min) < 0)) {
+    throw new Error(`lifecycle_seq_band_${seq}_min: invalid value '${min}' — expected non-negative integer`);
+  }
+  // max may be NULL (v2 fold v1-G-CRIT: NULL == no upper bound). If non-null, must be finite + non-negative.
+  if (max != null && (!Number.isFinite(Number(max)) || Number(max) < 0)) {
+    throw new Error(`lifecycle_seq_band_${seq}_max: invalid value '${max}' — expected non-negative integer or NULL`);
+  }
+  if (min != null && max != null && Number(min) > Number(max)) {
+    throw new Error(`lifecycle_seq_band_${seq}: min (${min}) > max (${max}) — band would never match`);
+  }
+}
+```
+
+This pattern (passthrough at module level + dynamic runtime validation against the catalog query) avoids the "schema knows about 110 keys but reality has 111" failure mode that hardcoded ranges would produce.
+
+### Part 8 — `lifecycle_seq_unclassified_max` seed default (mirror of mig 148 INSERT)
+
+```json
+"lifecycle_seq_unclassified_max": {
+  "default": 5000,
+  "type": "number",
+  "min": 0,
+  "max": 100000,
+  "description": "Max row count where lifecycle_seq IS NULL on permits or coa_applications. WARN threshold (E.4); Phase D + E.2 first-run state expected to violate. Tighten via E.5 after ramp-up."
+}
+```
+
+Default deliberately wide (5000 ≈ ~2% of total permit row count) — Phase D + E.2 first-run state expected to have substantial NULL-seq backlog. v2 fold v1-I-MED-3: this key is ALSO inserted by mig 148 SQL (Part 1) so the DB-side default exists immediately after migration apply, before `seed-logic-variables.js` runs.
+
+### Database Impact
+
+**YES — migration 148 ships in E.4.**
+
+- `logic_variables` table: 220 new band keys + 1 unclassified-max key = 221 new rows.
+- No business-table schema changes.
+- No data backfill needed (catalog already populated by mig 129).
+- All keys are ON CONFLICT DO NOTHING — idempotent.
+- Backfill strategy: the migration IS the backfill (INSERT...SELECT from catalog).
+
+### Standards Compliance (`00_engineering_standards.md`)
+
+- **§2.1 Unhappy Path Tests:** new tests cover (a) mig 148 against missing universal_stream_catalog (gracefully no-ops); (b) script behavior when seqBandKeysLoaded < 110 (partial assertion + WARN log); (c) script behavior when min > max for a band (Zod throws at startup).
+- **§2.2 Try-Catch Boundary:** N/A — pipeline script, not an API route. Existing `pipeline.run` envelope provides top-level error capture.
+- **§3.1 Add-Backfill-Drop:** N/A — no business-table column adds. logic_variables additions are ON CONFLICT DO NOTHING, idempotent.
+- **§3.2 Pagination:** N/A — assert script reads aggregate queries (bounded ≤220 rows), not raw business-table scans.
+- **§6.1 logError Mandate:** existing `pipeline.log.warn` + `pipeline.log.error` paths preserved. New code uses the same helpers.
+- **§7 Dual Code Path:** N/A — assert script is pure backend; no TS twin.
+- **§9.1 Transaction Boundaries:** N/A — assert script is read-only; no mutating transactions to wrap.
+- **§9.2 Parameter Limit:** N/A — no batch INSERTs in the script. Mig 148's INSERT...SELECT generates ~220 rows via the catalog source; PG runs this in a single statement without parameter-limit concerns.
+- **§9.3 Idempotency:** mig 148 is `ON CONFLICT DO NOTHING`. Re-runs are no-ops. Assert script is read-only — fully idempotent by construction.
+
+### Spec 47 §R1-R12 Compliance (existing — extension preserves envelope)
+
+- **§R1 SDK imports:** unchanged.
+- **§R2 Advisory lock ID:** unchanged (109; quality-script sequential per §A.5 Bundle G).
+- **§R3 Batch size:** N/A — read-only script.
+- **§R3.5 RUN_AT:** existing path preserved (not strictly required for read-only script, but harmless).
+- **§R4 Zod config validation:** extended with 220 new band keys (all `.optional()`) + 1 new threshold key.
+- **§R5 Startup guards:** existing DEAD_STATUS_ARRAY + NORMALIZED_DEAD_DECISIONS_ARRAY guards preserved + NEW universal_stream_catalog EXISTS check.
+- **§R6 Advisory lock:** existing `pipeline.withAdvisoryLock(pool, 109, ...)` preserved.
+- **§R7 Data read:** existing `pool.query` aggregate pattern preserved + new UNION ALL aggregate query.
+- **§R8 Pure-function computation:** band classification logic is inline-pure (no shared lib extraction needed — single consumer).
+- **§R9 Atomic write:** N/A — read-only.
+- **§R10 PIPELINE_SUMMARY with audit_table:** extended with 5 new aggregate rows (verdict cascade unchanged — derives from `auditRows.some(r => r.status === 'FAIL' || 'WARN')`).
+- **§R11 emitMeta:** extended to include `universal_stream_catalog` read.
+- **§R12 CQA gate:** existing `failures.length > 0 → throw` gate preserved. Per-seq WARNs do NOT throw (E.4 v1 posture; E.5 promotion path reserved).
 
 ### Spec 48 Pipeline Observability Adherence
 
-- **§3.1**: observer reads `audit_table.rows` for automated WARN/FAIL. E.3 emits 15 scalar rows; 6 thresholded (1 FAIL gate `total_buckets` + 5 WARN gates: `unreliable_buckets`, `coa_cohort_presence`, `coa_project_type_coverage_pct`, `unknown_cohort_count`, `coa_type_class_null_transition_count`).
-- **§3.2**: distributions in `records_meta` NOT passed to DeepSeek context. Manual operator inspection via SQL.
-- **§3.3**: post-E.3 (v2 fold #12), `compute_phase_calibration` runs in BOTH chains; observer writes to BOTH followup files.
-- **§3.4-§3.5**: observer fire-and-forget; emits its own audit_table. NO E.3 impact.
+- **§3.1 audit_table.rows enumeration:** 29 total rows after E.4 (existing 23 + 6 new aggregates including `seq_bands_null_catalog_count`). Within reasonable Spec 48 observer narrative budget (DeepSeek context includes all audit rows; 29 is well below the established ceiling of ~138 rows in `assert-global-coverage.js`).
+- **§3.2 distributions in records_meta:** the 110-row `seq_distribution` map ships in `records_meta`, NOT in `audit_table.rows`. Preserves observer narrative focus on aggregates.
+- **§3.3 observer report file routing:** `assert-lifecycle-phase-distribution` runs in BOTH permits + coa chains; observer writes audit_table to BOTH `permits-followup.md` AND `coa-followup.md`. Existing routing — no change.
+- **§3.4 records_total accuracy:** existing `records_total` calculation preserved (sums phase counts excluding the synthetic P9-P17 aggregate).
 
-### Pre-Review Self-Checklist (22 items)
+### Tests (TDD cadence per WF1 Red Light/Green Light)
 
-- (a) Scope is CoA-side only per v2 fold #1; permit-side aggregate UNCHANGED.
-- (b) `HAVING COUNT(*) >= 3` removed (v2 fold #2); tier counters handle low/outlier observability.
-- (c) `lifecycle_transitions` filter uses primary `from_seq/to_seq BETWEEN 1 AND 22` (intrinsic CoA range) + defensive `lead_id LIKE 'coa:%'`.
-- (d) LAG `ORDER BY ..., id` tiebreaker on both permit-side AND CoA-side CTEs (v2 fold #8).
-- (e) `from_phase` removed from GROUP BY; `MIN(from_phase) AS from_phase` aggregate (v2 fold #7).
-- (f) `EXTRACT(EPOCH FROM ...)` computed once in inner subquery, referenced thrice by PERCENTILE_CONT (v2 fold #19).
-- (g) BOTH `project_type IS NOT NULL` AND `coa_type_class IS NOT NULL` filters REMOVED from CoA aggregate WHERE clause (v3 fold v2-DS-1 + v4 fold v3-G-HIGH-3); NULLS DISTINCT (mig 135) handles permit-vs-CoA coexistence; new audit metrics `coa_type_class_null_transition_count` + `coa_project_type_coverage_pct` provide observability.
-- (h) Bulk INSERT uses `COHORT_INSERT_COLS` constant + `buildBulkInsertSQL` helper (v2 fold #4 — eliminates manual placeholder arithmetic).
-- (i) `audit_table.verdict` DERIVED from row statuses per §R10 (v2 fold #6 — fixes pre-existing bug at script line 155).
-- (j) 15 audit_table rows / 6 thresholded (v5 fold v4-L2): 4 existing (`total_buckets` FAIL, `permit_types_calibrated` INFO, `phases_calibrated` INFO, `unreliable_buckets` WARN — PRESERVED per v2 fold #11) + 7 new INFO (`permit_cohort_count`, `coa_cohort_count`, `coa_transition_count`, `high_volume_buckets`, `mid_volume_buckets`, `low_volume_buckets`, `outlier_buckets`) + 4 new thresholded WARN gates (`coa_cohort_presence`, `coa_project_type_coverage_pct`, `unknown_cohort_count`, `coa_type_class_null_transition_count`).
-- (k) `coa_transition_count` audit row (v2 fold #15) — triage signal to distinguish E.2-not-run vs E.2-ran-sparse.
-- (l) 3 records_meta distributions: `sample_size_distribution`, `cohort_dimension_coverage`, `coa_project_type_coverage_pct`.
-- (m) Startup guards: table-exists + CoA-row-count + project_type-coverage WARN (v2 folds #10, #13).
-- (n) `scripts/manifest.json` CoA chain includes `compute_phase_calibration` after `classify_lifecycle_phase` (v2 fold #12).
-- (o) Operator pre-ack targets duration regression (v2 fold #14 — Observability L).
-- (p) NULLS DISTINCT coexistence: permit-side `(permit_type, NULL, NULL, NULL, NULL, from_phase)` + CoA-side `(NULL, project_type, coa_type_class, from_seq, to_seq, from_phase)` — distinct under NULLS DISTINCT.
-- (q) emitMeta extended with `lifecycle_transitions`, `coa_applications`, and `id` columns added to existing tables for LAG tiebreaker (v2 fold #8).
-- (r) Spec 47 §R1-R12 walkthrough complete; Spec 48 §3.1-§3.5 alignment documented.
-- (s) Engineering Standards §2/3/6/9 explicit walkthrough complete.
-- (t) Tests in 4 files: infra (integration) + logic (helpers) + manifest assertion + mig-135 regression. EXPLAIN ANALYZE staging-only test (v2 fold #18).
-- (u) Phase F readiness: granular CoA cohorts ready for `compute-trade-forecasts.js` UNION extension.
-- (v) Spec amendments: §6.9 anchor; §6.11 Phase E E.3 anchor; §7 calibration-source extension; 84-W4 entry update; Phase I row anchor (Spec 42 §6.11).
+1. **`src/tests/migration-148-lifecycle-seq-bands.infra.test.ts`** (NEW) — mig 148 shape regression:
+   - Two INSERT...SELECT statements both reference `universal_stream_catalog` source.
+   - Generates `lifecycle_seq_band_<N>_min/_max` keys per seq.
+   - Tolerance formula (v2 fold v1-G-CRIT): `rows_count >= 30 → ±30%`; `1-29 → [0, max*5]`; `NULL/0 → [0, NULL]` (NULL = no upper bound).
+   - Separate VALUES insert for `lifecycle_seq_unclassified_max` with default 5000 (v2 fold v1-I-MED-3).
+   - `ON CONFLICT DO NOTHING` semantics on all 3 INSERT statements (operator-tuned values preserved).
+   - No explicit BEGIN/COMMIT (mig 135 R8 convention).
+   - Comment-only DOWN block (Rule 6).
+
+2. **`src/tests/assert-lifecycle-phase-distribution.infra.test.ts`** (EXTEND) — Phase E.4 v2 shape regression assertions:
+   - Dynamic catalog query (`SELECT seq, rows_count FROM universal_stream_catalog`) present — no hardcoded 1..110 loop range.
+   - UNION ALL aggregate query against `permits` + `coa_applications`.
+   - 6 new audit_table.rows entries present (`seq_bands_total`, `_passing`, `_null_catalog_count`, `_warn`, `_failing`, `seq_unclassified_count`).
+   - `records_meta.seq_distribution` map emitted.
+   - `records_meta.seq_violations` is an ARRAY OF STRUCTURED OBJECTS (not strings) with shape `{seq, actual, band_min, band_max, kind}` — v2 fold v1-O-MED-2.
+   - `records_meta.seq_violations_truncated_count` scalar present — v2 fold v1-DS-MED-4.
+   - `lifecycle_seq_unclassified_max` validated via LOGIC_VARS_SCHEMA.
+   - `universal_stream_catalog` EXISTS guard present.
+   - Per-seq min>max validation runs at the catalog-query stage (Part 7 Stage 2), not in module-level Zod schema.
+   - `seq_bands_warn` status logic uses WARN (NOT FAIL) per v1 posture.
+   - `linked_permit_num IS NULL` filter ABSENT from `seqUnclassifiedCoa` query (v2 fold v1-I-HIGH-3).
+   - Symmetric-difference detection logic present — seqs in distribution but not in bands emit a `kind: 'no_band_configured'` violation (v2 fold v1-DS-HIGH-2).
+   - Null-aware band classification: `band.max === null || actual <= band.max` (v2 fold v1-G-CRIT).
+   - Warnings preview includes the `[E.4 WARN-ONLY POSTURE — expected during first-deploy / Phase D ramp-up]` prefix.
+
+3. **`scripts/seeds/logic_variables.json`** completeness — extend existing seed test to assert presence of all 220 band keys + `lifecycle_seq_unclassified_max`. Allow `null` value for `_max` keys (v2 fold v1-G-CRIT — NULL == no upper bound).
+
+4. **`src/tests/lifecycle-seq-bands-parity.infra.test.ts`** (NEW — v2 fold v1-G-HIGH; v4 fold v3-G-CRIT-formula corrects to 2-branch) — mig-vs-seed parity test:
+   - Read `migrations/129_seed_universal_stream_catalog.sql` and extract each seq's `rows_count` value via regex on the INSERT...VALUES tuples. Regex robustness: anchor on `^\s*\((\d+),` for seq + use tuple-position offset (rows_count is the 20th column per mig 129's column list) — document the column-offset in a test-internal constant so future mig 129 column re-orderings are explicit.
+   - Apply the v3 2-branch continuous tolerance formula in JS (identical to mig 148's SQL CASE post-v3 fold v2-G-HIGH-2):
+     - `rows_count IS NULL OR 0 → min=0, max=null`  (INFO-only branch)
+     - `rows_count >= 1 → min=Math.max(0, Math.floor(rows_count * 0.7)), max=Math.ceil(rows_count * 1.3) + 20`  (continuous +20 buffer)
+   - Read `scripts/seeds/logic_variables.json` and assert every `lifecycle_seq_band_<N>_min/_max` entry's `default` value equals the JS-computed value. NULL `max` in the seed JSON must equal `null` (not the string "null" — explicit type assertion).
+   - Programmatic parity gate — tweaking the formula in either side without the other fails the test.
+   - Edge-case test: rows_count=1 → band=[0, 22]; rows_count=29 → band=[20, 58]; rows_count=30 → band=[21, 59] (verify continuity at the former boundary); rows_count=904 → band=[632, 1196] (verify +20 additive buffer in high-volume).
+
+### Pre-Review Self-Checklist (16 items — v2)
+
+- (a) Scope is per-seq band assertion + 1 unclassified-seq counter; NO classifier changes, NO business-table schema, NO `compute-phase-calibration.js` changes.
+- (b) Bands derived deterministically from `universal_stream_catalog.rows_count` via mig 148 INSERT...SELECT — no manual seed maintenance.
+- (c) WARN-only posture on first deploy (E.5 promotion path reserved via `seq_bands_failing` audit row).
+- (d) Per-seq distribution map in `records_meta` (Spec 48 §3.2); 6 aggregate counters in `audit_table.rows` (§3.1).
+- (e) `universal_stream_catalog` EXISTS guard added per Spec 47 §R5.
+- (f) Module-level Zod schema is static (existing keys + 1 new threshold); per-seq band keys pass through `.passthrough()` and are validated dynamically against `catalogSeqs` (v2 fold v1-G-MED-1 + v1-conv-HIGH).
+- (g) Min>max guard preserved for phase bands + extended to per-seq bands via Stage 2 runtime validation (v2 fold v1-L: explicit `Number.isFinite` checks).
+- (h) Mig 148 has no explicit BEGIN/COMMIT (mig 135 R8 convention).
+- (i) Mig 148 DOWN block is comment-only (Rule 6).
+- (j) Mig 148 ALSO seeds `lifecycle_seq_unclassified_max` (v2 fold v1-I-MED-3) — assert script's Zod validation doesn't throw on first apply.
+- (k) v2 fold v1-G-CRIT: NULL upper-bound (not magic `999999`) for catalog rows with `rows_count IS NULL OR 0`. Null-aware classification logic.
+- (l) v2 fold v1-O-CRIT: violations surfaced via `warnings[]` array (visible to followup file); `records_meta.seq_violations` is DB-only (capped at 50 structured objects).
+- (m) v2 fold v1-I-HIGH-3: `linked_permit_num IS NULL` filter REMOVED from `seqUnclassifiedCoa` query (post-E.1 correctness — Rule 0 removed).
+- (n) v2 fold v1-DS-HIGH-2: symmetric-difference detection — seqs in data but not in bands emit `kind: 'no_band_configured'` violations.
+- (o) v2 fold v1-I-HIGH-1: new `seq_bands_null_catalog_count` INFO metric distinguishes first-run noise from real PASSes.
+- (p) Tests: mig 148 shape, script extension shape, seed completeness, mig-vs-seed parity (v2 fold v1-G-HIGH).
+- (q) Spec amendments: §6.11 Phase E.4 anchor + §3.4 band-design extension (incl. records_total/seq_distribution gap doc per v2 fold v1-O-HIGH-2) + 84-W4 entry note + spec lock on records_meta DB-only fields.
 
 ### Execution Plan (per WF1 in `.claude/workflows.md`)
 
-- [x] **Contract Definition:** COHORT_INSERT_COLS constant; audit_table 15-row shape (6 thresholded — v5 fold v4-L2); verdict derivation pattern.
-- [x] **Schema Evolution:** migration 147 (drop legacy PK + partial unique index + LAG composite index).
-- [x] **Test Scaffolding (TDD Red Light):** Added infra + logic + migration shape + manifest tests. 37/249 failed Red Light.
-- [x] **Red Light:** confirmed failing (37 failures).
-- [x] **Implementation:**
-  - Aggregate SQL extension (Part 1 — CoA-side ADD; permit-side preserved + `, id` tiebreaker).
-  - Bulk INSERT helper + COHORT_INSERT_COLS + flattenBuckets (Part 2 — name-based lookup).
-  - Tier counters + new audit metrics + dedicated SQL queries for coaTransitionCount + coaTypeClassNullTransitionCount (Part 3).
-  - Audit_table extension (15 rows / 6 thresholded) + verdict fix per Spec 47 §R10 (Part 4).
-  - records_meta distributions (Part 5).
-  - emitMeta extension (Part 6).
-  - `scripts/manifest.json` CoA chain add + `FreshnessTimeline.tsx` CoA chain add (Part 7).
-  - Startup guards: lifecycle_transitions + coa_applications + phase_stay_calibration EXISTS checks; bucket-count safety cap at 5000 (Part 8).
-- [x] **Multi-Agent Review (4 reviewers parallel — diff stage):**
-  - Gemini: 1 CRIT + 1 HIGH false positives (recurring from v2); 2 MED + 1 LOW deferred; 1 NIT folded.
-  - DeepSeek: 2 HIGH (1 interpretive disagreement deferred, 1 EXISTS-guard gap folded); 2 MED + 6 LOW/NIT deferred.
-  - Independent worktree: 0 CRIT, 2 IMPORTANT folded (`buildBulkInsertSQL(rowCount=0)` guard + `unknownCohortCount` misclassification convergent with Observability).
-  - Observability worktree: 0 CRIT, 2 IMPORTANT folded (descriptor wording + classification convergent with Independent).
-  - **Triage (v6):** 5 real findings folded inline; 2 verified false positives; 6 deferrals filed at `docs/reports/review_followups.md` items #119-#131.
-- [x] **Green Light:** `npm run verify` clean (typecheck + lint + test — 249 tests pass).
-- [ ] **Operator pre-ack:** commit message includes duration regression annotation guidance.
-- [ ] **WF6 commit:** Single commit. Message: `feat(84_lifecycle_phase_engine): WF1 Phase E.3 — CoA-side granular cohort calibration (lifecycle_transitions reader) + audit_table verdict bug fix (Spec 47 §R10) + manifest CoA chain add + mig 147 drop legacy PK + 15-row audit + 4 spec amendments`.
-- [x] **Followups append:** `docs/reports/review_followups.md` items #119-#131.
+- [ ] **Contract Definition:** mig 148 INSERT...SELECT shape; 5 new audit_table.rows; records_meta.seq_distribution map; lifecycle_seq_unclassified_max threshold key.
+- [ ] **Spec & Registry Sync:** apply 2 spec amendments post-commit. `npm run system-map`.
+- [ ] **Schema Evolution:** migration 148 (logic_variables-only; no business-table schema change).
+- [ ] **Test Scaffolding (TDD Red Light):** scaffold mig 148 shape test + assert script extension tests + seed completeness test. All new tests fail; existing tests green.
+- [ ] **Red Light:** confirm failing.
+- [ ] **Implementation:**
+  - Migration 148 INSERT...SELECT (Part 1) ~65 lines (incl. 3rd INSERT for `lifecycle_seq_unclassified_max` + NULL upper-bound + continuous +20 buffer formula).
+  - Migration 149 (Part 1.5) — NEW — CREATE INDEX CONCURRENTLY on `permits.lifecycle_seq` + `coa_applications.lifecycle_seq` (~30 lines, non-transactional file).
+  - Seed JSON additions (Part 2) ~221 entries (helper-generated; NULL `max` for INFO-only bands; +20 buffer formula in helper, NOT committed `_tmp_*.mjs`).
+  - Script extension — dynamic catalog query + empty-catalog guard + per-seq band loading + orphan-key detection + UNION ALL distribution + bidirectional symmetric-difference + structured violations (Part 3) ~160 lines.
+  - 6 new audit_table.rows entries (incl. `seq_bands_null_catalog_count`) + empty-catalog WARN override + structured-warnings preview with truncation math fix (Part 4) ~80 lines.
+  - records_meta.seq_distribution + structured `seq_violations` + truncated count (Part 5) ~10 lines.
+  - Startup guard for universal_stream_catalog (Part 6) ~15 lines.
+  - Zod schema extension — static module-level + dynamic Stage 2 runtime validation (Part 7) ~40 lines.
+  - lifecycle_seq_unclassified_max seed entry (Part 8) ~10 lines.
+- [ ] **Auth Boundary & Secrets:** N/A.
+- [ ] **Pre-Review Self-Checklist (16 items):** walk against diff.
+- [ ] **Multi-Agent Review (4 reviewers parallel — diff stage):**
+  - Gemini: `npm run review:gemini -- review scripts/quality/assert-lifecycle-phase-distribution.js --context docs/specs/01-pipeline/47_pipeline_script_protocol.md`
+  - DeepSeek: `npm run review:deepseek -- review scripts/quality/assert-lifecycle-phase-distribution.js --context docs/specs/01-pipeline/48_pipeline_observability.md`
+  - Independent worktree: Spec 47 §R1-R12 + Spec 84 §3.4 band-design verification + Engineering Standards §9 walkthrough + mig-vs-seed parity verification.
+  - Observability worktree: Spec 48 lens + 29-row audit_table + structured `seq_violations` shape + WARN-only posture + warnings-array operator-narrative verification.
+- [ ] **Green Light:** `npm run typecheck && npm run lint && npm run test`; mig 148 apply verification; parity test green.
+- [ ] **Operator pre-ack:** commit message includes WARN-only posture note + Phase D/E.2 first-run state acknowledgement + `[E.4 WARN-ONLY POSTURE — expected during first-deploy / Phase D ramp-up]` annotation guidance.
+- [ ] **WF6 commit:** Single commit. Message: `feat(84_lifecycle_phase_engine): WF1 Phase E.4 — per-seq distribution bands + assert-lifecycle-phase-distribution.js extension + mig 148 lifecycle_seq_band keys (220 + 1 unclassified-max) + 6 new audit rows + records_meta.seq_distribution + 2 spec amendments`.
+- [ ] **Followups append:** `docs/reports/review_followups.md`.
 
-### Spec Amendments (4)
+### Spec Amendments (2)
 
-1. **Spec 42 §6.9 modified-scripts table — `scripts/compute-phase-calibration.js` row** — replace placeholder with `[E.3-COMMIT]` post-commit. Append note: "v2 scope reframe (Independent C-1): permit-side calibration unchanged; CoA-side granular cohort added via UNION ALL with `lifecycle_transitions`. Permit-side granular seq derivation deferred to Phase H."
+1. **Spec 42 §6.11 Phase E.4 row** — fill `[E.4-COMMIT]` post-commit. Append note: "Per-seq bands derived from `universal_stream_catalog.rows_count` via mig 148 INSERT...SELECT (220 band keys + 1 unclassified-max key = 221 inserts total). Catalog `rows_count IS NULL` (~40-50 of 110 seqs — inspection-stage + low-volume permit-status) maps to band `[0, NULL]` (INFO-only, no upper bound). Dynamic catalog query at script startup (no hardcoded seq count). WARN-only posture on first deploy; E.5 (separate WF) tightens to FAIL after 7 consecutive PASS runs on staging. Violations surfaced via `warnings[]` for followup-file visibility; full structured violation array in `records_meta.seq_violations` (DB-only, capped at 50)."
 
-2. **Spec 42 §6.11 Phase E E.3 row** — fill `[E.3-COMMIT]` post-commit.
-
-3. **Spec 84 §7 calibration source** — append: "E.3 (commit `[E.3-COMMIT]`) extended consumption to include CoA-side `lifecycle_transitions` (E.2 INSERT writer). CoA-side data drives granular 5-tuple cohort calibration `(NULL, project_type, coa_type_class, from_seq, to_seq)`. Permit-side data retains legacy 2-tuple `(permit_type, from_phase)` until Phase H consolidates `permit_phase_transitions` into `lifecycle_transitions`."
-
-4. **Spec 84 84-W4 entry** — append: "E.3 (commit `[E.3-COMMIT]`) extended ledger consumption to `lifecycle_transitions` for CoA-side cohort calibration. Spec 84 §8.7 cohort blind-spot CLOSED for CoA-stage rows; permit-side blind-spot remains until Phase H."
+2. **Spec 84 §3.4 band design** — extend with per-seq band pattern documentation: "Per-seq bands (E.4 commit `[E.4-COMMIT]`) cover Universal Stream catalog seq 1-110 with ±30% tolerance from snapshot baseline (`rows_count >= 30`), wide `[0, max*5]` for low-volume (`1-29`), and INFO-only `[0, NULL]` for `rows_count IS NULL OR 0`. Bands are operator-tunable via Spec 86 Control Panel. Phase-keyed bands (existing 19) coexist as the coarse safety net. Per-seq distribution map shipped in `records_meta.seq_distribution` (Spec 48 §3.2) — not in `audit_table.rows` (avoids observer narrative balloon). **`records_total` vs `sum(seq_distribution.values())` divergence (v2 fold v1-O-HIGH-2):** during Phase D/E.2 ramp-up, `sum(seq_distribution.values()) < records_total` because many rows have `lifecycle_phase` set but not yet `lifecycle_seq`. Expected; not a pipeline integrity failure. Convergence is the E.5 operational gate. **`linked_permit_num` post-E.1 (v2 fold v1-I-HIGH-3):** E.1 removed Rule 0; `classifyCoaPhase()` now writes `lifecycle_seq` to ALL CoA rows regardless of `linked_permit_num`. The `seq_unclassified_count` gate correctly does NOT filter on `linked_permit_num IS NULL` (matches post-E.1 reality). The legacy phase-keyed `unclassified_count` keeps its filter unchanged for baseline continuity (legacy shape)."
 
 ---
 
-> **PLAN LOCKED (v5)** — v4 plan-review 4-reviewer round surfaced 13 actionable findings, including a 4/4-convergent CRITICAL: `coaTypeClassNullTransitionCount` was declared but never populated (dead metric — would emit 0 every run, defeating the v4 observability replacement for the removed `coa_type_class IS NOT NULL` filter). Also a 3/4-convergent HIGH regression of the v3-DS-MED-3 fold (`coa_transition_count` query missing seq-range filter that the v4 revision table claimed was applied). v5 folds ALL 13 findings.
+> **PLAN LOCKED (v4) — authorized for implementation per user authorization.**
 >
-> v1→v2→v3→v4→v5 trajectory: 18 → 14 → 15 → 13 → v5 folds all. Per user authorization (response: "Fold all v4 + PLAN LOCK v5 directly"), v5 PLAN LOCKs without an additional plan-review round. The diff-stage 4-reviewer round (Gemini + DeepSeek + Independent worktree + Observability worktree) executed AFTER implementation will validate that all 13 folds correctly transferred from plan pseudocode to actual code.
+> v3 plan-review surfaced 2 CRITs + 1 HIGH + 6 MEDs (9 actionable). v4 folds all 9. Per user authorization: v4 PLAN LOCKs DIRECTLY without another plan-review round; diff-stage 4-reviewer round runs AFTER implementation to catch any new bugs introduced by the folds. Convergence trajectory: v1=14 → v2=8 → v3=9 → v4 ships.
 >
-> §10 note (v5 load-bearing changes on top of v4): (1) `coaTypeClassNullTransitionCount` now populated by a dedicated SQL query (CRITICAL fix — was emitting 0 silently); (2) `coa_transition_count` query gets the seq-range filter to match the aggregate population (HIGH regression fix); (3) `coa_applications` query wrapped in `information_schema.tables` EXISTS guard (HIGH defensive — prevents advisory-lock leak on missing-table crash); (4) pre-ack vector #6 wording corrected from `<1ms` to `zero` since TRUNCATE+INSERT inside one transaction holds ACCESS EXCLUSIVE for the full duration (HIGH accuracy); (5) bucket-count upper-bound assertion at 5000 rows with explicit FAIL error message (MED defensive against param-limit overflow); (6) mig 147 DOWN block adds `DELETE WHERE phase IS NULL` step before re-adding `SET NOT NULL` (MED rollback safety); (7) all 3 stale doc-count locations corrected to 15/6 (LOW consistency); (8) co-firing guidance added to pre-ack runbook (LOW operator clarity for verdict=WARN with multiple Phase D-incomplete signals); (9) `unknown_cohort_count` test rewritten as realistic Phase D-incomplete fixture instead of "impossible injection" (NIT semantic accuracy).
+> §10 note: v4 load-bearing changes on top of v3:
+> (a) Catalog `SELECT` query guarded by `if (catalogExists)` (CRIT — DeepSeek) — prevents crash on missing catalog table; restores Part 6 guard's effectiveness.
+> (b) All formula references aligned to 2-branch continuous formula (CRIT — Gemini + 3-way convergent) — mig 148 SQL, seed examples in Part 2, parity test spec in Test #4. Seq 1 example corrected to [7, 33]; seq 19 to [632, 1196].
+> (c) Stage 2 Zod validation gains `Number(min/max) < 0` checks (HIGH — Gemini) — parity with `.nonnegative()` modifier on phase-keyed bands.
+> (d) `catalogNullCountSeqs` repurposed (2/4 convergent MED) — INFO-only identification routes through catalog instead of mutable logic_variables.
+> (e) `expected_data_missing` neutral rendering (Indep+Obs convergent MED) — replaces alarming "possible data deletion" with 4-hypothesis prompt for operator triage.
+> (f) Orphan-key recovery path explicit (Indep MED) — DELETE command in error message; no more misleading "re-seed via mig 148."
+> (g) rows_count=1 always-PASS behavior documented (Indep MED-doc).
+> (h) Mig 149 `recordApplied` failure-mode clarified (Indep MED-doc).
+> (i) Empty-catalog threshold message bifurcated (DeepSeek MED) — distinct from partial-mig case.
 >
-> The plan is authorized for implementation. Next step: scaffold tests (TDD Red Light), confirm failing, then implement.
+> v3 (legacy) load-bearing changes preserved:
+> (1) Orphan band-key detection (CRIT) — catches typos like `_mx` instead of `_max` that `.passthrough()` would otherwise allow to silently disable the assertion. Throws at startup with diagnostic list.
+> (2) Partial indices on `lifecycle_seq` columns (HIGH-perf) — new migration 149 (non-transactional `CREATE INDEX CONCURRENTLY`). Prevents full-table scans on ~250K + 33K rows.
+> (3) Continuous 2-branch tolerance formula (HIGH-correctness) — `[FLOOR(rows_count*0.7), CEIL(rows_count*1.3) + 20]`. No discontinuity at the previous `rows_count=30` boundary. Tiny growth never triggers spurious WARN cascade.
+> (4) Bidirectional symmetric-difference (HIGH-coverage) — second loop catches "seqs in bands but not in data" with `band.min > 0`, emitting `kind: 'expected_data_missing'` WARNs. Detects classifier-skip and data-deletion bugs that the unidirectional check missed.
+> (5) Truncation math fix (HIGH-correctness) — preview suffix now correctly uses `seqViolationsCapped.length - previewCount` (not the uncapped array length); separate truncation note when `seqViolationsTruncatedCount > 0`. Operator triage info now accurate.
+> (6) Doc consistency (HIGH-test-author-safety) — 2 stale "28/5" references corrected to "29/6" throughout.
+> (7) `[E.4 WARN-ONLY POSTURE]` prefix on `seq_bands_total` WARN (HIGH-UX) — paired `warnings.push` ensures consistency with other E.4 WARNs in the followup file.
+> (8) Empty-catalog state explicit handling (MED-correctness) — `catalogExists && catalogRows.length === 0` forces `seq_bands_total` to WARN with `[E.4 STARTUP STATE]` prefix instead of `0 === 0 → PASS` silently hiding the misapplied-migration state.
+>
+> v3 total audit_table.rows: 29 (existing 23 + 6 new). Migration files now 2 (mig 148 transactional INSERTs + mig 149 non-transactional CONCURRENTLY indices).
+>
+> DO NOT generate code. DO NOT modify scripts. TERMINATE RESPONSE until v3 4-reviewer plan-review round completes + user authorization.
+
+> **PLAN LOCKED (v4) — AUTHORIZED.**
+> Proceed to Implementation: scaffold tests (TDD Red Light), confirm failing, then implement mig 148 + mig 149 + script extension + seed JSON + spec amendments. Diff-stage 4-reviewer round runs after Green Light, before WF6 commit.

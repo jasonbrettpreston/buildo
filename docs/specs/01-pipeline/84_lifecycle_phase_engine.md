@@ -1117,6 +1117,16 @@ Defaults are calibrated against the 2026-05-07 live-DB snapshot with ±15% toler
 
 A startup-time Zod `superRefine` rejects any `min > max` pair (operator-hotfix guard) — a bad pair would silently make a band un-matchable and the assertion would pass on a dead phase.
 
+**Phase E.4 extension (DELIVERED 2026-05-16 commit `[E.4-COMMIT]`):** the assertion script now ALSO validates per-seq distribution bands (Universal Stream catalog seq 1-110) alongside the 19 phase-keyed bands. Migration 148 derives band defaults from `universal_stream_catalog.rows_count` via INSERT...SELECT (220 new `lifecycle_seq_band_<N>_min/_max` keys + `lifecycle_seq_unclassified_max`). The continuous 2-branch tolerance formula (`[FLOOR(rc*0.7), CEIL(rc*1.3)+20]` for `rows_count >= 1`; `[0, NULL]` INFO-only for NULL or 0) replaces the discontinuous 3-branch formula reviewers flagged as causing spurious WARNs at the rows_count=30 boundary. Migration 149 adds partial `CREATE INDEX CONCURRENTLY` on `permits.lifecycle_seq` + `coa_applications.lifecycle_seq` (filtered `WHERE lifecycle_seq IS NOT NULL`) to support the per-seq aggregate UNION ALL query. Per-seq bands are operator-tunable via Spec 86 Control Panel; mig 148 uses `ON CONFLICT DO NOTHING` to preserve operator-tuned values.
+
+Per-seq posture is **WARN-only on first deploy** — `seq_bands_failing` audit row is hardwired to 0 in v1 as an E.5 promotion hook. All E.4-originated WARNs carry the `[E.4 WARN-ONLY POSTURE]` or `[E.4 STARTUP STATE]` prefix for operator-followup triage clarity. E.5 (separate WF) tightens to FAIL after 7 consecutive PASS runs on staging by routing `seqBandsWarn++` increments to `seqBandsFailing++`.
+
+The 110-row per-seq distribution map ships in `records_meta.seq_distribution` (NOT `audit_table.rows` per Spec 48 §3.2). Structured violations (`{seq, actual, band_min, band_max, kind}` objects with `kind` in `{band_violation, no_band_configured, expected_data_missing}`) ship in `records_meta.seq_violations` capped at 50; overflow surfaced as `seq_violations_truncated_count` scalar. The top-10 violations preview surfaces via the `warnings[]` array (visible to the Spec 48 followup file via `pipeline.log.warn`).
+
+**`records_total` vs `sum(seq_distribution.values())` divergence:** during Phase D/E.2 ramp-up, `sum(seq_distribution.values()) < records_total` because many rows have `lifecycle_phase` set but not yet `lifecycle_seq`. Expected; not a pipeline integrity failure. Convergence is the E.5 operational gate.
+
+**`linked_permit_num` post-E.1:** E.1 removed Rule 0; `classifyCoaPhase()` now writes `lifecycle_seq` (and `lifecycle_phase`) to ALL CoA rows regardless of `linked_permit_num`. The new `seq_unclassified_count` gate correctly does NOT filter on `linked_permit_num IS NULL`. The legacy phase-keyed `unclassified_count` DELIBERATELY KEEPS the filter for legacy-shape baseline continuity (Spec 48 §3.4 7-day historical baseline preservation during the Strangler Fig transition window).
+
 ---
 
 ## 4. System Logic & Edge Cases

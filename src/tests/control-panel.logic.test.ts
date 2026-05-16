@@ -161,6 +161,19 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'staleness_max_stale_over_30d',
   'staleness_min_coverage_pct',
   'staleness_max_days_stale',
+
+  // ── Phase E.4 per-seq distribution bands (WF1 2026-05-16, migration 148) ──
+  // Spec 47 §R4 + Spec 84 §3.4 + Spec 48 §3.2.
+  // 220 keys: lifecycle_seq_band_<N>_min/_max for N in [1, 110] (Universal
+  // Stream catalog seq range; mig 128/129 seed). Plus lifecycle_seq_unclassified_max.
+  // Generated programmatically rather than 220 literals — the catalog seq range
+  // is structural (per Spec 84 §2.5.h) and a single-line range matches the
+  // catalog's contract.
+  ...Array.from({ length: 110 }, (_, i) => i + 1).flatMap((n) => [
+    `lifecycle_seq_band_${n}_min`,
+    `lifecycle_seq_band_${n}_max`,
+  ]),
+  'lifecycle_seq_unclassified_max',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
