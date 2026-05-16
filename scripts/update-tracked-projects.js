@@ -50,9 +50,13 @@ const ALERTS_META_CAP = 200;
 // WF3-01: Short push-friendly notification titles per spec 82 §4.
 // The longer contextual sentence goes to notifications.body (see alerts.push calls).
 const NOTIFICATION_TITLES = {
-  STALL_WARNING:  'Site Stalled — Check your schedule.',
-  STALL_CLEARED:  'Back to Work — Site is active again.',
-  START_IMMINENT: 'Job Starting Soon — Confirm your crew.',
+  STALL_WARNING:           'Site Stalled — Check your schedule.',
+  STALL_CLEARED:           'Back to Work — Site is active again.',
+  START_IMMINENT:          'Job Starting Soon — Confirm your crew.',
+  // Phase F.2 new subtypes (Spec 82 §4)
+  COA_HEARING_IMMINENT:    'Variance Hearing Soon — Confirm crew.',
+  COA_DECISION_RENDERED:   'Variance Approved — Permit expected soon.',
+  COA_STALLED:             'Variance Stalled — Project may be on hold.',
 };
 
 // spec 47 §6.3: stay under 65,535 parameters.
@@ -68,6 +72,79 @@ const TRADE_CONFIG_SCHEMA = z.object({
   work_phase_target:  z.string().min(1),
 }).passthrough();
 
+// Phase F.2 v4 — LOGIC_VARS_SCHEMA for CoA-side stall thresholds + imminent window.
+// 4 keys total: 3 existing (mig 093 + mig 136) + 1 new (mig 154 — coa_stall_threshold_postponed_days).
+// v2 CRIT-A: reads the existing `coa_stall_threshold` key (NOT `_days` variant — v1 naming drift).
+const LOGIC_VARS_SCHEMA = z.object({
+  coa_stall_threshold:                z.coerce.number().int().positive(),  // mig 093 default 30
+  coa_stall_threshold_p2_days:        z.coerce.number().int().positive(),  // mig 136 default 90
+  coa_stall_threshold_postponed_days: z.coerce.number().int().positive(),  // mig 154 default 60
+  coa_imminent_window_days:           z.coerce.number().int().positive(),  // mig 136 default 7
+}).passthrough();
+
+// ─── Phase F.2 module-local pure helpers ────────────────────────────────────
+
+// extractCoaApplicationNumber — regex-based lead_id parser (v3 LOW-20 fold).
+// Returns null on non-CoA / malformed inputs; callers should fall back to 'unknown-coa' string.
+function extractCoaApplicationNumber(leadId) {
+  if (typeof leadId !== 'string') return null;
+  const m = leadId.match(/^coa:(.+)$/);
+  return m ? m[1] : null;
+}
+
+// selectCoaStallThreshold — Spec 82 §4 3-tier per-status mapping (v2 HIGH-I operator-tunable).
+// v2 CRIT-A: reads existing `coa_stall_threshold` key (NOT `_days` suffix — v1 drift).
+// v3 MED-18: null/empty status returns null; caller skips days-based stall (still honors
+// the explicit lifecycle_stalled flag from the classifier).
+function selectCoaStallThreshold(coaStatus, logicVars) {
+  if (coaStatus == null || coaStatus === '') return null;
+  if (coaStatus === 'Hearing Scheduled') return logicVars.coa_stall_threshold_p2_days;
+  if (coaStatus === 'Postponed' || coaStatus === 'Deferred') return logicVars.coa_stall_threshold_postponed_days;
+  return logicVars.coa_stall_threshold;
+}
+
+// isCoaInImminentWindow — hearing_date-based imminent gate (Spec 82 §4).
+// v2 LOW-U: normalize to UTC midnight before subtraction (prevents DST off-by-one).
+// v4 HIGH-GG: explicit UTC parse on string-form input (appends T00:00:00Z if missing — without
+// this, `new Date('2026-07-15')` parses as engine-default timezone).
+// v4 NIT-XX: zero/negative windowDays guard.
+function isCoaInImminentWindow(hearingDate, runAt, windowDays) {
+  if (!hearingDate) return false;
+  if (typeof windowDays !== 'number' || windowDays <= 0) return false;
+  const hearingStr = typeof hearingDate === 'string'
+    ? (hearingDate.includes('T') ? hearingDate : hearingDate + 'T00:00:00Z')
+    : hearingDate;
+  const hearing = new Date(hearingStr);
+  if (isNaN(hearing.getTime())) return false;
+  hearing.setUTCHours(0, 0, 0, 0);
+  const today = new Date(runAt);
+  today.setUTCHours(0, 0, 0, 0);
+  const daysUntilHearing = Math.floor((hearing.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+  return daysUntilHearing > 0 && daysUntilHearing <= windowDays;
+}
+
+// isCoaDecisionTerminal — Spec 82 §4 decision-keyed auto-archive trigger.
+const COA_TERMINAL_DECISIONS = new Set(['Refused', 'Withdrawn', 'Closed']);
+function isCoaDecisionTerminal(coaDecision) {
+  return typeof coaDecision === 'string' && COA_TERMINAL_DECISIONS.has(coaDecision);
+}
+
+// COA_APPROVED_DECISIONS — v2 CRIT-G fold: Final and Binding REMOVED per Spec 82 §4 contract
+// ("decision = 'Final and Binding' → keep the lead; linked permit handles it later").
+const COA_APPROVED_DECISIONS = new Set(['Approved', 'Approved with Conditions']);
+function isCoaDecisionApproved(coaDecision) {
+  return typeof coaDecision === 'string' && COA_APPROVED_DECISIONS.has(coaDecision);
+}
+
+// isCoaTerminalState — combined terminal-decision OR terminal-status check (v3 HIGH-11 + v4 CRIT-DD).
+// Spec 84 §3 P20 maps status IN ('Complete', 'Closed') as terminal. v4 CRIT-DD added 'Closed'
+// because 87.6% of CoAs have status='Closed' (most with decision='Approved' = lifecycle complete).
+const COA_TERMINAL_STATUSES = new Set(['Complete', 'Closed']);
+function isCoaTerminalState(coaStatus, coaDecision) {
+  return isCoaDecisionTerminal(coaDecision)
+      || (typeof coaStatus === 'string' && COA_TERMINAL_STATUSES.has(coaStatus));
+}
+
 pipeline.run('update-tracked-projects', async (pool) => {
   // ─── Concurrency guard — pipeline.withAdvisoryLock (Phase 2 migration) ───
   // §4: ALL state-dependent initialization (getDbTimestamp, loadMarketplaceConfigs)
@@ -79,7 +156,54 @@ pipeline.run('update-tracked-projects', async (pool) => {
   const RUN_AT = await pipeline.getDbTimestamp(pool);
 
   // ─── Load Control Panel via shared loader ──────────────────
-  const { tradeConfigs } = await loadMarketplaceConfigs(pool, 'tracked-projects');
+  const { tradeConfigs, logicVars } = await loadMarketplaceConfigs(pool, 'tracked-projects');
+
+  // Phase F.2 v4 Spec 47 §R4: validate CoA logic_variables at startup (fail-fast).
+  // diff-IMPORTANT (Observability): emit a minimal failure-state PIPELINE_SUMMARY before throwing
+  // so the Observer FreshnessTimeline shows a verdict + audit_table.rows entry rather than a bare
+  // FAIL with no payload. Mirrors the §R10/§R12 emit-before-throw pattern used by E.3/E.4 scripts.
+  const logicVarsResult = LOGIC_VARS_SCHEMA.safeParse(logicVars);
+  if (!logicVarsResult.success) {
+    const errMsg = logicVarsResult.error.issues
+      .map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
+    pipeline.emitSummary({
+      records_total: 0,
+      records_new: 0,
+      records_updated: 0,
+      records_meta: {
+        audit_table: {
+          phase: 82,
+          name: 'CRM Assistant — logic_variables validation',
+          verdict: 'FAIL',
+          rows: [{
+            metric: 'logic_vars_validation',
+            value: 0,
+            threshold: '== PASS',
+            status: 'FAIL',
+          }],
+        },
+        validation_error: errMsg,
+      },
+    });
+    throw new Error(`[tracked-projects] CoA logic_variables validation failed: ${errMsg}`);
+  }
+  // v4 NIT-YY fold: advisory warn if threshold ordering is unusual.
+  if (logicVars.coa_stall_threshold_p2_days < logicVars.coa_stall_threshold) {
+    pipeline.log.warn('[tracked-projects]',
+      `[ADVISORY] coa_stall_threshold_p2_days (${logicVars.coa_stall_threshold_p2_days}) < coa_stall_threshold (${logicVars.coa_stall_threshold}) — Hearing Scheduled rows will stall faster than generic rows, contradicting Spec 82 §4 intent.`);
+  }
+
+  // Phase F.2 v4 HIGH-N: pre-fetch BOTH 7-day and 30-day deploy-age counts in a single query.
+  // The pipeline slug must be 'permits:update_tracked_projects' (F.2's own pipeline — NOT F.1's).
+  const { rows: deployAgeRows } = await pool.query(
+    `SELECT
+       COUNT(*) FILTER (WHERE started_at < NOW() - INTERVAL '7 days')::int  AS prior_runs_7d,
+       COUNT(*) FILTER (WHERE started_at < NOW() - INTERVAL '30 days')::int AS prior_runs_30d
+     FROM pipeline_runs
+     WHERE pipeline = 'permits:update_tracked_projects'`,
+  );
+  const coaFirstDeployGrace = deployAgeRows[0].prior_runs_7d === 0;
+  const inQuietPeriod = deployAgeRows[0].prior_runs_30d === 0;
 
   // spec 47 §4.2: validate each trade's required fields before use.
   // Invalid entries log a WARN and are treated as unmapped (skipped).
@@ -129,7 +253,17 @@ pipeline.run('update-tracked-projects', async (pool) => {
   // ═══════════════════════════════════════════════════════════
   pipeline.log.info('[tracked-projects]', 'Streaming active tracked projects...');
 
+  // ╔═══════════════════════════════════════════════════════════════════════════════════╗
+  // ║ Phase F.2 SOURCE_SQL — Branch A (permit-side, preserved + #118 naming standardized) ║
+  // ║ + Branch B (NEW — CoA-side via tp.lead_id JOIN coa_applications).                   ║
+  // ║                                                                                     ║
+  // ║ Both branches project 20 columns with matching types per UNION ALL requirement.     ║
+  // ║ Branch A WHERE includes mutual-exclusivity guard (v2 CRIT-C — prevents double-      ║
+  // ║ processing of CoA-formatted lead_id rows with non-null permit_num).                 ║
+  // ╚═══════════════════════════════════════════════════════════════════════════════════╝
   const SQL = `
+    -- Branch A: permit-side (v2 #118 fold: rename permit_lead_id → lead_id)
+    -- diff-CRIT parity: NULL ca_lead_id keeps column-count alignment with Branch B's new projection.
     SELECT
       tp.id AS tracking_id,
       tp.user_id,
@@ -137,14 +271,21 @@ pipeline.run('update-tracked-projects', async (pool) => {
       tp.trade_slug,
       tp.permit_num,
       tp.revision_num,
-      p.lead_id AS permit_lead_id,
+      p.lead_id AS lead_id,
+      NULL::text         AS ca_lead_id,
       p.lifecycle_phase,
       p.lifecycle_stalled,
+      NULL::varchar(50) AS coa_status,
+      NULL::varchar(50) AS coa_decision,
+      NULL::date         AS hearing_date,
+      NULL::varchar(10)  AS lifecycle_group,
       tf.predicted_start,
       tf.urgency,
       tp.last_notified_urgency,
       tp.last_notified_stalled,
-      COALESCE(tc.imminent_window_days, 14) AS imminent_window_days
+      NULL::boolean      AS notified_decision_rendered,
+      COALESCE(tc.imminent_window_days, 14) AS imminent_window_days,
+      NULL::int          AS coa_days_at_status
     FROM tracked_projects tp
     JOIN permits p ON tp.permit_num = p.permit_num
                   AND tp.revision_num = p.revision_num
@@ -152,9 +293,58 @@ pipeline.run('update-tracked-projects', async (pool) => {
                                  AND tp.revision_num = tf.revision_num
                                  AND tp.trade_slug = tf.trade_slug
     LEFT JOIN trade_configurations tc ON tc.trade_slug = tp.trade_slug
-    -- 'saved' = Path A + CLAIMED_STATUSES set ('claimed_unverified','claimed','verified') = Path B.
-    -- Must stay in sync with the CLAIMED_STATUSES constant defined above.
     WHERE tp.status IN ('saved', 'claimed_unverified', 'claimed', 'verified')
+      AND tp.permit_num IS NOT NULL
+      AND tp.revision_num IS NOT NULL
+      AND (tp.lead_id IS NULL OR tp.lead_id NOT LIKE 'coa:%')
+
+    UNION ALL
+
+    -- Branch B: CoA-side (Phase F.2 NEW)
+    -- v4 HIGH-JJ: LEFT JOIN coa_applications enables single-pass orphan detection inline in the
+    --   stream loop (orphan rows have ca.* = NULL).
+    -- diff-CRIT (Observability): ca_lead_id projected so JS can detect orphans by ca.lead_id IS NULL
+    --   (reliable since coa_applications.lead_id is NOT NULL + UNIQUE per migration 133), instead of
+    --   the brittle (lifecycle_phase IS NULL AND coa_status IS NULL) discriminant which would
+    --   misidentify CKAN-null-status matched rows as orphans.
+    -- diff-HIGH (DeepSeek + Gemini convergent): coa_days_at_status uses $1::timestamptz RUN_AT
+    --   instead of NOW() — Spec 47 §14 Midnight Cross: a run spanning midnight could otherwise
+    --   flip the day count mid-stream and cause inconsistent stall detection.
+    SELECT
+      tp.id AS tracking_id,
+      tp.user_id,
+      tp.status AS tracking_status,
+      tp.trade_slug,
+      tp.permit_num,
+      tp.revision_num,
+      tp.lead_id,
+      ca.lead_id AS ca_lead_id,
+      ca.lifecycle_phase,
+      ca.lifecycle_stalled,
+      ca.status   AS coa_status,
+      ca.decision AS coa_decision,
+      ca.hearing_date,
+      ca.lifecycle_group,
+      tf.predicted_start,
+      tf.urgency,
+      tp.last_notified_urgency,
+      tp.last_notified_stalled,
+      tp.notified_decision_rendered,
+      NULL::int AS imminent_window_days,
+      GREATEST(
+        COALESCE(
+          FLOOR(EXTRACT(EPOCH FROM ($1::timestamptz - ca.lifecycle_classified_at)) / 86400)::int,
+          FLOOR(EXTRACT(EPOCH FROM ($1::timestamptz - ca.last_seen_at)) / 86400)::int,
+          0
+        ),
+        0
+      ) AS coa_days_at_status
+    FROM tracked_projects tp
+    LEFT JOIN coa_applications ca ON ca.lead_id = tp.lead_id
+    LEFT JOIN trade_forecasts tf ON tf.lead_id = tp.lead_id
+                                AND tf.trade_slug = tp.trade_slug
+    WHERE tp.status IN ('saved', 'claimed_unverified', 'claimed', 'verified')
+      AND tp.lead_id LIKE 'coa:%'
   `;
 
   // ═══════════════════════════════════════════════════════════
@@ -163,49 +353,203 @@ pipeline.run('update-tracked-projects', async (pool) => {
   const updates = [];  // {id, fields} — batched DB updates
   const alerts = [];   // {user_id, type, message} — notification payloads
 
-  let totalRows = 0;
-  let archived = 0;
+  // Phase F.2: counters split per-branch. records_total = permit + CoA per Spec 47 §11.1.
+  let totalRowsPermit = 0;
+  let totalRowsCoa = 0;
+  let archived = 0;          // permit-side archive count
+  let archivedCoa = 0;       // CoA-side archive count (v3 HIGH-8)
   let stallAlerts = 0;
   let recoveryAlerts = 0;
   let imminentAlerts = 0;
   let unmappedTrade = 0;
-  // spec §8.2: computed not hardcoded — increment if a dispatch step is added.
-  // Currently this script queues alerts for downstream delivery; no sends here.
   let deliveryErrors = 0;
 
-  // WF3-04 (H-W14 / 82-W7): defensive telemetry for lifecycle_phase
-  // values that are neither in PHASE_ORDINAL nor TERMINAL_PHASES.
-  // Without this, any future orphan-like value would silently render
-  // isWindowClosed=false forever with zero signal. Dedup by distinct
-  // value so one unknown phase doesn't spam N WARNs per nightly run.
+  // Phase F.2 CoA-side alert counters
+  let coaStallAlerts = 0;
+  let coaRecoveryAlerts = 0;
+  let coaImminentAlerts = 0;
+  let coaDecisionAlerts = 0;
+  let coaOrphanedLeadIds = 0;
+  let coaNotifiedDecisionRenderedCount = 0;
+
   let unknown_phase_skipped = 0;
   const unknownPhasesSeen = new Set();
 
-  // Phase E.2 (v4 scope expansion per Gemini v3 CRIT 2 + user authorization):
-  // defensive guard against CoA-side rows entering PHASE_ORDINAL[] lookup.
-  // PHASE_ORDINAL['P3'] = -6 (permit pre-issuance ordinal); CoA-P3 is
-  // post-approval — different semantic. INERT today (tracked_projects has
-  // only permits today; Phase F's deeper refactor adds CoA-side rows AND
-  // restructures the JOIN). Ships now so Phase F is a clean drop-in.
-  let coaSkippedCount = 0;
-  let coaSkippedFirstWarned = false;
+  // Phase F.2 v3 HIGH-8: per-lifecycle_group cohort breakdown (C1/C2/C3/C4 symmetric 5-field shape).
+  // Any group's `.archived` counter increments when that group's CoA row hits a terminal state.
+  // diff-HIGH (DeepSeek + Gemini NIT convergent): `unknown` slot prevents silent data loss for
+  // CoA rows where lifecycle_group is NULL or otherwise unrecognized — without this, the
+  // `if (skipDistributionCoa[groupKey])` guard silently drops the increment.
+  const skipDistributionCoa = {
+    C1:      { imminent: 0, stalled: 0, recovery: 0, decision: 0, archived: 0 },
+    C2:      { imminent: 0, stalled: 0, recovery: 0, decision: 0, archived: 0 },
+    C3:      { imminent: 0, stalled: 0, recovery: 0, decision: 0, archived: 0 },
+    C4:      { imminent: 0, stalled: 0, recovery: 0, decision: 0, archived: 0 },
+    unknown: { imminent: 0, stalled: 0, recovery: 0, decision: 0, archived: 0 },
+  };
+  // Failed-sample for INNER-JOIN-equivalent orphan rows (CoA tracked_projects row pointing to
+  // a missing coa_applications row). v4 HIGH-JJ: LEFT JOIN refactor lets us detect orphans inline.
+  const orphanedCoaSample = [];
 
-  for await (const row of pipeline.streamQuery(pool, SQL, [])) {
-    totalRows++;
+  // diff-HIGH (DeepSeek + Gemini convergent): pass RUN_AT as $1 so Branch B's coa_days_at_status
+  // uses the same snapshot timestamp as all DB writes — prevents Spec 47 §14 Midnight Cross.
+  for await (const row of pipeline.streamQuery(pool, SQL, [RUN_AT])) {
+    const isCoaRow = typeof row.lead_id === 'string' && row.lead_id.startsWith('coa:');
 
-    // Phase E.2 defensive guard: skip CoA-side rows.
-    if (typeof row.permit_lead_id === 'string' && row.permit_lead_id.startsWith('coa:')) {
-      coaSkippedCount++;
-      if (!coaSkippedFirstWarned) {
-        pipeline.log.warn('[tracked-projects]',
-          `Skipping CoA row (permit_lead_id=${row.permit_lead_id}, phase=${row.lifecycle_phase}). ` +
-          `Inert in E.2; Phase F handoff: tracked_projects JOIN is structurally permit-only today ` +
-          `(no coa_application_id FK or lead_id column on tracked_projects). Phase F needs deeper ` +
-          `SELECT refactor to accommodate CoA-side rows, not just a UNION on the source.`);
-        coaSkippedFirstWarned = true;
+    // ═════════════════════════════════════════════════════════════════════
+    // Phase F.2 CoA branch dispatch (v4 — Spec 82 §4)
+    // ═════════════════════════════════════════════════════════════════════
+    if (isCoaRow) {
+      totalRowsCoa++;
+
+      // v4 HIGH-JJ: orphan detection inline — LEFT JOIN coa_applications produced ca.* = NULL
+      // when the CoA tracked_projects row references a missing coa_applications row.
+      // diff-CRIT (Observability): use ca.lead_id (projected as ca_lead_id) as the discriminant —
+      // coa_applications.lead_id is NOT NULL + UNIQUE per migration 133, so NULL here is an
+      // unambiguous LEFT JOIN miss. The earlier (lifecycle_phase IS NULL AND coa_status IS NULL)
+      // form misidentified rows with CKAN-null status as orphans (Spec 84 P19/P20 false-positive).
+      if (row.ca_lead_id == null) {
+        coaOrphanedLeadIds++;
+        if (orphanedCoaSample.length < 20) {
+          orphanedCoaSample.push(`lead_id=${row.lead_id} — no matching coa_applications row (LEFT JOIN drop)`);
+        }
+        continue;
       }
+
+      const targets = TRADE_TARGET_PHASE[row.trade_slug];
+      if (!targets) { unmappedTrade++; continue; }
+
+      // v4 CRIT-AA: decision-reversal reset MUST run BEFORE auto-archive. If a CoA appeals
+      // Approved → Refused, the script archives + continues otherwise leaving the flag stuck.
+      // Counter increment also moves here, guarded with `&& isCoaDecisionApproved` so only
+      // "currently approved + flagged" rows count (the dedup-health semantic).
+      if (row.notified_decision_rendered === true && isCoaDecisionApproved(row.coa_decision)) {
+        coaNotifiedDecisionRenderedCount++;
+      }
+      if (row.notified_decision_rendered === true && !isCoaDecisionApproved(row.coa_decision)) {
+        updates.push({ id: row.tracking_id, notified_decision_rendered: false });
+      }
+
+      // Auto-archive precedence (Spec 82 §4). v3 CRIT-2 simplified to `if (terminalState)` only;
+      // v4 CRIT-DD added 'Closed' to terminal statuses (87.6% of CoAs).
+      const terminalState = isCoaTerminalState(row.coa_status, row.coa_decision);
+      if (terminalState) {
+        updates.push({ id: row.tracking_id, status: 'archived' });
+        archivedCoa++;
+        const groupKey = row.lifecycle_group || 'unknown';
+        if (skipDistributionCoa[groupKey]) skipDistributionCoa[groupKey].archived++;
+        continue;
+      }
+
+      // Saved path (passive watchlist) — no alerts; FaB does not archive (linked permit later)
+      if (row.tracking_status === 'saved') continue;
+
+      // Claimed path
+      if (!CLAIMED_STATUSES.has(row.tracking_status)) continue;
+
+      // CoA stall — 3-tier per-status threshold + explicit lifecycle_stalled flag.
+      // v3 MED-18: null threshold (unrecognized status) → skip days-based stall.
+      const stallThreshold = selectCoaStallThreshold(row.coa_status, logicVars);
+      const coaStalled = row.lifecycle_stalled === true
+                      || (stallThreshold != null
+                          && row.coa_days_at_status != null
+                          && row.coa_days_at_status > stallThreshold);
+
+      // v4 MED-PP: decouple recovery condition — `STALL_CLEARED` requires BOTH lifecycle_stalled
+      // = false AND days-based stall cleared, not just `!coaStalled`.
+      const daysBasedStallCleared = stallThreshold == null
+        || row.coa_days_at_status == null
+        || row.coa_days_at_status <= stallThreshold;
+      const fullyRecovered = row.lifecycle_stalled === false && daysBasedStallCleared;
+
+      // v4 HIGH-K: gate alert pushes on !coaFirstDeployGrace to prevent day-0 storm.
+      if (coaStalled && row.last_notified_stalled !== true && !coaFirstDeployGrace) {
+        const appNum = extractCoaApplicationNumber(row.lead_id) || 'unknown-coa';
+        alerts.push({
+          user_id: row.user_id,
+          type: 'COA_STALLED',
+          permit_num: row.permit_num,
+          coa_application_number: appNum,
+          trade_slug: row.trade_slug,
+          title: NOTIFICATION_TITLES.COA_STALLED,
+          body: `CoA stalled at "${row.coa_status}" for > ${stallThreshold} days — project may be on hold.`,
+        });
+        updates.push({ id: row.tracking_id, last_notified_stalled: true });
+        coaStallAlerts++;
+        const grp = row.lifecycle_group || 'unknown';
+        skipDistributionCoa[grp].stalled++;
+      }
+
+      if (fullyRecovered && row.last_notified_stalled === true && !coaFirstDeployGrace) {
+        const appNum = extractCoaApplicationNumber(row.lead_id) || 'unknown-coa';
+        alerts.push({
+          user_id: row.user_id,
+          type: 'STALL_CLEARED',
+          permit_num: row.permit_num,
+          coa_application_number: appNum,
+          trade_slug: row.trade_slug,
+          title: NOTIFICATION_TITLES.STALL_CLEARED,
+          body: `CoA at ${appNum} is moving again — schedule activity resuming.`,
+        });
+        updates.push({ id: row.tracking_id, last_notified_stalled: false });
+        coaRecoveryAlerts++;
+        const grp = row.lifecycle_group || 'unknown';
+        skipDistributionCoa[grp].recovery++;
+      }
+
+      // Imminent — hearing_date-based.
+      const inImminentWindow = isCoaInImminentWindow(row.hearing_date, RUN_AT, logicVars.coa_imminent_window_days);
+      if (inImminentWindow && row.last_notified_urgency !== 'imminent' && !coaStalled && !coaFirstDeployGrace) {
+        const appNum = extractCoaApplicationNumber(row.lead_id) || 'unknown-coa';
+        const hearingStr = row.hearing_date
+          ? new Date(row.hearing_date).toISOString().slice(0, 10)
+          : 'soon';
+        alerts.push({
+          user_id: row.user_id,
+          type: 'COA_HEARING_IMMINENT',
+          permit_num: row.permit_num,
+          coa_application_number: appNum,
+          trade_slug: row.trade_slug,
+          title: NOTIFICATION_TITLES.COA_HEARING_IMMINENT,
+          body: `Variance hearing for ${appNum} is on ${hearingStr} — confirm crew availability for likely-approved ${row.trade_slug}.`,
+        });
+        updates.push({ id: row.tracking_id, last_notified_urgency: 'imminent' });
+        coaImminentAlerts++;
+        const grp = row.lifecycle_group || 'unknown';
+        skipDistributionCoa[grp].imminent++;
+      }
+
+      // COA_DECISION_RENDERED — one-shot on Approved decisions (FaB excluded per v2 CRIT-G).
+      // v2 CRIT-G fold uses notified_decision_rendered BOOLEAN (NOT last_notified_urgency overload).
+      if (isCoaDecisionApproved(row.coa_decision) && !row.notified_decision_rendered && !coaFirstDeployGrace) {
+        const appNum = extractCoaApplicationNumber(row.lead_id) || 'unknown-coa';
+        alerts.push({
+          user_id: row.user_id,
+          type: 'COA_DECISION_RENDERED',
+          permit_num: row.permit_num,
+          coa_application_number: appNum,
+          trade_slug: row.trade_slug,
+          title: NOTIFICATION_TITLES.COA_DECISION_RENDERED,
+          body: `Variance approved for ${appNum} — permit application expected within 12 months.`,
+        });
+        updates.push({ id: row.tracking_id, notified_decision_rendered: true });
+        coaDecisionAlerts++;
+        const grp = row.lifecycle_group || 'unknown';
+        skipDistributionCoa[grp].decision++;
+      }
+
+      // CoA urgency reset (mirrors permit-side B5 — clear last_notified_urgency if no longer imminent)
+      if (row.last_notified_urgency === 'imminent' && !inImminentWindow) {
+        updates.push({ id: row.tracking_id, last_notified_urgency: null });
+      }
+
       continue;
     }
+
+    // ═════════════════════════════════════════════════════════════════════
+    // Permit branch (existing logic preserved — E.2 defensive guard REMOVED above)
+    // ═════════════════════════════════════════════════════════════════════
+    totalRowsPermit++;
 
     const targets = TRADE_TARGET_PHASE[row.trade_slug];
     if (!targets) { unmappedTrade++; continue; } // unmapped trade — skip
@@ -379,7 +723,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
     }
   }
 
-  pipeline.log.info('[tracked-projects]', `Streamed ${totalRows} active tracked projects`);
+  pipeline.log.info('[tracked-projects]',
+    `Streamed ${totalRowsPermit + totalRowsCoa} active tracked projects (permit=${totalRowsPermit}, coa=${totalRowsCoa})`);
   pipeline.log.info('[tracked-projects]', `Archived: ${archived}`);
   pipeline.log.info(
     '[tracked-projects]',
@@ -431,12 +776,20 @@ pipeline.run('update-tracked-projects', async (pool) => {
     const resetUrgencyOnlyIds = [];     // urgency = NULL (WF3-02 reset)
     const stallOnResetUrgencyIds = [];  // stalled = true  + urgency = NULL (WF3-02)
     const stallOffResetUrgencyIds = []; // stalled = false + urgency = NULL (WF3-02)
+    // Phase F.2 v4 diff-CRIT-1 (DeepSeek + Independent — 2/3 reviewers convergent):
+    // notified_decision_rendered true/false categories — without these, COA_DECISION_RENDERED
+    // dedup flag updates silently fall to the else-branch and never persist, causing the alert
+    // to fire every run forever.
+    const decisionRenderedTrueIds = [];
+    const decisionRenderedFalseIds = [];
 
     for (const upd of mergedUpdates) {
-      const hasStatus  = upd.status === 'archived';
-      const hasStall   = upd.last_notified_stalled != null;
-      const isImminent = upd.last_notified_urgency === 'imminent';
-      const isReset    = upd.last_notified_urgency === null;
+      const hasStatus    = upd.status === 'archived';
+      const hasStall     = upd.last_notified_stalled != null;
+      const isImminent   = upd.last_notified_urgency === 'imminent';
+      const isReset      = upd.last_notified_urgency === null;
+      const hasDecisionT = upd.notified_decision_rendered === true;
+      const hasDecisionF = upd.notified_decision_rendered === false;
 
       if (hasStatus) {
         archiveIds.push(upd.id);
@@ -452,6 +805,10 @@ pipeline.run('update-tracked-projects', async (pool) => {
         resetUrgencyOnlyIds.push(upd.id);
       } else if (hasStall && isReset) {
         (upd.last_notified_stalled === true ? stallOnResetUrgencyIds : stallOffResetUrgencyIds).push(upd.id);
+      } else if (hasDecisionT && !hasStall && !isImminent && !isReset) {
+        decisionRenderedTrueIds.push(upd.id);
+      } else if (hasDecisionF && !hasStall && !isImminent && !isReset) {
+        decisionRenderedFalseIds.push(upd.id);
       } else {
         // Defensive invariant: all update objects pushed by the routing engine
         // must set status, last_notified_stalled, or last_notified_urgency.
@@ -554,6 +911,29 @@ pipeline.run('update-tracked-projects', async (pool) => {
         );
         totalUpdated += r.rowCount ?? 0;
       }
+      // Phase F.2 v4 diff-CRIT-1: write notified_decision_rendered updates so COA_DECISION_RENDERED
+      // dedup persists across runs (without these blocks the alert would re-fire every run).
+      if (decisionRenderedTrueIds.length > 0) {
+        const r = await client.query(
+          `UPDATE tracked_projects
+              SET notified_decision_rendered = true, updated_at = $1
+            WHERE id = ANY($2::int[])
+              AND notified_decision_rendered IS DISTINCT FROM true`,
+          [RUN_AT, decisionRenderedTrueIds],
+        );
+        totalUpdated += r.rowCount ?? 0;
+      }
+      if (decisionRenderedFalseIds.length > 0) {
+        const r = await client.query(
+          `UPDATE tracked_projects
+              SET notified_decision_rendered = false, updated_at = $1
+            WHERE id = ANY($2::int[])
+              AND notified_decision_rendered IS DISTINCT FROM false`,
+          [RUN_AT, decisionRenderedFalseIds],
+        );
+        totalUpdated += r.rowCount ?? 0;
+      }
+
       if (stallOffResetUrgencyIds.length > 0) {
         const r = await client.query(
           `UPDATE tracked_projects
@@ -595,7 +975,12 @@ pipeline.run('update-tracked-projects', async (pool) => {
             return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7})`;
           }).join(', ');
           const params = batch.flatMap((a) => [
-            a.user_id, a.type, a.permit_num, a.trade_slug, a.title, a.body, RUN_AT,
+            a.user_id, a.type,
+            // v4 CRIT-CC: CoA notifications carry application_number in permit_num column (polymorphism
+            // per Spec 82 §4; mobile app discriminates on `type LIKE 'COA_%'`). Fallback to 'unknown-coa'
+            // if extractCoaApplicationNumber returned null — prevents NULL in notifications.permit_num.
+            a.coa_application_number || a.permit_num || 'unknown-coa',
+            a.trade_slug, a.title, a.body, RUN_AT,
           ]);
           await client.query(
             `INSERT INTO notifications
@@ -631,16 +1016,41 @@ pipeline.run('update-tracked-projects', async (pool) => {
   let analyticsZeroed = 0;
 
   await pipeline.withTransaction(pool, async (client) => {
+    // Phase F.2 v4 diff-CRIT-3 (Gemini CRIT 1): UNION CoA rows so CoA tracking activity flows
+    // into lead_analytics. Without this branch, downstream consumers (opportunity score,
+    // market density UI) see permit-side counts only — CoA leads are invisible to analytics.
+    // CoA lead_key uses the canonical `lead_id` value directly (tp.lead_id already starts with
+    // 'coa:' for the CoA branch); permit lead_key keeps the legacy LPAD-revision_num form for
+    // backward compatibility with the existing lead_analytics rows.
     const { rows: syncedRows } = await client.query(`
       INSERT INTO lead_analytics (lead_key, tracking_count, saving_count, updated_at)
-      SELECT
-        'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num::text, 2, '0') AS lead_key,
-        COUNT(*) FILTER (WHERE tp.status IN ('claimed_unverified', 'claimed', 'verified'))::int AS tracking_count,
-        COUNT(*) FILTER (WHERE tp.status = 'saved')::int AS saving_count,
-        $1::timestamptz
-      FROM tracked_projects tp
-      WHERE tp.status NOT IN ('archived', 'expired')
-      GROUP BY tp.permit_num, tp.revision_num
+      SELECT lead_key, tracking_count, saving_count, updated_at FROM (
+        -- Permit branch (existing — backward-compatible LPAD lead_key shape)
+        SELECT
+          'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num::text, 2, '0') AS lead_key,
+          COUNT(*) FILTER (WHERE tp.status IN ('claimed_unverified', 'claimed', 'verified'))::int AS tracking_count,
+          COUNT(*) FILTER (WHERE tp.status = 'saved')::int AS saving_count,
+          $1::timestamptz AS updated_at
+        FROM tracked_projects tp
+        WHERE tp.status NOT IN ('archived', 'expired')
+          AND tp.permit_num IS NOT NULL
+          AND tp.revision_num IS NOT NULL
+          AND (tp.lead_id IS NULL OR tp.lead_id NOT LIKE 'coa:%')
+        GROUP BY tp.permit_num, tp.revision_num
+
+        UNION ALL
+
+        -- CoA branch (Phase F.2 v4 — uses tp.lead_id directly as lead_key)
+        SELECT
+          tp.lead_id AS lead_key,
+          COUNT(*) FILTER (WHERE tp.status IN ('claimed_unverified', 'claimed', 'verified'))::int AS tracking_count,
+          COUNT(*) FILTER (WHERE tp.status = 'saved')::int AS saving_count,
+          $1::timestamptz AS updated_at
+        FROM tracked_projects tp
+        WHERE tp.status NOT IN ('archived', 'expired')
+          AND tp.lead_id LIKE 'coa:%'
+        GROUP BY tp.lead_id
+      ) combined
       ON CONFLICT (lead_key) DO UPDATE SET
         tracking_count = EXCLUDED.tracking_count,
         saving_count = EXCLUDED.saving_count,
@@ -650,15 +1060,18 @@ pipeline.run('update-tracked-projects', async (pool) => {
     analyticsSynced = syncedRows.length;
 
     // Zero out lead_analytics rows where all trackers have been archived.
-    // Operand order: la.lead_key on the left so Postgres can use the PK
-    // index. Independent review Issue 1.
+    // v4 diff-CRIT-3: also covers CoA lead_keys ('coa:%' form). The NOT EXISTS subquery handles
+    // both permit and CoA via OR'd lead_key reconstruction.
     const { rows: zeroedRows } = await client.query(`
       UPDATE lead_analytics la
          SET tracking_count = 0, saving_count = 0, updated_at = $1
        WHERE NOT EXISTS (
          SELECT 1 FROM tracked_projects tp
-          WHERE la.lead_key = 'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num::text, 2, '0')
-            AND tp.status NOT IN ('archived', 'expired')
+          WHERE tp.status NOT IN ('archived', 'expired')
+            AND (
+              la.lead_key = 'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num::text, 2, '0')
+              OR la.lead_key = tp.lead_id
+            )
        )
        AND (la.tracking_count > 0 OR la.saving_count > 0)
       RETURNING 1
@@ -677,16 +1090,43 @@ pipeline.run('update-tracked-projects', async (pool) => {
 
   // spec §8.2 mandatory rows for "Alert delivery" type:
   // alerts_evaluated, alerts_delivered, delivery_errors
-  const totalAlerts = stallAlerts + recoveryAlerts + imminentAlerts;
+  // Phase F.2 v4 diff-CRIT-2 (Gemini + Independent — 2/3 convergent): include CoA counters.
+  // Without this, alerts_delivered undercount the actual notifications written to the DB
+  // (which includes CoA alerts via alerts.length), corrupting the operator's health signal.
+  const totalAlerts = stallAlerts + recoveryAlerts + imminentAlerts
+    + coaStallAlerts + coaRecoveryAlerts + coaImminentAlerts + coaDecisionAlerts;
   const auditTableRows = [
-    { metric: 'alerts_evaluated',  value: totalRows,    threshold: null, status: 'INFO' },
+    { metric: 'alerts_evaluated',  value: totalRowsPermit + totalRowsCoa, threshold: null, status: 'INFO' },
     { metric: 'alerts_delivered',  value: totalAlerts,  threshold: null, status: 'INFO' },
     { metric: 'delivery_errors',   value: deliveryErrors, threshold: 0, status: deliveryErrors > 0 ? 'FAIL' : 'PASS' },
     { metric: 'projects_archived', value: archived,     threshold: null, status: 'INFO' },
     { metric: 'unknown_phase',     value: unknown_phase_skipped, threshold: null, status: 'INFO' },
-    // Phase E.2 — defensive guard telemetry. Inert today (tracked_projects has
-    // no CoA-side rows yet); first non-zero value appears when Phase F adds them.
-    { metric: 'coa_skipped_count', value: coaSkippedCount, threshold: null, status: 'INFO' },
+    // Phase F.2 CoA-side audit rows
+    { metric: 'coa_stall_alerts',     value: coaStallAlerts,    threshold: null, status: 'INFO' },
+    { metric: 'coa_recovery_alerts',  value: coaRecoveryAlerts, threshold: null, status: 'INFO' },
+    { metric: 'coa_imminent_alerts',  value: coaImminentAlerts, threshold: null, status: 'INFO' },
+    { metric: 'coa_decision_alerts',  value: coaDecisionAlerts, threshold: null, status: 'INFO' },
+    // v3 CRIT-6 / v4 CRIT-F: threshold row — kill-switch detector for 100% archival
+    {
+      metric: 'coa_archived',
+      value: archivedCoa,
+      threshold: '< 100% of totalRowsCoa',
+      status: totalRowsCoa > 0 && archivedCoa === totalRowsCoa ? 'WARN' : 'PASS',
+    },
+    // v3 HIGH-9 / v4 HIGH-LL: orphan capture (threshold label is the trigger condition)
+    {
+      metric: 'coa_orphaned_lead_ids',
+      value: coaOrphanedLeadIds,
+      threshold: '> 0',
+      status: coaOrphanedLeadIds > 0 ? 'WARN' : 'PASS',
+    },
+    // v4 HIGH-OO: in_quiet_period visible in audit_table.rows (not just records_meta)
+    {
+      metric: 'in_quiet_period',
+      value: inQuietPeriod ? 1 : 0,
+      threshold: null,
+      status: 'INFO',
+    },
   ];
   const auditVerdict =
     auditTableRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
@@ -701,11 +1141,19 @@ pipeline.run('update-tracked-projects', async (pool) => {
   const alertsTruncated = alerts.length > ALERTS_META_CAP;
 
   pipeline.emitSummary({
-    records_total: totalRows,
+    records_total: totalRowsPermit + totalRowsCoa,
     records_new: 0,
     records_updated: totalUpdated,
+    failed_sample: orphanedCoaSample.length > 0 ? orphanedCoaSample : undefined,
     records_meta: {
-      active_tracked: totalRows,
+      active_tracked: totalRowsPermit + totalRowsCoa,
+      total_rows_permit: totalRowsPermit,
+      total_rows_coa: totalRowsCoa,
+      coa_first_deploy_grace: coaFirstDeployGrace,
+      in_quiet_period: inQuietPeriod,
+      coa_alert_distribution_by_lifecycle_group: skipDistributionCoa,
+      coa_notified_decision_rendered_count: coaNotifiedDecisionRenderedCount,
+      coa_orphaned_lead_ids_sample_capped: coaOrphanedLeadIds > 20,
       archived,
       stall_alerts: stallAlerts,
       recovery_alerts: recoveryAlerts,
@@ -730,14 +1178,19 @@ pipeline.run('update-tracked-projects', async (pool) => {
 
   pipeline.emitMeta(
     {
-      tracked_projects: ['id', 'user_id', 'status', 'trade_slug', 'permit_num', 'revision_num', 'last_notified_urgency', 'last_notified_stalled'],
-      permits: ['permit_num', 'revision_num', 'lifecycle_phase', 'lifecycle_stalled'],
-      trade_forecasts: ['permit_num', 'revision_num', 'trade_slug', 'predicted_start', 'urgency'],
+      tracked_projects: ['id', 'user_id', 'status', 'trade_slug', 'permit_num', 'revision_num', 'lead_id', 'last_notified_urgency', 'last_notified_stalled', 'notified_decision_rendered'],
+      permits: ['permit_num', 'revision_num', 'lead_id', 'lifecycle_phase', 'lifecycle_stalled'],
+      trade_forecasts: ['permit_num', 'revision_num', 'trade_slug', 'lead_id', 'predicted_start', 'urgency'],
       trade_configurations: ['trade_slug', 'imminent_window_days', 'bid_phase_cutoff', 'work_phase_target'],
+      // Phase F.2 reads
+      coa_applications: ['lead_id', 'lifecycle_phase', 'lifecycle_stalled', 'lifecycle_group', 'status', 'decision', 'hearing_date', 'lifecycle_classified_at', 'last_seen_at'],
+      pipeline_runs: ['pipeline', 'started_at'],
     },
     {
-      tracked_projects: ['status', 'last_notified_urgency', 'last_notified_stalled', 'updated_at'],
+      tracked_projects: ['status', 'last_notified_urgency', 'last_notified_stalled', 'notified_decision_rendered', 'updated_at'],
       lead_analytics: ['lead_key', 'tracking_count', 'saving_count', 'updated_at'],
+      // Phase F.2: 3 new notification subtypes write here (existing pattern; new types per Spec 82 §4)
+      notifications: ['user_id', 'type', 'permit_num', 'trade_slug', 'title', 'body', 'created_at'],
     },
   );
   }, { skipEmit: false }); // end withAdvisoryLock
