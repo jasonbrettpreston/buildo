@@ -182,6 +182,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'lifecycle_seq_band_promote_to_fail_band_violation',
   'lifecycle_seq_band_promote_to_fail_no_band_configured',
   'lifecycle_seq_band_promote_to_fail_expected_data_missing',
+  // Phase F.1 (mig 152) — CoA forecast snowplow staleness gate + gate freshness window
+  'coa_lifecycle_transition_stale_days',
+  'coa_gate_calibration_window_days',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

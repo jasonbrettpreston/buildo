@@ -49,10 +49,19 @@ const PRE_CONSTRUCTION_PHASES = new Set([
   'P8',                      // revised
 ]);
 
-// 13 params per row: permit_num, revision_num, trade_slug, predicted_start,
-// confidence, urgency, target_window, calibration_method, sample_size,
-// median_days, p25_days, p75_days, computed_at (§47 §6.1 runAt snapshot)
-const FORECAST_BATCH_SIZE = pipeline.maxRowsPerInsert(13); // Math.floor(65535 / 13) = 5041
+// Phase F.1: 14 params per row — adds lead_id (post-mig 151 PK) so CoA rows can write
+// directly (no permits FK trigger derivation available for CoA). Permit-side rows continue
+// to populate lead_id since mig 139 promoted it to NOT NULL UNIQUE.
+// v3 NIT-O fold: FORECAST_COL_COUNT extracted as single source of truth for SQL + params.
+const FORECAST_COL_COUNT = 14; // permit_num, revision_num, lead_id, trade_slug, predicted_start,
+                                // confidence, urgency, target_window, calibration_method,
+                                // sample_size, median_days, p25_days, p75_days, computed_at
+const FORECAST_BATCH_SIZE = pipeline.maxRowsPerInsert(FORECAST_COL_COUNT); // Math.floor(65535 / 14) = 4681
+
+// Phase F.1: lead_id format validators for pre-INSERT pre-validation (v4 MED-I — both sides).
+// Spec 42 §6.6.A: permit lead_id is `permit:<num>:<rev>`; CoA is `coa:<application_number>`.
+const LEAD_ID_FORMAT_COA = /^coa:.+$/;
+const LEAD_ID_FORMAT_PERMIT = /^permit:[^:]+:[^:]+$/;
 
 // Grace-purge window: rows older than this are deleted by the grace-purge DELETE.
 // Mirrored as the JS in-memory cutoff to break the write+delete zombie loop.
@@ -75,7 +84,24 @@ const LOGIC_VARS_SCHEMA = z.object({
   calibration_default_median_days:    z.coerce.number().finite().positive(),
   calibration_default_p25_days:       z.coerce.number().finite().positive(),
   calibration_default_p75_days:       z.coerce.number().finite().positive(),
+  // Phase F.1 v3 CRIT-D: snowplow staleness gate for CoA lifecycle_transition anchors
+  coa_lifecycle_transition_stale_days: z.coerce.number().int().positive(),
+  // Phase F.1 v4 MED-J: operator-tunable gate freshness window
+  coa_gate_calibration_window_days:    z.coerce.number().int().positive(),
 }).passthrough();
+
+// ─── Phase F.1 module-local helpers ─────────────────────────────────────────
+
+// selectCoaAnchor (v2 NIT 14 fold — extracted for testability): returns the best CoA anchor
+// per Spec 85 §3 priority: lifecycle_transitions.MAX(transitioned_at) → decision_date →
+// hearing_date → first_seen_at. Returns { date, source } or null if no anchor available.
+function selectCoaAnchor(row) {
+  if (row.phase_started_at)  return { date: row.phase_started_at,                          source: 'lifecycle_transition' };
+  if (row.decision_date)     return { date: new Date(row.decision_date + 'T00:00:00Z'),     source: 'decision_date' };
+  if (row.hearing_date)      return { date: new Date(row.hearing_date  + 'T00:00:00Z'),     source: 'hearing_date' };
+  if (row.first_seen_at)     return { date: row.first_seen_at,                              source: 'first_seen_at' };
+  return null;
+}
 
 // Urgency classification — no isStalled parameter.
 //
@@ -181,6 +207,72 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   );
 
   // ═══════════════════════════════════════════════════════════
+  // Phase F.1: CoA audit-verdict gate (follow-up #131)
+  // ═══════════════════════════════════════════════════════════
+  // v3 CRIT-A: pipeline column stores `${chainId}:${manifest_key}` where manifest_key uses
+  //   UNDERSCORE per scripts/manifest.json. run-chain.js:321 builds the scopedSlug as
+  //   `${chainId}:${slug}` from the manifest key. v2 hyphen typo would never match.
+  // v3 CRIT-B: 7-day window per Spec 48 §3.4 baseline (now operator-tunable per v4 MED-J).
+  // v3 CRIT-C: drop status='completed' filter; check status in JS so most-recent FAILED run
+  //   is detected instead of falling through to an older PASS.
+  const GATE_PIPELINE_NAME = 'permits:compute_phase_calibration';
+  const gateWindowDays = logicVars.coa_gate_calibration_window_days;
+  let coaGateActive = false;
+  let coaGateStatus = 'unknown';
+  let coaGateLastRunId = null;
+  let coaGateLastVerdict = null;
+  try {
+    const { rows: gateRows } = await pool.query(
+      `SELECT id, status, started_at, records_meta->'audit_table'->>'verdict' AS verdict
+         FROM pipeline_runs
+        WHERE pipeline = $1
+          AND started_at >= NOW() - ($2 || ' days')::interval
+        ORDER BY started_at DESC
+        LIMIT 1`,
+      [GATE_PIPELINE_NAME, gateWindowDays.toString()],
+    );
+    if (gateRows.length === 0) {
+      coaGateStatus = 'no_prior_run';
+    } else {
+      coaGateLastRunId = gateRows[0].id;
+      coaGateLastVerdict = gateRows[0].verdict;
+      const lastStatus = gateRows[0].status;
+      if (lastStatus !== 'completed') {
+        coaGateStatus = `blocked_by_failed_run_${lastStatus}`;
+      } else if (coaGateLastVerdict === 'PASS') {
+        coaGateActive = true;
+        coaGateStatus = 'pass';
+      } else {
+        coaGateStatus = `blocked_by_${(coaGateLastVerdict || 'null').toLowerCase()}`;
+      }
+    }
+  } catch (err) {
+    coaGateActive = false;
+    coaGateStatus = 'query_error';
+    pipeline.log.warn('[trade-forecasts]', 'audit-verdict gate query failed — CoA branch will be skipped',
+      { error: err instanceof Error ? err.message : String(err) });
+  }
+  pipeline.log.info('[trade-forecasts]',
+    `CoA audit-verdict gate: ${coaGateStatus} (last_run_id=${coaGateLastRunId}, last_verdict=${coaGateLastVerdict})`);
+
+  // v4 CRIT-B: pre-fetch BOTH 7-day and 30-day deploy-age counts in a SINGLE startup query.
+  // Eliminates the inline `await pool.query(...)` from audit-row construction that previously
+  // could throw after UPSERTs commit but before emitSummary (violating Spec 47 §3.5).
+  // v3 HIGH-J: coaFirstDeployGrace = TRUE if F.1 has NO pipeline_runs rows older than 7 days
+  //   (cold-start). FALSE means it's been running ≥7 days; `no_prior_run` then means broken cron.
+  // v3 HIGH-I: inQuietPeriod = TRUE during first 30 days post-deploy (suppresses expected-WARN
+  //   on coa_anchor_fallback_pct + coa_anchor_stale_lifecycle_transition_count).
+  const { rows: deployAgeRows } = await pool.query(
+    `SELECT
+       COUNT(*) FILTER (WHERE started_at < NOW() - INTERVAL '7 days')::int  AS prior_runs_7d,
+       COUNT(*) FILTER (WHERE started_at < NOW() - INTERVAL '30 days')::int AS prior_runs_30d
+     FROM pipeline_runs
+     WHERE pipeline = 'permits:compute_trade_forecasts'`,
+  );
+  const coaFirstDeployGrace = deployAgeRows[0].prior_runs_7d === 0;
+  const inQuietPeriod = deployAgeRows[0].prior_runs_30d === 0;
+
+  // ═══════════════════════════════════════════════════════════
   // Step 1: Load calibration data into nested Map
   // ═══════════════════════════════════════════════════════════
   pipeline.log.info('[trade-forecasts]', 'Loading calibration data...');
@@ -229,6 +321,72 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   }
 
   // ═══════════════════════════════════════════════════════════
+  // Phase F.1 Step 1.b: Load CoA cohort calibration from phase_stay_calibration
+  // ═══════════════════════════════════════════════════════════
+  // v2 CRIT 6 fold: phase_stay_calibration is a DIFFERENT table from phase_calibration. E.3
+  // writes CoA-side rows here keyed on the 5-tuple (NULL permit_type, project_type,
+  // coa_type_class, from_seq, to_seq).
+  // v2 CRIT 1 + v3 HIGH-F folds: lookup keys on from_seq matching lifecycle_seq (the cohort
+  // row's from_seq = the phase being EXITED in the LAG window). Multiple to_seq variants for
+  // the same from_seq are collapsed by keeping max-sample row. 4-level fallback:
+  //   1 exact, 2 (pt, __ALL__, fs), 3 (__ALL__, tc, fs), 4 (__ALL__, __ALL__, fs), 5 default.
+  pipeline.log.info('[trade-forecasts]', 'Loading CoA cohort calibration from phase_stay_calibration...');
+  const { rows: coaCalRows } = await pool.query(
+    `SELECT project_type, coa_type_class, from_seq, to_seq,
+            median_days, p25_days, p75_days, sample_size, permit_type
+       FROM phase_stay_calibration
+      WHERE permit_type IS NULL
+        AND from_seq IS NOT NULL
+        AND median_days IS NOT NULL`,
+  );
+
+  // Map<projectType, Map<coaTypeClass, Map<fromSeq, {median,p25,p75,sample,toSeq}>>>
+  const coaCalMap = new Map();
+  for (const row of coaCalRows) {
+    if (row.permit_type != null) continue;  // v2 LOW 13 fold: undef-safe; defensive belt-and-suspenders
+    const pt = row.project_type ?? '__ALL__';
+    const tc = row.coa_type_class ?? '__ALL__';
+    const fs = row.from_seq;                // v2 CRIT 1 fold: key on from_seq, NOT to_seq
+
+    if (!coaCalMap.has(pt)) coaCalMap.set(pt, new Map());
+    const m2 = coaCalMap.get(pt);
+    if (!m2.has(tc)) m2.set(tc, new Map());
+    const existing = m2.get(tc).get(fs);
+    if (!existing || row.sample_size > existing.sample) {
+      m2.get(tc).set(fs, {
+        median: row.median_days,
+        p25:    row.p25_days,
+        p75:    row.p75_days,
+        sample: row.sample_size,
+        toSeq:  row.to_seq,
+      });
+    }
+  }
+  const coaCohortCount = [...coaCalMap.values()].reduce(
+    (n, m1) => n + [...m1.values()].reduce((nn, m2) => nn + m2.size, 0), 0);
+  pipeline.log.info('[trade-forecasts]',
+    `CoA cohort calibration loaded: ${coaCalRows.length} raw rows → ${coaCohortCount} unique (pt,tc,from_seq) cohorts`);
+
+  // v3 HIGH-F: 5-level fallback chain. fallback_all_type_classes (Level 2), fallback_all_
+  // project_types (Level 3 — NEW), fallback_all_cohorts (Level 4), default (Level 5).
+  function lookupCoaCalibration(projectType, coaTypeClass, lifecycleSeq) {
+    // Level 1: exact (project_type, coa_type_class, from_seq=lifecycleSeq)
+    const l1 = coaCalMap.get(projectType)?.get(coaTypeClass)?.get(lifecycleSeq);
+    if (l1) return { ...l1, method: 'exact' };
+    // Level 2: (project_type, __ALL__ coa_type_class, from_seq) — collapse type-class dimension
+    const l2 = coaCalMap.get(projectType)?.get('__ALL__')?.get(lifecycleSeq);
+    if (l2) return { ...l2, method: 'fallback_all_type_classes' };
+    // Level 3: (__ALL__ project_type, coa_type_class, from_seq) — v3 HIGH-F fold (NEW)
+    const l3 = coaCalMap.get('__ALL__')?.get(coaTypeClass)?.get(lifecycleSeq);
+    if (l3) return { ...l3, method: 'fallback_all_project_types' };
+    // Level 4: (__ALL__ project_type, __ALL__ coa_type_class, from_seq) — collapse both
+    const l4 = coaCalMap.get('__ALL__')?.get('__ALL__')?.get(lifecycleSeq);
+    if (l4) return { ...l4, method: 'fallback_all_cohorts' };
+    // Level 5: default (logicVars-driven; same as permit-side fallback)
+    return { median: defaultMedianDays, p25: defaultP25Days, p75: defaultP75Days, sample: 0, method: 'default' };
+  }
+
+  // ═══════════════════════════════════════════════════════════
   // Step 2: Capture preRowCount BEFORE any mutation (§47 §8.1).
   //
   // WF3 B2-H2 (2026-04-23): preRowCount is captured here — outside the
@@ -238,9 +396,18 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   // so there is no race between this SELECT and the later DELETEs.
   // ═══════════════════════════════════════════════════════════
   let stalePurged = 0;
+  let stalePurgedPermit = 0;            // Phase F.1: per-branch breakdown
+  let stalePurgedCoa = 0;
   let gracePurged = 0;
   let preRowCount = 0;
   let preCountFailed = false;
+  const failedSample = [];               // Phase F.1 v3 MED-M + v4 MED-I: lead_id pre-validation
+  const validForecasts = [];             // Phase F.1: pre-validated subset of allForecasts
+  // diff-fold #4 (DeepSeek HIGH 2): track invalid-format count per branch so audit can surface
+  let leadIdFormatFailedPermit = 0;
+  let leadIdFormatFailedCoa = 0;
+  // diff-fold #5 (DeepSeek CRIT 2): surface NULL lifecycle_seq CoA rows that silently fall to default
+  let coaNullLifecycleSeqCount = 0;
   try {
     const { rows: preCount } = await pool.query(
       'SELECT COUNT(*)::int AS n FROM trade_forecasts',
@@ -275,6 +442,14 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   // max (10) comfortably accommodates streamQuery's connection + the
   // tx's connection + the lock's connection.
   // ═══════════════════════════════════════════════════════════
+  // ╔═══════════════════════════════════════════════════════════════════════════════════╗
+  // ║ Phase F.1 SOURCE_SQL — Branch A (permit-side, preserved exactly) + Branch B (NEW). ║
+  // ║                                                                                   ║
+  // ║ CRITICAL: Branch B's WHERE clause must stay in sync with the CoA stale-purge      ║
+  // ║ CTE (see Part 2.7 / live_coa_forecasts below). Any change to "what counts as a    ║
+  // ║ live CoA forecast subject" must be mirrored in BOTH places. Otherwise stale-purge ║
+  // ║ either drops active forecasts or leaves ghosts.                                   ║
+  // ╚═══════════════════════════════════════════════════════════════════════════════════╝
   const SOURCE_SQL = `
     WITH last_passed AS (
       SELECT permit_num, MAX(inspection_date)::timestamptz AS last_passed_inspection_date
@@ -282,9 +457,14 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
        WHERE status = 'Passed'
        GROUP BY permit_num
     )
+    -- Branch A: permit-side
     SELECT p.permit_num, p.revision_num, p.lead_id, t.slug AS trade_slug,
            p.lifecycle_phase, p.phase_started_at, p.permit_type,
+           NULL::text AS project_type, NULL::text AS coa_type_class,
+           NULL::int  AS lifecycle_seq,  NULL::text AS lifecycle_group,
            p.lifecycle_stalled, p.issued_date, p.application_date,
+           NULL::date AS decision_date, NULL::date AS hearing_date,
+           NULL::timestamptz AS first_seen_at,
            lp.last_passed_inspection_date
       FROM permit_trades pt
       JOIN trades t ON t.id = pt.trade_id
@@ -306,33 +486,97 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
            AND COALESCE(p.phase_started_at, p.issued_date::timestamptz) >= NOW() - INTERVAL '3 years'
          )
        )
+
+    UNION ALL
+
+    -- Branch B: CoA-side (Phase F.1)
+    -- LATERAL JOIN value 'phase_started_at' is a DERIVED alias matching the permit-side
+    -- column semantically (most-recent phase transition timestamp); coa_applications has
+    -- no real phase_started_at column.
+    -- v2 HIGH 7 fold: decision_date + hearing_date are DATE (no TZ); explicit AT TIME ZONE 'UTC'
+    -- cast forces canonical interpretation. phase_started_at and first_seen_at are already
+    -- timestamptz so they bypass the cast (v4 NIT-N comment).
+    -- v4 HIGH-G fold: 3-year time bound REMOVED. lifecycle_group filter already gates active
+    -- (C1/C2/C3) vs terminal (C4); long-running OMB appeals (>3 years) must still produce
+    -- forecasts. (Permits-side 3-year bound exists to prune ancient ungated applications;
+    -- CoA doesn't have that pathology.)
+    SELECT NULL::varchar(30) AS permit_num,
+           NULL::varchar(10) AS revision_num,
+           lt.lead_id, t.slug AS trade_slug,
+           ca.lifecycle_phase, latest_trans.phase_started_at,
+           NULL::text AS permit_type,
+           ca.project_type, ca.coa_type_class,
+           ca.lifecycle_seq, ca.lifecycle_group,
+           ca.lifecycle_stalled,
+           NULL::date AS issued_date, NULL::date AS application_date,
+           ca.decision_date, ca.hearing_date, ca.first_seen_at,
+           NULL::timestamptz AS last_passed_inspection_date
+      FROM lead_trades lt
+      JOIN trades t ON t.id = lt.trade_id
+      JOIN coa_applications ca ON ca.lead_id = lt.lead_id
+      LEFT JOIN LATERAL (
+        SELECT MAX(transitioned_at) AS phase_started_at
+          FROM lifecycle_transitions
+         WHERE lead_id = lt.lead_id
+      ) latest_trans ON true
+     WHERE lt.is_active = true
+       AND lt.lead_id LIKE 'coa:%'
+       AND ca.lifecycle_phase IS NOT NULL
+       AND ca.lifecycle_stalled = false
+       AND ca.lifecycle_group IN ('C1','C2','C3')
+       AND COALESCE(
+             latest_trans.phase_started_at,
+             (ca.decision_date::timestamp AT TIME ZONE 'UTC'),
+             (ca.hearing_date::timestamp  AT TIME ZONE 'UTC'),
+             ca.first_seen_at
+           ) IS NOT NULL
   `;
 
-  let totalRows = 0;
-  let skipped = 0;
-  let skippedPastTarget = 0;
-  let skippedTooOld = 0;
+  // Phase F.1: counters split per-branch. records_total = permits + CoA per Spec 47 §11.1
+  // (both forecast subjects per Spec 85 §3 unified output entity).
+  let totalRowsPermit = 0;
+  let totalRowsCoa = 0;
+  let skipped = 0;             // permit-side: no-anchor
+  let skippedPastTarget = 0;   // permit-side: phase-past-target guard
+  let skippedTooOld = 0;       // permit-side: grace cutoff
   let unmappedTrades = 0;
   let upserted = 0;
-  let anchorFallbackCount = 0;
-  let snowplowCount = 0;
-  // Phase E.2 (v4 scope expansion per Gemini v3 CRIT 2 + user authorization):
-  // defensive guard against CoA-side rows entering PRE_CONSTRUCTION_PHASES.has()
-  // lookup. CoA-P3/P4 is post-approval (~1000+ days before permit filing);
-  // permit-P3 is pre-issuance — calibrating CoA-P3 via permit-P3 medians is
-  // semantically wrong. INERT today (source_SQL JOIN against permit_trades has
-  // no CoA rows); ships defensively so Phase F's UNION extension can drop in
-  // without touching the calibration code.
-  let coaSkippedCount = 0;
-  let coaSkippedFirstWarned = false;
-  // WF3 B2-H3: per-source breakdown for calibration_distribution audit.
-  // Incremented after the Phase-Past-Target Guard passes — consistent with
-  // anchorFallbackCount so "used" means "produced a forecast."
+  let upsertedCoa = 0;
+  let anchorFallbackCount = 0; // permit-side fallback count
+  let snowplowCount = 0;       // permit-side snowplow count
+
+  // Phase F.1 CoA-side counters (v3 HIGH-H + v4 folds)
+  let skippedNoAnchorCoa = 0;
+  let skippedTooOldCoa = 0;
+  let snowplowAppliedCoa = 0;
+  let coaSkippedAuditBlocked = 0;
+  let coaAnchorFallbackCount = 0;
+  let coaAnchorStaleLifecycleTransitionCount = 0;
+
+  // coa_skipped_count is RETAINED at 0 indefinitely for 7-day Observer baseline continuity
+  // (v2 CRIT 5 fold). Active CoA branch supersedes the E.2 defensive guard which is REMOVED.
+  const coaSkippedCount = 0;
+
+  // anchor-source breakdown for permit-side audit (existing) + CoA-side audit (new)
   const anchorSourceCounts = {
     phase_started_at: 0,
     last_passed_inspection: 0,
     issued_date: 0,
     application_date: 0,
+  };
+  const coaAnchorSourceCounts = {
+    lifecycle_transition: 0,
+    decision_date: 0,
+    hearing_date: 0,
+    first_seen_at: 0,
+  };
+
+  // v3 HIGH-H fold: per-lifecycle_group skip+upsert breakdown for §11.4 cohort traceability.
+  // Operator can answer "what happened to N CoAs in C2 last week?" from records_meta.
+  const skipDistribution = {
+    C1: { skipped_no_anchor: 0, skipped_too_old: 0, snowplow_applied: 0, upserted: 0 },
+    C2: { skipped_no_anchor: 0, skipped_too_old: 0, snowplow_applied: 0, upserted: 0 },
+    C3: { skipped_no_anchor: 0, skipped_too_old: 0, snowplow_applied: 0, upserted: 0 },
   };
 
   // In-memory mirror of the grace-purge DELETE threshold. Rows whose final
@@ -350,21 +594,117 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
 
   pipeline.log.info('[trade-forecasts]', 'Streaming active permit-trade pairs...');
   for await (const row of pipeline.streamQuery(pool, SOURCE_SQL, [])) {
-    totalRows++;
+    const isCoaRow = typeof row.lead_id === 'string' && row.lead_id.startsWith('coa:');
 
-    // Phase E.2 defensive guard: skip CoA rows from ISSUED calibration path.
-    // Inert today (SOURCE_SQL UNION extension lands in Phase F); ships now so
-    // Phase F is a clean drop-in.
-    if (typeof row.lead_id === 'string' && row.lead_id.startsWith('coa:')) {
-      coaSkippedCount++;
-      if (!coaSkippedFirstWarned) {
-        pipeline.log.warn('[trade-forecasts]',
-          `Skipping CoA row from forecast generation (lead_id=${row.lead_id}, phase=${row.lifecycle_phase}). ` +
-          `Inert in E.2 (no CoA UNION source yet) — Phase F replaces this with proper CoA-side logic.`);
-        coaSkippedFirstWarned = true;
+    // ═════════════════════════════════════════════════════════════════════
+    // Phase F.1 CoA branch dispatch (v2 CRIT folds + v3/v4 hardening)
+    // ═════════════════════════════════════════════════════════════════════
+    if (isCoaRow) {
+      totalRowsCoa++;
+      if (!coaGateActive) {
+        coaSkippedAuditBlocked++;
+        continue;
       }
+
+      const anchor = selectCoaAnchor(row);
+      if (!anchor) {
+        skippedNoAnchorCoa++;
+        if (skipDistribution[row.lifecycle_group]) skipDistribution[row.lifecycle_group].skipped_no_anchor++;
+        continue;
+      }
+      const { date: effectiveAnchor, source: coaAnchorSource } = anchor;
+
+      // 5-tuple cohort lookup (from_seq matching lifecycle_seq per v2 CRIT 1 / v3 HIGH-F)
+      // diff-fold #5 (DeepSeek CRIT 2): count NULL lifecycle_seq rows that silently fall to default
+      if (row.lifecycle_seq == null) coaNullLifecycleSeqCount++;
+      const cal = lookupCoaCalibration(row.project_type, row.coa_type_class, row.lifecycle_seq);
+
+      // CoA bimodal simplification: target_window = 'bid' ALWAYS (Spec 85 §3)
+      const targetWindow = 'bid';
+
+      const anchorDate = new Date(effectiveAnchor);
+      if (isNaN(anchorDate.getTime())) {
+        skippedNoAnchorCoa++;
+        if (skipDistribution[row.lifecycle_group]) skipDistribution[row.lifecycle_group].skipped_no_anchor++;
+        continue;
+      }
+      anchorDate.setUTCHours(0, 0, 0, 0);
+      let predictedStart = new Date(anchorDate);
+      predictedStart.setUTCDate(predictedStart.getUTCDate() + cal.median);
+
+      // v3 CRIT-D fold: snowplow eligibility — first_seen_at always eligible (years-stale CKAN
+      // seed); lifecycle_transition eligible only when older than logicVars.coa_lifecycle_
+      // transition_stale_days (default 180d ≈ p75 of CoA decision cohort).
+      const anchorAgeDays = (new Date(runAt).getTime() - anchorDate.getTime()) / (24 * 60 * 60 * 1000);
+      const lifecycleTransitionStale =
+            coaAnchorSource === 'lifecycle_transition'
+            && anchorAgeDays > logicVars.coa_lifecycle_transition_stale_days;
+      if (lifecycleTransitionStale) coaAnchorStaleLifecycleTransitionCount++;
+      const snowplowEligible = coaAnchorSource === 'first_seen_at' || lifecycleTransitionStale;
+      const isPast = predictedStart.getTime() < new Date(runAt).getTime();
+      if (snowplowEligible && isPast) {
+        predictedStart = new Date(today);
+        predictedStart.setUTCDate(predictedStart.getUTCDate() + logicVars.snowplow_buffer_days);
+        snowplowAppliedCoa++;
+        if (skipDistribution[row.lifecycle_group]) skipDistribution[row.lifecycle_group].snowplow_applied++;
+      }
+
+      if (predictedStart.getTime() < graceCutoffMs) {
+        skippedTooOldCoa++;
+        if (skipDistribution[row.lifecycle_group]) skipDistribution[row.lifecycle_group].skipped_too_old++;
+        continue;
+      }
+
+      const daysUntil = Math.floor((predictedStart.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+      // CoA never sets isPastTarget (target_window='bid' only)
+      const urgency = classifyUrgency(
+        daysUntil,
+        /* isPastTarget */ false,
+        logicVars.expired_threshold_days,
+        tradeConfigs[row.trade_slug]?.imminent_window_days ?? 14,
+        logicVars.urgency_overdue_days,
+        logicVars.urgency_upcoming_days,
+      );
+      const confidence = classifyConfidence(cal.sample, cal.method === 'default');
+
+      // v2 MED 12 fold: explicit cases + throw on unknown source (unreachable via selectCoaAnchor enum)
+      let finalCalMethod;
+      switch (coaAnchorSource) {
+        case 'lifecycle_transition': finalCalMethod = cal.method; break;
+        case 'decision_date':        finalCalMethod = 'fallback_decision'; break;
+        case 'hearing_date':         finalCalMethod = 'fallback_hearing'; break;
+        case 'first_seen_at':        finalCalMethod = 'fallback_first_seen'; break;
+        default:
+          throw new Error(`[trade-forecasts] selectCoaAnchor returned unknown source: ${coaAnchorSource}`);
+      }
+
+      coaAnchorSourceCounts[coaAnchorSource]++;
+      if (coaAnchorSource !== 'lifecycle_transition') coaAnchorFallbackCount++;
+
+      allForecasts.push({
+        permit_num:    null,
+        revision_num:  null,
+        lead_id:       row.lead_id,
+        trade_slug:    row.trade_slug,
+        predicted_start: predictedStart.toISOString().slice(0, 10),
+        confidence, urgency,
+        target_window: targetWindow,
+        calibration_method: finalCalMethod,
+        sample_size: cal.sample,
+        median_days: cal.median,
+        p25_days:    cal.p25,
+        p75_days:    cal.p75,
+      });
+      upsertedCoa++;
+      if (skipDistribution[row.lifecycle_group]) skipDistribution[row.lifecycle_group].upserted++;
       continue;
     }
+
+    // ═════════════════════════════════════════════════════════════════════
+    // Permit branch (existing logic preserved — E.2 defensive guard REMOVED above)
+    // ═════════════════════════════════════════════════════════════════════
+    totalRowsPermit++;
 
     const {
       permit_num, revision_num, trade_slug,
@@ -544,6 +884,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     allForecasts.push({
       permit_num,
       revision_num,
+      lead_id: row.lead_id,                    // Phase F.1: post-mig 151 PK column (explicit write)
       trade_slug,
       predicted_start: predictedStart.toISOString().slice(0, 10),
       confidence,
@@ -560,14 +901,25 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     if (allForecasts.length > 0 && allForecasts.length % (FORECAST_BATCH_SIZE * 50) === 0) {
       pipeline.log.info(
         '[trade-forecasts]',
-        `Streamed ${totalRows.toLocaleString()} rows, ${allForecasts.length.toLocaleString()} forecasts buffered`,
+        `Streamed ${(totalRowsPermit + totalRowsCoa).toLocaleString()} rows, ${allForecasts.length.toLocaleString()} forecasts buffered`,
       );
     }
   }
 
-  pipeline.log.info('[trade-forecasts]', `Rows streamed: ${totalRows.toLocaleString()}`);
-  pipeline.log.info('[trade-forecasts]', `Forecasts to write: ${allForecasts.length.toLocaleString()}`);
-  pipeline.log.info('[trade-forecasts]', `Skipped (no anchor): ${skipped.toLocaleString()}`);
+  pipeline.log.info('[trade-forecasts]',
+    `Rows streamed: ${(totalRowsPermit + totalRowsCoa).toLocaleString()} (permit=${totalRowsPermit.toLocaleString()}, coa=${totalRowsCoa.toLocaleString()})`);
+  pipeline.log.info('[trade-forecasts]',
+    `Forecasts to write: ${allForecasts.length.toLocaleString()} (coa=${upsertedCoa.toLocaleString()})`);
+  pipeline.log.info('[trade-forecasts]', `Skipped (no anchor, permit): ${skipped.toLocaleString()}`);
+  if (skippedNoAnchorCoa > 0) {
+    pipeline.log.info('[trade-forecasts]', `Skipped (no anchor, CoA): ${skippedNoAnchorCoa.toLocaleString()}`);
+  }
+  if (skippedTooOldCoa > 0) {
+    pipeline.log.info('[trade-forecasts]', `Skipped (too old, CoA grace cutoff): ${skippedTooOldCoa.toLocaleString()}`);
+  }
+  if (coaSkippedAuditBlocked > 0) {
+    pipeline.log.info('[trade-forecasts]', `CoA audit-gate blocked: ${coaSkippedAuditBlocked.toLocaleString()} rows (gate=${coaGateStatus})`);
+  }
   if (skippedTooOld > 0) {
     pipeline.log.info('[trade-forecasts]', `Skipped (too old, grace cutoff): ${skippedTooOld.toLocaleString()}`);
   }
@@ -601,13 +953,12 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       );
     }
 
-    // Stale-purge: forecasts whose underlying permit_trade is no longer active
-    // OR whose permit has moved into SKIP_PHASES or gone stalled. NOT EXISTS
-    // mirrors SOURCE_SQL exactly — anything SOURCE_SQL wouldn't emit today is
-    // something we shouldn't still have a forecast row for.
-    const { rows: staleRows } = await client.query(
+    // F2 Stale-purge — PERMIT branch (v2 CRIT 2 fold adds tf.lead_id LIKE 'permit:%' guard).
+    // Restricts to permit-side rows so NULL=NULL UNKNOWN can't silently drop CoA forecasts.
+    const { rows: stalePermitRows } = await client.query(
       `DELETE FROM trade_forecasts tf
-        WHERE NOT EXISTS (
+        WHERE tf.lead_id LIKE 'permit:%'
+          AND NOT EXISTS (
           SELECT 1 FROM permit_trades pt
             JOIN permits p ON p.permit_num = pt.permit_num
                           AND p.revision_num = pt.revision_num
@@ -633,43 +984,129 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
         )
       RETURNING 1`,
     );
-    stalePurged = staleRows.length;
-    if (stalePurged > 0) {
+    stalePurgedPermit = stalePermitRows.length;
+
+    // F3 Stale-purge — CoA branch (v3 HIGH-E fold: CTE + LEFT JOIN refactor).
+    //
+    // ╔═══════════════════════════════════════════════════════════════════════════════════╗
+    // ║ CRITICAL: this WHERE clause MUST stay in sync with Branch B of SOURCE_SQL above.  ║
+    // ║ Any change to "what counts as a live CoA forecast subject" must be mirrored in    ║
+    // ║ BOTH places. Otherwise stale-purge drops active forecasts or leaves ghosts.       ║
+    // ╚═══════════════════════════════════════════════════════════════════════════════════╝
+    //
+    // CTE-based pattern: pre-aggregate MAX(transitioned_at) per lead_id once (single scan
+    // of lifecycle_transitions), then LEFT JOIN to find purge candidates. Replaces v2's
+    // correlated scalar subquery which would have run N times inside the DELETE.
+    const { rows: staleCoaRows } = await client.query(
+      `WITH live_coa_anchors AS (
+         SELECT lead_id, MAX(transitioned_at) AS phase_started_at
+           FROM lifecycle_transitions
+          WHERE lead_id LIKE 'coa:%'
+          GROUP BY lead_id
+       ),
+       live_coa_forecasts AS (
+         SELECT lt.lead_id, t.slug AS trade_slug
+           FROM lead_trades lt
+           JOIN trades t ON t.id = lt.trade_id
+           JOIN coa_applications ca ON ca.lead_id = lt.lead_id
+           LEFT JOIN live_coa_anchors la ON la.lead_id = lt.lead_id
+          WHERE lt.is_active = true
+            AND lt.lead_id LIKE 'coa:%'
+            AND ca.lifecycle_phase IS NOT NULL
+            AND ca.lifecycle_stalled = false
+            AND ca.lifecycle_group IN ('C1','C2','C3')
+            AND COALESCE(
+                  la.phase_started_at,
+                  (ca.decision_date::timestamp AT TIME ZONE 'UTC'),
+                  (ca.hearing_date::timestamp  AT TIME ZONE 'UTC'),
+                  ca.first_seen_at
+                ) IS NOT NULL
+       )
+       DELETE FROM trade_forecasts tf
+        WHERE tf.lead_id LIKE 'coa:%'
+          AND NOT EXISTS (
+            SELECT 1 FROM live_coa_forecasts lcf
+             WHERE lcf.lead_id = tf.lead_id AND lcf.trade_slug = tf.trade_slug
+          )
+        RETURNING tf.lead_id`,
+    );
+    stalePurgedCoa = staleCoaRows.length;
+
+    // v3 LOW-P fold: surface first 5 purged CoA lead_ids for operator debugging
+    if (stalePurgedCoa > 0) {
+      const sample = staleCoaRows.slice(0, 5).map(r => r.lead_id).join(', ');
       pipeline.log.info(
         '[trade-forecasts]',
-        `Purged ${stalePurged.toLocaleString()} stale forecasts for terminal/orphan/dead permits`,
+        `Stale-purged ${stalePurgedCoa.toLocaleString()} CoA forecasts (sample: ${sample}${stalePurgedCoa > 5 ? ', ...' : ''})`,
       );
     }
 
-    // Chunked UPSERT: one INSERT ... ON CONFLICT DO UPDATE per FORECAST_BATCH_SIZE
-    // rows to stay under PostgreSQL's 65,535-parameter limit. §47 §6.3: use
-    // rowCount (returned by ON CONFLICT DO UPDATE for both INSERTs and UPDATEs),
-    // not batch length — otherwise IS DISTINCT FROM no-ops would inflate counts.
-    for (let offset = 0; offset < allForecasts.length; offset += FORECAST_BATCH_SIZE) {
-      const chunk = allForecasts.slice(offset, offset + FORECAST_BATCH_SIZE);
+    stalePurged = stalePurgedPermit + stalePurgedCoa;
+    if (stalePurged > 0) {
+      pipeline.log.info(
+        '[trade-forecasts]',
+        `Purged ${stalePurged.toLocaleString()} stale forecasts (permit=${stalePurgedPermit.toLocaleString()}, coa=${stalePurgedCoa.toLocaleString()})`,
+      );
+    }
+
+    // v3 MED-M + v4 MED-I fold: pre-validate lead_id format for BOTH CoA and permit before
+    // INSERT to surface format drift. Failed entries populate failedSample (capped at 20 per
+    // Spec 48 §4). Valid forecasts feed the INSERT.
+    for (const f of allForecasts) {
+      const isCoa = f.lead_id?.startsWith('coa:');
+      const isPermit = f.lead_id?.startsWith('permit:');
+      const validFormat = (isCoa && LEAD_ID_FORMAT_COA.test(f.lead_id))
+                       || (isPermit && LEAD_ID_FORMAT_PERMIT.test(f.lead_id));
+      if (!validFormat) {
+        if (failedSample.length < 20) {
+          const prefix = isCoa ? 'coa' : isPermit ? 'permit' : 'unknown';
+          failedSample.push(`lead_id:${f.lead_id} — ${prefix}-format validation failed`);
+        }
+        // diff-fold #1 (Independent BUG 1 — HIGH 88): drop the now-skipped row from upsertedCoa
+        // so forecasts_computed_permit = upserted - upsertedCoa stays accurate. Without this,
+        // upsertedCoa counts pushes BEFORE validation while `upserted` counts INSERT rowCount
+        // AFTER validation — leading to negative forecasts_computed_permit when any CoA fails.
+        if (isCoa) {
+          upsertedCoa--;
+          leadIdFormatFailedCoa++;
+        } else {
+          leadIdFormatFailedPermit++;
+        }
+        continue;
+      }
+      validForecasts.push(f);
+    }
+
+    // Chunked UPSERT: 14 columns per row (Phase F.1 adds lead_id explicitly — post-mig 151 PK).
+    // FORECAST_COL_COUNT = 14 single source of truth (v3 NIT-O fold).
+    for (let offset = 0; offset < validForecasts.length; offset += FORECAST_BATCH_SIZE) {
+      const chunk = validForecasts.slice(offset, offset + FORECAST_BATCH_SIZE);
       const vals = [];
       const params = [];
       for (let j = 0; j < chunk.length; j++) {
         const f = chunk[j];
-        const base = j * 13;
+        const base = j * FORECAST_COL_COUNT;
         vals.push(
-          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}::date, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}::int, $${base + 10}::int, $${base + 11}::int, $${base + 12}::int, $${base + 13}::timestamptz)`,
+          `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, ` +
+          `$${base + 5}::date, $${base + 6}, $${base + 7}, $${base + 8}, $${base + 9}, ` +
+          `$${base + 10}::int, $${base + 11}::int, $${base + 12}::int, $${base + 13}::int, ` +
+          `$${base + 14}::timestamptz)`,
         );
         params.push(
-          f.permit_num, f.revision_num, f.trade_slug,
+          f.permit_num, f.revision_num, f.lead_id, f.trade_slug,
           f.predicted_start, f.confidence, f.urgency,
-          f.target_window, f.calibration_method, f.sample_size,
-          f.median_days, f.p25_days, f.p75_days,
+          f.target_window, f.calibration_method,
+          f.sample_size, f.median_days, f.p25_days, f.p75_days,
           runAt, // §47 §6.1 — same timestamp for every row in this run
         );
       }
       const insertResult = await client.query(
         `INSERT INTO trade_forecasts
-           (permit_num, revision_num, trade_slug, predicted_start,
+           (permit_num, revision_num, lead_id, trade_slug, predicted_start,
             confidence, urgency, target_window, calibration_method,
             sample_size, median_days, p25_days, p75_days, computed_at)
          VALUES ${vals.join(', ')}
-         ON CONFLICT (permit_num, revision_num, trade_slug)
+         ON CONFLICT (lead_id, trade_slug)
          DO UPDATE SET
            predicted_start = EXCLUDED.predicted_start,
            confidence = EXCLUDED.confidence,
@@ -680,7 +1117,9 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
            median_days = EXCLUDED.median_days,
            p25_days = EXCLUDED.p25_days,
            p75_days = EXCLUDED.p75_days,
-           computed_at = EXCLUDED.computed_at`,
+           computed_at = EXCLUDED.computed_at,
+           permit_num = EXCLUDED.permit_num,
+           revision_num = EXCLUDED.revision_num`,
         params,
       );
       upserted += insertResult.rowCount || 0;
@@ -709,23 +1148,69 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   const defaultPct = ((calibrationDistribution.default ?? 0) / totalForecasts) * 100;
   const expiredPct = ((urgencyDistribution.expired ?? 0) / totalForecasts) * 100;
 
-  // Build audit table per spec 47 §8.2 — forecast engine minimum:
-  // forecasts_computed, stale_purged, default_calibration_pct (with threshold)
+  // Phase F.1 audit row classifications (v3 HIGH-J + v3 HIGH-I + v4 HIGH-F folds).
+  // coa_audit_gate_status — INFO for healthy (pass) + first-deploy-grace cold-start.
+  //   WARN for actual upstream failures or persistent absence (broken cron).
+  let coaGateAuditStatus;
+  if (coaGateStatus === 'pass') {
+    coaGateAuditStatus = 'INFO';
+  } else if (coaGateStatus === 'no_prior_run' && coaFirstDeployGrace) {
+    coaGateAuditStatus = 'INFO';                                  // Day 0–7 cold-start
+  } else {
+    coaGateAuditStatus = 'WARN';                                  // broken-cron OR actual failure
+  }
+
+  // coa_anchor_fallback_pct — quiet-period INFO during first 30 days; threshold-WARN after.
+  const coaAnchorFallbackPct = totalRowsCoa > 0
+    ? (coaAnchorFallbackCount / totalRowsCoa) * 100 : 0;
+  const coaAnchorFallbackStatus = inQuietPeriod
+    ? 'INFO'
+    : (coaAnchorFallbackPct >= 95 ? 'WARN' : 'PASS');
+
+  // coa_anchor_stale_lifecycle_transition_count — quiet-period INFO; > 50% post-quiet → WARN.
+  const coaStalePct = totalRowsCoa > 0
+    ? (coaAnchorStaleLifecycleTransitionCount / totalRowsCoa) : 0;
+  // diff-fold #3 (Observability HIGH 85): below-threshold post-quiet-period must be 'PASS'
+  // not 'INFO' so the Spec 48 Observer's anomaly detection sees a clean signal.
+  const coaStaleStatus = inQuietPeriod
+    ? 'INFO'
+    : (coaStalePct > 0.5 ? 'WARN' : 'PASS');
+
+  // Build audit table per spec 47 §8.2 — forecast engine minimum + Phase F.1 additions.
   const auditRows = [
     { metric: 'forecasts_computed',        value: upserted,                threshold: null,    status: 'INFO' },
     { metric: 'new_forecasts',             value: newRows,                 threshold: null,    status: 'INFO' },
     { metric: 'stale_purged',              value: stalePurged,             threshold: null,    status: 'INFO' },
+    { metric: 'stale_purged_permit',       value: stalePurgedPermit,       threshold: null,    status: 'INFO' },
+    { metric: 'stale_purged_coa',          value: stalePurgedCoa,          threshold: null,    status: 'INFO' },
     { metric: 'grace_purged',             value: gracePurged,             threshold: null,    status: 'INFO' },
-    // skipped_no_anchor: rows reaching the JS loop with no effectiveAnchor (all 4 fallback fields NULL).
-    // Terminal/orphan phases (SKIP_PHASES) are now excluded at SQL level — they no longer reach this counter.
+    // skipped_no_anchor: permit-side only (CoA breakdown in skipped_no_anchor_coa)
     { metric: 'skipped_no_anchor',         value: skipped,                 threshold: null,    status: 'INFO' },
-    // skipped_past_target: rows where currentOrdinal > targetOrdinal — trade's opportunity window closed.
-    // Not counted in skipped_no_anchor; kept separate so operators can distinguish the two skip reasons.
     { metric: 'skipped_past_target',       value: skippedPastTarget,       threshold: null,    status: 'INFO' },
-    // skipped_too_old: rows whose final predictedStart < graceCutoffMs — would be written then immediately
-    // grace_purge-deleted. Dropped in-memory to break the zombie write+delete loop.
     { metric: 'skipped_too_old',           value: skippedTooOld,           threshold: null,    status: 'INFO' },
     { metric: 'snowplow_applied',          value: snowplowCount,           threshold: null,    status: 'INFO' },
+    // Phase F.1 CoA-side counters in audit_table.rows per Spec 47 §11.4 (v2 HIGH 8)
+    { metric: 'skipped_no_anchor_coa',     value: skippedNoAnchorCoa,      threshold: null,    status: 'INFO' },
+    { metric: 'skipped_too_old_coa',       value: skippedTooOldCoa,        threshold: null,    status: 'INFO' },
+    { metric: 'snowplow_applied_coa',      value: snowplowAppliedCoa,      threshold: null,    status: 'INFO' },
+    { metric: 'coa_forecasts_computed',    value: upsertedCoa,             threshold: null,    status: 'INFO' },
+    { metric: 'coa_skipped_audit_blocked', value: coaSkippedAuditBlocked,  threshold: null,    status: 'INFO' },
+    { metric: 'coa_audit_gate_status',     value: coaGateStatus,           threshold: "== 'pass'", status: coaGateAuditStatus },
+    {
+      metric: 'coa_anchor_fallback_pct',
+      value: coaAnchorFallbackPct.toFixed(1) + '%',
+      threshold: '< 95% post-quiet-period; INFO during 30-day quiet period',
+      status: coaAnchorFallbackStatus,
+    },
+    // v4 HIGH-F: numeric 1/0 (NOT JS boolean) per Spec 48 §3.1 — Observer's anomaly detection
+    // math coerces boolean to NaN.
+    { metric: 'coa_anchor_fallback_pct_quiet_period', value: inQuietPeriod ? 1 : 0, threshold: null, status: 'INFO' },
+    {
+      metric: 'coa_anchor_stale_lifecycle_transition_count',
+      value: coaAnchorStaleLifecycleTransitionCount,
+      threshold: '< 50% of totalRowsCoa post-quiet-period',
+      status: coaStaleStatus,
+    },
     {
       metric: 'unmapped_trades',
       value: unmappedTrades,
@@ -745,32 +1230,75 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       status: expiredPct >= 60 ? 'FAIL' : expiredPct >= 30 ? 'WARN' : 'PASS',
     },
     { metric: 'total_forecast_rows', value: postRowCount, threshold: null, status: 'INFO' },
-    // Phase E.2 — defensive guard telemetry. Inert today (no CoA UNION source yet);
-    // first non-zero value appears when Phase F adds CoA rows to SOURCE_SQL.
+    // v2 CRIT 5: keep emitting coa_skipped_count = 0 indefinitely for 7-day Observer baseline
+    // continuity. Retire in F.2 once `coa_forecasts_computed` appears in ≥ 7 daily Observer
+    // baselines as PASS/INFO (concrete retirement criterion per diff-fold doc).
     { metric: 'coa_skipped_count', value: coaSkippedCount, threshold: null, status: 'INFO' },
+    // diff-fold #4 (DeepSeek HIGH 2): escalate to WARN when ANY lead_id pre-validation
+    // failures occur. The bare `failed_sample` field is easy to miss; this audit row makes
+    // widespread format drift visible in Observer's extractIssues().
+    {
+      metric: 'lead_id_format_failed_count',
+      value: leadIdFormatFailedPermit + leadIdFormatFailedCoa,
+      threshold: '== 0',
+      status: (leadIdFormatFailedPermit + leadIdFormatFailedCoa) > 0 ? 'WARN' : 'PASS',
+    },
+    // diff-fold #5 (DeepSeek CRIT 2): NULL lifecycle_seq CoA rows silently fall to default
+    // calibration. INFO during quiet period (E.2 ramp); WARN after quiet period if > 0 (E.2
+    // writer is unhealthy).
+    {
+      metric: 'coa_null_lifecycle_seq_count',
+      value: coaNullLifecycleSeqCount,
+      threshold: inQuietPeriod ? null : '== 0',
+      status: inQuietPeriod ? 'INFO' : (coaNullLifecycleSeqCount > 0 ? 'WARN' : 'PASS'),
+    },
   ];
   const auditVerdict =
     auditRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
     auditRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
 
-  // §11.1: records_total = total rows streamed, not rows upserted
+  // Phase F.1 v3 HIGH-9 fold: records_total = totalRowsPermit + totalRowsCoa per Spec 47 §11.1
+  // (both branches are primary forecast subjects per Spec 85 §3 unified output entity).
   pipeline.emitSummary({
-    records_total: totalRows,
+    records_total: totalRowsPermit + totalRowsCoa,
     records_new: newRows,
     records_updated: upserted - newRows,
+    failed_sample: failedSample.length > 0 ? failedSample : undefined,
     records_meta: {
       forecasts_computed: upserted,
+      forecasts_computed_permit: upserted - upsertedCoa,
+      forecasts_computed_coa: upsertedCoa,
+      total_rows_permit: totalRowsPermit,
+      total_rows_coa: totalRowsCoa,
       stale_forecasts_purged: stalePurged,
+      stale_purged_permit: stalePurgedPermit,
+      stale_purged_coa: stalePurgedCoa,
       grace_purged: gracePurged,
       skipped_no_anchor: skipped,
+      skipped_no_anchor_coa: skippedNoAnchorCoa,
       skipped_past_target: skippedPastTarget,
       skipped_too_old: skippedTooOld,
+      skipped_too_old_coa: skippedTooOldCoa,
+      snowplow_applied_coa: snowplowAppliedCoa,
+      coa_skipped_audit_blocked: coaSkippedAuditBlocked,
+      coa_anchor_stale_lifecycle_transition_count: coaAnchorStaleLifecycleTransitionCount,
+      // diff-fold #2 (Observability HIGH 90): raw float for Spec 48 Observer baseline arithmetic.
+      // The audit_table.rows entry stays as a formatted '%' string for human display; this
+      // top-level records_meta scalar is what observe-chain.js's anomaly detection consumes.
+      coa_anchor_fallback_pct: coaAnchorFallbackPct,
+      // diff-fold #5: surface NULL lifecycle_seq count for the Observer's baseline tracking.
+      coa_null_lifecycle_seq_count: coaNullLifecycleSeqCount,
+      // diff-fold #4: per-branch breakdown of lead_id pre-validation failures.
+      lead_id_format_failed_permit: leadIdFormatFailedPermit,
+      lead_id_format_failed_coa: leadIdFormatFailedCoa,
+      // v3 HIGH-H: per-lifecycle_group breakdown for Spec 47 §11.4 cohort traceability
+      skipped_distribution_by_lifecycle_group: skipDistribution,
+      coa_first_deploy_grace: coaFirstDeployGrace,
+      coa_audit_gate_status: coaGateStatus,
       unmapped_trades: unmappedTrades,
       anchor_fallbacks_used: anchorFallbackCount,
-      // WF3 B2-H3: granular breakdown so operators can distinguish
-      // inspection-anchored (fresh, no snowplow) from issued/application
-      // (stale, snowplow fires).
       anchor_sources: anchorSourceCounts,
+      anchor_sources_coa: coaAnchorSourceCounts,
       snowplow_applied: snowplowCount,
       urgency_distribution: urgencyDistribution,
       calibration_distribution: calibrationDistribution,
@@ -791,9 +1319,15 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       permits: ['permit_num', 'revision_num', 'lifecycle_phase', 'lifecycle_stalled', 'phase_started_at', 'permit_type', 'issued_date', 'application_date'],
       permit_inspections: ['permit_num', 'inspection_date', 'status'],
       phase_calibration: ['from_phase', 'to_phase', 'permit_type', 'median_days', 'p25_days', 'p75_days', 'sample_size'],
+      // Phase F.1 reads (CoA UNION + gate)
+      lead_trades: ['lead_id', 'trade_id', 'is_active'],
+      coa_applications: ['lead_id', 'lifecycle_phase', 'lifecycle_seq', 'lifecycle_group', 'lifecycle_stalled', 'project_type', 'coa_type_class', 'decision_date', 'hearing_date', 'first_seen_at'],
+      lifecycle_transitions: ['lead_id', 'transitioned_at'],
+      phase_stay_calibration: ['permit_type', 'project_type', 'coa_type_class', 'from_seq', 'to_seq', 'median_days', 'p25_days', 'p75_days', 'sample_size'],
+      pipeline_runs: ['pipeline', 'status', 'started_at', 'records_meta'],
     },
     {
-      trade_forecasts: ['permit_num', 'revision_num', 'trade_slug', 'predicted_start', 'confidence', 'urgency', 'calibration_method', 'sample_size', 'median_days', 'p25_days', 'p75_days', 'computed_at'],
+      trade_forecasts: ['permit_num', 'revision_num', 'lead_id', 'trade_slug', 'predicted_start', 'confidence', 'urgency', 'calibration_method', 'sample_size', 'median_days', 'p25_days', 'p75_days', 'computed_at'],
     },
   );
   }); // end withAdvisoryLock
