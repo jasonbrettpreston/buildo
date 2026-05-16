@@ -367,8 +367,10 @@ describe('scripts/update-tracked-projects.js — WF3-01 notification dispatch', 
     // midnight get a different date than the updated_at on tracked_projects.
     // RUN_AT is captured once at startup and passed as the final param.
     expect(content).not.toMatch(/INSERT INTO notifications[\s\S]{0,500}NOW\(\)/);
-    // RUN_AT must be in the params flatMap for the notification INSERT
-    expect(content).toMatch(/a\.user_id[\s\S]{0,200}a\.type[\s\S]{0,200}a\.body[\s\S]{0,200}RUN_AT/);
+    // RUN_AT must be in the params flatMap for the notification INSERT.
+    // Phase F.2 v4 CRIT-CC: INSERT params include CoA polymorphism fallback chain — the
+    // expression `a.coa_application_number || a.permit_num || 'unknown-coa'` precedes the trailing fields.
+    expect(content).toMatch(/a\.user_id[\s\S]{0,2000}a\.body[\s\S]{0,200}RUN_AT/);
   });
 
   it('alert objects carry title and body — not a bare message field (matches notifications schema)', () => {
@@ -492,3 +494,228 @@ describe('scripts/update-tracked-projects.js — WF3-03 dead lead archive', () =
     expect(archivedMatches).toHaveLength(1); // single consolidated archive UPDATE
   });
 });
+
+// 🔗 SPEC LINK: docs/specs/01-pipeline/82_crm_assistant_alerts.md §4 CoA Lead Handling
+//             docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase F.2
+//             docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3 + §7
+//             docs/specs/01-pipeline/48_pipeline_observability.md §3.1 / §3.4 / §11.4
+describe('Phase F.2 — update-tracked-projects.js CoA branch (WF1 v4)', () => {
+  let SRC: string;
+  beforeAll(() => {
+    SRC = read('scripts/update-tracked-projects.js');
+  });
+
+  // ── SOURCE_SQL UNION (Part 2.1) ──────────────────────────────────────
+
+  it('F.2-1: SOURCE_SQL contains UNION ALL with permit-side Branch A + CoA Branch B', () => {
+    expect(SRC).toMatch(/UNION\s+ALL/);
+  });
+
+  it('F.2-2: Branch A projects p.lead_id AS lead_id (resolves #118 naming standardization)', () => {
+    expect(SRC).toMatch(/p\.lead_id\s+AS\s+lead_id/);
+  });
+
+  it('F.2-3: Branch A WHERE filters lead_id NOT LIKE \'coa:%\' for mutual exclusivity (v2 CRIT-C)', () => {
+    expect(SRC).toMatch(/tp\.lead_id\s+IS\s+NULL\s+OR\s+tp\.lead_id\s+NOT\s+LIKE\s+'coa:%'/i);
+  });
+
+  it('F.2-4: Branch B uses LEFT JOIN on coa_applications for single-pass orphan detection (v4 HIGH-JJ)', () => {
+    expect(SRC).toMatch(/LEFT\s+JOIN\s+coa_applications\s+ca\s+ON\s+ca\.lead_id\s*=\s*tp\.lead_id/i);
+  });
+
+  it('F.2-5: Branch B filters tp.lead_id LIKE \'coa:%\'', () => {
+    expect(SRC).toMatch(/tp\.lead_id\s+LIKE\s+'coa:%'/);
+  });
+
+  it('F.2-6: Branch B projects NULL::int AS imminent_window_days (v2 HIGH-J — no permit-side pollution)', () => {
+    expect(SRC).toMatch(/NULL::int\s+AS\s+imminent_window_days/i);
+  });
+
+  it('F.2-7: coa_days_at_status uses GREATEST(..., 0) clamp + last_seen_at fallback (v2 HIGH-H + MED-S)', () => {
+    expect(SRC).toMatch(/GREATEST\s*\(/);
+    expect(SRC).toMatch(/last_seen_at/);
+  });
+
+  it('F.2-8: Branch A projects NULL::boolean AS notified_decision_rendered for UNION parity (v3 CRIT-1)', () => {
+    expect(SRC).toMatch(/NULL::boolean\s+AS\s+notified_decision_rendered/i);
+  });
+
+  // ── Module-local pure helpers (Part 2.2) ────────────────────────────
+
+  it('F.2-9: selectCoaStallThreshold helper present with null-guard (v3 MED-18)', () => {
+    expect(SRC).toMatch(/function\s+selectCoaStallThreshold\s*\(\s*coaStatus\s*,\s*logicVars\s*\)/);
+    expect(SRC).toMatch(/coaStatus\s*==\s*null/);
+  });
+
+  it('F.2-10: selectCoaStallThreshold reads existing coa_stall_threshold key (NOT _days suffix; v2 CRIT-A)', () => {
+    expect(SRC).toMatch(/logicVars\.coa_stall_threshold\b(?!_)/);
+    const helperBlock = SRC.match(/function\s+selectCoaStallThreshold[\s\S]+?\n\}/);
+    expect(helperBlock).toBeTruthy();
+    expect(helperBlock?.[0]).not.toMatch(/coa_stall_threshold_days/);
+  });
+
+  it('F.2-11: selectCoaStallThreshold reads coa_stall_threshold_postponed_days (v2 HIGH-I)', () => {
+    expect(SRC).toMatch(/logicVars\.coa_stall_threshold_postponed_days/);
+  });
+
+  it('F.2-12: isCoaInImminentWindow with UTC parse + zero-guard (v4 HIGH-GG + NIT-XX)', () => {
+    expect(SRC).toMatch(/function\s+isCoaInImminentWindow\s*\(/);
+    expect(SRC).toMatch(/T00:00:00Z/);
+    expect(SRC).toMatch(/windowDays\s*<=\s*0/);
+  });
+
+  it('F.2-13: isCoaTerminalState helper includes Closed in COA_TERMINAL_STATUSES (v4 CRIT-DD)', () => {
+    expect(SRC).toMatch(/function\s+isCoaTerminalState/);
+    expect(SRC).toMatch(/COA_TERMINAL_STATUSES[\s\S]{0,80}'Closed'/);
+    expect(SRC).toMatch(/COA_TERMINAL_STATUSES[\s\S]{0,80}'Complete'/);
+  });
+
+  it('F.2-14: COA_APPROVED_DECISIONS excludes Final and Binding (v2 CRIT-G)', () => {
+    const setMatch = SRC.match(/COA_APPROVED_DECISIONS\s*=\s*new\s+Set\s*\(\s*\[[^\]]+\]\s*\)/);
+    expect(setMatch).toBeTruthy();
+    expect(setMatch?.[0]).not.toMatch(/'Final and Binding'/);
+  });
+
+  it('F.2-15: extractCoaApplicationNumber regex helper with null-safe return (v3 LOW-20)', () => {
+    expect(SRC).toMatch(/function\s+extractCoaApplicationNumber/);
+    expect(SRC).toMatch(/\/\^coa:\(\.\+\)\$\//);
+  });
+
+  // ── Branch B dispatch (Part 2.3) ─────────────────────────────────────
+
+  it('F.2-16: E.2 defensive coa:% skip guard REMOVED', () => {
+    expect(SRC).not.toMatch(/Skipping CoA row \(permit_lead_id/);
+  });
+
+  it('F.2-17: CoA branch dispatches on row.lead_id.startsWith(\'coa:\') (NOT permit_lead_id)', () => {
+    expect(SRC).toMatch(/row\.lead_id\?\.startsWith\(\s*'coa:'\s*\)|row\.lead_id\.startsWith\(\s*'coa:'\s*\)/);
+  });
+
+  it('F.2-18: Negative grep — zero permit_lead_id references in script (v3 HIGH-12)', () => {
+    expect(SRC).not.toMatch(/row\.permit_lead_id/);
+  });
+
+  it('F.2-19: decision-reversal reset runs BEFORE auto-archive (v4 CRIT-AA)', () => {
+    const resetIdx = SRC.search(/notified_decision_rendered:\s*false/);
+    const archiveIdx = SRC.search(/terminalState\s*=\s*isCoaTerminalState/);
+    expect(resetIdx).toBeGreaterThan(0);
+    expect(archiveIdx).toBeGreaterThan(0);
+    expect(resetIdx).toBeLessThan(archiveIdx);
+  });
+
+  it('F.2-20: Auto-archive condition is `if (terminalState)` only — NO C4 clause (v3 CRIT-2)', () => {
+    const archiveBlock = SRC.match(/const\s+terminalState[\s\S]{0,500}if\s*\(\s*terminalState\s*\)/);
+    expect(archiveBlock).toBeTruthy();
+    expect(archiveBlock?.[0]).not.toMatch(/lifecycle_group\s*===\s*'C4'/);
+  });
+
+  // ── Notification subtypes (Part 2.4) ─────────────────────────────────
+
+  it('F.2-21: NOTIFICATION_TITLES includes 3 new CoA subtypes', () => {
+    expect(SRC).toMatch(/COA_HEARING_IMMINENT:/);
+    expect(SRC).toMatch(/COA_DECISION_RENDERED:/);
+    expect(SRC).toMatch(/COA_STALLED:/);
+  });
+
+  it('F.2-22: extractCoaApplicationNumber || \'unknown-coa\' fallback at call sites (v4 CRIT-CC)', () => {
+    expect(SRC).toMatch(/extractCoaApplicationNumber\(row\.lead_id\)\s*\|\|\s*'unknown-coa'/);
+  });
+
+  // ── LOGIC_VARS_SCHEMA (Spec 47 §R4) ──────────────────────────────────
+
+  it('F.2-23: LOGIC_VARS_SCHEMA validates 4 CoA keys (3 existing + 1 new)', () => {
+    expect(SRC).toMatch(/coa_stall_threshold:\s*z\./);
+    expect(SRC).toMatch(/coa_stall_threshold_p2_days:\s*z\./);
+    expect(SRC).toMatch(/coa_stall_threshold_postponed_days:\s*z\./);
+    expect(SRC).toMatch(/coa_imminent_window_days:\s*z\./);
+  });
+
+  // ── Startup checks (Part 2.7) ────────────────────────────────────────
+
+  it('F.2-24: Pre-fetches deploy-age counts in single startup query (v2 HIGH-N)', () => {
+    expect(SRC).toMatch(/prior_runs_7d/);
+    expect(SRC).toMatch(/prior_runs_30d/);
+    expect(SRC).toMatch(/coaFirstDeployGrace/);
+    expect(SRC).toMatch(/inQuietPeriod/);
+  });
+
+  it('F.2-25: Deploy-age query uses pipeline = \'permits:update_tracked_projects\' (v2 HIGH-N)', () => {
+    expect(SRC).toMatch(/pipeline\s*=\s*'permits:update_tracked_projects'/);
+  });
+
+  // ── Audit rows + records_meta (Part 2.8) ─────────────────────────────
+
+  it('F.2-26: 6 new CoA-side audit rows present (5 alert/archive + 1 orphan)', () => {
+    expect(SRC).toMatch(/metric:\s*['"]coa_stall_alerts['"]/);
+    expect(SRC).toMatch(/metric:\s*['"]coa_recovery_alerts['"]/);
+    expect(SRC).toMatch(/metric:\s*['"]coa_imminent_alerts['"]/);
+    expect(SRC).toMatch(/metric:\s*['"]coa_decision_alerts['"]/);
+    expect(SRC).toMatch(/metric:\s*['"]coa_archived['"]/);
+    expect(SRC).toMatch(/metric:\s*['"]coa_orphaned_lead_ids['"]/);
+  });
+
+  it('F.2-27: coa_skipped_count REMOVED from F.2 audit rows (v2 LOW-T)', () => {
+    expect(SRC).not.toMatch(/metric:\s*['"]coa_skipped_count['"]/);
+  });
+
+  it('F.2-28: in_quiet_period audit row present as INFO (v4 HIGH-OO)', () => {
+    expect(SRC).toMatch(/metric:\s*['"]in_quiet_period['"]/);
+  });
+
+  it('F.2-29: coa_alert_distribution_by_lifecycle_group with C1/C2/C3/C4 symmetric shape (v3 HIGH-8)', () => {
+    expect(SRC).toMatch(/skipDistributionCoa/);
+    expect(SRC).toMatch(/C1[\s\S]{0,150}C2[\s\S]{0,150}C3[\s\S]{0,150}C4/);
+  });
+
+  it('F.2-30: records_total = totalRowsPermit + totalRowsCoa (Spec 47 §11.1)', () => {
+    expect(SRC).toMatch(/records_total:\s*totalRowsPermit\s*\+\s*totalRowsCoa/);
+  });
+
+  it('F.2-31: emitMeta writes include notifications (v2 HIGH-P)', () => {
+    expect(SRC).toMatch(/notifications:\s*\[[\s\S]{0,200}'type'[\s\S]{0,200}'permit_num'/);
+  });
+
+  it('F.2-32: emitMeta reads include coa_applications + lifecycle_classified_at + last_seen_at', () => {
+    expect(SRC).toMatch(/coa_applications:[\s\S]{0,300}lifecycle_classified_at[\s\S]{0,200}last_seen_at/);
+  });
+
+  // ── Diff-stage 4-reviewer folds (locked-in after Green Light) ────────
+
+  it('F.2-33: diff-CRIT-1 — decisionRenderedTrueIds / decisionRenderedFalseIds batch categories + UPDATEs', () => {
+    expect(SRC).toMatch(/decisionRenderedTrueIds/);
+    expect(SRC).toMatch(/decisionRenderedFalseIds/);
+    expect(SRC).toMatch(/SET\s+notified_decision_rendered\s*=\s*true[\s\S]{0,150}IS DISTINCT FROM true/);
+    expect(SRC).toMatch(/SET\s+notified_decision_rendered\s*=\s*false[\s\S]{0,150}IS DISTINCT FROM false/);
+  });
+
+  it('F.2-34: diff-CRIT-2 — totalAlerts includes all 7 alert counters (Gemini CRIT 2)', () => {
+    expect(SRC).toMatch(
+      /totalAlerts\s*=\s*stallAlerts\s*\+\s*recoveryAlerts\s*\+\s*imminentAlerts[\s\S]{0,200}coaStallAlerts[\s\S]{0,200}coaRecoveryAlerts[\s\S]{0,200}coaImminentAlerts[\s\S]{0,200}coaDecisionAlerts/,
+    );
+  });
+
+  it('F.2-35: diff-CRIT-3 — lead_analytics UNIONs CoA leads (Gemini CRIT 1)', () => {
+    expect(SRC).toMatch(/INSERT INTO lead_analytics[\s\S]{0,1500}UNION ALL[\s\S]{0,500}tp\.lead_id\s+AS\s+lead_key/i);
+    expect(SRC).toMatch(/la\.lead_key\s*=\s*tp\.lead_id/);
+  });
+
+  it('F.2-36: diff-CRIT-4 — Branch B uses ca.lead_id discriminant for orphan detection (Observability CRIT)', () => {
+    expect(SRC).toMatch(/ca\.lead_id\s+AS\s+ca_lead_id/i);
+    expect(SRC).toMatch(/row\.ca_lead_id\s*==\s*null/);
+  });
+
+  it('F.2-37: diff-HIGH — Branch B coa_days_at_status uses $1::timestamptz RUN_AT (Spec 47 §14 Midnight Cross)', () => {
+    expect(SRC).toMatch(/EXTRACT\(EPOCH FROM \(\$1::timestamptz - ca\.lifecycle_classified_at\)\)/);
+    expect(SRC).toMatch(/EXTRACT\(EPOCH FROM \(\$1::timestamptz - ca\.last_seen_at\)\)/);
+    expect(SRC).toMatch(/pipeline\.streamQuery\(pool,\s*SQL,\s*\[RUN_AT\]\)/);
+  });
+
+  it('F.2-38: diff-HIGH — skipDistributionCoa has `unknown` slot (DeepSeek HIGH + Gemini NIT convergent)', () => {
+    expect(SRC).toMatch(/skipDistributionCoa\s*=\s*\{[\s\S]{0,500}unknown:\s*\{\s*imminent:\s*0,\s*stalled:\s*0,\s*recovery:\s*0,\s*decision:\s*0,\s*archived:\s*0\s*\}/);
+  });
+
+  it('F.2-39: diff-IMPORTANT — emitSummary failure payload before Zod throw (Observability IMPORTANT)', () => {
+    expect(SRC).toMatch(/logicVarsResult\.success[\s\S]{0,800}emitSummary\([\s\S]{0,800}verdict:\s*['"]FAIL['"][\s\S]{0,600}throw new Error/);
+  });
+});
+

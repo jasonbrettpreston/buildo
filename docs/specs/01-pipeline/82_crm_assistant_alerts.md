@@ -79,20 +79,25 @@ Leads automatically leave a user's board when:
 
 ### CoA Lead Handling (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
 
+**Phase F.2 (DELIVERED 2026-05-16 commit `[F.2-COMMIT]`):** `update-tracked-projects.js` now branches on `lead_id` prefix. The CoA branch implements 3-tier per-status stall thresholds, hearing-date-keyed imminent window, decision-keyed auto-archive (with `'Closed'` status terminal state per v4 CRIT-DD covering 87.6% of CoAs), and 3 new notification types. Mig 153 relaxes `tracked_projects` schema (drops FK + nullable permit_num/revision_num + adds partial UNIQUE on `(user_id, lead_id, trade_slug) WHERE lead_id LIKE 'coa:%'` + adds `notified_decision_rendered BOOLEAN` column). Mig 154 seeds `coa_stall_threshold_postponed_days=60` (operator-tunable; previously hardcoded).
+
 CoA-stage leads (`lead_id LIKE 'coa:%'`) require different stall thresholds, alert windows, and disappearance rules than permit-stage leads. The script branches on `lead_id` prefix (`permit:` vs `coa:`):
 
-**Stall thresholds for CoA-stage:**
-- `status = 'Hearing Scheduled'` (Universal Stream B1.B / P2) can sit for 1–3 months as normal hearing-prep — NOT a stall. Use `coa_stall_threshold_p2_days` (Spec 86 logic_variable, default 90) instead of the global `coa_stall_threshold` (default 30 — which is the intake-stall threshold).
-- `status IN ('Postponed','Deferred')` triggers stall on > 60 days at that status.
+**Stall thresholds for CoA-stage (3-tier per-status):**
+- `status = 'Hearing Scheduled'` (Universal Stream B1.B / P2) can sit for 1–3 months as normal hearing-prep — NOT a stall. Use `coa_stall_threshold_p2_days` (logic_variable, default 90) instead of the global `coa_stall_threshold` (default 30 — generic/intake-stall threshold).
+- `status IN ('Postponed','Deferred')` triggers stall on > `coa_stall_threshold_postponed_days` (logic_variable, default 60 — mig 154, operator-tunable per v2 HIGH-I fold).
 
 **Imminent-alert window for CoA-stage:**
 - Keyed on `coa_applications.hearing_date - NOW()` rather than `trade_forecasts.predicted_start - NOW()` (permit-stage anchor).
 - New `logic_variable` `coa_imminent_window_days` (Spec 86, default 7).
 - Alert fires when `0 < (hearing_date - NOW()) <= coa_imminent_window_days` AND `last_notified_urgency != 'imminent'`.
 
-**Decision-keyed auto-archive:**
+**Decision-keyed auto-archive (Spec 82 §4):**
 - `decision IN ('Refused', 'Withdrawn', 'Closed')` → archive immediately. No `lead_expiry_days` wait.
-- `decision = 'Final and Binding'` → keep the lead; the linked permit (if any) will surface as a new lead with `lead_type='permit'` once it lands in CKAN.
+- **`status IN ('Complete', 'Closed')`** (P20 lifecycle-terminal per Spec 84 §3) → archive immediately. v4 CRIT-DD fold adds 'Closed' status to terminal set — 87.6% of CoAs have `status='Closed'` (mostly `decision='Approved'` = lifecycle-complete approved variances). Without this, those CoAs would never auto-archive.
+- `decision = 'Final and Binding'` → keep the lead (NOT in `COA_APPROVED_DECISIONS` per v2 CRIT-G — FaB does NOT fire `COA_DECISION_RENDERED` alert because the spec contract is "keep the lead; linked permit handles it"). The linked permit (if any) will surface as a new lead with `lead_type='permit'` once it lands in CKAN.
+
+**`notifications.permit_num` polymorphism for CoA:** the 3 new notification subtypes (`COA_HEARING_IMMINENT`, `COA_DECISION_RENDERED`, `COA_STALLED`) store the CoA `application_number` in the existing `notifications.permit_num` column (already nullable). Mobile app discriminates via `type LIKE 'COA_%'` prefix check. v4 CRIT-CC: fallback chain `coa_application_number || permit_num || 'unknown-coa'` prevents NULL in the column for malformed lead_id inputs. F.4 (Spec 76 §3.5 Lead Inspector CoA panel) may revisit this with a dedicated `notifications.lead_id` column.
 
 **Notification subtypes (extensions to `notifications` table):**
 - `COA_HEARING_IMMINENT`: "Your variance hearing is in N days — confirm crew availability for likely-approved trade."

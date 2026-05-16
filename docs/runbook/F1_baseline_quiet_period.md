@@ -80,3 +80,54 @@ Operator removes the annotation block from daily Observer reports once **all** o
 3. Spec 48 Observer's day-7 baseline math has produced at least one DeepSeek narrative entry for each of the 11 new metrics that reads as PASS or INFO (not a flagged anomaly).
 
 After exit, retain this runbook for future F.2 / F.3 / F.4 deploys — the same annotation protocol applies to any subsequent phase that adds audit rows.
+
+---
+
+## Phase F.2 additions (v4 HIGH-M fold — `update-tracked-projects.js` CoA branch)
+
+Phase F.2 (commit `[F.2-COMMIT]`) added the CoA branch to `update-tracked-projects.js`, introducing **7 new audit_table.rows metrics + 5 new records_meta distributions**. Same baseline-quiet-period protocol applies; runbook entries follow.
+
+### The 7 new audit_table.rows metrics (7-day quiet, except as noted)
+
+| metric | First 7 days expected behavior | Stable steady state |
+|---|---|---|
+| `coa_stall_alerts` | 0 (grace-suppression — `!coaFirstDeployGrace` gate blocks all 4 CoA alert pushes for the first 7 days) | Small daily delta as CoAs exceed status-keyed thresholds |
+| `coa_recovery_alerts` | 0 (grace-suppressed) | Even smaller delta (recovery from stall is rarer than entering stall) |
+| `coa_imminent_alerts` | 0 (grace-suppressed) | Daily volume scales with hearing pipeline (hearing 7 days out → fires once per (user, CoA, trade)) |
+| `coa_decision_alerts` | 0 (grace-suppressed) | One-shot per (CoA, user, trade) on Approved decision; volume tracks variance approval rate |
+| `coa_archived` | Threshold WARN if 100% of `totalRowsCoa` archived (kill-switch detector). On day 0 with small CoA backlog of all-terminal-decision CoAs, the WARN can fire legitimately — **check `records_meta.total_rows_coa`**: < 50 with all terminal-decision rows is data-driven correct, not a fault. | PASS when not 100% (typical: 0–20% per run, terminal-decision tail) |
+| `coa_orphaned_lead_ids` | 0 expected; WARN if > 0 means `tracked_projects` row points to a missing `coa_applications` row (data-integrity issue, not a script fault) | 0 (clean steady state). Operator investigation: `SELECT tp.lead_id FROM tracked_projects tp LEFT JOIN coa_applications ca ON ca.lead_id = tp.lead_id WHERE tp.lead_id LIKE 'coa:%' AND ca.lead_id IS NULL;` |
+| `in_quiet_period` | `1` (active — first 30 days) | `0` (inactive — day 31 onward) |
+
+### The 5 new records_meta distributions
+
+- `total_rows_permit` / `total_rows_coa` — per-branch breakdown of `records_total`
+- `coa_first_deploy_grace` (boolean) + `in_quiet_period` (boolean) — operator visibility into both quiet-period gates
+- `coa_alert_distribution_by_lifecycle_group` — `{C1, C2, C3, C4, unknown}` each with 5-field shape `{imminent, stalled, recovery, decision, archived}`. Any group's `archived` increments when a CoA in that group hits a terminal state (post-v3 CRIT-2 simplification, C4 is no longer the exclusive archive path). C2 archive on Refused decision is the most common pattern. **Orphan rows** (those counted in `coa_orphaned_lead_ids`) are excluded from this distribution — they hit `continue` before any cohort increment. The `unknown` slot (diff-stage fold) captures legitimate rows where `lifecycle_group IS NULL` (pre-Phase E.2 classification or data-quality outlier).
+- `coa_notified_decision_rendered_count` — count of CoA rows where `notified_decision_rendered === true` AND decision is still in approved set. Used as the dedup-health audit. Monotonically non-decreasing after Day 30 in steady state; a sudden drop signals decision reversal (Approved → Refused on appeal) or a data correction.
+- `coa_orphaned_lead_ids_sample_capped` (boolean) — `true` if `coa_orphaned_lead_ids > 20` (the `failed_sample` cap). Pairs with the audit row to tell the operator whether `failed_sample` is exhaustive or truncated.
+
+### F.2-specific operator annotation protocol
+
+Days 0–7: append to **both** `permits-followup.md` and `coa-followup.md`:
+
+```markdown
+> **[F.2 baseline-quiet-period — Day X of 7]**
+> Phase F.2 deployed YYYY-MM-DD. Days 0–7: all 4 CoA alert counters (`coa_stall_alerts`, `coa_recovery_alerts`, `coa_imminent_alerts`, `coa_decision_alerts`) show 0 by design (grace-suppression via `!coaFirstDeployGrace` gate). Verify by checking `records_meta.coa_first_deploy_grace = true`. Day 8 onward, alert counts ramp.
+```
+
+Days 8–30 (30-day extended quiet-period for in_quiet_period only):
+
+```markdown
+> **[F.2 30-day quiet-period — Day X of 30]**
+> `in_quiet_period: 1` flag is active. Operator-tunable threshold metrics (`coa_archived` WARN, `coa_orphaned_lead_ids` WARN) remain in WARN classification but the WARN is expected during initial CoA backlog characterization. Day 31 onward, persistent WARN signals are actionable.
+```
+
+### CoA-specific exit criteria additions
+
+In addition to the F.1 exit criteria, an F.2-clean state also requires:
+
+- `coa_orphaned_lead_ids` PASS for 7 consecutive runs (no data-integrity drift).
+- `coa_archived` PASS for 7 consecutive runs (not stuck at 100% archive rate).
+- `coa_alert_distribution_by_lifecycle_group` shows non-zero values in at least 2 cohort×metric cells (C1.imminent, C2.stalled, etc.) — proves the F.2 dispatch is exercising multiple code paths in production.
+

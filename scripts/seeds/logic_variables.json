@@ -76,6 +76,27 @@
     "min": 1,
     "max": 365
   },
+  "coa_stall_threshold_p2_days": {
+    "default": 90,
+    "type": "number",
+    "description": "Phase F.2 CRM Assistant CoA stall threshold for Hearing Scheduled status (Universal Stream B1.B / P2): hearing prep typically runs 1-3 months — NOT a stall. Default 90 = upper edge of typical hearing window. Setting this below coa_stall_threshold defeats the purpose. Seeded in DB by mig 136.",
+    "min": 1,
+    "max": 365
+  },
+  "coa_imminent_window_days": {
+    "default": 7,
+    "type": "number",
+    "description": "Phase F.2 CRM Assistant CoA imminent-alert window: fires COA_HEARING_IMMINENT when 0 < (hearing_date - NOW()) <= this many days AND last_notified_urgency != 'imminent'. Default 7 = one week before hearing. Operator-tunable per trade engagement model. Seeded in DB by mig 136.",
+    "min": 1,
+    "max": 60
+  },
+  "coa_stall_threshold_postponed_days": {
+    "default": 60,
+    "type": "number",
+    "description": "Phase F.2 CRM Assistant CoA stall threshold for Postponed/Deferred statuses (mid-tier between generic 30-day and Hearing-Scheduled 90-day). Default 60 = upper edge of typical postponement before considered stalled. Operator-tunable per Spec 86 Control Panel. Seeded in DB by mig 154.",
+    "min": 1,
+    "max": 365
+  },
   "inspection_stall_days": {
     "default": 300,
     "type": "number",
