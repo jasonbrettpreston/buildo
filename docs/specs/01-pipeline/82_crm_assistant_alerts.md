@@ -79,7 +79,7 @@ Leads automatically leave a user's board when:
 
 ### CoA Lead Handling (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
 
-**Phase F.2 (DELIVERED 2026-05-16 commit `[F.2-COMMIT]`):** `update-tracked-projects.js` now branches on `lead_id` prefix. The CoA branch implements 3-tier per-status stall thresholds, hearing-date-keyed imminent window, decision-keyed auto-archive (with `'Closed'` status terminal state per v4 CRIT-DD covering 87.6% of CoAs), and 3 new notification types. Mig 153 relaxes `tracked_projects` schema (drops FK + nullable permit_num/revision_num + adds partial UNIQUE on `(user_id, lead_id, trade_slug) WHERE lead_id LIKE 'coa:%'` + adds `notified_decision_rendered BOOLEAN` column). Mig 154 seeds `coa_stall_threshold_postponed_days=60` (operator-tunable; previously hardcoded).
+**Phase F.2 (DELIVERED 2026-05-16 commit `66884af`):** `update-tracked-projects.js` now branches on `lead_id` prefix. The CoA branch implements 3-tier per-status stall thresholds, hearing-date-keyed imminent window, decision-keyed auto-archive (with `'Closed'` status terminal state per v4 CRIT-DD covering 87.6% of CoAs), and 3 new notification types. Mig 153 relaxes `tracked_projects` schema (drops FK + nullable permit_num/revision_num + adds partial UNIQUE on `(user_id, lead_id, trade_slug) WHERE lead_id LIKE 'coa:%'` + adds `notified_decision_rendered BOOLEAN` column). Mig 154 seeds `coa_stall_threshold_postponed_days=60` (operator-tunable; previously hardcoded).
 
 CoA-stage leads (`lead_id LIKE 'coa:%'`) require different stall thresholds, alert windows, and disappearance rules than permit-stage leads. The script branches on `lead_id` prefix (`permit:` vs `coa:`):
 

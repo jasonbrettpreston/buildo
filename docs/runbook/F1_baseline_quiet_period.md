@@ -85,7 +85,7 @@ After exit, retain this runbook for future F.2 / F.3 / F.4 deploys — the same 
 
 ## Phase F.2 additions (v4 HIGH-M fold — `update-tracked-projects.js` CoA branch)
 
-Phase F.2 (commit `[F.2-COMMIT]`) added the CoA branch to `update-tracked-projects.js`, introducing **7 new audit_table.rows metrics + 5 new records_meta distributions**. Same baseline-quiet-period protocol applies; runbook entries follow.
+Phase F.2 (commit `66884af`) added the CoA branch to `update-tracked-projects.js`, introducing **7 new audit_table.rows metrics + 5 new records_meta distributions**. Same baseline-quiet-period protocol applies; runbook entries follow.
 
 ### The 7 new audit_table.rows metrics (7-day quiet, except as noted)
 
