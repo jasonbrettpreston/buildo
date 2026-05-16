@@ -193,22 +193,26 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/>= 10/);
   });
 
-  it('batch-upserts into trade_forecasts with ON CONFLICT', () => {
+  it('batch-upserts into trade_forecasts with ON CONFLICT (Phase F.1: lead_id-keyed post-mig 151)', () => {
     expect(content).toMatch(/INSERT INTO trade_forecasts/);
+    // Phase F.1 v2 CRIT 3 fold: PK swapped from (permit_num, revision_num, trade_slug) to
+    // (lead_id, trade_slug). ON CONFLICT target updated accordingly.
     expect(content).toMatch(
-      /ON CONFLICT \(permit_num, revision_num, trade_slug\)/,
+      /ON CONFLICT \(lead_id, trade_slug\)/,
     );
     expect(content).toMatch(/DO UPDATE SET/);
   });
 
-  it('uses 13 params per row (includes target_window AND computed_at runAt snapshot)', () => {
-    // §47 §6.1: computed_at is now an explicit param bound to runAt (not NOW()).
-    // Row width: 12 forecast fields + 1 timestamp = 13 per row.
-    expect(content).toMatch(/j \* 13/);
+  it('uses 14 params per row (Phase F.1: adds lead_id; FORECAST_COL_COUNT constant)', () => {
+    // §47 §6.1: computed_at is an explicit param bound to runAt (not NOW()).
+    // Phase F.1 v2 CRIT 3 + v3 NIT-O: row width is now 14 (lead_id added explicitly for CoA path).
+    expect(content).toMatch(/FORECAST_COL_COUNT\s*=\s*14/);
+    expect(content).toMatch(/j \* FORECAST_COL_COUNT/);
     const insertMatch = content.match(
       /INSERT INTO trade_forecasts\s*\([^)]+\)/,
     );
     expect(insertMatch).toBeTruthy();
+    expect(insertMatch![0]).toMatch(/lead_id/);
     expect(insertMatch![0]).toMatch(/target_window/);
     expect(insertMatch![0]).toMatch(/computed_at/);
   });
@@ -584,10 +588,11 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(matches?.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('S1 skipped counter log message uses "no anchor" label, not "terminal/orphan"', () => {
+  it('S1 skipped counter log message uses "no anchor" label, not "terminal/orphan" (Phase F.1: split permit/coa)', () => {
     // After SQL pushdown, "skipped" only increments when effectiveAnchor is null/invalid.
     // Terminal/orphan rows are excluded by SQL before the stream opens — they never reach JS.
-    expect(content).toMatch(/Skipped \(no anchor\)/);
+    // Phase F.1 splits the log into permit + CoA branches; "no anchor" wording preserved per-branch.
+    expect(content).toMatch(/Skipped \(no anchor, permit\)/);
     expect(content).not.toMatch(/Skipped \(terminal\/orphan\)/);
   });
 
@@ -719,5 +724,189 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     // Dual-location requirement: spec §4 Testing Mandate + spec 47 §8.2.
     expect(content).toMatch(/metric:\s*['"]skipped_too_old['"]/);
     expect(content).toMatch(/skipped_too_old\s*:\s*skippedTooOld/);
+  });
+});
+
+// 🔗 SPEC LINK: docs/specs/01-pipeline/85_trade_forecast_engine.md §3 CoA-stage routing
+//             docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase F.1
+//             docs/specs/01-pipeline/84_lifecycle_phase_engine.md §7 Calibration Source
+//             docs/specs/01-pipeline/48_pipeline_observability.md §3.1 / §3.4 / §11.4
+describe('Phase F.1 — CoA UNION extension (WF1 v4)', () => {
+  let SRC: string;
+  beforeAll(() => {
+    SRC = read('scripts/compute-trade-forecasts.js');
+  });
+
+  // ── SOURCE_SQL UNION (Part 2.1) ──────────────────────────────────────
+
+  it('F.1-1: SOURCE_SQL contains UNION ALL with permit-side Branch A + CoA Branch B', () => {
+    expect(SRC).toMatch(/UNION\s+ALL/);
+  });
+
+  it('F.1-2: Branch B filters lt.lead_id LIKE \'coa:%\' and lifecycle_group IN (C1,C2,C3)', () => {
+    expect(SRC).toMatch(/lt\.lead_id\s+LIKE\s+'coa:%'/);
+    expect(SRC).toMatch(/lifecycle_group\s+IN\s*\(\s*'C1'\s*,\s*'C2'\s*,\s*'C3'\s*\)/);
+  });
+
+  it('F.1-3: Branch B uses AT TIME ZONE \'UTC\' casts on decision_date + hearing_date (v2 HIGH 7)', () => {
+    expect(SRC).toMatch(/decision_date::timestamp\s+AT\s+TIME\s+ZONE\s+'UTC'/);
+    expect(SRC).toMatch(/hearing_date::timestamp\s+AT\s+TIME\s+ZONE\s+'UTC'/);
+  });
+
+  it('F.1-4: Branch B uses LEFT JOIN LATERAL on lifecycle_transitions for phase_started_at', () => {
+    expect(SRC).toMatch(/LEFT\s+JOIN\s+LATERAL/);
+    expect(SRC).toMatch(/MAX\(transitioned_at\)\s+AS\s+phase_started_at/);
+    expect(SRC).toMatch(/FROM\s+lifecycle_transitions/);
+  });
+
+  it('F.1-5: Branch B uses IS NOT NULL (no 3-year time bound — v4 HIGH-G fold)', () => {
+    // Long OMB appeals can run >3 years and must still produce forecasts.
+    // CoA branch coalesces anchors and tests IS NOT NULL (not >= NOW() - 3 years).
+    // The script body should reference the v4 HIGH-G rationale.
+    expect(SRC).toMatch(/v4 HIGH-G/);
+  });
+
+  // ── CoA cohort load + lookup (Part 2.3) ──────────────────────────────
+
+  it('F.1-6: reads CoA cohorts from phase_stay_calibration (NOT phase_calibration) (v2 CRIT 6)', () => {
+    expect(SRC).toMatch(/FROM\s+phase_stay_calibration/);
+    expect(SRC).toMatch(/WHERE\s+permit_type\s+IS\s+NULL/);
+  });
+
+  it('F.1-7: lookupCoaCalibration helper present with from_seq keying (v2 CRIT 1)', () => {
+    expect(SRC).toMatch(/function\s+lookupCoaCalibration\s*\(\s*projectType\s*,\s*coaTypeClass\s*,\s*lifecycleSeq\s*\)/);
+  });
+
+  it('F.1-8: lookupCoaCalibration has 5 fallback levels (v3 HIGH-F)', () => {
+    expect(SRC).toMatch(/fallback_all_type_classes/);
+    expect(SRC).toMatch(/fallback_all_project_types/);
+    expect(SRC).toMatch(/fallback_all_cohorts/);
+  });
+
+  // ── selectCoaAnchor helper (Part 2.2) ────────────────────────────────
+
+  it('F.1-9: selectCoaAnchor() helper is module-local (v2 NIT 14)', () => {
+    expect(SRC).toMatch(/function\s+selectCoaAnchor\s*\(\s*row\s*\)/);
+  });
+
+  it('F.1-10: selectCoaAnchor returns 4 anchor sources in priority order', () => {
+    expect(SRC).toMatch(/source:\s*'lifecycle_transition'/);
+    expect(SRC).toMatch(/source:\s*'decision_date'/);
+    expect(SRC).toMatch(/source:\s*'hearing_date'/);
+    expect(SRC).toMatch(/source:\s*'first_seen_at'/);
+  });
+
+  // ── Audit-verdict gate (Part 2.4) ────────────────────────────────────
+
+  it('F.1-11: Audit-verdict gate uses underscore \'permits:compute_phase_calibration\' (v4 CRIT-A)', () => {
+    expect(SRC).toMatch(/permits:compute_phase_calibration/);
+    expect(SRC).not.toMatch(/permits:compute-phase-calibration/);
+  });
+
+  it('F.1-12: Gate query window is parameterized via coa_gate_calibration_window_days (v4 MED-J)', () => {
+    expect(SRC).toMatch(/coa_gate_calibration_window_days/);
+  });
+
+  it('F.1-13: Gate JS handles non-completed lastStatus → blocked_by_failed_run (v3 CRIT-C)', () => {
+    expect(SRC).toMatch(/blocked_by_failed_run/);
+  });
+
+  it('F.1-14: Pre-fetches BOTH 7-day and 30-day deploy-age counts in single startup query (v4 CRIT-B)', () => {
+    expect(SRC).toMatch(/prior_runs_7d/);
+    expect(SRC).toMatch(/prior_runs_30d/);
+    expect(SRC).toMatch(/coaFirstDeployGrace/);
+    expect(SRC).toMatch(/inQuietPeriod/);
+  });
+
+  // ── Audit rows (Part 2.5) ────────────────────────────────────────────
+
+  it('F.1-15: coa_skipped_count audit row emits value: 0 indefinitely (v2 CRIT 5)', () => {
+    expect(SRC).toMatch(/metric:\s*['"]coa_skipped_count['"]/);
+  });
+
+  it('F.1-16: coa_audit_gate_status audit row present (v3 HIGH-J)', () => {
+    expect(SRC).toMatch(/coa_audit_gate_status/);
+  });
+
+  it('F.1-17: coa_anchor_fallback_pct_quiet_period uses numeric value 1/0 (v4 HIGH-F)', () => {
+    expect(SRC).toMatch(/coa_anchor_fallback_pct_quiet_period/);
+    expect(SRC).toMatch(/inQuietPeriod\s*\?\s*1\s*:\s*0/);
+  });
+
+  it('F.1-18: skip counters in audit_table.rows (v2 HIGH 8)', () => {
+    expect(SRC).toMatch(/metric:\s*['"]skipped_no_anchor_coa['"]/);
+    expect(SRC).toMatch(/metric:\s*['"]skipped_too_old_coa['"]/);
+    expect(SRC).toMatch(/metric:\s*['"]snowplow_applied_coa['"]/);
+  });
+
+  // ── Counter semantics (Part 2.6) ─────────────────────────────────────
+
+  it('F.1-19: records_total = totalRowsPermit + totalRowsCoa (Spec 47 §11.1)', () => {
+    expect(SRC).toMatch(/records_total:\s*totalRowsPermit\s*\+\s*totalRowsCoa/);
+  });
+
+  it('F.1-20: INSERT/UPSERT uses ON CONFLICT (lead_id, trade_slug) (v2 CRIT 3)', () => {
+    expect(SRC).toMatch(/ON\s+CONFLICT\s*\(\s*lead_id\s*,\s*trade_slug\s*\)/);
+    expect(SRC).not.toMatch(/ON\s+CONFLICT\s*\(\s*permit_num\s*,\s*revision_num\s*,\s*trade_slug\s*\)/);
+  });
+
+  it('F.1-21: FORECAST_COL_COUNT = 14 constant extracted (v3 NIT-O)', () => {
+    expect(SRC).toMatch(/FORECAST_COL_COUNT\s*=\s*14/);
+  });
+
+  it('F.1-22: Defensive E.2 coa:% skip warning is REMOVED', () => {
+    expect(SRC).not.toMatch(/Skipping CoA row from forecast generation/);
+  });
+
+  it('F.1-23: Pre-validation extends to BOTH coa: and permit: lead_ids (v4 MED-I)', () => {
+    expect(SRC).toMatch(/LEAD_ID_FORMAT_COA/);
+    expect(SRC).toMatch(/LEAD_ID_FORMAT_PERMIT/);
+    expect(SRC).toMatch(/failed_sample/);
+  });
+
+  // ── Snowplow staleness (Part 2.2) ────────────────────────────────────
+
+  it('F.1-24: Snowplow staleness reads logicVars.coa_lifecycle_transition_stale_days (v3 CRIT-D)', () => {
+    expect(SRC).toMatch(/coa_lifecycle_transition_stale_days/);
+    expect(SRC).not.toMatch(/snowplow_buffer_days\s*\*\s*4/);
+  });
+
+  // ── Stale-purge (Part 2.7) ───────────────────────────────────────────
+
+  it('F.1-25: Permit stale-purge gains tf.lead_id LIKE \'permit:%\' guard (v2 CRIT 2)', () => {
+    expect(SRC).toMatch(/tf\.lead_id\s+LIKE\s+'permit:%'/);
+  });
+
+  it('F.1-26: CoA stale-purge uses CTE form (live_coa_anchors + live_coa_forecasts) (v3 HIGH-E)', () => {
+    expect(SRC).toMatch(/WITH\s+live_coa_anchors\s+AS/);
+    expect(SRC).toMatch(/live_coa_forecasts\s+AS/);
+  });
+
+  it('F.1-27: CoA stale-purge contains stay-in-sync comment (v3 HIGH-E)', () => {
+    expect(SRC).toMatch(/stay in sync with Branch B/i);
+  });
+
+  // ── LOGIC_VARS_SCHEMA (Part 2 + Spec 47 §R4) ─────────────────────────
+
+  it('F.1-28: LOGIC_VARS_SCHEMA validates coa_lifecycle_transition_stale_days (v3 CRIT-D)', () => {
+    expect(SRC).toMatch(/coa_lifecycle_transition_stale_days:\s*z\./);
+  });
+
+  it('F.1-29: LOGIC_VARS_SCHEMA validates coa_gate_calibration_window_days (v4 MED-J)', () => {
+    expect(SRC).toMatch(/coa_gate_calibration_window_days:\s*z\./);
+  });
+
+  // ── records_meta breakdowns (Part 2.6 + Spec 47 §11.4) ───────────────
+
+  it('F.1-30: records_meta.skipped_distribution_by_lifecycle_group present (v3 HIGH-H)', () => {
+    expect(SRC).toMatch(/skipped_distribution_by_lifecycle_group/);
+  });
+
+  it('F.1-31: emitMeta reads include phase_stay_calibration + lead_trades + coa_applications + lifecycle_transitions + pipeline_runs', () => {
+    expect(SRC).toMatch(/phase_stay_calibration/);
+    expect(SRC).toMatch(/lead_trades/);
+    expect(SRC).toMatch(/coa_applications/);
+    expect(SRC).toMatch(/lifecycle_transitions/);
+    expect(SRC).toMatch(/pipeline_runs/);
   });
 });

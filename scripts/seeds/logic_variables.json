@@ -2350,5 +2350,17 @@
     "min": 0,
     "max": 1,
     "description": "Phase E.5 gate for `expected_data_missing` kind (band has min > 0 but zero observed rows — possible data deletion or classifier-skip). 0=WARN (default); 1=FAIL (after verifying no structurally-absent seqs remain; see Spec 84 §3.4 structural-absence resolution path)."
+  },
+  "coa_lifecycle_transition_stale_days": {
+    "default": 180,
+    "type": "number",
+    "min": 1,
+    "description": "Phase F.1 CoA forecast snowplow staleness gate: if lifecycle_transitions.MAX(transitioned_at) anchor is older than this many days, the CoA forecast becomes snowplow-eligible (treats long-stalled E.2-classified CoAs without subsequent transitions as Rescue Missions). Default 180 = 6 months ≈ p75 of typical CoA decision cohort duration per Spec 84 §7."
+  },
+  "coa_gate_calibration_window_days": {
+    "default": 7,
+    "type": "number",
+    "min": 1,
+    "description": "Phase F.1 CoA audit-verdict gate freshness window: compute_phase_calibration must have a permits-chain pipeline_runs row within this many days for the gate to consult its verdict. Older runs trigger no_prior_run state. Default 7 aligns with Spec 48 §3.4 baseline window. Operator may raise this if calibration runs are less frequent than weekly."
   }
 }
