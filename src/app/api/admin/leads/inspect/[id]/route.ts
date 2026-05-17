@@ -33,7 +33,8 @@ import {
   notFound,
 } from '@/features/leads/api/error-mapping';
 import { parseLeadId } from '@/lib/leads/parse-lead-id';
-import { fetchLeadInspect } from '@/lib/leads/lead-inspect-query';
+import { fetchLeadInspect, fetchLeadInspectByCoaLeadId } from '@/lib/leads/lead-inspect-query';
+import { LeadInspectSchema } from '@/lib/admin/lead-schemas';
 
 export const GET = withApiEnvelope(async function GET(
   request: NextRequest,
@@ -59,10 +60,19 @@ export const GET = withApiEnvelope(async function GET(
     const parsed = parseLeadId(id);
     if (parsed === null) return badRequestInvalidId();
 
+    // F.4 v4.1: CoA-prefix leads route to coa_applications fetcher (Spec 76 §3.5 Cycle 8).
+    // The URL encoding is `COA-${application_number}`; the DB lead_id format is
+    // `coa:${application_number}` — construct it here at the boundary.
+    // Contract: fetchLeadInspectByCoaLeadId always resolves to a 200+coa:null+source-stub
+    // envelope when the CoA row is missing — no 404 path for primary-CoA inspections.
     if (parsed.kind === 'coa') {
-      // CoA inspect is recognized but not yet implemented — same precedent
-      // as /api/leads/detail/:id (Spec 91 §4.3.1 mobile contract).
-      return notFound('CoA lead inspect is not yet supported');
+      const result = await fetchLeadInspectByCoaLeadId(pool, {
+        coaLeadId: `coa:${parsed.application_number}`,
+        adminUid: adminCtx.uid,
+      });
+      // Spec 33 §13: Zod-parse response payload at the route boundary — catches query-layer
+      // schema drift before it ships to the admin client.
+      return ok(LeadInspectSchema.parse(result));
     }
 
     const result = await fetchLeadInspect(pool, {
@@ -72,7 +82,7 @@ export const GET = withApiEnvelope(async function GET(
     });
     if (!result) return notFound();
 
-    return ok(result);
+    return ok(LeadInspectSchema.parse(result));
   } catch (cause) {
     return internalError(cause, {
       route: 'GET /api/admin/leads/inspect/[id]',

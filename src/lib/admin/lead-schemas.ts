@@ -180,6 +180,8 @@ export const LeadInspectSourceSchema = z.object({
   est_const_cost: z.number().nullable(),
   last_seen_at: z.string(),
   first_seen_at: z.string(),
+  // F.4 CRIT-v3-Ind-3: linked CoA back-reference from mig 132. NULL for permits without linked CoA.
+  linked_coa_application_number: z.string().nullable(),
 });
 
 export const LeadInspectScopeSchema = z.object({
@@ -307,6 +309,85 @@ export const LeadInspectEngagementSchema = z.object({
   saved_by_admin: z.boolean(),
 });
 
+// ════════════════════════════════════════════════════════════════════════════════════════
+// F.4 — CoA Classification panel schemas (Spec 76 §3.5 Cycle 8 amendment).
+// Sub-schemas explicitly defined per v4.1 HIGH-Ind-v4-4.
+// ════════════════════════════════════════════════════════════════════════════════════════
+
+export const LeadInspectCoaDecisionEntrySchema = z.object({
+  decision: z.string(),
+  transitioned_at: z.string().datetime(),
+  from_status: z.string().nullable(),
+  to_status: z.string().nullable(),
+});
+
+export const LeadInspectCoaLinkedPermitSchema = z.object({
+  permit_num: z.string(),
+  revision_num: z.string().regex(/^\d{2}$/),   // LPAD'd by SQL per HIGH-Ind-D
+  status: z.string().nullable(),
+  lead_id: z.string(),                          // assembled as 'permit:NUM:REV'
+});
+
+export const LeadInspectCoaCrossStreamEntrySchema = z.object({
+  lead_id: z.string(),
+  lead_type: z.enum(['permit', 'coa']),
+  from_status: z.string().nullable(),
+  to_status: z.string().nullable(),
+  transitioned_at: z.string().datetime(),
+  id: z.number().int(),
+});
+
+export const LeadInspectCoaTradeSchema = z.object({
+  trade_id: z.number().int().nullable(),
+  trade_slug: z.string(),
+  display_name: z.string().nullable(),         // UI falls back to trade_slug per LOW-v1-Y
+  confidence: z.number().nullable(),
+});
+
+export const LeadInspectCoaSchema = z.object({
+  application_number: z.string(),
+  // v4.1 MED-v2-G: enum too brittle for DB drift — use string().nullable() + UI fallback chip.
+  coa_type_class: z.string().nullable(),
+  // v4.1 MED-v3-E: same brittleness concern; admin display only.
+  project_type: z.string().nullable(),
+  // v4.1 MED-v3-H: scope_tags can be NULL in DB; transform to [] to simplify UI.
+  scope_tags: z.array(z.string()).nullable().transform((v) => v ?? []),
+  structure_type: z.string().nullable(),
+  decision_current: z.string().nullable(),
+  decision_history: z.array(LeadInspectCoaDecisionEntrySchema),
+  decision_date: z.string().date().nullable(),
+  hearing_date: z.string().date().nullable(),
+  estimated_cost: z.number().nullable(),
+  // v4.1 CRIT-v1-E: not z.literal — DB column allows any string; UI renders warning badge for non-'geometric'.
+  cost_source: z.string().nullable(),
+  modeled_gfa_sqm: z.number().nullable(),
+  lifecycle_seq: z.number().int().nullable(),
+  // v4.1 CRIT-Ind-1: actual mig 133 columns (NO lifecycle_phase — that's permits-only).
+  lifecycle_group: z.string().nullable(),
+  lifecycle_block: z.string().nullable(),
+  lifecycle_stage: z.string().nullable(),
+  // v4.1 CRIT-Ind-2: universal_stream_catalog columns are *_icon (mig 128 VARCHAR(8) storing emoji codepoints).
+  group_label: z.string().nullable(),  group_color: z.string().nullable(),  group_icon: z.string().nullable(),
+  block_label: z.string().nullable(),  block_color: z.string().nullable(),  block_icon: z.string().nullable(),
+  stage_label: z.string().nullable(),  stage_color: z.string().nullable(),  stage_icon: z.string().nullable(),
+  bid_value: z.number().min(0).max(1).nullable(),
+  linked_permit: LeadInspectCoaLinkedPermitSchema.nullable(),
+  cross_stream_timeline: z.array(LeadInspectCoaCrossStreamEntrySchema),
+  lead_trades: z.array(LeadInspectCoaTradeSchema),
+});
+
+// F.4 110-row catalog bundled as src/lib/admin/universal-stream-catalog.json.
+// v4.1 HIGH-Ind-v4-1: type export.
+export const UniversalStreamCatalogRowSchema = z.object({
+  seq: z.number().int(),
+  lifecycle_group: z.string().nullable(),
+  lifecycle_block: z.string().nullable(),
+  lifecycle_stage: z.string().nullable(),
+  group_label: z.string().nullable(),  group_color: z.string().nullable(),  group_icon: z.string().nullable(),
+  block_label: z.string().nullable(),  block_color: z.string().nullable(),  block_icon: z.string().nullable(),
+  stage_label: z.string().nullable(),  stage_color: z.string().nullable(),  stage_icon: z.string().nullable(),
+});
+
 export const LeadInspectSchema = z.object({
   lead_id: z.string(),
   lead_type: z.enum(['permit', 'coa']),
@@ -320,6 +401,8 @@ export const LeadInspectSchema = z.object({
   forecast: z.array(LeadInspectForecastRowSchema),
   engagement: LeadInspectEngagementSchema,
   updated_at: z.string(),
+  // F.4 CRIT-v2-4: appended inline (NO BaseLeadInspectSchema rename — preserves existing imports).
+  coa: LeadInspectCoaSchema.nullable(),
 });
 
 export type LeadInspectSource = z.infer<typeof LeadInspectSourceSchema>;
@@ -332,3 +415,10 @@ export type LeadInspectLifecycle = z.infer<typeof LeadInspectLifecycleSchema>;
 export type LeadInspectForecastRow = z.infer<typeof LeadInspectForecastRowSchema>;
 export type LeadInspectEngagement = z.infer<typeof LeadInspectEngagementSchema>;
 export type LeadInspect = z.infer<typeof LeadInspectSchema>;
+// F.4 type exports.
+export type LeadInspectCoa = z.infer<typeof LeadInspectCoaSchema>;
+export type LeadInspectCoaDecisionEntry = z.infer<typeof LeadInspectCoaDecisionEntrySchema>;
+export type LeadInspectCoaLinkedPermit = z.infer<typeof LeadInspectCoaLinkedPermitSchema>;
+export type LeadInspectCoaCrossStreamEntry = z.infer<typeof LeadInspectCoaCrossStreamEntrySchema>;
+export type LeadInspectCoaTrade = z.infer<typeof LeadInspectCoaTradeSchema>;
+export type UniversalStreamCatalogRow = z.infer<typeof UniversalStreamCatalogRowSchema>;

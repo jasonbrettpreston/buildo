@@ -55,6 +55,7 @@ interface MainRow {
   est_const_cost: string | null;
   last_seen_at: string;
   first_seen_at: string;
+  linked_coa_application_number: string | null;
   // scope
   project_type: string | null;
   scope_tags: string[] | null;
@@ -122,6 +123,7 @@ const MAIN_SQL = `
     p.est_const_cost::text AS est_const_cost,
     p.last_seen_at::text AS last_seen_at,
     p.first_seen_at::text AS first_seen_at,
+    p.linked_coa_application_number,
     p.project_type, p.scope_tags,
     p.storeys AS permit_storeys,
     p.lifecycle_phase, p.lifecycle_stalled,
@@ -542,6 +544,7 @@ export async function fetchLeadInspect(
       est_const_cost: toNumber(m.est_const_cost),
       last_seen_at: m.last_seen_at,
       first_seen_at: m.first_seen_at,
+      linked_coa_application_number: m.linked_coa_application_number,   // F.4
     },
     scope: {
       project_type: m.project_type,
@@ -568,5 +571,354 @@ export async function fetchLeadInspect(
       saved_by_admin: m.saved_by_admin,
     },
     updated_at: m.updated_at,
+    // F.4 (Spec 76 §3.5 Cycle 8): CoA panel populated when permit has linked_coa.
+    coa: m.linked_coa_application_number != null
+      ? await fetchCoaPanel(pool, {
+          coaLeadId: `coa:${m.linked_coa_application_number}`,
+          permit_num: m.permit_num,
+          paddedRevision,
+          parentLeadType: 'permit',
+        })
+      : null,
+  };
+}
+
+// ════════════════════════════════════════════════════════════════════════════════════════
+// F.4 — CoA Classification panel fetcher (Spec 76 §3.5 Cycle 8 amendment).
+// Returns the full LeadInspectCoa shape, OR null when:
+//   - CoA application_number not found (orphan reference; emits data_quality breadcrumb)
+//   - Substrate not yet classified (Phase D classifier hasn't run)
+//
+// Used for BOTH:
+//   - Cross-stream-from-permit (called from fetchLeadInspect above)
+//   - Primary CoA inspection (called from fetchLeadInspectByCoaLeadId below)
+// ════════════════════════════════════════════════════════════════════════════════════════
+import type {
+  LeadInspectCoa,
+  LeadInspectCoaDecisionEntry,
+  LeadInspectCoaLinkedPermit,
+  LeadInspectCoaCrossStreamEntry,
+  LeadInspectCoaTrade,
+} from '@/lib/admin/lead-schemas';
+import { addBreadcrumb } from '@sentry/nextjs';
+
+interface FetchCoaPanelArgs {
+  coaLeadId: string;        // 'coa:APP-NUM'
+  permit_num: string | null; // bare permit_num for cross-stream LIKE prefix (NULL if primary CoA without linked permit)
+  paddedRevision: string | null; // LPAD'd revision_num of the actively inspected permit (for Arm 1 exact-match); NULL for CoA-primary inspections
+  parentLeadType: 'permit' | 'coa';
+}
+
+interface CoaMainRow {
+  application_number: string;
+  coa_type_class: string | null;
+  project_type: string | null;
+  scope_tags: string[] | null;
+  structure_type: string | null;
+  decision_current: string | null;
+  decision_date: string | null;
+  hearing_date: string | null;
+  estimated_cost: string | null;
+  cost_source: string | null;
+  modeled_gfa_sqm: string | null;
+  lifecycle_seq: number | null;
+  lifecycle_group: string | null;
+  lifecycle_block: string | null;
+  lifecycle_stage: string | null;
+  bid_value: string | null;
+  linked_permit_num: string | null;
+  group_label: string | null;  group_color: string | null;  group_icon: string | null;
+  block_label: string | null;  block_color: string | null;  block_icon: string | null;
+  stage_label: string | null;  stage_color: string | null;  stage_icon: string | null;
+}
+
+const COA_MAIN_SQL = `
+  SELECT
+    ca.application_number,
+    ca.coa_type_class,
+    ca.project_type,
+    ca.scope_tags,
+    ca.structure_type,
+    ca.decision               AS decision_current,
+    ca.decision_date::text    AS decision_date,
+    ca.hearing_date::text     AS hearing_date,
+    ca.estimated_cost::text   AS estimated_cost,
+    ca.cost_source,
+    ca.modeled_gfa_sqm::text  AS modeled_gfa_sqm,
+    ca.lifecycle_seq,
+    ca.lifecycle_group, ca.lifecycle_block, ca.lifecycle_stage,
+    ca.bid_value::text        AS bid_value,
+    ca.linked_permit_num,
+    usc.group_label, usc.group_color, usc.group_icon,
+    usc.block_label, usc.block_color, usc.block_icon,
+    usc.stage_label, usc.stage_color, usc.stage_icon
+  FROM coa_applications ca
+  LEFT JOIN universal_stream_catalog usc ON usc.seq = ca.lifecycle_seq
+  WHERE ca.lead_id = $1
+  LIMIT 1
+`;
+
+const COA_DECISION_HISTORY_SQL = `
+  SELECT decision, transitioned_at::text AS transitioned_at,
+         from_status, to_status
+    FROM lifecycle_status_history
+   WHERE lead_id = $1 AND decision IS NOT NULL
+   ORDER BY transitioned_at ASC, id ASC
+`;
+
+const COA_LEAD_TRADES_SQL = `
+  SELECT lt.trade_id, lt.trade_slug, lt.confidence::text AS confidence,
+         t.display_name
+    FROM lead_trades lt
+    LEFT JOIN trades t ON t.slug = lt.trade_slug
+   WHERE lt.lead_id = $1
+   ORDER BY lt.confidence DESC NULLS LAST
+`;
+
+// F.4 v4.1 (HIGH-DS-v4-A + HIGH-DS-v4-B/Ind-v4-6): 3-arm UNION ALL.
+// Arm 1: active lead_id (exact match). Arm 2: ALL permit revisions via LIKE prefix (skipped when $2 NULL).
+// Arm 3: linked CoA lead_id (skipped when $3 NULL). Defensive IS NOT NULL guards.
+const COA_CROSS_STREAM_SQL = `
+  SELECT lead_id,
+         CASE WHEN lead_id LIKE 'coa:%' THEN 'coa' ELSE 'permit' END AS lead_type,
+         from_status, to_status, transitioned_at::text AS transitioned_at, id
+    FROM lifecycle_status_history
+   WHERE lead_id = $1
+  UNION ALL
+  SELECT lead_id, 'permit', from_status, to_status, transitioned_at::text, id
+    FROM lifecycle_status_history
+   WHERE $2 IS NOT NULL
+     AND lead_id LIKE 'permit:' || $2 || ':%' ESCAPE '\\'
+  UNION ALL
+  SELECT lead_id, 'coa', from_status, to_status, transitioned_at::text, id
+    FROM lifecycle_status_history
+   WHERE $3 IS NOT NULL
+     AND lead_id = $3
+   ORDER BY transitioned_at ASC, id ASC
+`;
+
+const COA_LINKED_PERMIT_SQL = `
+  SELECT permit_num,
+         LPAD(revision_num::text, 2, '0') AS revision_num_padded,
+         status
+    FROM permits
+   WHERE permit_num = $1
+   ORDER BY revision_num DESC
+   LIMIT 1
+`;
+
+interface CoaCrossStreamRow {
+  lead_id: string;
+  lead_type: 'permit' | 'coa';
+  from_status: string | null;
+  to_status: string | null;
+  transitioned_at: string;
+  id: number;
+}
+
+interface CoaDecisionRow {
+  decision: string;
+  transitioned_at: string;
+  from_status: string | null;
+  to_status: string | null;
+}
+
+interface CoaLeadTradesRow {
+  trade_id: number | null;
+  trade_slug: string;
+  confidence: string | null;
+  display_name: string | null;
+}
+
+interface CoaLinkedPermitRow {
+  permit_num: string;
+  revision_num_padded: string;
+  status: string | null;
+}
+
+async function fetchCoaPanel(
+  pool: Pool,
+  args: FetchCoaPanelArgs,
+): Promise<LeadInspectCoa | null> {
+  const mainRes = await pool.query<CoaMainRow>(COA_MAIN_SQL, [args.coaLeadId]);
+
+  // v4.1 CRIT-Obs-2 + MED-v1-O: orphan/missing-CoA signals via admin_action/warning breadcrumb.
+  // Two cases: (a) primary coa: leadId with no row → 200+coa:null contract from caller; (b) cross-stream
+  // from permit with orphaned linked_coa_application_number → caller renders OrphanLinkedCoaBanner.
+  if (mainRes.rowCount === 0) {
+    // Spec 76 §3.5 line 241: "data_quality Sentry breadcrumb" — automated DB-orphan signal,
+    // not an admin action (Spec 33 §11 reserves admin_action for state-mutating events).
+    addBreadcrumb({
+      category: 'data_quality',
+      level: 'warning',
+      message: 'data_quality_coa_substrate_missing',
+      data: {
+        lead_id: args.coaLeadId,
+        parent_lead_type: args.parentLeadType,
+      },
+    });
+    return null;
+  }
+
+  const c = mainRes.rows[0]!;
+
+  // Cross-stream timeline parameters (diff-stage CRIT-Ind/DS): pass paddedRevision so Arm 1 exact-match
+  // hits the actually-inspected revision (NOT hardcoded :00 which doubled rev-00 rows and missed rev-01+).
+  // $1 = the active lead (the one user is inspecting); $2 = bare permit_num for LIKE; $3 = linked CoA leadId.
+  // For PRIMARY CoA inspection: $1=coaLeadId, $2=ca.linked_permit_num, $3=NULL (CoA's history is in arm 1).
+  // For CROSS-STREAM from permit: $1=`permit:NUM:REV` of inspected permit, $2=permit_num, $3=coaLeadId (CoA via arm 3).
+  const activeLeadId =
+    args.parentLeadType === 'coa'
+      ? args.coaLeadId
+      : `permit:${args.permit_num}:${args.paddedRevision}`;
+  const $2 = args.parentLeadType === 'coa' ? c.linked_permit_num : args.permit_num;
+  const $3 = args.parentLeadType === 'permit' ? args.coaLeadId : null;
+
+  // Value sanitization: reject SQL LIKE metacharacters in permit_num (mig 132 trigger format is alphanumeric+hyphen).
+  if ($2 != null && /[%_\\]/.test($2)) {
+    addBreadcrumb({
+      category: 'security',
+      level: 'warning',
+      message: 'cross_stream_param_rejected_sql_metachars',
+      data: { rejected_permit_num: $2 },
+    });
+  }
+
+  const [decisionRes, tradesRes, crossRes, linkedPermitRes] = await Promise.all([
+    pool.query<CoaDecisionRow>(COA_DECISION_HISTORY_SQL, [args.coaLeadId]),
+    pool.query<CoaLeadTradesRow>(COA_LEAD_TRADES_SQL, [args.coaLeadId]),
+    pool.query<CoaCrossStreamRow>(
+      COA_CROSS_STREAM_SQL,
+      [activeLeadId, $2 != null && !/[%_\\]/.test($2) ? $2 : null, $3],
+    ),
+    c.linked_permit_num != null
+      ? pool.query<CoaLinkedPermitRow>(COA_LINKED_PERMIT_SQL, [c.linked_permit_num])
+      : Promise.resolve({ rows: [] as CoaLinkedPermitRow[] }),
+  ]);
+
+  const decision_history: LeadInspectCoaDecisionEntry[] = decisionRes.rows.map((r) => ({
+    decision: r.decision,
+    transitioned_at: new Date(r.transitioned_at).toISOString(),
+    from_status: r.from_status,
+    to_status: r.to_status,
+  }));
+
+  const cross_stream_timeline: LeadInspectCoaCrossStreamEntry[] = crossRes.rows.map((r) => ({
+    lead_id: r.lead_id,
+    lead_type: r.lead_type,
+    from_status: r.from_status,
+    to_status: r.to_status,
+    transitioned_at: new Date(r.transitioned_at).toISOString(),
+    id: r.id,
+  }));
+
+  const lead_trades: LeadInspectCoaTrade[] = tradesRes.rows.map((r) => ({
+    trade_id: r.trade_id,
+    trade_slug: r.trade_slug,
+    display_name: r.display_name,
+    confidence: r.confidence != null ? Number(r.confidence) : null,
+  }));
+
+  const linkedRow = linkedPermitRes.rows[0];
+  const linked_permit: LeadInspectCoaLinkedPermit | null = linkedRow
+    ? {
+        permit_num: linkedRow.permit_num,
+        revision_num: linkedRow.revision_num_padded,
+        status: linkedRow.status,
+        lead_id: `permit:${linkedRow.permit_num}:${linkedRow.revision_num_padded}`,
+      }
+    : null;
+
+  return {
+    application_number: c.application_number,
+    coa_type_class: c.coa_type_class,
+    project_type: c.project_type,
+    scope_tags: c.scope_tags ?? [],
+    structure_type: c.structure_type,
+    decision_current: c.decision_current,
+    decision_history,
+    decision_date: c.decision_date,
+    hearing_date: c.hearing_date,
+    estimated_cost: c.estimated_cost != null ? Number(c.estimated_cost) : null,
+    cost_source: c.cost_source,
+    modeled_gfa_sqm: c.modeled_gfa_sqm != null ? Number(c.modeled_gfa_sqm) : null,
+    lifecycle_seq: c.lifecycle_seq,
+    lifecycle_group: c.lifecycle_group,
+    lifecycle_block: c.lifecycle_block,
+    lifecycle_stage: c.lifecycle_stage,
+    group_label: c.group_label,  group_color: c.group_color,  group_icon: c.group_icon,
+    block_label: c.block_label,  block_color: c.block_color,  block_icon: c.block_icon,
+    stage_label: c.stage_label,  stage_color: c.stage_color,  stage_icon: c.stage_icon,
+    bid_value: c.bid_value != null ? Number(c.bid_value) : null,
+    linked_permit,
+    cross_stream_timeline,
+    lead_trades,
+  };
+}
+
+// ════════════════════════════════════════════════════════════════════════════════════════
+// F.4 — Primary CoA inspection entrypoint (Spec 76 §3.5 Cycle 8).
+// Returns 200+coa:null with explicit source-stub when the CoA application_number is not yet
+// classified OR doesn't exist. UI renders <ClassifierPendingBanner> in this case.
+// ════════════════════════════════════════════════════════════════════════════════════════
+export async function fetchLeadInspectByCoaLeadId(
+  pool: Pool,
+  args: { coaLeadId: string; adminUid: string },
+): Promise<LeadInspect> {
+  const coa = await fetchCoaPanel(pool, {
+    coaLeadId: args.coaLeadId,
+    permit_num: null,            // CoA primary; permit_num lookup happens in fetchCoaPanel via ca.linked_permit_num
+    paddedRevision: null,        // not applicable — Arm 1 uses $1=coaLeadId for primary-CoA inspections
+    parentLeadType: 'coa',
+  });
+
+  // v4.1 HIGH-Ind-v4-5: explicit source stub for 200+coa:null contract.
+  const nowIso = new Date().toISOString();
+  const sourceStub: LeadInspect['source'] = {
+    permit_num: null,
+    revision_num: null,
+    permit_type: null,
+    structure_type: null,
+    status: null,
+    enriched_status: null,
+    address: { street_num: null, street_name: null, street_type: null, full: '' },
+    location: null,
+    application_date: null,
+    issued_date: null,
+    completed_date: null,
+    work: null,
+    description: null,
+    builder_name: null,
+    owner: null,
+    est_const_cost: null,
+    last_seen_at: nowIso,
+    first_seen_at: nowIso,
+    linked_coa_application_number: null,
+  };
+
+  return {
+    lead_id: args.coaLeadId,
+    lead_type: 'coa',
+    source: sourceStub,
+    scope: { project_type: coa?.project_type ?? null, scope_tags: coa?.scope_tags ?? [] },
+    trades: [],
+    entity: null,
+    spatial: { parcel: null, massing: null, neighbourhood: null },
+    cost: null,
+    lifecycle: {
+      phase: null,
+      phase_name: null,
+      stalled: false,
+      classified_at: null,
+      phase_started_at: null,
+      current_phase_days_in: null,
+      predicted_remaining_days: null,
+      predicted_completion_at: null,
+      timeline: [],
+    },
+    forecast: [],
+    engagement: { competition_count: 0, saved_by_admin: false },
+    updated_at: nowIso,
+    coa,
   };
 }
