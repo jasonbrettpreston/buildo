@@ -87,7 +87,8 @@
         { "file": "scripts/classify-lifecycle-phase.js","reason": "NOW() appears in code comments only; all SET clauses use RUN_AT" },
         { "file": "scripts/compute-cost-estimates.js",  "reason": "NOW() appears in comments only (documenting the anti-pattern avoided); batch UPSERT uses RUN_AT" },
         { "file": "scripts/compute-timing-calibration-v2.js", "reason": "NOW() appears in comment only (documenting Midnight Cross prevention); UPSERT uses RUN_AT" },
-        { "file": "scripts/compute-trade-forecasts.js", "reason": "NOW() in SELECT-only query (captures run_at + today for forecast logic, not in a SET clause)" }
+        { "file": "scripts/compute-trade-forecasts.js", "reason": "NOW() in SELECT-only query (captures run_at + today for forecast logic, not in a SET clause)" },
+        { "file": "scripts/compute-opportunity-scores.js", "reason": "F.3 (commit 2026-05-17): NOW() in deploy-age startup query (pipeline_runs WHERE filter computing coaFirstDeployGrace + inQuietPeriod) + post-UPDATE audit/score-tier-distribution WHERE filters. opportunity_score is INTEGER (no timestamp writes); RUN_AT captured per §R3.5 for run-identity but no SET clause uses NOW()." }
       ]
     },
     "unbounded-push-in-stream": {

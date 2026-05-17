@@ -15,6 +15,8 @@ Calculate a stable "Intrinsic Value" (0-100) for every trade opportunity based o
 
 > **Lead-ID keying (WF1 #coa-pipeline-parity-phase-a, 2026-05-13):** `trade_forecasts` PK migrates from `(permit_num, revision_num, trade_slug)` to `(lead_id, trade_slug)` per Spec 42 §6.6.B Option C. Lead identity is `'permit:<num>:<rev>'` or `'coa:<application_number>'`. Opportunity score engine reads/writes on `lead_id`; the asymptotic decay math is unchanged. CoA-stage rows (`lead_id LIKE 'coa:%'`) now produce scores end-to-end once the lifecycle classifier emits CoA P2/P3/P4 (post-Phase E fix of bug 84-W12). Realtor financial-base carve-out (existing): CoA-stage realtor uses `cost_estimates.estimated_cost` total since the CoA cost path is geometric-only (no per-trade slice).
 
+> **Phase F.3 (DELIVERED 2026-05-17 commit `[F.3-COMMIT]`):** `scripts/compute-opportunity-scores.js` re-keyed end-to-end on `lead_id` per the §2.1 contract. SOURCE_SQL JOINs `ce.lead_id = tf.lead_id` (mig 145 PK) and `la.lead_key = tf.lead_id` (F.2 UNION shape — alignment structurally guaranteed by mig 132 trigger). UPDATE writes via 2-col `(lead_id, trade_slug)` key matching mig 151 PK. Per-branch records_meta + 10 new audit rows mirror F.1/F.2 baseline-quiet-period observability pattern. Realtor carve-out + asymptotic-decay math unchanged. Legacy `permits_in_scope_legacy_distinct_count` audit row retained for one cycle (dual-emit); new `forecasts_in_scope_permit/_coa` rows have the operationally-correct row-count semantic.
+
 ### Database Schema
 
 #### `trade_forecasts` (Updated)
