@@ -3,6 +3,36 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Phase F.4 (Lead Inspector CoA Classification Panel) — diff-stage 4-reviewer DEFERs (2026-05-17)
+
+Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + Observability worktree) on F.4 v4.1 implementation. 11 BUG findings fixed in commit (1 CRIT + 7 HIGH + 3 MED). Items below are DEFERs.
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| HIGH | Gemini | "1MB JSON file synchronous parse blocks main thread" | False premise — actual file is **43KB** (Gemini misread `9KB × 110 rows` wording as `1MB total`). 43KB JSON.parse on a desktop admin tool is sub-millisecond; no perf issue exists. |
+| CRIT | DeepSeek | `fetchLeadInspect` returns `lead_id` in `NUM--REV` URL-segment form vs canonical `permit:NUM:REV` form used by SQL queries / cross-stream lookups | **Pre-existing Cycle 7 behavior**, not introduced by F.4. The `parseLeadId` parser + route handler translate between URL-segment and canonical at the boundary; `linked_permit.lead_id` (which F.4 added) IS canonical. File as a separate Spec 76 cleanup WF if a future consumer trips on the inconsistency. |
+| MED | DeepSeek | `ESCAPE '\\'` on `LIKE` arm — recommend stricter permit_num regex validation instead of relying on ESCAPE | F.4 already rejects `/[%_\\]/` via a hard guard before parameter binding (lead-inspect-query.ts: regex check + breadcrumb + null-out). ESCAPE clause is belt-and-suspenders defense-in-depth, not the primary gate. |
+| LOW | Gemini | `bidValue * 100` width style unclamped | Schema validates `z.number().min(0).max(1)` upstream; Zod boundary at route handler (added in this diff) blocks any out-of-range value before render. Defense-in-depth, not needed. |
+| LOW | Gemini | `LinkedPermitChip` needs `min-w-[44px]` for touch target | Desktop-first admin tool (Spec 33 §2) — current `px-3` + content width is adequate. WCAG 2.1 AAA touch-target sizing is mobile-priority. |
+| NIT | Gemini | `new Date(dateString).toISOString().slice(0,10)` timezone display drift | Admin diagnostic surface — exact local-tz date display is not load-bearing. Single line in DecisionTimeline + CrossStreamTimeline. |
+| LOW | DeepSeek | `is_default_fallback` hardcoded `[0.5, 0.6]` range — should be a `logic_variable` | **Pre-existing** in `fetchLeadInspect`, not F.4. Out of scope; file separately if/when business rule changes. |
+| LOW | DeepSeek | `normalizeBuilderName` regex called twice (suffix removal) | **Pre-existing** in `fetchLeadInspect`, not F.4. |
+
+**Fixed in F.4 v4.1 commit** (per the consolidated diff-stage triage):
+- CRIT (DeepSeek + Independent agreed): Cross-stream UNION ALL Arm 1 hardcoded `:00` revision → now threads `paddedRevision` through `FetchCoaPanelArgs`.
+- HIGH (Observability): `data_quality_coa_substrate_missing` breadcrumb `category` changed `admin_action` → `data_quality` (Spec 76 §3.5 line 241 explicit).
+- HIGH (Observability): `cross_stream_param_rejected_sql_metachars` breadcrumb `category` changed `admin_action` → `security`.
+- HIGH (Independent): `fetchLeadInspectByCoaLeadId` return type tightened `Promise<LeadInspect | null>` → `Promise<LeadInspect>`; dead `if (!result) return notFound()` removed.
+- HIGH (Independent): `scripts/generate-stream-catalog-json.js` added `ADVISORY_LOCK_ID = 76` + `pipeline.withAdvisoryLock` per Spec 47 §R2/§R6.
+- HIGH (Independent): `ClassifierPendingBanner` mount-time breadcrumb removed per Spec 33 §11 read-only carve-out (data layer already emits the equivalent signal).
+- HIGH (Independent): Route handler now calls `LeadInspectSchema.parse(result)` before `ok(result)` per Spec 33 §13.
+- HIGH (Gemini): Lifecycle widget current-position label now renders 3 colored chips (group/block/stage) with their hex backgrounds + emoji icons per Spec 76 §3.5 + Spec 84 §2.5.h. Per-rect rendering of the 110-position scrubber retains group_color band (information-density rationale; per-rect <title> already includes triple).
+- MED (Gemini): `DecisionTimeline` key changed `i` → `${transitioned_at}-${decision}`.
+- MED (Gemini): `CoaTradesTable` key changed `i` → `trade_slug`.
+- MED (Independent): Column-drift detection in generator now filters `AND table_schema = 'public'`.
+
+---
+
 ## classify-coa-scope.js R5.3 — plan-review + Pre-Review deferrals (2026-05-14)
 
 Source: 3-reviewer adversarial plan review (Gemini + DeepSeek + worktree feature-dev:code-reviewer) on the WF1 R5.3 plan, plus Pre-Review Self-Checklist item (l) verification against the live script.

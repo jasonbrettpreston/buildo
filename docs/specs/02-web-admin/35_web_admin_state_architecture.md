@@ -71,7 +71,8 @@ This table is **normative**. Adding a field to an admin store requires adding a 
 | `lead_feed_health` | `GET /api/admin/leads/health` | `['admin', 'lead-feed-health']` | 10s (poll) | B1 |
 | `test_feed_results` | `GET /api/admin/leads/test-feed?<params>` | `['admin', 'test-feed', params]` | 0 (on-demand) | B1 |
 | `flight_center_board` | `GET /api/leads/flight-board` | `['admin', 'flight-board']` (admin-uid scoped) | 30s | B1 |
-| `lead_detail` (Spec 76 §3.5) | `GET /api/leads/detail/:id` | `['admin', 'lead-detail', id]` | 60s | B1 |
+| `lead_detail` (Spec 76 §3.5 Cycle 3 — mobile thin-shape endpoint; admin inspector uses `lead_inspect` row below from Cycle 7+8) | `GET /api/leads/detail/:id` | `['admin', 'lead-detail', id]` | 60s | B1 |
+| `lead_inspect` (Spec 76 §3.5 Cycle 7+8 — admin diagnostic inspector with 8 base panels + Phase F.4 CoA Classification panel) | `GET /api/admin/leads/inspect/:id` | `['admin', 'lead-inspect', id]` | 30s | B1 |
 | `flight_job_detail` (Spec 76 §3.6) | `GET /api/leads/flight-board/detail/:id` | `['admin', 'flight-job-detail', id]` | 60s | B1 |
 
 ### 3.2 Admin Draft State (Layer 3 — Zustand stores)

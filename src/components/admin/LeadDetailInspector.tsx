@@ -18,7 +18,9 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { addBreadcrumb } from '@sentry/nextjs';
 import {
   useLeadInspect,
   LeadInspectError,
@@ -30,6 +32,11 @@ import type {
   LeadInspectForecastRow,
 } from '@/lib/admin/lead-schemas';
 import { LifecycleTimelinePanel } from '@/components/admin/lead-inspector/LifecycleTimelinePanel';
+import {
+  CoaClassificationPanel,
+  ClassifierPendingBanner,
+  OrphanLinkedCoaBanner,
+} from '@/components/admin/lead-inspector/CoaClassificationPanel';
 
 interface Props {
   /** Optional pre-filled id (URL deep-link from Test Feed Tool). */
@@ -46,6 +53,8 @@ function normalizeId(raw: string | null | undefined): string | null {
 export function LeadDetailInspector({ initialId = null }: Props) {
   const [pendingId, setPendingId] = useState(initialId ?? '');
   const [activeId, setActiveId] = useState<string | null>(normalizeId(initialId));
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Sync activeId when initialId changes (deep-link reactivity per Spec 76 §3.5).
   // useState only reads the initial value on first render; without this effect a
@@ -57,6 +66,48 @@ export function LeadDetailInspector({ initialId = null }: Props) {
   }, [initialId]);
 
   const { data, isLoading, isError, error } = useLeadInspect(activeId);
+
+  // F.4 v4.1 (MED-Obs2-3 + HIGH-Obs-1): cross-stream navigation handler.
+  // Order: breadcrumb FIRST → state update → URL replace. NO admin_action_performed
+  // emit per Spec 33 §11 read-only carve-out (lead_view-style events are excluded).
+  // Idempotency guard prevents no-op rerouting when the user clicks the chip for
+  // the lead they're already viewing.
+  const handleNavigate = useCallback(
+    (nextLeadId: string) => {
+      // Translate DB lead_id ('permit:NUM:REV' or 'coa:APP-NUM') back to the
+      // URL-segment encoding ('NUM--REV' or 'COA-APP-NUM').
+      let nextSegment: string;
+      if (nextLeadId.startsWith('permit:')) {
+        const rest = nextLeadId.slice(7);
+        const sep = rest.indexOf(':');
+        if (sep <= 0) return;
+        const permitNum = rest.slice(0, sep);
+        const revisionNum = rest.slice(sep + 1);
+        nextSegment = `${permitNum}--${revisionNum}`;
+      } else if (nextLeadId.startsWith('coa:')) {
+        nextSegment = `COA-${nextLeadId.slice(4)}`;
+      } else {
+        return;
+      }
+
+      if (nextSegment === activeId) return; // idempotency guard
+
+      addBreadcrumb({
+        category: 'admin_action',
+        level: 'info',
+        message: 'lead_inspect_cross_stream_navigate',
+        data: { from: activeId, to_lead_id: nextLeadId },
+      });
+
+      setActiveId(nextSegment);
+      setPendingId(nextSegment);
+
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('id', nextSegment);
+      router.replace(`?${params.toString()}`);
+    },
+    [activeId, router, searchParams],
+  );
 
   return (
     <div data-testid="lead-detail-inspector" className="space-y-4">
@@ -124,7 +175,7 @@ export function LeadDetailInspector({ initialId = null }: Props) {
 
       {activeId && data && (
         <div data-testid="lead-detail-inspector-result" className="space-y-4">
-          <StructuredLeadInspect data={data} />
+          <StructuredLeadInspect data={data} onNavigate={handleNavigate} />
           <details className="rounded-md border border-gray-200 bg-gray-50 p-3">
             <summary className="cursor-pointer text-xs font-medium text-gray-600">
               Raw JSON
@@ -143,7 +194,23 @@ export function LeadDetailInspector({ initialId = null }: Props) {
 // 8 panels — chain-step grouped
 // ===========================================================================
 
-function StructuredLeadInspect({ data }: { data: LeadInspect }) {
+function StructuredLeadInspect({
+  data,
+  onNavigate,
+}: {
+  data: LeadInspect;
+  onNavigate: (leadId: string) => void;
+}) {
+  // F.4 v4.1: panel ordering driven by lead_type.
+  //  - 'coa' primary  → Identity, CoA panel SECOND, then standard panels
+  //  - 'permit'       → Identity ... Engagement, CoA panel LAST (cross-stream linked CoA)
+  const isCoaPrimary = data.lead_type === 'coa';
+  const hasOrphanedLink =
+    data.lead_type === 'permit' &&
+    data.source.linked_coa_application_number != null &&
+    data.coa == null;
+  const classifierPending = isCoaPrimary && data.coa == null;
+
   return (
     <div className="space-y-4">
       {/* WF1 #C 2026-05-11 — Lifecycle Timeline panel (Cycle 7). Sits at the
@@ -174,6 +241,21 @@ function StructuredLeadInspect({ data }: { data: LeadInspect }) {
         <Field label="lead_type" value={data.lead_type} />
       </Section>
 
+      {/* F.4 v4.1: primary CoA — CoA panel renders SECOND, immediately after Identity.
+          If coa is null on a primary CoA lead, classifier is pending — show banner instead. */}
+      {isCoaPrimary && data.coa != null && (
+        <CoaClassificationPanel
+          data={data.coa}
+          parentLeadType="coa"
+          onNavigate={onNavigate}
+        />
+      )}
+      {classifierPending && (
+        <ClassifierPendingBanner
+          application_number={data.lead_id.replace(/^coa:/, '')}
+        />
+      )}
+
       <SourcePanel data={data} />
       <ScopePanel data={data} />
       <TradesPanel rows={data.trades} />
@@ -183,6 +265,21 @@ function StructuredLeadInspect({ data }: { data: LeadInspect }) {
       <LifecyclePanel data={data} />
       <ForecastPanel rows={data.forecast} />
       <EngagementPanel data={data} />
+
+      {/* F.4 v4.1: permit with valid linked CoA — CoA panel renders LAST as cross-stream. */}
+      {data.lead_type === 'permit' && data.coa != null && (
+        <CoaClassificationPanel
+          data={data.coa}
+          parentLeadType="permit"
+          onNavigate={onNavigate}
+        />
+      )}
+      {/* F.4 v4.1: permit references CoA that doesn't exist → orphan banner. */}
+      {hasOrphanedLink && (
+        <OrphanLinkedCoaBanner
+          linked_coa_application_number={data.source.linked_coa_application_number!}
+        />
+      )}
     </div>
   );
 }

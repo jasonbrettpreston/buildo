@@ -18,6 +18,7 @@ vi.mock('@/lib/auth/verify-admin', () => ({
 
 vi.mock('@/lib/leads/lead-inspect-query', () => ({
   fetchLeadInspect: vi.fn(),
+  fetchLeadInspectByCoaLeadId: vi.fn(),
 }));
 
 vi.mock('@/lib/db/client', () => ({
@@ -31,11 +32,12 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 import { verifyAdminAuth } from '@/lib/auth/verify-admin';
-import { fetchLeadInspect } from '@/lib/leads/lead-inspect-query';
+import { fetchLeadInspect, fetchLeadInspectByCoaLeadId } from '@/lib/leads/lead-inspect-query';
 import { LeadInspectSchema } from '@/lib/admin/lead-schemas';
 
 const mockedVerify = vi.mocked(verifyAdminAuth);
 const mockedFetch = vi.mocked(fetchLeadInspect);
+const mockedFetchByCoaLeadId = vi.mocked(fetchLeadInspectByCoaLeadId);
 
 function makeRequest(): NextRequest {
   return {
@@ -82,6 +84,7 @@ const OK_INSPECT = {
     est_const_cost: 750000,
     last_seen_at: '2026-05-08T12:00:00Z',
     first_seen_at: '2024-01-15T09:00:00Z',
+    linked_coa_application_number: null,
   },
   scope: {
     project_type: 'new_build',
@@ -154,6 +157,7 @@ const OK_INSPECT = {
   ],
   engagement: { competition_count: 3, saved_by_admin: false },
   updated_at: '2026-05-08T12:00:00Z',
+  coa: null,
 };
 
 beforeEach(() => {
@@ -201,13 +205,31 @@ describe('GET /api/admin/leads/inspect/:id — lead-id parsing', () => {
     expect(mockedFetch).not.toHaveBeenCalled();
   });
 
-  it('returns 404 with "not yet supported" for CoA leads', async () => {
+  it('routes CoA-prefix leads to fetchLeadInspectByCoaLeadId (F.4 v4.1)', async () => {
     mockedVerify.mockResolvedValueOnce({ uid: 'admin-1', authMethod: 'session' });
+    mockedFetchByCoaLeadId.mockResolvedValueOnce({
+      ...OK_INSPECT,
+      lead_id: 'coa:A0001-2024',
+      lead_type: 'coa' as const,
+    });
     const { GET } = await import('@/app/api/admin/leads/inspect/[id]/route');
     const res = await GET(makeRequest(), makeContext('COA-A0001-2024'));
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
+    // permit fetcher NOT called for CoA leads
     expect(mockedFetch).not.toHaveBeenCalled();
+    // CoA fetcher invoked with constructed coaLeadId
+    expect(mockedFetchByCoaLeadId).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        coaLeadId: 'coa:A0001-2024',
+        adminUid: 'admin-1',
+      }),
+    );
   });
+
+  // Removed: fetchLeadInspectByCoaLeadId never returns null — Spec 76 §3.5 Cycle 8 contract is
+  // always 200 + coa:null + explicit source-stub when the CoA row is missing. Route handler no
+  // longer has a 404 path for the coa: branch.
 });
 
 // ===========================================================================

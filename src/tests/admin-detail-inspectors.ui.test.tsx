@@ -19,6 +19,18 @@ vi.mock('@/lib/logger', () => ({
   logInfo: vi.fn(),
 }));
 
+// F.4 v4.1: LeadDetailInspector now calls useRouter/useSearchParams for cross-stream
+// navigation. RTL tests render outside an app router, so mock the next/navigation
+// hooks to return functional stubs.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn(), prefetch: vi.fn(), back: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+vi.mock('@sentry/nextjs', () => ({
+  addBreadcrumb: vi.fn(),
+}));
+
 // WF2 #4 2026-05-08 — LeadDetailInspector now consumes the LeadInspect shape
 // from /api/admin/leads/inspect/:id (Spec 76 §3.5 Cycle 7), not the public
 // /api/leads/detail/:id LeadDetail. The 8-panel diagnostic shape is below.
@@ -49,6 +61,7 @@ const VALID_LEAD_INSPECT = {
     est_const_cost: 250000,
     last_seen_at: '2026-05-08T12:00:00Z',
     first_seen_at: '2024-01-15T09:00:00Z',
+    linked_coa_application_number: null,
   },
   scope: {
     project_type: 'addition',
@@ -120,6 +133,7 @@ const VALID_LEAD_INSPECT = {
   ],
   engagement: { competition_count: 3, saved_by_admin: true },
   updated_at: '2026-05-08T12:00:00Z',
+  coa: null,
 };
 
 const VALID_FLIGHT_DETAIL = {
