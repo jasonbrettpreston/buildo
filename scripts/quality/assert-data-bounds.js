@@ -200,6 +200,23 @@ pipeline.run('assert-data-bounds', async (pool) => {
         { metric: 'orphaned_permit_parcels', value: orphanParcels, threshold: '== 0', status: orphanParcels > 0 ? 'FAIL' : 'PASS' },
         { metric: 'duplicate_pk_groups', value: dupes, threshold: '== 0', status: dupes > 0 ? 'FAIL' : 'PASS' },
       ];
+
+      // Phase G (Spec 42 §6.11): PRE-permit retirement count=0 gate. Same row added to
+      // coaAuditRows below (v2.1 fold: duplicated query inside each chain-specific block;
+      // disjoint runPermitChecks/runCoaChecks guards preclude a single shared variable).
+      const prePermitCount = await count(
+        `SELECT COUNT(*) FROM permits WHERE permit_type='Pre-Permit'`,
+      );
+      permitAuditRows.push({
+        metric: 'permits_pre_permit_count',
+        value: prePermitCount,
+        threshold: '== 0',
+        status: prePermitCount > 0 ? 'FAIL' : 'PASS',
+      });
+      if (prePermitCount > 0) {
+        errors.push(`${prePermitCount} Pre-Permits remain after Phase G retirement`);
+      }
+
       const permitHasFails = permitAuditRows.some((r) => r.status === 'FAIL');
       const permitHasWarns = permitAuditRows.some((r) => r.status === 'WARN');
       permitsAuditTable = {
@@ -271,6 +288,23 @@ pipeline.run('assert-data-bounds', async (pool) => {
         console.log(`  WARN: ${ancientHearing} coa_applications with ancient hearing dates`);
       } else {
         console.log(`  OK: Ancient hearing dates within baseline (${ancientHearing})`);
+      }
+
+      // Phase G (Spec 42 §6.11): PRE-permit retirement count=0 gate; mirrors the row in
+      // permitAuditRows. The DELETE shim runs in this chain — having the gate here
+      // ensures the assertion fires on every CoA-chain run regardless of which chain
+      // executed the wipe.
+      const coaPrePermitCount = await count(
+        `SELECT COUNT(*) FROM permits WHERE permit_type='Pre-Permit'`,
+      );
+      coaAuditRows.push({
+        metric: 'permits_pre_permit_count',
+        value: coaPrePermitCount,
+        threshold: '== 0',
+        status: coaPrePermitCount > 0 ? 'FAIL' : 'PASS',
+      });
+      if (coaPrePermitCount > 0) {
+        errors.push(`${coaPrePermitCount} Pre-Permits remain after Phase G retirement`);
       }
 
       // Emit CoA audit_table

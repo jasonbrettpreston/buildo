@@ -14,9 +14,9 @@ As a pipeline operator, I want a single authoritative field-level coverage repor
 
 ## 2. Architecture
 
-**Placement:**
-- Permits chain: step 27 (last step, after assert_entity_tracing)
-- CoA chain: step 12 (last step, after assert_lifecycle_phase_distribution)
+**Placement (post-Phase G):**
+- Permits chain: step 26 (last step, after assert_entity_tracing) — was step 27 pre-Phase G; `create_pre_permits` removed by Phase G.
+- CoA chain: step 10 (last step, after assert_lifecycle_phase_distribution) — was step 12 pre-Phase G; `create_pre_permits` + `assert_pre_permit_aging` removed by Phase G.
 
 **Non-halting.** Coverage gaps emit WARN/FAIL rows in the audit_table but do not throw. Infrastructure failures (DB connectivity, Zod validation) re-throw.
 
@@ -84,10 +84,10 @@ const LOGIC_VARS_SCHEMA = z.object({
 
 ## 4. Denominator Matrix
 
-All permit-based denominators exclude PRE-% synthetic permits: `permit_num NOT LIKE 'PRE-%'`.  
+Phase G (commit `[G-COMMIT-1]`) retired PRE-% synthetic permits. The `permit_num NOT LIKE 'PRE-%'` clauses preserved below are now vestigial defense-in-depth (always-true post-retirement; harmless but documents the historical exclusion intent).
 "All real permits" = the count above.
 
-**Step 17 pre_permit_leads denominator (F2):** Uses `coa_approved_unlinked` (`decision='Approved' AND linked_permit_num IS NULL`) — the actionable population that `create_pre_permits` actually processes. The prior denominator `coa_approved_total` caused a persistent false-FAIL (~0.5%) because it included CoAs already linked to real permits (not eligible for pre-permit creation). The ratio can theoretically exceed 100% if pre-permits were created for CoAs that were subsequently linked, but `create_pre_permits` deactivates pre-permits on linking, so counts converge in practice.
+**Step 17 `create_pre_permits` row REMOVED by Phase G** — the script is now a one-shot DELETE shim and removed from both chains. The `permits.pre_permit_leads` denominator is replaced at the assertion layer by the `permits_pre_permit_count == 0` FAIL gate in `assert-data-bounds.js` (both audits per Phase G v2-Q2).
 
 ### Permits Chain — Full Profile
 
@@ -120,7 +120,7 @@ All permit-based denominators exclude PRE-% synthetic permits: `permit_num NOT L
 | Step 14 — compute_cost_estimates | cost_estimates.estimated_cost | `estimated_cost IS NOT NULL` | all real permits |
 | Step 15 — compute_timing_calibration_v2 | phase_calibration.rows | `COUNT(*) FROM phase_calibration WHERE median_days IS NOT NULL` | INFO: total calibration rows |
 | Step 16 — link_coa | coa_applications.linked_permit_num | `linked_permit_num IS NOT NULL` | `COUNT(*) FROM coa_applications` |
-| Step 17 — create_pre_permits | permits.pre_permit_leads | `COUNT(*) FROM permits WHERE permit_num LIKE 'PRE-%'` | `COUNT(*) FROM coa_applications WHERE decision='Approved' AND linked_permit_num IS NULL` |
+| ~~Step 17 — create_pre_permits~~ | _Removed by Phase G (commit `[G-COMMIT-1]`); replaced by `permits_pre_permit_count == 0` gate in assert-data-bounds.js_ | | |
 | Step 18 — refresh_snapshot | data_quality_snapshots.today | `COUNT(*) WHERE snapshot_date=CURRENT_DATE` | 1 (INFO) |
 | Step 19 — assert_data_bounds | permits.duplicate_pks | duplicate `(permit_num,revision_num)` pairs | 0 expected (INFO: non-zero = anomaly) |
 | Step 20 — assert_engine_health | engine_health_snapshots.today | rows recorded `> NOW() - 25h` | ≥ 1 expected (INFO) |
@@ -150,8 +150,8 @@ All permit-based denominators exclude PRE-% synthetic permits: `permit_num NOT L
 | CoA Step 3 — assert_coa_freshness | coa_applications.days_since_latest | `EXTRACT(days FROM NOW() - MAX(created_at))` | threshold = 45 days (INFO, > 45 = WARN) |
 | CoA Step 4 — link_coa | coa_applications.linked_permit_num | `linked_permit_num IS NOT NULL` | `COUNT(*) FROM coa_applications` |
 | CoA Step 4 — link_coa | coa_applications.linked_confidence | `linked_confidence IS NOT NULL` | `COUNT(*) FROM coa_applications WHERE linked_permit_num IS NOT NULL` |
-| CoA Step 5 — create_pre_permits | permits.pre_permit_leads | `COUNT(DISTINCT permit_num) WHERE permit_num LIKE 'PRE-%'` | `COUNT(*) FROM coa_applications WHERE decision='Approved' AND linked_permit_num IS NULL` (F2: unlinked = actionable denominator) |
-| CoA Step 6 — assert_pre_permit_aging | permits.aged_pre_permits | `permit_num LIKE 'PRE-%' AND issued_date < NOW() - INTERVAL '18 months'` | `COUNT(*) FROM permits WHERE permit_num LIKE 'PRE-%'` (INFO) |
+| ~~CoA Step 5 — create_pre_permits~~ | _Removed by Phase G (commit `[G-COMMIT-1]`)_ | | |
+| ~~CoA Step 6 — assert_pre_permit_aging~~ | _Removed by Phase G (commit `[G-COMMIT-1]`)_ | | |
 | CoA Step 7 — refresh_snapshot | data_quality_snapshots.today | same as P18 | 1 (INFO) |
 | CoA Step 8 — assert_data_bounds | coa_applications.duplicate_pks | duplicate `application_number` pairs | 0 expected (INFO) |
 | CoA Step 9 — assert_engine_health | engine_health_snapshots.today | same as P20 | ≥ 1 expected (INFO) |
