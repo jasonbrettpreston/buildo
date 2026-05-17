@@ -37,7 +37,6 @@
     "update_tracked_projects": { "file": "scripts/update-tracked-projects.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["tracked_projects", "lead_analytics"] },
     "compute_centroids":    { "file": "scripts/compute-centroids.js",     "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcels"], "telemetry_null_cols": { "parcels": ["centroid_lat", "centroid_lng"] } },
     "link_similar":         { "file": "scripts/link-similar.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
-    "create_pre_permits":   { "file": "scripts/create-pre-permits.js",    "supports_full": false, "supports_dry_run": false },
     "reclassify_all":       { "file": "scripts/reclassify-all.js",         "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits", "permit_trades"] },
     "refresh_snapshot":     { "file": "scripts/refresh-snapshot.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["data_quality_snapshots"] },
     "assert_schema":        { "file": "scripts/quality/assert-schema.js", "supports_full": false, "supports_dry_run": false },
@@ -45,7 +44,6 @@
     "assert_engine_health": { "file": "scripts/quality/assert-engine-health.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["engine_health_snapshots"] },
     "assert_network_health": { "file": "scripts/quality/assert-network-health.js", "supports_full": false, "supports_dry_run": false },
     "assert_staleness": { "file": "scripts/quality/assert-staleness.js", "supports_full": false, "supports_dry_run": false },
-    "assert_pre_permit_aging": { "file": "scripts/quality/assert-pre-permit-aging.js", "supports_full": false, "supports_dry_run": false },
     "assert_coa_freshness": { "file": "scripts/quality/assert-coa-freshness.js", "supports_full": false, "supports_dry_run": false },
     "inspections":          { "file": "scripts/aic-orchestrator.py", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permit_inspections", "permits", "scraper_queue"] },
     "classify_inspection_status": { "file": "scripts/classify-inspection-status.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["permits"] },
@@ -66,7 +64,7 @@
       "link_neighbourhoods", "link_massing", "link_similar", "classify_permits",
       "backfill_realtor_permit_trades",
       "compute_cost_estimates", "compute_timing_calibration_v2",
-      "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
+      "link_coa", "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
       "classify_lifecycle_phase", "assert_lifecycle_phase_distribution",
       "compute_phase_calibration",
       "compute_trade_forecasts", "compute_opportunity_scores", "update_tracked_projects",
@@ -74,8 +72,8 @@
       "backup_db"
     ],
     "coa": [
-      "assert_schema", "coa", "assert_coa_freshness", "link_coa_to_parcels", "classify_coa_scope", "classify_coa_trades", "compute_coa_cost_estimates", "link_coa", "create_pre_permits",
-      "assert_pre_permit_aging", "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
+      "assert_schema", "coa", "assert_coa_freshness", "link_coa_to_parcels", "classify_coa_scope", "classify_coa_trades", "compute_coa_cost_estimates", "link_coa",
+      "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
       "classify_lifecycle_phase", "assert_lifecycle_phase_distribution", "compute_phase_calibration", "assert_global_coverage"
     ],
     "sources": [

@@ -35,7 +35,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // Wave 5 — Compute / Maintenance
   'scripts/close-stale-permits.js':  98,
   'scripts/compute-centroids.js':    99,
-  'scripts/create-pre-permits.js':   100,
+  // Phase G (Spec 42 §6.11): 'scripts/create-pre-permits.js' (lock 100) retired.
   'scripts/purge-lead-views.js':     101,
   'scripts/refresh-snapshot.js':     40,
   // Wave 3 — Enrich
@@ -79,7 +79,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/quality/assert-engine-health.js':    104,
   'scripts/quality/assert-network-health.js':   105,
   'scripts/quality/assert-staleness.js':        106,
-  'scripts/quality/assert-pre-permit-aging.js': 107,
+  // Phase G: 'scripts/quality/assert-pre-permit-aging.js' (lock 107) retired.
   'scripts/quality/assert-coa-freshness.js':    108,
   'scripts/quality/assert-lifecycle-phase-distribution.js': 109,
   'scripts/quality/assert-entity-tracing.js':   110,

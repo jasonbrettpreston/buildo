@@ -782,7 +782,7 @@ describe('Pipeline SDK', () => {
       'refresh-snapshot.js',
       'compute-centroids.js',
       'link-similar.js',
-      'create-pre-permits.js',
+      // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
       'enrich-web-search.js',
     ];
 
@@ -875,13 +875,8 @@ describe('Pipeline SDK', () => {
       });
     }
 
-    // Phase G (Spec 42 §6.11): create-pre-permits.js is now a DELETE-only retirement shim.
-    // records_new=0 (deletions aren't inserts); per-table deleted counts live in audit_table.
-    it('create-pre-permits.js emits records_new: 0 (Phase G retirement shim — no INSERTs)', () => {
-      const content = fs.readFileSync(path.join(scriptDir, 'create-pre-permits.js'), 'utf-8');
-      expect(content).toMatch(/records_new:\s*0/);
-      expect(content).not.toMatch(/INSERT INTO permits/);
-    });
+    // Phase G (Spec 42 §6.11): create-pre-permits.js retired entirely in Commit 2;
+    // file deleted from scripts/. No records_new assertion remains.
 
     // §11 — load-neighbourhoods.js records_new must be 0 (upsert path can't distinguish
     // inserts from no-ops without SQL rowCount; records_updated carries boundary count)
