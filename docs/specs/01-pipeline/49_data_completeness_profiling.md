@@ -84,7 +84,7 @@ const LOGIC_VARS_SCHEMA = z.object({
 
 ## 4. Denominator Matrix
 
-Phase G (commit `[G-COMMIT-1]`) retired PRE-% synthetic permits. The `permit_num NOT LIKE 'PRE-%'` clauses preserved below are now vestigial defense-in-depth (always-true post-retirement; harmless but documents the historical exclusion intent).
+Phase G (commit `3944f88`) retired PRE-% synthetic permits. The `permit_num NOT LIKE 'PRE-%'` clauses preserved below are now vestigial defense-in-depth (always-true post-retirement; harmless but documents the historical exclusion intent).
 "All real permits" = the count above.
 
 **Step 17 `create_pre_permits` row REMOVED by Phase G** — the script is now a one-shot DELETE shim and removed from both chains. The `permits.pre_permit_leads` denominator is replaced at the assertion layer by the `permits_pre_permit_count == 0` FAIL gate in `assert-data-bounds.js` (both audits per Phase G v2-Q2).
@@ -120,7 +120,7 @@ Phase G (commit `[G-COMMIT-1]`) retired PRE-% synthetic permits. The `permit_num
 | Step 14 — compute_cost_estimates | cost_estimates.estimated_cost | `estimated_cost IS NOT NULL` | all real permits |
 | Step 15 — compute_timing_calibration_v2 | phase_calibration.rows | `COUNT(*) FROM phase_calibration WHERE median_days IS NOT NULL` | INFO: total calibration rows |
 | Step 16 — link_coa | coa_applications.linked_permit_num | `linked_permit_num IS NOT NULL` | `COUNT(*) FROM coa_applications` |
-| ~~Step 17 — create_pre_permits~~ | _Removed by Phase G (commit `[G-COMMIT-1]`); replaced by `permits_pre_permit_count == 0` gate in assert-data-bounds.js_ | | |
+| ~~Step 17 — create_pre_permits~~ | _Removed by Phase G (commit `3944f88`); replaced by `permits_pre_permit_count == 0` gate in assert-data-bounds.js_ | | |
 | Step 18 — refresh_snapshot | data_quality_snapshots.today | `COUNT(*) WHERE snapshot_date=CURRENT_DATE` | 1 (INFO) |
 | Step 19 — assert_data_bounds | permits.duplicate_pks | duplicate `(permit_num,revision_num)` pairs | 0 expected (INFO: non-zero = anomaly) |
 | Step 20 — assert_engine_health | engine_health_snapshots.today | rows recorded `> NOW() - 25h` | ≥ 1 expected (INFO) |
@@ -150,8 +150,8 @@ Phase G (commit `[G-COMMIT-1]`) retired PRE-% synthetic permits. The `permit_num
 | CoA Step 3 — assert_coa_freshness | coa_applications.days_since_latest | `EXTRACT(days FROM NOW() - MAX(created_at))` | threshold = 45 days (INFO, > 45 = WARN) |
 | CoA Step 4 — link_coa | coa_applications.linked_permit_num | `linked_permit_num IS NOT NULL` | `COUNT(*) FROM coa_applications` |
 | CoA Step 4 — link_coa | coa_applications.linked_confidence | `linked_confidence IS NOT NULL` | `COUNT(*) FROM coa_applications WHERE linked_permit_num IS NOT NULL` |
-| ~~CoA Step 5 — create_pre_permits~~ | _Removed by Phase G (commit `[G-COMMIT-1]`)_ | | |
-| ~~CoA Step 6 — assert_pre_permit_aging~~ | _Removed by Phase G (commit `[G-COMMIT-1]`)_ | | |
+| ~~CoA Step 5 — create_pre_permits~~ | _Removed by Phase G (commit `3944f88`)_ | | |
+| ~~CoA Step 6 — assert_pre_permit_aging~~ | _Removed by Phase G (commit `3944f88`)_ | | |
 | CoA Step 7 — refresh_snapshot | data_quality_snapshots.today | same as P18 | 1 (INFO) |
 | CoA Step 8 — assert_data_bounds | coa_applications.duplicate_pks | duplicate `application_number` pairs | 0 expected (INFO) |
 | CoA Step 9 — assert_engine_health | engine_health_snapshots.today | same as P20 | ≥ 1 expected (INFO) |
