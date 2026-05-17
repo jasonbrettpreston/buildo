@@ -10,13 +10,13 @@
 //   404 — id parsed but no permit row
 //   500 — unexpected error (logged via logError, sanitized envelope)
 //
-// CoA leads (id prefix `COA-`) are recognised by the parser but currently
-// return 404 with a stable code; the rich CoA detail join is out of scope
-// for this milestone (tracked in active_task — Out of Scope).
-//
 // Auth: Bearer token (mobile) or session cookie (web admin). The middleware
 // at src/middleware.ts checks JWT shape; this handler calls
 // getCurrentUserContext to resolve the verified Firebase UID + trade_slug.
+//
+// Phase G (Spec 42 §6.11): CoA leads (id prefix `COA-`) are now resolved by
+// a dedicated branch reading `coa_applications` directly via `lead_id LIKE
+// 'coa:%'`. Pre-Phase G this returned 404.
 
 import type { NextRequest } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
@@ -32,8 +32,11 @@ import {
 import { parseLeadId } from '@/lib/leads/parse-lead-id';
 import {
   LEAD_DETAIL_SQL,
+  COA_LEAD_DETAIL_SQL,
   toLeadDetail,
+  toCoaLeadDetail,
   type LeadDetailRow,
+  type CoaLeadDetailRow,
 } from '@/lib/leads/lead-detail-query';
 
 export const GET = withApiEnvelope(async function GET(
@@ -52,10 +55,17 @@ export const GET = withApiEnvelope(async function GET(
     if (parsed === null) return badRequestInvalidId();
 
     if (parsed.kind === 'coa') {
-      // CoA detail is recognised but not yet implemented — see active_task
-      // Out of Scope. Return 404 (not 501) so existing mobile clients show
-      // the standard "Lead not found" UX instead of a new error class.
-      return notFound('CoA lead detail is not yet supported');
+      // Phase G: dispatch to CoA branch reading coa_applications directly.
+      // The DB-canonical lead_id `coa:${application_number}` is constructed
+      // INLINE in COA_LEAD_DETAIL_SQL (single conversion point per v2.1).
+      const coaResult = await pool.query<CoaLeadDetailRow>(COA_LEAD_DETAIL_SQL, [
+        parsed.application_number,
+        ctx.trade_slug,
+        ctx.uid,
+      ]);
+      const coaRow = coaResult.rows[0];
+      if (!coaRow) return notFound();
+      return ok(toCoaLeadDetail(coaRow));
     }
 
     const result = await pool.query<LeadDetailRow>(LEAD_DETAIL_SQL, [

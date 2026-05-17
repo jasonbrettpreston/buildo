@@ -21,7 +21,7 @@ classify_scope → builders → link_wsib → geocode_permits → link_parcels �
 link_neighbourhoods → link_massing → link_similar → classify_permits →
 backfill_realtor_permit_trades →
 compute_cost_estimates → compute_timing_calibration_v2 →
-link_coa → create_pre_permits → refresh_snapshot → assert_data_bounds →
+link_coa → refresh_snapshot → assert_data_bounds →
 assert_engine_health → classify_lifecycle_phase → assert_lifecycle_phase_distribution →
 compute_phase_calibration → compute_trade_forecasts → compute_opportunity_scores → update_tracked_projects →
 assert_entity_tracing → assert_global_coverage → backup_db

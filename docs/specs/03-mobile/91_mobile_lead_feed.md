@@ -167,7 +167,7 @@ Whether tapped from the feed or the map, the user is routed to a comprehensive, 
 |---|---|
 | **Auth** | Bearer token (mobile) or session cookie (web) — same as `/api/leads/feed`. |
 | **Path param** | `id` — `${permit_num}--${revision_num}` for permits, `COA-${application_number}` for CoA leads. |
-| **Status codes** | 200 success · 400 `INVALID_LEAD_ID` (malformed) · 401 `UNAUTHORIZED` · 404 `NOT_FOUND` (no permit row, or CoA — currently unimplemented) · 500 `INTERNAL_ERROR`/`DATABASE_ERROR` (sanitized, no raw `err.message` leaked) |
+| **Status codes** | 200 success · 400 `INVALID_LEAD_ID` (malformed) · 401 `UNAUTHORIZED` · 404 `NOT_FOUND` (no permit OR CoA row) · 500 `INTERNAL_ERROR`/`DATABASE_ERROR` (sanitized, no raw `err.message` leaked) |
 | **Response shape** | `{ data: LeadDetail, error: null, meta: null }` |
 
 `LeadDetail` is defined in `src/app/api/leads/detail/[id]/types.ts` and includes:

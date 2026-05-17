@@ -20,7 +20,7 @@ const PIPELINE_SCRIPTS = [
   'scripts/close-stale-permits.js',
   'scripts/compute-cost-estimates.js',
   'scripts/compute-timing-calibration-v2.js',
-  'scripts/create-pre-permits.js',
+  // Phase G (Spec 42 §6.11): scripts/create-pre-permits.js retired to DELETE shim — no logicVars.
   'scripts/link-coa.js',
   'scripts/link-massing.js',
   'scripts/link-parcels.js',
@@ -31,13 +31,13 @@ const PIPELINE_SCRIPTS = [
   'scripts/quality/assert-global-coverage.js',
   'scripts/quality/assert-lifecycle-phase-distribution.js',
   'scripts/quality/assert-network-health.js',
-  'scripts/quality/assert-pre-permit-aging.js',
+  // Phase G: scripts/quality/assert-pre-permit-aging.js retired to no-op shim — no logicVars.
   'scripts/quality/assert-staleness.js',
 ];
 
 describe('Pipeline scripts — LOGIC_VARS_SCHEMA uses z.coerce.number() (spec 47 §4)', () => {
-  it('covers all 20 pipeline scripts in the sweep', () => {
-    expect(PIPELINE_SCRIPTS).toHaveLength(20);
+  it('covers all 18 pipeline scripts in the sweep (was 20; Phase G retired 2 shims)', () => {
+    expect(PIPELINE_SCRIPTS).toHaveLength(18);
   });
 
   for (const scriptPath of PIPELINE_SCRIPTS) {

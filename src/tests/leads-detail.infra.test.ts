@@ -249,11 +249,12 @@ describe('GET /api/leads/detail/[id] — 404', () => {
     expect(body.error.code).toBe('NOT_FOUND');
   });
 
-  it('returns 404 for CoA leads (not yet implemented)', async () => {
+  it('returns 404 when the CoA row does not exist (Phase G — CoA branch active)', async () => {
     mockedGetUserContext.mockResolvedValueOnce(sampleContext);
-    const res = await GET(makeRequest(), makeContext('COA-A0123/24EYK'));
+    mockedPool.query.mockResolvedValueOnce({ rowCount: 0, rows: [] });
+    const res = await GET(makeRequest(), makeContext('COA-DOES-NOT-EXIST'));
     expect(res.status).toBe(404);
-    expect(mockedPool.query).not.toHaveBeenCalled();
+    expect(mockedPool.query).toHaveBeenCalled();
   });
 });
 

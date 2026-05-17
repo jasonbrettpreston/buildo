@@ -298,24 +298,13 @@ describe('assert-global-coverage.js — Bug 4: pre-permit coverage cannot exceed
     expect(content).toMatch(/COUNT\(DISTINCT permit_num\)[\s\S]{0,50}PRE-%/);
   });
 
-  it('CoA chain uses approved_unlinked as CoA Step 5 denominator (F2 fix: mirrors permits chain)', () => {
-    // F2: both chains now use the unlinked denominator (actionable approved CoAs).
-    // approved_total was dropped — it included already-linked CoAs and caused false FAILs.
-    expect(content).toMatch(/CoA Step 5[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}approvedUnlinked/);
-    expect(content).not.toMatch(/CoA Step 5[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}approvedTotal/);
-  });
-
-  it('permits chain uses coa_approved_unlinked as Step 17 denominator (F2 fix: unlinked = actionable denominator)', () => {
-    // coa_approved_unlinked = approved CoA apps NOT yet linked to a real permit.
-    // create_pre_permits only creates pre-permits for unlinked approved CoAs, so
-    // unlinked is the meaningful coverage denominator ("what % of open CoA opportunities
-    // have a pre-permit?"). coa_approved_total was too large (~26K) → 0.5% false FAIL.
-    // Note: ratio can theoretically exceed 100% as CoAs get linked after pre-permit
-    // creation — this is acceptable and documented here.
-    expect(content).toMatch(/coa_approved_unlinked/);
-    expect(content).toMatch(/Step 17[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}coa_approved_unlinked/);
-    // coa_approved_total must NOT appear as the Step 17 denominator
-    expect(content).not.toMatch(/Step 17[\s\S]{0,200}pre_permit_leads[\s\S]{0,200}coa_approved_total/);
+  // Phase G (Spec 42 §6.11): Step 17 (create_pre_permits), CoA Step 5 (create_pre_permits)
+  // and CoA Step 6 (assert_pre_permit_aging) CoverageRow entries REMOVED. The retirement
+  // assertion is now `permits_pre_permit_count == 0` in assert-data-bounds.js (both audits).
+  it('Phase G — Step 17 / CoA Step 5 / CoA Step 6 rows NOT emitted (retired)', () => {
+    expect(content).not.toMatch(/'Step 17 — create_pre_permits'/);
+    expect(content).not.toMatch(/'CoA Step 5 — create_pre_permits'/);
+    expect(content).not.toMatch(/'CoA Step 6 — assert_pre_permit_aging'/);
   });
 });
 

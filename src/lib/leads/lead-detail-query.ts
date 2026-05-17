@@ -209,3 +209,173 @@ export function toLeadDetail(row: LeadDetailRow): LeadDetail {
     is_saved: row.saved,
   };
 }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Phase G (Spec 42 §6.11): CoA lead-detail branch.
+//
+// Mobile clients now resolve `COA-${application_number}` URL segments to a
+// valid LeadDetail envelope (was 404 pre-Phase G; see Spec 91 §4.3.1 line 170
+// amendment). The route handler decides whether to call the permit or CoA
+// branch based on `parseLeadId` discriminant.
+//
+// The CoA branch reads `coa_applications` directly (mig 133 fields), LEFT JOIN
+// `neighbourhoods` for the demographics block, LEFT JOIN `trade_forecasts` for
+// the forecast block (Phase F.1 made this CoA-aware), plus two LATERAL
+// subqueries on `lead_views` mirroring the permit-side `is_saved` /
+// `competition_count` semantics.
+//
+// Cost mapping (v2-Q3 partial map): only `estimated` and `modeled_gfa_sqm` are
+// populated from `coa_applications.{estimated_cost, modeled_gfa_sqm}`. The
+// permit-side `tier` / `range_low` / `range_high` fields have no CoA-side
+// analog and are returned as null.
+// ═════════════════════════════════════════════════════════════════════════════
+
+export interface CoaLeadDetailRow {
+  application_number: string;
+  street_num: string | null;
+  street_name: string | null;
+  work_description: string | null;
+  lifecycle_phase: string | null;
+  lifecycle_stalled: boolean;
+  latitude: string | null;
+  longitude: string | null;
+  updated_at: string;
+  // cost (partial: only estimated_cost + modeled_gfa_sqm on the CoA side)
+  estimated_cost: string | null;
+  modeled_gfa_sqm: string | null;
+  // neighbourhood
+  neighbourhood_name: string | null;
+  avg_household_income: number | null;
+  median_household_income: number | null;
+  period_of_construction: string | null;
+  // forecast (trade_forecasts row scoped to user's trade_slug — may be null
+  // when Phase F.1 forecaster hasn't run yet for this CoA)
+  predicted_start: string | null;
+  p25_days: number | null;
+  p75_days: number | null;
+  opportunity_score: number | null;
+  target_window: 'bid' | 'work' | null;
+  competition_count: number;
+  saved: boolean;  // alias matches permit-side convention (v2.1 Indep M2 fold)
+}
+
+// $1 application_number · $2 trade_slug · $3 viewer's user_id
+//
+// `coa:` lead_id is constructed inline at the SQL parameter site (v2.1 DeepSeek
+// H3 fold — single conversion point; the route handler still passes
+// application_number after `parseLeadId`).
+//
+// `lead_id LIKE 'coa:%'` is reserved exclusively for CoA leads; the
+// `lead_type = 'coa'` filter on lead_views excludes any cross-contamination
+// from the permit/builder rows in the same table.
+export const COA_LEAD_DETAIL_SQL = `
+  SELECT
+    ca.application_number,
+    ca.street_num,
+    ca.street_name,
+    ca.description AS work_description,
+    ca.lifecycle_phase,
+    ca.lifecycle_stalled,
+    ca.latitude::text AS latitude,
+    ca.longitude::text AS longitude,
+    ca.updated_at::text AS updated_at,
+    ca.estimated_cost::text AS estimated_cost,
+    ca.modeled_gfa_sqm::text AS modeled_gfa_sqm,
+    n.name AS neighbourhood_name,
+    n.avg_household_income,
+    n.median_household_income,
+    n.period_of_construction,
+    tf.predicted_start::text AS predicted_start,
+    tf.p25_days,
+    tf.p75_days,
+    tf.opportunity_score,
+    tf.target_window,
+    COALESCE(lv_count.c, 0)::int AS competition_count,
+    lv_self.saved AS saved
+  FROM coa_applications ca
+  LEFT JOIN neighbourhoods n
+    ON n.id = ca.neighbourhood_id
+  LEFT JOIN trade_forecasts tf
+    ON tf.lead_id = ('coa:' || ca.application_number)
+    AND tf.trade_slug = $2
+  LEFT JOIN LATERAL (
+    SELECT COUNT(DISTINCT lv2.user_id)::int AS c
+    FROM lead_views lv2
+    WHERE lv2.lead_key = ('coa:' || ca.application_number)
+      AND lv2.saved = true
+      AND lv2.user_id != $3::text
+      AND lv2.lead_type = 'coa'
+  ) lv_count ON TRUE
+  LEFT JOIN LATERAL (
+    SELECT EXISTS (
+      SELECT 1 FROM lead_views lv_own
+      WHERE lv_own.lead_key = ('coa:' || ca.application_number)
+        AND lv_own.user_id = $3::text
+        AND lv_own.saved = true
+        AND lv_own.lead_type = 'coa'
+    ) AS saved
+  ) lv_self ON TRUE
+  WHERE ca.application_number = $1
+  LIMIT 1
+`;
+
+function toCoaCost(row: CoaLeadDetailRow): LeadDetailCost | null {
+  // v2-Q3 partial map: emit the cost object when at least one CoA-side field
+  // is populated. The 3 permit-only fields (tier/range_low/range_high) are
+  // returned as null.
+  if (row.estimated_cost === null && row.modeled_gfa_sqm === null) {
+    return null;
+  }
+  return {
+    estimated: toNumberOrNull(row.estimated_cost),
+    tier: null,
+    range_low: null,
+    range_high: null,
+    modeled_gfa_sqm: toNumberOrNull(row.modeled_gfa_sqm),
+  };
+}
+
+function toCoaNeighbourhood(row: CoaLeadDetailRow): LeadDetailNeighbourhood | null {
+  if (
+    row.neighbourhood_name === null &&
+    row.avg_household_income === null &&
+    row.median_household_income === null &&
+    row.period_of_construction === null
+  ) {
+    return null;
+  }
+  return {
+    name: row.neighbourhood_name,
+    avg_household_income: row.avg_household_income,
+    median_household_income: row.median_household_income,
+    period_of_construction: row.period_of_construction,
+  };
+}
+
+export function toCoaLeadDetail(row: CoaLeadDetailRow): LeadDetail {
+  const lead_id = `COA-${row.application_number}`;
+  const lat = toNumberOrNull(row.latitude);
+  const lng = toNumberOrNull(row.longitude);
+  return {
+    lead_id,
+    lead_type: 'coa',
+    permit_num: null,
+    revision_num: null,
+    address: composeAddress(row.street_num, row.street_name, lead_id),
+    location: lat !== null && lng !== null ? { lat, lng } : null,
+    work_description: row.work_description,
+    applicant: null,
+    lifecycle_phase: row.lifecycle_phase,
+    lifecycle_stalled: row.lifecycle_stalled,
+    target_window: row.target_window,
+    opportunity_score: row.opportunity_score,
+    competition_count: row.competition_count,
+    predicted_start: row.predicted_start,
+    p25_days: row.p25_days,
+    p75_days: row.p75_days,
+    cost: toCoaCost(row),
+    neighbourhood: toCoaNeighbourhood(row),
+    updated_at: row.updated_at,
+    is_saved: row.saved,
+  };
+}

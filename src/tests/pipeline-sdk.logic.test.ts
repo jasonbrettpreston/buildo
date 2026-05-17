@@ -875,11 +875,12 @@ describe('Pipeline SDK', () => {
       });
     }
 
-    // §3.5 — read-only scripts must use records_new: null
-    it('create-pre-permits.js emits records_new: inserted (generates Pre-Permits)', () => {
+    // Phase G (Spec 42 §6.11): create-pre-permits.js is now a DELETE-only retirement shim.
+    // records_new=0 (deletions aren't inserts); per-table deleted counts live in audit_table.
+    it('create-pre-permits.js emits records_new: 0 (Phase G retirement shim — no INSERTs)', () => {
       const content = fs.readFileSync(path.join(scriptDir, 'create-pre-permits.js'), 'utf-8');
-      // Script now INSERTs Pre-Permit rows — records_new tracks actual inserts
-      expect(content).toMatch(/records_new:\s*inserted/);
+      expect(content).toMatch(/records_new:\s*0/);
+      expect(content).not.toMatch(/INSERT INTO permits/);
     });
 
     // §11 — load-neighbourhoods.js records_new must be 0 (upsert path can't distinguish

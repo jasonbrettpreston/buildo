@@ -161,14 +161,10 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('CoA Step 4 — link_coa', 'coa_applications.linked_permit_num', linkedTotal, coaTotal));
       rows.push(coverageRow('CoA Step 4 — link_coa', 'coa_applications.linked_confidence', parseInt(ca.confidence_pop, 10), linkedTotal || null));
 
-      // Step: create_pre_permits
-      // F2: denominator = approved CoA apps not yet linked (actionable). Mirrors permits chain Step 17.
-      // Ratio can exceed 100% if CoAs get linked after pre-permit creation, but create_pre_permits
-      // deactivates pre-permits on linking, so counts converge in practice.
-      rows.push(coverageRow('CoA Step 5 — create_pre_permits', 'permits.pre_permit_leads', preTotal, approvedUnlinked || null));
-
-      // Step: assert_pre_permit_aging
-      rows.push(infoRow('CoA Step 6 — assert_pre_permit_aging', 'permits.aged_pre_permits_gt18m', parseInt(cm.aged_pre_permits, 10), preTotal));
+      // Phase G (Spec 42 §6.11): CoA Step 5 (create_pre_permits) and Step 6
+      // (assert_pre_permit_aging) coverage rows REMOVED — both scripts retired to
+      // shims and removed from the CoA chain. Replaced at the assertion layer by the
+      // `permits_pre_permit_count == 0` gate in assert-data-bounds.js (both audits).
 
       // Step: refresh_snapshot
       rows.push(infoRow('CoA Step 7 — refresh_snapshot', 'data_quality_snapshots.today', parseInt(cm.snapshot_today, 10)));
@@ -626,12 +622,10 @@ pipeline.run('assert-global-coverage', async (pool) => {
       const coaTotal = parseInt(misc.coa_total, 10) || 0;
       rows.push(coverageRow('Step 16 — link_coa', 'coa_applications.linked_permit_num', parseInt(misc.coa_linked_pop, 10), coaTotal || null));
 
-      // Step 17 — create_pre_permits
-      // F2: denominator is coa_approved_unlinked (actionable: approved + not yet linked to a real permit).
-      // create_pre_permits only creates pre-permits for unlinked CoAs, so this is the correct population.
-      // Ratio can theoretically exceed 100% if CoAs are linked after pre-permits are created, but in
-      // practice create_pre_permits deactivates pre-permits when CoAs get linked, so counts converge.
-      rows.push(coverageRow('Step 17 — create_pre_permits', 'permits.pre_permit_leads', parseInt(pa.pre_permit_count, 10), parseInt(misc.coa_approved_unlinked, 10) || null));
+      // Phase G (Spec 42 §6.11): Step 17 (create_pre_permits) coverage row REMOVED.
+      // The retired script no longer creates Pre-Permit rows; the `permits.pre_permit_leads`
+      // denominator is replaced by the `permits_pre_permit_count == 0` gate in
+      // assert-data-bounds.js.
 
       // Step 18 — refresh_snapshot
       rows.push(infoRow('Step 18 — refresh_snapshot', 'data_quality_snapshots.today', parseInt(misc.snapshot_today, 10)));
