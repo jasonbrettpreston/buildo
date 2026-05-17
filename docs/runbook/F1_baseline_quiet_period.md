@@ -133,7 +133,7 @@ In addition to the F.1 exit criteria, an F.2-clean state also requires:
 
 ## Phase F.3 additions (v4 — `compute-opportunity-scores.js` lead_id rekey + CoA consumer)
 
-Phase F.3 (commit `[F.3-COMMIT]`) re-keyed `compute-opportunity-scores.js` end-to-end on `lead_id` per Spec 81 §2.1, introducing **10 new audit_table.rows metrics + 16 new records_meta entries** in the F.3-pipeline scope. Same baseline-quiet-period protocol applies; runbook entries follow.
+Phase F.3 (commit `632e57d`) re-keyed `compute-opportunity-scores.js` end-to-end on `lead_id` per Spec 81 §2.1, introducing **10 new audit_table.rows metrics + 16 new records_meta entries** in the F.3-pipeline scope. Same baseline-quiet-period protocol applies; runbook entries follow.
 
 ### The 10 new audit_table.rows metrics
 
