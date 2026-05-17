@@ -125,7 +125,6 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'compute_cost_estimates',     indent: 1 },
       { slug: 'compute_timing_calibration_v2', indent: 1 },
       { slug: 'link_coa',             indent: 1 },
-      { slug: 'create_pre_permits',   indent: 1 },
       { slug: 'refresh_snapshot',     indent: 1 },
       { slug: 'assert_data_bounds',   indent: 0 },
       { slug: 'assert_engine_health', indent: 0 },
@@ -177,8 +176,6 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       // coa_applications cost cols + lead_id-keyed cost_estimates row.
       { slug: 'compute_coa_cost_estimates', indent: 1 },
       { slug: 'link_coa',                indent: 1 },
-      { slug: 'create_pre_permits',      indent: 1 },
-      { slug: 'assert_pre_permit_aging', indent: 0 },
       { slug: 'refresh_snapshot',         indent: 1 },
       { slug: 'assert_data_bounds',       indent: 0 },
       { slug: 'assert_engine_health',     indent: 0 },

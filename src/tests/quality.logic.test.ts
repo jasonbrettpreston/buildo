@@ -545,7 +545,7 @@ describe('Pipeline Chains', () => {
     expect(ids).toEqual(['permits', 'coa', 'entities', 'wsib', 'sources', 'deep_scrapes']);
   });
 
-  it('permits chain has 30 steps ending with backup_db', () => {
+  it('permits chain has 29 steps ending with backup_db (Phase G removed create_pre_permits)', () => {
     // WF3 2026-04-13: v1 `compute_timing_calibration` removed per Path A.
     // WF2 2026-04-18: +2 steps (assert_lifecycle_phase_distribution step 22,
     // assert_entity_tracing step 26).
@@ -555,7 +555,7 @@ describe('Pipeline Chains', () => {
     // WF3 #realtor-backfill 2026-05-09: +1 step (backfill_realtor_permit_trades
     // between classify_permits and compute_cost_estimates).
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(30);
+    expect(permits.steps).toHaveLength(29);
     expect(permits!.steps[0]!.slug).toBe('assert_schema');
     expect(permits!.steps[1]!.slug).toBe('permits');
     expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('backup_db');
@@ -579,7 +579,7 @@ describe('Pipeline Chains', () => {
     expect(indent2plus).toHaveLength(0);
   });
 
-  it('coa chain has 17 steps ending with assert_global_coverage', () => {
+  it('coa chain has 15 steps ending with assert_global_coverage (Phase G removed create_pre_permits + assert_pre_permit_aging)', () => {
     // WF2 2026-04-11: +1 (classify_lifecycle_phase) — was 9 before.
     // WF2 2026-04-18: +1 (assert_lifecycle_phase_distribution as step 11).
     // WF1 2026-04-19: +1 (assert_global_coverage as step 12).
@@ -590,7 +590,7 @@ describe('Pipeline Chains', () => {
     // WF1 2026-05-15 Phase E.3: +1 (compute_phase_calibration inserted between
     //   assert_lifecycle_phase_distribution and assert_global_coverage). Total 17.
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
-    expect(coa.steps).toHaveLength(17);
+    expect(coa.steps).toHaveLength(15);
     expect(coa!.steps[0]!.slug).toBe('assert_schema');
     expect(coa!.steps[1]!.slug).toBe('coa');
     expect(coa!.steps[coa.steps.length - 1]!.slug).toBe('assert_global_coverage');

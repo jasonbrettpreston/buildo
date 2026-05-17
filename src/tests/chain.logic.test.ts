@@ -13,7 +13,7 @@ describe('Pipeline Chain Definitions', () => {
     expect(PIPELINE_CHAINS).toHaveLength(6);
   });
 
-  it('defines permits chain with 30 steps (no enrichment scripts)', () => {
+  it('defines permits chain with 29 steps (Phase G removed create_pre_permits)', () => {
     // WF3 2026-04-13 — v1 `compute_timing_calibration` removed from chain
     // per user decision (Path A). v1's table `timing_calibration` will
     // go stale; the detail-page timing engine (spec 71) will be migrated
@@ -30,10 +30,12 @@ describe('Pipeline Chain Definitions', () => {
     // an actual recurring chain step, not a one-shot operator script.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(30);
+    expect(chain!.steps).toHaveLength(29);
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
+    // Phase G (Spec 42 §6.11): create_pre_permits retired + removed from permits chain
+    expect(slugs).not.toContain('create_pre_permits');
     expect(slugs).toContain('backfill_realtor_permit_trades');
   });
 
@@ -108,7 +110,7 @@ describe('Pipeline Chain Definitions', () => {
     expect(coaSlugs).not.toContain('compute_timing_calibration_v2');
   });
 
-  it('defines coa chain with 17 steps', () => {
+  it('defines coa chain with 15 steps (Phase G removed create_pre_permits + assert_pre_permit_aging)', () => {
     // WF2 2026-04-11 — added classify_lifecycle_phase as the final
     // step so every CoA chain run reclassifies permits whose
     // last_seen_at was just bumped by link-coa.
@@ -127,7 +129,11 @@ describe('Pipeline Chain Definitions', () => {
     //   BOTH chains; observer writes audit_table to both followup files.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(17);
+    expect(chain!.steps).toHaveLength(15);
+    const slugs = chain!.steps.map((s) => s.slug);
+    // Phase G (Spec 42 §6.11): both retired from CoA chain
+    expect(slugs).not.toContain('create_pre_permits');
+    expect(slugs).not.toContain('assert_pre_permit_aging');
   });
 
   it('coa chain includes compute_phase_calibration after assert_lifecycle_phase_distribution (Phase E.3 v5 fold #12)', () => {
@@ -381,8 +387,9 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     //  WF1 2026-05-14 R5.3 inserted classify_coa_scope — total 14;
     //  WF1 2026-05-14 R5.4 inserted classify_coa_trades — total 15;
     //  WF1 2026-05-14 R5.5 inserted compute_coa_cost_estimates — total 16;
-    //  WF1 2026-05-14 Phase E.3 inserted compute_phase_calibration — total 17)
-    expect(activeSteps).toHaveLength(17);
+    //  WF1 2026-05-14 Phase E.3 inserted compute_phase_calibration — total 17
+    //  WF1 2026-05-17 Phase G retired create_pre_permits + assert_pre_permit_aging — total 15
+    expect(activeSteps).toHaveLength(15);
   });
 
   it('empty disabled set leaves all steps active', () => {
@@ -573,7 +580,7 @@ describe('PIPELINE_SUMMARY convention', () => {
     'link-wsib.js',
     'link-coa.js',
     'compute-centroids.js',
-    'create-pre-permits.js',
+    // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
     'refresh-snapshot.js',
   ];
 
@@ -712,7 +719,7 @@ describe('PIPELINE_META convention', () => {
     'link-wsib.js',
     'link-coa.js',
     'compute-centroids.js',
-    'create-pre-permits.js',
+    // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
     'refresh-snapshot.js',
     'enrich-web-search.js',
     'quality/assert-schema.js',

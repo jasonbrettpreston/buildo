@@ -163,7 +163,7 @@ describe('manifest.json — chain wiring', () => {
     );
   });
 
-  it('assert_global_coverage is second-to-last in permits chain; backup_db is last (step 30)', () => {
+  it('assert_global_coverage is second-to-last in permits chain; backup_db is last (step 29 post-Phase G)', () => {
     // WF3 2026-04-25: backup_db appended as final step 28 (OP4 fix).
     // WF1 #B 2026-05-09: compute_phase_calibration inserted between
     // assert_lifecycle_phase_distribution and compute_trade_forecasts;
@@ -174,10 +174,10 @@ describe('manifest.json — chain wiring', () => {
     const permitsChain: string[] = manifest.chains.permits;
     expect(permitsChain[permitsChain.length - 1]).toBe('backup_db');
     expect(permitsChain[permitsChain.length - 2]).toBe('assert_global_coverage');
-    expect(permitsChain).toHaveLength(30);
+    expect(permitsChain).toHaveLength(29);
   });
 
-  it('assert_global_coverage is last step in coa chain (step 17 after Phase E.3 compute_phase_calibration insertion)', () => {
+  it('assert_global_coverage is last step in coa chain (step 15 post-Phase G retirement of create_pre_permits + assert_pre_permit_aging)', () => {
     // WF2 2026-05-14 R5.2 — +1 step (link_coa_to_parcels). Chain length 13.
     // WF1 2026-05-14 R5.3 — +1 step (classify_coa_scope). Chain length now 14.
     // WF1 2026-05-14 R5.4 — +1 step (classify_coa_trades). Chain length now 15.
@@ -187,7 +187,7 @@ describe('manifest.json — chain wiring', () => {
     //   Chain length now 17. Spec 42 §6.7 step 6 + §6.11 Phase E.3.
     const coaChain: string[] = manifest.chains.coa;
     expect(coaChain[coaChain.length - 1]).toBe('assert_global_coverage');
-    expect(coaChain).toHaveLength(17);
+    expect(coaChain).toHaveLength(15);
   });
 
   it('assert_global_coverage comes after assert_entity_tracing in permits chain', () => {
