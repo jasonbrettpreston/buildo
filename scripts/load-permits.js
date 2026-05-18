@@ -224,7 +224,7 @@ async function* fetchFromCKAN(tel) {
 }
 
 async function insertBatch(client, batch, RUN_AT) {
-  if (batch.length === 0) return [];
+  if (batch.length === 0) return { rows: [], ledgerInserted: 0, ledgerErrors: 0 };
 
   // Deduplicate within batch - last occurrence wins
   const seen = new Map();
@@ -232,6 +232,24 @@ async function insertBatch(client, batch, RUN_AT) {
     seen.set(`${row.permit_num}--${row.revision_num}`, row);
   }
   batch = Array.from(seen.values());
+
+  // Phase I.1: pre-UPSERT capture of status to detect status changes for the
+  // lifecycle_status_history ledger. Empty Map for new permits (Map.get → undefined
+  // → treated as NULL from_status). Uses JOIN UNNEST(...) pattern per Spec 47 §6.3
+  // (Gemini v2 HIGH 4 fold — NOT the invalid `WHERE (col, col) IN ($1, $2)` syntax).
+  const permitNums = batch.map((b) => b.permit_num);
+  const revisionNums = batch.map((b) => b.revision_num);
+  const prevRes = await client.query(
+    `SELECT p.permit_num, p.revision_num, p.status
+       FROM permits p
+       JOIN UNNEST($1::text[], $2::text[]) AS v(permit_num, revision_num)
+         ON p.permit_num = v.permit_num AND p.revision_num = v.revision_num`,
+    [permitNums, revisionNums],
+  );
+  const prevStatusByKey = new Map();
+  for (const row of prevRes.rows) {
+    prevStatusByKey.set(`${row.permit_num}--${row.revision_num}`, row.status);
+  }
 
   const cols = [
     'permit_num', 'revision_num', 'permit_type', 'structure_type', 'work',
@@ -320,7 +338,69 @@ async function insertBatch(client, batch, RUN_AT) {
     [...touchParams, RUN_AT]
   );
 
-  return result.rows;
+  // Phase I.1: lifecycle_status_history ledger write — Tier 3 (audit) table per
+  // Spec 47 §R9 Tier framework. SAVEPOINT pattern preserves primary UPSERT on
+  // ledger failures (non-fatal WARN). Build ledgerRows from batch rows where
+  // status changed; NO JS dedup (ON CONFLICT DO NOTHING handles intra-batch).
+  // lead_id constructed in JS via padStart (NOT SQL LPAD — would crash at runtime
+  // per v2.3 Gemini CRIT 1). Snapshot fields populated from current batch payload.
+  let ledgerInsertedCount = 0;
+  let ledgerErrorCount = 0;
+  const ledgerRows = [];
+  for (const b of batch) {
+    const key = `${b.permit_num}--${b.revision_num}`;
+    const prevStatus = prevStatusByKey.get(key);  // undefined for new permits → treat as NULL
+    if (prevStatus !== b.status) {
+      ledgerRows.push({
+        lead_id: 'permit:' + b.permit_num + ':' + String(b.revision_num).padStart(2, '0'),
+        from_status: prevStatus ?? null,
+        to_status: b.status,
+        permit_type: b.permit_type ?? null,
+      });
+    }
+  }
+  if (ledgerRows.length > 0) {
+    // SAVEPOINT pattern with nested ROLLBACK try/catch (v2.3 Gemini HIGH 1 fold).
+    // If ledger INSERT throws: ROLLBACK TO SAVEPOINT lets primary UPSERT survive.
+    // If ROLLBACK itself throws: swallow — re-throwing would undo primary UPSERT.
+    try {
+      await client.query('SAVEPOINT ledger_write');
+      const ledgerRes = await client.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type)
+         SELECT * FROM UNNEST(
+           $1::text[], $2::varchar[], $3::varchar[],
+           $4::timestamptz[], $5::varchar[], $6::varchar[]
+         )
+         ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
+         DO NOTHING`,
+        [
+          ledgerRows.map((r) => r.lead_id),
+          ledgerRows.map((r) => r.from_status),
+          ledgerRows.map((r) => r.to_status),
+          ledgerRows.map(() => RUN_AT),
+          ledgerRows.map(() => 'load-permits.js'),
+          ledgerRows.map((r) => r.permit_type),
+        ],
+      );
+      await client.query('RELEASE SAVEPOINT ledger_write');
+      ledgerInsertedCount = ledgerRes.rowCount || 0;
+    } catch (ledgerErr) {
+      try {
+        await client.query('ROLLBACK TO SAVEPOINT ledger_write');
+      } catch (rollbackErr) {
+        pipeline.log.error('[load-permits]',
+          'ROLLBACK TO SAVEPOINT failed; transaction state may be unstable',
+          { primaryError: ledgerErr.message, rollbackError: rollbackErr.message });
+        // Do NOT re-throw — preserve primary UPSERT commit.
+      }
+      pipeline.log.warn('[load-permits]', 'ledger write failed; primary UPSERT preserved',
+        { error: ledgerErr.message });
+      ledgerErrorCount = 1;
+    }
+  }
+
+  return { rows: result.rows, ledgerInserted: ledgerInsertedCount, ledgerErrors: ledgerErrorCount };
 }
 
 /**
@@ -356,14 +436,16 @@ async function upsertRecords(pool, records, counters, startTime, RUN_AT) {
     const { _ckan_id, ...dbRecord } = record;
     batch.push(dbRecord);
     if (batch.length >= pipeline.BATCH_SIZE) {
-      const rows = await pipeline.withTransaction(pool, async (client) => {
+      const batchResult = await pipeline.withTransaction(pool, async (client) => {
         return insertBatch(client, batch, RUN_AT);
       });
-      for (const r of rows) {
+      for (const r of batchResult.rows) {
         if (r.is_insert) counters.newInserts++;
         else counters.updated++;
       }
       counters.processed += batch.length;
+      counters.ledgerInserted += batchResult.ledgerInserted;
+      counters.ledgerErrors += batchResult.ledgerErrors;
       batch = [];
       if (counters.processed % 10000 === 0) {
         pipeline.progress('load-permits', counters.processed, records.length, startTime);
@@ -373,14 +455,16 @@ async function upsertRecords(pool, records, counters, startTime, RUN_AT) {
 
   // Flush remaining batch
   if (batch.length > 0) {
-    const rows = await pipeline.withTransaction(pool, async (client) => {
+    const batchResult = await pipeline.withTransaction(pool, async (client) => {
       return insertBatch(client, batch, RUN_AT);
     });
-    for (const r of rows) {
+    for (const r of batchResult.rows) {
       if (r.is_insert) counters.newInserts++;
       else counters.updated++;
     }
     counters.processed += batch.length;
+    counters.ledgerInserted += batchResult.ledgerInserted;
+    counters.ledgerErrors += batchResult.ledgerErrors;
   }
 }
 
@@ -391,7 +475,7 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const RUN_AT = await pipeline.getDbTimestamp(pool);
 
-  const counters = { newInserts: 0, updated: 0, processed: 0, errors: 0 };
+  const counters = { newInserts: 0, updated: 0, processed: 0, errors: 0, ledgerInserted: 0, ledgerErrors: 0 };
   const startTime = Date.now();
 
   // Telemetry accumulator
@@ -484,8 +568,24 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
     { metric: 'api_errors', value: tel.api_errors, threshold: '== 0', status: tel.api_errors > 0 ? 'FAIL' : 'PASS' },
     { metric: 'avg_latency_ms', value: avgLatency, threshold: null, status: 'INFO' },
     { metric: 'schema_drift', value: tel.schema_drift.length, threshold: '== 0', status: tel.schema_drift.length > 0 ? 'FAIL' : 'PASS' },
+    // Phase I.1: lifecycle_status_history ledger counters (Spec 47 §11.2 Overflow Rule —
+    // secondary writes to Tier 3 audit table; counted in audit_table.rows only,
+    // NEVER summed into records_total / records_new / records_updated).
+    // Unconditional push (Observability v2.1 HIGH 3 fold) — value=0 INFO row preserved
+    // in steady state for trend visibility. WARN-grade error gate (NOT FAIL) preserves
+    // primary UPSERT verdict on ledger failures.
+    { metric: 'lifecycle_status_history_inserted', value: counters.ledgerInserted, threshold: null, status: 'INFO' },
+    { metric: 'lifecycle_status_history_errors', value: counters.ledgerErrors, threshold: '== 0', status: counters.ledgerErrors > 0 ? 'WARN' : 'PASS' },
   ];
-  const permitAuditHasFails = tel.api_errors > 0 || tel.schema_drift.length > 0 || errors > 0 || (processed + errors) < 200000;
+  // Verdict derivation cascade (Observability v2.1 CRIT 1 + v2.3 Observability HIGH 1
+  // fold — Spec 47 §R10 mandates verdict derived from row statuses, not a hardcoded
+  // boolean. The original verdict used a hardcoded `permitAuditHasFails` flag which omitted WARN
+  // entirely, making the new lifecycle_status_history_errors WARN-grade row INVISIBLE
+  // to observe-chain.js's step-verdict display).
+  const verdict =
+    auditRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
+    auditRows.some((r) => r.status === 'WARN') ? 'WARN' :
+    'PASS';
 
   pipeline.emitSummary({
     records_total: newInserts + updated,
@@ -508,14 +608,22 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
       audit_table: {
         phase: 2,
         name: 'Permit Ingestion',
-        verdict: permitAuditHasFails ? 'FAIL' : 'PASS',
+        verdict,
         rows: auditRows,
       },
     },
   });
   pipeline.emitMeta(
-    { "CKAN API": ["PERMIT_NUM", "REVISION_NUM", "PERMIT_TYPE", "STRUCTURE_TYPE", "WORK", "STREET_NUM", "STREET_NAME", "STREET_TYPE", "STREET_DIRECTION", "CITY", "POSTAL", "GEO_ID", "BUILDING_TYPE", "CATEGORY", "APPLICATION_DATE", "ISSUED_DATE", "COMPLETED_DATE", "STATUS", "DESCRIPTION", "EST_CONST_COST", "BUILDER", "OWNER", "DWELLING_UNITS_CREATED", "DWELLING_UNITS_LOST", "WARD", "COUNCIL_DISTRICT", "CURRENT_USE", "PROPOSED_USE", "HOUSING_UNITS", "STOREYS"] },
-    { "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_name_normalized", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "data_hash", "raw_json"] }
+    {
+      "CKAN API": ["PERMIT_NUM", "REVISION_NUM", "PERMIT_TYPE", "STRUCTURE_TYPE", "WORK", "STREET_NUM", "STREET_NAME", "STREET_TYPE", "STREET_DIRECTION", "CITY", "POSTAL", "GEO_ID", "BUILDING_TYPE", "CATEGORY", "APPLICATION_DATE", "ISSUED_DATE", "COMPLETED_DATE", "STATUS", "DESCRIPTION", "EST_CONST_COST", "BUILDER", "OWNER", "DWELLING_UNITS_CREATED", "DWELLING_UNITS_LOST", "WARD", "COUNCIL_DISTRICT", "CURRENT_USE", "PROPOSED_USE", "HOUSING_UNITS", "STOREYS"],
+      // Phase I.1: pre-UPSERT capture of permits.status for ledger from_status detection.
+      "permits": ["permit_num", "revision_num", "status"],
+    },
+    {
+      "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_name_normalized", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "data_hash", "raw_json"],
+      // Phase I.1: lifecycle_status_history ledger writes (Tier 3 per Spec 47 §R9).
+      "lifecycle_status_history": ["lead_id", "from_status", "to_status", "transitioned_at", "detected_by", "permit_type"],
+    }
   );
 
   // Log sync run (duration parameterized to prevent SQL injection — §4.2)

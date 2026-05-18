@@ -215,7 +215,22 @@ function mapRecord(raw, schemaDrift) {
 }
 
 async function upsertBatch(client, batch, RUN_AT) {
-  if (batch.length === 0) return { inserted: 0, updated: 0 };
+  if (batch.length === 0) return { inserted: 0, updated: 0, ledgerInserted: 0, ledgerErrors: 0 };
+
+  // Phase I.1: pre-UPSERT capture of coa_applications.status for ledger from_status
+  // detection (v2.3 Independent v2.2 CRIT 2 — captured via separate SELECT BEFORE
+  // the upsert; result threaded as Map into post-UPSERT ledger-row construction).
+  const appNums = batch.map((r) => r.application_number);
+  const prevRes = await client.query(
+    `SELECT application_number, status
+       FROM coa_applications
+      WHERE application_number = ANY($1::text[])`,
+    [appNums],
+  );
+  const prevStatusByAppNum = new Map();
+  for (const row of prevRes.rows) {
+    prevStatusByAppNum.set(row.application_number, row.status);
+  }
 
   // Collect arrays for UNNEST batch insert (O(1) round-trips instead of O(batch.length)).
   // 14 column arrays + scalar RUN_AT = 15 params; 500 rows × 14 cols = 7,000 params
@@ -295,7 +310,67 @@ async function upsertBatch(client, batch, RUN_AT) {
     if (row.is_insert) inserted++;
     else updated++;
   }
-  return { inserted, updated };
+
+  // Phase I.1: lifecycle_status_history ledger write. Q1 trigger = status only
+  // (decision is denormalized snapshot at every status-change row). SAVEPOINT
+  // pattern preserves primary upsert on ledger failures.
+  let ledgerInsertedCount = 0;
+  let ledgerErrorCount = 0;
+  const ledgerRows = [];
+  for (const b of batch) {
+    // Trigger on status change only (Q1 fold) — JS-level comparison on `b.status`,
+    // NOT `decision`. Decision change without status change does NOT fire ledger.
+    if (prevStatusByAppNum.get(b.application_number) !== b.status) {
+      ledgerRows.push({
+        lead_id: 'coa:' + b.application_number,
+        from_status: prevStatusByAppNum.get(b.application_number) ?? null,
+        to_status: b.status,
+        decision: b.decision ?? null,
+        decision_date: b.decision_date ?? null,
+      });
+    }
+  }
+  if (ledgerRows.length > 0) {
+    try {
+      await client.query('SAVEPOINT ledger_write');
+      const ledgerRes = await client.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, decision, decision_date,
+            transitioned_at, detected_by)
+         SELECT * FROM UNNEST(
+           $1::text[], $2::varchar[], $3::varchar[],
+           $4::varchar[], $5::date[],
+           $6::timestamptz[], $7::varchar[]
+         )
+         ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
+         DO NOTHING`,
+        [
+          ledgerRows.map((r) => r.lead_id),
+          ledgerRows.map((r) => r.from_status),
+          ledgerRows.map((r) => r.to_status),
+          ledgerRows.map((r) => r.decision),
+          ledgerRows.map((r) => r.decision_date),
+          ledgerRows.map(() => RUN_AT),
+          ledgerRows.map(() => 'load-coa.js'),
+        ],
+      );
+      await client.query('RELEASE SAVEPOINT ledger_write');
+      ledgerInsertedCount = ledgerRes.rowCount || 0;
+    } catch (ledgerErr) {
+      try {
+        await client.query('ROLLBACK TO SAVEPOINT ledger_write');
+      } catch (rollbackErr) {
+        pipeline.log.error('[load-coa]',
+          'ROLLBACK TO SAVEPOINT failed; transaction state may be unstable',
+          { primaryError: ledgerErr.message, rollbackError: rollbackErr.message });
+      }
+      pipeline.log.warn('[load-coa]', 'ledger write failed; primary upsert preserved',
+        { error: ledgerErr.message });
+      ledgerErrorCount = 1;
+    }
+  }
+
+  return { inserted, updated, ledgerInserted: ledgerInsertedCount, ledgerErrors: ledgerErrorCount };
 }
 
 const ADVISORY_LOCK_ID = 95;
@@ -416,14 +491,18 @@ pipeline.run('load-coa', async (pool) => {
 
   let totalInserted = 0;
   let totalUpdated = 0;
+  let totalLedgerInserted = 0;
+  let totalLedgerErrors = 0;
 
   for (let i = 0; i < deduplicated.length; i += BATCH_SIZE) {
     const batch = deduplicated.slice(i, i + BATCH_SIZE);
-    const { inserted, updated } = await pipeline.withTransaction(pool, async (client) => {
+    const { inserted, updated, ledgerInserted, ledgerErrors } = await pipeline.withTransaction(pool, async (client) => {
       return upsertBatch(client, batch, RUN_AT);
     });
     totalInserted += inserted;
     totalUpdated += updated;
+    totalLedgerInserted += ledgerInserted;
+    totalLedgerErrors += ledgerErrors;
     pipeline.progress('load-coa', Math.min(i + BATCH_SIZE, deduplicated.length), deduplicated.length, startMs);
   }
 
@@ -489,13 +568,24 @@ pipeline.run('load-coa', async (pool) => {
     { metric: 'avg_latency_ms', value: avgLatency, threshold: null, status: 'INFO' },
     { metric: 'schema_mismatch_count', value: tel.schema_drift.length, threshold: '== 0', status: tel.schema_drift.length > 0 ? 'FAIL' : 'PASS' },
     { metric: 'max_days_stale', value: maxDaysStale, threshold: '< 45', status: maxDaysStale !== null && maxDaysStale >= 45 ? 'WARN' : 'PASS' },
+    // Phase I.1: lifecycle_status_history ledger counters (Spec 47 §11.2 Overflow Rule).
+    // Unconditional emission of both rows. WARN-grade error gate (NOT FAIL) preserves
+    // primary upsert verdict on ledger failures per Tier 3 SAVEPOINT pattern.
+    { metric: 'lifecycle_status_history_inserted', value: totalLedgerInserted, threshold: null, status: 'INFO' },
+    { metric: 'lifecycle_status_history_errors', value: totalLedgerErrors, threshold: '== 0', status: totalLedgerErrors > 0 ? 'WARN' : 'PASS' },
   ];
-  const coaAuditHasFails = tel.api_errors > 0 || tel.schema_drift.length > 0 || skipRate >= 5;
-  const coaAuditHasWarns = maxDaysStale !== null && maxDaysStale >= 45;
+  // Verdict derivation cascade (v2.3 Observability HIGH 1 fold — replaces the parallel
+  // boolean pattern `coaAuditHasFails`/`coaAuditHasWarns` which derived independently
+  // of row statuses. The new ledger_errors WARN-grade row wouldn't propagate to verdict
+  // under the old boolean pattern, making the SAVEPOINT WARN signal invisible to
+  // observe-chain.js).
   const coaAuditTable = {
     phase: 2,
     name: 'CoA Ingestion',
-    verdict: coaAuditHasFails ? 'FAIL' : coaAuditHasWarns ? 'WARN' : 'PASS',
+    verdict:
+      coaAuditRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
+      coaAuditRows.some((r) => r.status === 'WARN') ? 'WARN' :
+      'PASS',
     rows: coaAuditRows,
   };
 
@@ -523,8 +613,18 @@ pipeline.run('load-coa', async (pool) => {
     },
   });
   pipeline.emitMeta(
-    { "CKAN API": ["REFERENCE_FILE#", "STREET_NUM", "STREET_NAME", "WARD", "C_OF_A_DESCISION", "STATUSDESC", "HEARING_DATE", "DESCRIPTION", "CONTACT_NAME", "SUB_TYPE"] },
-    { "coa_applications": ["application_number", "address", "street_num", "street_name", "street_name_normalized", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"] }
+    {
+      "CKAN API": ["REFERENCE_FILE#", "STREET_NUM", "STREET_NAME", "WARD", "C_OF_A_DESCISION", "STATUSDESC", "HEARING_DATE", "DESCRIPTION", "CONTACT_NAME", "SUB_TYPE"],
+      // Phase I.1: pre-UPSERT capture of coa_applications.status for ledger from_status
+      // detection. coa_type_class is NOT listed here — Phase I.1 v2.3 DeepSeek MED 1
+      // fold: decision/decision_date are batch-sourced from CKAN payload, not DB SELECT.
+      "coa_applications": ["application_number", "status"],
+    },
+    {
+      "coa_applications": ["application_number", "address", "street_num", "street_name", "street_name_normalized", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"],
+      // Phase I.1: lifecycle_status_history ledger writes (Tier 3 per Spec 47 §R9).
+      "lifecycle_status_history": ["lead_id", "from_status", "to_status", "decision", "decision_date", "transitioned_at", "detected_by"],
+    }
   );
 
   // Show stats
