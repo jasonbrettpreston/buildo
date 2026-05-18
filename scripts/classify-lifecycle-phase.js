@@ -899,7 +899,59 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
         transitionsLogged += insertResult.rowCount || 0;
       }
 
-      // (c) Stamp classified_at for every row in this batch that is
+      // (c) Phase I.1 permit-side lifecycle_status_history ledger write.
+      // Filter rows where matched_status diff-compares to old_matched_status
+      // (Q2 zero-delta suppression per v2.3 plan). SAVEPOINT pattern wraps the
+      // INSERT — ledger errors emit WARN but primary UPDATEs (a)/(b) survive.
+      const ledgerRows = batch.filter((r) =>
+        r.matched_status != null && r.matched_status !== r.old_matched_status,
+      );
+      if (ledgerRows.length > 0) {
+        try {
+          await client.query('SAVEPOINT ledger_write');
+          const ledgerRes = await client.query(
+            `INSERT INTO lifecycle_status_history
+               (lead_id, from_status, to_status, from_seq, to_seq,
+                from_phase, to_phase, transitioned_at, detected_by, permit_type)
+             SELECT * FROM UNNEST(
+               $1::text[], $2::varchar[], $3::varchar[],
+               $4::integer[], $5::integer[],
+               $6::varchar[], $7::varchar[],
+               $8::timestamptz[], $9::varchar[], $10::varchar[]
+             )
+             ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
+             DO NOTHING`,
+            [
+              ledgerRows.map((r) => 'permit:' + r.permit_num + ':' + String(r.revision_num).padStart(2, '0')),
+              ledgerRows.map((r) => r.old_matched_status ?? null),
+              ledgerRows.map((r) => r.matched_status),
+              ledgerRows.map((r) => r.old_lifecycle_seq ?? null),
+              ledgerRows.map((r) => r.lifecycle_seq ?? null),
+              ledgerRows.map((r) => (r.phase !== r.old_phase ? (r.old_phase ?? null) : null)),
+              ledgerRows.map((r) => (r.phase !== r.old_phase ? (r.phase ?? null) : null)),
+              ledgerRows.map(() => RUN_AT),
+              ledgerRows.map(() => 'classify-lifecycle-phase.js'),
+              ledgerRows.map((r) => r.permit_type ?? null),
+            ],
+          );
+          await client.query('RELEASE SAVEPOINT ledger_write');
+          lifecycleStatusHistoryInserted += ledgerRes.rowCount || 0;
+        } catch (ledgerErr) {
+          try {
+            await client.query('ROLLBACK TO SAVEPOINT ledger_write');
+          } catch (rollbackErr) {
+            pipeline.log.error('[classify-lifecycle-phase]',
+              'ROLLBACK TO SAVEPOINT failed; transaction state may be unstable',
+              { primaryError: ledgerErr.message, rollbackError: rollbackErr.message });
+          }
+          pipeline.log.warn('[classify-lifecycle-phase]',
+            'permit-side ledger write failed; primary updates preserved',
+            { error: ledgerErr.message });
+          lifecycleStatusHistoryErrors++;
+        }
+      }
+
+      // (d) Stamp classified_at for every row in this batch that is
       // still dirty (last_seen_at > classified_at). This covers both
       // (i) rows just updated by (a) — redundant, idempotent — and
       // (ii) rows (a) skipped because phase was already correct.
@@ -942,8 +994,14 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   let permitBatch = [];
   for await (const row of pipeline.streamQuery(
     pool,
+    // Phase I.1 dirty SELECT extension (mig 155 enabled permits.matched_status):
+    // matched_status AS old_matched_status — for ledger from_status diff comparison
+    // lifecycle_seq AS old_lifecycle_seq — for ledger from_seq population
     `SELECT permit_num, revision_num, status, enriched_status, issued_date, last_seen_at,
-            lifecycle_phase AS old_phase, lifecycle_stalled AS old_stalled, permit_type, neighbourhood_id
+            lifecycle_phase AS old_phase, lifecycle_stalled AS old_stalled,
+            matched_status AS old_matched_status,
+            lifecycle_seq AS old_lifecycle_seq,
+            permit_type, neighbourhood_id
        FROM permits
       WHERE lifecycle_classified_at IS NULL
          OR last_seen_at > lifecycle_classified_at`,
@@ -985,6 +1043,20 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       old_stalled: row.old_stalled, // for stall-change push dispatch
       permit_type: row.permit_type,
       neighbourhood_id: row.neighbourhood_id,
+      // Phase I.1: carry matched_status + lifecycle_seq through to the ledger
+      // write. The permit-side `classifyLifecyclePhase` function does NOT yet
+      // produce matched_status (only `{phase, stalled}`); extending it requires
+      // a Spec 84 substrate amendment (deferred to Phase I.1.1 or similar).
+      // Until that lands, `matched_status` is undefined for permit-side rows
+      // and the ledger filter `r.matched_status != null` excludes them all —
+      // permit-side classifier ledger writes degrade gracefully to zero rows.
+      // (load-permits.js still captures raw CKAN status changes, so the
+      // permit-side stream isn't blind — derived insights from the classifier
+      // are simply not yet captured in the ledger.)
+      matched_status: undefined,           // TODO Phase I.1.1: result.matchedStatus when classifier extended
+      old_matched_status: row.old_matched_status,
+      lifecycle_seq: undefined,            // TODO Phase I.1.1: result.lifecycleSeq when classifier extended
+      old_lifecycle_seq: row.old_lifecycle_seq,
     });
 
     if (permitBatch.length >= PERMIT_BATCH_SIZE) {
@@ -1025,6 +1097,10 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   let dirtyCoAsCount = 0;
   let coasUpdated = 0;                  // total rows where any column changed (Phase E.2: renamed coa_rows_updated metric)
   let coaPhaseTransitionsCount = 0;     // E.2: actual phase OR seq changes that produced a lifecycle_transitions row
+  // Phase I.1: classifier-side lifecycle_status_history ledger counters (both streams).
+  // Tracked at script scope so flushPermitBatch + flushCoaBatch share them.
+  let lifecycleStatusHistoryInserted = 0;
+  let lifecycleStatusHistoryErrors = 0;
   let coaStalledCount = 0;              // E.2: CoA-side stall count (separate from permit-side stalled_count)
   let unmappedStatusCount = 0;          // E.2: rule 9 catchall OR data-drift signal
   let unmappedDecisionCount = 0;        // E.2: decision non-null but not in any decision set
@@ -1084,6 +1160,61 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
         coaPhaseTransitionsCount += transInsertResult.rowCount || 0;
       }
 
+      // (b.2) Phase I.1 CoA-side lifecycle_status_history ledger write.
+      // Q2 zero-delta suppression: only write when matched_status differs from
+      // persisted value. SAVEPOINT pattern preserves primary transition writes
+      // on ledger failures (per Spec 47 §R9 Tier 3 framework).
+      const coaLedgerRows = batch.filter((r) =>
+        r.matched_status != null && r.matched_status !== r.old_matched_status,
+      );
+      if (coaLedgerRows.length > 0) {
+        try {
+          await client.query('SAVEPOINT ledger_write');
+          const ledgerRes = await client.query(
+            `INSERT INTO lifecycle_status_history
+               (lead_id, from_status, to_status, from_seq, to_seq,
+                from_phase, to_phase, transitioned_at, detected_by,
+                coa_type_class, project_type)
+             SELECT * FROM UNNEST(
+               $1::text[], $2::varchar[], $3::varchar[],
+               $4::integer[], $5::integer[],
+               $6::varchar[], $7::varchar[],
+               $8::timestamptz[], $9::varchar[],
+               $10::varchar[], $11::varchar[]
+             )
+             ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
+             DO NOTHING`,
+            [
+              coaLedgerRows.map((r) => r.lead_id),
+              coaLedgerRows.map((r) => r.old_matched_status ?? null),
+              coaLedgerRows.map((r) => r.matched_status),
+              coaLedgerRows.map((r) => r.old_seq ?? null),
+              coaLedgerRows.map((r) => r.lifecycle_seq ?? null),
+              coaLedgerRows.map((r) => (r.phase !== r.old_phase ? (r.old_phase ?? null) : null)),
+              coaLedgerRows.map((r) => (r.phase !== r.old_phase ? (r.phase ?? null) : null)),
+              coaLedgerRows.map(() => RUN_AT),
+              coaLedgerRows.map(() => 'classify-lifecycle-phase.js'),
+              coaLedgerRows.map((r) => r.coa_type_class ?? null),
+              coaLedgerRows.map((r) => r.project_type ?? null),
+            ],
+          );
+          await client.query('RELEASE SAVEPOINT ledger_write');
+          lifecycleStatusHistoryInserted += ledgerRes.rowCount || 0;
+        } catch (ledgerErr) {
+          try {
+            await client.query('ROLLBACK TO SAVEPOINT ledger_write');
+          } catch (rollbackErr) {
+            pipeline.log.error('[classify-lifecycle-phase]',
+              'ROLLBACK TO SAVEPOINT failed; transaction state may be unstable',
+              { primaryError: ledgerErr.message, rollbackError: rollbackErr.message });
+          }
+          pipeline.log.warn('[classify-lifecycle-phase]',
+            'CoA-side ledger write failed; primary updates preserved',
+            { error: ledgerErr.message });
+          lifecycleStatusHistoryErrors++;
+        }
+      }
+
       // (c) Stamp classified_at for every row in this batch that is
       //     still dirty (last_seen_at > classified_at). Matches existing
       //     permit-side pattern (step (c) at line ~760).
@@ -1107,14 +1238,17 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     // catchall rule 9 writes matched_status=NULL forever, would create infinite
     // re-classification loop). matched_rule is null only pre-classification;
     // monotonic NULL→non-NULL after first run, breaking the loop.
+    // Phase I.1 dirty SELECT extension: matched_status AS old_matched_status for
+    // Q2 zero-delta suppression on ledger writes.
     `SELECT ca.id,
             ca.lead_id,
             ca.decision,
             ca.linked_permit_num,
             ca.status,
             ca.last_seen_at,
-            ca.lifecycle_phase  AS old_phase,
-            ca.lifecycle_seq    AS old_seq,
+            ca.lifecycle_phase   AS old_phase,
+            ca.lifecycle_seq     AS old_seq,
+            ca.matched_status    AS old_matched_status,
             ca.permit_type,
             ca.project_type,
             ca.coa_type_class,
@@ -1158,6 +1292,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       lead_id: row.lead_id,
       old_phase: row.old_phase,
       old_seq: row.old_seq,
+      old_matched_status: row.old_matched_status,  // Phase I.1: for Q2 zero-delta suppression on ledger
       permit_type: row.permit_type,
       project_type: row.project_type,
       coa_type_class: row.coa_type_class,
@@ -1381,6 +1516,11 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     { metric: 'coa_evaluated', value: dirtyCoAsCount, threshold: null, status: 'INFO' },
     { metric: 'coa_rows_updated', value: coasUpdated, threshold: null, status: 'INFO' },
     { metric: 'coa_phase_transitions_count', value: coaPhaseTransitionsCount, threshold: null, status: 'INFO' },
+    // Phase I.1: classifier-side lifecycle_status_history ledger counters (Spec 47 §11.2 Overflow Rule).
+    // Unconditional emission. WARN-grade error gate (NOT FAIL) preserves primary
+    // transition-write verdict on ledger failures per Tier 3 SAVEPOINT pattern.
+    { metric: 'lifecycle_status_history_inserted', value: lifecycleStatusHistoryInserted, threshold: null, status: 'INFO' },
+    { metric: 'lifecycle_status_history_errors', value: lifecycleStatusHistoryErrors, threshold: '== 0', status: lifecycleStatusHistoryErrors > 0 ? 'WARN' : 'PASS' },
     // Existing permit-side stall (kept distinct from coa_stalled_count per Observability v4 fold #105)
     { metric: 'stalled_count', value: stalledCount, threshold: null, status: 'INFO' },
     // Phase E.2 NEW — 4 thresholded scalars + 1 INFO
@@ -1494,6 +1634,9 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
         'issued_date',
         'last_seen_at',
         'lifecycle_classified_at',
+        // Phase I.1: new reads for ledger diff comparison (mig 155 columns).
+        'matched_status',
+        'lifecycle_seq',
       ],
       permit_inspections: ['permit_num', 'stage_name', 'status', 'inspection_date'],
       coa_applications: [
@@ -1510,6 +1653,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
         'coa_type_class',
         'neighbourhood_id',
         'matched_rule',            // E.2: backfill predicate
+        'matched_status',          // Phase I.1: ledger from_status diff comparison
         'lifecycle_classified_at',
       ],
       universal_stream_catalog: ['seq', 'lifecycle_group', 'lifecycle_block', 'lifecycle_stage', 'phase', 'bid_value', 'source', 'status'],
@@ -1524,6 +1668,9 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
         'matched_status', 'matched_rule', 'unmapped_status', 'unmapped_decision',
       ],
       lifecycle_transitions: ['lead_id', 'from_phase', 'to_phase', 'from_seq', 'to_seq', 'transitioned_at', 'permit_type', 'project_type', 'coa_type_class', 'neighbourhood_id'],
+      // Phase I.1: lifecycle_status_history ledger writes (Tier 3 per Spec 47 §R9).
+      // Both permit-side and CoA-side classifier rows write through this table.
+      lifecycle_status_history: ['lead_id', 'from_status', 'to_status', 'from_seq', 'to_seq', 'from_phase', 'to_phase', 'transitioned_at', 'detected_by', 'permit_type', 'coa_type_class', 'project_type'],
     },
   );
 
