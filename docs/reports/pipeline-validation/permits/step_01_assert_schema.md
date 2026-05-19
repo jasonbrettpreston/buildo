@@ -173,4 +173,38 @@ Node.js v24.15.0
 - **C11:** records_total=0 records_new=0 records_updated=0; verify primary entity scoping per §11.1
 
 ## Specialized agent finding
-_No agent for this step (sanity/cross-ref)._
+_No agent for this step per Spec 79 §3a (sanity-class)._ Investigation done inline:
+
+### Investigation: current CKAN Parcels schema (2026-05-19)
+
+Fetched live CSV header from:
+`https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/property-boundaries/resource/23d1f792-018f-4069-ac5d-443e932e1b78/download/Property%20Boundaries%20-%204326.csv`
+
+**Current schema (6 columns):**
+`_id, PARCELID, FEATURE_TYPE, STATEDAREA, OBJECTID, geometry`
+
+**Removed columns (vs expectations):**
+- `ADDRESS_NUMBER` — civic address number
+- `LINEAR_NAME_FULL` — street name
+- `DATE_EFFECTIVE` — parcel record effective date
+
+**Added columns (not in expectations):**
+- `_id` — CKAN row PK
+- `OBJECTID` — sequential ID
+
+### Findings — three layered issues
+
+| # | Severity | Finding | Affected files |
+|---|---|---|---|
+| F1 | HIGH (external) | CKAN's Parcels dataset schema changed; lost 3 address columns | external data source |
+| F2 | HIGH (internal) | `assert-schema.js` audit_table.rows omits a `parcels_schema_mismatch_count` row — drift surfaces in `records_meta.errors[]` only, so `audit_table.verdict='PASS'` while script exited 1. Spec 48 §3.6 cascade gap. | `scripts/quality/assert-schema.js` lines 56-58, 426 |
+| F3 | MED | `load-parcels.js` lines 431, 432, 461 read `ADDRESS_NUMBER`, `LINEAR_NAME_FULL`, `DATE_EFFECTIVE` from the CSV — will crash on next sources-chain run | `scripts/load-parcels.js` |
+
+### Proposed corrective actions (for SUMMARY.md execution plan)
+
+- **WF3 #1 (CRIT)** — `assert-schema.js`: add `parcels_schema_mismatch_count` to audit_table.rows; update `EXPECTED_PARCEL_COLUMNS` to the new schema (6 cols); add migration note in commit. Effort: S.
+- **WF3 #2 (HIGH)** — `load-parcels.js`: handle removed address columns (either NULL-tolerant or sourced from address_points instead — needs design decision). Effort: M.
+- **No immediate impact on permits chain steps 2-28** — `link_parcels` (step 9) reads from local `parcels` table which has prior-ingest data; not blocked by this finding.
+
+### Downstream risk to this validation run
+**LOW.** Step 1 is sanity-only with no output tables. Step 2 (load-permits) ingests CKAN's *permits* dataset independently. Step 9 (link_parcels) reads the local `parcels` table (populated by a prior load-parcels run before the schema drift). Per Spec 79 §3 non-stop rule, chain proceeds.

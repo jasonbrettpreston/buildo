@@ -36,7 +36,7 @@
     "26": {"slug": "update_tracked_projects", "script": "scripts/update-tracked-projects.js", "agent": "Calculations", "risk_class": "calculation", "output_tables": ["tracked_projects", "notifications"], "notes": "§11.9 invariants; Phase F.2"},
     "27": {"slug": "assert_entity_tracing", "script": "scripts/quality/assert-entity-tracing.js", "agent": "Compliance", "risk_class": "cqa", "output_tables": [], "notes": ""},
     "28": {"slug": "assert_global_coverage", "script": "scripts/quality/assert-global-coverage.js", "agent": "Compliance", "risk_class": "cqa", "output_tables": [], "notes": "Spec 49 cap"},
-    "29": {"slug": "backup_db", "script": "scripts/backup-db.js", "agent": "none", "risk_class": "sanity", "output_tables": [], "notes": "Backup; sanity", "destructive": true}
+    "29": {"slug": "backup_db", "script": "scripts/backup-db.js", "agent": "none", "risk_class": "sanity", "output_tables": [], "notes": "Backup; sanity. SKIPPED for this validation run — backup database not connected per user direction 2026-05-19.", "destructive": true, "skip_reason": "backup_db_not_connected"}
   },
   "coa": {
     "1": {"slug": "assert_schema", "script": null, "agent": "cross-ref-permits-1", "risk_class": "sanity", "output_tables": [], "notes": "Cross-ref permits/step_01"},

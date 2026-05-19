@@ -106,6 +106,23 @@ async function tableCount(pool, table) {
 // Cross-ref handling
 // ─────────────────────────────────────────────────────────────────────────────
 
+if (stepConfig.skip_reason) {
+  // Explicit skip — write a stub recording why
+  const skipContent = `# Step ${STEP_NUM_PADDED}: ${stepConfig.slug}
+**Chain:** ${chainArg}
+**Validated:** ${new Date().toISOString().slice(0, 10)}
+**Type:** SKIPPED
+**Skip reason:** ${stepConfig.skip_reason}
+**Notes:** ${stepConfig.notes}
+
+This step was deliberately skipped for this validation run. No script execution; no checklist evaluation.
+`;
+  mkdirSync(dirname(RECORD_PATH), { recursive: true });
+  writeFileSync(RECORD_PATH, skipContent);
+  console.log(`✓ Wrote skip stub: ${RECORD_PATH}`);
+  process.exit(0);
+}
+
 if (!stepConfig.script) {
   // Cross-ref stub — produce a record pointing at the canonical record
   const canonicalRef = stepConfig.agent.replace('cross-ref-', '').replace('permits-', 'permits/step_');
