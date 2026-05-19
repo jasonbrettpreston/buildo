@@ -13,7 +13,7 @@
     "3": {"slug": "close_stale_permits", "script": "scripts/close-stale-permits.js", "agent": "Calculations", "risk_class": "calculation", "output_tables": ["permits"], "notes": "Date arithmetic invariants §11.1"},
     "4": {"slug": "classify_permit_phase", "script": "scripts/classify-permit-phase.js", "agent": "Compliance", "risk_class": "ingest_linkage", "output_tables": ["permits"], "notes": "Legacy P-code"},
     "5": {"slug": "classify_scope", "script": "scripts/classify-scope.js", "agent": "Compliance", "risk_class": "ingest_linkage", "output_tables": ["permits"], "notes": ""},
-    "6": {"slug": "builders", "script": "scripts/classify-builders.js", "agent": "Compliance", "risk_class": "ingest_linkage", "output_tables": ["permits"], "notes": ""},
+    "6": {"slug": "builders", "script": "scripts/extract-builders.js", "agent": "Compliance", "risk_class": "ingest_linkage", "output_tables": ["entities"], "notes": "Entity extraction from applicant names"},
     "7": {"slug": "link_wsib", "script": "scripts/link-wsib.js", "agent": "Compliance", "risk_class": "ingest_linkage", "output_tables": ["permits"], "notes": ""},
     "8": {"slug": "geocode_permits", "script": "scripts/geocode-permits.js", "agent": "Compliance", "risk_class": "ingest_linkage", "output_tables": ["permits"], "notes": "Backlog drainage"},
     "9": {"slug": "link_parcels", "script": "scripts/link-parcels.js", "agent": "Compliance", "risk_class": "ingest_linkage", "output_tables": ["permits", "permit_parcels", "lead_parcels"], "notes": ""},

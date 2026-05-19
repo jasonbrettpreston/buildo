@@ -864,6 +864,13 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   const permitRuleDistribution = new Map();      // rule N → count
   const permitMatchedStatusCounts = new Map();   // matched_status → count
 
+  // Phase I.1.1b auto-unblock fix (Spec 79 validation Step 21, 2026-05-19):
+  // moved from CoA section to here so permit-side flushPermitBatch SAVEPOINT
+  // catch path can increment without TDZ ReferenceError. Both flushPermitBatch
+  // and flushCoaBatch share these counters via script scope.
+  let lifecycleStatusHistoryInserted = 0;
+  let lifecycleStatusHistoryErrors = 0;
+
   // Phase I.1.1b — code-drift status set (Spec 84 §2.5.a rows 6/7/10).
   // INFO-only counter; surfacing for operator visibility, NOT a CQA gate.
   const PERMIT_CODE_DRIFT_STATUSES = new Set([
@@ -1171,10 +1178,8 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   let dirtyCoAsCount = 0;
   let coasUpdated = 0;                  // total rows where any column changed (Phase E.2: renamed coa_rows_updated metric)
   let coaPhaseTransitionsCount = 0;     // E.2: actual phase OR seq changes that produced a lifecycle_transitions row
-  // Phase I.1: classifier-side lifecycle_status_history ledger counters (both streams).
-  // Tracked at script scope so flushPermitBatch + flushCoaBatch share them.
-  let lifecycleStatusHistoryInserted = 0;
-  let lifecycleStatusHistoryErrors = 0;
+  // Phase I.1: classifier-side lifecycle_status_history ledger counters
+  // moved to earlier scope (above flushPermitBatch) per Spec 79 unblock fix 2026-05-19.
   let coaStalledCount = 0;              // E.2: CoA-side stall count (separate from permit-side stalled_count)
   let unmappedStatusCount = 0;          // E.2: rule 9 catchall OR data-drift signal
   let unmappedDecisionCount = 0;        // E.2: decision non-null but not in any decision set
