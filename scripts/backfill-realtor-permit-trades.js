@@ -250,12 +250,26 @@ pipeline.run('backfill-realtor-permit-trades', async (pool) => {
     // Cycle 7 review LOW).
     const coverageOk = finalRealtorRows >= totalActivePermits;
     const summaryVerdict = completedNaturally && coverageOk ? 'PASS' : 'WARN';
+    // Spec 79 validation Step 14 fold (2026-05-19): records_meta key MUST be
+    // `audit_table` — SDK + observers (FreshnessTimeline, observe-chain
+    // narrative) only read the standard key. Previously emitted as
+    // `records_meta.backfill` → SDK warned "no audit_table → admin UI shows
+    // UNKNOWN verdict". Per Spec 47 §8.2 + Spec 48 §3.5 standard contract.
+    //
+    // DEBT (DeepSeek MED #1 fold; tracked for follow-up WF3): verdict below
+    // is a parallel-boolean (`coverageOk && completedNaturally`) rather than
+    // the row-derived cascade `rows.some(r => r.status === 'FAIL') ? 'FAIL'
+    // : rows.some(r => r.status === 'WARN') ? 'WARN' : 'PASS'` that Spec 48
+    // §3.6 / Phase I.1 established. Acceptable today because no row is
+    // WARN-grade. If any row gains WARN potential in future, migrate to
+    // cascade BEFORE that change ships, or the WARN will silently collapse
+    // to PASS.
     pipeline.emitSummary({
       records_total: totalActivePermits,
       records_new: totalInserted,
       records_updated: 0,
       records_meta: {
-        backfill: {
+        audit_table: {
           phase: 91,
           name: 'Backfill Realtor permit_trades',
           verdict: summaryVerdict,

@@ -836,3 +836,35 @@ describe('assert-schema.js — Parcels audit cascade completeness (Spec 79 CRIT-
     expect(assertSchemaSrc).not.toMatch(/parcels_api_errors/);
   });
 });
+
+// Spec 79 validation 2026-05-19 — Step 14 surfaced SDK warning
+// "emitSummary called with no audit_table — admin UI will show UNKNOWN
+// verdict". backfill-realtor-permit-trades.js was emitting a custom
+// `records_meta.backfill` key instead of the standard `records_meta.audit_table`.
+// SDK + observers (FreshnessTimeline, observe-chain narrative) read only the
+// standard key. Regression-locks the rename + inner structure (DeepSeek MED #2 fold).
+describe('backfill-realtor-permit-trades.js — emitSummary audit_table key (Spec 79 HIGH-1)', () => {
+  const backfillSrc = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/backfill-realtor-permit-trades.js'),
+    'utf-8',
+  );
+
+  it('records_meta uses standard audit_table key (not custom backfill key)', () => {
+    // Positive: audit_table is the nested key in records_meta
+    expect(backfillSrc).toMatch(/records_meta:\s*\{\s*audit_table:/);
+    // Negation: backfill must not be the nested key (regression-lock against re-introduction)
+    expect(backfillSrc).not.toMatch(/records_meta:\s*\{\s*backfill:/);
+  });
+
+  it('audit_table structure preserves phase + name + verdict + rows (Spec 48 §3.5 contract)', () => {
+    // DeepSeek MED #2 fold: don't just check the key rename — verify the inner
+    // contract is intact. All 4 fields must be present in the audit_table block.
+    const auditBlock = backfillSrc.match(/audit_table:\s*\{[\s\S]{0,800}?\}/);
+    expect(auditBlock).not.toBeNull();
+    const blockText = auditBlock?.[0] ?? '';
+    expect(blockText).toMatch(/phase:\s*\d+/);
+    expect(blockText).toMatch(/name:\s*['"]/);
+    expect(blockText).toMatch(/verdict:/);
+    expect(blockText).toMatch(/rows:\s*\[/);
+  });
+});
