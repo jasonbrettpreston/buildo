@@ -146,6 +146,54 @@ Emitted once per run (per spec 47 §R10). Observer pattern:
   }
 }
 ```
+
+### 3.6 audit_table dual-pattern for ledger writers _(NEW 2026-05-18 — Phase I.1 fold)_
+
+Scripts that write to a Tier 3 audit ledger (per Spec 47 §7.8) — currently
+`load-permits.js`, `load-coa.js`, `classify-lifecycle-phase.js`, all writing to
+`lifecycle_status_history` — MUST emit a **pair** of `audit_table.rows` entries:
+
+| Row | Metric | Status | Purpose |
+|-----|--------|--------|---------|
+| INFO counter | `lifecycle_status_history_inserted` (or analogous) | `INFO` | Always emitted, **even at value=0**. The zero-row emission is the steady-state signal — its absence means the ledger pathway is broken. |
+| WARN-grade error gate | `lifecycle_status_history_errors` (or analogous) | `INFO` if value=0; `WARN` if value>0 | Increments on SAVEPOINT ROLLBACK (Spec 47 §7.8). Primary write survived; ledger write failed. Operators MUST investigate. |
+
+**Verdict derivation:** MUST use Spec 47 §8.2's row-derived cascade
+(`rows.some(r => r.status === 'FAIL') ? 'FAIL' : rows.some(r => r.status === 'WARN') ? 'WARN' : 'PASS'`).
+Parallel-boolean verdicts (`hasFails ? 'FAIL' : 'PASS'`) **collapse the WARN signal**
+and are forbidden for any script emitting WARN-grade rows. Phase I.1's `load-permits.js`
+fix swapping the boolean for the cascade is the canonical example.
+
+**Zero-row emission preservation:** when no ledger writes happened this run (steady state),
+the INFO counter still emits as `value: 0`. Removing the row when value is zero is a
+common observability anti-pattern — it makes "ledger pathway healthy with no work" and
+"ledger pathway broken" indistinguishable.
+
+### 3.7 First-deploy spike pattern for new ledger writers _(NEW 2026-05-18 — Phase I.1 fold)_
+
+When a new Tier 3 ledger writer ships, the **first chain run after deploy** produces a
+one-time spike in the INFO counter because no prior writes exist. observe-chain.js's
+7-day DeepSeek narrative baseline doesn't yet contain the new metric, so the narrative
+may flag the spike as `CRITICAL`/`HIGH`.
+
+**Mandatory artifacts for any WF shipping a new ledger writer:**
+
+1. **Operator runbook** (NEW under `docs/runbook/`) describing the expected spike
+   shape, pre-deploy estimate query, and 7-day convergence verification query.
+   Mirrors the unnumbered-section format of `docs/runbook/F1_baseline_quiet_period.md`.
+2. **Pre-ack instrument** referenced from the runbook so the operator can annotate the
+   followup markdown reports with "Expected first-deploy spike — within pre-deploy bound."
+   **Annotations are for human readers only** — observe-chain.js writes followup files but
+   does not read them; DeepSeek will continue to flag the spike for the duration of the
+   quiet window. Until observe-chain.js is extended to ingest operator annotations into
+   the system prompt, the annotation block serves on-call escalation, not narrative
+   suppression.
+3. **Exit criteria** documented for when the spike has converged to steady state
+   (typically 7 consecutive runs without the metric appearing in the narrative).
+
+Phase I.1's `lifecycle_status_history` deploy is the canonical example — see
+`docs/runbook/I1_first_deploy_spike.md`.
+
 </behavior>
 
 ---

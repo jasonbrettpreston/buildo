@@ -1490,3 +1490,25 @@ OPERATOR PRE-ACK: Day 0 of F.3 — `coa_first_deploy_grace: true` is INFO-only (
 
 F.4 (Lead Inspector CoA panel — Spec 76 §3.5 UI) follows next.
 
+## Phase I.1.1a (close-out of Phase I.1 deferrals — commit pending)
+
+DIFF-STAGE 4-reviewer round on Phase I.1.1a produced 7 BUGs folded into the diff and 3 DEFERs:
+
+**Folded BUGs (corrections shipped in Phase I.1.1a commit):**
+1. Independent CRIT — Test #10 regex didn't match actual code shape (`auditRows = [{...}]` literal, not `.push()`). Fixed; now covers all 3 writers, not just load-permits.js.
+2. Gemini CRIT — Test #11 only verified the trigger fires, not the SAVEPOINT contract. Added "SAVEPOINT pattern: primary write survives ledger-write failure" test that exercises the §7.8 pattern directly without requiring a CKAN mock.
+3. Gemini CRIT — Test #13 didn't verify the UNIQUE INDEX timezone-agnosticism. Added "UNIQUE INDEX dedups same UTC instant across different session timezones" test inserting under America/New_York and Asia/Tokyo with the same UTC instant.
+4. Observability HIGH + Independent IMPORTANT — Runbook `realistic_upper_bound` query was misleading because `last_seen_at` is refreshed on every load run (becomes ~0 on healthy DB post-sync). Removed the realistic query; renamed conservative to `wal_capacity_ceiling` and clarified it's for capacity planning, not behavioral estimation. Day 1 measurement is the only operationally meaningful number.
+5. Observability HIGH — Runbook metrics table conflated CoA-side active + permit-side dormant classifier writers. Split into 4 detected_by rows; explicitly labeled permit-side as DORMANT until Phase I.1.1b.
+6. Observability HIGH — `observe-chain.js` writes followup.md files but never reads them, so operator annotations don't suppress DeepSeek narrative. Added clarifying note to both Spec 48 §3.7 mandatory-artifacts list and the runbook annotation-protocol section that annotations are human-readable only.
+7. Independent IMPORTANT — `lead_analytics` Tier 2 classification was unjustified given borderline status. Added `<sup>†</sup>` footnote explaining the deliberate Tier 2 rationale (LEFT JOIN enrichment; opportunity scores degrade gracefully on NULL) and the promotion criterion.
+
+Also folded: Gemini MED (Test #11 afterEach cleanup logs failures via console.error instead of swallowing); DeepSeek LOW (pipeline_runs cleanup moved into beforeEach for per-test hermeticity).
+
+**DEFERs (separate WFs / unblocked when fixtures land):**
+- Behavioral tests 1-9 in `lifecycle-status-history-writers.db.test.ts` (currently `describe.skip` with skeleton). Require CKAN file fixtures (`LOAD_PERMITS_LOCAL_FILE` / `LOAD_COA_LOCAL_FILE` JSON fixtures + helper module). Unblock when a separate WF establishes the fixture pattern.
+- `observe-chain.js` extension to ingest operator annotations from followup.md into the DeepSeek system prompt. Would enable real narrative suppression. Out of scope for I.1.1a (Spec 48 protocol change, not closure work).
+- Phase I.1.1b — Spec 84 permit classifier algorithm extension to produce `result.matchedStatus`; will activate the dormant permit-side classifier writer + enable tests for that path.
+
+Verification: `npm run typecheck` clean; `npm run lint` clean for new file; `npm run test` 6246 passed.
+
