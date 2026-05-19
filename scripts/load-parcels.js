@@ -13,6 +13,11 @@
  */
 const pipeline = require('./lib/pipeline');
 const { safeParsePositiveInt } = require('./lib/safe-math');
+const {
+  detectMissingColumns,
+  buildDriftAuditRow,
+  buildNullAddressAuditRow,
+} = require('./lib/parcels-csv-drift');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -268,6 +273,16 @@ pipeline.run('load-parcels', async (pool) => {
   let errors = 0;
   let batch = [];
 
+  // Spec 79 CRIT-3b — CKAN CSV column-drift detection. assert-schema.js
+  // is the FAIL gate; load-parcels.js (this script) surfaces the drift
+  // in its own audit_table so operators see the loss when the chain is
+  // run past a failing assert-schema (e.g., on manual override).
+  // `missingCsvColumns` is captured on the first record; `nullAddressCount`
+  // and `attemptedRows` track the null-address fraction across the run.
+  let missingCsvColumns = null;     // null = not yet captured (first record not seen)
+  let nullAddressCount = 0;
+  let attemptedRows = 0;            // rows pushed into batch (denominator for null-pct)
+
   async function flushBatch() {
     if (batch.length === 0) return;
 
@@ -362,6 +377,13 @@ pipeline.run('load-parcels', async (pool) => {
     const unchanged = Math.max(0, processed - inserted - updated - skipped);
     const skipRate = processed > 0 ? (skipped / processed) * 100 : 0;
     const skipRateStr = skipRate.toFixed(1) + '%';
+    // Spec 79 CRIT-3b — CSV drift + null-address audit rows. `missingCsvColumns`
+    // is null only if the loop emitted zero records (e.g., empty CSV); treat
+    // that as "no drift observed" for the audit row, which lets the row_count
+    // audit fail/warn on its own without double-counting.
+    const driftRow = buildDriftAuditRow(missingCsvColumns ?? []);
+    const nullAddressRow = buildNullAddressAuditRow(nullAddressCount, attemptedRows);
+
     const auditRows = [
       { metric: 'rows_read', value: processed, threshold: '>= 450000', status: processed < 450000 ? 'WARN' : 'PASS' },
       { metric: 'records_inserted', value: inserted, threshold: null, status: 'INFO' },
@@ -370,9 +392,9 @@ pipeline.run('load-parcels', async (pool) => {
       { metric: 'records_skipped', value: skipped, threshold: null, status: 'INFO' },
       { metric: 'skip_rate', value: skipRateStr, threshold: '< 10%', status: skipRate >= 10 ? 'FAIL' : 'PASS' },
       { metric: 'records_errors', value: errors, threshold: '== 0', status: errors > 0 ? 'FAIL' : 'PASS' },
+      driftRow,
+      nullAddressRow,
     ];
-    const hasFails = errors > 0 || skipRate >= 10;
-    const hasWarns = processed < 450000;
 
     pipeline.emitSummary({
       records_total: inserted + updated,
@@ -389,7 +411,12 @@ pipeline.run('load-parcels', async (pool) => {
         audit_table: {
           phase: 4,
           name: 'Parcels Ingestion',
-          verdict: hasFails ? 'FAIL' : hasWarns ? 'WARN' : 'PASS',
+          // Spec 48 §3.6 / Spec 47 §8.2 mandate: row-derived cascade. The
+          // earlier parallel-boolean form (hasFails/hasWarns) is forbidden
+          // because it silently drops WARN-grade rows added in the future.
+          verdict: auditRows.some((r) => r.status === 'FAIL') ? 'FAIL'
+                 : auditRows.some((r) => r.status === 'WARN') ? 'WARN'
+                 : 'PASS',
           rows: auditRows,
         },
       },
@@ -404,6 +431,21 @@ pipeline.run('load-parcels', async (pool) => {
   try {
     for await (const record of stream) {
       processed++;
+
+      // Spec 79 CRIT-3b — capture CSV header on the first record. The
+      // csv-parse `columns: true` option yields each row as an object whose
+      // keys are the CSV header names; `missingCsvColumns` is null until
+      // we have seen the first row.
+      if (missingCsvColumns === null) {
+        missingCsvColumns = detectMissingColumns(Object.keys(record));
+        if (missingCsvColumns.length > 0) {
+          pipeline.log.warn(
+            '[load-parcels]',
+            `CKAN Parcels CSV missing ${missingCsvColumns.length} expected column(s): ${missingCsvColumns.join(', ')}. ` +
+              'Rows will be loaded with NULL address/date data. Run assert-schema.js to diagnose CKAN drift.',
+          );
+        }
+      }
 
       // Filter: skip CORRIDOR, RESERVE feature types
       const featureType = (record.FEATURE_TYPE || '').trim().toUpperCase();
@@ -441,6 +483,11 @@ pipeline.run('load-parcels', async (pool) => {
       const frontageFt = frontageM ? Math.round(frontageM * M_TO_FT * 100) / 100 : null;
       const depthFt = depthM ? Math.round(depthM * M_TO_FT * 100) / 100 : null;
       const isIrregular = dims ? dims.is_irregular : false;
+
+      // Spec 79 CRIT-3b — track null-address rate across pushed rows
+      // (denominator for parcels_null_address_pct in emitFinal).
+      attemptedRows++;
+      if (!addressNumber) nullAddressCount++;
 
       batch.push({
         parcel_id: parcelId,
