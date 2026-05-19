@@ -864,6 +864,18 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   const permitRuleDistribution = new Map();      // rule N → count
   const permitMatchedStatusCounts = new Map();   // matched_status → count
 
+  // Spec 79 validation 2026-05-19 (Step 21 TDZ fix): classifier-side
+  // lifecycle_status_history ledger counters MUST be declared at script scope
+  // BEFORE flushPermitBatch is defined, because flushPermitBatch's SAVEPOINT
+  // catch path (line ~1019) increments lifecycleStatusHistoryErrors. The
+  // permits streaming loop calls flushPermitBatch BEFORE the CoA section's
+  // let-declarations would run → ReferenceError "Cannot access
+  // 'lifecycleStatusHistoryErrors' before initialization" without this hoist.
+  // Shared between flushPermitBatch (permit-side) and flushCoaBatch (CoA-side).
+  // Regression-lock: classify-lifecycle-phase.lifecycle-status-history.infra.test.ts
+  let lifecycleStatusHistoryInserted = 0;
+  let lifecycleStatusHistoryErrors = 0;
+
   // Phase I.1.1b — code-drift status set (Spec 84 §2.5.a rows 6/7/10).
   // INFO-only counter; surfacing for operator visibility, NOT a CQA gate.
   const PERMIT_CODE_DRIFT_STATUSES = new Set([
@@ -1171,10 +1183,9 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   let dirtyCoAsCount = 0;
   let coasUpdated = 0;                  // total rows where any column changed (Phase E.2: renamed coa_rows_updated metric)
   let coaPhaseTransitionsCount = 0;     // E.2: actual phase OR seq changes that produced a lifecycle_transitions row
-  // Phase I.1: classifier-side lifecycle_status_history ledger counters (both streams).
-  // Tracked at script scope so flushPermitBatch + flushCoaBatch share them.
-  let lifecycleStatusHistoryInserted = 0;
-  let lifecycleStatusHistoryErrors = 0;
+  // Phase I.1 ledger counters: moved to earlier scope (line ~866) per Spec 79
+  // Step 21 TDZ-fix 2026-05-19. Both flushPermitBatch and flushCoaBatch share
+  // them via script scope. See the canonical declarations above.
   let coaStalledCount = 0;              // E.2: CoA-side stall count (separate from permit-side stalled_count)
   let unmappedStatusCount = 0;          // E.2: rule 9 catchall OR data-drift signal
   let unmappedDecisionCount = 0;        // E.2: decision non-null but not in any decision set

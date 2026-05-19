@@ -109,4 +109,26 @@ describe('classify-lifecycle-phase.js — lifecycle_status_history ledger writer
       /coa_applications:\s*\[[^\]]*'matched_status'/,
     );
   });
+
+  // Spec 79 validation 2026-05-19 — Step 21 surfaced a TDZ ReferenceError
+  // because `let lifecycleStatusHistoryErrors` was declared inside the CoA
+  // section but referenced by flushPermitBatch's SAVEPOINT catch path.
+  // These regression-locks assert source-order: both ledger counters MUST be
+  // declared BEFORE `const flushPermitBatch` so the catch-path increment is
+  // not in temporal dead zone when called from the permits streaming loop.
+  it('lifecycleStatusHistoryErrors is declared before flushPermitBatch (TDZ regression-lock)', () => {
+    const declIdx = src.indexOf('let lifecycleStatusHistoryErrors');
+    const flushIdx = src.indexOf('const flushPermitBatch');
+    expect(declIdx).toBeGreaterThan(-1);
+    expect(flushIdx).toBeGreaterThan(-1);
+    expect(declIdx).toBeLessThan(flushIdx);
+  });
+
+  it('lifecycleStatusHistoryInserted is declared before flushPermitBatch (TDZ regression-lock)', () => {
+    const declIdx = src.indexOf('let lifecycleStatusHistoryInserted');
+    const flushIdx = src.indexOf('const flushPermitBatch');
+    expect(declIdx).toBeGreaterThan(-1);
+    expect(flushIdx).toBeGreaterThan(-1);
+    expect(declIdx).toBeLessThan(flushIdx);
+  });
 });
