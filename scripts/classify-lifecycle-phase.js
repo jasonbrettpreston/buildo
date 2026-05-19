@@ -1334,7 +1334,16 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
             ca.lifecycle_phase   AS old_phase,
             ca.lifecycle_seq     AS old_seq,
             ca.matched_status    AS old_matched_status,
-            ca.permit_type,
+            -- Phase E.3 §3.6.A + mig 147: CoA-side rows have permit_type IS NULL
+            -- in phase_stay_calibration (DROP NOT NULL on permit_type was the
+            -- explicit design intent — coa_applications has no permit_type
+            -- column and SHOULD NOT have one). The literal NULL here keeps the
+            -- 5-tuple cohort key shape correct for downstream
+            -- compute-phase-calibration. Do NOT JOIN to permits to derive
+            -- permit_type — the calibration table is keyed on NULL for CoA.
+            -- Surfaced by Spec 79 validation Step 21 Bug 2 (2026-05-19); fixed
+            -- as WF3 (pre-existed in Phase E.2 commit ad0c178).
+            NULL::text AS permit_type,
             ca.project_type,
             ca.coa_type_class,
             ca.neighbourhood_id,

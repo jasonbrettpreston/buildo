@@ -805,4 +805,16 @@ describe('scripts/classify-lifecycle-phase.js — Phase I.1.1b matched-status ex
       /permits:\s*\[[\s\S]{0,400}?'matched_status'[\s\S]{0,40}?'matched_rule'[\s\S]{0,40}?'unmapped_status'/,
     );
   });
+
+  // Spec 79 validation 2026-05-19 Step 21 Bug 2 — CoA dirty SELECT must NOT
+  // reference ca.permit_type (column does not exist on coa_applications per
+  // Phase E.3 §3.6.A design: CoA cohorts have NULL permit_type per mig 147).
+  // Pre-fix: `ca.permit_type,` at line 1331 caused PG error 42703. Post-fix:
+  // `NULL::text AS permit_type` literal preserves the 5-tuple cohort shape.
+  it('CoA dirty SELECT uses NULL::text AS permit_type (Phase E.3 §3.6.A design — coa_applications has no permit_type column per mig 147)', () => {
+    // Negation: the bare `ca.permit_type,` reference must not exist
+    expect(content).not.toMatch(/^\s*ca\.permit_type,\s*$/m);
+    // Positive: the explicit NULL literal must be present, scoped as permit_type
+    expect(content).toMatch(/NULL::text\s+AS\s+permit_type/);
+  });
 });
