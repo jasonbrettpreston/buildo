@@ -1887,3 +1887,7 @@ permits that entered in Step 2?"** This means:
 1. Every step that processes new permits MUST report `records_new = N` (the same N) if it inserts a row for them in its write target.
 2. Every step that only updates existing rows for new permits MUST have a named `audit_table` row (e.g., `new_permits_processed: N`) if the update is not already visible in `records_updated`.
 3. Steps that skip a subset of permits (terminal, orphan, no-match) MUST report the skip count in a named `audit_table` row so the skip is traceable, not silent.
+
+### §11.5 — Per-step compliance validation (cross-ref Spec 79)
+
+Per-step §R1-R12 + §11 compliance is validated per Spec 79 §2 checklist items C1, C5, C9, C11. Validation records under `docs/reports/pipeline-validation/{permits,coa}/` show actual SQL output and grep evidence for every claim — never asserted status without evidence.

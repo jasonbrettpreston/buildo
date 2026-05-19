@@ -202,6 +202,8 @@ for the round-trip correctness gate.
 - **Logic:** `pipeline-sdk.logic.test.ts` (all 26 scripts use Pipeline SDK pattern)
 - **Infra:** `quality.infra.test.ts` (CQA scripts exist, emit correct PIPELINE_SUMMARY)
 <!-- TEST_INJECT_END -->
+
+**Per-step validation:** see Spec 79 §4 for the canonical step map + reviewer-tier assignments. Each step's evidence-bearing validation record lives at `docs/reports/pipeline-validation/permits/step_<NN>_<slug>.md`.
 </testing>
 
 ---

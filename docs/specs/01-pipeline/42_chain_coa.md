@@ -117,6 +117,8 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
 - **Logic:** `chain.logic.test.ts` (coa chain definition, step count, assert_lifecycle_phase_distribution wired as step 11)
 - **Infra:** `quality.infra.test.ts` (assert-coa-freshness exists, assert-pre-permit-aging exists)
 <!-- TEST_INJECT_END -->
+
+**Per-step validation:** see Spec 79 §5 for the canonical step map. CoA chain shares 9 steps with permits via cross-reference (assert_schema, link_coa, refresh_snapshot, assert_data_bounds, assert_engine_health, classify_lifecycle_phase, assert_lifecycle_phase_distribution, compute_phase_calibration, assert_global_coverage); only 6 unique CoA-side records are produced (steps 2-7). Records live under `docs/reports/pipeline-validation/coa/`.
 </testing>
 
 ---
