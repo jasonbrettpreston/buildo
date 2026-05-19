@@ -808,3 +808,31 @@ describe('assert-lifecycle-phase-distribution.js — advisory lock delegation (s
     expect(content).not.toMatch(/SPEC LINK:.*docs\/reports\//);
   });
 });
+
+// Spec 79 validation 2026-05-19 — Step 1 surfaced that Parcels schema drift
+// (CKAN feed removed 3 columns) caused the script to exit 1 with audit_table
+// verdict='PASS'. The verdict cascade (rows.some FAIL) couldn't see the drift
+// because no audit row tracked Parcels mismatches — they only landed in
+// records_meta.errors[]. This regression-lock asserts the cascade now covers
+// the Parcels failure modes per Spec 47 §R10 + Spec 48 §8.2.
+describe('assert-schema.js — Parcels audit cascade completeness (Spec 79 CRIT-3a)', () => {
+  const assertSchemaSrc = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/quality/assert-schema.js'),
+    'utf-8',
+  );
+
+  it('audit_table.rows includes parcels_schema_mismatch_count + parcels_other_errors in BOTH chains', () => {
+    // Each metric should appear at least twice in the source — once per chain's
+    // audit-table construction (permitAuditRows + coaAuditRows).
+    const schemaMatches = assertSchemaSrc.match(/parcels_schema_mismatch_count/g) || [];
+    expect(schemaMatches.length).toBeGreaterThanOrEqual(2);
+    const otherMatches = assertSchemaSrc.match(/parcels_other_errors/g) || [];
+    expect(otherMatches.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('does NOT use the misleading parcels_api_errors metric name', () => {
+    // DeepSeek LOW #1 fold: parcels_api_errors over-promises; renamed to
+    // parcels_other_errors which is honest about scope.
+    expect(assertSchemaSrc).not.toMatch(/parcels_api_errors/);
+  });
+});

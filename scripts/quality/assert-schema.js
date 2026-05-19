@@ -330,6 +330,22 @@ pipeline.run('assert-schema', async (pool) => {
   }
 
   // Build permits-specific audit_table when permit columns were checked
+  // Spec 79 validation Step 1 (2026-05-19) fold: Parcels schema drift was
+  // landing only in records_meta.errors[] and bypassing the audit_table
+  // cascade — verdict='PASS' on a crashed script. Parcels feeds BOTH chains
+  // (link-parcels permits step 9 + link-coa-to-parcels CoA step 4) so these
+  // rows go into both audit_table arrays. assert-schema runs ONCE per chain
+  // invocation (only one of runPermitChecks/runCoaChecks is true at a time),
+  // so adding to both is correct — the active chain's table is what emits.
+  // Exact-phrase filters (DeepSeek HIGH #1 + LOW #2 fold) avoid false
+  // positives from generic "missing" / "api" tokens.
+  const parcelsSchemaErrors = errors.filter((e) =>
+    e.includes('Parcels schema drift') || e.toLowerCase().includes('parcels: missing'),
+  );
+  const parcelsOtherErrors = errors.filter((e) =>
+    e.toLowerCase().includes('parcels') && !parcelsSchemaErrors.includes(e),
+  );
+
   let permitsAuditTable = null;
   if (runPermitChecks) {
     const permitSchemaErrors = errors.filter((e) => e.toLowerCase().includes('permit'));
@@ -337,6 +353,8 @@ pipeline.run('assert-schema', async (pool) => {
     const permitAuditRows = [
       { metric: 'permit_columns_checked', value: EXPECTED_PERMIT_COLUMNS.length, threshold: null, status: 'INFO' },
       { metric: 'schema_mismatch_count', value: permitSchemaErrors.length, threshold: '== 0', status: permitSchemaErrors.length > 0 ? 'FAIL' : 'PASS' },
+      { metric: 'parcels_schema_mismatch_count', value: parcelsSchemaErrors.length, threshold: '== 0', status: parcelsSchemaErrors.length > 0 ? 'FAIL' : 'PASS' },
+      { metric: 'parcels_other_errors', value: parcelsOtherErrors.length, threshold: '== 0', status: parcelsOtherErrors.length > 0 ? 'FAIL' : 'PASS' },
       { metric: 'api_errors', value: permitApiErrors.length, threshold: '== 0', status: permitApiErrors.length > 0 ? 'FAIL' : 'PASS' },
     ];
     const permitHasFails = permitAuditRows.some((r) => r.status === 'FAIL');
@@ -356,6 +374,10 @@ pipeline.run('assert-schema', async (pool) => {
     const coaAuditRows = [
       { metric: 'coa_columns_checked', value: EXPECTED_COA_COLUMNS.length, threshold: null, status: 'INFO' },
       { metric: 'schema_mismatch_count', value: coaSchemaErrors.length, threshold: '== 0', status: coaSchemaErrors.length > 0 ? 'FAIL' : 'PASS' },
+      // Parcels feeds CoA chain via link-coa-to-parcels (step 4). Same rows
+      // as permits-side per Spec 79 CRIT-3a fix 2026-05-19.
+      { metric: 'parcels_schema_mismatch_count', value: parcelsSchemaErrors.length, threshold: '== 0', status: parcelsSchemaErrors.length > 0 ? 'FAIL' : 'PASS' },
+      { metric: 'parcels_other_errors', value: parcelsOtherErrors.length, threshold: '== 0', status: parcelsOtherErrors.length > 0 ? 'FAIL' : 'PASS' },
       { metric: 'api_errors', value: coaApiErrors.length, threshold: '== 0', status: coaApiErrors.length > 0 ? 'FAIL' : 'PASS' },
     ];
     const coaHasFails = coaAuditRows.some((r) => r.status === 'FAIL');
