@@ -215,3 +215,4 @@ FreshnessTimeline renders this script's output using the new columnar audit_tabl
 - **Relies on:** `40_pipeline_system.md` (emitSummary contract, records_total semantics)
 - **Relies on:** `41_chain_permits.md` + `42_chain_coa.md` (step ordering)
 - **Consumed by:** FreshnessTimeline via columnar audit_table render path (Spec 28)
+- **Consumed by:** Spec 79 §6.1 as the chain-end validation cap — every Spec 79 run finishes with this profile per chain, and the profile output becomes the final coverage gate.

@@ -194,6 +194,10 @@ may flag the spike as `CRITICAL`/`HIGH`.
 Phase I.1's `lifecycle_status_history` deploy is the canonical example — see
 `docs/runbook/I1_first_deploy_spike.md`.
 
+### 3.8 Per-step observability validation _(NEW 2026-05-19 — Spec 79 fold)_
+
+Per-step §3.6 dual-pattern + §3.7 first-deploy spike compliance is validated per Spec 79 §2 checklist items C2, C3, C4, C6 plus C12 tripwires (per-risk-class profile per Spec 79 §10). Validation records under `docs/reports/pipeline-validation/{permits,coa}/` show actual `pipeline_runs.records_meta` JSON and audit_table.rows shape — never asserted compliance without the actual JSON.
+
 </behavior>
 
 ---
