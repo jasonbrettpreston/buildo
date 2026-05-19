@@ -157,14 +157,31 @@ When a script crashes mid-execution with exit != 0 AND blocks downstream steps' 
 - `OR IS NULL` on non-classifier columns
 - Re-running destructive script (`backup_db`, `permits` full sync) more than once
 
-**Procedure (in-budget):**
-1. Capture crash evidence.
-2. Make fix; commit to unblock branch: `fix(validation): unblock <step-slug> — <description> [auto-unblock]`.
-3. Re-run the failed step. Exit code 0 → proceed.
-4. **Full C1-C12 + applicable tripwires re-run** for the step. Any item now FAIL/INVESTIGATE that wasn't pre-crash → fix is suspect, escalate.
-5. **Idempotency double-run** — run the step a second time. Verify second-run audit matches first-run within tolerance. Non-idempotent → escalate.
-6. Record in `SUMMARY.md` → "Unblock Interventions": full diff + rationale + step + audit comparison.
-7. User reviews unblock branch at chain-end; cherry-picks approved commits to main.
+**Procedure (in-budget — pre-authorized WF3 ceremony):**
+
+Every in-budget unblock is a WF3 with pre-granted authorization. The ceremony is preserved (matches the project's "always use workflow" discipline) but proceeds without halting for user input when the fix is in-scope.
+
+1. **Capture crash evidence** — stack trace, line number, last log message, exit code.
+2. **Create active task** `.cursor/active_task_unblock_<step-slug>_<timestamp>.md` using the standard WF3 template:
+   - Status: Implementation (pre-authorized)
+   - Goal: unblock `<step-slug>` script crash
+   - Reproduction: crash evidence (paste verbatim)
+   - Proposed fix: the diff
+   - Pre-authorization rationale: "in-budget per Spec 79 §3c — ≤10 LOC, single file, non-destructive, classifier-output-OR-IS-NULL only (if applicable)"
+3. **Independent reviewer sanity check** — spawn Independent code-reviewer agent with the active task + diff + crash evidence. Agent's narrow scope: confirm the fix is in-scope per §3c criteria AND behavior-preserving (does not introduce new logic paths or affect untested code). If agent disagrees (out-of-scope OR behavior-changing) → escalate to user.
+4. **Apply fix** → commit to unblock branch:
+   ```
+   fix(validation): unblock <step-slug> — <description> [auto-unblock WF3]
+   See: .cursor/closed_task_unblock_<step-slug>_<timestamp>.md
+   ```
+5. **Re-run the failed step.** Exit code 0 → proceed; non-zero → escalate.
+6. **Full C1-C12 + applicable tripwires re-run** for the step. Any item now FAIL/INVESTIGATE that wasn't pre-crash → fix is suspect, escalate.
+7. **Idempotency double-run** — run the step a second time. Verify second-run audit matches first-run within tolerance. Non-idempotent → escalate.
+8. **Archive task** → rename to `.cursor/closed_task_unblock_<step-slug>_<timestamp>.md`.
+9. **Record in `SUMMARY.md` → "Unblock Interventions"**: link to closed task + diff + Independent reviewer summary + audit comparison + verification results.
+10. User reviews unblock branch + closed task records at chain-end; cherry-picks approved commits to main.
+
+**Out-of-budget procedure:** same active task creation (step 2), but the Independent reviewer at step 3 will flag out-of-scope. Task halts at that point and surfaces to user with the same one-paragraph summary. User authorizes → resume from step 4. User declines → skip-and-document (task closed without commit; recorded in SUMMARY.md as a known-blocker for end-of-run review).
 
 ## 3d. Specialized-Agent Briefing Template
 
