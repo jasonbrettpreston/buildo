@@ -57,6 +57,17 @@
 -- UP
 -- ═══════════════════════════════════════════════════════════════════
 
+-- 2026-05-19 CI-fix: relax variable_value NOT NULL so the `_max=NULL` "no
+-- upper bound" semantic (v4 fold v3-G-CRIT-formula, asserted by
+-- src/tests/migration-148-lifecycle-seq-bands.infra.test.ts:59) actually
+-- works against the schema. Original mig 092 declared the column DECIMAL
+-- NOT NULL, which contradicted the design intent encoded in the CASE
+-- statements below. CI fresh-DB run surfaced this on 2026-05-19 — every
+-- prior environment happened to have all-positive rows_count in
+-- universal_stream_catalog and never exercised the NULL branch.
+-- Idempotent: DROP NOT NULL is a no-op when already nullable.
+ALTER TABLE logic_variables ALTER COLUMN variable_value DROP NOT NULL;
+
 INSERT INTO logic_variables (variable_key, variable_value, description)
 SELECT
   'lifecycle_seq_band_' || seq || '_min' AS variable_key,
@@ -100,6 +111,10 @@ ON CONFLICT (variable_key) DO NOTHING;
 --    WHERE variable_key LIKE 'lifecycle_seq_band_%_min'
 --       OR variable_key LIKE 'lifecycle_seq_band_%_max'
 --       OR variable_key = 'lifecycle_seq_unclassified_max';
+--   -- Restore original mig 092 NOT NULL constraint. Only safe if no other
+--   -- row in logic_variables has variable_value IS NULL — verify first via
+--   --   SELECT COUNT(*) FROM logic_variables WHERE variable_value IS NULL;
+--   ALTER TABLE logic_variables ALTER COLUMN variable_value SET NOT NULL;
 --
 -- Then revert the assert-lifecycle-phase-distribution.js extension + the
 -- scripts/seeds/logic_variables.json additions + mig 149 (CONCURRENTLY

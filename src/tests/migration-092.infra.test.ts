@@ -37,6 +37,12 @@ describe('migration 092 — control panel', () => {
     it('creates with expected columns', () => {
       expect(sql).toMatch(/CREATE TABLE logic_variables/);
       expect(sql).toMatch(/variable_key\s+VARCHAR\(100\)\s+PRIMARY KEY/);
+      // NOTE: mig 148 (2026-05-19 CI-fix) subsequently runs
+      // `ALTER TABLE logic_variables ALTER COLUMN variable_value DROP NOT NULL`
+      // to enable the `_max = NULL` "no upper bound" sentinel pattern
+      // (Spec 84 §3.4 / Spec 42 §6.11 Phase E.4). This test still locks the
+      // original mig 092 SQL text — the column starts as NOT NULL and is
+      // relaxed later. Live-schema state after mig 148 is nullable.
       expect(sql).toMatch(/variable_value\s+DECIMAL\s+NOT NULL/);
     });
 

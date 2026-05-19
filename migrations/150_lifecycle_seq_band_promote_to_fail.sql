@@ -23,9 +23,11 @@
 -- is deferred to a follow-up.
 --
 -- Why integer 0/1 (not string enum, not boolean):
--- - logic_variables.variable_value is DECIMAL NOT NULL (mig 092). A string
---   posture flag would require the variable_value_json (mig 097) JSONB path —
---   added complexity for a single-bit decision.
+-- - logic_variables.variable_value is DECIMAL (originally NOT NULL per mig 092;
+--   relaxed to nullable by mig 148 for the `_max=NULL` "no upper bound"
+--   sentinel — see mig 148 header). A string posture flag would require the
+--   variable_value_json (mig 097) JSONB path — added complexity for a
+--   single-bit decision.
 -- - Existing Zod patterns (mig 119, mig 148) use z.coerce.number().int().
 --   Integer is the project convention for tunable logic variables.
 -- - Spec 86 Control Panel renders the keys as editable marketplace constants —
