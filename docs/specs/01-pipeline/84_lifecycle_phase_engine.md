@@ -158,6 +158,8 @@ Defined in code but absent from live data: `Tenant Notice Period` (DEAD), `Exten
 - Row 6 "Not Started" and row 7 "Not Started - Express" → city def is pre-review (Phase 2); code maps to post-issuance P7d.
 - Row 10 "Plan Review Complete" → city def is end of Phase 2; code maps to intake `INTAKE_P3_SET`.
 
+**Phase I.1.1b addendum (2026-05-18):** the "Current code maps to" column also drives `matched_rule` (SMALLINT 0..99) per the §3.7 18-rule precedence table. `matched_status` reflects the **raw normalized input status** for every rule (no literal overrides). The 3 CODE DRIFT rows above are codified in `matched_status` exactly as the current code classifies them — drift correction is a separate WF3 because changing set membership requires behavioral migration coordinated with downstream consumers. Operators surface drift counts via the `permit_code_drift_count` audit row.
+
 ---
 
 ### §2.5.b `coa_applications.decision` — 54 distinct values
@@ -1223,6 +1225,55 @@ Each flag is integer 0/1; Zod validates `.int().min(0).max(1)` at script startup
      ```
      The next pipeline run reverts to WARN-only routing.
    - **SAFEST rollback (full restoration):** (1) `git revert` of the WF1 Phase E.5 commit; (2) redeploy the application; (3) **run mig 150's DOWN block manually** to remove the 3 orphan `logic_variables` rows (the DOWN block is comment-only per project Rule 6; operator runs the `DELETE` statement from the comment block manually). Without step 3, the 3 keys remain in the DB unused — not functionally breaking (the reverted code doesn't read them) but leaves stale config visible in Spec 86 Control Panel.
+
+---
+
+### 3.7 Permit classifier matchedStatus contract _(NEW Phase I.1.1b — 2026-05-18)_
+
+`classifyLifecyclePhase()` returns `{phase, stalled, matchedStatus, matchedRule, unmappedStatus}`. The pre-I.1.1b shape `{phase, stalled}` continues to destructure correctly (additive change).
+
+**matchedStatus contract:** `matchedStatus` is **ALWAYS the normalized raw `permits.status` value** that the classifier saw on input. **No literal overrides.** No downstream-computed label. The state-machine derivation lives in `phase`; the bifurcation context lives in `matchedRule`.
+
+Rationale: this contract mirrors `classifyCoaPhase`'s matchedStatus semantics (raw normalized status that matched, not the derived phase) and aligns with `load-permits.js` ledger semantics (the from_status / to_status values in `lifecycle_status_history` written by load-permits.js are also raw normalized status values). The classifier's contribution to the ledger is the same anchor; only the `detected_by` column differs.
+
+**Exceptions** — `matchedStatus = null` only on:
+- **Rule 0** — defensive null/non-object input guard (mirrors CoA rule 0)
+- **Rule 1** — status null / empty (also excluded from CQA unclassified-count gate)
+
+**18-rule precedence table** (top-down, first match wins):
+
+| Rule | Branch | Phase | matchedStatus | Notes |
+|------|--------|-------|---------------|-------|
+| 0 | defensive null/non-object guard | null | null | Mirrors CoA rule 0 |
+| 1 | `status == null` | null | null | Excluded from CQA unclassified-count |
+| 2 | DEAD_STATUS_SET | null | normalized dead status | DEAD takes precedence over orphan classification |
+| 3 | TERMINAL_P20_SET | P20 | normalized terminal status | |
+| 4 | WINDDOWN_P19_SET | P19 | normalized winddown status | |
+| 5a | orphan + Permit Issued / Inspection / Revision Issued / Revised | O2 (or O3 if stalled past orphanStallDays) | raw normalized status | |
+| 5b | orphan + INTAKE_P3 / REVIEW_P4 / HOLD_P5 / READY_P6 | O1 | raw normalized status | |
+| 5c | orphan fallback (any other status) | O1 | raw normalized status | Independent CRIT 1 sub-path |
+| 6 | BldLed REVIEW_P4_SET | P4 | raw normalized status | |
+| 7 | BldLed HOLD_P5_SET | P5 | raw normalized status | |
+| 8 | BldLed READY_P6_SET | P6 | raw normalized status | |
+| 9 | BldLed INTAKE_P3_SET | P3 | raw normalized status | §2.5.a rows 4-5, 10 are CODE DRIFT (out of I.1.1b scope) |
+| 10 | BldLed NOT_STARTED_P7D_SET | P7d | raw normalized status | §2.5.a rows 6-7 are CODE DRIFT (out of I.1.1b scope) |
+| 11 | BldLed REVISION_P8_SET | P8 | raw normalized status | |
+| 12 | Permit Issued + has_passed_inspection=false + time-bucket | P7a / P7b / P7c | 'Permit Issued' (raw — coincidental) | |
+| 13 | Permit Issued + has_passed_inspection=true + stage maps | P9-P17 | raw normalized status ('Permit Issued' or 'Inspection') | NOT a hardcoded 'Inspection' literal |
+| 14 | INSPECTION_PIPELINE_P18_SET OR (Permit Issued + passed but stage unmapped/null) OR (Inspection + stage unmapped/null) | P18 OR P17-fallback | raw normalized status | P17-fallback covers WF3 2026-04-23 B1-C3 case |
+| 15 | catchall (status non-null, matched no set) | null | **raw normalized status** (NOT null) | `unmappedStatus = true`; ledger captures transition INTO unmapped state per Gemini CRIT fold |
+
+**`matchedRule` is `SMALLINT` (CHECK 0..99 per mig 155 constraint).** The 18-row table above uses values 0..15 — well within range. Future expansions stay below 99.
+
+**Catchall non-null matchedStatus (rule 15):** under the contract, the catchall sets `matchedStatus = the raw unmapped status` (NOT null). Combined with `unmappedStatus = true`, this means the `lifecycle_status_history` ledger filter `r.matched_status != null` admits catchall transitions — so when an operator sees a new unmapped status appear in CKAN, the ledger captures both the from_status and to_status with `detected_by='classify-lifecycle-phase.js'`, surfacing the data drift in the audit trail.
+
+**DEAD precedes orphan:** a permit that is both `is_orphan=true` AND has a DEAD status returns rule 2 (terminal authority). The orphan classification is contextual; terminal state is authoritative.
+
+**Implementation enforcement:** `finalizePermit()` in `scripts/lib/lifecycle-phase.js` + `src/lib/classification/lifecycle-phase.ts` runs a runtime assertion that throws if any exit returns `matchedStatus === undefined`. This catches accidental partial returns introduced by future refactors — converts a silent ledger-suppression bug into a loud throw during testing.
+
+**Out-of-scope for I.1.1b** (deferred to separate WFs):
+- CODE DRIFT correction for §2.5.a rows 6, 7, 10 (membership move between status sets — would change `matched_rule` for those rows but require a behavioral migration coordinated with downstream consumers).
+- `lifecycle_seq` derivation on permit side (the universal-stream catalog lookup is CoA-only today).
 
 ---
 

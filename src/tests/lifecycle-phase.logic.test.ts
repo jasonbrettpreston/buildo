@@ -1466,3 +1466,290 @@ describe('classifyLifecyclePhase — fuzzing', () => {
     }
   });
 });
+
+// ═════════════════════════════════════════════════════════════════
+// Section P — Phase I.1.1b matchedStatus / matchedRule extension
+// Spec 84 §3.7 18-rule precedence contract.
+// ═════════════════════════════════════════════════════════════════
+
+describe('classifyLifecyclePhase — Phase I.1.1b matchedStatus extension', () => {
+  // Rule 0 — defensive null/non-object guard
+  test('Rule 0: null input returns matchedRule=0, matchedStatus=null', () => {
+    // @ts-expect-error — testing defensive guard against null input
+    const result = classifyLifecyclePhase(null);
+    expect(result.phase).toBe(null);
+    expect(result.matchedRule).toBe(0);
+    expect(result.matchedStatus).toBe(null);
+    expect(result.unmappedStatus).toBe(false);
+  });
+
+  // Rule 1 — status null
+  test('Rule 1: status=null returns matchedRule=1, matchedStatus=null', () => {
+    const result = classifyLifecyclePhase(permit({ status: null }));
+    expect(result.phase).toBe(null);
+    expect(result.matchedRule).toBe(1);
+    expect(result.matchedStatus).toBe(null);
+    expect(result.unmappedStatus).toBe(false);
+  });
+
+  // Rule 2 — DEAD status
+  test('Rule 2: DEAD status returns matchedStatus=raw status, phase=null', () => {
+    const result = classifyLifecyclePhase(permit({ status: 'Application Withdrawn' }));
+    expect(result.phase).toBe(null);
+    expect(result.matchedRule).toBe(2);
+    expect(result.matchedStatus).toBe('Application Withdrawn');
+  });
+
+  // Rule 2 precedence — DEAD beats orphan (DeepSeek LOW fold)
+  test('Rule 2 precedence: DEAD takes precedence over orphan classification', () => {
+    const result = classifyLifecyclePhase(
+      permit({ status: 'Cancelled', is_orphan: true }),
+    );
+    expect(result.phase).toBe(null);
+    expect(result.matchedRule).toBe(2);
+    expect(result.matchedStatus).toBe('Cancelled');
+  });
+
+  // Rule 3 — TERMINAL P20
+  test('Rule 3: TERMINAL_P20_SET status returns matchedRule=3, phase=P20', () => {
+    const result = classifyLifecyclePhase(permit({ status: 'Closed' }));
+    expect(result.phase).toBe('P20');
+    expect(result.matchedRule).toBe(3);
+    expect(result.matchedStatus).toBe('Closed');
+  });
+
+  // Rule 4 — WINDDOWN P19
+  test('Rule 4: WINDDOWN_P19_SET status returns matchedRule=4, phase=P19', () => {
+    const result = classifyLifecyclePhase(permit({ status: 'Pending Closed' }));
+    expect(result.phase).toBe('P19');
+    expect(result.matchedRule).toBe(4);
+    expect(result.matchedStatus).toBe('Pending Closed');
+  });
+
+  // Rule 5a — orphan + active status → O2/O3
+  test('Rule 5a: orphan + Permit Issued + recent → O2 with matchedRule=5', () => {
+    const result = classifyLifecyclePhase(
+      permit({ status: 'Permit Issued', is_orphan: true, issued_date: daysAgo(30) }),
+    );
+    expect(result.phase).toBe('O2');
+    expect(result.matchedRule).toBe(5);
+    expect(result.matchedStatus).toBe('Permit Issued');
+  });
+
+  // Rule 5b — orphan + pre-issuance set
+  test('Rule 5b: orphan + Under Review → O1 with matchedStatus=raw status', () => {
+    const result = classifyLifecyclePhase(
+      permit({ status: 'Under Review', is_orphan: true }),
+    );
+    expect(result.phase).toBe('O1');
+    expect(result.matchedRule).toBe(5);
+    expect(result.matchedStatus).toBe('Under Review');
+  });
+
+  // Rule 5c — orphan fallback (Independent CRIT 1 — previously untested).
+  // DIFF-stage Independent IMPORTANT fold: previous "5c with Revision Issued"
+  // test was mislabeled — 'Revision Issued' IS in 5a's active-status list, so
+  // it hit 5a, not 5c. Replaced with genuinely 5c-triggering statuses below.
+  test('Rule 5c: orphan + REVISION_P8 status (Order Complied) → O1 with raw matchedStatus', () => {
+    const result = classifyLifecyclePhase(
+      permit({ status: 'Order Complied', is_orphan: true }),
+    );
+    // 'Order Complied' is REVISION_P8_SET (not in 5a, not in 5b's pre-issuance
+    // sets) — hits the 5c fallback for orphans with non-standard statuses.
+    expect(result.phase).toBe('O1');
+    expect(result.matchedRule).toBe(5);
+    expect(result.matchedStatus).toBe('Order Complied');
+  });
+
+  test('Rule 5c: orphan + INSPECTION_PIPELINE_P18 status → O1', () => {
+    const result = classifyLifecyclePhase(
+      permit({ status: 'Forward to Inspector', is_orphan: true }),
+    );
+    // 'Forward to Inspector' is INSPECTION_PIPELINE_P18 — not in 5a or 5b — hits 5c fallback
+    expect(result.phase).toBe('O1');
+    expect(result.matchedRule).toBe(5);
+    expect(result.matchedStatus).toBe('Forward to Inspector');
+  });
+
+  test('Rule 5c: orphan + NOT_STARTED_P7D status → O1', () => {
+    const result = classifyLifecyclePhase(
+      permit({ status: 'Work Not Started', is_orphan: true }),
+    );
+    // 'Work Not Started' is NOT_STARTED_P7D — not in 5a's 4 active statuses or
+    // 5b's 4 pre-issuance sets — hits 5c fallback. Confirms the fallback is
+    // genuinely reached for non-standard orphan statuses.
+    expect(result.phase).toBe('O1');
+    expect(result.matchedRule).toBe(5);
+    expect(result.matchedStatus).toBe('Work Not Started');
+  });
+
+  // Rules 6-11 — BldLed status-set rules
+  test('Rule 6: BldLed REVIEW_P4 → P4', () => {
+    const r = classifyLifecyclePhase(permit({ status: 'Under Review' }));
+    expect(r.phase).toBe('P4');
+    expect(r.matchedRule).toBe(6);
+    expect(r.matchedStatus).toBe('Under Review');
+  });
+
+  test('Rule 7: BldLed HOLD_P5 → P5', () => {
+    const r = classifyLifecyclePhase(permit({ status: 'Application On Hold' }));
+    expect(r.phase).toBe('P5');
+    expect(r.matchedRule).toBe(7);
+    expect(r.matchedStatus).toBe('Application On Hold');
+  });
+
+  test('Rule 8: BldLed READY_P6 → P6', () => {
+    const r = classifyLifecyclePhase(permit({ status: 'Ready for Issuance' }));
+    expect(r.phase).toBe('P6');
+    expect(r.matchedRule).toBe(8);
+    expect(r.matchedStatus).toBe('Ready for Issuance');
+  });
+
+  test('Rule 9: BldLed INTAKE_P3 → P3', () => {
+    const r = classifyLifecyclePhase(permit({ status: 'Application Received' }));
+    expect(r.phase).toBe('P3');
+    expect(r.matchedRule).toBe(9);
+    expect(r.matchedStatus).toBe('Application Received');
+  });
+
+  test('Rule 10: BldLed NOT_STARTED_P7D → P7d', () => {
+    const r = classifyLifecyclePhase(permit({ status: 'Work Not Started' }));
+    expect(r.phase).toBe('P7d');
+    expect(r.matchedRule).toBe(10);
+    expect(r.matchedStatus).toBe('Work Not Started');
+  });
+
+  test('Rule 11: BldLed REVISION_P8 → P8', () => {
+    const r = classifyLifecyclePhase(permit({ status: 'Revision Issued' }));
+    expect(r.phase).toBe('P8');
+    expect(r.matchedRule).toBe(11);
+    expect(r.matchedStatus).toBe('Revision Issued');
+  });
+
+  // Rule 12 — Permit Issued + time-bucket (no passed inspection)
+  test('Rule 12: Permit Issued + recent (≤30d) → P7a with matchedStatus=Permit Issued', () => {
+    const r = classifyLifecyclePhase(
+      permit({ status: 'Permit Issued', issued_date: daysAgo(15) }),
+    );
+    expect(r.phase).toBe('P7a');
+    expect(r.matchedRule).toBe(12);
+    expect(r.matchedStatus).toBe('Permit Issued');
+  });
+
+  test('Rule 12: Permit Issued + 60d → P7b', () => {
+    const r = classifyLifecyclePhase(
+      permit({ status: 'Permit Issued', issued_date: daysAgo(60) }),
+    );
+    expect(r.phase).toBe('P7b');
+    expect(r.matchedRule).toBe(12);
+    expect(r.matchedStatus).toBe('Permit Issued');
+  });
+
+  // Rule 13 — Permit Issued + passed + stage mapped (CRIT-1 contract: matchedStatus = raw, NOT 'Inspection')
+  test('Rule 13: Permit Issued + passed inspection + framing stage → P11 with matchedStatus=Permit Issued', () => {
+    const r = classifyLifecyclePhase(
+      permit({
+        status: 'Permit Issued',
+        has_passed_inspection: true,
+        latest_passed_stage: 'Framing',
+      }),
+    );
+    expect(r.phase).toBe('P11');
+    expect(r.matchedRule).toBe(13);
+    // CRIT-1 fold: matchedStatus stays as the RAW input 'Permit Issued',
+    // NOT a literal 'Inspection' override.
+    expect(r.matchedStatus).toBe('Permit Issued');
+  });
+
+  test('Rule 13: status=Inspection + stage mapped → P-stage with matchedStatus=Inspection', () => {
+    const r = classifyLifecyclePhase(
+      permit({ status: 'Inspection', latest_passed_stage: 'Framing' }),
+    );
+    expect(r.phase).toBe('P11');
+    expect(r.matchedRule).toBe(13);
+    expect(r.matchedStatus).toBe('Inspection');
+  });
+
+  // Rule 14 — passed inspection but stage unmapped → P17 fallback
+  test('Rule 14: Permit Issued + passed but stage unmapped → P17 fallback', () => {
+    const r = classifyLifecyclePhase(
+      permit({
+        status: 'Permit Issued',
+        has_passed_inspection: true,
+        latest_passed_stage: 'Bizarre Unknown Stage',
+      }),
+    );
+    expect(r.phase).toBe('P17');
+    expect(r.matchedRule).toBe(14);
+    expect(r.matchedStatus).toBe('Permit Issued');
+  });
+
+  test('Rule 14: INSPECTION_PIPELINE_P18 status → P18', () => {
+    const r = classifyLifecyclePhase(permit({ status: 'Forward to Inspector' }));
+    expect(r.phase).toBe('P18');
+    expect(r.matchedRule).toBe(14);
+    expect(r.matchedStatus).toBe('Forward to Inspector');
+  });
+
+  // Rule 15 — catchall (Gemini CRIT fold: matchedStatus = raw, NOT null)
+  test('Rule 15: unknown status returns matchedStatus=raw status (NOT null), unmappedStatus=true', () => {
+    const r = classifyLifecyclePhase(permit({ status: 'Notice Sent' }));
+    // 'Notice Sent' is §2.5.a row 13 — documented unmapped status.
+    expect(r.phase).toBe(null);
+    expect(r.matchedRule).toBe(15);
+    // CRIT fold: NOT null — ledger captures the transition INTO unmapped state.
+    expect(r.matchedStatus).toBe('Notice Sent');
+    expect(r.unmappedStatus).toBe(true);
+  });
+
+  test('Rule 15: completely novel status surfaces via unmappedStatus', () => {
+    const r = classifyLifecyclePhase(permit({ status: 'Future Novel Status' }));
+    expect(r.phase).toBe(null);
+    expect(r.matchedRule).toBe(15);
+    expect(r.matchedStatus).toBe('Future Novel Status');
+    expect(r.unmappedStatus).toBe(true);
+  });
+
+  // matchedStatus contract — known status, NOT unmapped
+  test('matchedStatus = raw normalized input across every set', () => {
+    const cases: Array<[string, number]> = [
+      ['Cancelled', 2],
+      ['Closed', 3],
+      ['Pending Closed', 4],
+      ['Under Review', 6],
+      ['Response Received', 7],
+      ['Issuance Pending', 8],
+      ['Plan Review Complete', 9], // §2.5.a row 10 — CODE DRIFT (P3 per current code)
+      ['Not Started', 10],          // §2.5.a row 6 — CODE DRIFT (P7d per current code)
+      ['Revised', 11],
+    ];
+    for (const [status, expectedRule] of cases) {
+      const r = classifyLifecyclePhase(permit({ status }));
+      expect(r.matchedStatus).toBe(status);
+      expect(r.matchedRule).toBe(expectedRule);
+      expect(r.unmappedStatus).toBe(false);
+    }
+  });
+
+  // matchedRule range — every value is 0..15
+  test('matchedRule is a SMALLINT in 0..15 range for all classifier outputs', () => {
+    const statuses = [
+      null, '', 'Cancelled', 'Closed', 'Pending Closed', 'Under Review',
+      'Application On Hold', 'Ready for Issuance', 'Application Received',
+      'Work Not Started', 'Revised', 'Permit Issued', 'Inspection',
+      'Forward to Inspector', 'Notice Sent',
+    ];
+    for (const status of statuses) {
+      const r = classifyLifecyclePhase(permit({ status }));
+      expect(r.matchedRule).toBeGreaterThanOrEqual(0);
+      expect(r.matchedRule).toBeLessThanOrEqual(15);
+    }
+  });
+
+  // Backward-compat — existing {phase, stalled} destructure still works
+  test('backward-compat: {phase, stalled} destructure still works', () => {
+    const { phase, stalled } = classifyLifecyclePhase(permit({ status: 'Under Review' }));
+    expect(phase).toBe('P4');
+    expect(typeof stalled).toBe('boolean');
+  });
+});

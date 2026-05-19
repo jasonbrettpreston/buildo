@@ -397,42 +397,47 @@ const PERMIT_BATCH_SIZE = Math.floor((65535 - 1) / PERMIT_TRANSITION_COLS); // =
 const COA_BATCH_SIZE = 5000;
 // ─────────────────────────────────────────────────────────────────
 
-function buildPermitUpdateSQL(batchSize) {
-  const tuples = [];
-  for (let i = 0; i < batchSize; i++) {
-    const base = i * 4;
-    tuples.push(
-      `($${base + 1}::varchar, $${base + 2}::varchar, $${base + 3}::varchar, $${base + 4}::boolean)`,
-    );
-  }
-  // Phase 2 state machine: phase_started_at is stamped ONLY when
-  // lifecycle_phase actually changes (IS DISTINCT FROM), NOT when only
-  // lifecycle_stalled changes. This creates the immutable "start time"
-  // anchor required for countdown math. If only stalled changed, the
-  // existing phase_started_at is preserved.
-  //
-  // §14.2: RUN_AT ($runAtParam) is appended as the last parameter after all
-  // batch rows. Using a single captured DB timestamp prevents Midnight Cross
-  // drift where batches processed after 00:00 get a different date than
-  // earlier batches in the same run.
-  const runAtParam = batchSize * 4 + 1;
-  return `
-    UPDATE permits p
-       SET lifecycle_phase = v.phase,
-           lifecycle_stalled = v.stalled,
-           lifecycle_classified_at = $${runAtParam}::timestamptz,
-           phase_started_at = CASE
-             WHEN p.lifecycle_phase IS DISTINCT FROM v.phase
-             THEN $${runAtParam}::timestamptz
-             ELSE p.phase_started_at
-           END
-      FROM (VALUES ${tuples.join(', ')}) AS v(permit_num, revision_num, phase, stalled)
-     WHERE p.permit_num = v.permit_num
-       AND p.revision_num = v.revision_num
-       AND (p.lifecycle_phase IS DISTINCT FROM v.phase
-            OR p.lifecycle_stalled IS DISTINCT FROM v.stalled)
-  `;
-}
+// Phase I.1.1b — unnest array form (mirror COA_UPDATE_SQL pattern at line ~441).
+// 8 bind params constant regardless of batch size: 7 arrays + 1 RUN_AT, well below
+// the PG 65535 param limit. Replaces the prior positional VALUES tuples form
+// which would have ballooned to 8 cols × batchSize at moderate sizes.
+//
+// IMPORTANT (Independent IMPORTANT v1 fold): the `phase_started_at` CASE
+// expression must be preserved. CoA template has no equivalent — must be
+// carried over manually. Stamping fires ONLY on lifecycle_phase change, NOT
+// when only stalled changes — preserves the immutable phase-start anchor.
+const PERMIT_UPDATE_SQL = `
+  UPDATE permits p SET
+    lifecycle_phase           = upd.phase,
+    lifecycle_stalled         = upd.stalled,
+    matched_status            = upd.matched_status,
+    matched_rule              = upd.matched_rule,
+    unmapped_status           = upd.unmapped_status,
+    lifecycle_classified_at   = $8::timestamptz,
+    phase_started_at = CASE
+      WHEN p.lifecycle_phase IS DISTINCT FROM upd.phase
+      THEN $8::timestamptz
+      ELSE p.phase_started_at
+    END
+  FROM (
+    SELECT * FROM unnest(
+      $1::varchar[],     -- permit_nums
+      $2::varchar[],     -- revision_nums
+      $3::varchar[],     -- phases (nullable)
+      $4::boolean[],     -- stalleds
+      $5::text[],        -- matched_statuses (nullable for rule 0/1)
+      $6::smallint[],    -- matched_rules (0..15)
+      $7::boolean[]      -- unmapped_status flags
+    ) AS u(permit_num, revision_num, phase, stalled, matched_status, matched_rule, unmapped_status)
+  ) upd
+  WHERE p.permit_num = upd.permit_num
+    AND p.revision_num = upd.revision_num
+    AND (p.lifecycle_phase     IS DISTINCT FROM upd.phase
+      OR p.lifecycle_stalled   IS DISTINCT FROM upd.stalled
+      OR p.matched_status      IS DISTINCT FROM upd.matched_status
+      OR p.matched_rule        IS DISTINCT FROM upd.matched_rule
+      OR p.unmapped_status     IS DISTINCT FROM upd.unmapped_status)
+`;
 
 // Phase E.2 — unnest array-param form. 12 array params + 1 RUN_AT = 13 bind params
 // regardless of batch size. Writes 11 columns + lifecycle_classified_at per row.
@@ -529,12 +534,18 @@ function buildTop20WithOther(map) {
   return result;
 }
 
-function flattenPermitBatch(rows) {
-  const out = [];
-  for (const r of rows) {
-    out.push(r.permit_num, r.revision_num, r.phase, r.stalled);
-  }
-  return out;
+// Phase I.1.1b — build 7 unnest array params from permitBatch rows (one array per column).
+// Mirrors buildCoaUpdateArrays at line 547. Used by PERMIT_UPDATE_SQL.
+function buildPermitUpdateArrays(rows) {
+  return [
+    rows.map((r) => r.permit_num),
+    rows.map((r) => r.revision_num),
+    rows.map((r) => r.phase),
+    rows.map((r) => r.stalled),
+    rows.map((r) => r.matched_status),
+    rows.map((r) => r.matched_rule),
+    rows.map((r) => r.unmapped_status),
+  ];
 }
 
 // Phase E.2 — build 12 unnest array params from coaBatch rows (one array per column).
@@ -594,6 +605,32 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // source and TZ session, preventing Midnight Cross drift where batches
   // processed across midnight get different dates.
   const RUN_AT = await pipeline.getDbTimestamp(pool);
+
+  // Phase I.1.1b — first-deploy grace flag (Observability MED fold, mirror
+  // F.1 coaFirstDeployGrace pattern at compute-trade-forecasts.js:261-272).
+  // Counts prior chain runs older than 7 days. TRUE during first 7 days
+  // post-extension-deploy. Used to soften `permit_unmapped_status_count`
+  // WARN→INFO during the grace window — operators understand the spike is
+  // expected and not actionable.
+  //
+  // DeepSeek DIFF-CRIT fold: the script is invoked from BOTH chains
+  // (`permits:classify-lifecycle-phase` AND `coa:classify-lifecycle-phase`
+  // — `run-chain.js:321` adds the `${chainId}:` prefix) AND standalone
+  // (`classify-lifecycle-phase`). The IN clause covers all three invocation
+  // paths so the grace clock advances regardless of which chain calls it.
+  //
+  // The `records_meta->>'permit_classifier_extended' = 'true'` filter scopes
+  // the grace window to runs that include I.1.1b's new audit rows; prior
+  // I.1.1a runs (without the extension) don't count toward the 7-day clock.
+  const { rows: graceRows } = await pool.query(
+    `SELECT COUNT(*) FILTER (WHERE started_at < NOW() - INTERVAL '7 days')::int AS prior_runs_7d
+       FROM pipeline_runs
+      WHERE pipeline IN ('permits:classify-lifecycle-phase',
+                         'coa:classify-lifecycle-phase',
+                         'classify-lifecycle-phase')
+        AND records_meta->>'permit_classifier_extended' = 'true'`,
+  );
+  const permitFirstDeployGrace = (graceRows[0]?.prior_runs_7d ?? 0) === 0;
 
   // ═══════════════════════════════════════════════════════════
   // Load Control Panel (WF3 2026-04-13)
@@ -819,6 +856,22 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   let transitionsLogged = 0;
   let permitBatchIndex = 0;
 
+  // Phase I.1.1b — permit-side audit accumulators (mirror CoA-side
+  // unmappedStatusCount + distributions at line ~1105-1116). Tracked at script
+  // scope so flushPermitBatch can update them per batch.
+  let permitUnmappedStatusCount = 0;       // rule 15 fires
+  let permitCodeDriftCount = 0;            // Spec 84 §2.5.a rows 6/7/10 visibility
+  const permitRuleDistribution = new Map();      // rule N → count
+  const permitMatchedStatusCounts = new Map();   // matched_status → count
+
+  // Phase I.1.1b — code-drift status set (Spec 84 §2.5.a rows 6/7/10).
+  // INFO-only counter; surfacing for operator visibility, NOT a CQA gate.
+  const PERMIT_CODE_DRIFT_STATUSES = new Set([
+    'Not Started',           // §2.5.a row 6 — city says pre-review, code says P7d post-issuance
+    'Not Started - Express', // §2.5.a row 7 — same as row 6
+    'Plan Review Complete',  // §2.5.a row 10 — city says end-of-Phase-2, code says INTAKE_P3
+  ]);
+
   // Per-batch flush — called from the streaming loop below and again for
   // the remainder. Closes over pool, RUN_AT, and the counters above.
   //
@@ -838,10 +891,8 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     if (batch.length === 0) return;
     permitBatchIndex++;
 
-    const sql = buildPermitUpdateSQL(batch.length);
-    // RUN_AT appended as last param — matches $${batchSize*4+1}::timestamptz
-    // in the SQL returned by buildPermitUpdateSQL.
-    const params = [...flattenPermitBatch(batch), RUN_AT];
+    // Phase I.1.1b — unnest array form. 7 arrays + RUN_AT = 8 bind params constant.
+    const params = [...buildPermitUpdateArrays(batch), RUN_AT];
     const batchPnums = batch.map((r) => r.permit_num);
     const batchRnums = batch.map((r) => r.revision_num);
 
@@ -856,9 +907,27 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       return true;
     });
 
+    // Phase I.1.1b — accumulate audit distributions BEFORE the transaction.
+    // (The UPDATE rowCount only reflects rows that changed; the distributions
+    // need every classified row regardless of IS DISTINCT FROM result.)
+    for (const r of batch) {
+      if (r.unmapped_status) permitUnmappedStatusCount += 1;
+      if (r.matched_status != null && PERMIT_CODE_DRIFT_STATUSES.has(r.matched_status)) {
+        permitCodeDriftCount += 1;
+      }
+      const ruleKey = `rule_${r.matched_rule}`;
+      permitRuleDistribution.set(ruleKey, (permitRuleDistribution.get(ruleKey) ?? 0) + 1);
+      if (r.matched_status != null) {
+        permitMatchedStatusCounts.set(
+          r.matched_status,
+          (permitMatchedStatusCounts.get(r.matched_status) ?? 0) + 1,
+        );
+      }
+    }
+
     await pipeline.withTransaction(pool, async (client) => {
-      // (a) Phase/stalled UPDATE + conditional phase_started_at stamp.
-      const result = await client.query(sql, params);
+      // (a) Phase/stalled/matched_* UPDATE + conditional phase_started_at stamp.
+      const result = await client.query(PERMIT_UPDATE_SQL, params);
       permitsUpdated += result.rowCount || 0;
 
       // (b) Log phase transitions to permit_phase_transitions.
@@ -997,6 +1066,13 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     // Phase I.1 dirty SELECT extension (mig 155 enabled permits.matched_status):
     // matched_status AS old_matched_status — for ledger from_status diff comparison
     // lifecycle_seq AS old_lifecycle_seq — for ledger from_seq population
+    //
+    // Phase I.1.1b CRIT-2 fold (Independent + Observability 92-95% convergence):
+    // Added `OR matched_rule IS NULL` to ensure existing classified permits
+    // (lifecycle_classified_at populated + last_seen_at not advanced) ALSO get
+    // matchedStatus/matchedRule populated on the first run after I.1.1b ships.
+    // Mirror of CoA-side line ~1263 predicate. Without this clause, the matched_*
+    // columns would stay NULL forever on already-classified permits.
     `SELECT permit_num, revision_num, status, enriched_status, issued_date, last_seen_at,
             lifecycle_phase AS old_phase, lifecycle_stalled AS old_stalled,
             matched_status AS old_matched_status,
@@ -1004,7 +1080,8 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
             permit_type, neighbourhood_id
        FROM permits
       WHERE lifecycle_classified_at IS NULL
-         OR last_seen_at > lifecycle_classified_at`,
+         OR last_seen_at > lifecycle_classified_at
+         OR matched_rule IS NULL`,
   )) {
     dirtyPermitsCount++;
 
@@ -1036,26 +1113,23 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       revision_num: row.revision_num,
       phase: result.phase,
       stalled: result.stalled,
-      // Phase 2 state machine: carry the old phase + context for
-      // transition logging. old_phase is the value BEFORE this run's
-      // classification. If old_phase !== phase, we log a transition.
+      // Phase 2 state machine: carry old phase for transition logging.
       old_phase: row.old_phase,
-      old_stalled: row.old_stalled, // for stall-change push dispatch
+      old_stalled: row.old_stalled,
       permit_type: row.permit_type,
       neighbourhood_id: row.neighbourhood_id,
-      // Phase I.1: carry matched_status + lifecycle_seq through to the ledger
-      // write. The permit-side `classifyLifecyclePhase` function does NOT yet
-      // produce matched_status (only `{phase, stalled}`); extending it requires
-      // a Spec 84 substrate amendment (deferred to Phase I.1.1 or similar).
-      // Until that lands, `matched_status` is undefined for permit-side rows
-      // and the ledger filter `r.matched_status != null` excludes them all —
-      // permit-side classifier ledger writes degrade gracefully to zero rows.
-      // (load-permits.js still captures raw CKAN status changes, so the
-      // permit-side stream isn't blind — derived insights from the classifier
-      // are simply not yet captured in the ledger.)
-      matched_status: undefined,           // TODO Phase I.1.1: result.matchedStatus when classifier extended
+      // Phase I.1.1b — wire the extended classifier result (Spec 84 §3.7).
+      // matchedStatus is the raw normalized input status (or null for rule 0/1).
+      // matchedRule is 0..15 per the 18-rule precedence table.
+      // unmappedStatus is true only when status was non-null but matched no
+      // known set (rule 15 catchall).
+      matched_status: result.matchedStatus,
+      matched_rule: result.matchedRule,
+      unmapped_status: result.unmappedStatus,
       old_matched_status: row.old_matched_status,
-      lifecycle_seq: undefined,            // TODO Phase I.1.1: result.lifecycleSeq when classifier extended
+      // lifecycle_seq is permit-side dormant (not derived by classifyLifecyclePhase
+      // — the universal stream catalog drives this on CoA side only).
+      lifecycle_seq: null,
       old_lifecycle_seq: row.old_lifecycle_seq,
     });
 
@@ -1508,10 +1582,57 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
   // Phase E.2: 7 new CoA-side metrics (4 thresholded scalars + 2 INFO + 1 split-from-existing).
   // Spec 48 observer reads `audit_table.rows` for automated WARN/FAIL via extractIssues().
   // The 3 distributions live in records_meta only (manual operator inspection via SQL).
+  // Phase I.1.1b — permit-side unmapped status WARN (mirror CoA absolute
+  // threshold pattern at line ~1580, Observability HIGH 3 fold). During the
+  // 7-day grace window the WARN is softened to INFO so first-deploy spike
+  // doesn't dominate operator triage. Steady-state: 'Notice Sent' (§2.5.a
+  // row 13) is the only known unmapped status — count of 1 = PASS expected.
+  const permitUnmappedStatus = permitFirstDeployGrace
+    ? 'INFO'
+    : computeWarnableAuditStatus(permitUnmappedStatusCount, { passAt: 1, warnAt: 3 });
+
   const auditRows = [
     // Existing permit-side rows (unchanged)
     { metric: 'permits_dirty', value: dirtyPermitsCount, threshold: null, status: 'INFO' },
     { metric: 'permits_updated', value: permitsUpdated, threshold: null, status: 'INFO' },
+    // Phase I.1.1b — permit-side matched-status outputs (Spec 84 §3.7).
+    {
+      metric: 'permit_unmapped_status_count',
+      value: permitUnmappedStatusCount,
+      threshold: permitFirstDeployGrace
+        ? 'INFO during first-deploy grace (7d)'
+        : '<=3 WARN, <=1 PASS',
+      status: permitUnmappedStatus,
+    },
+    {
+      // Operator visibility for Spec 84 §2.5.a CODE DRIFT rows (6/7/10).
+      // INFO-only — drift correction is a separate WF3, not a CQA gate.
+      metric: 'permit_code_drift_count',
+      value: permitCodeDriftCount,
+      threshold: 'INFO — Spec 84 §2.5.a documented drift',
+      status: 'INFO',
+    },
+    {
+      // Top-5 matchedRule hits (DIFF-stage Independent IMPORTANT fold).
+      // Surfaces rule-by-rule distribution at-a-glance for the admin dashboard
+      // without requiring an operator to query records_meta directly. The full
+      // 16-rule distribution lives in records_meta.permit_rule_distribution.
+      metric: 'permit_rule_distribution_top5',
+      value: Object.fromEntries(
+        [...permitRuleDistribution.entries()]
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 5),
+      ),
+      threshold: null,
+      status: 'INFO',
+    },
+    {
+      // First-deploy grace visibility (1=active, 0=expired).
+      metric: 'permit_first_deploy_grace',
+      value: permitFirstDeployGrace ? 1 : 0,
+      threshold: null,
+      status: 'INFO',
+    },
     // CoA-side existing (renamed: coa_phase_changes was misleading — counts ANY column change)
     { metric: 'coa_evaluated', value: dirtyCoAsCount, threshold: null, status: 'INFO' },
     { metric: 'coa_rows_updated', value: coasUpdated, threshold: null, status: 'INFO' },
@@ -1612,6 +1733,14 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       // audit_table.rows for automated WARN/FAIL; distributions land in
       // pipeline_runs.records_meta but are NOT passed to DeepSeek narrative
       // until Spec 48 Improvement D ships.
+      // Phase I.1.1b — emit_meta sentinel. Drives the permitFirstDeployGrace
+      // startup query (counts prior runs that included the matched_status
+      // extension). Once 7 days of runs land, grace expires automatically.
+      permit_classifier_extended: 'true',
+      // Phase I.1.1b — permit-side distributions (Observability HIGH 4 fold).
+      // Mirror CoA-side coa_rule_distribution + coa_matched_status_top20.
+      permit_rule_distribution: Object.fromEntries(permitRuleDistribution),
+      permit_matched_status_top20: buildTop20WithOther(permitMatchedStatusCounts),
       coa_rule_distribution: Object.fromEntries(coaRuleDistribution),
       coa_phase_distribution_live: Object.fromEntries(coaPhaseDistributionLive),
       coa_matched_status_top20: buildTop20WithOther(coaMatchedStatusCounts),
@@ -1659,7 +1788,11 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       universal_stream_catalog: ['seq', 'lifecycle_group', 'lifecycle_block', 'lifecycle_stage', 'phase', 'bid_value', 'source', 'status'],
     },
     {
-      permits: ['lifecycle_phase', 'lifecycle_stalled', 'lifecycle_classified_at', 'phase_started_at'],
+      permits: [
+        'lifecycle_phase', 'lifecycle_stalled', 'lifecycle_classified_at', 'phase_started_at',
+        // Phase I.1.1b — matched_* writes (mig 155 columns; populated for first time).
+        'matched_status', 'matched_rule', 'unmapped_status',
+      ],
       permit_phase_transitions: ['permit_num', 'revision_num', 'from_phase', 'to_phase', 'transitioned_at', 'permit_type', 'neighbourhood_id'],
       // Phase E.2: extended write list (mig 146 columns + granular Universal Stream)
       coa_applications: [

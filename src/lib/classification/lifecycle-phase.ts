@@ -64,6 +64,13 @@ interface PermitClassifierInput {
 interface PermitClassifierResult {
   phase: string | null;
   stalled: boolean;
+  /** Phase I.1.1b (Spec 84 §3.7): raw normalized input status that the classifier matched.
+   * ALWAYS the raw normalized input — never a literal override. Null only for rule 0 and rule 1. */
+  matchedStatus: string | null;
+  /** Phase I.1.1b: rule number that fired (0..15 per Spec 84 §3.7 18-rule table; 0 = defensive sentinel). */
+  matchedRule: number;
+  /** Phase I.1.1b: input.status was non-null but matched no known status set (rule 15 catchall). */
+  unmappedStatus: boolean;
 }
 
 interface CoaClassifierInput {
@@ -668,46 +675,136 @@ function computeStalled(input: PermitClassifierInput): boolean {
 // ─────────────────────────────────────────────────────────────────
 
 /**
- * Classify a single permit row into a lifecycle phase + stalled modifier.
- * Pure function — no DB, no throws. Deterministic.
+ * Phase I.1.1b — finalize helper for the permit classifier.
+ *
+ * Contract (Spec 84 §3.7): every exit of classifyLifecyclePhase MUST set
+ * matchedStatus to either `null` (rules 0 and 1 only) or a string. Runtime
+ * assertion catches accidental `undefined` returns introduced by future
+ * refactors — converts a silent ledger-suppression bug into a loud throw.
+ */
+function finalizePermit(args: {
+  phase: string | null;
+  stalled: boolean;
+  matchedStatus: string | null;
+  matchedRule: number;
+  unmappedStatus: boolean;
+}): PermitClassifierResult {
+  const { phase, stalled, matchedStatus, matchedRule, unmappedStatus } = args;
+  if (matchedStatus === undefined) {
+    throw new Error(
+      `[classifyLifecyclePhase] BUG: matchedStatus=undefined at rule ${matchedRule}`,
+    );
+  }
+  return { phase, stalled, matchedStatus, matchedRule, unmappedStatus };
+}
+
+// Phase I.1.1b: union of every known permit status set. Used (in the JS twin)
+// by tests that need to enumerate known statuses. The TS classifier's catchall
+// detection lives implicitly in the rule cascade — if no specific rule fires,
+// rule 15 runs. Exported for symmetry with the JS twin's module exports.
+export const ALL_KNOWN_PERMIT_STATUSES = new Set<string>([
+  ...DEAD_STATUS_SET,
+  ...TERMINAL_P20_SET,
+  ...WINDDOWN_P19_SET,
+  ...INTAKE_P3_SET,
+  ...REVIEW_P4_SET,
+  ...HOLD_P5_SET,
+  ...READY_P6_SET,
+  ...NOT_STARTED_P7D_SET,
+  ...REVISION_P8_SET,
+  ...INSPECTION_PIPELINE_P18_SET,
+  'Permit Issued',
+  'Inspection',
+]);
+
+/**
+ * Classify a single permit row into a lifecycle phase + stalled modifier
+ * + Phase I.1.1b matched-status outputs.
+ *
+ * Pure function — no DB, no throws (except the finalizePermit runtime
+ * assertion guarding the matchedStatus=undefined regression). Deterministic.
+ *
+ * Phase I.1.1b extends the return shape to include matchedStatus (raw
+ * normalized input status — Spec 84 §3.7 contract), matchedRule (0..15
+ * per the 18-rule precedence table), and unmappedStatus (rule 15 catchall
+ * flag). Existing destructure `{phase, stalled}` continues to work.
+ *
+ * Precedence note: DEAD status takes precedence over orphan classification.
+ * A permit that is both is_orphan AND has a DEAD status returns phase=null
+ * via rule 2, NOT an O-phase. Terminal status is more authoritative than
+ * the orphan-vs-BldLed distinction.
  */
 export function classifyLifecyclePhase(
   input: PermitClassifierInput,
 ): PermitClassifierResult {
+  // Rule 0 — defensive null/non-object input guard (mirrors CoA rule 0).
+  if (typeof input !== 'object' || input === null) {
+    return finalizePermit({
+      phase: null,
+      stalled: false,
+      matchedStatus: null,
+      matchedRule: 0,
+      unmappedStatus: false,
+    });
+  }
+
   const status = normalizeStatus(input.status);
 
-  // Step 0: null / empty status → always unclassified. These rows are
-  // explicitly excluded from the CQA unclassified-count gate in
-  // classify-lifecycle-phase.js, so we must not assign O1 via the
-  // orphan fallback — doing so would diverge from the SQL reproducer
-  // and contradict the spec's "status IS NULL" carve-out.
+  // Rule 1 — null / empty status → always unclassified. Excluded from
+  // the CQA unclassified-count gate in classify-lifecycle-phase.js.
   if (status == null) {
-    return { phase: null, stalled: false };
+    return finalizePermit({
+      phase: null,
+      stalled: false,
+      matchedStatus: null,
+      matchedRule: 1,
+      unmappedStatus: false,
+    });
   }
 
-  // Step 1: dead states (filter from feed)
+  // Rule 2 — dead states. DEAD takes precedence over orphan: a permit
+  // that is both is_orphan AND DEAD returns rule 2 (terminal authority).
   if (DEAD_STATUS_SET.has(status)) {
-    return { phase: null, stalled: false };
+    return finalizePermit({
+      phase: null,
+      stalled: false,
+      matchedStatus: status,
+      matchedRule: 2,
+      unmappedStatus: false,
+    });
   }
 
-  // Step 2: terminal — P20 (closed) and P19 (wind-down)
-  // Applied to both BLD-led and orphan paths before the orphan branch.
+  // Rule 3 — terminal P20 (closed).
   if (TERMINAL_P20_SET.has(status)) {
-    return { phase: 'P20', stalled: false };
-  }
-  if (WINDDOWN_P19_SET.has(status)) {
-    return { phase: 'P19', stalled: false };
+    return finalizePermit({
+      phase: 'P20',
+      stalled: false,
+      matchedStatus: status,
+      matchedRule: 3,
+      unmappedStatus: false,
+    });
   }
 
-  // Stalled modifier computed once — used by both orphan and BLD-led branches
+  // Rule 4 — wind-down P19.
+  if (WINDDOWN_P19_SET.has(status)) {
+    return finalizePermit({
+      phase: 'P19',
+      stalled: false,
+      matchedStatus: status,
+      matchedRule: 4,
+      unmappedStatus: false,
+    });
+  }
+
+  // Stalled modifier computed once — used by both orphan and BldLed branches.
   const stalled = computeStalled(input);
 
-  // Step 3: orphan branch (simplified 4-phase)
+  // Rule 5 (sub-paths 5a/5b/5c) — orphan branch.
   if (input.is_orphan) {
     return classifyOrphan(input, status, stalled);
   }
 
-  // Step 4: BLD-led phase assignment
+  // Rules 6-15 — BldLed branch.
   return classifyBldLed(input, status, stalled);
 }
 
@@ -720,7 +817,7 @@ function classifyOrphan(
   status: string | null,
   stalled: boolean,
 ): PermitClassifierResult {
-  // Active statuses — Permit Issued, Inspection, Revision Issued, Revised
+  // Rule 5a — active statuses (Permit Issued / Inspection / Revision Issued / Revised) → O2 or O3.
   if (
     status === 'Permit Issued' ||
     status === 'Inspection' ||
@@ -728,10 +825,6 @@ function classifyOrphan(
     status === 'Revised'
   ) {
     // O3 stalled check — long issue without any passed inspection.
-    // WF3 2026-04-23 B1-C2: threshold sourced from logic_variables
-    // (lifecycle_orphan_stall_days). `?? 180` preserves legacy behaviour
-    // for test callers that don't provide the full config context —
-    // the pipeline script always passes the DB-loaded value.
     if (
       input.issued_date != null &&
       !input.has_passed_inspection
@@ -739,13 +832,25 @@ function classifyOrphan(
       const daysSinceIssued = daysBetween(input.issued_date, input.now);
       const orphanStallDays = input.orphanStallDays ?? 180;
       if (daysSinceIssued > orphanStallDays) {
-        return { phase: 'O3', stalled };
+        return finalizePermit({
+          phase: 'O3',
+          stalled,
+          matchedStatus: status,
+          matchedRule: 5,
+          unmappedStatus: false,
+        });
       }
     }
-    return { phase: 'O2', stalled };
+    return finalizePermit({
+      phase: 'O2',
+      stalled,
+      matchedStatus: status,
+      matchedRule: 5,
+      unmappedStatus: false,
+    });
   }
 
-  // Applied bucket — all pre-issuance statuses collapse to O1
+  // Rule 5b — pre-issuance statuses (INTAKE / REVIEW / HOLD / READY) → O1.
   if (
     status != null &&
     (INTAKE_P3_SET.has(status) ||
@@ -753,12 +858,25 @@ function classifyOrphan(
       HOLD_P5_SET.has(status) ||
       READY_P6_SET.has(status))
   ) {
-    return { phase: 'O1', stalled };
+    return finalizePermit({
+      phase: 'O1',
+      stalled,
+      matchedStatus: status,
+      matchedRule: 5,
+      unmappedStatus: false,
+    });
   }
 
-  // Unknown orphan status — default to O1 (safer than null — orphan
-  // pools tend to have real but weird statuses we haven't mapped)
-  return { phase: 'O1', stalled };
+  // Rule 5c — orphan fallback. Any other status when is_orphan=true defaults to O1.
+  // matchedStatus preserves the raw input (e.g., 'Forward to Inspector' on an orphan)
+  // so the ledger lineage stays auditable. Independent CRIT 1 sub-path.
+  return finalizePermit({
+    phase: 'O1',
+    stalled,
+    matchedStatus: status,
+    matchedRule: 5,
+    unmappedStatus: false,
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -770,67 +888,108 @@ function classifyBldLed(
   status: string | null,
   stalled: boolean,
 ): PermitClassifierResult {
+  // Defensive: classifyBldLed is unreachable with status==null (caller handles
+  // rule 1). Keep the guard as belt-and-suspenders — returns rule 1 shape.
   if (status == null) {
-    return { phase: null, stalled: false };
+    return finalizePermit({
+      phase: null,
+      stalled: false,
+      matchedStatus: null,
+      matchedRule: 1,
+      unmappedStatus: false,
+    });
   }
 
-  // Pre-issuance phases (order matters — most specific first)
-  if (REVIEW_P4_SET.has(status)) return { phase: 'P4', stalled };
-  if (HOLD_P5_SET.has(status)) return { phase: 'P5', stalled };
-  if (READY_P6_SET.has(status)) return { phase: 'P6', stalled };
-  if (INTAKE_P3_SET.has(status)) return { phase: 'P3', stalled };
+  // Rule 6 — REVIEW_P4 (most specific first).
+  if (REVIEW_P4_SET.has(status)) {
+    return finalizePermit({ phase: 'P4', stalled, matchedStatus: status, matchedRule: 6, unmappedStatus: false });
+  }
+  // Rule 7 — HOLD_P5.
+  if (HOLD_P5_SET.has(status)) {
+    return finalizePermit({ phase: 'P5', stalled, matchedStatus: status, matchedRule: 7, unmappedStatus: false });
+  }
+  // Rule 8 — READY_P6.
+  if (READY_P6_SET.has(status)) {
+    return finalizePermit({ phase: 'P6', stalled, matchedStatus: status, matchedRule: 8, unmappedStatus: false });
+  }
+  // Rule 9 — INTAKE_P3 (CODE DRIFT §2.5.a rows 4/5/10 — out of I.1.1b scope).
+  if (INTAKE_P3_SET.has(status)) {
+    return finalizePermit({ phase: 'P3', stalled, matchedStatus: status, matchedRule: 9, unmappedStatus: false });
+  }
 
-  // P8 — Revision/active catch-all (includes Order Complied gap status)
-  if (REVISION_P8_SET.has(status)) return { phase: 'P8', stalled };
+  // Rule 11 — REVISION_P8 (includes Order Complied).
+  if (REVISION_P8_SET.has(status)) {
+    return finalizePermit({ phase: 'P8', stalled, matchedStatus: status, matchedRule: 11, unmappedStatus: false });
+  }
 
-  // P7d — Not started flagged statuses
-  if (NOT_STARTED_P7D_SET.has(status)) return { phase: 'P7d', stalled };
+  // Rule 10 — NOT_STARTED_P7D (CODE DRIFT §2.5.a rows 6/7 — out of I.1.1b scope).
+  if (NOT_STARTED_P7D_SET.has(status)) {
+    return finalizePermit({ phase: 'P7d', stalled, matchedStatus: status, matchedRule: 10, unmappedStatus: false });
+  }
 
-  // P7a/b/c — Permit Issued, time-bucketed, no passed inspection yet
+  // Rules 12/13 — Permit Issued: time-bucket (no passed inspection)
+  // OR stage-mapped P9-P17 (passed inspection). matchedStatus is the raw
+  // input 'Permit Issued' string (Spec 84 §3.7: raw status ALWAYS).
   if (status === 'Permit Issued') {
     if (input.has_passed_inspection) {
       if (input.latest_passed_stage != null) {
         const stageLower = String(input.latest_passed_stage).toLowerCase();
         const mapped = mapInspectionStageToPhase(stageLower);
-        if (mapped) return { phase: mapped, stalled };
+        if (mapped) {
+          // Rule 13 — Permit Issued + has_passed_inspection + stage maps → P9-P17.
+          return finalizePermit({ phase: mapped, stalled, matchedStatus: status, matchedRule: 13, unmappedStatus: false });
+        }
       }
-      // WF3 2026-04-23 B1-C3: an inspection passed but the stage either
-      // wasn't recorded (rollup race) or didn't map to P9-P16. Routing to
-      // P18 (Inspection Pipeline) is the wrong bucket — P18 represents
-      // "in pipeline, no stage passed yet". Since a stage HAS passed,
-      // the permit is effectively at Final Inspection (P17).
-      return { phase: 'P17', stalled };
+      // Rule 14 — Permit Issued + has_passed_inspection but stage unmapped/null → P17 fallback.
+      // (WF3 2026-04-23 B1-C3 rationale: a stage passed but didn't map, so the permit is at
+      // Final Inspection — not the P18 "no stage yet" pipeline catchall.)
+      return finalizePermit({ phase: 'P17', stalled, matchedStatus: status, matchedRule: 14, unmappedStatus: false });
     }
+    // Rule 12 — Permit Issued + no passed inspection → P7a/P7b/P7c time-bucket.
     if (input.issued_date == null) {
-      return { phase: 'P7c', stalled };
+      return finalizePermit({ phase: 'P7c', stalled, matchedStatus: status, matchedRule: 12, unmappedStatus: false });
     }
     const p7aMax = input.p7aMaxDays ?? 30;
     const p7bMax = input.p7bMaxDays ?? 90;
     const daysSinceIssued = daysBetween(input.issued_date, input.now);
-    if (daysSinceIssued <= p7aMax) return { phase: 'P7a', stalled };
-    if (daysSinceIssued <= p7bMax) return { phase: 'P7b', stalled };
-    // P7c covers the range above p7bMax — stalled flag disambiguates.
-    // Tests assert this behavior.
-    return { phase: 'P7c', stalled };
+    if (daysSinceIssued <= p7aMax) {
+      return finalizePermit({ phase: 'P7a', stalled, matchedStatus: status, matchedRule: 12, unmappedStatus: false });
+    }
+    if (daysSinceIssued <= p7bMax) {
+      return finalizePermit({ phase: 'P7b', stalled, matchedStatus: status, matchedRule: 12, unmappedStatus: false });
+    }
+    return finalizePermit({ phase: 'P7c', stalled, matchedStatus: status, matchedRule: 12, unmappedStatus: false });
   }
 
-  // P9-P17/P18 — Inspection status, sub-stage mapped
+  // Rule 13 (continued) — status='Inspection' with stage mapping. matchedStatus = 'Inspection' (raw input).
   if (status === 'Inspection') {
     if (input.latest_passed_stage == null) {
-      return { phase: 'P18', stalled };
+      // No stage yet → P18 (inspection pipeline). matchedStatus = 'Inspection' raw.
+      return finalizePermit({ phase: 'P18', stalled, matchedStatus: status, matchedRule: 14, unmappedStatus: false });
     }
     const stageLower = String(input.latest_passed_stage).toLowerCase();
     const mapped = mapInspectionStageToPhase(stageLower);
-    return { phase: mapped ?? 'P18', stalled };
+    if (mapped) {
+      return finalizePermit({ phase: mapped, stalled, matchedStatus: status, matchedRule: 13, unmappedStatus: false });
+    }
+    return finalizePermit({ phase: 'P18', stalled, matchedStatus: status, matchedRule: 14, unmappedStatus: false });
   }
 
-  // Gap statuses: Forward to Inspector, Rescheduled → P18 (inspection pipeline, no passed stage)
+  // Rule 14 — INSPECTION_PIPELINE_P18 (Forward to Inspector, Rescheduled) → P18.
   if (INSPECTION_PIPELINE_P18_SET.has(status)) {
-    return { phase: 'P18', stalled };
+    return finalizePermit({ phase: 'P18', stalled, matchedStatus: status, matchedRule: 14, unmappedStatus: false });
   }
 
-  // Unknown status — safest fallback is null (unclassified)
-  return { phase: null, stalled: false };
+  // Rule 15 — catchall: status is non-null but matched no set above.
+  // matchedStatus = the raw unmapped status (NOT null per Gemini CRIT fold) so
+  // the ledger captures transitions INTO unmapped states. unmappedStatus=true.
+  return finalizePermit({
+    phase: null,
+    stalled: false,
+    matchedStatus: status,
+    matchedRule: 15,
+    unmappedStatus: true,
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────
