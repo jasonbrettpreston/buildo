@@ -149,11 +149,15 @@ describe('scripts/classify-lifecycle-phase.js — pipeline shape', () => {
     expect(content).toMatch(/pipeline\.withTransaction\(/);
   });
 
-  it('uses IS DISTINCT FROM guards for permit UPDATE idempotency', () => {
-    expect(content).toMatch(/p\.lifecycle_phase IS DISTINCT FROM v\.phase/);
-    expect(content).toMatch(
-      /p\.lifecycle_stalled IS DISTINCT FROM v\.stalled/,
-    );
+  it('uses IS DISTINCT FROM guards for permit UPDATE idempotency (Phase I.1.1b unnest form, alias upd)', () => {
+    // Phase I.1.1b: positional VALUES-form alias `v` replaced with unnest alias `upd`.
+    // IS DISTINCT FROM extended to cover the 3 new Phase I.1.1b columns
+    // (matched_status, matched_rule, unmapped_status) for full idempotency.
+    expect(content).toMatch(/p\.lifecycle_phase\s+IS DISTINCT FROM upd\.phase/);
+    expect(content).toMatch(/p\.lifecycle_stalled\s+IS DISTINCT FROM upd\.stalled/);
+    expect(content).toMatch(/p\.matched_status\s+IS DISTINCT FROM upd\.matched_status/);
+    expect(content).toMatch(/p\.matched_rule\s+IS DISTINCT FROM upd\.matched_rule/);
+    expect(content).toMatch(/p\.unmapped_status\s+IS DISTINCT FROM upd\.unmapped_status/);
   });
 
   it('uses IS DISTINCT FROM guard for CoA UPDATE idempotency (E.2 unnest form, alias upd)', () => {
@@ -317,13 +321,17 @@ describe('scripts/classify-lifecycle-phase.js — concurrency guard (advisory lo
     expect(content).toMatch(/pipeline\.withTransaction\(pool/);
   });
 
-  it('runs phase UPDATE and classified_at stamp in the same transaction per batch', () => {
-    // Phase UPDATE + stamp UPDATE must be atomic per batch.
-    // §14.2: stamp now uses $N::timestamptz (RUN_AT), not NOW().
-    const stampInsideTx =
-      /pipeline\.withTransaction\(pool,\s*async\s*\(client\)\s*=>\s*\{[\s\S]*?client\.query\(sql,\s*params\)[\s\S]*?client\.query\([\s\S]*?SET\s+lifecycle_classified_at\s*=\s*\$\d+::timestamptz[\s\S]*?\}\)/;
-    expect(content).toMatch(stampInsideTx);
-    // Must NOT call pool.query for the stamp (would be outside the transaction)
+  it('runs phase + matched_* UPDATE inside the per-batch transaction (Phase I.1.1b — single merged UPDATE)', () => {
+    // Phase I.1.1b: positional VALUES tuples → unnest array form. The previous
+    // implementation ran TWO sequential UPDATEs per batch (phase + stamp); the
+    // unnest refactor merges them into ONE statement that sets both lifecycle_*
+    // AND lifecycle_classified_at + phase_started_at atomically.
+    const mergedUpdateInsideTx =
+      /pipeline\.withTransaction\(pool,\s*async\s*\(client\)\s*=>\s*\{[\s\S]*?client\.query\(PERMIT_UPDATE_SQL,\s*params\)/;
+    expect(content).toMatch(mergedUpdateInsideTx);
+    // PERMIT_UPDATE_SQL itself sets lifecycle_classified_at via RUN_AT ($8).
+    expect(content).toMatch(/lifecycle_classified_at\s*=\s*\$8::timestamptz/);
+    // Must NOT call pool.query for the stamp (would be outside the transaction).
     expect(content).not.toMatch(
       /pool\.query\([\s\S]{0,300}?SET\s+lifecycle_classified_at\s*=\s*NOW\(\)/,
     );
@@ -363,15 +371,16 @@ describe('scripts/classify-lifecycle-phase.js — Phase 2 state machine', () => 
     expect(content).toMatch(/lifecycle_phase AS old_phase/);
   });
 
-  it('conditionally stamps phase_started_at only on actual phase changes', () => {
+  it('conditionally stamps phase_started_at only on actual phase changes (Phase I.1.1b unnest form)', () => {
     // The CASE ensures phase_started_at resets ONLY when lifecycle_phase
-    // changes, NOT when only lifecycle_stalled changes. This is the
-    // critical invariant for countdown math.
+    // changes, NOT when only lifecycle_stalled changes. Critical invariant
+    // for countdown math.
     //
-    // §14.2: THEN clause now uses $N::timestamptz (RUN_AT) instead of NOW(),
-    // preventing Midnight Cross drift on long first-run backfills.
+    // Phase I.1.1b: alias `v` → `upd` (unnest form). RUN_AT is $8 now (after
+    // 7 array params). CoA template does NOT have phase_started_at — must be
+    // preserved manually in permit-side refactor (Independent IMPORTANT fold).
     expect(content).toMatch(
-      /phase_started_at\s*=\s*CASE[\s\S]*?WHEN\s+p\.lifecycle_phase\s+IS DISTINCT FROM\s+v\.phase[\s\S]*?THEN\s+\$[\s\S]{0,40}::timestamptz[\s\S]*?ELSE\s+p\.phase_started_at/,
+      /phase_started_at\s*=\s*CASE[\s\S]*?WHEN\s+p\.lifecycle_phase\s+IS DISTINCT FROM\s+upd\.phase[\s\S]*?THEN\s+\$[\s\S]{0,40}::timestamptz[\s\S]*?ELSE\s+p\.phase_started_at/,
     );
     // Must NOT use NOW() in this CASE — would differ between first and last batch
     expect(content).not.toMatch(
@@ -699,5 +708,101 @@ describe('scripts/classify-lifecycle-phase.js — WF3 push dispatch hardening', 
     // and surfaces a summary via pipeline.log.warn.
     expect(classifySrc).toContain("t.status === 'error'");
     expect(classifySrc).toMatch(/per-ticket errors/);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════
+// Phase I.1.1b — permit classifier extension regression locks
+// (matchedStatus + matchedRule + unmappedStatus wiring)
+// ═════════════════════════════════════════════════════════════════
+describe('scripts/classify-lifecycle-phase.js — Phase I.1.1b matched-status extension', () => {
+  let content: string;
+  beforeAll(() => {
+    content = read('scripts/classify-lifecycle-phase.js');
+  });
+
+  it('dirty SELECT predicate includes `OR matched_rule IS NULL` (CRIT-2 backfill fold)', () => {
+    // Without this clause, existing classified permits (non-null
+    // lifecycle_classified_at + last_seen_at not advanced) would NEVER get
+    // matched_status populated on first I.1.1b run. Mirror of CoA-side predicate.
+    const dirtyPermitSelectRe =
+      /FROM permits[\s\S]{0,400}?WHERE lifecycle_classified_at IS NULL[\s\S]{0,200}?OR matched_rule IS NULL/;
+    expect(content).toMatch(dirtyPermitSelectRe);
+  });
+
+  it('PERMIT_UPDATE_SQL is defined as a constant unnest-array UPDATE (not built per-batch)', () => {
+    expect(content).toMatch(/const PERMIT_UPDATE_SQL\s*=\s*`/);
+    // 7 array params + RUN_AT = 8 bind params constant regardless of batch size.
+    // Verify the constant range exists (full window covers commented column docs).
+    expect(content).toMatch(/\$1::varchar\[\]/);
+    expect(content).toMatch(/\$7::boolean\[\]/);
+    expect(content).toMatch(/\$8::timestamptz/);
+  });
+
+  it('buildPermitUpdateArrays returns 7 arrays mirroring CoA pattern', () => {
+    expect(content).toMatch(/function buildPermitUpdateArrays/);
+    expect(content).toMatch(/rows\.map\(\(r\) => r\.matched_status\)/);
+    expect(content).toMatch(/rows\.map\(\(r\) => r\.matched_rule\)/);
+    expect(content).toMatch(/rows\.map\(\(r\) => r\.unmapped_status\)/);
+  });
+
+  it('permit batch wiring passes result.matchedStatus / matchedRule / unmappedStatus (TODO removed)', () => {
+    // The Phase I.1 TODO at line ~1056 (matched_status: undefined) MUST be gone.
+    expect(content).not.toMatch(/matched_status:\s*undefined/);
+    expect(content).toMatch(/matched_status:\s*result\.matchedStatus/);
+    expect(content).toMatch(/matched_rule:\s*result\.matchedRule/);
+    expect(content).toMatch(/unmapped_status:\s*result\.unmappedStatus/);
+  });
+
+  it('permitFirstDeployGrace startup query mirrors F.1 pattern (Observability MED fold)', () => {
+    expect(content).toMatch(/const permitFirstDeployGrace\s*=/);
+    expect(content).toMatch(/INTERVAL\s+'7 days'/);
+    expect(content).toMatch(/permit_classifier_extended/);
+  });
+
+  it('emits permit_unmapped_status_count audit row with absolute threshold (NOT percent)', () => {
+    expect(content).toMatch(/metric:\s*'permit_unmapped_status_count'/);
+    // Uses CoA-style absolute threshold via computeWarnableAuditStatus(passAt:1, warnAt:3).
+    // The threshold expression lives above the auditRows array (in permitUnmappedStatus).
+    expect(content).toMatch(
+      /computeWarnableAuditStatus\(permitUnmappedStatusCount[\s\S]{0,100}?passAt:\s*1[\s\S]{0,40}?warnAt:\s*3/,
+    );
+    // No percentage-based threshold — explicit absolute number.
+    expect(content).not.toMatch(/permit_unmapped_status_count[\s\S]{0,200}?dirtyPermitsCount\s*\*\s*0\.001/);
+  });
+
+  it('emits permit_code_drift_count INFO audit row (Spec 84 §2.5.a rows 6/7/10 visibility)', () => {
+    expect(content).toMatch(/metric:\s*'permit_code_drift_count'/);
+    expect(content).toMatch(/PERMIT_CODE_DRIFT_STATUSES/);
+    // The set lists the 3 documented drift statuses.
+    expect(content).toMatch(/'Not Started'/);
+    expect(content).toMatch(/'Not Started - Express'/);
+    expect(content).toMatch(/'Plan Review Complete'/);
+  });
+
+  it('emits permit_first_deploy_grace audit row (1=active, 0=expired)', () => {
+    expect(content).toMatch(/metric:\s*'permit_first_deploy_grace'/);
+  });
+
+  it('softens permit_unmapped_status to INFO during the grace window', () => {
+    expect(content).toMatch(
+      /permitFirstDeployGrace\s*\?\s*'INFO'\s*:\s*computeWarnableAuditStatus\(permitUnmappedStatusCount/,
+    );
+  });
+
+  it('records_meta carries permit_rule_distribution + permit_matched_status_top20', () => {
+    expect(content).toMatch(/permit_rule_distribution:\s*Object\.fromEntries\(permitRuleDistribution\)/);
+    expect(content).toMatch(/permit_matched_status_top20:\s*buildTop20WithOther\(permitMatchedStatusCounts\)/);
+  });
+
+  it('records_meta carries permit_classifier_extended sentinel (drives grace query)', () => {
+    expect(content).toMatch(/permit_classifier_extended:\s*'true'/);
+  });
+
+  it('emitMeta declares matched_status + matched_rule + unmapped_status as permits writes', () => {
+    // The permits write list is extended with the 3 new I.1.1b columns.
+    expect(content).toMatch(
+      /permits:\s*\[[\s\S]{0,400}?'matched_status'[\s\S]{0,40}?'matched_rule'[\s\S]{0,40}?'unmapped_status'/,
+    );
   });
 });

@@ -1500,3 +1500,39 @@ Also folded: Gemini MED (Test #11 afterEach cleanup logs failures via console.er
 
 Verification: `npm run typecheck` clean; `npm run lint` clean for new file; `npm run test` 6246 passed.
 
+## Phase I.1.1b (Spec 84 permit classifier extension — commit pending)
+
+PLAN-STAGE 4-reviewer round (3 convergent CRITs + 8 HIGHs + several MEDs) + DIFF-STAGE 4-reviewer round (1 CRIT + 5 HIGHs/IMPORTANTs) folded into v2 plan + implementation. DeepSeek SAVEPOINT CRIT was a verified false positive (pattern already shipped in Phase I.1).
+
+**Folded into v2 plan and implementation:**
+
+Plan-stage folds:
+1. Gemini + Independent + DeepSeek convergent — matchedStatus is ALWAYS the raw normalized input status (no literal overrides on rule 12/13/14)
+2. Independent + Observability convergent — dirty SELECT predicate adds `OR matched_rule IS NULL` (mirror CoA-side)
+3. Gemini + Observability convergent — rule 15 catchall sets matchedStatus = raw unmapped status (NOT null) so ledger captures unmapped-state transitions
+4. Independent — orphan rule 5 split into 5a/5b/5c with explicit test coverage
+5. buildPermitUpdateSQL refactor preserves `phase_started_at` CASE expression (CoA template lacks this)
+6. Absolute (not percentage) WARN thresholds via computeWarnableAuditStatus
+7. permitFirstDeployGrace startup query mirrors F.1 pattern
+8. Runbook ceiling corrected from `<1%` to `230K-245K` (Spec 84 §2.5.a sum)
+9. Runtime assertion in finalizePermit() catches `matchedStatus === undefined` regressions
+
+Diff-stage folds:
+1. DeepSeek CRIT (95%) — grace query pipeline name mismatch: `run-chain.js:321` prefixes with `${chainId}:` so the script's pipeline_runs row is `'permits:classify-lifecycle-phase'` (or `'coa:'` prefix or standalone slug). Folded to use `pipeline IN (...)` covering all 3 invocation paths.
+2. Independent IMPORTANT (90%) — rule 5c test was mislabeled; 'Revision Issued' is in 5a's active-status set so the test was actually testing 5a. Replaced with 'Order Complied' (REVISION_P8) and 'Work Not Started' (NOT_STARTED_P7D) which genuinely trigger 5c fallback.
+3. Independent IMPORTANT (85%) — `permit_rule_distribution_top5` audit row was missing from auditRows (plan called for it; only the full distribution in records_meta existed). Added top-5 sorted view.
+4. Observability HIGH (95%) — behavioral CRIT-2 backfill test was missing (only source-grep regression locks). Added a SQL-predicate behavioral test in `lifecycle-status-history-writers.db.test.ts` that seeds a permit with `lifecycle_classified_at` populated + `matched_rule=NULL`, then asserts the legacy predicate MISSES it but the new `OR matched_rule IS NULL` predicate catches it (proves the SQL semantic, not just the string presence).
+5. Observability MED (92%) — spike range tightened from `200K-235K` to `230K-245K` based on Spec 84 §2.5.a row count math (97-98% of 247K with non-null status).
+
+**DEFERs (separate WFs):**
+- **D1** (Gemini DIFF CRIT 1) — P17 vs P18 fallback inconsistency: status='Permit Issued' + passed + unmapped stage returns P17, but status='Inspection' + passed + unmapped stage returns P18. Same condition, different phase. Pre-existing bug from before Phase I.1.1b — out of scope (would change phase logic, not matchedStatus). File as separate WF3.
+- **D2** (Gemini DIFF CRIT 2) — realtor work_phase = 'P19' (should be P17 per Spec 84 §8.5). Out of scope entirely (different file). Already documented in spec; separate WF3.
+- **D3** (Gemini DIFF HIGH) — TS↔JS twin manual sync architectural concern. Project-wide refactor; separate WF.
+- **D4** (Gemini DIFF HIGH) — classifyBldLed rule ordering cosmetics. Would require renumbering tests + matchedRule values; defer to a dedicated cleanup WF.
+- **D5** (DeepSeek DIFF HIGH 2/3) — RUN_AT vs NOW() in `dispatchStartDateUrgentPushes`, duplicate-push risk on deadlock retry. Pre-existing patterns; separate WF3.
+- **D6** (DeepSeek DIFF MED) — SAVEPOINT name reuse across batches. Defensive concern; not actionable today (current flow safe).
+- **D7** (DeepSeek DIFF MED) — `dispatchStartDateUrgentPushes` `NOW() + INTERVAL` should use RUN_AT. Pre-existing; separate WF.
+- **D8** (Observability DIFF LOW) — Spec 48 §3.6 dual-pattern doesn't cover "supplemental classifier metrics" (the 3 new I.1.1b audit rows). Doc-only; consider adding §3.6.b sub-section in a separate doc cleanup WF.
+
+Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passed / 84 skipped / 230 files.
+

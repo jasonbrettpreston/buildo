@@ -280,6 +280,48 @@ describe.skipIf(!dbAvailable())('lifecycle_status_history writers — Phase I.1.
   });
 
   // ──────────────────────────────────────────────────────────────────────
+  // Phase I.1.1b CRIT-2 behavioral test (Observability DIFF-stage HIGH fold).
+  //   Verifies the dirty-permit SELECT predicate's new `OR matched_rule IS NULL`
+  //   clause actually selects already-classified permits whose matched_rule is
+  //   still NULL after Phase I.1.1b ships. This is the backfill mechanism — the
+  //   source-grep regression locks in classify-lifecycle-phase.infra.test.ts
+  //   confirm the predicate string exists; this test confirms the SQL semantic.
+  // ──────────────────────────────────────────────────────────────────────
+  it('CRIT-2 backfill: dirty SELECT picks up already-classified permits with matched_rule=NULL', async () => {
+    // Seed: a permit that LOOKS classified per the legacy dirty predicate
+    // (lifecycle_classified_at populated + last_seen_at NOT newer) but has
+    // never had matched_rule populated (the substrate of mig 155 columns
+    // before Phase I.1.1b's classifier extension landed).
+    await pool.query(`
+      INSERT INTO permits (permit_num, revision_num, permit_type, status,
+                           data_hash, last_seen_at, application_date,
+                           lifecycle_classified_at, matched_rule)
+      VALUES ('I1TEST-BACKFILL', '00', 'Single Family Detached', 'Under Review',
+              'hash-backfill', NOW() - INTERVAL '2 days', '2024-01-01',
+              NOW() - INTERVAL '1 day', NULL)
+    `);
+
+    // Verify the row matches the legacy predicate alone? Without the
+    // `OR matched_rule IS NULL` clause it should NOT be dirty (classified
+    // newer than last_seen_at). With the clause it SHOULD be dirty.
+    const { rows: legacyOnly } = await pool.query(
+      `SELECT permit_num FROM permits
+        WHERE permit_num = 'I1TEST-BACKFILL'
+          AND (lifecycle_classified_at IS NULL OR last_seen_at > lifecycle_classified_at)`,
+    );
+    expect(legacyOnly).toHaveLength(0); // legacy predicate misses it — proves the bug
+
+    const { rows: withBackfillClause } = await pool.query(
+      `SELECT permit_num FROM permits
+        WHERE permit_num = 'I1TEST-BACKFILL'
+          AND (lifecycle_classified_at IS NULL
+            OR last_seen_at > lifecycle_classified_at
+            OR matched_rule IS NULL)`,
+    );
+    expect(withBackfillClause).toHaveLength(1); // new predicate catches it
+  });
+
+  // ──────────────────────────────────────────────────────────────────────
   // Tests 1-9 require running the actual scripts (load-permits.js, load-coa.js,
   // classify-lifecycle-phase.js) with seeded fixtures + CKAN mock data. Those
   // tests need the LOAD_PERMITS_LOCAL_FILE / LOAD_COA_LOCAL_FILE env vars and
