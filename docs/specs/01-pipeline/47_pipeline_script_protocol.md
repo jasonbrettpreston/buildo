@@ -342,6 +342,15 @@ pipeline.run('script-slug', async (pool) => {
   ...
 ```
 
+**Phase I.1 canonical reference (ADDITIVE clarification, 2026-05-18):** Phase I.1's three
+ledger-writing scripts (`load-permits.js`, `load-coa.js`, `classify-lifecycle-phase.js`)
+capture `RUN_AT` as the first action **inside** the `withAdvisoryLock` callback (after lock
+acquisition), not before. This is the canonical placement for new scripts because (1) the
+lock-acquisition wait is bounded but non-zero, and (2) capturing inside the lock ensures
+`RUN_AT` reflects the moment the script actually owns the work, not the moment it queued
+for the lock. Existing scripts that capture `RUN_AT` before lock acquisition are
+**grandfathered** — this is not a retroactive mandate.
+
 ### 6.2 Streaming for large tables
 
 Any query expected to return more than 10K rows MUST use `pipeline.streamQuery`:
@@ -541,6 +550,66 @@ await client.query(`INSERT INTO tracked_projects (id, status) VALUES ${tuples} O
 
 **MANDATORY:** Inside `pipeline.withTransaction`, you MUST NOT use `Promise.all` concurrently on the same `client`. The `pg` driver will interleave packets and permanently crash the database connection. Await sequentially.
 
+### 7.8 Tier framework for SAVEPOINT usage _(NEW 2026-05-18 — Phase I.1 fold)_
+
+`SAVEPOINT` (nested transaction) lets a script attempt a secondary write inside the primary
+withTransaction block; on failure the SAVEPOINT is rolled back but the primary write is
+preserved. This is powerful — and dangerous if used on the wrong tables. The Tier framework
+below classifies every write target and dictates whether SAVEPOINT is permitted.
+
+| Tier | Description | SAVEPOINT | Tables (Phase I.1 inventory) |
+|------|-------------|-----------|------------------------------|
+| **Tier 1 — Core data** | Algorithm-critical primary outputs; downstream computation reads these as source-of-truth | **FORBIDDEN** | `permits`, `coa_applications`, `permit_trades`, `permit_parcels`, `lead_trades`, `lead_parcels`, `cost_estimates`, `trade_forecasts`, `tracked_projects`, `lead_views` |
+| **Tier 2 — Derived data** | Computed from Tier 1; read by other pipeline scripts for further computation | **FORBIDDEN by default** | `phase_calibration`, `lifecycle_transitions`, `permit_phase_transitions`, `lead_analytics`<sup>†</sup> |
+| **Tier 3 — Audit / ledger** | Consumed only by observers, audits, reports — never by computation | **PERMITTED** | `lifecycle_status_history`, `pipeline_runs`, `engine_health_snapshots` |
+
+<sup>†</sup> `lead_analytics` is borderline Tier 1/Tier 2. It is read by `compute-opportunity-scores.js` for score
+derivation but only as a LEFT JOIN competition-discount enrichment — opportunity scores degrade gracefully on
+NULL rather than producing a wrong answer. Classified Tier 2 because the read path tolerates missing data.
+SAVEPOINT is still FORBIDDEN by default per Tier 2 rule; promote to Tier 1 if a future consumer treats
+`lead_analytics` as source-of-truth for a decision rather than an optional enrichment.
+
+**Decision-rule procedure for unclassified tables:**
+
+1. If the table is an **algorithm-critical primary output** (a downstream script reads it to
+   make decisions) → **Tier 1**.
+2. If the table is **read by other pipeline scripts for computation** (but is itself derived
+   from Tier 1) → **Tier 2**.
+3. If the table is **consumed only by observers, audits, or reports** (no computation reads
+   it) → **Tier 3**.
+4. **Ambiguous → default to Tier 1.** SAVEPOINT-misclassifying a derived-data table as audit
+   silently corrupts downstream computation; the opposite mistake (over-classifying audit as
+   core) only forces tighter error handling.
+
+**SAVEPOINT pattern (canonical — Phase I.1's three writers):**
+
+```js
+await pipeline.withTransaction(client, async () => {
+  // Tier 1 primary write (no SAVEPOINT — must succeed or whole txn rolls back)
+  await client.query('INSERT INTO permits ... ON CONFLICT ...', [...]);
+
+  // Tier 3 audit-ledger write (SAVEPOINT — failure preserves primary write)
+  try {
+    await client.query('SAVEPOINT ledger_write');
+    await client.query(
+      `INSERT INTO lifecycle_status_history (lead_id, from_status, to_status, ...)
+       SELECT ...
+       ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
+       DO NOTHING`,
+      [...],
+    );
+    await client.query('RELEASE SAVEPOINT ledger_write');
+  } catch (err) {
+    await client.query('ROLLBACK TO SAVEPOINT ledger_write');
+    pipeline.log.warn('[script-slug] ledger write failed', { err: err.message });
+    ledgerErrorCount += 1;  // surfaced as audit_table.rows[].status='WARN'
+  }
+});
+```
+
+The `ledgerErrorCount` then flows into the `audit_table.rows` as a WARN-grade counter (see
+§11.2 Overflow Rule + §8.2 verdict cascade).
+
 ---
 
 ## 8. Observability Requirements
@@ -592,6 +661,28 @@ pipeline.emitSummary({
   },
 });
 ```
+
+**Row-derived verdict cascade (ADDITIVE clarification, 2026-05-18 — Phase I.1 fold):**
+
+The template above derives the verdict from `auditRows` directly:
+
+```js
+verdict: auditRows.some(r => r.status === 'FAIL') ? 'FAIL'
+       : auditRows.some(r => r.status === 'WARN') ? 'WARN'
+       : 'PASS'
+```
+
+Phase I.1 surfaced the failure mode this guards against: `load-permits.js` previously
+hardcoded `permitAuditHasFails ? 'FAIL' : 'PASS'` — a parallel boolean that **omitted WARN
+entirely**. When the new Tier 3 ledger writes started emitting `lifecycle_status_history_errors`
+WARN rows via SAVEPOINT (§7.8), the boolean verdict reported `'PASS'` because no `FAIL`-causing
+errors existed, silently hiding the WARN-grade signal from operators.
+
+The cascade above is the canonical defense: any script that emits `audit_table.rows` MUST
+derive the verdict from row statuses via the cascade, not from a parallel boolean that
+collapses the FAIL/WARN/PASS trichotomy. Existing scripts using boolean verdicts are
+**grandfathered**, but new scripts and any script that adds a WARN-emitting row to its
+audit_table MUST switch to the cascade as part of that change.
 
 **Minimum audit_table rows for each script type:**
 
@@ -1776,6 +1867,10 @@ in a generic counter. Common overflow cases:
 - **Failure/no-match counts** — e.g., unlinked permits in `link-neighbourhoods`. Goes in `audit_table` as `no_neighbourhood_match`. MUST NOT inflate `records_updated`.
 - **Secondary entity types** — e.g., CoA application phase changes in `classify-lifecycle-phase`. Goes in `audit_table` as `coa_phase_changes`. MUST NOT be summed into permits counters.
 - **Pre-run backlog sizes** — e.g., `before.to_geocode` in `geocode-permits`. Goes in `audit_table` as `backlog_remaining`. MUST NOT be used as `records_total`.
+- **Audit-ledger writes (Tier 3 — §7.8)** — e.g., `lifecycle_status_history_inserted` (INFO) +
+  `lifecycle_status_history_errors` (WARN) from Phase I.1's three writers. Goes in
+  `audit_table.rows` and **NEVER** summed into `records_total`/`records_new`/`records_updated`.
+  Ledger writes are observability artifacts, not primary entity mutations.
 
 ### §11.3 — Velocity Integrity
 
