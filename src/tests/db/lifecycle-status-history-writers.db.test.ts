@@ -253,20 +253,31 @@ describe.skipIf(!dbAvailable())('lifecycle_status_history writers — Phase I.1.
       await conn.query(`SET TIME ZONE 'America/New_York'`);
       await conn.query(
         `INSERT INTO lifecycle_status_history (lead_id, to_status, transitioned_at, detected_by)
-         VALUES ($1, 'Permit Issued', $2::timestamptz, 'load-permits.js')
-         ON CONFLICT ON CONSTRAINT uniq_lifecycle_status_history_natural_key DO NOTHING`,
+         VALUES ($1, 'Permit Issued', $2::timestamptz, 'load-permits.js')`,
         ['permit:I1TEST-TZDEDUP:00', sameUtcInstant],
       );
 
       // Second insert: session TZ = Asia/Tokyo (UTC+9). Same UTC instant.
-      // The UNIQUE INDEX should reject this as a duplicate after AT TIME ZONE 'UTC' truncation.
+      // mig 127:58 created `uniq_lifecycle_status_history_natural_key` as an
+      // EXPRESSION INDEX (date_trunc(...) AT TIME ZONE 'UTC'), not a named
+      // CONSTRAINT — so `ON CONFLICT ON CONSTRAINT <name>` errors with
+      // 42704. We exercise the index by letting the duplicate INSERT throw
+      // unique_violation (23505) and asserting the rejection — that proves
+      // the index does TZ-agnostic dedup, which is the actual contract.
       await conn.query(`SET TIME ZONE 'Asia/Tokyo'`);
-      await conn.query(
-        `INSERT INTO lifecycle_status_history (lead_id, to_status, transitioned_at, detected_by)
-         VALUES ($1, 'Permit Issued', $2::timestamptz, 'load-permits.js')
-         ON CONFLICT ON CONSTRAINT uniq_lifecycle_status_history_natural_key DO NOTHING`,
-        ['permit:I1TEST-TZDEDUP:00', sameUtcInstant],
-      );
+      let uniqueViolation = false;
+      try {
+        await conn.query(
+          `INSERT INTO lifecycle_status_history (lead_id, to_status, transitioned_at, detected_by)
+           VALUES ($1, 'Permit Issued', $2::timestamptz, 'load-permits.js')`,
+          ['permit:I1TEST-TZDEDUP:00', sameUtcInstant],
+        );
+      } catch (err) {
+        const code = (err as { code?: string }).code;
+        if (code === '23505') uniqueViolation = true;
+        else throw err;
+      }
+      expect(uniqueViolation).toBe(true);
 
       // Assert: only ONE row exists for this lead_id+to_status — TZ-agnostic dedup confirmed.
       const { rows } = await pool.query(

@@ -189,17 +189,25 @@ describe.skipIf(!dbAvailable())('migration 109 — Tier 2 FK hardening', () => {
       ).resolves.toBeDefined();
     });
 
-    it('rejects tracked_projects row referencing a non-existent permit', async () => {
+    // mig 153 (tracked_projects_relax_for_coa.sql:21) DROPped
+    // fk_tracked_projects_permits so CoA-only leads (which have no permits
+    // row) can be tracked. The chk_tracked_projects_lead_id_format CHECK
+    // still enforces lead_id format; tracked_projects.lead_id is the
+    // canonical anchor now. The two specs below codify the NEW behavior.
+
+    it('accepts tracked_projects row referencing a non-existent permit (mig 153 dropped fk_tracked_projects_permits for CoA support)', async () => {
       if (!pool) return;
       await expect(
         pool.query(
           `INSERT INTO tracked_projects (user_id, permit_num, revision_num, trade_slug)
            VALUES ('fk109-user', 'ORPHAN-109', '00', 'plumbing')`,
         ),
-      ).rejects.toThrow(/violates foreign key constraint/);
+      ).resolves.toBeDefined();
+      // cleanup
+      await pool.query(`DELETE FROM tracked_projects WHERE permit_num = 'ORPHAN-109'`);
     });
 
-    it('deletes tracked_projects rows when the parent permit is deleted', async () => {
+    it('does NOT cascade-delete tracked_projects when the parent permit is deleted (mig 153 dropped CASCADE)', async () => {
       if (!pool) return;
       await pool.query(
         `INSERT INTO permits (permit_num, revision_num)
@@ -216,7 +224,11 @@ describe.skipIf(!dbAvailable())('migration 109 — Tier 2 FK hardening', () => {
         `SELECT COUNT(*)::text AS c
          FROM tracked_projects WHERE permit_num = 'FK109-TP-CAS'`,
       );
-      expect(Number(after.rows[0]?.c)).toBe(0);
+      // FK is gone; tracked_projects row persists. CoA-side lifecycle owns cleanup.
+      expect(Number(after.rows[0]?.c)).toBe(1);
+
+      // cleanup
+      await pool.query(`DELETE FROM tracked_projects WHERE permit_num = 'FK109-TP-CAS'`);
     });
   });
 

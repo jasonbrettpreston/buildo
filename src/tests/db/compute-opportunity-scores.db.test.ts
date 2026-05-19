@@ -88,10 +88,12 @@ describe.skipIf(!dbAvailable())('compute-opportunity-scores — CoA end-to-end s
       ['F3TEST001', leadId],
     );
 
-    // Seed a CoA forecast: framing trade, bid window, urgency NULL (active).
+    // Seed a CoA forecast: framing trade, bid window, opportunity_score NULL (script will populate).
+    // urgency intentionally OMITTED so the DB-side column default applies — trade_forecasts.urgency
+    // is NOT NULL with a default; explicit NULL bypasses the default and fails 23502.
     await pool.query(
-      `INSERT INTO trade_forecasts (lead_id, trade_slug, target_window, urgency, opportunity_score)
-       VALUES ($1, 'framing', 'bid', NULL, NULL)`,
+      `INSERT INTO trade_forecasts (lead_id, trade_slug, target_window, opportunity_score)
+       VALUES ($1, 'framing', 'bid', NULL)`,
       [leadId],
     );
 
@@ -151,9 +153,10 @@ describe.skipIf(!dbAvailable())('compute-opportunity-scores — CoA end-to-end s
     );
 
     // Higher cost slice for distinct expected output (5 vs 4 if global fallback fires).
+    // urgency omitted — DB default applies (see T1 above for the 23502 rationale).
     await pool.query(
-      `INSERT INTO trade_forecasts (lead_id, trade_slug, target_window, urgency, opportunity_score)
-       VALUES ($1, 'framing', 'bid', NULL, NULL)`,
+      `INSERT INTO trade_forecasts (lead_id, trade_slug, target_window, opportunity_score)
+       VALUES ($1, 'framing', 'bid', NULL)`,
       [leadId],
     );
     await pool.query(
