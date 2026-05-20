@@ -98,9 +98,13 @@ describe.skipIf(!dbAvailable())('compute-opportunity-scores — CoA end-to-end s
     );
 
     // Seed cost_estimates (mig 145 lead_id PK): estimated_cost=200000, framing slice=30000.
+    // cost_source='permit' satisfies the mig 071 NOT NULL + CHECK constraint
+    // (mig 145 later extended CHECK to allow 'none' too). The value doesn't
+    // affect compute-opportunity-scores — that script reads estimated_cost
+    // and trade_contract_values, not cost_source.
     await pool.query(
-      `INSERT INTO cost_estimates (lead_id, estimated_cost, trade_contract_values, computed_at)
-       VALUES ($1, 200000, '{"framing": 30000}'::jsonb, NOW())`,
+      `INSERT INTO cost_estimates (lead_id, estimated_cost, trade_contract_values, computed_at, cost_source)
+       VALUES ($1, 200000, '{"framing": 30000}'::jsonb, NOW(), 'permit')`,
       [leadId],
     );
 
@@ -159,9 +163,10 @@ describe.skipIf(!dbAvailable())('compute-opportunity-scores — CoA end-to-end s
        VALUES ($1, 'framing', 'bid', NULL)`,
       [leadId],
     );
+    // cost_source='permit' satisfies mig 071 NOT NULL + CHECK; see T1 above.
     await pool.query(
-      `INSERT INTO cost_estimates (lead_id, estimated_cost, trade_contract_values, computed_at)
-       VALUES ($1, 300000, '{"framing": 50000}'::jsonb, NOW())`,
+      `INSERT INTO cost_estimates (lead_id, estimated_cost, trade_contract_values, computed_at, cost_source)
+       VALUES ($1, 300000, '{"framing": 50000}'::jsonb, NOW(), 'permit')`,
       [leadId],
     );
     await pool.query(

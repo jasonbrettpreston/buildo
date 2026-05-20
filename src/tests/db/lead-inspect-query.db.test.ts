@@ -262,6 +262,12 @@ describe.skipIf(!dbAvailable())('fetchLeadInspect — live-DB regression-lock (W
 
     // The seeded permit's permit_type was 'New Building' in beforeAll;
     // populate phase_stay_calibration for a few buckets so cohort fields land.
+    //
+    // Mig 147 dropped the legacy (permit_type, phase) PRIMARY KEY and replaced
+    // it with a PARTIAL unique index `phase_stay_calibration_permit_legacy_unique`
+    // ON (permit_type, phase) WHERE permit_type IS NOT NULL. Postgres requires
+    // the same WHERE predicate in ON CONFLICT to match a partial unique index;
+    // all rows below have non-NULL permit_type so the predicate is satisfied.
     await pool.query(
       `INSERT INTO phase_stay_calibration (permit_type, phase, median_days, p25_days, p75_days, sample_size)
        VALUES
@@ -269,7 +275,7 @@ describe.skipIf(!dbAvailable())('fetchLeadInspect — live-DB regression-lock (W
          ('New Building', 'P7c',      45, 22, 87, 12000),
          ('New Building', 'P8',       30, 15, 60, 8000),
          ('New Building', 'P18',      30, 10, 60, 5000)
-       ON CONFLICT (permit_type, phase) DO UPDATE
+       ON CONFLICT (permit_type, phase) WHERE permit_type IS NOT NULL DO UPDATE
          SET median_days = EXCLUDED.median_days,
              p25_days = EXCLUDED.p25_days,
              p75_days = EXCLUDED.p75_days,
