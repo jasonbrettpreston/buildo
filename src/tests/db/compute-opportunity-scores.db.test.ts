@@ -109,9 +109,12 @@ describe.skipIf(!dbAvailable())('compute-opportunity-scores — CoA end-to-end s
     );
 
     // Seed lead_analytics CoA row: 1 tracker, 0 savers (F.2 UNION lead_key shape).
+    // mig 141 promoted lead_id to NOT NULL on lead_analytics — must be supplied
+    // alongside the legacy lead_key column. Both hold the same canonical id for
+    // CoA leads ('coa:F3TEST00N').
     await pool.query(
-      `INSERT INTO lead_analytics (lead_key, tracking_count, saving_count, updated_at)
-       VALUES ($1, 1, 0, NOW())`,
+      `INSERT INTO lead_analytics (lead_key, lead_id, tracking_count, saving_count, updated_at)
+       VALUES ($1, $1, 1, 0, NOW())`,
       [leadId],
     );
 
