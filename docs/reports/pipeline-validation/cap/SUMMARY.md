@@ -49,13 +49,13 @@ Not yet run — requires explicit `node scripts/run-chain.js permits` invocation
 
 | # | Surface | Status | Notes |
 |---|---------|--------|-------|
-| 1 | Lead Detail Inspector | ⏳ pending | Pending dedicated session |
+| 1 | Lead Detail Inspector | ✅ validated (post-fix) | Permit lead `21 106440 DRN--00` → 200 with 8-panel envelope. CoA lead `COA-B0015/26TEY` initially 500 — surfaced 4 schema drifts (filed + fixed in commit `8c6a9bc`): `lt.trade_slug`→`lt.trade_id`, `t.display_name`→`t.name AS display_name`, `$2/$3::text` cast, `id::int` cast. After fix: 200 with 25+ CoA panel keys, 3 cross-stream timeline entries, 1 lead trade. |
 | 2 | Freshness Timeline (Data Quality) | ✅ validated | `/admin/data-quality` renders chain trigger UI; per-step "Expand details" surfaces audit_table rows with correct PASS/WARN/FAIL color coding; verdict colors match `pipeline_runs.records_meta.audit_table.verdict` |
-| 3 | Pipelines/Resync trigger (Spec 86) | ✅ validated | "Run All" button (ref_39 permits, ref_298 CoA) triggers chain; new pipeline_runs row appears immediately; status updates live in UI |
-| 4 | Flight Center | ⏳ pending | |
-| 5 | Test Feed Tool | ⏳ pending | |
-| 6 | observe-chain trigger | ⏳ pending | |
-| 7 | logic_variables CRUD (Spec 86 Control Panel) | ✅ partial | `/admin/control-panel` loads with Platform Variables / Trade Configurations / Scope Matrix tabs; CRUD cycle on isolated test variable not yet exercised |
+| 3 | Pipelines/Resync trigger (Spec 86) | ✅ validated | "Run All" button triggers chain; new pipeline_runs row appears immediately; status updates live in UI |
+| 4 | Flight Center | ✅ validated | `/admin/lead-feed/flight-center` shows 2 actionable leads grouped by temporal proximity (Action Required / Departing Soon / On the Horizon). All 4 contract fields populated per trade row: opportunity_score (5-25), predicted_start (2026-06-15..2026-12-31), estimated_cost ($978K), trade_slug (concrete/drywall/electrical/etc.). |
+| 5 | Test Feed Tool | ⚠ partial — finding | `/admin/lead-feed` "Run Test Query" returns 200 + 15-item array ✓. **Finding (S5-1):** `lead_id` field returns as `25 256833 BLD:00` — missing the canonical `permit:` prefix. Spec 79 §7 contract (b) requires canonical form. Filed for follow-up WF3. |
+| 6 | observe-chain trigger | ⚠ contract gap | **Finding (S6-1):** No admin UI surface exists for manual observe-chain triggering. `scripts/observe-chain.js` runs as auto-spawn at chain end, but Spec 79 §7 contract (a) "UI surface exists" is unfulfilled. Either add the UI (WF1) or amend Spec 79 to clarify implicit-via-Surface-3. |
+| 7 | logic_variables CRUD (Spec 86 Control Panel) | ⚠ partial | API supports READ + UPDATE on existing keys: PUT `los_decay_divisor=99` returns `rows_updated:1`; DB reflects 25→99; restored. **Finding (S7-1):** PUT with new key `_validation_test_<ts>` returns `rows_updated:0` (API is update-only-on-existing). **Finding (S7-2):** No DELETE endpoint exposed. Spec 79 §7 contract (a) CREATE + (d) DELETE unfulfilled. Either expose endpoints (WF3) or amend spec to read-update-only. |
 
 ---
 
