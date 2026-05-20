@@ -1570,3 +1570,21 @@ Diff-stage folds:
 
 Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passed / 84 skipped / 230 files.
 
+---
+
+## WF3 Pass-2 bundled (per-seq audit + CoA coverage gap) — Multi-agent review (2026-05-19)
+
+3-reviewer review on the bundled Pass-2 WF3 (assert-lifecycle-phase-distribution + assert-global-coverage). **0 in-scope issues** — Independent reviewer's worktree was stale and didn't pick up the edits (false-positive); Gemini + DeepSeek surfaced pre-existing concerns in untouched lines. All deferred:
+
+| # | Severity | Source | Finding | Decision rationale |
+|---|---|---|---|---|
+| 82 | DEFER | Gemini CRIT | `Number(logicVars[maxKey])` coerces empty string `''` → 0, silently turning operator-clear into a band of `[min..0]` which any positive count violates | Pre-existing; lines 205-207 untouched by Pass-2. Real concern but separate WF3 — needs an explicit `'' → null` shim or Zod refinement at the seqBands construction. |
+| 83 | DEFER | Gemini HIGH | Symmetric-diff doesn't detect seqs missing from BOTH catalog AND bands AND data — silent invisibility for whole-seq disappearance | Pre-existing architecture. Spec 84 §3.4 cross-check pattern would need a static seq-list source-of-truth to compare against. Separate Spec amendment. |
+| 84 | DEFER | Gemini MED | Function-based index on `LOWER(enriched_status)` missing → full table scans on cross_check queries | Pre-existing perf; ~250K rows. Separate WF3 with mig to add `CREATE INDEX IF NOT EXISTS idx_permits_enriched_status_lower ON permits (LOWER(enriched_status))`. |
+| 85 | DEFER | Gemini MED | `unclassified_count` (legacy) vs `seq_unclassified_count` (new) — two metrics with different filters; cognitive overhead | Strangler-Fig transition artifact. Spec 48 §3.4 baseline continuity for legacy counter is intentional. Track for E.6 cleanup pass. |
+| 86 | DEFER | Gemini MED | `if (!band) continue;` silently skips seqs missing band config → could hide misconfigured seqs behind one startup warning | Pre-existing. Adding a `seqs_skipped_no_config` counter would close the visibility gap. Separate WF3 — small scope. |
+| 87 | DEFER | DeepSeek MED | `SKIP_PHASES_SQL` imported but unused in CoA branch — dead import in CoA codepath | Pre-existing. Cosmetic. Bundle with any future CoA-branch refactor. |
+| 88 | DEFER | DeepSeek MED | `non_bld_total` `permit_type != 'BLD'` filter excludes NULL permit_type rows — denominator hides CoA-linked permits | Pre-existing (line 729+). Real concern post-mig 147 (CoA cohorts have permit_type=NULL). Separate WF3 to switch to `IS DISTINCT FROM 'BLD'`. |
+| 89 | DEFER | DeepSeek LOW | Hardcoded 10%/5% scraper-coverage thresholds in `externalRow` — not tunable via logic_variables | Pre-existing design choice. Track if operators need it. |
+| 90 | REJECT | Independent CRIT | "5 new CoA coverage rows + cx query + renumbered labels are missing from assert-global-coverage.js" | Worktree was stale at agent spawn time; verified via main-repo grep that all edits ARE present at lines 132-232. Reviewer's `isolation: "worktree"` snapshot didn't capture the in-flight edits. |
+

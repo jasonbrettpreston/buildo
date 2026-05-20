@@ -335,14 +335,34 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
       if (!band) continue;  // partial-migration case
       const actual = seqDistribution[seq] || 0;
       // v4 fold v3-G-LOW: use catalog-derived INFO-only set, not band.max === null.
-      if (catalogNullCountSeqs.has(seq)) {
+      const isNullCatalog = catalogNullCountSeqs.has(seq);
+      // v4 fold v3-G-CRIT-formula: null-aware comparison (operator-tampered
+      // null max still defers to catalog-null check above).
+      const inBand = !isNullCatalog && actual >= band.min && (band.max === null || actual <= band.max);
+
+      // Pass-2 fold (2026-05-19 Spec 79 §6 CoA chain re-run): per-seq audit row.
+      // Replaces the legacy hardcoded phase_PN_count rows with 110 data-driven
+      // per-seq rows derived from the universal_stream_catalog snapshot. User
+      // direction: "this audit table should emit for each of the 110 seq bands
+      // not the old phases". Aggregate counters (seq_bands_*) preserved below.
+      const status = isNullCatalog ? 'INFO'
+                   : inBand          ? 'PASS'
+                   : promoteToFail_band_violation ? 'FAIL'
+                   :                                 'WARN';
+      auditRows.push({
+        metric: `lifecycle_seq_${String(seq).padStart(2, '0')}_count`,
+        value: actual,
+        threshold: isNullCatalog ? 'no upper bound (catalog rows_count=0)'
+                 : band.max === null ? `>= ${band.min} (no upper bound)`
+                 :                     `${band.min}..${band.max}`,
+        status,
+      });
+
+      if (isNullCatalog) {
         seqBandsNullCatalogCount++;
         seqBandsPassing++;
         continue;
       }
-      // v4 fold v3-G-CRIT-formula: null-aware comparison (operator-tampered
-      // null max still defers to catalog-null check above).
-      const inBand = actual >= band.min && (band.max === null || actual <= band.max);
       if (inBand) {
         seqBandsPassing++;
       } else {
@@ -478,23 +498,13 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     );
     const unclassifiedCount = unclPermitRows[0].n + unclCoaRows[0].n;
 
-    // ─── Phase-keyed band evaluation (existing) ──────────────────────
-    // (auditRows/failures/warnings hoisted above for per-kind branch routing)
-
-    for (const [phase, band] of Object.entries(EXPECTED_BANDS)) {
-      const actual = allCounts[phase] || 0;
-      const inBand = actual >= band.min && actual <= band.max;
-      const status = inBand ? 'PASS' : 'FAIL';
-      if (!inBand) {
-        failures.push(`${phase}: ${actual} outside expected band [${band.min}, ${band.max}]`);
-      }
-      auditRows.push({
-        metric: `phase_${phase}_count`,
-        value: actual,
-        threshold: `${band.min}..${band.max}`,
-        status,
-      });
-    }
+    // ─── Phase-keyed audit rows: RETIRED (Pass-2 fold 2026-05-19) ───────
+    // The legacy phase_PN_count audit rows were replaced by 110 per-seq rows
+    // emitted in the catalog iteration loop above. The phase-level aggregates
+    // are still surfaced via records_meta.phase_distribution (line ~710) for
+    // any downstream consumer that prefers the coarser slicing. EXPECTED_BANDS,
+    // allCounts, and the lifecycle_band_<suffix>_min/_max logic_variables are
+    // preserved for back-compat; their Zod validation still runs at startup.
 
     auditRows.push({
       metric: 'unclassified_count',

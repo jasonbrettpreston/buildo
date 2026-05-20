@@ -340,8 +340,9 @@ describe('assert-global-coverage.js — Bug 5: lifecycle_stalled NOT NULL DEFAUL
   it('CoA lifecycle_stalled uses infoRow (not coverageRow) — BOOLEAN NOT NULL DEFAULT false guarantees 100% population', () => {
     // lifecycle_stalled BOOLEAN NOT NULL DEFAULT false — IS NOT NULL is always vacuous.
     // coverageRow would permanently show 100% PASS; infoRow shows count of actually-stalled apps.
-    expect(content).toMatch(/infoRow\('CoA Step 10[\s\S]{0,80}lifecycle_stalled[\s\S]{0,80}lifecyclePhaseTotal/);
-    expect(content).not.toMatch(/coverageRow\('CoA Step 10[\s\S]{0,30}lifecycle_stalled/);
+    // Pass-2 fold (2026-05-19): classify_lifecycle_phase is "CoA Step 12" per manifest order (was "Step 10").
+    expect(content).toMatch(/infoRow\('CoA Step 12[\s\S]{0,80}lifecycle_stalled[\s\S]{0,80}lifecyclePhaseTotal/);
+    expect(content).not.toMatch(/coverageRow\('CoA Step 12[\s\S]{0,30}lifecycle_stalled/);
   });
 
   it('CoA aggregate uses lifecycle_stalled = true (count stalled apps, not IS NOT NULL)', () => {
@@ -493,5 +494,80 @@ describe('assert-global-coverage.js — Surgical Triangle input coverage (WF2 #4
 
   it('tracks permits.storeys coverage (Step 2 — load_permits)', () => {
     expect(src()).toMatch(/permits\.storeys/);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────────
+// Spec 79 Pass-2 bundled WF3 (2026-05-19): CoA chain coverage gap closure.
+// User direction: "step 15 — this step does not include every field in the
+// CoA analysis". Step 15 (assert_global_coverage) previously skipped 5 of
+// the 15 CoA chain manifest steps. This block locks in the additions and
+// the step-label resync with the manifest order.
+// ────────────────────────────────────────────────────────────────────────
+describe('assert-global-coverage.js — Pass-2 CoA chain coverage additions', () => {
+  const src = () =>
+    fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/quality/assert-global-coverage.js'),
+      'utf-8',
+    );
+
+  // Manifest step 4 — link_coa_to_parcels (Phase D)
+  it('CoA Step 4 — link_coa_to_parcels coverage row is emitted', () => {
+    expect(src()).toMatch(/'CoA Step 4 — link_coa_to_parcels'/);
+  });
+
+  // Manifest step 5 — classify_coa_scope (Phase D)
+  it('CoA Step 5 — classify_coa_scope coverage row is emitted (scope_tags + scope_classified_at)', () => {
+    expect(src()).toMatch(/'CoA Step 5 — classify_coa_scope'/);
+    expect(src()).toMatch(/coa_applications\.scope_tags/);
+    expect(src()).toMatch(/coa_applications\.scope_classified_at/);
+  });
+
+  // Manifest step 6 — classify_coa_trades (Phase D)
+  it('CoA Step 6 — classify_coa_trades coverage row is emitted (trade_classified_at + lead_trades coa rows)', () => {
+    expect(src()).toMatch(/'CoA Step 6 — classify_coa_trades'/);
+    expect(src()).toMatch(/coa_applications\.trade_classified_at/);
+  });
+
+  // Manifest step 7 — compute_coa_cost_estimates (Phase D)
+  it('CoA Step 7 — compute_coa_cost_estimates coverage row is emitted (cost_classified_at + cost_estimates coa rows)', () => {
+    expect(src()).toMatch(/'CoA Step 7 — compute_coa_cost_estimates'/);
+    expect(src()).toMatch(/coa_applications\.cost_classified_at/);
+  });
+
+  // Manifest step 14 — compute_phase_calibration (Phase E.3 — CoA-side cohorts)
+  it('CoA Step 14 — compute_phase_calibration coverage row is emitted (phase_stay_calibration CoA-side rows)', () => {
+    expect(src()).toMatch(/'CoA Step 14 — compute_phase_calibration'/);
+    expect(src()).toMatch(/phase_stay_calibration/);
+  });
+
+  // Manifest order resync — the script's CoA step labels must match the manifest.
+  // Previous labels were out of sync (script called assert_data_bounds "Step 8"
+  // but it's manifest step 10, etc.). New labels: 1=schema, 2=load, 3=freshness,
+  // 4=link_to_parcels, 5=scope, 6=trades, 7=cost, 8=link_coa, 9=refresh,
+  // 10=data_bounds, 11=engine_health, 12=classify_lifecycle, 13=distribution,
+  // 14=calibration, 15=this script.
+  it('CoA Step 8 — link_coa label (was Step 4 prior to Pass-2 resync)', () => {
+    expect(src()).toMatch(/'CoA Step 8 — link_coa'/);
+  });
+
+  it('CoA Step 9 — refresh_snapshot label (was Step 7 prior to Pass-2 resync)', () => {
+    expect(src()).toMatch(/'CoA Step 9 — refresh_snapshot'/);
+  });
+
+  it('CoA Step 10 — assert_data_bounds label (was Step 8 prior to Pass-2 resync)', () => {
+    expect(src()).toMatch(/'CoA Step 10 — assert_data_bounds'/);
+  });
+
+  it('CoA Step 11 — assert_engine_health label (was Step 9 prior to Pass-2 resync)', () => {
+    expect(src()).toMatch(/'CoA Step 11 — assert_engine_health'/);
+  });
+
+  it('CoA Step 12 — classify_lifecycle_phase label (was Step 10 prior to Pass-2 resync)', () => {
+    expect(src()).toMatch(/'CoA Step 12 — classify_lifecycle_phase'/);
+  });
+
+  it('CoA Step 13 — assert_lifecycle_phase_distribution label (was Step 11 prior to Pass-2 resync)', () => {
+    expect(src()).toMatch(/'CoA Step 13 — assert_lifecycle_phase_distribution'/);
   });
 });

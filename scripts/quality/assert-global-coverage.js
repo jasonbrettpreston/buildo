@@ -99,6 +99,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // ═══════════════════════════════════════════════════════════
 
       // ── CoA applications aggregate ─────────────────────────────
+      // Pass-2 fold (2026-05-19 Spec 79 §6): added 5 new pop counters for the
+      // previously-missing Phase D step coverage (parcel_linked_at, scope_tags,
+      // scope_classified_at, trade_classified_at, cost_classified_at, estimated_cost).
       const { rows: [ca] } = await pool.query(`
         SELECT
           COUNT(*)                                                                        AS coa_total,
@@ -115,8 +118,26 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE lifecycle_stalled = true AND linked_permit_num IS NULL)   AS lifecycle_stalled_true_pop,
           COUNT(*) FILTER (WHERE lifecycle_classified_at IS NOT NULL AND linked_permit_num IS NULL) AS lifecycle_classified_pop,
           COUNT(*) FILTER (WHERE lifecycle_phase IS NULL)                                 AS unclassified_count,
+          -- Pass-2 additions for Steps 4-7 coverage rows:
+          COUNT(*) FILTER (WHERE parcel_linked_at IS NOT NULL)                            AS parcel_linked_pop,
+          COUNT(*) FILTER (WHERE scope_tags IS NOT NULL)                                  AS scope_tags_pop,
+          COUNT(*) FILTER (WHERE scope_classified_at IS NOT NULL)                         AS scope_classified_pop,
+          COUNT(*) FILTER (WHERE trade_classified_at IS NOT NULL)                         AS trade_classified_pop,
+          COUNT(*) FILTER (WHERE cost_classified_at IS NOT NULL)                          AS cost_classified_pop,
+          COUNT(*) FILTER (WHERE estimated_cost IS NOT NULL)                              AS estimated_cost_pop,
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
+      `);
+
+      // ── Cross-table CoA aggregate (Pass-2 fold) ────────────────
+      // Counts CoA-side rows on tables written by Phase D / Phase E.3 steps.
+      const { rows: [cx] } = await pool.query(`
+        SELECT
+          (SELECT COUNT(*) FROM lead_trades   WHERE lead_id LIKE 'coa:%')                  AS lead_trades_coa_rows,
+          (SELECT COUNT(*) FROM lead_parcels  WHERE lead_id LIKE 'coa:%')                  AS lead_parcels_coa_rows,
+          (SELECT COUNT(*) FROM cost_estimates WHERE lead_id LIKE 'coa:%')                 AS cost_estimates_coa_rows,
+          -- mig 147 DROP NOT NULL on permit_type: CoA cohorts have permit_type IS NULL
+          (SELECT COUNT(*) FROM phase_stay_calibration WHERE permit_type IS NULL)          AS calibration_coa_rows
       `);
       const coaTotal = parseInt(ca.coa_total, 10) || 0;
       const linkedTotal = parseInt(ca.linked_pop, 10) || 0;
@@ -147,45 +168,68 @@ pipeline.run('assert-global-coverage', async (pool) => {
       `);
       rows.push(infoRow('CoA Step 1 — assert_schema', 'coa_applications.columns_present', parseInt(csSchema.cols, 10)));
 
-      // Step: load_coa
+      // Step 2 — load_coa
       rows.push(coverageRow('CoA Step 2 — load_coa', 'coa_applications.address',            parseInt(ca.address_pop, 10),  coaTotal));
       rows.push(coverageRow('CoA Step 2 — load_coa', 'coa_applications.ward',               parseInt(ca.ward_pop, 10),     coaTotal));
       rows.push(coverageRow('CoA Step 2 — load_coa', 'coa_applications.decision',           parseInt(ca.decision_pop, 10), coaTotal));
       rows.push(coverageRow('CoA Step 2 — load_coa', 'coa_applications.application_number', parseInt(ca.app_num_pop, 10),  coaTotal));
 
-      // Step: assert_coa_freshness
+      // Step 3 — assert_coa_freshness
       const daysSince = ca.days_since_latest != null ? parseInt(ca.days_since_latest, 10) : null;
       rows.push(infoRow('CoA Step 3 — assert_coa_freshness', 'coa_applications.days_since_latest', daysSince ?? 0));
 
-      // Step: link_coa
-      rows.push(coverageRow('CoA Step 4 — link_coa', 'coa_applications.linked_permit_num', linkedTotal, coaTotal));
-      rows.push(coverageRow('CoA Step 4 — link_coa', 'coa_applications.linked_confidence', parseInt(ca.confidence_pop, 10), linkedTotal || null));
+      // Step 4 — link_coa_to_parcels (Pass-2 fold: was missing)
+      rows.push(coverageRow('CoA Step 4 — link_coa_to_parcels', 'coa_applications.parcel_linked_at', parseInt(ca.parcel_linked_pop, 10), coaTotal));
+      rows.push(infoRow('CoA Step 4 — link_coa_to_parcels', 'lead_parcels.coa_rows', parseInt(cx.lead_parcels_coa_rows, 10)));
 
-      // Phase G (Spec 42 §6.11): CoA Step 5 (create_pre_permits) and Step 6
-      // (assert_pre_permit_aging) coverage rows REMOVED — both scripts retired to
-      // shims and removed from the CoA chain. Replaced at the assertion layer by the
-      // `permits_pre_permit_count == 0` gate in assert-data-bounds.js (both audits).
+      // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
+      rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
+      rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_classified_at', parseInt(ca.scope_classified_pop, 10), coaTotal));
 
-      // Step: refresh_snapshot
-      rows.push(infoRow('CoA Step 7 — refresh_snapshot', 'data_quality_snapshots.today', parseInt(cm.snapshot_today, 10)));
+      // Step 6 — classify_coa_trades (Pass-2 fold: was missing)
+      rows.push(coverageRow('CoA Step 6 — classify_coa_trades', 'coa_applications.trade_classified_at', parseInt(ca.trade_classified_pop, 10), coaTotal));
+      rows.push(infoRow('CoA Step 6 — classify_coa_trades', 'lead_trades.coa_rows', parseInt(cx.lead_trades_coa_rows, 10)));
 
-      // Step: assert_data_bounds
-      rows.push(infoRow('CoA Step 8 — assert_data_bounds', 'coa_applications.duplicate_pks', parseInt(cm.dup_coa_pks, 10)));
+      // Step 7 — compute_coa_cost_estimates (Pass-2 fold: was missing)
+      rows.push(coverageRow('CoA Step 7 — compute_coa_cost_estimates', 'coa_applications.cost_classified_at', parseInt(ca.cost_classified_pop, 10), coaTotal));
+      rows.push(coverageRow('CoA Step 7 — compute_coa_cost_estimates', 'coa_applications.estimated_cost', parseInt(ca.estimated_cost_pop, 10), coaTotal));
+      rows.push(infoRow('CoA Step 7 — compute_coa_cost_estimates', 'cost_estimates.coa_rows', parseInt(cx.cost_estimates_coa_rows, 10)));
 
-      // Step: assert_engine_health
-      rows.push(infoRow('CoA Step 9 — assert_engine_health', 'engine_health_snapshots.today', parseInt(cm.engine_health_today, 10)));
+      // Step 8 — link_coa (Pass-2 fold: was labelled "Step 4")
+      rows.push(coverageRow('CoA Step 8 — link_coa', 'coa_applications.linked_permit_num', linkedTotal, coaTotal));
+      rows.push(coverageRow('CoA Step 8 — link_coa', 'coa_applications.linked_confidence', parseInt(ca.confidence_pop, 10), linkedTotal || null));
 
-      // Step: classify_lifecycle_phase
+      // Phase G (Spec 42 §6.11): create_pre_permits and assert_pre_permit_aging
+      // were retired to shims and removed from the CoA chain. Replaced at the
+      // assertion layer by the `permits_pre_permit_count == 0` gate in
+      // assert-data-bounds.js (both audits). Pre-Pass-2 these were labelled
+      // "CoA Step 5" / "CoA Step 6" — those slots are now reused for
+      // Phase D (classify_coa_scope) / (classify_coa_trades) per manifest order.
+
+      // Step 9 — refresh_snapshot (Pass-2 fold: was labelled "Step 7")
+      rows.push(infoRow('CoA Step 9 — refresh_snapshot', 'data_quality_snapshots.today', parseInt(cm.snapshot_today, 10)));
+
+      // Step 10 — assert_data_bounds (Pass-2 fold: was labelled "Step 8")
+      rows.push(infoRow('CoA Step 10 — assert_data_bounds', 'coa_applications.duplicate_pks', parseInt(cm.dup_coa_pks, 10)));
+
+      // Step 11 — assert_engine_health (Pass-2 fold: was labelled "Step 9")
+      rows.push(infoRow('CoA Step 11 — assert_engine_health', 'engine_health_snapshots.today', parseInt(cm.engine_health_today, 10)));
+
+      // Step 12 — classify_lifecycle_phase (Pass-2 fold: was labelled "Step 10")
       // Bug 3: lifecycle_phase denominator = unlinked CoA apps only (classifier skips linked ones).
-      rows.push(coverageRow('CoA Step 10 — classify_lifecycle_phase', 'coa_applications.lifecycle_phase',         lifecyclePhaseTotal,                          unlinkedTotal || null));
+      rows.push(coverageRow('CoA Step 12 — classify_lifecycle_phase', 'coa_applications.lifecycle_phase',         lifecyclePhaseTotal,                          unlinkedTotal || null));
       // lifecycle_stalled BOOLEAN NOT NULL DEFAULT false — IS NOT NULL is always vacuous (100%).
       // Show count of actually-stalled classified unlinked apps as an info metric.
-      rows.push(infoRow('CoA Step 10 — classify_lifecycle_phase', 'coa_applications.lifecycle_stalled', parseInt(ca.lifecycle_stalled_true_pop, 10), lifecyclePhaseTotal));
+      rows.push(infoRow('CoA Step 12 — classify_lifecycle_phase', 'coa_applications.lifecycle_stalled', parseInt(ca.lifecycle_stalled_true_pop, 10), lifecyclePhaseTotal));
       // Bug 3: lifecycle_classified_at denominator = unlinked CoA apps only.
-      rows.push(coverageRow('CoA Step 10 — classify_lifecycle_phase', 'coa_applications.lifecycle_classified_at', parseInt(ca.lifecycle_classified_pop, 10),     unlinkedTotal || null));
+      rows.push(coverageRow('CoA Step 12 — classify_lifecycle_phase', 'coa_applications.lifecycle_classified_at', parseInt(ca.lifecycle_classified_pop, 10),     unlinkedTotal || null));
 
-      // Step: assert_lifecycle_phase_distribution
-      rows.push(infoRow('CoA Step 11 — assert_lifecycle_phase_distribution', 'coa_applications.unclassified_count', parseInt(ca.unclassified_count, 10), coaTotal));
+      // Step 13 — assert_lifecycle_phase_distribution (Pass-2 fold: was labelled "Step 11")
+      rows.push(infoRow('CoA Step 13 — assert_lifecycle_phase_distribution', 'coa_applications.unclassified_count', parseInt(ca.unclassified_count, 10), coaTotal));
+
+      // Step 14 — compute_phase_calibration (Pass-2 fold: was missing)
+      // mig 147 DROPped permit_type NOT NULL so CoA-side cohorts have permit_type IS NULL.
+      rows.push(infoRow('CoA Step 14 — compute_phase_calibration', 'phase_stay_calibration.coa_rows', parseInt(cx.calibration_coa_rows, 10)));
 
     } else {
       // ═══════════════════════════════════════════════════════════

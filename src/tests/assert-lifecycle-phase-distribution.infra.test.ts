@@ -509,3 +509,51 @@ describe('Phase E.5 v4 — scripts/seeds/logic_variables.json — 3 posture flag
     expect(seed.lifecycle_seq_band_promote_to_fail_expected_data_missing!.default).toBe(0);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// Spec 79 Pass-2 bundled WF3 (2026-05-19): per-seq audit_table rows.
+// User direction: "this audit table should emit for each of the 110 seq
+// bands not the old phases". The script previously emitted 7 hardcoded
+// phase_PN_count rows (P3..P9) — replaced with 110 per-seq rows derived
+// from the universal_stream_catalog snapshot (mig 148 band keys).
+// ────────────────────────────────────────────────────────────────────────
+describe('assert-lifecycle-phase-distribution.js — Pass-2 per-seq audit rows', () => {
+  let SRC: string;
+  beforeAll(() => {
+    SRC = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/quality/assert-lifecycle-phase-distribution.js'),
+      'utf-8',
+    );
+  });
+
+  it('does NOT emit the legacy phase_PN_count rows (P3..P9) — replaced by per-seq', () => {
+    // The legacy EXPECTED_BANDS loop emitted `metric: 'phase_P3_count'` ...
+    // through `'phase_P9_count'`. These are retired in favor of per-seq rows.
+    for (const phase of ['P3', 'P4', 'P5', 'P6', 'P7a', 'P7b', 'P7c', 'P7d', 'P8', 'P9']) {
+      expect(SRC).not.toMatch(new RegExp(`metric:\\s*['"]phase_${phase}_count['"]`));
+    }
+  });
+
+  it('emits a per-seq audit row inside the catalog iteration loop (lifecycle_seq_NN_count)', () => {
+    // The push must happen inside the `for (const seq of catalogSeqs)` loop
+    // and use a zero-padded 2-digit metric name for sortability.
+    expect(SRC).toMatch(/lifecycle_seq_\$\{[^}]*?padStart\s*\(\s*2\s*,\s*['"]0['"]\s*\)\s*\}_count/);
+  });
+
+  it('per-seq audit row threshold reflects the band shape (min..max or no upper bound)', () => {
+    // PASS / WARN / FAIL determined by inBand + posture; INFO when catalogNullCountSeqs has the seq.
+    // Implementation hoists the membership check into `isNullCatalog` for clarity.
+    expect(SRC).toMatch(/const\s+isNullCatalog\s*=\s*catalogNullCountSeqs\.has\(seq\)/);
+    expect(SRC).toMatch(/isNullCatalog\s*\?\s*['"]INFO['"]/);
+    expect(SRC).toMatch(/band\.max\s*===\s*null/);
+  });
+
+  it('keeps the aggregate counters (seq_bands_total / passing / warn / failing / null_catalog_count)', () => {
+    // Aggregates remain for ops-level dashboards that don't want to fan out across 110 rows.
+    expect(SRC).toMatch(/['"]seq_bands_total['"]/);
+    expect(SRC).toMatch(/['"]seq_bands_passing['"]/);
+    expect(SRC).toMatch(/['"]seq_bands_warn['"]/);
+    expect(SRC).toMatch(/['"]seq_bands_failing['"]/);
+    expect(SRC).toMatch(/['"]seq_bands_null_catalog_count['"]/);
+  });
+});
