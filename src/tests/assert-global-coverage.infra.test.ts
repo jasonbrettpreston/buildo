@@ -480,16 +480,30 @@ describe('chain specs — step counts updated', () => {
 // ===========================================================================
 
 describe('assert-global-coverage.js — Surgical Triangle input coverage (WF2 #4)', () => {
-  it('tracks parcels.area_sqm coverage (Step 9 — link_parcels)', () => {
-    expect(src()).toMatch(/parcels\.area_sqm/);
+  it('tracks parcels.lot_size_sqm coverage (Step 9 — link_parcels)', () => {
+    // Pass-2 fold (2026-05-19): parcels stores area as `lot_size_sqm` (mig 011).
+    // Same column-drift class as the WF2 #4 fetchLeadInspect bug (commit 73f3ae6).
+    expect(src()).toMatch(/parcels\.lot_size_sqm/);
+    // Negation: must not bare-read `area_sqm` from parcels.
+    expect(src()).not.toMatch(/FROM\s+parcels\s+WHERE\s+area_sqm/i);
   });
 
-  it('tracks parcel_buildings.area_sqm coverage (Step 11 — link_massing)', () => {
-    expect(src()).toMatch(/parcel_buildings\.area_sqm/);
+  // Pass-2 fold (2026-05-19): the dim columns live on building_footprints, not
+  // parcel_buildings. Same column-drift class as the WF2 #4 fetchLeadInspect bug
+  // (commit 73f3ae6). The aggregate query now LEFT JOINs building_footprints on
+  // building_id; the row labels reference the canonical bf.* columns.
+  it('tracks building_footprints.footprint_area_sqm coverage (Step 11 — link_massing)', () => {
+    expect(src()).toMatch(/building_footprints\.footprint_area_sqm/);
+    // Negation: the script must NOT bare-read these dims from parcel_buildings.
+    expect(src()).not.toMatch(/FROM\s+parcel_buildings\b(?:[^J]|J(?!OIN))*\barea_sqm\b/i);
   });
 
-  it('tracks parcel_buildings.height_m coverage (Step 11 — link_massing)', () => {
-    expect(src()).toMatch(/parcel_buildings\.height_m/);
+  it('tracks building_footprints.max_height_m coverage (Step 11 — link_massing)', () => {
+    expect(src()).toMatch(/building_footprints\.max_height_m/);
+  });
+
+  it('pb aggregate LEFT JOINs building_footprints on building_id (Pass-2 fold)', () => {
+    expect(src()).toMatch(/LEFT JOIN building_footprints bf ON bf\.id\s*=\s*pb\.building_id/);
   });
 
   it('tracks permits.storeys coverage (Step 2 — load_permits)', () => {

@@ -359,20 +359,25 @@ pipeline.run('assert-global-coverage', async (pool) => {
 
       // ── pb: Parcel-buildings aggregate (Denom D) ───────────────
       // All linkage columns are NOT NULL in schema — rows serve as integrity sentinels.
-      // WF2 #4 2026-05-08 — added Surgical Triangle INPUT coverage for area_sqm and
-      // height_m (the cost model's primary inputs). Without these, an outlier output
-      // like the $29M ZARA two-wall-signs estimate gives no upstream signal.
+      // WF2 #4 2026-05-08 — added Surgical Triangle INPUT coverage for footprint_area_sqm
+      // and max_height_m (the cost model's primary inputs). Without these, an outlier
+      // output like the $29M ZARA two-wall-signs estimate gives no upstream signal.
+      // Pass-2 fold (2026-05-19): the dims live on `building_footprints` (cols
+      // footprint_area_sqm, max_height_m), NOT on `parcel_buildings`. Same drift class
+      // as the WF2 #4 fetchLeadInspect bug fixed in commit 73f3ae6 — that fix was
+      // applied to the lead inspector but not to this script. JOIN added.
       const { rows: [pb] } = await pool.query(`
         SELECT
-          COUNT(*)                                                     AS pb_total,
-          COUNT(*) FILTER (WHERE is_primary IS NOT NULL)               AS is_primary_pop,
-          COUNT(*) FILTER (WHERE structure_type IS NOT NULL)           AS structure_type_pop,
-          COUNT(*) FILTER (WHERE match_type IS NOT NULL)               AS match_type_pop,
-          COUNT(*) FILTER (WHERE confidence IS NOT NULL)               AS confidence_pop,
-          COUNT(*) FILTER (WHERE linked_at IS NOT NULL)                AS linked_at_pop,
-          COUNT(*) FILTER (WHERE area_sqm IS NOT NULL)                 AS area_sqm_pop,
-          COUNT(*) FILTER (WHERE height_m IS NOT NULL)                 AS height_m_pop
-        FROM parcel_buildings
+          COUNT(*)                                                                  AS pb_total,
+          COUNT(*) FILTER (WHERE pb.is_primary IS NOT NULL)                         AS is_primary_pop,
+          COUNT(*) FILTER (WHERE pb.structure_type IS NOT NULL)                     AS structure_type_pop,
+          COUNT(*) FILTER (WHERE pb.match_type IS NOT NULL)                         AS match_type_pop,
+          COUNT(*) FILTER (WHERE pb.confidence IS NOT NULL)                         AS confidence_pop,
+          COUNT(*) FILTER (WHERE pb.linked_at IS NOT NULL)                          AS linked_at_pop,
+          COUNT(*) FILTER (WHERE bf.footprint_area_sqm IS NOT NULL)                 AS area_sqm_pop,
+          COUNT(*) FILTER (WHERE bf.max_height_m IS NOT NULL)                       AS height_m_pop
+        FROM parcel_buildings pb
+        LEFT JOIN building_footprints bf ON bf.id = pb.building_id
       `);
       const pbTotal = parseInt(pb.pb_total, 10) || 0;
 
@@ -433,7 +438,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
             WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL)                    AS parcels_with_centroid,
           -- WF2 #4 2026-05-08 — Surgical Triangle INPUT: lot size coverage
           (SELECT COUNT(*) FROM parcels)                                                    AS parcels_total,
-          (SELECT COUNT(*) FROM parcels WHERE area_sqm IS NOT NULL)                         AS parcels_with_area,
+          (SELECT COUNT(*) FROM parcels WHERE lot_size_sqm IS NOT NULL)                     AS parcels_with_area,
           -- Timing calibration
           (SELECT COUNT(*) FROM phase_calibration WHERE median_days IS NOT NULL)            AS calibration_rows,
           -- CoA context
@@ -613,7 +618,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 9 — link_parcels', 'permit_parcels.confidence (geocoded)',  parseInt(misc.pp_linked_geocoded, 10), geocodedTotal || null));
       rows.push(coverageRow('Step 9 — link_parcels', 'permit_parcels.linked_at (geocoded)',   parseInt(misc.pp_linked_geocoded, 10), geocodedTotal || null));
       // WF2 #4 2026-05-08 — Surgical Triangle INPUT: lot size (fallback GFA basis per Spec 83 §3A).
-      rows.push(coverageRow('Step 9 — link_parcels', 'parcels.area_sqm', parseInt(misc.parcels_with_area, 10), parseInt(misc.parcels_total, 10) || null));
+      // Pass-2 fold (2026-05-19): parcels stores area as `lot_size_sqm` (same WF2 #4 drift class as the pb dims).
+      rows.push(coverageRow('Step 9 — link_parcels', 'parcels.lot_size_sqm', parseInt(misc.parcels_with_area, 10), parseInt(misc.parcels_total, 10) || null));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));
@@ -628,8 +634,10 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 11 — link_massing', 'parcel_buildings.confidence',     parseInt(pb.confidence_pop, 10),     pbTotal || null));
       rows.push(coverageRow('Step 11 — link_massing', 'parcel_buildings.linked_at',      parseInt(pb.linked_at_pop, 10),      pbTotal || null));
       // WF2 #4 2026-05-08 — Surgical Triangle INPUTS: footprint area + height (primary GFA basis per Spec 83 §3A).
-      rows.push(coverageRow('Step 11 — link_massing', 'parcel_buildings.area_sqm',       parseInt(pb.area_sqm_pop, 10),       pbTotal || null));
-      rows.push(coverageRow('Step 11 — link_massing', 'parcel_buildings.height_m',       parseInt(pb.height_m_pop, 10),       pbTotal || null));
+      // Pass-2 fold (2026-05-19): columns live on building_footprints, not parcel_buildings.
+      // Denominator stays pbTotal (parcel_buildings rows joined to bf via building_id).
+      rows.push(coverageRow('Step 11 — link_massing', 'building_footprints.footprint_area_sqm', parseInt(pb.area_sqm_pop, 10), pbTotal || null));
+      rows.push(coverageRow('Step 11 — link_massing', 'building_footprints.max_height_m',       parseInt(pb.height_m_pop, 10), pbTotal || null));
 
       // Step 12 — link_similar (proxy: non-BLD permits with scope_tags propagated)
       rows.push(coverageRow('Step 12 — link_similar', 'permits.scope_tags (non-BLD)', parseInt(pa.non_bld_scope_pop, 10), parseInt(pa.non_bld_total, 10) || null));
