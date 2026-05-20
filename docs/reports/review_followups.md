@@ -1603,3 +1603,17 @@ Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passe
 | 95 | DEFER | DeepSeek LOW | normalizeBuilderName double-regex strip; lead_type CASE redundant; new Date(transitioned_at).toISOString() may throw on malformed | Pre-existing patterns. Separate cleanup pass. |
 | 96 | REJECT | DeepSeek NIT | "$2::text casts are redundant because $2 is a string param" | Wrong — when caller passes JS `null`, pg-pool can't infer the parameter type without an explicit cast. That's the exact bug this WF3 fixed. |
 
+---
+
+## WF3 #1 cross-stream timeline dedup (Spec 79 §7a, 2026-05-20) — Multi-agent IMPL review folds
+
+2-reviewer IMPL review (DeepSeek + Independent) on the Arm 2/3 `lead_id <> $1` exclusion. **1 in-scope fold applied** (regex tighten). 4 DeepSeek findings are pre-existing in untouched code paths; deferred:
+
+| # | Severity | Source | Finding | Decision rationale |
+|---|---|---|---|---|
+| 97 | DEFER | DeepSeek HIGH | `trade_slice_dollar` at line 351 — `Number(slice)` produces NaN if jsonb holds non-numeric. Use `toNumber()` helper instead. | Pre-existing in compute path; my WF3 #1 doesn't touch line 351. Real concern — file as separate WF3 in the §7a queue (rows F or D group). |
+| 98 | DEFER | DeepSeek HIGH | `new Date(r.transitioned_at).toISOString()` at lines 371/383 — `new Date(null)` returns epoch 1970-01-01. | Pre-existing in cross_stream mapper. My fix didn't touch the mapper. Defer; safer guard pattern documented for future WF3. |
+| 99 | DEFER | DeepSeek MED | LIKE injection defense-in-depth — wrap `$2::text` with `replace(..., '%', '\\%')` inside SQL. | Existing metachar guard at line 783-789 sanitises before SQL. DeepSeek's concern is "what if guard is bypassed later"; defense-in-depth nice-to-have but not load-bearing today. |
+| 100 | DEFER | DeepSeek MED + various LOW | normalizeBuilderName edge cases, fetchNeighbourhoodPremiumTier per-call DB roundtrip, liar_gate modeled_total label, LLP suffix, parcel_buildings ORDER BY comment | All pre-existing, unrelated to WF3 #1 scope. Bundle into a separate "Lead Inspector polish" WF later. |
+| 101 | FIX INLINE | Independent FLAG | Arm 2 test regex lookahead `[\s\S]{0,200}?` is wider than necessary — could miss drift if 150+ chars of unrelated predicates added | Tightened to `[\s\S]{0,80}?` in the same commit. Sufficient for the ESCAPE clause + whitespace that legitimately sit between the predicates. |
+

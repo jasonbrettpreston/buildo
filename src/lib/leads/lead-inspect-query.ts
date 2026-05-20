@@ -690,6 +690,15 @@ const COA_LEAD_TRADES_SQL = `
 // Pass-2 fold #2: id::int casts — lifecycle_status_history.id is BIGINT; pg
 // returns it as a string by default. The LeadInspect schema declares id as
 // `number`, so the bare bigint string fails Zod validation. Cast in SQL.
+// Pass-2.5 WF3 #1 (Spec 79 §7a, 2026-05-20): added `lead_id <> $1`
+// exclusion on Arms 2 and 3 to prevent the duplicate-active-lead row that
+// fetchCoaPanel was emitting whenever invoked on a permit linked to a CoA.
+// $1 is always the canonical activeLeadId (`permit:NUM:REV` or `coa:APP`)
+// per the callsite below — no NULL, no wildcards. Independent plan-review
+// confirmed: Arm 2's guard is load-bearing; Arm 3's is paranoid (the
+// permit/coa namespaces are structurally disjoint so $1=$3 cannot happen
+// today) but harmless and future-proof. DeepSeek plan-review also added
+// the `$2::text <> ''` empty-string guard.
 const COA_CROSS_STREAM_SQL = `
   SELECT lead_id,
          CASE WHEN lead_id LIKE 'coa:%' THEN 'coa' ELSE 'permit' END AS lead_type,
@@ -700,12 +709,15 @@ const COA_CROSS_STREAM_SQL = `
   SELECT lead_id, 'permit', from_status, to_status, transitioned_at::text, id::int
     FROM lifecycle_status_history
    WHERE $2::text IS NOT NULL
+     AND $2::text <> ''
      AND lead_id LIKE 'permit:' || $2::text || ':%' ESCAPE '\\'
+     AND lead_id <> $1
   UNION ALL
   SELECT lead_id, 'coa', from_status, to_status, transitioned_at::text, id::int
     FROM lifecycle_status_history
    WHERE $3::text IS NOT NULL
      AND lead_id = $3::text
+     AND lead_id <> $1
    ORDER BY transitioned_at ASC, id ASC
 `;
 

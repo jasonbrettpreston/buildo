@@ -155,3 +155,47 @@ describe('lead-inspect-query.ts — CoA Lead Inspector schema drift (Spec 79 §7
     expect(idCasts.length).toBeGreaterThanOrEqual(3);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// Spec 79 §7a Pass-2.5 WF3 #1 (2026-05-20): Cross-stream timeline duplicate
+// permit row.
+// When fetchCoaPanel is called on a PERMIT lead linked to a CoA, Arm 1
+// (`lead_id=$1`) and Arm 2 (`lead_id LIKE 'permit:'||$2||':%'`) BOTH match
+// the active permit's lifecycle_status_history row, producing a duplicate
+// in cross_stream_timeline. Fix: add `lead_id <> $1` exclusion to Arm 2
+// (primary) and Arm 3 (defense-only). Also add `$2::text <> ''` empty-
+// string guard from DeepSeek plan-review.
+// Original duplicate observed live on permit 25 237692 PLB--00 (4/4
+// CoA-linked permits in 12-permit sample reproduced 100%).
+// ────────────────────────────────────────────────────────────────────────
+describe('lead-inspect-query.ts — Cross-stream timeline dedup (Spec 79 §7a WF3 #1)', () => {
+  const src = fs.readFileSync(QUERY_PATH, 'utf-8');
+  const crossStreamBlock = src.match(/COA_CROSS_STREAM_SQL\s*=\s*`[\s\S]*?`/)?.[0] ?? '';
+
+  it('COA_CROSS_STREAM_SQL has exactly 2 `lead_id <> $1` exclusions (Arms 2 + 3)', () => {
+    // Whitespace-tolerant + count-exact (catches future drift where someone removes one arm's guard).
+    const matches = crossStreamBlock.match(/lead_id\s*<>\s*\$1\b/g) ?? [];
+    expect(matches.length).toBe(2);
+  });
+
+  it('Arm 2 has the `lead_id <> $1` exclusion that prevents Arm 1 overlap', () => {
+    // The permit-arm: matches against `LIKE 'permit:' || $2::text || ':%'` then must exclude active lead.
+    // Tightened lookahead from 200→80 per Independent IMPL review (Item 6 FLAG) — only ESCAPE clause
+    // and whitespace sit between the two predicates; 80 chars is generous without permitting drift.
+    expect(crossStreamBlock).toMatch(
+      /lead_id\s+LIKE\s+'permit:'\s*\|\|\s*\$2::text\s*\|\|\s*':%'[\s\S]{0,80}?lead_id\s*<>\s*\$1/i,
+    );
+  });
+
+  it('Arm 3 has the `lead_id <> $1` paranoid/defense-in-depth exclusion', () => {
+    // The cross-stream-coa arm: matches against `lead_id = $3::text` then has the defense exclusion.
+    expect(crossStreamBlock).toMatch(
+      /lead_id\s*=\s*\$3::text[\s\S]{0,100}?lead_id\s*<>\s*\$1/i,
+    );
+  });
+
+  it('Arm 2 has the `$2::text <> \'\'` empty-string guard (DeepSeek plan-review fold)', () => {
+    // Empty-string would otherwise let `LIKE 'permit::%'` through and match unrelated rows.
+    expect(crossStreamBlock).toMatch(/\$2::text\s*<>\s*''/);
+  });
+});
