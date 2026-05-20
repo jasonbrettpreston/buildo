@@ -109,3 +109,49 @@ describe('lead-inspect-query.ts — SQL-shape regression-lock (WF3 2026-05-08)',
     expect(src).not.toMatch(/JOIN\s+neighbourhoods\s+n\s+ON\s+n\.neighbourhood_id\s*=\s*p\.neighbourhood_id/i);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// Spec 79 §7 Surface 1 Pass-2 fold (2026-05-20): CoA Lead Inspector hit
+// 4 schema-drift crashes when invoked with COA-<application_number>:
+//   1. lead_trades.trade_slug — column doesn't exist (FK is trade_id)
+//   2. trades.display_name — column is `name`
+//   3. $2/$3 in COA_CROSS_STREAM_SQL — null param type ambiguity (42P18)
+//   4. lifecycle_status_history.id — BIGINT returns as string, LeadInspect
+//      schema requires number → ZodError
+// ────────────────────────────────────────────────────────────────────────
+describe('lead-inspect-query.ts — CoA Lead Inspector schema drift (Spec 79 §7 Surface 1)', () => {
+  const src = fs.readFileSync(QUERY_PATH, 'utf-8');
+
+  it('COA_LEAD_TRADES_SQL reads lt.trade_id and JOINs trades on t.id = lt.trade_id (NOT lt.trade_slug)', () => {
+    // The lead_trades schema is (id, lead_id, trade_id, confidence, tier, ...) — there is no `trade_slug` column.
+    const block = src.match(/COA_LEAD_TRADES_SQL\s*=\s*`[\s\S]*?`/)?.[0] ?? '';
+    expect(block, 'COA_LEAD_TRADES_SQL block not found').toBeTruthy();
+    expect(block).toMatch(/lt\.trade_id/);
+    expect(block).toMatch(/JOIN\s+trades\s+t\s+ON\s+t\.id\s*=\s*lt\.trade_id/i);
+    // Negation: must NOT bare-read trade_slug from lead_trades.
+    expect(block).not.toMatch(/lt\.trade_slug/);
+    expect(block).not.toMatch(/ON\s+t\.slug\s*=\s*lt\.trade_slug/i);
+  });
+
+  it('COA_LEAD_TRADES_SQL aliases t.name AS display_name (trades has `name`, not `display_name`)', () => {
+    const block = src.match(/COA_LEAD_TRADES_SQL\s*=\s*`[\s\S]*?`/)?.[0] ?? '';
+    expect(block).toMatch(/t\.name\s+AS\s+display_name/i);
+    expect(block).not.toMatch(/\bt\.display_name\b(?!\s+AS)/);
+  });
+
+  it('COA_CROSS_STREAM_SQL casts $2 and $3 as ::text to resolve nullable-param ambiguity (PG 42P18)', () => {
+    const block = src.match(/COA_CROSS_STREAM_SQL\s*=\s*`[\s\S]*?`/)?.[0] ?? '';
+    expect(block, 'COA_CROSS_STREAM_SQL block not found').toBeTruthy();
+    expect(block).toMatch(/\$2::text\s+IS\s+NOT\s+NULL/i);
+    expect(block).toMatch(/\|\|\s*\$2::text\s*\|\|/);
+    expect(block).toMatch(/\$3::text\s+IS\s+NOT\s+NULL/i);
+    expect(block).toMatch(/lead_id\s*=\s*\$3::text/i);
+  });
+
+  it('COA_CROSS_STREAM_SQL casts id::int — lifecycle_status_history.id is BIGINT (pg returns string by default)', () => {
+    const block = src.match(/COA_CROSS_STREAM_SQL\s*=\s*`[\s\S]*?`/)?.[0] ?? '';
+    // All three UNION ALL arms must cast id; LeadInspectSchema declares id: number.
+    const idCasts = block.match(/id::int/g) ?? [];
+    expect(idCasts.length).toBeGreaterThanOrEqual(3);
+  });
+});

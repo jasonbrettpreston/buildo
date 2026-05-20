@@ -666,11 +666,16 @@ const COA_DECISION_HISTORY_SQL = `
    ORDER BY transitioned_at ASC, id ASC
 `;
 
+// Pass-2 fold (2026-05-20 Spec 79 §7 Surface 1): lead_trades has `trade_id`
+// (FK to trades.id), not `trade_slug` — the bare `lt.trade_slug` columns
+// caused 42703 on every CoA inspector call. Mirror the working permit-trades
+// pattern at line 224: read lt.trade_id, JOIN trades on t.id, SELECT
+// t.slug AS trade_slug so the downstream CoaLeadTradesRow shape is preserved.
 const COA_LEAD_TRADES_SQL = `
-  SELECT lt.trade_id, lt.trade_slug, lt.confidence::text AS confidence,
-         t.display_name
+  SELECT lt.trade_id, t.slug AS trade_slug, lt.confidence::text AS confidence,
+         t.name AS display_name
     FROM lead_trades lt
-    LEFT JOIN trades t ON t.slug = lt.trade_slug
+    LEFT JOIN trades t ON t.id = lt.trade_id
    WHERE lt.lead_id = $1
    ORDER BY lt.confidence DESC NULLS LAST
 `;
@@ -678,22 +683,29 @@ const COA_LEAD_TRADES_SQL = `
 // F.4 v4.1 (HIGH-DS-v4-A + HIGH-DS-v4-B/Ind-v4-6): 3-arm UNION ALL.
 // Arm 1: active lead_id (exact match). Arm 2: ALL permit revisions via LIKE prefix (skipped when $2 NULL).
 // Arm 3: linked CoA lead_id (skipped when $3 NULL). Defensive IS NOT NULL guards.
+// Pass-2 fold (2026-05-20): explicit ::text casts on $2 and $3 — when the
+// caller passes null (no linked permit / no cross-stream coa lead), pg-pool
+// can't infer the parameter type and raises 42P18 ("could not determine data
+// type of parameter $N"). Casting forces text inference up-front.
+// Pass-2 fold #2: id::int casts — lifecycle_status_history.id is BIGINT; pg
+// returns it as a string by default. The LeadInspect schema declares id as
+// `number`, so the bare bigint string fails Zod validation. Cast in SQL.
 const COA_CROSS_STREAM_SQL = `
   SELECT lead_id,
          CASE WHEN lead_id LIKE 'coa:%' THEN 'coa' ELSE 'permit' END AS lead_type,
-         from_status, to_status, transitioned_at::text AS transitioned_at, id
+         from_status, to_status, transitioned_at::text AS transitioned_at, id::int AS id
     FROM lifecycle_status_history
    WHERE lead_id = $1
   UNION ALL
-  SELECT lead_id, 'permit', from_status, to_status, transitioned_at::text, id
+  SELECT lead_id, 'permit', from_status, to_status, transitioned_at::text, id::int
     FROM lifecycle_status_history
-   WHERE $2 IS NOT NULL
-     AND lead_id LIKE 'permit:' || $2 || ':%' ESCAPE '\\'
+   WHERE $2::text IS NOT NULL
+     AND lead_id LIKE 'permit:' || $2::text || ':%' ESCAPE '\\'
   UNION ALL
-  SELECT lead_id, 'coa', from_status, to_status, transitioned_at::text, id
+  SELECT lead_id, 'coa', from_status, to_status, transitioned_at::text, id::int
     FROM lifecycle_status_history
-   WHERE $3 IS NOT NULL
-     AND lead_id = $3
+   WHERE $3::text IS NOT NULL
+     AND lead_id = $3::text
    ORDER BY transitioned_at ASC, id ASC
 `;
 

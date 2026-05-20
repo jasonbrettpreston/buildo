@@ -1588,3 +1588,18 @@ Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passe
 | 89 | DEFER | DeepSeek LOW | Hardcoded 10%/5% scraper-coverage thresholds in `externalRow` — not tunable via logic_variables | Pre-existing design choice. Track if operators need it. |
 | 90 | REJECT | Independent CRIT | "5 new CoA coverage rows + cx query + renumbered labels are missing from assert-global-coverage.js" | Worktree was stale at agent spawn time; verified via main-repo grep that all edits ARE present at lines 132-232. Reviewer's `isolation: "worktree"` snapshot didn't capture the in-flight edits. |
 
+---
+
+## WF3 CoA Lead Inspector schema drift (Spec 79 §7 Surface 1) — Multi-agent review (2026-05-20)
+
+2-reviewer review (DeepSeek + Independent) on the 4-drift fix in `src/lib/leads/lead-inspect-query.ts`. The 4 in-scope crashes are correctly fixed (Red Light → Green Light cycle confirmed; live API returns 200). All other findings are pre-existing concerns in untouched lines:
+
+| # | Severity | Source | Finding | Decision rationale |
+|---|---|---|---|---|
+| 91 | DEFER | Independent CONDITIONAL + DeepSeek CRIT | `id::int` cast in `COA_CROSS_STREAM_SQL` truncates at 2.1B; lifecycle_status_history.id is BIGSERIAL with no growth ceiling | Acceptable for current scale (<300K rows; 10000× headroom). Safer long-term: `id::text` + JS-side `Number(r.id)` parse in mapper at line 819, matching the `toNumber()` pattern elsewhere in the file. Separate WF3. |
+| 92 | REJECT | DeepSeek CRIT | "Arm 2 of `COA_CROSS_STREAM_SQL` produces duplicate timeline entries with Arm 1" | False positive. `fetchCoaPanel` is only invoked for CoA leads, so `$1='coa:...'` and Arm 2 only matches `permit:...` — no overlap. The reviewer assumed the function is used for permit leads too. |
+| 93 | DEFER | DeepSeek HIGH | `COA_LINKED_PERMIT_SQL` `ORDER BY revision_num DESC` lex-sorts ("9" > "10") | Real pre-existing concern. Cast to `revision_num::int DESC`. Separate WF3. |
+| 94 | DEFER | DeepSeek HIGH+MED | Pre-existing patterns in MAIN_SQL (LPAD 3-digit revisions, est_const_cost JS precision, lead_key separator alignment, predicted_remaining_days null sum, estimatedTotal zero-divide) | All pre-existing in lines I didn't touch. Separate audit/cleanup WFs. |
+| 95 | DEFER | DeepSeek LOW | normalizeBuilderName double-regex strip; lead_type CASE redundant; new Date(transitioned_at).toISOString() may throw on malformed | Pre-existing patterns. Separate cleanup pass. |
+| 96 | REJECT | DeepSeek NIT | "$2::text casts are redundant because $2 is a string param" | Wrong — when caller passes JS `null`, pg-pool can't infer the parameter type without an explicit cast. That's the exact bug this WF3 fixed. |
+
