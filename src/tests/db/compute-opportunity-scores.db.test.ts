@@ -111,11 +111,13 @@ describe.skipIf(!dbAvailable())('compute-opportunity-scores — CoA end-to-end s
     // Seed lead_analytics CoA row: 1 tracker, 0 savers (F.2 UNION lead_key shape).
     // mig 141 promoted lead_id to NOT NULL on lead_analytics — must be supplied
     // alongside the legacy lead_key column. Both hold the same canonical id for
-    // CoA leads ('coa:F3TEST00N').
+    // CoA leads ('coa:F3TEST00N'). Split into $1/$2 (same value) to avoid PG's
+    // 42P08 "inconsistent types deduced for parameter" error — lead_key is
+    // VARCHAR, lead_id is TEXT, so a shared $1 fails type inference.
     await pool.query(
       `INSERT INTO lead_analytics (lead_key, lead_id, tracking_count, saving_count, updated_at)
-       VALUES ($1, $1, 1, 0, NOW())`,
-      [leadId],
+       VALUES ($1, $2, 1, 0, NOW())`,
+      [leadId, leadId],
     );
 
     // Run the script end-to-end.
@@ -172,10 +174,11 @@ describe.skipIf(!dbAvailable())('compute-opportunity-scores — CoA end-to-end s
        VALUES ($1, 300000, '{"framing": 50000}'::jsonb, NOW(), 'permit')`,
       [leadId],
     );
+    // Same shape as T1 — see mig 141 note above.
     await pool.query(
-      `INSERT INTO lead_analytics (lead_key, tracking_count, saving_count, updated_at)
-       VALUES ($1, 1, 0, NOW())`,
-      [leadId],
+      `INSERT INTO lead_analytics (lead_key, lead_id, tracking_count, saving_count, updated_at)
+       VALUES ($1, $2, 1, 0, NOW())`,
+      [leadId, leadId],
     );
 
     // H3 fold (Independent diff HIGH): stdio 'inherit' (NOT 'pipe') matches setup-testcontainer.ts
