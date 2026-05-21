@@ -85,6 +85,17 @@ Pre-issuance status values observed in the feed (2026-05-11):
 - CKAN adds/removes columns → `assert_schema` (Tier 1) catches this before `load-permits` runs
 - Duplicate `(permit_num, revision_num)` within a batch → deduped before INSERT
 - `est_const_cost` as string → parsed to numeric, NULL on failure
+
+### Lifecycle status history `event_date` population (WF3 Pass-2.5 Finding C Phase 2 — planned 2026-05-21)
+
+`load-permits.js` writes status-change rows to `lifecycle_status_history` (per Spec 41 step 2 + Spec 84 §2 schema). **Phase 2 of WF3 Finding C** will populate the nullable `event_date DATE` column added in Phase 1 (mig 160).
+
+**Intent (exact `to_status` → source-date mapping deferred to Phase 2 implementation):**
+`event_date` will be populated from one of `permits.issued_date` / `permits.completed_date` / `permits.application_date` based on the `to_status` value emitted by the writer. The exact mapping table is determined at Phase 2 implementation time by reading the actual normalized status strings emitted by `load-permits.js` against Spec 84 §2.5.a's enumerated 53-status list — this avoids Phase 1 documentation pre-committing to status strings that Phase 2 may need to refine.
+
+**Status transitions without a CKAN source date column** (most pre-issuance Notice / Review / Application-On-Hold states, intermediate inspection states, post-issuance non-milestone states) leave `event_date = NULL`. The Inspector (Spec 76 §3.5, Phase 5) renders `COALESCE(event_date, transitioned_at)` with a 'detected' badge when `event_date IS NULL`.
+
+**No historical backfill.** Pre-Phase-2 rows retain `event_date = NULL` permanently — honest representation that we don't know the exact event date for those rows, only when the pipeline observed the transition.
 </behavior>
 
 ---

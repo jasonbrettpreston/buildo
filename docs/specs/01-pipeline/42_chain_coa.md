@@ -29,7 +29,7 @@ assert_lifecycle_phase_distribution → assert_global_coverage
 | # | Slug | Script | Purpose | Writes To |
 |---|------|--------|---------|-----------|
 | 1 | `assert_schema` | `quality/assert-schema.js` | Validate CKAN metadata for CoA resources | pipeline_runs |
-| 2 | `coa` | `load-coa.js` | Ingest CoA applications from CKAN (active + closed resources) | coa_applications |
+| 2 | `coa` | `load-coa.js` | Ingest CoA applications from CKAN (active + closed resources). Also writes status-change rows to `lifecycle_status_history` (detected_by='load-coa.js') when CKAN status differs from existing CoA row. **WF3 Pass-2.5 Finding C Phase 3 (planned, 2026-05-21):** will populate `lifecycle_status_history.event_date` from `coa_applications.decision_date` / `hearing_date` based on `to_status` (intent only — exact mapping deferred to Phase 3 per Spec 84 §2 `event_date` column note). Phase 1 (mig 160) added the nullable column; Phase 3 lands the writer logic. | coa_applications, lifecycle_status_history |
 | 3 | `assert_coa_freshness` | `quality/assert-coa-freshness.js` | Verify last CoA record is within 45-day threshold | — |
 | 4 | `link_coa` | `link-coa.js` | Address matching via `street_name_normalized` columns + confidence matrix (ward as booster) | coa_applications |
 | 5 | `create_pre_permits` | `create-pre-permits.js` | Generate pre-permit leads from approved unlinked CoA applications | — |

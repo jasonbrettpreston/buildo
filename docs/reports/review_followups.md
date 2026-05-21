@@ -1732,3 +1732,24 @@ Source: WF3 #5 Pass-2.5 — adversarial IMPLEMENTATION review (Independent + Gem
 - Two reviewers converged on **advisory lock SDK + SIGTERM + stream error flush** as a single architectural concern. Worth a focused "pipeline runtime hardening" WF that fixes all three together rather than three separate WF3s.
 - Gemini CRIT on `computeSurgicalTotal` rounding (row 145) is the highest-confidence pre-existing financial-correctness bug surfaced in this review cycle. Should be next-session WF3 candidate alongside the §3 typo (row 122 from Finding L's review).
 
+---
+
+## Spec 84 Finding C Phase 1 (migration 160) — adversarial IMPLEMENTATION review DEFERs (2026-05-21)
+
+Source: WF3 #7 Pass-2.5 — Independent (no isolation) + Gemini Pro + DeepSeek-R1 reviewed migration 160 + tests + Spec 84/41/42/50/51/76 amendments. Independent caught 1 REAL Phase 1 fidelity issue (Spec 84 §2 "extended migrations 145/155/157/160" was factually wrong — only 160 is a schema extension; fixed inline before commit). Two-reviewer convergence raised a Phase 2+ design concern about idempotency + event_date. All items below are out-of-Phase-1 scope and tracked for downstream phases.
+
+| # | Triage | Source | Item | Phase to address |
+|---|---|---|---|---|
+| 152 | **DEFER to Phase 2/3 design** | Gemini CRIT + DeepSeek HIGH (two-reviewer convergence) | `uniq_lifecycle_status_history_natural_key` unique index is on `(lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))` — does NOT include `event_date`. When Phase 2/3 writers populate event_date, `ON CONFLICT DO NOTHING` may silently discard new event_date values OR retain stale ones. Real data-quality risk. | **Phase 2 + Phase 3 writer design.** Two options: (a) include `event_date` in the unique key via index rebuild; (b) keep the index as-is but switch to `ON CONFLICT DO UPDATE SET event_date = COALESCE(EXCLUDED.event_date, event_date)` so first non-null wins. Decision belongs to Phase 2's plan. Phase 1's migration is correct as-is — adding the column is independent of upsert semantics. |
+| 153 | DEFER to Phase 4 hardening | Gemini MEDIUM | Migration 160 doesn't add a CHECK constraint enforcing `(detected_by = 'classify-lifecycle-phase.js' → event_date IS NULL)`. Application-layer enforcement is fragile. | **Phase 4 (classify-lifecycle-phase writer).** When Phase 4 lands, add CHECK constraint as a sibling migration. Phase 1 kept the additive migration tight; the constraint becomes meaningful only after Phase 4 writer logic clarifies the rule. |
+| 154 | DEFER to Phase 5 | Gemini MEDIUM | No index on `event_date` — Inspector queries that ORDER BY `COALESCE(event_date, transitioned_at)` for a `lead_id` lack support on a 250K+ row table. | **Phase 5 (Inspector).** Add `CREATE INDEX CONCURRENTLY idx_lifecycle_status_history_lead_event_date ON lifecycle_status_history (lead_id, event_date DESC NULLS LAST, transitioned_at DESC)` IF EXPLAIN ANALYZE shows a Seq Scan. |
+| 155 | DEFER to Phase 5 | Gemini LOW | Timezone bug risk: implicit DATE → TIMESTAMPTZ coercion uses session timezone — operator west of UTC could see previous day. | **Phase 5 (Inspector).** Either format `event_date` as `YYYY-MM-DD` directly in the Inspector layer, or use `event_date::timestamptz AT TIME ZONE 'America/Toronto'` for Toronto-anchor. |
+| 156 | DEFER to Phase 5 | DeepSeek MEDIUM | Display asymmetry: event_date is date-only; transitioned_at is datetime. Fallback rendering needs an explicit formatting rule. | **Phase 5 (Inspector).** Document the formatting contract in Spec 76 §3.5 when Phase 5 lands. |
+| 157 | DEFER (false alarm) | DeepSeek CRIT | Claimed `COALESCE(date, timestamptz)` will throw — actually PostgreSQL auto-coerces DATE through TIMESTAMP to TIMESTAMPTZ in COALESCE. Spec 76 amendment uses explicit `::timestamptz`; migration COMMENT also updated to call out the cast. | N/A. Migration COMMENT updated to document the explicit cast pattern. |
+| 158 | DEFER (no action) | DeepSeek LOW | Risk of consumer `SELECT *` patterns confused by new column. | Independent confirmed no `SELECT *` consumers. Verified safe. |
+| 159 | DEFER (no action) | DeepSeek NIT | Migration numbering gap at 158 documented in migration header as "unknown provenance." | Already documented; operator awareness is sufficient. |
+
+**Phase 2 must-address items at the top of its plan:**
+- Row 152 idempotency-key + event_date — pick option (a) or (b) and document in Phase 2 plan before writer implementation.
+- Row 153 CHECK constraint for classifier-derived rows — schedule for Phase 4.
+

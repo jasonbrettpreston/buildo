@@ -91,6 +91,17 @@ The CoA stream parallels the permits stream — neither is a foreign key of the 
 - `C_OF_A_DESCISION` typo in CKAN → mapped as-is to `decision` column
 - Empty records on incremental → `process.exit(0)` after logging "no new records"
 - CKAN SQL endpoint returns 500 → treated as error, chain halts
+
+### Lifecycle status history `event_date` population (WF3 Pass-2.5 Finding C Phase 3 — planned 2026-05-21)
+
+`load-coa.js` writes status-change rows to `lifecycle_status_history` (per Spec 42 step 2 + Spec 84 §2 schema). **Phase 3 of WF3 Finding C** will populate the nullable `event_date DATE` column added in Phase 1 (mig 160).
+
+**Intent (exact `to_status` → source-date mapping deferred to Phase 3 implementation):**
+`event_date` will be populated from one of `coa_applications.decision_date` / `coa_applications.hearing_date` based on the `to_status` value emitted by the writer. Terminal-stage transitions (Approved / Refused / Final and Binding / Approved with Conditions / etc. per Spec 84 CoA status list) anchor to `decision_date`; pre-decision hearing-related transitions anchor to `hearing_date` when set. The exact mapping table is determined at Phase 3 implementation time by reading the actual normalized status strings emitted by `load-coa.js`.
+
+**Status transitions without a CKAN source date column** (pre-hearing intake states, intermediate review states) leave `event_date = NULL`. The Inspector (Spec 76 §3.5, Phase 5) renders `COALESCE(event_date, transitioned_at)` with a 'detected' badge when `event_date IS NULL`.
+
+**No historical backfill** — same rationale as Spec 50 §3.
 </behavior>
 
 ---

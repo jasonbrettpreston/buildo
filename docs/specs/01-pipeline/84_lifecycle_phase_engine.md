@@ -35,6 +35,32 @@ The engine mutates core tables and populates a historical transition ledger.
 
 > **Ledger key scope (added 2026-05-11):** the ledger is keyed on `(permit_num, revision_num)` — it captures permit-side transitions only. CoA-side lifecycle transitions are NOT written here; `coa_applications.lifecycle_phase` is the in-place column for CoA phase state and there's no CoA equivalent transition table. **Implication:** the WF1 #B/#C `lifecycle.timeline[]` panel (Spec 76 §3.5) reads `permit_phase_transitions` and therefore structurally cannot render meaningful history for CoA-only leads (`lead_id = COA-${application_number}` per Spec 91 §4.3.1). Cross-stream timeline rendering is the scope of Fix B WF1 (queued — see `.cursor/queued_task_coa_lifecycle_fixes.md`).
 
+#### `lifecycle_status_history` (Unified Status-Level Ledger)
+
+Universal status-change ledger (migration 127, extended by migration 160). Captures EVERY source-status change for both permits and CoA — including same-phase transitions that `permit_phase_transitions` collapses. Three writers (enforced by CHECK on `detected_by`): `load-permits.js` (permit-side CKAN status changes), `load-coa.js` (CoA-side CKAN status+decision changes), `classify-lifecycle-phase.js` (derived phase transitions).
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | BIGSERIAL | PRIMARY KEY | Surrogate key |
+| `lead_id` | TEXT | NOT NULL, CHECK `~ '^(permit\|coa):.+$'` | Canonical lead identifier per Spec 42 §6.6.A.1 Option C |
+| `from_status` | VARCHAR(60) | nullable | Previous source status (NULL on first observation) |
+| `to_status` | VARCHAR(60) | NOT NULL | New source status (raw CKAN, whitespace-trimmed per `normalizeStatus()`) |
+| `from_seq` | INTEGER | nullable | Spec 84 §3 phase sequence number — previous |
+| `to_seq` | INTEGER | nullable | Spec 84 §3 phase sequence number — new |
+| `from_phase` | VARCHAR(20) | nullable | P-code phase — previous |
+| `to_phase` | VARCHAR(20) | nullable | P-code phase — new |
+| `decision` | VARCHAR(60) | nullable | CoA decision snapshot at transition time (decision-history preservation) |
+| `decision_date` | DATE | nullable | CoA decision date at transition time |
+| `transitioned_at` | TIMESTAMPTZ | NOT NULL, DEFAULT NOW() | **Timestamp of the detected shift** — when the pipeline observed this status change. Not the real-world event date. See `event_date` below. |
+| `detected_by` | VARCHAR(60) | NOT NULL, CHECK in ('load-permits.js', 'load-coa.js', 'classify-lifecycle-phase.js') | Writer attribution for cross-writer audit |
+| `permit_type` | VARCHAR(50) | nullable | Snapshot from permits source |
+| `project_type` | VARCHAR(50) | nullable | Snapshot for CoA-side rows |
+| `coa_type_class` | VARCHAR(30) | nullable | Snapshot from `coa_applications.coa_type_class` |
+| `neighbourhood_id` | BIGINT | nullable | Snapshot of permits→neighbourhoods join |
+| `event_date` | DATE | nullable | **Real-world date the status change occurred** (sourced from CKAN: `permits.issued_date` / `completed_date` / `application_date` / `coa_applications.decision_date` / `hearing_date`, depending on writer + `to_status`). NULL when source provides no date (most permit non-milestone transitions; all classifier-derived rows). Inspector (Spec 76 §3.5) renders `COALESCE(event_date, transitioned_at)` with a 'detected' badge when NULL. **WF3 Pass-2.5 Finding C** (mig 160, 2026-05-21 — phase 1 of 5; writers populate in phases 2-4). No historical backfill — pre-fix rows retain `event_date = NULL` and render via the `transitioned_at` fallback with the 'detected' badge (honest representation: "we don't know exactly when, only when we observed"). |
+
+**Idempotency:** UNIQUE INDEX `uniq_lifecycle_status_history_natural_key` on `(lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))` defends against re-runs of ingest scripts over the same time window.
+
 ### Implementation
 - **Script:** `scripts/classify-lifecycle-phase.js`
 - **Logic Library:** `scripts/lib/lifecycle-phase.js` (Pure function `classifyLifecyclePhase`)
