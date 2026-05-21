@@ -66,7 +66,10 @@ export type TradeTimingEstimate =
 
 export interface LeadFeedCursor {
   score: number;
-  lead_type: 'permit' | 'builder';
+  // WF3 #3 (Spec 79 §7a Finding K, 2026-05-20): 'coa' added so cursor
+  // tuples emitted by the 3-arm SQL parse cleanly on both server + mobile.
+  // Mobile Zod schema parity required (mobile/src/lib/schemas.ts).
+  lead_type: 'permit' | 'builder' | 'coa';
   lead_id: string;
 }
 
@@ -78,6 +81,15 @@ export interface LeadFeedInput {
   radius_km: number;
   cursor?: LeadFeedCursor;
   limit: number;
+  // WF3 #3 — Spec 91 §3.1 filter param. 'all' = permit+builder+coa,
+  // 'permit' = lead_id LIKE 'permit:%' only (excludes builders per
+  // spec-literal lead-id-pattern read), 'coa' = lead_id LIKE 'coa:%' only.
+  // Optional + defaulted at the Zod boundary to 'all'.
+  lead_type?: 'permit' | 'coa' | 'all';
+  // WF3 #3 killswitch — when true, omits the CoA UNION arm entirely from
+  // the emitted SQL. Read from LEAD_FEED_DISABLE_COA env var at the route
+  // boundary; default DISABLED (=true) until mobile CoA cards ship.
+  disableCoa?: boolean;
 }
 
 // LeadFeedItem is a discriminated union on `lead_type`. The flat-with-nullable
@@ -167,7 +179,33 @@ export interface BuilderLeadFeedItem extends LeadFeedItemBase {
   avg_project_cost: number | null;
 }
 
-export type LeadFeedItem = PermitLeadFeedItem | BuilderLeadFeedItem;
+// WF3 #3 (Spec 79 §7a Finding K, 2026-05-20) — CoA lead branch per Spec 91
+// §3 backend contract. Shape mirrors the proven COA_LEAD_DETAIL_SQL (lead-
+// detail-query.ts:271-320 + Spec 42 §6.11 Phase C). is_saved + competition_
+// count are read-path only: mig 070 CHECK constraint blocks lead_type='coa'
+// writes, so both default to false/0 until the CoA-write WF lands.
+export interface CoaLeadFeedItem extends LeadFeedItemBase {
+  lead_type: 'coa';
+  application_number: string;
+  work_description: string | null;
+  street_num: string | null;
+  street_name: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  neighbourhood_name: string | null;
+  estimated_cost: number | null;
+  modeled_gfa_sqm: number | null;
+  lifecycle_phase: string | null;
+  lifecycle_stalled: boolean;
+  // CoA-specific signal — 0–1 probability sourced from trade_forecasts (Phase
+  // F.1). Drives Spec 91 §3.5 5-bar render. Scoped to CoA-only in this WF
+  // (Finding H — permit-branch bid_value is a follow-up).
+  bid_value: number | null;
+  target_window: 'bid' | 'work' | null;
+  predicted_start: string | null;
+}
+
+export type LeadFeedItem = PermitLeadFeedItem | BuilderLeadFeedItem | CoaLeadFeedItem;
 
 export interface LeadFeedResult {
   data: LeadFeedItem[];

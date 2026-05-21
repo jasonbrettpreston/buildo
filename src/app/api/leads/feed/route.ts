@@ -123,6 +123,13 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     //    (post Phase-2 holistic review — earlier drafts swallowed errors
     //    and returned empty). The outer try/catch below converts thrown
     //    errors to a 500 envelope via `internalError()`.
+    //
+    // WF3 #3 (Spec 79 §7a Finding K, 2026-05-20) — CoA killswitch.
+    // `LEAD_FEED_DISABLE_COA=1` (the deploy default) keeps prod on the
+    // legacy 2-arm SQL until mobile CoA cards ship. Operators flip it to
+    // '0' in dev/staging to live-test the 3-arm path. Read once per
+    // request (cheap — env-var lookup).
+    const disableCoa = process.env.LEAD_FEED_DISABLE_COA !== '0';
     perf.mark('query_start');
     const result = await getLeadFeed(
       {
@@ -132,6 +139,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
         lng: params.lng,
         radius_km: params.radius_km,
         limit: params.limit,
+        lead_type: params.lead_type,
+        disableCoa,
         ...(cursor !== undefined && { cursor }),
       },
       pool,

@@ -297,4 +297,24 @@ describe('leadViewBodySchema', () => {
       }),
     ).toThrow();
   });
+
+  // WF3 #3 (Spec 79 §7a Finding K, 2026-05-20) — IMPL-review fold Indep MED-1.
+  // Documents the known contract gap: the feed surfaces CoA leads (when the
+  // LEAD_FEED_DISABLE_COA killswitch is off) but lead_views CHECK constraint
+  // from mig 070 blocks `lead_type='coa'` writes. A mobile client tapping
+  // the save heart on a CoA card therefore must EITHER (a) be prevented from
+  // tapping by a mobile-card gate, or (b) hit this Zod 400 here. This test
+  // is the contract gate — when the CoA-write follow-up WF lands and the
+  // discriminated union gains a 'coa' arm, this test SHOULD be deleted in
+  // the same commit (Indep MED-3 fold).
+  it("rejects lead_type='coa' until the CoA-write follow-up WF lands (Spec 79 §7a Finding K, IMPL-review Indep MED fold)", () => {
+    expect(() =>
+      leadViewBodySchema.parse({
+        trade_slug: 'plumbing',
+        action: 'save',
+        lead_type: 'coa',
+        application_number: 'A0125-24',
+      }),
+    ).toThrow();
+  });
 });

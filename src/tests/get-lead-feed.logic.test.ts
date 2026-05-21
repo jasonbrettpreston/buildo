@@ -1,8 +1,10 @@
 // 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §Implementation
+// 🔗 SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §3 (CoA UNION arm — WF3 #3, 2026-05-20)
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Pool, QueryResult, QueryResultRow } from 'pg';
 import {
   LEAD_FEED_SQL,
+  LEAD_FEED_SQL_WITH_COA,
   MAX_FEED_LIMIT,
   TIMING_DISPLAY_BY_CONFIDENCE,
   getLeadFeed,
@@ -949,5 +951,299 @@ describe('mapRow — widened columns', () => {
     } else {
       throw new Error('expected permit lead to expose lifecycle fields');
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF3 #3 (Spec 79 §7a Finding K, 2026-05-20) — CoA UNION arm source-shape
+//
+// 18 assertions on the 3-arm SQL (`LEAD_FEED_SQL_WITH_COA`) plus regression
+// guards on the killswitch-off shape (`LEAD_FEED_SQL`). When the killswitch
+// `LEAD_FEED_DISABLE_COA=1` is set, the route uses `LEAD_FEED_SQL` (2-arm,
+// legacy shape); when unset/`0`, the route uses `LEAD_FEED_SQL_WITH_COA`
+// (3-arm with CoA candidates). Default per WF3 #3 plan v2: DISABLED (kill
+// switch on). Operators flip the env var off once mobile cards ship.
+//
+// Plan-review v2 folds covered by these tests:
+//   #1 (cursor enum), #4 (bid_value CoA-only), #6 (CTE conditional emission),
+//   #7 (test coverage: NULL JOINs, lead_type filter axes), #8 (param doc),
+//   #9 (lead_type=permit excludes builder per Spec 91 §3.1 literal read),
+//  #11 (regression guard against accidental coa_applications leak)
+// ---------------------------------------------------------------------------
+
+describe('LEAD_FEED_SQL_WITH_COA — CoA UNION arm (Spec 91 §3)', () => {
+  it('exports LEAD_FEED_SQL_WITH_COA as a 3-arm SQL string', () => {
+    expect(typeof LEAD_FEED_SQL_WITH_COA).toBe('string');
+    expect(LEAD_FEED_SQL_WITH_COA.length).toBeGreaterThan(LEAD_FEED_SQL.length);
+  });
+
+  it('contains coa_candidates AS CTE', () => {
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/coa_candidates AS/);
+  });
+
+  it('UNION ALL has exactly 3 arms inside `unified` CTE (permit + builder + coa)', () => {
+    // Count `UNION ALL\n    SELECT` patterns — the actual SQL-level UNION
+    // operator usage, excluding the word appearing in SQL comments.
+    const unionAllOps = (LEAD_FEED_SQL_WITH_COA.match(/UNION ALL\s+SELECT/g) ?? []).length;
+    expect(unionAllOps).toBe(2);
+  });
+
+  it("coa_candidates projects 'coa'::text AS lead_type", () => {
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/'coa'::text\s+AS\s+lead_type/);
+  });
+
+  it("coa_candidates emits canonical lead_id ('coa:' || ca.application_number)", () => {
+    // Spec 42 §6.6.A.1 — canonical CoA lead_id format.
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/'coa:'\s*\|\|\s*ca\.application_number/);
+  });
+
+  it('coa_candidates projects bid_value from coa_applications (Spec 91 §3.5 5-bar render)', () => {
+    // §10 fold #4: bid_value is CoA-only in this WF. Live-verify discovered
+    // bid_value lives on coa_applications (NOT trade_forecasts) — fixed
+    // inline 2026-05-20 after the test ran against the dev DB.
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/ca\.bid_value/);
+  });
+
+  it("coa_candidates LEFT JOINs trade_forecasts on tf.lead_id = ('coa:' || ca.application_number)", () => {
+    // Mirrors lead-detail-query.ts:298-300 (proven shape per Spec 42 §6.11 Phase C).
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/LEFT JOIN trade_forecasts tf[\s\S]{0,80}?tf\.lead_id\s*=\s*\('coa:'\s*\|\|\s*ca\.application_number\)/);
+  });
+
+  it('coa_candidates LEFT JOINs neighbourhoods on n.id = ca.neighbourhood_id', () => {
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/LEFT JOIN neighbourhoods n[\s\S]{0,80}?n\.id\s*=\s*ca\.neighbourhood_id/);
+  });
+
+  it("coa_candidates LEFT JOIN lead_views uses lead_type = 'coa' (read path — mig 070 CHECK blocks writes)", () => {
+    // Plan-review fold: detail-query already JOINs lead_views.lead_type='coa';
+    // the read path is forward-compatible even though writes 23514 from the
+    // mig 070 CHECK constraint. is_saved + competition_count therefore
+    // always emit false/0 until the CoA-write WF lands. Documented in the
+    // §10 deferral notes.
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/lv_c\.lead_type\s*=\s*'coa'/);
+  });
+
+  it('coa_candidates WHERE filters by ST_DWithin (geography) — radius gate', () => {
+    // Find the coa_candidates block and assert ST_DWithin appears in it.
+    const coaBlock = LEAD_FEED_SQL_WITH_COA.match(/coa_candidates AS \([\s\S]*?\),\s*unified AS/);
+    expect(coaBlock).not.toBeNull();
+    expect(coaBlock?.[0]).toMatch(/ST_DWithin/);
+  });
+
+  it("coa_candidates WHERE includes lead_type filter predicate ($10::text IN ('all', 'coa'))", () => {
+    // Spec 91 §3.1 — `?lead_type=coa` returns only `coa:%` rows; `?lead_type=all` returns all.
+    const coaBlock = LEAD_FEED_SQL_WITH_COA.match(/coa_candidates AS \([\s\S]*?\),\s*unified AS/);
+    expect(coaBlock?.[0]).toMatch(/\$10::text\s+IN\s*\(\s*'all'\s*,\s*'coa'\s*\)/);
+  });
+
+  it("permit_candidates WHERE includes filter predicate ($10::text IN ('all', 'permit'))", () => {
+    // Spec 91 §3.1 literal — `?lead_type=permit` returns only `permit:%` rows.
+    const permitBlock = LEAD_FEED_SQL_WITH_COA.match(/permit_candidates AS \([\s\S]*?\),\s*builder_candidates AS/);
+    expect(permitBlock?.[0]).toMatch(/\$10::text\s+IN\s*\(\s*'all'\s*,\s*'permit'\s*\)/);
+  });
+
+  it("builder_candidates WHERE restricts to $10::text = 'all' (excluded by permit filter — Spec 91 §3.1 literal)", () => {
+    // DeepSeek #9 plan-review fold rationale: spec line 81-83 reads
+    // `?lead_type=permit — returns only lead_id LIKE 'permit:%' rows`.
+    // Builder lead_ids are zero-padded numeric strings (no 'permit:' prefix),
+    // so the spec's literal lead_id pattern excludes builders under the
+    // permit filter. §10 note documents this interpretation.
+    const builderBlock = LEAD_FEED_SQL_WITH_COA.match(/builder_candidates AS \([\s\S]*?\),\s*unified AS/);
+    expect(builderBlock?.[0]).toMatch(/\$10::text\s*=\s*'all'/);
+  });
+
+  it('LEAD_FEED_SQL (killswitch-on shape) does NOT contain coa_candidates', () => {
+    // Regression guard: when LEAD_FEED_DISABLE_COA=1, the route uses
+    // LEAD_FEED_SQL which must NOT reference the CoA arm. This is the
+    // legacy 2-arm shape that 75 prior tests assert against.
+    expect(LEAD_FEED_SQL).not.toMatch(/coa_candidates/);
+  });
+
+  it('LEAD_FEED_SQL (killswitch-on shape) does NOT reference coa_applications', () => {
+    expect(LEAD_FEED_SQL).not.toMatch(/coa_applications/);
+  });
+
+  it('LEAD_FEED_SQL (killswitch-on shape) STILL accepts $10 filter — permit arm respects ?lead_type=permit (IMPL-review Indep CRIT-2 fold)', () => {
+    // The 10-param shape MUST be stable across the killswitch boundary so
+    // route.ts can pass a uniform 10-element params array regardless of
+    // disableCoa. If a future edit strips $10 from only the 2-arm SQL,
+    // the killswitch-on path will hit a `bind message supplies N
+    // parameters, but prepared statement requires N-1` error from pg.
+    expect(LEAD_FEED_SQL).toMatch(/\$10::text\s+IN\s*\(\s*'all'\s*,\s*'permit'\s*\)/);
+    expect(LEAD_FEED_SQL).toMatch(/\$10::text\s*=\s*'all'/);
+  });
+
+  it('coa_candidates lv_c JOIN includes trade_slug predicate (IMPL-review Indep HIGH-1 fold)', () => {
+    // Without this, post-CoA-write-WF a user saving a CoA under trade A
+    // would see is_saved=true on the CoA feed for trade B. Mirrors lv_p
+    // (line ~253) and lv_b (line ~450). Dormant today (mig 070 CHECK
+    // blocks lead_type='coa' writes); correct for forward-compat.
+    const coaBlock = LEAD_FEED_SQL_WITH_COA.match(/coa_candidates AS \([\s\S]*?\),\s*unified AS/);
+    expect(coaBlock?.[0]).toMatch(/lv_c\.trade_slug\s*=\s*\$1/);
+  });
+
+  it("coa_candidates filters terminal CoA states by P-CODES (P19/P20) NOT status strings (IMPL-review Indep CRIT-1 fold)", () => {
+    // coa_applications.lifecycle_phase stores P-codes per mig 085 + the
+    // classifier. v1 of this filter used 'Withdrawn'/'Refused'/'Closed'
+    // literal status strings against the P-code column — semantic no-op.
+    // The correct terminal codes per
+    // src/lib/classification/lifecycle-phase.ts:508-517 are P19 + P20.
+    const coaBlock = LEAD_FEED_SQL_WITH_COA.match(/coa_candidates AS \([\s\S]*?\),\s*unified AS/);
+    expect(coaBlock?.[0]).toMatch(/NOT IN \('P19',\s*'P20'\)/);
+    // Status-string predicates would appear in an `IN (...)` or `NOT IN (...)`
+    // clause WITHOUT the P-code prefix. Allow status strings in comments
+    // (which explain WHY we filter by P-code) by anchoring on the SQL
+    // predicate shape: `IN ('Withdrawn'` would only occur in actual code.
+    expect(coaBlock?.[0]).not.toMatch(/IN\s*\(\s*'Withdrawn'/);
+    expect(coaBlock?.[0]).not.toMatch(/IN\s*\(\s*'Refused'/);
+  });
+
+  it('SQL has a parameter-binding comment block listing all 10 $N params (DeepSeek #8 fold)', () => {
+    // Drift-prevention: any future change that adds/removes/renames a
+    // numbered parameter must also update this comment. Tests catch the
+    // comment going stale.
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/\$1[\s\S]*?trade_slug/);
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/\$10[\s\S]{0,200}?lead_type/);
+  });
+
+  it('ORDER BY tuple remains (relevance_score DESC, lead_type DESC, lead_id DESC)', () => {
+    // Cursor compat: changing the ORDER BY would invalidate every
+    // in-flight mobile cursor. Spec 91 §3.1 mentions ?sort=lifecycle_seq
+    // alternative ordering — DEFERRED per plan v2 Operating Boundaries.
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(
+      /ORDER BY\s+relevance_score\s+DESC\s*,\s*lead_type\s+DESC\s*,\s*lead_id\s+DESC/,
+    );
+  });
+
+  it('coa_candidates projects target_window from trade_forecasts (Phase F.1 cached)', () => {
+    // Reads the persisted target_window from trade_forecasts rather than
+    // recomputing in JS — mirrors the permit-side lead-detail-query
+    // pattern from Spec 71. NULL when the forecast row is missing for a
+    // given (lead_id, trade_slug) combination.
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/tf\.target_window/);
+  });
+
+  it('LEAD_FEED_SQL_WITH_COA shares the 4-CTE legacy structure (wsib_per_entity + permit + builder + new coa)', () => {
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/wsib_per_entity AS/);
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/permit_candidates AS/);
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/builder_candidates AS/);
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/coa_candidates AS/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF3 #3 (2026-05-20) — getLeadFeed function-level CoA behaviour
+//
+// 6 behaviour assertions: killswitch routing, mapRow CoA branch, defensive
+// narrowing on malformed CoA rows, lead_type filter $10 param emission.
+// ---------------------------------------------------------------------------
+
+const sampleCoaRow = {
+  lead_type: 'coa',
+  lead_id: 'coa:A0125-24',
+  application_number: 'A0125-24',
+  permit_num: null,
+  revision_num: null,
+  status: null,
+  permit_type: null,
+  description: 'Two-storey rear addition + interior alts (heritage CoA review)',
+  street_num: '52',
+  street_name: 'Beech Avenue',
+  neighbourhood_name: 'The Beaches',
+  cost_tier: null,
+  estimated_cost: 320000,
+  active_permits_nearby: null,
+  avg_project_cost: null,
+  is_saved: false,
+  entity_id: null,
+  legal_name: null,
+  business_size: null,
+  primary_phone: null,
+  primary_email: null,
+  website: null,
+  photo_url: null,
+  latitude: 43.668,
+  longitude: -79.298,
+  distance_m: 1240,
+  proximity_score: 20,
+  timing_score: 15,
+  value_score: 12,
+  opportunity_score: 14,
+  relevance_score: 61,
+  timing_confidence: 'medium' as const,
+  opportunity_type: 'unknown' as const,
+  lifecycle_phase: 'P2' as string | null,
+  lifecycle_stalled: false,
+  competition_count: 0,
+  // CoA-specific
+  modeled_gfa_sqm: 185,
+  bid_value: 0.72,
+  target_window: 'bid' as 'bid' | 'work' | null,
+  predicted_start: '2026-09-15',
+};
+
+describe('getLeadFeed — CoA branch (WF3 #3 fold #6 + #7)', () => {
+  it('uses LEAD_FEED_SQL (no CoA arm) when input.disableCoa = true', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    await getLeadFeed(makeInput({ disableCoa: true }), mock as unknown as Pool);
+    const calledSql = mock.query.mock.calls[0]?.[0] as string;
+    expect(calledSql).not.toMatch(/coa_candidates/);
+  });
+
+  it('uses LEAD_FEED_SQL_WITH_COA when input.disableCoa = false (default in dev/staging)', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    await getLeadFeed(makeInput({ disableCoa: false }), mock as unknown as Pool);
+    const calledSql = mock.query.mock.calls[0]?.[0] as string;
+    expect(calledSql).toMatch(/coa_candidates/);
+  });
+
+  it("passes lead_type filter as $10 query parameter ('all' default per Spec 91 §3.1)", async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    await getLeadFeed(makeInput({ disableCoa: false, lead_type: 'coa' }), mock as unknown as Pool);
+    const params = mock.query.mock.calls[0]?.[1] as unknown[];
+    // $9 is user_id, $10 is lead_type filter.
+    expect(params[9]).toBe('coa');
+  });
+
+  it('mapRow CoA branch returns CoaLeadFeedItem with lead_type discriminator', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([sampleCoaRow]));
+    const result = await getLeadFeed(makeInput({ disableCoa: false }), mock as unknown as Pool);
+    const item = result.data[0];
+    expect(item?.lead_type).toBe('coa');
+    if (item && item.lead_type === 'coa') {
+      expect(item.application_number).toBe('A0125-24');
+      expect(item.bid_value).toBe(0.72);
+      expect(item.target_window).toBe('bid');
+      expect(item.predicted_start).toBe('2026-09-15');
+    } else {
+      throw new Error('expected CoA branch with discriminator');
+    }
+  });
+
+  it('mapRow drops malformed CoA row (null application_number) without breaking the feed', async () => {
+    const mock = createMockPool();
+    const malformedCoa = { ...sampleCoaRow, application_number: null };
+    const goodPermit = { ...samplePermitRow, lead_id: 'permit-good', relevance_score: 90 };
+    mock.query.mockResolvedValueOnce(qr([goodPermit, malformedCoa]));
+    const result = await getLeadFeed(makeInput({ disableCoa: false, limit: 2 }), mock as unknown as Pool);
+    // Bad row dropped; good permit remains.
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]?.lead_type).toBe('permit');
+  });
+
+  it('handles 3-way score tie (permit + coa + builder same relevance_score)', async () => {
+    // ORDER BY lead_type DESC tie-breaks: 'permit' > 'coa' > 'builder' in DESC order.
+    // mapRow must produce all 3 branches without throwing.
+    const mock = createMockPool();
+    const tiedPermit = { ...samplePermitRow, lead_id: 'p-tie', relevance_score: 50 };
+    const tiedCoa = { ...sampleCoaRow, lead_id: 'coa:tie', application_number: 'TIE-01', relevance_score: 50 };
+    const tiedBuilder = { ...sampleBuilderRow, lead_id: 'b-tie', relevance_score: 50 };
+    mock.query.mockResolvedValueOnce(qr([tiedPermit, tiedCoa, tiedBuilder]));
+    const result = await getLeadFeed(makeInput({ disableCoa: false, limit: 3 }), mock as unknown as Pool);
+    expect(result.data).toHaveLength(3);
+    expect(result.data.map((d) => d?.lead_type).sort()).toEqual(['builder', 'coa', 'permit']);
   });
 });

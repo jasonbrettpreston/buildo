@@ -75,23 +75,59 @@ export const BuilderLeadFeedItemSchema = LeadScoreBaseSchema.extend({
 export type BuilderLeadFeedItem = z.infer<typeof BuilderLeadFeedItemSchema>;
 
 // ---------------------------------------------------------------------------
-// Discriminated union: permit | builder
+// CoA lead (WF3 #3, Spec 79 §7a Finding K, 2026-05-20 — Spec 91 §3 contract)
+//
+// Mirrors server CoaLeadFeedItem in src/features/leads/types.ts. is_saved +
+// competition_count surface the read-path values from lead_views.lead_type='coa'
+// (always false / 0 until the CoA-write WF lands because mig 070 CHECK blocks
+// writes). bid_value is CoA-only in this WF (§10 fold #4); the permit-branch
+// bid_value addition is queued as Finding H.
+// ---------------------------------------------------------------------------
+
+export const CoaLeadFeedItemSchema = LeadScoreBaseSchema.extend({
+  lead_type: z.literal('coa'),
+  application_number: z.string(),
+  work_description: z.string().nullable(),
+  street_num: z.string().nullable(),
+  street_name: z.string().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  neighbourhood_name: z.string().nullable(),
+  estimated_cost: z.number().nullable(),
+  modeled_gfa_sqm: z.number().nullable(),
+  lifecycle_phase: z.string().nullable(),
+  lifecycle_stalled: z.boolean(),
+  bid_value: z.number().nullable(),
+  target_window: z.enum(['bid', 'work']).nullable(),
+  predicted_start: z.string().nullable(),
+});
+
+export type CoaLeadFeedItem = z.infer<typeof CoaLeadFeedItemSchema>;
+
+// ---------------------------------------------------------------------------
+// Discriminated union: permit | builder | coa
 // ---------------------------------------------------------------------------
 
 export const LeadFeedItemSchema = z.discriminatedUnion('lead_type', [
   PermitLeadFeedItemSchema,
   BuilderLeadFeedItemSchema,
+  CoaLeadFeedItemSchema,
 ]);
 
 export type LeadFeedItem = z.infer<typeof LeadFeedItemSchema>;
 
 // ---------------------------------------------------------------------------
 // Feed cursor
+//
+// WF3 #3 Indep CRIT-1 fold: 'coa' added to the enum or any page where a CoA
+// row is the last raw row would emit a next_cursor that fails this parse and
+// crashes the feed via ErrorBoundary. Server `LeadFeedCursor.lead_type` and
+// `cursor_lead_type` query-param enum mirror this change.
 // ---------------------------------------------------------------------------
 
 export const LeadFeedCursorSchema = z.object({
   score: z.number(),
-  lead_type: z.enum(['permit', 'builder']),
+  lead_type: z.enum(['permit', 'builder', 'coa']),
   lead_id: z.string(),
 });
 

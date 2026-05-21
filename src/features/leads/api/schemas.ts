@@ -51,8 +51,17 @@ export const leadFeedQuerySchema = z
     // promote to .number().finite() at that time and update the SQL cast
     // in get-lead-feed.ts to match.
     cursor_score: z.coerce.number().finite().int().nonnegative().optional(),
-    cursor_lead_type: z.enum(['permit', 'builder']).optional(),
+    // WF3 #3 (Spec 79 §7a Finding K, 2026-05-20): 'coa' added so cursor
+    // round-trips through 3-arm UNION feed. Mobile parity in
+    // mobile/src/lib/schemas.ts LeadFeedCursorSchema.
+    cursor_lead_type: z.enum(['permit', 'builder', 'coa']).optional(),
     cursor_lead_id: z.string().min(1).optional(),
+    // WF3 #3 — Spec 91 §3.1 lead_type filter axis. 'all' default per spec
+    // line 83. 'permit' filter (line 81) reads literally: `lead_id LIKE
+    // 'permit:%'` — builders (zero-padded numeric lead_ids) are excluded
+    // under that filter. 'builder' is NOT a value of this param — builders
+    // surface only via 'all'.
+    lead_type: z.enum(['permit', 'coa', 'all']).default('all'),
   })
   .refine(
     (data) => {

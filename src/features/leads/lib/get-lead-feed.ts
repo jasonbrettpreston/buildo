@@ -33,6 +33,7 @@ import type { Pool } from 'pg';
 import { MAX_RADIUS_KM, metersFromKilometers } from '@/features/leads/lib/distance';
 import { displayLifecyclePhase } from '@/features/leads/lib/lifecycle-phase-display';
 import type {
+  CoaLeadFeedItem,
   LeadFeedCursor,
   LeadFeedInput,
   LeadFeedItem,
@@ -51,7 +52,10 @@ export const MAX_FEED_LIMIT = 30;
 export const DEFAULT_FEED_LIMIT = 15;
 
 /**
- * Spec 70 §Implementation — verbatim. Parameters:
+ * Spec 70 §Implementation. Parameters (WF3 #3 fold — DeepSeek #8: any change
+ * that adds/removes/renames a numbered parameter MUST also update this comment;
+ * the get-lead-feed.logic.test.ts regex guards prevent silent drift):
+ *
  *   $1 = trade_slug (text)
  *   $2 = lng (float8)
  *   $3 = lat (float8)
@@ -60,9 +64,25 @@ export const DEFAULT_FEED_LIMIT = 15;
  *   $6 = cursor_score (int or NULL)        — page 1 sends NULL
  *   $7 = cursor_lead_type (text or NULL)
  *   $8 = cursor_lead_id (text or NULL)
+ *   $9 = user_id (text)                    — Phase 3-vi saved-state JOINs
+ *   $10 = lead_type (text)                 — Spec 91 §3.1 filter: 'all' | 'permit' | 'coa'
+ *                                            (WF3 #3 2026-05-20 fold)
  *
  * The `$6::int IS NULL` short-circuit makes the WHERE a no-op on page 1, so
  * we use a single SQL string for both first-page and cursor cases.
+ *
+ * WF3 #3 SQL emission strategy: this module pre-builds TWO SQL strings at
+ * module load (no per-request string concat):
+ *   - LEAD_FEED_SQL          → 2-arm legacy (permit + builder). Used when
+ *                              LEAD_FEED_DISABLE_COA=1 (default per plan v2).
+ *   - LEAD_FEED_SQL_WITH_COA → 3-arm (permit + builder + coa). Used when
+ *                              the env-var is unset/'0'. CoA candidates CTE
+ *                              mirrors COA_LEAD_DETAIL_SQL (lead-detail-
+ *                              query.ts:271-320 + Spec 42 §6.11 Phase C).
+ *
+ * The killswitch is a STRING-CONCAT-AT-MODULE-LOAD gate (not a runtime SQL
+ * predicate) — PG has no work to do when the CoA arm is absent. When CoA
+ * arm IS present, the $10 filter param routes traffic per Spec 91 §3.1.
  */
 export const LEAD_FEED_SQL = `
   WITH
@@ -258,6 +278,9 @@ export const LEAD_FEED_SQL = `
       AND p.location IS NOT NULL
       AND ST_DWithin(p.location::geography, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)
       AND p.status NOT IN ('Cancelled', 'Revoked', 'Closed')
+      -- WF3 #3 (Spec 91 §3.1 literal: ?lead_type=permit → lead_id LIKE 'permit:%'):
+      -- permit candidates participate under 'all' and 'permit' filters only.
+      AND $10::text IN ('all', 'permit')
   ),
   builder_candidates AS (
     SELECT
@@ -453,6 +476,13 @@ export const LEAD_FEED_SQL = `
       AND p.status IN ('Permit Issued', 'Inspection')
       AND ST_DWithin(p.location::geography, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)
       AND w.business_size IS NOT NULL
+      -- WF3 #3 (Spec 91 §3.1): builder lead_ids are zero-padded numeric
+      -- strings (no 'permit:' or 'coa:' prefix). Per the spec-literal
+      -- read of ?lead_type=permit (returns lead_id LIKE 'permit:%'),
+      -- builders are excluded from the permit filter. Builders surface
+      -- only under 'all'. There is no 'builder' filter value (Spec 91
+      -- §3.1 only documents permit | coa | all).
+      AND $10::text = 'all'
     GROUP BY
       e.id, e.legal_name, w.business_size,
       e.primary_phone, e.primary_email, e.website, e.photo_url
@@ -498,9 +528,191 @@ export const LEAD_FEED_SQL = `
   LIMIT $5::int
 `;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// WF3 #3 (Spec 79 §7a Finding K, 2026-05-20) — CoA UNION arm SQL.
+//
+// LEAD_FEED_SQL_WITH_COA = LEAD_FEED_SQL + an injected coa_candidates CTE +
+// a third UNION ALL arm. Built at module load by surgically inserting two
+// fragments into the legacy template:
+//   (a) the `coa_candidates AS (...)` CTE between builder_candidates and
+//       unified; and
+//   (b) a third `UNION ALL / SELECT * FROM coa_candidates` line inside the
+//       unified CTE.
+// The CoA CTE shape mirrors COA_LEAD_DETAIL_SQL (lead-detail-query.ts:271-320,
+// Spec 42 §6.11 Phase C) for column/JOIN parity. The `lead_views.lead_type='coa'`
+// JOIN is read-only — mig 070 CHECK blocks writes, so is_saved + competition_count
+// always emit false/0 until the CoA-write WF lands.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const COA_CANDIDATES_CTE = `
+  coa_candidates AS (
+    SELECT
+      'coa'::text AS lead_type,
+      ('coa:' || ca.application_number) AS lead_id,
+      -- Permit-shaped projections — NULL on CoA rows so the UNION ALL
+      -- column types line up with permit_candidates + builder_candidates.
+      NULL::text    AS permit_num,
+      NULL::text    AS revision_num,
+      NULL::text    AS status,
+      NULL::text    AS permit_type,
+      ca.description AS description,
+      ca.street_num,
+      ca.street_name,
+      n.name        AS neighbourhood_name,
+      NULL::text    AS cost_tier,
+      ca.estimated_cost::float8 AS estimated_cost,
+      ca.lifecycle_phase,
+      ca.lifecycle_stalled,
+      -- Read-path competition count. Mig 070 CHECK blocks lead_type='coa'
+      -- writes, so this lateral always returns 0 until the CoA-write WF
+      -- lands. Mirrors COA_LEAD_DETAIL_SQL (lead-detail-query.ts:301-308).
+      (
+        SELECT COUNT(DISTINCT lv2.user_id)::int
+        FROM lead_views lv2
+        WHERE lv2.lead_key = ('coa:' || ca.application_number)
+          AND lv2.saved = true
+          AND lv2.user_id != $9::text
+          AND lv2.lead_type = 'coa'
+      ) AS competition_count,
+      NULL::int        AS active_permits_nearby,
+      NULL::float8     AS avg_project_cost,
+      -- Per-user saved-state. Same read-path constraint as competition_count.
+      COALESCE(lv_c.saved, false) AS is_saved,
+      NULL::int  AS entity_id,
+      NULL::text AS legal_name,
+      NULL::text AS business_size,
+      NULL::text AS primary_phone,
+      NULL::text AS primary_email,
+      NULL::text AS website,
+      NULL::text AS photo_url,
+      ca.latitude,
+      ca.longitude,
+      -- Geographic distance — coa_applications.location is a geography(Point)
+      -- per mig 133. Same casting pattern as permit_candidates.
+      (ST_MakePoint(ca.longitude::float8, ca.latitude::float8)::geography <-> ST_MakePoint($2::float8, $3::float8)::geography)::float8 AS distance_m,
+      -- Pillar 1: proximity (0-30) — same bands as permit branch.
+      CASE
+        WHEN (ST_MakePoint(ca.longitude::float8, ca.latitude::float8)::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 500   THEN 30
+        WHEN (ST_MakePoint(ca.longitude::float8, ca.latitude::float8)::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 1000  THEN 25
+        WHEN (ST_MakePoint(ca.longitude::float8, ca.latitude::float8)::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 2000  THEN 20
+        WHEN (ST_MakePoint(ca.longitude::float8, ca.latitude::float8)::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 5000  THEN 15
+        WHEN (ST_MakePoint(ca.longitude::float8, ca.latitude::float8)::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 10000 THEN 10
+        WHEN (ST_MakePoint(ca.longitude::float8, ca.latitude::float8)::geography <-> ST_MakePoint($2::float8, $3::float8)::geography) < 20000 THEN 5
+        ELSE 0
+      END AS proximity_score,
+      -- Pillar 2: timing (0-30) — CoA leads precede construction; use the
+      -- bid_value as a smooth proxy. bid_value ∈ [0,1] from trade_forecasts;
+      -- map [0..1] → [10..30] so even null/0 still gets the floor=10 used
+      -- by permit's ELSE branch.
+      COALESCE(GREATEST(10, LEAST(30, (10 + ROUND(ca.bid_value * 20))::int)), 10) AS timing_score,
+      -- Pillar 3: value (0-20) — bucket by estimated_cost. Same boundaries
+      -- as the permit cost_tier CASE for cross-stream comparability.
+      CASE
+        WHEN ca.estimated_cost >= 2000000 THEN 20
+        WHEN ca.estimated_cost >= 500000  THEN 16
+        WHEN ca.estimated_cost >= 100000  THEN 12
+        WHEN ca.estimated_cost IS NOT NULL THEN 8
+        ELSE 3
+      END AS value_score,
+      -- Pillar 4: opportunity (0-20) — sourced from cached trade_forecasts
+      -- score (Phase F.1). Mirrors the permit-side reuse pattern; NULL
+      -- forecast → 0 (CoA hasn't been forecasted yet for this trade).
+      COALESCE(tf.opportunity_score, 0) AS opportunity_score,
+      -- Confidence + opportunity type. CoA leads are 'medium' confidence
+      -- (forecast is a prediction, not a phase observation) and 'unknown'
+      -- opportunity_type (the CoA application doesn't reveal homeowner vs
+      -- newbuild — that's only knowable post-permit).
+      'medium'::text AS timing_confidence,
+      'unknown'::text AS opportunity_type,
+      -- CoA-only payload fields (extra columns the UNION needs to carry).
+      ca.modeled_gfa_sqm::float8 AS modeled_gfa_sqm,
+      ca.bid_value::float8 AS bid_value,
+      tf.target_window,
+      tf.predicted_start::text AS predicted_start,
+      ca.application_number AS application_number
+    FROM coa_applications ca
+    LEFT JOIN neighbourhoods n ON n.id = ca.neighbourhood_id
+    LEFT JOIN trade_forecasts tf
+      ON tf.lead_id = ('coa:' || ca.application_number)
+     AND tf.trade_slug = $1
+    LEFT JOIN lead_views lv_c
+      ON lv_c.user_id = $9::text
+     AND lv_c.lead_key = ('coa:' || ca.application_number)
+     AND lv_c.lead_type = 'coa'
+     -- IMPL-review v1 fold (Indep HIGH-1, 2026-05-20): trade_slug
+     -- predicate matches the (user_id, lead_key, trade_slug) UNIQUE
+     -- index on lead_views (mig 070). Without it, a user who saves a
+     -- CoA under trade A would see is_saved=true on the CoA feed for
+     -- trade B as well. Today this is dormant (mig 070 CHECK blocks
+     -- lead_type='coa' writes → JOIN finds 0 rows regardless), but
+     -- the predicate is the correct per-trade semantic for when
+     -- writes are unblocked. Mirrors lv_p (line 253) and lv_b (line 450).
+     AND lv_c.trade_slug = $1
+    -- IMPL-review v1 live-verify fold (2026-05-20): coa_applications has no
+    -- location geography column (only numeric latitude + longitude per
+    -- mig 009 + 133). Build the geography inline. The compound NOT NULL
+    -- guard prevents ST_MakePoint(NULL, NULL) from short-circuiting the
+    -- DWithin in unexpected ways.
+    WHERE ca.latitude IS NOT NULL
+      AND ca.longitude IS NOT NULL
+      AND ST_DWithin(ST_MakePoint(ca.longitude::float8, ca.latitude::float8)::geography, ST_MakePoint($2::float8, $3::float8)::geography, $4::float8)
+      -- Spec 91 §3.1: ?lead_type=coa includes only coa rows; ?lead_type=all
+      -- includes coa rows alongside permit; ?lead_type=permit excludes coa.
+      AND $10::text IN ('all', 'coa')
+      -- Filter out terminal CoA states. coa_applications.lifecycle_phase
+      -- stores P-codes (mig 085 + classify-lifecycle-phase.js), NOT raw
+      -- status strings. Terminal CoA phases per
+      -- src/lib/classification/lifecycle-phase.ts:508-517:
+      --   P19 → Application Withdrawn / Cancelled / Refused
+      --   P20 → Closed / Complete
+      -- WF3 #3 IMPL-review v1 fold (Indep CRIT-1, 2026-05-20): v1 of this
+      -- filter used the literal STATUS strings against the P-code column
+      -- which is a no-op — no row's lifecycle_phase ever matches
+      -- 'Withdrawn'/'Refused'/'Closed' because the classifier writes
+      -- P-codes. Every terminal CoA was passing through. Switched to the
+      -- correct P-code values. Lifecycle_phase IS NULL still allowed for
+      -- newly-ingested CoAs awaiting classification.
+      AND (ca.lifecycle_phase IS NULL OR ca.lifecycle_phase NOT IN ('P19', 'P20'))
+  ),`;
+
+// Inject the CoA CTE between `builder_candidates AS (...)` and `unified AS (...)`,
+// and add a third UNION ALL arm inside unified. String replace at module load
+// keeps the two SQL strings in lockstep — every future LEAD_FEED_SQL edit
+// automatically propagates.
+// IMPL-review v1 fold (Indep HIGH-2, 2026-05-20): the anchor uses \r?\n to
+// tolerate both LF (Linux/macOS) and CRLF (Windows + git autocrlf=true)
+// line endings. The repo's primary dev environment is Windows 11. Without
+// this, a CRLF-normalized clone would silently miss the anchor and the
+// module-load throw below would crash the server at boot rather than
+// silently shipping the 2-arm SQL.
+export const LEAD_FEED_SQL_WITH_COA = LEAD_FEED_SQL
+  .replace(
+    /  unified AS \(\r?\n    SELECT \* FROM permit_candidates\r?\n    UNION ALL\r?\n    SELECT \* FROM builder_candidates\r?\n  \),/,
+    `${COA_CANDIDATES_CTE}\n  unified AS (\n    SELECT permit_num, revision_num, status, permit_type, description, street_num, street_name, neighbourhood_name, cost_tier, estimated_cost, lifecycle_phase, lifecycle_stalled, competition_count, active_permits_nearby, avg_project_cost, is_saved, entity_id, legal_name, business_size, primary_phone, primary_email, website, photo_url, latitude, longitude, distance_m, proximity_score, timing_score, value_score, opportunity_score, timing_confidence, opportunity_type, lead_type, lead_id, NULL::float8 AS modeled_gfa_sqm, NULL::float8 AS bid_value, NULL::text AS target_window, NULL::text AS predicted_start, NULL::text AS application_number FROM permit_candidates\n    UNION ALL\n    SELECT permit_num, revision_num, status, permit_type, description, street_num, street_name, neighbourhood_name, cost_tier, estimated_cost, lifecycle_phase, lifecycle_stalled, competition_count, active_permits_nearby, avg_project_cost, is_saved, entity_id, legal_name, business_size, primary_phone, primary_email, website, photo_url, latitude, longitude, distance_m, proximity_score, timing_score, value_score, opportunity_score, timing_confidence, opportunity_type, lead_type, lead_id, NULL::float8 AS modeled_gfa_sqm, NULL::float8 AS bid_value, NULL::text AS target_window, NULL::text AS predicted_start, NULL::text AS application_number FROM builder_candidates\n    UNION ALL\n    SELECT permit_num, revision_num, status, permit_type, description, street_num, street_name, neighbourhood_name, cost_tier, estimated_cost, lifecycle_phase, lifecycle_stalled, competition_count, active_permits_nearby, avg_project_cost, is_saved, entity_id, legal_name, business_size, primary_phone, primary_email, website, photo_url, latitude, longitude, distance_m, proximity_score, timing_score, value_score, opportunity_score, timing_confidence, opportunity_type, lead_type, lead_id, modeled_gfa_sqm, bid_value, target_window, predicted_start, application_number FROM coa_candidates\n  ),`,
+  );
+
+// Module-load sanity check: if the replacement didn't fire (e.g., the
+// LEAD_FEED_SQL template was edited in a way that no longer matches the
+// regex anchor), throw at boot so this never silently ships as a NOOP.
+if (LEAD_FEED_SQL_WITH_COA === LEAD_FEED_SQL) {
+  throw new Error(
+    '[get-lead-feed] LEAD_FEED_SQL_WITH_COA injection regex failed to match. ' +
+    'The unified-CTE anchor in LEAD_FEED_SQL changed shape — update the regex in ' +
+    'this module to match. Refusing to boot to avoid silently shipping the 2-arm ' +
+    'SQL when the 3-arm is requested.',
+  );
+}
+
 interface LeadFeedRow {
-  lead_type: 'permit' | 'builder';
+  lead_type: 'permit' | 'builder' | 'coa';
   lead_id: string;
+  // WF3 #3 CoA-side projections (NULL on permit + builder rows; populated on
+  // CoA rows). Carried through the UNION column list of LEAD_FEED_SQL_WITH_COA.
+  modeled_gfa_sqm?: number | string | null;
+  bid_value?: number | string | null;
+  target_window?: 'bid' | 'work' | null;
+  predicted_start?: string | null;
+  application_number?: string | null;
   permit_num: string | null;
   revision_num: string | null;
   status: string | null;
@@ -694,6 +906,39 @@ function mapRow(row: LeadFeedRow, tradeSlug: string): LeadFeedItem | null {
     };
   }
 
+  // WF3 #3 (Spec 79 §7a Finding K, 2026-05-20) — CoA branch.
+  // Defensive narrowing parallel to permit/builder: drop the row + logWarn
+  // rather than break the feed. application_number is the CoA-side primary
+  // key (mig 133); if it's null the row is structurally invalid.
+  if (row.lead_type === 'coa') {
+    if (row.application_number == null) {
+      logWarn('[lead-feed/get]', 'mapRow dropped malformed CoA row', {
+        lead_id: row.lead_id,
+        lead_type: row.lead_type,
+      });
+      return null;
+    }
+    const coaItem: CoaLeadFeedItem = {
+      ...base,
+      lead_type: 'coa',
+      application_number: row.application_number,
+      work_description: row.description,
+      street_num: row.street_num,
+      street_name: row.street_name,
+      latitude: toNumberOrNull(row.latitude),
+      longitude: toNumberOrNull(row.longitude),
+      neighbourhood_name: row.neighbourhood_name,
+      estimated_cost: toNumberOrNull(row.estimated_cost),
+      modeled_gfa_sqm: toNumberOrNull(row.modeled_gfa_sqm ?? null),
+      lifecycle_phase: row.lifecycle_phase,
+      lifecycle_stalled: row.lifecycle_stalled,
+      bid_value: toNumberOrNull(row.bid_value ?? null),
+      target_window: row.target_window ?? null,
+      predicted_start: row.predicted_start ?? null,
+    };
+    return coaItem;
+  }
+
   // Builder branch — same defensive narrowing on the entity-required fields
   if (row.entity_id === null || row.legal_name === null) {
     logWarn('[lead-feed/get]', 'mapRow dropped malformed builder row', {
@@ -741,6 +986,15 @@ export async function getLeadFeed(
   const clampedLimit = Math.min(Math.max(1, input.limit), MAX_FEED_LIMIT);
   const radius_m = metersFromKilometers(clampedKm);
 
+  // WF3 #3 (Spec 79 §7a Finding K, 2026-05-20) — killswitch routing.
+  // disableCoa defaults to true (CoA disabled) when omitted by the caller,
+  // matching the LEAD_FEED_DISABLE_COA env-var default in the route handler.
+  // Until mobile CoA cards ship, this default keeps prod traffic on the
+  // legacy 2-arm SQL while dev/staging can flip via the env var or per-test
+  // override.
+  const disableCoa = input.disableCoa ?? true;
+  const leadTypeFilter = input.lead_type ?? 'all';
+
   try {
     const params: unknown[] = [
       input.trade_slug,
@@ -752,9 +1006,11 @@ export async function getLeadFeed(
       input.cursor?.lead_type ?? null,
       input.cursor?.lead_id ?? null,
       input.user_id, // $9 — Phase 3-vi: keyed for the lead_views LEFT JOIN
+      leadTypeFilter, // $10 — Spec 91 §3.1 filter axis (WF3 #3 fold)
     ];
 
-    const res = await pool.query<LeadFeedRow>(LEAD_FEED_SQL, params);
+    const sql = disableCoa ? LEAD_FEED_SQL : LEAD_FEED_SQL_WITH_COA;
+    const res = await pool.query<LeadFeedRow>(sql, params);
     // Filter out any defensively-null mapping (rows where the SQL UNION
     // produced an unexpected shape — should never happen given the CASE
     // structure but the DU forces explicit narrowing).
