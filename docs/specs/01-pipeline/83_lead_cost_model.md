@@ -148,6 +148,30 @@ Final audit against city `est_const_cost`:
   * **Weight**: Calculate % each trade contributes to our theoretical total.
   * **Slice**: Apply those % weights to the city's reported total.
 
+##### The three `cost_source = 'none'` paths (WF3 Pass-2.5 Finding E re-characterization, 2026-05-21)
+
+The Brain emits `cost_source = 'none'` via three distinct paths. Their envelope shapes intentionally differ — operators distinguish causes by the populated/null pattern AND the `_`-prefixed telemetry flags (which flow into the Muscle's `audit_table` counters, not into `cost_estimates` rows).
+
+| # | Cause | Brain location | `modeled_gfa_sqm` | `effective_area_sqm` | Telemetry flag | Audit counter |
+|---|-------|----------------|-------------------|----------------------|----------------|---------------|
+| **A** | `permit_type_class != 'construction'` short-circuit (Spec 80 §5 gate — signage / administrative / safety_upgrade / unclassified) | `estimateCostShared` lines ~488-522 | **null** | **null** | `_permitTypeClassSkipped: true` | `permit_type_class_skipped` |
+| **B** | Matrix-miss safe-skip (Surgical Triangle has no row for the permit's `permit_type::structure_type` — WF3 #5 Finding D) | `estimateCostShared` lines ~544-565 | **null** | **null** | `_matrixMiss: true`, `_matrixMissKey: <key>` | `matrix_misses`, `matrix_miss_unique_keys`, `matrix_miss_top_keys` |
+| **C1** | Zero-Total Bypass — matrix HIT + GFA > 0 but `surgicalTotal === 0` because no `active_trade_slugs` matched the `tradeRates` table | `applyLiarsGate` lines ~364-375 (Zero-Total Bypass branch) → main return in `estimateCostShared` at lines ~598-619 | **populated** (from Step A) | **populated** (`areaEff > 0`) | `_zeroTotalBypass: true` | `zero_total_bypass` |
+| **C2** | Zero-Total Bypass — `gfa = 0` (no massing AND no lot-size data) → `areaEff = 0` → falls through matrix-miss check, `surgicalTotal = 0` via the `areaEff > 0 ?` short-circuit at the call-site | same as C1 (lines ~364-375 → ~598-619) | **null** (`modeledGfaSqm` is null when `computeGfa` returns `gfa=0`) | **null** (`areaEff > 0` is false) | `_zeroTotalBypass: true` | `zero_total_bypass` |
+
+**Path C1 asymmetry is intentional, not a defect.** Path C1 preserves the computed geometry on the `cost_estimates` row because:
+- Geometry IS knowable (matrix had an allocation; Surgical Triangle ran successfully).
+- Scope IS knowable (`effective_area_sqm` reflects the surgical area).
+- Only the cost is unknown (no active trades classified for this permit, or the classified trades don't have rate-table entries).
+
+This gives operators a per-row debug signal distinguishing "we couldn't compute geometry at all" (Paths A/B/C2 → all null) from "we computed geometry and scope but no trades activated cost-slicing" (Path C1 → geometry preserved, cost null). The latter typically indicates an upstream `classify-permits.js` coverage gap or a missing `trade_sqft_rates` row, not a cost-model defect.
+
+**Path C2 produces an all-null envelope identical to Paths A/B at the row level.** The reliable per-row distinguishing signal is the `_zeroTotalBypass: true` telemetry flag (visible in test fixtures + parity battery), and at the pipeline-run level the `zero_total_bypass` audit counter. Operators **MUST** read the audit_table counters to attribute null-cost permits to their cause when the row alone is ambiguous — Paths A, B, and C2 all produce the same row shape.
+
+**Original Finding E observation:** The §7a Inspector spot-check (2026-05-20) found 5/12 permits with the partial-write pattern. Subsequent investigation (post-WF3 #5) determined these were predominantly Path B (matrix-miss permits getting modeled_gfa from the full building GFA). WF3 #5 Option A resolved Path B by switching to all-null. Residual Path C1 cases retain populated geometry by design; Path C2 cases (rare — no geometry inputs at all) are all-null.
+
+**Aggregation rule for Pass-2.5 Inspector:** when auditing partial-write patterns, distinguish the four causes by reading the Muscle's audit_table counters in the most recent `compute-cost-estimates` pipeline_run — the per-counter cause is dispositive. Do NOT treat populated `modeled_gfa_sqm` + `cost_source='none'` as a defect on its own; cross-reference the `zero_total_bypass`, `matrix_misses`, and `permit_type_class_skipped` counters first.
+
 ### Edge Cases
 * **Missing Massing**: Fallback to Lot Size $\times$ coverage ratios.
 * **Mixed-Use**: Requires multi-variable intensity matching for commercial/residential split.
