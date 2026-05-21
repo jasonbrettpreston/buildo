@@ -265,6 +265,101 @@ See `docs/runbook/pipeline_step_validation_walkthrough.md` for the canonical bri
 
 5 of 7 surfaces read-only. 2 perform isolated bounded mutations.
 
+## 7a. Per-Lead Detail Inspector Spot-Check
+
+§7 walks the 7 admin surfaces end-to-end for existence + 200/render. §7a goes **deep on one surface** (Lead Detail Inspector, Spec 76 §3.5) for **a sample of individual leads** to catch semantic, schema, and contract bugs that whole-surface walkthroughs miss. §7 answers "does the page work?"; §7a answers "does the data on the page reflect reality?"
+
+The 2026-05-20 cycle's §7a run on permit `25 237692 PLB--00` + 12-permit broader sample surfaced 11 production-impacting findings (A–K) that the §7 walkthrough did not — including a chicken-and-egg gate that blocked all 34,290 CoA forecast rows (Finding J, CRIT), a server-side lead-feed query with no CoA UNION arm making every CoA lead invisible (Finding K, CRIT), and a cost-estimate scope bug that ballooned a 119m² plumbing permit to $14M (Finding D, HIGH). The protocol below codifies what worked so future cycles can repeat it.
+
+### §7a.1 Sample selection (4-axis rubric)
+
+Pick ONE target lead for the deep dive + a broader sample of ~12 leads. Every axis must be represented in the broader sample:
+
+| Axis | Why it matters | Example coverage |
+|------|----------------|------------------|
+| CoA-linked vs non-CoA-linked | Different cross-stream UNION paths; CoA-side data products are the youngest part of the pipeline | ≥3 CoA-linked, ≥3 non-CoA |
+| Permit-type diversity | Cost-estimate / scope / lifecycle logic differs by permit type (BLD/PLB/ELE/ALT/000/DRN) | ≥1 BLD + ≥1 PLB + ≥1 non-construction (DRN/000) |
+| Lifecycle-phase diversity | Forecast + opportunity score logic gates on phase; classifier bugs hide in rare phases | ≥1 P1 active, ≥1 P2 issued, ≥1 P3 stalled, ≥1 P20 closed, ≥1 DEAD |
+| GFA-populated vs GFA-null | Cost-estimate uses GFA — bugs only fire when GFA is populated; null path hides the bug | ≥3 GFA-populated, ≥3 GFA-null |
+
+The target lead should be CoA-linked, GFA-populated, mid-lifecycle (P1/P2) — that combination exercises the maximum code path density.
+
+### §7a.2 DB↔API three-way cross-validation
+
+For each lead, run THREE parallel queries against the same `lead_id` and diff them:
+
+1. **API surface** — `GET /api/admin/leads/inspect/:id` (the operator-facing envelope, per Spec 76 §3.5 — `:id` is a path parameter accepting either `permit:<num>:<rev>` or `coa:<num>`, NOT a query string).
+2. **Raw DB SELECTs** — direct queries against the underlying tables that the API joins:
+   - `permits` (or `coa_applications`)
+   - `lifecycle_status_history` (filtered to the lead_id)
+   - `cost_estimates` + `trade_forecasts`
+   - `lead_analytics` (cross-reference)
+3. **Cross-stream UNION** — `lifecycle_status_history` rows for BOTH the permit AND any linked CoA application (the source data for the Inspector's cross-stream timeline panel).
+
+**Diff the three.** Any divergence — a row in the DB not in the API response, a field in the API response not derivable from the DB rows, a duplicate row in the cross-stream timeline that isn't in the underlying ledger — is a finding. Capture the diff verbatim in the per-lead notes.
+
+### §7a.3 Anomaly indicator catalog
+
+Concrete checks the operator runs against the Inspector envelope + diff output. Each row below maps to a real Finding from the 2026-05-20 cycle so future cycles know what shape to look for.
+
+| Indicator | Source pattern | Severity if firing |
+|-----------|----------------|---------------------|
+| Cross-stream timeline duplicates | UNION-arm overlap in `lead-inspect-query.ts` (Finding A) | HIGH |
+| `transitioned_at` equals classifier `RUN_AT` rather than a real event date | Phase I.1 writer contract gap (Finding C) | HIGH |
+| Orphan-routing fires on CoA-linked permit | `classify-lifecycle-phase.js` doesn't check `linked_coa_application_number` (Finding B) | HIGH |
+| `modeled_gfa_sqm` populated with building total instead of permit scope | `compute-cost-estimates` SOURCE_SQL design defect (Finding D) | HIGH |
+| `cost_source=None` with populated `modeled_gfa` | Partial-write atomicity gap (Finding E) | MED |
+| Lead surfaces in feed with `score=0` + past `predicted_start` | Forecast-or-feed gating mismatch (Finding F) | MED |
+| CoA classification panel omits `description` field | API SELECT missing column (Finding I) | MED |
+| `trade_forecasts` has zero CoA-side rows | Audit-gate chicken-and-egg (Finding J) | CRIT |
+| Server-side lead feed has no CoA UNION arm | `get-lead-feed.ts` arms incomplete (Finding K) | CRIT |
+| Lifecycle timeline truncated to 1–2 entries on ALT/000/DRN permits | Rare-permit-type classifier gaps (Finding G) | LOW |
+| `bid_value=0.8` with no documented unit semantics | API doc / spec annotation gap (Finding H) | LOW |
+
+The catalog is **non-exhaustive** — every cycle is expected to surface new indicators. Add a row to this table when a new finding pattern is discovered.
+
+### §7a.4 Tabulation format
+
+Findings live in `docs/reports/pipeline-validation/wf3-queue.md` with this 6-column schema (matches the 2026-05-20 cycle's queue):
+
+| Column | Content |
+|--------|---------|
+| `#` | Single letter id (A, B, C…) assigned in discovery order |
+| `Item` | One-sentence problem description |
+| `Frequency` | How many sample leads exhibited it (`4/4 CoA-linked`, `11/12 sampled`, `All CoA leads`) — drives severity |
+| `Severity` | CRIT / HIGH / MED / LOW (frequency-weighted; data-integrity > correctness > polish) |
+| `Status` | `queued` / `in progress (WF3 #N)` / `✅ CLOSED — pending commit` / `✅ CLOSED` |
+| `Notes` | Root cause hypothesis + the option space (e.g., "small UI relabel vs large writer change") |
+
+### §7a.5 WF3 triage discipline
+
+- **Priority order:** CRIT → HIGH → MED → LOW. Within a tier, order by frequency (universal > 4/4 > 11/12 > 5/12 etc.).
+- **One finding per WF3 commit** (matches the project's per-finding cadence). Bundling is reserved for findings sharing a single root cause AND a single file.
+- **Adversarial review on both PLAN and IMPLEMENTATION** is the default for §7a-sourced WF3s (per user direction 2026-05-20): Gemini Pro + DeepSeek-R1 review the active task before authorization, and again on the diff before commit. Independent reviewer always runs in a worktree. This is stricter than the standard WF3 protocol in `feedback_review_protocol.md` because §7a findings are by definition things the existing test suite missed.
+- **Doc-only meta-items** (like Finding L itself) may skip the adversarial PLAN gate at user discretion — the §10 note in the active task should call this out so the user can override.
+
+### §7a.6 When to invoke §7a
+
+- After every full validation cycle's Pass-2 cap (per §3b), as the §6.3 admin-UI cap's deep-dive complement.
+- Whenever a §7 surface walkthrough shows green but operator complaints persist (the §7 contract checks page existence and shape, not data correctness).
+- After landing a Phase that affects the Inspector envelope (Spec 76 §3.5 contract changes).
+- NOT on every minor pipeline change — the cost is high (12 leads × 3-way diff × indicator catalog walk).
+
+### §7a.7 Living queue file
+
+`docs/reports/pipeline-validation/wf3-queue.md` is the canonical execution artifact:
+- One row per finding, status updates as WF3s close.
+- Closed rows stay in the file (move them out only when the file exceeds ~50 rows for readability).
+- The header documents the source (target lead, sample size) and the review protocol applied.
+- Cross-link the closing commit SHA in the Notes column when a row moves to ✅ CLOSED.
+
+### §7a.8 Cross-references
+
+- **Spec 33 §3 + §13** — Web Admin Engineering Protocol authority. The Lead Detail Inspector is an admin UI surface; §7a operates within the engineering boundaries Spec 33 defines (Zod boundary on the envelope, observability on operator actions). §7a is operator-driven live validation; Spec 33 governs the surface it walks.
+- **Spec 34 §3.2** — Web Admin Testing Protocol. The pending `lead-feed-inspectors.spec.ts` Playwright flow (Spec 34 §3.2 row 7) is the automated future of §7a. §7a is the **manual fallback** until that suite lands, and remains the deep-semantic protocol thereafter (Playwright catches contract breaks, §7a catches data-meaning bugs).
+- **Spec 47 §11** — Counter Semantic Contract. §7a verifies that the per-lead counters surfaced in the Inspector envelope (lifecycle counts, cost-estimate rows, forecast rows) match the §11.1–§11.3 semantics declared by the upstream scripts. Counter-semantic drift between script and Inspector is a §7a indicator class.
+- **Spec 76 §3.5** — Lead Detail Inspector contract. §7a's three-way diff (API ↔ DB ↔ cross-stream UNION) is the only protocol that validates the Inspector's full envelope against source data.
+
 ## 8. Validation Record Format
 
 See `docs/runbook/pipeline_step_validation_walkthrough.md` for the canonical record template with worked example.
@@ -314,8 +409,11 @@ See `docs/runbook/pipeline_step_validation_walkthrough.md` §11 for the full SQL
 
 ## 13. Cross-references
 
+- **Spec 33** §3 + §13 — Web Admin Engineering Protocol; §7a operates within its boundaries
+- **Spec 34** §3.2 — Web Admin Testing Protocol; pending `lead-feed-inspectors.spec.ts` is the automated future of §7a
 - **Spec 41** §classify_lifecycle_phase row — references Spec 79 §4
 - **Spec 42** §6.11 Phase I row — references Spec 79 §5
-- **Spec 47** §R1-R12 + §11 — validated per Spec 79 §2 C1/C5/C9/C11
+- **Spec 47** §R1-R12 + §11 — validated per Spec 79 §2 C1/C5/C9/C11; §11 counter semantics specifically verified by §7a per-lead
 - **Spec 48** §3.6 + §3.7 — validated per Spec 79 §2 C2/C3/C4/C6
 - **Spec 49** — Spec 79 §6.1 cap
+- **Spec 76** §3.5 — Lead Detail Inspector contract; §7a is the deep-dive validation protocol against it
