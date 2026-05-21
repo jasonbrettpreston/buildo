@@ -185,6 +185,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // Phase F.1 (mig 152) — CoA forecast snowplow staleness gate + gate freshness window
   'coa_lifecycle_transition_stale_days',
   'coa_gate_calibration_window_days',
+  // Spec 79 §7a WF3 #2 (mig 159) — operator force-active override for CoA audit-verdict gate
+  'coa_gate_force_active',
   // Phase F.2 — CoA CRM assistant stall thresholds + imminent window (mig 136 + mig 154).
   // Note: coa_stall_threshold_p2_days + coa_imminent_window_days were seeded in DB by mig 136
   // but absent from seeds JSON until F.2 (v3 CRIT-4 gap discovery).

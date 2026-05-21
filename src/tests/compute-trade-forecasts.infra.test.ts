@@ -910,3 +910,58 @@ describe('Phase F.1 — CoA UNION extension (WF1 v4)', () => {
     expect(SRC).toMatch(/pipeline_runs/);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// Spec 79 §7a Pass-2.5 WF3 #2 (Finding J, 2026-05-20): grace bypass for the
+// CoA audit-verdict gate. Root cause: `permits:compute_phase_calibration`
+// verdict is WARN because `coa_cohort_presence=0`. Gate blocks 34,290 CoA
+// forecast rows. Chicken-and-egg: cohorts need forecasts, forecasts blocked
+// by gate. Fix: grace bypass during cold-start (prior_runs_7d=0) + operator
+// safety valve `coa_gate_force_active` for post-grace deadlocks.
+// Plan reviewed twice (v1+v2 folds applied) per §7a adversarial protocol.
+// ────────────────────────────────────────────────────────────────────────
+describe('compute-trade-forecasts.js — CoA gate grace bypass + force-active (Spec 79 §7a WF3 #2)', () => {
+  const SRC = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/compute-trade-forecasts.js'),
+    'utf-8',
+  );
+
+  it('grace bypass is a SEPARATE override block AFTER the branch logic (not inside the if/else)', () => {
+    // The override must appear AFTER `coaGateLastVerdict === 'PASS'` branch,
+    // not interleaved inside the verdict branches.
+    const branchEnd = SRC.search(/blocked_by_\$\{[^}]+\}/);
+    const graceBypassMarker = SRC.search(/coaFirstDeployGrace\s*&&\s*!coaGateActive/);
+    expect(branchEnd).toBeGreaterThan(0);
+    expect(graceBypassMarker).toBeGreaterThan(branchEnd);
+  });
+
+  it('operator safety valve: `coa_gate_force_active` logic_variable read + used as override', () => {
+    expect(SRC).toMatch(/const\s+coaGateForceActive\s*=\s*logicVars\.coa_gate_force_active\s*===\s*1/);
+    expect(SRC).toMatch(/if\s*\(\s*coaGateForceActive\s*\)/);
+  });
+
+  it('override ORDER: force-active appears AFTER grace bypass (force last = most authoritative)', () => {
+    const graceBypassLine = SRC.search(/coaFirstDeployGrace\s*&&\s*!coaGateActive/);
+    const forceActiveLine = SRC.search(/if\s*\(\s*coaGateForceActive\s*\)/);
+    expect(graceBypassLine).toBeGreaterThan(0);
+    expect(forceActiveLine).toBeGreaterThan(graceBypassLine);
+  });
+
+  it('two distinct audit rows emitted: coa_audit_gate_grace_bypass AND coa_audit_gate_force_active (both WARN when active)', () => {
+    expect(SRC).toMatch(/metric:\s*['"]coa_audit_gate_grace_bypass['"]/);
+    expect(SRC).toMatch(/metric:\s*['"]coa_audit_gate_force_active['"]/);
+    // Both rows should have a WARN-when-active conditional status.
+    expect(SRC).toMatch(/coa_audit_gate_grace_bypass[\s\S]{0,300}?status:\s*coaGraceBypassActive\s*\?\s*['"]WARN['"]/);
+    expect(SRC).toMatch(/coa_audit_gate_force_active[\s\S]{0,300}?status:\s*coaGateForceActive\s*\?\s*['"]WARN['"]/);
+  });
+
+  it('pipeline.log.warn fires when either override is active, reporting both flags + calibration verdict', () => {
+    // The warn message must include both grace_bypass and force_active state for post-mortem clarity.
+    expect(SRC).toMatch(/pipeline\.log\.warn[\s\S]{0,500}?grace_bypass=\$\{coaGraceBypassActive\}[\s\S]{0,200}?force_active=\$\{coaGateForceActive\}/);
+  });
+
+  it('Zod schema entry for coa_gate_force_active uses .default(0) (prevents NaN crash before mig 159 applies)', () => {
+    // Without .default(0), undefined → z.coerce.number() → NaN → .int() throws → script crash.
+    expect(SRC).toMatch(/coa_gate_force_active\s*:\s*z\.coerce\.number\(\)\.int\(\)[\s\S]{0,80}?\.default\(\s*0\s*\)/);
+  });
+});

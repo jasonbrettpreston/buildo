@@ -2383,5 +2383,12 @@
     "type": "number",
     "min": 1,
     "description": "Phase F.1 CoA audit-verdict gate freshness window: compute_phase_calibration must have a permits-chain pipeline_runs row within this many days for the gate to consult its verdict. Older runs trigger no_prior_run state. Default 7 aligns with Spec 48 §3.4 baseline window. Operator may raise this if calibration runs are less frequent than weekly."
+  },
+  "coa_gate_force_active": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 79 §7a WF3 #2 — operator safety valve for compute-trade-forecasts.js CoA audit-verdict gate. 0 = normal gate behavior (calibration verdict + cold-start grace decide). 1 = force CoA writes regardless of calibration verdict; use for post-grace deadlocks where coa_cohort_presence remains 0 after 7 days. When 1, script emits WARN audit row + pipeline.log.warn on every run; reset to 0 once root cause is resolved."
   }
 }

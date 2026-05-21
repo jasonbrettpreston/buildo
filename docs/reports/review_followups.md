@@ -1617,3 +1617,18 @@ Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passe
 | 100 | DEFER | DeepSeek MED + various LOW | normalizeBuilderName edge cases, fetchNeighbourhoodPremiumTier per-call DB roundtrip, liar_gate modeled_total label, LLP suffix, parcel_buildings ORDER BY comment | All pre-existing, unrelated to WF3 #1 scope. Bundle into a separate "Lead Inspector polish" WF later. |
 | 101 | FIX INLINE | Independent FLAG | Arm 2 test regex lookahead `[\s\S]{0,200}?` is wider than necessary — could miss drift if 150+ chars of unrelated predicates added | Tightened to `[\s\S]{0,80}?` in the same commit. Sufficient for the ESCAPE clause + whitespace that legitimately sit between the predicates. |
 
+---
+
+## WF3 #2 CoA gate grace bypass (Spec 79 §7a Finding J, 2026-05-20) — Multi-agent IMPL review
+
+DeepSeek + Independent IMPL review. **1 CRIT fold applied inline** (variable hoisting). Other findings deferred or rejected:
+
+| # | Severity | Source | Finding | Decision rationale |
+|---|---|---|---|---|
+| 102 | FIX INLINE | DeepSeek CRIT | `coaFirstDeployGrace` was used at line 276 before its declaration at line 320 → ReferenceError at runtime. Independent's review claimed 9/9 PASS — missed this entirely. | Hoisted the `deployAgeRows` query + `coaFirstDeployGrace` / `inQuietPeriod` declarations to ABOVE the override blocks (now declared at line 292, used at line 300). Live-verified by running the script post-fold: 34,290 CoA forecast rows wrote successfully. |
+| 103 | REJECT | DeepSeek HIGH | "Pipeline name mismatch: query uses `'permits:compute_trade_forecasts'` but script slug is `'compute-trade-forecasts'`." | DeepSeek conflated the script slug (line 167, dashes, standalone invocation) with the DB pipeline_runs.pipeline name (line 318, underscores + chain-namespace prefix). The query is correct — chain-orchestrated runs write rows with the `permits:` prefix; standalone runs use the bare slug. Both forms exist in pipeline_runs. |
+| 104 | DEFER | DeepSeek CRIT | `new Date(row.decision_date + 'T00:00:00Z')` invalid concatenation in `selectCoaAnchor` and permit anchor block (~line 150, ~line 500) | Real concern, but PRE-EXISTING in code NOT touched by this WF3. The 34,290-row live verification proved CoA anchors resolve correctly via `lifecycle_transition` (anchor_sources_coa.lifecycle_transition: 34290), so the suspected `Invalid Date` failure isn't triggering for this DB's data. Defer to a separate WF3 once it can be reproduced. |
+| 105 | DEFER | DeepSeek MED | `coaGraceBypassActive` is captured BEFORE `coaGateActive` flips → if a future refactor reorders the override blocks, the captured value could be stale. | Acceptable for current scope — the capture-before-mutation pattern is intentional (audit row needs the pre-override state). Adding a defensive comment would help future readers; bundle into a future Inspector polish WF. |
+| 106 | DEFER | DeepSeek LOW × 3 | `classifyUrgency` expired threshold sign contract; `finalCalMethod` audit row downstream tolerance; misc NITs | Pre-existing in untouched code paths. |
+| 107 | NOTED | Independent v2 PASS | Implementation matches plan exactly. Independent did not catch the variable-hoisting CRIT that DeepSeek found — both reviewers required to surface all critical bugs. Reinforces the §7a protocol mandate for parallel adversarial review. | Process note for the §7a protocol amendment. |
+

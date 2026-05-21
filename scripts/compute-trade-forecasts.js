@@ -88,6 +88,12 @@ const LOGIC_VARS_SCHEMA = z.object({
   coa_lifecycle_transition_stale_days: z.coerce.number().int().positive(),
   // Phase F.1 v4 MED-J: operator-tunable gate freshness window
   coa_gate_calibration_window_days:    z.coerce.number().int().positive(),
+  // Spec 79 §7a WF3 #2 (Finding J, 2026-05-20): operator safety valve to
+  // force-active the CoA gate during post-grace deadlocks. Default 0; set
+  // to 1 via Control Panel to bypass calibration verdict gating entirely.
+  // `.default(0)` is critical — without it, runs before mig 159 applies
+  // would get undefined → z.coerce.number() yields NaN → .int() throws.
+  coa_gate_force_active:               z.coerce.number().int().min(0).max(1).default(0),
 }).passthrough();
 
 // ─── Phase F.1 module-local helpers ─────────────────────────────────────────
@@ -252,16 +258,30 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     pipeline.log.warn('[trade-forecasts]', 'audit-verdict gate query failed — CoA branch will be skipped',
       { error: err instanceof Error ? err.message : String(err) });
   }
-  pipeline.log.info('[trade-forecasts]',
-    `CoA audit-verdict gate: ${coaGateStatus} (last_run_id=${coaGateLastRunId}, last_verdict=${coaGateLastVerdict})`);
 
-  // v4 CRIT-B: pre-fetch BOTH 7-day and 30-day deploy-age counts in a SINGLE startup query.
-  // Eliminates the inline `await pool.query(...)` from audit-row construction that previously
-  // could throw after UPSERTs commit but before emitSummary (violating Spec 47 §3.5).
-  // v3 HIGH-J: coaFirstDeployGrace = TRUE if F.1 has NO pipeline_runs rows older than 7 days
-  //   (cold-start). FALSE means it's been running ≥7 days; `no_prior_run` then means broken cron.
-  // v3 HIGH-I: inQuietPeriod = TRUE during first 30 days post-deploy (suppresses expected-WARN
-  //   on coa_anchor_fallback_pct + coa_anchor_stale_lifecycle_transition_count).
+  // ─── Spec 79 §7a WF3 #2 (Finding J, 2026-05-20) — gate overrides ───
+  // Override order is intentional (least-authoritative → most-authoritative):
+  //   (a) verdict branches above set coaGateActive based on calibration state
+  //   (b) grace bypass — cold-start override (breaks chicken-and-egg)
+  //   (c) force-active — operator safety valve (last word, always wins)
+  // Two rounds of adversarial plan-review locked this ordering: force-active
+  // MUST be last so it decisively overrides any prior state. Grace MUST come
+  // BEFORE force-active so the audit row can distinguish the two reasons.
+
+  // IMPL-review fold (DeepSeek CRIT 2026-05-20): deployAge query MUST run
+  // before the override blocks below — they reference `coaFirstDeployGrace`.
+  // Pre-fold this lived ~50 lines further down, causing a ReferenceError.
+  //
+  // v4 CRIT-B: pre-fetch BOTH 7-day and 30-day deploy-age counts in a SINGLE
+  // startup query. Eliminates the inline `await pool.query(...)` from
+  // audit-row construction that previously could throw after UPSERTs commit
+  // but before emitSummary (violating Spec 47 §3.5).
+  // v3 HIGH-J: coaFirstDeployGrace = TRUE if F.1 has NO pipeline_runs rows
+  //   older than 7 days (cold-start). FALSE means it's been running ≥7 days;
+  //   `no_prior_run` then means broken cron.
+  // v3 HIGH-I: inQuietPeriod = TRUE during first 30 days post-deploy
+  //   (suppresses expected-WARN on coa_anchor_fallback_pct +
+  //   coa_anchor_stale_lifecycle_transition_count).
   const { rows: deployAgeRows } = await pool.query(
     `SELECT
        COUNT(*) FILTER (WHERE started_at < NOW() - INTERVAL '7 days')::int  AS prior_runs_7d,
@@ -271,6 +291,45 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   );
   const coaFirstDeployGrace = deployAgeRows[0].prior_runs_7d === 0;
   const inQuietPeriod = deployAgeRows[0].prior_runs_30d === 0;
+
+  // (b) Grace bypass — fires when calibration isn't yet PASS AND we're in
+  // the cold-start window (no pipeline_runs older than 7 days for this slug).
+  // `coaFirstDeployGrace` is computed once at startup (just above). It does
+  // NOT auto-deactivate within a run — it transitions to false on the NEXT
+  // script invocation once prior_runs_7d > 0.
+  const coaGraceBypassActive = coaFirstDeployGrace && !coaGateActive;
+  if (coaGraceBypassActive) {
+    coaGateActive = true;
+    coaGateStatus = `grace_bypass_${coaGateStatus}`;
+  }
+
+  // (c) Force-active — operator safety valve via logic_variable. Last so it
+  // decisively wins regardless of grace or verdict. For post-grace deadlocks
+  // (e.g., coa_cohort_presence still 0 after 7 days because of a separate
+  // upstream bug) operator sets coa_gate_force_active=1 via Control Panel.
+  const coaGateForceActive = logicVars.coa_gate_force_active === 1;
+  if (coaGateForceActive) {
+    coaGateActive = true;
+    coaGateStatus = `forced_active_${coaGateStatus}`;
+  }
+
+  pipeline.log.info('[trade-forecasts]',
+    `CoA audit-verdict gate: ${coaGateStatus} (last_run_id=${coaGateLastRunId}, last_verdict=${coaGateLastVerdict})`);
+
+  // Spec 79 §7a WF3 #2 fold C — accurate post-mortem log when overrides fire.
+  // Either override produces writes without normal calibration validation;
+  // operator-visible WARN with both flag states + the suppressed verdict.
+  if (coaGraceBypassActive || coaGateForceActive) {
+    pipeline.log.warn('[trade-forecasts]',
+      `CoA gate overridden — calibration verdict was ${coaGateLastVerdict || 'no_prior_run'}. ` +
+      `grace_bypass=${coaGraceBypassActive} force_active=${coaGateForceActive}. ` +
+      `Grace bypass deactivates on next script run once pipeline_runs has rows ≥7d old. ` +
+      `Force-active deactivates when coa_gate_force_active is set to 0 via Control Panel.`);
+  }
+
+  // (deployAgeRows / coaFirstDeployGrace / inQuietPeriod hoisted to ABOVE the
+  //  gate overrides per DeepSeek IMPL-review CRIT fold — they're now declared
+  //  immediately before the grace bypass block, ~70 lines earlier.)
 
   // ═══════════════════════════════════════════════════════════
   // Step 1: Load calibration data into nested Map
@@ -1196,6 +1255,18 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     { metric: 'coa_forecasts_computed',    value: upsertedCoa,             threshold: null,    status: 'INFO' },
     { metric: 'coa_skipped_audit_blocked', value: coaSkippedAuditBlocked,  threshold: null,    status: 'INFO' },
     { metric: 'coa_audit_gate_status',     value: coaGateStatus,           threshold: "== 'pass'", status: coaGateAuditStatus },
+    // Spec 79 §7a WF3 #2 (Finding J): two distinct override-visibility rows so
+    // operators can distinguish grace bypass (auto, cold-start) from force-active
+    // (manual, post-grace deadlock). WARN status when either is active — writes
+    // are flowing without normal calibration validation; operator should monitor.
+    { metric: 'coa_audit_gate_grace_bypass',
+      value: coaGraceBypassActive ? 1 : 0,
+      threshold: '== 0; if 1, calibration unhealthy and cold-start grace is allowing writes — verify by re-running compute_phase_calibration after 7d',
+      status: coaGraceBypassActive ? 'WARN' : 'INFO' },
+    { metric: 'coa_audit_gate_force_active',
+      value: coaGateForceActive ? 1 : 0,
+      threshold: '== 0; if 1, operator has manually overridden the gate — set coa_gate_force_active=0 once root cause is resolved',
+      status: coaGateForceActive ? 'WARN' : 'INFO' },
     {
       metric: 'coa_anchor_fallback_pct',
       value: coaAnchorFallbackPct.toFixed(1) + '%',
