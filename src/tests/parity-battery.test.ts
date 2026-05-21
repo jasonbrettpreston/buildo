@@ -405,18 +405,22 @@ describe('parity-battery — Scope intensity matrix hit/miss', () => {
     }, 'C17');
   });
 
-  it('C18: matrix miss — unknown combination → full GFA (allocation = 1.0)', () => {
+  it('C18: matrix miss — unknown combination → safe-skip (cost_source=none, effective_area=null) per WF3 Pass-2.5 Finding D', () => {
     assertParity({
       permit: makePermit({ permit_num: 'C18', permit_type: 'demolition', structure_type: 'industrial', active_trade_slugs: ['excavation'] }),
       parcel: GOOD_PARCEL, footprint: GOOD_FOOTPRINT, neighbourhood: null,
     }, 'C18');
-    // Matrix miss means effective_area = full GFA (area_eff = gfa × 1.0)
+    // Matrix miss now safe-skips: effective_area_sqm=null, cost_source='none',
+    // estimated_cost=null. Pre-fix behavior was effective_area ≈ 400 (full GFA),
+    // which produced $14M-style cost balloons on trade-specific permits.
     const ts = estimateCost(
       makePermit({ permit_num: 'C18', permit_type: 'demolition', structure_type: 'industrial', active_trade_slugs: ['excavation'] }),
       GOOD_PARCEL, GOOD_FOOTPRINT, null, SHARED_CONFIG,
     );
-    // gfa = 200 × 2 = 400 sqm; area_eff = 400 (no matrix reduction)
-    expect(ts.effective_area_sqm).toBeCloseTo(400, 1);
+    expect(ts.effective_area_sqm).toBeNull();
+    expect(ts.cost_source).toBe('none');
+    expect(ts.estimated_cost).toBeNull();
+    expect(ts.modeled_gfa_sqm).toBeNull(); // Option A envelope symmetry
   });
 
   it('C19: matrix hit — "interior alteration::commercial" → 0.25 allocation', () => {

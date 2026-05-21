@@ -94,6 +94,44 @@ Calculate the physical baseline of the structure.
 The "Surgical Triangle" lookup using `classify-scope.js` result, Permit Type, and Structure Type.
 **Area_Eff** = GFA * Permit Type Allocation %
 
+> **Matrix-miss safe-skip (WF3 Pass-2.5 Finding D, 2026-05-21):** When the `scope_intensity_matrix` has no row for the `(permit_type, structure_type)` pair AND `permit_type_class = 'construction'` (Spec 80 §5), the cost model **safe-skips** with `cost_source = 'none'` and `estimated_cost = null` — instead of the previous "miss → default to 1.0 (full GFA)" behavior. The pre-fix behavior produced $14M-style cost balloons on trade-specific permits (a 119m² plumbing scope inside a 46K-sqm office got the full 46K sqm → $14M). The matrix-miss envelope is byte-symmetric with the existing `permit_type_class != 'construction'` short-circuit: `modeled_gfa_sqm = null`, `effective_area_sqm = null`, `trade_contract_values = {}`, `is_geometric_override = false`. Telemetry counters (`matrix_misses`, `matrix_miss_unique_keys`, `matrix_miss_top_keys`) emit to `audit_table` so operators can prioritize incremental matrix backfill — see §3.A Operator Runbook below.
+
+#### §3.A Operator Runbook — Adding `scope_intensity_matrix` rows
+
+Triggered when the `compute-cost-estimates` audit_table shows non-trivial `matrix_misses` (added by WF3 Pass-2.5 Finding D). Follow this runbook to incrementally improve coverage.
+
+**(a) Discover top misses.** Query the most recent `compute-cost-estimates` run's audit_table:
+
+```sql
+SELECT records_meta->'audit_table'->'rows'
+  FROM pipeline_runs
+ WHERE pipeline = 'permits:compute-cost-estimates'
+   AND status   = 'completed'
+ ORDER BY started_at DESC
+ LIMIT 1;
+```
+
+Look for the `matrix_misses`, `matrix_miss_unique_keys` (with `_truncated` flag), and `matrix_miss_top_keys` rows. The `matrix_miss_top_keys` value is a JSON object mapping `permit_type::structure_type` → miss count, sorted by frequency (top 10).
+
+**(b) PRIMARY — admin Control Panel.** When the Spec 86 Control Panel surface for `scope_intensity_matrix` is available, use it to add rows. The Control Panel provides input validation (allocation percentage ∈ (0, 1]), audit logging via `admin_action` breadcrumb, and a diff-before-save preview.
+
+**(c) FALLBACK — direct SQL with engineering review.** If the Control Panel surface is not yet live, operators can add rows via SQL after engineering review:
+
+```sql
+INSERT INTO scope_intensity_matrix (permit_type, structure_type, gfa_allocation_percentage)
+VALUES
+  ('plumbing',   'commercial',  0.05),     -- example: 5% allocation
+  ('mechanical', 'commercial',  0.08)
+ON CONFLICT (permit_type, structure_type) DO UPDATE
+  SET gfa_allocation_percentage = EXCLUDED.gfa_allocation_percentage;
+```
+
+Allocation values MUST satisfy the CHECK constraint (`> 0 AND <= 1.0`). Use lowercase `permit_type` and `structure_type` strings — the Brain normalizes input via `.toLowerCase().trim()` before lookup.
+
+**(d) Domain-research caveat.** Trade-specific permits (plumbing, mechanical, electrical, demolition) may NOT have a valid "fraction of GFA" semantic at all — system scope is typically not floor-area-proportional. A plumbing rough-in on a 46K-sqm office is NOT "X% of 46K sqm × $/sqft trade rate"; the actual cost is driven by fixture count, riser layout, etc. **The safe-skip may be the permanent correct behavior for some trade-specific permit_types.** Operators MUST validate any proposed allocation_pct against historical declared costs (compare `est_const_cost` distributions for the permit_type) before adding matrix rows.
+
+**(e) Expected coverage impact pre/post backfill.** Per the WF3 Pass-2.5 pre-flight quantification (2026-05-21): adding rows for the top 4 missing permit_types (Plumbing(PS), Mechanical(MS), Drain and Site Service, Demolition Folder — ~110K permits combined) would restore ~46 percentage points of `model_coverage_pct`. Until the backfill lands, the first post-Finding-D-fix pipeline run will produce a WARN verdict on `model_coverage_pct` — this is **intentional signal**, not a regression.
+
 #### Step C: Trade Valuation (The Constraint Filter)
 The engine joins with `permit_trades`. If a trade was not identified during classification, Value = $0. For "Found" trades:
 **Trade Value** = (Area_Eff * Base Trade Rate) * Structure Complexity Factor * Neighborhood Premium
@@ -184,6 +222,9 @@ CoA applications carry no applicant-declared construction cost (the `est_const_c
 | Infra | `ADVISORY_LOCK_ID` | Strictly set to 83 to avoid collision with other specs. |
 | Logic | `liar_gate_threshold` | Must be added to `ZERO_IS_INVALID` to prevent silent disabling. |
 | Telemetry | `liar_gate_overrides` | Counter must be emitted to the `audit_table`. |
+| Telemetry | `matrix_misses` | Counter of construction-class permits that hit the `scope_intensity_matrix` miss path (WF3 Pass-2.5 Finding D). Gated on `> 0` to avoid zero-count audit noise. |
+| Telemetry | `matrix_miss_unique_keys` | Count of distinct `permit_type::structure_type` keys observed in misses. Includes `_truncated`/`_total` flags when the bounded telemetry Map (cap = 200) drops new keys. |
+| Telemetry | `matrix_miss_top_keys` | JSON object — top 10 missing `permit_type::structure_type` pairs by frequency. Operator runbook §3.A consumes this to prioritize matrix backfill. |
 | Quality | `snapshots` | Script must populate `data_quality_snapshots` (from Migration 080). |
 
 > **Per-permit audit surface (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7) renders every Surgical Triangle input from §3 (lot_size_sqm, footprint_area_sqm, height_m, stories, permit_type_allocation_pct, structure_complexity_factor, neighbourhood_premium_tier) plus the Liar's Gate decision tree (modeled_total, reported_total, ratio, path: surgical_only/proportional_slicing/none per §3D). When a single permit produces a "crazy number" (e.g., $29M for a sign install), the inspector exposes which input drove the divergence. This is the operator-facing dual to step 27 (`assert-global-coverage.js`) which measures field-coverage at the population level.
@@ -210,6 +251,9 @@ CoA applications carry no applicant-declared construction cost (the `est_const_c
 
 **Out-of-Scope Files**
 * `classify-permits.js`: This is an upstream dependency. The Slicer consumes this data but does not perform the classification itself.
+
+**Operator-tunable surface**
+* `scope_intensity_matrix` (DB table seeded via migration 096) — matrix completeness is operator-driven, not code-tunable. The Brain treats missing rows as a safe-skip signal (cost_source='none'), and operators add new rows via §3.A runbook as the telemetry surfaces hot misses.
 
 **Cross-Spec Dependencies**
 * **Relies on**: Spec 13 (Classify Permits) for trade identification and Spec 3 (Classify Scope) for project/structure types.

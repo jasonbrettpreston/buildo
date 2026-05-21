@@ -167,17 +167,138 @@ describe('computeEffectiveArea', () => {
     expect(matched).toBe(true);
   });
 
-  it('defaults to full GFA on matrix miss', () => {
+  it('returns areaEff=null on matrix miss with positive GFA (WF3 Pass-2.5 Finding D — safe-skip replaces $14M-on-plumbing bug)', () => {
     const row = makeRow({ permit_type: 'demolition', structure_type: 'commercial' });
-    const { areaEff, matched } = computeEffectiveArea(row, 200, BASE_CONFIG);
-    expect(areaEff).toBe(200); // conservative miss = full scope
+    const { areaEff, matched, matrixKey } = computeEffectiveArea(row, 200, BASE_CONFIG);
+    expect(areaEff).toBeNull();
     expect(matched).toBe(false);
+    expect(matrixKey).toBe('demolition::commercial');
+  });
+
+  it('returns areaEff=0 on gfa<=0 (internal defensive guard — never consults matrix)', () => {
+    const row = makeRow({ permit_type: 'new building', structure_type: 'sfd' });
+    const zeroResult = computeEffectiveArea(row, 0, BASE_CONFIG);
+    expect(zeroResult.areaEff).toBe(0);
+    expect(zeroResult.matched).toBe(false);
+    expect(zeroResult.matrixKey).toBeNull();
+    const nullResult = computeEffectiveArea(row, null, BASE_CONFIG);
+    expect(nullResult.areaEff).toBe(0);
+    expect(nullResult.matched).toBe(false);
   });
 
   it('normalizes permit_type and structure_type to lowercase before lookup', () => {
     const row = makeRow({ permit_type: 'New Building', structure_type: 'SFD' });
     const { matched } = computeEffectiveArea(row, 100, BASE_CONFIG);
     expect(matched).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// estimateCostShared — matrix-miss safe-skip (WF3 Pass-2.5 Finding D)
+// ---------------------------------------------------------------------------
+
+describe('estimateCostShared — matrix-miss safe-skip (Finding D)', () => {
+  it('Test A: construction-class permit + matrix miss → cost_source=none, byte-symmetric envelope with _matrixMiss=true', () => {
+    const row = makeRow({
+      permit_type: 'plumbing',
+      structure_type: 'commercial',
+      footprint_area_sqm: 4600,  // 46K-sqm office building (5 storeys × 4600 footprint = 23K, the bug exemplar)
+      estimated_stories: 5,
+      permit_type_class: 'construction',
+    });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result.cost_source).toBe('none');
+    expect(result.estimated_cost).toBeNull();
+    expect(result.modeled_gfa_sqm).toBeNull(); // Option A symmetry — matches non-construction envelope
+    expect(result.effective_area_sqm).toBeNull();
+    expect(result.cost_tier).toBeNull();
+    expect(result.cost_range_low).toBeNull();
+    expect(result.cost_range_high).toBeNull();
+    expect(result.is_geometric_override).toBe(false);
+    expect(result.trade_contract_values).toEqual({});
+    expect(result._matrixMiss).toBe(true);
+    expect(result._matrixMissKey).toBe('plumbing::commercial');
+    // premium_factor + complexity_score still computed (matches non-construction contract)
+    expect(typeof result.premium_factor).toBe('number');
+    expect(typeof result.complexity_score).toBe('number');
+  });
+
+  it('Test B: construction-class permit + matrix hit → unchanged behavior (regression lock)', () => {
+    const row = makeRow({
+      permit_type: 'new building',
+      structure_type: 'sfd',
+      footprint_area_sqm: 100,
+      estimated_stories: 2,
+      est_const_cost: 500000,
+      active_trade_slugs: ['framing', 'plumbing'],
+    });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result.cost_source).not.toBe('none');
+    expect(result.estimated_cost).toBeGreaterThan(0);
+    expect(result.effective_area_sqm).toBeGreaterThan(0);
+    expect(result._matrixMiss).toBe(false);
+    expect(result._matrixMissKey).toBeNull();
+  });
+
+  it('Test C: precedence — permit_type_class=unclassified + matrix-miss-eligible → _permitTypeClassSkipped wins, _matrixMiss=false', () => {
+    const row = makeRow({
+      permit_type: 'plumbing',
+      structure_type: 'commercial',
+      permit_type_class: 'unclassified', // non-construction → short-circuits BEFORE matrix lookup
+    });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result.cost_source).toBe('none');
+    expect(result._permitTypeClassSkipped).toBe(true);
+    expect(result._matrixMiss).toBe(false);
+    expect(result._matrixMissKey).toBeNull();
+  });
+
+  it('Test D: gfa<=0 + matrix-miss-eligible → defensive guard wins, _matrixMiss=false (matrix never consulted)', () => {
+    const row = makeRow({
+      permit_type: 'plumbing',
+      structure_type: 'commercial',
+      footprint_area_sqm: null,
+      estimated_stories: null,
+      lot_size_sqm: null,    // forces gfa=0 + usedFallback=true
+    });
+    const result = estimateCostShared(row, BASE_CONFIG);
+    expect(result._matrixMiss).toBe(false);
+    expect(result._matrixMissKey).toBeNull();
+    // Falls through to Zero-Total Bypass via existing path → cost_source='none'
+    expect(result.cost_source).toBe('none');
+  });
+
+  it('Test E: reverse transition — matrix HIT after a previous miss restores effective_area_sqm from null to a number (IS DISTINCT FROM guard regression lock)', () => {
+    // The compute-cost-estimates.js bulk UPSERT uses `IS DISTINCT FROM` on
+    // effective_area_sqm so an operator backfill of scope_intensity_matrix
+    // (transitioning a permit from null → number) actually writes through the
+    // WAL guard. `NULL IS DISTINCT FROM 42.5` evaluates TRUE in PostgreSQL.
+    // This JS-layer test asserts the Brain side of that transition: the same
+    // permit row produces null on a miss config and a number on a hit config.
+    const row = makeRow({
+      permit_type: 'plumbing',
+      structure_type: 'commercial',
+      footprint_area_sqm: 100,
+      estimated_stories: 2, // gfa = 200
+      active_trade_slugs: ['plumbing'],
+    });
+    // Pass 1: matrix has no plumbing::commercial row → safe-skip → null
+    const missConfig = { ...BASE_CONFIG, scopeMatrix: BASE_SCOPE_MATRIX };
+    const miss = estimateCostShared(row, missConfig);
+    expect(miss.effective_area_sqm).toBeNull();
+    expect(miss.cost_source).toBe('none');
+    // Pass 2: operator backfills the matrix row → cost path runs → number
+    const hitConfig = {
+      ...BASE_CONFIG,
+      scopeMatrix: { ...BASE_SCOPE_MATRIX, 'plumbing::commercial': 0.05 },
+    };
+    const hit = estimateCostShared(row, hitConfig);
+    expect(hit.effective_area_sqm).not.toBeNull();
+    expect(hit.effective_area_sqm).toBeGreaterThan(0);
+    expect(hit.cost_source).not.toBe('none');
+    // The IS DISTINCT FROM guard at compute-cost-estimates.js will admit the
+    // UPDATE because miss.effective_area_sqm (null) IS DISTINCT FROM
+    // hit.effective_area_sqm (positive number).
   });
 });
 

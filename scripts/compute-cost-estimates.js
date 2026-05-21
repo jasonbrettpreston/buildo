@@ -37,6 +37,15 @@ const ADVISORY_LOCK_ID = 83;
 const BULK_COLUMN_COUNT = 15;
 const BATCH_SIZE = Math.floor((65535 - 1) / BULK_COLUMN_COUNT); // 4368
 
+// Spec 47 §3.6 bounded-array discipline — cap the unique-key telemetry Map at
+// 200 entries to prevent OOM under a long-tail anomaly (e.g., a data-import
+// bug that generates thousands of new permit_type×structure_type variations).
+// Cap-enforcement is "keep-frequent / drop-new-at-cap" so existing entries
+// keep accumulating once seen, while truly new keys past the cap are not
+// tracked individually (the scalar matrixMissUniqueKeys counter still grows
+// so operators see the long-tail magnitude via _truncated + _total flags).
+const MATRIX_MISS_KEYS_CAP = 200;
+
 // ─── Zod config schema ───────────────────────────────────────────────────────
 // Every logic_variable consumed by this script must appear here. Validated at
 // startup — bad DB values (NULL, 0, wrong type) throw immediately with a clear
@@ -166,6 +175,11 @@ async function flushBatch(pool, rows, RUN_AT) {
   return await pipeline.withTransaction(pool, async (client) => {
     const sql = buildBulkUpsertSQL(rows.length);
     const params = [];
+    // Only DB schema columns included; the Brain's `_`-prefixed telemetry
+    // fields (_matrixMiss, _matrixMissKey, _liarsGateOverride, _zeroTotalBypass,
+    // _usedFallback, _permitTypeClassSkipped) are read by the Muscle's counter
+    // logic but explicitly NOT pushed into params here, so they cannot leak
+    // into the INSERT statement and cause a schema error.
     for (const r of rows) {
       params.push(
         r.permit_num,
@@ -289,6 +303,9 @@ if (require.main === module) {
     let liarsGateOverrides  = 0;
     let zeroTotalBypasses   = 0;
     let permitTypeClassSkipped = 0; // WF2 #3 — Spec 80 §5 / Spec 83 §3 gate
+    let matrixMisses = 0;          // WF3 Pass-2.5 Finding D — Spec 83 §3 Step B
+    let matrixMissUniqueKeys = 0;  // scalar — counts ALL distinct keys seen (uncapped)
+    const matrixMissByKey = new Map(); // bounded at MATRIX_MISS_KEYS_CAP
     let batch = [];
 
     try {
@@ -306,6 +323,21 @@ if (require.main === module) {
         if (estimate._liarsGateOverride) liarsGateOverrides++;
         if (estimate._zeroTotalBypass)   zeroTotalBypasses++;
         if (estimate._permitTypeClassSkipped) permitTypeClassSkipped++;
+        if (estimate._matrixMiss) {
+          matrixMisses++;
+          const key = estimate._matrixMissKey;
+          // Keep-frequent / drop-new-at-cap (Spec 47 §3.6 bounded-array):
+          // existing entries keep accumulating; new entries past the cap are
+          // counted globally but not tracked individually.
+          if (matrixMissByKey.has(key)) {
+            matrixMissByKey.set(key, matrixMissByKey.get(key) + 1);
+          } else if (matrixMissByKey.size < MATRIX_MISS_KEYS_CAP) {
+            matrixMissByKey.set(key, 1);
+            matrixMissUniqueKeys++;
+          } else {
+            matrixMissUniqueKeys++;
+          }
+        }
 
         if (batch.length >= BATCH_SIZE) {
           try {
@@ -400,6 +432,35 @@ if (require.main === module) {
       { metric: 'permit_type_class_skipped', value: permitTypeClassSkipped, threshold: null, status: 'INFO' },
       { metric: 'model_coverage_pct',        value: modelCoveragePct.toFixed(1) + '%', threshold: `>= ${logicVars.cost_model_coverage_warn_pct}%`, status: modelCoveragePct >= logicVars.cost_model_coverage_warn_pct ? 'PASS' : 'WARN' },
     ];
+    // WF3 Pass-2.5 Finding D — gated on >0 to avoid zero-count noise (DeepSeek NIT)
+    if (matrixMisses > 0) {
+      const topKeys = Array.from(matrixMissByKey.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+      costAuditRows.push({
+        metric: 'matrix_misses',
+        value: matrixMisses,
+        threshold: null,
+        status: 'INFO',
+      });
+      // value = tracked in Map (capped at MATRIX_MISS_KEYS_CAP);
+      // _total = true uncapped count seen across the run;
+      // _truncated = true when the Map dropped at least one new key.
+      costAuditRows.push({
+        metric: 'matrix_miss_unique_keys',
+        value: matrixMissByKey.size,
+        threshold: null,
+        status: 'INFO',
+        _truncated: matrixMissUniqueKeys > MATRIX_MISS_KEYS_CAP,
+        _total: matrixMissUniqueKeys,
+      });
+      costAuditRows.push({
+        metric: 'matrix_miss_top_keys',
+        value: JSON.stringify(Object.fromEntries(topKeys)),
+        threshold: null,
+        status: 'INFO',
+      });
+    }
     if (failedRows > 0) {
       costAuditRows.push({ metric: 'failed_rows',    value: failedRows,    threshold: '== 0', status: 'WARN' });
       costAuditRows.push({ metric: 'failed_batches', value: failedBatches, threshold: '== 0', status: 'WARN' });

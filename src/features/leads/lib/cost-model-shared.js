@@ -217,16 +217,28 @@ function computeGfa(row, config) {
  * Determine the Effective Work Area by applying the Surgical Triangle lookup.
  *
  * Area_Eff = GFA × scope_intensity_matrix[permit_type::structure_type].
- * On matrix miss, Area_Eff = GFA (allocation = 1.0 — treat as full scope).
- * This is a conservative miss strategy; Phase 3 EXPLAIN ANALYZE will identify
- * which permit_type × structure_type pairs are most frequently missed.
+ * On matrix miss for a construction-class permit, areaEff = null — the caller
+ * `estimateCostShared` then short-circuits to cost_source='none' (Spec 83 §3
+ * Step B, WF3 Pass-2.5 Finding D). Operators see misses via the Muscle's
+ * `matrix_miss_top_keys` audit_table row and backfill the matrix incrementally
+ * via the admin Control Panel (Spec 86) or the SQL fallback in Spec 83 §3.A.
+ *
+ * Internal defensive guard: when gfa is null/0, the matrix is not consulted
+ * (areaEff=0, matched=false). This makes the function self-defensive against
+ * future refactors that might drop the caller's `gfa > 0 ?` short-circuit.
  *
  * @param {PermitRow} row
  * @param {number} gfa
  * @param {CostModelConfig} config
- * @returns {{ areaEff: number, matrixKey: string, matched: boolean }}
+ * @returns {{ areaEff: number | null, matrixKey: string | null, matched: boolean }}
+ *   areaEff is null only on a matrix miss with gfa > 0; 0 when gfa <= 0;
+ *   a positive number on hit. The caller MUST handle the null case
+ *   explicitly (downstream Step C and Liar's Gate are skipped via early-return).
  */
 function computeEffectiveArea(row, gfa, config) {
+  if (gfa == null || gfa <= 0) {
+    return { areaEff: 0, matrixKey: null, matched: false };
+  }
   const pt = (row.permit_type || '').toLowerCase().trim();
   const st = (row.structure_type || '').toLowerCase().trim();
   const matrixKey = `${pt}::${st}`;
@@ -234,8 +246,7 @@ function computeEffectiveArea(row, gfa, config) {
   if (pct !== undefined && pct > 0) {
     return { areaEff: gfa * pct, matrixKey, matched: true };
   }
-  // Miss: default to full GFA (allocation = 1.0)
-  return { areaEff: gfa, matrixKey, matched: false };
+  return { areaEff: null, matrixKey, matched: false };
 }
 
 // ---------------------------------------------------------------------------
@@ -505,6 +516,8 @@ function estimateCostShared(row, config) {
       _zeroTotalBypass:       false,
       _usedFallback:          false,
       _permitTypeClassSkipped: true,
+      _matrixMiss:            false,
+      _matrixMissKey:         null,
     };
   }
 
@@ -515,9 +528,41 @@ function estimateCostShared(row, config) {
   const { gfa, usedFallback, modeledGfaSqm } = computeGfa(row, config);
 
   // ── Step B: Effective Work Area ─────────────────────────────────────────
-  const { areaEff } = gfa > 0
+  const { areaEff, matrixKey } = gfa > 0
     ? computeEffectiveArea(row, gfa, config)
-    : { areaEff: 0 };
+    : { areaEff: 0, matrixKey: null };
+
+  // ── Step B.1 — Matrix-miss safe-skip (WF3 Pass-2.5 Finding D) ───────────
+  // When the Surgical Triangle has no row for this permit_type×structure_type
+  // pair, areaEff is null. Defaulting to full GFA (the pre-fix behavior) made
+  // a 119m² plumbing permit on a 46K-sqm office produce a $14M cost. Safe-skip
+  // returns an envelope byte-symmetric with the permit_type_class!=construction
+  // short-circuit above. Operator backfills the matrix via Spec 86 / SQL
+  // fallback once the audit_table's `matrix_miss_top_keys` exposes which pairs
+  // are hot. premium_factor + complexity_score are still computed for telemetry
+  // consistency (matching the non-construction short-circuit's contract).
+  if (areaEff === null) {
+    return {
+      permit_num:             row.permit_num,
+      revision_num:           row.revision_num,
+      estimated_cost:         null,
+      cost_source:            'none',
+      cost_tier:              null,
+      cost_range_low:         null,
+      cost_range_high:        null,
+      premium_factor:         computePremiumFactor(row.avg_household_income, config),
+      complexity_score:       computeComplexityScore(row),
+      is_geometric_override:  false,
+      modeled_gfa_sqm:        null,
+      effective_area_sqm:     null,
+      trade_contract_values:  {},
+      _liarsGateOverride:     false,
+      _zeroTotalBypass:       false,
+      _usedFallback:          false,
+      _matrixMiss:            true,
+      _matrixMissKey:         matrixKey,
+    };
+  }
 
   // ── Neighbourhood premium ───────────────────────────────────────────────
   const premium = computePremiumFactor(row.avg_household_income, config);
@@ -568,6 +613,8 @@ function estimateCostShared(row, config) {
     _liarsGateOverride:     gate.liarsGateOverride,
     _zeroTotalBypass:       gate.zeroTotalBypass,
     _usedFallback:          usedFallback,
+    _matrixMiss:            false,
+    _matrixMissKey:         null,
   };
 }
 

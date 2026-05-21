@@ -1684,3 +1684,51 @@ Source: WF3 #4 Pass-2.5 — Gemini Pro + DeepSeek-R1 adversarial review of `docs
 - Both flagged AI-driven processes (auto-unblock LLM-on-LLM gate, Pass 2 AI root-cause synthesis) as needing more guards. Worth a single design pass that addresses both.
 - Gemini #122 (C3/C4 typo in §3 halt conditions) is the most actionable pre-existing bug — a low-effort WF3 fix in a future session.
 
+---
+
+## Spec 83 Finding D (matrix-miss safe-skip) — adversarial PLAN review DEFERs (2026-05-21)
+
+Source: WF3 #5 Pass-2.5 — adversarial PLAN review (Independent + Gemini Pro + DeepSeek-R1) on `.cursor/active_task.md` BEFORE implementation. 5 REAL plan-level findings folded into plan v2 (Map cap eviction, envelope symmetry, coverage quantification, C18 update, telemetry-strip comment + flushBatch). Items below are DEFERs and notes.
+
+| # | Triage | Source | Item | Why deferred |
+|---|---|---|---|---|
+| 137 | **DEFER — future Spec 83 hardening WF** | Gemini HIGH | Persistent `cost_source_detail` text column on `cost_estimates` to disambiguate skip reasons (`matrix_miss` vs `non_construction_class` vs `zero_gfa`). Would resolve the ambiguity Gemini flagged about transient `_matrixMiss` telemetry vs persisted state, and permanently disambiguate Finding E vs Finding D legitimate partial-writes. | Requires a migration on `cost_estimates` (237K+ row table) + Brain change to populate. Beyond WF3 #5's "no schema change" boundary per its Out-of-Scope declaration. Operationally the audit_table telemetry covers the immediate diagnostic need; the persistent column is a longer-term observability investment. Filing for future hardening WF. |
+| 138 | DEFER — informational | Gemini CRIT (folded as Phase 0 quantification) | Downstream consumer impact (Opportunity Scoring) of the ~46 pp coverage drop. Folded as Phase 0 read-only pre-flight queries + decision log; ship-with-WARN approach documented. | Phase 0 quantification recorded in commit message; not an open follow-up. |
+| 139 | DEFER (potential follow-up) | Gemini NIT | `scope_intensity_matrix.gfa_allocation_percentage` CHECK constraint allows values > 0 and ≤ 1.0, but admin Control Panel input validation should mirror this. | Spec 86 Control Panel surface for this table is referenced in §3.A but may not yet be live. When it ships, input validation must enforce the same DB CHECK bounds. File when Spec 86 amendment for scope_intensity_matrix lands. |
+
+**Two-reviewer convergence on Finding D plan:**
+- Map cap eviction strategy (Independent R3 + DeepSeek HIGH#1 + Gemini MED) → folded as "keep-frequent / drop-new-at-cap" pattern + `matrix_miss_unique_keys` scalar + `_truncated`/`_total` flags.
+- Envelope asymmetry (Independent R1 + Gemini LOW + DeepSeek HIGH#2) → folded as Option A (matrix-miss envelope sets `modeled_gfa_sqm = null` to match non-construction short-circuit byte-for-byte). Side effect: Finding E's original 5/12 partial-write observation needs re-characterization.
+
+---
+
+## Spec 83 Finding D (matrix-miss safe-skip) — adversarial IMPLEMENTATION review DEFERs (2026-05-21)
+
+Source: WF3 #5 Pass-2.5 — adversarial IMPLEMENTATION review (Independent + Gemini Pro × 2 + DeepSeek-R1 × 2) on `src/features/leads/lib/cost-model-shared.js` (Brain) + `scripts/compute-cost-estimates.js` (Muscle). Both adversarial models reviewed the WHOLE file, surfacing many pre-existing concerns. Independent (no isolation) caught one REAL Finding D-specific issue (Test E was tautological, replaced with proper IS DISTINCT FROM transition test). Items below are pre-existing and DEFERED — none are introduced by Finding D.
+
+### Two-reviewer convergence on pre-existing concerns
+
+| # | Convergence | Item | Why deferred |
+|---|---|---|---|
+| 140 | Gemini Muscle CRIT + DeepSeek Muscle CRIT | Advisory lock pattern: `pipeline.withAdvisoryLock` abstracts away the spec-mandated "dedicated pinned client" requirement. Real risk if the SDK reuses pool connections for stream queries. | Pre-existing in `pipeline.withAdvisoryLock` — used across most pipeline scripts. Auditing this SDK and migrating to dedicated `pool.connect()` is a multi-script hardening WF. NOT this WF3's scope. |
+| 141 | Gemini Muscle HIGH + DeepSeek Muscle CRIT | Stream error path doesn't flush in-flight batch (lines ~344-360 — current `catch` only logs and increments `failedRows`, but the partial batch is not retried). Spec 47 §7 stream guard violation. | Pre-existing in compute-cost-estimates.js streamErr catch. Real but unrelated to Finding D. File separately. |
+| 142 | Gemini Muscle HIGH (column completeness) + DeepSeek Muscle HIGH (xmax fragility) | WAL guard `IS DISTINCT FROM` checks 5 of 13 updated columns; if a non-checked column changes (e.g., `model_version` bump), update is silently skipped. Plus the `xmax=0` insert/update distinction can be fragile under concurrent transactions. | Pre-existing design choice for compute-cost-estimates.js bulk UPSERT. Real concern for model_version bumps. Separate hardening WF. |
+| 143 | Gemini Brain HIGH + DeepSeek Brain MEDIUM | `computeGfa` story handling: `estimated_stories=0` propagates through `!== null` check producing GFA=0; `storeys=0` coerces to 1 via `|| 1`. Inconsistent precedence between `computeGfa` and `computeComplexityScore`. | Pre-existing in computeGfa (lines ~210-230 of cost-model-shared.js). Not touched by Finding D. Real but contained — 0-storey data is rare. File for future Spec 83 Brain hardening WF. |
+
+### Unique pre-existing findings
+
+| # | Source | Item | Why deferred |
+|---|---|---|---|
+| 144 | Gemini Muscle HIGH | No SIGTERM handler — dangling advisory lock on container restart will block subsequent runs for the PostgreSQL connection timeout window. | Pre-existing in compute-cost-estimates.js. Real ops concern. Tied to row 140 advisory lock refactor — fold into the same WF. |
+| 145 | Gemini Brain CRIT | `computeSurgicalTotal` sums raw `val`s while `tradeValues` stores `Math.round(val)`. Liar's Gate proportional slicing then uses the unrounded total → slice sum ≠ reportedCost. | Pre-existing in cost-model-shared.js `computeSurgicalTotal`. Real mathematical bug but pre-dates Finding D. Confidence high; separate Spec 83 §3 Step D hardening WF. |
+| 146 | DeepSeek Brain HIGH | `applyLiarsGate` Branch 3 (Override) is suppressed when `usedFallback=true` — diverges from Spec 83 §3 Step D which doesn't document this exemption. Either remove the `!usedFallback` guard or amend the spec. | Pre-existing override behavior. Real spec drift. Separate Spec 83 amendment WF or code-fix WF. |
+| 147 | DeepSeek Muscle HIGH | `trade_sqft_rates` rows fetched at startup but not validated for NULL `base_rate_sqft` / `structure_complexity_factor` — NULL would propagate as NaN through arithmetic, corrupting all estimates for that trade. | Pre-existing in compute-cost-estimates.js startup pre-fetch (lines ~250-260). Real defensive gap. Add Zod validation step in a follow-up. |
+| 148 | DeepSeek Muscle MEDIUM | `scopeMatrix` key construction in Muscle uses `.toLowerCase()` only; Brain uses `.toLowerCase().trim()`. If DB rows have leading/trailing whitespace, Muscle's key won't match Brain's lookup → silent matrix MISS for rows that should match. | Pre-existing whitespace handling gap. Could affect Finding D coverage (more misses than expected if any rows have whitespace). Worth fixing: change SQL to `SELECT LOWER(TRIM(permit_type)) AS permit_type, LOWER(TRIM(structure_type)) AS structure_type` OR mirror Brain's `.trim()` in the JS Map key. Single-line fix; file separately to keep WF3#5 scope tight. |
+| 149 | Gemini Brain MEDIUM | String normalization inconsistency: `computeEffectiveArea` does `.toLowerCase().trim()`; `isShellPermit` and `computeComplexityScore` only `.toLowerCase()`. | Pre-existing Brain inconsistency. File separately. |
+| 150 | Gemini Muscle MEDIUM | Zod schema uses `.passthrough()` — silently ignores misspelled config keys → silent NaN corruption on typos. | Pre-existing config-loader design. Real defensive gap. File separately. |
+| 151 | DeepSeek Brain LOW | `matrixKey="::"` when both `permit_type` and `structure_type` are null/empty — uninformative telemetry. Could normalize to `"unknown::unknown"` sentinel. | Pre-existing in Brain `computeEffectiveArea`. Minor telemetry polish. Not blocking. |
+
+### Convergence notes
+- Two reviewers converged on **advisory lock SDK + SIGTERM + stream error flush** as a single architectural concern. Worth a focused "pipeline runtime hardening" WF that fixes all three together rather than three separate WF3s.
+- Gemini CRIT on `computeSurgicalTotal` rounding (row 145) is the highest-confidence pre-existing financial-correctness bug surfaced in this review cycle. Should be next-session WF3 candidate alongside the §3 typo (row 122 from Finding L's review).
+
