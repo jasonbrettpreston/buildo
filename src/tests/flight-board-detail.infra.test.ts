@@ -49,6 +49,11 @@ const stalledRow = {
   predicted_start: '2026-04-01',
   p25_days: 30,
   p75_days: 60,
+  // WF3 #13 Pass-2.5 Finding F — opportunity_score required by
+  // computeTemporalGroup. Positive value preserves existing test semantic
+  // (stalled+meaningful → action_required); demotion tests live in the
+  // dedicated logic test at src/tests/flight-board-temporal.logic.test.ts.
+  opportunity_score: 42,
   updated_at: '2026-04-29T10:00:00.000Z',
 };
 

@@ -35,6 +35,10 @@ interface FlightBoardRow {
   predicted_start: string | null;
   p25_days: number | null;
   p75_days: number | null;
+  // WF3 #13 Pass-2.5 Finding F (2026-05-22) — consumed by
+  // computeTemporalGroup demotion rule. NULL means "no cost data"
+  // (Spec 81 §3); ≤ 0 means meaningless (demoted out of action_required).
+  opportunity_score: number | null;
   updated_at: string;
 }
 
@@ -48,6 +52,7 @@ const FLIGHT_BOARD_SQL = `
     tf.predicted_start::text AS predicted_start,
     tf.p25_days,
     tf.p75_days,
+    tf.opportunity_score,
     p.updated_at::text AS updated_at
   FROM lead_views lv
   INNER JOIN permits p
