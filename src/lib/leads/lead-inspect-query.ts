@@ -614,6 +614,11 @@ interface CoaMainRow {
   coa_type_class: string | null;
   project_type: string | null;
   scope_tags: string[] | null;
+  // WF3 #14 Pass-2.5 Finding I (2026-05-22) — free-text application
+  // description from CKAN (coa_applications.description; mig 009).
+  // Lets operators substantiate the auto-classified scope_tags +
+  // project_type without leaving the Inspector panel.
+  description: string | null;
   structure_type: string | null;
   decision_current: string | null;
   decision_date: string | null;
@@ -638,6 +643,7 @@ const COA_MAIN_SQL = `
     ca.coa_type_class,
     ca.project_type,
     ca.scope_tags,
+    ca.description,
     ca.structure_type,
     ca.decision               AS decision_current,
     ca.decision_date::text    AS decision_date,
@@ -881,6 +887,7 @@ async function fetchCoaPanel(
     coa_type_class: c.coa_type_class,
     project_type: c.project_type,
     scope_tags: c.scope_tags ?? [],
+    description: c.description ?? null,
     structure_type: c.structure_type,
     decision_current: c.decision_current,
     decision_history,

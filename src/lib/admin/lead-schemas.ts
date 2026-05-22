@@ -356,6 +356,13 @@ export const LeadInspectCoaSchema = z.object({
   project_type: z.string().nullable(),
   // v4.1 MED-v3-H: scope_tags can be NULL in DB; transform to [] to simplify UI.
   scope_tags: z.array(z.string()).nullable().transform((v) => v ?? []),
+  // WF3 #14 Pass-2.5 Finding I (2026-05-22) — free-text description from CKAN
+  // (coa_applications.description; mig 009). No .max() length cap — DB column
+  // is unlimited TEXT; arbitrary cap would create schema↔DB divergence and
+  // could reject legitimate operator data. JSX rendering auto-escapes via
+  // `{value}` expression so untrusted content is safe by construction
+  // (regression-locked by the XSS-prevention UI test).
+  description: z.string().nullable(),
   structure_type: z.string().nullable(),
   decision_current: z.string().nullable(),
   decision_history: z.array(LeadInspectCoaDecisionEntrySchema),

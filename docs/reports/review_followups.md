@@ -1793,6 +1793,25 @@ Gemini Pro and DeepSeek-R1 reviewed the full `load-permits.js` source rather tha
 
 ---
 
+## WF3 #14 Finding I — adversarial IMPL review pre-existing concerns in CoaClassificationPanel.tsx (2026-05-22)
+
+Source: WF3 #14 closed the description gap. Adversarial Gemini + DeepSeek IMPL review surfaced 8 PRE-EXISTING concerns in the broader `CoaClassificationPanel.tsx` file (not introduced by Finding I; outside its scope). Filed for a future hardening WF.
+
+| # | Triage | Source | Item | Why deferred |
+|---|--------|--------|------|--------------|
+| 181 | **DEFER — broader file hardening WF** | Gemini CRITICAL | Inline style `backgroundColor: '${color}22'` in `LifecyclePositionChip` (line ~288) assumes 6-digit hex — breaks on 3-digit / named / rgb()/hsl() values. Use `tinycolor2` or `color` lib for safe alpha-channel adjustment. | Pre-existing logic in the lifecycle scrubber, not touched by Finding I. |
+| 182 | **DEFER** | **2-reviewer convergence** (Gemini HIGH + DeepSeek MED) | `DecisionTimeline` history list (line ~204) uses `key={transitioned_at + decision}` — collides if 2 entries share both. Should use `lifecycle_status_history.id` as a stable unique identifier. | Pre-existing; needs schema-side change (return `id` in `decision_history` rows). |
+| 183 | **DEFER** | Gemini HIGH | `LifecyclePositionChip` accessibility — `style={{ color: dbColor, backgroundColor: dbColor+'22' }}` provides no WCAG AA contrast guarantee. Map DB colors to predefined audited color-pair set OR compute contrasting text from luminance. | Pre-existing a11y concern in the lifecycle scrubber. |
+| 184 | **DEFER** | Gemini MED | `bidValue` progress bar (line ~359) — width = `bidValue * 100%` with no clamp. Malformed data > 1 → bar overflows container. Zod schema already enforces `.min(0).max(1)` so Zod-layer is safe; component should also clamp defensively: `Math.max(0, Math.min(1, bidValue))`. | Pre-existing; defense-in-depth nicety. |
+| 185 | **DEFER** | Gemini LOW | SVG `viewBox="0 0 1100 40"` (line ~330) hardcoded — `1100 = 110 stages × 10px`. Couples component to catalog size. Should compute dynamically from `TYPED_CATALOG.length`. | Pre-existing; only matters if the 110-row catalog ever changes (unlikely). |
+| 186 | **DEFER** | DeepSeek HIGH | `costSourceWarn` logic (line ~144) — `data.cost_source != null && data.cost_source !== 'geometric'` excludes `null` from the warning. Spec says warn when `cost_source !== 'geometric'`; `null` is not `'geometric'` so should warn. Currently silently ignored. | Pre-existing spec-violation in the cost panel. Easy fix but needs verification: should `null` actually warn, or is `null` semantically "not measured yet" (different from a bad/non-geometric source)? Needs spec author confirmation. |
+| 187 | **DEFER** | DeepSeek HIGH | Nullable-array defensive guards — `scope_tags`, `decision_history`, `cross_stream_timeline`, `lead_trades` are all typed as arrays but nothing prevents runtime null from API/DB drift. Each uses `.map()` or `.length` directly → crash if null. Add `tags ?? []` fallbacks or `= []` default params. | Pre-existing; Zod schema currently transforms nullable → [] for scope_tags but not for others. Defense-in-depth nicety. |
+| 188 | **DEFER** | DeepSeek MED | Hardcoded "110 stages" in SVG `aria-label` (line ~286) — should use `${TYPED_CATALOG.length}`. Convergent with row 185. | Pre-existing; bundle together. |
+
+**Two-reviewer convergence (row 182):** `decision_history` key uniqueness — both Gemini and DeepSeek flagged the same line independently. Worth prioritizing in a hardening WF that returns `id` in the `decision_history` envelope.
+
+---
+
 ## WF3 #12 Finding B — residual 7/8 non-CoA-linked orphan classifications (2026-05-22)
 
 Source: WF3 #12 closed the 4/4 CoA-linked subset (via `linked_coa_application_number` exclusion in `computeIsOrphan`). The §7a Inspector spot-check on 2026-05-20 also flagged 7/8 NON-CoA-linked permits as incorrectly classified into O1/O2/O3 when the operator considered them non-orphan. Schema audit (2026-05-22) ruled out the obvious remediations.

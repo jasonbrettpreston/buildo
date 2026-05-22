@@ -2,8 +2,9 @@
 //             docs/specs/01-pipeline/84_lifecycle_phase_engine.md §2.5.h (Color & Icon Strategy)
 //             docs/specs/01-pipeline/42_chain_coa.md §6.6.B (cross-stream timeline JOIN)
 //
-// F.4 CoA Classification panel — 12 sub-sections rendering CoA-stage classifier output
+// F.4 CoA Classification panel — 13 sub-sections rendering CoA-stage classifier output
 // alongside the existing 8-panel admin inspector per Spec 76 §3.5 Cycle 8.
+// (13th section: description, added WF3 #14 Pass-2.5 Finding I 2026-05-22.)
 //
 // v4.1 folds applied:
 //   - CRIT-Ind-1: lifecycle_group/_block/_stage (NOT lifecycle_phase — mig 133)
@@ -78,6 +79,24 @@ export function CoaClassificationPanel({ data, parentLeadType, onNavigate }: Coa
 
         <div data-testid="coa-panel-section-project-type">
           <Field label="Project type" value={data.project_type} />
+        </div>
+
+        {/* WF3 #14 Pass-2.5 Finding I (2026-05-22) — free-text description from
+            CKAN. Custom multi-line-safe rendering (NOT stock <Field>) per
+            3-reviewer adversarial PLAN review fold F1:
+              - whitespace-pre-wrap preserves newlines (Gemini MED fold F2)
+              - break-words handles long unbreakable strings
+              - max-h-32 overflow-y-auto bounds vertical height so a 2KB+
+                description gets an internal scrollbar instead of pushing
+                downstream sections off-screen (DeepSeek MED + Gemini HIGH F3)
+              - JSX `{value ?? '—'}` expression auto-escapes — XSS-safe by
+                construction; regression-locked by the XSS-prevention UI test
+                (Gemini CRITICAL + DeepSeek HIGH triaged VERIFIED SAFE) */}
+        <div data-testid="coa-panel-section-description">
+          <div className="text-xs uppercase tracking-wide text-gray-500">Description</div>
+          <div className="mt-1 max-h-32 overflow-y-auto rounded border border-gray-200 bg-gray-50 px-2 py-1 text-sm text-gray-900 whitespace-pre-wrap break-words">
+            {data.description ?? '—'}
+          </div>
         </div>
 
         <div data-testid="coa-panel-section-scope-tags">

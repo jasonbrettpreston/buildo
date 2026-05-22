@@ -4,9 +4,9 @@
 //             docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §3 + §13
 //             docs/specs/01-pipeline/84_lifecycle_phase_engine.md §2.5.h
 //
-// RTL tests for F.4 CoA Classification Panel — the 12-sub-section CoA classifier
-// surface introduced by Spec 76 §3.5 Cycle 8. Covers:
-//   - 12 panel sub-sections render with correct testids
+// RTL tests for F.4 CoA Classification Panel — the 13-sub-section CoA classifier
+// surface introduced by Spec 76 §3.5 Cycle 8 + WF3 #14 Finding I (description). Covers:
+//   - 13 panel sub-sections render with correct testids
 //   - 110-position SVG scrubber WCAG accessibility
 //   - Conditional cost_source warning badge
 //   - Linked-permit chip navigation callback
@@ -36,6 +36,9 @@ function makeCoa(overrides: Partial<LeadInspectCoa> = {}): LeadInspectCoa {
     coa_type_class: 'residential',
     project_type: 'addition_renovation',
     scope_tags: ['rear_addition', 'second_storey'],
+    // WF3 #14 Pass-2.5 Finding I — null default preserves existing tests'
+    // semantic (no description rendered unless overridden in test).
+    description: null,
     structure_type: 'Single Family Detached',
     decision_current: 'approved',
     decision_history: [],
@@ -70,7 +73,7 @@ beforeEach(() => {
 });
 
 describe('<CoaClassificationPanel> — section visibility', () => {
-  it('renders all 12 sub-sections when fully populated', () => {
+  it('renders all 13 sub-sections when fully populated', () => {
     const onNavigate = vi.fn();
     render(
       <CoaClassificationPanel
@@ -104,6 +107,9 @@ describe('<CoaClassificationPanel> — section visibility', () => {
     expect(screen.getByTestId('coa-classification-panel')).toBeDefined();
     expect(screen.getByTestId('coa-panel-section-type-class')).toBeDefined();
     expect(screen.getByTestId('coa-panel-section-project-type')).toBeDefined();
+    // WF3 #14 Pass-2.5 Finding I (2026-05-22) — description section rendered
+    // between project_type and scope_tags. Always-present (no data guard).
+    expect(screen.getByTestId('coa-panel-section-description')).toBeDefined();
     expect(screen.getByTestId('coa-panel-section-scope-tags')).toBeDefined();
     expect(screen.getByTestId('coa-panel-section-structure')).toBeDefined();
     expect(screen.getByTestId('coa-panel-section-decision')).toBeDefined();
@@ -450,6 +456,102 @@ describe('<CoaClassificationPanel> — parent context label', () => {
       />,
     );
     expect(screen.getByText('Linked CoA (cross-stream)')).toBeDefined();
+  });
+});
+
+// WF3 #14 Pass-2.5 Finding I (2026-05-22) — CoA description rendering.
+// 5-test coverage block per adversarial PLAN review fold F4 (Gemini LOW +
+// DeepSeek HIGH convergence on test plan adequacy):
+//   1. Happy path — verbatim text appears
+//   2. Null state — '—' fallback, no crash
+//   3. Newline formatting — pre-wrap preserves \n (Gemini MED fold F2)
+//   4. Long-string overflow — bounded container has overflow class (Indep CRIT + Gemini HIGH F3)
+//   5. XSS regression lock — <script> rendered as literal text (Gemini CRIT + DeepSeek HIGH)
+describe('<CoaClassificationPanel> — description (WF3 #14 Finding I)', () => {
+  it('Happy path: renders description verbatim in the description section', () => {
+    const desc = 'Variance to permit a 3-storey rear addition with reduced side yard setback';
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({ description: desc })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const section = screen.getByTestId('coa-panel-section-description');
+    expect(section.textContent).toContain(desc);
+  });
+
+  it('Null state: renders the —  fallback without crashing', () => {
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({ description: null })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const section = screen.getByTestId('coa-panel-section-description');
+    // The bordered value div renders '—' when description is null
+    expect(section.textContent).toContain('—');
+  });
+
+  it('Newline formatting (Gemini MED F2): description value container has whitespace-pre-wrap class', () => {
+    const multiline = 'Line 1\nLine 2\nLine 3';
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({ description: multiline })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const section = screen.getByTestId('coa-panel-section-description');
+    // textContent preserves the literal characters (JSX renders the string as-is)
+    expect(section.textContent).toContain('Line 1');
+    expect(section.textContent).toContain('Line 2');
+    expect(section.textContent).toContain('Line 3');
+    // The rendering element MUST carry whitespace-pre-wrap so newlines render
+    // as line breaks rather than collapsing per HTML default
+    const valueDiv = section.querySelector('div.whitespace-pre-wrap');
+    expect(valueDiv).not.toBeNull();
+  });
+
+  it('Long-string overflow (Indep CRIT + Gemini HIGH F3): bounded container has max-h-32 overflow-y-auto', () => {
+    const longDesc = 'x'.repeat(5000);
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({ description: longDesc })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const section = screen.getByTestId('coa-panel-section-description');
+    // Text renders fully (no truncation in markup — overflow is CSS-bounded)
+    expect(section.textContent).toContain('x'.repeat(100));
+    // The rendering element carries the bounded-height + scroll classes so
+    // the 5KB string gets an internal scrollbar instead of pushing
+    // downstream sections off-screen
+    const valueDiv = section.querySelector('div.max-h-32');
+    expect(valueDiv).not.toBeNull();
+    expect(valueDiv?.className).toContain('overflow-y-auto');
+    expect(valueDiv?.className).toContain('break-words');
+  });
+
+  it('XSS regression lock (Gemini CRIT + DeepSeek HIGH): <script> payload is rendered as literal text, not executed', () => {
+    const xssPayload = "<script>alert('xss')</script>";
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({ description: xssPayload })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const section = screen.getByTestId('coa-panel-section-description');
+    // textContent contains the LITERAL payload string — meaning React's JSX
+    // expression auto-escape transformed `<script>` into the text node
+    // `&lt;script&gt;...` (rendered in the DOM as the literal chars).
+    expect(section.textContent).toContain("<script>alert('xss')</script>");
+    // Defense-in-depth: assert NO actual <script> element was created
+    // inside the panel section as a result of rendering the description.
+    expect(section.querySelector('script')).toBeNull();
   });
 });
 
