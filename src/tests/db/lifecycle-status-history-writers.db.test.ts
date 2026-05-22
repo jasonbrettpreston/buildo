@@ -480,6 +480,87 @@ describe.skipIf(!dbAvailable())('lifecycle_status_history writers — Phase I.1.
     });
   });
 
+  // ──────────────────────────────────────────────────────────────────────
+  // WF3 Pass-2.5 Finding C Phase 3 — event_date population (load-coa.js writer)
+  //   Direct-SQL tests mirroring Phase 2's CoA-side scenarios. event_date is
+  //   sourced from coa_applications.hearing_date (hearing-scheduled group) or
+  //   decision_date (decision-rendered group); 14 of 22 statuses unmapped → NULL.
+  // ──────────────────────────────────────────────────────────────────────
+  describe('WF3 Finding C Phase 3 — load-coa.js event_date population', () => {
+    const COA_LEAD_ID = 'coa:I1TEST-C3A';
+
+    it('Scenario CoA-A: Approved + decision_date set → event_date = decision_date', async () => {
+      if (!pool) return;
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, decision, decision_date, transitioned_at, detected_by, event_date)
+         VALUES ($1, NULL, 'Approved', 'Approved', $2::date, NOW(), 'load-coa.js', $2::date)`,
+        [COA_LEAD_ID, '2024-05-15'],
+      );
+      const res = await pool.query<{ event_date: string | null }>(
+        `SELECT event_date::text AS event_date FROM lifecycle_status_history WHERE lead_id = $1`,
+        [COA_LEAD_ID],
+      );
+      expect(res.rows.length).toBe(1);
+      const row = res.rows[0]!;
+      expect(row.event_date).toBe('2024-05-15');
+    });
+
+    it('Scenario CoA-B: Hearing Scheduled + hearing_date set → event_date = hearing_date', async () => {
+      if (!pool) return;
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, decision, decision_date, transitioned_at, detected_by, event_date)
+         VALUES ($1, 'Application Received', 'Hearing Scheduled', NULL, NULL, NOW(), 'load-coa.js', $2::date)`,
+        [COA_LEAD_ID, '2024-04-20'],
+      );
+      const res = await pool.query<{ event_date: string | null }>(
+        `SELECT event_date::text AS event_date FROM lifecycle_status_history WHERE lead_id = $1`,
+        [COA_LEAD_ID],
+      );
+      expect(res.rows.length).toBe(1);
+      const row = res.rows[0]!;
+      expect(row.event_date).toBe('2024-04-20');
+    });
+
+    it('Scenario CoA-C: Closed (unmapped — 87.6% of CoA volume) → event_date = NULL', async () => {
+      if (!pool) return;
+      // 'Closed' is administratively terminal — no defensible source date for the
+      // close transition itself. Writer leaves event_date = NULL; Inspector falls
+      // back to transitioned_at with 'detected' badge.
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, decision, decision_date, transitioned_at, detected_by, event_date)
+         VALUES ($1, 'Approved', 'Closed', 'Approved', $2::date, NOW(), 'load-coa.js', $3::date)`,
+        [COA_LEAD_ID, '2024-05-15', null],
+      );
+      const res = await pool.query<{ event_date: string | null }>(
+        `SELECT event_date::text AS event_date FROM lifecycle_status_history WHERE lead_id = $1`,
+        [COA_LEAD_ID],
+      );
+      expect(res.rows.length).toBe(1);
+      const row = res.rows[0]!;
+      expect(row.event_date).toBeNull();
+    });
+
+    it('Scenario CoA-D: Refused + decision_date NULL → event_date = NULL', async () => {
+      if (!pool) return;
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, decision, decision_date, transitioned_at, detected_by, event_date)
+         VALUES ($1, 'Hearing Scheduled', 'Refused', NULL, NULL, NOW(), 'load-coa.js', $2::date)`,
+        [COA_LEAD_ID, null],
+      );
+      const res = await pool.query<{ event_date: string | null }>(
+        `SELECT event_date::text AS event_date FROM lifecycle_status_history WHERE lead_id = $1`,
+        [COA_LEAD_ID],
+      );
+      expect(res.rows.length).toBe(1);
+      const row = res.rows[0]!;
+      expect(row.event_date).toBeNull();
+    });
+  });
+
   describe.skip('script-execution tests (deferred — requires CKAN file fixtures)', () => {
     // Skeleton for tests 1-9 follow-up; left as describe.skip so the structure
     // is documented but doesn't fail Phase I.1.1a's Red Light gate.

@@ -47,6 +47,32 @@ const CRITICAL_FIELDS = [
   'STREET_NAME',       // address component
 ];
 
+// WF3 Pass-2.5 Finding C Phase 3 — CoA status → source date column mapping.
+// Maps the 8 CoA STATUSDESC values that anchor to a CKAN-provided source date
+// (hearing-scheduled group → hearing_date; decision-rendered group →
+// decision_date). The remaining 14 of 22 statuses per Spec 84 §2.5.c have no
+// defensible source date (intake states, procedural pauses, post-decision
+// appeals, administrative closures including 'Closed' which is 87.6% of CoA
+// rows) and leave lifecycle_status_history.event_date = NULL. Inspector falls
+// back to transitioned_at with a 'detected' badge per Spec 76 §3.5.
+//
+// Authoritative spec: docs/specs/01-pipeline/51_source_coa.md §3.
+//
+// Frozen to prevent accidental mutation at runtime (Spec 47 §4.1
+// structural-constants rule).
+const STATUS_TO_DATE_COLUMN_COA = Object.freeze({
+  // Hearing-scheduled group
+  'Tentatively Scheduled':    'hearing_date',
+  'Hearing Scheduled':        'hearing_date',
+  'Hearing Rescheduled':      'hearing_date',
+  // Decision-rendered group
+  'Conditional Consent':      'decision_date',
+  'Approved':                 'decision_date',
+  'Approved with Conditions': 'decision_date',
+  'Refused':                  'decision_date',
+  'Await Expiry Date':        'decision_date',
+});
+
 function trimToNull(v) {
   if (v == null) return null;
   const t = String(v).trim();
@@ -320,30 +346,51 @@ async function upsertBatch(client, batch, RUN_AT) {
   for (const b of batch) {
     // Trigger on status change only (Q1 fold) — JS-level comparison on `b.status`,
     // NOT `decision`. Decision change without status change does NOT fire ledger.
-    if (prevStatusByAppNum.get(b.application_number) !== b.status) {
+    const prevStatus = prevStatusByAppNum.get(b.application_number);
+    if (prevStatus !== b.status) {
+      // WF3 Pass-2.5 Finding C Phase 3 — populate event_date from the CKAN
+      // source date column corresponding to this CoA status. Trim before lookup
+      // is defensive against future CKAN whitespace anomalies (Spec 84 §2.5.a
+      // row 8 documents 'Under Review' has a trailing space — same risk class).
+      // CKAN date corrections to existing rows are NOT propagated (status
+      // unchanged → no emit); accepted Option B trade-off — see Spec 51 §3.
+      const statusKey = (b.status ?? '').trim();
+      const dateColumn = STATUS_TO_DATE_COLUMN_COA[statusKey];
+      const eventDate = dateColumn ? (b[dateColumn] ?? null) : null;
       ledgerRows.push({
         lead_id: 'coa:' + b.application_number,
-        from_status: prevStatusByAppNum.get(b.application_number) ?? null,
+        from_status: prevStatus ?? null,
         to_status: b.status,
         decision: b.decision ?? null,
         decision_date: b.decision_date ?? null,
+        event_date: eventDate,
       });
     }
   }
   if (ledgerRows.length > 0) {
     try {
       await client.query('SAVEPOINT ledger_write');
+      // WF3 Pass-2.5 Finding C Phase 3 — added event_date column (8th column,
+      // $8::date[]). ON CONFLICT switched from DO NOTHING to DO UPDATE so
+      // intra-batch retries (rare — same lead_id + to_status + same UTC second)
+      // can capture a non-null event_date from a later attempt. WHERE clause
+      // guards: only UPDATE if EXCLUDED.event_date is non-null AND differs.
+      // Note: does NOT propagate CKAN date corrections to existing rows where
+      // status is unchanged (the loop above only emits on status change);
+      // accepted as Option B per Spec 51 §3 + review_followups row 160.
       const ledgerRes = await client.query(
         `INSERT INTO lifecycle_status_history
            (lead_id, from_status, to_status, decision, decision_date,
-            transitioned_at, detected_by)
+            transitioned_at, detected_by, event_date)
          SELECT * FROM UNNEST(
            $1::text[], $2::varchar[], $3::varchar[],
            $4::varchar[], $5::date[],
-           $6::timestamptz[], $7::varchar[]
+           $6::timestamptz[], $7::varchar[], $8::date[]
          )
          ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
-         DO NOTHING`,
+         DO UPDATE SET event_date = EXCLUDED.event_date
+         WHERE EXCLUDED.event_date IS DISTINCT FROM lifecycle_status_history.event_date
+           AND EXCLUDED.event_date IS NOT NULL`,
         [
           ledgerRows.map((r) => r.lead_id),
           ledgerRows.map((r) => r.from_status),
@@ -352,6 +399,7 @@ async function upsertBatch(client, batch, RUN_AT) {
           ledgerRows.map((r) => r.decision_date),
           ledgerRows.map(() => RUN_AT),
           ledgerRows.map(() => 'load-coa.js'),
+          ledgerRows.map((r) => r.event_date),
         ],
       );
       await client.query('RELEASE SAVEPOINT ledger_write');
@@ -623,7 +671,7 @@ pipeline.run('load-coa', async (pool) => {
     {
       "coa_applications": ["application_number", "address", "street_num", "street_name", "street_name_normalized", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"],
       // Phase I.1: lifecycle_status_history ledger writes (Tier 3 per Spec 47 §R9).
-      "lifecycle_status_history": ["lead_id", "from_status", "to_status", "decision", "decision_date", "transitioned_at", "detected_by"],
+      "lifecycle_status_history": ["lead_id", "from_status", "to_status", "decision", "decision_date", "transitioned_at", "detected_by", "event_date"],
     }
   );
 

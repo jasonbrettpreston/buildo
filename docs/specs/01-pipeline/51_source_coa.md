@@ -92,16 +92,44 @@ The CoA stream parallels the permits stream — neither is a foreign key of the 
 - Empty records on incremental → `process.exit(0)` after logging "no new records"
 - CKAN SQL endpoint returns 500 → treated as error, chain halts
 
-### Lifecycle status history `event_date` population (WF3 Pass-2.5 Finding C Phase 3 — planned 2026-05-21)
+### Lifecycle status history `event_date` population (WF3 Pass-2.5 Finding C Phase 3 — shipped 2026-05-22)
 
-`load-coa.js` writes status-change rows to `lifecycle_status_history` (per Spec 42 step 2 + Spec 84 §2 schema). **Phase 3 of WF3 Finding C** will populate the nullable `event_date DATE` column added in Phase 1 (mig 160).
+`load-coa.js` writes status-change rows to `lifecycle_status_history` (per Spec 42 step 2 + Spec 84 §2 schema). **Phase 3 of WF3 Finding C** populates the nullable `event_date DATE` column added in Phase 1 (mig 160) from CKAN source date columns when the `to_status` is one of 8 milestone CoA statuses.
 
-**Intent (exact `to_status` → source-date mapping deferred to Phase 3 implementation):**
-`event_date` will be populated from one of `coa_applications.decision_date` / `coa_applications.hearing_date` based on the `to_status` value emitted by the writer. Terminal-stage transitions (Approved / Refused / Final and Binding / Approved with Conditions / etc. per Spec 84 CoA status list) anchor to `decision_date`; pre-decision hearing-related transitions anchor to `hearing_date` when set. The exact mapping table is determined at Phase 3 implementation time by reading the actual normalized status strings emitted by `load-coa.js`.
+**Concrete `STATUS_TO_DATE_COLUMN_COA` mapping** (frozen const at top of `scripts/load-coa.js`):
 
-**Status transitions without a CKAN source date column** (pre-hearing intake states, intermediate review states) leave `event_date = NULL`. The Inspector (Spec 76 §3.5, Phase 5) renders `COALESCE(event_date, transitioned_at)` with a 'detected' badge when `event_date IS NULL`.
+| `to_status` (raw CKAN per Spec 84 §3.7) | Source column | Spec 84 §2.5.c row |
+|------------|---------------|---------------------|
+| `'Tentatively Scheduled'` | `hearing_date` | 74 (118 CoAs) |
+| `'Hearing Scheduled'` | `hearing_date` | 75 (317 CoAs) |
+| `'Hearing Rescheduled'` | `hearing_date` | 76 (1 CoA) |
+| `'Conditional Consent'` | `decision_date` | 79 (326 CoAs) |
+| `'Approved'` | `decision_date` | 80 (246 CoAs) |
+| `'Approved with Conditions'` | `decision_date` | 81 (554 CoAs) |
+| `'Refused'` | `decision_date` | 82 (59 CoAs) |
+| `'Await Expiry Date'` | `decision_date` | 84 (24 CoAs) |
 
-**No historical backfill** — same rationale as Spec 50 §3.
+**All other statuses → `event_date = NULL`** — this includes the 14 unmapped CoA statuses out of 22 enumerated in Spec 84 §2.5.c:
+- **Intake states** (Application Received, Accepted, Prepare Notice, Notice Prepared) — no CKAN source date
+- **Procedural pauses** (Postponed, Deferred) — no source date
+- **Post-decision states** (Final and Binding, Appealed, TLAB Appeal, OMB Appeal) — no source date for the transition itself
+- **Terminal/administrative** (Application Withdrawn, Cancelled, Complete, Closed) — `decision_date` represents the original decision (if any), not when the administrative close happened. Mapping them would conflate two events. **Notably 'Closed' is 87.6% of all CoA rows (28,948 of 33,052)** — by design they get the 'detected' badge from `transitioned_at` fallback in the Inspector.
+
+**Whitespace defense:** writer applies `(b.status ?? '').trim()` before `STATUS_TO_DATE_COLUMN_COA` lookup. Spec 84 §2.5.a row 8 documents that the permit-side CKAN feed has at least one status with trailing whitespace ('Under Review') — defensive trim guards against the same risk on the CoA-side feed.
+
+**`ON CONFLICT` semantic:** the existing `uniq_lifecycle_status_history_natural_key` unique index covers `(lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))`. The writer switches from `DO NOTHING` to `DO UPDATE SET event_date = EXCLUDED.event_date WHERE EXCLUDED.event_date IS DISTINCT FROM lifecycle_status_history.event_date AND EXCLUDED.event_date IS NOT NULL`. Preserves WAL discipline; prevents NULL overwriting non-null; captures non-null event_date on intra-batch retries.
+
+**Accepted limitation (Option B, 2026-05-22):** the ledger does **NOT** propagate CKAN date corrections to existing rows where status is unchanged. The writer's loop only emits when status changes (`prevStatus !== b.status`); a CKAN clerk correcting an already-recorded `decision_date` (e.g., typo fix 5 days off) does NOT trigger a re-emit. Rationale:
+- CKAN retroactive date corrections are rare in practice (typically a handful per year for Toronto's open data).
+- The magnitude of staleness is small (days, not months).
+- vs. the pre-Phase-3 state, the Inspector showed `transitioned_at` (off by 1-3 YEARS); event_date with possible 5-day correction lag is ~99% improvement.
+- The append-only event log model — "the ledger records what we knew when" — is industry standard.
+- Operators needing live source dates read `coa_applications.decision_date` / `hearing_date` directly (always current via the main UPSERT).
+- The Inspector renders the 'detected' badge to clearly signal observation-time provenance.
+
+Tracked in `docs/reports/review_followups.md` row 160 as candidate for future "emit-on-any-change" hardening WF if/when operator complaints surface.
+
+**No historical backfill** — pre-Phase-3 rows retain `event_date = NULL`. Inspector falls back to `transitioned_at` with 'detected' badge.
 </behavior>
 
 ---
