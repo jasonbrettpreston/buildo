@@ -81,7 +81,6 @@ export function stripPii(
     if (ALLOWED_KEYS.has(key as AllowedKey)) {
       safe[key as AllowedKey] = value as EventValue;
     } else if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
       console.warn(
         `[admin/analytics] dropped non-whitelisted key "${key}" from event payload`,
       );

@@ -18,7 +18,7 @@ import { classifyCoaScope } from '@/lib/classification/coa-scope-classifier';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const jsLib: any = require('../../scripts/lib/coa-scope-classifier');
 
 const ALLOWED_CLASSES = new Set(['residential', 'commercial', 'institutional', 'mixed']);

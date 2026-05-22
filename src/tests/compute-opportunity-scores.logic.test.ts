@@ -32,7 +32,6 @@ describe('compute-opportunity-scores — parseBranchFromLeadId pure helper (F.3 
     expect(helperIdx).toBeLessThan(runIdx);
 
     // Eval the function definition into the current scope and return it.
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
     parseBranchFromLeadId = new Function(`${fnMatch[0]} return parseBranchFromLeadId;`)() as typeof parseBranchFromLeadId;
   });
 
