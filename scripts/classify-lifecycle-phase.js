@@ -1093,11 +1093,14 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     // matchedStatus/matchedRule populated on the first run after I.1.1b ships.
     // Mirror of CoA-side line ~1263 predicate. Without this clause, the matched_*
     // columns would stay NULL forever on already-classified permits.
+    // WF3 #12 Pass-2.5 Finding B (2026-05-22) — `linked_coa_application_number`
+    // added so the orphan check can exclude CoA-linked permits per Spec 84 §7.
     `SELECT permit_num, revision_num, status, enriched_status, issued_date, last_seen_at,
             lifecycle_phase AS old_phase, lifecycle_stalled AS old_stalled,
             matched_status AS old_matched_status,
             lifecycle_seq AS old_lifecycle_seq,
-            permit_type, neighbourhood_id
+            permit_type, neighbourhood_id,
+            linked_coa_application_number
        FROM permits
       WHERE lifecycle_classified_at IS NULL
          OR last_seen_at > lifecycle_classified_at
@@ -1107,11 +1110,11 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
 
     // Orphan detection — pure helper. Per Spec 84 §7, O-phases are for
     // "standalone trade permits" only (HVA/PLB/DRN/etc.); BLD and CMB
-    // are parent permits and can never be orphans. Earlier inline logic
-    // wrongly orphaned single-revision BLDs because their prefix Set
-    // contained only themselves; the loop never set is_orphan = false.
-    // See scripts/lib/orphan-detection.js for the spec-aligned check.
-    const is_orphan = computeIsOrphan(row.permit_num, bldCmbByPrefix);
+    // are parent permits and can never be orphans. CoA-linked permits
+    // also have parent context (the CoA application) and are not
+    // standalone — see WF3 #12 Pass-2.5 Finding B (2026-05-22). See
+    // scripts/lib/orphan-detection.js for the spec-aligned check.
+    const is_orphan = computeIsOrphan(row.permit_num, row.linked_coa_application_number, bldCmbByPrefix);
     const insp = inspByPermit.get(row.permit_num) || EMPTY_INSP;
     const result = classifyLifecyclePhase({
       status: row.status,

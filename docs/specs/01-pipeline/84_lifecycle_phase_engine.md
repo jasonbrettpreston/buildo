@@ -1125,6 +1125,18 @@ Orphans (O1-O3) have no logical rank in the standard P1-P20 progression, prevent
 | O2 | Orphan Done | Standalone trade permit finalized. |
 | O3 | Orphan Stalled | Standalone trade permit > stall threshold with no activity. |
 
+**"Standalone" definition** (authoritative; consumed by `scripts/lib/orphan-detection.js::computeIsOrphan`):
+
+A permit qualifies as a "standalone trade permit" — and is therefore eligible for O1/O2/O3 — iff **all** of the following hold:
+
+1. The permit suffix is NOT `BLD` or `CMB`. Parent-permit / combined-folder permits are never orphans. *(Pre-existing exclusion.)*
+2. No sibling `BLD` or `CMB` permit exists at the same year+serial prefix (`split_part(permit_num, ' ', 1) || ' ' || split_part(permit_num, ' ', 2)`). *(Pre-existing exclusion.)*
+3. **`permits.linked_coa_application_number IS NULL`.** A trade permit attached to a Committee of Adjustment application has CoA parent context and is part of a regulated project — not standalone work. *(WF3 #12 Pass-2.5 Finding B, 2026-05-22.)*
+
+Operationally: O-phase permits are filtered out of `compute-trade-forecasts.js` via `SKIP_PHASES_SQL = ('P19','P20','O1','O2','O3')` (Spec 85). Pre-Finding-B, CoA-linked trade permits were silently dropped from the lead feed at 4/4 = 100% miss rate on the §7a Inspector sample; Finding B restores them to their correct lifecycle phase.
+
+**Known residual concern (filed in `docs/reports/review_followups.md`):** the same §7a sample showed 7/8 non-CoA-linked permits also classified as orphan when the operator considered them non-orphan. Schema audit (2026-05-22) confirmed: no additional linkage column exists on `permits`; the BLD/CMB load is exhaustive. The 7/8 cases must be one of (race-condition transient orphans / archived-parent feed-perspective orphans / genuinely-standalone permits where operator intuition disagreed). Fresh §7a sample data is required to characterize; no schema-driven fix is currently available.
+
 ---
 
 ### 8. Distribution Health Bands (CQA Tier 3)

@@ -1791,3 +1791,13 @@ Gemini Pro and DeepSeek-R1 reviewed the full `load-permits.js` source rather tha
 
 **Two-reviewer convergence (rows 168 + 144 + 141):** fetch timeout + SIGTERM handler + stream-error flush all converge on the "pipeline runtime hardening" pattern. Worth a single focused WF that addresses all three across `scripts/*.js`.
 
+---
+
+## WF3 #12 Finding B — residual 7/8 non-CoA-linked orphan classifications (2026-05-22)
+
+Source: WF3 #12 closed the 4/4 CoA-linked subset (via `linked_coa_application_number` exclusion in `computeIsOrphan`). The §7a Inspector spot-check on 2026-05-20 also flagged 7/8 NON-CoA-linked permits as incorrectly classified into O1/O2/O3 when the operator considered them non-orphan. Schema audit (2026-05-22) ruled out the obvious remediations.
+
+| # | Triage | Item | Why deferred |
+|---|--------|------|--------------|
+| 180 | **DEFER — needs fresh §7a sample data** | 7/8 non-CoA-linked permits in the 12-permit §7a sample were classified as orphan when operator considered them non-orphan. Pre-fix this represented 87.5% of the non-CoA-linked sample. Post-WF3 #12, these cases still classify as orphan (CoA fix doesn't apply to them). | Schema audit (2026-05-22) confirmed: `permits` has only one linkage column (`linked_coa_application_number`); no `parent_permit_num` or equivalent. The `bldCmbByPrefix` Map load in `classify-lifecycle-phase.js` is exhaustive (full BLD/CMB SELECT, no incremental filter). So the 7/8 cases must be one of: **(a)** transient race — trade permit ingested before its parent BLD lands in the CKAN feed; self-resolves on next classifier run. **(b)** archived-parent — old BLD removed from CKAN while sub-permits remain; feed-perspective orphan correct, operator perspective wrong. **(c)** genuinely standalone — operator intuition incorrect; orphan classification correct. **No schema-driven fix is currently available.** Next steps: (1) re-run §7a Inspector spot-check with explicit `linked_coa_application_number` + `bldCmbByPrefix` lookup per sampled permit; (2) classify residual orphans into (a)/(b)/(c) buckets; (3) if (a) is significant, file a "BLD-linkage stickiness" hardening WF; if (b) is significant, propose a `last_known_parent_bld_permit_num` schema addition. |
+
