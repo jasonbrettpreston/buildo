@@ -33,10 +33,46 @@ describe('load-permits.js — lifecycle_status_history ledger writer (Phase I.1)
     expect(src).toMatch(/'load-permits\.js'/);
   });
 
-  it('ON CONFLICT clause is ledger-scoped (matches mig 127 UNIQUE INDEX verbatim)', () => {
+  it('ON CONFLICT clause is ledger-scoped (matches mig 127 UNIQUE INDEX verbatim) and uses DO UPDATE WHERE for event_date (Phase 2)', () => {
+    // WF3 Pass-2.5 Finding C Phase 2 — DO NOTHING → DO UPDATE on event_date,
+    // with WHERE guard ensuring (a) only writes when EXCLUDED.event_date differs
+    // AND is non-null (preserves WAL discipline + never overwrites with NULL).
     expect(src).toMatch(
-      /lifecycle_status_history[\s\S]{0,500}ON CONFLICT \(lead_id, to_status, date_trunc\('second', transitioned_at AT TIME ZONE 'UTC'\)\)[\s\S]{0,50}DO NOTHING/,
+      /lifecycle_status_history[\s\S]{0,800}ON CONFLICT \(lead_id, to_status, date_trunc\('second', transitioned_at AT TIME ZONE 'UTC'\)\)[\s\S]{0,200}DO UPDATE SET event_date = EXCLUDED\.event_date/,
     );
+    expect(src).toMatch(
+      /WHERE EXCLUDED\.event_date IS DISTINCT FROM lifecycle_status_history\.event_date[\s\S]{0,50}AND EXCLUDED\.event_date IS NOT NULL/,
+    );
+    // Regression lock: the old DO NOTHING form is gone.
+    expect(src).not.toMatch(/lifecycle_status_history[\s\S]{0,500}DO NOTHING/);
+  });
+
+  it('STATUS_TO_DATE_COLUMN const is defined with 7 milestone-status entries (Phase 2)', () => {
+    expect(src).toMatch(/const STATUS_TO_DATE_COLUMN\s*=\s*Object\.freeze\(\{/);
+    expect(src).toMatch(/'Permit Issued':\s*'issued_date'/);
+    expect(src).toMatch(/'Closed':\s*'completed_date'/);
+    expect(src).toMatch(/'File Closed':\s*'completed_date'/);
+    expect(src).toMatch(/'Permit Issued\/Close File':\s*'completed_date'/);
+    expect(src).toMatch(/'Request Received':\s*'application_date'/);
+    expect(src).toMatch(/'Application Received':\s*'application_date'/);
+    expect(src).toMatch(/'Application Acceptable':\s*'application_date'/);
+    // Gemini HIGH fold — 'Open' and 'Active' deliberately NOT mapped (generic IBMS states).
+    expect(src).not.toMatch(/'Open':\s*'application_date'/);
+    expect(src).not.toMatch(/'Active':\s*'application_date'/);
+  });
+
+  it('ledger-build loop applies .trim() before STATUS_TO_DATE_COLUMN lookup (whitespace defense)', () => {
+    // 3-reviewer convergence fold — Spec 84 §2.5.a documents CKAN whitespace
+    // anomalies on at least one status; defensive trim guards future drift.
+    expect(src).toMatch(/\(b\.status \?\? ''\)\.trim\(\)/);
+    expect(src).toMatch(/STATUS_TO_DATE_COLUMN\[statusKey\]/);
+  });
+
+  it('INSERT writes event_date as the 7th unnest column ($7::date[])', () => {
+    expect(src).toMatch(/INSERT INTO lifecycle_status_history[\s\S]{0,300}event_date\)/);
+    expect(src).toMatch(/\$7::date\[\]/);
+    // ledgerRows.map for event_date appears in the params list.
+    expect(src).toMatch(/ledgerRows\.map\(\(r\) => r\.event_date\)/);
   });
 
   it('SAVEPOINT pattern present (SAVEPOINT + RELEASE + ROLLBACK TO SAVEPOINT all appear)', () => {
@@ -67,8 +103,9 @@ describe('load-permits.js — lifecycle_status_history ledger writer (Phase I.1)
     expect(src).not.toMatch(/permitAuditHasFails\s*\?\s*'FAIL'\s*:\s*'PASS'/);
   });
 
-  it('emitMeta writes-list includes lifecycle_status_history', () => {
+  it('emitMeta writes-list includes lifecycle_status_history with event_date (Phase 2)', () => {
     expect(src).toMatch(/"lifecycle_status_history":\s*\[[^\]]*"lead_id"[^\]]*"detected_by"/);
+    expect(src).toMatch(/"lifecycle_status_history":\s*\[[^\]]*"event_date"/);
   });
 
   it('emitMeta reads-list adds permits.status for pre-UPSERT capture', () => {

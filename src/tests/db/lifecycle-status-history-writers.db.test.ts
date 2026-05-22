@@ -344,6 +344,142 @@ describe.skipIf(!dbAvailable())('lifecycle_status_history writers — Phase I.1.
   // tracked as a follow-up since they need substrate (test-helpers/seed-pre-permits.mjs
   // pattern + permit/coa CKAN JSON fixtures) not present in the repo yet.
   // ──────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────
+  // WF3 Pass-2.5 Finding C Phase 2 — event_date population (load-permits.js writer)
+  //   Direct-SQL tests that exercise the writer's INSERT shape against a
+  //   live testcontainer DB. No CKAN fixtures needed — INSERT the same SQL
+  //   pattern the writer uses and assert event_date is populated correctly.
+  //   Scenario D specifically tests the ON CONFLICT DO UPDATE WHERE behavior
+  //   on the narrow intra-batch retry case (per plan v2 fold of DeepSeek CRIT).
+  // ──────────────────────────────────────────────────────────────────────
+  describe('WF3 Finding C Phase 2 — load-permits.js event_date population', () => {
+    const LEAD_ID = 'permit:I1TEST-C2A:00';
+
+    it('Scenario A: Permit Issued + issued_date set → event_date = issued_date', async () => {
+      if (!pool) return;
+      // Simulate the writer's INSERT shape directly.
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type, event_date)
+         VALUES ($1, NULL, 'Permit Issued', NOW(), 'load-permits.js', 'BLD', $2::date)`,
+        [LEAD_ID, '2024-03-15'],
+      );
+      const res = await pool.query<{ event_date: string | null }>(
+        `SELECT event_date::text AS event_date FROM lifecycle_status_history WHERE lead_id = $1`,
+        [LEAD_ID],
+      );
+      expect(res.rows.length).toBe(1);
+      const row = res.rows[0]!;
+      expect(row.event_date).toBe('2024-03-15');
+    });
+
+    it('Scenario B: Closed + completed_date NULL → event_date = NULL (administrative close, no construction date)', async () => {
+      if (!pool) return;
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type, event_date)
+         VALUES ($1, 'Permit Issued', 'Closed', NOW(), 'load-permits.js', 'BLD', $2::date)`,
+        [LEAD_ID, null],
+      );
+      const res = await pool.query<{ event_date: string | null }>(
+        `SELECT event_date::text AS event_date FROM lifecycle_status_history WHERE lead_id = $1`,
+        [LEAD_ID],
+      );
+      expect(res.rows.length).toBe(1);
+      const row = res.rows[0]!;
+      expect(row.event_date).toBeNull();
+    });
+
+    it('Scenario C: Under Review (unmapped status) → event_date = NULL (no source date)', async () => {
+      if (!pool) return;
+      // Writer would pass NULL because STATUS_TO_DATE_COLUMN['Under Review'] is undefined.
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type, event_date)
+         VALUES ($1, NULL, 'Under Review', NOW(), 'load-permits.js', 'BLD', $2::date)`,
+        [LEAD_ID, null],
+      );
+      const res = await pool.query<{ event_date: string | null }>(
+        `SELECT event_date::text AS event_date FROM lifecycle_status_history WHERE lead_id = $1`,
+        [LEAD_ID],
+      );
+      expect(res.rows.length).toBe(1);
+      const row = res.rows[0]!;
+      expect(row.event_date).toBeNull();
+    });
+
+    it('Scenario D: ON CONFLICT DO UPDATE WHERE — intra-batch retry semantics', async () => {
+      if (!pool) return;
+      // Step 1: seed a row with event_date='2024-03-15' at a controlled timestamp.
+      const fixedTs = '2024-03-15T12:00:00Z';
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type, event_date)
+         VALUES ($1, NULL, 'Permit Issued', $2::timestamptz, 'load-permits.js', 'BLD', $3::date)`,
+        [LEAD_ID, fixedTs, '2024-03-15'],
+      );
+
+      // Step 2: Re-insert with event_date=NULL (NULL overwrite guard) — should NOT update.
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type, event_date)
+         VALUES ($1, NULL, 'Permit Issued', $2::timestamptz, 'load-permits.js', 'BLD', $3::date)
+         ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
+         DO UPDATE SET event_date = EXCLUDED.event_date
+         WHERE EXCLUDED.event_date IS DISTINCT FROM lifecycle_status_history.event_date
+           AND EXCLUDED.event_date IS NOT NULL`,
+        [LEAD_ID, fixedTs, null],
+      );
+      let res = await pool.query<{ event_date: string | null }>(
+        `SELECT event_date::text AS event_date FROM lifecycle_status_history WHERE lead_id = $1`,
+        [LEAD_ID],
+      );
+      expect(res.rows.length).toBe(1);
+      expect(res.rows[0]!.event_date).toBe('2024-03-15'); // unchanged — NULL did not overwrite
+
+      // Step 3: Re-insert with different non-null event_date — DO UPDATE fires.
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type, event_date)
+         VALUES ($1, NULL, 'Permit Issued', $2::timestamptz, 'load-permits.js', 'BLD', $3::date)
+         ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
+         DO UPDATE SET event_date = EXCLUDED.event_date
+         WHERE EXCLUDED.event_date IS DISTINCT FROM lifecycle_status_history.event_date
+           AND EXCLUDED.event_date IS NOT NULL`,
+        [LEAD_ID, fixedTs, '2024-04-01'],
+      );
+      res = await pool.query<{ event_date: string | null }>(
+        `SELECT event_date::text AS event_date FROM lifecycle_status_history WHERE lead_id = $1`,
+        [LEAD_ID],
+      );
+      expect(res.rows.length).toBe(1);
+      expect(res.rows[0]!.event_date).toBe('2024-04-01'); // updated
+
+      // Step 4: Re-insert with same value — WHERE IS DISTINCT FROM is false → no update.
+      // Capture xmin before vs after to confirm no row-version bump.
+      const beforeXmin = await pool.query<{ xmin: string }>(
+        `SELECT xmin::text FROM lifecycle_status_history WHERE lead_id = $1`,
+        [LEAD_ID],
+      );
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type, event_date)
+         VALUES ($1, NULL, 'Permit Issued', $2::timestamptz, 'load-permits.js', 'BLD', $3::date)
+         ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
+         DO UPDATE SET event_date = EXCLUDED.event_date
+         WHERE EXCLUDED.event_date IS DISTINCT FROM lifecycle_status_history.event_date
+           AND EXCLUDED.event_date IS NOT NULL`,
+        [LEAD_ID, fixedTs, '2024-04-01'],
+      );
+      const afterXmin = await pool.query<{ xmin: string }>(
+        `SELECT xmin::text FROM lifecycle_status_history WHERE lead_id = $1`,
+        [LEAD_ID],
+      );
+      // No actual column UPDATE fired → xmin unchanged (WHERE clause false).
+      expect(afterXmin.rows[0]!.xmin).toBe(beforeXmin.rows[0]!.xmin);
+    });
+  });
+
   describe.skip('script-execution tests (deferred — requires CKAN file fixtures)', () => {
     // Skeleton for tests 1-9 follow-up; left as describe.skip so the structure
     // is documented but doesn't fail Phase I.1.1a's Red Light gate.

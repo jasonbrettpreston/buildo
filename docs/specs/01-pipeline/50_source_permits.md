@@ -86,16 +86,31 @@ Pre-issuance status values observed in the feed (2026-05-11):
 - Duplicate `(permit_num, revision_num)` within a batch → deduped before INSERT
 - `est_const_cost` as string → parsed to numeric, NULL on failure
 
-### Lifecycle status history `event_date` population (WF3 Pass-2.5 Finding C Phase 2 — planned 2026-05-21)
+### Lifecycle status history `event_date` population (WF3 Pass-2.5 Finding C Phase 2 — shipped 2026-05-21)
 
-`load-permits.js` writes status-change rows to `lifecycle_status_history` (per Spec 41 step 2 + Spec 84 §2 schema). **Phase 2 of WF3 Finding C** will populate the nullable `event_date DATE` column added in Phase 1 (mig 160).
+`load-permits.js` writes status-change rows to `lifecycle_status_history` (per Spec 41 step 2 + Spec 84 §2 schema). **Phase 2 of WF3 Finding C** populates the nullable `event_date DATE` column added in Phase 1 (mig 160) from the CKAN source date columns when the `to_status` is one of 7 milestone statuses.
 
-**Intent (exact `to_status` → source-date mapping deferred to Phase 2 implementation):**
-`event_date` will be populated from one of `permits.issued_date` / `permits.completed_date` / `permits.application_date` based on the `to_status` value emitted by the writer. The exact mapping table is determined at Phase 2 implementation time by reading the actual normalized status strings emitted by `load-permits.js` against Spec 84 §2.5.a's enumerated 53-status list — this avoids Phase 1 documentation pre-committing to status strings that Phase 2 may need to refine.
+**Concrete `STATUS_TO_DATE_COLUMN` mapping** (defined as a frozen const at the top of `scripts/load-permits.js`):
 
-**Status transitions without a CKAN source date column** (most pre-issuance Notice / Review / Application-On-Hold states, intermediate inspection states, post-issuance non-milestone states) leave `event_date = NULL`. The Inspector (Spec 76 §3.5, Phase 5) renders `COALESCE(event_date, transitioned_at)` with a 'detected' badge when `event_date IS NULL`.
+| `to_status` (raw CKAN string per Spec 84 §3.7) | Source column | Spec 84 §2.5.a row |
+|------------|---------------|---------------------|
+| `'Permit Issued'` | `permits.issued_date` | 25 (52,403 permits) |
+| `'Closed'` | `permits.completed_date` | 39 (10,695 permits) |
+| `'File Closed'` | `permits.completed_date` | 40 (6 permits) |
+| `'Permit Issued/Close File'` | `permits.completed_date` | 41 (2 permits) |
+| `'Request Received'` | `permits.application_date` | 1 (1 permit) |
+| `'Application Received'` | `permits.application_date` | 2 (218 permits) |
+| `'Application Acceptable'` | `permits.application_date` | 3 (465 permits) |
 
-**No historical backfill.** Pre-Phase-2 rows retain `event_date = NULL` permanently — honest representation that we don't know the exact event date for those rows, only when the pipeline observed the transition.
+**All other statuses → `event_date = NULL`.** This includes the 46 statuses outside the mapping (53 enumerated in Spec 84 §2.5.a − 7 mapped above; e.g., 'Open', 'Active', 'Under Review', 'Examiner's Notice Sent', 'Inspection', 'Revision Issued', 'Refused', 'Abandoned'). Justification: the `permits` source schema (§2 above) carries only three date columns — `application_date`, `issued_date`, `completed_date`. Statuses outside the 7 mapped above do not correspond to any of these date columns in a defensible way, so NULL is the honest representation. 'Open' and 'Active' were explicitly excluded per Gemini HIGH plan review (2026-05-21): Spec 84 §2.5.a documents them as "generic IBMS state" — mapping them to `application_date` would invent data.
+
+**`Closed` semantic note:** `completed_date` may be NULL for closed-without-construction permits (administrative close), in which case `event_date = NULL` — the correct semantic ("status changed, but no construction date is knowable"). The Inspector (Spec 76 §3.5, Phase 5) falls back to `transitioned_at` with the 'detected' badge.
+
+**Whitespace defense:** Spec 84 §2.5.a row 8 documents that 'Under Review' has a trailing space in CKAN source data. The writer applies `.trim()` to `b.status` before the `STATUS_TO_DATE_COLUMN` lookup, so future CKAN whitespace anomalies on the 7 mapped statuses don't silently yield NULL event_dates.
+
+**`ON CONFLICT` semantic:** the existing `uniq_lifecycle_status_history_natural_key` unique index covers `(lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))`. The writer switches from `DO NOTHING` to `DO UPDATE SET event_date = EXCLUDED.event_date WHERE EXCLUDED.event_date IS DISTINCT FROM lifecycle_status_history.event_date AND EXCLUDED.event_date IS NOT NULL`. This preserves WAL discipline (no column update on identical-data retries), prevents NULL overwriting non-null values, and captures non-null event_date on intra-batch retries (rare but possible when two writes land in the same UTC second). The conflict scope is **intra-batch retries only** — re-runs of the writer over the same data produce different `transitioned_at` values (different second) and never conflict. **Does NOT propagate CKAN date corrections** to existing rows where `status` is unchanged (the writer's loop only emits on status change). Tracked as future hardening in `docs/reports/review_followups.md` under "emit-on-any-change semantics."
+
+**No historical backfill.** Pre-Phase-2 rows retain `event_date = NULL` permanently — honest representation that we observed the transition but don't have a CKAN source date for it. The Inspector (Phase 5) renders these via the `transitioned_at` fallback with the 'detected' badge.
 </behavior>
 
 ---

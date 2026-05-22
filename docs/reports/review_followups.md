@@ -1753,3 +1753,41 @@ Source: WF3 #7 Pass-2.5 — Independent (no isolation) + Gemini Pro + DeepSeek-R
 - Row 152 idempotency-key + event_date — pick option (a) or (b) and document in Phase 2 plan before writer implementation.
 - Row 153 CHECK constraint for classifier-derived rows — schedule for Phase 4.
 
+---
+
+## Spec 50 Finding C Phase 2 (load-permits.js event_date) — adversarial PLAN review DEFERs (2026-05-21)
+
+Source: WF3 #8 Pass-2.5 Phase 2 — Independent + Gemini Pro + DeepSeek-R1 adversarial PLAN review on plan v1. DeepSeek caught CRITICAL framing error (ON CONFLICT DO UPDATE has narrow intra-batch-retry scope, not CKAN-correction propagation as v1 claimed). 8 REAL findings folded into plan v2 + 6 items deferred below.
+
+| # | Triage | Source | Item | Why deferred |
+|---|---|---|---|---|
+| 160 | **DEFER to future hardening WF** | DeepSeek CRIT clarification (Phase 2 framing) | Phase 2's ON CONFLICT DO UPDATE does NOT propagate CKAN date corrections to existing rows. The writer's loop only emits on status change (`prevStatus !== b.status`). If CKAN corrects `issued_date` for an already-issued permit (status unchanged) → no ledger row emitted → no conflict → existing event_date stays stale. To propagate corrections, the writer would need "emit-on-any-change" semantics: compare ALL tracked fields (status + each mapped source date column) and emit a row when any changes. | Real but separate scope from Phase 2 (which is about populating event_date on NEW transitions, not maintaining it under source corrections). CKAN date corrections are rare in practice. Track for a future Spec 50 hardening WF if operator complaints surface. The Inspector's `transitioned_at` fallback gracefully handles stale event_date (renders the observation time with 'detected' badge instead). |
+| 161 | DEFER OOS | Gemini MEDIUM | `parseDate(raw.APPLICATION_DATE)` extracts YYYY-MM-DD via regex from CKAN string — uses no explicit timezone handling. If CKAN ever shifts to a timestamped representation (e.g., 2026-03-15T23:00:00-05:00 instead of 2026-03-15), the regex would still match the date portion but TZ semantics would diverge. | Pre-existing in `load-permits.js parseDate()` since the script's origin. CKAN currently emits date-only strings; risk is forward-only. File separately if/when CKAN format changes. |
+| 162 | DEFER OOS | Gemini MEDIUM | SQL INSERT position-counting fragility — column list, UNNEST type list, and ledgerRows.map ordering must stay synchronized manually. A column refactor introduces silent breakage risk. | Pre-existing in `load-permits.js` and other pipeline writers. Refactor would touch many scripts. Could fold into a "pipeline runtime hardening" WF alongside rows 140-144 (advisory lock + SIGTERM + stream flush). |
+| 163 | DEFER OOS | Gemini LOW | No data-quality validation on source dates (e.g., `completed_date < application_date` would be nonsensical but copied through to event_date). | Defensive; could log a WARN if such inversions are detected. Defer until/unless production logs show meaningful incidence. |
+| 164 | DEFER (accepted) | DeepSeek MEDIUM | Same-second runs (highly improbable) would conflict on the unique index and trigger the new DO UPDATE WHERE clause. Edge case — operationally safe per the WAL guard but worth documenting. | Documented in Spec 50 §3 amendment. No code change needed. |
+| 165 | DEFER OOS | DeepSeek NIT | `STATUS_TO_DATE_COLUMN` lives in `scripts/load-permits.js` body rather than a shared lib per Spec 47 §4.1. | Other writers will have their own status→date mappings (load-coa uses different columns). Shared-lib placement is premature until Phases 3/4 ship and a generalization pattern emerges. |
+
+### Phase 2 IMPL review — additional pre-existing concerns (adversarial models walked the whole file)
+
+Gemini Pro and DeepSeek-R1 reviewed the full `load-permits.js` source rather than just the Phase 2 diff. They surfaced ~12 pre-existing concerns unrelated to Phase 2:
+
+| # | Source | Item | Status |
+|---|--------|------|--------|
+| 166 | Gemini CRIT | `revision_num` normalization inconsistent — raw vs padded across writes/reads | Pre-existing; file separately as data-integrity hardening |
+| 167 | Gemini CRIT | `BUILDER_NAME`/`OWNER` not in `CRITICAL_FIELDS` — silent data loss risk on CKAN field rename | Pre-existing; file as schema-drift hardening |
+| 168 | Gemini HIGH + DeepSeek HIGH (convergence) | `fetch()` has no timeout — stalled API hangs entire script + advisory lock | Real ops concern; bundle with row 144 SIGTERM into "pipeline runtime hardening" WF |
+| 169 | Gemini HIGH | `--file` CLI parsing crashes ungracefully on missing path | Pre-existing; minor |
+| 170 | Gemini MEDIUM | Entire dataset buffered in memory (~250-300MB at 240K records) | Pre-existing; consider streaming via staging table for 500K+ scale |
+| 171 | Gemini MEDIUM | Separate `last_seen_at` UPDATE doubles write traffic | Pre-existing optimization opportunity |
+| 172 | Gemini LOW | `cleanCost` regex can corrupt European-style numbers (`1.000.000` → `1.0`) | Pre-existing edge case; CKAN doesn't emit European format today |
+| 173 | DeepSeek CRIT | Pre-UPSERT INSERT uses 33 columns × batch_size positional params — risks 65K param limit | Pre-existing; bound by pipeline.BATCH_SIZE which is currently safe |
+| 174 | DeepSeek HIGH | `fs.readFileSync` for `--file` mode OOMs on large local fixtures | Pre-existing; file-mode is dev-only convenience |
+| 175 | DeepSeek HIGH | `pipeline.BATCH_SIZE` validation gap | Pre-existing across pipeline scripts; fold into runtime hardening WF |
+| 176 | DeepSeek MEDIUM | Retry backoff lacks jitter — synchronized retries on network blips | Pre-existing |
+| 177 | DeepSeek MEDIUM | `cleanCost` rejects substring `'DO NOT UPDATE'` even when number is present | Pre-existing edge case |
+| 178 | DeepSeek LOW | `tel.latencies` averages failed + successful attempts | Pre-existing; minor observability nit |
+| 179 | DeepSeek NIT | `durationSeconds` float vs integer for `make_interval(secs)` | Pre-existing; PostgreSQL accepts both |
+
+**Two-reviewer convergence (rows 168 + 144 + 141):** fetch timeout + SIGTERM handler + stream-error flush all converge on the "pipeline runtime hardening" pattern. Worth a single focused WF that addresses all three across `scripts/*.js`.
+

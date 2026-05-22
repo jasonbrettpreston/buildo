@@ -31,6 +31,31 @@ const RESOURCE_ID = '6d0229af-bc54-46de-9c2b-26759b01dd05';
 const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 2000;
 
+// WF3 Pass-2.5 Finding C Phase 2 — status → source date column mapping.
+// Maps the 7 permit statuses that have a CKAN-provided source date to the
+// corresponding `permits.*_date` column. All other statuses (46 of 53 per
+// Spec 84 §2.5.a — 53 enumerated minus 7 mapped) have no source date in
+// the CKAN feed and leave lifecycle_status_history.event_date = NULL
+// (Inspector falls back to transitioned_at with a 'detected' badge per
+// Spec 76 §3.5).
+//
+// Authoritative spec: docs/specs/01-pipeline/50_source_permits.md §3.
+//
+// Frozen to prevent accidental mutation at runtime (Spec 47 §4.1
+// structural-constants rule).
+const STATUS_TO_DATE_COLUMN = Object.freeze({
+  // Issued group
+  'Permit Issued':            'issued_date',
+  // Terminal/closed group
+  'Closed':                   'completed_date',
+  'File Closed':              'completed_date',
+  'Permit Issued/Close File': 'completed_date',
+  // Application/intake group
+  'Request Received':         'application_date',
+  'Application Received':     'application_date',
+  'Application Acceptable':   'application_date',
+});
+
 // Critical CKAN fields — if any are missing, schema has drifted
 const CRITICAL_FIELDS = [
   'PERMIT_NUM',     // primary key part 1
@@ -341,7 +366,8 @@ async function insertBatch(client, batch, RUN_AT) {
   // Phase I.1: lifecycle_status_history ledger write — Tier 3 (audit) table per
   // Spec 47 §R9 Tier framework. SAVEPOINT pattern preserves primary UPSERT on
   // ledger failures (non-fatal WARN). Build ledgerRows from batch rows where
-  // status changed; NO JS dedup (ON CONFLICT DO NOTHING handles intra-batch).
+  // status changed; NO JS dedup (ON CONFLICT DO UPDATE handles intra-batch retries —
+  // WF3 Pass-2.5 Finding C Phase 2 — see Spec 50 §3 for the event_date contract).
   // lead_id constructed in JS via padStart (NOT SQL LPAD — would crash at runtime
   // per v2.3 Gemini CRIT 1). Snapshot fields populated from current batch payload.
   let ledgerInsertedCount = 0;
@@ -351,11 +377,20 @@ async function insertBatch(client, batch, RUN_AT) {
     const key = `${b.permit_num}--${b.revision_num}`;
     const prevStatus = prevStatusByKey.get(key);  // undefined for new permits → treat as NULL
     if (prevStatus !== b.status) {
+      // WF3 Pass-2.5 Finding C Phase 2 — populate event_date from the CKAN
+      // source date column corresponding to this status, when available.
+      // Trim before lookup: Spec 84 §2.5.a row 8 documents 'Under Review'
+      // has a trailing space in source data; defensive against future
+      // CKAN whitespace anomalies on the mapped statuses.
+      const statusKey = (b.status ?? '').trim();
+      const dateColumn = STATUS_TO_DATE_COLUMN[statusKey];
+      const eventDate = dateColumn ? (b[dateColumn] ?? null) : null;
       ledgerRows.push({
         lead_id: 'permit:' + b.permit_num + ':' + String(b.revision_num).padStart(2, '0'),
         from_status: prevStatus ?? null,
         to_status: b.status,
         permit_type: b.permit_type ?? null,
+        event_date: eventDate,
       });
     }
   }
@@ -365,15 +400,27 @@ async function insertBatch(client, batch, RUN_AT) {
     // If ROLLBACK itself throws: swallow — re-throwing would undo primary UPSERT.
     try {
       await client.query('SAVEPOINT ledger_write');
+      // WF3 Pass-2.5 Finding C Phase 2 — added event_date column (7th column,
+      // $7::date[]). ON CONFLICT switched from DO NOTHING to DO UPDATE so
+      // intra-batch retries (rare — same lead_id + to_status + same UTC second)
+      // can capture a non-null event_date from a later attempt that had source
+      // data the earlier attempt lacked. WHERE clause guards: only UPDATE if
+      // the incoming event_date is BOTH non-null AND different from existing
+      // — preserves WAL discipline + never overwrites existing non-null with
+      // NULL. Note: does NOT propagate CKAN date corrections to existing rows
+      // where status is unchanged (the loop above only emits on status change);
+      // tracked as future hardening in review_followups.md.
       const ledgerRes = await client.query(
         `INSERT INTO lifecycle_status_history
-           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type)
+           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type, event_date)
          SELECT * FROM UNNEST(
            $1::text[], $2::varchar[], $3::varchar[],
-           $4::timestamptz[], $5::varchar[], $6::varchar[]
+           $4::timestamptz[], $5::varchar[], $6::varchar[], $7::date[]
          )
          ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
-         DO NOTHING`,
+         DO UPDATE SET event_date = EXCLUDED.event_date
+         WHERE EXCLUDED.event_date IS DISTINCT FROM lifecycle_status_history.event_date
+           AND EXCLUDED.event_date IS NOT NULL`,
         [
           ledgerRows.map((r) => r.lead_id),
           ledgerRows.map((r) => r.from_status),
@@ -381,6 +428,7 @@ async function insertBatch(client, batch, RUN_AT) {
           ledgerRows.map(() => RUN_AT),
           ledgerRows.map(() => 'load-permits.js'),
           ledgerRows.map((r) => r.permit_type),
+          ledgerRows.map((r) => r.event_date),
         ],
       );
       await client.query('RELEASE SAVEPOINT ledger_write');
@@ -622,7 +670,7 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
     {
       "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_name_normalized", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "data_hash", "raw_json"],
       // Phase I.1: lifecycle_status_history ledger writes (Tier 3 per Spec 47 §R9).
-      "lifecycle_status_history": ["lead_id", "from_status", "to_status", "transitioned_at", "detected_by", "permit_type"],
+      "lifecycle_status_history": ["lead_id", "from_status", "to_status", "transitioned_at", "detected_by", "permit_type", "event_date"],
     }
   );
 
