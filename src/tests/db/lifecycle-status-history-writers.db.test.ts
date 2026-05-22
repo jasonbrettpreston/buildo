@@ -561,6 +561,110 @@ describe.skipIf(!dbAvailable())('lifecycle_status_history writers — Phase I.1.
     });
   });
 
+  // ──────────────────────────────────────────────────────────────────────
+  // WF3 Pass-2.5 Finding C Phase 5 — Inspector cross-stream timeline
+  //   ORDER BY semantics: tests the COA_CROSS_STREAM_SQL ORDER BY clause
+  //   that the Inspector uses to render mixed permit + CoA rows
+  //   chronologically by event_date (with transitioned_at fallback).
+  //
+  //   Plan-v2 form per 3-reviewer convergence:
+  //     ORDER BY
+  //       COALESCE(event_date, (transitioned_at AT TIME ZONE 'UTC')::date) ASC,
+  //       CASE WHEN event_date IS NOT NULL THEN 0 ELSE 1 END ASC,
+  //       transitioned_at ASC,
+  //       id ASC
+  //
+  //   Test scenario uses 2-year gap between event_date (2024) and
+  //   transitioned_at (2026) values — INTENTIONAL: keeps the test out of
+  //   the TZ-boundary zone. The UTC-anchored cast handles same-day TZ
+  //   boundaries correctly but the test scenario doesn't exercise that
+  //   case (Independent ITEM 2 fold).
+  // ──────────────────────────────────────────────────────────────────────
+  describe('WF3 Finding C Phase 5 — cross-stream ORDER BY (event_date with detected fallback)', () => {
+    const PERMIT_LEAD = 'permit:I1TEST-C5-P5:00';
+    const COA_LEAD = 'coa:I1TEST-C5-P5-COA';
+
+    beforeEach(async () => {
+      if (!pool) return;
+      await pool.query(
+        `DELETE FROM lifecycle_status_history WHERE lead_id IN ($1, $2)`,
+        [PERMIT_LEAD, COA_LEAD],
+      );
+    });
+
+    it('ORDER BY sorts mixed event_date / transitioned_at rows chronologically (expected [C, A, B, D])', async () => {
+      if (!pool) return;
+      // Seed 4 rows — A and B on the permit side, C and D on the CoA side.
+      // COALESCE values: A=2024-03-15, B=2026-05-20, C=2024-01-10, D=2026-05-22
+      // Sorted ASC by COALESCE → [C, A, B, D].
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, event_date)
+         VALUES
+           ($1, NULL, 'Permit Issued',          '2026-05-19T00:00:00Z'::timestamptz, 'load-permits.js', '2024-03-15'::date),
+           ($1, 'Permit Issued', 'Under Review','2026-05-20T00:00:00Z'::timestamptz, 'load-permits.js', NULL),
+           ($2, NULL, 'Approved',               '2026-05-21T00:00:00Z'::timestamptz, 'load-coa.js',     '2024-01-10'::date),
+           ($2, 'Approved', 'Closed',           '2026-05-22T00:00:00Z'::timestamptz, 'load-coa.js',     NULL)`,
+        [PERMIT_LEAD, COA_LEAD],
+      );
+
+      // Run the same ORDER BY the Inspector uses (verbatim from COA_CROSS_STREAM_SQL).
+      const res = await pool.query<{ to_status: string; event_date: string | null }>(
+        `SELECT to_status, event_date::text AS event_date
+           FROM lifecycle_status_history
+          WHERE lead_id IN ($1, $2)
+          ORDER BY
+            COALESCE(event_date, (transitioned_at AT TIME ZONE 'UTC')::date) ASC,
+            CASE WHEN event_date IS NOT NULL THEN 0 ELSE 1 END ASC,
+            transitioned_at ASC,
+            id ASC`,
+        [PERMIT_LEAD, COA_LEAD],
+      );
+
+      expect(res.rows.length).toBe(4);
+      // C → A → B → D
+      expect(res.rows[0]!.to_status).toBe('Approved');         // C: event_date='2024-01-10'
+      expect(res.rows[0]!.event_date).toBe('2024-01-10');
+      expect(res.rows[1]!.to_status).toBe('Permit Issued');    // A: event_date='2024-03-15'
+      expect(res.rows[1]!.event_date).toBe('2024-03-15');
+      expect(res.rows[2]!.to_status).toBe('Under Review');     // B: event_date=NULL, transitioned_at=2026-05-20
+      expect(res.rows[2]!.event_date).toBeNull();
+      expect(res.rows[3]!.to_status).toBe('Closed');           // D: event_date=NULL, transitioned_at=2026-05-22
+      expect(res.rows[3]!.event_date).toBeNull();
+    });
+
+    it('Same-date tie-break: real-event_date rows sort before detected-only rows (Gemini CRIT fold)', async () => {
+      if (!pool) return;
+      // Same effective date (2024-03-15) but one row has real event_date,
+      // the other has only transitioned_at. The CASE WHEN tie-break should
+      // sort the real-event_date row first.
+      await pool.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, event_date)
+         VALUES
+           ($1, NULL, 'Detected Row',  '2024-03-15T12:00:00Z'::timestamptz, 'load-permits.js', NULL),
+           ($1, NULL, 'Real Row',      '2024-03-15T18:00:00Z'::timestamptz, 'load-permits.js', '2024-03-15'::date)`,
+        [PERMIT_LEAD],
+      );
+
+      const res = await pool.query<{ to_status: string }>(
+        `SELECT to_status FROM lifecycle_status_history
+          WHERE lead_id = $1
+          ORDER BY
+            COALESCE(event_date, (transitioned_at AT TIME ZONE 'UTC')::date) ASC,
+            CASE WHEN event_date IS NOT NULL THEN 0 ELSE 1 END ASC,
+            transitioned_at ASC,
+            id ASC`,
+        [PERMIT_LEAD],
+      );
+
+      expect(res.rows.length).toBe(2);
+      // Real-event_date row first (CASE WHEN ... THEN 0 sorts before THEN 1)
+      expect(res.rows[0]!.to_status).toBe('Real Row');
+      expect(res.rows[1]!.to_status).toBe('Detected Row');
+    });
+  });
+
   describe.skip('script-execution tests (deferred — requires CKAN file fixtures)', () => {
     // Skeleton for tests 1-9 follow-up; left as describe.skip so the structure
     // is documented but doesn't fail Phase I.1.1a's Red Light gate.

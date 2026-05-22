@@ -334,6 +334,10 @@ export const LeadInspectCoaCrossStreamEntrySchema = z.object({
   from_status: z.string().nullable(),
   to_status: z.string().nullable(),
   transitioned_at: z.string().datetime(),
+  // WF3 Pass-2.5 Finding C Phase 5 — real-world event date from CKAN source.
+  // `.date()` validates YYYY-MM-DD format at the Zod boundary (Spec 33 §13)
+  // — same precision as decision_date / hearing_date in this file.
+  event_date: z.string().date().nullable(),
   id: z.number().int(),
 });
 

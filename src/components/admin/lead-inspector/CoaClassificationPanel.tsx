@@ -388,22 +388,42 @@ function CrossStreamTimeline({ rows }: { rows: LeadInspectCoaCrossStreamEntry[] 
     <div>
       <div className="text-xs uppercase tracking-wide text-gray-500">Cross-stream timeline</div>
       <ol className="ml-4 mt-1 list-disc text-xs text-gray-700">
-        {rows.map((r) => (
-          <li key={`${r.lead_id}-${r.id}`}>
-            <span
-              className={`mr-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${
-                r.lead_type === 'coa' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-              }`}
-            >
-              {r.lead_type}
-            </span>
-            {new Date(r.transitioned_at).toISOString().slice(0, 10)}:{' '}
-            <code>
-              {r.from_status ?? '—'} → {r.to_status ?? '—'}
-            </code>{' '}
-            <span className="text-gray-500">({r.lead_id})</span>
-          </li>
-        ))}
+        {rows.map((r) => {
+          // WF3 Pass-2.5 Finding C Phase 5 (Spec 76 §3.5) — render real
+          // source event date when available (already YYYY-MM-DD from the
+          // DATE::text SQL cast); fall back to the date portion of the
+          // pipeline observation timestamp with a 'detected' badge when
+          // event_date is null (classifier-derived rows + writer rows
+          // whose to_status has no mapped source date).
+          const displayDate = r.event_date ?? new Date(r.transitioned_at).toISOString().slice(0, 10);
+          const isDetected = r.event_date == null;
+          return (
+            <li key={`${r.lead_id}-${r.id}`}>
+              <span
+                className={`mr-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${
+                  r.lead_type === 'coa' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                }`}
+              >
+                {r.lead_type}
+              </span>
+              {displayDate}
+              {isDetected && (
+                <span
+                  data-testid="cross-stream-detected-badge"
+                  className="ml-1 rounded bg-amber-100 px-1 py-0.5 text-[9px] uppercase tracking-wider text-amber-800"
+                  title="Date reflects when the pipeline detected the change, not when the source's status actually changed"
+                >
+                  detected
+                </span>
+              )}
+              :{' '}
+              <code>
+                {r.from_status ?? '—'} → {r.to_status ?? '—'}
+              </code>{' '}
+              <span className="text-gray-500">({r.lead_id})</span>
+            </li>
+          );
+        })}
       </ol>
     </div>
   );

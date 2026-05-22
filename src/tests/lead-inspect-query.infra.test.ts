@@ -199,3 +199,44 @@ describe('lead-inspect-query.ts — Cross-stream timeline dedup (Spec 79 §7a WF
     expect(crossStreamBlock).toMatch(/\$2::text\s*<>\s*''/);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// WF3 Pass-2.5 Finding C Phase 5 (2026-05-22) — event_date column passed
+// through each UNION arm + TZ-deterministic ORDER BY using DATE-only
+// comparison via `AT TIME ZONE 'UTC'`. Plan v2 fix per 3-reviewer
+// convergence (Gemini CRIT + DeepSeek MED + Independent ITEM 2) — the
+// plan-v1 `COALESCE(event_date::timestamptz, transitioned_at)` was
+// session-TZ-dependent. New form casts transitioned_at to DATE under
+// explicit UTC so both sides of COALESCE are DATE.
+// ────────────────────────────────────────────────────────────────────────
+describe('lead-inspect-query.ts — Cross-stream timeline event_date (Spec 79 §7a WF3 #11 Finding C Phase 5)', () => {
+  const src = fs.readFileSync(QUERY_PATH, 'utf-8');
+  const crossStreamBlock = src.match(/COA_CROSS_STREAM_SQL\s*=\s*`[\s\S]*?`/)?.[0] ?? '';
+
+  it('Each of the 3 UNION arms SELECTs event_date::text AS event_date', () => {
+    const matches = crossStreamBlock.match(/event_date::text\s+AS\s+event_date/g) ?? [];
+    expect(matches.length).toBe(3);
+  });
+
+  it('ORDER BY uses TZ-deterministic COALESCE(event_date, (transitioned_at AT TIME ZONE \'UTC\')::date)', () => {
+    expect(crossStreamBlock).toMatch(
+      /COALESCE\(\s*event_date\s*,\s*\(\s*transitioned_at\s+AT\s+TIME\s+ZONE\s+'UTC'\s*\)::date\s*\)\s*ASC/,
+    );
+  });
+
+  it('ORDER BY has the "real-event_date rows sort before detected-only rows" tie-break (Gemini CRIT fold)', () => {
+    expect(crossStreamBlock).toMatch(
+      /CASE\s+WHEN\s+event_date\s+IS\s+NOT\s+NULL\s+THEN\s+0\s+ELSE\s+1\s+END\s+ASC/,
+    );
+  });
+
+  it('ORDER BY preserves transitioned_at ASC + id ASC for absolute determinism', () => {
+    expect(crossStreamBlock).toMatch(/transitioned_at\s+ASC\s*,\s*\n?\s*id\s+ASC/);
+  });
+
+  it('The plan-v1 TZ-dependent form COALESCE(event_date::timestamptz, transitioned_at) is NOT present (regression lock)', () => {
+    // Plan-v1 used implicit DATE→TIMESTAMPTZ cast which depends on session TZ.
+    // Plan-v2 cast direction is reversed (transitioned_at → DATE under UTC).
+    expect(crossStreamBlock).not.toMatch(/COALESCE\(\s*event_date::timestamptz/);
+  });
+});

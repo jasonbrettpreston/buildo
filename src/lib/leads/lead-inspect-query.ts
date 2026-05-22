@@ -699,26 +699,41 @@ const COA_LEAD_TRADES_SQL = `
 // permit/coa namespaces are structurally disjoint so $1=$3 cannot happen
 // today) but harmless and future-proof. DeepSeek plan-review also added
 // the `$2::text <> ''` empty-string guard.
+// WF3 Pass-2.5 Finding C Phase 5 — adds event_date::text to each UNION arm
+// and replaces the simple transitioned_at ORDER BY with a TZ-deterministic
+// 4-key clause. Both sides of COALESCE are DATE under explicit AT TIME ZONE
+// 'UTC', so the chronological comparison is session-TZ-independent. Within
+// the same date, real-event_date rows sort before detected-only rows
+// (operators see real milestones first); within same date + same kind,
+// observation order (transitioned_at ASC) preserves insertion sequence;
+// final id ASC for absolute determinism.
 const COA_CROSS_STREAM_SQL = `
   SELECT lead_id,
          CASE WHEN lead_id LIKE 'coa:%' THEN 'coa' ELSE 'permit' END AS lead_type,
-         from_status, to_status, transitioned_at::text AS transitioned_at, id::int AS id
+         from_status, to_status, transitioned_at::text AS transitioned_at,
+         event_date::text AS event_date, id::int AS id
     FROM lifecycle_status_history
    WHERE lead_id = $1
   UNION ALL
-  SELECT lead_id, 'permit', from_status, to_status, transitioned_at::text, id::int
+  SELECT lead_id, 'permit', from_status, to_status, transitioned_at::text,
+         event_date::text AS event_date, id::int
     FROM lifecycle_status_history
    WHERE $2::text IS NOT NULL
      AND $2::text <> ''
      AND lead_id LIKE 'permit:' || $2::text || ':%' ESCAPE '\\'
      AND lead_id <> $1
   UNION ALL
-  SELECT lead_id, 'coa', from_status, to_status, transitioned_at::text, id::int
+  SELECT lead_id, 'coa', from_status, to_status, transitioned_at::text,
+         event_date::text AS event_date, id::int
     FROM lifecycle_status_history
    WHERE $3::text IS NOT NULL
      AND lead_id = $3::text
      AND lead_id <> $1
-   ORDER BY transitioned_at ASC, id ASC
+   ORDER BY
+     COALESCE(event_date, (transitioned_at AT TIME ZONE 'UTC')::date) ASC,
+     CASE WHEN event_date IS NOT NULL THEN 0 ELSE 1 END ASC,
+     transitioned_at ASC,
+     id ASC
 `;
 
 const COA_LINKED_PERMIT_SQL = `
@@ -737,6 +752,12 @@ interface CoaCrossStreamRow {
   from_status: string | null;
   to_status: string | null;
   transitioned_at: string;
+  // WF3 Pass-2.5 Finding C Phase 5 — real-world event date from CKAN source
+  // (permits.issued_date / coa_applications.decision_date / etc, per writer).
+  // NULL for classifier-derived rows + writer rows whose to_status has no
+  // mapped source date. Inspector renders the date directly when set;
+  // falls back to transitioned_at with a 'detected' badge when null.
+  event_date: string | null;
   id: number;
 }
 
@@ -833,6 +854,8 @@ async function fetchCoaPanel(
     from_status: r.from_status,
     to_status: r.to_status,
     transitioned_at: new Date(r.transitioned_at).toISOString(),
+    // event_date is already YYYY-MM-DD from DATE::text cast — pass through.
+    event_date: r.event_date,
     id: r.id,
   }));
 

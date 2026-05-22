@@ -88,6 +88,7 @@ describe('<CoaClassificationPanel> — section visibility', () => {
               from_status: 'Application',
               to_status: 'Permit Issued',
               transitioned_at: '2026-04-01T00:00:00Z',
+              event_date: null,
               id: 1,
             },
           ],
@@ -344,6 +345,7 @@ describe('<CoaClassificationPanel> — cross-stream timeline', () => {
               from_status: 'Submitted',
               to_status: 'Hearing',
               transitioned_at: '2026-01-01T00:00:00Z',
+              event_date: null,
               id: 1,
             },
             {
@@ -352,6 +354,7 @@ describe('<CoaClassificationPanel> — cross-stream timeline', () => {
               from_status: 'Application',
               to_status: 'Permit Issued',
               transitioned_at: '2026-04-01T00:00:00Z',
+              event_date: null,
               id: 2,
             },
           ],
@@ -365,6 +368,64 @@ describe('<CoaClassificationPanel> — cross-stream timeline', () => {
     expect(section.textContent).toContain('permit');
     expect(section.textContent).toContain('Submitted');
     expect(section.textContent).toContain('Permit Issued');
+  });
+
+  // WF3 Pass-2.5 Finding C Phase 5 — cross-stream timeline renders event_date
+  // when set, falls back to transitioned_at with a 'detected' badge when null.
+  it('Phase 5: renders event_date directly when set (no detected badge)', () => {
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({
+          cross_stream_timeline: [
+            {
+              lead_id: 'permit:24-123456:00',
+              lead_type: 'permit',
+              from_status: 'Application',
+              to_status: 'Permit Issued',
+              transitioned_at: '2026-05-19T18:28:51Z',
+              event_date: '2024-03-15',
+              id: 1,
+            },
+          ],
+        })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const section = screen.getByTestId('coa-panel-section-cross-stream');
+    // Real event date displayed (the date the permit was actually issued)
+    expect(section.textContent).toContain('2024-03-15');
+    // Pipeline observation date NOT shown
+    expect(section.textContent).not.toContain('2026-05-19');
+    // No 'detected' badge — event_date is set
+    expect(screen.queryByTestId('cross-stream-detected-badge')).toBeNull();
+  });
+
+  it('Phase 5: renders transitioned_at date with detected badge when event_date is null', () => {
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({
+          cross_stream_timeline: [
+            {
+              lead_id: 'coa:A0001-2024',
+              lead_type: 'coa',
+              from_status: 'Hearing',
+              to_status: 'Postponed',
+              transitioned_at: '2026-05-19T18:28:51Z',
+              event_date: null,
+              id: 1,
+            },
+          ],
+        })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const section = screen.getByTestId('coa-panel-section-cross-stream');
+    // Fallback: pipeline observation date (date portion only)
+    expect(section.textContent).toContain('2026-05-19');
+    // 'detected' badge present — signals fallback semantic
+    expect(screen.getByTestId('cross-stream-detected-badge')).toBeDefined();
   });
 });
 
