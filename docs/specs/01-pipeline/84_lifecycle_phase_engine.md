@@ -1037,6 +1037,30 @@ Source: `scripts/lib/lifecycle-phase.js` `TRADE_TARGET_PHASE_FALLBACK` (compile-
 
 **Cross-reference:** The Universal Stream table (§2.5.h.2) shows the inverse view — for each Stage, which trades have their Bid or Work window opening at that Stage. See the `Bid Trades` and `Work Trades` columns there.
 
+#### §2.5.h.10 — Lifecycle timeline entry-count: empirical patterns by permit category
+
+> **WF3 #15 Pass-2.5 Finding G fold (2026-05-22).** Operator §7a observation noted that ALT/000/DRN permits sometimes display only 1-2 `lifecycle_status_history` entries in the Inspector cross-stream timeline. This sub-section clarifies that the classifier does NOT have a per-category truncation rule — entry count is a data-driven property of what `permits.status` transitions CKAN actually surfaces for each permit category. The annotations below help operators distinguish "data signal" from "classifier bug."
+
+**Classifier behavior:** `classify-lifecycle-phase.js` (Spec 84 §2.5.a) classifies all permits uniformly based on `permits.status`. There is no `permit_type_class` gate on the lifecycle classifier — a `safety_upgrade` permit in status "Inspection" legitimately gets P9-P17 just like a `construction` permit would. The empirical timeline-entry-count patterns below reflect what statuses these permit categories typically reach in CKAN data, not a classifier rule.
+
+**Empirical patterns by `permit_type_class` (Spec 80 §5 taxonomy):**
+
+| Class | Typical lifecycle entry count | Why |
+|-------|-------------------------------|-----|
+| `construction` | Many (typically 5-12 entries through full P1-P20 path) | Plan-review + permit-issuance + inspection-stream all generate status transitions |
+| `signage` | Few (typically 1-2 entries) | Signs don't require plan-review or inspection stages in CKAN — typically Issued → Closed |
+| `administrative` | Few (typically 1 entry) | Fee deferrals, certificates of occupancy, paperwork — Issued/Closed only |
+| `safety_upgrade` | Variable (1-5 entries) | Fire/security upgrades may pass through limited inspection stages but don't follow full construction path |
+| `unclassified` | Variable | Depends on underlying permit_type's actual lifecycle in CKAN |
+
+**ALT (Alteration) permits explicitly:** classify as `construction` (Spec 80 §5 lists "Building Additions/Alterations" as a `construction` example). ALT permits with full inspection chains WILL show the full P1-P20 timeline. **A truncated ALT timeline is a data signal that the permit's status hasn't progressed beyond intake yet — NOT expected behavior.** If an operator sees a long-lived ALT permit with only 1-2 timeline entries, investigate the source CKAN data, not the classifier.
+
+**Sub-permits (DRN/PLB/HVA/ELE/MTL/etc. attached to a parent BLD/CMB):** entry count is data-driven by whether the sub-permit has its own passed inspections recorded in `permit_inspections`. A plumbing sub-permit that passed its Drain/Waste/Vents inspection (AIC stage #109 per §2.5.d) WILL show that entry in its timeline. A sub-permit with no independent inspection activity will show only its issued-date and close events — typically 1-2 entries. **The 1-2 entry pattern is typical when independent inspection activity is absent**, not a hard contract.
+
+**Distinct from orphan-detection (§7):** orphan classification (O1/O2/O3) governs phase-track assignment for standalone trade permits with no BLD/CMB sibling AND no CoA linkage — that's about phase track membership, not timeline entry count. Sub-permits with a BLD/CMB parent are excluded from O1/O2/O3 per §7 (separate behavior; contextual background only).
+
+**Inspector rendering (Spec 76 §3.5 lifecycle scrubber):** the timeline reflects what `lifecycle_status_history` actually contains for the lead. A short timeline is operator-visible signal: either (a) the permit is in an early phase, (b) the permit category naturally has few status transitions (non-construction or sub-permit), or (c) data is missing/lagging. Operators read this directly; no classifier change is needed.
+
 ---
 
 ## 3. Behavioral Contract: Full Phase Detail
@@ -1560,7 +1584,7 @@ This is the migration backlog. Each item is a delta between what §2.5.h prescri
 
 **D. Schema mismatches:**
 - `trade_configurations` table has `bid_phase_cutoff` + `work_phase_target` (single P-code each). New model requires either: (a) a join table mapping `trade_slug × seq` with signal-type, or (b) per-trade row arrays in a `jsonb` column.
-- `permits` / `coa_applications` lack a `bid_value` column to weight bid activation per row.
+- ~~`permits` / `coa_applications` lack a `bid_value` column to weight bid activation per row.~~ **COMPLETED 2026 (WF3 #15 fold, 2026-05-22):** migrations 132 (`permits`) + 133 (`coa_applications`) added the column on both tables; `classify-lifecycle-phase.js:1419` writes the catalog's `bid_value` snapshot for each row's current `lifecycle_seq` at classification time. See §2.5.h.10 for the full semantic contract.
 - No `lifecycle_group`, `lifecycle_block`, `lifecycle_stage` columns — only `lifecycle_phase`.
 
 **E. Unresolved known bugs (§6):**

@@ -1793,6 +1793,40 @@ Gemini Pro and DeepSeek-R1 reviewed the full `load-permits.js` source rather tha
 
 ---
 
+## WF3 #15 IMPL review — pre-existing Spec 84 design concerns (2026-05-22)
+
+Source: WF3 #15 adversarial IMPL review (Gemini + DeepSeek) reviewed Spec 84 broadly (not just the G+H changes) and surfaced 10+ pre-existing design/implementation concerns. Filed for future spec-author review; none related to Findings G + H.
+
+| # | Triage | Source | Item | Why deferred |
+|---|--------|--------|------|--------------|
+| 190 | **DEFER** | **2-reviewer convergence** (Gemini HIGH + DeepSeek HIGH) | Universal Stream §2.5.h.2 represented as a single denormalized table with 152 per-trade signal columns (Bid:<trade> + Work:<trade> + Fallback:<trade> + Bid:Last Minute:<trade> × 38 trades). Unmaintainable; can't add/remove trades without schema change; 16,720 checkmarks not human-validatable. Should be replaced with a normalized join table `universal_stream_trade_signals(seq, trade_slug, signal_type)`. | Pre-existing design concern; the §8.9 implementation plan already proposes this. Needs separate spec author + DB migration WF. |
+| 191 | **DEFER** | Gemini CRITICAL | P3 phase-code collision between CoA "P3 = CoA Approved" and Permit "P3 = Permit Review" — bug 84-W11 in §C, partially shipped (`INTAKE_P3` prefix exists) but P4/P5 still ambiguous. Any consumer querying for `lifecycle_phase = 'P3'` gets contaminated mix. | Pre-existing known bug (84-W11). Needs coordinated migration across downstream consumers (forecasting, opportunity scoring, CRM alerts) — separate WF. |
+| 192 | **DEFER** | Gemini CRITICAL | Two-ledger split: `permit_phase_transitions` (permit-only) vs `lifecycle_status_history` (both streams). Inspector cross-stream timeline cannot render meaningful CoA-only history without §8.9 "Fix B WF1" consolidation. | Pre-existing tech debt acknowledged in §8.9 implementation plan. Needs dedicated unification WF. |
+| 193 | **DEFER** | Gemini HIGH | §2.5.a row "CODE DRIFT" notes — "Not Started" → P7d (post-issuance phase, wrong direction); "Plan Review Complete" → P3 (intake, wrong direction). Semantic mismatches misclassifying thousands of permits. | Pre-existing classifier set-membership errors documented as DRIFT but not yet corrected. Needs coordinated downstream consumer update. |
+| 194 | **DEFER** | Gemini HIGH | §2.5.b row 2 — `Approved` CoA decision mapped to P2 ("CoA Review") instead of P3 ("CoA Approved") per §3.1 Rule 5. Misrepresents project status. | Pre-existing classifier mapping bug. Affects all 16 `NORMALIZED_APPROVED_DECISIONS` variants. |
+| 195 | **DEFER** | Gemini HIGH | §2.5.d fallback maps un-matched passed inspections to P17 (Occupancy), conflating specialty work (pools, tents, repairs) with project completion. ~10,500 rows affected. Should be a new phase P17_SP (Specialty Inspection). | Pre-existing classifier fallback over-pollutes P17 semantic. |
+| 196 | **DEFER** | Gemini MED | §2.5.b Block 6 — all "Deferred" CoA decisions (505 rows) misclassified as P1 (Intake) instead of a distinct P2_DEFERRED phase. Deferred ≠ new application. | Pre-existing classifier mapping. Affects stall detection. |
+| 197 | **DEFER** | Gemini MED | §2.5.d inspection-stage matching uses brittle ordered `substring.includes()` — "Final Interior" doesn't match `interior final`. Should use keyword-AND matching or regex/pattern dictionary. | Pre-existing matching strategy fragility. |
+| 198 | **DEFER** | DeepSeek HIGH | §2.5.h.7 / §2.5.f.4 — `linked_permit_num` Phase E.1 fix is "consumer wiring" but description still says "99.4% of CoAs are linked — dominant cause of NULL lifecycle_phase." Audit all paths in classifier + legacy adapter to ensure no remaining `linked_permit_num` short-circuits. | Pre-existing potential incompleteness in Phase E.1 fix. |
+| 199 | **DEFER** | DeepSeek MED | §3.7 `matchedStatus` contract inconsistent between permit (raw normalized) and CoA (canonical mapped). Downstream code expecting raw input mis-parses CoA rows. | Pre-existing contract drift; aligns or document explicitly. |
+| 200 | **DEFER** | DeepSeek MED + Gemini LOW (2-reviewer) | `uniq_lifecycle_status_history_natural_key` UNIQUE INDEX truncates `transitioned_at` to second — sub-second collisions (batch approvals) silently drop the second transition. | Pre-existing idempotency-gate fragility. Add sequence-based tiebreaker (id) to the index OR remove natural key and handle idempotency in application layer. |
+| 201 | **DEFER** | DeepSeek MED | `lifecycle_seq` not written for permit rows until Phase H — Inspector's granular timeline empty for permits (~247K rows). | Pre-existing Phase H deferral. Either backfill in mig 149 or document fallback to P-code timeline. |
+| 202 | **DEFER** | DeepSeek LOW | §8.5 trade LM (Last Minute) row inconsistencies between §2.5.h.9 table and §2.5.h.2 Universal Stream — e.g., plumbing LM=row 106 but stream shows blank at seq 59. Data consistency error. | Pre-existing documentation inconsistency. Should add cross-validation test. |
+
+**Two-reviewer convergence (row 190):** the 152-column trade-signal matrix — Gemini HIGH + DeepSeek HIGH independently flagged the same denormalization concern. Highest priority for a follow-up spec WF.
+
+---
+
+## WF3 #15 Findings G + H — pre-existing Spec 84 self-contradiction at seq 14 "Final & Binding" (2026-05-22)
+
+Source: WF3 #15 adversarial PLAN review (DeepSeek MED) surfaced a pre-existing internal contradiction in `docs/specs/01-pipeline/84_lifecycle_phase_engine.md` — unrelated to Findings G + H but worth a follow-up pass.
+
+| # | Triage | Source | Item | Why deferred |
+|---|--------|--------|------|--------------|
+| 189 | **DEFER — pre-existing spec inconsistency** | DeepSeek MED (WF3 #15 PLAN review) | Spec 84 line 1604 documents a self-contradiction: "**seq 14 'Final & Binding'** (line 737): `Bid Value = 0` AND ✓ filled in all 37 non-realtor `Bid: <trade>` columns. Contradicts the §2.5.h.9 rule 'Bid Value ≤ 0.2 → no bid checkmark.'" The §2.5.h.2 Universal Stream catalog row at seq 14 has Bid Value = 0 but ALSO has bid checkmarks — these are mutually inconsistent per the rule. Either the row's Bid Value should be > 0.2 (to legitimize the checkmarks), OR the checkmarks should be removed (to align with Bid Value = 0). | Pre-existing inconsistency in Spec 84 itself (called out at line 1604 in the §C backlog as a known issue). Unrelated to WF3 #15's Findings G + H additions, but surfaced during PLAN review because the new annotations cross-ref §2.5.h.9 + §2.5.h.2. Resolution requires content correction in either §2.5.h.2 (row 14 catalog data) OR §2.5.h.9 (add an explicit exception) — needs spec-author intent verification. Note: confusable with seq 83 "Final and Binding" (CoA status, Bid Value 0.8 with checkmarks — that one is consistent with the rule). Distinct rows. |
+
+---
+
 ## WF3 #14 Finding I — adversarial IMPL review pre-existing concerns in CoaClassificationPanel.tsx (2026-05-22)
 
 Source: WF3 #14 closed the description gap. Adversarial Gemini + DeepSeek IMPL review surfaced 8 PRE-EXISTING concerns in the broader `CoaClassificationPanel.tsx` file (not introduced by Finding I; outside its scope). Filed for a future hardening WF.
