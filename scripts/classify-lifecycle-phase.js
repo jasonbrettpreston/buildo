@@ -990,6 +990,14 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       if (ledgerRows.length > 0) {
         try {
           await client.query('SAVEPOINT ledger_write');
+          // WF3 Pass-2.5 Finding C Phase 4 (mig 161) — `event_date` is
+          // deliberately NOT in this INSERT column list. Classifier-derived
+          // transitions infer lifecycle phase from current data state; there
+          // is no source event date for them. The column defaults to NULL
+          // for omitted columns. The mig 161 CHECK constraint
+          // `lifecycle_status_history_classifier_event_date_null` enforces
+          // this invariant at the DB level — any future refactor that adds
+          // event_date here with a non-null value will be rejected.
           const ledgerRes = await client.query(
             `INSERT INTO lifecycle_status_history
                (lead_id, from_status, to_status, from_seq, to_seq,
@@ -1255,6 +1263,12 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       if (coaLedgerRows.length > 0) {
         try {
           await client.query('SAVEPOINT ledger_write');
+          // WF3 Pass-2.5 Finding C Phase 4 (mig 161) — `event_date` is
+          // deliberately NOT in this INSERT column list (CoA-side classifier
+          // path). Same invariant as the permit-side classifier write above:
+          // classifier-derived transitions have no source event date. The
+          // mig 161 CHECK constraint enforces NULL at the DB level for all
+          // detected_by='classify-lifecycle-phase.js' rows.
           const ledgerRes = await client.query(
             `INSERT INTO lifecycle_status_history
                (lead_id, from_status, to_status, from_seq, to_seq,
