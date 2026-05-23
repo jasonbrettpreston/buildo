@@ -1,7 +1,7 @@
 # Step 16: compute_timing_calibration_v2
 **Chain:** permits
-**Validated:** 2026-05-19
-**HEAD commit:** 8ef6509
+**Validated:** 2026-05-23
+**HEAD commit:** 61abe60
 **Risk class:** calculation
 **Per-step agent:** Calculations
 **Final status:** PASS-pending-manual
@@ -11,40 +11,40 @@
 - Output table counts: {"timing_calibration":{"ok":false,"error":"table_not_found"}}
 - Last 3 runs: [
   {
-    "id": 3152,
+    "id": 3312,
     "status": "completed",
-    "completed_at": "2026-05-08T22:34:07.233Z",
+    "completed_at": "2026-05-20T20:47:31.745Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T22:34:05.143Z",
-    "duration_ms": "2091"
+    "started_at": "2026-05-20T20:47:30.038Z",
+    "duration_ms": "1707"
   },
   {
-    "id": 3124,
+    "id": 3266,
     "status": "completed",
-    "completed_at": "2026-05-08T21:56:48.442Z",
+    "completed_at": "2026-05-20T02:14:05.071Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T21:56:44.691Z",
-    "duration_ms": "3751"
+    "started_at": "2026-05-20T02:14:03.685Z",
+    "duration_ms": "1386"
   },
   {
-    "id": 3057,
+    "id": 3233,
     "status": "completed",
-    "completed_at": "2026-05-08T18:20:36.554Z",
+    "completed_at": "2026-05-20T01:51:46.509Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T18:20:34.775Z",
-    "duration_ms": "1780"
+    "started_at": "2026-05-20T01:51:43.025Z",
+    "duration_ms": "3484"
   }
 ]
 
 ## Execution
 - Command: `node scripts/compute-timing-calibration-v2.js`
 - Exit code: 0
-- Duration: 1208ms
-- New `pipeline_runs.id`: 3152
+- Duration: 1252ms
+- New `pipeline_runs.id`: 3312
 
 ## Post-run state
 - Output table counts: {"timing_calibration":{"ok":false,"error":"table_not_found"}}
-- New run: {"id":3152,"status":"completed","verdict":"PASS","duration_ms":"2091","records_total":131,"records_new":0,"records_updated":131}
+- New run: {"id":3312,"status":"completed","verdict":"PASS","duration_ms":"1707","records_total":131,"records_new":0,"records_updated":131}
 
 ### audit_table.rows
 ```json
@@ -74,13 +74,13 @@
     "threshold": 0
   },
   {
-    "value": 71.35,
+    "value": 88.04,
     "metric": "sys_velocity_rows_sec",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": 1836,
+    "value": 1488,
     "metric": "sys_duration_ms",
     "status": "INFO",
     "threshold": null
@@ -101,11 +101,11 @@
     },
     "engine": {
       "phase_calibration": {
-        "idx_scan": 652,
-        "seq_scan": 31,
-        "seq_ratio": 0.0454,
-        "dead_ratio": 0.2184,
-        "n_dead_tup": 38,
+        "idx_scan": 522,
+        "seq_scan": 24,
+        "seq_ratio": 0.044,
+        "dead_ratio": 0.2139,
+        "n_dead_tup": 37,
         "n_live_tup": 136
       }
     },
@@ -157,35 +157,63 @@
 ### stdout tail
 ```
 {"level":"INFO","tag":"[calibration-v2]","msg":"Loaded 33 trade configs from control panel"}
-{"level":"INFO","tag":"[calibration-v2]","msg":"Loaded 115 logic variables from control panel"}
+{"level":"INFO","tag":"[calibration-v2]","msg":"Loaded 349 logic variables from control panel"}
 {"level":"INFO","tag":"[calibration-v2]","msg":"Computing phase-to-phase calibration from inspection pairs..."}
-{"level":"INFO","tag":"[calibration-v2]","msg":"Phase-to-phase pairs: 66 (per permit_type)"}
+{"level":"INFO","tag":"[calibration-v2]","msg":"Phase-to-phase pairs: 65 (per permit_type)"}
 {"level":"INFO","tag":"[calibration-v2]","msg":"Phase-to-phase pairs (all types): 35"}
 {"level":"INFO","tag":"[calibration-v2]","msg":"Computing ISSUED → first-phase calibration..."}
 {"level":"INFO","tag":"[calibration-v2]","msg":"ISSUED → phase pairs: 22"}
 {"level":"INFO","tag":"[calibration-v2]","msg":"ISSUED → phase pairs (all types): 9"}
-{"level":"INFO","tag":"[calibration-v2]","msg":"Total calibration rows to upsert: 132"}
-{"level":"INFO","tag":"[calibration-v2]","msg":"Upserted 132 calibration rows"}
-PIPELINE_SUMMARY:{"records_total":132,"records_new":0,"records_updated":132,"records_meta":{"phase_pairs_by_type":66,"phase_pairs_all_types":35,"issued_pairs_by_type":22,"issued_pairs_all_types":9,"total_calibration_rows":136,"min_sample_size":5,"audit_table":{"phase":15,"name":"Timing Calibration V2","verdict":"PASS","rows":[{"metric":"phase_pairs_computed","value":132,"threshold":null,"status":"INFO"},{"metric":"pairs_above_threshold","value":132,"threshold":1,"status":"PASS"},{"metric":"negative_gap_count","value":0,"threshold":0,"status":"PASS"},{"metric":"null_stats_count","value":0,"threshold":0,"status":"PASS"},{"metric":"sys_velocity_rows_sec","value":127.05,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":1039,"threshold":null,"status":"INFO"}]}}}
+{"level":"INFO","tag":"[calibration-v2]","msg":"Total calibration rows to upsert: 131"}
+{"level":"INFO","tag":"[calibration-v2]","msg":"Upserted 131 calibration rows"}
+PIPELINE_SUMMARY:{"records_total":131,"records_new":0,"records_updated":131,"records_meta":{"phase_pairs_by_type":65,"phase_pairs_all_types":35,"issued_pairs_by_type":22,"issued_pairs_all_types":9,"total_calibration_rows":136,"min_sample_size":5,"audit_table":{"phase":15,"name":"Timing Calibration V2","verdict":"PASS","rows":[{"metric":"phase_pairs_computed","value":131,"threshold":null,"status":"INFO"},{"metric":"pairs_above_threshold","value":131,"threshold":1,"status":"PASS"},{"metric":"negative_gap_count","value":0,"threshold":0,"status":"PASS"},{"metric":"null_stats_count","value":0,"threshold":0,"status":"PASS"},{"metric":"sys_velocity_rows_sec","value":120.63,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":1086,"threshold":null,"status":"INFO"}]}}}
 PIPELINE_META:{"reads":{"permit_inspections":["permit_num","stage_name","status","inspection_date"],"permits":["permit_num","permit_type","issued_date"]},"writes":{"phase_calibration":["from_phase","to_phase","permit_type","median_days","p25_days","p75_days","sample_size","computed_at"]}}
 
-[compute-timing-calibration-v2] completed in 1.0s
+[compute-timing-calibration-v2] completed in 1.1s
 
 ```
 
 ### stderr tail
 ```
-{"level":"WARN","tag":"[calibration-v2]","msg":"allocation_pct sum is 1.0500 (expected 1.0) — normalizing"}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[calibration-v2]","msg":"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback","context":{"raw":null}}
 
 ```
 
 ## Checklist evidence (C1-C12)
 
 ### C1: PASS
-**Evidence:** exit=0 duration=1208ms
+**Evidence:** exit=0 duration=1252ms
 
 ### C2: PASS
-**Evidence:** id=3152 status=completed completed_at=Fri May 08 2026 18:34:07 GMT-0400 (Eastern Daylight Time)
+**Evidence:** id=3312 status=completed completed_at=Wed May 20 2026 16:47:31 GMT-0400 (Eastern Daylight Time)
 
 ### C3: PASS
 **Evidence:** verdict='PASS'

@@ -1,62 +1,62 @@
 # Step 13: classify_permits
 **Chain:** permits
-**Validated:** 2026-05-19
-**HEAD commit:** 8ef6509
+**Validated:** 2026-05-23
+**HEAD commit:** 61abe60
 **Risk class:** ingest_linkage
 **Per-step agent:** Compliance
 **Final status:** PASS-pending-manual
 **Notes:** 
 
 ## Pre-run state
-- Output table counts: {"permit_trades":{"ok":true,"n":1377443},"lead_trades":{"ok":true,"n":0}}
+- Output table counts: {"permit_trades":{"ok":true,"n":1236223},"lead_trades":{"ok":true,"n":1584828}}
 - Last 3 runs: [
   {
-    "id": 3150,
+    "id": 3309,
     "status": "completed",
-    "completed_at": "2026-05-08T22:32:44.665Z",
+    "completed_at": "2026-05-20T20:46:40.336Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T22:29:42.047Z",
-    "duration_ms": "182618"
+    "started_at": "2026-05-20T20:42:41.512Z",
+    "duration_ms": "238824"
   },
   {
-    "id": 3122,
+    "id": 3263,
     "status": "completed",
-    "completed_at": "2026-05-08T21:55:09.644Z",
+    "completed_at": "2026-05-20T02:13:32.231Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T21:51:14.014Z",
-    "duration_ms": "235630"
+    "started_at": "2026-05-20T02:10:34.972Z",
+    "duration_ms": "177258"
   },
   {
-    "id": 3055,
+    "id": 3218,
     "status": "completed",
-    "completed_at": "2026-05-08T18:19:21.307Z",
+    "completed_at": "2026-05-20T01:50:40.158Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T18:16:05.930Z",
-    "duration_ms": "195377"
+    "started_at": "2026-05-20T01:47:04.794Z",
+    "duration_ms": "215364"
   }
 ]
 
 ## Execution
 - Command: `node scripts/classify-permits.js`
 - Exit code: 0
-- Duration: 197536ms
-- New `pipeline_runs.id`: 3150
+- Duration: 213171ms
+- New `pipeline_runs.id`: 3309
 
 ## Post-run state
-- Output table counts: {"permit_trades":{"ok":true,"n":1237132},"lead_trades":{"ok":true,"n":1145045}}
-- New run: {"id":3150,"status":"completed","verdict":"PASS","duration_ms":"182618","records_total":229702,"records_new":0,"records_updated":226111}
+- Output table counts: {"permit_trades":{"ok":true,"n":1237730},"lead_trades":{"ok":true,"n":1586336}}
+- New run: {"id":3309,"status":"completed","verdict":"PASS","duration_ms":"238824","records_total":229206,"records_new":2,"records_updated":225534}
 
 ### audit_table.rows
 ```json
 [
   {
-    "value": 229702,
+    "value": 229206,
     "metric": "permits_processed",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": 226111,
+    "value": 225534,
     "metric": "run_classified",
     "status": "INFO",
     "threshold": null
@@ -68,19 +68,19 @@
     "threshold": ">= 95%"
   },
   {
-    "value": 1293820,
+    "value": 1145036,
     "metric": "total_trade_matches",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": 1293820,
+    "value": 1145036,
     "metric": "permit_trades_written",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": 219561,
+    "value": 219037,
     "metric": "class.construction",
     "status": "INFO",
     "threshold": null
@@ -92,31 +92,31 @@
     "threshold": null
   },
   {
-    "value": 1039,
+    "value": 1049,
     "metric": "class.administrative",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": 6551,
+    "value": 6550,
     "metric": "class.safety_upgrade",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": 2551,
+    "value": 2570,
     "metric": "class.unclassified",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": 1316.72,
+    "value": 983.06,
     "metric": "sys_velocity_rows_sec",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": 174450,
+    "value": 233156,
     "metric": "sys_duration_ms",
     "status": "INFO",
     "threshold": null
@@ -130,58 +130,58 @@
   "telemetry": {
     "counts": {
       "permits": {
-        "after": 247030,
+        "after": 248092,
         "delta": 0,
-        "before": 247030
+        "before": 248092
       },
       "permit_trades": {
-        "after": 1377443,
-        "delta": -6,
-        "before": 1377449
+        "after": 1236223,
+        "delta": 0,
+        "before": 1236223
       }
     },
     "engine": {
       "permits": {
-        "idx_scan": 12693426,
-        "seq_scan": 1032,
+        "idx_scan": 7652353,
+        "seq_scan": 676,
         "seq_ratio": 0.0001,
-        "dead_ratio": 0.6743,
-        "n_dead_tup": 512856,
-        "n_live_tup": 247703
+        "dead_ratio": 0.6853,
+        "n_dead_tup": 541816,
+        "n_live_tup": 248813
       },
       "permit_trades": {
-        "idx_scan": 10117679,
-        "seq_scan": 122,
+        "idx_scan": 6450839,
+        "seq_scan": 86,
         "seq_ratio": 0,
-        "dead_ratio": 0.4429,
-        "n_dead_tup": 1111828,
-        "n_live_tup": 1398294
+        "dead_ratio": 0.447,
+        "n_dead_tup": 996268,
+        "n_live_tup": 1232652
       }
     },
     "pg_stats": {
       "permits": {
         "del": 0,
         "ins": 0,
-        "upd": 229702
+        "upd": 229206
       },
       "permit_trades": {
-        "del": 10,
-        "ins": 4,
-        "upd": 1293816
+        "del": 0,
+        "ins": 0,
+        "upd": 1145036
       }
     },
     "null_fills": {
       "permits": {
         "trade_classified_at": {
           "after": 0,
-          "before": 0,
-          "filled": 0
+          "before": 2,
+          "filled": 2
         }
       }
     }
   },
-  "db_updated": 1293820,
-  "duration_ms": 155364,
+  "db_updated": 1145036,
+  "duration_ms": 222286,
   "pipeline_meta": {
     "reads": {
       "permits": [
@@ -225,44 +225,44 @@
       ]
     }
   },
-  "permits_processed": 229702,
-  "permits_with_trades": 226111,
-  "total_trade_matches": 1293820,
-  "avg_trades_per_permit": 5.72
+  "permits_processed": 229206,
+  "permits_with_trades": 225534,
+  "total_trade_matches": 1145036,
+  "avg_trades_per_permit": 5.08
 }
 ```
 
 ### stdout tail
 ```
-{"level":"INFO","tag":"[classify-permits]","msg":"Mode: INCREMENTAL, permits to classify: 229,211"}
-  [classify-permits] 10,000 / 229,211 (4.4%) — 9.2s — 1086 rows/s
-  [classify-permits] 20,000 / 229,211 (8.7%) — 16.1s — 1239 rows/s
-  [classify-permits] 30,000 / 229,211 (13.1%) — 23.5s — 1274 rows/s
-  [classify-permits] 40,000 / 229,211 (17.5%) — 30.5s — 1310 rows/s
-  [classify-permits] 50,000 / 229,211 (21.8%) — 37.2s — 1342 rows/s
-  [classify-permits] 60,000 / 229,211 (26.2%) — 45.0s — 1332 rows/s
-  [classify-permits] 70,000 / 229,211 (30.5%) — 53.0s — 1321 rows/s
-  [classify-permits] 80,000 / 229,211 (34.9%) — 61.2s — 1307 rows/s
-  [classify-permits] 90,000 / 229,211 (39.3%) — 70.4s — 1279 rows/s
-  [classify-permits] 100,000 / 229,211 (43.6%) — 78.6s — 1273 rows/s
-  [classify-permits] 110,000 / 229,211 (48.0%) — 86.3s — 1274 rows/s
-  [classify-permits] 120,000 / 229,211 (52.4%) — 94.5s — 1269 rows/s
-  [classify-permits] 130,000 / 229,211 (56.7%) — 103.3s — 1259 rows/s
-  [classify-permits] 140,000 / 229,211 (61.1%) — 112.7s — 1242 rows/s
-  [classify-permits] 150,000 / 229,211 (65.4%) — 121.4s — 1235 rows/s
-  [classify-permits] 160,000 / 229,211 (69.8%) — 129.0s — 1240 rows/s
-  [classify-permits] 170,000 / 229,211 (74.2%) — 138.1s — 1231 rows/s
-  [classify-permits] 180,000 / 229,211 (78.5%) — 146.4s — 1230 rows/s
-  [classify-permits] 190,000 / 229,211 (82.9%) — 154.5s — 1229 rows/s
-  [classify-permits] 200,000 / 229,211 (87.3%) — 162.1s — 1234 rows/s
-  [classify-permits] 210,000 / 229,211 (91.6%) — 169.5s — 1239 rows/s
-  [classify-permits] 220,000 / 229,211 (96.0%) — 176.7s — 1245 rows/s
-  [classify-permits] 229,211 / 229,211 (100.0%) — 184.7s — 1241 rows/s
-{"level":"INFO","tag":"[classify-permits]","msg":"Classification complete","context":{"processed":229211,"permits_with_trades":225541,"total_matches":1145045,"avg_trades":"5.1","db_changes":1145045,"duration":"184.7s"}}
-PIPELINE_SUMMARY:{"records_total":229211,"records_new":1207,"records_updated":225541,"records_meta":{"duration_ms":184730,"permits_processed":229211,"permits_with_trades":225541,"total_trade_matches":1145045,"avg_trades_per_permit":5.08,"db_updated":1145045,"audit_table":{"phase":11,"name":"Trade Classification","verdict":"PASS","rows":[{"metric":"permits_processed","value":229211,"threshold":null,"status":"INFO"},{"metric":"run_classified","value":225541,"threshold":null,"status":"INFO"},{"metric":"classification_coverage","value":"98.5%","threshold":">= 95%","status":"PASS"},{"metric":"total_trade_matches","value":1145045,"threshold":null,"status":"INFO"},{"metric":"permit_trades_written","value":1145045,"threshold":null,"status":"INFO"},{"metric":"class.construction","value":219044,"threshold":null,"status":"INFO"},{"metric":"class.signage","value":0,"threshold":null,"status":"INFO"},{"metric":"class.administrative","value":1049,"threshold":null,"status":"INFO"},{"metric":"class.safety_upgrade","value":6550,"threshold":null,"status":"INFO"},{"metric":"class.unclassified","value":2568,"threshold":null,"status":"INFO"},{"metric":"sys_velocity_rows_sec","value":1161.16,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":197398,"threshold":null,"status":"INFO"}]}}}
+{"level":"INFO","tag":"[classify-permits]","msg":"Mode: INCREMENTAL, permits to classify: 229,060"}
+  [classify-permits] 10,000 / 229,060 (4.4%) — 12.8s — 778 rows/s
+  [classify-permits] 20,000 / 229,060 (8.7%) — 20.1s — 993 rows/s
+  [classify-permits] 30,000 / 229,060 (13.1%) — 29.1s — 1031 rows/s
+  [classify-permits] 40,000 / 229,060 (17.5%) — 37.1s — 1079 rows/s
+  [classify-permits] 50,000 / 229,060 (21.8%) — 44.4s — 1126 rows/s
+  [classify-permits] 60,000 / 229,060 (26.2%) — 52.7s — 1138 rows/s
+  [classify-permits] 70,000 / 229,060 (30.6%) — 61.9s — 1132 rows/s
+  [classify-permits] 80,000 / 229,060 (34.9%) — 71.1s — 1126 rows/s
+  [classify-permits] 90,000 / 229,060 (39.3%) — 81.2s — 1108 rows/s
+  [classify-permits] 100,000 / 229,060 (43.7%) — 90.0s — 1111 rows/s
+  [classify-permits] 110,000 / 229,060 (48.0%) — 98.8s — 1113 rows/s
+  [classify-permits] 120,000 / 229,060 (52.4%) — 108.0s — 1111 rows/s
+  [classify-permits] 130,000 / 229,060 (56.8%) — 117.5s — 1106 rows/s
+  [classify-permits] 140,000 / 229,060 (61.1%) — 126.6s — 1106 rows/s
+  [classify-permits] 150,000 / 229,060 (65.5%) — 135.3s — 1109 rows/s
+  [classify-permits] 160,000 / 229,060 (69.9%) — 143.4s — 1115 rows/s
+  [classify-permits] 170,000 / 229,060 (74.2%) — 152.6s — 1114 rows/s
+  [classify-permits] 180,000 / 229,060 (78.6%) — 160.8s — 1120 rows/s
+  [classify-permits] 190,000 / 229,060 (82.9%) — 169.0s — 1124 rows/s
+  [classify-permits] 200,000 / 229,060 (87.3%) — 177.1s — 1129 rows/s
+  [classify-permits] 210,000 / 229,060 (91.7%) — 184.4s — 1139 rows/s
+  [classify-permits] 220,000 / 229,060 (96.0%) — 191.9s — 1147 rows/s
+  [classify-permits] 229,060 / 229,060 (100.0%) — 199.5s — 1148 rows/s
+{"level":"INFO","tag":"[classify-permits]","msg":"Classification complete","context":{"processed":229060,"permits_with_trades":225393,"total_matches":1144482,"avg_trades":"5.1","db_changes":1144482,"duration":"199.5s"}}
+PIPELINE_SUMMARY:{"records_total":229060,"records_new":355,"records_updated":225393,"records_meta":{"duration_ms":199502,"permits_processed":229060,"permits_with_trades":225393,"total_trade_matches":1144482,"avg_trades_per_permit":5.08,"db_updated":1144482,"audit_table":{"phase":11,"name":"Trade Classification","verdict":"PASS","rows":[{"metric":"permits_processed","value":229060,"threshold":null,"status":"INFO"},{"metric":"run_classified","value":225393,"threshold":null,"status":"INFO"},{"metric":"classification_coverage","value":"98.5%","threshold":">= 95%","status":"PASS"},{"metric":"total_trade_matches","value":1144482,"threshold":null,"status":"INFO"},{"metric":"permit_trades_written","value":1144482,"threshold":null,"status":"INFO"},{"metric":"class.construction","value":218900,"threshold":null,"status":"INFO"},{"metric":"class.signage","value":0,"threshold":null,"status":"INFO"},{"metric":"class.administrative","value":1050,"threshold":null,"status":"INFO"},{"metric":"class.safety_upgrade","value":6545,"threshold":null,"status":"INFO"},{"metric":"class.unclassified","value":2565,"threshold":null,"status":"INFO"},{"metric":"sys_velocity_rows_sec","value":1075.35,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":213009,"threshold":null,"status":"INFO"}]}}}
 PIPELINE_META:{"reads":{"permits":["permit_num","revision_num","permit_type","structure_type","work","description","status","est_const_cost","issued_date","current_use","proposed_use","scope_tags","last_seen_at"],"trade_mapping_rules":["id","trade_id","tier","match_field","match_pattern","confidence","phase_start","phase_end","is_active"]},"writes":{"permit_trades":["permit_num","revision_num","trade_id","tier","confidence","is_active","phase","lead_score","classified_at"]}}
 
-[classify-permits] completed in 197.4s
+[classify-permits] completed in 213.0s
 
 ```
 
@@ -274,10 +274,10 @@ PIPELINE_META:{"reads":{"permits":["permit_num","revision_num","permit_type","st
 ## Checklist evidence (C1-C12)
 
 ### C1: PASS
-**Evidence:** exit=0 duration=197536ms
+**Evidence:** exit=0 duration=213171ms
 
 ### C2: PASS
-**Evidence:** id=3150 status=completed completed_at=Fri May 08 2026 18:32:44 GMT-0400 (Eastern Daylight Time)
+**Evidence:** id=3309 status=completed completed_at=Wed May 20 2026 16:46:40 GMT-0400 (Eastern Daylight Time)
 
 ### C3: PASS
 **Evidence:** verdict='PASS'
@@ -295,7 +295,7 @@ PIPELINE_META:{"reads":{"permits":["permit_num","revision_num","permit_type","st
 **Evidence:** 8 records_meta keys: [telemetry, db_updated, duration_ms, pipeline_meta, permits_processed, permits_with_trades, total_trade_matches, avg_trades_per_permit]
 
 ### C8: N/A-MANUAL
-**Evidence:** claimed records_new+records_updated=226111; deltas={"permit_trades":{"pre":1377443,"post":1237132,"delta":-140311},"lead_trades":{"pre":0,"post":1145045,"delta":1145045}}
+**Evidence:** claimed records_new+records_updated=225536; deltas={"permit_trades":{"pre":1236223,"post":1237730,"delta":1507},"lead_trades":{"pre":1584828,"post":1586336,"delta":1508}}
 
 ### C9: N/A-MANUAL
 **Evidence:** compare information_schema columns to script INSERT/UPDATE column list
@@ -304,14 +304,14 @@ PIPELINE_META:{"reads":{"permits":["permit_num","revision_num","permit_type","st
 **Evidence:** not a calculation step
 
 ### C11: N/A-MANUAL
-**Evidence:** records_total=229702 records_new=0 records_updated=226111; verify primary entity scoping per §11.1
+**Evidence:** records_total=229206 records_new=2 records_updated=225534; verify primary entity scoping per §11.1
 
 ### C12: PASS
 **Evidence:** all applicable tripwires PASS or N/A
 
 ## Tripwires (per-risk-class profile: ingest_linkage)
 
-- **T3:** INFO — records_total=229702 records_new=0 records_updated=226111
+- **T3:** INFO — records_total=229206 records_new=2 records_updated=225534
 - **T4:** N/A-MANUAL — requires join-key knowledge per step
 - **T5:** N/A-MANUAL — requires LEFT JOIN context per step
 - **T12:** PASS — 0 warn lines in stderr
@@ -319,9 +319,9 @@ PIPELINE_META:{"reads":{"permits":["permit_num","revision_num","permit_type","st
 ## N/A-MANUAL items requiring follow-up
 
 - **C5:** grep script source; cross-ref with C3
-- **C8:** claimed records_new+records_updated=226111; deltas={"permit_trades":{"pre":1377443,"post":1237132,"delta":-140311},"lead_trades":{"pre":0,"post":1145045,"delta":1145045}}
+- **C8:** claimed records_new+records_updated=225536; deltas={"permit_trades":{"pre":1236223,"post":1237730,"delta":1507},"lead_trades":{"pre":1584828,"post":1586336,"delta":1508}}
 - **C9:** compare information_schema columns to script INSERT/UPDATE column list
-- **C11:** records_total=229702 records_new=0 records_updated=226111; verify primary entity scoping per §11.1
+- **C11:** records_total=229206 records_new=2 records_updated=225534; verify primary entity scoping per §11.1
 
 ## Specialized agent finding
 _Pending: Compliance agent to run separately and append findings here._

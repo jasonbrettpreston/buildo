@@ -1,7 +1,7 @@
 # Step 03: assert_coa_freshness
 **Chain:** coa
-**Validated:** 2026-05-19
-**HEAD commit:** 8ef6509
+**Validated:** 2026-05-23
+**HEAD commit:** 61abe60
 **Risk class:** cqa
 **Per-step agent:** Compliance
 **Final status:** PASS-pending-manual
@@ -11,52 +11,52 @@
 - Output table counts: {}
 - Last 3 runs: [
   {
-    "id": 3074,
+    "id": 3286,
     "status": "completed",
-    "completed_at": "2026-05-08T18:40:57.670Z",
+    "completed_at": "2026-05-20T20:33:40.948Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T18:40:57.237Z",
-    "duration_ms": "433"
+    "started_at": "2026-05-20T20:33:40.392Z",
+    "duration_ms": "556"
   },
   {
-    "id": 3034,
+    "id": 3222,
     "status": "completed",
-    "completed_at": "2026-05-08T15:59:46.053Z",
+    "completed_at": "2026-05-20T01:50:37.089Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T15:59:45.724Z",
-    "duration_ms": "329"
+    "started_at": "2026-05-20T01:50:36.517Z",
+    "duration_ms": "572"
   },
   {
-    "id": 2965,
+    "id": 3175,
     "status": "completed",
-    "completed_at": "2026-05-07T19:24:59.460Z",
+    "completed_at": "2026-05-20T01:04:34.195Z",
     "verdict": "PASS",
-    "started_at": "2026-05-07T19:24:58.879Z",
-    "duration_ms": "581"
+    "started_at": "2026-05-20T01:04:33.840Z",
+    "duration_ms": "355"
   }
 ]
 
 ## Execution
 - Command: `node scripts/quality/assert-coa-freshness.js`
 - Exit code: 0
-- Duration: 295ms
-- New `pipeline_runs.id`: 3074
+- Duration: 318ms
+- New `pipeline_runs.id`: 3286
 
 ## Post-run state
 - Output table counts: {}
-- New run: {"id":3074,"status":"completed","verdict":"PASS","duration_ms":"433","records_total":0,"records_new":0,"records_updated":0}
+- New run: {"id":3286,"status":"completed","verdict":"PASS","duration_ms":"556","records_total":0,"records_new":0,"records_updated":0}
 
 ### audit_table.rows
 ```json
 [
   {
-    "value": 33052,
+    "value": 33106,
     "metric": "total_records",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": "2026-05-08",
+    "value": "2026-05-20",
     "metric": "last_ingestion",
     "status": "INFO",
     "threshold": null
@@ -68,13 +68,13 @@
     "threshold": "< 45"
   },
   {
-    "value": "2026-06-28T04:00:00.000Z",
+    "value": "2026-06-29T04:00:00.000Z",
     "metric": "max_decision_date",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": "2027-04-29T04:00:00.000Z",
+    "value": "2027-05-12T04:00:00.000Z",
     "metric": "max_hearing_date",
     "status": "INFO",
     "threshold": null
@@ -86,7 +86,7 @@
     "threshold": null
   },
   {
-    "value": 163,
+    "value": 268,
     "metric": "sys_duration_ms",
     "status": "INFO",
     "threshold": null
@@ -97,7 +97,7 @@
 ### records_meta (minus audit_table)
 ```json
 {
-  "duration_ms": 96,
+  "duration_ms": 78,
   "pipeline_meta": {
     "reads": {
       "coa_applications": [
@@ -114,10 +114,10 @@
 ### stdout tail
 ```
 {"level":"INFO","tag":"[assert-coa-freshness]","msg":"Loaded 33 trade configs from control panel"}
-{"level":"INFO","tag":"[assert-coa-freshness]","msg":"Loaded 115 logic variables from control panel"}
+{"level":"INFO","tag":"[assert-coa-freshness]","msg":"Loaded 349 logic variables from control panel"}
 {"level":"INFO","tag":"[assert-coa-freshness]","msg":"Checking CoA source data freshness..."}
-{"level":"INFO","tag":"[assert-coa-freshness]","msg":"Freshness check complete","context":{"total_records":33106,"last_ingestion":"2026-05-19T18:58:03.491Z","ingestion_days_ago":0,"max_decision_date":"2026-06-29T04:00:00.000Z","max_hearing_date":"2027-05-12T04:00:00.000Z","stale":false}}
-PIPELINE_SUMMARY:{"records_total":0,"records_new":null,"records_updated":null,"records_meta":{"duration_ms":72,"audit_table":{"phase":3,"name":"Source Freshness","verdict":"PASS","rows":[{"metric":"total_records","value":33106,"threshold":null,"status":"INFO"},{"metric":"last_ingestion","value":"2026-05-19","threshold":null,"status":"INFO"},{"metric":"ingestion_days_ago","value":0,"threshold":"< 45","status":"PASS"},{"metric":"max_decision_date","value":"2026-06-29T04:00:00.000Z","threshold":null,"status":"INFO"},{"metric":"max_hearing_date","value":"2027-05-12T04:00:00.000Z","threshold":null,"status":"INFO"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":120,"threshold":null,"status":"INFO"}]}}}
+{"level":"INFO","tag":"[assert-coa-freshness]","msg":"Freshness check complete","context":{"total_records":33119,"last_ingestion":"2026-05-23T01:47:56.595Z","ingestion_days_ago":0,"max_decision_date":"2026-07-06T04:00:00.000Z","max_hearing_date":"2027-05-19T04:00:00.000Z","stale":false}}
+PIPELINE_SUMMARY:{"records_total":0,"records_new":null,"records_updated":null,"records_meta":{"duration_ms":86,"audit_table":{"phase":3,"name":"Source Freshness","verdict":"PASS","rows":[{"metric":"total_records","value":33119,"threshold":null,"status":"INFO"},{"metric":"last_ingestion","value":"2026-05-23","threshold":null,"status":"INFO"},{"metric":"ingestion_days_ago","value":0,"threshold":"< 45","status":"PASS"},{"metric":"max_decision_date","value":"2026-07-06T04:00:00.000Z","threshold":null,"status":"INFO"},{"metric":"max_hearing_date","value":"2027-05-19T04:00:00.000Z","threshold":null,"status":"INFO"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":138,"threshold":null,"status":"INFO"}]}}}
 PIPELINE_META:{"reads":{"coa_applications":["last_seen_at","hearing_date","decision_date"]},"writes":{}}
 
 [assert-coa-freshness] completed in 0.1s
@@ -126,17 +126,45 @@ PIPELINE_META:{"reads":{"coa_applications":["last_seen_at","hearing_date","decis
 
 ### stderr tail
 ```
-{"level":"WARN","tag":"[assert-coa-freshness]","msg":"allocation_pct sum is 1.0500 (expected 1.0) — normalizing"}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-coa-freshness]","msg":"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback","context":{"raw":null}}
 
 ```
 
 ## Checklist evidence (C1-C12)
 
 ### C1: PASS
-**Evidence:** exit=0 duration=295ms
+**Evidence:** exit=0 duration=318ms
 
 ### C2: PASS
-**Evidence:** id=3074 status=completed completed_at=Fri May 08 2026 14:40:57 GMT-0400 (Eastern Daylight Time)
+**Evidence:** id=3286 status=completed completed_at=Wed May 20 2026 16:33:40 GMT-0400 (Eastern Daylight Time)
 
 ### C3: PASS
 **Evidence:** verdict='PASS'

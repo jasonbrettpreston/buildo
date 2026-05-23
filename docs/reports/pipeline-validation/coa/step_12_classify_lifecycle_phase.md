@@ -1,6 +1,6 @@
 # Step 12: classify_lifecycle_phase
 **Chain:** coa
-**Validated:** 2026-05-19
+**Validated:** 2026-05-23
 **Type:** CROSS-REFERENCE
 **Canonical record:** ../permits/step_21_*.md
 

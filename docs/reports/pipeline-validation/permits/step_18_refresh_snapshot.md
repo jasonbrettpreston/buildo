@@ -1,7 +1,7 @@
 # Step 18: refresh_snapshot
 **Chain:** permits
-**Validated:** 2026-05-19
-**HEAD commit:** 8ef6509
+**Validated:** 2026-05-23
+**HEAD commit:** 61abe60
 **Risk class:** ingest_linkage
 **Per-step agent:** Compliance
 **Final status:** PASS-pending-manual
@@ -11,40 +11,40 @@
 - Output table counts: {}
 - Last 3 runs: [
   {
-    "id": 3155,
+    "id": 3314,
     "status": "completed",
-    "completed_at": "2026-05-08T22:34:43.473Z",
+    "completed_at": "2026-05-20T20:47:58.375Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T22:34:12.385Z",
-    "duration_ms": "31088"
+    "started_at": "2026-05-20T20:47:39.513Z",
+    "duration_ms": "18862"
   },
   {
-    "id": 3127,
+    "id": 3268,
     "status": "completed",
-    "completed_at": "2026-05-08T21:57:19.467Z",
+    "completed_at": "2026-05-20T02:14:28.103Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T21:56:48.449Z",
-    "duration_ms": "31018"
+    "started_at": "2026-05-20T02:14:11.189Z",
+    "duration_ms": "16914"
   },
   {
-    "id": 3060,
+    "id": 3236,
     "status": "completed",
-    "completed_at": "2026-05-08T18:20:57.175Z",
+    "completed_at": "2026-05-20T01:52:20.785Z",
     "verdict": "PASS",
-    "started_at": "2026-05-08T18:20:36.559Z",
-    "duration_ms": "20616"
+    "started_at": "2026-05-20T01:51:56.440Z",
+    "duration_ms": "24345"
   }
 ]
 
 ## Execution
 - Command: `node scripts/refresh-snapshot.js`
 - Exit code: 0
-- Duration: 20729ms
-- New `pipeline_runs.id`: 3155
+- Duration: 18874ms
+- New `pipeline_runs.id`: 3314
 
 ## Post-run state
 - Output table counts: {}
-- New run: {"id":3155,"status":"completed","verdict":"PASS","duration_ms":"31088","records_total":1,"records_new":0,"records_updated":1}
+- New run: {"id":3314,"status":"completed","verdict":"PASS","duration_ms":"18862","records_total":1,"records_new":0,"records_updated":1}
 
 ### audit_table.rows
 ```json
@@ -62,13 +62,13 @@
     "threshold": null
   },
   {
-    "value": 0.03,
+    "value": 0.05,
     "metric": "sys_velocity_rows_sec",
     "status": "INFO",
     "threshold": null
   },
   {
-    "value": 30777,
+    "value": 18641,
     "metric": "sys_duration_ms",
     "status": "INFO",
     "threshold": null
@@ -82,19 +82,19 @@
   "telemetry": {
     "counts": {
       "data_quality_snapshots": {
-        "after": 40,
+        "after": 42,
         "delta": 0,
-        "before": 40
+        "before": 42
       }
     },
     "engine": {
       "data_quality_snapshots": {
-        "idx_scan": 13,
-        "seq_scan": 60,
-        "seq_ratio": 0.8219,
-        "dead_ratio": 0.0698,
-        "n_dead_tup": 3,
-        "n_live_tup": 40
+        "idx_scan": 10,
+        "seq_scan": 37,
+        "seq_ratio": 0.7872,
+        "dead_ratio": 0.0455,
+        "n_dead_tup": 2,
+        "n_live_tup": 42
       }
     },
     "pg_stats": {
@@ -106,7 +106,7 @@
     },
     "null_fills": {}
   },
-  "duration_ms": 30617,
+  "duration_ms": 18593,
   "pipeline_meta": {
     "reads": {
       "permits": [
@@ -154,42 +154,70 @@
 ```
 {"level":"INFO","tag":"[refresh-snapshot]","msg":"Recapturing data quality snapshot..."}
 {"level":"INFO","tag":"[refresh-snapshot]","msg":"Loaded 33 trade configs from control panel"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"Loaded 115 logic variables from control panel"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"Permits: 248237 total, 212683 active"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"Neighbourhoods (active): 201641 / 212683 = 94.8%"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"CoA: 33052 total, 32846 linked = 99.4%"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"Scope tags: 212683 total, 197665 detailed"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"Top tags: alter:interior-alterations:36018, new:addition:34409, office:22653, new:garage:19268, new:build-sfd:18085"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"Nulls: desc=296, builder=202115, cost=94590"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"Violations: cost_oor=19024, future_issued=0, missing_status=0, total=19024"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"Loaded 349 logic variables from control panel"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"Permits: 248447 total, 211503 active"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"Neighbourhoods (active): 200505 / 211503 = 94.8%"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"CoA: 33106 total, 32898 linked = 99.4%"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"Scope tags: 211503 total, 196567 detailed"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"Top tags: alter:interior-alterations:35798, new:addition:34234, office:22543, new:garage:19100, new:build-sfd:17925"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"Nulls: desc=293, builder=201000, cost=93947"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"Violations: cost_oor=18921, future_issued=0, missing_status=0, total=18921"}
 {"level":"INFO","tag":"[refresh-snapshot]","msg":"Inspections: 94645 stages, 10102 permits, 71658 outstanding, 17298 passed, 5689 not passed"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"Cost Estimates: 245785 total (21316 permit, 197886 model, 26583 null)"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"Snapshot inserted for Tue May 19 2026 00:00:00 GMT-0400 (Eastern Daylight Time):"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"  Neighbourhoods: 201641 / 212683 = 94.8%"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"  CoA: 32846 / 33052 = 99.4%"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"  Scope Class: 212683 classified"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"  Scope Tags: 212683 total, 197665 detailed"}
-{"level":"INFO","tag":"[refresh-snapshot]","msg":"Done in 20502ms"}
-PIPELINE_SUMMARY:{"records_total":1,"records_new":1,"records_updated":0,"records_meta":{"duration_ms":20502,"audit_table":{"phase":18,"name":"Refresh Snapshot","verdict":"PASS","rows":[{"metric":"snapshots_created","value":1,"threshold":null,"status":"INFO"},{"metric":"snapshots_updated","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_velocity_rows_sec","value":0.05,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":20551,"threshold":null,"status":"INFO"}]}}}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"Cost Estimates: 271073 total (21316 permit, 197886 model, 26583 null)"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"Snapshot inserted for Fri May 22 2026 00:00:00 GMT-0400 (Eastern Daylight Time):"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"  Neighbourhoods: 200505 / 211503 = 94.8%"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"  CoA: 32898 / 33106 = 99.4%"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"  Scope Class: 211503 classified"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"  Scope Tags: 211503 total, 196567 detailed"}
+{"level":"INFO","tag":"[refresh-snapshot]","msg":"Done in 18655ms"}
+PIPELINE_SUMMARY:{"records_total":1,"records_new":1,"records_updated":0,"records_meta":{"duration_ms":18655,"audit_table":{"phase":18,"name":"Refresh Snapshot","verdict":"PASS","rows":[{"metric":"snapshots_created","value":1,"threshold":null,"status":"INFO"},{"metric":"snapshots_updated","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_velocity_rows_sec","value":0.05,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":18705,"threshold":null,"status":"INFO"}]}}}
 PIPELINE_META:{"reads":{"permits":["*"],"permit_trades":["*"],"entities":["*"],"permit_parcels":["*"],"coa_applications":["*"],"sync_runs":["*"],"building_footprints":["*"],"parcel_buildings":["*"],"permit_inspections":["*"],"cost_estimates":["cost_source","estimated_cost"]},"writes":{"data_quality_snapshots":["*"]}}
 
-[refresh-snapshot] completed in 20.6s
+[refresh-snapshot] completed in 18.7s
 
 ```
 
 ### stderr tail
 ```
-{"level":"WARN","tag":"[refresh-snapshot]","msg":"allocation_pct sum is 1.0500 (expected 1.0) — normalizing"}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback","context":{"raw":null}}
 
 ```
 
 ## Checklist evidence (C1-C12)
 
 ### C1: PASS
-**Evidence:** exit=0 duration=20729ms
+**Evidence:** exit=0 duration=18874ms
 
 ### C2: PASS
-**Evidence:** id=3155 status=completed completed_at=Fri May 08 2026 18:34:43 GMT-0400 (Eastern Daylight Time)
+**Evidence:** id=3314 status=completed completed_at=Wed May 20 2026 16:47:58 GMT-0400 (Eastern Daylight Time)
 
 ### C3: PASS
 **Evidence:** verdict='PASS'

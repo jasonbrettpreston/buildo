@@ -1,50 +1,50 @@
 # Step 19: assert_data_bounds
 **Chain:** permits
-**Validated:** 2026-05-19
-**HEAD commit:** 8ef6509
+**Validated:** 2026-05-23
+**HEAD commit:** 61abe60
 **Risk class:** cqa
 **Per-step agent:** Compliance
-**Final status:** FAIL
+**Final status:** INVESTIGATE
 **Notes:** Phase G permits_pre_permit_count gate
 
 ## Pre-run state
 - Output table counts: {}
 - Last 3 runs: [
   {
-    "id": 3156,
+    "id": 3315,
     "status": "completed",
-    "completed_at": "2026-05-08T22:34:52.198Z",
+    "completed_at": "2026-05-20T20:48:06.227Z",
     "verdict": "WARN",
-    "started_at": "2026-05-08T22:34:43.478Z",
-    "duration_ms": "8720"
+    "started_at": "2026-05-20T20:47:58.378Z",
+    "duration_ms": "7849"
   },
   {
-    "id": 3128,
+    "id": 3269,
     "status": "completed",
-    "completed_at": "2026-05-08T21:57:31.571Z",
+    "completed_at": "2026-05-20T02:14:34.657Z",
     "verdict": "WARN",
-    "started_at": "2026-05-08T21:57:19.474Z",
-    "duration_ms": "12097"
+    "started_at": "2026-05-20T02:14:28.114Z",
+    "duration_ms": "6543"
   },
   {
-    "id": 3061,
+    "id": 3237,
     "status": "completed",
-    "completed_at": "2026-05-08T18:21:04.537Z",
+    "completed_at": "2026-05-20T01:52:31.841Z",
     "verdict": "WARN",
-    "started_at": "2026-05-08T18:20:57.179Z",
-    "duration_ms": "7359"
+    "started_at": "2026-05-20T01:52:20.813Z",
+    "duration_ms": "11028"
   }
 ]
 
 ## Execution
 - Command: `node scripts/quality/assert-data-bounds.js`
-- Exit code: 1
-- Duration: 15691ms
-- New `pipeline_runs.id`: 3166
+- Exit code: 0
+- Duration: 12667ms
+- New `pipeline_runs.id`: 3327
 
 ## Post-run state
 - Output table counts: {}
-- New run: {"id":3166,"status":"failed","verdict":"FAIL","duration_ms":"15362","records_total":0,"records_new":0,"records_updated":0}
+- New run: {"id":3327,"status":"completed","verdict":"WARN","duration_ms":"12404","records_total":0,"records_new":0,"records_updated":0}
 
 ### audit_table.rows
 ```json
@@ -92,9 +92,9 @@
     "threshold": "== 0"
   },
   {
-    "value": 147,
+    "value": 0,
     "metric": "permits_pre_permit_count",
-    "status": "FAIL",
+    "status": "PASS",
     "threshold": "== 0"
   },
   {
@@ -120,12 +120,6 @@
     "metric": "wsib_orphaned_links",
     "status": "PASS",
     "threshold": "== 0"
-  },
-  {
-    "value": 1341,
-    "metric": "ghost_permits_30d",
-    "status": "WARN",
-    "threshold": "== 0"
   }
 ]
 ```
@@ -133,26 +127,19 @@
 ### records_meta (minus audit_table)
 ```json
 {
-  "errors": [
-    "147 Pre-Permits remain after Phase G retirement",
-    "147 Pre-Permits remain after Phase G retirement"
-  ],
   "warnings": [
     "2 permits with NULL status",
     "3 parcels with lot_size_sqm out of bounds (0-1M sqm)",
     "1 completed_without_date",
-    "64 ancient_dates",
-    "1341 non-terminal permits not seen in 30+ days (oldest: Sat Apr 11 2026 05:48:09 GMT-0400 (Eastern Daylight Time))"
+    "64 ancient_dates"
   ],
-  "checks_failed": 2,
-  "checks_warned": 5
+  "checks_failed": 0,
+  "checks_warned": 4
 }
 ```
 
 ### stdout tail
 ```
-  OK: All WSIB NAICS codes are numeric
-  OK: No orphaned WSIB entity links
 
 --- Phase 3: Inspection Data Quality (94,645 rows) ---
   PASS: null_permit_num = 0
@@ -169,53 +156,69 @@
   PASS: date_before_permit_year = 0
 
 --- Cost Estimates Coverage ---
-  OK: 245785 cost estimates (10.8% null, 5 distinct tiers)
+  OK: 271073 cost estimates (9.8% null, 5 distinct tiers)
 
 --- Ghost Records (stale > 30 days) ---
-PIPELINE_SUMMARY:{"records_total":0,"records_new":null,"records_updated":null,"records_meta":{"checks_failed":2,"checks_warned":5,"errors":["147 Pre-Permits remain after Phase G retirement","147 Pre-Permits remain after Phase G retirement"],"warnings":["2 permits with NULL status","3 parcels with lot_size_sqm out of bounds (0-1M sqm)","1 completed_without_date","64 ancient_dates","1341 non-terminal permits not seen in 30+ days (oldest: Sat Apr 11 2026 05:48:09 GMT-0400 (Eastern Daylight Time))"],"audit_table":{"phase":15,"name":"Data Quality Checks","verdict":"FAIL","rows":[{"metric":"cost_outliers","value":0,"threshold":"< 20","status":"PASS"},{"metric":"null_descriptions_24h","value":"0.2%","threshold":"< 5%","status":"PASS"},{"metric":"null_builders_24h","value":"94.9%","threshold":"< 95%","status":"PASS"},{"metric":"null_status_24h","value":2,"threshold":"== 0","status":"WARN"},{"metric":"orphaned_permit_trades","value":0,"threshold":"== 0","status":"PASS"},{"metric":"orphaned_permit_parcels","value":0,"threshold":"== 0","status":"PASS"},{"metric":"duplicate_pk_groups","value":0,"threshold":"== 0","status":"PASS"},{"metric":"permits_pre_permit_count","value":147,"threshold":"== 0","status":"FAIL"},{"metric":"wsib_no_legal_name","value":0,"threshold":"== 0","status":"PASS"},{"metric":"wsib_no_g_class","value":0,"threshold":"== 0","status":"PASS"},{"metric":"wsib_invalid_naics","value":0,"threshold":"== 0","status":"PASS"},{"metric":"wsib_orphaned_links","value":0,"threshold":"== 0","status":"PASS"},{"metric":"ghost_permits_30d","value":1341,"threshold":"== 0","status":"WARN"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":15470,"threshold":null,"status":"INFO"}]}}}
+  OK: No ghost records (all permits seen within 30 days)
+PIPELINE_SUMMARY:{"records_total":0,"records_new":null,"records_updated":null,"records_meta":{"checks_failed":0,"checks_warned":4,"warnings":["2 permits with NULL status","3 parcels with lot_size_sqm out of bounds (0-1M sqm)","1 completed_without_date","64 ancient_dates"],"audit_table":{"phase":15,"name":"Data Quality Checks","verdict":"WARN","rows":[{"metric":"cost_outliers","value":0,"threshold":"< 20","status":"PASS"},{"metric":"null_descriptions_24h","value":"0.2%","threshold":"< 5%","status":"PASS"},{"metric":"null_builders_24h","value":"94.9%","threshold":"< 95%","status":"PASS"},{"metric":"null_status_24h","value":2,"threshold":"== 0","status":"WARN"},{"metric":"orphaned_permit_trades","value":0,"threshold":"== 0","status":"PASS"},{"metric":"orphaned_permit_parcels","value":0,"threshold":"== 0","status":"PASS"},{"metric":"duplicate_pk_groups","value":0,"threshold":"== 0","status":"PASS"},{"metric":"permits_pre_permit_count","value":0,"threshold":"== 0","status":"PASS"},{"metric":"wsib_no_legal_name","value":0,"threshold":"== 0","status":"PASS"},{"metric":"wsib_no_g_class","value":0,"threshold":"== 0","status":"PASS"},{"metric":"wsib_invalid_naics","value":0,"threshold":"== 0","status":"PASS"},{"metric":"wsib_orphaned_links","value":0,"threshold":"== 0","status":"PASS"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":12497,"threshold":null,"status":"INFO"}]}}}
 PIPELINE_META:{"reads":{"permits":["*"],"parcels":["*"],"address_points":["*"],"building_footprints":["*"],"neighbourhoods":["*"],"coa_applications":["*"],"permit_inspections":["*"]},"writes":{"pipeline_runs":["checks_passed","checks_failed","checks_warned"]}}
 
-  Warnings: 5
-  Errors: 2
+  Warnings: 4
 
-=== Data Bounds: FAILED (15.4s) ===
+=== Data Bounds: COMPLETED (12.4s) ===
 
+
+[assert-data-bounds] completed in 12.5s
 
 ```
 
 ### stderr tail
 ```
-{"level":"WARN","tag":"[assert-data-bounds]","msg":"allocation_pct sum is 1.0500 (expected 1.0) — normalizing"}
-  WARN: 1341 ghost permits (non-terminal, unseen 30+ days) — oldest last_seen_at: Sat Apr 11 2026 05:48:09 GMT-0400 (Eastern Daylight Time)
-{"level":"ERROR","tag":"[assert-data-bounds]","msg":"Data bounds validation failed","error_type":"unknown","stack":"Error: Data bounds validation failed\n    at C:\\Users\\User\\Buildo\\scripts\\quality\\assert-data-bounds.js:783:24\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Object.withAdvisoryLock (C:\\Users\\User\\Buildo\\scripts\\lib\\pipeline.js:802:22)\n    at async C:\\Users\\User\\Buildo\\scripts\\quality\\assert-data-bounds.js:38:22\n    at async Object.run (C:\\Users\\User\\Buildo\\scripts\\lib\\pipeline.js:350:5)","context":{"phase":"fatal"}}
-node:internal/process/promises:394
-    triggerUncaughtException(err, true /* fromPromise */);
-    ^
-
-Error: Data bounds validation failed
-    at C:\Users\User\Buildo\scripts\quality\assert-data-bounds.js:783:24
-    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async Object.withAdvisoryLock (C:\Users\User\Buildo\scripts\lib\pipeline.js:802:22)
-    at async C:\Users\User\Buildo\scripts\quality\assert-data-bounds.js:38:22
-    at async Object.run (C:\Users\User\Buildo\scripts\lib\pipeline.js:350:5)
-
-Node.js v24.15.0
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback","context":{"raw":null}}
+{"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback","context":{"raw":null}}
 
 ```
 
 ## Checklist evidence (C1-C12)
 
-### C1: FAIL
-**Evidence:** exit=1 duration=15691ms
+### C1: PASS
+**Evidence:** exit=0 duration=12667ms
 
-### C2: INVESTIGATE
-**Evidence:** id=3166 status=failed completed_at=Tue May 19 2026 14:24:50 GMT-0400 (Eastern Daylight Time)
+### C2: PASS
+**Evidence:** id=3327 status=completed completed_at=Fri May 22 2026 21:00:42 GMT-0400 (Eastern Daylight Time)
 
-### C3: FAIL
-**Evidence:** verdict='FAIL'
+### C3: INVESTIGATE
+**Evidence:** verdict='WARN'
 
 ### C4: PASS
-**Evidence:** 13 audit rows: [cost_outliers, null_descriptions_24h, null_builders_24h, null_status_24h, orphaned_permit_trades, orphaned_permit_parcels, duplicate_pk_groups, permits_pre_permit_count, wsib_no_legal_name, wsib_no_g_class, wsib_invalid_naics, wsib_orphaned_links, ghost_permits_30d]
+**Evidence:** 12 audit rows: [cost_outliers, null_descriptions_24h, null_builders_24h, null_status_24h, orphaned_permit_trades, orphaned_permit_parcels, duplicate_pk_groups, permits_pre_permit_count, wsib_no_legal_name, wsib_no_g_class, wsib_invalid_naics, wsib_orphaned_links]
 
 ### C5: N/A-MANUAL
 **Evidence:** grep script source; cross-ref with C3
@@ -224,7 +227,7 @@ Node.js v24.15.0
 **Evidence:** not a ledger writer
 
 ### C7: PASS
-**Evidence:** 4 records_meta keys: [errors, warnings, checks_failed, checks_warned]
+**Evidence:** 3 records_meta keys: [warnings, checks_failed, checks_warned]
 
 ### C8: N/A
 **Evidence:** no output tables declared (read-only / sanity step)
