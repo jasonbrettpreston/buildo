@@ -2045,3 +2045,52 @@ Source: 4-reviewer IMPL review on Phase 2c diff (`link-parcel-addresses.js` + ma
 | 285 | DeepSeek LOW (line 112) | Progress log condition `parcelsInBatch < BATCH_SIZE` could skip on exact-multiple final batch | **DEFENSIBLE** — completedNaturally log at the break point covers the final-batch case. |
 | 286 | DeepSeek LOW (line 130) | Post-run query runs on slightly stale snapshot | **DEFENSIBLE** — read-only telemetry; staleness is acceptable. |
 | 287 | DeepSeek NIT (line 52) | Pre-run fetches `existing_links` but value unused | **DEFENSIBLE NIT** — visible in log line for operator context. |
+
+
+---
+
+## WF1 #parcel-address-bridge Phase 2d — IMPL Multi-Agent Review triage (2026-05-23)
+
+Source: 4-reviewer IMPL review on Phase 2d diff (link-parcels.js Strategy 1a addition + infra test). **Observability reviewer caught 2 CRITICAL plan-lock violations (F17 counter rename, F19/F20/C2/H5 tiebreaker omission) — the initial implementation deviated from plan v4. 5 REAL findings folded inline; remainder pre-existing/defensible.**
+
+### REAL fixes folded into Phase 2d
+
+| # | Reviewer | Item | Resolution |
+|---|----------|------|------------|
+| 288 | Observability F1 + F2 (conf 100, BOTH) | **PLAN F17 VIOLATION** — initial impl renamed `tier_1_exact_address` → `tier_1b_exact_address` + `matches_tier_1_exact` → `matches_tier_1b_exact`. Plan v4 line 532 explicitly locked: keep old name, add `_via_bridge` informational sibling | **FIXED INLINE** — reverted to legacy name as primary; new `linkedAddressPoints` is summed into `linkedExactTotal` (= `tier_1_exact_address` value); added `tier_1_via_bridge` + `matches_tier_1_via_bridge` as INFO siblings. 7-day observe-chain baseline preserved. |
+| 289 | Observability "Disambiguation tiebreaker gap" (conf 88) | **PLAN F19/F20/F22/H5/C2 VIOLATION** — initial impl used `pap.parcel_id` as cross-parcel tiebreaker. Plan v4 locked: ADDRESS_CLASS_DESC > `ST_Area(p.geom::geography) ASC` > `ap.address_point_id ASC`. Critical: ST_Area on GEOMETRY(*, 4326) returns square *degrees* not meters (C2 — Gemini CRITICAL from PLAN review round 4) | **FIXED INLINE** — Strategy 1a CTE now JOINs `parcels p ON p.id = pap.parcel_id`. ORDER BY appends `ST_Area(p.geom::geography) ASC, ap.address_point_id ASC` per plan H5 uniform-3-level rule. |
+| 290 | Independent F1 (conf 88) | Test gap: single `expect(SRC).toMatch()` for `NOT EXISTS (... address_points_exact ...)` passes if either guard matches — could regress if `name_only` guard removed | **FIXED INLINE** — test now uses regex with `/g` flag + assertion `matches.length >= 2` so removal of either guard fails the test. |
+| 291 | Independent F2 (conf 80) | Test gap: emitMeta reads-list assertion missed `maint_stage` + `address_status` (the filter predicate columns most likely to be stripped/renamed in CKAN drift) | **FIXED INLINE** — added 2 toMatch assertions for both columns in the address_points reads-list. |
+
+### DEFERRED (Observability noted but defensible/pre-existing)
+
+| # | Reviewer | Item | Triage |
+|---|----------|------|--------|
+| 292 | Observability Item 6 (conf 85) | No zero-coverage gate for `tier_1_via_bridge = 0` when bridge has rows but normalization missing | **DEFENSIBLE** — Phase 2c's `final_link_count > 0` FAIL gate halts the chain before Phase 2d runs if bridge is empty. Partial-regression case (bridge populated but Strategy 1a returns 0) covered by 7-day DeepSeek baseline. Cold-start blind spot is bounded to first run. |
+| 293 | Observability Item 7 (conf 80) | `link_rate >= 75%` threshold unchanged post-Phase-2d — could be recalibrated higher since 1a should boost rate | **DEFENSIBLE** — recalibrating before first production run with Strategy 1a active risks false WARNs. Threshold revisit deferred to post-deploy measurement. |
+| 294 | Observability Items 11+12 (out-of-scope) | No audit signal for fraction of matched rows with NULL `address_class_desc` / `maint_stage` / `address_status` | **DEFER to Phase 2e/2f** — new audit metric requires first-deploy runbook (Spec 48 §3.7). |
+
+### DEFENSIBLE / pre-existing (no action)
+
+| # | Reviewer | Item | Triage |
+|---|----------|------|--------|
+| 295 | Gemini CRIT lines 538-613 + DeepSeek CRIT lines 394-421 | Non-atomic 2-transaction batch: UPSERT in tx1, ghost cleanup + parcel_linked_at update in tx2. Crash between leaves duplicate/inconsistent state | **PRE-EXISTING** — pattern existed in load-parcels well before Phase 2d. Not introduced by Strategy 1a addition. Worth a separate WF3 if production incidents surface; not blocking. |
+| 296 | Gemini HIGH line 321 | Strategy 1b `(ip.street_type = '' OR pa.street_type_normalized = ip.street_type)` is permissive — empty type matches any parcel type | **PRE-EXISTING** in Strategy 1b. Not introduced by Phase 2d. |
+| 297 | Gemini HIGH "spec divergence" | Spec 41 documents writes to `lead_parcels`, code writes `permit_parcels` | **MISREAD** — Phase 2f explicitly owns spec sync for the 7 affected specs. |
+| 298 | Gemini MEDIUM lines 423/434 | centroid_lng/lat stored as TEXT, cast to float on read | **PRE-EXISTING** schema concern. |
+| 299 | Gemini MEDIUM line 490 | JSON.parse(geometry) in JS fallback (no PostGIS) | **PRE-EXISTING** JS fallback path. |
+| 300 | Gemini MEDIUM lines 449-452 | Non-PostGIS BBOX has no composite (centroid_lat, centroid_lng) index | **PRE-EXISTING**. JS fallback rarely used; PostGIS available in production. |
+| 301 | Gemini LOW lines 570-588 | Hardcoded "one permit, one parcel" assumption in DISTINCT ON | **PRE-EXISTING + INTENTIONAL design** per Spec 41. |
+| 302 | Gemini NIT lines 450-451 | String interpolation `${BBOX_OFFSET}` in SQL | **PRE-EXISTING** + constant from module scope (not user input). |
+| 303 | DeepSeek HIGH lines 352-384 | BBOX_OFFSET hardcoded 0.001 (~111m) doesn't scale with logicVar `spatial_max_distance_m` | **PRE-EXISTING** JS fallback path. |
+| 304 | DeepSeek HIGH lines 376-382 | JS fallback only checks polygon containment for nearest centroid candidate | **PRE-EXISTING** JS fallback. |
+| 305 | DeepSeek HIGH lines 374/381-382 | JS fallback assumes geometry is string but may be EWKB binary | **PRE-EXISTING** + would only impact non-PostGIS runs. |
+| 306 | DeepSeek MEDIUM lines 90-95 | Uses raw `logicVars` instead of validated `validation.data` | **PRE-EXISTING** + Zod schema is passthrough; values are typed correctly upstream. |
+| 307 | DeepSeek MEDIUM lines 569-574 | parcel_linked_at update in separate tx — same as Gemini CRIT #295 | **PRE-EXISTING** (duplicate of 295). |
+| 308 | DeepSeek NIT line 353 | BBOX_OFFSET hardcoded — see 303 | **PRE-EXISTING**. |
+| 309 | DeepSeek NIT line 65 | Misleading comment about BBOX_OFFSET units | **PRE-EXISTING**. |
+| 310 | DeepSeek NIT 585-608 | Code duplication between early-exit + main path emitMeta/emitSummary | **PRE-EXISTING**. |
+
+### Procedure note (lesson)
+
+WF1 #parcel-address-bridge Phase 2d initially shipped with TWO plan-lock violations (F17 + F19/F20/F22/H5/C2) that the Observability reviewer caught with confidence 100. **Lesson:** when a multi-page plan locks specific naming or algorithmic decisions, re-read the relevant fold section IMMEDIATELY before writing the change. The plan's §10 Plan Compliance Checklist exists precisely to prevent these silent deviations. Adding to memory: re-read `.cursor/active_task.md` fold locks before implementing each phase that maps to specific fold IDs.

@@ -2,13 +2,28 @@
 /**
  * Link permits to parcels via address + spatial matching.
  *
- * Three-step cascade:
- *   1. Exact address (num + name + type) -> confidence 0.95
- *   2. Num + name only (ignore type mismatch) -> confidence 0.80
- *   3. Spatial proximity (nearest parcel centroid ≤100m) -> confidence 0.65
- *      (upgraded to 0.90 if permit geocode falls inside parcel polygon)
+ * Four-step cascade (WF1 #parcel-address-bridge Phase 2d):
+ *   1a. address_points exact match via parcel_address_points bridge
+ *       (addr_num_normalized + linear_name_normalized, filtered to
+ *        MAINT_STAGE=REGULAR + ADDRESS_STATUS=CURRENT, disambiguated
+ *        by address_class_desc Structure > Structure Entrance > Land)
+ *       -> confidence 0.97 [NEW post-2026-05-20 CKAN strip]
+ *   1b. Legacy parcels exact address (num + name + type) -> 0.95
+ *   2.  Num + name only (ignore type mismatch) -> 0.80
+ *   3.  Spatial proximity (nearest parcel centroid ≤100m) -> 0.65
+ *       (upgraded to 0.90 if permit geocode falls inside parcel polygon)
  *
- * Strategies 1 & 2 use a batch CTE approach (single SQL per batch).
+ * WHY Strategy 1a is highest confidence: Toronto stripped ADDRESS_NUMBER,
+ * LINEAR_NAME_FULL, DATE_EFFECTIVE from the Property Boundaries CSV on
+ * 2026-05-20. address_points is now the canonical address source. The
+ * parcel_address_points bridge (mig 162 + scripts/link-parcel-addresses.js
+ * Phase 2c) guarantees the AP geom is contained by the parcel polygon —
+ * a spatial proof, not an address-string guess. Filter to REGULAR +
+ * CURRENT to exclude RETIRED/PRELIMINARY records. Disambiguate by
+ * address_class_desc (the canonical "primary address" hierarchy in
+ * Toronto's address model).
+ *
+ * Strategies 1a + 1b + 2 use a batch CTE approach (single SQL per batch).
  * Strategy 3 uses JavaScript haversine + point-in-polygon for spatial matching.
  *
  * Observability:
@@ -179,14 +194,27 @@ pipeline.run('link-parcels', async (pool) => {
       },
     });
     pipeline.emitMeta(
-      { "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"], "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"] },
+      {
+        "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"],
+        "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"],
+        "address_points": ["address_point_id", "addr_num_normalized", "linear_name_normalized", "address_class_desc", "maint_stage", "address_status"],
+        "parcel_address_points": ["parcel_id", "address_point_id"],
+      },
       { "permit_parcels": ["permit_num", "revision_num", "parcel_id", "match_type", "confidence", "linked_at"] }
     );
     return;
   }
 
   let processed = 0;
-  let linkedExact = 0;
+  // Plan v4 fold F17 — counter naming preservation. The legacy
+  // `linkedExact` counter rolls up BOTH new bridge-path matches and
+  // legacy parcels-table matches under the existing
+  // `tier_1_exact_address` metric name to preserve the 7-day
+  // observe-chain.js baseline. `linkedAddressPoints` is an
+  // informational sibling counter that surfaces the bridge-path
+  // subset via the new `tier_1_via_bridge` audit row.
+  let linkedAddressPoints = 0;  // Strategy 1a — bridge path subset (sibling)
+  let linkedExactLegacy = 0;    // Strategy 1b — legacy parcels exact subset
   let linkedName = 0;
   let linkedSpatial = 0;
   let linkedSpatialPolygon = 0;
@@ -248,6 +276,40 @@ pipeline.run('link-parcels', async (pool) => {
         WITH input_permits (permit_num, revision_num, addr_num, street_name, street_type) AS (
           VALUES ${valuesPlaceholders.join(', ')}
         ),
+        -- WF1 Phase 2d Strategy 1a — address_points exact via spatial bridge.
+        -- Higher confidence than legacy parcels exact (1b) because:
+        --   1. address_points is the canonical post-2026-05-20-CKAN-strip source.
+        --   2. parcel_address_points guarantees the AP geom is INSIDE the parcel.
+        --   3. MAINT_STAGE=REGULAR + ADDRESS_STATUS=CURRENT filters retired records.
+        -- Disambiguation (plan v4 fold H5 — uniform 3-level rule):
+        --   1. ADDRESS_CLASS_DESC priority: Structure > Structure Entrance > Land (PI-6 option b)
+        --   2. Smallest ST_Area(p.geom::geography) (fold C2: ::geography cast yields
+        --      square meters; raw ST_Area on GEOMETRY(*, 4326) returns square degrees
+        --      which vary with latitude and are NOT comparable) — narrower parcel wins
+        --      cross-parcel ties.
+        --   3. ap.address_point_id ASC (stable deterministic tiebreaker; fold F19).
+        address_points_exact AS (
+          SELECT DISTINCT ON (ip.permit_num, ip.revision_num)
+            ip.permit_num, ip.revision_num, pap.parcel_id,
+            'address_points_exact' AS match_type, 0.97 AS confidence
+          FROM input_permits ip
+          JOIN address_points ap
+            ON ap.addr_num_normalized = ip.addr_num
+           AND ap.linear_name_normalized = ip.street_name
+           AND (ap.maint_stage IS NULL OR UPPER(ap.maint_stage) = 'REGULAR')
+           AND (ap.address_status IS NULL OR UPPER(ap.address_status) = 'CURRENT')
+          JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id
+          JOIN parcels p ON p.id = pap.parcel_id
+          ORDER BY ip.permit_num, ip.revision_num,
+            CASE UPPER(COALESCE(ap.address_class_desc, ''))
+              WHEN 'STRUCTURE'           THEN 1
+              WHEN 'STRUCTURE ENTRANCE'  THEN 2
+              WHEN 'LAND'                THEN 3
+              ELSE 4
+            END,
+            ST_Area(p.geom::geography) ASC,
+            ap.address_point_id ASC
+        ),
         exact AS (
           SELECT DISTINCT ON (ip.permit_num, ip.revision_num)
             ip.permit_num, ip.revision_num, pa.id AS parcel_id,
@@ -257,6 +319,10 @@ pipeline.run('link-parcels', async (pool) => {
             AND pa.street_name_normalized = ip.street_name
             AND pa.street_type_normalized = ip.street_type
           WHERE (ip.street_type = '' OR pa.street_type_normalized = ip.street_type)
+            AND NOT EXISTS (
+              SELECT 1 FROM address_points_exact ape
+              WHERE ape.permit_num = ip.permit_num AND ape.revision_num = ip.revision_num
+            )
           ORDER BY ip.permit_num, ip.revision_num, pa.id
         ),
         name_only AS (
@@ -267,11 +333,17 @@ pipeline.run('link-parcels', async (pool) => {
           JOIN parcels pa ON pa.addr_num_normalized = ip.addr_num
             AND pa.street_name_normalized = ip.street_name
           WHERE NOT EXISTS (
+            SELECT 1 FROM address_points_exact ape
+            WHERE ape.permit_num = ip.permit_num AND ape.revision_num = ip.revision_num
+          )
+          AND NOT EXISTS (
             SELECT 1 FROM exact e
             WHERE e.permit_num = ip.permit_num AND e.revision_num = ip.revision_num
           )
           ORDER BY ip.permit_num, ip.revision_num, pa.id
         )
+        SELECT * FROM address_points_exact
+        UNION ALL
         SELECT * FROM exact
         UNION ALL
         SELECT * FROM name_only
@@ -409,7 +481,8 @@ pipeline.run('link-parcels', async (pool) => {
       const match = sqlMatched.get(key) || spatialMatched.get(key);
 
       if (match) {
-        if (match.match_type === 'exact_address') linkedExact++;
+        if (match.match_type === 'address_points_exact') linkedAddressPoints++;
+        else if (match.match_type === 'exact_address') linkedExactLegacy++;
         else if (match.match_type === 'name_only') linkedName++;
 
         insertParams.push(
@@ -504,23 +577,28 @@ pipeline.run('link-parcels', async (pool) => {
     }
   }
 
-  const totalLinked = linkedExact + linkedName + linkedSpatial;
+  // Plan v4 fold F17 — counter naming preservation: `tier_1_exact_address`
+  // metric continues to count BOTH bridge-path + legacy-path Tier-1 matches.
+  // `tier_1_via_bridge` is the bridge-only informational sibling subset.
+  const linkedExactTotal = linkedAddressPoints + linkedExactLegacy;
+  const totalLinked = linkedExactTotal + linkedName + linkedSpatial;
   const durationMs = Date.now() - startTime;
 
   pipeline.log.info('[link-parcels]', 'Linking complete', {
     processed,
     linked: totalLinked,
-    exact: linkedExact,
-    name_only: linkedName,
-    spatial: linkedSpatial,
-    spatial_polygon: linkedSpatialPolygon,
+    tier_1_exact_address: linkedExactTotal,
+    tier_1_via_bridge: linkedAddressPoints,
+    tier_2_name_only: linkedName,
+    tier_3_spatial: linkedSpatial,
+    tier_3_polygon: linkedSpatialPolygon,
     no_match: noMatch,
     db_upserted: dbUpserted,
     duration: `${(durationMs / 1000).toFixed(1)}s`,
   });
 
   // Build audit_table for parcel linking observability
-  const totalMatched = linkedExact + linkedName + linkedSpatial;
+  const totalMatched = totalLinked;
 
   // Cumulative link rate — the meaningful metric: total permits with parcel links / total permits.
   // Run-specific rate (totalMatched / processed) is misleading in steady-state because the
@@ -536,7 +614,15 @@ pipeline.run('link-parcels', async (pool) => {
 
   const parcelAuditRows = [
     { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
-    { metric: 'tier_1_exact_address', value: linkedExact, threshold: null, status: 'INFO' },
+    // Plan v4 fold F17: legacy counter name PRESERVED to maintain the
+    // 7-day observe-chain.js baseline. Now rolls up BOTH bridge-path
+    // (Strategy 1a) + legacy parcels-table (Strategy 1b) Tier-1 matches.
+    { metric: 'tier_1_exact_address', value: linkedExactTotal, threshold: null, status: 'INFO' },
+    // Plan v4 fold F17: NEW informational sibling — counts the subset
+    // of Tier-1 matches that came via the address_points bridge path
+    // (Phase 2c parcel_address_points). Delta over time shows migration
+    // progress as more permits get matched via the canonical bridge.
+    { metric: 'tier_1_via_bridge', value: linkedAddressPoints, threshold: null, status: 'INFO' },
     { metric: 'tier_2_name_only', value: linkedName, threshold: null, status: 'INFO' },
     { metric: 'tier_3_spatial', value: linkedSpatial, threshold: null, status: 'INFO' },
     { metric: 'tier_3_polygon', value: linkedSpatialPolygon, threshold: null, status: 'INFO' },
@@ -553,7 +639,9 @@ pipeline.run('link-parcels', async (pool) => {
     records_meta: {
       duration_ms: durationMs,
       permits_processed: processed,
-      matches_tier_1_exact: linkedExact,
+      // Plan v4 fold F17: legacy key PRESERVED; bridge-path sibling added.
+      matches_tier_1_exact: linkedExactTotal,
+      matches_tier_1_via_bridge: linkedAddressPoints,
       matches_tier_2_name: linkedName,
       matches_tier_3_spatial: linkedSpatial,
       matches_tier_3_polygon: linkedSpatialPolygon,
@@ -563,13 +651,26 @@ pipeline.run('link-parcels', async (pool) => {
       audit_table: {
         phase: (process.env.PIPELINE_CHAIN === 'sources') ? 6 : 7,
         name: 'Parcel Linking',
-        verdict: parcelLinkRate < 75 ? 'WARN' : 'PASS',
+        // WF1 Phase 2d — row-derived cascade per Spec 48 §3.6. Replaces the
+        // prior parallel-boolean form so any future FAIL-emitting row (e.g.,
+        // a Strategy 1a coverage gate) propagates correctly.
+        verdict: parcelAuditRows.some((r) => r.status === 'FAIL') ? 'FAIL'
+               : parcelAuditRows.some((r) => r.status === 'WARN') ? 'WARN'
+               : 'PASS',
         rows: parcelAuditRows,
       },
     },
   });
+  // WF1 Phase 2d — reads-list adds address_points + parcel_address_points
+  // for the new Strategy 1a JOIN path. Writes-list unchanged (still only
+  // permit_parcels — the bridge table is populated by Phase 2c, not here).
   pipeline.emitMeta(
-    { "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"], "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"] },
+    {
+      "permits": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude"],
+      "parcels": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geometry"],
+      "address_points": ["address_point_id", "addr_num_normalized", "linear_name_normalized", "address_class_desc", "maint_stage", "address_status"],
+      "parcel_address_points": ["parcel_id", "address_point_id"],
+    },
     { "permit_parcels": ["permit_num", "revision_num", "parcel_id", "match_type", "confidence", "linked_at"] }
   );
   });
