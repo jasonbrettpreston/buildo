@@ -1753,6 +1753,9 @@ and registry-vs-code agreement.
 | **111** | `scripts/quality/assert-global-coverage.js` | 6 — Quality | NO — read-only probe |
 | **112** | `scripts/backup-db.js` | 7 — Maintenance | NO — GCS write only, no DB tables |
 | **113** | `scripts/observe-chain.js` | 7 — Maintenance | NO — reads pipeline_runs only, no writes |
+| **114** | `scripts/backfill-realtor-permit-trades.js` | 5 — Maintenance | YES — `classified_at` |
+| **115** | `scripts/link-parcel-addresses.js` | 2 — Link (WF1 #parcel-address-bridge Phase 2c) | NO — `parcel_address_points.computed_at` is a script-bound RUN_AT write but the value is bookkeeping (when this run produced the link), not a business-event timestamp. Spec 47 §14.2 RUN_AT discipline applied (captured inside withAdvisoryLock + passed as $3, NOT inline NOW()). |
+| **116** | `scripts/one-time/backfill-address-points-geom.js` | One-time backfill (WF1 #parcel-address-bridge Phase 2a — not in manifest.json) | NO — pure UPDATE on existing rows; no timestamp columns written |
 
 **`RUN_AT` Snapshot Convention:**
 Scripts that write timestamps (`Writes Timestamps? = YES`) capture a single `RUN_AT` timestamp

@@ -135,12 +135,33 @@ The `pre_flight_audit` with `sys_db_bloat_*` metrics is always stored in the cha
 
 ### 4.2 PostGIS Dual-Path (B10/B11/B12)
 
-Spatial scripts (link-massing, link-neighbourhoods, link-parcels, compute-centroids) detect PostGIS availability at runtime:
+Spatial scripts (link-massing, link-neighbourhoods, link-parcels, link-coa-to-parcels, compute-centroids) detect PostGIS availability at runtime:
 
 - **PostGIS available (production):** Use `ST_Contains()`, `ST_Centroid()`, `ST_DWithin()` with GiST indexes for O(log n) spatial queries
 - **PostGIS unavailable (local dev):** Fall back to JavaScript spatial math (Turf.js, ray-casting, haversine)
 
-This ensures scripts work in all environments while leveraging native spatial indexing in production.
+This ensures dual-path scripts work in all environments while leveraging native spatial indexing in production.
+
+#### PostGIS-required scripts (no JS fallback) — WF1 #parcel-address-bridge
+
+Two scripts have NO JS fallback path and require PostGIS unconditionally:
+
+- **`link-parcel-addresses.js`** (Phase 2c, lock 115) — populates the `parcel_address_points` spatial bridge via batched `ST_Within(ap.geom, p.geom)` PK-ordered parcel joins. The entire script is a single set-based spatial-join INSERT; there is no Turf.js path because the cardinality (~486K × ~525K candidate pairs reduced via GIST indexes) is impractical in JS.
+- **`scripts/one-time/backfill-address-points-geom.js`** (Phase 2a, lock 116) — one-time backfill of `address_points.geom` from `(longitude, latitude)` via `ST_SetSRID(ST_MakePoint(lng, lat), 4326)`. Idempotent + checkpointable; runs before first execution of link-parcel-addresses.
+
+Operators running in local dev MUST install PostGIS to execute these scripts. The `assert-schema.js` startup check verifies the PostGIS extension is loaded; absence is a hard FAIL.
+
+### 4.2.1 Parcel-Address Bridge Architecture (WF1, 2026-05-23)
+
+Toronto Open Data stripped `ADDRESS_NUMBER`, `LINEAR_NAME_FULL`, `DATE_EFFECTIVE` from the Property Boundaries CSV on 2026-05-20 (Spec 55 CKAN strip event). Address data now sources canonically from the Address Points dataset (Spec 54). The bridge architecture:
+
+**Dataflow A → B → C → D:**
+- **A. Source ingest:** `load-address-points.js` (Spec 54, lock 96) loads 525K rows with 10 new fields + 2 derived normalized JOIN keys (`addr_num_normalized`, `linear_name_normalized`) + in-SQL computed `geom GEOMETRY(Point, 4326)`. Shared normalizers in `scripts/lib/address-normalizers.js` guarantee JOIN-key consistency with the LEGACY `parcels.*_normalized` columns.
+- **B. Spatial bridge population:** `link-parcel-addresses.js` (lock 115) executes `INSERT INTO parcel_address_points (parcel_id, address_point_id, computed_at) SELECT … FROM parcels p JOIN address_points ap ON ST_Within(ap.geom, p.geom) ON CONFLICT DO NOTHING`. Idempotent. PK-ordered parcel batches of 1000.
+- **C. Strategy/Tier 1a consumers:** `link-parcels.js` Strategy 1a + `link-coa-to-parcels.js` bridge-path Tier 1a JOIN through `parcel_address_points` to resolve permits/CoAs to parcels. Disambiguation hierarchy (plan v4 fold H5/C2/F19): `address_class_desc` priority (Structure > Structure Entrance > Land) > `ST_Area(p.geom::geography) ASC` > `address_point_id ASC`.
+- **D. Legacy fallback:** when the bridge misses (e.g., parcels with no address point), Strategy 1b/2/3 in link-parcels + legacy Tier 1a/1b in link-coa-to-parcels fall back to the LEGACY `parcels.*_normalized` columns (preserved via COALESCE-UPSERT in `load-parcels.js` against future CKAN strips).
+
+Chain placement: `link_parcel_addresses` inserted into the sources chain manifest between `parcels` (loader) and `link_parcels` (consumer). Adds one new pipeline step.
 
 ### 4.3 Streaming Memory Safety (B4)
 

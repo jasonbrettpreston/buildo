@@ -192,7 +192,7 @@ Ordered array of script slugs. Execution is strictly sequential, stop-on-failure
 {
   "permits": ["assert_schema", "permits", "close_stale_permits", "classify_permit_phase", "classify_scope", "builders", "link_wsib", "geocode_permits", "link_parcels", "link_neighbourhoods", "link_massing", "link_similar", "classify_permits", "compute_cost_estimates", "compute_timing_calibration_v2", "link_coa", "create_pre_permits", "refresh_snapshot", "assert_data_bounds", "assert_engine_health", "classify_lifecycle_phase", "compute_trade_forecasts", "compute_opportunity_scores", "update_tracked_projects"],
   "coa": ["assert_schema", "coa", "assert_coa_freshness", "link_coa", "create_pre_permits", "assert_pre_permit_aging", "refresh_snapshot", "assert_data_bounds", "assert_engine_health", "classify_lifecycle_phase"],
-  "sources": ["assert_schema", "address_points", "geocode_permits", "parcels", "compute_centroids", "link_parcels", "massing", "link_massing", "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"],
+  "sources": ["assert_schema", "address_points", "geocode_permits", "parcels", "link_parcel_addresses", "compute_centroids", "link_parcels", "massing", "link_massing", "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib", "refresh_snapshot", "assert_data_bounds", "assert_engine_health"],
   "entities": ["enrich_wsib_builders", "enrich_named_builders"],
   "wsib": ["enrich_wsib_registry"],
   "deep_scrapes": ["inspections", "classify_inspection_status", "assert_network_health", "refresh_snapshot", "assert_data_bounds", "assert_engine_health", "assert_staleness"]
@@ -214,6 +214,7 @@ Ordered array of script slugs. Execution is strictly sequential, stop-on-failure
 | `neighbourhoods` | `load-neighbourhoods.js` | neighbourhoods | sources |
 | `geocode_permits` | `geocode-permits.js` | permits | permits, sources |
 | `link_parcels` | `link-parcels.js` | permit_parcels | permits, sources |
+| `link_parcel_addresses` | `link-parcel-addresses.js` | parcel_address_points | sources |
 | `link_neighbourhoods` | `link-neighbourhoods.js` | permits | permits, sources |
 | `link_massing` | `link-massing.js` | parcel_buildings | permits, sources |
 | `link_coa` | `link-coa.js` | coa_applications | permits, coa |
