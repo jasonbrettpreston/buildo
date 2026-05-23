@@ -24,24 +24,25 @@ import {
 } from '../../scripts/lib/parcels-csv-drift';
 
 describe('REQUIRED_CSV_COLUMNS', () => {
-  it('enumerates the 7 columns the loader actually consumes', () => {
-    // Must match the columns referenced in scripts/load-parcels.js
-    // (PARCELID, FEATURE_TYPE, ADDRESS_NUMBER, LINEAR_NAME_FULL, STATEDAREA,
-    //  geometry, DATE_EFFECTIVE). DATE_EXPIRY is a filter column (used to
-    //  skip expired parcels) but does not feed into any column the loader
-    //  writes, so it is intentionally out of the required-set: dropping
-    //  DATE_EXPIRY would not cause silent data loss the way the others do.
+  it('enumerates the 4 surviving columns (3 deprecated post WF1 #parcel-address-bridge 2026-05-23)', () => {
+    // WF1 #parcel-address-bridge — Toronto Open Data stripped ADDRESS_NUMBER,
+    // LINEAR_NAME_FULL, DATE_EFFECTIVE from the Property Boundaries CSV on
+    // 2026-05-20. The address bridge (mig 162 + scripts/link-parcel-addresses.js)
+    // sources these from the Address Points CSV via spatial intersect.
+    // The 3 removed columns remain as LEGACY columns on the parcels table
+    // (preserved via COALESCE UPSERT in load-parcels.js per plan v4 fold C2).
     expect([...REQUIRED_CSV_COLUMNS].sort()).toEqual(
       [
-        'ADDRESS_NUMBER',
-        'DATE_EFFECTIVE',
         'FEATURE_TYPE',
-        'LINEAR_NAME_FULL',
         'PARCELID',
         'STATEDAREA',
         'geometry',
       ].sort(),
     );
+    // Defensive: deprecated columns explicitly NOT in REQUIRED_CSV_COLUMNS
+    expect([...REQUIRED_CSV_COLUMNS]).not.toContain('ADDRESS_NUMBER');
+    expect([...REQUIRED_CSV_COLUMNS]).not.toContain('LINEAR_NAME_FULL');
+    expect([...REQUIRED_CSV_COLUMNS]).not.toContain('DATE_EFFECTIVE');
   });
 
   it('is frozen (cannot be mutated at runtime)', () => {
@@ -50,37 +51,39 @@ describe('REQUIRED_CSV_COLUMNS', () => {
 });
 
 describe('detectMissingColumns', () => {
-  it('returns [] when every required column is present', () => {
+  it('returns [] when every required column is present (post WF1 #parcel-address-bridge)', () => {
     const present = [...REQUIRED_CSV_COLUMNS, 'DATE_EXPIRY', 'EXTRA_COL'];
     expect(detectMissingColumns(present)).toEqual([]);
   });
 
-  it('returns the exact set of required columns absent from the record', () => {
-    // Reproduces the 2026-05-19 CKAN drift: ADDRESS_NUMBER, LINEAR_NAME_FULL,
-    // and DATE_EFFECTIVE all dropped at once.
-    const drifted = ['PARCELID', 'FEATURE_TYPE', 'STATEDAREA', 'geometry', 'DATE_EXPIRY'];
-    expect(detectMissingColumns(drifted).sort()).toEqual(
-      ['ADDRESS_NUMBER', 'DATE_EFFECTIVE', 'LINEAR_NAME_FULL'].sort(),
-    );
+  it('the 2026-05-20 CKAN strip (3 cols removed) no longer triggers drift — those columns are no longer required', () => {
+    // WF1 #parcel-address-bridge — post-fix, the stripped CSV (PARCELID,
+    // FEATURE_TYPE, STATEDAREA, OBJECTID, geometry) is accepted; the 3
+    // dropped columns are sourced from address_points via the bridge.
+    const stripped = ['PARCELID', 'FEATURE_TYPE', 'STATEDAREA', 'OBJECTID', 'geometry'];
+    expect(detectMissingColumns(stripped)).toEqual([]);
+  });
+
+  it('still flags drift when one of the surviving 4 required columns goes missing', () => {
+    const drifted = ['PARCELID', 'STATEDAREA', 'geometry']; // missing FEATURE_TYPE
+    expect(detectMissingColumns(drifted)).toEqual(['FEATURE_TYPE']);
   });
 
   it('preserves the canonical column order in the returned array', () => {
     // Deterministic ordering so the audit_table value string is stable
     // across runs (operators grepping logs / dashboards expect a stable shape).
-    const drifted = ['PARCELID', 'STATEDAREA', 'geometry'];
+    const drifted = ['PARCELID']; // missing FEATURE_TYPE, STATEDAREA, geometry
     expect(detectMissingColumns(drifted)).toEqual([
       'FEATURE_TYPE',
-      'ADDRESS_NUMBER',
-      'LINEAR_NAME_FULL',
-      'DATE_EFFECTIVE',
+      'STATEDAREA',
+      'geometry',
     ]);
   });
 
   it('treats column names as case-sensitive (CKAN headers are case-sensitive)', () => {
     // Lowercase / mixed-case must not be silently accepted — that would
     // mask drift by collapsing 'geometry' and 'GEOMETRY' as the same column.
-    const wrongCase = ['parcelid', 'feature_type', 'address_number',
-                       'linear_name_full', 'statedarea', 'GEOMETRY', 'date_effective'];
+    const wrongCase = ['parcelid', 'feature_type', 'statedarea', 'GEOMETRY'];
     const missing = detectMissingColumns(wrongCase);
     expect(missing).toContain('PARCELID');
     expect(missing).toContain('geometry');

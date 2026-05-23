@@ -325,11 +325,27 @@ pipeline.run('load-parcels', async (pool) => {
         ON CONFLICT (parcel_id)
         DO UPDATE SET
           feature_type = EXCLUDED.feature_type,
-          address_number = EXCLUDED.address_number,
-          linear_name_full = EXCLUDED.linear_name_full,
-          addr_num_normalized = EXCLUDED.addr_num_normalized,
-          street_name_normalized = EXCLUDED.street_name_normalized,
-          street_type_normalized = EXCLUDED.street_type_normalized,
+          -- WF1 #parcel-address-bridge (2026-05-23 mig 162) — Day-1 critical safety
+          -- per plan v4 fold C2. Toronto Open Data stripped ADDRESS_NUMBER,
+          -- LINEAR_NAME_FULL, DATE_EFFECTIVE from the Property Boundaries CSV
+          -- between 2026-05-19 and 2026-05-20. Without COALESCE, the next run
+          -- against the stripped CSV would NULL-overwrite the 486K rows of
+          -- pre-drift address data — silent data loss.
+          --
+          -- COALESCE(NULLIF(EXCLUDED.X, ''), parcels.X) preserves existing values
+          -- when the CSV value is NULL or empty string (which is what the stripped
+          -- CSV produces because the row mapper passes `null` for missing columns
+          -- to keep the INSERT column list intact — see plan v4 fold C2).
+          --
+          -- These 5 columns are LEGACY: populated from pre-drift load + by future
+          -- address-points-bridge backfill. New parcel rows from CKAN load with
+          -- NULL here; matching now routes through the address_points bridge
+          -- (link-parcels.js Strategies 1+2 read via parcel_address_points).
+          address_number          = COALESCE(NULLIF(EXCLUDED.address_number, ''),          parcels.address_number),
+          linear_name_full        = COALESCE(NULLIF(EXCLUDED.linear_name_full, ''),        parcels.linear_name_full),
+          addr_num_normalized     = COALESCE(NULLIF(EXCLUDED.addr_num_normalized, ''),     parcels.addr_num_normalized),
+          street_name_normalized  = COALESCE(NULLIF(EXCLUDED.street_name_normalized, ''),  parcels.street_name_normalized),
+          street_type_normalized  = COALESCE(NULLIF(EXCLUDED.street_type_normalized, ''),  parcels.street_type_normalized),
           stated_area_raw = EXCLUDED.stated_area_raw,
           lot_size_sqm = EXCLUDED.lot_size_sqm,
           lot_size_sqft = EXCLUDED.lot_size_sqft,
@@ -339,13 +355,23 @@ pipeline.run('load-parcels', async (pool) => {
           depth_ft = EXCLUDED.depth_ft,
           geometry = EXCLUDED.geometry,
           ${geomLine}
-          date_effective = EXCLUDED.date_effective,
+          date_effective = COALESCE(EXCLUDED.date_effective, parcels.date_effective),
           is_irregular = EXCLUDED.is_irregular
         WHERE parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
           OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm
           OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type
-          OR parcels.address_number IS DISTINCT FROM EXCLUDED.address_number
-          OR parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective
+          OR (NULLIF(EXCLUDED.address_number, '') IS NOT NULL
+              AND parcels.address_number IS DISTINCT FROM EXCLUDED.address_number)
+          OR (NULLIF(EXCLUDED.linear_name_full, '') IS NOT NULL
+              AND parcels.linear_name_full IS DISTINCT FROM EXCLUDED.linear_name_full)
+          OR (NULLIF(EXCLUDED.addr_num_normalized, '') IS NOT NULL
+              AND parcels.addr_num_normalized IS DISTINCT FROM EXCLUDED.addr_num_normalized)
+          OR (NULLIF(EXCLUDED.street_name_normalized, '') IS NOT NULL
+              AND parcels.street_name_normalized IS DISTINCT FROM EXCLUDED.street_name_normalized)
+          OR (NULLIF(EXCLUDED.street_type_normalized, '') IS NOT NULL
+              AND parcels.street_type_normalized IS DISTINCT FROM EXCLUDED.street_type_normalized)
+          OR (EXCLUDED.date_effective IS NOT NULL
+              AND parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective)
         RETURNING (xmax = 0) AS is_insert`,
         values
       );
@@ -421,8 +447,15 @@ pipeline.run('load-parcels', async (pool) => {
         },
       },
     });
+    // Independent IMPL I2 + Observability Finding A fold (WF1 #parcel-address-bridge):
+    // Toronto stripped ADDRESS_NUMBER, LINEAR_NAME_FULL, DATE_EFFECTIVE on 2026-05-20.
+    // Reads-list now reflects the actual columns consumed by the stream loop.
+    // DATE_EXPIRY is included — it's used as a row-skip filter (expired-permit gate).
+    // The 3 address-derived parcels columns (address_number, linear_name_full,
+    // addr_num_normalized) remain on the writes-list because COALESCE UPSERT
+    // preserves them on existing rows; they are no longer SOURCED from this CSV.
     pipeline.emitMeta(
-      { "Toronto Open Data CSV": ["PARCELID", "FEATURE_TYPE", "ADDRESS_NUMBER", "LINEAR_NAME_FULL", "STATEDAREA", "geometry", "DATE_EFFECTIVE"] },
+      { "Toronto Open Data CSV": ["PARCELID", "FEATURE_TYPE", "STATEDAREA", "geometry", "DATE_EXPIRY"] },
       { "parcels": ["parcel_id", "feature_type", "address_number", "linear_name_full", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "stated_area_raw", "lot_size_sqm", "lot_size_sqft", "frontage_m", "frontage_ft", "depth_m", "depth_ft", "geometry", "date_effective", "is_irregular", "geom"] }
     );
   }

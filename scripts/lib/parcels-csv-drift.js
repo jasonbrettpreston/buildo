@@ -23,14 +23,21 @@
 // table. DATE_EXPIRY is consumed too but only as a row-skip filter;
 // dropping it would not cause silent data loss the way the others do,
 // so it is intentionally out of the required set.
+// WF1 #parcel-address-bridge (2026-05-23) — Toronto Open Data stripped
+// ADDRESS_NUMBER, LINEAR_NAME_FULL, DATE_EFFECTIVE from the Property Boundaries
+// CSV between 2026-05-19 and 2026-05-20. Verified via direct fetch — columns
+// are REMOVED (not renamed). Address data migrated to the separate Address
+// Points dataset. The 3 removed columns are kept as LEGACY columns on the
+// parcels table (preserved via COALESCE UPSERT in load-parcels.js), but the
+// REQUIRED_CSV_COLUMNS gate no longer enforces them — that would fail every
+// run forever. Going forward, address lookup routes through address_points
+// via the parcel_address_points spatial bridge (mig 162) + link-parcels
+// Strategies 1+2 / link-coa-to-parcels Tier 1a/1b rewrites.
 const REQUIRED_CSV_COLUMNS = Object.freeze([
   'PARCELID',
   'FEATURE_TYPE',
-  'ADDRESS_NUMBER',
-  'LINEAR_NAME_FULL',
   'STATEDAREA',
   'geometry',
-  'DATE_EFFECTIVE',
 ]);
 
 function detectMissingColumns(recordKeys) {

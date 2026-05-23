@@ -50,11 +50,43 @@ const MASSING_URL =
 const NEIGHBOURHOODS_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/fc443770-ef0a-4025-9c2c-2cb558bfab00/resource/0719053b-28b7-48ea-b863-068823a93aaa/download/neighbourhoods-4326.geojson';
 
-// Expected CSV columns for source data
-const EXPECTED_ADDRESS_POINT_COLUMNS = ['ADDRESS_POINT_ID', 'geometry'];
+// Expected CSV columns for source data.
+//
+// WF1 #parcel-address-bridge (2026-05-23) — Address Points dataset is now the
+// canonical source for ADDRESS_NUMBER + LINEAR_NAME_FULL (Toronto stripped them
+// from the Property Boundaries CSV on 2026-05-20). EXPECTED_ADDRESS_POINT_COLUMNS
+// expanded to include the 10 fields Buildo now loads (per mig 162 + load-address-points
+// extension). EXPECTED_PARCEL_COLUMNS shrunk to the 4 surviving columns; the 3 removed
+// columns (ADDRESS_NUMBER, LINEAR_NAME_FULL, DATE_EFFECTIVE) are kept as LEGACY columns
+// on the parcels table but no longer required from the source CSV.
+// Independent IMPL I1 + Observability Finding B fold (WF1 #parcel-address-bridge):
+// LATITUDE/LONGITUDE are explicitly listed even though `geometry` is also present.
+// Rationale: load-address-points.js falls back to ST_MakePoint(longitude, latitude)
+// when geometry has no coordinates (lines 174-177); the one-time geom backfill
+// script also reads these columns. If Toronto strips them, the spatial bridge
+// produces 0 rows with no operator-visible signal — same failure mode as the
+// 2026-05-20 Property Boundaries strip that motivated this WF1.
+const EXPECTED_ADDRESS_POINT_COLUMNS = [
+  'ADDRESS_POINT_ID',
+  'ADDRESS_NUMBER',
+  'LINEAR_NAME_FULL',
+  'ADDRESS_FULL',
+  'LO_NUM',
+  'HI_NUM',
+  'MAINT_STAGE',
+  'ADDRESS_STATUS',
+  'ADDRESS_CLASS_DESC',
+  'CLASS_FAMILY_DESC',
+  'PLACE_NAME',
+  'LATITUDE',
+  'LONGITUDE',
+  'geometry',
+];
 const EXPECTED_PARCEL_COLUMNS = [
-  'PARCELID', 'FEATURE_TYPE', 'ADDRESS_NUMBER', 'LINEAR_NAME_FULL',
-  'STATEDAREA', 'geometry', 'DATE_EFFECTIVE',
+  'PARCELID',
+  'FEATURE_TYPE',
+  'STATEDAREA',
+  'geometry',
 ];
 // Neighbourhood GeoJSON: at least one of these ID properties must exist
 const NEIGHBOURHOOD_ID_PROPS = ['AREA_SHORT_CODE', 'AREA_ID'];
