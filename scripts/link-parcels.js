@@ -297,7 +297,15 @@ pipeline.run('link-parcels', async (pool) => {
             ON ap.addr_num_normalized = ip.addr_num
            AND ap.linear_name_normalized = ip.street_name
            AND (ap.maint_stage IS NULL OR UPPER(ap.maint_stage) = 'REGULAR')
-           AND (ap.address_status IS NULL OR UPPER(ap.address_status) = 'CURRENT')
+           -- WF3 hotfix #2 (2026-05-23): Toronto's actual ADDRESS_STATUS
+           -- column contains the literal string 'None' for 100% of rows
+           -- (verified post-Phase-2b deploy: 525,346/525,346 rows = 'None').
+           -- Plan v4 + Spec 54 originally assumed CURRENT/RETIRED/PENDING.
+           -- Production data has neither NULL nor CURRENT — only 'None'.
+           -- Accept 'NONE' as equivalent to 'CURRENT' (the canonical
+           -- "in-use" state in Toronto's actual data model). If Toronto
+           -- adds RETIRED/PENDING values later, those will be filtered out.
+           AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
           JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id
           JOIN parcels p ON p.id = pap.parcel_id
           ORDER BY ip.permit_num, ip.revision_num,

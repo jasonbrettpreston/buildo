@@ -177,9 +177,10 @@ describe('link-coa-to-parcels.js — WF1 #parcel-address-bridge Phase 2e bridge 
     expect(src).toMatch(/JOIN\s+parcels\s+p\s+ON\s+p\.id\s*=\s*pap\.parcel_id/);
   });
 
-  it('bridge query filters to MAINT_STAGE=REGULAR + ADDRESS_STATUS=CURRENT (with NULL fallback)', () => {
+  it('bridge query filters to MAINT_STAGE=REGULAR + ADDRESS_STATUS in (CURRENT, NONE) with NULL fallback', () => {
+    // WF3 hotfix #2 (2026-05-23) — see link-parcels equivalent.
     expect(src).toMatch(/ap\.maint_stage\s+IS\s+NULL\s+OR\s+UPPER\(ap\.maint_stage\)\s*=\s*'REGULAR'/);
-    expect(src).toMatch(/ap\.address_status\s+IS\s+NULL\s+OR\s+UPPER\(ap\.address_status\)\s*=\s*'CURRENT'/);
+    expect(src).toMatch(/ap\.address_status\s+IS\s+NULL\s+OR\s+UPPER\(ap\.address_status\)\s+IN\s*\(\s*'CURRENT'\s*,\s*'NONE'\s*\)/);
   });
 
   it('bridge query uses ST_Area(p.geom::geography) ASC + ap.address_point_id ASC tiebreakers (plan v4 H5/C2/F19)', () => {

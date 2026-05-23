@@ -32,8 +32,8 @@ As the **canonical** source of street-level addresses for permit + CoA matching,
 | `address_full` | TEXT | NEW — pre-formatted full address |
 | `lo_num` | INTEGER | NEW — low end of address range (nullable) |
 | `hi_num` | INTEGER | NEW — high end of address range (nullable) |
-| `maint_stage` | TEXT | NEW — `REGULAR` / `PRELIMINARY` / `RETIRED`. Filter to REGULAR. |
-| `address_status` | TEXT | NEW — `CURRENT` / `RETIRED` / `PENDING`. Filter to CURRENT. |
+| `maint_stage` | TEXT | NEW — observed production values: `REGULAR` (98.5%, 517K rows) / `RESERVED` (1.5%, 7.7K rows). Filter to REGULAR. |
+| `address_status` | TEXT | NEW — observed production value: `None` for 100% of rows (525K). Plan v4 originally assumed CURRENT/RETIRED/PENDING per the Toronto Open Data field catalog, but the actual CSV publishes literal `None` for every row. Filter accepts `NULL` OR `CURRENT` OR `NONE` (WF3 hotfix #2, 2026-05-23) — treating `None` as the canonical in-use state. If Toronto adds RETIRED/PENDING values in the future, those will be filtered out. |
 | `address_class_desc` | TEXT | NEW — `Structure` / `Structure Entrance` / `Land`. Used by link-parcels Strategy 1a + link-coa-to-parcels Tier 1a disambiguation hierarchy (PI-6 option b). |
 | `class_family_desc` | TEXT | NEW — coarser class grouping. |
 | `place_name` | TEXT | NEW — POI name when present. |

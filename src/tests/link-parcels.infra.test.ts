@@ -62,11 +62,14 @@ describe('link-parcels.js — WF1 #parcel-address-bridge Phase 2d Strategy 1a', 
     expect(SRC).toMatch(/0\.97\s+AS\s+confidence/);
   });
 
-  it('Strategy 1a filters to MAINT_STAGE=REGULAR + ADDRESS_STATUS=CURRENT (with NULL fallback)', () => {
-    // Defensive: NULL fallback ensures rows where these columns haven't been
-    // populated by load-address-points (e.g., older imports) still match.
+  it('Strategy 1a filters to MAINT_STAGE=REGULAR + ADDRESS_STATUS in (CURRENT, NONE) with NULL fallback', () => {
+    // Defensive: NULL fallback for pre-Phase-2b imports.
+    // WF3 hotfix #2 (2026-05-23): Toronto's actual ADDRESS_STATUS column
+    // contains the literal string 'None' for 100% of rows. Plan v4
+    // originally assumed CURRENT/RETIRED/PENDING. Filter accepts 'NONE'
+    // as equivalent to 'CURRENT' (canonical in-use state in production).
     expect(SRC).toMatch(/ap\.maint_stage\s+IS\s+NULL\s+OR\s+UPPER\(ap\.maint_stage\)\s*=\s*'REGULAR'/);
-    expect(SRC).toMatch(/ap\.address_status\s+IS\s+NULL\s+OR\s+UPPER\(ap\.address_status\)\s*=\s*'CURRENT'/);
+    expect(SRC).toMatch(/ap\.address_status\s+IS\s+NULL\s+OR\s+UPPER\(ap\.address_status\)\s+IN\s*\(\s*'CURRENT'\s*,\s*'NONE'\s*\)/);
   });
 
   it('Strategy 1a disambiguates multiple APs per parcel via Structure > Structure Entrance > Land (PI-6 option b)', () => {

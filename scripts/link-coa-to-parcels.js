@@ -360,7 +360,11 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
                   WHERE ap.addr_num_normalized = $1
                     AND ap.linear_name_normalized = $2
                     AND (ap.maint_stage IS NULL OR UPPER(ap.maint_stage) = 'REGULAR')
-                    AND (ap.address_status IS NULL OR UPPER(ap.address_status) = 'CURRENT')
+                    -- WF3 hotfix #2 (2026-05-23): see link-parcels.js
+                    -- equivalent block. Toronto's actual ADDRESS_STATUS
+                    -- column contains 'None' for 100% of rows; accept
+                    -- 'NONE' alongside 'CURRENT' as the in-use state.
+                    AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
                   ORDER BY
                     CASE UPPER(COALESCE(ap.address_class_desc, ''))
                       WHEN 'STRUCTURE'           THEN 1
