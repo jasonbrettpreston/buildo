@@ -62,4 +62,30 @@ describe('audit-fk-orphans RELATIONSHIPS registry', () => {
     const missing = tier3.filter((r) => !r.note || r.note.trim().length === 0);
     expect(missing).toEqual([]);
   });
+
+  describe('WF1 #parcel-address-bridge Phase 2f.3 — bridge table registry entries', () => {
+    it('registers parcel_address_points → parcels FK (Tier 1, ON DELETE CASCADE from mig 162)', () => {
+      const entry = RELATIONSHIPS.find(
+        (r) =>
+          r.child === 'parcel_address_points' &&
+          r.parent === 'parcels' &&
+          r.childCols.includes('parcel_id') &&
+          r.parentCols.includes('id'),
+      );
+      expect(entry, 'parcel_address_points → parcels FK missing from RELATIONSHIPS').toBeDefined();
+      expect(entry!.tier).toBe(1);
+    });
+
+    it('registers parcel_address_points → address_points FK (Tier 1, ON DELETE CASCADE from mig 162)', () => {
+      const entry = RELATIONSHIPS.find(
+        (r) =>
+          r.child === 'parcel_address_points' &&
+          r.parent === 'address_points' &&
+          r.childCols.includes('address_point_id') &&
+          r.parentCols.includes('address_point_id'),
+      );
+      expect(entry, 'parcel_address_points → address_points FK missing from RELATIONSHIPS').toBeDefined();
+      expect(entry!.tier).toBe(1);
+    });
+  });
 });

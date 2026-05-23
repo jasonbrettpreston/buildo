@@ -64,6 +64,22 @@ const RELATIONSHIPS = [
     childCols: ['parcel_id'],
     parentCols: ['id'],
   },
+  // WF1 #parcel-address-bridge Phase 2c (mig 162) — spatial bridge table.
+  // Both FKs ON DELETE CASCADE per v4 fold M1 (cache rebuilds from source).
+  {
+    tier: 1,
+    child: 'parcel_address_points',
+    parent: 'parcels',
+    childCols: ['parcel_id'],
+    parentCols: ['id'],
+  },
+  {
+    tier: 1,
+    child: 'parcel_address_points',
+    parent: 'address_points',
+    childCols: ['address_point_id'],
+    parentCols: ['address_point_id'],
+  },
   {
     tier: 1,
     child: 'parcel_buildings',

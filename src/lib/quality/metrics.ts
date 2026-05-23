@@ -403,6 +403,15 @@ async function queryBuilderCounts() {
 }
 
 async function queryParcelCounts() {
+  // WF1 #parcel-address-bridge Phase 2f.3 (2026-05-23) — `exact_matches`
+  // FILTER expanded to roll up BOTH legacy 'exact_address' AND new
+  // 'address_points_exact' rows (the latter introduced by Phase 2d
+  // link-parcels Strategy 1a + Phase 2e link-coa-to-parcels bridge path).
+  // Plan v4 fold F17 preservation pattern: the dashboard's "Exact Address"
+  // tile keeps its semantic (count of all Tier-1 exact matches) without a
+  // schema migration to data_quality_snapshots. Bridge-path migration
+  // progress is observable via the link-parcels + link-coa-to-parcels
+  // audit_table tier_1_via_bridge / tier_1a_via_bridge metrics.
   const rows = await query<{
     permits_with_parcel: string;
     exact_matches: string;
@@ -412,7 +421,7 @@ async function queryParcelCounts() {
   }>(
     `SELECT
        COUNT(DISTINCT (permit_num, revision_num)) as permits_with_parcel,
-       COUNT(*) FILTER (WHERE match_type = 'exact_address') as exact_matches,
+       COUNT(*) FILTER (WHERE match_type IN ('exact_address', 'address_points_exact')) as exact_matches,
        COUNT(*) FILTER (WHERE match_type = 'name_only') as name_matches,
        COUNT(*) FILTER (WHERE match_type = 'spatial') as spatial_matches,
        AVG(confidence)::NUMERIC(4,3) as avg_confidence

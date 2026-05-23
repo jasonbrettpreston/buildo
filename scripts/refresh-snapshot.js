@@ -88,9 +88,15 @@ pipeline.run('refresh-snapshot', async (pool) => {
     permitsBuilderRes = await snapClient.query(
       `SELECT COUNT(*) as count FROM permits WHERE builder_name IS NOT NULL AND builder_name != ''`
     );
+    // WF1 #parcel-address-bridge Phase 2f.3 (2026-05-23) — exact_matches
+    // FILTER expanded to roll up BOTH legacy 'exact_address' AND new
+    // 'address_points_exact' rows per F17 preservation (mirrors the
+    // src/lib/quality/metrics.ts fix). data_quality_snapshots.parcel_exact_matches
+    // stays semantically "all Tier-1 exact matches" — bridge-path migration
+    // progress is observable via link-parcels audit_table tier_1_via_bridge.
     parcelsRes = await snapClient.query(
       `SELECT COUNT(DISTINCT (permit_num, revision_num)) as permits_with_parcel,
-              COUNT(*) FILTER (WHERE match_type = 'exact_address') as exact_matches,
+              COUNT(*) FILTER (WHERE match_type IN ('exact_address', 'address_points_exact')) as exact_matches,
               COUNT(*) FILTER (WHERE match_type = 'name_only') as name_matches,
               COUNT(*) FILTER (WHERE match_type = 'spatial') as spatial_matches,
               AVG(confidence)::NUMERIC(4,3) as avg_confidence
