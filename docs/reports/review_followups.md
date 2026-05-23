@@ -2142,3 +2142,38 @@ Re-read `.cursor/active_task.md` fold-locks BEFORE implementing per `feedback_pl
 | 330 | DeepSeek LOW 465 | centroidOutsidePolygon undercounts when geometry NULL | **PRE-EXISTING**. |
 | 331 | Observability Finding 3 (conf 80) | Early-exit `audit_table.phase: 11` ≠ main path `phase: 42` | **PRE-EXISTING** — admin UI step ordering uses phase as key. Worth a follow-up WF3. |
 | 332 | Observability Item 9 (out-of-scope Phase 2f) | match_type='address_points_exact' downstream consumer audit per Spec 47 §10.3 | **DEFER to Phase 2f** — verify assert-global-coverage.js + mobile lead feed + admin dashboards handle the new bucket. |
+
+
+---
+
+## WF1 #parcel-address-bridge — Final Closure (2026-05-23)
+
+WF1 #parcel-address-bridge shipped across 8 commits in a single working day. The active_task.md plan v4 (33+ folds, 3 PLAN review rounds) drove the implementation. Phase 2 was split into 6 sub-phases at the user's direction ("smaller is better"); the Phase 2f sub-phase split itself ran a 4-reviewer PLAN review with 11 findings folded.
+
+**Commit series:**
+
+| Phase | Commit | Scope |
+|-------|--------|-------|
+| Phase 1 | `2501aa0` | mig 162 + Day-1 COALESCE-preserve UPSERT in load-parcels |
+| Phase 2a | `4758f2d` | One-time geom backfill script (lock 116) |
+| Phase 2b | `10db268` | load-address-points 12-field extension + shared normalizers + drift detector |
+| Phase 2c | `d44b445` | link-parcel-addresses bridge populator (lock 115) + manifest + FreshnessTimeline |
+| Phase 2d | `1ba020b` | link-parcels Strategy 1a (initial F17 + H5/C2 violations caught + folded) |
+| Phase 2e | `986409e` | link-coa-to-parcels bridge-path Tier 1a |
+| Phase 2f.1 | `dee9470` | 7-spec sync + wf3-queue Cycle 2 Env-1 closure + system-map |
+| Phase 2f.3 | `94abd19` | metrics.ts match_type fix (§10.3 audit) + RELATIONSHIPS registry |
+| Phase 2f.2 | `df3fb78` | first-deploy runbook (Spec 48 §3.6 + F1 pattern) |
+
+**Total findings triaged in review_followups.md:** rows 215-332 (118 entries across 8 sub-phase IMPL reviews + 1 Phase 2f PLAN review).
+
+**Adversarial review ceremony:**
+- 3 PLAN review rounds at WF kickoff (33+ folds locked in plan v4)
+- 1 PLAN review on the Phase 2f split (11 folds applied before implementing)
+- 8 IMPL reviews (one per sub-phase commit): Independent + Observability + Gemini Pro + DeepSeek-R1
+- 2 plan-lock violations caught + folded back (Phase 2d F17 counter rename + F19/F20/C2/H5 ST_Area::geography tiebreaker) — produced the `feedback_plan_fold_locks.md` memory.
+
+**Process lessons added to memory:**
+- `feedback_plan_fold_locks.md` — re-read `.cursor/active_task.md` fold IDs before implementing each phase
+- `feedback_wf1_phase_plan_review.md` — run 4-reviewer adversarial PLAN review on each sub-phase plan, not just at WF kickoff
+
+**WF1 status:** ✅ DONE. Operator action: follow `docs/runbook/WF1_parcel_address_bridge_first_deploy.md` on next deploy. 7-day baseline-quiet-period applies to `tier_1_via_bridge` + `tier_1a_via_bridge` + new_links_written + parcel_address_points_inserted metrics.
