@@ -156,3 +156,86 @@ describe('link-coa-to-parcels.js — Spec 47 §R1-R12 + R5.2 contract', () => {
     expect(src).not.toMatch(/'coa:'\s*\|\|\s*application_number/);
   });
 });
+
+describe('link-coa-to-parcels.js — WF1 #parcel-address-bridge Phase 2e bridge path', () => {
+  const src = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/link-coa-to-parcels.js'),
+    'utf-8',
+  );
+
+  it('checks address_points → parcel_address_points BEFORE the legacy parcels-table Tier 1a query', () => {
+    const bridgeIdx = src.indexOf('FROM address_points ap');
+    // Legacy block is marked by the section comment "Tier 1a (legacy)".
+    const legacyIdx = src.indexOf('Tier 1a (legacy)');
+    expect(bridgeIdx).toBeGreaterThan(-1);
+    expect(legacyIdx).toBeGreaterThan(-1);
+    expect(bridgeIdx).toBeLessThan(legacyIdx);
+  });
+
+  it('bridge query JOINs through parcel_address_points to resolve parcel_id', () => {
+    expect(src).toMatch(/JOIN\s+parcel_address_points\s+pap\s+ON\s+pap\.address_point_id\s*=\s*ap\.address_point_id/);
+    expect(src).toMatch(/JOIN\s+parcels\s+p\s+ON\s+p\.id\s*=\s*pap\.parcel_id/);
+  });
+
+  it('bridge query filters to MAINT_STAGE=REGULAR + ADDRESS_STATUS=CURRENT (with NULL fallback)', () => {
+    expect(src).toMatch(/ap\.maint_stage\s+IS\s+NULL\s+OR\s+UPPER\(ap\.maint_stage\)\s*=\s*'REGULAR'/);
+    expect(src).toMatch(/ap\.address_status\s+IS\s+NULL\s+OR\s+UPPER\(ap\.address_status\)\s*=\s*'CURRENT'/);
+  });
+
+  it('bridge query uses ST_Area(p.geom::geography) ASC + ap.address_point_id ASC tiebreakers (plan v4 H5/C2/F19)', () => {
+    expect(src).toMatch(/CASE\s+UPPER\(COALESCE\(ap\.address_class_desc/);
+    expect(src).toMatch(/WHEN\s+'STRUCTURE'\s+THEN\s+1/);
+    expect(src).toMatch(/WHEN\s+'STRUCTURE ENTRANCE'\s+THEN\s+2/);
+    expect(src).toMatch(/WHEN\s+'LAND'\s+THEN\s+3/);
+    expect(src).toMatch(/ST_Area\s*\(\s*p\.geom\s*::\s*geography\s*\)\s+ASC/i);
+    expect(src).toMatch(/ap\.address_point_id\s+ASC/);
+  });
+
+  it('bridge match increments BOTH tier1aExact (legacy rollup) AND tier1aViaBridge (sibling) per F17', () => {
+    // The bridge block must increment both counters so the F17 rollup stays
+    // accurate (tier_1a_exact = bridge + legacy total).
+    const bridgeBlock = src.substring(
+      src.indexOf('apBridge.rows.length > 0'),
+      src.indexOf('// ─── Tier 1a (legacy)'),
+    );
+    expect(bridgeBlock).toMatch(/tier1aExact\+\+/);
+    expect(bridgeBlock).toMatch(/tier1aViaBridge\+\+/);
+  });
+
+  it('bridge match uses match_type=address_points_exact (consistent with Phase 2d link-parcels)', () => {
+    expect(src).toMatch(/matchTier\s*=\s*['"]address_points_exact['"]/);
+  });
+
+  it('legacy Tier 1a fallback fires only when bridge missed (parcelMatch null guard)', () => {
+    // The legacy block must check `!parcelMatch` so it doesn't double-match
+    // when the bridge already resolved.
+    expect(src).toMatch(/if\s*\(\s*!parcelMatch\s+&&\s+hasStreetNum\s+&&\s+hasStreetName\s*\)/);
+  });
+
+  it('audit_table preserves tier_1a_exact + adds tier_1a_via_bridge sibling (plan v4 F17)', () => {
+    expect(src).toMatch(/metric:\s*['"]tier_1a_exact['"]/);
+    expect(src).toMatch(/metric:\s*['"]tier_1a_via_bridge['"]/);
+  });
+
+  it('records_meta exposes both tier_1a_exact + tier_1a_via_bridge keys', () => {
+    expect(src).toMatch(/tier_1a_exact:\s*tier1aExact/);
+    expect(src).toMatch(/tier_1a_via_bridge:\s*tier1aViaBridge/);
+  });
+
+  it('emitMeta reads-list adds address_points + parcel_address_points (Spec 48 §3 / plan F14)', () => {
+    expect(src).toMatch(/address_points:\s*\[[^\]]*'address_point_id'/);
+    expect(src).toMatch(/address_points:\s*\[[^\]]*'addr_num_normalized'/);
+    expect(src).toMatch(/address_points:\s*\[[^\]]*'linear_name_normalized'/);
+    expect(src).toMatch(/address_points:\s*\[[^\]]*'address_class_desc'/);
+    expect(src).toMatch(/address_points:\s*\[[^\]]*'maint_stage'/);
+    expect(src).toMatch(/address_points:\s*\[[^\]]*'address_status'/);
+    expect(src).toMatch(/parcel_address_points:\s*\[[^\]]*'parcel_id'/);
+  });
+
+  it('verdict cascade is row-derived (Spec 48 §3.6 / Spec 47 §8.2 / plan v4 F16)', () => {
+    expect(src).toMatch(/auditRows\.some\(\(?r\)?\s*=>\s*r\.status\s*===\s*['"]FAIL['"]\)/);
+    expect(src).toMatch(/auditRows\.some\(\(?r\)?\s*=>\s*r\.status\s*===\s*['"]WARN['"]\)/);
+    // Pre-Phase-2e `hasWarn` parallel-boolean removed.
+    expect(src).not.toMatch(/const\s+hasWarn\s*=/);
+  });
+});

@@ -231,6 +231,8 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
       pipeline.emitMeta(
         { coa_applications: ['id', 'lead_id', 'street_num', 'street_name_normalized', 'parcel_linked_at'],
           parcels: ['id', 'addr_num_normalized', 'street_name_normalized', 'centroid_lat', 'centroid_lng', 'geom'],
+          address_points: ['address_point_id', 'addr_num_normalized', 'linear_name_normalized', 'address_class_desc', 'maint_stage', 'address_status'],
+          parcel_address_points: ['parcel_id', 'address_point_id'],
           neighbourhoods: ['id', 'geom'] },
         { lead_parcels: ['lead_id', 'parcel_id', 'match_type', 'confidence', 'matched_at'],
           coa_applications: ['neighbourhood_id', 'latitude', 'longitude', 'parcel_linked_at'] }
@@ -241,6 +243,12 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
     // Counters for per-tier audit breakdown (R2.v5 fix #12).
     let processed = 0;
     let tier1aExact = 0;
+    // WF1 Phase 2e — plan v4 fold F17: bridge-path is an INFORMATIONAL
+    // sibling counter that surfaces the SUBSET of tier1aExact matches
+    // resolved via the address_points → parcel_address_points bridge.
+    // The legacy `tier_1a_exact` audit row still totals BOTH bridge +
+    // legacy parcels-table hits (preserves 7-day observe-chain baseline).
+    let tier1aViaBridge = 0;
     let tier1bNameOnly = 0;
     let noAddressData = 0;     // CoA has no street_name_normalized (handled in pre-pass below)
     let noParcelMatch = 0;     // address present but no parcel found
@@ -320,6 +328,62 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
             //   - no_parcel_match: had address but no parcel found
 
             if (hasStreetNum && hasStreetName) {
+              // ─── Tier 1a (bridge path) — preferred resolution via address_points
+              //
+              // Toronto stripped ADDRESS_NUMBER, LINEAR_NAME_FULL,
+              // DATE_EFFECTIVE from the Property Boundaries CSV on
+              // 2026-05-20. address_points is now the canonical address
+              // source; parcel_address_points (mig 162 + Phase 2c) guarantees
+              // the AP geom is inside the parcel polygon. Try this FIRST;
+              // fall through to the legacy parcels-table query on miss.
+              //
+              // Plan v4 fold F17: this match increments BOTH tier1aExact
+              // (legacy counter preserved) AND tier1aViaBridge (new INFO
+              // sibling). match_type='address_points_exact' is the new value
+              // surfacing the bridge-path provenance at the row level
+              // (consistent with Phase 2d link-parcels Strategy 1a).
+              //
+              // Disambiguation (plan v4 H5/C2/F19 uniform 3-level rule):
+              //   1. ADDRESS_CLASS_DESC priority (Structure > Structure Entrance > Land)
+              //   2. ST_Area(p.geom::geography) ASC — narrower parcel wins;
+              //      ::geography cast yields square meters (raw on GEOMETRY
+              //      (*, 4326) would return square degrees — fold C2).
+              //   3. ap.address_point_id ASC — stable deterministic final tie.
+              //
+              // MAINT_STAGE=REGULAR + ADDRESS_STATUS=CURRENT filters retired
+              // records with NULL fallback for pre-Phase-2b imports.
+              const apBridge = await client.query(
+                `SELECT p.id, p.centroid_lat, p.centroid_lng${hasPostGIS ? ', p.geom' : ', p.geometry'}
+                   FROM address_points ap
+                   JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id
+                   JOIN parcels p ON p.id = pap.parcel_id
+                  WHERE ap.addr_num_normalized = $1
+                    AND ap.linear_name_normalized = $2
+                    AND (ap.maint_stage IS NULL OR UPPER(ap.maint_stage) = 'REGULAR')
+                    AND (ap.address_status IS NULL OR UPPER(ap.address_status) = 'CURRENT')
+                  ORDER BY
+                    CASE UPPER(COALESCE(ap.address_class_desc, ''))
+                      WHEN 'STRUCTURE'           THEN 1
+                      WHEN 'STRUCTURE ENTRANCE'  THEN 2
+                      WHEN 'LAND'                THEN 3
+                      ELSE 4
+                    END,
+                    ST_Area(p.geom::geography) ASC,
+                    ap.address_point_id ASC
+                  LIMIT 1`,
+                [coa.street_num.trim(), coa.street_name_normalized.trim()]
+              );
+              if (apBridge.rows.length > 0) {
+                parcelMatch = apBridge.rows[0];
+                matchTier = 'address_points_exact';
+                confidence = tier1aConfidence;
+                tier1aExact++;
+                tier1aViaBridge++;
+              }
+            }
+
+            // ─── Tier 1a (legacy) — parcels-table exact (fallback when bridge misses) ───
+            if (!parcelMatch && hasStreetNum && hasStreetName) {
               const t1a = await client.query(
                 `SELECT id, centroid_lat, centroid_lng${hasPostGIS ? ', geom' : ', geometry'}
                    FROM parcels
@@ -523,7 +587,11 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
     // Day-1 threshold: WARN, not FAIL (R2.v5 fix #9). Operators recalibrate post-burn-in.
     const auditRows = [
       { metric: 'coa_processed',                  value: processed,                                              threshold: null,                                          status: 'INFO' },
+      // Plan v4 fold F17: tier_1a_exact preserved (rolls up BOTH bridge-path
+      // + legacy hits). tier_1a_via_bridge is the bridge-path subset INFO
+      // sibling — delta over time shows migration progress.
       { metric: 'tier_1a_exact',                  value: tier1aExact,                                            threshold: null,                                          status: 'INFO' },
+      { metric: 'tier_1a_via_bridge',             value: tier1aViaBridge,                                        threshold: null,                                          status: 'INFO' },
       { metric: 'tier_1b_name_only',              value: tier1bNameOnly,                                         threshold: null,                                          status: 'INFO' },
       { metric: 'no_address_data',                value: noAddressData,                                          threshold: null,                                          status: 'INFO' },
       { metric: 'no_parcel_match',                value: noParcelMatch,                                          threshold: null,                                          status: 'INFO' },
@@ -536,7 +604,12 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
       { metric: 'per_row_errors',                 value: perRowErrors,                                           threshold: '== 0',                                        status: perRowErrors === 0 ? 'PASS' : 'WARN' },
     ];
 
-    const hasWarn = auditRows.some(r => r.status === 'WARN');
+    // Plan v4 fold F16: row-derived verdict cascade per Spec 48 §3.6 /
+    // Spec 47 §8.2 — replaces the pre-Phase-2e `hasWarn` parallel-boolean
+    // form so a future FAIL-emitting row propagates correctly.
+    const verdict = auditRows.some((r) => r.status === 'FAIL') ? 'FAIL'
+                  : auditRows.some((r) => r.status === 'WARN') ? 'WARN'
+                  : 'PASS';
 
     // §R10 — PIPELINE_SUMMARY (records_total = processed, records_new = newly matched, records_updated = total writes)
     pipeline.emitSummary({
@@ -547,6 +620,8 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
         duration_ms: durationMs,
         coa_processed: processed,
         tier_1a_exact: tier1aExact,
+        // Plan v4 fold F17: bridge-path subset key for migration tracking.
+        tier_1a_via_bridge: tier1aViaBridge,
         tier_1b_name_only: tier1bNameOnly,
         no_address_data: noAddressData,
         no_parcel_match: noParcelMatch,
@@ -559,17 +634,23 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
         audit_table: {
           phase: 42,
           name: 'CoA Parcel Linking',
-          verdict: hasWarn ? 'WARN' : 'PASS',
+          verdict,
           rows: auditRows,
         },
       },
     });
 
     // §R11 — PIPELINE_META declares reads + writes
+    // Plan v4 fold F14: emitMeta reads-list expanded to include
+    // address_points + parcel_address_points for the new bridge-path
+    // Tier 1a lookup. Writes-list unchanged (Phase 2c owns the bridge
+    // table; Phase 2e only consumes it).
     pipeline.emitMeta(
       {
         coa_applications: ['id', 'lead_id', 'street_num', 'street_name_normalized', 'parcel_linked_at'],
         parcels: ['id', 'addr_num_normalized', 'street_name_normalized', 'centroid_lat', 'centroid_lng', 'geom'],
+        address_points: ['address_point_id', 'addr_num_normalized', 'linear_name_normalized', 'address_class_desc', 'maint_stage', 'address_status'],
+        parcel_address_points: ['parcel_id', 'address_point_id'],
         neighbourhoods: ['id', 'geom'],
       },
       {
@@ -581,6 +662,7 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
     pipeline.log.info('[link-coa-to-parcels]', 'Linking complete', {
       processed,
       tier_1a_exact: tier1aExact,
+      tier_1a_via_bridge: tier1aViaBridge,
       tier_1b_name_only: tier1bNameOnly,
       no_address_data: noAddressData,
       no_parcel_match: noParcelMatch,

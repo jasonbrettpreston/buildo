@@ -2094,3 +2094,51 @@ Source: 4-reviewer IMPL review on Phase 2d diff (link-parcels.js Strategy 1a add
 ### Procedure note (lesson)
 
 WF1 #parcel-address-bridge Phase 2d initially shipped with TWO plan-lock violations (F17 + F19/F20/F22/H5/C2) that the Observability reviewer caught with confidence 100. **Lesson:** when a multi-page plan locks specific naming or algorithmic decisions, re-read the relevant fold section IMMEDIATELY before writing the change. The plan's §10 Plan Compliance Checklist exists precisely to prevent these silent deviations. Adding to memory: re-read `.cursor/active_task.md` fold locks before implementing each phase that maps to specific fold IDs.
+
+
+---
+
+## WF1 #parcel-address-bridge Phase 2e — IMPL Multi-Agent Review triage (2026-05-23)
+
+Source: 4-reviewer IMPL review on Phase 2e diff (link-coa-to-parcels.js bridge-path addition). Independent verdict: PASS (no Phase 2e-specific findings ≥ confidence 80). Observability + Gemini + DeepSeek findings target PRE-EXISTING patterns not introduced by Phase 2e — recorded below for follow-up WF3 scoping.
+
+### Plan-lock verification (lessons from Phase 2d applied)
+
+Re-read `.cursor/active_task.md` fold-locks BEFORE implementing per `feedback_plan_fold_locks.md`. Phase 2e correctly applied:
+- F14 (emitMeta deltas declared for link-coa-to-parcels — both early-exit + main paths)
+- F16 (verdict cascade upgrade from `hasWarn` parallel-boolean to row-derived)
+- F17 (counter naming preservation — `tier_1a_exact` rolls up BOTH bridge + legacy; `tier_1a_via_bridge` is INFO sibling)
+- F19/F20/F22/H5 (uniform 3-level tiebreaker: ADDRESS_CLASS_DESC > ST_Area(p.geom::geography) ASC > ap.address_point_id ASC)
+- C2 (::geography cast for square-meters semantics)
+
+### REAL Phase-2e-specific findings folded
+
+| # | Reviewer | Item | Resolution |
+|---|----------|------|------------|
+| 311 | Observability Finding 2 (conf 82) — initially flagged | Early-exit emitMeta parcels reads-list over-declares legacy columns | **MISREAD — REVERTED** — the legacy Tier 1a fallback at line 391-407 + Tier 1b at line 410-419 STILL read `parcels.addr_num_normalized` + `parcels.street_name_normalized` (they're the fallback path when the bridge misses). The columns are correctly declared in both emitMeta paths. Observability assumed the bridge fully replaced the legacy path; it doesn't. |
+
+### DEFERRED (pre-existing patterns surfaced; not Phase 2e scope)
+
+| # | Reviewer | Item | Triage |
+|---|----------|------|--------|
+| 312 | Gemini CRIT line 552 + Independent acknowledged | `RELEASE SAVEPOINT row_sp` after `ROLLBACK TO SAVEPOINT row_sp` may error because rollback destroys the savepoint | **PRE-EXISTING** SAVEPOINT lifecycle pattern. Worth a follow-up WF3 to verify the catch-block + release pattern actually works under fault injection. |
+| 313 | DeepSeek CRIT lines 280-380 | SAVEPOINT on Tier 1 tables forbidden by Spec 47 §7.8 | **PRE-EXISTING** design (R2.v5 fix #11 documented). The §7.8 prohibition is recent; the script's SAVEPOINT pattern predates it. Worth a Spec 42 rewrite WF to align with §7.8 (pre-validate, no in-transaction per-row catch). |
+| 314 | DeepSeek CRIT lines 285-380 | Per-row try/catch inside withTransaction violates §7.4 | **PRE-EXISTING** — same as #313. |
+| 315 | Gemini HIGH line 379 | ST_Area on NULL geometry could fail | **DEFENSIBLE for Phase 2e** — parcel_address_points (Phase 2c) only inserts rows where both parcels.geom AND address_points.geom are NOT NULL. A NULL-geom parcel cannot be a JOIN target. Belt-and-suspenders `WHERE p.geom IS NOT NULL` would be additive but not required. |
+| 316 | Gemini MEDIUM 80-128 | Inconsistent geometry libraries (custom pointInPolygon + Turf.js + own pointInGeoJSON) | **PRE-EXISTING** — refactoring opportunity, not Phase 2e scope. |
+| 317 | Gemini LOW 424/439 | `ORDER BY id DESC` heuristic on legacy Tier 1a/1b is undocumented | **PRE-EXISTING** + arguably should be aligned with the bridge tiebreaker per H5. Future WF3. |
+| 318 | Gemini LOW 320-556 | Row-by-row processing (RBAR) — no batch CTE like link-parcels | **PRE-EXISTING** architecture choice. The neighbourhood lookup + ghost cleanup per row complicates batching. |
+| 319 | Gemini NIT line 134 | `haversineDistance` dead code | **PRE-EXISTING**. |
+| 320 | DeepSeek HIGH line 478 | `records_new: 0` hardcoded — per §11.1 should count actual INSERTs | **PRE-EXISTING** — script uses ON CONFLICT DO UPDATE and doesn't distinguish INSERT vs UPDATE via xmax. Worth a Spec 47 §11.1 alignment WF3. |
+| 321 | DeepSeek HIGH 460-467 | Ghost cleanup uses bare `pool.query` outside withTransaction (§B2 violation) | **PRE-EXISTING** — ghost cleanup is between rows but outside the row-loop transaction. Worth a follow-up. |
+| 322 | DeepSeek HIGH 463-467 | Hardcoded thresholds 95% / 1% should be in logic_variables | **PRE-EXISTING**. |
+| 323 | DeepSeek HIGH line 83 | RUN_AT captured BEFORE advisory lock acquisition (§6.1 / Phase I.1 fold) | **PRE-EXISTING** — Phase I.1 grandfathered this; new scripts MUST capture inside the lock callback. |
+| 324 | DeepSeek MEDIUM line 14 | Lock ID 4201 ≠ spec number 42 (§R2 default rule) | **DEFENSIBLE** — Spec 47 §5.2 exception precedent + registered in pipeline-advisory-lock.infra.test.ts §A.5. Documented project decision. |
+| 325 | DeepSeek MEDIUM line ~360 | Unmatched-row update lacks IS DISTINCT FROM guard | **PRE-EXISTING**. |
+| 326 | DeepSeek MEDIUM line ~465 | perRowErrors masking: SAVEPOINT-rolled-back rows not counted as processed | **PRE-EXISTING** — related to #313/#314. |
+| 327 | DeepSeek LOW 478 | records_total includes noAddressData from pre-pass | **DEFENSIBLE** — pre-pass rows ARE primary entities evaluated (just resolved as unmatchable early). §11.1-compliant. |
+| 328 | DeepSeek LOW ~440 | tier_1a_via_bridge not used in any threshold/verdict | **DEFENSIBLE** — F17 explicitly defines it as INFO sibling; observe-chain.js 7-day baseline catches drift. |
+| 329 | DeepSeek LOW 290-310 | Neighbourhoods loaded into memory (not streamed) | **PRE-EXISTING** — neighbourhoods table is ~140 rows, well below the §6.2 10K threshold. |
+| 330 | DeepSeek LOW 465 | centroidOutsidePolygon undercounts when geometry NULL | **PRE-EXISTING**. |
+| 331 | Observability Finding 3 (conf 80) | Early-exit `audit_table.phase: 11` ≠ main path `phase: 42` | **PRE-EXISTING** — admin UI step ordering uses phase as key. Worth a follow-up WF3. |
+| 332 | Observability Item 9 (out-of-scope Phase 2f) | match_type='address_points_exact' downstream consumer audit per Spec 47 §10.3 | **DEFER to Phase 2f** — verify assert-global-coverage.js + mobile lead feed + admin dashboards handle the new bucket. |
