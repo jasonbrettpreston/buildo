@@ -34,8 +34,16 @@ const ADVISORY_LOCK_ID = 83;
 // cost_range_low, cost_range_high, premium_factor, complexity_score,
 // model_version, is_geometric_override, modeled_gfa_sqm,
 // effective_area_sqm, trade_contract_values, computed_at.
-const BULK_COLUMN_COUNT = 15;
-const BATCH_SIZE = Math.floor((65535 - 1) / BULK_COLUMN_COUNT); // 4368
+// WF3 #16 (2026-05-22) — Spec 79 §7a Cycle 2 Finding M fix.
+// Mig 145 (Phase D classifier substrate, 2026-05-18) changed cost_estimates
+// PK from (permit_num, revision_num) → (lead_id). The script's INSERT was
+// not updated, causing every batch to fail with "no unique or exclusion
+// constraint matching the ON CONFLICT specification" since 2026-05-19.
+// Fix: include lead_id in INSERT column list (computed from permit_num +
+// padded revision_num) + change ON CONFLICT target to (lead_id). Column
+// count bumps from 15 → 16.
+const BULK_COLUMN_COUNT = 16;
+const BATCH_SIZE = Math.floor((65535 - 1) / BULK_COLUMN_COUNT); // 4095
 
 // Spec 47 §3.6 bounded-array discipline — cap the unique-key telemetry Map at
 // 200 entries to prevent OOM under a long-tail anomaly (e.g., a data-import
@@ -132,7 +140,7 @@ function buildBulkUpsertSQL(batchSize) {
   for (let i = 0; i < batchSize; i++) {
     const b = i * BULK_COLUMN_COUNT;
     valueGroups.push(
-      `($${b+1},$${b+2},$${b+3},$${b+4},$${b+5},$${b+6},$${b+7},$${b+8},$${b+9},$${b+10},$${b+11},$${b+12},$${b+13},$${b+14}::jsonb,$${b+15}::timestamptz)`,
+      `($${b+1},$${b+2},$${b+3},$${b+4},$${b+5},$${b+6},$${b+7},$${b+8},$${b+9},$${b+10},$${b+11},$${b+12},$${b+13},$${b+14}::jsonb,$${b+15}::timestamptz,$${b+16})`,
     );
   }
   return `
@@ -140,10 +148,10 @@ function buildBulkUpsertSQL(batchSize) {
       permit_num, revision_num, estimated_cost, cost_source, cost_tier,
       cost_range_low, cost_range_high, premium_factor, complexity_score,
       model_version, is_geometric_override, modeled_gfa_sqm,
-      effective_area_sqm, trade_contract_values, computed_at
+      effective_area_sqm, trade_contract_values, computed_at, lead_id
     ) VALUES
       ${valueGroups.join(',\n      ')}
-    ON CONFLICT (permit_num, revision_num) DO UPDATE SET
+    ON CONFLICT (lead_id) DO UPDATE SET
       estimated_cost        = EXCLUDED.estimated_cost,
       cost_source           = EXCLUDED.cost_source,
       cost_tier             = EXCLUDED.cost_tier,
@@ -181,6 +189,11 @@ async function flushBatch(pool, rows, RUN_AT) {
     // logic but explicitly NOT pushed into params here, so they cannot leak
     // into the INSERT statement and cause a schema error.
     for (const r of rows) {
+      // WF3 #16 (2026-05-22) — lead_id computed from permit_num + padded
+      // revision_num per mig 132 trigger contract (matches the auto-populated
+      // `permits.lead_id` shape so JOINs against cost_estimates by lead_id
+      // align with the permits trigger output).
+      const leadId = `permit:${r.permit_num}:${String(r.revision_num).padStart(2, '0')}`;
       params.push(
         r.permit_num,
         r.revision_num,
@@ -197,6 +210,7 @@ async function flushBatch(pool, rows, RUN_AT) {
         r.effective_area_sqm,
         JSON.stringify(r.trade_contract_values || {}),
         RUN_AT,
+        leadId,
       );
     }
     const res = await client.query(sql, params);
@@ -306,10 +320,20 @@ if (require.main === module) {
     let matrixMisses = 0;          // WF3 Pass-2.5 Finding D — Spec 83 §3 Step B
     let matrixMissUniqueKeys = 0;  // scalar — counts ALL distinct keys seen (uncapped)
     const matrixMissByKey = new Map(); // bounded at MATRIX_MISS_KEYS_CAP
-    let batch = [];
 
     try {
       const sourceSQL = rowLimit ? `${SOURCE_SQL} LIMIT ${rowLimit}` : SOURCE_SQL;
+
+      // WF3 #16 fold (2026-05-22) — defensive Map dedupe by lead_id within the
+      // batch. After the Finding M ON CONFLICT fix surfaced this latent issue
+      // (6 batches × 4095 rows = 24,570 collisions), a Map keyed by lead_id
+      // prevents intra-batch duplicates from triggering PG's "ON CONFLICT DO
+      // UPDATE command cannot affect row a second time" error. Latest-wins
+      // semantic — if the same lead_id appears twice in the stream, the
+      // second estimate overwrites. Cheap O(1) per row; flushBatch reads
+      // Map.values() instead of the array.
+      const batchByLeadId = new Map();
+      const getBatchLeadId = (r) => `permit:${r.permit_num}:${String(r.revision_num).padStart(2, '0')}`;
 
       for await (const row of pipeline.streamQuery(pool, sourceSQL)) {
         processed++;
@@ -317,7 +341,7 @@ if (require.main === module) {
         if (dryRun) continue; // count rows without writing
 
         const estimate = estimateCostShared(row, config);
-        batch.push(estimate);
+        batchByLeadId.set(getBatchLeadId(estimate), estimate);
 
         if (estimate.estimated_cost == null) nullEstimates++;
         if (estimate._liarsGateOverride) liarsGateOverrides++;
@@ -339,7 +363,9 @@ if (require.main === module) {
           }
         }
 
-        if (batch.length >= BATCH_SIZE) {
+        if (batchByLeadId.size >= BATCH_SIZE) {
+          const batch = Array.from(batchByLeadId.values());
+          batchByLeadId.clear();
           try {
             const res = await flushBatch(pool, batch, RUN_AT);
             inserted += res.inserted;
@@ -353,12 +379,13 @@ if (require.main === module) {
               err: err && err.message,
             });
           }
-          batch.length = 0; // reuse array allocation (faster than batch = [])
         }
       }
 
-      // Final partial batch
-      if (batch.length > 0) {
+      // Final partial batch — drain the Map.
+      if (batchByLeadId.size > 0) {
+        const batch = Array.from(batchByLeadId.values());
+        batchByLeadId.clear();
         try {
           const res = await flushBatch(pool, batch, RUN_AT);
           inserted += res.inserted;
@@ -376,11 +403,11 @@ if (require.main === module) {
     } catch (streamErr) {
       // If a batch was in-flight when the stream died, those rows are lost.
       // Count them as failed so emitSummary reflects reality.
-      if (batch.length > 0) {
+      if (batchByLeadId.size > 0) {
         failedBatches++;
-        failedRows += batch.length;
+        failedRows += batchByLeadId.size;
         pipeline.log.error('[compute-cost-estimates]', 'stream error — dropping in-flight batch', {
-          dropped_rows: batch.length,
+          dropped_rows: batchByLeadId.size,
           err: streamErr && streamErr.message,
         });
       } else {
@@ -502,6 +529,7 @@ if (require.main === module) {
           'cost_range_low', 'cost_range_high', 'premium_factor', 'complexity_score',
           'model_version', 'is_geometric_override', 'modeled_gfa_sqm',
           'effective_area_sqm', 'trade_contract_values', 'computed_at',
+          'lead_id', // WF3 #16 fold (mig 145 PK fix)
         ],
         data_quality_snapshots: ['cost_estimates_liar_gate_overrides', 'cost_estimates_zero_total_bypass'],
       },

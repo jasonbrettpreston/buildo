@@ -41,8 +41,8 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     expect(content).toMatch(/pipeline\.withTransaction\(/);
   });
 
-  it('uses formula-based BULK_COLUMN_COUNT = 15 (spec 83 §7, spec 47 §6.3)', () => {
-    expect(content).toMatch(/BULK_COLUMN_COUNT\s*=\s*15/);
+  it('uses formula-based BULK_COLUMN_COUNT = 16 (spec 83 §7, spec 47 §6.3; WF3 #16 added lead_id column)', () => {
+    expect(content).toMatch(/BULK_COLUMN_COUNT\s*=\s*16/);
   });
 
   it('derives BATCH_SIZE from formula Math.floor((65535 - 1) / BULK_COLUMN_COUNT) (spec 47 §6.3)', () => {
@@ -51,8 +51,12 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     expect(content).not.toMatch(/BATCH_SIZE\s*=\s*5000/);
   });
 
-  it('uses ON CONFLICT (permit_num, revision_num) DO UPDATE for idempotency', () => {
-    expect(content).toMatch(/ON CONFLICT \(permit_num, revision_num\) DO UPDATE/);
+  it('uses ON CONFLICT (lead_id) DO UPDATE for idempotency (WF3 #16: mig 145 changed PK to lead_id)', () => {
+    expect(content).toMatch(/ON CONFLICT \(lead_id\) DO UPDATE/);
+    // Regression lock: old (permit_num, revision_num) conflict target must NOT
+    // return — it doesn't match the cost_estimates PK and produces silent
+    // 0-write production state (Finding M, 14-day silent failure).
+    expect(content).not.toMatch(/ON CONFLICT \(permit_num, revision_num\)/);
   });
 
   it('references all source tables', () => {
@@ -285,8 +289,18 @@ describe('scripts/compute-cost-estimates.js — file shape', () => {
     expect(content).toMatch(/--limit=/);
   });
 
-  it('uses batch.length = 0 for array reuse (not batch = [] allocation)', () => {
-    expect(content).toMatch(/batch\.length\s*=\s*0/);
+  it('uses Map-based intra-batch dedupe by lead_id (WF3 #16 fold — prevents "cannot affect row a second time" collision)', () => {
+    // Replaced the array-based `let batch = []` + `batch.push()` + `batch.length=0`
+    // pattern with a Map keyed by lead_id. Latest-wins semantic eliminates
+    // intra-batch lead_id duplicates by construction regardless of upstream
+    // JOIN behavior. flushBatch reads `Array.from(map.values())`.
+    expect(content).toMatch(/const\s+batchByLeadId\s*=\s*new\s+Map\(\)/);
+    expect(content).toMatch(/batchByLeadId\.set\(/);
+    expect(content).toMatch(/Array\.from\(batchByLeadId\.values\(\)\)/);
+    expect(content).toMatch(/batchByLeadId\.clear\(\)/);
+    // Regression lock: legacy array-based batch must NOT return.
+    expect(content).not.toMatch(/let\s+batch\s*=\s*\[\]/);
+    expect(content).not.toMatch(/batch\.push\(estimate\)/);
   });
 
   it('has SPEC LINK pointing to spec 83 (not legacy 72)', () => {
