@@ -1934,3 +1934,38 @@ Source: 4-reviewer IMPL review on Phase 1 diff (mig 162 + load-parcels.js Day-1 
 | 235 | DeepSeek MEDIUM (line 349-350) | `JSON.stringify(row.geometry)` could be passed as JSONB-cast param for slightly better perf |
 | 236 | DeepSeek LOW (line 239-246) | Progress logging `downloaded % (10MB) < chunk.length` modulo-comparison fires unevenly |
 | 237 | DeepSeek NIT (line 399-400) | `pipeline.BATCH_SIZE` not imported — relies on SDK fallback |
+
+
+---
+
+## WF1 #parcel-address-bridge Phase 2a — IMPL Multi-Agent Review triage (2026-05-23)
+
+Source: 4-reviewer IMPL review on Phase 2a diff (`scripts/one-time/backfill-address-points-geom.js` + infra test). Independent + Observability + Gemini Pro + DeepSeek-R1. **2 REAL findings folded inline; 1 deferred to Phase 2f; remainder defensible.**
+
+### REAL findings folded into Phase 2a (no separate WF3)
+
+| # | Reviewer | Item | Resolution |
+|---|----------|------|------------|
+| 238 | Independent F1 (conf 88) + Observability I1 (conf 88) | `records_total: pendingTotal` violates Spec 47 §11.2 — pre-run backlog must live in audit_table only (already does as `pending_pre_run`), not duplicated as records_total | **FIXED INLINE** — changed to `records_total: totalUpdated`. Added regression-lock test. |
+| 239 | Gemini CRIT + DeepSeek MED | Candidates CTE without ORDER BY scans progressively slower as more rows are filled — last batches re-scan most of the table | **FIXED INLINE** — added `ORDER BY address_point_id` to the CTE. Enables forward PK-btree scan. Regression-locked. |
+
+### DEFER to Phase 2f (registry + infra test coverage)
+
+| # | Reviewer | Item | Phase 2f owner |
+|---|----------|------|----------------|
+| 240 | Observability C1 (conf 95) | Lock 116 not in Spec 47 §A.5 registry; `pipeline-advisory-lock.infra.test.ts` LOCK_ID_REGISTRY doesn't cover one-time scripts | Phase 2f adds both lock 115 (link-parcel-addresses) AND lock 116 (geom backfill) to the §A.5 registry table + extends infra test to iterate one-time scripts. |
+
+### DEFENSIBLE intentional choices (no action)
+
+| # | Reviewer | Item | Triage |
+|---|----------|------|--------|
+| 241 | Independent + Observability I3 (conf 82) | `completed_naturally` should be an audit_table row | **DEFENSIBLE** — `completed_naturally === false` while `errors === 0` is unreachable (the catch block always increments errors before break). The FAIL state is correctly surfaced via the `errors` row. `completed_naturally` is operator-facing diagnostic context appropriate for records_meta. |
+| 242 | Gemini MED (line 104) | Redundant `ap.geom IS NULL` in UPDATE — CTE already filtered | **DEFENSIBLE** — belt-and-suspenders idempotency. Prevents double-write if a concurrent run set geom between SELECT and UPDATE. Cheap; not misleading. |
+| 243 | Gemini MED (line 102) | No lat/lng range validation — ST_MakePoint could fail on out-of-range | **MISREAD** — `ST_MakePoint(double, double)` accepts any numeric values; `ST_SetSRID(.., 4326)` does not enforce coordinate bounds either. No actual error possible. |
+| 244 | Gemini LOW (line 99) | `FOR UPDATE SKIP LOCKED` misleading in single-worker context (advisory lock 116 already enforces singleton) | **DEFENSIBLE** — comment-documented intent. SKIP LOCKED is harmless single-worker; provides forward compatibility if multi-instance is added later. |
+| 245 | DeepSeek CRIT (line 50) | Lock ID 116 doesn't match spec number 54 | **DEFENSIBLE** — Spec 47 §5.2 explicitly documents the precedent: when the owning-spec ID is already taken, use a free ID (precedent: compute-phase-calibration took 93 vs owning-spec 84). Spec 54 lock is taken by load-address-points (lock 96 — chained because 54 was already held by an earlier script). |
+| 246 | DeepSeek HIGH (line 100-106) | catch block does not re-throw — pipeline_runs.status stays 'success' even on FAIL verdict | **DEFENSIBLE** — verdict cascade correctly emits FAIL via the `errors` audit row. FreshnessTimeline + admin dashboard read `audit_table.verdict`, NOT pipeline_runs.status. Consistent with project pattern (e.g., backfill-realtor-permit-trades.js uses the same flow). |
+| 247 | DeepSeek HIGH (line 31) | Missing RUN_AT capture per §R3.5 | **DEFENSIBLE** — §R3.5 mandates RUN_AT for DB-clock timestamps WRITTEN to the DB. This script writes no timestamps. No DB-clock dependency. |
+| 248 | DeepSeek MED (line 76-91) | FOR UPDATE SKIP LOCKED can cause premature completion if external sessions hold conflicting row-locks | **DEFENSIBLE** — `remaining_pending` audit row catches the under-completion case (WARN). Operator can re-run (idempotent). |
+| 249 | DeepSeek LOW (line 22) | BATCH_SIZE magic 5000 not derived from §9.2 formula `floor(65535 / column_count)` | **DEFENSIBLE** — §9.2 applies to multi-row VALUES INSERTs (binds per row). This script's UPDATE has a single LIMIT parameter regardless of batch size. 5000 well within practical lock-duration bounds. |
+| 250 | DeepSeek NIT (line 35-38) | Typo "geoemetry" → "geometry" | **HALLUCINATION** — grep confirms no such typo in the file. |
