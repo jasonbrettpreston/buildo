@@ -18,6 +18,15 @@ const {
   buildDriftAuditRow,
   buildNullAddressAuditRow,
 } = require('./lib/parcels-csv-drift');
+// WF1 #parcel-address-bridge Phase 2b — normalizers extracted to a shared
+// lib so load-parcels + load-address-points produce identical normalized
+// values. Link-parcels JOINs parcels.addr_num_normalized to
+// address_points.addr_num_normalized; the two loaders MUST use the same
+// function so the JOIN doesn't silently miss matches.
+const {
+  normalizeAddressNumber,
+  parseLinearName,
+} = require('./lib/address-normalizers');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -33,19 +42,10 @@ const CSV_URL =
 const SQM_TO_SQFT = 10.7639;
 const M_TO_FT = 3.28084;
 
-const STREET_TYPE_REGEX =
-  /\b(ST|STREET|AVE|AVENUE|DR|DRIVE|RD|ROAD|BLVD|BOULEVARD|CRT|COURT|CRES|CRESCENT|PL|PLACE|WAY|LANE|LN|TR|TRAIL|TERR|TERRACE|CIR|CIRCLE|PKWY|PARKWAY|GATE|GDNS|GARDENS|GRV|GROVE|HTS|HEIGHTS|MEWS|SQ|SQUARE)\b/;
-
-const STREET_TYPE_MAP = {
-  STREET: 'ST', AVENUE: 'AVE', DRIVE: 'DR', ROAD: 'RD',
-  BOULEVARD: 'BLVD', COURT: 'CRT', CRESCENT: 'CRES', PLACE: 'PL',
-  LANE: 'LN', TRAIL: 'TR', TERRACE: 'TERR', CIRCLE: 'CIR',
-  PARKWAY: 'PKWY', GARDENS: 'GDNS', GROVE: 'GRV', HEIGHTS: 'HTS',
-  SQUARE: 'SQ',
-};
-
 // ---------------------------------------------------------------------------
-// Helpers (inline to avoid module resolution issues in standalone scripts)
+// Helpers (parseStatedArea is parcels-specific; parseLinearName +
+// normalizeAddressNumber + STREET_TYPE_* moved to scripts/lib/address-normalizers.js
+// for cross-loader consistency per WF1 Phase 2b.)
 // ---------------------------------------------------------------------------
 function parseStatedArea(raw) {
   if (!raw || !raw.trim()) return null;
@@ -54,29 +54,6 @@ function parseStatedArea(raw) {
   const value = parseFloat(match[1]);
   if (isNaN(value) || value <= 0) return null;
   return value;
-}
-
-function parseLinearName(linearName) {
-  if (!linearName || !linearName.trim()) {
-    return { street_name: '', street_type: '' };
-  }
-  const upper = linearName.trim().toUpperCase();
-  const typeMatch = upper.match(STREET_TYPE_REGEX);
-  let streetType = '';
-  if (typeMatch) {
-    streetType = STREET_TYPE_MAP[typeMatch[1]] || typeMatch[1];
-  }
-  const nameOnly = upper
-    .replace(STREET_TYPE_REGEX, '')
-    .replace(/\b(NORTH|SOUTH|EAST|WEST|[NSEW])\s*$/, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return { street_name: nameOnly, street_type: streetType };
-}
-
-function normalizeAddressNumber(num) {
-  if (!num) return '';
-  return num.trim().replace(/^0+/, '').toUpperCase();
 }
 
 function extractRing(geometry) {

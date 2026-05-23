@@ -1969,3 +1969,45 @@ Source: 4-reviewer IMPL review on Phase 2a diff (`scripts/one-time/backfill-addr
 | 248 | DeepSeek MED (line 76-91) | FOR UPDATE SKIP LOCKED can cause premature completion if external sessions hold conflicting row-locks | **DEFENSIBLE** — `remaining_pending` audit row catches the under-completion case (WARN). Operator can re-run (idempotent). |
 | 249 | DeepSeek LOW (line 22) | BATCH_SIZE magic 5000 not derived from §9.2 formula `floor(65535 / column_count)` | **DEFENSIBLE** — §9.2 applies to multi-row VALUES INSERTs (binds per row). This script's UPDATE has a single LIMIT parameter regardless of batch size. 5000 well within practical lock-duration bounds. |
 | 250 | DeepSeek NIT (line 35-38) | Typo "geoemetry" → "geometry" | **HALLUCINATION** — grep confirms no such typo in the file. |
+
+
+---
+
+## WF1 #parcel-address-bridge Phase 2b — IMPL Multi-Agent Review triage (2026-05-23)
+
+Source: 4-reviewer IMPL review on Phase 2b diff (load-address-points.js extension + new shared address-normalizers lib + new address-points-csv-drift lib + load-parcels refactor + 3 new test files). Independent + Observability + Gemini Pro + DeepSeek-R1. **2 REAL inline-comment fixes folded; 3 deferred to Phase 2c / future cleanup; remainder defensible.**
+
+### REAL fixes folded into Phase 2b (comment-only)
+
+| # | Reviewer | Item | Resolution |
+|---|----------|------|------------|
+| 251 | Independent I3 (conf 82) | latitude/longitude UPSERT uses bare assignment (no COALESCE) — intentional but undocumented; future "safety improvement" could suppress legitimate coordinate updates | **FIXED INLINE** — added inline comment explaining the isNaN skip guard makes COALESCE unnecessary + the hazard of "fixing" it. |
+| 252 | Independent C1 (conf 95) | `linear_name_normalized` stores `street_name` only (not the full linear name); JOIN key pairing for Phase 2c link-parcel-addresses needs documentation | **FIXED INLINE** — added comment documenting the asymmetric column naming + the required JOIN predicate (`parcels.street_name_normalized = address_points.linear_name_normalized`). |
+
+### DEFER to Phase 2c / follow-up
+
+| # | Reviewer | Item | Owner |
+|---|----------|------|-------|
+| 253 | Observability Item 4 (conf 85) | No dedicated `geom_parse_failures` audit row — a Toronto CSV format change for `geometry` that falls through to LATITUDE/LONGITUDE fallback produces zero audit signal beyond eventual `skip_rate >= 5%` FAIL | Phase 2c follow-up: add a `geom_parse_failures` INFO/WARN counter incremented at line 292 (post-geometry-parse fall-through). |
+| 254 | Observability Item 7 (conf 88) | `records_total: inserted + updated` is pre-Phase-2b grandfathered pattern; Spec 47 §11.1 defines records_total as rows evaluated this run (would be `processed`, not write-counts) | Future cleanup — same pattern as load-parcels.js. Aligning would also require updating load-parcels for consistency. |
+| 255 | Observability Item 12a (conf 82) | `relax_column_count: true` in csv-parse silently null-fills 10 new columns for malformed mid-file rows; no `records_malformed_rows` counter | Future cleanup — applies to ALL pipeline loaders. Owning WF: a "csv-parse hardening" follow-up. |
+
+### DEFENSIBLE intentional choices / pre-existing patterns (no action)
+
+| # | Reviewer | Item | Triage |
+|---|----------|------|--------|
+| 256 | Gemini CRIT line 369 + DeepSeek CRIT line 365-370 | Silent data loss on batch flush failure — catch block clears batch + continues, leaving rows in `processed` but unwritten | **DEFENSIBLE** — project-wide pipeline pattern (matches load-parcels, backfill-realtor). Verdict cascade emits FAIL via errors > 0 row. Alternative (throw + halt) would discard 500K+ good rows on one bad row. The current pattern + audit signal is the documented project trade-off. |
+| 257 | Gemini CRIT line 48 | Unbounded recursion in downloadFile for redirect loops | **PRE-EXISTING** — not introduced by Phase 2b. Hardening tracked separately. |
+| 258 | Gemini HIGH "spec divergence" | Spec 54 documents 5-column target; code inserts 16 columns | **MISREAD** — Phase 2f explicitly owns the spec sync. The 16-column shape was authorized by plan v4. |
+| 259 | Gemini HIGH line 313 | Empty catch on JSON.parse(geomRaw) | **PRE-EXISTING** — fallback to LATITUDE/LONGITUDE columns handles the parse failure; isNaN guard catches if both paths fail. |
+| 260 | Gemini MED lines 222-246 | WHERE clause complex with NULLIF/NOT NULL guards on every COALESCE column | **DEFENSIBLE** — each guard prevents spurious WAL writes when EXCLUDED is empty/NULL. The simpler `IS DISTINCT FROM` alternative would fire updates on EVERY no-op row. Verbose form is intentional. |
+| 261 | Gemini MED lines 47/52/70 | fs.unlinkSync without existence check could re-throw | **PRE-EXISTING** in downloadFile helper. |
+| 262 | Gemini LOW line 36 | Hardcoded CKAN URL not in env | **PRE-EXISTING** + acceptable for one-source CSV loaders. |
+| 263 | Gemini LOW lines 122-159 | Placeholder construction tightly coupled with magic number 15 | **DEFENSIBLE** — clearly commented; the regression-lock infra test catches column-count drift. |
+| 264 | Gemini NIT line 290 | parseInt accepts negative integers | **PRE-EXISTING** — DB PK enforces positive (BIGINT but operationally positive). |
+| 265 | DeepSeek HIGH lines 103/375 | No geometry pre-validation before batch push | **DEFENSIBLE** — isNaN skip guard catches malformed coords. PostGIS ST_MakePoint accepts any float; failure mode is downstream (link-parcel-addresses sees NULL geom and skips). |
+| 266 | DeepSeek MED lines 10-17/98 | Spec link points to specs 43+54 but ADVISORY_LOCK_ID=96 | **DEFENSIBLE** — Spec 47 §5.2 exception precedent (lock ID can differ from spec ID when spec ID is taken). Lock 96 has been load-address-points's lock since well before WF1. |
+| 267 | DeepSeek MED lines 111-118 | No User-Agent header + no redirect counter | **PRE-EXISTING** in downloadFile. |
+| 268 | DeepSeek LOW lines 380-381 | `unchanged` double-counts rows from failed batches | **DEFENSIBLE + DOCUMENTED** — inline comment already acknowledges this imprecision. The reviewer's suggested fix (subtract errors) doesn't quite work because `errors` is a batch-level counter, not a row-level one. |
+| 269 | DeepSeek LOW line 298 | safeParseIntOrNull accepts 0 as valid for lo_num/hi_num | **NOT A BUG** — 0 is a valid LO_NUM per Toronto schema. |
+| 270 | DeepSeek NIT lines 348-360 / line 92 | Comment count consistency / progress logging modulo arithmetic | **PRE-EXISTING** — minor refactor opportunities. |
