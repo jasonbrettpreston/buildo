@@ -2177,3 +2177,42 @@ WF1 #parcel-address-bridge shipped across 8 commits in a single working day. The
 - `feedback_wf1_phase_plan_review.md` — run 4-reviewer adversarial PLAN review on each sub-phase plan, not just at WF kickoff
 
 **WF1 status:** ✅ DONE. Operator action: follow `docs/runbook/WF1_parcel_address_bridge_first_deploy.md` on next deploy. 7-day baseline-quiet-period applies to `tier_1_via_bridge` + `tier_1a_via_bridge` + new_links_written + parcel_address_points_inserted metrics.
+
+
+---
+
+## WF3 hotfix on WF1 #parcel-address-bridge Phase 2b — load-address-points $2 type inference (2026-05-23)
+
+Source: production deploy run revealed `error: inconsistent types deduced for parameter $2` — every batch in the post-Phase-2b loader run failed silently. addr_num_normalized + linear_name_normalized NULL across all 525K address_points. Strategy 1a + bridge Tier 1a yielding 0 hits in production despite Phase 2c bridge populator showing 511K links + verdict PASS.
+
+### Root cause
+
+`scripts/load-address-points.js` placeholder template used `$i+1` (latitude) and `$i+2` (longitude) BOTH as NUMERIC column values (PG inferred from DECIMAL(10,7)) AND with explicit `::float8` cast inside `ST_MakePoint(...)`. PG cannot reconcile two different inferred types for the same parameter slot.
+
+### Why the 4-reviewer IMPL review missed it
+
+SQL-string regex tests pass against the literal source text — they verify what the JS string contains, not what PostgreSQL actually parses. The bug surfaces only at prepared-statement parse time when pg-node sends the query to PG. A `BUILDO_TEST_DB=1` integration test that issues an actual `client.query(sql, [sampleRow])` against a live DB would catch this class at CI time. The lesson is already in `feedback_db_integration_tests.md`; the WF1 Phase 2b shipping cycle did not apply it.
+
+### Fix (commit: pending)
+
+`scripts/load-address-points.js` placeholders.push() template: `$i+1` + `$i+2` (latitude/longitude) gain explicit `::float8` cast in the column-value positions so all uses of the same parameter share one type.
+
+### 2-reviewer IMPL on the hotfix
+
+| Reviewer | Verdict | Findings |
+|----------|---------|----------|
+| Independent | PASS | No REAL findings before ship. Fix correctly resolves PG type unification. NUMERIC column accepts float8 via implicit cast. Precision-lossless for Toronto coords. Existing SQL-string regex tests still pass. No other parameter slot has the same conflict. |
+| Observability | PASS for the fix; 3 hardening items DEFERRED |
+
+### DEFER (Observability hardening — not blocking hotfix)
+
+| # | Finding | Severity | Triage |
+|---|---------|----------|--------|
+| 333 | `records_unchanged` audit row has `threshold: null, status: 'INFO'` — when all batches fail, `unchanged = processed = ~525K` is a silent anomaly. No alert. Suggested fix: heuristic threshold `processed > 1000 && unchanged > 0.9 * processed && (inserted + updated) === 0 ? 'WARN' : 'INFO'`. | MED | Defer to future load-address-points hardening WF. |
+| 334 | `records_errors` is a batch-failure counter (1 per failed flush), not a row-count. With BATCH_SIZE=1000 + 26 batch failures, ~26K rows were silently lost but operator-visible counter showed `26`. Suggested fix: add `failedRows` counter incremented by `currentBatch.length` in the catch block + new `records_failed_rows` audit row with FAIL gate. | MED | Defer to future hardening WF. |
+| 335 | No DB integration smoke test for load-address-points — pure SQL-string regex tests cannot catch PG prepared-statement parse errors. Suggested fix: add `src/tests/db/load-address-points.db.test.ts` (BUILDO_TEST_DB=1) that issues `client.query(sql, [sampleRow])` against live PG and asserts post-run row count > 0. | HIGH | Defer to a follow-up DB-integration-tests hardening WF; the lesson is already in `feedback_db_integration_tests.md` memory. |
+| 336 | Phase 2c (link-parcel-addresses) should add an `addr_num_fill_rate` cross-stream audit row that checks `COUNT(*) FILTER (WHERE addr_num_normalized IS NOT NULL) / NULLIF(COUNT(*), 0) >= 0.80`. This would have caught the Phase 2b broken state at Phase 2c's audit gate (FAIL verdict halts chain). | HIGH | Defer to a follow-up Phase 2c hardening WF. |
+
+### Process gap (lesson — already in memory)
+
+The 4-reviewer IMPL review on Phase 2b shipped despite the bug because **tests pass ≠ production-data working** (the precise gap the user flagged when restarting this session). `feedback_db_integration_tests.md` already documents this; the lesson held but wasn't applied in the Phase 2b commit gate. Reinforcing: any WF that adds batch INSERT/UPSERT logic MUST include a DB-integration smoke test before shipping.

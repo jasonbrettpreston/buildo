@@ -136,7 +136,18 @@ pipeline.run('load-address-points', async (pool) => {
       for (const row of currentBatch) {
         const i = idx;
         placeholders.push(
-          `($${i}, $${i+1}, $${i+2}, $${i+3}, $${i+4}, $${i+5}, $${i+6}, $${i+7}, ` +
+          // WF3 hotfix on Phase 2b (2026-05-23): the prior form used
+          // $${i+1} (latitude) and $${i+2} (longitude) WITHOUT casts in
+          // the column positions (PG inferred NUMERIC from address_points.
+          // latitude / .longitude column types) AND with `::float8` casts
+          // inside ST_MakePoint. PG cannot reconcile two different inferred
+          // types for the same parameter slot — "error: inconsistent types
+          // deduced for parameter $2" — and every batch failed in production
+          // despite passing SQL-string regex tests + 4-reviewer IMPL review.
+          // Fix: pin both uses of lat/lng to ::float8 so the parameter type
+          // is unambiguous in all positions. The NUMERIC column accepts the
+          // float8 value via implicit cast on the column side.
+          `($${i}, $${i+1}::float8, $${i+2}::float8, $${i+3}, $${i+4}, $${i+5}, $${i+6}, $${i+7}, ` +
           `$${i+8}, $${i+9}, $${i+10}, $${i+11}, $${i+12}, $${i+13}, $${i+14}, ` +
           // ST_MakePoint takes (X=longitude, Y=latitude).
           `ST_SetSRID(ST_MakePoint($${i+2}::float8, $${i+1}::float8), 4326))`,
