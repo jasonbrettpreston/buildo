@@ -550,6 +550,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   // Link & Enrich
   geocode_permits:      { summary: 'Matches permit addresses to address points for lat/lng coordinates', table: 'permits' },
   link_parcels:         { summary: 'Links permits to property parcels via address or spatial match', table: 'permit_parcels' },
+  link_parcel_addresses:{ summary: 'Populates parcel↔address_points spatial bridge via ST_Within (WF1 Phase 2c)', table: 'parcel_address_points' },
   link_neighbourhoods:  { summary: 'Spatially links permits to neighbourhood boundaries', table: 'permits' },
   link_massing:         { summary: 'Links permits to 3D building footprints via parcel intersection', table: 'parcel_buildings' },
   link_coa:             { summary: 'Links CoA applications to building permits by address and ward', table: 'coa_applications' },

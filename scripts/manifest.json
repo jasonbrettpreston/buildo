@@ -13,6 +13,7 @@
     "massing":              { "file": "scripts/load-massing.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["building_footprints"], "telemetry_null_cols": { "building_footprints": ["centroid_lat", "centroid_lng"] } },
     "neighbourhoods":       { "file": "scripts/load-neighbourhoods.js",   "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["neighbourhoods"], "telemetry_null_cols": { "neighbourhoods": ["geometry"] } },
     "geocode_permits":      { "file": "scripts/geocode-permits.js",       "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["latitude", "longitude"] } },
+    "link_parcel_addresses": { "file": "scripts/link-parcel-addresses.js","supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcel_address_points"] },
     "link_parcels":         { "file": "scripts/link-parcels.js",          "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permit_parcels", "permits"], "telemetry_null_cols": { "permits": ["latitude", "longitude"] } },
     "link_neighbourhoods":  { "file": "scripts/link-neighbourhoods.js",   "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["neighbourhood_id"] } },
     "link_massing":         { "file": "scripts/link-massing.js",          "supports_full": true,  "supports_dry_run": false, "chain_args": { "sources": ["--full"] }, "telemetry_tables": ["parcel_buildings"] },
@@ -78,6 +79,7 @@
     ],
     "sources": [
       "assert_schema", "address_points", "geocode_permits", "parcels",
+      "link_parcel_addresses",
       "compute_centroids", "link_parcels", "massing", "link_massing",
       "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib",
       "refresh_snapshot", "assert_data_bounds", "assert_engine_health"

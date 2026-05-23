@@ -30,6 +30,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   // Link & Enrich (12)
   geocode_permits:    { name: 'Geocode Permits',       group: 'link' },
   link_parcels:       { name: 'Link Parcels',          group: 'link' },
+  link_parcel_addresses: { name: 'Link Parcel Addresses', group: 'link' },
   link_neighbourhoods:{ name: 'Link Neighbourhoods',   group: 'link' },
   link_massing:       { name: 'Link Massing',          group: 'link' },
   link_coa:           { name: 'Link CoA',              group: 'link' },
@@ -219,6 +220,11 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'address_points',      indent: 0 },
       { slug: 'geocode_permits',     indent: 1 },
       { slug: 'parcels',             indent: 0 },
+      // WF1 #parcel-address-bridge Phase 2c — spatial bridge populator.
+      // Runs after parcels + address_points are loaded; populates
+      // parcel_address_points so link_parcels Strategies 1+2 and
+      // link_coa_to_parcels Tier 1a/1b have JOIN data.
+      { slug: 'link_parcel_addresses', indent: 1 },
       { slug: 'compute_centroids',   indent: 1 },
       { slug: 'link_parcels',        indent: 1 },
       { slug: 'massing',             indent: 0 },

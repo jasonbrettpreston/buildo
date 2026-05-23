@@ -48,6 +48,16 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/link-neighbourhoods.js':  92,
   'scripts/link-coa.js':             12,
   'scripts/link-wsib.js':            94,
+  // WF1 #parcel-address-bridge Phase 2c — Wave 2 spatial bridge populator.
+  // Lock 115 assigned from free range; owning spec is 54 (Source: Address
+  // Points) but spec ID is taken by load-address-points historically.
+  'scripts/link-parcel-addresses.js': 115,
+  // Lock 116 reservation — Phase 2a one-time backfill:
+  //   scripts/one-time/backfill-address-points-geom.js
+  // One-time scripts are NOT in scripts/manifest.json, so the manifest-
+  // coverage assertion at line 191 below does not enforce their presence
+  // here. This comment serves as the §A.5 registry record so a future
+  // developer assigning a new lock ID does not silently collide with 116.
   // Wave 1 — Classify
   'scripts/classify-inspection-status.js': 53,
   'scripts/classify-scope.js':       87,

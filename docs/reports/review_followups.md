@@ -2011,3 +2011,37 @@ Source: 4-reviewer IMPL review on Phase 2b diff (load-address-points.js extensio
 | 268 | DeepSeek LOW lines 380-381 | `unchanged` double-counts rows from failed batches | **DEFENSIBLE + DOCUMENTED** — inline comment already acknowledges this imprecision. The reviewer's suggested fix (subtract errors) doesn't quite work because `errors` is a batch-level counter, not a row-level one. |
 | 269 | DeepSeek LOW line 298 | safeParseIntOrNull accepts 0 as valid for lo_num/hi_num | **NOT A BUG** — 0 is a valid LO_NUM per Toronto schema. |
 | 270 | DeepSeek NIT lines 348-360 / line 92 | Comment count consistency / progress logging modulo arithmetic | **PRE-EXISTING** — minor refactor opportunities. |
+
+
+---
+
+## WF1 #parcel-address-bridge Phase 2c — IMPL Multi-Agent Review triage (2026-05-23)
+
+Source: 4-reviewer IMPL review on Phase 2c diff (`link-parcel-addresses.js` + manifest insertion + advisory-lock registry + infra test). **5 REAL findings folded inline; remainder defensible / pre-existing pattern.**
+
+### REAL fixes folded into Phase 2c
+
+| # | Reviewer | Item | Resolution |
+|---|----------|------|------------|
+| 271 | All 4 reviewers (Independent C1 + Observability F1 + Gemini implicit + DeepSeek HIGH, conf 95) | `NOW()` in batch INSERT violates Spec 47 §14.2 / §R3.5 — midnight-cross splits computed_at across calendar dates on long runs | **FIXED INLINE** — captured `RUN_AT = await pipeline.getDbTimestamp(pool)` once at startup, passed as `$3::timestamptz`. Regression-locked via 4-pattern infra test. |
+| 272 | Observability F3 (conf 85) | `final_link_count` had no FAIL gate; PostGIS/index regression would silently produce 0 links + Phase 2d would unlink every permit | **FIXED INLINE** — added threshold `> 0` + `status: finalLinks === 0 ? 'FAIL' : 'INFO'`. Bridge zero-coverage now blocks the chain before Phase 2d runs. |
+| 273 | Independent C2 + Observability F2 + DeepSeek HIGH | Lock 115 vs SPEC LINK spec 54/55 mismatch undocumented at script header (Spec 47 §3 requires inline exception note) | **FIXED INLINE** — added "ADVISORY LOCK NOTE" block in script header citing the §3 exception precedent (backfill-realtor uses lock 114 vs owning-spec 91). |
+| 274 | Independent I1 (conf 83) | `parcels_with_no_address_pct >= 10% → WARN` would fire on every clean run given PI-2 avg-1.0-ap estimate (~37% of parcels have zero APs naturally) | **FIXED INLINE** — recalibrated threshold to `< 50%` (well above expected baseline; a regression jump would still trip WARN). |
+| 275 | Observability F4 (conf 90) | Lock 116 (Phase 2a backfill) still absent from §A.5 registry — collision risk for future lock assignments | **FIXED INLINE** — added reservation comment in LOCK_ID_REGISTRY noting lock 116 is reserved for one-time backfill script (not in manifest, so uniqueness assertion doesn't enforce). |
+
+### DEFENSIBLE / pre-existing pattern (no action)
+
+| # | Reviewer | Item | Triage |
+|---|----------|------|--------|
+| 276 | Gemini CRIT (line 138) + DeepSeek MED (line 119-122) | `catch` block breaks loop on any error — no retry, no resumption from same lastParcelId | **DEFENSIBLE** — project-wide pattern (matches Phase 2a backfill, backfill-realtor). Verdict cascade emits FAIL via errors counter. Operator re-runs (idempotent via ON CONFLICT DO NOTHING). Tighter retry loop would be improvement, not a fix. |
+| 277 | Gemini HIGH (line 103) | Batching by parcel count (1000) not by AP-containment count — risk of "super-parcel" batches with thousands of APs in one statement | **DEFENSIBLE** — GIST index spatial lookup is O(log n) per parcel; even a super-parcel produces sub-second results. Worth a follow-up if observed in prod, but not blocking. |
+| 278 | Gemini MED (line 47/148) | 5 separate COUNT subqueries pre-run + post-run; could be a single conditional-aggregation query | **DEFENSIBLE** — each scalar subquery hits the partial GIST index or PK + returns in milliseconds. Premature optimization. |
+| 279 | Gemini LOW (line 130) + DeepSeek LOW (line 109) | `lastParcelId = maxParcelId ?? lastParcelId` — confusing fallback; relies on parcelsInBatch === 0 guard for termination | **DEFENSIBLE** — the parcelsInBatch === 0 guard runs BEFORE the maxParcelId access on every iteration. Safe by construction. |
+| 280 | Gemini LOW (lines 240/248) | Audit thresholds hardcoded magic values not externalized | **DEFENSIBLE** — Toronto-specific bridge populator; tuning across municipalities is out-of-scope. |
+| 281 | Gemini NIT (line 38) | Magic-number ADVISORY_LOCK_ID | **DEFENSIBLE** — registered in §A.5 + inline comment block now documents the lock-ID exception. |
+| 282 | Gemini NIT (line 107) | Redundant `ap.geom IS NOT NULL` in JOIN — GIST partial index `WHERE geom IS NOT NULL` from mig 162 makes this match the index | **DEFENSIBLE** — keeping the predicate in the JOIN matches the partial index's WHERE clause precisely; removing it could trigger planner to skip the partial index. |
+| 283 | DeepSeek MED (line 79) | lastParcelId updated outside the transaction — process death between commit + update causes duplicate batch on resume | **DEFENSIBLE** — ON CONFLICT DO NOTHING makes the duplicate-batch case a no-op. Wasteful but correct. |
+| 284 | DeepSeek LOW (line 96) | `safeParseIntOrNull(row.new_links) ?? 0` — new_links from COUNT(*) is never null, ?? unnecessary | **DEFENSIBLE NIT** — defensive code; cheap. |
+| 285 | DeepSeek LOW (line 112) | Progress log condition `parcelsInBatch < BATCH_SIZE` could skip on exact-multiple final batch | **DEFENSIBLE** — completedNaturally log at the break point covers the final-batch case. |
+| 286 | DeepSeek LOW (line 130) | Post-run query runs on slightly stale snapshot | **DEFENSIBLE** — read-only telemetry; staleness is acceptable. |
+| 287 | DeepSeek NIT (line 52) | Pre-run fetches `existing_links` but value unused | **DEFENSIBLE NIT** — visible in log line for operator context. |
