@@ -2216,3 +2216,42 @@ SQL-string regex tests pass against the literal source text — they verify what
 ### Process gap (lesson — already in memory)
 
 The 4-reviewer IMPL review on Phase 2b shipped despite the bug because **tests pass ≠ production-data working** (the precise gap the user flagged when restarting this session). `feedback_db_integration_tests.md` already documents this; the lesson held but wasn't applied in the Phase 2b commit gate. Reinforcing: any WF that adds batch INSERT/UPSERT logic MUST include a DB-integration smoke test before shipping.
+
+
+---
+
+## WF3 cost-model-none plan review (v2 → v3) — DEFERRED items (2026-05-23)
+
+The v2 → v3 PLAN review fold (4-reviewer adversarial pass) raised these items that are confirmed as out-of-scope for WF3 #cost-model-none. Filed for future action:
+
+| # | Source | Item | Defer rationale |
+|---|--------|------|-----------------|
+| 337 | Observability v2 Q5 (OB-6, conf 90) | `model_coverage_pct` audit row emits `value: '0.0%'` as a STRING (`toFixed(1) + '%'`); observe-chain.js DeepSeek baseline cannot diff strings numerically. Fix: emit raw float as `records_meta.model_coverage_pct` alongside the string row (precedent at row 159). | Out of WF3 scope. File a separate WF3 to add numeric records_meta for `model_coverage_pct` + audit other audit rows with same pattern. |
+| 338 | Observability v2 Q2 | Multi-band threshold for `model_coverage_pct` (e.g., `<10%` = FAIL, `10-80%` = WARN, `≥80%` = PASS) would catch partial collapses below 80% as FAIL. v3 only escalates `=== 0` to FAIL. | Requires new `cost_model_coverage_fail_pct` logic_variable + calibration. Separate WF2. |
+| 339 | Independent v2 Q9 | Spec 47 §12 self-review should be a named gate step in Execution Plan, not just referenced in Standards Compliance. | Documentation hygiene; not blocking. |
+| 340 | Independent v2 Q10 | Verification ≥83% floor needs adjustability clause: if Phase A reveals new permit_type volume legitimately reduces achievable coverage, document revised floor with §3.A(e) quantification. | Will be re-evaluated during Phase A; not blocking authorization. |
+| 341 | DeepSeek v2 MED | A.5 input-shape diff has weak fallback if `row_history` doesn't exist. | Will be addressed in Phase A by inspecting available alternatives. |
+| 342 | Gemini v2 CRIT (Spec 83) | Spec 83 "Geometric-Only Path for CoA Leads" is silent on what happens when CoA lead has `permit_type_class='unclassified'` or matrix miss. Ambiguity could cause future production incident. | Spec amendment — separate Spec 83 hardening WF. |
+| 343 | Gemini v2 HIGH (Spec 83) | 3 distinct `cost_source='none'` failure modes produce identical row signature; requires out-of-band audit_table cross-ref. Design flaw — `cost_source` enum should be explicit (`'none_class_skipped'`, `'none_matrix_miss'`, `'none_no_geometry'`). | Schema redesign + downstream consumer updates. Separate WF1. |
+| 344 | Gemini v2 MED (Spec 83) | `scope_intensity_matrix` requires CHECK constraint or BEFORE trigger to enforce lowercase + trimmed permit_type/structure_type. Would have prevented the entire class of bug. | Migration + downstream coordination. Separate WF3. |
+| 345 | Gemini v2 MED (Spec 83) | Spec §7.1 in-memory matrix load has no size-limit / circuit breaker — future OOM risk. | Architecture — separate WF1. |
+| 346 | Gemini v2 LOW (Spec 83) | Spec §3.A "Establish Geometric Truth" — `gfa_parcel_fallback_pct` counter MISSING; system was blind to 100% lot-size fallback. | Observability — could be bundled with WF3 #cost-model-none Phase B if Phase A surfaces lot-size fallback as a contributor; otherwise separate WF3. |
+| 347 | Independent v2 PASS (Q11) — process | Plan length is load-bearing; v3 is ~3× v1. Future plan reviews should expect this for high-severity multi-day silent regressions. | Process note — log to feedback memory. |
+
+
+---
+
+## WF1 Spec 58 plan review (v1) — DEFERRED items (2026-05-25)
+
+The v1 PLAN review on the WF1 active_task for Spec 58 raised these items as Phase 3 cost-model concerns. They are out-of-scope for this Spec 58 authoring WF (data-source spec only; cost-model integration is a separate WF). Filed here for future action:
+
+| # | Source | Item | Defer rationale |
+|---|--------|------|-----------------|
+| 348 | Gemini PLAN v1 | Liar's Gate over-prediction masks Phase 3 surgical-model improvements; recalibrate thresholds (`cost_model_coverage_warn_pct`) when new GFA paths land | Cost-model integration concern; lives in Phase 3 of the implementation plan (`docs/reports/wf1-cost-implementation-plan.md`), not Spec 58 |
+| 349 | Gemini + DeepSeek PLAN v1 | Storeys derivation regex robustness (Canadian description patterns: "10-1/2 storey", "2.0 storey", "split-level") — needs broader regex + 500-sample test | Phase 3 derivation-script concern (Spec 58 is data source ingest only) |
+| 350 | DeepSeek PLAN v1 | G-BYLAW-DERIVED formula uses `unit_sqm` constant for megaprojects — should vary by structure_type / dwelling_type / luxury vs affordable | Phase 3 cost-model logic; Spec 64 (Toronto Design Standards) is the right home |
+| 351 | DeepSeek PLAN v1 | G-HERITAGE "replace within 5% of existing" needs operator override mechanism; depends on validated massing data | Phase 4 (after RC1 link-massing fix) |
+| 352 | DeepSeek PLAN v1 | G-BYLAW-FSI for towers should subtract existing footprint before applying FSI_max — formula: `(lot_area - existing_footprint) × FSI_max + existing_GFA` | Phase 3 cost-model logic refinement |
+| 353 | Gemini + DeepSeek PLAN v1 | Spec 58 schema column assumptions invalidated by Phase 0 discovery — Phase 0 confirmed COVERAGE + FSI_TOTAL ARE in source. No follow-up needed; documented for history. | Resolved by Phase 0 (no further action) |
+| 354 | DeepSeek PLAN v1 NIT | Quarterly refresh cadence justification — Toronto publishes "as available" (~annual). Quarterly overfetches but matches parcels cadence. | Operator decision (accepted) |
+
