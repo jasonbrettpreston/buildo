@@ -655,13 +655,15 @@ describe('parity-battery — Edge cases and null guards', () => {
     }, 'C38');
   });
 
-  it('C39: case-insensitive permit_type matching in matrix lookup', () => {
-    // Brain lowercases and trims permit_type before lookup
+  it('C39: case-sensitive permit_type matching in matrix lookup (§3.A re-key 2026-05-24)', () => {
+    // Brain trims only; matrix lookup is exact-case per Spec 83 §3.A re-key.
+    // SHARED_CONFIG uses a lowercase matrix → UPPER input misses; lower input hits.
     const upper = makePermit({ permit_num: 'C39u', permit_type: 'NEW BUILDING', structure_type: 'SFD', active_trade_slugs: ['framing'] });
     const lower = makePermit({ permit_num: 'C39l', permit_type: 'new building', structure_type: 'sfd', active_trade_slugs: ['framing'] });
     const tsUpper = estimateCost(upper, GOOD_PARCEL, GOOD_FOOTPRINT, null, SHARED_CONFIG);
     const tsLower = estimateCost(lower, GOOD_PARCEL, GOOD_FOOTPRINT, null, SHARED_CONFIG);
-    expect(tsUpper.effective_area_sqm).toEqual(tsLower.effective_area_sqm);
+    expect(tsUpper.effective_area_sqm).toBeNull();
+    expect(tsLower.effective_area_sqm).not.toBeNull();
   });
 
   it('C40: range is ±25% when cost_source=model (footprint-based, no fallback)', () => {

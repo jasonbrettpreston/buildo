@@ -101,6 +101,14 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'score_tier_moderate',
   'los_decay_divisor',              // WF1 spec 81 — asymptotic decay curve steepness
   'cost_model_coverage_warn_pct',
+  // WF1 §3.A re-key tail (Task #89, mig 163) — cost-coverage gate FAIL pcts +
+  // matrix-miss/PTC-skip telemetry thresholds for compute-cost-estimates +
+  // compute-coa-cost-estimates audit gates.
+  'cost_model_coverage_fail_pct',
+  'cost_matrix_miss_warn_pct',
+  'cost_matrix_miss_fail_pct',
+  'cost_ptc_skipped_warn_pct',
+  'coa_cost_coverage_fail_pct',
   'coa_match_conf_high',
   'coa_match_conf_medium',
   'snapshot_coa_conf_high',

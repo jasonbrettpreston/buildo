@@ -186,10 +186,14 @@ describe('computeEffectiveArea', () => {
     expect(nullResult.matched).toBe(false);
   });
 
-  it('normalizes permit_type and structure_type to lowercase before lookup', () => {
+  it('is case-sensitive on matrix lookup — Title Case input MISSES lowercase matrix (§3.A re-key 2026-05-24)', () => {
+    // Per Spec 83 §3.A: matrix lookup is `.trim()`-only on permit_type/structure_type
+    // — NO case normalization. With a lowercase BASE_SCOPE_MATRIX and Title Case
+    // input, the lookup should miss. Regression guard for the 14-day silent
+    // cost_source='none' bug the re-key was authored to prevent re-introducing.
     const row = makeRow({ permit_type: 'New Building', structure_type: 'SFD' });
     const { matched } = computeEffectiveArea(row, 100, BASE_CONFIG);
-    expect(matched).toBe(true);
+    expect(matched).toBe(false);
   });
 });
 

@@ -120,17 +120,31 @@ Look for the `matrix_misses`, `matrix_miss_unique_keys` (with `_truncated` flag)
 ```sql
 INSERT INTO scope_intensity_matrix (permit_type, structure_type, gfa_allocation_percentage)
 VALUES
-  ('plumbing',   'commercial',  0.05),     -- example: 5% allocation
-  ('mechanical', 'commercial',  0.08)
+  ('Building Additions/Alterations', 'Office',         0.20),     -- 20% GFA allocation
+  ('Building Additions/Alterations', 'Retail Store',   0.20)
 ON CONFLICT (permit_type, structure_type) DO UPDATE
   SET gfa_allocation_percentage = EXCLUDED.gfa_allocation_percentage;
 ```
 
-Allocation values MUST satisfy the CHECK constraint (`> 0 AND <= 1.0`). Use lowercase `permit_type` and `structure_type` strings — the Brain normalizes input via `.toLowerCase().trim()` before lookup.
+Allocation values MUST satisfy the CHECK constraint (`> 0 AND <= 1.0`).
 
-**(d) Domain-research caveat.** Trade-specific permits (plumbing, mechanical, electrical, demolition) may NOT have a valid "fraction of GFA" semantic at all — system scope is typically not floor-area-proportional. A plumbing rough-in on a 46K-sqm office is NOT "X% of 46K sqm × $/sqft trade rate"; the actual cost is driven by fixture count, riser layout, etc. **The safe-skip may be the permanent correct behavior for some trade-specific permit_types.** Operators MUST validate any proposed allocation_pct against historical declared costs (compare `est_const_cost` distributions for the permit_type) before adding matrix rows.
+**Vocabulary contract (WF1 §3.A re-key, 2026-05-24):** Use **exact production vocabulary** matching the values in the `permits` table — Toronto's CKAN feed values verbatim (Title Case + prefix format, e.g., `'SFD - Detached'`, `'Apartment Building'`, `'Building Additions/Alterations'`). The Brain looks up matrix rows by exact string match with defensive `.trim()` only — **NO case normalization**. The Brain's `computeEffectiveArea` and the Muscle's `scopeMatrix` pre-fetch use the same trim-only contract. See `src/features/leads/lib/cost-model-shared.js` NORMALIZATION CONTRACT comment.
 
-**(e) Expected coverage impact pre/post backfill.** Per the WF3 Pass-2.5 pre-flight quantification (2026-05-21): adding rows for the top 4 missing permit_types (Plumbing(PS), Mechanical(MS), Drain and Site Service, Demolition Folder — ~110K permits combined) would restore ~46 percentage points of `model_coverage_pct`. Until the backfill lands, the first post-Finding-D-fix pipeline run will produce a WARN verdict on `model_coverage_pct` — this is **intentional signal**, not a regression.
+**Step 1 Input Sanitization (re-stated post-WF1):** Defensive `.trim()` only; case is preserved verbatim. Vocabulary mismatch is surfaced via the `matrix_miss_pct` audit row (OB-3b), not silently normalized.
+
+**(d) Domain-research caveat.** Trade-specific permits (Plumbing(PS), Mechanical(MS), Electrical, Drain and Site Service, Demolition Folder (DM)) may NOT have a valid "fraction of GFA" semantic at all — system scope is typically not floor-area-proportional. A plumbing rough-in on a 46K-sqm office is NOT "X% of 46K sqm × $/sqft trade rate"; the actual cost is driven by fixture count, riser layout, etc. **The safe-skip IS the permanent correct behavior for trade-specific permit_types.** Operators MUST validate any proposed allocation_pct against historical declared costs (compare `est_const_cost` distributions for the permit_type) before adding matrix rows.
+
+**(e) Expected coverage post WF1 §3.A re-key (2026-05-24).** Per PI-1/PI-3 (`docs/reports/wf1-cost-matrix-rekey-pis.md`): with the 32-row production-vocabulary matrix from migration 163, post-fix `model_coverage_pct` is anchored to PI-1 prediction ± 5pp. PI-1 predicted ~52% construction-permit coverage given the safe-skip-by-design exclusion of trade-specific permit_types (~50% of construction permits per §3.A(f)). Verification criterion is **single**: actual coverage = PI-1 predicted ± 5pp. Falling above the band signals matrix over-coverage (extra rows shouldn't be there); falling below signals under-seeding.
+
+**(f) Operator-Documented Safe-Skip List (WF1, 2026-05-24).** The following permit_types intentionally have **NO matrix row** per §3.A(d) — they are scope-bounded by fixture count / riser layout / unit count / equipment, not by GFA fraction:
+
+- `Plumbing(PS)` — plumbing system permit (fixture-count-bounded)
+- `Mechanical(MS)` — mechanical system permit (equipment-bounded)
+- `Drain and Site Service` — site servicing (linear-foot-bounded)
+- `Demolition Folder (DM)` — demolition (cubic-volume-bounded, separate cost basis)
+- `Electrical` — electrical system permit (panel/circuit-count-bounded)
+
+A miss for any of these permit_types produces `cost_source='none'` deliberately. The `matrix_miss_pct` audit row reports them as Path B (matrix-miss), but operators should NOT add matrix rows for them — that would re-introduce the $14M class of bug §3.A(d) warns about.
 
 #### Step C: Trade Valuation (The Constraint Filter)
 The engine joins with `permit_trades`. If a trade was not identified during classification, Value = $0. For "Found" trades:
@@ -206,7 +220,7 @@ CoA applications carry no applicant-declared construction cost (the `est_const_c
 ### Step-by-Step Defense
 **Step 1: Input Sanitization (Avoiding W12, W21)**
 * **Numeric Guard**: Apply `Number.isFinite(row.est_const_cost)` to prevent NaN values from corrupting Path 2 logic.
-* **String Cleaning**: All `scope_tags` and `permit_type` strings must be `.toLowerCase().trim()` before comparison.
+* **String Cleaning**: All `scope_tags` strings must be `.toLowerCase().trim()` before comparison. `permit_type` and `structure_type` are `.trim()`-only — **case-preserved** per §3.A re-key (2026-05-24) to match the production-vocabulary matrix verbatim.
 
 **Step 2: Data Deduplication (Avoiding W2, W3)**
 * **The Set Rule**: All `scope_tags` must be wrapped in `new Set(tags)` before iteration. This prevents a duplicate "pool" tag from adding $80K twice in the DB while the API only shows it once.
@@ -395,7 +409,7 @@ To power these scripts, we need to add these fields to support the new surgical 
 *Objective: Idempotent, mathematically pure, dual-path valuation logic with strict type contracts.*
 
 - [ ] **Numeric Guard**: `Number.isFinite(row.est_const_cost)` is executed before any logic evaluation.
-- [ ] **String Cleaning**: `scope_tags` and `permit_type` are forced to `.toLowerCase().trim()` before evaluation.
+- [ ] **String Cleaning**: `scope_tags` is forced to `.toLowerCase().trim()` before evaluation; `permit_type` and `structure_type` are `.trim()`-only (case preserved) per §3.A re-key.
 - [ ] **Set Deduplication**: `scope_tags` are mapped into a `new Set(tags)`.
 - [ ] **Core Valuation Math**: Implements Geometry, Effective Area, and Trade Valuation properly.
 - [ ] **Per-Trade Complexity (Part 2)**: The math logic applies the structure complexity factor at the trade level, not the global area level.
