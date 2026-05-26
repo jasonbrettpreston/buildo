@@ -3,6 +3,25 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Spec 62 (Toronto Centreline) — R3 SPEC review DEFERs (2026-05-26)
+
+Source: 3-reviewer adversarial R3 SPEC review (Gemini + DeepSeek + Independent code-reviewer) on `docs/specs/01-pipeline/62_source_centreline.md` v1.0. 5 CRIT + 7 HIGH folded to spec v1.1 (commit alongside). Items below are DEFERs.
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| CRIT | Gemini | `is_corner_lot` + `is_through_lot` use `BOOLEAN NOT NULL DEFAULT false` — unprocessed parcels report affirmative `false` rather than `NULL` (unknown). | **Cross-spec architectural concern.** Specs 58/59/61 use the same `NOT NULL DEFAULT false` pattern for their derived boolean columns. Changing Spec 62 unilaterally would create inconsistency across 4 sibling datasource specs. Routed for cross-spec architectural review WF that revisits all four together, plus all downstream consumers (UI display logic, permit-detail panels) which would need NULL-aware rendering. |
+| HIGH | Gemini | `parcel_parallel_pairs` centroid-as-frontage-proxy fails for L/U/panhandle-shaped parcels — centroid can sit outside polygon and have no bearing on frontage. | Requires architectural rewrite — replace centroid-anchored `ST_ClosestPoint` with longest-shared-boundary between parcel polygon and a buffer around the centreline LineString. Computationally more expensive; needs benchmarking against the 486K × 47K spatial join. Tracked separately for a v2 enrichment-quality WF. |
+| HIGH | Gemini | L28 file-ownership coupling — Spec 62 implementing WF appends `applyCentrelineEnrichment` to `enrich-permits.js` (created by Spec 61's WF). High merge-conflict and integration-disaster risk if specs ship in parallel. | Architectural pattern shared with Spec 61. Best fix is a plugin-style `enrich-permits.js` (discover + invoke `apply*` functions from a known dir) but that's a refactor across all enrichment steps. Routed to cross-spec architectural WF. |
+| MED | Independent | §4.1 unit test gap — `normalize_address_number(NULL)` and `normalize_address_number('Rear 10')` not explicitly asserted. | Function body handles both correctly (NULL → early return; "Rear 10" → regex no-match → `(NULL, NULL)`); without explicit test assertion the behavior is unverified. Implementing WF should add these. |
+| MED | Independent | §4.4 DB schema test missing explicit all-NULL-input branch for `address_match_status(NULL, NULL, NULL, NULL) → FALSE`. | Test text vague enough that implementor may not write the case. Implementing WF should expand §4.4 coverage description. |
+| MED | Independent | §11.1 `per_permit_state` CTE has cosmetic indentation inconsistency on `FROM` and `GROUP BY` clauses. | Pure cosmetic; no semantic impact. Fix during implementation. |
+| MED | Independent | §4.2 integration tests missing explicit `L7b geometry-update drift` + `L7c mass-deletion drift` rows (current §4.2 has L7 count-delta only). | Specs 59 and 61 both have all three signals tested independently. Implementing WF should add 2 test rows. |
+| MED | Gemini | Loader uses `DELETE FROM toronto_centreline; INSERT INTO ... SELECT * FROM temp_centreline;` (full replace) generating significant WAL traffic + vacuum pressure for a daily-cadence source with mostly stable rows. Should be `INSERT ... ON CONFLICT (source_id) DO UPDATE` + separate `DELETE` for removed IDs. | Optimization not correctness. The full-replace pattern is consistent with Spec 58 staging-CTE precedent. Track as a v2 performance optimization. |
+| MED | Gemini | L21 7-day post-deploy convergence pattern for `parcels_with_zero_centreline_intersections_pct` thresholds is "fix it in prod". Could fail daily for a week until operator intervenes. | Real concern. Mitigation already documented: implementing WF should dry-run against a production clone pre-deploy to establish baseline (§12.7). Track as a runbook deliverable. |
+| LOW | Gemini | `STREET_CLASS_INCLUDE` + `STREET_CLASS_EXCLUDE` dual sets: a new legitimate-but-unforeseen non-street code (e.g., "Pedestrian Overpass") would fall into neither set + get the `unknown_operator_review` sentinel, polluting `toronto_centreline` with non-streets. | Mitigated by the sentinel + WARN audit. Implementing WF could invert logic to default-exclude (only process explicit-include), but the current pattern matches Spec 61 H-v1.1.2 precedent. |
+
+---
+
 ## Phase F.4 (Lead Inspector CoA Classification Panel) — diff-stage 4-reviewer DEFERs (2026-05-17)
 
 Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + Observability worktree) on F.4 v4.1 implementation. 11 BUG findings fixed in commit (1 CRIT + 7 HIGH + 3 MED). Items below are DEFERs.
