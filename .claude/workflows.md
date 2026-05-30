@@ -49,6 +49,7 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
       - **Tool call 5 — Agent** (`subagent_type: "general-purpose"`, NO worktree):
         Focus: integration vs the REAL codebase — SDK export signatures, manifest/chain wiring, existing helpers to reuse, downstream consumers, migration mechanics.
       (Role definitions: CLAUDE.md → Review Agent Reference.)
+      **When the diff MODIFIES/DELETES existing code (any domain):** ALSO send **Tool call 6 — Agent** (`subagent_type: "feature-dev:code-explorer"`, main tree, NO worktree): the **Regression Guardian** — reconstruct the intent of every deletion/alteration (git blame/log + `tasks/lessons.md` + `*.regression.test.ts` locks + Spec 05 §5 footers); an undefended fence is a finding; route load-bearing behaviors into a regression-lock test. WF1: existing-file edits only (skip net-new files). See CLAUDE.md → Review Agent Reference.
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste final test
       summary line and typecheck result. Both must show zero failures.
       List each prior step as DONE or N/A. → WF6.
@@ -89,6 +90,7 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
       - **Tool call 5 — Agent** (`subagent_type: "general-purpose"`, NO worktree):
         Focus: integration vs the REAL codebase — SDK export signatures, manifest/chain wiring, existing helpers, downstream consumers, migration mechanics.
       (Role definitions: CLAUDE.md → Review Agent Reference.)
+      **When the diff MODIFIES/DELETES existing code (any domain):** ALSO send **Tool call 6 — Agent** (`subagent_type: "feature-dev:code-explorer"`, main tree, NO worktree): the **Regression Guardian** — reconstruct the intent of every deletion/alteration (git blame/log + `tasks/lessons.md` + `*.regression.test.ts` locks + Spec 05 §5 footers); an undefended fence is a finding; route load-bearing behaviors into a regression-lock test. (WF2 alters existing code by definition, so this effectively always applies — no net-new carve-out.) See CLAUDE.md → Review Agent Reference.
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste evidence. → WF6.
 ```
 
@@ -114,9 +116,11 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
 - [ ] **Pre-Review Self-Checklist:** List 3-5 sibling bugs that could share the same
       root cause. For each, verify either that the fix covers it OR that it doesn't
       apply. Catches the "fixed the symptom, missed the class" pattern.
-- [ ] **Independent Review:** Spawn one code reviewer agent (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`).
-      Provide: (a) spec path, (b) modified files list, (c) one-sentence summary.
-      Agent generates its own checklist — do NOT provide one.
+- [ ] **Independent Review + Regression Guardian:** In ONE message spawn two agents:
+      - **Independent code reviewer** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`).
+      - **Regression Guardian** (`subagent_type: "feature-dev:code-explorer"`, main tree, NO worktree) — a fix alters existing code by definition, so this ALWAYS applies: reconstruct the intent of every line the fix changes/removes (git blame/log + `tasks/lessons.md` + `*.regression.test.ts` locks + Spec 05 §5 footers); confirm the fix doesn't silently drop a behavior the old code guarded; an undefended fence is a finding.
+      Provide each: (a) spec path, (b) modified files list, (c) one-sentence summary.
+      Agents generate their own checklist — do NOT provide one.
       BUG items → fix before Green Light. DEFER → `docs/reports/review_followups.md`.
       (Adversarial agents — Gemini + DeepSeek — only run for WF3 when explicitly requested.)
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste evidence. → WF6.
