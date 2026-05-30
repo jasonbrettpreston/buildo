@@ -146,10 +146,10 @@ describe('Pipeline Chain Definitions', () => {
     expect(calibIdx).toBeGreaterThan(distIdx);
   });
 
-  it('defines sources chain with 16 steps (WF1 #parcel-address-bridge Phase 2c added link_parcel_addresses)', () => {
+  it('defines sources chain with 17 steps (Spec 58 added load_zoning before refresh_snapshot)', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(16);
+    expect(chain!.steps).toHaveLength(17);
   });
 
   it('coa chain ends with assert_global_coverage; permits chain ends with backup_db', () => {

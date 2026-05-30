@@ -1,4 +1,11 @@
 {
+  "road_overlay_distance_m": {
+    "default": 5,
+    "type": "number",
+    "description": "Distance (metres) for the LineString zoning-overlay spatial join (Policy Road, Priority Retail). SEEDED by Spec 58 load-zoning; CONSUMED by the future WF2 enrich-parcels.js via ST_DWithin(parcels.geom::geography, road.geom::geography, road_overlay_distance_m) — the ::geography cast is mandatory (F-C2), else SRID 4326 treats the value as degrees (~111km/deg).",
+    "min": 0,
+    "max": 100
+  },
   "los_multiplier_bid": {
     "default": 2.5,
     "type": "number",
@@ -314,6 +321,34 @@
     "min": 1,
     "max": 100
   },
+  "cost_model_coverage_fail_pct": {
+    "default": 25,
+    "type": "number",
+    "description": "WF1 Spec 83 §3.A OB-2: model_coverage_pct FAIL threshold. Default 25 = half of PI-3 predicted post-fix coverage (~52%) — catches not just the 14-day exact-zero regression but also half-broken states (e.g., coverage drops from 52% to 5% via partial vocabulary mismatch). Recalibrate via Spec 86 Control Panel after the post-deploy spike settles.",
+    "min": 0,
+    "max": 100
+  },
+  "cost_matrix_miss_warn_pct": {
+    "default": 58,
+    "type": "number",
+    "description": "WF1 Spec 83 §3.A OB-3b: matrix_miss_pct WARN threshold. Default 58 = PI-1 predicted miss rate (48%) + 10pp WARN margin. Operator-tunable per Spec 86 Control Panel as the scope_intensity_matrix coverage scales.",
+    "min": 0,
+    "max": 100
+  },
+  "cost_matrix_miss_fail_pct": {
+    "default": 68,
+    "type": "number",
+    "description": "WF1 Spec 83 §3.A OB-3b: matrix_miss_pct FAIL threshold. Default 68 = PI-1 predicted miss rate (48%) + 20pp FAIL margin. Catches large-step coverage regressions (e.g., new permit_type vocabulary appearing in CKAN that the matrix doesn't cover).",
+    "min": 0,
+    "max": 100
+  },
+  "cost_ptc_skipped_warn_pct": {
+    "default": 14.5,
+    "type": "number",
+    "description": "WF1 Spec 83 §3.A OB-3a: permit_type_class_skipped_pct WARN threshold. Default 14.5 = steady-state non-construction rate (~4.5%) + 10pp margin. Catches permit_type_classifications drift if the JOIN starts producing unclassified for previously-classified types.",
+    "min": 0,
+    "max": 100
+  },
   "coa_match_conf_high": {
     "default": 0.9,
     "type": "number",
@@ -388,6 +423,13 @@
     "default": 70,
     "type": "number",
     "description": "Day-1 threshold (percent) for CoAs producing a non-NULL estimated_cost in compute-coa-cost-estimates (Spec 42 §6.8 row 668; R5.5 fold #13). Below threshold → audit_table verdict WARN. Set to 70% for first burn-in (Spec 42 §6.3 success target is 80% — threshold gives latitude for early-run coverage gaps from missing parcel links, scope tags, or trade rates). Tune up to 80% once R5.2-R5.4 are at steady-state coverage.",
+    "min": 0,
+    "max": 100
+  },
+  "coa_cost_coverage_fail_pct": {
+    "default": 0,
+    "type": "number",
+    "description": "WF1 Spec 83 §3.A D3 (CoA OB-2 mirror): coverage FAIL threshold. Default 0 = architecture-independent gate that catches a 14-day-style silent regression in the CoA cost path (coverage stuck at exactly 0%). Symmetric with cost_model_coverage_fail_pct for the permits path.",
     "min": 0,
     "max": 100
   },

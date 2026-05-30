@@ -12,14 +12,14 @@ As a data pipeline operator, I need this quarterly chain to refresh all foundati
 
 **Trigger:** `node scripts/run-chain.js sources` or `POST /api/admin/pipelines/chain_sources`
 **Schedule:** Quarterly (address_points, parcels, massing), Annual (neighbourhoods)
-**Steps:** 15 (sequential, stop-on-failure)
+**Steps:** 17 (sequential, stop-on-failure)
 **Gate:** None — all steps always run
 
 ```
 assert_schema → address_points → geocode_permits → parcels →
 compute_centroids → link_parcels → massing → link_massing →
 neighbourhoods → link_neighbourhoods → load_wsib → link_wsib →
-refresh_snapshot → assert_data_bounds → assert_engine_health
+load_zoning → refresh_snapshot → assert_data_bounds → assert_engine_health
 ```
 
 ### Step Breakdown
@@ -38,9 +38,10 @@ refresh_snapshot → assert_data_bounds → assert_engine_health
 | 10 | `link_neighbourhoods` | `link-neighbourhoods.js` | Assign neighbourhood_id to all permits via point-in-polygon | permits |
 | 11 | `load_wsib` | `load-wsib.js` | Download Ontario WSIB contractor registry | wsib_registry |
 | 12 | `link_wsib` | `link-wsib.js` | Re-match all builders against fresh WSIB data | entities |
-| 13 | `refresh_snapshot` | `refresh-snapshot.js` | Update dashboard metrics | data_quality_snapshots |
-| 14 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Sources-scoped: row counts, duplicate IDs, lot size bounds | pipeline_runs |
-| 15 | `assert_engine_health` | `quality/assert-engine-health.js` | Engine health for spatial tables | engine_health_snapshots |
+| 13 | `load_zoning` | `load-zoning.js` | Ingest Toronto Zoning By-law (569-2013) — 10 CKAN **DataStore** layers (not SHP ZIP; `_id` upsert key) into the zoning tables | `zoning_bylaw_areas` + 9 overlays |
+| 14 | `refresh_snapshot` | `refresh-snapshot.js` | Update dashboard metrics | data_quality_snapshots |
+| 15 | `assert_data_bounds` | `quality/assert-data-bounds.js` | Sources-scoped: row counts, duplicate IDs, lot size bounds | pipeline_runs |
+| 16 | `assert_engine_health` | `quality/assert-engine-health.js` | Engine health for spatial tables | engine_health_snapshots |
 
 ### Chain-Specific Arguments
 `link_massing` receives `--full` when run in the sources chain (via `manifest.scripts.link_massing.chain_args.sources`). This forces a full re-link instead of incremental.

@@ -606,3 +606,21 @@ When an operator triages a permit missing `zoning_class` after WF3 lands, follow
 ```
 
 This convention is FROZEN: any modification requires updating the admin lead detail page debug surface so operators can follow the triage path interactively.
+
+---
+
+## 11. Implementation deltas (WF6 — 2026-05-30; supersede earlier text where they conflict)
+
+Landed during implementation + 4 adversarial review rounds + the first-deploy spike.
+
+- **D8 — Acquisition = CKAN DataStore API, NOT Shapefile ZIP (R-C1).** The D1 upsert key `_id` is injected only by `datastore_search`; shapefiles lack it. `load-zoning.js` paginates `datastore_search` per the §2 resource-map `resourceId`s. §2's "downloads SHP ZIP" / `Script` rows are superseded. `geometry` arrives as a GeoJSON string → `ST_GeomFromGeoJSON` (downstream geom handling unchanged).
+- **D9 — Out-of-range = null-the-cell, NOT reject-the-row (refines P-H5).** Toronto encodes "not regulated" as a pervasive `-1` sentinel (`FSI_TOTAL`, `PRCNT_*`, `STAND_SET`, `FRONTAGE`…); the §2 CHECK constraints forbid it. Policy: null the offending cell (faithful "no value" — neither clamp nor row-drop), keep the row, count `<layer>_out_of_range_nulled_count` (INFO). Reject-the-row would discard ~100% of base rows.
+- **D10 — §4 exit-criterion correction.** `coverage_max_pct` is **null on every base row** in the live source (Toronto leaves `COVERAGE` blank; coverage lives in `zoning_lot_coverage_overlay.coverage_max_pct_override`). The end-objective gate must assert `fsi_max` (the populated base cost input, ~2,835 non-null) + `lot_coverage_overlay` rows, NOT base `coverage_max_pct`. See runbook §2.
+- **§3 new audit rows (declared for Spec 79 C4):** `<layer>_out_of_range_nulled_count` (INFO), `<layer>_null_geometry_count` (WARN if >0), `<layer>_non_integer_source_id_count` (WARN if >0).
+- **§9 additive key:** `records_meta.zoning_layer_versions` `{ <key>: last_modified }` — per-layer skip-check baseline (the single `source_dataset_version` is base-only). Additive; the frozen 4 keys unchanged. Skip-runs forward the full §9 contract from the prior successful run.
+
+## 12. Known Failure Modes
+
+- **-1 sentinel mass-rejection** (caught: spike 2026-05-30). Reject-the-row on out-of-range nukes all base rows because `-1` is pervasive. Guard: D9 null-the-cell + `zoning.logic.test.ts` range tests.
+- **Chain-step registration cascade** (caught: review + full suite). Adding a step to `manifest.chains.sources` MUST also update `FreshnessTimeline.tsx` (`PIPELINE_REGISTRY` + sources steps), `funnel.ts` (`STEP_DESCRIPTIONS`, `PIPELINE_TABLE_MAP`, `LOADER_SLUGS`), the §A.5 advisory-lock registry test, the `LOGIC_VAR_DEFAULTS`/`EXPECTED_LOGIC_VAR_KEYS` parity (if a logic-var is added), and the count assertions in `chain.logic.test.ts`/`quality.logic.test.ts` — else the suite goes red. Guard: those tests pin the coupling.
+- **DataStore `_id` vs shapefile** (caught: review R2). A loader built against DataStore field semantics must acquire via DataStore, not shapefiles. Guard: D8.

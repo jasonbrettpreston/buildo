@@ -354,6 +354,35 @@ pipeline.run('assert-schema', async (pool) => {
         errors.push(`Neighbourhoods: ${err.message}`);
         console.error(`  FAIL: Neighbourhoods — ${err.message}`);
       }
+
+      // Toronto Zoning By-law — 10 CKAN DataStore resources (Spec 58). Pre-flight
+      // reachability + upsert-key/geometry presence; full attribute drift is
+      // enforced at load time by scripts/lib/zoning-attr-drift.js.
+      const ZONING_RESOURCES = [
+        { id: '76a2620f-a6b4-495d-8e41-c0ede1f8a928', label: 'Zoning Area (base)', required: ['_id', 'geometry', 'ZN_ZONE', 'ZN_STRING', 'COVERAGE', 'FSI_TOTAL'] },
+        { id: 'f0a88d06-2430-4025-b15d-362cabd00f31', label: 'Zoning Height Overlay', required: ['_id', 'geometry', 'HT_LABEL'] },
+        { id: '58ad8814-ca4e-43d6-848d-d5fd8d873574', label: 'Zoning Lot Coverage Overlay', required: ['_id', 'geometry', 'PRCNT_CVER'] },
+        { id: '8d75cab6-ab97-4158-8ba5-8874860b26f7', label: 'Zoning Building Setback Overlay', required: ['_id', 'geometry'] },
+        { id: '1a6469f8-1eaf-4ba6-a1f6-07179efbc2f2', label: 'Zoning Policy Area Overlay', required: ['_id', 'geometry'] },
+        { id: '4e2f9292-6082-4627-be8e-61b87a2cb273', label: 'Zoning Policy Road Overlay', required: ['_id', 'geometry'] },
+        { id: '75b9805b-bc65-4c30-97fa-9c57c17233b2', label: 'Zoning Rooming House Overlay', required: ['_id', 'geometry'] },
+        { id: '8f969df7-9008-49fd-a50b-df53f1f680e6', label: 'Zoning Parking Zone Overlay', required: ['_id', 'geometry'] },
+        { id: '499de5f6-194a-4da3-a18f-27a8e684721d', label: 'Zoning Priority Retail Street Overlay', required: ['_id', 'geometry'] },
+        { id: '1f18bd73-bbbc-4ad6-ac27-6c9cae7385b4', label: 'Zoning QueenStW Eat Community Overlay', required: ['_id', 'geometry'] },
+      ];
+      for (const zr of ZONING_RESOURCES) {
+        try {
+          const fields = await fetchFieldNames(zr.id, zr.label);
+          if (!checkColumns(fields, zr.required, zr.label)) {
+            allPassed = false;
+            errors.push(`${zr.label} schema drift detected`);
+          }
+        } catch (err) {
+          allPassed = false;
+          errors.push(`${zr.label}: ${err.message}`);
+          console.error(`  FAIL: ${zr.label} — ${err.message}`);
+        }
+      }
     }
   } catch (err) {
     allPassed = false;
@@ -434,10 +463,10 @@ pipeline.run('assert-schema', async (pool) => {
       if (CHAIN_ID === 'coa' && coaAuditTable) return { audit_table: coaAuditTable };
       if (CHAIN_ID === 'sources') {
         const sourceErrors = errors.filter((e) =>
-          /address|parcel|massing|neighbourhood/i.test(e)
+          /address|parcel|massing|neighbourhood|zoning/i.test(e)
         );
         const sourceAuditRows = [
-          { metric: 'sources_checked', value: 4, threshold: null, status: 'INFO' },
+          { metric: 'sources_checked', value: 14, threshold: null, status: 'INFO' }, // 4 original + 10 zoning DataStore resources (Spec 58)
           { metric: 'schema_errors', value: sourceErrors.length, threshold: '== 0', status: sourceErrors.length > 0 ? 'FAIL' : 'PASS' },
         ];
         return {

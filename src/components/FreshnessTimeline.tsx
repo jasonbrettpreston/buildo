@@ -27,6 +27,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   parcels:            { name: 'Parcels',               group: 'ingest' },
   massing:            { name: '3D Massing',            group: 'ingest' },
   neighbourhoods:     { name: 'Neighbourhoods',        group: 'ingest' },
+  load_zoning:        { name: 'Load Zoning By-law',    group: 'ingest' },
   // Link & Enrich (12)
   geocode_permits:    { name: 'Geocode Permits',       group: 'link' },
   link_parcels:       { name: 'Link Parcels',          group: 'link' },
@@ -233,6 +234,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_neighbourhoods', indent: 1 },
       { slug: 'load_wsib',           indent: 0 },
       { slug: 'link_wsib',           indent: 1 },
+      { slug: 'load_zoning',         indent: 0 },
       { slug: 'refresh_snapshot',    indent: 1 },
       { slug: 'assert_data_bounds',  indent: 0 },
       { slug: 'assert_engine_health', indent: 0 },

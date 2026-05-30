@@ -59,6 +59,7 @@ describe('deltaExceeds50pct — Delta Guard utility', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const EXPECTED_LOGIC_VAR_KEYS = [
+  'road_overlay_distance_m', // Spec 58 — seeded for WF2 enrich-parcels (F-C2)
   'los_multiplier_bid',
   'los_multiplier_work',
   'los_penalty_tracking',
