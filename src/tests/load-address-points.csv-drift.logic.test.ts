@@ -14,13 +14,15 @@
 import { describe, it, expect } from 'vitest';
 import {
   REQUIRED_CSV_COLUMNS,
+  COORDINATE_SOURCE_SENTINEL,
+  hasCoordinateSource,
   detectMissingColumns,
   buildDriftAuditRow,
   buildNullAddressNumberAuditRow,
 } from '../../scripts/lib/address-points-csv-drift';
 
 describe('REQUIRED_CSV_COLUMNS', () => {
-  it('enumerates the 14 columns the loader consumes', () => {
+  it('enumerates the 11 non-coordinate columns (coordinates have an OR-contract — see hasCoordinateSource)', () => {
     expect([...REQUIRED_CSV_COLUMNS].sort()).toEqual(
       [
         'ADDRESS_POINT_ID',
@@ -34,9 +36,6 @@ describe('REQUIRED_CSV_COLUMNS', () => {
         'ADDRESS_CLASS_DESC',
         'CLASS_FAMILY_DESC',
         'PLACE_NAME',
-        'LATITUDE',
-        'LONGITUDE',
-        'geometry',
       ].sort(),
     );
   });
@@ -47,39 +46,43 @@ describe('REQUIRED_CSV_COLUMNS', () => {
 });
 
 describe('detectMissingColumns', () => {
-  it('returns [] when every required column is present', () => {
-    const present = [...REQUIRED_CSV_COLUMNS, 'EXTRA_COL'];
+  it('returns [] when every required column + a coordinate source is present', () => {
+    const present = [...REQUIRED_CSV_COLUMNS, 'geometry', 'EXTRA_COL'];
     expect(detectMissingColumns(present)).toEqual([]);
   });
 
   it('flags a stripped data-bearing column (CKAN drift)', () => {
-    const present = REQUIRED_CSV_COLUMNS.filter((c) => c !== 'ADDRESS_NUMBER');
-    expect(detectMissingColumns([...present])).toEqual(['ADDRESS_NUMBER']);
+    const present = [...REQUIRED_CSV_COLUMNS.filter((c) => c !== 'ADDRESS_NUMBER'), 'geometry'];
+    expect(detectMissingColumns(present)).toEqual(['ADDRESS_NUMBER']);
   });
 
   it('flags multiple stripped columns in canonical order', () => {
-    const stripped = REQUIRED_CSV_COLUMNS.filter(
-      (c) => c !== 'LINEAR_NAME_FULL' && c !== 'PLACE_NAME',
-    );
-    expect(detectMissingColumns([...stripped])).toEqual(['LINEAR_NAME_FULL', 'PLACE_NAME']);
+    const present = [
+      ...REQUIRED_CSV_COLUMNS.filter((c) => c !== 'LINEAR_NAME_FULL' && c !== 'PLACE_NAME'),
+      'geometry',
+    ];
+    expect(detectMissingColumns(present)).toEqual(['LINEAR_NAME_FULL', 'PLACE_NAME']);
   });
 
-  it('flags coordinate-source columns (LATITUDE/LONGITUDE/geometry) — Phase 1 IMPL I1 fold', () => {
-    // If Toronto strips LATITUDE/LONGITUDE, the loader cannot compute geom
-    // and Phase 2c link-parcel-addresses produces 0 rows silently.
-    // assert-schema's EXPECTED_ADDRESS_POINT_COLUMNS catches this at FAIL
-    // gate; this drift detector catches it at the loader for WARN cascade.
-    const present = REQUIRED_CSV_COLUMNS.filter(
-      (c) => c !== 'LATITUDE' && c !== 'LONGITUDE',
-    );
-    expect(detectMissingColumns([...present])).toEqual(['LATITUDE', 'LONGITUDE']);
+  it('coordinate source = geometry OR (LATITUDE AND LONGITUDE); drift fires only when NEITHER (WF3 2026-05-30)', () => {
+    // The loader derives geom + lat/lng from the `geometry` GeoJSON column (primary)
+    // or from LATITUDE+LONGITUDE (fallback). Stripping LAT/LONG while `geometry` is
+    // present is NOT coordinate loss — the live CSV ships exactly that. Only losing
+    // BOTH is the real "link-parcel-addresses produces 0 rows" loss mode.
+    expect(hasCoordinateSource(new Set([...REQUIRED_CSV_COLUMNS, 'geometry']))).toBe(true);                          // geometry only (live CSV)
+    expect(hasCoordinateSource(new Set([...REQUIRED_CSV_COLUMNS, 'LATITUDE', 'LONGITUDE']))).toBe(true);             // lat/long fallback only
+    expect(hasCoordinateSource(new Set([...REQUIRED_CSV_COLUMNS, 'geometry', 'LATITUDE', 'LONGITUDE']))).toBe(true); // both
+    expect(hasCoordinateSource(new Set(REQUIRED_CSV_COLUMNS))).toBe(false);                                          // neither → loss
+    expect(hasCoordinateSource(new Set([...REQUIRED_CSV_COLUMNS, 'LATITUDE']))).toBe(false);                         // partial fallback (LAT only)
+    // detectMissingColumns surfaces the loss via the coordinate-source sentinel:
+    expect(detectMissingColumns([...REQUIRED_CSV_COLUMNS])).toEqual([COORDINATE_SOURCE_SENTINEL]);
+    expect(detectMissingColumns([...REQUIRED_CSV_COLUMNS, 'geometry'])).toEqual([]);
   });
 
   it('treats column names as case-sensitive', () => {
-    const wrongCase = ['address_point_id', 'latitude'];
-    const missing = detectMissingColumns(wrongCase);
-    expect(missing).toContain('ADDRESS_POINT_ID');
-    expect(missing).toContain('LATITUDE');
+    const missing = detectMissingColumns(['address_point_id', 'latitude']); // wrong case
+    expect(missing).toContain('ADDRESS_POINT_ID');         // 'address_point_id' ≠ required ADDRESS_POINT_ID
+    expect(missing).toContain(COORDINATE_SOURCE_SENTINEL); // 'latitude' ≠ LATITUDE → no coordinate source
   });
 });
 

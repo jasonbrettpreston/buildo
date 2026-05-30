@@ -17,6 +17,7 @@
  * Exit 1 = fail (missing columns detected)
  */
 const pipeline = require('../lib/pipeline');
+const { hasCoordinateSource } = require('../lib/address-points-csv-drift');
 
 const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
 
@@ -59,13 +60,14 @@ const NEIGHBOURHOODS_URL =
 // extension). EXPECTED_PARCEL_COLUMNS shrunk to the 4 surviving columns; the 3 removed
 // columns (ADDRESS_NUMBER, LINEAR_NAME_FULL, DATE_EFFECTIVE) are kept as LEGACY columns
 // on the parcels table but no longer required from the source CSV.
-// Independent IMPL I1 + Observability Finding B fold (WF1 #parcel-address-bridge):
-// LATITUDE/LONGITUDE are explicitly listed even though `geometry` is also present.
-// Rationale: load-address-points.js falls back to ST_MakePoint(longitude, latitude)
-// when geometry has no coordinates (lines 174-177); the one-time geom backfill
-// script also reads these columns. If Toronto strips them, the spatial bridge
-// produces 0 rows with no operator-visible signal — same failure mode as the
-// 2026-05-20 Property Boundaries strip that motivated this WF1.
+// Coordinate columns are NOT in this flat list — they have an OR-contract checked
+// separately via hasCoordinateSource (geometry OR LATITUDE+LONGITUDE).
+// [WF3 2026-05-30] The earlier flat LATITUDE/LONGITUDE requirement was dead-on-arrival:
+// the live Address Points CSV ships a `geometry` GeoJSON column (NOT LATITUDE/LONGITUDE),
+// and load-address-points.js derives geom + lat/lng from `geometry` (primary, :285-301),
+// falling back to LATITUDE+LONGITUDE (:304) only if geometry is absent. The geom backfill
+// reads the DB latitude/longitude COLUMNS, not the CSV. So the coordinate-loss guard is
+// "no coordinate source present" (below), not "LAT/LONG present".
 const EXPECTED_ADDRESS_POINT_COLUMNS = [
   'ADDRESS_POINT_ID',
   'ADDRESS_NUMBER',
@@ -78,9 +80,6 @@ const EXPECTED_ADDRESS_POINT_COLUMNS = [
   'ADDRESS_CLASS_DESC',
   'CLASS_FAMILY_DESC',
   'PLACE_NAME',
-  'LATITUDE',
-  'LONGITUDE',
-  'geometry',
 ];
 const EXPECTED_PARCEL_COLUMNS = [
   'PARCELID',
@@ -309,6 +308,14 @@ pipeline.run('assert-schema', async (pool) => {
         if (!checkColumns(apHeaders, EXPECTED_ADDRESS_POINT_COLUMNS, 'Address Points')) {
           allPassed = false;
           errors.push('Address Points schema drift detected');
+        }
+        // Coordinate-source contract (WF3 2026-05-30): geometry OR LATITUDE+LONGITUDE.
+        // The live CSV ships `geometry`; LAT/LONG are an accepted fallback. FAIL only
+        // if NEITHER is present (the real "0-row spatial bridge" loss mode).
+        if (!hasCoordinateSource(new Set(apHeaders))) {
+          allPassed = false;
+          errors.push('Address Points: no coordinate source (geometry or LATITUDE+LONGITUDE)');
+          console.error('  FAIL: Address Points — no coordinate source column present');
         }
       } catch (err) {
         allPassed = false;

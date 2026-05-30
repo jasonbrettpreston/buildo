@@ -25,8 +25,8 @@ As the **canonical** source of street-level addresses for permit + CoA matching,
 | Column | Type | Notes |
 |--------|------|-------|
 | `address_point_id` | INTEGER | PK |
-| `latitude` | NUMERIC | WGS84 |
-| `longitude` | NUMERIC | WGS84 |
+| `latitude` | NUMERIC | WGS84 — DERIVED from the CSV `geometry` GeoJSON column (loader primary path), falling back to the `LATITUDE` column only if `geometry` is absent. |
+| `longitude` | NUMERIC | WGS84 — DERIVED from the CSV `geometry` column (see `latitude`). |
 | `address_number` | TEXT | NEW — raw `ADDRESS_NUMBER` from CSV |
 | `linear_name_full` | TEXT | NEW — raw `LINEAR_NAME_FULL` (e.g., "Davenport Rd") |
 | `address_full` | TEXT | NEW — pre-formatted full address |
@@ -39,7 +39,7 @@ As the **canonical** source of street-level addresses for permit + CoA matching,
 | `place_name` | TEXT | NEW — POI name when present. |
 | `addr_num_normalized` | TEXT | DERIVED — leading-zero-stripped uppercase `address_number`. Cross-table JOIN key. |
 | `linear_name_normalized` | TEXT | DERIVED — uppercase street-name component of `linear_name_full` (street_type stripped). Cross-table JOIN key. |
-| `geom` | GEOMETRY(Point, 4326) | NEW — derived from `(longitude, latitude)` via `ST_SetSRID(ST_MakePoint(lng, lat), 4326)`. Used by the `parcel_address_points` bridge (mig 162). |
+| `geom` | GEOMETRY(Point, 4326) | NEW — `ST_SetSRID(ST_MakePoint(lng, lat), 4326)` where `(lng, lat)` come from the CSV **`geometry`** GeoJSON column (loader primary, `load-address-points.js:285-301`), or `LATITUDE`/`LONGITUDE` columns as fallback (`:304`). **The CSV's coordinate source is `geometry`, NOT lat/lng columns** — assert-schema + the loader drift check require `geometry` OR (`LATITUDE` AND `LONGITUDE`) per the coordinate-source contract (WF3 2026-05-30). Used by the `parcel_address_points` bridge (mig 162). |
 
 **PK:** `(address_point_id)`
 **Upsert:** `ON CONFLICT (address_point_id) DO UPDATE` with `COALESCE(NULLIF(EXCLUDED.X, ''), address_points.X)` on the 10 source + 2 normalized columns. lat/lng use bare assignment (skip-guard at row-parse stage prevents NULL coords from reaching UPSERT). `geom` computed in-SQL on every UPSERT.

@@ -21,11 +21,13 @@
  * spinning up a CSV stream or a DB connection.
  */
 
-// Columns the loader reads + propagates into address_points. These
-// are the data-bearing columns whose silent absence loses information.
-// ADDRESS_POINT_ID is required for the PK ON CONFLICT key. LATITUDE/
-// LONGITUDE/geometry are the geom source. The other 10 are the new
-// fields added by mig 162.
+// Non-coordinate data-bearing columns whose silent absence loses information
+// (ADDRESS_POINT_ID is the PK ON CONFLICT key; the other 10 are mig-162 fields).
+// Coordinates are NOT in this flat list — they have an OR-contract (see
+// hasCoordinateSource): the loader derives geom + lat/lng from the `geometry`
+// GeoJSON column (primary, load-address-points.js:285-301) OR falls back to
+// LATITUDE+LONGITUDE (line 304). [WF3 2026-05-30: the old flat LATITUDE/LONGITUDE
+// requirement never matched the live CSV — which ships `geometry`, not lat/lng.]
 const REQUIRED_CSV_COLUMNS = Object.freeze([
   'ADDRESS_POINT_ID',
   'ADDRESS_NUMBER',
@@ -38,14 +40,30 @@ const REQUIRED_CSV_COLUMNS = Object.freeze([
   'ADDRESS_CLASS_DESC',
   'CLASS_FAMILY_DESC',
   'PLACE_NAME',
-  'LATITUDE',
-  'LONGITUDE',
-  'geometry',
 ]);
+
+// Sentinel surfaced in the drift WARN row when NO coordinate source is present.
+const COORDINATE_SOURCE_SENTINEL = '<coordinate-source: geometry OR LATITUDE+LONGITUDE>';
+
+/**
+ * Coordinate-source contract: a usable coordinate source is EITHER the GeoJSON
+ * `geometry` column (loader primary path) OR both LATITUDE + LONGITUDE (fallback).
+ * Drift fires only when NEITHER is present — the real "link-parcel-addresses
+ * produces 0 rows" loss mode. Toronto's live CSV ships `geometry`; both formats
+ * are accepted for format-volatility robustness.
+ * NOTE: presence-only check. All-empty-per-row geometry is caught by the loader's
+ * `skip_rate ≥ 5% → FAIL` audit row (a dedicated geom_parse_failures row is tracked
+ * in review_followups #253, out of scope here).
+ */
+function hasCoordinateSource(fieldSet) {
+  return fieldSet.has('geometry') || (fieldSet.has('LATITUDE') && fieldSet.has('LONGITUDE'));
+}
 
 function detectMissingColumns(recordKeys) {
   const present = new Set(recordKeys);
-  return REQUIRED_CSV_COLUMNS.filter((c) => !present.has(c));
+  const missing = REQUIRED_CSV_COLUMNS.filter((c) => !present.has(c));
+  if (!hasCoordinateSource(present)) missing.push(COORDINATE_SOURCE_SENTINEL);
+  return missing;
 }
 
 function buildDriftAuditRow(missingColumns) {
@@ -81,6 +99,8 @@ function buildNullAddressNumberAuditRow(nullCount, attemptedCount) {
 
 module.exports = {
   REQUIRED_CSV_COLUMNS,
+  COORDINATE_SOURCE_SENTINEL,
+  hasCoordinateSource,
   detectMissingColumns,
   buildDriftAuditRow,
   buildNullAddressNumberAuditRow,
