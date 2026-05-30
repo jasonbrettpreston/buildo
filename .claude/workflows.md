@@ -33,7 +33,7 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
       against the ACTUAL diff (not the intended diff). If any item fails,
       fix and re-verify. Output the checklist + per-item PASS/FAIL in the
       response BEFORE running tests.
-- [ ] **Multi-Agent Review:** In ONE message send three parallel tool calls.
+- [ ] **Multi-Agent Review:** In ONE message send three (pipeline-domain: five) parallel tool calls.
       No checklist provided to any agent; each generates its own from the spec + diff.
       - **Tool call 1 — Bash:** `npm run review:gemini -- review <file> --context <spec>`
         Focus: spec-vs-code gaps, missing edge cases, failure modes, silent swallowed errors.
@@ -43,6 +43,12 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
         Provide: spec path + modified files list + one-sentence summary.
         Focus: error path coverage, type safety, naming/patterns.
       **Triage:** BUG (blocking) → file WF3 immediately. DEFER → `docs/reports/review_followups.md`.
+      **Pipeline-domain WFs (5-reviewer panel — 3 base + 2):** ALSO send:
+      - **Tool call 4 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`):
+        Focus: audit-row completeness · verdict cascade row-derived (no parallel-boolean) · §11 counter scoping · `records_meta` producer/consumer contracts (Spec 48 §3.6/§3.7, Spec 79 C1–C12).
+      - **Tool call 5 — Agent** (`subagent_type: "general-purpose"`, NO worktree):
+        Focus: integration vs the REAL codebase — SDK export signatures, manifest/chain wiring, existing helpers to reuse, downstream consumers, migration mechanics.
+      (Role definitions: CLAUDE.md → Review Agent Reference.)
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste final test
       summary line and typecheck result. Both must show zero failures.
       List each prior step as DONE or N/A. → WF6.
@@ -72,11 +78,17 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
 - [ ] **Pre-Review Self-Checklist:** Generate a 5-10 item self-skeptical checklist from
       the spec section governing the change. Walk each item against the ACTUAL diff.
       Output PASS/FAIL per item BEFORE running tests.
-- [ ] **Multi-Agent Review:** In ONE message send three parallel tool calls.
+- [ ] **Multi-Agent Review:** In ONE message send three (pipeline-domain: five) parallel tool calls.
       - **Tool call 1 — Bash:** `npm run review:gemini -- review <file> --context <spec>`
       - **Tool call 2 — Bash:** `npm run review:deepseek -- review <file> --context <spec>`
       - **Tool call 3 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`):
       **Triage:** BUG → file WF3 immediately. DEFER → `docs/reports/review_followups.md`.
+      **Pipeline-domain WFs (5-reviewer panel — 3 base + 2):** ALSO send:
+      - **Tool call 4 — Agent** (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`):
+        Focus: audit-row completeness · verdict cascade row-derived (no parallel-boolean) · §11 counter scoping · `records_meta` producer/consumer contracts (Spec 48 §3.6/§3.7, Spec 79 C1–C12).
+      - **Tool call 5 — Agent** (`subagent_type: "general-purpose"`, NO worktree):
+        Focus: integration vs the REAL codebase — SDK export signatures, manifest/chain wiring, existing helpers, downstream consumers, migration mechanics.
+      (Role definitions: CLAUDE.md → Review Agent Reference.)
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste evidence. → WF6.
 ```
 
@@ -102,7 +114,7 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
 - [ ] **Pre-Review Self-Checklist:** List 3-5 sibling bugs that could share the same
       root cause. For each, verify either that the fix covers it OR that it doesn't
       apply. Catches the "fixed the symptom, missed the class" pattern.
-- [ ] **Independent Review:** Spawn one code reviewer agent (`isolation: "worktree"`).
+- [ ] **Independent Review:** Spawn one code reviewer agent (`subagent_type: "feature-dev:code-reviewer"`, `isolation: "worktree"`).
       Provide: (a) spec path, (b) modified files list, (c) one-sentence summary.
       Agent generates its own checklist — do NOT provide one.
       BUG items → fix before Green Light. DEFER → `docs/reports/review_followups.md`.

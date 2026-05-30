@@ -111,11 +111,19 @@ Full WF execution plans: `.claude/workflows.md` — read when a WF is triggered,
 
 Triggered as named steps inside WF1, WF2, WF3 — not standalone.
 
-**All agents:** Spawn with `isolation: "worktree"`. Inputs: spec path + modified files + one-sentence summary. No checklist provided — each agent generates its own from the spec and diff. Output: PASS/FAIL per item with line numbers.
+**All agents:** Spawn with `isolation: "worktree"` (exception: **Integration** runs in the main tree — see its entry below). Inputs: spec path + modified files + one-sentence summary. No checklist provided — each agent generates its own from the spec and diff. Output: PASS/FAIL per item with line numbers.
 
 **Adversarial agents (Gemini, DeepSeek):** Error paths that silently swallow failures · State mutations without IS DISTINCT FROM guards · Spec requirements with no corresponding code · Off-by-one errors · New states not handled by downstream consumers.
 
-**Code Reviewer:** Missing telemetry/logging · Type safety and `any` usage · Naming and pattern consistency · Dead code introduced.
+**Code Reviewer** (`feature-dev:code-reviewer`): Missing telemetry/logging · Type safety and `any` usage · Naming and pattern consistency · Dead code introduced.
+
+**Observability** (`feature-dev:code-reviewer`): Audit-row completeness vs spec · verdict cascade row-derived, never a parallel-boolean (`hasFails ? …`) · §11 counter scoping (primary-entity only) · producer/consumer `records_meta` contracts · Spec 48 §3.6/§3.7 + Spec 79 C1–C12 / risk-class tripwires.
+
+**Integration** (`general-purpose`, **NO worktree** — must see the uncommitted plan AND live code together): Verifies the work against the REAL codebase, not the spec's idealized version — SDK export signatures, manifest/chain wiring (`run-chain.js` reads `manifest.chains`, not spec docs), existing helpers to reuse, real downstream consumers, migration mechanics (`validate-migration.js`/`migrate.js`), test conventions. Refutes spec-only findings that are wrong about the code.
+
+**Panel sizing:** **Pipeline-domain WF1/WF2 run the 5-reviewer panel** (Gemini + DeepSeek + Code Reviewer + Observability + Integration). Non-pipeline WF1/WF2 run the 3 (Gemini + DeepSeek + Code Reviewer). WF3 unchanged (Independent only; adversarial on request).
+
+**Two altitudes — same roles, different prompt + target:** **Plan review** points the reviewers at `.cursor/active_task.md` (the plan) with the spec as context — hunts completeness, internal consistency, and factual correctness *before* code exists. **Output review** points them at the diff — hunts whether the code does what the plan says (error paths, idempotency, integration). The Multi-Agent Review step in WF1/WF2 is the *output* review; plan review is run on request (per `feedback_wf1_phase_plan_review`).
 
 ---
 
