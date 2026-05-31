@@ -311,7 +311,7 @@ pipeline.run('load-parcels', async (pool) => {
           --
           -- COALESCE(NULLIF(EXCLUDED.X, ''), parcels.X) preserves existing values
           -- when the CSV value is NULL or empty string (which is what the stripped
-          -- CSV produces because the row mapper passes `null` for missing columns
+          -- CSV produces because the row mapper passes NULL for missing columns
           -- to keep the INSERT column list intact — see plan v4 fold C2).
           --
           -- These 5 columns are LEGACY: populated from pre-drift load + by future
