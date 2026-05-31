@@ -481,17 +481,16 @@ Each downstream WF is its own ceremony. WFs MUST be implemented in order; WF2 ca
 9. Edit to `scripts/quality/assert-schema.js` adding 10 zoning resource URL checks
 10. Edit to `scripts/seeds/logic_variables.json` adding `road_overlay_distance_m` constant (used WITH `::geography` cast per F-C2)
 
-### 8c. WF2 (future spec — NOT this WF) — `enrich-parcels.js`
+### 8c. WF2 — `enrich-parcels.js` → **AUTHORED: `docs/specs/01-pipeline/65_enrich_parcels.md` (v1.0, 2026-05-31)**
 
 Adds columns to `parcels` via spatial join. **F-C5: use `ST_Intersects(parcel.geom, zone.geom)` with area-ranked dominant-zone selection** — NOT `ST_Contains` (which only matches fully-contained parcels and misses boundary lots).
 
-Future-spec deliverables (placeholder for visibility — NOT in scope here):
-- Migration adding `parcels.zoning_class`, `.bylaw_max_coverage_pct`, `.bylaw_max_fsi`, `.bylaw_max_height_m`, `.exception_number`, etc. (F-H5 naming)
-- `scripts/enrich-parcels.js` running spatial joins
-- **Overlay precedence implementation (D4 + D7):** per-attribute "most-restrictive" logic — for ceiling attributes (height, coverage, FSI, units) MIN wins; for floor attributes (frontage, area_min) MAX wins; for categorical attributes first-seen wins with audit row surfacing conflicts
-- **F-C2:** for LineString overlays use `ST_DWithin(parcels.geom::geography, road.geom::geography, road_overlay_distance_m)` — `::geography` cast mandatory
-- Audit rows for parcels-with-no-base-zone (gap handling)
-- New chain step in `chain_sources` after `load_zoning`
+The full WF2 design now lives in **Spec 65**, which resolves D7 (the per-attribute precedence rule deferred from this spec) and consumes the §9/§11 producer contract below. Spec 65 highlights:
+- Migration 165 maps the **full bylaw feed** onto `parcels` (F-H5 naming: `bylaw_max_coverage_pct`, `bylaw_max_fsi`, `bylaw_max_height_m`, …) — see Spec 65 §2 column map.
+- **D7 resolved (Spec 65 DEC-1):** identity attrs ← area-dominant base zone; overlays REPLACE base per-attribute (D4); same-attribute overlaps → ceiling MIN / floor MAX + conflict audit row + candidates in `zoning_overlays` jsonb.
+- **F-C2:** LineString overlays use `ST_DWithin(parcels.geom::geography, road.geom::geography, road_overlay_distance_m)` — `::geography` cast mandatory.
+- Gap handling (parcels with no base zone) + ambiguity flag + the new `enrich_parcels` `chain_sources` step (after `load_zoning`).
+- **Gate reality (Spec 65 DEC-4, profiled 2026-05-31):** `zoning_class` ≈ 96.8% (hard gate ≥95%); `fsi` ≈ 5.1% / `coverage` ≈ 56.7% / `height` ≈ 89.8% are sparse-by-design INFO rows (per D10), NOT ≥90% gates.
 
 ### 8d. WF3 (future spec — NOT this WF) — `enrich-permits.js`
 

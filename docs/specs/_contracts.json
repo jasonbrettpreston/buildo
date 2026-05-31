@@ -35,5 +35,9 @@
   "retention": {
     "lead_views_days": 90,
     "grace_purge_days": 180
+  },
+  "zoning": {
+    "$comment": "Spec 65 enrich-parcels. ambiguous_dominant_share_max: a parcel whose dominant base-zone intersection share is below this is flagged zoning_is_ambiguous. Consumer: scripts/lib/zoning-precedence.js AMBIGUOUS_DOMINANT_SHARE_MAX (pinned by contracts.infra.test.ts).",
+    "ambiguous_dominant_share_max": 0.6
   }
 }
