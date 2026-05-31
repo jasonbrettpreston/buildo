@@ -504,10 +504,11 @@ describe('Pipeline Registry', () => {
     // +1 compute_coa_cost_estimates added (WF1 2026-05-14 R5.5, Spec 42 §6.8 row 668)
     // +1 link_parcel_addresses added (WF1 #parcel-address-bridge Phase 2c 2026-05-23, Spec 54)
     // +1 load_zoning added (Spec 58 2026-05-30)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(53);
+    // +1 enrich_parcels added (Spec 65 WF2 2026-05-31)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(54);
   });
 
-  it('groups are correct: 11 ingest, 16 link, 14 classify, 2 snapshot, 10 quality', () => {
+  it('groups are correct: 11 ingest, 17 link, 14 classify, 2 snapshot, 10 quality', () => {
     // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     // +1 snapshot: backup_db added (WF3 2026-04-25)
     // +1 classify: compute_phase_calibration added (WF1 #B 2026-05-09)
@@ -518,8 +519,9 @@ describe('Pipeline Registry', () => {
     // +1 classify: compute_coa_cost_estimates added (WF1 2026-05-14 R5.5)
     // +1 link:     link_parcel_addresses added (WF1 Phase 2c 2026-05-23)
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
+    // +1 link: enrich_parcels added (Spec 65 WF2 2026-05-31)
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(11);
-    expect(groups.filter((g) => g === 'link')).toHaveLength(16);
+    expect(groups.filter((g) => g === 'link')).toHaveLength(17);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(14);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(10);
@@ -601,11 +603,13 @@ describe('Pipeline Chains', () => {
     expect(coa!.steps[coa.steps.length - 3]!.slug).toBe('assert_lifecycle_phase_distribution');
   });
 
-  it('sources chain has 17 steps including link_parcel_addresses, WSIB, load_zoning, compute_centroids and assert_engine_health', () => {
+  it('sources chain has 18 steps including link_parcel_addresses, WSIB, load_zoning, enrich_parcels, compute_centroids and assert_engine_health', () => {
     // WF1 #parcel-address-bridge Phase 2c (2026-05-23) — link_parcel_addresses (15 → 16).
     // Spec 58 (2026-05-30) — load_zoning inserted before refresh_snapshot (16 → 17).
+    // Spec 65 (2026-05-31) — enrich_parcels inserted after load_zoning (17 → 18).
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
-    expect(sources.steps).toHaveLength(17);
+    expect(sources.steps).toHaveLength(18);
+    expect(sources.steps.some((s) => s.slug === 'enrich_parcels')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'link_parcel_addresses')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'compute_centroids')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'load_wsib')).toBe(true);

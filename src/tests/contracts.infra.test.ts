@@ -52,6 +52,7 @@ interface Contracts {
     revision_num_max: number;
   };
   retention: { lead_views_days: number; grace_purge_days: number };
+  zoning: { ambiguous_dominant_share_max: number };
 }
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -195,6 +196,15 @@ const rules: Rule[] = [
     file: 'src/lib/admin/control-panel.ts',
     pattern: new RegExp(`tradeSlug.*max\\(${contracts.schema.trade_slug_max}\\)`),
   },
+  // ---- zoning ambiguity threshold (Spec 65 enrich-parcels) ----
+  {
+    name: 'zoning.ambiguous_dominant_share_max → AMBIGUOUS_DOMINANT_SHARE_MAX constant',
+    value: contracts.zoning.ambiguous_dominant_share_max,
+    file: 'scripts/lib/zoning-precedence.js',
+    pattern: new RegExp(
+      `AMBIGUOUS_DOMINANT_SHARE_MAX\\s*=\\s*${contracts.zoning.ambiguous_dominant_share_max}\\b`,
+    ),
+  },
 ];
 
 describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', () => {
@@ -205,6 +215,7 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
     expect(contracts.feed).toBeDefined();
     expect(contracts.schema).toBeDefined();
     expect(contracts.retention).toBeDefined();
+    expect(contracts.zoning).toBeDefined();
   });
 
   it('permit pillar maxes sum to permit_total_max (spec 70 §4 invariant)', () => {

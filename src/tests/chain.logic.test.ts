@@ -146,10 +146,13 @@ describe('Pipeline Chain Definitions', () => {
     expect(calibIdx).toBeGreaterThan(distIdx);
   });
 
-  it('defines sources chain with 17 steps (Spec 58 added load_zoning before refresh_snapshot)', () => {
+  it('defines sources chain with 18 steps (Spec 65 added enrich_parcels after load_zoning)', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(17);
+    expect(chain!.steps).toHaveLength(18);
+    // enrich_parcels runs immediately after load_zoning (consumes its tables).
+    const slugs = chain!.steps.map((s) => s.slug);
+    expect(slugs.indexOf('enrich_parcels')).toBe(slugs.indexOf('load_zoning') + 1);
   });
 
   it('coa chain ends with assert_global_coverage; permits chain ends with backup_db', () => {

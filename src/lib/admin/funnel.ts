@@ -548,6 +548,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   neighbourhoods:       { summary: 'Loads neighbourhood boundary polygons and demographic data', table: 'neighbourhoods' },
   load_wsib:            { summary: 'Loads WSIB registry snapshot for contractor identity matching', table: 'wsib_registry' },
   load_zoning:          { summary: 'Loads Toronto Zoning By-law (569-2013) — 10 CKAN DataStore layers into the zoning tables', table: 'zoning_bylaw_areas' },
+  enrich_parcels:       { summary: 'Spatially joins parcels against the zoning tables; writes the zoning by-law feed (class, FSI, coverage, height, overlays) onto parcels', table: 'parcels' },
   // Link & Enrich
   geocode_permits:      { summary: 'Matches permit addresses to address points for lat/lng coordinates', table: 'permits' },
   link_parcels:         { summary: 'Links permits to property parcels via address or spatial match', table: 'permit_parcels' },
@@ -813,6 +814,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   permits: 'permits', coa: 'coa_applications', builders: 'entities',
   address_points: 'address_points', parcels: 'parcels', massing: 'building_footprints',
   neighbourhoods: 'neighbourhoods', load_wsib: 'wsib_registry', load_zoning: 'zoning_bylaw_areas',
+  enrich_parcels: 'parcels',
   geocode_permits: 'permits', link_parcels: 'permit_parcels',
   link_neighbourhoods: 'permits', link_massing: 'parcel_buildings',
   link_coa: 'coa_applications', link_wsib: 'entities',
