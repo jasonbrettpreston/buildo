@@ -30,6 +30,8 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   load_zoning:        { name: 'Load Zoning By-law',    group: 'ingest' },
   // Link & Enrich (12)
   enrich_parcels:     { name: 'Enrich Parcel Zoning',  group: 'link' },
+  enrich_permits:     { name: 'Enrich Permit Zoning',  group: 'link' },
+  enrich_coa_zoning:  { name: 'Enrich CoA Zoning',     group: 'link' },
   geocode_permits:    { name: 'Geocode Permits',       group: 'link' },
   link_parcels:       { name: 'Link Parcels',          group: 'link' },
   link_parcel_addresses: { name: 'Link Parcel Addresses', group: 'link' },
@@ -114,6 +116,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_wsib',            indent: 1 },
       { slug: 'geocode_permits',      indent: 1 },
       { slug: 'link_parcels',         indent: 1 },
+      { slug: 'enrich_permits',       indent: 1 },
       { slug: 'link_neighbourhoods',  indent: 1 },
       { slug: 'link_massing',         indent: 1 },
       { slug: 'link_similar',         indent: 1 },
@@ -168,6 +171,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       // WF2 R5.2 (Spec 42 §6.5 step 9) — CoA-to-parcels linking + bundled
       // neighbourhood lookup + lat/lng back-fill. Must run BEFORE link_coa.
       { slug: 'link_coa_to_parcels',     indent: 1 },
+      { slug: 'enrich_coa_zoning',       indent: 1 },
       // WF1 R5.3 (Spec 42 §6.5 step 5) — description-keyword scope classifier
       // (coa_type_class, project_type, scope_tags). Must run AFTER
       // link_coa_to_parcels per §6.8 lock-ID ordering (4201 → 4202) and

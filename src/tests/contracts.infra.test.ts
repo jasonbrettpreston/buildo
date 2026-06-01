@@ -52,7 +52,11 @@ interface Contracts {
     revision_num_max: number;
   };
   retention: { lead_views_days: number; grace_purge_days: number };
-  zoning: { ambiguous_dominant_share_max: number };
+  zoning: {
+    ambiguous_dominant_share_max: number;
+    permits_zoning_class_coverage_fail: number;
+    coa_zoning_class_coverage_fail: number;
+  };
 }
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -204,6 +208,19 @@ const rules: Rule[] = [
     pattern: new RegExp(
       `AMBIGUOUS_DOMINANT_SHARE_MAX\\s*=\\s*${contracts.zoning.ambiguous_dominant_share_max}\\b`,
     ),
+  },
+  // ---- F-H12 zoning coverage gates (Spec 66 enrich-permits) ----
+  {
+    name: 'zoning.permits_zoning_class_coverage_fail → PERMITS_COVERAGE_FAIL constant',
+    value: contracts.zoning.permits_zoning_class_coverage_fail,
+    file: 'scripts/enrich-permits.js',
+    pattern: new RegExp(`PERMITS_COVERAGE_FAIL\\s*=\\s*${contracts.zoning.permits_zoning_class_coverage_fail}\\b`),
+  },
+  {
+    name: 'zoning.coa_zoning_class_coverage_fail → COA_COVERAGE_FAIL constant',
+    value: contracts.zoning.coa_zoning_class_coverage_fail,
+    file: 'scripts/enrich-permits.js',
+    pattern: new RegExp(`COA_COVERAGE_FAIL\\s*=\\s*${contracts.zoning.coa_zoning_class_coverage_fail}\\b`),
   },
 ];
 

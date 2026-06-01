@@ -505,10 +505,11 @@ describe('Pipeline Registry', () => {
     // +1 link_parcel_addresses added (WF1 #parcel-address-bridge Phase 2c 2026-05-23, Spec 54)
     // +1 load_zoning added (Spec 58 2026-05-30)
     // +1 enrich_parcels added (Spec 65 WF2 2026-05-31)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(54);
+    // +2 enrich_permits + enrich_coa_zoning added (Spec 66 WF3 2026-05-31)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(56);
   });
 
-  it('groups are correct: 11 ingest, 17 link, 14 classify, 2 snapshot, 10 quality', () => {
+  it('groups are correct: 11 ingest, 19 link, 14 classify, 2 snapshot, 10 quality', () => {
     // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     // +1 snapshot: backup_db added (WF3 2026-04-25)
     // +1 classify: compute_phase_calibration added (WF1 #B 2026-05-09)
@@ -520,8 +521,9 @@ describe('Pipeline Registry', () => {
     // +1 link:     link_parcel_addresses added (WF1 Phase 2c 2026-05-23)
     const groups = Object.values(PIPELINE_REGISTRY).map((e) => e.group);
     // +1 link: enrich_parcels added (Spec 65 WF2 2026-05-31)
+    // +2 link: enrich_permits + enrich_coa_zoning added (Spec 66 WF3 2026-05-31)
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(11);
-    expect(groups.filter((g) => g === 'link')).toHaveLength(17);
+    expect(groups.filter((g) => g === 'link')).toHaveLength(19);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(14);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(10);
@@ -560,7 +562,7 @@ describe('Pipeline Chains', () => {
     // WF3 #realtor-backfill 2026-05-09: +1 step (backfill_realtor_permit_trades
     // between classify_permits and compute_cost_estimates).
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(29);
+    expect(permits.steps).toHaveLength(30); // +enrich_permits (Spec 66 WF3)
     expect(permits!.steps[0]!.slug).toBe('assert_schema');
     expect(permits!.steps[1]!.slug).toBe('permits');
     expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('backup_db');
@@ -595,7 +597,7 @@ describe('Pipeline Chains', () => {
     // WF1 2026-05-15 Phase E.3: +1 (compute_phase_calibration inserted between
     //   assert_lifecycle_phase_distribution and assert_global_coverage). Total 17.
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
-    expect(coa.steps).toHaveLength(15);
+    expect(coa.steps).toHaveLength(16); // +enrich_coa_zoning (Spec 66 WF3)
     expect(coa!.steps[0]!.slug).toBe('assert_schema');
     expect(coa!.steps[1]!.slug).toBe('coa');
     expect(coa!.steps[coa.steps.length - 1]!.slug).toBe('assert_global_coverage');

@@ -13,6 +13,8 @@
     "massing":              { "file": "scripts/load-massing.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["building_footprints"], "telemetry_null_cols": { "building_footprints": ["centroid_lat", "centroid_lng"] } },
     "load_zoning":          { "file": "scripts/load-zoning.js",           "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["zoning_bylaw_areas", "zoning_height_overlay", "zoning_lot_coverage_overlay", "zoning_building_setback_overlay", "zoning_policy_area_overlay", "zoning_policy_road_overlay", "zoning_rooming_house_overlay", "zoning_parking_zone_overlay", "zoning_priority_retail_overlay", "zoning_queenstw_eat_overlay"], "telemetry_null_cols": { "zoning_bylaw_areas": ["coverage_max_pct", "fsi_max", "frontage_min_m"] } },
     "enrich_parcels":       { "file": "scripts/enrich-parcels.js",        "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["parcels"], "telemetry_null_cols": { "parcels": ["zoning_class", "bylaw_max_fsi", "bylaw_max_coverage_pct"] } },
+    "enrich_permits":       { "file": "scripts/enrich-permits.js",        "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_TARGET": "permits" }, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["zoning_class", "bylaw_max_fsi", "bylaw_max_coverage_pct"] } },
+    "enrich_coa_zoning":    { "file": "scripts/enrich-permits.js",        "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_TARGET": "coa" }, "telemetry_tables": ["coa_applications"], "telemetry_null_cols": { "coa_applications": ["zoning_class", "bylaw_max_fsi"] } },
     "neighbourhoods":       { "file": "scripts/load-neighbourhoods.js",   "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["neighbourhoods"], "telemetry_null_cols": { "neighbourhoods": ["geometry"] } },
     "geocode_permits":      { "file": "scripts/geocode-permits.js",       "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["permits"], "telemetry_null_cols": { "permits": ["latitude", "longitude"] } },
     "link_parcel_addresses": { "file": "scripts/link-parcel-addresses.js","supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcel_address_points"] },
@@ -63,7 +65,7 @@
   "chains": {
     "permits": [
       "assert_schema", "permits", "close_stale_permits", "classify_permit_phase", "classify_scope",
-      "builders", "link_wsib", "geocode_permits", "link_parcels",
+      "builders", "link_wsib", "geocode_permits", "link_parcels", "enrich_permits",
       "link_neighbourhoods", "link_massing", "link_similar", "classify_permits",
       "backfill_realtor_permit_trades",
       "compute_cost_estimates", "compute_timing_calibration_v2",
@@ -75,7 +77,7 @@
       "backup_db"
     ],
     "coa": [
-      "assert_schema", "coa", "assert_coa_freshness", "link_coa_to_parcels", "classify_coa_scope", "classify_coa_trades", "compute_coa_cost_estimates", "link_coa",
+      "assert_schema", "coa", "assert_coa_freshness", "link_coa_to_parcels", "enrich_coa_zoning", "classify_coa_scope", "classify_coa_trades", "compute_coa_cost_estimates", "link_coa",
       "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
       "classify_lifecycle_phase", "assert_lifecycle_phase_distribution", "compute_phase_calibration", "assert_global_coverage"
     ],

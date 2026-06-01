@@ -171,10 +171,11 @@ describe('manifest.json — chain wiring', () => {
     // WF3 #realtor-backfill 2026-05-09: backfill_realtor_permit_trades
     // inserted between classify_permits and compute_cost_estimates;
     // chain length 29 → 30.
+    // Spec 66 WF3 (2026-05-31): +1 step (enrich_permits after link_parcels). Length 30.
     const permitsChain: string[] = manifest.chains.permits;
     expect(permitsChain[permitsChain.length - 1]).toBe('backup_db');
     expect(permitsChain[permitsChain.length - 2]).toBe('assert_global_coverage');
-    expect(permitsChain).toHaveLength(29);
+    expect(permitsChain).toHaveLength(30);
   });
 
   it('assert_global_coverage is last step in coa chain (step 15 post-Phase G retirement of create_pre_permits + assert_pre_permit_aging)', () => {
@@ -185,9 +186,10 @@ describe('manifest.json — chain wiring', () => {
     // WF1 2026-05-15 Phase E.3 — +1 step (compute_phase_calibration inserted
     //   between assert_lifecycle_phase_distribution and assert_global_coverage).
     //   Chain length now 17. Spec 42 §6.7 step 6 + §6.11 Phase E.3.
+    // Spec 66 WF3 (2026-05-31): +1 step (enrich_coa_zoning after link_coa_to_parcels). Length 16.
     const coaChain: string[] = manifest.chains.coa;
     expect(coaChain[coaChain.length - 1]).toBe('assert_global_coverage');
-    expect(coaChain).toHaveLength(15);
+    expect(coaChain).toHaveLength(16);
   });
 
   it('assert_global_coverage comes after assert_entity_tracing in permits chain', () => {

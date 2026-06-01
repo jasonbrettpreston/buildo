@@ -33,6 +33,10 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // Spec 65 (enrich-parcels WF2): lock = spec number (§R2). Enrich step after
   // load_zoning in chain_sources; writes the zoning by-law feed onto parcels.
   'scripts/enrich-parcels.js':       65,
+  // Spec 66 (enrich-permits WF3): lock = spec number. ONE file, two manifest entries
+  // (enrich_permits / enrich_coa_zoning via ENRICH_TARGET) → one shared lock (the
+  // chains run 1h apart + are chain-locked, so no harmful serialisation).
+  'scripts/enrich-permits.js':       66,
   'scripts/load-coa.js':             95,
   'scripts/load-address-points.js':  96,
   'scripts/load-wsib.js':            97,
@@ -62,7 +66,8 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // coverage assertion at line 191 below does not enforce their presence
   // here. This comment serves as the §A.5 registry record so a future
   // developer assigning a new lock ID does not silently collide with 116.
-  // §A.5 record — scripts/one-time/backfill-parcels-zoning-index.js (Spec 65):
+  // §A.5 record — scripts/one-time/backfill-parcels-zoning-index.js (Spec 65) +
+  //   scripts/one-time/backfill-permits-coa-zoning-index.js (Spec 66):
   //   NO advisory lock (idempotent CREATE INDEX CONCURRENTLY IF NOT EXISTS,
   //   autocommit DDL; not in manifest). Listed here for registry completeness.
   // Wave 1 — Classify

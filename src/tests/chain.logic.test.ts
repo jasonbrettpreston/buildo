@@ -30,8 +30,9 @@ describe('Pipeline Chain Definitions', () => {
     // an actual recurring chain step, not a one-shot operator script.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(29);
+    expect(chain!.steps).toHaveLength(30); // +enrich_permits (Spec 66 WF3, after link_parcels)
     const slugs = chain!.steps.map((s) => s.slug);
+    expect(slugs.indexOf('enrich_permits')).toBe(slugs.indexOf('link_parcels') + 1);
     expect(slugs).not.toContain('enrich_wsib_builders');
     expect(slugs).not.toContain('enrich_named_builders');
     // Phase G (Spec 42 §6.11): create_pre_permits retired + removed from permits chain
@@ -129,8 +130,9 @@ describe('Pipeline Chain Definitions', () => {
     //   BOTH chains; observer writes audit_table to both followup files.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(15);
+    expect(chain!.steps).toHaveLength(16); // +enrich_coa_zoning (Spec 66 WF3, after link_coa_to_parcels)
     const slugs = chain!.steps.map((s) => s.slug);
+    expect(slugs.indexOf('enrich_coa_zoning')).toBe(slugs.indexOf('link_coa_to_parcels') + 1);
     // Phase G (Spec 42 §6.11): both retired from CoA chain
     expect(slugs).not.toContain('create_pre_permits');
     expect(slugs).not.toContain('assert_pre_permit_aging');
@@ -392,7 +394,8 @@ describe('Pipeline Disabled Step Skip Logic', () => {
     //  WF1 2026-05-14 R5.5 inserted compute_coa_cost_estimates — total 16;
     //  WF1 2026-05-14 Phase E.3 inserted compute_phase_calibration — total 17
     //  WF1 2026-05-17 Phase G retired create_pre_permits + assert_pre_permit_aging — total 15
-    expect(activeSteps).toHaveLength(15);
+    //  Spec 66 WF3 2026-05-31 inserted enrich_coa_zoning — total 16
+    expect(activeSteps).toHaveLength(16);
   });
 
   it('empty disabled set leaves all steps active', () => {
