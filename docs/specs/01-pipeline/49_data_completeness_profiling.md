@@ -182,6 +182,36 @@ Added with the CoA pipeline parity rollout per Spec 42 §6. Coverage targets:
 | Universal — lead_id column population | cost_estimates.lead_id | `lead_id IS NOT NULL` | `COUNT(*) FROM cost_estimates` — target 100% post-Phase C backfill |
 | Universal — lead_id column population | trade_forecasts.lead_id | `lead_id IS NOT NULL` | same pattern across `tracked_projects`, `lifecycle_transitions`, `lifecycle_status_history` — all 100% post-Phase C |
 
+#### WF3 #406 — zoning enrichment coverage (enrich_permits / enrich_coa_zoning, migration 166)
+
+Added 2026-06-01 (WF3 #406) so the global profile reports the Spec 66 WF3 relational-zoning feed. **`zoning_class` is the one GATED row** — emitted via `calibratedRow` at **PASS ≥ 80 / WARN ≥ 75** (per-field threshold, same mechanism as the `externalRow` 10/5 row above; thresholds are the source of truth and are NOT the global `logic_variables` pass/warn). 80/75 matches the F-H12 enrich-step ceiling and sits below live coverage (permits 83.6% / CoA 84.4% at authorization), so a real regression below 80% WARNs/FAILs the profile instead of going silent. **All other zoning fields are INFO** (`infoRow`) — sparse-by-design cost inputs (`bylaw_max_*`, `exception_number`), co-written jsonb (`applicable_bylaws`/`overlay_summary`/`variance_context`), and write-provenance (`zoning_parcel_count`/`zoning_dominant_parcel_id`/`zoning_dominant_parcel_method`/`zoning_enriched_at`); they are excluded from the verdict cascade (Spec 48 §3.6) and so cannot newly WARN/FAIL.
+
+Step labels `Step 9b` (permits, after `link_parcels`) / `CoA Step 4b` (CoA, after `link_coa_to_parcels`) are the deliberate insert-after convention (the #405 full label-renumber to manifest order remains a separate deferred cosmetic item). INFO sub-field denominator context = the `zoning_enriched_at`-populated count (coverage "of enriched leads", not all leads).
+
+| step_target | field | populated condition | denominator + threshold |
+|---|---|---|---|
+| Step 9b — enrich_permits | permits.zoning_class | `zoning_class IS NOT NULL` | all real permits — **GATED: PASS ≥ 80 / WARN ≥ 75** |
+| Step 9b — enrich_permits | permits.zoning_enriched_at | `zoning_enriched_at IS NOT NULL` | enriched permits (INFO — enrichment radius) |
+| Step 9b — enrich_permits | permits.bylaw_max_coverage_pct | `bylaw_max_coverage_pct IS NOT NULL` | enriched permits (INFO — sparse cost input) |
+| Step 9b — enrich_permits | permits.bylaw_max_fsi | `bylaw_max_fsi IS NOT NULL` | enriched permits (INFO — sparse cost input) |
+| Step 9b — enrich_permits | permits.bylaw_max_height_m | `bylaw_max_height_m IS NOT NULL` | enriched permits (INFO — sparse cost input) |
+| Step 9b — enrich_permits | permits.exception_number | `exception_number IS NOT NULL` | enriched permits (INFO — sparse) |
+| Step 9b — enrich_permits | permits.applicable_bylaws | `applicable_bylaws IS NOT NULL` | enriched permits (INFO — jsonb; non-empty by writer contract) |
+| Step 9b — enrich_permits | permits.overlay_summary | `overlay_summary IS NOT NULL` | enriched permits (INFO — jsonb) |
+| Step 9b — enrich_permits | permits.zoning_parcel_count | `zoning_parcel_count IS NOT NULL` | enriched permits (INFO — write provenance) |
+| Step 9b — enrich_permits | permits.zoning_dominant_parcel_id | `zoning_dominant_parcel_id IS NOT NULL` | enriched permits (INFO — write provenance) |
+| Step 9b — enrich_permits | permits.zoning_dominant_parcel_method | `zoning_dominant_parcel_method IS NOT NULL` | enriched permits (INFO — CHECK-pinned `'max_area'`; mirrors `zoning_enriched_at`) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_class | `zoning_class IS NOT NULL` | all CoAs — **GATED: PASS ≥ 80 / WARN ≥ 75** |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_enriched_at | `zoning_enriched_at IS NOT NULL` | enriched CoAs (INFO — enrichment radius) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.bylaw_max_coverage_pct | `bylaw_max_coverage_pct IS NOT NULL` | enriched CoAs (INFO — sparse cost input) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.bylaw_max_fsi | `bylaw_max_fsi IS NOT NULL` | enriched CoAs (INFO — sparse cost input) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.bylaw_max_height_m | `bylaw_max_height_m IS NOT NULL` | enriched CoAs (INFO — sparse cost input) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.exception_number | `exception_number IS NOT NULL` | enriched CoAs (INFO — sparse) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.variance_context | `variance_context IS NOT NULL` | enriched CoAs (INFO — jsonb) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_parcel_count | `zoning_parcel_count IS NOT NULL` | enriched CoAs (INFO — write provenance) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_dominant_parcel_id | `zoning_dominant_parcel_id IS NOT NULL` | enriched CoAs (INFO — write provenance) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_dominant_parcel_method | `zoning_dominant_parcel_method IS NOT NULL` | enriched CoAs (INFO — CHECK-pinned `'max_area'`) |
+
 ---
 
 ## 5. Mobile & Responsive Behavior

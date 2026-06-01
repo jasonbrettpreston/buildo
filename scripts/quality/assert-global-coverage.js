@@ -25,6 +25,7 @@ const { z } = require('zod');
 const pipeline = require('./../lib/pipeline');
 const { SKIP_PHASES_SQL } = require('./../lib/lifecycle-phase');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./../lib/config-loader');
+const { calibratedStatus } = require('./../lib/coverage-status');
 
 // Advisory lock ID — unique to this assert script (spec 47 §A.5, ID 111).
 const ADVISORY_LOCK_ID = 111;
@@ -85,6 +86,21 @@ pipeline.run('assert-global-coverage', async (pool) => {
       return { metric: `${field} (${stepTarget})`, value: pct !== null ? `${pct}%` : populated, threshold: '>= 10%', status };
     }
 
+    // Calibrated coverage: PASS >= passPct%, WARN >= warnPct%, FAIL below — per-field
+    // thresholds passed explicitly (like externalRow's 10/5, blessed by Spec 49 §4).
+    // Used by the WF3 #406 gated zoning_class row (DEC-1: 80/75). Status delegated to
+    // the pure calibratedStatus helper so the PASS/WARN/FAIL boundary is unit-locked.
+    // Params named fieldPassPct/fieldWarnPct (not passPct/warnPct) to avoid shadowing
+    // the outer logic_variables-loaded globals — a future caller omitting explicit
+    // thresholds should fail loudly, not silently inherit the global gate (review fold).
+    function calibratedRow(stepTarget, field, populated, denominator, fieldPassPct, fieldWarnPct) {
+      const pct = (denominator != null && denominator > 0)
+        ? Math.round((populated / denominator) * 1000) / 10
+        : null;
+      const status = calibratedStatus(pct, fieldPassPct, fieldWarnPct);
+      return { metric: `${field} (${stepTarget})`, value: pct !== null ? `${pct}%` : populated, threshold: `>= ${fieldPassPct}%`, status };
+    }
+
     // Informational only — no traffic-light judgment.
     // Used for structural sparsity (est_const_cost) and count-only metrics.
     function infoRow(stepTarget, field, value, denominator = null) {
@@ -125,6 +141,17 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE trade_classified_at IS NOT NULL)                         AS trade_classified_pop,
           COUNT(*) FILTER (WHERE cost_classified_at IS NOT NULL)                          AS cost_classified_pop,
           COUNT(*) FILTER (WHERE estimated_cost IS NOT NULL)                              AS estimated_cost_pop,
+          -- WF3 #406 — enrich_coa_zoning (migration 166) zoning feed coverage:
+          COUNT(*) FILTER (WHERE zoning_class IS NOT NULL)                                AS zoning_class_pop,
+          COUNT(*) FILTER (WHERE zoning_enriched_at IS NOT NULL)                          AS zoning_enriched_pop,
+          COUNT(*) FILTER (WHERE bylaw_max_coverage_pct IS NOT NULL)                      AS bylaw_max_coverage_pct_pop,
+          COUNT(*) FILTER (WHERE bylaw_max_fsi IS NOT NULL)                               AS bylaw_max_fsi_pop,
+          COUNT(*) FILTER (WHERE bylaw_max_height_m IS NOT NULL)                          AS bylaw_max_height_m_pop,
+          COUNT(*) FILTER (WHERE exception_number IS NOT NULL)                            AS exception_number_pop,
+          COUNT(*) FILTER (WHERE variance_context IS NOT NULL)                            AS variance_context_pop,
+          COUNT(*) FILTER (WHERE zoning_parcel_count IS NOT NULL)                         AS zoning_parcel_count_pop,
+          COUNT(*) FILTER (WHERE zoning_dominant_parcel_id IS NOT NULL)                   AS zoning_dominant_parcel_id_pop,
+          COUNT(*) FILTER (WHERE zoning_dominant_parcel_method IS NOT NULL)               AS zoning_dominant_parcel_method_pop,
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
       `);
@@ -146,6 +173,10 @@ pipeline.run('assert-global-coverage', async (pool) => {
       const unlinkedTotal = parseInt(ca.unlinked_total, 10) || 0;
       // F2: use approved_unlinked (actionable denominator) — mirrors permits chain Step 17.
       const approvedUnlinked = parseInt(ca.approved_unlinked, 10) || 0;
+      // WF3 #406 — enrichment radius: count of CoAs the enrich_coa_zoning step actually
+      // wrote a zone for. Used as the INFO denominator context for the sub-fields so a
+      // sparse bylaw value reads as "of enriched CoAs", not "of all CoAs" (Gemini LOW).
+      const coaZoningEnrichedTotal = parseInt(ca.zoning_enriched_pop, 10) || 0;
 
       // ── Misc CoA metrics ───────────────────────────────────────
       const { rows: [cm] } = await pool.query(`
@@ -181,6 +212,23 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // Step 4 — link_coa_to_parcels (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 4 — link_coa_to_parcels', 'coa_applications.parcel_linked_at', parseInt(ca.parcel_linked_pop, 10), coaTotal));
       rows.push(infoRow('CoA Step 4 — link_coa_to_parcels', 'lead_parcels.coa_rows', parseInt(cx.lead_parcels_coa_rows, 10)));
+
+      // Step 4b — enrich_coa_zoning (WF3 #406, Spec 66 WF3 / migration 166).
+      // Insert-after label (DEC-2; #405 full renumber deferred). zoning_class is the
+      // gated headline (DEC-1: PASS >= 80 / WARN >= 75, restores the regression net
+      // F-H12 would otherwise be the only source of). Sub-fields are INFO — sparse
+      // cost inputs / co-written provenance, excluded from the verdict cascade
+      // (Spec 48 §3.6). Sub-field denominator context = coaZoningEnrichedTotal.
+      rows.push(calibratedRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.zoning_class', parseInt(ca.zoning_class_pop, 10), coaTotal, 80, 75));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.zoning_enriched_at',            parseInt(ca.zoning_enriched_pop, 10),            coaZoningEnrichedTotal));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.bylaw_max_coverage_pct',        parseInt(ca.bylaw_max_coverage_pct_pop, 10),     coaZoningEnrichedTotal));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.bylaw_max_fsi',                 parseInt(ca.bylaw_max_fsi_pop, 10),              coaZoningEnrichedTotal));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.bylaw_max_height_m',            parseInt(ca.bylaw_max_height_m_pop, 10),         coaZoningEnrichedTotal));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.exception_number',              parseInt(ca.exception_number_pop, 10),           coaZoningEnrichedTotal));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.variance_context',              parseInt(ca.variance_context_pop, 10),           coaZoningEnrichedTotal));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.zoning_parcel_count',           parseInt(ca.zoning_parcel_count_pop, 10),        coaZoningEnrichedTotal));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.zoning_dominant_parcel_id',     parseInt(ca.zoning_dominant_parcel_id_pop, 10),  coaZoningEnrichedTotal));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.zoning_dominant_parcel_method', parseInt(ca.zoning_dominant_parcel_method_pop, 10), coaZoningEnrichedTotal));
 
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
@@ -307,13 +355,28 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE status IN ('Pending Closed','Closed')
                              AND completed_date IS NOT NULL)                   AS stale_with_date,
           -- Step 17 — create_pre_permits (Bug 4: DISTINCT avoids overcounting when revisions exist)
-          COUNT(DISTINCT permit_num) FILTER (WHERE permit_num LIKE 'PRE-%')    AS pre_permit_count
+          COUNT(DISTINCT permit_num) FILTER (WHERE permit_num LIKE 'PRE-%')    AS pre_permit_count,
+          -- WF3 #406 — enrich_permits (migration 166) zoning feed coverage:
+          COUNT(*) FILTER (WHERE zoning_class IS NOT NULL)                     AS zoning_class_pop,
+          COUNT(*) FILTER (WHERE zoning_enriched_at IS NOT NULL)               AS zoning_enriched_pop,
+          COUNT(*) FILTER (WHERE bylaw_max_coverage_pct IS NOT NULL)           AS bylaw_max_coverage_pct_pop,
+          COUNT(*) FILTER (WHERE bylaw_max_fsi IS NOT NULL)                    AS bylaw_max_fsi_pop,
+          COUNT(*) FILTER (WHERE bylaw_max_height_m IS NOT NULL)               AS bylaw_max_height_m_pop,
+          COUNT(*) FILTER (WHERE exception_number IS NOT NULL)                 AS exception_number_pop,
+          COUNT(*) FILTER (WHERE applicable_bylaws IS NOT NULL)                AS applicable_bylaws_pop,
+          COUNT(*) FILTER (WHERE overlay_summary IS NOT NULL)                  AS overlay_summary_pop,
+          COUNT(*) FILTER (WHERE zoning_parcel_count IS NOT NULL)              AS zoning_parcel_count_pop,
+          COUNT(*) FILTER (WHERE zoning_dominant_parcel_id IS NOT NULL)        AS zoning_dominant_parcel_id_pop,
+          COUNT(*) FILTER (WHERE zoning_dominant_parcel_method IS NOT NULL)    AS zoning_dominant_parcel_method_pop
         FROM permits
       `);
       const permitsTotal        = parseInt(pa.permits_total, 10) || 0;
       const geocodedTotal       = parseInt(pa.latitude_pop, 10)  || 0; // permits WHERE latitude IS NOT NULL
       const lifecyclePhaseTotal = parseInt(pa.lifecycle_phase_pop, 10) || 0;
       const staleTotal          = parseInt(pa.stale_total, 10) || 0;
+      // WF3 #406 — enrichment radius (count of permits enrich_permits wrote a zone for);
+      // INFO denominator context for the zoning sub-fields (Gemini LOW).
+      const zoningEnrichedTotal = parseInt(pa.zoning_enriched_pop, 10) || 0;
 
       // ── ea: Entities aggregate (Denom B) ──────────────────────
       const { rows: [ea] } = await pool.query(`
@@ -620,6 +683,25 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // WF2 #4 2026-05-08 — Surgical Triangle INPUT: lot size (fallback GFA basis per Spec 83 §3A).
       // Pass-2 fold (2026-05-19): parcels stores area as `lot_size_sqm` (same WF2 #4 drift class as the pb dims).
       rows.push(coverageRow('Step 9 — link_parcels', 'parcels.lot_size_sqm', parseInt(misc.parcels_with_area, 10), parseInt(misc.parcels_total, 10) || null));
+
+      // Step 9b — enrich_permits (WF3 #406, Spec 66 WF3 / migration 166).
+      // Insert-after label (DEC-2; #405 full renumber deferred). zoning_class is the
+      // gated headline (DEC-1: PASS >= 80 / WARN >= 75 — matches the F-H12 ceiling, so
+      // a real drop below 80 WARNs/FAILs the global profile instead of going silent).
+      // Sub-fields are INFO — sparse cost inputs (bylaw_max_*) / co-written jsonb +
+      // provenance — excluded from the verdict cascade (Spec 48 §3.6). Sub-field
+      // denominator context = zoningEnrichedTotal ("of enriched permits", not all).
+      rows.push(calibratedRow('Step 9b — enrich_permits', 'permits.zoning_class', parseInt(pa.zoning_class_pop, 10), permitsTotal, 80, 75));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.zoning_enriched_at',            parseInt(pa.zoning_enriched_pop, 10),            zoningEnrichedTotal));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.bylaw_max_coverage_pct',        parseInt(pa.bylaw_max_coverage_pct_pop, 10),     zoningEnrichedTotal));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.bylaw_max_fsi',                 parseInt(pa.bylaw_max_fsi_pop, 10),              zoningEnrichedTotal));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.bylaw_max_height_m',            parseInt(pa.bylaw_max_height_m_pop, 10),         zoningEnrichedTotal));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.exception_number',              parseInt(pa.exception_number_pop, 10),           zoningEnrichedTotal));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.applicable_bylaws',             parseInt(pa.applicable_bylaws_pop, 10),          zoningEnrichedTotal));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.overlay_summary',               parseInt(pa.overlay_summary_pop, 10),            zoningEnrichedTotal));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.zoning_parcel_count',           parseInt(pa.zoning_parcel_count_pop, 10),        zoningEnrichedTotal));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.zoning_dominant_parcel_id',     parseInt(pa.zoning_dominant_parcel_id_pop, 10),  zoningEnrichedTotal));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.zoning_dominant_parcel_method', parseInt(pa.zoning_dominant_parcel_method_pop, 10), zoningEnrichedTotal));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));

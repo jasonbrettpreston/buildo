@@ -587,3 +587,72 @@ describe('assert-global-coverage.js — Pass-2 CoA chain coverage additions', ()
     expect(src()).toMatch(/'CoA Step 13 — assert_lifecycle_phase_distribution'/);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// WF3 #406 (2026-06-01): zoning coverage rows for the Spec 66 WF3 enrich
+// steps (enrich_permits / enrich_coa_zoning, migration 166). DEC-1: the
+// zoning_class headline is GATED at 80/75 via calibratedRow; the remaining
+// sub-fields are INFO (sparse-by-design / co-written, excluded from the
+// verdict cascade per Spec 48 §3.6). Step labels 9b / 4b are the deliberate
+// insert-after convention (DEC-2; #405 full renumber deferred).
+// ────────────────────────────────────────────────────────────────────────
+describe('assert-global-coverage.js — WF3 #406 zoning coverage rows', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  // (a) presence — new aggregate counts + helper + rows exist
+  it('permits aggregate counts zoning_class_pop', () => {
+    expect(content).toMatch(/zoning_class IS NOT NULL\)\s*(?:FILTER[^A]*)?AS zoning_class_pop/);
+  });
+
+  it('introduces the calibratedRow helper with explicit (passPct, warnPct) thresholds', () => {
+    expect(content).toMatch(/function calibratedRow\([^)]*fieldPassPct[^)]*fieldWarnPct[^)]*\)/);
+  });
+
+  it('calibratedRow delegates status to the pure calibratedStatus helper (testable boundary)', () => {
+    expect(content).toMatch(/require\(['"][^'"]*coverage-status['"]\)/);
+    expect(content).toMatch(/calibratedStatus\(/);
+  });
+
+  // (b) zoning_class is GATED via calibratedRow at 80/75; emits a % value
+  it('permits.zoning_class is gated via calibratedRow at 80/75 over permitsTotal (Step 9b)', () => {
+    expect(content).toMatch(
+      /calibratedRow\('Step 9b — enrich_permits',\s*'permits\.zoning_class',\s*parseInt\([^)]+\),\s*permitsTotal,\s*80,\s*75\)/,
+    );
+  });
+
+  it('coa_applications.zoning_class is gated via calibratedRow at 80/75 over coaTotal (CoA Step 4b)', () => {
+    expect(content).toMatch(
+      /calibratedRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.zoning_class',\s*parseInt\([^)]+\),\s*coaTotal,\s*80,\s*75\)/,
+    );
+  });
+
+  // (c) verdict-cascade invariance (Gemini HIGH#3): the ONLY new gated (non-INFO)
+  //     row per enrich step is zoning_class. Every other new zoning field must be
+  //     infoRow — so the verdict (worst non-INFO over `rows`) is provably unmoved
+  //     by the additions except by a genuine zoning_class regression below 80.
+  it('zoning sub-fields are NEVER gated (no coverageRow/calibratedRow for bylaw_max_*/exception_number/jsonb/provenance)', () => {
+    const GATED = /(?:coverageRow|calibratedRow)\([^)]*(?:bylaw_max_fsi|bylaw_max_height_m|bylaw_max_coverage_pct|exception_number|applicable_bylaws|overlay_summary|variance_context|zoning_parcel_count|zoning_dominant_parcel_id|zoning_dominant_parcel_method|zoning_enriched_at)/;
+    expect(content).not.toMatch(GATED);
+  });
+
+  it('verdict remains row-derived (worst non-INFO), not a parallel boolean', () => {
+    expect(content).toMatch(/rows\.some\(r => r\.status === 'FAIL'\)/);
+  });
+
+  // (d) sub-fields are INFO and use the zoning_enriched_at count as denominator context
+  it('permits zoning sub-fields use infoRow under Step 9b', () => {
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.bylaw_max_fsi'/);
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.applicable_bylaws'/);
+  });
+
+  it('coa zoning sub-fields use infoRow under CoA Step 4b', () => {
+    expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.variance_context'/);
+  });
+
+  it('INFO sub-fields pass the zoning_enriched_at-populated count as denominator context (Gemini LOW)', () => {
+    // permits: zoningEnrichedTotal; coa: coaZoningEnrichedTotal
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.bylaw_max_fsi',\s*parseInt\([^)]+\),\s*zoningEnrichedTotal\)/);
+    expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.bylaw_max_fsi',\s*parseInt\([^)]+\),\s*coaZoningEnrichedTotal\)/);
+  });
+});
