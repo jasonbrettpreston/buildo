@@ -107,6 +107,18 @@ export function createMockPermit(overrides: Partial<Permit> = {}): Permit {
     lifecycle_stalled: false,
     lifecycle_classified_at: null,
     phase_started_at: null,
+    // Spec 66 zoning feed — null until enrich-permits.js runs (override per test).
+    zoning_class: null,
+    bylaw_max_coverage_pct: null,
+    bylaw_max_fsi: null,
+    bylaw_max_height_m: null,
+    exception_number: null,
+    applicable_bylaws: null,
+    overlay_summary: null,
+    zoning_parcel_count: null,
+    zoning_dominant_parcel_id: null,
+    zoning_dominant_parcel_method: null,
+    zoning_enriched_at: null,
     ...overrides,
   };
 }

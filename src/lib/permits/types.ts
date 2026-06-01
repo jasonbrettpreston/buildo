@@ -89,6 +89,18 @@ export interface Permit {
   // (not every run). NULL = not yet classified or pre-backfill.
   // Migration 086, Phase 1 of predictive timing.
   phase_started_at: Date | null;
+  // Spec 66 (enrich-permits.js) zoning by-law feed — all nullable (migration 166).
+  zoning_class: string | null;
+  bylaw_max_coverage_pct: number | null;
+  bylaw_max_fsi: number | null;
+  bylaw_max_height_m: number | null;
+  exception_number: number | null;
+  applicable_bylaws: Record<string, unknown>[] | null;
+  overlay_summary: Record<string, unknown> | null;
+  zoning_parcel_count: number | null;
+  zoning_dominant_parcel_id: number | null;
+  zoning_dominant_parcel_method: string | null;
+  zoning_enriched_at: Date | null;
 }
 
 // ---------------------------------------------------------------------------
