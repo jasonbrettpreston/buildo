@@ -38,6 +38,9 @@
   },
   "zoning": {
     "$comment": "Spec 65 enrich-parcels. ambiguous_dominant_share_max: a parcel whose dominant base-zone intersection share is below this is flagged zoning_is_ambiguous. Consumer: scripts/lib/zoning-precedence.js AMBIGUOUS_DOMINANT_SHARE_MAX (pinned by contracts.infra.test.ts).",
-    "ambiguous_dominant_share_max": 0.6
+    "ambiguous_dominant_share_max": 0.6,
+    "permits_zoning_class_coverage_fail": 80,
+    "coa_zoning_class_coverage_fail": 80,
+    "$comment_fh12": "Spec 66 enrich-permits F-H12 gates. FAIL when construction-permit / CoA zoning_class coverage drops below these. Spike-calibrated (live: permits 84.2%, coa 84.4% — §8d's aspirational 99/95 is unachievable; ~84% ceiling = 5.5% no-link + ~10% gap-parcel). Catches regression, not an aspirational target. Consumer: scripts/enrich-permits.js (pinned by contracts.infra.test.ts)."
   }
 }

@@ -17,7 +17,7 @@ As a business user, I expect this daily pipeline to ingest 237K+ raw Toronto bui
 
 ```
 assert_schema → permits → close_stale_permits → classify_permit_phase →
-classify_scope → builders → link_wsib → geocode_permits → link_parcels →
+classify_scope → builders → link_wsib → geocode_permits → link_parcels → enrich_permits →
 link_neighbourhoods → link_massing → link_similar → classify_permits →
 backfill_realtor_permit_trades →
 compute_cost_estimates → compute_timing_calibration_v2 →
@@ -45,6 +45,7 @@ assert_entity_tracing → assert_global_coverage → backup_db
 | 7 | `link_wsib` | `link-wsib.js` | Match builders against Ontario WSIB registry | entities |
 | 8 | `geocode_permits` | `geocode-permits.js` | Assign lat/lng via address point lookup or Google fallback | permits |
 | 9 | `link_parcels` | `link-parcels.js` | Spatially link permits to property lot polygons. **WF1 Phase C extension:** writes to unified `lead_parcels` table (lead_id-keyed per Spec 42 §6.6.B Option C) instead of legacy `permit_parcels`. **WF1 #parcel-address-bridge Phase 2d (2026-05-23, commit `1ba020b`):** new top-of-cascade Strategy 1a (address_points exact via `parcel_address_points` bridge) added before existing Strategy 1b (legacy parcels-table exact); confidence 0.97. Strategy 1a JOIN: `address_points ap → parcel_address_points pap → parcels p`, filtered `MAINT_STAGE=REGULAR + ADDRESS_STATUS=CURRENT` (NULL fallback), disambiguated by plan v4 fold H5/C2/F19 uniform 3-level rule (`address_class_desc` Structure > Structure Entrance > Land > `ST_Area(p.geom::geography) ASC` > `address_point_id ASC`). F17 counter naming preservation: legacy `tier_1_exact_address` audit row rolls up BOTH bridge + legacy hits; new `tier_1_via_bridge` is informational sibling counter. F16: verdict cascade upgraded from `parcelLinkRate < 75 ? WARN : PASS` to row-derived per Spec 48 §3.6. F14: emitMeta reads expanded to include `address_points` + `parcel_address_points`. | lead_parcels |
+| 9b | `enrich_permits` | `enrich-permits.js` (`ENRICH_TARGET=permits`) | **Spec 66 WF3** — copies the dominant linked parcel's zoning by-law feed (class, FSI, coverage, height, exception, `applicable_bylaws`/`overlay_summary` jsonb) onto permits via `permit_parcels`. Always-full relational join; emits the F-H12 `permits_zoning_class_coverage_pct` gate (FAIL <80, construction). | permits |
 | 10 | `link_neighbourhoods` | `link-neighbourhoods.js` | Assign neighbourhood_id via point-in-polygon | permits |
 | 11 | `link_massing` | `link-massing.js` | Link parcels to 3D building footprint volumes | parcel_buildings |
 | 12 | `link_similar` | `link-similar.js` | Propagate scope tags between related permits at same address | permits |

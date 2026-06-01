@@ -462,7 +462,7 @@ load-zoning.js                       →     enrich-parcels.js              → 
                                               .bylaw_max_height_m (F-H5)       └─ adds columns to coa_applications:
                                               .is_heritage (Spec 59)              .zoning_class
                                               .in_trca_regulated (Spec 61)        .variance_context (jsonb)
-                                              .on_major_street (Spec 63)          .base_zoning_class
+                                              .on_major_street (Spec 63)          (base_zoning_class DROPPED — Spec 66: redundant copy of .zoning_class)
                                               .corner_lot (Spec 62)
 ```
 
@@ -498,10 +498,12 @@ Adds columns to `permits` and `coa_applications` via JOIN through `permit_parcel
 
 **F-H7 — `lead_parcels` transitional check:** the CoA JOIN path via `lead_parcels` assumes Spec 42's mig 143-144 mirror triggers are still in place. If Spec 42's legacy-table drop phase has executed before WF3 is implemented, WF3 MUST use `permit_parcels` via `linked_permit_num` as primary path, with `lead_parcels` as fallback for CoA-only data. WF3 spec authoring MUST verify which tables exist.
 
-Future-spec deliverables:
-- Migration adding `permits.zoning_class`, `.applicable_bylaws jsonb`, `.overlay_summary jsonb`, `.lot_configuration`
-- Migration adding `coa_applications.zoning_class`, `.variance_context jsonb`, `.base_zoning_class`
-- `scripts/enrich-permits.js` — handles both permits + CoA paths
+**AUTHORED: `docs/specs/01-pipeline/66_enrich_permits.md` (v1.0, 2026-05-31).** Highlights (full design in Spec 66):
+- Migration adding `permits.zoning_class`, `.bylaw_max_*`, `.exception_number`, `.applicable_bylaws jsonb`, `.overlay_summary jsonb` (+ provenance). `.lot_configuration` DEFERRED (corner-lot = Spec 62).
+- Migration adding `coa_applications.zoning_class`, `.bylaw_max_*`, `.exception_number`, `.variance_context jsonb` (+ provenance). **`base_zoning_class` DROPPED** — a redundant copy of `zoning_class` with no variance-decision history; the full base snapshot lives in `variance_context`.
+- `scripts/enrich-permits.js` — ONE script, two chain modes (`ENRICH_TARGET=permits|coa`, lock 66), **always-full relational join** (no incremental — the join is ~5 s).
+- **DEC (Spec 66): join CoA on the stored `coa_applications.lead_id`** (not a re-derived `'coa:'||application_number`).
+- **F-H12 gates calibrated (Spec 66 spike): permits/CoA `zoning_class` coverage is ~84% achievable, NOT 99/95** (5.5% no-link + ~10% gap-parcel). Gates FAIL below 80% (regression catch); thresholds in `_contracts.json`.
 - JOIN paths verified per F-H7 transitional check
 - Multi-parcel project handling — dominant zone by area; full zone list as jsonb
 - **F-H12 — End-objective machine gates: WF3 MUST emit:**
