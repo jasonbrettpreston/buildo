@@ -25,6 +25,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   builders:           { name: 'Extract Entities',       group: 'ingest' },
   address_points:     { name: 'Address Points',        group: 'ingest' },
   parcels:            { name: 'Parcels',               group: 'ingest' },
+  load_ravines:       { name: 'Load Ravines',          group: 'ingest' },
   massing:            { name: '3D Massing',            group: 'ingest' },
   neighbourhoods:     { name: 'Neighbourhoods',        group: 'ingest' },
   load_zoning:        { name: 'Load Zoning By-law',    group: 'ingest' },
@@ -226,6 +227,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'address_points',      indent: 0 },
       { slug: 'geocode_permits',     indent: 1 },
       { slug: 'parcels',             indent: 0 },
+      { slug: 'load_ravines',        indent: 0 },
       // WF1 #parcel-address-bridge Phase 2c — spatial bridge populator.
       // Runs after parcels + address_points are loaded; populates
       // parcel_address_points so link_parcels Strategies 1+2 and

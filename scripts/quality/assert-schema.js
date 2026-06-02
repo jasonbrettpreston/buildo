@@ -48,6 +48,8 @@ const PARCELS_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/property-boundaries/resource/23d1f792-018f-4069-ac5d-443e932e1b78/download/Property%20Boundaries%20-%204326.csv';
 const MASSING_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/667237d6-4d3c-4cf3-8cb7-e91c48d59375/download/3dmassingshapefile_2025_wgs84.zip';
+const RAVINE_URL =
+  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ravine-natural-feature-protection-area/resource/bb81bb0f-f88a-4f3e-bca7-a328154ba31b/download/ravine-natural-feature-protection-area-wgs84.zip';
 const NEIGHBOURHOODS_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/fc443770-ef0a-4025-9c2c-2cb558bfab00/resource/0719053b-28b7-48ea-b863-068823a93aaa/download/neighbourhoods-4326.geojson';
 
@@ -345,6 +347,17 @@ pipeline.run('assert-schema', async (pool) => {
         console.error(`  FAIL: 3D Massing — ${err.message}`);
       }
 
+      // Ravine & Natural Feature Protection Shapefile ZIP — accessibility check only
+      // (datastore_active=false → no field-set check possible pre-download; OBJECTID
+      // attribute presence is validated post-download inside load-ravines.js). Spec 59 §8c.
+      try {
+        await checkUrlAccessible(RAVINE_URL, 'Ravine Protection');
+      } catch (err) {
+        allPassed = false;
+        errors.push(`Ravine Protection: ${err.message}`);
+        console.error(`  FAIL: Ravine Protection — ${err.message}`);
+      }
+
       // Neighbourhoods GeoJSON — property key validation
       try {
         const nhoodKeys = await fetchGeoJsonPropertyKeys(NEIGHBOURHOODS_URL, 'Neighbourhoods');
@@ -470,10 +483,10 @@ pipeline.run('assert-schema', async (pool) => {
       if (CHAIN_ID === 'coa' && coaAuditTable) return { audit_table: coaAuditTable };
       if (CHAIN_ID === 'sources') {
         const sourceErrors = errors.filter((e) =>
-          /address|parcel|massing|neighbourhood|zoning/i.test(e)
+          /address|parcel|massing|neighbourhood|zoning|ravine/i.test(e)
         );
         const sourceAuditRows = [
-          { metric: 'sources_checked', value: 14, threshold: null, status: 'INFO' }, // 4 original + 10 zoning DataStore resources (Spec 58)
+          { metric: 'sources_checked', value: 15, threshold: null, status: 'INFO' }, // 4 original + 10 zoning DataStore resources (Spec 58) + 1 ravine ZIP (Spec 59)
           { metric: 'schema_errors', value: sourceErrors.length, threshold: '== 0', status: sourceErrors.length > 0 ? 'FAIL' : 'PASS' },
         ];
         return {

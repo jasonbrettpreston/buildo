@@ -30,6 +30,7 @@ load_zoning → enrich_parcels → refresh_snapshot → assert_data_bounds → a
 | 2 | `address_points` | `load-address-points.js` | Ingest Toronto master address point geometries | address_points |
 | 3 | `geocode_permits` | `geocode-permits.js` | Re-geocode permits missing coordinates | permits |
 | 4 | `parcels` | `load-parcels.js` | Ingest property lot polygons from city GIS | parcels |
+| 4b | `load_ravines` | `load-ravines.js` | Ingest Toronto Ravine & Natural Feature Protection Area polygons (Chapter 658) — zipped shapefile (854 polygons), advisory lock 59 (Spec 59 §8c) | ravines |
 | 5 | `compute_centroids` | `compute-centroids.js` | Calculate centroid lat/lng for parcels missing them | parcels |
 | 6 | `link_parcels` | `link-parcels.js` | Re-link all permits to fresh parcel data (runs `--full` in sources chain) | permit_parcels |
 | 7 | `massing` | `load-massing.js` | Ingest 3D building footprint volumes | building_footprints |

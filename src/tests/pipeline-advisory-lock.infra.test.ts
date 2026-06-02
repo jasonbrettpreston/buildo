@@ -30,6 +30,9 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/load-massing.js':         56,
   'scripts/load-neighbourhoods.js':  57,
   'scripts/load-zoning.js':          58,
+  // Spec 59 (load-ravines §8c): lock = spec number (§R2/L4). Ravine & Natural
+  // Feature Protection source ingest; chain step after parcels in chain_sources.
+  'scripts/load-ravines.js':         59,
   // Spec 65 (enrich-parcels WF2): lock = spec number (§R2). Enrich step after
   // load_zoning in chain_sources; writes the zoning by-law feed onto parcels.
   'scripts/enrich-parcels.js':       65,

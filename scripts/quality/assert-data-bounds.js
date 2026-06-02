@@ -417,6 +417,25 @@ pipeline.run('assert-data-bounds', async (pool) => {
         console.log('  OK: No duplicate neighbourhood_id');
       }
 
+      // 9. ravines (Spec 59 §8c — catastrophic-load detector; >= 500 floor vs ~854 expected).
+      // does-not-exist guarded for deploy ordering (migration 167 may land same-WF).
+      let ravinesCount = null;
+      try {
+        ravinesCount = await count(`SELECT COUNT(*) FROM ravines`);
+        if (ravinesCount < 500) {
+          errors.push(`ravines has ${ravinesCount} rows (expected >= 500)`);
+          console.error(`  FAIL: ravines has ${ravinesCount} rows (expected >= 500)`);
+        } else {
+          console.log(`  OK: ravines has ${ravinesCount.toLocaleString()} rows (>= 500)`);
+        }
+      } catch (ravErr) {
+        if (ravErr.message && ravErr.message.includes('does not exist')) {
+          console.log('  SKIP: ravines table does not exist (migration 167 not yet applied)');
+        } else {
+          throw ravErr;
+        }
+      }
+
       // Build sources audit_table
       const sourceAuditRows = [
         { metric: 'address_points_count', value: apCount, threshold: '> 0', status: apCount === 0 ? 'FAIL' : 'PASS' },
@@ -428,6 +447,7 @@ pipeline.run('assert-data-bounds', async (pool) => {
         { metric: 'building_height_outliers', value: heightOutliers, threshold: '== 0', status: heightOutliers > 0 ? 'WARN' : 'PASS' },
         { metric: 'neighbourhoods_count', value: nhoodCount, threshold: '>= 158', status: nhoodCount < 158 ? 'FAIL' : 'PASS' },
         { metric: 'neighbourhood_dupes', value: nhoodDupes, threshold: '== 0', status: nhoodDupes > 0 ? 'FAIL' : 'PASS' },
+        ...(ravinesCount !== null ? [{ metric: 'ravines_count', value: ravinesCount, threshold: '>= 500', status: ravinesCount < 500 ? 'FAIL' : 'PASS' }] : []),
       ];
       const sourceHasFails = sourceAuditRows.some((r) => r.status === 'FAIL');
       const sourceHasWarns = sourceAuditRows.some((r) => r.status === 'WARN');

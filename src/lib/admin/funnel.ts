@@ -544,6 +544,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   builders:             { summary: 'Extracts corporate entity names from permit applicant/builder fields', table: 'entities' },
   address_points:       { summary: 'Loads Toronto address point reference data for geocoding', table: 'address_points' },
   parcels:              { summary: 'Loads Toronto property parcel boundaries and lot dimensions', table: 'parcels' },
+  load_ravines:         { summary: 'Loads Toronto Ravine & Natural Feature Protection Area polygons (Chapter 658) from the City shapefile', table: 'ravines' },
   massing:              { summary: 'Loads 3D building massing models from City shapefile', table: 'building_footprints' },
   neighbourhoods:       { summary: 'Loads neighbourhood boundary polygons and demographic data', table: 'neighbourhoods' },
   load_wsib:            { summary: 'Loads WSIB registry snapshot for contractor identity matching', table: 'wsib_registry' },

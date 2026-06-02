@@ -108,8 +108,12 @@ describe('manifest.json — enrich_parcels chain-registration cascade', () => {
     expect(ei).toBeLessThan(sources.indexOf('refresh_snapshot'));
   });
 
-  it('grows the sources chain from 17 to 18 steps', () => {
-    expect(manifest.chains.sources).toHaveLength(18);
+  it('keeps enrich_parcels registered as the sources chain grows (18 → 19 after Spec 59 load_ravines)', () => {
+    // Spec 65 added enrich_parcels (17 → 18); Spec 59 §8c added load_ravines after
+    // parcels (18 → 19). The enrich_parcels-presence + ordering assertions above are
+    // the real lock; the length is updated to reflect the legitimately-added step.
+    expect(manifest.chains.sources).toHaveLength(19);
+    expect(manifest.chains.sources).toContain('enrich_parcels');
   });
 });
 
