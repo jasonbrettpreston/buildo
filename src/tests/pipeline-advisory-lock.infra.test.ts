@@ -35,6 +35,9 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/load-ravines.js':         59,
   // Spec 65 (enrich-parcels WF2): lock = spec number (§R2). Enrich step after
   // load_zoning in chain_sources; writes the zoning by-law feed onto parcels.
+  // Spec 59 §8d (enrich-ravines): lock 60 (L4b). Sibling of load-ravines (59);
+  // set-based parcels ravine enrichment after link_parcels in chain_sources.
+  'scripts/enrich-ravines.js':       60,
   'scripts/enrich-parcels.js':       65,
   // Spec 66 (enrich-permits WF3): lock = spec number. ONE file, two manifest entries
   // (enrich_permits / enrich_coa_zoning via ENRICH_TARGET) → one shared lock (the

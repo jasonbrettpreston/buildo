@@ -33,6 +33,7 @@ load_zoning → enrich_parcels → refresh_snapshot → assert_data_bounds → a
 | 4b | `load_ravines` | `load-ravines.js` | Ingest Toronto Ravine & Natural Feature Protection Area polygons (Chapter 658) — zipped shapefile (854 polygons), advisory lock 59 (Spec 59 §8c) | ravines |
 | 5 | `compute_centroids` | `compute-centroids.js` | Calculate centroid lat/lng for parcels missing them | parcels |
 | 6 | `link_parcels` | `link-parcels.js` | Re-link all permits to fresh parcel data (runs `--full` in sources chain) | permit_parcels |
+| 6b | `enrich_ravines` | `enrich-ravines.js` | Spatially join parcels against ravines; write Chapter-658 flag + signed ravine distance + lineage onto parcels (Spec 59 §8d, advisory lock 60) | parcels |
 | 7 | `massing` | `load-massing.js` | Ingest 3D building footprint volumes | building_footprints |
 | 8 | `link_massing` | `link-massing.js` | Link parcels to building footprints (runs `--full` in sources chain) | parcel_buildings |
 | 9 | `neighbourhoods` | `load-neighbourhoods.js` | Ingest neighbourhood boundaries + Census income profiles | neighbourhoods |

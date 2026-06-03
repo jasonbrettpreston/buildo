@@ -507,7 +507,8 @@ describe('Pipeline Registry', () => {
     // +1 enrich_parcels added (Spec 65 WF2 2026-05-31)
     // +2 enrich_permits + enrich_coa_zoning added (Spec 66 WF3 2026-05-31)
     // +1 load_ravines added (Spec 59 §8c 2026-06-02)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(57);
+    // +1 enrich_ravines added (Spec 59 §8d 2026-06-02)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(58);
   });
 
   it('groups are correct: 11 ingest, 19 link, 14 classify, 2 snapshot, 10 quality', () => {
@@ -524,8 +525,9 @@ describe('Pipeline Registry', () => {
     // +1 link: enrich_parcels added (Spec 65 WF2 2026-05-31)
     // +2 link: enrich_permits + enrich_coa_zoning added (Spec 66 WF3 2026-05-31)
     // +1 ingest: load_ravines added (Spec 59 §8c 2026-06-02)
+    // +1 link: enrich_ravines added (Spec 59 §8d 2026-06-02)
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(12);
-    expect(groups.filter((g) => g === 'link')).toHaveLength(19);
+    expect(groups.filter((g) => g === 'link')).toHaveLength(20);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(14);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(10);
@@ -612,9 +614,11 @@ describe('Pipeline Chains', () => {
     // Spec 58 (2026-05-30) — load_zoning inserted before refresh_snapshot (16 → 17).
     // Spec 65 (2026-05-31) — enrich_parcels inserted after load_zoning (17 → 18).
     // Spec 59 §8c (2026-06-02) — load_ravines inserted after parcels (18 → 19).
+    // Spec 59 §8d (2026-06-02) — enrich_ravines inserted after link_parcels (19 → 20).
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
-    expect(sources.steps).toHaveLength(19);
+    expect(sources.steps).toHaveLength(20);
     expect(sources.steps.some((s) => s.slug === 'load_ravines')).toBe(true);
+    expect(sources.steps.some((s) => s.slug === 'enrich_ravines')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'enrich_parcels')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'link_parcel_addresses')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'compute_centroids')).toBe(true);

@@ -31,6 +31,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   load_zoning:        { name: 'Load Zoning By-law',    group: 'ingest' },
   // Link & Enrich (12)
   enrich_parcels:     { name: 'Enrich Parcel Zoning',  group: 'link' },
+  enrich_ravines:     { name: 'Enrich Parcel Ravine',  group: 'link' },
   enrich_permits:     { name: 'Enrich Permit Zoning',  group: 'link' },
   enrich_coa_zoning:  { name: 'Enrich CoA Zoning',     group: 'link' },
   geocode_permits:    { name: 'Geocode Permits',       group: 'link' },
@@ -235,6 +236,7 @@ export const PIPELINE_CHAINS: PipelineChain[] = [
       { slug: 'link_parcel_addresses', indent: 1 },
       { slug: 'compute_centroids',   indent: 1 },
       { slug: 'link_parcels',        indent: 1 },
+      { slug: 'enrich_ravines',      indent: 1 },
       { slug: 'massing',             indent: 0 },
       { slug: 'link_massing',        indent: 1 },
       { slug: 'neighbourhoods',      indent: 0 },
