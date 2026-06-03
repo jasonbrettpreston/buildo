@@ -22,6 +22,11 @@ const COA_COVERAGE_FAIL = 80;
 // Scalar zoning fields copied verbatim from the dominant parcel (already NUMERIC/TEXT).
 const SCALARS = ['zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number'];
 
+// §8e ravine columns (Spec 59 / migration 169). Aggregated across linked parcels (L12),
+// NOT dominant-parcel scalars. In allWriteCols → UPDATE guard + emitMeta writes; but the
+// boolean is NOT NULL so the orphan-nullify resets it to false (not NULL) — see buildNullifyOrphansSql.
+const RAVINE_COLS = ['is_in_ravine_protection_area', 'ravine_distance_m'];
+
 // Per-target config (DEC-1/2/4). leadKey = the temp-table identity columns.
 // The 7 parcel overlay-membership booleans (WF2 / migration 165) — bool_or'd across
 // a lead's linked parcels to build overlay_summary (Spec 66 frozen shape).
@@ -71,7 +76,7 @@ function validateTarget(t) {
 
 function allWriteCols(target) {
   const c = CFG[target];
-  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method'];
+  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS];
 }
 
 // ---------------------------------------------------------------------------
@@ -81,6 +86,17 @@ async function assertWf2Ran(client) {
   const { rows } = await client.query('SELECT COUNT(*)::int AS n FROM parcels WHERE zoning_enriched_at IS NOT NULL');
   if (rows[0].n === 0) {
     throw new Error(`${TAG} no parcel has zoning_enriched_at — WF2 (enrich-parcels) has not run; cannot enrich permits/CoA`);
+  }
+}
+
+// §8e precondition (DEC-D) — enrich-ravines (§8d) must have populated parcels' ravine feed.
+// Cross-chain: §8d runs in the sources chain, this runs in permits/coa — so this HALT (not
+// chain order) is the load-bearing guard. The lineage TEXT column is the only reliable signal
+// (is_in_ravine_protection_area defaults false, so it can't distinguish "ran" from "never ran").
+async function assertRavinesEnriched(client) {
+  const { rows } = await client.query('SELECT COUNT(*)::int AS n FROM parcels WHERE ravine_dataset_version_when_enriched IS NOT NULL');
+  if (rows[0].n === 0) {
+    throw new Error(`${TAG} no parcel has ravine_dataset_version_when_enriched — enrich-ravines (§8d) has not run; cannot propagate ravine to permits/CoA`);
   }
 }
 
@@ -103,6 +119,7 @@ WITH cand AS (
   SELECT ${c.keySelect},
          par.id AS parcel_id, par.zoning_class, par.bylaw_max_coverage_pct, par.bylaw_max_fsi,
          par.bylaw_max_height_m, par.exception_number, par.zoning_overlays, par.lot_size_sqm,
+         par.is_in_ravine_protection_area, par.ravine_distance_m,
          ${OVERLAY_FLAGS.map((f) => `par.${f}`).join(', ')},
          ${c.confidence} AS confidence,
          par.lot_size_sqm / NULLIF(SUM(par.lot_size_sqm) OVER (PARTITION BY ${qkey}), 0) AS area_share,
@@ -122,6 +139,11 @@ ag AS (
       ORDER BY area_share DESC NULLS LAST, parcel_id) AS applicable_bylaws,
     COUNT(*)                         AS zoning_parcel_count,
     COUNT(DISTINCT zoning_class)     AS distinct_zones,
+    -- §8e L12 ravine propagation: any linked parcel inside → true; signed distance =
+    -- MIN(ABS) over linked parcels × sign(any-inside). MIN ignores NULLs, so a lead
+    -- whose parcels all have NULL distance gets NULL (orphan semantic, §11.2).
+    COALESCE(bool_or(is_in_ravine_protection_area), false) AS new_in_ravine,
+    MIN(ABS(ravine_distance_m))      AS min_abs_dist,
     ${OVERLAY_FLAGS.map((f) => `bool_or(${f}) AS ov_${f}`).join(',\n    ')}
   FROM cand GROUP BY ${key}
 )
@@ -131,6 +153,8 @@ SELECT ${c.leadKey.map((k) => `dom.${k}`).join(', ')},
        ag.zoning_parcel_count,
        dom.parcel_id AS zoning_dominant_parcel_id,
        'max_area'::text AS zoning_dominant_parcel_method,
+       ag.new_in_ravine AS is_in_ravine_protection_area,
+       ag.min_abs_dist * CASE WHEN ag.new_in_ravine THEN -1 ELSE 1 END AS ravine_distance_m,
        ag.distinct_zones
 FROM cand dom
 JOIN ag USING (${key})
@@ -194,7 +218,14 @@ async function enrichLeads(client, opts = {}) {
 
 function buildNullifyOrphansSql({ target, scopeWhere = 'TRUE' }) {
   const c = CFG[target];
-  const set = allWriteCols(target).map((col) => `${col} = NULL`).join(', ');
+  // Zoning cols (nullable) → NULL on un-link. The §8e ravine cols are EXCLUDED here: the
+  // boolean is NOT NULL (can't be NULLed), so reset it to false (= "not determined in
+  // ravine") + ravine_distance_m to NULL (= "no parcel link", §11.2) — appended below.
+  const set = [
+    ...allWriteCols(target).filter((col) => !RAVINE_COLS.includes(col)).map((col) => `${col} = NULL`),
+    'is_in_ravine_protection_area = false',
+    'ravine_distance_m = NULL',
+  ].join(', ');
   const linkExists = target === 'permits'
     ? `SELECT 1 FROM permit_parcels pp WHERE pp.permit_num = ${c.leadAlias}.permit_num AND pp.revision_num = ${c.leadAlias}.revision_num`
     : `SELECT 1 FROM lead_parcels lp WHERE lp.lead_id = ${c.leadAlias}.lead_id`;
@@ -244,6 +275,7 @@ async function main(pool) {
     let result;
     await pipeline.withTransaction(pool, async (client) => {
       await assertWf2Ran(client);
+      await assertRavinesEnriched(client); // §8e DEC-D
       const runAt = await pipeline.getDbTimestamp(client);
       result = await enrichLeads(client, { target, scopeWhere: 'TRUE', runAt });
     });
@@ -274,6 +306,21 @@ async function main(pool) {
     auditRows.push({ metric: `${np}_bylaw_max_fsi_null_pct`, value: nr.fsi, status: 'INFO' });
     auditRows.push({ metric: `${np}_bylaw_max_coverage_pct_null_pct`, value: nr.cov, status: 'INFO' });
     auditRows.push({ metric: `${np}_bylaw_max_height_m_null_pct`, value: nr.height, status: 'INFO' });
+    // §8e ravine propagation observability (INFO — the zoning F-H12 gate + verdict are untouched).
+    const rv = (await pool.query(`
+      SELECT COUNT(*) FILTER (WHERE is_in_ravine_protection_area)::int AS in_ravine,
+             COUNT(*) FILTER (WHERE ravine_distance_m IS NOT NULL)::int AS with_dist
+      FROM ${cfg.table}`)).rows[0];
+    auditRows.push({ metric: `${prefix}_in_ravine_count`, value: rv.in_ravine, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_with_ravine_distance_count`, value: rv.with_dist, status: 'INFO' });
+    // L5 disagreement protocol (permits only, §11.3): geometry stays authoritative; flag for
+    // operator triage. INFO at count 0 (RNFP currently 0 rows) — WARN ONLY on a real disagreement,
+    // so a clean run never collapses PASS (Spec 48 §3.6).
+    if (target === 'permits') {
+      const dis = (await pool.query(
+        `SELECT COUNT(*)::int AS n FROM permits WHERE permit_type = 'RNFP' AND is_in_ravine_protection_area = false`)).rows[0].n;
+      auditRows.push({ metric: 'permit_type_geometry_disagreement', value: dis, status: dis > 0 ? 'WARN' : 'INFO' });
+    }
     const stepDur = target === 'permits' ? 'enrich_permits_duration_ms' : 'enrich_coa_zoning_duration_ms';
     auditRows.push({ metric: stepDur, value: Date.now() - t0, status: 'INFO' });
 
@@ -289,7 +336,7 @@ async function main(pool) {
     });
 
     const readsCommon = {
-      parcels: ['id', 'zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number', 'zoning_overlays', 'lot_size_sqm', 'zoning_enriched_at'],
+      parcels: ['id', 'zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number', 'zoning_overlays', 'lot_size_sqm', 'zoning_enriched_at', 'is_in_ravine_protection_area', 'ravine_distance_m'],
     };
     const reads = target === 'permits'
       ? { permits: ['permit_num', 'revision_num', 'permit_type'], permit_parcels: ['permit_num', 'revision_num', 'parcel_id', 'confidence'], permit_type_classifications: ['permit_type', 'class'], ...readsCommon }
@@ -308,7 +355,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL,
-  validateTarget, allWriteCols, assertWf2Ran, buildEnrichmentSql, buildUpdateSql,
-  enrichLeads, coverageGate, verdictCascade,
+  ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS,
+  validateTarget, allWriteCols, assertWf2Ran, assertRavinesEnriched, buildEnrichmentSql,
+  buildUpdateSql, buildNullifyOrphansSql, enrichLeads, coverageGate, verdictCascade,
 };
