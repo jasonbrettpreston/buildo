@@ -152,6 +152,12 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE zoning_parcel_count IS NOT NULL)                         AS zoning_parcel_count_pop,
           COUNT(*) FILTER (WHERE zoning_dominant_parcel_id IS NOT NULL)                   AS zoning_dominant_parcel_id_pop,
           COUNT(*) FILTER (WHERE zoning_dominant_parcel_method IS NOT NULL)               AS zoning_dominant_parcel_method_pop,
+          -- WF2 #415 — enrich_coa_zoning ravine propagation (Spec 59 §8e / migration 169):
+          -- is_in_ravine is NOT NULL DEFAULT false (vacuously 100% under IS NOT NULL) — count the
+          -- TRUE subset, mirroring lifecycle_stalled; ravine_distance is sparse by design (NULL for
+          -- orphans, §11.2) — count non-null. Both surfaced as INFO (not gated). [#415 / Integration]
+          COUNT(*) FILTER (WHERE is_in_ravine_protection_area)                            AS in_ravine_pop,
+          COUNT(*) FILTER (WHERE ravine_distance_m IS NOT NULL)                           AS ravine_distance_pop,
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
       `);
@@ -229,6 +235,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.zoning_parcel_count',           parseInt(ca.zoning_parcel_count_pop, 10),        coaZoningEnrichedTotal));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.zoning_dominant_parcel_id',     parseInt(ca.zoning_dominant_parcel_id_pop, 10),  coaZoningEnrichedTotal));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.zoning_dominant_parcel_method', parseInt(ca.zoning_dominant_parcel_method_pop, 10), coaZoningEnrichedTotal));
+      // WF2 #415 — ravine propagation (Spec 59 §8e). INFO: is_in_ravine is a count of the TRUE
+      // subset (the NOT-NULL-DEFAULT-false boolean is vacuously 100% under coverage — count TRUE,
+      // never IS NOT NULL); ravine_distance is non-null only for parcel-linked CoAs. Neither is a
+      // coverage % — a small geographic subset has no stable population floor to gate against (DEC-B).
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.is_in_ravine_protection_area', parseInt(ca.in_ravine_pop, 10)));
+      // Pure count, no denominator — see permits Step 9b ravine_distance note (#415).
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.ravine_distance_m',             parseInt(ca.ravine_distance_pop, 10)));
 
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
@@ -367,7 +380,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE overlay_summary IS NOT NULL)                  AS overlay_summary_pop,
           COUNT(*) FILTER (WHERE zoning_parcel_count IS NOT NULL)              AS zoning_parcel_count_pop,
           COUNT(*) FILTER (WHERE zoning_dominant_parcel_id IS NOT NULL)        AS zoning_dominant_parcel_id_pop,
-          COUNT(*) FILTER (WHERE zoning_dominant_parcel_method IS NOT NULL)    AS zoning_dominant_parcel_method_pop
+          COUNT(*) FILTER (WHERE zoning_dominant_parcel_method IS NOT NULL)    AS zoning_dominant_parcel_method_pop,
+          -- WF2 #415 — enrich_permits ravine propagation (Spec 59 §8e / migration 169):
+          -- is_in_ravine is NOT NULL DEFAULT false (vacuously 100% under IS NOT NULL) — count the
+          -- TRUE subset, mirroring lifecycle_stalled; ravine_distance is sparse by design (NULL for
+          -- orphan permits, §11.2) — count non-null. Both surfaced as INFO (not gated). [#415 / Integration]
+          COUNT(*) FILTER (WHERE is_in_ravine_protection_area)                AS in_ravine_pop,
+          COUNT(*) FILTER (WHERE ravine_distance_m IS NOT NULL)               AS ravine_distance_pop
         FROM permits
       `);
       const permitsTotal        = parseInt(pa.permits_total, 10) || 0;
@@ -702,6 +721,16 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.zoning_parcel_count',           parseInt(pa.zoning_parcel_count_pop, 10),        zoningEnrichedTotal));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.zoning_dominant_parcel_id',     parseInt(pa.zoning_dominant_parcel_id_pop, 10),  zoningEnrichedTotal));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.zoning_dominant_parcel_method', parseInt(pa.zoning_dominant_parcel_method_pop, 10), zoningEnrichedTotal));
+      // WF2 #415 — ravine propagation (Spec 59 §8e). INFO: is_in_ravine is a count of the TRUE
+      // subset (the NOT-NULL-DEFAULT-false boolean is vacuously 100% under coverage — count TRUE,
+      // never IS NOT NULL); ravine_distance is non-null only for parcel-linked permits. Neither is a
+      // coverage % — a small geographic subset has no stable population floor to gate against (DEC-B).
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.is_in_ravine_protection_area', parseInt(pa.in_ravine_pop, 10)));
+      // Pure count, no denominator — ravine_distance is populated for the parcel-LINKED set,
+      // which is distinct from (and can exceed) the zoning-enriched set, so passing
+      // zoningEnrichedTotal would risk a >100% INFO display (Code Reviewer #415). Mirrors the
+      // is_in_ravine count above.
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.ravine_distance_m',             parseInt(pa.ravine_distance_pop, 10)));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));

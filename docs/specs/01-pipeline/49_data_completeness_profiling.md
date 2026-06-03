@@ -212,6 +212,17 @@ Step labels `Step 9b` (permits, after `link_parcels`) / `CoA Step 4b` (CoA, afte
 | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_dominant_parcel_id | `zoning_dominant_parcel_id IS NOT NULL` | enriched CoAs (INFO — write provenance) |
 | CoA Step 4b — enrich_coa_zoning | coa_applications.zoning_dominant_parcel_method | `zoning_dominant_parcel_method IS NOT NULL` | enriched CoAs (INFO — CHECK-pinned `'max_area'`) |
 
+#### WF2 #415 — ravine propagation coverage (enrich_permits / enrich_coa_zoning, migration 169)
+
+Added 2026-06-03 (WF2 #415) so the global profile reports the Spec 59 §8e ravine feed propagated from parcels. Both rows are **INFO** (`infoRow`), under the same `Step 9b` / `CoA Step 4b` labels as the #406 zoning rows (enrich-permits.js writes ravine in the same step it writes zoning). Both are **pure counts with no denominator** (no coverage %). `is_in_ravine_protection_area` is `BOOLEAN NOT NULL DEFAULT false` — vacuously 100% under an `IS NOT NULL` coverage test, so it is emitted as a **count of the TRUE subset** (`FILTER (WHERE is_in_ravine_protection_area)`, never `IS NOT NULL`), mirroring the `lifecycle_stalled` count-only pattern. `ravine_distance_m` is non-null only for parcel-linked leads (orphans → NULL by design, Spec 59 §11.2); it is emitted as a count of the populated subset **without a denominator** — the parcel-linked set is distinct from (and can exceed) the zoning-enriched set, so passing `zoning_enriched`-count as a denominator context would risk a `>100%` display (#415 review fold). Neither is gated: ravine affects a small geographic subset with no stable population floor, so a coverage threshold would yield false FAILs; the per-run enrichment signal lives in enrich-permits.js's own `${prefix}_in_ravine_count` audit rows. INFO rows are excluded from the verdict cascade (Spec 48 §3.6).
+
+| Step | Field | Numerator | Denominator |
+| :--- | :--- | :--- | :--- |
+| Step 9b — enrich_permits | permits.is_in_ravine_protection_area | `FILTER (WHERE is_in_ravine_protection_area)` | none (INFO — count of TRUE subset, not coverage) |
+| Step 9b — enrich_permits | permits.ravine_distance_m | `ravine_distance_m IS NOT NULL` | none (INFO — count of populated subset; parcel-linked ⊄ zoning-enriched) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.is_in_ravine_protection_area | `FILTER (WHERE is_in_ravine_protection_area)` | none (INFO — count of TRUE subset, not coverage) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.ravine_distance_m | `ravine_distance_m IS NOT NULL` | none (INFO — count of populated subset; parcel-linked ⊄ zoning-enriched) |
+
 ---
 
 ## 5. Mobile & Responsive Behavior

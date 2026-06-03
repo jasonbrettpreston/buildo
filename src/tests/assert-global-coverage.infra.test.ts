@@ -656,3 +656,61 @@ describe('assert-global-coverage.js — WF3 #406 zoning coverage rows', () => {
     expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.bylaw_max_fsi',\s*parseInt\([^)]+\),\s*coaZoningEnrichedTotal\)/);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// WF2 #415 (2026-06-03): ravine propagation coverage rows for the Spec 59
+// §8e enrich steps (migration 169). Both rows are INFO — ravine affects a
+// small geographic subset with no stable population floor; gating would yield
+// false FAILs. is_in_ravine is NOT NULL DEFAULT false (vacuously 100% under
+// IS NOT NULL) so it MUST be a count of the TRUE subset, NEVER an IS NOT NULL
+// coverage row — getting this wrong reintroduces the Bug-2 vacuous-coverage
+// failure mode the block above locks. Rides the existing 9b / 4b labels.
+// ────────────────────────────────────────────────────────────────────────
+describe('assert-global-coverage.js — WF2 #415 ravine coverage rows', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  // (a) presence — aggregate counts the TRUE subset (FILTER), not IS NOT NULL
+  it('permits aggregate counts in_ravine_pop via FILTER on the boolean (not IS NOT NULL — vacuous)', () => {
+    expect(content).toMatch(/FILTER \(WHERE is_in_ravine_protection_area\)\s*AS in_ravine_pop/);
+    // guard: the boolean must NOT be counted via IS NOT NULL anywhere (would read 100%)
+    expect(content).not.toMatch(/is_in_ravine_protection_area IS NOT NULL/);
+  });
+
+  it('permits aggregate counts ravine_distance_pop via IS NOT NULL (legitimately sparse)', () => {
+    expect(content).toMatch(/ravine_distance_m IS NOT NULL\)\s*AS ravine_distance_pop/);
+  });
+
+  it('coa aggregate counts in_ravine_pop + ravine_distance_pop (same contract)', () => {
+    // both branches define identically-named pops; assert the coa block also has them
+    expect((content.match(/FILTER \(WHERE is_in_ravine_protection_area\)\s*AS in_ravine_pop/g) || []).length).toBeGreaterThanOrEqual(2);
+    expect((content.match(/ravine_distance_m IS NOT NULL\)\s*AS ravine_distance_pop/g) || []).length).toBeGreaterThanOrEqual(2);
+  });
+
+  // (b) rows are INFO under the existing 9b / 4b labels, NEVER gated
+  // Both ravine rows are PURE COUNTS (no denominator). is_in_ravine counts the TRUE subset;
+  // ravine_distance counts the populated subset over the parcel-LINKED set (distinct from — and
+  // potentially larger than — the zoning-enriched set), so passing zoningEnrichedTotal would risk
+  // a >100% INFO display (Code Reviewer #415 fold). Lock the no-denominator form for both.
+  it('permits ravine rows use infoRow under Step 9b (pure count, no denominator)', () => {
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.is_in_ravine_protection_area',\s*parseInt\([^)]+\)\)/);
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.ravine_distance_m',\s*parseInt\([^)]+\)\)/);
+  });
+
+  it('coa ravine rows use infoRow under CoA Step 4b (pure count, no denominator)', () => {
+    expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.is_in_ravine_protection_area',\s*parseInt\([^)]+\)\)/);
+    expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.ravine_distance_m',\s*parseInt\([^)]+\)\)/);
+  });
+
+  it('ravine_distance_m passes NO denominator (avoids >100% — populated set ⊄ zoning-enriched set)', () => {
+    expect(content).not.toMatch(/'permits\.ravine_distance_m',\s*parseInt\([^)]+\),\s*zoningEnrichedTotal\)/);
+    expect(content).not.toMatch(/'coa_applications\.ravine_distance_m',\s*parseInt\([^)]+\),\s*coaZoningEnrichedTotal\)/);
+  });
+
+  // (c) verdict-cascade invariance: ravine fields must NEVER be gated — both INFO,
+  //     so the verdict (worst non-INFO over rows) is provably unmoved by the additions.
+  it('ravine fields are NEVER gated (no coverageRow/calibratedRow for is_in_ravine_protection_area/ravine_distance_m)', () => {
+    const GATED = /(?:coverageRow|calibratedRow)\([^)]*(?:is_in_ravine_protection_area|ravine_distance_m)/;
+    expect(content).not.toMatch(GATED);
+  });
+});
