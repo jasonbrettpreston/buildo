@@ -1,9 +1,24 @@
 # Spec 59 — Toronto Ravine and Natural Feature Protection (Ingest + Link)
 
-**Spec version:** 1.2 (locked per L10)
-**Status:** Authored (WF1 Genesis — spec-only deliverable; implementation deferred per §8b)
+**Spec version:** 1.3 (v1.2 locked per L10; v1.3 = implementation reconciliation, 2026-06-03)
+**Status:** ✅ Implemented (§8c `1ceebd1` + §8d `0090269` + §8e `27d9690`, branch `auto-unblock/validation-2026-05-23`)
 **Authored:** 2026-05-25 (v1.0 → v1.1 R2 fold: 5 CRIT + 12 HIGH + 14 DEFERs; v1.1 → v1.2 R2.5 regression-check fold: 4 CRIT + 8 HIGH + 5 additional DEFERs — R2.5 caught 2 bugs introduced by R2 folds + 2 pre-existing gaps the R2 round missed)
 **Phase 0 discovery:** `docs/reports/wf1-spec59-architecture-discovery.md`
+
+---
+
+## Implementation reconciliation (v1.3 — 2026-06-03)
+
+All three WFs were built, reviewed (4-reviewer plan + 6-reviewer output each), and validated against a live PostGIS-16 DB. The as-built code consciously corrected several v1.2 spec-text errors (each plan/output-reviewed; detail in `docs/reports/review_followups.md`):
+
+| # | v1.2 spec said | As-built (authoritative) | Why |
+|---|---|---|---|
+| #409 | §3.2/§9/L18 read `pipeline = 'source-ravines'` | `pipeline = 'sources:load_ravines'` | run-chain.js records each step as `${chainId}:${slug}` |
+| #413 | §11.1 inline `ST_Centroid(p.geom)::geography <-> r.geom::geography` (correlated subquery) | `parcel_c AS MATERIALIZED` centroid CTE + `LEFT JOIN LATERAL … ORDER BY pc.cg <-> r.geom::geography` | the inline form defeats the geography-GIST KNN → ~2h on 486K vs ~2min; matches L13's *prose* |
+| #414/#416 | §9 emitMeta reads listed `lead_id` | actual link keys (`parcels:['id','geom']`; permits via permit_parcels, coa via lead_parcels) | `lead_id` isn't read by the §11.1/§11.2 SQL |
+| #417 | §8e F-H7 "verify CoA join table at runtime, fall back" | hardcoded `lead_parcels` (Spec 66 DEC-4) | settled at Spec 66 — lead_parcels (mig 143-144) + permit_parcels are core schema |
+
+Schema as-built: M-1 = migration 167 (`ravines`), M-2 = 168 (`parcels` ravine cols), M-3 = 169 (`permits`/`coa_applications` ravine cols). Advisory locks: load-ravines 59, enrich-ravines 60, enrich-permits ravine step reuses 66 (L19). Spec 49 `assert-global-coverage` ravine rows DONE (#415, `938cf1a`). Open post-deploy items: `enrich_ravines` first-deploy runbook (#412), `enrich_ravines` full-table re-run perf (~77min idempotent — incremental-skip guard candidate, #418), §8f admin-UI (future sibling spec).
 
 ---
 
@@ -646,7 +661,7 @@ The overall audit verdict is computed as: `FAIL > WARN > PASS`. Any row with `st
 ```sql
 SELECT records_meta
   FROM pipeline_runs
- WHERE pipeline = 'source-ravines'
+ WHERE pipeline = 'sources:load_ravines'   -- v1.3: chain-scoped slug, NOT 'source-ravines' (run-chain.js:253; #409)
    AND status   = 'completed'
  ORDER BY completed_at DESC
  LIMIT 1;
