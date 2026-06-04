@@ -508,7 +508,8 @@ describe('Pipeline Registry', () => {
     // +2 enrich_permits + enrich_coa_zoning added (Spec 66 WF3 2026-05-31)
     // +1 load_ravines added (Spec 59 §8c 2026-06-02)
     // +1 enrich_ravines added (Spec 59 §8d 2026-06-02)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(58);
+    // +1 load_heritage added (Spec 61 §8c 2026-06-04)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(59);
   });
 
   it('groups are correct: 11 ingest, 19 link, 14 classify, 2 snapshot, 10 quality', () => {
@@ -526,7 +527,8 @@ describe('Pipeline Registry', () => {
     // +2 link: enrich_permits + enrich_coa_zoning added (Spec 66 WF3 2026-05-31)
     // +1 ingest: load_ravines added (Spec 59 §8c 2026-06-02)
     // +1 link: enrich_ravines added (Spec 59 §8d 2026-06-02)
-    expect(groups.filter((g) => g === 'ingest')).toHaveLength(12);
+    // +1 ingest: load_heritage added (Spec 61 §8c 2026-06-04)
+    expect(groups.filter((g) => g === 'ingest')).toHaveLength(13);
     expect(groups.filter((g) => g === 'link')).toHaveLength(20);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(14);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
@@ -615,8 +617,9 @@ describe('Pipeline Chains', () => {
     // Spec 65 (2026-05-31) — enrich_parcels inserted after load_zoning (17 → 18).
     // Spec 59 §8c (2026-06-02) — load_ravines inserted after parcels (18 → 19).
     // Spec 59 §8d (2026-06-02) — enrich_ravines inserted after link_parcels (19 → 20).
+    // Spec 61 §8c (2026-06-04) — load_heritage inserted after load_ravines (20 → 21).
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
-    expect(sources.steps).toHaveLength(20);
+    expect(sources.steps).toHaveLength(21);
     expect(sources.steps.some((s) => s.slug === 'load_ravines')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'enrich_ravines')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'enrich_parcels')).toBe(true);

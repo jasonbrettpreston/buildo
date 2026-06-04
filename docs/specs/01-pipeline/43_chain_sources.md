@@ -31,6 +31,7 @@ load_zoning → enrich_parcels → refresh_snapshot → assert_data_bounds → a
 | 3 | `geocode_permits` | `geocode-permits.js` | Re-geocode permits missing coordinates | permits |
 | 4 | `parcels` | `load-parcels.js` | Ingest property lot polygons from city GIS | parcels |
 | 4b | `load_ravines` | `load-ravines.js` | Ingest Toronto Ravine & Natural Feature Protection Area polygons (Chapter 658) — zipped shapefile (854 polygons), advisory lock 59 (Spec 59 §8c) | ravines |
+| 4c | `load_heritage` | `load-heritage.js` | Ingest Toronto Heritage Register (≈8,803 Part IV/V address points) + Heritage Conservation Districts (28 polygons) — two zipped shapefiles, Ontario Heritage Act Parts IV/V, advisory lock 61 (Spec 61 §8c) | heritage_properties, heritage_districts |
 | 5 | `compute_centroids` | `compute-centroids.js` | Calculate centroid lat/lng for parcels missing them | parcels |
 | 6 | `link_parcels` | `link-parcels.js` | Re-link all permits to fresh parcel data (runs `--full` in sources chain) | permit_parcels |
 | 6b | `enrich_ravines` | `enrich-ravines.js` | Spatially join parcels against ravines; write Chapter-658 flag + signed ravine distance + lineage onto parcels (Spec 59 §8d, advisory lock 60) | parcels |

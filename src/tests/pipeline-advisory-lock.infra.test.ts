@@ -33,6 +33,9 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // Spec 59 (load-ravines §8c): lock = spec number (§R2/L4). Ravine & Natural
   // Feature Protection source ingest; chain step after parcels in chain_sources.
   'scripts/load-ravines.js':         59,
+  // Spec 61 (load-heritage §8c): lock = spec number (DEC-A; spec L4=62 was a stale
+  // pre-implementation guess). Heritage Register + HCD source ingest after load_ravines.
+  'scripts/load-heritage.js':        61,
   // Spec 65 (enrich-parcels WF2): lock = spec number (§R2). Enrich step after
   // load_zoning in chain_sources; writes the zoning by-law feed onto parcels.
   // Spec 59 §8d (enrich-ravines): lock 60 (L4b). Sibling of load-ravines (59);

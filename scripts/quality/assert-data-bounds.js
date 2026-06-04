@@ -436,6 +436,36 @@ pipeline.run('assert-data-bounds', async (pool) => {
         }
       }
 
+      // 10. heritage (Spec 61 §8c — catastrophic-load detectors; floors well below the
+      // post-filter live counts: ~8,803 Part IV/V points (>= 8000), 28 Designated HCDs (>= 20)).
+      // does-not-exist guarded for deploy ordering (migration 170 may land same-WF).
+      let heritagePropsCount = null;
+      let heritageDistrictsCount = null;
+      try {
+        heritagePropsCount = await count(`SELECT COUNT(*) FROM heritage_properties`);
+        heritageDistrictsCount = await count(`SELECT COUNT(*) FROM heritage_districts`);
+        if (heritagePropsCount < 8000) {
+          errors.push(`heritage_properties has ${heritagePropsCount} rows (expected >= 8000)`);
+          console.error(`  FAIL: heritage_properties has ${heritagePropsCount} rows (expected >= 8000)`);
+        } else {
+          console.log(`  OK: heritage_properties has ${heritagePropsCount.toLocaleString()} rows (>= 8000)`);
+        }
+        if (heritageDistrictsCount < 20) {
+          errors.push(`heritage_districts has ${heritageDistrictsCount} rows (expected >= 20)`);
+          console.error(`  FAIL: heritage_districts has ${heritageDistrictsCount} rows (expected >= 20)`);
+        } else {
+          console.log(`  OK: heritage_districts has ${heritageDistrictsCount.toLocaleString()} rows (>= 20)`);
+        }
+      } catch (herErr) {
+        if (herErr.message && herErr.message.includes('does not exist')) {
+          console.log('  SKIP: heritage tables do not exist (migration 170 not yet applied)');
+          heritagePropsCount = null;
+          heritageDistrictsCount = null;
+        } else {
+          throw herErr;
+        }
+      }
+
       // Build sources audit_table
       const sourceAuditRows = [
         { metric: 'address_points_count', value: apCount, threshold: '> 0', status: apCount === 0 ? 'FAIL' : 'PASS' },
@@ -448,6 +478,8 @@ pipeline.run('assert-data-bounds', async (pool) => {
         { metric: 'neighbourhoods_count', value: nhoodCount, threshold: '>= 158', status: nhoodCount < 158 ? 'FAIL' : 'PASS' },
         { metric: 'neighbourhood_dupes', value: nhoodDupes, threshold: '== 0', status: nhoodDupes > 0 ? 'FAIL' : 'PASS' },
         ...(ravinesCount !== null ? [{ metric: 'ravines_count', value: ravinesCount, threshold: '>= 500', status: ravinesCount < 500 ? 'FAIL' : 'PASS' }] : []),
+        ...(heritagePropsCount !== null ? [{ metric: 'heritage_properties_count', value: heritagePropsCount, threshold: '>= 8000', status: heritagePropsCount < 8000 ? 'FAIL' : 'PASS' }] : []),
+        ...(heritageDistrictsCount !== null ? [{ metric: 'heritage_districts_count', value: heritageDistrictsCount, threshold: '>= 20', status: heritageDistrictsCount < 20 ? 'FAIL' : 'PASS' }] : []),
       ];
       const sourceHasFails = sourceAuditRows.some((r) => r.status === 'FAIL');
       const sourceHasWarns = sourceAuditRows.some((r) => r.status === 'WARN');

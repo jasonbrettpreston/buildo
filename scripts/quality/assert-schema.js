@@ -50,6 +50,12 @@ const MASSING_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/667237d6-4d3c-4cf3-8cb7-e91c48d59375/download/3dmassingshapefile_2025_wgs84.zip';
 const RAVINE_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ravine-natural-feature-protection-area/resource/bb81bb0f-f88a-4f3e-bca7-a328154ba31b/download/ravine-natural-feature-protection-area-wgs84.zip';
+// Spec 61 §8c — two Heritage shapefile ZIPs (reachability only; STATUS/HCD_TYPE +
+// OBJECTID/HCD_NO attribute presence validated post-download in load-heritage.js).
+const HERITAGE_REGISTER_URL =
+  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/e41da515-5ad1-4bc3-85ea-18ec9e55cd33/resource/108b1080-d048-439f-a9e8-e8d6cd81bddb/download/heritage_register_address_points_wgs84.zip';
+const HERITAGE_HCD_URL =
+  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/37a3c911-0813-4e87-90ed-3b9fa6156a63/resource/8e6b9347-63a8-4dac-91fb-a6491a8c1e5a/download/heritageconservationdistrict.zip';
 const NEIGHBOURHOODS_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/fc443770-ef0a-4025-9c2c-2cb558bfab00/resource/0719053b-28b7-48ea-b863-068823a93aaa/download/neighbourhoods-4326.geojson';
 
@@ -358,6 +364,23 @@ pipeline.run('assert-schema', async (pool) => {
         console.error(`  FAIL: Ravine Protection — ${err.message}`);
       }
 
+      // Heritage Register + Conservation Districts Shapefile ZIPs — reachability only
+      // (attribute presence validated post-download in load-heritage.js). Spec 61 §8c.
+      try {
+        await checkUrlAccessible(HERITAGE_REGISTER_URL, 'Heritage Register');
+      } catch (err) {
+        allPassed = false;
+        errors.push(`Heritage Register: ${err.message}`);
+        console.error(`  FAIL: Heritage Register — ${err.message}`);
+      }
+      try {
+        await checkUrlAccessible(HERITAGE_HCD_URL, 'Heritage Conservation Districts');
+      } catch (err) {
+        allPassed = false;
+        errors.push(`Heritage Conservation Districts: ${err.message}`);
+        console.error(`  FAIL: Heritage Conservation Districts — ${err.message}`);
+      }
+
       // Neighbourhoods GeoJSON — property key validation
       try {
         const nhoodKeys = await fetchGeoJsonPropertyKeys(NEIGHBOURHOODS_URL, 'Neighbourhoods');
@@ -483,10 +506,10 @@ pipeline.run('assert-schema', async (pool) => {
       if (CHAIN_ID === 'coa' && coaAuditTable) return { audit_table: coaAuditTable };
       if (CHAIN_ID === 'sources') {
         const sourceErrors = errors.filter((e) =>
-          /address|parcel|massing|neighbourhood|zoning|ravine/i.test(e)
+          /address|parcel|massing|neighbourhood|zoning|ravine|heritage/i.test(e)
         );
         const sourceAuditRows = [
-          { metric: 'sources_checked', value: 15, threshold: null, status: 'INFO' }, // 4 original + 10 zoning DataStore resources (Spec 58) + 1 ravine ZIP (Spec 59)
+          { metric: 'sources_checked', value: 17, threshold: null, status: 'INFO' }, // 4 original + 10 zoning DataStore resources (Spec 58) + 1 ravine ZIP (Spec 59) + 2 heritage ZIPs (Spec 61)
           { metric: 'schema_errors', value: sourceErrors.length, threshold: '== 0', status: sourceErrors.length > 0 ? 'FAIL' : 'PASS' },
         ];
         return {

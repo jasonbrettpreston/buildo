@@ -148,10 +148,10 @@ describe('Pipeline Chain Definitions', () => {
     expect(calibIdx).toBeGreaterThan(distIdx);
   });
 
-  it('defines sources chain with 20 steps (Spec 65 enrich_parcels + Spec 59 §8c load_ravines + §8d enrich_ravines)', () => {
+  it('defines sources chain with 21 steps (Spec 65 enrich_parcels + Spec 59 §8c/§8d + Spec 61 §8c load_heritage)', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(20); // Spec 59 §8d added enrich_ravines after link_parcels (19 → 20)
+    expect(chain!.steps).toHaveLength(21); // Spec 61 §8c added load_heritage after load_ravines (20 → 21)
     // enrich_parcels runs immediately after load_zoning (consumes its tables).
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs.indexOf('enrich_parcels')).toBe(slugs.indexOf('load_zoning') + 1);

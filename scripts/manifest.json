@@ -11,6 +11,7 @@
     "address_points":       { "file": "scripts/load-address-points.js",   "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["address_points"] },
     "parcels":              { "file": "scripts/load-parcels.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcels"], "telemetry_null_cols": { "parcels": ["centroid_lat", "centroid_lng"] } },
     "load_ravines":         { "file": "scripts/load-ravines.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["ravines"] },
+    "load_heritage":        { "file": "scripts/load-heritage.js",         "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["heritage_properties", "heritage_districts"] },
     "massing":              { "file": "scripts/load-massing.js",          "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["building_footprints"], "telemetry_null_cols": { "building_footprints": ["centroid_lat", "centroid_lng"] } },
     "load_zoning":          { "file": "scripts/load-zoning.js",           "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["zoning_bylaw_areas", "zoning_height_overlay", "zoning_lot_coverage_overlay", "zoning_building_setback_overlay", "zoning_policy_area_overlay", "zoning_policy_road_overlay", "zoning_rooming_house_overlay", "zoning_parking_zone_overlay", "zoning_priority_retail_overlay", "zoning_queenstw_eat_overlay"], "telemetry_null_cols": { "zoning_bylaw_areas": ["coverage_max_pct", "fsi_max", "frontage_min_m"] } },
     "enrich_parcels":       { "file": "scripts/enrich-parcels.js",        "supports_full": true,  "supports_dry_run": false, "telemetry_tables": ["parcels"], "telemetry_null_cols": { "parcels": ["zoning_class", "bylaw_max_fsi", "bylaw_max_coverage_pct"] } },
@@ -86,6 +87,7 @@
     "sources": [
       "assert_schema", "address_points", "geocode_permits", "parcels",
       "load_ravines",
+      "load_heritage",
       "link_parcel_addresses",
       "compute_centroids", "link_parcels", "enrich_ravines", "massing", "link_massing",
       "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib",
