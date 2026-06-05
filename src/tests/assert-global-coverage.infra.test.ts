@@ -714,3 +714,41 @@ describe('assert-global-coverage.js — WF2 #415 ravine coverage rows', () => {
     expect(content).not.toMatch(GATED);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// WF3 #428 (2026-06-05): heritage propagation coverage rows for the Spec 61 §8e
+// enrich step (migration 172). Same contract as the #415 ravine rows: INFO only,
+// is_heritage_designated counted via FILTER(= true) NOT IS NOT NULL (the Bug-5
+// vacuous-boolean lock), type/date pure counts with no denominator.
+// ────────────────────────────────────────────────────────────────────────
+describe('assert-global-coverage.js — WF3 #428 heritage coverage rows', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('both aggregates count is_heritage_designated via FILTER on the boolean (not IS NOT NULL — vacuous)', () => {
+    expect((content.match(/FILTER \(WHERE is_heritage_designated\)\s*AS heritage_designated_pop/g) || []).length).toBeGreaterThanOrEqual(2);
+    expect(content).not.toMatch(/is_heritage_designated IS NOT NULL/);
+  });
+
+  it('type/date counted via IS NOT NULL (legitimately populated-subset only), both branches', () => {
+    expect((content.match(/heritage_designation_type IS NOT NULL\)\s*AS heritage_type_pop/g) || []).length).toBeGreaterThanOrEqual(2);
+    expect((content.match(/heritage_designation_date IS NOT NULL\)\s*AS heritage_date_pop/g) || []).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('permits heritage rows use infoRow under Step 9b (pure count, no denominator)', () => {
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.is_heritage_designated',\s*parseInt\([^)]+\)\)/);
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.heritage_designation_type',\s*parseInt\([^)]+\)\)/);
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.heritage_designation_date',\s*parseInt\([^)]+\)\)/);
+  });
+
+  it('coa heritage rows use infoRow under CoA Step 4b (pure count, no denominator)', () => {
+    expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.is_heritage_designated',\s*parseInt\([^)]+\)\)/);
+    expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.heritage_designation_type',\s*parseInt\([^)]+\)\)/);
+    expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.heritage_designation_date',\s*parseInt\([^)]+\)\)/);
+  });
+
+  it('heritage fields are NEVER gated (no coverageRow/calibratedRow)', () => {
+    const GATED = /(?:coverageRow|calibratedRow)\([^)]*(?:is_heritage_designated|heritage_designation_type|heritage_designation_date)/;
+    expect(content).not.toMatch(GATED);
+  });
+});

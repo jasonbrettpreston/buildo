@@ -158,6 +158,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
           -- orphans, §11.2) — count non-null. Both surfaced as INFO (not gated). [#415 / Integration]
           COUNT(*) FILTER (WHERE is_in_ravine_protection_area)                            AS in_ravine_pop,
           COUNT(*) FILTER (WHERE ravine_distance_m IS NOT NULL)                           AS ravine_distance_pop,
+          -- WF3 #428 — enrich_coa_zoning heritage propagation (Spec 61 §8e / migration 172):
+          -- is_heritage_designated is NOT NULL DEFAULT false (vacuously 100% under IS NOT NULL) — count
+          -- the TRUE subset; type/date are populated only for designated leads — count non-null. INFO,
+          -- pure counts, no denominator (designated ⊄ zoning-enriched → would risk >100%). [#428, mirrors #415]
+          COUNT(*) FILTER (WHERE is_heritage_designated)                                  AS heritage_designated_pop,
+          COUNT(*) FILTER (WHERE heritage_designation_type IS NOT NULL)                   AS heritage_type_pop,
+          COUNT(*) FILTER (WHERE heritage_designation_date IS NOT NULL)                   AS heritage_date_pop,
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
       `);
@@ -242,6 +249,12 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.is_in_ravine_protection_area', parseInt(ca.in_ravine_pop, 10)));
       // Pure count, no denominator — see permits Step 9b ravine_distance note (#415).
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.ravine_distance_m',             parseInt(ca.ravine_distance_pop, 10)));
+      // WF3 #428 — heritage propagation (Spec 61 §8e). is_heritage_designated = count of the TRUE subset
+      // (FILTER, never IS NOT NULL — vacuous on the NOT-NULL-DEFAULT-false boolean); type/date pure counts,
+      // no denominator (designated ⊄ zoning-enriched). All INFO — small geographic subset, never gated.
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.is_heritage_designated',   parseInt(ca.heritage_designated_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.heritage_designation_type', parseInt(ca.heritage_type_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.heritage_designation_date', parseInt(ca.heritage_date_pop, 10)));
 
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
@@ -386,7 +399,12 @@ pipeline.run('assert-global-coverage', async (pool) => {
           -- TRUE subset, mirroring lifecycle_stalled; ravine_distance is sparse by design (NULL for
           -- orphan permits, §11.2) — count non-null. Both surfaced as INFO (not gated). [#415 / Integration]
           COUNT(*) FILTER (WHERE is_in_ravine_protection_area)                AS in_ravine_pop,
-          COUNT(*) FILTER (WHERE ravine_distance_m IS NOT NULL)               AS ravine_distance_pop
+          COUNT(*) FILTER (WHERE ravine_distance_m IS NOT NULL)               AS ravine_distance_pop,
+          -- WF3 #428 — enrich_permits heritage propagation (Spec 61 §8e / migration 172). Same shape
+          -- as ravine above: count the TRUE boolean subset + non-null type/date. INFO, no denominator.
+          COUNT(*) FILTER (WHERE is_heritage_designated)                      AS heritage_designated_pop,
+          COUNT(*) FILTER (WHERE heritage_designation_type IS NOT NULL)       AS heritage_type_pop,
+          COUNT(*) FILTER (WHERE heritage_designation_date IS NOT NULL)       AS heritage_date_pop
         FROM permits
       `);
       const permitsTotal        = parseInt(pa.permits_total, 10) || 0;
@@ -731,6 +749,11 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // zoningEnrichedTotal would risk a >100% INFO display (Code Reviewer #415). Mirrors the
       // is_in_ravine count above.
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.ravine_distance_m',             parseInt(pa.ravine_distance_pop, 10)));
+      // WF3 #428 — heritage propagation (Spec 61 §8e). Same shape as ravine: is_heritage_designated
+      // = count of the TRUE subset (FILTER, never IS NOT NULL); type/date pure counts, no denominator.
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.is_heritage_designated',   parseInt(pa.heritage_designated_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.heritage_designation_type', parseInt(pa.heritage_type_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.heritage_designation_date', parseInt(pa.heritage_date_pop, 10)));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));

@@ -223,6 +223,19 @@ Added 2026-06-03 (WF2 #415) so the global profile reports the Spec 59 §8e ravin
 | CoA Step 4b — enrich_coa_zoning | coa_applications.is_in_ravine_protection_area | `FILTER (WHERE is_in_ravine_protection_area)` | none (INFO — count of TRUE subset, not coverage) |
 | CoA Step 4b — enrich_coa_zoning | coa_applications.ravine_distance_m | `ravine_distance_m IS NOT NULL` | none (INFO — count of populated subset; parcel-linked ⊄ zoning-enriched) |
 
+#### WF3 #428 — heritage propagation coverage (enrich_permits / enrich_coa_zoning, migration 172)
+
+Added 2026-06-05 (WF3 #428) so the global profile reports the Spec 61 §8e heritage feed propagated from parcels onto permits + coa_applications. All rows are **INFO** (`infoRow`), under the same `Step 9b` / `CoA Step 4b` labels as the #415 ravine + #406 zoning rows (enrich-permits.js writes heritage in the same step). `is_heritage_designated` is `BOOLEAN NOT NULL DEFAULT false` — vacuously 100% under `IS NOT NULL`, so it is a **count of the TRUE subset** (`FILTER (WHERE is_heritage_designated)`, never `IS NOT NULL`). `heritage_designation_type`/`heritage_designation_date` are non-null only for the designated subset (a small geographic set, distinct from zoning-enriched), so they are **pure counts with no denominator** (a denominator would risk a `>100%` display — the #415 fold). Not gated: heritage affects a small subset with no stable population floor. INFO rows are cascade-neutral (Spec 48 §3.6).
+
+| Step | Field | Numerator | Denominator |
+| :--- | :--- | :--- | :--- |
+| Step 9b — enrich_permits | permits.is_heritage_designated | `FILTER (WHERE is_heritage_designated)` | none (INFO — count of TRUE subset, not coverage) |
+| Step 9b — enrich_permits | permits.heritage_designation_type | `heritage_designation_type IS NOT NULL` | none (INFO — count of designated subset) |
+| Step 9b — enrich_permits | permits.heritage_designation_date | `heritage_designation_date IS NOT NULL` | none (INFO — count of designated subset) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.is_heritage_designated | `FILTER (WHERE is_heritage_designated)` | none (INFO — count of TRUE subset, not coverage) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.heritage_designation_type | `heritage_designation_type IS NOT NULL` | none (INFO — count of designated subset) |
+| CoA Step 4b — enrich_coa_zoning | coa_applications.heritage_designation_date | `heritage_designation_date IS NOT NULL` | none (INFO — count of designated subset) |
+
 ---
 
 ## 5. Mobile & Responsive Behavior
