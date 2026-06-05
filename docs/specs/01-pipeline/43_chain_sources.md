@@ -35,6 +35,7 @@ load_zoning → enrich_parcels → refresh_snapshot → assert_data_bounds → a
 | 5 | `compute_centroids` | `compute-centroids.js` | Calculate centroid lat/lng for parcels missing them | parcels |
 | 6 | `link_parcels` | `link-parcels.js` | Re-link all permits to fresh parcel data (runs `--full` in sources chain) | permit_parcels |
 | 6b | `enrich_ravines` | `enrich-ravines.js` | Spatially join parcels against ravines; write Chapter-658 flag + signed ravine distance + lineage onto parcels (Spec 59 §8d, advisory lock 60) | parcels |
+| 6c | `enrich_heritage` | `enrich-heritage.js` | Spatially join parcels against the heritage tables; write the Ontario Heritage Act designation flag (Part IV individual via point containment / Part V HCD via polygon intersect, L12 Part IV wins) + type + date + lineage onto parcels (Spec 61 §8d, advisory lock 62) | parcels |
 | 7 | `massing` | `load-massing.js` | Ingest 3D building footprint volumes | building_footprints |
 | 8 | `link_massing` | `link-massing.js` | Link parcels to building footprints (runs `--full` in sources chain) | parcel_buildings |
 | 9 | `neighbourhoods` | `load-neighbourhoods.js` | Ingest neighbourhood boundaries + Census income profiles | neighbourhoods |

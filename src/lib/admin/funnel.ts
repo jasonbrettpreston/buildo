@@ -552,6 +552,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   load_zoning:          { summary: 'Loads Toronto Zoning By-law (569-2013) — 10 CKAN DataStore layers into the zoning tables', table: 'zoning_bylaw_areas' },
   enrich_parcels:       { summary: 'Spatially joins parcels against the zoning tables; writes the zoning by-law feed (class, FSI, coverage, height, overlays) onto parcels', table: 'parcels' },
   enrich_ravines:       { summary: 'Spatially joins parcels against the ravines table; writes the Chapter-658 protection flag + signed ravine distance + dataset lineage onto parcels', table: 'parcels' },
+  enrich_heritage:      { summary: 'Spatially joins parcels against the heritage tables; writes the Ontario Heritage Act designation flag (Part IV individual via point containment / Part V HCD via polygon intersect) + type + date + lineage onto parcels', table: 'parcels' },
   enrich_permits:       { summary: 'Copies the dominant linked parcel zoning feed onto permits via permit_parcels (Spec 66 WF3)', table: 'permits' },
   enrich_coa_zoning:    { summary: 'Copies the dominant linked parcel zoning feed onto coa_applications via lead_parcels (Spec 66 WF3)', table: 'coa_applications' },
   // Link & Enrich
@@ -820,7 +821,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   address_points: 'address_points', parcels: 'parcels', massing: 'building_footprints',
   neighbourhoods: 'neighbourhoods', load_wsib: 'wsib_registry', load_zoning: 'zoning_bylaw_areas',
   load_ravines: 'ravines', load_heritage: 'heritage_properties',
-  enrich_parcels: 'parcels', enrich_ravines: 'parcels', enrich_permits: 'permits', enrich_coa_zoning: 'coa_applications',
+  enrich_parcels: 'parcels', enrich_ravines: 'parcels', enrich_heritage: 'parcels', enrich_permits: 'permits', enrich_coa_zoning: 'coa_applications',
   geocode_permits: 'permits', link_parcels: 'permit_parcels',
   link_neighbourhoods: 'permits', link_massing: 'parcel_buildings',
   link_coa: 'coa_applications', link_wsib: 'entities',

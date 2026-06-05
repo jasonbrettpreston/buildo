@@ -1,0 +1,321 @@
+#!/usr/bin/env node
+/**
+ * Enrich Parcel Heritage Designation (Spec 61 §8d) — spatial-joins parcels.geom
+ * against the §8c heritage tables and writes is_heritage_designated +
+ * heritage_designation_type (Part IV / Part V HCD) + heritage_designation_date +
+ * dataset lineage onto parcels via one set-based UPDATE (§11.1).
+ * SPEC LINK: docs/specs/01-pipeline/61_source_heritage_properties.md (v1.1 §8d)
+ *
+ * Sibling of load-heritage.js (advisory lock 62). Consumes the §8c producer's
+ * frozen records_meta.heritage_load contract (per-dataset sub-blocks).
+ *
+ * Match (CONTAINMENT — live-validation finding, supersedes the spec's §11.1 radius):
+ * Part V HCD = ST_Intersects(parcel, hcd_polygon); Part IV individual = ST_Intersects(
+ * parcel, heritage_point) — the parcel that CONTAINS the point. The spec's Part IV
+ * ST_DWithin(50m)+levenshtein over-matched 4× (tagged ~4 neighbours of every point), so
+ * containment is used instead (precision over recall; ~10% of Part IV points fall outside
+ * any parcel and are unmatched — surfaced as heritage_points_no_parcel_match). Both bind
+ * planar GISTs; no centroid/KNN needed. L12: Part IV wins over Part V HCD. See review_followups #424.
+ */
+'use strict';
+
+const pipeline = require('./lib/pipeline');
+const { loadMarketplaceConfigs } = require('./lib/config-loader');
+const { z } = require('zod');
+
+const ADVISORY_LOCK_ID = 62; // DEC-A (sibling of load-heritage=61; spec L4b=63 stale). 62 verified free.
+const PIPELINE_NAME = 'sources:enrich_heritage'; // chain-scoped (run-chain.js:253)
+const PRODUCER_NAME = 'sources:load_heritage';    // §8c chain-scoped slug (DEC-C; NOT spec's 'source-heritage')
+const SPEC_VERSION = '1.1'; // L10 — consumer pins on the §8c producer's spec_version
+const TAG = '[enrich-heritage]';
+
+const ConfigSchema = z.object({
+  // heritage_point_match_radius_m (spec §12.3a) intentionally NOT consumed: the live-validation
+  // finding switched Part IV from a radius match to containment (ST_Intersects), so there is no
+  // radius parameter. Left out of the schema rather than declared-and-ignored.
+  heritageAddressLevenshteinThreshold: z.number().int().nonnegative().default(2), // tiebreak when a parcel contains >1 Part IV point
+  // L21 heritage_points_no_parcel_match thresholds. Spec §12.3a seeds 0.05/0.20, but those assumed
+  // the radius match (~0% unmatched); under containment ~10% of Part IV points legitimately fall
+  // outside any parcel, so the defaults are calibrated above that baseline → INFO at steady state,
+  // escalating only on real regression (review_followups #424).
+  heritageUnlinkedPointWarnPct: z.number().default(0.15),
+  heritageUnlinkedPointFailPct: z.number().default(0.30),
+});
+
+// ---------------------------------------------------------------------------
+// Consumer read protocol (§9 / L23, 2-dataset) — HALTs on any bad producer state.
+// ---------------------------------------------------------------------------
+async function readHeritageContract(pool) {
+  const res = await pool.query(
+    `SELECT records_meta FROM pipeline_runs
+      WHERE pipeline = $1 AND status = 'completed'
+      ORDER BY completed_at DESC LIMIT 1`,
+    [PRODUCER_NAME],
+  );
+  if (res.rows.length === 0) {
+    throw new Error(`${TAG} no successful ${PRODUCER_NAME} run — cannot enrich without a versioned heritage source`);
+  }
+  const hl = (res.rows[0].records_meta || {}).heritage_load || {};
+  if (hl.spec_version !== SPEC_VERSION) {
+    throw new Error(`${TAG} ${PRODUCER_NAME}.spec_version=${hl.spec_version} !== ${SPEC_VERSION} — aborting to prevent contract violation`);
+  }
+  // Defensive sub-block guards (DeepSeek MED) — clean FAIL, never a raw TypeError.
+  const reg = hl.heritage_register;
+  const hcd = hl.heritage_districts;
+  if (!reg) throw new Error(`${TAG} producer records_meta.heritage_load.heritage_register sub-block is missing — aborting`);
+  if (!hcd) throw new Error(`${TAG} producer records_meta.heritage_load.heritage_districts sub-block is missing — aborting`);
+  // Per-table feature_count (C-v1.1.3) — distinct messages for operator triage.
+  if (!(Number(reg.feature_count) > 0)) {
+    throw new Error(`${TAG} heritage_register dataset ingested zero features; refusing to enrich`);
+  }
+  if (!(Number(hcd.feature_count) > 0)) {
+    throw new Error(`${TAG} heritage_districts dataset ingested zero features; refusing to enrich`);
+  }
+  // Per-table drift guard (explicit-false sentinel; null/undefined passes).
+  if (reg.drift_check_passed === false || hcd.drift_check_passed === false) {
+    throw new Error(`${TAG} producer drift_check_passed=false — aborting against a churned heritage source`);
+  }
+  // §9 step 5 — both lineage strings must be present; combine deterministically.
+  if (!reg.source_dataset_version) throw new Error(`${TAG} heritage_register.source_dataset_version is null/empty — cannot stamp lineage`);
+  if (!hcd.source_dataset_version) throw new Error(`${TAG} heritage_districts.source_dataset_version is null/empty — cannot stamp lineage`);
+  const datasetVersion = `${reg.source_dataset_version}|${hcd.source_dataset_version}`;
+  return { datasetVersion };
+}
+
+// ---------------------------------------------------------------------------
+// Preconditions (DEC-F) — non-viable spatial join without these.
+// ---------------------------------------------------------------------------
+async function assertPreconditions(client) {
+  const pg = await client.query("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
+  if (pg.rows.length === 0) throw new Error(`${TAG} PostGIS not installed — cannot run the heritage spatial join`);
+  const fz = await client.query("SELECT 1 FROM pg_extension WHERE extname = 'fuzzystrmatch'");
+  if (fz.rows.length === 0) throw new Error(`${TAG} fuzzystrmatch not installed (migration 170) — levenshtein() unavailable`);
+  const fn = await client.query("SELECT 1 FROM pg_proc WHERE proname = 'normalize_address'");
+  if (fn.rows.length === 0) throw new Error(`${TAG} normalize_address() function missing (migration 170)`);
+
+  const idx = async (name) =>
+    (await client.query('SELECT 1 FROM pg_indexes WHERE indexname = $1', [name])).rows.length > 0;
+  if (!(await idx('idx_parcels_geom_gist'))) throw new Error(`${TAG} no idx_parcels_geom_gist (migration 039) — refusing a sequential-scan join`);
+  if (!(await idx('idx_heritage_districts_geom_gist'))) throw new Error(`${TAG} no idx_heritage_districts_geom_gist (migration 170) — Part V ST_Intersects would seq-scan`);
+  if (!(await idx('idx_heritage_properties_geom_gist'))) throw new Error(`${TAG} no idx_heritage_properties_geom_gist (migration 170) — Part IV ST_Intersects would seq-scan`);
+
+  // M-2 columns must exist (else the UPDATE crashes with "column does not exist"; DeepSeek HIGH / L24).
+  const cols = await client.query(
+    `SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'parcels'
+        AND column_name IN ('is_heritage_designated','heritage_designation_type','heritage_designation_date','heritage_dataset_version_when_enriched')`,
+  );
+  if (cols.rows.length < 4) {
+    throw new Error(`${TAG} parcels heritage columns missing (migration 171 not applied) — found ${cols.rows.length}/4`);
+  }
+
+  // §3.10 SRID guard — parcels must be 4326 (no ST_Transform path).
+  const srid = await client.query("SELECT Find_SRID('public', 'parcels', 'geom') AS srid");
+  if (Number(srid.rows[0].srid) !== 4326) {
+    throw new Error(`${TAG} parcels.geom SRID is ${srid.rows[0].srid}, expected 4326`);
+  }
+  // L14 — never run against an empty heritage source (would reset every parcel's enrichment).
+  const hp = await client.query('SELECT COUNT(*)::int AS n FROM heritage_properties');
+  const hd = await client.query('SELECT COUNT(*)::int AS n FROM heritage_districts');
+  if (hp.rows[0].n === 0) throw new Error(`${TAG} heritage_properties is empty — aborting (L14)`);
+  if (hd.rows[0].n === 0) throw new Error(`${TAG} heritage_districts is empty — aborting (L14)`);
+}
+
+// §11.1 set-based UPDATE — CONTAINMENT match (live-validation finding, 2026-06-04).
+// The spec's Part IV ST_DWithin(50m) over-matched 4× (6,217 parcels vs 1,549 source points —
+// a 50m radius around each parcel centroid grabbed ~4 neighbours of every heritage point). For
+// a regulatory flag, false positives (tagging non-heritage parcels) are worse than missing the
+// ~10% of points that fall outside any parcel, so Part IV matches the parcel that CONTAINS the
+// point: ST_Intersects(pc.geom, hp.geom) — exactly one parcel per point, binds the planar
+// idx_heritage_properties_geom_gist. Part V HCD = ST_Intersects(pc.geom, hd.geom) (planar
+// idx_heritage_districts_geom_gist). No centroid / geography-KNN needed (the Spec 59 §8d trap is
+// moot under containment). L12: Part IV wins. levenshtein = tiebreak only when a parcel contains
+// >1 Part IV point. $1=lev_threshold, $2=dataset_version. Valid-geom parcels only (excluded rows
+// keep prior enrichment). Known limitation: ~10% of Part IV points fall outside any parcel and are
+// unmatched (filed as a follow-up — precision over recall for the regulatory flag).
+const ENRICH_SQL = `
+WITH parcel_c AS MATERIALIZED (
+  SELECT
+    p.id AS parcel_id,
+    p.geom,
+    NULLIF(normalize_address(concat_ws(' ', p.addr_num_normalized, p.street_name_normalized, p.street_type_normalized)), '') AS norm_addr
+  FROM parcels p
+  WHERE p.geom IS NOT NULL AND NOT ST_IsEmpty(p.geom) AND ST_IsValid(p.geom)  -- exclude invalid geoms (ST_Intersects can false-negative); counted separately as INFO
+),
+enrichment AS (
+  SELECT
+    pc.parcel_id,
+    pv.hcd_id, pv.hcd_date,
+    piv.hp_id, piv.hp_date
+  FROM parcel_c pc
+  LEFT JOIN LATERAL (
+    SELECT hd.id AS hcd_id, hd.designated_date AS hcd_date
+      FROM heritage_districts hd
+     WHERE ST_Intersects(pc.geom, hd.geom)
+     ORDER BY hd.id ASC
+     LIMIT 1
+  ) pv ON true
+  LEFT JOIN LATERAL (
+    SELECT hp.id AS hp_id, hp.designated_date AS hp_date
+      FROM heritage_properties hp
+     WHERE hp.status = 'part_iv'
+       AND ST_Intersects(pc.geom, hp.geom)                    -- point falls WITHIN this parcel; binds idx_heritage_properties_geom_gist
+     ORDER BY
+       CASE WHEN pc.norm_addr IS NOT NULL
+                 AND levenshtein(pc.norm_addr, normalize_address(hp.address_text)) <= $1
+            THEN 0 ELSE 1 END ASC,                            -- tiebreak when a parcel contains >1 Part IV point
+       hp.id ASC                                              -- deterministic
+     LIMIT 1
+  ) piv ON true
+),
+resolved AS (
+  SELECT
+    parcel_id,
+    (hcd_id IS NOT NULL OR hp_id IS NOT NULL) AS new_designated,
+    CASE
+      WHEN hp_id  IS NOT NULL THEN 'part_iv_individual'       -- L12: Part IV wins over Part V HCD
+      WHEN hcd_id IS NOT NULL THEN 'part_v_hcd'
+      ELSE NULL
+    END AS new_type,
+    CASE
+      WHEN hp_id  IS NOT NULL THEN hp_date
+      WHEN hcd_id IS NOT NULL THEN hcd_date
+      ELSE NULL
+    END AS new_date
+  FROM enrichment
+)
+UPDATE parcels p
+   SET is_heritage_designated                = r.new_designated,
+       heritage_designation_type             = r.new_type,
+       heritage_designation_date             = r.new_date,
+       heritage_dataset_version_when_enriched = $2
+  FROM resolved r
+ WHERE p.id = r.parcel_id
+   AND (p.is_heritage_designated    IS DISTINCT FROM r.new_designated
+        OR p.heritage_designation_type IS DISTINCT FROM r.new_type
+        OR p.heritage_designation_date IS DISTINCT FROM r.new_date
+        OR p.heritage_dataset_version_when_enriched IS DISTINCT FROM $2);
+`;
+
+/** Engine — runs on the caller's transaction client. Returns the updated count. */
+async function enrichHeritage(client, { levenshteinThreshold, datasetVersion }) {
+  const upd = await client.query(ENRICH_SQL, [levenshteinThreshold, datasetVersion]);
+  return { updated: upd.rowCount };
+}
+
+/** Row-derived verdict cascade (Spec 47 §8.2 / Spec 48 §3.6). */
+function verdictCascade(rows) {
+  return rows.some((r) => r.status === 'FAIL') ? 'FAIL'
+    : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+}
+
+async function main(pool) {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+    const t0 = Date.now();
+    const { logicVars } = await loadMarketplaceConfigs(pool, 'enrich-heritage');
+    const config = ConfigSchema.parse(logicVars || {});
+
+    // §9/L23 consumer protocol — HALTs on missing/failed/stale producer.
+    const { datasetVersion } = await readHeritageContract(pool);
+
+    let result;
+    await pipeline.withTransaction(pool, async (client) => {
+      await assertPreconditions(client);
+      result = await enrichHeritage(client, {
+        levenshteinThreshold: config.heritageAddressLevenshteinThreshold,
+        datasetVersion,
+      });
+    });
+
+    // Coverage stats (DEC-H — counts, not a coverage %).
+    const cov = await pool.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE is_heritage_designated)                                  AS designated,
+        COUNT(*) FILTER (WHERE heritage_designation_type = 'part_iv_individual')        AS part_iv,
+        COUNT(*) FILTER (WHERE heritage_designation_type = 'part_v_hcd')                AS part_v,
+        COUNT(*) FILTER (WHERE geom IS NOT NULL AND NOT ST_IsValid(geom))               AS invalid_geom,
+        (SELECT COUNT(*) FROM heritage_properties WHERE status = 'part_iv')             AS part_iv_source
+      FROM parcels`);
+    const c = cov.rows[0];
+    const designated = Number(c.designated);
+    const partIv = Number(c.part_iv);
+    const partV = Number(c.part_v);
+    const invalidGeom = Number(c.invalid_geom);
+    const partIvSource = Number(c.part_iv_source);
+
+    // L21: Part IV source points NOT contained by any (valid-geom) parcel — the containment
+    // limitation made observable. ST_Intersects binds idx_parcels_geom_gist (index-bound).
+    const unl = await pool.query(`
+      SELECT COUNT(*)::int AS n FROM heritage_properties hp
+       WHERE hp.status = 'part_iv'
+         AND NOT EXISTS (SELECT 1 FROM parcels p WHERE p.geom IS NOT NULL AND ST_IsValid(p.geom) AND ST_Intersects(p.geom, hp.geom))`);
+    const unmatchedPoints = Number(unl.rows[0].n);
+    const unmatchedFrac = partIvSource > 0 ? unmatchedPoints / partIvSource : 0;
+
+    const auditRows = [];
+    // Broken-join FAIL gate: a hard zero means the spatial join matched NOTHING (wrong SRID /
+    // unbound GIST / Option-C bug) — distinct from a legitimately-small heritage subset (DEC-H / Obs).
+    auditRows.push({ metric: 'parcels_heritage_designated_count', value: designated, status: designated === 0 ? 'FAIL' : 'INFO' });
+    // Part IV broken-while-Part-V-works visibility: WARN when 0 matched but source has Part IV points.
+    auditRows.push({ metric: 'parcels_part_iv_count', value: partIv, status: (partIv === 0 && partIvSource > 0) ? 'WARN' : 'INFO' });
+    auditRows.push({ metric: 'parcels_part_v_hcd_count', value: partV, status: 'INFO' });
+    auditRows.push({ metric: 'heritage_part_iv_source_count', value: partIvSource, status: 'INFO' });
+    // L21 — % of Part IV source points with no containing parcel (containment limitation; calibrated thresholds).
+    auditRows.push({
+      metric: 'heritage_points_no_parcel_match',
+      value: Math.round(unmatchedFrac * 1000) / 10,
+      status: unmatchedFrac > config.heritageUnlinkedPointFailPct ? 'FAIL'
+        : unmatchedFrac > config.heritageUnlinkedPointWarnPct ? 'WARN' : 'INFO',
+    });
+    // INFO (not WARN): invalid-geom parcels are excluded from the join (parcel_c WHERE ST_IsValid),
+    // so they don't corrupt enrichment — this is a steady-state parcels-loader data-quality fact, not a
+    // per-run alert. WARN-on->0 would force a perpetual-WARN verdict (alert fatigue). Mirrors enrich-ravines.
+    auditRows.push({ metric: 'parcels_invalid_geom_count', value: invalidGeom, status: 'INFO' });
+    auditRows.push({ metric: 'parcels_enriched_count', value: result.updated, status: 'INFO' });
+    auditRows.push({ metric: 'heritage_source_dataset_version', value: datasetVersion, status: 'INFO' });
+    auditRows.push({ metric: 'enrich_heritage_duration_ms', value: Date.now() - t0, status: 'INFO' });
+
+    pipeline.emitSummary({
+      records_total: null, // Enrich archetype — does not create rows (Spec 47 §11)
+      records_new: null,
+      records_updated: result.updated,
+      records_meta: {
+        audit_table: {
+          phase: ADVISORY_LOCK_ID,
+          name: 'Parcel heritage enrichment',
+          verdict: verdictCascade(auditRows),
+          rows: auditRows,
+        },
+      },
+    });
+
+    pipeline.emitMeta(
+      {
+        heritage_properties: ['geom', 'status', 'address_text', 'designated_date'],
+        heritage_districts: ['geom', 'designated_date'],
+        parcels: ['id', 'geom', 'addr_num_normalized', 'street_name_normalized', 'street_type_normalized'],
+      },
+      { parcels: ['is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date', 'heritage_dataset_version_when_enriched'] },
+    );
+
+    pipeline.log.info(TAG, `enriched ${result.updated} parcels (designated ${designated}: part_iv ${partIv}/${partIvSource}, part_v ${partV})`);
+    return { ok: true };
+  });
+
+  if (!lockResult.acquired) return; // §R12 — SDK emitted SKIP already
+}
+
+if (require.main === module) {
+  pipeline.run('enrich-heritage', main);
+}
+
+module.exports = {
+  ADVISORY_LOCK_ID,
+  PRODUCER_NAME,
+  PIPELINE_NAME,
+  ENRICH_SQL,
+  readHeritageContract,
+  assertPreconditions,
+  enrichHeritage,
+  verdictCascade,
+};

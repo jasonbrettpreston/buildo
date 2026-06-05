@@ -41,6 +41,9 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // Spec 59 §8d (enrich-ravines): lock 60 (L4b). Sibling of load-ravines (59);
   // set-based parcels ravine enrichment after link_parcels in chain_sources.
   'scripts/enrich-ravines.js':       60,
+  // Spec 61 §8d (enrich-heritage): lock 62 (sibling of load-heritage=61; spec L4b=63 stale).
+  // Set-based parcels heritage enrichment after enrich_ravines in chain_sources.
+  'scripts/enrich-heritage.js':      62,
   'scripts/enrich-parcels.js':       65,
   // Spec 66 (enrich-permits WF3): lock = spec number. ONE file, two manifest entries
   // (enrich_permits / enrich_coa_zoning via ENRICH_TARGET) → one shared lock (the
