@@ -333,7 +333,20 @@ pipeline.run('load-parcels', async (pool) => {
           geometry = EXCLUDED.geometry,
           ${geomLine}
           date_effective = COALESCE(EXCLUDED.date_effective, parcels.date_effective),
-          is_irregular = EXCLUDED.is_irregular
+          is_irregular = EXCLUDED.is_irregular,
+          -- DEC-FENCE2 (#418): invalidate the downstream enrichment lineage stamps when a
+          -- parcel's GEOMETRY changes, so enrich_ravines / enrich_heritage recompute it (a
+          -- moved parcel can cross a ravine / HCD boundary). Gated on geometry change ONLY —
+          -- an address-only update (also in the WHERE below) is geom-invariant, so it must
+          -- NOT force an expensive ravine KNN recompute. NULL stamp ⇒ the consumer's
+          -- version-skip sees the parcel as stale ⇒ scoped recompute. New parcels INSERT with
+          -- a NULL stamp by default (mig 168/171, no DEFAULT) → already stale.
+          ravine_dataset_version_when_enriched = CASE
+            WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+            THEN NULL ELSE parcels.ravine_dataset_version_when_enriched END,
+          heritage_dataset_version_when_enriched = CASE
+            WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+            THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END
         WHERE parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
           OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm
           OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type

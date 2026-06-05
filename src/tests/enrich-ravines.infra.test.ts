@@ -44,7 +44,7 @@ describe('enrich-ravines.js — source contract (Spec 59 §8d/§9)', () => {
 
   it('Enrich archetype emit + emitMeta read-set is id/geom only (NO lead_id — Observability BUG-2)', () => {
     expect(SCRIPT).toMatch(/records_total:\s*null/);
-    expect(SCRIPT).toMatch(/records_updated:\s*result\.updated/);
+    expect(SCRIPT).toMatch(/records_updated:\s*updated/); // shared emitResults param (#418)
     expect(SCRIPT).toMatch(/parcels:\s*\['id', 'geom'\]/);
     expect(SCRIPT).not.toMatch(/parcels:\s*\[[^\]]*lead_id/);
   });
@@ -54,6 +54,42 @@ describe('enrich-ravines.js — source contract (Spec 59 §8d/§9)', () => {
     expect(SCRIPT).toContain('delete_skipped_empty_guard');
     expect(SCRIPT).toContain('mass_delete_check_passed');
     expect(SCRIPT).toContain('source_dataset_version is null/empty');
+  });
+
+  // ── #418 incremental-skip wiring ──────────────────────────────────────────
+  it('#418 Layer-1 staleCount skip + Layer-2 version-scoped parcel_c are wired', () => {
+    expect(SCRIPT).toContain('countStale');
+    // Layer-2: parcel_c is scoped to stale parcels (NULL/older stamp vs $1).
+    expect(SCRIPT).toMatch(/ravine_dataset_version_when_enriched IS DISTINCT FROM \$1/);
+    expect(SCRIPT).toContain('#418 stale-only scope');
+    // Layer-1: the skip branch returns WITHOUT entering withTransaction (no KNN).
+    expect(SCRIPT).toMatch(/if \(staleCount === 0\)/);
+  });
+
+  it('#418 skip path STILL emits summary + meta via shared emitResults (Gemini — no UNKNOWN step)', () => {
+    // Both branches funnel through emitResults — skip (updated:0, skipped:true) + recompute.
+    expect(SCRIPT).toMatch(/emitResults\(pool, \{ sourceDatasetVersion, updated: 0, skipped: true/);
+    expect(SCRIPT).toMatch(/emitResults\(pool, \{ sourceDatasetVersion, updated: result\.updated, skipped: false/);
+    // ...and emitResults always calls BOTH emit calls + carries the skip audit row.
+    const emitFn = SCRIPT.slice(
+      SCRIPT.indexOf('async function emitResults'),
+      SCRIPT.indexOf('async function main'),
+    );
+    expect(emitFn).toContain('pipeline.emitSummary');
+    expect(emitFn).toContain('pipeline.emitMeta');
+    expect(emitFn).toContain('parcels_ravine_enrich_skipped');
+  });
+
+  it('#418 DEC-E column guard + L14 empty-ravines guard BOTH run before the skip decision', () => {
+    expect(SCRIPT).toContain('information_schema.columns');
+    expect(SCRIPT).toContain('migration 168 not applied');
+    // In main(), assertRavinesNonEmpty(pool) must precede countStale(pool, …) so a wiped
+    // ravines table HALTs even when matching version stamps would satisfy the skip (Gemini).
+    const mainBody = SCRIPT.slice(SCRIPT.indexOf('async function main'));
+    const idxNonEmpty = mainBody.indexOf('assertRavinesNonEmpty(pool)');
+    const idxStale = mainBody.indexOf('countStale(pool');
+    expect(idxNonEmpty).toBeGreaterThan(-1);
+    expect(idxStale).toBeGreaterThan(idxNonEmpty);
   });
 });
 

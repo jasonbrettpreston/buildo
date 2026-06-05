@@ -13,7 +13,6 @@
 const pipeline = require('./lib/pipeline');
 
 const ADVISORY_LOCK_ID = 60; // L4b (verified unassigned)
-const PIPELINE_NAME = 'sources:enrich_ravines'; // chain-scoped (run-chain.js:253)
 // The §8c producer, read via the L18 cross-run contract. The chain records the
 // load step as 'sources:load_ravines' (run-chain.js:253) — NOT the spec §9 literal
 // 'source-ravines', which is stale (review_followups #409).
@@ -67,6 +66,41 @@ async function readRavineContract(pool) {
   return { sourceDatasetVersion };
 }
 
+// L14 empty-ravines guard — never run the UPDATE against an empty source (would
+// NULL-out / reset every parcel's enrichment). Reused by assertPreconditions AND the
+// pre-skip path in main() so the invariant holds on BOTH branches (a wiped ravines table
+// must HALT even when matching version stamps would otherwise satisfy the #418 skip — Gemini).
+async function assertRavinesNonEmpty(db) {
+  const cnt = await db.query('SELECT COUNT(*)::int AS n FROM ravines');
+  if (cnt.rows[0].n === 0) {
+    throw new Error(`${TAG} ravines table is empty — aborting to avoid resetting all parcels' enrichment (L14)`);
+  }
+}
+
+// DEC-E — fail clearly if migration 168's lineage column is absent, instead of a cryptic
+// 42703 from the #418 staleCount query.
+async function assertVersionColumn(db) {
+  const res = await db.query(
+    `SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'parcels' AND column_name = 'ravine_dataset_version_when_enriched'`,
+  );
+  if (res.rows.length === 0) {
+    throw new Error(`${TAG} parcels.ravine_dataset_version_when_enriched missing — migration 168 not applied`);
+  }
+}
+
+// #418 Layer-1 — cheap full-table COUNT (no KNN) of geom-bearing parcels not yet enriched
+// against this exact ravines version. 0 ⇒ every parcel is current ⇒ the per-parcel KNN is a
+// guaranteed no-op ⇒ SKIP the whole transaction.
+async function countStale(db, sourceDatasetVersion) {
+  const res = await db.query(
+    `SELECT COUNT(*)::int AS n FROM parcels
+      WHERE geom IS NOT NULL AND ravine_dataset_version_when_enriched IS DISTINCT FROM $1`,
+    [sourceDatasetVersion],
+  );
+  return res.rows[0].n;
+}
+
 // ---------------------------------------------------------------------------
 // Preconditions (DEC-F + §3.10 SRID + L14) — non-viable spatial join without these.
 // ---------------------------------------------------------------------------
@@ -90,12 +124,8 @@ async function assertPreconditions(client) {
   if (Number(srid.rows[0].srid) !== 4326) {
     throw new Error(`${TAG} parcels.geom SRID is ${srid.rows[0].srid}, expected 4326`);
   }
-  // L14 empty-ravines guard — never run the UPDATE against an empty source (would
-  // NULL-out / reset every parcel's enrichment).
-  const cnt = await client.query('SELECT COUNT(*)::int AS n FROM ravines');
-  if (cnt.rows[0].n === 0) {
-    throw new Error(`${TAG} ravines table is empty — aborting to avoid resetting all parcels' enrichment (L14)`);
-  }
+  // L14 empty-ravines guard (shared with the main() pre-skip path).
+  await assertRavinesNonEmpty(client);
 }
 
 // §11.1 set-based UPDATE — the index-accelerated LATERAL form (L13's prose).
@@ -108,13 +138,21 @@ async function assertPreconditions(client) {
 // ST_Intersects uses the planar idx_ravines_geom_gist. Semantically EQUIVALENT to the
 // intent of §11.1 + L2 (boolean = any-intersect; distance = nearest × sign; 0 inside) but
 // implemented for index performance — the spec's inline-correlated form is pathologically
-// slow. Equivalence verified on live data (0 mismatches). Scoped to geom-bearing parcels.
-// $1 = source_dataset_version.
+// slow. Equivalence verified on live data (0 mismatches). $1 = source_dataset_version.
+//
+// #418 Layer-2 scoping: parcel_c is restricted to geom-bearing parcels that are STALE
+// against this exact ravines version (NULL/older stamp). In steady state nothing is stale
+// (Layer-1 skip never reaches the UPDATE); a ravines refresh bumps every stamp → all stale
+// → full recompute (paid once per refresh); a handful of newly-geocoded / geom-changed
+// parcels (their stamp NULLed by load-parcels — DEC-FENCE2) KNN only themselves, not all 486K.
+// Correctness rests on the stamp going stale on BOTH a ravines-version bump AND a parcel-geom
+// change; the inner IS DISTINCT FROM triple-guard (§8d no-op-write fence) is KEPT.
 const ENRICH_SQL = `
 WITH parcel_c AS MATERIALIZED (
   SELECT p.id AS parcel_id, p.geom, ST_Centroid(p.geom)::geography AS cg
     FROM parcels p
    WHERE p.geom IS NOT NULL
+     AND p.ravine_dataset_version_when_enriched IS DISTINCT FROM $1   -- #418 stale-only scope
 ),
 enrichment AS (
   SELECT
@@ -155,6 +193,67 @@ function verdictCascade(rows) {
     : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
 }
 
+// Coverage stats + audit-row emit — shared by BOTH the skip and recompute paths so the
+// dashboard step always reports (never UNKNOWN) and the producer/consumer column contract is
+// honored on a skip (Integration BUG). Coverage is RE-QUERIED live on every call so a
+// pre-existing partial-coverage hole stays visible even when this run skips (Regression Guardian).
+async function emitResults(pool, { sourceDatasetVersion, updated, skipped, t0 }) {
+  // Coverage stats over geom-bearing parcels (denominator explicit — DeepSeek MED).
+  const cov = await pool.query(`
+    SELECT
+      COUNT(*) FILTER (WHERE geom IS NOT NULL)                                          AS geom_total,
+      COUNT(*) FILTER (WHERE geom IS NOT NULL AND ravine_distance_m IS NOT NULL)         AS with_distance,
+      COUNT(*) FILTER (WHERE is_in_ravine_protection_area)                               AS in_ravine,
+      COUNT(*) FILTER (WHERE geom IS NOT NULL AND NOT ST_IsValid(geom))                  AS invalid_geom
+    FROM parcels`);
+  const c = cov.rows[0];
+  const geomTotal = Number(c.geom_total);
+  const withDistance = Number(c.with_distance);
+  const inRavine = Number(c.in_ravine);
+  const invalidGeom = Number(c.invalid_geom);
+  const distancePct = geomTotal ? Math.round((1000 * withDistance) / geomTotal) / 10 : 0;
+
+  const auditRows = [];
+  auditRows.push({
+    metric: 'parcels_with_ravine_distance_pct', value: distancePct,
+    status: distancePct >= DISTANCE_COVERAGE_PASS_PCT ? 'PASS'
+      : distancePct >= DISTANCE_COVERAGE_WARN_PCT ? 'WARN' : 'FAIL',
+  });
+  auditRows.push({ metric: 'parcels_in_ravine_count', value: inRavine, status: 'INFO' });
+  // Root-cause signal for any distance-coverage drop: a degenerate parcel geom yields a
+  // NULL centroid → NULL distance → counts as not-enriched (Gemini/DeepSeek MED). Live data = 0.
+  auditRows.push({ metric: 'parcels_invalid_geom_count', value: invalidGeom, status: 'INFO' });
+  auditRows.push({ metric: 'parcels_enriched_count', value: updated, status: 'INFO' });
+  // #418 — whether this run took the Layer-1 skip (steady state) or recomputed (post-refresh).
+  auditRows.push({ metric: 'parcels_ravine_enrich_skipped', value: skipped, status: 'INFO' });
+  auditRows.push({ metric: 'ravine_source_dataset_version', value: sourceDatasetVersion, status: 'INFO' });
+  auditRows.push({ metric: 'enrich_ravines_duration_ms', value: Date.now() - t0, status: 'INFO' });
+
+  pipeline.emitSummary({
+    records_total: null, // Enrich archetype — does not create rows (Spec 47 §11)
+    records_new: null,
+    records_updated: updated,
+    records_meta: {
+      audit_table: {
+        phase: ADVISORY_LOCK_ID,
+        name: 'Parcel ravine enrichment',
+        verdict: verdictCascade(auditRows),
+        rows: auditRows,
+      },
+    },
+  });
+
+  // §9 — lead_id is NOT read here (it's an §8e concern); reads are id + geom only.
+  pipeline.emitMeta(
+    { ravines: ['geom'], parcels: ['id', 'geom'] },
+    { parcels: ['is_in_ravine_protection_area', 'ravine_distance_m', 'ravine_dataset_version_when_enriched'] },
+  );
+
+  pipeline.log.info(TAG, skipped
+    ? `skip — all geom-bearing parcels already enriched at ravine version ${sourceDatasetVersion} (in_ravine ${inRavine}, distance coverage ${distancePct}%)`
+    : `enriched ${updated} parcels (in_ravine ${inRavine}, distance coverage ${distancePct}%)`);
+}
+
 async function main(pool) {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const t0 = Date.now();
@@ -162,62 +261,30 @@ async function main(pool) {
     // §9/L18 consumer protocol — HALTs on missing/failed/stale producer.
     const { sourceDatasetVersion } = await readRavineContract(pool);
 
+    // DEC-E — migration-168 lineage column must exist before the staleCount query.
+    await assertVersionColumn(pool);
+    // L14 holds on BOTH paths (Gemini): a wiped ravines table must HALT even when matching
+    // version stamps would otherwise satisfy the #418 skip below.
+    await assertRavinesNonEmpty(pool);
+
+    // #418 Layer-1 incremental skip — if no geom-bearing parcel is stale against this exact
+    // ravines version, the per-parcel KNN is a guaranteed no-op: skip the transaction entirely.
+    // The skip path STILL emits coverage + summary + meta (shared emitResults) so the dashboard
+    // step is never UNKNOWN and the producer/consumer column contract holds (Integration BUG).
+    const staleCount = await countStale(pool, sourceDatasetVersion);
+    if (staleCount === 0) {
+      await emitResults(pool, { sourceDatasetVersion, updated: 0, skipped: true, t0 });
+      return { ok: true };
+    }
+
+    // Layer-2 — recompute, scoped (parcel_c filters on version) to the stale parcels only.
     let result;
     await pipeline.withTransaction(pool, async (client) => {
       await assertPreconditions(client);
       result = await enrichRavines(client, { sourceDatasetVersion });
     });
 
-    // Coverage stats over geom-bearing parcels (denominator explicit — DeepSeek MED).
-    const cov = await pool.query(`
-      SELECT
-        COUNT(*) FILTER (WHERE geom IS NOT NULL)                                          AS geom_total,
-        COUNT(*) FILTER (WHERE geom IS NOT NULL AND ravine_distance_m IS NOT NULL)         AS with_distance,
-        COUNT(*) FILTER (WHERE is_in_ravine_protection_area)                               AS in_ravine,
-        COUNT(*) FILTER (WHERE geom IS NOT NULL AND NOT ST_IsValid(geom))                  AS invalid_geom
-      FROM parcels`);
-    const c = cov.rows[0];
-    const geomTotal = Number(c.geom_total);
-    const withDistance = Number(c.with_distance);
-    const inRavine = Number(c.in_ravine);
-    const invalidGeom = Number(c.invalid_geom);
-    const distancePct = geomTotal ? Math.round((1000 * withDistance) / geomTotal) / 10 : 0;
-
-    const auditRows = [];
-    auditRows.push({
-      metric: 'parcels_with_ravine_distance_pct', value: distancePct,
-      status: distancePct >= DISTANCE_COVERAGE_PASS_PCT ? 'PASS'
-        : distancePct >= DISTANCE_COVERAGE_WARN_PCT ? 'WARN' : 'FAIL',
-    });
-    auditRows.push({ metric: 'parcels_in_ravine_count', value: inRavine, status: 'INFO' });
-    // Root-cause signal for any distance-coverage drop: a degenerate parcel geom yields a
-    // NULL centroid → NULL distance → counts as not-enriched (Gemini/DeepSeek MED). Live data = 0.
-    auditRows.push({ metric: 'parcels_invalid_geom_count', value: invalidGeom, status: 'INFO' });
-    auditRows.push({ metric: 'parcels_enriched_count', value: result.updated, status: 'INFO' });
-    auditRows.push({ metric: 'ravine_source_dataset_version', value: sourceDatasetVersion, status: 'INFO' });
-    auditRows.push({ metric: 'enrich_ravines_duration_ms', value: Date.now() - t0, status: 'INFO' });
-
-    pipeline.emitSummary({
-      records_total: null, // Enrich archetype — does not create rows (Spec 47 §11)
-      records_new: null,
-      records_updated: result.updated,
-      records_meta: {
-        audit_table: {
-          phase: ADVISORY_LOCK_ID,
-          name: 'Parcel ravine enrichment',
-          verdict: verdictCascade(auditRows),
-          rows: auditRows,
-        },
-      },
-    });
-
-    // §9 — lead_id is NOT read here (it's an §8e concern); reads are id + geom only.
-    pipeline.emitMeta(
-      { ravines: ['geom'], parcels: ['id', 'geom'] },
-      { parcels: ['is_in_ravine_protection_area', 'ravine_distance_m', 'ravine_dataset_version_when_enriched'] },
-    );
-
-    pipeline.log.info(TAG, `enriched ${result.updated} parcels (in_ravine ${inRavine}, distance coverage ${distancePct}%)`);
+    await emitResults(pool, { sourceDatasetVersion, updated: result.updated, skipped: false, t0 });
     return { ok: true };
   });
 
@@ -234,6 +301,10 @@ module.exports = {
   ENRICH_SQL,
   readRavineContract,
   assertPreconditions,
+  assertRavinesNonEmpty,
+  assertVersionColumn,
+  countStale,
   enrichRavines,
+  emitResults,
   verdictCascade,
 };
