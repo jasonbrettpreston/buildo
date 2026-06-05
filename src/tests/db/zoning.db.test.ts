@@ -79,7 +79,10 @@ describe.skipIf(!dbAvailable())('Spec 58 zoning ingest — live DB (migration 16
       );
       const defs = rows.map((r) => r.def).join(' | ');
       expect(defs).toMatch(/coverage_max_pct.*0.*100/i);
-      expect(defs).toMatch(/fsi_max\s*>=\s*0/i);
+      // pg_get_constraintdef renders the NUMERIC CHECK as `fsi_max >= (0)::numeric`
+      // — tolerate the optional paren before 0 (the constraint IS present; the bare
+      // `>=\s*0` was a false negative against the canonical catalog rendering).
+      expect(defs).toMatch(/fsi_max\s*>=\s*\(?\s*0/i);
       const exc = await pool.query(`SELECT to_regclass('zoning_exceptions') AS t`);
       expect(exc.rows[0].t).toBeNull();
     });

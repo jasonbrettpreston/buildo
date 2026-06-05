@@ -22,7 +22,12 @@ const { enrichParcels, assertPreconditions } = require('../../../scripts/enrich-
 
 const TEST_PARCEL = 990_000_000; // test parcel_id range — isolated by ROLLBACK
 const TEST_SRC = 990_000_000;    // test source_id range for zoning fixtures
-const SCOPE = `p.parcel_id >= ${TEST_PARCEL}`;
+// parcels.parcel_id is VARCHAR(20) (mig 011 — the text business key, NOT the integer
+// PK parcels.id), so `parcel_id >= 990000000` errors with "character varying >= integer".
+// Scope by the fixtures' own feature_type='TEST' marker (set in insParcel) AND the 990-id
+// prefix (insParcel ids are TEST_PARCEL+N = '990…') — two type-safe axes so the exact-count
+// assertions can't be inflated by any future test that commits a 'TEST' parcel without ROLLBACK.
+const SCOPE = `p.feature_type = 'TEST' AND p.parcel_id LIKE '990%'`;
 
 // GeoJSON axis-aligned square helper [x0,y0]-[x1,y1] near (0,0), far from Toronto.
 function box(x0: number, y0: number, x1: number, y1: number): string {
@@ -37,9 +42,13 @@ async function insBase(
   fsi: number | null, units: number | null, frontage: number | null, g: string,
 ) {
   await c.query(
+    // $7 is bound to BOTH the JSONB `geometry` column and the text arg of
+    // ST_GeomFromGeoJSON — without explicit casts PG cannot deduce one param type
+    // ("inconsistent types deduced for parameter $7"). Cast each site (text -> jsonb /
+    // text -> text) so $7 resolves to text and both uses are valid. Data unchanged.
     `INSERT INTO zoning_bylaw_areas
        (source_id, zn_zone, zn_string, fsi_max, units_max, frontage_min_m, geometry, geom, source_dataset_version)
-     VALUES ($1,$2,$3,$4,$5,$6,$7, ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($7),4326)), NOW())`,
+     VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb, ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($7::text),4326)), NOW())`,
     [sid, zn, `${zn} (test)`, fsi, units, frontage, g],
   );
 }
@@ -47,15 +56,19 @@ async function insOverlay(c: PoolClient, table: string, cols: string, vals: unkn
   // geom is the last positional ($N) — wrapped in ST_Multi for the MultiPolygon column.
   const n = vals.length + 1;
   await c.query(
+    // $${n} feeds both the JSONB `geometry` column and ST_GeomFromGeoJSON — cast each
+    // site so PG can deduce the param type (see insBase). Data unchanged.
     `INSERT INTO ${table} (${cols}, geometry, geom, source_dataset_version)
-     VALUES (${vals.map((_, i) => `$${i + 1}`).join(',')}, $${n}, ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($${n}),4326)), NOW())`,
+     VALUES (${vals.map((_, i) => `$${i + 1}`).join(',')}, $${n}::jsonb, ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($${n}::text),4326)), NOW())`,
     [...vals, g],
   );
 }
 async function insParcel(c: PoolClient, pid: number, g: string) {
   await c.query(
+    // $2 feeds both the JSONB `geometry` column and ST_GeomFromGeoJSON — cast each
+    // site so PG can deduce the param type (see insBase). Data unchanged.
     `INSERT INTO parcels (parcel_id, feature_type, geometry, geom)
-     VALUES ($1, 'TEST', $2, ST_SetSRID(ST_GeomFromGeoJSON($2),4326))`,
+     VALUES ($1, 'TEST', $2::jsonb, ST_SetSRID(ST_GeomFromGeoJSON($2::text),4326))`,
     [pid, g],
   );
 }
