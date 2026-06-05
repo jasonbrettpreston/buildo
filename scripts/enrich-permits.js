@@ -27,6 +27,12 @@ const SCALARS = ['zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'byl
 // boolean is NOT NULL so the orphan-nullify resets it to false (not NULL) — see buildNullifyOrphansSql.
 const RAVINE_COLS = ['is_in_ravine_protection_area', 'ravine_distance_m'];
 
+// §8e heritage columns (Spec 61 / migration 172). Aggregated across linked parcels with
+// L12 Part-IV-wins precedence (bool_or per type + MIN(date) FILTER), NOT dominant-parcel
+// scalars. In allWriteCols → UPDATE guard + emitMeta writes; the boolean is NOT NULL so the
+// orphan-nullify resets it to false (type/date → NULL) — see buildNullifyOrphansSql.
+const HERITAGE_COLS = ['is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date'];
+
 // Per-target config (DEC-1/2/4). leadKey = the temp-table identity columns.
 // The 7 parcel overlay-membership booleans (WF2 / migration 165) — bool_or'd across
 // a lead's linked parcels to build overlay_summary (Spec 66 frozen shape).
@@ -76,7 +82,7 @@ function validateTarget(t) {
 
 function allWriteCols(target) {
   const c = CFG[target];
-  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS];
+  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS];
 }
 
 // ---------------------------------------------------------------------------
@@ -100,6 +106,38 @@ async function assertRavinesEnriched(client) {
   }
 }
 
+// §8e precondition (Spec 61 DEC-F) — enrich-heritage (§8d) must have populated parcels'
+// heritage feed. Same cross-chain HALT rationale as ravine (lineage TEXT col is the only
+// reliable "ran" signal; is_heritage_designated defaults false).
+async function assertHeritageEnriched(client) {
+  const { rows } = await client.query('SELECT COUNT(*)::int AS n FROM parcels WHERE heritage_dataset_version_when_enriched IS NOT NULL');
+  if (rows[0].n === 0) {
+    throw new Error(`${TAG} no parcel has heritage_dataset_version_when_enriched — enrich-heritage (§8d) has not run; cannot propagate heritage to permits/CoA`);
+  }
+}
+
+// §8e L24 — column-existence guard. Fails fast with a clear message if migration 171 (source
+// parcels cols) or 172 (target lead cols) has not been applied, instead of a cryptic
+// "column does not exist" mid-UPDATE. No existing information_schema check in this file to mirror.
+async function assertHeritageColumns(client, target) {
+  const targetTable = CFG[target].table;
+  const want = {
+    parcels: ['is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date', 'heritage_dataset_version_when_enriched'],
+    [targetTable]: ['is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date'],
+  };
+  for (const [tbl, cols] of Object.entries(want)) {
+    const { rows } = await client.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name = ANY($2::text[])`,
+      [tbl, cols],
+    );
+    const present = new Set(rows.map((r) => r.column_name));
+    const missing = cols.filter((c) => !present.has(c));
+    if (missing.length > 0) {
+      throw new Error(`${TAG} ${tbl} missing heritage columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '171' : '172'} not applied`);
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // SQL builders (DEC-1/3/4 — set-based; decomposed temp table → trivial UPDATE).
 // scopeWhere is a TRUSTED internal/test predicate over the lead alias.
@@ -120,6 +158,7 @@ WITH cand AS (
          par.id AS parcel_id, par.zoning_class, par.bylaw_max_coverage_pct, par.bylaw_max_fsi,
          par.bylaw_max_height_m, par.exception_number, par.zoning_overlays, par.lot_size_sqm,
          par.is_in_ravine_protection_area, par.ravine_distance_m,
+         par.is_heritage_designated, par.heritage_designation_type, par.heritage_designation_date,
          ${OVERLAY_FLAGS.map((f) => `par.${f}`).join(', ')},
          ${c.confidence} AS confidence,
          par.lot_size_sqm / NULLIF(SUM(par.lot_size_sqm) OVER (PARTITION BY ${qkey}), 0) AS area_share,
@@ -144,6 +183,13 @@ ag AS (
     -- whose parcels all have NULL distance gets NULL (orphan semantic, §11.2).
     COALESCE(bool_or(is_in_ravine_protection_area), false) AS new_in_ravine,
     MIN(ABS(ravine_distance_m))      AS min_abs_dist,
+    -- §8e L12 heritage propagation: any linked parcel designated → true; type via Part-IV-wins
+    -- precedence (has_part_iv > has_part_v_hcd); date = MIN(date) of the winning type's parcels.
+    COALESCE(bool_or(is_heritage_designated), false)                                    AS new_heritage,
+    bool_or(heritage_designation_type = 'part_iv_individual')                           AS has_part_iv,
+    bool_or(heritage_designation_type = 'part_v_hcd')                                   AS has_part_v_hcd,
+    MIN(heritage_designation_date) FILTER (WHERE heritage_designation_type = 'part_iv_individual') AS part_iv_date,
+    MIN(heritage_designation_date) FILTER (WHERE heritage_designation_type = 'part_v_hcd')         AS part_v_date,
     ${OVERLAY_FLAGS.map((f) => `bool_or(${f}) AS ov_${f}`).join(',\n    ')}
   FROM cand GROUP BY ${key}
 )
@@ -155,6 +201,16 @@ SELECT ${c.leadKey.map((k) => `dom.${k}`).join(', ')},
        'max_area'::text AS zoning_dominant_parcel_method,
        ag.new_in_ravine AS is_in_ravine_protection_area,
        ag.min_abs_dist * CASE WHEN ag.new_in_ravine THEN -1 ELSE 1 END AS ravine_distance_m,
+       ag.new_heritage AS is_heritage_designated,
+       -- L12 Part-IV-wins; outer new_heritage guard keeps type/date NULL when undesignated (invariant-explicit).
+       CASE WHEN ag.new_heritage
+            THEN (CASE WHEN ag.has_part_iv THEN 'part_iv_individual'
+                       WHEN ag.has_part_v_hcd THEN 'part_v_hcd' ELSE NULL END)
+            ELSE NULL END AS heritage_designation_type,
+       CASE WHEN ag.new_heritage
+            THEN (CASE WHEN ag.has_part_iv THEN ag.part_iv_date
+                       WHEN ag.has_part_v_hcd THEN ag.part_v_date ELSE NULL END)
+            ELSE NULL END AS heritage_designation_date,
        ag.distinct_zones
 FROM cand dom
 JOIN ag USING (${key})
@@ -218,13 +274,16 @@ async function enrichLeads(client, opts = {}) {
 
 function buildNullifyOrphansSql({ target, scopeWhere = 'TRUE' }) {
   const c = CFG[target];
-  // Zoning cols (nullable) → NULL on un-link. The §8e ravine cols are EXCLUDED here: the
-  // boolean is NOT NULL (can't be NULLed), so reset it to false (= "not determined in
-  // ravine") + ravine_distance_m to NULL (= "no parcel link", §11.2) — appended below.
+  // Zoning cols (nullable) → NULL on un-link. The §8e ravine + heritage cols are EXCLUDED
+  // from the generic =NULL map: each has a NOT-NULL boolean that can't be NULLed, so reset the
+  // boolean to false + the rest to NULL — appended below (ravine §11.2 / heritage L12).
   const set = [
-    ...allWriteCols(target).filter((col) => !RAVINE_COLS.includes(col)).map((col) => `${col} = NULL`),
+    ...allWriteCols(target).filter((col) => !RAVINE_COLS.includes(col) && !HERITAGE_COLS.includes(col)).map((col) => `${col} = NULL`),
     'is_in_ravine_protection_area = false',
     'ravine_distance_m = NULL',
+    'is_heritage_designated = false',
+    'heritage_designation_type = NULL',
+    'heritage_designation_date = NULL',
   ].join(', ');
   const linkExists = target === 'permits'
     ? `SELECT 1 FROM permit_parcels pp WHERE pp.permit_num = ${c.leadAlias}.permit_num AND pp.revision_num = ${c.leadAlias}.revision_num`
@@ -276,6 +335,8 @@ async function main(pool) {
     await pipeline.withTransaction(pool, async (client) => {
       await assertWf2Ran(client);
       await assertRavinesEnriched(client); // §8e DEC-D
+      await assertHeritageColumns(client, target); // §8e L24 — clear message if mig 171/172 unapplied
+      await assertHeritageEnriched(client); // §8e DEC-F
       const runAt = await pipeline.getDbTimestamp(client);
       result = await enrichLeads(client, { target, scopeWhere: 'TRUE', runAt });
     });
@@ -313,13 +374,25 @@ async function main(pool) {
       FROM ${cfg.table}`)).rows[0];
     auditRows.push({ metric: `${prefix}_in_ravine_count`, value: rv.in_ravine, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_with_ravine_distance_count`, value: rv.with_dist, status: 'INFO' });
+    // §8e heritage propagation observability (Spec 61 — INFO; zoning F-H12 gate + verdict untouched).
+    const hr = (await pool.query(`
+      SELECT COUNT(*) FILTER (WHERE is_heritage_designated)::int                          AS designated,
+             COUNT(*) FILTER (WHERE heritage_designation_type = 'part_iv_individual')::int AS part_iv,
+             COUNT(*) FILTER (WHERE heritage_designation_type = 'part_v_hcd')::int         AS part_v
+      FROM ${cfg.table}`)).rows[0];
+    auditRows.push({ metric: `${prefix}_heritage_designated_count`, value: hr.designated, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_part_iv_count`, value: hr.part_iv, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_part_v_hcd_count`, value: hr.part_v, status: 'INFO' });
     // L5 disagreement protocol (permits only, §11.3): geometry stays authoritative; flag for
-    // operator triage. INFO at count 0 (RNFP currently 0 rows) — WARN ONLY on a real disagreement,
-    // so a clean run never collapses PASS (Spec 48 §3.6).
+    // operator triage. INFO at count 0 (RNFP/Heritage currently 0 rows) — WARN ONLY on a real
+    // disagreement, so a clean run never collapses PASS (Spec 48 §3.6).
     if (target === 'permits') {
       const dis = (await pool.query(
         `SELECT COUNT(*)::int AS n FROM permits WHERE permit_type = 'RNFP' AND is_in_ravine_protection_area = false`)).rows[0].n;
       auditRows.push({ metric: 'permit_type_geometry_disagreement', value: dis, status: dis > 0 ? 'WARN' : 'INFO' });
+      const hdis = (await pool.query(
+        `SELECT COUNT(*)::int AS n FROM permits WHERE permit_type = 'Heritage' AND is_heritage_designated = false`)).rows[0].n;
+      auditRows.push({ metric: 'permit_type_heritage_disagreement', value: hdis, status: hdis > 0 ? 'WARN' : 'INFO' });
     }
     const stepDur = target === 'permits' ? 'enrich_permits_duration_ms' : 'enrich_coa_zoning_duration_ms';
     auditRows.push({ metric: stepDur, value: Date.now() - t0, status: 'INFO' });
@@ -336,7 +409,7 @@ async function main(pool) {
     });
 
     const readsCommon = {
-      parcels: ['id', 'zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number', 'zoning_overlays', 'lot_size_sqm', 'zoning_enriched_at', 'is_in_ravine_protection_area', 'ravine_distance_m'],
+      parcels: ['id', 'zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number', 'zoning_overlays', 'lot_size_sqm', 'zoning_enriched_at', 'is_in_ravine_protection_area', 'ravine_distance_m', 'is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date'],
     };
     const reads = target === 'permits'
       ? { permits: ['permit_num', 'revision_num', 'permit_type'], permit_parcels: ['permit_num', 'revision_num', 'parcel_id', 'confidence'], permit_type_classifications: ['permit_type', 'class'], ...readsCommon }
@@ -355,7 +428,8 @@ if (require.main === module) {
 }
 
 module.exports = {
-  ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS,
-  validateTarget, allWriteCols, assertWf2Ran, assertRavinesEnriched, buildEnrichmentSql,
-  buildUpdateSql, buildNullifyOrphansSql, enrichLeads, coverageGate, verdictCascade,
+  ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS, HERITAGE_COLS,
+  validateTarget, allWriteCols, assertWf2Ran, assertRavinesEnriched, assertHeritageEnriched,
+  assertHeritageColumns, buildEnrichmentSql, buildUpdateSql, buildNullifyOrphansSql, enrichLeads,
+  coverageGate, verdictCascade,
 };
