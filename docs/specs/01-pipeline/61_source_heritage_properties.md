@@ -161,7 +161,7 @@ D18. §8e Spec 58 F-H7 verbatim reference not independently locked (Independent 
 -- M-1: Heritage Register points (filtered to Part IV + Part V at JS load)
 CREATE TABLE heritage_properties (
   id                     BIGSERIAL PRIMARY KEY,
-  source_id              BIGINT UNIQUE NOT NULL,            -- from OBJECTID
+  source_id              BIGINT UNIQUE NOT NULL,            -- from Folder_Row (#426: the Q2 2026 CKAN refresh dropped OBJECTID; Folder_Row is the new stable unique key)
   status                 TEXT NOT NULL CHECK (status IN ('part_iv', 'part_v_member')),
   geom                   GEOMETRY(Point, 4326) NOT NULL,
   designated_date        DATE,                               -- from DESIGNATED (sentinel 1899-11-30 -> NULL)
@@ -285,7 +285,7 @@ Both Shapefile bundles downloaded via `node-fetch`; unzipped via `node-stream-zi
 const statusNorm = (feature.properties.STATUS || '').toLowerCase().trim();
 if (statusNorm === 'listed') continue;                                    // drop Listed
 if (!['part iv', 'part v'].includes(statusNorm)) {
-  pipeline.emitWarn(`unknown STATUS value '${feature.properties.STATUS}' on OBJECTID=${feature.properties.OBJECTID}; skipping`);
+  pipeline.emitWarn(`unknown STATUS value '${feature.properties.STATUS}' on Folder_Row=${feature.properties.Folder_Row}; skipping`); // #426: OBJECTID dropped in Q2 2026
   invalidStatusCount++;
   continue;
 }
@@ -645,7 +645,7 @@ pipeline.emitMeta(
        v   computed per §11 LATERAL: Part V via ST_Intersects(heritage_districts); Part IV via ST_DWithin+Levenshtein(heritage_properties WHERE status='part_iv')
 [heritage_properties row + heritage_districts row]
        v   written by load-heritage.js (advisory lock 62)
-       v   source_id == CKAN OBJECTID (Heritage Register) or HCD_NO (HCDs)
+       v   source_id == CKAN Folder_Row (Heritage Register, #426) or HCD_NO (HCDs)
 [Heritage Register CKAN dataset + HCDs CKAN dataset]
        v   regulated by
 [Ontario Heritage Act Part IV (s.29) + Part V (s.41)]

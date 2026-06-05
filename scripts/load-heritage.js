@@ -318,7 +318,10 @@ async function parseRegister(shpPath, dbfPath) {
     const cls = classifyRegisterStatus(p.STATUS);
     if (cls.drop === 'filtered_listed') { filteredListed++; continue; }
     if (cls.drop === 'unknown_status') { unknownStatus++; continue; }
-    const sourceId = coerceSourceId(p.OBJECTID);
+    // #426: the Q2 2026 CKAN refresh dropped OBJECTID; Folder_Row is the new stable unique
+    // key (verified unique across all features). A future rename → coerceSourceId null →
+    // bad_source_id WARN + the assert_data_bounds >=8000 floor (loud, not silent).
+    const sourceId = coerceSourceId(p.Folder_Row);
     if (sourceId == null) { badSourceId++; continue; }
     if (r.value.geometry == null) { nullGeometry++; continue; }
     const addr = coerceAddress(p.ADDRESS);

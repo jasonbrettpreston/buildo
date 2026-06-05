@@ -36,6 +36,14 @@ Captured 2026-06-04 from a live download + parse (post-L25 filter):
 - `heritage_count_drift_pct > 50%` (L7) without `HERITAGE_ACCEPT_FEATURE_COUNT_DRIFT=1` → loader aborts that dataset's write; verdict FAIL. Set the override only after confirming the new count is legitimate.
 - `heritage_mass_delete_pct > 50%` (L7c) → set `HERITAGE_ACCEPT_MASS_DELETE=1` only for an acknowledged full reload.
 
+## #426 source_id re-key (Folder_Row) — one-time mass-delete on the next load
+
+The Q2 2026 CKAN refresh dropped `OBJECTID`; `parseRegister` now keys `source_id` on `Folder_Row` (`169f22a`-era loader, re-keyed in the #426 fix). The first load after the fix replaces every `heritage_properties` row (old OBJECTID-keyed rows don't match the new Folder_Row keys → orphan-DELETE removes all ~8,800, then ~8,800 new INSERT).
+
+- **The blocker is L7c mass-delete, NOT L7 count-drift** (the kept count is ~unchanged): `mass_delete_pct = deleted/prior ≈ 1.0 > 0.5` → FAIL + write suppressed. **The override is `HERITAGE_ACCEPT_MASS_DELETE=1`** (not `HERITAGE_ACCEPT_FEATURE_COUNT_DRIFT`). (A load with NO prior `sources:load_heritage` run has `prior=null` → `mass_delete_pct=0` → no FAIL; the override is only needed when a prior run exists to compare against.)
+- **Before the re-key deploy:** `CREATE TABLE heritage_properties_backup AS SELECT * FROM heritage_properties;` — rollback = restore the backup + `git revert` the parseRegister change.
+- After a clean re-key load, re-run §8d `enrich_heritage` + §8e `enrich_permits`/`enrich_coa_zoning` so the parcels/permits/coa heritage feeds reflect the Q2 data.
+
 ## Notes
 
 - The two datasets skip-check **independently** (DEC-K): one may SKIP (unchanged) while the other reloads. A SKIPPED dataset carries its prior `feature_count` + `drift_check_passed` forward (never reset to false).

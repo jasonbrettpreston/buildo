@@ -365,7 +365,8 @@ pipeline.run('assert-schema', async (pool) => {
       }
 
       // Heritage Register + Conservation Districts Shapefile ZIPs — reachability only
-      // (attribute presence validated post-download in load-heritage.js). Spec 61 §8c.
+      // (Folder_Row[register, #426]/HCD_NO[hcd] + STATUS/HCD_TYPE validated post-download in
+      // load-heritage.js). Spec 61 §8c.
       try {
         await checkUrlAccessible(HERITAGE_REGISTER_URL, 'Heritage Register');
       } catch (err) {

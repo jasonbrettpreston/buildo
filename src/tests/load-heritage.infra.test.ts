@@ -116,6 +116,10 @@ describe('load-heritage.js — geometry + null-safety (DEC-E/M)', () => {
     expect(content).not.toMatch(/require\(['"]node-fetch['"]\)/);
     expect(content).toMatch(/await fetch\(/);
   });
+  it('#426: register source_id keyed on Folder_Row, NOT the dropped OBJECTID', () => {
+    expect(content).toMatch(/coerceSourceId\(p\.Folder_Row\)/);
+    expect(content).not.toMatch(/coerceSourceId\(p\.OBJECTID\)/);
+  });
 });
 
 describe('migration 170 + manifest wiring', () => {
