@@ -36,6 +36,11 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // Spec 61 (load-heritage §8c): lock = spec number (DEC-A; spec L4=62 was a stale
   // pre-implementation guess). Heritage Register + HCD source ingest after load_ravines.
   'scripts/load-heritage.js':        61,
+  // Spec 62 (load-centreline §8c): §5.2 exception — natural ID 62 + sibling 63 both intended
+  // for Spec 62, but 62 is taken by enrich-heritage. Spec L4=65 is stale (collides with
+  // enrich-parcels=65). Next-free-gap: load=63, enrich=64 (§8d). Toronto Centreline ingest
+  // after load_heritage in chain_sources.
+  'scripts/load-centreline.js':      63,
   // Spec 65 (enrich-parcels WF2): lock = spec number (§R2). Enrich step after
   // load_zoning in chain_sources; writes the zoning by-law feed onto parcels.
   // Spec 59 §8d (enrich-ravines): lock 60 (L4b). Sibling of load-ravines (59);

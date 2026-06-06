@@ -56,6 +56,10 @@ const HERITAGE_REGISTER_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/e41da515-5ad1-4bc3-85ea-18ec9e55cd33/resource/108b1080-d048-439f-a9e8-e8d6cd81bddb/download/heritage_register_address_points_wgs84.zip';
 const HERITAGE_HCD_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/37a3c911-0813-4e87-90ed-3b9fa6156a63/resource/8e6b9347-63a8-4dac-91fb-a6491a8c1e5a/download/heritageconservationdistrict.zip';
+// Spec 62 §8c — Toronto Centreline shapefile ZIP (reachability only; the 40-col attribute /
+// FEATURE_CODE_DESC + JURISDICTION value validation runs post-download in load-centreline.js).
+const CENTRELINE_URL =
+  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1d079757-377b-4564-82df-eb5638583bfb/resource/d86bdca4-ab2c-470d-80fb-34647ea0e87f/download/centreline-version-2-4326.zip';
 const NEIGHBOURHOODS_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/fc443770-ef0a-4025-9c2c-2cb558bfab00/resource/0719053b-28b7-48ea-b863-068823a93aaa/download/neighbourhoods-4326.geojson';
 
@@ -382,6 +386,16 @@ pipeline.run('assert-schema', async (pool) => {
         console.error(`  FAIL: Heritage Conservation Districts — ${err.message}`);
       }
 
+      // Toronto Centreline Shapefile ZIP — reachability only (FEATURE_CODE_DESC/JURISDICTION
+      // values + 40-col attribute presence validated post-download in load-centreline.js). Spec 62 §8c.
+      try {
+        await checkUrlAccessible(CENTRELINE_URL, 'Toronto Centreline');
+      } catch (err) {
+        allPassed = false;
+        errors.push(`Toronto Centreline: ${err.message}`);
+        console.error(`  FAIL: Toronto Centreline — ${err.message}`);
+      }
+
       // Neighbourhoods GeoJSON — property key validation
       try {
         const nhoodKeys = await fetchGeoJsonPropertyKeys(NEIGHBOURHOODS_URL, 'Neighbourhoods');
@@ -507,10 +521,10 @@ pipeline.run('assert-schema', async (pool) => {
       if (CHAIN_ID === 'coa' && coaAuditTable) return { audit_table: coaAuditTable };
       if (CHAIN_ID === 'sources') {
         const sourceErrors = errors.filter((e) =>
-          /address|parcel|massing|neighbourhood|zoning|ravine|heritage/i.test(e)
+          /address|parcel|massing|neighbourhood|zoning|ravine|heritage|centreline/i.test(e)
         );
         const sourceAuditRows = [
-          { metric: 'sources_checked', value: 17, threshold: null, status: 'INFO' }, // 4 original + 10 zoning DataStore resources (Spec 58) + 1 ravine ZIP (Spec 59) + 2 heritage ZIPs (Spec 61)
+          { metric: 'sources_checked', value: 18, threshold: null, status: 'INFO' }, // 4 original + 10 zoning DataStore resources (Spec 58) + 1 ravine ZIP (Spec 59) + 2 heritage ZIPs (Spec 61) + 1 centreline ZIP (Spec 62)
           { metric: 'schema_errors', value: sourceErrors.length, threshold: '== 0', status: sourceErrors.length > 0 ? 'FAIL' : 'PASS' },
         ];
         return {

@@ -466,6 +466,26 @@ pipeline.run('assert-data-bounds', async (pool) => {
         }
       }
 
+      // 11. toronto_centreline (Spec 62 §8c — catastrophic-load detector; >= 40000 floor vs
+      // ~47K expected post-L25-filter). does-not-exist guarded for deploy ordering (migration 173).
+      let centrelineCount = null;
+      try {
+        centrelineCount = await count(`SELECT COUNT(*) FROM toronto_centreline`);
+        if (centrelineCount < 40000) {
+          errors.push(`toronto_centreline has ${centrelineCount} rows (expected >= 40000)`);
+          console.error(`  FAIL: toronto_centreline has ${centrelineCount} rows (expected >= 40000)`);
+        } else {
+          console.log(`  OK: toronto_centreline has ${centrelineCount.toLocaleString()} rows (>= 40000)`);
+        }
+      } catch (cenErr) {
+        if (cenErr.message && cenErr.message.includes('does not exist')) {
+          console.log('  SKIP: toronto_centreline table does not exist (migration 173 not yet applied)');
+          centrelineCount = null;
+        } else {
+          throw cenErr;
+        }
+      }
+
       // Build sources audit_table
       const sourceAuditRows = [
         { metric: 'address_points_count', value: apCount, threshold: '> 0', status: apCount === 0 ? 'FAIL' : 'PASS' },
@@ -480,6 +500,7 @@ pipeline.run('assert-data-bounds', async (pool) => {
         ...(ravinesCount !== null ? [{ metric: 'ravines_count', value: ravinesCount, threshold: '>= 500', status: ravinesCount < 500 ? 'FAIL' : 'PASS' }] : []),
         ...(heritagePropsCount !== null ? [{ metric: 'heritage_properties_count', value: heritagePropsCount, threshold: '>= 8000', status: heritagePropsCount < 8000 ? 'FAIL' : 'PASS' }] : []),
         ...(heritageDistrictsCount !== null ? [{ metric: 'heritage_districts_count', value: heritageDistrictsCount, threshold: '>= 20', status: heritageDistrictsCount < 20 ? 'FAIL' : 'PASS' }] : []),
+        ...(centrelineCount !== null ? [{ metric: 'toronto_centreline_count', value: centrelineCount, threshold: '>= 40000', status: centrelineCount < 40000 ? 'FAIL' : 'PASS' }] : []),
       ];
       const sourceHasFails = sourceAuditRows.some((r) => r.status === 'FAIL');
       const sourceHasWarns = sourceAuditRows.some((r) => r.status === 'WARN');
