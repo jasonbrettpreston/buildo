@@ -294,6 +294,11 @@ async function downloadZipOnce(url, destPath, timeoutMs) {
   }
 }
 
+/** MD5 of a local file (CENTRELINE_LOCAL_ZIP override path; one-off read is fine). */
+function md5OfFileSync(filePath) {
+  return crypto.createHash('md5').update(fs.readFileSync(filePath)).digest('hex');
+}
+
 /** Retry the download on transient socket resets ("terminated" / ECONNRESET) — CKAN/CDN drops
  *  large-file connections intermittently. Up to 3 attempts; a genuine block fails all three. */
 async function downloadZipWithRetry(url, destPath, timeoutMs, attempts = 3) {
@@ -412,14 +417,24 @@ async function main(pool) {
     const priorFeatureCount = prior && prior.centreline_load ? safeParseIntOrNull(prior.centreline_load.feature_count_filtered) : null;
     const hasPriorRun = !!(prior && prior.centreline_load);
 
+    // CENTRELINE_LOCAL_ZIP override: validate the full parse→filter→validate→staging pipeline
+    // against a manually-fetched file when the CKAN large-resource endpoint is unservable. Skips
+    // the HEAD + download entirely; the rest of the pipeline runs unchanged.
+    const LOCAL_ZIP = process.env.CENTRELINE_LOCAL_ZIP || null;
+
     // §3.2 Step 0a — HEAD skip-check.
-    let headInfo = null;
-    try {
-      headInfo = await headValidators(CKAN_DOWNLOAD_URL, config.centrelineDownloadTimeoutMs);
-    } catch (err) {
-      // §3.9: HEAD 4xx/5xx → WARN + proceed to download (do NOT skip on failure).
-      push('centreline_head_error', String(err.message), 'WARN');
-      headInfo = { lastModified: null, etag: null };
+    let headInfo = { lastModified: null, etag: null };
+    if (LOCAL_ZIP) {
+      pipeline.log.warn('[load-centreline]', `CENTRELINE_LOCAL_ZIP=${LOCAL_ZIP} — using local file, skipping HEAD + download`);
+      push('centreline_local_zip_override', LOCAL_ZIP, 'WARN');
+    } else {
+      try {
+        headInfo = await headValidators(CKAN_DOWNLOAD_URL, config.centrelineDownloadTimeoutMs);
+      } catch (err) {
+        // §3.9: HEAD 4xx/5xx → WARN + proceed to download (do NOT skip on failure).
+        push('centreline_head_error', String(err.message), 'WARN');
+        headInfo = { lastModified: null, etag: null };
+      }
     }
     if (headInfo && !headInfo.lastModified && !headInfo.etag) push('centreline_no_cache_validators', true, 'WARN');
 
@@ -441,7 +456,9 @@ async function main(pool) {
     let contentHash = null;
     let downloadValidators = {};
     try {
-      const dl = await downloadZipWithRetry(CKAN_DOWNLOAD_URL, path.join(tmpRoot, 'centreline.zip'), config.centrelineDownloadTimeoutMs);
+      const dl = LOCAL_ZIP
+        ? { zipPath: LOCAL_ZIP, contentHash: md5OfFileSync(LOCAL_ZIP), lastModified: null, etag: null }
+        : await downloadZipWithRetry(CKAN_DOWNLOAD_URL, path.join(tmpRoot, 'centreline.zip'), config.centrelineDownloadTimeoutMs);
       contentHash = dl.contentHash;
       downloadValidators = { lastModified: dl.lastModified || (headInfo && headInfo.lastModified), etag: dl.etag || (headInfo && headInfo.etag) };
       const extractDir = path.join(tmpRoot, 'ext');
