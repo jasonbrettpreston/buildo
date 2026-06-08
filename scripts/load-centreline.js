@@ -26,6 +26,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
+const { Readable } = require('stream');
+const { pipeline: streamPipeline } = require('stream/promises');
 const StreamZip = require('node-stream-zip');
 const shapefile = require('shapefile');
 
@@ -50,7 +52,7 @@ const ConfigSchema = z.object({
   centrelineAcceptFeatureCountDriftPct: z.number().default(0.5), // L7
   centrelineInvalidGeometryFailPct: z.number().default(0.05), // L8
   centrelineMinFeatureCount: z.number().default(40000), // L21 (assert-data-bounds uses a hardcoded floor; this is the loader's own reference)
-  centrelineDownloadTimeoutMs: z.number().default(120000), // 117 MB zip — larger timeout than ravines
+  centrelineDownloadTimeoutMs: z.number().default(600000), // 117 MB zip — 10 min (live smoke 2026-06-06: 120s aborted mid-download)
 });
 
 // F-S9 (Spec 47 §4.2): safeParse wrapper, not raw .parse().
@@ -271,19 +273,41 @@ async function headValidators(url, timeoutMs) {
   }
 }
 
-async function downloadZip(url, destPath, timeoutMs) {
+// STREAM the 117 MB body straight to disk (consume promptly — no 117 MB Buffer in memory;
+// the live smoke 2026-06-06 showed `await res.arrayBuffer()` getting "terminated" mid-stream),
+// computing the MD5 on the fly. Single attempt; retry is layered in downloadZipWithRetry.
+async function downloadZipOnce(url, destPath, timeoutMs) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, { redirect: 'follow', signal: ctrl.signal });
     if (!res.ok) throw new Error(`GET ${res.status} ${res.statusText}`);
-    const buf = Buffer.from(await res.arrayBuffer());
-    fs.writeFileSync(destPath, buf);
-    const contentHash = crypto.createHash('md5').update(buf).digest('hex');
-    return { zipPath: destPath, contentHash, lastModified: res.headers.get('last-modified'), etag: res.headers.get('etag') };
+    const hash = crypto.createHash('md5');
+    await streamPipeline(
+      Readable.fromWeb(res.body),
+      async function* hashThrough(source) { for await (const chunk of source) { hash.update(chunk); yield chunk; } },
+      fs.createWriteStream(destPath),
+    );
+    return { zipPath: destPath, contentHash: hash.digest('hex'), lastModified: res.headers.get('last-modified'), etag: res.headers.get('etag') };
   } finally {
     clearTimeout(t);
   }
+}
+
+/** Retry the download on transient socket resets ("terminated" / ECONNRESET) — CKAN/CDN drops
+ *  large-file connections intermittently. Up to 3 attempts; a genuine block fails all three. */
+async function downloadZipWithRetry(url, destPath, timeoutMs, attempts = 3) {
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      return await downloadZipOnce(url, destPath, timeoutMs);
+    } catch (err) {
+      lastErr = err;
+      pipeline.log.warn('[load-centreline]', `download attempt ${i}/${attempts} failed: ${err.message}`);
+      fs.rmSync(destPath, { force: true }); // drop any partial file (force:true = no throw if absent)
+    }
+  }
+  throw lastErr;
 }
 
 async function extractZip(zipPath, destDir) {
@@ -417,7 +441,7 @@ async function main(pool) {
     let contentHash = null;
     let downloadValidators = {};
     try {
-      const dl = await downloadZip(CKAN_DOWNLOAD_URL, path.join(tmpRoot, 'centreline.zip'), config.centrelineDownloadTimeoutMs);
+      const dl = await downloadZipWithRetry(CKAN_DOWNLOAD_URL, path.join(tmpRoot, 'centreline.zip'), config.centrelineDownloadTimeoutMs);
       contentHash = dl.contentHash;
       downloadValidators = { lastModified: dl.lastModified || (headInfo && headInfo.lastModified), etag: dl.etag || (headInfo && headInfo.etag) };
       const extractDir = path.join(tmpRoot, 'ext');
