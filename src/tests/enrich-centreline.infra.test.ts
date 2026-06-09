@@ -96,6 +96,25 @@ describe('enrich-centreline.js — source contract (Spec 62 §8d)', () => {
     expect(SCRIPT).not.toContain('parcels_frontage_priority3_longest_intersect_count');
   });
 
+  it('WF3: corner = share-node + abuts both streets; through = parallel opposite-sides + abuts both', () => {
+    // The discriminator is "abuts BOTH streets" (≤ CENTRELINE_ABUT_M) — node-proximity alone over-flagged
+    // adjacent lots that share the intersection node but sit ~18-20 m from the cross street.
+    expect(SCRIPT).toContain('CENTRELINE_ABUT_M');
+    expect(SCRIPT).not.toContain('CORNER_NODE_PROXIMITY_M'); // rejected approach fully removed
+    expect(ec.BUILD_TEMP_SQL).toContain('ST_Distance(ps1.parcel_geom::geography, ps1.seg_geom::geography) AS c1_dist');
+    expect(ec.BUILD_TEMP_SQL).toContain('ST_Distance(ps1.parcel_geom::geography, ps2.seg_geom::geography) AS c2_dist');
+    // the abut cap fires in BOTH the corner and the through CTEs
+    expect((ec.BUILD_TEMP_SQL.match(/c1_dist <= \d+ AND c2_dist <= \d+/g) || []).length).toBe(2);
+    // corner still requires the two streets to SHARE A NODE (distinguishes corner from through)
+    expect(ec.BUILD_TEMP_SQL).toContain('IS NOT DISTINCT FROM');
+    // through: opposite-sides azimuths from a guaranteed-interior point (concave/L/U lots) + degenerate guard
+    expect(SCRIPT).toContain('THROUGH_OPPOSITE_TOL_DEG');
+    expect(ec.BUILD_TEMP_SQL).toContain('ST_PointOnSurface(ps1.parcel_geom) AS pos');
+    expect(ec.BUILD_TEMP_SQL).toMatch(/ST_Distance\(pos, ST_ClosestPoint\(c1_geom, pos\)\) > 0/); // degenerate guard
+    expect(ec.BUILD_TEMP_SQL).toMatch(/> pi\(\) - radians\(\d+\)/); // opposite ≈ 180°
+    expect(ec.BUILD_TEMP_SQL).not.toContain('ST_Centroid(parcel_geom)'); // not centroid for azimuths
+  });
+
   it('verdict cascade is row-derived FAIL > WARN > PASS', () => {
     expect(ec.verdictCascade([{ status: 'INFO' }])).toBe('PASS');
     expect(ec.verdictCascade([{ status: 'WARN' }, { status: 'INFO' }])).toBe('WARN');

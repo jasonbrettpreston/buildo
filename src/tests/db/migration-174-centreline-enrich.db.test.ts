@@ -63,14 +63,17 @@ describe.skipIf(!dbAvailable())('migration 174 + §11 enrich-centreline (real Po
     expect(by.centreline_dataset_version_when_enriched.data_type).toBe('text');
   });
 
-  it('corner lot: 2 different streets sharing an intersection node → is_corner_lot=true + P1 frontage + lineage', async () => {
+  it('corner lot: 2 different streets sharing an intersection node ~11 m away → is_corner_lot=true + P1 frontage + lineage', async () => {
     const c = await pool.connect();
     try {
       await c.query('BEGIN');
-      // 'Main' (node 100→101 horizontal) + 'King' (node 101→102 vertical) share node 101; both cross the parcel.
-      await insSeg(c, 1, 'Main', 'Main St', 100, 101, 'LINESTRING(-5 5, 15 5)', '1', '99', null);
-      await insSeg(c, 2, 'King', 'King St', 101, 102, 'LINESTRING(5 -5, 5 15)');
-      const id = await insParcel(c, 'CE-CORNER', 'POLYGON((0 0,10 0,10 10,0 10,0 0))', 'Main', '30');
+      // Real Toronto coords (the WF3 corner test is geography-based — synthetic grid coords are meaningless).
+      // Parcel = 18 m square; NE corner ≈ (-79.39978, 43.70018). 'Main' runs E-W ~4 m north and ENDS at the
+      // shared node 101 = (-79.39965, 43.70022); 'King' STARTS at node 101 and runs south. The parcel ABUTS
+      // BOTH streets (Main ~4 m, King ~11 m — both ≤ CENTRELINE_ABUT_M=13) and they share node 101 → corner.
+      await insSeg(c, 1, 'Main', 'Main St', 100, 101, 'LINESTRING(-79.40010 43.70022, -79.39965 43.70022)', '1', '99', null);
+      await insSeg(c, 2, 'King', 'King St', 101, 102, 'LINESTRING(-79.39965 43.70022, -79.39965 43.69995)');
+      const id = await insParcel(c, 'CE-CORNER', 'POLYGON((-79.4 43.7, -79.39978 43.7, -79.39978 43.70018, -79.4 43.70018, -79.4 43.7))', 'Main', '30');
 
       const res = await ec.enrichCentreline(c, { sourceDatasetVersion: SRC_VER });
       expect(res.updated).toBeGreaterThanOrEqual(1);
@@ -79,6 +82,93 @@ describe.skipIf(!dbAvailable())('migration 174 + §11 enrich-centreline (real Po
       expect(p.primary_frontage_street_name).toBe('Main St'); // P1 name match (street_name_normalized='Main')
       expect(res.tally.p1).toBeGreaterThanOrEqual(1);
       expect(p.ver).toBe(SRC_VER); // lineage stamped
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  it('WF3 corner abut: parcel abuts one street; the cross street it shares a node with is ~19 m away → NOT corner', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // The over-detection case the 20 m frontage radius caused: 'Main' ABUTS the parcel (~4 m north) and ends at
+      // node 101 ~18 m east; 'King' starts at node 101 and runs south, its nearest point ~19 m from the parcel.
+      // Both are within 20 m (the pair forms) and they share node 101 — but the parcel does NOT abut King (>13 m).
+      // Node-share alone (the rejected approach) flags this; "abuts BOTH streets" correctly rejects it.
+      await insSeg(c, 11, 'Main', 'Main St', 100, 101, 'LINESTRING(-79.40010 43.70022, -79.39954 43.70022)');
+      await insSeg(c, 12, 'King', 'King St', 101, 102, 'LINESTRING(-79.39954 43.70022, -79.39954 43.69996)');
+      const id = await insParcel(c, 'CE-CORNER-ADJ', 'POLYGON((-79.4 43.7, -79.39978 43.7, -79.39978 43.70018, -79.4 43.70018, -79.4 43.7))', 'Main', '8');
+      await ec.enrichCentreline(c, { sourceDatasetVersion: SRC_VER });
+      const p = await getParcel(c, id);
+      expect(p.is_corner_lot).toBe(false); // King ~19 m away > CENTRELINE_ABUT_M (13)
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  it('WF3 corner abut: a true corner on a moderately-wide road (far street ~12 m, within the cap) → is_corner_lot=true', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // Guards against over-tightening: a TRUE corner where the wider-allowance cross street sits ~12 m out — the
+      // 13 m cap keeps it (a 10 m cap would have dropped it). 'Bloor' (~7 m) + 'Yonge' (~12 m) share node 101.
+      await insSeg(c, 13, 'Bloor', 'Bloor St W', 100, 101, 'LINESTRING(-79.40010 43.70024, -79.39963 43.70024)');
+      await insSeg(c, 14, 'Yonge', 'Yonge St', 101, 102, 'LINESTRING(-79.39963 43.70024, -79.39963 43.69998)');
+      const id = await insParcel(c, 'CE-ARTERIAL', 'POLYGON((-79.4 43.7, -79.39978 43.7, -79.39978 43.70018, -79.4 43.70018, -79.4 43.7))', 'Bloor', '40');
+      await ec.enrichCentreline(c, { sourceDatasetVersion: SRC_VER });
+      const p = await getParcel(c, id);
+      expect(p.is_corner_lot).toBe(true); // both ≤ 13 m
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  it('WF3 through lot: two parallel streets on OPPOSITE sides (front + back) → is_through_lot=true', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // Deep lot fronting 'Front St' (~3 m south) and backing onto 'Back St' (~3 m north); both E-W parallel, no
+      // shared node. seg_count≥2 + parallel + opposite-sides → through (but NOT corner — no shared node).
+      await insSeg(c, 15, 'Front', 'Front St', 200, 201, 'LINESTRING(-79.40020 43.69997, -79.39958 43.69997)');
+      await insSeg(c, 16, 'Back', 'Back St', 300, 301, 'LINESTRING(-79.40020 43.70033, -79.39958 43.70033)');
+      const id = await insParcel(c, 'CE-THRU', 'POLYGON((-79.4 43.7, -79.39978 43.7, -79.39978 43.70030, -79.4 43.70030, -79.4 43.7))', 'Front', '5');
+      await ec.enrichCentreline(c, { sourceDatasetVersion: SRC_VER });
+      const p = await getParcel(c, id);
+      expect(p.is_through_lot).toBe(true);
+      expect(p.is_corner_lot).toBe(false); // parallel, no shared node
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  it('WF3 through over-detection: two parallel streets on the SAME side → NOT through', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // The over-detection case: 'RoadA' (~3 m north) + 'RoadB' (~13 m north) are parallel & both within 20 m, but
+      // BOTH north of the parcel. Old logic (parallel different streets) → false through. WF3 requires opposite sides.
+      await insSeg(c, 17, 'RoadA', 'Road A', 400, 401, 'LINESTRING(-79.40020 43.70033, -79.39958 43.70033)');
+      await insSeg(c, 18, 'RoadB', 'Road B', 500, 501, 'LINESTRING(-79.40020 43.70042, -79.39958 43.70042)');
+      const id = await insParcel(c, 'CE-THRU-SAME', 'POLYGON((-79.4 43.70015, -79.39978 43.70015, -79.39978 43.70030, -79.4 43.70030, -79.4 43.70015))', 'RoadA', '6');
+      await ec.enrichCentreline(c, { sourceDatasetVersion: SRC_VER });
+      const p = await getParcel(c, id);
+      expect(p.is_through_lot).toBe(false); // both streets on the same (north) side → not opposite
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  it('WF3 concave (L-shaped) through lot: ST_PointOnSurface stays inside → is_through_lot=true', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // L-shaped parcel whose ST_Centroid can fall OUTSIDE the polygon; ST_PointOnSurface guarantees an interior
+      // point so the opposite-sides azimuths are taken from inside the lot. Front (~3 m south) + Back (~3 m north).
+      await insSeg(c, 19, 'LFront', 'L Front St', 600, 601, 'LINESTRING(-79.40020 43.69997, -79.39958 43.69997)');
+      await insSeg(c, 20, 'LBack', 'L Back St', 700, 701, 'LINESTRING(-79.40020 43.70033, -79.39958 43.70033)');
+      const id = await insParcel(
+        c, 'CE-THRU-L',
+        'POLYGON((-79.4 43.7, -79.39978 43.7, -79.39978 43.70012, -79.39989 43.70012, -79.39989 43.70030, -79.4 43.70030, -79.4 43.7))',
+        'LFront', '7',
+      );
+      await ec.enrichCentreline(c, { sourceDatasetVersion: SRC_VER });
+      const p = await getParcel(c, id);
+      expect(p.is_through_lot).toBe(true); // opposite-sides held from the interior point despite the concave shape
       await c.query('ROLLBACK');
     } finally { c.release(); }
   });

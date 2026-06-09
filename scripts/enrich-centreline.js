@@ -33,6 +33,16 @@ const ADDRESS_NULL_WARN_PCT = 10; // G4/F7 — P2 degradation signal
 // ST_Intersects matched only 0.05% of parcels live). Distance probe (1000 parcels): p50 9.9 m,
 // p90 12.9 m, 97.1% within 20 m. Hardcoded — change here to tune (NOT via logic_variables).
 const CENTRELINE_PROXIMITY_M = 20;
+// §11 WF3 (#431) corner/through PRECISION. The 20 m frontage radius over-flags the two booleans
+// (live: corner 24%, through 16.7% vs typical ~13%/<5%) because it reaches streets the parcel does
+// not actually abut. The discriminator is "abuts BOTH streets": a true corner/through lot touches
+// both streets (≤ CENTRELINE_ABUT_M); an adjacent lot abuts one and merely sees the other ~18-20 m
+// away. Live-validated: abut ≤13 m lands corner ~13% / through ~8% (node-proximity alone only reached
+//   17.8% — an adjacent lot still shares the intersection node). Corner additionally requires the two
+//   streets to SHARE A NODE (they intersect); through requires them PARALLEL on OPPOSITE sides.
+// Hardcoded/dev-tuned (enrich-ravines precedent). Tune here.
+const CENTRELINE_ABUT_M = 13;
+const THROUGH_OPPOSITE_TOL_DEG = 45;
 
 // ---------------------------------------------------------------------------
 // §11 — the authoritative 8-CTE chain, materialized into a temp table so the
@@ -92,7 +102,11 @@ parcel_pairs AS (
     ps1.seg_name_base AS c1_name,  ps2.seg_name_base AS c2_name,
     ps1.from_node     AS c1_from,  ps1.to_node       AS c1_to,
     ps2.from_node     AS c2_from,  ps2.to_node       AS c2_to,
-    ps1.parcel_centroid AS centroid
+    ps1.parcel_centroid AS centroid,
+    ps1.parcel_geom     AS parcel_geom,
+    ST_PointOnSurface(ps1.parcel_geom) AS pos,    -- WF3 DEC-B: guaranteed-interior point (concave/L/U lots) for through azimuths
+    ST_Distance(ps1.parcel_geom::geography, ps1.seg_geom::geography) AS c1_dist,  -- WF3: "abuts both" cap (#431)
+    ST_Distance(ps1.parcel_geom::geography, ps2.seg_geom::geography) AS c2_dist
   FROM parcel_segments_capped ps1
   INNER JOIN parcel_segments_capped ps2 ON ps1.parcel_id = ps2.parcel_id
   WHERE ps1.centreline_id < ps2.centreline_id
@@ -105,6 +119,10 @@ parcel_corner_pairs AS (
            AND (c1_from IS NOT DISTINCT FROM c2_from OR c1_from IS NOT DISTINCT FROM c2_to
                 OR c1_to IS NOT DISTINCT FROM c2_from OR c1_to IS NOT DISTINCT FROM c2_to)
            AND (c1_from IS NOT NULL OR c1_to IS NOT NULL OR c2_from IS NOT NULL OR c2_to IS NOT NULL)
+           AND c1_dist <= ${CENTRELINE_ABUT_M} AND c2_dist <= ${CENTRELINE_ABUT_M}
+                 -- WF3 (#431): the parcel must ABUT BOTH intersecting streets. Share-node alone over-flags
+                 -- adjacent lots (they share the intersection node but the cross street is ~18-20 m away).
+                 -- Abut-both is digitization-immune (a planar/geography distance, no endpoint assumption).
          ) AS has_corner_pair
   FROM parcel_pairs GROUP BY parcel_id
 ),
@@ -145,6 +163,29 @@ parcel_parallel_pairs AS (
                  ST_Azimuth(ST_StartPoint(c2_geom), ST_EndPoint(c2_geom)))
              )
            ))) > cos(radians(15))
+           AND LEAST(
+                 abs(
+                   (CASE WHEN ST_Distance(pos, ST_ClosestPoint(c1_geom, pos)) > 0
+                         THEN ST_Azimuth(pos, ST_ClosestPoint(c1_geom, pos)) END)
+                   -
+                   (CASE WHEN ST_Distance(pos, ST_ClosestPoint(c2_geom, pos)) > 0
+                         THEN ST_Azimuth(pos, ST_ClosestPoint(c2_geom, pos)) END)
+                 ),
+                 2 * pi() - abs(
+                   (CASE WHEN ST_Distance(pos, ST_ClosestPoint(c1_geom, pos)) > 0
+                         THEN ST_Azimuth(pos, ST_ClosestPoint(c1_geom, pos)) END)
+                   -
+                   (CASE WHEN ST_Distance(pos, ST_ClosestPoint(c2_geom, pos)) > 0
+                         THEN ST_Azimuth(pos, ST_ClosestPoint(c2_geom, pos)) END)
+                 )
+               ) > pi() - radians(${THROUGH_OPPOSITE_TOL_DEG})
+                 -- WF3 DEC-B (#431): the two parallel streets must be on OPPOSITE sides of the parcel —
+                 -- bearings from the interior point (pos) to each segment differ by ~180° (angular gap > 135°).
+                 -- Degenerate guard: if pos lies ON a segment (ST_Distance = 0) ST_Azimuth throws → the CASE
+                 -- (no ELSE) yields NULL → the LEAST(...) comparison is NULL → bool_or ignores it (not-through).
+           AND c1_dist <= ${CENTRELINE_ABUT_M} AND c2_dist <= ${CENTRELINE_ABUT_M}
+                 -- WF3 (#431): the parcel must ABUT BOTH parallel streets (front + back), not merely sit
+                 -- within 20 m of two streets it doesn't front. Same "abuts both" cap as corner.
          ) AS has_parallel_different_street_pair
   FROM parcel_pairs GROUP BY parcel_id
 ),

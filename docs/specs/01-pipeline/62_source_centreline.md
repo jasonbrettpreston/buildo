@@ -746,13 +746,20 @@ parcel_pairs AS (
     ps1.seg_name_base AS c1_name,  ps2.seg_name_base AS c2_name,
     ps1.from_node     AS c1_from,  ps1.to_node       AS c1_to,
     ps2.from_node     AS c2_from,  ps2.to_node       AS c2_to,
-    ps1.parcel_centroid             AS centroid
+    ps1.parcel_centroid             AS centroid,
+    -- WF3 (#431) corner/through PRECISION: the "abuts BOTH streets" cap + the through opposite-sides interior point.
+    ST_PointOnSurface(ps1.parcel_geom) AS pos,                                   -- guaranteed-interior point (concave/L/U lots)
+    ST_Distance(ps1.parcel_geom::geography, ps1.seg_geom::geography) AS c1_dist, -- parcel↔c1 (geography)
+    ST_Distance(ps1.parcel_geom::geography, ps2.seg_geom::geography) AS c2_dist  -- parcel↔c2 (geography)
   FROM parcel_segments_capped ps1
   INNER JOIN parcel_segments_capped ps2 ON ps1.parcel_id = ps2.parcel_id
   WHERE ps1.centreline_id < ps2.centreline_id        -- canonical ordering
 ),
 
--- Step 5: Corner-lot detection (different NAMED streets + shared node, NULL-safe).
+-- Step 5: Corner-lot detection — different NAMED streets that SHARE A NODE (they intersect) AND the parcel
+--         ABUTS BOTH (each ≤ CENTRELINE_ABUT_M=13). WF3 #431: node-share alone over-flagged adjacent lots
+--         (they share the intersection node but the cross street is ~18-20 m away). Abut-both is a pure
+--         geography distance — no from/to_node ↔ Start/EndPoint endpoint assumption (digitization-immune).
 parcel_corner_pairs AS (
   SELECT parcel_id,
          bool_or(
@@ -769,6 +776,7 @@ parcel_corner_pairs AS (
              c1_from IS NOT NULL OR c1_to IS NOT NULL
              OR c2_from IS NOT NULL OR c2_to IS NOT NULL
            )
+           AND c1_dist <= 13 AND c2_dist <= 13                                 -- WF3 #431: parcel ABUTS BOTH streets
          ) AS has_corner_pair
   FROM parcel_pairs
   GROUP BY parcel_id
@@ -832,6 +840,16 @@ parcel_parallel_pairs AS (
                )
              )
            ))) > cos(radians(15))                                            -- cosine threshold per H-v1.3.1
+           -- WF3 #431: the two parallel streets must be on OPPOSITE sides of the parcel (front + back),
+           -- bearings from the interior point `pos` to each segment differ by ~180° (gap > 135° = pi-radians(45)).
+           -- Degenerate guard: pos ON a segment ⇒ ST_Azimuth throws ⇒ CASE→NULL ⇒ bool_or ignores it.
+           AND LEAST(
+                 abs((CASE WHEN ST_Distance(pos, ST_ClosestPoint(c1_geom, pos)) > 0 THEN ST_Azimuth(pos, ST_ClosestPoint(c1_geom, pos)) END)
+                   - (CASE WHEN ST_Distance(pos, ST_ClosestPoint(c2_geom, pos)) > 0 THEN ST_Azimuth(pos, ST_ClosestPoint(c2_geom, pos)) END)),
+                 2 * pi() - abs((CASE WHEN ST_Distance(pos, ST_ClosestPoint(c1_geom, pos)) > 0 THEN ST_Azimuth(pos, ST_ClosestPoint(c1_geom, pos)) END)
+                   - (CASE WHEN ST_Distance(pos, ST_ClosestPoint(c2_geom, pos)) > 0 THEN ST_Azimuth(pos, ST_ClosestPoint(c2_geom, pos)) END))
+               ) > pi() - radians(45)
+           AND c1_dist <= 13 AND c2_dist <= 13                                -- WF3 #431: parcel ABUTS BOTH streets
          ) AS has_parallel_different_street_pair
   FROM parcel_pairs
   GROUP BY parcel_id
@@ -919,7 +937,8 @@ UPDATE parcels p
 ### 11.0 Known Failure Modes (live validation, 2026-06-09)
 
 - **Containment→proximity (FIXED, WF2).** The original §11 `JOIN ... ON ST_Intersects(p.geom, c.geom)` was geometrically wrong: street centerlines run down the middle of the road allowance, **~10 m off the lot polygons**, so the live §8d enrich matched only **255 / 486,530 parcels (0.05%)**. Corrected to a **20 m geography proximity** join (`ST_DWithin(p.geom::geography, c.geom::geography, 20)`, backed by `idx_toronto_centreline_geog_gist`, migration 175). Distance probe (1000 parcels): p50 9.9 m, p90 12.9 m, 97.1% within 20 m. Re-validated live: zero-intersection 99.95%→**3.0%**, **471,869 parcels enriched** (97%), frontage resolved 97% (P1 name 91%), 8.1 min. Frontage P3 changed from longest-intersection (always 0 under proximity) to **nearest segment**; corner/through pairs now require both base names NOT NULL (an unnamed laneway within radius is not "a different street").
-- **Corner/through OVER-DETECTION (OPEN — tuning follow-up).** The proximity model inflates the two booleans: live `is_corner_lot` **24%** and `is_through_lot` **16.7%** vs typical ~13% / <5%. The 20 m radius catches streets the parcel does not actually *front* (a cross-street a lot away → false corner; a parallel street within radius → false through). The `primary_frontage_street_name` field is solid (P1 91%); the two flags need a precision pass (e.g. restrict the corner/through pair population to the parcel's genuine adjacent frontages / a tighter pair-radius, or a "different bearings" constraint). Tracked in `review_followups.md`; **`is_corner_lot` is the priority field to get right.**
+- **Corner/through OVER-DETECTION (FIXED, WF3 #431).** The proximity model inflated the two booleans (live `is_corner_lot` **24%**, `is_through_lot` **16.7%** vs typical ~13% / <5%) because the 20 m radius reaches streets the parcel does not *abut*. A first attempt (corner node-proximity ≤18 m) only reached 17.8% — an adjacent lot still **shares** the intersection node. Corrected to an **"abuts BOTH streets" model**: corner = different-named streets that share a node **AND** the parcel is within `CENTRELINE_ABUT_M`=13 m of **both**; through = different-named **parallel, OPPOSITE-side** streets (interior-point `ST_PointOnSurface` azimuths, degenerate-guarded) **AND** abuts both. Re-validated live (2026-06-09): `is_corner_lot` 24%→**14.8%** (71,945), `is_through_lot` 16.7%→**11.3%** (54,873); frontage unchanged (P1 91%); ~11.4 min. Diagnostics: `scripts/analysis/wf3-centreline-postfix-diagnostic.js` (abut-distance distributions) + `wf3-through-sample.js`. Locked by `migration-174-centreline-enrich.db.test.ts` (CE-CORNER-ADJ / CE-ARTERIAL / CE-THRU / CE-THRU-SAME / CE-THRU-L) + the infra string contracts.
+- **Through counts NAMED laneways as a second frontage (OPEN — follow-up).** The residual through count (11.3% vs ~<5% expected) is genuine geometry, not over-detection — sampled flags are real opposite-side named-street pairs, but some are a street + a **named laneway** (e.g. "Ln W Abraham Welsh…"). A street-to-street through lot should exclude laneways (the WF2 guard only excludes *unnamed* ones). Tracked in `review_followups.md` (#431-FU) as a fast follow-up WF3 (exclude `feature_code` = Laneway from the through pair); will also slightly lower corner.
 
 ### 11.1 Permit/CoA propagation SQL (3-CTE chain per Spec 61 §11.2 pattern + L12)
 
