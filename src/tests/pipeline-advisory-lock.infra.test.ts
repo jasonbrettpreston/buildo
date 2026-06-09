@@ -41,6 +41,9 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // enrich-parcels=65). Next-free-gap: load=63, enrich=64 (§8d). Toronto Centreline ingest
   // after load_heritage in chain_sources.
   'scripts/load-centreline.js':      63,
+  // Spec 62 §8d (enrich-centreline): lock 64 (sibling of load-centreline=63; spec L4b=66 stale —
+  // 66 is enrich-permits). Parcel corner/through/frontage enrichment after enrich_heritage.
+  'scripts/enrich-centreline.js':    64,
   // Spec 65 (enrich-parcels WF2): lock = spec number (§R2). Enrich step after
   // load_zoning in chain_sources; writes the zoning by-law feed onto parcels.
   // Spec 59 §8d (enrich-ravines): lock 60 (L4b). Sibling of load-ravines (59);

@@ -612,7 +612,7 @@ pipeline.emitMeta(
     "parcels_primary_frontage_resolved_count":             0,
     "parcels_frontage_priority1_name_match_count":         0,
     "parcels_frontage_priority2_addrrange_match_count":    0,
-    "parcels_frontage_priority3_longest_intersect_count":  0,
+    "parcels_frontage_priority3_nearest_segment_count":    0,
     "parcels_truncated_pair_count":                        0,
     "completed_at":                                        "<ISO timestamp>"
   }
@@ -700,7 +700,12 @@ parcel_segments AS (
     c.lo_num_r, c.hi_num_r, c.parity_r
   FROM parcels p
   JOIN toronto_centreline c
-    ON ST_Intersects(p.geom, c.geom)
+    -- WF2 (2026-06-09 live-validation correction): PROXIMITY, not containment. Street centerlines
+    -- run down the middle of the road allowance, ~10 m off the lot polygons, so ST_Intersects
+    -- matched only 0.05% of parcels live. Distance probe (1000 parcels): p50 9.9 m, p90 12.9 m,
+    -- 97.1% within 20 m. Requires idx_toronto_centreline_geog_gist (geography GIST, migration 175).
+    ON ST_DWithin(p.geom::geography, c.geom::geography, 20)
+  WHERE p.geom IS NOT NULL AND ST_IsValid(p.geom)
 ),
 
 -- Step 2: Base CTE — every parcel that intersects at least one centreline.
@@ -747,11 +752,13 @@ parcel_pairs AS (
   WHERE ps1.centreline_id < ps2.centreline_id        -- canonical ordering
 ),
 
--- Step 5: Corner-lot detection (different streets + shared node, NULL-safe).
+-- Step 5: Corner-lot detection (different NAMED streets + shared node, NULL-safe).
 parcel_corner_pairs AS (
   SELECT parcel_id,
          bool_or(
            c1_name IS DISTINCT FROM c2_name                                  -- base name compare per C-v1.3.7
+           AND c1_name IS NOT NULL AND c2_name IS NOT NULL                   -- WF2 DEC-C: an unnamed laneway within the
+                                                                             -- proximity radius is NOT "a different street"
            AND (
              c1_from IS NOT DISTINCT FROM c2_from
              OR c1_from IS NOT DISTINCT FROM c2_to
@@ -776,6 +783,7 @@ parcel_parallel_pairs AS (
   SELECT parcel_id,
          bool_or(
            c1_name IS DISTINCT FROM c2_name                                  -- base name compare
+           AND c1_name IS NOT NULL AND c2_name IS NOT NULL                   -- WF2 DEC-C: exclude unnamed laneways
            AND abs(cos(LEAST(
              abs(
                COALESCE(
@@ -836,7 +844,8 @@ parcel_parallel_pairs AS (
 --   Priority 2: side-agnostic L+R address-range match (TRY BOTH SIDES — no longer keyed on
 --               cross-product side detection because consecutive segments of the same street
 --               can be digitized in opposite directions, flipping L/R per DeepSeek CRIT).
---   Priority 3: longest geometric intersection.
+--   Priority 3: NEAREST segment (WF2: under the proximity join the segment does not overlap the
+--               lot, so ST_Length(ST_Intersection)=0 — P3 is min ST_Distance::geography ASC).
 --   Tie-break: smallest centreline_id ASC.
 parcel_frontage AS (
   SELECT DISTINCT ON (parcel_id)
@@ -850,7 +859,7 @@ parcel_frontage AS (
       ps.parcel_id,
       ps.centreline_id,
       ps.seg_name_full,
-      ST_Length(ST_Intersection(ps.parcel_geom, ps.seg_geom)) AS intersect_len_m,
+      ST_Distance(ps.parcel_geom::geography, ps.seg_geom::geography) AS dist_m,  -- WF2: nearest, not longest-intersection
       -- F-S4 Priority 1: case-insensitive base-name equality
       (ps.parcel_street_norm IS NOT NULL
         AND ps.seg_name_base IS NOT NULL
@@ -866,8 +875,8 @@ parcel_frontage AS (
            CASE WHEN name_match_p1 THEN 0 ELSE 1 END,
            -- Priority 2: address-range hit on EITHER side (try-both per F-S3)
            CASE WHEN addr_match_p2 THEN 0 ELSE 1 END,
-           -- Priority 3: longest intersection
-           intersect_len_m DESC,
+           -- Priority 3: nearest segment (WF2 — longest-intersection is 0 under proximity)
+           dist_m ASC,
            -- Final tie-break: smallest centreline_id (deterministic)
            centreline_id ASC
 ),
@@ -897,13 +906,20 @@ parcel_enrichment AS (
 UPDATE parcels p
    SET is_corner_lot                = pe.new_is_corner_lot,
        is_through_lot               = pe.new_is_through_lot,
-       primary_frontage_street_name = pe.new_primary_frontage_street_name
+       primary_frontage_street_name = pe.new_primary_frontage_street_name,
+       centreline_dataset_version_when_enriched = $1   -- §8d lineage stamp = producer source_dataset_version (§9 step-5)
   FROM parcel_enrichment pe
  WHERE p.id = pe.parcel_id
    AND (p.is_corner_lot                IS DISTINCT FROM pe.new_is_corner_lot
         OR p.is_through_lot            IS DISTINCT FROM pe.new_is_through_lot
-        OR p.primary_frontage_street_name IS DISTINCT FROM pe.new_primary_frontage_street_name);
+        OR p.primary_frontage_street_name IS DISTINCT FROM pe.new_primary_frontage_street_name
+        OR p.centreline_dataset_version_when_enriched IS DISTINCT FROM $1);
 ```
+
+### 11.0 Known Failure Modes (live validation, 2026-06-09)
+
+- **Containment→proximity (FIXED, WF2).** The original §11 `JOIN ... ON ST_Intersects(p.geom, c.geom)` was geometrically wrong: street centerlines run down the middle of the road allowance, **~10 m off the lot polygons**, so the live §8d enrich matched only **255 / 486,530 parcels (0.05%)**. Corrected to a **20 m geography proximity** join (`ST_DWithin(p.geom::geography, c.geom::geography, 20)`, backed by `idx_toronto_centreline_geog_gist`, migration 175). Distance probe (1000 parcels): p50 9.9 m, p90 12.9 m, 97.1% within 20 m. Re-validated live: zero-intersection 99.95%→**3.0%**, **471,869 parcels enriched** (97%), frontage resolved 97% (P1 name 91%), 8.1 min. Frontage P3 changed from longest-intersection (always 0 under proximity) to **nearest segment**; corner/through pairs now require both base names NOT NULL (an unnamed laneway within radius is not "a different street").
+- **Corner/through OVER-DETECTION (OPEN — tuning follow-up).** The proximity model inflates the two booleans: live `is_corner_lot` **24%** and `is_through_lot` **16.7%** vs typical ~13% / <5%. The 20 m radius catches streets the parcel does not actually *front* (a cross-street a lot away → false corner; a parallel street within radius → false through). The `primary_frontage_street_name` field is solid (P1 91%); the two flags need a precision pass (e.g. restrict the corner/through pair population to the parcel's genuine adjacent frontages / a tighter pair-radius, or a "different bearings" constraint). Tracked in `review_followups.md`; **`is_corner_lot` is the priority field to get right.**
 
 ### 11.1 Permit/CoA propagation SQL (3-CTE chain per Spec 61 §11.2 pattern + L12)
 
