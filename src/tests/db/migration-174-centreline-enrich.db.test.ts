@@ -19,13 +19,14 @@ async function insSeg(
   c: PoolClient, sid: number, name: string | null, nameFull: string | null,
   fromNode: number | null, toNode: number | null, wkt: string,
   loL: string | null = null, hiL: string | null = null, parityL: string | null = null,
+  featureCodeDesc = 'Local',   // WF3 #431-FU: 'Laneway' fixtures exercise the lane-exclusion guard
 ) {
   await c.query(
     `INSERT INTO toronto_centreline
        (source_id, geom, linear_name, linear_name_full, feature_code_desc, jurisdiction,
         from_intersection_id, to_intersection_id, lo_num_l, hi_num_l, parity_l, source_dataset_version)
-     VALUES ($1, ST_GeomFromText($2,4326), $3, $4, 'Local', 'CITY OF TORONTO', $5, $6, $7, $8, $9, $10)`,
-    [sid, wkt, name, nameFull, fromNode, toNode, loL, hiL, parityL, SRC_VER],
+     VALUES ($1, ST_GeomFromText($2,4326), $3, $4, $11, 'CITY OF TORONTO', $5, $6, $7, $8, $9, $10)`,
+    [sid, wkt, name, nameFull, fromNode, toNode, loL, hiL, parityL, SRC_VER, featureCodeDesc],
   );
 }
 async function insParcel(c: PoolClient, pid: string, wkt: string, streetNorm: string | null, addr: string | null) {
@@ -249,6 +250,38 @@ describe.skipIf(!dbAvailable())('migration 174 + §11 enrich-centreline (real Po
       const p = await getParcel(c, id);
       expect(p.is_corner_lot).toBe(false); // DEC-C guard: unnamed laneway is not "a different street"
       expect(p.primary_frontage_street_name).toBe('Cedar St'); // still resolves frontage via the named street
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  it('WF3 #431-FU: a NAMED laneway sharing a node with a street (both abut) does NOT flag corner', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // CLONE of CE-CORNER geometry (would be corner=true: named, share node 101, both abut ≤13 m) BUT the
+      // cross segment is a NAMED 'Laneway' — the WF2 name guard doesn't catch it; only the #431-FU lane guard does.
+      await insSeg(c, 1, 'Main', 'Main St', 100, 101, 'LINESTRING(-79.40010 43.70022, -79.39965 43.70022)', '1', '99', null);
+      await insSeg(c, 2, 'Smith Lane', 'Smith Lane', 101, 102, 'LINESTRING(-79.39965 43.70022, -79.39965 43.69995)', null, null, null, 'Laneway');
+      const id = await insParcel(c, 'CE-LANE-NAMED-CORNER', 'POLYGON((-79.4 43.7, -79.39978 43.7, -79.39978 43.70018, -79.4 43.70018, -79.4 43.7))', 'Main', '30');
+      await ec.enrichCentreline(c, { sourceDatasetVersion: SRC_VER });
+      const p = await getParcel(c, id);
+      expect(p.is_corner_lot).toBe(false); // #431-FU: a street + named laneway junction is not a corner
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  it('WF3 #431-FU: a parcel fronting a street and backing a NAMED laneway does NOT flag through', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // CLONE of CE-THRU geometry (would be through=true: parallel, opposite, both abut) BUT the back segment is
+      // a NAMED 'Laneway' — the normal downtown lot (street front + rear lane), not a double-frontage through lot.
+      await insSeg(c, 15, 'Front', 'Front St', 200, 201, 'LINESTRING(-79.40020 43.69997, -79.39958 43.69997)');
+      await insSeg(c, 16, 'Rear Lane', 'Rear Lane', 300, 301, 'LINESTRING(-79.40020 43.70033, -79.39958 43.70033)', null, null, null, 'Laneway');
+      const id = await insParcel(c, 'CE-LANE-THRU', 'POLYGON((-79.4 43.7, -79.39978 43.7, -79.39978 43.70030, -79.4 43.70030, -79.4 43.7))', 'Front', '5');
+      await ec.enrichCentreline(c, { sourceDatasetVersion: SRC_VER });
+      const p = await getParcel(c, id);
+      expect(p.is_through_lot).toBe(false); // #431-FU: a rear laneway is not a second street frontage
       await c.query('ROLLBACK');
     } finally { c.release(); }
   });

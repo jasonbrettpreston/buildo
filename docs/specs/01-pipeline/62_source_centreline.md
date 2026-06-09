@@ -697,7 +697,8 @@ parcel_segments AS (
     c.from_intersection_id               AS from_node,
     c.to_intersection_id                 AS to_node,
     c.lo_num_l, c.hi_num_l, c.parity_l,
-    c.lo_num_r, c.hi_num_r, c.parity_r
+    c.lo_num_r, c.hi_num_r, c.parity_r,
+    (LOWER(c.feature_code_desc) = 'laneway') AS seg_is_lane   -- #431-FU: laneway flag for corner/through exclusion
   FROM parcels p
   JOIN toronto_centreline c
     -- WF2 (2026-06-09 live-validation correction): PROXIMITY, not containment. Street centerlines
@@ -750,7 +751,11 @@ parcel_pairs AS (
     -- WF3 (#431) corner/through PRECISION: the "abuts BOTH streets" cap + the through opposite-sides interior point.
     ST_PointOnSurface(ps1.parcel_geom) AS pos,                                   -- guaranteed-interior point (concave/L/U lots)
     ST_Distance(ps1.parcel_geom::geography, ps1.seg_geom::geography) AS c1_dist, -- parcel↔c1 (geography)
-    ST_Distance(ps1.parcel_geom::geography, ps2.seg_geom::geography) AS c2_dist  -- parcel↔c2 (geography)
+    ST_Distance(ps1.parcel_geom::geography, ps2.seg_geom::geography) AS c2_dist, -- parcel↔c2 (geography)
+    ps1.seg_is_lane AS c1_is_lane, ps2.seg_is_lane AS c2_is_lane                 -- #431-FU: laneway exclusion
+    -- seg_is_lane = (LOWER(c.feature_code_desc) = 'laneway') in parcel_segments. A laneway is loaded (valid
+    -- frontage fallback) but is NOT a "street" for corner/through — a lot fronting a street with a rear lane
+    -- is a normal lot. (Live #431-FU: through 11.3%→0.98%, corner 14.8%→11.2%.)
   FROM parcel_segments_capped ps1
   INNER JOIN parcel_segments_capped ps2 ON ps1.parcel_id = ps2.parcel_id
   WHERE ps1.centreline_id < ps2.centreline_id        -- canonical ordering
@@ -777,6 +782,7 @@ parcel_corner_pairs AS (
              OR c2_from IS NOT NULL OR c2_to IS NOT NULL
            )
            AND c1_dist <= 13 AND c2_dist <= 13                                 -- WF3 #431: parcel ABUTS BOTH streets
+           AND NOT c1_is_lane AND NOT c2_is_lane                               -- #431-FU: laneway ≠ street
          ) AS has_corner_pair
   FROM parcel_pairs
   GROUP BY parcel_id
@@ -850,6 +856,7 @@ parcel_parallel_pairs AS (
                    - (CASE WHEN ST_Distance(pos, ST_ClosestPoint(c2_geom, pos)) > 0 THEN ST_Azimuth(pos, ST_ClosestPoint(c2_geom, pos)) END))
                ) > pi() - radians(45)
            AND c1_dist <= 13 AND c2_dist <= 13                                -- WF3 #431: parcel ABUTS BOTH streets
+           AND NOT c1_is_lane AND NOT c2_is_lane                              -- #431-FU: a rear laneway is not a 2nd frontage
          ) AS has_parallel_different_street_pair
   FROM parcel_pairs
   GROUP BY parcel_id
@@ -938,7 +945,7 @@ UPDATE parcels p
 
 - **Containment→proximity (FIXED, WF2).** The original §11 `JOIN ... ON ST_Intersects(p.geom, c.geom)` was geometrically wrong: street centerlines run down the middle of the road allowance, **~10 m off the lot polygons**, so the live §8d enrich matched only **255 / 486,530 parcels (0.05%)**. Corrected to a **20 m geography proximity** join (`ST_DWithin(p.geom::geography, c.geom::geography, 20)`, backed by `idx_toronto_centreline_geog_gist`, migration 175). Distance probe (1000 parcels): p50 9.9 m, p90 12.9 m, 97.1% within 20 m. Re-validated live: zero-intersection 99.95%→**3.0%**, **471,869 parcels enriched** (97%), frontage resolved 97% (P1 name 91%), 8.1 min. Frontage P3 changed from longest-intersection (always 0 under proximity) to **nearest segment**; corner/through pairs now require both base names NOT NULL (an unnamed laneway within radius is not "a different street").
 - **Corner/through OVER-DETECTION (FIXED, WF3 #431).** The proximity model inflated the two booleans (live `is_corner_lot` **24%**, `is_through_lot` **16.7%** vs typical ~13% / <5%) because the 20 m radius reaches streets the parcel does not *abut*. A first attempt (corner node-proximity ≤18 m) only reached 17.8% — an adjacent lot still **shares** the intersection node. Corrected to an **"abuts BOTH streets" model**: corner = different-named streets that share a node **AND** the parcel is within `CENTRELINE_ABUT_M`=13 m of **both**; through = different-named **parallel, OPPOSITE-side** streets (interior-point `ST_PointOnSurface` azimuths, degenerate-guarded) **AND** abuts both. Re-validated live (2026-06-09): `is_corner_lot` 24%→**14.8%** (71,945), `is_through_lot` 16.7%→**11.3%** (54,873); frontage unchanged (P1 91%); ~11.4 min. Diagnostics: `scripts/analysis/wf3-centreline-postfix-diagnostic.js` (abut-distance distributions) + `wf3-through-sample.js`. Locked by `migration-174-centreline-enrich.db.test.ts` (CE-CORNER-ADJ / CE-ARTERIAL / CE-THRU / CE-THRU-SAME / CE-THRU-L) + the infra string contracts.
-- **Through counts NAMED laneways as a second frontage (OPEN — follow-up).** The residual through count (11.3% vs ~<5% expected) is genuine geometry, not over-detection — sampled flags are real opposite-side named-street pairs, but some are a street + a **named laneway** (e.g. "Ln W Abraham Welsh…"). A street-to-street through lot should exclude laneways (the WF2 guard only excludes *unnamed* ones). Tracked in `review_followups.md` (#431-FU) as a fast follow-up WF3 (exclude `feature_code` = Laneway from the through pair); will also slightly lower corner.
+- **Laneways counted as a "street" (FIXED, WF3 #431-FU).** The abut-both model still counted NAMED laneways (e.g. "Ln W Abraham Welsh…") as a second frontage — a street + rear-lane lot is a *normal* lot (most downtown lots back onto a named lane), not a corner/through lot. Excluded `LOWER(feature_code_desc) = 'laneway'` (4,146 segments) from BOTH the corner and through pair populations (extends the WF2 *unnamed*-name guard to *named* lanes). Re-validated live: `is_through_lot` 11.3%→**0.98%** (4,764), `is_corner_lot` 14.8%→**11.2%** (54,478); frontage unchanged. Laneways remain loaded + valid for **frontage** resolution (P3) — a lane is a frontage fallback but not a corner/through "street." Locked by `CE-LANE-NAMED-CORNER` / `CE-LANE-THRU` fixtures + infra contract. Diagnostics: `scripts/analysis/wf3-laneway-scope.js`. **Deferred:** `parcels.abuts_laneway` (laneway-suite / laneway-house development signal) → its own WF1 (#431-FU2); frontage P3 can still name a lane (#431-FU3).
 
 ### 11.1 Permit/CoA propagation SQL (3-CTE chain per Spec 61 §11.2 pattern + L12)
 

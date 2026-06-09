@@ -115,6 +115,17 @@ describe('enrich-centreline.js — source contract (Spec 62 §8d)', () => {
     expect(ec.BUILD_TEMP_SQL).not.toContain('ST_Centroid(parcel_geom)'); // not centroid for azimuths
   });
 
+  it('WF3 #431-FU: laneways are excluded from BOTH the corner and through pair populations', () => {
+    // seg_is_lane derived from feature_code_desc (LOWER() for CKAN case-robustness), carried into parcel_pairs.
+    expect(ec.BUILD_TEMP_SQL).toMatch(/LOWER\(c\.feature_code_desc\) = 'laneway'\) AS seg_is_lane/);
+    expect(ec.BUILD_TEMP_SQL).toContain('ps1.seg_is_lane AS c1_is_lane');
+    expect(ec.BUILD_TEMP_SQL).toContain('ps2.seg_is_lane AS c2_is_lane');
+    // the lane guard fires in BOTH CTEs (corner + through) — extends the WF2 unnamed-name guard to NAMED lanes
+    expect((ec.BUILD_TEMP_SQL.match(/NOT c1_is_lane AND NOT c2_is_lane/g) || []).length).toBe(2);
+    // the WF2 unnamed-name guard is untouched (still exactly twice — independent pattern)
+    expect((ec.BUILD_TEMP_SQL.match(/c1_name IS NOT NULL AND c2_name IS NOT NULL/g) || []).length).toBe(2);
+  });
+
   it('verdict cascade is row-derived FAIL > WARN > PASS', () => {
     expect(ec.verdictCascade([{ status: 'INFO' }])).toBe('PASS');
     expect(ec.verdictCascade([{ status: 'WARN' }, { status: 'INFO' }])).toBe('WARN');

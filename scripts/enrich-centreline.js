@@ -75,7 +75,8 @@ parcel_segments AS MATERIALIZED (
     c.from_intersection_id     AS from_node,
     c.to_intersection_id       AS to_node,
     c.lo_num_l, c.hi_num_l, c.parity_l,
-    c.lo_num_r, c.hi_num_r, c.parity_r
+    c.lo_num_r, c.hi_num_r, c.parity_r,
+    (LOWER(c.feature_code_desc) = 'laneway') AS seg_is_lane   -- WF3 #431-FU: a laneway is not a "street" for corner/through
   FROM parcels p
   JOIN toronto_centreline c
     ON ST_DWithin(p.geom::geography, c.geom::geography, ${CENTRELINE_PROXIMITY_M})  -- WF2: proximity, not containment (idx_toronto_centreline_geog_gist, mig 175)
@@ -106,7 +107,8 @@ parcel_pairs AS (
     ps1.parcel_geom     AS parcel_geom,
     ST_PointOnSurface(ps1.parcel_geom) AS pos,    -- WF3 DEC-B: guaranteed-interior point (concave/L/U lots) for through azimuths
     ST_Distance(ps1.parcel_geom::geography, ps1.seg_geom::geography) AS c1_dist,  -- WF3: "abuts both" cap (#431)
-    ST_Distance(ps1.parcel_geom::geography, ps2.seg_geom::geography) AS c2_dist
+    ST_Distance(ps1.parcel_geom::geography, ps2.seg_geom::geography) AS c2_dist,
+    ps1.seg_is_lane AS c1_is_lane, ps2.seg_is_lane AS c2_is_lane   -- WF3 #431-FU: exclude laneways from corner/through
   FROM parcel_segments_capped ps1
   INNER JOIN parcel_segments_capped ps2 ON ps1.parcel_id = ps2.parcel_id
   WHERE ps1.centreline_id < ps2.centreline_id
@@ -123,6 +125,9 @@ parcel_corner_pairs AS (
                  -- WF3 (#431): the parcel must ABUT BOTH intersecting streets. Share-node alone over-flags
                  -- adjacent lots (they share the intersection node but the cross street is ~18-20 m away).
                  -- Abut-both is digitization-immune (a planar/geography distance, no endpoint assumption).
+           AND NOT c1_is_lane AND NOT c2_is_lane
+                 -- WF3 #431-FU: a laneway is not a "street" — a lot fronting a street with a rear/side lane
+                 -- is a normal lot, not a corner. Extends the WF2 unnamed-name guard to NAMED laneways.
          ) AS has_corner_pair
   FROM parcel_pairs GROUP BY parcel_id
 ),
@@ -186,6 +191,9 @@ parcel_parallel_pairs AS (
            AND c1_dist <= ${CENTRELINE_ABUT_M} AND c2_dist <= ${CENTRELINE_ABUT_M}
                  -- WF3 (#431): the parcel must ABUT BOTH parallel streets (front + back), not merely sit
                  -- within 20 m of two streets it doesn't front. Same "abuts both" cap as corner.
+           AND NOT c1_is_lane AND NOT c2_is_lane
+                 -- WF3 #431-FU: a street + rear LANEWAY is a normal lot, not a through lot. (Most downtown
+                 -- lots back onto a named lane; counting it as a 2nd frontage was the main through inflation.)
          ) AS has_parallel_different_street_pair
   FROM parcel_pairs GROUP BY parcel_id
 ),
