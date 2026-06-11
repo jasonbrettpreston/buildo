@@ -1,0 +1,45 @@
+# Buildo local Postgres (PostGIS) — the canonical dev database.
+#
+# Connects to localhost:5432/buildo (matches .env: PG_HOST/PG_PORT/PG_DATABASE/PG_USER).
+# Uses a NAMED volume (buildo_pgdata) rather than an anonymous one: anonymous volumes get
+# orphaned whenever the container is recreated (Docker update, image bump, `down`) and are
+# silently deleted by `docker volume prune` — the most likely cause of the 2026-06-10 data
+# loss, where the dev DB reverted to the ravine era while specs 58/61/62 had shipped in code.
+# A named volume survives container recreation and is not pruned by default.
+#
+# Start:   docker compose up -d
+# Stop:    docker compose stop      (data preserved)
+# Destroy: docker compose down      (container removed; named volume PRESERVED)
+#          docker compose down -v   (DANGER: also deletes buildo_pgdata)
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: buildo-postgis
+    restart: unless-stopped
+    environment:
+      # Dev default; override via .env (POSTGRES_PASSWORD=...) for any non-loopback exposure.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: buildo
+    # Default Docker /dev/shm is 64MB; PostGIS parallel spatial queries (e.g. load-massing
+    # over 428K footprints) exhaust it → "could not resize shared memory segment ... No space
+    # left on device". Raise it. (2026-06-10 rebuild: massing failed at 64MB.)
+    shm_size: '1gb'
+    ports:
+      # Bind to loopback only — the dev DB must not be reachable from the LAN (security review
+      # 2026-06-11). Everything connects via localhost (.env PG_HOST=localhost), so no impact.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - buildo_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d buildo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  # external: this volume is managed outside Compose so `docker compose down -v` can NEVER
+  # delete it (defence-in-depth against the data loss above). First-time setup on a new machine:
+  #   docker volume create buildo_pgdata
+  buildo_pgdata:
+    name: buildo_pgdata
+    external: true

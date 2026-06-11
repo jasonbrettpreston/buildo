@@ -70,6 +70,24 @@ const pgHost = process.env.PG_HOST || 'localhost';
 const pgPort = process.env.PG_PORT || '5432';
 run(`pg_isready -h ${pgHost} -p ${pgPort}`, `PostgreSQL: ${pgHost}:${pgPort}`);
 
+// 2b. Migration drift — schema_migrations ledger vs the migrations/ folder on disk.
+// `migrate.js --verify` exits non-zero if any migration file is unapplied (MISSING) or its
+// checksum drifted since apply. Wired here so a dev DB silently falling behind the code (the
+// 2026-06-10 incident: persistent volume stuck at the ravine era while specs 58/61/62 shipped)
+// is caught on every pre-flight instead of weeks later. Report-only — never aborts the check run.
+try {
+  execSync('node scripts/migrate.js --verify', {
+    encoding: 'utf-8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'], cwd: resolve(__dirname, '..'),
+  });
+  console.log('✔ Migrations: DB in sync with migrations/ (no missing, no drift)');
+} catch (e) {
+  // --verify exits 1 on missing/drift; its "Verify: N missing, M drift" summary is on stdout.
+  const out = `${e.stdout ? e.stdout.toString() : ''}${e.stderr ? e.stderr.toString() : ''}`;
+  const summary = (out.match(/^Verify:.*$/m) || [])[0];
+  const detail = summary ? summary.trim() : (out.split('\n').find((l) => l.trim()) || e.message).trim();
+  console.log(`✘ Migrations: ${detail} — DB behind code; run \`npm run migrate\` (details: node scripts/migrate.js --verify)`);
+}
+
 // 3. Project Config
 console.log(`✔ .env file: ${hasEnv ? 'present' : 'MISSING'}`);
 console.log(`✔ Pipeline SDK: ${existsSync(resolve(__dirname, 'lib', 'pipeline.js')) ? 'present' : 'MISSING'}`);
