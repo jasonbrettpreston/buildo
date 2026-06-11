@@ -401,6 +401,24 @@ pipeline.run('load-massing', async (pool) => {
   `);
   pipeline.log.info('[load-massing]', `Post-INSERT area-backfill: ${areaUpdateRes.rowCount} rows updated`);
 
+  // WF3 2026-06-10: post-INSERT geom pass — populate building_footprints.geom from the stored
+  // EPSG:3857 GeoJSON, transformed to WGS84 (4326), mirroring the area pass above (minus the
+  // ::geography cast, since geom is geometry(4326)). link-massing's PostGIS fast path
+  // (ST_Contains(bf.geom, parcel_centroid_4326)) requires this; migrations 065/098 only
+  // ST_SetSRID'd without transforming AND ran on the empty table during migrate, so geom was
+  // never correctly populated for loaded rows. Idempotent (geom IS NULL). See Spec 56 §2.
+  const geomUpdateRes = await pool.query(`
+    UPDATE building_footprints
+    SET geom = ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)
+    WHERE geom IS NULL AND geometry IS NOT NULL
+  `);
+  pipeline.log.info('[load-massing]', `Post-INSERT geom-backfill: ${geomUpdateRes.rowCount} rows updated`);
+  if ((geomUpdateRes.rowCount ?? 0) > 0) {
+    // Outside any transaction (matches the cleanup-path precedent at lines 198-212) so VACUUM
+    // can run; reclaims dead tuples + refreshes GiST stats for the link-massing fast path.
+    await pool.query('VACUUM ANALYZE building_footprints');
+  }
+
   const durationMs = Date.now() - startTime;
   pipeline.log.info('[load-massing]', 'Load complete', {
     features_read: processed, inserted, updated, skipped, errors,

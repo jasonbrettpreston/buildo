@@ -601,8 +601,15 @@ pipeline.run('link-massing', async (pool) => {
   const cumulativeLinked = safeParsePositiveInt(cumulativeResult.rows[0].linked, 'linked');
   const cumulativeTotal = safeParsePositiveInt(cumulativeResult.rows[0].total, 'total');
   const massingLinkRate = cumulativeTotal > 0 ? (cumulativeLinked / cumulativeTotal) * 100 : 0;
-  const massingHasFails = !hasPostGIS && totalBuildings === 0;
-  const massingHasWarns = massingLinkRate < 50;
+  // WF3 2026-06-10: row-derived verdict (Spec 48 — derive from row statuses, not a parallel
+  // `hasFails ?` boolean). The link_rate row FAILs on the PostGIS fast path when it ran over a
+  // non-empty parcel set yet matched < floor — the signal that bf.geom is broken. A broken-geom
+  // run previously hid as WARN because the old `!hasPostGIS && totalBuildings===0` gate cannot
+  // fire on the PostGIS path (hasPostGIS is true). processed>0 guard avoids a false-FAIL on an
+  // empty-parcels run.
+  const linkRateStatus = massingLinkRate >= 50
+    ? 'PASS'
+    : (hasPostGIS && processed > 0 ? 'FAIL' : 'WARN');
   const massingAuditRows = [
     { metric: 'buildings_indexed', value: totalBuildings, threshold: hasPostGIS ? null : '> 0', status: hasPostGIS ? 'INFO' : (totalBuildings > 0 ? 'PASS' : 'FAIL') },
     { metric: 'grid_cells', value: hasPostGIS ? 'N/A (PostGIS)' : grid.size, threshold: null, status: 'INFO' },
@@ -610,10 +617,12 @@ pipeline.run('link-massing', async (pool) => {
     { metric: 'run_matched', value: parcelsLinked, threshold: null, status: 'INFO' },
     { metric: 'match_centroid_in_parcel', value: centroidInParcelMatches, threshold: null, status: 'INFO' },
     { metric: 'match_nearest_fallback', value: nearestMatches, threshold: null, status: 'INFO' },
-    { metric: 'link_rate', value: massingLinkRate.toFixed(1) + '%', threshold: '>= 50%', status: massingLinkRate >= 50 ? 'PASS' : 'WARN' },
+    { metric: 'link_rate', value: massingLinkRate.toFixed(1) + '%', threshold: '>= 50%', status: linkRateStatus },
     { metric: 'no_match', value: noMatch, threshold: null, status: 'INFO' },
     { metric: 'parcel_buildings_written', value: buildingsUpserted, threshold: null, status: 'INFO' },
   ];
+  const massingVerdict = massingAuditRows.some((r) => r.status === 'FAIL') ? 'FAIL'
+    : massingAuditRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
 
   pipeline.emitSummary({
     records_total: processed,
@@ -631,7 +640,7 @@ pipeline.run('link-massing', async (pool) => {
       audit_table: {
         phase: (process.env.PIPELINE_CHAIN === 'sources') ? 8 : 9,
         name: 'Building Footprint Linking',
-        verdict: massingHasFails ? 'FAIL' : massingHasWarns ? 'WARN' : 'PASS',
+        verdict: massingVerdict,
         rows: massingAuditRows,
       },
     },

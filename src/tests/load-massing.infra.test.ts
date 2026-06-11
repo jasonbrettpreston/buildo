@@ -88,4 +88,19 @@ describe('scripts/load-massing.js — Web Mercator area pipeline (WF2 #C 2026-05
     expect(whereBlock, 'ON CONFLICT WHERE block not found').toBeTruthy();
     expect(whereBlock).not.toMatch(/footprint_area_sqm\s+IS\s+DISTINCT\s+FROM\s+EXCLUDED/i);
   });
+
+  // WF3 2026-06-10 regression-lock: geom must be populated via the SAME ST_Transform(3857→4326)
+  // the area pass uses — NOT migrations 065/098's ST_SetSRID(...,4326) which mislabeled Mercator
+  // as WGS84 and made link-massing's ST_Contains fast path match 0 rows (parcel_buildings=0).
+  it('populates geom via ST_Transform(... 3857 → 4326) — NOT a bare ST_SetSRID(...,4326) label', () => {
+    expect(src).toMatch(
+      /UPDATE\s+building_footprints\s+SET\s+geom\s*=\s*ST_Transform\(\s*ST_SetSRID\(\s*ST_GeomFromGeoJSON\([\s\S]*?\)\s*,\s*3857\s*\)\s*,\s*4326\s*\)/i,
+    );
+    // the broken pattern: geom assigned DIRECTLY from ST_SetSRID (no transform) must NOT appear.
+    expect(src).not.toMatch(/geom\s*=\s*ST_SetSRID\(/i);
+  });
+
+  it('geom pass is idempotent — WHERE geom IS NULL', () => {
+    expect(src).toMatch(/SET\s+geom\s*=\s*ST_Transform\([\s\S]*?WHERE\s+geom\s+IS\s+NULL/i);
+  });
 });

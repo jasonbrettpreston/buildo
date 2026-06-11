@@ -100,3 +100,4 @@ reports/mutation/
 # only; the spec amendments themselves capture the grounded numbers.
 .review-*
 
+backups/

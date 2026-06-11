@@ -22,6 +22,7 @@ As a spatial data dependency, this script ingests 3D building footprint volumes 
 |--------|------|-------|
 | `source_id` | TEXT | PK — from shapefile feature ID |
 | `geometry` | JSONB | GeoJSON polygon (EPSG:3857 Web Mercator — see "Geometry projection" below) |
+| `geom` | GEOMETRY(Geometry, 4326) | PostGIS polygon for spatial linking — derived at load via `ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry), 3857), 4326)` (same transform as the area columns). Consumed by `link-massing.js`'s fast path `ST_Contains(geom, parcel_centroid)`. GiST-indexed. (WF3 2026-06-10: prior to this, `geom` was populated by migrations 065/098 with `ST_SetSRID(...,4326)` WITHOUT transforming — mislabeling Mercator as WGS84 — and only ran on the empty table; `load-massing.js` now owns geom population, with `scripts/one-time/backfill-building-footprints-geom.js` for existing rows.) |
 | `footprint_area_sqm` | DECIMAL(12,2) | Computed at load-time via PostGIS — see "Geometry projection" below |
 | `footprint_area_sqft` | DECIMAL(12,2) | sqm × 10.7639104167 |
 | `max_height_m` | DECIMAL(8,2) | Building max height in meters |
