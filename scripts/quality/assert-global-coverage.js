@@ -165,6 +165,10 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE is_heritage_designated)                                  AS heritage_designated_pop,
           COUNT(*) FILTER (WHERE heritage_designation_type IS NOT NULL)                   AS heritage_type_pop,
           COUNT(*) FILTER (WHERE heritage_designation_date IS NOT NULL)                   AS heritage_date_pop,
+          -- §8e — enrich_coa_zoning centreline propagation (Spec 62 / migration 176):
+          COUNT(*) FILTER (WHERE is_corner_lot)                                           AS corner_lot_pop,
+          COUNT(*) FILTER (WHERE is_through_lot)                                          AS through_lot_pop,
+          COUNT(*) FILTER (WHERE primary_frontage_street_name IS NOT NULL)                AS frontage_name_pop,
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
       `);
@@ -255,6 +259,12 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.is_heritage_designated',   parseInt(ca.heritage_designated_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.heritage_designation_type', parseInt(ca.heritage_type_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.heritage_designation_date', parseInt(ca.heritage_date_pop, 10)));
+      // §8e — centreline propagation (Spec 62 §8e). is_corner_lot/is_through_lot = TRUE-subset counts
+      // (FILTER, never IS NOT NULL — vacuous on the NOT-NULL-DEFAULT-false booleans); frontage name =
+      // non-null count. All INFO (small geographic subset, never gated) — mirrors ravine/heritage.
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.is_corner_lot',                parseInt(ca.corner_lot_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.is_through_lot',               parseInt(ca.through_lot_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.primary_frontage_street_name', parseInt(ca.frontage_name_pop, 10)));
 
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
@@ -404,7 +414,11 @@ pipeline.run('assert-global-coverage', async (pool) => {
           -- as ravine above: count the TRUE boolean subset + non-null type/date. INFO, no denominator.
           COUNT(*) FILTER (WHERE is_heritage_designated)                      AS heritage_designated_pop,
           COUNT(*) FILTER (WHERE heritage_designation_type IS NOT NULL)       AS heritage_type_pop,
-          COUNT(*) FILTER (WHERE heritage_designation_date IS NOT NULL)       AS heritage_date_pop
+          COUNT(*) FILTER (WHERE heritage_designation_date IS NOT NULL)       AS heritage_date_pop,
+          -- §8e — enrich_permits centreline propagation (Spec 62 / migration 176):
+          COUNT(*) FILTER (WHERE is_corner_lot)                               AS corner_lot_pop,
+          COUNT(*) FILTER (WHERE is_through_lot)                              AS through_lot_pop,
+          COUNT(*) FILTER (WHERE primary_frontage_street_name IS NOT NULL)    AS frontage_name_pop
         FROM permits
       `);
       const permitsTotal        = parseInt(pa.permits_total, 10) || 0;
@@ -754,6 +768,11 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.is_heritage_designated',   parseInt(pa.heritage_designated_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.heritage_designation_type', parseInt(pa.heritage_type_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.heritage_designation_date', parseInt(pa.heritage_date_pop, 10)));
+      // §8e — centreline propagation (Spec 62 §8e). Same shape as ravine/heritage: is_corner_lot/
+      // is_through_lot = TRUE-subset counts (FILTER, never IS NOT NULL); frontage name = non-null count.
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.is_corner_lot',                parseInt(pa.corner_lot_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.is_through_lot',               parseInt(pa.through_lot_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.primary_frontage_street_name', parseInt(pa.frontage_name_pop, 10)));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));

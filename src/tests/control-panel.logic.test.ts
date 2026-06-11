@@ -59,6 +59,7 @@ describe('deltaExceeds50pct — Delta Guard utility', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const EXPECTED_LOGIC_VAR_KEYS = [
+  'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate
   'road_overlay_distance_m', // Spec 58 — seeded for WF2 enrich-parcels (F-C2)
   'los_multiplier_bid',
   'los_multiplier_work',

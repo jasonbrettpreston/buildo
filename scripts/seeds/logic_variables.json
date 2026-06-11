@@ -1,4 +1,11 @@
 {
+  "centreline_propagation_coverage_min": {
+    "default": 0.9,
+    "type": "number",
+    "description": "§8e L24c (Spec 62) — minimum fraction of valid-geom parcels that must carry centreline_dataset_version_when_enriched before enrich-permits.js propagates is_corner_lot/is_through_lot/primary_frontage_street_name onto permits + coa. Below this, §8d is treated as only partially run and propagation HALTs (would otherwise mark most leads false/false/NULL). 0.9 sits below the ~3% zero-intersection floor so a healthy ~97% run never false-HALTs. CONSUMED by scripts/enrich-permits.js (assertCentrelineEnriched).",
+    "min": 0,
+    "max": 1
+  },
   "road_overlay_distance_m": {
     "default": 5,
     "type": "number",

@@ -752,3 +752,42 @@ describe('assert-global-coverage.js — WF3 #428 heritage coverage rows', () => 
     expect(content).not.toMatch(GATED);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// §8e (2026-06-11): centreline propagation coverage rows for the Spec 62 §8e enrich
+// step (migration 176). Same contract as the #415 ravine / #428 heritage rows: INFO only,
+// is_corner_lot/is_through_lot counted via FILTER(= true) NOT IS NOT NULL (the vacuous-boolean
+// lock), primary_frontage_street_name = non-null count. [Code-Reviewer R1: plan-mandated extension.]
+// ────────────────────────────────────────────────────────────────────────
+describe('assert-global-coverage.js — §8e centreline coverage rows', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('both aggregates count is_corner_lot / is_through_lot via FILTER on the boolean (not IS NOT NULL — vacuous)', () => {
+    expect((content.match(/FILTER \(WHERE is_corner_lot\)\s*AS corner_lot_pop/g) || []).length).toBeGreaterThanOrEqual(2);
+    expect((content.match(/FILTER \(WHERE is_through_lot\)\s*AS through_lot_pop/g) || []).length).toBeGreaterThanOrEqual(2);
+    expect(content).not.toMatch(/is_corner_lot IS NOT NULL/);
+    expect(content).not.toMatch(/is_through_lot IS NOT NULL/);
+  });
+
+  it('frontage counted via IS NOT NULL (legitimately populated-subset only), both branches', () => {
+    expect((content.match(/primary_frontage_street_name IS NOT NULL\)\s*AS frontage_name_pop/g) || []).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('permits centreline rows use infoRow under Step 9b (pure count, no denominator)', () => {
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.is_corner_lot',\s*parseInt\([^)]+\)\)/);
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.is_through_lot',\s*parseInt\([^)]+\)\)/);
+    expect(content).toMatch(/infoRow\('Step 9b — enrich_permits',\s*'permits\.primary_frontage_street_name',\s*parseInt\([^)]+\)\)/);
+  });
+
+  it('coa centreline rows use infoRow under CoA Step 4b (pure count, no denominator)', () => {
+    expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.is_corner_lot',\s*parseInt\([^)]+\)\)/);
+    expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.is_through_lot',\s*parseInt\([^)]+\)\)/);
+    expect(content).toMatch(/infoRow\('CoA Step 4b — enrich_coa_zoning',\s*'coa_applications\.primary_frontage_street_name',\s*parseInt\([^)]+\)\)/);
+  });
+
+  it('centreline fields are NEVER gated (no coverageRow/calibratedRow)', () => {
+    const GATED = /(?:coverageRow|calibratedRow)\([^)]*(?:is_corner_lot|is_through_lot|primary_frontage_street_name)/;
+    expect(content).not.toMatch(GATED);
+  });
+});

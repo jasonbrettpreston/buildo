@@ -33,6 +33,17 @@ const RAVINE_COLS = ['is_in_ravine_protection_area', 'ravine_distance_m'];
 // orphan-nullify resets it to false (type/date → NULL) — see buildNullifyOrphansSql.
 const HERITAGE_COLS = ['is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date'];
 
+// §8e centreline columns (Spec 62 / migration 176). Aggregated across linked parcels (L12):
+// is_corner_lot/is_through_lot via bool_or; primary_frontage_street_name is the smallest-par.id
+// non-NULL value (§11.1, NOT a bool_or). The booleans are NOT NULL so the orphan-nullify resets
+// them to false (frontage → NULL), like ravine/heritage — see buildNullifyOrphansSql.
+const CENTRELINE_COLS = ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name'];
+
+// L24c coverage-guard default (operator-overridable via logic_variables.centreline_propagation_coverage_min).
+// 0.90 sits below the ~3% zero-intersection floor so a healthy ~97% run never false-HALTs, yet a
+// partial §8d run (≪50% enriched) trips it. See assertCentrelineEnriched.
+const CENTRELINE_COVERAGE_MIN_DEFAULT = 0.90;
+
 // Per-target config (DEC-1/2/4). leadKey = the temp-table identity columns.
 // The 7 parcel overlay-membership booleans (WF2 / migration 165) — bool_or'd across
 // a lead's linked parcels to build overlay_summary (Spec 66 frozen shape).
@@ -82,7 +93,7 @@ function validateTarget(t) {
 
 function allWriteCols(target) {
   const c = CFG[target];
-  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS];
+  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS, ...CENTRELINE_COLS];
 }
 
 // ---------------------------------------------------------------------------
@@ -138,6 +149,88 @@ async function assertHeritageColumns(client, target) {
   }
 }
 
+// §8e L24a (Spec 62) — column-existence guard. Fail fast with a clear message if migration 174
+// (parcels source cols + lineage) or 176 (target lead cols) is unapplied, not a cryptic
+// "column does not exist" mid-UPDATE.
+async function assertCentrelineColumns(client, target) {
+  const targetTable = CFG[target].table;
+  const want = {
+    parcels: ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'centreline_dataset_version_when_enriched'],
+    [targetTable]: ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name'],
+  };
+  for (const [tbl, cols] of Object.entries(want)) {
+    const { rows } = await client.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name = ANY($2::text[])`,
+      [tbl, cols],
+    );
+    const present = new Set(rows.map((r) => r.column_name));
+    const missing = cols.filter((c) => !present.has(c));
+    if (missing.length > 0) {
+      throw new Error(`${TAG} ${tbl} missing centreline columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '174' : '176'} not applied`);
+    }
+  }
+}
+
+// §8e L24b/c (Spec 62) — enrich-centreline (§8d) must have populated parcels' feed, RECENTLY +
+// BROADLY. This is the load-bearing cross-chain HALT (§8d runs in the sources chain, this in
+// permits/coa). Stricter than the ravine/heritage `>0` precedent — deliberate per §L24.
+async function assertCentrelineEnriched(client) {
+  // L24b recency — a successful enrich_centreline must post-date the most recent load-parcels.
+  // The lineage TEXT column alone can't tell "stale-vs-reloaded-parcels" apart; a parcels reload
+  // after enrichment leaves the stamp set but the spatial join stale.
+  const { rows: r } = await client.query(`
+    SELECT
+      (SELECT max(completed_at) FROM pipeline_runs WHERE pipeline IN ('sources:enrich_centreline','enrich_centreline') AND status = 'completed') AS enriched_at,
+      (SELECT max(completed_at) FROM pipeline_runs WHERE pipeline IN ('sources:parcels','parcels')                       AND status = 'completed') AS parcels_at`);
+  const enrichedAt = r[0].enriched_at;
+  const parcelsAt = r[0].parcels_at;
+  if (!enrichedAt) {
+    throw new Error(`${TAG} no successful enrich_centreline run — §8d has not run; cannot propagate centreline to permits/CoA`);
+  }
+  if (parcelsAt && new Date(enrichedAt) < new Date(parcelsAt)) {
+    throw new Error(`${TAG} enrich_centreline (${enrichedAt}) predates the latest load-parcels (${parcelsAt}) — parcels reloaded after centreline enrichment; re-run enrich_centreline (§8d)`);
+  }
+  // L24c coverage — enriched / all valid-geom parcels >= tunable threshold. (The schema can't
+  // cleanly express "intersecting", so denominator is all valid-geom; ~3% are zero-intersection
+  // so a healthy run is ≈97% while a partial §8d is ≪50% — the gap is wide, default 0.90 is safe.)
+  const minRow = await client.query(`SELECT variable_value FROM logic_variables WHERE variable_key = 'centreline_propagation_coverage_min'`);
+  const threshold = minRow.rows.length && minRow.rows[0].variable_value != null ? Number(minRow.rows[0].variable_value) : CENTRELINE_COVERAGE_MIN_DEFAULT;
+  const cov = (await client.query(`
+    SELECT COUNT(*) FILTER (WHERE centreline_dataset_version_when_enriched IS NOT NULL)::float
+         / NULLIF(COUNT(*) FILTER (WHERE geom IS NOT NULL), 0) AS pct
+    FROM parcels`)).rows[0].pct;
+  if (cov === null) {
+    throw new Error(`${TAG} no valid-geom parcels — cannot assess centreline coverage`);
+  }
+  if (Number(cov) < threshold) {
+    throw new Error(`${TAG} centreline parcels coverage ${(Number(cov) * 100).toFixed(1)}% < ${(threshold * 100).toFixed(1)}% min — §8d only partially enriched; refusing to propagate (would mark most leads false/false/NULL). Override via logic_variables.centreline_propagation_coverage_min.`);
+  }
+}
+
+// §8e DEC-D2 (Spec 62) — per-target link-table guard. Verify THIS target's configured link table
+// (permit_parcels for permits, lead_parcels for coa — keyed off CFG) exists AND carries its join
+// columns, so a missing/renamed link table FAILs clearly (not a cryptic relation/column-not-found
+// mid-transaction).
+async function assertLinkTable(client, target) {
+  const linkTable = target === 'permits' ? 'permit_parcels' : 'lead_parcels';
+  const joinCols = target === 'permits' ? ['permit_num', 'revision_num', 'parcel_id'] : ['lead_id', 'parcel_id'];
+  // Check table existence FIRST so a missing/renamed table FAILs clearly (a column probe on a
+  // non-existent table returns 0 rows → a misleading "missing columns" message) [DeepSeek R1].
+  const tbl = await client.query(`SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = $1`, [linkTable]);
+  if (tbl.rows.length === 0) {
+    throw new Error(`${TAG} link table "${linkTable}" does not exist for target ${target} — cannot join to propagate`);
+  }
+  const { rows } = await client.query(
+    `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name = ANY($2::text[])`,
+    [linkTable, joinCols],
+  );
+  const present = new Set(rows.map((row) => row.column_name));
+  const missing = joinCols.filter((col) => !present.has(col));
+  if (missing.length > 0) {
+    throw new Error(`${TAG} link table "${linkTable}" missing/renamed columns [${missing.join(', ')}] for target ${target} — cannot join to propagate`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // SQL builders (DEC-1/3/4 — set-based; decomposed temp table → trivial UPDATE).
 // scopeWhere is a TRUSTED internal/test predicate over the lead alias.
@@ -159,6 +252,7 @@ WITH cand AS (
          par.bylaw_max_height_m, par.exception_number, par.zoning_overlays, par.lot_size_sqm,
          par.is_in_ravine_protection_area, par.ravine_distance_m,
          par.is_heritage_designated, par.heritage_designation_type, par.heritage_designation_date,
+         par.is_corner_lot, par.is_through_lot, par.primary_frontage_street_name,
          ${OVERLAY_FLAGS.map((f) => `par.${f}`).join(', ')},
          ${c.confidence} AS confidence,
          par.lot_size_sqm / NULLIF(SUM(par.lot_size_sqm) OVER (PARTITION BY ${qkey}), 0) AS area_share,
@@ -190,6 +284,13 @@ ag AS (
     bool_or(heritage_designation_type = 'part_v_hcd')                                   AS has_part_v_hcd,
     MIN(heritage_designation_date) FILTER (WHERE heritage_designation_type = 'part_iv_individual') AS part_iv_date,
     MIN(heritage_designation_date) FILTER (WHERE heritage_designation_type = 'part_v_hcd')         AS part_v_date,
+    -- §8e L12 centreline propagation: corner/through via bool_or (a consolidated multi-parcel lead
+    -- can be both — no mutual-exclusivity carve-out, F-S6). primary_frontage_street_name (§11.1):
+    -- smallest-parcel_id non-NULL value — array_agg ORDER BY parcel_id FILTER drops NULLs, [1] of
+    -- an empty filtered array is NULL (correct orphan semantic). parcel_id = the cand alias of par.id.
+    COALESCE(bool_or(is_corner_lot), false)  AS new_is_corner_lot,
+    COALESCE(bool_or(is_through_lot), false) AS new_is_through_lot,
+    (array_agg(primary_frontage_street_name ORDER BY parcel_id) FILTER (WHERE primary_frontage_street_name IS NOT NULL))[1] AS new_primary_frontage,
     ${OVERLAY_FLAGS.map((f) => `bool_or(${f}) AS ov_${f}`).join(',\n    ')}
   FROM cand GROUP BY ${key}
 )
@@ -211,6 +312,9 @@ SELECT ${c.leadKey.map((k) => `dom.${k}`).join(', ')},
             THEN (CASE WHEN ag.has_part_iv THEN ag.part_iv_date
                        WHEN ag.has_part_v_hcd THEN ag.part_v_date ELSE NULL END)
             ELSE NULL END AS heritage_designation_date,
+       ag.new_is_corner_lot AS is_corner_lot,
+       ag.new_is_through_lot AS is_through_lot,
+       ag.new_primary_frontage AS primary_frontage_street_name,
        ag.distinct_zones
 FROM cand dom
 JOIN ag USING (${key})
@@ -278,12 +382,16 @@ function buildNullifyOrphansSql({ target, scopeWhere = 'TRUE' }) {
   // from the generic =NULL map: each has a NOT-NULL boolean that can't be NULLed, so reset the
   // boolean to false + the rest to NULL — appended below (ravine §11.2 / heritage L12).
   const set = [
-    ...allWriteCols(target).filter((col) => !RAVINE_COLS.includes(col) && !HERITAGE_COLS.includes(col)).map((col) => `${col} = NULL`),
+    ...allWriteCols(target).filter((col) => !RAVINE_COLS.includes(col) && !HERITAGE_COLS.includes(col) && !CENTRELINE_COLS.includes(col)).map((col) => `${col} = NULL`),
     'is_in_ravine_protection_area = false',
     'ravine_distance_m = NULL',
     'is_heritage_designated = false',
     'heritage_designation_type = NULL',
     'heritage_designation_date = NULL',
+    // §8e centreline: NOT-NULL booleans reset to false (NOT NULL → would crash PG 23502), name → NULL.
+    'is_corner_lot = false',
+    'is_through_lot = false',
+    'primary_frontage_street_name = NULL',
   ].join(', ');
   const linkExists = target === 'permits'
     ? `SELECT 1 FROM permit_parcels pp WHERE pp.permit_num = ${c.leadAlias}.permit_num AND pp.revision_num = ${c.leadAlias}.revision_num`
@@ -337,6 +445,9 @@ async function main(pool) {
       await assertRavinesEnriched(client); // §8e DEC-D
       await assertHeritageColumns(client, target); // §8e L24 — clear message if mig 171/172 unapplied
       await assertHeritageEnriched(client); // §8e DEC-F
+      await assertCentrelineColumns(client, target); // §8e L24a — mig 174/176 applied?
+      await assertCentrelineEnriched(client); // §8e L24b recency + L24c coverage
+      await assertLinkTable(client, target); // §8e DEC-D2 — link table + join cols present?
       const runAt = await pipeline.getDbTimestamp(client);
       result = await enrichLeads(client, { target, scopeWhere: 'TRUE', runAt });
     });
@@ -383,6 +494,15 @@ async function main(pool) {
     auditRows.push({ metric: `${prefix}_heritage_designated_count`, value: hr.designated, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_part_iv_count`, value: hr.part_iv, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_part_v_hcd_count`, value: hr.part_v, status: 'INFO' });
+    // §8e centreline propagation observability (Spec 62 — INFO; zoning F-H12 gate + verdict untouched).
+    const cl = (await pool.query(`
+      SELECT COUNT(*) FILTER (WHERE is_corner_lot)::int                            AS corner,
+             COUNT(*) FILTER (WHERE is_through_lot)::int                           AS through_lot,
+             COUNT(*) FILTER (WHERE primary_frontage_street_name IS NOT NULL)::int AS frontage
+      FROM ${cfg.table}`)).rows[0];
+    auditRows.push({ metric: `${prefix}_corner_lot_count`, value: cl.corner, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_through_lot_count`, value: cl.through_lot, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_with_frontage_name_count`, value: cl.frontage, status: 'INFO' });
     // L5 disagreement protocol (permits only, §11.3): geometry stays authoritative; flag for
     // operator triage. INFO at count 0 (RNFP/Heritage currently 0 rows) — WARN ONLY on a real
     // disagreement, so a clean run never collapses PASS (Spec 48 §3.6).
@@ -409,7 +529,7 @@ async function main(pool) {
     });
 
     const readsCommon = {
-      parcels: ['id', 'zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number', 'zoning_overlays', 'lot_size_sqm', 'zoning_enriched_at', 'is_in_ravine_protection_area', 'ravine_distance_m', 'is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date'],
+      parcels: ['id', 'zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number', 'zoning_overlays', 'lot_size_sqm', 'zoning_enriched_at', 'is_in_ravine_protection_area', 'ravine_distance_m', 'is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date', 'is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'centreline_dataset_version_when_enriched'],
     };
     const reads = target === 'permits'
       ? { permits: ['permit_num', 'revision_num', 'permit_type'], permit_parcels: ['permit_num', 'revision_num', 'parcel_id', 'confidence'], permit_type_classifications: ['permit_type', 'class'], ...readsCommon }
@@ -428,8 +548,9 @@ if (require.main === module) {
 }
 
 module.exports = {
-  ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS, HERITAGE_COLS,
+  ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS, HERITAGE_COLS, CENTRELINE_COLS,
   validateTarget, allWriteCols, assertWf2Ran, assertRavinesEnriched, assertHeritageEnriched,
-  assertHeritageColumns, buildEnrichmentSql, buildUpdateSql, buildNullifyOrphansSql, enrichLeads,
+  assertHeritageColumns, assertCentrelineColumns, assertCentrelineEnriched, assertLinkTable,
+  buildEnrichmentSql, buildUpdateSql, buildNullifyOrphansSql, enrichLeads,
   coverageGate, verdictCascade,
 };
