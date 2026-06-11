@@ -510,10 +510,11 @@ describe('Pipeline Registry', () => {
     // +1 enrich_ravines added (Spec 59 §8d 2026-06-02)
     // +1 load_heritage added (Spec 61 §8c 2026-06-04)
     // +1 enrich_heritage added (Spec 61 §8d 2026-06-04)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(60);
+    // +2 load_centreline + enrich_centreline added (Spec 62 §8c/§8d UI registration, WF2 2026-06-11)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(62);
   });
 
-  it('groups are correct: 11 ingest, 19 link, 14 classify, 2 snapshot, 10 quality', () => {
+  it('groups are correct: 14 ingest, 22 link, 14 classify, 2 snapshot, 10 quality', () => {
     // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     // +1 snapshot: backup_db added (WF3 2026-04-25)
     // +1 classify: compute_phase_calibration added (WF1 #B 2026-05-09)
@@ -530,8 +531,9 @@ describe('Pipeline Registry', () => {
     // +1 link: enrich_ravines added (Spec 59 §8d 2026-06-02)
     // +1 ingest: load_heritage added (Spec 61 §8c 2026-06-04)
     // +1 link: enrich_heritage added (Spec 61 §8d 2026-06-04)
-    expect(groups.filter((g) => g === 'ingest')).toHaveLength(13);
-    expect(groups.filter((g) => g === 'link')).toHaveLength(21);
+    // +1 ingest: load_centreline, +1 link: enrich_centreline (Spec 62 §8c/§8d, WF2 2026-06-11)
+    expect(groups.filter((g) => g === 'ingest')).toHaveLength(14);
+    expect(groups.filter((g) => g === 'link')).toHaveLength(22);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(14);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(10);
@@ -613,7 +615,7 @@ describe('Pipeline Chains', () => {
     expect(coa!.steps[coa.steps.length - 3]!.slug).toBe('assert_lifecycle_phase_distribution');
   });
 
-  it('sources chain has 18 steps including link_parcel_addresses, WSIB, load_zoning, enrich_parcels, compute_centroids and assert_engine_health', () => {
+  it('sources chain includes link_parcel_addresses, WSIB, load_zoning, enrich_parcels, compute_centroids, centreline and assert_engine_health (length derived from manifest)', () => {
     // WF1 #parcel-address-bridge Phase 2c (2026-05-23) — link_parcel_addresses (15 → 16).
     // Spec 58 (2026-05-30) — load_zoning inserted before refresh_snapshot (16 → 17).
     // Spec 65 (2026-05-31) — enrich_parcels inserted after load_zoning (17 → 18).
@@ -622,7 +624,10 @@ describe('Pipeline Chains', () => {
     // Spec 61 §8c (2026-06-04) — load_heritage inserted after load_ravines (20 → 21).
     // Spec 61 §8d (2026-06-04) — enrich_heritage inserted after enrich_ravines (21 → 22).
     const sources = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
-    expect(sources.steps).toHaveLength(22);
+    // No hardcoded length — steps are DERIVED from manifest.chains (WF2 2026-06-11). Presence
+    // checks below are the real lock; the bidirectional parity tests guard manifest⇄UI coverage.
+    expect(sources.steps.some((s) => s.slug === 'load_centreline')).toBe(true);
+    expect(sources.steps.some((s) => s.slug === 'enrich_centreline')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'load_ravines')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'enrich_ravines')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'enrich_parcels')).toBe(true);

@@ -148,10 +148,12 @@ describe('Pipeline Chain Definitions', () => {
     expect(calibIdx).toBeGreaterThan(distIdx);
   });
 
-  it('defines sources chain with 22 steps (Spec 65 enrich_parcels + Spec 59 §8c/§8d + Spec 61 §8c/§8d)', () => {
+  it('defines the sources chain with the right ordering invariants (length derived from manifest, not pinned — WF2 2026-06-11)', () => {
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'sources');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(22); // Spec 61 §8d added enrich_heritage after enrich_ravines (21 → 22)
+    // No hardcoded step count: PIPELINE_CHAINS.steps is DERIVED from manifest.chains (single
+    // source of truth). The bidirectional parity tests below guard manifest⇄UI coverage; a
+    // magic length here just re-encodes the drift class this WF2 removed.
     // enrich_parcels runs immediately after load_zoning (consumes its tables).
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs.indexOf('enrich_parcels')).toBe(slugs.indexOf('load_zoning') + 1);
@@ -782,12 +784,18 @@ describe('Pipeline Manifest (§9.6)', () => {
     }
   });
 
-  it('manifest chains match PIPELINE_CHAINS step slugs', () => {
+  it('PIPELINE_CHAINS is derived 1:1 from manifest.chains, bidirectionally (no drift — WF2 2026-06-11)', () => {
+    // Derivation-correctness: every UI chain's slug list + ORDER equals the manifest's (since
+    // PIPELINE_CHAINS is now derived from manifest.chains, this proves the wiring, not a tautology).
     for (const chain of PIPELINE_CHAINS) {
       const manifestSteps = manifest.chains[chain.id];
       expect(manifestSteps, `Manifest missing chain "${chain.id}"`).toBeDefined();
-      const uiSlugs = chain.steps.map((s) => s.slug);
-      expect(manifestSteps).toEqual(uiSlugs);
+      expect(chain.steps.map((s) => s.slug)).toEqual(manifestSteps);
+    }
+    // Reverse direction: every manifest chain is rendered by the UI (no manifest chain silently dropped).
+    const uiChainIds = new Set(PIPELINE_CHAINS.map((c) => c.id));
+    for (const manifestChainId of Object.keys(manifest.chains)) {
+      expect(uiChainIds.has(manifestChainId), `Manifest chain "${manifestChainId}" is not rendered by FreshnessTimeline`).toBe(true);
     }
   });
 
@@ -1126,13 +1134,17 @@ describe('Sources chain registration completeness (Bug C11)', () => {
     expect(manifest.chains.sources.length).toBeGreaterThan(0);
   });
 
-  it('sources chain steps in manifest match PIPELINE_CHAINS', () => {
+  it('sources chain renders exactly the manifest steps incl. the Spec 62 centreline steps (WF2 2026-06-11)', () => {
     const manifest = JSON.parse(fs.readFileSync(
       path.resolve(__dirname, '../../scripts/manifest.json'), 'utf-8'
     ));
     const uiChain = PIPELINE_CHAINS.find((c) => c.id === 'sources')!;
     const uiSlugs = uiChain.steps.map((s) => s.slug);
-    expect(manifest.chains.sources).toEqual(uiSlugs);
+    // Derivation-correctness: the UI is derived from manifest.chains, so this proves the wiring.
+    expect(uiSlugs).toEqual(manifest.chains.sources);
+    // The exact drift that triggered this WF2: the centreline steps must now surface in the UI.
+    expect(uiSlugs).toContain('load_centreline');
+    expect(uiSlugs).toContain('enrich_centreline');
   });
 });
 

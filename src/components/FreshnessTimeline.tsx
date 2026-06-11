@@ -1,9 +1,14 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { z } from 'zod';
 import type { FunnelRowData } from '@/lib/admin/funnel';
 import { FUNNEL_SOURCE_BY_SLUG, STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP, STEP_EXPECTED_RANGES, getRangeStatus } from '@/lib/admin/funnel';
 import { CircularBadge, DataFlowTile, TelemetrySection, Sparkline, type SparklineRun, type TelemetryData } from './funnel/FunnelPanels';
+// Spec 47: scripts/manifest.json is the single source of truth for chain step lists.
+// Spec 33 §7 / line 81: the web admin DERIVES from it, never hand-duplicates (precedent:
+// src/lib/admin/control-panel.ts imports scripts/seeds/logic_variables.json).
+import pipelineManifest from '../../scripts/manifest.json';
 
 // ---------------------------------------------------------------------------
 // Pipeline Registry — single source of truth for all tracked pipelines
@@ -14,6 +19,8 @@ type PipelineGroup = 'ingest' | 'link' | 'classify' | 'snapshot' | 'quality';
 interface PipelineEntry {
   name: string;
   group: PipelineGroup;
+  /** Optional operator-facing rationale (WF/spec provenance) for the step. */
+  description?: string;
 }
 
 export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
@@ -27,6 +34,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   parcels:            { name: 'Parcels',               group: 'ingest' },
   load_ravines:       { name: 'Load Ravines',          group: 'ingest' },
   load_heritage:      { name: 'Load Heritage',         group: 'ingest' },
+  load_centreline:    { name: 'Load Centreline',       group: 'ingest', description: 'Spec 62 §8c — Toronto Centreline street network (drives corner/through-lot detection).' },
   massing:            { name: '3D Massing',            group: 'ingest' },
   neighbourhoods:     { name: 'Neighbourhoods',        group: 'ingest' },
   load_zoning:        { name: 'Load Zoning By-law',    group: 'ingest' },
@@ -34,6 +42,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   enrich_parcels:     { name: 'Enrich Parcel Zoning',  group: 'link' },
   enrich_ravines:     { name: 'Enrich Parcel Ravine',  group: 'link' },
   enrich_heritage:    { name: 'Enrich Parcel Heritage', group: 'link' },
+  enrich_centreline:  { name: 'Enrich Parcel Centreline', group: 'link', description: 'Spec 62 §8d — is_corner_lot / is_through_lot / primary_frontage_street_name.' },
   enrich_permits:     { name: 'Enrich Permit Zoning',  group: 'link' },
   enrich_coa_zoning:  { name: 'Enrich CoA Zoning',     group: 'link' },
   geocode_permits:    { name: 'Geocode Permits',       group: 'link' },
@@ -104,173 +113,46 @@ interface PipelineChain {
   comingSoon?: boolean;
 }
 
-export const PIPELINE_CHAINS: PipelineChain[] = [
-  // Group 1: Core Ingestion (fast daily)
-  {
-    id: 'permits',
-    label: 'Permits Pipeline',
-    description: 'Daily — when building permits are loaded',
-    steps: [
-      { slug: 'assert_schema',       indent: 0 },
-      { slug: 'permits',              indent: 0 },
-      { slug: 'close_stale_permits',  indent: 0 },
-      { slug: 'classify_permit_phase', indent: 0 },
-      { slug: 'classify_scope',       indent: 1 },
-      { slug: 'builders',             indent: 1 },
-      { slug: 'link_wsib',            indent: 1 },
-      { slug: 'geocode_permits',      indent: 1 },
-      { slug: 'link_parcels',         indent: 1 },
-      { slug: 'enrich_permits',       indent: 1 },
-      { slug: 'link_neighbourhoods',  indent: 1 },
-      { slug: 'link_massing',         indent: 1 },
-      { slug: 'link_similar',         indent: 1 },
-      { slug: 'classify_permits',     indent: 1 },
-      // WF3 #realtor-backfill 2026-05-09 — Spec 91 §3.5 item 4: every
-      // realtor-eligible active permit (3-axis gate: construction class
-      // + REALTOR_RELEVANT_TYPES + non-commercial scope) gets a
-      // (permit_id, 'realtor') row so the realtor feed is non-empty
-      // end-to-end. Idempotent; the script's NOT EXISTS guard makes
-      // re-runs cheap.
-      { slug: 'backfill_realtor_permit_trades', indent: 1 },
-      { slug: 'compute_cost_estimates',     indent: 1 },
-      { slug: 'compute_timing_calibration_v2', indent: 1 },
-      { slug: 'link_coa',             indent: 1 },
-      { slug: 'refresh_snapshot',     indent: 1 },
-      { slug: 'assert_data_bounds',   indent: 0 },
-      { slug: 'assert_engine_health', indent: 0 },
-      { slug: 'classify_lifecycle_phase', indent: 0 },
-      // WF2 2026-04-18 — phase distribution gate (spec 84 §3.3):
-      // validates classifier output before marketplace tail reads it.
-      { slug: 'assert_lifecycle_phase_distribution', indent: 0 },
-      // WF1 #B 2026-05-09 — phase calibration step 21.5 (Spec 84 §7,
-      // Spec 86 §4): aggregates permit_phase_transitions ledger into
-      // phase_stay_calibration table; consumed by the inspector
-      // lifecycle.timeline[] cohort fields. Closes Spec 84 bug 84-W4.
-      { slug: 'compute_phase_calibration',  indent: 0 },
-      // WF2 2026-04-13 — marketplace tail (specs 81/82/85):
-      // forecasts → scores → tracked projects. Depends on
-      // classify_lifecycle_phase having stamped fresh lifecycle_phase
-      // + phase_started_at anchors on all active permits.
-      { slug: 'compute_trade_forecasts',    indent: 1 },
-      { slug: 'compute_opportunity_scores', indent: 1 },
-      { slug: 'update_tracked_projects',    indent: 1 },
-      // WF2 2026-04-18 — entity tracing gate (spec 41 §4):
-      // end-to-end coverage check across all downstream tables.
-      { slug: 'assert_entity_tracing',      indent: 0 },
-      // WF1 2026-04-19 — global field-level coverage profile (spec 49).
-      { slug: 'assert_global_coverage',     indent: 0 },
-      // WF3 2026-04-25 — OP4 gap: daily logical backup as the final maintenance
-      // step after all CQA assertions pass (spec 112 §3).
-      { slug: 'backup_db',                  indent: 0 },
-    ],
-  },
-  {
-    id: 'coa',
-    label: 'CoA Pipeline',
-    description: 'Daily — when Committee of Adjustment data is loaded',
-    steps: [
-      { slug: 'assert_schema',           indent: 0 },
-      { slug: 'coa',                     indent: 0 },
-      { slug: 'assert_coa_freshness',   indent: 0 },
-      // WF2 R5.2 (Spec 42 §6.5 step 9) — CoA-to-parcels linking + bundled
-      // neighbourhood lookup + lat/lng back-fill. Must run BEFORE link_coa.
-      { slug: 'link_coa_to_parcels',     indent: 1 },
-      { slug: 'enrich_coa_zoning',       indent: 1 },
-      // WF1 R5.3 (Spec 42 §6.5 step 5) — description-keyword scope classifier
-      // (coa_type_class, project_type, scope_tags). Must run AFTER
-      // link_coa_to_parcels per §6.8 lock-ID ordering (4201 → 4202) and
-      // BEFORE classify_coa_trades (R5.4) which gates on scope_classified_at.
-      { slug: 'classify_coa_scope',      indent: 1 },
-      { slug: 'classify_coa_trades',     indent: 1 },
-      // WF1 R5.5 (Spec 42 §6.5 step 12, §6.8 row 668) — geometric-only cost
-      // estimator. Reads lead_parcels + parcel_buildings + lead_trades; writes
-      // coa_applications cost cols + lead_id-keyed cost_estimates row.
-      { slug: 'compute_coa_cost_estimates', indent: 1 },
-      { slug: 'link_coa',                indent: 1 },
-      { slug: 'refresh_snapshot',         indent: 1 },
-      { slug: 'assert_data_bounds',       indent: 0 },
-      { slug: 'assert_engine_health',     indent: 0 },
-      { slug: 'classify_lifecycle_phase', indent: 0 },
-      // WF2 2026-04-18 — phase distribution gate after CoA classifier run.
-      { slug: 'assert_lifecycle_phase_distribution', indent: 0 },
-      // WF1 2026-05-14 Phase E.3 — compute_phase_calibration now runs in BOTH chains
-      // (permits + coa) so CoA-only chain runs trigger calibration refresh on the
-      // newly-classified lifecycle_transitions. Spec 42 §6.7 step 6 + §6.11 Phase E.3.
-      { slug: 'compute_phase_calibration', indent: 0 },
-      // WF1 2026-04-19 — global field-level coverage profile (spec 49).
-      { slug: 'assert_global_coverage',     indent: 0 },
-    ],
-  },
-  // Group 2: Corporate Entities Enrichment (slow daily scrapes)
-  {
-    id: 'entities',
-    label: 'Corporate Entities Pipeline',
-    description: 'Daily — missing contact enrichment via web scraping',
-    steps: [
-      { slug: 'enrich_wsib_builders',  indent: 0 },
-      { slug: 'enrich_named_builders', indent: 0 },
-    ],
-  },
-  // Group 3: WSIB Registry Enrichment (annual, on-demand)
-  {
-    id: 'wsib',
-    label: 'WSIB Enrichment',
-    description: 'Annual — enrich WSIB registry with contact data via web search',
-    steps: [
-      { slug: 'enrich_wsib_registry', indent: 0 },
-    ],
-  },
-  // Group 4: Foundation (periodic reference data)
-  {
-    id: 'sources',
-    label: 'Source Data Updates',
-    description: 'Quarterly/Annual — reference data refreshes',
-    steps: [
-      { slug: 'assert_schema',       indent: 0 },
-      { slug: 'address_points',      indent: 0 },
-      { slug: 'geocode_permits',     indent: 1 },
-      { slug: 'parcels',             indent: 0 },
-      { slug: 'load_ravines',        indent: 0 },
-      { slug: 'load_heritage',       indent: 0 },
-      // WF1 #parcel-address-bridge Phase 2c — spatial bridge populator.
-      // Runs after parcels + address_points are loaded; populates
-      // parcel_address_points so link_parcels Strategies 1+2 and
-      // link_coa_to_parcels Tier 1a/1b have JOIN data.
-      { slug: 'link_parcel_addresses', indent: 1 },
-      { slug: 'compute_centroids',   indent: 1 },
-      { slug: 'link_parcels',        indent: 1 },
-      { slug: 'enrich_ravines',      indent: 1 },
-      { slug: 'enrich_heritage',     indent: 1 },
-      { slug: 'massing',             indent: 0 },
-      { slug: 'link_massing',        indent: 1 },
-      { slug: 'neighbourhoods',      indent: 0 },
-      { slug: 'link_neighbourhoods', indent: 1 },
-      { slug: 'load_wsib',           indent: 0 },
-      { slug: 'link_wsib',           indent: 1 },
-      { slug: 'load_zoning',         indent: 0 },
-      { slug: 'enrich_parcels',      indent: 1 },
-      { slug: 'refresh_snapshot',    indent: 1 },
-      { slug: 'assert_data_bounds',  indent: 0 },
-      { slug: 'assert_engine_health', indent: 0 },
-    ],
-  },
-  // Group 4: Deep Scrapes & Documents (continuous async workers)
-  {
-    id: 'deep_scrapes',
-    label: 'Deep Scrapes',
-    description: 'Weekly — AIC portal inspection scraping via REST API',
-    steps: [
-      { slug: 'inspections',                  indent: 0 },
-      { slug: 'classify_inspection_status',  indent: 0 },
-      { slug: 'assert_network_health',       indent: 0 },
-      { slug: 'refresh_snapshot',      indent: 1 },
-      { slug: 'assert_data_bounds',    indent: 0 },
-      { slug: 'assert_engine_health',  indent: 0 },
-      { slug: 'assert_staleness',      indent: 0 },
-    ],
-  },
+// Zod boundary (Spec 33 §13): validate the manifest shape. safeParse (NOT parse) at module
+// scope so a malformed/truncated manifest.json degrades to empty chains instead of an
+// uncatchable module-load throw. The manifest is build-time static + test-validated.
+const ManifestChainsSchema = z.object({ chains: z.record(z.string(), z.array(z.string())) });
+const _manifestParsed = ManifestChainsSchema.safeParse(pipelineManifest);
+const MANIFEST_CHAINS: Record<string, string[]> = _manifestParsed.success ? _manifestParsed.data.chains : {};
+if (!_manifestParsed.success) {
+  // eslint-disable-next-line no-console
+  console.error('[FreshnessTimeline] manifest.json failed chains-schema validation — chains render empty', _manifestParsed.error);
+}
+
+// Display nesting (the ONLY per-step UI datum the manifest lacks). Slugs not listed render at
+// indent 0. Verified consistent per-slug across chains (WF2 2026-06-11).
+const STEP_INDENT: Record<string, number> = {
+  classify_scope: 1, builders: 1, link_wsib: 1, geocode_permits: 1, link_parcels: 1,
+  enrich_permits: 1, link_neighbourhoods: 1, link_massing: 1, link_similar: 1,
+  classify_permits: 1, backfill_realtor_permit_trades: 1, compute_cost_estimates: 1,
+  compute_timing_calibration_v2: 1, link_coa: 1, refresh_snapshot: 1,
+  compute_trade_forecasts: 1, compute_opportunity_scores: 1, update_tracked_projects: 1,
+  link_coa_to_parcels: 1, enrich_coa_zoning: 1, classify_coa_scope: 1, classify_coa_trades: 1,
+  compute_coa_cost_estimates: 1, link_parcel_addresses: 1, compute_centroids: 1,
+  enrich_ravines: 1, enrich_heritage: 1, enrich_centreline: 1, enrich_parcels: 1,
+};
+
+// Per-chain display metadata + render order. Step slugs + ORDER are DERIVED from manifest.chains
+// (Spec 47 single source of truth) — adding a step there flows to the UI automatically, removing
+// the hand-maintained-duplicate drift class (WF2 2026-06-11).
+const CHAIN_META: ReadonlyArray<{ id: string; label: string; description: string; comingSoon?: boolean }> = [
+  { id: 'permits',      label: 'Permits Pipeline',            description: 'Daily — when building permits are loaded' },
+  { id: 'coa',          label: 'CoA Pipeline',                description: 'Daily — when Committee of Adjustment data is loaded' },
+  { id: 'entities',     label: 'Corporate Entities Pipeline', description: 'Daily — missing contact enrichment via web scraping' },
+  { id: 'wsib',         label: 'WSIB Enrichment',             description: 'Annual — enrich WSIB registry with contact data via web search' },
+  { id: 'sources',      label: 'Source Data Updates',         description: 'Quarterly/Annual — reference data refreshes' },
+  { id: 'deep_scrapes', label: 'Deep Scrapes',                description: 'Weekly — AIC portal inspection scraping via REST API' },
 ];
 
+export const PIPELINE_CHAINS: PipelineChain[] = CHAIN_META.map((meta) => ({
+  ...meta,
+  steps: (MANIFEST_CHAINS[meta.id] ?? []).map((slug) => ({ slug, indent: STEP_INDENT[slug] ?? 0 })),
+}));
 // ---------------------------------------------------------------------------
 // Infrastructure steps — no individual Run button or toggle switch.
 // These always run as part of a chain and cannot be disabled.

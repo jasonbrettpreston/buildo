@@ -108,12 +108,10 @@ describe('manifest.json — enrich_parcels chain-registration cascade', () => {
     expect(ei).toBeLessThan(sources.indexOf('refresh_snapshot'));
   });
 
-  it('keeps enrich_parcels registered as the sources chain grows (→ 22 after Spec 61 §8d)', () => {
-    // Spec 65 added enrich_parcels (17 → 18); Spec 59 §8c added load_ravines (18 → 19);
-    // Spec 59 §8d added enrich_ravines (19 → 20); Spec 61 §8c added load_heritage (20 → 21);
-    // Spec 61 §8d added enrich_heritage (21 → 22). The enrich_parcels-presence + ordering
-    // assertions above are the real lock; the length tracks the legitimately-added steps.
-    expect(manifest.chains.sources).toHaveLength(22);
+  it('keeps enrich_parcels registered in the sources chain (presence, not a pinned length)', () => {
+    // No hardcoded chain length — that bare count was the drift class (it failed every time a
+    // step was legitimately added, e.g. Spec 62 §8c/§8d centreline → 24). The enrich_parcels
+    // presence + ordering assertions above are the real lock (WF2 2026-06-11).
     expect(manifest.chains.sources).toContain('enrich_parcels');
   });
 });

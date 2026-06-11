@@ -289,7 +289,7 @@ Each quality script emits an `audit_table` in `records_meta` with per-metric PAS
 
 ### Out-of-Scope Files
 - `src/app/api/admin/pipelines/` — API trigger routes (governed by Spec 26 admin)
-- `src/components/FreshnessTimeline.tsx` — UI rendering (governed by Spec 28)
+- `src/components/FreshnessTimeline.tsx` — UI rendering (governed by Spec 33/35; derives chain step lists from this manifest per Spec 33 §7 / WF2 2026-06-11)
 - Individual pipeline scripts (`load-*.js`, `classify-*.js`, etc.) — governed by their own specs
 
 ### Cross-Spec Dependencies
