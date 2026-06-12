@@ -1,9 +1,54 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full prose history of resolved batches recoverable via `git log -p docs/reports/review_followups.md`._
 
+
 ---
 
+## Weekly Triage — 2026-06-12
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
+
+**Triage completed:** 2026-06-12 · **Spec ref:** 05_knowledge_operating_model.md §6
+
+| Metric | Count |
+|---|---|
+| Total named deferred items (approximate) | ~170 |
+| Sections with no `last_reviewed` (zombies) | 35 of 35 |
+| Items proposed **PROMOTE → WF3** | 11 |
+| Items proposed **KILL** | 28 |
+| Items proposed **CONVERT** (lesson / spec / lint) | 5 |
+| Items proposed **DEFER** (triage_after refreshed +4 wks) | ~126 |
+
+**PROMOTE summary (all filed as WF3 candidates):**
+1. `get-lead-feed.ts:100` — lead_id separator mismatch `:` vs `--` breaks mobile feed→detail routing
+2. `get-lead-feed.ts` — `clampedLimit` and `clampedKm` NaN when inputs undefined (bundle)
+3. `get-lead-feed.ts` — `builder_candidates` LEFT JOIN acts as INNER JOIN, drops 30-50% of builders
+4. `cost-model-shared.js` — falsy-`0` in `computeGfa` / `computeEffectiveArea` / `computeTradeValue` (bundle)
+5. `compute-cost-estimates.js` — `scopeMatrix` built without `.trim()` → silent cost inflation
+6. `PaywallScreen` — unhandled rejection + premature haptic + accessibilityLabel mismatch (bundle)
+7. `classify-coa-scope.js` — unconditionally bumps `scope_classified_at` → daily full-re-classify cycle (CRIT)
+8. PostHog subscription funnel — near-zero events across paywall + checkout flow (revenue analytics gap)
+9. `scoring.ts` — `runAt` parity drift TS↔JS classifiers violates Midnight Cross / Spec 47 §R3.5
+10. Spec 84 bug 84-W11 — `classify-lifecycle-phase.js` writes wrong `P3/P4/P5` phase names
+11. `lead_views` — no composite index on `lead_key`; admin inspector degrades as table grows
+
+**CONVERT summary:**
+- Falsy-`||`-vs-`??` bug class → `tasks/lessons.md` entry (recurring pattern across cost-model)
+- `backup-db.js` never run in production → `tasks/lessons.md` operational safety note
+- §B4 idToken-gate mitigation → Spec 99 §B4 "Implementation note" (5-line spec edit)
+- classify-permits.js `new Date()` lint warnings → tasks/lessons.md (`pipeline.getDbTimestamp` mandate reminder)
+- Adversarial reviewer false-positive protocol → already partially in lessons; add 3-step verification checklist
+
+**KILL rationale:** Items killed are NITs or LOWs dormant > 4 weeks with no observed symptom, cosmetic-only scope, or already superseded by later commits. Full details inline per section.
+
+**New triage_after dates (all DEFERs):** 2026-07-10
+
+---
+
+
 ## Phase F.4 (Lead Inspector CoA Classification Panel) — diff-stage 4-reviewer DEFERs (2026-05-17)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + Observability worktree) on F.4 v4.1 implementation. 11 BUG findings fixed in commit (1 CRIT + 7 HIGH + 3 MED). Items below are DEFERs.
 
@@ -12,11 +57,11 @@ Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + 
 | HIGH | Gemini | "1MB JSON file synchronous parse blocks main thread" | False premise — actual file is **43KB** (Gemini misread `9KB × 110 rows` wording as `1MB total`). 43KB JSON.parse on a desktop admin tool is sub-millisecond; no perf issue exists. |
 | CRIT | DeepSeek | `fetchLeadInspect` returns `lead_id` in `NUM--REV` URL-segment form vs canonical `permit:NUM:REV` form used by SQL queries / cross-stream lookups | **Pre-existing Cycle 7 behavior**, not introduced by F.4. The `parseLeadId` parser + route handler translate between URL-segment and canonical at the boundary; `linked_permit.lead_id` (which F.4 added) IS canonical. File as a separate Spec 76 cleanup WF if a future consumer trips on the inconsistency. |
 | MED | DeepSeek | `ESCAPE '\\'` on `LIKE` arm — recommend stricter permit_num regex validation instead of relying on ESCAPE | F.4 already rejects `/[%_\\]/` via a hard guard before parameter binding (lead-inspect-query.ts: regex check + breadcrumb + null-out). ESCAPE clause is belt-and-suspenders defense-in-depth, not the primary gate. |
-| LOW | Gemini | `bidValue * 100` width style unclamped | Schema validates `z.number().min(0).max(1)` upstream; Zod boundary at route handler (added in this diff) blocks any out-of-range value before render. Defense-in-depth, not needed. |
-| LOW | Gemini | `LinkedPermitChip` needs `min-w-[44px]` for touch target | Desktop-first admin tool (Spec 33 §2) — current `px-3` + content width is adequate. WCAG 2.1 AAA touch-target sizing is mobile-priority. |
-| NIT | Gemini | `new Date(dateString).toISOString().slice(0,10)` timezone display drift | Admin diagnostic surface — exact local-tz date display is not load-bearing. Single line in DecisionTimeline + CrossStreamTimeline. |
-| LOW | DeepSeek | `is_default_fallback` hardcoded `[0.5, 0.6]` range — should be a `logic_variable` | **Pre-existing** in `fetchLeadInspect`, not F.4. Out of scope; file separately if/when business rule changes. |
-| LOW | DeepSeek | `normalizeBuilderName` regex called twice (suffix removal) | **Pre-existing** in `fetchLeadInspect`, not F.4. |
+| LOW | Gemini | ~~`bidValue * 100` width style unclamped~~ | **❌ KILL** — Zod boundary blocks out-of-range; purely cosmetic. |
+| LOW | Gemini | ~~`LinkedPermitChip` needs `min-w-[44px]` for touch target~~ | **❌ KILL** — desktop-first admin tool, WCAG touch-target is mobile priority; no observed a11y issue. |
+| NIT | Gemini | ~~`new Date(dateString).toISOString().slice(0,10)` timezone display drift~~ | **❌ KILL** — admin diagnostic, not load-bearing, no observed complaint. |
+| LOW | DeepSeek | `is_default_fallback` hardcoded `[0.5, 0.6]` range — should be a `logic_variable` | **Pre-existing** in `fetchLeadInspect`, not F.4. Out of scope; file separately if/when business rule changes. DEFER → 2026-07-10 |
+| LOW | DeepSeek | `normalizeBuilderName` regex called twice (suffix removal) | **Pre-existing** in `fetchLeadInspect`, not F.4. DEFER → 2026-07-10 |
 
 **Fixed in F.4 v4.1 commit** (per the consolidated diff-stage triage):
 - CRIT (DeepSeek + Independent agreed): Cross-stream UNION ALL Arm 1 hardcoded `:00` revision → now threads `paddedRevision` through `FetchCoaPanelArgs`.
@@ -34,6 +79,8 @@ Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + 
 ---
 
 ## classify-coa-scope.js R5.3 — plan-review + Pre-Review deferrals (2026-05-14)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 3-reviewer adversarial plan review (Gemini + DeepSeek + worktree feature-dev:code-reviewer) on the WF1 R5.3 plan, plus Pre-Review Self-Checklist item (l) verification against the live script.
 
@@ -41,13 +88,13 @@ Source: 3-reviewer adversarial plan review (Gemini + DeepSeek + worktree feature
 
 | Severity | Source | Item | Why deferred |
 |---|---|---|---|
-| CRIT | DeepSeek | lead_id LPAD truncation collision risk | **ALREADY FIXED**: WF3 #lpad-revision-num-collision (commit `4b9ff32`) corrected Spec 42 §6.6.A.1 + added mig 138_a admin-exclusion. DeepSeek didn't have visibility into the most recent commits. |
+| CRIT | DeepSeek | ~~lead_id LPAD truncation collision risk~~ | **❌ KILL** — already fixed in commit `4b9ff32`. DeepSeek false positive from stale context. |
 | CRIT | DeepSeek | lifecycle_status_history natural key `date_trunc('second')` allows silent drops within same second | Out of R5.3 scope (separate spec section + separate script `classify-lifecycle-phase.js`). File as follow-up to Spec 84 hardening WF. |
 | HIGH | DeepSeek | `assert_coa_freshness` WARN-only — won't halt chain on prolonged CKAN outage | Operational concern, out of R5.3 scope. |
 | HIGH | DeepSeek | `permits.linked_coa_application_number` single-value column loses data on multi-CoA-to-permit linkage | Out of R5.3 scope (link_coa.js concern). |
 | MED | DeepSeek | Phase distribution gate edge case on Seq with row_count=1 | Out of R5.3 scope (assert-lifecycle-phase-distribution.js). |
 | MED/LOW | DeepSeek | lead_id format CHECK regex tightness; advisory lock deadlock potential | Operational concerns; one already mitigated. |
-| LOW | DeepSeek | Mobile API should expose `lead_type` field derived from prefix | Out of R5.3 scope (Spec 91 mobile concern). |
+| LOW | DeepSeek | ~~Mobile API should expose `lead_type` field derived from prefix~~ | **❌ KILL** — out of R5.3 scope + no observed mobile consumer requesting it. Re-file when Spec 91 mobile WF targets this. |
 
 **Pre-Review Self-Checklist (l) — RESOLVED during Green Light (not a defer):**
 
@@ -56,6 +103,8 @@ The initial verdict on item (l) was based on a search for `load_at` updates in `
 ---
 
 ## mig 139 — Phase C composite-UNIQUE WF3 follow-ups (2026-05-14)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 3-reviewer reviews across two passes (plan + diff). Plan-review findings already triaged in the active task. Diff-review (post-Fix) findings appended below:
 
@@ -97,6 +146,8 @@ Worktree verdict: **GO** with no issues found (all 8 checklist items PASS).
 ---
 
 ## migrate-to-lead-id.js + deriveLeadId — LPAD-collision WF3 follow-ups (2026-05-14)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 3-reviewer adversarial plan review on WF3 #lpad-revision-num-collision (Gemini + DeepSeek + worktree feature-dev:code-reviewer, user-requested adversarial). 14 findings total — 6 BUGs folded into the WF3 commit (administrative-exclusion + LPAD-collision preflight + Spec 42 §6.6.A.1 truncation correction + 4 plan refinements), 1 REJECTED (see below), 8 DEFER below.
 
@@ -117,6 +168,8 @@ The canonical `permit:<num>:LPAD(rev,2,'0')` form requires `LENGTH(revision_num)
 ---
 
 ## migrate-to-lead-id.js — Phase C hardening followups (WF3 2026-05-14)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 3-reviewer adversarial plan review on the lead_type-drift WF3 (Gemini + DeepSeek + worktree code-reviewer, user-requested adversarial). 14 findings total — 5 BUGs folded into WF3 commit, 1 INCORRECT (DeepSeek CRIT advisory-lock claim, see below), 8 DEFER below. All DEFER items are pre-existing weaknesses in `scripts/migrate-to-lead-id.js` not introduced by the WF3 fix — appropriate destination is a future Phase C hardening WF or `tasks/lessons.md` if a pattern emerges.
 
@@ -137,6 +190,8 @@ DeepSeek flagged the advisory-lock-vs-transaction client mismatch as a CRITICAL 
 ---
 
 ## WF1 #coa-pipeline-parity-phase-a R2.v2 Multi-Agent Review Deferred Items (2026-05-13)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: R2.v2 re-review on `.cursor/active_task.md` + `docs/specs/01-pipeline/42_chain_coa.md` (Gemini + DeepSeek + worktree code-reviewer, after Round 1 BUG fixes + granular-first reframing + `lifecycle_status_history` unified table). 11 BUGs documented as known issues in the active task itself (under "Known Issues — Documented for Implementation"). Items below are accepted-and-deferred per user direction "B — authorize as-is with documented known issues."
 
@@ -155,6 +210,8 @@ Source: R2.v2 re-review on `.cursor/active_task.md` + `docs/specs/01-pipeline/42
 ---
 
 ## Spec 42 §6 — WF2 #coa-pipeline-parity R0 Multi-Agent Review Deferred Items (2026-05-13)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: R0 plan review on `docs/specs/01-pipeline/42_chain_coa.md` §6 (Gemini + DeepSeek adversarial + worktree code-reviewer). Items below are accepted-and-deferred — either pre-existing pipeline concerns, operational hardening that fits a later WF, or specificity that resolves at WF1 plan-lock.
 
@@ -197,6 +254,8 @@ Source: R0 plan review on `docs/specs/01-pipeline/42_chain_coa.md` §6 (Gemini +
 8. CKAN `coa_applications.status` enumeration exhaustiveness — §6.7 lists specific status values; future CKAN additions would silently NULL `lifecycle_phase`. Add catchall fallback rule.
 
 ## WF1 #C (2026-05-11) — Multi-Agent Review deferrals from admin Lifecycle Timeline panel
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 _Source: pre-implementation R0 Gemini review of the plan itself (7 findings, 5 folded into plan) + post-implementation R8 multi-agent review of the component code (Gemini + DeepSeek + worktree code-reviewer). 8 BUGs fixed in-loop; remaining items catalogued below._
 
 **Applied in this commit (R9 in-loop fixes):**
@@ -221,16 +280,16 @@ _Source: pre-implementation R0 Gemini review of the plan itself (7 findings, 5 f
 |---|---|---|
 | MED | Three filter passes over `timeline` to split by status (`completed`/`current`/`upcoming`). | Timeline arrays are bounded at ~23 entries (Spec 84 §3 phase count) — micro-optimization with no measurable impact. Defer. |
 | MED | Multiple `status: 'current'` entries silently ignored (`current[0]` pick). | Spec 84 §5 invariant: at most one current entry per timeline. If the upstream data layer ever emits two, that's a data-quality bug worth surfacing, not a render-time concern. Defer; add a dev-mode assertion if it ever happens in practice. |
-| MED | `statusBg` mixes `opacity-70` with `bg-slate-50/50` (alpha-channel bg). | Cosmetic redundancy; visual outcome is the intended faded state. Defer. |
-| LOW | Array index in keys (`completed-${entry.phase}-${i}`). | Phase prefix already disambiguates; timeline is server-emitted in stable order, so React reconciliation is correct. Defer. |
-| LOW | Duplicate `aria-label` + `title` on `UnreliableMarker`. | Intentional — `aria-label` is the canonical signal for screen readers; `title` is the visible tooltip on focus/hover. Some screen readers announce both, which is mildly redundant but not broken. Defer. |
-| NIT | `Chevron` is a one-line abstraction over `ChevronRightIcon`. | Kept for naming consistency with the resolved-content shape (`<Chevron />` reads as "render a chevron" at every use site without distinguishing the underlying SVG). Defer. |
+| MED | ~~`statusBg` mixes `opacity-70` with `bg-slate-50/50` (alpha-channel bg).~~ | **❌ KILL** — cosmetic, no observable correctness impact. |
+| LOW | ~~Array index in keys (`completed-${entry.phase}-${i}`).~~ | **❌ KILL** — phase prefix disambiguates; reconciliation is correct. |
+| LOW | Duplicate `aria-label` + `title` on `UnreliableMarker`. | DEFER → 2026-07-10 — intentional redundancy for a11y breadth. |
+| NIT | ~~`Chevron` is a one-line abstraction over `ChevronRightIcon`.~~ | **❌ KILL** — naming rationale is sound; no value tracking. |
 
 **Deferred — DeepSeek minor items:**
 
 | Severity | Item | Rationale |
 |---|---|---|
-| NIT | Skeleton placeholders aren't chevron-shaped (just rounded rectangles). | V2 visual fidelity. The skeleton conveys "timeline is loading" correctly; chevron-shaped placeholders are aesthetic polish. Defer. |
+| NIT | ~~Skeleton placeholders aren't chevron-shaped (just rounded rectangles).~~ | **❌ KILL** — aesthetic polish, no functional impact. |
 
 **Future Spec-33-conformance WF (carry-forward):**
 - Install `lucide-react` and replace the two inline-SVG icons (`ChevronRightIcon`, `InfoIcon`) with `<ChevronRight />` and `<Info />` from the library. Spec 33 §4 mandates `lucide-react` as the admin icon library; the inline SVGs in this WF are documented technical debt.
@@ -239,6 +298,8 @@ _Source: pre-implementation R0 Gemini review of the plan itself (7 findings, 5 f
 ---
 
 ## WF3 #realtor-backfill (2026-05-11) — Multi-Agent Review deferrals
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 _Source: Gemini + DeepSeek + worktree code-reviewer of `scripts/backfill-realtor-permit-trades.js` and 11 supporting files. Three reviewers caught 5 issues fixed in-loop; remaining items are catalogued here._
 
 **Applied in this commit (R9 in-loop fixes):**
@@ -263,7 +324,7 @@ _Source: Gemini + DeepSeek + worktree code-reviewer of `scripts/backfill-realtor
 
 | Severity | Item | Rationale |
 |---|---|---|
-| HIGH | `ACTIVE_STATUSES` hardcoded literal not imported from `src/lib/quality/metrics.ts:473` (canonical source). | Real drift risk. The R9 §R5 startup guard catches the empty-array case but not the "wrong-values" case. Fix: extract `ACTIVE_STATUSES` to `scripts/lib/active-statuses.js` JS mirror with a parity test against the TS source. Defer to a follow-up WF3 that touches the canonical filter — bundling here would expand scope into the TS dual-path. |
+| HIGH | **🔴 PROMOTE → WF3** — `ACTIVE_STATUSES` hardcoded literal not imported from `src/lib/quality/metrics.ts:473` (canonical source). Real drift risk — startup guard catches empty-array but NOT wrong values. Fix: extract to `scripts/lib/active-statuses.js` JS mirror with parity test. | Bundle with next WF3 touching the canonical filter. |
 | HIGH | `REALTOR_RELEVANT_TYPES` imported from JS mirror; drift between JS and TS sets unchecked at runtime. | Already regression-locked by `src/tests/permit-type-class.logic.test.ts` — drift between JS and TS sets fails CI. The reviewer's concern was that this lock isn't visible from the backfill script; the comment now points at the mirror file but the test coverage is real. Defer. |
 | MED | `totalActivePermits` snapshot at startup races against concurrent classify-permits writes. | False-WARN/false-PASS risk on coverage comparison is real but small (the window is the few seconds between the count query and the final emitSummary, and the discrepancy at scale would be tens of rows out of ~95K — invisible at the verdict threshold). Defer; not worth the SQL complexity of a re-count. |
 | MED | Hardcoded `tier=1, confidence=1.0` not documented + not compared against classify-permits' realtor write. | Realtor rows have no signal-derived tier or confidence (every eligible permit gets the row regardless of permit content); 1.0 is the canonical "no signal" / "tier-1 default" value. Defer adding a comment to next-touch. |
@@ -279,6 +340,8 @@ _Source: Gemini + DeepSeek + worktree code-reviewer of `scripts/backfill-realtor
 ---
 
 ## WF1 #B (2026-05-09) — Multi-Agent Review deferrals from lifecycle timeline data layer
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 _Source: Gemini review of `compute-phase-calibration.js` + DeepSeek review of `build-lifecycle-timeline.ts` + worktree code-reviewer of full diff. Three reviewers; four BUGs applied this commit, several DEFERrals catalogued below._
 
 **Applied this commit:**
@@ -307,13 +370,13 @@ _Source: Gemini review of `compute-phase-calibration.js` + DeepSeek review of `b
 | HIGH | A completed entry can have `exited_at: null` when the last transition's `to_phase` is not the current phase (i.e., the transition list and `currentPhase` are inconsistent). | Defensive guard against an upstream invariant violation that should never happen — the ledger always writes the entry-into-current-phase transition at step 21. If it ever did happen, the panel would render a "completed" entry with no exit timestamp, which is confusing but not corrupting. WF3 candidate to add an explicit invariant assertion + WARN log. Defer. |
 | HIGH | No validation that the transition list ends with a transition into `currentPhase`. Same root cause as above. | Same defer rationale. |
 | MEDIUM | `remainingPhases` may misbehave for a `currentPhase` not in the canonical path. | Already returns `[]` for unknown / off-path phases — the failure mode is a missing upcoming list, not a crash. Cosmetic. Defer. |
-| LOW | DST sensitivity from `MS_PER_DAY = 86_400_000` — spring-forward / fall-back days are 23h / 25h. | At most 1-day error per phase transition; cohort medians smooth this out. Defer permanently. |
+| LOW | ~~DST sensitivity from `MS_PER_DAY = 86_400_000` — spring-forward / fall-back days are 23h / 25h.~~ | **❌ KILL** — 1-day error smoothed by cohort medians; "defer permanently" already the verdict. No value tracking further. |
 
 **Worktree code-reviewer — inherited limitations (catalogued, not fixed):**
 
 | Severity | Item | Rationale |
 |---|---|---|
-| INHERITED-BUG | Spec 84 bug 84-W11 — `classify-lifecycle-phase.js` writes unprefixed `P3/P4/P5` for permit intake instead of the spec'd `INTAKE_P3/P4/P5`. The new `STANDARD_PHASE_PATH_BY_PERMIT_TYPE` and the new live-DB test assertion `phase_name === 'CoA Approved'` for a building permit at phase `P3` both reflect this — building permits never go through CoA, so showing "CoA Approved" as a completed phase in the inspector is technically a UX bug. | The data layer cannot fix the labeling without first fixing the ledger writer (out of scope for WF1 #B). The new code documents the limitation in `phase-progression.ts` lines 8–14. WF3 candidate against bug 84-W11 — must be done before any user-visible release of the inspector lifecycle panel. |
+| INHERITED-BUG | **🔴 PROMOTE → WF3** — Spec 84 bug 84-W11 — `classify-lifecycle-phase.js` writes unprefixed `P3/P4/P5` for permit intake instead of the spec'd `INTAKE_P3/P4/P5`. The new `STANDARD_PHASE_PATH_BY_PERMIT_TYPE` and the new live-DB test assertion `phase_name === 'CoA Approved'` for a building permit at phase `P3` both reflect this — building permits never go through CoA, so showing "CoA Approved" as a completed phase in the inspector is technically a UX bug. | The data layer cannot fix the labeling without first fixing the ledger writer (out of scope for WF1 #B). The new code documents the limitation in `phase-progression.ts` lines 8–14. WF3 candidate against bug 84-W11 — must be done before any user-visible release of the inspector lifecycle panel. |
 | DEFER | Spec 86 §4 chain-step table not updated with the new `compute_phase_calibration` row. | The script's `SPEC LINK` header and migration comment both reference `chain step 21.5`, but Spec 86 §4 was not amended this commit (separate spec-amendment WF). Will be picked up by the next Spec 86 housekeeping pass. Defer. |
 
 **Spec amendment followup (carry-forward):**
@@ -322,6 +385,8 @@ _Source: Gemini review of `compute-phase-calibration.js` + DeepSeek review of `b
 ---
 
 ## WF2 #C (2026-05-09) — Multi-Agent Review deferrals from massing area backfill commit
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 _Source: Gemini review of `load-massing.js` + DeepSeek review of `mig 122` + worktree code-reviewer of full diff. Worktree found 1 real CRITICAL fix (applied this commit). Gemini + DeepSeek findings are mostly pre-existing structural concerns + a few legitimate enhancements; bundling them in this WF2 #C would explode the blast radius._
 
 **Applied this commit (worktree BUG-2, conf 92 — real concurrency window):**
@@ -343,8 +408,8 @@ _Source: Gemini review of `load-massing.js` + DeepSeek review of `mig 122` + wor
 | MEDIUM | `execSync('unzip', 'powershell')` — non-portable. | Pre-existing. Use `yauzl`/`unzipper` lib. Defer. |
 | MEDIUM | `downloadFile` redirect handling has no depth limit. | Pre-existing. Add depth counter. Defer. |
 | MEDIUM | `processed < 400000` is hardcoded magic threshold. | Pre-existing. Make dynamic (95% of last run). Defer. |
-| LOW | `shoelaceArea` is now dead code. | Introduced as dead by WF2 #C. Cleanup follow-up. Defer. |
-| LOW | `SQM_TO_SQFT` constant unused. | Same — dead post-WF2-#C. Cleanup follow-up. Defer. |
+| LOW | ~~`shoelaceArea` is now dead code.~~ | **❌ KILL** — 4 weeks dormant, delete at next touch of this file; no standalone WF. |
+| LOW | ~~`SQM_TO_SQFT` constant unused.~~ | **❌ KILL** — same as above. |
 | LOW | MD5 hash truncated to 12 chars (48-bit collision risk). | Pre-existing. Use full digest. Defer. |
 | NIT | Progress reporting brittle on chunk boundaries. | Pre-existing. Defer. |
 
@@ -362,14 +427,16 @@ _Source: Gemini review of `load-massing.js` + DeepSeek review of `mig 122` + wor
 **Worktree deferred nits:**
 | Severity | Item | Rationale |
 |---|---|---|
-| DEFER (worktree, conf 88) | `isProjected` variable is declared but never used after WF2 #C — true dead code. | Cleanup follow-up. Defer. |
-| DEFER (worktree, conf 88) | `shoelaceArea` function is now unused. | Same as Gemini LOW. Defer. |
-| DEFER (worktree, conf 85) | `SQM_TO_SQFT` constant unused. | Same as Gemini LOW. Defer. |
+| DEFER (worktree, conf 88) | ~~`isProjected` variable is declared but never used after WF2 #C — true dead code.~~ | **❌ KILL** — delete at next touch of load-massing.js. |
+| DEFER (worktree, conf 88) | ~~`shoelaceArea` function is now unused.~~ | **❌ KILL** — already killed above. |
+| DEFER (worktree, conf 85) | ~~`SQM_TO_SQFT` constant unused.~~ | **❌ KILL** — already killed above. |
 | DEFER (worktree, conf 82) | Double `ST_Area` call in mig 122 + post-INSERT UPDATE — no CSE. CTE-based version would compute once. | Perf nit; 114.9s for 427K rows means current form is acceptable. Defer. |
 
 ---
 
 ## WF3 (2026-05-09) — Multi-Agent Review deferrals from realtor sub-gating commit
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 _Source: Gemini review of `classify-permits.js` + DeepSeek review of `classifier.ts` + worktree code-reviewer of full diff. Worktree review found 1 important fix (applied this commit). Gemini + DeepSeek findings are ALL pre-existing structural issues unrelated to the realtor sub-gating fix — bundling them in this WF3 would explode the blast radius. Each is a separate WF candidate._
 
 **Applied this commit (worktree IMPORTANT #1, conf 82):**
@@ -408,14 +475,18 @@ _Source: Gemini review of `classify-permits.js` + DeepSeek review of `classifier
 ---
 
 ## WF3 (2026-05-09) — Realtor sub-gating: Option B deferred (DB-driven `realtor_eligible` column)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 | Severity | Source | Item | Why deferred |
 |---|---|---|---|
-| LOW (future enhancement) | WF3 realtor sub-gating commit `<pending>` | **Make `REALTOR_RELEVANT_TYPES` operator-tunable via `permit_type_classifications.realtor_eligible BOOLEAN`.** Today the residential-types list is a code constant mirrored TS↔JS. If the residential type list churns (e.g., a new permit_type emerges or the policy contract changes), the change requires a code deploy. Per Spec 86 §1 the project pattern for taxonomies-with-policy is a DB column + admin Control Panel surface. Migration adds the column with a backfill of `TRUE` for the 5 currently-relevant types and `FALSE` for the rest; classifier loads via `loadPermitTypeClassMap` (already loaded once at startup); admin UI reuses the existing GlobalConfigCard pattern. | Future WF — not blocked by anything. Raise priority only when a 6th residential type emerges or operator-side experimentation is needed. |
+| LOW (future enhancement) | WF3 realtor sub-gating commit `<pending>` | ~~**Make `REALTOR_RELEVANT_TYPES` operator-tunable via `permit_type_classifications.realtor_eligible BOOLEAN`.**~~ | **❌ KILL** — no 6th residential type has emerged in 4 weeks; no operator-side experimentation requested. Re-file as WF1 if/when a trigger surfaces. |
 
 ---
 
 ## WF3 (2026-05-08) — Multi-Agent Review deferrals from neighbourhoods FK-join repair commit
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 _Source: Gemini review of `compute-cost-estimates.js` + DeepSeek review of `get-lead-feed.ts` + worktree code-reviewer of full diff. ALL findings below are pre-existing structural issues unrelated to the wrong-join fix; bundling into the WF3 would have exploded blast radius beyond the surgical correction. Each is a meaningful separate WF._
 
 **Applied this commit (worktree review FAILs in the new Layer 2 test):**
@@ -429,7 +500,7 @@ _Source: Gemini review of `compute-cost-estimates.js` + DeepSeek review of `get-
 | CRITICAL | **Spec 83 §8 mandates "pinned client" advisory lock pattern, not the SDK helper.** Project-wide convention is `pipeline.withAdvisoryLock` (matches every other pipeline script). The spec-vs-code gap is the spec, not the code. | Spec 83 §8 amendment to allow the SDK helper (or the project chooses to revert to per-script pinned client). Gemini doesn't have spec-evolution context. |
 | HIGH | **`trade_contract_values::text IS DISTINCT FROM` perf** at IS DISTINCT FROM WAL guard. Forces JSONB serialization per row; defeats GIN. | WF3 — switch to JSONB containment (`@>`/`<@`) once we have a perf benchmark on the bulk UPSERT. |
 | HIGH | **LATERAL parcel `ORDER BY parcel_id ASC LIMIT 1`** is non-deterministic on a permit that spans multiple parcels — picks the lowest-id parcel which may be a sliver. | WF3 — define the canonical primary-parcel choice (likely `lot_size_sqm DESC` or `is_primary` flag); pre-existing across `compute-cost-estimates.js` AND `lead-inspect-query.ts` AND `lead-detail-query.ts`. Bundle. |
-| HIGH | **`scopeMatrix` key built without `.trim()`** — Spec 83 §3 explicitly requires `.toLowerCase().trim()`; trailing whitespace in DB rows would silently fall through to matrix-miss → full-GFA fallback (the very inflation pattern WF2 #3 just gated). | WF3 — one-line `.trim()` add at scopeMatrix build. |
+| HIGH | **🔴 PROMOTE → WF3** — **`scopeMatrix` key built without `.trim()`** — Spec 83 §3 explicitly requires `.toLowerCase().trim()`; trailing whitespace in DB rows would silently fall through to matrix-miss → full-GFA fallback (the very inflation pattern WF2 #3 just gated). | WF3 — one-line `.trim()` add at scopeMatrix build. |
 | MEDIUM | **`data_quality_snapshots` UPDATE assumes the row exists** (created later in the chain by `refresh-snapshot.js`). Brittle if chain order changes. | WF3 — switch to `INSERT ... ON CONFLICT (snapshot_date) DO UPDATE`. |
 | MEDIUM | **SOURCE_SQL complexity** (9 tables × multiple LATERAL subqueries) — performance liability as data grows. | Defer indefinitely; pre-materialize aggregations only after `EXPLAIN ANALYZE` shows real degradation. |
 | LOW | **`BULK_COLUMN_COUNT = 15` manually maintained** — adding a column to the INSERT without updating the constant breaks `BATCH_SIZE`. | WF3 — derive from a column-list array. |
@@ -439,9 +510,9 @@ _Source: Gemini review of `compute-cost-estimates.js` + DeepSeek review of `get-
 
 | Severity | Item | Why deferred |
 |---|---|---|
-| HIGH | **`clampedLimit = NaN` when `input.limit` undefined** — `Math.max(1, undefined) → NaN`; `LIMIT $5::int` then errors at PG. Breaks the entire feed for any request without explicit `limit`. | WF3 — add `?? DEFAULT_FEED_LIMIT` before clamp. Check whether route-handler validation already prevents undefined from reaching this code. |
-| HIGH | **`clampedKm = NaN` when `input.radius_km` undefined** — `ST_DWithin` with NaN meters silently returns false → empty feed. | WF3 — bundle with the limit fix. |
-| HIGH | **`builder_candidates` `LEFT JOIN wsib_per_entity` filtered by `WHERE w.business_size IS NOT NULL`** acts as INNER JOIN — silently drops 30-50% of builder leads (new contractors, GTA-condition failures). Pre-existing performance optimization that introduced a regression. | WF3 — remove the WHERE; UI handles NULL business_size. Verify against Spec 91 §4.3 builder-display contract. |
+| HIGH | **🔴 PROMOTE → WF3** — **`clampedLimit = NaN` when `input.limit` undefined** — `Math.max(1, undefined) → NaN`; `LIMIT $5::int` then errors at PG. Breaks the entire feed for any request without explicit `limit`. | WF3 — add `?? DEFAULT_FEED_LIMIT` before clamp. Check whether route-handler validation already prevents undefined from reaching this code. |
+| HIGH | **🔴 PROMOTE → WF3** (bundle with above) — **`clampedKm = NaN` when `input.radius_km` undefined** — `ST_DWithin` with NaN meters silently returns false → empty feed. | WF3 — bundle with the limit fix. |
+| HIGH | **🔴 PROMOTE → WF3** — **`builder_candidates` `LEFT JOIN wsib_per_entity` filtered by `WHERE w.business_size IS NOT NULL`** acts as INNER JOIN — silently drops 30-50% of builder leads (new contractors, GTA-condition failures). Pre-existing performance optimization that introduced a regression. | WF3 — remove the WHERE; UI handles NULL business_size. Verify against Spec 91 §4.3 builder-display contract. |
 | MEDIUM | **Cursor pagination NULL CASE** — malformed cursor with NULL lead_id → empty page → client thinks feed is exhausted. | WF3 — COALESCE the CASE or validate cursor in route handler. |
 | MEDIUM | **`competition_count` not trade-scoped** — counts saves across all trades; same user counted multiple times if they saved the same permit for different trades. | WF3 — add `AND lv2.trade_slug = $1` to the subquery. Verify Spec 91 expectation. |
 | MEDIUM | **`proximity_score` CASE re-evaluates `geography <->` 8× per row** — wasteful for 30-row feed; expensive for builder CTE aggregate. | WF3 — compute distance once in subquery, reference column in CASE. |
@@ -452,6 +523,8 @@ _Source: Gemini review of `compute-cost-estimates.js` + DeepSeek review of `get-
 ---
 
 ## WF2 (2026-05-08) — Resolved: live-DB harness already existed; lead-inspect adopted it
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 _Resolution commit: `<pending>` (test added at `src/tests/db/lead-inspect-query.db.test.ts`)._
 
 The original WF3 commit `73f3ae6` deferral said "no live-DB infra test exists" — that was wrong. The harness exists at `src/tests/db/setup-testcontainer.ts` (`getTestPool()` + `dbAvailable()` helpers + `*.db.test.ts` convention with 5 prior adopters). The actual gap was that WF2 #4 didn't add an inspector adopter. Fixed in this WF2.
@@ -466,16 +539,18 @@ The original WF3 commit `73f3ae6` deferral said "no live-DB infra test exists" �
 ---
 
 ## WF2 #3 (2026-05-08) — Multi-Agent Review deferrals
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared.js` + `compute-cost-estimates.js` for the `permit_type_class` cost-model gating commit._
 
 **Applied this commit:** Gemini MEDIUM (Brain line 548) — short-circuit now computes `premium_factor` via `computePremiumFactor(...)` for telemetry consistency with `complexity_score`.
 
 | Severity | Source | Item | Planned Home |
 |---|---|---|---|
-| HIGH | Gemini WF2 #3 review | **Falsy-`0` in `computeGfa` `(row.storeys || 1)`** at `src/features/leads/lib/cost-model-shared.js:188`. A permit correctly listing 0 storeys (e.g., foundation-only) gets defaulted to 1 — inflates GFA. Pre-existing, not introduced by WF2 #3. **Fix:** swap `||` → `??`. | WF3 — same change in `(row.estimated_stories ?? row.storeys ?? 1)`. Bundle with the next two HIGHs (all share the same falsy-`0` root cause). |
-| HIGH | Gemini WF2 #3 review | **Falsy-`0` in `computeEffectiveArea` `pct > 0` gate** at `src/features/leads/lib/cost-model-shared.js:227`. A `gfa_allocation_percentage = 0` row in `scope_intensity_matrix` (valid configuration meaning "no construction area") falls through to the matrix-miss branch and defaults to 1.0 (full GFA). Same pattern as the storeys bug — could grossly inflate cost for a minor permit on a large structure. Pre-existing. **Fix:** change to `if (pct !== undefined)` so `pct === 0` short-circuits correctly. | WF3 — bundle with the storeys fix; both share the same root cause. |
-| MEDIUM | Gemini WF2 #3 review | **Falsy-`0` in `computeTradeValue` `complexity_factor \|\| 1.0`** at `src/features/leads/lib/cost-model-shared.js:286`. Operator-set `0` is silently overridden to 1.0. Pre-existing. **Fix:** `??` instead of `\|\|`. | WF3 — bundle with the two HIGHs above (one commit covers all three falsy-`0` cases). |
-| LOW | Gemini WF2 #3 review | **Proportional slicing rounding error** at `src/features/leads/lib/cost-model-shared.js:393`. Sum of `Math.round(weight * reportedCost)` per trade may not equal `reportedCost` (off-by-pennies for many trades). Pre-existing. **Fix:** remainder distribution OR document in JSDoc. | WF3 — low priority; document in JSDoc as the simpler fix. |
+| HIGH | Gemini WF2 #3 review | **🔴 PROMOTE → WF3** — **Falsy-`0` in `computeGfa` `(row.storeys || 1)`** at `src/features/leads/lib/cost-model-shared.js:188`. A permit correctly listing 0 storeys (e.g., foundation-only) gets defaulted to 1 — inflates GFA. Pre-existing, not introduced by WF2 #3. **Fix:** swap `||` → `??`. | WF3 — same change in `(row.estimated_stories ?? row.storeys ?? 1)`. Bundle with the next two HIGHs (all share the same falsy-`0` root cause). |
+| HIGH | Gemini WF2 #3 review | **🔴 PROMOTE → WF3** (bundle) — **Falsy-`0` in `computeEffectiveArea` `pct > 0` gate** at `src/features/leads/lib/cost-model-shared.js:227`. A `gfa_allocation_percentage = 0` row in `scope_intensity_matrix` (valid configuration meaning "no construction area") falls through to the matrix-miss branch and defaults to 1.0 (full GFA). Same pattern as the storeys bug — could grossly inflate cost for a minor permit on a large structure. Pre-existing. **Fix:** change to `if (pct !== undefined)` so `pct === 0` short-circuits correctly. | WF3 — bundle with the storeys fix; both share the same root cause. |
+| MEDIUM | Gemini WF2 #3 review | **🔴 PROMOTE → WF3** (bundle) — **Falsy-`0` in `computeTradeValue` `complexity_factor \|\| 1.0`** at `src/features/leads/lib/cost-model-shared.js:286`. Operator-set `0` is silently overridden to 1.0. Pre-existing. **Fix:** `??` instead of `\|\|`. | WF3 — bundle with the two HIGHs above (one commit covers all three falsy-`0` cases). |
+| LOW | Gemini WF2 #3 review | **Proportional slicing rounding error** at `src/features/leads/lib/cost-model-shared.js:393`. Sum of `Math.round(weight * reportedCost)` per trade may not equal `reportedCost` (off-by-pennies for many trades). Pre-existing. **Fix:** remainder distribution OR document in JSDoc. | WF3 — low priority; document in JSDoc as the simpler fix. DEFER → 2026-07-10. **🔄 NOTE: The falsy-`||`-vs-`??` pattern (items above) should be converted to `tasks/lessons.md`: "Cost-model falsy-0 hazard: prefer `??` over `\|\|` for any numeric field that can legitimately be 0."** |
 | LOW | Gemini WF2 #3 review | **Brittle `includes()` keyword detection** at `isShellPermit` / `isCommercial` (`cost-model-shared.js:151–164`). False positives on substrings (e.g., "nutshell-shaped roof", "Commercial Electric Inc."). Pre-existing. **Fix:** word-boundary regex `\bshell\b` / `\bcommercial\b`. | WF3 — low priority; needs a regression-test fixture to confirm no false negatives on tokenized permit types. |
 | NIT | Gemini WF2 #3 review | **Magic numbers in `computeComplexityScore`** at `cost-model-shared.js:421–425` (`stories > 6`, `units > 4`, `footprint > 300`, `income > 150000`). Pre-existing. **Fix:** module-level named constants (`HIGH_RISE_STORY_THRESHOLD = 6` etc.). | WF3 — nit; pair with the Spec 81 score-distribution work if/when those thresholds become operator-tunable. |
 | DEFER | Worktree code-reviewer (conf 35) | **Shape asymmetry: `_permitTypeClassSkipped` not on normal-path return.** Construction return object has 14 fields; non-construction has 16 (`_permitTypeClassSkipped: true` + the always-present `_liarsGateOverride/_zeroTotalBypass/_usedFallback`). Muscle truthiness check handles the asymmetry, but a future destructuring consumer would see `undefined`. **Fix:** add `_permitTypeClassSkipped: false` to the normal return + document the four `_` flags in the `CostEstimate` JSDoc. | WF3 — housekeeping. |
@@ -490,6 +565,8 @@ _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared
 ---
 
 ## 🔴 Maestro-First — Frontend Candidates (pull only on observed symptoms)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 **Pivot 2026-05-05:** session-end decision was to abandon speculative pre-Maestro patches (the FC1+FC2+FC3 batch I attempted at commit `3709025`, reverted via `2ccb8c0`). The right signal is running Maestro against the current architecture and fixing only what genuinely manifests. The candidates below remain open, scoped, and ready to pull from when matching symptoms appear in Maestro logs — but DO NOT pre-emptively patch.
 
@@ -505,19 +582,21 @@ _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared
 ---
 
 ## Active Open Items
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 ### Code-fix WF3 candidates (non-frontend-critical)
 
 | Severity | Source | Item | Planned Home |
 |---|---|---|---|
-| HIGH | Gemini WF2 M1+M2+M3 batch | **§4 B6 concurrent 401 thundering herd needs a mutex.** Currently noted as "low risk known limitation" in `apiClient.ts:69-71` + the new B6 spec rules. Gemini argues a single in-flight refresh promise that subsequent 401s `await` is structurally correct. Real concern under burst-401 scenarios (deploy-induced 401 storm; post-network-restoration retries). | WF3 — implement promise-mutex in `mobile/src/lib/apiClient.ts`; amend §4 B6 spec rules to require it. **Promote to Architectural Reinforcement section.** |
+| HIGH | Gemini WF2 M1+M2+M3 batch | **🔴 PROMOTE → WF3** — **§4 B6 concurrent 401 thundering herd needs a mutex.** Currently noted as "low risk known limitation" in `apiClient.ts:69-71` + the new B6 spec rules. Gemini argues a single in-flight refresh promise that subsequent 401s `await` is structurally correct. Real concern under burst-401 scenarios (deploy-induced 401 storm; post-network-restoration retries). | WF3 — implement promise-mutex in `mobile/src/lib/apiClient.ts`; amend §4 B6 spec rules to require it. |
 | HIGH | Gemini WF2 M1+M2+M3 batch | **§4 B3 version-counter design discussion** — spec defaults to naive rollback (post-2026-05-05 revision); re-read-before-rollback is recommended for high-contention fields. Gemini argues version-counter is structurally correct vs. either. Decision can wait until a high-contention field surfaces a real issue. | Open design discussion — no action until a real bug surfaces. |
 
 ### Spec-amendment WF2 candidates
 
 | Severity | Source | Item | Planned Home |
 |---|---|---|---|
-| HIGH | Spec 96 WF5 2026-04-30 | **Subscription funnel has near-zero PostHog events.** Only `subscription_expired_to_active` is wired (WF3 H3, commit `d032621`). The original Spec 96 audit flagged that the full funnel — `paywall_shown`, `subscribe_button_clicked`, `checkout_initiated`, `checkout_completed`, `subscribe_failed` etc. — has no instrumentation. Affects revenue/conversion analytics, not Maestro testing. | WF3 — wire the missing PostHog events at PaywallScreen + checkout flow sites; add to Spec 99 §7.3 production-event enumeration if any are routing-relevant. |
+| HIGH | Spec 96 WF5 2026-04-30 | **🔴 PROMOTE → WF3** — **Subscription funnel has near-zero PostHog events.** Only `subscription_expired_to_active` is wired (WF3 H3, commit `d032621`). The original Spec 96 audit flagged that the full funnel — `paywall_shown`, `subscribe_button_clicked`, `checkout_initiated`, `checkout_completed`, `subscribe_failed` etc. — has no instrumentation. Affects revenue/conversion analytics, not Maestro testing. | WF3 — wire the missing PostHog events at PaywallScreen + checkout flow sites; add to Spec 99 §7.3 production-event enumeration if any are routing-relevant. |
 | MEDIUM | Gemini WF2 M1+M2+M3 batch | **§4 B2 server-payload coupling.** `hydrateFilter(query.data)` and `hydrateUserProfile(query.data)` pass entire server response into both stores. Future API field additions expose both to changes only one cares about. Recommend bridge-level mapping: `hydrateFilter({tradeSlug: query.data.trade_slug, ...})`. | WF2 — amend §4 B2 spec rules + refactor `useUserProfile.ts` hydration call sites. |
 | MEDIUM | Gemini WF2 M1+M2+M3 batch | **§4 B4 `lastKnownUid` module-let is fragile.** Disputes the spec's HMR-caveat justification. Recommends moving to Zustand state with `partialize` exclusion + read in `onRehydrateStorage`. | WF2 — design discussion; current pattern was reviewed and accepted at §9.6 amendment time. Re-open only if HMR remains a friction point. |
 | MEDIUM | DeepSeek M1+M2+M3 batch | **§B4 cache invalidation race after `setAuth`.** New component renders may start a query with the old bearer token before `invalidateQueries` fires. Already partially mitigated by `useUserProfile` idToken gate (commit `ffd9851`). At minimum: document inefficiency in spec + add Sentry breadcrumb. | WF2 — spec doc clarification + optional breadcrumb wire. |
@@ -537,9 +616,9 @@ _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared
 |---|---|---|---|
 | HIGH | Gemini | **`signOut` race condition with `onAuthStateChanged`**: between `await auth().signOut()` and `clearLocalSessionState` running in `finally`, a new authStateChanged fire could land. Speculative — practical race window is milliseconds and a new sign-in takes seconds; never observed. Mitigation would be an `isSigningOut` flag in authStore + listener guard. | Cross-cutting auth-flow hardening WF; gated on observed Sentry events from real users. |
 | HIGH | Gemini | **`clearLocalSessionState` no per-step try/catch**: a thrown error in any step halts the fan-out — partial cleanup = partial PIPEDA. Mitigation: wrap each `.reset()`/`clear()` call in `try { ... } catch { Sentry.captureException }`. ~50 LoC. | Defensive cross-store hardening WF. |
-| HIGH | DeepSeek | **`PaywallScreen.handlePrimary` unhandled rejection**: `await openCheckout()` has no try/catch; throwing leaves checkout in indeterminate state with no error feedback. Pre-existing pattern, not introduced by Phase 3. | WF3 spec 96 PaywallScreen hardening cycle. |
-| HIGH | DeepSeek | **`PaywallScreen` `successNotification()` haptic on `openCheckout=true` is premature**: `true` only confirms the WebBrowser opened, not that payment succeeded. Spec 91 §4.4 reserves success haptic for genuine state mutations. Should fire on `subscription_status='expired'→'active'` transition (currently fires at button-tap time). | Same WF3 PaywallScreen cycle. |
-| HIGH | DeepSeek | **`PaywallScreen` accessibilityLabel mismatch with `CTA_NEUTRAL` flag**: when env flag flips to neutral copy ("Learn more →"), the accessibilityLabel still reads "Continue subscription at buildo.com". Screen-reader users see contradictory state. | Same WF3 PaywallScreen cycle. |
+| HIGH | DeepSeek | **🔴 PROMOTE → WF3** — **`PaywallScreen.handlePrimary` unhandled rejection**: `await openCheckout()` has no try/catch; throwing leaves checkout in indeterminate state with no error feedback. Pre-existing pattern, not introduced by Phase 3. | WF3 spec 96 PaywallScreen hardening cycle — bundle next two HIGHs. |
+| HIGH | DeepSeek | **🔴 PROMOTE → WF3** (bundle) — **`PaywallScreen` `successNotification()` haptic on `openCheckout=true` is premature**: `true` only confirms the WebBrowser opened, not that payment succeeded. Spec 91 §4.4 reserves success haptic for genuine state mutations. Should fire on `subscription_status='expired'→'active'` transition (currently fires at button-tap time). | Same WF3 PaywallScreen cycle. |
+| HIGH | DeepSeek | **🔴 PROMOTE → WF3** (bundle) — **`PaywallScreen` accessibilityLabel mismatch with `CTA_NEUTRAL` flag**: when env flag flips to neutral copy ("Learn more →"), the accessibilityLabel still reads "Continue subscription at buildo.com". Screen-reader users see contradictory state. | Same WF3 PaywallScreen cycle. |
 | MEDIUM | Gemini | **Unconditional `clearLocalSessionState` on cold boot for logged-out users**: pre-existing crash-recovery pattern; imposes I/O cost on every cold start. Mitigation: clean-shutdown flag in MMKV. | Performance-WF gated on cold-start telemetry. |
 | MEDIUM | DeepSeek | **`PaywallScreen.handleRefresh` missing error catch**: `queryClient.invalidateQueries` throwing leaves `isRefreshing` stuck. Pre-existing pattern. | Same WF3 PaywallScreen cycle. |
 | LOW (cross-store) | Gemini | **mmkvStorage adapter silent failures across stores** (already in WF1-C deferrals). Multi-store concern; reviewer surfaced again on authStore. | Cross-store observability hardening (existing defer). |
@@ -590,6 +669,8 @@ _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared
 ---
 
 ## 📱 Pre-Spec-99 Mobile Findings — Still Valid Post-Architecture
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Surfaced 2026-05-05 verification pass against the BEFORE state of this file (commit `bb4bdc9~1`). These are mobile findings from 2026-04-23 batches (Mobile Ph4-7, Phase 8.0, Design-audit) that the prior cleanup dropped under the "dormant >1 week" rule. **Spec 99's architectural change did NOT obsolete them** — Spec 99 restructured state management; these are UI/screen/schema gaps orthogonal to that. Each row verified against current HEAD before promotion.
 
@@ -628,6 +709,8 @@ Plus historical resolved (verified already-fixed in this triage):
 ---
 
 ## 🟢 Architectural Reinforcement — close spec-vs-code gaps (high-leverage)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 These are NOT race patches. They are gaps where the spec promises something the implementation does not actually guarantee, OR places where a bridge has a "known limitation" footnote that violates the architecture's "safe by construction" principle. Closing these reinforces the architecture rather than patching around it. Each is small + high-leverage.
 
@@ -637,7 +720,7 @@ These are NOT race patches. They are gaps where the spec promises something the 
 | **§8.5 store-enum import-based discovery** (LOW) | Currently regex-discovers `create<...>(` patterns in `mobile/src/store/*.ts`. A factory pattern (`createStore(...)`) silently bypasses; new store added via factory → no `.reset()` enforcement → stale data leaks across users on shared device (a §B5 PIPEDA-class bug). | Replace regex with maintained allow-list OR import-graph parsing of `useXxxStore` exports across the directory. Makes §B5 store-reset coverage robust to future Zustand idiom changes. |
 | **§4 B2 server-payload coupling** (MEDIUM) | `hydrateFilter(query.data)` and `hydrateUserProfile(query.data)` pass the FULL TanStack response into both stores. §3.1 mandates "exactly ONE store owns each field" — but each bridge call exposes both stores to fields neither owns. | Refactor `useUserProfile.ts` hydration calls to pass per-store sub-objects: `hydrateFilter({tradeSlug, radiusKm, ...})`. Tightens single-ownership at the bridge boundary. ~10 lines of code change. |
 | **§4 B6 thundering-herd mutex** (HIGH) | Spec says "exactly-once retry per call chain" but admits N parallel `getIdToken(true)` calls under burst-401. The asterisk itself violates Spec 99's "bridges are safe by construction" principle. | Implement single-flight promise in `apiClient.ts`: first 401 starts the refresh, subsequent 401s `await` the same promise. Removes the "known limitation" footnote. ~15 lines. |
-| **§B4 idToken-gate documentation** (MEDIUM) | Commit `ffd9851` added the idToken gate to `useUserProfile` that mitigates the §B4 cache invalidation race — but the mitigation isn't called out in §B4's spec text. Future contributor reading §B4 wouldn't know the gate exists or why removing it would re-open a race. | Add a one-paragraph "Implementation note" under §B4 documenting the `useUserProfile.ts:enabled` gate as the canonical mitigation. ~5 lines of spec edit. Closes implicit knowledge. |
+| **§B4 idToken-gate documentation** (MEDIUM) | **🔄 CONVERT → Spec 99 §B4 edit** — Commit `ffd9851` added the idToken gate to `useUserProfile` that mitigates the §B4 cache invalidation race — but the mitigation isn't called out in §B4's spec text. Future contributor reading §B4 wouldn't know the gate exists or why removing it would re-open a race. | Add a one-paragraph "Implementation note" under §B4 documenting the `useUserProfile.ts:enabled` gate as the canonical mitigation. ~5 lines of spec edit. Closes implicit knowledge. |
 
 **Why these matter more than FC2/FC3:** the FC items are races that may or may not manifest in practice. The reinforcement items are concrete gaps where someone reading the architecture today gets the wrong impression (lint claims to enforce something it doesn't; spec promises ownership the bridge dilutes; B6 admits the limitation it shouldn't have). Closing these makes the architecture trustworthy by self-description — the spec describes what the code does, the code does what the spec says.
 
@@ -651,6 +734,8 @@ These are NOT race patches. They are gaps where the spec promises something the 
 ---
 
 ## Adversarial Pattern Notes
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Across the H1-H5 + M1-M3 + §7.2 + §9.21 + M1+M2+M3 WF3/WF2 batches this session, the 3-agent Multi-Agent Review pattern produced these false-positive rates on Spec 99 doc-only and code amendments:
 
@@ -679,6 +764,8 @@ If any of (1)/(2)/(3) reveals already-resolved state, document as "false positiv
 ---
 
 ## Hygiene Practices (forward-going)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 These practices keep `review_followups.md` from drifting back to the 1246-line state.
 
@@ -699,6 +786,8 @@ These practices keep `review_followups.md` from drifting back to the 1246-line s
 ---
 
 ## Resolved (Historical Index)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 One-line per resolved batch with commit hash + date. Full prose recoverable via `git log -p docs/reports/review_followups.md`.
 
@@ -734,7 +823,7 @@ One-line per resolved batch with commit hash + date. Full prose recoverable via 
 
 ### Operational Safety (dormant but live)
 
-- **`scripts/backup-db.js` has never run in production** per WF5 prod backend 2026-04-25 audit. Script exists; operational state unverified. File a backup-runbook WF before next migration that touches a >100K-row table.
+- **🔄 CONVERT → tasks/lessons.md** — **`scripts/backup-db.js` has never run in production** per WF5 prod backend 2026-04-25 audit. Script exists; operational state unverified. File a backup-runbook WF before next migration that touches a >100K-row table. _Lesson: "Pre-migration gate: verify backup-db.js ran successfully within 24h before any migration touching >100K rows."_
 
 ---
 
@@ -743,6 +832,8 @@ _If you need a specific historical entry's full prose, use `git log -p docs/repo
 ---
 
 ## Spec 30 Cycle 2 Phase 4 — Multi-Agent Review Deferred Items (2026-05-06)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: Gemini + DeepSeek + worktree code-reviewer adversarial review of commits `5b1a327` through `fdfbda8`. Fix-now items (CSRF Origin gate, minute-boundary TTL, promise-deduplication, useState-scoped QueryClient, `affected_users` distinct-count, `useAppHealth` hook extraction, Zod parse on Sentry/PostHog responses, timing-safe admin key compare) were applied in commit `<TBD>`. Items below are deferred — not blocking, but worth picking up in a future maintenance pass.
 
@@ -756,7 +847,7 @@ Source: Gemini + DeepSeek + worktree code-reviewer adversarial review of commits
 
 - **Dev bypass without hostname check (DeepSeek HIGH, demoted).** `isDevMode()` already enforces `NODE_ENV !== 'production'` AND `DEV_MODE === 'true'` (route-guard.ts:32-34) — two independent flags must misconfigure simultaneously. Adding a `request.nextUrl.hostname === 'localhost'` check is defense-in-depth-3, not a missing security boundary. Defer.
 
-- **Long inline comment block in verify-admin.ts (DeepSeek NIT).** The 32-line spec-paraphrase comment block at the top of the file may rot if Spec 33 amends without updating the file. Defer; spec links + brief summary is the project pattern, but rewriting now adds review burden without correctness gain.
+- ~~**Long inline comment block in verify-admin.ts (DeepSeek NIT).**~~ **❌ KILL** — style preference, 4+ weeks dormant with no observed impact.
 
 - **Zod 500 error includes no detail in dev (Gemini LOW).** When the response envelope fails Zod validation, the 500 returns a generic message. In dev mode, including `parsed.error.issues` in the body would speed local diagnosis. Defer — the issue is logged via `logError` already, which is the canonical operator-debug path.
 
@@ -764,6 +855,8 @@ Source: Gemini + DeepSeek + worktree code-reviewer adversarial review of commits
 ---
 
 ## Spec 76 WF2 Cycle 4 P5 — Deferred Items (2026-05-06)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 3-agent Multi-Agent Review of `POST /api/leads/save` + the lead_id-format alignment across web admin + mobile (commit `<TBD>`). Fix-now items applied: canonical `parseLeadId` reuse, `--`-uniqueness guard, `.trim()` on Zod schema, defensive cache spread on optimistic write. Items below are deferred — non-blocking but worth picking up:
 
@@ -779,12 +872,14 @@ Source: 3-agent Multi-Agent Review of `POST /api/leads/save` + the lead_id-forma
 
 - **Content-Type validation uses `.includes` not `.startsWith` (Gemini NIT).** `'text/plain; comment="application/json"'` would technically pass `.includes('application/json')`. Mirrors the existing `/api/leads/view` pattern (consistency); change both at once or neither. Defer to a sweep PR.
 
-- **Pre-existing broader bug: SQL `lead_id` separator mismatch.** `get-lead-feed.ts:100` builds `lead_id` as `permit_num || ':' || revision_num` (colon), but `parseLeadId` and the new `/api/leads/save` route expect `--`. Mobile's feed→detail flow (`router.push(`/(app)/[lead]?id=${item.lead_id}`)`) passes the colon-separated id into the URL where `parseLeadId` fails — separate WF3 needed. NOT introduced by P5; surfaced during P5 review.
+- **🔴 PROMOTE → WF3** — **Pre-existing broader bug: SQL `lead_id` separator mismatch.** `get-lead-feed.ts:100` builds `lead_id` as `permit_num || ':' || revision_num` (colon), but `parseLeadId` and the new `/api/leads/save` route expect `--`. Mobile's feed→detail flow (`router.push(`/(app)/[lead]?id=${item.lead_id}`)`) passes the colon-separated id into the URL where `parseLeadId` fails — separate WF3 needed. NOT introduced by P5; surfaced during P5 review.
 
 
 ---
 
 ## Spec 91 + Spec 95 — Cycle 6 Multi-Agent Review Deferred Items (2026-05-06)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 3-agent Multi-Agent Review of Cycle 6 spec amendments (Spec 91 §1.1-1.3 + §3.5; Spec 95 §2.5.1; Spec 76 §3.7 closure). Fix-now items applied: phantom Spec 94 §3.5 → §4 reference (3 places); Spec 91 §3.5 item 4 algorithmic-invariant tightening (mandated option (a), rejected option (b)).
 
@@ -836,6 +931,8 @@ All items above are PRE-EXISTING and out of Cycle 6 scope. They warrant a separa
 ---
 
 ## Spec 91 — WF2 Cycle 7 Multi-Agent Review Deferred Items (2026-05-06)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 3-agent Multi-Agent Review of Cycle 7 backend wire-up. Fix-now applied: dual-code-path parity (JS classifyPermit now appends realtor INSIDE the function, mirroring TS), explicit RAISE EXCEPTION DOWN block, ON CONFLICT DO NOTHING for trade_configurations to preserve operator hotfixes, removed MAX_ITERATIONS cap, added active-status filter on backfill SELECT, computed verdict from completion.
 
@@ -853,12 +950,14 @@ Source: 3-agent Multi-Agent Review of Cycle 7 backend wire-up. Fix-now applied: 
 
 - **setval('trades_id_seq', MAX(id)) race condition — Gemini HIGH.** Migration-time race: a concurrent INSERT into trades after the migration's INSERT but before setval could let the sequence reset below the actual MAX(id). Migrations are typically serialized in production deployments (single migration runner, no concurrent application writes during migration window), so this race is theoretical. **Defer:** if Buildo ever moves to online migrations with concurrent writes, revisit this with row-level locking.
 
-- **Pre-existing classify-permits.js `new Date()` lint warnings on lines 79, 122, 139 — pre-existing.** Not introduced by Cycle 7. Spec 47 mandates pipeline.getDbTimestamp(pool); this is a separate cleanup.
+- **🔄 CONVERT → tasks/lessons.md** — **Pre-existing classify-permits.js `new Date()` lint warnings on lines 79, 122, 139.** Not introduced by Cycle 7. Spec 47 mandates pipeline.getDbTimestamp(pool). _Lesson: "Any new Date() in a pipeline script is a lint violation — always use pipeline.getDbTimestamp(pool). Run npm run lint before submitting pipeline WFs."_
 
 
 ---
 
 ## Spec 30 — WF3 Sibling Concerns Surfaced 2026-05-06
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: WF3 worktree code-reviewer flagged this while reviewing the App Health route extraction fix.
 
@@ -867,6 +966,8 @@ Source: WF3 worktree code-reviewer flagged this while reviewing the App Health r
 ---
 
 ## Spec 47/84/86 — WF2 Lifecycle Bands Multi-Agent Review Deferred Items (2026-05-07)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of the WF2 that externalized `EXPECTED_BANDS` + 3 cross-status thresholds into `logic_variables` (migration 119).
 
@@ -887,6 +988,8 @@ Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of the W
 ---
 
 ## Spec 47/84/85 — WF3 Cross-Check Hygiene Review Deferred Items (2026-05-08)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: WF3 worktree code-reviewer of the cross-check #1 NULL + case-hygiene fix (also extended `LOWER()` to cross-checks #2 and #3).
 
@@ -899,6 +1002,8 @@ Source: WF3 worktree code-reviewer of the cross-check #1 NULL + case-hygiene fix
 ---
 
 ## Spec 86/91/95/99 — WF3 Mig 118+119 Apply Deferred Items (2026-05-08)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: Worktree code-reviewer of the WF3 that brought dev DB in sync with on-disk migrations 118 (realtor wire-up) + 119 (lifecycle bands tracking).
 
@@ -912,12 +1017,14 @@ Source: Worktree code-reviewer of the WF3 that brought dev DB in sync with on-di
 ---
 
 ## Spec 76/47/83 — WF2 #4 Multi-Agent Review Deferred Items (2026-05-08)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #4 admin Lead Detail Inspector diagnostic field expansion (Spec 76 §3.5 Cycle 7 amendment).
 
 | Severity | Source | Item | Why deferred |
 |---|---|---|---|
-| HIGH (perf) | worktree (conf 88) + Gemini (medium) | **`lead_views` performance index missing.** Both `lv_count` LATERAL and `saved_by_admin` EXISTS subquery filter on `lead_key + saved + (user_id?)`. No matching composite index exists. The diagnostic endpoint will get progressively slower as `lead_views` grows. | Migration required — separate WF3. Add `CREATE INDEX CONCURRENTLY idx_lead_views_lead_key_saved ON lead_views (lead_key) INCLUDE (user_id) WHERE saved = true`. Not blocking — single-permit admin diagnostic, not on hot path. |
+| HIGH (perf) | worktree (conf 88) + Gemini (medium) | **🔴 PROMOTE → WF3** — **`lead_views` performance index missing.** Both `lv_count` LATERAL and `saved_by_admin` EXISTS subquery filter on `lead_key + saved + (user_id?)`. No matching composite index exists. The diagnostic endpoint will get progressively slower as `lead_views` grows. | Migration required — separate WF3. Add `CREATE INDEX CONCURRENTLY idx_lead_views_lead_key_saved ON lead_views (lead_key) INCLUDE (user_id) WHERE saved = true`. Not blocking — single-permit admin diagnostic, not on hot path. |
 | HIGH (correctness) | worktree (conf 82) | **Liar's Gate ≤$1,000 sub-path inference.** `classifyLiarGatePath()` maps `cost_source='permit'` → `proportional_slicing` always, but Spec 83 §3D bullet 2 ("Default: Reported ≤ $1,000 use Surgical Total exclusively") may also write `cost_source='permit'`. The inference would then mislabel that path. | Needs investigation of `compute-cost-estimates.js` to see what it actually writes. If ambiguous, either heuristic + `est_const_cost` check, or persist `path` as a column on `cost_estimates` (cleanest). Filed as separate WF3. |
 | MEDIUM (design) | Gemini | **`is_default_fallback` magic range 0.5..0.6 in lead-inspect-query.ts:268.** Couples the consumer query to the pipeline's default `0.55` confidence value. If the constant moves, the flag silently misfires. | Cleanest fix: add `is_default_fallback` boolean column to `permit_trades` so the producer (classifier) sets it at write time. Separate WF2. Short-term mitigation: import `DEFAULT_TRADE_CONFIDENCE` from a shared constants module (currently doesn't exist as TS export). |
 | MEDIUM (deferred input) | Gemini (CRITICAL→partial) | **`structure_complexity_factor` not in cost.inputs panel.** Lives in `trade_sqft_rates` per-trade_slug, not per-permit. Surfacing it in the Cost panel (which is single-permit) would require picking a representative trade. | Better placement: add as a per-trade column in the Forecast panel. Filed as a small WF2 follow-up — schema already exists, just needs the join + UI. |
@@ -939,6 +1046,8 @@ Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #
 ---
 
 ## Spec 80 — WF2 #1 Multi-Agent Review Deferred Items (2026-05-08)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #1 `permit_type_class` foundation (mig 120 + dual-path TS/JS mirrors).
 
@@ -962,12 +1071,14 @@ Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #
 ---
 
 ## Spec 41/80/91 — WF2 #2 Multi-Agent Review Deferred Items (2026-05-08)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #2 classifier gating on `permit_type_class`.
 
 | Severity | Source | Item | Why deferred |
 |---|---|---|---|
-| CRITICAL (per worktree, conf 90) | worktree #1+#2 | **`runAt` parameter parity drift between JS↔TS classifiers.** JS `applyClassGating` accepts `runAt` and threads it to `appendRealtorMatch` → `calculateLeadScore(permit, partial, phase, runAt)`. TS `applyClassGating` doesn't have `runAt` because TS `calculateLeadScore(permit, partial, phase)` uses `new Date()` internally for freshness/staleness. → Realtor `lead_score` differs between JS and TS paths for the same permit. Spec 47 §R3.5 Midnight Cross + Spec 7 §7.1 dual-path violations. | **Pre-existing** — TS `calculateLeadScore` in `src/lib/classification/scoring.ts:102` already used `new Date()` before this WF. WF2 #2 mirrors the existing pattern in each surface, doesn't introduce the drift. Fixing requires expanding `calculateLeadScore` signature across 10 call sites + `scoring.ts` rewrite. **Promote to a separate WF3** for explicit Midnight Cross hardening of TS classifier. |
+| CRITICAL (per worktree, conf 90) | worktree #1+#2 | **🔴 PROMOTE → WF3** — **`runAt` parameter parity drift between JS↔TS classifiers.** JS `applyClassGating` accepts `runAt` and threads it to `appendRealtorMatch` → `calculateLeadScore(permit, partial, phase, runAt)`. TS `applyClassGating` doesn't have `runAt` because TS `calculateLeadScore(permit, partial, phase)` uses `new Date()` internally for freshness/staleness. → Realtor `lead_score` differs between JS and TS paths for the same permit. Spec 47 §R3.5 Midnight Cross + Spec 7 §7.1 dual-path violations. | **Pre-existing** — TS `calculateLeadScore` in `src/lib/classification/scoring.ts:102` already used `new Date()` before this WF. WF2 #2 mirrors the existing pattern in each surface, doesn't introduce the drift. Fixing requires expanding `calculateLeadScore` signature across 10 call sites + `scoring.ts` rewrite. **Promote to a separate WF3** for explicit Midnight Cross hardening of TS classifier. |
 | MEDIUM | DeepSeek #6 | **`classifyPermit` defaults `permitClass = UNCLASSIFIED` — silent zero matches for callers that forget to thread the option.** | **Intentional safe-skip per plan-lock.** The default IS the conservative behavior for unknown call sites — over-classifying with the full matrix is the WORSE outcome. Documented at the parameter's JSDoc + Spec 80 §5. A runtime warn would be too noisy. Defer permanently. |
 | HIGH (Gemini) | Gemini all | **classify-permits.js architectural concerns** — multi-transaction race, hardcoded business logic duplicated TS↔JS, ghost-trade `unnest` query fragility, 30-day month math, non-deterministic work fallback iteration. | **Pre-existing** structural concerns that long predate WF2 #2. Each is a worthy separate WF; none introduced by this change. Architectural rewrite of classify-permits.js belongs in a dedicated initiative. |
 | HIGH (DeepSeek) | DeepSeek #1-3 | **TS classifier pre-existing concerns** — `extractPermitCode` regex misses start-of-string, `applyScopeLimit` only applies first matching pattern, `NARROW_SCOPE_CODES` hardcoded slugs. | **Pre-existing.** Same architectural origin as Gemini's findings. Defer. |
@@ -986,6 +1097,8 @@ Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #
 ---
 
 ## WF1 #coa-pipeline-parity-phase-b — R5.1 review deferrals (2026-05-13)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Adversarial findings from Multi-Agent Review of migrations 124–127 (`lead_trades`, `lead_parcels`, `lifecycle_transitions`, `lifecycle_status_history`). All findings triaged DEFER (logged here) or REJECT (design choice). None blocking R5.1 commit.
 
@@ -1018,6 +1131,8 @@ Adversarial findings from Multi-Agent Review of migrations 124–127 (`lead_trad
 ---
 
 ## WF1 #coa-pipeline-parity-phase-b — R5.2 review deferrals (2026-05-13)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Adversarial findings from Multi-Agent Review of migrations 128–131 (Universal Stream catalog + signals seeds). All findings triaged DEFER (logged) or REJECT (false positive / design choice / convention). None blocking R5.2 commit.
 
@@ -1045,6 +1160,8 @@ Adversarial findings from Multi-Agent Review of migrations 128–131 (Universal 
 ---
 
 ## WF1 #coa-pipeline-parity-phase-b — R5.3 review deferrals (2026-05-13)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Adversarial findings from Multi-Agent Review of migrations 132-135 (HIGH RISK hot-table ALTERs). 2 real BUGs fixed inline (B1 CHECK regex over-strict, B2 missing bid_value range CHECK). All other findings DEFER or REJECT.
 
@@ -1070,6 +1187,8 @@ Adversarial findings from Multi-Agent Review of migrations 132-135 (HIGH RISK ho
 ---
 
 ## WF1 #coa-pipeline-parity-phase-c — R5.1 review deferrals (2026-05-13)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 R5.1.f Multi-Agent Review on `scripts/lib/leads/lead-id.js` + `src/lib/leads/lead-id.ts` + parity test. 3 BUGs fixed inline (LPAD trigger-parity drift on empty + over-width; missing numeric-0 fixture). Other findings logged here.
 
@@ -1085,6 +1204,8 @@ R5.1.f Multi-Agent Review on `scripts/lib/leads/lead-id.js` + `src/lib/leads/lea
 ---
 
 ## WF1 #coa-pipeline-parity-phase-c — R5.2 review deferrals (2026-05-13)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 R5.2.f Multi-Agent Review on `scripts/migrate-to-lead-id.js` + migrations 138–142. 3 BUGs fixed inline (emitSummary outside lock callback → double-emit; LPAD-truncation preflight missing; permit_num/revision_num NOT NULL guards on the cost_estimates + trade_forecasts UPDATEs). Other findings logged.
 
@@ -1105,6 +1226,8 @@ R5.2.f Multi-Agent Review on `scripts/migrate-to-lead-id.js` + migrations 138–
 ---
 
 ## WF1 #coa-pipeline-parity-phase-c — R5.3 review deferrals (2026-05-13)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 R5.3 design pivot from app-layer dual-write (6 scripts) to trigger-based mirroring (2 migrations) was approved by user. R5.3.f Multi-Agent Review on migrations 143/144 + db.test.ts surfaced 1 BUG (UPDATE branch silent miss + key-change orphan, fixed inline via INSERT ON CONFLICT + EXCEPTION guard). Other findings logged below.
 
@@ -1120,6 +1243,8 @@ R5.3 design pivot from app-layer dual-write (6 scripts) to trigger-based mirrori
 ---
 
 ## WF2 Spec 93 RNFirebase migration — Round 2 review (commit: TBD, 2026-04-30)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 ### WF3 candidates — FILED 2026-05-15
 
@@ -1134,12 +1259,14 @@ _Filed by scheduled remote agent 2026-05-15; commit SHA: TBD (this commit). Orig
 ---
 
 ## WF1 R5.4 classify-coa-trades — diff-review deferrals (2026-05-14)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 R5.4 4-reviewer diff-review (Gemini + DeepSeek + Worktree-independent + Worktree-observability) surfaced 1 CRITICAL bug (batch threshold), 5 functional coverage gaps (TAG_ALIASES), and 4 observability improvements — all folded inline. DEFERs below.
 
 | # | Severity | Source | Finding | Decision rationale |
 |---|---|---|---|---|
-| 56 | DEFER | Worktree#2 CRIT-1 + IMP-4 | `classify-coa-scope.js` unconditionally bumps `scope_classified_at` even when classifier output is unchanged → on next R5.4 run, every CoA re-enters cursor → `records_updated` inflated daily | Real concern. Cross-script fix needed in `classify-coa-scope.js`: use `scope_classified_at = CASE WHEN scope_tags IS DISTINCT FROM v.scope_tags THEN $runAt ELSE scope_classified_at END`. Preserves the all-NULL infinite-re-fetch fix while breaking the daily full-re-classify cycle. Open as separate WF3 on classify-coa-scope.js. |
+| 56 | **🔴 PROMOTE → WF3** | Worktree#2 CRIT-1 + IMP-4 | `classify-coa-scope.js` unconditionally bumps `scope_classified_at` even when classifier output is unchanged → on next R5.4 run, every CoA re-enters cursor → `records_updated` inflated daily | Real concern. Cross-script fix needed in `classify-coa-scope.js`: use `scope_classified_at = CASE WHEN scope_tags IS DISTINCT FROM v.scope_tags THEN $runAt ELSE scope_classified_at END`. Preserves the all-NULL infinite-re-fetch fix while breaking the daily full-re-classify cycle. Open as separate WF3 on classify-coa-scope.js. |
 | 57 | DEFER | Worktree#2 IMP-5 + Indep H-1/M-1 | Spec 42 §6.8 row 667 literal `unmapped_coa_count (== 0 FAIL)` + `default_fallback_pct (≤ 20%)` slugs absent | R8 fold #1 deliberately replaced with `unmapped_scope_pct <= coa_trades_unmapped_threshold_pct%` to avoid permanent FAIL on variance-only CoAs. Spec text needs amendment to reflect this. Open a §6.8 amendment commit. |
 | 58 | DEFER | Worktree#2 IMP-7 | `dwelling → build-sfd` alias fires on variance/change-of-use CoAs ("permit use of dwelling for commercial") producing spurious excavation+concrete trades at 0.80 confidence | Architectural: requires multi-tag context (cross-reference `project_type` or co-occurring tags like `severance`/`setback`) which the lib's lookupTradesForTags doesn't have. Fix would require: (a) two-stage classification (lib produces matches, script filters by project_type), or (b) tag-context guard in TAG_ALIASES. Defer until first production audit reveals scale. |
 | 59 | DEFER | Worktree#2 IMP-2 + Indep | `emitSummary` cross-granularity — `records_total: processed` (CoA count) but `records_new/_updated: recordsNew/recordsUpdated` (lead_trades row counts) — dashboard misleads | Spec 47 §8.1 mandates these fields. Re-design would need a parallel `child_records_*` field set. Track. |
@@ -1153,6 +1280,8 @@ R5.4 4-reviewer diff-review (Gemini + DeepSeek + Worktree-independent + Worktree
 ---
 
 ## WF3 Spec 79 CRIT-3b load-parcels CSV drift — Multi-agent review (2026-05-19)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 3-reviewer review (Gemini + DeepSeek + Independent code-reviewer worktree) on `scripts/load-parcels.js` after folding the CSV drift detection. **1 IN-SCOPE bug fixed inline** (CR-1 below); remaining items are pre-existing concerns in untouched parts of the script — surface area too large for a per-finding WF3 fold. Each gets its own DEFER row.
 
@@ -1177,6 +1306,8 @@ R5.4 4-reviewer diff-review (Gemini + DeepSeek + Worktree-independent + Worktree
 ---
 
 ## WF1 R5.5 compute-coa-cost-estimates — diff-review deferrals (2026-05-14)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 R5.5 4-reviewer diff-review (Gemini + DeepSeek + Worktree-independent + Worktree-observability-w/spec-48) surfaced 3 CRITICAL + 3 HIGH + 7 MED-level findings — all folded inline. DEFERs below.
 
@@ -1201,6 +1332,8 @@ R5.5 4-reviewer diff-review (Gemini + DeepSeek + Worktree-independent + Worktree
 ---
 
 ## WF1 R5.6 link-coa.js enrichment — diff-review deferrals + Phase D close-out (2026-05-14)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 R5.6 4-reviewer diff-review (Gemini fetch-failed; DeepSeek + Independent + Observability worktree using Spec 48 lens) surfaced 1 cross-reviewer CRITICAL (`wardFillRes` CTE filter inconsistency, 3-way concur), 2 HIGHs, 5 MEDs — all critical/high folds applied inline. DEFERs below.
 
@@ -1237,6 +1370,8 @@ Phase D DELIVERED 2026-05-14. R5.1 → R5.5 → R5.6 commit chain captured in Sp
 ---
 
 ## Phase E.1 diff-stage 4-reviewer findings (2026-05-14)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Phase E.1 (#lifecycle-phase-engine-migration-E.1) commit covers bug 84-W12 substrate fix + `mapToUniversalStream` + TS twin extension + 14 spec amendments. 4-reviewer diff-stage review surfaced these PRE-EXISTING bugs (NOT introduced by E.1) — filed as future WF3 candidates rather than blocking commit.
 
@@ -1282,6 +1417,8 @@ Phase E.1 DELIVERED 2026-05-14. Substrate-only commit per Spec 42 §6.11. Same-S
 ---
 
 ## Phase E.3 diff-stage 4-reviewer findings (2026-05-15)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Phase E.3 (#lifecycle-phase-engine-migration-E.3) commit covers CoA-side granular cohort calibration extension (`scripts/compute-phase-calibration.js` rewrite + migration 147 + manifest CoA-chain add + 4 spec amendments). Plan trajectory: v1=18 → v2=14 → v3=15 → v4=13 (5 rounds plan-review; user authorized direct PLAN LOCK at v5). Diff-stage 4-reviewer round (Gemini + DeepSeek + Independent + Observability) — 0 CRITs, 5 real findings folded inline (v6), 2 verified false positives, 6 deferrals.
 
@@ -1316,6 +1453,8 @@ E.4 (per-seq band tuning + `assert-lifecycle-phase-distribution.js` extension) a
 ---
 
 ## Phase E.4 diff-stage 4-reviewer findings (2026-05-16)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Phase E.4 (#lifecycle-phase-engine-migration-E.4) commit covers per-seq distribution band assertion in `scripts/quality/assert-lifecycle-phase-distribution.js` (110 per-seq bands alongside the existing 19 phase-keyed bands), migration 148 (logic_variables INSERTs + lifecycle_seq_unclassified_max), migration 149 (CONCURRENTLY partial indices on `lifecycle_seq` columns), 221 new `scripts/seeds/logic_variables.json` entries, 3 new test files + 1 extension (65 tests pass), and 2 spec amendments. Plan trajectory: 4 plan-review rounds (v1=14 → v2=8 → v3=9 → v4 PLAN LOCK per user authorization). Diff-stage 4-reviewer round surfaced 2 real findings folded inline, 2 verified false positives, 10 deferrals.
 
@@ -1352,6 +1491,8 @@ E.5 (band recalibration operational gate — promotes `seqBandsWarn++` to `seqBa
 ---
 
 ## assert-lifecycle-phase-distribution.js / mig 150 — Phase E.5 deferrals (2026-05-16)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 4-reviewer diff-stage round on Phase E.5 v4 (per-kind posture flag promotion gate). Gemini + DeepSeek raised pre-existing E.4 design concerns (out of E.5's per-kind posture flag scope). Independent + Observability both **PASS** with no Critical/High findings at confidence ≥80. All findings deferred per user authorization (defer-all + WF6 commit).
 
@@ -1388,6 +1529,8 @@ Plan trajectory: 4 plan-review rounds (v1=incomplete-fold → v2=incomplete-fold
 ---
 
 ## compute-trade-forecasts.js / mig 151 + mig 152 — Phase F.1 deferrals (2026-05-16)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 4-reviewer diff-stage round on Phase F.1 v4 (CoA UNION extension + trade_forecasts PK swap + dual stale-purge + audit-verdict gate). Plan trajectory: 4 plan-review rounds (v1=16 → v2=18 → v3=14 → v4 PLAN LOCK per user authorization). Diff-stage: zero CRIT, 4 real HIGH folds applied inline (#158-#161), 2 MED folds applied inline (#162-#163), all other findings DEFER (#164-#176).
 
@@ -1431,6 +1574,8 @@ F.2 (update-tracked-projects.js CoA branch — stall thresholds, hearing-date im
 ---
 
 ## update-tracked-projects.js / mig 153 + mig 154 — Phase F.2 deferrals (2026-05-16)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 4-reviewer diff-stage round on Phase F.2 v4 (CoA branch in update-tracked-projects.js + tracked_projects schema relaxation + 1 new CoA logic_variable + 3 new notification subtypes + decision-keyed auto-archive). Plan trajectory: 4 plan-review rounds (v1=25 → v2=22 → v3=28 → v4 PLAN LOCK direct per user authorization — v3 plateaued, targeted-Edit folds were accumulating stale residue). Diff-stage: 4 CRIT folds applied inline (#177-#180), 2 HIGH folds applied inline (#181-#182), 1 IMPORTANT fold applied inline (#183), 1 doc-gap fold applied inline (#184), all other findings DEFER (#185-#193). One Gemini HIGH (#185) verified as false positive.
 
@@ -1472,6 +1617,8 @@ F.3 (compute-opportunity-scores.js CoA consumer) and F.4 (Lead Inspector CoA pan
 ---
 
 ## compute-opportunity-scores.js — Phase F.3 deferrals (2026-05-17)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 Source: 4-reviewer diff-stage round on Phase F.3 v4 (lead_id rekey + CoA consumer end-to-end). Plan trajectory: 4 plan-review rounds (v1=30 → v2=31 → v3=33 → v4 PLAN LOCK direct per user authorization — same plateau pattern as F.2 v3). Diff-stage: 4 real folds applied inline (#194-#197), 4 verified false positives, 5 pre-existing patterns deferred, 2 cosmetic-only deferred.
 
@@ -1513,6 +1660,8 @@ OPERATOR PRE-ACK: Day 0 of F.3 — `coa_first_deploy_grace: true` is INFO-only (
 F.4 (Lead Inspector CoA panel — Spec 76 §3.5 UI) follows next.
 
 ## Phase I.1.1a (close-out of Phase I.1 deferrals — commit pending)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 DIFF-STAGE 4-reviewer round on Phase I.1.1a produced 7 BUGs folded into the diff and 3 DEFERs:
 
@@ -1535,6 +1684,8 @@ Also folded: Gemini MED (Test #11 afterEach cleanup logs failures via console.er
 Verification: `npm run typecheck` clean; `npm run lint` clean for new file; `npm run test` 6246 passed.
 
 ## Phase I.1.1b (Spec 84 permit classifier extension — commit pending)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 PLAN-STAGE 4-reviewer round (3 convergent CRITs + 8 HIGHs + several MEDs) + DIFF-STAGE 4-reviewer round (1 CRIT + 5 HIGHs/IMPORTANTs) folded into v2 plan + implementation. DeepSeek SAVEPOINT CRIT was a verified false positive (pattern already shipped in Phase I.1).
 
@@ -1573,6 +1724,8 @@ Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passe
 ---
 
 ## WF3 Pass-2 bundled (per-seq audit + CoA coverage gap) — Multi-agent review (2026-05-19)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 3-reviewer review on the bundled Pass-2 WF3 (assert-lifecycle-phase-distribution + assert-global-coverage). **0 in-scope issues** — Independent reviewer's worktree was stale and didn't pick up the edits (false-positive); Gemini + DeepSeek surfaced pre-existing concerns in untouched lines. All deferred:
 
@@ -1591,6 +1744,8 @@ Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passe
 ---
 
 ## WF3 CoA Lead Inspector schema drift (Spec 79 §7 Surface 1) — Multi-agent review (2026-05-20)
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 2-reviewer review (DeepSeek + Independent) on the 4-drift fix in `src/lib/leads/lead-inspect-query.ts`. The 4 in-scope crashes are correctly fixed (Red Light → Green Light cycle confirmed; live API returns 200). All other findings are pre-existing concerns in untouched lines:
 
@@ -1606,6 +1761,8 @@ Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passe
 ---
 
 ## WF3 #1 cross-stream timeline dedup (Spec 79 §7a, 2026-05-20) — Multi-agent IMPL review folds
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 2-reviewer IMPL review (DeepSeek + Independent) on the Arm 2/3 `lead_id <> $1` exclusion. **1 in-scope fold applied** (regex tighten). 4 DeepSeek findings are pre-existing in untouched code paths; deferred:
 
@@ -1620,6 +1777,8 @@ Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passe
 ---
 
 ## WF3 #2 CoA gate grace bypass (Spec 79 §7a Finding J, 2026-05-20) — Multi-agent IMPL review
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 DeepSeek + Independent IMPL review. **1 CRIT fold applied inline** (variable hoisting). Other findings deferred or rejected:
 
@@ -1635,6 +1794,8 @@ DeepSeek + Independent IMPL review. **1 CRIT fold applied inline** (variable hoi
 ---
 
 ## WF3 #3 CoA UNION arm in lead feed (Spec 79 §7a Finding K, 2026-05-20) — Multi-agent IMPL review
+_last_reviewed: 2026-06-12 · triage_after: 2026-07-10_
+
 
 DeepSeek + Independent IMPL review. **5 folds applied inline** (4 from Independent CRIT/HIGH + 1 MED). DeepSeek's HIGH (column-list drift) and remaining MED/LOW deferred. Notable: **Independent REJECTED** with the correct CRIT (lifecycle filter no-op); DeepSeek's strongest finding was the column-list-drift maintenance trap, complementary but missed the CRIT-1 entirely. Both reviewers needed.
 
