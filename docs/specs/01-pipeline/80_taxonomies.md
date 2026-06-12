@@ -47,12 +47,13 @@ These static classification models define the business vocabulary that the pipel
 | 30 | temporary-fencing | early_construction |
 | 31 | caulking | finishing |
 | 32 | drain-plumbing | early_construction |
+| 33 | realtor | n/a (Real-Estate-Agent persona — Spec 91 §1.3, no construction phase) |
 
 **Tag-Trade Matrix:** 58 tag keys + 16 aliases → trade arrays with confidence scores. Defined in `src/lib/classification/tag-trade-matrix.ts`.
 
 **Narrow-Scope Codes:** PLB/PSA→plumbing, HVA/MSA→hvac, DRN/STS→drain-plumbing, FSU→fire-protection, DEM→demolition
 
-**Invariants:** Trade IDs 1-32 are stable, never renumbered. Slugs are FK in `permit_trades.trade_slug`. TRADES array in JS script MUST match TS module.
+**Invariants:** Trade IDs 1-32 are stable, never renumbered (realtor=33 likewise). Trades are referenced by **`trade_id` → `trades.id`** in `permit_trades`, `lead_trades`, and `trade_mapping_rules`; the slug-FK (`trade_slug → trades.slug`) is on `universal_stream_trade_signals` only — `permit_trades` has no `trade_slug` column. TRADES array in JS script MUST match TS module.
 </architecture>
 
 ---
