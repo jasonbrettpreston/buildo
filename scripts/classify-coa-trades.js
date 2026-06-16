@@ -40,6 +40,7 @@ const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 const { lookupTradesForTags, shouldAppendRealtor } = require('./lib/coa-trade-classifier');
 const { checkRealtorAvailable, REALTOR_TRADE_ID } = require('./lib/pipeline-realtor-availability');
+const manifest = require('./manifest.json');
 
 // §R2 — advisory lock 4203 (Spec 42 §6.8 Phase D allocation)
 const ADVISORY_LOCK_ID = 4203;
@@ -48,8 +49,14 @@ const ADVISORY_LOCK_ID = 4203;
 const LOGIC_VARS_SCHEMA = z
   .object({
     coa_trades_unmapped_threshold_pct: z.coerce.number().finite().nonnegative().max(100),
+    // cov_* vocabulary-coverage thresholds (Spec 30 §3 / 48 §3.5 — the cov_ primitive).
+    vocab_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
+    vocab_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
   })
-  .passthrough();
+  .passthrough()
+  .refine((d) => d.vocab_coverage_warn_pct < d.vocab_coverage_pass_pct, {
+    message: 'vocab_coverage_warn_pct must be strictly less than vocab_coverage_pass_pct',
+  });
 
 // Spec 47 §6.3: BATCH_SIZE = Math.floor(65535 / COL_COUNT). The lead_trades
 // INSERT emits 8 columns per row (lead_id, trade_id, tier, confidence,
@@ -327,10 +334,23 @@ pipeline.run('classify-coa-trades', async (pool) => {
         ? 'WARN'
         : 'PASS';
 
+    // cov_* vocabulary coverage (Spec 30 §3 / 48 §3.5): distinct trade_ids emitted vs the trades
+    // vocabulary. emitSummary injects the cov_ row and escalates the verdict if it FAILs.
+    const vocabSpec = manifest.scripts.classify_coa_trades?.telemetry_vocab_cols;
+    const vocabCoverage = vocabSpec ? await pipeline.computeVocabCoverage(pool, vocabSpec) : undefined;
+
     pipeline.emitSummary({
       records_total: processed,
       records_new: recordsNew,
       records_updated: recordsUpdated,
+      ...(vocabCoverage
+        ? {
+            telemetry_context: {
+              vocab_coverage: vocabCoverage,
+              vocab_coverage_thresholds: { pass: logicVars.vocab_coverage_pass_pct, warn: logicVars.vocab_coverage_warn_pct },
+            },
+          }
+        : {}),
       records_meta: {
         duration_ms: durationMs,
         coa_processed: processed,

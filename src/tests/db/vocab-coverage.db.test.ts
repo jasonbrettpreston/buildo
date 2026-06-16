@@ -9,14 +9,18 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { PoolClient } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { resolveAndCountTriple } = require('../../../scripts/lib/vocab-coverage');
 
 const pool = getTestPool()!;
 
-// Mirrors assert-global-coverage.js profileVocabTriple's query (present / vocab_size).
+// Mirrors the count semantics now shared in scripts/lib/vocab-coverage.js (resolveAndCountTriple).
 async function vocab(c: PoolClient, dataTable: string, dataCol: string, dataFilter: string | null, vocabTable: string, vocabCol: string) {
-  const dWhere = dataFilter ? `WHERE ${dataFilter}` : '';
+  // Intersection semantics — mirrors resolveAndCountTriple (present = distinct data values IN the vocab).
+  const dAnd = dataFilter ? ` AND (${dataFilter})` : '';
   const { rows: [r] } = await c.query(
-    `SELECT (SELECT COUNT(DISTINCT ${dataCol}) FROM ${dataTable} ${dWhere})::int AS present,
+    `SELECT (SELECT COUNT(DISTINCT ${dataCol}) FROM ${dataTable}
+              WHERE ${dataCol} IN (SELECT ${vocabCol} FROM ${vocabTable})${dAnd})::int AS present,
             (SELECT COUNT(DISTINCT ${vocabCol}) FROM ${vocabTable})::int AS vsize`,
   );
   return { present: r.present as number, vsize: r.vsize as number };
@@ -25,7 +29,8 @@ async function vocab(c: PoolClient, dataTable: string, dataCol: string, dataFilt
 describe.skipIf(!dbAvailable())('vocabulary-coverage metric (Spec 49 §3) — live DB', () => {
   let c: PoolClient;
   beforeAll(async () => { if (pool) c = await pool.connect(); });
-  afterAll(async () => { if (c) c.release(); if (pool) await pool.end(); });
+  // pool.end() happens in the LAST describe (shared single pool per file).
+  afterAll(async () => { if (c) c.release(); });
 
   it('trade_id vocab = COUNT(DISTINCT permit_trades.trade_id) / COUNT(*) trades — dynamic vocab size', async () => {
     if (!pool) return;
@@ -77,5 +82,38 @@ describe.skipIf(!dbAvailable())('vocabulary-coverage metric (Spec 49 §3) — li
               (SELECT COUNT(DISTINCT id) FROM trades WHERE 1=0)::int AS vsize`,
     );
     expect(r.vsize).toBe(0); // → INFO branch in vocabRow (vocabSize === 0)
+  });
+});
+
+// The shared lib executed against real PG — proves the resolve + intersection-count + the
+// enumerated unresolved markers actually run (the source-text lock lives in vocab-coverage.logic.test.ts).
+describe.skipIf(!dbAvailable())('resolveAndCountTriple (Spec 30 §3 / 48 §3.5) — live DB', () => {
+  afterAll(async () => { if (pool) await pool.end(); });
+
+  it('trade_vocab triple → numeric {present, vocab_size}, present <= vocab_size (intersection bound)', async () => {
+    if (!pool) return;
+    const r = await resolveAndCountTriple(pool, {
+      dataTable: 'permit_trades', dataColumn: 'trade_id', vocabTable: 'trades', vocabColumn: 'id',
+    });
+    expect(r.unresolved).toBeUndefined();
+    expect(typeof r.present).toBe('number');
+    expect(r.vocab_size).toBeGreaterThanOrEqual(33);      // live trades vocabulary
+    expect(r.present).toBeLessThanOrEqual(r.vocab_size);   // intersection semantics ⇒ never > 100%
+  });
+
+  it('missing column → enumerated WARN marker (not a throw)', async () => {
+    if (!pool) return;
+    const r = await resolveAndCountTriple(pool, {
+      dataTable: 'permit_trades', dataColumn: 'does_not_exist', vocabTable: 'trades', vocabColumn: 'id',
+    });
+    expect(r.unresolved).toBe('missing column');
+  });
+
+  it('bad identifier → enumerated marker, never reaches SQL', async () => {
+    if (!pool) return;
+    const r = await resolveAndCountTriple(pool, {
+      dataTable: 'permit_trades; DROP TABLE trades', dataColumn: 'trade_id', vocabTable: 'trades', vocabColumn: 'id',
+    });
+    expect(r.unresolved).toBe('bad identifier');
   });
 });

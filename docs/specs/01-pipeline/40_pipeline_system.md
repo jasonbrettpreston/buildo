@@ -86,7 +86,7 @@ Captured by `run-chain.js` before and after each step via the SDK:
 | T4 | NULL fill rate changes | `count(*) WHERE {col} IS NULL` | `records_meta.telemetry.null_fills` |
 | T6 | Engine health (dead tuples, seq scans) | `pg_stat_user_tables` | `records_meta.telemetry.engine` |
 
-Tables and NULL columns per script are declared in `manifest.json` under `telemetry_tables` and `telemetry_null_cols`.
+Tables and NULL columns per script are declared in `manifest.json` under `telemetry_tables` and `telemetry_null_cols`. Vocabulary-coverage triples (the `cov_*` primitive — Spec 30 §3.2 / 48 §4.3) are declared under `telemetry_vocab_cols`: `{ "<label>": { dataTable, dataColumn, vocabTable, vocabColumn, dataFilter?, vocabFilter? } }`, where `<label>` matches `/^[a-z][a-z0-9_]*$/` and drives the `cov_<label>` metric name. The script reads its own entry and passes it to `pipeline.computeVocabCoverage(pool, spec)`.
 </architecture>
 
 ---
@@ -177,6 +177,9 @@ The two layers compose: the chain lock serialises orchestrator entry; per-script
   "supports_dry_run": false,
   "telemetry_tables": ["permits"],
   "telemetry_null_cols": { "permits": ["latitude", "longitude"] },
+  "telemetry_vocab_cols": {
+    "trade_vocab": { "dataTable": "permit_trades", "dataColumn": "trade_id", "vocabTable": "trades", "vocabColumn": "id", "dataFilter": null, "vocabFilter": null }
+  },
   "env": { "SOME_FLAG": "1" },
   "chain_args": { "sources": ["--full"] },
   "deprecated": false,

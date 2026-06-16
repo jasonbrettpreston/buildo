@@ -229,6 +229,41 @@ pipeline.emitSummary({
 | **Capped** | Truncated to 20 items if more are provided |
 | **Passthrough** | Written verbatim to `PIPELINE_SUMMARY` payload as `failed_sample` top-level field |
 | **Absent when empty** | If array is empty or not provided, the field is omitted from the payload |
+
+## 4.3 `emitSummary()` Extension — `vocab_coverage` (cov_* primitive) _(NEW 2026-06-16)_
+
+Scripts may pass `telemetry_context.vocab_coverage` to surface value/vocabulary coverage as a
+verdict-driving `cov_*` audit row (parallel to `dq_`; see Spec 30 §3.2). The data is produced by
+`pipeline.computeVocabCoverage(pool, spec)` from a manifest `telemetry_vocab_cols` declaration (Spec 40).
+
+```js
+const vocabCoverage = await pipeline.computeVocabCoverage(pool, manifest.scripts.classify_permits.telemetry_vocab_cols);
+pipeline.emitSummary({
+  records_total: n,
+  telemetry_context: {
+    vocab_coverage: vocabCoverage,                       // { trade_vocab: { present, vocab_size } | { unresolved } }
+    vocab_coverage_thresholds: { pass: 90, warn: 70 },   // optional; defaults 90/70
+  },
+  records_meta: { audit_table: { ... } },
+});
+```
+
+| Rule | Detail |
+|------|--------|
+| **Optional** | Absent `vocab_coverage` → no `cov_*` rows (opt-in, like `dq_`) |
+| **Row shape** | `cov_<label>: present/vocab_size (pct%)` → PASS ≥ pass%, WARN ≥ warn%, FAIL below |
+| **Empty vocab** | `vocab_size=0` with data present → WARN; with no data → INFO |
+| **Unresolved** | `{ unresolved: '<enumerated reason>' }` → a VISIBLE WARN row (never silent); raw error logged via `log.warn` only |
+| **Bounded** | INTERSECTION semantics (data values in vocab) ⇒ coverage ≤ 100% |
+
+### 4.4 Verdict recompute (escalate-only) _(NEW 2026-06-16)_
+
+After injecting all auto rows (`sys_/err_/dq_/cov_`), `emitSummary()` recomputes `audit_table.verdict`
+as the row-derived cascade (§3.6), **escalate-only**: it raises the verdict when an injected row is
+more severe but NEVER downgrades a script-set verdict, and preserves `SKIP`/`UNKNOWN` verbatim. This
+enforces the §3.6 "row-derived, never parallel-boolean" rule at the SDK level — a `cov_*`/`dq_`/`err_`
+FAIL now turns its step red without each script re-deriving its own verdict.
+
 </behavior>
 
 ---

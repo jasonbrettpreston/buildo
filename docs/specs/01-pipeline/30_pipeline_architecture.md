@@ -92,6 +92,8 @@ pipeline.emitSummary({
   telemetry_context: {
     error_taxonomy: { waf_blocks: 3, timeouts: 0, parse_failures: 1 },
     data_quality: { issued_date: { nulls: 50, total: 500 } },
+    vocab_coverage: { trade_vocab: { present: 22, vocab_size: 38 } },
+    vocab_coverage_thresholds: { pass: 90, warn: 70 },  // optional; defaults 90/70
   },
 });
 ```
@@ -102,10 +104,27 @@ The SDK auto-injects prefixed rows:
 |--------|----------|---------|-------------|
 | `err_` | Error Taxonomy | `err_waf_blocks: 3` | WARN if > 0, PASS if 0 |
 | `dq_` | Data Quality | `dq_null_rate_issued_date: 10.0%` | FAIL if >= 50%, PASS otherwise |
+| `cov_` | Vocabulary Coverage | `cov_trade_vocab: 22/38 (57.9%)` | PASS ≥ pass%, WARN ≥ warn%, FAIL below (default 90/70) |
+
+**`cov_*` — value/vocabulary coverage** (Spec 49 §3): distinct values PRESENT vs the defining
+vocabulary, measured with INTERSECTION semantics (data values that are in the vocab) so the ratio is
+bounded ≤100%. Catches silent under-emission a NULL-rate profiler structurally can't see — a
+never-emitted value has no row to be null. The data is produced by `pipeline.computeVocabCoverage(pool, spec)`
+from a manifest `telemetry_vocab_cols` declaration (Spec 40). `vocab_size=0` with data present → WARN
+(empty-vocab misconfig); with no data → INFO. An unresolved triple (bad identifier / missing column /
+type mismatch / timeout / query error) → a VISIBLE WARN row, never a silent skip.
 
 ### 3.3 Namespace Protection
 
-All auto-injected metrics use strict prefixes (`sys_`, `err_`, `dq_`) to prevent collision with developer-defined metrics. A developer's `{ metric: "total_errors" }` safely coexists with the SDK's `{ metric: "err_timeouts" }`.
+All auto-injected metrics use strict prefixes (`sys_`, `err_`, `dq_`, `cov_`) to prevent collision with developer-defined metrics. A developer's `{ metric: "total_errors" }` safely coexists with the SDK's `{ metric: "err_timeouts" }`.
+
+### 3.3.1 Verdict recompute (escalate-only)
+
+After injecting all auto rows, `emitSummary()` recomputes `audit_table.verdict` as the row-derived
+cascade (Spec 48 §3.5/§3.6) **escalate-only**: it raises the verdict when an injected row is more
+severe (`cov_`/`dq_`/`err_` FAIL → step FAIL), but NEVER downgrades a script-set verdict. `SKIP`/`UNKNOWN`
+(lock-held / no-data) are preserved verbatim. This is what makes the auto-injected primitives
+verdict-driving rather than decorative.
 
 ### 3.4 NULL Rate Tracking
 

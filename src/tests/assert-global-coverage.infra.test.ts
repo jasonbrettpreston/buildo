@@ -818,8 +818,7 @@ describe('assert-global-coverage.js — §3 vocabulary-coverage', () => {
   it('vocabRow emits the standard { metric, value, threshold, status } rail (label-attributed, not columnar)', () => {
     expect(content).toMatch(/function vocabRow\(/);
     expect(content).toMatch(/metric: `\$\{dataColumn\} vocab \(\$\{stepTarget\}\)`/);
-    expect(content).toMatch(/COUNT\(DISTINCT \$\{t\.dataColumn\}\)/);
-    expect(content).toMatch(/COUNT\(DISTINCT \$\{t\.vocabColumn\}\)/);
+    // The COUNT(DISTINCT …) SQL now lives in scripts/lib/vocab-coverage.js — asserted there.
   });
 
   it('Zod schema requires both vocab thresholds + enforces warn < pass', () => {
@@ -828,9 +827,9 @@ describe('assert-global-coverage.js — §3 vocabulary-coverage', () => {
     expect(content).toMatch(/vocab_coverage_warn_pct < d\.vocab_coverage_pass_pct/);
   });
 
-  it('unresolved / type-mismatched triple → VISIBLE WARN row (never silent INFO-skip)', () => {
-    expect(content).toMatch(/unresolved: missing/);
-    expect(content).toMatch(/unresolved: type mismatch/);
+  it('delegates resolve+count to the shared lib and maps any unresolved marker → VISIBLE WARN row', () => {
+    expect(content).toMatch(/resolveAndCountTriple/);
+    expect(content).toMatch(/value: `unresolved: \$\{result\.unresolved\}`/);
     expect(content).toMatch(/status: 'WARN'/);
   });
 

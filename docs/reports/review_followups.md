@@ -3,6 +3,20 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Spec 30/48 (cov_* SDK vocabulary-coverage primitive) — WF1 output-altitude review DEFERs (2026-06-16)
+
+Source: 6-reviewer output review (Code Reviewer + Observability + Integration + Regression Guardian + Gemini + DeepSeek) on the `cov_*` SDK primitive diff. 4 findings fixed in the commit (pool.connect inside try; classify-permits config load before lock per §R5; cov_ threshold→passPct; db-test intersection mirror). Items below are DEFERs.
+
+| Severity | Source | Item | Why deferred |
+|---|---|---|---|
+| MED | Gemini | `resolveAndCountTriple` hardcodes `table_schema='public'` in the information_schema resolve. | All pipeline tables are in `public`; multi-schema is not a Buildo concern. Track as an enhancement (pass schema in the triple) if a non-public vocab is ever added. |
+| LOW | Gemini | `typeFamily` regex groups only int/numeric/text — uuid/date/timestamp fall through to raw-type compare. | The only live triples are integer FK columns. Expand (or use `pg_type.typcategory`) only when a non-integer vocab triple is added. |
+| LOW | Integration | `vocab_coverage_pass_pct`/`warn_pct` are present via `FALLBACK_LOGIC_VARS` (seed JSON) but NOT seeded into the DB `logic_variables` table (mig 101 seeds only `profiling_*`) → not operator-tunable from the Control Panel until a row exists. | Defaults work (90/70); the gate passes. Add an `INSERT … ON CONFLICT DO NOTHING` for the two keys if runtime tuning is wanted. Config-surface gap, not a bug. |
+| — | Observability | Pre-existing: `load-massing.js` sets `verdict: hasWarns ? 'WARN'` where `hasWarns = processed < 400000` has NO backing audit row (Spec 48 §3.6 parallel-boolean WARN without a row). | Pre-existing, not introduced by this WF. The escalate-only recompute neither fixes nor worsens it. File for a §3.6 cleanup sweep. |
+| — | DeepSeek | Pre-existing `scripts/lib/pipeline.js` concerns flagged against the whole file: `checkQueueAge` whereClause interpolation, `streamQuery` resource handling, `withAdvisoryLock` session-vs-txn lock on non-SIGKILL exit, `withTransaction` maxAttempts≥1 guard. | None are in this WF's diff. Candidate items for a pipeline-SDK hardening WF; not in scope here. |
+
+---
+
 ## Spec 49 (Vocabulary-Coverage Profiling) — WF2 output-altitude review DEFERs (2026-06-16)
 
 Source: output-altitude review (Integration general-purpose PASS + Regression Guardian PASS + Gemini + DeepSeek adversarial) on the vocabulary-coverage diff (`assert-global-coverage.js` `VOCAB_COVERAGE` matrix + `profileVocabTriple` + Zod keys, Spec 49 §3/§4.x). Both structural reviewers commit-ready; no BUG on the diff. Items below are DEFERs.

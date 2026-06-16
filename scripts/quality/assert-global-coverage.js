@@ -26,6 +26,7 @@ const pipeline = require('./../lib/pipeline');
 const { SKIP_PHASES_SQL } = require('./../lib/lifecycle-phase');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./../lib/config-loader');
 const { calibratedStatus } = require('./../lib/coverage-status');
+const { resolveAndCountTriple } = require('./../lib/vocab-coverage');
 
 // Advisory lock ID — unique to this assert script (spec 47 §A.5, ID 111).
 const ADVISORY_LOCK_ID = 111;
@@ -141,40 +142,16 @@ pipeline.run('assert-global-coverage', async (pool) => {
       return { metric: `${dataColumn} vocab (${stepTarget})`, value: `${present}/${vocabSize} (${pct}%)`, threshold: `>= ${vocabPassPct}%`, status };
     }
 
-    // Resolve + profile one vocab triple. Unresolved (missing table/column) or type-mismatch →
-    // a VISIBLE WARN row (never silent INFO-skip — the transparency principle this feature serves),
-    // and any query error degrades to WARN — one bad triple never throws / breaks the profile.
+    // Resolve + profile one vocab triple via the shared lib (resolveAndCountTriple — also backs the
+    // SDK cov_* primitive). Unresolved (bad identifier / missing column / type mismatch / timeout /
+    // query error) → a VISIBLE WARN row (never silent INFO-skip — the transparency principle this
+    // feature serves); the lib never throws, so one bad triple never breaks the profile.
     async function profileVocabTriple(t) {
-      try {
-        const colType = async (table, col) => {
-          const r = await pool.query(
-            `SELECT data_type FROM information_schema.columns WHERE table_schema='public' AND table_name=$1 AND column_name=$2`,
-            [table, col],
-          );
-          return r.rows[0]?.data_type ?? null;
-        };
-        const [dType, vType] = await Promise.all([colType(t.dataTable, t.dataColumn), colType(t.vocabTable, t.vocabColumn)]);
-        if (dType === null || vType === null) {
-          const missing = [dType === null && `${t.dataTable}.${t.dataColumn}`, vType === null && `${t.vocabTable}.${t.vocabColumn}`].filter(Boolean).join(', ');
-          return { metric: `${t.dataColumn} vocab (${t.stepTarget})`, value: `unresolved: missing ${missing}`, threshold: 'N/A', status: 'WARN' };
-        }
-        // Compare broad type families (integer↔integer, text↔text). A mismatch yields a meaningless metric.
-        const fam = (dt) => (/int|numeric|serial/.test(dt) ? 'num' : /char|text/.test(dt) ? 'text' : dt);
-        if (fam(dType) !== fam(vType)) {
-          return { metric: `${t.dataColumn} vocab (${t.stepTarget})`, value: `unresolved: type mismatch (${dType} vs ${vType})`, threshold: 'N/A', status: 'WARN' };
-        }
-        // dataFilter/vocabFilter are hardcoded matrix constants (not user input) — safe to inline.
-        const dWhere = t.dataFilter ? `WHERE ${t.dataFilter}` : '';
-        const vWhere = t.vocabFilter ? `WHERE ${t.vocabFilter}` : '';
-        const { rows: [r] } = await pool.query(
-          `SELECT (SELECT COUNT(DISTINCT ${t.dataColumn}) FROM ${t.dataTable} ${dWhere})::int AS present,
-                  (SELECT COUNT(DISTINCT ${t.vocabColumn}) FROM ${t.vocabTable} ${vWhere})::int AS vsize`,
-        );
-        return vocabRow(t.stepTarget, t.dataColumn, r.present, r.vsize);
-      } catch (err) {
-        pipeline.log.warn('[assert-global-coverage]', `vocab triple ${t.dataTable}.${t.dataColumn} failed`, { error: err.message });
-        return { metric: `${t.dataColumn} vocab (${t.stepTarget})`, value: `unresolved: ${err.message}`, threshold: 'N/A', status: 'WARN' };
+      const result = await resolveAndCountTriple(pool, t, { logWarn: pipeline.log.warn });
+      if (result.unresolved) {
+        return { metric: `${t.dataColumn} vocab (${t.stepTarget})`, value: `unresolved: ${result.unresolved}`, threshold: 'N/A', status: 'WARN' };
       }
+      return vocabRow(t.stepTarget, t.dataColumn, result.present, result.vocab_size);
     }
 
     const rows = [];

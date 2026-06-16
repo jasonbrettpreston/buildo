@@ -21,6 +21,7 @@
  * SPEC LINK: docs/specs/01-pipeline/40_pipeline_system.md
  */
 const { Pool } = require('pg');
+const { resolveAndCountTriple } = require('./vocab-coverage');
 
 // ---------------------------------------------------------------------------
 // Pool Creation — single standardized pattern (PG_* env vars)
@@ -229,8 +230,13 @@ let _runStartMs = Date.now();
  * - sys_* (always): velocity, duration — free for all scripts
  * - err_* (opt-in): from telemetry_context.error_taxonomy
  * - dq_*  (opt-in): from telemetry_context.data_quality
+ * - cov_* (opt-in): from telemetry_context.vocab_coverage — value/vocabulary coverage
  *
- * @param {{ records_total: number, records_new: number, records_updated: number, records_meta?: object, failed_sample?: string[], telemetry_context?: { error_taxonomy?: Record<string, number>, data_quality?: Record<string, { nulls: number, total: number }> } }} stats
+ * Then recomputes audit_table.verdict ESCALATE-ONLY from the final rows (Spec 48 §3.5/§3.6 —
+ * verdict must be row-derived, never a parallel boolean): raises the verdict when an injected
+ * row is more severe, NEVER downgrades. SKIP/UNKNOWN (lock-held / no-data) are preserved verbatim.
+ *
+ * @param {{ records_total: number, records_new: number, records_updated: number, records_meta?: object, failed_sample?: string[], telemetry_context?: { error_taxonomy?: Record<string, number>, data_quality?: Record<string, { nulls: number, total: number }>, vocab_coverage?: Record<string, { present: number, vocab_size: number } | { unresolved: string }>, vocab_coverage_thresholds?: { pass: number, warn: number } } }} stats
  */
 function emitSummary(stats) {
   const payload = {
@@ -281,6 +287,45 @@ function emitSummary(stats) {
       const pctNum = fieldTotal > 0 ? (nulls / fieldTotal) * 100 : 0;
       rows.push({ metric: `dq_null_rate_${field}`, value: pct, threshold: '< 50%', status: pctNum >= 50 ? 'FAIL' : 'PASS' });
     }
+  }
+
+  // cov_* metrics (opt-in via telemetry_context.vocab_coverage) — distinct values PRESENT vs the
+  // defining vocabulary. Thresholds default 90/70 (coverage axis: higher is better, unlike dq_).
+  if (stats.telemetry_context?.vocab_coverage) {
+    const th = stats.telemetry_context.vocab_coverage_thresholds || {};
+    const passPct = Number.isFinite(th.pass) ? th.pass : 90;
+    const warnPct = Number.isFinite(th.warn) ? th.warn : 70;
+    for (const [label, info] of Object.entries(stats.telemetry_context.vocab_coverage)) {
+      const metric = `cov_${String(label).replace(/[^a-zA-Z0-9_]/g, '_')}`;
+      if (info && info.unresolved) {
+        // Visible WARN — never a silent skip (the transparency principle). Reason is enumerated.
+        rows.push({ metric, value: `unresolved: ${info.unresolved}`, threshold: 'N/A', status: 'WARN' });
+        continue;
+      }
+      const present = Number(info?.present) || 0;
+      const vocabSize = Number(info?.vocab_size) || 0;
+      if (vocabSize === 0) {
+        // Empty vocab with data present = misconfiguration (WARN); nothing to measure = INFO.
+        rows.push(present > 0
+          ? { metric, value: `${present}/0 (empty vocab)`, threshold: 'N/A', status: 'WARN' }
+          : { metric, value: '0/0', threshold: 'N/A', status: 'INFO' });
+        continue;
+      }
+      const pct = Math.round((present / vocabSize) * 1000) / 10;
+      const status = pct >= passPct ? 'PASS' : pct >= warnPct ? 'WARN' : 'FAIL';
+      // threshold shows the PASS bar (consistent with assert-global-coverage.js vocabRow).
+      rows.push({ metric, value: `${present}/${vocabSize} (${pct}%)`, threshold: `>= ${passPct}%`, status });
+    }
+  }
+
+  // --- Verdict recompute (escalate-only) — make every injected row verdict-driving (Spec 48 §3.5/§3.6).
+  // SKIP/UNKNOWN are deliberate signals (lock-held / no-data) and are never overwritten.
+  const at = payload.records_meta.audit_table;
+  if (at.verdict !== 'SKIP' && at.verdict !== 'UNKNOWN') {
+    const rowDerived = rows.some((r) => r.status === 'FAIL') ? 'FAIL'
+      : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+    const SEV = { PASS: 0, WARN: 1, FAIL: 2 };
+    if ((SEV[rowDerived] ?? 0) > (SEV[at.verdict] ?? 0)) at.verdict = rowDerived;
   }
 
   console.log('PIPELINE_SUMMARY:' + JSON.stringify(payload));
@@ -527,6 +572,23 @@ async function diffTelemetry(pool, tables, pre) {
     }
   }
   return result;
+}
+
+/**
+ * Compute value/vocabulary coverage for a manifest `telemetry_vocab_cols` spec — the data behind
+ * the cov_* primitive. Pass the result to emitSummary as telemetry_context.vocab_coverage.
+ *
+ * @param {import('pg').Pool} pool
+ * @param {Record<string, { dataTable:string, dataColumn:string, dataFilter?:string|null, vocabTable:string, vocabColumn:string, vocabFilter?:string|null }>} vocabSpec
+ * @returns {Promise<Record<string, { present:number, vocab_size:number } | { unresolved:string }>>}
+ */
+async function computeVocabCoverage(pool, vocabSpec) {
+  const out = {};
+  if (!vocabSpec) return out;
+  for (const [label, triple] of Object.entries(vocabSpec)) {
+    out[label] = await resolveAndCountTriple(pool, triple, { logWarn: log.warn });
+  }
+  return out;
 }
 
 /**
@@ -840,5 +902,6 @@ module.exports = {
   isFullMode,
   captureTelemetry,
   diffTelemetry,
+  computeVocabCoverage,
   quoteIdent,
 };

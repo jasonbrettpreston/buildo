@@ -287,6 +287,125 @@ describe('Pipeline SDK', () => {
       expect(rows.filter((r: { metric: string }) => r.metric === 'sys_duration_ms')).toHaveLength(1);
     });
 
+    // --- cov_* vocabulary-coverage primitive (Spec 30 §3 / 48 §3.5) ---
+
+    type AuditRow = { metric: string; value: unknown; threshold: unknown; status: string };
+    const rowsFromCall = (i = 0): AuditRow[] =>
+      JSON.parse((logSpy!.mock.calls[i]![0] as string).replace('PIPELINE_SUMMARY:', '')).records_meta.audit_table.rows;
+    const verdictFromCall = (i = 0): string =>
+      JSON.parse((logSpy!.mock.calls[i]![0] as string).replace('PIPELINE_SUMMARY:', '')).records_meta.audit_table.verdict;
+
+    it('injects cov_* rows from telemetry_context.vocab_coverage with PASS/WARN/FAIL bands', () => {
+      pipeline.emitSummary({
+        records_total: 100,
+        records_meta: { audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] } },
+        telemetry_context: {
+          vocab_coverage: {
+            full: { present: 38, vocab_size: 38 }, // 100% → PASS
+            partial: { present: 30, vocab_size: 38 }, // 78.9% → WARN
+            broken: { present: 22, vocab_size: 38 }, // 57.9% → FAIL
+          },
+          vocab_coverage_thresholds: { pass: 90, warn: 70 },
+        },
+      });
+      const rows = rowsFromCall();
+      expect(rows.find((r) => r.metric === 'cov_full')!.status).toBe('PASS');
+      const partial = rows.find((r) => r.metric === 'cov_partial')!;
+      expect(partial.status).toBe('WARN');
+      expect(partial.value).toBe('30/38 (78.9%)');
+      expect(rows.find((r) => r.metric === 'cov_broken')!.status).toBe('FAIL');
+    });
+
+    it('cov_* defaults to 90/70 thresholds when vocab_coverage_thresholds is absent', () => {
+      pipeline.emitSummary({
+        records_total: 100,
+        records_meta: { audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] } },
+        telemetry_context: { vocab_coverage: { x: { present: 22, vocab_size: 38 } } },
+      });
+      const x = rowsFromCall().find((r) => r.metric === 'cov_x')!;
+      expect(x.status).toBe('FAIL'); // 57.9% < 70 default warn
+      expect(x.threshold).toBe('>= 90%'); // threshold shows the PASS bar
+
+    });
+
+    it('cov_* vocab_size=0: WARN when present>0 (empty-vocab misconfig), INFO when present=0', () => {
+      pipeline.emitSummary({
+        records_total: 1,
+        records_meta: { audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] } },
+        telemetry_context: {
+          vocab_coverage: { hasdata: { present: 5, vocab_size: 0 }, nodata: { present: 0, vocab_size: 0 } },
+        },
+      });
+      const rows = rowsFromCall();
+      const hasdata = rows.find((r) => r.metric === 'cov_hasdata')!;
+      expect(hasdata.status).toBe('WARN');
+      expect(hasdata.value).toBe('5/0 (empty vocab)');
+      expect(rows.find((r) => r.metric === 'cov_nodata')!.status).toBe('INFO');
+    });
+
+    it('cov_* unresolved marker → visible WARN row (never a silent skip)', () => {
+      pipeline.emitSummary({
+        records_total: 1,
+        records_meta: { audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] } },
+        telemetry_context: { vocab_coverage: { trade_vocab: { unresolved: 'missing column' } } },
+      });
+      const r = rowsFromCall().find((x) => x.metric === 'cov_trade_vocab')!;
+      expect(r.status).toBe('WARN');
+      expect(r.value).toBe('unresolved: missing column');
+    });
+
+    it('cov_* label is sanitized into a safe metric name', () => {
+      pipeline.emitSummary({
+        records_total: 1,
+        records_meta: { audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] } },
+        telemetry_context: { vocab_coverage: { 'trade vocab!': { present: 38, vocab_size: 38 } } },
+      });
+      expect(rowsFromCall().find((r) => r.metric === 'cov_trade_vocab_')).toBeDefined();
+    });
+
+    it('verdict recompute: a cov_* FAIL escalates a script PASS → FAIL', () => {
+      pipeline.emitSummary({
+        records_total: 1,
+        records_meta: { audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] } },
+        telemetry_context: { vocab_coverage: { v: { present: 22, vocab_size: 38 } } },
+      });
+      expect(verdictFromCall()).toBe('FAIL');
+    });
+
+    it('verdict recompute: escalate-only — a script FAIL is never downgraded by PASS rows', () => {
+      pipeline.emitSummary({
+        records_total: 1,
+        records_meta: {
+          audit_table: { phase: 1, name: 'Test', verdict: 'FAIL', rows: [{ metric: 'x', value: 1, threshold: null, status: 'PASS' }] },
+        },
+        telemetry_context: { vocab_coverage: { v: { present: 38, vocab_size: 38 } } },
+      });
+      expect(verdictFromCall()).toBe('FAIL');
+    });
+
+    it('verdict recompute: SKIP / UNKNOWN preserved verbatim even with a cov_* FAIL row', () => {
+      pipeline.emitSummary({
+        records_total: 1,
+        records_meta: { audit_table: { phase: 1, name: 'Test', verdict: 'SKIP', rows: [] } },
+        telemetry_context: { vocab_coverage: { v: { present: 0, vocab_size: 38 } } }, // 0% → would be FAIL
+      });
+      pipeline.emitSummary({
+        records_total: 1,
+        records_meta: { audit_table: { phase: 1, name: 'Test', verdict: 'UNKNOWN', rows: [] } },
+        telemetry_context: { vocab_coverage: { v: { present: 0, vocab_size: 38 } } },
+      });
+      expect(verdictFromCall(0)).toBe('SKIP');
+      expect(verdictFromCall(1)).toBe('UNKNOWN');
+    });
+
+    it('skips cov_* rows when telemetry_context.vocab_coverage is absent (opt-in)', () => {
+      pipeline.emitSummary({
+        records_total: 100,
+        records_meta: { audit_table: { phase: 1, name: 'Test', verdict: 'PASS', rows: [] } },
+      });
+      expect(rowsFromCall().filter((r) => r.metric.startsWith('cov_'))).toHaveLength(0);
+    });
+
     // --- failed_sample tests (spec 48 §4) ---
 
     it('failed_sample passes through to PIPELINE_SUMMARY payload', () => {
@@ -1090,6 +1209,46 @@ describe('Pipeline SDK', () => {
     it('classify_permits declares null tracking for classified_at', () => {
       const entry = manifest.scripts.classify_permits;
       expect(entry.telemetry_null_cols).toBeDefined();
+    });
+  });
+
+  describe('B22: manifest telemetry_vocab_cols schema (Spec 30 §3 / 48 §3.5 — cov_ primitive)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fsMan = require('fs');
+    const manifest = JSON.parse(fsMan.readFileSync(
+      path.resolve(__dirname, '../../scripts/manifest.json'), 'utf-8'
+    ));
+    const LABEL_RE = /^[a-z][a-z0-9_]*$/;
+    const IDENT_RE = /^[a-z_][a-z0-9_]*$/i;
+
+    it('every telemetry_vocab_cols entry follows { <label>: { dataTable, dataColumn, vocabTable, vocabColumn, dataFilter?, vocabFilter? } }', () => {
+      const withVocab = Object.entries(manifest.scripts)
+        .filter(([, v]) => (v as { telemetry_vocab_cols?: unknown }).telemetry_vocab_cols);
+      expect(withVocab.length).toBeGreaterThanOrEqual(2); // classify_permits + classify_coa_trades
+      for (const [, v] of withVocab) {
+        const spec = (v as { telemetry_vocab_cols: Record<string, Record<string, string>> }).telemetry_vocab_cols;
+        for (const [label, triple] of Object.entries(spec)) {
+          expect(label).toMatch(LABEL_RE); // fail-loud on a bad metric label (no runtime collision)
+          for (const ident of [triple.dataTable, triple.dataColumn, triple.vocabTable, triple.vocabColumn]) {
+            expect(typeof ident).toBe('string');
+            expect(ident).toMatch(IDENT_RE);
+          }
+        }
+      }
+    });
+
+    it('classify_coa_trades carries the coa lead_id row-filter (lead_trades holds permit+coa rows)', () => {
+      const triple = manifest.scripts.classify_coa_trades.telemetry_vocab_cols.trade_vocab;
+      expect(triple.dataTable).toBe('lead_trades');
+      expect(triple.dataFilter).toBe("lead_id LIKE 'coa:%'");
+      expect(triple.vocabTable).toBe('trades');
+    });
+
+    it('classify_permits declares the trade_vocab triple (permit_trades.trade_id → trades.id)', () => {
+      const triple = manifest.scripts.classify_permits.telemetry_vocab_cols.trade_vocab;
+      expect(triple.dataTable).toBe('permit_trades');
+      expect(triple.dataColumn).toBe('trade_id');
+      expect(triple.vocabColumn).toBe('id');
     });
   });
 

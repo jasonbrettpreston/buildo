@@ -26,10 +26,24 @@ const {
   filterTradesByClass,
   shouldAppendRealtor,
 } = require('./lib/permit-type-classifier');
+const { z } = require('zod');
+const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+const manifest = require('./manifest.json');
 
 const ADVISORY_LOCK_ID = 88;
 
 const BATCH_SIZE = 1000;
+
+// cov_* vocabulary-coverage thresholds (Spec 30 §3 / 48 §3.5 — the cov_ primitive).
+const LOGIC_VARS_SCHEMA = z
+  .object({
+    vocab_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
+    vocab_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
+  })
+  .passthrough()
+  .refine((d) => d.vocab_coverage_warn_pct < d.vocab_coverage_pass_pct, {
+    message: 'vocab_coverage_warn_pct must be strictly less than vocab_coverage_pass_pct',
+  });
 
 // ---------------------------------------------------------------------------
 // Trades (hardcoded to avoid module resolution issues in standalone script)
@@ -571,6 +585,14 @@ function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitCla
 const fullMode = pipeline.isFullMode();
 
 pipeline.run('classify-permits', async (pool) => {
+  // §R5 — cov_* thresholds validated BEFORE acquiring the lock (matches classify-coa-trades).
+  // logicVars is closed over by the lock callback below (used at emitSummary).
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'classify-permits');
+  const vocabValidation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'classify-permits');
+  if (!vocabValidation.valid) {
+    throw new Error(`logicVars validation failed: ${vocabValidation.errors.join('; ')}`);
+  }
+
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const RUN_AT = await pipeline.getDbTimestamp(pool);
     const startTime = Date.now();
@@ -880,10 +902,23 @@ pipeline.run('classify-permits', async (pool) => {
     { metric: 'class.unclassified', value: classCounters.unclassified, threshold: null, status: 'INFO' },
   ];
 
+  // cov_* vocabulary coverage (Spec 30 §3 / 48 §3.5): distinct trade_ids emitted vs the trades
+  // vocabulary. emitSummary injects the cov_ row and escalates the verdict if it FAILs.
+  const vocabSpec = manifest.scripts.classify_permits?.telemetry_vocab_cols;
+  const vocabCoverage = vocabSpec ? await pipeline.computeVocabCoverage(pool, vocabSpec) : undefined;
+
   pipeline.emitSummary({
     records_total: processed,
     records_new: trulyNewPermits,
     records_updated: permitsWithTrades,
+    ...(vocabCoverage
+      ? {
+          telemetry_context: {
+            vocab_coverage: vocabCoverage,
+            vocab_coverage_thresholds: { pass: logicVars.vocab_coverage_pass_pct, warn: logicVars.vocab_coverage_warn_pct },
+          },
+        }
+      : {}),
     records_meta: {
       duration_ms: durationMs,
       permits_processed: processed,
