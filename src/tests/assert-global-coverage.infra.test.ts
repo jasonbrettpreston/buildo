@@ -791,3 +791,50 @@ describe('assert-global-coverage.js — §8e centreline coverage rows', () => {
     expect(content).not.toMatch(GATED);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────
+// Spec 49 §3 — vocabulary-coverage dimension (the value/vocabulary axis that
+// catches silent under-emission, e.g. classify_permits emitting 22/38 trades).
+// ────────────────────────────────────────────────────────────────────────
+describe('assert-global-coverage.js — §3 vocabulary-coverage', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  it('VOCAB_COVERAGE matrix uses camelCase keys (NOT the banned step_target:/populated: columnar keys)', () => {
+    expect(content).toMatch(/const VOCAB_COVERAGE = \[/);
+    expect(content).toMatch(/stepTarget:/);
+    expect(content).toMatch(/dataTable:.*dataColumn:/);
+    expect(content).toMatch(/vocabTable:.*vocabColumn:/);
+    expect(content).not.toMatch(/step_target:/); // must not reintroduce the banned columnar key
+  });
+
+  it('declares the trade-vocab triples (the gap this guards) + the neighbourhood healthy control', () => {
+    expect(content).toMatch(/dataTable: 'permit_trades', dataColumn: 'trade_id'/);
+    expect(content).toMatch(/dataTable: 'lead_trades', dataColumn: 'trade_id'/);
+    expect(content).toMatch(/lead_id LIKE 'coa:%'/);
+    expect(content).toMatch(/dataTable: 'permits', dataColumn: 'neighbourhood_id'/); // control
+  });
+
+  it('vocabRow emits the standard { metric, value, threshold, status } rail (label-attributed, not columnar)', () => {
+    expect(content).toMatch(/function vocabRow\(/);
+    expect(content).toMatch(/metric: `\$\{dataColumn\} vocab \(\$\{stepTarget\}\)`/);
+    expect(content).toMatch(/COUNT\(DISTINCT \$\{t\.dataColumn\}\)/);
+    expect(content).toMatch(/COUNT\(DISTINCT \$\{t\.vocabColumn\}\)/);
+  });
+
+  it('Zod schema requires both vocab thresholds + enforces warn < pass', () => {
+    expect(content).toMatch(/vocab_coverage_pass_pct: z\.coerce\.number\(\)/);
+    expect(content).toMatch(/vocab_coverage_warn_pct: z\.coerce\.number\(\)/);
+    expect(content).toMatch(/vocab_coverage_warn_pct < d\.vocab_coverage_pass_pct/);
+  });
+
+  it('unresolved / type-mismatched triple → VISIBLE WARN row (never silent INFO-skip)', () => {
+    expect(content).toMatch(/unresolved: missing/);
+    expect(content).toMatch(/unresolved: type mismatch/);
+    expect(content).toMatch(/status: 'WARN'/);
+  });
+
+  it('vocab_size = 0 → INFO (nothing to measure), not a false FAIL', () => {
+    expect(content).toMatch(/vocabSize == null \|\| vocabSize === 0/);
+  });
+});

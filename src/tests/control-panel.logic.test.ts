@@ -132,6 +132,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'calibration_default_p75_days',     // E21
   'profiling_coverage_pass_pct',      // spec 49
   'profiling_coverage_warn_pct',      // spec 49
+  'vocab_coverage_pass_pct',          // spec 49 §3 — vocabulary coverage
+  'vocab_coverage_warn_pct',          // spec 49 §3 — vocabulary coverage
   'snowplow_buffer_days',             // WF3 spec 85 §3 — Historic Snowplow buffer (spec 47 §4.1)
   'lifecycle_issued_stall_days',      // WF2 — days since Permit Issued before stall flag (§4.1)
   'lifecycle_inspection_stall_days',  // WF2 — days since last inspection before stall flag (§4.1)

@@ -517,6 +517,20 @@
     "min": 0,
     "max": 100
   },
+  "vocab_coverage_pass_pct": {
+    "default": 90,
+    "type": "number",
+    "description": "assert-global-coverage vocabulary-coverage (spec 49 §3): distinct values present / defined vocabulary >= this integer pct -> PASS",
+    "min": 0,
+    "max": 100
+  },
+  "vocab_coverage_warn_pct": {
+    "default": 70,
+    "type": "number",
+    "description": "assert-global-coverage vocabulary-coverage (spec 49 §3): >= this integer pct -> WARN; below -> FAIL",
+    "min": 0,
+    "max": 100
+  },
   "lifecycle_issued_stall_days": {
     "default": 730,
     "type": "number",

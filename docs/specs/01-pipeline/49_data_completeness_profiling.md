@@ -36,49 +36,46 @@ As a pipeline operator, I want a single authoritative field-level coverage repor
 
 ### Core Logic
 1. Acquire advisory lock 111 (`pg_try_advisory_xact_lock`). If lock held, emit skip and exit.
-2. Load and Zod-validate both threshold variables.
-3. Run coverage queries (grouped by table using `COUNT(*) FILTER (WHERE ...)` expressions).
-4. Build `CoverageRow[]` — one row per step/field combination.
-5. INFO rows (quality steps, count-only metrics) always get `status: 'INFO'`, `coverage_pct: null`.
-6. Compute `verdict` = worst non-INFO status across all rows (PASS if no WARN/FAIL).
+2. Load and Zod-validate the threshold variables (field-coverage + vocabulary-coverage pairs).
+3. **Field-coverage** (the original dimension): run `COUNT(*) FILTER (WHERE ...)` queries grouped by table; one row per step/field. `populated/denominator`. Step-attributed via the metric label.
+4. **Vocabulary-coverage** (the value/vocabulary dimension): for each triple in the `VOCAB_COVERAGE` matrix (§4.x), `COUNT(DISTINCT dataColumn)` PRESENT vs `COUNT(DISTINCT vocabColumn)` DEFINED — catches *silent under-emission* a field-NULL query can't see (a never-emitted value has no row to be null). An unresolved/type-mismatched triple → a **WARN** row (never silent INFO-skip).
+5. INFO rows (quality steps, count-only metrics, `denominator=0`/`vocab_size=0`) always get `status: 'INFO'`.
+6. Compute `verdict` = worst status across all rows (`rows.some(FAIL)?FAIL:some(WARN)?WARN:PASS`). **Non-halting** — verdict never throws (only Zod/DB infra errors do).
 7. `emitSummary({ records_total: 1, ... })` — `records_total` is ALWAYS 1 (one audit pass).
 
 ### Zod Schema
 ```js
 const LOGIC_VARS_SCHEMA = z.object({
-  profiling_coverage_pass_pct: z.number().int().min(0).max(100),
-  profiling_coverage_warn_pct: z.number().int().min(0).max(100),
-}).refine(d => d.profiling_coverage_warn_pct < d.profiling_coverage_pass_pct, {
-  message: 'warn_pct must be strictly less than pass_pct',
-});
+  profiling_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
+  profiling_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
+  vocab_coverage_pass_pct: z.coerce.number().int().min(0).max(100),   // §3 vocabulary dimension
+  vocab_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
+}).passthrough()                                                       // other logic_vars flow through
+  .refine(d => d.profiling_coverage_warn_pct < d.profiling_coverage_pass_pct, { message: '…' })
+  .refine(d => d.vocab_coverage_warn_pct  < d.vocab_coverage_pass_pct,  { message: '…' });
 ```
 
-### Output: columnar audit_table
+### Output: `{ metric, value, threshold, status }` rows (NOT columnar — the "P3 fix")
+The script emits standard SDK rows, NOT a `columns[]`-keyed columnar table. The old columnar shape (`step_target`/`populated`/`denominator`/`coverage_pct` keys) was removed because it broke the SDK's auto-injected `{metric,value,threshold,status}` rows (`sys_*`/`dq_*`) in the admin renderer; `assert-global-coverage.infra.test.ts` now *bans* those keys (whole-file regex). Step attribution lives in the **metric label**.
 ```js
-{
-  records_total: 1,
-  records_new: 0,
-  records_updated: 0,
-  records_meta: {
-    audit_table: {
-      name: 'Global Data Completeness Profile',
-      verdict: 'PASS' | 'WARN' | 'FAIL',
-      columns: ['step_target', 'field', 'populated', 'denominator', 'coverage_pct', 'status'],
-      rows: [
-        { step_target: 'Step 2 — load_permits', field: 'permits.description',
-          populated: 231000, denominator: 237000, coverage_pct: 97.5, status: 'PASS' },
-        // ... one row per step/field in matrix
-      ]
-    }
-  }
-}
+{ records_total: 1, records_new: 0, records_updated: 0,
+  records_meta: { audit_table: { phase: 111, name: 'Global Data Completeness Profile',
+    verdict: 'PASS' | 'WARN' | 'FAIL',
+    rows: [
+      // field-coverage (original dimension)
+      { metric: 'permits.description (Step 2 — load_permits)', value: '97.5%', threshold: '>= 90%', status: 'PASS' },
+      // vocabulary-coverage (value dimension) — present/defined; discriminator 'vocab' in the label
+      { metric: 'trade_id vocab (Step 13 — classify_permits)', value: '22/38 (57.9%)', threshold: '>= 90%', status: 'FAIL' },
+      { metric: 'neighbourhood_id vocab (Step 10 — link_neighbourhoods)', value: '158/158 (100%)', threshold: '>= 90%', status: 'PASS' },
+    ] } } }
 ```
 
 ### Edge Cases
-- `denominator = 0` → `coverage_pct = null`, `status = 'INFO'` (nothing to measure)
+- field `denominator = 0` / vocab `vocab_size = 0` → `value: '<n>/0'`, `threshold: 'N/A'`, `status: 'INFO'` (nothing to measure)
+- vocab triple unresolved (missing table/column) or type-mismatch → `value: 'unresolved: <reason>'`, `threshold: 'N/A'`, `status: 'WARN'` (visible, never silent)
 - Advisory lock held → emit skip payload, `records_total: 0`, `reason: 'lock_held'`
-- `profiling_coverage_warn_pct` missing from logic_variables → Zod throws (halting)
-- Zero real permits in DB → all rows emit `populated: 0`, `coverage_pct: 0`, `status: 'FAIL'`
+- any threshold var missing from logic_variables → Zod throws (halting) — **the seed must run before the first execution**
+- Zero real permits in DB → field rows emit `0%`/`status: 'FAIL'`
 
 ---
 
@@ -236,16 +233,27 @@ Added 2026-06-05 (WF3 #428) so the global profile reports the Spec 61 §8e herit
 | CoA Step 4b — enrich_coa_zoning | coa_applications.heritage_designation_type | `heritage_designation_type IS NOT NULL` | none (INFO — count of designated subset) |
 | CoA Step 4b — enrich_coa_zoning | coa_applications.heritage_designation_date | `heritage_designation_date IS NOT NULL` | none (INFO — count of designated subset) |
 
+### 4.x Vocabulary-Coverage Matrix (value/vocabulary dimension)
+
+`VOCAB_COVERAGE` (in `assert-global-coverage.js`) — distinct values PRESENT vs DEFINED. camelCase keys (the banned-keys lock is a whole-file regex on `step_target:`/`populated:`/`denominator:`/`coverage_pct:`). `present = COUNT(DISTINCT dataColumn) [WHERE dataFilter]`; `vocab_size = COUNT(DISTINCT vocabColumn) [WHERE vocabFilter]`; status from `vocab_coverage_pass_pct`/`warn_pct`.
+
+| stepTarget | dataTable.dataColumn (dataFilter) | vocabTable.vocabColumn | Catches |
+|---|---|---|---|
+| Step 13 — classify_permits | `permit_trades.trade_id` | `trades.id` | the classifier emitting only 22/38 trades (the gap that motivated this) |
+| CoA Step 7 — classify_coa_trades | `lead_trades.trade_id` (`lead_id LIKE 'coa:%'`) | `trades.id` | coa classifier emitting 19/38 |
+| Step 10 — link_neighbourhoods | `permits.neighbourhood_id` (`<> -1`) | `neighbourhoods.id` | **healthy control** → 158/158 PASS (green == verified, not "ran") |
+
+Unresolved triple (missing table/column) or data/vocab type-family mismatch → a **WARN** row (never silent INFO-skip). `vocab_size=0` → INFO. Adding a triple = one matrix entry; no new step, no new display. *(Deferred: per-triple threshold overrides; the per-step SDK `cov_*` auto-injection; the Step-Output row Inspector — see `docs/reports/transparency-step-output-observability-design-brief.md`.)*
+
 ---
 
 ## 5. Mobile & Responsive Behavior
 
-FreshnessTimeline renders this script's output using the new columnar audit_table render path:
-- Detects `audit_table.columns` array → renders `<table>` with `<thead>` from columns, `<tbody>` from rows
-- `overflow-x-auto` wrapper on mobile (375px), `text-[10px]` base size, `md:text-xs` desktop
-- Sticky `step_target` column at 375px (`sticky left-0 bg-white`)
-- Status cell: PASS = green dot, WARN = amber dot, FAIL = red dot, INFO = blue dot
-- Falls back to existing metric-row renderer when `audit_table.columns` is absent
+This script emits **no `audit_table.columns`**, so FreshnessTimeline renders its output via the **legacy metric-row renderer** (the columnar `<table>` path is for scripts that DO emit `columns[]`):
+- Each row renders as a `{ metric, value, threshold, status }` line (metric label + value + traffic-light status dot: PASS green / WARN amber / FAIL red / INFO blue).
+- Step attribution is read from the metric label suffix (e.g. `… (Step 13 — classify_permits)`), not a separate column.
+- Standard mobile sizing (`text-[10px]` base, `md:text-xs`) applies to the metric-row list.
+- *(The columnar render path remains available for other audit scripts that opt into `audit_table.columns`; assert-global-coverage deliberately does not — see §3 "P3 fix".)*
 
 ---
 
@@ -258,7 +266,7 @@ FreshnessTimeline renders this script's output using the new columnar audit_tabl
 - `docs/specs/pipeline/41_chain_permits.md` (add step 27)
 - `docs/specs/pipeline/42_chain_coa.md` (add step 12)
 - `src/tests/assert-global-coverage.infra.test.ts` (new)
-- `src/components/FreshnessTimeline.tsx` (columnar render path)
+- `src/components/FreshnessTimeline.tsx` (metric-row render path — no change needed; rows are `{metric,value,threshold,status}`)
 
 ### Out-of-Scope Files
 - Any script being PROFILED — this script only reads their output, never modifies them
@@ -268,5 +276,5 @@ FreshnessTimeline renders this script's output using the new columnar audit_tabl
 - **Relies on:** `47_pipeline_script_protocol.md` (advisory lock, SDK skeleton, Zod validation)
 - **Relies on:** `40_pipeline_system.md` (emitSummary contract, records_total semantics)
 - **Relies on:** `41_chain_permits.md` + `42_chain_coa.md` (step ordering)
-- **Consumed by:** FreshnessTimeline via columnar audit_table render path (Spec 28)
+- **Consumed by:** FreshnessTimeline via the metric-row renderer (`{metric,value,threshold,status}`) — this script emits no `columns[]`
 - **Consumed by:** Spec 79 §6.1 as the chain-end validation cap — every Spec 79 run finishes with this profile per chain, and the profile output becomes the final coverage gate.

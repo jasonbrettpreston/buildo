@@ -35,10 +35,30 @@ const ADVISORY_LOCK_ID = 111;
 const LOGIC_VARS_SCHEMA = z.object({
   profiling_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
   profiling_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
+  // Vocabulary-coverage thresholds (Spec 49 §3 — the value/vocabulary dimension). Required;
+  // .passthrough() still lets other logic_vars flow through, but these are explicitly validated.
+  vocab_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
+  vocab_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
 }).passthrough().refine(
   d => d.profiling_coverage_warn_pct < d.profiling_coverage_pass_pct,
   { message: 'profiling_coverage_warn_pct must be strictly less than profiling_coverage_pass_pct' },
+).refine(
+  d => d.vocab_coverage_warn_pct < d.vocab_coverage_pass_pct,
+  { message: 'vocab_coverage_warn_pct must be strictly less than vocab_coverage_pass_pct' },
 );
+
+// Vocabulary-coverage matrix (Spec 49 §3/§4 — the value/vocabulary dimension). Each triple measures
+// COUNT(DISTINCT dataTable.dataColumn) PRESENT vs COUNT(DISTINCT vocabTable.vocabColumn) DEFINED —
+// catching silent under-emission a field-NULL profiler structurally can't see (a never-emitted
+// value has no row to be null). camelCase keys are MANDATORY: the infra-test banned-keys lock is a
+// whole-file regex on the abandoned columnar key names (the snake_case populated/denominator set).
+const VOCAB_COVERAGE = [
+  { stepTarget: 'Step 13 — classify_permits', dataTable: 'permit_trades', dataColumn: 'trade_id', dataFilter: null, vocabTable: 'trades', vocabColumn: 'id', vocabFilter: null },
+  { stepTarget: 'CoA Step 7 — classify_coa_trades', dataTable: 'lead_trades', dataColumn: 'trade_id', dataFilter: "lead_id LIKE 'coa:%'", vocabTable: 'trades', vocabColumn: 'id', vocabFilter: null },
+  // Healthy control — proves green == verified (not merely "ran"). -1 is the "unassigned"
+  // neighbourhood sentinel (excluded, mirroring the Step-10 field-coverage row).
+  { stepTarget: 'Step 10 — link_neighbourhoods', dataTable: 'permits', dataColumn: 'neighbourhood_id', dataFilter: 'neighbourhood_id <> -1', vocabTable: 'neighbourhoods', vocabColumn: 'id', vocabFilter: null },
+];
 
 pipeline.run('assert-global-coverage', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
@@ -50,6 +70,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
 
     const passPct = logicVars.profiling_coverage_pass_pct;
     const warnPct = logicVars.profiling_coverage_warn_pct;
+    const vocabPassPct = logicVars.vocab_coverage_pass_pct;
+    const vocabWarnPct = logicVars.vocab_coverage_warn_pct;
 
     const isCoaChain = process.env.PIPELINE_CHAIN === 'coa';
     pipeline.log.info(
@@ -105,6 +127,54 @@ pipeline.run('assert-global-coverage', async (pool) => {
     // Used for structural sparsity (est_const_cost) and count-only metrics.
     function infoRow(stepTarget, field, value, denominator = null) {
       return { metric: `${field} (${stepTarget})`, value, threshold: null, status: 'INFO' };
+    }
+
+    // Vocabulary coverage (Spec 49 §3 value/vocabulary dimension): distinct values PRESENT vs
+    // the defining vocabulary. PASS >= vocabPassPct%, WARN >= vocabWarnPct%, FAIL below. Same
+    // { metric, value, threshold, status } rail as the field-coverage rows.
+    function vocabRow(stepTarget, dataColumn, present, vocabSize) {
+      if (vocabSize == null || vocabSize === 0) {
+        return { metric: `${dataColumn} vocab (${stepTarget})`, value: `${present}/0`, threshold: 'N/A', status: 'INFO' };
+      }
+      const pct = Math.round((present / vocabSize) * 1000) / 10;
+      const status = pct >= vocabPassPct ? 'PASS' : pct >= vocabWarnPct ? 'WARN' : 'FAIL';
+      return { metric: `${dataColumn} vocab (${stepTarget})`, value: `${present}/${vocabSize} (${pct}%)`, threshold: `>= ${vocabPassPct}%`, status };
+    }
+
+    // Resolve + profile one vocab triple. Unresolved (missing table/column) or type-mismatch →
+    // a VISIBLE WARN row (never silent INFO-skip — the transparency principle this feature serves),
+    // and any query error degrades to WARN — one bad triple never throws / breaks the profile.
+    async function profileVocabTriple(t) {
+      try {
+        const colType = async (table, col) => {
+          const r = await pool.query(
+            `SELECT data_type FROM information_schema.columns WHERE table_schema='public' AND table_name=$1 AND column_name=$2`,
+            [table, col],
+          );
+          return r.rows[0]?.data_type ?? null;
+        };
+        const [dType, vType] = await Promise.all([colType(t.dataTable, t.dataColumn), colType(t.vocabTable, t.vocabColumn)]);
+        if (dType === null || vType === null) {
+          const missing = [dType === null && `${t.dataTable}.${t.dataColumn}`, vType === null && `${t.vocabTable}.${t.vocabColumn}`].filter(Boolean).join(', ');
+          return { metric: `${t.dataColumn} vocab (${t.stepTarget})`, value: `unresolved: missing ${missing}`, threshold: 'N/A', status: 'WARN' };
+        }
+        // Compare broad type families (integer↔integer, text↔text). A mismatch yields a meaningless metric.
+        const fam = (dt) => (/int|numeric|serial/.test(dt) ? 'num' : /char|text/.test(dt) ? 'text' : dt);
+        if (fam(dType) !== fam(vType)) {
+          return { metric: `${t.dataColumn} vocab (${t.stepTarget})`, value: `unresolved: type mismatch (${dType} vs ${vType})`, threshold: 'N/A', status: 'WARN' };
+        }
+        // dataFilter/vocabFilter are hardcoded matrix constants (not user input) — safe to inline.
+        const dWhere = t.dataFilter ? `WHERE ${t.dataFilter}` : '';
+        const vWhere = t.vocabFilter ? `WHERE ${t.vocabFilter}` : '';
+        const { rows: [r] } = await pool.query(
+          `SELECT (SELECT COUNT(DISTINCT ${t.dataColumn}) FROM ${t.dataTable} ${dWhere})::int AS present,
+                  (SELECT COUNT(DISTINCT ${t.vocabColumn}) FROM ${t.vocabTable} ${vWhere})::int AS vsize`,
+        );
+        return vocabRow(t.stepTarget, t.dataColumn, r.present, r.vsize);
+      } catch (err) {
+        pipeline.log.warn('[assert-global-coverage]', `vocab triple ${t.dataTable}.${t.dataColumn} failed`, { error: err.message });
+        return { metric: `${t.dataColumn} vocab (${t.stepTarget})`, value: `unresolved: ${err.message}`, threshold: 'N/A', status: 'WARN' };
+      }
     }
 
     const rows = [];
@@ -898,6 +968,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
       `);
       const etVerdict = etRuns[0]?.records_meta?.audit_table?.verdict ?? 'NO_RUN';
       rows.push(infoRow('Step 26 — assert_entity_tracing', 'entity_tracing.last_verdict', etVerdict === 'PASS' ? 1 : 0));
+    }
+
+    // ── Vocabulary coverage (Spec 49 §3 value/vocabulary dimension) ─────────
+    // Distinct values present vs the defining vocabulary, per triple — catches silent
+    // under-emission the field-NULL rows above can't see. Step-attributed via the metric label.
+    for (const t of VOCAB_COVERAGE) {
+      rows.push(await profileVocabTriple(t));
     }
 
     // ── Worst status verdict ───────────────────────────────────────────────
