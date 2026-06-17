@@ -24,10 +24,15 @@ describe.skipIf(!dbAvailable())('migration 177 — re-key drain-plumbing to cano
     expect(rows[0].sort_order).toBe(32);
   });
 
-  it('id 34 is left as a free gap (drain-plumbing vacated it; not reused)', async () => {
+  it('drain-plumbing vacated id 34; Spec 80 v-next (mig 179) reuses 34 for overhead-doors', async () => {
     if (!pool) return;
-    const { rows } = await pool.query(`SELECT 1 FROM trades WHERE id = 34`);
-    expect(rows).toHaveLength(0);
+    // Migration 177 left id 34 a free gap (drain-plumbing's vacated SERIAL slot).
+    // Migration 179 KNOWINGLY reuses that out-of-(1-32)-range slot for the new
+    // `overhead-doors` trade — permitted, since the never-renumber invariant only
+    // covers ids 1-32. What still matters is that drain-plumbing is NOT at 34 (it
+    // is canonical id 32, asserted above).
+    const { rows } = await pool.query(`SELECT slug FROM trades WHERE id = 34`);
+    expect(rows).toEqual([{ slug: 'overhead-doors' }]);
   });
 
   it('the 3 by-id FKs + the universal_stream slug-FK all exist; mirror trigger is enabled', async () => {

@@ -234,6 +234,157 @@ CoA P3/P4 and Permit P3/P4 are string-identical phase codes (legacy artifact). P
 
 ---
 
+## 5.B Unified Taxonomy v-next (PROPOSED — WF2 #trade-product-taxonomy, 2026-06-17)
+
+**Status:** Proposed model, settled with product owner; implemented via the WF2 (phased — see active task). On completion this SUPERSEDES §2 (trades) + §4 (product groups) and reconciles the granular 38-trade forecast vocab (Spec 84/85) by folding 5 split trades. The 22/38 `cov_trade_vocab` gap (Spec 49/30 §3) is what this resolves; target becomes 35/35.
+
+### 5.B.1 Model (trade-primary)
+- **`trades`** — the PRIMARY entity. Columns: `id` (stable identity, never renumbered), `slug`, `kind` (`construction` | `service` | `persona`), `seq` (build **stage band 1–12** = `work_band`; concurrent trades SHARE a band; `spans`/`lifecycle` for site-maintenance/realtor), `phase` (§3 4-phase membership — MANY-to-many; bands roll up into phases). Forecast/cost knobs surfaced here as design-of-record, runtime in Spec 85 `trade_configurations` / Spec 83 `trade_sqft_rates`: `bimodal` (§5.B.2), `cost_basis` (§5.B.2), and `bid_phase`/`work_phase` P-stage timing (§5.B.9 — the existing `trade_configurations` knobs; the `seq`-band is build-order, not timing).
+- **`products`** — materials/rentals/services procured on a project. Columns: `id`, `slug`, `type` (`material` | `rental` | `service`). Manufacturer/supplier/rental/service audiences match here.
+- **`trade_products`** — link table (trade → products it installs/procures). Product-lead **timing = the installing trade's forecast stage** (Spec 84/85; no separate product-forecast model).
+- **archetype** — a SECONDARY, derived rollup over §5.A `project_type` × `scope_tags` (NOT a new classifier). Used as (a) a named project label and (b) a `{trades, products}` **bundle prior** that boosts classification recall (a "kitchen-reno" implies its trades even when tags don't name each).
+
+### 5.B.2 Master trades (35)
+
+Legend: FB full-build · ADD addition · BAS basement-reno · KIT kitchen-reno · BTH bathroom-reno · INT interior-reno · ENV envelope-exterior · MEC mechanical-upgrade · SITE site-landscape · LANE laneway/garden-suite · GAR garage/accessory
+
+`band` = build **stage band** (concurrent trades share a band; shown number + name). **The 4 phases ORGANIZE the bands — each band maps to exactly ONE phase (1:1), and a trade's `phase` = its band's phase** (this supersedes Spec 80 §3's many-to-many membership for the v-next model): **early_construction = bands 1–5 · structural = bands 6–10 (shell + systems + close-in: rough-in/insulate/drywall are NOT finishing) · finishing = band 11 (interior finishes) · landscaping = band 12**. `bimodal`: Y = staged bid→work routing (`trade_configurations.bid_phase_cutoff`/`work_phase_target`, Spec 85); N = single window. `cost_basis`: `per_sqft` (default, Spec 83 `trade_sqft_rates`) · `per_unit` (windows/elevator/cabinets/doors/solar) · `fixed` (lump-sum/fixed-fee) · `rental` (monthly) · `commission` (realtor). Per-trade **timing** (`bid_phase`/`work_phase` P-stages) is §5.B.9 — NOT in this table.
+
+| band | id | trade | kind | phase | bimodal | cost_basis | products (id) | archetypes |
+|---|---|---|---|---|---|---|---|---|
+| 1 site-setup | 36 | site-preparation | service | early_construction | N | fixed | portable-toilet (22), temp-fencing-rental (24), surveying (25), tree-removal (26) | FB, ADD, BAS, LANE, GAR, SITE |
+| 2 teardown | 18 | demolition | construction | early_construction | Y | per_sqft | — | FB, ADD, BAS, INT, GAR, LANE |
+| 3 earthwork | 1 | excavation | construction | early_construction | Y | per_sqft | — | FB, ADD, BAS, SITE, LANE, GAR |
+| 3 earthwork | 2 | shoring | construction | early_construction | Y | per_sqft | — | FB, ADD, BAS, LANE |
+| 4 foundation | 3 | concrete | construction | early_construction | Y | per_sqft | — | FB, ADD, BAS, SITE, LANE, GAR |
+| 5 seal+drainage | 20 | waterproofing | construction | early_construction | Y | per_sqft | — | FB, ADD, BAS, LANE |
+| 5 seal+drainage | 32 | drain-plumbing | construction | early_construction | Y | per_sqft | — | FB, ADD, BAS, SITE, MEC, LANE |
+| 6 structure | 4 | structural-steel | construction | structural | Y | per_sqft | — | FB, ADD |
+| 6 structure | 5 | framing | construction | structural | Y | per_sqft | lumber (11) | FB, ADD, BAS, INT, SITE, LANE, GAR |
+| 7 dry-in | 7 | roofing | construction | structural | Y | per_sqft | roofing-materials (13) | FB, ADD, ENV, LANE, GAR |
+| 7 dry-in | 6 | masonry | construction | structural | Y | per_sqft | exterior-cladding (20), scaffolding-lifts (23) | FB, ADD, ENV, LANE, GAR |
+| 7 dry-in | 26 | eavestrough-siding | construction | structural | Y | per_sqft | eavestroughs (14), exterior-cladding (20), scaffolding-lifts (23) | FB, ADD, ENV, LANE, GAR |
+| 7 dry-in | 16 | glazing | construction | structural | Y | per_unit | windows (6), mirrors-glass (16) | FB, ADD, ENV, INT, LANE, GAR |
+| 7 dry-in | 28 | solar | construction | structural | Y | per_unit | — | ENV, FB, LANE |
+| 7 dry-in | 31 | caulking | construction | structural | Y | per_sqft | — | FB, ADD, ENV, BTH, INT, LANE |
+| 8 rough-in | 8 | plumbing | construction | structural | Y | per_sqft | plumbing-fixtures (4) | FB, ADD, BAS, KIT, BTH, MEC, LANE |
+| 8 rough-in | 9 | hvac | construction | structural | Y | per_sqft | hvac-equipment (18) | FB, ADD, BAS, MEC, LANE |
+| 8 rough-in | 10 | electrical | construction | structural | Y | per_sqft | lighting (10) | FB, ADD, BAS, KIT, BTH, INT, MEC, LANE, GAR |
+| 8 rough-in | 11 | fire-protection | construction | structural | Y | per_sqft | — | FB, ADD, MEC |
+| 9 insulate | 12 | insulation | construction | structural | Y | per_sqft | insulation-materials (19) | FB, ADD, BAS, ENV, LANE |
+| 10 drywall | 13 | drywall | construction | structural | Y | per_sqft | drywall-board (12) | FB, ADD, BAS, KIT, BTH, INT, LANE |
+| 11 interior-finishes | 23 | tiling | construction | finishing | Y | per_sqft | tiling (5) | FB, KIT, BTH, BAS, INT, LANE |
+| 11 interior-finishes | 15 | flooring | construction | finishing | Y | per_sqft | flooring (8) | FB, ADD, BAS, KIT, BTH, INT, LANE |
+| 11 interior-finishes | 14 | painting | construction | finishing | Y | per_sqft | paint (9) | FB, ADD, BAS, KIT, BTH, INT, LANE |
+| 11 interior-finishes | 21 | trim-work | construction | finishing | Y | per_sqft | doors (7), staircases (15) | FB, ADD, BAS, KIT, BTH, INT, LANE |
+| 11 interior-finishes | 22 | millwork-cabinetry | construction | finishing | Y | per_unit | kitchen-cabinets (1), countertops (3), appliances (2), staircases (15) | FB, KIT, BTH, INT, LANE |
+| 11 interior-finishes | 24 | stone-countertops | construction | finishing | Y | per_unit | countertops (3) | FB, KIT, BTH, LANE |
+| 11 interior-finishes | 17 | elevator | construction | finishing | Y | per_unit | — | FB, ADD |
+| 11 interior-finishes | 34 | overhead-doors | construction | finishing | Y | per_unit | garage-doors (17) | FB, ADD, SITE, GAR, LANE |
+| 11 interior-finishes | 29 | security | construction | finishing | Y | fixed | — | FB, INT, MEC |
+| 12 landscaping | 19 | landscaping | construction | landscaping | Y | fixed | — | FB, SITE, LANE |
+| 12 landscaping | 25 | decking-fences | construction | landscaping | Y | per_sqft | lumber (11) | SITE, ADD |
+| 12 landscaping | 27 | pool-installation | construction | landscaping | Y | fixed | — | SITE |
+| spans | 37 | site-maintenance | service | spans all | N | fixed | bin-rental (21), site-security (27) | FB, ADD, BAS, KIT, BTH, INT, LANE, GAR |
+| lifecycle | 33 | realtor | persona | near-completion | N | commission | — | ALL |
+| — deprecated | 30 | temporary-fencing | deprecated | — | — | — | folded → site-preparation + temp-fencing-rental (24) | — |
+
+### 5.B.3 Products (27 — 20 material / 4 rental / 3 service)
+
+> **Physical table = `product_groups`** (mig 031; TS module exports `PRODUCT_GROUPS`; link table `permit_products`). "Products" is the conceptual hub name; this WF adds a `type` column to the existing `product_groups` table **in place** — it does NOT create a new `products` table or rename `product_groups` (rename = `permit_products` FK blast radius, out of scope). The new 27-row layout (incl. the `lumber-drywall`→`lumber`(11)+`drywall-board`(12) split) is applied by a **guarded whole-table re-seed** (abort if `permit_products` non-empty → `TRUNCATE RESTART IDENTITY` → INSERT 1–27) rather than a by-id cascade re-key — safe because the table is dormant (`permit_products`=0). `tag-product-matrix.ts` references products by **slug** — the ~10 `lumber-drywall` refs must be repointed (per-reference) to `lumber`/`drywall-board`.
+
+| id | slug | type | id | slug | type |
+|---|---|---|---|---|---|
+| 1 | kitchen-cabinets | material | 15 | staircases | material |
+| 2 | appliances | material | 16 | mirrors-glass | material |
+| 3 | countertops | material | 17 | garage-doors | material |
+| 4 | plumbing-fixtures | material | 18 | hvac-equipment | material |
+| 5 | tiling | material | 19 | insulation-materials | material |
+| 6 | windows | material | 20 | exterior-cladding | material |
+| 7 | doors | material | 21 | bin-rental | rental |
+| 8 | flooring | material | 22 | portable-toilet | rental |
+| 9 | paint | material | 23 | scaffolding-lifts | rental |
+| 10 | lighting | material | 24 | temp-fencing-rental | rental |
+| 11 | lumber | material | 25 | surveying | service |
+| 12 | drywall-board | material | 26 | tree-removal | service |
+| 13 | roofing-materials | material | 27 | site-security | service |
+| 14 | eavestroughs | material | | | |
+
+### 5.B.4 `trade_products` links (32)
+
+`(5,11) (6,20) (6,23) (7,13) (8,4) (9,18) (10,10) (12,19) (13,12) (14,9) (15,8) (16,6) (16,16) (21,7) (21,15) (22,1) (22,3) (22,2) (22,15) (23,5) (24,3) (25,11) (26,14) (26,20) (26,23) (36,22) (36,24) (36,25) (36,26) (34,17) (37,21) (37,27)`
+
+> Trade ids: `36`=site-preparation (installs the 4 site-setup products), `37`=site-maintenance (bin-rental + site-security), `34`=overhead-doors (garage-doors). The 4 pairs formerly keyed to the retired `temporary-fencing`/legacy `site-preparation`(30) now key to **36** (the new site-preparation), not 30.
+
+### 5.B.5 Archetype bundle classifier (the prior `archetype → {trades, products}`)
+
+Derived from §5.A `project_type` × `scope_tags`; the classifier uses each archetype's bundle to boost recall on implied trades/products. `realtor` (persona) fires across ALL at near-completion; `site-maintenance` spans all build types.
+
+| archetype | trades (bundle) | products |
+|---|---|---|
+| **FB** full-build | all trades EXCEPT pool-installation, decking-fences | ≈ all 27 |
+| **LANE** laneway/garden-suite | ≈ full-build set (a small dwelling — all structural + interior-finish trades) | ≈ all material + site-prep/maintenance |
+| **ADD** addition | site-prep, excavation, shoring, concrete, structural-steel, framing, masonry, roofing, glazing, eavestrough-siding, plumbing, hvac, electrical, fire-protection, insulation, drywall, flooring, painting, trim-work, demolition, waterproofing, decking-fences, caulking, drain-plumbing, overhead-doors, site-maintenance | lumber, exterior-cladding, scaffolding-lifts, roofing-materials, windows, eavestroughs, plumbing-fixtures, hvac-equipment, lighting, insulation-materials, drywall-board, paint, doors, garage-doors |
+| **BAS** basement-reno | site-prep, excavation, shoring, concrete, waterproofing, framing, drain-plumbing, plumbing, hvac, electrical, insulation, drywall, tiling, flooring, painting, trim-work, demolition, site-maintenance | lumber, plumbing-fixtures, hvac-equipment, lighting, insulation-materials, drywall-board, tiling, flooring, paint, doors, staircases, bin-rental |
+| **KIT** kitchen-reno | plumbing, electrical, drywall, tiling, flooring, painting, trim-work, millwork-cabinetry, stone-countertops, site-maintenance | kitchen-cabinets, countertops, appliances, plumbing-fixtures, lighting, tiling, flooring, paint, doors, staircases, drywall-board, bin-rental |
+| **BTH** bathroom-reno | plumbing, electrical, drywall, tiling, flooring, painting, trim-work, millwork-cabinetry, stone-countertops, caulking, site-maintenance | plumbing-fixtures, tiling, lighting, flooring, paint, countertops, kitchen-cabinets(vanity), drywall-board, bin-rental |
+| **INT** interior-reno | demolition, framing, electrical, drywall, glazing, tiling, flooring, painting, trim-work, millwork-cabinetry, security, caulking, site-maintenance | lumber, lighting, drywall-board, windows, mirrors-glass, tiling, flooring, paint, doors, staircases, kitchen-cabinets, countertops, bin-rental |
+| **ENV** envelope-exterior | masonry, roofing, glazing, insulation, eavestrough-siding, solar, caulking | exterior-cladding, scaffolding-lifts, roofing-materials, windows, mirrors-glass, eavestroughs, insulation-materials |
+| **MEC** mechanical-upgrade | plumbing, hvac, electrical, fire-protection, security, drain-plumbing | plumbing-fixtures, hvac-equipment, lighting |
+| **SITE** site-landscape | site-prep, excavation, concrete, framing, drain-plumbing, landscaping, decking-fences, pool-installation, overhead-doors | lumber, garage-doors, surveying, tree-removal, temp-fencing-rental, portable-toilet |
+| **GAR** garage/accessory | site-prep, excavation, concrete, framing, masonry, roofing, glazing, electrical, eavestrough-siding, demolition, overhead-doors, site-maintenance | lumber, exterior-cladding, scaffolding-lifts, roofing-materials, windows, lighting, eavestroughs, garage-doors |
+
+### 5.B.6 Reconciliation with the current model
+- **Trades 33 → 35 (active):** +`overhead-doors` (id **34**), +`site-preparation` (id **36**), +`site-maintenance` (id **37**). **IDs 1–32 are the invariant — never renumbered.** `temporary-fencing` KEEPS id **30** but is marked **deprecated** (its function absorbed by `site-preparation` + the `temp-fencing-rental` product 24 — the row is NOT deleted and NOT re-slotted). realtor stays 33. So the physical `trades` table holds **36 rows = 35 active + 1 deprecated**.
+- **The 5 granular forecast trades FOLD (they are not trades):** `windows` → product (installed by `glazing`); `paving`/`outdoor-patio` → `landscaping`; `decks`/`back-yard-fences` → `decking-fences`. These were SERIAL-seeded (mig 131) and carry **slug-FK children in `universal_stream_trade_signals`** (mig 130, no CASCADE) — the fold migration must **DELETE those signal rows before deleting the trade rows, keyed on slug (not id)**.
+- **cov_trade_vocab denominator:** the gate counts `COUNT(DISTINCT id) FROM trades`, which is **36** (incl. the deprecated row) unless filtered. The denominator MUST exclude deprecated rows via `vocabFilter: "kind != 'deprecated'"` (the new `kind` column) → honest **/35**. Without the filter the gate caps at 35/36 (perpetual WARN). Phase 1 makes the denominator honest (classifier still emits ~22 → reports worse-but-truer); the gate goes GREEN (35/35) in Phase 2.
+- **Products: dormant 16 → 27 wired.** Split `lumber-drywall` → `lumber` + `drywall-board`; add `hvac-equipment`, `insulation-materials`, `exterior-cladding`, 4 rentals, 3 services. The dormant tag-product classifier (`permit_products` = 0) is activated.
+- **archetype** is derived from §5.A `project_type` + `scope_tags` — NO new classification pass; the new artifact is the bundle prior (5.B.5).
+- **Open §5 decisions still to confirm:** (1) `windows` as product-only vs a distinct `window-installer` trade; (2) deferred material products (`concrete`/rebar, `structural-steel`, `solar-panels`, `pool-equipment`); (3) the `cost_basis` direction — how far past `per_sqft` the cost engine goes given data availability (Phase 4, see active task).
+
+### 5.B.7 Sell-side audience — `suppliers` + `supplier_products` → **see Spec 87**
+
+The sell-side mirror of `trade_products` — who *sells* each product (a single-line window maker; a big-box like Home Depot spanning many categories). Because `suppliers` are **real marketplace accounts onboarded over time** (not a fixed seeded vocabulary), this lives in its **own spec: Spec 87 (Supplier & Sell-Side Audience Model)** — NOT in the Spec-80 taxonomy and **out of WF2 Phase-1 scope**. Products (this spec) are the hub: `trades` install them (`trade_products`); `suppliers` (Spec 87) sell them (`supplier_products`); a supplier lead inherits the product's installing-trade forecast stage. Home Depot = 21 timed streams (broad `supplier_products`); a lighting maker = 1 (timed by `electrical`).
+
+### 5.B.8 How the tables connect (entity relationships)
+
+```
+ suppliers ──< supplier_products >── PRODUCTS ──< trade_products >── TRADES
+                                        │                              │
+                                  permit_products                permit_trades
+                                        └──────── LEAD (permit / coa_application) ──────┘
+                                                       │  classified into archetype (project_type × scope_tags)
+                                                       ├── trade_forecasts (lead × trade → predicted_start, urgency)   ← timing
+                                                       └── cost_estimates (lead → per-trade $ via trades.cost_basis + trade_sqft_rates)  ← cost
+```
+
+**Two lead flows:**
+1. **Tradesperson lead:** LEAD → `permit_trades` (emitted trade) → `trade_forecasts` (timing) → matched to that trade's tradespeople.
+2. **Supplier/manufacturer lead:** LEAD → its trades → `trade_products` → product → `supplier_products` → suppliers carrying it; **timing inherited** from the product's installing trade's `trade_forecasts` row. (Acme Lighting fires when `electrical` sources; Home Depot fires across all 21 of its categories.)
+
+**`archetype`** is derived (`project_type × scope_tags`) and is the classification *prior* that boosts which trades/products get emitted onto the LEAD. **`cost`** rides `trades.cost_basis` + `trade_sqft_rates` → `cost_estimates`. Taxonomy tables (`trades`, `products`, `trade_products`) are Spec-80/WF2-Phase-1; the sell-side (`suppliers`, `supplier_products`) is the separate accounts layer (§5.B.7 caveat).
+
+### 5.B.9 Trade timing — `bid_phase` / `work_phase` (P-stages, NOT bands)
+
+Timing is **two P-stage points per trade** — the **existing** Spec 85 knobs `trade_configurations.bid_phase_cutoff` / `work_phase_target` (P-codes P1–P20). **The `seq`-band is build-ORDER only** (display + archetype grouping) — it is deliberately NOT the timing knob, because **bidding starts pre-construction** (when the permit is filed/issued — P3/P7a), which has **no construction-band equivalent**. (This corrects an earlier draft that proposed a band-based `bid_band`; reusing the bands for timing introduced a third vocabulary and couldn't express pre-construction bids.)
+
+- **`work_phase`** = the P-stage the trade is on-site (≈ where its `seq`-band falls in the lifecycle: bands 1–5→P9–P10, 6–7→P11, 8→P12, 9→P13, 10→P14, 11→P15, 12→P17).
+- **`bid_phase`** = the P-stage to START bidding — usually **pre-construction** (P3 permit-application / P7a issued), earlier than `work_phase`.
+- `bimodal=Y` → `bid_phase < work_phase` (shortlist → rescue); `bimodal=N` → `bid_phase = work_phase` (degenerate single window).
+
+Examples (real values from `trade_configurations` / Spec 85 `TRADE_TARGET_PHASE`):
+
+| trade | bid_phase | work_phase | note |
+|---|---|---|---|
+| excavation | P3 | P9 | bid at permit application; on-site at site prep |
+| decking-fences | P12 | P17 | |
+| realtor | P1 | P19 | wide listing-signal window (NOT band-11; from earliest intake) |
+| site-preparation (`bimodal=N`) | P3 | P3 | single window |
+
+**How it connects (Spec 85 forecast routing):** for a lead at current lifecycle phase `P` and trade `T` — `ordinal(P) ≤ ordinal(bid_phase)` → too early; `bid_phase < P < work_phase` → **bid/shortlist**; `P ≥ work_phase` → **work/rescue**. **Product/supplier leads (Spec 87)** inherit the installing trade's `bid_phase`/`work_phase` via `trade_products`. **Runtime/layer:** these are the EXISTING Spec 85 `trade_configurations` columns (control panel = Spec 86) — **Phase 4** only adds rows for the 3 new trades + retires the 5 folded. The dormant `universal_stream_trade_signals` (110-seq matrix) stays superseded (delete folded-trade rows; candidate for removal). **No new timing column is added to `trades`.**
+
+---
+
 <testing>
 ## 6. Testing Mandate
 - **Logic:** `classification.logic.test.ts` (trade completeness, slug-to-ID mapping, tier routing)

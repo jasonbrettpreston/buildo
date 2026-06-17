@@ -44,9 +44,11 @@ describe('TRADES — realtor persona row (Cycle 7)', () => {
     expect(realtor?.color).toMatch(/^#[0-9A-Fa-f]{6}$/);
   });
 
-  it('TRADES list contains exactly 33 entries after Cycle 7 wire-up', () => {
+  it('TRADES list contains exactly 36 entries (Spec 80 v-next)', () => {
     // Pre-Cycle-7: 32 construction trades. Post-Cycle-7: 32 + realtor = 33.
-    expect(TRADES.length).toBe(33);
+    // Spec 80 v-next: + overhead-doors(34)/site-preparation(36)/site-maintenance(37),
+    // temporary-fencing(30) kept as deprecated, 5 granular folded out = 36.
+    expect(TRADES.length).toBe(36);
   });
 
   it('realtor slug does not collide with any existing construction trade slug', () => {

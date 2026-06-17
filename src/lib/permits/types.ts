@@ -218,6 +218,11 @@ export interface SyncStats {
 // ---------------------------------------------------------------------------
 // Trade classification
 // ---------------------------------------------------------------------------
+/** Spec 80 §5.B.2 — how a trade is priced. */
+export type CostBasis = 'per_sqft' | 'per_unit' | 'fixed' | 'rental' | 'commission';
+/** Spec 80 §5.B.2 — trade category. */
+export type TradeKind = 'construction' | 'service' | 'persona' | 'deprecated';
+
 export interface Trade {
   id: number;
   slug: string;
@@ -225,6 +230,15 @@ export interface Trade {
   icon: string;
   color: string;
   sort_order: number;
+  /**
+   * Spec 80 §5.B.2 taxonomy attributes. Optional so DB-row mappers that don't
+   * select these columns still satisfy the type; the canonical `TRADES` seed
+   * populates all three.
+   */
+  kind?: TradeKind;
+  /** Build-stage band 1-12; null for spans/lifecycle/deprecated trades. */
+  seq?: number | null;
+  cost_basis?: CostBasis;
 }
 
 export interface TradeMatch {
@@ -293,11 +307,16 @@ export interface EntityProject {
 // ---------------------------------------------------------------------------
 // Product classification
 // ---------------------------------------------------------------------------
+/** Spec 80 §5.B.3 — product category. */
+export type ProductType = 'material' | 'rental' | 'service';
+
 export interface ProductGroup {
   id: number;
   slug: string;
   name: string;
   sort_order: number;
+  /** Spec 80 §5.B.3 (optional; the canonical `PRODUCT_GROUPS` seed populates it). */
+  type?: ProductType;
 }
 
 export interface ProductMatch {

@@ -19,10 +19,14 @@ import { createMockPermit } from './factories';
 // ---------------------------------------------------------------------------
 
 describe('Trade Taxonomy', () => {
-  it('has exactly 33 trade categories (32 construction + realtor)', () => {
+  it('has exactly 36 trade categories (35 active + 1 deprecated)', () => {
     // WF2 Cycle 7 — added 'realtor' (id 33) per Spec 91 §3.5.
-    // Realtor is a tradesperson algorithmically; calibrated via the DB.
-    expect(TRADES).toHaveLength(33);
+    // Spec 80 v-next (2026-06-17) — folded 5 granular forecast trades, added
+    // overhead-doors(34)/site-preparation(36)/site-maintenance(37), and kept
+    // temporary-fencing(30) as kind='deprecated' (IDs 1-32 never renumbered).
+    // 35 active (kind != 'deprecated') + 1 deprecated = 36 rows.
+    expect(TRADES).toHaveLength(36);
+    expect(TRADES.filter((t) => t.kind !== 'deprecated')).toHaveLength(35);
   });
 
   it('includes drain-plumbing trade', () => {
@@ -710,8 +714,16 @@ describe('Construction Phases', () => {
     for (const trades of Object.values(PHASE_TRADE_MAP)) {
       for (const t of trades) allPhaseTradeSet.add(t);
     }
+    // Spec 80 v-next: the 3 new trades are added to the vocab in Phase 1 but NOT
+    // yet wired into the construction PHASE_TRADE_MAP (classifier phase wiring is
+    // Phase 2). site-prep/maintenance are services, realtor a persona — none
+    // belong to a construction phase. Deprecated trades are skipped too.
+    const PENDING_PHASE_WIRE = new Set([
+      'realtor', 'overhead-doors', 'site-preparation', 'site-maintenance',
+    ]);
     for (const trade of TRADES) {
-      if (trade.slug === 'realtor') continue;
+      if (PENDING_PHASE_WIRE.has(trade.slug)) continue;
+      if (trade.kind === 'deprecated') continue;
       expect(allPhaseTradeSet.has(trade.slug)).toBe(true);
     }
   });
@@ -722,8 +734,14 @@ describe('Construction Phases', () => {
 // ---------------------------------------------------------------------------
 
 describe('Product Groups', () => {
-  it('has exactly 16 product groups', () => {
-    expect(PRODUCT_GROUPS).toHaveLength(16);
+  it('has exactly 27 product groups (20 material / 4 rental / 3 service)', () => {
+    // Spec 80 v-next (2026-06-17): split lumber-drywall -> lumber + drywall-board
+    // and added 11 new products (hvac-equipment, insulation-materials,
+    // exterior-cladding, 4 rentals, 3 services). 16 -> 27.
+    expect(PRODUCT_GROUPS).toHaveLength(27);
+    expect(PRODUCT_GROUPS.filter((p) => p.type === 'material')).toHaveLength(20);
+    expect(PRODUCT_GROUPS.filter((p) => p.type === 'rental')).toHaveLength(4);
+    expect(PRODUCT_GROUPS.filter((p) => p.type === 'service')).toHaveLength(3);
   });
 
   it('each product has slug, name, sort_order', () => {
@@ -737,6 +755,27 @@ describe('Product Groups', () => {
   it('has unique slugs', () => {
     const slugs = PRODUCT_GROUPS.map((p) => p.slug);
     expect(new Set(slugs).size).toBe(slugs.length);
+  });
+
+  it('every product slug emitted by the tag-product matrix exists in PRODUCT_GROUPS', () => {
+    // Spec 80 v-next regression guard: after splitting lumber-drywall -> lumber +
+    // drywall-board, no matrix entry may reference a slug absent from the vocab
+    // (a dead slug would silently classify to product_id=0 in Phase 2). Covers
+    // every PREFIXED_TAG_PRODUCT_MATRIX key.
+    const ALL_TAGS = [
+      'kitchen', 'bathroom', 'basement', 'pool', 'deck', 'porch', 'garage', 'fence',
+      'garden_suite', 'laneway', 'build-sfd', 'semi', 'townhouse', 'houseplex', 'roof',
+      'cladding', 'windows', 'interior', 'addition', 'fireplace', 'solar', 'elevator',
+      'demolition', 'security',
+    ];
+    const validSlugs = new Set(PRODUCT_GROUPS.map((p) => p.slug));
+    const emitted = new Set(lookupProductsForTags(ALL_TAGS));
+    expect(emitted.size).toBeGreaterThan(0);
+    for (const slug of emitted) {
+      expect(validSlugs.has(slug), `tag-product matrix emits unknown slug "${slug}"`).toBe(true);
+    }
+    // The retired combined slug must be gone.
+    expect(emitted.has('lumber-drywall')).toBe(false);
   });
 
   it('kitchen tag maps to cabinets, appliances, countertops', () => {

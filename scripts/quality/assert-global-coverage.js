@@ -54,8 +54,8 @@ const LOGIC_VARS_SCHEMA = z.object({
 // value has no row to be null). camelCase keys are MANDATORY: the infra-test banned-keys lock is a
 // whole-file regex on the abandoned columnar key names (the snake_case populated/denominator set).
 const VOCAB_COVERAGE = [
-  { stepTarget: 'Step 13 — classify_permits', dataTable: 'permit_trades', dataColumn: 'trade_id', dataFilter: null, vocabTable: 'trades', vocabColumn: 'id', vocabFilter: null },
-  { stepTarget: 'CoA Step 7 — classify_coa_trades', dataTable: 'lead_trades', dataColumn: 'trade_id', dataFilter: "lead_id LIKE 'coa:%'", vocabTable: 'trades', vocabColumn: 'id', vocabFilter: null },
+  { stepTarget: 'Step 13 — classify_permits', dataTable: 'permit_trades', dataColumn: 'trade_id', dataFilter: null, vocabTable: 'trades', vocabColumn: 'id', vocabFilter: "kind != 'deprecated'" },
+  { stepTarget: 'CoA Step 7 — classify_coa_trades', dataTable: 'lead_trades', dataColumn: 'trade_id', dataFilter: "lead_id LIKE 'coa:%'", vocabTable: 'trades', vocabColumn: 'id', vocabFilter: "kind != 'deprecated'" },
   // Healthy control — proves green == verified (not merely "ran"). -1 is the "unassigned"
   // neighbourhood sentinel (excluded, mirroring the Step-10 field-coverage row).
   { stepTarget: 'Step 10 — link_neighbourhoods', dataTable: 'permits', dataColumn: 'neighbourhood_id', dataFilter: 'neighbourhood_id <> -1', vocabTable: 'neighbourhoods', vocabColumn: 'id', vocabFilter: null },

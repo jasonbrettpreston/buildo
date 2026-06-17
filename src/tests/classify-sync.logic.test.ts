@@ -13,6 +13,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { TAG_TRADE_MATRIX as TS_MATRIX } from '@/lib/classification/tag-trade-matrix';
+import { TRADES as TS_TRADES } from '@/lib/classification/trades';
 
 // ---------------------------------------------------------------------------
 // Parse the JS script's TAG_ALIASES and TAG_TRADE_MATRIX from source
@@ -193,5 +194,44 @@ describe('Classification Sync Gate (§7.1)', () => {
         expect(jsNarrowKeys, `TS has NARROW_SCOPE_CODE "${key}" not in JS`).toContain(key);
       }
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TRADES array parity (Spec 80 §5.B dual-path) — added 2026-06-17.
+// The JS classifier (scripts/classify-permits.js) must mirror the TS TRADES
+// (src/lib/classification/trades.ts) by id->slug for every trade it can emit.
+// The ONLY permitted divergence is the 'realtor' persona, which the permit
+// classifier intentionally does NOT emit (lifecycle/forecast path handles it).
+// This is the behavior-driven TRADES check the prior subset-only test lacked.
+// ---------------------------------------------------------------------------
+function extractJsTrades(): Map<number, string> {
+  const match = scriptSource.match(/const TRADES\s*=\s*\[([\s\S]*?)\n\];/);
+  if (!match) throw new Error('Could not find TRADES in classify-permits.js');
+  const map = new Map<number, string>();
+  const entries = match[1]!.matchAll(/\{\s*id:\s*(\d+),\s*slug:\s*'([^']+)'\s*\}/g);
+  for (const [, id, slug] of entries) map.set(Number(id), slug!);
+  return map;
+}
+
+describe('TRADES dual-path parity (Spec 80 §5.B)', () => {
+  const jsTrades = extractJsTrades();
+  const tsById = new Map(TS_TRADES.map((t) => [t.id, t.slug]));
+
+  it('every JS TRADES entry matches the TS id -> slug', () => {
+    expect(jsTrades.size).toBeGreaterThan(0);
+    for (const [id, slug] of jsTrades) {
+      expect(tsById.get(id), `JS trade id ${id} (${slug}) missing/mismatched in TS`).toBe(slug);
+    }
+  });
+
+  it('the only TS trade absent from the JS classifier is the realtor persona', () => {
+    const missingFromJs = TS_TRADES.filter((t) => !jsTrades.has(t.id)).map((t) => t.slug);
+    expect(missingFromJs).toEqual(['realtor']);
+  });
+
+  it('JS TRADES has 35 entries (36 TS minus the realtor persona)', () => {
+    expect(TS_TRADES).toHaveLength(36);
+    expect(jsTrades.size).toBe(35);
   });
 });

@@ -81,6 +81,11 @@ const TRADES = [
   { id: 30, slug: 'temporary-fencing' },
   { id: 31, slug: 'caulking' },
   { id: 32, slug: 'drain-plumbing' },
+  // Spec 80 v-next (2026-06-17). realtor (33) stays OUT — it is a persona the
+  // permit classifier does not emit (handled in the lifecycle/forecast path).
+  { id: 34, slug: 'overhead-doors' },
+  { id: 36, slug: 'site-preparation' },
+  { id: 37, slug: 'site-maintenance' },
 ];
 
 const TRADE_BY_ID = new Map(TRADES.map(t => [t.id, t]));
