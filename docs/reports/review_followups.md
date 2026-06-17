@@ -3,6 +3,20 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Spec 26 (Step-Output Inspector) — WF1 output-altitude review DEFERs (2026-06-16)
+
+Source: 5-reviewer output review (Code Reviewer + Integration + Regression Guardian + Gemini + DeepSeek) on the admin Step-Output Inspector. Code Reviewer "safe to commit, no CRITICAL"; Integration + RG PASS. 1 fix folded (schema-qualify the `reltuples` query). Items below are DEFERs/accepted.
+
+| Severity | Source | Item | Disposition |
+|---|---|---|---|
+| MED | Gemini | `"<col>"::text ILIKE` on a non-indexed text column forces a seq-scan; `reltuples<=0` falls back to exact `COUNT(*)` on a huge unanalyzed table. | **Accepted** — both are bounded by the 15s `SET LOCAL statement_timeout`; admin-only, low-frequency diagnostic. Type-aware filter operators are already a deferred enhancement. |
+| HIGH | DeepSeek | "missing database pool parameter — showstopper." | **False positive** — `fetchStepOutput` uses the internal pool via `withTransaction` (no pool arg by design); Integration confirmed it compiles + runs. No action. |
+| HIGH | DeepSeek | No request-level `AbortSignal` timeout on the route (relies on `SET LOCAL`). | **DEFER** — `SET LOCAL statement_timeout` already caps query time; a request-abort layer is belt-and-suspenders, out of scope for this WF. |
+| LOW | Code Reviewer | Inner `try/catch`→`internalError` double-logs with `withApiEnvelope`'s outer catch. | **Accepted** — the inner catch adds `{route, slug}` context and matches the `/leads/inspect` route precedent. |
+| — | Regression Guardian | `FreshnessTimeline.tsx`'s `PII` set is a client-side hand-copy of `manifest-utils.ts` `PII_EXCLUDED` (server-only, can't be imported into a `'use client'` file). | **Maintenance coupling noted** (commented in both files) — if a 4th PII table is added, update both. Low-risk (3 tables, rarely changes). |
+
+---
+
 ## Spec 30/48 (cov_* SDK vocabulary-coverage primitive) — WF1 output-altitude review DEFERs (2026-06-16)
 
 Source: 6-reviewer output review (Code Reviewer + Observability + Integration + Regression Guardian + Gemini + DeepSeek) on the `cov_*` SDK primitive diff. 4 findings fixed in the commit (pool.connect inside try; classify-permits config load before lock per §R5; cov_ threshold→passPct; db-test intersection mirror). Items below are DEFERs.

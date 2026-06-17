@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { z } from 'zod';
 import type { FunnelRowData } from '@/lib/admin/funnel';
 import { FUNNEL_SOURCE_BY_SLUG, STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP, STEP_EXPECTED_RANGES, getRangeStatus } from '@/lib/admin/funnel';
@@ -136,6 +137,24 @@ const STEP_INDENT: Record<string, number> = {
   compute_coa_cost_estimates: 1, link_parcel_addresses: 1, compute_centroids: 1,
   enrich_ravines: 1, enrich_heritage: 1, enrich_centreline: 1, enrich_parcels: 1,
 };
+
+// slug → primary output table (manifest telemetry_tables[0]) — drives the "Inspect output" link.
+// Built defensively from the raw manifest (the chains schema above validates only `chains`); a slug
+// absent here has no inspectable table. User-PII tables excluded (mirrors src/lib/admin/manifest-utils.ts).
+const STEP_TELEMETRY_TABLES: Record<string, string> = (() => {
+  const out: Record<string, string> = {};
+  const PII = new Set(['lead_views', 'tracked_projects', 'lead_analytics']);
+  try {
+    const scripts = (pipelineManifest as { scripts?: Record<string, { telemetry_tables?: string[] }> }).scripts ?? {};
+    for (const [slug, s] of Object.entries(scripts)) {
+      const t = s?.telemetry_tables?.[0];
+      if (typeof t === 'string' && !PII.has(t)) out[slug] = t;
+    }
+  } catch {
+    // degrade to empty — render no Inspect links rather than an uncatchable module-load throw
+  }
+  return out;
+})();
 
 // Per-chain display metadata + render order. Step slugs + ORDER are DERIVED from manifest.chains
 // (Spec 47 single source of truth) — adding a step there flows to the UI automatically, removing
@@ -861,6 +880,18 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
 
                           {/* Hover-hidden controls: visible on mobile, fade-in on desktop hover */}
                           <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            {/* Inspect output — browse the step's main table (only when it has one) */}
+                            {STEP_TELEMETRY_TABLES[step.slug] && (
+                              <Link
+                                href={`/admin/pipeline/step-output?slug=${encodeURIComponent(step.slug)}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-[9px] px-2.5 py-1 rounded border min-h-[44px] flex items-center border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                                title="Inspect this step's output rows"
+                              >
+                                <span className="hidden md:inline">Inspect</span>
+                                <span className="md:hidden">&#128269;</span>
+                              </Link>
+                            )}
                             {/* Run button — hidden for infrastructure steps */}
                             {!NON_TOGGLEABLE_SLUGS.has(step.slug) && (
                               <button

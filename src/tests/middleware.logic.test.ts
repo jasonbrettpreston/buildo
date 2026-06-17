@@ -63,6 +63,10 @@ describe('Route Classification', () => {
       expect(classifyRoute('/api/admin/builders')).toBe('admin');
       expect(classifyRoute('/api/admin/market-metrics')).toBe('admin');
       expect(classifyRoute('/api/admin/rules')).toBe('admin');
+      // Step-Output Inspector route + page are covered by the blanket /api/admin/ & /admin/ prefixes
+      // (no middleware change needed — documents that coverage).
+      expect(classifyRoute('/api/admin/pipeline/step-output')).toBe('admin');
+      expect(classifyRoute('/admin/pipeline/step-output')).toBe('admin');
     });
 
     it('classifies write/mutation API routes as authenticated', () => {
