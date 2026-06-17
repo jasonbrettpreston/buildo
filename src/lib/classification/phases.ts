@@ -23,6 +23,8 @@ export const PHASE_TRADE_MAP: Record<Phase, string[]> = {
     'waterproofing',
     'temporary-fencing',
     'drain-plumbing',
+    'site-preparation', // Spec 80 v-next band 1
+    'site-maintenance', // spans all phases
   ],
   structural: [
     'framing',
@@ -36,6 +38,7 @@ export const PHASE_TRADE_MAP: Record<Phase, string[]> = {
     'elevator',
     'fire-protection',
     'pool-installation',
+    'site-maintenance', // spans all phases
   ],
   finishing: [
     'insulation',
@@ -55,12 +58,15 @@ export const PHASE_TRADE_MAP: Record<Phase, string[]> = {
     'security',
     'solar',
     'eavestrough-siding',
+    'overhead-doors',   // Spec 80 v-next band 11
+    'site-maintenance', // spans all phases
   ],
   landscaping: [
     'landscaping',
     'painting',
     'decking-fences',
     'pool-installation',
+    'site-maintenance', // spans all phases
   ],
 };
 

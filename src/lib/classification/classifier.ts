@@ -1,5 +1,6 @@
 import type { Permit, TradeMappingRule, TradeMatch, ProductMatch } from '@/lib/permits/types';
-import { getTradeById, getTradeBySlug } from '@/lib/classification/trades';
+import { TRADES, getTradeById, getTradeBySlug } from '@/lib/classification/trades';
+import { deriveArchetypes, bundleSlugsFor } from '@/lib/classification/archetypes';
 import { determinePhase } from '@/lib/classification/phases';
 import { calculateLeadScore } from '@/lib/classification/scoring';
 import { lookupTradesForTags } from '@/lib/classification/tag-trade-matrix';
@@ -21,6 +22,18 @@ const TIER_CONFIDENCE: Record<number, number> = {
   1: 0.95,
   2: 0.80,
 };
+
+// Spec 80 §5.B.5 — default bundle-tier confidence for archetype-implied trades.
+// Sits BELOW direct tag/rule hits (so MAX-dedup never lets a bundle row override a
+// real hit) but at/above the lead-feed gate (0.5) so the implied trades are REAL
+// leads, not coverage-only. Operator-tunable via the `archetype_bundle_confidence`
+// logic_variable on the pipeline side (passed through ClassifyPermitOptions).
+const BUNDLE_TIER_CONFIDENCE = 0.55;
+
+// The deprecated trades (Spec 80 §5.B.6) — never bundle-emit these.
+const DEPRECATED_SLUGS: ReadonlySet<string> = new Set(
+  TRADES.filter((t) => t.kind === 'deprecated').map((t) => t.slug),
+);
 
 // ---------------------------------------------------------------------------
 // Matching helpers (kept for Tier 1 rule matching)
@@ -438,6 +451,18 @@ export interface ClassifyPermitOptions {
    * call sites from accidentally bypassing the gate.
    */
   permitClass?: PermitTypeClass;
+  /**
+   * The permit's `project_type` (scope.ts) — input to the §5.B.5 archetype
+   * bundle prior alongside `scopeTags`. Optional; NULL/absent + no matching
+   * tags → no bundle (the permit keeps its direct-hit/fallback trades).
+   */
+  projectType?: string | null;
+  /**
+   * Bundle-tier confidence for archetype-implied trades (default
+   * BUNDLE_TIER_CONFIDENCE). Pipeline passes the `archetype_bundle_confidence`
+   * logic_variable so it is operator-tunable.
+   */
+  bundleConfidence?: number;
 }
 
 /**
@@ -556,6 +581,42 @@ export function classifyPermit(
     for (const m of fallback) {
       merged.set(m.trade_slug, m);
     }
+  }
+
+  // Archetype bundle prior (Spec 80 §5.B.5) — recall boost for implied trades the
+  // direct tag/rule/fallback paths miss (the low-signal interior-finish + service
+  // trades). Bundle-tier confidence sits below direct hits; MAX-dedup keeps any
+  // existing (higher-confidence) hit. Added to `merged` BEFORE applyScopeLimit so
+  // NARROW_SCOPE_CODES + WORK_SCOPE_EXCLUSIONS gate bundle emissions like all others.
+  // Deprecated trades are never bundle-emitted.
+  const bundleConf = options?.bundleConfidence ?? BUNDLE_TIER_CONFIDENCE;
+  const archetypes = deriveArchetypes(options?.projectType, tags);
+  const { trades: bundleTrades } = bundleSlugsFor(archetypes, DEPRECATED_SLUGS);
+  for (const slug of bundleTrades) {
+    if (merged.has(slug)) continue; // a direct hit already won (its confidence ≥ bundle-tier)
+    const trade = getTradeBySlug(slug);
+    if (!trade) continue;
+    const partial: Partial<TradeMatch> = {
+      trade_id: trade.id,
+      trade_slug: slug,
+      trade_name: trade.name,
+      tier: 2,
+      confidence: bundleConf,
+      is_active: true,
+      phase,
+    };
+    merged.set(slug, {
+      permit_num: permit.permit_num ?? '',
+      revision_num: permit.revision_num ?? '',
+      trade_id: trade.id,
+      trade_slug: slug,
+      trade_name: trade.name,
+      tier: 2,
+      confidence: bundleConf,
+      is_active: true,
+      phase,
+      lead_score: calculateLeadScore(permit, partial, phase),
+    });
   }
 
   const allMatches = Array.from(merged.values());

@@ -28,6 +28,13 @@ const {
 } = require('./lib/permit-type-classifier');
 const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+const { deriveArchetypes, bundleSlugsFor } = require('./lib/archetypes');
+// Spec 80 §5.B.5 archetype bundle prior. Deprecated trades (kept in the vocab but
+// never bundle-emitted, Spec 80 §5.B.6) — temporary-fencing only. The JS TRADES list
+// carries no `kind`, so the deprecated set is maintained explicitly here (mirrors the
+// DEPRECATED_SLUGS derived from trades.ts kind on the TS side).
+const DEPRECATED_TRADE_SLUGS = new Set(['temporary-fencing']);
+const BUNDLE_TIER_CONFIDENCE_DEFAULT = 0.55;
 const manifest = require('./manifest.json');
 
 const ADVISORY_LOCK_ID = 88;
@@ -39,6 +46,8 @@ const LOGIC_VARS_SCHEMA = z
   .object({
     vocab_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
     vocab_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
+    // Spec 80 §5.B.5 — bundle-tier confidence for archetype-implied trades.
+    archetype_bundle_confidence: z.coerce.number().min(0).max(1).default(0.55),
   })
   .passthrough()
   .refine((d) => d.vocab_coverage_warn_pct < d.vocab_coverage_pass_pct, {
@@ -94,10 +103,10 @@ const TRADE_BY_ID = new Map(TRADES.map(t => [t.id, t]));
 // Phase determination
 // ---------------------------------------------------------------------------
 const PHASE_TRADES = {
-  early_construction: ['excavation','shoring','demolition','concrete','waterproofing','drain-plumbing','temporary-fencing'],
-  structural: ['framing','structural-steel','masonry','concrete','roofing','plumbing','hvac','electrical','elevator','fire-protection'],
-  finishing: ['insulation','drywall','painting','flooring','glazing','fire-protection','plumbing','hvac','electrical','trim-work','millwork-cabinetry','tiling','stone-countertops','caulking','solar','security'],
-  landscaping: ['landscaping','painting','decking-fences','eavestrough-siding','pool-installation'],
+  early_construction: ['excavation','shoring','demolition','concrete','waterproofing','drain-plumbing','temporary-fencing','site-preparation','site-maintenance'],
+  structural: ['framing','structural-steel','masonry','concrete','roofing','plumbing','hvac','electrical','elevator','fire-protection','site-maintenance'],
+  finishing: ['insulation','drywall','painting','flooring','glazing','fire-protection','plumbing','hvac','electrical','trim-work','millwork-cabinetry','tiling','stone-countertops','caulking','solar','security','overhead-doors','site-maintenance'],
+  landscaping: ['landscaping','painting','decking-fences','eavestrough-siding','pool-installation','site-maintenance'],
 };
 
 function determinePhase(permit, runAt) {
@@ -469,7 +478,7 @@ function applyClassGating(matches, permit, phase, runAt, realtorAvailable, permi
   return appendRealtorMatch(filtered, permit, phase, runAt, realtorAvailable);
 }
 
-function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitClass = 'unclassified') {
+function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitClass = 'unclassified', bundleConf = BUNDLE_TIER_CONFIDENCE_DEFAULT) {
   const phase = determinePhase(permit, runAt);
   const code = extractPermitCode(permit.permit_num);
   const isNarrowScope = code != null && NARROW_SCOPE_CODES[code] != null;
@@ -580,6 +589,31 @@ function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitCla
     }
   }
 
+  // Step 4: Archetype bundle prior (Spec 80 §5.B.5) — recall boost for the implied
+  // trades the tag/rule/fallback paths miss. Bundle-tier confidence sits below direct
+  // hits; MAX-dedup keeps any existing (higher) hit. Merged BEFORE applyScopeLimit so
+  // NARROW_SCOPE_CODES + WORK_SCOPE_EXCLUSIONS gate bundle emissions like all others.
+  // Mirror of classifier.ts. Deprecated trades never bundle-emitted.
+  const archetypes = deriveArchetypes(permit.project_type, scopeTags);
+  const { trades: bundleTrades } = bundleSlugsFor(archetypes, DEPRECATED_TRADE_SLUGS);
+  for (const slug of bundleTrades) {
+    if (merged.has(slug)) continue; // a direct hit already won (confidence >= bundle-tier)
+    const tradeId = SLUG_TO_ID.get(slug);
+    if (!tradeId) continue;
+    const tradeMatch = {
+      permit_num: permit.permit_num,
+      revision_num: permit.revision_num,
+      trade_id: tradeId,
+      trade_slug: slug,
+      tier: 2,
+      confidence: bundleConf,
+      is_active: true,
+      phase,
+    };
+    tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
+    merged.set(slug, tradeMatch);
+  }
+
   const final = applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);
   return applyClassGating(final, permit, phase, runAt, realtorAvailable, permitClass);
 }
@@ -597,6 +631,10 @@ pipeline.run('classify-permits', async (pool) => {
   if (!vocabValidation.valid) {
     throw new Error(`logicVars validation failed: ${vocabValidation.errors.join('; ')}`);
   }
+  // Spec 80 §5.B.5 — bundle-tier confidence (operator-tunable; default if the
+  // logic_variable is absent in the DB).
+  const archetypeBundleConfidence =
+    Number(logicVars.archetype_bundle_confidence) || BUNDLE_TIER_CONFIDENCE_DEFAULT;
 
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const RUN_AT = await pipeline.getDbTimestamp(pool);
@@ -724,7 +762,7 @@ pipeline.run('classify-permits', async (pool) => {
       // classifier filters non-construction trade matches per Spec 80 §5.
       const permitClass = classifyPermitType(permitClassMap, permit.permit_type);
       classCounters[permitClass] = (classCounters[permitClass] ?? 0) + 1;
-      const matches = classifyPermit(permit, allRules, RUN_AT, realtorAvailable, permitClass);
+      const matches = classifyPermit(permit, allRules, RUN_AT, realtorAvailable, permitClass, archetypeBundleConfidence);
       if (matches.length > 0) {
         // Dedup by (permit_num, revision_num, trade_id) - keep highest confidence
         const dedupMap = new Map();

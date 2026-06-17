@@ -53,6 +53,10 @@ const PREFIXED_TAG_PRODUCT_MATRIX: Record<string, string[]> = {
 function normalizeTag(tag: string): string {
   let base = tag.replace(/^(new|alter|sys|scale|exp):/, '');
   base = base.replace(/^houseplex-\d+-unit$/, 'houseplex');
+  // scope.ts emits the singular `window` tag; the matrix keys it `windows`
+  // (design-brief §9 bug — otherwise the windows/mirrors-glass products are
+  // unreachable via the tag path). Alias so both resolve.
+  if (base === 'window') base = 'windows';
   return base;
 }
 
