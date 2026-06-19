@@ -55,6 +55,8 @@ const LOGIC_VARS_SCHEMA = z.object({
 // whole-file regex on the abandoned columnar key names (the snake_case populated/denominator set).
 const VOCAB_COVERAGE = [
   { stepTarget: 'Step 13 — classify_permits', dataTable: 'permit_trades', dataColumn: 'trade_id', dataFilter: null, vocabTable: 'trades', vocabColumn: 'id', vocabFilter: "kind != 'deprecated'" },
+  // Spec 80 §5.B — product vocabulary coverage (permit_products is permits-only; product_groups has no deprecation column → no vocabFilter).
+  { stepTarget: 'Step 13 — classify_permits (products)', dataTable: 'permit_products', dataColumn: 'product_id', dataFilter: null, vocabTable: 'product_groups', vocabColumn: 'id', vocabFilter: null },
   { stepTarget: 'CoA Step 7 — classify_coa_trades', dataTable: 'lead_trades', dataColumn: 'trade_id', dataFilter: "lead_id LIKE 'coa:%'", vocabTable: 'trades', vocabColumn: 'id', vocabFilter: "kind != 'deprecated'" },
   // Healthy control — proves green == verified (not merely "ran"). -1 is the "unassigned"
   // neighbourhood sentinel (excluded, mirroring the Step-10 field-coverage row).

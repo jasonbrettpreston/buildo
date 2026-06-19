@@ -1,8 +1,10 @@
 // SPEC LINK: docs/specs/03-mobile/94_mobile_onboarding.md §3.1
 //             docs/specs/03-mobile/99_mobile_state_architecture.md §3.5 + §9.3
 // Static trade list for the SectionList in profession.tsx.
-// 6 category groups, 33 items (32 canonical trade slugs + realtor).
-// Slugs match the canonical 32 in the system map exactly.
+// 6 category groups, 35 items — the 35 ACTIVE trade slugs (incl. realtor).
+// Spec 80 v-next §5.B.6: excludes the deprecated `temporary-fencing`; includes the
+// new site-preparation, site-maintenance, overhead-doors. Slugs match the active
+// (kind != 'deprecated') trades in the system map.
 //
 // Per Spec 99 §9.3: this catalog is also the canonical lookup for trade
 // label display (e.g. complete.tsx). The previously-mirrored
@@ -23,7 +25,8 @@ export const TRADE_SECTIONS: Array<{ title: string; data: TradeItem[] }> = [
       { label: 'Structural Steel', slug: 'structural-steel' },
       { label: 'Framing', slug: 'framing' },
       { label: 'Masonry', slug: 'masonry' },
-      { label: 'Temporary Fencing', slug: 'temporary-fencing' },
+      { label: 'Site Preparation', slug: 'site-preparation' },
+      { label: 'Site Maintenance', slug: 'site-maintenance' },
     ],
   },
   {
@@ -68,6 +71,7 @@ export const TRADE_SECTIONS: Array<{ title: string; data: TradeItem[] }> = [
       { label: 'Landscaping', slug: 'landscaping' },
       { label: 'Decking & Fences', slug: 'decking-fences' },
       { label: 'Pool Installation', slug: 'pool-installation' },
+      { label: 'Overhead Doors', slug: 'overhead-doors' },
     ],
   },
   {

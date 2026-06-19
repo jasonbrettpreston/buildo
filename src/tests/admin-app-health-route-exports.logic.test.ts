@@ -53,7 +53,7 @@ describe('App Health route — Next.js export allowlist (WF3 regression lock)', 
         `Move helpers/state/test-seams to a sibling module (./cache.ts pattern). ` +
         `Violations would block 'next build' at type-check time.`,
     ).toEqual([]);
-  });
+  }, 15000); // first dynamic import compiles the route (~14s on a loaded machine); 5s default flakes
 
   it('exports the GET handler', async () => {
     const routeModule = await import('@/app/api/admin/app-health/route');

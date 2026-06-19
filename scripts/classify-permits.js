@@ -35,6 +35,12 @@ const { deriveArchetypes, bundleSlugsFor } = require('./lib/archetypes');
 // DEPRECATED_SLUGS derived from trades.ts kind on the TS side).
 const DEPRECATED_TRADE_SLUGS = new Set(['temporary-fencing']);
 const BUNDLE_TIER_CONFIDENCE_DEFAULT = 0.55;
+// Spec 80 §5.B — product classifier (wire the dormant permit_products). Tag-driven
+// (mirror of src/lib/classification/classifier.ts classifyProducts); the archetype
+// {products} bundle is a deferred enhancement (review_followups 80-vnext-P2).
+const { lookupProductsForTags } = require('./lib/tag-product-matrix');
+const PRODUCT_TAG_CONFIDENCE = 0.75;   // direct scope_tag -> product hit
+const PRODUCT_BUNDLE_CONFIDENCE = 0.45; // archetype-implied product (bundle prior; below tag hits)
 const manifest = require('./manifest.json');
 
 const ADVISORY_LOCK_ID = 88;
@@ -533,6 +539,7 @@ function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitCla
         confidence: 0.80,
         is_active: true,
         phase,
+        fromFallback: true, // narrow-code inference, not a direct tag/rule hit (precision counter)
       };
       tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
       return tradeMatch;
@@ -583,6 +590,7 @@ function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitCla
         confidence: fb.confidence,
         is_active: true,
         phase,
+        fromFallback: true, // work-field inference, not a direct tag/rule hit (precision counter)
       };
       tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
       merged.set(slug, tradeMatch);
@@ -635,6 +643,10 @@ pipeline.run('classify-permits', async (pool) => {
   // logic_variable is absent in the DB).
   const archetypeBundleConfidence =
     Number(logicVars.archetype_bundle_confidence) || BUNDLE_TIER_CONFIDENCE_DEFAULT;
+  // Product vocab (slug -> {id, name}) loaded once from product_groups (Spec 80 §5.B.3).
+  // Single source of truth — the JS classifier does NOT duplicate the product vocab.
+  const productGroupsRes = await pool.query('SELECT id, slug, name FROM product_groups');
+  const productMap = new Map(productGroupsRes.rows.map((r) => [r.slug, { id: r.id, name: r.name }]));
 
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const RUN_AT = await pipeline.getDbTimestamp(pool);
@@ -700,6 +712,14 @@ pipeline.run('classify-permits', async (pool) => {
   let totalMatches = 0;
   let permitsWithTrades = 0;
   let dbUpdated = 0;
+  let totalProducts = 0;
+  let permitsWithProducts = 0;
+  let productsDbUpdated = 0;
+  // Precision signal (Spec 80 §5.B.5 — guards against cov_trade_vocab going green on
+  // bundle-only emission): distinct trades seen with a STRONG signal (confidence above
+  // the bundle tier) vs trades only ever seen at/below it (bundle or work-fallback).
+  const strongSignalTradeIds = new Set();
+  const weakSignalTradeIds = new Set();
   // WF2 #2 — per-class telemetry for operator visibility (worktree review #4).
   // Surfaces in audit_table: counts of permits processed per permit_type_class
   // so operators can confirm e.g. "3,500 administrative permits emitted zero
@@ -737,7 +757,7 @@ pipeline.run('classify-permits', async (pool) => {
     const batch = await pool.query(
       `SELECT p.permit_num, p.revision_num, p.permit_type, p.structure_type, p.work,
               p.description, p.status, p.est_const_cost, p.issued_date, p.current_use, p.proposed_use,
-              p.scope_tags
+              p.scope_tags, p.project_type
        FROM permits p ${batchWhere}
        ORDER BY p.permit_num ASC, p.revision_num ASC
        LIMIT $1`,
@@ -751,6 +771,7 @@ pipeline.run('classify-permits', async (pool) => {
 
     const insertValues = [];
     const insertParams = [];
+    const productInsertValues = []; // flat [permit_num, revision_num, product_id, slug, name, confidence] × N
     let paramIdx = 1;
 
     for (const permit of batch.rows) {
@@ -779,6 +800,11 @@ pipeline.run('classify-permits', async (pool) => {
         totalMatches += dedupedMatches.length;
 
         for (const m of dedupedMatches) {
+          // STRONG = a direct tag/rule hit above the bundle tier. A bundle row (conf ==
+          // bundle-tier) OR any fallback inference (work-field / narrow-code, even at 0.85)
+          // is WEAK — fallback is not direct evidence (output-review fix).
+          if (m.confidence > archetypeBundleConfidence && !m.fromFallback) strongSignalTradeIds.add(m.trade_id);
+          else weakSignalTradeIds.add(m.trade_id);
           insertParams.push(
             `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`
           );
@@ -788,6 +814,34 @@ pipeline.run('classify-permits', async (pool) => {
           );
         }
       }
+
+      // Product classification (Spec 80 §5.B): tag-driven (0.75) + the §5.B.5
+      // archetype {products} bundle (bundle-tier). NARROW-SCOPE GUARD: companion
+      // sub-permits (PLB/MS/DR/DM/…) repeat the whole project description, so their
+      // tags/archetype look like a full build. Products belong on the PRIMARY permit,
+      // not duplicated across companions — so skip products for narrow-scope codes,
+      // exactly as the trade path emits only the 1 narrow trade. Mirror of classifyProducts.
+      const pCode = extractPermitCode(permit.permit_num);
+      const pNarrow = pCode != null && NARROW_SCOPE_CODES[pCode] != null;
+      let permitProductCount = 0;
+      if (!pNarrow) {
+        const productConf = new Map();
+        for (const slug of lookupProductsForTags(permit.scope_tags || [])) {
+          productConf.set(slug, PRODUCT_TAG_CONFIDENCE);
+        }
+        const pArchetypes = deriveArchetypes(permit.project_type, permit.scope_tags || []);
+        const { products: bundleProducts } = bundleSlugsFor(pArchetypes, DEPRECATED_TRADE_SLUGS);
+        for (const slug of bundleProducts) {
+          if (!productConf.has(slug)) productConf.set(slug, PRODUCT_BUNDLE_CONFIDENCE);
+        }
+        for (const [slug, conf] of productConf) {
+          const pg = productMap.get(slug);
+          if (!pg) continue;
+          productInsertValues.push(permit.permit_num, permit.revision_num, pg.id, slug, pg.name, conf);
+          permitProductCount++;
+        }
+      }
+      if (permitProductCount > 0) { permitsWithProducts++; totalProducts += permitProductCount; }
     }
 
     // Collect permit keys for ghost trade cleanup
@@ -888,8 +942,80 @@ pipeline.run('classify-permits', async (pool) => {
           [zeroNums, zeroRevs]
         );
       }
+    });
 
-      // Mark ALL processed permits as evaluated (regardless of match count)
+    // ── Product classification write (Spec 80 §5.B) — mirrors the trade path ──
+    // Sub-batch UPSERT (6 params/row → 4000-row chunks under the 65535-param cap).
+    const PROD_COLS = 6;
+    const PROD_MAX_ROWS = 4000;
+    for (let i = 0; i < productInsertValues.length; i += PROD_MAX_ROWS * PROD_COLS) {
+      const chunkVals = productInsertValues.slice(i, i + PROD_MAX_ROWS * PROD_COLS);
+      const rowCount = chunkVals.length / PROD_COLS;
+      let pIdx = 1;
+      const ph = [];
+      for (let r = 0; r < rowCount; r++) {
+        ph.push(`($${pIdx++},$${pIdx++},$${pIdx++},$${pIdx++},$${pIdx++},$${pIdx++})`);
+      }
+      await pipeline.withTransaction(pool, async (client) => {
+        const res = await client.query(
+          `INSERT INTO permit_products (permit_num, revision_num, product_id, product_slug, product_name, confidence)
+           VALUES ${ph.join(',')}
+           ON CONFLICT (permit_num, revision_num, product_id)
+           DO UPDATE SET product_slug = EXCLUDED.product_slug, product_name = EXCLUDED.product_name,
+                         confidence = EXCLUDED.confidence
+           RETURNING permit_num`,
+          chunkVals
+        );
+        productsDbUpdated += res.rows.length;
+      });
+    }
+
+    // Ghost cleanup for products — delete products no longer matching, and all
+    // products for permits that yielded zero products this run. Mirrors trades.
+    await pipeline.withTransaction(pool, async (client) => {
+      const validProductIds = new Map(); // "pnum--rev" -> Set<product_id>
+      for (let i = 0; i < productInsertValues.length; i += PROD_COLS) {
+        const key = `${productInsertValues[i]}--${productInsertValues[i + 1]}`;
+        if (!validProductIds.has(key)) validProductIds.set(key, new Set());
+        validProductIds.get(key).add(productInsertValues[i + 2]);
+      }
+      const pEntries = Array.from(validProductIds.entries());
+      if (pEntries.length > 0) {
+        const scopeNums = [], scopeRevs = [], keepNums = [], keepRevs = [], keepIds = [];
+        for (const [key, ids] of pEntries) {
+          const [pn, rv] = key.split('--');
+          scopeNums.push(pn); scopeRevs.push(rv);
+          for (const id of ids) { keepNums.push(pn); keepRevs.push(rv); keepIds.push(id); }
+        }
+        await client.query(
+          `DELETE FROM permit_products pp
+           WHERE (pp.permit_num, pp.revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))
+           AND NOT EXISTS (
+             SELECT 1 FROM (
+               SELECT unnest($3::text[]) AS kn, unnest($4::text[]) AS kr, unnest($5::int[]) AS ki
+             ) keep
+             WHERE keep.kn = pp.permit_num AND keep.kr = pp.revision_num AND keep.ki = pp.product_id
+           )`,
+          [scopeNums, scopeRevs, keepNums, keepRevs, keepIds]
+        );
+      }
+      const zeroProductPermits = batch.rows.filter(
+        (p) => !validProductIds.has(`${p.permit_num}--${p.revision_num}`)
+      );
+      if (zeroProductPermits.length > 0) {
+        await client.query(
+          `DELETE FROM permit_products
+           WHERE (permit_num, revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))`,
+          [zeroProductPermits.map((p) => p.permit_num), zeroProductPermits.map((p) => p.revision_num)]
+        );
+      }
+    });
+
+    // Watermark LAST — set trade_classified_at only AFTER both trades AND products are
+    // written + cleaned, so a crash mid-batch leaves the permit unmarked → re-processed
+    // next run (idempotent UPSERTs) rather than marked-done with under-written products.
+    // (Output-review fix: products previously wrote after the watermark committed.)
+    await pipeline.withTransaction(pool, async (client) => {
       await client.query(
         `UPDATE permits SET trade_classified_at = $3::timestamptz
          WHERE (permit_num, revision_num) IN (
@@ -934,6 +1060,14 @@ pipeline.run('classify-permits', async (pool) => {
     { metric: 'classification_coverage', value: classificationCoverage.toFixed(1) + '%', threshold: '>= 95%', status: classificationCoverage >= 95 ? 'PASS' : 'WARN' },
     { metric: 'total_trade_matches', value: totalMatches, threshold: null, status: 'INFO' },
     { metric: 'permit_trades_written', value: dbUpdated, threshold: null, status: 'INFO' },
+    // Spec 80 §5.B — product classification (permit_products, now live).
+    { metric: 'permits_with_products', value: permitsWithProducts, threshold: null, status: 'INFO' },
+    { metric: 'total_product_matches', value: totalProducts, threshold: null, status: 'INFO' },
+    { metric: 'permit_products_written', value: productsDbUpdated, threshold: null, status: 'INFO' },
+    // Precision signal alongside cov_trade_vocab — so a green coverage gate can't hide
+    // trades that only ever appear at bundle/fallback confidence (Spec 80 §5.B.5).
+    { metric: 'trades_strong_signal', value: strongSignalTradeIds.size, threshold: null, status: 'INFO' },
+    { metric: 'trades_bundle_or_fallback_only', value: [...weakSignalTradeIds].filter((id) => !strongSignalTradeIds.has(id)).length, threshold: null, status: 'INFO' },
     // WF2 #2 — per-class breakdown for operator visibility (Spec 80 §5).
     // Operator can confirm whether non-construction permits emitted the
     // expected zero-trade output (the gating's intended behavior) vs.
@@ -977,7 +1111,7 @@ pipeline.run('classify-permits', async (pool) => {
       },
     },
   });
-  pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"] });
+  pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "project_type", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"], "product_groups": ["id", "slug", "name"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"], "permit_products": ["permit_num", "revision_num", "product_id", "product_slug", "product_name", "confidence"] });
   });
   if (!lockResult.acquired) return;
 });

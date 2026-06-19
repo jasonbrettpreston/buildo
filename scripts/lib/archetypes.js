@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------
 // Archetype bundle prior (Spec 80 §5.B.5) — JS twin of
 // src/lib/classification/archetypes.ts (§7.1 dual-path; pinned by
-// classify-sync.logic.test.ts behavior-driven parity).
+// product-archetype-sync.logic.test.ts behavior-driven parity).
 //
 // Derived rollup over project_type × scope_tags → {trades, products} bundle prior
 // that boosts classification recall (lights up the low-signal interior-finish +
@@ -189,6 +189,10 @@ function baseSlug(tag) {
 /** project_type × scope_tags → archetype codes (multi; [] when nothing matches —
  *  coverage is corpus-level, so no per-permit default-FB over-emission). */
 function deriveArchetypes(projectType, scopeTags) {
+  // A repair is maintenance, not construction — never inherit a construction archetype,
+  // even with a structural tag (balcony/roof/foundation REPAIR is not a full build). The
+  // direct tag-trade matrix still emits the repair's actual trades. WF3 precision fix.
+  if (projectType === 'repair') return [];
   const set = new Set();
   for (const tag of scopeTags || []) {
     const code = TAG_ARCHETYPE[baseSlug(tag)];

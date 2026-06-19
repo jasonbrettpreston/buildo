@@ -634,28 +634,60 @@ export function classifyPermit(
 // Product classifier
 // ---------------------------------------------------------------------------
 
+/** Tag-driven product confidence (direct scope_tag → product hit). */
+const PRODUCT_TAG_CONFIDENCE = 0.75;
+/** Archetype-implied product confidence (bundle prior; below tag hits). */
+const PRODUCT_BUNDLE_CONFIDENCE = 0.45;
+
+export interface ClassifyProductsOptions {
+  /** project_type — input to the §5.B.5 archetype {products} bundle. */
+  projectType?: string | null;
+  /** Product bundle-tier confidence (default PRODUCT_BUNDLE_CONFIDENCE). */
+  bundleConfidence?: number;
+}
+
 /**
- * Classify products for a permit based on scope_tags.
- * Returns a list of product matches with confidence.
+ * Classify products for a permit (Spec 80 §5.B). Tag-driven hits at 0.75, plus the
+ * §5.B.5 archetype {products} bundle at a lower bundle-tier confidence — the bundle
+ * fires ONLY when `deriveArchetypes(projectType, tags)` returns a non-empty set (i.e.
+ * NOT on every permit; a no-archetype permit yields only its tag-products, or none).
+ * MAX-dedup: a tag hit always wins over a bundle hit for the same product.
  */
 export function classifyProducts(
   permit: Partial<Permit>,
-  scopeTags?: string[]
+  scopeTags?: string[],
+  options?: ClassifyProductsOptions,
 ): ProductMatch[] {
+  // Narrow-scope companion permits (PLB/MS/DR/DM/…) repeat the whole project's
+  // description, so their tags/archetype look like a full build. Products belong on
+  // the PRIMARY permit, not duplicated across companions — so emit none here, exactly
+  // as the trade path returns just the narrow trade for these codes (Spec 80 §5.B).
+  const code = extractPermitCode(permit.permit_num);
+  if (code != null && NARROW_SCOPE_CODES[code] != null) return [];
+
   const tags = scopeTags ?? [];
-  if (tags.length === 0) return [];
+  const conf = new Map<string, number>();
+  for (const slug of lookupProductsForTags(tags)) conf.set(slug, PRODUCT_TAG_CONFIDENCE);
 
-  const productSlugs = lookupProductsForTags(tags);
+  const bundleConf = options?.bundleConfidence ?? PRODUCT_BUNDLE_CONFIDENCE;
+  const archetypes = deriveArchetypes(options?.projectType, tags);
+  const { products: bundleProducts } = bundleSlugsFor(archetypes, DEPRECATED_SLUGS);
+  for (const slug of bundleProducts) {
+    if (!conf.has(slug)) conf.set(slug, bundleConf); // tag hit wins (MAX-dedup)
+  }
 
-  return productSlugs.map((slug) => {
+  const out: ProductMatch[] = [];
+  for (const [slug, c] of conf) {
     const group = PRODUCT_GROUPS.find((p) => p.slug === slug);
-    return {
+    if (!group) continue;
+    out.push({
       permit_num: permit.permit_num ?? '',
       revision_num: permit.revision_num ?? '',
-      product_id: group?.id ?? 0,
+      product_id: group.id,
       product_slug: slug,
-      product_name: group?.name ?? slug,
-      confidence: 0.75,
-    };
-  });
+      product_name: group.name,
+      confidence: c,
+    });
+  }
+  return out;
 }

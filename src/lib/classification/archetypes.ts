@@ -239,6 +239,14 @@ export function deriveArchetypes(
   projectType: string | null | undefined,
   scopeTags: readonly string[] | null | undefined,
 ): ArchetypeCode[] {
+  // A repair is maintenance, not construction — it must NOT inherit a construction
+  // archetype even when it carries a structural tag (a balcony/roof/foundation REPAIR
+  // is not a full ADD/ENV build). This early-return overrides the tag path. The direct
+  // tag-trade matrix still emits the repair's actual trades (e.g. fire-damage →
+  // demolition/framing/drywall), so substantial rebuilds keep their core trades.
+  // WF3 precision fix (Spec 80 §5.B.5).
+  if (projectType === 'repair') return [];
+
   const set = new Set<ArchetypeCode>();
 
   for (const tag of scopeTags ?? []) {

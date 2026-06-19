@@ -34,6 +34,10 @@ $mig$;
 -- re-runs immediately after in the same ordered batch and re-seeds its 32 links (verified by the
 -- migration-178-181 idempotency test). The forward (migrate-once, in-order) path is unaffected
 -- because 180 applies before 181 ever exists. Acceptable; see review_followups.md.
+-- NOTE (post-P2 `--force` trap): once Phase-2 classify-permits has populated permit_products, the
+-- empty-guard above RAISEs and a `--force` full replay HALTS here. Pre-flight before any post-P2
+-- `--force` rebuild: `TRUNCATE permit_products, trade_products CASCADE;` (both repopulate on the
+-- first classify run). Runbook: docs/runbook/db_rebuild_post_p2.md. (review_followups 80-vnext-P2)
 TRUNCATE product_groups RESTART IDENTITY CASCADE;
 
 INSERT INTO product_groups (id, slug, name, sort_order, type) VALUES
