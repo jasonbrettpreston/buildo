@@ -231,3 +231,33 @@ describe('classify-coa-trades.js — §R10 records_new + records_updated semanti
     expect(src).toMatch(/(?:records_updated|recordsUpdated|updates(Count)?)/);
   });
 });
+
+describe('classify-coa-trades.js — Spec 80 §5.B.5 Phase 3 archetype bundle wiring (regression-lock)', () => {
+  const src = fs.readFileSync(SCRIPT, 'utf-8');
+
+  it('classifyCoaTrades() is the call site (replaced the inline lookupTradesForTags path)', () => {
+    expect(src).toMatch(/classifyCoaTrades\(\s*row\s*,/);
+    // lookupTradesForTags must NOT be called directly here (it is consumed transitively).
+    expect(src).not.toMatch(/=\s*lookupTradesForTags\(/);
+  });
+
+  it('archetype_bundle_confidence Zod logic-var present with a default (mig 182 / bundle prior)', () => {
+    expect(src).toMatch(/archetype_bundle_confidence:\s*z\.coerce\.number\(\)[\s\S]*?\.default\(/);
+  });
+
+  it('bundleConf + DEPRECATED_TRADE_SLUGS threaded into classifyCoaTrades', () => {
+    expect(src).toMatch(/classifyCoaTrades\(\s*row\s*,\s*bundleConf\s*,\s*DEPRECATED_TRADE_SLUGS\s*\)/);
+  });
+
+  it('project_type read by the source SELECT AND declared in emitMeta reads (§R11 contract)', () => {
+    const sel = src.match(/SELECT[\s\S]*?FROM\s+coa_applications/i);
+    expect(sel?.[0]).toMatch(/\bproject_type\b/);
+    const meta = src.match(/emitMeta\(([\s\S]*?)\)\s*;/);
+    expect(meta?.[1]).toMatch(/\bproject_type\b/);
+  });
+
+  it('precision counters emitted as INFO audit rows (Spec 48 §3.6 — even at value 0)', () => {
+    expect(src).toMatch(/metric:\s*'coa_trades_strong_signal'[\s\S]*?status:\s*'INFO'/);
+    expect(src).toMatch(/metric:\s*'coa_trades_bundle_only'[\s\S]*?status:\s*'INFO'/);
+  });
+});

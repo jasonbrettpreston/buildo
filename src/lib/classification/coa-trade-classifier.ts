@@ -22,6 +22,16 @@
 //
 // Review fold (Indep N-5): no `'use strict'` directive — TS/ESM modules are
 // strict mode by default.
+//
+// Spec 80 §5.B.5 (Phase 3 — CoA classifier parity): the archetype bundle prior
+// is shared with permits via ./archetypes, but CoA carries a DIFFERENT vocab
+// (PascalCase project_type + its own ~31-tag set), so a translation layer
+// (COA_PROJECT_TYPE_MAP + COA_TAG_TO_ARCHETYPE_TAG → deriveArchetypesForCoa) maps
+// CoA inputs onto the permit-side keys deriveArchetypes() understands BEFORE
+// delegating to the shared engine. classifyCoaTrades() merges the direct
+// tag-matrix path with the bundle prior (MAX-dedup, deprecated-filtered).
+
+import { deriveArchetypes, bundleSlugsFor } from './archetypes';
 
 // ─────────────────────────── Public types ────────────────────────────────────
 
@@ -177,6 +187,118 @@ export function lookupTradesForTags(scopeTags: readonly unknown[] | null | undef
   }
   return Array.from(best.entries())
     .map(([slug, confidence]) => ({ slug, confidence }))
+    .sort((a, b) => a.slug.localeCompare(b.slug));
+}
+
+// ───────────────── Archetype bundle prior — CoA translation layer ─────────────
+// Spec 80 §5.B.5 (Phase 3). CoA's project_type + scope_tag vocab differ from
+// permits, so they cannot be fed to the shared deriveArchetypes() verbatim.
+// NOTE: distinct from TAG_ALIASES above — TAG_ALIASES targets TAG_TRADE_MATRIX
+// keys (renovation→interior); these target TAG_ARCHETYPE keys (renovation→
+// interior-alterations). Locked TS↔JS by coa-trade-classifier.logic.test.ts.
+
+/** Shape of a row consumed by classifyCoaTrades (the classifier's pure input). */
+export interface CoaRowForTrades {
+  project_type?: string | null;
+  scope_tags?: readonly unknown[] | null;
+}
+
+// CoA PascalCase project_type → permit-side project_type key. Demolition/Severance/
+// Mixed → null (no project-type-axis archetype); scope tags still derive independently.
+export const COA_PROJECT_TYPE_MAP: Readonly<Record<string, string | null>> = Object.freeze({
+  NewConstruction: 'new_build', // → FB
+  Addition: 'addition',         // → ADD
+  Alteration: 'renovation',     // → INT
+  Demolition: null,
+  Severance: null,
+  Mixed: null,
+});
+
+// CoA scope_tag → valid TAG_ARCHETYPE key. Tags already valid in TAG_ARCHETYPE
+// (basement/garage/walkout/rear-addition/addition/fence/townhouse/…) pass through;
+// variance/use-type tags map to nothing → no archetype (correct — no construction signal).
+// `two-storey` is an intentional NON-entry (storey-count modifier, not a scope signal — always
+// co-fires with the real scope tag). `third-storey` → addition (vertical addition; CoA spelling
+// of 3rd-floor). `condo` → build-sfd mirrors TAG_ALIASES condo→apartment (Integration, 2026-06-19).
+export const COA_TAG_TO_ARCHETYPE_TAG: Readonly<Record<string, string>> = Object.freeze({
+  dwelling: 'build-sfd',                       // → FB
+  'new-construction': 'build-sfd',             // → FB
+  apartment: 'build-sfd',                      // → FB
+  condo: 'build-sfd',                          // → FB (mirror TAG_ALIASES condo→apartment)
+  renovation: 'interior-alterations',          // → INT
+  office: 'tenant-fitout',                     // → INT
+  retail: 'tenant-fitout',                     // → INT
+  'service-shop': 'tenant-fitout',             // → INT
+  'mixed-use': 'tenant-fitout',                // → INT
+  'secondary-suite': 'second-suite',           // → FB
+  'accessory-structure': 'accessory-building', // → GAR
+  'change-of-use': 'convert-unit',             // → INT
+  'third-storey': 'addition',                  // → ADD (vertical addition; CoA spelling of 3rd-floor)
+});
+
+// Deprecated trades kept in the vocab but NEVER bundle-emitted (Spec 80 §5.B.6).
+// Explicit set mirrors classify-permits.js; parity-pinned by the logic test.
+export const DEPRECATED_TRADE_SLUGS: ReadonlySet<string> = new Set(['temporary-fencing']);
+
+// Bundle-tier confidence default when the archetype_bundle_confidence logic_var is
+// absent (mirrors classify-permits.js BUNDLE_TIER_CONFIDENCE_DEFAULT / migration 182).
+export const BUNDLE_TIER_CONFIDENCE_DEFAULT = 0.55;
+
+/**
+ * Derive the §5.B.5 archetype set for a CoA application. Translates CoA's vocab
+ * onto permit-side keys, then delegates to the shared deriveArchetypes(). Returns
+ * [] when nothing maps (coverage is corpus-level).
+ */
+export function deriveArchetypesForCoa(
+  projectType: string | null | undefined,
+  scopeTags: readonly unknown[] | null | undefined,
+): ReturnType<typeof deriveArchetypes> {
+  const mappedPt =
+    projectType != null && Object.prototype.hasOwnProperty.call(COA_PROJECT_TYPE_MAP, projectType)
+      ? COA_PROJECT_TYPE_MAP[projectType]
+      : null;
+  const mappedTags: string[] = [];
+  for (const tag of scopeTags ?? []) {
+    if (typeof tag !== 'string' || tag === '') continue;
+    const base = tag.toLowerCase();
+    mappedTags.push(COA_TAG_TO_ARCHETYPE_TAG[base] ?? base);
+  }
+  return deriveArchetypes(mappedPt, mappedTags);
+}
+
+/** A classified CoA trade plus its provenance — `fromBundle` is true ONLY when
+ *  the direct tag-matrix did not emit the slug (the archetype bundle is its sole
+ *  source). The honest precision signal, independent of the confidence value. */
+export interface CoaTradeMatch extends TradeMatch {
+  fromBundle: boolean;
+}
+
+/**
+ * CoA trade classification = direct tag-matrix path + archetype bundle prior,
+ * MAX-deduped (a direct hit above the bundle tier wins; the bundle only fills
+ * low-signal trades). Deprecated slugs are never bundle-emitted. Returns a
+ * deduped, slug-sorted array of { slug, confidence, fromBundle } (mirrors the
+ * permit twin's `!fromFallback` provenance so a direct hit at exactly the bundle
+ * tier is still a direct/"strong" signal). tier/phase/lead_score are attached by
+ * the caller (tier 3, phase null for CoA).
+ */
+export function classifyCoaTrades(
+  row: CoaRowForTrades,
+  bundleConf: number,
+  deprecatedSlugs?: ReadonlySet<string>,
+): CoaTradeMatch[] {
+  const best = new Map<string, number>();
+  const directSlugs = new Set<string>();
+  for (const { slug, confidence } of lookupTradesForTags(row.scope_tags)) {
+    directSlugs.add(slug);
+    if (confidence > (best.get(slug) ?? 0)) best.set(slug, confidence);
+  }
+  const archetypes = deriveArchetypesForCoa(row.project_type, row.scope_tags);
+  for (const slug of bundleSlugsFor(archetypes, deprecatedSlugs).trades) {
+    if (bundleConf > (best.get(slug) ?? 0)) best.set(slug, bundleConf);
+  }
+  return Array.from(best.entries())
+    .map(([slug, confidence]) => ({ slug, confidence, fromBundle: !directSlugs.has(slug) }))
     .sort((a, b) => a.slug.localeCompare(b.slug));
 }
 

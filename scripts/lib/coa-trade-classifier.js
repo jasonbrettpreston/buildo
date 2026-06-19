@@ -25,7 +25,17 @@
  * src/tests/coa-trade-classifier.logic.test.ts (JS↔TS fixture-matrix tests
  * over lookupTradesForTags, TAG_TRADE_MATRIX keys, TAG_ALIASES, PHASE_TRADES,
  * isTradeActiveInPhase, shouldAppendRealtor).
+ *
+ * Spec 80 §5.B.5 (Phase 3 — CoA classifier parity): the archetype bundle prior
+ * is shared with permits via scripts/lib/archetypes.js, but CoA carries a DIFFERENT
+ * vocab (PascalCase project_type + its own ~31-tag set), so a translation layer
+ * (COA_PROJECT_TYPE_MAP + COA_TAG_TO_ARCHETYPE_TAG → deriveArchetypesForCoa) maps
+ * CoA inputs onto the permit-side keys deriveArchetypes() understands BEFORE
+ * delegating to the shared engine. classifyCoaTrades() merges the direct
+ * tag-matrix path with the bundle prior (MAX-dedup, deprecated-filtered).
  */
+
+const { deriveArchetypes, bundleSlugsFor } = require('./archetypes');
 
 // ──────────────────────────────────────────────────────────────────────
 // TAG_ALIASES (verbatim from classify-permits.js:168)
@@ -181,6 +191,113 @@ function lookupTradesForTags(scopeTags) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
+// Archetype bundle prior — CoA translation layer (Spec 80 §5.B.5, Phase 3).
+//
+// CoA's project_type + scope_tag vocab differ from permits, so they cannot be
+// fed to the shared deriveArchetypes() verbatim. These two maps translate CoA
+// inputs onto the permit-side keys deriveArchetypes()/TAG_ARCHETYPE understand.
+// NOTE: distinct from TAG_ALIASES above — TAG_ALIASES targets TAG_TRADE_MATRIX
+// keys (renovation→interior); these target TAG_ARCHETYPE keys (renovation→
+// interior-alterations). Locked TS↔JS by coa-trade-classifier.logic.test.ts.
+// ──────────────────────────────────────────────────────────────────────
+
+// CoA PascalCase project_type → permit-side project_type key (PROJECT_TYPE_ARCHETYPE).
+// Demolition/Severance/Mixed → null: no project-type-axis archetype (Severance is a
+// lot division, Mixed is ambiguous). Scope tags still derive archetypes independently.
+const COA_PROJECT_TYPE_MAP = {
+  NewConstruction: 'new_build', // → FB
+  Addition: 'addition',         // → ADD
+  Alteration: 'renovation',     // → INT
+  Demolition: null,
+  Severance: null,
+  Mixed: null,
+};
+
+// CoA scope_tag → valid TAG_ARCHETYPE key. Tags already valid in TAG_ARCHETYPE
+// (basement/garage/walkout/rear-addition/addition/fence/townhouse/…) pass through
+// unchanged; variance/use-type tags (severance/setback/minor-variance/residential/…)
+// map to nothing → no archetype (correct — they carry no construction signal).
+// `two-storey` is an intentional NON-entry: it is a storey-count modifier, not a scope
+// signal, and on a real CoA always co-fires with the actual scope tag (dwelling / addition /
+// rear-addition) that carries the archetype. `third-storey`, by contrast, is virtually always
+// a vertical addition, so it maps to `addition` (mirrors TAG_ARCHETYPE 3rd-floor→ADD, which the
+// CoA spelling `third-storey` cannot reach directly). `condo` mirrors TAG_ALIASES condo→apartment
+// (a "condominium" CoA without the literal word apartment/dwelling would otherwise miss the FB
+// bundle — Integration review, 2026-06-19).
+const COA_TAG_TO_ARCHETYPE_TAG = {
+  dwelling: 'build-sfd',                 // → FB
+  'new-construction': 'build-sfd',       // → FB
+  apartment: 'build-sfd',                // → FB
+  condo: 'build-sfd',                    // → FB (mirror TAG_ALIASES condo→apartment)
+  renovation: 'interior-alterations',    // → INT
+  office: 'tenant-fitout',               // → INT
+  retail: 'tenant-fitout',               // → INT
+  'service-shop': 'tenant-fitout',       // → INT
+  'mixed-use': 'tenant-fitout',          // → INT
+  'secondary-suite': 'second-suite',     // → FB
+  'accessory-structure': 'accessory-building', // → GAR
+  'change-of-use': 'convert-unit',       // → INT
+  'third-storey': 'addition',            // → ADD (vertical addition; CoA spelling of 3rd-floor)
+};
+
+// Deprecated trades kept in the vocab but NEVER bundle-emitted (Spec 80 §5.B.6).
+// Explicit set mirrors classify-permits.js (the JS TRADES list carries no `kind`);
+// parity-pinned by coa-trade-classifier.logic.test.ts.
+const DEPRECATED_TRADE_SLUGS = new Set(['temporary-fencing']);
+
+// Bundle-tier confidence default when the archetype_bundle_confidence logic_var is
+// absent (mirrors classify-permits.js BUNDLE_TIER_CONFIDENCE_DEFAULT / migration 182).
+const BUNDLE_TIER_CONFIDENCE_DEFAULT = 0.55;
+
+/**
+ * Derive the §5.B.5 archetype set for a CoA application. Translates CoA's vocab
+ * (PascalCase project_type via COA_PROJECT_TYPE_MAP; scope_tags via
+ * COA_TAG_TO_ARCHETYPE_TAG) onto permit-side keys, then delegates to the shared
+ * deriveArchetypes(). Returns [] when nothing maps (coverage is corpus-level).
+ */
+function deriveArchetypesForCoa(projectType, scopeTags) {
+  const mappedPt =
+    projectType != null && Object.prototype.hasOwnProperty.call(COA_PROJECT_TYPE_MAP, projectType)
+      ? COA_PROJECT_TYPE_MAP[projectType]
+      : null;
+  const mappedTags = [];
+  for (const tag of scopeTags || []) {
+    if (typeof tag !== 'string' || tag === '') continue;
+    const base = tag.toLowerCase();
+    mappedTags.push(COA_TAG_TO_ARCHETYPE_TAG[base] ?? base);
+  }
+  return deriveArchetypes(mappedPt, mappedTags);
+}
+
+/**
+ * CoA trade classification = direct tag-matrix path + archetype bundle prior,
+ * MAX-deduped (a direct hit above the bundle tier wins; the bundle only fills
+ * low-signal trades). Deprecated slugs are never bundle-emitted. Returns a
+ * deduped, slug-sorted array of { slug, confidence, fromBundle } where
+ * `fromBundle` is true ONLY when the direct tag-matrix did not emit the slug
+ * at all (the archetype bundle is its sole source) — this is the honest
+ * precision signal (mirrors the permit twin's `!fromFallback`), independent of
+ * the confidence value, so a direct hit at exactly the bundle tier is still a
+ * direct ("strong") signal. tier/phase/lead_score are attached by the caller
+ * (tier 3, phase null for CoA).
+ */
+function classifyCoaTrades(row, bundleConf, deprecatedSlugs) {
+  const best = new Map();
+  const directSlugs = new Set();
+  for (const { slug, confidence } of lookupTradesForTags(row.scope_tags)) {
+    directSlugs.add(slug);
+    if (confidence > (best.get(slug) ?? 0)) best.set(slug, confidence);
+  }
+  const archetypes = deriveArchetypesForCoa(row.project_type, row.scope_tags);
+  for (const slug of bundleSlugsFor(archetypes, deprecatedSlugs).trades) {
+    if (bundleConf > (best.get(slug) ?? 0)) best.set(slug, bundleConf);
+  }
+  return Array.from(best.entries())
+    .map(([slug, confidence]) => ({ slug, confidence, fromBundle: !directSlugs.has(slug) }))
+    .sort((a, b) => a.slug.localeCompare(b.slug));
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // PHASE_TRADES (verbatim from classify-permits.js:77)
 // ──────────────────────────────────────────────────────────────────────
 const PHASE_TRADES = {
@@ -239,4 +356,11 @@ module.exports = {
   TAG_TRADE_MATRIX,
   TAG_ALIASES,
   PHASE_TRADES,
+  // Spec 80 §5.B.5 Phase 3 — archetype bundle prior (CoA translation layer).
+  COA_PROJECT_TYPE_MAP,
+  COA_TAG_TO_ARCHETYPE_TAG,
+  DEPRECATED_TRADE_SLUGS,
+  BUNDLE_TIER_CONFIDENCE_DEFAULT,
+  deriveArchetypesForCoa,
+  classifyCoaTrades,
 };

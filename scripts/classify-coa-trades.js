@@ -19,11 +19,12 @@
  *   - #9: slug_resolution_miss_count audit metric (== 0 FAIL)
  *   - #10: RETURNING (xmax = 0) for accurate records_new vs records_updated
  *
- * Phase H integration gap (R8 fold #11, operator-facing): downstream
- * compute-trade-forecasts.js / compute-opportunity-scores.js currently read
- * permit_trades, not lead_trades. CoA trade rows live correctly in
- * lead_trades but produce zero trade_forecasts coverage until the Phase H
- * rekey. Documented at docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase H.
+ * Downstream forecast coverage (Spec 80 Phase 3 correction — the old "Phase H
+ * gap" note was stale): compute-trade-forecasts.js Phase F.1 DOES read these rows
+ * (`FROM lead_trades WHERE lead_id LIKE 'coa:%'`, gated by coaGateActive), so CoA
+ * trades flow into trade_forecasts → opportunity_score → the lead feed. The §5.B.5
+ * archetype bundle prior (added Phase 3) therefore increases CoA forecast coverage;
+ * the first post-deploy run produces a one-time volume spike (Spec 48 §3.7 runbook).
  *
  * Usage:
  *   node scripts/classify-coa-trades.js
@@ -38,7 +39,12 @@
 const pipeline = require('./lib/pipeline');
 const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
-const { lookupTradesForTags, shouldAppendRealtor } = require('./lib/coa-trade-classifier');
+const {
+  classifyCoaTrades,
+  shouldAppendRealtor,
+  DEPRECATED_TRADE_SLUGS,
+  BUNDLE_TIER_CONFIDENCE_DEFAULT,
+} = require('./lib/coa-trade-classifier');
 const { checkRealtorAvailable, REALTOR_TRADE_ID } = require('./lib/pipeline-realtor-availability');
 const manifest = require('./manifest.json');
 
@@ -52,6 +58,8 @@ const LOGIC_VARS_SCHEMA = z
     // cov_* vocabulary-coverage thresholds (Spec 30 §3 / 48 §3.5 — the cov_ primitive).
     vocab_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
     vocab_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
+    // Spec 80 §5.B.5 — bundle-tier confidence for archetype-implied trades (mig 182).
+    archetype_bundle_confidence: z.coerce.number().min(0).max(1).default(0.55),
   })
   .passthrough()
   .refine((d) => d.vocab_coverage_warn_pct < d.vocab_coverage_pass_pct, {
@@ -77,6 +85,9 @@ pipeline.run('classify-coa-trades', async (pool) => {
     throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   }
   const unmappedThresholdPct = logicVars.coa_trades_unmapped_threshold_pct;
+  // Spec 80 §5.B.5 — bundle-tier confidence (mirror classify-permits.js; falls back to
+  // the default when the logic_var is absent so the bundle prior still fires).
+  const bundleConf = Number(logicVars.archetype_bundle_confidence) || BUNDLE_TIER_CONFIDENCE_DEFAULT;
 
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     // R8 fold #3 — realtor availability startup guard. Without trades.id=33
@@ -102,6 +113,12 @@ pipeline.run('classify-coa-trades', async (pool) => {
     let residentialCount = 0;
     let realtorAppendCount = 0;
     let slugResolutionMissCount = 0;
+    // Spec 80 §5.B.5 precision counters (Spec 48 §3.6 INFO rows — emit even at 0).
+    // strong = a direct tag-matrix hit above the bundle tier; bundle_only = trades
+    // carried at exactly the bundle tier (low/no direct signal). Row-derived from the
+    // emitted confidence; the realtor append is excluded (not a matrix/bundle trade).
+    let coaTradesStrong = 0;
+    let coaTradesBundleOnly = 0;
     let recordsNew = 0;       // R8 fold #10 — xmax-derived true INSERTs
     let recordsUpdated = 0;   // R8 fold #10 — xmax-derived ON CONFLICT UPDATEs
     const tradeSlugDist = new Map();
@@ -176,7 +193,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
     // idempotency cursor + (l) requires scope_tags IS NOT NULL.
     const sourceStream = pipeline.streamQuery(
       pool,
-      `SELECT id, lead_id, scope_tags, coa_type_class, scope_classified_at
+      `SELECT id, lead_id, scope_tags, coa_type_class, project_type, scope_classified_at
          FROM coa_applications
         WHERE scope_tags IS NOT NULL
           AND scope_classified_at IS NOT NULL
@@ -188,12 +205,14 @@ pipeline.run('classify-coa-trades', async (pool) => {
     for await (const row of sourceStream) {
       processed++;
 
-      // Matrix lookup (R5.1 substrate handles case-insensitivity + type-guard).
-      const matches = lookupTradesForTags(row.scope_tags);
+      // Matrix lookup + §5.B.5 archetype bundle prior (R5.1 substrate handles
+      // case-insensitivity + type-guard; classifyCoaTrades MAX-dedups direct hits
+      // with bundle-tier trades and filters deprecated slugs).
+      const matches = classifyCoaTrades(row, bundleConf, DEPRECATED_TRADE_SLUGS);
 
       // R8 fold #2 — lead_score formula committed: Math.round(confidence * 100).
       const tradeRows = [];
-      for (const { slug, confidence } of matches) {
+      for (const { slug, confidence, fromBundle } of matches) {
         const tradeId = SLUG_TO_ID.get(slug);
         if (tradeId == null) {
           // R8 fold #9 — schema-drift catch: matrix emits a slug not in trades.
@@ -201,6 +220,11 @@ pipeline.run('classify-coa-trades', async (pool) => {
           if (slugResolutionMissSet.size < SLUG_MISS_CAP) slugResolutionMissSet.add(slug);
           continue;
         }
+        // Spec 80 §5.B.5 precision: strong = emitted by the direct tag-matrix;
+        // bundle_only = the archetype bundle is the slug's sole source (provenance,
+        // not a confidence proxy — a direct hit at exactly the bundle tier is strong).
+        if (fromBundle) coaTradesBundleOnly++;
+        else coaTradesStrong++;
         tradeRows.push([
           row.lead_id,
           tradeId,
@@ -326,6 +350,13 @@ pipeline.run('classify-coa-trades', async (pool) => {
       { metric: 'records_new', value: recordsNew, threshold: null, status: 'INFO' },
       { metric: 'records_updated', value: recordsUpdated, threshold: null, status: 'INFO' },
       { metric: 'total_lead_trades_written', value: totalLeadTradeRows, threshold: null, status: 'INFO' },
+      // Spec 80 §5.B.5 / Spec 48 §3.6 — precision split of emitted construction
+      // trades by PROVENANCE (realtor append excluded): strong = emitted by the
+      // direct tag-matrix; bundle_only = the archetype bundle is the slug's sole
+      // source. INFO, emitted every run even at value 0 (the steady-state signal).
+      // Bundle-only proportion tracks the recall-vs-precision tradeoff.
+      { metric: 'coa_trades_strong_signal', value: coaTradesStrong, threshold: null, status: 'INFO' },
+      { metric: 'coa_trades_bundle_only', value: coaTradesBundleOnly, threshold: null, status: 'INFO' },
     ];
 
     const verdict = auditRows.some((r) => r.status === 'FAIL')
@@ -358,6 +389,8 @@ pipeline.run('classify-coa-trades', async (pool) => {
         coa_zero_trades: coaZeroTrades,
         residential_count: residentialCount,
         realtor_append_count: realtorAppendCount,
+        coa_trades_strong_signal: coaTradesStrong,
+        coa_trades_bundle_only: coaTradesBundleOnly,
         slug_resolution_miss_count: slugResolutionMissCount,
         // Worktree#2 IMP-3: actionable diagnostic. Capped at SLUG_MISS_CAP (50).
         slug_resolution_misses: Array.from(slugResolutionMissSet).sort(),
@@ -379,6 +412,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
           'lead_id',
           'scope_tags',
           'coa_type_class',
+          'project_type',
           'scope_classified_at',
           'trade_classified_at',
         ],
