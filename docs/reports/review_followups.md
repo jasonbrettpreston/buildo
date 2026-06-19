@@ -3,6 +3,68 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Weekly Triage — 2026-06-19
+_Automated triage run. No `last_reviewed` dates existed before this run. All 48 active sections are **zombies** (all added 2026-04-30 → 2026-05-19, i.e., >4 weeks unreviewed as of 2026-06-19). `triage_after` for DEFERred items: **2026-07-17**._
+_`last_reviewed: 2026-06-19` applies to all 48 active sections below._
+
+### Summary
+
+| Metric | Count |
+|--------|-------|
+| Active sections | 48 |
+| Zombie sections (no review in >4 weeks) | **48** |
+| Items proposed PROMOTE (WF3) | 11 |
+| Items proposed KILL | 5 |
+| Items proposed CONVERT | 3 |
+| Items DEFERed (remaining) | ~130+ |
+| Sections refreshed | 48 |
+
+---
+
+### PROMOTE → WF3 (high severity + still relevant + actionable fix)
+
+| # | Section | Item | Sev | Rationale |
+|---|---------|------|-----|-----------|
+| P1 | WF2 #3 (2026-05-08) `cost-model-shared.js` | `\|\|` → `??` falsy-0 in `computeGfa` / `computeEffectiveArea` / `computeTradeValue` | HIGH ×3 | Correctness bugs: 0-storey, 0-allocation-pct, and 0-complexity-factor inputs all coerce to wrong defaults. Bundle into one WF3. |
+| P2 | Spec 76 P5 (2026-05-06) `get-lead-feed.ts:100` | `lead_id` separator `':'` vs expected `'--'`; mobile feed→detail deep-link broken for CoA leads | HIGH | `parseLeadId` fails on colon-form IDs; mobile user tapping a CoA lead gets a 404. Real runtime regression. |
+| P3 | Spec 76/47/83 WF2 #4 (2026-05-08) | Missing `CREATE INDEX CONCURRENTLY` on `lead_views (lead_key) INCLUDE (user_id) WHERE saved=true` | HIGH | Admin Lead Inspector degrades as `lead_views` grows; single-migration WF3. |
+| P4 | Phase E.2 #110 (2026-05-14) `classify-lifecycle-phase.js` | Does not write to `lifecycle_status_history` per Spec 42 §6.7; spec deviation | HIGH | Phase F audit-verdict gate (#131) cannot be valid without status-history writes; blocks chain correctness. |
+| P5 | WF1 R5.4 #56 (2026-05-14) `classify-coa-scope.js` | `scope_classified_at` bumped unconditionally → daily full re-classify of all CoAs | HIGH | Cross-reviewer concurrence; fix is `scope_classified_at = CASE WHEN IS DISTINCT FROM THEN $runAt ELSE scope_classified_at END`. |
+| P6 | Spec 86/91/95/99 Mig 118+119 (2026-05-08) | `realtor` row missing from `trade_sqft_rates`; first backfill run will produce silent $0 cost estimates | MED | Backfill script shipped; the downstream JOIN target is absent. Add mig 120-ish seed before or with the backfill run. |
+| P7 | Spec 76/47/83 WF2 #4 (2026-05-08) | `classifyLiarGatePath()` always maps `cost_source='permit'` → `proportional_slicing`; ≤$1K sub-path also writes `cost_source='permit'` | HIGH | Mislabel in Lead Inspector diagnostic panel. Investigate `compute-cost-estimates.js` write paths; add `path` column or fix heuristic. |
+| P8 | Spec 41/80/91 WF2 #2 (2026-05-08) | 14K+ wrong fire/security/designated-structures trade rows for non-construction permits still in DB | HIGH | Gating blocks new wrong rows; old rows persist. Explicit DELETE WF3 scoped per non-construction `permit_type`. |
+| P9 | WF2 Spec 93 WF3-A (2026-05-15) | Backup-email persistence bridge missing; task file at `.cursor/deferred_task_spec93_backup_email_persistence.md` | CRIT | Task file exists; pick up via `WF3`. |
+| P10 | WF2 Spec 93 WF3-B (2026-05-15) | Auth-state reset placement leaks data on forced sign-out; task file exists | CRIT | Task file exists; pick up via `WF3`. |
+| P11 | WF2 Spec 93 WF3-C (2026-05-15) | `@sentry/react-native` v7→v8 for RN 0.81 + New Architecture; task file exists | HIGH | Required for RN compatibility; task file exists. |
+
+---
+
+### KILL (false premise / superseded / cost > benefit)
+
+| # | Section | Item | Rationale |
+|---|---------|------|-----------|
+| K1 | Phase F.4 (2026-05-17) | HIGH "1MB JSON synchronous parse blocks main thread" | False premise on entry: actual file is 43 KB; parse is sub-ms on desktop admin. |
+| K2 | Phase F.4 (2026-05-17) | NIT `new Date().toISOString().slice(0,10)` timezone drift | Admin diagnostic surface only; non-load-bearing; NIT cost > benefit. |
+| K3 | WF1 #C (2026-05-06) | MED "Three filter passes over `timeline` (23-entry array)" | Timeline bounded at 23 entries per Spec 84 §3; micro-optimization permanently irrelevant at this scale. |
+| K4 | WF3 Option B (2026-05-09) | LOW "Make `REALTOR_RELEVANT_TYPES` operator-tunable via `realtor_eligible` column" | No 6th residential type emerged; no operator experimentation requested; migration + admin UI + dual-path cost > benefit. |
+| K5 | Phase F.4 (2026-05-17) | LOW "`LinkedPermitChip` needs `min-w-[44px]` touch target" | Desktop-first admin tool per Spec 33 §2; WCAG 2.1 AAA touch sizing is mobile-priority and explicitly out of scope. |
+
+---
+
+### CONVERT (route to stronger destination per Spec 05 §2)
+
+| # | Section | Item | Destination | Rationale |
+|---|---------|------|-------------|-----------|
+| C1 | Adversarial Pattern Notes (throughout file) | ~40% Gemini/DeepSeek false-positive rate on spec-sync WFs + 3-step verification protocol | `tasks/lessons.md` | Protocol guidance must survive beyond this report and be read at session start; audit report is an anti-destination per Spec 05 §7. |
+| C2 | Spec 42 §6 R0 HIGH (2026-05-13) | "Universal applicability of `trade_mapping_rules` to CoA descriptions" (was "testable in Phase D") | WF5 audit | Phase D is complete; accuracy against real CoA trade classifications is now measurable. Convert to `WF5 manual` with accuracy threshold <80% → Open Decision #1 fallback. |
+| C3 | WF1 #B INHERITED-BUG 84-W11 (2026-05-09) | P3/P4/P5 naming collision CoA vs Permits — blocks `lifecycle_band_p3_*` rename (BLOCKED in Spec 47/84/86 section) | WF3 active task | This is an explicit blocker for at least one other deferred item; needs a formal WF3 against Spec 84 §6 W11. |
+
+---
+
+_All remaining ~130+ items below are **DEFER** with `triage_after: 2026-07-17`._
+
+---
+
 ## Phase F.4 (Lead Inspector CoA Classification Panel) — diff-stage 4-reviewer DEFERs (2026-05-17)
 
 Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + Observability worktree) on F.4 v4.1 implementation. 11 BUG findings fixed in commit (1 CRIT + 7 HIGH + 3 MED). Items below are DEFERs.
