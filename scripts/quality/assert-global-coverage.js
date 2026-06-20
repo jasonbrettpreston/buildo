@@ -185,6 +185,10 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE lifecycle_phase IS NULL)                                 AS unclassified_count,
           -- Pass-2 additions for Steps 4-7 coverage rows:
           COUNT(*) FILTER (WHERE parcel_linked_at IS NOT NULL)                            AS parcel_linked_pop,
+          -- neighbourhood_id stamped by link_coa_to_parcels (point-in-polygon on the matched
+          -- parcel centroid). CoA uses a NULL sentinel for no-match (link-coa-to-parcels R2.v5
+          -- fix #5 — NOT a -1 sentinel, unlike the permits chain), so no -1 exclusion is needed.
+          COUNT(*) FILTER (WHERE neighbourhood_id IS NOT NULL)                            AS neighbourhood_id_pop,
           COUNT(*) FILTER (WHERE scope_tags IS NOT NULL)                                  AS scope_tags_pop,
           COUNT(*) FILTER (WHERE scope_classified_at IS NOT NULL)                         AS scope_classified_pop,
           COUNT(*) FILTER (WHERE trade_classified_at IS NOT NULL)                         AS trade_classified_pop,
@@ -278,6 +282,12 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // Step 4 — link_coa_to_parcels (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 4 — link_coa_to_parcels', 'coa_applications.parcel_linked_at', parseInt(ca.parcel_linked_pop, 10), coaTotal));
       rows.push(infoRow('CoA Step 4 — link_coa_to_parcels', 'lead_parcels.coa_rows', parseInt(cx.lead_parcels_coa_rows, 10)));
+      // neighbourhood_id is parcel-DERIVED: only the parcel-MATCHED subset can ever receive it,
+      // so the denominator is the lead_parcels-matched count (cx.lead_parcels_coa_rows), NOT
+      // coaTotal and NOT parcel_linked_pop (parcel_linked_at is a 100% processing watermark
+      // stamped on matched AND unmatched CoAs alike — using it would manufacture a false-FAIL).
+      // Spec 49 §4: "denominator of CoAs with lead_parcels row — target ≥ 95%".
+      rows.push(calibratedRow('CoA Step 4 — link_coa_to_parcels', 'coa_applications.neighbourhood_id', parseInt(ca.neighbourhood_id_pop, 10), parseInt(cx.lead_parcels_coa_rows, 10) || null, 95, 90));
 
       // Step 4b — enrich_coa_zoning (WF3 #406, Spec 66 WF3 / migration 166).
       // Insert-after label (DEC-2; #405 full renumber deferred). zoning_class is the

@@ -532,6 +532,20 @@ describe('assert-global-coverage.js — Pass-2 CoA chain coverage additions', ()
     expect(src()).toMatch(/'CoA Step 4 — link_coa_to_parcels'/);
   });
 
+  // Spec 49 §4 (2026-06-20): neighbourhood_id is parcel-DERIVED — stamped only on the
+  // parcel-MATCHED subset. The coverage row MUST be denominated on the lead_parcels-matched
+  // count (cx.lead_parcels_coa_rows), NOT coaTotal and NOT parcel_linked_pop (a 100% watermark).
+  // This lock pins both the row's presence and its denominator so the false-FAIL regression
+  // (denominating a parcel-derived field over all CoAs) cannot creep back.
+  it('CoA Step 4 — neighbourhood_id row is denominated on the lead_parcels-matched subset', () => {
+    // aggregate uses IS NOT NULL only (CoA NULL-sentinel; no `<> -1` permits guard)
+    expect(src()).toMatch(/WHERE neighbourhood_id IS NOT NULL\)\s+AS neighbourhood_id_pop/);
+    // gated row over cx.lead_parcels_coa_rows, NOT coaTotal
+    expect(src()).toMatch(
+      /'coa_applications\.neighbourhood_id',\s*parseInt\(ca\.neighbourhood_id_pop[^)]*\),\s*parseInt\(cx\.lead_parcels_coa_rows/,
+    );
+  });
+
   // Manifest step 5 — classify_coa_scope (Phase D)
   it('CoA Step 5 — classify_coa_scope coverage row is emitted (scope_tags + scope_classified_at)', () => {
     expect(src()).toMatch(/'CoA Step 5 — classify_coa_scope'/);
