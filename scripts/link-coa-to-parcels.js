@@ -149,6 +149,44 @@ function computeBBox(geom) {
   return [minLng, minLat, maxLng, maxLat];
 }
 
+/**
+ * CORPUS-level CoA linkage coverage (Spec 48 transparency primitive). Returns verdict-driving
+ * audit rows + a records_meta fragment describing coverage over the WHOLE coa_applications entity
+ * — independent of any single run's incremental slice. `coa_corpus_linked_pct` WARNs below the
+ * same operator floor as the slice metric; `coa_corpus_missing_normalized_count` surfaces CoAs that
+ * carry a raw street_name but no normalized JOIN key (unlinkable → the root-cause backlog).
+ */
+async function buildCorpusCoverageRows(pool, coaUnmatchedThresholdPct) {
+  const res = await pool.query(
+    `SELECT
+       (SELECT COUNT(*)::int FROM coa_applications WHERE lead_id IS NOT NULL) AS total,
+       (SELECT COUNT(DISTINCT lp.lead_id)::int FROM lead_parcels lp WHERE lp.lead_id LIKE 'coa:%') AS linked,
+       (SELECT COUNT(*)::int FROM coa_applications
+          WHERE lead_id IS NOT NULL AND street_name IS NOT NULL AND street_name_normalized IS NULL) AS missing_normalized`,
+  );
+  const total = res.rows[0].total ?? 0;
+  const linked = res.rows[0].linked ?? 0;
+  const missingNormalized = res.rows[0].missing_normalized ?? 0;
+  const unlinked = Math.max(0, total - linked);
+  const linkedPct = total > 0 ? (linked / total) * 100 : 0;
+  const floor = 100 - coaUnmatchedThresholdPct;
+  return {
+    meta: {
+      coa_corpus_total: total,
+      coa_corpus_linked_count: linked,
+      coa_corpus_unlinked_count: unlinked,
+      coa_corpus_missing_normalized_count: missingNormalized,
+    },
+    rows: [
+      { metric: 'coa_corpus_total',                    value: total,                       threshold: null,           status: 'INFO' },
+      { metric: 'coa_corpus_linked_count',             value: linked,                      threshold: null,           status: 'INFO' },
+      { metric: 'coa_corpus_linked_pct',               value: linkedPct.toFixed(1) + '%',  threshold: `>= ${floor}%`, status: linkedPct >= floor ? 'PASS' : 'WARN' },
+      { metric: 'coa_corpus_unlinked_count',           value: unlinked,                    threshold: null,           status: 'INFO' },
+      { metric: 'coa_corpus_missing_normalized_count', value: missingNormalized,           threshold: '== 0',         status: missingNormalized > 0 ? 'WARN' : 'INFO' },
+    ],
+  };
+}
+
 // ─────────────────────────── Main entrypoint ───────────────────────────
 
 pipeline.run('link-coa-to-parcels', async (pool) => {
@@ -213,17 +251,30 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
     const totalCoa = safeParsePositiveInt(countResult.rows[0].n, 'unprocessed_coa');
     pipeline.log.info('[link-coa-to-parcels]', `Unprocessed CoAs to process: ${totalCoa.toLocaleString()}`);
 
+    // ─── CORPUS-level coverage (Spec 48 transparency / "if we can't see it, it's a false
+    // representation"). Reported on EVERY run — including the common steady-state run with 0
+    // unprocessed CoAs — over the WHOLE coa_applications entity, so a backlog of stamped-but-unlinked
+    // CoAs (e.g. missing street_name_normalized) surfaces honestly. The per-run slice metrics
+    // (coa_parcels_linked_pct = matched / processed) only describe this run's incremental slice and
+    // would otherwise let the step show GREEN over a 7%-linked corpus. Computed post-write in each
+    // path (here for the no-work path; after the main loop below) so it reflects the true post-state. ─
     if (totalCoa === 0) {
+      const corpus = await buildCorpusCoverageRows(pool, coaUnmatchedThresholdPct);
       pipeline.emitSummary({
         records_total: 0, records_new: 0, records_updated: 0,
         records_meta: {
+          ...corpus.meta,
           audit_table: {
             phase: 11,
             name: 'CoA Parcel Linking',
-            verdict: 'PASS',
+            // Verdict row-derived from the corpus rows (Spec 48 §3.6) — NOT a hardcoded PASS. A
+            // steady-state run still goes WARN if the corpus is under-linked.
+            verdict: corpus.rows.some((r) => r.status === 'FAIL') ? 'FAIL'
+                   : corpus.rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS',
             rows: [
-              { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
-              { metric: 'reason', value: 'No unprocessed CoAs — all already have parcel_linked_at set', threshold: null, status: 'INFO' },
+              { metric: 'status', value: 'NO_NEW_WORK', threshold: null, status: 'INFO' },
+              { metric: 'reason', value: 'No unprocessed CoAs this run — corpus coverage reported regardless', threshold: null, status: 'INFO' },
+              ...corpus.rows,
             ],
           },
         },
@@ -587,9 +638,17 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
     const unmatchedPct = processed > 0 ? (totalUnmatched / processed) * 100 : 0;
     const centroidOutsidePct = totalMatched > 0 ? (centroidOutsidePolygon / totalMatched) * 100 : 0;
 
+    // CORPUS coverage — computed AFTER the linking loop's per-batch writes have committed, so it
+    // reflects this run's new links (not the stale pre-run count). See buildCorpusCoverageRows.
+    const corpus = await buildCorpusCoverageRows(pool, coaUnmatchedThresholdPct);
+
     // Per-tier audit breakdown (R2.v5 fix #12).
     // Day-1 threshold: WARN, not FAIL (R2.v5 fix #9). Operators recalibrate post-burn-in.
     const auditRows = [
+      // CORPUS coverage (verdict-driving) — the honest, entity-level truth, independent of the
+      // per-run slice (same rows the no-work skip path emits).
+      ...corpus.rows,
+      // THIS-RUN slice metrics (incremental processing detail; NOT corpus coverage) ──────────────
       { metric: 'coa_processed',                  value: processed,                                              threshold: null,                                          status: 'INFO' },
       // Plan v4 fold F17: tier_1a_exact preserved (rolls up BOTH bridge-path
       // + legacy hits). tier_1a_via_bridge is the bridge-path subset INFO
@@ -622,6 +681,7 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
       records_updated: totalMatched,
       records_meta: {
         duration_ms: durationMs,
+        ...corpus.meta,
         coa_processed: processed,
         tier_1a_exact: tier1aExact,
         // Plan v4 fold F17: bridge-path subset key for migration tracking.
