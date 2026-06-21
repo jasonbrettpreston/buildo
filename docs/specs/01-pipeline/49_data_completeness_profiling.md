@@ -161,6 +161,11 @@ Phase G (commit `3944f88`) retired PRE-% synthetic permits. The `permit_num NOT 
 
 Added with the CoA pipeline parity rollout per Spec 42 §6. Coverage targets:
 
+> **Label note:** rows that are now LIVE in `assert-global-coverage.js` use the manifest-order
+> labels the code emits (`CoA Step 4 — link_coa_to_parcels`, `CoA Step 5 — classify_coa_scope`).
+> The remaining `CoA Step D`/`CoA Step E` phase-letter labels below predate implementation; the
+> full label renumber to manifest order is the separately-tracked cosmetic item #405.
+
 | step_target | field | populated condition | denominator + threshold |
 |---|---|---|---|
 | CoA Step D — classify-coa-scope | coa_applications.coa_type_class | `coa_type_class IS NOT NULL` | `COUNT(*) FROM coa_applications WHERE decision NOT IN ('Refused','Withdrawn','Closed')` — target ≥ 95% |
@@ -168,7 +173,7 @@ Added with the CoA pipeline parity rollout per Spec 42 §6. Coverage targets:
 | CoA Step D — classify-coa-scope | coa_applications.scope_tags | `scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0` | same — target ≥ 80% |
 | CoA Step D — link-coa-to-parcels | lead_parcels WHERE lead_id LIKE 'coa:%' | `EXISTS row` | `COUNT(*) FROM coa_applications WHERE latitude IS NOT NULL` — target ≥ 75% (parcel-match floor at confidence 0.50) |
 | CoA Step 5 — classify_coa_scope | coa_applications.structure_type | `structure_type IS NOT NULL` | denominator = `coaTotal` (description-derived, every CoA eligible — NOT parcel-gated); calibrated target ≥ 45% (corrected 2026-06-20: source is the description classifier, not a parcel_buildings copy; ~52% description-only ceiling) |
-| CoA Step D — link-coa-to-parcels | coa_applications.neighbourhood_id | `neighbourhood_id IS NOT NULL` | same denominator — target ≥ 95% |
+| CoA Step 4 — link_coa_to_parcels | coa_applications.neighbourhood_id | `neighbourhood_id IS NOT NULL` (CoA uses a NULL sentinel for no-match — link-coa-to-parcels R2.v5 fix #5 — NOT the permits `-1` sentinel, so no `<> -1` guard) | denominator = the lead_parcels-matched count `cx.lead_parcels_coa_rows` (corrected 2026-06-20: implemented denominator, NOT `latitude IS NOT NULL`; matched CoAs resolve a neighbourhood ~100%) — target ≥ 95% |
 | CoA Step D — classify-coa-trades | lead_trades WHERE lead_id LIKE 'coa:%' | `EXISTS row` | `COUNT(*) FROM coa_applications` active — target ≥ 90% (default fallback allowed) |
 | CoA Step D — compute-coa-cost-estimates | coa_applications.estimated_cost | `estimated_cost IS NOT NULL` | active CoAs — target ≥ 80% |
 | CoA Step D — compute-coa-cost-estimates | coa_applications.modeled_gfa_sqm | `modeled_gfa_sqm IS NOT NULL` | active CoAs — target ≥ 80% |
