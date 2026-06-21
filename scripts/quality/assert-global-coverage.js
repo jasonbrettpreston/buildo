@@ -334,6 +334,17 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // description is eligible). Calibrated 45/35: the description-only ceiling is ~52% (measured),
       // so the Spec-42 ≥80% target was recalibrated — gating at 80 would be a permanent false-FAIL.
       rows.push(calibratedRow('CoA Step 5 — classify_coa_scope', 'coa_applications.structure_type', parseInt(ca.structure_type_pop, 10), coaTotal, 45, 35));
+      // structure_type VOCAB coverage (Spec 49 §3 value dimension) — catches silent under-emission /
+      // classifier collapse a field-NULL row can't see. Called INLINE here (NOT the static
+      // VOCAB_COVERAGE array, which runs in BOTH chains) so it stays CoA-scoped. vocabFilter excludes
+      // only the 2 fallback sentinels ('Other'/'Unknown' — never classify-TO targets, classifier
+      // emits null on no-match); the 2 real gaps (Multiple Use/Non Residential, Restaurant Greater
+      // Than 30 Seats) STAY in the denominator → 21/23 ≈ 91% PASS. A collapse drops it hard.
+      rows.push(await profileVocabTriple({
+        stepTarget: 'CoA Step 5 — classify_coa_scope',
+        dataTable: 'coa_applications', dataColumn: 'structure_type', dataFilter: "lead_id LIKE 'coa:%'",
+        vocabTable: 'scope_intensity_matrix', vocabColumn: 'structure_type', vocabFilter: "structure_type NOT IN ('Other','Unknown')",
+      }));
 
       // Step 6 — classify_coa_trades (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 6 — classify_coa_trades', 'coa_applications.trade_classified_at', parseInt(ca.trade_classified_pop, 10), coaTotal));

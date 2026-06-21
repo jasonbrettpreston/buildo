@@ -829,6 +829,23 @@ describe('assert-global-coverage.js — §3 vocabulary-coverage', () => {
     expect(content).toMatch(/dataTable: 'permits', dataColumn: 'neighbourhood_id'/); // control
   });
 
+  it('CoA structure_type vocab triple is emitted INLINE (CoA-scoped collapse-detector)', () => {
+    // Presence lock — the structure_type vocab triple must exist so it can't silently drop.
+    expect(content).toMatch(/dataTable: 'coa_applications', dataColumn: 'structure_type'/);
+    expect(content).toMatch(/vocabTable: 'scope_intensity_matrix', vocabColumn: 'structure_type'/);
+  });
+
+  it('CoA structure_type vocab triple is NOT in the static VOCAB_COVERAGE array (must stay CoA-only, not run in the permits chain)', () => {
+    // CoA-scoping lock — the static array is iterated in BOTH chains; a coa_applications triple there
+    // would emit a meaningless row in the permits profile (Regression Guardian F1). It must live
+    // inline inside the `if (isCoaChain)` block instead.
+    const arrayStart = content.indexOf('const VOCAB_COVERAGE = [');
+    const arrayEnd = content.indexOf('];', arrayStart);
+    const arraySlice = content.slice(arrayStart, arrayEnd);
+    expect(arraySlice).not.toMatch(/coa_applications/);
+    expect(arraySlice).not.toMatch(/structure_type/);
+  });
+
   it('vocabRow emits the standard { metric, value, threshold, status } rail (label-attributed, not columnar)', () => {
     expect(content).toMatch(/function vocabRow\(/);
     expect(content).toMatch(/metric: `\$\{dataColumn\} vocab \(\$\{stepTarget\}\)`/);
