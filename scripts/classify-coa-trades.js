@@ -41,6 +41,7 @@ const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 const {
   classifyCoaTrades,
+  classifyCoaProducts,
   shouldAppendRealtor,
   DEPRECATED_TRADE_SLUGS,
   BUNDLE_TIER_CONFIDENCE_DEFAULT,
@@ -72,6 +73,10 @@ const LOGIC_VARS_SCHEMA = z
 // is memory-bounded (in-process batch staging), not param-bounded.
 const LEAD_TRADES_COL_COUNT = 8;
 const INSERT_BATCH_SIZE = Math.min(1000, Math.floor(65535 / LEAD_TRADES_COL_COUNT));
+// Spec 80 §5.B — lead_products (mig 184). Its OWN param fence (4 cols: lead_id,
+// product_id, confidence, classified_at) — NOT shared with the 8-col trade fence.
+const LEAD_PRODUCTS_COL_COUNT = 4;
+const PRODUCT_BATCH_SIZE = Math.min(1000, Math.floor(65535 / LEAD_PRODUCTS_COL_COUNT));
 
 pipeline.run('classify-coa-trades', async (pool) => {
   // §R3.5 + §R5 — RUN_AT + config validated BEFORE lock contention.
@@ -106,6 +111,11 @@ pipeline.run('classify-coa-trades', async (pool) => {
     const tradesResult = await pool.query('SELECT id, slug FROM trades');
     const SLUG_TO_ID = new Map(tradesResult.rows.map((t) => [t.slug, t.id]));
 
+    // Spec 80 §5.B — product vocab (slug → id) from product_groups, mirroring the
+    // trade SLUG_TO_ID. Misses (matrix/bundle slug not in product_groups) tracked below.
+    const productGroupsResult = await pool.query('SELECT id, slug FROM product_groups');
+    const PRODUCT_SLUG_TO_ID = new Map(productGroupsResult.rows.map((p) => [p.slug, p.id]));
+
     // Counters.
     let processed = 0;
     let coaWithTrades = 0;
@@ -119,6 +129,11 @@ pipeline.run('classify-coa-trades', async (pool) => {
     // emitted confidence; the realtor append is excluded (not a matrix/bundle trade).
     let coaTradesStrong = 0;
     let coaTradesBundleOnly = 0;
+    // Spec 80 §5.B product counters (INFO).
+    let coaWithProducts = 0;
+    let productRowsWritten = 0;
+    let productSlugMissCount = 0;
+    const productSlugDist = new Map();
     let recordsNew = 0;       // R8 fold #10 — xmax-derived true INSERTs
     let recordsUpdated = 0;   // R8 fold #10 — xmax-derived ON CONFLICT UPDATEs
     const tradeSlugDist = new Map();
@@ -132,6 +147,8 @@ pipeline.run('classify-coa-trades', async (pool) => {
     const batch = {
       coaIds: [],
       rows: [],   // each entry: [lead_id, trade_id, tier, confidence, is_active, phase, lead_score]
+      leadIds: [],     // every processed CoA lead_id — drives the lead_products resync (Spec 80 §5.B)
+      productRows: [], // each entry: [lead_id, product_id, confidence]
     };
 
     async function flushBatch() {
@@ -174,6 +191,31 @@ pipeline.run('classify-coa-trades', async (pool) => {
           }
         }
 
+        // Spec 80 §5.B — lead_products resync (mig 184). Delete-then-insert per processed
+        // lead so a CoA whose products changed (or dropped to zero) is fully resynced.
+        // BEFORE the trade_classified_at watermark (mirror classify-permits "watermark LAST"):
+        // products must be durable before the cursor stops re-fetching the lead.
+        if (batch.leadIds.length > 0) {
+          await client.query(`DELETE FROM lead_products WHERE lead_id = ANY($1::text[])`, [batch.leadIds]);
+        }
+        if (batch.productRows.length > 0) {
+          const pv = [];
+          const pp = [];
+          let q = 1;
+          for (const pr of batch.productRows) {
+            pv.push(`($${q++}::text, $${q++}::int, $${q++}::numeric, $${q++}::timestamptz)`);
+            pp.push(pr[0], pr[1], pr[2], RUN_AT);
+          }
+          // ON CONFLICT DO NOTHING: the per-lead DELETE above already cleared the set, so a
+          // duplicate (lead_id, product_id) within one batch is the only conflict source.
+          await client.query(
+            `INSERT INTO lead_products (lead_id, product_id, confidence, classified_at)
+             VALUES ${pv.join(', ')}
+             ON CONFLICT (lead_id, product_id) DO NOTHING`,
+            pp,
+          );
+        }
+
         // R8 fold #8 — single batched UPDATE for trade_classified_at, regardless
         // of how many trades each CoA matched. Zero-trade CoAs still need the
         // timestamp advanced or the streamQuery cursor will re-fetch forever.
@@ -187,6 +229,8 @@ pipeline.run('classify-coa-trades', async (pool) => {
 
       batch.rows = [];
       batch.coaIds = [];
+      batch.leadIds = [];
+      batch.productRows = [];
     }
 
     // §R7 — streamQuery for the source SELECT. Self-checklist (b)
@@ -268,6 +312,26 @@ pipeline.run('classify-coa-trades', async (pool) => {
       // R8 fold #8 — every CoA gets its id staged so trade_classified_at
       // advances even on zero-trade rows (otherwise the cursor re-fetches).
       batch.coaIds.push(row.id);
+      // Spec 80 §5.B — every processed lead is staged for the lead_products resync
+      // (so a CoA dropping to zero products gets its stale rows cleared).
+      batch.leadIds.push(row.lead_id);
+
+      // Spec 80 §5.B — product classification (mirror classify-permits; reuses the
+      // archetype bundle the trade path already derives via deriveArchetypesForCoa).
+      const productMatches = classifyCoaProducts(row, DEPRECATED_TRADE_SLUGS);
+      let leadHasProduct = false;
+      for (const { slug, confidence } of productMatches) {
+        const productId = PRODUCT_SLUG_TO_ID.get(slug);
+        if (productId == null) {
+          productSlugMissCount++;
+          continue;
+        }
+        batch.productRows.push([row.lead_id, productId, confidence]);
+        productRowsWritten++;
+        leadHasProduct = true;
+        productSlugDist.set(slug, (productSlugDist.get(slug) ?? 0) + 1);
+      }
+      if (leadHasProduct) coaWithProducts++;
 
       const bucket = String(tradeRows.length);
       coaTradesPerLeadHist.set(bucket, (coaTradesPerLeadHist.get(bucket) ?? 0) + 1);
@@ -279,7 +343,11 @@ pipeline.run('classify-coa-trades', async (pool) => {
       // could reach ~16,000 entries × 8 params = 128,000 params — 2× the
       // 65,535 PostgreSQL parameter limit. The CoA-id UPDATE uses
       // `ANY($1::bigint[])` so coaIds growth is unconstrained on its side.
-      if (batch.rows.length >= INSERT_BATCH_SIZE || batch.coaIds.length >= INSERT_BATCH_SIZE) {
+      if (
+        batch.rows.length >= INSERT_BATCH_SIZE ||
+        batch.coaIds.length >= INSERT_BATCH_SIZE ||
+        batch.productRows.length >= PRODUCT_BATCH_SIZE
+      ) {
         await flushBatch();
         if (processed % 5000 === 0) {
           pipeline.log.info(
@@ -357,6 +425,14 @@ pipeline.run('classify-coa-trades', async (pool) => {
       // Bundle-only proportion tracks the recall-vs-precision tradeoff.
       { metric: 'coa_trades_strong_signal', value: coaTradesStrong, threshold: null, status: 'INFO' },
       { metric: 'coa_trades_bundle_only', value: coaTradesBundleOnly, threshold: null, status: 'INFO' },
+      // Spec 80 §5.B — product classification (lead_products, mig 184). INFO counters;
+      // the gated vocab-coverage lives in assert_global_coverage (Spec 49 §4).
+      { metric: 'coa_with_products', value: coaWithProducts, threshold: null, status: 'INFO' },
+      { metric: 'lead_products_written', value: productRowsWritten, threshold: null, status: 'INFO' },
+      // (product vocab coverage is emitted as a gated cov_ row via the manifest
+      // telemetry_vocab_cols.product_vocab mechanism — parity with trades; live 27/27 PASS.)
+      // == 0 FAIL: catches product matrix/bundle ↔ product_groups schema drift (mirror slug_resolution_miss).
+      { metric: 'product_slug_miss_count', value: productSlugMissCount, threshold: '== 0', status: productSlugMissCount === 0 ? 'PASS' : 'FAIL' },
     ];
 
     const verdict = auditRows.some((r) => r.status === 'FAIL')
@@ -417,6 +493,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
           'trade_classified_at',
         ],
         trades: ['id', 'slug'],
+        product_groups: ['id', 'slug'],
       },
       {
         lead_trades: [
@@ -429,6 +506,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
           'lead_score',
           'classified_at',
         ],
+        lead_products: ['lead_id', 'product_id', 'confidence', 'classified_at'],
         coa_applications: ['trade_classified_at'],
       },
     );

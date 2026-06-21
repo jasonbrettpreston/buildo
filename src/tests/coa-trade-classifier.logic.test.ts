@@ -21,6 +21,9 @@ import {
   // Spec 80 §5.B.5 Phase 3 — archetype bundle prior (CoA translation layer).
   deriveArchetypesForCoa,
   classifyCoaTrades,
+  classifyCoaProducts,
+  PRODUCT_TAG_CONFIDENCE,
+  PRODUCT_BUNDLE_CONFIDENCE,
   COA_PROJECT_TYPE_MAP,
   COA_TAG_TO_ARCHETYPE_TAG,
   DEPRECATED_TRADE_SLUGS,
@@ -29,6 +32,8 @@ import {
 import { ARCHETYPE_BUNDLES } from '@/lib/classification/archetypes';
 import { TRADES } from '@/lib/classification/trades';
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 const require = createRequire(import.meta.url);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -420,5 +425,55 @@ describe('coa-trade-classifier — Phase 3 bundle slug integrity (R4) + JS↔TS 
         jsLib.classifyCoaTrades(jsRow, jsLib.BUNDLE_TIER_CONFIDENCE_DEFAULT, jsLib.DEPRECATED_TRADE_SLUGS),
       );
     }
+  });
+});
+
+describe('coa-trade-classifier — classifyCoaProducts (Spec 80 §5.B)', () => {
+  it('emits product slugs for a product-bearing residential new-construction CoA', () => {
+    const out = classifyCoaProducts(
+      { project_type: 'NewConstruction', scope_tags: ['new-construction', 'dwelling', 'roofing'] },
+      DEPRECATED_TRADE_SLUGS,
+    );
+    expect(out.length).toBeGreaterThan(0);
+    // shape mirrors classifyCoaTrades: { slug, confidence, fromBundle }
+    for (const m of out) {
+      expect(typeof m.slug).toBe('string');
+      expect(m.confidence === PRODUCT_TAG_CONFIDENCE || m.confidence === PRODUCT_BUNDLE_CONFIDENCE).toBe(true);
+      expect(typeof m.fromBundle).toBe('boolean');
+    }
+  });
+
+  it('returns [] for empty scope_tags (no signal)', () => {
+    expect(classifyCoaProducts({ project_type: null, scope_tags: [] }, DEPRECATED_TRADE_SLUGS)).toEqual([]);
+  });
+
+  it('TS and JS dual-path produce identical product output', () => {
+    const cases: Array<[string | null, string[]]> = [
+      ['NewConstruction', ['new-construction', 'dwelling', 'roofing']],
+      ['Addition', ['addition', 'rear-addition']],
+      ['Alteration', ['renovation', 'kitchen']],
+      [null, []],
+    ];
+    for (const [pt, tags] of cases) {
+      expect(classifyCoaProducts({ project_type: pt, scope_tags: tags as unknown[] }, DEPRECATED_TRADE_SLUGS)).toEqual(
+        jsLib.classifyCoaProducts({ project_type: pt, scope_tags: tags }, jsLib.DEPRECATED_TRADE_SLUGS),
+      );
+    }
+  });
+
+  it('product confidence tiers are pinned to 0.75 / 0.45 in BOTH the CoA classifier AND classify-permits (no drift)', () => {
+    // TS + JS CoA constants.
+    expect(PRODUCT_TAG_CONFIDENCE).toBe(0.75);
+    expect(PRODUCT_BUNDLE_CONFIDENCE).toBe(0.45);
+    expect(jsLib.PRODUCT_TAG_CONFIDENCE).toBe(0.75);
+    expect(jsLib.PRODUCT_BUNDLE_CONFIDENCE).toBe(0.45);
+    // The live permit path must carry the same literals (we duplicate rather than extract,
+    // so this lock is the anti-drift guard — Regression Guardian).
+    const permitsSrc = readFileSync(
+      path.resolve(__dirname, '../../scripts/classify-permits.js'),
+      'utf-8',
+    );
+    expect(permitsSrc).toMatch(/PRODUCT_TAG_CONFIDENCE\s*=\s*0\.75/);
+    expect(permitsSrc).toMatch(/PRODUCT_BUNDLE_CONFIDENCE\s*=\s*0\.45/);
   });
 });

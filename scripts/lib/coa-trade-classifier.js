@@ -36,6 +36,14 @@
  */
 
 const { deriveArchetypes, bundleSlugsFor } = require('./archetypes');
+const { lookupProductsForTags } = require('./tag-product-matrix');
+
+// Product-confidence tiers — DUPLICATED verbatim from scripts/classify-permits.js:42-43
+// (and src/lib/classification/classifier.ts) to keep the CoA product path in lockstep
+// with the permit path WITHOUT touching the live permit file. A parity test pins both
+// sites to these exact values so they cannot drift. (Spec 80 §5.B; recalibration deferred.)
+const PRODUCT_TAG_CONFIDENCE = 0.75;    // direct scope_tag → product hit
+const PRODUCT_BUNDLE_CONFIDENCE = 0.45; // archetype-implied product (bundle prior; below tag hits)
 
 // ──────────────────────────────────────────────────────────────────────
 // TAG_ALIASES (verbatim from classify-permits.js:168)
@@ -297,6 +305,29 @@ function classifyCoaTrades(row, bundleConf, deprecatedSlugs) {
     .sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
+/**
+ * Classify a CoA row into product-group slugs (Spec 80 §5.B). Mirror of classifyCoaTrades
+ * but for products: direct scope_tag→product hits at PRODUCT_TAG_CONFIDENCE, archetype-implied
+ * products (the SAME deriveArchetypesForCoa bundle the trade path computes) at the lower
+ * PRODUCT_BUNDLE_CONFIDENCE. Returns sorted [{ slug, confidence, fromBundle }]; the caller
+ * resolves slug→product_id via product_groups and attaches classified_at.
+ */
+function classifyCoaProducts(row, deprecatedSlugs) {
+  const best = new Map();
+  const directSlugs = new Set();
+  for (const slug of lookupProductsForTags(row.scope_tags)) {
+    directSlugs.add(slug);
+    if (PRODUCT_TAG_CONFIDENCE > (best.get(slug) ?? 0)) best.set(slug, PRODUCT_TAG_CONFIDENCE);
+  }
+  const archetypes = deriveArchetypesForCoa(row.project_type, row.scope_tags);
+  for (const slug of bundleSlugsFor(archetypes, deprecatedSlugs).products) {
+    if (PRODUCT_BUNDLE_CONFIDENCE > (best.get(slug) ?? 0)) best.set(slug, PRODUCT_BUNDLE_CONFIDENCE);
+  }
+  return Array.from(best.entries())
+    .map(([slug, confidence]) => ({ slug, confidence, fromBundle: !directSlugs.has(slug) }))
+    .sort((a, b) => a.slug.localeCompare(b.slug));
+}
+
 // ──────────────────────────────────────────────────────────────────────
 // PHASE_TRADES (verbatim from classify-permits.js:77)
 // ──────────────────────────────────────────────────────────────────────
@@ -363,4 +394,7 @@ module.exports = {
   BUNDLE_TIER_CONFIDENCE_DEFAULT,
   deriveArchetypesForCoa,
   classifyCoaTrades,
+  classifyCoaProducts,
+  PRODUCT_TAG_CONFIDENCE,
+  PRODUCT_BUNDLE_CONFIDENCE,
 };

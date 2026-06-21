@@ -81,7 +81,8 @@ early_construction → structural → finishing → landscaping
 ## 4. Product Groups
 
 **Files:** `src/lib/classification/groups.ts` + `scripts/reclassify-all.js`
-**Table:** `permit_products` (permit_num, revision_num, product_id, product_slug, product_name, confidence)
+**Tables:** `permit_products` (permit_num, revision_num, product_id, product_slug, product_name, confidence) — the permit-side link table.
+`lead_products` (lead_id, product_id, confidence, classified_at — mig 184) — the **CoA-side** product link table, written by `classify-coa-trades.js` (`coa:` lead_ids) via `classifyCoaProducts` (tag hits @0.75 + the same `deriveArchetypesForCoa` bundle the trade path uses @0.45). NORMALIZED (product_id only — consumers JOIN `product_groups` for slug/name; the denormalized slug/name on `permit_products` is the legacy anti-pattern). Mirrors the `lead_trades` vs `permit_trades` coexistence — a new LINK table, not a new `products` entity table, so the §5.B.3 "no new products table" fence holds. CoA product-vocab coverage = a gated cov_ row via `manifest.classify_coa_trades.telemetry_vocab_cols.product_vocab` (live 27/27 PASS); existing CoA leads were one-time backfilled by `scripts/one-time/backfill-coa-products.js`.
 
 Maps building materials to the trades that consume them:
 - Lumber → framing, decking-fences

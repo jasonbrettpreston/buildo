@@ -232,6 +232,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
       const { rows: [cx] } = await pool.query(`
         SELECT
           (SELECT COUNT(*) FROM lead_trades   WHERE lead_id LIKE 'coa:%')                  AS lead_trades_coa_rows,
+          (SELECT COUNT(*) FROM lead_products WHERE lead_id LIKE 'coa:%')                  AS lead_products_coa_rows,
           (SELECT COUNT(*) FROM lead_parcels  WHERE lead_id LIKE 'coa:%')                  AS lead_parcels_coa_rows,
           (SELECT COUNT(*) FROM cost_estimates WHERE lead_id LIKE 'coa:%')                 AS cost_estimates_coa_rows,
           -- mig 147 DROP NOT NULL on permit_type: CoA cohorts have permit_type IS NULL
@@ -349,6 +350,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // Step 6 — classify_coa_trades (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 6 — classify_coa_trades', 'coa_applications.trade_classified_at', parseInt(ca.trade_classified_pop, 10), coaTotal));
       rows.push(infoRow('CoA Step 6 — classify_coa_trades', 'lead_trades.coa_rows', parseInt(cx.lead_trades_coa_rows, 10)));
+      rows.push(infoRow('CoA Step 6 — classify_coa_trades', 'lead_products.coa_rows', parseInt(cx.lead_products_coa_rows, 10)));
 
       // Step 7 — compute_coa_cost_estimates (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 7 — compute_coa_cost_estimates', 'coa_applications.cost_classified_at', parseInt(ca.cost_classified_pop, 10), coaTotal));

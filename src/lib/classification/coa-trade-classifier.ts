@@ -32,6 +32,14 @@
 // tag-matrix path with the bundle prior (MAX-dedup, deprecated-filtered).
 
 import { deriveArchetypes, bundleSlugsFor } from './archetypes';
+import { lookupProductsForTags } from './tag-product-matrix';
+
+// Product-confidence tiers — DUPLICATED verbatim from scripts/classify-permits.js:42-43
+// (and src/lib/classification/classifier.ts) to keep the CoA product path in lockstep with
+// the permit path WITHOUT touching the live permit file. A parity test pins both sites to
+// these exact values so they cannot drift. (Spec 80 §5.B; recalibration deferred.)
+export const PRODUCT_TAG_CONFIDENCE = 0.75;    // direct scope_tag → product hit
+export const PRODUCT_BUNDLE_CONFIDENCE = 0.45; // archetype-implied product (bundle prior; below tag hits)
 
 // ─────────────────────────── Public types ────────────────────────────────────
 
@@ -296,6 +304,31 @@ export function classifyCoaTrades(
   const archetypes = deriveArchetypesForCoa(row.project_type, row.scope_tags);
   for (const slug of bundleSlugsFor(archetypes, deprecatedSlugs).trades) {
     if (bundleConf > (best.get(slug) ?? 0)) best.set(slug, bundleConf);
+  }
+  return Array.from(best.entries())
+    .map(([slug, confidence]) => ({ slug, confidence, fromBundle: !directSlugs.has(slug) }))
+    .sort((a, b) => a.slug.localeCompare(b.slug));
+}
+
+/**
+ * CoA product classification (Spec 80 §5.B) — mirror of classifyCoaTrades but for products:
+ * direct scope_tag→product hits at PRODUCT_TAG_CONFIDENCE, archetype-implied products (the SAME
+ * deriveArchetypesForCoa bundle the trade path computes) at the lower PRODUCT_BUNDLE_CONFIDENCE.
+ * Returns sorted { slug, confidence, fromBundle }; the caller resolves slug→product_id.
+ */
+export function classifyCoaProducts(
+  row: CoaRowForTrades,
+  deprecatedSlugs?: ReadonlySet<string>,
+): CoaTradeMatch[] {
+  const best = new Map<string, number>();
+  const directSlugs = new Set<string>();
+  for (const slug of lookupProductsForTags((row.scope_tags ?? []) as string[])) {
+    directSlugs.add(slug);
+    if (PRODUCT_TAG_CONFIDENCE > (best.get(slug) ?? 0)) best.set(slug, PRODUCT_TAG_CONFIDENCE);
+  }
+  const archetypes = deriveArchetypesForCoa(row.project_type, row.scope_tags);
+  for (const slug of bundleSlugsFor(archetypes, deprecatedSlugs).products) {
+    if (PRODUCT_BUNDLE_CONFIDENCE > (best.get(slug) ?? 0)) best.set(slug, PRODUCT_BUNDLE_CONFIDENCE);
   }
   return Array.from(best.entries())
     .map(([slug, confidence]) => ({ slug, confidence, fromBundle: !directSlugs.has(slug) }))

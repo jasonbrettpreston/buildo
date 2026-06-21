@@ -260,4 +260,34 @@ describe('classify-coa-trades.js — Spec 80 §5.B.5 Phase 3 archetype bundle wi
     expect(src).toMatch(/metric:\s*'coa_trades_strong_signal'[\s\S]*?status:\s*'INFO'/);
     expect(src).toMatch(/metric:\s*'coa_trades_bundle_only'[\s\S]*?status:\s*'INFO'/);
   });
+
+  // Spec 80 §5.B — CoA product classification (lead_products, mig 184)
+  it('classifies + writes products to lead_products with its OWN param fence', () => {
+    expect(src).toMatch(/classifyCoaProducts/);
+    expect(src).toMatch(/LEAD_PRODUCTS_COL_COUNT\s*=\s*4/);
+    expect(src).toMatch(/INSERT INTO lead_products/);
+    expect(src).toMatch(/ON CONFLICT \(lead_id, product_id\) DO NOTHING/);
+  });
+
+  it('product write is BEFORE the trade_classified_at watermark, in the same transaction', () => {
+    const productInsertIdx = src.indexOf('INSERT INTO lead_products');
+    const watermarkIdx = src.indexOf('SET trade_classified_at');
+    expect(productInsertIdx).toBeGreaterThan(0);
+    expect(watermarkIdx).toBeGreaterThan(productInsertIdx); // products durable before the cursor advances
+  });
+
+  it('emits product counters + declares lead_products in emitMeta writes', () => {
+    expect(src).toMatch(/metric:\s*'coa_with_products'/);
+    expect(src).toMatch(/metric:\s*'lead_products_written'/);
+    expect(src).toMatch(/metric:\s*'product_slug_miss_count'/);
+    expect(src).toMatch(/lead_products:\s*\[\s*'lead_id',\s*'product_id'/);
+  });
+
+  it('REGRESSION: the existing lead_trades trade path is unchanged (product block is additive)', () => {
+    expect(src).toMatch(/INSERT INTO lead_trades/);
+    expect(src).toMatch(/LEAD_TRADES_COL_COUNT\s*=\s*8/);
+    expect(src).toMatch(/ON CONFLICT \(lead_id, trade_id\) DO UPDATE SET/);
+    expect(src).toMatch(/REALTOR_TRADE_ID/);
+    expect(src).toMatch(/batch\.coaIds\.push\(row\.id\)/);
+  });
 });
