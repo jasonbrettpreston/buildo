@@ -207,6 +207,12 @@ describe('coa-scope-classifier — JS/TS dual-path parity (Spec 84 §7)', () => 
     { description: '' },
     { description: 'xyz' },
     { description: 'fence variance' },
+    // structure_type-bearing fixtures (4th output — keep dual-path parity honest)
+    { description: 'To construct a new detached dwelling.' },
+    { description: 'Semi-detached dwelling containing two residential dwelling units.' },
+    { description: 'New mixed-use building with retail and apartments above.' },
+    { description: 'Convert dwelling into a place of worship.' },
+    { description: 'Legalize the existing detached garage.' },
   ];
 
   for (const f of fixtures) {
@@ -217,4 +223,84 @@ describe('coa-scope-classifier — JS/TS dual-path parity (Spec 84 §7)', () => 
       expect(jsOut).toEqual(tsOut);
     });
   }
+});
+
+describe('coa-scope-classifier — structure_type archetype mapping (Spec 83 §3.A)', () => {
+  const cases: Array<[string, string | null]> = [
+    ['To construct a new detached dwelling.', 'SFD - Detached'],
+    ['Alter the existing semi-detached dwelling.', 'SFD - Semi-Detached'],
+    ['Construct a new townhouse block.', 'SFD - Townhouse'],
+    ['Construct stacked townhouses.', 'Stacked Townhouses'],
+    ['Construct a new duplex.', '2 Unit - Detached'],
+    ['Semi-detached dwelling containing two residential dwelling units.', '2 Unit - Semi-detached'],
+    ['Construct a new triplex dwelling.', '3+ Unit - Detached'],
+    ['New detached building with 8 residential units.', 'Multiple Unit Building'],
+    ['Alterations to a condominium building.', 'Apartment Building'],
+    ['Convert the existing house into three dwelling units.', 'Converted House'],
+    ['Construct a garden suite in the rear yard.', 'Laneway / Rear Yard Suite'],
+    ['New medical office building.', 'Medical/Dental Office'],
+    ['Interior alterations to existing office.', 'Office'],
+    ['To permit a restaurant on the ground floor.', 'Restaurant 30 Seats or Less'],
+    ['New industrial warehouse.', 'Industrial'],
+    ['Addition to retail store.', 'Retail Store'],
+    ['New elementary school.', 'Elementary School'],
+    ['Addition to the university campus building.', 'University'],
+    ['Expansion of the hospital.', 'Hospital'],
+    ['Convert dwelling into a place of worship.', 'Place of Worship'],
+    ['New mixed-use building with retail and apartments above.', 'Mixed Use/Res w Non Res'],
+    // Output-review folds (edge cases):
+    ['Construct a duplex within the existing multiplex site.', '2 Unit - Detached'], // explicit plex count wins over "multiplex" keyword
+    ['New detached two-unit building.', '2 Unit - Detached'],                        // hyphenated unit count
+    ['Construct a new detached dwelling and a detached garage.', 'SFD - Detached'],  // garage does not kill the detached-dwelling signal
+    // Guards + honest under-emission (null, never a default-guess):
+    ['Legalize the existing detached garage.', null], // accessory, not an SFD
+    ['Alter the existing dwelling.', null],            // no form/unit keyword
+    ['minor variance for setback', null],
+    ['', null],
+  ];
+  for (const [desc, expected] of cases) {
+    it(`"${(desc.substring(0, 48) || '(empty)')}" → ${expected ?? 'null'}`, () => {
+      expect(classifyCoaScope({ description: desc }).structure_type).toBe(expected);
+    });
+  }
+});
+
+describe('coa-scope-classifier — structure_type drift-lock vs scope_intensity_matrix (mig 163)', () => {
+  // Every archetype the classifier can emit MUST exist in the matrix vocab (Spec 83
+  // §3.A) — else the cost model safe-skips on it. Derive the allow-set from migration
+  // 163's INSERT tuples (the vocab owner), NOT from memory.
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const migSql: string = fs.readFileSync(
+    path.resolve(__dirname, '../../migrations/163_scope_intensity_matrix_production_vocab.sql'),
+    'utf-8',
+  );
+  // INSERT tuples are ('<permit_type>', '<structure_type>', <alloc>) — requiring the
+  // numeric 3rd value distinguishes them from the 2-string DELETE tuples AND from the
+  // header comment's example vocab lists (which have no numeric allocation).
+  const vocab = new Set<string>();
+  const re = /\(\s*'(?:[^']*)'\s*,\s*'([^']*)'\s*,\s*[\d.]+\s*\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(migSql)) !== null) vocab.add(m[1]!);
+
+  it('migration 163 yields the 25-value structure_type vocab', () => {
+    expect(vocab.size).toBe(25);
+  });
+
+  it('every classifier-emitted structure_type ∈ matrix vocab', () => {
+    const descs = [
+      'new detached dwelling', 'semi-detached dwelling', 'townhouse', 'stacked townhouses',
+      'duplex', 'semi-detached with two dwelling units', 'triplex', 'detached building with 8 units',
+      'condominium building', 'convert house into 3 units', 'garden suite', 'medical office',
+      'office', 'restaurant', 'industrial warehouse', 'retail store', 'elementary school',
+      'university building', 'hospital', 'place of worship', 'mixed-use retail and apartments',
+    ];
+    const emitted = new Set<string>();
+    for (const d of descs) {
+      const st = classifyCoaScope({ description: d }).structure_type;
+      if (st) emitted.add(st);
+    }
+    expect(emitted.size).toBeGreaterThan(15);
+    for (const v of emitted) expect(vocab.has(v)).toBe(true);
+  });
 });

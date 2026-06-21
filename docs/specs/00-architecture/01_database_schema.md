@@ -900,7 +900,7 @@ Decomposes the 152 per-trade × per-row signal columns from Spec 84 §2.5.h.2 in
 - `project_type VARCHAR(50)` — Addition / NewConstruction / Alteration / Demolition / Severance / Mixed
 - `scope_tags TEXT[]`
 - `scope_classified_at TIMESTAMPTZ`, `scope_source VARCHAR(30)` — provenance
-- `structure_type VARCHAR(30)` — denormalized from `parcel_buildings`
+- `structure_type VARCHAR(30)` — dwelling-use archetype keyword-classified from `description` by `classify-coa-scope.js` into the Spec 83 §3.A `scope_intensity_matrix` vocab (corrected 2026-06-20: NOT denormalized from `parcel_buildings` — that holds physical-role `primary`/`shed`/`garage`, a different vocabulary)
 - `neighbourhood_id BIGINT`
 - `latitude DECIMAL(10,7)`, `longitude DECIMAL(10,7)` — geocoded
 - `modeled_gfa_sqm NUMERIC`, `estimated_cost NUMERIC`, `cost_source VARCHAR(20)` — geometric cost path

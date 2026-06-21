@@ -183,7 +183,7 @@ After this work ships, these gates must hold on a steady-state daily run:
 | `coa_applications.scope_tags IS NOT NULL` | 0% | ≥ 80% of active CoAs | `assert-global-coverage.js` extension |
 | `coa_applications.coa_type_class IS NOT NULL` | 0% | ≥ 95% | same |
 | `coa_applications.project_type IS NOT NULL` | 0% | ≥ 90% | same |
-| `coa_applications.structure_type IS NOT NULL` | 0% | ≥ 80% (limited by parcel-match success) | same |
+| `coa_applications.structure_type IS NOT NULL` | 0% | ≥ 45% (recalibrated 2026-06-20 — description-only ceiling ~52% measured; the original ≥80% assumed a parcel_buildings copy that proved vocabulary-incompatible) | same |
 | `coa_applications.estimated_cost IS NOT NULL` | 0% | ≥ 80% of active CoAs | same |
 | `lead_parcels` rows for CoA leads / active CoAs | 0% | ≥ 75% (parcel-match confidence ≥ 0.50) | new metric in parcel-linker audit_table |
 | `lead_trades` rows for CoA leads / active CoAs | 0% | ≥ 90% (≥ 1 trade tagged per CoA, may include default fallback) | new metric, filtered to `lead_id LIKE 'coa:%'` |
@@ -555,7 +555,7 @@ The catalog and signals tables are seeded from a single source: the finalized §
 | `scope_tags` | TEXT[] | `classify-coa-scope.js` | YES (reduced tag set) |
 | `scope_classified_at` | TIMESTAMPTZ | `classify-coa-scope.js` | YES |
 | `scope_source` | VARCHAR(30) | `classify-coa-scope.js` | `'description'` always |
-| `structure_type` | VARCHAR(30) | denormalized from `parcel_buildings` via `lead_parcels` JOIN | YES |
+| `structure_type` | VARCHAR(30) | `classify-coa-scope.js` — dwelling-use archetype keyword-classified from `description` into the Spec 83 §3.A `scope_intensity_matrix` vocab (corrected 2026-06-20: the prior "denormalized from `parcel_buildings`" was vocabulary-incompatible — that column holds physical-role `primary`/`shed`/`garage`, not dwelling-use archetypes) | YES |
 | `neighbourhood_id` | BIGINT | `link-coa-neighbourhoods.js` | YES |
 | `latitude` | DECIMAL(10,7) | **primary:** `link-coa-to-parcels.js` (parcel centroid via address-text match, R5.2). **secondary upgrade:** `link-coa.js` (inherits from linked permit when fuzzy-match confidence ≥ `coa_inherit_from_permit_min_confidence`, R5.6 Part A). See §6.X for the lead-identity continuity rationale. | YES |
 | `longitude` | DECIMAL(10,7) | (same writers as `latitude`) | YES |

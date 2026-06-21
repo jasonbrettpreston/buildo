@@ -167,7 +167,7 @@ Added with the CoA pipeline parity rollout per Spec 42 §6. Coverage targets:
 | CoA Step D — classify-coa-scope | coa_applications.project_type | `project_type IS NOT NULL` | same denominator — target ≥ 90% |
 | CoA Step D — classify-coa-scope | coa_applications.scope_tags | `scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0` | same — target ≥ 80% |
 | CoA Step D — link-coa-to-parcels | lead_parcels WHERE lead_id LIKE 'coa:%' | `EXISTS row` | `COUNT(*) FROM coa_applications WHERE latitude IS NOT NULL` — target ≥ 75% (parcel-match floor at confidence 0.50) |
-| CoA Step D — link-coa-to-parcels | coa_applications.structure_type | `structure_type IS NOT NULL` | denominator of CoAs with `lead_parcels` row — target ≥ 80% |
+| CoA Step 5 — classify_coa_scope | coa_applications.structure_type | `structure_type IS NOT NULL` | denominator = `coaTotal` (description-derived, every CoA eligible — NOT parcel-gated); calibrated target ≥ 45% (corrected 2026-06-20: source is the description classifier, not a parcel_buildings copy; ~52% description-only ceiling) |
 | CoA Step D — link-coa-to-parcels | coa_applications.neighbourhood_id | `neighbourhood_id IS NOT NULL` | same denominator — target ≥ 95% |
 | CoA Step D — classify-coa-trades | lead_trades WHERE lead_id LIKE 'coa:%' | `EXISTS row` | `COUNT(*) FROM coa_applications` active — target ≥ 90% (default fallback allowed) |
 | CoA Step D — compute-coa-cost-estimates | coa_applications.estimated_cost | `estimated_cost IS NOT NULL` | active CoAs — target ≥ 80% |

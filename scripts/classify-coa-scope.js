@@ -43,10 +43,10 @@ const LOGIC_VARS_SCHEMA = z.object({
 
 // WF3 #r5-3-observability-fixes BUG-4: Spec 47 §6.3 mandates the formula
 // `Math.floor(65535 / COL_COUNT)` to prevent silent param-limit violations
-// as columns are added. flushBatch emits 4 params per row (id, coa_type_class,
-// project_type, scope_tags) + 1 shared RUN_AT. The Math.min(1000, ...) cap is
-// memory-bounded, not param-bounded — keeping in-memory batch staging modest.
-const COA_SCOPE_COL_COUNT = 4;
+// as columns are added. flushBatch emits 5 params per row (id, coa_type_class,
+// project_type, scope_tags, structure_type) + 1 shared RUN_AT. The Math.min(1000, ...)
+// cap is memory-bounded, not param-bounded — keeping in-memory batch staging modest.
+const COA_SCOPE_COL_COUNT = 5;
 const UPDATE_BATCH_SIZE = Math.min(1000, Math.floor(65535 / COA_SCOPE_COL_COUNT));
 
 pipeline.run('classify-coa-scope', async (pool) => {
@@ -69,6 +69,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
     let unmappedScope = 0;       // scope_tags IS NULL (no keyword fired)
     let noClass = 0;             // coa_type_class IS NULL (no class keyword)
     let noProjectType = 0;       // project_type IS NULL
+    let structureTyped = 0;      // structure_type non-NULL (archetype resolved)
     let totalUpdated = 0;        // WF3 BUG-1: actual rowCount sum from flushBatch (NOT JS classifier count) per Spec 47 §8.1
     const projectTypeDist = new Map();
     const coaTypeClassDist = new Map();
@@ -81,6 +82,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
       typeClasses: [],
       projectTypes: [],
       scopeTagArrays: [],     // each entry is JS array (or null), passed via $N::TEXT[][] expansion
+      structureTypes: [],     // building-use archetype (Spec 83 §3.A) or null
     };
 
     /** Flush the staged batch via an explicit VALUES UPDATE.
@@ -110,8 +112,8 @@ pipeline.run('classify-coa-scope', async (pool) => {
       const params = [];
       let paramIdx = 1;
       for (let i = 0; i < batch.ids.length; i++) {
-        valuesParts.push(`($${paramIdx++}::bigint, $${paramIdx++}::text, $${paramIdx++}::text, $${paramIdx++}::text[])`);
-        params.push(batch.ids[i], batch.typeClasses[i], batch.projectTypes[i], batch.scopeTagArrays[i]);
+        valuesParts.push(`($${paramIdx++}::bigint, $${paramIdx++}::text, $${paramIdx++}::text, $${paramIdx++}::text[], $${paramIdx++}::text)`);
+        params.push(batch.ids[i], batch.typeClasses[i], batch.projectTypes[i], batch.scopeTagArrays[i], batch.structureTypes[i]);
       }
       const runAtParam = paramIdx++;
       params.push(RUN_AT);
@@ -133,9 +135,10 @@ pipeline.run('classify-coa-scope', async (pool) => {
               SET coa_type_class      = v.coa_type_class,
                   project_type        = v.project_type,
                   scope_tags          = v.scope_tags,
+                  structure_type      = v.structure_type,
                   scope_classified_at = $${runAtParam}::timestamptz,
                   scope_source        = 'description'
-             FROM (VALUES ${valuesParts.join(', ')}) AS v(id, coa_type_class, project_type, scope_tags)
+             FROM (VALUES ${valuesParts.join(', ')}) AS v(id, coa_type_class, project_type, scope_tags, structure_type)
             WHERE ca.id = v.id`,
           params
         );
@@ -145,6 +148,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
       batch.typeClasses = [];
       batch.projectTypes = [];
       batch.scopeTagArrays = [];
+      batch.structureTypes = [];
     }
 
     // §R7 — streamQuery for the source SELECT (33K rows; well above the 10K
@@ -170,7 +174,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
     );
     for await (const row of sourceStream) {
       processed++;
-      const { coa_type_class, project_type, scope_tags } = classifyCoaScope({
+      const { coa_type_class, project_type, scope_tags, structure_type } = classifyCoaScope({
         description: row.description,
         status: row.status,
         decision: row.decision,
@@ -181,6 +185,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
       else scopeClassified++;
       if (coa_type_class === null) noClass++;
       if (project_type === null) noProjectType++;
+      if (structure_type !== null) structureTyped++;
 
       const ptKey = project_type ?? '(null)';
       projectTypeDist.set(ptKey, (projectTypeDist.get(ptKey) ?? 0) + 1);
@@ -192,6 +197,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
       batch.typeClasses.push(coa_type_class);
       batch.projectTypes.push(project_type);
       batch.scopeTagArrays.push(scope_tags);   // null or JS array — pg driver handles both
+      batch.structureTypes.push(structure_type);
 
       if (batch.ids.length >= UPDATE_BATCH_SIZE) {
         await flushBatch();
@@ -208,6 +214,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
     const durationMs = Date.now() - startTime;
     const scopeClassifiedPct = processed > 0 ? (scopeClassified / processed) * 100 : 0;
     const unmappedPct = processed > 0 ? (unmappedScope / processed) * 100 : 0;
+    const structureTypedPct = processed > 0 ? (structureTyped / processed) * 100 : 0;
 
     const auditRows = [
       { metric: 'coa_processed',         value: processed,                                        threshold: null,                                       status: 'INFO' },
@@ -216,11 +223,18 @@ pipeline.run('classify-coa-scope', async (pool) => {
       { metric: 'scope_classified_pct',  value: scopeClassifiedPct.toFixed(1) + '%',              threshold: `>= ${100 - unmappedThresholdPct}%`,        status: unmappedPct <= unmappedThresholdPct ? 'PASS' : 'WARN' },
       { metric: 'no_class',              value: noClass,                                          threshold: null,                                       status: 'INFO' },
       { metric: 'no_project_type',       value: noProjectType,                                    threshold: null,                                       status: 'INFO' },
+      // structure_type (Spec 83 §3.A archetype) — step-level visibility (INFO); the gated
+      // coverage row lives in assert_global_coverage (Spec 49). Description-only signal,
+      // so partial coverage is expected (honest under-emission → null on no match).
+      { metric: 'structure_type_classified_pct', value: structureTypedPct.toFixed(1) + '%',       threshold: null,                                       status: 'INFO' },
       { metric: 'project_type_distribution', value: Object.fromEntries(projectTypeDist),          threshold: null,                                       status: 'INFO' },
       { metric: 'coa_type_class_distribution', value: Object.fromEntries(coaTypeClassDist),       threshold: null,                                       status: 'INFO' },
     ];
 
-    const hasWarn = auditRows.some((r) => r.status === 'WARN');
+    // Row-derived verdict cascade (Spec 48 §3.6 — NOT a parallel-boolean; a FAIL
+    // row must be able to drive FAIL, not be collapsed to WARN/PASS).
+    const verdict = auditRows.some((r) => r.status === 'FAIL') ? 'FAIL'
+                  : auditRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
 
     pipeline.emitSummary({
       records_total: processed,
@@ -233,12 +247,13 @@ pipeline.run('classify-coa-scope', async (pool) => {
         unmapped_scope: unmappedScope,
         no_class: noClass,
         no_project_type: noProjectType,
+        structure_typed: structureTyped,
         project_type_distribution: Object.fromEntries(projectTypeDist),
         coa_type_class_distribution: Object.fromEntries(coaTypeClassDist),
         audit_table: {
           phase: 42,
           name: 'CoA Scope Classification',
-          verdict: hasWarn ? 'WARN' : 'PASS',
+          verdict,
           rows: auditRows,
         },
       },
@@ -246,7 +261,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
 
     pipeline.emitMeta(
       { coa_applications: ['id', 'description', 'status', 'decision', 'last_seen_at', 'scope_classified_at'] },
-      { coa_applications: ['coa_type_class', 'project_type', 'scope_tags', 'scope_classified_at', 'scope_source'] }
+      { coa_applications: ['coa_type_class', 'project_type', 'scope_tags', 'structure_type', 'scope_classified_at', 'scope_source'] }
     );
 
     pipeline.log.info('[classify-coa-scope]', 'Classification complete', {

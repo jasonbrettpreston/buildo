@@ -49,11 +49,45 @@ export interface ClassifyCoaScopeInput {
   decision?: string | null;
 }
 
+/**
+ * Building-use archetype — EXACT subset of `scope_intensity_matrix.structure_type`
+ * (Spec 83 §3.A vocabulary contract, case-preserved verbatim — see migration 163).
+ * The classifier emits these from CoA description text; values NOT emitted
+ * ('Other'/'Unknown'/'Multiple Use/Non Residential') are valid matrix rows but
+ * have no reliable description signal, so the classifier returns null instead
+ * (honest under-emission). A drift-lock test pins this union ⊆ the matrix vocab.
+ */
+export type StructureType =
+  | 'SFD - Detached'
+  | 'SFD - Semi-Detached'
+  | 'SFD - Townhouse'
+  | 'Stacked Townhouses'
+  | '2 Unit - Detached'
+  | '2 Unit - Semi-detached'
+  | '3+ Unit - Detached'
+  | 'Multiple Unit Building'
+  | 'Apartment Building'
+  | 'Converted House'
+  | 'Laneway / Rear Yard Suite'
+  | 'Office'
+  | 'Medical/Dental Office'
+  | 'Retail Store'
+  | 'Restaurant 30 Seats or Less'
+  | 'Industrial'
+  | 'Elementary School'
+  | 'University'
+  | 'Hospital'
+  | 'Place of Worship'
+  | 'Mixed Use/Res w Non Res'
+  | null;
+
 export interface ClassifyCoaScopeOutput {
   coa_type_class: CoaTypeClass;
   project_type: ProjectType;
   /** Sorted alphabetically. NULL (not empty array) when no keyword matched. */
   scope_tags: string[] | null;
+  /** Building-use archetype (Spec 83 §3.A matrix vocab) or null when no signal. */
+  structure_type: StructureType;
 }
 
 // ─────────────────────────── Type-class indicators ───────────────────────────
@@ -214,16 +248,112 @@ const TAG_PATTERNS: Array<{ tag: string; patterns: RegExp[] }> = [
   { tag: 'fence',              patterns: [/\bfenc(e|ing)\b/i] },
 ];
 
+// ─────────────────────────── Structure-type archetype ────────────────────────
+// Maps a CoA description to a `scope_intensity_matrix.structure_type` archetype
+// (Spec 83 §3.A). Precedence (first hit wins): institutional use → explicit
+// mixed-use → implicit res+commercial mixed → commercial use → laneway/suite →
+// converted house → apartment → unit-count×form → form-only → null. Residential
+// FORM keywords are guarded against accessory nouns (a "detached garage" is NOT
+// an SFD). NO match → null (honest under-emission, never a default-guess).
+
+const DWELLING_CONTEXT = /\b(dwelling|house|home|residence|residential|unit)\b/i;
+const WORD_NUMS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+};
+
+/** Explicit residential unit count from plex words or "N [residential] [dwelling] unit(s)"; null if absent. */
+function extractUnitCount(desc: string): number | null {
+  if (/\bduplex\b/i.test(desc)) return 2;
+  if (/\btriplex\b/i.test(desc)) return 3;
+  if (/\bfourplex\b/i.test(desc)) return 4;
+  // Up to two optional qualifier words ("two residential dwelling units"); digit or word
+  // count; hyphen OR space separators ("2-unit", "two-unit", "2 residential units").
+  const m = desc.match(/\b(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten)[\s-]+(?:(?:residential|dwelling)[\s-]+){0,2}units?\b/i);
+  if (m) {
+    const tok = m[1]!.toLowerCase();
+    const n = /^\d+$/.test(tok) ? parseInt(tok, 10) : WORD_NUMS[tok];
+    if (n && Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
+
+export function classifyStructureType(desc: string): StructureType {
+  if (!desc) return null;
+
+  // 1. Institutional use — most specific; wins over conversion/residential context.
+  if (/\bhospital\b/i.test(desc)) return 'Hospital';
+  if (/\b(university|college)\b/i.test(desc)) return 'University';
+  if (/\bschool\b/i.test(desc)) return 'Elementary School';
+  if (/\b(church|place\s+of\s+worship|mosque|synagogue|temple)\b/i.test(desc)) return 'Place of Worship';
+
+  const hasCommercialUse = /\b(office|retail|restaurant|store|shop|warehouse|industrial|commercial|hotel|bar|tavern)\b/i.test(desc);
+  const hasResidentialUse = /\b(dwelling|apartment|condo(?:minium)?|town\s*house|town\s*home|row\s*house|duplex|triplex|fourplex|residential)\b/i.test(desc);
+
+  // 2-3. Mixed use: explicit, OR simultaneous res+commercial that is NOT a sequential conversion.
+  if (/\bmixed[\s-]?use\b/i.test(desc)) return 'Mixed Use/Res w Non Res';
+  if (hasResidentialUse && hasCommercialUse && !/\b(convert|conversion|change\s+of\s+use)\b/i.test(desc)) {
+    return 'Mixed Use/Res w Non Res';
+  }
+
+  // 4. Commercial use.
+  if (/\b(medical|dental)\b/i.test(desc) && /\b(office|clinic|building)\b/i.test(desc)) return 'Medical/Dental Office';
+  if (/\boffice\b/i.test(desc)) return 'Office';
+  if (/\brestaurant\b/i.test(desc)) return 'Restaurant 30 Seats or Less';
+  if (/\b(industrial|warehouse|manufacturing)\b/i.test(desc)) return 'Industrial';
+  if (/\bretail\b/i.test(desc) || /\bstore\b/i.test(desc) || /\bshop\b/i.test(desc)) return 'Retail Store';
+
+  // 5. Laneway / rear-yard / garden suite.
+  if (/\b(laneway|garden|rear[\s-]?yard)\s+(suite|house|home)\b/i.test(desc)) return 'Laneway / Rear Yard Suite';
+
+  // 6. Converted house — sequential residential conversion to >1 unit.
+  if (/\bconvert(?:ed|ing|sion)?\b/i.test(desc) && DWELLING_CONTEXT.test(desc) &&
+      (/\b(units?|apartments?|rooming|multiple)\b/i.test(desc) || (extractUnitCount(desc) ?? 0) >= 2)) {
+    return 'Converted House';
+  }
+
+  // 7. Apartment / condominium building.
+  if (/\b(apartment|condo(?:minium)?)\b/i.test(desc)) return 'Apartment Building';
+
+  // 8. Unit-count × dwelling form.
+  const units = extractUnitCount(desc);
+  const stacked = /\bstacked\s+town\s*house/i.test(desc);
+  const townhouse = /\b(town\s*house|town\s*home|row\s*house)\b/i.test(desc);
+  const semi = /\bsemi[\s-]?detached\b/i.test(desc);
+  // "detached" must sit within a short window of a dwelling noun — a proximity match
+  // (not bare \bdetached\b) so "detached garage" is excluded WITHOUT also killing
+  // "detached dwelling" when both appear (e.g. "...detached dwelling and a detached garage").
+  const detached = /\bdetached\b[\s\w-]{0,30}?\b(dwelling|house|home|residence)\b/i.test(desc);
+
+  if (stacked) return 'Stacked Townhouses';
+  if (townhouse) return 'SFD - Townhouse';
+
+  if (units !== null) {
+    if (units >= 5) return 'Multiple Unit Building';
+    if (units >= 3) return '3+ Unit - Detached';
+    if (units === 2) return semi ? '2 Unit - Semi-detached' : '2 Unit - Detached';
+    // units === 1 → fall through to form-only
+  } else if (/\b(multiplex|multiple\s+units?)\b/i.test(desc)) {
+    // keyword-only fallback — fires ONLY when there is no explicit plex/unit count,
+    // so "duplex within the multiplex site" stays 2 Unit (the explicit count wins).
+    return 'Multiple Unit Building';
+  }
+
+  if (semi) return 'SFD - Semi-Detached';
+  if (detached) return 'SFD - Detached';
+
+  return null;
+}
+
 // ─────────────────────────── Pure classifier ─────────────────────────────────
 
 /**
  * Classify a CoA description into the canonical (coa_type_class, project_type,
- * scope_tags) triple per Spec 42 §6.6.D enums.
+ * scope_tags, structure_type) tuple per Spec 42 §6.6.D enums + Spec 83 §3.A vocab.
  */
 export function classifyCoaScope(input: ClassifyCoaScopeInput): ClassifyCoaScopeOutput {
   const desc = (input?.description ?? '').toString().trim();
   if (!desc) {
-    return { coa_type_class: null, project_type: null, scope_tags: null };
+    return { coa_type_class: null, project_type: null, scope_tags: null, structure_type: null };
   }
 
   // ─── coa_type_class ──────────────────────────────────────────────────
@@ -292,5 +422,7 @@ export function classifyCoaScope(input: ClassifyCoaScopeInput): ClassifyCoaScope
   // NULL sentinel (not empty array) when no keyword matched.
   const scopeTags: string[] | null = tagSet.size > 0 ? Array.from(tagSet).sort() : null;
 
-  return { coa_type_class: coaTypeClass, project_type: projectType, scope_tags: scopeTags };
+  const structure_type = classifyStructureType(desc);
+
+  return { coa_type_class: coaTypeClass, project_type: projectType, scope_tags: scopeTags, structure_type };
 }

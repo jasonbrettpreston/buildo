@@ -190,6 +190,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
           -- fix #5 — NOT a -1 sentinel, unlike the permits chain), so no -1 exclusion is needed.
           COUNT(*) FILTER (WHERE neighbourhood_id IS NOT NULL)                            AS neighbourhood_id_pop,
           COUNT(*) FILTER (WHERE scope_tags IS NOT NULL)                                  AS scope_tags_pop,
+          COUNT(*) FILTER (WHERE structure_type IS NOT NULL)                              AS structure_type_pop,
           COUNT(*) FILTER (WHERE scope_classified_at IS NOT NULL)                         AS scope_classified_pop,
           COUNT(*) FILTER (WHERE trade_classified_at IS NOT NULL)                         AS trade_classified_pop,
           COUNT(*) FILTER (WHERE cost_classified_at IS NOT NULL)                          AS cost_classified_pop,
@@ -328,6 +329,11 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_classified_at', parseInt(ca.scope_classified_pop, 10), coaTotal));
+      // structure_type is DESCRIPTION-derived (Spec 83 §3.A archetype via classify_coa_scope, NOT
+      // parcel_buildings — see Spec 42 §6.6.D correction). Denominator = coaTotal (every CoA with a
+      // description is eligible). Calibrated 45/35: the description-only ceiling is ~52% (measured),
+      // so the Spec-42 ≥80% target was recalibrated — gating at 80 would be a permanent false-FAIL.
+      rows.push(calibratedRow('CoA Step 5 — classify_coa_scope', 'coa_applications.structure_type', parseInt(ca.structure_type_pop, 10), coaTotal, 45, 35));
 
       // Step 6 — classify_coa_trades (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 6 — classify_coa_trades', 'coa_applications.trade_classified_at', parseInt(ca.trade_classified_pop, 10), coaTotal));
