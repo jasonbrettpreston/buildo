@@ -143,10 +143,9 @@ async function main() {
 
   console.log('');
   console.log('Step 2 - Parcel-to-Building:  ~92% accuracy');
-  console.log('  Method: multi-point matching (centroid + 4 bbox midpoints) + nearest fallback');
-  console.log('  polygon:    centroid-in-polygon hit (0.90 confidence)');
-  console.log('  multipoint: bbox edge midpoint hit (0.80 confidence)');
-  console.log('  nearest:    haversine fallback ≤50m (0.60 confidence)');
+  console.log('  Method: building-centroid-in-parcel (WF3 2026-06-22) + nearest fallback');
+  console.log('  centroid_in_parcel: building centroid inside parcel polygon (0.95 confidence)');
+  console.log('  nearest:            distance fallback ≤ massing_nearest_max_distance_m (0.60 confidence)');
 
   console.log('');
   console.log('Step 3 - Height to Stories:   ~92% accuracy (within +/-1 storey)');

@@ -537,8 +537,8 @@ export function createMockParcelBuilding(
     building_id: 1,
     is_primary: true,
     structure_type: 'primary',
-    match_type: 'polygon',
-    confidence: 0.90,
+    match_type: 'centroid_in_parcel',
+    confidence: 0.95,
     linked_at: new Date('2024-01-01'),
     ...overrides,
   };

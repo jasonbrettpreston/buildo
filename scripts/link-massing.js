@@ -24,7 +24,7 @@
  *
  * Usage: node scripts/link-massing.js [--full]
  *
- * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/56_source_massing.md
  */
 const pipeline = require('./lib/pipeline');
 const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
@@ -210,23 +210,55 @@ pipeline.run('link-massing', async (pool) => {
   const grid = new Map(); // empty unless JS fallback runs
 
   if (hasPostGIS) {
-    pipeline.log.info('[link-massing]', 'Using PostGIS ST_Contains (fast path — no in-memory grid)');
+    pipeline.log.info('[link-massing]', 'Using PostGIS building-centroid-in-parcel (fast path — no in-memory grid)');
+
+    // WF3 2026-06-22: the new predicate joins parcels.geom (the OLD path used the centroid_lat/lng
+    // columns only). A GiST index on parcels.geom is required or the per-batch join degrades to a
+    // 486K seq-scan. Mirror enrich-parcels.assertPreconditions — HALT with an actionable error.
+    const parcelGistCheck = await pool.query(
+      `SELECT 1 FROM pg_indexes WHERE tablename = 'parcels' AND indexdef ILIKE '%gist%' AND indexdef ILIKE '%geom%' LIMIT 1`
+    );
+    if (parcelGistCheck.rows.length === 0) {
+      throw new Error('[link-massing] no GiST index on parcels.geom (expected idx_parcels_geom_gist, migration 039) — refusing the building-centroid-in-parcel join (would seq-scan 486K parcels)');
+    }
 
     const baseFilter = 'centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL';
     const incrementalFilter = FULL_MODE
       ? ''
       : ' AND NOT EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = parcels.id)';
+
+    // FULL-mode stale-link cleanup (parity with the JS path lines below). The PostGIS path
+    // historically lacked this — a full re-link left ghost rows for parcels that matched under the
+    // OLD (parcel-centroid-in-building) predicate but not the new one. ONE DELETE, before the loop,
+    // in a transaction, scoped identically to the parcels being re-evaluated.
+    if (FULL_MODE) {
+      const ghostsRemoved = await pipeline.withTransaction(pool, async (client) => {
+        const result = await client.query(
+          `DELETE FROM parcel_buildings WHERE parcel_id IN (SELECT id FROM parcels WHERE ${baseFilter})`
+        );
+        return result.rowCount || 0;
+      });
+      if (ghostsRemoved > 0) {
+        pipeline.log.info('[link-massing]', `Full mode: cleared ${ghostsRemoved.toLocaleString()} existing links for re-evaluation`);
+      }
+    }
+
     const countResult = await pool.query(
       `SELECT COUNT(*) as total FROM parcels WHERE ${baseFilter}${incrementalFilter}`
     );
     const totalParcels = safeParsePositiveInt(countResult.rows[0].total, 'total');
     pipeline.log.info('[link-massing]', `Parcels to process: ${totalParcels.toLocaleString()}`);
 
+    // Nearest-fallback bbox prefilter span in DEGREES (≥ the metre distance at Toronto's latitude;
+    // /78000 over-covers E-W per the enrich-parcels precedent) — MANDATORY before the geography
+    // ST_DWithin/ST_Distance or it runs a nested-loop over all footprints (tasks/lessons.md).
+    const nearestDegSpan = nearestMaxDistanceM / 78000.0;
+
     // Process in keyset-paginated batches
     let lastId = 0;
     while (true) {
       const parcelBatch = await pool.query(
-        `SELECT id, centroid_lat, centroid_lng FROM parcels
+        `SELECT id FROM parcels
          WHERE ${baseFilter}${incrementalFilter} AND id > $2
          ORDER BY id ASC
          LIMIT $1`,
@@ -236,26 +268,30 @@ pipeline.run('link-massing', async (pool) => {
       lastId = parcelBatch.rows[parcelBatch.rows.length - 1].id;
 
       const parcelIds = parcelBatch.rows.map(p => p.id);
-      const parcelLats = parcelBatch.rows.map(p => safeParseFloat(p.centroid_lat, 'centroid_lat'));
-      const parcelLngs = parcelBatch.rows.map(p => safeParseFloat(p.centroid_lng, 'centroid_lng'));
 
-      // ST_Contains: find buildings whose polygon contains the parcel centroid
+      // Building-centroid-in-parcel (WF3 fix): the building's centre-of-mass sits on the lot.
+      // bf.geom && p.geom is the GiST bbox prefilter; ST_Contains(p.geom, building_centroid) is exact.
+      // Everything stays SRID 4326 (parcels.geom + building_footprints.geom both 4326). p.geom IS NOT
+      // NULL guards the rare ungeometried parcel (ST_Contains(NULL,…) → NULL → silently dropped anyway).
       const matchResult = await pool.query(
-        `SELECT v.pid AS parcel_id, bf.id AS building_id, bf.footprint_area_sqm
-         FROM (SELECT unnest($1::int[]) AS pid, unnest($2::float[]) AS lat, unnest($3::float[]) AS lng) v
-         JOIN building_footprints bf ON bf.geom IS NOT NULL
-           AND ST_Contains(bf.geom, ST_SetSRID(ST_MakePoint(v.lng, v.lat), 4326))`,
-        [parcelIds, parcelLats, parcelLngs]
+        `SELECT p.id AS parcel_id, bf.id AS building_id, bf.footprint_area_sqm
+         FROM parcels p
+         JOIN building_footprints bf
+           ON bf.geom && p.geom
+           AND ST_Contains(p.geom, ST_SetSRID(ST_MakePoint(bf.centroid_lng, bf.centroid_lat), 4326))
+         WHERE p.id = ANY($1::int[]) AND p.geom IS NOT NULL`,
+        [parcelIds]
       );
 
-      // Upsert matched parcel-building links using flushInsertBatch
-      // Group by parcel for deterministic primary assignment (mirrors JS fallback path)
+      const matchedParcelIds = new Set(matchResult.rows.map(r => r.parcel_id));
+
+      // Upsert matched parcel-building links using flushInsertBatch.
+      // Group by parcel for deterministic primary assignment (mirrors JS fallback path).
       if (matchResult.rows.length > 0) {
         const insertParams = [];
         const insertValues = [];
         let paramIdx = 1;
 
-        // Group buildings by parcel_id
         const byParcel = new Map();
         for (const r of matchResult.rows) {
           const pid = r.parcel_id;
@@ -266,8 +302,8 @@ pipeline.run('link-massing', async (pool) => {
           });
         }
 
-        // Clear is_primary for affected parcels before upserting — prevents
-        // partial unique index violation when primary shifts to a different building.
+        // Clear is_primary for affected parcels before upserting — prevents partial unique index
+        // violation (mig 081 idx_parcel_buildings_one_primary) when primary shifts to a different building.
         const parcelIdArray = [...byParcel.keys()];
         await pool.query(
           `UPDATE parcel_buildings SET is_primary = false WHERE parcel_id = ANY($1) AND is_primary = true`,
@@ -279,7 +315,6 @@ pipeline.run('link-massing', async (pool) => {
           // (matches migration 081 repair ORDER BY and JS fallback tie-breaker)
           buildings.sort((a, b) => b.footprint_area_sqm - a.footprint_area_sqm || a.building_id - b.building_id);
           const allAreas = buildings.map(b => b.footprint_area_sqm);
-          const maxArea = Math.max(...allAreas);
           const primaryBuildingId = buildings[0].building_id;
 
           for (const b of buildings) {
@@ -290,7 +325,9 @@ pipeline.run('link-massing', async (pool) => {
             const isPrimary = structureType === 'primary';
 
             insertParams.push(`($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}::timestamptz)`);
-            insertValues.push(parcelId, b.building_id, isPrimary, structureType, 'centroid_in_parcel', 0.90, RUN_AT); // §47 §6.1 — linked_at on INSERT
+            insertValues.push(parcelId, b.building_id, isPrimary, structureType, 'centroid_in_parcel', 0.95, RUN_AT); // §47 §6.1 — linked_at on INSERT
+            buildingsMatched++;
+            centroidInParcelMatches++;
           }
         }
 
@@ -299,8 +336,40 @@ pipeline.run('link-massing', async (pool) => {
         parcelsLinked += byParcel.size;
       }
 
+      // Nearest-fallback (parity with the JS path): parcels with no building-centroid inside get the
+      // single nearest footprint within massing_nearest_max_distance_m. DISTINCT ON picks the nearest;
+      // bf.geom && ST_Expand(p.geom, deg) prefilters on the GiST index before the geography distance.
+      const unmatchedIds = parcelIds.filter(id => !matchedParcelIds.has(id));
+      if (unmatchedIds.length > 0) {
+        const nearestResult = await pool.query(
+          `SELECT DISTINCT ON (p.id) p.id AS parcel_id, bf.id AS building_id, bf.footprint_area_sqm
+           FROM parcels p
+           JOIN building_footprints bf
+             ON bf.geom && ST_Expand(p.geom, $2)
+             AND ST_DWithin(p.geom::geography, bf.geom::geography, $3)
+           WHERE p.id = ANY($1::int[]) AND p.geom IS NOT NULL
+           ORDER BY p.id, ST_Distance(p.geom::geography, bf.geom::geography) ASC`,
+          [unmatchedIds, nearestDegSpan, nearestMaxDistanceM]
+        );
+        if (nearestResult.rows.length > 0) {
+          const nInsertParams = [];
+          const nInsertValues = [];
+          let nIdx = 1;
+          for (const r of nearestResult.rows) {
+            // One nearest building per parcel → always primary (these parcels had no centroid match,
+            // and FULL pre-clear / incremental NOT-EXISTS means no pre-existing primary to conflict).
+            nInsertParams.push(`($${nIdx++}, $${nIdx++}, $${nIdx++}, $${nIdx++}, $${nIdx++}, $${nIdx++}, $${nIdx++}::timestamptz)`);
+            nInsertValues.push(r.parcel_id, r.building_id, true, 'primary', 'nearest', 0.60, RUN_AT);
+            buildingsMatched++;
+            nearestMatches++;
+          }
+          buildingsUpserted += await flushInsertBatch(pool, nInsertParams, nInsertValues);
+          parcelsLinked += nearestResult.rows.length;
+          for (const r of nearestResult.rows) matchedParcelIds.add(r.parcel_id);
+        }
+      }
+
       processed += parcelBatch.rows.length;
-      const matchedParcelIds = new Set(matchResult.rows.map(r => r.parcel_id));
       noMatch += parcelBatch.rows.filter(p => !matchedParcelIds.has(p.id)).length;
 
       if (processed % 10000 === 0 || processed >= totalParcels) {

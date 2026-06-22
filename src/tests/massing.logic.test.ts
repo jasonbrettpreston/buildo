@@ -459,3 +459,65 @@ describe('link-massing.js PostGIS detection guard', () => {
     expect(source).toMatch(/pipeline\.log\.warn.*link-massing/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// link-massing.js PostGIS predicate flip (WF3 2026-06-22, Spec 56)
+// The PostGIS fast path must test BUILDING-centroid-inside-PARCEL (not the old
+// backwards parcel-centroid-inside-building), matching the already-correct JS
+// fallback. Regression-locks the fix + its mandatory companions.
+// ---------------------------------------------------------------------------
+
+describe('link-massing.js building-centroid-in-parcel (WF3 fix)', () => {
+  const scriptSource = () =>
+    fs.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.js'), 'utf-8');
+
+  it('PostGIS path tests building-centroid-in-parcel, NOT the old parcel-centroid-in-building', () => {
+    const source = scriptSource();
+    // New (correct): the building centroid is tested inside the parcel polygon.
+    expect(source).toMatch(/ST_Contains\(\s*p\.geom,\s*ST_SetSRID\(ST_MakePoint\(bf\.centroid_lng,\s*bf\.centroid_lat\)/);
+    // Old (backwards) must be gone — parcel centroid tested inside the building polygon.
+    expect(source).not.toMatch(/ST_Contains\(bf\.geom,\s*ST_SetSRID\(ST_MakePoint\(v\.lng,\s*v\.lat\)/);
+    // bbox prefilter on the GiST index.
+    expect(source).toMatch(/bf\.geom\s*&&\s*p\.geom/);
+  });
+
+  it('aligns confidence to 0.95 across both paths (no 0.90 centroid_in_parcel insert)', () => {
+    const source = scriptSource();
+    expect(source).toMatch(/'centroid_in_parcel',\s*0\.95/);
+    expect(source).not.toMatch(/'centroid_in_parcel',\s*0\.90/);
+  });
+
+  it('asserts a GiST index on parcels.geom before the join (precondition HALT)', () => {
+    const source = scriptSource();
+    expect(source).toMatch(/pg_indexes[\s\S]*tablename\s*=\s*'parcels'[\s\S]*gist/i);
+    expect(source).toMatch(/refusing the building-centroid-in-parcel join/);
+  });
+
+  it('PostGIS path has the FULL-mode stale-link cleanup (parity with the JS path)', () => {
+    const source = scriptSource();
+    // The PostGIS branch (before the in-memory grid `else`) must DELETE stale links in FULL mode.
+    const postgisBranch = source.slice(
+      source.indexOf('Using PostGIS building-centroid-in-parcel'),
+      source.indexOf('Phase 1 (JS fallback)'),
+    );
+    expect(postgisBranch).toMatch(/DELETE FROM parcel_buildings WHERE parcel_id IN \(SELECT id FROM parcels/);
+    expect(postgisBranch).toMatch(/FULL_MODE/);
+  });
+
+  it('PostGIS nearest-fallback bbox-prefilters before the geography ST_DWithin (lessons.md runaway guard)', () => {
+    const source = scriptSource();
+    expect(source).toMatch(/bf\.geom\s*&&\s*ST_Expand\(p\.geom/);
+    expect(source).toMatch(/ST_DWithin\(p\.geom::geography,\s*bf\.geom::geography/);
+    expect(source).toMatch(/DISTINCT ON \(p\.id\)/);
+  });
+
+  it('PostGIS path increments buildings_matched + centroid counters (honest telemetry)', () => {
+    const source = scriptSource();
+    const postgisBranch = source.slice(
+      source.indexOf('Using PostGIS building-centroid-in-parcel'),
+      source.indexOf('Phase 1 (JS fallback)'),
+    );
+    expect(postgisBranch).toMatch(/buildingsMatched\+\+/);
+    expect(postgisBranch).toMatch(/centroidInParcelMatches\+\+/);
+  });
+});
