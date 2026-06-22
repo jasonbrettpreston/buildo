@@ -64,7 +64,8 @@ describe('max-build — column arrays (MB-1 regression lock)', () => {
     expect(mb.MAX_BUILD_COLS).toContain('max_buildable_footprint_sqm');
     expect(mb.MAX_BUILD_COLS).toContain('max_build_confidence');
     expect(mb.MAX_BUILD_COLS).toContain('envelope_constraint_reason');
-    expect(mb.MAX_BUILD_COLS.length).toBe(16);
+    expect(mb.MAX_BUILD_COLS.length).toBe(17); // 16 + max_build_stories_basis (Phase 2 storey-height refinement)
+    expect(mb.MAX_BUILD_COLS).toContain('max_build_stories_basis');
     expect(mb.MAX_BUILD_BOOL_COLS).toEqual(['garden_suite_fits', 'envelope_constrained']);
     for (const b of mb.MAX_BUILD_BOOL_COLS) expect(mb.MAX_BUILD_COLS).toContain(b);
   });

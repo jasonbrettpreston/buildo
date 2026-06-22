@@ -53,6 +53,26 @@ const FB_PRODUCTS = [
   'temp-fencing-rental', 'surveying', 'tree-removal', 'site-security',
 ];
 
+/**
+ * Spec 65 §6 (Phase 2 B1) — archetype → parcel geom_basis bridge: which scenario field supplies this
+ * archetype's floor area for the cost model (Spec 83 Step B). `null` = not floor-area-proportional
+ * (ENV/MEC/SITE) or deferred (GAR → Phase 3). Mirrors scripts/lib/archetypes.js ARCHETYPE_GEOM_BASIS
+ * (dual-path). Additive — does not touch ARCHETYPE_BUNDLES.
+ */
+export const ARCHETYPE_GEOM_BASIS: Record<ArchetypeCode, string | null> = {
+  FB: 'max_buildable_gfa_sqm',
+  ADD: 'cur_storey_gfa_sqm',
+  BAS: 'cur_basement_gfa_sqm',
+  KIT: 'cur_est_kitchen_gfa_sqm',
+  BTH: 'cur_est_bath_gfa_sqm',
+  INT: 'cur_interior_reno_gfa_sqm',
+  LANE: 'max_garden_suite_gfa_sqm',
+  ENV: null,
+  MEC: null,
+  SITE: null,
+  GAR: null,
+};
+
 /** Spec 80 §5.B.5 — each archetype's implied {trades, products}. */
 export const ARCHETYPE_BUNDLES: Record<ArchetypeCode, ArchetypeBundle> = {
   FB: { trades: FB_TRADES, products: FB_PRODUCTS },

@@ -217,4 +217,24 @@ function bundleSlugsFor(archetypes, deprecatedSlugs) {
   return { trades: Array.from(trades), products: Array.from(products) };
 }
 
-module.exports = { ARCHETYPE_BUNDLES, deriveArchetypes, bundleSlugsFor };
+// Spec 65 §6 (Phase 2 B1) — the archetype → parcel geom_basis bridge: which scenario field supplies
+// this archetype's floor area for the cost model (Spec 83 Step B). Additive map (does NOT touch the
+// bundle objects → bundle-content + dual-path parity tests unaffected). `null` = not floor-area-
+// proportional (ENV/MEC/SITE — Spec 83 §3.A(d)) or deferred (GAR → Phase 3). LANE → garden-suite GFA
+// (shipped; laneway field arrives Phase 3). FB+COA is a B2 archetype (own Spec-80 WF) — its field
+// max_newbuild_coa_gfa_sqm exists but has no code yet.
+const ARCHETYPE_GEOM_BASIS = {
+  FB: 'max_buildable_gfa_sqm',
+  ADD: 'cur_storey_gfa_sqm',
+  BAS: 'cur_basement_gfa_sqm',
+  KIT: 'cur_est_kitchen_gfa_sqm',
+  BTH: 'cur_est_bath_gfa_sqm',
+  INT: 'cur_interior_reno_gfa_sqm',
+  LANE: 'max_garden_suite_gfa_sqm',
+  ENV: null,
+  MEC: null,
+  SITE: null,
+  GAR: null,
+};
+
+module.exports = { ARCHETYPE_BUNDLES, ARCHETYPE_GEOM_BASIS, deriveArchetypes, bundleSlugsFor };

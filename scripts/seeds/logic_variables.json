@@ -13,6 +13,34 @@
     "min": 0,
     "max": 100
   },
+  "reno_coa_uplift_pct": {
+    "default": 0.05,
+    "type": "number",
+    "description": "Spec 65 §6 (Phase 2) — CoA variance uplift on the by-law max-build GFA: max_newbuild_coa_gfa_sqm = max_buildable_gfa_sqm × (1 + this). CONSUMED by enrich-parcels.js (scenario pass). Operator-tunable calibration heuristic.",
+    "min": 0,
+    "max": 1
+  },
+  "reno_kitchen_gfa_pct": {
+    "default": 0.15,
+    "type": "number",
+    "description": "Spec 65 §6 (Phase 2) — kitchen-reno floor area as a fraction of existing_footprint_sqm (cur_est_kitchen_gfa_sqm). CONSUMED by enrich-parcels.js. Operator-tunable.",
+    "min": 0.01,
+    "max": 1
+  },
+  "reno_bath_gfa_pct": {
+    "default": 0.07,
+    "type": "number",
+    "description": "Spec 65 §6 (Phase 2) — bathroom-reno floor area as a fraction of existing_footprint_sqm (cur_est_bath_gfa_sqm). CONSUMED by enrich-parcels.js. Operator-tunable.",
+    "min": 0.01,
+    "max": 1
+  },
+  "storey_height_m": {
+    "default": 3.0,
+    "type": "number",
+    "description": "Spec 65 §6 (Phase 2) — residential storey height (metres) for the height→storey translation (max_build_stories = round(bylaw_max_height_m / storey_height) when the by-law gives no storey count). Non-residential zones use a taller inline value. CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 2,
+    "max": 6
+  },
   "los_multiplier_bid": {
     "default": 2.5,
     "type": "number",

@@ -9,6 +9,20 @@
 
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs } = require('./lib/config-loader');
+const { z } = require('zod');
+
+// §R4 — logic-var schema (validated against RESOLVED post-default values in main()). Covers the
+// pre-existing road_overlay_distance_m + the Phase-2 externalized reno factors + storey height.
+// Bounds MUST mirror scripts/seeds/logic_variables.json (min/max) so a bad operator override FAILs
+// loudly here (SC-3) rather than producing physically-nonsensical GFAs/storey counts. .strict() so a
+// mistyped key (e.g. reno_coa_uplift_percent) raises instead of silently falling back to the default.
+const LOGIC_VARS_SCHEMA = z.object({
+  road_overlay_distance_m: z.coerce.number().finite().min(0).max(100),
+  reno_coa_uplift_pct: z.coerce.number().finite().min(0).max(1),
+  reno_kitchen_gfa_pct: z.coerce.number().finite().min(0.01).max(1),
+  reno_bath_gfa_pct: z.coerce.number().finite().min(0.01).max(1),
+  storey_height_m: z.coerce.number().finite().min(2).max(6),
+}).strict();
 const {
   PRECEDENCE_RULES,
   AMBIGUOUS_DOMINANT_SHARE_MAX,
@@ -334,14 +348,14 @@ async function enrichParcels(client, opts = {}) {
 // (protects the 36-col regression lock + idempotency fences). Runs in the SAME transaction
 // AFTER enrichParcels, so parcel_zoning_enrich (ON COMMIT DROP) is still visible for scoping.
 // ---------------------------------------------------------------------------
-function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false }) {
+function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M }) {
   // SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only.
   // Incremental: first-time (lot_size_confidence NULL) OR a parcel whose zoning was re-enriched
   // this run (present in parcel_zoning_enrich). --full recomputes all (use after a massing/lot reload).
   const incremental = full
     ? 'TRUE'
     : `(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id))`;
-  const { LOT_TOLERANCE: tol, LOT_MIN_SQM, LOT_MAX_SQM, STOREY_HEIGHT_M, RAVINE_SETBACK_M,
+  const { LOT_TOLERANCE: tol, LOT_MIN_SQM, LOT_MAX_SQM, RAVINE_SETBACK_M,
     GARDEN_SUITE_MIN_LOT_SQM, GARDEN_SUITE_MIN_REAR_YARD_M, GARDEN_SUITE_MAX_GFA_SQM } = mb;
   return `
 CREATE TEMP TABLE parcel_max_build ON COMMIT DROP AS
@@ -427,7 +441,7 @@ geo AS (
     NULLIF(round(ST_Area(ST_Buffer(geom::geography, -(side_setback + ravine_red)))::numeric, 2), 0) AS buffer_area,
     CASE WHEN bylaw_max_coverage_pct IS NOT NULL THEN round(lot_size_sqm * bylaw_max_coverage_pct / 100.0, 2) END AS coverage_cap,
     CASE WHEN bylaw_max_stories IS NOT NULL THEN GREATEST(1, bylaw_max_stories)
-         WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN GREATEST(1, round(bylaw_max_height_m / ${STOREY_HEIGHT_M})::int)
+         WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN GREATEST(1, round(bylaw_max_height_m / (${mb.buildStoreyHeightCase('zoning_class', storeyHeight)}))::int)
          ELSE NULL END AS stories_calc
   FROM box
 ),
@@ -456,6 +470,11 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
        WHEN heritage THEN existing_stories
        ELSE stories_calc END AS max_build_stories,
+  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+       WHEN heritage THEN 'existing'
+       WHEN bylaw_max_stories IS NOT NULL THEN 'bylaw'
+       WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN 'derived'
+       ELSE NULL END AS max_build_stories_basis,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
        WHEN heritage THEN 'heritage_existing' ELSE 'rect_approx' END AS max_build_basis,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
@@ -510,9 +529,9 @@ WHERE p.parcel_id = e.parcel_id
 }
 
 async function enrichMaxBuild(client, opts = {}) {
-  const { scopeWhere = 'TRUE', full = false } = opts;
+  const { scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M } = opts;
   await client.query('DROP TABLE IF EXISTS parcel_max_build');
-  await client.query(buildMaxBuildSql({ scopeWhere, full }));
+  await client.query(buildMaxBuildSql({ scopeWhere, full, storeyHeight }));
   const stats = await client.query(`
     SELECT
       COUNT(*)::int AS scoped,
@@ -542,15 +561,21 @@ async function enrichMaxBuild(client, opts = {}) {
 // CTE aggregates non-primary count/Σ; greenspace = lot − primary − other (no ST_Union — perf).
 // Runs in the SAME txn after enrichMaxBuild, scoped to parcel_max_build (the incremental set).
 // ---------------------------------------------------------------------------
-function buildExistingStructureSql({ scopeWhere = 'TRUE', full = false }) {
+function buildExistingStructureSql({ scopeWhere = 'TRUE', full = false, reno = {} }) {
   const incremental = full
     ? 'TRUE'
     : '(p.existing_footprint_sqm IS NULL OR EXISTS (SELECT 1 FROM parcel_max_build z WHERE z.parcel_id = p.parcel_id))';
   const confMin = mb.EXISTING_CONFIDENCE_HIGH_MIN;
+  // Phase-2 scenario factors (externalized logic-vars; defaults from max-build.js).
+  const coaUplift = Number(reno.coaUplift ?? mb.RENO_COA_UPLIFT_PCT_DEFAULT);
+  const kitchenPct = Number(reno.kitchenPct ?? mb.RENO_KITCHEN_GFA_PCT_DEFAULT);
+  const bathPct = Number(reno.bathPct ?? mb.RENO_BATH_GFA_PCT_DEFAULT);
   return `
 CREATE TEMP TABLE parcel_existing_struct ON COMMIT DROP AS
 WITH scope AS (
-  SELECT p.id AS pid, p.parcel_id, p.geom, p.lot_size_sqm::numeric AS lot_size_sqm
+  -- max_buildable_gfa_sqm + max_build_stories were written by the max-build pass earlier in THIS txn.
+  SELECT p.id AS pid, p.parcel_id, p.geom, p.lot_size_sqm::numeric AS lot_size_sqm,
+         p.max_buildable_gfa_sqm::numeric AS max_buildable_gfa_sqm, p.max_build_stories
   FROM parcels p
   WHERE (${scopeWhere}) AND p.geom IS NOT NULL AND ${incremental}
 ),
@@ -596,7 +621,15 @@ SELECT s.pid, s.parcel_id,
   CASE WHEN pr.pid IS NOT NULL AND pr.p_footprint IS NOT NULL THEN
     ROUND(GREATEST(0, COALESCE(s.lot_size_sqm, ST_Area(s.geom::geography)::numeric)
                       - ROUND(pr.p_footprint, 2) - ROUND(COALESCE(a.other_sqm, 0), 2)), 2)
-  END AS existing_greenspace_sqm
+  END AS existing_greenspace_sqm,
+  -- Phase 2 scenario GFAs (pure arithmetic; max_newbuild_coa off max-build, the rest off existing).
+  CASE WHEN s.max_buildable_gfa_sqm IS NOT NULL THEN ROUND(s.max_buildable_gfa_sqm * (1 + ${coaUplift}), 2) END AS max_newbuild_coa_gfa_sqm,
+  CASE WHEN pr.p_footprint IS NOT NULL THEN ROUND(pr.p_footprint, 2) END AS cur_basement_gfa_sqm,
+  CASE WHEN pr.p_footprint IS NOT NULL AND s.max_build_stories IS NOT NULL AND pr.p_stories IS NOT NULL
+       THEN ROUND(pr.p_footprint * GREATEST(0, s.max_build_stories - pr.p_stories), 2) END AS cur_storey_gfa_sqm,
+  CASE WHEN pr.p_footprint IS NOT NULL THEN ROUND(pr.p_footprint * GREATEST(1, COALESCE(pr.p_stories, 1)), 2) END AS cur_interior_reno_gfa_sqm,
+  CASE WHEN pr.p_footprint IS NOT NULL THEN ROUND(pr.p_footprint * ${kitchenPct}, 2) END AS cur_est_kitchen_gfa_sqm,
+  CASE WHEN pr.p_footprint IS NOT NULL THEN ROUND(pr.p_footprint * ${bathPct}, 2) END AS cur_est_bath_gfa_sqm
 FROM scope s
 LEFT JOIN prim pr ON pr.pid = s.pid
 LEFT JOIN allb a ON a.pid = s.pid
@@ -618,10 +651,27 @@ WHERE p.parcel_id = e.parcel_id
   );`;
 }
 
+// Sibling UPDATE for the Phase-2 scenario GFAs — reads the SAME parcel_existing_struct temp table
+// (which now also SELECTs SCENARIO_COLS); distinct array + own IS-DISTINCT-FROM guard so the
+// EXISTING_COLS update stays byte-stable.
+function buildScenarioUpdateSql() {
+  const cols = mb.SCENARIO_COLS;
+  const setList = cols.map((c) => `${c} = e.${c}`).join(',\n    ');
+  const guard = cols.map((c) => `p.${c} IS DISTINCT FROM e.${c}`).join('\n      OR ');
+  return `
+UPDATE parcels p SET
+    ${setList}
+FROM parcel_existing_struct e
+WHERE p.parcel_id = e.parcel_id
+  AND (
+      ${guard}
+  );`;
+}
+
 async function enrichExistingStructure(client, opts = {}) {
-  const { scopeWhere = 'TRUE', full = false } = opts;
+  const { scopeWhere = 'TRUE', full = false, reno = {} } = opts;
   await client.query('DROP TABLE IF EXISTS parcel_existing_struct');
-  await client.query(buildExistingStructureSql({ scopeWhere, full }));
+  await client.query(buildExistingStructureSql({ scopeWhere, full, reno }));
   const stats = await client.query(`
     SELECT
       COUNT(*)::int AS scoped,
@@ -631,10 +681,17 @@ async function enrichExistingStructure(client, opts = {}) {
       COUNT(*) FILTER (WHERE existing_structure_confidence = 'high')::int AS conf_high,
       COUNT(*) FILTER (WHERE existing_structure_confidence = 'low')::int  AS conf_low,
       COUNT(*) FILTER (WHERE existing_other_structures_count > 0)::int AS with_other,
-      COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)::int AS with_greenspace
+      COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)::int AS with_greenspace,
+      COUNT(*) FILTER (WHERE max_newbuild_coa_gfa_sqm IS NOT NULL)::int  AS with_coa,
+      COUNT(*) FILTER (WHERE cur_basement_gfa_sqm IS NOT NULL)::int      AS with_basement,
+      COUNT(*) FILTER (WHERE cur_storey_gfa_sqm IS NOT NULL)::int        AS with_storey,
+      COUNT(*) FILTER (WHERE cur_interior_reno_gfa_sqm IS NOT NULL)::int AS with_interior,
+      COUNT(*) FILTER (WHERE cur_est_kitchen_gfa_sqm IS NOT NULL)::int   AS with_kitchen,
+      COUNT(*) FILTER (WHERE cur_est_bath_gfa_sqm IS NOT NULL)::int      AS with_bath
     FROM parcel_existing_struct`);
   const upd = await client.query(buildExistingStructureUpdateSql());
-  return { ...stats.rows[0], updated: upd.rowCount };
+  const updScenario = await client.query(buildScenarioUpdateSql());
+  return { ...stats.rows[0], updated: upd.rowCount, scenarioUpdated: updScenario.rowCount };
 }
 
 // ---------------------------------------------------------------------------
@@ -653,7 +710,23 @@ async function main(pool) {
       pipeline.log.warn(TAG, `config load failed, using defaults: ${err.message}`);
       return { logicVars: {} };
     });
-    const roadDist = Number(logicVars?.road_overlay_distance_m ?? 5);
+    // Resolve + validate logic-vars (§R4/R5). Defaults from max-build.js; validate the RESOLVED
+    // values (post-default) so an operator's bad override FAILs loudly without making a fresh/test
+    // DB fragile. Schema covers road_overlay_distance_m too (previously unvalidated).
+    const resolvedVars = {
+      road_overlay_distance_m: Number(logicVars?.road_overlay_distance_m ?? 5),
+      reno_coa_uplift_pct: Number(logicVars?.reno_coa_uplift_pct ?? mb.RENO_COA_UPLIFT_PCT_DEFAULT),
+      reno_kitchen_gfa_pct: Number(logicVars?.reno_kitchen_gfa_pct ?? mb.RENO_KITCHEN_GFA_PCT_DEFAULT),
+      reno_bath_gfa_pct: Number(logicVars?.reno_bath_gfa_pct ?? mb.RENO_BATH_GFA_PCT_DEFAULT),
+      storey_height_m: Number(logicVars?.storey_height_m ?? mb.RESIDENTIAL_STOREY_HEIGHT_M),
+    };
+    const vparse = LOGIC_VARS_SCHEMA.safeParse(resolvedVars);
+    if (!vparse.success) {
+      throw new Error(`${TAG} invalid logic_variables: ${vparse.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')}`);
+    }
+    const roadDist = resolvedVars.road_overlay_distance_m;
+    const storeyHeight = resolvedVars.storey_height_m;
+    const reno = { coaUplift: resolvedVars.reno_coa_uplift_pct, kitchenPct: resolvedVars.reno_kitchen_gfa_pct, bathPct: resolvedVars.reno_bath_gfa_pct };
 
     // Spec 58 §9/§11 consumer protocol — HALTs on missing/failed/no-base producer.
     const contract = await readZoningContract(pool);
@@ -682,10 +755,11 @@ async function main(pool) {
       result = await enrichParcels(client, { scopeWhere: 'TRUE', full, roadDist, runAt, staleOverlays });
       // Second pass — max-build envelope (Spec 65 §). Same txn: parcel_zoning_enrich (ON COMMIT
       // DROP) is still visible for incremental scoping; reads the zoning feed just written above.
-      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full });
-      // Third pass — existing structure (Spec 65 Phase 1). Same txn: parcel_max_build (ON COMMIT
-      // DROP) is still visible for incremental scoping; reads the PRIMARY building (massing).
-      exResult = await enrichExistingStructure(client, { scopeWhere: 'TRUE', full });
+      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight });
+      // Third pass — existing structure (Spec 65 Phase 1) + reno/build scenarios (Phase 2). Same txn:
+      // parcel_max_build (ON COMMIT DROP) visible for scoping; reads the PRIMARY building (massing)
+      // + the max-build cols written above; computes SCENARIO_COLS via a sibling UPDATE.
+      exResult = await enrichExistingStructure(client, { scopeWhere: 'TRUE', full, reno });
     });
 
     const totalParcels = await pool
@@ -740,6 +814,19 @@ async function main(pool) {
     auditRows.push({ metric: 'existing_structure_confidence_low_count', value: exResult.conf_low, status: 'INFO' });
     auditRows.push({ metric: 'existing_other_structures_present_count', value: exResult.with_other, status: 'INFO' });
     auditRows.push({ metric: 'existing_greenspace_count', value: exResult.with_greenspace, status: 'INFO' });
+    // --- Reno/build scenarios (Spec 65 Phase 2) — all INFO; + resolved-factor provenance. ---
+    auditRows.push({ metric: 'max_newbuild_coa_gfa_count', value: exResult.with_coa, status: 'INFO' });
+    auditRows.push({ metric: 'cur_basement_gfa_count', value: exResult.with_basement, status: 'INFO' });
+    auditRows.push({ metric: 'cur_storey_gfa_count', value: exResult.with_storey, status: 'INFO' });
+    auditRows.push({ metric: 'cur_interior_reno_gfa_count', value: exResult.with_interior, status: 'INFO' });
+    auditRows.push({ metric: 'cur_est_kitchen_gfa_count', value: exResult.with_kitchen, status: 'INFO' });
+    auditRows.push({ metric: 'cur_est_bath_gfa_count', value: exResult.with_bath, status: 'INFO' });
+    auditRows.push({ metric: 'scenario_enriched_count', value: exResult.scenarioUpdated, status: 'INFO' });
+    // Resolved-factor provenance (operator sees what % was applied — transparency initiative).
+    auditRows.push({ metric: 'reno_coa_uplift_pct_applied', value: reno.coaUplift, status: 'INFO' });
+    auditRows.push({ metric: 'reno_kitchen_gfa_pct_applied', value: reno.kitchenPct, status: 'INFO' });
+    auditRows.push({ metric: 'reno_bath_gfa_pct_applied', value: reno.bathPct, status: 'INFO' });
+    auditRows.push({ metric: 'storey_height_m_applied', value: storeyHeight, status: 'INFO' });
     auditRows.push({ metric: 'enrich_parcels_duration_ms', value: Date.now() - t0, status: 'INFO' });
 
     pipeline.emitSummary({
@@ -774,13 +861,15 @@ async function main(pool) {
         parcels: ['id', 'parcel_id', 'geom', 'zoning_enriched_at', 'lot_size_sqm', 'frontage_m', 'depth_m',
           'bylaw_max_height_m', 'bylaw_max_stories', 'bylaw_max_fsi', 'bylaw_max_coverage_pct', 'bylaw_standard_setback_m',
           'zoning_class', 'zoning_is_ambiguous', 'is_corner_lot', 'is_through_lot',
-          'is_in_ravine_protection_area', 'is_heritage_designated', 'lot_size_confidence'],
+          'is_in_ravine_protection_area', 'is_heritage_designated', 'lot_size_confidence',
+          // Phase 2 scenario pass reads these max-build outputs from the parcels row (same txn).
+          'max_buildable_gfa_sqm', 'max_build_stories'],
         // Massing join — heritage freeze (max-build pass) + existing-structure pass (Phase 1):
         // existing pass also reads pb.confidence + bf.geom/max_height_m.
         parcel_buildings: ['parcel_id', 'building_id', 'is_primary', 'confidence'],
         building_footprints: ['id', 'footprint_area_sqm', 'estimated_stories', 'max_height_m', 'geom'],
       },
-      { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, ...mb.EXISTING_COLS, 'zoning_enriched_at'] },
+      { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, ...mb.EXISTING_COLS, ...mb.SCENARIO_COLS, 'zoning_enriched_at'] },
     );
 
     pipeline.log.info(TAG, `enriched ${result.updated} parcels (zone_class ${zonePct}%, gaps ${result.gaps}, ambiguous ${result.ambiguous}, conflicts ${result.conflicts})`);
@@ -808,6 +897,7 @@ module.exports = {
   enrichMaxBuild,
   buildExistingStructureSql,
   buildExistingStructureUpdateSql,
+  buildScenarioUpdateSql,
   enrichExistingStructure,
   verdictCascade,
 };

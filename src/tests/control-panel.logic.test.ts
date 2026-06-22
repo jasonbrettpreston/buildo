@@ -61,6 +61,10 @@ describe('deltaExceeds50pct — Delta Guard utility', () => {
 const EXPECTED_LOGIC_VAR_KEYS = [
   'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate
   'road_overlay_distance_m', // Spec 58 — seeded for WF2 enrich-parcels (F-C2)
+  'reno_coa_uplift_pct', // Spec 65 §6 SC-3 — new-build CoA uplift over max-build GFA
+  'reno_kitchen_gfa_pct', // Spec 65 §6 SC-3 — kitchen reno as %-of-footprint
+  'reno_bath_gfa_pct', // Spec 65 §6 SC-3 — bath reno as %-of-footprint
+  'storey_height_m', // Spec 65 §6 SC-4 — residential storey-height (max-build derivation)
   'los_multiplier_bid',
   'los_multiplier_work',
   'los_penalty_tracking',

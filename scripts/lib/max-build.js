@@ -20,7 +20,27 @@ const LOT_TOLERANCE = 0.15;
 const LOT_MIN_SQM = 50;
 const LOT_MAX_SQM = 2000;
 // Fallback storey height (m) when only bylaw_max_height_m is known (no bylaw_max_stories).
+// RESIDENTIAL_STOREY_HEIGHT_M is the default + externalized (logic_var `storey_height_m`);
+// non-residential zones are taller (NONRES_STOREY_HEIGHT_M, inline). STOREY_HEIGHT_M kept as the
+// residential default alias for back-compat with any inline reference.
 const STOREY_HEIGHT_M = 3.0;
+const RESIDENTIAL_STOREY_HEIGHT_M = 3.0;
+const NONRES_STOREY_HEIGHT_M = 4.0; // commercial/employment/institutional ≈ 4–4.5 m floors
+
+/**
+ * SQL CASE returning the storey-height (m) for `zoneCol`: non-residential (C/E/I prefixes) → taller;
+ * everything else → `residentialHeight` (the externalized residential default). Mirrors the
+ * setback-table pattern so height→storey translation is use-class-aware, not a single 3.0.
+ */
+function buildStoreyHeightCase(zoneCol, residentialHeight = RESIDENTIAL_STOREY_HEIGHT_M) {
+  return `CASE WHEN upper(${zoneCol}) LIKE 'C%' OR upper(${zoneCol}) LIKE 'E%' OR upper(${zoneCol}) LIKE 'I%' OR upper(${zoneCol}) LIKE 'UT%'\n         THEN ${NONRES_STOREY_HEIGHT_M.toFixed(2)} ELSE ${Number(residentialHeight).toFixed(2)} END`;
+}
+/** Pure JS mirror of the storey-height lookup. */
+function lookupStoreyHeight(zoningClass, residentialHeight = RESIDENTIAL_STOREY_HEIGHT_M) {
+  const zc = (zoningClass || '').toUpperCase();
+  return (zc.startsWith('C') || zc.startsWith('E') || zc.startsWith('I') || zc.startsWith('UT'))
+    ? NONRES_STOREY_HEIGHT_M : residentialHeight;
+}
 // Fixed TRCA top-of-bank setback (m) — Toronto Ch.658 stable-slope default. NOT scaled by
 // ravine_distance_m (Spec 59 L2: distance is signed proximity, not a gradient multiplier).
 const RAVINE_SETBACK_M = 10.0;
@@ -89,6 +109,7 @@ const MAX_BUILD_COLS = [
   'max_build_length_m',           // NUMERIC — rect approx
   'max_build_height_m',           // NUMERIC — bylaw_max_height_m
   'max_build_stories',            // INTEGER
+  'max_build_stories_basis',      // TEXT bylaw/derived (Phase 2 — storey-height refinement)
   'max_build_basis',              // TEXT rect_approx/heritage_existing
   'max_buildable_gfa_sqm',        // NUMERIC
   'max_buildable_gfa_basis',      // TEXT fsi/coverage_box/heritage_existing
@@ -129,6 +150,21 @@ const EXISTING_COLS = [
   'existing_greenspace_sqm',        // lot − primary − other (ROUND 2; non-overlap assumption)
 ];
 
+// --- Reno/build scenario GFA columns (Spec 65 Phase 2) — pure arithmetic off existing_* + max-build,
+// written by a sibling UPDATE in the existing-structure pass; propagated to permits/coa. ---
+const SCENARIO_COLS = [
+  'max_newbuild_coa_gfa_sqm',   // FB+COA = max_buildable_gfa × (1 + reno_coa_uplift_pct)
+  'cur_basement_gfa_sqm',       // BAS = existing_footprint
+  'cur_storey_gfa_sqm',         // ADD = existing_footprint × (max_build_stories − existing_stories)
+  'cur_interior_reno_gfa_sqm',  // INT = existing_gfa
+  'cur_est_kitchen_gfa_sqm',    // KIT = existing_footprint × reno_kitchen_gfa_pct
+  'cur_est_bath_gfa_sqm',       // BTH = existing_footprint × reno_bath_gfa_pct
+];
+// Externalized reno heuristics — defaults (also seeded in logic_variables.json + control-panel.ts).
+const RENO_COA_UPLIFT_PCT_DEFAULT = 0.05;
+const RENO_KITCHEN_GFA_PCT_DEFAULT = 0.15;
+const RENO_BATH_GFA_PCT_DEFAULT = 0.07;
+
 module.exports = {
   LOT_TOLERANCE, LOT_MIN_SQM, LOT_MAX_SQM, STOREY_HEIGHT_M, RAVINE_SETBACK_M,
   GARDEN_SUITE_MIN_LOT_SQM, GARDEN_SUITE_MIN_REAR_YARD_M, GARDEN_SUITE_MAX_GFA_SQM,
@@ -136,4 +172,6 @@ module.exports = {
   MAX_BUILD_COLS, MAX_BUILD_BOOL_COLS,
   LOT_MAXBUILD_INPUT_COLS, LOT_MAXBUILD_OUTPUT_COLS, LOT_MAXBUILD_COLS,
   EXISTING_COLS, EXISTING_CONFIDENCE_HIGH_MIN,
+  SCENARIO_COLS, RENO_COA_UPLIFT_PCT_DEFAULT, RENO_KITCHEN_GFA_PCT_DEFAULT, RENO_BATH_GFA_PCT_DEFAULT,
+  RESIDENTIAL_STOREY_HEIGHT_M, NONRES_STOREY_HEIGHT_M, buildStoreyHeightCase, lookupStoreyHeight,
 };

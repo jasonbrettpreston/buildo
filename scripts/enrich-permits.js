@@ -52,6 +52,11 @@ const MAXBUILD_COLS = mb.LOT_MAXBUILD_COLS;
 // orphan-nullify uses the generic = NULL path (NO NOT-NULL bools).
 const EXISTING_STRUCTURE_COLS = mb.EXISTING_COLS;
 
+// Scenario GFA columns (Spec 65 Phase 2 / migration 190). Propagated from the DOMINANT parcel; all
+// nullable numerics → generic =NULL orphan path. (max_build_stories_basis rides the max-build
+// propagation — it's in MAX_BUILD_COLS/LOT_MAXBUILD_COLS.)
+const SCENARIO_COLS = mb.SCENARIO_COLS;
+
 // L24c coverage-guard default (operator-overridable via logic_variables.centreline_propagation_coverage_min).
 // 0.90 sits below the ~3% zero-intersection floor so a healthy ~97% run never false-HALTs, yet a
 // partial §8d run (≪50% enriched) trips it. See assertCentrelineEnriched.
@@ -106,7 +111,7 @@ function validateTarget(t) {
 
 function allWriteCols(target) {
   const c = CFG[target];
-  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS, ...CENTRELINE_COLS, ...MAXBUILD_COLS, ...EXISTING_STRUCTURE_COLS];
+  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS, ...CENTRELINE_COLS, ...MAXBUILD_COLS, ...EXISTING_STRUCTURE_COLS, ...SCENARIO_COLS];
 }
 
 // ---------------------------------------------------------------------------
@@ -202,7 +207,8 @@ async function assertMaxBuildColumns(client, target) {
     const present = new Set(rows.map((r) => r.column_name));
     const missing = cols.filter((c) => !present.has(c));
     if (missing.length > 0) {
-      throw new Error(`${TAG} ${tbl} missing max-build columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '185' : '186'} not applied`);
+      // max_build_stories_basis (Phase 2) ships in mig 189/190; the rest in 185/186 — cite both.
+      throw new Error(`${TAG} ${tbl} missing max-build columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '185/189' : '186/190'} not applied`);
     }
   }
 }
@@ -221,6 +227,23 @@ async function assertExistingStructureColumns(client, target) {
     const missing = cols.filter((c) => !present.has(c));
     if (missing.length > 0) {
       throw new Error(`${TAG} ${tbl} missing existing-structure columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '187' : '188'} not applied`);
+    }
+  }
+}
+
+// §8e (Spec 65 Phase 2) — column-existence guard for the scenario GFA feed (mig 189 parcels / 190 target).
+async function assertScenarioColumns(client, target) {
+  const targetTable = CFG[target].table;
+  const want = { parcels: mb.SCENARIO_COLS, [targetTable]: mb.SCENARIO_COLS };
+  for (const [tbl, cols] of Object.entries(want)) {
+    const { rows } = await client.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name = ANY($2::text[])`,
+      [tbl, cols],
+    );
+    const present = new Set(rows.map((r) => r.column_name));
+    const missing = cols.filter((c) => !present.has(c));
+    if (missing.length > 0) {
+      throw new Error(`${TAG} ${tbl} missing scenario columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '189' : '190'} not applied`);
     }
   }
 }
@@ -309,6 +332,7 @@ WITH cand AS (
          par.is_corner_lot, par.is_through_lot, par.primary_frontage_street_name,
          ${MAXBUILD_COLS.filter((col) => col !== 'lot_size_sqm').map((col) => `par.${col}`).join(', ')},
          ${EXISTING_STRUCTURE_COLS.map((col) => `par.${col}`).join(', ')},
+         ${SCENARIO_COLS.map((col) => `par.${col}`).join(', ')},
          ${OVERLAY_FLAGS.map((f) => `par.${f}`).join(', ')},
          ${c.confidence} AS confidence,
          par.lot_size_sqm / NULLIF(SUM(par.lot_size_sqm) OVER (PARTITION BY ${qkey}), 0) AS area_share,
@@ -376,6 +400,7 @@ SELECT ${c.leadKey.map((k) => `dom.${k}`).join(', ')},
        ${MAXBUILD_COLS.filter((col) => col !== 'max_build_confidence').map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
        CASE WHEN ag.zoning_parcel_count > 1 THEN 'low' ELSE dom.max_build_confidence END AS max_build_confidence,
        ${EXISTING_STRUCTURE_COLS.map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
+       ${SCENARIO_COLS.map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
        ag.distinct_zones
 FROM cand dom
 JOIN ag USING (${key})
@@ -515,6 +540,7 @@ async function main(pool) {
       await assertCentrelineEnriched(client); // §8e L24b recency + L24c coverage
       await assertMaxBuildColumns(client, target); // §8e (Spec 65) — mig 185/186 applied?
       await assertExistingStructureColumns(client, target); // §8e (Spec 65 Phase 1) — mig 187/188 applied?
+      await assertScenarioColumns(client, target); // §8e (Spec 65 Phase 2) — mig 189/190 applied?
       await assertLinkTable(client, target); // §8e DEC-D2 — link table + join cols present?
       const runAt = await pipeline.getDbTimestamp(client);
       result = await enrichLeads(client, { target, scopeWhere: 'TRUE', runAt });
@@ -604,6 +630,21 @@ async function main(pool) {
     auditRows.push({ metric: `${prefix}_existing_structure_confidence_high_count`, value: ex.conf_high, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_structure_confidence_low_count`, value: ex.conf_low, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_greenspace_count`, value: ex.with_greenspace, status: 'INFO' });
+    // §8e scenario GFA propagation observability (Spec 65 Phase 2 — INFO).
+    const sc = (await pool.query(`
+      SELECT COUNT(*) FILTER (WHERE max_newbuild_coa_gfa_sqm IS NOT NULL)::int AS with_coa,
+             COUNT(*) FILTER (WHERE cur_basement_gfa_sqm IS NOT NULL)::int      AS with_basement,
+             COUNT(*) FILTER (WHERE cur_storey_gfa_sqm IS NOT NULL)::int        AS with_storey,
+             COUNT(*) FILTER (WHERE cur_interior_reno_gfa_sqm IS NOT NULL)::int AS with_interior,
+             COUNT(*) FILTER (WHERE cur_est_kitchen_gfa_sqm IS NOT NULL)::int   AS with_kitchen,
+             COUNT(*) FILTER (WHERE cur_est_bath_gfa_sqm IS NOT NULL)::int      AS with_bath
+      FROM ${cfg.table}`)).rows[0];
+    auditRows.push({ metric: `${prefix}_max_newbuild_coa_gfa_count`, value: sc.with_coa, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_cur_basement_gfa_count`, value: sc.with_basement, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_cur_storey_gfa_count`, value: sc.with_storey, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_cur_interior_reno_gfa_count`, value: sc.with_interior, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_cur_est_kitchen_gfa_count`, value: sc.with_kitchen, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_cur_est_bath_gfa_count`, value: sc.with_bath, status: 'INFO' });
     // L5 disagreement protocol (permits only, §11.3): geometry stays authoritative; flag for
     // operator triage. INFO at count 0 (RNFP/Heritage currently 0 rows) — WARN ONLY on a real
     // disagreement, so a clean run never collapses PASS (Spec 48 §3.6).
@@ -634,7 +675,9 @@ async function main(pool) {
         // §8e max-build feed (Spec 65) — lot INPUTS + envelope OUTPUTS read off the dominant parcel.
         'frontage_m', 'depth_m', 'lot_size_confidence', 'lot_size_basis', ...mb.LOT_MAXBUILD_OUTPUT_COLS,
         // §8e existing-structure feed (Spec 65 Phase 1) — read off the dominant parcel.
-        ...mb.EXISTING_COLS],
+        ...mb.EXISTING_COLS,
+        // §8e scenario GFA feed (Spec 65 Phase 2) — read off the dominant parcel.
+        ...mb.SCENARIO_COLS],
     };
     const reads = target === 'permits'
       ? { permits: ['permit_num', 'revision_num', 'permit_type'], permit_parcels: ['permit_num', 'revision_num', 'parcel_id', 'confidence'], permit_type_classifications: ['permit_type', 'class'], ...readsCommon }
@@ -653,9 +696,9 @@ if (require.main === module) {
 }
 
 module.exports = {
-  ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS, HERITAGE_COLS, CENTRELINE_COLS, MAXBUILD_COLS, EXISTING_STRUCTURE_COLS,
+  ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS, HERITAGE_COLS, CENTRELINE_COLS, MAXBUILD_COLS, EXISTING_STRUCTURE_COLS, SCENARIO_COLS,
   validateTarget, allWriteCols, assertWf2Ran, assertRavinesEnriched, assertHeritageEnriched,
-  assertHeritageColumns, assertCentrelineColumns, assertCentrelineEnriched, assertLinkTable, assertMaxBuildColumns, assertExistingStructureColumns,
+  assertHeritageColumns, assertCentrelineColumns, assertCentrelineEnriched, assertLinkTable, assertMaxBuildColumns, assertExistingStructureColumns, assertScenarioColumns,
   buildEnrichmentSql, buildUpdateSql, buildNullifyOrphansSql, enrichLeads,
   coverageGate, verdictCascade,
 };

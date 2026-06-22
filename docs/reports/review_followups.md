@@ -3,6 +3,25 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Spec 65 Phase 2 (reno/build scenario GFAs + geom_basis + storey-height) — WF6 output-altitude review DEFERs (2026-06-22)
+
+Source: 6-reviewer output review (Gemini + DeepSeek + Code Reviewer + Observability + Integration + Regression Guardian) on the enrich-parcels Phase-2 diff. Integration + Regression Guardian PASS (no undefended fences). 3 findings folded into the commit: (a) Zod logic-var schema bounds aligned to `logic_variables.json` min/max + `.strict()` (was `.positive()`/`.passthrough()`) — closes the SC-3 "bad override FAILs loudly" gate [Code Reviewer #12 + DeepSeek upper-bounds]; (b) `assertMaxBuildColumns` error message now cites `185/189` + `186/190` (max_build_stories_basis ships in 189/190) [Code Reviewer #11]; (c) Spec 65 SC-6 clarified — `*_applied` provenance rows live at the producer (enrich-parcels) layer only [Observability]. Items below are DEFERs / refuted.
+
+| Severity | Source | Item | Disposition |
+|---|---|---|---|
+| CRITICAL | DeepSeek | `LEAST(...)` returns NULL if any arg is NULL → kills max-build footprint/GFA. | **REFUTED (false positive)** — PostgreSQL `LEAST`/`GREATEST` *ignore* NULLs; the result is NULL only if *all* args are NULL. The code comment is correct. Also targets the shipped max-build pass, not Phase 2. No action. |
+| CRITICAL | Gemini | Incremental predicate re-enriches only on base-zone version bump; overlay-table updates (e.g. height overlay) are missed until the base zone changes. | **DEFER (pre-existing, out of Phase-2 scope)** — this is the Phase-1 zoning incremental design, not introduced here. Real staleness risk worth a future WF3 (expand incremental WHERE to OR-EXISTS over all 10 zoning source tables, or key off a per-overlay `source_dataset_version`). Operators run `--full` periodically as mitigation. |
+| HIGH | DeepSeek | Incremental for max-build/existing passes misses lot-dimension + massing (`building_footprints`/`parcel_buildings`) changes unless `--full`. | **DEFER (pre-existing, same root as above)** — bundle with the overlay-staleness WF3. In a normal chain run the max-build pass populates `parcel_max_build` for the incrementally-scoped set, so the existing-structure EXISTS-trigger follows it; standalone lot/massing edits need `--full`. |
+| MED | Gemini | `existing_greenspace_sqm` subtracts `Σ footprint areas`; overlapping primary/other footprints are double-subtracted → greenspace under-counted. | **DEFER (pre-existing Phase-1 existing-structure logic)** — fix is `ST_Area(ST_Union(...))` of the building geoms; add an overlap-count observability metric. Low frequency (most parcels have non-overlapping footprints). |
+| MED (perf) | self (db-test timing) | enrich-parcels existing-structure pass: the `prim`/`allb` CTEs scan ALL `parcel_buildings`/`building_footprints` even on an incrementally-scoped run (~48s/parcel against the full dev DB in the db test). Correct + necessary for `--full` (scope = all parcels); wasteful for incremental/scoped runs. | **DEFER (pre-existing Phase-1 structure)** — scope `prim`/`allb` to the `scope` CTE (`JOIN scope ON ...` / `WHERE parcel_id IN (SELECT pid FROM scope)`) to make incremental runs fast without changing `--full` semantics. Behavior-preserving perf WF3. |
+| LOW | Code Reviewer | `cur_interior_reno_gfa_sqm` re-computes `existing_gfa_sqm` inline rather than referencing the column; byte-identical today but could silently diverge if the `existing_gfa` formula is later revised. | **DEFER** — note the coupling; consider a nested-CTE refactor so INT reads `existing_gfa_sqm` directly. No current data defect. |
+| LOW | Gemini | `ST_Expand(geom, $1/78000.0)` magic divisor (deg/m latitude approx) should be a named constant. | **Accepted (pre-existing)** — extract to a named constant in a future cleanup. |
+| LOW | DeepSeek | `assertPreconditions` GiST index check uses `indexdef ILIKE '%gist%' AND '%geom%'` (loose match). | **Accepted (pre-existing)** — tighten to an exact `USING gist (geom)` match in a future cleanup. |
+| MED | DeepSeek | `emitMeta` omits the `parcels` scenario-input reads (`max_buildable_gfa_sqm`/`max_build_stories`). | **REFUTED** — Integration verified emitMeta DOES add both to the `parcels` self-read (enrich-parcels.js ~:858–860). No action. |
+| LOW | Gemini | `LOGIC_VARS_SCHEMA` `.passthrough()` lets a mistyped key fall back silently to default. | **RESOLVED** — switched to `.strict()` in this commit (validates the 5-key `resolvedVars` object). |
+
+---
+
 ## Spec 26 (Step-Output Inspector) — WF1 output-altitude review DEFERs (2026-06-16)
 
 Source: 5-reviewer output review (Code Reviewer + Integration + Regression Guardian + Gemini + DeepSeek) on the admin Step-Output Inspector. Code Reviewer "safe to commit, no CRITICAL"; Integration + RG PASS. 1 fix folded (schema-qualify the `reltuples` query). Items below are DEFERs/accepted.

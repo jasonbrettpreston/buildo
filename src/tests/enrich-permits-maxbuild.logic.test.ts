@@ -68,9 +68,11 @@ describe('enrich-permits §8e max-build — orphan-nullify respects NOT NULL (MB
 });
 
 describe('enrich-permits §8e max-build — preconditions + observability (MB-7e/MB-8)', () => {
-  it('exports + cites migration 185/186 in the column guard', () => {
+  it('exports + cites migration 185/189 + 186/190 in the column guard', () => {
+    // Spec 65 Phase 2: max_build_stories_basis joined MAX_BUILD_COLS (ships in mig 189/190), so the
+    // guard now cites both the 185/186 (original) and 189/190 (Phase 2) migrations.
     expect(typeof ep.assertMaxBuildColumns).toBe('function');
-    expect(SRC).toMatch(/migration \$\{tbl === 'parcels' \? '185' : '186'\} not applied/);
+    expect(SRC).toMatch(/migration \$\{tbl === 'parcels' \? '185\/189' : '186\/190'\} not applied/);
   });
 
   it('max-build propagation counts are INFO (zoning F-H12 gate untouched)', () => {

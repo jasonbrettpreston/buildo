@@ -242,6 +242,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE existing_structure_confidence = 'high')                   AS existing_conf_high_pop,
           COUNT(*) FILTER (WHERE existing_structure_confidence = 'low')                    AS existing_conf_low_pop,
           COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)                      AS existing_greenspace_pop,
+          -- Spec 65 Phase 2 — enrich_coa_zoning scenario GFA propagation (mig 190). All INFO, no denominator.
+          COUNT(*) FILTER (WHERE max_newbuild_coa_gfa_sqm IS NOT NULL)                     AS scen_coa_pop,
+          COUNT(*) FILTER (WHERE cur_basement_gfa_sqm IS NOT NULL)                         AS scen_basement_pop,
+          COUNT(*) FILTER (WHERE cur_storey_gfa_sqm IS NOT NULL)                           AS scen_storey_pop,
+          COUNT(*) FILTER (WHERE cur_interior_reno_gfa_sqm IS NOT NULL)                    AS scen_interior_pop,
+          COUNT(*) FILTER (WHERE cur_est_kitchen_gfa_sqm IS NOT NULL)                      AS scen_kitchen_pop,
+          COUNT(*) FILTER (WHERE cur_est_bath_gfa_sqm IS NOT NULL)                         AS scen_bath_pop,
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
       `);
@@ -362,6 +369,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.existing_structure_confidence_high', parseInt(ca.existing_conf_high_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.existing_structure_confidence_low',  parseInt(ca.existing_conf_low_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.existing_greenspace_sqm',     parseInt(ca.existing_greenspace_pop, 10)));
+      // Spec 65 Phase 2 scenario GFAs — INFO, no denominator.
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_newbuild_coa_gfa_sqm',  parseInt(ca.scen_coa_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.cur_basement_gfa_sqm',      parseInt(ca.scen_basement_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.cur_storey_gfa_sqm',        parseInt(ca.scen_storey_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.cur_interior_reno_gfa_sqm', parseInt(ca.scen_interior_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.cur_est_kitchen_gfa_sqm',   parseInt(ca.scen_kitchen_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.cur_est_bath_gfa_sqm',      parseInt(ca.scen_bath_pop, 10)));
 
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
@@ -549,7 +563,14 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE existing_gfa_sqm IS NOT NULL)                AS existing_gfa_pop,
           COUNT(*) FILTER (WHERE existing_structure_confidence = 'high')      AS existing_conf_high_pop,
           COUNT(*) FILTER (WHERE existing_structure_confidence = 'low')       AS existing_conf_low_pop,
-          COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)         AS existing_greenspace_pop
+          COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)         AS existing_greenspace_pop,
+          -- Spec 65 Phase 2 — enrich_permits scenario GFA propagation (mig 190). INFO, no denominator.
+          COUNT(*) FILTER (WHERE max_newbuild_coa_gfa_sqm IS NOT NULL)        AS scen_coa_pop,
+          COUNT(*) FILTER (WHERE cur_basement_gfa_sqm IS NOT NULL)            AS scen_basement_pop,
+          COUNT(*) FILTER (WHERE cur_storey_gfa_sqm IS NOT NULL)              AS scen_storey_pop,
+          COUNT(*) FILTER (WHERE cur_interior_reno_gfa_sqm IS NOT NULL)       AS scen_interior_pop,
+          COUNT(*) FILTER (WHERE cur_est_kitchen_gfa_sqm IS NOT NULL)         AS scen_kitchen_pop,
+          COUNT(*) FILTER (WHERE cur_est_bath_gfa_sqm IS NOT NULL)            AS scen_bath_pop
         FROM permits
       `);
       const permitsTotal        = parseInt(pa.permits_total, 10) || 0;
@@ -921,6 +942,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.existing_structure_confidence_high', parseInt(pa.existing_conf_high_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.existing_structure_confidence_low',  parseInt(pa.existing_conf_low_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.existing_greenspace_sqm',     parseInt(pa.existing_greenspace_pop, 10)));
+      // Spec 65 Phase 2 scenario GFAs — INFO, no denominator.
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_newbuild_coa_gfa_sqm',  parseInt(pa.scen_coa_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.cur_basement_gfa_sqm',      parseInt(pa.scen_basement_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.cur_storey_gfa_sqm',        parseInt(pa.scen_storey_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.cur_interior_reno_gfa_sqm', parseInt(pa.scen_interior_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.cur_est_kitchen_gfa_sqm',   parseInt(pa.scen_kitchen_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.cur_est_bath_gfa_sqm',      parseInt(pa.scen_bath_pop, 10)));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));
