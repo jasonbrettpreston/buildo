@@ -110,10 +110,30 @@ const LOT_MAXBUILD_INPUT_COLS = ['lot_size_sqm', 'frontage_m', 'depth_m', 'lot_s
 const LOT_MAXBUILD_OUTPUT_COLS = MAX_BUILD_COLS.filter((c) => c !== 'lot_size_confidence' && c !== 'lot_size_basis');
 const LOT_MAXBUILD_COLS = [...LOT_MAXBUILD_INPUT_COLS, ...LOT_MAXBUILD_OUTPUT_COLS];
 
+// --- Existing-structure columns (Spec 65 Phase 1) — written by a SEPARATE third pass in
+// enrich-parcels (buildExistingStructureSql), disjoint from MAX_BUILD_COLS + ALL_WRITE_COLS.
+// Derived from the PRIMARY linked building (massing) + lot. Propagated to permits/coa. ---
+// pb.confidence >= this → existing_structure_confidence 'high', else 'low' (NULL → low).
+// link-massing writes 0.95 (centroid-in-parcel) / 0.60 (nearest); 0.90 cleanly splits them.
+const EXISTING_CONFIDENCE_HIGH_MIN = 0.90;
+const EXISTING_COLS = [
+  'existing_footprint_sqm',         // primary footprint (ROUND 2)
+  'existing_stories',               // primary estimated_stories (height-derived ≈ h/3)
+  'existing_height_m',              // primary max_height_m
+  'existing_gfa_sqm',               // footprint × GREATEST(1, stories) (ROUND 2)
+  'existing_width_m',               // shorter side of ST_OrientedEnvelope, metres (ROUND 2)
+  'existing_length_m',              // longer side, metres (ROUND 2)
+  'existing_structure_confidence',  // TEXT high/low from pb.confidence
+  'existing_other_structures_count',// # non-primary buildings
+  'existing_other_structures_sqm',  // Σ non-primary footprint (ROUND 2)
+  'existing_greenspace_sqm',        // lot − primary − other (ROUND 2; non-overlap assumption)
+];
+
 module.exports = {
   LOT_TOLERANCE, LOT_MIN_SQM, LOT_MAX_SQM, STOREY_HEIGHT_M, RAVINE_SETBACK_M,
   GARDEN_SUITE_MIN_LOT_SQM, GARDEN_SUITE_MIN_REAR_YARD_M, GARDEN_SUITE_MAX_GFA_SQM,
   SETBACK_DEFAULTS, SETBACK_DIMS, lookupSetback, buildSetbackCase,
   MAX_BUILD_COLS, MAX_BUILD_BOOL_COLS,
   LOT_MAXBUILD_INPUT_COLS, LOT_MAXBUILD_OUTPUT_COLS, LOT_MAXBUILD_COLS,
+  EXISTING_COLS, EXISTING_CONFIDENCE_HIGH_MIN,
 };

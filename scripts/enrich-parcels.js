@@ -535,6 +535,109 @@ async function enrichMaxBuild(client, opts = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Existing-structure (Spec 65 Phase 1) — THIRD set-based UPDATE pass. SEPARATE from the
+// max-build pass (its `massing` CTE is SUM…FILTER(is_primary) GROUP BY, feeding the heritage
+// freeze — left byte-identical). Reads the PRIMARY linked building (one row/parcel by mig 081's
+// partial unique index, so no GROUP BY) for footprint/stories/height/geom/confidence; an `allb`
+// CTE aggregates non-primary count/Σ; greenspace = lot − primary − other (no ST_Union — perf).
+// Runs in the SAME txn after enrichMaxBuild, scoped to parcel_max_build (the incremental set).
+// ---------------------------------------------------------------------------
+function buildExistingStructureSql({ scopeWhere = 'TRUE', full = false }) {
+  const incremental = full
+    ? 'TRUE'
+    : '(p.existing_footprint_sqm IS NULL OR EXISTS (SELECT 1 FROM parcel_max_build z WHERE z.parcel_id = p.parcel_id))';
+  const confMin = mb.EXISTING_CONFIDENCE_HIGH_MIN;
+  return `
+CREATE TEMP TABLE parcel_existing_struct ON COMMIT DROP AS
+WITH scope AS (
+  SELECT p.id AS pid, p.parcel_id, p.geom, p.lot_size_sqm::numeric AS lot_size_sqm
+  FROM parcels p
+  WHERE (${scopeWhere}) AND p.geom IS NOT NULL AND ${incremental}
+),
+prim AS (
+  -- exactly one row/parcel (mig 081 idx_parcel_buildings_one_primary) — no GROUP BY needed.
+  SELECT pb.parcel_id AS pid, pb.confidence AS link_confidence,
+         bf.footprint_area_sqm::numeric AS p_footprint, bf.estimated_stories AS p_stories,
+         bf.max_height_m::numeric AS p_height, bf.geom AS p_geom
+  FROM parcel_buildings pb JOIN building_footprints bf ON bf.id = pb.building_id
+  WHERE pb.is_primary = true
+),
+allb AS (
+  SELECT pb.parcel_id AS pid,
+         COUNT(*) FILTER (WHERE NOT pb.is_primary)::int AS other_count,
+         SUM(bf.footprint_area_sqm) FILTER (WHERE NOT pb.is_primary)::numeric AS other_sqm
+  FROM parcel_buildings pb JOIN building_footprints bf ON bf.id = pb.building_id
+  GROUP BY pb.parcel_id
+),
+dims AS (
+  -- oriented-envelope side lengths in METRES (::geography at the POINT level). Areal geoms only.
+  SELECT s.pid,
+    ST_Distance(ST_PointN(ST_ExteriorRing(oe.box), 1)::geography, ST_PointN(ST_ExteriorRing(oe.box), 2)::geography) AS side1,
+    ST_Distance(ST_PointN(ST_ExteriorRing(oe.box), 2)::geography, ST_PointN(ST_ExteriorRing(oe.box), 3)::geography) AS side2
+  FROM scope s
+  JOIN prim pr ON pr.pid = s.pid
+  CROSS JOIN LATERAL (
+    SELECT CASE WHEN pr.p_geom IS NOT NULL AND ST_Dimension(pr.p_geom) = 2
+                THEN ST_OrientedEnvelope(pr.p_geom) END AS box
+  ) oe
+  WHERE oe.box IS NOT NULL AND ST_GeometryType(oe.box) = 'ST_Polygon'
+)
+SELECT s.pid, s.parcel_id,
+  ROUND(pr.p_footprint, 2) AS existing_footprint_sqm,
+  pr.p_stories AS existing_stories,
+  ROUND(pr.p_height, 2) AS existing_height_m,
+  ROUND(pr.p_footprint * GREATEST(1, COALESCE(pr.p_stories, 1)), 2) AS existing_gfa_sqm,
+  ROUND(LEAST(d.side1, d.side2)::numeric, 2) AS existing_width_m,
+  ROUND(GREATEST(d.side1, d.side2)::numeric, 2) AS existing_length_m,
+  CASE WHEN pr.pid IS NOT NULL AND pr.p_footprint IS NOT NULL
+       THEN (CASE WHEN pr.link_confidence >= ${confMin} THEN 'high' ELSE 'low' END) END AS existing_structure_confidence,
+  CASE WHEN pr.pid IS NOT NULL AND pr.p_footprint IS NOT NULL THEN COALESCE(a.other_count, 0) END AS existing_other_structures_count,
+  CASE WHEN pr.pid IS NOT NULL AND pr.p_footprint IS NOT NULL THEN ROUND(COALESCE(a.other_sqm, 0), 2) END AS existing_other_structures_sqm,
+  CASE WHEN pr.pid IS NOT NULL AND pr.p_footprint IS NOT NULL THEN
+    ROUND(GREATEST(0, COALESCE(s.lot_size_sqm, ST_Area(s.geom::geography)::numeric)
+                      - ROUND(pr.p_footprint, 2) - ROUND(COALESCE(a.other_sqm, 0), 2)), 2)
+  END AS existing_greenspace_sqm
+FROM scope s
+LEFT JOIN prim pr ON pr.pid = s.pid
+LEFT JOIN allb a ON a.pid = s.pid
+LEFT JOIN dims d ON d.pid = s.pid;
+`;
+}
+
+function buildExistingStructureUpdateSql() {
+  const cols = mb.EXISTING_COLS;
+  const setList = cols.map((c) => `${c} = e.${c}`).join(',\n    ');
+  const guard = cols.map((c) => `p.${c} IS DISTINCT FROM e.${c}`).join('\n      OR ');
+  return `
+UPDATE parcels p SET
+    ${setList}
+FROM parcel_existing_struct e
+WHERE p.parcel_id = e.parcel_id
+  AND (
+      ${guard}
+  );`;
+}
+
+async function enrichExistingStructure(client, opts = {}) {
+  const { scopeWhere = 'TRUE', full = false } = opts;
+  await client.query('DROP TABLE IF EXISTS parcel_existing_struct');
+  await client.query(buildExistingStructureSql({ scopeWhere, full }));
+  const stats = await client.query(`
+    SELECT
+      COUNT(*)::int AS scoped,
+      COUNT(*) FILTER (WHERE existing_footprint_sqm IS NOT NULL)::int AS with_footprint,
+      COUNT(*) FILTER (WHERE existing_gfa_sqm IS NOT NULL)::int       AS with_gfa,
+      COUNT(*) FILTER (WHERE existing_width_m IS NOT NULL AND existing_length_m IS NOT NULL)::int AS with_dims,
+      COUNT(*) FILTER (WHERE existing_structure_confidence = 'high')::int AS conf_high,
+      COUNT(*) FILTER (WHERE existing_structure_confidence = 'low')::int  AS conf_low,
+      COUNT(*) FILTER (WHERE existing_other_structures_count > 0)::int AS with_other,
+      COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)::int AS with_greenspace
+    FROM parcel_existing_struct`);
+  const upd = await client.query(buildExistingStructureUpdateSql());
+  return { ...stats.rows[0], updated: upd.rowCount };
+}
+
+// ---------------------------------------------------------------------------
 // Observability — row-derived verdict cascade (Spec 47 §8.2).
 // ---------------------------------------------------------------------------
 function verdictCascade(rows) {
@@ -572,6 +675,7 @@ async function main(pool) {
 
     let result;
     let mbResult;
+    let exResult;
     await pipeline.withTransaction(pool, async (client) => {
       await assertPreconditions(client);
       const runAt = await pipeline.getDbTimestamp(client);
@@ -579,6 +683,9 @@ async function main(pool) {
       // Second pass — max-build envelope (Spec 65 §). Same txn: parcel_zoning_enrich (ON COMMIT
       // DROP) is still visible for incremental scoping; reads the zoning feed just written above.
       mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full });
+      // Third pass — existing structure (Spec 65 Phase 1). Same txn: parcel_max_build (ON COMMIT
+      // DROP) is still visible for incremental scoping; reads the PRIMARY building (massing).
+      exResult = await enrichExistingStructure(client, { scopeWhere: 'TRUE', full });
     });
 
     const totalParcels = await pool
@@ -624,6 +731,15 @@ async function main(pool) {
     auditRows.push({ metric: 'max_build_confidence_low_count', value: mbResult.mb_low, status: 'INFO' });
     auditRows.push({ metric: 'garden_suite_fits_count', value: mbResult.suite_fits, status: 'INFO' });
     auditRows.push({ metric: 'envelope_constrained_count', value: mbResult.constrained, status: 'INFO' });
+    // --- Existing structure (Spec 65 Phase 1) — all INFO, never gated (NULL on no-massing). ---
+    auditRows.push({ metric: 'existing_structure_enriched_count', value: exResult.updated, status: 'INFO' });
+    auditRows.push({ metric: 'existing_footprint_count', value: exResult.with_footprint, status: 'INFO' });
+    auditRows.push({ metric: 'existing_gfa_count', value: exResult.with_gfa, status: 'INFO' });
+    auditRows.push({ metric: 'existing_dims_count', value: exResult.with_dims, status: 'INFO' });
+    auditRows.push({ metric: 'existing_structure_confidence_high_count', value: exResult.conf_high, status: 'INFO' });
+    auditRows.push({ metric: 'existing_structure_confidence_low_count', value: exResult.conf_low, status: 'INFO' });
+    auditRows.push({ metric: 'existing_other_structures_present_count', value: exResult.with_other, status: 'INFO' });
+    auditRows.push({ metric: 'existing_greenspace_count', value: exResult.with_greenspace, status: 'INFO' });
     auditRows.push({ metric: 'enrich_parcels_duration_ms', value: Date.now() - t0, status: 'INFO' });
 
     pipeline.emitSummary({
@@ -659,11 +775,12 @@ async function main(pool) {
           'bylaw_max_height_m', 'bylaw_max_stories', 'bylaw_max_fsi', 'bylaw_max_coverage_pct', 'bylaw_standard_setback_m',
           'zoning_class', 'zoning_is_ambiguous', 'is_corner_lot', 'is_through_lot',
           'is_in_ravine_protection_area', 'is_heritage_designated', 'lot_size_confidence'],
-        // Massing join for the heritage freeze (existing structure dims).
-        parcel_buildings: ['parcel_id', 'building_id', 'is_primary'],
-        building_footprints: ['id', 'footprint_area_sqm', 'estimated_stories'],
+        // Massing join — heritage freeze (max-build pass) + existing-structure pass (Phase 1):
+        // existing pass also reads pb.confidence + bf.geom/max_height_m.
+        parcel_buildings: ['parcel_id', 'building_id', 'is_primary', 'confidence'],
+        building_footprints: ['id', 'footprint_area_sqm', 'estimated_stories', 'max_height_m', 'geom'],
       },
-      { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, 'zoning_enriched_at'] },
+      { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, ...mb.EXISTING_COLS, 'zoning_enriched_at'] },
     );
 
     pipeline.log.info(TAG, `enriched ${result.updated} parcels (zone_class ${zonePct}%, gaps ${result.gaps}, ambiguous ${result.ambiguous}, conflicts ${result.conflicts})`);
@@ -689,5 +806,8 @@ module.exports = {
   buildMaxBuildSql,
   buildMaxBuildUpdateSql,
   enrichMaxBuild,
+  buildExistingStructureSql,
+  buildExistingStructureUpdateSql,
+  enrichExistingStructure,
   verdictCascade,
 };

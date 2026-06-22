@@ -1197,65 +1197,6 @@ export const heritageDistricts = pgTable("heritage_districts", {
 	check("heritage_districts_hcd_type_check", sql`hcd_type = 'designated_district'::text`),
 ]);
 
-export const trades = pgTable("trades", {
-	id: serial().primaryKey().notNull(),
-	slug: varchar({ length: 50 }).notNull(),
-	name: varchar({ length: 100 }).notNull(),
-	icon: varchar({ length: 50 }),
-	color: varchar({ length: 7 }),
-	sortOrder: integer("sort_order"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	kind: text().default('construction').notNull(),
-	seq: integer(),
-	costBasis: text("cost_basis").default('per_sqft').notNull(),
-}, (table) => [
-	unique("trades_slug_key").on(table.slug),
-	check("trades_cost_basis_check", sql`cost_basis = ANY (ARRAY['per_sqft'::text, 'per_unit'::text, 'fixed'::text, 'rental'::text, 'commission'::text])`),
-	check("trades_kind_check", sql`kind = ANY (ARRAY['construction'::text, 'service'::text, 'persona'::text, 'deprecated'::text])`),
-]);
-
-export const productGroups = pgTable("product_groups", {
-	id: serial().primaryKey().notNull(),
-	slug: varchar({ length: 50 }).notNull(),
-	name: varchar({ length: 100 }).notNull(),
-	sortOrder: integer("sort_order").default(0).notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	type: text().default('material').notNull(),
-}, (table) => [
-	uniqueIndex("idx_product_groups_slug").using("btree", table.slug.asc().nullsLast().op("text_ops")),
-	unique("product_groups_slug_key").on(table.slug),
-	check("product_groups_type_check", sql`type = ANY (ARRAY['material'::text, 'rental'::text, 'service'::text])`),
-]);
-
-export const suppliers = pgTable("suppliers", {
-	id: serial().primaryKey().notNull(),
-	name: text().notNull(),
-	accountType: text("account_type").notNull(),
-	status: text().default('active').notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	check("suppliers_account_type_check", sql`account_type = ANY (ARRAY['supplier_retailer'::text, 'manufacturer'::text, 'rental_co'::text, 'service_co'::text])`),
-]);
-
-export const leadProducts = pgTable("lead_products", {
-	id: serial().primaryKey().notNull(),
-	leadId: text("lead_id").notNull(),
-	productId: integer("product_id").notNull(),
-	confidence: numeric({ precision: 3, scale:  2 }),
-	classifiedAt: timestamp("classified_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_lead_products_lead").using("btree", table.leadId.asc().nullsLast().op("text_ops")),
-	index("idx_lead_products_product").using("btree", table.productId.asc().nullsLast().op("int4_ops")),
-	foreignKey({
-			columns: [table.productId],
-			foreignColumns: [productGroups.id],
-			name: "lead_products_product_id_fkey"
-		}),
-	unique("lead_products_lead_id_product_id_key").on(table.leadId, table.productId),
-	check("lead_products_confidence_check", sql`(confidence IS NULL) OR ((confidence >= (0)::numeric) AND (confidence <= (1)::numeric))`),
-	check("lead_products_lead_id_check", sql`lead_id ~ '^(permit|coa):.+$'::text`),
-]);
-
 export const parcels = pgTable("parcels", {
 	id: serial().primaryKey().notNull(),
 	parcelId: varchar("parcel_id", { length: 20 }).notNull(),
@@ -1343,6 +1284,16 @@ export const parcels = pgTable("parcels", {
 	gardenSuiteFits: boolean("garden_suite_fits").default(false).notNull(),
 	envelopeConstrained: boolean("envelope_constrained").default(false).notNull(),
 	envelopeConstraintReason: text("envelope_constraint_reason"),
+	existingFootprintSqm: numeric("existing_footprint_sqm", { precision: 12, scale:  2 }),
+	existingStories: integer("existing_stories"),
+	existingHeightM: numeric("existing_height_m", { precision: 8, scale:  2 }),
+	existingGfaSqm: numeric("existing_gfa_sqm", { precision: 12, scale:  2 }),
+	existingWidthM: numeric("existing_width_m", { precision: 8, scale:  2 }),
+	existingLengthM: numeric("existing_length_m", { precision: 8, scale:  2 }),
+	existingStructureConfidence: text("existing_structure_confidence"),
+	existingOtherStructuresCount: integer("existing_other_structures_count"),
+	existingOtherStructuresSqm: numeric("existing_other_structures_sqm", { precision: 12, scale:  2 }),
+	existingGreenspaceSqm: numeric("existing_greenspace_sqm", { precision: 12, scale:  2 }),
 }, (table) => [
 	index("idx_parcels_address").using("btree", table.addrNumNormalized.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")),
 	index("idx_parcels_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")).where(sql`(centroid_lat IS NOT NULL)`),
@@ -1351,6 +1302,65 @@ export const parcels = pgTable("parcels", {
 	index("idx_parcels_street_name").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")),
 	unique("parcels_parcel_id_key").on(table.parcelId),
 	check("parcels_heritage_designation_type_check", sql`(heritage_designation_type IS NULL) OR (heritage_designation_type = ANY (ARRAY['part_iv_individual'::text, 'part_v_hcd'::text]))`),
+]);
+
+export const trades = pgTable("trades", {
+	id: serial().primaryKey().notNull(),
+	slug: varchar({ length: 50 }).notNull(),
+	name: varchar({ length: 100 }).notNull(),
+	icon: varchar({ length: 50 }),
+	color: varchar({ length: 7 }),
+	sortOrder: integer("sort_order"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	kind: text().default('construction').notNull(),
+	seq: integer(),
+	costBasis: text("cost_basis").default('per_sqft').notNull(),
+}, (table) => [
+	unique("trades_slug_key").on(table.slug),
+	check("trades_cost_basis_check", sql`cost_basis = ANY (ARRAY['per_sqft'::text, 'per_unit'::text, 'fixed'::text, 'rental'::text, 'commission'::text])`),
+	check("trades_kind_check", sql`kind = ANY (ARRAY['construction'::text, 'service'::text, 'persona'::text, 'deprecated'::text])`),
+]);
+
+export const productGroups = pgTable("product_groups", {
+	id: serial().primaryKey().notNull(),
+	slug: varchar({ length: 50 }).notNull(),
+	name: varchar({ length: 100 }).notNull(),
+	sortOrder: integer("sort_order").default(0).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	type: text().default('material').notNull(),
+}, (table) => [
+	uniqueIndex("idx_product_groups_slug").using("btree", table.slug.asc().nullsLast().op("text_ops")),
+	unique("product_groups_slug_key").on(table.slug),
+	check("product_groups_type_check", sql`type = ANY (ARRAY['material'::text, 'rental'::text, 'service'::text])`),
+]);
+
+export const suppliers = pgTable("suppliers", {
+	id: serial().primaryKey().notNull(),
+	name: text().notNull(),
+	accountType: text("account_type").notNull(),
+	status: text().default('active').notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	check("suppliers_account_type_check", sql`account_type = ANY (ARRAY['supplier_retailer'::text, 'manufacturer'::text, 'rental_co'::text, 'service_co'::text])`),
+]);
+
+export const leadProducts = pgTable("lead_products", {
+	id: serial().primaryKey().notNull(),
+	leadId: text("lead_id").notNull(),
+	productId: integer("product_id").notNull(),
+	confidence: numeric({ precision: 3, scale:  2 }),
+	classifiedAt: timestamp("classified_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_lead_products_lead").using("btree", table.leadId.asc().nullsLast().op("text_ops")),
+	index("idx_lead_products_product").using("btree", table.productId.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+			columns: [table.productId],
+			foreignColumns: [productGroups.id],
+			name: "lead_products_product_id_fkey"
+		}),
+	unique("lead_products_lead_id_product_id_key").on(table.leadId, table.productId),
+	check("lead_products_confidence_check", sql`(confidence IS NULL) OR ((confidence >= (0)::numeric) AND (confidence <= (1)::numeric))`),
+	check("lead_products_lead_id_check", sql`lead_id ~ '^(permit|coa):.+$'::text`),
 ]);
 
 export const coaApplications = pgTable("coa_applications", {
@@ -1439,6 +1449,16 @@ export const coaApplications = pgTable("coa_applications", {
 	gardenSuiteFits: boolean("garden_suite_fits").default(false).notNull(),
 	envelopeConstrained: boolean("envelope_constrained").default(false).notNull(),
 	envelopeConstraintReason: text("envelope_constraint_reason"),
+	existingFootprintSqm: numeric("existing_footprint_sqm", { precision: 12, scale:  2 }),
+	existingStories: integer("existing_stories"),
+	existingHeightM: numeric("existing_height_m", { precision: 8, scale:  2 }),
+	existingGfaSqm: numeric("existing_gfa_sqm", { precision: 12, scale:  2 }),
+	existingWidthM: numeric("existing_width_m", { precision: 8, scale:  2 }),
+	existingLengthM: numeric("existing_length_m", { precision: 8, scale:  2 }),
+	existingStructureConfidence: text("existing_structure_confidence"),
+	existingOtherStructuresCount: integer("existing_other_structures_count"),
+	existingOtherStructuresSqm: numeric("existing_other_structures_sqm", { precision: 12, scale:  2 }),
+	existingGreenspaceSqm: numeric("existing_greenspace_sqm", { precision: 12, scale:  2 }),
 }, (table) => [
 	index("idx_coa_applications_address").using("btree", table.address.asc().nullsLast().op("text_ops")),
 	index("idx_coa_applications_lifecycle_seq").using("btree", table.lifecycleSeq.asc().nullsLast().op("int4_ops")).where(sql`(lifecycle_seq IS NOT NULL)`),
@@ -1744,6 +1764,16 @@ export const permits = pgTable("permits", {
 	gardenSuiteFits: boolean("garden_suite_fits").default(false).notNull(),
 	envelopeConstrained: boolean("envelope_constrained").default(false).notNull(),
 	envelopeConstraintReason: text("envelope_constraint_reason"),
+	existingFootprintSqm: numeric("existing_footprint_sqm", { precision: 12, scale:  2 }),
+	existingStories: integer("existing_stories"),
+	existingHeightM: numeric("existing_height_m", { precision: 8, scale:  2 }),
+	existingGfaSqm: numeric("existing_gfa_sqm", { precision: 12, scale:  2 }),
+	existingWidthM: numeric("existing_width_m", { precision: 8, scale:  2 }),
+	existingLengthM: numeric("existing_length_m", { precision: 8, scale:  2 }),
+	existingStructureConfidence: text("existing_structure_confidence"),
+	existingOtherStructuresCount: integer("existing_other_structures_count"),
+	existingOtherStructuresSqm: numeric("existing_other_structures_sqm", { precision: 12, scale:  2 }),
+	existingGreenspaceSqm: numeric("existing_greenspace_sqm", { precision: 12, scale:  2 }),
 }, (table) => [
 	index("idx_permits_addr_normalized").using("btree", table.streetNum.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")).where(sql`(street_name_normalized IS NOT NULL)`),
 	index("idx_permits_application_date").using("btree", table.applicationDate.asc().nullsLast().op("date_ops")),

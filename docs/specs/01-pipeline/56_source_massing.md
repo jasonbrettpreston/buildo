@@ -70,6 +70,6 @@ As a spatial data dependency, this script ingests 3D building footprint volumes 
 <constraints>
 ## 4. Operating Boundaries
 - **Script:** `scripts/load-massing.js`
-- **Consumed by:** `chain_sources.md` (step 7), `link_massing` (spatial matching)
+- **Consumed by:** `chain_sources.md` (step 7), `link_massing` (spatial matching), `compute-cost-estimates.js` (GFA Step A — `footprint_area_sqm`), and `enrich-parcels.js` Spec 65 §5 existing-structure pass (PRIMARY building footprint/stories/height/geom → `parcels.existing_*`, propagated to permits/coa)
 - **Relies on:** `pipeline_system.md` (SDK)
 </constraints>

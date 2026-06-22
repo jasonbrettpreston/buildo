@@ -55,6 +55,8 @@ The Toronto Open Data Property Boundaries CSV historically published 7 columns. 
 | `stated_area_raw` | TEXT | CSV `STATEDAREA` | |
 | `lot_size_sqm` / `lot_size_sqft` | NUMERIC | derived from `geometry` | |
 
+**Enrichment-written columns (NOT load-parcels — listed here as the parcels-schema SoT):** zoning feed (Spec 65 §2, mig 165), max-build envelope (Spec 65 §4, mig 185), and the **existing-structure feed** (Spec 65 §5, mig 187): `existing_footprint_sqm`, `existing_stories`, `existing_height_m`, `existing_gfa_sqm`, `existing_width_m`, `existing_length_m`, `existing_structure_confidence` (TEXT high/low), `existing_other_structures_count`, `existing_other_structures_sqm`, `existing_greenspace_sqm` — derived by `enrich-parcels.js` from the PRIMARY linked building (Spec 56 massing) + lot; NULL where no building is linked. Propagated to permits + coa_applications (mig 188).
+
 **PK:** `(id)` — auto-generated; `parcel_id` UNIQUE.
 **Upsert:** `ON CONFLICT (parcel_id) DO UPDATE`. Day-1 critical safety (WF1 Phase 1 commit `2501aa0`): all 5 address-derived columns use `COALESCE(NULLIF(EXCLUDED.X, ''), parcels.X)` to preserve pre-strip values when EXCLUDED is empty. WHERE-clause NULLIF guards prevent spurious WAL writes on no-op updates.
 </architecture>

@@ -236,6 +236,12 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE max_build_confidence = 'low')                            AS mb_conf_low_pop,
           COUNT(*) FILTER (WHERE garden_suite_fits)                                       AS suite_fits_pop,
           COUNT(*) FILTER (WHERE envelope_constrained)                                    AS env_constrained_pop,
+          -- Spec 65 Phase 1 — enrich_coa_zoning existing-structure propagation (mig 188). All INFO, no denominator.
+          COUNT(*) FILTER (WHERE existing_footprint_sqm IS NOT NULL)                       AS existing_footprint_pop,
+          COUNT(*) FILTER (WHERE existing_gfa_sqm IS NOT NULL)                             AS existing_gfa_pop,
+          COUNT(*) FILTER (WHERE existing_structure_confidence = 'high')                   AS existing_conf_high_pop,
+          COUNT(*) FILTER (WHERE existing_structure_confidence = 'low')                    AS existing_conf_low_pop,
+          COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)                      AS existing_greenspace_pop,
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
       `);
@@ -350,6 +356,12 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_build_confidence_low',    parseInt(ca.mb_conf_low_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.garden_suite_fits',           parseInt(ca.suite_fits_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.envelope_constrained',        parseInt(ca.env_constrained_pop, 10)));
+      // Spec 65 Phase 1 existing-structure — INFO, no denominator.
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.existing_footprint_sqm',      parseInt(ca.existing_footprint_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.existing_gfa_sqm',            parseInt(ca.existing_gfa_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.existing_structure_confidence_high', parseInt(ca.existing_conf_high_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.existing_structure_confidence_low',  parseInt(ca.existing_conf_low_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.existing_greenspace_sqm',     parseInt(ca.existing_greenspace_pop, 10)));
 
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
@@ -531,7 +543,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE max_build_confidence = 'medium')             AS mb_conf_medium_pop,
           COUNT(*) FILTER (WHERE max_build_confidence = 'low')                AS mb_conf_low_pop,
           COUNT(*) FILTER (WHERE garden_suite_fits)                           AS suite_fits_pop,
-          COUNT(*) FILTER (WHERE envelope_constrained)                        AS env_constrained_pop
+          COUNT(*) FILTER (WHERE envelope_constrained)                        AS env_constrained_pop,
+          -- Spec 65 Phase 1 — enrich_permits existing-structure propagation (mig 188). INFO, no denominator.
+          COUNT(*) FILTER (WHERE existing_footprint_sqm IS NOT NULL)          AS existing_footprint_pop,
+          COUNT(*) FILTER (WHERE existing_gfa_sqm IS NOT NULL)                AS existing_gfa_pop,
+          COUNT(*) FILTER (WHERE existing_structure_confidence = 'high')      AS existing_conf_high_pop,
+          COUNT(*) FILTER (WHERE existing_structure_confidence = 'low')       AS existing_conf_low_pop,
+          COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)         AS existing_greenspace_pop
         FROM permits
       `);
       const permitsTotal        = parseInt(pa.permits_total, 10) || 0;
@@ -897,6 +915,12 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_build_confidence_low',    parseInt(pa.mb_conf_low_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.garden_suite_fits',           parseInt(pa.suite_fits_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.envelope_constrained',        parseInt(pa.env_constrained_pop, 10)));
+      // Spec 65 Phase 1 existing-structure — INFO, no denominator.
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.existing_footprint_sqm',      parseInt(pa.existing_footprint_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.existing_gfa_sqm',            parseInt(pa.existing_gfa_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.existing_structure_confidence_high', parseInt(pa.existing_conf_high_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.existing_structure_confidence_low',  parseInt(pa.existing_conf_low_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.existing_greenspace_sqm',     parseInt(pa.existing_greenspace_pop, 10)));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));
