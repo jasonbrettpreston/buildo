@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { trades, tradeMappingRules, permits, permitHistory, syncRuns, permitTrades, entities, entityContacts, builders, builderContacts, parcels, permitParcels, buildingFootprints, parcelBuildings, wsibRegistry, entityProjects, leadViews, permitPhaseTransitions, costEstimates, userProfiles, subscribeNonces, leadTrades, addressPoints, parcelAddressPoints, universalStreamCatalog, universalStreamTradeSignals, leadViewEvents, leadParcels, permitProducts, productGroups, neighbourhoods } from "./schema";
+import { trades, tradeMappingRules, permits, permitHistory, syncRuns, permitTrades, permitParcels, parcels, buildingFootprints, parcelBuildings, entities, wsibRegistry, entityProjects, entityContacts, leadViews, costEstimates, permitPhaseTransitions, userProfiles, subscribeNonces, leadTrades, productGroups, leadProducts, universalStreamCatalog, universalStreamTradeSignals, addressPoints, parcelAddressPoints, tradeProducts, supplierProducts, suppliers, leadViewEvents, leadParcels, permitProducts, neighbourhoods } from "./schema";
 
 export const tradeMappingRulesRelations = relations(tradeMappingRules, ({one}) => ({
 	trade: one(trades, {
@@ -13,6 +13,7 @@ export const tradesRelations = relations(trades, ({many}) => ({
 	permitTrades: many(permitTrades),
 	leadTrades: many(leadTrades),
 	universalStreamTradeSignals: many(universalStreamTradeSignals),
+	tradeProducts: many(tradeProducts),
 }));
 
 export const permitHistoryRelations = relations(permitHistory, ({one}) => ({
@@ -28,9 +29,12 @@ export const permitHistoryRelations = relations(permitHistory, ({one}) => ({
 
 export const permitsRelations = relations(permits, ({one, many}) => ({
 	permitHistories: many(permitHistory),
+	permitTrades: many(permitTrades),
+	permitParcels: many(permitParcels),
+	entityProjects: many(entityProjects),
 	leadViews: many(leadViews),
-	permitPhaseTransitions: many(permitPhaseTransitions),
 	costEstimates: many(costEstimates),
+	permitPhaseTransitions: many(permitPhaseTransitions),
 	permitProducts: many(permitProducts),
 	neighbourhood: one(neighbourhoods, {
 		fields: [permits.neighbourhoodId],
@@ -43,38 +47,21 @@ export const syncRunsRelations = relations(syncRuns, ({many}) => ({
 }));
 
 export const permitTradesRelations = relations(permitTrades, ({one}) => ({
+	permit: one(permits, {
+		fields: [permitTrades.permitNum],
+		references: [permits.permitNum]
+	}),
 	trade: one(trades, {
 		fields: [permitTrades.tradeId],
 		references: [trades.id]
 	}),
 }));
 
-export const entityContactsRelations = relations(entityContacts, ({one}) => ({
-	entity: one(entities, {
-		fields: [entityContacts.entityId],
-		references: [entities.id]
-	}),
-}));
-
-export const entitiesRelations = relations(entities, ({many}) => ({
-	entityContacts: many(entityContacts),
-	wsibRegistries: many(wsibRegistry),
-	entityProjects: many(entityProjects),
-	leadViews: many(leadViews),
-}));
-
-export const builderContactsRelations = relations(builderContacts, ({one}) => ({
-	builder: one(builders, {
-		fields: [builderContacts.builderId],
-		references: [builders.id]
-	}),
-}));
-
-export const buildersRelations = relations(builders, ({many}) => ({
-	builderContacts: many(builderContacts),
-}));
-
 export const permitParcelsRelations = relations(permitParcels, ({one}) => ({
+	permit: one(permits, {
+		fields: [permitParcels.permitNum],
+		references: [permits.permitNum]
+	}),
 	parcel: one(parcels, {
 		fields: [permitParcels.parcelId],
 		references: [parcels.id]
@@ -110,9 +97,27 @@ export const wsibRegistryRelations = relations(wsibRegistry, ({one}) => ({
 	}),
 }));
 
+export const entitiesRelations = relations(entities, ({many}) => ({
+	wsibRegistries: many(wsibRegistry),
+	entityProjects: many(entityProjects),
+	entityContacts: many(entityContacts),
+	leadViews: many(leadViews),
+}));
+
 export const entityProjectsRelations = relations(entityProjects, ({one}) => ({
 	entity: one(entities, {
 		fields: [entityProjects.entityId],
+		references: [entities.id]
+	}),
+	permit: one(permits, {
+		fields: [entityProjects.permitNum],
+		references: [permits.permitNum]
+	}),
+}));
+
+export const entityContactsRelations = relations(entityContacts, ({one}) => ({
+	entity: one(entities, {
+		fields: [entityContacts.entityId],
 		references: [entities.id]
 	}),
 }));
@@ -128,16 +133,16 @@ export const leadViewsRelations = relations(leadViews, ({one}) => ({
 	}),
 }));
 
-export const permitPhaseTransitionsRelations = relations(permitPhaseTransitions, ({one}) => ({
+export const costEstimatesRelations = relations(costEstimates, ({one}) => ({
 	permit: one(permits, {
-		fields: [permitPhaseTransitions.permitNum],
+		fields: [costEstimates.permitNum],
 		references: [permits.permitNum]
 	}),
 }));
 
-export const costEstimatesRelations = relations(costEstimates, ({one}) => ({
+export const permitPhaseTransitionsRelations = relations(permitPhaseTransitions, ({one}) => ({
 	permit: one(permits, {
-		fields: [costEstimates.permitNum],
+		fields: [permitPhaseTransitions.permitNum],
 		references: [permits.permitNum]
 	}),
 }));
@@ -161,19 +166,18 @@ export const leadTradesRelations = relations(leadTrades, ({one}) => ({
 	}),
 }));
 
-export const parcelAddressPointsRelations = relations(parcelAddressPoints, ({one}) => ({
-	addressPoint: one(addressPoints, {
-		fields: [parcelAddressPoints.addressPointId],
-		references: [addressPoints.addressPointId]
-	}),
-	parcel: one(parcels, {
-		fields: [parcelAddressPoints.parcelId],
-		references: [parcels.id]
+export const leadProductsRelations = relations(leadProducts, ({one}) => ({
+	productGroup: one(productGroups, {
+		fields: [leadProducts.productId],
+		references: [productGroups.id]
 	}),
 }));
 
-export const addressPointsRelations = relations(addressPoints, ({many}) => ({
-	parcelAddressPoints: many(parcelAddressPoints),
+export const productGroupsRelations = relations(productGroups, ({many}) => ({
+	leadProducts: many(leadProducts),
+	tradeProducts: many(tradeProducts),
+	supplierProducts: many(supplierProducts),
+	permitProducts: many(permitProducts),
 }));
 
 export const universalStreamTradeSignalsRelations = relations(universalStreamTradeSignals, ({one}) => ({
@@ -189,6 +193,47 @@ export const universalStreamTradeSignalsRelations = relations(universalStreamTra
 
 export const universalStreamCatalogRelations = relations(universalStreamCatalog, ({many}) => ({
 	universalStreamTradeSignals: many(universalStreamTradeSignals),
+}));
+
+export const parcelAddressPointsRelations = relations(parcelAddressPoints, ({one}) => ({
+	addressPoint: one(addressPoints, {
+		fields: [parcelAddressPoints.addressPointId],
+		references: [addressPoints.addressPointId]
+	}),
+	parcel: one(parcels, {
+		fields: [parcelAddressPoints.parcelId],
+		references: [parcels.id]
+	}),
+}));
+
+export const addressPointsRelations = relations(addressPoints, ({many}) => ({
+	parcelAddressPoints: many(parcelAddressPoints),
+}));
+
+export const tradeProductsRelations = relations(tradeProducts, ({one}) => ({
+	productGroup: one(productGroups, {
+		fields: [tradeProducts.productId],
+		references: [productGroups.id]
+	}),
+	trade: one(trades, {
+		fields: [tradeProducts.tradeId],
+		references: [trades.id]
+	}),
+}));
+
+export const supplierProductsRelations = relations(supplierProducts, ({one}) => ({
+	productGroup: one(productGroups, {
+		fields: [supplierProducts.productId],
+		references: [productGroups.id]
+	}),
+	supplier: one(suppliers, {
+		fields: [supplierProducts.supplierId],
+		references: [suppliers.id]
+	}),
+}));
+
+export const suppliersRelations = relations(suppliers, ({many}) => ({
+	supplierProducts: many(supplierProducts),
 }));
 
 export const leadViewEventsRelations = relations(leadViewEvents, ({one}) => ({
@@ -214,10 +259,6 @@ export const permitProductsRelations = relations(permitProducts, ({one}) => ({
 		fields: [permitProducts.productId],
 		references: [productGroups.id]
 	}),
-}));
-
-export const productGroupsRelations = relations(productGroups, ({many}) => ({
-	permitProducts: many(permitProducts),
 }));
 
 export const neighbourhoodsRelations = relations(neighbourhoods, ({many}) => ({
