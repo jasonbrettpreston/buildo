@@ -181,11 +181,39 @@ pipeline.emitMeta(
 
 ---
 
+<maxbuild>
+## 4. Max-build envelope (v1.1 — 2026-06-21, WF1/Genesis)
+
+A SECOND set-based UPDATE pass in `enrich-parcels.js` computes, per parcel, the **maximum buildable structure** — a geometric footprint + a human-readable L×W×H box + GFA + garden-suite size — gated on a **lot-size confidence** cross-check, then `enrich-permits.js` propagates the feed onto permits + coa_applications (so every application shows both the lot-validation inputs and the computed envelope). Born from the user requirement: reason about "how big could this be" (new build / addition headroom / suite), location-dependent (ravine reduces, heritage freezes, narrow lots constrain). Inputs drawn from Specs 58 (FSI/coverage/height/`bylaw_standard_setback_m`/exceptions), 59 (ravine), 61 (heritage), 62 (corner/through lot).
+
+### MB-DEC — design decisions (folded from two 6-panel plan-review rounds)
+- **MB-1 Separate pass, separate columns.** The 16 new columns live in `scripts/lib/max-build.js` `MAX_BUILD_COLS` and are written by `buildMaxBuildSql`/`buildMaxBuildUpdateSql` — a SECOND `UPDATE parcels` that READS the already-written zoning feed (`bylaw_max_*`) + lot dims (`frontage_m`/`depth_m`, mig 011) + geom + the massing join. They are **NOT** in `ALL_WRITE_COLS` and **NOT** inside `buildEnrichmentSql`'s spatial CTE — protecting the migration-165 36-column regression lock + the stale-overlay / NOT ST_Touches / round-cast idempotency fences. Runs in the SAME transaction after the zoning pass (so `parcel_zoning_enrich` is still visible for incremental scoping).
+- **MB-2 Lot-validation gate (Phase 1).** `lot_size_confidence` (high/medium/low) from a 3-way cross-check: stored `lot_size_sqm` vs inline `ST_Area(geom::geography)` vs `frontage_m × depth_m` (NO `stated_area_raw` re-parse — `lot_size_sqm` is already the parsed value). `high` = all 3 pairwise within 15%; `medium` = ≥1 pair agrees; `low` = none agree OR out-of-bounds (<50/>2000 m²). The envelope (Phase 2/3) emits ONLY when `lot_size_confidence ∈ {high, medium}` — else NULL + `envelope_constraint_reason='low_lot_confidence'`.
+- **MB-3 Geometric footprint + rect box (Phase 2).** `max_buildable_footprint_sqm = LEAST(ST_Area(ST_Buffer(geom::geography, -(side_setback+ravine_red))), box_area, lot×coverage)` — the negative buffer is shape-aware (irregular/pie-safe) but directionally-blind; the `max_build_width/length_m` rect box (`max_build_basis='rect_approx'`) is directional but shape-blind; the two cross-check via `LEAST` (which ignores NULLs). Empty buffer (lot < 2×inset) → NULL + `setback_exceeds_lot`. Widths/lengths clamp `GREATEST(0,…)` → NULL + `lot_too_narrow`. Stories = `GREATEST(1, COALESCE(bylaw_max_stories, round(height/3.0)))`; both NULL → NULL (not floored to 1). GFA = `LEAST(footprint×stories, lot×FSI)`; basis `fsi`/`coverage_box`.
+- **MB-4 Setbacks.** `bylaw_standard_setback_m` (from `STAND_SET`, front-aligned) is the FRONT setback when present; side/rear/flankage have NO source field → always from the coarse `zoning_class → {front,side,rear,flankage}` table in `scripts/lib/max-build.js` (`SETBACK_DEFAULTS`, documented approximations). `max_build_setback_basis` records `bylaw` vs `zone_default` (the rollup keys on it). Setbacks always resolve (the zone-default table has a DEFAULT row), so the front setback is never NULL — there is no `no_setback_data` outcome in practice.
+- **MB-5 Location reductions (Phase 3).** Corner → `width = frontage − front − flankage`; through-lot → `length = depth − 2×front`. Ravine → subtract a FIXED `RAVINE_SETBACK_M` (10 m, Ch.658 stable-slope); `ravine_distance_m` is display-only, **NOT** a multiplier (Spec 59 L2: it is signed proximity, not a gradient). Heritage → FREEZE to existing structure (`SUM(footprint_area_sqm)`, `MAX(estimated_stories)` across primary `parcel_buildings`→`building_footprints`); no primary building → NULL + `heritage_no_massing`; **`bylaw_max_*` is never overwritten** (variance_context depends on it). Garden suite (rear-yard) gated on min lot area + usable rear yard, excluding ravine/heritage — NOT laneway (laneway-suite deferred #431-FU2).
+- **MB-6 Single confidence rollup.** `max_build_confidence` (high/medium/low) covers the WHOLE envelope, is pure NUMBER-trust (decoupled from constraint status — a heritage freeze with real massing stays `high`), worst-input-wins: `high` = lot high + bylaw setback + (FSI or real height); `medium` = lot medium / zone-default setback / height-only; `low` = clamped / ambiguous_zone / multi-parcel assembly / lot low. (Replaces per-field footprint/GFA confidences — shared inputs.)
+- **MB-7 Propagation = dominant parcel.** `enrich-permits.js` propagates lot INPUTS (`lot_size_sqm`/`frontage_m`/`depth_m`/`lot_size_confidence`/`lot_size_basis`) + envelope OUTPUTS from the **dominant parcel** (`rn=1`; an assembly has no coherent envelope) via the established §8e 4-surface pattern (`allWriteCols`, `cand`/`ag`+SELECT, `buildNullifyOrphansSql`, `buildUpdateSql`). `max_build_confidence` degrades to `low` when `zoning_parcel_count > 1`. The two NOT-NULL booleans (`garden_suite_fits`, `envelope_constrained`) reset to false on orphan-nullify. **Precondition:** `link-massing` should precede enrich-parcels for the heritage freeze; otherwise heritage parcels emit `heritage_no_massing`.
+- **MB-8 Observability — all INFO, never gated.** Coverage of every envelope field is sparse-by-design (FSI ~5% → GFA largely `coverage_box`), so all rows are `infoRow` (no denominator): `lot_size_confidence` + `max_build_confidence` 3-tier distributions, per-output populated counts (footprint/gfa/box) + the `gfa_basis` split (keeps the footprint-OK/GFA-null gap visible behind the unified confidence), `garden_suite_fits`/`envelope_constrained` TRUE-subset counts — in enrich-parcels' audit_table, enrich-permits' audit_table, AND assert-global-coverage (parcels + propagated coa/permits). Verdict cascade stays row-derived. First-deploy 0→N spike: `docs/runbook/max_build_envelope_first_deploy.md` (§3.7).
+
+### Incremental scope
+The max-build pass recomputes a parcel when `lot_size_confidence IS NULL` (first-time) OR its zoning was re-enriched this run (present in `parcel_zoning_enrich`). `--full` recomputes all — **run `--full` after a lot/massing reload** (lot dims or massing changing without a zoning change won't otherwise re-trigger). `IS DISTINCT FROM` keeps steady-state re-runs at 0 writes.
+
+### Migrations
+- `migrations/185_parcels_max_build_columns.sql` — 16 parcels columns (nullable; 2 NOT-NULL bools).
+- `migrations/186_permits_coa_max_build_columns.sql` — lot inputs + envelope outputs on permits + coa_applications (`is_through_lot` already on both via mig 176).
+</maxbuild>
+
+---
+
 <testing>
 ## 5. Testing Mandate
 - **Logic** (`src/tests/zoning-parcels.logic.test.ts`): `zoning-precedence.js` attr→rule map completeness (every parcel column has a rule); `buildEnrichmentSql` emits MIN for ceilings / MAX for floors / dominant for identity; deterministic ORDER BY present; jsonb shape builder.
 - **Infra** (`src/tests/parcels-zoning-columns.regression.test.ts`): migration 165 applied — all ~36 columns + exact types + CHECK-free nullability; assert **no** new index on `parcels` from the migration; `zoning_overlays` is JSONB.
 - **DB integration** (`src/tests/db/enrich-parcels.db.test.ts`, gated `BUILDO_TEST_DB=1`): temp-table + `UPDATE … FROM`; gap parcel → NULLs + count; boundary parcel → dominant identity + MIN numeric + `<attr>_conflict` row + jsonb candidates; ambiguity flag at `share<0.60`; point-touch intersection excluded; incremental skip + idempotent re-run (0 rows); precondition HALT when GIST/PostGIS absent; skip-run `records_meta` forwarding honored.
+- **Max-build logic** (`src/tests/max-build.logic.test.ts`): `lookupSetback`/`buildSetbackCase` (longest-prefix wins, DEFAULT fallback, dims complete); constants present; **`MAX_BUILD_COLS` ∩ `enrich-parcels.ALL_WRITE_COLS` empty** (MB-1 regression lock); `LOT_MAXBUILD_COLS` shape; `MAX_BUILD_BOOL_COLS ⊂ MAX_BUILD_COLS`.
+- **Max-build DB integration** (`src/tests/db/enrich-parcels-maxbuild.db.test.ts`, gated `BUILDO_TEST_DB=1`): lot-confidence tiers; geometric footprint vs coverage cap; corner (flankage) + through (2×front) reductions; ravine fixed-setback; heritage freeze with/without massing; narrow-lot clamp → `lot_too_narrow`; garden-suite gate (excludes ravine/heritage); NULL-on-low-confidence; idempotent re-run.
+- **Propagation** (`src/tests/enrich-permits-maxbuild.logic.test.ts`): `MAXBUILD_COLS` on all 4 surfaces; orphan-nullify resets the 2 NOT-NULL bools to `false`; `max_build_confidence='low'` on assembly; `assertMaxBuildColumns` guard.
 
 Every test file carries the `SPEC LINK` header.
 </testing>
@@ -196,10 +224,16 @@ Every test file carries the `SPEC LINK` header.
 ## 6. Operating Boundaries
 
 ### Target Files
-- `scripts/enrich-parcels.js` (NEW)
+- `scripts/enrich-parcels.js` (NEW; v1.1 adds the max-build second pass)
 - `scripts/lib/zoning-precedence.js` (NEW)
+- `scripts/lib/max-build.js` (NEW v1.1 — setback table, constants, `MAX_BUILD_COLS`, SQL fragments)
+- `scripts/enrich-permits.js` (v1.1 — max-build §8e propagation; otherwise Spec 66)
+- `scripts/quality/assert-global-coverage.js` (v1.1 — max-build INFO rows)
 - `scripts/one-time/backfill-parcels-zoning-index.js` (NEW)
 - `migrations/165_parcels_zoning_columns.sql` (NEW)
+- `migrations/185_parcels_max_build_columns.sql` (NEW v1.1)
+- `migrations/186_permits_coa_max_build_columns.sql` (NEW v1.1)
+- `docs/runbook/max_build_envelope_first_deploy.md` (NEW v1.1)
 - `scripts/manifest.json` — add `enrich_parcels` script + `chains.sources` step (after `load_zoning`)
 - `src/components/FreshnessTimeline.tsx` — `PIPELINE_REGISTRY` + `PIPELINE_CHAINS.sources`
 - `src/lib/admin/funnel.ts` — `STEP_DESCRIPTIONS` / `PIPELINE_TABLE_MAP` (NOT `LOADER_SLUGS` — enricher)

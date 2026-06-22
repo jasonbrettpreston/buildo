@@ -9,6 +9,7 @@
 'use strict';
 
 const pipeline = require('./lib/pipeline');
+const mb = require('./lib/max-build');
 
 const ADVISORY_LOCK_ID = 66; // §R2 — lock = spec number
 const TAG = '[enrich-permits]';
@@ -38,6 +39,13 @@ const HERITAGE_COLS = ['is_heritage_designated', 'heritage_designation_type', 'h
 // non-NULL value (§11.1, NOT a bool_or). The booleans are NOT NULL so the orphan-nullify resets
 // them to false (frontage → NULL), like ravine/heritage — see buildNullifyOrphansSql.
 const CENTRELINE_COLS = ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name'];
+
+// Max-build columns (Spec 65 / migration 186). Lot-validation INPUTS + max-build OUTPUTS, both from
+// the DOMINANT parcel (assembly has no coherent envelope — max_build_confidence degrades to 'low'
+// when zoning_parcel_count > 1). The two NOT-NULL booleans (garden_suite_fits, envelope_constrained)
+// reset to false on orphan-nullify; the rest → NULL. mb.LOT_MAXBUILD_COLS = inputs + outputs.
+// (is_through_lot is already propagated via CENTRELINE_COLS — not duplicated here.)
+const MAXBUILD_COLS = mb.LOT_MAXBUILD_COLS;
 
 // L24c coverage-guard default (operator-overridable via logic_variables.centreline_propagation_coverage_min).
 // 0.90 sits below the ~3% zero-intersection floor so a healthy ~97% run never false-HALTs, yet a
@@ -93,7 +101,7 @@ function validateTarget(t) {
 
 function allWriteCols(target) {
   const c = CFG[target];
-  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS, ...CENTRELINE_COLS];
+  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS, ...CENTRELINE_COLS, ...MAXBUILD_COLS];
 }
 
 // ---------------------------------------------------------------------------
@@ -167,6 +175,29 @@ async function assertCentrelineColumns(client, target) {
     const missing = cols.filter((c) => !present.has(c));
     if (missing.length > 0) {
       throw new Error(`${TAG} ${tbl} missing centreline columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '174' : '176'} not applied`);
+    }
+  }
+}
+
+// §8e (Spec 65) — column-existence guard for the max-build feed. Fail fast with a clear message if
+// migration 185 (parcels source cols) or 186 (target lead cols) is unapplied, not a cryptic
+// "column does not exist" mid-UPDATE. The "enrich-parcels ran" precondition is already covered by
+// assertWf2Ran (max-build is a second pass of the SAME enrich-parcels script/txn as zoning).
+async function assertMaxBuildColumns(client, target) {
+  const targetTable = CFG[target].table;
+  const want = {
+    parcels: ['lot_size_confidence', ...mb.LOT_MAXBUILD_OUTPUT_COLS],
+    [targetTable]: mb.LOT_MAXBUILD_COLS,
+  };
+  for (const [tbl, cols] of Object.entries(want)) {
+    const { rows } = await client.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name = ANY($2::text[])`,
+      [tbl, cols],
+    );
+    const present = new Set(rows.map((r) => r.column_name));
+    const missing = cols.filter((c) => !present.has(c));
+    if (missing.length > 0) {
+      throw new Error(`${TAG} ${tbl} missing max-build columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '185' : '186'} not applied`);
     }
   }
 }
@@ -253,6 +284,7 @@ WITH cand AS (
          par.is_in_ravine_protection_area, par.ravine_distance_m,
          par.is_heritage_designated, par.heritage_designation_type, par.heritage_designation_date,
          par.is_corner_lot, par.is_through_lot, par.primary_frontage_street_name,
+         ${MAXBUILD_COLS.filter((col) => col !== 'lot_size_sqm').map((col) => `par.${col}`).join(', ')},
          ${OVERLAY_FLAGS.map((f) => `par.${f}`).join(', ')},
          ${c.confidence} AS confidence,
          par.lot_size_sqm / NULLIF(SUM(par.lot_size_sqm) OVER (PARTITION BY ${qkey}), 0) AS area_share,
@@ -315,6 +347,10 @@ SELECT ${c.leadKey.map((k) => `dom.${k}`).join(', ')},
        ag.new_is_corner_lot AS is_corner_lot,
        ag.new_is_through_lot AS is_through_lot,
        ag.new_primary_frontage AS primary_frontage_street_name,
+       -- §8e max-build propagation (Spec 65): lot INPUTS + envelope OUTPUTS from the DOMINANT parcel
+       -- (rn=1). max_build_confidence degrades to 'low' on a multi-parcel assembly (no coherent envelope).
+       ${MAXBUILD_COLS.filter((col) => col !== 'max_build_confidence').map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
+       CASE WHEN ag.zoning_parcel_count > 1 THEN 'low' ELSE dom.max_build_confidence END AS max_build_confidence,
        ag.distinct_zones
 FROM cand dom
 JOIN ag USING (${key})
@@ -382,7 +418,8 @@ function buildNullifyOrphansSql({ target, scopeWhere = 'TRUE' }) {
   // from the generic =NULL map: each has a NOT-NULL boolean that can't be NULLed, so reset the
   // boolean to false + the rest to NULL — appended below (ravine §11.2 / heritage L12).
   const set = [
-    ...allWriteCols(target).filter((col) => !RAVINE_COLS.includes(col) && !HERITAGE_COLS.includes(col) && !CENTRELINE_COLS.includes(col)).map((col) => `${col} = NULL`),
+    ...allWriteCols(target).filter((col) => !RAVINE_COLS.includes(col) && !HERITAGE_COLS.includes(col)
+      && !CENTRELINE_COLS.includes(col) && !mb.MAX_BUILD_BOOL_COLS.includes(col)).map((col) => `${col} = NULL`),
     'is_in_ravine_protection_area = false',
     'ravine_distance_m = NULL',
     'is_heritage_designated = false',
@@ -392,6 +429,10 @@ function buildNullifyOrphansSql({ target, scopeWhere = 'TRUE' }) {
     'is_corner_lot = false',
     'is_through_lot = false',
     'primary_frontage_street_name = NULL',
+    // §8e max-build (Spec 65): the two NOT-NULL booleans reset to false; the rest of MAXBUILD_COLS
+    // (lot inputs + envelope outputs) fall through the generic = NULL map above.
+    'garden_suite_fits = false',
+    'envelope_constrained = false',
   ].join(', ');
   const linkExists = target === 'permits'
     ? `SELECT 1 FROM permit_parcels pp WHERE pp.permit_num = ${c.leadAlias}.permit_num AND pp.revision_num = ${c.leadAlias}.revision_num`
@@ -447,6 +488,7 @@ async function main(pool) {
       await assertHeritageEnriched(client); // §8e DEC-F
       await assertCentrelineColumns(client, target); // §8e L24a — mig 174/176 applied?
       await assertCentrelineEnriched(client); // §8e L24b recency + L24c coverage
+      await assertMaxBuildColumns(client, target); // §8e (Spec 65) — mig 185/186 applied?
       await assertLinkTable(client, target); // §8e DEC-D2 — link table + join cols present?
       const runAt = await pipeline.getDbTimestamp(client);
       result = await enrichLeads(client, { target, scopeWhere: 'TRUE', runAt });
@@ -503,6 +545,26 @@ async function main(pool) {
     auditRows.push({ metric: `${prefix}_corner_lot_count`, value: cl.corner, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_through_lot_count`, value: cl.through_lot, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_with_frontage_name_count`, value: cl.frontage, status: 'INFO' });
+    // §8e max-build propagation observability (Spec 65 — INFO; zoning F-H12 gate + verdict untouched).
+    // Per-output populated counts + confidence distribution keep the footprint/GFA gap visible.
+    const me = (await pool.query(`
+      SELECT COUNT(*) FILTER (WHERE lot_size_confidence IS NOT NULL)::int        AS with_lot_conf,
+             COUNT(*) FILTER (WHERE max_buildable_footprint_sqm IS NOT NULL)::int AS with_footprint,
+             COUNT(*) FILTER (WHERE max_buildable_gfa_sqm IS NOT NULL)::int       AS with_gfa,
+             COUNT(*) FILTER (WHERE max_build_confidence = 'high')::int           AS mb_high,
+             COUNT(*) FILTER (WHERE max_build_confidence = 'medium')::int         AS mb_medium,
+             COUNT(*) FILTER (WHERE max_build_confidence = 'low')::int            AS mb_low,
+             COUNT(*) FILTER (WHERE garden_suite_fits)::int                       AS suite_fits,
+             COUNT(*) FILTER (WHERE envelope_constrained)::int                    AS constrained
+      FROM ${cfg.table}`)).rows[0];
+    auditRows.push({ metric: `${prefix}_with_lot_confidence_count`, value: me.with_lot_conf, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_max_buildable_footprint_count`, value: me.with_footprint, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_max_buildable_gfa_count`, value: me.with_gfa, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_max_build_confidence_high_count`, value: me.mb_high, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_max_build_confidence_medium_count`, value: me.mb_medium, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_max_build_confidence_low_count`, value: me.mb_low, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_garden_suite_fits_count`, value: me.suite_fits, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_envelope_constrained_count`, value: me.constrained, status: 'INFO' });
     // L5 disagreement protocol (permits only, §11.3): geometry stays authoritative; flag for
     // operator triage. INFO at count 0 (RNFP/Heritage currently 0 rows) — WARN ONLY on a real
     // disagreement, so a clean run never collapses PASS (Spec 48 §3.6).
@@ -529,7 +591,9 @@ async function main(pool) {
     });
 
     const readsCommon = {
-      parcels: ['id', 'zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number', 'zoning_overlays', 'lot_size_sqm', 'zoning_enriched_at', 'is_in_ravine_protection_area', 'ravine_distance_m', 'is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date', 'is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'centreline_dataset_version_when_enriched'],
+      parcels: ['id', 'zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number', 'zoning_overlays', 'lot_size_sqm', 'zoning_enriched_at', 'is_in_ravine_protection_area', 'ravine_distance_m', 'is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date', 'is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'centreline_dataset_version_when_enriched',
+        // §8e max-build feed (Spec 65) — lot INPUTS + envelope OUTPUTS read off the dominant parcel.
+        'frontage_m', 'depth_m', 'lot_size_confidence', 'lot_size_basis', ...mb.LOT_MAXBUILD_OUTPUT_COLS],
     };
     const reads = target === 'permits'
       ? { permits: ['permit_num', 'revision_num', 'permit_type'], permit_parcels: ['permit_num', 'revision_num', 'parcel_id', 'confidence'], permit_type_classifications: ['permit_type', 'class'], ...readsCommon }
@@ -548,9 +612,9 @@ if (require.main === module) {
 }
 
 module.exports = {
-  ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS, HERITAGE_COLS, CENTRELINE_COLS,
+  ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS, HERITAGE_COLS, CENTRELINE_COLS, MAXBUILD_COLS,
   validateTarget, allWriteCols, assertWf2Ran, assertRavinesEnriched, assertHeritageEnriched,
-  assertHeritageColumns, assertCentrelineColumns, assertCentrelineEnriched, assertLinkTable,
+  assertHeritageColumns, assertCentrelineColumns, assertCentrelineEnriched, assertLinkTable, assertMaxBuildColumns,
   buildEnrichmentSql, buildUpdateSql, buildNullifyOrphansSql, enrichLeads,
   coverageGate, verdictCascade,
 };

@@ -223,6 +223,19 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE is_corner_lot)                                           AS corner_lot_pop,
           COUNT(*) FILTER (WHERE is_through_lot)                                          AS through_lot_pop,
           COUNT(*) FILTER (WHERE primary_frontage_street_name IS NOT NULL)                AS frontage_name_pop,
+          -- Spec 65 — enrich_coa_zoning max-build propagation (migration 186). All INFO, no
+          -- denominator (sparse-by-design; FSI ~5%). Per-output populated counts keep the
+          -- footprint/GFA gap visible behind the unified max_build_confidence distribution.
+          COUNT(*) FILTER (WHERE lot_size_confidence IS NOT NULL)                         AS lot_size_conf_pop,
+          COUNT(*) FILTER (WHERE max_buildable_footprint_sqm IS NOT NULL)                 AS max_footprint_pop,
+          COUNT(*) FILTER (WHERE max_buildable_gfa_sqm IS NOT NULL)                       AS max_gfa_pop,
+          COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'fsi')                         AS max_gfa_fsi_pop,
+          COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'coverage_box')                AS max_gfa_cov_pop,
+          COUNT(*) FILTER (WHERE max_build_confidence = 'high')                           AS mb_conf_high_pop,
+          COUNT(*) FILTER (WHERE max_build_confidence = 'medium')                         AS mb_conf_medium_pop,
+          COUNT(*) FILTER (WHERE max_build_confidence = 'low')                            AS mb_conf_low_pop,
+          COUNT(*) FILTER (WHERE garden_suite_fits)                                       AS suite_fits_pop,
+          COUNT(*) FILTER (WHERE envelope_constrained)                                    AS env_constrained_pop,
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
       `);
@@ -326,6 +339,17 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.is_corner_lot',                parseInt(ca.corner_lot_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.is_through_lot',               parseInt(ca.through_lot_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.primary_frontage_street_name', parseInt(ca.frontage_name_pop, 10)));
+      // Spec 65 max-build propagation — INFO, no denominator (sparse-by-design; FSI ~5% → never gated).
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.lot_size_confidence',         parseInt(ca.lot_size_conf_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_buildable_footprint_sqm', parseInt(ca.max_footprint_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_buildable_gfa_sqm',       parseInt(ca.max_gfa_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_buildable_gfa_basis_fsi', parseInt(ca.max_gfa_fsi_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_buildable_gfa_basis_coverage_box', parseInt(ca.max_gfa_cov_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_build_confidence_high',   parseInt(ca.mb_conf_high_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_build_confidence_medium', parseInt(ca.mb_conf_medium_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_build_confidence_low',    parseInt(ca.mb_conf_low_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.garden_suite_fits',           parseInt(ca.suite_fits_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.envelope_constrained',        parseInt(ca.env_constrained_pop, 10)));
 
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
@@ -496,7 +520,18 @@ pipeline.run('assert-global-coverage', async (pool) => {
           -- §8e — enrich_permits centreline propagation (Spec 62 / migration 176):
           COUNT(*) FILTER (WHERE is_corner_lot)                               AS corner_lot_pop,
           COUNT(*) FILTER (WHERE is_through_lot)                              AS through_lot_pop,
-          COUNT(*) FILTER (WHERE primary_frontage_street_name IS NOT NULL)    AS frontage_name_pop
+          COUNT(*) FILTER (WHERE primary_frontage_street_name IS NOT NULL)    AS frontage_name_pop,
+          -- Spec 65 — enrich_permits max-build propagation (migration 186). INFO, no denominator.
+          COUNT(*) FILTER (WHERE lot_size_confidence IS NOT NULL)             AS lot_size_conf_pop,
+          COUNT(*) FILTER (WHERE max_buildable_footprint_sqm IS NOT NULL)     AS max_footprint_pop,
+          COUNT(*) FILTER (WHERE max_buildable_gfa_sqm IS NOT NULL)           AS max_gfa_pop,
+          COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'fsi')             AS max_gfa_fsi_pop,
+          COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'coverage_box')    AS max_gfa_cov_pop,
+          COUNT(*) FILTER (WHERE max_build_confidence = 'high')               AS mb_conf_high_pop,
+          COUNT(*) FILTER (WHERE max_build_confidence = 'medium')             AS mb_conf_medium_pop,
+          COUNT(*) FILTER (WHERE max_build_confidence = 'low')                AS mb_conf_low_pop,
+          COUNT(*) FILTER (WHERE garden_suite_fits)                           AS suite_fits_pop,
+          COUNT(*) FILTER (WHERE envelope_constrained)                        AS env_constrained_pop
         FROM permits
       `);
       const permitsTotal        = parseInt(pa.permits_total, 10) || 0;
@@ -851,6 +886,17 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.is_corner_lot',                parseInt(pa.corner_lot_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.is_through_lot',               parseInt(pa.through_lot_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.primary_frontage_street_name', parseInt(pa.frontage_name_pop, 10)));
+      // Spec 65 max-build propagation — INFO, no denominator (sparse-by-design; FSI ~5% → never gated).
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.lot_size_confidence',         parseInt(pa.lot_size_conf_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_buildable_footprint_sqm', parseInt(pa.max_footprint_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_buildable_gfa_sqm',       parseInt(pa.max_gfa_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_buildable_gfa_basis_fsi', parseInt(pa.max_gfa_fsi_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_buildable_gfa_basis_coverage_box', parseInt(pa.max_gfa_cov_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_build_confidence_high',   parseInt(pa.mb_conf_high_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_build_confidence_medium', parseInt(pa.mb_conf_medium_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_build_confidence_low',    parseInt(pa.mb_conf_low_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.garden_suite_fits',           parseInt(pa.suite_fits_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.envelope_constrained',        parseInt(pa.env_constrained_pop, 10)));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));

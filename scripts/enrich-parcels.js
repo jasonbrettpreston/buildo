@@ -15,6 +15,7 @@ const {
   DOMINANT_ORDER_BY,
   sqlAggregate,
 } = require('./lib/zoning-precedence');
+const mb = require('./lib/max-build');
 
 // §R2 — advisory lock = spec number.
 const ADVISORY_LOCK_ID = 65;
@@ -326,6 +327,214 @@ async function enrichParcels(client, opts = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Max-build envelope (Spec 65 § Max-build) — SECOND set-based UPDATE pass. Reads the
+// already-written zoning feed (bylaw_max_*) + lot dims (frontage_m/depth_m) + geom + the
+// massing join, computes a lot-validated 3D envelope. Deliberately SEPARATE from the zoning
+// engine: own MAX_BUILD_COLS array + own UPDATE — NOT in ALL_WRITE_COLS / buildEnrichmentSql
+// (protects the 36-col regression lock + idempotency fences). Runs in the SAME transaction
+// AFTER enrichParcels, so parcel_zoning_enrich (ON COMMIT DROP) is still visible for scoping.
+// ---------------------------------------------------------------------------
+function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false }) {
+  // SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only.
+  // Incremental: first-time (lot_size_confidence NULL) OR a parcel whose zoning was re-enriched
+  // this run (present in parcel_zoning_enrich). --full recomputes all (use after a massing/lot reload).
+  const incremental = full
+    ? 'TRUE'
+    : `(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id))`;
+  const { LOT_TOLERANCE: tol, LOT_MIN_SQM, LOT_MAX_SQM, STOREY_HEIGHT_M, RAVINE_SETBACK_M,
+    GARDEN_SUITE_MIN_LOT_SQM, GARDEN_SUITE_MIN_REAR_YARD_M, GARDEN_SUITE_MAX_GFA_SQM } = mb;
+  return `
+CREATE TEMP TABLE parcel_max_build ON COMMIT DROP AS
+WITH scope AS (
+  SELECT p.id AS pid, p.parcel_id, p.geom,
+         p.lot_size_sqm::numeric AS lot_size_sqm, p.frontage_m::numeric AS frontage_m, p.depth_m::numeric AS depth_m,
+         p.bylaw_max_height_m, p.bylaw_max_stories, p.bylaw_max_fsi, p.bylaw_max_coverage_pct,
+         p.bylaw_standard_setback_m, p.zoning_class, COALESCE(p.zoning_is_ambiguous, false) AS zoning_is_ambiguous,
+         COALESCE(p.is_corner_lot, false) AS is_corner_lot, COALESCE(p.is_through_lot, false) AS is_through_lot,
+         COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area,
+         COALESCE(p.is_heritage_designated, false) AS is_heritage_designated
+  FROM parcels p
+  WHERE (${scopeWhere}) AND p.geom IS NOT NULL AND ${incremental}
+),
+massing AS (
+  -- heritage-freeze existing structure: SUM footprint, MAX storeys across primary buildings (DeepSeek multi-primary).
+  SELECT pb.parcel_id AS pid,
+         SUM(bf.footprint_area_sqm)::numeric AS existing_footprint_sqm,
+         MAX(bf.estimated_stories) AS existing_stories
+  FROM parcel_buildings pb JOIN building_footprints bf ON bf.id = pb.building_id
+  WHERE pb.is_primary = true
+  GROUP BY pb.parcel_id
+),
+sb AS (
+  SELECT s.*, m.existing_footprint_sqm, m.existing_stories,
+    ST_Area(s.geom::geography)::numeric AS geom_area,
+    (s.frontage_m * s.depth_m)::numeric AS fxd_area,
+    -- front = real STAND_SET when present, else zone default; side/rear/flankage always zone default (no source).
+    COALESCE(s.bylaw_standard_setback_m, ${mb.buildSetbackCase('s.zoning_class', 'front')}) AS front_setback,
+    ${mb.buildSetbackCase('s.zoning_class', 'side')} AS side_setback,
+    ${mb.buildSetbackCase('s.zoning_class', 'rear')} AS rear_setback,
+    ${mb.buildSetbackCase('s.zoning_class', 'flankage')} AS flankage_setback,
+    (s.bylaw_standard_setback_m IS NOT NULL) AS setback_is_bylaw
+  FROM scope s LEFT JOIN massing m ON m.pid = s.pid
+),
+lot AS (
+  SELECT sb.*,
+    (lot_size_sqm IS NOT NULL AND geom_area IS NOT NULL
+      AND abs(lot_size_sqm - geom_area) <= ${tol} * GREATEST(lot_size_sqm, geom_area)) AS pair_lg,
+    (lot_size_sqm IS NOT NULL AND fxd_area IS NOT NULL
+      AND abs(lot_size_sqm - fxd_area) <= ${tol} * GREATEST(lot_size_sqm, fxd_area)) AS pair_lf,
+    (geom_area IS NOT NULL AND fxd_area IS NOT NULL
+      AND abs(geom_area - fxd_area) <= ${tol} * GREATEST(geom_area, fxd_area)) AS pair_gf,
+    COALESCE(lot_size_sqm, geom_area, fxd_area) AS best_area
+  FROM sb
+),
+tier AS (
+  SELECT lot.*,
+    CASE
+      WHEN best_area IS NULL THEN NULL
+      WHEN best_area < ${LOT_MIN_SQM} OR best_area > ${LOT_MAX_SQM} THEN 'low'
+      WHEN pair_lg AND pair_lf AND pair_gf THEN 'high'
+      WHEN pair_lg OR pair_lf OR pair_gf THEN 'medium'
+      ELSE 'low'
+    END AS lot_size_confidence,
+    CASE
+      WHEN best_area IS NULL THEN NULL
+      WHEN best_area < ${LOT_MIN_SQM} OR best_area > ${LOT_MAX_SQM} THEN 'oob'
+      WHEN pair_lg AND pair_lf AND pair_gf THEN '3way'
+      WHEN pair_lg OR pair_lf OR pair_gf THEN 'pair'
+      ELSE 'single'
+    END AS lot_size_basis
+  FROM lot
+),
+box AS (
+  SELECT tier.*,
+    COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit,
+    CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red,
+    GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - front_setback - flankage_setback
+                      ELSE frontage_m - 2 * side_setback END)
+                - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS width_raw,
+    GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback
+                      ELSE depth_m - front_setback - rear_setback END)
+                - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS length_raw
+  FROM tier
+),
+geo AS (
+  SELECT box.*,
+    NULLIF(width_raw, 0) AS width_m,
+    NULLIF(length_raw, 0) AS length_m,
+    CASE WHEN width_raw > 0 AND length_raw > 0 THEN round(width_raw * length_raw, 2) END AS box_area,
+    -- uniform negative buffer (shape-aware, dir-blind): side setback + ravine reduction. Empty (lot < 2×inset) → NULL.
+    NULLIF(round(ST_Area(ST_Buffer(geom::geography, -(side_setback + ravine_red)))::numeric, 2), 0) AS buffer_area,
+    CASE WHEN bylaw_max_coverage_pct IS NOT NULL THEN round(lot_size_sqm * bylaw_max_coverage_pct / 100.0, 2) END AS coverage_cap,
+    CASE WHEN bylaw_max_stories IS NOT NULL THEN GREATEST(1, bylaw_max_stories)
+         WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN GREATEST(1, round(bylaw_max_height_m / ${STOREY_HEIGHT_M})::int)
+         ELSE NULL END AS stories_calc
+  FROM box
+),
+env AS (
+  SELECT geo.*,
+    -- LEAST ignores NULLs → footprint = min of whatever measures exist (buffer ⋂ box ⋂ coverage cap).
+    LEAST(buffer_area, box_area, coverage_cap) AS footprint_calc,
+    is_heritage_designated AS heritage,
+    (is_heritage_designated AND existing_footprint_sqm IS NULL) AS heritage_no_massing
+  FROM geo
+),
+gfa AS (
+  SELECT env.*,
+    CASE WHEN footprint_calc IS NOT NULL AND stories_calc IS NOT NULL THEN round(footprint_calc * stories_calc, 2) END AS gfa_box,
+    CASE WHEN bylaw_max_fsi IS NOT NULL THEN round(lot_size_sqm * bylaw_max_fsi, 2) END AS fsi_cap
+  FROM env
+)
+SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
+  CASE WHEN emit THEN (CASE WHEN setback_is_bylaw THEN 'bylaw' ELSE 'zone_default' END) END AS max_build_setback_basis,
+  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+       WHEN heritage THEN existing_footprint_sqm
+       ELSE footprint_calc END AS max_buildable_footprint_sqm,
+  CASE WHEN emit AND NOT heritage THEN width_m END AS max_build_width_m,
+  CASE WHEN emit AND NOT heritage THEN length_m END AS max_build_length_m,
+  CASE WHEN emit AND NOT heritage THEN bylaw_max_height_m END AS max_build_height_m,
+  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+       WHEN heritage THEN existing_stories
+       ELSE stories_calc END AS max_build_stories,
+  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+       WHEN heritage THEN 'heritage_existing' ELSE 'rect_approx' END AS max_build_basis,
+  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+       WHEN heritage THEN round(existing_footprint_sqm * COALESCE(existing_stories, 1), 2)
+       ELSE LEAST(gfa_box, fsi_cap) END AS max_buildable_gfa_sqm,
+  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+       WHEN heritage THEN 'heritage_existing'
+       WHEN fsi_cap IS NOT NULL AND fsi_cap <= COALESCE(gfa_box, 'infinity'::numeric) THEN 'fsi'
+       ELSE 'coverage_box' END AS max_buildable_gfa_basis,
+  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+       WHEN zoning_is_ambiguous THEN 'low'
+       WHEN heritage THEN 'high'
+       WHEN width_m IS NULL OR length_m IS NULL THEN 'low'
+       WHEN lot_size_confidence = 'high' AND setback_is_bylaw
+            AND (bylaw_max_fsi IS NOT NULL OR bylaw_max_height_m IS NOT NULL) THEN 'high'
+       ELSE 'medium' END AS max_build_confidence,
+  CASE WHEN emit AND NOT heritage AND NOT is_in_ravine_protection_area
+            AND lot_size_sqm >= ${GARDEN_SUITE_MIN_LOT_SQM}
+            AND (depth_m - front_setback - rear_setback) >= ${GARDEN_SUITE_MIN_REAR_YARD_M}
+       THEN ${GARDEN_SUITE_MAX_GFA_SQM} END AS max_garden_suite_gfa_sqm,
+  COALESCE(emit AND NOT heritage AND NOT is_in_ravine_protection_area
+       AND lot_size_sqm >= ${GARDEN_SUITE_MIN_LOT_SQM}
+       AND (depth_m - front_setback - rear_setback) >= ${GARDEN_SUITE_MIN_REAR_YARD_M}, false) AS garden_suite_fits,
+  COALESCE(emit AND (heritage OR is_in_ravine_protection_area OR width_m IS NULL OR length_m IS NULL
+       OR (buffer_area IS NULL AND box_area IS NULL)), false) AS envelope_constrained,
+  CASE
+    WHEN NOT emit THEN 'low_lot_confidence'
+    WHEN heritage_no_massing THEN 'heritage_no_massing'
+    WHEN heritage THEN 'heritage'
+    WHEN is_in_ravine_protection_area THEN 'ravine'
+    WHEN buffer_area IS NULL AND box_area IS NULL THEN 'setback_exceeds_lot'
+    WHEN width_m IS NULL OR length_m IS NULL THEN 'lot_too_narrow'
+    WHEN zoning_is_ambiguous THEN 'ambiguous_zone'
+    ELSE NULL
+  END AS envelope_constraint_reason
+FROM gfa;
+`;
+}
+
+function buildMaxBuildUpdateSql() {
+  const cols = mb.MAX_BUILD_COLS;
+  const setList = cols.map((c) => `${c} = e.${c}`).join(',\n    ');
+  const guard = cols.map((c) => `p.${c} IS DISTINCT FROM e.${c}`).join('\n      OR ');
+  return `
+UPDATE parcels p SET
+    ${setList}
+FROM parcel_max_build e
+WHERE p.parcel_id = e.parcel_id
+  AND (
+      ${guard}
+  );`;
+}
+
+async function enrichMaxBuild(client, opts = {}) {
+  const { scopeWhere = 'TRUE', full = false } = opts;
+  await client.query('DROP TABLE IF EXISTS parcel_max_build');
+  await client.query(buildMaxBuildSql({ scopeWhere, full }));
+  const stats = await client.query(`
+    SELECT
+      COUNT(*)::int AS scoped,
+      COUNT(*) FILTER (WHERE lot_size_confidence = 'high')::int   AS lot_high,
+      COUNT(*) FILTER (WHERE lot_size_confidence = 'medium')::int AS lot_medium,
+      COUNT(*) FILTER (WHERE lot_size_confidence = 'low')::int    AS lot_low,
+      COUNT(*) FILTER (WHERE max_buildable_footprint_sqm IS NOT NULL)::int AS with_footprint,
+      COUNT(*) FILTER (WHERE max_buildable_gfa_sqm IS NOT NULL)::int       AS with_gfa,
+      COUNT(*) FILTER (WHERE max_build_width_m IS NOT NULL)::int           AS with_box,
+      COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'fsi')::int         AS gfa_fsi,
+      COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'coverage_box')::int AS gfa_coverage,
+      COUNT(*) FILTER (WHERE max_build_confidence = 'high')::int   AS mb_high,
+      COUNT(*) FILTER (WHERE max_build_confidence = 'medium')::int AS mb_medium,
+      COUNT(*) FILTER (WHERE max_build_confidence = 'low')::int    AS mb_low,
+      COUNT(*) FILTER (WHERE garden_suite_fits)::int    AS suite_fits,
+      COUNT(*) FILTER (WHERE envelope_constrained)::int AS constrained
+    FROM parcel_max_build`);
+  const upd = await client.query(buildMaxBuildUpdateSql());
+  return { ...stats.rows[0], updated: upd.rowCount };
+}
+
+// ---------------------------------------------------------------------------
 // Observability — row-derived verdict cascade (Spec 47 §8.2).
 // ---------------------------------------------------------------------------
 function verdictCascade(rows) {
@@ -362,10 +571,14 @@ async function main(pool) {
     }
 
     let result;
+    let mbResult;
     await pipeline.withTransaction(pool, async (client) => {
       await assertPreconditions(client);
       const runAt = await pipeline.getDbTimestamp(client);
       result = await enrichParcels(client, { scopeWhere: 'TRUE', full, roadDist, runAt, staleOverlays });
+      // Second pass — max-build envelope (Spec 65 §). Same txn: parcel_zoning_enrich (ON COMMIT
+      // DROP) is still visible for incremental scoping; reads the zoning feed just written above.
+      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full });
     });
 
     const totalParcels = await pool
@@ -393,6 +606,24 @@ async function main(pool) {
     auditRows.push({ metric: 'bylaw_max_fsi_null_pct', value: result.fsiNullPct, status: 'INFO' });
     auditRows.push({ metric: 'bylaw_max_coverage_pct_null_pct', value: result.coverageNullPct, status: 'INFO' });
     auditRows.push({ metric: 'bylaw_max_height_m_null_pct', value: result.heightNullPct, status: 'INFO' });
+    // --- Max-build envelope (Spec 65 §) — all INFO, never gated (sparse-by-design, FSI ~5%). ---
+    auditRows.push({ metric: 'max_build_enriched_count', value: mbResult.updated, status: 'INFO' });
+    // lot_size_confidence tier distribution (operator trust signal — INFO, not a WARN gate).
+    auditRows.push({ metric: 'lot_size_confidence_high_count', value: mbResult.lot_high, status: 'INFO' });
+    auditRows.push({ metric: 'lot_size_confidence_medium_count', value: mbResult.lot_medium, status: 'INFO' });
+    auditRows.push({ metric: 'lot_size_confidence_low_count', value: mbResult.lot_low, status: 'INFO' });
+    // Per-output-field populated counts — keep footprint/GFA gap visible behind the unified confidence.
+    auditRows.push({ metric: 'max_buildable_footprint_count', value: mbResult.with_footprint, status: 'INFO' });
+    auditRows.push({ metric: 'max_buildable_gfa_count', value: mbResult.with_gfa, status: 'INFO' });
+    auditRows.push({ metric: 'max_build_box_count', value: mbResult.with_box, status: 'INFO' });
+    auditRows.push({ metric: 'max_buildable_gfa_basis_fsi_count', value: mbResult.gfa_fsi, status: 'INFO' });
+    auditRows.push({ metric: 'max_buildable_gfa_basis_coverage_box_count', value: mbResult.gfa_coverage, status: 'INFO' });
+    // max_build_confidence tier distribution.
+    auditRows.push({ metric: 'max_build_confidence_high_count', value: mbResult.mb_high, status: 'INFO' });
+    auditRows.push({ metric: 'max_build_confidence_medium_count', value: mbResult.mb_medium, status: 'INFO' });
+    auditRows.push({ metric: 'max_build_confidence_low_count', value: mbResult.mb_low, status: 'INFO' });
+    auditRows.push({ metric: 'garden_suite_fits_count', value: mbResult.suite_fits, status: 'INFO' });
+    auditRows.push({ metric: 'envelope_constrained_count', value: mbResult.constrained, status: 'INFO' });
     auditRows.push({ metric: 'enrich_parcels_duration_ms', value: Date.now() - t0, status: 'INFO' });
 
     pipeline.emitSummary({
@@ -422,9 +653,17 @@ async function main(pool) {
         zoning_building_setback_overlay: ['source_id', 'geom', 'source_dataset_version'],
         zoning_priority_retail_overlay: ['source_id', 'geom', 'source_dataset_version'],
         zoning_queenstw_eat_overlay: ['source_id', 'geom', 'source_dataset_version'],
-        parcels: ['parcel_id', 'geom', 'zoning_enriched_at'],
+        // parcels: zoning identity/stamp (pass 1) + the max-build pass-2 read columns (lot dims +
+        // already-written zoning feed + ravine/heritage/centreline flags it consumes).
+        parcels: ['id', 'parcel_id', 'geom', 'zoning_enriched_at', 'lot_size_sqm', 'frontage_m', 'depth_m',
+          'bylaw_max_height_m', 'bylaw_max_stories', 'bylaw_max_fsi', 'bylaw_max_coverage_pct', 'bylaw_standard_setback_m',
+          'zoning_class', 'zoning_is_ambiguous', 'is_corner_lot', 'is_through_lot',
+          'is_in_ravine_protection_area', 'is_heritage_designated', 'lot_size_confidence'],
+        // Massing join for the heritage freeze (existing structure dims).
+        parcel_buildings: ['parcel_id', 'building_id', 'is_primary'],
+        building_footprints: ['id', 'footprint_area_sqm', 'estimated_stories'],
       },
-      { parcels: [...ALL_WRITE_COLS, 'zoning_enriched_at'] },
+      { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, 'zoning_enriched_at'] },
     );
 
     pipeline.log.info(TAG, `enriched ${result.updated} parcels (zone_class ${zonePct}%, gaps ${result.gaps}, ambiguous ${result.ambiguous}, conflicts ${result.conflicts})`);
@@ -447,5 +686,8 @@ module.exports = {
   buildEnrichmentSql,
   buildUpdateSql,
   enrichParcels,
+  buildMaxBuildSql,
+  buildMaxBuildUpdateSql,
+  enrichMaxBuild,
   verdictCascade,
 };
