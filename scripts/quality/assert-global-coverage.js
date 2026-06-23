@@ -222,6 +222,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
           -- §8e — enrich_coa_zoning centreline propagation (Spec 62 / migration 176):
           COUNT(*) FILTER (WHERE is_corner_lot)                                           AS corner_lot_pop,
           COUNT(*) FILTER (WHERE is_through_lot)                                          AS through_lot_pop,
+          COUNT(*) FILTER (WHERE abuts_laneway)                                           AS abuts_laneway_pop,
           COUNT(*) FILTER (WHERE primary_frontage_street_name IS NOT NULL)                AS frontage_name_pop,
           -- Spec 65 — enrich_coa_zoning max-build propagation (migration 186). All INFO, no
           -- denominator (sparse-by-design; FSI ~5%). Per-output populated counts keep the
@@ -249,6 +250,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE cur_interior_reno_gfa_sqm IS NOT NULL)                    AS scen_interior_pop,
           COUNT(*) FILTER (WHERE cur_est_kitchen_gfa_sqm IS NOT NULL)                      AS scen_kitchen_pop,
           COUNT(*) FILTER (WHERE cur_est_bath_gfa_sqm IS NOT NULL)                         AS scen_bath_pop,
+          -- Spec 65 Phase 3 — enrich_coa_zoning accessory-fit propagation (mig 192). All INFO, no denominator.
+          COUNT(*) FILTER (WHERE max_garage_gfa_sqm IS NOT NULL)                           AS garage_fits_pop,
+          COUNT(*) FILTER (WHERE garage_permission = 'as_of_right')                        AS garage_aor_pop,
+          COUNT(*) FILTER (WHERE garage_permission = 'coa_required')                       AS garage_coa_pop,
+          COUNT(*) FILTER (WHERE rear_suite_type IS NOT NULL)                              AS rear_suite_pop,
+          COUNT(*) FILTER (WHERE rear_suite_permission = 'as_of_right')                    AS rear_suite_aor_pop,
+          COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')                   AS rear_suite_coa_pop,
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
       `);
@@ -351,6 +359,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // non-null count. All INFO (small geographic subset, never gated) — mirrors ravine/heritage.
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.is_corner_lot',                parseInt(ca.corner_lot_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.is_through_lot',               parseInt(ca.through_lot_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.abuts_laneway',               parseInt(ca.abuts_laneway_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.primary_frontage_street_name', parseInt(ca.frontage_name_pop, 10)));
       // Spec 65 max-build propagation — INFO, no denominator (sparse-by-design; FSI ~5% → never gated).
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.lot_size_confidence',         parseInt(ca.lot_size_conf_pop, 10)));
@@ -376,6 +385,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.cur_interior_reno_gfa_sqm', parseInt(ca.scen_interior_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.cur_est_kitchen_gfa_sqm',   parseInt(ca.scen_kitchen_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.cur_est_bath_gfa_sqm',      parseInt(ca.scen_bath_pop, 10)));
+      // Spec 65 Phase 3 accessory fit — INFO, no denominator.
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_garage_gfa_sqm',        parseInt(ca.garage_fits_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.garage_permission_as_of_right',  parseInt(ca.garage_aor_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.garage_permission_coa_required', parseInt(ca.garage_coa_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.rear_suite_type',           parseInt(ca.rear_suite_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.rear_suite_permission_as_of_right',  parseInt(ca.rear_suite_aor_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.rear_suite_permission_coa_required', parseInt(ca.rear_suite_coa_pop, 10)));
 
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
@@ -546,6 +562,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
           -- §8e — enrich_permits centreline propagation (Spec 62 / migration 176):
           COUNT(*) FILTER (WHERE is_corner_lot)                               AS corner_lot_pop,
           COUNT(*) FILTER (WHERE is_through_lot)                              AS through_lot_pop,
+          COUNT(*) FILTER (WHERE abuts_laneway)                               AS abuts_laneway_pop,
           COUNT(*) FILTER (WHERE primary_frontage_street_name IS NOT NULL)    AS frontage_name_pop,
           -- Spec 65 — enrich_permits max-build propagation (migration 186). INFO, no denominator.
           COUNT(*) FILTER (WHERE lot_size_confidence IS NOT NULL)             AS lot_size_conf_pop,
@@ -570,7 +587,14 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE cur_storey_gfa_sqm IS NOT NULL)              AS scen_storey_pop,
           COUNT(*) FILTER (WHERE cur_interior_reno_gfa_sqm IS NOT NULL)       AS scen_interior_pop,
           COUNT(*) FILTER (WHERE cur_est_kitchen_gfa_sqm IS NOT NULL)         AS scen_kitchen_pop,
-          COUNT(*) FILTER (WHERE cur_est_bath_gfa_sqm IS NOT NULL)            AS scen_bath_pop
+          COUNT(*) FILTER (WHERE cur_est_bath_gfa_sqm IS NOT NULL)            AS scen_bath_pop,
+          -- Spec 65 Phase 3 — enrich_permits accessory-fit propagation (mig 192). INFO, no denominator.
+          COUNT(*) FILTER (WHERE max_garage_gfa_sqm IS NOT NULL)              AS garage_fits_pop,
+          COUNT(*) FILTER (WHERE garage_permission = 'as_of_right')           AS garage_aor_pop,
+          COUNT(*) FILTER (WHERE garage_permission = 'coa_required')          AS garage_coa_pop,
+          COUNT(*) FILTER (WHERE rear_suite_type IS NOT NULL)                 AS rear_suite_pop,
+          COUNT(*) FILTER (WHERE rear_suite_permission = 'as_of_right')       AS rear_suite_aor_pop,
+          COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')      AS rear_suite_coa_pop
         FROM permits
       `);
       const permitsTotal        = parseInt(pa.permits_total, 10) || 0;
@@ -924,6 +948,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // is_through_lot = TRUE-subset counts (FILTER, never IS NOT NULL); frontage name = non-null count.
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.is_corner_lot',                parseInt(pa.corner_lot_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.is_through_lot',               parseInt(pa.through_lot_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.abuts_laneway',               parseInt(pa.abuts_laneway_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.primary_frontage_street_name', parseInt(pa.frontage_name_pop, 10)));
       // Spec 65 max-build propagation — INFO, no denominator (sparse-by-design; FSI ~5% → never gated).
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.lot_size_confidence',         parseInt(pa.lot_size_conf_pop, 10)));
@@ -949,6 +974,13 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.cur_interior_reno_gfa_sqm', parseInt(pa.scen_interior_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.cur_est_kitchen_gfa_sqm',   parseInt(pa.scen_kitchen_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.cur_est_bath_gfa_sqm',      parseInt(pa.scen_bath_pop, 10)));
+      // Spec 65 Phase 3 accessory fit — INFO, no denominator.
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_garage_gfa_sqm',        parseInt(pa.garage_fits_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.garage_permission_as_of_right',  parseInt(pa.garage_aor_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.garage_permission_coa_required', parseInt(pa.garage_coa_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.rear_suite_type',           parseInt(pa.rear_suite_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.rear_suite_permission_as_of_right',  parseInt(pa.rear_suite_aor_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.rear_suite_permission_coa_required', parseInt(pa.rear_suite_coa_pop, 10)));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));

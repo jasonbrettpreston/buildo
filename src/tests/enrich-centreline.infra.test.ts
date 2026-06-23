@@ -61,10 +61,11 @@ describe('enrich-centreline.js — source contract (Spec 62 §8d)', () => {
     expect(SCRIPT).toContain('address_match_status');
   });
 
-  it('Enrich archetype emit + emitMeta writes the 4-column set incl. lineage (G3)', () => {
+  it('Enrich archetype emit + emitMeta writes the 5-column set incl. abuts_laneway + lineage (G3)', () => {
     expect(SCRIPT).toMatch(/records_total:\s*null/);
     expect(SCRIPT).toMatch(/records_updated:\s*result\.updated/);
-    expect(SCRIPT).toMatch(/parcels:\s*\['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'centreline_dataset_version_when_enriched'\]/);
+    // Phase 3 (Spec 65 §7 AF-1): abuts_laneway joins the centreline write-set.
+    expect(SCRIPT).toMatch(/parcels:\s*\['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'abuts_laneway', 'centreline_dataset_version_when_enriched'\]/);
     expect(SCRIPT).toContain('centreline_enrich'); // frozen §9 block
   });
 

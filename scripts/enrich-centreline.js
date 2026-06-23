@@ -89,6 +89,13 @@ parcel_counts AS (
   SELECT parcel_id, COUNT(DISTINCT centreline_id) AS intersected_segment_count
   FROM parcel_segments GROUP BY parcel_id
 ),
+parcel_lane AS (
+  -- Spec 65 Phase 3 / #431-FU2: does the parcel abut a laneway? bool_or over its adjacent segments.
+  -- Reuses the same seg_is_lane flag (and the same §8d 20m proximity model) as the corner/through
+  -- exclusion — it does NOT alter those CTEs. Gates laneway-suite eligibility downstream (enrich-parcels).
+  SELECT parcel_id, bool_or(seg_is_lane) AS abuts_laneway
+  FROM parcel_segments GROUP BY parcel_id
+),
 parcel_segments_capped AS (
   SELECT * FROM (
     SELECT *, ROW_NUMBER() OVER (PARTITION BY parcel_id ORDER BY centreline_id) AS rn
@@ -226,9 +233,11 @@ SELECT
   (COALESCE(pc.intersected_segment_count, 0) >= 2
     AND COALESCE(ppp.has_parallel_different_street_pair, false)) AS new_is_through_lot,
   pf.primary_frontage_street_name                       AS new_primary_frontage_street_name,
-  pf.frontage_priority                                  AS frontage_priority
+  pf.frontage_priority                                  AS frontage_priority,
+  COALESCE(pl.abuts_laneway, false)                    AS new_abuts_laneway   -- Spec 65 Phase 3 / #431-FU2
 FROM parcel_ids_intersecting pii
 LEFT JOIN parcel_counts        pc  USING (parcel_id)
+LEFT JOIN parcel_lane          pl  USING (parcel_id)
 LEFT JOIN parcel_corner_pairs  pcp USING (parcel_id)
 LEFT JOIN parcel_parallel_pairs ppp USING (parcel_id)
 LEFT JOIN parcel_frontage      pf  USING (parcel_id);
@@ -241,12 +250,14 @@ UPDATE parcels p
    SET is_corner_lot                = e.new_is_corner_lot,
        is_through_lot               = e.new_is_through_lot,
        primary_frontage_street_name = e.new_primary_frontage_street_name,
+       abuts_laneway                = e.new_abuts_laneway,
        centreline_dataset_version_when_enriched = $1
   FROM tmp_centreline_enrich e
  WHERE p.id = e.parcel_id
    AND (p.is_corner_lot                IS DISTINCT FROM e.new_is_corner_lot
         OR p.is_through_lot            IS DISTINCT FROM e.new_is_through_lot
         OR p.primary_frontage_street_name IS DISTINCT FROM e.new_primary_frontage_street_name
+        OR p.abuts_laneway            IS DISTINCT FROM e.new_abuts_laneway
         OR p.centreline_dataset_version_when_enriched IS DISTINCT FROM $1);
 `;
 
@@ -327,7 +338,8 @@ async function enrichCentreline(client, { sourceDatasetVersion }) {
       COUNT(*) FILTER (WHERE frontage_priority = 1)::int             AS p1,
       COUNT(*) FILTER (WHERE frontage_priority = 2)::int             AS p2,
       COUNT(*) FILTER (WHERE frontage_priority = 3)::int             AS p3,
-      COUNT(*) FILTER (WHERE seg_count > 20)::int                     AS truncated
+      COUNT(*) FILTER (WHERE seg_count > 20)::int                     AS truncated,
+      COUNT(*) FILTER (WHERE new_abuts_laneway)::int                  AS abuts_laneway_true
     FROM tmp_centreline_enrich`)).rows[0];
   return { updated: upd.rowCount, tally: t };
 }
@@ -394,6 +406,7 @@ async function main(pool) {
     const push = (metric, value, status) => auditRows.push({ metric, value, status });
     push('parcels_is_corner_lot_count', tally.corner_true, 'INFO');
     push('parcels_is_through_lot_count', tally.through_true, 'INFO');
+    push('parcels_abuts_laneway_count', tally.abuts_laneway_true, 'INFO'); // Spec 65 Phase 3 / #431-FU2
     push('parcels_primary_frontage_resolved_count', tally.frontage_resolved, 'INFO');
     push('parcels_frontage_priority1_match_count', tally.p1, 'INFO');
     push('parcels_frontage_priority2_match_count', tally.p2, 'INFO');
@@ -421,6 +434,8 @@ async function main(pool) {
           parcels_with_zero_centreline_intersections_pct: zeroPct,
           parcels_is_corner_lot_true_count: tally.corner_true,
           parcels_is_through_lot_true_count: tally.through_true,
+          parcels_abuts_laneway_true_count: tally.abuts_laneway_true, // Spec 65 Phase 3 / #431-FU2
+
           parcels_primary_frontage_resolved_count: tally.frontage_resolved,
           parcels_frontage_priority1_name_match_count: tally.p1,
           parcels_frontage_priority2_addrrange_match_count: tally.p2,
@@ -436,7 +451,7 @@ async function main(pool) {
         toronto_centreline: ['geom', 'linear_name', 'linear_name_full', 'from_intersection_id', 'to_intersection_id', 'lo_num_l', 'hi_num_l', 'lo_num_r', 'hi_num_r', 'parity_l', 'parity_r'],
         parcels: ['id', 'geom', 'address_number', 'street_name_normalized'],
       },
-      { parcels: ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'centreline_dataset_version_when_enriched'] },
+      { parcels: ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'abuts_laneway', 'centreline_dataset_version_when_enriched'] },
     );
 
     pipeline.log.info(TAG, `enriched ${result.updated} parcels (corner ${tally.corner_true}, through ${tally.through_true}, frontage ${tally.frontage_resolved}; zero-intersection ${zeroPct}%)`);

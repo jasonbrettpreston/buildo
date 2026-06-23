@@ -65,6 +65,11 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'reno_kitchen_gfa_pct', // Spec 65 §6 SC-3 — kitchen reno as %-of-footprint
   'reno_bath_gfa_pct', // Spec 65 §6 SC-3 — bath reno as %-of-footprint
   'storey_height_m', // Spec 65 §6 SC-4 — residential storey-height (max-build derivation)
+  // Spec 65 §7 (Phase 3) — accessory garage + laneway/garden rear-suite by-law constants.
+  'garage_min_lot_sqm', 'garage_max_gfa_sqm', 'garage_min_footprint_sqm', 'accessory_max_coverage_pct',
+  'car_footprint_sqm', 'laneway_suite_max_gfa_sqm', 'laneway_suite_min_lot_sqm', 'laneway_suite_min_rear_yard_m',
+  'min_soft_landscaping_pct', 'laneway_suite_storeys', 'garden_suite_storeys',
+  'garden_suite_min_lot_sqm', 'garden_suite_min_rear_yard_m', 'garden_suite_max_gfa_sqm',
   'los_multiplier_bid',
   'los_multiplier_work',
   'los_penalty_tracking',

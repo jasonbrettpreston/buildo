@@ -230,11 +230,11 @@ const ARCHETYPE_GEOM_BASIS = {
   KIT: 'cur_est_kitchen_gfa_sqm',
   BTH: 'cur_est_bath_gfa_sqm',
   INT: 'cur_interior_reno_gfa_sqm',
-  LANE: 'max_garden_suite_gfa_sqm',
+  LANE: 'max_rear_suite_gfa_sqm', // Phase 3: chosen rear suite (laneway XOR garden); NULL when neither fits (cost model safe-skips)
   ENV: null,
   MEC: null,
   SITE: null,
-  GAR: null,
+  GAR: 'max_garage_gfa_sqm', // Phase 3
 };
 
 module.exports = { ARCHETYPE_BUNDLES, ARCHETYPE_GEOM_BASIS, deriveArchetypes, bundleSlugsFor };

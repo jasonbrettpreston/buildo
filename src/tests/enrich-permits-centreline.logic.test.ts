@@ -18,8 +18,8 @@ const ep = require('../../scripts/enrich-permits.js');
 const SRC = fs.readFileSync(path.resolve(__dirname, '../../scripts/enrich-permits.js'), 'utf8');
 
 describe('enrich-permits §8e centreline — write-col plumbing', () => {
-  it('CENTRELINE_COLS = the 3 centreline columns, in allWriteCols for BOTH targets', () => {
-    expect(ep.CENTRELINE_COLS).toEqual(['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name']);
+  it('CENTRELINE_COLS = the 4 centreline columns (incl. Phase-3 abuts_laneway), in allWriteCols for BOTH targets', () => {
+    expect(ep.CENTRELINE_COLS).toEqual(['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'abuts_laneway']);
     for (const t of ['permits', 'coa']) {
       expect(ep.allWriteCols(t)).toEqual(expect.arrayContaining(ep.CENTRELINE_COLS));
     }
@@ -58,10 +58,12 @@ describe('enrich-permits §8e centreline — propagation SQL (§11.1, single-pas
 describe('enrich-permits §8e centreline — orphan-nullify respects NOT NULL (DEC-C)', () => {
   for (const target of ['permits', 'coa']) {
     const sql = ep.buildNullifyOrphansSql({ target });
-    it(`[${target}] resets is_corner_lot/is_through_lot=false (NOT = NULL → PG 23502); frontage=NULL`, () => {
+    it(`[${target}] resets is_corner_lot/is_through_lot/abuts_laneway=false (NOT = NULL → PG 23502); frontage=NULL`, () => {
       expect(sql).not.toMatch(/is_(corner|through)_lot = NULL/);
+      expect(sql).not.toMatch(/abuts_laneway = NULL/);
       expect(sql).toMatch(/is_corner_lot = false/);
       expect(sql).toMatch(/is_through_lot = false/);
+      expect(sql).toMatch(/abuts_laneway = false/); // Phase 3 NN-bool
       expect(sql).toMatch(/primary_frontage_street_name = NULL/);
     });
   }
@@ -73,8 +75,8 @@ describe('enrich-permits §8e centreline — preconditions + exports (DEC-D)', (
     expect(typeof ep.assertCentrelineEnriched).toBe('function');
     expect(typeof ep.assertLinkTable).toBe('function');
   });
-  it('L24a column-existence covers parcels (incl. lineage) + the target, citing mig 174/176', () => {
-    expect(SRC).toMatch(/migration \$\{tbl === 'parcels' \? '174' : '176'\} not applied/);
+  it('L24a column-existence covers parcels (incl. lineage) + the target, citing mig 174/191 + 176/192', () => {
+    expect(SRC).toMatch(/migration \$\{tbl === 'parcels' \? '174\/191' : '176\/192'\} not applied/);
     expect(SRC).toMatch(/centreline_dataset_version_when_enriched/);
   });
   it('L24b recency: enrich_centreline run must post-date the latest load-parcels', () => {

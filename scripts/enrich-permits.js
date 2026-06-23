@@ -38,7 +38,7 @@ const HERITAGE_COLS = ['is_heritage_designated', 'heritage_designation_type', 'h
 // is_corner_lot/is_through_lot via bool_or; primary_frontage_street_name is the smallest-par.id
 // non-NULL value (§11.1, NOT a bool_or). The booleans are NOT NULL so the orphan-nullify resets
 // them to false (frontage → NULL), like ravine/heritage — see buildNullifyOrphansSql.
-const CENTRELINE_COLS = ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name'];
+const CENTRELINE_COLS = ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'abuts_laneway'];
 
 // Max-build columns (Spec 65 / migration 186). Lot-validation INPUTS + max-build OUTPUTS, both from
 // the DOMINANT parcel (assembly has no coherent envelope — max_build_confidence degrades to 'low'
@@ -173,8 +173,8 @@ async function assertHeritageColumns(client, target) {
 async function assertCentrelineColumns(client, target) {
   const targetTable = CFG[target].table;
   const want = {
-    parcels: ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'centreline_dataset_version_when_enriched'],
-    [targetTable]: ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name'],
+    parcels: ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'abuts_laneway', 'centreline_dataset_version_when_enriched'],
+    [targetTable]: ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'abuts_laneway'],
   };
   for (const [tbl, cols] of Object.entries(want)) {
     const { rows } = await client.query(
@@ -184,7 +184,8 @@ async function assertCentrelineColumns(client, target) {
     const present = new Set(rows.map((r) => r.column_name));
     const missing = cols.filter((c) => !present.has(c));
     if (missing.length > 0) {
-      throw new Error(`${TAG} ${tbl} missing centreline columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '174' : '176'} not applied`);
+      // abuts_laneway ships in mig 191/192 (Phase 3); the rest in 174/176.
+      throw new Error(`${TAG} ${tbl} missing centreline columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '174/191' : '176/192'} not applied`);
     }
   }
 }
@@ -207,8 +208,8 @@ async function assertMaxBuildColumns(client, target) {
     const present = new Set(rows.map((r) => r.column_name));
     const missing = cols.filter((c) => !present.has(c));
     if (missing.length > 0) {
-      // max_build_stories_basis (Phase 2) ships in mig 189/190; the rest in 185/186 — cite both.
-      throw new Error(`${TAG} ${tbl} missing max-build columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '185/189' : '186/190'} not applied`);
+      // max_build_stories_basis (Phase 2) ships in 189/190; the Phase-3 accessory cols in 191/192 — cite all.
+      throw new Error(`${TAG} ${tbl} missing max-build columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '185/189/191' : '186/190/192'} not applied`);
     }
   }
 }
@@ -329,7 +330,7 @@ WITH cand AS (
          par.bylaw_max_height_m, par.exception_number, par.zoning_overlays, par.lot_size_sqm,
          par.is_in_ravine_protection_area, par.ravine_distance_m,
          par.is_heritage_designated, par.heritage_designation_type, par.heritage_designation_date,
-         par.is_corner_lot, par.is_through_lot, par.primary_frontage_street_name,
+         par.is_corner_lot, par.is_through_lot, par.primary_frontage_street_name, par.abuts_laneway,
          ${MAXBUILD_COLS.filter((col) => col !== 'lot_size_sqm').map((col) => `par.${col}`).join(', ')},
          ${EXISTING_STRUCTURE_COLS.map((col) => `par.${col}`).join(', ')},
          ${SCENARIO_COLS.map((col) => `par.${col}`).join(', ')},
@@ -370,6 +371,7 @@ ag AS (
     -- an empty filtered array is NULL (correct orphan semantic). parcel_id = the cand alias of par.id.
     COALESCE(bool_or(is_corner_lot), false)  AS new_is_corner_lot,
     COALESCE(bool_or(is_through_lot), false) AS new_is_through_lot,
+    COALESCE(bool_or(abuts_laneway), false)  AS new_abuts_laneway,
     (array_agg(primary_frontage_street_name ORDER BY parcel_id) FILTER (WHERE primary_frontage_street_name IS NOT NULL))[1] AS new_primary_frontage,
     ${OVERLAY_FLAGS.map((f) => `bool_or(${f}) AS ov_${f}`).join(',\n    ')}
   FROM cand GROUP BY ${key}
@@ -394,6 +396,7 @@ SELECT ${c.leadKey.map((k) => `dom.${k}`).join(', ')},
             ELSE NULL END AS heritage_designation_date,
        ag.new_is_corner_lot AS is_corner_lot,
        ag.new_is_through_lot AS is_through_lot,
+       ag.new_abuts_laneway AS abuts_laneway,
        ag.new_primary_frontage AS primary_frontage_street_name,
        -- §8e max-build propagation (Spec 65): lot INPUTS + envelope OUTPUTS from the DOMINANT parcel
        -- (rn=1). max_build_confidence degrades to 'low' on a multi-parcel assembly (no coherent envelope).
@@ -478,6 +481,7 @@ function buildNullifyOrphansSql({ target, scopeWhere = 'TRUE' }) {
     // §8e centreline: NOT-NULL booleans reset to false (NOT NULL → would crash PG 23502), name → NULL.
     'is_corner_lot = false',
     'is_through_lot = false',
+    'abuts_laneway = false', // Spec 65 Phase 3 — NOT-NULL bool (mig 192), reset to false on orphan
     'primary_frontage_street_name = NULL',
     // §8e max-build (Spec 65): the two NOT-NULL booleans reset to false; the rest of MAXBUILD_COLS
     // (lot inputs + envelope outputs) fall through the generic = NULL map above.
@@ -592,10 +596,12 @@ async function main(pool) {
     const cl = (await pool.query(`
       SELECT COUNT(*) FILTER (WHERE is_corner_lot)::int                            AS corner,
              COUNT(*) FILTER (WHERE is_through_lot)::int                           AS through_lot,
+             COUNT(*) FILTER (WHERE abuts_laneway)::int                            AS abuts_laneway,
              COUNT(*) FILTER (WHERE primary_frontage_street_name IS NOT NULL)::int AS frontage
       FROM ${cfg.table}`)).rows[0];
     auditRows.push({ metric: `${prefix}_corner_lot_count`, value: cl.corner, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_through_lot_count`, value: cl.through_lot, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_abuts_laneway_count`, value: cl.abuts_laneway, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_with_frontage_name_count`, value: cl.frontage, status: 'INFO' });
     // §8e max-build propagation observability (Spec 65 — INFO; zoning F-H12 gate + verdict untouched).
     // Per-output populated counts + confidence distribution keep the footprint/GFA gap visible.
@@ -645,6 +651,23 @@ async function main(pool) {
     auditRows.push({ metric: `${prefix}_cur_interior_reno_gfa_count`, value: sc.with_interior, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_cur_est_kitchen_gfa_count`, value: sc.with_kitchen, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_cur_est_bath_gfa_count`, value: sc.with_bath, status: 'INFO' });
+    // §8e accessory-fit propagation observability (Spec 65 Phase 3 — INFO; permission distribution).
+    const acc = (await pool.query(`
+      SELECT COUNT(*) FILTER (WHERE max_garage_gfa_sqm IS NOT NULL)::int        AS garage_fits,
+             COUNT(*) FILTER (WHERE garage_permission = 'as_of_right')::int     AS garage_aor,
+             COUNT(*) FILTER (WHERE garage_permission = 'coa_required')::int    AS garage_coa,
+             COUNT(*) FILTER (WHERE rear_suite_type = 'laneway')::int           AS suite_laneway,
+             COUNT(*) FILTER (WHERE rear_suite_type = 'garden')::int            AS suite_garden,
+             COUNT(*) FILTER (WHERE rear_suite_permission = 'as_of_right')::int  AS suite_aor,
+             COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')::int AS suite_coa
+      FROM ${cfg.table}`)).rows[0];
+    auditRows.push({ metric: `${prefix}_garage_fits_count`, value: acc.garage_fits, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_garage_permission_as_of_right_count`, value: acc.garage_aor, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_garage_permission_coa_required_count`, value: acc.garage_coa, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_rear_suite_laneway_count`, value: acc.suite_laneway, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_rear_suite_garden_count`, value: acc.suite_garden, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_rear_suite_permission_as_of_right_count`, value: acc.suite_aor, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_rear_suite_permission_coa_required_count`, value: acc.suite_coa, status: 'INFO' });
     // L5 disagreement protocol (permits only, §11.3): geometry stays authoritative; flag for
     // operator triage. INFO at count 0 (RNFP/Heritage currently 0 rows) — WARN ONLY on a real
     // disagreement, so a clean run never collapses PASS (Spec 48 §3.6).
@@ -671,7 +694,7 @@ async function main(pool) {
     });
 
     const readsCommon = {
-      parcels: ['id', 'zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number', 'zoning_overlays', 'lot_size_sqm', 'zoning_enriched_at', 'is_in_ravine_protection_area', 'ravine_distance_m', 'is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date', 'is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'centreline_dataset_version_when_enriched',
+      parcels: ['id', 'zoning_class', 'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'exception_number', 'zoning_overlays', 'lot_size_sqm', 'zoning_enriched_at', 'is_in_ravine_protection_area', 'ravine_distance_m', 'is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date', 'is_corner_lot', 'is_through_lot', 'abuts_laneway', 'primary_frontage_street_name', 'centreline_dataset_version_when_enriched',
         // §8e max-build feed (Spec 65) — lot INPUTS + envelope OUTPUTS read off the dominant parcel.
         'frontage_m', 'depth_m', 'lot_size_confidence', 'lot_size_basis', ...mb.LOT_MAXBUILD_OUTPUT_COLS,
         // §8e existing-structure feed (Spec 65 Phase 1) — read off the dominant parcel.

@@ -45,9 +45,27 @@ function lookupStoreyHeight(zoningClass, residentialHeight = RESIDENTIAL_STOREY_
 // ravine_distance_m (Spec 59 L2: distance is signed proximity, not a gradient multiplier).
 const RAVINE_SETBACK_M = 10.0;
 // Garden-suite (rear-yard) eligibility floor: min lot area + min usable rear yard (m / m²).
+// These three are the DEFAULTS for the externalized logic_variables of the same name (Phase 3,
+// Spec 65 §7) — buildMaxBuildSql takes them as params (like storeyHeight); kept here as the
+// JS fallback. A two-source-sync test asserts logic_variables.json defaults === these.
 const GARDEN_SUITE_MIN_LOT_SQM = 270; // Toronto garden-suite by-law practical floor
 const GARDEN_SUITE_MIN_REAR_YARD_M = 5.0;
 const GARDEN_SUITE_MAX_GFA_SQM = 60.0; // typical by-law cap for a one-storey rear suite
+
+// --- Accessory-structure by-law constants (Spec 65 Phase 3) — all externalized as logic_variables;
+// these are the JS-fallback defaults. Garage = footprint area fit (single-storey); laneway/garden
+// suite = lot + rear-yard-depth fit; *_permission tri-state gated on soft-landscaping (greenspace). ---
+const GARAGE_MIN_LOT_SQM = 230;           // min lot to consider an accessory garage
+const GARAGE_MAX_GFA_SQM = 60;            // by-law cap on a detached garage footprint
+const GARAGE_MIN_FOOTPRINT_SQM = 18;      // a garage smaller than this doesn't fit one car
+const ACCESSORY_MAX_COVERAGE_PCT = 0.30;  // max share of usable rear-yard a garage may cover
+const CAR_FOOTPRINT_SQM = 18.5;           // ≈ one parking stall incl. clearance → garage_capacity_cars
+const LANEWAY_SUITE_MAX_GFA_SQM = 120;    // larger (2-storey) than a garden suite
+const LANEWAY_SUITE_MIN_LOT_SQM = 230;
+const LANEWAY_SUITE_MIN_REAR_YARD_M = 5.0;
+const MIN_SOFT_LANDSCAPING_PCT = 0.30;    // share of lot that must remain soft landscaping (as-of-right floor)
+const LANEWAY_SUITE_STOREYS = 2;          // footprint = GFA / storeys (greenspace uses ground coverage)
+const GARDEN_SUITE_STOREYS = 1;
 
 // --- Zone-default setbacks (metres) — COARSE fallback only (Integration WRONG#3 + Gemini) ---
 // bylaw_standard_setback_m (the real STAND_SET value) is used as the FRONT setback when present;
@@ -118,6 +136,15 @@ const MAX_BUILD_COLS = [
   'garden_suite_fits',            // BOOLEAN NOT NULL DEFAULT false
   'envelope_constrained',         // BOOLEAN NOT NULL DEFAULT false
   'envelope_constraint_reason',   // TEXT
+  // --- Accessory fit (Spec 65 Phase 3) — all nullable; computed in the same max-build pass ---
+  'max_garage_gfa_sqm',           // NUMERIC — by-law-capped garage footprint that fits the rear yard
+  'garage_capacity_cars',         // INTEGER — floor(max_garage_gfa / car_footprint)
+  'garage_constraint_reason',     // TEXT — heritage/ravine/lot_too_small/no_rear_yard/low_lot_confidence
+  'garage_permission',            // TEXT — as_of_right/coa_required/not_permitted (greenspace-driven)
+  'max_laneway_suite_gfa_sqm',    // NUMERIC — lane-gated 2-storey suite GFA
+  'max_rear_suite_gfa_sqm',       // NUMERIC — the chosen suite GFA (laneway⊕garden); archetype LANE geom_basis
+  'rear_suite_type',              // TEXT — 'laneway'|'garden'|NULL (mutually exclusive by abuts_laneway)
+  'rear_suite_permission',        // TEXT — as_of_right/coa_required/not_permitted (greenspace-driven)
 ];
 // NOT-NULL booleans — reset to false (not NULL) on orphan-nullify (PG 23502 guard).
 const MAX_BUILD_BOOL_COLS = ['garden_suite_fits', 'envelope_constrained'];
@@ -174,4 +201,8 @@ module.exports = {
   EXISTING_COLS, EXISTING_CONFIDENCE_HIGH_MIN,
   SCENARIO_COLS, RENO_COA_UPLIFT_PCT_DEFAULT, RENO_KITCHEN_GFA_PCT_DEFAULT, RENO_BATH_GFA_PCT_DEFAULT,
   RESIDENTIAL_STOREY_HEIGHT_M, NONRES_STOREY_HEIGHT_M, buildStoreyHeightCase, lookupStoreyHeight,
+  // Accessory fit (Phase 3)
+  GARAGE_MIN_LOT_SQM, GARAGE_MAX_GFA_SQM, GARAGE_MIN_FOOTPRINT_SQM, ACCESSORY_MAX_COVERAGE_PCT,
+  CAR_FOOTPRINT_SQM, LANEWAY_SUITE_MAX_GFA_SQM, LANEWAY_SUITE_MIN_LOT_SQM, LANEWAY_SUITE_MIN_REAR_YARD_M,
+  MIN_SOFT_LANDSCAPING_PCT, LANEWAY_SUITE_STOREYS, GARDEN_SUITE_STOREYS,
 };

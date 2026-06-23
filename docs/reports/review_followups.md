@@ -3,6 +3,25 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Spec 65 Phase 3 (garage + rear-suite accessory fit + CoA permission) — WF6 output-altitude review DEFERs (2026-06-23)
+
+Source: 6-reviewer output review. Integration + Regression Guardian **PASS** (no undefended fences — heritage-freeze byte-stable via `FILTER(is_primary)`, garden-suite externalization byte-stable, #431-FU guards preserved, MAX_BUILD_COLS 17→25 / bool-cols unchanged). 2 findings folded into the commit: (a) `parcels_abuts_laneway_true_count` added to the `centreline_enrich` records_meta sub-object [Code Reviewer]; (b) `rear_suite_permission_as_of_right` count added to assert-global-coverage pa+ca [Observability]. Items below are DEFERs / refutations.
+
+| Severity | Source | Item | Disposition |
+|---|---|---|---|
+| CRITICAL | DeepSeek | Incremental scope ignores overlay-table changes (overlay-only update needs `--full`). | **DEFER — already logged (Phase-2 entry below).** Pre-existing zoning-pass design, not Phase-3. Same bucket as the accessory-field staleness (centreline/massing-only change → `--full`). |
+| CRITICAL | Gemini | `emitMeta` lists written columns (e.g. `bylaw_max_height_m`) as `parcels` reads. | **REFUTED / by-design.** The max-build pass (pass 2) genuinely READS the zoning feed pass 1 wrote earlier in the SAME txn; declaring it a read is correct for the 3-pass design. Pre-existing (Phase 1/2), not Phase-3. No action. |
+| HIGH | Gemini/DeepSeek | `prim` CTE assumes one primary building (mig 081 partial unique index) — silent if the index is dropped. | **DEFER (pre-existing Phase-1).** Add a precondition check that `idx_parcel_buildings_one_primary` is valid, or `DISTINCT ON`. Low risk (index enforced). |
+| HIGH | Gemini | `readZoningContract` can run against stale data if a newer `load_zoning` run failed after the last completed-with-meta run. | **DEFER (pre-existing Spec-58 consumer protocol).** Single-query state inspection refinement. |
+| HIGH | DeepSeek | A missing (`undefined`) `zoning_layers_loaded` key isn't treated as stale (only `=== false` is). | **DEFER (pre-existing).** Treat absent key as stale + WARN. |
+| HIGH | DeepSeek | `scopeWhere` interpolated verbatim (SQL-injection surface if ever called with untrusted input). | **Accepted (pre-existing).** Trusted internal/test predicate only; documented SECURITY comment. Always `'TRUE'` in the live path. |
+| MED | Gemini | `max_build_confidence` CASE is a long order-dependent cascade (maintainability). | **Accepted (pre-existing Phase-1).** Behavior locked by db tests. |
+| MED (perf) | self | max-build `massing` CTE is unscoped (whole-DB building scan) — incremental runs slow (~7-14s/parcel against the full dev DB, hence the 60s db-test timeouts). Correct + necessary for `--full`. | **DEFER.** Scope `massing` to `WHERE pb.parcel_id IN (SELECT pid FROM scope)` (behavior-preserving — it's LEFT JOINed on scope) for fast incremental. Same bucket as the Phase-2 prim/allb perf DEFER. |
+| LOW | Gemini/DeepSeek | `NOT ST_Touches` may exclude a valid boundary-touching intersection; jsonb `_placeholder` hack; `resolvedVars` boilerplate repetition. | **Accepted (pre-existing / style).** |
+| — | self (DEFER carried) | `abuts_laneway` 20 m-proximity vs strict shared-boundary; accessory-field incremental staleness (centreline/massing-only change needs `--full`). | **DEFER** (as planned). |
+
+---
+
 ## Spec 65 Phase 2 (reno/build scenario GFAs + geom_basis + storey-height) — WF6 output-altitude review DEFERs (2026-06-22)
 
 Source: 6-reviewer output review (Gemini + DeepSeek + Code Reviewer + Observability + Integration + Regression Guardian) on the enrich-parcels Phase-2 diff. Integration + Regression Guardian PASS (no undefended fences). 3 findings folded into the commit: (a) Zod logic-var schema bounds aligned to `logic_variables.json` min/max + `.strict()` (was `.positive()`/`.passthrough()`) — closes the SC-3 "bad override FAILs loudly" gate [Code Reviewer #12 + DeepSeek upper-bounds]; (b) `assertMaxBuildColumns` error message now cites `185/189` + `186/190` (max_build_stories_basis ships in 189/190) [Code Reviewer #11]; (c) Spec 65 SC-6 clarified — `*_applied` provenance rows live at the producer (enrich-parcels) layer only [Observability]. Items below are DEFERs / refuted.

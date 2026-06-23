@@ -22,6 +22,21 @@ const LOGIC_VARS_SCHEMA = z.object({
   reno_kitchen_gfa_pct: z.coerce.number().finite().min(0.01).max(1),
   reno_bath_gfa_pct: z.coerce.number().finite().min(0.01).max(1),
   storey_height_m: z.coerce.number().finite().min(2).max(6),
+  // Phase 3 accessory + externalized garden-suite by-law constants (bounds mirror logic_variables.json).
+  garage_min_lot_sqm: z.coerce.number().finite().min(100).max(2000),
+  garage_max_gfa_sqm: z.coerce.number().finite().min(10).max(200),
+  garage_min_footprint_sqm: z.coerce.number().finite().min(5).max(200),
+  accessory_max_coverage_pct: z.coerce.number().finite().min(0.05).max(1.0),
+  car_footprint_sqm: z.coerce.number().finite().min(10).max(40),
+  laneway_suite_max_gfa_sqm: z.coerce.number().finite().min(20).max(400),
+  laneway_suite_min_lot_sqm: z.coerce.number().finite().min(100).max(2000),
+  laneway_suite_min_rear_yard_m: z.coerce.number().finite().min(2).max(30),
+  min_soft_landscaping_pct: z.coerce.number().finite().min(0.05).max(0.90),
+  laneway_suite_storeys: z.coerce.number().finite().min(1).max(4),
+  garden_suite_storeys: z.coerce.number().finite().min(1).max(4),
+  garden_suite_min_lot_sqm: z.coerce.number().finite().min(100).max(2000),
+  garden_suite_min_rear_yard_m: z.coerce.number().finite().min(2).max(30),
+  garden_suite_max_gfa_sqm: z.coerce.number().finite().min(10).max(200),
 }).strict();
 const {
   PRECEDENCE_RULES,
@@ -348,15 +363,31 @@ async function enrichParcels(client, opts = {}) {
 // (protects the 36-col regression lock + idempotency fences). Runs in the SAME transaction
 // AFTER enrichParcels, so parcel_zoning_enrich (ON COMMIT DROP) is still visible for scoping.
 // ---------------------------------------------------------------------------
-function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M }) {
+function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {} }) {
   // SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only.
   // Incremental: first-time (lot_size_confidence NULL) OR a parcel whose zoning was re-enriched
   // this run (present in parcel_zoning_enrich). --full recomputes all (use after a massing/lot reload).
   const incremental = full
     ? 'TRUE'
     : `(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id))`;
-  const { LOT_TOLERANCE: tol, LOT_MIN_SQM, LOT_MAX_SQM, RAVINE_SETBACK_M,
-    GARDEN_SUITE_MIN_LOT_SQM, GARDEN_SUITE_MIN_REAR_YARD_M, GARDEN_SUITE_MAX_GFA_SQM } = mb;
+  const { LOT_TOLERANCE: tol, LOT_MIN_SQM, LOT_MAX_SQM, RAVINE_SETBACK_M } = mb;
+  // Phase-3 accessory + (now externalized) garden-suite by-law constants — values from logic_variables
+  // (resolved in main()), defaults from max-build.js. Interpolated as numeric literals (Number()).
+  const N = (v, d) => Number(v ?? d);
+  const gardenMinLot = N(acc.gardenMinLot, mb.GARDEN_SUITE_MIN_LOT_SQM);
+  const gardenMinRearYard = N(acc.gardenMinRearYard, mb.GARDEN_SUITE_MIN_REAR_YARD_M);
+  const gardenMaxGfa = N(acc.gardenMaxGfa, mb.GARDEN_SUITE_MAX_GFA_SQM);
+  const garageMinLot = N(acc.garageMinLot, mb.GARAGE_MIN_LOT_SQM);
+  const garageMaxGfa = N(acc.garageMaxGfa, mb.GARAGE_MAX_GFA_SQM);
+  const garageMinFootprint = N(acc.garageMinFootprint, mb.GARAGE_MIN_FOOTPRINT_SQM);
+  const accessoryMaxCovPct = N(acc.accessoryMaxCovPct, mb.ACCESSORY_MAX_COVERAGE_PCT);
+  const carFootprint = N(acc.carFootprint, mb.CAR_FOOTPRINT_SQM);
+  const lanewayMaxGfa = N(acc.lanewayMaxGfa, mb.LANEWAY_SUITE_MAX_GFA_SQM);
+  const lanewayMinLot = N(acc.lanewayMinLot, mb.LANEWAY_SUITE_MIN_LOT_SQM);
+  const lanewayMinRearYard = N(acc.lanewayMinRearYard, mb.LANEWAY_SUITE_MIN_REAR_YARD_M);
+  const minSoftPct = N(acc.minSoftPct, mb.MIN_SOFT_LANDSCAPING_PCT);
+  const lanewayStoreys = N(acc.lanewayStoreys, mb.LANEWAY_SUITE_STOREYS);
+  const gardenStoreys = N(acc.gardenStoreys, mb.GARDEN_SUITE_STOREYS);
   return `
 CREATE TEMP TABLE parcel_max_build ON COMMIT DROP AS
 WITH scope AS (
@@ -366,21 +397,24 @@ WITH scope AS (
          p.bylaw_standard_setback_m, p.zoning_class, COALESCE(p.zoning_is_ambiguous, false) AS zoning_is_ambiguous,
          COALESCE(p.is_corner_lot, false) AS is_corner_lot, COALESCE(p.is_through_lot, false) AS is_through_lot,
          COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area,
-         COALESCE(p.is_heritage_designated, false) AS is_heritage_designated
+         COALESCE(p.is_heritage_designated, false) AS is_heritage_designated,
+         COALESCE(p.abuts_laneway, false) AS abuts_laneway
   FROM parcels p
   WHERE (${scopeWhere}) AND p.geom IS NOT NULL AND ${incremental}
 ),
 massing AS (
-  -- heritage-freeze existing structure: SUM footprint, MAX storeys across primary buildings (DeepSeek multi-primary).
+  -- heritage-freeze uses the PRIMARY building (SUM footprint, MAX storeys; DeepSeek multi-primary).
+  -- existing_total_footprint_sqm = ALL buildings (incl. sheds/detached garages) — for the Phase-3
+  -- accessory yard/greenspace math, so it isn't optimistic about an empty rear yard.
   SELECT pb.parcel_id AS pid,
-         SUM(bf.footprint_area_sqm)::numeric AS existing_footprint_sqm,
-         MAX(bf.estimated_stories) AS existing_stories
+         SUM(bf.footprint_area_sqm) FILTER (WHERE pb.is_primary)::numeric AS existing_footprint_sqm,
+         MAX(bf.estimated_stories) FILTER (WHERE pb.is_primary) AS existing_stories,
+         SUM(bf.footprint_area_sqm)::numeric AS existing_total_footprint_sqm
   FROM parcel_buildings pb JOIN building_footprints bf ON bf.id = pb.building_id
-  WHERE pb.is_primary = true
   GROUP BY pb.parcel_id
 ),
 sb AS (
-  SELECT s.*, m.existing_footprint_sqm, m.existing_stories,
+  SELECT s.*, m.existing_footprint_sqm, m.existing_stories, m.existing_total_footprint_sqm,
     ST_Area(s.geom::geography)::numeric AS geom_area,
     (s.frontage_m * s.depth_m)::numeric AS fxd_area,
     -- front = real STAND_SET when present, else zone default; side/rear/flankage always zone default (no source).
@@ -458,6 +492,33 @@ gfa AS (
     CASE WHEN footprint_calc IS NOT NULL AND stories_calc IS NOT NULL THEN round(footprint_calc * stories_calc, 2) END AS gfa_box,
     CASE WHEN bylaw_max_fsi IS NOT NULL THEN round(lot_size_sqm * bylaw_max_fsi, 2) END AS fsi_cap
   FROM env
+),
+-- Phase-3 accessory fit (garage + rear suite). rear_yard_area subtracts the TOTAL existing footprint
+-- (all buildings) so it isn't optimistic about sheds/old garages. garden/laneway fit reuse the
+-- garden-suite lot+rear-yard-depth rule (now externalized); laneway additionally REQUIRES abuts_laneway.
+accessory AS (
+  SELECT gfa.*,
+    GREATEST(0, depth_m - front_setback - rear_setback) AS rear_yard_depth,
+    GREATEST(0, GREATEST(0, depth_m - front_setback - rear_setback) * COALESCE(width_m, 0)
+              - COALESCE(existing_total_footprint_sqm, 0)) AS rear_yard_area,
+    COALESCE(emit AND NOT heritage AND NOT is_in_ravine_protection_area
+             AND lot_size_sqm >= ${gardenMinLot} AND (depth_m - front_setback - rear_setback) >= ${gardenMinRearYard}, false) AS garden_fits,
+    COALESCE(emit AND NOT heritage AND NOT is_in_ravine_protection_area AND abuts_laneway
+             AND lot_size_sqm >= ${lanewayMinLot} AND (depth_m - front_setback - rear_setback) >= ${lanewayMinRearYard}, false) AS laneway_fits
+  FROM gfa
+),
+accessory2 AS (
+  SELECT a.*,
+    COALESCE(a.emit AND NOT a.heritage AND NOT a.is_in_ravine_protection_area
+             AND a.lot_size_sqm >= ${garageMinLot} AND a.rear_yard_area >= ${garageMinFootprint}, false) AS garage_fits,
+    CASE WHEN a.emit AND NOT a.heritage AND NOT a.is_in_ravine_protection_area
+              AND a.lot_size_sqm >= ${garageMinLot} AND a.rear_yard_area >= ${garageMinFootprint}
+         THEN round(LEAST(${garageMaxGfa}::numeric, ${accessoryMaxCovPct}::numeric * a.rear_yard_area), 2) END AS max_garage_gfa_sqm,
+    CASE WHEN a.garden_fits THEN round(${gardenMaxGfa}::numeric, 2) END AS max_garden_suite_gfa_sqm,
+    CASE WHEN a.laneway_fits THEN round(${lanewayMaxGfa}::numeric, 2) END AS max_laneway_suite_gfa_sqm,
+    CASE WHEN a.abuts_laneway AND a.laneway_fits THEN 'laneway'
+         WHEN NOT a.abuts_laneway AND a.garden_fits THEN 'garden' END AS rear_suite_type
+  FROM accessory a
 )
 SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
   CASE WHEN emit THEN (CASE WHEN setback_is_bylaw THEN 'bylaw' ELSE 'zone_default' END) END AS max_build_setback_basis,
@@ -491,13 +552,8 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
        WHEN lot_size_confidence = 'high' AND setback_is_bylaw
             AND (bylaw_max_fsi IS NOT NULL OR bylaw_max_height_m IS NOT NULL) THEN 'high'
        ELSE 'medium' END AS max_build_confidence,
-  CASE WHEN emit AND NOT heritage AND NOT is_in_ravine_protection_area
-            AND lot_size_sqm >= ${GARDEN_SUITE_MIN_LOT_SQM}
-            AND (depth_m - front_setback - rear_setback) >= ${GARDEN_SUITE_MIN_REAR_YARD_M}
-       THEN ${GARDEN_SUITE_MAX_GFA_SQM} END AS max_garden_suite_gfa_sqm,
-  COALESCE(emit AND NOT heritage AND NOT is_in_ravine_protection_area
-       AND lot_size_sqm >= ${GARDEN_SUITE_MIN_LOT_SQM}
-       AND (depth_m - front_setback - rear_setback) >= ${GARDEN_SUITE_MIN_REAR_YARD_M}, false) AS garden_suite_fits,
+  max_garden_suite_gfa_sqm,        -- externalized garden constants; computed in accessory2
+  garden_fits AS garden_suite_fits,
   COALESCE(emit AND (heritage OR is_in_ravine_protection_area OR width_m IS NULL OR length_m IS NULL
        OR (buffer_area IS NULL AND box_area IS NULL)), false) AS envelope_constrained,
   CASE
@@ -509,8 +565,29 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
     WHEN width_m IS NULL OR length_m IS NULL THEN 'lot_too_narrow'
     WHEN zoning_is_ambiguous THEN 'ambiguous_zone'
     ELSE NULL
-  END AS envelope_constraint_reason
-FROM gfa;
+  END AS envelope_constraint_reason,
+  -- --- Phase 3 accessory fit (garage + rear suite + greenspace-driven CoA permission) ---
+  max_garage_gfa_sqm,
+  CASE WHEN max_garage_gfa_sqm IS NOT NULL THEN floor(max_garage_gfa_sqm / ${carFootprint})::int END AS garage_capacity_cars,
+  CASE WHEN garage_fits THEN NULL
+       WHEN NOT emit THEN 'low_lot_confidence'
+       WHEN heritage THEN 'heritage'
+       WHEN is_in_ravine_protection_area THEN 'ravine'
+       WHEN lot_size_sqm < ${garageMinLot} THEN 'lot_too_small'
+       WHEN rear_yard_area < ${garageMinFootprint} THEN 'no_rear_yard'
+       ELSE NULL END AS garage_constraint_reason,
+  CASE WHEN NOT garage_fits THEN (CASE WHEN emit THEN 'not_permitted' END)
+       WHEN GREATEST(0, lot_size_sqm - COALESCE(existing_total_footprint_sqm, 0) - max_garage_gfa_sqm)
+            >= ${minSoftPct} * lot_size_sqm THEN 'as_of_right' ELSE 'coa_required' END AS garage_permission,
+  max_laneway_suite_gfa_sqm,
+  CASE rear_suite_type WHEN 'laneway' THEN max_laneway_suite_gfa_sqm WHEN 'garden' THEN max_garden_suite_gfa_sqm END AS max_rear_suite_gfa_sqm,
+  rear_suite_type,
+  CASE WHEN rear_suite_type IS NULL THEN (CASE WHEN emit THEN 'not_permitted' END)
+       WHEN GREATEST(0, lot_size_sqm - COALESCE(existing_total_footprint_sqm, 0)
+            - (CASE rear_suite_type WHEN 'laneway' THEN max_laneway_suite_gfa_sqm / ${lanewayStoreys}
+                                    WHEN 'garden'  THEN max_garden_suite_gfa_sqm / ${gardenStoreys} END))
+            >= ${minSoftPct} * lot_size_sqm THEN 'as_of_right' ELSE 'coa_required' END AS rear_suite_permission
+FROM accessory2;
 `;
 }
 
@@ -529,9 +606,9 @@ WHERE p.parcel_id = e.parcel_id
 }
 
 async function enrichMaxBuild(client, opts = {}) {
-  const { scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M } = opts;
+  const { scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {} } = opts;
   await client.query('DROP TABLE IF EXISTS parcel_max_build');
-  await client.query(buildMaxBuildSql({ scopeWhere, full, storeyHeight }));
+  await client.query(buildMaxBuildSql({ scopeWhere, full, storeyHeight, acc }));
   const stats = await client.query(`
     SELECT
       COUNT(*)::int AS scoped,
@@ -547,7 +624,14 @@ async function enrichMaxBuild(client, opts = {}) {
       COUNT(*) FILTER (WHERE max_build_confidence = 'medium')::int AS mb_medium,
       COUNT(*) FILTER (WHERE max_build_confidence = 'low')::int    AS mb_low,
       COUNT(*) FILTER (WHERE garden_suite_fits)::int    AS suite_fits,
-      COUNT(*) FILTER (WHERE envelope_constrained)::int AS constrained
+      COUNT(*) FILTER (WHERE envelope_constrained)::int AS constrained,
+      COUNT(*) FILTER (WHERE max_garage_gfa_sqm IS NOT NULL)::int           AS garage_fits_cnt,
+      COUNT(*) FILTER (WHERE garage_permission = 'as_of_right')::int        AS garage_aor,
+      COUNT(*) FILTER (WHERE garage_permission = 'coa_required')::int       AS garage_coa,
+      COUNT(*) FILTER (WHERE rear_suite_type = 'laneway')::int              AS suite_laneway,
+      COUNT(*) FILTER (WHERE rear_suite_type = 'garden')::int               AS suite_garden,
+      COUNT(*) FILTER (WHERE rear_suite_permission = 'as_of_right')::int     AS suite_aor,
+      COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')::int    AS suite_coa
     FROM parcel_max_build`);
   const upd = await client.query(buildMaxBuildUpdateSql());
   return { ...stats.rows[0], updated: upd.rowCount };
@@ -719,6 +803,21 @@ async function main(pool) {
       reno_kitchen_gfa_pct: Number(logicVars?.reno_kitchen_gfa_pct ?? mb.RENO_KITCHEN_GFA_PCT_DEFAULT),
       reno_bath_gfa_pct: Number(logicVars?.reno_bath_gfa_pct ?? mb.RENO_BATH_GFA_PCT_DEFAULT),
       storey_height_m: Number(logicVars?.storey_height_m ?? mb.RESIDENTIAL_STOREY_HEIGHT_M),
+      // Phase 3 accessory + externalized garden-suite (defaults from max-build.js).
+      garage_min_lot_sqm: Number(logicVars?.garage_min_lot_sqm ?? mb.GARAGE_MIN_LOT_SQM),
+      garage_max_gfa_sqm: Number(logicVars?.garage_max_gfa_sqm ?? mb.GARAGE_MAX_GFA_SQM),
+      garage_min_footprint_sqm: Number(logicVars?.garage_min_footprint_sqm ?? mb.GARAGE_MIN_FOOTPRINT_SQM),
+      accessory_max_coverage_pct: Number(logicVars?.accessory_max_coverage_pct ?? mb.ACCESSORY_MAX_COVERAGE_PCT),
+      car_footprint_sqm: Number(logicVars?.car_footprint_sqm ?? mb.CAR_FOOTPRINT_SQM),
+      laneway_suite_max_gfa_sqm: Number(logicVars?.laneway_suite_max_gfa_sqm ?? mb.LANEWAY_SUITE_MAX_GFA_SQM),
+      laneway_suite_min_lot_sqm: Number(logicVars?.laneway_suite_min_lot_sqm ?? mb.LANEWAY_SUITE_MIN_LOT_SQM),
+      laneway_suite_min_rear_yard_m: Number(logicVars?.laneway_suite_min_rear_yard_m ?? mb.LANEWAY_SUITE_MIN_REAR_YARD_M),
+      min_soft_landscaping_pct: Number(logicVars?.min_soft_landscaping_pct ?? mb.MIN_SOFT_LANDSCAPING_PCT),
+      laneway_suite_storeys: Number(logicVars?.laneway_suite_storeys ?? mb.LANEWAY_SUITE_STOREYS),
+      garden_suite_storeys: Number(logicVars?.garden_suite_storeys ?? mb.GARDEN_SUITE_STOREYS),
+      garden_suite_min_lot_sqm: Number(logicVars?.garden_suite_min_lot_sqm ?? mb.GARDEN_SUITE_MIN_LOT_SQM),
+      garden_suite_min_rear_yard_m: Number(logicVars?.garden_suite_min_rear_yard_m ?? mb.GARDEN_SUITE_MIN_REAR_YARD_M),
+      garden_suite_max_gfa_sqm: Number(logicVars?.garden_suite_max_gfa_sqm ?? mb.GARDEN_SUITE_MAX_GFA_SQM),
     };
     const vparse = LOGIC_VARS_SCHEMA.safeParse(resolvedVars);
     if (!vparse.success) {
@@ -727,6 +826,16 @@ async function main(pool) {
     const roadDist = resolvedVars.road_overlay_distance_m;
     const storeyHeight = resolvedVars.storey_height_m;
     const reno = { coaUplift: resolvedVars.reno_coa_uplift_pct, kitchenPct: resolvedVars.reno_kitchen_gfa_pct, bathPct: resolvedVars.reno_bath_gfa_pct };
+    // Phase 3 accessory params passed to enrichMaxBuild → buildMaxBuildSql.
+    const acc = {
+      gardenMinLot: resolvedVars.garden_suite_min_lot_sqm, gardenMinRearYard: resolvedVars.garden_suite_min_rear_yard_m,
+      gardenMaxGfa: resolvedVars.garden_suite_max_gfa_sqm, garageMinLot: resolvedVars.garage_min_lot_sqm,
+      garageMaxGfa: resolvedVars.garage_max_gfa_sqm, garageMinFootprint: resolvedVars.garage_min_footprint_sqm,
+      accessoryMaxCovPct: resolvedVars.accessory_max_coverage_pct, carFootprint: resolvedVars.car_footprint_sqm,
+      lanewayMaxGfa: resolvedVars.laneway_suite_max_gfa_sqm, lanewayMinLot: resolvedVars.laneway_suite_min_lot_sqm,
+      lanewayMinRearYard: resolvedVars.laneway_suite_min_rear_yard_m, minSoftPct: resolvedVars.min_soft_landscaping_pct,
+      lanewayStoreys: resolvedVars.laneway_suite_storeys, gardenStoreys: resolvedVars.garden_suite_storeys,
+    };
 
     // Spec 58 §9/§11 consumer protocol — HALTs on missing/failed/no-base producer.
     const contract = await readZoningContract(pool);
@@ -755,7 +864,7 @@ async function main(pool) {
       result = await enrichParcels(client, { scopeWhere: 'TRUE', full, roadDist, runAt, staleOverlays });
       // Second pass — max-build envelope (Spec 65 §). Same txn: parcel_zoning_enrich (ON COMMIT
       // DROP) is still visible for incremental scoping; reads the zoning feed just written above.
-      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight });
+      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight, acc });
       // Third pass — existing structure (Spec 65 Phase 1) + reno/build scenarios (Phase 2). Same txn:
       // parcel_max_build (ON COMMIT DROP) visible for scoping; reads the PRIMARY building (massing)
       // + the max-build cols written above; computes SCENARIO_COLS via a sibling UPDATE.
@@ -805,6 +914,14 @@ async function main(pool) {
     auditRows.push({ metric: 'max_build_confidence_low_count', value: mbResult.mb_low, status: 'INFO' });
     auditRows.push({ metric: 'garden_suite_fits_count', value: mbResult.suite_fits, status: 'INFO' });
     auditRows.push({ metric: 'envelope_constrained_count', value: mbResult.constrained, status: 'INFO' });
+    // --- Accessory fit (Spec 65 Phase 3) — all INFO; permission distribution makes the CoA split visible. ---
+    auditRows.push({ metric: 'garage_fits_count', value: mbResult.garage_fits_cnt, status: 'INFO' });
+    auditRows.push({ metric: 'garage_permission_as_of_right_count', value: mbResult.garage_aor, status: 'INFO' });
+    auditRows.push({ metric: 'garage_permission_coa_required_count', value: mbResult.garage_coa, status: 'INFO' });
+    auditRows.push({ metric: 'rear_suite_laneway_count', value: mbResult.suite_laneway, status: 'INFO' });
+    auditRows.push({ metric: 'rear_suite_garden_count', value: mbResult.suite_garden, status: 'INFO' });
+    auditRows.push({ metric: 'rear_suite_permission_as_of_right_count', value: mbResult.suite_aor, status: 'INFO' });
+    auditRows.push({ metric: 'rear_suite_permission_coa_required_count', value: mbResult.suite_coa, status: 'INFO' });
     // --- Existing structure (Spec 65 Phase 1) — all INFO, never gated (NULL on no-massing). ---
     auditRows.push({ metric: 'existing_structure_enriched_count', value: exResult.updated, status: 'INFO' });
     auditRows.push({ metric: 'existing_footprint_count', value: exResult.with_footprint, status: 'INFO' });
@@ -861,7 +978,7 @@ async function main(pool) {
         parcels: ['id', 'parcel_id', 'geom', 'zoning_enriched_at', 'lot_size_sqm', 'frontage_m', 'depth_m',
           'bylaw_max_height_m', 'bylaw_max_stories', 'bylaw_max_fsi', 'bylaw_max_coverage_pct', 'bylaw_standard_setback_m',
           'zoning_class', 'zoning_is_ambiguous', 'is_corner_lot', 'is_through_lot',
-          'is_in_ravine_protection_area', 'is_heritage_designated', 'lot_size_confidence',
+          'is_in_ravine_protection_area', 'is_heritage_designated', 'lot_size_confidence', 'abuts_laneway',
           // Phase 2 scenario pass reads these max-build outputs from the parcels row (same txn).
           'max_buildable_gfa_sqm', 'max_build_stories'],
         // Massing join — heritage freeze (max-build pass) + existing-structure pass (Phase 1):

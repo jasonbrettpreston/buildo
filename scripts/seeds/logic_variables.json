@@ -41,6 +41,104 @@
     "min": 2,
     "max": 6
   },
+  "garage_min_lot_sqm": {
+    "default": 230,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — minimum lot area (m²) to consider an accessory garage. CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 100,
+    "max": 2000
+  },
+  "garage_max_gfa_sqm": {
+    "default": 60,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — by-law cap on a detached garage footprint (m²). CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 10,
+    "max": 200
+  },
+  "garage_min_footprint_sqm": {
+    "default": 18,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — minimum usable rear-yard footprint (m²) for a garage to fit (one car). CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 5,
+    "max": 200
+  },
+  "accessory_max_coverage_pct": {
+    "default": 0.30,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — max share of usable rear-yard area a garage may cover. CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 0.05,
+    "max": 1.0
+  },
+  "car_footprint_sqm": {
+    "default": 18.5,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — one parking-stall footprint incl. clearance (m²); garage_capacity_cars = floor(max_garage_gfa / this). CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 10,
+    "max": 40
+  },
+  "laneway_suite_max_gfa_sqm": {
+    "default": 120,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — by-law cap on a laneway suite GFA (m², ~2-storey). CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 20,
+    "max": 400
+  },
+  "laneway_suite_min_lot_sqm": {
+    "default": 230,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — minimum lot area (m²) for a laneway suite. CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 100,
+    "max": 2000
+  },
+  "laneway_suite_min_rear_yard_m": {
+    "default": 5.0,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — minimum usable rear-yard depth (m) for a laneway suite. CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 2,
+    "max": 30
+  },
+  "min_soft_landscaping_pct": {
+    "default": 0.30,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — share of the lot that must remain soft landscaping; an accessory pushing greenspace below this is buildable only via a CoA minor variance (drives garage_permission / rear_suite_permission). CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 0.05,
+    "max": 0.90
+  },
+  "laneway_suite_storeys": {
+    "default": 2,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — laneway suite storeys; suite footprint = GFA / storeys for the greenspace test. CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 1,
+    "max": 4
+  },
+  "garden_suite_storeys": {
+    "default": 1,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — garden suite storeys; suite footprint = GFA / storeys for the greenspace test. CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 1,
+    "max": 4
+  },
+  "garden_suite_min_lot_sqm": {
+    "default": 270,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — externalized garden-suite min lot area (m²); default = the previously-hardcoded value (byte-stable). CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 100,
+    "max": 2000
+  },
+  "garden_suite_min_rear_yard_m": {
+    "default": 5.0,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — externalized garden-suite min usable rear-yard depth (m); default = previously-hardcoded. CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 2,
+    "max": 30
+  },
+  "garden_suite_max_gfa_sqm": {
+    "default": 60.0,
+    "type": "number",
+    "description": "Spec 65 §7 (Phase 3) — externalized garden-suite GFA cap (m²); default = previously-hardcoded. CONSUMED by enrich-parcels.js (max-build pass).",
+    "min": 10,
+    "max": 200
+  },
   "los_multiplier_bid": {
     "default": 2.5,
     "type": "number",
