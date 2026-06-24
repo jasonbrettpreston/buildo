@@ -511,10 +511,11 @@ describe('Pipeline Registry', () => {
     // +1 load_heritage added (Spec 61 §8c 2026-06-04)
     // +1 enrich_heritage added (Spec 61 §8d 2026-06-04)
     // +2 load_centreline + enrich_centreline added (Spec 62 §8c/§8d UI registration, WF2 2026-06-11)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(62);
+    // +1 compute_storey_norms added (Spec 65 §8 WF3-C1 2026-06-24)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(63);
   });
 
-  it('groups are correct: 14 ingest, 22 link, 14 classify, 2 snapshot, 10 quality', () => {
+  it('groups are correct: 14 ingest, 22 link, 15 classify, 2 snapshot, 10 quality', () => {
     // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     // +1 snapshot: backup_db added (WF3 2026-04-25)
     // +1 classify: compute_phase_calibration added (WF1 #B 2026-05-09)
@@ -532,9 +533,10 @@ describe('Pipeline Registry', () => {
     // +1 ingest: load_heritage added (Spec 61 §8c 2026-06-04)
     // +1 link: enrich_heritage added (Spec 61 §8d 2026-06-04)
     // +1 ingest: load_centreline, +1 link: enrich_centreline (Spec 62 §8c/§8d, WF2 2026-06-11)
+    // +1 classify: compute_storey_norms (Spec 65 §8 WF3-C1 2026-06-24)
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(14);
     expect(groups.filter((g) => g === 'link')).toHaveLength(22);
-    expect(groups.filter((g) => g === 'classify')).toHaveLength(14);
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(15);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(10);
   });
@@ -572,7 +574,7 @@ describe('Pipeline Chains', () => {
     // WF3 #realtor-backfill 2026-05-09: +1 step (backfill_realtor_permit_trades
     // between classify_permits and compute_cost_estimates).
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(30); // +enrich_permits (Spec 66 WF3)
+    expect(permits.steps).toHaveLength(31); // +enrich_permits (Spec 66 WF3); +compute_storey_norms (Spec 65 §8 WF3-C1)
     expect(permits!.steps[0]!.slug).toBe('assert_schema');
     expect(permits!.steps[1]!.slug).toBe('permits');
     expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('backup_db');

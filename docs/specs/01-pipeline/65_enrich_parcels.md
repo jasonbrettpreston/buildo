@@ -256,6 +256,20 @@ By-law / space-fit for the two new-accessory archetypes — **garage** (GAR) and
 
 ---
 
+<storey-norms>
+## 8. Permit-pocket storey norms (WF3-C1 — 2026-06-24)
+
+The `max_build_stories` "derived" path was `round(bylaw_max_height_m / storey_height)` — a fragile height÷3 guess (dev: 55% of residential, avg 3.47 storeys vs by-law 2.17). WF3-C replaces it with what's ACTUALLY built nearby. **C1 (this section) produces the empirical input**; **C2 consumes it** (spatial-join parcels→neighbourhoods, reconcile `max_build_stories` p50 + `max_build_stories_aggressive` p90 + market>by-law hotspot — see §8 C2 note).
+
+- **SN-1 Derivation (`scripts/compute-storey-norms.js`, permits chain after `classify_permits`, advisory lock 195).** Extract a storey count from NEW-BUILD permit descriptions via `scripts/lib/storey-extract.js` (`extractStoreys` — single-sourced mirror of `scope.ts:325-341` numeric/cardinal/single regexes; parity-locked; clamp 1–`STOREY_CLAMP_MAX`=15, a CODE constant not a logic-var — >15 is unit-count/address noise). Source = `permit_type IN ('New Houses','New Building','Residential Building Permit')` (drops the Plumbing/Mechanical/Drain MEP companions that repeat the storey text) AND `neighbourhood_id IS NOT NULL AND <> -1` (the `link-neighbourhoods` no-match sentinel). **Dedup** per `zoning_dominant_parcel_id` (one project filing >1 building permit on a parcel counts ONCE; unlinked permits kept individually — no NULL-collapse).
+- **SN-2 Aggregation.** `percentile_disc(0.5)`/`percentile_disc(0.9) WITHIN GROUP (ORDER BY storeys) GROUP BY neighbourhood_id` → `neighbourhood_storey_norms` (mig 195; truncate-replace snapshot). p50 = typical realized, p90 = aggressive realized ceiling. Pockets with `sample_count < STOREY_NORM_MIN_SAMPLE`(10) flagged `low_sample` (C2 falls back to citywide). One **citywide fallback row `neighbourhood_id = NULL`** (all observations) — a PARTIAL UNIQUE INDEX enforces the singleton (a plain UNIQUE wouldn't, NULLs being distinct). `neighbourhood_id` = `neighbourhoods.id` (the SERIAL the permits FK targets), FK-declared.
+- **SN-3 Selection bias (load-bearing).** Permit data skews to **maximizers** (teardown-rebuilds max the envelope) → **MARKET-REALIZED, not the legal ceiling**. `data_provenance='market_realized_new_builds'` + the TABLE COMMENT make this explicit in-schema; C2 caps by the by-law height envelope + flags market>by-law as a CoA hotspot; NEVER reuse for existing-stock storeys (WF3-A retired those). Live first run: citywide p50=2/p90=3, 156 pockets, 93.7% parcel-linked.
+- **SN-4 Observability (all INFO).** `pockets_computed`/`pockets_low_sample`/`pockets_p50_equals_p90` (degenerate/single-obs ceilings) + `citywide_p50`/`_p90` + `storey_permits_candidates`/`_extracted_deduped`/`_parcel_linked_pct`. Verdict PASS unless 0 pockets → WARN. (DEFER → review_followups: a `neighbourhood_storey_norms` row in `assert-global-coverage.js` + its stale step-numbers.)
+- **C2 (next):** parcels lack `neighbourhood_id` → C2 spatial-joins `parcels.geom`→`neighbourhoods`, joins the norm, reconciles `max_build_stories` (bylaw authoritative where present; else `LEAST(p50, height-implied)`, basis `'pocket'`); adds `max_build_stories_aggressive`(p90) + `market_exceeds_bylaw` hotspot; the same join also surfaces the **neighbourhood cost-premium** fields (income etc. already on `neighbourhoods`) for the Spec 83 per-option premium.
+</storey-norms>
+
+---
+
 <testing>
 ## 5. Testing Mandate
 - **Logic** (`src/tests/zoning-parcels.logic.test.ts`): `zoning-precedence.js` attr→rule map completeness (every parcel column has a rule); `buildEnrichmentSql` emits MIN for ceilings / MAX for floors / dominant for identity; deterministic ORDER BY present; jsonb shape builder.

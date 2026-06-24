@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { trades, tradeMappingRules, permits, permitHistory, syncRuns, permitTrades, permitParcels, parcels, buildingFootprints, parcelBuildings, entities, wsibRegistry, entityProjects, entityContacts, leadViews, costEstimates, permitPhaseTransitions, userProfiles, subscribeNonces, leadTrades, productGroups, leadProducts, universalStreamCatalog, universalStreamTradeSignals, addressPoints, parcelAddressPoints, tradeProducts, supplierProducts, suppliers, leadViewEvents, leadParcels, permitProducts, neighbourhoods } from "./schema";
+import { trades, tradeMappingRules, permits, permitHistory, syncRuns, permitTrades, permitParcels, parcels, buildingFootprints, parcelBuildings, entities, wsibRegistry, entityProjects, entityContacts, leadViews, costEstimates, permitPhaseTransitions, userProfiles, subscribeNonces, leadTrades, neighbourhoods, neighbourhoodStoreyNorms, productGroups, leadProducts, universalStreamCatalog, universalStreamTradeSignals, addressPoints, parcelAddressPoints, tradeProducts, supplierProducts, suppliers, leadViewEvents, leadParcels, permitProducts } from "./schema";
 
 export const tradeMappingRulesRelations = relations(tradeMappingRules, ({one}) => ({
 	trade: one(trades, {
@@ -166,6 +166,18 @@ export const leadTradesRelations = relations(leadTrades, ({one}) => ({
 	}),
 }));
 
+export const neighbourhoodStoreyNormsRelations = relations(neighbourhoodStoreyNorms, ({one}) => ({
+	neighbourhood: one(neighbourhoods, {
+		fields: [neighbourhoodStoreyNorms.neighbourhoodId],
+		references: [neighbourhoods.id]
+	}),
+}));
+
+export const neighbourhoodsRelations = relations(neighbourhoods, ({many}) => ({
+	neighbourhoodStoreyNorms: many(neighbourhoodStoreyNorms),
+	permits: many(permits),
+}));
+
 export const leadProductsRelations = relations(leadProducts, ({one}) => ({
 	productGroup: one(productGroups, {
 		fields: [leadProducts.productId],
@@ -259,8 +271,4 @@ export const permitProductsRelations = relations(permitProducts, ({one}) => ({
 		fields: [permitProducts.productId],
 		references: [productGroups.id]
 	}),
-}));
-
-export const neighbourhoodsRelations = relations(neighbourhoods, ({many}) => ({
-	permits: many(permits),
 }));

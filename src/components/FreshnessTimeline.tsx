@@ -74,6 +74,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   backfill_realtor_permit_trades: { name: 'Backfill Realtor Trades', group: 'classify' },
   classify_lifecycle_phase:   { name: 'Classify Lifecycle Phase', group: 'classify' },
   compute_phase_calibration:  { name: 'Phase Calibration',        group: 'classify' },
+  compute_storey_norms:       { name: 'Storey Norms',        group: 'classify' },
   compute_cost_estimates:     { name: 'Cost Estimates',      group: 'classify' },
   compute_timing_calibration_v2: { name: 'Timing Calibration', group: 'classify' },
   compute_trade_forecasts:       { name: 'Trade Forecasts',       group: 'classify' },
@@ -130,7 +131,7 @@ if (!_manifestParsed.success) {
 const STEP_INDENT: Record<string, number> = {
   classify_scope: 1, builders: 1, link_wsib: 1, geocode_permits: 1, link_parcels: 1,
   enrich_permits: 1, link_neighbourhoods: 1, link_massing: 1, link_similar: 1,
-  classify_permits: 1, backfill_realtor_permit_trades: 1, compute_cost_estimates: 1,
+  classify_permits: 1, compute_storey_norms: 1, backfill_realtor_permit_trades: 1, compute_cost_estimates: 1,
   compute_timing_calibration_v2: 1, link_coa: 1, refresh_snapshot: 1,
   compute_trade_forecasts: 1, compute_opportunity_scores: 1, update_tracked_projects: 1,
   link_coa_to_parcels: 1, enrich_coa_zoning: 1, classify_coa_scope: 1, classify_coa_trades: 1,

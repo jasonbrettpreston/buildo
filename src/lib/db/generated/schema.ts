@@ -1325,6 +1325,25 @@ export const parcels = pgTable("parcels", {
 	check("parcels_heritage_designation_type_check", sql`(heritage_designation_type IS NULL) OR (heritage_designation_type = ANY (ARRAY['part_iv_individual'::text, 'part_v_hcd'::text]))`),
 ]);
 
+export const neighbourhoodStoreyNorms = pgTable("neighbourhood_storey_norms", {
+	id: serial().primaryKey().notNull(),
+	neighbourhoodId: integer("neighbourhood_id"),
+	storeysP50: integer("storeys_p50"),
+	storeysP90: integer("storeys_p90"),
+	sampleCount: integer("sample_count").notNull(),
+	lowSample: boolean("low_sample").default(false).notNull(),
+	dataProvenance: text("data_provenance").default('market_realized_new_builds').notNull(),
+	computedAt: timestamp("computed_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	uniqueIndex("neighbourhood_storey_norms_citywide_singleton").using("btree", sql`((neighbourhood_id IS NULL))`).where(sql`(neighbourhood_id IS NULL)`),
+	foreignKey({
+			columns: [table.neighbourhoodId],
+			foreignColumns: [neighbourhoods.id],
+			name: "neighbourhood_storey_norms_neighbourhood_id_fkey"
+		}),
+	unique("neighbourhood_storey_norms_neighbourhood_id_key").on(table.neighbourhoodId),
+]);
+
 export const trades = pgTable("trades", {
 	id: serial().primaryKey().notNull(),
 	slug: varchar({ length: 50 }).notNull(),

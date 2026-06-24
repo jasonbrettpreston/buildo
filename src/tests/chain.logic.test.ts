@@ -30,7 +30,7 @@ describe('Pipeline Chain Definitions', () => {
     // an actual recurring chain step, not a one-shot operator script.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(30); // +enrich_permits (Spec 66 WF3, after link_parcels)
+    expect(chain!.steps).toHaveLength(31); // +enrich_permits (Spec 66 WF3); +compute_storey_norms (Spec 65 §8 WF3-C1)
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs.indexOf('enrich_permits')).toBe(slugs.indexOf('link_parcels') + 1);
     expect(slugs).not.toContain('enrich_wsib_builders');

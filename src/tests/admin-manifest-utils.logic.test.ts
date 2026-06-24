@@ -51,7 +51,7 @@ describe('manifest-utils — STEP_TELEMETRY_TABLES allow-list', () => {
     const FROZEN_INSPECTABLE_TABLES = [
       'address_points', 'building_footprints', 'coa_applications', 'cost_estimates',
       'data_quality_snapshots', 'engine_health_snapshots', 'entities', 'heritage_properties',
-      'lead_parcels', 'lead_trades', 'neighbourhoods', 'parcel_address_points',
+      'lead_parcels', 'lead_trades', 'neighbourhood_storey_norms', 'neighbourhoods', 'parcel_address_points',
       'parcel_buildings', 'parcels', 'permit_inspections', 'permit_parcels', 'permit_trades',
       'permits', 'phase_calibration', 'phase_stay_calibration', 'pipeline_runs', 'ravines',
       'toronto_centreline', 'trade_forecasts', 'wsib_registry', 'zoning_bylaw_areas',

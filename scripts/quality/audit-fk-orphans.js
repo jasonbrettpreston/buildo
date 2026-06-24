@@ -201,6 +201,15 @@ const RELATIONSHIPS = [
     nullable: true,
   },
   {
+    // Spec 65 §8 (WF3-C1): per-neighbourhood storey norms. NULL neighbourhood_id = citywide fallback row.
+    tier: 1,
+    child: 'neighbourhood_storey_norms',
+    parent: 'neighbourhoods',
+    childCols: ['neighbourhood_id'],
+    parentCols: ['id'],
+    nullable: true,
+  },
+  {
     tier: 1,
     child: 'permit_products',
     parent: 'permits',

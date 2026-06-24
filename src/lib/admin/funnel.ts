@@ -586,6 +586,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   compute_opportunity_scores: { summary: 'Calculates 0-100 composite opportunity score per trade forecast from trade value, urgency window multiplier, and competition discount.', table: 'trade_forecasts' },
   update_tracked_projects: { summary: 'Nightly CRM assistant: processes saved + claimed projects, detects state changes (stalled, urgency shifts), generates alerts, auto-archives dead leads. Memory columns prevent duplicate notifications.', table: 'tracked_projects' },
   // Compute (lead feed pre-computation)
+  compute_storey_norms:       { summary: 'Derives per-neighbourhood storey norms (p50/p90) from new-build permit descriptions — the market-realized storey ceiling that replaces the height÷3 max-build guess (Spec 65 §8).', table: 'neighbourhood_storey_norms' },
   compute_cost_estimates:     { summary: 'Pre-computes cost model estimates for all permits (permit-reported or model-based)', table: 'cost_estimates' },
   // Snapshot
   refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', table: 'data_quality_snapshots' },
@@ -831,6 +832,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   link_similar: 'permits', create_pre_permits: 'coa_applications',
   compute_centroids: 'parcels', classify_scope: 'permits',
   classify_permits: 'permit_trades',
+  compute_storey_norms: 'neighbourhood_storey_norms',
   backfill_realtor_permit_trades: 'permit_trades',
   compute_cost_estimates: 'cost_estimates',
   compute_timing_calibration_v2: 'phase_calibration',
