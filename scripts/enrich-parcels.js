@@ -423,6 +423,7 @@ sb AS (
     ${mb.buildSetbackCase('s.zoning_class', 'side')} AS side_setback,
     ${mb.buildSetbackCase('s.zoning_class', 'rear')} AS rear_setback,
     ${mb.buildSetbackCase('s.zoning_class', 'flankage')} AS flankage_setback,
+    ${mb.buildSideCountCase('s.zoning_class')} AS side_count,  -- WF3-B party-wall: NON-party sides (RD/RM 2, RS 1, RT 0)
     (s.bylaw_standard_setback_m IS NOT NULL) AS setback_is_bylaw
   FROM scope s LEFT JOIN massing m ON m.pid = s.pid
 ),
@@ -460,7 +461,7 @@ box AS (
     COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit,
     CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red,
     GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - front_setback - flankage_setback
-                      ELSE frontage_m - 2 * side_setback END)
+                      ELSE frontage_m - side_count * side_setback END)  -- WF3-B: party-wall side_count (was 2×)
                 - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS width_raw,
     GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback
                       ELSE depth_m - front_setback - rear_setback END)
@@ -472,8 +473,8 @@ geo AS (
     NULLIF(width_raw, 0) AS width_m,
     NULLIF(length_raw, 0) AS length_m,
     CASE WHEN width_raw > 0 AND length_raw > 0 THEN round(width_raw * length_raw, 2) END AS box_area,
-    -- uniform negative buffer (shape-aware, dir-blind): side setback + ravine reduction. Empty (lot < 2×inset) → NULL.
-    NULLIF(round(ST_Area(ST_Buffer(geom::geography, -(side_setback + ravine_red)))::numeric, 2), 0) AS buffer_area,
+    -- uniform negative buffer (shape-aware, dir-blind): side setback (party-wall-scaled, WF3-B) + ravine. Empty (lot < 2×inset) → NULL.
+    NULLIF(round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2), 0) AS buffer_area,
     CASE WHEN bylaw_max_coverage_pct IS NOT NULL THEN round(lot_size_sqm * bylaw_max_coverage_pct / 100.0, 2) END AS coverage_cap,
     CASE WHEN bylaw_max_stories IS NOT NULL THEN GREATEST(1, bylaw_max_stories)
          WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN GREATEST(1, round(bylaw_max_height_m / (${mb.buildStoreyHeightCase('zoning_class', storeyHeight)}))::int)
@@ -941,6 +942,12 @@ async function main(pool) {
     auditRows.push({ metric: 'max_build_confidence_low_count', value: mbResult.mb_low, status: 'INFO' });
     auditRows.push({ metric: 'garden_suite_fits_count', value: mbResult.suite_fits, status: 'INFO' });
     auditRows.push({ metric: 'envelope_constrained_count', value: mbResult.constrained, status: 'INFO' });
+    // WF3-B party-wall transparency: how many attached (semi/townhouse) parcels got the modal side_count<2
+    // footprint widening (the documented approximation). zoning_class isn't on parcel_max_build → query parcels.
+    const attachedModal = await pool
+      .query(`SELECT COUNT(*)::int AS n FROM parcels WHERE zoning_class IN ('RS','RT') AND max_buildable_footprint_sqm IS NOT NULL`)
+      .then((r) => r.rows[0].n);
+    auditRows.push({ metric: 'attached_modal_side_count_parcels', value: attachedModal, status: 'INFO' });
     // --- Accessory fit (Spec 65 Phase 3) — all INFO; permission distribution makes the CoA split visible. ---
     auditRows.push({ metric: 'garage_fits_count', value: mbResult.garage_fits_cnt, status: 'INFO' });
     auditRows.push({ metric: 'garage_permission_as_of_right_count', value: mbResult.garage_aor, status: 'INFO' });

@@ -100,20 +100,24 @@ const GARDEN_SUITE_STOREYS = 1;
 // side/rear/flankage have NO source field, so they ALWAYS come from this table. Keyed by the
 // zoning_class prefix (longest match wins). Approximations from By-law 569-2013 typical yards —
 // documented coarse; max_build_setback_basis records 'bylaw' vs 'zone_default' for visibility.
+// `side_count` (WF3-A→B): number of NON-party sides that take a side setback. Detached/apartment = 2
+// (both sides open); semi = 1 (one shared party wall); townhouse = 0 (interior unit, both shared — the
+// MODAL townhouse; end units over-counted slightly, documented approximation). Only RS/RT differ from 2.
+// Consumed by buildSideCountCase/lookupSideCount → width_raw + the buffer side inset in enrich-parcels.
 const SETBACK_DEFAULTS = {
-  RD: { front: 6.0, side: 0.9, rear: 7.5, flankage: 4.5 }, // detached
-  RS: { front: 6.0, side: 0.9, rear: 7.5, flankage: 4.5 }, // semi-detached
-  RT: { front: 6.0, side: 0.9, rear: 7.5, flankage: 4.5 }, // townhouse
-  RM: { front: 6.0, side: 1.5, rear: 7.5, flankage: 4.5 }, // multiple dwelling
-  R:  { front: 6.0, side: 0.9, rear: 7.5, flankage: 4.5 }, // residential (generic)
-  CR: { front: 3.0, side: 0.0, rear: 7.5, flankage: 3.0 }, // commercial-residential
-  CL: { front: 3.0, side: 0.0, rear: 7.5, flankage: 3.0 }, // commercial-local
-  C:  { front: 3.0, side: 0.0, rear: 7.5, flankage: 3.0 }, // commercial
-  E:  { front: 6.0, side: 1.5, rear: 7.5, flankage: 6.0 }, // employment
-  I:  { front: 6.0, side: 1.5, rear: 7.5, flankage: 6.0 }, // institutional
-  O:  { front: 3.0, side: 1.5, rear: 3.0, flankage: 3.0 }, // open space (rare build)
-  UT: { front: 3.0, side: 1.5, rear: 3.0, flankage: 3.0 }, // utility
-  DEFAULT: { front: 6.0, side: 1.2, rear: 7.5, flankage: 4.5 },
+  RD: { front: 6.0, side: 0.9, rear: 7.5, flankage: 4.5, side_count: 2 }, // detached
+  RS: { front: 6.0, side: 0.9, rear: 7.5, flankage: 4.5, side_count: 1 }, // semi-detached (one party wall)
+  RT: { front: 6.0, side: 0.9, rear: 7.5, flankage: 4.5, side_count: 0 }, // townhouse (interior unit — both party walls)
+  RM: { front: 6.0, side: 1.5, rear: 7.5, flankage: 4.5, side_count: 2 }, // multiple dwelling (standalone apartment)
+  R:  { front: 6.0, side: 0.9, rear: 7.5, flankage: 4.5, side_count: 2 }, // residential (generic)
+  CR: { front: 3.0, side: 0.0, rear: 7.5, flankage: 3.0, side_count: 2 }, // commercial-residential
+  CL: { front: 3.0, side: 0.0, rear: 7.5, flankage: 3.0, side_count: 2 }, // commercial-local
+  C:  { front: 3.0, side: 0.0, rear: 7.5, flankage: 3.0, side_count: 2 }, // commercial
+  E:  { front: 6.0, side: 1.5, rear: 7.5, flankage: 6.0, side_count: 2 }, // employment
+  I:  { front: 6.0, side: 1.5, rear: 7.5, flankage: 6.0, side_count: 2 }, // institutional
+  O:  { front: 3.0, side: 1.5, rear: 3.0, flankage: 3.0, side_count: 2 }, // open space (rare build)
+  UT: { front: 3.0, side: 1.5, rear: 3.0, flankage: 3.0, side_count: 2 }, // utility
+  DEFAULT: { front: 6.0, side: 1.2, rear: 7.5, flankage: 4.5, side_count: 2 },
 };
 const SETBACK_DIMS = ['front', 'side', 'rear', 'flankage'];
 
@@ -142,6 +146,23 @@ function buildSetbackCase(zoneCol, dim) {
     .map((p) => `    WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}`)
     .join('\n');
   return `CASE\n${whens}\n    ELSE ${SETBACK_DEFAULTS.DEFAULT[dim].toFixed(2)}\n  END`;
+}
+
+/** Pure JS mirror of the party-wall side-count lookup (WF3-B). Detached/apt 2, semi 1, townhouse 0. */
+function lookupSideCount(zoningClass) {
+  const zc = (zoningClass || '').toUpperCase();
+  for (const p of SETBACK_PREFIXES) {
+    if (zc.startsWith(p)) return SETBACK_DEFAULTS[p].side_count;
+  }
+  return SETBACK_DEFAULTS.DEFAULT.side_count;
+}
+
+/** SQL CASE returning the party-wall `side_count` for `zoneCol`, generated from SETBACK_DEFAULTS. */
+function buildSideCountCase(zoneCol) {
+  const whens = SETBACK_PREFIXES
+    .map((p) => `    WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}`)
+    .join('\n');
+  return `CASE\n${whens}\n    ELSE ${SETBACK_DEFAULTS.DEFAULT.side_count}\n  END`;
 }
 
 // --- Output columns written onto parcels by the second UPDATE pass (16) ---
@@ -231,7 +252,7 @@ const RENO_BATH_GFA_PCT_DEFAULT = 0.07;
 module.exports = {
   LOT_TOLERANCE, LOT_MIN_SQM, LOT_MAX_SQM, STOREY_HEIGHT_M, RAVINE_SETBACK_M,
   GARDEN_SUITE_MIN_LOT_SQM, GARDEN_SUITE_MIN_REAR_YARD_M, GARDEN_SUITE_MAX_GFA_SQM,
-  SETBACK_DEFAULTS, SETBACK_DIMS, lookupSetback, buildSetbackCase,
+  SETBACK_DEFAULTS, SETBACK_DIMS, lookupSetback, buildSetbackCase, lookupSideCount, buildSideCountCase,
   MAX_BUILD_COLS, MAX_BUILD_BOOL_COLS,
   LOT_MAXBUILD_INPUT_COLS, LOT_MAXBUILD_OUTPUT_COLS, LOT_MAXBUILD_COLS,
   EXISTING_COLS, EXISTING_CONFIDENCE_HIGH_MIN,

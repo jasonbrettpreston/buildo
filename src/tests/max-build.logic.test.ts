@@ -56,6 +56,29 @@ describe('max-build — setback table (MB-4)', () => {
       expect(sql).toContain(`LIKE '${p}%'`);
     }
   });
+
+  it('side_count (WF3-B party-wall): RD/RM 2, RS 1 (one party wall), RT 0 (interior), DEFAULT 2', () => {
+    expect(mb.lookupSideCount('RD')).toBe(2);
+    expect(mb.lookupSideCount('RM')).toBe(2);
+    expect(mb.lookupSideCount('R')).toBe(2);
+    expect(mb.lookupSideCount('RS')).toBe(1);
+    expect(mb.lookupSideCount('RT')).toBe(0);
+    expect(mb.lookupSideCount('RT (x9)')).toBe(0); // longest-prefix match
+    expect(mb.lookupSideCount('ZZZ')).toBe(2);     // DEFAULT
+    expect(mb.lookupSideCount(null)).toBe(2);
+    // every SETBACK_DEFAULTS row carries side_count
+    for (const [zone, row] of Object.entries<Record<string, number>>(mb.SETBACK_DEFAULTS)) {
+      expect(typeof row.side_count, `${zone}.side_count`).toBe('number');
+    }
+  });
+
+  it('buildSideCountCase emits a CASE matching lookupSideCount (single source)', () => {
+    const sql = mb.buildSideCountCase('p.zoning_class');
+    expect(sql).toMatch(/^CASE/);
+    expect(sql).toMatch(/ELSE 2\s+END/); // DEFAULT.side_count = 2
+    expect(sql).toMatch(/LIKE 'RS%' THEN 1/);
+    expect(sql).toMatch(/LIKE 'RT%' THEN 0/);
+  });
 });
 
 describe('max-build — column arrays (MB-1 regression lock)', () => {
@@ -130,7 +153,12 @@ describe('max-build — enrich-parcels second-pass SQL plumbing', () => {
     const sql = ep.buildMaxBuildSql({});
     expect(sql).toMatch(/CREATE TEMP TABLE parcel_max_build/);
     expect(sql).toMatch(/parcel_buildings pb JOIN building_footprints bf/);
-    expect(sql).toMatch(/ST_Buffer\(geom::geography, -\(side_setback \+ ravine_red\)\)/);
+    // WF3-B: buffer side inset is party-wall-scaled (side_count/2.0); ravine_red still added separately.
+    expect(sql).toMatch(/ST_Buffer\(geom::geography, -\(side_setback \* side_count \/ 2\.0 \+ ravine_red\)\)/);
+    // width_raw uses the party-wall side_count, not a flat 2× (attached fix)
+    expect(sql).toMatch(/frontage_m - side_count \* side_setback/);
+    // footprint_calc still cross-checks box_area (KEPT — the front/rear depth guard; review CRITICAL)
+    expect(sql).toMatch(/LEAST\(buffer_area, box_area, coverage_cap\)/);
     // ravine is a FIXED constant, NOT scaled by ravine_distance_m (Spec 59 L2 / MB-5)
     expect(sql).not.toMatch(/ravine_distance_m\s*\*/);
   });

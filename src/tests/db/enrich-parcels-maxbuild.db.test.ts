@@ -194,4 +194,52 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       await c.query('ROLLBACK');
     } finally { c.release(); }
   });
+
+  // WF3-B — party-wall side-setbacks: attached types subtract fewer side setbacks (RD 2 / RS 1 / RT 0).
+  // No coverage cap here → footprint is box-bound → directly reflects width_raw = frontage − side_count×side.
+  it('attached widen: identical geometry RD < RS < RT in width + footprint; RD byte-stable', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      const base = { lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24,
+        bylaw_max_height_m: 10, bylaw_max_stories: 3, bylaw_max_fsi: 1.0 }; // NO coverage_pct → box-bound
+      await insMb(c, TEST_PARCEL + 10, sq(0, 0, 0.0002), { ...base, zoning_class: 'RD' });
+      await insMb(c, TEST_PARCEL + 11, sq(0, 0, 0.0002), { ...base, zoning_class: 'RS' });
+      await insMb(c, TEST_PARCEL + 12, sq(0, 0, 0.0002), { ...base, zoning_class: 'RT' });
+      await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+      const rd = await getParcel(c, TEST_PARCEL + 10);
+      const rs = await getParcel(c, TEST_PARCEL + 11);
+      const rt = await getParcel(c, TEST_PARCEL + 12);
+      // width_m = frontage − side_count×side_setback: RD 22.24−1.8=20.44, RS 22.24−0.9=21.34, RT 22.24
+      expect(Number(rd.max_build_width_m)).toBeCloseTo(20.44, 2); // RD byte-stable (side_count 2 = old 2×)
+      expect(Number(rs.max_build_width_m)).toBeCloseTo(21.34, 2);
+      expect(Number(rt.max_build_width_m)).toBeCloseTo(22.24, 2);
+      // footprint monotonic: attached strictly wider than detached
+      expect(Number(rt.max_buildable_footprint_sqm)).toBeGreaterThan(Number(rs.max_buildable_footprint_sqm));
+      expect(Number(rs.max_buildable_footprint_sqm)).toBeGreaterThan(Number(rd.max_buildable_footprint_sqm));
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  // WF3-B NEW-1 cascade: the wider width_m for attached flows into rear_yard_area → garage GFA.
+  it('accessory cascade: RT wider rear yard → larger max_garage_gfa than identical RD', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      const base = { lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24,
+        bylaw_max_height_m: 10, bylaw_max_stories: 3, bylaw_max_fsi: 1.0 };
+      const rdId = await insMb(c, TEST_PARCEL + 13, sq(0, 0, 0.0002), { ...base, zoning_class: 'RD' });
+      const rtId = await insMb(c, TEST_PARCEL + 14, sq(0, 0, 0.0002), { ...base, zoning_class: 'RT' });
+      await addMassing(c, rdId, 50, 1); // small primary → rear yard well under the garage GFA cap
+      await addMassing(c, rtId, 50, 1);
+      await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+      const rd = await getParcel(c, TEST_PARCEL + 13);
+      const rt = await getParcel(c, TEST_PARCEL + 14);
+      expect(rd.garage_permission).not.toBeNull();
+      expect(rt.garage_permission).not.toBeNull();
+      // RT's wider width_m → larger rear_yard_area → larger garage GFA (both below the 60 m² cap)
+      expect(Number(rt.max_garage_gfa_sqm)).toBeGreaterThan(Number(rd.max_garage_gfa_sqm));
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
 });
