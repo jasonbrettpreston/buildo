@@ -92,6 +92,39 @@ describe('max-build — column arrays (MB-1 regression lock)', () => {
   });
 });
 
+describe('computeCurGfaRange (WF3-A current-building GFA menu)', () => {
+  it('pocket tops at 2 storeys → 1-2 range, no 3-storey option', () => {
+    expect(mb.computeCurGfaRange(100, 2)).toEqual({
+      cur_floor_gfa_sqm: 100, cur_pot_2story_gfa_sqm: 200, cur_pot_3story_gfa_sqm: null, cur_gfa_range_basis: '1-2',
+    });
+  });
+
+  it('pocket supports 3 storeys → 1-3 range, 3-storey option emitted', () => {
+    expect(mb.computeCurGfaRange(100, 3)).toEqual({
+      cur_floor_gfa_sqm: 100, cur_pot_2story_gfa_sqm: 200, cur_pot_3story_gfa_sqm: 300, cur_gfa_range_basis: '1-3',
+    });
+    // higher pockets still cap the current-building menu at 3 (max_build_stories>=3 gate)
+    expect(mb.computeCurGfaRange(100, 5).cur_gfa_range_basis).toBe('1-3');
+  });
+
+  it('range_basis is ASCII hyphen, never an en-dash', () => {
+    expect(mb.computeCurGfaRange(100, 2).cur_gfa_range_basis).toBe('1-2');
+    expect(mb.computeCurGfaRange(100, 3).cur_gfa_range_basis).toBe('1-3');
+  });
+
+  it('NULL footprint OR NULL max_build_stories → all NULL (range_basis NULL, not 1-2)', () => {
+    expect(mb.computeCurGfaRange(null, 2)).toEqual({
+      cur_floor_gfa_sqm: null, cur_pot_2story_gfa_sqm: null, cur_pot_3story_gfa_sqm: null, cur_gfa_range_basis: null,
+    });
+    expect(mb.computeCurGfaRange(100, null).cur_gfa_range_basis).toBeNull();
+  });
+
+  it('rounds to 2 dp like the SQL ROUND(...,2)', () => {
+    expect(mb.computeCurGfaRange(33.337, 2).cur_floor_gfa_sqm).toBe(33.34);
+    expect(mb.computeCurGfaRange(33.337, 2).cur_pot_2story_gfa_sqm).toBe(66.67);
+  });
+});
+
 describe('max-build — enrich-parcels second-pass SQL plumbing', () => {
   it('buildMaxBuildSql references the zoning feed + lot dims + the massing join', () => {
     const sql = ep.buildMaxBuildSql({});

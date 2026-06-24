@@ -34,6 +34,13 @@
     "min": 0.01,
     "max": 1
   },
+  "mislink_footprint_lot_tol": {
+    "default": 0.05,
+    "type": "number",
+    "description": "Spec 65 §5 (WF3-A) — mislink guard tolerance: existing_footprint > lot_size_sqm × (1 + this) means the WRONG building was linked (block/neighbour attribution); the whole existing structure is NULLed + existing_data_quality_flag='footprint_exceeds_lot'. CONSUMED by enrich-parcels.js. Operator-tunable.",
+    "min": 0,
+    "max": 1
+  },
   "storey_height_m": {
     "default": 3.0,
     "type": "number",

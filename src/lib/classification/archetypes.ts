@@ -61,11 +61,11 @@ const FB_PRODUCTS = [
  */
 export const ARCHETYPE_GEOM_BASIS: Record<ArchetypeCode, string | null> = {
   FB: 'max_buildable_gfa_sqm',
-  ADD: 'cur_storey_gfa_sqm',
-  BAS: 'cur_basement_gfa_sqm',
+  ADD: 'cur_floor_gfa_sqm',       // WF3-A: one added storey = one footprint (was cur_storey_gfa_sqm, deprecated)
+  BAS: 'cur_floor_gfa_sqm',       // WF3-A: basement reno = one footprint (was cur_basement_gfa_sqm, deprecated)
   KIT: 'cur_est_kitchen_gfa_sqm',
   BTH: 'cur_est_bath_gfa_sqm',
-  INT: 'cur_interior_reno_gfa_sqm',
+  INT: 'cur_pot_2story_gfa_sqm',  // WF3-A: interior gut = typical 2-storey option (was cur_interior_reno_gfa_sqm, deprecated)
   LANE: 'max_rear_suite_gfa_sqm', // Phase 3: chosen rear suite (laneway XOR garden); NULL when neither fits (cost model safe-skips)
   ENV: null,
   MEC: null,

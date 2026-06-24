@@ -543,8 +543,8 @@ async function main(pool) {
       await assertCentrelineColumns(client, target); // §8e L24a — mig 174/176 applied?
       await assertCentrelineEnriched(client); // §8e L24b recency + L24c coverage
       await assertMaxBuildColumns(client, target); // §8e (Spec 65) — mig 185/186 applied?
-      await assertExistingStructureColumns(client, target); // §8e (Spec 65 Phase 1) — mig 187/188 applied?
-      await assertScenarioColumns(client, target); // §8e (Spec 65 Phase 2) — mig 189/190 applied?
+      await assertExistingStructureColumns(client, target); // §8e (Spec 65 Phase 1 + WF3-A flag) — mig 187/188 + 193/194 applied?
+      await assertScenarioColumns(client, target); // §8e (Spec 65 Phase 2 + WF3-A cur-GFA range) — mig 189/190 + 193/194 applied?
       await assertLinkTable(client, target); // §8e DEC-D2 — link table + join cols present?
       const runAt = await pipeline.getDbTimestamp(client);
       result = await enrichLeads(client, { target, scopeWhere: 'TRUE', runAt });
@@ -629,26 +629,30 @@ async function main(pool) {
              COUNT(*) FILTER (WHERE existing_gfa_sqm IS NOT NULL)::int                AS with_gfa,
              COUNT(*) FILTER (WHERE existing_structure_confidence = 'high')::int      AS conf_high,
              COUNT(*) FILTER (WHERE existing_structure_confidence = 'low')::int       AS conf_low,
-             COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)::int         AS with_greenspace
+             COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)::int         AS with_greenspace,
+             COUNT(*) FILTER (WHERE existing_data_quality_flag = '${mb.MISLINK_FLAG_FOOTPRINT_EXCEEDS_LOT}')::int AS mislinked
       FROM ${cfg.table}`)).rows[0];
     auditRows.push({ metric: `${prefix}_existing_footprint_count`, value: ex.with_footprint, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_gfa_count`, value: ex.with_gfa, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_structure_confidence_high_count`, value: ex.conf_high, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_structure_confidence_low_count`, value: ex.conf_low, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_greenspace_count`, value: ex.with_greenspace, status: 'INFO' });
-    // §8e scenario GFA propagation observability (Spec 65 Phase 2 — INFO).
+    auditRows.push({ metric: `${prefix}_existing_mislinked_footprint_count`, value: ex.mislinked, status: 'INFO' });
+    // §8e scenario GFA + cur-GFA-range propagation observability (Spec 65 Phase 2 + WF3-A — INFO).
     const sc = (await pool.query(`
       SELECT COUNT(*) FILTER (WHERE max_newbuild_coa_gfa_sqm IS NOT NULL)::int AS with_coa,
-             COUNT(*) FILTER (WHERE cur_basement_gfa_sqm IS NOT NULL)::int      AS with_basement,
-             COUNT(*) FILTER (WHERE cur_storey_gfa_sqm IS NOT NULL)::int        AS with_storey,
-             COUNT(*) FILTER (WHERE cur_interior_reno_gfa_sqm IS NOT NULL)::int AS with_interior,
+             COUNT(*) FILTER (WHERE cur_floor_gfa_sqm IS NOT NULL)::int        AS with_floor,
+             COUNT(*) FILTER (WHERE cur_pot_2story_gfa_sqm IS NOT NULL)::int   AS with_pot2,
+             COUNT(*) FILTER (WHERE cur_pot_3story_gfa_sqm IS NOT NULL)::int   AS with_pot3,
+             COUNT(*) FILTER (WHERE cur_gfa_range_basis IS NOT NULL)::int      AS with_range,
              COUNT(*) FILTER (WHERE cur_est_kitchen_gfa_sqm IS NOT NULL)::int   AS with_kitchen,
              COUNT(*) FILTER (WHERE cur_est_bath_gfa_sqm IS NOT NULL)::int      AS with_bath
       FROM ${cfg.table}`)).rows[0];
     auditRows.push({ metric: `${prefix}_max_newbuild_coa_gfa_count`, value: sc.with_coa, status: 'INFO' });
-    auditRows.push({ metric: `${prefix}_cur_basement_gfa_count`, value: sc.with_basement, status: 'INFO' });
-    auditRows.push({ metric: `${prefix}_cur_storey_gfa_count`, value: sc.with_storey, status: 'INFO' });
-    auditRows.push({ metric: `${prefix}_cur_interior_reno_gfa_count`, value: sc.with_interior, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_cur_floor_gfa_count`, value: sc.with_floor, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_cur_pot_2story_gfa_count`, value: sc.with_pot2, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_cur_pot_3story_gfa_count`, value: sc.with_pot3, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_cur_gfa_range_basis_count`, value: sc.with_range, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_cur_est_kitchen_gfa_count`, value: sc.with_kitchen, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_cur_est_bath_gfa_count`, value: sc.with_bath, status: 'INFO' });
     // §8e accessory-fit propagation observability (Spec 65 Phase 3 — INFO; permission distribution).

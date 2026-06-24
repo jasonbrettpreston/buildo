@@ -75,15 +75,21 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 1 existing-structure — live DB 
 
       const p = await get(c, TEST_PARCEL + 1);
       expect(Number(p.existing_footprint_sqm)).toBe(50);
-      expect(Number(p.existing_stories)).toBe(2);
-      expect(Number(p.existing_height_m)).toBe(6);
-      expect(Number(p.existing_gfa_sqm)).toBe(100); // 50 × 2
+      expect(p.existing_stories).toBeNull();  // WF3-A: RETIRED (tree-contaminated)
+      expect(p.existing_height_m).toBeNull(); // WF3-A: RETIRED (tree-contaminated)
+      expect(Number(p.existing_gfa_sqm)).toBe(100); // WF3-A: footprint × 2 (forward-compat 2-storey default)
       expect(Number(p.existing_width_m)).toBeGreaterThan(0);
       expect(Number(p.existing_length_m)).toBeGreaterThan(Number(p.existing_width_m)); // 10m > 5m
       expect(p.existing_structure_confidence).toBe('high');
       expect(Number(p.existing_other_structures_count)).toBe(1);    // the garage
       expect(Number(p.existing_other_structures_sqm)).toBe(6);
       expect(Number(p.existing_greenspace_sqm)).toBeCloseTo(490 - 50 - 6, 0); // lot − primary − other
+      // WF3-A cur-GFA range menu (no max-build pass here → max_build_stories NULL → pot_3/range_basis NULL).
+      expect(Number(p.cur_floor_gfa_sqm)).toBe(50);        // known single floor = footprint
+      expect(Number(p.cur_pot_2story_gfa_sqm)).toBe(100);  // footprint × 2
+      expect(p.cur_pot_3story_gfa_sqm).toBeNull();         // gated on max_build_stories >= 3
+      expect(p.cur_gfa_range_basis).toBeNull();            // NULL when max_build_stories unknown
+      expect(p.existing_data_quality_flag).toBeNull();     // footprint 50 < lot 490 → not mislinked
 
       const res2 = await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true });
       expect(res2.updated).toBe(0); // idempotent
@@ -106,7 +112,7 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 1 existing-structure — live DB 
     } finally { c.release(); }
   });
 
-  it('bungalow stories 0 → GFA floored at 1 storey (not zeroed)', async () => {
+  it('bungalow (massing stories 0) → cur_floor = footprint > 0, never zeroed (WF3-A re-lock of the floor intent)', async () => {
     const c = await pool.connect();
     try {
       await c.query('BEGIN');
@@ -115,7 +121,10 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 1 existing-structure — live DB 
       await link(c, id, b, true, 0.95);
       await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true });
       const p = await get(c, TEST_PARCEL + 3);
-      expect(Number(p.existing_gfa_sqm)).toBe(80); // 80 × GREATEST(1,0) = 80, not 0
+      // The retired floor-at-1 intent ("a bungalow never gets GFA 0") now lives on cur_floor_gfa_sqm.
+      expect(Number(p.cur_floor_gfa_sqm)).toBe(80);   // = footprint, non-zero regardless of massing stories
+      expect(Number(p.existing_gfa_sqm)).toBe(160);   // WF3-A: footprint × 2 (was 80 × GREATEST(1,0))
+      expect(p.existing_stories).toBeNull();          // retired
       await c.query('ROLLBACK');
     } finally { c.release(); }
   });

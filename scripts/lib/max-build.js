@@ -27,6 +27,12 @@ const STOREY_HEIGHT_M = 3.0;
 const RESIDENTIAL_STOREY_HEIGHT_M = 3.0;
 const NONRES_STOREY_HEIGHT_M = 4.0; // commercial/employment/institutional ≈ 4–4.5 m floors
 
+// WF3-A mislink guard: existing_footprint > lot × (1 + tol) → the linked building is the WRONG one
+// (block/neighbour attribution — RT 56.5%, R 23.8% in dev). Whole existing structure is NULLed +
+// existing_data_quality_flag='footprint_exceeds_lot'. Externalized (logic-var mislink_footprint_lot_tol).
+const MISLINK_FOOTPRINT_LOT_TOL_DEFAULT = 0.05;
+const MISLINK_FLAG_FOOTPRINT_EXCEEDS_LOT = 'footprint_exceeds_lot';
+
 /**
  * SQL CASE returning the storey-height (m) for `zoneCol`: non-residential (C/E/I prefixes) → taller;
  * everything else → `residentialHeight` (the externalized residential default). Mirrors the
@@ -40,6 +46,28 @@ function lookupStoreyHeight(zoningClass, residentialHeight = RESIDENTIAL_STOREY_
   const zc = (zoningClass || '').toUpperCase();
   return (zc.startsWith('C') || zc.startsWith('E') || zc.startsWith('I') || zc.startsWith('UT'))
     ? NONRES_STOREY_HEIGHT_M : residentialHeight;
+}
+
+// WF3-A current-building GFA range (Spec 65 §6). The contaminated existing_stories is retired, so
+// we present a MENU of priceable scope options off the TRUSTWORTHY footprint rather than one wrong
+// GFA: cur_floor (known single floor) + cur_pot_2story + cur_pot_3story, with the 3-storey option
+// gated on what the pocket actually builds (max_build_stories — the upper end of the build envelope).
+// range_basis flags the menu span. Footprint or max_build_stories unknown → all NULL (honest).
+// Pure fn; the SQL CASE in buildExistingStructureSql mirrors this exactly.
+function computeCurGfaRange(footprintSqm, maxBuildStories) {
+  const fp = footprintSqm == null ? null : Number(footprintSqm);
+  const mbs = maxBuildStories == null ? null : Number(maxBuildStories);
+  if (fp == null || !Number.isFinite(fp) || mbs == null || !Number.isFinite(mbs)) {
+    return { cur_floor_gfa_sqm: null, cur_pot_2story_gfa_sqm: null, cur_pot_3story_gfa_sqm: null, cur_gfa_range_basis: null };
+  }
+  const round2 = (n) => Math.round(n * 100) / 100;
+  const supports3 = mbs >= 3;
+  return {
+    cur_floor_gfa_sqm: round2(fp),
+    cur_pot_2story_gfa_sqm: round2(fp * 2),
+    cur_pot_3story_gfa_sqm: supports3 ? round2(fp * 3) : null,
+    cur_gfa_range_basis: supports3 ? '1-3' : '1-2',
+  };
 }
 // Fixed TRCA top-of-bank setback (m) — Toronto Ch.658 stable-slope default. NOT scaled by
 // ravine_distance_m (Spec 59 L2: distance is signed proximity, not a gradient multiplier).
@@ -175,17 +203,25 @@ const EXISTING_COLS = [
   'existing_other_structures_count',// # non-primary buildings
   'existing_other_structures_sqm',  // Σ non-primary footprint (ROUND 2)
   'existing_greenspace_sqm',        // lot − primary − other (ROUND 2; non-overlap assumption)
+  'existing_data_quality_flag',     // WF3-A: 'footprint_exceeds_lot' mislink sentinel, else NULL
 ];
+// WF3-A (Spec 65 §5): existing_stories + existing_height_m are RETIRED — kept in EXISTING_COLS so the
+// array-driven UPDATE NULLs their (tree-contaminated) values on re-enrich; raw height → records_meta.
 
 // --- Reno/build scenario GFA columns (Spec 65 Phase 2) — pure arithmetic off existing_* + max-build,
 // written by a sibling UPDATE in the existing-structure pass; propagated to permits/coa. ---
 const SCENARIO_COLS = [
   'max_newbuild_coa_gfa_sqm',   // FB+COA = max_buildable_gfa × (1 + reno_coa_uplift_pct)
-  'cur_basement_gfa_sqm',       // BAS = existing_footprint
-  'cur_storey_gfa_sqm',         // ADD = existing_footprint × (max_build_stories − existing_stories)
-  'cur_interior_reno_gfa_sqm',  // INT = existing_gfa
+  'cur_basement_gfa_sqm',       // DEPRECATED (WF3-A) → folds into cur_floor_gfa_sqm; NULL-cleared, kept in-array so the SET writes NULL
+  'cur_storey_gfa_sqm',         // DEPRECATED (WF3-A) → depended on retired existing_stories; NULL-cleared
+  'cur_interior_reno_gfa_sqm',  // DEPRECATED (WF3-A) → was existing_gfa; NULL-cleared
   'cur_est_kitchen_gfa_sqm',    // KIT = existing_footprint × reno_kitchen_gfa_pct
   'cur_est_bath_gfa_sqm',       // BTH = existing_footprint × reno_bath_gfa_pct
+  // WF3-A current-building GFA range (menu of priceable scope options off the known footprint):
+  'cur_floor_gfa_sqm',          // known single floor (= existing_footprint) — basement/single-storey/minimum
+  'cur_pot_2story_gfa_sqm',     // footprint × 2 (always emitted when footprint known)
+  'cur_pot_3story_gfa_sqm',     // footprint × 3; NULL unless pocket supports 3 (max_build_stories >= 3)
+  'cur_gfa_range_basis',        // '1-2' | '1-3' | NULL — range/menu-span flag
 ];
 // Externalized reno heuristics — defaults (also seeded in logic_variables.json + control-panel.ts).
 const RENO_COA_UPLIFT_PCT_DEFAULT = 0.05;
@@ -199,6 +235,7 @@ module.exports = {
   MAX_BUILD_COLS, MAX_BUILD_BOOL_COLS,
   LOT_MAXBUILD_INPUT_COLS, LOT_MAXBUILD_OUTPUT_COLS, LOT_MAXBUILD_COLS,
   EXISTING_COLS, EXISTING_CONFIDENCE_HIGH_MIN,
+  MISLINK_FOOTPRINT_LOT_TOL_DEFAULT, MISLINK_FLAG_FOOTPRINT_EXCEEDS_LOT, computeCurGfaRange,
   SCENARIO_COLS, RENO_COA_UPLIFT_PCT_DEFAULT, RENO_KITCHEN_GFA_PCT_DEFAULT, RENO_BATH_GFA_PCT_DEFAULT,
   RESIDENTIAL_STOREY_HEIGHT_M, NONRES_STOREY_HEIGHT_M, buildStoreyHeightCase, lookupStoreyHeight,
   // Accessory fit (Phase 3)

@@ -16,10 +16,11 @@ const aj = require('../../scripts/lib/archetypes.js');
 import { ARCHETYPE_GEOM_BASIS as TS_GEOM_BASIS, ARCHETYPE_BUNDLES as TS_BUNDLES } from '../lib/classification/archetypes';
 
 describe('scenarios — column set (Phase 2 regression lock)', () => {
-  it('SCENARIO_COLS is the 6 documented columns', () => {
+  it('SCENARIO_COLS is the Phase-2 6 + WF3-A 4 cur-GFA-range superset (deprecated 3 kept in-array, NULL-cleared)', () => {
     expect(mb.SCENARIO_COLS).toEqual([
       'max_newbuild_coa_gfa_sqm', 'cur_basement_gfa_sqm', 'cur_storey_gfa_sqm',
       'cur_interior_reno_gfa_sqm', 'cur_est_kitchen_gfa_sqm', 'cur_est_bath_gfa_sqm',
+      'cur_floor_gfa_sqm', 'cur_pot_2story_gfa_sqm', 'cur_pot_3story_gfa_sqm', 'cur_gfa_range_basis',
     ]);
   });
 
@@ -31,21 +32,39 @@ describe('scenarios — column set (Phase 2 regression lock)', () => {
     expect(mb.SCENARIO_COLS.filter((c: string) => others.includes(c))).toEqual([]);
   });
 
-  it('externalized reno defaults present', () => {
+  it('externalized reno + WF3-A mislink defaults present', () => {
     expect(mb.RENO_COA_UPLIFT_PCT_DEFAULT).toBe(0.05);
     expect(mb.RENO_KITCHEN_GFA_PCT_DEFAULT).toBe(0.15);
     expect(mb.RENO_BATH_GFA_PCT_DEFAULT).toBe(0.07);
+    expect(mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT).toBe(0.05);
+    expect(mb.MISLINK_FLAG_FOOTPRINT_EXCEEDS_LOT).toBe('footprint_exceeds_lot');
   });
 });
 
 describe('scenarios — SQL plumbing', () => {
-  it('existing-structure SQL computes the 6 scenarios + reads max-build cols from the parcels row', () => {
-    const sql = ep.buildExistingStructureSql({ reno: { coaUplift: 0.05, kitchenPct: 0.15, bathPct: 0.07 } });
+  it('existing-structure SQL: retires height/stories, mislink-guards, emits the cur-GFA range', () => {
+    const sql = ep.buildExistingStructureSql({ reno: { coaUplift: 0.05, kitchenPct: 0.15, bathPct: 0.07, mislinkTol: 0.05 } });
     expect(sql).toMatch(/p\.max_buildable_gfa_sqm::numeric AS max_buildable_gfa_sqm, p\.max_build_stories/);
     expect(sql).toMatch(/s\.max_buildable_gfa_sqm \* \(1 \+ 0\.05\)[\s\S]*AS max_newbuild_coa_gfa_sqm/);
-    expect(sql).toMatch(/pr\.p_footprint \* 0\.15[\s\S]*AS cur_est_kitchen_gfa_sqm/);
-    // cur_storey is NULL when max_build_stories OR existing_stories is NULL (panel fix — not 0).
-    expect(sql).toMatch(/s\.max_build_stories IS NOT NULL AND pr\.p_stories IS NOT NULL[\s\S]*AS cur_storey_gfa_sqm/);
+    expect(sql).toMatch(/g\.eff_footprint \* 0\.15[\s\S]*AS cur_est_kitchen_gfa_sqm/);
+    // WF3-A: existing_stories + existing_height_m are RETIRED → always NULL.
+    expect(sql).toMatch(/NULL::integer AS existing_stories/);
+    expect(sql).toMatch(/NULL::numeric AS existing_height_m/);
+    // WF3-A: deprecated scenario cols NULL-cleared (kept in-array so the SET writes NULL).
+    expect(sql).toMatch(/NULL::numeric AS cur_basement_gfa_sqm/);
+    expect(sql).toMatch(/NULL::numeric AS cur_storey_gfa_sqm/);
+    expect(sql).toMatch(/NULL::numeric AS cur_interior_reno_gfa_sqm/);
+    // WF3-A: mislink guard NULLs eff_footprint when footprint > lot×(1+tol); flag records why.
+    expect(sql).toMatch(/pr\.p_footprint > s\.lot_size_sqm \* \(1 \+ 0\.05\)\) AS mislink/);
+    expect(sql).toMatch(/CASE WHEN m\.mislink THEN NULL ELSE pr\.p_footprint END AS eff_footprint/);
+    expect(sql).toMatch(/CASE WHEN m\.mislink THEN 'footprint_exceeds_lot' END AS existing_data_quality_flag/);
+    // WF3-A: the cur-GFA range menu — floor / pot_2story / pot_3story (gated >=3) / range_basis.
+    expect(sql).toMatch(/g\.eff_footprint IS NOT NULL THEN ROUND\(g\.eff_footprint, 2\) END AS cur_floor_gfa_sqm/);
+    expect(sql).toMatch(/g\.eff_footprint \* 2, 2\) END AS cur_pot_2story_gfa_sqm/);
+    expect(sql).toMatch(/s\.max_build_stories >= 3 THEN ROUND\(g\.eff_footprint \* 3, 2\) END AS cur_pot_3story_gfa_sqm/);
+    expect(sql).toMatch(/WHEN s\.max_build_stories >= 3 THEN '1-3' ELSE '1-2' END\) END AS cur_gfa_range_basis/);
+    // existing_gfa_sqm is the forward-compat 2-storey default (footprint × 2), not the old ×stories.
+    expect(sql).toMatch(/g\.eff_footprint \* 2, 2\) END AS existing_gfa_sqm/);
   });
 
   it('sibling buildScenarioUpdateSql guards every SCENARIO_COL, reuses parcel_existing_struct', () => {

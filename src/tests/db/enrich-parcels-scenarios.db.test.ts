@@ -46,33 +46,44 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 2 scenarios — live DB (mig 189 
   // enrichExistingStructure's prim/allb CTEs scan all parcel_buildings (whole-DB pass, by design —
   // a live `--full` run scopes to every parcel anyway), so against the full dev DB even a one-parcel
   // scoped run materializes the building dataset. 60s is generous headroom over that fixed cost.
-  it('computes all 6 scenario GFAs from existing + max-build inputs', async () => {
+  it('computes FB+COA, kitchen/bath + the WF3-A cur-GFA range; deprecated scenario cols NULL-cleared', async () => {
     const c = await pool.connect();
     try {
       await c.query('BEGIN');
       await setup(c, TEST_PARCEL + 1, 500, 4, 100, 2); // footprint 100, 2 storeys; max gfa 500, max 4 storeys
-      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, reno: { coaUplift: 0.05, kitchenPct: 0.15, bathPct: 0.07 } });
+      await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, reno: { coaUplift: 0.05, kitchenPct: 0.15, bathPct: 0.07, mislinkTol: 0.05 } });
       const p = await get(c, TEST_PARCEL + 1);
       expect(Number(p.max_newbuild_coa_gfa_sqm)).toBe(525);  // 500 × 1.05
-      expect(Number(p.cur_basement_gfa_sqm)).toBe(100);      // = existing_footprint
-      expect(Number(p.cur_interior_reno_gfa_sqm)).toBe(200); // = existing_gfa (100×2)
       expect(Number(p.cur_est_kitchen_gfa_sqm)).toBe(15);    // 100 × 0.15
       expect(Number(p.cur_est_bath_gfa_sqm)).toBe(7);        // 100 × 0.07
-      expect(Number(p.cur_storey_gfa_sqm)).toBe(200);        // 100 × (4 − 2)
+      // WF3-A: deprecated scenario cols NULL-cleared (kept in SCENARIO_COLS so the SET writes NULL).
+      expect(p.cur_basement_gfa_sqm).toBeNull();
+      expect(p.cur_storey_gfa_sqm).toBeNull();
+      expect(p.cur_interior_reno_gfa_sqm).toBeNull();
+      // WF3-A: cur-GFA range menu — pocket max_build_stories=4 supports 3 → '1-3', pot_3 emitted.
+      expect(Number(p.cur_floor_gfa_sqm)).toBe(100);         // known floor = footprint
+      expect(Number(p.cur_pot_2story_gfa_sqm)).toBe(200);    // footprint × 2
+      expect(Number(p.cur_pot_3story_gfa_sqm)).toBe(300);    // footprint × 3 (pocket supports 3)
+      expect(p.cur_gfa_range_basis).toBe('1-3');
       await c.query('ROLLBACK');
     } finally { c.release(); }
   }, 60_000);
 
-  it('cur_storey_gfa is NULL (not 0) when max_build_stories is unknown', async () => {
+  it('max_build_stories unknown → cur_pot_3story + range_basis NULL; floor + 2-storey still emitted', async () => {
     const c = await pool.connect();
     try {
       await c.query('BEGIN');
       await setup(c, TEST_PARCEL + 2, null, null, 100, 2); // no max-build stories
       await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true, reno: {} });
       const p = await get(c, TEST_PARCEL + 2);
-      expect(p.cur_storey_gfa_sqm).toBeNull();
-      expect(p.max_newbuild_coa_gfa_sqm).toBeNull(); // max_buildable_gfa NULL
-      expect(Number(p.cur_basement_gfa_sqm)).toBe(100); // still computed off existing
+      expect(p.max_newbuild_coa_gfa_sqm).toBeNull();   // max_buildable_gfa NULL
+      expect(p.cur_storey_gfa_sqm).toBeNull();         // deprecated
+      expect(p.cur_basement_gfa_sqm).toBeNull();       // deprecated
+      // WF3-A: floor + 2-storey always available off the known footprint; 3-storey/range gate on the (unknown) pocket.
+      expect(Number(p.cur_floor_gfa_sqm)).toBe(100);
+      expect(Number(p.cur_pot_2story_gfa_sqm)).toBe(200);
+      expect(p.cur_pot_3story_gfa_sqm).toBeNull();
+      expect(p.cur_gfa_range_basis).toBeNull();
       await c.query('ROLLBACK');
     } finally { c.release(); }
   }, 60_000);

@@ -17,13 +17,16 @@ const ep = require('../../scripts/enrich-parcels.js');
 const eperm = require('../../scripts/enrich-permits.js');
 
 describe('existing-structure — column set (Phase 1 regression lock)', () => {
-  it('EXISTING_COLS is the 10 documented columns incl. the confidence flag', () => {
+  it('EXISTING_COLS is the 11-col set: the 10 Phase-1 cols + the WF3-A data-quality flag', () => {
+    // WF3-A: existing_stories/existing_height_m STAY in the array (the array-driven UPDATE is what
+    // NULLs their retired values); existing_data_quality_flag added for the mislink sentinel.
     expect(mb.EXISTING_COLS).toEqual([
       'existing_footprint_sqm', 'existing_stories', 'existing_height_m', 'existing_gfa_sqm',
       'existing_width_m', 'existing_length_m', 'existing_structure_confidence',
       'existing_other_structures_count', 'existing_other_structures_sqm', 'existing_greenspace_sqm',
+      'existing_data_quality_flag',
     ]);
-    expect(mb.EXISTING_COLS.length).toBe(10);
+    expect(mb.EXISTING_COLS.length).toBe(11);
   });
 
   it('EXISTING_COLS is DISJOINT from ALL_WRITE_COLS, MAX_BUILD_COLS, and the enrich-permits col groups', () => {
@@ -71,10 +74,17 @@ describe('existing-structure — SQL plumbing (separate pass)', () => {
     expect(sql).not.toMatch(/parcel_max_build e/); // doesn't reuse the max-build temp table for output
   });
 
-  it('measures envelope dims in metres (::geography at the point level) + floors GFA stories at 1', () => {
+  it('measures envelope dims in metres (::geography at the point level) + areal-geom guard', () => {
     expect(sql).toMatch(/ST_PointN\(ST_ExteriorRing[\s\S]*::geography/);
-    expect(sql).toMatch(/GREATEST\(1, COALESCE\(pr\.p_stories, 1\)\)/);
     expect(sql).toMatch(/ST_Dimension\(pr\.p_geom\) = 2/); // areal-geom guard
+  });
+
+  it('WF3-A: retires existing_stories/height (NULL) + existing_gfa = footprint×2 (not ×stories)', () => {
+    expect(sql).toMatch(/NULL::integer AS existing_stories/);
+    expect(sql).toMatch(/NULL::numeric AS existing_height_m/);
+    // the old GREATEST(1, COALESCE(pr.p_stories, 1)) floor-at-1 formula is RETIRED.
+    expect(sql).not.toMatch(/GREATEST\(1, COALESCE\(pr\.p_stories, 1\)\)/);
+    expect(sql).toMatch(/g\.eff_footprint \* 2, 2\) END AS existing_gfa_sqm/);
   });
 
   it('confidence flag derives from numeric pb.confidence (>= threshold → high)', () => {

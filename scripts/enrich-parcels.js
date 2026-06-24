@@ -21,6 +21,7 @@ const LOGIC_VARS_SCHEMA = z.object({
   reno_coa_uplift_pct: z.coerce.number().finite().min(0).max(1),
   reno_kitchen_gfa_pct: z.coerce.number().finite().min(0.01).max(1),
   reno_bath_gfa_pct: z.coerce.number().finite().min(0.01).max(1),
+  mislink_footprint_lot_tol: z.coerce.number().finite().min(0).max(1),  // WF3-A mislink guard tolerance
   storey_height_m: z.coerce.number().finite().min(2).max(6),
   // Phase 3 accessory + externalized garden-suite by-law constants (bounds mirror logic_variables.json).
   garage_min_lot_sqm: z.coerce.number().finite().min(100).max(2000),
@@ -654,6 +655,9 @@ function buildExistingStructureSql({ scopeWhere = 'TRUE', full = false, reno = {
   const coaUplift = Number(reno.coaUplift ?? mb.RENO_COA_UPLIFT_PCT_DEFAULT);
   const kitchenPct = Number(reno.kitchenPct ?? mb.RENO_KITCHEN_GFA_PCT_DEFAULT);
   const bathPct = Number(reno.bathPct ?? mb.RENO_BATH_GFA_PCT_DEFAULT);
+  // WF3-A mislink guard tolerance (externalized logic-var mislink_footprint_lot_tol; default 0.05).
+  const mislinkTol = Number(reno.mislinkTol ?? mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT);
+  const mislinkFlag = mb.MISLINK_FLAG_FOOTPRINT_EXCEEDS_LOT;
   return `
 CREATE TEMP TABLE parcel_existing_struct ON COMMIT DROP AS
 WITH scope AS (
@@ -692,32 +696,52 @@ dims AS (
   WHERE oe.box IS NOT NULL AND ST_GeometryType(oe.box) = 'ST_Polygon'
 )
 SELECT s.pid, s.parcel_id,
-  ROUND(pr.p_footprint, 2) AS existing_footprint_sqm,
-  pr.p_stories AS existing_stories,
-  ROUND(pr.p_height, 2) AS existing_height_m,
-  ROUND(pr.p_footprint * GREATEST(1, COALESCE(pr.p_stories, 1)), 2) AS existing_gfa_sqm,
-  ROUND(LEAST(d.side1, d.side2)::numeric, 2) AS existing_width_m,
-  ROUND(GREATEST(d.side1, d.side2)::numeric, 2) AS existing_length_m,
-  CASE WHEN pr.pid IS NOT NULL AND pr.p_footprint IS NOT NULL
+  -- WF3-A mislink guard: a primary footprint larger than the lot means the WRONG building was linked
+  -- (block/neighbour attribution). g.eff_footprint is NULL when mislinked → the WHOLE existing
+  -- structure resolves NULL; existing_data_quality_flag records why. Footprint is otherwise trusted.
+  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(g.eff_footprint, 2) END AS existing_footprint_sqm,
+  NULL::integer AS existing_stories,   -- RETIRED (WF3-A): massing estimated_stories tree-contaminated (mode 3 storeys on bungalows)
+  NULL::numeric AS existing_height_m,  -- RETIRED (WF3-A): massing max_height_m catches canopy, not roof (bungalows to 85-95 m)
+  -- existing_gfa_sqm: forward-compat default = the typical 2-storey menu option (= cur_pot_2story_gfa_sqm).
+  -- No live consumer today (cost model computes GFA from building_footprints); kept honest (NULL on mislink).
+  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(g.eff_footprint * 2, 2) END AS existing_gfa_sqm,
+  CASE WHEN m.mislink THEN NULL ELSE ROUND(LEAST(d.side1, d.side2)::numeric, 2) END AS existing_width_m,
+  CASE WHEN m.mislink THEN NULL ELSE ROUND(GREATEST(d.side1, d.side2)::numeric, 2) END AS existing_length_m,
+  CASE WHEN m.mislink THEN 'low'
+       WHEN pr.pid IS NOT NULL AND pr.p_footprint IS NOT NULL
        THEN (CASE WHEN pr.link_confidence >= ${confMin} THEN 'high' ELSE 'low' END) END AS existing_structure_confidence,
-  CASE WHEN pr.pid IS NOT NULL AND pr.p_footprint IS NOT NULL THEN COALESCE(a.other_count, 0) END AS existing_other_structures_count,
-  CASE WHEN pr.pid IS NOT NULL AND pr.p_footprint IS NOT NULL THEN ROUND(COALESCE(a.other_sqm, 0), 2) END AS existing_other_structures_sqm,
-  CASE WHEN pr.pid IS NOT NULL AND pr.p_footprint IS NOT NULL THEN
+  CASE WHEN g.eff_footprint IS NOT NULL THEN COALESCE(a.other_count, 0) END AS existing_other_structures_count,
+  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(COALESCE(a.other_sqm, 0), 2) END AS existing_other_structures_sqm,
+  CASE WHEN g.eff_footprint IS NOT NULL THEN
     ROUND(GREATEST(0, COALESCE(s.lot_size_sqm, ST_Area(s.geom::geography)::numeric)
-                      - ROUND(pr.p_footprint, 2) - ROUND(COALESCE(a.other_sqm, 0), 2)), 2)
+                      - ROUND(g.eff_footprint, 2) - ROUND(COALESCE(a.other_sqm, 0), 2)), 2)
   END AS existing_greenspace_sqm,
-  -- Phase 2 scenario GFAs (pure arithmetic; max_newbuild_coa off max-build, the rest off existing).
+  CASE WHEN m.mislink THEN '${mislinkFlag}' END AS existing_data_quality_flag,
+  -- max_newbuild_coa off max-build (mislink-independent); KIT/BTH off the known footprint.
   CASE WHEN s.max_buildable_gfa_sqm IS NOT NULL THEN ROUND(s.max_buildable_gfa_sqm * (1 + ${coaUplift}), 2) END AS max_newbuild_coa_gfa_sqm,
-  CASE WHEN pr.p_footprint IS NOT NULL THEN ROUND(pr.p_footprint, 2) END AS cur_basement_gfa_sqm,
-  CASE WHEN pr.p_footprint IS NOT NULL AND s.max_build_stories IS NOT NULL AND pr.p_stories IS NOT NULL
-       THEN ROUND(pr.p_footprint * GREATEST(0, s.max_build_stories - pr.p_stories), 2) END AS cur_storey_gfa_sqm,
-  CASE WHEN pr.p_footprint IS NOT NULL THEN ROUND(pr.p_footprint * GREATEST(1, COALESCE(pr.p_stories, 1)), 2) END AS cur_interior_reno_gfa_sqm,
-  CASE WHEN pr.p_footprint IS NOT NULL THEN ROUND(pr.p_footprint * ${kitchenPct}, 2) END AS cur_est_kitchen_gfa_sqm,
-  CASE WHEN pr.p_footprint IS NOT NULL THEN ROUND(pr.p_footprint * ${bathPct}, 2) END AS cur_est_bath_gfa_sqm
+  NULL::numeric AS cur_basement_gfa_sqm,       -- DEPRECATED (WF3-A) → folded into cur_floor_gfa_sqm
+  NULL::numeric AS cur_storey_gfa_sqm,         -- DEPRECATED (WF3-A) → depended on retired existing_stories
+  NULL::numeric AS cur_interior_reno_gfa_sqm,  -- DEPRECATED (WF3-A) → folded into cur_pot_2story_gfa_sqm
+  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(g.eff_footprint * ${kitchenPct}, 2) END AS cur_est_kitchen_gfa_sqm,
+  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(g.eff_footprint * ${bathPct}, 2) END AS cur_est_bath_gfa_sqm,
+  -- WF3-A current-building GFA range — a MENU of priceable scope options off the known footprint
+  -- (computeCurGfaRange in max-build.js mirrors this). cur_pot_3story + range_basis gate on the pocket.
+  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(g.eff_footprint, 2) END AS cur_floor_gfa_sqm,
+  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(g.eff_footprint * 2, 2) END AS cur_pot_2story_gfa_sqm,
+  CASE WHEN g.eff_footprint IS NOT NULL AND s.max_build_stories >= 3 THEN ROUND(g.eff_footprint * 3, 2) END AS cur_pot_3story_gfa_sqm,
+  CASE WHEN g.eff_footprint IS NOT NULL AND s.max_build_stories IS NOT NULL
+       THEN (CASE WHEN s.max_build_stories >= 3 THEN '1-3' ELSE '1-2' END) END AS cur_gfa_range_basis
 FROM scope s
 LEFT JOIN prim pr ON pr.pid = s.pid
 LEFT JOIN allb a ON a.pid = s.pid
-LEFT JOIN dims d ON d.pid = s.pid;
+LEFT JOIN dims d ON d.pid = s.pid
+CROSS JOIN LATERAL (
+  SELECT (pr.p_footprint IS NOT NULL AND s.lot_size_sqm IS NOT NULL
+          AND pr.p_footprint > s.lot_size_sqm * (1 + ${mislinkTol})) AS mislink
+) m
+CROSS JOIN LATERAL (
+  SELECT CASE WHEN m.mislink THEN NULL ELSE pr.p_footprint END AS eff_footprint
+) g;
 `;
 }
 
@@ -767,9 +791,11 @@ async function enrichExistingStructure(client, opts = {}) {
       COUNT(*) FILTER (WHERE existing_other_structures_count > 0)::int AS with_other,
       COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)::int AS with_greenspace,
       COUNT(*) FILTER (WHERE max_newbuild_coa_gfa_sqm IS NOT NULL)::int  AS with_coa,
-      COUNT(*) FILTER (WHERE cur_basement_gfa_sqm IS NOT NULL)::int      AS with_basement,
-      COUNT(*) FILTER (WHERE cur_storey_gfa_sqm IS NOT NULL)::int        AS with_storey,
-      COUNT(*) FILTER (WHERE cur_interior_reno_gfa_sqm IS NOT NULL)::int AS with_interior,
+      COUNT(*) FILTER (WHERE cur_floor_gfa_sqm IS NOT NULL)::int         AS with_floor,
+      COUNT(*) FILTER (WHERE cur_pot_2story_gfa_sqm IS NOT NULL)::int    AS with_pot2,
+      COUNT(*) FILTER (WHERE cur_pot_3story_gfa_sqm IS NOT NULL)::int    AS with_pot3,
+      COUNT(*) FILTER (WHERE cur_gfa_range_basis IS NOT NULL)::int       AS with_range,
+      COUNT(*) FILTER (WHERE existing_data_quality_flag = '${mb.MISLINK_FLAG_FOOTPRINT_EXCEEDS_LOT}')::int AS mislinked,
       COUNT(*) FILTER (WHERE cur_est_kitchen_gfa_sqm IS NOT NULL)::int   AS with_kitchen,
       COUNT(*) FILTER (WHERE cur_est_bath_gfa_sqm IS NOT NULL)::int      AS with_bath
     FROM parcel_existing_struct`);
@@ -802,6 +828,7 @@ async function main(pool) {
       reno_coa_uplift_pct: Number(logicVars?.reno_coa_uplift_pct ?? mb.RENO_COA_UPLIFT_PCT_DEFAULT),
       reno_kitchen_gfa_pct: Number(logicVars?.reno_kitchen_gfa_pct ?? mb.RENO_KITCHEN_GFA_PCT_DEFAULT),
       reno_bath_gfa_pct: Number(logicVars?.reno_bath_gfa_pct ?? mb.RENO_BATH_GFA_PCT_DEFAULT),
+      mislink_footprint_lot_tol: Number(logicVars?.mislink_footprint_lot_tol ?? mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT),
       storey_height_m: Number(logicVars?.storey_height_m ?? mb.RESIDENTIAL_STOREY_HEIGHT_M),
       // Phase 3 accessory + externalized garden-suite (defaults from max-build.js).
       garage_min_lot_sqm: Number(logicVars?.garage_min_lot_sqm ?? mb.GARAGE_MIN_LOT_SQM),
@@ -825,7 +852,7 @@ async function main(pool) {
     }
     const roadDist = resolvedVars.road_overlay_distance_m;
     const storeyHeight = resolvedVars.storey_height_m;
-    const reno = { coaUplift: resolvedVars.reno_coa_uplift_pct, kitchenPct: resolvedVars.reno_kitchen_gfa_pct, bathPct: resolvedVars.reno_bath_gfa_pct };
+    const reno = { coaUplift: resolvedVars.reno_coa_uplift_pct, kitchenPct: resolvedVars.reno_kitchen_gfa_pct, bathPct: resolvedVars.reno_bath_gfa_pct, mislinkTol: resolvedVars.mislink_footprint_lot_tol };
     // Phase 3 accessory params passed to enrichMaxBuild → buildMaxBuildSql.
     const acc = {
       gardenMinLot: resolvedVars.garden_suite_min_lot_sqm, gardenMinRearYard: resolvedVars.garden_suite_min_rear_yard_m,
@@ -933,9 +960,12 @@ async function main(pool) {
     auditRows.push({ metric: 'existing_greenspace_count', value: exResult.with_greenspace, status: 'INFO' });
     // --- Reno/build scenarios (Spec 65 Phase 2) — all INFO; + resolved-factor provenance. ---
     auditRows.push({ metric: 'max_newbuild_coa_gfa_count', value: exResult.with_coa, status: 'INFO' });
-    auditRows.push({ metric: 'cur_basement_gfa_count', value: exResult.with_basement, status: 'INFO' });
-    auditRows.push({ metric: 'cur_storey_gfa_count', value: exResult.with_storey, status: 'INFO' });
-    auditRows.push({ metric: 'cur_interior_reno_gfa_count', value: exResult.with_interior, status: 'INFO' });
+    // WF3-A current-building GFA range (menu of priceable scope options off the known footprint).
+    auditRows.push({ metric: 'cur_floor_gfa_count', value: exResult.with_floor, status: 'INFO' });
+    auditRows.push({ metric: 'cur_pot_2story_gfa_count', value: exResult.with_pot2, status: 'INFO' });
+    auditRows.push({ metric: 'cur_pot_3story_gfa_count', value: exResult.with_pot3, status: 'INFO' });
+    auditRows.push({ metric: 'cur_gfa_range_basis_count', value: exResult.with_range, status: 'INFO' });
+    auditRows.push({ metric: 'existing_mislinked_footprint_count', value: exResult.mislinked, status: 'INFO' });
     auditRows.push({ metric: 'cur_est_kitchen_gfa_count', value: exResult.with_kitchen, status: 'INFO' });
     auditRows.push({ metric: 'cur_est_bath_gfa_count', value: exResult.with_bath, status: 'INFO' });
     auditRows.push({ metric: 'scenario_enriched_count', value: exResult.scenarioUpdated, status: 'INFO' });
@@ -943,6 +973,7 @@ async function main(pool) {
     auditRows.push({ metric: 'reno_coa_uplift_pct_applied', value: reno.coaUplift, status: 'INFO' });
     auditRows.push({ metric: 'reno_kitchen_gfa_pct_applied', value: reno.kitchenPct, status: 'INFO' });
     auditRows.push({ metric: 'reno_bath_gfa_pct_applied', value: reno.bathPct, status: 'INFO' });
+    auditRows.push({ metric: 'mislink_footprint_lot_tol_applied', value: reno.mislinkTol, status: 'INFO' });
     auditRows.push({ metric: 'storey_height_m_applied', value: storeyHeight, status: 'INFO' });
     auditRows.push({ metric: 'enrich_parcels_duration_ms', value: Date.now() - t0, status: 'INFO' });
 

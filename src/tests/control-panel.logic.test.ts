@@ -64,6 +64,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'reno_coa_uplift_pct', // Spec 65 §6 SC-3 — new-build CoA uplift over max-build GFA
   'reno_kitchen_gfa_pct', // Spec 65 §6 SC-3 — kitchen reno as %-of-footprint
   'reno_bath_gfa_pct', // Spec 65 §6 SC-3 — bath reno as %-of-footprint
+  'mislink_footprint_lot_tol', // Spec 65 §5 (WF3-A) — mislink guard tolerance (footprint > lot)
   'storey_height_m', // Spec 65 §6 SC-4 — residential storey-height (max-build derivation)
   // Spec 65 §7 (Phase 3) — accessory garage + laneway/garden rear-suite by-law constants.
   'garage_min_lot_sqm', 'garage_max_gfa_sqm', 'garage_min_footprint_sqm', 'accessory_max_coverage_pct',
