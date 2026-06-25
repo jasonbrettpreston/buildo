@@ -1315,6 +1315,10 @@ export const parcels = pgTable("parcels", {
 	curPot3StoryGfaSqm: numeric("cur_pot_3story_gfa_sqm", { precision: 12, scale:  2 }),
 	curGfaRangeBasis: text("cur_gfa_range_basis"),
 	existingDataQualityFlag: text("existing_data_quality_flag"),
+	maxBuildStoriesAggressive: integer("max_build_stories_aggressive"),
+	marketExceedsBylaw: boolean("market_exceeds_bylaw").default(false).notNull(),
+	neighbourhoodId: integer("neighbourhood_id"),
+	neighbourhoodCostPremium: numeric("neighbourhood_cost_premium", { precision: 4, scale:  2 }),
 }, (table) => [
 	index("idx_parcels_address").using("btree", table.addrNumNormalized.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")),
 	index("idx_parcels_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")).where(sql`(centroid_lat IS NOT NULL)`),
@@ -1520,6 +1524,9 @@ export const coaApplications = pgTable("coa_applications", {
 	curPot3StoryGfaSqm: numeric("cur_pot_3story_gfa_sqm", { precision: 12, scale:  2 }),
 	curGfaRangeBasis: text("cur_gfa_range_basis"),
 	existingDataQualityFlag: text("existing_data_quality_flag"),
+	maxBuildStoriesAggressive: integer("max_build_stories_aggressive"),
+	marketExceedsBylaw: boolean("market_exceeds_bylaw").default(false).notNull(),
+	neighbourhoodCostPremium: numeric("neighbourhood_cost_premium", { precision: 4, scale:  2 }),
 }, (table) => [
 	index("idx_coa_applications_address").using("btree", table.address.asc().nullsLast().op("text_ops")),
 	index("idx_coa_applications_lifecycle_seq").using("btree", table.lifecycleSeq.asc().nullsLast().op("int4_ops")).where(sql`(lifecycle_seq IS NOT NULL)`),
@@ -1856,6 +1863,9 @@ export const permits = pgTable("permits", {
 	curPot3StoryGfaSqm: numeric("cur_pot_3story_gfa_sqm", { precision: 12, scale:  2 }),
 	curGfaRangeBasis: text("cur_gfa_range_basis"),
 	existingDataQualityFlag: text("existing_data_quality_flag"),
+	maxBuildStoriesAggressive: integer("max_build_stories_aggressive"),
+	marketExceedsBylaw: boolean("market_exceeds_bylaw").default(false).notNull(),
+	neighbourhoodCostPremium: numeric("neighbourhood_cost_premium", { precision: 4, scale:  2 }),
 }, (table) => [
 	index("idx_permits_addr_normalized").using("btree", table.streetNum.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")).where(sql`(street_name_normalized IS NOT NULL)`),
 	index("idx_permits_application_date").using("btree", table.applicationDate.asc().nullsLast().op("date_ops")),

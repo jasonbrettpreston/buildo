@@ -13,6 +13,13 @@
  * SPEC LINK: docs/specs/01-pipeline/65_enrich_parcels.md (§ Max-build envelope)
  */
 
+// WF3-C2: the neighbourhood income-premium tiers — SAME constant the permit cost model applies
+// (compute-cost-estimates builds config WITHOUT premiumTiers → computePremiumFactor falls to
+// DEFAULT_PREMIUM_TIERS). Generating buildPremiumCase from it guarantees parcel↔permit parity.
+// (The DB income_premium_tiers logic-var is a different shape + display-only today; reconciling it
+// into BOTH surfaces is a future Spec-83 WF.)
+const { DEFAULT_PREMIUM_TIERS } = require('../../src/features/leads/lib/cost-model-shared');
+
 // --- Model constants (inline, documented — model values like the cost-model 45/35) ---
 // Lot-size 3-way cross-check tolerance: two area measures "agree" within 15%.
 const LOT_TOLERANCE = 0.15;
@@ -165,6 +172,30 @@ function buildSideCountCase(zoneCol) {
   return `CASE\n${whens}\n    ELSE ${SETBACK_DEFAULTS.DEFAULT.side_count}\n  END`;
 }
 
+/**
+ * WF3-C2 — SQL CASE for the neighbourhood income premium, generated from the tier table. Mirrors
+ * `computePremiumFactor` EXACTLY (cost-model-shared.js): NULL income → 1.0; each tier half-open
+ * `[min,max)` (a boundary value belongs to the UPPER tier); open-top tier (max=null) has no upper
+ * bound; any no-match → 1.0. Default tier source = DEFAULT_PREMIUM_TIERS (= the permit model).
+ */
+function buildPremiumCase(incomeCol, tiers = DEFAULT_PREMIUM_TIERS) {
+  const whens = tiers.map((t) => {
+    const hi = (t.max === null || t.max === undefined) ? '' : ` AND ${incomeCol} < ${t.max}`;
+    return `    WHEN ${incomeCol} >= ${t.min}${hi} THEN ${Number(t.multiplier).toFixed(2)}`;
+  }).join('\n');
+  return `CASE\n    WHEN ${incomeCol} IS NULL THEN 1.00\n${whens}\n    ELSE 1.00\n  END`;
+}
+
+/** Pure JS mirror of buildPremiumCase / computePremiumFactor — for the parity test.
+ *  Guard matches computePremiumFactor EXACTLY (isFinite on the raw value — a string is NOT coerced). */
+function lookupPremium(income, tiers = DEFAULT_PREMIUM_TIERS) {
+  if (income === null || income === undefined || !Number.isFinite(income)) return 1.0;
+  for (const t of tiers) {
+    if (income >= t.min && (t.max === null || t.max === undefined || income < t.max)) return t.multiplier;
+  }
+  return 1.0;
+}
+
 // --- Output columns written onto parcels by the second UPDATE pass (16) ---
 // MUST stay disjoint from enrich-parcels ALL_WRITE_COLS (Guardian#1 — separate UPDATE pass).
 const MAX_BUILD_COLS = [
@@ -194,9 +225,14 @@ const MAX_BUILD_COLS = [
   'max_rear_suite_gfa_sqm',       // NUMERIC — the chosen suite GFA (laneway⊕garden); archetype LANE geom_basis
   'rear_suite_type',              // TEXT — 'laneway'|'garden'|NULL (mutually exclusive by abuts_laneway)
   'rear_suite_permission',        // TEXT — as_of_right/coa_required/not_permitted (greenspace-driven)
+  // WF3-C2: pocket-derived storeys + neighbourhood link/premium (one parcels→neighbourhoods spatial join)
+  'max_build_stories_aggressive', // INTEGER — pocket p90 (market-realized ceiling, uncapped); NULL where no pocket
+  'market_exceeds_bylaw',         // BOOLEAN NOT NULL — pocket p90 > by-law height-implied storeys (CoA/variance hotspot)
+  'neighbourhood_id',             // INTEGER — neighbourhoods.id (the reusable link; NULL outside all polygons)
+  'neighbourhood_cost_premium',   // NUMERIC(4,2) — income-tier multiplier 1.00–1.85 (parity with the permit cost model)
 ];
 // NOT-NULL booleans — reset to false (not NULL) on orphan-nullify (PG 23502 guard).
-const MAX_BUILD_BOOL_COLS = ['garden_suite_fits', 'envelope_constrained'];
+const MAX_BUILD_BOOL_COLS = ['garden_suite_fits', 'envelope_constrained', 'market_exceeds_bylaw'];
 
 // --- Propagation set (permits + coa_applications) ---
 // Lot-validation INPUTS (currently parcels-only) the operator eyeballs per-application.
@@ -204,7 +240,12 @@ const MAX_BUILD_BOOL_COLS = ['garden_suite_fits', 'envelope_constrained'];
 // are added. is_through_lot is ALREADY propagated via CENTRELINE_COLS (mig 176) — not here.
 const LOT_MAXBUILD_INPUT_COLS = ['lot_size_sqm', 'frontage_m', 'depth_m', 'lot_size_confidence', 'lot_size_basis'];
 // OUTPUTS propagated from the dominant parcel (assembly has no coherent envelope).
-const LOT_MAXBUILD_OUTPUT_COLS = MAX_BUILD_COLS.filter((c) => c !== 'lot_size_confidence' && c !== 'lot_size_basis');
+// WF3-C2: neighbourhood_id is a PARCEL-ONLY column — permits/coa already carry their OWN
+// neighbourhood_id (mig 014); propagating the dominant parcel's would clobber it. So exclude it
+// from the propagated output set (it stays in MAX_BUILD_COLS for the parcels UPDATE only).
+const LOT_MAXBUILD_OUTPUT_COLS = MAX_BUILD_COLS.filter(
+  (c) => c !== 'lot_size_confidence' && c !== 'lot_size_basis' && c !== 'neighbourhood_id',
+);
 const LOT_MAXBUILD_COLS = [...LOT_MAXBUILD_INPUT_COLS, ...LOT_MAXBUILD_OUTPUT_COLS];
 
 // --- Existing-structure columns (Spec 65 Phase 1) — written by a SEPARATE third pass in
@@ -253,6 +294,7 @@ module.exports = {
   LOT_TOLERANCE, LOT_MIN_SQM, LOT_MAX_SQM, STOREY_HEIGHT_M, RAVINE_SETBACK_M,
   GARDEN_SUITE_MIN_LOT_SQM, GARDEN_SUITE_MIN_REAR_YARD_M, GARDEN_SUITE_MAX_GFA_SQM,
   SETBACK_DEFAULTS, SETBACK_DIMS, lookupSetback, buildSetbackCase, lookupSideCount, buildSideCountCase,
+  DEFAULT_PREMIUM_TIERS, buildPremiumCase, lookupPremium,
   MAX_BUILD_COLS, MAX_BUILD_BOOL_COLS,
   LOT_MAXBUILD_INPUT_COLS, LOT_MAXBUILD_OUTPUT_COLS, LOT_MAXBUILD_COLS,
   EXISTING_COLS, EXISTING_CONFIDENCE_HIGH_MIN,

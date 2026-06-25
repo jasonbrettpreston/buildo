@@ -208,8 +208,8 @@ async function assertMaxBuildColumns(client, target) {
     const present = new Set(rows.map((r) => r.column_name));
     const missing = cols.filter((c) => !present.has(c));
     if (missing.length > 0) {
-      // max_build_stories_basis (Phase 2) ships in 189/190; the Phase-3 accessory cols in 191/192 — cite all.
-      throw new Error(`${TAG} ${tbl} missing max-build columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '185/189/191' : '186/190/192'} not applied`);
+      // max_build_stories_basis (Phase 2) in 189/190; Phase-3 accessory in 191/192; WF3-C2 nbhd/premium in 196/197 — cite all.
+      throw new Error(`${TAG} ${tbl} missing max-build columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '185/189/191/196' : '186/190/192/197'} not applied`);
     }
   }
 }
@@ -487,6 +487,7 @@ function buildNullifyOrphansSql({ target, scopeWhere = 'TRUE' }) {
     // (lot inputs + envelope outputs) fall through the generic = NULL map above.
     'garden_suite_fits = false',
     'envelope_constrained = false',
+    'market_exceeds_bylaw = false', // WF3-C2 — NOT-NULL bool (mig 197), reset to false on orphan
   ].join(', ');
   const linkExists = target === 'permits'
     ? `SELECT 1 FROM permit_parcels pp WHERE pp.permit_num = ${c.leadAlias}.permit_num AND pp.revision_num = ${c.leadAlias}.revision_num`
@@ -613,7 +614,10 @@ async function main(pool) {
              COUNT(*) FILTER (WHERE max_build_confidence = 'medium')::int         AS mb_medium,
              COUNT(*) FILTER (WHERE max_build_confidence = 'low')::int            AS mb_low,
              COUNT(*) FILTER (WHERE garden_suite_fits)::int                       AS suite_fits,
-             COUNT(*) FILTER (WHERE envelope_constrained)::int                    AS constrained
+             COUNT(*) FILTER (WHERE envelope_constrained)::int                    AS constrained,
+             COUNT(*) FILTER (WHERE max_build_stories_aggressive IS NOT NULL)::int AS with_aggressive,
+             COUNT(*) FILTER (WHERE market_exceeds_bylaw)::int                     AS market_exceeds,
+             COUNT(*) FILTER (WHERE neighbourhood_cost_premium IS NOT NULL AND neighbourhood_cost_premium > 1.00)::int AS premium_above_1
       FROM ${cfg.table}`)).rows[0];
     auditRows.push({ metric: `${prefix}_with_lot_confidence_count`, value: me.with_lot_conf, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_max_buildable_footprint_count`, value: me.with_footprint, status: 'INFO' });
@@ -623,6 +627,10 @@ async function main(pool) {
     auditRows.push({ metric: `${prefix}_max_build_confidence_low_count`, value: me.mb_low, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_garden_suite_fits_count`, value: me.suite_fits, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_envelope_constrained_count`, value: me.constrained, status: 'INFO' });
+    // WF3-C2 propagated cols (layer-2 visibility — neighbourhood_id is parcel-only, not propagated).
+    auditRows.push({ metric: `${prefix}_max_build_stories_aggressive_count`, value: me.with_aggressive, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_market_exceeds_bylaw_count`, value: me.market_exceeds, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_neighbourhood_premium_above_1_count`, value: me.premium_above_1, status: 'INFO' });
     // §8e existing-structure propagation observability (Spec 65 Phase 1 — INFO; never gates verdict).
     const ex = (await pool.query(`
       SELECT COUNT(*) FILTER (WHERE existing_footprint_sqm IS NOT NULL)::int          AS with_footprint,

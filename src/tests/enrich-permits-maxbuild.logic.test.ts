@@ -56,23 +56,28 @@ describe('enrich-permits §8e max-build — propagation SQL (MB-7b/c)', () => {
 describe('enrich-permits §8e max-build — orphan-nullify respects NOT NULL (MB-7d)', () => {
   for (const target of ['permits', 'coa']) {
     const sql = ep.buildNullifyOrphansSql({ target });
-    it(`[${target}] resets the 2 NOT-NULL bools to false; lot inputs + numeric outputs → NULL`, () => {
+    it(`[${target}] resets the 3 NOT-NULL bools to false; lot inputs + numeric outputs → NULL`, () => {
       expect(sql).not.toMatch(/garden_suite_fits = NULL/);
       expect(sql).not.toMatch(/envelope_constrained = NULL/);
+      expect(sql).not.toMatch(/market_exceeds_bylaw = NULL/); // WF3-C2 3rd NN-bool (no duplicate SET)
       expect(sql).toMatch(/garden_suite_fits = false/);
       expect(sql).toMatch(/envelope_constrained = false/);
+      expect(sql).toMatch(/market_exceeds_bylaw = false/);
       expect(sql).toMatch(/lot_size_confidence = NULL/);
       expect(sql).toMatch(/max_buildable_gfa_sqm = NULL/);
+      // WF3-C2: neighbourhood_cost_premium propagates (numeric → NULL); neighbourhood_id does NOT.
+      expect(sql).toMatch(/neighbourhood_cost_premium = NULL/);
+      expect(sql).not.toMatch(/neighbourhood_id = NULL/);
     });
   }
 });
 
 describe('enrich-permits §8e max-build — preconditions + observability (MB-7e/MB-8)', () => {
-  it('exports + cites migration 185/189/191 + 186/190/192 in the column guard', () => {
-    // Spec 65 Phase 2: max_build_stories_basis joined MAX_BUILD_COLS (ships in mig 189/190), so the
-    // guard now cites both the 185/186 (original) and 189/190 (Phase 2) migrations.
+  it('exports + cites migration 185/189/191/196 + 186/190/192/197 in the column guard', () => {
+    // Cites every max-build migration: 185/186 (envelope), 189/190 (Phase 2 basis), 191/192 (Phase 3
+    // accessory), 196/197 (WF3-C2 pocket-aggressive/hotspot/nbhd-id/premium).
     expect(typeof ep.assertMaxBuildColumns).toBe('function');
-    expect(SRC).toMatch(/migration \$\{tbl === 'parcels' \? '185\/189\/191' : '186\/190\/192'\} not applied/);
+    expect(SRC).toMatch(/migration \$\{tbl === 'parcels' \? '185\/189\/191\/196' : '186\/190\/192\/197'\} not applied/);
   });
 
   it('max-build propagation counts are INFO (zoning F-H12 gate untouched)', () => {

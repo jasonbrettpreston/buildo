@@ -221,6 +221,60 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
     } finally { c.release(); }
   });
 
+  // WF3-C2: pocket-derived storeys + neighbourhood premium via the parcels→neighbourhoods spatial join.
+  it('pocket norm drives stories (basis pocket, legal-capped) + aggregate p90 + hotspot + income premium', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // A neighbourhood polygon covering the (0,0) fixture area, income 120000 (→ tier 1.35).
+      const nbhdGeo = JSON.stringify({ type: 'Polygon', coordinates: [[[-0.001, -0.001], [0.001, -0.001], [0.001, 0.001], [-0.001, 0.001], [-0.001, -0.001]]] });
+      await c.query(
+        `INSERT INTO neighbourhoods (id, neighbourhood_id, name, geom, avg_household_income)
+         VALUES (8001, 8001, 'C2-TEST', ST_SetSRID(ST_GeomFromGeoJSON($1::text),4326), 120000)`,
+        [nbhdGeo],
+      );
+      // pocket p50=2, p90=4 (sample 20). With by-law height 10 / RD 3.0 → height_implied=3.
+      await c.query(
+        `INSERT INTO neighbourhood_storey_norms (neighbourhood_id, storeys_p50, storeys_p90, sample_count) VALUES (8001, 2, 4, 20)`,
+      );
+      // Parcel inside the nbhd, NO bylaw_max_stories (so the pocket branch drives), height 10.
+      await insMb(c, TEST_PARCEL + 20, sq(0, 0, 0.0002), {
+        lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24, zoning_class: 'RD',
+        bylaw_max_height_m: 10, bylaw_max_fsi: 1.0, bylaw_max_coverage_pct: 45,
+      });
+      await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+      const p = await getParcel(c, TEST_PARCEL + 20);
+      expect(p.max_build_stories_basis).toBe('pocket');
+      expect(Number(p.max_build_stories)).toBe(2);             // LEAST(pocket p50=2, height_implied=3)
+      expect(Number(p.max_build_stories_aggressive)).toBe(4);  // pocket p90, UNCAPPED
+      expect(p.market_exceeds_bylaw).toBe(true);               // p90=4 > height_implied=3
+      expect(Number(p.neighbourhood_id)).toBe(8001);
+      expect(Number(p.neighbourhood_cost_premium)).toBe(1.35); // income 120000 → tier 1.35
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  it('parcel with NO neighbourhood join → premium 1.00, neighbourhood_id NULL, derived/bylaw stories unchanged', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // No neighbourhoods inserted → the LATERAL finds nothing → premium 1.00 (NULL income), basis bylaw.
+      await insMb(c, TEST_PARCEL + 21, sq(0, 0, 0.0002), {
+        lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24, zoning_class: 'RD',
+        bylaw_max_height_m: 10, bylaw_max_stories: 3, bylaw_max_fsi: 1.0, bylaw_max_coverage_pct: 45,
+      });
+      await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+      const p = await getParcel(c, TEST_PARCEL + 21);
+      expect(p.neighbourhood_id).toBeNull();
+      expect(Number(p.neighbourhood_cost_premium)).toBe(1.00); // NULL income → 1.0
+      expect(p.max_build_stories_basis).toBe('bylaw');         // bylaw authoritative, byte-identical
+      expect(Number(p.max_build_stories)).toBe(3);
+      expect(p.max_build_stories_aggressive).toBeNull();       // no pocket
+      expect(p.market_exceeds_bylaw).toBe(false);
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
   // WF3-B NEW-1 cascade: the wider width_m for attached flows into rear_yard_area → garage GFA.
   it('accessory cascade: RT wider rear yard → larger max_garage_gfa than identical RD', async () => {
     const c = await pool.connect();

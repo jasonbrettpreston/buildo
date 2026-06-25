@@ -399,8 +399,19 @@ WITH scope AS (
          COALESCE(p.is_corner_lot, false) AS is_corner_lot, COALESCE(p.is_through_lot, false) AS is_through_lot,
          COALESCE(p.is_in_ravine_protection_area, false) AS is_in_ravine_protection_area,
          COALESCE(p.is_heritage_designated, false) AS is_heritage_designated,
-         COALESCE(p.abuts_laneway, false) AS abuts_laneway
+         COALESCE(p.abuts_laneway, false) AS abuts_laneway,
+         -- WF3-C2: parcel→neighbourhood (centroid-in-polygon, deterministic tiebreak). LEFT JOINs can't
+         -- drop parcel rows; inner nsn LEFT JOIN so a parcel in a real nbhd with no norm still gets the link+income.
+         nb.neighbourhood_id, nb.avg_household_income AS nbhd_income,
+         nb.storeys_p50 AS pocket_p50_local, nb.storeys_p90 AS pocket_p90_local
   FROM parcels p
+  LEFT JOIN LATERAL (
+    SELECT n.id AS neighbourhood_id, n.avg_household_income, nsn.storeys_p50, nsn.storeys_p90
+    FROM neighbourhoods n
+    LEFT JOIN neighbourhood_storey_norms nsn ON nsn.neighbourhood_id = n.id
+    WHERE n.geom IS NOT NULL AND ST_Contains(n.geom, ST_Centroid(p.geom))
+    ORDER BY n.id LIMIT 1
+  ) nb ON TRUE
   WHERE (${scopeWhere}) AND p.geom IS NOT NULL AND ${incremental}
 ),
 massing AS (
@@ -476,9 +487,12 @@ geo AS (
     -- uniform negative buffer (shape-aware, dir-blind): side setback (party-wall-scaled, WF3-B) + ravine. Empty (lot < 2×inset) → NULL.
     NULLIF(round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2), 0) AS buffer_area,
     CASE WHEN bylaw_max_coverage_pct IS NOT NULL THEN round(lot_size_sqm * bylaw_max_coverage_pct / 100.0, 2) END AS coverage_cap,
-    CASE WHEN bylaw_max_stories IS NOT NULL THEN GREATEST(1, bylaw_max_stories)
-         WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN GREATEST(1, round(bylaw_max_height_m / (${mb.buildStoreyHeightCase('zoning_class', storeyHeight)}))::int)
-         ELSE NULL END AS stories_calc
+    -- WF3-C2: by-law height-implied storeys (standalone — the legal cap for the pocket branch + hotspot ref).
+    CASE WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0
+         THEN GREATEST(1, round(bylaw_max_height_m / (${mb.buildStoreyHeightCase('zoning_class', storeyHeight)}))::int) END AS height_implied,
+    -- WF3-C2: pocket norm — local neighbourhood, else citywide NULL-row fallback (singleton, partial-unique-index).
+    COALESCE(pocket_p50_local, (SELECT storeys_p50 FROM neighbourhood_storey_norms WHERE neighbourhood_id IS NULL)) AS pocket_p50,
+    COALESCE(pocket_p90_local, (SELECT storeys_p90 FROM neighbourhood_storey_norms WHERE neighbourhood_id IS NULL)) AS pocket_p90
   FROM box
 ),
 env AS (
@@ -486,7 +500,12 @@ env AS (
     -- LEAST ignores NULLs → footprint = min of whatever measures exist (buffer ⋂ box ⋂ coverage cap).
     LEAST(buffer_area, box_area, coverage_cap) AS footprint_calc,
     is_heritage_designated AS heritage,
-    (is_heritage_designated AND existing_footprint_sqm IS NULL) AS heritage_no_massing
+    (is_heritage_designated AND existing_footprint_sqm IS NULL) AS heritage_no_massing,
+    -- WF3-C2: 3-way storeys — by-law authoritative; else pocket p50 (LEGAL-height-capped); else height-derived.
+    CASE WHEN bylaw_max_stories IS NOT NULL THEN GREATEST(1, bylaw_max_stories)
+         WHEN pocket_p50 IS NOT NULL AND height_implied IS NOT NULL THEN LEAST(pocket_p50, height_implied)
+         WHEN pocket_p50 IS NOT NULL THEN pocket_p50
+         ELSE height_implied END AS stories_calc
   FROM geo
 ),
 gfa AS (
@@ -536,8 +555,14 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
        WHEN heritage THEN 'existing'
        WHEN bylaw_max_stories IS NOT NULL THEN 'bylaw'
+       WHEN pocket_p50 IS NOT NULL THEN 'pocket'
        WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN 'derived'
        ELSE NULL END AS max_build_stories_basis,
+  -- WF3-C2: market-realized ceiling (p90, UNCAPPED) + the variance hotspot; neighbourhood link + premium (ALL parcels, ungated).
+  CASE WHEN NOT emit OR heritage_no_massing OR heritage THEN NULL ELSE pocket_p90 END AS max_build_stories_aggressive,
+  COALESCE(emit AND NOT heritage AND pocket_p90 IS NOT NULL AND height_implied IS NOT NULL AND pocket_p90 > height_implied, false) AS market_exceeds_bylaw,
+  neighbourhood_id,
+  round((${mb.buildPremiumCase('nbhd_income')})::numeric, 2) AS neighbourhood_cost_premium,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
        WHEN heritage THEN 'heritage_existing' ELSE 'rect_approx' END AS max_build_basis,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
@@ -633,7 +658,13 @@ async function enrichMaxBuild(client, opts = {}) {
       COUNT(*) FILTER (WHERE rear_suite_type = 'laneway')::int              AS suite_laneway,
       COUNT(*) FILTER (WHERE rear_suite_type = 'garden')::int               AS suite_garden,
       COUNT(*) FILTER (WHERE rear_suite_permission = 'as_of_right')::int     AS suite_aor,
-      COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')::int    AS suite_coa
+      COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')::int    AS suite_coa,
+      COUNT(*) FILTER (WHERE max_build_stories_basis = 'bylaw')::int   AS basis_bylaw,
+      COUNT(*) FILTER (WHERE max_build_stories_basis = 'pocket')::int  AS basis_pocket,
+      COUNT(*) FILTER (WHERE max_build_stories_basis = 'derived')::int AS basis_derived,
+      COUNT(*) FILTER (WHERE market_exceeds_bylaw)::int                AS market_exceeds,
+      COUNT(*) FILTER (WHERE neighbourhood_id IS NOT NULL)::int        AS with_nbhd,
+      COUNT(*) FILTER (WHERE neighbourhood_cost_premium IS NOT NULL AND neighbourhood_cost_premium > 1.00)::int AS premium_above_1
     FROM parcel_max_build`);
   const upd = await client.query(buildMaxBuildUpdateSql());
   return { ...stats.rows[0], updated: upd.rowCount };
@@ -942,6 +973,13 @@ async function main(pool) {
     auditRows.push({ metric: 'max_build_confidence_low_count', value: mbResult.mb_low, status: 'INFO' });
     auditRows.push({ metric: 'garden_suite_fits_count', value: mbResult.suite_fits, status: 'INFO' });
     auditRows.push({ metric: 'envelope_constrained_count', value: mbResult.constrained, status: 'INFO' });
+    // WF3-C2: pocket-storey basis distribution (derived should shrink) + market hotspot + neighbourhood premium coverage.
+    auditRows.push({ metric: 'max_build_stories_basis_bylaw_count', value: mbResult.basis_bylaw, status: 'INFO' });
+    auditRows.push({ metric: 'max_build_stories_basis_pocket_count', value: mbResult.basis_pocket, status: 'INFO' });
+    auditRows.push({ metric: 'max_build_stories_basis_derived_count', value: mbResult.basis_derived, status: 'INFO' });
+    auditRows.push({ metric: 'market_exceeds_bylaw_count', value: mbResult.market_exceeds, status: 'INFO' });
+    auditRows.push({ metric: 'neighbourhood_join_count', value: mbResult.with_nbhd, status: 'INFO' });
+    auditRows.push({ metric: 'neighbourhood_premium_above_1_count', value: mbResult.premium_above_1, status: 'INFO' });
     // WF3-B party-wall transparency: how many attached (semi/townhouse) parcels got the modal side_count<2
     // footprint widening (the documented approximation). zoning_class isn't on parcel_max_build → query parcels.
     const attachedModal = await pool

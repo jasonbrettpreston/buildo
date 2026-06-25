@@ -29,8 +29,8 @@ const ACCESSORY_COLS = [
 describe('accessory — column sets (Phase 3 regression lock)', () => {
   it('the 8 accessory cols ride MAX_BUILD_COLS; none is a new NN-bool', () => {
     for (const c of ACCESSORY_COLS) expect(mb.MAX_BUILD_COLS).toContain(c);
-    // permissions are nullable TEXT, not bools — MAX_BUILD_BOOL_COLS unchanged.
-    expect(mb.MAX_BUILD_BOOL_COLS).toEqual(['garden_suite_fits', 'envelope_constrained']);
+    // permissions are nullable TEXT, not bools; WF3-C2 added market_exceeds_bylaw as the 3rd NN-bool.
+    expect(mb.MAX_BUILD_BOOL_COLS).toEqual(['garden_suite_fits', 'envelope_constrained', 'market_exceeds_bylaw']);
     // they auto-ride the propagation set (dominant-parcel outputs).
     for (const c of ACCESSORY_COLS) expect(mb.LOT_MAXBUILD_COLS).toContain(c);
   });

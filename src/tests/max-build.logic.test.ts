@@ -82,21 +82,45 @@ describe('max-build — setback table (MB-4)', () => {
 });
 
 describe('max-build — column arrays (MB-1 regression lock)', () => {
-  it('MAX_BUILD_COLS has the 25 documented columns incl. the two NOT-NULL bools', () => {
+  it('MAX_BUILD_COLS has the 29 documented columns incl. the three NOT-NULL bools', () => {
     expect(mb.MAX_BUILD_COLS).toContain('lot_size_confidence');
     expect(mb.MAX_BUILD_COLS).toContain('max_buildable_footprint_sqm');
     expect(mb.MAX_BUILD_COLS).toContain('max_build_confidence');
     expect(mb.MAX_BUILD_COLS).toContain('envelope_constraint_reason');
-    // 17 (Phase 2) + 8 Phase-3 accessory cols (garage + rear-suite/laneway + permissions).
-    expect(mb.MAX_BUILD_COLS.length).toBe(25);
+    // 17 (Phase 2) + 8 Phase-3 accessory + 4 WF3-C2 (pocket-aggressive/hotspot/nbhd-id/premium).
+    expect(mb.MAX_BUILD_COLS.length).toBe(29);
     expect(mb.MAX_BUILD_COLS).toContain('max_build_stories_basis');
     for (const c of ['max_garage_gfa_sqm', 'garage_capacity_cars', 'garage_constraint_reason', 'garage_permission',
-      'max_laneway_suite_gfa_sqm', 'max_rear_suite_gfa_sqm', 'rear_suite_type', 'rear_suite_permission']) {
+      'max_laneway_suite_gfa_sqm', 'max_rear_suite_gfa_sqm', 'rear_suite_type', 'rear_suite_permission',
+      'max_build_stories_aggressive', 'market_exceeds_bylaw', 'neighbourhood_id', 'neighbourhood_cost_premium']) {
       expect(mb.MAX_BUILD_COLS).toContain(c);
     }
-    // Phase 3 added NO new max-build NN-bools (permissions are nullable TEXT) — bool set unchanged.
-    expect(mb.MAX_BUILD_BOOL_COLS).toEqual(['garden_suite_fits', 'envelope_constrained']);
+    // WF3-C2 added market_exceeds_bylaw as the third NN-bool.
+    expect(mb.MAX_BUILD_BOOL_COLS).toEqual(['garden_suite_fits', 'envelope_constrained', 'market_exceeds_bylaw']);
     for (const b of mb.MAX_BUILD_BOOL_COLS) expect(mb.MAX_BUILD_COLS).toContain(b);
+    // WF3-C2: neighbourhood_id is parcel-only — NOT propagated (permits/coa have their own).
+    expect(mb.LOT_MAXBUILD_OUTPUT_COLS).not.toContain('neighbourhood_id');
+    expect(mb.LOT_MAXBUILD_OUTPUT_COLS).toContain('neighbourhood_cost_premium');
+  });
+
+  it('buildPremiumCase parity with lookupPremium / computePremiumFactor (income-tier model)', () => {
+    // The generated SQL CASE must match the JS tier lookup exactly (half-open [min,max), NULL→1.0).
+    for (const income of [null, 0, 59999, 60000, 60001, 99999, 100000, 150000, 199999, 200000, 500000]) {
+      const expected = mb.lookupPremium(income);
+      expect(typeof expected).toBe('number');
+    }
+    // boundary values land in the UPPER tier (>= min, < max)
+    expect(mb.lookupPremium(60000)).toBe(1.15);   // not 1.00
+    expect(mb.lookupPremium(59999)).toBe(1.00);
+    expect(mb.lookupPremium(200000)).toBe(1.85);  // open-top
+    expect(mb.lookupPremium(null)).toBe(1.0);
+    expect(mb.lookupPremium(NaN)).toBe(1.0);
+    // the SQL CASE encodes the same brackets + NULL→1.00
+    const sql = mb.buildPremiumCase('inc');
+    expect(sql).toMatch(/WHEN inc IS NULL THEN 1\.00/);
+    expect(sql).toMatch(/WHEN inc >= 60000 AND inc < 100000 THEN 1\.15/);
+    expect(sql).toMatch(/WHEN inc >= 200000 THEN 1\.85/);
+    expect(sql).toMatch(/ELSE 1\.00/);
   });
 
   it('MAX_BUILD_COLS is DISJOINT from enrich-parcels ALL_WRITE_COLS (separate pass)', () => {
