@@ -530,10 +530,20 @@ accessory AS (
 ),
 accessory2 AS (
   SELECT a.*,
+    -- WF3 (Phase 0 garage one-car floor): offer a garage only when the BUILDABLE garage GFA
+    -- (LEAST(max, accessoryMaxCovPct of rear yard)) holds >=1 car. The old gate (rear_yard_area >=
+    -- garageMinFootprint) was wrong: the garage is only ~30% of the rear yard, so an 18-61 m2 rear yard
+    -- yielded a 5-18 m2 garage = 0 cars but garage_permission='as_of_right' (46,598 phantom garages, e.g.
+    -- 39 & 45 Derwyn). GREATEST(garageMinFootprint, carFootprint) guarantees >=1 car even if the logicVar
+    -- garage_min_footprint_sqm is set below the one-car footprint.
     COALESCE(a.emit AND NOT a.heritage AND NOT a.is_in_ravine_protection_area
-             AND a.lot_size_sqm >= ${garageMinLot} AND a.rear_yard_area >= ${garageMinFootprint}, false) AS garage_fits,
+             AND a.lot_size_sqm >= ${garageMinLot}
+             AND LEAST(${garageMaxGfa}::numeric, ${accessoryMaxCovPct}::numeric * a.rear_yard_area)
+                 >= GREATEST(${garageMinFootprint}::numeric, ${carFootprint}::numeric), false) AS garage_fits,
     CASE WHEN a.emit AND NOT a.heritage AND NOT a.is_in_ravine_protection_area
-              AND a.lot_size_sqm >= ${garageMinLot} AND a.rear_yard_area >= ${garageMinFootprint}
+              AND a.lot_size_sqm >= ${garageMinLot}
+              AND LEAST(${garageMaxGfa}::numeric, ${accessoryMaxCovPct}::numeric * a.rear_yard_area)
+                  >= GREATEST(${garageMinFootprint}::numeric, ${carFootprint}::numeric)
          THEN round(LEAST(${garageMaxGfa}::numeric, ${accessoryMaxCovPct}::numeric * a.rear_yard_area), 2) END AS max_garage_gfa_sqm,
     CASE WHEN a.garden_fits THEN round(${gardenMaxGfa}::numeric, 2) END AS max_garden_suite_gfa_sqm,
     CASE WHEN a.laneway_fits THEN round(${lanewayMaxGfa}::numeric, 2) END AS max_laneway_suite_gfa_sqm,
@@ -601,7 +611,8 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
        WHEN heritage THEN 'heritage'
        WHEN is_in_ravine_protection_area THEN 'ravine'
        WHEN lot_size_sqm < ${garageMinLot} THEN 'lot_too_small'
-       WHEN rear_yard_area < ${garageMinFootprint} THEN 'no_rear_yard'
+       WHEN LEAST(${garageMaxGfa}::numeric, ${accessoryMaxCovPct}::numeric * rear_yard_area)
+            < GREATEST(${garageMinFootprint}::numeric, ${carFootprint}::numeric) THEN 'no_rear_yard'
        ELSE NULL END AS garage_constraint_reason,
   CASE WHEN NOT garage_fits THEN (CASE WHEN emit THEN 'not_permitted' END)
        WHEN GREATEST(0, lot_size_sqm - COALESCE(existing_total_footprint_sqm, 0) - max_garage_gfa_sqm)
@@ -715,15 +726,18 @@ allb AS (
   GROUP BY pb.parcel_id
 ),
 dims AS (
-  -- oriented-envelope side lengths in METRES (::geography at the POINT level). Areal geoms only.
+  -- oriented-envelope side lengths in METRES. WF3 (Phase 0 projection fix): build the oriented envelope
+  -- in a PROJECTED CRS (EPSG:2952, MTM zone 10) then measure PLANAR. Computing ST_OrientedEnvelope on the
+  -- raw 4326 (degree) geom distorts the minimum-rotated rectangle at Toronto's latitude (1° lon ≈ 0.72°
+  -- lat), inflating length ~7% (measured n=272). 2952 is already metres → no ::geography cast. Areal geoms only.
   SELECT s.pid,
-    ST_Distance(ST_PointN(ST_ExteriorRing(oe.box), 1)::geography, ST_PointN(ST_ExteriorRing(oe.box), 2)::geography) AS side1,
-    ST_Distance(ST_PointN(ST_ExteriorRing(oe.box), 2)::geography, ST_PointN(ST_ExteriorRing(oe.box), 3)::geography) AS side2
+    ST_Distance(ST_PointN(ST_ExteriorRing(oe.box), 1), ST_PointN(ST_ExteriorRing(oe.box), 2)) AS side1,
+    ST_Distance(ST_PointN(ST_ExteriorRing(oe.box), 2), ST_PointN(ST_ExteriorRing(oe.box), 3)) AS side2
   FROM scope s
   JOIN prim pr ON pr.pid = s.pid
   CROSS JOIN LATERAL (
     SELECT CASE WHEN pr.p_geom IS NOT NULL AND ST_Dimension(pr.p_geom) = 2
-                THEN ST_OrientedEnvelope(pr.p_geom) END AS box
+                THEN ST_OrientedEnvelope(ST_Transform(pr.p_geom, 2952)) END AS box
   ) oe
   WHERE oe.box IS NOT NULL AND ST_GeometryType(oe.box) = 'ST_Polygon'
 )

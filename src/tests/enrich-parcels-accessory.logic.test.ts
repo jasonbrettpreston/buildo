@@ -78,6 +78,22 @@ describe('accessory — buildMaxBuildSql SQL plumbing', () => {
     expect(sql).toMatch(/WHEN garage_fits THEN NULL[\s\S]*WHEN NOT emit THEN 'low_lot_confidence'[\s\S]*WHEN heritage THEN 'heritage'[\s\S]*WHEN is_in_ravine_protection_area THEN 'ravine'[\s\S]*'lot_too_small'[\s\S]*'no_rear_yard'/);
   });
 
+  // WF3 Phase-0 (garage one-car floor): a garage was offered when rear_yard_area >= 18, but the buildable
+  // garage is only ~30% of the rear yard → an 18-61 m² yard yielded a 5-18 m² garage = 0 cars but
+  // garage_permission='as_of_right' (46,598 phantom garages: 39 & 45 Derwyn). Gate now requires the
+  // buildable garage GFA to hold >=1 car: LEAST(max, covPct*rear) >= GREATEST(garageMinFootprint, carFootprint).
+  it('garage gate requires the buildable garage to hold >=1 car (no phantom 0-car as_of_right)', () => {
+    // the one-car floor is the GREATEST of the (tunable) min footprint and the structural car footprint,
+    // so the logicVar cannot undercut it.
+    expect(sql).toMatch(/LEAST\([\d.]+::numeric, [\d.]+::numeric \* a\.rear_yard_area\)\s*>=\s*GREATEST\([\d.]+::numeric, [\d.]+::numeric\)/);
+    // the old phantom-garage gate (bare rear_yard_area >= min) is gone from garage_fits AND the reason chain.
+    expect(sql).not.toMatch(/a\.rear_yard_area >= [\d.]+, false\) AS garage_fits/);
+    expect(sql).not.toMatch(/WHEN rear_yard_area < [\d.]+ THEN 'no_rear_yard'/);
+    // carFootprint (structural one-car size) must appear in the floor — guarantees floor(gfa/carFootprint) >= 1.
+    expect(mb.CAR_FOOTPRINT_SQM).toBeGreaterThanOrEqual(18);
+    expect(sql).toMatch(new RegExp(`GREATEST\\([\\d.]+::numeric, ${mb.CAR_FOOTPRINT_SQM}::numeric\\)`));
+  });
+
   it('externalized garden-suite constants flow from acc (logic-vars), default-byte-stable', () => {
     const def = ep.buildMaxBuildSql({});
     const overridden = ep.buildMaxBuildSql({ acc: { gardenMaxGfa: 99 } });

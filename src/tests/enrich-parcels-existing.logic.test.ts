@@ -74,9 +74,13 @@ describe('existing-structure — SQL plumbing (separate pass)', () => {
     expect(sql).not.toMatch(/parcel_max_build e/); // doesn't reuse the max-build temp table for output
   });
 
-  it('measures envelope dims in metres (::geography at the point level) + areal-geom guard', () => {
-    expect(sql).toMatch(/ST_PointN\(ST_ExteriorRing[\s\S]*::geography/);
-    expect(sql).toMatch(/ST_Dimension\(pr\.p_geom\) = 2/); // areal-geom guard
+  it('WF3 Phase-0 projection fix: oriented envelope in EPSG:2952 (projected metres), planar side distances', () => {
+    // ST_OrientedEnvelope on the raw 4326 (degree) geom distorted the min-rotated rectangle at Toronto's
+    // latitude (1° lon ≈ 0.72° lat), inflating length ~7% (n=272). Now built in EPSG:2952 (MTM zone 10,
+    // metres) → planar ST_Distance with NO ::geography cast on the side points.
+    expect(sql).toMatch(/ST_OrientedEnvelope\(ST_Transform\(pr\.p_geom, 2952\)\)/);
+    expect(sql).not.toMatch(/ST_PointN\(ST_ExteriorRing\(oe\.box\), \d\)::geography/); // the ::geography hack is gone
+    expect(sql).toMatch(/ST_Dimension\(pr\.p_geom\) = 2/); // areal-geom guard preserved
   });
 
   it('WF3-A: retires existing_stories/height (NULL) + existing_gfa = footprint×2 (not ×stories)', () => {
