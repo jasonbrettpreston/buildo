@@ -63,6 +63,18 @@ interface Contracts {
     over_capture_clamp: number;
     build_ratio_null_rate_warn: number;
   };
+  optimal_config: {
+    garden_footprint_rear_frac: number;
+    garden_footprint_max_sqm: number;
+    ancillary_coverage_max_frac: number;
+    soft_landscape_wide_frac: number;
+    soft_landscape_narrow_frac: number;
+    garden_sep_low_m: number;
+    garden_sep_high_m: number;
+    laneway_footprint_max_sqm: number;
+    laneway_abuts_min_m: number;
+    garage_car_footprint_sqm: number;
+  };
 }
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -253,6 +265,67 @@ const rules: Rule[] = [
     file: 'scripts/lib/build-norms.js',
     pattern: new RegExp(`BUILD_RATIO_NULL_RATE_WARN\\s*=\\s*${contracts.build_norms.build_ratio_null_rate_warn}\\b`),
   },
+  // ---- optimal-config by-law constants (Spec 78 Phase 2; 569-2013 Ch.150.7) ----
+  {
+    name: 'optimal_config.garden_footprint_rear_frac → GARDEN_FOOTPRINT_REAR_FRAC',
+    value: contracts.optimal_config.garden_footprint_rear_frac,
+    file: 'scripts/lib/optimal-config.js',
+    pattern: new RegExp(`GARDEN_FOOTPRINT_REAR_FRAC:\\s*${contracts.optimal_config.garden_footprint_rear_frac}\\b`),
+  },
+  {
+    name: 'optimal_config.garden_footprint_max_sqm → GARDEN_FOOTPRINT_MAX_SQM',
+    value: contracts.optimal_config.garden_footprint_max_sqm,
+    file: 'scripts/lib/optimal-config.js',
+    pattern: new RegExp(`GARDEN_FOOTPRINT_MAX_SQM:\\s*${contracts.optimal_config.garden_footprint_max_sqm}\\b`),
+  },
+  {
+    name: 'optimal_config.ancillary_coverage_max_frac → ANCILLARY_COVERAGE_MAX_FRAC',
+    value: contracts.optimal_config.ancillary_coverage_max_frac,
+    file: 'scripts/lib/optimal-config.js',
+    pattern: new RegExp(`ANCILLARY_COVERAGE_MAX_FRAC:\\s*${contracts.optimal_config.ancillary_coverage_max_frac}\\b`),
+  },
+  {
+    name: 'optimal_config.soft_landscape_wide_frac → SOFT_LANDSCAPE_WIDE_FRAC',
+    value: contracts.optimal_config.soft_landscape_wide_frac,
+    file: 'scripts/lib/optimal-config.js',
+    pattern: new RegExp(`SOFT_LANDSCAPE_WIDE_FRAC:\\s*${contracts.optimal_config.soft_landscape_wide_frac}\\b`),
+  },
+  {
+    name: 'optimal_config.soft_landscape_narrow_frac → SOFT_LANDSCAPE_NARROW_FRAC',
+    value: contracts.optimal_config.soft_landscape_narrow_frac,
+    file: 'scripts/lib/optimal-config.js',
+    pattern: new RegExp(`SOFT_LANDSCAPE_NARROW_FRAC:\\s*${contracts.optimal_config.soft_landscape_narrow_frac}\\b`),
+  },
+  {
+    name: 'optimal_config.garden_sep_low_m → GARDEN_SEP_LOW_M',
+    value: contracts.optimal_config.garden_sep_low_m,
+    file: 'scripts/lib/optimal-config.js',
+    pattern: new RegExp(`GARDEN_SEP_LOW_M:\\s*${contracts.optimal_config.garden_sep_low_m}\\b`),
+  },
+  {
+    name: 'optimal_config.garden_sep_high_m → GARDEN_SEP_HIGH_M',
+    value: contracts.optimal_config.garden_sep_high_m,
+    file: 'scripts/lib/optimal-config.js',
+    pattern: new RegExp(`GARDEN_SEP_HIGH_M:\\s*${contracts.optimal_config.garden_sep_high_m}\\b`),
+  },
+  {
+    name: 'optimal_config.laneway_footprint_max_sqm → LANEWAY_FOOTPRINT_MAX_SQM',
+    value: contracts.optimal_config.laneway_footprint_max_sqm,
+    file: 'scripts/lib/optimal-config.js',
+    pattern: new RegExp(`LANEWAY_FOOTPRINT_MAX_SQM:\\s*${contracts.optimal_config.laneway_footprint_max_sqm}\\b`),
+  },
+  {
+    name: 'optimal_config.laneway_abuts_min_m → LANEWAY_ABUTS_MIN_M',
+    value: contracts.optimal_config.laneway_abuts_min_m,
+    file: 'scripts/lib/optimal-config.js',
+    pattern: new RegExp(`LANEWAY_ABUTS_MIN_M:\\s*${contracts.optimal_config.laneway_abuts_min_m}\\b`),
+  },
+  {
+    name: 'optimal_config.garage_car_footprint_sqm → GARAGE_CAR_FOOTPRINT_SQM',
+    value: contracts.optimal_config.garage_car_footprint_sqm,
+    file: 'scripts/lib/optimal-config.js',
+    pattern: new RegExp(`GARAGE_CAR_FOOTPRINT_SQM:\\s*${contracts.optimal_config.garage_car_footprint_sqm}\\b`),
+  },
 ];
 
 describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', () => {
@@ -265,6 +338,7 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
     expect(contracts.retention).toBeDefined();
     expect(contracts.zoning).toBeDefined();
     expect(contracts.build_norms).toBeDefined();
+    expect(contracts.optimal_config).toBeDefined();
   });
 
   it('permit pillar maxes sum to permit_total_max (spec 70 §4 invariant)', () => {

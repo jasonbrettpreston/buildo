@@ -120,6 +120,67 @@ forced `false`) so the per-parcel optimal-config range never NULL-collapses on a
 
 ---
 
+## §Phase-2 — Optimal-Config Engine (Behavioral Contract)
+
+`scripts/lib/optimal-config.js` (NEW, pure — IO-free, never throws; mirrors `max-build.js`). The
+budget-allocation engine that turns a lot's reliable inputs into the two build configurations. **DB
+Impact: NONE** — Phase 2 is the engine + logic tests + by-law constants only; the parcel columns,
+JSONB blobs, the enrich pass, position geometry, and comps all land in **Phase 3**.
+
+### P2.1 — By-law constants (Toronto Zoning By-law 569-2013, Ch.150.7 in-force consolidation)
+
+Verified 2026-06-26 against `toronto.ca/zoning/.../ZBL_NewProvision_Chapter150_7.htm`. Pinned to
+`scripts/lib/optimal-config.js` via `_contracts.json` (`optimal_config` group) + `contracts.infra.test.ts`.
+
+| Rule | Value | Citation |
+|---|---|---|
+| Garden footprint | **min(40% rear-yard, 60 m²)** | 150.7.60.70(1)(C) |
+| All-ancillary lot coverage | **≤ 20% lot** | 150.7.60.70(1)(B) |
+| Garden height by separation | **4.0 m** @ 5.0–7.5 m / **6.0 m** @ ≥ 7.5 m | 150.7.60.40(1) |
+| Min separation from main | **5.0 m** (≤ 4.0 m suite) / **7.5 m** (> 4.0 m) | 150.7.60.30(1) |
+| Soft landscaping (rear yard) | **≥ 50%** (frontage > 6.0 m) / **≥ 25%** (≤ 6.0 m) | 150.7.50.10(1) |
+| Side setback | max(floor, 10% frontage) cap 3.0 m; floor 1.5 (openings) / 0.6 | 150.7.60.20(5) |
+| Rear setback | 1.5 m (deep lot > 45 m → max(½ h, 1.5); through-lot → adjacent front) | 150.7.60.20(2)(3) |
+| Garden GFA | **< main-house GFA** | 150.7.60.50(2) |
+| Laneway footprint / abutment | ≤ 60 m² / `abuts_laneway ≥ 3.5 m` | (Changing Lanes) |
+| Garage | one-car floor **18.5 m²** (never 0-car — Phase-0 fix); cap 60 m² | — |
+
+> **`BYLAW_VERSION = '569-2013_consolidation_2025'`** stamped on every result. NB: a **2025 DRAFT**
+> amendment (PH bg 256978) proposes removing the 40% rear-yard footprint term (keeping the 20% cap) +
+> the angular plane — **NOT enacted**, so the 40% term is the baseline; the flag marks the consolidation
+> in force so a future re-pin is a one-line constant + `bylaw_version` change.
+
+### P2.2 — Engine outputs (`computeOptimalConfig(parcel)`)
+
+- **as-of-right tier:** main build (footprint = coverage cap; storeys = nbhd `storeys_p50`; GFA under
+  the coverage **and** FSI caps — **NULL-FSI guard:** absent FSI → GFA = footprint × storeys, never
+  unbounded) + **suite-if-fits** + garage.
+- **CoA-upside tier:** **storeys = nbhd `storeys_p90`** at the SAME footprint (CoA = up, not out —
+  validated); `opt_coa_gfa_uplift_sqm` = the storey-driven GFA delta.
+- **Suite fit is conservative (field-spec §P):** evaluated against the CURRENT building's rear-yard
+  envelope, not a hypothetical max-rebuild. A depth-constrained yard **shrinks** the suite (a smaller
+  suite is always permitted) rather than failing; only a yard too shallow for the minimum-separation
+  suite fails. Laneway preferred where a lane abuts (separate access, no rear-yard consumption) — the
+  abutment gate prefers a metres signal (`abuts_laneway_m ≥ 3.5`) but accepts the boolean
+  `parcels.abuts_laneway` (Spec 62 #431-FU2 emits only the boolean today).
+- **The 20% all-ancillary cap is SHARED** across the suite, the garage, and any existing ancillary —
+  the garage is allocated the headroom REMAINING after the chosen suite, never the full cap twice. The
+  60 m² garden cap is a **footprint** (lot-coverage) limit (verified — a 2-storey suite reaches ≤ 120 m²
+  GFA), distinct from the GFA `< main-house` rule.
+- `opt_binding_constraint` ∈ {coverage, fsi, depth, soft_landscaping, holding, heritage, ravine,
+  through_lot}; `opt_config_confidence` ∈ {high, medium, low} (lot-size confidence, FSI presence,
+  suspected existing accessory — comp-count joins it in Phase 3).
+- **Trade-off resolver:** `opt_suite_adds_value` records whether main+suite beats main-only total GFA.
+- **Gates:** holding zone → as-of-right suite suppressed (`binding=holding`); CoA tier may relieve a
+  heritage-massing freeze but never a holding zone.
+
+### P2.3 — Tests
+`src/tests/optimal-config.logic.test.ts` pins every by-law branch + the orchestration (garden footprint
+cap, soft-landscape 50/25 boundary at 6.0 m, height-by-separation, side/rear setback, NULL-FSI guard,
+suite-fit-vs-current-building + depth-shrink, CoA storeys-not-footprint, through-lot → no suite, holding
+→ gated, laneway preference, confidence degradation). Generated-SQL dual-path: the engine is the single
+JS source the Phase-3 `enrich-parcels.js` pass calls (no TS twin).
+
 ## 2. Operating Boundaries
 
 ### Target Files

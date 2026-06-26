@@ -49,5 +49,18 @@
     "min_sample_default": 5,
     "over_capture_clamp": 1.1,
     "build_ratio_null_rate_warn": 0.5
+  },
+  "optimal_config": {
+    "$comment": "Spec 78 Phase 2 — optimal-lot-configuration engine (scripts/lib/optimal-config.js). Toronto Zoning By-law 569-2013 Ch.150.7 (garden/laneway suites) in-force consolidation constants, verified 2026-06-26 vs toronto.ca/zoning. Operator-tunable where the by-law may shift (a 2025 DRAFT proposes removing the 40% rear-yard term). Consumer: scripts/lib/optimal-config.js (pinned by contracts.infra.test.ts); Phase 3 enrich-parcels SQL will add itself as a consumer.",
+    "garden_footprint_rear_frac": 0.4,
+    "garden_footprint_max_sqm": 60,
+    "ancillary_coverage_max_frac": 0.2,
+    "soft_landscape_wide_frac": 0.5,
+    "soft_landscape_narrow_frac": 0.25,
+    "garden_sep_low_m": 5,
+    "garden_sep_high_m": 7.5,
+    "laneway_footprint_max_sqm": 60,
+    "laneway_abuts_min_m": 3.5,
+    "garage_car_footprint_sqm": 18.5
   }
 }
