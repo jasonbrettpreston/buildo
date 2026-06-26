@@ -286,13 +286,16 @@ describe('CQA Script Files', () => {
     expect(fs.existsSync(scriptPath)).toBe(true);
   });
 
+  // Timeout 30s (was the 5s default): the dynamic import of the FreshnessTimeline component pulls a heavy
+  // Next.js module graph that can starve >5s under full-suite parallel transform load (passes in ~0.5s
+  // isolated). Bumping the per-test timeout removes the flaky-under-load failure without changing assertions.
   it('both CQA slugs are registered in PIPELINE_REGISTRY with quality group', async () => {
     const { PIPELINE_REGISTRY } = await import('@/components/FreshnessTimeline');
     expect(PIPELINE_REGISTRY.assert_schema).toBeDefined();
     expect(PIPELINE_REGISTRY!.assert_schema!.group).toBe('quality');
     expect(PIPELINE_REGISTRY.assert_data_bounds).toBeDefined();
     expect(PIPELINE_REGISTRY!.assert_data_bounds!.group).toBe('quality');
-  });
+  }, 30000);
 });
 
 describe('Migration 041 records_meta', () => {
