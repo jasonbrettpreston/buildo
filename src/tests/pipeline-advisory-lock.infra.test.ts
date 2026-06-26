@@ -101,6 +101,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/update-tracked-projects.js':      82,
   'scripts/compute-cost-estimates.js':       83,
   'scripts/compute-storey-norms.js':         195,
+  'scripts/compute-build-norms.js':          78,
   'scripts/classify-lifecycle-phase.js':     84,
   'scripts/compute-trade-forecasts.js':      85,
   'scripts/compute-timing-calibration-v2.js': 86,

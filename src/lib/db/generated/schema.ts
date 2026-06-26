@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, index, foreignKey, check, serial, varchar, numeric, boolean, unique, jsonb, geometry, uniqueIndex, date, bigint, bigserial, doublePrecision, smallint, primaryKey, pgMaterializedView, pgView, pgEnum } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp, integer, index, foreignKey, check, serial, varchar, numeric, boolean, unique, uniqueIndex, date, jsonb, geometry, bigint, bigserial, doublePrecision, smallint, primaryKey, pgMaterializedView, pgView, pgEnum } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const entityTypeEnum = pgEnum("entity_type_enum", ['Corporation', 'Individual'])
@@ -103,6 +103,46 @@ export const permitTrades = pgTable("permit_trades", {
 			name: "permit_trades_trade_id_fkey"
 		}),
 	unique("permit_trades_permit_num_revision_num_trade_id_key").on(table.permitNum, table.revisionNum, table.tradeId),
+]);
+
+export const neighbourhoodBuildNorms = pgTable("neighbourhood_build_norms", {
+	id: serial().primaryKey().notNull(),
+	neighbourhoodId: integer("neighbourhood_id"),
+	windowStart: date("window_start"),
+	windowEnd: date("window_end"),
+	newBuilds5Yr: integer("new_builds_5yr").default(0).notNull(),
+	additions5Yr: integer("additions_5yr").default(0).notNull(),
+	renos5Yr: integer("renos_5yr").default(0).notNull(),
+	suites5Yr: integer("suites_5yr").default(0).notNull(),
+	demos5Yr: integer("demos_5yr").default(0).notNull(),
+	realizedFsiP50: numeric("realized_fsi_p50"),
+	realizedFsiP90: numeric("realized_fsi_p90"),
+	realizedCoverageP50: numeric("realized_coverage_p50"),
+	realizedCoverageP90: numeric("realized_coverage_p90"),
+	buildRatioP50: numeric("build_ratio_p50"),
+	existingBuildRatioP25: numeric("existing_build_ratio_p25"),
+	existingBuildRatioP50: numeric("existing_build_ratio_p50"),
+	renoKitchenPct: numeric("reno_kitchen_pct"),
+	renoBathPct: numeric("reno_bath_pct"),
+	storeysP50: integer("storeys_p50"),
+	storeysP90: integer("storeys_p90"),
+	coaApproved: integer("coa_approved").default(0).notNull(),
+	coaRefused: integer("coa_refused").default(0).notNull(),
+	coaTotal: integer("coa_total").default(0).notNull(),
+	coaApprovalRate: numeric("coa_approval_rate"),
+	renoMix: jsonb("reno_mix"),
+	sampleN: integer("sample_n").default(0).notNull(),
+	lowSample: boolean("low_sample").default(false).notNull(),
+	dataProvenance: text("data_provenance").default('market_realized_5yr').notNull(),
+	computedAt: timestamp("computed_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	uniqueIndex("neighbourhood_build_norms_citywide_singleton").using("btree", sql`((neighbourhood_id IS NULL))`).where(sql`(neighbourhood_id IS NULL)`),
+	foreignKey({
+			columns: [table.neighbourhoodId],
+			foreignColumns: [neighbourhoods.id],
+			name: "neighbourhood_build_norms_neighbourhood_id_fkey"
+		}).onDelete("cascade"),
+	unique("neighbourhood_build_norms_neighbourhood_id_key").on(table.neighbourhoodId),
 ]);
 
 export const notifications = pgTable("notifications", {
@@ -1866,6 +1906,13 @@ export const permits = pgTable("permits", {
 	maxBuildStoriesAggressive: integer("max_build_stories_aggressive"),
 	marketExceedsBylaw: boolean("market_exceeds_bylaw").default(false).notNull(),
 	neighbourhoodCostPremium: numeric("neighbourhood_cost_premium", { precision: 4, scale:  2 }),
+	residentialSqm: numeric("residential_sqm"),
+	interiorAlterationsSqm: numeric("interior_alterations_sqm"),
+	assemblySqm: numeric("assembly_sqm"),
+	institutionalSqm: numeric("institutional_sqm"),
+	mercantileSqm: numeric("mercantile_sqm"),
+	industrialSqm: numeric("industrial_sqm"),
+	businessPersonalServicesSqm: numeric("business_personal_services_sqm"),
 }, (table) => [
 	index("idx_permits_addr_normalized").using("btree", table.streetNum.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")).where(sql`(street_name_normalized IS NOT NULL)`),
 	index("idx_permits_application_date").using("btree", table.applicationDate.asc().nullsLast().op("date_ops")),

@@ -57,6 +57,12 @@ interface Contracts {
     permits_zoning_class_coverage_fail: number;
     coa_zoning_class_coverage_fail: number;
   };
+  build_norms: {
+    window_years: number;
+    min_sample_default: number;
+    over_capture_clamp: number;
+    build_ratio_null_rate_warn: number;
+  };
 }
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -222,6 +228,31 @@ const rules: Rule[] = [
     file: 'scripts/enrich-permits.js',
     pattern: new RegExp(`COA_COVERAGE_FAIL\\s*=\\s*${contracts.zoning.coa_zoning_class_coverage_fail}\\b`),
   },
+  // ---- neighbourhood build-norms constants (Spec 78 Phase 1) ----
+  {
+    name: 'build_norms.window_years → BUILD_NORM_WINDOW_YEARS constant',
+    value: contracts.build_norms.window_years,
+    file: 'scripts/lib/build-norms.js',
+    pattern: new RegExp(`BUILD_NORM_WINDOW_YEARS\\s*=\\s*${contracts.build_norms.window_years}\\b`),
+  },
+  {
+    name: 'build_norms.min_sample_default → BUILD_NORM_MIN_SAMPLE_DEFAULT constant',
+    value: contracts.build_norms.min_sample_default,
+    file: 'scripts/lib/build-norms.js',
+    pattern: new RegExp(`BUILD_NORM_MIN_SAMPLE_DEFAULT\\s*=\\s*${contracts.build_norms.min_sample_default}\\b`),
+  },
+  {
+    name: 'build_norms.over_capture_clamp → OVER_CAPTURE_CLAMP constant',
+    value: contracts.build_norms.over_capture_clamp,
+    file: 'scripts/lib/build-norms.js',
+    pattern: new RegExp(`OVER_CAPTURE_CLAMP\\s*=\\s*${contracts.build_norms.over_capture_clamp}\\b`),
+  },
+  {
+    name: 'build_norms.build_ratio_null_rate_warn → BUILD_RATIO_NULL_RATE_WARN constant',
+    value: contracts.build_norms.build_ratio_null_rate_warn,
+    file: 'scripts/lib/build-norms.js',
+    pattern: new RegExp(`BUILD_RATIO_NULL_RATE_WARN\\s*=\\s*${contracts.build_norms.build_ratio_null_rate_warn}\\b`),
+  },
 ];
 
 describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', () => {
@@ -233,6 +264,7 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
     expect(contracts.schema).toBeDefined();
     expect(contracts.retention).toBeDefined();
     expect(contracts.zoning).toBeDefined();
+    expect(contracts.build_norms).toBeDefined();
   });
 
   it('permit pillar maxes sum to permit_total_max (spec 70 §4 invariant)', () => {

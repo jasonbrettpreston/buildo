@@ -64,6 +64,7 @@ const CRITICAL_FIELDS = [
   'PERMIT_TYPE',    // classification input
   'STREET_NUM',     // address component
   'STREET_NAME',    // address component
+  'RESIDENTIAL',    // Spec 78: authoritative GFA — if Toronto drops the column, abort (don't silently lose it)
 ];
 
 // CLI: --file <path> for local file fallback
@@ -93,6 +94,19 @@ function cleanCost(v) {
   if (s.includes('DO NOT UPDATE') || s.includes('DO NOT DELETE')) return null;
   const parsed = parseFloat(s.replace(/[^0-9.\-]/g, ''));
   if (isNaN(parsed)) return null;
+  return parsed;
+}
+
+/**
+ * Parse a CKAN occupancy floor-area cell (RESIDENTIAL, INTERIOR_ALTERATIONS, …) to m².
+ * Same junk-sentinel guard as cleanCost, but NEGATIVE areas are invalid → null (a
+ * negative GFA would poison the neighbourhood_build_norms percentiles — Spec 78 Phase 1).
+ * Zero is preserved as null (no work in that occupancy class), not 0, so the build-norm
+ * CASEs (which guard `residential_sqm > 0`) treat "no residential area" and "unmapped" alike.
+ */
+function cleanArea(v) {
+  const parsed = cleanCost(v);
+  if (parsed === null || parsed <= 0) return null;
   return parsed;
 }
 
@@ -153,6 +167,16 @@ function mapRecord(raw) {
     proposed_use: raw.PROPOSED_USE || null,
     housing_units: safeParseIntOrNull(raw.HOUSING_UNITS) ?? 0,
     storeys: safeParseIntOrNull(raw.STOREYS) ?? 0,
+    // Spec 78 Phase 1 — CKAN occupancy floor-area (m²). RESIDENTIAL = the authoritative GFA the
+    // neighbourhood_build_norms calibrate against (new-build total / addition delta); the rest are
+    // the use-class breakdown. cleanArea() drops junk/0/negative → null (see compute-build-norms guards).
+    residential_sqm: cleanArea(raw.RESIDENTIAL),
+    interior_alterations_sqm: cleanArea(raw.INTERIOR_ALTERATIONS),
+    assembly_sqm: cleanArea(raw.ASSEMBLY),
+    institutional_sqm: cleanArea(raw.INSTITUTIONAL),
+    mercantile_sqm: cleanArea(raw.MERCANTILE),
+    industrial_sqm: cleanArea(raw.INDUSTRIAL),
+    business_personal_services_sqm: cleanArea(raw.BUSINESS_AND_PERSONAL_SERVICES),
   };
   // Hash the mapped fields only — excludes raw_json, data_hash, and _ckan_id
   mapped.data_hash = computeHash(mapped);
@@ -284,10 +308,13 @@ async function insertBatch(client, batch, RUN_AT) {
     'status', 'description', 'est_const_cost',
     'builder_name', 'owner', 'dwelling_units_created', 'dwelling_units_lost',
     'ward', 'council_district', 'current_use', 'proposed_use',
-    'housing_units', 'storeys', 'data_hash', 'raw_json',
+    'housing_units', 'storeys',
+    'residential_sqm', 'interior_alterations_sqm', 'assembly_sqm', 'institutional_sqm',
+    'mercantile_sqm', 'industrial_sqm', 'business_personal_services_sqm',
+    'data_hash', 'raw_json',
   ];
 
-  const valuesPerRow = cols.length; // 33
+  const valuesPerRow = cols.length;
   const placeholders = [];
   const values = [];
 
@@ -335,6 +362,13 @@ async function insertBatch(client, batch, RUN_AT) {
       proposed_use = EXCLUDED.proposed_use,
       housing_units = EXCLUDED.housing_units,
       storeys = EXCLUDED.storeys,
+      residential_sqm = EXCLUDED.residential_sqm,
+      interior_alterations_sqm = EXCLUDED.interior_alterations_sqm,
+      assembly_sqm = EXCLUDED.assembly_sqm,
+      institutional_sqm = EXCLUDED.institutional_sqm,
+      mercantile_sqm = EXCLUDED.mercantile_sqm,
+      industrial_sqm = EXCLUDED.industrial_sqm,
+      business_personal_services_sqm = EXCLUDED.business_personal_services_sqm,
       data_hash = EXCLUDED.data_hash,
       last_seen_at = $${values.length + 1}::timestamptz,
       raw_json = EXCLUDED.raw_json
@@ -663,12 +697,12 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
   });
   pipeline.emitMeta(
     {
-      "CKAN API": ["PERMIT_NUM", "REVISION_NUM", "PERMIT_TYPE", "STRUCTURE_TYPE", "WORK", "STREET_NUM", "STREET_NAME", "STREET_TYPE", "STREET_DIRECTION", "CITY", "POSTAL", "GEO_ID", "BUILDING_TYPE", "CATEGORY", "APPLICATION_DATE", "ISSUED_DATE", "COMPLETED_DATE", "STATUS", "DESCRIPTION", "EST_CONST_COST", "BUILDER", "OWNER", "DWELLING_UNITS_CREATED", "DWELLING_UNITS_LOST", "WARD", "COUNCIL_DISTRICT", "CURRENT_USE", "PROPOSED_USE", "HOUSING_UNITS", "STOREYS"],
+      "CKAN API": ["PERMIT_NUM", "REVISION_NUM", "PERMIT_TYPE", "STRUCTURE_TYPE", "WORK", "STREET_NUM", "STREET_NAME", "STREET_TYPE", "STREET_DIRECTION", "CITY", "POSTAL", "GEO_ID", "BUILDING_TYPE", "CATEGORY", "APPLICATION_DATE", "ISSUED_DATE", "COMPLETED_DATE", "STATUS", "DESCRIPTION", "EST_CONST_COST", "BUILDER", "OWNER", "DWELLING_UNITS_CREATED", "DWELLING_UNITS_LOST", "WARD", "COUNCIL_DISTRICT", "CURRENT_USE", "PROPOSED_USE", "HOUSING_UNITS", "STOREYS", "RESIDENTIAL", "INTERIOR_ALTERATIONS", "ASSEMBLY", "INSTITUTIONAL", "MERCANTILE", "INDUSTRIAL", "BUSINESS_AND_PERSONAL_SERVICES"],
       // Phase I.1: pre-UPSERT capture of permits.status for ledger from_status detection.
       "permits": ["permit_num", "revision_num", "status"],
     },
     {
-      "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_name_normalized", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "data_hash", "raw_json"],
+      "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_name_normalized", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "residential_sqm", "interior_alterations_sqm", "assembly_sqm", "institutional_sqm", "mercantile_sqm", "industrial_sqm", "business_personal_services_sqm", "data_hash", "raw_json"],
       // Phase I.1: lifecycle_status_history ledger writes (Tier 3 per Spec 47 §R9).
       "lifecycle_status_history": ["lead_id", "from_status", "to_status", "transitioned_at", "detected_by", "permit_type", "event_date"],
     }
@@ -687,5 +721,5 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
   if (!lockResult.acquired) return;
 });
 
-// Export for testing (used by sync.logic.test.ts)
-module.exports = { deduplicateRecords };
+// Export for testing (used by sync.logic.test.ts + load-permits-occupancy.logic.test.ts)
+module.exports = { deduplicateRecords, mapRecord, cleanArea, CRITICAL_FIELDS };
