@@ -46,6 +46,7 @@ const {
   sqlAggregate,
 } = require('./lib/zoning-precedence');
 const mb = require('./lib/max-build');
+const optcfg = require('./lib/optimal-config'); // Spec 78 Phase 3A — optimal-config engine
 
 // §R2 — advisory lock = spec number.
 const ADVISORY_LOCK_ID = 65;
@@ -851,6 +852,189 @@ async function enrichExistingStructure(client, opts = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Optimal-config pass (Spec 78 Phase 3A) — JS-streaming. Unlike the SQL passes above, this consumes
+// the per-row pure engine `optimal-config.js#computeOptimalConfig`, so it STREAMS eligible parcels
+// (joined to neighbourhood_build_norms with a citywide fallback), computes in JS, and batch-UPDATEs.
+// Runs AFTER the SQL passes COMMIT (streamQuery uses a separate connection — it can't see uncommitted
+// txn writes), reading the max-build envelope + zoning caps they wrote.
+// ---------------------------------------------------------------------------
+
+const OPTCFG_WRITE_COLS = [
+  'opt_aor_storeys', 'opt_aor_gfa_sqm', 'opt_aor_units', 'opt_coa_storeys', 'opt_coa_gfa_sqm',
+  'opt_suite_type', 'opt_suite_fits_full', 'opt_binding_constraint', 'opt_config_confidence',
+  'optimal_config', 'nearby_builds_summary',
+];
+const OPTCFG_BATCH = 500;
+
+function numOrNull(v) {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** The streaming read: eligible parcels + the max-build/zoning inputs + the nbhd norms (per-nbhd with a
+ *  citywide-fallback CROSS JOIN). `full` recomputes all eligible; incremental does only the not-yet-configured. */
+function buildOptConfigSelectSql({ full = false, scopeWhere = 'TRUE' } = {}) {
+  const incrWhere = full ? '' : 'AND p.opt_config_confidence IS NULL';
+  return `
+    SELECT p.id, p.lot_size_sqm, p.frontage_m, p.depth_m, p.max_buildable_footprint_sqm,
+           p.bylaw_max_fsi, p.bylaw_max_coverage_pct, p.max_build_stories,
+           p.abuts_laneway, p.zoning_holding, p.is_through_lot, p.is_heritage_designated,
+           p.is_in_ravine_protection_area, p.exception_number, p.existing_greenspace_sqm,
+           p.existing_other_structures_sqm, p.existing_other_structures_count, p.lot_size_confidence,
+           p.neighbourhood_id, n.name AS neighbourhood_name,
+           (nbn.id IS NULL) AS used_citywide,
+           COALESCE(nbn.storeys_p50, cw.storeys_p50)                     AS storeys_p50,
+           COALESCE(nbn.storeys_p90, cw.storeys_p90)                     AS storeys_p90,
+           COALESCE(nbn.new_builds_5yr, cw.new_builds_5yr)               AS new_builds_5yr,
+           COALESCE(nbn.additions_5yr, cw.additions_5yr)                 AS additions_5yr,
+           COALESCE(nbn.renos_5yr, cw.renos_5yr)                         AS renos_5yr,
+           COALESCE(nbn.suites_5yr, cw.suites_5yr)                       AS suites_5yr,
+           COALESCE(nbn.demos_5yr, cw.demos_5yr)                         AS demos_5yr,
+           COALESCE(nbn.realized_fsi_p50, cw.realized_fsi_p50)           AS realized_fsi_p50,
+           COALESCE(nbn.build_ratio_p50, cw.build_ratio_p50)            AS build_ratio_p50,
+           COALESCE(nbn.existing_build_ratio_p25, cw.existing_build_ratio_p25) AS existing_build_ratio_p25,
+           COALESCE(nbn.existing_build_ratio_p50, cw.existing_build_ratio_p50) AS existing_build_ratio_p50,
+           COALESCE(nbn.coa_approved, cw.coa_approved)                   AS coa_approved,
+           COALESCE(nbn.coa_refused, cw.coa_refused)                     AS coa_refused,
+           COALESCE(nbn.coa_approval_rate, cw.coa_approval_rate)         AS coa_approval_rate,
+           COALESCE(nbn.window_start, cw.window_start)                   AS window_start,
+           COALESCE(nbn.window_end, cw.window_end)                       AS window_end,
+           COALESCE(nbn.sample_n, cw.sample_n)                           AS nbn_sample_n
+    FROM parcels p
+    LEFT JOIN neighbourhood_build_norms nbn ON nbn.neighbourhood_id = p.neighbourhood_id
+    LEFT JOIN neighbourhoods n ON n.id = p.neighbourhood_id
+    CROSS JOIN (SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL) cw
+    WHERE p.max_buildable_footprint_sqm IS NOT NULL AND p.lot_size_sqm > 0 AND (${scopeWhere}) ${incrWhere}`;
+}
+
+/** Map a streamed DB row to the optimal-config engine input object. */
+function mapRowToEngineInput(r) {
+  return {
+    lotSizeSqm: numOrNull(r.lot_size_sqm),
+    frontageM: numOrNull(r.frontage_m),
+    depthM: numOrNull(r.depth_m),
+    maxBuildableFootprintSqm: numOrNull(r.max_buildable_footprint_sqm),
+    fsiCap: numOrNull(r.bylaw_max_fsi),
+    coverageCapFrac: r.bylaw_max_coverage_pct != null ? numOrNull(r.bylaw_max_coverage_pct) / 100 : null,
+    // storeys: prefer the nbhd build-norm p50/p90; fall back to the parcel's own max_build_stories.
+    nbhdStoreysP50: numOrNull(r.storeys_p50) ?? numOrNull(r.max_build_stories),
+    nbhdStoreysP90: numOrNull(r.storeys_p90) ?? numOrNull(r.max_build_stories),
+    abutsLaneway: r.abuts_laneway === true,          // boolean source — engine's fallback gate
+    isHolding: r.zoning_holding === 'H',
+    isThroughLot: r.is_through_lot === true,
+    isHeritageFreeze: r.is_heritage_designated === true, // heritage → CoA for a suite (conservative)
+    isRavine: r.is_in_ravine_protection_area === true,
+    // 3A: existing greenspace is the open-yard proxy for rearYardAreaSqm; rearBehindMaxM null → the
+    // engine does an area-only suite fit (precise ST_Difference position geom is a Phase-3 refinement).
+    rearYardAreaSqm: numOrNull(r.existing_greenspace_sqm),
+    rearBehindMaxM: null,
+    existingAncillarySqm: numOrNull(r.existing_other_structures_sqm) || 0,
+    existingAccessorySuspected: (numOrNull(r.existing_other_structures_count) || 0) > 0,
+    lotSizeConfidence: r.lot_size_confidence,
+  };
+}
+
+function pct(x) { return x == null ? '?' : `${Math.round(Number(x) * 100)}%`; }
+
+/** §J nearby_builds_summary — a frozen snapshot of the (coalesced) nbhd build-norm row + a headline. */
+function buildNearbyBuildsSummary(r) {
+  if (r.nbn_sample_n == null) return null;
+  const where = r.used_citywide ? 'Citywide' : (r.neighbourhood_name || `Nbhd ${r.neighbourhood_id}`);
+  const ratio = r.build_ratio_p50 != null ? `, ${Math.round(Number(r.build_ratio_p50) * 100)}% of the max-build footprint` : '';
+  const headline = `${where}: ${r.new_builds_5yr || 0} new builds + ${r.additions_5yr || 0} additions + ${r.renos_5yr || 0} renos in 5 yrs; CoA ${pct(r.coa_approval_rate)} approval; typically ${r.storeys_p50 || '?'} storeys (p90 ${r.storeys_p90 || '?'})${ratio}.`;
+  return {
+    basis: r.used_citywide ? 'citywide_fallback' : 'neighbourhood',
+    neighbourhood_id: r.neighbourhood_id, window_start: r.window_start, window_end: r.window_end,
+    new_builds_5yr: r.new_builds_5yr, additions_5yr: r.additions_5yr, renos_5yr: r.renos_5yr,
+    suites_5yr: r.suites_5yr, demos_5yr: r.demos_5yr,
+    realized_fsi_p50: r.realized_fsi_p50, build_ratio_p50: r.build_ratio_p50,
+    existing_build_ratio_p25: r.existing_build_ratio_p25, existing_build_ratio_p50: r.existing_build_ratio_p50,
+    storeys_p50: r.storeys_p50, storeys_p90: r.storeys_p90,
+    coa_approved: r.coa_approved, coa_refused: r.coa_refused, coa_approval_rate: r.coa_approval_rate,
+    sample_n: r.nbn_sample_n, headline,
+  };
+}
+
+/** Turn a streamed row into the 11 flat+JSONB write values (or null on a per-row engine error). */
+function computeOptConfigRow(r) {
+  const cfg = optcfg.computeOptimalConfig(mapRowToEngineInput(r));
+  // Exception/site-specific provisions aren't parsed → never claim 'high' confidence (queued item 2).
+  let confidence = cfg.opt_config_confidence;
+  if (r.exception_number != null && confidence === 'high') confidence = 'medium';
+  const units = 1 + (cfg.opt_suite_fits_full ? 1 : 0);
+  const nearby = buildNearbyBuildsSummary(r); // null when the parcel has no build-norm sample
+  return [
+    cfg.as_of_right.main_storeys, cfg.as_of_right.main_gfa_sqm, units,
+    cfg.coa_upside.main_storeys, cfg.coa_upside.main_gfa_sqm,
+    cfg.opt_suite_type || 'none', cfg.opt_suite_fits_full, cfg.opt_binding_constraint, confidence,
+    JSON.stringify(cfg), nearby == null ? null : JSON.stringify(nearby), // SQL NULL, not the 'null' literal
+    r.id,
+  ];
+}
+
+/** Batched UPDATE … FROM (VALUES …). 12 params/row (11 cols + id); ~500 rows/batch. */
+async function flushOptConfigBatch(pool, batch) {
+  if (!batch.length) return 0;
+  const cols = OPTCFG_WRITE_COLS;
+  const perRow = cols.length + 1; // + id
+  const tuples = [];
+  const params = [];
+  for (let i = 0; i < batch.length; i++) {
+    const base = i * perRow;
+    tuples.push(`($${base + 1}::int, $${base + 2}::int, $${base + 3}::numeric, $${base + 4}::int, $${base + 5}::int, $${base + 6}::numeric, $${base + 7}::text, $${base + 8}::boolean, $${base + 9}::text, $${base + 10}::text, $${base + 11}::jsonb, $${base + 12}::jsonb)`);
+    // batch[i] is [storeys,gfa,units,coaStoreys,coaGfa,type,fits,binding,conf,cfgJson,nearbyJson,id]
+    // VALUES tuple order = (id, aor_storeys, aor_gfa, units, coa_storeys, coa_gfa, type, fits, binding, conf, cfg, nearby)
+    const row = batch[i];
+    params.push(row[11], row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10]);
+  }
+  const sql = `
+    UPDATE parcels p SET
+      opt_aor_storeys = v.opt_aor_storeys, opt_aor_gfa_sqm = v.opt_aor_gfa_sqm, opt_aor_units = v.opt_aor_units,
+      opt_coa_storeys = v.opt_coa_storeys, opt_coa_gfa_sqm = v.opt_coa_gfa_sqm,
+      opt_suite_type = v.opt_suite_type, opt_suite_fits_full = v.opt_suite_fits_full,
+      opt_binding_constraint = v.opt_binding_constraint, opt_config_confidence = v.opt_config_confidence,
+      optimal_config = v.optimal_config, nearby_builds_summary = v.nearby_builds_summary
+    FROM (VALUES ${tuples.join(',')})
+      AS v(id, opt_aor_storeys, opt_aor_gfa_sqm, opt_aor_units, opt_coa_storeys, opt_coa_gfa_sqm,
+           opt_suite_type, opt_suite_fits_full, opt_binding_constraint, opt_config_confidence,
+           optimal_config, nearby_builds_summary)
+    WHERE p.id = v.id`;
+  const res = await pool.query(sql, params);
+  return res.rowCount || 0;
+}
+
+async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE' } = {}) {
+  // Precondition: the citywide-fallback row MUST exist (compute-build-norms writes it unconditionally).
+  // Without it the SELECT's citywide CROSS JOIN yields 0 rows → the pass would silently no-op (review C1).
+  const cw = await pool.query(`SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL LIMIT 1`);
+  if (!cw.rowCount) {
+    throw new Error(`${TAG} optimal-config: no citywide neighbourhood_build_norms fallback row — run compute_build_norms (permits chain) first`);
+  }
+  const stats = { updated: 0, suite_fits: 0, conf_high: 0, conf_medium: 0, conf_low: 0, citywide: 0, errors: 0 };
+  let batch = [];
+  for await (const r of pipeline.streamQuery(pool, buildOptConfigSelectSql({ full, scopeWhere }), [], { batchSize: 200 })) {
+    let row;
+    try {
+      row = computeOptConfigRow(r);
+    } catch (err) {
+      stats.errors += 1;
+      pipeline.log.warn(TAG, `optimal-config engine error on parcel ${r.id}: ${err.message}`);
+      continue;
+    }
+    if (row[6]) stats.suite_fits += 1;                 // opt_suite_fits_full
+    if (row[8] === 'high') stats.conf_high += 1;
+    else if (row[8] === 'medium') stats.conf_medium += 1;
+    else stats.conf_low += 1;
+    if (r.used_citywide) stats.citywide += 1;
+    batch.push(row);
+    if (batch.length >= OPTCFG_BATCH) { stats.updated += await flushOptConfigBatch(pool, batch); batch = []; }
+  }
+  if (batch.length) stats.updated += await flushOptConfigBatch(pool, batch);
+  return stats;
+}
+
+// ---------------------------------------------------------------------------
 // Observability — row-derived verdict cascade (Spec 47 §8.2).
 // ---------------------------------------------------------------------------
 function verdictCascade(rows) {
@@ -944,6 +1128,11 @@ async function main(pool) {
       exResult = await enrichExistingStructure(client, { scopeWhere: 'TRUE', full, reno });
     });
 
+    // Fourth pass — optimal config (Spec 78 Phase 3A). Runs AFTER the txn COMMITS: it is a JS-streaming
+    // pass (consumes the per-row engine optimal-config.js) and reads the just-committed max-build
+    // envelope on a separate connection. Cross-chain read of neighbourhood_build_norms (permits chain).
+    const ocResult = await enrichOptimalConfig(pool, { full });
+
     const totalParcels = await pool
       .query('SELECT COUNT(*)::int AS n FROM parcels WHERE geom IS NOT NULL')
       .then((r) => r.rows[0].n);
@@ -1034,6 +1223,14 @@ async function main(pool) {
     auditRows.push({ metric: 'reno_bath_gfa_pct_applied', value: reno.bathPct, status: 'INFO' });
     auditRows.push({ metric: 'mislink_footprint_lot_tol_applied', value: reno.mislinkTol, status: 'INFO' });
     auditRows.push({ metric: 'storey_height_m_applied', value: storeyHeight, status: 'INFO' });
+    // --- Optimal config (Spec 78 Phase 3A) — config-tier/suite/confidence distribution; errors gated. ---
+    auditRows.push({ metric: 'optimal_config_enriched_count', value: ocResult.updated, status: 'INFO' });
+    auditRows.push({ metric: 'opt_suite_fits_full_count', value: ocResult.suite_fits, status: 'INFO' });
+    auditRows.push({ metric: 'opt_config_confidence_high_count', value: ocResult.conf_high, status: 'INFO' });
+    auditRows.push({ metric: 'opt_config_confidence_medium_count', value: ocResult.conf_medium, status: 'INFO' });
+    auditRows.push({ metric: 'opt_config_confidence_low_count', value: ocResult.conf_low, status: 'INFO' });
+    auditRows.push({ metric: 'opt_config_citywide_fallback_count', value: ocResult.citywide, status: 'INFO' });
+    auditRows.push({ metric: 'opt_config_engine_errors', value: ocResult.errors, threshold: '== 0', status: ocResult.errors > 0 ? 'FAIL' : 'INFO' });
     auditRows.push({ metric: 'enrich_parcels_duration_ms', value: Date.now() - t0, status: 'INFO' });
 
     pipeline.emitSummary({
@@ -1075,8 +1272,14 @@ async function main(pool) {
         // existing pass also reads pb.confidence + bf.geom/max_height_m.
         parcel_buildings: ['parcel_id', 'building_id', 'is_primary', 'confidence'],
         building_footprints: ['id', 'footprint_area_sqm', 'estimated_stories', 'max_height_m', 'geom'],
+        // Optimal-config pass (Spec 78 Phase 3A) — cross-chain read of the neighbourhood build-norms
+        // (id read for the used_citywide flag). neighbourhoods.avg_household_income +
+        // neighbourhood_storey_norms are read by the max-build pass (WF3-C2 LATERAL) — declared here.
+        neighbourhood_build_norms: ['id', 'neighbourhood_id', 'storeys_p50', 'storeys_p90', 'new_builds_5yr', 'additions_5yr', 'renos_5yr', 'suites_5yr', 'demos_5yr', 'realized_fsi_p50', 'build_ratio_p50', 'existing_build_ratio_p25', 'existing_build_ratio_p50', 'coa_approved', 'coa_refused', 'coa_approval_rate', 'window_start', 'window_end', 'sample_n'],
+        neighbourhood_storey_norms: ['neighbourhood_id', 'storeys_p50', 'storeys_p90'],
+        neighbourhoods: ['id', 'name', 'avg_household_income'],
       },
-      { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, ...mb.EXISTING_COLS, ...mb.SCENARIO_COLS, 'zoning_enriched_at'] },
+      { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, ...mb.EXISTING_COLS, ...mb.SCENARIO_COLS, ...OPTCFG_WRITE_COLS, 'zoning_enriched_at'] },
     );
 
     pipeline.log.info(TAG, `enriched ${result.updated} parcels (zone_class ${zonePct}%, gaps ${result.gaps}, ambiguous ${result.ambiguous}, conflicts ${result.conflicts})`);
@@ -1106,5 +1309,12 @@ module.exports = {
   buildExistingStructureUpdateSql,
   buildScenarioUpdateSql,
   enrichExistingStructure,
+  // Spec 78 Phase 3A — optimal-config pass.
+  OPTCFG_WRITE_COLS,
+  buildOptConfigSelectSql,
+  mapRowToEngineInput,
+  buildNearbyBuildsSummary,
+  computeOptConfigRow,
+  enrichOptimalConfig,
   verdictCascade,
 };

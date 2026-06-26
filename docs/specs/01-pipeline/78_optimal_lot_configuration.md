@@ -181,6 +181,44 @@ suite-fit-vs-current-building + depth-shrink, CoA storeys-not-footprint, through
 → gated, laneway preference, confidence degradation). Generated-SQL dual-path: the engine is the single
 JS source the Phase-3 `enrich-parcels.js` pass calls (no TS twin).
 
+## §Phase-3A — Optimal-Config Enrich Pass (Behavioral Contract)
+
+The 4th `enrich-parcels.js` pass writes the §I headline columns + §J `nearby_builds_summary` per
+residential parcel by calling the Phase-2 engine. **(3B = imagery rename + §G/§H/§L/§M degrade; 3C =
+comparable-builds kNN — separate commits.)**
+
+### P3A.1 — Architecture: a JS-streaming pass
+Unlike the SQL-generated passes (zoning / max-build / existing-structure, all in one `withTransaction`),
+the optimal-config pass consumes the **per-row** pure engine `optimal-config.js#computeOptimalConfig`.
+It therefore **streams** eligible parcels (`pipeline.streamQuery`), maps each row → engine input, and
+**batch-UPDATEs** (`UPDATE … FROM (VALUES …)`, ~500/batch). It runs **AFTER the SQL passes COMMIT** —
+`streamQuery` uses a separate connection, so it reads the just-committed max-build envelope (a same-txn
+read would be invisible). Eligibility: `max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0`;
+`--full` recomputes all, incremental does only `opt_config_confidence IS NULL`.
+
+### P3A.2 — Inputs (parcels + neighbourhood_build_norms, citywide fallback)
+The streaming SELECT joins `neighbourhood_build_norms` on `neighbourhood_id` with a **citywide-fallback
+CROSS JOIN** (`COALESCE(nbn.*, cw.*)`, `used_citywide = nbn.id IS NULL`). Maps: coverage % → fraction;
+`bylaw_max_fsi` → `fsiCap` (NULL guarded by the engine); storeys = nbhd p50/p90 falling back to the
+parcel's own `max_build_stories`; `abuts_laneway` (boolean → the engine's boolean gate); `zoning_holding
+= 'H'` → `isHolding`; `is_heritage_designated` → `isHeritageFreeze` (heritage suite → CoA, conservative);
+`is_through_lot`, `is_in_ravine_protection_area`; `existing_greenspace_sqm` → `rearYardAreaSqm` (open-yard
+proxy); **`rearBehindMaxM = null` → engine area-only suite fit** (precise ST_Difference position geometry
+is a Phase-3 refinement). `exception_number` present → confidence never claims `high` (unparsed provision).
+
+### P3A.3 — Outputs (§I + §J)
+`opt_aor_storeys/gfa_sqm/units` (units = 1 + suite), `opt_coa_storeys/gfa_sqm` (p90 storeys, same
+footprint), `opt_suite_type` (garden/laneway/none), `opt_suite_fits_full`, `opt_binding_constraint`,
+`opt_config_confidence`, `optimal_config` (full engine result JSONB), `nearby_builds_summary` (frozen
+`neighbourhood_build_norms` snapshot + a human headline). Disjoint column set (own pass — the
+max-build/existing-structure columns are untouched). Idempotent.
+
+### P3A.4 — Observability
+INFO audit rows: `optimal_config_enriched_count`, `opt_suite_fits_full_count`,
+`opt_config_confidence_high/medium/low_count`, `opt_config_citywide_fallback_count`; **gated**
+`opt_config_engine_errors` (`== 0`, else FAIL — a per-row engine throw is caught, counted, and never
+aborts the stream). Spec 48 §3.6 row-derived cascade.
+
 ## 2. Operating Boundaries
 
 ### Target Files
