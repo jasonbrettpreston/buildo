@@ -1,6 +1,91 @@
 # Active Review Follow-ups (Consolidated)
 _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full prose history of resolved batches recoverable via `git log -p docs/reports/review_followups.md`._
 
+
+---
+
+## Weekly Triage — 2026-06-26
+
+**Triage officer:** Automated weekly routine (scheduled agent, Spec 05 §6)
+**Run date:** 2026-06-26
+**Prior triage:** Never — no `last_reviewed` field on any item; all items are zombies.
+**Zombie threshold:** added/last_reviewed > 2026-05-29 (4 weeks before today)
+
+### Queue health
+
+| Metric | Count |
+|---|---|
+| Active sections (non-resolved) | 46 |
+| Individual deferred items | ~260+ |
+| Items with a `last_reviewed` field | 0 |
+| **Zombie items flagged** | **ALL** — most recent addition 2026-05-20 (37 days ago) |
+| Items refreshed `last_reviewed: 2026-06-26` | all (this commit) |
+
+---
+
+### PROMOTE → WF3 active task (6 items)
+
+These are HIGH/CRIT severity items with a clear implementation path whose deferred destination has either arrived or the issue is demonstrably production-relevant.
+
+| Ref | Severity | Section | Item | Action |
+|---|---|---|---|---|
+| **P1+P2** | HIGH×3 | WF3 (2026-05-08) `get-lead-feed.ts` | `clampedLimit = NaN` on missing limit (`LIMIT $5::int` errors at PG); `clampedKm = NaN` on missing radius (`ST_DWithin` returns empty feed silently); `LEFT JOIN wsib_per_entity` WHERE clause acts as INNER JOIN → drops 30–50% builder leads | Bundle as WF3 "lead-feed-nan-and-join-hardening". |
+| **P3** | HIGH×2+MED | WF2 #3 (2026-05-08) `cost-model-shared.js` | `\|\|` → `??` for storeys, GFA allocation pct, complexity_factor — falsy-`0` inflates cost estimates on valid 0-valued permits | WF3 "cost-model-falsy-zero-bundle". |
+| **P4** | HIGH (gate) | WF3 #3 (2026-05-20) `get-lead-feed.ts` CoA arm | Missing GIST spatial index on `coa_applications.(latitude,longitude)` — 4.4 s seq scan confirmed via EXPLAIN ANALYZE; **explicit gate condition before flipping LEAD_FEED_DISABLE_COA off in prod** | WF3 "coa-lead-feed-spatial-index" (migration only). |
+| **P5** | HIGH | WF1 R5.4 item #56 (2026-05-14) `classify-coa-scope.js` | `scope_classified_at` bumped unconditionally every run — all CoAs re-enter cursor daily; `records_updated` inflated; chain stability degraded | WF3 "classify-coa-scope-idempotency" (add `IS DISTINCT FROM` guard). |
+| **P6** | CRIT | Phase E.2 item #110 (2026-05-14) | `lifecycle_status_history` writes missing from `classify-lifecycle-phase.js` — Spec 42 §6.7 status-ledger contract violated; Phase F (the deferred destination) is now fully DELIVERED (F.1–F.4) | Promote to WF3. Deferred destination shipped; obligation is now overdue. |
+
+---
+
+### KILL (15 items)
+
+NIT/cosmetic/symptom-only items where cost of tracking > cost of ever fixing.
+
+| Ref | Section | Item | Reason |
+|---|---|---|---|
+| K1 | WF1 Phase B R5.2 item #23 | `'—'` em dash for `loop_marker` vs NULL — cosmetic CSV authoring convention | Zero consumer impact; perpetually deferred. |
+| K2 | Phase C R5.1 item #38 | `String(input.application_number)` redundant cast | NIT; no correctness gap. |
+| K3 | Phase B R5.2 item #48 | `lt` alias reuse in UNION branches | PG scopes per-branch; cosmetic only. |
+| K4 | WF3 Spec 79 load-parcels item #77 | `new Date()` per-record in expiry filter (~480K allocs) | Micro-perf NIT; hoist trivially if/when the loop is touched. |
+| K5 | R5.6 link-coa.js item #84 | Redundant `IS DISTINCT FROM cleared.an` in Step 3 | Cosmetic belt-and-suspenders; documented as intentional. |
+| K6 | R5.6 link-coa.js item #85 | `staleBackRefsCleared` outer-scope variable assignment | Cosmetic style; works correctly. |
+| K7 | R5.6 link-coa.js item #89 | `actualCandidates` variable name + dry-run log wording | NIT. |
+| K8 | Phase E.1 item #100 | `classifyBldLed` precedence unintuitive (comment-only suggestion) | Add an inline comment if/when the function is next touched; not worth a standalone entry. |
+| K9 | Phase E.1 item #101 | `SKIP_PHASES_SQL` hardcoded — generate programmatically | Pre-existing NIT; low blast radius. |
+| K10 | Phase E.5 item #144 | `skipEmit: false` pre-existing redundancy | Functional no-op; pre-existing pattern project-wide. |
+| K11 | WF1 #C | Skeleton loading placeholders not chevron-shaped | V2 visual polish; never Maestro-blocking; perpetually deferred. |
+| K12 | Frontend FC3 | §3.3 onboarding completion race (LOW, symptom-driven) | Never observed in production or Maestro; speculative race in low-contention flow. |
+| K13 | Active Open Items | §7.2 lint check comment overstates enforcement (inert `src/` guard) | The comment is wrong; fix the comment inline on next touch rather than tracking. |
+| K14 | Active Open Items | `feedback_wf3_granularity.md` SHA chain fragile after rebase | SHA chains in feedback docs are illustrative; not load-bearing. |
+| K15 | R5.4 classify-coa-trades item #64 | `IS DISTINCT FROM` on `trade_classified_at` — "zero practical benefit" already decided | Decision rationale already explicit. Remove tracking entry. |
+
+---
+
+### CONVERT → `tasks/lessons.md` (4 items)
+
+Recurring failure modes that belong in `tasks/lessons.md` (Spec 05 §2 destination: "gotcha that doesn't fit a spec but is project-specific").
+
+| Ref | Lesson | Source |
+|---|---|---|
+| C1 | **Adversarial false-positive rate.** Gemini/DeepSeek produce ~40% false positives on spec-sync/doc-amendment WFs. Run the 3-step HEAD check (read file:line → `git log -- <file>` → grep in current HEAD) before treating any adversarial finding as actionable. Use code-reviewer as primary signal; treat adversarial output as a "did we miss anything" check only. | Adversarial Pattern Notes; repeatedly validated across H1–H5, M1–M3, F.1–F.3 diff rounds. |
+| C2 | **Worktree isolation defaults to last commit.** `isolation: 'worktree'` spawns at the HEAD commit. Uncommitted/untracked files in the working tree are invisible to the worktree agent. When a reviewer reports "file missing," verify the file is committed before filing the finding. Same false-positive appeared at E.1 #109, E.4 #134, WF3 Pass-2 #90, and F.3 diff-stage. | Recurring false-positive pattern across 4+ reviews. |
+| C3 | **`SET LOCAL statement_timeout` in non-transactional migrations is a no-op.** CONCURRENTLY-containing migration files are split into individual statements, each in its own implicit transaction. `SET LOCAL` scope is the current transaction; it reverts on commit. The timeout never applies. Move `SET LOCAL` into each DO block that needs it, or rely on the DB default. | Mig 139 HIGH, raised again in plan review for mig 138. Repeatedly flagged by reviewers who misread it as session-level `SET`. |
+| C4 | **Parallel adversarial IMPL review: both reviewers needed.** On WF3 #2 IMPL review, Independent reviewed PASS (9/9) but missed a CRIT that DeepSeek caught (variable hoisting). On WF3 #3, DeepSeek caught column-list drift but missed the CRIT that Independent caught (terminal filter no-op). Each reviewer catches CRITs the other misses. A single-reviewer PASS on IMPL review is insufficient — always run two in parallel. | WF3 #2 item #107 + WF3 #3 post-mortem. |
+
+---
+
+### DEFER — all remaining items (triage_after: 2026-07-24)
+
+All items not listed above are refreshed. Notable high-severity defers that should be watched at the next triage:
+
+- **`compute-cost-estimates.js` `scopeMatrix` missing `.trim()`** — Gemini HIGH (WF3 2026-05-08); one-line fix preventing silent cost inflation when DB scope_tags have trailing whitespace. Pull on next `compute-cost-estimates.js` touch.
+- **WF2 Spec 93 WF3-A/B/C** — backup-email bridge, auth-state reset placement, Sentry v8 upgrade — planning docs at `.cursor/deferred_task_spec93_*.md`; still open.
+- **Spec 95 internal contradictions** (§2.4 vs §9 Step 6; manufacturer PATCH block) — spec hardening WF needed before next onboarding feature work.
+- **`backfill-realtor-permit-trades.js` ACTIVE_STATUSES drift** (DeepSeek HIGH, 2026-05-11) — extract to shared module before next classify-permits.js change touches ACTIVE_STATUSES.
+- **`lead_views` missing composite index** (WF2 #4 2026-05-08) — grows with usage; pull before Lead Inspector is used heavily.
+- **`classify-permits.js` classifyPermit Tier 2/3 architectural drift** (Gemini CRIT, WF3 realtor sub-gating 2026-05-09) — large refactor; escalate if Tier 3 rules are ever re-activated.
+- **Spec 86/91/95/99 — mig 118+119 checksum drift (14 prior migrations)** — LOW but operationally messy; single WF3 with explicit operator confirmation can close it.
+
 ---
 
 ## Phase F.4 (Lead Inspector CoA Classification Panel) — diff-stage 4-reviewer DEFERs (2026-05-17)
