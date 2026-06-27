@@ -23,14 +23,14 @@
   "reno_kitchen_gfa_pct": {
     "default": 0.15,
     "type": "number",
-    "description": "Spec 65 §6 (Phase 2) — kitchen-reno floor area as a fraction of existing_footprint_sqm (cur_est_kitchen_gfa_sqm). CONSUMED by enrich-parcels.js. Operator-tunable.",
+    "description": "Spec 65 §6 (Phase 2) — kitchen-reno floor area as a fraction of the current-home GFA (cur_est_kitchen_gfa_sqm). CONSUMED by enrich-parcels.js. Operator-tunable.",
     "min": 0.01,
     "max": 1
   },
   "reno_bath_gfa_pct": {
     "default": 0.07,
     "type": "number",
-    "description": "Spec 65 §6 (Phase 2) — bathroom-reno floor area as a fraction of existing_footprint_sqm (cur_est_bath_gfa_sqm). CONSUMED by enrich-parcels.js. Operator-tunable.",
+    "description": "Spec 65 §6 (Phase 2) — bathroom-reno floor area as a fraction of the current-home GFA (cur_est_bath_gfa_sqm). CONSUMED by enrich-parcels.js. Operator-tunable.",
     "min": 0.01,
     "max": 1
   },

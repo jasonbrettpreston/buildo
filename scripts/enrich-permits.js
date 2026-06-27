@@ -633,15 +633,15 @@ async function main(pool) {
     auditRows.push({ metric: `${prefix}_neighbourhood_premium_above_1_count`, value: me.premium_above_1, status: 'INFO' });
     // §8e existing-structure propagation observability (Spec 65 Phase 1 — INFO; never gates verdict).
     const ex = (await pool.query(`
-      SELECT COUNT(*) FILTER (WHERE existing_footprint_sqm IS NOT NULL)::int          AS with_footprint,
-             COUNT(*) FILTER (WHERE existing_gfa_sqm IS NOT NULL)::int                AS with_gfa,
+      SELECT COUNT(*) FILTER (WHERE imagery_roof_footprint_sqm IS NOT NULL)::int      AS with_footprint,
+             COUNT(*) FILTER (WHERE imagery_roof_gfa_sqm IS NOT NULL)::int            AS with_gfa,
              COUNT(*) FILTER (WHERE existing_structure_confidence = 'high')::int      AS conf_high,
              COUNT(*) FILTER (WHERE existing_structure_confidence = 'low')::int       AS conf_low,
              COUNT(*) FILTER (WHERE existing_greenspace_sqm IS NOT NULL)::int         AS with_greenspace,
              COUNT(*) FILTER (WHERE existing_data_quality_flag = '${mb.MISLINK_FLAG_FOOTPRINT_EXCEEDS_LOT}')::int AS mislinked
       FROM ${cfg.table}`)).rows[0];
-    auditRows.push({ metric: `${prefix}_existing_footprint_count`, value: ex.with_footprint, status: 'INFO' });
-    auditRows.push({ metric: `${prefix}_existing_gfa_count`, value: ex.with_gfa, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_imagery_roof_footprint_count`, value: ex.with_footprint, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_imagery_roof_gfa_count`, value: ex.with_gfa, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_structure_confidence_high_count`, value: ex.conf_high, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_structure_confidence_low_count`, value: ex.conf_low, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_greenspace_count`, value: ex.with_greenspace, status: 'INFO' });

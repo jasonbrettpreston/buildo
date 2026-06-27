@@ -219,6 +219,25 @@ INFO audit rows: `optimal_config_enriched_count`, `opt_suite_fits_full_count`,
 `opt_config_engine_errors` (`== 0`, else FAIL — a per-row engine throw is caught, counted, and never
 aborts the stream). Spec 48 §3.6 row-derived cascade.
 
+## §Phase-3B — Imagery-Roof Honesty Rename (Behavioral Contract)
+
+`existing_footprint_sqm` / `existing_gfa_sqm` (massing/imagery roof footprint + footprint×2) are
+unreliable per-parcel (±20–38%, tree-contaminated — the massing-footprint-reliability investigation).
+Their `existing_*` names falsely presented them as authoritative existing-structure sizes. **Migration
+201 renames them to `imagery_roof_footprint_sqm` / `imagery_roof_gfa_sqm` across parcels + permits +
+coa_applications** — the column NAME now tells the truth (transparency initiative).
+
+- **Array-driven:** `EXISTING_COLS` (`max-build.js`) is the single source for the existing-structure
+  UPDATE + the permits/coa propagation + orphan-nullify + emitMeta — renaming its two entries (plus the
+  `buildExistingStructureSql` CTE aliases that feed it) flows the rename through every surface.
+- **Cost-model SAFETY (the load-bearing fence):** the cost-model `geom_basis` does **NOT** read these
+  columns — WF3-A remapped `ARCHETYPE_GEOM_BASIS` ADD/BAS→`cur_floor_gfa_sqm`, INT→`cur_pot_2story_gfa_sqm`.
+  `imagery-roof-rename.regression.test.ts` locks that decoupling (JS↔TS) so a future re-coupling — which
+  would null ADD/BAS/INT cost estimates across 486K parcels — fails the test first.
+- **Untouched:** the max-build heritage fallback's `existing_footprint_sqm` is a query-LOCAL CTE alias
+  recomputed from massing (not the persisted column) — intentionally not renamed.
+- **(§G/§H neighbourhood-calibrated cur-GFA range = deferred — blocked on the residential_sqm backfill.)**
+
 ## 2. Operating Boundaries
 
 ### Target Files

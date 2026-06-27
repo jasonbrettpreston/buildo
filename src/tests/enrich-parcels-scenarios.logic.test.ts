@@ -63,8 +63,8 @@ describe('scenarios — SQL plumbing', () => {
     expect(sql).toMatch(/g\.eff_footprint \* 2, 2\) END AS cur_pot_2story_gfa_sqm/);
     expect(sql).toMatch(/s\.max_build_stories >= 3 THEN ROUND\(g\.eff_footprint \* 3, 2\) END AS cur_pot_3story_gfa_sqm/);
     expect(sql).toMatch(/WHEN s\.max_build_stories >= 3 THEN '1-3' ELSE '1-2' END\) END AS cur_gfa_range_basis/);
-    // existing_gfa_sqm is the forward-compat 2-storey default (footprint × 2), not the old ×stories.
-    expect(sql).toMatch(/g\.eff_footprint \* 2, 2\) END AS existing_gfa_sqm/);
+    // imagery_roof_gfa_sqm (mig 201 rename) is the forward-compat 2-storey default (footprint × 2).
+    expect(sql).toMatch(/g\.eff_footprint \* 2, 2\) END AS imagery_roof_gfa_sqm/);
   });
 
   it('sibling buildScenarioUpdateSql guards every SCENARIO_COL, reuses parcel_existing_struct', () => {

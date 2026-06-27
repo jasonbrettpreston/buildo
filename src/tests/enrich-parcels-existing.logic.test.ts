@@ -21,7 +21,7 @@ describe('existing-structure — column set (Phase 1 regression lock)', () => {
     // WF3-A: existing_stories/existing_height_m STAY in the array (the array-driven UPDATE is what
     // NULLs their retired values); existing_data_quality_flag added for the mislink sentinel.
     expect(mb.EXISTING_COLS).toEqual([
-      'existing_footprint_sqm', 'existing_stories', 'existing_height_m', 'existing_gfa_sqm',
+      'imagery_roof_footprint_sqm', 'existing_stories', 'existing_height_m', 'imagery_roof_gfa_sqm', // mig 201 rename (Spec 78 §3B)
       'existing_width_m', 'existing_length_m', 'existing_structure_confidence',
       'existing_other_structures_count', 'existing_other_structures_sqm', 'existing_greenspace_sqm',
       'existing_data_quality_flag',
@@ -88,7 +88,7 @@ describe('existing-structure — SQL plumbing (separate pass)', () => {
     expect(sql).toMatch(/NULL::numeric AS existing_height_m/);
     // the old GREATEST(1, COALESCE(pr.p_stories, 1)) floor-at-1 formula is RETIRED.
     expect(sql).not.toMatch(/GREATEST\(1, COALESCE\(pr\.p_stories, 1\)\)/);
-    expect(sql).toMatch(/g\.eff_footprint \* 2, 2\) END AS existing_gfa_sqm/);
+    expect(sql).toMatch(/g\.eff_footprint \* 2, 2\) END AS imagery_roof_gfa_sqm/);
   });
 
   it('confidence flag derives from numeric pb.confidence (>= threshold → high)', () => {

@@ -74,10 +74,10 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 1 existing-structure — live DB 
       expect(res.updated).toBeGreaterThanOrEqual(1);
 
       const p = await get(c, TEST_PARCEL + 1);
-      expect(Number(p.existing_footprint_sqm)).toBe(50);
+      expect(Number(p.imagery_roof_footprint_sqm)).toBe(50);
       expect(p.existing_stories).toBeNull();  // WF3-A: RETIRED (tree-contaminated)
       expect(p.existing_height_m).toBeNull(); // WF3-A: RETIRED (tree-contaminated)
-      expect(Number(p.existing_gfa_sqm)).toBe(100); // WF3-A: footprint × 2 (forward-compat 2-storey default)
+      expect(Number(p.imagery_roof_gfa_sqm)).toBe(100); // WF3-A: footprint × 2 (forward-compat 2-storey default)
       expect(Number(p.existing_width_m)).toBeGreaterThan(0);
       expect(Number(p.existing_length_m)).toBeGreaterThan(Number(p.existing_width_m)); // 10m > 5m
       expect(p.existing_structure_confidence).toBe('high');
@@ -107,7 +107,7 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 1 existing-structure — live DB 
       await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true });
       const p = await get(c, TEST_PARCEL + 2);
       expect(p.existing_structure_confidence).toBe('low');
-      expect(Number(p.existing_footprint_sqm)).toBe(50); // still emitted
+      expect(Number(p.imagery_roof_footprint_sqm)).toBe(50); // still emitted
       await c.query('ROLLBACK');
     } finally { c.release(); }
   });
@@ -123,7 +123,7 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 1 existing-structure — live DB 
       const p = await get(c, TEST_PARCEL + 3);
       // The retired floor-at-1 intent ("a bungalow never gets GFA 0") now lives on cur_floor_gfa_sqm.
       expect(Number(p.cur_floor_gfa_sqm)).toBe(80);   // = footprint, non-zero regardless of massing stories
-      expect(Number(p.existing_gfa_sqm)).toBe(160);   // WF3-A: footprint × 2 (was 80 × GREATEST(1,0))
+      expect(Number(p.imagery_roof_gfa_sqm)).toBe(160);   // WF3-A: footprint × 2 (was 80 × GREATEST(1,0))
       expect(p.existing_stories).toBeNull();          // retired
       await c.query('ROLLBACK');
     } finally { c.release(); }
@@ -151,8 +151,8 @@ describe.skipIf(!dbAvailable())('Spec 65 Phase 1 existing-structure — live DB 
       await insParcel(c, TEST_PARCEL + 5, poly(0, 0, 0.0002, 0.0002), 490);
       await enrichExistingStructure(c, { scopeWhere: SCOPE, full: true });
       const p = await get(c, TEST_PARCEL + 5);
-      expect(p.existing_footprint_sqm).toBeNull();
-      expect(p.existing_gfa_sqm).toBeNull();
+      expect(p.imagery_roof_footprint_sqm).toBeNull();
+      expect(p.imagery_roof_gfa_sqm).toBeNull();
       expect(p.existing_structure_confidence).toBeNull();
       expect(p.existing_other_structures_count).toBeNull();
       expect(p.existing_greenspace_sqm).toBeNull();

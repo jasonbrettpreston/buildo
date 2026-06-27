@@ -419,6 +419,9 @@ massing AS (
   -- heritage-freeze uses the PRIMARY building (SUM footprint, MAX storeys; DeepSeek multi-primary).
   -- existing_total_footprint_sqm = ALL buildings (incl. sheds/detached garages) — for the Phase-3
   -- accessory yard/greenspace math, so it isn't optimistic about an empty rear yard.
+  -- NB: existing_footprint_sqm here is a query-LOCAL massing intermediate (recomputed from
+  -- building_footprints), feeding ONLY the max-build heritage fallback below — NOT the persisted column
+  -- (renamed to imagery_roof_footprint_sqm by mig 201; written by the separate existing-structure pass).
   SELECT pb.parcel_id AS pid,
          SUM(bf.footprint_area_sqm) FILTER (WHERE pb.is_primary)::numeric AS existing_footprint_sqm,
          MAX(bf.estimated_stories) FILTER (WHERE pb.is_primary) AS existing_stories,
@@ -693,7 +696,7 @@ async function enrichMaxBuild(client, opts = {}) {
 function buildExistingStructureSql({ scopeWhere = 'TRUE', full = false, reno = {} }) {
   const incremental = full
     ? 'TRUE'
-    : '(p.existing_footprint_sqm IS NULL OR EXISTS (SELECT 1 FROM parcel_max_build z WHERE z.parcel_id = p.parcel_id))';
+    : '(p.imagery_roof_footprint_sqm IS NULL OR EXISTS (SELECT 1 FROM parcel_max_build z WHERE z.parcel_id = p.parcel_id))';
   const confMin = mb.EXISTING_CONFIDENCE_HIGH_MIN;
   // Phase-2 scenario factors (externalized logic-vars; defaults from max-build.js).
   const coaUplift = Number(reno.coaUplift ?? mb.RENO_COA_UPLIFT_PCT_DEFAULT);
@@ -746,12 +749,13 @@ SELECT s.pid, s.parcel_id,
   -- WF3-A mislink guard: a primary footprint larger than the lot means the WRONG building was linked
   -- (block/neighbour attribution). g.eff_footprint is NULL when mislinked → the WHOLE existing
   -- structure resolves NULL; existing_data_quality_flag records why. Footprint is otherwise trusted.
-  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(g.eff_footprint, 2) END AS existing_footprint_sqm,
+  -- imagery_roof_footprint_sqm (mig 201 rename): massing roof footprint — imagery, ±20–38% unreliable.
+  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(g.eff_footprint, 2) END AS imagery_roof_footprint_sqm,
   NULL::integer AS existing_stories,   -- RETIRED (WF3-A): massing estimated_stories tree-contaminated (mode 3 storeys on bungalows)
   NULL::numeric AS existing_height_m,  -- RETIRED (WF3-A): massing max_height_m catches canopy, not roof (bungalows to 85-95 m)
-  -- existing_gfa_sqm: forward-compat default = the typical 2-storey menu option (= cur_pot_2story_gfa_sqm).
+  -- imagery_roof_gfa_sqm (mig 201 rename): imagery roof footprint × 2 (typical 2-storey menu option).
   -- No live consumer today (cost model computes GFA from building_footprints); kept honest (NULL on mislink).
-  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(g.eff_footprint * 2, 2) END AS existing_gfa_sqm,
+  CASE WHEN g.eff_footprint IS NOT NULL THEN ROUND(g.eff_footprint * 2, 2) END AS imagery_roof_gfa_sqm,
   CASE WHEN m.mislink THEN NULL ELSE ROUND(LEAST(d.side1, d.side2)::numeric, 2) END AS existing_width_m,
   CASE WHEN m.mislink THEN NULL ELSE ROUND(GREATEST(d.side1, d.side2)::numeric, 2) END AS existing_length_m,
   CASE WHEN m.mislink THEN 'low'
@@ -830,8 +834,8 @@ async function enrichExistingStructure(client, opts = {}) {
   const stats = await client.query(`
     SELECT
       COUNT(*)::int AS scoped,
-      COUNT(*) FILTER (WHERE existing_footprint_sqm IS NOT NULL)::int AS with_footprint,
-      COUNT(*) FILTER (WHERE existing_gfa_sqm IS NOT NULL)::int       AS with_gfa,
+      COUNT(*) FILTER (WHERE imagery_roof_footprint_sqm IS NOT NULL)::int AS with_footprint,
+      COUNT(*) FILTER (WHERE imagery_roof_gfa_sqm IS NOT NULL)::int       AS with_gfa,
       COUNT(*) FILTER (WHERE existing_width_m IS NOT NULL AND existing_length_m IS NOT NULL)::int AS with_dims,
       COUNT(*) FILTER (WHERE existing_structure_confidence = 'high')::int AS conf_high,
       COUNT(*) FILTER (WHERE existing_structure_confidence = 'low')::int  AS conf_low,
@@ -1199,8 +1203,8 @@ async function main(pool) {
     auditRows.push({ metric: 'rear_suite_permission_coa_required_count', value: mbResult.suite_coa, status: 'INFO' });
     // --- Existing structure (Spec 65 Phase 1) — all INFO, never gated (NULL on no-massing). ---
     auditRows.push({ metric: 'existing_structure_enriched_count', value: exResult.updated, status: 'INFO' });
-    auditRows.push({ metric: 'existing_footprint_count', value: exResult.with_footprint, status: 'INFO' });
-    auditRows.push({ metric: 'existing_gfa_count', value: exResult.with_gfa, status: 'INFO' });
+    auditRows.push({ metric: 'imagery_roof_footprint_count', value: exResult.with_footprint, status: 'INFO' });
+    auditRows.push({ metric: 'imagery_roof_gfa_count', value: exResult.with_gfa, status: 'INFO' });
     auditRows.push({ metric: 'existing_dims_count', value: exResult.with_dims, status: 'INFO' });
     auditRows.push({ metric: 'existing_structure_confidence_high_count', value: exResult.conf_high, status: 'INFO' });
     auditRows.push({ metric: 'existing_structure_confidence_low_count', value: exResult.conf_low, status: 'INFO' });

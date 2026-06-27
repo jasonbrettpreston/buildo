@@ -54,7 +54,7 @@ describe.skipIf(!dbAvailable())('Spec 65 WF3-A existing-structure honesty — li
       const p = await get(c, TEST_PARCEL + 1);
       expect(p.existing_stories).toBeNull();   // not 7
       expect(p.existing_height_m).toBeNull();  // not 22.1
-      expect(Number(p.existing_footprint_sqm)).toBe(80); // footprint trusted
+      expect(Number(p.imagery_roof_footprint_sqm)).toBe(80); // footprint trusted
       expect(p.existing_data_quality_flag).toBeNull();   // footprint 80 < lot 490 → not a mislink
       await c.query('ROLLBACK');
     } finally { c.release(); }
@@ -69,8 +69,8 @@ describe.skipIf(!dbAvailable())('Spec 65 WF3-A existing-structure honesty — li
       const p = await get(c, TEST_PARCEL + 2);
       expect(p.existing_data_quality_flag).toBe('footprint_exceeds_lot');
       expect(p.existing_structure_confidence).toBe('low');
-      expect(p.existing_footprint_sqm).toBeNull();   // whole structure NULLed — not this parcel's building
-      expect(p.existing_gfa_sqm).toBeNull();
+      expect(p.imagery_roof_footprint_sqm).toBeNull();   // whole structure NULLed — not this parcel's building
+      expect(p.imagery_roof_gfa_sqm).toBeNull();
       expect(p.existing_width_m).toBeNull();
       expect(p.cur_floor_gfa_sqm).toBeNull();
       expect(p.cur_pot_2story_gfa_sqm).toBeNull();

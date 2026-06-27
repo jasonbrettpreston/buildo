@@ -255,10 +255,10 @@ const LOT_MAXBUILD_COLS = [...LOT_MAXBUILD_INPUT_COLS, ...LOT_MAXBUILD_OUTPUT_CO
 // link-massing writes 0.95 (centroid-in-parcel) / 0.60 (nearest); 0.90 cleanly splits them.
 const EXISTING_CONFIDENCE_HIGH_MIN = 0.90;
 const EXISTING_COLS = [
-  'existing_footprint_sqm',         // primary footprint (ROUND 2)
+  'imagery_roof_footprint_sqm',     // primary roof footprint from massing (ROUND 2) — imagery, ±20–38% (mig 201 rename)
   'existing_stories',               // primary estimated_stories (height-derived ≈ h/3)
   'existing_height_m',              // primary max_height_m
-  'existing_gfa_sqm',               // footprint × GREATEST(1, stories) (ROUND 2)
+  'imagery_roof_gfa_sqm',           // imagery roof footprint × GREATEST(1, stories) (ROUND 2) (mig 201 rename)
   'existing_width_m',               // shorter side of ST_OrientedEnvelope, metres (ROUND 2)
   'existing_length_m',              // longer side, metres (ROUND 2)
   'existing_structure_confidence',  // TEXT high/low from pb.confidence
