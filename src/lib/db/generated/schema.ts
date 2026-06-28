@@ -145,6 +145,48 @@ export const neighbourhoodBuildNorms = pgTable("neighbourhood_build_norms", {
 	unique("neighbourhood_build_norms_neighbourhood_id_key").on(table.neighbourhoodId),
 ]);
 
+export const notifications = pgTable("notifications", {
+	id: serial().primaryKey().notNull(),
+	userId: varchar("user_id", { length: 100 }).notNull(),
+	type: varchar({ length: 50 }).notNull(),
+	title: varchar({ length: 200 }),
+	body: text(),
+	permitNum: varchar("permit_num", { length: 30 }),
+	tradeSlug: varchar("trade_slug", { length: 50 }),
+	channel: varchar({ length: 20 }).default('in_app').notNull(),
+	isRead: boolean("is_read").default(false).notNull(),
+	isSent: boolean("is_sent").default(false).notNull(),
+	sentAt: timestamp("sent_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_notifications_user_created").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("text_ops")),
+	index("idx_notifications_user_read").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.isRead.asc().nullsLast().op("bool_ops")),
+]);
+
+export const permitParcels = pgTable("permit_parcels", {
+	id: serial().primaryKey().notNull(),
+	permitNum: varchar("permit_num", { length: 30 }).notNull(),
+	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
+	parcelId: integer("parcel_id").notNull(),
+	matchType: varchar("match_type", { length: 30 }).notNull(),
+	confidence: numeric({ precision: 3, scale:  2 }).notNull(),
+	linkedAt: timestamp("linked_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_permit_parcels_parcel").using("btree", table.parcelId.asc().nullsLast().op("int4_ops")),
+	index("idx_permit_parcels_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.permitNum, table.revisionNum],
+			foreignColumns: [permits.permitNum, permits.revisionNum],
+			name: "fk_permit_parcels_permits"
+		}),
+	foreignKey({
+			columns: [table.parcelId],
+			foreignColumns: [parcels.id],
+			name: "permit_parcels_parcel_id_fkey"
+		}),
+	unique("permit_parcels_permit_num_revision_num_parcel_id_key").on(table.permitNum, table.revisionNum, table.parcelId),
+]);
+
 export const parcels = pgTable("parcels", {
 	id: serial().primaryKey().notNull(),
 	parcelId: varchar("parcel_id", { length: 20 }).notNull(),
@@ -278,6 +320,11 @@ export const parcels = pgTable("parcels", {
 	optConfigConfidence: text("opt_config_confidence"),
 	optimalConfig: jsonb("optimal_config"),
 	nearbyBuildsSummary: jsonb("nearby_builds_summary"),
+	comparableBuilds: jsonb("comparable_builds"),
+	compCount: integer("comp_count"),
+	compDominantBuild: text("comp_dominant_build"),
+	compBuildRatioP50: numeric("comp_build_ratio_p50"),
+	compFsiP50: numeric("comp_fsi_p50"),
 }, (table) => [
 	index("idx_parcels_address").using("btree", table.addrNumNormalized.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")),
 	index("idx_parcels_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")).where(sql`(centroid_lat IS NOT NULL)`),
@@ -286,48 +333,6 @@ export const parcels = pgTable("parcels", {
 	index("idx_parcels_street_name").using("btree", table.streetNameNormalized.asc().nullsLast().op("text_ops")),
 	unique("parcels_parcel_id_key").on(table.parcelId),
 	check("parcels_heritage_designation_type_check", sql`(heritage_designation_type IS NULL) OR (heritage_designation_type = ANY (ARRAY['part_iv_individual'::text, 'part_v_hcd'::text]))`),
-]);
-
-export const notifications = pgTable("notifications", {
-	id: serial().primaryKey().notNull(),
-	userId: varchar("user_id", { length: 100 }).notNull(),
-	type: varchar({ length: 50 }).notNull(),
-	title: varchar({ length: 200 }),
-	body: text(),
-	permitNum: varchar("permit_num", { length: 30 }),
-	tradeSlug: varchar("trade_slug", { length: 50 }),
-	channel: varchar({ length: 20 }).default('in_app').notNull(),
-	isRead: boolean("is_read").default(false).notNull(),
-	isSent: boolean("is_sent").default(false).notNull(),
-	sentAt: timestamp("sent_at", { withTimezone: true, mode: 'string' }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_notifications_user_created").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("text_ops")),
-	index("idx_notifications_user_read").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.isRead.asc().nullsLast().op("bool_ops")),
-]);
-
-export const permitParcels = pgTable("permit_parcels", {
-	id: serial().primaryKey().notNull(),
-	permitNum: varchar("permit_num", { length: 30 }).notNull(),
-	revisionNum: varchar("revision_num", { length: 10 }).notNull(),
-	parcelId: integer("parcel_id").notNull(),
-	matchType: varchar("match_type", { length: 30 }).notNull(),
-	confidence: numeric({ precision: 3, scale:  2 }).notNull(),
-	linkedAt: timestamp("linked_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_permit_parcels_parcel").using("btree", table.parcelId.asc().nullsLast().op("int4_ops")),
-	index("idx_permit_parcels_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.revisionNum.asc().nullsLast().op("text_ops")),
-	foreignKey({
-			columns: [table.permitNum, table.revisionNum],
-			foreignColumns: [permits.permitNum, permits.revisionNum],
-			name: "fk_permit_parcels_permits"
-		}),
-	foreignKey({
-			columns: [table.parcelId],
-			foreignColumns: [parcels.id],
-			name: "permit_parcels_parcel_id_fkey"
-		}),
-	unique("permit_parcels_permit_num_revision_num_parcel_id_key").on(table.permitNum, table.revisionNum, table.parcelId),
 ]);
 
 export const buildingFootprints = pgTable("building_footprints", {

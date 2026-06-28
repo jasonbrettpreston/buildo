@@ -856,6 +856,131 @@ async function enrichExistingStructure(client, opts = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Comparable-builds pass (Spec 78 Phase 3C) — §K parcel-level named comps via a spatial kNN. Runs
+// INSIDE the main txn (4th SQL pass): reads the same-txn max-build envelope + imagery_roof footprint +
+// committed permits/coa. Materializes the permitted-parcel candidate set ONCE (~9.6K rows) into a temp
+// table with a GiST geom index, then per residential subject does a LATERAL kNN (over-fetch 50 nearest,
+// post-filter zoning + lot/frontage ±20%, top-10 by similarity, jsonb_agg). NOT a 486K cross-join.
+// ---------------------------------------------------------------------------
+
+const COMP_WRITE_COLS = ['comparable_builds', 'comp_count', 'comp_dominant_build', 'comp_build_ratio_p50', 'comp_fsi_p50'];
+const COMP_LOT_TOL = 0.2;        // ±20% lot-size / frontage similarity window
+const COMP_KNN_OVERFETCH = 50;   // GiST kNN over-fetch before the similarity post-filter
+const COMP_TOP_N = 10;           // comps kept per subject
+const COMP_OVER_CAPTURE_CLAMP = 1.1; // build_ratio above this = massing over-capture → excluded from p50
+
+// Candidate set: parcels with a recent (5-yr) new-build/addition permit — the principal such permit
+// supplies the address + what-built + realized GFA/FSI; the build_ratio is massing-footprint ÷ max-build.
+function buildCompCandidatesSql() {
+  // Start from the SMALL filtered permit set (~9.6K), pre-aggregate the principal permit + CoA decision
+  // per parcel (DISTINCT ON), THEN join parcels — NOT a parcels(486K)-driven scan with a per-row CoA
+  // LATERAL (which was a >90s plan). build_ratio = imagery roof footprint ÷ max-build (massing realized).
+  return `
+  CREATE TEMP TABLE comp_cand ON COMMIT DROP AS
+  WITH recent AS (
+    SELECT DISTINCT ON (pr.zoning_dominant_parcel_id)
+      pr.zoning_dominant_parcel_id AS pid, pr.street_num, pr.street_name,
+      pr.project_type, pr.residential_sqm, pr.storeys
+    FROM permits pr
+    WHERE pr.project_type IN ('new_build','addition')
+      AND pr.issued_date >= (now()::date - interval '5 years')
+      AND pr.zoning_dominant_parcel_id IS NOT NULL
+    ORDER BY pr.zoning_dominant_parcel_id, pr.issued_date DESC, pr.residential_sqm DESC NULLS LAST
+  ),
+  coa AS (
+    SELECT DISTINCT ON (zoning_dominant_parcel_id) zoning_dominant_parcel_id AS pid, decision
+    FROM coa_applications
+    WHERE zoning_dominant_parcel_id IS NOT NULL
+    ORDER BY zoning_dominant_parcel_id, coalesce(decision_date, hearing_date) DESC NULLS LAST
+  )
+  SELECT pa.id, pa.geom, pa.zoning_class, pa.lot_size_sqm, pa.frontage_m,
+    NULLIF(trim(coalesce(r.street_num,'') || ' ' || coalesce(r.street_name,'')), '') AS address,
+    r.project_type AS work_type, r.residential_sqm AS permit_gfa, r.storeys AS storeys,
+    CASE WHEN pa.lot_size_sqm > 0 AND r.residential_sqm > 0 THEN round(r.residential_sqm / pa.lot_size_sqm, 2) END AS permit_fsi,
+    CASE WHEN pa.max_buildable_footprint_sqm > 0 AND pa.imagery_roof_footprint_sqm > 0
+         THEN round(pa.imagery_roof_footprint_sqm / pa.max_buildable_footprint_sqm, 2) END AS build_ratio,
+    coa.decision AS coa_decision
+  FROM recent r
+  JOIN parcels pa ON pa.id = r.pid
+  LEFT JOIN coa ON coa.pid = r.pid
+  WHERE pa.geom IS NOT NULL AND pa.zoning_class IS NOT NULL AND pa.lot_size_sqm > 0;
+  CREATE INDEX comp_cand_gix ON comp_cand USING gist (geom);
+  ANALYZE comp_cand;`;
+}
+
+// SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only (never user input).
+function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE' } = {}) {
+  const incr = full ? '' : 'AND sp.comp_count IS NULL';
+  return `
+  UPDATE parcels p SET
+    comparable_builds = agg.comps, comp_count = agg.cnt, comp_dominant_build = agg.dominant,
+    comp_build_ratio_p50 = agg.br_p50, comp_fsi_p50 = agg.fsi_p50
+  FROM (
+    SELECT s.id,
+      jsonb_agg(jsonb_build_object(
+        'address', m.address, 'lot_sqm', m.lot_size_sqm, 'frontage_m', m.frontage_m,
+        'distance_m', round(m.dist::numeric, 1), 'work_type', m.work_type, 'permit_gfa_sqm', m.permit_gfa,
+        'permit_fsi', m.permit_fsi, 'storeys', m.storeys, 'coa_decision', m.coa_decision, 'build_ratio', m.build_ratio
+      ) ORDER BY m.dist) AS comps,
+      count(*)::int AS cnt,
+      mode() WITHIN GROUP (ORDER BY m.work_type) AS dominant,
+      percentile_cont(0.5) WITHIN GROUP (ORDER BY m.build_ratio)
+        FILTER (WHERE m.build_ratio IS NOT NULL AND m.build_ratio <= ${COMP_OVER_CAPTURE_CLAMP}) AS br_p50,
+      percentile_cont(0.5) WITHIN GROUP (ORDER BY m.permit_fsi) FILTER (WHERE m.permit_fsi IS NOT NULL) AS fsi_p50
+    FROM (
+      -- subjects: residential parcels with a max-build envelope (scoped + incremental). Scoping HERE
+      -- (not just at the final UPDATE) is what keeps a scoped/test run from kNN-ing all 486K parcels.
+      SELECT sp.id, sp.geom, sp.zoning_class, sp.lot_size_sqm, sp.frontage_m
+      FROM parcels sp
+      WHERE sp.max_buildable_footprint_sqm IS NOT NULL AND sp.lot_size_sqm > 0 AND sp.zoning_class IS NOT NULL
+        AND (${scopeWhere}) ${incr}
+    ) s
+    CROSS JOIN LATERAL (
+      SELECT near.*
+      FROM (
+        -- GiST kNN: the 50 nearest candidates (index-served), excluding the subject itself.
+        SELECT c.*, c.geom <-> s.geom AS dist
+        FROM comp_cand c
+        WHERE c.id <> s.id
+        ORDER BY c.geom <-> s.geom
+        LIMIT ${COMP_KNN_OVERFETCH}
+      ) near
+      -- post-filter to genuinely comparable lots, then keep the 10 most similar (|Δlot| + |Δfrontage|·10).
+      WHERE near.zoning_class = s.zoning_class
+        AND near.lot_size_sqm BETWEEN s.lot_size_sqm * ${1 - COMP_LOT_TOL} AND s.lot_size_sqm * ${1 + COMP_LOT_TOL}
+        AND (s.frontage_m IS NULL OR near.frontage_m IS NULL
+             OR near.frontage_m BETWEEN s.frontage_m * ${1 - COMP_LOT_TOL} AND s.frontage_m * ${1 + COMP_LOT_TOL})
+      ORDER BY (abs(near.lot_size_sqm - s.lot_size_sqm) + abs(coalesce(near.frontage_m, 0) - coalesce(s.frontage_m, 0)) * 10)
+      LIMIT ${COMP_TOP_N}
+    ) m
+    GROUP BY s.id
+  ) agg
+  WHERE p.id = agg.id;`;
+}
+
+async function enrichComparableBuilds(client, { full = false, scopeWhere = 'TRUE' } = {}) {
+  const eligible = `max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0 AND zoning_class IS NOT NULL`;
+  // FULL re-run: clear stale comp data for the scope first, so a parcel whose comps disappeared resets.
+  if (full) {
+    await client.query(`UPDATE parcels SET comparable_builds = NULL, comp_count = NULL, comp_dominant_build = NULL,
+      comp_build_ratio_p50 = NULL, comp_fsi_p50 = NULL WHERE ${eligible} AND (${scopeWhere})`);
+  }
+  await client.query(buildCompCandidatesSql());
+  const cand = (await client.query('SELECT count(*)::int AS n FROM comp_cand')).rows[0].n;
+  const upd = await client.query(buildComparableBuildsUpdateSql({ full, scopeWhere }));
+  // Mark eligible subjects that matched NO comps as comp_count = 0 (a clean "processed" marker, so the
+  // incremental `comp_count IS NULL` skip is correct and the zero-comp count is real, not hidden as NULL).
+  const zeroFilled = await client.query(
+    `UPDATE parcels p SET comp_count = 0 WHERE ${eligible} AND p.comp_count IS NULL AND (${scopeWhere})`);
+  const dist = (await client.query(
+    `SELECT count(*) FILTER (WHERE comp_count > 0)::int AS with_comps,
+            count(*) FILTER (WHERE comp_count = 0)::int AS zero_comps,
+            count(*) FILTER (WHERE comp_build_ratio_p50 IS NOT NULL)::int AS with_br
+     FROM parcels WHERE ${eligible} AND (${scopeWhere})`)).rows[0];
+  return { candidates: cand, updated: upd.rowCount, zero_filled: zeroFilled.rowCount, ...dist };
+}
+
+// ---------------------------------------------------------------------------
 // Optimal-config pass (Spec 78 Phase 3A) — JS-streaming. Unlike the SQL passes above, this consumes
 // the per-row pure engine `optimal-config.js#computeOptimalConfig`, so it STREAMS eligible parcels
 // (joined to neighbourhood_build_norms with a citywide fallback), computes in JS, and batch-UPDATEs.
@@ -1119,6 +1244,7 @@ async function main(pool) {
     let result;
     let mbResult;
     let exResult;
+    let compResult;
     await pipeline.withTransaction(pool, async (client) => {
       await assertPreconditions(client);
       const runAt = await pipeline.getDbTimestamp(client);
@@ -1130,9 +1256,12 @@ async function main(pool) {
       // parcel_max_build (ON COMMIT DROP) visible for scoping; reads the PRIMARY building (massing)
       // + the max-build cols written above; computes SCENARIO_COLS via a sibling UPDATE.
       exResult = await enrichExistingStructure(client, { scopeWhere: 'TRUE', full, reno });
+      // Fourth pass — comparable builds (Spec 78 Phase 3C). Same txn: reads the max-build envelope +
+      // imagery_roof footprint just written + committed permits/coa; writes the disjoint comp_* columns.
+      compResult = await enrichComparableBuilds(client, { scopeWhere: 'TRUE', full });
     });
 
-    // Fourth pass — optimal config (Spec 78 Phase 3A). Runs AFTER the txn COMMITS: it is a JS-streaming
+    // Fifth pass — optimal config (Spec 78 Phase 3A). Runs AFTER the txn COMMITS: it is a JS-streaming
     // pass (consumes the per-row engine optimal-config.js) and reads the just-committed max-build
     // envelope on a separate connection. Cross-chain read of neighbourhood_build_norms (permits chain).
     const ocResult = await enrichOptimalConfig(pool, { full });
@@ -1227,6 +1356,13 @@ async function main(pool) {
     auditRows.push({ metric: 'reno_bath_gfa_pct_applied', value: reno.bathPct, status: 'INFO' });
     auditRows.push({ metric: 'mislink_footprint_lot_tol_applied', value: reno.mislinkTol, status: 'INFO' });
     auditRows.push({ metric: 'storey_height_m_applied', value: storeyHeight, status: 'INFO' });
+    // --- Comparable builds (Spec 78 Phase 3C) — all INFO; comp_count distribution = the comp-evidence reach. ---
+    auditRows.push({ metric: 'comp_candidate_pool', value: compResult.candidates, status: 'INFO' });
+    auditRows.push({ metric: 'comparable_builds_enriched_count', value: compResult.updated, status: 'INFO' });
+    auditRows.push({ metric: 'comp_zero_filled_count', value: compResult.zero_filled, status: 'INFO' });
+    auditRows.push({ metric: 'comp_with_comps_count', value: compResult.with_comps, status: 'INFO' });
+    auditRows.push({ metric: 'comp_zero_comps_count', value: compResult.zero_comps, status: 'INFO' });
+    auditRows.push({ metric: 'comp_build_ratio_p50_count', value: compResult.with_br, status: 'INFO' });
     // --- Optimal config (Spec 78 Phase 3A) — config-tier/suite/confidence distribution; errors gated. ---
     auditRows.push({ metric: 'optimal_config_enriched_count', value: ocResult.updated, status: 'INFO' });
     auditRows.push({ metric: 'opt_suite_fits_full_count', value: ocResult.suite_fits, status: 'INFO' });
@@ -1270,8 +1406,8 @@ async function main(pool) {
           'bylaw_max_height_m', 'bylaw_max_stories', 'bylaw_max_fsi', 'bylaw_max_coverage_pct', 'bylaw_standard_setback_m',
           'zoning_class', 'zoning_is_ambiguous', 'is_corner_lot', 'is_through_lot',
           'is_in_ravine_protection_area', 'is_heritage_designated', 'lot_size_confidence', 'abuts_laneway',
-          // Phase 2 scenario pass reads these max-build outputs from the parcels row (same txn).
-          'max_buildable_gfa_sqm', 'max_build_stories'],
+          // Phase 2 scenario pass + Phase 3C comp pass read these max-build/imagery outputs (same txn).
+          'max_buildable_gfa_sqm', 'max_build_stories', 'max_buildable_footprint_sqm', 'imagery_roof_footprint_sqm'],
         // Massing join — heritage freeze (max-build pass) + existing-structure pass (Phase 1):
         // existing pass also reads pb.confidence + bf.geom/max_height_m.
         parcel_buildings: ['parcel_id', 'building_id', 'is_primary', 'confidence'],
@@ -1282,8 +1418,11 @@ async function main(pool) {
         neighbourhood_build_norms: ['id', 'neighbourhood_id', 'storeys_p50', 'storeys_p90', 'new_builds_5yr', 'additions_5yr', 'renos_5yr', 'suites_5yr', 'demos_5yr', 'realized_fsi_p50', 'build_ratio_p50', 'existing_build_ratio_p25', 'existing_build_ratio_p50', 'coa_approved', 'coa_refused', 'coa_approval_rate', 'window_start', 'window_end', 'sample_n'],
         neighbourhood_storey_norms: ['neighbourhood_id', 'storeys_p50', 'storeys_p90'],
         neighbourhoods: ['id', 'name', 'avg_household_income'],
+        // Comparable-builds pass (Spec 78 Phase 3C) — the permitted-parcel candidate set + CoA decision.
+        permits: ['zoning_dominant_parcel_id', 'project_type', 'issued_date', 'street_num', 'street_name', 'residential_sqm', 'storeys'],
+        coa_applications: ['zoning_dominant_parcel_id', 'decision', 'decision_date', 'hearing_date'],
       },
-      { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, ...mb.EXISTING_COLS, ...mb.SCENARIO_COLS, ...OPTCFG_WRITE_COLS, 'zoning_enriched_at'] },
+      { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, ...mb.EXISTING_COLS, ...mb.SCENARIO_COLS, ...COMP_WRITE_COLS, ...OPTCFG_WRITE_COLS, 'zoning_enriched_at'] },
     );
 
     pipeline.log.info(TAG, `enriched ${result.updated} parcels (zone_class ${zonePct}%, gaps ${result.gaps}, ambiguous ${result.ambiguous}, conflicts ${result.conflicts})`);
@@ -1313,6 +1452,11 @@ module.exports = {
   buildExistingStructureUpdateSql,
   buildScenarioUpdateSql,
   enrichExistingStructure,
+  // Spec 78 Phase 3C — comparable-builds pass.
+  COMP_WRITE_COLS,
+  buildCompCandidatesSql,
+  buildComparableBuildsUpdateSql,
+  enrichComparableBuilds,
   // Spec 78 Phase 3A — optimal-config pass.
   OPTCFG_WRITE_COLS,
   buildOptConfigSelectSql,

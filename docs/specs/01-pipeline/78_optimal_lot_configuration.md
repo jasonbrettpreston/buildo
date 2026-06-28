@@ -238,6 +238,39 @@ coa_applications** — the column NAME now tells the truth (transparency initiat
   recomputed from massing (not the persisted column) — intentionally not renamed.
 - **(§G/§H neighbourhood-calibrated cur-GFA range = deferred — blocked on the residential_sqm backfill.)**
 
+## §Phase-3C — Comparable-Builds kNN (Behavioral Contract)
+
+`comparable_builds` (mig 202) is the parcel-level NAMED evidence of what nearby *comparable* lots
+actually built — the complement to §J `nearby_builds_summary` (neighbourhood aggregate). A 4th SQL pass
+in `enrich-parcels.js` (inside the main txn — reads the same-txn max-build envelope + imagery-roof
+footprint + committed permits/coa).
+
+### P3C.1 — The kNN (not a 486K cross-join)
+1. **Materialize the candidate set ONCE** into an `ON COMMIT DROP` temp table (`comp_cand`) with a GiST
+   geom index: parcels with a recent (5-yr) new-build/addition permit (~9.6K). It starts FROM the
+   filtered permit set + pre-aggregates the principal permit + CoA decision (DISTINCT ON) THEN joins
+   parcels — a parcels-driven scan with a per-row CoA LATERAL was a >90s plan; this is ~11s.
+2. **Per subject** (residential parcel with a max-build envelope, scoped at SOURCE + incremental on
+   `comp_count IS NULL`): a LATERAL **GiST kNN over-fetch** of the 50 nearest candidates → **post-filter**
+   same `zoning_class` + lot/frontage within **±20%** → keep the **10 most similar** (`|Δlot| +
+   |Δfrontage|·10`) → `jsonb_agg` nearest-first.
+
+### P3C.2 — Columns (§K)
+`comparable_builds` (jsonb array of `{address, lot_sqm, frontage_m, distance_m, work_type,
+permit_gfa_sqm, permit_fsi, storeys, coa_decision, build_ratio}`), `comp_count`, `comp_dominant_build`
+(modal work_type), `comp_build_ratio_p50`, `comp_fsi_p50`. **Over-capture exclusion:** a comp's
+`build_ratio` (imagery roof footprint ÷ max-build) **> 1.1** (physically impossible — massing noise) is
+kept in the evidence array but **EXCLUDED from `comp_build_ratio_p50`**. Idempotent: full re-run resets
+the scope first; subjects with no match get `comp_count = 0` (a clean "processed" marker).
+
+### P3C.3 — Deferred
+- The `(zoning_class, lot_size_sqm)` CONCURRENTLY index (impl-plan §4.6) is **not needed** with the
+  materialized-candidate kNN (the temp-table GiST index serves the kNN; the post-filter runs on the
+  cheap 50-nearest set) — add only if a non-materialized shape is ever used.
+- `permit_gfa_sqm`/`permit_fsi` are NULL until the `residential_sqm` backfill (next load-permits run).
+- Feeding `comp_count` back into `opt_config_confidence` (§9) — comp runs after the optconfig pass; a
+  small follow-up can reorder or re-read.
+
 ## 2. Operating Boundaries
 
 ### Target Files
