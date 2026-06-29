@@ -97,4 +97,39 @@ describe('build-norms structural constants', () => {
     expect(bn.BUILD_NORM_MIN_SAMPLE_DEFAULT).toBe(5);
     expect(bn.BUILD_RATIO_NULL_RATE_WARN).toBe(0.5);
   });
+  it('pins the plausibility backstops (also cross-checked vs _contracts.json)', () => {
+    expect(bn.FSI_PLAUSIBILITY_MAX).toBe(10);
+    expect(bn.STOREYS_PLAUSIBILITY_MAX).toBe(8);
+  });
+});
+
+describe('build-norms low-rise-residential allowlist (norm-cohort contamination filter)', () => {
+  it('KEEPS every genuine low-rise residential StructureType', () => {
+    for (const t of [
+      'SFD - Detached', 'SFD - Semi-Detached', 'SFD - Townhouse', 'Stacked Townhouses',
+      '2 Unit - Detached', '2 Unit - Semi-detached', '3+ Unit - Detached', '3+ Unit - Semi-detached',
+      'Duplex', 'Converted House', 'Laneway / Rear Yard Suite',
+    ]) {
+      expect(bn.isLowRiseResidential(t), `keep ${t}`).toBe(true);
+    }
+  });
+  it('EXCLUDES apartment / mixed-use / commercial / institutional forms', () => {
+    for (const t of [
+      'Apartment Building', 'Multiple Unit Building', 'Mixed Use/Res w Non Res', 'Multiple Use/Non Residential',
+      'Office', 'Medical/Dental Office', 'Retail Store', 'Restaurant 30 Seats or Less', 'Industrial',
+      'Elementary School', 'University', 'Hospital', 'Place of Worship',
+    ]) {
+      expect(bn.isLowRiseResidential(t), `exclude ${t}`).toBe(false);
+    }
+  });
+  it('RETAINS NULL structure_type (unknown on a genuine new-build; contaminants are all named types)', () => {
+    expect(bn.isLowRiseResidential(null)).toBe(true);
+    expect(bn.isLowRiseResidential(undefined)).toBe(true);
+  });
+  it('lowRiseResidentialSql() mirrors the JS predicate: NULL-retained + the allowlist regex, keyed on alias', () => {
+    const sql = bn.lowRiseResidentialSql('p');
+    expect(sql).toContain('p.structure_type IS NULL OR');
+    expect(sql).toContain('lower(p.structure_type)');
+    expect(sql).toContain('sfd|townhouse|duplex|converted house|laneway|rear yard suite|unit - (detached|semi)');
+  });
 });

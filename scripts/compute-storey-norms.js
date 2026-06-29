@@ -17,6 +17,7 @@
 
 const pipeline = require('./lib/pipeline');
 const { extractStoreys, STOREY_NORM_MIN_SAMPLE } = require('./lib/storey-extract');
+const bn = require('./lib/build-norms');
 
 const ADVISORY_LOCK_ID = 195;
 // Building-permit types only — drops the Plumbing/Mechanical/Drain MEP companions that repeat the
@@ -32,13 +33,26 @@ async function computeStoreyNorms(pool) {
   const RUN_AT = await pipeline.getDbTimestamp(pool);
 
   // Candidate new-build building permits with a neighbourhood (excl. the -1 no-match sentinel).
-  // ORDER stable so dedup keeps a deterministic representative per parcel.
-  const sourceSQL = `SELECT permit_num, revision_num, neighbourhood_id, zoning_dominant_parcel_id, description
+  // ORDER stable so dedup keeps a deterministic representative per parcel. The structure_type
+  // ALLOWLIST is applied HERE (in the WHERE, before the JS dedup) so apartment/mixed-use towers never
+  // claim a parcel's representative slot and suppress its low-rise residential permit (the contamination
+  // that inflated storeys_p90 → opt_coa). NULL structure_type is retained (see build-norms.js).
+  const sourceSQL = `SELECT permit_num, revision_num, neighbourhood_id, zoning_dominant_parcel_id, description, structure_type
            FROM permits
            WHERE permit_type = ANY($1)
              AND neighbourhood_id IS NOT NULL AND neighbourhood_id <> -1
              AND description IS NOT NULL
+             AND ${bn.lowRiseResidentialSql('permits')}
            ORDER BY zoning_dominant_parcel_id NULLS LAST, permit_num, revision_num`;
+
+  // Observability: how many candidates the structure_type allowlist drops (apartment/mixed/commercial).
+  const excludedNonLowrise = parseInt((await pool.query(
+    `SELECT count(*) FILTER (WHERE NOT ${bn.lowRiseResidentialSql('permits')})::int AS excluded
+       FROM permits
+      WHERE permit_type = ANY($1) AND neighbourhood_id IS NOT NULL AND neighbourhood_id <> -1
+        AND description IS NOT NULL`,
+    [BUILDING_PERMIT_TYPES],
+  )).rows[0].excluded, 10);
 
   // Stream → JS extract + dedup. Observations are tiny (int,int); holding the deduped set in memory
   // is safe (~tens of thousands). Dedup key = dominant parcel, or the permit itself when unlinked
@@ -50,6 +64,7 @@ async function computeStoreyNorms(pool) {
     candidates += 1;
     const storeys = extractStoreys(r.description);
     if (storeys == null) continue; // no storey text / out-of-band noise
+    if (storeys > bn.STOREYS_PLAUSIBILITY_MAX) continue; // backstop: a low-rise-typed permit reporting >8 storeys is a data error (extract already clamps >15)
     const key = r.zoning_dominant_parcel_id != null
       ? `parcel:${r.zoning_dominant_parcel_id}`
       : `permit:${r.permit_num}:${r.revision_num}`;
@@ -103,7 +118,7 @@ async function computeStoreyNorms(pool) {
             max(storeys_p90) FILTER (WHERE neighbourhood_id IS NULL) AS citywide_p90
      FROM neighbourhood_storey_norms`)).rows[0];
 
-  return { rowsWritten, candidates, extracted, parcelLinked, ...stats };
+  return { rowsWritten, candidates, extracted, parcelLinked, excludedNonLowrise, ...stats };
 }
 
 function main() {
@@ -120,6 +135,7 @@ function main() {
         { metric: 'storey_permits_candidates', value: s.candidates, threshold: null, status: 'INFO' },
         { metric: 'storey_permits_extracted_deduped', value: s.extracted, threshold: null, status: 'INFO' },
         { metric: 'storey_permits_parcel_linked_pct', value: parcelLinkedPct, threshold: null, status: 'INFO' },
+        { metric: 'storeys_excluded_nonlowrise', value: s.excludedNonLowrise, threshold: null, status: 'INFO' },
       ];
       pipeline.emitSummary({
         records_total: s.extracted,
@@ -128,7 +144,7 @@ function main() {
         records_meta: { audit_table: { phase: ADVISORY_LOCK_ID, name: 'Neighbourhood Storey Norms', verdict: s.pockets > 0 ? 'PASS' : 'WARN', rows: auditRows } },
       });
       pipeline.emitMeta(
-        { permits: ['permit_num', 'revision_num', 'permit_type', 'neighbourhood_id', 'zoning_dominant_parcel_id', 'description'] },
+        { permits: ['permit_num', 'revision_num', 'permit_type', 'neighbourhood_id', 'zoning_dominant_parcel_id', 'description', 'structure_type'] },
         { neighbourhood_storey_norms: ['neighbourhood_id', 'storeys_p50', 'storeys_p90', 'sample_count', 'low_sample', 'data_provenance', 'computed_at'] },
       );
     });

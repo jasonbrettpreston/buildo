@@ -121,6 +121,24 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-1 compute-build-norms — live 
     expect(cw.rows[0].n).toBe(1);
   }, 90_000);
 
+  it('REGRESSION-LOCK: an apartment with HIGHER residential_sqm does NOT win the DISTINCT ON slot or pollute FSI', async () => {
+    await insNbhd(pool, N1);
+    await insParcel(pool, P(1), N1, 400, 500);
+    // Same parcel, same kind: a low-rise new-build (res 300 → FSI 0.75) AND an apartment with LARGER
+    // residential_sqm (res 3000 → FSI 7.5, ≤ the plausibility cap so ONLY the structure_type allowlist
+    // can exclude it). DISTINCT ON picks max(residential_sqm); without the WHERE-before-dedup filter the
+    // apartment would win the slot → realized_fsi_p50 = 7.5. With it, the apartment never enters the
+    // cohort → the low-rise wins → realized_fsi_p50 = 0.75.
+    await insPermit(pool, P(1), 'new_build', { res: 300, structure: 'SFD - Detached' });
+    await insPermit(pool, P(1), 'new_build', { res: 3000, structure: 'Apartment Building' });
+
+    const s = await computeBuildNorms(pool);
+    const n1 = (await pool.query(`SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id = $1`, [N1])).rows[0];
+    expect(Number(n1.realized_fsi_p50)).toBeCloseTo(0.75, 5); // low-rise wins the slot, NOT the apartment's 7.5
+    expect(n1.new_builds_5yr).toBe(1);                        // the apartment is excluded from the cohort
+    expect(s.fsiExcludedNonlowrise).toBeGreaterThanOrEqual(1);
+  }, 90_000);
+
   it('idempotent: a second run leaves exactly one row per neighbourhood (truncate-replace)', async () => {
     await insNbhd(pool, N1);
     await insParcel(pool, P(1), N1, 400, 500);

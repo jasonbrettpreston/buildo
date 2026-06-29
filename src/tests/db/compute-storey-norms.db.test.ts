@@ -21,12 +21,12 @@ async function insNbhd(pool: Pool, id: number) {
   );
 }
 let permitSeq = 0;
-async function insPermit(pool: Pool, nbhd: number, parcel: number | null, permitType: string, desc: string) {
+async function insPermit(pool: Pool, nbhd: number, parcel: number | null, permitType: string, desc: string, structure: string | null = null) {
   permitSeq += 1;
   await pool.query(
-    `INSERT INTO permits (permit_num, revision_num, permit_type, neighbourhood_id, zoning_dominant_parcel_id, description)
-     VALUES ($1, 0, $2, $3, $4, $5)`,
-    [`SN-TEST-${permitSeq}`, permitType, nbhd, parcel, desc],
+    `INSERT INTO permits (permit_num, revision_num, permit_type, neighbourhood_id, zoning_dominant_parcel_id, description, structure_type)
+     VALUES ($1, 0, $2, $3, $4, $5, $6)`,
+    [`SN-TEST-${permitSeq}`, permitType, nbhd, parcel, desc, structure],
   );
 }
 
@@ -84,6 +84,23 @@ describe.skipIf(!dbAvailable())('Spec 65 §8 compute-storey-norms — live DB (m
     const cw = await pool.query(`SELECT * FROM neighbourhood_storey_norms WHERE neighbourhood_id IS NULL`);
     expect(cw.rowCount).toBe(1);
     expect(Number(cw.rows[0].sample_count)).toBe(16);  // N1 14 + N2 2 (−1 excluded)
+  }, 60_000);
+
+  it('REGRESSION-LOCK: apartment/mixed structure_type excluded from the storey norm; storeys>cap excluded; NULL retained', async () => {
+    await insNbhd(pool, N1);
+    // 5 genuine low-rise (NULL structure_type → retained) at 2 storeys.
+    for (let i = 0; i < 5; i++) await insPermit(pool, N1, 100 + i, 'New Houses', 'new 2 storey detached dwelling');
+    // an apartment at 5 storeys (≤ cap, so ONLY the structure_type allowlist can exclude it). Without the
+    // fix this drags p90 to 5; with it, excluded → p90 stays 2.
+    await insPermit(pool, N1, 200, 'New Building', '5 storey building', 'Apartment Building');
+    // a low-rise-typed (NULL) permit reporting 10 storeys → dropped by STOREYS_PLAUSIBILITY_MAX (8) backstop.
+    await insPermit(pool, N1, 201, 'New Houses', '10 storey dwelling');
+
+    const s = await computeStoreyNorms(pool);
+    const n1 = (await pool.query(`SELECT * FROM neighbourhood_storey_norms WHERE neighbourhood_id = $1`, [N1])).rows[0];
+    expect(Number(n1.storeys_p90)).toBe(2);            // apartment (type) + 10-storey (cap) both excluded
+    expect(Number(n1.sample_count)).toBe(5);           // only the 5 low-rise 2-storeys
+    expect(s.excludedNonLowrise).toBeGreaterThanOrEqual(1); // the apartment counted as excluded-by-type
   }, 60_000);
 
   it('empty corpus → no pockets, no citywide row', async () => {

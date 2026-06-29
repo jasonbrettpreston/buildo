@@ -29,8 +29,8 @@ const AGG_COLS = `
   count(*) FILTER (WHERE o.kind IN ('reno','kitchen','bath'))::int AS c_reno,
   count(*) FILTER (WHERE o.kind = 'suite')::int AS c_suite,
   count(*) FILTER (WHERE o.kind = 'demo')::int AS c_demo,
-  percentile_cont(0.5) WITHIN GROUP (ORDER BY o.fsi) FILTER (WHERE o.fsi IS NOT NULL) AS fsi_p50,
-  percentile_cont(0.9) WITHIN GROUP (ORDER BY o.fsi) FILTER (WHERE o.fsi IS NOT NULL) AS fsi_p90,
+  percentile_cont(0.5) WITHIN GROUP (ORDER BY o.fsi) FILTER (WHERE o.fsi IS NOT NULL AND o.fsi <= $6) AS fsi_p50,
+  percentile_cont(0.9) WITHIN GROUP (ORDER BY o.fsi) FILTER (WHERE o.fsi IS NOT NULL AND o.fsi <= $6) AS fsi_p90,
   percentile_cont(0.5) WITHIN GROUP (ORDER BY o.build_ratio) FILTER (WHERE o.build_ratio IS NOT NULL AND o.build_ratio <= $4) AS br_p50,
   percentile_cont(0.25) WITHIN GROUP (ORDER BY o.existing_ratio) FILTER (WHERE o.existing_ratio IS NOT NULL) AS ex_p25,
   percentile_cont(0.5) WITHIN GROUP (ORDER BY o.existing_ratio) FILTER (WHERE o.existing_ratio IS NOT NULL) AS ex_p50,
@@ -78,6 +78,7 @@ const OBS_CTE = `obs AS (
   JOIN parcels pa ON pa.id = p.zoning_dominant_parcel_id
   CROSS JOIN LATERAL (SELECT (${bn.buildKindCaseSql('p')}) AS kind) kc
   WHERE p.issued_date >= $1 AND p.issued_date <= $2 AND p.zoning_dominant_parcel_id IS NOT NULL AND pa.neighbourhood_id IS NOT NULL
+    AND ${bn.lowRiseResidentialSql('p')}
   ORDER BY p.zoning_dominant_parcel_id, kc.kind, p.residential_sqm DESC NULLS LAST, p.issued_date DESC, p.revision_num DESC
 )`;
 
@@ -85,8 +86,20 @@ async function computeBuildNorms(pool, minSample = bn.BUILD_NORM_MIN_SAMPLE_DEFA
   const RUN_AT = await pipeline.getDbTimestamp(pool);
   const windowStart = (await pool.query(`SELECT (now()::date - ($1 || ' years')::interval)::date AS d`, [bn.BUILD_NORM_WINDOW_YEARS])).rows[0].d;
   const windowEnd = (await pool.query(`SELECT now()::date AS d`)).rows[0].d;
-  // params: $1 windowStart, $2 windowEnd, $3 minSample, $4 overClamp, $5 RUN_AT
-  const params = [windowStart, windowEnd, minSample, bn.OVER_CAPTURE_CLAMP, RUN_AT];
+  // params: $1 windowStart, $2 windowEnd, $3 minSample, $4 overClamp, $5 RUN_AT, $6 FSI plausibility cap
+  const params = [windowStart, windowEnd, minSample, bn.OVER_CAPTURE_CLAMP, RUN_AT, bn.FSI_PLAUSIBILITY_MAX];
+
+  // Observability: new-build permits dropped by the structure_type allowlist (apartment/mixed/commercial)
+  // + low-rise new-builds whose FSI exceeds the plausibility cap (residential_sqm ÷ tiny-parcel artifact).
+  const clean = (await pool.query(
+    `SELECT count(*) FILTER (WHERE NOT ${bn.lowRiseResidentialSql('p')})::int AS excluded,
+            count(*) FILTER (WHERE ${bn.lowRiseResidentialSql('p')} AND pa.lot_size_sqm > 0 AND p.residential_sqm > 0
+                                AND p.residential_sqm / pa.lot_size_sqm > $1)::int AS capped
+       FROM permits p JOIN parcels pa ON pa.id = p.zoning_dominant_parcel_id
+      WHERE p.project_type = 'new_build' AND p.issued_date >= $2 AND p.issued_date <= $3
+        AND p.zoning_dominant_parcel_id IS NOT NULL AND pa.neighbourhood_id IS NOT NULL`,
+    [bn.FSI_PLAUSIBILITY_MAX, windowStart, windowEnd],
+  )).rows[0];
 
   const rowsWritten = await pipeline.withTransaction(pool, async (client) => {
     await client.query('DELETE FROM neighbourhood_build_norms'); // truncate-replace snapshot
@@ -141,7 +154,7 @@ async function computeBuildNorms(pool, minSample = bn.BUILD_NORM_MIN_SAMPLE_DEFA
             (SELECT realized_fsi_p50 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL) AS citywide_fsi_p50
      FROM neighbourhood_build_norms`)).rows[0];
 
-  return { rowsWritten, ...stats };
+  return { rowsWritten, fsiExcludedNonlowrise: clean.excluded, fsiCapped: clean.capped, ...stats };
 }
 
 function main() {
@@ -156,6 +169,8 @@ function main() {
         { metric: 'build_ratio_null_rate_pct', value: Math.round(1000 * nullRate) / 10, threshold: `< ${bn.BUILD_RATIO_NULL_RATE_WARN * 100}%`, status: nullRate > bn.BUILD_RATIO_NULL_RATE_WARN ? 'WARN' : 'INFO' },
         { metric: 'citywide_existing_build_ratio_p50', value: s.citywide_existing_p50, threshold: null, status: 'INFO' },
         { metric: 'citywide_fsi_p50', value: s.citywide_fsi_p50, threshold: null, status: 'INFO' },
+        { metric: 'fsi_excluded_nonlowrise', value: s.fsiExcludedNonlowrise, threshold: null, status: 'INFO' },
+        { metric: 'fsi_capped', value: s.fsiCapped, threshold: null, status: 'INFO' },
       ];
       const verdict = auditRows.some((r) => r.status === 'FAIL') ? 'FAIL' : auditRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
       pipeline.emitSummary({

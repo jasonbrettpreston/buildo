@@ -18,6 +18,33 @@ const OVER_CAPTURE_CLAMP = 1.1;           // realized/max-build ratios above thi
 const BUILD_NORM_MIN_SAMPLE_DEFAULT = 5;  // < this in a neighbourhood → low_sample → optimal-config uses citywide
 const BUILD_RATIO_NULL_RATE_WARN = 0.5;   // audit WARN when >50% of neighbourhoods have no build_ratio
 
+// --- Plausibility backstops (defensive; pinned in _contracts.json `build_norms`). The structure_type
+//     ALLOWLIST below is the primary filter; these catch residual artifacts a mislinked parcel can
+//     still produce (e.g. a tower's residential_sqm ÷ a single tiny dominant parcel → FSI in the
+//     thousands). High enough to never clip a legitimate low-rise residential build. ---
+const FSI_PLAUSIBILITY_MAX = 10;          // realized FSI above this is a residential_sqm÷tiny-parcel artifact
+const STOREYS_PLAUSIBILITY_MAX = 8;       // storeys above this is not low-rise residential (extract already clamps >15)
+
+// --- Low-rise-residential ALLOWLIST (single source for both compute-build-norms.js + compute-storey-
+//     norms.js). Derived from the StructureType enum (src/lib/classification/coa-scope-classifier.ts) +
+//     the CKAN production vocab. KEEPS: SFD detached/semi/townhouse, stacked townhouses, 2/3-unit
+//     detached/semi, duplex, converted house, laneway/rear-yard suite. EXCLUDES (named): apartment,
+//     multiple-unit building, mixed-use, office/medical/retail/restaurant/industrial/school/university/
+//     hospital/worship. NULL structure_type is RETAINED (unknown on a genuine new-build; contaminants
+//     are all NAMED types; the plausibility caps backstop a NULL-that's-secretly-a-tower). Applied in
+//     the SQL WHERE *before* DISTINCT ON / dedup so apartments never win a parcel's representative slot. ---
+const LOW_RISE_RESIDENTIAL_RE = /sfd|townhouse|duplex|converted house|laneway|rear yard suite|unit - (detached|semi)/i;
+
+/** JS predicate mirror (NULL-retained) — for the logic/parity test. */
+function isLowRiseResidential(structureType) {
+  return structureType == null || LOW_RISE_RESIDENTIAL_RE.test(structureType);
+}
+
+/** SQL fragment mirroring isLowRiseResidential(), keyed on alias `a` (a table alias or bare table name). */
+function lowRiseResidentialSql(a) {
+  return `(${a}.structure_type IS NULL OR lower(${a}.structure_type) ~ 'sfd|townhouse|duplex|converted house|laneway|rear yard suite|unit - (detached|semi)')`;
+}
+
 /**
  * Pure JS mirror of the SQL kind classifier — for the parity/logic test. Mirrors the CASE in
  * buildNormsSql exactly: new_build / addition / suite / kitchen / bath / demo / reno / other.
@@ -54,6 +81,11 @@ module.exports = {
   OVER_CAPTURE_CLAMP,
   BUILD_NORM_MIN_SAMPLE_DEFAULT,
   BUILD_RATIO_NULL_RATE_WARN,
+  FSI_PLAUSIBILITY_MAX,
+  STOREYS_PLAUSIBILITY_MAX,
+  LOW_RISE_RESIDENTIAL_RE,
+  isLowRiseResidential,
+  lowRiseResidentialSql,
   classifyKind,
   buildKindCaseSql,
 };

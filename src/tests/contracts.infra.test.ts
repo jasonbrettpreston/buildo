@@ -62,6 +62,8 @@ interface Contracts {
     min_sample_default: number;
     over_capture_clamp: number;
     build_ratio_null_rate_warn: number;
+    fsi_plausibility_max: number;
+    storeys_plausibility_max: number;
   };
   optimal_config: {
     garden_footprint_rear_frac: number;
@@ -264,6 +266,18 @@ const rules: Rule[] = [
     value: contracts.build_norms.build_ratio_null_rate_warn,
     file: 'scripts/lib/build-norms.js',
     pattern: new RegExp(`BUILD_RATIO_NULL_RATE_WARN\\s*=\\s*${contracts.build_norms.build_ratio_null_rate_warn}\\b`),
+  },
+  {
+    name: 'build_norms.fsi_plausibility_max → FSI_PLAUSIBILITY_MAX constant',
+    value: contracts.build_norms.fsi_plausibility_max,
+    file: 'scripts/lib/build-norms.js',
+    pattern: new RegExp(`FSI_PLAUSIBILITY_MAX\\s*=\\s*${contracts.build_norms.fsi_plausibility_max}\\b`),
+  },
+  {
+    name: 'build_norms.storeys_plausibility_max → STOREYS_PLAUSIBILITY_MAX constant',
+    value: contracts.build_norms.storeys_plausibility_max,
+    file: 'scripts/lib/build-norms.js',
+    pattern: new RegExp(`STOREYS_PLAUSIBILITY_MAX\\s*=\\s*${contracts.build_norms.storeys_plausibility_max}\\b`),
   },
   // ---- optimal-config by-law constants (Spec 78 Phase 2; 569-2013 Ch.150.7) ----
   {
