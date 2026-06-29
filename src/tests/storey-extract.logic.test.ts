@@ -15,6 +15,21 @@ describe('extractStoreys (WF3-C1)', () => {
     expect(extractStoreys('proposed 2 stories')).toBe(2);
   });
 
+  it('decimal storeys read the INTEGER part — "2.5 storey" → 2 (the "2.5→5" mis-parse fix), NOT clamped', () => {
+    expect(extractStoreys('new 2.5 storey detached dwelling')).toBe(2);   // was 5 (grabbed the post-decimal digit)
+    expect(extractStoreys('3.5 storey home')).toBe(3);
+    expect(extractStoreys('2.5-storey semi')).toBe(2);                    // hyphen variant
+    expect(extractStoreys('10.5 storey')).toBe(10);
+    // the real-world demolition string that produced the bogus 5s in small pockets
+    expect(extractStoreys('DEMOLITION OF EXISTING 2.5 STOREY BRICK RESIDENCE AND CONSTRUCTION OF 3 STOREY')).toBe(2);
+  });
+
+  it('REGRESSION-LOCK: a genuine "5 storey" still returns 5 — the fix corrects a mis-read, it does NOT hide high values', () => {
+    expect(extractStoreys('new 5 storey building')).toBe(5);
+    expect(extractStoreys('5-storey residential')).toBe(5);
+    expect(extractStoreys('6 storey')).toBe(6);
+  });
+
   it('cardinal: one..five', () => {
     expect(extractStoreys('a one storey bungalow')).toBe(1);
     expect(extractStoreys('two-storey semi')).toBe(2);

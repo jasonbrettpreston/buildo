@@ -59,12 +59,12 @@ async function computeStoreyNorms(pool) {
   // (so unlinked permits are each kept once — no silent NULL-collapse).
   const seen = new Set();
   const obs = []; // { nbhd, storeys }
-  let candidates = 0; let extracted = 0; let parcelLinked = 0;
+  let candidates = 0; let extracted = 0; let parcelLinked = 0; let droppedImplausible = 0;
   for await (const r of pipeline.streamQuery(pool, sourceSQL, [BUILDING_PERMIT_TYPES])) {
     candidates += 1;
     const storeys = extractStoreys(r.description);
     if (storeys == null) continue; // no storey text / out-of-band noise
-    if (storeys > bn.STOREYS_PLAUSIBILITY_MAX) continue; // backstop: a low-rise-typed permit reporting >8 storeys is a data error (extract already clamps >15)
+    if (storeys > bn.STOREYS_PLAUSIBILITY_MAX) { droppedImplausible += 1; continue; } // backstop, COUNTED (not hidden): a low-rise-typed permit reporting >8 storeys is a data error (extract already clamps >15)
     const key = r.zoning_dominant_parcel_id != null
       ? `parcel:${r.zoning_dominant_parcel_id}`
       : `permit:${r.permit_num}:${r.revision_num}`;
@@ -118,7 +118,7 @@ async function computeStoreyNorms(pool) {
             max(storeys_p90) FILTER (WHERE neighbourhood_id IS NULL) AS citywide_p90
      FROM neighbourhood_storey_norms`)).rows[0];
 
-  return { rowsWritten, candidates, extracted, parcelLinked, excludedNonLowrise, ...stats };
+  return { rowsWritten, candidates, extracted, parcelLinked, excludedNonLowrise, droppedImplausible, ...stats };
 }
 
 function main() {
@@ -136,6 +136,7 @@ function main() {
         { metric: 'storey_permits_extracted_deduped', value: s.extracted, threshold: null, status: 'INFO' },
         { metric: 'storey_permits_parcel_linked_pct', value: parcelLinkedPct, threshold: null, status: 'INFO' },
         { metric: 'storeys_excluded_nonlowrise', value: s.excludedNonLowrise, threshold: null, status: 'INFO' },
+        { metric: 'storeys_dropped_implausible', value: s.droppedImplausible, threshold: null, status: 'INFO' },
       ];
       pipeline.emitSummary({
         records_total: s.extracted,

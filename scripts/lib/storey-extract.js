@@ -28,7 +28,10 @@ function extractStoreys(description) {
   const d = description.toLowerCase();
   let n = 0;
 
-  const numeric = d.match(/\b(\d+)\s*[-]?\s*(storey|story|stories)\b/);
+  // (?:\.\d+)? consumes a decimal so "2.5 storey" reads the INTEGER part (2), not the post-decimal
+  // digit (the old /\b(\d+)…/ matched the "5" in "2.5" because \b falls between '.' and '5').
+  // A genuine "5 storey" still → 5; we correct a mis-read, we do NOT clamp.
+  const numeric = d.match(/\b(\d+)(?:\.\d+)?\s*[-]?\s*(storey|story|stories)\b/);
   if (numeric && numeric[1]) n = parseInt(numeric[1], 10);
 
   if (n === 0) {

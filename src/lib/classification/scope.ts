@@ -321,8 +321,9 @@ export function extractResidentialTags(
   // --- 1. Storey count extraction ---
   let storeyCount = 0;
 
-  // Match "N storey" / "N-storey" / "N story"
-  const numericStorey = descLower.match(/\b(\d+)\s*[-]?\s*(storey|story|stories)\b/);
+  // Match "N storey" / "N-storey" / "N story". (?:\.\d+)? consumes a decimal so "2.5 storey" reads the
+  // INTEGER part (2), not the post-decimal digit — twin of scripts/lib/storey-extract.js (parity test).
+  const numericStorey = descLower.match(/\b(\d+)(?:\.\d+)?\s*[-]?\s*(storey|story|stories)\b/);
   if (numericStorey && numericStorey[1]) {
     storeyCount = parseInt(numericStorey[1], 10);
   }
