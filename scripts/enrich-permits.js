@@ -57,6 +57,11 @@ const EXISTING_STRUCTURE_COLS = mb.EXISTING_COLS;
 // propagation — it's in MAX_BUILD_COLS/LOT_MAXBUILD_COLS.)
 const SCENARIO_COLS = mb.SCENARIO_COLS;
 
+// Optimal-config + comparable-builds headline scalars (Spec 78 §4D / migration 204). Propagated from the
+// DOMINANT parcel; all 13 nullable (incl. opt_suite_fits_full BOOLEAN) → generic =NULL orphan path (NO
+// NOT-NULL bools). The 3 JSONB blobs stay parcel-scoped (joinable via zoning_dominant_parcel_id).
+const OPT_COMP_PROP_COLS = require('./lib/optimal-config-cols').OPT_COMP_PROP_COLS;
+
 // L24c coverage-guard default (operator-overridable via logic_variables.centreline_propagation_coverage_min).
 // 0.90 sits below the ~3% zero-intersection floor so a healthy ~97% run never false-HALTs, yet a
 // partial §8d run (≪50% enriched) trips it. See assertCentrelineEnriched.
@@ -111,7 +116,7 @@ function validateTarget(t) {
 
 function allWriteCols(target) {
   const c = CFG[target];
-  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS, ...CENTRELINE_COLS, ...MAXBUILD_COLS, ...EXISTING_STRUCTURE_COLS, ...SCENARIO_COLS];
+  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS, ...CENTRELINE_COLS, ...MAXBUILD_COLS, ...EXISTING_STRUCTURE_COLS, ...SCENARIO_COLS, ...OPT_COMP_PROP_COLS];
 }
 
 // ---------------------------------------------------------------------------
@@ -249,6 +254,24 @@ async function assertScenarioColumns(client, target) {
   }
 }
 
+// §4D (Spec 78) — the optimal-config + comp propagation cols must exist on parcels (source, mig 200/202)
+// AND the target (permits/coa, mig 204) before we propagate; HALT cleanly otherwise.
+async function assertOptConfigColumns(client, target) {
+  const targetTable = CFG[target].table;
+  const want = { parcels: OPT_COMP_PROP_COLS, [targetTable]: OPT_COMP_PROP_COLS };
+  for (const [tbl, cols] of Object.entries(want)) {
+    const { rows } = await client.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name = ANY($2::text[])`,
+      [tbl, cols],
+    );
+    const present = new Set(rows.map((r) => r.column_name));
+    const missing = cols.filter((c) => !present.has(c));
+    if (missing.length > 0) {
+      throw new Error(`${TAG} ${tbl} missing optimal-config columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '200/202' : '204'} not applied`);
+    }
+  }
+}
+
 // §8e L24b/c (Spec 62) — enrich-centreline (§8d) must have populated parcels' feed, RECENTLY +
 // BROADLY. This is the load-bearing cross-chain HALT (§8d runs in the sources chain, this in
 // permits/coa). Stricter than the ravine/heritage `>0` precedent — deliberate per §L24.
@@ -334,6 +357,7 @@ WITH cand AS (
          ${MAXBUILD_COLS.filter((col) => col !== 'lot_size_sqm').map((col) => `par.${col}`).join(', ')},
          ${EXISTING_STRUCTURE_COLS.map((col) => `par.${col}`).join(', ')},
          ${SCENARIO_COLS.map((col) => `par.${col}`).join(', ')},
+         ${OPT_COMP_PROP_COLS.map((col) => `par.${col}`).join(', ')},
          ${OVERLAY_FLAGS.map((f) => `par.${f}`).join(', ')},
          ${c.confidence} AS confidence,
          par.lot_size_sqm / NULLIF(SUM(par.lot_size_sqm) OVER (PARTITION BY ${qkey}), 0) AS area_share,
@@ -404,6 +428,7 @@ SELECT ${c.leadKey.map((k) => `dom.${k}`).join(', ')},
        CASE WHEN ag.zoning_parcel_count > 1 THEN 'low' ELSE dom.max_build_confidence END AS max_build_confidence,
        ${EXISTING_STRUCTURE_COLS.map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
        ${SCENARIO_COLS.map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
+       ${OPT_COMP_PROP_COLS.map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
        ag.distinct_zones
 FROM cand dom
 JOIN ag USING (${key})
@@ -546,6 +571,7 @@ async function main(pool) {
       await assertMaxBuildColumns(client, target); // §8e (Spec 65) — mig 185/186 applied?
       await assertExistingStructureColumns(client, target); // §8e (Spec 65 Phase 1 + WF3-A flag) — mig 187/188 + 193/194 applied?
       await assertScenarioColumns(client, target); // §8e (Spec 65 Phase 2 + WF3-A cur-GFA range) — mig 189/190 + 193/194 applied?
+      await assertOptConfigColumns(client, target); // §4D (Spec 78) — opt/comp propagation cols — mig 200/202 + 204 applied?
       await assertLinkTable(client, target); // §8e DEC-D2 — link table + join cols present?
       const runAt = await pipeline.getDbTimestamp(client);
       result = await enrichLeads(client, { target, scopeWhere: 'TRUE', runAt });
@@ -646,6 +672,17 @@ async function main(pool) {
     auditRows.push({ metric: `${prefix}_existing_structure_confidence_low_count`, value: ex.conf_low, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_greenspace_count`, value: ex.with_greenspace, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_existing_mislinked_footprint_count`, value: ex.mislinked, status: 'INFO' });
+    // §4D optimal-config + comp propagation observability (Spec 78 — INFO, sparse-by-design on non-residential/orphan leads).
+    const oc = (await pool.query(`
+      SELECT COUNT(*) FILTER (WHERE opt_config_confidence IS NOT NULL)::int AS with_opt,
+             COUNT(*) FILTER (WHERE opt_suite_fits_full)::int               AS suite_fits,
+             COUNT(*) FILTER (WHERE comp_count IS NOT NULL)::int            AS with_comp,
+             COUNT(*) FILTER (WHERE comp_build_ratio_p50 IS NOT NULL)::int  AS with_comp_br
+      FROM ${cfg.table}`)).rows[0];
+    auditRows.push({ metric: `${prefix}_optimal_config_count`, value: oc.with_opt, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_opt_suite_fits_full_count`, value: oc.suite_fits, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_comparable_builds_count`, value: oc.with_comp, status: 'INFO' });
+    auditRows.push({ metric: `${prefix}_comp_build_ratio_p50_count`, value: oc.with_comp_br, status: 'INFO' });
     // §8e scenario GFA + cur-GFA-range propagation observability (Spec 65 Phase 2 + WF3-A — INFO).
     const sc = (await pool.query(`
       SELECT COUNT(*) FILTER (WHERE max_newbuild_coa_gfa_sqm IS NOT NULL)::int AS with_coa,
@@ -712,7 +749,9 @@ async function main(pool) {
         // §8e existing-structure feed (Spec 65 Phase 1) — read off the dominant parcel.
         ...mb.EXISTING_COLS,
         // §8e scenario GFA feed (Spec 65 Phase 2) — read off the dominant parcel.
-        ...mb.SCENARIO_COLS],
+        ...mb.SCENARIO_COLS,
+        // §4D optimal-config + comp feed (Spec 78) — read off the dominant parcel.
+        ...OPT_COMP_PROP_COLS],
     };
     const reads = target === 'permits'
       ? { permits: ['permit_num', 'revision_num', 'permit_type'], permit_parcels: ['permit_num', 'revision_num', 'parcel_id', 'confidence'], permit_type_classifications: ['permit_type', 'class'], ...readsCommon }
@@ -733,7 +772,7 @@ if (require.main === module) {
 module.exports = {
   ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS, HERITAGE_COLS, CENTRELINE_COLS, MAXBUILD_COLS, EXISTING_STRUCTURE_COLS, SCENARIO_COLS,
   validateTarget, allWriteCols, assertWf2Ran, assertRavinesEnriched, assertHeritageEnriched,
-  assertHeritageColumns, assertCentrelineColumns, assertCentrelineEnriched, assertLinkTable, assertMaxBuildColumns, assertExistingStructureColumns, assertScenarioColumns,
+  assertHeritageColumns, assertCentrelineColumns, assertCentrelineEnriched, assertLinkTable, assertMaxBuildColumns, assertExistingStructureColumns, assertScenarioColumns, assertOptConfigColumns,
   buildEnrichmentSql, buildUpdateSql, buildNullifyOrphansSql, enrichLeads,
   coverageGate, verdictCascade,
 };

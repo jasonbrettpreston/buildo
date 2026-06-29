@@ -271,6 +271,33 @@ the scope first; subjects with no match get `comp_count = 0` (a clean "processed
 - Feeding `comp_count` back into `opt_config_confidence` (§9) — comp runs after the optconfig pass; a
   small follow-up can reorder or re-read.
 
+## §4D — Optimal-config + comp propagation to permits/CoA (Spec 49 completeness)
+
+The lot-driven outputs are computed on `parcels`, but the lead surfaces are `permits` + `coa_applications`.
+§4D propagates the **flat optimal-config + comp headline scalars** from the dominant parcel onto both lead
+tables (via the existing `enrich-permits.js` dominant-parcel propagation), so a lead is directly
+filterable/sortable on the optimal config — closing the Spec-49 completeness gap (the older
+lot/max-build/existing/scenario scalars already propagate; the new `opt_*`/`comp_*` did not).
+
+- **13 flat scalars** (migration 204, nullable on permits + coa): `opt_aor_storeys`, `opt_aor_gfa_sqm`,
+  `opt_aor_units`, `opt_coa_storeys`, `opt_coa_gfa_sqm`, `opt_suite_type`, `opt_suite_fits_full`,
+  `opt_binding_constraint`, `opt_config_confidence`, `comp_count`, `comp_dominant_build`,
+  `comp_build_ratio_p50`, `comp_fsi_p50`. **`opt_suite_fits_full` is NULLABLE** (plain `BOOLEAN`) — an
+  orphan lead (no dominant parcel) resets it to **NULL** (= "no parcel match"), via the generic
+  orphan-nullify path, NOT the `= false` reset used for the NOT-NULL max-build bools.
+- **Single source:** `OPT_COMP_PROP_COLS` in `scripts/lib/optimal-config-cols.js` (a neutral leaf module —
+  avoids a `max-build.js` domain-mismatch and an `enrich-parcels.js` import cycle). A regression test pins
+  it to `(OPTCFG_WRITE_COLS ∪ COMP_WRITE_COLS) − the 3 JSONB`.
+- **JSONB excluded:** `optimal_config`, `comparable_builds`, `nearby_builds_summary` stay parcel-scoped
+  (heavy; reachable via `zoning_dominant_parcel_id`) — §4D delivers the queryable scalars to the leads.
+- **Wiring:** `OPT_COMP_PROP_COLS` flows into `allWriteCols` (→ the `IS DISTINCT FROM` SET-guard +
+  emitMeta writes), the `par.col`/`dom.col AS col` propagation CTE, the generic orphan-nullify, the
+  emitMeta `parcels` reads, an `assertOptConfigColumns` precondition, per-run `enrich-permits` audit rows,
+  and per-column `assert-global-coverage` INFO rows (both surfaces). Idempotent; dominant-pick + no-ping-pong
+  fences preserved.
+- NB: `opt_config_confidence` is computed before the comp pass, so it does not yet incorporate `comp_count`
+  (the deferred §P3C feedback) — propagated as-is.
+
 ## 2. Operating Boundaries
 
 ### Target Files

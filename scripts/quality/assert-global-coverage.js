@@ -255,6 +255,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE max_garage_gfa_sqm IS NOT NULL)                           AS garage_fits_pop,
           COUNT(*) FILTER (WHERE garage_permission = 'as_of_right')                        AS garage_aor_pop,
           COUNT(*) FILTER (WHERE garage_permission = 'coa_required')                       AS garage_coa_pop,
+          -- Spec 78 §4D — enrich_coa_zoning optimal-config + comp propagation (mig 204). INFO, no denominator.
+          COUNT(*) FILTER (WHERE opt_config_confidence IS NOT NULL)                         AS opt_config_pop,
+          COUNT(*) FILTER (WHERE comp_count IS NOT NULL)                                    AS comp_pop,
           COUNT(*) FILTER (WHERE rear_suite_type IS NOT NULL)                              AS rear_suite_pop,
           COUNT(*) FILTER (WHERE rear_suite_permission = 'as_of_right')                    AS rear_suite_aor_pop,
           COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')                   AS rear_suite_coa_pop,
@@ -394,6 +397,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.rear_suite_type',           parseInt(ca.rear_suite_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.rear_suite_permission_as_of_right',  parseInt(ca.rear_suite_aor_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.rear_suite_permission_coa_required', parseInt(ca.rear_suite_coa_pop, 10)));
+      // Spec 78 §4D optimal-config + comp propagation — INFO.
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.opt_config_confidence', parseInt(ca.opt_config_pop, 10)));
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.comp_count', parseInt(ca.comp_pop, 10)));
 
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
@@ -595,6 +601,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE max_garage_gfa_sqm IS NOT NULL)              AS garage_fits_pop,
           COUNT(*) FILTER (WHERE garage_permission = 'as_of_right')           AS garage_aor_pop,
           COUNT(*) FILTER (WHERE garage_permission = 'coa_required')          AS garage_coa_pop,
+          -- Spec 78 §4D — enrich_permits optimal-config + comp propagation (mig 204). INFO, no denominator.
+          COUNT(*) FILTER (WHERE opt_config_confidence IS NOT NULL)           AS opt_config_pop,
+          COUNT(*) FILTER (WHERE comp_count IS NOT NULL)                      AS comp_pop,
           COUNT(*) FILTER (WHERE rear_suite_type IS NOT NULL)                 AS rear_suite_pop,
           COUNT(*) FILTER (WHERE rear_suite_permission = 'as_of_right')       AS rear_suite_aor_pop,
           COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')      AS rear_suite_coa_pop
@@ -982,6 +991,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_garage_gfa_sqm',        parseInt(pa.garage_fits_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.garage_permission_as_of_right',  parseInt(pa.garage_aor_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.garage_permission_coa_required', parseInt(pa.garage_coa_pop, 10)));
+      // Spec 78 §4D optimal-config + comp propagation — INFO.
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.opt_config_confidence', parseInt(pa.opt_config_pop, 10)));
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.comp_count', parseInt(pa.comp_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.rear_suite_type',           parseInt(pa.rear_suite_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.rear_suite_permission_as_of_right',  parseInt(pa.rear_suite_aor_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.rear_suite_permission_coa_required', parseInt(pa.rear_suite_coa_pop, 10)));
