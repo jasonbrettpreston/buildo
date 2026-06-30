@@ -27,6 +27,11 @@ const { SKIP_PHASES_SQL } = require('./../lib/lifecycle-phase');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./../lib/config-loader');
 const { calibratedStatus } = require('./../lib/coverage-status');
 const { resolveAndCountTriple } = require('./../lib/vocab-coverage');
+const { COST_PROP_COLS } = require('./../lib/parcel-cost-cols');
+
+// Spec 88 §2.10 — the 15 propagated cost/FSI scalars, as a reusable SELECT fragment of
+// `COUNT(*) FILTER (WHERE <col> IS NOT NULL) AS <col>_pop` (same on permits + coa_applications).
+const COST_PROP_FILTER_SQL = COST_PROP_COLS.map((c) => `COUNT(*) FILTER (WHERE ${c} IS NOT NULL) AS ${c}_pop`).join(',\n          ');
 
 // Advisory lock ID — unique to this assert script (spec 47 §A.5, ID 111).
 const ADVISORY_LOCK_ID = 111;
@@ -261,6 +266,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE rear_suite_type IS NOT NULL)                              AS rear_suite_pop,
           COUNT(*) FILTER (WHERE rear_suite_permission = 'as_of_right')                    AS rear_suite_aor_pop,
           COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')                   AS rear_suite_coa_pop,
+          -- Spec 88 §2.10 — enrich_coa_zoning parcel-cost propagation (mig 207). INFO, no denominator.
+          ${COST_PROP_FILTER_SQL},
           EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
         FROM coa_applications
       `);
@@ -400,6 +407,10 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // Spec 78 §4D optimal-config + comp propagation — INFO.
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.opt_config_confidence', parseInt(ca.opt_config_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.comp_count', parseInt(ca.comp_pop, 10)));
+      // Spec 88 §2.10 parcel-cost propagation — INFO, sparse where the CoA is parcel-unlinked.
+      for (const c of COST_PROP_COLS) {
+        rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', `coa_applications.${c}`, parseInt(ca[`${c}_pop`], 10)));
+      }
 
       // Step 5 — classify_coa_scope (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 5 — classify_coa_scope', 'coa_applications.scope_tags', parseInt(ca.scope_tags_pop, 10), coaTotal));
@@ -606,7 +617,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE comp_count IS NOT NULL)                      AS comp_pop,
           COUNT(*) FILTER (WHERE rear_suite_type IS NOT NULL)                 AS rear_suite_pop,
           COUNT(*) FILTER (WHERE rear_suite_permission = 'as_of_right')       AS rear_suite_aor_pop,
-          COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')      AS rear_suite_coa_pop
+          COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')      AS rear_suite_coa_pop,
+          -- Spec 88 §2.10 — enrich_permits parcel-cost propagation (mig 207). INFO, no denominator.
+          ${COST_PROP_FILTER_SQL}
         FROM permits
       `);
       const permitsTotal        = parseInt(pa.permits_total, 10) || 0;
@@ -997,6 +1010,33 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.rear_suite_type',           parseInt(pa.rear_suite_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.rear_suite_permission_as_of_right',  parseInt(pa.rear_suite_aor_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.rear_suite_permission_coa_required', parseInt(pa.rear_suite_coa_pop, 10)));
+      // Spec 88 §2.10 — enrich_permits parcel-cost propagation (mig 207). INFO, no denominator
+      // (sparse-by-design — propagated only where a dominant parcel carries a cost menu).
+      for (const c of COST_PROP_COLS) {
+        rows.push(infoRow('Step 9b — enrich_permits', `permits.${c}`, parseInt(pa[`${c}_pop`], 10)));
+      }
+
+      // ── Spec 88 §2.10 — compute_parcel_cost_estimates (sources chain, profiled here).
+      // GATED ≥85% of residential parcels WITH a linked building (the ~9% building-less are an
+      // exclusion FILTER, not a numerator note — that makes 85% achievable). Building-less parcels
+      // still get a lot-driven menu, so the gated denominator is the with-building subset.
+      const { rows: [pcm] } = await pool.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE has_bldg)                                    AS resid_with_bldg,
+          COUNT(*) FILTER (WHERE has_bldg AND parcel_cost_menu IS NOT NULL)   AS resid_with_bldg_menu,
+          COUNT(*) FILTER (WHERE parcel_cost_menu IS NOT NULL)                AS any_menu,
+          COUNT(*)                                                            AS resid_total
+        FROM (
+          SELECT p.parcel_cost_menu,
+                 EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id) AS has_bldg
+          FROM parcels p
+          WHERE p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%'
+        ) q
+      `);
+      const residWithBldg = parseInt(pcm.resid_with_bldg, 10) || 0;
+      rows.push(calibratedRow('Sources — compute_parcel_cost_estimates', 'parcels.parcel_cost_menu (residential w/ building)',
+        parseInt(pcm.resid_with_bldg_menu, 10), residWithBldg || null, 85, 80));
+      rows.push(infoRow('Sources — compute_parcel_cost_estimates', 'parcels.parcel_cost_menu (any residential)', parseInt(pcm.any_menu, 10)));
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));

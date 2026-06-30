@@ -513,10 +513,11 @@ describe('Pipeline Registry', () => {
     // +2 load_centreline + enrich_centreline added (Spec 62 §8c/§8d UI registration, WF2 2026-06-11)
     // +1 compute_storey_norms added (Spec 65 §8 WF3-C1 2026-06-24)
     // +1 compute_build_norms added (Spec 78 P1 2026-06-26)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(64);
+    // +1 compute_parcel_cost_estimates added (Spec 88 P1 2026-06-30)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(65);
   });
 
-  it('groups are correct: 14 ingest, 22 link, 15 classify, 2 snapshot, 10 quality', () => {
+  it('groups are correct: 14 ingest, 22 link, 17 classify, 2 snapshot, 10 quality', () => {
     // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     // +1 snapshot: backup_db added (WF3 2026-04-25)
     // +1 classify: compute_phase_calibration added (WF1 #B 2026-05-09)
@@ -536,9 +537,10 @@ describe('Pipeline Registry', () => {
     // +1 ingest: load_centreline, +1 link: enrich_centreline (Spec 62 §8c/§8d, WF2 2026-06-11)
     // +1 classify: compute_storey_norms (Spec 65 §8 WF3-C1 2026-06-24)
     // +1 classify: compute_build_norms (Spec 78 P1 2026-06-26)
+    // +1 classify: compute_parcel_cost_estimates (Spec 88 P1 2026-06-30)
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(14);
     expect(groups.filter((g) => g === 'link')).toHaveLength(22);
-    expect(groups.filter((g) => g === 'classify')).toHaveLength(16);
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(17);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(10);
   });

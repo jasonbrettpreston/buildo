@@ -589,6 +589,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   compute_storey_norms:       { summary: 'Derives per-neighbourhood storey norms (p50/p90) from new-build permit descriptions — the market-realized storey ceiling that replaces the height÷3 max-build guess (Spec 65 §8).', table: 'neighbourhood_storey_norms' },
   compute_build_norms:        { summary: 'Derives per-neighbourhood realized build/reno norms (FSI, new-build + old-stock build-ratios, reno-%, CoA approval) over the 5-year permit window — the market-realized calibration layer for the optimal-lot-configuration (Spec 78 P1).', table: 'neighbourhood_build_norms' },
   compute_cost_estimates:     { summary: 'Pre-computes cost model estimates for all permits (permit-reported or model-based)', table: 'cost_estimates' },
+  compute_parcel_cost_estimates: { summary: 'Computes a per-parcel menu of priced renovation scenarios (max/CoA build, suites, kitchen, bath, basement, gut, addition, garage, solar) from EXTERNAL industry cost rates — pure parcel model, no permit data (Spec 88).', table: 'parcels' },
   // Snapshot
   refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', table: 'data_quality_snapshots' },
   // Quality (CQA)
@@ -837,6 +838,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   compute_build_norms: 'neighbourhood_build_norms',
   backfill_realtor_permit_trades: 'permit_trades',
   compute_cost_estimates: 'cost_estimates',
+  compute_parcel_cost_estimates: 'parcels',
   compute_timing_calibration_v2: 'phase_calibration',
   compute_phase_calibration: 'phase_stay_calibration',
   refresh_snapshot: 'data_quality_snapshots', assert_schema: 'pipeline_runs',

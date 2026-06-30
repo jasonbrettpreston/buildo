@@ -62,6 +62,11 @@ const SCENARIO_COLS = mb.SCENARIO_COLS;
 // NOT-NULL bools). The 3 JSONB blobs stay parcel-scoped (joinable via zoning_dominant_parcel_id).
 const OPT_COMP_PROP_COLS = require('./lib/optimal-config-cols').OPT_COMP_PROP_COLS;
 
+// Parcel cost-model headline + FSI scalars (Spec 88 §2.10 / migration 207). Propagated from the
+// DOMINANT parcel; all 15 nullable numerics → generic =NULL orphan path (NO NOT-NULL bools). The
+// parcel_cost_menu JSONB stays parcel-scoped (joinable via zoning_dominant_parcel_id), like optimal_config.
+const COST_PROP_COLS = require('./lib/parcel-cost-cols').COST_PROP_COLS;
+
 // L24c coverage-guard default (operator-overridable via logic_variables.centreline_propagation_coverage_min).
 // 0.90 sits below the ~3% zero-intersection floor so a healthy ~97% run never false-HALTs, yet a
 // partial §8d run (≪50% enriched) trips it. See assertCentrelineEnriched.
@@ -116,7 +121,7 @@ function validateTarget(t) {
 
 function allWriteCols(target) {
   const c = CFG[target];
-  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS, ...CENTRELINE_COLS, ...MAXBUILD_COLS, ...EXISTING_STRUCTURE_COLS, ...SCENARIO_COLS, ...OPT_COMP_PROP_COLS];
+  return [...SCALARS, ...c.jsonbCols, 'zoning_parcel_count', 'zoning_dominant_parcel_id', 'zoning_dominant_parcel_method', ...RAVINE_COLS, ...HERITAGE_COLS, ...CENTRELINE_COLS, ...MAXBUILD_COLS, ...EXISTING_STRUCTURE_COLS, ...SCENARIO_COLS, ...OPT_COMP_PROP_COLS, ...COST_PROP_COLS];
 }
 
 // ---------------------------------------------------------------------------
@@ -272,6 +277,24 @@ async function assertOptConfigColumns(client, target) {
   }
 }
 
+// Spec 88 §2.10 — the parcel cost-model headline + FSI scalars must exist on parcels (source, mig 206)
+// AND the target (permits/coa, mig 207) before we propagate; HALT cleanly otherwise.
+async function assertCostColumns(client, target) {
+  const targetTable = CFG[target].table;
+  const want = { parcels: COST_PROP_COLS, [targetTable]: COST_PROP_COLS };
+  for (const [tbl, cols] of Object.entries(want)) {
+    const { rows } = await client.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name = ANY($2::text[])`,
+      [tbl, cols],
+    );
+    const present = new Set(rows.map((r) => r.column_name));
+    const missing = cols.filter((c) => !present.has(c));
+    if (missing.length > 0) {
+      throw new Error(`${TAG} ${tbl} missing parcel-cost columns [${missing.join(', ')}] — migration ${tbl === 'parcels' ? '206' : '207'} not applied`);
+    }
+  }
+}
+
 // §8e L24b/c (Spec 62) — enrich-centreline (§8d) must have populated parcels' feed, RECENTLY +
 // BROADLY. This is the load-bearing cross-chain HALT (§8d runs in the sources chain, this in
 // permits/coa). Stricter than the ravine/heritage `>0` precedent — deliberate per §L24.
@@ -358,6 +381,7 @@ WITH cand AS (
          ${EXISTING_STRUCTURE_COLS.map((col) => `par.${col}`).join(', ')},
          ${SCENARIO_COLS.map((col) => `par.${col}`).join(', ')},
          ${OPT_COMP_PROP_COLS.map((col) => `par.${col}`).join(', ')},
+         ${COST_PROP_COLS.map((col) => `par.${col}`).join(', ')},
          ${OVERLAY_FLAGS.map((f) => `par.${f}`).join(', ')},
          ${c.confidence} AS confidence,
          par.lot_size_sqm / NULLIF(SUM(par.lot_size_sqm) OVER (PARTITION BY ${qkey}), 0) AS area_share,
@@ -429,6 +453,7 @@ SELECT ${c.leadKey.map((k) => `dom.${k}`).join(', ')},
        ${EXISTING_STRUCTURE_COLS.map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
        ${SCENARIO_COLS.map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
        ${OPT_COMP_PROP_COLS.map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
+       ${COST_PROP_COLS.map((col) => `dom.${col} AS ${col}`).join(',\n       ')},
        ag.distinct_zones
 FROM cand dom
 JOIN ag USING (${key})
@@ -572,6 +597,7 @@ async function main(pool) {
       await assertExistingStructureColumns(client, target); // §8e (Spec 65 Phase 1 + WF3-A flag) — mig 187/188 + 193/194 applied?
       await assertScenarioColumns(client, target); // §8e (Spec 65 Phase 2 + WF3-A cur-GFA range) — mig 189/190 + 193/194 applied?
       await assertOptConfigColumns(client, target); // §4D (Spec 78) — opt/comp propagation cols — mig 200/202 + 204 applied?
+      await assertCostColumns(client, target);       // Spec 88 §2.10 — parcel-cost propagation cols — mig 206 + 207 applied?
       await assertLinkTable(client, target); // §8e DEC-D2 — link table + join cols present?
       const runAt = await pipeline.getDbTimestamp(client);
       result = await enrichLeads(client, { target, scopeWhere: 'TRUE', runAt });
@@ -751,7 +777,9 @@ async function main(pool) {
         // §8e scenario GFA feed (Spec 65 Phase 2) — read off the dominant parcel.
         ...mb.SCENARIO_COLS,
         // §4D optimal-config + comp feed (Spec 78) — read off the dominant parcel.
-        ...OPT_COMP_PROP_COLS],
+        ...OPT_COMP_PROP_COLS,
+        // Spec 88 §2.10 parcel cost-model feed — read off the dominant parcel.
+        ...COST_PROP_COLS],
     };
     const reads = target === 'permits'
       ? { permits: ['permit_num', 'revision_num', 'permit_type'], permit_parcels: ['permit_num', 'revision_num', 'parcel_id', 'confidence'], permit_type_classifications: ['permit_type', 'class'], ...readsCommon }
@@ -772,7 +800,7 @@ if (require.main === module) {
 module.exports = {
   ADVISORY_LOCK_ID, TARGETS, PERMITS_COVERAGE_FAIL, COA_COVERAGE_FAIL, RAVINE_COLS, HERITAGE_COLS, CENTRELINE_COLS, MAXBUILD_COLS, EXISTING_STRUCTURE_COLS, SCENARIO_COLS,
   validateTarget, allWriteCols, assertWf2Ran, assertRavinesEnriched, assertHeritageEnriched,
-  assertHeritageColumns, assertCentrelineColumns, assertCentrelineEnriched, assertLinkTable, assertMaxBuildColumns, assertExistingStructureColumns, assertScenarioColumns, assertOptConfigColumns,
+  assertHeritageColumns, assertCentrelineColumns, assertCentrelineEnriched, assertLinkTable, assertMaxBuildColumns, assertExistingStructureColumns, assertScenarioColumns, assertOptConfigColumns, assertCostColumns,
   buildEnrichmentSql, buildUpdateSql, buildNullifyOrphansSql, enrichLeads,
   coverageGate, verdictCascade,
 };

@@ -111,6 +111,12 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // precedent (free-ID assignment when owning-spec slot taken), 114 is
   // assigned from the post-Wave-7 free range.
   'scripts/backfill-realtor-permit-trades.js': 114,
+  // Spec 88 (compute-parcel-cost-estimates): owning-spec lock 88 collides with
+  // classify-permits.js (which predates the spec-number convention). Per the
+  // compute-phase-calibration precedent (free-ID when the slot is taken), 117 is
+  // assigned from the post-Wave-7 free range (113 observe-chain, 114 backfill-realtor,
+  // 115 link-parcel-addresses, 116 reserved one-time → 117 next-free).
+  'scripts/compute-parcel-cost-estimates.js':  117,
   // Phase D Wave 4 — CoA classifiers (Spec 42 §6.8 allocation 4201-4205)
   'scripts/link-coa-to-parcels.js':            4201,
   'scripts/classify-coa-scope.js':             4202,

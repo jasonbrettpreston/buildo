@@ -77,6 +77,20 @@ interface Contracts {
     laneway_abuts_min_m: number;
     garage_car_footprint_sqm: number;
   };
+  parcel_cost_model: {
+    rate_fb_sqm: number;
+    rate_solar_sqm: number;
+    rate_garden_suite_sqm: number;
+    rate_laneway_suite_sqm: number;
+    rate_kitchen_sqm: number;
+    rate_bath_sqm: number;
+    rate_garage_sqm: number;
+    rate_basement_underpin_sqm: number;
+    rate_basement_sqm: number;
+    rate_gut_sqm: number;
+    rate_addition_sqm: number;
+    solar_adj_factor: number;
+  };
 }
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -340,6 +354,84 @@ const rules: Rule[] = [
     file: 'scripts/lib/optimal-config.js',
     pattern: new RegExp(`GARAGE_CAR_FOOTPRINT_SQM:\\s*${contracts.optimal_config.garage_car_footprint_sqm}\\b`),
   },
+  // ---- parcel_cost_model (Spec 88): seed-migration literal lock. Each rate's
+  // canonical $/m² must appear as the seed literal for its archetype key in
+  // migration 205. Anchored by the quoted archetype key so 4306 (BTH vs ADD)
+  // and 4844 (FB vs CoA) and 'BAS' vs 'BAS_UNDERPIN' don't cross-match. ----
+  {
+    name: 'parcel_cost_model.rate_fb_sqm → migration 205 FB seed',
+    value: contracts.parcel_cost_model.rate_fb_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'FB',\\s*${contracts.parcel_cost_model.rate_fb_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.rate_solar_sqm → migration 205 SOLAR seed',
+    value: contracts.parcel_cost_model.rate_solar_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'SOLAR',\\s*${contracts.parcel_cost_model.rate_solar_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.rate_garden_suite_sqm → migration 205 LANE_GARDEN seed',
+    value: contracts.parcel_cost_model.rate_garden_suite_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'LANE_GARDEN',\\s*${contracts.parcel_cost_model.rate_garden_suite_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.rate_laneway_suite_sqm → migration 205 LANE_LANEWAY seed',
+    value: contracts.parcel_cost_model.rate_laneway_suite_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'LANE_LANEWAY',\\s*${contracts.parcel_cost_model.rate_laneway_suite_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.rate_kitchen_sqm → migration 205 KIT seed',
+    value: contracts.parcel_cost_model.rate_kitchen_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'KIT',\\s*${contracts.parcel_cost_model.rate_kitchen_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.rate_bath_sqm → migration 205 BTH seed',
+    value: contracts.parcel_cost_model.rate_bath_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'BTH',\\s*${contracts.parcel_cost_model.rate_bath_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.rate_garage_sqm → migration 205 GAR seed',
+    value: contracts.parcel_cost_model.rate_garage_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'GAR',\\s*${contracts.parcel_cost_model.rate_garage_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.rate_basement_underpin_sqm → migration 205 BAS_UNDERPIN seed',
+    value: contracts.parcel_cost_model.rate_basement_underpin_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'BAS_UNDERPIN',\\s*${contracts.parcel_cost_model.rate_basement_underpin_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.rate_basement_sqm → migration 205 BAS seed',
+    value: contracts.parcel_cost_model.rate_basement_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'BAS',\\s*${contracts.parcel_cost_model.rate_basement_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.rate_gut_sqm → migration 205 INT seed',
+    value: contracts.parcel_cost_model.rate_gut_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'INT',\\s*${contracts.parcel_cost_model.rate_gut_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.rate_addition_sqm → migration 205 ADD seed',
+    value: contracts.parcel_cost_model.rate_addition_sqm,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(`'ADD',\\s*${contracts.parcel_cost_model.rate_addition_sqm}\\b`),
+  },
+  {
+    name: 'parcel_cost_model.solar_adj_factor → migration 205 SOLAR cost_adjustment_factor seed',
+    value: contracts.parcel_cost_model.solar_adj_factor,
+    file: 'migrations/205_archetype_cost_rates.sql',
+    pattern: new RegExp(
+      `'SOLAR',\\s*${contracts.parcel_cost_model.rate_solar_sqm},\\s*${contracts.parcel_cost_model.solar_adj_factor.toFixed(3)}\\b`,
+    ),
+  },
 ];
 
 describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', () => {
@@ -353,6 +445,7 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
     expect(contracts.zoning).toBeDefined();
     expect(contracts.build_norms).toBeDefined();
     expect(contracts.optimal_config).toBeDefined();
+    expect(contracts.parcel_cost_model).toBeDefined();
   });
 
   it('permit pillar maxes sum to permit_total_max (spec 70 §4 invariant)', () => {

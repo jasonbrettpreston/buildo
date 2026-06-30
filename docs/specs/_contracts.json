@@ -64,5 +64,20 @@
     "laneway_footprint_max_sqm": 60,
     "laneway_abuts_min_m": 3.5,
     "garage_car_footprint_sqm": 18.5
+  },
+  "parcel_cost_model": {
+    "$comment": "Spec 88 — parcel renovation cost model. SEED-MIGRATION LITERAL LOCK: every rate here is the canonical external-industry $/m² ($/ft² × 10.764) documented in Spec 88 §3 and SEEDED by migrations/205_archetype_cost_rates.sql. The lock pins the migration seed literal against this JSON so a re-seed can't silently diverge from the §3 design table. These are admin-TUNABLE at runtime (archetype_cost_rates table, Spec 86) — the lock governs the seed, not runtime values. solar_adj_factor = SOLAR cost_adjustment_factor (usable-roof fraction, §2). Consumer for all rows: migrations/205_archetype_cost_rates.sql (pinned by contracts.infra.test.ts).",
+    "rate_fb_sqm": 4844,
+    "rate_solar_sqm": 377,
+    "rate_garden_suite_sqm": 5382,
+    "rate_laneway_suite_sqm": 5651,
+    "rate_kitchen_sqm": 3498,
+    "rate_bath_sqm": 4306,
+    "rate_garage_sqm": 1938,
+    "rate_basement_underpin_sqm": 1615,
+    "rate_basement_sqm": 753,
+    "rate_gut_sqm": 3229,
+    "rate_addition_sqm": 4306,
+    "solar_adj_factor": 0.75
   }
 }
