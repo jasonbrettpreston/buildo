@@ -173,9 +173,13 @@ function lineCost({ areaSqm, ratePerSqm, escalationMult, adjFactor, premium }) {
  *   fitGatedGarageCount: number
  * }}
  */
-function buildParcelCostMenu(parcel, rates, indexNow) {
+function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
   const premium = num(parcel.neighbourhood_cost_premium) ?? 1;
   const maxBuildConfidence = parcel.max_build_confidence ?? null;
+  // §2.4: coa_build norm_basis. Spec 78 P2 R2 grounds opt_coa in realized detached FSI p90 — but only
+  // for the DETACHED family (townhouse/multiplex keep by-law). The caller passes r2Grounded=true only
+  // for detached parcels; otherwise the CoA GFA is still by-law-derived (pre_r2).
+  const coaNormBasis = opts.r2Grounded === true ? 'r2_refined' : 'pre_r2';
 
   /** @type {Record<string, unknown>} */
   const menu = { _schema_version: PARCEL_COST_SCHEMA_VERSION };
@@ -213,7 +217,7 @@ function buildParcelCostMenu(parcel, rates, indexNow) {
       per_sqm,
       area: round2(area),
       area_confidence: areaConfidence,
-      norm_basis: line.isCoaLine ? 'pre_r2' : 'n/a', // §2.4: CoA-line-scoped; always pre_r2 in P1
+      norm_basis: line.isCoaLine ? coaNormBasis : 'n/a', // §2.4: CoA-line-scoped (pre_r2 | r2_refined post-R2)
       trades: null, // §2.1 — breakdown deferred to P3
       products: null,
     };

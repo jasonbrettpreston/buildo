@@ -34,6 +34,7 @@ const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 const { safeParsePositiveInt } = require('./lib/safe-math');
 const { buildParcelCostMenu, PARCEL_COST_LINES } = require('./lib/parcel-cost');
+const { parcelFamilyFromZoning } = require('./lib/build-norms'); // Spec 78 P2 R2 — detached-only norm_basis
 const { COST_SCALAR_COLS, FSI_SCALAR_COLS } = require('./lib/parcel-cost-cols');
 
 // §R2 — advisory lock. The owning Spec is 88, but lock 88 is taken by classify-permits.js
@@ -249,7 +250,8 @@ async function computeParcelCostEstimates(pool, opts = {}) {
       p.neighbourhood_cost_premium::float8   AS neighbourhood_cost_premium,
       p.rear_suite_permission,
       p.garage_permission,
-      p.max_build_confidence
+      p.max_build_confidence,
+      p.zoning_class
     FROM parcels p
     WHERE p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%'
     ORDER BY p.id ASC${limitClause}
@@ -259,7 +261,10 @@ async function computeParcelCostEstimates(pool, opts = {}) {
   for await (const parcel of sourceStream) {
     processed++;
     try {
-      const built = buildParcelCostMenu(parcel, rates, indexNow);
+      // R2 is DETACHED-ONLY (plan fold #3): only detached parcels' opt_coa_gfa is realized-FSI-grounded,
+      // so only their coa_build line is r2_refined; townhouse/multiplex/generic stay pre_r2 (by-law).
+      const r2Grounded = parcelFamilyFromZoning(parcel.zoning_class) === 'detached';
+      const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded });
       if (built.lineCount === 0) {
         nullGeomBasisCount++;
       } else {

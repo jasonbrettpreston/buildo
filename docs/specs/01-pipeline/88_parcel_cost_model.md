@@ -55,7 +55,7 @@ Root: `{ "_schema_version": 1, "<line_id>": {…}, … }`. Per line:
 - `total` (numeric, premium-inclusive — see §2.6), `per_sqm`, `area` (the geom_basis value used)
 - `area_confidence` ∈ `high|medium|low` (§2.7) — **floor-AREA certainty, NOT a price range**
 - `fits` (boolean) — present ONLY for fit-gated lines (LANE garden/laneway, GAR); driven by `rear_suite_permission`/`garage_permission ∈ {as_of_right, coa_required}` (NOT area-presence)
-- `norm_basis` — **CoA-line-scoped only** (`pre_r2|r2_refined`; `n/a` for non-CoA lines; always `pre_r2` in P1 until R2 ships)
+- `norm_basis` — **CoA-line-scoped only** (`pre_r2|r2_refined`; `n/a` for non-CoA lines). `r2_refined` once Spec 78 P2 R2 grounds `opt_coa` in realized detached FSI p90 — but R2 is **DETACHED-ONLY** (townhouse/multiplex/generic-R keep by-law logic), so `norm_basis` is family-aware: `r2_refined` for detached parcels, `pre_r2` otherwise (the compute passes `r2Grounded = parcelFamilyFromZoning(zoning_class) === 'detached'`).
 - absent line key = geom_basis NULL (not computable); `fits:false` = fit-gated (doesn't fit here) — these are DISTINCT.
 
 ### 2.5 New parcel scalar columns (headline + FSI), all propagated (§2.8)

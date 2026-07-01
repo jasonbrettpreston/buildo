@@ -151,10 +151,18 @@ describe('buildParcelCostMenu — full parcel', () => {
     }
   });
 
-  it('norm_basis is CoA-line-scoped (pre_r2 on coa_build, n/a elsewhere)', () => {
-    expect(menu.coa_build.norm_basis).toBe('pre_r2');
+  it('norm_basis is CoA-line-scoped (pre_r2 by default, n/a elsewhere)', () => {
+    expect(menu.coa_build.norm_basis).toBe('pre_r2'); // no r2Grounded opt → by-law
     expect(menu.max_build.norm_basis).toBe('n/a');
     expect(menu.kitchen.norm_basis).toBe('n/a');
+  });
+
+  it('norm_basis flips to r2_refined on coa_build when r2Grounded (detached, Spec 78 P2 R2)', () => {
+    const built = pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { r2Grounded: true });
+    expect(built.menu.coa_build.norm_basis).toBe('r2_refined');
+    expect(built.menu.max_build.norm_basis).toBe('n/a'); // non-CoA lines unchanged
+    // townhouse/multiplex/generic (r2Grounded falsey) stay pre_r2
+    expect(pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { r2Grounded: false }).menu.coa_build.norm_basis).toBe('pre_r2');
   });
 
   it('fits key present + true on fit-gated lines, absent on others', () => {
