@@ -191,6 +191,21 @@ describe('buildParcelCostMenu — full parcel', () => {
     expect(scalars.realized_fsi_p90).toBeNull();
   });
 
+  it('implausible FSI (garbage max_buildable_gfa) is NULLed + flagged, never overflows the column', () => {
+    // a 111 m² lot with a 115,825 m² max-build → FSI ~1042 (a tree-contaminated massing artifact)
+    const built = pc.buildParcelCostMenu(
+      fullParcel({ lot_size_sqm: 111, max_buildable_gfa_sqm: 115825 }),
+      RATES,
+      NO_ESCALATION,
+    );
+    expect(built.scalars.max_build_fsi).toBeNull();  // NULLed, not 1042 (would overflow NUMERIC(6,3))
+    expect(built.fsiImplausible).toBe(true);
+    // a plausible FSI is kept
+    expect(pc.plausibleFsi(300, 400)).toEqual({ fsi: 0.75, implausible: false });
+    expect(pc.plausibleFsi(115825, 111).fsi).toBeNull();
+    expect(pc.FSI_MAX_PLAUSIBLE).toBe(99.999);
+  });
+
   it('gut line is low-confidence (storey-multiplied); basement/addition medium', () => {
     expect(menu.gut.area_confidence).toBe('low');
     expect(menu.basement.area_confidence).toBe('medium');

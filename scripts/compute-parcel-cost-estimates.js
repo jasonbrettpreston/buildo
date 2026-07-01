@@ -165,6 +165,7 @@ async function computeParcelCostEstimates(pool, opts = {}) {
   let recordsSkipped = 0;
   let engineErrorCount = 0;
   let nullGeomBasisCount = 0; // residential parcels with NO computable line (empty menu)
+  let fsiImplausibleCount = 0; // parcels whose max_build/coa FSI was NULLed as a garbage max-build artifact
   let fitGatedSuiteCount = 0;
   let fitGatedGarageCount = 0;
   const unmappedFamilyFallbackCount = 0; // P1: always 0 (family logic is P2) — emitted for the inventory
@@ -265,6 +266,7 @@ async function computeParcelCostEstimates(pool, opts = {}) {
       // so only their coa_build line is r2_refined; townhouse/multiplex/generic stay pre_r2 (by-law).
       const r2Grounded = parcelFamilyFromZoning(parcel.zoning_class) === 'detached';
       const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded });
+      if (built.fsiImplausible) fsiImplausibleCount++;
       if (built.lineCount === 0) {
         nullGeomBasisCount++;
       } else {
@@ -322,6 +324,8 @@ async function computeParcelCostEstimates(pool, opts = {}) {
       status: 'INFO',
     },
     { metric: 'null_geom_basis_count', value: nullGeomBasisCount, threshold: null, status: 'INFO' },
+    // FSI NULLed as a garbage max-build artifact (implausible max_buildable_gfa ÷ lot) — surfaced, not hidden.
+    { metric: 'fsi_implausible_count', value: fsiImplausibleCount, threshold: null, status: 'INFO' },
     // engine_error_count — deliberately strict: any engine error fails the step.
     {
       metric: 'engine_error_count',

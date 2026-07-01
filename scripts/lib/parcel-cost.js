@@ -38,6 +38,22 @@ const PARCEL_COST_SCHEMA_VERSION = 1;
 const PERMITTED_VALUES = new Set(['as_of_right', 'coa_required']);
 
 /**
+ * Max STORABLE / plausible FSI. The FSI columns are NUMERIC(6,3) (max 999.999), and no residential
+ * parcel legitimately reaches FSI 100 — a higher derived FSI means a garbage `max_buildable_gfa_sqm`
+ * (the known tree-contaminated massing / setback-box artifacts, ~1.3K parcels). We NULL such FSIs
+ * (rather than overflow the column or store nonsense) and COUNT them so the data gap is visible.
+ */
+const FSI_MAX_PLAUSIBLE = 99.999;
+
+/** GFA ÷ lot as a stored FSI, or null when not computable OR implausibly high (data artifact). */
+function plausibleFsi(gfa, lot) {
+  if (!(lot > 0) || gfa === null) return { fsi: null, implausible: false };
+  const fsi = round3(gfa / lot);
+  if (fsi > FSI_MAX_PLAUSIBLE) return { fsi: null, implausible: true };
+  return { fsi, implausible: false };
+}
+
+/**
  * The 13 reno lines → parcel area field + rate archetype + headline scalar.
  * Order is the menu/report order. `archetype` keys the archetype_cost_rates table.
  *
@@ -239,23 +255,27 @@ function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
     }
   }
 
-  // FSI scalars (§2.5). Derived from parcel GFA ÷ lot; realized_fsi_p90 read-through (P2 populates).
+  // FSI scalars (§2.5). Derived from parcel GFA ÷ lot; NULLed + counted when implausibly high (a garbage
+  // max_buildable_gfa artifact) so they can't overflow NUMERIC(6,3). realized_fsi_p90 read-through (P2 populates).
   const lot = num(parcel.lot_size_sqm);
-  const maxGfa = num(parcel.max_buildable_gfa_sqm);
-  const coaGfa = num(parcel.opt_coa_gfa_sqm);
-  scalars.max_build_fsi = lot && lot > 0 && maxGfa !== null ? round3(maxGfa / lot) : null;
-  scalars.coa_fsi = lot && lot > 0 && coaGfa !== null ? round3(coaGfa / lot) : null;
+  const mb = plausibleFsi(num(parcel.max_buildable_gfa_sqm), lot);
+  const coa = plausibleFsi(num(parcel.opt_coa_gfa_sqm), lot);
+  scalars.max_build_fsi = mb.fsi;
+  scalars.coa_fsi = coa.fsi;
   scalars.realized_fsi_p90 = num(parcel.realized_fsi_p90); // NULL in P1 — P2 family-aware norm read
+  const fsiImplausible = mb.implausible || coa.implausible;
 
-  return { menu, scalars, lineCount, confidenceCounts, fitGatedSuiteCount, fitGatedGarageCount };
+  return { menu, scalars, lineCount, confidenceCounts, fitGatedSuiteCount, fitGatedGarageCount, fsiImplausible };
 }
 
 module.exports = {
   PARCEL_COST_SCHEMA_VERSION,
   PARCEL_COST_LINES,
   PERMITTED_VALUES,
+  FSI_MAX_PLAUSIBLE,
   escalationMultiplier,
   areaConfidenceFor,
+  plausibleFsi,
   lineCost,
   buildParcelCostMenu,
 };

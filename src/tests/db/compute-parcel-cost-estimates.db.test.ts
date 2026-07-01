@@ -98,8 +98,8 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
     // trades/products deferred to P3
     expect(menu.max_build.trades).toBeNull();
     expect(menu.max_build.products).toBeNull();
-    // CoA-line-scoped norm_basis
-    expect(menu.coa_build.norm_basis).toBe('pre_r2');
+    // CoA-line-scoped norm_basis — the fixture is RD (detached), so R2 grounds it → r2_refined (P2).
+    expect(menu.coa_build.norm_basis).toBe('r2_refined');
     expect(menu.kitchen.norm_basis).toBe('n/a');
   }, 60_000);
 
