@@ -40,12 +40,12 @@ const AGG_COLS = `
 
 // The shared SELECT-list that maps an `agg`/`ag` row + storey + coa into the insert column order.
 // `nid` = the neighbourhood_id expr; `storeyP50/P90`, `coaApproved/Refused/Total` are scalar exprs.
-function insertSelectCols(src, nid, storeyP50, storeyP90, coaApproved, coaRefused, coaTotal, lowSampleExpr) {
+function insertSelectCols(src, nid, family, storeyP50, storeyP90, coaApproved, coaRefused, coaTotal, lowSampleExpr) {
   // lowSampleExpr override lets the citywide fallback FORCE low_sample = false (Spec 78 §P1.2) — the
   // fallback is never "low sample" by definition. `... AND $3::int IS NOT NULL` keeps $3 referenced so
   // Postgres can still infer its type (a bare `false` leaves $3 unused → "cannot determine type").
   const lowSample = lowSampleExpr || `${src}.sample_n < $3::int`;
-  return `${nid}, $1::date, $2::date,
+  return `${nid}, ${family}, $1::date, $2::date,
     ${src}.c_new, ${src}.c_add, ${src}.c_reno, ${src}.c_suite, ${src}.c_demo,
     ${src}.fsi_p50, ${src}.fsi_p90, NULL::numeric, NULL::numeric,
     ${src}.br_p50, ${src}.ex_p25, ${src}.ex_p50, ${src}.reno_kit, ${src}.reno_bth,
@@ -56,7 +56,7 @@ function insertSelectCols(src, nid, storeyP50, storeyP90, coaApproved, coaRefuse
     ${src}.sample_n, ${lowSample}, 'market_realized_5yr', $5`;
 }
 
-const INSERT_COLS = `(neighbourhood_id, window_start, window_end, new_builds_5yr, additions_5yr, renos_5yr, suites_5yr, demos_5yr,
+const INSERT_COLS = `(neighbourhood_id, structure_family, window_start, window_end, new_builds_5yr, additions_5yr, renos_5yr, suites_5yr, demos_5yr,
   realized_fsi_p50, realized_fsi_p90, realized_coverage_p50, realized_coverage_p90,
   build_ratio_p50, existing_build_ratio_p25, existing_build_ratio_p50, reno_kitchen_pct, reno_bath_pct,
   storeys_p50, storeys_p90, coa_approved, coa_refused, coa_total, coa_approval_rate,
@@ -66,7 +66,7 @@ const INSERT_COLS = `(neighbourhood_id, window_start, window_end, new_builds_5yr
 // tiebreak (DISTINCT ON). 5-yr window; only parcel-linked, neighbourhood-resolved permits.
 const OBS_CTE = `obs AS (
   SELECT DISTINCT ON (p.zoning_dominant_parcel_id, kc.kind)
-    pa.neighbourhood_id, kc.kind,
+    pa.neighbourhood_id, kc.kind, (${bn.structureFamilyCaseSql('p')}) AS structure_family,
     -- NB: guard residential_sqm > 0 — Postgres LEAST/GREATEST IGNORE NULL args, so without it a
     -- NULL-residential permit (~63% have no RESIDENTIAL) would yield existing_ratio = 0.0, not NULL,
     -- silently polluting the percentile.
@@ -114,9 +114,13 @@ async function computeBuildNorms(pool, minSample = bn.BUILD_NORM_MIN_SAMPLE_DEFA
          WHERE coalesce(ca.hearing_date, ca.decision_date) BETWEEN $1 AND $2 AND pa.neighbourhood_id IS NOT NULL
          GROUP BY pa.neighbourhood_id
        ),
-       agg AS (SELECT o.neighbourhood_id, ${AGG_COLS} FROM obs o GROUP BY o.neighbourhood_id)
+       -- P2: per-POCKET × FAMILY rows (detached/townhouse/multiplex; family-agnostic obs excluded).
+       -- coa + storey are per-neighbourhood (not family-split): coa is per parcel, storey norms are UNIFIED.
+       agg AS (SELECT o.neighbourhood_id, o.structure_family, ${AGG_COLS}
+               FROM obs o WHERE o.structure_family IS NOT NULL
+               GROUP BY o.neighbourhood_id, o.structure_family)
        INSERT INTO neighbourhood_build_norms ${INSERT_COLS}
-       SELECT ${insertSelectCols('a', 'a.neighbourhood_id', 'nsn.storeys_p50', 'nsn.storeys_p90', 'coalesce(c.approved,0)', 'coalesce(c.refused,0)', 'coalesce(c.total,0)')}
+       SELECT ${insertSelectCols('a', 'a.neighbourhood_id', 'a.structure_family', 'nsn.storeys_p50', 'nsn.storeys_p90', 'coalesce(c.approved,0)', 'coalesce(c.refused,0)', 'coalesce(c.total,0)')}
        FROM agg a
        LEFT JOIN coa_agg c ON c.neighbourhood_id = a.neighbourhood_id
        LEFT JOIN neighbourhood_storey_norms nsn ON nsn.neighbourhood_id = a.neighbourhood_id`,
@@ -124,16 +128,23 @@ async function computeBuildNorms(pool, minSample = bn.BUILD_NORM_MIN_SAMPLE_DEFA
     );
 
     // citywide fallback (neighbourhood_id = NULL) — UNCONDITIONAL (review A-10). low_sample forced false.
-    await client.query(
+    const cityRes = await client.query(
       `WITH ${OBS_CTE},
        coa_all AS (
          SELECT count(*) FILTER (WHERE ca.decision ILIKE '%approv%')::int AS approved,
                 count(*) FILTER (WHERE ca.decision ILIKE '%refus%')::int  AS refused, count(*)::int AS total
          FROM coa_applications ca WHERE coalesce(ca.hearing_date, ca.decision_date) BETWEEN $1 AND $2
        ),
-       ag AS (SELECT ${AGG_COLS} FROM obs o)
+       -- P2: citywide rows — one PER family (typed obs) + an UNCONDITIONAL (NULL,'all') rollup over
+       -- ALL obs (the family-agnostic backstop every read falls through to). Storey subqueries read the
+       -- UNIFIED neighbourhood_storey_norms citywide row (single-row — storey norms are NOT family-aware).
+       ag AS (
+         SELECT o.structure_family, ${AGG_COLS} FROM obs o WHERE o.structure_family IS NOT NULL GROUP BY o.structure_family
+         UNION ALL
+         SELECT 'all'::text AS structure_family, ${AGG_COLS} FROM obs o
+       )
        INSERT INTO neighbourhood_build_norms ${INSERT_COLS}
-       SELECT ${insertSelectCols('ag', 'NULL',
+       SELECT ${insertSelectCols('ag', 'NULL', 'ag.structure_family',
               '(SELECT storeys_p50 FROM neighbourhood_storey_norms WHERE neighbourhood_id IS NULL)',
               '(SELECT storeys_p90 FROM neighbourhood_storey_norms WHERE neighbourhood_id IS NULL)',
               'coalesce(ca.approved,0)', 'coalesce(ca.refused,0)', 'coalesce(ca.total,0)',
@@ -142,16 +153,22 @@ async function computeBuildNorms(pool, minSample = bn.BUILD_NORM_MIN_SAMPLE_DEFA
       params,
     );
 
-    return (perNbhd.rowCount || 0) + 1;
+    return (perNbhd.rowCount || 0) + (cityRes.rowCount || 0);
   });
 
+  // Stats. Citywide is now MULTI-ROW (one per family + 'all'), so the scalar subqueries + the "exactly
+  // one citywide" check target the (NULL,'all') backstop explicitly (else "more than one row"). P2.
   const stats = (await pool.query(
-    `SELECT count(*) FILTER (WHERE neighbourhood_id IS NOT NULL)::int AS nbhds,
-            count(*) FILTER (WHERE neighbourhood_id IS NULL)::int AS citywide_count,
+    `SELECT count(*) FILTER (WHERE neighbourhood_id IS NOT NULL)::int AS pocket_family_rows,
+            count(DISTINCT neighbourhood_id) FILTER (WHERE neighbourhood_id IS NOT NULL)::int AS nbhds,
+            count(*) FILTER (WHERE neighbourhood_id IS NULL AND structure_family = 'all')::int AS citywide_all_count,
+            count(*) FILTER (WHERE neighbourhood_id IS NULL AND structure_family <> 'all')::int AS citywide_family_count,
+            count(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND structure_family = 'detached')::int AS detached_pocket_rows,
             count(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND low_sample)::int AS low_sample_nbhds,
             count(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND build_ratio_p50 IS NULL)::int AS no_build_ratio,
-            (SELECT existing_build_ratio_p50 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL) AS citywide_existing_p50,
-            (SELECT realized_fsi_p50 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL) AS citywide_fsi_p50
+            (SELECT existing_build_ratio_p50 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all') AS citywide_existing_p50,
+            (SELECT realized_fsi_p50 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all') AS citywide_fsi_p50,
+            (SELECT realized_fsi_p90 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'detached') AS citywide_detached_fsi_p90
      FROM neighbourhood_build_norms`)).rows[0];
 
   return { rowsWritten, fsiExcludedNonlowrise: clean.excluded, fsiCapped: clean.capped, ...stats };
@@ -161,11 +178,18 @@ function main() {
   pipeline.run('compute-build-norms', async (pool) => {
     const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
       const s = await computeBuildNorms(pool);
-      const nullRate = s.nbhds > 0 ? s.no_build_ratio / s.nbhds : 0;
+      // P2: numerator + denominator are both per-POCKET-FAMILY row (no_build_ratio counts pocket-family
+      // rows with a null build_ratio, so divide by pocket_family_rows, NOT distinct neighbourhoods).
+      const nullRate = s.pocket_family_rows > 0 ? s.no_build_ratio / s.pocket_family_rows : 0;
       const auditRows = [
         { metric: 'neighbourhoods_computed', value: s.nbhds, threshold: '> 0', status: s.nbhds > 0 ? 'INFO' : 'WARN' },
+        // P2 family-aware: one (NULL,'all') backstop is REQUIRED (every read falls through to it).
+        { metric: 'citywide_all_backstop_written', value: s.citywide_all_count, threshold: '== 1', status: s.citywide_all_count === 1 ? 'INFO' : 'FAIL' },
+        { metric: 'citywide_family_rows', value: s.citywide_family_count, threshold: null, status: 'INFO' },
+        { metric: 'pocket_family_rows', value: s.pocket_family_rows, threshold: null, status: 'INFO' },
+        { metric: 'detached_pocket_rows', value: s.detached_pocket_rows, threshold: null, status: 'INFO' },
+        { metric: 'citywide_detached_fsi_p90', value: s.citywide_detached_fsi_p90, threshold: null, status: 'INFO' },
         { metric: 'low_sample_neighbourhoods', value: s.low_sample_nbhds, threshold: null, status: 'INFO' },
-        { metric: 'citywide_fallback_written', value: s.citywide_count, threshold: '== 1', status: s.citywide_count === 1 ? 'INFO' : 'WARN' },
         { metric: 'build_ratio_null_rate_pct', value: Math.round(1000 * nullRate) / 10, threshold: `< ${bn.BUILD_RATIO_NULL_RATE_WARN * 100}%`, status: nullRate > bn.BUILD_RATIO_NULL_RATE_WARN ? 'WARN' : 'INFO' },
         { metric: 'citywide_existing_build_ratio_p50', value: s.citywide_existing_p50, threshold: null, status: 'INFO' },
         { metric: 'citywide_fsi_p50', value: s.citywide_fsi_p50, threshold: null, status: 'INFO' },

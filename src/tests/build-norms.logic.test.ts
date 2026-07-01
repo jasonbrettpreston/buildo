@@ -133,3 +133,58 @@ describe('build-norms low-rise-residential allowlist (norm-cohort contamination 
     expect(sql).toContain('sfd|townhouse|duplex|converted house|laneway|rear yard suite|unit - (detached|semi)');
   });
 });
+
+describe('build-norms family mapping (Spec 78 P2) — structureFamily(structure_type)', () => {
+  it('detached forms (SFD + N-unit detached/semi) → detached', () => {
+    for (const t of ['SFD - Detached', 'SFD - Semi-Detached', '2 Unit - Detached', '3+ Unit - Semi-detached']) {
+      expect(bn.structureFamily(t), t).toBe('detached');
+    }
+  });
+  it('townhouse forms → townhouse (wins over detached for "SFD - Townhouse")', () => {
+    expect(bn.structureFamily('SFD - Townhouse')).toBe('townhouse');
+    expect(bn.structureFamily('Stacked Townhouses')).toBe('townhouse');
+  });
+  it('duplex / converted house / multiple → multiplex', () => {
+    expect(bn.structureFamily('Duplex')).toBe('multiplex');
+    expect(bn.structureFamily('Converted House')).toBe('multiplex');
+  });
+  it('suite / unrecognized / NULL → null (rollup-only, no dwelling family)', () => {
+    expect(bn.structureFamily('Laneway / Rear Yard Suite')).toBeNull();
+    expect(bn.structureFamily(null)).toBeNull();
+    expect(bn.structureFamily(undefined)).toBeNull();
+  });
+  it('structureFamilyCaseSql() mirrors the JS branch order (townhouse → detached → multiplex → NULL)', () => {
+    const sql = bn.structureFamilyCaseSql('p');
+    const order = ['townhouse', "'townhouse'", 'sfd|detached|semi', "'detached'", 'duplex|converted house|multiple', "'multiplex'", 'ELSE NULL'];
+    let idx = -1;
+    for (const token of order) {
+      const next = sql.indexOf(token, idx + 1);
+      expect(next, `token ${token} in order`).toBeGreaterThan(idx);
+      idx = next;
+    }
+  });
+});
+
+describe('build-norms family mapping (Spec 78 P2) — parcelFamilyFromZoning(zoning_class)', () => {
+  it('RD/RS → detached; RT → townhouse; RM → multiplex', () => {
+    expect(bn.parcelFamilyFromZoning('RD')).toBe('detached');
+    expect(bn.parcelFamilyFromZoning('RD3')).toBe('detached');
+    expect(bn.parcelFamilyFromZoning('RS')).toBe('detached'); // semi grouped with detached
+    expect(bn.parcelFamilyFromZoning('RT')).toBe('townhouse');
+    expect(bn.parcelFamilyFromZoning('RM')).toBe('multiplex');
+  });
+  it("generic-R / non-residential / NULL → the literal 'all' backstop (never SQL NULL)", () => {
+    expect(bn.parcelFamilyFromZoning('R')).toBe('all');
+    expect(bn.parcelFamilyFromZoning('CR')).toBe('all');
+    expect(bn.parcelFamilyFromZoning(null)).toBe('all');
+    expect(bn.parcelFamilyFromZoning('')).toBe('all');
+  });
+  it('parcelFamilyFromZoningCaseSql() mirrors the prefixes + else-all', () => {
+    const sql = bn.parcelFamilyFromZoningCaseSql('p.zoning_class');
+    expect(sql).toContain("LIKE 'RD%'");
+    expect(sql).toContain("LIKE 'RS%'");
+    expect(sql).toContain("LIKE 'RT%'");
+    expect(sql).toContain("LIKE 'RM%'");
+    expect(sql).toContain("ELSE 'all'");
+  });
+});

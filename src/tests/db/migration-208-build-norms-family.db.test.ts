@@ -34,10 +34,11 @@ describe.skipIf(!dbAvailable())('migration 208 — neighbourhood_build_norms.str
   beforeAll(async () => {
     pool = getTestPool() as Pool;
     await pool.query(`INSERT INTO neighbourhoods (id, neighbourhood_id, name) VALUES ($1,$1,$2) ON CONFLICT (id) DO NOTHING`, [NB, `PCM-FAM-${NB}`]);
+    await pool.query(`DELETE FROM neighbourhood_build_norms`); // clean any rows leaked by an earlier test file
   });
 
   afterEach(async () => {
-    await pool.query(`DELETE FROM neighbourhood_build_norms WHERE data_provenance = 'test'`);
+    await pool.query(`DELETE FROM neighbourhood_build_norms`); // constraint test owns the table state — full clean
   });
 
   it('composite UNIQUE(neighbourhood_id, structure_family): distinct families per nbhd OK; dup family fails', async () => {

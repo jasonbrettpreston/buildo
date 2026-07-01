@@ -62,6 +62,54 @@ function classifyKind({ project_type, structure_type, description }) {
   return 'other';
 }
 
+// --- Family mapping (Spec 78 P2). TWO vocabularies over the SAME family keys {detached, townhouse,
+//     multiplex} so a parcel's family (from zoning) joins to a build-norm cohort's family (from the
+//     permit's structure_type). RD/RS (detached + semi) group as 'detached' — semis share the detached
+//     build pattern + the zoning setback family. 'all' is the family-agnostic citywide backstop. ---
+
+/** Permit structure_type → build-norm cohort family, ALIGNED to the parcel zoning family it will be
+ *  read against (RD/RS→detached). So detached-FORM buildings (incl. "N Unit - Detached/Semi") map to
+ *  'detached'; townhouses → 'townhouse'; duplex/converted-house/multiple → 'multiplex'. Returns null for
+ *  suites / unrecognized / NULL (→ the family-agnostic 'all' rollup only). Order: townhouse before
+ *  detached (an "SFD - Townhouse" is a townhouse); detached before multiplex ("2 Unit - Detached" is a
+ *  detached form, NOT a multiplex). */
+function structureFamily(structureType) {
+  const st = (structureType || '').toLowerCase();
+  if (/townhouse/.test(st)) return 'townhouse';
+  if (/sfd|detached|semi/.test(st)) return 'detached';
+  if (/duplex|converted house|multiple/.test(st)) return 'multiplex';
+  return null;
+}
+
+/** SQL CASE mirroring structureFamily(), keyed on alias `a`. NULL for the rollup-only rows. */
+function structureFamilyCaseSql(a) {
+  return `CASE
+    WHEN lower(coalesce(${a}.structure_type,'')) ~ 'townhouse' THEN 'townhouse'
+    WHEN lower(coalesce(${a}.structure_type,'')) ~ 'sfd|detached|semi' THEN 'detached'
+    WHEN lower(coalesce(${a}.structure_type,'')) ~ 'duplex|converted house|multiple' THEN 'multiplex'
+    ELSE NULL END`;
+}
+
+/** Parcel zoning_class → the family whose build-norm cohort it reads (Spec 78 P2). 569-2013 residential
+ *  prefixes; generic-R / non-residential / NULL → the literal 'all' backstop (NEVER a SQL NULL — a
+ *  `structure_family = NULL` join predicate is always false). */
+function parcelFamilyFromZoning(zoningClass) {
+  const zc = (zoningClass || '').toUpperCase();
+  if (zc.startsWith('RD') || zc.startsWith('RS')) return 'detached';
+  if (zc.startsWith('RT')) return 'townhouse';
+  if (zc.startsWith('RM')) return 'multiplex';
+  return 'all';
+}
+
+/** SQL CASE mirroring parcelFamilyFromZoning(), keyed on `zoneCol` (a column ref, e.g. `p.zoning_class`). */
+function parcelFamilyFromZoningCaseSql(zoneCol) {
+  return `CASE
+    WHEN upper(coalesce(${zoneCol},'')) LIKE 'RD%' OR upper(coalesce(${zoneCol},'')) LIKE 'RS%' THEN 'detached'
+    WHEN upper(coalesce(${zoneCol},'')) LIKE 'RT%' THEN 'townhouse'
+    WHEN upper(coalesce(${zoneCol},'')) LIKE 'RM%' THEN 'multiplex'
+    ELSE 'all' END`;
+}
+
 /** SQL CASE mirroring classifyKind(), keyed on alias `a`. The single source for the kind buckets
  *  used by both the JS mirror (parity test) and the inline aggregation SQL in compute-build-norms.js. */
 function buildKindCaseSql(a) {
@@ -88,4 +136,8 @@ module.exports = {
   lowRiseResidentialSql,
   classifyKind,
   buildKindCaseSql,
+  structureFamily,
+  structureFamilyCaseSql,
+  parcelFamilyFromZoning,
+  parcelFamilyFromZoningCaseSql,
 };

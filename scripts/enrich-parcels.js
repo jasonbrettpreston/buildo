@@ -47,6 +47,7 @@ const {
 } = require('./lib/zoning-precedence');
 const mb = require('./lib/max-build');
 const optcfg = require('./lib/optimal-config'); // Spec 78 Phase 3A — optimal-config engine
+const bn = require('./lib/build-norms'); // Spec 78 P2 — parcelFamilyFromZoning family-aware norm read
 
 // §R2 — advisory lock = spec number.
 const ADVISORY_LOCK_ID = 65;
@@ -1013,27 +1014,38 @@ function buildOptConfigSelectSql({ full = false, scopeWhere = 'TRUE' } = {}) {
            p.existing_other_structures_sqm, p.existing_other_structures_count, p.lot_size_confidence,
            p.neighbourhood_id, n.name AS neighbourhood_name,
            (nbn.id IS NULL) AS used_citywide,
-           COALESCE(nbn.storeys_p50, cw.storeys_p50)                     AS storeys_p50,
-           COALESCE(nbn.storeys_p90, cw.storeys_p90)                     AS storeys_p90,
-           COALESCE(nbn.new_builds_5yr, cw.new_builds_5yr)               AS new_builds_5yr,
-           COALESCE(nbn.additions_5yr, cw.additions_5yr)                 AS additions_5yr,
-           COALESCE(nbn.renos_5yr, cw.renos_5yr)                         AS renos_5yr,
-           COALESCE(nbn.suites_5yr, cw.suites_5yr)                       AS suites_5yr,
-           COALESCE(nbn.demos_5yr, cw.demos_5yr)                         AS demos_5yr,
-           COALESCE(nbn.realized_fsi_p50, cw.realized_fsi_p50)           AS realized_fsi_p50,
-           COALESCE(nbn.build_ratio_p50, cw.build_ratio_p50)            AS build_ratio_p50,
-           COALESCE(nbn.existing_build_ratio_p25, cw.existing_build_ratio_p25) AS existing_build_ratio_p25,
-           COALESCE(nbn.existing_build_ratio_p50, cw.existing_build_ratio_p50) AS existing_build_ratio_p50,
-           COALESCE(nbn.coa_approved, cw.coa_approved)                   AS coa_approved,
-           COALESCE(nbn.coa_refused, cw.coa_refused)                     AS coa_refused,
-           COALESCE(nbn.coa_approval_rate, cw.coa_approval_rate)         AS coa_approval_rate,
-           COALESCE(nbn.window_start, cw.window_start)                   AS window_start,
-           COALESCE(nbn.window_end, cw.window_end)                       AS window_end,
-           COALESCE(nbn.sample_n, cw.sample_n)                           AS nbn_sample_n
+           -- P2 3-level family fallback: pocket-family (nbn) → citywide-family (cwf) → citywide-'all' (cwa).
+           COALESCE(nbn.storeys_p50, cwf.storeys_p50, cwa.storeys_p50)                     AS storeys_p50,
+           COALESCE(nbn.storeys_p90, cwf.storeys_p90, cwa.storeys_p90)                     AS storeys_p90,
+           COALESCE(nbn.new_builds_5yr, cwf.new_builds_5yr, cwa.new_builds_5yr)            AS new_builds_5yr,
+           COALESCE(nbn.additions_5yr, cwf.additions_5yr, cwa.additions_5yr)              AS additions_5yr,
+           COALESCE(nbn.renos_5yr, cwf.renos_5yr, cwa.renos_5yr)                          AS renos_5yr,
+           COALESCE(nbn.suites_5yr, cwf.suites_5yr, cwa.suites_5yr)                       AS suites_5yr,
+           COALESCE(nbn.demos_5yr, cwf.demos_5yr, cwa.demos_5yr)                          AS demos_5yr,
+           COALESCE(nbn.realized_fsi_p50, cwf.realized_fsi_p50, cwa.realized_fsi_p50)     AS realized_fsi_p50,
+           COALESCE(nbn.realized_fsi_p90, cwf.realized_fsi_p90, cwa.realized_fsi_p90)     AS realized_fsi_p90,
+           COALESCE(nbn.build_ratio_p50, cwf.build_ratio_p50, cwa.build_ratio_p50)        AS build_ratio_p50,
+           COALESCE(nbn.existing_build_ratio_p25, cwf.existing_build_ratio_p25, cwa.existing_build_ratio_p25) AS existing_build_ratio_p25,
+           COALESCE(nbn.existing_build_ratio_p50, cwf.existing_build_ratio_p50, cwa.existing_build_ratio_p50) AS existing_build_ratio_p50,
+           COALESCE(nbn.coa_approved, cwf.coa_approved, cwa.coa_approved)                 AS coa_approved,
+           COALESCE(nbn.coa_refused, cwf.coa_refused, cwa.coa_refused)                    AS coa_refused,
+           COALESCE(nbn.coa_approval_rate, cwf.coa_approval_rate, cwa.coa_approval_rate)  AS coa_approval_rate,
+           COALESCE(nbn.window_start, cwf.window_start, cwa.window_start)                 AS window_start,
+           COALESCE(nbn.window_end, cwf.window_end, cwa.window_end)                       AS window_end,
+           COALESCE(nbn.sample_n, cwf.sample_n, cwa.sample_n)                             AS nbn_sample_n
     FROM parcels p
-    LEFT JOIN neighbourhood_build_norms nbn ON nbn.neighbourhood_id = p.neighbourhood_id
     LEFT JOIN neighbourhoods n ON n.id = p.neighbourhood_id
-    CROSS JOIN (SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL) cw
+    -- pocket-family: this neighbourhood, the parcel's dwelling family (from zoning; literal 'all' for
+    -- generic-R/non-residential — a structure_family=NULL join predicate would always be false).
+    LEFT JOIN neighbourhood_build_norms nbn
+      ON nbn.neighbourhood_id = p.neighbourhood_id
+      AND nbn.structure_family = (${bn.parcelFamilyFromZoningCaseSql('p.zoning_class')})
+    -- citywide row for the parcel's family (absent for a sparse family → NULL → falls through to cwa).
+    LEFT JOIN neighbourhood_build_norms cwf
+      ON cwf.neighbourhood_id IS NULL
+      AND cwf.structure_family = (${bn.parcelFamilyFromZoningCaseSql('p.zoning_class')})
+    -- citywide 'all' backstop — exactly one row (partial unique index); asserted by the precondition guard.
+    CROSS JOIN (SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all') cwa
     WHERE p.max_buildable_footprint_sqm IS NOT NULL AND p.lot_size_sqm > 0 AND (${scopeWhere}) ${incrWhere}`;
 }
 
@@ -1134,11 +1146,12 @@ async function flushOptConfigBatch(pool, batch) {
 }
 
 async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE' } = {}) {
-  // Precondition: the citywide-fallback row MUST exist (compute-build-norms writes it unconditionally).
-  // Without it the SELECT's citywide CROSS JOIN yields 0 rows → the pass would silently no-op (review C1).
-  const cw = await pool.query(`SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL LIMIT 1`);
+  // Precondition: the citywide (NULL,'all') backstop row MUST exist — the SELECT's cwa CROSS JOIN is
+  // filtered to structure_family='all', so without it the whole pass yields 0 rows → silent no-op
+  // (review C1). compute-build-norms writes the 'all' backstop UNCONDITIONALLY (P2).
+  const cw = await pool.query(`SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all' LIMIT 1`);
   if (!cw.rowCount) {
-    throw new Error(`${TAG} optimal-config: no citywide neighbourhood_build_norms fallback row — run compute_build_norms (permits chain) first`);
+    throw new Error(`${TAG} optimal-config: no citywide (NULL,'all') neighbourhood_build_norms backstop — run compute_build_norms (permits chain) first`);
   }
   const stats = { updated: 0, suite_fits: 0, conf_high: 0, conf_medium: 0, conf_low: 0, citywide: 0, errors: 0 };
   let batch = [];

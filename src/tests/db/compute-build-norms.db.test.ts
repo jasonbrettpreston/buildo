@@ -38,7 +38,9 @@ async function insPermit(
     `INSERT INTO permits (permit_num, revision_num, project_type, structure_type, description,
        zoning_dominant_parcel_id, residential_sqm, interior_alterations_sqm, issued_date)
      VALUES ($1, '00', $2, $3, $4, $5, $6, $7, now()::date - interval '6 months')`,
-    [`BN-TEST-${pseq}`, projectType, opts.structure ?? null, opts.desc ?? null, parcel, opts.res ?? null, opts.ia ?? null],
+    // Default structure_type → 'SFD - Detached' so fixtures land in the 'detached' family cohort (P2);
+    // tests needing a different family/exclusion (townhouse, apartment) pass opts.structure explicitly.
+    [`BN-TEST-${pseq}`, projectType, opts.structure ?? 'SFD - Detached', opts.desc ?? null, parcel, opts.res ?? null, opts.ia ?? null],
   );
 }
 async function insCoa(pool: Pool, parcel: number, decision: string) {
@@ -58,6 +60,7 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-1 compute-build-norms — live 
     await pool.query(`DELETE FROM permits WHERE permit_num LIKE 'BN-TEST-%'`);
     await pool.query(`DELETE FROM coa_applications WHERE application_number LIKE 'BN-COA-%'`);
     await pool.query(`DELETE FROM parcels WHERE parcel_id LIKE 'BN-TEST-%'`);
+    await pool.query(`DELETE FROM neighbourhood_build_norms`); // truncate-replace leaks its final run — clean so no cross-test leak
     await pool.query(`DELETE FROM neighbourhoods WHERE id IN ($1,$2)`, [N1, N2]);
     pseq = 0;
   });
@@ -93,8 +96,9 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-1 compute-build-norms — live 
 
     await computeBuildNorms(pool);
 
+    // P2: read the 'detached' family row (fixtures default to SFD - Detached).
     const get = async (nbhd: number) =>
-      (await pool.query(`SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id = $1`, [nbhd])).rows[0];
+      (await pool.query(`SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id = $1 AND structure_family = 'detached'`, [nbhd])).rows[0];
 
     const n1 = await get(N1);
     expect(n1.new_builds_5yr).toBe(3);                 // dedup: P1's two new_builds → ONE obs
@@ -116,9 +120,11 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-1 compute-build-norms — live 
     expect(n2.new_builds_5yr).toBe(2);
     expect(n2.low_sample).toBe(true);                  // 2 < 5
 
-    // exactly ONE citywide row (neighbourhood_id IS NULL) — written unconditionally
-    const cw = await pool.query(`SELECT count(*)::int n FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL`);
-    expect(cw.rows[0].n).toBe(1);
+    // P2: exactly ONE citywide (NULL,'all') backstop row — written unconditionally; + one (NULL,'detached').
+    const cwAll = await pool.query(`SELECT count(*)::int n FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all'`);
+    expect(cwAll.rows[0].n).toBe(1);
+    const cwDet = await pool.query(`SELECT count(*)::int n FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'detached'`);
+    expect(cwDet.rows[0].n).toBe(1);
   }, 90_000);
 
   it('REGRESSION-LOCK: an apartment with HIGHER residential_sqm does NOT win the DISTINCT ON slot or pollute FSI', async () => {
@@ -147,9 +153,29 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-1 compute-build-norms — live 
     await computeBuildNorms(pool);
     await computeBuildNorms(pool);
 
-    const n1 = await pool.query(`SELECT count(*)::int n FROM neighbourhood_build_norms WHERE neighbourhood_id = $1`, [N1]);
+    const n1 = await pool.query(`SELECT count(*)::int n FROM neighbourhood_build_norms WHERE neighbourhood_id = $1 AND structure_family = 'detached'`, [N1]);
     expect(n1.rows[0].n).toBe(1);
-    const cw = await pool.query(`SELECT count(*)::int n FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL`);
+    const cw = await pool.query(`SELECT count(*)::int n FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all'`);
     expect(cw.rows[0].n).toBe(1);
+  }, 90_000);
+
+  it('P2 family segmentation: detached + townhouse permits in one nbhd → two distinct pocket-family rows', async () => {
+    await insNbhd(pool, N1);
+    // detached cohort: FSI 1.0
+    await insParcel(pool, P(1), N1, 400, 500);
+    await insPermit(pool, P(1), 'new_build', { res: 400, structure: 'SFD - Detached' });
+    // townhouse cohort: FSI 2.0 (denser — distinct realized pattern)
+    await insParcel(pool, P(2), N1, 400, 500);
+    await insPermit(pool, P(2), 'new_build', { res: 800, structure: 'SFD - Townhouse' });
+
+    await computeBuildNorms(pool);
+
+    const det = (await pool.query(`SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id = $1 AND structure_family = 'detached'`, [N1])).rows[0];
+    const twn = (await pool.query(`SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id = $1 AND structure_family = 'townhouse'`, [N1])).rows[0];
+    expect(Number(det.realized_fsi_p50)).toBeCloseTo(1.0, 5);
+    expect(Number(twn.realized_fsi_p50)).toBeCloseTo(2.0, 5); // family-segmented, NOT a blended 1.5
+    // the (NULL,'all') backstop blends BOTH → median([1.0, 2.0]) = 1.5
+    const all = (await pool.query(`SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all'`)).rows[0];
+    expect(Number(all.realized_fsi_p50)).toBeCloseTo(1.5, 5);
   }, 90_000);
 });

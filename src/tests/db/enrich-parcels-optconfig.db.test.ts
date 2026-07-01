@@ -35,14 +35,16 @@ async function insParcel(pool: Pool, id: number, nbhd: number | null, over: Reco
   );
 }
 async function insNorm(pool: Pool, nbhd: number | null) {
-  // guarded citywide insert (the partial-unique singleton allows exactly one); per-nbhd plain insert.
+  // P2: seed the (nbhd,'all') / (NULL,'all') family — the test parcels have no zoning_class →
+  // parcelFamilyFromZoning → 'all', so they read the 'all' cohort. Citywide guarded on (NULL,'all')
+  // (the partial-unique singleton is now per-family); per-nbhd uses the composite ON CONFLICT.
   if (nbhd == null) {
-    await pool.query(`INSERT INTO neighbourhood_build_norms (neighbourhood_id, storeys_p50, storeys_p90, new_builds_5yr, additions_5yr, renos_5yr, coa_approved, coa_refused, coa_approval_rate, existing_build_ratio_p25, existing_build_ratio_p50, build_ratio_p50, sample_n)
-       SELECT NULL, 2, 3, 3000, 6000, 9000, 900, 70, 0.93, 0.55, 0.62, 0.80, 30000
-       WHERE NOT EXISTS (SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL)`);
+    await pool.query(`INSERT INTO neighbourhood_build_norms (neighbourhood_id, structure_family, storeys_p50, storeys_p90, new_builds_5yr, additions_5yr, renos_5yr, coa_approved, coa_refused, coa_approval_rate, existing_build_ratio_p25, existing_build_ratio_p50, build_ratio_p50, sample_n)
+       SELECT NULL, 'all', 2, 3, 3000, 6000, 9000, 900, 70, 0.93, 0.55, 0.62, 0.80, 30000
+       WHERE NOT EXISTS (SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all')`);
   } else {
-    await pool.query(`INSERT INTO neighbourhood_build_norms (neighbourhood_id, storeys_p50, storeys_p90, new_builds_5yr, additions_5yr, renos_5yr, coa_approved, coa_refused, coa_approval_rate, existing_build_ratio_p25, existing_build_ratio_p50, build_ratio_p50, sample_n)
-       VALUES ($1, 2, 3, 25, 88, 81, 19, 1, 0.95, 0.55, 0.62, 0.80, 195) ON CONFLICT (neighbourhood_id) DO NOTHING`, [nbhd]);
+    await pool.query(`INSERT INTO neighbourhood_build_norms (neighbourhood_id, structure_family, storeys_p50, storeys_p90, new_builds_5yr, additions_5yr, renos_5yr, coa_approved, coa_refused, coa_approval_rate, existing_build_ratio_p25, existing_build_ratio_p50, build_ratio_p50, sample_n)
+       VALUES ($1, 'all', 2, 3, 25, 88, 81, 19, 1, 0.95, 0.55, 0.62, 0.80, 195) ON CONFLICT (neighbourhood_id, structure_family) DO NOTHING`, [nbhd]);
   }
 }
 
@@ -52,7 +54,7 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-3A enrich-parcels optimal-confi
 
   afterEach(async () => {
     await pool.query(`DELETE FROM parcels WHERE parcel_id LIKE 'OPTCFG-TEST-%'`);
-    await pool.query(`DELETE FROM neighbourhood_build_norms WHERE neighbourhood_id IN ($1,$2)`, [NB, NB_NONORM]);
+    await pool.query(`DELETE FROM neighbourhood_build_norms`); // incl. the seeded (NULL,'all') citywide — no cross-test leak
     await pool.query(`DELETE FROM neighbourhoods WHERE id IN ($1,$2)`, [NB, NB_NONORM]);
   });
 

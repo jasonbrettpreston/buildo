@@ -107,10 +107,14 @@ describe('optconfig SQL shape', () => {
     expect(ep.OPTCFG_WRITE_COLS).toContain('nearby_builds_summary');
   });
 
-  it('select gates on a max-build envelope, cross-joins the citywide fallback, and honours scopeWhere + incremental', () => {
+  it('select gates on a max-build envelope, uses the P2 3-level family fallback, and honours scopeWhere + incremental', () => {
     const sql = ep.buildOptConfigSelectSql({ full: false, scopeWhere: "p.parcel_id = 'X'" });
     expect(sql).toContain('max_buildable_footprint_sqm IS NOT NULL');
-    expect(sql).toContain("neighbourhood_id IS NULL) cw");   // citywide CROSS JOIN
+    // P2 family-aware read: pocket-family (nbn) + citywide-family (cwf) + citywide-'all' backstop (cwa).
+    expect(sql).toContain('nbn.structure_family =');                                  // pocket-family predicate
+    expect(sql).toContain('cwf.structure_family =');                                  // citywide-family predicate
+    expect(sql).toContain("neighbourhood_id IS NULL AND structure_family = 'all') cwa"); // citywide 'all' CROSS JOIN
+    expect(sql).toContain('COALESCE(nbn.realized_fsi_p90, cwf.realized_fsi_p90, cwa.realized_fsi_p90)'); // 3-level, incl. R2 FSI p90
     expect(sql).toContain("p.parcel_id = 'X'");               // scopeWhere injected
     expect(sql).toContain('opt_config_confidence IS NULL');   // incremental (full=false)
     expect(ep.buildOptConfigSelectSql({ full: true })).not.toContain('opt_config_confidence IS NULL');
