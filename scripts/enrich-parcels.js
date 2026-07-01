@@ -1061,6 +1061,8 @@ function mapRowToEngineInput(r) {
     // storeys: prefer the nbhd build-norm p50/p90; fall back to the parcel's own max_build_stories.
     nbhdStoreysP50: numOrNull(r.storeys_p50) ?? numOrNull(r.max_build_stories),
     nbhdStoreysP90: numOrNull(r.storeys_p90) ?? numOrNull(r.max_build_stories),
+    // R2 (Spec 78 P2): realized detached FSI p90 grounds the CoA tier's density (null → by-law fallback).
+    realizedFsiP90: numOrNull(r.realized_fsi_p90),
     abutsLaneway: r.abuts_laneway === true,          // boolean source — engine's fallback gate
     isHolding: r.zoning_holding === 'H',
     isThroughLot: r.is_through_lot === true,

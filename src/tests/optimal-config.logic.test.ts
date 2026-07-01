@@ -164,6 +164,35 @@ describe('optimal-config whole-parcel computeOptimalConfig', () => {
   it('bylaw_version is stamped on every result', () => {
     expect(oc.computeOptimalConfig(lot).bylaw_version).toBe('569-2013_consolidation_2025');
   });
+
+  // R2 (Spec 78 P2): the CoA tier is grounded in the REALIZED detached FSI p90, not the by-law FSI.
+  const r2lot = {
+    lotSizeSqm: 400, maxBuildableFootprintSqm: 140, coverageCapFrac: 0.35,
+    fsiCap: 1.0, nbhdStoreysP50: 2, nbhdStoreysP90: 3, lotSizeConfidence: 'high', rearYardAreaSqm: 0,
+  };
+
+  it('R2: realizedFsiP90 above the by-law FSI lifts the CoA GFA (grounded in what neighbours build)', () => {
+    const bylawOnly = oc.computeOptimalConfig(r2lot);                        // no realizedFsiP90 → by-law
+    const r2 = oc.computeOptimalConfig({ ...r2lot, realizedFsiP90: 1.5 });   // realized > by-law
+    expect(bylawOnly.coa_upside.main_gfa_sqm).toBeCloseTo(400, 5);           // MIN(140×3, 1.0×400) = 400 (by-law FSI)
+    expect(r2.coa_upside.main_gfa_sqm).toBeCloseTo(420, 5);                  // MIN(140×3, 1.5×400) = 420 (coverage-bound)
+    expect(r2.coa_upside.main_gfa_sqm).toBeGreaterThan(bylawOnly.coa_upside.main_gfa_sqm);
+    expect(r2.as_of_right.main_gfa_sqm).toBe(bylawOnly.as_of_right.main_gfa_sqm); // as-of-right UNCHANGED (by-law)
+  });
+
+  it('R2 invariant: realizedFsiP90 below as-of-right density floors CoA at as-of-right (opt_coa ≥ opt_aor)', () => {
+    const r2 = oc.computeOptimalConfig({ ...r2lot, fsiCap: 2.0, realizedFsiP90: 0.5 });
+    // realized-grounded CoA = MIN(140×3, 0.5×400=200) = 200 < as-of-right 280 → floored to 280.
+    expect(r2.coa_upside.main_gfa_sqm).toBe(r2.as_of_right.main_gfa_sqm);
+    expect(r2.coa_upside.main_gfa_binding).toBe('realized_fsi_floor');
+    expect(r2.opt_coa_gfa_uplift_sqm).toBe(0);
+  });
+
+  it('R2: no realizedFsiP90 (null) preserves the by-law CoA behaviour (backward-compatible)', () => {
+    const noNorm = oc.computeOptimalConfig({ ...r2lot, realizedFsiP90: null });
+    const bylaw = oc.computeOptimalConfig(r2lot);
+    expect(noNorm.coa_upside.main_gfa_sqm).toBe(bylaw.coa_upside.main_gfa_sqm);
+  });
 });
 
 describe('optimal-config review-fold fixes (Phase 2 output review)', () => {

@@ -245,7 +245,21 @@ function computeOptimalConfig(parcel) {
   const p90 = p.nbhdStoreysP90 || p50;
 
   const asOfRight = buildTier(p, p50, !blocked);
-  const coaUpside = buildTier(p, p90, !isHolding); // CoA can relieve heritage-massing but not holding
+  // R2 (Spec 78 P2): ground the CoA tier's main GFA in the REALIZED detached FSI p90 — what neighbours
+  // actually get APPROVED via CoA — instead of the by-law FSI (CoAs routinely exceed by-law density; the
+  // realized p90 captures the achievable reality). fsiCap = realizedFsiP90 when present (else by-law →
+  // current behaviour). mainBuildGfa still bounds it by the physical footprint × p90 storeys (coverage cap).
+  const coaFsiCap = p.realizedFsiP90 != null ? p.realizedFsiP90 : p.fsiCap;
+  const coaUpside = buildTier({ ...p, fsiCap: coaFsiCap }, p90, !isHolding); // CoA can relieve heritage-massing but not holding
+  // R2 invariant (Guardian fold #3): opt_coa ≥ opt_aor — a CoA can only ADD. When realizedFsiP90 is below
+  // the by-law FSI (neighbours don't build to max), the realized-grounded CoA GFA can dip under as-of-right;
+  // floor it at as-of-right (the CoA simply offers no density uplift there).
+  if (coaUpside.main_gfa_sqm < asOfRight.main_gfa_sqm) {
+    const suiteGfa = coaUpside.suite ? coaUpside.suite.gfaSqm : 0;
+    coaUpside.main_gfa_sqm = asOfRight.main_gfa_sqm;
+    coaUpside.main_gfa_binding = 'realized_fsi_floor';
+    coaUpside.total_gfa_sqm = round2(asOfRight.main_gfa_sqm + suiteGfa);
+  }
 
   // Trade-off resolver: a max-coverage main house may leave no rear yard for a suite. Compare
   // {max-main + whatever suite fits} vs {a shorter main that frees suite room}. We only have one main
