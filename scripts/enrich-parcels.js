@@ -881,7 +881,7 @@ function buildCompCandidatesSql() {
   WITH recent AS (
     SELECT DISTINCT ON (pr.zoning_dominant_parcel_id)
       pr.zoning_dominant_parcel_id AS pid, pr.street_num, pr.street_name,
-      pr.project_type, pr.residential_sqm, pr.storeys
+      pr.project_type, pr.residential_sqm, pr.storeys, pr.structure_type
     FROM permits pr
     WHERE pr.project_type IN ('new_build','addition')
       AND pr.issued_date >= (now()::date - interval '5 years')
@@ -897,6 +897,9 @@ function buildCompCandidatesSql() {
   SELECT pa.id, pa.geom, pa.zoning_class, pa.lot_size_sqm, pa.frontage_m,
     NULLIF(trim(coalesce(r.street_num,'') || ' ' || coalesce(r.street_name,'')), '') AS address,
     r.project_type AS work_type, r.residential_sqm AS permit_gfa, r.storeys AS storeys,
+    -- R4 (Spec 78 P2): the comp's BUILT dwelling family (permit structure_type), falling back to the
+    -- candidate parcel's zoning family when the permit is untyped — so comps match on dwelling FORM.
+    COALESCE(${bn.structureFamilyCaseSql('r')}, ${bn.parcelFamilyFromZoningCaseSql('pa.zoning_class')}) AS comp_family,
     CASE WHEN pa.lot_size_sqm > 0 AND r.residential_sqm > 0 THEN round(r.residential_sqm / pa.lot_size_sqm, 2) END AS permit_fsi,
     CASE WHEN pa.max_buildable_footprint_sqm > 0 AND pa.imagery_roof_footprint_sqm > 0
          THEN round(pa.imagery_roof_footprint_sqm / pa.max_buildable_footprint_sqm, 2) END AS build_ratio,
@@ -921,7 +924,8 @@ function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE' } = 
       jsonb_agg(jsonb_build_object(
         'address', m.address, 'lot_sqm', m.lot_size_sqm, 'frontage_m', m.frontage_m,
         'distance_m', round(m.dist::numeric, 1), 'work_type', m.work_type, 'permit_gfa_sqm', m.permit_gfa,
-        'permit_fsi', m.permit_fsi, 'storeys', m.storeys, 'coa_decision', m.coa_decision, 'build_ratio', m.build_ratio
+        'permit_fsi', m.permit_fsi, 'storeys', m.storeys, 'coa_decision', m.coa_decision, 'build_ratio', m.build_ratio,
+        'structure_family', m.comp_family
       ) ORDER BY m.dist) AS comps,
       count(*)::int AS cnt,
       mode() WITHIN GROUP (ORDER BY m.work_type) AS dominant,
@@ -931,7 +935,8 @@ function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE' } = 
     FROM (
       -- subjects: residential parcels with a max-build envelope (scoped + incremental). Scoping HERE
       -- (not just at the final UPDATE) is what keeps a scoped/test run from kNN-ing all 486K parcels.
-      SELECT sp.id, sp.geom, sp.zoning_class, sp.lot_size_sqm, sp.frontage_m
+      SELECT sp.id, sp.geom, sp.zoning_class, sp.lot_size_sqm, sp.frontage_m,
+        (${bn.parcelFamilyFromZoningCaseSql('sp.zoning_class')}) AS subj_family  -- R4: the subject's dwelling family
       FROM parcels sp
       WHERE sp.max_buildable_footprint_sqm IS NOT NULL AND sp.lot_size_sqm > 0 AND sp.zoning_class IS NOT NULL
         AND (${scopeWhere}) ${incr}
@@ -947,7 +952,10 @@ function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE' } = 
         LIMIT ${COMP_KNN_OVERFETCH}
       ) near
       -- post-filter to genuinely comparable lots, then keep the 10 most similar (|Δlot| + |Δfrontage|·10).
-      WHERE near.zoning_class = s.zoning_class
+      -- R4 (Spec 78 P2): match on dwelling FAMILY — a specific-family subject (detached/townhouse/multiplex)
+      -- pools comps of the same BUILT form (so RD + RS both count as detached); a generic 'all' subject
+      -- (R/RA/RAC) keeps the exact-zoning match. Replaces the old bare near.zoning_class = s.zoning_class.
+      WHERE (near.comp_family = s.subj_family OR (s.subj_family = 'all' AND near.zoning_class = s.zoning_class))
         AND near.lot_size_sqm BETWEEN s.lot_size_sqm * ${1 - COMP_LOT_TOL} AND s.lot_size_sqm * ${1 + COMP_LOT_TOL}
         AND (s.frontage_m IS NULL OR near.frontage_m IS NULL
              OR near.frontage_m BETWEEN s.frontage_m * ${1 - COMP_LOT_TOL} AND s.frontage_m * ${1 + COMP_LOT_TOL})
@@ -1013,6 +1021,7 @@ function buildOptConfigSelectSql({ full = false, scopeWhere = 'TRUE' } = {}) {
            p.is_in_ravine_protection_area, p.exception_number, p.existing_greenspace_sqm,
            p.existing_other_structures_sqm, p.existing_other_structures_count, p.lot_size_confidence,
            p.neighbourhood_id, n.name AS neighbourhood_name,
+           (${bn.parcelFamilyFromZoningCaseSql('p.zoning_class')}) AS norm_family, -- R4: which family cohort the norm came from
            (nbn.id IS NULL) AS used_citywide,
            -- P2 3-level family fallback: pocket-family (nbn) → citywide-family (cwf) → citywide-'all' (cwa).
            COALESCE(nbn.storeys_p50, cwf.storeys_p50, cwa.storeys_p50)                     AS storeys_p50,
@@ -1088,6 +1097,7 @@ function buildNearbyBuildsSummary(r) {
   const headline = `${where}: ${r.new_builds_5yr || 0} new builds + ${r.additions_5yr || 0} additions + ${r.renos_5yr || 0} renos in 5 yrs; CoA ${pct(r.coa_approval_rate)} approval; typically ${r.storeys_p50 || '?'} storeys (p90 ${r.storeys_p90 || '?'})${ratio}.`;
   return {
     basis: r.used_citywide ? 'citywide_fallback' : 'neighbourhood',
+    structure_family: r.norm_family, // R4: the dwelling-family cohort these norms were read from
     neighbourhood_id: r.neighbourhood_id, window_start: r.window_start, window_end: r.window_end,
     new_builds_5yr: r.new_builds_5yr, additions_5yr: r.additions_5yr, renos_5yr: r.renos_5yr,
     suites_5yr: r.suites_5yr, demos_5yr: r.demos_5yr,

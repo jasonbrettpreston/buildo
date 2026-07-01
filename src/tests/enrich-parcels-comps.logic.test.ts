@@ -32,12 +32,19 @@ describe('comps candidate-set SQL', () => {
 });
 
 describe('comps kNN UPDATE SQL', () => {
-  it('over-fetches the 50 nearest (GiST kNN) then post-filters zoning + lot/frontage ±20%', () => {
+  it('over-fetches the 50 nearest (GiST kNN) then post-filters family + lot/frontage ±20%', () => {
     const sql = ep.buildComparableBuildsUpdateSql({ full: true });
     expect(sql).toMatch(/ORDER BY c\.geom <-> s\.geom\s+LIMIT 50/);
-    expect(sql).toContain('near.zoning_class = s.zoning_class');
+    // R4: dwelling-family match (specific family pools same-form comps; 'all' keeps the exact-zoning match).
+    expect(sql).toContain('near.comp_family = s.subj_family');
+    expect(sql).toContain("s.subj_family = 'all' AND near.zoning_class = s.zoning_class");
     expect(sql).toContain('near.lot_size_sqm BETWEEN s.lot_size_sqm * 0.8 AND s.lot_size_sqm * 1.2');
     expect(sql).toMatch(/LIMIT 10/); // top-N kept
+  });
+  it('R4: each comp carries its built structure_family + the subject family is computed once', () => {
+    const sql = ep.buildComparableBuildsUpdateSql({ full: true });
+    expect(sql).toContain("'structure_family', m.comp_family"); // comp JSONB carries the built family
+    expect(sql).toContain('AS subj_family');                    // subject family computed in the subject SELECT
   });
   it('excludes over-captured comps (build_ratio > 1.1) from the p50 only', () => {
     const sql = ep.buildComparableBuildsUpdateSql({ full: true });
