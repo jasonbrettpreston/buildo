@@ -186,6 +186,8 @@ describe('optimal-config whole-parcel computeOptimalConfig', () => {
     expect(r2.coa_upside.main_gfa_sqm).toBe(r2.as_of_right.main_gfa_sqm);
     expect(r2.coa_upside.main_gfa_binding).toBe('realized_fsi_floor');
     expect(r2.opt_coa_gfa_uplift_sqm).toBe(0);
+    // Guardian F3: the floored CoA IS the as-of-right build → storeys floor too (not a stray p90).
+    expect(r2.coa_upside.main_storeys).toBe(r2.as_of_right.main_storeys);
   });
 
   it('R2: no realizedFsiP90 (null) preserves the by-law CoA behaviour (backward-compatible)', () => {

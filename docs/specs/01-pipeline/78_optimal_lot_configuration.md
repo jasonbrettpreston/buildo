@@ -107,11 +107,14 @@ forced `false`) so the per-parcel optimal-config range never NULL-collapses on a
 | metric | threshold | status |
 |---|---|---|
 | `neighbourhoods_computed` | `> 0` | WARN if 0 |
+| `citywide_all_backstop_written` | `== 1` | **FAIL** if not (P2) |
+| `citywide_family_rows` / `pocket_family_rows` / `detached_pocket_rows` | — | INFO (P2) |
+| `citywide_detached_fsi_p90` | — | INFO (P2 — the R2 grounding value) |
 | `low_sample_neighbourhoods` | — | INFO |
-| `citywide_fallback_written` | `== 1` | INFO |
-| `build_ratio_null_rate_pct` | `< 50%` (`BUILD_RATIO_NULL_RATE_WARN`) | WARN above |
-| `citywide_existing_build_ratio_p50` | — | INFO |
-| `citywide_fsi_p50` | — | INFO |
+| `build_ratio_null_rate_pct` | `< 50%` (`BUILD_RATIO_NULL_RATE_WARN`; numerator + denominator both per-pocket-family, P2) | WARN above |
+| `citywide_existing_build_ratio_p50` / `citywide_fsi_p50` | — | INFO (read from the `(NULL,'all')` backstop) |
+
+> **P2 (family-aware):** the single citywide row became one row PER `structure_family` + a `(NULL,'all')` rollup. The old `citywide_fallback_written` INFO metric is now `citywide_all_backstop_written` (the `(NULL,'all')` backstop is the load-bearing fallback every read falls through to, so it is **FAIL**-gated, not INFO). Storey norms stay UNIFIED (not family-split).
 
 ### P1.4 — Cross-layer contracts (`docs/specs/_contracts.json` → `build_norms`)
 

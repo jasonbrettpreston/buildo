@@ -257,6 +257,9 @@ function computeOptimalConfig(parcel) {
   if (coaUpside.main_gfa_sqm < asOfRight.main_gfa_sqm) {
     const suiteGfa = coaUpside.suite ? coaUpside.suite.gfaSqm : 0;
     coaUpside.main_gfa_sqm = asOfRight.main_gfa_sqm;
+    // The CoA offers no density uplift here → its build IS the as-of-right build. Floor the storeys too
+    // (not just GFA) so opt_coa_storeys doesn't report p90 for an as-of-right-sized main (Guardian F3).
+    coaUpside.main_storeys = asOfRight.main_storeys;
     coaUpside.main_gfa_binding = 'realized_fsi_floor';
     coaUpside.total_gfa_sqm = round2(asOfRight.main_gfa_sqm + suiteGfa);
   }

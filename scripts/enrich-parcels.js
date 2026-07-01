@@ -1070,8 +1070,9 @@ function mapRowToEngineInput(r) {
     // storeys: prefer the nbhd build-norm p50/p90; fall back to the parcel's own max_build_stories.
     nbhdStoreysP50: numOrNull(r.storeys_p50) ?? numOrNull(r.max_build_stories),
     nbhdStoreysP90: numOrNull(r.storeys_p90) ?? numOrNull(r.max_build_stories),
-    // R2 (Spec 78 P2): realized detached FSI p90 grounds the CoA tier's density (null → by-law fallback).
-    realizedFsiP90: numOrNull(r.realized_fsi_p90),
+    // R2 (Spec 78 P2, plan fold #3): DETACHED-ONLY realized-FSI grounding — townhouse/multiplex cohorts
+    // are thin (e.g. ~25 multiplex builds citywide) so their p90 is noisy → they keep the by-law FSI.
+    realizedFsiP90: r.norm_family === 'detached' ? numOrNull(r.realized_fsi_p90) : null,
     abutsLaneway: r.abuts_laneway === true,          // boolean source — engine's fallback gate
     isHolding: r.zoning_holding === 'H',
     isThroughLot: r.is_through_lot === true,
@@ -1440,11 +1441,11 @@ async function main(pool) {
         // Optimal-config pass (Spec 78 Phase 3A) — cross-chain read of the neighbourhood build-norms
         // (id read for the used_citywide flag). neighbourhoods.avg_household_income +
         // neighbourhood_storey_norms are read by the max-build pass (WF3-C2 LATERAL) — declared here.
-        neighbourhood_build_norms: ['id', 'neighbourhood_id', 'storeys_p50', 'storeys_p90', 'new_builds_5yr', 'additions_5yr', 'renos_5yr', 'suites_5yr', 'demos_5yr', 'realized_fsi_p50', 'build_ratio_p50', 'existing_build_ratio_p25', 'existing_build_ratio_p50', 'coa_approved', 'coa_refused', 'coa_approval_rate', 'window_start', 'window_end', 'sample_n'],
+        neighbourhood_build_norms: ['id', 'neighbourhood_id', 'structure_family', 'storeys_p50', 'storeys_p90', 'new_builds_5yr', 'additions_5yr', 'renos_5yr', 'suites_5yr', 'demos_5yr', 'realized_fsi_p50', 'realized_fsi_p90', 'build_ratio_p50', 'existing_build_ratio_p25', 'existing_build_ratio_p50', 'coa_approved', 'coa_refused', 'coa_approval_rate', 'window_start', 'window_end', 'sample_n'],
         neighbourhood_storey_norms: ['neighbourhood_id', 'storeys_p50', 'storeys_p90'],
         neighbourhoods: ['id', 'name', 'avg_household_income'],
         // Comparable-builds pass (Spec 78 Phase 3C) — the permitted-parcel candidate set + CoA decision.
-        permits: ['zoning_dominant_parcel_id', 'project_type', 'issued_date', 'street_num', 'street_name', 'residential_sqm', 'storeys'],
+        permits: ['zoning_dominant_parcel_id', 'project_type', 'issued_date', 'street_num', 'street_name', 'residential_sqm', 'storeys', 'structure_type'],
         coa_applications: ['zoning_dominant_parcel_id', 'decision', 'decision_date', 'hearing_date'],
       },
       { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, ...mb.EXISTING_COLS, ...mb.SCENARIO_COLS, ...COMP_WRITE_COLS, ...OPTCFG_WRITE_COLS, 'zoning_enriched_at'] },

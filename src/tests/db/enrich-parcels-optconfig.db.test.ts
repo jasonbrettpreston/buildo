@@ -34,18 +34,18 @@ async function insParcel(pool: Pool, id: number, nbhd: number | null, over: Reco
     keys.map((k) => cols[k]),
   );
 }
-async function insNorm(pool: Pool, nbhd: number | null, realizedFsiP90: number | null = null) {
-  // P2: seed the (nbhd,'all') / (NULL,'all') family — the test parcels have no zoning_class →
-  // parcelFamilyFromZoning → 'all', so they read the 'all' cohort. Citywide guarded on (NULL,'all')
-  // (the partial-unique singleton is now per-family); per-nbhd uses the composite ON CONFLICT.
-  // R2: realized_fsi_p90 grounds the CoA tier (null → by-law fallback in the engine).
+async function insNorm(pool: Pool, nbhd: number | null, realizedFsiP90: number | null = null, family = 'all') {
+  // P2: seed a (nbhd,family) / (NULL,family) cohort. Most tests use 'all' (the test parcels have no
+  // zoning_class → parcelFamilyFromZoning → 'all'); the R2 test uses 'detached' (R2 is detached-only,
+  // plan fold #3). Citywide guarded on (NULL,family) — the partial-unique singleton is per-family;
+  // per-nbhd uses the composite ON CONFLICT. R2: realized_fsi_p90 grounds the CoA tier.
   if (nbhd == null) {
     await pool.query(`INSERT INTO neighbourhood_build_norms (neighbourhood_id, structure_family, storeys_p50, storeys_p90, new_builds_5yr, additions_5yr, renos_5yr, coa_approved, coa_refused, coa_approval_rate, existing_build_ratio_p25, existing_build_ratio_p50, build_ratio_p50, realized_fsi_p90, sample_n)
-       SELECT NULL, 'all', 2, 3, 3000, 6000, 9000, 900, 70, 0.93, 0.55, 0.62, 0.80, $1, 30000
-       WHERE NOT EXISTS (SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all')`, [realizedFsiP90]);
+       SELECT NULL, $2, 2, 3, 3000, 6000, 9000, 900, 70, 0.93, 0.55, 0.62, 0.80, $1, 30000
+       WHERE NOT EXISTS (SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = $2)`, [realizedFsiP90, family]);
   } else {
     await pool.query(`INSERT INTO neighbourhood_build_norms (neighbourhood_id, structure_family, storeys_p50, storeys_p90, new_builds_5yr, additions_5yr, renos_5yr, coa_approved, coa_refused, coa_approval_rate, existing_build_ratio_p25, existing_build_ratio_p50, build_ratio_p50, realized_fsi_p90, sample_n)
-       VALUES ($1, 'all', 2, 3, 25, 88, 81, 19, 1, 0.95, 0.55, 0.62, 0.80, $2, 195) ON CONFLICT (neighbourhood_id, structure_family) DO NOTHING`, [nbhd, realizedFsiP90]);
+       VALUES ($1, $3, 2, 3, 25, 88, 81, 19, 1, 0.95, 0.55, 0.62, 0.80, $2, 195) ON CONFLICT (neighbourhood_id, structure_family) DO NOTHING`, [nbhd, realizedFsiP90, family]);
   }
 }
 
@@ -117,19 +117,24 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-3A enrich-parcels optimal-confi
     expect(stats.updated).toBe(1);                                     // only P(1)
   }, 90_000);
 
-  it('R2: opt_coa is grounded in the realized detached FSI p90 (norm → engine → opt_coa wiring)', async () => {
+  it('R2 (detached-only): opt_coa is grounded in realized detached FSI p90 (norm → engine → opt_coa wiring)', async () => {
     await insNbhd(pool, NB, 'TEST-OC-NBHD');
-    await insNorm(pool, NB, 1.5);    // pocket 'all' cohort with realized_fsi_p90 = 1.5 (dense)
-    await insNorm(pool, null, 1.5);  // citywide 'all' backstop
-    await insParcel(pool, P(20), NB, { bylaw_max_fsi: 0.5 }); // low by-law FSI → realized 1.5 lifts CoA
+    await insNorm(pool, null);                     // (NULL,'all') backstop — the cwa CROSS JOIN needs it
+    await insNorm(pool, NB, 1.5, 'detached');       // pocket DETACHED cohort, realized_fsi_p90 = 1.5 (dense)
+    // detached (RD) parcel with a low by-law FSI → the realized detached 1.5 lifts the CoA tier.
+    await insParcel(pool, P(20), NB, { zoning_class: 'RD', bylaw_max_fsi: 0.5 });
+    // control: a townhouse (RT) parcel — R2 is detached-only, so it keeps by-law (no realized lift).
+    await insNorm(pool, NB, 1.5, 'townhouse');
+    await insParcel(pool, P(21), NB, { zoning_class: 'RT', bylaw_max_fsi: 0.5 });
 
     await ep.enrichOptimalConfig(pool, { full: true, scopeWhere: SCOPE });
 
-    const r = (await pool.query(`SELECT opt_aor_gfa_sqm, opt_coa_gfa_sqm FROM parcels WHERE id = $1`, [P(20)])).rows[0];
-    // as-of-right bound by the by-law FSI 0.5 → MIN(140×2, 0.5×400=200) = 200.
-    expect(Number(r.opt_aor_gfa_sqm)).toBeCloseTo(200, 0);
-    // CoA grounded in realized FSI 1.5 → MIN(140×3=420, 1.5×400=600) = 420 (coverage-bound) — far above by-law.
-    expect(Number(r.opt_coa_gfa_sqm)).toBeCloseTo(420, 0);
-    expect(Number(r.opt_coa_gfa_sqm)).toBeGreaterThan(Number(r.opt_aor_gfa_sqm));
+    const det = (await pool.query(`SELECT opt_aor_gfa_sqm, opt_coa_gfa_sqm FROM parcels WHERE id = $1`, [P(20)])).rows[0];
+    expect(Number(det.opt_aor_gfa_sqm)).toBeCloseTo(200, 0);   // by-law 0.5 → MIN(140×2, 200) = 200
+    expect(Number(det.opt_coa_gfa_sqm)).toBeCloseTo(420, 0);   // realized 1.5 → MIN(140×3, 600) = 420
+    expect(Number(det.opt_coa_gfa_sqm)).toBeGreaterThan(Number(det.opt_aor_gfa_sqm));
+    // townhouse control: R2 detached-only → CoA stays by-law-bound (MIN(140×3, 0.5×400=200) = 200 = as-of-right).
+    const twn = (await pool.query(`SELECT opt_aor_gfa_sqm, opt_coa_gfa_sqm FROM parcels WHERE id = $1`, [P(21)])).rows[0];
+    expect(Number(twn.opt_coa_gfa_sqm)).toBeCloseTo(200, 0);   // NOT lifted to 420 — by-law FSI kept
   }, 90_000);
 });
