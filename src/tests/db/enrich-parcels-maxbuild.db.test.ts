@@ -196,13 +196,15 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
   });
 
   // WF3-B — party-wall side-setbacks: attached types subtract fewer side setbacks (RD 2 / RS 1 / RT 0).
-  // No coverage cap here → footprint is box-bound → directly reflects width_raw = frontage − side_count×side.
+  // Needs the footprint box-bound so it reflects width_raw = frontage − side_count×side. WF3 coverage-default:
+  // pass bylaw_max_coverage_pct=90 (495×0.90=445 m² ≫ box ~194 m²) so coverage never binds and the RD<RS<RT
+  // footprint monotonicity survives (else all three collapse to the same 33% zone-default coverage cap).
   it('attached widen: identical geometry RD < RS < RT in width + footprint; RD byte-stable', async () => {
     const c = await pool.connect();
     try {
       await c.query('BEGIN');
       const base = { lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24,
-        bylaw_max_height_m: 10, bylaw_max_stories: 3, bylaw_max_fsi: 1.0 }; // NO coverage_pct → box-bound
+        bylaw_max_height_m: 10, bylaw_max_stories: 3, bylaw_max_fsi: 1.0, bylaw_max_coverage_pct: 90 }; // box-bound (coverage non-binding)
       await insMb(c, TEST_PARCEL + 10, sq(0, 0, 0.0002), { ...base, zoning_class: 'RD' });
       await insMb(c, TEST_PARCEL + 11, sq(0, 0, 0.0002), { ...base, zoning_class: 'RS' });
       await insMb(c, TEST_PARCEL + 12, sq(0, 0, 0.0002), { ...base, zoning_class: 'RT' });
@@ -217,6 +219,48 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       // footprint monotonic: attached strictly wider than detached
       expect(Number(rt.max_buildable_footprint_sqm)).toBeGreaterThan(Number(rs.max_buildable_footprint_sqm));
       expect(Number(rs.max_buildable_footprint_sqm)).toBeGreaterThan(Number(rd.max_buildable_footprint_sqm));
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  // WF3 — zone-default coverage caps the footprint when bylaw_max_coverage_pct is NULL (the ~37% gap).
+  // Reuse the proven-emitting WF3-B geometry (lot 495): RD box ≈ 179 m², but 33% of 495 = 163 m² is the
+  // tighter LEAST term → coverage binds. bylaw coverage NULL → the default fires.
+  it('NULL bylaw coverage → footprint capped by the RD 33% zone default; defaulted + binding counted', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      await insMb(c, TEST_PARCEL + 20, sq(0, 0, 0.0002), {
+        lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24, bylaw_max_height_m: 10, bylaw_max_stories: 3,
+        zoning_class: 'RD', // NO bylaw_max_coverage_pct, NO fsi → coverage-box basis
+      });
+      const s = await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+      const p = await getParcel(c, TEST_PARCEL + 20);
+      // footprint = 33% × 495 = 163.35 m² (coverage-bound), NOT the ~179 m² setback box.
+      expect(Number(p.max_buildable_footprint_sqm)).toBeCloseTo(163.35, 1);
+      expect(s.coverage_defaulted_cnt).toBeGreaterThanOrEqual(1);
+      expect(s.coverage_binding_cnt).toBeGreaterThanOrEqual(1); // coverage actually reduced the footprint
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  // WF3 — a NULL lot_size_sqm parcel cannot be coverage-capped (lot × pct = NULL → coverage_cap NULL).
+  // The footprint still emits from the setback box (NOT coverage-bound), and the default is NOT counted.
+  it('NULL lot_size → coverage_cap NULL, footprint falls to the box (not capped), not counted', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      await insMb(c, TEST_PARCEL + 21, sq(0, 0, 0.0002), {
+        lot_size_sqm: null, frontage_m: 22.24, depth_m: 22.24, bylaw_max_height_m: 10,
+        bylaw_max_stories: 3, zoning_class: 'RD', // NULL coverage + NULL lot
+      });
+      const s = await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+      const p = await getParcel(c, TEST_PARCEL + 21);
+      // coverage_cap = lot(NULL) × default = NULL → LEAST drops it → footprint = the RD box (~178.65),
+      // NOT coverage-bound. Proves the fix can't cap without a lot area.
+      expect(Number(p.max_buildable_footprint_sqm)).toBeCloseTo(178.65, 1);
+      expect(s.coverage_defaulted_cnt).toBe(0); // coverage_cap NULL → excluded (default didn't produce a cap)
+      expect(s.coverage_binding_cnt).toBe(0);
       await c.query('ROLLBACK');
     } finally { c.release(); }
   });

@@ -79,6 +79,38 @@ describe('max-build — setback table (MB-4)', () => {
     expect(sql).toMatch(/LIKE 'RS%' THEN 1/);
     expect(sql).toMatch(/LIKE 'RT%' THEN 0/);
   });
+
+  // WF3 — zone-default lot coverage (fills a NULL bylaw_max_coverage_pct in the footprint LEAST).
+  it('lookupCoverage: empirical zone defaults, longest-prefix, RA→R, NULL→DEFAULT', () => {
+    expect(mb.lookupCoverage('RD')).toBe(33);
+    expect(mb.lookupCoverage('RS')).toBe(33);
+    expect(mb.lookupCoverage('RT')).toBe(33);
+    expect(mb.lookupCoverage('RM')).toBe(30);
+    expect(mb.lookupCoverage('RA')).toBe(35);          // no RA key → resolves to R:35 via prefix
+    expect(mb.lookupCoverage('R')).toBe(35);
+    expect(mb.lookupCoverage('RD (x123)')).toBe(33);   // longest-prefix
+    expect(mb.lookupCoverage('CR')).toBe(75);          // commercial permissive
+    expect(mb.lookupCoverage('ZZZ')).toBe(mb.COVERAGE_DEFAULTS.DEFAULT);
+    expect(mb.lookupCoverage(null)).toBe(mb.COVERAGE_DEFAULTS.DEFAULT);
+  });
+
+  it('COVERAGE_DEFAULTS key set matches SETBACK_DEFAULTS (parity — no RA, none missing)', () => {
+    const covKeys = Object.keys(mb.COVERAGE_DEFAULTS).sort();
+    const sbKeys = Object.keys(mb.SETBACK_DEFAULTS).sort();
+    expect(covKeys).toEqual(sbKeys);
+  });
+
+  it('buildCoverageCase emits a CASE whose values match lookupCoverage (single source, percent)', () => {
+    const sql = mb.buildCoverageCase('zoning_class');
+    expect(sql).toMatch(/^CASE/);
+    expect(sql).toMatch(/ELSE 50\.00\s+END/);                       // DEFAULT = 50
+    expect(sql).toMatch(/upper\(zoning_class\) LIKE 'RD%' THEN 33\.00/); // RD = 33
+    expect(sql).toMatch(/LIKE 'RM%' THEN 30\.00/);                  // RM = 30
+    // JS↔SQL parity: every emitted THEN value equals lookupCoverage for that prefix.
+    for (const p of Object.keys(mb.COVERAGE_DEFAULTS).filter((k) => k !== 'DEFAULT')) {
+      expect(sql).toContain(`LIKE '${p}%' THEN ${mb.lookupCoverage(p).toFixed(2)}`);
+    }
+  });
 });
 
 describe('max-build — column arrays (MB-1 regression lock)', () => {
@@ -183,6 +215,9 @@ describe('max-build — enrich-parcels second-pass SQL plumbing', () => {
     expect(sql).toMatch(/frontage_m - side_count \* side_setback/);
     // footprint_calc still cross-checks box_area (KEPT — the front/rear depth guard; review CRITICAL)
     expect(sql).toMatch(/LEAST\(buffer_area, box_area, coverage_cap\)/);
+    // WF3: coverage_cap fills a NULL bylaw coverage with the zone default (anchored to the exact
+    // expression — a loose /COALESCE.*coverage_cap/ would also match unrelated COALESCEs in the blob).
+    expect(sql).toMatch(/COALESCE\(bylaw_max_coverage_pct,/);
     // ravine is a FIXED constant, NOT scaled by ravine_distance_m (Spec 59 L2 / MB-5)
     expect(sql).not.toMatch(/ravine_distance_m\s*\*/);
   });

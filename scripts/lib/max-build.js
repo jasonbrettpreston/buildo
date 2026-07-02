@@ -172,6 +172,36 @@ function buildSideCountCase(zoneCol) {
   return `CASE\n${whens}\n    ELSE ${SETBACK_DEFAULTS.DEFAULT.side_count}\n  END`;
 }
 
+// --- Max-build lot COVERAGE defaults (WF3) — zone-class fallback when bylaw_max_coverage_pct is
+// absent (~37% of parcels). Values are empirical medians of the parcels that DO carry a bylaw value
+// (RD/RS/RT 33, RM 30, R 35); commercial/other permissive (outside the residential cost scope, but
+// max-build runs on all zones). PERCENT (0-100) — applied as lot × pct / 100. SAME key set + prefix
+// logic as SETBACK_DEFAULTS (no RA — 'RA' resolves to 'R' via longest-prefix, like the setbacks).
+const COVERAGE_DEFAULTS = {
+  RD: 33, RS: 33, RT: 33, RM: 30, R: 35,
+  CR: 75, CL: 75, C: 75, E: 60, I: 60, O: 50, UT: 50,
+  DEFAULT: 50,
+};
+
+/** Pure JS mirror of the coverage-default lookup (used to GENERATE the SQL CASE — same source). */
+function lookupCoverage(zoningClass) {
+  const zc = (zoningClass || '').toUpperCase();
+  for (const p of SETBACK_PREFIXES) {
+    if (zc.startsWith(p) && COVERAGE_DEFAULTS[p] != null) return COVERAGE_DEFAULTS[p];
+  }
+  return COVERAGE_DEFAULTS.DEFAULT;
+}
+
+/** SQL CASE returning the zone-default lot-coverage PERCENT for `zoneCol`, generated from
+ *  COVERAGE_DEFAULTS so the numbers live in exactly one place (mirrors buildSetbackCase). */
+function buildCoverageCase(zoneCol) {
+  const whens = SETBACK_PREFIXES
+    .filter((p) => COVERAGE_DEFAULTS[p] != null)
+    .map((p) => `    WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${COVERAGE_DEFAULTS[p].toFixed(2)}`)
+    .join('\n');
+  return `CASE\n${whens}\n    ELSE ${COVERAGE_DEFAULTS.DEFAULT.toFixed(2)}\n  END`;
+}
+
 /**
  * WF3-C2 — SQL CASE for the neighbourhood income premium, generated from the tier table. Mirrors
  * `computePremiumFactor` EXACTLY (cost-model-shared.js): NULL income → 1.0; each tier half-open
@@ -294,6 +324,7 @@ module.exports = {
   LOT_TOLERANCE, LOT_MIN_SQM, LOT_MAX_SQM, STOREY_HEIGHT_M, RAVINE_SETBACK_M,
   GARDEN_SUITE_MIN_LOT_SQM, GARDEN_SUITE_MIN_REAR_YARD_M, GARDEN_SUITE_MAX_GFA_SQM,
   SETBACK_DEFAULTS, SETBACK_DIMS, lookupSetback, buildSetbackCase, lookupSideCount, buildSideCountCase,
+  COVERAGE_DEFAULTS, lookupCoverage, buildCoverageCase,
   DEFAULT_PREMIUM_TIERS, buildPremiumCase, lookupPremium,
   MAX_BUILD_COLS, MAX_BUILD_BOOL_COLS,
   LOT_MAXBUILD_INPUT_COLS, LOT_MAXBUILD_OUTPUT_COLS, LOT_MAXBUILD_COLS,

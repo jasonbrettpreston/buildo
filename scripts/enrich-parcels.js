@@ -502,7 +502,11 @@ geo AS (
     CASE WHEN width_raw > 0 AND length_raw > 0 THEN round(width_raw * length_raw, 2) END AS box_area,
     -- uniform negative buffer (shape-aware, dir-blind): side setback (party-wall-scaled, WF3-B) + ravine. Empty (lot < 2×inset) → NULL.
     NULLIF(round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2), 0) AS buffer_area,
-    CASE WHEN bylaw_max_coverage_pct IS NOT NULL THEN round(lot_size_sqm * bylaw_max_coverage_pct / 100.0, 2) END AS coverage_cap,
+    -- WF3: coverage cap ALWAYS applied — a zone-class DEFAULT (empirical median) fills a NULL bylaw
+    -- coverage (~37% of parcels), else LEAST drops the term and the footprint balloons to the setback
+    -- box (~67% coverage). COALESCE fills NULL only. coverage_cap stays NULL only when lot_size_sqm is NULL.
+    round(lot_size_sqm * COALESCE(bylaw_max_coverage_pct, ${mb.buildCoverageCase('zoning_class')}) / 100.0, 2) AS coverage_cap,
+    (bylaw_max_coverage_pct IS NULL) AS coverage_defaulted,
     -- WF3-C2: by-law height-implied storeys (standalone — the legal cap for the pocket branch + hotspot ref).
     CASE WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0
          THEN GREATEST(1, round(bylaw_max_height_m / (${mb.buildStoreyHeightCase('zoning_class', storeyHeight)}))::int) END AS height_implied,
@@ -640,7 +644,10 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
        WHEN GREATEST(0, lot_size_sqm - COALESCE(existing_total_footprint_sqm, 0)
             - (CASE rear_suite_type WHEN 'laneway' THEN max_laneway_suite_gfa_sqm / ${lanewayStoreys}
                                     WHEN 'garden'  THEN max_garden_suite_gfa_sqm / ${gardenStoreys} END))
-            >= ${minSoftPct} * lot_size_sqm THEN 'as_of_right' ELSE 'coa_required' END AS rear_suite_permission
+            >= ${minSoftPct} * lot_size_sqm THEN 'as_of_right' ELSE 'coa_required' END AS rear_suite_permission,
+  -- WF3 coverage-default telemetry — stats-only passthrough into parcel_max_build for the audit
+  -- counts. Deliberately NOT in MAX_BUILD_COLS (buildMaxBuildUpdateSql would UPDATE nonexistent cols).
+  coverage_cap, box_area, buffer_area, coverage_defaulted
 FROM accessory2;
 `;
 }
@@ -691,7 +698,17 @@ async function enrichMaxBuild(client, opts = {}) {
       COUNT(*) FILTER (WHERE max_build_stories_basis = 'derived')::int AS basis_derived,
       COUNT(*) FILTER (WHERE market_exceeds_bylaw)::int                AS market_exceeds,
       COUNT(*) FILTER (WHERE neighbourhood_id IS NOT NULL)::int        AS with_nbhd,
-      COUNT(*) FILTER (WHERE neighbourhood_cost_premium IS NOT NULL AND neighbourhood_cost_premium > 1.00)::int AS premium_above_1
+      COUNT(*) FILTER (WHERE neighbourhood_cost_premium IS NOT NULL AND neighbourhood_cost_premium > 1.00)::int AS premium_above_1,
+      -- WF3: how many footprints applied the zone-default coverage, and how many were actually
+      -- REDUCED by it (coverage was the binding LEAST term). Gated on the coverage-eligible footprint
+      -- path (max_build_basis='rect_approx' = non-heritage emitted footprint_calc) AND coverage_cap
+      -- non-null (lot present, so the default produced a cap). NULL-safe: buffer_area/box_area nullable.
+      COUNT(*) FILTER (WHERE coverage_defaulted AND coverage_cap IS NOT NULL
+                         AND max_build_basis = 'rect_approx')::int AS coverage_defaulted_cnt,
+      COUNT(*) FILTER (WHERE coverage_defaulted AND coverage_cap IS NOT NULL
+                         AND max_build_basis = 'rect_approx'
+                         AND (buffer_area IS NULL OR coverage_cap <= buffer_area)
+                         AND (box_area   IS NULL OR coverage_cap <= box_area))::int AS coverage_binding_cnt
     FROM parcel_max_build`);
   const upd = await client.query(buildMaxBuildUpdateSql());
   return { ...stats.rows[0], updated: upd.rowCount };
@@ -1343,6 +1360,10 @@ async function main(pool) {
     auditRows.push({ metric: 'max_build_box_count', value: mbResult.with_box, status: 'INFO' });
     auditRows.push({ metric: 'max_buildable_gfa_basis_fsi_count', value: mbResult.gfa_fsi, status: 'INFO' });
     auditRows.push({ metric: 'max_buildable_gfa_basis_coverage_box_count', value: mbResult.gfa_coverage, status: 'INFO' });
+    // WF3: zone-default coverage applied (no bylaw coverage) + how many footprints it actually REDUCED
+    // (coverage was the binding LEAST term — the real blast radius, ≪ defaulted). "Don't hide a cap."
+    auditRows.push({ metric: 'max_build_coverage_defaulted_count', value: mbResult.coverage_defaulted_cnt, status: 'INFO' });
+    auditRows.push({ metric: 'max_build_coverage_binding_count', value: mbResult.coverage_binding_cnt, status: 'INFO' });
     // max_build_confidence tier distribution.
     auditRows.push({ metric: 'max_build_confidence_high_count', value: mbResult.mb_high, status: 'INFO' });
     auditRows.push({ metric: 'max_build_confidence_medium_count', value: mbResult.mb_medium, status: 'INFO' });
