@@ -268,8 +268,15 @@ footprint + committed permits/coa).
 permit_gfa_sqm, permit_fsi, storeys, coa_decision, build_ratio}`), `comp_count`, `comp_dominant_build`
 (modal work_type), `comp_build_ratio_p50`, `comp_fsi_p50`. **Over-capture exclusion:** a comp's
 `build_ratio` (imagery roof footprint ÷ max-build) **> 1.1** (physically impossible — massing noise) is
-kept in the evidence array but **EXCLUDED from `comp_build_ratio_p50`**. Idempotent: full re-run resets
-the scope first; subjects with no match get `comp_count = 0` (a clean "processed" marker).
+kept in the evidence array but **EXCLUDED from `comp_build_ratio_p50`**. **`comp_fsi_p50` is NEW-BUILD comps
+ONLY (WF3):** an addition's `residential_sqm` is the INCREMENT, not a whole building, so its FSI (~0.13) is
+incommensurable with a new-build FSI (~0.7) — mixing them dragged the scalar to ~0.19 (~3× understated).
+The scalar is the median `permit_fsi` over comps where `work_type='new_build'` AND `permit_fsi ∈ [0.05, 8]`
+(two-sided plausibility band: > 8 = a data-entry outlier; < 0.05 = a mislabeled minor permit typed new_build).
+The `comparable_builds` ARRAY still lists additions as renovation-activity evidence, and `comp_dominant_build`
+is still modal over all comps. A subject with no in-band new-build comp → `comp_fsi_p50 = NULL` (honest — no
+comparable *build*). Post-fix median = 0.695 ≈ the independent `neighbourhood_build_norms.realized_fsi_p50`
+(0.696). Idempotent: full re-run resets the scope first; subjects with no match get `comp_count = 0`.
 
 ### P3C.3 — Deferred
 - The `(zoning_class, lot_size_sqm)` CONCURRENTLY index (impl-plan §4.6) is **not needed** with the

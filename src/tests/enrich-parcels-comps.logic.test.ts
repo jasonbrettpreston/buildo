@@ -52,6 +52,14 @@ describe('comps kNN UPDATE SQL', () => {
     // build_ratio still flows into the evidence array (not filtered out of jsonb_agg)
     expect(sql).toMatch(/'build_ratio', m\.build_ratio/);
   });
+  it('WF3: comp_fsi_p50 is NEW-BUILD comps only, two-sided plausibility band (regression lock)', () => {
+    const sql = ep.buildComparableBuildsUpdateSql({ full: true });
+    expect(sql).toContain("m.work_type = 'new_build'");
+    expect(sql).toMatch(/m\.permit_fsi BETWEEN 0\.05 AND 8/);
+    // additions still populate the evidence array + comp_dominant_build (only the fsi SCALAR narrows)
+    expect(sql).toContain("'work_type', m.work_type");
+    expect(sql).toContain('mode() WITHIN GROUP (ORDER BY m.work_type)');
+  });
   it('scopes the SUBJECTS at source (not just the final UPDATE) + incremental guard', () => {
     const full = ep.buildComparableBuildsUpdateSql({ full: true, scopeWhere: "sp.parcel_id = 'X'" });
     expect(full).toContain('FROM parcels sp');

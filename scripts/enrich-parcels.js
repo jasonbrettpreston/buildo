@@ -907,6 +907,13 @@ const COMP_LOT_TOL = 0.2;        // ±20% lot-size / frontage similarity window
 const COMP_KNN_OVERFETCH = 50;   // GiST kNN over-fetch before the similarity post-filter
 const COMP_TOP_N = 10;           // comps kept per subject
 const COMP_OVER_CAPTURE_CLAMP = 1.1; // build_ratio above this = massing over-capture → excluded from p50
+// WF3: comp_fsi_p50 = median realized FSI over NEW-BUILD comps only (an addition's residential_sqm is the
+// increment, not a whole build → its FSI ~0.13 is incommensurable; mixing dragged the scalar to ~0.19,
+// ~3× understated). Two-sided plausibility band on the comp permit_fsi: > 8 is a data-entry outlier (FSI
+// 361 on a tiny lot); < 0.05 is a mislabeled minor permit typed 'new_build' (an 8 m² "new build"). Post-fix
+// median 0.695 ≈ neighbourhood_build_norms.realized_fsi_p50 (0.696) — cross-validates on an independent path.
+const COMP_FSI_MIN_PLAUSIBLE = 0.05;
+const COMP_FSI_MAX_PLAUSIBLE = 8;
 
 // Candidate set: parcels with a recent (5-yr) new-build/addition permit — the principal such permit
 // supplies the address + what-built + realized GFA/FSI; the build_ratio is massing-footprint ÷ max-build.
@@ -969,7 +976,12 @@ function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE' } = 
       mode() WITHIN GROUP (ORDER BY m.work_type) AS dominant,
       percentile_cont(0.5) WITHIN GROUP (ORDER BY m.build_ratio)
         FILTER (WHERE m.build_ratio IS NOT NULL AND m.build_ratio <= ${COMP_OVER_CAPTURE_CLAMP}) AS br_p50,
-      percentile_cont(0.5) WITHIN GROUP (ORDER BY m.permit_fsi) FILTER (WHERE m.permit_fsi IS NOT NULL) AS fsi_p50
+      -- WF3: NEW-BUILD comps only (additions' residential_sqm = increment, not a whole build) + two-sided
+      -- plausibility band (kills the FSI-361 data-entry outlier + the sub-0.05 mislabeled-minor-permit tail).
+      -- The comparable_builds ARRAY above still lists additions (valid renovation-activity evidence).
+      percentile_cont(0.5) WITHIN GROUP (ORDER BY m.permit_fsi)
+        FILTER (WHERE m.permit_fsi IS NOT NULL AND m.work_type = 'new_build'
+                AND m.permit_fsi BETWEEN ${COMP_FSI_MIN_PLAUSIBLE} AND ${COMP_FSI_MAX_PLAUSIBLE}) AS fsi_p50
     FROM (
       -- subjects: residential parcels with a max-build envelope (scoped + incremental). Scoping HERE
       -- (not just at the final UPDATE) is what keeps a scoped/test run from kNN-ing all 486K parcels.
@@ -1007,6 +1019,13 @@ function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE' } = 
 
 async function enrichComparableBuilds(client, { full = false, scopeWhere = 'TRUE' } = {}) {
   const eligible = `max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0 AND zoning_class IS NOT NULL`;
+  // WF3: RESET stale comp_* on parcels that LOST eligibility (footprint → NULL, e.g. a heritage-mislink
+  // freeze) — the eligible-only reset below skips them, leaving a stale comp_fsi_p50 forever (same gated-pass
+  // gap the optconfig reset fixes). Always-on (not just --full).
+  const resetIneligible = await client.query(
+    `UPDATE parcels p SET comparable_builds = NULL, comp_count = NULL, comp_dominant_build = NULL,
+       comp_build_ratio_p50 = NULL, comp_fsi_p50 = NULL
+     WHERE (${scopeWhere}) AND p.max_buildable_footprint_sqm IS NULL AND p.comp_count IS NOT NULL`);
   // FULL re-run: clear stale comp data for the scope first, so a parcel whose comps disappeared resets.
   if (full) {
     await client.query(`UPDATE parcels SET comparable_builds = NULL, comp_count = NULL, comp_dominant_build = NULL,
@@ -1024,7 +1043,7 @@ async function enrichComparableBuilds(client, { full = false, scopeWhere = 'TRUE
             count(*) FILTER (WHERE comp_count = 0)::int AS zero_comps,
             count(*) FILTER (WHERE comp_build_ratio_p50 IS NOT NULL)::int AS with_br
      FROM parcels WHERE ${eligible} AND (${scopeWhere})`)).rows[0];
-  return { candidates: cand, updated: upd.rowCount, zero_filled: zeroFilled.rowCount, ...dist };
+  return { candidates: cand, updated: upd.rowCount, zero_filled: zeroFilled.rowCount, reset_ineligible: resetIneligible.rowCount || 0, ...dist };
 }
 
 // ---------------------------------------------------------------------------
@@ -1464,6 +1483,8 @@ async function main(pool) {
     auditRows.push({ metric: 'comp_with_comps_count', value: compResult.with_comps, status: 'INFO' });
     auditRows.push({ metric: 'comp_zero_comps_count', value: compResult.zero_comps, status: 'INFO' });
     auditRows.push({ metric: 'comp_build_ratio_p50_count', value: compResult.with_br, status: 'INFO' });
+    // WF3: stale comp_* nulled on parcels that lost their footprint (mirrors opt_config_reset_ineligible).
+    auditRows.push({ metric: 'comp_reset_ineligible_count', value: compResult.reset_ineligible, status: 'INFO' });
     // --- Optimal config (Spec 78 Phase 3A) — config-tier/suite/confidence distribution; errors gated. ---
     auditRows.push({ metric: 'optimal_config_enriched_count', value: ocResult.updated, status: 'INFO' });
     // WF3: stale opt_* nulled on parcels that lost their footprint (e.g. heritage-mislink freeze).
