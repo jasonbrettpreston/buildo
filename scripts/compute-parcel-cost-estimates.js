@@ -166,6 +166,7 @@ async function computeParcelCostEstimates(pool, opts = {}) {
   let engineErrorCount = 0;
   let nullGeomBasisCount = 0; // residential parcels with NO computable line (empty menu)
   let fsiImplausibleCount = 0; // parcels whose max_build/coa FSI was NULLed as a garbage max-build artifact
+  let newBuildFallbackCount = 0; // WF3: new_build priced on max-build envelope (opt_aor NULL) not opt_aor
   let fitGatedSuiteCount = 0;
   let fitGatedGarageCount = 0;
   const unmappedFamilyFallbackCount = 0; // P1: always 0 (family logic is P2) — emitted for the inventory
@@ -238,6 +239,11 @@ async function computeParcelCostEstimates(pool, opts = {}) {
       p.id,
       p.lot_size_sqm::float8                 AS lot_size_sqm,
       p.max_buildable_gfa_sqm::float8        AS max_buildable_gfa_sqm,
+      -- WF3: the max_build ('new build') cost line prices as-of-right opt_aor, falling back to the
+      -- max-build envelope where opt_aor is NULL (counted via new_build_fallback_count). max_buildable_gfa
+      -- is KEPT above — it still drives the *envelope* max_build_fsi scalar (parcel-cost.js).
+      COALESCE(p.opt_aor_gfa_sqm, p.max_buildable_gfa_sqm)::float8 AS opt_aor_gfa_sqm,
+      (p.opt_aor_gfa_sqm IS NULL AND p.max_buildable_gfa_sqm IS NOT NULL) AS new_build_used_fallback,
       p.max_buildable_footprint_sqm::float8  AS max_buildable_footprint_sqm,
       p.opt_coa_gfa_sqm::float8              AS opt_coa_gfa_sqm,
       p.max_garden_suite_gfa_sqm::float8     AS max_garden_suite_gfa_sqm,
@@ -267,6 +273,7 @@ async function computeParcelCostEstimates(pool, opts = {}) {
       const r2Grounded = parcelFamilyFromZoning(parcel.zoning_class) === 'detached';
       const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded });
       if (built.fsiImplausible) fsiImplausibleCount++;
+      if (parcel.new_build_used_fallback) newBuildFallbackCount++; // WF3: opt_aor NULL → envelope fallback
       if (built.lineCount === 0) {
         nullGeomBasisCount++;
       } else {
@@ -326,6 +333,8 @@ async function computeParcelCostEstimates(pool, opts = {}) {
     { metric: 'null_geom_basis_count', value: nullGeomBasisCount, threshold: null, status: 'INFO' },
     // FSI NULLed as a garbage max-build artifact (implausible max_buildable_gfa ÷ lot) — surfaced, not hidden.
     { metric: 'fsi_implausible_count', value: fsiImplausibleCount, threshold: null, status: 'INFO' },
+    // WF3: new_build ('max build' line) priced on the max-build envelope because opt_aor_gfa was NULL — surfaced, not hidden.
+    { metric: 'new_build_fallback_count', value: newBuildFallbackCount, threshold: null, status: 'INFO' },
     // engine_error_count — deliberately strict: any engine error fails the step.
     {
       metric: 'engine_error_count',
@@ -397,6 +406,7 @@ async function computeParcelCostEstimates(pool, opts = {}) {
     recordsSkipped,
     engineErrorCount,
     nullGeomBasisCount,
+    newBuildFallbackCount,
     fitGatedSuiteCount,
     fitGatedGarageCount,
     lineCoverage,
@@ -489,6 +499,7 @@ function main() {
             'zoning_class',
             'lot_size_sqm',
             'max_buildable_gfa_sqm',
+            'opt_aor_gfa_sqm', // WF3: new_build priced area (COALESCE'd with max_buildable_gfa)
             'max_buildable_footprint_sqm',
             'opt_coa_gfa_sqm',
             'max_garden_suite_gfa_sqm',

@@ -252,7 +252,13 @@ base_cand AS (
   -- dominant zone is never a mere neighbour.
   SELECT s.parcel_id, z.source_id, z.zn_zone, z.zn_string, z.gen_zone, z.zn_holding, z.zone_status,
          z.exception_number, z.exception_text, z.bylaw_chapter, z.bylaw_section, z.bylaw_exception_ref,
-         z.fsi_max, z.units_max, z.density_max, z.pct_commercial_max, z.pct_residential_max,
+         -- WF3 B2 source-plausibility guard (Spec 65): a residential (R-prefix) source zone with
+         -- fsi_max > 10 is corrupt data (real RD/RS/RM ≤ ~2, RA apartment ≤ ~8-10; CR is exempt —
+         -- starts with C). NULL it before aggregation so it can't seed bylaw_max_fsi. Counted via
+         -- zoning_fsi_source_nulled_count (INFO). Keep the raw value for the count in fsi_max_raw.
+         CASE WHEN upper(z.zn_zone) LIKE 'R%' AND z.fsi_max > 10 THEN NULL ELSE z.fsi_max END AS fsi_max,
+         z.fsi_max AS fsi_max_raw,
+         z.units_max, z.density_max, z.pct_commercial_max, z.pct_residential_max,
          z.pct_employment_max, z.pct_office_max, z.frontage_min_m, z.area_min_sqm, z.standard_setback,
          z.coverage_max_pct, z.source_dataset_version,
          CASE WHEN COUNT(*) OVER (PARTITION BY s.parcel_id) = 1 THEN 1.0
@@ -277,6 +283,8 @@ ${baseAgg},
       round(MAX(area_share)::numeric, 4) AS zoning_dominant_area_share,
       (MAX(area_share) < ${AMBIGUOUS_DOMINANT_SHARE_MAX}) AS zoning_is_ambiguous,
       COUNT(*) AS base_candidate_count,
+      -- WF3 B2 telemetry: source rows the plausibility guard nulled (raw R-zone fsi_max > 10).
+      COUNT(*) FILTER (WHERE upper(zn_zone) LIKE 'R%' AND fsi_max_raw > 10) AS fsi_source_nulled,
       COUNT(DISTINCT fsi_max)      FILTER (WHERE fsi_max IS NOT NULL)      AS fsi_distinct,
       COUNT(DISTINCT frontage_min_m) FILTER (WHERE frontage_min_m IS NOT NULL) AS frontage_distinct,
       jsonb_agg(jsonb_build_object('source_id', source_id, 'zn_zone', zn_zone,
@@ -298,6 +306,7 @@ ${memberSelect},
 ${heightJson}${covJson}    '_placeholder', NULL
   )) AS zoning_overlays,
   ba.base_candidate_count,
+  COALESCE(ba.fsi_source_nulled, 0) AS fsi_source_nulled,
   COALESCE(ba.fsi_distinct, 0) AS fsi_distinct,
   COALESCE(ba.frontage_distinct, 0) AS frontage_distinct
 FROM scope s
@@ -336,6 +345,7 @@ async function enrichParcels(client, opts = {}) {
       COUNT(*) FILTER (WHERE zoning_is_ambiguous) AS ambiguous,
       COUNT(*) FILTER (WHERE base_candidate_count > 1) AS multi_zone,
       COUNT(*) FILTER (WHERE fsi_distinct > 1 OR frontage_distinct > 1) AS conflicts,
+      COALESCE(SUM(fsi_source_nulled), 0) AS fsi_source_nulled,
       ROUND(100.0 * COUNT(*) FILTER (WHERE bylaw_max_fsi IS NULL) / NULLIF(COUNT(*), 0), 1) AS fsi_null_pct,
       ROUND(100.0 * COUNT(*) FILTER (WHERE bylaw_max_coverage_pct IS NULL) / NULLIF(COUNT(*), 0), 1) AS coverage_null_pct,
       ROUND(100.0 * COUNT(*) FILTER (WHERE bylaw_max_height_m IS NULL) / NULLIF(COUNT(*), 0), 1) AS height_null_pct
@@ -352,6 +362,7 @@ async function enrichParcels(client, opts = {}) {
     ambiguous: Number(s.ambiguous),
     multiZone: Number(s.multi_zone),
     conflicts: Number(s.conflicts),
+    fsiSourceNulled: Number(s.fsi_source_nulled),
     fsiNullPct: s.fsi_null_pct === null ? null : Number(s.fsi_null_pct),
     coverageNullPct: s.coverage_null_pct === null ? null : Number(s.coverage_null_pct),
     heightNullPct: s.height_null_pct === null ? null : Number(s.height_null_pct),
@@ -1313,6 +1324,9 @@ async function main(pool) {
       status: result.scoped && result.ambiguous > 0.05 * result.scoped ? 'WARN' : 'INFO',
     });
     auditRows.push({ metric: 'parcels_zone_conflict_count', value: result.conflicts, status: 'INFO' });
+    // WF3 B2 source-plausibility guard: corrupt R-zone fsi_max > 10 source rows nulled before
+    // aggregation. INFO (endemic ~handful of bad source rows — WARN would pin the step permanently).
+    auditRows.push({ metric: 'zoning_fsi_source_nulled_count', value: result.fsiSourceNulled, status: 'INFO' });
     // Sparse-by-design null rates (DEC-4) — INFO only, never gated.
     auditRows.push({ metric: 'bylaw_max_fsi_null_pct', value: result.fsiNullPct, status: 'INFO' });
     auditRows.push({ metric: 'bylaw_max_coverage_pct_null_pct', value: result.coverageNullPct, status: 'INFO' });

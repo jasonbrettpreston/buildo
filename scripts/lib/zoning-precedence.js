@@ -34,8 +34,14 @@ const PRECEDENCE_RULES = {
   bylaw_chapter: 'dominant',
   bylaw_section: 'dominant',
   bylaw_exception_ref: 'dominant',
-  // numeric ceilings ← MIN (most-restrictive)
-  bylaw_max_fsi: 'min',
+  // FSI ← dominant base zone (WF3 fix, Spec 65 DEC-1). Was 'min': MIN(fsi_max) skips NULLs
+  // in Postgres, so a dominantly-RD parcel (RD fsi_max=NULL) that slivers a CR zone (fsi_max=2.0)
+  // borrowed CR's FSI via MIN(NULL, 2.0)=2.0 — a data-quality defect (502/555 RD-FSI≥2 parcels).
+  // 'dominant' sources FSI from the area-dominant zone only; NULL when that zone has none
+  // (the dominant zone governs; zoning_is_ambiguous separately flags share < 0.6).
+  bylaw_max_fsi: 'dominant',
+  // numeric ceilings ← MIN (most-restrictive). NB: siblings stay 'min' — they feed no cost path;
+  // MIN is defensible for genuine density splits (revisit → review_followups.md).
   bylaw_max_units: 'min',
   bylaw_max_density: 'min',
   bylaw_pct_commercial_max: 'min',

@@ -136,10 +136,10 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
       expect(Number(p1.zoning_dominant_area_share)).toBeCloseTo(1.0, 3);
       expect(p1.zoning_is_ambiguous).toBe(false);
 
-      // P2 — boundary, dominant A: MIN(fsi)=2, MAX(frontage)=9
+      // P2 — boundary, dominant A: fsi=dominant(A)=2, MAX(frontage)=9
       const p2 = await getParcel(c, TEST_PARCEL + 2);
       expect(p2.zoning_class).toBe('RD');
-      expect(Number(p2.bylaw_max_fsi)).toBe(2.0);            // MIN(2,3) ceiling
+      expect(Number(p2.bylaw_max_fsi)).toBe(2.0);            // dominant(A)=2 (WF3; coincides with old MIN(2,3) here)
       expect(Number(p2.bylaw_min_frontage_m)).toBe(9.0);    // MAX(6,9) floor
       expect(p2.zoning_is_ambiguous).toBe(false);           // ~0.667 share
 
@@ -152,6 +152,57 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
       const p4 = await getParcel(c, TEST_PARCEL + 4);
       expect(p4.zoning_is_ambiguous).toBe(true);
       expect(Number(p4.zoning_dominant_area_share)).toBeLessThan(0.6);
+
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  // WF3 regression lock (Spec 65 DEC-1): bylaw_max_fsi is sourced from the DOMINANT zone, not MIN.
+  // The old 'min' rule let Postgres MIN(NULL, 2.0)=2.0 borrow FSI from a sliver-touching zone onto a
+  // dominantly-RD parcel whose own zone had no FSI cap. Three distinguishing cases + the B2 source guard.
+  it('WF3 — bylaw_max_fsi from dominant zone (min→dominant) + B2 source-plausibility guard', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // Zone grid (lon far from Toronto; valid lat). Z1 is a real RD with NO FSI cap (fsi NULL).
+      await insBase(c, TEST_SRC + 11, 'RD', null, 10, 6, box(60, 40, 70, 50)); // Z1 dominant, NULL fsi
+      await insBase(c, TEST_SRC + 12, 'CR', 2.0, 50, 9, box(70, 40, 80, 50));  // Z2 sliver, fsi 2.0
+      await insBase(c, TEST_SRC + 13, 'CR', 3.0, 50, 9, box(60, 30, 70, 40));  // Z3 dominant, fsi 3.0
+      await insBase(c, TEST_SRC + 14, 'RD', 2.0, 10, 6, box(70, 30, 80, 40));  // Z4 minor, fsi 2.0
+      await insBase(c, TEST_SRC + 15, 'RD', 15.0, 10, 6, box(60, 20, 70, 30)); // Z5 CORRUPT RD fsi 15
+
+      // (i) un-ambiguous sliver: 95% Z1(NULL) + 5% Z2(2.0) → NULL, NOT the borrowed 2.0.
+      await insParcel(c, TEST_PARCEL + 11, box(60.5, 41, 70.5, 42));
+      // (ii) ambiguous ~52/48 toward Z1(NULL) + Z2(2.0) → dominant Z1 → NULL (accepted outcome).
+      await insParcel(c, TEST_PARCEL + 12, box(68.9, 41, 71, 42));
+      // (iii) dual-non-NULL DISAGREEING: 2/3 Z3(3.0) + 1/3 Z4(2.0) → dominant=3.0, NOT MIN=2.0.
+      await insParcel(c, TEST_PARCEL + 13, box(68, 31, 71, 32));
+      // (guard) fully inside corrupt RD fsi=15 → nulled by B2 → NULL + counted.
+      await insParcel(c, TEST_PARCEL + 14, box(62, 21, 68, 29));
+
+      const res = await enrichParcels(c, { scopeWhere: SCOPE, full: true });
+
+      // (i) sliver — dominant NULL zone governs; FSI is NOT borrowed from the sliver.
+      const g1 = await getParcel(c, TEST_PARCEL + 11);
+      expect(g1.zoning_class).toBe('RD');
+      expect(g1.bylaw_max_fsi).toBeNull();                  // old 'min' would have borrowed 2.0
+      expect(g1.zoning_is_ambiguous).toBe(false);
+
+      // (ii) ambiguous — dominant NULL zone still governs FSI (ambiguity flagged separately).
+      const g2 = await getParcel(c, TEST_PARCEL + 12);
+      expect(g2.zoning_is_ambiguous).toBe(true);
+      expect(g2.bylaw_max_fsi).toBeNull();
+
+      // (iii) the load-bearing case — dominant zone's HIGHER FSI wins over the lower secondary.
+      const g3 = await getParcel(c, TEST_PARCEL + 13);
+      expect(g3.zoning_class).toBe('CR');
+      expect(Number(g3.bylaw_max_fsi)).toBe(3.0);           // dominant(3.0), NOT MIN(2,3)=2.0
+
+      // (guard) corrupt residential fsi_max > 10 nulled at source + surfaced in the audit count.
+      const g4 = await getParcel(c, TEST_PARCEL + 14);
+      expect(g4.zoning_class).toBe('RD');
+      expect(g4.bylaw_max_fsi).toBeNull();
+      expect(res.fsiSourceNulled).toBeGreaterThanOrEqual(1);
 
       await c.query('ROLLBACK');
     } finally { c.release(); }

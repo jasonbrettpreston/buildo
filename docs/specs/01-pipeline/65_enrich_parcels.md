@@ -51,7 +51,7 @@ Before any join, read `pipeline_runs.records_meta` for the **most-recent `load_z
 | `zoning_gen_zone` | INTEGER | base `gen_zone` | dominant |
 | `zoning_holding` | TEXT | base `zn_holding` | dominant |
 | `zone_status` | INTEGER | base `zone_status` | dominant |
-| `bylaw_max_fsi` | NUMERIC(6,3) | base `fsi_max` | MIN |
+| `bylaw_max_fsi` | NUMERIC(6,3) | base `fsi_max` | dominant (WF3; was MIN — see DEC-1 note) |
 | `bylaw_max_coverage_pct` | NUMERIC(5,2) | `lot_coverage_overlay.coverage_max_pct_override` → base `coverage_max_pct` | overlay-replaces-base, then MIN |
 | `bylaw_max_height_m` | NUMERIC(8,2) | `height_overlay.height_max_m` | overlay, MIN |
 | `bylaw_max_stories` | INTEGER | `height_overlay.ht_stories` | overlay, MIN |
@@ -96,7 +96,7 @@ Before any join, read `pipeline_runs.records_meta` for the **most-recent `load_z
 ### Implementation
 
 - **`scripts/enrich-parcels.js`** (NEW) — Spec 47 §R1–R12 skeleton; `ADVISORY_LOCK_ID = 65`; `require.main === module` guard (per `tasks/lessons.md` — loaders without it fire a real DB run when `require()`'d in tests).
-- **`scripts/lib/zoning-precedence.js`** (NEW, pure) — exports the attr→rule map (`{ bylaw_max_fsi: 'min', bylaw_min_frontage_m: 'max', zoning_class: 'dominant', bylaw_max_height_m: 'overlay', … }`) and a `buildEnrichmentSql(config)` helper that assembles the CTE fragments. No DB access; unit-tested.
+- **`scripts/lib/zoning-precedence.js`** (NEW, pure) — exports the attr→rule map (`{ bylaw_max_fsi: 'dominant', bylaw_min_frontage_m: 'max', zoning_class: 'dominant', bylaw_max_height_m: 'overlay', … }`) and a `buildEnrichmentSql(config)` helper that assembles the CTE fragments. No DB access; unit-tested.
 - **`scripts/one-time/backfill-parcels-zoning-index.js`** (NEW) — out-of-band `CREATE INDEX CONCURRENTLY` on `parcels (zoning_class)` + partial indexes on the boolean flags where useful; mig-116 precedent (one-time, not in `manifest.json`, registered only in the §A.5 lock-registry comment).
 
 **Engine (executed inside one `pipeline.withAdvisoryLock(pool, 65, …)` → one `withTransaction`):**
@@ -104,7 +104,7 @@ Before any join, read `pipeline_runs.records_meta` for the **most-recent `load_z
 1. **Precondition** — verify `idx_parcels_geom_gist` exists on `parcels(geom)` (confirmed present, mig 039) and PostGIS extension is loaded; HALT with an actionable error if either is absent.
 2. **Pass A** — `ST_Intersects(p.geom, z.geom)` (GIST) collects each parcel's candidate base zones (and overlay memberships).
 3. **Pass B (only multi-candidate parcels)** — compute `ST_Area(ST_Intersection(p.geom, z.geom)::geography) > 0` (`::geography` for true area; `> 0` drops point/edge-touch ties), rank `ROW_NUMBER() OVER (PARTITION BY p.parcel_id ORDER BY intersect_area DESC, z.zn_zone ASC, z.source_id ASC)` (fully deterministic). Single-candidate parcels short-circuit to `dominant_area_share = 1.0`.
-4. **Aggregate** numerics (MIN ceilings / MAX floors) across intersecting base+overlay polygons; `FIRST_VALUE(… ORDER BY value, source_id)` for stable jsonb candidate provenance; overlay attrs replace base (D4).
+4. **Aggregate** numerics (MIN ceilings / MAX floors) across intersecting base+overlay polygons — **except `bylaw_max_fsi`, sourced from the dominant zone (DEC-1 note, WF3)**; `FIRST_VALUE(… ORDER BY value, source_id)` for stable jsonb candidate provenance; overlay attrs replace base (D4).
 5. **Stage** the result into `TEMP TABLE parcel_zoning_enrich (parcel_id, …) ON COMMIT DROP`, then `UPDATE parcels p SET … FROM parcel_zoning_enrich e WHERE p.parcel_id = e.parcel_id AND (e.zoning_class IS DISTINCT FROM p.zoning_class OR … /* every column */)` — `IS DISTINCT FROM` makes the write idempotent.
 6. **Incremental default** — restrict Pass A to parcels whose intersecting zones' `source_dataset_version` > the parcel's `zoning_enriched_at` (full pass on first run or `--full`).
 7. **LineString overlays (policy_road, priority_retail) — bbox-prefilter mandatory (PERF, spike finding).** `ST_DWithin(p.geom::geography, road.geom::geography, road_overlay_distance_m)` (F-C2 metre-accurate `::geography`) **defeats the geometry GiST index** and degrades to a nested loop over 8,913 lines. The query MUST prefilter on the indexable geometry bbox first: `WHERE road.geom && ST_Expand(p.geom, 0.0006) AND ST_DWithin(p.geom::geography, road.geom::geography, road_overlay_distance_m)`. `road_overlay_distance_m` logic-var seeded by Spec 58 WF1 (default 5). See `docs/runbook/65_enrich_parcels_spike.md` §4.
@@ -120,7 +120,8 @@ Before any join, read `pipeline_runs.records_meta` for the **most-recent `load_z
 - **Outputs:** mutates the ~36 `parcels` zoning columns; emits `PIPELINE_SUMMARY` (`records_updated` = parcels changed; `records_total`/`_new` = null — Enrich archetype, not a loader) + `PIPELINE_META`.
 - **Edge Cases:**
   - **Gap parcels** (no intersecting base zone — parks/federal/utility/ravine, ~3.2%) → all zoning cols stay NULL; counted in `parcels_no_base_zone_count` (INFO, not a failure).
-  - **Boundary lot** (>1 base zone) → dominant for identity, MIN/MAX for numerics, `<attr>_conflict` audit row when candidates disagree, candidates in jsonb.
+  - **Boundary lot** (>1 base zone) → dominant for identity **and `bylaw_max_fsi`** (DEC-1 note), MIN/MAX for the other numerics, `<attr>_conflict` audit row when candidates disagree, candidates in jsonb.
+  - **DEC-1 note — `bylaw_max_fsi` is DOMINANT-sourced, not MIN (WF3 fix).** The other numeric ceilings (`bylaw_max_units/density/pct_*`) keep MIN (most-restrictive doctrine). FSI is the exception because Postgres `MIN(x)` **skips NULLs**: a dominantly-RD parcel whose RD zone has no FSI cap (`fsi_max = NULL`) but which slivers a CR zone (`fsi_max = 2.0`) was assigned `MIN(NULL, 2.0) = 2.0` — borrowing a commercial zone's FSI (502/555 RD-FSI≥2 parcels). `dominant` sources FSI from the area-dominant zone only → **NULL when that zone has no cap** (the dominant zone governs). *Accepted limitation:* on a genuinely ambiguous parcel (dominant zone NULL-FSI + a real secondary zone with a cap), FSI is NULL rather than the secondary's value — `zoning_is_ambiguous` flags these separately. A **B2 source-plausibility guard** additionally nulls corrupt residential source rows (`zn_zone LIKE 'R%' AND fsi_max > 10`; real RD/RS/RM ≤ ~2, RA ≤ ~8-10) before aggregation, counted in `zoning_fsi_source_nulled_count`.
   - **Ambiguous dominant** (`share < 0.60`, ~0.2% live) → `zoning_is_ambiguous = true` + counted.
   - **Overlay stale** (`zoning_layers_loaded[x] === false`) → skip that overlay, base-only, `<layer>_overlay_stale` row.
   - **PostGIS / GIST absent** → HALT (precondition).
@@ -136,6 +137,7 @@ Before any join, read `pipeline_runs.records_meta` for the **most-recent `load_z
 | `parcels_ambiguous_zone_count` | n/a; WARN if > 5% of enriched | INFO (live 0.2%) |
 | `parcels_multi_zone_count` | n/a | INFO |
 | `bylaw_max_fsi_null_pct` | n/a | INFO (sparse by design — live ~95% null) |
+| `zoning_fsi_source_nulled_count` | n/a | INFO (B2 guard nulled corrupt R-zone `fsi_max > 10` source rows) |
 | `bylaw_max_coverage_pct_null_pct` | n/a | INFO (live ~43% null) |
 | `bylaw_max_height_m_null_pct` | n/a | INFO (live ~10% null) |
 | `<attr>_conflict_count` (per numeric attr) | n/a; WARN if > prior-baseline ×2 | INFO |

@@ -75,7 +75,11 @@ function plausibleFsi(gfa, lot) {
  * }>}
  */
 const PARCEL_COST_LINES = Object.freeze([
-  { id: 'max_build',        archetype: 'FB',           areaField: 'max_buildable_gfa_sqm',      baseConfidence: 'high',   scalar: 'cost_fb_total',                  scalarKind: 'total' },
+  // WF3: 'new build' prices the as-of-right optimal config (opt_aor_gfa_sqm), NOT the max-build
+  // envelope — else new_build > coa_build (incoherent: CoA can only add). The SELECT COALESCEs
+  // opt_aor → max_buildable_gfa for the parcels lacking opt_aor. max_build_fsi below still reports
+  // the *envelope* FSI (max_buildable_gfa ÷ lot) — a distinct reference from this priced area.
+  { id: 'max_build',        archetype: 'FB',           areaField: 'opt_aor_gfa_sqm',            baseConfidence: 'high',   scalar: 'cost_fb_total',                  scalarKind: 'total' },
   { id: 'coa_build',        archetype: 'CoA',          areaField: 'opt_coa_gfa_sqm',            baseConfidence: 'high',   scalar: 'cost_coa_total',                 scalarKind: 'total',  isCoaLine: true },
   { id: 'solar_max',        archetype: 'SOLAR',        areaField: 'max_buildable_footprint_sqm', baseConfidence: 'high',  scalar: 'cost_solar_total',               scalarKind: 'total' },
   // solar_coa shares the SAME capped footprint as solar_max (§2.2 "up, not out") → equal cost; no separate headline scalar.
@@ -257,6 +261,8 @@ function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
 
   // FSI scalars (§2.5). Derived from parcel GFA ÷ lot; NULLed + counted when implausibly high (a garbage
   // max_buildable_gfa artifact) so they can't overflow NUMERIC(6,3). realized_fsi_p90 read-through (P2 populates).
+  // NB (WF3): max_build_fsi is the *envelope* reference (max_buildable_gfa ÷ lot) — deliberately NOT
+  // opt_aor. The max_build cost LINE now prices opt_aor (see PARCEL_COST_LINES); these two diverge by design.
   const lot = num(parcel.lot_size_sqm);
   const mb = plausibleFsi(num(parcel.max_buildable_gfa_sqm), lot);
   const coa = plausibleFsi(num(parcel.opt_coa_gfa_sqm), lot);

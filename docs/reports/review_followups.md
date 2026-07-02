@@ -3,6 +3,17 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## WF3 cost-menu coherence + zoning FSI mis-sourcing (Spec 88 Fix A + Spec 65 Fix B) — plan-review DEFERs (2026-07-01)
+
+Source: 2-round 3-reviewer plan panel (Integration + Regression Guardian + Code Reviewer, both converged). Fixes shipped: `bylaw_max_fsi` precedence `'min'→'dominant'` + B2 residential `fsi_max>10` source guard; cost `new_build` line → `COALESCE(opt_aor_gfa, max_buildable_gfa)`. Items below are accepted-limitation DEFERs.
+
+| Severity | Source | Item | Disposition |
+|---|---|---|---|
+| LOW | Code Reviewer / Regression Guardian | **Sibling numeric ceilings still use `'min'`.** `bylaw_max_units`/`bylaw_max_density`/`bylaw_pct_*_max` keep the most-restrictive MIN aggregation, which can NULL-skip / sliver-borrow exactly as `bylaw_max_fsi` did before this WF3. | **DEFER (accepted).** They feed **no cost path** today, and MIN is defensible for genuine dual-zone density splits. Revisit when a consumer begins pricing/gating on these AND a sliver-borrow case is observed. Owner: Spec 65 DEC-1. |
+| LOW | Regression Guardian (W3) | **B2 guard erases the pre-guard value from jsonb provenance.** `enrich-parcels.js` nulls corrupt `fsi_max` in `base_cand` *before* it reaches the `base_candidates` jsonb (`zoning_overlays.base[]`), so the raw corrupt value (e.g. `RD fsi=15`) is not visible to operators there — only the `zoning_fsi_source_nulled_count` INFO count survives. | **DEFER (accepted).** The count is sufficient signal for now. Revisit if operator diagnostics need the specific pre-guard value per parcel (e.g. capture it in a `nulled_fsi_max` provenance key). |
+
+---
+
 ## Spec 65 Phase 3 (garage + rear-suite accessory fit + CoA permission) — WF6 output-altitude review DEFERs (2026-06-23)
 
 Source: 6-reviewer output review. Integration + Regression Guardian **PASS** (no undefended fences — heritage-freeze byte-stable via `FILTER(is_primary)`, garden-suite externalization byte-stable, #431-FU guards preserved, MAX_BUILD_COLS 17→25 / bool-cols unchanged). 2 findings folded into the commit: (a) `parcels_abuts_laneway_true_count` added to the `centreline_enrich` records_meta sub-object [Code Reviewer]; (b) `rear_suite_permission_as_of_right` count added to assert-global-coverage pa+ca [Observability]. Items below are DEFERs / refutations.

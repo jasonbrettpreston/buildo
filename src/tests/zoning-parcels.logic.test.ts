@@ -38,8 +38,8 @@ describe('zoning-precedence — config completeness (DEC-2)', () => {
   it('classifies representative attributes correctly (DEC-1)', () => {
     expect(PRECEDENCE_RULES.zoning_class).toBe('dominant');       // identity ← dominant zone
     expect(PRECEDENCE_RULES.exception_number).toBe('dominant');
-    expect(PRECEDENCE_RULES.bylaw_max_fsi).toBe('min');           // ceiling ← most-restrictive MIN
-    expect(PRECEDENCE_RULES.bylaw_max_units).toBe('min');
+    expect(PRECEDENCE_RULES.bylaw_max_fsi).toBe('dominant');      // WF3: FSI ← dominant zone (was 'min' — MIN skipped NULLs → sliver-borrowed FSI)
+    expect(PRECEDENCE_RULES.bylaw_max_units).toBe('min');         // sibling ceilings stay MIN (no cost path)
     expect(PRECEDENCE_RULES.bylaw_min_frontage_m).toBe('max');    // floor ← MAX
     expect(PRECEDENCE_RULES.bylaw_min_area_sqm).toBe('max');
     expect(PRECEDENCE_RULES.bylaw_standard_setback_m).toBe('max');// setback is a floor requirement
@@ -52,7 +52,9 @@ describe('zoning-precedence — config completeness (DEC-2)', () => {
 
 describe('zoning-precedence — SQL fragment builder (DEC-3)', () => {
   it('emits MIN for ceilings, MAX for floors, bool_or for membership', () => {
-    expect(sqlAggregate('bylaw_max_fsi', 'x')).toBe('MIN(x)');
+    // WF3: bylaw_max_fsi is now 'dominant' → emits the area-ordered array_agg form, not MIN.
+    expect(sqlAggregate('bylaw_max_fsi', 'x')).toBe(`(array_agg(x ORDER BY ${DOMINANT_ORDER_BY}))[1]`);
+    expect(sqlAggregate('bylaw_max_units', 'x')).toBe('MIN(x)'); // sibling ceiling stays MIN
     expect(sqlAggregate('bylaw_max_coverage_pct', 'x')).toBe('MIN(x)'); // overlay_min still aggregates MIN
     expect(sqlAggregate('bylaw_min_frontage_m', 'x')).toBe('MAX(x)');
     expect(sqlAggregate('in_policy_area', 'x')).toBe('bool_or(x)');

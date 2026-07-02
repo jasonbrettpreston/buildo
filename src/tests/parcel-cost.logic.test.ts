@@ -37,6 +37,7 @@ function fullParcel(overrides: Record<string, unknown> = {}) {
   return {
     lot_size_sqm: 400,
     max_buildable_gfa_sqm: 300,
+    opt_aor_gfa_sqm: 300, // WF3: new_build prices this; == max_buildable_gfa here so existing assertions stay value-neutral
     max_buildable_footprint_sqm: 120,
     opt_coa_gfa_sqm: 360,
     max_garden_suite_gfa_sqm: 60,
@@ -137,6 +138,20 @@ describe('buildParcelCostMenu — full parcel', () => {
     expect(menu.max_build.total).toBeCloseTo(4844 * 300, 1);
     expect(menu.max_build.area).toBe(300);
     expect(menu.max_build.area_confidence).toBe('high');
+  });
+
+  it('WF3: max_build (new_build) prices opt_aor_gfa, NOT the max-build envelope', () => {
+    // opt_aor (250) ≠ max_buildable_gfa (300) — the line must use opt_aor, while max_build_fsi
+    // (the *envelope* reference scalar) keeps deriving from max_buildable_gfa (300 ÷ 400).
+    const built = pc.buildParcelCostMenu(
+      fullParcel({ opt_aor_gfa_sqm: 250, max_buildable_gfa_sqm: 300 }),
+      RATES,
+      NO_ESCALATION,
+    );
+    expect(built.menu.max_build.area).toBe(250);              // prices opt_aor, not 300
+    expect(built.menu.max_build.total).toBeCloseTo(4844 * 250, 1);
+    expect(built.scalars.cost_fb_total).toBeCloseTo(4844 * 250, 1);
+    expect(built.scalars.max_build_fsi).toBeCloseTo(300 / 400, 3); // envelope FSI unchanged (max_buildable_gfa)
   });
 
   it('solar_coa equals solar_max (footprint capped → same roof)', () => {

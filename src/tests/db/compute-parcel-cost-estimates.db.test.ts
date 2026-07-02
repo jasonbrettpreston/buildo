@@ -25,6 +25,7 @@ async function insParcel(pool: Pool, id: number, over: Record<string, unknown> =
     zoning_class: 'RD',
     lot_size_sqm: 400,
     max_buildable_gfa_sqm: 300,
+    opt_aor_gfa_sqm: 300, // WF3: new_build prices this; == max_buildable_gfa → cost_fb_total assertions stay value-neutral
     max_buildable_footprint_sqm: 120,
     opt_coa_gfa_sqm: 360,
     max_garden_suite_gfa_sqm: 60,
@@ -103,6 +104,30 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
     expect(menu.kitchen.norm_basis).toBe('n/a');
   }, 60_000);
 
+  it('WF3: new_build (cost_fb_total) prices opt_aor_gfa; NULL opt_aor → envelope fallback + counted', async () => {
+    // (a) opt_aor 250 ≠ max_buildable 300 → the max_build line prices 250, not the envelope.
+    await insParcel(pool, P(5), { opt_aor_gfa_sqm: 250, max_buildable_gfa_sqm: 300 });
+    // (b) opt_aor NULL → COALESCE falls back to the max-build envelope (300) + increments the counter.
+    await insParcel(pool, P(6), { opt_aor_gfa_sqm: null, max_buildable_gfa_sqm: 300 });
+
+    const s = await computeParcelCostEstimates(pool, { config: CONFIG });
+    expect(s.engineErrorCount).toBe(0);
+    expect(s.newBuildFallbackCount).toBeGreaterThanOrEqual(1); // P(6) used the fallback
+
+    const rowA = (await pool.query(
+      `SELECT parcel_cost_menu, cost_fb_total, max_build_fsi FROM parcels WHERE id = $1`, [P(5)],
+    )).rows[0];
+    expect(rowA.parcel_cost_menu.max_build.area).toBe(250);   // priced opt_aor, not 300
+    expect(Number(rowA.cost_fb_total)).toBeCloseTo(4844 * 250, 0);
+    expect(Number(rowA.max_build_fsi)).toBeCloseTo(300 / 400, 2); // envelope FSI still from max_buildable_gfa
+
+    const rowB = (await pool.query(
+      `SELECT parcel_cost_menu, cost_fb_total FROM parcels WHERE id = $1`, [P(6)],
+    )).rows[0];
+    expect(rowB.parcel_cost_menu.max_build.area).toBe(300);   // fell back to the envelope
+    expect(Number(rowB.cost_fb_total)).toBeCloseTo(4844 * 300, 0);
+  }, 60_000);
+
   it('IS-DISTINCT-FROM idempotency: a clean re-run updates 0 parcels', async () => {
     await insParcel(pool, P(2));
     const first = await computeParcelCostEstimates(pool, { config: CONFIG });
@@ -137,6 +162,7 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
   it('a parcel with NO computable line counts as null_geom_basis (menu has no lines)', async () => {
     await insParcel(pool, P(4), {
       max_buildable_gfa_sqm: null,
+      opt_aor_gfa_sqm: null, // WF3: null both so the COALESCE'd new_build area is also NULL (no computable line)
       max_buildable_footprint_sqm: null,
       opt_coa_gfa_sqm: null,
       max_garden_suite_gfa_sqm: null,
