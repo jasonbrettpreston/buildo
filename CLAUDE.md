@@ -34,6 +34,7 @@ Full WF execution plans: `.claude/workflows.md` — read when a WF is triggered,
 7. **Engineering Standards:** Adhere to `docs/specs/00_engineering_standards.md` for all API, UI, and DB code.
 8. **Lessons:** Read `tasks/lessons.md` at session start — project-specific gotchas that have already bitten us. When fixing a CRITICAL/HIGH bug or running WF5/WF6, also read `docs/specs/00-architecture/05_knowledge_operating_model.md` for the lesson-routing protocol.
 9. **Library Docs:** Use the Context7 MCP server (`resolve-library-id` → `get-library-docs`) before writing code against any external library. Prevents hallucinated API calls against outdated versions.
+10. **Spec-First, No Assumptions:** Before explaining or acting on how any script, chain, migration, schema, or table behaves — including debugging and ops, not just planning — READ the governing spec first (find it via `docs/specs/00_system_map.md`). Cite it. Never infer behavior from a name or guess; if no spec exists, read the code. An unverified claim about system behavior is a defect.
 
 ### Execution Order Constraint
 > 1. Read `docs/specs/00_engineering_standards.md` AND the relevant feature spec before generating the Active Task.
@@ -97,12 +98,12 @@ Full WF execution plans: `.claude/workflows.md` — read when a WF is triggered,
 ```
 
 **PLAN COMPLIANCE GATE:** Before presenting any plan:
-1. Read §10 Plan Compliance Checklist in `docs/specs/00_engineering_standards.md`
+1. Read §11 Plan Compliance Checklist in `docs/specs/00_engineering_standards.md`
 2. Verify the plan addresses every applicable item
 3. Fix silently if missing — never present a non-compliant plan
 
 > **PLAN LOCKED. Do you authorize this [Workflow Type] plan? (y/n)**
-> §10 note: [one line only if a non-obvious compliance choice was made — otherwise omit]
+> §11 note: [one line only if a non-obvious compliance choice was made — otherwise omit]
 > DO NOT generate code. DO NOT run commands. TERMINATE RESPONSE.
 
 ---
@@ -125,7 +126,11 @@ Triggered as named steps inside WF1, WF2, WF3 — not standalone.
 
 **Trigger — Regression Guardian:** runs in WF1 / WF2 / WF3 **whenever the diff MODIFIES or DELETES existing code** (skip for pure net-new additions). WF1: scoped to the *existing-file edits* only (e.g. `manifest.json`, `assert-schema.js`, `factories.ts`, shared `scripts/lib/`) — brand-new files have no prior intent to preserve. WF3 (`fix`): always applies (a fix alters existing code by definition).
 
-**Panel sizing:** **Pipeline-domain WF1/WF2 run the 5-reviewer panel** (Gemini + DeepSeek + Code Reviewer + Observability + Integration), **+ Regression Guardian when the diff touches existing code** (always fires for WF2, which by definition alters existing code; conditional for WF1). Non-pipeline WF1/WF2 run the 3 (Gemini + DeepSeek + Code Reviewer) + Guardian (same condition). WF3 = Independent + Regression Guardian (adversarial on request).
+**Reality-Check** (`pipeline-reality-check`, **main tree** — needs the live DB): the ONLY reviewer that reads the *output values*, not the code. Every other role asks "is the code correct?"; this one asks "are these numbers physically and domain-plausible?" — the pass that keeps catching the bugs green coverage-observability misses (a field populated but *insane*: FSI 2.0 borrowed from a 0-area sliver, footprint at 67% coverage, a 456 m² building frozen onto a 111 m² lot). Instruments: `scripts/analysis/parcel-sanity-audit.js` (zone-aware BOUNDS + cross-field INVARIANTS + per-zone DISTRIBUTION outliers over all parcels) + `scripts/analysis/parcel-field-dump.js` (full-field eyeball — a plausible value on a CLEAN parcel is an audit *miss*). Runs both, separates **genuine bugs** from **not-yet-re-run data** (a committed fix whose `--full` hasn't landed), reports **audit blind spots** the eyeball exposes. **Plan-altitude:** for every field a plan adds/derives, demands a plausibility bound (zone-aware where the sane range differs by zone) + the named cross-field invariants it must preserve + an audit-row count for any cap/drop/default. Never declares a result sane without having looked at the numbers.
+
+**Trigger — Reality-Check:** runs in **pipeline WF1 / WF2 / WF3 that add or change any enriched/derived parcel field** (zoning / max-build / optconfig / cost) — plan-altitude on `.cursor/active_task.md`, output-altitude on the re-run data. Skip for pure plumbing (chain wiring, manifest, non-data refactors).
+
+**Panel sizing:** **Pipeline-domain WF1/WF2 run the 5-reviewer panel** (Gemini + DeepSeek + Code Reviewer + Observability + Integration), **+ Regression Guardian when the diff touches existing code** (always fires for WF2, which by definition alters existing code; conditional for WF1), **+ Reality-Check when the diff adds/changes an enriched parcel field**. Non-pipeline WF1/WF2 run the 3 (Gemini + DeepSeek + Code Reviewer) + Guardian (same condition). WF3 = Independent + Regression Guardian (adversarial on request) **+ Reality-Check when it touches enriched parcel data**.
 
 **Two altitudes — same roles, different prompt + target:** **Plan review** points the reviewers at `.cursor/active_task.md` (the plan) with the spec as context — hunts completeness, internal consistency, and factual correctness *before* code exists. **Output review** points them at the diff — hunts whether the code does what the plan says (error paths, idempotency, integration). The Multi-Agent Review step in WF1/WF2 is the *output* review; plan review is run on request (per `feedback_wf1_phase_plan_review`).
 
@@ -138,7 +143,7 @@ Every new spec MUST include `## Operating Boundaries` (Target Files, Out-of-Scop
 
 ## Domain Rules
 
-> **MANDATORY:** Declare Domain Mode at the start of every task. Read the corresponding domain file before generating the active task. Violating domain rules is a §10 compliance failure.
+> **MANDATORY:** Declare Domain Mode at the start of every task. Read the corresponding domain file before generating the active task. Violating domain rules is a §11 compliance failure.
 
 | If you will modify… | Declare mode | Read |
 |---------------------|--------------|------|
