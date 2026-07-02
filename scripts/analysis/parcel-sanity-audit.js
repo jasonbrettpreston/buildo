@@ -21,13 +21,16 @@ const CHECKS = [
   { fam: 'BOUND', id: 'lot_size_out_of_range', why: 'physical', applies: `lot_size_sqm IS NOT NULL`, bad: `lot_size_sqm < 40 OR lot_size_sqm > 100000`, sev: 'HIGH' },
   { fam: 'BOUND', id: 'lowrise_bylaw_fsi_gt_1_5', why: 'FSI-borrow bug (RD sliver→2.0)', applies: `(${LOWRISE}) AND bylaw_max_fsi IS NOT NULL`, bad: `bylaw_max_fsi > 1.5`, sev: 'HIGH' },
   { fam: 'BOUND', id: 'residential_bylaw_fsi_gt_8', why: 'corrupt source (FSI 15)', applies: `bylaw_max_fsi IS NOT NULL`, bad: `bylaw_max_fsi > 8`, sev: 'HIGH' },
-  { fam: 'BOUND', id: 'coverage_gt_60pct', why: 'coverage-uncapped bug (67%)', applies: `bylaw_max_coverage_pct IS NOT NULL`, bad: `bylaw_max_coverage_pct > 60`, sev: 'MED' },
+  // LOWRISE-only: RA/RM apartment zones legitimately reach 80% coverage (was a false positive on RA).
+  { fam: 'BOUND', id: 'lowrise_coverage_gt_50pct', why: 'coverage-uncapped bug (67%)', applies: `(${LOWRISE}) AND bylaw_max_coverage_pct IS NOT NULL`, bad: `bylaw_max_coverage_pct > 50`, sev: 'MED' },
   { fam: 'BOUND', id: 'lowrise_height_gt_15m', why: 'tree-massing (95 m bungalow)', applies: `(${LOWRISE}) AND bylaw_max_height_m IS NOT NULL`, bad: `bylaw_max_height_m > 15`, sev: 'MED' },
   { fam: 'BOUND', id: 'footprint_coverage_gt_65pct', why: 'coverage-uncapped bug', applies: `max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0`, bad: `max_buildable_footprint_sqm / lot_size_sqm > 0.65`, sev: 'HIGH' },
   { fam: 'BOUND', id: 'max_build_fsi_gt_5', why: 'garbage GFA (FSI 1042)', applies: `max_build_fsi IS NOT NULL`, bad: `max_build_fsi > 5`, sev: 'HIGH' },
   { fam: 'BOUND', id: 'coa_fsi_gt_5', why: 'garbage GFA', applies: `coa_fsi IS NOT NULL`, bad: `coa_fsi > 5`, sev: 'HIGH' },
-  { fam: 'BOUND', id: 'existing_height_gt_20m', why: 'tree-massing', applies: `existing_height_m IS NOT NULL`, bad: `existing_height_m > 20`, sev: 'MED' },
-  { fam: 'BOUND', id: 'lowrise_existing_stories_gt_4', why: 'tree-massing / mislink', applies: `(${LOWRISE}) AND existing_stories IS NOT NULL`, bad: `existing_stories > 4`, sev: 'MED' },
+  // NB: existing_height_m/existing_stories are NULL across the DB — re-targeted to the POPULATED
+  // envelope-height field (the tree-massing contamination lands in max_build_height_m, not existing_*).
+  { fam: 'BOUND', id: 'lowrise_maxbuild_height_gt_15m', why: 'tree-massing (envelope height)', applies: `(${LOWRISE}) AND max_build_height_m IS NOT NULL`, bad: `max_build_height_m > 15`, sev: 'MED' },
+  { fam: 'BOUND', id: 'comp_fsi_p50_implausibly_low', why: 'comps domain-review (existing vs realized-build?)', applies: `comp_fsi_p50 IS NOT NULL`, bad: `comp_fsi_p50 < 0.05`, sev: 'INFO' },
   { fam: 'BOUND', id: 'lowrise_maxbuild_stories_gt_4', why: 'over-tall envelope', applies: `(${LOWRISE}) AND max_build_stories IS NOT NULL`, bad: `max_build_stories > 4`, sev: 'MED' },
   { fam: 'BOUND', id: 'opt_storeys_gt_12', why: 'physical', applies: `opt_aor_storeys IS NOT NULL OR opt_coa_storeys IS NOT NULL`, bad: `opt_aor_storeys > 12 OR opt_coa_storeys > 12`, sev: 'MED' },
   { fam: 'BOUND', id: 'newbuild_cost_per_sqm_out_of_band', why: 'cost-rate sanity ($186–1115/ft²)', applies: `cost_fb_total IS NOT NULL AND opt_aor_gfa_sqm > 0`, bad: `cost_fb_total / opt_aor_gfa_sqm < 2000 OR cost_fb_total / opt_aor_gfa_sqm > 12000`, sev: 'MED' },
@@ -35,8 +38,16 @@ const CHECKS = [
   { fam: 'INVARIANT', id: 'opt_aor_gfa_gt_opt_coa_gfa', why: 'CoA ≥ as-of-right (coherence)', applies: `opt_aor_gfa_sqm IS NOT NULL AND opt_coa_gfa_sqm IS NOT NULL`, bad: `opt_aor_gfa_sqm > opt_coa_gfa_sqm + 0.5`, sev: 'HIGH' },
   { fam: 'INVARIANT', id: 'opt_aor_storeys_gt_opt_coa_storeys', why: 'CoA storeys ≥ as-of-right', applies: `opt_aor_storeys IS NOT NULL AND opt_coa_storeys IS NOT NULL`, bad: `opt_aor_storeys > opt_coa_storeys`, sev: 'MED' },
   { fam: 'INVARIANT', id: 'new_build_cost_gt_coa_build_cost', why: 'THE headline bug (new_build > coa_build)', applies: `cost_fb_total IS NOT NULL AND cost_coa_total IS NOT NULL`, bad: `cost_fb_total > cost_coa_total + 1`, sev: 'HIGH' },
-  { fam: 'INVARIANT', id: 'footprint_gt_lot', why: 'footprint ≤ lot (physical)', applies: `max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm IS NOT NULL`, bad: `max_buildable_footprint_sqm > lot_size_sqm`, sev: 'HIGH' },
-  { fam: 'INVARIANT', id: 'existing_floor_gt_lot', why: 'existing footprint ≤ lot', applies: `cur_floor_gfa_sqm IS NOT NULL AND lot_size_sqm IS NOT NULL`, bad: `cur_floor_gfa_sqm > lot_size_sqm`, sev: 'HIGH' },
+  // ×1.05 = the mislink tolerance (mislink_footprint_lot_tol) the enrich passes use — a footprint within
+  // 5% of the lot is the accepted grandfather band, NOT a mislink (else 194 legit heritage stay flagged).
+  { fam: 'INVARIANT', id: 'footprint_gt_lot_x105', why: 'footprint ≤ lot×1.05 (mislink)', applies: `max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm IS NOT NULL`, bad: `max_buildable_footprint_sqm > lot_size_sqm * 1.05`, sev: 'HIGH' },
+  { fam: 'INVARIANT', id: 'existing_floor_gt_lot_x105', why: 'existing footprint ≤ lot×1.05', applies: `cur_floor_gfa_sqm IS NOT NULL AND lot_size_sqm IS NOT NULL`, bad: `cur_floor_gfa_sqm > lot_size_sqm * 1.05`, sev: 'HIGH' },
+  // A heritage-freeze basis must never keep a footprint > lot×1.05 (the heritage-mislink WF3 guard).
+  { fam: 'INVARIANT', id: 'heritage_basis_footprint_gt_lot', why: 'heritage freeze ⟺ mislink-guard agreement', applies: `max_buildable_gfa_basis = 'heritage_existing' AND max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm IS NOT NULL`, bad: `max_buildable_footprint_sqm > lot_size_sqm * 1.05`, sev: 'HIGH' },
+  // Stale cost after an enrich re-run but BEFORE compute-parcel-cost re-runs (blind-spot A): the FSI
+  // scalar (cost-model-written) is present while the envelope GFA (enrich-written) is NULL.
+  { fam: 'INVARIANT', id: 'stale_cost_fsi_without_gfa', why: 'stale cost (needs compute-parcel-cost re-run)', applies: `max_build_fsi IS NOT NULL`, bad: `max_buildable_gfa_sqm IS NULL`, sev: 'MED' },
+  { fam: 'INVARIANT', id: 'cost_fb_on_footprint_gt_lot', why: 'garbage cost on a mislink not yet cleared', applies: `cost_fb_total IS NOT NULL AND max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm IS NOT NULL`, bad: `max_buildable_footprint_sqm > lot_size_sqm * 1.05`, sev: 'HIGH' },
   { fam: 'INVARIANT', id: 'greenspace_out_of_range', why: '0 ≤ greenspace ≤ lot', applies: `existing_greenspace_sqm IS NOT NULL AND lot_size_sqm IS NOT NULL`, bad: `existing_greenspace_sqm < 0 OR existing_greenspace_sqm > lot_size_sqm + 0.5`, sev: 'MED' },
   { fam: 'INVARIANT', id: 'opt_aor_gfa_gt_max_buildable_gfa', why: 'as-of-right ≤ lot-validated envelope', applies: `opt_aor_gfa_sqm IS NOT NULL AND max_buildable_gfa_sqm IS NOT NULL`, bad: `opt_aor_gfa_sqm > max_buildable_gfa_sqm + 0.5`, sev: 'MED' },
   { fam: 'INVARIANT', id: 'realized_fsi_p90_out_of_range', why: 'realized FSI ∈ [0.1, 6]', applies: `realized_fsi_p90 IS NOT NULL`, bad: `realized_fsi_p90 < 0.1 OR realized_fsi_p90 > 6`, sev: 'MED' },
@@ -47,9 +58,10 @@ const DIST_FIELDS = [
   { id: 'bylaw_max_fsi', expr: 'bylaw_max_fsi' },
   { id: 'max_build_fsi', expr: 'max_build_fsi' },
   { id: 'footprint_coverage', expr: 'max_buildable_footprint_sqm / NULLIF(lot_size_sqm,0)' },
-  { id: 'existing_height_m', expr: 'existing_height_m' },
+  { id: 'max_build_height_m', expr: 'max_build_height_m' },
   { id: 'newbuild_cost_per_sqm', expr: 'cost_fb_total / NULLIF(opt_aor_gfa_sqm,0)' },
   { id: 'opt_aor_gfa_sqm', expr: 'opt_aor_gfa_sqm' },
+  { id: 'comp_fsi_p50', expr: 'comp_fsi_p50' },
   { id: 'lot_size_sqm', expr: 'lot_size_sqm' },
 ];
 
