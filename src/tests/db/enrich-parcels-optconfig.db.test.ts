@@ -117,6 +117,28 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-3A enrich-parcels optimal-confi
     expect(stats.updated).toBe(1);                                     // only P(1)
   }, 90_000);
 
+  it('WF3: a parcel that LOST its footprint has stale opt_* RESET to NULL (else cost prices the stale opt_aor)', async () => {
+    await insNbhd(pool, NB, 'TEST-OC-NBHD');
+    await insNorm(pool, NB);
+    await insNorm(pool, null);
+    // Configure a parcel (footprint present) → opt_* written.
+    await insParcel(pool, P(30), NB);
+    await ep.enrichOptimalConfig(pool, { full: true, scopeWhere: SCOPE });
+    const configured = (await pool.query(`SELECT opt_aor_gfa_sqm, opt_config_confidence FROM parcels WHERE id = $1`, [P(30)])).rows[0];
+    expect(configured.opt_aor_gfa_sqm).not.toBeNull();
+
+    // Now the footprint becomes NULL (e.g. a heritage-mislink freeze nulled the envelope). Re-run.
+    await pool.query(`UPDATE parcels SET max_buildable_footprint_sqm = NULL WHERE id = $1`, [P(30)]);
+    const stats = await ep.enrichOptimalConfig(pool, { full: true, scopeWhere: SCOPE });
+    expect(stats.reset_ineligible).toBeGreaterThanOrEqual(1);
+    const after = (await pool.query(
+      `SELECT opt_aor_gfa_sqm, opt_coa_gfa_sqm, opt_aor_storeys, opt_config_confidence, optimal_config FROM parcels WHERE id = $1`, [P(30)])).rows[0];
+    expect(after.opt_aor_gfa_sqm).toBeNull();      // stale opt_aor cleared → cost can't price it
+    expect(after.opt_coa_gfa_sqm).toBeNull();
+    expect(after.opt_config_confidence).toBeNull();
+    expect(after.optimal_config).toBeNull();
+  }, 90_000);
+
   it('R2 (detached-only): opt_coa is grounded in realized detached FSI p90 (norm → engine → opt_coa wiring)', async () => {
     await insNbhd(pool, NB, 'TEST-OC-NBHD');
     await insNorm(pool, null);                     // (NULL,'all') backstop — the cwa CROSS JOIN needs it

@@ -177,6 +177,28 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
     } finally { c.release(); }
   });
 
+  // WF3 — heritage WITH a MISLINKED (oversized) massing: the primary footprint exceeds the lot, so the
+  // wrong building was linked. The freeze must NOT copy it (else FSI 20+ garbage prices millions).
+  it('heritage + massing footprint > lot → NULLed (not frozen); reason heritage_footprint_exceeds_lot; counted', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      const id = await insMb(c, TEST_PARCEL + 22, sq(0, 0, 0.0002), {
+        lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24, zoning_class: 'RD',
+        bylaw_max_height_m: 10, bylaw_max_stories: 3, bylaw_max_coverage_pct: 45, is_heritage_designated: true,
+      });
+      await addMassing(c, id, 900, 3); // 900 m² footprint on a 495 m² lot → mislink (> 495×1.05)
+      const s = await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+      const p = await getParcel(c, TEST_PARCEL + 22);
+      expect(p.max_buildable_footprint_sqm).toBeNull();               // NOT frozen to the 900 m² garbage
+      expect(p.max_buildable_gfa_sqm).toBeNull();
+      expect(p.max_build_basis).toBeNull();                           // was 'heritage_existing'
+      expect(p.envelope_constraint_reason).toBe('heritage_footprint_exceeds_lot');
+      expect(s.heritage_mislink_cnt).toBeGreaterThanOrEqual(1);
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
   it('ravine lot → envelope_constrained, reason ravine', async () => {
     const c = await pool.connect();
     try {

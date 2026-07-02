@@ -218,6 +218,10 @@ describe('max-build — enrich-parcels second-pass SQL plumbing', () => {
     // WF3: coverage_cap fills a NULL bylaw coverage with the zone default (anchored to the exact
     // expression — a loose /COALESCE.*coverage_cap/ would also match unrelated COALESCEs in the blob).
     expect(sql).toMatch(/COALESCE\(bylaw_max_coverage_pct,/);
+    // WF3: heritage freeze respects the mislink guard — heritage_no_massing widens to include a
+    // primary-massing footprint exceeding the lot (× 1+mislinkTol), so it never freezes garbage.
+    expect(sql).toMatch(/existing_footprint_sqm > lot_size_sqm \* \(1 \+/);
+    expect(sql).toMatch(/heritage_footprint_mislink/);
     // ravine is a FIXED constant, NOT scaled by ravine_distance_m (Spec 59 L2 / MB-5)
     expect(sql).not.toMatch(/ravine_distance_m\s*\*/);
   });

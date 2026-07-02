@@ -377,7 +377,7 @@ async function enrichParcels(client, opts = {}) {
 // (protects the 36-col regression lock + idempotency fences). Runs in the SAME transaction
 // AFTER enrichParcels, so parcel_zoning_enrich (ON COMMIT DROP) is still visible for scoping.
 // ---------------------------------------------------------------------------
-function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {} }) {
+function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {}, mislinkTol = mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT }) {
   // SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only.
   // Incremental: first-time (lot_size_confidence NULL) OR a parcel whose zoning was re-enriched
   // this run (present in parcel_zoning_enrich). --full recomputes all (use after a massing/lot reload).
@@ -402,6 +402,8 @@ function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight = mb
   const minSoftPct = N(acc.minSoftPct, mb.MIN_SOFT_LANDSCAPING_PCT);
   const lanewayStoreys = N(acc.lanewayStoreys, mb.LANEWAY_SUITE_STOREYS);
   const gardenStoreys = N(acc.gardenStoreys, mb.GARDEN_SUITE_STOREYS);
+  // WF3: mislink tolerance for the heritage freeze — SAME logic-var as the existing-structure pass.
+  const mislinkTolNum = N(mislinkTol, mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT);
   return `
 CREATE TEMP TABLE parcel_max_build ON COMMIT DROP AS
 WITH scope AS (
@@ -520,7 +522,13 @@ env AS (
     -- LEAST ignores NULLs → footprint = min of whatever measures exist (buffer ⋂ box ⋂ coverage cap).
     LEAST(buffer_area, box_area, coverage_cap) AS footprint_calc,
     is_heritage_designated AS heritage,
-    (is_heritage_designated AND existing_footprint_sqm IS NULL) AS heritage_no_massing,
+    -- WF3: "no TRUSTWORTHY massing" — the heritage freeze copies the primary-massing footprint, but a
+    -- footprint exceeding the lot means the WRONG building was linked (mislink). The existing-structure
+    -- pass NULLs this identically (> lot×(1+tol)); the freeze must agree, else it prices garbage (FSI 20+).
+    (is_heritage_designated AND (existing_footprint_sqm IS NULL
+       OR existing_footprint_sqm > lot_size_sqm * (1 + ${mislinkTolNum}))) AS heritage_no_massing,
+    (is_heritage_designated AND existing_footprint_sqm IS NOT NULL
+       AND existing_footprint_sqm > lot_size_sqm * (1 + ${mislinkTolNum})) AS heritage_footprint_mislink,
     -- WF3-C2: 3-way storeys — by-law authoritative; else pocket p50 (LEGAL-height-capped); else height-derived.
     CASE WHEN bylaw_max_stories IS NOT NULL THEN GREATEST(1, bylaw_max_stories)
          WHEN pocket_p50 IS NOT NULL AND height_implied IS NOT NULL THEN LEAST(pocket_p50, height_implied)
@@ -615,7 +623,7 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
        OR (buffer_area IS NULL AND box_area IS NULL)), false) AS envelope_constrained,
   CASE
     WHEN NOT emit THEN 'low_lot_confidence'
-    WHEN heritage_no_massing THEN 'heritage_no_massing'
+    WHEN heritage_no_massing THEN (CASE WHEN heritage_footprint_mislink THEN 'heritage_footprint_exceeds_lot' ELSE 'heritage_no_massing' END)
     WHEN heritage THEN 'heritage'
     WHEN is_in_ravine_protection_area THEN 'ravine'
     WHEN buffer_area IS NULL AND box_area IS NULL THEN 'setback_exceeds_lot'
@@ -645,9 +653,9 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
             - (CASE rear_suite_type WHEN 'laneway' THEN max_laneway_suite_gfa_sqm / ${lanewayStoreys}
                                     WHEN 'garden'  THEN max_garden_suite_gfa_sqm / ${gardenStoreys} END))
             >= ${minSoftPct} * lot_size_sqm THEN 'as_of_right' ELSE 'coa_required' END AS rear_suite_permission,
-  -- WF3 coverage-default telemetry — stats-only passthrough into parcel_max_build for the audit
-  -- counts. Deliberately NOT in MAX_BUILD_COLS (buildMaxBuildUpdateSql would UPDATE nonexistent cols).
-  coverage_cap, box_area, buffer_area, coverage_defaulted
+  -- WF3 telemetry — stats-only passthrough into parcel_max_build for the audit counts. Deliberately
+  -- NOT in MAX_BUILD_COLS (buildMaxBuildUpdateSql would UPDATE nonexistent cols).
+  coverage_cap, box_area, buffer_area, coverage_defaulted, heritage_footprint_mislink
 FROM accessory2;
 `;
 }
@@ -667,9 +675,9 @@ WHERE p.parcel_id = e.parcel_id
 }
 
 async function enrichMaxBuild(client, opts = {}) {
-  const { scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {} } = opts;
+  const { scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {}, mislinkTol = mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT } = opts;
   await client.query('DROP TABLE IF EXISTS parcel_max_build');
-  await client.query(buildMaxBuildSql({ scopeWhere, full, storeyHeight, acc }));
+  await client.query(buildMaxBuildSql({ scopeWhere, full, storeyHeight, acc, mislinkTol }));
   const stats = await client.query(`
     SELECT
       COUNT(*)::int AS scoped,
@@ -708,7 +716,9 @@ async function enrichMaxBuild(client, opts = {}) {
       COUNT(*) FILTER (WHERE coverage_defaulted AND coverage_cap IS NOT NULL
                          AND max_build_basis = 'rect_approx'
                          AND (buffer_area IS NULL OR coverage_cap <= buffer_area)
-                         AND (box_area   IS NULL OR coverage_cap <= box_area))::int AS coverage_binding_cnt
+                         AND (box_area   IS NULL OR coverage_cap <= box_area))::int AS coverage_binding_cnt,
+      -- WF3: heritage parcels nulled because the primary-massing footprint exceeds the lot (mislink).
+      COUNT(*) FILTER (WHERE heritage_footprint_mislink)::int AS heritage_mislink_cnt
     FROM parcel_max_build`);
   const upd = await client.query(buildMaxBuildUpdateSql());
   return { ...stats.rows[0], updated: upd.rowCount };
@@ -1194,7 +1204,15 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE' } =
   if (!cw.rowCount) {
     throw new Error(`${TAG} optimal-config: no citywide (NULL,'all') neighbourhood_build_norms backstop — run compute_build_norms (permits chain) first`);
   }
-  const stats = { updated: 0, suite_fits: 0, conf_high: 0, conf_medium: 0, conf_low: 0, citywide: 0, errors: 0 };
+  // WF3: RESET stale opt_* on parcels that LOST eligibility — the stream gates on
+  // max_buildable_footprint_sqm IS NOT NULL, so a parcel whose footprint became NULL (e.g. a
+  // heritage-mislink freeze nulled it) would otherwise keep a stale opt_aor forever, and the cost
+  // model's COALESCE(opt_aor, max_buildable_gfa) would still price it. Null-out is scope-bounded.
+  const resetCols = OPTCFG_WRITE_COLS.map((c) => `${c} = NULL`).join(', ');
+  const reset = await pool.query(
+    `UPDATE parcels p SET ${resetCols}
+       WHERE (${scopeWhere}) AND p.max_buildable_footprint_sqm IS NULL AND p.opt_config_confidence IS NOT NULL`);
+  const stats = { updated: 0, reset_ineligible: reset.rowCount || 0, suite_fits: 0, conf_high: 0, conf_medium: 0, conf_low: 0, citywide: 0, errors: 0 };
   let batch = [];
   for await (const r of pipeline.streamQuery(pool, buildOptConfigSelectSql({ full, scopeWhere }), [], { batchSize: 200 })) {
     let row;
@@ -1305,7 +1323,7 @@ async function main(pool) {
       result = await enrichParcels(client, { scopeWhere: 'TRUE', full, roadDist, runAt, staleOverlays });
       // Second pass — max-build envelope (Spec 65 §). Same txn: parcel_zoning_enrich (ON COMMIT
       // DROP) is still visible for incremental scoping; reads the zoning feed just written above.
-      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight, acc });
+      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight, acc, mislinkTol: reno.mislinkTol });
       // Third pass — existing structure (Spec 65 Phase 1) + reno/build scenarios (Phase 2). Same txn:
       // parcel_max_build (ON COMMIT DROP) visible for scoping; reads the PRIMARY building (massing)
       // + the max-build cols written above; computes SCENARIO_COLS via a sibling UPDATE.
@@ -1364,6 +1382,8 @@ async function main(pool) {
     // (coverage was the binding LEAST term — the real blast radius, ≪ defaulted). "Don't hide a cap."
     auditRows.push({ metric: 'max_build_coverage_defaulted_count', value: mbResult.coverage_defaulted_cnt, status: 'INFO' });
     auditRows.push({ metric: 'max_build_coverage_binding_count', value: mbResult.coverage_binding_cnt, status: 'INFO' });
+    // WF3: heritage freezes nulled because the primary-massing footprint exceeds the lot (mislink guard).
+    auditRows.push({ metric: 'heritage_mislink_footprint_count', value: mbResult.heritage_mislink_cnt, status: 'INFO' });
     // max_build_confidence tier distribution.
     auditRows.push({ metric: 'max_build_confidence_high_count', value: mbResult.mb_high, status: 'INFO' });
     auditRows.push({ metric: 'max_build_confidence_medium_count', value: mbResult.mb_medium, status: 'INFO' });
@@ -1426,6 +1446,8 @@ async function main(pool) {
     auditRows.push({ metric: 'comp_build_ratio_p50_count', value: compResult.with_br, status: 'INFO' });
     // --- Optimal config (Spec 78 Phase 3A) — config-tier/suite/confidence distribution; errors gated. ---
     auditRows.push({ metric: 'optimal_config_enriched_count', value: ocResult.updated, status: 'INFO' });
+    // WF3: stale opt_* nulled on parcels that lost their footprint (e.g. heritage-mislink freeze).
+    auditRows.push({ metric: 'opt_config_reset_ineligible_count', value: ocResult.reset_ineligible, status: 'INFO' });
     auditRows.push({ metric: 'opt_suite_fits_full_count', value: ocResult.suite_fits, status: 'INFO' });
     auditRows.push({ metric: 'opt_config_confidence_high_count', value: ocResult.conf_high, status: 'INFO' });
     auditRows.push({ metric: 'opt_config_confidence_medium_count', value: ocResult.conf_medium, status: 'INFO' });
