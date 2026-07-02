@@ -155,9 +155,14 @@ Verified 2026-06-26 against `toronto.ca/zoning/.../ZBL_NewProvision_Chapter150_7
 
 ### P2.2 — Engine outputs (`computeOptimalConfig(parcel)`)
 
-- **as-of-right tier:** main build (footprint = coverage cap; storeys = nbhd `storeys_p50`; GFA under
-  the coverage **and** FSI caps — **NULL-FSI guard:** absent FSI → GFA = footprint × storeys, never
-  unbounded) + **suite-if-fits** + garage.
+- **as-of-right tier:** main build (footprint = coverage cap; storeys = nbhd `storeys_p50` **CAPPED at the
+  parcel's own `max_build_stories` envelope**; GFA under the coverage **and** FSI caps — **NULL-FSI guard:**
+  absent FSI → GFA = footprint × storeys, never unbounded) + **suite-if-fits** + garage. **WF3 envelope cap:**
+  as-of-right cannot exceed the lot-validated max-build envelope (you cannot build MORE than the legal max
+  as-of-right — that overshoot belongs to the CoA tier). The cap = `max_build_stories`, or for a HERITAGE
+  freeze (where that column is NULL) the derived frozen storeys `round(max_buildable_gfa ÷ footprint)` —
+  guarded on `max_buildable_gfa_basis='heritage_existing'` so it never mis-caps an FSI-bound parcel. Counted
+  `opt_aor_envelope_capped_count`.
 - **CoA-upside tier:** **storeys = nbhd `storeys_p90`** at the SAME footprint (CoA = up, not out —
   validated); `opt_coa_gfa_uplift_sqm` = the storey-driven GFA delta.
 - **Suite fit is conservative (field-spec §P):** evaluated against the CURRENT building's rear-yard

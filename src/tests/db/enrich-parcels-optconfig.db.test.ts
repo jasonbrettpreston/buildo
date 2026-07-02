@@ -139,6 +139,21 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-3A enrich-parcels optimal-confi
     expect(after.optimal_config).toBeNull();
   }, 90_000);
 
+  it('WF3: as-of-right storeys capped at max_build_stories (opt_aor ≤ envelope); opt_coa (p90) not capped', async () => {
+    await insNbhd(pool, NB, 'TEST-OC-NBHD');
+    await insNorm(pool, NB);       // storeys_p50=2, storeys_p90=3
+    await insNorm(pool, null);
+    // This parcel's envelope caps at 1 storey (max_build_stories=1, gfa=footprint×1=140); the nbhd p50=2
+    // would overshoot the envelope — the cap must bring opt_aor down to 1 storey.
+    await insParcel(pool, P(40), NB, { max_build_stories: 1, max_buildable_footprint_sqm: 140, max_buildable_gfa_sqm: 140, bylaw_max_fsi: null });
+    const stats = await ep.enrichOptimalConfig(pool, { full: true, scopeWhere: SCOPE });
+    expect(stats.envelope_capped).toBeGreaterThanOrEqual(1);
+    const r = (await pool.query(`SELECT opt_aor_storeys, opt_aor_gfa_sqm, opt_coa_storeys, max_buildable_gfa_sqm FROM parcels WHERE id = $1`, [P(40)])).rows[0];
+    expect(Number(r.opt_aor_storeys)).toBe(1);                                              // capped from p50=2 → 1
+    expect(Number(r.opt_aor_gfa_sqm)).toBeLessThanOrEqual(Number(r.max_buildable_gfa_sqm) + 0.5); // the invariant holds
+    expect(Number(r.opt_coa_storeys)).toBe(3);                                              // p90 uncapped — CoA upside intact
+  }, 90_000);
+
   it('R2 (detached-only): opt_coa is grounded in realized detached FSI p90 (norm → engine → opt_coa wiring)', async () => {
     await insNbhd(pool, NB, 'TEST-OC-NBHD');
     await insNorm(pool, null);                     // (NULL,'all') backstop — the cwa CROSS JOIN needs it

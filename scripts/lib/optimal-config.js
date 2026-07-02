@@ -241,7 +241,11 @@ function computeOptimalConfig(parcel) {
 
   // As-of-right: storeys = nbhd p50; CoA-upside: storeys = nbhd p90 (CoA = up, not out — footprint
   // unchanged between tiers). Fall back to 2 storeys when the norm is absent.
-  const p50 = p.nbhdStoreysP50 || 2;
+  // WF3: cap the AS-OF-RIGHT storeys at the parcel's own max-build envelope (maxBuildStories = by-law/
+  // pocket cap, or the frozen storeys for heritage). Neighbours may typically build taller than THIS
+  // parcel's legal cap, but you cannot build MORE as-of-right than the envelope — that overshoot belongs
+  // to the CoA tier (p90, uncapped). Same footprint + fsiCap as the envelope → capping storeys is exact.
+  const p50 = Math.min(p.nbhdStoreysP50 || 2, p.maxBuildStories != null ? p.maxBuildStories : Infinity);
   const p90 = p.nbhdStoreysP90 || p50;
 
   const asOfRight = buildTier(p, p50, !blocked);

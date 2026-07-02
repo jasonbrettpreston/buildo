@@ -1054,6 +1054,7 @@ function buildOptConfigSelectSql({ full = false, scopeWhere = 'TRUE' } = {}) {
   const incrWhere = full ? '' : 'AND p.opt_config_confidence IS NULL';
   return `
     SELECT p.id, p.lot_size_sqm, p.frontage_m, p.depth_m, p.max_buildable_footprint_sqm,
+           p.max_buildable_gfa_sqm, p.max_buildable_gfa_basis,  -- WF3: envelope-storey derive for heritage (col is NULL there)
            p.bylaw_max_fsi, p.bylaw_max_coverage_pct, p.max_build_stories,
            p.abuts_laneway, p.zoning_holding, p.is_through_lot, p.is_heritage_designated,
            p.is_in_ravine_protection_area, p.exception_number, p.existing_greenspace_sqm,
@@ -1108,6 +1109,16 @@ function mapRowToEngineInput(r) {
     // storeys: prefer the nbhd build-norm p50/p90; fall back to the parcel's own max_build_stories.
     nbhdStoreysP50: numOrNull(r.storeys_p50) ?? numOrNull(r.max_build_stories),
     nbhdStoreysP90: numOrNull(r.storeys_p90) ?? numOrNull(r.max_build_stories),
+    // WF3: the EFFECTIVE envelope-storey cap for the as-of-right tier. = max_build_stories (coverage/fsi
+    // basis); for HERITAGE the column is NULL but the envelope GFA = footprint × COALESCE(existing_stories,1),
+    // so derive it (exact integer). GUARDED on heritage_existing basis [Regression Guardian] so a
+    // hypothetical non-heritage null-stories + FSI parcel can't get a spurious fractional-ratio cap
+    // (the engine's fsiCap already bounds those — a storey cap there would under-state opt_aor).
+    maxBuildStories: numOrNull(r.max_build_stories)
+      ?? (r.max_buildable_gfa_basis === 'heritage_existing'
+          && numOrNull(r.max_buildable_footprint_sqm) > 0 && numOrNull(r.max_buildable_gfa_sqm) != null
+          ? Math.round(numOrNull(r.max_buildable_gfa_sqm) / numOrNull(r.max_buildable_footprint_sqm))
+          : null),
     // R2 (Spec 78 P2, plan fold #3): DETACHED-ONLY realized-FSI grounding — townhouse/multiplex cohorts
     // are thin (e.g. ~25 multiplex builds citywide) so their p90 is noisy → they keep the by-law FSI.
     realizedFsiP90: r.norm_family === 'detached' ? numOrNull(r.realized_fsi_p90) : null,
@@ -1212,7 +1223,7 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE' } =
   const reset = await pool.query(
     `UPDATE parcels p SET ${resetCols}
        WHERE (${scopeWhere}) AND p.max_buildable_footprint_sqm IS NULL AND p.opt_config_confidence IS NOT NULL`);
-  const stats = { updated: 0, reset_ineligible: reset.rowCount || 0, suite_fits: 0, conf_high: 0, conf_medium: 0, conf_low: 0, citywide: 0, errors: 0 };
+  const stats = { updated: 0, reset_ineligible: reset.rowCount || 0, envelope_capped: 0, suite_fits: 0, conf_high: 0, conf_medium: 0, conf_low: 0, citywide: 0, errors: 0 };
   let batch = [];
   for await (const r of pipeline.streamQuery(pool, buildOptConfigSelectSql({ full, scopeWhere }), [], { batchSize: 200 })) {
     let row;
@@ -1228,6 +1239,15 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE' } =
     else if (row[8] === 'medium') stats.conf_medium += 1;
     else stats.conf_low += 1;
     if (r.used_citywide) stats.citywide += 1;
+    // WF3: count as-of-right builds whose storeys the envelope cap reduced (mirrors the engine's cap
+    // decision from the raw row — the 12-tuple is locked, so we can't read cfg here).
+    const rawP50 = numOrNull(r.storeys_p50) ?? numOrNull(r.max_build_stories);
+    const effMbs = numOrNull(r.max_build_stories)
+      ?? (r.max_buildable_gfa_basis === 'heritage_existing'
+          && numOrNull(r.max_buildable_footprint_sqm) > 0 && numOrNull(r.max_buildable_gfa_sqm) != null
+          ? Math.round(numOrNull(r.max_buildable_gfa_sqm) / numOrNull(r.max_buildable_footprint_sqm))
+          : null);
+    if (effMbs != null && rawP50 != null && rawP50 > effMbs) stats.envelope_capped += 1;
     batch.push(row);
     if (batch.length >= OPTCFG_BATCH) { stats.updated += await flushOptConfigBatch(pool, batch); batch = []; }
   }
@@ -1448,6 +1468,8 @@ async function main(pool) {
     auditRows.push({ metric: 'optimal_config_enriched_count', value: ocResult.updated, status: 'INFO' });
     // WF3: stale opt_* nulled on parcels that lost their footprint (e.g. heritage-mislink freeze).
     auditRows.push({ metric: 'opt_config_reset_ineligible_count', value: ocResult.reset_ineligible, status: 'INFO' });
+    // WF3: as-of-right builds whose storeys were capped at the parcel's max-build envelope (was overshooting).
+    auditRows.push({ metric: 'opt_aor_envelope_capped_count', value: ocResult.envelope_capped, status: 'INFO' });
     auditRows.push({ metric: 'opt_suite_fits_full_count', value: ocResult.suite_fits, status: 'INFO' });
     auditRows.push({ metric: 'opt_config_confidence_high_count', value: ocResult.conf_high, status: 'INFO' });
     auditRows.push({ metric: 'opt_config_confidence_medium_count', value: ocResult.conf_medium, status: 'INFO' });

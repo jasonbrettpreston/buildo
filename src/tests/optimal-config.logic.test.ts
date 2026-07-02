@@ -138,6 +138,21 @@ describe('optimal-config whole-parcel computeOptimalConfig', () => {
     expect(c.opt_coa_gfa_uplift_sqm).toBeGreaterThan(0);
   });
 
+  it('WF3: as-of-right storeys capped at maxBuildStories (envelope); CoA (p90) NOT capped', () => {
+    // nbhd typically builds 2 (p50) but THIS parcel's envelope caps at 1 storey.
+    const c = oc.computeOptimalConfig({ ...lot, maxBuildStories: 1 });
+    expect(c.as_of_right.main_storeys).toBe(1);                            // capped from p50=2 → 1
+    expect(c.as_of_right.main_gfa_sqm).toBe(c.as_of_right.main_footprint_sqm); // footprint × 1
+    expect(c.coa_upside.main_storeys).toBe(3);                             // p90 uncapped — CoA upside intact
+    expect(c.coa_upside.main_gfa_sqm).toBeGreaterThan(c.as_of_right.main_gfa_sqm);
+  });
+
+  it('WF3: no cap when maxBuildStories is null, ≥ p50, or == p50 (fallback = max_build_stories → no-op, F8)', () => {
+    expect(oc.computeOptimalConfig(lot).as_of_right.main_storeys).toBe(2);                              // null → uncapped
+    expect(oc.computeOptimalConfig({ ...lot, maxBuildStories: 5 }).as_of_right.main_storeys).toBe(2);   // ≥ p50 → no-op
+    expect(oc.computeOptimalConfig({ ...lot, maxBuildStories: 2 }).as_of_right.main_storeys).toBe(2);   // == p50 → no-op
+  });
+
   it('emits a fitting suite + suite_adds_value when a rear yard accommodates one', () => {
     const c = oc.computeOptimalConfig(lot);
     expect(c.opt_suite_fits_full).toBe(true);

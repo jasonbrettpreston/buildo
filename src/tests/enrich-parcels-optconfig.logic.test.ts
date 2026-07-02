@@ -49,6 +49,21 @@ describe('optconfig mapRowToEngineInput', () => {
     expect(i.nbhdStoreysP50).toBe(3);
     expect(i.nbhdStoreysP90).toBe(3);
   });
+
+  it('WF3: maxBuildStories = the max_build_stories column (envelope cap for the as-of-right tier)', () => {
+    expect(ep.mapRowToEngineInput(baseRow).maxBuildStories).toBe(2);
+  });
+
+  it('WF3: maxBuildStories derives from gfa/footprint ONLY on heritage_existing basis (exact integer)', () => {
+    // heritage: max_build_stories NULL, envelope gfa = footprint × frozen storeys (280/140 = 2), basis heritage.
+    const i = ep.mapRowToEngineInput({ ...baseRow, max_build_stories: null, max_buildable_gfa_basis: 'heritage_existing', max_buildable_gfa_sqm: '280', max_buildable_footprint_sqm: '140' });
+    expect(i.maxBuildStories).toBe(2);
+    // NON-heritage basis with null stories + FSI-bound gfa → do NOT derive (engine's fsiCap bounds it;
+    // a fractional-ratio storey cap would under-state opt_aor). [Regression Guardian guard]
+    expect(ep.mapRowToEngineInput({ ...baseRow, max_build_stories: null, max_buildable_gfa_basis: 'fsi', max_buildable_gfa_sqm: '200', max_buildable_footprint_sqm: '140' }).maxBuildStories).toBeNull();
+    // both NULL (no envelope) → null → uncapped.
+    expect(ep.mapRowToEngineInput({ ...baseRow, max_build_stories: null, max_buildable_gfa_sqm: null }).maxBuildStories).toBeNull();
+  });
 });
 
 describe('optconfig computeOptConfigRow', () => {
