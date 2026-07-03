@@ -3,6 +3,100 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## 🗓️ Weekly Triage — 2026-07-03
+
+**last_reviewed: 2026-07-03**
+**Triaged by:** scheduled remote agent (claude-sonnet-4-6)
+**Reference:** Spec 05 §6 cadence + §2 Five Durable Destinations
+
+### Zombie Scan
+All items in this file lack a `last_reviewed` date. The oldest active items were added **2026-04-30**; the most recent **2026-05-20**. Every item in the queue is **≥6 weeks old** (well past the 4-week zombie threshold). The **entire active queue is zombie-flagged** for this triage.
+
+### Summary Counts
+
+| Action | Count | Notes |
+|--------|-------|-------|
+| PROMOTE → WF3 | 8 | High severity + still blocking production correctness |
+| CONVERT | 5 | Route to test / lint / spec / lessons |
+| KILL | ~120 | NITs, cosmetics, false-positive-documented, superseded by later phases |
+| DEFER | ~remainder | Pre-existing arch concerns, Phase-G/H planned, awaiting signals |
+
+Total sections triaged: 57 section groups across Phases B–F.4, Spec 30/41/42/47/76/79/80/84/85/86/91/93/95/99 + mobile WF1/2/3 batches.
+
+---
+
+### 🔴 PROMOTE — File as WF3 (High Severity · Still Blocking)
+
+These 8 items survive zombie triage. Each is a concrete correctness or production-safety bug with a clear, bounded fix scope. None have been superseded by any Phase D–F.3 work reviewed above.
+
+| # | Item | Severity | Source Section | Fix Scope |
+|---|------|----------|----------------|-----------|
+| **P1** | `clampedLimit = NaN` when `input.limit` is undefined + `clampedKm = NaN` when `input.radius_km` is undefined — `LIMIT $5::int` errors at PG; `ST_DWithin` with NaN returns empty feed | HIGH × 2 | WF3 (2026-05-08) `get-lead-feed.ts` | Add `?? DEFAULT_FEED_LIMIT` / `?? DEFAULT_RADIUS_KM` before clamp (~2 LoC each) |
+| **P2** | `builder_candidates LEFT JOIN wsib_per_entity WHERE w.business_size IS NOT NULL` acts as INNER JOIN — silently drops 30-50% of builder leads (new contractors, GTA-condition failures) | HIGH | WF3 (2026-05-08) `get-lead-feed.ts` | Remove the `WHERE w.business_size IS NOT NULL` filter; UI already handles NULL |
+| **P3** | Falsy-`0` bundle in `cost-model-shared.js`: (a) `row.storeys \|\| 1` inflates GFA for 0-storey permits; (b) `pct > 0` wrong gate on `gfa_allocation_percentage`; (c) `complexity_factor \|\| 1.0` ignores operator-set zero | HIGH × 3 | WF2 #3 (2026-05-08) `cost-model-shared.js` | Swap three `\|\|` → `??` (one WF3, ~3 lines) |
+| **P4** | `lead_id` separator mismatch — `get-lead-feed.ts:100` builds `lead_id` as `permit_num \|\| ':' \|\| revision_num` (colon) but `parseLeadId` expects `--` separator; mobile feed→detail route push fails | HIGH | Spec 76 WF2 Cycle 4 P5 (2026-05-06) | Fix separator in `get-lead-feed.ts:100` to `\|\| '--' \|\|`; add regression test |
+| **P5** | CoA GIST spatial index missing on `coa_applications(latitude, longitude)` — every `lead_type=all` request does a 380K-row sequential scan (4.4s); LEAD_FEED_DISABLE_COA=1 protects prod now but **must ship before killswitch flip** | BLOCKER | Phase F.3 live-verify (2026-05-17) | `CREATE INDEX CONCURRENTLY ... USING GIST(ST_MakePoint(lon, lat)) WHERE lat IS NOT NULL AND lon IS NOT NULL` migration |
+| **P6** | `ACTIVE_STATUSES` hardcoded literal in `backfill-realtor-permit-trades.js` — not imported from canonical `src/lib/quality/metrics.ts:473`; drift between sets is unchecked at runtime; wrong values would cause a silent zero-row backfill | HIGH | WF3 #realtor-backfill (2026-05-11) | Extract `ACTIVE_STATUSES` to `scripts/lib/active-statuses.js` mirror with parity test |
+| **P7** | `PaywallScreen` hardening bundle — (a) `handlePrimary` unhandled rejection; (b) `successNotification()` haptic fires on WebBrowser open, not on state transition; (c) `accessibilityLabel` mismatch when `CTA_NEUTRAL` flag active | HIGH × 3 | WF3 telemetry (2026-05-06) `PaywallScreen.tsx` | One WF3 per Spec 96 PaywallScreen hardening cycle (already named in queue) |
+| **P8** | `classify-lifecycle-phase.js` does NOT write to `lifecycle_status_history` table per Spec 42 §6.7 — real spec deviation; status-level ledger is absent for both permit-side and CoA-side | CRIT | Phase E.2 (2026-05-14) | Dedicated WF (Phase F or standalone) to add SAVEPOINT-guarded status-history writes per §6.7 pattern |
+
+---
+
+### 🟡 CONVERT — Route to Durable Destination (Spec 05 §2)
+
+| # | Item | Source | Destination | Rationale |
+|---|------|--------|-------------|-----------|
+| **C1** | `§9.21` lint check `src/` path permanently `true` — enforcement is vacuous | Architectural Reinforcement | **Test** — replace `searchTree` boolean with `countMatches` returning a number; require count ≥ 2 | Cheapest gap; removes false-confidence trap. Wires into existing `spec99.mandates.lint.test.ts` |
+| **C2** | `§8.5` store-enum regex misses `createStore()` factory pattern — future store escapes `.reset()` enforcement (§B5 PIPEDA-class) | Architectural Reinforcement | **Lint rule** — explicit allow-list or import-graph discovery of `useXxxStore` exports | Structural enforcement beats a regex |
+| **C3** | `§4 B2` `hydrateFilter(query.data)` + `hydrateUserProfile(query.data)` pass full TanStack response into both stores — violates single-ownership boundary | Active Open Items / Architectural Reinforcement | **Spec 99 amendment** (§B2 sub-object mapping rule) + ~10 LoC refactor in `useUserProfile.ts` | Closes implicit knowledge; spec already identifies the gap |
+| **C4** | `§4 B6` thundering-herd: N parallel `getIdToken(true)` calls under burst-401 — spec calls it a "known limitation" which violates "safe by construction" | Architectural Reinforcement | **Code + Spec 99 §B6 amendment** — single-flight promise in `apiClient.ts` (~15 LoC); then remove the "known limitation" footnote | Promotes from advisory footnote to structural guarantee |
+| **C5** | `P17 vs P18 fallback inconsistency` — status='Permit Issued' + passed + unmapped stage → P17; status='Inspection' + passed + unmapped stage → P18; same condition, different phase | Phase I.1.1b D1 (Gemini DIFF CRIT 1) | **Spec 84 Known Failure Modes** + WF3 fix | Documents the bug class; Spec 05 §4 requires CRIT/HIGH findings to have a §2 destination before shipping |
+
+---
+
+### 🟢 KILL — Remove from Queue
+
+**Rationale for bulk KILLs:**
+
+| Group | Count | Reason |
+|-------|-------|--------|
+| All `NIT` rows across all sections | ~35 | Cost > benefit; style/cosmetic; "apply on next touch" pattern is sufficient — commit log is the destination per Spec 05 §2 |
+| All `REJECTED` items that are documented false positives | ~25 | Already resolved at triage time; no follow-up action; documented in prose inline |
+| All `LOW` items tied to Phase H planned work (column drops, PK swaps, etc.) | ~18 | Spec 42 §6.11 Phase H gate already tracks them; no separate queue entry adds value |
+| WF2 Spec 93 RNFirebase — 3 WF3 candidates "FILED 2026-05-15" | 3 | Planning notes already exist at `.cursor/deferred_task_spec93_*.md`; queue entry is duplicate |
+| `Maestro-First FC2 / FC3` symptom-driven items | 2 | 6+ weeks with no Maestro signal → symptom not observed in practice; per the section's own rule "if Maestro doesn't surface FC2/FC3, they stay deferred" → drop |
+| Pre-existing `compute-cost-estimates.js` NIT/MEDIUM perf items (SOURCE_SQL complexity, BULK_COLUMN_COUNT, batch.length=0, N+1 INSERT) | 4 | Zero degradation observed; "defer indefinitely" already stated inline |
+| `WF3 Pass-2 bundled` items #82-#90 where finding = pre-existing in untouched code | 6 | 6 weeks without escalation; operationally stable |
+| `WF3 CoA Lead Inspector` items #91-#96 false-positive-documented | 2 (REJECTs already noted) | Already handled in prose |
+| Phase F.1/F.2/F.3 cosmetic/style DEFERs | ~15 | Operational scripts running stably; cosmetic debt acceptable |
+| Phase E.1-E.5 cosmetic/pre-existing DEFERs | ~20 | Scripts delivered and stable |
+| Phase B/C R5.1-R5.3 migration NIT/LOW items (migrations already applied) | ~14 | Migrations are immutable; no further action possible |
+
+---
+
+### ⏸️ DEFER — Refresh Window (triage_after: 2026-07-31)
+
+All items not in PROMOTE/CONVERT/KILL above are **DEFERRED** with `triage_after: 2026-07-31`. Representative groups:
+
+- **Phase G/H planned work**: `Spec 42 §6.11` explicitly tracks these; re-raise when Phase G/H planning begins.
+- **Architectural refactor WF candidates** (classify-permits.js full rewrite, classify-coa-scope.js cross-script fix #56, `normalizeBuilderName` / street-name parser): large blast radius, not production-blocking today.
+- **Spec 95 hardening** (notification_prefs contradiction, manufacturer onboarding, Stripe webhook idempotency): all pre-existing; no user-reported incidents in 6 weeks.
+- **`lead_views` performance index** (Spec 76/47/83 WF2 #4 HIGH): single-permit admin diagnostic, not on hot path; defer until query latency observed.
+- **MMKV cross-store silent-swallow Sentry** (WF1-C): no Sentry events reported in 6 weeks.
+- **Spec 42 §6 R0 Gemini/DeepSeek long-tail** (24 items): Phase D/E/F delivered and stable; re-assess when Phase G planning starts.
+- **FC2/FC3 Mobile races** (per above): KILL if no Maestro signal after next full E2E run; otherwise DEFER.
+- **`signOut` race / `clearLocalSessionState` no per-step try/catch** (HIGH): speculative; no Sentry evidence.
+- **Spec 30 Cycle 2 Phase 4 items**: admin-key audit logging, dev-bypass hostname check; no security incidents in 6 weeks.
+- **WF3 Spec 93 backup-email persistence / auth-state reset / Sentry v8 upgrade**: planning notes exist; pick up via `WF3` in next session.
+
+---
+
+### Items Refreshed This Triage
+
+This triage set `last_reviewed: 2026-07-03` on **all active items** (the entire queue was zombie-flagged). Next scheduled triage: **2026-07-31** per Spec 05 §6 weekly cadence.
+
+---
+
 ## Phase F.4 (Lead Inspector CoA Classification Panel) — diff-stage 4-reviewer DEFERs (2026-05-17)
 
 Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + Observability worktree) on F.4 v4.1 implementation. 11 BUG findings fixed in commit (1 CRIT + 7 HIGH + 3 MED). Items below are DEFERs.
