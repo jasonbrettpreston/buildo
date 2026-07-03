@@ -45,6 +45,12 @@ const CHECKS = [
   // heritage storeys no longer read the tree-contaminated massing estimated_stories). Any reappearance means
   // the old heritage-freeze logic was re-wired in. Fires on un-re-run rows until enrich-parcels --full lands.
   { fam: 'BOUND', id: 'maxbuild_stories_basis_existing_retired', why: 'retired basis value (heritage massing storeys)', applies: `max_build_stories_basis IS NOT NULL`, bad: `max_build_stories_basis = 'existing'`, sev: 'HIGH' },
+  // WF3 phase C: the height-overlay m/storey signal is ASYMMETRIC. Too-LOW (< 2.5 m/storey) is physically
+  // impossible — you cannot fit N storeys in H metres — the signature of a WELD (height from one overlay,
+  // storeys spilled from an edge-touching mid-rise). Too-HIGH is NOT a bug: a generous height cap with a
+  // conservative storey cap (e.g. 11.5 m / 2 storeys) is genuine low-density zoning → INFO visibility only.
+  { fam: 'BOUND', id: 'bylaw_height_per_storey_impossible', why: 'weld: cannot fit the storeys in the height (<2.5 m/storey)', applies: `bylaw_max_height_m IS NOT NULL AND bylaw_max_stories IS NOT NULL AND bylaw_max_stories > 0`, bad: `bylaw_max_height_m / bylaw_max_stories < 2.5`, sev: 'HIGH' },
+  { fam: 'BOUND', id: 'bylaw_height_per_storey_generous', why: 'visibility: generous height + low storey cap (genuine low-density zoning, not a bug)', applies: `bylaw_max_height_m IS NOT NULL AND bylaw_max_stories IS NOT NULL AND bylaw_max_stories > 0`, bad: `bylaw_max_height_m / bylaw_max_stories > 5.5`, sev: 'INFO' },
   { fam: 'BOUND', id: 'opt_storeys_gt_12', why: 'physical', applies: `opt_aor_storeys IS NOT NULL OR opt_coa_storeys IS NOT NULL`, bad: `opt_aor_storeys > 12 OR opt_coa_storeys > 12`, sev: 'MED' },
   { fam: 'BOUND', id: 'newbuild_cost_per_sqm_out_of_band', why: 'cost-rate sanity ($186–1115/ft²)', applies: `cost_fb_total IS NOT NULL AND opt_aor_gfa_sqm > 0`, bad: `cost_fb_total / opt_aor_gfa_sqm < 2000 OR cost_fb_total / opt_aor_gfa_sqm > 12000`, sev: 'MED' },
   // ---- INVARIANTS (cross-field) ----

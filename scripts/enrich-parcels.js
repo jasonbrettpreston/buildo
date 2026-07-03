@@ -214,10 +214,19 @@ function buildEnrichmentSql({ scopeWhere = 'TRUE', full = false, staleOverlays =
   // base; coverage falls back to the base column, height/stories become NULL).
   const heightStale = staleOverlays.has('height_overlay');
   const covStale = staleOverlays.has('lot_coverage_overlay');
+  // WF3: pair height+storeys from the SAME (most-restrictive) overlay row, and drop edge-only contacts.
+  // The old `MIN(height_max_m)` + independent `MIN(ht_stories)` WELDED storeys from a spillover polygon
+  // onto the height from the real one (e.g. 6 storeys @ 9m = 1.5 m/storey), and lacked the NOT ST_Touches
+  // guard the base-zone join has (edge-touching mid-rise overlays leaked in at <0.01% coverage). DISTINCT ON
+  // takes the min-height row (MIN-height conservatism preserved) and ITS storeys; ht_stories ASC NULLS LAST
+  // + source_id break ties deterministically. Genuine multi-overlay straddles + real generous-height rows
+  // (e.g. HT 11.5 / ST 2) are single/covering overlays → unchanged.
   const heightCte = heightStale ? '' : `height_agg AS (
-  SELECT s.parcel_id, MIN(h.height_max_m) AS bylaw_max_height_m, MIN(h.ht_stories) AS bylaw_max_stories
-  FROM scope s JOIN zoning_height_overlay h ON h.geom && s.geom AND ST_Intersects(s.geom, h.geom)
-  GROUP BY s.parcel_id
+  SELECT DISTINCT ON (s.parcel_id) s.parcel_id,
+         h.height_max_m AS bylaw_max_height_m, h.ht_stories AS bylaw_max_stories
+  FROM scope s JOIN zoning_height_overlay h
+    ON h.geom && s.geom AND ST_Intersects(s.geom, h.geom) AND NOT ST_Touches(s.geom, h.geom)
+  ORDER BY s.parcel_id, h.height_max_m ASC, h.ht_stories ASC NULLS LAST, h.source_id ASC
 ),\n`;
   const covCte = covStale ? '' : `cov_agg AS (
   SELECT s.parcel_id, MIN(o.coverage_max_pct_override) AS cov_override

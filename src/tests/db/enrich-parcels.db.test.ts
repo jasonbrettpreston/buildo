@@ -157,6 +157,46 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
     } finally { c.release(); }
   });
 
+  // WF3 phase C: height-overlay weld + spillover. Storeys must come from the SAME (min-height) overlay row,
+  // and edge-only contacts must be dropped (NOT ST_Touches) so a mid-rise neighbour doesn't leak its storeys.
+  it('WF3 — height/storey pairing: spillover dropped, straddle min-height paired, generous-height unchanged', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      await insBase(c, TEST_SRC + 30, 'RD', 1.0, 10, 6, box(0, 0, 100, 100)); // base zone covers all
+
+      // Parcel A: 100%-covered by a real HT 9.0 (ht_stories NULL) + EDGE-TOUCHED by a mid-rise HT 20/ST 6.
+      await insOverlay(c, 'zoning_height_overlay', 'source_id, height_max_m, ht_stories', [TEST_SRC + 31, 9.0, null], box(0, 0, 10, 10));
+      await insOverlay(c, 'zoning_height_overlay', 'source_id, height_max_m, ht_stories', [TEST_SRC + 32, 20.0, 6], box(2, 1, 5, 3)); // touches A's x=2 edge
+      await insParcel(c, TEST_PARCEL + 30, box(1, 1, 2, 2));
+
+      // Parcel B: genuinely straddles HT 16 (left) + HT 15/ST 5 (right) — both real area coverage.
+      await insOverlay(c, 'zoning_height_overlay', 'source_id, height_max_m, ht_stories', [TEST_SRC + 33, 16.0, null], box(15, 0, 21, 10));
+      await insOverlay(c, 'zoning_height_overlay', 'source_id, height_max_m, ht_stories', [TEST_SRC + 34, 15.0, 5], box(21, 0, 25, 10));
+      await insParcel(c, TEST_PARCEL + 31, box(20, 1, 22, 2));
+
+      // Parcel C: a genuine generous-height single overlay HT 11.5 / ST 2 (5.75 m/storey is REAL low-density zoning).
+      await insOverlay(c, 'zoning_height_overlay', 'source_id, height_max_m, ht_stories', [TEST_SRC + 35, 11.5, 2], box(35, 0, 45, 10));
+      await insParcel(c, TEST_PARCEL + 32, box(40, 1, 42, 2));
+
+      await enrichParcels(c, { scopeWhere: SCOPE, full: true });
+
+      const a = await getParcel(c, TEST_PARCEL + 30);
+      expect(Number(a.bylaw_max_height_m)).toBe(9.0);   // real covering overlay
+      expect(a.bylaw_max_stories).toBeNull();            // spillover ST 6 dropped, NOT welded onto 9m
+
+      const b = await getParcel(c, TEST_PARCEL + 31);
+      expect(Number(b.bylaw_max_height_m)).toBe(15.0);  // most-restrictive (min) height
+      expect(Number(b.bylaw_max_stories)).toBe(5);       // ITS storeys (paired), not from the 16m row
+
+      const cc = await getParcel(c, TEST_PARCEL + 32);
+      expect(Number(cc.bylaw_max_height_m)).toBe(11.5);  // genuine generous-height row UNCHANGED
+      expect(Number(cc.bylaw_max_stories)).toBe(2);
+
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
   // WF3 regression lock (Spec 65 DEC-1): bylaw_max_fsi is sourced from the DOMINANT zone, not MIN.
   // The old 'min' rule let Postgres MIN(NULL, 2.0)=2.0 borrow FSI from a sliver-touching zone onto a
   // dominantly-RD parcel whose own zone had no FSI cap. Three distinguishing cases + the B2 source guard.
