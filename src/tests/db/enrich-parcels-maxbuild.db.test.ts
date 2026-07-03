@@ -145,17 +145,52 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
         bylaw_max_height_m: 10, bylaw_max_stories: 3, bylaw_max_fsi: 1.0,
         bylaw_max_coverage_pct: 45, bylaw_standard_setback_m: 6, is_heritage_designated: true,
       });
-      await addMassing(c, id, 200, 2);
+      await addMassing(c, id, 200, 2);   // massing estimated_stories=2 is now IGNORED (tree-contaminated)
       await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
       const p = await getParcel(c, TEST_PARCEL + 3);
       expect(Number(p.max_buildable_footprint_sqm)).toBe(200);     // frozen to existing
-      expect(Number(p.max_build_stories)).toBe(2);
-      expect(p.max_build_basis).toBe('heritage_existing');
-      expect(Number(p.max_buildable_gfa_sqm)).toBe(400);           // 200 × 2
+      // WF3: storeys come from stories_calc (bylaw_max_stories=3 wins), NOT the massing 2.
+      expect(Number(p.max_build_stories)).toBe(3);
+      expect(p.max_build_stories_basis).toBe('bylaw');             // was 'existing' (retired)
+      expect(p.max_build_basis).toBe('heritage_existing');         // footprint still frozen
+      expect(Number(p.max_buildable_gfa_sqm)).toBe(600);           // 200 × 3 (frozen fp × stories_calc)
       expect(p.max_build_confidence).toBe('high');                 // measured massing = high-accuracy
       expect(p.envelope_constrained).toBe(true);
       expect(p.envelope_constraint_reason).toBe('heritage');
       expect(p.max_build_width_m).toBeNull();                      // freeze has no W/L
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  // WF3: heritage with massing but NO bylaw_max_stories → storeys must come from the POCKET p50 branch of
+  // stories_calc (NOT the tree-contaminated massing estimated_stories). Locks the heritage pocket path so a
+  // regression where stories_calc silently skips heritage is caught.
+  it('heritage WITH massing, no bylaw stories → storeys from pocket p50 (basis pocket), massing ignored', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      const nbhdGeo = JSON.stringify({ type: 'Polygon', coordinates: [[[-0.001, -0.001], [0.001, -0.001], [0.001, 0.001], [-0.001, 0.001], [-0.001, -0.001]]] });
+      await c.query(
+        `INSERT INTO neighbourhoods (id, neighbourhood_id, name, geom, avg_household_income)
+         VALUES (8002, 8002, 'HERITAGE-POCKET-TEST', ST_SetSRID(ST_GeomFromGeoJSON($1::text),4326), 90000)`,
+        [nbhdGeo],
+      );
+      await c.query(
+        `INSERT INTO neighbourhood_storey_norms (neighbourhood_id, storeys_p50, storeys_p90, sample_count) VALUES (8002, 2, 4, 20)`,
+      );
+      const id = await insMb(c, TEST_PARCEL + 23, sq(0, 0, 0.0002), {
+        lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24, zoning_class: 'RD',
+        bylaw_max_height_m: 10, bylaw_max_fsi: 1.0, bylaw_max_coverage_pct: 45,
+        is_heritage_designated: true,   // heritage, but NO bylaw_max_stories → pocket branch must drive
+      });
+      await addMassing(c, id, 200, 7);  // massing estimated_stories=7 (contaminated) MUST be ignored
+      await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+      const p = await getParcel(c, TEST_PARCEL + 23);
+      expect(Number(p.max_buildable_footprint_sqm)).toBe(200);   // frozen to existing
+      expect(p.max_build_stories_basis).toBe('pocket');          // NOT 'existing', NOT 'bylaw'
+      expect(Number(p.max_build_stories)).toBe(2);               // LEAST(pocket p50=2, height_implied=3), NOT massing 7
+      expect(Number(p.max_buildable_gfa_sqm)).toBe(400);         // 200 × 2 (frozen fp × pocket p50)
+      expect(p.max_build_basis).toBe('heritage_existing');       // footprint still frozen
       await c.query('ROLLBACK');
     } finally { c.release(); }
   });

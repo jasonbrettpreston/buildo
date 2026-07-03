@@ -18,7 +18,12 @@ const LOWRISE = `upper(zoning_class) LIKE 'RD%' OR upper(zoning_class) LIKE 'RS%
 // { family, id, why(seed bug/law), applies (extra population filter), bad (violation predicate), sev }
 const CHECKS = [
   // ---- BOUNDS (zone-aware) ----
-  { fam: 'BOUND', id: 'lot_size_out_of_range', why: 'physical', applies: `lot_size_sqm IS NOT NULL`, bad: `lot_size_sqm < 40 OR lot_size_sqm > 100000`, sev: 'HIGH' },
+  // Scoped to BUILDABLE parcels: an implausible lot is only a BUG if it leaked into a build. The 3,260
+  // out-of-range parcels are all real COMMON/CONDO (tiny slivers / oversized parks) with an accurate
+  // lot_size (= geom) that the pipeline ALREADY gates (LOT_MIN/MAX → low confidence → no envelope/cost).
+  { fam: 'BOUND', id: 'lot_size_out_of_range_on_buildable', why: 'physical (bad lot leaked into a build)', applies: `lot_size_sqm IS NOT NULL AND max_buildable_footprint_sqm IS NOT NULL`, bad: `lot_size_sqm < 40 OR lot_size_sqm > 100000`, sev: 'HIGH' },
+  // Visibility (INFO, don't-hide): implausible lots the pipeline CORRECTLY excluded from the cost model.
+  { fam: 'BOUND', id: 'lot_implausible_correctly_excluded', why: 'visibility: implausible lot → gated, no cost (not a bug)', applies: `lot_size_sqm IS NOT NULL AND (lot_size_sqm < 40 OR lot_size_sqm > 100000)`, bad: `max_buildable_footprint_sqm IS NULL`, sev: 'INFO' },
   { fam: 'BOUND', id: 'lowrise_bylaw_fsi_gt_1_5', why: 'FSI-borrow bug (RD sliver→2.0)', applies: `(${LOWRISE}) AND bylaw_max_fsi IS NOT NULL`, bad: `bylaw_max_fsi > 1.5`, sev: 'HIGH' },
   { fam: 'BOUND', id: 'residential_bylaw_fsi_gt_8', why: 'corrupt source (FSI 15)', applies: `bylaw_max_fsi IS NOT NULL`, bad: `bylaw_max_fsi > 8`, sev: 'HIGH' },
   // LOWRISE-only: RA/RM apartment zones legitimately reach 80% coverage (was a false positive on RA).
@@ -32,6 +37,14 @@ const CHECKS = [
   { fam: 'BOUND', id: 'lowrise_maxbuild_height_gt_15m', why: 'tree-massing (envelope height)', applies: `(${LOWRISE}) AND max_build_height_m IS NOT NULL`, bad: `max_build_height_m > 15`, sev: 'MED' },
   { fam: 'BOUND', id: 'comp_fsi_p50_implausibly_low', why: 'comps domain-review (existing vs realized-build?)', applies: `comp_fsi_p50 IS NOT NULL`, bad: `comp_fsi_p50 < 0.05`, sev: 'INFO' },
   { fam: 'BOUND', id: 'lowrise_maxbuild_stories_gt_4', why: 'over-tall envelope', applies: `(${LOWRISE}) AND max_build_stories IS NOT NULL`, bad: `max_build_stories > 4`, sev: 'MED' },
+  // Zone-aware tighter bound: RD (detached) physically caps ~3 storeys. The >4 lowrise check above misses
+  // RD contamination that lands at exactly 4 (and the 3–4 band a flat >4 can't see) — this RD-specific >3
+  // bound would have caught the tree-massing heritage contamination earlier. [Reality-Check WF3 2026-07-02]
+  { fam: 'BOUND', id: 'rd_maxbuild_stories_gt_3', why: 'RD detached caps ~3 storeys (tighter than lowrise >4)', applies: `upper(zoning_class) LIKE 'RD%' AND max_build_stories IS NOT NULL`, bad: `max_build_stories > 3`, sev: 'MED' },
+  // Regression guard at the DATA layer: `max_build_stories_basis='existing'` was RETIRED (WF3 2026-07-02 —
+  // heritage storeys no longer read the tree-contaminated massing estimated_stories). Any reappearance means
+  // the old heritage-freeze logic was re-wired in. Fires on un-re-run rows until enrich-parcels --full lands.
+  { fam: 'BOUND', id: 'maxbuild_stories_basis_existing_retired', why: 'retired basis value (heritage massing storeys)', applies: `max_build_stories_basis IS NOT NULL`, bad: `max_build_stories_basis = 'existing'`, sev: 'HIGH' },
   { fam: 'BOUND', id: 'opt_storeys_gt_12', why: 'physical', applies: `opt_aor_storeys IS NOT NULL OR opt_coa_storeys IS NOT NULL`, bad: `opt_aor_storeys > 12 OR opt_coa_storeys > 12`, sev: 'MED' },
   { fam: 'BOUND', id: 'newbuild_cost_per_sqm_out_of_band', why: 'cost-rate sanity ($186–1115/ft²)', applies: `cost_fb_total IS NOT NULL AND opt_aor_gfa_sqm > 0`, bad: `cost_fb_total / opt_aor_gfa_sqm < 2000 OR cost_fb_total / opt_aor_gfa_sqm > 12000`, sev: 'MED' },
   // ---- INVARIANTS (cross-field) ----
@@ -113,10 +126,13 @@ async function runAudit() {
   }
 
   const flagged = results.filter((r) => r.viol > 0);
-  const totalViol = results.reduce((s, r) => s + r.viol, 0);
-  console.log(`\n=== SUMMARY: ${flagged.length}/${results.length} checks tripped · ${totalViol.toLocaleString()} bound/invariant violations · ${dist.filter((d) => d.viol > 0).length}/${dist.length} distribution fields with outliers ===`);
-  console.log('Top offenders:');
-  for (const r of [...results].sort((a, b) => b.viol - a.viol).slice(0, 8).filter((r) => r.viol > 0)) {
+  // "Violations" = real problems (HIGH/MED). INFO rows are visibility counts (e.g. correctly-gated
+  // parcels), NOT violations — reported separately so the headline number isn't inflated by non-bugs.
+  const totalViol = results.filter((r) => r.sev !== 'INFO').reduce((s, r) => s + r.viol, 0);
+  const infoViz = results.filter((r) => r.sev === 'INFO' && r.viol > 0).reduce((s, r) => s + r.viol, 0);
+  console.log(`\n=== SUMMARY: ${flagged.length}/${results.length} checks tripped · ${totalViol.toLocaleString()} HIGH/MED violations (+ ${infoViz.toLocaleString()} INFO visibility) · ${dist.filter((d) => d.viol > 0).length}/${dist.length} distribution fields with outliers ===`);
+  console.log('Top offenders (HIGH/MED only):');
+  for (const r of results.filter((r) => r.sev !== 'INFO' && r.viol > 0).sort((a, b) => b.viol - a.viol).slice(0, 8)) {
     console.log(`  ${r.viol.toLocaleString().padStart(8)}  ${r.id}  (${r.why})`);
   }
 }

@@ -436,15 +436,18 @@ massing AS (
   -- NB: existing_footprint_sqm here is a query-LOCAL massing intermediate (recomputed from
   -- building_footprints), feeding ONLY the max-build heritage fallback below — NOT the persisted column
   -- (renamed to imagery_roof_footprint_sqm by mig 201; written by the separate existing-structure pass).
+  -- WF3 (heritage storeys): massing estimated_stories is tree-canopy contaminated (bungalows at 5-79
+  -- storeys) -- RETIRED as a storey source everywhere (WF3-A did the output column; this closes the ES-6
+  -- L213 heritage-freeze carve-out). Heritage storeys now come from stories_calc (bylaw->pocket p50).
+  -- Footprint (canopy-independent, corr(fp,height)=0.116) is still trusted and kept.
   SELECT pb.parcel_id AS pid,
          SUM(bf.footprint_area_sqm) FILTER (WHERE pb.is_primary)::numeric AS existing_footprint_sqm,
-         MAX(bf.estimated_stories) FILTER (WHERE pb.is_primary) AS existing_stories,
          SUM(bf.footprint_area_sqm)::numeric AS existing_total_footprint_sqm
   FROM parcel_buildings pb JOIN building_footprints bf ON bf.id = pb.building_id
   GROUP BY pb.parcel_id
 ),
 sb AS (
-  SELECT s.*, m.existing_footprint_sqm, m.existing_stories, m.existing_total_footprint_sqm,
+  SELECT s.*, m.existing_footprint_sqm, m.existing_total_footprint_sqm,
     ST_Area(s.geom::geography)::numeric AS geom_area,
     (s.frontage_m * s.depth_m)::numeric AS fxd_area,
     -- front = real STAND_SET when present, else zone default; side/rear/flankage always zone default (no source).
@@ -587,11 +590,11 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
   CASE WHEN emit AND NOT heritage THEN width_m END AS max_build_width_m,
   CASE WHEN emit AND NOT heritage THEN length_m END AS max_build_length_m,
   CASE WHEN emit AND NOT heritage THEN bylaw_max_height_m END AS max_build_height_m,
+  -- WF3: heritage storeys use the bounded stories_calc (bylaw→pocket p50→derived), NOT the retired
+  -- tree-contaminated massing estimated_stories. Footprint stays frozen to the existing structure.
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
-       WHEN heritage THEN existing_stories
        ELSE stories_calc END AS max_build_stories,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
-       WHEN heritage THEN 'existing'
        WHEN bylaw_max_stories IS NOT NULL THEN 'bylaw'
        WHEN pocket_p50 IS NOT NULL THEN 'pocket'
        WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN 'derived'
@@ -603,8 +606,11 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
   round((${mb.buildPremiumCase('nbhd_income')})::numeric, 2) AS neighbourhood_cost_premium,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
        WHEN heritage THEN 'heritage_existing' ELSE 'rect_approx' END AS max_build_basis,
+  -- WF3: heritage GFA = frozen existing footprint x bounded stories_calc (was x the contaminated
+  -- massing storeys). No FSI cap: footprint is real+frozen and stories_calc is bounded, so FSI
+  -- self-bounds; capping would understate a legitimately grandfathered heritage structure.
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
-       WHEN heritage THEN round(existing_footprint_sqm * COALESCE(existing_stories, 1), 2)
+       WHEN heritage THEN round(existing_footprint_sqm * stories_calc, 2)
        ELSE LEAST(gfa_box, fsi_cap) END AS max_buildable_gfa_sqm,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
        WHEN heritage THEN 'heritage_existing'
@@ -1128,11 +1134,11 @@ function mapRowToEngineInput(r) {
     // storeys: prefer the nbhd build-norm p50/p90; fall back to the parcel's own max_build_stories.
     nbhdStoreysP50: numOrNull(r.storeys_p50) ?? numOrNull(r.max_build_stories),
     nbhdStoreysP90: numOrNull(r.storeys_p90) ?? numOrNull(r.max_build_stories),
-    // WF3: the EFFECTIVE envelope-storey cap for the as-of-right tier. = max_build_stories (coverage/fsi
-    // basis); for HERITAGE the column is NULL but the envelope GFA = footprint × COALESCE(existing_stories,1),
-    // so derive it (exact integer). GUARDED on heritage_existing basis [Regression Guardian] so a
-    // hypothetical non-heritage null-stories + FSI parcel can't get a spurious fractional-ratio cap
-    // (the engine's fsiCap already bounds those — a storey cap there would under-state opt_aor).
+    // WF3: the EFFECTIVE envelope-storey cap for the as-of-right tier = max_build_stories. Heritage is
+    // now POPULATED from stories_calc (no longer NULL), so this fallback is a dead-but-correct safety net
+    // for heritage: round(gfa/footprint) == round(footprint×stories_calc / footprint) == stories_calc.
+    // GUARDED on heritage_existing basis [Regression Guardian] so a hypothetical non-heritage null-stories
+    // + FSI parcel can't get a spurious fractional-ratio cap (the engine's fsiCap already bounds those).
     maxBuildStories: numOrNull(r.max_build_stories)
       ?? (r.max_buildable_gfa_basis === 'heritage_existing'
           && numOrNull(r.max_buildable_footprint_sqm) > 0 && numOrNull(r.max_buildable_gfa_sqm) != null

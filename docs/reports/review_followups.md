@@ -3,6 +3,18 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Parcel-sanity-audit residuals — WF3 heritage storeys + lot-size audit refinement (2026-07-02)
+
+Source: parcel-sanity-audit triage. Shipped this session: lot_size audit Option A (gate `lot_size_out_of_range` on `max_buildable_footprint_sqm IS NOT NULL` + INFO visibility count `lot_implausible_correctly_excluded`); WF3 heritage storeys (retire massing `estimated_stories` → `stories_calc`). Items below deferred.
+
+| Severity | Source | Item | Disposition |
+|----------|--------|------|-------------|
+| LOW (UX) | lot_size Option-A discussion | `envelope_constraint_reason` conflates too-small / too-large / unreliable under one `low_lot_confidence`/`oob` code (3,260 gated residential parcels: 3,255 tiny <40 m², 5 oversized >10 ha). When the parcel cost/build UI (Spec 88 P2/P3) is built, a NULL envelope with only a generic reason reads as a blank, not "too small to build" — that's hiding at the UX layer. **Split** `envelope_constraint_reason` into `lot_too_small` (`lot_size_sqm < LOT_MIN`) vs `lot_too_large` (`> LOT_MAX`) so the UI has an honest, specific signal to render. Trivial branch on data that already exists. | DEFER — small WF3, rides the next enrich re-run; not UI-blocking (no consumer reads the field yet). User: "let's do it after" the heritage fix. |
+| LOW | parcel-sanity-audit `lowrise_maxbuild_stories_gt_4` | **84 non-heritage** RD/RS/RT parcels with `max_build_stories_basis='bylaw'` and `bylaw_max_stories > 4` (post-heritage-fix, the only >4 survivors; 4 are CR/RA `bylaw=8` mid-rise, correctly out of low-rise scope). If a genuine bylaw data error (RD detached shouldn't carry a 5–11 storey bylaw), it's a source-data issue, not a max-build bug. Also 144 `rd_maxbuild_stories_gt_3`: 89 bylaw-sourced (as above) + 55 `basis='pocket'` at 4 storeys (neighbourhood market-realized p50=4 — legit, RD pockets that build 4). | DEFER — bylaw-authoritative / market-realized; verify the bylaw subset against source zoning before treating as a defect. Separate WF3 if confirmed wrong. |
+| LOW (edge) | WF3 heritage re-run spot-check (2026-07-03) | A **heritage parcel with `lot_size_sqm=NULL`** (e.g. id 475651, R zone) emits a max-build envelope + $26M cost: the emit gate (`lot_size_confidence IN high/medium`) and the mislink guard (`footprint > lot×1.05`) both rely on a non-NULL lot, so a NULL lot slips both (NULL comparisons → false). GFA is still bounded (`footprint × pocket_p50`, no phantom), but a null-lot heritage parcel arguably shouldn't emit at all (can't lot-validate). Count unknown — few parcels. | DEFER — verify count; if non-trivial, add an explicit `lot_size_sqm IS NOT NULL` guard to the heritage emit path (or route to `heritage_no_massing`/`low_lot_confidence`). Not a phantom, so low urgency. |
+
+---
+
 ## WF3 cost-menu coherence + zoning FSI mis-sourcing (Spec 88 Fix A + Spec 65 Fix B) — plan-review DEFERs (2026-07-01)
 
 Source: 2-round 3-reviewer plan panel (Integration + Regression Guardian + Code Reviewer, both converged). Fixes shipped: `bylaw_max_fsi` precedence `'min'→'dominant'` + B2 residential `fsi_max>10` source guard; cost `new_build` line → `COALESCE(opt_aor_gfa, max_buildable_gfa)`. Items below are accepted-limitation DEFERs.

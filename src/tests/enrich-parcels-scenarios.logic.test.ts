@@ -89,6 +89,19 @@ describe('storey-height refinement (Part C)', () => {
     expect(sql).toMatch(/bylaw_max_height_m \/ \(CASE WHEN upper\(zoning_class\)/);
     expect(sql).toMatch(/WHEN bylaw_max_stories IS NOT NULL THEN 'bylaw'[\s\S]*AS max_build_stories_basis/);
   });
+
+  // WF3 regression lock: heritage storeys/GFA must NEVER again read the tree-contaminated massing
+  // `estimated_stories` (via the `existing_stories` CTE column) or emit the retired `'existing'` basis.
+  // Pins the retirement so a future copy-paste of the old heritage-freeze logic is caught immediately.
+  it('max-build SQL does NOT source heritage storeys/GFA from the retired massing existing_stories', () => {
+    const sql = ep.buildMaxBuildSql({ storeyHeight: 3.0 });
+    expect(sql).not.toMatch(/WHEN heritage THEN existing_stories/);          // old storey source
+    expect(sql).not.toMatch(/WHEN heritage THEN 'existing'/);                // retired basis value
+    expect(sql).not.toContain('COALESCE(existing_stories');                  // old heritage GFA multiplier
+    expect(sql).not.toMatch(/existing_stories/);                             // symbol fully gone from max-build SQL
+    // Positive: heritage GFA is now frozen footprint × the bounded stories_calc.
+    expect(sql).toMatch(/WHEN heritage THEN round\(existing_footprint_sqm \* stories_calc, 2\)/);
+  });
 });
 
 describe('archetype geom_basis (B1) — dual-path + resolvable', () => {
