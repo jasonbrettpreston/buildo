@@ -221,6 +221,8 @@ footprint), `opt_suite_type` (garden/laneway/none), `opt_suite_fits_full`, `opt_
 `neighbourhood_build_norms` snapshot + a human headline). Disjoint column set (own pass — the
 max-build/existing-structure columns are untouched). Idempotent.
 
+**WF3 (owner-report FSI fallback):** `nearby_builds_summary` carries a `typical_fsi` = `comp_fsi_p50 ?? realized_fsi_p50` + a `comp_fsi_basis` ∈ {`comp`, `pocket_realized`, `none`}. `comp_fsi_p50` (§P3C, new-build comps only) is honestly NULL on addition-dominated pockets (~63% of parcels) — so the narrative falls back to the pocket's realized new-build FSI (same units, also new-build-only) and the headline always shows a `~X.XX FSI` figure instead of a blank. The raw `comp_fsi_p50` column is unchanged.
+
 ### P3A.4 — Observability
 INFO audit rows: `optimal_config_enriched_count`, `opt_suite_fits_full_count`,
 `opt_config_confidence_high/medium/low_count`, `opt_config_citywide_fallback_count`; **gated**

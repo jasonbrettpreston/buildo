@@ -113,6 +113,28 @@ describe('optconfig buildNearbyBuildsSummary', () => {
   it('returns null when the parcel has no neighbourhood build-norm row (no sample)', () => {
     expect(ep.buildNearbyBuildsSummary({ ...baseRow, nbn_sample_n: null })).toBeNull();
   });
+
+  // WF3 phase A — typical_fsi fallback + comp_fsi_basis transparency.
+  it('typical_fsi = comp_fsi_p50 when present (basis comp) + FSI in headline', () => {
+    const s = ep.buildNearbyBuildsSummary({ ...baseRow, comp_fsi_p50: '0.83' });
+    expect(s.typical_fsi).toBeCloseTo(0.83, 2);
+    expect(s.comp_fsi_basis).toBe('comp');
+    expect(s.headline).toContain('~0.83 FSI');
+  });
+
+  it('typical_fsi falls back to realized_fsi_p50 when comp_fsi_p50 NULL (basis pocket_realized)', () => {
+    const s = ep.buildNearbyBuildsSummary({ ...baseRow, comp_fsi_p50: null }); // realized_fsi_p50 = '0.9'
+    expect(s.typical_fsi).toBeCloseTo(0.9, 2);
+    expect(s.comp_fsi_basis).toBe('pocket_realized');
+    expect(s.headline).toContain('~0.90 FSI');
+  });
+
+  it('basis none + no FSI clause when both comp and realized are NULL', () => {
+    const s = ep.buildNearbyBuildsSummary({ ...baseRow, comp_fsi_p50: null, realized_fsi_p50: null });
+    expect(s.typical_fsi).toBeNull();
+    expect(s.comp_fsi_basis).toBe('none');
+    expect(s.headline).not.toContain('FSI');
+  });
 });
 
 describe('optconfig SQL shape', () => {

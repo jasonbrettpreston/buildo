@@ -1090,6 +1090,7 @@ function buildOptConfigSelectSql({ full = false, scopeWhere = 'TRUE' } = {}) {
            p.is_in_ravine_protection_area, p.exception_number, p.existing_greenspace_sqm,
            p.existing_other_structures_sqm, p.existing_other_structures_count, p.lot_size_confidence,
            p.neighbourhood_id, n.name AS neighbourhood_name,
+           p.comp_fsi_p50,  -- WF3 phase A: narrative "typical FSI" falls back to realized_fsi_p50 when this (new-build comps) is NULL
            (${bn.parcelFamilyFromZoningCaseSql('p.zoning_class')}) AS norm_family, -- R4: which family cohort the norm came from
            (nbn.id IS NULL) AS used_citywide,
            -- P2 3-level family fallback: pocket-family (nbn) → citywide-family (cwf) → citywide-'all' (cwa).
@@ -1174,7 +1175,15 @@ function buildNearbyBuildsSummary(r) {
   if (r.nbn_sample_n == null) return null;
   const where = r.used_citywide ? 'Citywide' : (r.neighbourhood_name || `Nbhd ${r.neighbourhood_id}`);
   const ratio = r.build_ratio_p50 != null ? `, ${Math.round(Number(r.build_ratio_p50) * 100)}% of the max-build footprint` : '';
-  const headline = `${where}: ${r.new_builds_5yr || 0} new builds + ${r.additions_5yr || 0} additions + ${r.renos_5yr || 0} renos in 5 yrs; CoA ${pct(r.coa_approval_rate)} approval; typically ${r.storeys_p50 || '?'} storeys (p90 ${r.storeys_p90 || '?'})${ratio}.`;
+  // WF3 phase A: the owner-facing "typical build FSI". comp_fsi_p50 is the nearest NEW-BUILD comps (honest
+  // NULL on addition-dominated pockets); fall back to the pocket's realized new-build FSI (same units, also
+  // new-build-only) so the report never shows a blank. comp_fsi_basis makes the source transparent.
+  const compFsi = r.comp_fsi_p50 != null ? Number(r.comp_fsi_p50) : null;
+  const pocketFsi = r.realized_fsi_p50 != null ? Number(r.realized_fsi_p50) : null;
+  const typicalFsi = compFsi ?? pocketFsi;
+  const compFsiBasis = compFsi != null ? 'comp' : (pocketFsi != null ? 'pocket_realized' : 'none');
+  const fsiClause = typicalFsi != null ? `; comparable builds ~${typicalFsi.toFixed(2)} FSI` : '';
+  const headline = `${where}: ${r.new_builds_5yr || 0} new builds + ${r.additions_5yr || 0} additions + ${r.renos_5yr || 0} renos in 5 yrs; CoA ${pct(r.coa_approval_rate)} approval; typically ${r.storeys_p50 || '?'} storeys (p90 ${r.storeys_p90 || '?'})${ratio}${fsiClause}.`;
   return {
     basis: r.used_citywide ? 'citywide_fallback' : 'neighbourhood',
     structure_family: r.norm_family, // R4: the dwelling-family cohort these norms were read from
@@ -1182,6 +1191,7 @@ function buildNearbyBuildsSummary(r) {
     new_builds_5yr: r.new_builds_5yr, additions_5yr: r.additions_5yr, renos_5yr: r.renos_5yr,
     suites_5yr: r.suites_5yr, demos_5yr: r.demos_5yr,
     realized_fsi_p50: r.realized_fsi_p50, build_ratio_p50: r.build_ratio_p50,
+    typical_fsi: typicalFsi, comp_fsi_basis: compFsiBasis, // WF3 phase A: always-present FSI + its source
     existing_build_ratio_p25: r.existing_build_ratio_p25, existing_build_ratio_p50: r.existing_build_ratio_p50,
     storeys_p50: r.storeys_p50, storeys_p90: r.storeys_p90,
     coa_approved: r.coa_approved, coa_refused: r.coa_refused, coa_approval_rate: r.coa_approval_rate,
