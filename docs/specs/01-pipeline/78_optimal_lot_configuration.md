@@ -116,6 +116,8 @@ forced `false`) so the per-parcel optimal-config range never NULL-collapses on a
 
 > **P2 (family-aware):** the single citywide row became one row PER `structure_family` + a `(NULL,'all')` rollup. The old `citywide_fallback_written` INFO metric is now `citywide_all_backstop_written` (the `(NULL,'all')` backstop is the load-bearing fallback every read falls through to, so it is **FAIL**-gated, not INFO). Storey norms stay UNIFIED (not family-split).
 
+> **WF3 (per-neighbourhood `all` rollup):** P2 wrote per-pocket rows ONLY for typed families (detached/townhouse/multiplex) — a generic-R / non-family parcel (`norm_family='all'`) had no per-pocket `all` row to resolve, so the P3A join's `nbn` tier missed and it fell straight to the CITYWIDE narrative (36% of parcels; 78% of them family=`all`). Now `compute-build-norms.js` ALSO writes a per-neighbourhood `(neighbourhood_id,'all')` rollup (family-agnostic aggregate over ALL builds in the boundary — mirrors the `(NULL,'all')` citywide rollup, `GROUP BY neighbourhood_id`; `sample_n ≥ 1`, real builds, invents nothing). Recovers ~126,670 parcels to their OWN pocket (`basis='neighbourhood'` share 64%→~92%). **No read-side change**: the existing `nbn` join already binds `structure_family = parcelFamilyFromZoningCaseSql(...)` (literal `'all'` for generic-R), so those parcels auto-resolve the new row and `used_citywide` self-corrects. New INFO metric `pocket_all_rollup_rows`; `pocket_family_rows` / `build_ratio_null_rate` stay family-only (exclude `'all'`).
+
 ### P1.4 — Cross-layer contracts (`docs/specs/_contracts.json` → `build_norms`)
 
 `window_years` (5), `min_sample_default` (5), `over_capture_clamp` (1.1), `build_ratio_null_rate_warn`

@@ -114,11 +114,20 @@ async function computeBuildNorms(pool, minSample = bn.BUILD_NORM_MIN_SAMPLE_DEFA
          WHERE coalesce(ca.hearing_date, ca.decision_date) BETWEEN $1 AND $2 AND pa.neighbourhood_id IS NOT NULL
          GROUP BY pa.neighbourhood_id
        ),
-       -- P2: per-POCKET × FAMILY rows (detached/townhouse/multiplex; family-agnostic obs excluded).
+       -- P2: per-POCKET × FAMILY rows (detached/townhouse/multiplex). WF3: PLUS a per-neighbourhood 'all'
+       -- rollup — a family-agnostic aggregate over ALL builds in the boundary (mirrors the citywide
+       -- (NULL,'all') rollup below, just GROUP BY neighbourhood_id). Fixes the 36% who fell to CITYWIDE:
+       -- 78% of them are generic-R / non-family parcels (norm_family='all') that had NO per-pocket 'all'
+       -- row to land in, so they skipped straight to Toronto-wide. Now they get their OWN pocket. Real
+       -- builds in the boundary (sample_n >= 1) — invents nothing. obs is neighbourhood_id NOT NULL (L80),
+       -- so this never emits a (NULL,'all') row that would collide with the citywide backstop.
        -- coa + storey are per-neighbourhood (not family-split): coa is per parcel, storey norms are UNIFIED.
        agg AS (SELECT o.neighbourhood_id, o.structure_family, ${AGG_COLS}
                FROM obs o WHERE o.structure_family IS NOT NULL
-               GROUP BY o.neighbourhood_id, o.structure_family)
+               GROUP BY o.neighbourhood_id, o.structure_family
+               UNION ALL
+               SELECT o.neighbourhood_id, 'all'::text AS structure_family, ${AGG_COLS}
+               FROM obs o GROUP BY o.neighbourhood_id)
        INSERT INTO neighbourhood_build_norms ${INSERT_COLS}
        SELECT ${insertSelectCols('a', 'a.neighbourhood_id', 'a.structure_family', 'nsn.storeys_p50', 'nsn.storeys_p90', 'coalesce(c.approved,0)', 'coalesce(c.refused,0)', 'coalesce(c.total,0)')}
        FROM agg a
@@ -159,13 +168,14 @@ async function computeBuildNorms(pool, minSample = bn.BUILD_NORM_MIN_SAMPLE_DEFA
   // Stats. Citywide is now MULTI-ROW (one per family + 'all'), so the scalar subqueries + the "exactly
   // one citywide" check target the (NULL,'all') backstop explicitly (else "more than one row"). P2.
   const stats = (await pool.query(
-    `SELECT count(*) FILTER (WHERE neighbourhood_id IS NOT NULL)::int AS pocket_family_rows,
+    `SELECT count(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND structure_family <> 'all')::int AS pocket_family_rows,
             count(DISTINCT neighbourhood_id) FILTER (WHERE neighbourhood_id IS NOT NULL)::int AS nbhds,
+            count(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND structure_family = 'all')::int AS pocket_all_rows,
             count(*) FILTER (WHERE neighbourhood_id IS NULL AND structure_family = 'all')::int AS citywide_all_count,
             count(*) FILTER (WHERE neighbourhood_id IS NULL AND structure_family <> 'all')::int AS citywide_family_count,
             count(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND structure_family = 'detached')::int AS detached_pocket_rows,
             count(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND low_sample)::int AS low_sample_nbhds,
-            count(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND build_ratio_p50 IS NULL)::int AS no_build_ratio,
+            count(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND structure_family <> 'all' AND build_ratio_p50 IS NULL)::int AS no_build_ratio,
             (SELECT existing_build_ratio_p50 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all') AS citywide_existing_p50,
             (SELECT realized_fsi_p50 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all') AS citywide_fsi_p50,
             (SELECT realized_fsi_p90 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'detached') AS citywide_detached_fsi_p90
@@ -187,6 +197,9 @@ function main() {
         { metric: 'citywide_all_backstop_written', value: s.citywide_all_count, threshold: '== 1', status: s.citywide_all_count === 1 ? 'INFO' : 'FAIL' },
         { metric: 'citywide_family_rows', value: s.citywide_family_count, threshold: null, status: 'INFO' },
         { metric: 'pocket_family_rows', value: s.pocket_family_rows, threshold: null, status: 'INFO' },
+        // WF3: the per-neighbourhood 'all' rollup — one per neighbourhood with ANY build; recovers the
+        // generic-R / non-family parcels (~127K) from the citywide fallback to their own pocket.
+        { metric: 'pocket_all_rollup_rows', value: s.pocket_all_rows, threshold: null, status: 'INFO' },
         { metric: 'detached_pocket_rows', value: s.detached_pocket_rows, threshold: null, status: 'INFO' },
         { metric: 'citywide_detached_fsi_p90', value: s.citywide_detached_fsi_p90, threshold: null, status: 'INFO' },
         { metric: 'low_sample_neighbourhoods', value: s.low_sample_nbhds, threshold: null, status: 'INFO' },

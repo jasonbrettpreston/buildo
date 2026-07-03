@@ -177,5 +177,11 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-1 compute-build-norms — live 
     // the (NULL,'all') backstop blends BOTH → median([1.0, 2.0]) = 1.5
     const all = (await pool.query(`SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all'`)).rows[0];
     expect(Number(all.realized_fsi_p50)).toBeCloseTo(1.5, 5);
+    // WF3: the PER-NEIGHBOURHOOD 'all' rollup — blends both families in N1's OWN boundary → 1.5. A generic-R
+    // parcel in N1 (norm_family='all') now resolves THIS row (its own pocket), not the citywide fallback.
+    const nbhdAll = (await pool.query(`SELECT * FROM neighbourhood_build_norms WHERE neighbourhood_id = $1 AND structure_family = 'all'`, [N1])).rows[0];
+    expect(nbhdAll).toBeDefined();
+    expect(Number(nbhdAll.realized_fsi_p50)).toBeCloseTo(1.5, 5);
+    expect(Number(nbhdAll.sample_n)).toBe(2); // real builds in the boundary, invents nothing
   }, 90_000);
 });
