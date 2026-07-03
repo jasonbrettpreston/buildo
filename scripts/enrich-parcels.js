@@ -628,6 +628,11 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
   COALESCE(emit AND (heritage OR is_in_ravine_protection_area OR width_m IS NULL OR length_m IS NULL
        OR (buffer_area IS NULL AND box_area IS NULL)), false) AS envelope_constrained,
   CASE
+    -- WF3: split the NOT-emit reason so a future cost/build UI can distinguish an unbuildable sliver from a
+    -- large lot that merely exceeds the residential max-build MODEL range (LOT_MAX) — the latter is buildable,
+    -- just not modelled. NULL lot (NULL < LOT_MIN is NULL, not TRUE) correctly falls through to low_lot_confidence.
+    WHEN NOT emit AND lot_size_sqm < ${LOT_MIN_SQM} THEN 'lot_too_small'
+    WHEN NOT emit AND lot_size_sqm > ${LOT_MAX_SQM} THEN 'lot_too_large'
     WHEN NOT emit THEN 'low_lot_confidence'
     WHEN heritage_no_massing THEN (CASE WHEN heritage_footprint_mislink THEN 'heritage_footprint_exceeds_lot' ELSE 'heritage_no_massing' END)
     WHEN heritage THEN 'heritage'

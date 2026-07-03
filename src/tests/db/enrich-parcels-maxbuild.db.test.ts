@@ -115,11 +115,11 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
     } finally { c.release(); }
   });
 
-  it('out-of-bounds lot → low confidence, envelope NULL, reason low_lot_confidence', async () => {
+  it('over-sized lot (>LOT_MAX) → low confidence, envelope NULL, reason lot_too_large', async () => {
     const c = await pool.connect();
     try {
       await c.query('BEGIN');
-      // ~2.2km square ≈ 4.9M m² → out of the 50–2000 band.
+      // ~2.2km square ≈ 4.9M m² → above the 2000 m² LOT_MAX (WF3: reason lot_too_large, not low_lot_confidence).
       await insMb(c, TEST_PARCEL + 2, sq(0, 0, 0.02), {
         lot_size_sqm: 4_900_000, frontage_m: 2220, depth_m: 2220, zoning_class: 'RD',
         bylaw_max_height_m: 10, bylaw_standard_setback_m: 6,
@@ -131,7 +131,25 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(p.max_buildable_gfa_sqm).toBeNull();
       expect(p.max_build_confidence).toBeNull();
       expect(p.garden_suite_fits).toBe(false);
-      expect(p.envelope_constraint_reason).toBe('low_lot_confidence');
+      expect(p.envelope_constraint_reason).toBe('lot_too_large');   // WF3: was low_lot_confidence
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
+  it('under-sized lot (<LOT_MIN) → low confidence, envelope NULL, reason lot_too_small', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // ~6m square ≈ 36 m² → below the 50 m² LOT_MIN (WF3: reason lot_too_small — the genuine unbuildable case).
+      await insMb(c, TEST_PARCEL + 24, sq(0, 0, 0.00006), {
+        lot_size_sqm: 36, frontage_m: 6, depth_m: 6, zoning_class: 'RD',
+        bylaw_max_height_m: 10, bylaw_standard_setback_m: 6,
+      });
+      await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+      const p = await getParcel(c, TEST_PARCEL + 24);
+      expect(p.lot_size_confidence).toBe('low');
+      expect(p.max_buildable_footprint_sqm).toBeNull();
+      expect(p.envelope_constraint_reason).toBe('lot_too_small');
       await c.query('ROLLBACK');
     } finally { c.release(); }
   });
