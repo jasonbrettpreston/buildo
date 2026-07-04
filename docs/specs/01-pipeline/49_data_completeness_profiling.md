@@ -20,9 +20,10 @@ As a pipeline operator, I want a single authoritative field-level coverage repor
 
 **Non-halting.** Coverage gaps emit WARN/FAIL rows in the audit_table but do not throw. Infrastructure failures (DB connectivity, Zod validation) re-throw.
 
-**Chain-aware:** `process.env.PIPELINE_CHAIN`
-- `permits` → full profile (all steps 1–26)
+**Chain-aware:** `process.env.PIPELINE_CHAIN` — a 3-way branch `if(coa) else if(sources) else{permits}`
+- `permits` → full profile (all steps 1–26) — the default `else`
 - `coa` → CoA-scoped subset (CoA steps 1–11)
+- **`sources` → the PARCELS-table coverage profile (WF3)** — profiles parcel fields on the SOURCE table directly. Closes the structural blind spot where parcel-derived fields were profiled ONLY via their propagated copies on permits/coa, so a **wrong-but-faithfully-propagated parcel value read GREEN**. Emits: field-family populated-counts (denominator `zoning_enriched_at IS NOT NULL`; all `infoRow` except `zoning_class` = the one gated health floor at 90/85, measured ~96.6%); the **`envelope_constraint_reason` VALUE DISTRIBUTION** (dynamic `GROUP BY` → one `infoRow` per value incl. the WF3 `lot_too_small`/`lot_too_large` — distribution-VISIBILITY to catch a classifier collapse, NOT value-correctness, which is `parcel-sanity-audit.js`'s job); and the relocated `parcel_cost_menu` profile (it queries `parcels`, was mislabeled "Sources —" but ran in the permits branch). The vocabulary-coverage loop is skipped in `sources` (its triples are permit/lead-trade). **Intentionally NOT profiled:** `nearby_builds_summary` (JSONB always-written → vacuous 100%; its `typical_fsi`/`comp_fsi_basis` sub-fields are not column-null-profilable — joinable via `zoning_dominant_parcel_id`).
 - unset → full profile (default for standalone runs)
 
 ---

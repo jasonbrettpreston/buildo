@@ -100,7 +100,7 @@
       "link_parcel_addresses",
       "compute_centroids", "link_parcels", "enrich_ravines", "enrich_heritage", "enrich_centreline", "massing", "link_massing",
       "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib",
-      "load_zoning", "enrich_parcels", "compute_parcel_cost_estimates",
+      "load_zoning", "enrich_parcels", "compute_parcel_cost_estimates", "assert_global_coverage",
       "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
     ],
     "entities": [

@@ -137,6 +137,24 @@ describe('assert-global-coverage.js — chain-aware behavior', () => {
   it('has coa branch (scoped subset)', () => {
     expect(src()).toContain('coa');
   });
+
+  // WF3: the sources-chain parcels-table coverage profile (Spec 49 blind-spot closure).
+  it('has a sources branch that profiles the parcels table directly', () => {
+    expect(src()).toContain("process.env.PIPELINE_CHAIN === 'sources'");
+    expect(src()).toMatch(/else if \(isSourcesChain\)/);
+    expect(src()).toContain("'parcels.zoning_class'");            // gated health floor
+    expect(src()).toContain('parcels.max_buildable_gfa_sqm');
+  });
+
+  it('sources branch emits the envelope_constraint_reason VALUE DISTRIBUTION (dynamic GROUP BY, not hard-coded)', () => {
+    expect(src()).toMatch(/GROUP BY envelope_constraint_reason/);
+    expect(src()).toMatch(/envelope_constraint_reason='\$\{rr\.reason\}'/); // one legible infoRow per returned value
+  });
+
+  it('relocated parcel_cost_menu into the sources branch + gated the VOCAB loop out of sources', () => {
+    expect(src()).toMatch(/if \(!isSourcesChain\)\s*\{\s*for \(const t of VOCAB_COVERAGE\)/);
+    expect(src()).toContain("'parcels.parcel_cost_menu (residential w/ building)'");
+  });
 });
 
 describe('assert-global-coverage.js — logic_variables Zod validation', () => {
@@ -190,6 +208,16 @@ describe('manifest.json — chain wiring', () => {
     const coaChain: string[] = manifest.chains.coa;
     expect(coaChain[coaChain.length - 1]).toBe('assert_global_coverage');
     expect(coaChain).toHaveLength(16);
+  });
+
+  // WF3: lock the sources-chain wiring (the parcels-table coverage profile) — it had no length lock.
+  it('assert_global_coverage runs in the sources chain, after compute_parcel_cost_estimates and before the housekeeping steps', () => {
+    const sourcesChain: string[] = manifest.chains.sources;
+    expect(sourcesChain).toContain('assert_global_coverage');
+    const covIdx = sourcesChain.indexOf('assert_global_coverage');
+    expect(sourcesChain[covIdx - 1]).toBe('compute_parcel_cost_estimates');
+    expect(sourcesChain[covIdx + 1]).toBe('refresh_snapshot');
+    expect(sourcesChain).toHaveLength(26); // +assert_global_coverage (WF3 Spec 49 parcels profile)
   });
 
   it('assert_global_coverage comes after assert_entity_tracing in permits chain', () => {

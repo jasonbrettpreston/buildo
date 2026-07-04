@@ -82,9 +82,10 @@ pipeline.run('assert-global-coverage', async (pool) => {
     const vocabWarnPct = logicVars.vocab_coverage_warn_pct;
 
     const isCoaChain = process.env.PIPELINE_CHAIN === 'coa';
+    const isSourcesChain = process.env.PIPELINE_CHAIN === 'sources'; // WF3: the parcels-table profile
     pipeline.log.info(
       '[assert-global-coverage]',
-      `Chain mode: ${isCoaChain ? 'coa (scoped subset)' : 'permits (full profile)'}`,
+      `Chain mode: ${isCoaChain ? 'coa (scoped subset)' : isSourcesChain ? 'sources (parcels profile)' : 'permits (full profile)'}`,
       { pass_pct: passPct, warn_pct: warnPct },
     );
 
@@ -477,6 +478,79 @@ pipeline.run('assert-global-coverage', async (pool) => {
       // Step 14 — compute_phase_calibration (Pass-2 fold: was missing)
       // mig 147 DROPped permit_type NOT NULL so CoA-side cohorts have permit_type IS NULL.
       rows.push(infoRow('CoA Step 14 — compute_phase_calibration', 'phase_stay_calibration.coa_rows', parseInt(cx.calibration_coa_rows, 10)));
+
+    } else if (isSourcesChain) {
+      // ═══════════════════════════════════════════════════════════
+      // Sources chain — the PARCELS-table coverage profile (WF3, Spec 49 blind-spot closure).
+      // Profiles parcel fields on the SOURCE table directly: a wrong-but-faithfully-propagated
+      // parcel value reads GREEN on the permits/coa copies, so this is the ONLY place it's caught.
+      // Denominator = zoning-enriched parcels (zoning_enriched_at, the enrich-parcels watermark).
+      // ═══════════════════════════════════════════════════════════
+      const { rows: [pp] } = await pool.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE zoning_enriched_at IS NOT NULL)          AS enriched,
+          COUNT(*) FILTER (WHERE zoning_class IS NOT NULL)                AS zoning_class_pop,
+          COUNT(*) FILTER (WHERE bylaw_max_fsi IS NOT NULL)              AS bylaw_max_fsi_pop,
+          COUNT(*) FILTER (WHERE max_buildable_footprint_sqm IS NOT NULL) AS mb_footprint_pop,
+          COUNT(*) FILTER (WHERE max_buildable_gfa_sqm IS NOT NULL)       AS mb_gfa_pop,
+          COUNT(*) FILTER (WHERE max_build_stories IS NOT NULL)           AS mb_stories_pop,
+          COUNT(*) FILTER (WHERE opt_config_confidence IS NOT NULL)       AS opt_conf_pop,
+          COUNT(*) FILTER (WHERE opt_aor_gfa_sqm IS NOT NULL)             AS opt_aor_pop,
+          COUNT(*) FILTER (WHERE opt_coa_gfa_sqm IS NOT NULL)             AS opt_coa_pop,
+          COUNT(*) FILTER (WHERE comp_count IS NOT NULL)                  AS comp_pop,
+          COUNT(*) FILTER (WHERE neighbourhood_id IS NOT NULL)            AS nbhd_pop,
+          COUNT(*) FILTER (WHERE cost_fb_total IS NOT NULL)              AS cost_fb_pop,
+          COUNT(*) FILTER (WHERE envelope_constrained)                   AS env_constrained_pop
+        FROM parcels
+      `);
+      const enriched = parseInt(pp.enriched, 10) || 0;
+      // zoning_class is the ONE health floor (measured ~96.6% live) — gated.
+      rows.push(calibratedRow('Sources Step — enrich_parcels', 'parcels.zoning_class', parseInt(pp.zoning_class_pop, 10), enriched || null, 90, 85));
+      // The rest are sparse-by-design (FSI ~5%, opt/comp partial) → INFO population counts (no gate that would false-FAIL).
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.bylaw_max_fsi', parseInt(pp.bylaw_max_fsi_pop, 10)));
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.max_buildable_footprint_sqm', parseInt(pp.mb_footprint_pop, 10)));
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.max_buildable_gfa_sqm', parseInt(pp.mb_gfa_pop, 10)));
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.max_build_stories', parseInt(pp.mb_stories_pop, 10)));
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.opt_config_confidence', parseInt(pp.opt_conf_pop, 10)));
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.opt_aor_gfa_sqm', parseInt(pp.opt_aor_pop, 10)));
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.opt_coa_gfa_sqm', parseInt(pp.opt_coa_pop, 10)));
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.comp_count', parseInt(pp.comp_pop, 10)));
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.neighbourhood_id', parseInt(pp.nbhd_pop, 10))); // NULL sentinel on parcels → plain IS NOT NULL (NOT the permits != -1)
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.cost_fb_total', parseInt(pp.cost_fb_pop, 10)));
+      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.envelope_constrained (TRUE)', parseInt(pp.env_constrained_pop, 10))); // NOT NULL DEFAULT false → count of TRUE
+
+      // PRIORITY — envelope_constraint_reason VALUE DISTRIBUTION (profiled nowhere else). Dynamic
+      // GROUP BY so a new reason value auto-appears; this is distribution-VISIBILITY (catches a
+      // classifier collapse — e.g. all reasons flip to low_lot_confidence), NOT value-correctness
+      // (that is parcel-sanity-audit.js's job). One legible per-value infoRow.
+      const reasonDist = await pool.query(`
+        SELECT envelope_constraint_reason AS reason, COUNT(*)::int AS n
+        FROM parcels WHERE envelope_constraint_reason IS NOT NULL
+        GROUP BY envelope_constraint_reason ORDER BY n DESC
+      `);
+      for (const rr of reasonDist.rows) {
+        rows.push(infoRow('Sources Step — enrich_parcels', `parcels.envelope_constraint_reason='${rr.reason}'`, rr.n));
+      }
+
+      // Spec 88 §2.10 — parcel_cost_menu (RELOCATED here from the mislabeled permits branch; it queries
+      // parcels, so it belongs in the sources chain). Gated >=85% of residential parcels WITH a building
+      // (the ~9% building-less are an exclusion FILTER, not a numerator note — makes 85% achievable).
+      const { rows: [pcm] } = await pool.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE has_bldg)                                    AS resid_with_bldg,
+          COUNT(*) FILTER (WHERE has_bldg AND parcel_cost_menu IS NOT NULL)   AS resid_with_bldg_menu,
+          COUNT(*) FILTER (WHERE parcel_cost_menu IS NOT NULL)                AS any_menu
+        FROM (
+          SELECT p.parcel_cost_menu,
+                 EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id) AS has_bldg
+          FROM parcels p
+          WHERE p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%'
+        ) q
+      `);
+      const residWithBldg = parseInt(pcm.resid_with_bldg, 10) || 0;
+      rows.push(calibratedRow('Sources Step — compute_parcel_cost_estimates', 'parcels.parcel_cost_menu (residential w/ building)',
+        parseInt(pcm.resid_with_bldg_menu, 10), residWithBldg || null, 85, 80));
+      rows.push(infoRow('Sources Step — compute_parcel_cost_estimates', 'parcels.parcel_cost_menu (any residential)', parseInt(pcm.any_menu, 10)));
 
     } else {
       // ═══════════════════════════════════════════════════════════
@@ -1016,27 +1090,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
         rows.push(infoRow('Step 9b — enrich_permits', `permits.${c}`, parseInt(pa[`${c}_pop`], 10)));
       }
 
-      // ── Spec 88 §2.10 — compute_parcel_cost_estimates (sources chain, profiled here).
-      // GATED ≥85% of residential parcels WITH a linked building (the ~9% building-less are an
-      // exclusion FILTER, not a numerator note — that makes 85% achievable). Building-less parcels
-      // still get a lot-driven menu, so the gated denominator is the with-building subset.
-      const { rows: [pcm] } = await pool.query(`
-        SELECT
-          COUNT(*) FILTER (WHERE has_bldg)                                    AS resid_with_bldg,
-          COUNT(*) FILTER (WHERE has_bldg AND parcel_cost_menu IS NOT NULL)   AS resid_with_bldg_menu,
-          COUNT(*) FILTER (WHERE parcel_cost_menu IS NOT NULL)                AS any_menu,
-          COUNT(*)                                                            AS resid_total
-        FROM (
-          SELECT p.parcel_cost_menu,
-                 EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id) AS has_bldg
-          FROM parcels p
-          WHERE p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%'
-        ) q
-      `);
-      const residWithBldg = parseInt(pcm.resid_with_bldg, 10) || 0;
-      rows.push(calibratedRow('Sources — compute_parcel_cost_estimates', 'parcels.parcel_cost_menu (residential w/ building)',
-        parseInt(pcm.resid_with_bldg_menu, 10), residWithBldg || null, 85, 80));
-      rows.push(infoRow('Sources — compute_parcel_cost_estimates', 'parcels.parcel_cost_menu (any residential)', parseInt(pcm.any_menu, 10)));
+      // NOTE (WF3): the parcels.parcel_cost_menu profile was RELOCATED to the sources-chain branch
+      // above (it queries parcels — a sources concern; it was mislabeled "Sources —" but ran here).
 
       // Step 10 — link_neighbourhoods (Denom A)
       rows.push(coverageRow('Step 10 — link_neighbourhoods', 'permits.neighbourhood_id', parseInt(pa.neighbourhood_pop, 10), permitsTotal));
@@ -1167,8 +1222,12 @@ pipeline.run('assert-global-coverage', async (pool) => {
     // ── Vocabulary coverage (Spec 49 §3 value/vocabulary dimension) ─────────
     // Distinct values present vs the defining vocabulary, per triple — catches silent
     // under-emission the field-NULL rows above can't see. Step-attributed via the metric label.
-    for (const t of VOCAB_COVERAGE) {
-      rows.push(await profileVocabTriple(t));
+    // WF3: the triples are permit/lead-trade + neighbourhood vocab (permits/coa concerns) — skip in
+    // the sources chain (else it emits permits-oriented vocab rows into the parcels profile).
+    if (!isSourcesChain) {
+      for (const t of VOCAB_COVERAGE) {
+        rows.push(await profileVocabTriple(t));
+      }
     }
 
     // ── Worst status verdict ───────────────────────────────────────────────
