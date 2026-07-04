@@ -22,6 +22,13 @@ const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 
 const ADVISORY_LOCK_ID = 92;
 
+// WF3: row-derived verdict cascade (Spec 48 §3.6) — replaces the old parallel-boolean verdict which
+// could never emit FAIL and would ignore a future FAIL-grade audit row.
+function verdictCascade(rows) {
+  return rows.some((r) => r.status === 'FAIL') ? 'FAIL'
+    : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+}
+
 // Turf.js imports are lazy-loaded inside the JS fallback path (else block).
 // PostGIS environments don't need Turf installed at all.
 let booleanPointInPolygon, turfCentroid, point, polygon, multiPolygon;
@@ -332,13 +339,14 @@ pipeline.run('link-neighbourhoods', async (pool) => {
   const nhoodCount = nhoods.rows.length;
   const nhoodAuditRows = [
     { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
-    { metric: 'neighbourhoods_loaded', value: nhoodCount, threshold: '== 158', status: nhoodCount === 158 ? 'PASS' : 'WARN' },
+    // 0 neighbourhoods loaded → linking is impossible (empty polygon table) → FAIL, not a soft WARN.
+    { metric: 'neighbourhoods_loaded', value: nhoodCount, threshold: '== 158', status: nhoodCount === 158 ? 'PASS' : nhoodCount === 0 ? 'FAIL' : 'WARN' },
     { metric: 'run_linked', value: linked, threshold: null, status: 'INFO' },
-    { metric: 'link_rate', value: nhoodLinkRate.toFixed(1) + '%', threshold: '>= 95%', status: nhoodLinkRate >= 95 ? 'PASS' : 'WARN' },
+    // A catastrophic link rate (< 50%) is a broken run, not a soft WARN.
+    { metric: 'link_rate', value: nhoodLinkRate.toFixed(1) + '%', threshold: '>= 95%', status: nhoodLinkRate >= 95 ? 'PASS' : nhoodLinkRate < 50 ? 'FAIL' : 'WARN' },
     { metric: 'no_neighbourhood_match', value: noMatch, threshold: null, status: 'INFO' },
     { metric: 'polygon_tests_skipped', value: polygonTestsSkipped, threshold: null, status: 'INFO' },
   ];
-  const nhoodHasWarns = nhoodLinkRate < 95 || nhoodCount !== 158;
 
   pipeline.emitSummary({
     records_total: processed,
@@ -353,7 +361,7 @@ pipeline.run('link-neighbourhoods', async (pool) => {
       audit_table: {
         phase: (process.env.PIPELINE_CHAIN === 'sources') ? 10 : 8,
         name: 'Neighbourhood Linking',
-        verdict: nhoodHasWarns ? 'WARN' : 'PASS',
+        verdict: verdictCascade(nhoodAuditRows),
         rows: nhoodAuditRows,
       },
     },

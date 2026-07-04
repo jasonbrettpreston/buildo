@@ -121,16 +121,25 @@ async function computeStoreyNorms(pool) {
   return { rowsWritten, candidates, extracted, parcelLinked, excludedNonLowrise, droppedImplausible, ...stats };
 }
 
+// WF3: row-derived verdict cascade (Spec 48 §3.6) — replaces the old parallel-boolean verdict which
+// could never emit FAIL and would ignore a future FAIL-grade row.
+function verdictCascade(rows) {
+  return rows.some((r) => r.status === 'FAIL') ? 'FAIL'
+    : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+}
+
 function main() {
   pipeline.run('compute-storey-norms', async (pool) => {
     const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
       const s = await computeStoreyNorms(pool);
       const parcelLinkedPct = s.extracted > 0 ? Math.round((1000 * s.parcelLinked) / s.extracted) / 10 : 0;
       const auditRows = [
-        { metric: 'pockets_computed', value: s.pockets, threshold: null, status: s.pockets > 0 ? 'INFO' : 'WARN' },
+        { metric: 'pockets_computed', value: s.pockets, threshold: '> 0', status: s.pockets > 0 ? 'INFO' : 'WARN' },
         { metric: 'pockets_low_sample', value: s.low_sample_pockets, threshold: null, status: 'INFO' },
         { metric: 'pockets_p50_equals_p90', value: s.degenerate_pockets, threshold: null, status: 'INFO' },
-        { metric: 'citywide_p50', value: s.citywide_p50, threshold: null, status: 'INFO' },
+        // The citywide backstop is load-bearing: enrich-parcels' stories_calc falls back to it when a
+        // pocket is absent. A NULL citywide p50 means NO storey fallback exists → FAIL (not silent).
+        { metric: 'citywide_p50', value: s.citywide_p50, threshold: '!= null', status: s.citywide_p50 != null ? 'INFO' : 'FAIL' },
         { metric: 'citywide_p90', value: s.citywide_p90, threshold: null, status: 'INFO' },
         { metric: 'storey_permits_candidates', value: s.candidates, threshold: null, status: 'INFO' },
         { metric: 'storey_permits_extracted_deduped', value: s.extracted, threshold: null, status: 'INFO' },
@@ -142,7 +151,7 @@ function main() {
         records_total: s.extracted,
         records_new: s.rowsWritten,
         records_updated: 0,
-        records_meta: { audit_table: { phase: ADVISORY_LOCK_ID, name: 'Neighbourhood Storey Norms', verdict: s.pockets > 0 ? 'PASS' : 'WARN', rows: auditRows } },
+        records_meta: { audit_table: { phase: ADVISORY_LOCK_ID, name: 'Neighbourhood Storey Norms', verdict: verdictCascade(auditRows), rows: auditRows } },
       });
       pipeline.emitMeta(
         { permits: ['permit_num', 'revision_num', 'permit_type', 'neighbourhood_id', 'zoning_dominant_parcel_id', 'description', 'structure_type'] },
