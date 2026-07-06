@@ -134,6 +134,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/quality/assert-lifecycle-phase-distribution.js': 109,
   'scripts/quality/assert-entity-tracing.js':   110,
   'scripts/quality/assert-global-coverage.js':  111,
+  'scripts/quality/assert-parcel-sanity.js':    107, // WF2 (reuses the slot retired from assert-pre-permit-aging, Phase G)
   // Wave 7 — Maintenance / Backup
   'scripts/backup-db.js':                       112,
   'scripts/observe-chain.js':                   113,

@@ -95,6 +95,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   assert_lifecycle_phase_distribution: { name: 'Phase Distribution',  group: 'quality' },
   assert_entity_tracing:      { name: 'Entity Tracing',           group: 'quality' },
   assert_global_coverage:     { name: 'Global Coverage Profile',   group: 'quality' },
+  assert_parcel_sanity:       { name: 'Parcel Sanity Profile',     group: 'quality' },
   // Maintenance (1) — logical backup after all data + CQA passes
   backup_db:                  { name: 'Database Backup',           group: 'snapshot' },
 };
@@ -189,6 +190,7 @@ export const NON_TOGGLEABLE_SLUGS = new Set([
   'assert_lifecycle_phase_distribution',
   'assert_entity_tracing',
   'assert_global_coverage',
+  'assert_parcel_sanity',
   'refresh_snapshot',
 ]);
 

@@ -603,6 +603,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   assert_lifecycle_phase_distribution: { summary: 'Validates lifecycle phase distribution bands and unclassified count after classifier runs', table: 'pipeline_runs' },
   assert_entity_tracing:   { summary: 'Checks coverage of new permits across 5 downstream tables: permit_trades, cost_estimates, trade_forecasts, lifecycle_phase, opportunity_score', table: 'pipeline_runs' },
   assert_global_coverage:  { summary: 'Field-level coverage profile for a predefined set of steps in the current chain (static list — update manually when chain steps are added)', table: 'pipeline_runs' },
+  assert_parcel_sanity:    { summary: 'Value-CORRECTNESS gate over all residential parcels — zone-aware bounds + cross-field invariants + per-zone distribution; a zero-baseline invariant going non-zero FAILs the chain (WF2)', table: 'pipeline_runs' },
   // Maintenance (1) — final permits chain step: logical pg_dump to GCS
   backup_db:               { summary: 'Logical pg_dump backup to GCS after all data writes and CQA assertions pass (spec 112)', table: 'pipeline_runs' },
   // Deep Scrapes

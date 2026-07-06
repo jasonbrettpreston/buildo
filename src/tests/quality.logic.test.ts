@@ -514,7 +514,8 @@ describe('Pipeline Registry', () => {
     // +1 compute_storey_norms added (Spec 65 §8 WF3-C1 2026-06-24)
     // +1 compute_build_norms added (Spec 78 P1 2026-06-26)
     // +1 compute_parcel_cost_estimates added (Spec 88 P1 2026-06-30)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(65);
+    // +1 assert_global_coverage / +1 assert_parcel_sanity (WF Spec 49 parcels observability 2026-07)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(66);
   });
 
   it('groups are correct: 14 ingest, 22 link, 17 classify, 2 snapshot, 10 quality', () => {
@@ -542,7 +543,7 @@ describe('Pipeline Registry', () => {
     expect(groups.filter((g) => g === 'link')).toHaveLength(22);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(17);
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
-    expect(groups.filter((g) => g === 'quality')).toHaveLength(10);
+    expect(groups.filter((g) => g === 'quality')).toHaveLength(11); // +assert_parcel_sanity (WF2)
   });
 
   it('every pipeline has a non-empty human-readable name', () => {

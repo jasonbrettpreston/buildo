@@ -549,13 +549,14 @@ describe('Incremental Processing Guards', () => {
 });
 
 describe('Quality Pipeline Group', () => {
-  it('quality group has 10 registry entries', () => {
+  it('quality group has 11 registry entries', () => {
     // WF2 2026-04-18 — +2: assert_lifecycle_phase_distribution, assert_entity_tracing
     // WF1 2026-04-19 — +1: assert_global_coverage
+    // WF2 2026-07 — +1: assert_parcel_sanity (Spec 49 value-sanity gate)
     const qualityEntries = Object.entries(PIPELINE_REGISTRY).filter(
       ([, entry]) => entry.group === 'quality'
     );
-    expect(qualityEntries).toHaveLength(10);
+    expect(qualityEntries).toHaveLength(11);
   });
 
   it('assert_schema and assert_data_bounds exist in PIPELINE_REGISTRY', () => {

@@ -216,8 +216,8 @@ describe('manifest.json — chain wiring', () => {
     expect(sourcesChain).toContain('assert_global_coverage');
     const covIdx = sourcesChain.indexOf('assert_global_coverage');
     expect(sourcesChain[covIdx - 1]).toBe('compute_parcel_cost_estimates');
-    expect(sourcesChain[covIdx + 1]).toBe('refresh_snapshot');
-    expect(sourcesChain).toHaveLength(26); // +assert_global_coverage (WF3 Spec 49 parcels profile)
+    expect(sourcesChain[covIdx + 1]).toBe('assert_parcel_sanity'); // WF2 sanity gate inserted after coverage
+    expect(sourcesChain).toHaveLength(27); // +assert_global_coverage (WF3) +assert_parcel_sanity (WF2)
   });
 
   it('assert_global_coverage comes after assert_entity_tracing in permits chain', () => {
