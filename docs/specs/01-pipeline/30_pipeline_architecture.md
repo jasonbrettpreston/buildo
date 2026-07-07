@@ -1,11 +1,15 @@
 # Pipeline Architecture v2.0 — SDK-First, Infrastructure-Defended
 
+> **Status (verified 2026-07-07):** foundational doc; chain inventory + scheduling reconciled against
+> `scripts/manifest.json` and `scripts/local-cron.js`. See §2.3 (chain inventory & scheduling) and §5.4
+> (verdict semantics — a FAIL verdict does NOT halt a chain).
+
 <requirements>
 ## 1. Goal & User Story
 
 As a developer modifying any pipeline script, I need a single reference for the architectural invariants, enforcement mechanisms, and observability standards — so I can write correct, observable, infrastructure-safe code without memorizing a 25-point checklist.
 
-This spec governs the **philosophy and policy** of the pipeline. For the **SDK mechanics** (exports, protocols, chain orchestration), see `docs/specs/pipeline/40_pipeline_system.md`.
+This spec governs the **philosophy and policy** of the pipeline. For the **SDK mechanics** (exports, protocols, chain orchestration), see `docs/specs/01-pipeline/40_pipeline_system.md`.
 </requirements>
 
 ---
@@ -33,7 +37,13 @@ Every pipeline script belongs to exactly one archetype. The archetype determines
 | **Observers** | Read-only admin/orchestration — do not mutate business data | ai-env-check, audit_all_specs, generate-db-docs, generate-system-map, harvest-tests, local-cron, migrate, refresh-snapshot, run-chain, task-init | Mutation, pagination, spatial, deep metrics rules |
 | **Scrapers** | Reach out to external networks (AIC portal, CKAN, Google, Serper) | aic-orchestrator, aic-scraper-nodriver, enrich-web-search, geocode-permits, poc-aic-scraper-v2, spike-nodriver | Pagination, spatial rules |
 | **Ingestors** | Load raw data from external files/APIs into initial DB tables | load-address-points, load-coa, load-massing, load-neighbourhoods, load-parcels, load-permits, load-wsib, seed-coa, seed-parcels, seed-trades | Spatial rules |
-| **Mutators** | Read existing tables, apply business logic, update/link records | classify-*, close-stale-permits, compute-centroids, compute-cost-estimates, compute-timing-calibration, create-pre-permits, enrich-wsib, extract-builders, link-*, reclassify-all | None — all rules apply |
+| **Mutators** | Read existing tables, apply business logic, update/link records | classify-*, close-stale-permits, compute-centroids, compute-cost-estimates, compute-timing-calibration, create-pre-permits, enrich-parcels, enrich-permits, enrich-wsib, extract-builders, link-*, reclassify-all | None — all rules apply |
+
+**Archetype-honesty note (`records_total`, 2026-07):** a Mutator MUST emit an honest `records_total`
+(rows it wrote), not `null` (Spec 48 §4.10). `enrich-permits` was reclassified/repaired as a Mutator when
+its `records_total` fix landed. **Known deviation (follow-up filed):** four sibling Mutators still carry a
+`null` headline count and are not yet honest — treat any Mutator reporting `records_total: null` as a
+pending fix, not a design choice.
 
 ### 2.2 Architectural Invariants
 
@@ -63,6 +73,31 @@ Any Pull Request violating these invariants is automatically rejected by the `pi
 - **Why:** Swallows WAF blocks, timeouts, and parse errors — makes debugging impossible.
 - **Standard:** Catch specific exception types. Build error taxonomy.
 - **Enforced by:** Ruff `BLE` (blind-except) and `TRY` (tryceratops) rule sets
+
+### 2.3 Chain Inventory & Scheduling
+
+**Six chains** are registered in `scripts/manifest.json` (step counts verified 2026-07-07). Each has a
+governing chain spec:
+
+| Chain | Steps | Spec | Schedule (`scripts/local-cron.js`) |
+|-------|------:|------|------------------------------------|
+| `coa` | 16 | `42_chain_coa.md` | Daily 06:00 ET weekdays — **first** in the serialized job |
+| `permits` | 32 | `41_chain_permits.md` | Daily 06:00 ET weekdays — **after** coa, same serialized job |
+| `sources` | 27 | `43_chain_sources.md` | Quarterly, 08:00 ET on the 1st of Jan/Apr/Jul/Oct |
+| `entities` | 2 | `45_chain_entities.md` | Daily 03:00 ET (contact-enrichment; API-cost-sensitive) |
+| `deep_scrapes` | 7 | `44_chain_deep_scrapes.md` | On-demand (not cron-scheduled) |
+| `wsib` | 1 | `46_wsib_enrichment.md` | On-demand (not cron-scheduled) |
+
+**Scheduling model (freshness contract, WF2 2026-07-06).** The `coa` and `permits` chains run as **ONE
+serialized weekday job** — `coa` first, `permits` only after `coa` completes (cron `0 6 * * 1-5`,
+`SCHEDULES[0].chainIds = ['coa','permits']`, run strictly sequentially in `local-cron.js`). Serializing
+(rather than staggering on separate hours) is required because the two chains SHARE steps
+(`classify_lifecycle_phase`, `compute_phase_calibration`, `refresh_snapshot`) whose advisory locks
+**SKIP on contention rather than wait** (Spec 47 §5.6) — a stagger where `coa` overran its hour would make
+`permits` silently drop those shared steps. The permits chain is the single engine that computes both
+CoA-stage trade forecasts and Branch-B opportunity scores, reading the CoA costs the coa chain wrote.
+`sources` runs quarterly; `entities` daily at 03:00. Lock: `src/tests/chain.logic.test.ts` ("serialized
+daily job runs coa strictly before permits").
 </architecture>
 
 ---
@@ -226,6 +261,16 @@ The list is expected to reach zero through normal sprint work without requiring 
 | Test B: Pre-Flight Gate | 5 | Someone removes bloat gate, thresholds, or Phase 0 audit |
 | Test C: Telemetry Intercept | 5 | Someone breaks auto-injection, namespace isolation, or append-don't-replace |
 | Test D: Memory Squeeze | 4 | Someone removes streamQuery, breaks cursor cleanup, or reverts streaming |
+
+### 5.4 Verdict semantics — verdicts do NOT halt chains
+
+A step's audit `verdict` (`PASS`/`WARN`/`FAIL`) is a **health signal, not a control-flow gate**.
+`run-chain.js` only `break`s the step loop when a step **process exits non-zero** (a crash/throw) or is
+cancelled — a `FAIL` verdict from a step that exited 0 does NOT stop the chain. FAIL verdicts are
+aggregated at chain completion (`hasVerdictFails`) into chain-level health and logged, and the Phase-0
+bloat gate is warn-only (§4.1). Consequence for authors: an `assert_*` step reporting FAIL still lets
+downstream steps run — do not rely on a FAIL to protect a downstream consumer from bad data; guard the
+consumer itself.
 </behavior>
 
 ---
@@ -262,5 +307,10 @@ The list is expected to reach zero through normal sprint work without requiring 
 ### Cross-Spec Dependencies
 - **Relies on:** `00_engineering_standards.md` (§9 pipeline standards)
 - **Extended by:** `40_pipeline_system.md` (SDK mechanics, protocol details)
-- **Consumed by:** All chain specs (`41-46`), all source specs (`50-57`), shared steps (`60`)
+- **New-step authoring conventions (2026-07):** `47_pipeline_script_protocol.md` §5.6 (skip-not-serialize
+  semantics — the shared-step-across-chains hazard, referenced by §2.3 scheduling) and §10.4 (chain-scoped
+  `pipeline_runs` names for cross-step lookups); `48_pipeline_observability.md` §4.5–4.10 (coverage-gate
+  row vocabulary, denominator honesty, active-scoped counters, magnitude floors, first-deploy posture, and
+  §4.10 Mutator `records_total` honesty — see §2.1 archetype-honesty note).
+- **Consumed by:** All chain specs (`41`–`46`), all source specs (`50-57`), shared steps (`60`)
 </constraints>
