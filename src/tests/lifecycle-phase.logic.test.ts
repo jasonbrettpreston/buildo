@@ -1753,3 +1753,89 @@ describe('classifyLifecyclePhase — Phase I.1.1b matchedStatus extension', () =
     expect(typeof stalled).toBe('boolean');
   });
 });
+
+// ═════════════════════════════════════════════════════════════════
+// Section — WF2 P3 lifecycle NULL dirty-drain regression locks
+//
+// Context: docs/reports/pipeline-validation/2026-07-07-lifecycle-null-trace.md
+// proved the ~578 live-status NULL permits are a dirty-queue *drain lag*, NOT a
+// classifier defect (stuck_not_dirty=0 — every row is already in the dirty set;
+// they simply arrived/flipped after the last classify run). The pure lib maps
+// every sampled live status to a non-null phase, which is the invariant that
+// makes the drain correct. These locks pin that invariant so a future edit
+// cannot silently regress the live-status → phase mapping (which would turn a
+// benign drain lag into a genuine stuck-NULL bug).
+// ═════════════════════════════════════════════════════════════════
+describe('classifyLifecyclePhase — WF2 P3 live-status dirty-drain locks', () => {
+  // The exact statuses sampled in the 2026-07-07 trace (across the two dirty
+  // cohorts + the trailing-space case), each mapped to the phase its set emits.
+  const SAMPLED_LIVE_STATUS_PHASE: Array<[string, string]> = [
+    ['Application Acceptable', 'P3'],
+    ['Application Received', 'P3'],
+    ['Open', 'P3'],
+    ['Under Review ', 'P4'],            // trailing-space variant (real DB)
+    ["Examiner's Notice Sent", 'P4'],
+    ['Application On Hold', 'P5'],
+    ['Response Received', 'P5'],
+    ['Pending Parent Folder Review', 'P5'],
+    ['Ready for Issuance', 'P6'],
+    ['Issuance Pending', 'P6'],
+    ['Not Started', 'P7d'],
+    ['Not Started - Express', 'P7d'],
+    ['Revision Issued', 'P8'],
+  ];
+
+  test.each(SAMPLED_LIVE_STATUS_PHASE)(
+    'sampled live status %s → %s (non-orphan) — never NULL',
+    (status, expectedPhase) => {
+      const r = classifyLifecyclePhase(permit({ status }));
+      expect(r.phase).toBe(expectedPhase);
+      expect(r.phase).not.toBeNull();
+    },
+  );
+
+  test.each(SAMPLED_LIVE_STATUS_PHASE)(
+    'sampled live status %s → non-null O-phase (orphan branch) — never NULL',
+    (status) => {
+      const r = classifyLifecyclePhase(permit({ status, is_orphan: true }));
+      // Orphan branch never returns null for a live (non-dead, non-terminal)
+      // status — it resolves to O1/O2/O3. The point is: NOT null.
+      expect(r.phase).not.toBeNull();
+      expect(['O1', 'O2', 'O3']).toContain(r.phase);
+    },
+  );
+
+  // Dead-status null-by-design stays pinned — cross-reference to the existing
+  // Section A "dead states" test (line ~92). Re-assert one representative here
+  // so this block is self-contained on the null-by-design boundary.
+  test('dead status stays null-by-design (Rule 2) — cites Section A dead-states', () => {
+    const r = classifyLifecyclePhase(permit({ status: 'Not Accepted' }));
+    expect(r.phase).toBeNull();
+    expect(r.matchedRule).toBe(2);
+  });
+
+  // ── GRD-3.2 CASE-SENSITIVITY FENCE ──────────────────────────────
+  // The status sets are matched case-SENSITIVELY. The dual-case HOLD_P5_SET
+  // entries ('Application On Hold' + 'Application on Hold') are a DELIBERATE
+  // fence: both real-DB casings are enumerated explicitly rather than handled
+  // by a toLowerCase() normalization. Do NOT add toLowerCase() anywhere near
+  // the permit status-set membership checks — it would make the dual-case
+  // entries dead code and silently widen matching to arbitrary casings.
+  test('dual-case HOLD_P5_SET entries both → P5 (explicit enumeration, not normalization)', () => {
+    expect(classifyLifecyclePhase(permit({ status: 'Application On Hold' })).phase).toBe('P5');
+    expect(classifyLifecyclePhase(permit({ status: 'Application on Hold' })).phase).toBe('P5');
+    // Both casings ARE present in the exported set (the fence's substrate).
+    expect(HOLD_P5_SET.has('Application On Hold')).toBe(true);
+    expect(HOLD_P5_SET.has('Application on Hold')).toBe(true);
+  });
+
+  test('case-sensitivity fence: an all-lowercase live status does NOT match a set (proves no toLowerCase)', () => {
+    // If a toLowerCase() were ever added to the status-matching path, this
+    // arbitrary-casing string would wrongly resolve to P5. It MUST fall to the
+    // rule-15 catchall (phase=null, unmappedStatus=true) instead.
+    const r = classifyLifecyclePhase(permit({ status: 'application on hold' }));
+    expect(r.phase).toBeNull();
+    expect(r.matchedRule).toBe(15);
+    expect(r.unmappedStatus).toBe(true);
+  });
+});
