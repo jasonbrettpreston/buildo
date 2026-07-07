@@ -147,16 +147,18 @@ describe('assert-entity-tracing.js — WF3 Zombie Gate: eligible denominator use
   });
 });
 
-describe('assert-entity-tracing.js — ET-1: trade_forecasts threshold post zombie-gate calibration', () => {
+describe('assert-entity-tracing.js — ET-1: trade_forecasts threshold restored post-rebuild', () => {
   let content: string;
   beforeAll(() => { content = src(); });
 
-  it('ET-1 THRESHOLDS.trade_forecasts is 0.30 (zombie/stall gates reduce expected coverage to ~36%)', () => {
-    // After WF3 zombie-gate (stall gate + grace cutoff), compute-trade-forecasts
-    // intentionally excludes ~64% of technically eligible permits. The 0.90 threshold
-    // produced a permanent false FAIL at ~36% actual coverage. 0.30 reflects the
-    // design-gated expectation.
-    expect(content).toMatch(/trade_forecasts\s*:\s*0\.30\b/);
-    expect(content).not.toMatch(/trade_forecasts\s*:\s*0\.90\b/);
+  it('ET-1 THRESHOLDS.trade_forecasts is 0.85 (WF2 P6.5 restore — eligible denominator already gates stall/ancient/SKIP)', () => {
+    // WF2 P6.5 (2026-07-07): the 0.30 was a rebuild-era relaxation while forecasts
+    // were cold. The `eligible_permits` denominator (assert-entity-tracing.js:106-118)
+    // already excludes stalled + ancient-anchor + SKIP_PHASES permits AND requires ≥1
+    // active trade, so a healthy in-chain run reads ~0.90+ — the 0.85 floor is the real
+    // regression signal, not a false FAIL. Gate is permit-scoped (CoA forecasts carry
+    // permit_num NULL), so the P6.6 CoA fan-out shrink cannot false-FAIL it.
+    expect(content).toMatch(/trade_forecasts\s*:\s*0\.85\b/);
+    expect(content).not.toMatch(/trade_forecasts\s*:\s*0\.30\b/);
   });
 });

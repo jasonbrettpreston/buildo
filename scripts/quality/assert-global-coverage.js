@@ -969,7 +969,14 @@ pipeline.run('assert-global-coverage', async (pool) => {
 
       // Step 3 — close_stale_permits
       rows.push(infoRow(    'Step 3 — close_stale_permits', 'permits.status (stale total)', staleTotal, permitsTotal));
-      rows.push(coverageRow('Step 3 — close_stale_permits', 'permits.completed_date',        parseInt(pa.stale_with_date, 10), staleTotal || null));
+      // WF2 P6.5 [41-#5]: completed_date is EMPTY in all 252,064 rows — CKAN
+      // sends the key but never a value on the Active-Permits feed (loader
+      // mapping at load-permits.js:156 is correct), and the close-stale
+      // synthesizer has produced 0 rows to date. This is structural sparsity,
+      // not a coverage regression → infoRow (matches the file's own convention
+      // at :949/:953/:960 + the Step-2 completed_date infoRow). Spec 50 §:107
+      // already documents the column as nullable.
+      rows.push(infoRow(    'Step 3 — close_stale_permits', 'permits.completed_date',        parseInt(pa.stale_with_date, 10), staleTotal || null));
 
       // Step 4 — classify_permit_phase
       // enriched_status is only populated for permits in active inspection stages
@@ -991,10 +998,16 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 6 — extract_builders', 'entities.permit_count',          parseInt(ea.permit_count_pop, 10),   entitiesTotal));
       rows.push(coverageRow('Step 6 — extract_builders', 'entities.entity_type',           parseInt(ea.entity_type_pop, 10),    entitiesTotal));
       rows.push(coverageRow('Step 6 — extract_builders', 'entities.last_seen_at',          parseInt(ea.last_seen_at_pop, 10),   entitiesTotal));
-      // Scraped contact data — externalRow thresholds (PASS ≥10%, WARN ≥5%).
-      rows.push(externalRow('Step 6 — extract_builders', 'entities.primary_phone',         parseInt(ea.phone_pop, 10),          entitiesTotal));
-      rows.push(externalRow('Step 6 — extract_builders', 'entities.primary_email',         parseInt(ea.email_pop, 10),          entitiesTotal));
-      rows.push(externalRow('Step 6 — extract_builders', 'entities.website',               parseInt(ea.website_pop, 10),        entitiesTotal));
+      // WF2 P6.5 [41-#4]: primary_phone / primary_email / website are populated
+      // by the on-demand, Serper-gated `entities` chain (manifest scripts:107-109)
+      // — a DORMANT chain that permits/coa/sources NEVER invoke. Over a
+      // permits-chain run these fields are legitimately near-zero, so an
+      // externalRow (which FAILs below 5%) is a false regression. infoRow —
+      // contacts arrive via the dormant entities chain (Spec 45). The producers
+      // are NOT retired (do not delete the steps — would orphan Spec 45).
+      rows.push(infoRow(    'Step 6 — extract_builders', 'entities.primary_phone (via entities chain — Spec 45)', parseInt(ea.phone_pop, 10),   entitiesTotal));
+      rows.push(infoRow(    'Step 6 — extract_builders', 'entities.primary_email (via entities chain — Spec 45)', parseInt(ea.email_pop, 10),   entitiesTotal));
+      rows.push(infoRow(    'Step 6 — extract_builders', 'entities.website (via entities chain — Spec 45)',       parseInt(ea.website_pop, 10), entitiesTotal));
 
       // Step 7 — link_wsib
       // is_wsib_registered: third-party scraper field, sparse by design (~24%).

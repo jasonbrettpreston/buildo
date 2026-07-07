@@ -286,6 +286,13 @@
     "min": 7,
     "max": 180
   },
+  "coa_freshness_fail_days": {
+    "default": 135,
+    "type": "number",
+    "description": "WF2 P6.5 — days since last CoA ingestion before assert-coa-freshness escalates from WARN to FAIL (portal likely dead, not just slow). Default 135 ≈ 3× the 45-day WARN floor. Empty-table branch stays WARN (fresh-staging, not portal rot).",
+    "min": 14,
+    "max": 365
+  },
   "scrape_early_phase_threshold_pct": {
     "default": 5,
     "type": "number",
@@ -633,6 +640,41 @@
     "default": 20,
     "type": "number",
     "description": "Day-1 threshold (percent) for CoAs with non-NULL scope_tags but zero trade matches in classify-coa-trades (Spec 42 §6.8 row 667; R5.4 R8 fold #1). Variance-only CoAs (severance, setback, minor-variance) legitimately produce zero trades, so a non-zero threshold is the correct semantic — the spec literal `== 0 FAIL` would be a permanent FAIL. Set to 20% for first burn-in; recalibrate post-prod once tag distribution is known.",
+    "min": 0,
+    "max": 100
+  },
+  "coa_active_trades_warn_max": {
+    "default": 18,
+    "type": "number",
+    "description": "WF2 P6.5/P6.6 — WARN ceiling for mean ACTIVE trades per CoA (is_active=true rows) in classify-coa-trades. Post-P6.6 (is_active=!fromBundle) the direct tag-matrix + realtor rows are active; bundle-only recall rows are inactive. Expected ~15; WARN above 18 flags a fan-out regression (e.g. bundle rows reactivated).",
+    "min": 1,
+    "max": 35
+  },
+  "permits_bylaw_max_fsi_null_warn_pct": {
+    "default": 88,
+    "type": "number",
+    "description": "WF2 P6.5 — enrich-permits bylaw_max_fsi NULL-rate WARN floor. Nulls are ~100% STRUCTURAL (residential zones regulate by coverage-not-FSI) so this WARNs only above baseline+margin (83.0+5); never FAIL.",
+    "min": 0,
+    "max": 100
+  },
+  "permits_bylaw_max_coverage_null_warn_pct": {
+    "default": 72,
+    "type": "number",
+    "description": "WF2 P6.5 — enrich-permits bylaw_max_coverage NULL-rate WARN floor (density zones regulate by FSI-not-coverage). Baseline 66.3+5.75; WARN-above-baseline, never FAIL.",
+    "min": 0,
+    "max": 100
+  },
+  "coa_bylaw_max_fsi_null_warn_pct": {
+    "default": 97,
+    "type": "number",
+    "description": "WF2 P6.5 — enrich-permits (coa target) bylaw_max_fsi NULL-rate WARN floor. Baseline 93.9+3; structural nulls, WARN-above-baseline, never FAIL.",
+    "min": 0,
+    "max": 100
+  },
+  "coa_bylaw_max_coverage_null_warn_pct": {
+    "default": 66,
+    "type": "number",
+    "description": "WF2 P6.5 — enrich-permits (coa target) bylaw_max_coverage NULL-rate WARN floor. Baseline 59.6+6.4; structural nulls, WARN-above-baseline, never FAIL.",
     "min": 0,
     "max": 100
   },

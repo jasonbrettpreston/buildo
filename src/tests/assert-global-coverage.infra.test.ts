@@ -280,6 +280,14 @@ describe('assert-global-coverage.js — Bug 1+2: sparse fields use infoRow, not 
     expect(content).toMatch(/infoRow[\s\S]{0,100}permits\.completed_date[\s\S]{0,200}permitsTotal/);
     expect(content).not.toMatch(/coverageRow\('Step 2[^)]*permits\.completed_date/);
   });
+
+  it('completed_date at Step 3 (close_stale_permits) uses infoRow (WF2 P6.5 [41-#5] — empty in all rows, synthesizer produced 0)', () => {
+    // CKAN sends the completed_date key but it is EMPTY in all 252,064 rows;
+    // the close-stale synthesizer has produced 0 rows. Structural sparsity, not
+    // a coverage regression → infoRow (the file's own convention).
+    expect(content).toMatch(/infoRow\(\s*'Step 3 — close_stale_permits',\s*'permits\.completed_date'/);
+    expect(content).not.toMatch(/coverageRow\(\s*'Step 3 — close_stale_permits',\s*'permits\.completed_date'/);
+  });
 });
 
 describe('assert-global-coverage.js — Bug 3: CoA lifecycle_phase uses unlinked denominator', () => {
@@ -361,6 +369,23 @@ describe('assert-global-coverage.js — W2 regression: CKAN-absent fields emit I
     expect(content).toMatch(/infoRow\([^)]*permits\.owner/);
     expect(content).not.toMatch(/coverageRow\([^)]*permits\.owner/);
   });
+});
+
+describe('assert-global-coverage.js — WF2 P6.5 [41-#4]: entity contact fields via dormant entities chain → infoRow', () => {
+  let content: string;
+  beforeAll(() => { content = src(); });
+
+  // primary_phone/primary_email/website are produced ONLY by the on-demand,
+  // Serper-gated `entities` chain (manifest scripts:107-109) that permits/coa/
+  // sources never invoke — so over a permits run they are legitimately near-zero.
+  // externalRow (FAILs below 5%) was a false regression → infoRow. Producers are
+  // NOT retired (Spec 45).
+  for (const field of ['primary_phone', 'primary_email', 'website']) {
+    it(`entities.${field} uses infoRow, not externalRow (Spec 45 dormant chain)`, () => {
+      expect(content).toMatch(new RegExp(`infoRow\\([^)]*entities\\.${field}`));
+      expect(content).not.toMatch(new RegExp(`externalRow\\('Step 6[^)]*entities\\.${field}`));
+    });
+  }
 });
 
 describe('assert-global-coverage.js — Bug 5: lifecycle_stalled NOT NULL DEFAULT false → infoRow', () => {
@@ -471,13 +496,13 @@ describe('assert-global-coverage.js — GC-1: Step 23 Denom G rows use infoRow (
 });
 
 describe('chain specs — step counts updated', () => {
-  it('41_chain_permits.md declares 30 steps', () => {
-    // WF3 2026-04-25: backup_db added as step 28 (OP4 fix).
-    // WF1 #B 2026-05-09: compute_phase_calibration inserted; +1 step.
-    // WF3 #realtor-backfill 2026-05-09: backfill_realtor_permit_trades
-    // inserted between classify_permits and compute_cost_estimates; +1.
+  it('41_chain_permits.md declares 32 steps', () => {
+    // WF2 P6.5 2026-07-07: FULL re-derivation from manifest.chains.permits.
+    // The prior "30" omitted compute_storey_norms + compute_build_norms (both
+    // shipped with the max-build/norms epics) and still carried the retired
+    // create_pre_permits row. Live manifest = 32 steps.
     const content = fs.readFileSync(CHAIN_PERMITS_SPEC, 'utf8');
-    expect(content).toContain('30 (sequential');
+    expect(content).toContain('32 (sequential');
   });
 
   it('42_chain_coa.md declares 12 steps (current state — target 22 per §6)', () => {

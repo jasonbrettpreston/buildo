@@ -235,6 +235,13 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // default_calibration_pct verdict thresholds (were hardcoded 50/20).
   'forecast_default_calibration_warn_pct',
   'forecast_default_calibration_fail_pct',
+  // WF2 P6.5 — chain-honesty WARN/FAIL floors.
+  'coa_freshness_fail_days',                 // assert-coa-freshness 3-tier FAIL
+  'coa_active_trades_warn_max',              // classify-coa-trades active fan-out WARN
+  'permits_bylaw_max_fsi_null_warn_pct',     // enrich-permits bylaw NULL-rate floors
+  'permits_bylaw_max_coverage_null_warn_pct',
+  'coa_bylaw_max_fsi_null_warn_pct',
+  'coa_bylaw_max_coverage_null_warn_pct',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

@@ -548,6 +548,24 @@ WHERE ${c.leadAlias}.zoning_enriched_at IS NOT NULL AND (${scopeWhere})
   AND NOT EXISTS (${linkExists});`;
 }
 
+// WF2 P6.5 — bylaw NULL-rate WARN floors (logic_variables). Nulls are ~100%
+// STRUCTURAL (residential zones regulate by coverage-not-FSI; density zones by
+// FSI-not-coverage; +no-parcel-link), so these WARN only above baseline+margin
+// and NEVER FAIL. Per-target keys (permits vs coa). Falls back to the seeded
+// defaults if a var is somehow absent (never throws — INFO-degrade).
+async function bylawNullFloors(client, np) {
+  const keys = np === 'permits'
+    ? { fsi: 'permits_bylaw_max_fsi_null_warn_pct', cov: 'permits_bylaw_max_coverage_null_warn_pct', fsiDefault: 88, covDefault: 72 }
+    : { fsi: 'coa_bylaw_max_fsi_null_warn_pct',     cov: 'coa_bylaw_max_coverage_null_warn_pct',     fsiDefault: 97, covDefault: 66 };
+  const r = await client.query(
+    `SELECT variable_key, variable_value FROM logic_variables WHERE variable_key = ANY($1)`,
+    [[keys.fsi, keys.cov]],
+  );
+  const byKey = new Map(r.rows.map((row) => [row.variable_key, Number(row.variable_value)]));
+  const num = (k, dflt) => (Number.isFinite(byKey.get(k)) ? byKey.get(k) : dflt);
+  return { fsi: num(keys.fsi, keys.fsiDefault), cov: num(keys.cov, keys.covDefault) };
+}
+
 // Sparse-by-design null rates for the target table (Spec 66 §3a INFO rows).
 async function nullRates(client, table) {
   const r = (await client.query(`
@@ -624,10 +642,16 @@ async function main(pool) {
     auditRows.push({ metric: `${prefix}_unlink_cleared_count`, value: result.orphansCleared, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_multi_parcel_count`, value: result.multiParcel, status: 'INFO' });
     auditRows.push({ metric: `${prefix}_heterogeneous_assembly_count`, value: result.heterogeneous, status: 'INFO' });
-    // Sparse-by-design null rates (Spec 66 §3a) — INFO only.
+    // WF2 P6.5 — bylaw fsi/coverage null-rates are STRUCTURAL (residential zones
+    // regulate by coverage-not-FSI; density zones by FSI-not-coverage), so they
+    // WARN above a per-target baseline+margin floor and NEVER FAIL. Height stays
+    // INFO. Null value (empty denominator) → INFO.
     const np = target === 'permits' ? 'permits' : 'coa';
-    auditRows.push({ metric: `${np}_bylaw_max_fsi_null_pct`, value: nr.fsi, status: 'INFO' });
-    auditRows.push({ metric: `${np}_bylaw_max_coverage_pct_null_pct`, value: nr.cov, status: 'INFO' });
+    const floors = await bylawNullFloors(pool, np);
+    const nullFloorStatus = (value, floor) =>
+      value === null ? 'INFO' : value > floor ? 'WARN' : 'INFO';
+    auditRows.push({ metric: `${np}_bylaw_max_fsi_null_pct`, value: nr.fsi, threshold: `<= ${floors.fsi}%`, status: nullFloorStatus(nr.fsi, floors.fsi) });
+    auditRows.push({ metric: `${np}_bylaw_max_coverage_pct_null_pct`, value: nr.cov, threshold: `<= ${floors.cov}%`, status: nullFloorStatus(nr.cov, floors.cov) });
     auditRows.push({ metric: `${np}_bylaw_max_height_m_null_pct`, value: nr.height, status: 'INFO' });
     // §8e ravine propagation observability (INFO — the zoning F-H12 gate + verdict are untouched).
     const rv = (await pool.query(`
@@ -758,7 +782,11 @@ async function main(pool) {
     auditRows.push({ metric: stepDur, value: Date.now() - t0, status: 'INFO' });
 
     pipeline.emitSummary({
-      records_total: null, records_new: null, records_updated: result.updated,
+      // WF2 P6.5 — headline honesty (Spec 30 §2.1: only Observers may null
+      // counters; this is a Mutator). result.scoped = rows in the enrichment
+      // scope; result.updated = rows actually changed. Sibling precedent:
+      // enrich-wsib.js. records_new=0 (enrichment never inserts).
+      records_total: result.scoped, records_new: 0, records_updated: result.updated,
       records_meta: {
         audit_table: {
           phase: ADVISORY_LOCK_ID,
