@@ -503,10 +503,11 @@ pipeline.run('assert-data-bounds', async (pool) => {
         { metric: 'address_point_dupes', value: apDupes, threshold: '== 0', status: apDupes > 0 ? 'FAIL' : 'PASS' },
         { metric: 'parcels_count', value: parcelCount, threshold: `>= ${PARCELS_FLOOR}`, status: parcelCount < PARCELS_FLOOR ? 'FAIL' : 'PASS' },
         { metric: 'parcel_dupes', value: parcelDupes, threshold: '== 0', status: parcelDupes > 0 ? 'FAIL' : 'PASS' },
-        // parcel_lot_outliers: live count is 1 (a single implausible lot_size that the
-        // enrich/cost pipeline already gates out via LOT_MIN/MAX → no envelope, no cost). This
-        // is a documented residual, kept WARN (honest label) rather than FAIL — a genuine load
-        // corruption would move the core-count floors above, not this single-row outlier. [Spec 43 §6.7-A]
+        // parcel_lot_outliers: documented residual, fluctuates 1-3 with quarterly loads (07-06: 1;
+        // post 07-07 full load: 3 — two zero-size slivers + one 1.14M m² mega-parcel). The
+        // enrich/cost pipeline already gates these out via LOT_MIN/MAX → no envelope, no cost.
+        // Kept WARN (honest label) rather than FAIL — a genuine load corruption would move the
+        // core-count floors above, not this handful of outliers. [Spec 43 §6.7-A]
         { metric: 'parcel_lot_outliers', value: lotOutliers, threshold: '== 0', status: lotOutliers > 0 ? 'WARN' : 'PASS' },
         { metric: 'building_footprints_count', value: bfCount, threshold: `>= ${BUILDING_FOOTPRINTS_FLOOR}`, status: bfCount < BUILDING_FOOTPRINTS_FLOOR ? 'FAIL' : 'PASS' },
         { metric: 'building_height_outliers', value: heightOutliers, threshold: '== 0', status: heightOutliers > 0 ? 'WARN' : 'PASS' },
