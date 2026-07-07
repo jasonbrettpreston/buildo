@@ -381,6 +381,36 @@ describe('coa-trade-classifier — classifyCoaTrades (direct matrix + bundle, MA
   });
 });
 
+describe('coa-trade-classifier — WF2 P6.6 is_active = !fromBundle partition contract', () => {
+  const BC = BUNDLE_TIER_CONFIDENCE_DEFAULT;
+
+  // classify-coa-trades.js sets lead_trades.is_active = !fromBundle. This pins the
+  // provenance partition that mapping depends on: direct tag-matrix hits (active)
+  // vs archetype-bundle-only recall (inactive). If the classifier's fromBundle
+  // provenance regressed, the fan-out fix would silently mis-activate.
+  it('NewConstruction+dwelling: direct build-sfd trades are ACTIVE (fromBundle=false)', () => {
+    const out = classifyCoaTrades({ project_type: 'NewConstruction', scope_tags: ['dwelling'] }, BC, DEPRECATED_TRADE_SLUGS);
+    // framing is a direct build-sfd matrix hit → active.
+    expect(out.find((r) => r.slug === 'framing')?.fromBundle).toBe(false);
+  });
+
+  it('NewConstruction+dwelling: FB-bundle-only trades are present-but-INACTIVE (fromBundle=true)', () => {
+    const out = classifyCoaTrades({ project_type: 'NewConstruction', scope_tags: ['dwelling'] }, BC, DEPRECATED_TRADE_SLUGS);
+    // FB-bundle recall trades the build-sfd direct matrix never emits → inactive.
+    for (const bundleOnly of ['elevator', 'structural-steel']) {
+      const r = out.find((x) => x.slug === bundleOnly);
+      if (r) expect(r.fromBundle).toBe(true); // present → must be bundle-only (inactive)
+    }
+  });
+
+  it('severance-only CoA → [] → 0 active trades (variance work has no trade fan-out)', () => {
+    const out = classifyCoaTrades({ project_type: 'Severance', scope_tags: ['severance'] }, BC, DEPRECATED_TRADE_SLUGS);
+    expect(out).toEqual([]);
+    // is_active = !fromBundle over an empty set → 0 active rows.
+    expect(out.filter((r) => !r.fromBundle).length).toBe(0);
+  });
+});
+
 describe('coa-trade-classifier — Phase 3 bundle slug integrity (R4) + JS↔TS parity', () => {
   it('R4: every ARCHETYPE_BUNDLES trade slug exists in the trades vocab (no slug_resolution_miss)', () => {
     const vocab = new Set(TRADES.map((t) => t.slug));

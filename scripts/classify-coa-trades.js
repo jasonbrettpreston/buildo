@@ -61,6 +61,8 @@ const LOGIC_VARS_SCHEMA = z
     vocab_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
     // Spec 80 §5.B.5 — bundle-tier confidence for archetype-implied trades (mig 182).
     archetype_bundle_confidence: z.coerce.number().min(0).max(1).default(0.55),
+    // WF2 P6.5 — active-scoped fan-out WARN ceiling (mean active trades/CoA).
+    coa_active_trades_warn_max: z.coerce.number().finite().positive().max(35).default(18),
   })
   .passthrough()
   .refine((d) => d.vocab_coverage_warn_pct < d.vocab_coverage_pass_pct, {
@@ -90,6 +92,8 @@ pipeline.run('classify-coa-trades', async (pool) => {
     throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   }
   const unmappedThresholdPct = logicVars.coa_trades_unmapped_threshold_pct;
+  // WF2 P6.5 — active fan-out WARN ceiling (default 18 via schema).
+  const activeTradesWarnMax = Number(logicVars.coa_active_trades_warn_max ?? 18);
   // Spec 80 §5.B.5 — bundle-tier confidence (mirror classify-permits.js; falls back to
   // the default when the logic_var is absent so the bundle prior still fires).
   const bundleConf = Number(logicVars.archetype_bundle_confidence) || BUNDLE_TIER_CONFIDENCE_DEFAULT;
@@ -129,6 +133,15 @@ pipeline.run('classify-coa-trades', async (pool) => {
     // emitted confidence; the realtor append is excluded (not a matrix/bundle trade).
     let coaTradesStrong = 0;
     let coaTradesBundleOnly = 0;
+    // WF2 P6.5 — active-scoped fan-out telemetry. Post-P6.6, `is_active` is
+    // `!fromBundle`, so active rows per CoA = direct-matrix (strong) hits +
+    // realtor append. The legacy `avg_trades_per_lead` counts ALL written rows
+    // (strong + bundle-only + realtor ≈ 31) and stays INFO; this active-scoped
+    // mean/histogram is the real fan-out signal (WARN above ~18, expected ~15).
+    // Denominator = CoAs with ≥1 ACTIVE row (severance-only legitimately 0).
+    let coaWithActiveTrades = 0;
+    let activeTradeRowsTotal = 0;
+    const activeTradesPerCoaHist = new Map(); // active-count → #CoAs, for the median.
     // Spec 80 §5.B product counters (INFO).
     let coaWithProducts = 0;
     let productRowsWritten = 0;
@@ -256,6 +269,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
 
       // R8 fold #2 — lead_score formula committed: Math.round(confidence * 100).
       const tradeRows = [];
+      let activeThisCoa = 0; // WF2 P6.5 — active (is_active=true) rows for THIS CoA.
       for (const { slug, confidence, fromBundle } of matches) {
         const tradeId = SLUG_TO_ID.get(slug);
         if (tradeId == null) {
@@ -268,7 +282,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
         // bundle_only = the archetype bundle is the slug's sole source (provenance,
         // not a confidence proxy — a direct hit at exactly the bundle tier is strong).
         if (fromBundle) coaTradesBundleOnly++;
-        else coaTradesStrong++;
+        else { coaTradesStrong++; activeThisCoa++; } // WF2 P6.5 — strong = active post-P6.6.
         tradeRows.push([
           row.lead_id,
           tradeId,
@@ -277,7 +291,15 @@ pipeline.run('classify-coa-trades', async (pool) => {
           // Tier-3 is the CoA-specific value, NOT a mirror of permit Tier-2.
           3,
           confidence,
-          true,
+          // WF2 P6.6 — is_active = !fromBundle. Previously hardcoded `true`,
+          // which activated every archetype-bundle trade (NewConstruction→FB=32,
+          // Addition→ADD=26, Alteration→INT=13) with NONE of the permit-side
+          // gates — inflating CoA fan-out to ~33/35 active trades. Direct
+          // tag-matrix hits stay active; bundle-only recall rows persist as
+          // is_active=false (vocab 35/35 coverage unchanged — the manifest
+          // trade_vocab dataFilter has no is_active predicate). severance-only
+          // → 0 active preserved.
+          !fromBundle,
           null, // phase — determineCoaPhase always null at CoA submission
           Math.round(confidence * 100),
         ]);
@@ -301,6 +323,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
         ]);
         tradeSlugDist.set(realtorSlug, (tradeSlugDist.get(realtorSlug) ?? 0) + 1);
         realtorAppendCount++;
+        activeThisCoa++; // WF2 P6.6 — realtor append stays is_active=true.
       }
 
       if (tradeRows.length > 0) {
@@ -308,6 +331,16 @@ pipeline.run('classify-coa-trades', async (pool) => {
         batch.rows.push(...tradeRows);
       } else {
         coaZeroTrades++;
+      }
+      // WF2 P6.5 — active-scoped fan-out: count CoAs with ≥1 active row + the
+      // per-CoA active histogram for the P7 median acceptance.
+      if (activeThisCoa > 0) {
+        coaWithActiveTrades++;
+        activeTradeRowsTotal += activeThisCoa;
+        activeTradesPerCoaHist.set(
+          activeThisCoa,
+          (activeTradesPerCoaHist.get(activeThisCoa) ?? 0) + 1,
+        );
       }
       // R8 fold #8 — every CoA gets its id staged so trade_classified_at
       // advances even on zero-trade rows (otherwise the cursor re-fetches).
@@ -373,6 +406,25 @@ pipeline.run('classify-coa-trades', async (pool) => {
     // entries surface in the UI).
     const avgTradesPerLead = coaWithTrades > 0 ? totalLeadTradeRows / coaWithTrades : 0;
 
+    // WF2 P6.5 — active-scoped fan-out mean + median (over CoAs with ≥1 active
+    // row). WARN above `activeTradesWarnMax` (default 18); expected ~15 post-P6.6.
+    const avgActiveTradesPerLead =
+      coaWithActiveTrades > 0 ? activeTradeRowsTotal / coaWithActiveTrades : 0;
+    // Median from the histogram (bounded — active counts are small integers).
+    let medianActiveTradesPerLead = 0;
+    if (coaWithActiveTrades > 0) {
+      const sortedCounts = [...activeTradesPerCoaHist.keys()].sort((a, b) => a - b);
+      const midpoint = coaWithActiveTrades / 2;
+      let cumulative = 0;
+      for (const count of sortedCounts) {
+        cumulative += activeTradesPerCoaHist.get(count);
+        if (cumulative >= midpoint) { medianActiveTradesPerLead = count; break; }
+      }
+    }
+    const activeFanoutStatus =
+      coaWithActiveTrades === 0 ? 'INFO'
+        : avgActiveTradesPerLead > activeTradesWarnMax ? 'WARN' : 'PASS';
+
     const auditRows = [
       // Worktree#2 IMP-1: surface the empty-cursor first-run via a WARN row
       // instead of letting unmapped_scope_pct silently PASS at 0%.
@@ -400,13 +452,28 @@ pipeline.run('classify-coa-trades', async (pool) => {
         threshold: realtorInclusionPct === null ? 'N/A' : null,
         status: 'INFO',
       },
-      // Indep M-2: scalar coa_trades_per_lead for the audit-table UI.
+      // Indep M-2: scalar coa_trades_per_lead for the audit-table UI. Counts ALL
+      // written rows (strong + bundle-only + realtor) — stays INFO; NOT the gate.
       {
         metric: 'avg_trades_per_lead',
         value: avgTradesPerLead.toFixed(2),
         threshold: null,
         status: 'INFO',
       },
+      // WF2 P6.5 — active-scoped fan-out gate (the real signal post-P6.6).
+      {
+        metric: 'avg_active_trades_per_lead',
+        value: coaWithActiveTrades > 0 ? avgActiveTradesPerLead.toFixed(2) : 'N/A',
+        threshold: `<= ${activeTradesWarnMax}`,
+        status: activeFanoutStatus,
+      },
+      {
+        metric: 'median_active_trades_per_lead',
+        value: coaWithActiveTrades > 0 ? medianActiveTradesPerLead : 'N/A',
+        threshold: null,
+        status: 'INFO',
+      },
+      { metric: 'coa_with_active_trades', value: coaWithActiveTrades, threshold: null, status: 'INFO' },
       // R8 fold #9 — schema-drift catch. == 0 FAIL is the right threshold here
       // (this catches matrix↔trades-table divergence, not data sparsity).
       {

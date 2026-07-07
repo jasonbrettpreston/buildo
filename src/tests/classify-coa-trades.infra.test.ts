@@ -291,3 +291,51 @@ describe('classify-coa-trades.js — Spec 80 §5.B.5 Phase 3 archetype bundle wi
     expect(src).toMatch(/batch\.coaIds\.push\(row\.id\)/);
   });
 });
+
+describe('classify-coa-trades.js — WF2 P6.6 CoA fan-out fix (is_active = !fromBundle)', () => {
+  const src = fs.readFileSync(SCRIPT, 'utf-8');
+
+  it('is_active in the tag-matrix lead_trades push is `!fromBundle` (NOT hardcoded true)', () => {
+    // The matrix push array (index 4 = is_active) must derive from bundle
+    // provenance. Bundle-only recall rows persist as is_active=false; direct
+    // tag-matrix hits stay active.
+    expect(src).toMatch(/!fromBundle,/);
+    // Guard: the OLD hardcoded `true,` must NOT appear as the is_active element
+    // of the matrix push (realtor append still uses `true` — that stays active).
+    const matrixBlock = src.match(/for \(const \{ slug, confidence, fromBundle \}[\s\S]*?tradeSlugDist\.set\(slug/);
+    expect(matrixBlock?.[0]).toMatch(/!fromBundle,/);
+    expect(matrixBlock?.[0]).not.toMatch(/\n\s*true,\s*\n\s*null, \/\/ phase/);
+  });
+
+  it('realtor append stays is_active=true (realtor is always active)', () => {
+    const realtorBlock = src.match(/REALTOR_TRADE_ID,[\s\S]*?realtorAppendCount\+\+/);
+    expect(realtorBlock?.[0]).toMatch(/true,/);
+  });
+
+  it('coaTradesStrong/coaTradesBundleOnly partition maps to the active/inactive split', () => {
+    // strong (non-bundle) increments the per-CoA active counter; bundle-only does not.
+    expect(src).toMatch(/else \{ coaTradesStrong\+\+; activeThisCoa\+\+; \}/);
+  });
+});
+
+describe('classify-coa-trades.js — WF2 P6.5 active-scoped fan-out telemetry', () => {
+  const src = fs.readFileSync(SCRIPT, 'utf-8');
+
+  it('emits avg_active_trades_per_lead as the WARN-gated fan-out metric', () => {
+    expect(src).toMatch(/metric:\s*'avg_active_trades_per_lead'/);
+    expect(src).toMatch(/coa_active_trades_warn_max/);
+  });
+
+  it('emits median_active_trades_per_lead + coa_with_active_trades (P7 median acceptance)', () => {
+    expect(src).toMatch(/metric:\s*'median_active_trades_per_lead'/);
+    expect(src).toMatch(/metric:\s*'coa_with_active_trades'/);
+  });
+
+  it('legacy avg_trades_per_lead (all rows) stays INFO — NOT the gate', () => {
+    expect(src).toMatch(/metric:\s*'avg_trades_per_lead',\s*\n\s*value:[^\n]*\n\s*threshold:\s*null,\s*\n\s*status:\s*'INFO'/);
+  });
+
+  it('coa_active_trades_warn_max is a validated logic_variable (Zod schema)', () => {
+    expect(src).toMatch(/coa_active_trades_warn_max:\s*z\.coerce\.number\(\)/);
+  });
+});
