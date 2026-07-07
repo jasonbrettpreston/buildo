@@ -557,3 +557,48 @@ describe('assert-lifecycle-phase-distribution.js — Pass-2 per-seq audit rows',
     expect(SRC).toMatch(/['"]seq_bands_null_catalog_count['"]/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// WF2 P3 — drain-lag breakout counters (audit blind spot [OB-F4])
+// SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3.4
+// Trace: docs/reports/pipeline-validation/2026-07-07-lifecycle-null-trace.md
+// ---------------------------------------------------------------------------
+describe('WF2 P3 — live_status_null_count + never_classified_count breakouts', () => {
+  it('seed has lifecycle_live_status_null_warn_count (default 50, bounds sane)', () => {
+    const entry = SEED.lifecycle_live_status_null_warn_count;
+    if (!entry) throw new Error('lifecycle_live_status_null_warn_count missing from seed JSON');
+    expect(entry.default).toBe(50);
+    expect(entry.type).toBe('number');
+    expect(entry.min).toBeGreaterThanOrEqual(0);
+    expect(entry.max).toBeGreaterThan(entry.min ?? 0);
+  });
+
+  it('LOGIC_VARS_SCHEMA declares lifecycle_live_status_null_warn_count (Zod int)', () => {
+    expect(SRC).toMatch(/lifecycle_live_status_null_warn_count\s*:\s*z\.coerce\.number\(\)\.finite\(\)\.nonnegative\(\)\.int\(\)/);
+    expect(SRC).toMatch(/logicVars\.lifecycle_live_status_null_warn_count/);
+  });
+
+  it('emits both breakout audit rows', () => {
+    expect(SRC).toMatch(/['"]live_status_null_count['"]/);
+    expect(SRC).toMatch(/['"]never_classified_count['"]/);
+  });
+
+  it('live_status_null_count query pins dead-status exclusion via matched_rule IS NULL + status <> ALL (RC4)', () => {
+    // The counter MUST exclude dead-status rows (which carry matched_rule=2) so
+    // its steady-state acceptance can reach ~0. Pin both structural guards.
+    const idx = SRC.indexOf('liveStatusNullCount }');
+    expect(idx).toBeGreaterThan(-1);
+    const q = SRC.slice(idx, idx + 400);
+    expect(q).toMatch(/matched_rule IS NULL/);
+    expect(q).toMatch(/status <> ALL\(\$1::text\[\]\)/);
+  });
+
+  it('never_classified_count is lifecycle_classified_at IS NULL', () => {
+    expect(SRC).toMatch(/lifecycle_classified_at IS NULL/);
+  });
+
+  it('breakout rows use row-derived status (no parallel boolean); live→PASS/WARN, never→INFO/WARN', () => {
+    expect(SRC).toMatch(/liveStatusNullCount <= liveStatusNullWarn \? 'PASS' : 'WARN'/);
+    expect(SRC).toMatch(/neverClassifiedCount <= liveStatusNullWarn \? 'INFO' : 'WARN'/);
+  });
+});

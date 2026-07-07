@@ -64,6 +64,9 @@ for (const suffix of Object.values(PHASE_TO_LOGIC_VAR_SUFFIX)) {
 // against the catalog query (which determines the actual valid seq list).
 const LOGIC_VARS_SCHEMA = z.object({
   lifecycle_unclassified_max: z.coerce.number().finite().nonnegative().int(),
+  // WF2 P3 — WARN threshold for the two additive drain-lag breakout counters
+  // (live_status_null_count + never_classified_count). See Spec 84 §3.4.
+  lifecycle_live_status_null_warn_count: z.coerce.number().finite().nonnegative().int(),
   lifecycle_seq_unclassified_max: z.coerce.number().finite().nonnegative().int(),
   lifecycle_cross_stalled_threshold: z.coerce.number().finite().nonnegative().int(),
   lifecycle_cross_active_inspection_threshold: z.coerce.number().finite().nonnegative().int(),
@@ -114,6 +117,8 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-lifecycle-phase-distribution');
     if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
     const unclassifiedMax = logicVars.lifecycle_unclassified_max;
+    // WF2 P3 — shared WARN threshold for the two drain-lag breakout counters.
+    const liveStatusNullWarn = logicVars.lifecycle_live_status_null_warn_count;
     const seqUnclassifiedMax = logicVars.lifecycle_seq_unclassified_max;
     const stalledThreshold = logicVars.lifecycle_cross_stalled_threshold;
     const activeInspectionThreshold = logicVars.lifecycle_cross_active_inspection_threshold;
@@ -498,6 +503,34 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     );
     const unclassifiedCount = unclPermitRows[0].n + unclCoaRows[0].n;
 
+    // ─── WF2 P3 — additive drain-lag breakout counters (audit blind spot) ─
+    // The existing `unclassified_count` (above) conflates two very different
+    // states: (1) rows genuinely stuck / misclassified — a real bug — and
+    // (2) rows loaded or status-flipped since the last classify run that are
+    // simply queued and will drain on the next in-chain run — benign drain lag.
+    // These two counters break that number apart so operators can tell them
+    // apart at a glance. Trace: docs/reports/pipeline-validation/
+    // 2026-07-07-lifecycle-null-trace.md (stuck_not_dirty=0 proved the entire
+    // gap was drain lag). Both are SUBSETS/breakouts of unclassified_count:
+    //   • live_status_null_count ⊆ unclassified_count — adds `matched_rule IS NULL`
+    //     (structurally excludes dead-status rows, which carry matched_rule=2),
+    //     i.e. the never-classified-through-the-rule-path slice.
+    //   • never_classified_count is `lifecycle_classified_at IS NULL` over ALL
+    //     rows (not phase-scoped) — the strictly "classifier has never touched
+    //     this row" population; it drains to ~0 on the next run.
+    const { rows: [{ n: liveStatusNullCount }] } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM permits
+        WHERE lifecycle_phase IS NULL
+          AND matched_rule IS NULL
+          AND status <> ALL($1::text[])
+          AND status IS NOT NULL
+          AND TRIM(status) <> ''`,
+      [DEAD_STATUS_ARRAY],
+    );
+    const { rows: [{ n: neverClassifiedCount }] } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM permits WHERE lifecycle_classified_at IS NULL`,
+    );
+
     // ─── Phase-keyed audit rows: RETIRED (Pass-2 fold 2026-05-19) ───────
     // The legacy phase_PN_count audit rows were replaced by 110 per-seq rows
     // emitted in the catalog iteration loop above. The phase-level aggregates
@@ -514,6 +547,39 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     });
     if (unclassifiedCount > unclassifiedMax) {
       failures.push(`unclassified_count ${unclassifiedCount} exceeds hard limit ${unclassifiedMax}`);
+    }
+
+    // ─── WF2 P3 — drain-lag breakout audit rows [OB-F4] ──────────────
+    // Row-derived verdict only (no parallel booleans). WARN above the shared
+    // logic_variable threshold. These are diagnostic breakouts of the FAIL
+    // gate above — a WARN here on its own is the benign drain-lag signal that
+    // clears on the next in-chain classify run.
+    auditRows.push({
+      metric: 'live_status_null_count',
+      value: liveStatusNullCount,
+      threshold: `<= ${liveStatusNullWarn} (WARN above) — breakout of unclassified_count: adds matched_rule IS NULL (never-classified slice, excludes dead-status matched_rule=2)`,
+      status: liveStatusNullCount <= liveStatusNullWarn ? 'PASS' : 'WARN',
+    });
+    if (liveStatusNullCount > liveStatusNullWarn) {
+      warnings.push(
+        `live_status_null_count ${liveStatusNullCount} exceeds ${liveStatusNullWarn} — ` +
+        'live-status permits with NULL phase + matched_rule IS NULL. Usually drain lag ' +
+        '(rows loaded/flipped since the last classify run); verify the next in-chain ' +
+        'classify_lifecycle_phase run clears it. See 2026-07-07-lifecycle-null-trace.md.',
+      );
+    }
+    auditRows.push({
+      metric: 'never_classified_count',
+      value: neverClassifiedCount,
+      threshold: `<= ${liveStatusNullWarn} (INFO→WARN above) — breakout of unclassified_count: lifecycle_classified_at IS NULL (rows the classifier has never touched)`,
+      status: neverClassifiedCount <= liveStatusNullWarn ? 'INFO' : 'WARN',
+    });
+    if (neverClassifiedCount > liveStatusNullWarn) {
+      warnings.push(
+        `never_classified_count ${neverClassifiedCount} exceeds ${liveStatusNullWarn} — ` +
+        'permits with lifecycle_classified_at IS NULL (loaded since the last classify run). ' +
+        'Benign drain lag; clears on the next in-chain classify_lifecycle_phase run.',
+      );
     }
 
     // ─── Cross-status checks (preserved) ─────────────────────────────
@@ -735,7 +801,7 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
 
     pipeline.emitMeta(
       {
-        permits: ['lifecycle_phase', 'lifecycle_seq', 'lifecycle_stalled', 'enriched_status', 'status'],
+        permits: ['lifecycle_phase', 'lifecycle_seq', 'lifecycle_stalled', 'enriched_status', 'status', 'matched_rule', 'lifecycle_classified_at'],
         coa_applications: ['lifecycle_phase', 'lifecycle_seq', 'linked_permit_num', 'decision'],
         universal_stream_catalog: ['seq', 'rows_count'],
       },

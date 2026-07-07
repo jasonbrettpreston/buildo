@@ -391,6 +391,13 @@
     "min": 0,
     "max": 10000
   },
+  "lifecycle_live_status_null_warn_count": {
+    "default": 50,
+    "type": "number",
+    "description": "WARN threshold for the additive breakout counters in assert-lifecycle-phase-distribution: live_status_null_count (NULL phase + non-dead status + matched_rule IS NULL) and never_classified_count (lifecycle_classified_at IS NULL). Both are dirty-queue drain-lag signals that clear on the next in-chain classify run (per docs/reports/pipeline-validation/2026-07-07-lifecycle-null-trace.md). Default 50 sits above steady-state noise (~1) and below a single day's new-permit load (~500).",
+    "min": 0,
+    "max": 100000
+  },
   "scraper_error_rate_warn_pct": {
     "default": 5,
     "type": "number",

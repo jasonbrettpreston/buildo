@@ -103,6 +103,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'cost_est_min_tiers',
   'calibration_freshness_warn_hours',
   'lifecycle_unclassified_max',
+  'lifecycle_live_status_null_warn_count', // WF2 P3 — WARN threshold for live_status_null_count + never_classified_count drain-lag breakouts
   'scraper_error_rate_warn_pct',
   'scraper_latency_p50_warn_ms',
   'scraper_empty_streak_warn',
