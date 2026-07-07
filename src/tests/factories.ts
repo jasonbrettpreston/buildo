@@ -139,6 +139,19 @@ export function createMockLeadView(overrides: Partial<LeadView> = {}): LeadView 
   };
 }
 
+// WF2 P6 (mig 212): CoA lead_view variant. Identity via lead_key='coa:...';
+// permit_num/revision_num/entity_id are ALL NULL per the third XOR arm.
+export function createMockCoaLeadView(overrides: Partial<LeadView> = {}): LeadView {
+  return createMockLeadView({
+    lead_key: 'coa:A0125-24',
+    lead_type: 'coa',
+    permit_num: null,
+    revision_num: null,
+    entity_id: null,
+    ...overrides,
+  });
+}
+
 export function createMockCostEstimate(
   overrides: Partial<CostEstimate> = {},
 ): CostEstimate {

@@ -129,6 +129,16 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     // legacy 2-arm SQL until mobile CoA cards ship. Operators flip it to
     // '0' in dev/staging to live-test the 3-arm path. Read once per
     // request (cheap — env-var lookup).
+    //
+    // WF2 P6 (Decision D5(a), 2026-07-07) — CoA surfacing is now data-ready
+    // (mig 212 admits lead_type='coa' to lead_views; the 3rd UNION arm reads
+    // overall estimated_cost). The default STAYS OFF: the fence is a
+    // RENDERABILITY gate ("until mobile CoA cards ship"), not a data gate.
+    // Admin-only opt-in: the ADMIN deployment sets `LEAD_FEED_DISABLE_COA=0`
+    // to surface CoA leads in the desktop admin feed; the mobile deployment
+    // keeps it default-ON so no CoA card is emitted to a client that cannot
+    // render or save it (api-schemas.logic.test.ts:301-318 still pins the
+    // mobile save-heart Zod rejection of lead_type='coa').
     const disableCoa = process.env.LEAD_FEED_DISABLE_COA !== '0';
     perf.mark('query_start');
     const result = await getLeadFeed(

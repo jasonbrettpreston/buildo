@@ -106,7 +106,9 @@ export interface Permit {
 // ---------------------------------------------------------------------------
 // Lead Views (migration 070 — corrected shape per spec 70)
 // ---------------------------------------------------------------------------
-export type LeadType = 'permit' | 'builder';
+// WF2 P6 (mig 212): 'coa' admitted to lead_views — admin-only surfacing.
+// CoA rows carry identity via lead_key='coa:...'; permit_num/revision_num/entity_id all NULL.
+export type LeadType = 'permit' | 'builder' | 'coa';
 
 export interface LeadView {
   id: number;

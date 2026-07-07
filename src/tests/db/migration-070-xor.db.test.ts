@@ -107,4 +107,49 @@ describe.skipIf(!dbAvailable())('migration 070 — lead_views XOR CHECK', () => 
     expect(caught).not.toBeNull();
     expect(caught?.code).toBe('23514');
   });
+
+  // ── WF2 P6 (mig 212) — CoA lead_type + third XOR arm ────────────────────────
+  // CoA rows carry identity via lead_key='coa:...'; all three shape columns null.
+  it('accepts a coa row (all shape cols null, identity via lead_key)', async () => {
+    if (!pool) return;
+    const res = await pool.query(
+      `INSERT INTO lead_views (user_id, lead_key, lead_type, permit_num, revision_num, entity_id, trade_slug, viewed_at, saved)
+       VALUES ($1, $2, 'coa', NULL, NULL, NULL, $3, NOW(), false)
+       RETURNING id`,
+      [baseRow.user_id + 'coa', 'coa:A0125-24', baseRow.trade_slug],
+    );
+    expect(res.rowCount).toBe(1);
+  });
+
+  it('REJECTS a coa row with permit_num set (XOR arm violation, 23514)', async () => {
+    if (!pool) return;
+    let caught: DatabaseError | null = null;
+    try {
+      await pool.query(
+        `INSERT INTO lead_views (user_id, lead_key, lead_type, permit_num, revision_num, entity_id, trade_slug, viewed_at, saved)
+         VALUES ($1, $2, 'coa', '24 999001', '00', NULL, $3, NOW(), false)`,
+        [baseRow.user_id + 'coabad', 'coa:badshape', baseRow.trade_slug],
+      );
+    } catch (err) {
+      caught = err as DatabaseError;
+    }
+    expect(caught).not.toBeNull();
+    expect(caught?.code).toBe('23514');
+  });
+
+  it('REJECTS a junk lead_type (type CHECK, 23514)', async () => {
+    if (!pool) return;
+    let caught: DatabaseError | null = null;
+    try {
+      await pool.query(
+        `INSERT INTO lead_views (user_id, lead_key, lead_type, permit_num, revision_num, entity_id, trade_slug, viewed_at, saved)
+         VALUES ($1, $2, 'garbage', NULL, NULL, NULL, $3, NOW(), false)`,
+        [baseRow.user_id + 'junk', 'junk:1', baseRow.trade_slug],
+      );
+    } catch (err) {
+      caught = err as DatabaseError;
+    }
+    expect(caught).not.toBeNull();
+    expect(caught?.code).toBe('23514');
+  });
 });
