@@ -13,7 +13,7 @@ Calculate a stable "Intrinsic Value" (0-100) for every trade opportunity based o
 
 ## 2. Technical Architecture
 
-> **Lead-ID keying (WF1 #coa-pipeline-parity-phase-a, 2026-05-13):** `trade_forecasts` PK migrates from `(permit_num, revision_num, trade_slug)` to `(lead_id, trade_slug)` per Spec 42 §6.6.B Option C. Lead identity is `'permit:<num>:<rev>'` or `'coa:<application_number>'`. Opportunity score engine reads/writes on `lead_id`; the asymptotic decay math is unchanged. CoA-stage rows (`lead_id LIKE 'coa:%'`) now produce scores end-to-end once the lifecycle classifier emits CoA P2/P3/P4 (post-Phase E fix of bug 84-W12). Realtor financial-base carve-out (existing): CoA-stage realtor uses `cost_estimates.estimated_cost` total since the CoA cost path is geometric-only (no per-trade slice).
+> **Lead-ID keying (WF1 #coa-pipeline-parity-phase-a, 2026-05-13):** `trade_forecasts` PK migrates from `(permit_num, revision_num, trade_slug)` to `(lead_id, trade_slug)` per Spec 42 §6.6.B Option C. Lead identity is `'permit:<num>:<rev>'` or `'coa:<application_number>'`. Opportunity score engine reads/writes on `lead_id`; the asymptotic decay math is unchanged. CoA-stage rows (`lead_id LIKE 'coa:%'`) now produce scores end-to-end once the lifecycle classifier emits CoA P2/P3/P4 (post-Phase E fix of bug 84-W12). Realtor financial-base carve-out (existing): CoA-stage realtor uses `cost_estimates.estimated_cost` total because the CoA cost path is an archetype/whole-project estimate (no per-trade slice). *(Historical note: this path was originally "geometric-only"; the live CoA cost path is now archetype-based — `cost_source='archetype_parcel'` — but the whole-project-no-slice property this carve-out relies on is unchanged. See Spec 83 §3-ARCHETYPE.)*
 
 > **Phase F.3 (DELIVERED 2026-05-17 commit `632e57d`):** `scripts/compute-opportunity-scores.js` re-keyed end-to-end on `lead_id` per the §2.1 contract. SOURCE_SQL JOINs `ce.lead_id = tf.lead_id` (mig 145 PK) and `la.lead_key = tf.lead_id` (F.2 UNION shape — alignment structurally guaranteed by mig 132 trigger). UPDATE writes via 2-col `(lead_id, trade_slug)` key matching mig 151 PK. Per-branch records_meta + 10 new audit rows mirror F.1/F.2 baseline-quiet-period observability pattern. Realtor carve-out + asymptotic-decay math unchanged. Legacy `permits_in_scope_legacy_distinct_count` audit row retained for one cycle (dual-emit); new `forecasts_in_scope_permit/_coa` rows have the operationally-correct row-count semantic.
 
@@ -35,18 +35,36 @@ Calculate a stable "Intrinsic Value" (0-100) for every trade opportunity based o
 | `variable_value` | DECIMAL | | Value used in scoring |
 | `description` | TEXT | | Rationale for the variable |
 
-**Used Variables in `logic_variables`:**
+**Used Variables in `logic_variables` (10 total — the exact `LOGIC_VARS_SCHEMA` in `compute-opportunity-scores.js`):**
 - `los_base_divisor`: 10000 (Normalization denominator)
+- `los_base_cap`: 30 (Financial-base cap — `MIN(trade_value / los_base_divisor, los_base_cap)`; the former hardcoded `30` is now this DB-driven knob)
 - `los_multiplier_bid`: 2.5 (Early window weight)
 - `los_multiplier_work`: 1.5 (Rescue window weight)
 - `los_penalty_tracking`: 50 (Penalty per high-intensity tracker)
 - `los_penalty_saving`: 10 (Penalty per low-intensity watcher)
 - `los_decay_divisor`: 25 (Asymptotic decay curve steepness — `rawPenalty / this` = decayFactor; higher = gentler decay)
+- `score_tier_elite`: (audit tier boundary — used by the score-distribution audit rows, not the per-lead math)
+- `score_tier_strong`: (audit tier boundary)
+- `score_tier_moderate`: (audit tier boundary)
 
 ### Implementation
 - **Script:** `scripts/compute-opportunity-scores.js`
 - **Data Flow:** Marries `trade_forecasts` with `cost_estimates` (for trade-specific $) and `lead_analytics` (for competition counts).
 - **Pipeline Wiring:** Permits Chain step 23 of 24. Runs after `classify_lifecycle_phase` (21) → `compute_trade_forecasts` (22). Depends on `compute_cost_estimates` (step 14) for trade_contract_values in `cost_estimates`. Precedes `update_tracked_projects` (24) so CRM alerts see fresh scores.
+
+### Wiring & Freshness — CoA scores are produced by the PERMITS chain (WF2 2026-07-06)
+
+`compute_opportunity_scores` runs **only in the permits chain**, never in the coa chain — the same single engine scores BOTH permit-stage leads and CoA-stage leads (`lead_id LIKE 'coa:%'`, the CoA branch). This is BY DESIGN: keeping one scoring engine + one permit-side calibration path in one chain avoids a divergent second implementation. The `compute-trade-forecasts` engine that feeds it is wired the same way (Spec 85).
+
+Because the permits chain reads CoA costs (`cost_estimates` rows written by the coa chain's `compute_coa_cost_estimates` step), a **freshness contract** governs the two chains:
+
+> **Freshness contract:** the coa chain must COMPLETE before the permits chain STARTS. In production this is enforced by running both as **one serialized daily cron job** (`scripts/local-cron.js` — coa first, permits only after coa completes), NOT two staggered cron hours. Serialization (not a stagger) is mandatory because the chains share advisory-locked steps (`classify_lifecycle_phase`, `compute_phase_calibration`, `refresh_snapshot`) whose locks SKIP — not wait — on contention, so an overrunning stagger could make the permits chain silently drop a shared step. Regressing this order means the permits chain scores CoA leads against stale (prior-day) CoA costs. Locked by `src/tests/chain.logic.test.ts` ("serialized daily job runs coa strictly before permits").
+
+The CoA-branch **audit-verdict gate** reads the most-recent `permits:compute_phase_calibration` `pipeline_runs` verdict (within `coa_gate_calibration_window_days`, default 7) — a `permits:`-scoped source BY DESIGN, because the permits chain is where the CoA forecasts/scores are produced. See Spec 85 §3.6 for the gate policy (`coa_gate_policy`).
+
+### cost_source-agnostic BY DESIGN
+
+The per-lead score math (§3) reads only `estimated_cost` and the `trade_contract_values` slice — it **never branches on `cost_source`** (`permit` / `model` / `archetype_parcel` / `archetype_declared_area` / `rate` / `geometric` / `none`). A lead priced by any source scores identically given the same dollar figures; a lead with `estimated_cost IS NULL` scores `NULL` regardless of why the cost is absent. This keeps the score independent of the cost-provenance taxonomy (Spec 83). Regression-locked by a source-agnosticism assertion in `compute-opportunity-scores.infra.test.ts`.
 
 ---
 
@@ -58,7 +76,7 @@ Nightly run processing all active `trade_forecasts` where `(urgency IS NULL OR u
 ### Core Logic
 - **Financial Base:** Extract `trade_contract_values[row.trade_slug]`.
   - **Realtor carve-out (WF3 2026-05-08):** When `row.trade_slug === 'realtor'`, the financial base is `row.estimated_cost` (the total project cost), NOT `trade_contract_values['realtor']` (which the cost slicer never produces — realtors don't bid on a sliced trade contract). Rationale: realtors prospect for listings, so the entire renovation is the listing-likelihood signal. The carve-out branches on `trade_slug` only — Spec 95 §2.5.1 explicitly forbids branching on the persona axis. Spec 81 §3 NULL semantics are preserved: realtor with `estimated_cost IS NULL` → `score = NULL`, same as other trades.
-- **Math:** `MIN(trade_value / logic_variables['los_base_divisor'], 30)`.
+- **Math:** `MIN(trade_value / logic_variables['los_base_divisor'], logic_variables['los_base_cap'])` — the cap is the DB-driven `los_base_cap` (default 30), not a hardcoded literal.
 - **Strategic Multiplier (Per-Trade):**
   - Performs a `LEFT JOIN` on `trade_configurations` for per-trade `multiplier_bid` / `multiplier_work`.
   - If `target_window === 'bid'` use `tc.multiplier_bid` (e.g., 3.0 for excavation, 2.0 for painting).
@@ -77,7 +95,7 @@ Nightly run processing all active `trade_forecasts` where `(urgency IS NULL OR u
 Mutates `trade_forecasts.opportunity_score`. All `UPDATE` queries must include `AND opportunity_score IS DISTINCT FROM v.score` to prevent unnecessary "dead tuple" bloat. Score is `NULL` when cost data is absent (see Edge Cases).
 
 ### Edge Cases
-- **Integrity Audit:** Flags leads where `tracking_count > 0` but `modeled_gfa_sqm` is null (users following unverified geometry).
+- **Integrity Audit:** Flags leads where `tracking_count > 0` but `modeled_gfa_sqm` is null (an observability breakout, not an error class). **NULL-semantics correction (WF2 2026-07-06):** `modeled_gfa_sqm IS NULL` does NOT mean "unverified geometry." Archetype-priced leads legitimately carry a NULL `modeled_gfa_sqm` because their cost basis is an archetype (parcel/declared-area/rate) basis area, not a per-lead modeled building envelope. The audit row simply counts tracked leads whose cost did not flow from a modeled GFA; it is INFO-level and must not be read as a data defect.
 - **Missing Cost → NULL (WF1 April 2026):** If `estimated_cost IS NULL` OR (for non-realtor trades) `trade_contract_values IS NULL` OR `trade_contract_values = {}`, `opportunity_score` is set to `NULL` (not 0). A score of 0 definitively means "real value, fully competed." Missing data is surfaced as `NULL` so downstream consumers can distinguish the two states. **Realtor exemption (WF3 2026-05-08):** see Realtor carve-out under Core Logic above — realtor doesn't require `trade_contract_values` to be populated; only `estimated_cost`. Realtor with `estimated_cost IS NULL` still yields `score = NULL`.
 - **Heavy Competition → Low (not Zero):** The asymptotic decay formula ensures heavily competed leads produce low non-negative scores. The old zero-clamp data-loss pattern (negative raw → clamped to 0) is eliminated.
 

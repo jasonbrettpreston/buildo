@@ -37,6 +37,16 @@ To retire or add an exclusion, edit the `forecast_excluded_trade_slugs` array (C
 - **Logic:** Combines `phase_started_at` anchors with `phase_calibration` medians and `TRADE_TARGET_PHASE` mappings.
 - **Pipeline Wiring:** Permits Chain step 22 of 24. Runs after `classify_lifecycle_phase` (21) so lifecycle_phase + phase_started_at anchors are fresh. Consumes `phase_calibration` written by `compute_timing_calibration_v2` (step 15). Precedes `compute_opportunity_scores` (23) which reads the `target_window` and `urgency` stamps this script produces. `expired` urgency threshold is loaded from `logic_variables.expired_threshold_days` (WF3 2026-04-13).
 
+### Wiring & Freshness — the CoA branch (Branch B) is produced by the PERMITS chain (WF2 2026-07-06)
+
+`compute_trade_forecasts` runs **only in the permits chain**, never in the coa chain. The single engine forecasts BOTH permit-stage leads (Branch A) and CoA-stage leads (**Branch B** — `lead_id LIKE 'coa:%'`, `lifecycle_group IN ('C1','C2','C3')`; see §3 CoA-stage routing). This is BY DESIGN: one engine, one permit-side calibration path, no divergent second implementation. The downstream `compute_opportunity_scores` engine is wired identically (Spec 81 §Wiring).
+
+Because the permits chain's Branch B reads CoA costs (`cost_estimates` rows written by the coa chain's `compute_coa_cost_estimates` step), a **freshness contract** governs the two chains:
+
+> **Freshness contract:** the coa chain must COMPLETE before the permits chain STARTS. In production both run as **one serialized daily cron job** (`scripts/local-cron.js` — coa first, permits only after coa completes), NOT two staggered cron hours. Serialization is mandatory because the chains share advisory-locked steps (`classify_lifecycle_phase`, `compute_phase_calibration`, `refresh_snapshot`) whose locks SKIP — not wait — on contention, so an overrunning stagger could make the permits chain silently drop a shared step. Regressing the order means Branch B forecasts CoA leads against stale (prior-day) CoA costs. Locked by `src/tests/chain.logic.test.ts` ("serialized daily job runs coa strictly before permits").
+
+The CoA branch's **audit-verdict gate** (§3.6) reads the most-recent `permits:compute_phase_calibration` verdict — a `permits:`-scoped source BY DESIGN, since the permits chain is where Branch B runs.
+
 ---
 
 ## 3. Behavioral Contract

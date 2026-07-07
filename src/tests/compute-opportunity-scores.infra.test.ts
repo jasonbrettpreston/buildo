@@ -402,6 +402,45 @@ describe('scripts/compute-opportunity-scores.js — realtor financial-base carve
 });
 
 // ════════════════════════════════════════════════════════════════════════════
+// cost_source-agnosticism (WF2 2026-07-06 Phase 4) — Spec 81 §Wiring
+// The per-lead score math must read only estimated_cost + trade_contract_values;
+// it must NEVER branch on cost_source (permit/model/archetype_*/rate/geometric/
+// none). A lead scores identically regardless of which cost source priced it.
+// This regression-locks the "cost_source-agnostic BY DESIGN" spec property.
+// ════════════════════════════════════════════════════════════════════════════
+describe('scripts/compute-opportunity-scores.js — cost_source-agnostic score math (WF2 2026-07-06)', () => {
+  let content: string;
+  beforeAll(() => {
+    content = fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/compute-opportunity-scores.js'),
+      'utf-8',
+    );
+  });
+
+  it('never references cost_source anywhere in the script (SQL or math)', () => {
+    // The engine must be blind to the cost-provenance taxonomy (Spec 83). It
+    // neither SELECTs nor branches on cost_source — the dollar figures alone
+    // drive the score. If a future edit adds a cost_source read, this fails
+    // loudly so the agnosticism decision is re-affirmed consciously.
+    expect(content).not.toMatch(/cost_source/);
+  });
+
+  it('score math branches only on trade_slug (realtor) — no cost-provenance branch', () => {
+    // Scope to executable lines (strip // comments) so a clarifying comment
+    // mentioning cost_source / archetype / geometric wouldn't trip the lock.
+    const codeOnly = content
+      .split('\n')
+      .filter((l) => !l.trimStart().startsWith('//') && !l.trimStart().startsWith('*'))
+      .join('\n');
+    // No branch on any cost-provenance token in executable code.
+    expect(codeOnly).not.toMatch(/\bcost_source\b/);
+    expect(codeOnly).not.toMatch(/is_geometric_override\s*[=!]==?/); // selected but never branched on
+    expect(codeOnly).not.toMatch(/===\s*['"]archetype/);
+    expect(codeOnly).not.toMatch(/===\s*['"]geometric['"]/);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // Phase F.3 — lead_id rekey + CoA consumer (v4 — 23 v3 folds applied)
 // SPEC LINK: docs/specs/01-pipeline/81_opportunity_score_engine.md §2.1
 // ════════════════════════════════════════════════════════════════════════════

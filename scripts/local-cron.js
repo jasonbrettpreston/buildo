@@ -30,23 +30,31 @@ const RUN_CHAIN_SCRIPT = path.resolve(__dirname, 'run-chain.js');
 // ---------------------------------------------------------------------------
 
 const SCHEDULES = [
+  // FRESHNESS CONTRACT (WF2 2026-07-06, D4b* + adversarial amendment;
+  // Spec 81 §Wiring / Spec 85 §Wiring):
+  // The coa chain and permits chain run in ONE serialized weekday job — coa
+  // FIRST, permits only AFTER coa completes. The permits chain is the single
+  // engine that computes CoA-stage trade forecasts AND opportunity scores
+  // (Branch B), reading the CoA costs written by the coa chain's
+  // compute_coa_cost_estimates step. SERIALIZING (rather than staggering the
+  // two on separate cron hours) is required because the chains SHARE steps
+  // (classify_lifecycle_phase, compute_phase_calibration, refresh_snapshot)
+  // whose advisory locks SKIP on contention rather than wait — a stagger where
+  // the coa chain overran its hour would make the permits chain silently drop
+  // those shared steps. Chain-order lock: src/tests/chain.logic.test.ts
+  // ("serialized daily job runs coa strictly before permits").
   {
-    chainId: 'permits',
-    cron: '0 6 * * 1-5',          // 6 AM ET weekdays
-    label: 'Permits (Daily)',
+    chainIds: ['coa', 'permits'],
+    cron: '0 6 * * 1-5',          // 6 AM ET weekdays — coa then permits, strictly sequential
+    label: 'CoA→Permits (Daily, serialized)',
   },
   {
-    chainId: 'coa',
-    cron: '0 7 * * 1-5',          // 7 AM ET weekdays (staggered 1h)
-    label: 'CoA (Daily)',
-  },
-  {
-    chainId: 'sources',
+    chainIds: ['sources'],
     cron: '0 8 1 1,4,7,10 *',     // 8 AM ET, 1st day of each quarter
     label: 'Sources (Quarterly)',
   },
   {
-    chainId: 'entities',
+    chainIds: ['entities'],
     cron: '0 3 * * *',             // 3 AM ET daily — after core ingestion
     label: 'Entities Enrichment (Daily)',
   },
@@ -117,18 +125,29 @@ for (const schedule of SCHEDULES) {
   const task = cron.schedule(
     schedule.cron,
     async () => {
-      const running = await isChainRunning(schedule.chainId);
-      if (running) {
-        pipeline.log.info('[local-cron]', `Skipping ${schedule.label} — already running.`);
-        return;
+      // Run the chains in this job STRICTLY SEQUENTIALLY — each awaits the
+      // previous one's completion before starting (the freshness contract for
+      // the coa→permits job; harmless for single-chain jobs).
+      for (const chainId of schedule.chainIds) {
+        const running = await isChainRunning(chainId);
+        if (running) {
+          pipeline.log.info(
+            '[local-cron]',
+            `Skipping chain_${chainId} (${schedule.label}) — already running.`,
+          );
+          continue;
+        }
+        await triggerChain(chainId, `${schedule.label} :: chain_${chainId}`);
       }
-      await triggerChain(schedule.chainId, schedule.label);
     },
     { timezone: 'America/Toronto' }
   );
 
   tasks.push(task);
-  pipeline.log.info('[local-cron]', `  ${schedule.label} — cron: ${schedule.cron}`);
+  pipeline.log.info(
+    '[local-cron]',
+    `  ${schedule.label} — cron: ${schedule.cron} — chains: ${schedule.chainIds.join(' → ')}`,
+  );
 }
 
 pipeline.log.info('[local-cron]', `${tasks.length} jobs scheduled. Waiting for triggers...`);

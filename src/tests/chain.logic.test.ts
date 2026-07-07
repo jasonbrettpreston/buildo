@@ -98,9 +98,19 @@ describe('Pipeline Chain Definitions', () => {
   });
 
   it('marketplace tail scripts appear only in permits chain', () => {
-    // The CoA chain does not include trade_forecasts / opportunity_scores
-    // / update_tracked_projects because CoA applications are pre-permit —
-    // they have no trade classification, no cost estimates yet.
+    // The marketplace tail (compute_trade_forecasts / compute_opportunity_scores
+    // / update_tracked_projects / compute_cost_estimates / timing calibration)
+    // runs ONLY in the permits chain BY DESIGN — a single engine keeps the
+    // scoring/forecast math and its permit-side calibration in one place.
+    // NOTE (WF2 2026-07-06): CoA applications DO now carry trade classification
+    // (classify_coa_trades) AND cost estimates (compute_coa_cost_estimates) —
+    // the old "pre-permit / no trades, no costs" rationale is FALSE since the
+    // coa chain gained those steps. The permits chain is nonetheless the sole
+    // producer of CoA-stage forecasts + opportunity scores (Branch B), reading
+    // the CoA costs the coa chain wrote earlier in the same run. Freshness is
+    // guaranteed by running coa then permits as ONE serialized daily job (coa
+    // completes before permits starts), locked by the "serialized daily job"
+    // test above and documented in Spec 81 §Wiring / Spec 85 §Wiring.
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa')!;
     const coaSlugs = coa.steps.map((s) => s.slug);
     expect(coaSlugs).not.toContain('compute_trade_forecasts');
@@ -322,10 +332,40 @@ describe('Chain Orchestrator Script', () => {
   it('local-cron.js contains all 4 chain IDs (permits, coa, sources, entities)', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/local-cron.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');
-    expect(content).toContain("chainId: 'permits'");
-    expect(content).toContain("chainId: 'coa'");
-    expect(content).toContain("chainId: 'sources'");
-    expect(content).toContain("chainId: 'entities'");
+    // Chains are declared in `chainIds` arrays (the coa+permits daily job is
+    // serialized into a single array, WF2 2026-07-06 D4b* amendment).
+    expect(content).toContain("'permits'");
+    expect(content).toContain("'coa'");
+    expect(content).toContain("'sources'");
+    expect(content).toContain("'entities'");
+  });
+
+  // WF2 2026-07-06 Phase 4 (D4b* + adversarial amendment) — FRESHNESS CONTRACT lock.
+  // CoA costs must land BEFORE the permits chain computes CoA forecasts/scores:
+  // the permits chain is the single engine that produces CoA-stage trade
+  // forecasts + opportunity scores (Branch B), and those steps read CoA costs
+  // written by the coa chain's compute_coa_cost_estimates step. The coa and
+  // permits chains run in ONE SERIALIZED daily job — coa first, permits only
+  // after coa completes — because the chains share advisory-locked steps that
+  // SKIP (not wait) on contention, so a two-cron stagger could silently drop
+  // shared steps if the coa chain overran. If this order silently regresses,
+  // the permits chain scores CoA leads against stale CoA costs — every day.
+  // See Spec 81 §Wiring / Spec 85 §Wiring.
+  it('serialized daily job runs coa strictly before permits (CoA-cost freshness contract)', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/local-cron.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    // The coa+permits pair must live in ONE chainIds array (single serialized
+    // cron job), with coa ordered before permits — NOT two separate entries.
+    const m = content.match(/chainIds:\s*\[([^\]]*)\]/);
+    expect(m, 'a chainIds array with coa+permits not found').toBeTruthy();
+    // Find the array literal that contains both coa and permits.
+    const arrays = [...content.matchAll(/chainIds:\s*\[([^\]]*)\]/g)].map((mm) => mm[1] ?? '');
+    const serialized = arrays.find((a) => a.includes("'coa'") && a.includes("'permits'"));
+    expect(serialized, 'coa and permits must share one serialized chainIds array').toBeTruthy();
+    expect(serialized!.indexOf("'coa'")).toBeLessThan(serialized!.indexOf("'permits'"));
+    // And they must NOT also appear as standalone single-chain jobs.
+    expect(content).not.toMatch(/chainIds:\s*\[\s*'permits'\s*\]/);
+    expect(content).not.toMatch(/chainIds:\s*\[\s*'coa'\s*\]/);
   });
 });
 
