@@ -475,8 +475,37 @@ pipeline.run('link-coa', async (pool) => {
   //
   // SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase D R5.1
   let permitsBackRefUpdated = 0;
+  let permitsBackRefCleared = 0;
   if (!dryRun) {
-    permitsBackRefUpdated = await pipeline.withTransaction(pool, async (client) => {
+    const backRefCounts = await pipeline.withTransaction(pool, async (client) => {
+      // WF2 P6.5 — confidence floor. The five sibling enrichment passes below
+      // gate on `linked_confidence >= inheritConfMin` (default 0.60); this
+      // back-ref had NO floor, so it wrote a parent-context signal off links as
+      // weak as a Tier-3 FTS guess (0.30-0.50). `computeIsOrphan`
+      // (orphan-detection.js:71) treats ANY non-null back-ref as CoA parent
+      // context and suppresses orphan status — so an unreliable back-ref was
+      // silently masking genuinely-standalone permits. Floor it to match the
+      // siblings. ACCEPTED consequence: sub-floor-only permits lose the
+      // back-ref → some become orphan candidates (quantified in the P0 report).
+      //
+      // Two statements in one transaction:
+      //  (1) CLEAR back-refs on permits that no longer have ANY qualifying
+      //      (>= floor) CoA link — otherwise a stale sub-floor back-ref would
+      //      persist and the floor would be a no-op on the existing corpus.
+      //  (2) SET the authoritative back-ref from the floored subquery.
+      // Clear-then-set order: a permit whose sub-floor winner is cleared but
+      // has a different >= floor CoA is correctly re-set by (2).
+      const clearResult = await client.query(
+        `UPDATE permits p
+            SET linked_coa_application_number = NULL
+          WHERE p.linked_coa_application_number IS NOT NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM coa_applications ca
+               WHERE ca.linked_permit_num = p.permit_num
+                 AND ca.linked_confidence >= $1::numeric
+            )`,
+        [inheritConfMin],
+      );
       // R5.1.g Worktree HIGH-3 fix: tiebreaker preference for APPROVED
       // decisions before falling back to decision_date / application_number.
       // Most CoAs that resolve to a real permit are approved; preferring
@@ -490,19 +519,23 @@ pipeline.run('link-coa', async (pool) => {
                     linked_permit_num, application_number
                FROM coa_applications
               WHERE linked_permit_num IS NOT NULL
+                AND linked_confidence >= $1::numeric
               ORDER BY linked_permit_num,
                        (decision ILIKE 'approved%')::int DESC,
                        decision_date DESC NULLS LAST,
                        application_number
            ) src
           WHERE p.permit_num = src.linked_permit_num
-            AND p.linked_coa_application_number IS DISTINCT FROM src.application_number`
+            AND p.linked_coa_application_number IS DISTINCT FROM src.application_number`,
+        [inheritConfMin],
       );
-      return backRefResult.rowCount || 0;
+      return { set: backRefResult.rowCount || 0, cleared: clearResult.rowCount || 0 };
     });
+    permitsBackRefUpdated = backRefCounts.set;
+    permitsBackRefCleared = backRefCounts.cleared;
     pipeline.log.info(
       '[link-coa]',
-      `Wrote permits.linked_coa_application_number back-ref on ${permitsBackRefUpdated.toLocaleString()} permits`,
+      `Back-ref: set ${permitsBackRefUpdated.toLocaleString()} permits; cleared ${permitsBackRefCleared.toLocaleString()} sub-floor (< ${inheritConfMin}) back-refs`,
     );
   }
 
@@ -819,6 +852,8 @@ pipeline.run('link-coa', async (pool) => {
   const auditRows = [
     { metric: 'permits_bumped_last_seen_at', value: permitsBumped, threshold: null, status: 'INFO' },
     { metric: 'permits_back_ref_updated', value: permitsBackRefUpdated, threshold: null, status: 'INFO' },
+    // WF2 P6.5 — sub-floor back-refs excluded/cleared by the >= inheritConfMin gate.
+    { metric: 'permits_back_ref_cleared_below_floor', value: permitsBackRefCleared, threshold: null, status: 'INFO' },
     { metric: 'cross_ward_cleaned', value: crossWardCleaned, threshold: null, status: crossWardCleaned > 0 ? 'INFO' : 'PASS' },
     { metric: 'total_candidates', value: actualCandidates, threshold: null, status: 'INFO' },
     { metric: 'potential_matches', value: potentialMatches, threshold: null, status: 'INFO' },

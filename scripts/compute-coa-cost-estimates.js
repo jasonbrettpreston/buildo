@@ -667,6 +667,30 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
       p50 = percRes.rows[0].p50 != null ? Number(percRes.rows[0].p50) : null;
       p75 = percRes.rows[0].p75 != null ? Number(percRes.rows[0].p75) : null;
     }
+    // ── WF2 P6.5: corpus-scoped coverage ────────────────────────────────────
+    // The `cost_estimate_coverage_pct` row above divides by `processed` (this
+    // run's incremental batch) — on a quiet steady-state run that denominator
+    // is tiny (or 0) and the row goes INFO, hiding whether the FULL corpus is
+    // healthy. This corpus-scoped row divides priced CoA cost rows by the whole
+    // coa_applications population (FILTER count) so a stalled corpus is visible
+    // even when the incremental batch is empty. INFO (breakout of the batch
+    // coverage gate above; the batch row keeps the FAIL/WARN authority).
+    let corpusPricedCoa = null, corpusTotalCoa = null;
+    if (!dryRun) {
+      const corpusRes = await pool.query(
+        `SELECT
+           (SELECT COUNT(*) FROM cost_estimates
+             WHERE lead_id LIKE 'coa:%' AND estimated_cost IS NOT NULL)::int AS priced,
+           (SELECT COUNT(*) FROM coa_applications)::int AS total`,
+      );
+      corpusPricedCoa = corpusRes.rows[0].priced;
+      corpusTotalCoa = corpusRes.rows[0].total;
+    }
+    const corpusCoveragePct =
+      corpusTotalCoa != null && corpusTotalCoa > 0
+        ? (corpusPricedCoa / corpusTotalCoa) * 100
+        : null;
+
     // Diff-review fold (W#2 L1-3): pin locale so the percentile distribution
     // string is identical across Node runtime environments — otherwise the
     // 7-day baseline diff in spec 48's observer becomes fragile.
@@ -734,6 +758,15 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
       { metric: 'coa_with_cost', value: coaWithCost, threshold: null, status: 'INFO' },
       { metric: 'coa_without_cost', value: coaWithoutCost, threshold: null, status: 'INFO' },
       coverageRow,
+      // WF2 P6.5 — corpus-scoped coverage (whole coa_applications denominator).
+      {
+        metric: 'coa_corpus_cost_coverage_pct',
+        value: corpusCoveragePct != null ? corpusCoveragePct.toFixed(1) + '%' : 'N/A',
+        threshold: null,
+        status: 'INFO',
+      },
+      { metric: 'coa_corpus_priced', value: corpusPricedCoa != null ? corpusPricedCoa : 'N/A', threshold: null, status: 'INFO' },
+      { metric: 'coa_corpus_total', value: corpusTotalCoa != null ? corpusTotalCoa : 'N/A', threshold: null, status: 'INFO' },
       { metric: 'null_reason_no_parcel', value: nullReasons.no_parcel, threshold: null, status: 'INFO' },
       { metric: 'null_reason_no_scope_tags', value: nullReasons.no_scope_tags, threshold: null, status: 'INFO' },
       { metric: 'null_reason_no_active_trades', value: nullReasons.no_active_trades, threshold: null, status: 'INFO' },

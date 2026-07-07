@@ -112,3 +112,45 @@ All three exist in `trades` but have no `trade_configurations` row (the 33-row c
 - `node scripts/ai-env-check.mjs`: PASS except migrations "8 drift" (checksum-changed 163/179/180/183/190/195/202/209 — pre-existing, documented user migrations; 0 missing).
 - `npm run migrate -- --verify`: 0 missing, 8 drift (same set).
 - Branch `auto-unblock/validation-2026-05-23` pushed to origin (`c8b3647..4b1712f`).
+
+---
+
+## (h) P6.5/P6.6 measured deltas + P7 preconditions (appended 2026-07-07)
+
+### Back-ref confidence floor (link-coa.js, P6.5) — orphan-delta
+The permit→CoA back-ref (`permits.linked_coa_application_number`) gained the standard
+`>= 0.60` confidence floor (`inheritConfMin`) that the five sibling enrichment passes
+already use. Measured impact on the live corpus (floor + stale-clear):
+- **3,012 permits lose their back-ref entirely** (no linking CoA at conf >= 0.60; the
+  DISTINCT-ON winner was not confidence-ordered, so most sub-floor rows are re-set to a
+  different qualifying CoA rather than lost).
+- **339 of those become orphan CANDIDATES** (`computeIsOrphan` true: not BLD/CMB, no
+  BLD/CMB sibling at the same prefix). ACCEPTED consequence — a <0.60 FTS-guess back-ref
+  was falsely suppressing orphan status on genuinely standalone permits. The plan's
+  ~17K estimate was high; the measured figure is 3,012 lost / 339 orphan candidates.
+- Emitted as audit row `permits_back_ref_cleared_below_floor`.
+
+### permits.location gate — DISCREPANCY from plan (documented)
+Both plan options were wrong given reality: (a) pointing the gate at `latitude` would MASK
+a real consumer-facing gap (`get-lead-feed.ts:278` filters `p.location IS NOT NULL`);
+(b) geocode-permits ALREADY populates `location` forward via trigger `trg_permits_set_location`
+(mig 067, `BEFORE UPDATE OF latitude,longitude`). The real gap is **219K historical rows**
+(location 10,721 / lat 229,986 = 4.3% vs 91.2%) geocoded before the trigger existed; the
+`IS DISTINCT FROM` guard skips them on re-geocode. No code change made — the gate is honest.
+Resolution = run the existing `scripts/backfill/backfill-permits-location.js` (idempotent).
+
+### P7 PRECONDITIONS (run BEFORE the Phase 7 chains, in order)
+1. **CoA trade reset (P6.6):** `node scripts/analysis/wf2-reset-coa-trade-classification.js --confirm`
+   — nulls `trade_classified_at` on ~31,348 CoAs so the dirty predicate drains the FULL
+   corpus (the fan-out fix `is_active=!fromBundle` otherwise lands on only the re-seen
+   sliver). Also re-fires compute_coa_cost_estimates downstream. Run IMMEDIATELY before the
+   coa chain. Corpus-wide P7 acceptance (median active <= 18) is valid ONLY with this reset.
+2. **Location backfill (P6.5 permits.location):** `node scripts/backfill/backfill-permits-location.js`
+   — populates `permits.location` for the ~219K historical rows so the feed's
+   `p.location IS NOT NULL` distance filter serves them and the Step-8 coverage gate reads
+   honestly. Run before the permits chain (or before Green Light validation of the gate).
+
+### Logic-variable seeds applied (P6.5) — DB already seeded (6 rows)
+`coa_freshness_fail_days=135`, `coa_active_trades_warn_max=18`,
+`permits_bylaw_max_fsi_null_warn_pct=88`, `permits_bylaw_max_coverage_null_warn_pct=72`,
+`coa_bylaw_max_fsi_null_warn_pct=97`, `coa_bylaw_max_coverage_null_warn_pct=66`.

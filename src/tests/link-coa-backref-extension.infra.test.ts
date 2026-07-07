@@ -57,3 +57,26 @@ describe('scripts/link-coa.js — back-ref extension (Phase D R5.1)', () => {
     expect(src).toMatch(/"linked_coa_application_number"|'linked_coa_application_number'/);
   });
 });
+
+describe('scripts/link-coa.js — WF2 P6.5 back-ref confidence floor', () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(path.resolve(__dirname, '../../scripts/link-coa.js'), 'utf-8');
+  });
+
+  it('back-ref SET subquery gates on linked_confidence >= inheritConfMin (mirrors the 5 sibling passes)', () => {
+    // The DISTINCT ON source subquery must filter sub-floor CoAs.
+    const backRefSet = src.match(/SELECT DISTINCT ON \(linked_permit_num\)[\s\S]*?ORDER BY linked_permit_num/);
+    expect(backRefSet?.[0]).toMatch(/linked_confidence >= \$1::numeric/);
+  });
+
+  it('clears stale sub-floor back-refs (floor is not a no-op on the existing corpus)', () => {
+    // Without the CLEAR, a stale sub-floor back-ref would persist and suppress
+    // orphan status forever. The NOT EXISTS clear removes them.
+    expect(src).toMatch(/SET linked_coa_application_number = NULL[\s\S]*?NOT EXISTS[\s\S]*?linked_confidence >= \$1::numeric/);
+  });
+
+  it('emits the excluded/cleared count as an audit row', () => {
+    expect(src).toMatch(/metric:\s*'permits_back_ref_cleared_below_floor'/);
+  });
+});

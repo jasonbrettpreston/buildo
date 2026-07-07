@@ -40,3 +40,21 @@ describe('compute-coa-cost-estimates audit_table — D3 OB-2 mirror', () => {
     expect(coaBrain).toMatch(/const st = \(row\.structure_type \|\| ''\)\.trim\(\)/);
   });
 });
+
+describe('compute-coa-cost-estimates — WF2 P6.5 corpus-scoped coverage', () => {
+  it('emits coa_corpus_cost_coverage_pct (INFO breakout of the batch coverage gate)', () => {
+    expect(coaMuscle).toMatch(/metric:\s*'coa_corpus_cost_coverage_pct'/);
+  });
+
+  it('corpus coverage divides priced coa cost rows by the whole coa_applications population', () => {
+    // FILTER count over the entire corpus, not the incremental `processed` batch.
+    expect(coaMuscle).toMatch(/FROM cost_estimates[\s\S]{0,120}lead_id LIKE 'coa:%'[\s\S]{0,120}estimated_cost IS NOT NULL/);
+    expect(coaMuscle).toMatch(/FROM coa_applications\)::int AS total/);
+  });
+
+  it('corpus row is INFO — the batch cost_estimate_coverage_pct keeps the FAIL/WARN authority', () => {
+    // corpus row must not carry a FAIL/WARN status (it's a health breakout).
+    const corpusRow = coaMuscle.match(/metric:\s*'coa_corpus_cost_coverage_pct',[\s\S]{0,160}?status:\s*'(\w+)'/);
+    expect(corpusRow?.[1]).toBe('INFO');
+  });
+});

@@ -29,7 +29,11 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loa
 
 const LOGIC_VARS_SCHEMA = z.object({
   coa_freshness_warn_days: z.coerce.number().finite().positive().int(),
-}).passthrough();
+  // WF2 P6.5 — FAIL tier (portal likely dead, not just slow). Seed 135 ≈ 3× warn.
+  coa_freshness_fail_days: z.coerce.number().finite().positive().int(),
+}).passthrough().refine((d) => d.coa_freshness_fail_days > d.coa_freshness_warn_days, {
+  message: 'coa_freshness_fail_days must be strictly greater than coa_freshness_warn_days',
+});
 
 const ADVISORY_LOCK_ID = 108;
 
@@ -42,6 +46,7 @@ pipeline.run('assert-coa-freshness', async (pool) => {
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
 
   const freshnessDays = logicVars.coa_freshness_warn_days;
+  const freshnessFailDays = logicVars.coa_freshness_fail_days;
 
   pipeline.log.info('[assert-coa-freshness]', 'Checking CoA source data freshness...');
 
@@ -82,7 +87,11 @@ pipeline.run('assert-coa-freshness', async (pool) => {
     ? Math.max(0, Math.round((Date.now() - lastSeenMs) / (1000 * 60 * 60 * 24)))
     : null;
 
+  // WF2 P6.5 — 3-tier: FAIL (portal dead) > WARN (portal slow) > PASS.
+  // Pattern: assert-staleness.js:160. isFail takes precedence over isStale.
+  const isFail = ingestionDaysAgo !== null && ingestionDaysAgo >= freshnessFailDays;
   const isStale = ingestionDaysAgo !== null && ingestionDaysAgo >= freshnessDays;
+  const freshnessStatus = isFail ? 'FAIL' : isStale ? 'WARN' : 'PASS';
 
   pipeline.log.info('[assert-coa-freshness]', 'Freshness check complete', {
     total_records: totalRecords,
@@ -91,9 +100,12 @@ pipeline.run('assert-coa-freshness', async (pool) => {
     max_decision_date: maxDecisionDate,
     max_hearing_date: maxHearingDate,
     stale: isStale,
+    fail: isFail,
   });
 
-  if (isStale) {
+  if (isFail) {
+    pipeline.log.error('[assert-coa-freshness]', new Error(`Portal rot FAIL: last ingestion was ${ingestionDaysAgo} days ago (>= ${freshnessFailDays}). CKAN CoA feed likely dead.`), { phase: 'freshness' });
+  } else if (isStale) {
     pipeline.log.warn('[assert-coa-freshness]', `Portal rot warning: last ingestion was ${ingestionDaysAgo} days ago. CKAN data may be frozen.`);
   }
 
@@ -101,7 +113,7 @@ pipeline.run('assert-coa-freshness', async (pool) => {
   const rows = [
     { metric: 'total_records', value: totalRecords, threshold: null, status: 'INFO' },
     { metric: 'last_ingestion', value: maxLastSeen ? new Date(maxLastSeen).toISOString().split('T')[0] : 'never', threshold: null, status: 'INFO' },
-    { metric: 'ingestion_days_ago', value: ingestionDaysAgo, threshold: `< ${freshnessDays}`, status: isStale ? 'WARN' : 'PASS' },
+    { metric: 'ingestion_days_ago', value: ingestionDaysAgo, threshold: `< ${freshnessDays} WARN / < ${freshnessFailDays} FAIL`, status: freshnessStatus },
     { metric: 'max_decision_date', value: maxDecisionDate || 'none', threshold: null, status: 'INFO' },
     { metric: 'max_hearing_date', value: maxHearingDate || 'none', threshold: null, status: 'INFO' },
   ];
@@ -113,7 +125,7 @@ pipeline.run('assert-coa-freshness', async (pool) => {
       audit_table: {
         phase: 3,
         name: 'Source Freshness',
-        verdict: isStale ? 'WARN' : 'PASS',
+        verdict: freshnessStatus,
         rows,
       },
     },
