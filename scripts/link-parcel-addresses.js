@@ -245,6 +245,17 @@ pipeline.run('link-parcel-addresses', async (pool) => {
         status: 'INFO',
       },
       {
+        // Spec 43 §6.7-A link-rate telemetry: the bridge's headline coverage figure
+        // (parcels with >=1 address point / parcels with geom). Complements the
+        // WARN-gated parcels_with_no_address_pct below with the positive framing that
+        // Spec 43 documents (~511K bridge rows over ~468K linked parcels live). INFO —
+        // the WARN threshold lives on the complement row so the gate isn't double-counted.
+        metric: 'parcel_link_rate_pct',
+        value: parcelsWithGeom > 0 ? `${((parcelsWithLinks / parcelsWithGeom) * 100).toFixed(1)}%` : 'n/a',
+        threshold: null,
+        status: 'INFO',
+      },
+      {
         // Independent IMPL I1 fold: threshold recalibrated from 10% to 50%.
         // PI-2 plan estimate is avg 1.0 ap/parcel — Poisson-like distribution
         // implies ~37% of parcels legitimately have zero address points

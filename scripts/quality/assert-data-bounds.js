@@ -322,13 +322,24 @@ pipeline.run('assert-data-bounds', async (pool) => {
     // Source-scoped checks (sections 5-8)
     // -----------------------------------------------------------------------
     if (runSourceChecks) {
+      // Magnitude floors for the 3 core GIS source tables (WF2 2026-07-07, Spec 43 §6.7-A).
+      // The old `> 0` semantics passed a TRUNCATED quarterly load (e.g. a partial CKAN
+      // extract that wrote 12K parcels) as GREEN. Floors are ~95% of the live counts
+      // (address_points 525K → 500K, parcels 486K → 460K, building_footprints 427K → 400K)
+      // so a catastrophically short load FAILs while ordinary quarter-over-quarter growth
+      // does not. These are CATASTROPHIC-LOAD detectors, mirroring the toronto_centreline
+      // (>= 40000) / ravines (>= 500) / heritage (>= 8000) floors already in this file.
+      const ADDRESS_POINTS_FLOOR = 500000;
+      const PARCELS_FLOOR = 460000;
+      const BUILDING_FOOTPRINTS_FLOOR = 400000;
+
       // 5. address_points
       const apCount = await count(`SELECT COUNT(*) FROM address_points`);
-      if (apCount === 0) {
-        errors.push('address_points table is empty');
-        console.error('  FAIL: address_points table is empty');
+      if (apCount < ADDRESS_POINTS_FLOOR) {
+        errors.push(`address_points has ${apCount} rows (expected >= ${ADDRESS_POINTS_FLOOR})`);
+        console.error(`  FAIL: address_points has ${apCount.toLocaleString()} rows (expected >= ${ADDRESS_POINTS_FLOOR.toLocaleString()})`);
       } else {
-        console.log(`  OK: address_points has ${apCount.toLocaleString()} rows`);
+        console.log(`  OK: address_points has ${apCount.toLocaleString()} rows (>= ${ADDRESS_POINTS_FLOOR.toLocaleString()})`);
       }
 
       const apDupes = await count(
@@ -346,11 +357,11 @@ pipeline.run('assert-data-bounds', async (pool) => {
 
       // 6. parcels
       const parcelCount = await count(`SELECT COUNT(*) FROM parcels`);
-      if (parcelCount === 0) {
-        errors.push('parcels table is empty');
-        console.error('  FAIL: parcels table is empty');
+      if (parcelCount < PARCELS_FLOOR) {
+        errors.push(`parcels has ${parcelCount} rows (expected >= ${PARCELS_FLOOR})`);
+        console.error(`  FAIL: parcels has ${parcelCount.toLocaleString()} rows (expected >= ${PARCELS_FLOOR.toLocaleString()})`);
       } else {
-        console.log(`  OK: parcels has ${parcelCount.toLocaleString()} rows`);
+        console.log(`  OK: parcels has ${parcelCount.toLocaleString()} rows (>= ${PARCELS_FLOOR.toLocaleString()})`);
       }
 
       const parcelDupes = await count(
@@ -378,11 +389,11 @@ pipeline.run('assert-data-bounds', async (pool) => {
 
       // 7. building_footprints
       const bfCount = await count(`SELECT COUNT(*) FROM building_footprints`);
-      if (bfCount === 0) {
-        errors.push('building_footprints table is empty');
-        console.error('  FAIL: building_footprints table is empty');
+      if (bfCount < BUILDING_FOOTPRINTS_FLOOR) {
+        errors.push(`building_footprints has ${bfCount} rows (expected >= ${BUILDING_FOOTPRINTS_FLOOR})`);
+        console.error(`  FAIL: building_footprints has ${bfCount.toLocaleString()} rows (expected >= ${BUILDING_FOOTPRINTS_FLOOR.toLocaleString()})`);
       } else {
-        console.log(`  OK: building_footprints has ${bfCount.toLocaleString()} rows`);
+        console.log(`  OK: building_footprints has ${bfCount.toLocaleString()} rows (>= ${BUILDING_FOOTPRINTS_FLOOR.toLocaleString()})`);
       }
 
       const heightOutliers = await count(
@@ -488,12 +499,16 @@ pipeline.run('assert-data-bounds', async (pool) => {
 
       // Build sources audit_table
       const sourceAuditRows = [
-        { metric: 'address_points_count', value: apCount, threshold: '> 0', status: apCount === 0 ? 'FAIL' : 'PASS' },
+        { metric: 'address_points_count', value: apCount, threshold: `>= ${ADDRESS_POINTS_FLOOR}`, status: apCount < ADDRESS_POINTS_FLOOR ? 'FAIL' : 'PASS' },
         { metric: 'address_point_dupes', value: apDupes, threshold: '== 0', status: apDupes > 0 ? 'FAIL' : 'PASS' },
-        { metric: 'parcels_count', value: parcelCount, threshold: '> 0', status: parcelCount === 0 ? 'FAIL' : 'PASS' },
+        { metric: 'parcels_count', value: parcelCount, threshold: `>= ${PARCELS_FLOOR}`, status: parcelCount < PARCELS_FLOOR ? 'FAIL' : 'PASS' },
         { metric: 'parcel_dupes', value: parcelDupes, threshold: '== 0', status: parcelDupes > 0 ? 'FAIL' : 'PASS' },
+        // parcel_lot_outliers: live count is 1 (a single implausible lot_size that the
+        // enrich/cost pipeline already gates out via LOT_MIN/MAX → no envelope, no cost). This
+        // is a documented residual, kept WARN (honest label) rather than FAIL — a genuine load
+        // corruption would move the core-count floors above, not this single-row outlier. [Spec 43 §6.7-A]
         { metric: 'parcel_lot_outliers', value: lotOutliers, threshold: '== 0', status: lotOutliers > 0 ? 'WARN' : 'PASS' },
-        { metric: 'building_footprints_count', value: bfCount, threshold: '> 0', status: bfCount === 0 ? 'FAIL' : 'PASS' },
+        { metric: 'building_footprints_count', value: bfCount, threshold: `>= ${BUILDING_FOOTPRINTS_FLOOR}`, status: bfCount < BUILDING_FOOTPRINTS_FLOOR ? 'FAIL' : 'PASS' },
         { metric: 'building_height_outliers', value: heightOutliers, threshold: '== 0', status: heightOutliers > 0 ? 'WARN' : 'PASS' },
         { metric: 'neighbourhoods_count', value: nhoodCount, threshold: '>= 158', status: nhoodCount < 158 ? 'FAIL' : 'PASS' },
         { metric: 'neighbourhood_dupes', value: nhoodDupes, threshold: '== 0', status: nhoodDupes > 0 ? 'FAIL' : 'PASS' },

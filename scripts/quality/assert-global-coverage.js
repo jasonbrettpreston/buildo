@@ -515,15 +515,40 @@ pipeline.run('assert-global-coverage', async (pool) => {
         FROM parcels
       `);
       const enriched = parseInt(pp.enriched, 10) || 0;
-      // zoning_class is the ONE health floor (measured ~96.6% live) — gated.
+
+      // Max-build / opt-config coverage is a HEALTH floor, not sparse-by-design — but only on the
+      // parcels the envelope is DEFINED for: residential lots WITH a building (a building-less lot
+      // has no existing-structure basis and is correctly excluded, not a coverage miss). Mirror the
+      // parcel_cost_menu `has_bldg EXISTS` scoping pattern (below): the numerator AND denominator both
+      // filter to residential-with-building, giving a denominator of ~437K (vs ~486K all parcels).
+      // Measured live: 96.2-97.0% on this scoped denominator (vs ~92.5-93.8% over all enriched) →
+      // ~8-9pt headroom over the WARN floor. WARN < 88 / FAIL < 75. [Spec 43 §6.7-A]
+      const { rows: [mbc] } = await pool.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE has_bldg)                                          AS resid_with_bldg,
+          COUNT(*) FILTER (WHERE has_bldg AND max_buildable_footprint_sqm IS NOT NULL) AS mb_footprint_pop,
+          COUNT(*) FILTER (WHERE has_bldg AND max_buildable_gfa_sqm IS NOT NULL)       AS mb_gfa_pop,
+          COUNT(*) FILTER (WHERE has_bldg AND max_build_stories IS NOT NULL)           AS mb_stories_pop,
+          COUNT(*) FILTER (WHERE has_bldg AND opt_aor_gfa_sqm IS NOT NULL)             AS opt_aor_pop
+        FROM (
+          SELECT p.max_buildable_footprint_sqm, p.max_buildable_gfa_sqm, p.max_build_stories, p.opt_aor_gfa_sqm,
+                 EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id) AS has_bldg
+          FROM parcels p
+          WHERE p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%'
+        ) q
+      `);
+      const residWithBldgEnv = parseInt(mbc.resid_with_bldg, 10) || 0;
+
+      // zoning_class is the ONE enrich-wide health floor (measured ~96.6% live) — gated.
       rows.push(calibratedRow('Sources Step — enrich_parcels', 'parcels.zoning_class', parseInt(pp.zoning_class_pop, 10), enriched || null, 90, 85));
+      // Max-build / opt envelope — GATED on the residential-with-building denominator (WARN<88 / FAIL<75).
+      rows.push(calibratedRow('Sources Step — enrich_parcels', 'parcels.max_buildable_footprint_sqm (residential w/ building)', parseInt(mbc.mb_footprint_pop, 10), residWithBldgEnv || null, 88, 75));
+      rows.push(calibratedRow('Sources Step — enrich_parcels', 'parcels.max_buildable_gfa_sqm (residential w/ building)', parseInt(mbc.mb_gfa_pop, 10), residWithBldgEnv || null, 88, 75));
+      rows.push(calibratedRow('Sources Step — enrich_parcels', 'parcels.max_build_stories (residential w/ building)', parseInt(mbc.mb_stories_pop, 10), residWithBldgEnv || null, 88, 75));
+      rows.push(calibratedRow('Sources Step — enrich_parcels', 'parcels.opt_aor_gfa_sqm (residential w/ building)', parseInt(mbc.opt_aor_pop, 10), residWithBldgEnv || null, 88, 75));
       // The rest are sparse-by-design (FSI ~5%, opt/comp partial) → INFO population counts (no gate that would false-FAIL).
       rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.bylaw_max_fsi', parseInt(pp.bylaw_max_fsi_pop, 10)));
-      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.max_buildable_footprint_sqm', parseInt(pp.mb_footprint_pop, 10)));
-      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.max_buildable_gfa_sqm', parseInt(pp.mb_gfa_pop, 10)));
-      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.max_build_stories', parseInt(pp.mb_stories_pop, 10)));
       rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.opt_config_confidence', parseInt(pp.opt_conf_pop, 10)));
-      rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.opt_aor_gfa_sqm', parseInt(pp.opt_aor_pop, 10)));
       rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.opt_coa_gfa_sqm', parseInt(pp.opt_coa_pop, 10)));
       rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.comp_count', parseInt(pp.comp_pop, 10)));
       rows.push(infoRow('Sources Step — enrich_parcels', 'parcels.neighbourhood_id', parseInt(pp.nbhd_pop, 10))); // NULL sentinel on parcels → plain IS NOT NULL (NOT the permits != -1)

@@ -171,6 +171,18 @@ describe('Pipeline Chain Definitions', () => {
     expect(slugs.indexOf('load_ravines')).toBe(slugs.indexOf('parcels') + 1);
     // enrich_ravines runs immediately after link_parcels (needs parcels loaded + linked).
     expect(slugs.indexOf('enrich_ravines')).toBe(slugs.indexOf('link_parcels') + 1);
+    // WF2 2026-07-07 (Spec 43 §6.7-A): both assert_global_coverage AND assert_parcel_sanity
+    // must run AFTER compute_parcel_cost_estimates — they read the FINAL enriched cost/envelope
+    // values (coverage gates the max-build fields; sanity gates the cost invariants). RELATIVE
+    // order (indexOf), NOT adjacency: live positions are 22→23→24 with refresh_snapshot(25)/
+    // assert_data_bounds(26) trailing, so an adjacency +1 pin would red the suite on any benign
+    // insertion. A reorder that moved either assert BEFORE the cost step would silently void it.
+    const costIdx = slugs.indexOf('compute_parcel_cost_estimates');
+    const globalCovIdx = slugs.indexOf('assert_global_coverage');
+    const parcelSanityIdx = slugs.indexOf('assert_parcel_sanity');
+    expect(costIdx).toBeGreaterThanOrEqual(0);
+    expect(globalCovIdx).toBeGreaterThan(costIdx);
+    expect(parcelSanityIdx).toBeGreaterThan(globalCovIdx);
   });
 
   it('coa chain ends with assert_global_coverage; permits chain ends with backup_db', () => {
