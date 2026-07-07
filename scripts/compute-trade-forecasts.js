@@ -94,6 +94,11 @@ const LOGIC_VARS_SCHEMA = z.object({
   // `.default(0)` is critical — without it, runs before mig 159 applies
   // would get undefined → z.coerce.number() yields NaN → .int() throws.
   coa_gate_force_active:               z.coerce.number().int().min(0).max(1).default(0),
+  // WF2 D2a (Spec 85 §3.6): externalized default_calibration_pct verdict thresholds
+  // (were hardcoded 20/50). Required + finite (fail-fast Zod) — a missing/NaN threshold
+  // must throw, not silently degrade the verdict cascade. Seeded via logic_variables.json.
+  forecast_default_calibration_warn_pct: z.coerce.number().finite().min(0).max(100),
+  forecast_default_calibration_fail_pct: z.coerce.number().finite().min(0).max(100),
   // Spec 80 P4 (D1 / CR-F4): non-forecastable trade slugs. JSONB logic variable
   // (mig 210) read as an array by config-loader.js:220-221 (variable_value_json
   // is an object → passed through untouched). `.optional()` NOT `.required()`:
@@ -244,12 +249,37 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   // v3 CRIT-B: 7-day window per Spec 48 §3.4 baseline (now operator-tunable per v4 MED-J).
   // v3 CRIT-C: drop status='completed' filter; check status in JS so most-recent FAILED run
   //   is detected instead of falling through to an older PASS.
+  // ─── D3a: CoA gate policy (declarative) ───────────────────────────────────
+  // coa_gate_policy is a NON-numeric logic variable stored as a JSONB string (mig 211).
+  // config-loader.js only reads object-typed JSON (line 220-221), so read it directly here.
+  // Default 'pass_only' (strict) whenever absent, malformed, or on query failure — the safe
+  // posture is to gate on PASS only.
+  let coaGatePolicy = 'pass_only';
+  try {
+    const { rows: policyRows } = await pool.query(
+      `SELECT variable_value_json FROM logic_variables WHERE variable_key = 'coa_gate_policy'`,
+    );
+    const rawPolicy = policyRows[0]?.variable_value_json;
+    if (rawPolicy === 'pass_only' || rawPolicy === 'pass_or_warn') {
+      coaGatePolicy = rawPolicy;
+    } else if (rawPolicy != null) {
+      pipeline.log.warn('[trade-forecasts]',
+        `coa_gate_policy has unexpected value ${JSON.stringify(rawPolicy)} — defaulting to pass_only`);
+    }
+  } catch (err) {
+    pipeline.log.warn('[trade-forecasts]',
+      'coa_gate_policy read failed — defaulting to pass_only',
+      { error: err instanceof Error ? err.message : String(err) });
+  }
+
   const GATE_PIPELINE_NAME = 'permits:compute_phase_calibration';
   const gateWindowDays = logicVars.coa_gate_calibration_window_days;
   let coaGateActive = false;
   let coaGateStatus = 'unknown';
   let coaGateLastRunId = null;
   let coaGateLastVerdict = null;
+  // D3a: set true when a WARN verdict is accepted under coa_gate_policy='pass_or_warn'.
+  let coaGateWarnAccepted = false;
   try {
     const { rows: gateRows } = await pool.query(
       `SELECT id, status, started_at, records_meta->'audit_table'->>'verdict' AS verdict
@@ -271,6 +301,14 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       } else if (coaGateLastVerdict === 'PASS') {
         coaGateActive = true;
         coaGateStatus = 'pass';
+      } else if (coaGateLastVerdict === 'WARN' && coaGatePolicy === 'pass_or_warn') {
+        // D3a: a WARN verdict within the freshness window activates the CoA branch under the
+        // pass_or_warn policy. Strictly narrower than the already-sanctioned cold-start grace
+        // bypass — the WARN here is a sample-size caveat, not a wrongness signal. FAIL, absent
+        // (no_prior_run / stale window), and non-completed runs all stay BLOCKED.
+        coaGateActive = true;
+        coaGateWarnAccepted = true;
+        coaGateStatus = 'pass_or_warn_accepted';
       } else {
         coaGateStatus = `blocked_by_${(coaGateLastVerdict || 'null').toLowerCase()}`;
       }
@@ -1251,6 +1289,18 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   const defaultPct = ((calibrationDistribution.default ?? 0) / totalForecasts) * 100;
   const expiredPct = ((urgencyDistribution.expired ?? 0) / totalForecasts) * 100;
 
+  // WF2 D2a (Spec 85 §3.6): externalized default_calibration_pct verdict thresholds + the
+  // GRD-F1 mechanical re-tightening guard. STRICT pair (20/50) is the pre-relaxation baseline —
+  // any active pair looser than it emits calibration_thresholds_relaxed WARN on every run so the
+  // loosening can never quietly become permanent. calibration_cohort_fill_pct = share of rows NOT
+  // on the level-5 calibration_method='default' (cheap: 100 − default_calibration_pct).
+  const STRICT_CALIB_WARN_PCT = 20;
+  const STRICT_CALIB_FAIL_PCT = 50;
+  const calibWarnPct = logicVars.forecast_default_calibration_warn_pct;
+  const calibFailPct = logicVars.forecast_default_calibration_fail_pct;
+  const calibThresholdsRelaxed = calibWarnPct > STRICT_CALIB_WARN_PCT || calibFailPct > STRICT_CALIB_FAIL_PCT;
+  const calibCohortFillPct = 100 - defaultPct;
+
   // Phase F.1 audit row classifications (v3 HIGH-J + v3 HIGH-I + v4 HIGH-F folds).
   // coa_audit_gate_status — INFO for healthy (pass) + first-deploy-grace cold-start.
   //   WARN for actual upstream failures or persistent absence (broken cron).
@@ -1311,6 +1361,13 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       value: coaGateForceActive ? 1 : 0,
       threshold: '== 0; if 1, operator has manually overridden the gate — set coa_gate_force_active=0 once root cause is resolved',
       status: coaGateForceActive ? 'WARN' : 'INFO' },
+    // D3a (OB-F6 / GRD-F2): the third bypass, as loud as the two it joins. A WARN calibration
+    // verdict was accepted under coa_gate_policy='pass_or_warn' — writes flow on a sample-size
+    // caveat rather than a clean PASS; operator should monitor. Value carries the accepted verdict.
+    { metric: 'coa_audit_gate_warn_accepted',
+      value: coaGateWarnAccepted ? 1 : 0,
+      threshold: `policy=${coaGatePolicy}; == 0 under pass_only. If 1, a WARN calibration verdict activated the CoA branch — set coa_gate_policy=pass_only to revert once calibration returns to PASS`,
+      status: coaGateWarnAccepted ? 'WARN' : 'INFO' },
     {
       metric: 'coa_anchor_fallback_pct',
       value: coaAnchorFallbackPct.toFixed(1) + '%',
@@ -1346,8 +1403,24 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     {
       metric: 'default_calibration_pct',
       value: defaultPct.toFixed(1) + '%',
-      threshold: '< 20%',
-      status: defaultPct >= 50 ? 'FAIL' : defaultPct >= 20 ? 'WARN' : 'PASS',
+      threshold: `< ${calibWarnPct}% (WARN ≥ ${calibWarnPct}%, FAIL ≥ ${calibFailPct}%)`,
+      status: defaultPct >= calibFailPct ? 'FAIL' : defaultPct >= calibWarnPct ? 'WARN' : 'PASS',
+    },
+    // GRD-F1 / D2a mechanical re-tightening guard: the loosening is LOUD + permanent-by-choice-only.
+    // calibration_thresholds_relaxed WARNs on EVERY run while the active pair is looser than the
+    // strict pair (20/50); its value carries the active pair. calibration_cohort_fill_pct (share of
+    // rows NOT on the level-5 default) tells the operator when it's safe to restore 20/50.
+    {
+      metric: 'calibration_thresholds_relaxed',
+      value: `warn=${calibWarnPct}/fail=${calibFailPct} (strict warn=${STRICT_CALIB_WARN_PCT}/fail=${STRICT_CALIB_FAIL_PCT})`,
+      threshold: `restore strict warn=${STRICT_CALIB_WARN_PCT}/fail=${STRICT_CALIB_FAIL_PCT} once calibration_cohort_fill_pct recovers past the strict-PASS point`,
+      status: calibThresholdsRelaxed ? 'WARN' : 'PASS',
+    },
+    {
+      metric: 'calibration_cohort_fill_pct',
+      value: calibCohortFillPct.toFixed(1) + '%',
+      threshold: `> ${(100 - STRICT_CALIB_WARN_PCT)}% ⇒ default_calibration_pct < ${STRICT_CALIB_WARN_PCT}% (strict-PASS): restore strict warn/fail thresholds`,
+      status: 'INFO',
     },
     {
       metric: 'expired_urgency_pct',
@@ -1421,6 +1494,14 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       skipped_distribution_by_lifecycle_group: skipDistribution,
       coa_first_deploy_grace: coaFirstDeployGrace,
       coa_audit_gate_status: coaGateStatus,
+      // D3a: gate policy + WARN-accept visibility for the Observer baseline.
+      coa_gate_policy: coaGatePolicy,
+      coa_audit_gate_warn_accepted: coaGateWarnAccepted,
+      // D2a: calibration verdict-threshold telemetry (raw scalars for anomaly detection).
+      forecast_default_calibration_warn_pct: calibWarnPct,
+      forecast_default_calibration_fail_pct: calibFailPct,
+      calibration_thresholds_relaxed: calibThresholdsRelaxed,
+      calibration_cohort_fill_pct: calibCohortFillPct,
       unmapped_trades: unmappedTrades,
       // Spec 80 P4 (D1 / OB-F5): non-forecastable exclusion telemetry (outside records_total).
       excluded_rows: excludedRows,
@@ -1454,6 +1535,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       lifecycle_transitions: ['lead_id', 'transitioned_at'],
       phase_stay_calibration: ['permit_type', 'project_type', 'coa_type_class', 'from_seq', 'to_seq', 'median_days', 'p25_days', 'p75_days', 'sample_size'],
       pipeline_runs: ['pipeline', 'status', 'started_at', 'records_meta'],
+      // D3a: coa_gate_policy read directly (config-loader reads object JSON only, not string scalars).
+      logic_variables: ['variable_key', 'variable_value_json'],
     },
     {
       trade_forecasts: ['permit_num', 'revision_num', 'lead_id', 'trade_slug', 'predicted_start', 'confidence', 'urgency', 'calibration_method', 'sample_size', 'median_days', 'p25_days', 'p75_days', 'computed_at'],

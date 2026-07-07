@@ -93,6 +93,34 @@ Upserts rows to `trade_forecasts`. Runs two purge passes in Step 2 (atomic `with
 
 ---
 
+### 3.6 Audit-verdict thresholds & CoA gate policy (WF2 D2a/D3a, 2026-07-06)
+
+The audit `verdict` (PASS/WARN/FAIL) is **advisory** — `run-chain.js` halts only on script crashes, never on a FAIL verdict. Forecast rows are written regardless. These gates drive the dashboard signal, not computation.
+
+**Gate-threshold table** (all thresholds are `logic_variables`, operator-tunable via the Control Panel):
+
+| Audit row | Source | WARN at | FAIL at | Notes |
+|---|---|---|---|---|
+| `default_calibration_pct` | share on `calibration_method='default'` | ≥ `forecast_default_calibration_warn_pct` (70) | ≥ `forecast_default_calibration_fail_pct` (85) | Was HARDCODED 20/50 (D2a externalized it). Relaxed while the post-rebuild calibration corpus is cold (~60% default). |
+| `expired_urgency_pct` | share on `urgency='expired'` | ≥ 30% | ≥ 60% | Values HARDCODED, unchanged by D2a. |
+| `unmapped_trades` | rows on a slug with no `trade_configurations` | > 0 → WARN | — | Acceptance `== 0` after Spec 80 P4 (§1). |
+| `excluded_rows` / `excluded_trade_slugs` | non-forecastable rows (§1) | INFO | — | Outside `records_total`; loud, never silent. |
+| `calibration_thresholds_relaxed` | active vs strict (20/50) pair | WARN whenever looser than strict | — | **GRD-F1 mechanical re-tightening guard** — emitted on EVERY run while relaxed; the loosening is permanent-by-choice-only. Value carries the active pair. |
+| `calibration_cohort_fill_pct` | `100 − default_calibration_pct` | INFO | — | Recovery signal: once it passes the strict-PASS point (> 80% ⇒ default < 20%), restore strict 20/50. |
+
+**CoA audit-verdict gate** (`compute-trade-forecasts.js` §Phase F.1) — the CoA forecast branch is gated on the most-recent permits-chain `compute_phase_calibration` `pipeline_runs` verdict within `coa_gate_calibration_window_days` (7). Policy is declarative via `logic_variables.coa_gate_policy`:
+
+- `pass_only` — only a `PASS` verdict activates the CoA branch (strict; pre-D3a behavior).
+- `pass_or_warn` (live default, D3a) — a `WARN` verdict within the window ALSO activates it. **FAIL, absent (`no_prior_run` / stale window), and non-completed runs stay BLOCKED.** The WARN here is a sample-size caveat, not a wrongness signal — strictly narrower than the already-sanctioned cold-start grace bypass.
+
+Three bypass rows make every non-strict activation as loud as the others (override order is `verdict → grace → force-active`, force last — review-locked):
+
+| Bypass row | Fires when | Status |
+|---|---|---|
+| `coa_audit_gate_warn_accepted` | a WARN verdict activated the branch under `pass_or_warn` | WARN when 1 |
+| `coa_audit_gate_grace_bypass` | cold-start grace (no `pipeline_runs` ≥ 7d old) activated it | WARN when 1 |
+| `coa_audit_gate_force_active` | operator set `coa_gate_force_active=1` | WARN when 1 |
+
 ## 4. Testing Mandate
 
 - **Logic:** `trade-forecasts.logic.test.ts` — Tests the "Rolling Snowplow" math, bimodal target switching, and UTC midnight normalization.

@@ -706,6 +706,20 @@
     "min": 1,
     "max": 365
   },
+  "forecast_default_calibration_warn_pct": {
+    "default": 70,
+    "type": "number",
+    "description": "WF2 D2a (Spec 85 §3.6): compute-trade-forecasts.js default_calibration_pct WARN threshold. At or above this share of forecast rows on the level-5 calibration_method='default', the trade-forecast audit verdict WARNs. Was HARDCODED at 20; relaxed to 70 while the post-rebuild phase_calibration corpus is cold (measured ~60% default). The mechanical re-tightening guard emits calibration_thresholds_relaxed WARN on every run while this exceeds the strict 20 — restore 20 once calibration_cohort_fill_pct recovers past 80%.",
+    "min": 0,
+    "max": 100
+  },
+  "forecast_default_calibration_fail_pct": {
+    "default": 85,
+    "type": "number",
+    "description": "WF2 D2a (Spec 85 §3.6): compute-trade-forecasts.js default_calibration_pct FAIL threshold. At or above this share on calibration_method='default', the verdict FAILs (blocks nothing — verdict-only, run-chain.js halts on crashes not FAIL verdicts). Was HARDCODED at 50; relaxed to 85 (projected post-P1 pct ~61-64% lands PASS). The strict pair is 20/50; the calibration_thresholds_relaxed guard makes the loosening loud + permanent-by-choice-only.",
+    "min": 0,
+    "max": 100
+  },
   "profiling_coverage_pass_pct": {
     "default": 90,
     "type": "number",

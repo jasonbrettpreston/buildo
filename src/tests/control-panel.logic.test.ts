@@ -230,6 +230,10 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'coa_stall_threshold_p2_days',
   'coa_imminent_window_days',
   'coa_stall_threshold_postponed_days',
+  // WF2 Spec 80 P4 / D2a (mig 211 seed) — externalized compute-trade-forecasts.js
+  // default_calibration_pct verdict thresholds (were hardcoded 50/20).
+  'forecast_default_calibration_warn_pct',
+  'forecast_default_calibration_fail_pct',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
