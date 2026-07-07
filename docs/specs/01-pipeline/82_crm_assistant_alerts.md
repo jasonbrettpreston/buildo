@@ -1,7 +1,13 @@
 # 82 CRM Assistant & Alerts
 
-> **Status:** ARCHITECTURE LOCKED — The Communication Layer
+> **Status:** IMPLEMENTED (engine LIVE + chain-wired) — The Communication Layer
+> **KEEP decision (2026-07-07):** After a supersession review against Specs 81 (LOS scoring), 85 (forecast), and 77 (flight board), this spec is **KEPT, not superseded**. It owns push/dedup/archive duties that no other spec covers — see §Relationship to Specs 77 / 81 below.
+> **Implementation state:** `scripts/update-tracked-projects.js` is shipped and wired as a permits-chain step (immediately after `compute_opportunity_scores`; see §2). It writes `tracked_projects`, `lead_analytics`, and `notifications`. The **user-facing tables (`tracked_projects`, `notifications`) are empty in the dev DB only because there are no onboarded users**, not because the engine is inert — the engine runs every chain pass. `trade_configurations` is seeded (35 rows live). **See §Known Failure Modes for the saved-lead dual-table split that mutes notifications for real users.**
 > **Purpose:** Formal specifications for the CRM Assistant, which delivers high-signal logic alerts and monitors tracked projects.
+
+### Relationship to Specs 77 / 81 (why this spec is KEPT)
+- **Spec 81 (LOS scoring) is a downstream CONSUMER, not a replacement.** Spec 81's opportunity-score engine reads the `lead_analytics` aggregation this spec produces (competition penalties): `scripts/compute-opportunity-scores.js:155` (`LEFT JOIN lead_analytics la ON la.lead_key = tf.lead_id` in the main scoring query) and the drift-probe at `:449`/`:463`. If this engine stops populating `lead_analytics`, Spec 81 loses its saturation signal. This is a hard producer→consumer dependency.
+- **Spec 77 (Flight Board) is pull-only and does NOT replace this engine.** The flight board renders current state on demand; it does not own the push-notification delivery, the cross-run dedup memory (`last_notified_urgency` / `last_notified_stalled`), or the auto-archive/disappearance duties. Those live here. Retiring Spec 82 would silently drop push/dedup/archive.
 
 ## 1. Goal & User Story
 
@@ -43,7 +49,7 @@ Maintaining a synchronous state between the project's physical reality and the u
 ### Implementation
 - **Script:** `scripts/update-tracked-projects.js`
 - **Logic:** The script fetches settings from `trade_configurations` at runtime to decide when to notify.
-- **Wired Into:** Permits Chain — final step 24 of 24. Runs after `compute_opportunity_scores` (23) so alerts and lead_analytics UPSERTs see the freshest `opportunity_score` and `urgency` values from this chain. Auto-archives claimed leads where `urgency='expired'` (WF3 2026-04-13).
+- **Wired Into:** Permits Chain — registered as `update_tracked_projects` in `scripts/manifest.json` (`chains.permits`). It runs **immediately after `compute_opportunity_scores`** so alerts and `lead_analytics` UPSERTs see the freshest `opportunity_score` and `urgency` values from this chain. It is **not** the terminal step: three quality/backup steps follow it (`assert_entity_tracing`, `assert_global_coverage`, `backup_db`). As of the live manifest it is position 29 of the 32-step permits chain (verify against `manifest.json`, not a fixed number, before quoting a position). Auto-archives claimed leads where `urgency='expired'` (WF3 2026-04-13).
 
 ---
 
@@ -115,6 +121,18 @@ Mutates `tracked_projects` (status/memory) and `lead_analytics`. Generates an en
 ### Edge Cases
 - **Stall Suppression:** "Imminent" alerts are strictly suppressed if `lifecycle_stalled` is `TRUE`, even if the predicted date is close.
 - **Unmapped Trade:** Defaults to 14-day imminent window if trade is missing from config table.
+
+---
+
+## Known Failure Modes
+
+### KFM-1 — Saved-lead dual-table split mutes ALL push notifications for real users (2026-07-07)
+
+**Mechanism.** The live save API (`src/app/api/leads/save/route.ts`) persists a user's save into **`lead_views.saved = true`** (see also `src/app/api/admin/stats/route.ts:181` counting `lead_views WHERE saved = true`). This alert engine, however, reads its work queue **`FROM tracked_projects`**. **No production code path copies a `lead_views.saved` row into `tracked_projects`.** The trigger-based dual-write shipped in commit `872ec73` (§2 R5.3) mirrors a **DIFFERENT** table pair — `permit_trades → lead_trades` and `permit_parcels → lead_parcels` — for the CoA-parity lead-key derivation. It does nothing for `lead_views → tracked_projects`. So the "dual-write" that the §4 keying note leans on does not bridge the save→track gap.
+
+**Consequence.** For real onboarded users, saving/claiming a lead writes `lead_views.saved` but leaves `tracked_projects` empty, so this engine's work queue is empty → **every STALL / IMMINENT / recovery / CoA push notification is silently muted.** The dev DB masks this because it has zero users (empty on both tables looks the same as "no work").
+
+**Fix.** Queued as a WF3 — see `.cursor/active_task.md` **P9a**. Not fixed in this doc-currency pass. Until then, treat any "0 notifications generated" telemetry as EXPECTED-BROKEN, not healthy.
 
 ---
 
