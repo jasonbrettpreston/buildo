@@ -40,6 +40,23 @@ const pool = new Pool({
     return;
   }
 
+  // P7 precondition hardening [Gemini P9-pass]: a destructive NULL-out with no
+  // rollback path is not acceptable. Back up (id, trade_classified_at) to a
+  // dedicated table BEFORE nulling. Restore is a single documented UPDATE (below).
+  const BACKUP_TABLE = '_backup_coa_trade_classified_20260707';
+  await pool.query(`DROP TABLE IF EXISTS ${BACKUP_TABLE}`);
+  const bkp = await pool.query(
+    `CREATE TABLE ${BACKUP_TABLE} AS
+       SELECT id, trade_classified_at
+       FROM coa_applications
+       WHERE trade_classified_at IS NOT NULL`,
+  );
+  const bkpCount = await pool.query(`SELECT COUNT(*)::int AS n FROM ${BACKUP_TABLE}`);
+  console.log(`[wf2-reset-coa-trade-classification] backed up ${bkpCount.rows[0].n} (id, trade_classified_at) pairs to ${BACKUP_TABLE} (CREATE TABLE AS reported ${bkp.rowCount}).`);
+  console.log(`[wf2-reset-coa-trade-classification] RESTORE (one UPDATE, if the reset must be undone):`);
+  console.log(`    UPDATE coa_applications c SET trade_classified_at = b.trade_classified_at`);
+  console.log(`    FROM ${BACKUP_TABLE} b WHERE b.id = c.id;`);
+
   const res = await pool.query(
     `UPDATE coa_applications SET trade_classified_at = NULL WHERE trade_classified_at IS NOT NULL`,
   );
