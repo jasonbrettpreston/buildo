@@ -97,7 +97,7 @@ Phase 0 architecture discovery (`docs/reports/wf1-spec58-architecture-discovery.
 | **Publisher** | City of Toronto, City Planning Division |
 | **Last refresh** | 2026-02-20 (covers amendments through June 18, 2023) |
 | **Refresh policy** | "As available" — effectively annual; quarterly chain checks via `chain_sources` overfetch with skip-check (§3 step 0a) |
-| **Formats** | Shapefile ZIP, GeoJSON, GeoPackage, CSV — all in **EPSG:4326** |
+| **Formats** | CKAN publishes Shapefile ZIP / GeoJSON / GeoPackage / CSV — all **EPSG:4326** — but the loader acquires via the **CKAN DataStore API layers (`_id` upsert key)**, NOT a Shapefile/GeoJSON ZIP download (see D8). |
 | **Script** | `scripts/load-zoning.js` (NEW — implemented in follow-up WF) |
 | **Lock** | 58 (§A.5) |
 | **Licence** | [Toronto Open Government Licence](https://open.toronto.ca/open-data-license/) |
@@ -213,8 +213,8 @@ Each layer commits independently. The chain sequencing in `chain_sources` (Spec 
 
 **F-C4: ALL queries within a layer MUST use the `client` parameter from `withTransaction`** — never `pool.query`. The temp staging table is created on `client`'s connection and invisible to a different connection.
 
-1. **Download Shapefile ZIP** from CKAN (EPSG:4326). On HTTP error (404/503/truncated) → record `<layer>_fetch_error` audit row + emit `<layer>_fetch_skipped: true`. Base → FAIL+abort whole load (D3). Overlay → WARN+skip layer (D3).
-2. **Schema drift check** via `scripts/lib/zoning-attr-drift.js`: parse shapefile `.dbf`, compare attribute fields against frozen `REQUIRED_ATTR_COLUMNS`. **F-H3: only abort if a REQUIRED column is missing**; unknown extra columns emit `<layer>_attr_drift` WARN but DO NOT abort the layer.
+1. **Paginate the CKAN DataStore API** (`datastore_search` per layer `resourceId`; `_id` upsert key; EPSG:4326 GeoJSON geometry) — NOT a Shapefile ZIP download (D8). On HTTP error (404/503/truncated) → record `<layer>_fetch_error` audit row + emit `<layer>_fetch_skipped: true`. Base → FAIL+abort whole load (D3). Overlay → WARN+skip layer (D3).
+2. **Schema drift check** via `scripts/lib/zoning-attr-drift.js`: compare the DataStore field schema against frozen `REQUIRED_ATTR_COLUMNS`. **F-H3: only abort if a REQUIRED column is missing**; unknown extra columns emit `<layer>_attr_drift` WARN but DO NOT abort the layer.
 3. **Stream-parse polygons.** Validate per row:
    - Polygon layers: `ST_IsValid(geom)`. If invalid → attempt `ST_MakeValid`; if repaired → `<layer>_repaired_polygon_count` (INFO). If still invalid → skip + `<layer>_invalid_polygon_count`.
    - LineString layers (F-M9): `ST_Length(geom) > 0 AND ST_IsSimple(geom)`. Wrap in `ST_Multi`.

@@ -1,6 +1,6 @@
 # Spec 78 — Optimal Lot Configuration
 
-**Status:** Phase 1 implemented (Permit-Data Foundation). Phases 2–4 designed, not built.
+**Status:** Built — Phases 0-3 + 4A + 4D shipped/PUSHED; only forecast/cost reconciliation moved to Spec 88.
 **Domain:** Backend / Pipeline. **Advisory lock / spec number:** 78.
 **Design reports (authoritative for the full epic):**
 `docs/reports/optimal-lot-configuration-implementation-plan.md`,
@@ -29,9 +29,9 @@ real permit/CoA outcomes, not idealized geometry.
 | Phase | Scope | State |
 |------|-------|-------|
 | **1** | **Permit-Data Foundation** — ingest unused CKAN occupancy floor-area columns; build `neighbourhood_build_norms` (realized FSI, build-ratios, old-stock ratio, reno-%, storey norms, CoA approval). | **Built (this spec §Phase-1).** |
-| 2 | Optimal-config engine — per-parcel optimal new-build + accessory + greenspace/solar fit. | Designed. |
-| 3 | Parcel new-fields pass + degrade/retire unreliable existing-structure fields + nearby-builds & comps summary. | Designed. |
-| 4 | Chain validation + forecast/cost reconciliation. | Designed. |
+| 2 | Optimal-config engine — per-parcel optimal new-build + accessory + greenspace/solar fit. | **Built.** |
+| 3 | Parcel new-fields pass + degrade/retire unreliable existing-structure fields + nearby-builds & comps summary. | **Built.** |
+| 4 | Chain validation + forecast/cost reconciliation. | **4A + 4D built (shipped/PUSHED);** forecast/cost reconciliation moved to Spec 88. |
 
 ---
 

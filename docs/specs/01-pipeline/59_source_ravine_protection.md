@@ -18,7 +18,7 @@ All three WFs were built, reviewed (4-reviewer plan + 6-reviewer output each), a
 | #414/#416 | §9 emitMeta reads listed `lead_id` | actual link keys (`parcels:['id','geom']`; permits via permit_parcels, coa via lead_parcels) | `lead_id` isn't read by the §11.1/§11.2 SQL |
 | #417 | §8e F-H7 "verify CoA join table at runtime, fall back" | hardcoded `lead_parcels` (Spec 66 DEC-4) | settled at Spec 66 — lead_parcels (mig 143-144) + permit_parcels are core schema |
 
-Schema as-built: M-1 = migration 167 (`ravines`), M-2 = 168 (`parcels` ravine cols), M-3 = 169 (`permits`/`coa_applications` ravine cols). Advisory locks: load-ravines 59, enrich-ravines 60, enrich-permits ravine step reuses 66 (L19). Spec 49 `assert-global-coverage` ravine rows DONE (#415, `938cf1a`). Open post-deploy items: `enrich_ravines` first-deploy runbook (#412), `enrich_ravines` full-table re-run perf (~77min idempotent — incremental-skip guard candidate, #418), §8f admin-UI (future sibling spec).
+Schema as-built: M-1 = migration 167 (`ravines`), M-2 = 168 (`parcels` ravine cols), M-3 = 169 (`permits`/`coa_applications` ravine cols). Advisory locks: load-ravines 59, enrich-ravines 60, enrich-permits ravine step reuses 66 (L19). Spec 49 `assert-global-coverage` ravine rows DONE (#415, `938cf1a`). Open post-deploy items: `enrich_ravines` first-deploy runbook (#412), `enrich_ravines` full-table re-run perf (~77min idempotent — incremental-skip guard, #418 → shipped `92ee03b`), §8f admin-UI (future sibling spec).
 
 ---
 
@@ -46,7 +46,7 @@ Schema as-built: M-1 = migration 167 (`ravines`), M-2 = 168 (`parcels` ravine co
 | **L15 (NEW v1.2)** | F-C1 empty-set guard runs in the **JS layer**, not in a PL/pgSQL `DO` block. PL/pgSQL DO blocks cannot accept query parameters (`$1`), so the v1.1 SQL would crash at runtime. JS-side guard: `if (loadedSourceIds.length === 0) { delete_skipped_empty_guard = true; } else { client.query('DELETE FROM ravines WHERE source_id <> ALL($1::BIGINT[])', [loadedSourceIds]); }`. *(R2.5 DeepSeek CRIT-2 fold.)* |
 | **L16 (NEW v1.2)** | Geometry validation runs as a **single batched query** using `VALUES + UNNEST`, not 854 individual `SELECT ST_IsValid(...)` calls. Spec 47 §B1 Loop Query Ban applies. The batched query runs ONCE before entering `pipeline.withTransaction`. *(R2.5 DeepSeek HIGH-4 fold.)* |
 | **L17 (NEW v1.2)** | `pipeline.emitMeta` MUST use the two-argument table-keyed-map signature per Spec 47 §8.3: `emitMeta({ tableName: ['col1','col2'] }, { tableName: ['col1','col2'] })`. The v1.1 single-arg flat-string-array form was incorrect and would have left the admin DataFlowTile Live Meta indicator dark. *(R2.5 Independent CRIT-1 fold.)* |
-| **L18 (NEW v1.2)** | Cross-run `records_meta` read pattern for `enrich-ravines.js` consumer protocol: `SELECT records_meta FROM pipeline_runs WHERE pipeline = 'source-ravines' AND status = 'completed' ORDER BY completed_at DESC LIMIT 1`. Specified explicitly so implementation WF does not invent its own pattern. *(R2.5 Independent CRIT-3 fold.)* |
+| **L18 (NEW v1.2)** | Cross-run `records_meta` read pattern for `enrich-ravines.js` consumer protocol: `SELECT records_meta FROM pipeline_runs WHERE pipeline = 'sources:load_ravines' AND status = 'completed' ORDER BY completed_at DESC LIMIT 1`. Specified explicitly so implementation WF does not invent its own pattern. *(R2.5 Independent CRIT-3 fold.)* |
 | **L19 (NEW v1.2)** | `enrich-permits.js` ravine step (§8e) MUST acquire an advisory lock per Spec 47 §5.1. Either the parent enrich-permits.js script's existing lock, or a new lock ID assigned by the implementing WF. Spec 59 mandates the requirement, not the ID. *(R2.5 Gemini HIGH-2 fold: third instance of this finding class — Spec 47 §5.1 is the answer.)* |
 
 Folds dissolved by Phase 0 (carried forward as no-ops): per-layer transactions; staging-table CTE; buffer-distance constants; multi-layer Producer/Consumer keys.
@@ -387,7 +387,7 @@ Write the HEAD response's `Last-Modified`, `ETag`, and the downloaded zip's cont
 
 ---
 
-## 4. Testing Mandate (Spec 47 §6 + §10 compliance)
+## 4. Testing Mandate (Spec 47 §6 + §11 compliance)
 
 ### 4.1 Unit tests (pure functions, no DB / FS) — `src/tests/load-ravines.logic.test.ts`
 
@@ -667,7 +667,7 @@ SELECT records_meta
  LIMIT 1;
 ```
 
-This is the canonical pattern for any consumer reading another script's `records_meta`. If no successful run exists, FAIL with "no prior source-ravines successful run; enrichment cannot proceed without a versioned source dataset."
+This is the canonical pattern for any consumer reading another script's `records_meta`. If no successful run exists, FAIL with "no prior sources:load_ravines successful run; enrichment cannot proceed without a versioned source dataset."
 
 **Validation steps (run in order):**
 
@@ -789,4 +789,4 @@ Geometry-derived is authoritative. If `permits.permit_type = 'RNFP'` ever appear
 
 ---
 
-*End of Spec 59 v1.1.*
+*End of Spec 59 v1.3.*

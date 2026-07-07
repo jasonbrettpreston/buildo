@@ -1,7 +1,7 @@
 # Spec 61 -- Toronto Heritage Properties (Ingest + Link)
 
 **Spec version:** 1.1 (locked per L10)
-**Status:** Authored (WF1 Genesis -- spec-only deliverable; implementation deferred per §8b)
+**Status:** Implemented — §8c `load-heritage.js` (`169f22a`, advisory lock **61**) + §8d `enrich-heritage.js` (`e299d26`, advisory lock **62**) + §8e enrich-permits heritage propagation (`32d94fe`) + #426 register re-key (`78748a3`) + #428 Spec 49 rows (`a8ac7d5`) all SHIPPED. Remaining: §8f admin UI. **The shipped Part IV/V match is CONTAINMENT (`ST_Intersects`), NOT the spec's original `ST_DWithin`+radius — see the §11.1 IMPLEMENTED note + review_followups #424.**
 **Authored:** 2026-05-26 after 3-pass adversarial PLAN review cadence (R1 + R2 + R3) + user-direction Gate 1.5 + Phase 0 architecture discovery + v2 fold; **v1.1 fold:** R3 SPEC review (Gemini + DeepSeek + Independent) -- 4 CRIT + 5 HIGH folded; ~14 MED routed to `review_followups.md`
 **Phase 0 discovery:** `docs/reports/wf1-spec61-architecture-discovery.md`
 
@@ -52,9 +52,9 @@ D18. §8e Spec 58 F-H7 verbatim reference not independently locked (Independent 
 | **L1** | TWO source enums + ONE target enum. Source: `heritage_register.STATUS IN ('Part IV', 'Part V')` + `heritage_districts.HCD_TYPE = 'Designated District'`. Target: `parcels.heritage_designation_type TEXT CHECK IN ('part_iv_individual', 'part_v_hcd')`. Listed + Under Appeal + Under Study rows filtered OUT at JS load. |
 | **L2** | `heritage_designation_date DATE` -- unconditionally populated from `heritage_register.DESIGNATED` or `heritage_districts.HCD_DESDAT`. Sentinel `1899-11-30` mapped to NULL. |
 | **L3** | Point-in-time MVP semantics; `source_dataset_version` UI display mandated. |
-| **L4** | `load-heritage.js` advisory lock = **62** (verified §A.5). |
-| **L4b** | `enrich-heritage.js` advisory lock = **63** (verified §A.5). |
-| **L4c** | `enrich-permits.js` advisory lock = **64** (provisional; future implementation WF owns the script). |
+| **L4** | `load-heritage.js` advisory lock = **61** (SHIPPED: lock = spec number, mirroring load-ravines=59 / load-zoning=58. The spec's original **62** was superseded at implementation — DEC-A in `load-heritage.js:33`). |
+| **L4b** | `enrich-heritage.js` advisory lock = **62** (SHIPPED: sibling of load-heritage=61. The spec's original **63** was superseded — DEC-A in `enrich-heritage.js:26`). |
+| **L4c** | `enrich-permits.js` heritage step advisory lock = **64** (the enrich-permits script's own lock; shipped §8e propagation). |
 | **L5** | Geometry-derived `is_heritage_designated` is authoritative. Disagreement with future `permit_type='Heritage'` -> WARN audit row; the boolean is ALWAYS derived from geometry. Rationale (user 2026-05-26): "designations rarely change." |
 | **L6** | Sibling script `enrich-heritage.js` (NOT shared `enrich-parcels.js`). 3rd parcels-writer after Spec 58 zoning + Spec 59 ravine. |
 | **L7/L7b/L7c** | Three drift signals -- count-delta / geometry-update / mass-deletion -- 50% threshold + override flag per Spec 59. |
@@ -63,7 +63,7 @@ D18. §8e Spec 58 F-H7 verbatim reference not independently locked (Independent 
 | **L10** | `spec_version: 1.1` lock (bumped from 1.0 in R3 SPEC fold; consumer protocol pins on 1.1). |
 | **L11** | Cross-WF serialization: SEPARATE migration files per spec; `IS DISTINCT FROM` UPDATE guards; slug-based Spec 43 chain step placement. |
 | **L12** | Heritage = boolean (`is_heritage_designated`). Multi-parcel propagation: `bool_or(par.is_heritage_designated)`. For `heritage_designation_type`: deterministic precedence via per-type bool_or CASE expression -- Part IV wins over Part V HCD. Applies symmetrically to BOTH permits AND coa_applications. |
-| **L13** | **TWO-table schema** (per Phase 0 P0-1): `heritage_properties` (12,320 Points from Heritage Register; Part IV + Part V member-of-HCD points) + `heritage_districts` (32 Polygons from HCDs). §11 LATERAL SQL split into two branches: Part V via `ST_Intersects(parcels.geom, heritage_districts.geom)`; Part IV via `ST_DWithin + Levenshtein` on `heritage_properties WHERE status='part_iv'`. |
+| **L13** | **TWO-table schema** (per Phase 0 P0-1): `heritage_properties` (Points from Heritage Register; Part IV + Part V member-of-HCD points) + `heritage_districts` (**29 designated HCD Polygons live**; the spec's original "32" was pre-load estimate). §11 SQL split into two branches — SHIPPED as containment: Part V via `ST_Intersects(parcels.geom, heritage_districts.geom)`; **Part IV also via `ST_Intersects(parcels.geom, heritage_properties.geom)`** — the parcel that CONTAINS the point (NOT the spec's original `ST_DWithin`+Levenshtein, which over-matched 4×; levenshtein is now only a tiebreak when a parcel contains >1 Part IV point). See §11.1 IMPLEMENTED note + review_followups #424. |
 | **L14** | Empty-source guard on load: zero-feature first-run = FAIL; zero-feature subsequent-run = WARN (F-C1 preserves prior table). |
 | **L15** | F-C1 empty-set DELETE guard in JS layer (NOT PL/pgSQL DO) per Spec 59. |
 | **L16** | Batched VALUES+UNNEST geometry validation per Spec 59 (Spec 47 §B1 Loop Query Ban compliance). |
@@ -96,8 +96,8 @@ D18. §8e Spec 58 F-H7 verbatim reference not independently locked (Independent 
 | WF1 = Spec 61 (this spec) -- spec-only; no code                   |
 +-------------------------------------------------------------------+
 
-+- Future WF (§8c) ------------------------------------------------+
-| load-heritage.js (Spec 47 skeleton; advisory lock 62)             |
++- SHIPPED (§8c, 169f22a) -----------------------------------------+
+| load-heritage.js (advisory lock 61 — shipped; spec's 62 stale)    |
 |   - Loads heritage_register (12,320 Points; Part IV + Part V)     |
 |   - Loads heritage_districts (32 Polygon/MultiPolygon)            |
 |   - Filters Listed + Under Appeal/Study at JS load time           |
@@ -109,8 +109,8 @@ D18. §8e Spec 58 F-H7 verbatim reference not independently locked (Independent 
 | chain_sources edit: load_heritage AFTER load_parcels              |
 +--------------------------------------------------------------------+
 
-+- Future WF (§8d) ------------------------------------------------+
-| enrich-heritage.js (Spec 47 skeleton; advisory lock 63)           |
++- SHIPPED (§8d, e299d26) -----------------------------------------+
+| enrich-heritage.js (advisory lock 62 — shipped; spec's 63 stale)  |
 |   - L23 empty-source guard at startup                             |
 |   - Single UPDATE per §11 (LATERAL LIMIT 1 with tie-break)        |
 | migration M-2 (separate from Spec 58 zoning + Spec 59 ravine)     |
@@ -118,7 +118,7 @@ D18. §8e Spec 58 F-H7 verbatim reference not independently locked (Independent 
 | chain_sources edit: enrich_heritage AFTER link_parcels            |
 +--------------------------------------------------------------------+
 
-+- Future WF (§8e) ------------------------------------------------+
++- SHIPPED (§8e, 32d94fe) -----------------------------------------+
 | enrich-permits.js heritage step (advisory lock 64)                 |
 |   - Self-contained applyHeritageEnrichment(client, RUN_AT) fn     |
 |   - L24 information_schema startup check                          |
@@ -239,8 +239,8 @@ const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs } = require('./lib/config-loader');
 const { z } = require('zod');
 
-const ADVISORY_LOCK_ID = 62;   // L4
-const SPEC_VERSION = '1.0';    // L10
+const ADVISORY_LOCK_ID = 61;   // L4 (SHIPPED: lock = spec number; spec's original 62 superseded)
+const SPEC_VERSION = '1.1';    // L10 (shipped as 1.1; consumer protocol pins on 1.1)
 
 const ConfigSchema = z.object({
   heritageSkipCheckThresholdYears:        z.number().default(2),    // L9
@@ -309,6 +309,25 @@ Single round-trip per phase using `VALUES + UNNEST` (Spec 59 §3.5 pattern). For
 ### 3.6 Step 3 -- Feature-count drift (L7) + mass-deletion drift (L7c) + geometry-update drift (L7b)
 
 All three drift signals per Spec 59 pattern. Override flag `HERITAGE_ACCEPT_FEATURE_COUNT_DRIFT=1` + `HERITAGE_ACCEPT_MASS_DELETE=1`.
+
+#### 3.6.1 Register re-key DEPLOY RUNBOOK (one-time, #426)
+
+The Heritage Register source_id re-key (#426, shipped `78748a3`) is a natural-key change on
+`heritage_properties`. On the deploy that re-keys the register, the loader's mass-deletion drift
+guard WILL trip (nearly every row is deleted-and-reinserted under the new key), so it must be run
+with the accept flag AND a manual backup:
+
+```
+# 1. Back up heritage_properties BEFORE the re-key load (the drift guard's DELETE is not rolled back)
+pg_dump -h <host> -U <user> -d buildo -t heritage_properties \
+  > backups/heritage_properties_pre_rekey_$(date +%Y%m%d).sql
+
+# 2. Run the load with the mass-delete override (one-time — do NOT leave it set)
+HERITAGE_ACCEPT_MASS_DELETE=1 node scripts/run-chain.js sources   # or the standalone load-heritage step
+```
+
+This is a one-time operation for the re-key deploy only; the flag must NOT be left in the standing
+cron env (it would suppress a genuine catastrophic-delete signal on future quarterly loads).
 
 ### 3.7 Step 4 -- Batched direct INSERT (L26)
 
@@ -481,15 +500,15 @@ See §1 ASCII diagram.
 
 **Zero code deliverables.** Spec only.
 
-### 8c -- Future WF: `load-heritage.js` + M-1 + chain edit
+### 8c -- SHIPPED (`169f22a`): `load-heritage.js` (lock 61) + M-1 + chain edit
 
 Detailed step-by-step recipe in **§12.1 + §12.3 + §12.4** below.
 
-### 8d -- Future WF: `enrich-heritage.js` + M-2 + chain edit
+### 8d -- SHIPPED (`e299d26`): `enrich-heritage.js` (lock 62) + M-2 + chain edit
 
-Detailed recipe in **§12.2 + §12.3 + §12.4**.
+Detailed recipe in **§12.2 + §12.3 + §12.4**. **Implemented with CONTAINMENT (`ST_Intersects`) for both Part IV and Part V — see §11.1 IMPLEMENTED note.**
 
-### 8e -- Future WF: `enrich-permits.js` heritage step + M-3
+### 8e -- SHIPPED (`32d94fe`): `enrich-permits.js` heritage step + M-3
 
 **CoA JOIN path (Spec 58 F-H7 verbatim):**
 > WF MUST verify CoA-to-parcel join table exists. If `lead_parcels` mirror active (Spec 42 mig 143-144), use it. Otherwise `permit_parcels` via `linked_permit_num`. Both missing -> FAIL.
@@ -514,7 +533,12 @@ Out of pipeline scope. New spec under `02-web-admin/`. Surfaces: `is_heritage_de
 
 ---
 
-## 9. Producer/Consumer Contract (frozen at spec_version 1.0)
+## 9. Producer/Consumer Contract (frozen at spec_version 1.1)
+
+> **IMPLEMENTED — producer/consumer slug names:** the spec's `'source-heritage'` slug shipped as the
+> chain-scoped **`sources:load_heritage`** (producer, recorded in `pipeline_runs.pipeline`) and
+> **`sources:enrich_heritage`** (the §8d consumer), per `enrich-heritage.js:27-28` (DEC-C). Read
+> every `'source-heritage'` literal below as its chain-scoped `sources:load_heritage` equivalent.
 
 ### `pipeline.emitSummary` (Spec 47 §R10 + §11.1)
 
@@ -640,11 +664,11 @@ pipeline.emitMeta(
 [permits.is_heritage_designated + heritage_designation_type + heritage_designation_date]
        v   written by enrich-permits.js heritage step (advisory lock 64)
        v   propagated per L12 (bool_or + Part IV-wins precedence + symmetric to coa_applications)
-[parcels.is_heritage_designated + heritage_designation_type + heritage_designation_date]
-       v   written by enrich-heritage.js (advisory lock 63)
-       v   computed per §11 LATERAL: Part V via ST_Intersects(heritage_districts); Part IV via ST_DWithin+Levenshtein(heritage_properties WHERE status='part_iv')
+[parcels.is_heritage_designated + heritage_designation_type + heritage_designation_date + heritage_dataset_version_when_enriched]
+       v   written by enrich-heritage.js (advisory lock 62 — shipped)
+       v   computed per §11 CONTAINMENT: Part V via ST_Intersects(parcel, heritage_districts); Part IV via ST_Intersects(parcel, heritage_properties WHERE status='part_iv') — the parcel that CONTAINS the point; levenshtein tiebreak only
 [heritage_properties row + heritage_districts row]
-       v   written by load-heritage.js (advisory lock 62)
+       v   written by load-heritage.js (advisory lock 61 — shipped)
        v   source_id == CKAN Folder_Row (Heritage Register, #426) or HCD_NO (HCDs)
 [Heritage Register CKAN dataset + HCDs CKAN dataset]
        v   regulated by
@@ -658,6 +682,18 @@ pipeline.emitMeta(
 ## 11. Linking Contract
 
 ### 11.1 Parcel-level enrichment SQL (L13 two-table; tie-break protocol; L12 Part IV precedence)
+
+> **IMPLEMENTED (supersedes the design SQL below) — CONTAINMENT, not radius (review_followups #424, `e299d26`):**
+> The shipped `enrich-heritage.js` matches **Part IV by `ST_Intersects(parcel.geom, heritage_point.geom)`** — the
+> parcel that physically CONTAINS the register point — NOT `ST_DWithin(50m)` + Levenshtein. The radius match
+> over-matched ~4× (tagged ~4 neighbouring parcels per point: 6,217 parcels vs 1,549 source points), so containment
+> is used for precision. `levenshtein` survives only as a **tiebreak** when a single parcel contains >1 Part IV point.
+> Consequence: ~10% of Part IV points fall outside any parcel and are legitimately unmatched, surfaced as the
+> `heritage_points_no_parcel_match` audit row (thresholds calibrated **0.15 WARN / 0.30 FAIL** above that ~10%
+> containment baseline). `heritage_point_match_radius_m` is therefore **NOT consumed** by the shipped code (dead
+> config — see §12.3a note). `enrich-heritage.js` also stamps `parcels.heritage_dataset_version_when_enriched`
+> (`register|hcd` source_dataset_version pair) as lineage. The design SQL below is retained for the original
+> tie-break rationale; the `ST_DWithin`+`levenshtein <= $2` Part IV predicate is the ONLY part superseded.
 
 ```sql
 -- enrich-heritage.js UPDATE; runs after L23 empty-source guard passes.
@@ -715,7 +751,7 @@ Notes:
 - Part IV path: address-fuzzy + spatial-proximity ONLY against `status='part_iv'` rows.
 - L23 startup guard ensures both tables are non-empty before this query runs.
 - L11 IS DISTINCT FROM guard prevents phantom updates on re-runs.
-- `$1` = `heritage_point_match_radius_m` (default 50); `$2` = `heritage_address_levenshtein_threshold` (default 2).
+- **IMPLEMENTED:** the shipped Part IV predicate is `ST_Intersects` containment, so it takes only ONE parameter — `$1` = `heritage_address_levenshtein_threshold` (default 2, tiebreak-only). `heritage_point_match_radius_m` is a RETIRED/dead config (the original `$1` radius param) — not consumed by `enrich-heritage.js`.
 
 ### 11.2 Permit / CoA propagation (L12 + symmetric)
 
@@ -865,6 +901,7 @@ DROP FUNCTION IF EXISTS normalize_address(TEXT);
 ```json
 {
   "heritage_point_match_radius_m":           50,
+  "_note_radius_retired":                     "DEAD CONFIG — the shipped enrich-heritage.js uses ST_Intersects containment for Part IV (review_followups #424); this radius is NOT consumed. Retained only for historical/rollback reference.",
   "heritage_address_levenshtein_threshold":  2,
   "heritage_accept_feature_count_drift_pct": 0.50,
   "heritage_invalid_geometry_fail_pct":      0.05,

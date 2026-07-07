@@ -58,7 +58,7 @@ As a spatial data dependency, this script ingests 3D building footprint volumes 
 2. Parse shapefile features, convert to GeoJSON
 3. Calculate centroids for each footprint
 4. Batch upsert with parameter flush threshold (30K params)
-5. After load, automatically triggers `link-massing.js`
+5. `link-massing.js` runs as the next manifest chain step in the `sources` chain (a chain-step, not an auto-trigger fired from within the loader)
 
 ### Edge Cases
 - Shapefile URL changes → `assert_schema` (Tier 1) checks URL accessibility

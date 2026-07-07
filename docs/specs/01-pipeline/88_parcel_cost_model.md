@@ -1,6 +1,6 @@
 # Spec 88 — Parcel Renovation Cost Model
 
-**Status:** ACTIVE (P1 in build, 2026-06-30). Design-of-record: `docs/reports/wf1-parcel-renovation-cost-model.md`.
+**Status:** ACTIVE (P1 shipped / DB-populated — committed `8a3a364` + pushed + dev DB populated, 2026-06-30). Design-of-record: `docs/reports/wf1-parcel-renovation-cost-model.md`.
 **Domain:** Backend/Pipeline. **Advisory lock:** 117 (owning-spec lock 88 is taken by classify-permits.js — predates the spec-number convention; 117 assigned from the post-Wave-7 free range per the compute-phase-calibration precedent). The audit `phase` still carries the spec number 88.
 
 ## 1. Goal & User Story

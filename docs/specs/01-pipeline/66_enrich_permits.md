@@ -69,7 +69,7 @@ Reads `parcels` zoning columns (migration 165). **Precondition:** HALT if `COUNT
 **permits mode:**
 | metric | threshold | status |
 |---|---|---|
-| `permits_zoning_class_coverage_pct` (construction; `NULLIF`-guarded) | PASS ≥83 / WARN 80–83 / **FAIL <80** (`_contracts.json` `permits_zoning_class_coverage_fail`) | **hard gate** (live 84.2%) |
+| `permits_zoning_class_coverage_pct` (construction; `NULLIF`-guarded) | PASS ≥83 / WARN 80–83 / **FAIL <80** (`_contracts.json` `permits_zoning_class_coverage_fail`) | **hard gate** (live 83.3%) |
 | `permits_construction_count_zero` | n/a | INFO (only if denominator 0 → gate value NULL, no FAIL) |
 | `permits_no_parcel_link_count` | n/a | INFO (live 13,759) |
 | `permits_unlink_cleared_count` | n/a | INFO (leads reset because they lost all parcel links; live 0) |
@@ -78,7 +78,7 @@ Reads `parcels` zoning columns (migration 165). **Precondition:** HALT if `COUNT
 | `bylaw_max_{fsi,coverage_pct,height_m}_null_pct` | n/a | INFO (sparse-by-design) |
 | `enrich_permits_duration_ms` | n/a; WARN if > 2× prior | INFO |
 
-**coa mode:** `coa_zoning_class_coverage_pct` (all CoA; FAIL <80, live 84.4%) + the analogously-named INFO rows: `coa_no_parcel_link_count`, `coa_unlink_cleared_count`, `coa_enriched_count`, `coa_multi_parcel_count`, `coa_heterogeneous_assembly_count`, `coa_bylaw_max_{fsi,coverage_pct,height_m}_null_pct`, `enrich_coa_zoning_duration_ms`. (Zero-denominator guard: `coa_row_count_zero`, not a "construction" variant.)
+**coa mode:** `coa_zoning_class_coverage_pct` (all CoA; FAIL <80, live 86.5%) + the analogously-named INFO rows: `coa_no_parcel_link_count`, `coa_unlink_cleared_count`, `coa_enriched_count`, `coa_multi_parcel_count`, `coa_heterogeneous_assembly_count`, `coa_bylaw_max_{fsi,coverage_pct,height_m}_null_pct`, `enrich_coa_zoning_duration_ms`. (Zero-denominator guard: `coa_row_count_zero`, not a "construction" variant.)
 
 **Verdict cascade (Spec 47 §8.2):** `rows.some(r=>r.status==='FAIL')?'FAIL':rows.some(r=>r.status==='WARN')?'WARN':'PASS'` — row-derived, never a parallel boolean. **Counters (§11):** `records_total/_new = null`; `records_updated` = the mode's primary entity (permits OR coa).
 

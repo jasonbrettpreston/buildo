@@ -1,7 +1,7 @@
 # Spec 62 — Toronto Centreline (Streets) (Ingest + Link)
 
 **Spec version:** 1.1 (R3 SPEC fold applied; L10 lock re-baselined)
-**Status:** Authored (WF1 Genesis — spec-only deliverable; implementation deferred per §8b)
+**Status:** Implemented — §8c load + §8d enrich + §8e propagate-to-permits/coa all shipped (2026-06).
 **Authored:** 2026-05-26 after Phase-0-FIRST architecture discovery + 3-pass adversarial PLAN review cadence (R1 + R2 + R3 over Gemini + DeepSeek + Independent reviewers; 75 findings folded). Folded again 2026-05-26 after R3 SPEC review on v1.0 authored body: 5 CRIT + 7 HIGH applied; 1 CRIT (NOT NULL DEFAULT false — cross-spec architectural) + 2 HIGH (centroid-as-frontage proxy, file-ownership coupling) + 8 MED routed to `docs/reports/review_followups.md`.
 **Phase 0 discovery:** `docs/reports/wf1-spec62-architecture-discovery.md`
 
@@ -35,9 +35,9 @@
 | **L1** | THREE derived columns on `parcels`: `is_corner_lot BOOLEAN NOT NULL DEFAULT false` + `is_through_lot BOOLEAN NOT NULL DEFAULT false` + `primary_frontage_street_name TEXT` (nullable; "address-side only" semantic). Permits + CoA propagate same 3 columns via lead_id join (L12) |
 | **L2** | `toronto_centreline` table — 18-column schema with `linear_name` (base) AND `linear_name_full` (with suffix); TEXT-typed address-range columns (handles "10A", "12 1/2" suffixes). **Mandatory `CREATE INDEX toronto_centreline_geom_gist ON toronto_centreline USING GIST (geom)`** — required for §11 ST_Intersects on 486K parcels × 47K segments |
 | **L3** | Point-in-time MVP semantics; `source_dataset_version` UI display |
-| **L4** | `load-centreline.js` advisory lock = **65** (§5.2 exception; see §A.5 footnote for rationale — natural ID 62 pre-occupied by Spec 61) |
-| **L4b** | `enrich-centreline.js` advisory lock = **66** (§5.2 exception; see §A.5 footnote) |
-| **L4c** | `enrich-permits.js` centreline step inherits parent lock = **64** (per Spec 61 L4c, no new lock for in-script step) |
+| **L4** | `load-centreline.js` advisory lock = **63** (§5.2 exception; see §A.5 footnote — natural ID 62 pre-occupied by Spec 61's enrich-heritage; the original 65 guess collided with enrich-parcels, so the next free gap 63 is used. **Corrected 2026-06-23 from 65 to match canonical Spec 47 §A.5 registry + live code.**) |
+| **L4b** | `enrich-centreline.js` advisory lock = **64** (§5.2 exception; see §A.5 footnote — sibling of load=63; the original 66 guess collided with enrich-permits. **Corrected 2026-06-23 from 66 to match canonical Spec 47 §A.5 registry + live code.**) |
+| **L4c** | `enrich-permits.js` centreline step inherits parent lock = **66** (per Spec 61 L4c, no new lock for in-script step — `enrich-permits.js`'s own lock is 66. **Corrected 2026-06-23 from 64.**) |
 | **L5** | Geometry-derived `is_corner_lot` + `is_through_lot` + `primary_frontage_street_name` are authoritative |
 | **L6** | Sibling script `enrich-centreline.js` (NOT shared `enrich-parcels.js`); **4th parcels-writer** after Spec 58/59/61 |
 | **L7/L7b/L7c** | Three drift signals (count-delta / geometry-update / mass-deletion); 50% threshold + override flag pattern per Spec 59 |
@@ -52,8 +52,8 @@
 | **L16** | Batched VALUES+UNNEST geometry validation per Spec 47 §B1; 5,000-row chunks |
 | **L17** | `pipeline.emitMeta` two-argument table-keyed-map signature per Spec 47 §8.3 (all 3 scripts: load, enrich, permits-propagate) |
 | **L18** | Cross-run `records_meta` read pattern for enrich consumer per Spec 61 L18 |
-| **L19** | `enrich-permits.js` centreline step = self-contained `applyCentrelineEnrichment(client, RUN_AT)` function inside parent lock 64 |
-| **L20** | §A.5 registry update is explicit §5 + §12 deliverable; footnote-based §5.2 exception documentation below lock-65/66 entries (canonical home) |
+| **L19** | `enrich-permits.js` centreline step = self-contained `applyCentrelineEnrichment(client, RUN_AT)` function inside parent lock 66 |
+| **L20** | §A.5 registry update is explicit §5 + §12 deliverable; footnote-based §5.2 exception documentation below lock-63/64 entries (canonical home) |
 | **L21** | Unlinked-parcels audit row `parcels_with_zero_centreline_intersections`; thresholds in `logic_variables.json` (NOT §3.7 ledger-writer spike — spatial enrichment uses 7-day post-deploy convergence pattern) |
 | **L22** | Chain step ordering: `chain_sources` inserts `load_centreline` AFTER `load_parcels`; `enrich_centreline` AFTER `enrich_heritage` |
 | **L23** | `enrich-centreline.js` empty-source guard: (a) prior successful run; (b) `records_meta.centreline_load.features_inserted > 0`; (c) `SELECT COUNT(*) FROM toronto_centreline > 0` |
@@ -88,8 +88,8 @@ so admin permit/CoA detail panels display this context for lead-context awarenes
 | WF1 = Spec 62 (this spec) -- spec-only; no code                   |
 +-------------------------------------------------------------------+
 
-+- Future WF (§8c) ------------------------------------------------+
-| load-centreline.js (Spec 47 R1-R12 skeleton; advisory lock 65)    |
++- Implemented (§8c) ----------------------------------------------+
+| load-centreline.js (Spec 47 R1-R12 skeleton; advisory lock 63)    |
 |   - Downloads + parses 117 MB zip (64K LineStrings)               |
 |   - JS-side L25 filter: 12 street-class + jurisdictions; UNKNOWN  |
 |     -> sentinel; FEDERAL excluded                                 |
@@ -104,8 +104,8 @@ so admin permit/CoA detail panels display this context for lead-context awarenes
 | Spec 43 chain edit: load_centreline AFTER load_parcels slug       |
 +--------------------------------------------------------------------+
 
-+- Future WF (§8d) ------------------------------------------------+
-| enrich-centreline.js (Spec 47 R1-R12 skeleton; advisory lock 66)  |
++- Implemented (§8d) ----------------------------------------------+
+| enrich-centreline.js (Spec 47 R1-R12 skeleton; advisory lock 64)  |
 |   - L23 empty-source guard at startup (3-tier)                    |
 |   - Single UPDATE per §11 (8-CTE chain; ~5-15 min on 486K parcels)|
 | Migration M-2 (separate from Spec 58/59/61):                      |
@@ -114,8 +114,8 @@ so admin permit/CoA detail panels display this context for lead-context awarenes
 | Spec 43 chain edit: enrich_centreline AFTER enrich_heritage slug  |
 +--------------------------------------------------------------------+
 
-+- Future WF (§8e) ------------------------------------------------+
-| enrich-permits.js centreline step (advisory lock 64 inherits)     |
++- Implemented (§8e) ----------------------------------------------+
+| enrich-permits.js centreline step (advisory lock 66 inherits)     |
 |   - Self-contained applyCentrelineEnrichment(client, RUN_AT) fn   |
 |   - L24 information_schema startup check                          |
 |   - L12 multi-parcel propagation: bool_or + permit-level NOT      |
@@ -220,8 +220,8 @@ const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs } = require('./lib/config-loader');
 const { z } = require('zod');
 
-const ADVISORY_LOCK_ID = 65;   // L4 — §5.2 exception per §A.5 footnote
-const SPEC_VERSION = '1.0';    // L10
+const ADVISORY_LOCK_ID = 63;   // L4 — §5.2 exception per §A.5 footnote
+const SPEC_VERSION = '1.1';    // L10
 
 const ConfigSchema = z.object({
   centrelineSkipCheckThresholdDays:          z.number().default(7),      // L9
@@ -359,7 +359,7 @@ Single `pipeline.emitSummary` call at the END of the successful path (per Spec 4
 | All features dropped by L25 filter | L8 threshold fires; abort before transaction |
 | F-C1: temp empty on first run | FAIL with `f_c1_empty_temp_guard_fired` audit row |
 | F-C1: temp empty on subsequent run | WARN + preserve target (L15 dual-mode) |
-| Concurrent run attempt | Advisory lock 65 blocks |
+| Concurrent run attempt | Advisory lock 63 blocks |
 | `parcels.geom` SRID mismatch | runtime assertion `Find_SRID('public','parcels','geom') = 4326`; FAIL if false |
 | `toronto_centreline` table empty at enrich time | L23 enrich-side guard FAILs (3-tier check) |
 
@@ -430,8 +430,8 @@ Data represents a point-in-time snapshot per `source_dataset_version`. Daily-pub
 
 ### Target Files (future implementation WFs)
 
-- `scripts/load-centreline.js` (NEW; Spec 47 R1-R12 skeleton; advisory lock 65)
-- `scripts/enrich-centreline.js` (NEW; sibling per L6; advisory lock 66)
+- `scripts/load-centreline.js` (NEW; Spec 47 R1-R12 skeleton; advisory lock 63)
+- `scripts/enrich-centreline.js` (NEW; sibling per L6; advisory lock 64)
 - `scripts/enrich-permits.js` (extended per L28; Spec 61 creates the file; Spec 62 appends `applyCentrelineEnrichment` function)
 - `migrations/NNN_create_toronto_centreline.sql` (M-1: table + GIST index + `normalize_address_number()` + `address_match_status()`)
 - `migrations/NNN_parcels_centreline_columns.sql` (M-2; SEPARATE from Spec 58/59/61 per L11)
@@ -440,8 +440,8 @@ Data represents a point-in-time snapshot per `source_dataset_version`. Daily-pub
 - `scripts/lib/safe-math.js` (existing per Spec 47 §16 B5)
 - `docs/specs/01-pipeline/43_chain_sources.md` (edit: `load_centreline` AFTER `load_parcels`; `enrich_centreline` AFTER `enrich_heritage`)
 - `docs/specs/01-pipeline/41_chain_permits.md` + `docs/specs/01-pipeline/42_chain_coa.md` (edits for centreline propagation step)
-- `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §A.5 (lock registry: add 65 + 66 + footnote per §5.2 exception).
-- **`src/tests/pipeline-advisory-lock.infra.test.ts` (MANDATORY EDIT per F-S1 — R3 SPEC Independent CRIT-1, confidence 97):** add `'scripts/load-centreline.js': 65` AND `'scripts/enrich-centreline.js': 66` to the **hardcoded `LOCK_ID_REGISTRY` TypeScript constant**. The earlier "H-v1.3.8 safety check" wording assumed a regex-based parser of §A.5; that assumption is FACTUALLY WRONG — the test does NOT parse §A.5 at all. It uses an explicit `LOCK_ID_REGISTRY` constant and the test at line ~200 (`'registry covers every JS script in the manifest'`) WILL FAIL after `manifest.json` adds the two new scripts UNTIL `LOCK_ID_REGISTRY` is updated in the test file. This is a CI-failure-at-implementation bug; the implementing WF MUST edit this file in the same diff that adds the two scripts to `manifest.json`.
+- `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §A.5 (lock registry: add 63 + 64 + footnote per §5.2 exception).
+- **`src/tests/pipeline-advisory-lock.infra.test.ts` (MANDATORY EDIT per F-S1 — R3 SPEC Independent CRIT-1, confidence 97):** add `'scripts/load-centreline.js': 63` AND `'scripts/enrich-centreline.js': 64` to the **hardcoded `LOCK_ID_REGISTRY` TypeScript constant**. The earlier "H-v1.3.8 safety check" wording assumed a regex-based parser of §A.5; that assumption is FACTUALLY WRONG — the test does NOT parse §A.5 at all. It uses an explicit `LOCK_ID_REGISTRY` constant and the test at line ~200 (`'registry covers every JS script in the manifest'`) WILL FAIL after `manifest.json` adds the two new scripts UNTIL `LOCK_ID_REGISTRY` is updated in the test file. This is a CI-failure-at-implementation bug; the implementing WF MUST edit this file in the same diff that adds the two scripts to `manifest.json`.
 - `scripts/quality/assert-schema.js` (centreline CKAN URL + 40-column attribute schema check)
 - `scripts/quality/assert-data-bounds.js` (`toronto_centreline >= centreline_min_feature_count` lower bound; threshold from `logic_variables.json`)
 - `scripts/quality/assert-entity-tracing.js` (centreline_* fields to coverage grid)
@@ -464,7 +464,7 @@ Data represents a point-in-time snapshot per `source_dataset_version`. Daily-pub
 | Spec | Dependency |
 |---|---|
 | Spec 43 | Chain orchestration; slug-based step placement; manifest array conventions |
-| Spec 47 | §R1-R12 + §5.1 lock + §5.2 spec-number convention (§A.5 footnote exception for 65/66) + §6.4 IS DISTINCT FROM + §6.6 PostGIS pre-validation + §8.1/§8.2 audit cascade + §8.3 emitMeta + §A.5 lock registry + §B1 Loop Query Ban + §16 B5 safe-math |
+| Spec 47 | §R1-R12 + §5.1 lock + §5.2 spec-number convention (§A.5 footnote exception for 63/64) + §6.4 IS DISTINCT FROM + §6.6 PostGIS pre-validation + §8.1/§8.2 audit cascade + §8.3 emitMeta + §A.5 lock registry + §B1 Loop Query Ban + §16 B5 safe-math |
 | Spec 48 | §3.6 dual-pattern (§3.7 spike NOT applicable per L21) |
 | Spec 58 | Pattern model — staging-CTE precedent for >2K features; reuse `geometry-validator.js` |
 | Spec 59 | Pattern model — JS-side F-C1 guard precedent (L15 inherited verbatim) |
@@ -482,7 +482,7 @@ Toronto Open Data Licence v1.0 — attribution required. Citation: "Contains inf
 
 ## 7. Discovery report cross-reference
 
-Phase 0 report at `docs/reports/wf1-spec62-architecture-discovery.md`. Resolved all 12 Q0.x questions (Q0.1-Q0.12). Key findings: 64,433 LineString features (~47K post-filter); EPSG:4326 native; CENTRELINE_ID stable upsert key; daily refresh cadence; bundled 40-column data dictionary; lock IDs 65/66 verified unassigned.
+Phase 0 report at `docs/reports/wf1-spec62-architecture-discovery.md`. Resolved all 12 Q0.x questions (Q0.1-Q0.12). Key findings: 64,433 LineString features (~47K post-filter); EPSG:4326 native; CENTRELINE_ID stable upsert key; daily refresh cadence; bundled 40-column data dictionary; lock IDs 63/64 (the original 65/66 discovery-time guess later collided with enrich-parcels/enrich-permits — re-derived per Spec 47 §A.5).
 
 ---
 
@@ -496,15 +496,15 @@ See §1 diagram.
 
 **Zero code deliverables.** Spec only.
 
-### 8c — Future WF: `load-centreline.js` + M-1 + chain edit
+### 8c — Implemented: `load-centreline.js` + M-1 + chain edit
 
 Detailed step-by-step recipe in **§12.1 + §12.3 + §12.4**.
 
-### 8d — Future WF: `enrich-centreline.js` + M-2 + chain edit
+### 8d — Implemented: `enrich-centreline.js` + M-2 + chain edit
 
 Detailed recipe in **§12.2 + §12.3 + §12.4**.
 
-### 8e — Future WF: `enrich-permits.js` centreline step + M-3
+### 8e — Implemented: `enrich-permits.js` centreline step + M-3
 
 **CoA JOIN path (per Spec 58 F-H7 + Spec 61 §8e verbatim):**
 > WF implementing §8e MUST verify which CoA-to-parcel join table exists in current schema BEFORE committing to a JOIN plan. If `lead_parcels` mirror is still active (Spec 42 mig 143-144), use it. Otherwise `permit_parcels` via `linked_permit_num`. Both missing → FAIL.
@@ -527,7 +527,7 @@ Out of pipeline scope. Surfaces `is_corner_lot` + `is_through_lot` + `primary_fr
 
 ---
 
-## 9. Producer/Consumer Contract (frozen at spec_version 1.0)
+## 9. Producer/Consumer Contract (frozen at spec_version 1.1)
 
 ### `pipeline.emitSummary` (Spec 47 §R10)
 
@@ -641,7 +641,7 @@ This frozen block enables `enrich-permits.js` L24 startup check (b) to verify th
 ### Consumer read protocol (`enrich-centreline.js` — L14 + L23)
 
 1. `SELECT records_meta FROM pipeline_runs WHERE pipeline='source-centreline' AND status='completed' ORDER BY completed_at DESC LIMIT 1` — FAIL if no prior run
-2. `records_meta.centreline_load.spec_version` — FAIL if != "1.0"
+2. `records_meta.centreline_load.spec_version` — FAIL if != "1.1"
 3. `records_meta.centreline_load.features_inserted > 0` — FAIL if zero (no rows ingested means no data to enrich against)
 4. `SELECT COUNT(*) FROM toronto_centreline > 0` — FAIL (data inconsistency from external truncation)
 5. Read `source_dataset_version` and propagate into parcels for traceback
@@ -654,13 +654,13 @@ This frozen block enables `enrich-permits.js` L24 startup check (b) to verify th
 [Admin UI permit detail]                       shows "Corner Lot: Yes; Frontage: Daisy Ave; source v2026-05-25"
        ↓
 [permits.is_corner_lot + is_through_lot + primary_frontage_street_name]
-       ↓   written by enrich-permits.js centreline step (lock 64 inherits)
+       ↓   written by enrich-permits.js centreline step (lock 66 inherits)
        ↓   propagated per L12: bool_or for booleans; permit-level NOT; smallest par.id tie-break
 [parcels.is_corner_lot + is_through_lot + primary_frontage_street_name]
-       ↓   written by enrich-centreline.js (lock 66)
+       ↓   written by enrich-centreline.js (lock 64)
        ↓   computed per §11 8-CTE chain (cross-product side + cosine parallel + NULL-safe nodes + base-name compare)
 [toronto_centreline row]
-       ↓   written by load-centreline.js (lock 65)
+       ↓   written by load-centreline.js (lock 63)
        ↓   source_id == CKAN CENTRELINE_ID
 [CKAN toronto-centreline-tcl dataset]
        ↓   maintained by
@@ -1019,7 +1019,7 @@ Geometry-derived is authoritative. No declared override (no `permit_type='Corner
 
 ### §12.1 `load-centreline.js` guidance
 
-- Spec 47 R1-R12 skeleton; `ADVISORY_LOCK_ID = 65`; slug = `source-centreline`
+- Spec 47 R1-R12 skeleton; `ADVISORY_LOCK_ID = 63`; slug = `source-centreline`
 - Zod config schema with 7 keys (per §12.3a)
 - **F-S9:** wrap config validation in `validateConfig(logicVars)` calling `safeParse` per Spec 47 §4.2 (NOT raw `ConfigSchema.parse()`)
 - HEAD skip-check per §3.2 (7-day threshold; HEAD-fail proceeds; ETag + content-hash fallback)
@@ -1035,7 +1035,7 @@ Geometry-derived is authoritative. No declared override (no `permit_type='Corner
 
 ### §12.2 `enrich-centreline.js` guidance
 
-- Spec 47 R1-R12 skeleton; `ADVISORY_LOCK_ID = 66`
+- Spec 47 R1-R12 skeleton; `ADVISORY_LOCK_ID = 64`
 - L23 3-tier startup guard
 - Single UPDATE per §11 (9-CTE chain after F-S7 added `parcel_segments_capped`)
 - IS DISTINCT FROM guard on UPDATE WHERE (per L11)
@@ -1141,8 +1141,8 @@ DROP FUNCTION IF EXISTS normalize_address_number(TEXT);
 - **`chain_coa` (Spec 42):** symmetric for CoA
 - **`manifest.json`:** 3 chain arrays updated with `source-centreline` + `enrich-centreline` slugs
 - **Spec 47 §A.5 registry update (per F-S1 corrected text):**
-  - Add 2 table rows: lock 65 (`load-centreline.js`) + lock 66 (`enrich-centreline.js`)
-  - **Footnote immediately below the rows:** "Spec 62 uses lock IDs 65 + 66 instead of natural §5.2 ID 62 because Spec 61 pre-occupied 62/63. Per §5.2 exception protocol, next-available gap (65/66) is used. The `pipeline-advisory-lock.infra.test.ts` `LOCK_ID_REGISTRY` hardcoded constant MUST also be updated with the same two entries — see §5 Target Files (this is NOT optional; the registry-coverage test will fail without this edit)."
+  - Add 2 table rows: lock 63 (`load-centreline.js`) + lock 64 (`enrich-centreline.js`)
+  - **Footnote immediately below the rows:** "Spec 62 uses lock IDs 63 + 64 instead of natural §5.2 ID 62 because 62 is occupied by enrich-heritage and the original 65/66 guess collides with enrich-parcels/enrich-permits. Per §5.2 next-free-gap exception, 63/64 are used. The `pipeline-advisory-lock.infra.test.ts` `LOCK_ID_REGISTRY` hardcoded constant MUST also be updated with the same two entries — see §5 Target Files (this is NOT optional; the registry-coverage test will fail without this edit)."
 
 ### §12.5 Quality script edits
 
