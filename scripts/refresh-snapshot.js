@@ -344,6 +344,57 @@ pipeline.run('refresh-snapshot', async (pool) => {
     pipeline.log.warn(TAG, `Cost estimates query failed — zeroes: ${err.message}`);
   }
 
+  // ── CoA cost coverage + servable-CoA funnel (WF2 P5, 2026-07-06) ──────────
+  // INFO-only audit rows (they inform, they don't gate the traffic light yet).
+  // coa_cost_coverage_pct = priced CoAs (cost_source='archetype_parcel') / total.
+  // Servable funnel: total → geo+non-terminal(C1-C3) → +cost → +fresh-forecast
+  // → +score. Row-derived, Spec-48 conformant. Baseline: 33,280→3,200→1,585→1,421.
+  let coaFunnel = {
+    total: 0, open: 0, cost: 0, forecast: 0, score: 0,
+    corpus_cov_pct: null, open_cov_pct: null,
+  };
+  try {
+    const funnelRes = await pool.query(
+      `WITH base AS (
+         SELECT ca.lead_id,
+           (ca.lifecycle_group IN ('C1','C2','C3')
+             AND ((ca.latitude IS NOT NULL AND ca.longitude IS NOT NULL)
+                  OR EXISTS(SELECT 1 FROM lead_parcels lp WHERE lp.lead_id = ca.lead_id))) AS is_open,
+           (ca.cost_source = 'archetype_parcel') AS has_cost
+         FROM coa_applications ca
+       )
+       SELECT
+         (SELECT COUNT(*) FROM coa_applications) AS s0_total,
+         COUNT(*) FILTER (WHERE is_open) AS s1_open,
+         COUNT(*) FILTER (WHERE is_open AND has_cost) AS s2_cost,
+         COUNT(*) FILTER (WHERE is_open AND has_cost AND EXISTS(
+           SELECT 1 FROM trade_forecasts tf WHERE tf.lead_id = base.lead_id
+             AND (tf.urgency IS NULL OR tf.urgency <> 'expired'))) AS s3_forecast,
+         COUNT(*) FILTER (WHERE is_open AND has_cost AND EXISTS(
+           SELECT 1 FROM trade_forecasts tf WHERE tf.lead_id = base.lead_id
+             AND tf.opportunity_score IS NOT NULL)) AS s4_score,
+         COUNT(*) FILTER (WHERE has_cost) AS priced_total
+       FROM base`,
+    );
+    const fr = funnelRes.rows[0];
+    const total = safeParsePositiveInt(fr.s0_total, 's0_total');
+    const open = safeParsePositiveInt(fr.s1_open, 's1_open');
+    const cost = safeParsePositiveInt(fr.s2_cost, 's2_cost');
+    const priced = safeParsePositiveInt(fr.priced_total, 'priced_total');
+    coaFunnel = {
+      total,
+      open,
+      cost,
+      forecast: safeParsePositiveInt(fr.s3_forecast, 's3_forecast'),
+      score: safeParsePositiveInt(fr.s4_score, 's4_score'),
+      corpus_cov_pct: total > 0 ? Math.round((1000 * priced) / total) / 10 : null,
+      open_cov_pct: open > 0 ? Math.round((1000 * cost) / open) / 10 : null,
+    };
+    pipeline.log.info(TAG, `CoA cost coverage: corpus ${coaFunnel.corpus_cov_pct}% (${priced}/${total}), open ${coaFunnel.open_cov_pct}% (${cost}/${open}); servable funnel ${total}→${open}→${cost}→${coaFunnel.forecast}→${coaFunnel.score}`);
+  } catch (err) {
+    pipeline.log.warn(TAG, `CoA cost-coverage/funnel query failed — zeroes: ${err.message}`);
+  }
+
   // V1 timing_calibration dropped (migration 106). Columns preserved in
   // data_quality_snapshots for historical continuity — written as NULL.
   const timingCal = { total: null, avg_sample: null, freshness_hours: null };
@@ -503,11 +554,19 @@ pipeline.run('refresh-snapshot', async (pool) => {
         rows: [
           { metric: 'snapshots_created', value: isNew, threshold: null, status: 'INFO' },
           { metric: 'snapshots_updated', value: isUpdate, threshold: null, status: 'INFO' },
+          // CoA cost coverage + servable-CoA funnel (WF2 P5) — INFO (inform, don't gate yet).
+          { metric: 'coa_cost_coverage_pct', value: coaFunnel.corpus_cov_pct, threshold: null, status: 'INFO' },
+          { metric: 'coa_cost_coverage_open_pct', value: coaFunnel.open_cov_pct, threshold: null, status: 'INFO' },
+          { metric: 'servable_coa_funnel_total', value: coaFunnel.total, threshold: null, status: 'INFO' },
+          { metric: 'servable_coa_funnel_geo_open', value: coaFunnel.open, threshold: null, status: 'INFO' },
+          { metric: 'servable_coa_funnel_cost', value: coaFunnel.cost, threshold: null, status: 'INFO' },
+          { metric: 'servable_coa_funnel_fresh_forecast', value: coaFunnel.forecast, threshold: null, status: 'INFO' },
+          { metric: 'servable_coa_funnel_score', value: coaFunnel.score, threshold: null, status: 'INFO' },
         ],
       },
     },
   });
-  pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"], "permit_inspections": ["*"], "cost_estimates": ["cost_source", "estimated_cost"] }, { "data_quality_snapshots": ["*"] });
+  pipeline.emitMeta({ "permits": ["*"], "permit_trades": ["*"], "entities": ["*"], "permit_parcels": ["*"], "coa_applications": ["*"], "sync_runs": ["*"], "building_footprints": ["*"], "parcel_buildings": ["*"], "permit_inspections": ["*"], "cost_estimates": ["cost_source", "estimated_cost"], "lead_parcels": ["lead_id"], "trade_forecasts": ["lead_id", "urgency", "opportunity_score"] }, { "data_quality_snapshots": ["*"] });
   }); // withAdvisoryLock
 
   if (!lockResult.acquired) return;
