@@ -46,7 +46,10 @@ async function updateBatch(client, keys) {
   const params = [];
   let p = 1;
   for (const k of keys) {
-    valuesPlaceholders.push(`($${p++}::text, $${p++}::int)`);
+    // revision_num is varchar in permits — cast to text, NOT int (a ::int cast
+    // makes k.revision_num int and `p.revision_num = k.revision_num` becomes
+    // varchar = int → 42883 no-operator error).
+    valuesPlaceholders.push(`($${p++}::text, $${p++}::text)`);
     params.push(k.permit_num, k.revision_num);
   }
   const sql = `
