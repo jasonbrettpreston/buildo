@@ -320,6 +320,31 @@ No explicit SIGTERM handler is needed or should be installed. Installing one wou
 
 **Do NOT add `process.on('SIGTERM', ...)` to new pipeline scripts.** The `compute-cost-estimates.infra.test.ts` adoption test asserts its absence.
 
+### 5.6 Skip-not-serialize semantics — the shared-step-across-chains hazard
+
+`pipeline.withAdvisoryLock` uses `pg_try_advisory_xact_lock` (`pipeline.js` ~L844), which
+returns **immediately**: `acquired = true` → run; `acquired = false` → **SKIP** (emit a SKIP
+summary and return). It does **not** block, queue, or serialize — a contended lock is a
+silent no-op, not a wait.
+
+For same-script contention (§5.1) this is the desired behavior: a manual re-trigger during
+the nightly run simply skips. But the same mechanism creates a subtler hazard **across
+chains**. Several steps are shared by more than one chain — `classify_lifecycle_phase`,
+`compute_phase_calibration`, and `refresh_snapshot` run in **both** the `permits` and `coa`
+chains — and they contend on the **same** `ADVISORY_LOCK_ID`. If the two chains overlap in
+wall-clock time, the second chain's shared step finds the lock held, **silently skips its
+work**, emits a SKIP summary, and the chain **continues green** having dropped that step. No
+error, no FAIL — the operator sees a healthy run that quietly did less than it should have.
+
+**Mitigation — serialize, never stagger.** `local-cron.js` runs the `coa` and `permits`
+chains as **one serialized weekday job** (`coa` first, `permits` only after `coa`
+completes), *not* two staggered cron hours. A stagger where the first chain overruns its
+window would let the second chain's shared steps hit held locks and silently drop them.
+Serialization eliminates the overlap class entirely. Any new chain that reuses a step from
+an existing chain MUST be scheduled in the same serialized job, or given its own lock ID if
+the two invocations are genuinely independent. (Chain-order lock:
+`src/tests/chain.logic.test.ts`.)
+
 ---
 
 ## 6. Data Access Patterns
@@ -954,6 +979,32 @@ Checklist before adding enum value 'new_value' to urgency:
 [ ] update-tracked-projects.js   — does it handle 'new_value'?
 [ ] any frontend component consuming urgency via API?
 ```
+
+### 10.4 Chain-scoped pipeline names — cross-step `pipeline_runs` lookups
+
+`run-chain.js` writes each step's `pipeline_runs.pipeline` value as the **chain-scoped**
+name `${chainId}:${slug}` — e.g. `permits:compute_phase_calibration`, not the bare
+`compute_phase_calibration` (`run-chain.js` L253 / L284 / L321). The chain-level row itself
+is `chain_${chainId}`. The same script slug therefore produces **different** `pipeline_runs`
+keys depending on which chain invoked it.
+
+Any script that reads a **prior step's run** from `pipeline_runs` (a freshness/verdict gate)
+MUST query the fully-scoped name, and MUST name the **producing** chain's prefix explicitly:
+
+- `compute-trade-forecasts.js` L275 hardcodes `GATE_PIPELINE_NAME = 'permits:compute_phase_calibration'`.
+  The CoA forecast branch gates on the **permits-scoped** calibration run specifically,
+  because `compute_phase_calibration` only runs in the `permits` chain — even when the
+  forecast script itself is executing inside the `coa` chain. This cross-chain read is
+  intentional: calibration is a permits-chain product consumed by both chains.
+- Same pattern: `compute-opportunity-scores.js` L118 (`pipeline = 'permits:compute_opportunity_scores'`),
+  `update-tracked-projects.js` L203, `close-stale-permits.js` L52 (`pipeline IN ('permits:permits', 'permits')` — tolerates the legacy bare name).
+
+**Contract implication:** these are **string-keyed** reads with no FK. Renaming a chain id
+or a step slug silently breaks every cross-step gate that hardcodes the old
+`${chainId}:${slug}` value — the gate resolves `no_prior_run` and fails closed (or, worse,
+opens) with no error. Before renaming a chain or slug, grep `scripts/` for the literal
+`'{chain}:{slug}'` string and update every consumer. Declare the scoped name in the
+producer's spec `## Producer / Consumer Contracts` (§10.1) so the dependency is discoverable.
 
 ---
 
