@@ -1,6 +1,6 @@
 # 84 Lifecycle Phase Engine — The "Strangler Fig" Classifier
 
-> **Status:** ARCHITECTURE LOCKED — Version 2 State Machine Implemented (April 2026).
+> **Status:** ARCHITECTURE LOCKED — Version 2 State Machine Implemented (April 2026). CoA classifier rebuilt in Phases **E.1–E.5** (2026-05-14): E.1 removed the `linked_permit_num` Rule-0 short-circuit (the 84-W12 root cause) and rewrote `classifyCoaPhase` to the 9-rule status+decision precedence; E.2 wired the full Universal-Stream substrate (11 columns/row, 0.6% → 100% CoA `lifecycle_seq`); E.4/E.5 added per-seq band assertion + per-kind WARN→FAIL posture flags. **WF2 P3 (2026-07-07):** traced the standing "live-status NULL permits" gap to *dirty-queue drain lag* (not a defect — see §8.10) and added the `live_status_null_count` / `never_classified_count` audit breakouts.
 > **Purpose:** To provide a unified, chronological status for every construction project by merging Committee of Adjustment (CoA) data, building permits, and physical inspection results.
 
 ## 1. Goal & User Story
@@ -20,7 +20,7 @@ The engine mutates core tables and populates a historical transition ledger.
 #### `permits` & `coa_applications` (Core Fields)
 | Column | Type | Description |
 |---|---|---|
-| `lifecycle_phase` | VARCHAR | The current stage (P1-P20, INTAKE_P3, O1-O3). |
+| `lifecycle_phase` | VARCHAR | The current stage. Valid values: `P1`–`P20` (with `P7a/P7b/P7c/P7d` and no `P0`), `O1`/`O2`/`O3`, or `NULL` (dead/terminal-adverse + unmapped statuses). **Note:** `INTAKE_P3` is the *name of a status-SET* (`INTAKE_P3_SET`), not a phase value — the phase it emits is the literal `'P3'`. `O4` was removed (WF3-04 / 84-W10 — phantom phase with no classifier rule); the classifier never writes it and it is absent from `VALID_PHASES`. |
 | `lifecycle_stalled` | BOOLEAN | `TRUE` if no activity detected within threshold. |
 | `phase_started_at` | TIMESTAMPTZ | The immutable anchor for countdown math. |
 | `lifecycle_classified_at` | TIMESTAMPTZ | Watermark for incremental processing. |
@@ -63,11 +63,13 @@ Universal status-change ledger (migration 127, extended by migration 160). Captu
 
 ### Implementation
 - **Script:** `scripts/classify-lifecycle-phase.js`
-- **Logic Library:** `scripts/lib/lifecycle-phase.js` (Pure function `classifyLifecyclePhase`)
-- **Pipeline Wiring:**
-  - **Permits Chain:** Step 21 of 24. Runs after `assert_engine_health` and before the marketplace tail.
-  - **CoA Chain:** Step 10 of 10. No forecasts run on pre-permit CoA data.
-  - Holds `pg_try_advisory_lock(85)` on a dedicated `pool.connect()` client to prevent concurrent runs.
+- **Logic Library:** `scripts/lib/lifecycle-phase.js` — two pure classifiers:
+  - `classifyLifecyclePhase(input)` — permit-side (18-rule precedence, rules 0–15).
+  - `classifyCoaPhase(input)` — CoA-side (9-rule status+decision precedence, Phase E.1). The script consumes the full substrate (not the deprecated `classifyCoaPhaseLegacy`) and writes 11 columns/row via `mapToUniversalStream`.
+- **Pipeline Wiring** (positions verified against `scripts/manifest.json` `chains` 2026-07-07):
+  - **Permits Chain:** step **24 of 32** (`classify_lifecycle_phase`). Runs after `assert_engine_health`, immediately before `assert_lifecycle_phase_distribution` → `compute_phase_calibration` → the forecast/score marketplace tail.
+  - **CoA Chain:** step **13 of 16**. Followed by `assert_lifecycle_phase_distribution` → `compute_phase_calibration` → `assert_global_coverage`.
+  - Holds a transaction-level advisory lock `ADVISORY_LOCK_ID = 84` (= spec number) via `pipeline.withAdvisoryLock` (`classify-lifecycle-phase.js:588`). **Historical note:** was briefly `85` (migration number) — corrected to `84` because `85` collided with `compute-trade-forecasts.js` (spec 85), mutually blocking the two scripts on concurrent runs.
   - **CoA Stall Detection:** Consumes `logic_variables.coa_stall_threshold` (seeded 30 days) to flag `lifecycle_stalled = TRUE`.
 
 ---
@@ -192,7 +194,7 @@ Defined in code but absent from live data: `Tenant Notice Period` (DEAD), `Exten
 
 Source field: `coa_applications.decision` (CoA portal feed). Read by `classifyCoaPhase()` in `scripts/lib/lifecycle-phase.js`. Normalized via `normalizeCoaDecision()`: lowercase + TRIM + collapse internal whitespace → matched against frozen `NORMALIZED_APPROVED_DECISIONS` and `NORMALIZED_DEAD_DECISIONS` sets.
 
-**Caveat:** every value below is overridden to `null` if the row has `linked_permit_num IS NOT NULL` (99.4% of CoAs are linked — this is the dominant cause of NULL `lifecycle_phase` per bug 84-W12).
+**Caveat (SUPERSEDED — pre-E.1 history only):** ~~every value below is overridden to `null` if the row has `linked_permit_num IS NOT NULL` (99.4% of CoAs are linked — this is the dominant cause of NULL `lifecycle_phase` per bug 84-W12).~~ **This is FALSE post-E.1.** Phase E.1 (2026-05-14, commit `7003683`) **removed Rule 0** — the `linked_permit_num` short-circuit — entirely; `classifyCoaPhase()` now classifies ALL CoA rows regardless of link state (see §2.5.f row 4, which documents the removal). `linked_permit_num` is retained only for lead-identity continuity, not classification. Post-E.1 CoA `lifecycle_phase` non-NULL coverage is 100% (verified 2026-07-07: active + all CoAs both 33,280/33,280).
 
 | # | Decision | Rows | Current code maps to | Notes |
 |---|---|---|---|---|
@@ -1191,6 +1193,16 @@ The 110-row per-seq distribution map ships in `records_meta.seq_distribution` (N
 
 **`linked_permit_num` post-E.1:** E.1 removed Rule 0; `classifyCoaPhase()` now writes `lifecycle_seq` (and `lifecycle_phase`) to ALL CoA rows regardless of `linked_permit_num`. The new `seq_unclassified_count` gate correctly does NOT filter on `linked_permit_num IS NULL`. The legacy phase-keyed `unclassified_count` DELIBERATELY KEEPS the filter for legacy-shape baseline continuity (Spec 48 §3.4 7-day historical baseline preservation during the Strangler Fig transition window).
 
+**Permit `lifecycle_seq` is NULL-by-design (the seq axis is CoA-only today).** The Universal-Stream `seq` (1–110) is derived ONLY on the CoA side: `classify-lifecycle-phase.js` sets `lifecycle_seq = null` for every permit row (`classify-lifecycle-phase.js:1155`) — the permit classifier emits a P-code phase but no seq (the catalog seq lookup runs against `'coa.status'` source rows only). Consequently the assert's per-seq aggregate UNION ALL is fed almost entirely by CoA rows, and the permit corpus contributes to the phase-keyed bands, not the seq-keyed bands. This is intentional, not a coverage gap — do NOT "fix" it by fabricating permit seqs.
+
+**Reading the standing E.4 seq-band WARN.** Because per-seq bands are WARN-only until E.5 promotion (per-kind flags all default 0), the assert step's verdict frequently sits at **WARN** in steady state — driven by `seq_bands_warn` and/or `seq_unclassified_count`, NOT by any correctness defect. That WARN is the *posture*, not a regression. It is compounded by the permit-`lifecycle_seq`-NULL-by-design fact above (permit rows count toward `seq_unclassified_count` unless dead/empty-status filtered). Operators should read the `[E.4 WARN-ONLY POSTURE]`-prefixed warnings and the per-kind posture audit rows before treating a WARN as actionable.
+
+**WF2 P3 drain-lag breakout counters (2026-07-07).** Two additive breakouts of the FAIL-gated `unclassified_count` make the *phase*-side NULL population legible in the same way the seq bands make the seq side legible:
+- `live_status_null_count` — `lifecycle_phase IS NULL` + non-dead status + `matched_rule IS NULL` (the never-classified-through-the-rule-path slice; `matched_rule IS NULL` structurally excludes dead-status rows, which carry `matched_rule = 2`). PASS/WARN above `logic_variables.lifecycle_live_status_null_warn_count` (seed 50).
+- `never_classified_count` — `lifecycle_classified_at IS NULL` over all permits (rows the classifier has never touched). INFO→WARN above the same threshold.
+
+Both are *drain-lag* signals: a WARN means rows were loaded or status-flipped since the last classify run and are queued in the dirty set, not that anything is misclassified. They clear on the next in-chain `classify_lifecycle_phase` run. See §8.10 and `docs/reports/pipeline-validation/2026-07-07-lifecycle-null-trace.md`.
+
 **Phase E.5 per-kind posture-flag mechanism (DELIVERED 2026-05-16 commit `0d90571`):** band recalibration operational gate via **3 per-kind integer logic_variables** (mig 150) that allow operators to independently promote each violation kind from WARN routing (E.4 default) to FAIL routing:
 
 - `lifecycle_seq_band_promote_to_fail_band_violation` — gates `band_violation` kind (data shifted within configured band). The canonical regression-detection gate; promote first after pre-promotion checklist passes.
@@ -1588,10 +1600,13 @@ This is the migration backlog. Each item is a delta between what §2.5.h prescri
 - No `lifecycle_group`, `lifecycle_block`, `lifecycle_stage` columns — only `lifecycle_phase`.
 
 **E. Unresolved known bugs (§6):**
-- **84-W11 — phase-code ID collision:** P3/P4/P5 used for both CoA and Permit, colliding. Spec calls for `INTAKE_P3` prefix style — partially shipped (`INTAKE_P3` exists) but P4/P5 still ambiguous.
-- **84-W12 — CoA classifier silent no-op:** 99.4% NULL. Root cause: `coa_applications.status` column never read; only `decision` is consumed and only via a narrow approved/dead frozen-set check.
+> **RESOLVED (E.1/E.2 2026-05-14) — annotation added 2026-07-07.** The §A/§E items below describing the CoA classifier as broken are stale. Phase E.1 rewrote `classifyCoaPhase()` to the 9-rule status+decision precedence (now READS `coa_applications.status`) and removed the `linked_permit_num` Rule-0 short-circuit; Phase E.2 wired the substrate. CoA `lifecycle_phase` non-NULL coverage is 100% (verified 2026-07-07). Left in place as investigation history — do not treat as an open backlog.
+- **84-W11 — phase-code ID collision:** P3/P4/P5 used for both CoA and Permit, colliding. Spec calls for `INTAKE_P3` prefix style — partially shipped (`INTAKE_P3` exists) but P4/P5 still ambiguous. *(Note: `INTAKE_P3` is a status-SET name, not a distinct phase value — see §2 enum note.)*
+- **84-W12 — CoA classifier silent no-op:** 99.4% NULL. Root cause: `coa_applications.status` column never read; only `decision` is consumed and only via a narrow approved/dead frozen-set check. **→ RESOLVED E.1/E.2 2026-05-14 (see banner above).**
 
 ### 8.5 — Independent Review Findings: Universal Stream (Investigation 5)
+
+> **RESOLVED (E.1/E.2 2026-05-14) — annotation added 2026-07-07.** The Universal Stream substrate reviewed here (110-row catalog, seq 1–110, group/block/stage, per-row `bid_value`) was SHIPPED in Phase E.2: `universal_stream_catalog` seeded (mig 128/129), `classify-lifecycle-phase.js` writes `lifecycle_seq/group/block/stage/bid_value` per CoA row via `mapToUniversalStream`, and the per-seq band assertion landed in E.4/E.5. Findings below are pre-implementation validation history.
 
 Two reviewers validated §2.5.h.2 / §2.5.h.9 in parallel — one code-reviewer agent for internal cross-file consistency, one independent reviewer for construction-industry sequencing accuracy. Findings (raw, no remediation proposed):
 
@@ -1814,6 +1829,8 @@ How `trade_forecasts` rows are produced today. Source: `scripts/compute-trade-fo
 
 ### 8.9 — Implementation Step 1: CoA Classification & Cost-Estimation Parity
 
+> **RESOLVED (E.1/E.2 2026-05-14 + subsequent CoA-chain work) — annotation added 2026-07-07.** Most of this plan has shipped: `classify-coa-scope.js` / `classify-coa-trades.js` / `compute-coa-cost-estimates.js` exist and run in the CoA chain (manifest `chains.coa`); `link-coa-to-parcels.js` populates `lead_parcels`; `lead_trades` / `lifecycle_transitions` / `universal_stream_catalog` / `universal_stream_trade_signals` are live; `cost_estimates` is `lead_id`-keyed. In particular the line below calling `classify-lifecycle-phase.js` "the broken P1/P2 assignment, bug 84-W12 — 99.4% NULL" is **stale** — E.1/E.2 fixed the CoA classifier (100% non-NULL as of 2026-07-07). NOTE: the `cost_source = 'geometric'` claim (new-columns table) is being reconciled separately — live CoA cost rows carry `archetype_parcel`; that label truth is out of scope here (tracked under the cost-model epic / WF2 P5).
+
 **Background.** Investigations §8.7 and §8.8 surfaced a structural blind spot in the prediction engine. The cohort key in `phase_stay_calibration` is `(permit_type, phase)`, but during the CoA portion of Path A (Universal Stream rows 70–91), `permit_type` does not exist. `coa_applications` carries `description` (free text), `address`, `decision`, and `hearing_date` — none of which feed the cohort key. Result: every CoA-stage lead today resolves to the same `__ALL__` calibration bucket regardless of whether it is a side-yard variance or a 20-storey condo, and the median 1,078-day CoA-decision-to-permit-filing lag is invisible to the forecast.
 
 By contrast, the permits side runs through a multi-step classification pipeline (Spec 41 steps 9, 11, 5, 13, 15) that produces `scope_tags`, `project_type`, `permit_type_class`, `structure_type`, and cost estimates. None of these exist on `coa_applications` today, and there is no `classify-coa.js` script — the only CoA-side writes are `load-coa.js` (CKAN ingest), `link-coa.js` (back-link to permits), and `classify-lifecycle-phase.js` (the broken P1/P2 assignment, bug 84-W12 — 99.4% NULL).
@@ -1871,3 +1888,21 @@ Cost output: `cost_estimates` rekeyed on `lead_id` (Option C — single unified 
 - Predicting WHICH permit_type will follow a given CoA (vs no permit at all). Separate spec; classifier driven by historical CoA→Permit linkage patterns.
 - Predicting CoA approval odds from description + scope + neighbourhood. Separate spec.
 - Construction-stream (post-permit) classification parity — already mature on the permits side; nothing new needed here.
+
+---
+
+### 8.10 — WF2 P3 (2026-07-07): live-status NULL root-cause — dirty-queue drain lag, NOT a defect
+
+**Symptom investigated.** ~578 permits with LIVE statuses (`Application Acceptable`, `Not Started`, `Application On Hold`, `Under Review ` [trailing space], `Ready for Issuance`, `Permit Issued`, …) carried `lifecycle_phase IS NULL`, even though (a) the pure lib maps every one of these statuses to a phase and (b) the dirty-select predicate (`classify-lifecycle-phase.js:1105-1107`) already includes them. The paradox: they "should have self-healed" on the last run and didn't.
+
+**Traced root cause (report: `docs/reports/pipeline-validation/2026-07-07-lifecycle-null-trace.md`).** The classifier had simply **not run since the rows became dirty** — there is no classifier defect. Decisive evidence:
+- **`stuck_not_dirty = 0`** — every one of the 578 rows is already in the dirty set. Not one is a genuinely stuck / would-not-self-heal row.
+- **544 never-classified** (`lifecycle_classified_at IS NULL`, `matched_rule IS NULL`) were **loaded 2026-06-28**, *after* the last `permits:classify_lifecycle_phase` run (id 1319, 2026-06-25 11:34, verdict PASS, `unclassified_count = 1`). No classify run has executed since.
+- **34 stale-reclassify** (`matched_rule = 2`, the DEAD rule → NULL phase) had their status flip DEAD→LIVE after 06-25; `last_seen_at` advanced past `lifecycle_classified_at`, so they are dirty now and re-classify on the next run.
+- The pure lib maps all sampled live statuses (incl. the trailing-space case via `normalizeStatus()`) to non-null phases in both the BldLed and orphan branches (verified by direct invocation).
+
+**Fix.** None in production code (verify-don't-build). Regression locks pin the live-status → phase mapping + the case-sensitivity fence (`src/tests/lifecycle-phase.logic.test.ts`). The two drain-lag breakout counters (§8 above) make future drain lag legible instead of masquerading as a standing gap. The Phase 7 in-chain classify run drains all 578 rows.
+
+**`lifecycle_stalled` interaction (G1).** Draining these rows projects ≤ 2 new stalls and **0 un-stalls** (all rows go NULL→phase; no currently-stalled row is touched). Because old phase was NULL for all 578, `phase_started_at` is stamped fresh (`= RUN_AT`) on the NULL→phase change — no old anchors, no past-dated forecast wave. Far under the 5,000-flip STOP threshold. Baseline stalled = 34,465.
+
+**CoA `lifecycle_seq` (DS6, verified 2026-07-07):** 100% on active CoAs (2,899/2,899) and overall (33,280/33,280) — ≥ 95%, no backfill needed.
