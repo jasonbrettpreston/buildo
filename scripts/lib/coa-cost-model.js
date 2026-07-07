@@ -8,7 +8,11 @@
  *
  * CoA-specific defaults:
  *   - est_const_cost: null always (no applicant-declared cost on CoA)
- *   - cost_source intent: 'geometric' (no Liar's Gate path)
+ *   - cost_source: 'archetype_parcel' when the §3-ARCHETYPE ladder prices the
+ *     lead (the PRIMARY CoA path today), else 'none' via the T4 fallthrough.
+ *     (LABEL TRUTH, WF2 2026-07-06: the legacy 'geometric' cost_source is RETIRED
+ *     for new CoA rows — the old 'model'→'geometric' transform priced 0.0% of
+ *     CoAs and was removed. No Liar's-Gate path exists for CoA either way.)
  *   - permit_type_class skipped (Brain's permit-class gating is permit-only)
  *
  * R0.14 confirmed: `cost-model-shared.js:512` is null-safe via
@@ -26,7 +30,7 @@
  *
  * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.11 Phase D R5.1
  * SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §3-ARCHETYPE (CoA: same ladder minus T1)
- * SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §Geometric-Only Path for CoA (Brain consumer)
+ * SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §Geometric-Only Path for CoA (SUPERSEDED by §3-ARCHETYPE — history)
  */
 
 const DEFAULT_LIAR_GATE_THRESHOLD = 0.25;

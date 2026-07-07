@@ -45,7 +45,7 @@
     "4": {"slug": "link_coa_to_parcels", "script": "scripts/link-coa-to-parcels.js", "agent": "Compliance", "risk_class": "ingest_linkage", "output_tables": ["coa_applications", "lead_parcels"], "notes": "Phase D §6.6.X"},
     "5": {"slug": "classify_coa_scope", "script": "scripts/classify-coa-scope.js", "agent": "Compliance", "risk_class": "ingest_linkage", "output_tables": ["coa_applications"], "notes": "Phase D"},
     "6": {"slug": "classify_coa_trades", "script": "scripts/classify-coa-trades.js", "agent": "Compliance", "risk_class": "ingest_linkage", "output_tables": ["lead_trades"], "notes": "Phase D"},
-    "7": {"slug": "compute_coa_cost_estimates", "script": "scripts/compute-coa-cost-estimates.js", "agent": "Calculations", "risk_class": "calculation", "output_tables": ["coa_applications"], "notes": "§11.10 invariants; geometric-only per Spec 83 §3.A"},
+    "7": {"slug": "compute_coa_cost_estimates", "script": "scripts/compute-coa-cost-estimates.js", "agent": "Calculations", "risk_class": "calculation", "output_tables": ["coa_applications"], "notes": "§11.10 invariants; archetype-based (cost_source=archetype_parcel) per Spec 83 §3-ARCHETYPE — legacy 'geometric' label retired for new rows"},
     "8": {"slug": "link_coa", "script": null, "agent": "cross-ref-permits-17", "risk_class": "ingest_linkage", "output_tables": [], "notes": "Cross-ref permits/step_17"},
     "9": {"slug": "refresh_snapshot", "script": null, "agent": "cross-ref-permits-18", "risk_class": "ingest_linkage", "output_tables": [], "notes": "Cross-ref permits/step_18"},
     "10": {"slug": "assert_data_bounds", "script": null, "agent": "cross-ref-permits-19", "risk_class": "cqa", "output_tables": [], "notes": "Cross-ref permits/step_19"},

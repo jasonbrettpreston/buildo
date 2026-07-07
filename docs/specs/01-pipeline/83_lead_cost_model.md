@@ -123,6 +123,22 @@ lead → `{}`, counted. `modeled_gfa_sqm`/`effective_area_sqm` carry the archety
 **CoA:** same ladder minus T1; `is_geometric_override = false` (nothing was overridden); the PI-5 fence
 holds (the CoA path never passes `permit_type` into the Brain's matrix machinery).
 
+#### §3-ARCHETYPE rejection taxonomy — why a priceable-shaped lead stays `cost_source='none'` (WF2 P5, 2026-07-06)
+
+A programmatic re-run of the live mapper + ladder over **all 7,073** residential-lowrise permits (`project_type ∈ {addition, new_build, renovation}`) and **all 13,831** CoA leads carrying `cost_source='none'` (script: `scripts/analysis/wf2-priceable-none-taxonomy.js`; report: `docs/reports/pipeline-validation/2026-07-07-priceable-none-taxonomy.md`). **No cost-model code bug was found** — every bucket is a CORRECT `'none'` for a documented reason. The distribution:
+
+| Bucket | Permits | CoA (corpus) | Meaning — why `'none'` is CORRECT |
+|---|---:|---:|---|
+| `mapped_no_scalar` | 4,766 (67%) | 4,665 (34%) | The scope maps to an archetype line, but the parcel carries **no propagated §4D cost scalar** for it (≈50% of these permits have no `permit_parcels` link at all; the rest link a parcel whose cost-menu was never computed/propagated). No cost basis ⇒ no price. **NOT a mapper/ladder defect — a parcel cost-menu propagation-COVERAGE gap** (the single biggest lever for lifting cost coverage; tracked as a follow-up, not a code change here). |
+| `fit_blocked` | 2,046 (29%) | 690 (5%) | Maps to a **fit-gated** accessory line (garage / laneway_suite / garden_suite) whose scalar is `NULL` = `fits:false` (Spec 88 §2.4). Verified genuine: 99.6% of these permits DO link a parcel and 99.3% carry a `NULL max_*_gfa_sqm` — the accessory-fit model (Spec 65 §7) returned no envelope, so cost is `null` **by design** (a permissioning result, never a fallback). *(Note: many are permits literally FOR a garage that the conservative fit-model declines to fit — a Spec 65 accessory-fit-conservatism follow-up, not a cost-model bug.)* |
+| `ladder_rejected:t2_bound` | 214 (3%) | 178 (1%) | The propagated line total fell **outside** the T2 plausibility bounds (`archetype_t2_*_cap` / `_min`) — the data-poison guard firing as designed; the row correctly falls through rather than emit an implausible price. |
+| `class_gate` | 33 (0.5%) | — | `permit_type_class ≠ 'construction'` (Spec 80 §5) — all verified administrative/safety/modifier permit_types (`AS Alternative Solution`, `Fire/Security Upgrade`, `Conditional Permit`, …), correctly non-priced. |
+| `not_lowrise` | — | 2,628 (19%) | `structure_type` outside the low-rise gate (Apartment / Office / Mixed-Use / Commercial) — out of the archetype scope by design (Steps A–D territory; no low-rise archetype applies). |
+| `mapper_null:t4` | — | 5,670 (41%) | No archetype line: `Severance`/`Demolition` (→ null by rule), tagless leads, or descriptor-only tags (`dwelling`/`residential`/`two-storey`) with a `NULL project_type` — no scope to price. |
+| `now_priced:*` | 14 (0.2%) | 0 | The **current** code WOULD price these — they are STALE rows the cost step has not re-processed since the ladder shipped. **Not a bug**; they resolve on the P7 in-chain re-run. |
+
+**Consequence:** cost coverage is bounded today by parcel cost-menu propagation coverage (`mapped_no_scalar`) and the accessory-fit model's conservatism (`fit_blocked`), NOT by the cost-model code. Both are logged as follow-ups (`docs/reports/review_followups.md`); expanding §4D propagation coverage is the highest-leverage next step.
+
 ### Core Logic (Three-Step Valuation) — the T4 / legacy path (mapper-null residential + non-residential)
 
 > **permit_type_class gating (WF2 #3, implemented 2026-05-08, depends on mig 120 / Spec 80 §5):** the cost model only applies the Surgical Triangle when `permit_type_class = 'construction'`. Non-construction classes (`signage`, `administrative`, `safety_upgrade`, `unclassified`) short-circuit BEFORE Step A (GFA), Step B (Area_Eff), Step C (trade valuation), and Step D (Liar's Gate) → `cost_source = 'none'`, `estimated_cost = null`, `trade_contract_values = {}`. The gate is enforced at the Brain layer (`src/features/leads/lib/cost-model-shared.js`) so both the Muscle and the TS shim inherit the same byte-identical short-circuit. The Muscle's SOURCE_SQL gains `LEFT JOIN permit_type_classifications` with `COALESCE(ptc.class, 'unclassified')` and a startup guard refuses to run when the lookup table is empty (Spec 47 §R5). Eliminates the $29M-for-2-signs class of bug surfaced by the WF3 investigation 2026-05-08 (sign permits inheriting host-building GFA in the Surgical Triangle). Detailed behavior table: see Spec 80 §5 "Cost-model behaviors". The reserved `signage` class will be unlocked once a future WF3 adds description-level subtype detection inside `Designated Structures`.
@@ -244,6 +260,8 @@ This gives operators a per-row debug signal distinguishing "we couldn't compute 
 
 ### Geometric-Only Path for CoA Leads (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
 
+> **⚠️ SUPERSEDED by §3-ARCHETYPE (WF2 2026-07-06) — retained for history.** This section describes the ORIGINAL CoA cost path. **The live CoA cost path is the §3-ARCHETYPE ladder** (`cost_source='archetype_parcel'`), not the geometric path below. The legacy `'model'→'geometric'` transform priced **0.0%** of CoAs (every CoA matrix-missed the Surgical Triangle via the `::`-key bug) and was RETIRED in `compute-coa-cost-estimates.js` (the `transformCostSource` removal). The `'geometric'` `cost_source` enum value is PRESERVED (mig 209) for backward-compat with legacy rows and for downstream readers (`refresh-snapshot.js`, `lead-schemas.ts`, `CoaClassificationPanel.tsx`) — **do not prune** — but no code writes it for new CoA rows. Read §3-ARCHETYPE (CoA: same ladder minus T1) for the current behavior.
+
 CoA applications carry no applicant-declared construction cost (the `est_const_cost` field is permit-side only). The CoA cost path is therefore **geometric-only** — there is no Liar's Gate equivalent for CoA leads because there is no applicant declaration to gate against.
 
 **Inputs (CoA):**
@@ -266,7 +284,12 @@ CoA applications carry no applicant-declared construction cost (the `est_const_c
 
 **Per-trade slicing for realtor:** the realtor financial-base carve-out (existing per WF3 2026-05-08) applies — CoA-stage realtor rows use the total `estimated_cost` rather than a `trade_contract_values` per-trade slice (since CoA classifier may not always allocate to realtor explicitly). See Spec 81 §3 realtor carve-out.
 
-**Acceptance:** CoA-stage `cost_estimates.estimated_cost IS NOT NULL` ≥ 80% (per Spec 42 §6.3 success criteria + Spec 49 coverage matrix).
+**Acceptance (RE-DERIVED WF2 P5, 2026-07-06 — supersedes the stale "≥ 80%"):** The original ≥80% target assumed a geometric path that in fact priced 0.0% of CoAs; it never reflected reality and is retired. The archetype path's LIVE coverage, measured two ways:
+
+- **Corpus:** 19,449 priced / 33,280 total = **58.4%** (`archetype_parcel` on every priced row). This figure is inflated by CLOSED CoAs (terminal `lifecycle_group='C4'`, 87.6% of the corpus), which skew toward being priced.
+- **Feed-relevant OPEN subset** (geocoded AND non-terminal `lifecycle_group ∈ {C1,C2,C3}` — the CoAs that can actually surface as leads): 1,585 priced / 3,200 total = **49.5%**. This is the number the feed sees; it is LOWER than the corpus because the priced CoAs skew closed.
+
+The remaining OPEN-subset `'none'` (1,615) decomposes per the §3-ARCHETYPE rejection taxonomy above — dominated by `mapper_null:t4` (988: severance/tagless/descriptor-only), `not_lowrise` (301: apartment/commercial), and `mapped_no_scalar` (228: §4D propagation-coverage gap). None is a cost-model code defect. **Acceptance is therefore the taxonomy itself** (every `'none'` accounted for by a correct reason), not a single percentage floor. *(Baseline is PRE-P6.6: the CoA fan-out fix (Phase 6.6) flips bundle-only `lead_trades` to `is_active=false`, which raises the CoA cost step's `null_reason_no_active_trades` counter on re-run; coverage impact ≈ 0 because the archetype ladder runs before any trade path — validated post-P6.6 in P7.)* Per Spec 42 §6.3 + Spec 49 coverage matrix.
 
 ### Step-by-Step Defense
 **Step 1: Input Sanitization (Avoiding W12, W21)**

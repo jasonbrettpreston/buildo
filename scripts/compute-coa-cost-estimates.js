@@ -151,10 +151,12 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
 
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     // ── Diff-review fold (W#2 CRIT L2-3): mig 145 startup guard ─────────────
-    // This script writes cost_source='geometric' and permit_num=NULL, both of
-    // which require mig 145 (cost_source CHECK extension + DROP NOT NULL).
-    // Refuse to run if mig 145 hasn't been applied — gives the operator a
-    // clear error instead of a downstream CHECK violation rolling back batches.
+    // LABEL TRUTH (WF2 2026-07-06): this script writes cost_source='archetype_parcel'
+    // (the §3-ARCHETYPE ladder; the legacy 'geometric' transform is RETIRED — see
+    // the §3-ARCHETYPE note above flushBatch) and permit_num=NULL, both of which
+    // require mig 145 (cost_source CHECK extension + DROP NOT NULL). Refuse to run
+    // if mig 145 hasn't been applied — gives the operator a clear error instead of
+    // a downstream CHECK violation rolling back batches.
     const migCheck = await pool.query(
       `SELECT 1 FROM pg_constraint
         WHERE conrelid = 'cost_estimates'::regclass
@@ -334,7 +336,7 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
               r.permit_num,          // NULL for CoA (mig 145 DROP NOT NULL)
               r.revision_num,        // NULL for CoA (mig 145 DROP NOT NULL)
               r.estimated_cost,
-              r.cost_source,         // 'geometric' (post-transform)
+              r.cost_source,         // 'archetype_parcel' (§3-ARCHETYPE; the 'geometric' transform is retired)
               r.cost_tier,
               r.cost_range_low,
               r.cost_range_high,
