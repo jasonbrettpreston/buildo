@@ -1,11 +1,19 @@
 # 85 Trade Forecast Engine — The Flight Tracker
 
 > **Status:** ARCHITECTURE LOCKED — Bimodal Routing & Instant Stall Recalibration (April 2026).
-> **Purpose:** Predict actionable work dates for all 32 trades by marrying current lifecycle stages with historical velocity data.
+> **Purpose:** Predict actionable work dates for every forecastable trade by marrying current lifecycle stages with historical velocity data.
 
 ## 1. Goal & User Story
 
-Predict actionable work dates for all 32 trades by marrying current lifecycle stages with historical velocity data.
+Predict actionable work dates for every forecastable trade by marrying current lifecycle stages with historical velocity data.
+
+### Forecastability contract (WF2 Spec 80 P4, 2026-07-06)
+
+The classifier emits **36** distinct trade slugs. Of these:
+- **35 are forecastable** — each carries a `trade_configurations` row supplying `bid_phase_cutoff` + `work_phase_target` (the bimodal routing anchors). Trades absent from that table are counted by the `unmapped_trades` audit row (acceptance: `== 0`). Migration 210 closed the last two gaps: `site-preparation` (early sitework → bid P3 / work P9) and `overhead-doors` (closing/finishing → bid P11 / work P15).
+- **1 is non-forecastable** — `site-maintenance` (≈108K permit_trades, 3.6%) has **no phase-anchored install window**, so no `predicted_start` can be derived. It is excluded via `logic_variables.forecast_excluded_trade_slugs` (a JSONB array, mig 210). Rows carrying an excluded slug are skipped **before** branch dispatch, so they never inflate `records_total` and never increment `unmapped_trades`. The exclusion is loud, not silent: two INFO audit rows surface it — `excluded_rows` (row count, mirroring `unmapped_trades` semantics) and `excluded_trade_slugs` (the distinct slugs withheld).
+
+To retire or add an exclusion, edit the `forecast_excluded_trade_slugs` array (Control Panel / a migration) — no code change. The list is read via `config-loader.js` and Zod-validated (`z.array(z.string())`).
 
 **User Story:** A landscaper looks at a project currently in the "Framing" stage and sees a predicted start date for their work in 6 months, allowing them to bid early and secure the contract.
 
@@ -115,8 +123,9 @@ Upserts rows to `trade_forecasts`. Runs two purge passes in Step 2 (atomic `with
 - `trade_configurations.bid_phase_cutoff` + `work_phase_target` define the bimodal routing per trade
 - `trade_configurations.imminent_window_days` defines the per-trade alert threshold for the CRM assistant
 - `trade_configurations.multiplier_bid` + `multiplier_work` (migration 093) — per-trade urgency multipliers consumed by the Opportunity Score Engine
-- `logic_variables.stall_penalty_precon` (45) + `stall_penalty_active` (14) drive the stall recalibration math (now loaded via shared `loadMarketplaceConfigs()`)
 - `logic_variables.expired_threshold_days` (-90) drives the expired urgency classification
+- `logic_variables.forecast_excluded_trade_slugs` (JSONB array, mig 210) — non-forecastable trade slugs (see §1 Forecastability contract). Operator-tunable; no code change to add/remove a slug.
+- ~~`logic_variables.stall_penalty_precon` (45) + `stall_penalty_active` (14)~~ **RETIRED as control-panel drivers** — the per-row stall-recalibration math they fed was deleted WF3 2026-04-22 (§3, Instant Stall Recalibration removed; the Stalled Gate in SOURCE_SQL supersedes it). The two logic_variables still exist for potential future use but drive nothing in this engine today.
 - `target_window` column on `trade_forecasts` stamps 'bid' or 'work' at the bimodal routing decision point
 
 ### Shared Config Loader
@@ -131,5 +140,5 @@ When refactoring `scripts/compute-trade-forecasts.js`, the following structural 
 1. **Stream Execution (Spec 47 §6.1):** Prevent OOM errors by querying massive historical permit batches through `pipeline.streamQuery()`, processing via in-loop backpressure array limits.
 2. **Graceful Locks (Spec 47 §5.5):** Acquire an advisory lock on a dedicated client and attach a `process.on('SIGTERM')` listener to ensure lock unbinding during forced shutdown.
 3. **Bimodal Data Path:** The database join must retrieve `bid_phase_cutoff` and `work_phase_target` from the `trade_configurations` table, routing "Rescue Mission" states dynamically instead of hardcoding target dates.
-4. **Zod Defense:** Extract the raw JSON definitions of `logic_variables.stall_penalty_active` and `logic_variables.expired_threshold_days`, filtering them strictly via `Zod` prior to running math calculations so `NaN` propagation is impossible.
+4. **Zod Defense:** Extract the raw definitions of the consumed logic variables — `expired_threshold_days`, `urgency_overdue_days`, `urgency_upcoming_days`, `snowplow_buffer_days`, the `calibration_default_*` triple, and `forecast_excluded_trade_slugs` (JSONB array) — filtering them strictly via `Zod` (`LOGIC_VARS_SCHEMA`) prior to running math calculations so `NaN` propagation is impossible. (`stall_penalty_*` are no longer consumed — see §3, stall recalibration removed.)
 5. **Atomic Commit (Spec 47 §6.3):** Ensure `ON CONFLICT DO UPDATE` upserts for forecasts occur exclusively within ephemeral `pipeline.withTransaction()` wrappers.

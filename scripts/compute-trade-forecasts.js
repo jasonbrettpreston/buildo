@@ -94,6 +94,14 @@ const LOGIC_VARS_SCHEMA = z.object({
   // `.default(0)` is critical — without it, runs before mig 159 applies
   // would get undefined → z.coerce.number() yields NaN → .int() throws.
   coa_gate_force_active:               z.coerce.number().int().min(0).max(1).default(0),
+  // Spec 80 P4 (D1 / CR-F4): non-forecastable trade slugs. JSONB logic variable
+  // (mig 210) read as an array by config-loader.js:220-221 (variable_value_json
+  // is an object → passed through untouched). `.optional()` NOT `.required()`:
+  // config-loader has no fallback for JSONB vars (they live only in migrations,
+  // like income_premium_tiers), so a DB-down degraded run yields undefined →
+  // empty exclusion set, which is the safe default (nothing excluded, unmapped
+  // counter still fires). z.string() array so a poisoned non-string entry throws.
+  forecast_excluded_trade_slugs:       z.array(z.string()).optional(),
 }).passthrough();
 
 // ─── Phase F.1 module-local helpers ─────────────────────────────────────────
@@ -189,6 +197,21 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   const defaultMedianDays = logicVars.calibration_default_median_days;
   const defaultP25Days    = logicVars.calibration_default_p25_days;
   const defaultP75Days    = logicVars.calibration_default_p75_days;
+
+  // Spec 80 P4 (D1 / CR-F4): non-forecastable trade slugs (e.g. site-maintenance — no
+  // phase-anchored install window). Rows carrying these slugs are skipped BEFORE branch
+  // dispatch so they never inflate records_total NOR unmapped_trades; surfaced via the
+  // excluded_rows + excluded_trade_slugs audit rows. Array.isArray guard: on a DB-down
+  // degraded run the JSONB var is absent (no config-loader fallback) → empty set.
+  const excludedTradeSlugs = new Set(
+    Array.isArray(logicVars.forecast_excluded_trade_slugs)
+      ? logicVars.forecast_excluded_trade_slugs
+      : [],
+  );
+  if (excludedTradeSlugs.size > 0) {
+    pipeline.log.info('[trade-forecasts]',
+      `Non-forecastable excluded trade slugs: ${[...excludedTradeSlugs].join(', ')}`);
+  }
 
   // Build TRADE_TARGET_PHASE from loaded trade configs
   TRADE_TARGET_PHASE = Object.fromEntries(
@@ -599,6 +622,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   let skippedPastTarget = 0;   // permit-side: phase-past-target guard
   let skippedTooOld = 0;       // permit-side: grace cutoff
   let unmappedTrades = 0;
+  // Spec 80 P4 (D1 / OB-F5): excluded (non-forecastable) rows + distinct slugs seen.
+  // Kept OUTSIDE records_total (skipped before totalRows++) and OUTSIDE unmapped_trades.
+  let excludedRows = 0;
+  const excludedSlugsSeen = new Set();
   let upserted = 0;
   let upsertedCoa = 0;
   let anchorFallbackCount = 0; // permit-side fallback count
@@ -654,6 +681,19 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   pipeline.log.info('[trade-forecasts]', 'Streaming active permit-trade pairs...');
   for await (const row of pipeline.streamQuery(pool, SOURCE_SQL, [])) {
     const isCoaRow = typeof row.lead_id === 'string' && row.lead_id.startsWith('coa:');
+
+    // ═════════════════════════════════════════════════════════════════════
+    // Spec 80 P4 (D1 / OB-F5): non-forecastable trade exclusion — FIRST, before
+    // both the branch dispatch and the totalRows++ increments. Excluded slugs
+    // have no phase-anchored install window; they are counted ONLY as
+    // excluded_rows (never records_total, never unmapped_trades) so the
+    // unmapped_trades == 0 acceptance holds and the exclusion is loud, not silent.
+    // ═════════════════════════════════════════════════════════════════════
+    if (excludedTradeSlugs.has(row.trade_slug)) {
+      excludedRows++;
+      excludedSlugsSeen.add(row.trade_slug);
+      continue;
+    }
 
     // ═════════════════════════════════════════════════════════════════════
     // Phase F.1 CoA branch dispatch (v2 CRIT folds + v3/v4 hardening)
@@ -985,6 +1025,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   if (unmappedTrades > 0) {
     pipeline.log.warn('[trade-forecasts]', `Unmapped trades (not in TRADE_TARGET_PHASE): ${unmappedTrades}`);
   }
+  if (excludedRows > 0) {
+    pipeline.log.info('[trade-forecasts]',
+      `Excluded (non-forecastable) rows: ${excludedRows.toLocaleString()} across slugs [${[...excludedSlugsSeen].sort().join(', ')}]`);
+  }
 
   // ═══════════════════════════════════════════════════════════
   // Step 4: Atomic purge + upsert (§47 §7.1, §7.3).
@@ -1288,6 +1332,17 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       threshold: '== 0',
       status: unmappedTrades > 0 ? 'WARN' : 'PASS',
     },
+    // Spec 80 P4 (D1 / OB-F5): the two exclusion-visibility rows. excluded_rows mirrors
+    // unmapped_trades' row-count semantics (a counted, never-silent skip); excluded_trade_slugs
+    // names the distinct slugs so an operator can see WHICH trades were withheld. Both INFO —
+    // exclusion is a deliberate, configured non-forecastable classification, not an anomaly.
+    { metric: 'excluded_rows', value: excludedRows, threshold: null, status: 'INFO' },
+    {
+      metric: 'excluded_trade_slugs',
+      value: [...excludedSlugsSeen].sort().join(', ') || '(none)',
+      threshold: null,
+      status: 'INFO',
+    },
     {
       metric: 'default_calibration_pct',
       value: defaultPct.toFixed(1) + '%',
@@ -1367,6 +1422,9 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       coa_first_deploy_grace: coaFirstDeployGrace,
       coa_audit_gate_status: coaGateStatus,
       unmapped_trades: unmappedTrades,
+      // Spec 80 P4 (D1 / OB-F5): non-forecastable exclusion telemetry (outside records_total).
+      excluded_rows: excludedRows,
+      excluded_trade_slugs: [...excludedSlugsSeen].sort(),
       anchor_fallbacks_used: anchorFallbackCount,
       anchor_sources: anchorSourceCounts,
       anchor_sources_coa: coaAnchorSourceCounts,
