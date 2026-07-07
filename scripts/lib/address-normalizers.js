@@ -17,6 +17,12 @@
  *
  * Functions extracted verbatim from scripts/load-parcels.js (the prior
  * source-of-truth before WF1 #parcel-address-bridge Phase 2b).
+ *
+ * MIRRORED IMPLEMENTATION (Spec 89): src/lib/parcels/address.ts is a
+ * character-identical TS port consumed by the admin Parcel Cost Model
+ * Tool's address lookup. Any rule change here MUST be applied there too —
+ * the parity test src/tests/parcel-cost-tool.logic.test.ts pins the two
+ * to identical output on shared fixtures.
  */
 
 // Toronto street-type tokens. Used by parseLinearName to (a) extract a

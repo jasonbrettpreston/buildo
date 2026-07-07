@@ -56,6 +56,7 @@
 | 84 | `01-pipeline/84_lifecycle_phase_engine.md` | 84 Lifecycle Phase Engine — The "Strangler Fig" Classifier | `src/lib/classification/lifecycle-phase.ts`, `src/lib/leads/build-lifecycle-timeline.ts`, `src/components/FreshnessTimeline.tsx`, +13 more | `src/tests/control-panel.logic.test.ts` | Done |
 | 85 | `01-pipeline/85_trade_forecast_engine.md` | 85 Trade Forecast Engine — The Flight Tracker | `scripts/compute-trade-forecasts.js`, `scripts/lib/lifecycle-phase.js` | `src/tests/trade-forecasts.logic.test.ts`, `src/tests/trade-forecasts.infra.test.ts` | Done |
 | 87 | `01-pipeline/87_supplier_audience.md` | Spec 87: Supplier & Sell-Side Audience Model | — | — | PROPOSED (design-of-record, 2026-06-17). The sell-side mirror of Spec 80's install-side `trade_products`. Implemented in a later WF — **NOT** part of the Spec 80 taxonomy WF2 (Phase 1). |
+| 88 | `01-pipeline/88_parcel_cost_model.md` | Parcel Renovation Cost Model | `scripts/lib/parcel-cost.js`, `scripts/seeds/logic_variables.json` | — | ACTIVE (P1 in build, 2026-06-30). Design-of-record: `docs/reports/wf1-parcel-renovation-cost-model.md`. |
 
 ## Web Admin
 
@@ -70,6 +71,7 @@
 | 35 | `02-web-admin/35_web_admin_state_architecture.md` | Web Admin State Architecture & Ownership Protocol | `src/lib/admin/preferences.ts`, `src/app/admin/layout.tsx`, `src/lib/admin/context.ts`, +1 more | `src/tests/admin-store-reset.coverage.test.ts`, `src/tests/spec35-render-stability.lint.test.ts` | ACTIVE |
 | 76 | `02-web-admin/76_lead_feed_health_dashboard.md` | Admin Lead-Feed Tooling (Test Feed + Flight Center + Detail Inspectors) | `src/app/api/admin/leads/health/route.ts`, `src/app/api/admin/leads/test-feed/route.ts`, `src/lib/admin/lead-feed-health.ts`, +10 more | `src/tests/lead-feed-health.logic.test.ts`, `src/tests/lead-feed-health.infra.test.ts` | **CLOSED.** A `?user_type=` parameter is NOT a planned product feature. Realtors and tradespeople share Spec 91's feed/flight-board algorithm; differentiation flows through `trade_slug` (a parameter the admin Test Feed Tool already exposes), not through a separate `user_type` axis. Manufacturers are not customer-facing feed personas — they're admin-managed B2B accounts per Spec 94 §7. |
 | 86 | `02-web-admin/86_control_panel.md` | 86 Master Configuration List: The "Control Panel" Schema | `src/lib/admin/control-panel.ts`, `src/app/api/admin/control-panel/configs/route.ts`, `src/features/admin-controls/**`, +3 more | `src/tests/control-panel.*.test.{ts,tsx}` | Done |
+| 89 | `02-web-admin/89_parcel_cost_model_tool.md` | Parcel Cost Model Tool (web-admin) | `src/app/api/admin/parcels/lookup/types.ts`, `src/components/admin/ParcelCostTool.tsx`, `src/app/admin/page.tsx`, +1 more | — | Active (WF1 2026-07-06) |
 
 ## Mobile (Lead Feed)
 

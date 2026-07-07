@@ -1,3 +1,9 @@
+// MIRRORED IMPLEMENTATION (Spec 89): this file is a character-identical TS port of
+// scripts/lib/address-normalizers.js — the shared JOIN-key normalization the pipeline loaders use.
+// Any rule change MUST be applied to BOTH files; the parity test
+// src/tests/parcel-cost-tool.logic.test.ts pins the two to identical output on shared fixtures.
+// Two behaviors are DELIBERATE fences (preserve, don't "fix"): first-street-type-token-wins
+// ("Avenue Road" → type AVE) and trailing-directional-strip — established JOIN-key semantics.
 import type { ParsedAddress } from './types';
 
 // Street-type suffixes (same set as src/lib/coa/linker.ts:60)

@@ -52,7 +52,10 @@ type EventName =
   | 'admin_gravity_adjusted'
   | 'admin_gravity_discarded'
   | 'admin_gravity_save_failed'
-  | 'admin_pipeline_resync_triggered';
+  | 'admin_pipeline_resync_triggered'
+  // Parcel Cost Model Tool (Spec 89) — read-only lookup interactions (§13.1)
+  | 'admin_parcel_lookup_searched'
+  | 'admin_parcel_group_expanded';
 
 type EventProperties = Record<string, unknown>;
 
