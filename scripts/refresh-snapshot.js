@@ -311,12 +311,23 @@ pipeline.run('refresh-snapshot', async (pool) => {
   }
 
   // ── Cost estimates coverage ──
+  // WF2 §3-ARCHETYPE (2026-07-06): the archetype ladder writes three new
+  // provenances (archetype_declared_area / archetype_parcel / archetype_rate)
+  // that carry ~83% of priced rows. The snapshot has no dedicated column for
+  // them (no second migration, per the Phase D plan), so they fold into the
+  // `from_model` bucket — semantically correct: every archetype price IS a
+  // modeled (non-applicant-declared) cost. Legacy 'geometric' likewise folds in.
+  // This keeps the invariant total = from_permit + from_model + null_cost intact
+  // instead of silently dropping the archetype rows. The archetype sub-count is
+  // surfaced in the INFO log for operators.
   let costEst = { total: 0, from_permit: 0, from_model: 0, null_cost: 0 };
   try {
     const costRes = await pool.query(
       `SELECT COUNT(*) as total,
               COUNT(*) FILTER (WHERE cost_source = 'permit') as from_permit,
-              COUNT(*) FILTER (WHERE cost_source = 'model') as from_model,
+              COUNT(*) FILTER (WHERE cost_source IN ('model', 'geometric',
+                'archetype_declared_area', 'archetype_parcel', 'archetype_rate')) as from_model,
+              COUNT(*) FILTER (WHERE cost_source LIKE 'archetype\\_%') as from_archetype,
               COUNT(*) FILTER (WHERE estimated_cost IS NULL) as null_cost
        FROM cost_estimates`
     );
@@ -327,7 +338,8 @@ pipeline.run('refresh-snapshot', async (pool) => {
       from_model: safeParsePositiveInt(cr.from_model, 'from_model'),
       null_cost: safeParsePositiveInt(cr.null_cost, 'null_cost'),
     };
-    pipeline.log.info(TAG, `Cost Estimates: ${costEst.total} total (${costEst.from_permit} permit, ${costEst.from_model} model, ${costEst.null_cost} null)`);
+    const fromArchetype = safeParsePositiveInt(cr.from_archetype, 'from_archetype');
+    pipeline.log.info(TAG, `Cost Estimates: ${costEst.total} total (${costEst.from_permit} permit, ${costEst.from_model} model incl. ${fromArchetype} archetype, ${costEst.null_cost} null)`);
   } catch (err) {
     pipeline.log.warn(TAG, `Cost estimates query failed — zeroes: ${err.message}`);
   }

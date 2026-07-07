@@ -173,16 +173,46 @@ describe('<CoaClassificationPanel> — cost panel', () => {
     expect(section.textContent).toContain('geometric');
   });
 
-  it('shows warning badge when cost_source is non-geometric and non-null', () => {
+  // WF2 §3-ARCHETYPE (2026-07-06): the anomaly is now a source that should never
+  // reach a CoA row — a permit-path 'permit' leak (CoA carries no applicant cost).
+  it('shows warning badge when cost_source is unexpected for a CoA (permit leak)', () => {
     render(
       <CoaClassificationPanel
-        data={makeCoa({ cost_source: 'reported' })}
+        data={makeCoa({ cost_source: 'permit' })}
         parentLeadType="coa"
         onNavigate={vi.fn()}
       />,
     );
     const section = screen.getByTestId('coa-panel-section-cost');
     expect(section.textContent).toContain('Unexpected cost_source');
+  });
+
+  // Replacement for the retired "geometric-only" badge assertion: the archetype
+  // ladder now supplies priced CoA rows. They must render the 'archetype' badge
+  // and MUST NOT trip the anomaly warning (the false-warn the Phase D fix closed).
+  it('shows "archetype" badge and no warning when cost_source === "archetype_parcel"', () => {
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({ cost_source: 'archetype_parcel', estimated_cost: 850_000 })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const section = screen.getByTestId('coa-panel-section-cost');
+    expect(section.textContent).toContain('archetype');
+    expect(section.textContent).not.toContain('Unexpected cost_source');
+  });
+
+  it('renders no warning when cost_source is a legitimate "none" (unpriceable)', () => {
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({ cost_source: 'none' })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const section = screen.getByTestId('coa-panel-section-cost');
+    expect(section.textContent).not.toContain('Unexpected cost_source');
   });
 
   it('renders no warning when cost_source is null', () => {

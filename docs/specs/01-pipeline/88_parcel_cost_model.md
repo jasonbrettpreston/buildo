@@ -141,7 +141,7 @@ The cost is `rate × AREA`, so the **area driver is half the model**. Two driver
 ### Out-of-Scope Files
 - **P2 (separate phase):** `neighbourhood_*_norms` `structure_family` schema + the shared family-aware accessor + the 5 norm read-sites + R2 (`optimal-config.js` realized-FSI wiring) + R4 (comp family filter). This spec's P1 uses *current* `opt_coa_gfa`.
 - **P3:** the product-cost dimension + the per-trade/product breakdown (`trades`/`products` JSONB sub-objects).
-- The permit/CoA cost model (`compute-cost-estimates.js`, `cost-model-shared.js`, `trade_sqft_rates`) — **untouched**; this is an additive parcel model.
+- ~~The permit/CoA cost model (`compute-cost-estimates.js`, `cost-model-shared.js`, `trade_sqft_rates`) — **untouched**; this is an additive parcel model.~~ **SEAM CLOSED (WF2 2026-07-06, Spec 83 §3-ARCHETYPE):** the permit/CoA cost model now CONSUMES this spec's archetype costs as its primary derivation for low-rise residential — the propagated scalars (premium-INCLUSIVE per §2.6, never re-premiumed) + `archetype_cost_rates`. The T4/legacy path (`trade_sqft_rates` build-up) survives only for mapper-null residential + non-residential leads.
 
 ### Cross-Spec Dependencies
 - **Relies on:** Spec 65 §4 (`max_buildable_gfa/footprint_sqm`, the `cur_*` scenario fields, `neighbourhood_cost_premium`), Spec 78 (`opt_coa_gfa_sqm` + the §4D `OPT_COMP_PROP_COLS` propagation pattern), Spec 47 (Mutator skeleton), Spec 48 §3.6 (verdict cascade), Spec 49 (completeness matrix), Spec 86 (Control Panel — rate/logic-var tuning), Spec 26/35 (admin surfacing).

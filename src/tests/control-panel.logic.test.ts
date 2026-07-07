@@ -120,6 +120,19 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'cost_matrix_miss_warn_pct',
   'cost_matrix_miss_fail_pct',
   'cost_ptc_skipped_warn_pct',
+  // WF2 §3-ARCHETYPE (2026-07-06) — the archetype cost ladder's tunable guards +
+  // T4-scoped matrix-miss thresholds (compute-cost-estimates + compute-coa-cost-
+  // estimates audit gates). Seeded in logic_variables.json Phase 0.
+  'cost_t4_matrix_miss_warn_pct',
+  'cost_t4_matrix_miss_fail_pct',
+  'archetype_nofit_residential_warn_pct',
+  'archetype_t1_fsi_min',
+  'archetype_t1_fsi_max',
+  'archetype_t1_total_cap',
+  'archetype_t2_reno_line_cap',
+  'archetype_t2_build_line_cap',
+  'archetype_t2_build_line_min',
+  'archetype_t3_total_cap',           // WF3 F2 — T3 per-unit absolute cap
   'coa_cost_coverage_fail_pct',
   'coa_match_conf_high',
   'coa_match_conf_medium',
@@ -142,6 +155,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'calibration_default_p75_days',     // E21
   'profiling_coverage_pass_pct',      // spec 49
   'profiling_coverage_warn_pct',      // spec 49
+  'cost_coverage_pass_pct',           // WF3 F4 — archetype-era cost-coverage floor (Step-14 rows)
+  'cost_coverage_warn_pct',           // WF3 F4
   'vocab_coverage_pass_pct',          // spec 49 §3 — vocabulary coverage
   'vocab_coverage_warn_pct',          // spec 49 §3 — vocabulary coverage
   'snowplow_buffer_days',             // WF3 spec 85 §3 — Historic Snowplow buffer (spec 47 §4.1)

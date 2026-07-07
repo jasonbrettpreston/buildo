@@ -39,6 +39,23 @@ const TYPED_CATALOG: UniversalStreamCatalogRow[] = z
   .parse(rawCatalog);
 
 // NIT-v1-Z: extracted Tailwind token map. Light-only (no dark: variants — Spec 33 §2).
+// WF2 §3-ARCHETYPE (2026-07-06): the cost_source values a CoA row may legitimately
+// carry. Anything else surfaces the ⚠ classifier-anomaly badge (see costSourceWarn).
+const COA_EXPECTED_COST_SOURCES = new Set<string>([
+  'archetype_parcel',
+  'archetype_rate',
+  'geometric',
+  'none',
+]);
+
+// Human-readable provenance chip label per priced cost_source (WF2 §3-ARCHETYPE).
+const COST_SOURCE_BADGE: Record<string, string> = {
+  geometric: 'geometric',
+  archetype_parcel: 'archetype',
+  archetype_rate: 'archetype',
+  archetype_declared_area: 'archetype',
+};
+
 const COA_TYPE_CLASS_COLORS: Record<string, string> = {
   residential: 'bg-green-100 text-green-800',
   commercial: 'bg-blue-100 text-blue-800',
@@ -54,8 +71,15 @@ interface CoaPanelProps {
 }
 
 export function CoaClassificationPanel({ data, parentLeadType, onNavigate }: CoaPanelProps) {
-  // v4.1 HIGH-v3-C: warning badge for non-'geometric' cost_source.
-  const costSourceWarn = data.cost_source != null && data.cost_source !== 'geometric';
+  // v4.1 HIGH-v3-C, revised WF2 §3-ARCHETYPE (2026-07-06): CoA cost now flows
+  // from the archetype ladder — T2 `archetype_parcel` (T3 `archetype_rate` never
+  // fires on CoA, kept for symmetry), a legitimate `none` (unpriceable / fit-
+  // blocked / T4 matrix-miss), or legacy `geometric` (not-yet-re-run rows). None
+  // of these is an anomaly. Warn ONLY on a source that should never reach a CoA
+  // row: a permit-path `permit`/`model` leak, or `archetype_declared_area`
+  // (T1 needs an applicant-declared area CoA records do not carry).
+  const costSourceWarn =
+    data.cost_source != null && !COA_EXPECTED_COST_SOURCES.has(data.cost_source);
 
   return (
     <section
@@ -242,9 +266,9 @@ function GeometricCostPanel({
         <span className="font-mono text-sm text-gray-900">
           {estimated_cost != null ? `$${estimated_cost.toLocaleString()}` : '—'}
         </span>
-        {cost_source === 'geometric' && (
+        {cost_source != null && COST_SOURCE_BADGE[cost_source] && (
           <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-blue-800">
-            geometric
+            {COST_SOURCE_BADGE[cost_source]}
           </span>
         )}
       </div>

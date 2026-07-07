@@ -147,9 +147,21 @@ const DEFAULT_PREMIUM_TIERS = [
 // Step A: Geometric Truth (GFA)
 // ---------------------------------------------------------------------------
 
+// ──────────────────────────────────────────────────────────────────────────
+// NORMALIZATION CONTRACT (Spec 83 §3.A — WF1 production-vocabulary re-key):
+//   - Matrix lookup keys (computeEffectiveArea below) MUST use exact
+//     production vocabulary with defensive .trim() only — NO .toLowerCase().
+//   - Substring-detection helpers (isShellPermit, isCommercial) MAY use
+//     .toLowerCase() because they search for keyword substrings, not key
+//     lookups against DB-seeded data. These are different use classes.
+// Re-introducing .toLowerCase() to the matrix-lookup path will silently
+// reproduce the 14-day cost_source='none' regression (PI-9 audit).
+// ──────────────────────────────────────────────────────────────────────────
+
 /**
  * Detect shell permits — triggers the 0.60x interior trade multiplier.
  * Shell = structural envelope only; interior finishes are not in scope.
+ * Uses .toLowerCase() for case-insensitive substring search — NOT a matrix lookup.
  *
  * @param {PermitRow} row
  * @returns {boolean}
@@ -162,6 +174,7 @@ function isShellPermit(row) {
 
 /**
  * Detect commercial permits for fallback floor count selection.
+ * Uses .toLowerCase() for case-insensitive substring search — NOT a matrix lookup.
  *
  * @param {PermitRow} row
  * @returns {boolean}
@@ -239,8 +252,11 @@ function computeEffectiveArea(row, gfa, config) {
   if (gfa == null || gfa <= 0) {
     return { areaEff: 0, matrixKey: null, matched: false };
   }
-  const pt = (row.permit_type || '').toLowerCase().trim();
-  const st = (row.structure_type || '').toLowerCase().trim();
+  // Spec 83 §3.A: exact production-vocabulary match. Defensive .trim() only
+  // (PI-7 found 4716 permits with leading/trailing whitespace, 1.9% of corpus).
+  // NO .toLowerCase() — see NORMALIZATION CONTRACT above.
+  const pt = (row.permit_type || '').trim();
+  const st = (row.structure_type || '').trim();
   const matrixKey = `${pt}::${st}`;
   const pct = config.scopeMatrix ? config.scopeMatrix[matrixKey] : undefined;
   if (pct !== undefined && pct > 0) {
@@ -471,6 +487,303 @@ function determineCostTier(cost) {
 }
 
 // ---------------------------------------------------------------------------
+// §3-ARCHETYPE — the archetype cost ladder (WF2 2026-07-06, Spec 83 §3-ARCHETYPE)
+// ---------------------------------------------------------------------------
+
+const {
+  LINE_DEFS,
+  mapToLines,
+  isLowRiseResidential,
+} = require('./archetype-cost-map');
+
+/** Archetype range uncertainty (±25% — same as the geometric model band). */
+const ARCHETYPE_RANGE_PCT = 0.25;
+
+/**
+ * Decision-4 trade slicing for archetype totals: Step C never runs on this path, so the relative
+ * weights reduce to base_rate × complexity over the lead's OWN deduped slugs (in Step C every trade
+ * shares the same areaEff, so the area cancels out of the relative weights). A rough allocation,
+ * NOT a bottom-up estimate (revisit at Spec 88 P3). Trade-less lead → {} (counted by the Muscle).
+ */
+function sliceArchetypeTotal(row, total, config) {
+  const slugs = [...new Set(Array.isArray(row.active_trade_slugs) ? row.active_trade_slugs : [])];
+  const rates = config && config.tradeRates ? config.tradeRates : {};
+  const weights = {};
+  let weightSum = 0;
+  for (const slug of slugs) {
+    const r = rates[slug];
+    if (!r) continue; // unknown slug → 0 weight (matches the legacy slicing)
+    const w = (r.base_rate_sqft || 0) * (r.structure_complexity_factor || 1);
+    if (w > 0) { weights[slug] = w; weightSum += w; }
+  }
+  if (weightSum <= 0) return {};
+  const out = {};
+  for (const [slug, w] of Object.entries(weights)) out[slug] = Math.round((w / weightSum) * total);
+  return out;
+}
+
+/** Assemble the Brain result envelope for an archetype-priced lead. */
+function archetypeEnvelope(row, config, { total, source, area, telemetry }) {
+  // premium_factor reports the Spec 88 neighbourhood_cost_premium actually
+  // EMBEDDED in the archetype price (1.0 fallback — mirrors §2.1 lineCost),
+  // not the legacy income-tier premium, so the column stays truthful about
+  // what multiplied the estimate.
+  const premium = Number.isFinite(row.neighbourhood_cost_premium)
+    ? Number(row.neighbourhood_cost_premium)
+    : 1.0;
+  const rounded = Math.round(total);
+  return {
+    permit_num:             row.permit_num,
+    revision_num:           row.revision_num,
+    estimated_cost:         rounded,
+    cost_source:            source,
+    cost_tier:              determineCostTier(rounded),
+    cost_range_low:         Math.round(rounded * (1 - ARCHETYPE_RANGE_PCT)),
+    cost_range_high:        Math.round(rounded * (1 + ARCHETYPE_RANGE_PCT)),
+    premium_factor:         premium,
+    complexity_score:       computeComplexityScore(row),
+    is_geometric_override:  false,
+    modeled_gfa_sqm:        area != null ? Math.round(area * 100) / 100 : null,
+    effective_area_sqm:     area != null ? Math.round(area * 100) / 100 : null,
+    trade_contract_values:  sliceArchetypeTotal(row, rounded, config),
+    _liarsGateOverride:     false,
+    _zeroTotalBypass:       false,
+    _usedFallback:          false,
+    _matrixMiss:            false,
+    _matrixMissKey:         null,
+    ...telemetry,
+  };
+}
+
+/** The byte-symmetric no-cost envelope for fit-blocked / zero-total archetype outcomes. */
+function archetypeNoneEnvelope(row, config, telemetry) {
+  return {
+    permit_num:             row.permit_num,
+    revision_num:           row.revision_num,
+    estimated_cost:         null,
+    cost_source:            'none',
+    cost_tier:              null,
+    cost_range_low:         null,
+    cost_range_high:        null,
+    premium_factor:         computePremiumFactor(row.avg_household_income, config),
+    complexity_score:       computeComplexityScore(row),
+    is_geometric_override:  false,
+    modeled_gfa_sqm:        null,
+    effective_area_sqm:     null,
+    trade_contract_values:  {},
+    _liarsGateOverride:     false,
+    _zeroTotalBypass:       false,
+    _usedFallback:          false,
+    _matrixMiss:            false,
+    _matrixMissKey:         null,
+    ...telemetry,
+  };
+}
+
+/**
+ * Price ONE mapped line down the T1→T3 ladder.
+ * @returns {{ total:number, tier:'t1'|'t2'|'t3', area:number|null, rejections:string[] } |
+ *           { fitBlocked:true } | { zeroTotal:true } | null}
+ *           null = unpriceable on this ladder (caller falls to T4).
+ */
+function priceLine(row, line, config, capClassOverride) {
+  const def = LINE_DEFS[line];
+  if (!def) return null;
+  const scalar = Number.isFinite(row[def.scalarCol]) ? Number(row[def.scalarCol]) : null;
+  const basisArea = Number.isFinite(row[def.areaCol]) ? Number(row[def.areaCol]) : null;
+  const rejections = [];
+
+  // Present-but-ZERO (or negative) propagated total → the 'none' envelope, never
+  // $0 and never a T4 re-price (Guardian F1-B — the Zero-Total-Bypass analog;
+  // a computed $0 archetype price is a data-poison signal, not missing data).
+  if (scalar != null && scalar <= 0) return { zeroTotal: true };
+
+  // Line total + per-sqm from the propagated columns (premium-INCLUSIVE — never re-premium, §2.6).
+  const lineTotal = def.kind === 'total' ? scalar
+    : scalar != null && basisArea != null && basisArea > 0 ? scalar * basisArea : null;
+  const perSqm = def.kind === 'per_sqm' ? scalar
+    : scalar != null && basisArea != null && basisArea > 0 ? scalar / basisArea : null;
+
+  // ── T1: the lead's OWN declared area × the line per-sqm ──
+  const ownArea = def.ownAreaField && Number.isFinite(row[def.ownAreaField]) && Number(row[def.ownAreaField]) > 0
+    ? Number(row[def.ownAreaField]) : null;
+  if (ownArea != null && perSqm != null && perSqm > 0) {
+    const lot = Number.isFinite(row.lot_size_sqm) ? Number(row.lot_size_sqm) : null;
+    const fsi = lot && lot > 0 ? ownArea / lot : null;
+    const fsiOk = fsi != null && fsi >= config.archetypeT1FsiMin && fsi <= config.archetypeT1FsiMax;
+    if (!fsiOk) {
+      rejections.push('t1_band');
+    } else {
+      const t1 = perSqm * ownArea;
+      const cap = config.archetypeT1TotalCap * Math.max(1, Number(row.dwelling_units_created) || 1);
+      if (t1 > cap) rejections.push('t1_cap');
+      else if (t1 > 0) return { total: t1, tier: 't1', area: ownArea, rejections };
+    }
+  }
+
+  // ── T2: the parcel's precomputed line total ──
+  if (def.fitGated && scalar == null) return { fitBlocked: true }; // fits:false = permissioning, never a fallback
+  if (lineTotal != null && lineTotal > 0) {
+    // WF3 2026-07-06 (F1 escalation cap-class): a reno-origin escalated max_build carries
+    // capClassOverride='reno' so BOTH the cap AND the min use the reno family — not just the
+    // ceiling. Overriding only the cap would leave the $200K new-build sliver `min` gating a
+    // reno-origin row (Independent/Guardian round-2), wrongly dropping a sub-$200K reno-escalation.
+    // Undefined override (every non-escalated / additive / single-line path) → def.class, unchanged.
+    const eff = capClassOverride || def.class;
+    const cap = eff === 'build' ? config.archetypeT2BuildCap : config.archetypeT2RenoCap;
+    const min = eff === 'build' ? config.archetypeT2BuildMin : 0;
+    if (lineTotal <= cap && lineTotal >= min) {
+      return { total: lineTotal, tier: 't2', area: basisArea, rejections };
+    }
+    rejections.push('t2_bound');
+  }
+
+  // ── T3: the rate table × the lead's OWN area (no derived-area invention) ──
+  // config.archetypeRates values are PRE-RESOLVED premium-EXCLUSIVE per-sqm
+  // (cost_per_sqm × escalation × adj — see resolveArchetypeRates), so the
+  // premium is applied exactly once here, mirroring Spec 88 §2.1/§2.6/§2.9.
+  const ratePerSqm = config.archetypeRates ? config.archetypeRates[def.rateKey] : null;
+  if (ratePerSqm != null && ratePerSqm > 0 && ownArea != null) {
+    const premium = Number.isFinite(row.neighbourhood_cost_premium) ? Number(row.neighbourhood_cost_premium) : 1.0;
+    const t3 = ratePerSqm * ownArea * premium;
+    // WF3 2026-07-06 (F2): a dedicated per-unit cap on T3 (rate × own area × premium). T3 was
+    // shipped uncapped on the assumption own area is bounded; live data disproved it (19 rows
+    // >$20M, max $159.9M) — the own-area basis is inflated by oversized/mislinked parent parcels.
+    // Mirrors t1_cap: over-cap → reject to T4, never $0. Number.isFinite guard so a mis-seeded /
+    // unregistered cap (undefined→NaN) degrades to UNCAPPED (today's behavior), never reject-all —
+    // Zod (.positive().finite()) in both Muscles is the fail-fast primary defense (Independent #1).
+    // CoA has no dwelling_units_created column → divisor degrades to 1 → flat $15M for CoA (intended).
+    const t3Cap = Number(config.archetypeT3TotalCap) * Math.max(1, Number(row.dwelling_units_created) || 1);
+    if (Number.isFinite(t3Cap) && t3 > t3Cap) {
+      rejections.push('t3_cap');
+    } else if (t3 > 0) {
+      return { total: t3, tier: 't3', area: ownArea, rejections };
+    }
+  }
+
+  return rejections.length ? { rejections } : null; // unpriceable → T4 (telemetry rides along)
+}
+
+/**
+ * Pre-resolve archetype_cost_rates rows into { archetypeKey → premium-EXCLUSIVE
+ * per-sqm rate } for config.archetypeRates. Single implementation shared by the
+ * Muscle and the TS shim so the Spec 88 §2.9 escalation formula
+ * (MAX(1, index_now ÷ index_base), never deflate; missing/invalid → 1.0)
+ * cannot drift between the pipeline write path and the admin read path.
+ *
+ * @param {Array<{archetype:string, cost_per_sqm:number, cost_adjustment_factor:number, escalation_index_base:number}>} rateRows
+ * @param {number|null|undefined} indexNow logic_variables.cost_escalation_index
+ * @returns {Record<string, number>}
+ */
+function resolveArchetypeRates(rateRows, indexNow) {
+  const out = {};
+  const now = Number(indexNow);
+  for (const r of rateRows || []) {
+    const base = Number(r.escalation_index_base);
+    const esc = Number.isFinite(now) && Number.isFinite(base) && base > 0
+      ? Math.max(1, now / base)
+      : 1;
+    const per = Number(r.cost_per_sqm) * esc * (Number(r.cost_adjustment_factor) || 1);
+    if (Number.isFinite(per) && per > 0) out[r.archetype] = per;
+  }
+  return out;
+}
+
+/**
+ * The archetype path (Spec 83 §3-ARCHETYPE). Returns a full Brain envelope when the lead is
+ * archetype-priced (or fit-blocked/zero-total → the 'none' envelope), or null → the caller falls
+ * through to the legacy Steps A–D (T4). Entry gate: low-rise residential AND mapper non-null —
+ * the MAPPER is the T4 discriminator (a MEC-only residential permit maps to null).
+ */
+/** Single source of truth for the Brain-row → mapper-input shape (used by the
+ *  pricing path AND the Muscle's telemetry classifier — never build it twice). */
+function buildMapperInput(row) {
+  const slugs = [...new Set(Array.isArray(row.active_trade_slugs) ? row.active_trade_slugs : [])];
+  return {
+    projectType: row.project_type,
+    scopeTags: row.scope_tags,
+    structureType: row.structure_type,
+    isCoa: row._is_coa === true,
+    activeTradeCount: slugs.length,
+  };
+}
+
+/**
+ * Telemetry classifier for rows that FELL THROUGH to T4 — lets the Muscle
+ * distinguish the non-residential bypass (mapper never called) from a genuine
+ * mapper-null residential (the archetype_nofit_residential_warn_pct signal).
+ * @returns {'not_lowrise'|'mapper_null'|'mapped'}
+ */
+function archetypeMapperOutcome(row) {
+  if (!isLowRiseResidential(row.structure_type)) return 'not_lowrise';
+  return mapToLines(buildMapperInput(row)) ? 'mapped' : 'mapper_null';
+}
+
+function tryArchetypeCost(row, config) {
+  if (!config || !config.archetypeEnabled) return null;
+  if (!isLowRiseResidential(row.structure_type)) return null;
+
+  const mapped = mapToLines(buildMapperInput(row));
+  if (!mapped) return null; // T4
+
+  const telemetryBase = { _archetypeLines: mapped.lines, _archetypeMapKind: mapped.mapKind };
+
+  // Additive pair: sum the two line TOTALS (each per-sqm × ITS OWN area — never one shared area).
+  // T1 refinement deliberately skipped for pairs (two scopes, one declared area is ambiguous).
+  if (mapped.lines.length === 2) {
+    // capClass is only ever set on the escalated single-line result (undefined for additive
+    // pairs) → the override is a harmless no-op here, forwarded for uniformity.
+    const a = priceLine(row, mapped.lines[0], config, mapped.capClass);
+    const b = priceLine(row, mapped.lines[1], config, mapped.capClass);
+    const aOk = a && !a.fitBlocked && a.total != null;
+    const bOk = b && !b.fitBlocked && b.total != null;
+    if (aOk && bOk) {
+      return archetypeEnvelope(row, config, {
+        total: a.total + b.total,
+        source: 'archetype_parcel',
+        area: (a.area || 0) + (b.area || 0) || null,
+        telemetry: { ...telemetryBase, _archetypeTier: 'additive', _archetypeRejections: [...a.rejections, ...b.rejections] },
+      });
+    }
+    // One side unpriceable → fall back to the dominance winner alone.
+    const single = aOk ? a : bOk ? b : null;
+    if (single) {
+      return archetypeEnvelope(row, config, {
+        total: single.total,
+        source: single.tier === 't1' ? 'archetype_declared_area' : single.tier === 't3' ? 'archetype_rate' : 'archetype_parcel',
+        area: single.area,
+        telemetry: { ...telemetryBase, _archetypeTier: single.tier, _archetypeRejections: single.rejections },
+      });
+    }
+    if ((a && a.fitBlocked) || (b && b.fitBlocked)) {
+      return archetypeNoneEnvelope(row, config, { ...telemetryBase, _archetypeFitBlocked: true });
+    }
+    if ((a && a.zeroTotal) || (b && b.zeroTotal)) {
+      return archetypeNoneEnvelope(row, config, { ...telemetryBase, _archetypeZeroTotal: true });
+    }
+    return null; // both unpriceable → T4
+  }
+
+  const priced = priceLine(row, mapped.lines[0], config, mapped.capClass);
+  if (priced && priced.fitBlocked) {
+    return archetypeNoneEnvelope(row, config, { ...telemetryBase, _archetypeFitBlocked: true });
+  }
+  if (priced && priced.zeroTotal) {
+    return archetypeNoneEnvelope(row, config, { ...telemetryBase, _archetypeZeroTotal: true });
+  }
+  if (priced && priced.total != null && priced.total > 0) {
+    return archetypeEnvelope(row, config, {
+      total: priced.total,
+      source: priced.tier === 't1' ? 'archetype_declared_area' : priced.tier === 't3' ? 'archetype_rate' : 'archetype_parcel',
+      area: priced.area,
+      telemetry: { ...telemetryBase, _archetypeTier: priced.tier, _archetypeRejections: priced.rejections },
+    });
+  }
+  // Mapped but unpriceable (no scalar, no own area) → the legacy path prices it as today (T4).
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Primary entry point
 // ---------------------------------------------------------------------------
 
@@ -520,6 +833,15 @@ function estimateCostShared(row, config) {
       _matrixMissKey:         null,
     };
   }
+
+  // ── §3-ARCHETYPE ladder (WF2 2026-07-06) ────────────────────────────────
+  // Low-rise residential leads whose scope maps to a Spec 88 archetype line
+  // are priced top-down from the parcel's precomputed archetype costs
+  // (T1 declared-area → T2 parcel line total → T3 rate-table). Everything
+  // else — mapper-null residential, non-residential, non-lowrise — falls
+  // through to the legacy Steps A–D below (the T4 path), unchanged.
+  const archetypeResult = tryArchetypeCost(row, config);
+  if (archetypeResult) return archetypeResult;
 
   // ── Input sanitization (spec 83 §3 Step 1 — W12, W21) ──────────────────
   const rawCost = Number.isFinite(row.est_const_cost) ? row.est_const_cost : null;
@@ -636,6 +958,13 @@ module.exports = {
   computePremiumFactor,
   computeComplexityScore,
   determineCostTier,
+  // §3-ARCHETYPE ladder (for unit testing + Muscle/shim config assembly)
+  tryArchetypeCost,
+  priceLine,
+  sliceArchetypeTotal,
+  resolveArchetypeRates,
+  archetypeMapperOutcome,
+  ARCHETYPE_RANGE_PCT,
   // Constants
   INTERIOR_TRADE_SLUGS,
   SHELL_INTERIOR_MULTIPLIER,

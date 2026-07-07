@@ -22,7 +22,15 @@ const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 const { safeParsePositiveInt } = require('./lib/safe-math');
 // Brain: pure valuation logic shared by this Muscle and the TS read-path.
-const { estimateCostShared, MODEL_VERSION } = require('../src/features/leads/lib/cost-model-shared');
+// §3-ARCHETYPE (WF2 2026-07-06): resolveArchetypeRates keeps the Spec 88 §2.9
+// escalation formula single-sourced; archetypeMapperOutcome classifies T4
+// fallthrough rows for the nofit-residential gate.
+const {
+  estimateCostShared,
+  resolveArchetypeRates,
+  archetypeMapperOutcome,
+  MODEL_VERSION,
+} = require('../src/features/leads/lib/cost-model-shared');
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 // Spec 40 §3.5: advisory lock ID = spec number convention.
@@ -66,6 +74,29 @@ const COST_MODEL_CONFIG_SCHEMA = z.object({
   // Remains seeded in logic_variables.json and ZERO_IS_INVALID for future use.
   liar_gate_threshold:            z.coerce.number().positive().max(1),
   cost_model_coverage_warn_pct:   z.coerce.number().finite().positive(),
+  // WF1 Spec 83 §3.A — externalized OB-2/OB-3a/OB-3b thresholds. Validated at
+  // startup so a missing or out-of-range Spec 86 Control Panel value fails
+  // fast instead of silently producing NaN that would disable the FAIL gate.
+  cost_model_coverage_fail_pct:   z.coerce.number().finite().min(0).max(100),
+  cost_matrix_miss_warn_pct:      z.coerce.number().finite().min(0).max(100),
+  cost_matrix_miss_fail_pct:      z.coerce.number().finite().min(0).max(100),
+  cost_ptc_skipped_warn_pct:      z.coerce.number().finite().min(0).max(100),
+  // §3-ARCHETYPE (WF2 2026-07-06) — ladder guards + T4-scoped observability
+  // thresholds. All seeded in logic_variables.json; validated here so a bad
+  // Control Panel edit fails fast instead of silently disabling a T1/T2 bound.
+  cost_t4_matrix_miss_warn_pct:         z.coerce.number().finite().min(0).max(100),
+  cost_t4_matrix_miss_fail_pct:         z.coerce.number().finite().min(0).max(100),
+  archetype_nofit_residential_warn_pct: z.coerce.number().finite().min(0).max(100),
+  archetype_t1_fsi_min:                 z.coerce.number().positive().finite(),
+  archetype_t1_fsi_max:                 z.coerce.number().positive().finite(),
+  archetype_t1_total_cap:               z.coerce.number().positive().finite(),
+  archetype_t2_reno_line_cap:           z.coerce.number().positive().finite(),
+  archetype_t2_build_line_cap:          z.coerce.number().positive().finite(),
+  archetype_t2_build_line_min:          z.coerce.number().finite().min(0),
+  archetype_t3_total_cap:               z.coerce.number().positive().finite(), // WF3 F2 — T3 per-unit cap
+  // Escalation index (Spec 88 §2.9) — optional; missing → multiplier 1.0
+  // (mirrors compute-parcel-cost-estimates.js, which WARNs but never crashes).
+  cost_escalation_index:                z.coerce.number().positive().finite().optional(),
 }).passthrough();
 
 // ─── Source query ─────────────────────────────────────────────────────────────
@@ -84,6 +115,35 @@ const SOURCE_SQL = `
     p.scope_tags,
     p.dwelling_units_created,
     p.storeys,
+    -- §3-ARCHETYPE (WF2 2026-07-06): mapper inputs + the Spec 88 §4D propagated
+    -- premium-INCLUSIVE cost scalars + their geom-basis areas + the lead's own
+    -- declared areas (T1). All live on permits directly — no parcel_cost_menu join.
+    p.project_type,
+    p.residential_sqm::float8             AS residential_sqm,
+    p.interior_alterations_sqm::float8    AS interior_alterations_sqm,
+    p.neighbourhood_cost_premium::float8  AS neighbourhood_cost_premium,
+    p.cost_fb_total::float8               AS cost_fb_total,
+    p.cost_coa_total::float8              AS cost_coa_total,
+    p.cost_addition_total::float8         AS cost_addition_total,
+    p.cost_gut_total::float8              AS cost_gut_total,
+    p.cost_basement_underpin_per_sqm::float8 AS cost_basement_underpin_per_sqm,
+    p.cost_basement_per_sqm::float8       AS cost_basement_per_sqm,
+    p.cost_garage_total::float8           AS cost_garage_total,
+    p.cost_laneway_suite_total::float8    AS cost_laneway_suite_total,
+    p.cost_garden_suite_total::float8     AS cost_garden_suite_total,
+    p.cost_kitchen_per_sqm::float8        AS cost_kitchen_per_sqm,
+    p.cost_bath_per_sqm::float8           AS cost_bath_per_sqm,
+    p.cost_solar_total::float8            AS cost_solar_total,
+    p.opt_aor_gfa_sqm::float8             AS opt_aor_gfa_sqm,
+    p.opt_coa_gfa_sqm::float8             AS opt_coa_gfa_sqm,
+    p.cur_floor_gfa_sqm::float8           AS cur_floor_gfa_sqm,
+    p.cur_pot_2story_gfa_sqm::float8      AS cur_pot_2story_gfa_sqm,
+    p.max_garage_gfa_sqm::float8          AS max_garage_gfa_sqm,
+    p.max_laneway_suite_gfa_sqm::float8   AS max_laneway_suite_gfa_sqm,
+    p.max_garden_suite_gfa_sqm::float8    AS max_garden_suite_gfa_sqm,
+    p.cur_est_kitchen_gfa_sqm::float8     AS cur_est_kitchen_gfa_sqm,
+    p.cur_est_bath_gfa_sqm::float8        AS cur_est_bath_gfa_sqm,
+    p.max_buildable_footprint_sqm::float8 AS max_buildable_footprint_sqm,
     pp_parcel.lot_size_sqm::float8        AS lot_size_sqm,
     pp_parcel.frontage_m::float8          AS frontage_m,
     bf.footprint_area_sqm::float8         AS footprint_area_sqm,
@@ -251,12 +311,19 @@ if (require.main === module) {
     }
 
     // ── 4. Pre-fetch surgical rate tables ────────────────────────────────
-    const [tradeRatesRes, scopeMatrixRes] = await Promise.all([
+    const [tradeRatesRes, scopeMatrixRes, archetypeRatesRes] = await Promise.all([
       pool.query(
         'SELECT trade_slug, base_rate_sqft::float8, structure_complexity_factor::float8 FROM trade_sqft_rates',
       ),
       pool.query(
         'SELECT permit_type, structure_type, gfa_allocation_percentage::float8 FROM scope_intensity_matrix',
+      ),
+      // §3-ARCHETYPE T3 — same table Spec 88's engine prices from.
+      pool.query(
+        `SELECT archetype, cost_per_sqm::float8 AS cost_per_sqm,
+                cost_adjustment_factor::float8 AS cost_adjustment_factor,
+                escalation_index_base::float8 AS escalation_index_base
+           FROM archetype_cost_rates`,
       ),
     ]);
     const tradeRates = Object.fromEntries(
@@ -265,18 +332,37 @@ if (require.main === module) {
         structure_complexity_factor: r.structure_complexity_factor,
       }]),
     );
+    // Spec 83 §3.A WF1 re-key — exact production vocabulary, no case
+    // normalization. Defensive .trim() to symmetrise the Brain's input
+    // sanitization (PI-7 found 1.9% of permits with leading/trailing
+    // whitespace). DB-side rows assumed clean (PI-7 also found 0 anomalies
+    // in scope_intensity_matrix); .trim() here is defence-in-depth.
     const scopeMatrix = Object.fromEntries(
       scopeMatrixRes.rows.map((r) => [
-        `${r.permit_type.toLowerCase()}::${r.structure_type.toLowerCase()}`,
+        `${(r.permit_type || '').trim()}::${(r.structure_type || '').trim()}`,
         r.gfa_allocation_percentage,
       ]),
     );
     if (tradeRatesRes.rows.length === 0) {
       throw new Error('trade_sqft_rates table is empty — aborting to prevent zero-cost estimates for all permits');
     }
+    // §3-ARCHETYPE T3 rates — pre-resolved to premium-EXCLUSIVE per-sqm via the
+    // Brain's single-source escalation helper (Spec 88 §2.9: MAX(1, now/base)).
+    // Empty rates table is a WARN, not fatal: T1/T2 still price from the
+    // propagated scalars; only the T3 rung degrades (those rows fall to T4).
+    const archetypeRates = resolveArchetypeRates(
+      archetypeRatesRes.rows,
+      logicVars.cost_escalation_index != null ? Number(logicVars.cost_escalation_index) : null,
+    );
+    if (archetypeRatesRes.rows.length === 0) {
+      pipeline.log.warn(
+        '[compute-cost-estimates]',
+        'archetype_cost_rates is empty — T3 rung disabled; T3-eligible rows fall through to T4',
+      );
+    }
     pipeline.log.info(
       '[compute-cost-estimates]',
-      `Pre-fetched ${tradeRatesRes.rows.length} trade rates, ${scopeMatrixRes.rows.length} matrix entries`,
+      `Pre-fetched ${tradeRatesRes.rows.length} trade rates, ${scopeMatrixRes.rows.length} matrix entries, ${archetypeRatesRes.rows.length} archetype rates`,
     );
 
     // WF2 #3 — startup guard (Spec 47 §R5): permit_type_classifications drives
@@ -297,6 +383,22 @@ if (require.main === module) {
       urbanCoverageRatio:    logicVars.urban_coverage_ratio,
       suburbanCoverageRatio: logicVars.suburban_coverage_ratio,
       liarGateThreshold:     logicVars.liar_gate_threshold,
+      // §3-ARCHETYPE (WF2 2026-07-06) — the T1–T3 ladder ahead of Steps A–D.
+      // Zod-validated above; Number() coercion here because logic_variables
+      // values arrive as text.
+      // ROLLBACK KILL-SWITCH (Phase F): `ARCHETYPE_COST_DISABLED=1` flips the
+      // ladder OFF so a re-run reproduces the legacy Spec-83 derivation end-to-end
+      // (the old path is code-preserved as T4). Default ON. See the runbook:
+      // docs/specs/01-pipeline/runbooks/83_archetype_cost_rollback.md
+      archetypeEnabled:   process.env.ARCHETYPE_COST_DISABLED !== '1',
+      archetypeRates,
+      archetypeT1FsiMin:  Number(logicVars.archetype_t1_fsi_min),
+      archetypeT1FsiMax:  Number(logicVars.archetype_t1_fsi_max),
+      archetypeT1TotalCap: Number(logicVars.archetype_t1_total_cap),
+      archetypeT2RenoCap:  Number(logicVars.archetype_t2_reno_line_cap),
+      archetypeT2BuildCap: Number(logicVars.archetype_t2_build_line_cap),
+      archetypeT2BuildMin: Number(logicVars.archetype_t2_build_line_min),
+      archetypeT3TotalCap: Number(logicVars.archetype_t3_total_cap), // WF3 F2
     };
 
     // ── 6. RUN_AT: single DB timestamp captured once after lock ────────────
@@ -320,6 +422,22 @@ if (require.main === module) {
     let matrixMisses = 0;          // WF3 Pass-2.5 Finding D — Spec 83 §3 Step B
     let matrixMissUniqueKeys = 0;  // scalar — counts ALL distinct keys seen (uncapped)
     const matrixMissByKey = new Map(); // bounded at MATRIX_MISS_KEYS_CAP
+    // §3-ARCHETYPE (WF2 2026-07-06) — per-tier + fallthrough telemetry.
+    // t4Processed is the denominator for the T4-scoped matrix-miss gate
+    // (Observability item 1: full-population %s are meaningless once T1–T3
+    // bypass the matrix). nofit split per the plan: mapper-null residential is
+    // the WARN-gated mapper-quality signal; the non-lowrise bypass is INFO.
+    let archetypeT1 = 0;             // cost_source = archetype_declared_area
+    let archetypeT2 = 0;             // cost_source = archetype_parcel (single line)
+    let archetypeT3 = 0;             // cost_source = archetype_rate
+    let archetypeAdditive = 0;       // archetype_parcel via an additive pair
+    let archetypeFitBlocked = 0;     // fits:false → cost_source 'none'
+    let archetypeZeroTotal = 0;      // present-but-zero scalar → 'none' (tier_none_count)
+    let archetypeTradeless = 0;      // archetype-priced with trade_contract_values = {}
+    let archetypeNofitResidential = 0; // low-rise residential, mapper returned null → T4
+    let archetypeUnpriceableT4 = 0;  // mapped but no scalar + no own area → T4
+    let t4NonResidential = 0;        // outside the low-rise gate → T4 (mapper never called)
+    let t4Processed = 0;             // all rows priced by the legacy Steps A–D
 
     try {
       const sourceSQL = rowLimit ? `${SOURCE_SQL} LIMIT ${rowLimit}` : SOURCE_SQL;
@@ -338,12 +456,50 @@ if (require.main === module) {
       for await (const row of pipeline.streamQuery(pool, sourceSQL)) {
         processed++;
 
-        if (dryRun) continue; // count rows without writing
-
+        // WF2 §3-ARCHETYPE (2026-07-06): compute ALWAYS runs — dry-run is the
+        // Phase E shadow/report mode, so every estimate + telemetry counter must
+        // be exercised. Only the DB write is skipped: the batch is staged +
+        // flushed under `if (!dryRun)` (the Map stays empty in dry-run, so the
+        // flush blocks below never fire). The prior `if (dryRun) continue` here
+        // short-circuited BEFORE pricing, producing an all-zero (meaningless)
+        // audit — it could not serve as a shadow of the archetype ladder.
         const estimate = estimateCostShared(row, config);
-        batchByLeadId.set(getBatchLeadId(estimate), estimate);
+        if (!dryRun) batchByLeadId.set(getBatchLeadId(estimate), estimate);
 
         if (estimate.estimated_cost == null) nullEstimates++;
+
+        // §3-ARCHETYPE tier + fallthrough classification (WF2 2026-07-06).
+        // Envelope-first: archetype-priced rows carry cost_source archetype_* or
+        // the _archetype* 'none' flags; everything else that passed the class
+        // gate went down the legacy Steps A–D (T4) and gets the nofit split via
+        // the Brain's own mapper (archetypeMapperOutcome — same input builder).
+        const isArchetypeSource = typeof estimate.cost_source === 'string'
+          && estimate.cost_source.startsWith('archetype_');
+        if (isArchetypeSource) {
+          if (estimate._archetypeTier === 'additive') archetypeAdditive++;
+          else if (estimate._archetypeTier === 't1') archetypeT1++;
+          else if (estimate._archetypeTier === 't3') archetypeT3++;
+          else archetypeT2++;
+          if (Object.keys(estimate.trade_contract_values || {}).length === 0) archetypeTradeless++;
+        } else if (estimate._archetypeFitBlocked) {
+          archetypeFitBlocked++;
+        } else if (estimate._archetypeZeroTotal) {
+          archetypeZeroTotal++;
+        } else if (!estimate._permitTypeClassSkipped) {
+          t4Processed++;
+          const outcome = archetypeMapperOutcome(row);
+          if (outcome === 'mapper_null') archetypeNofitResidential++;
+          else if (outcome === 'mapped') archetypeUnpriceableT4++;
+          else t4NonResidential++;
+        }
+
+        // WF2 §3-ARCHETYPE (2026-07-06): the archetype envelopes hard-set
+        // _liarsGateOverride:false / _zeroTotalBypass:false — the Liar's Gate is
+        // retired for T1–T3 (Decision 2) and archetype zero-totals route through
+        // _archetypeZeroTotal instead. So these two counters (and the
+        // data_quality_snapshots columns they feed) now measure the T4 (legacy)
+        // path ONLY. They are KEPT unchanged (no second migration) with this
+        // T4-scope annotation; the archetype tiers report via their own telemetry.
         if (estimate._liarsGateOverride) liarsGateOverrides++;
         if (estimate._zeroTotalBypass)   zeroTotalBypasses++;
         if (estimate._permitTypeClassSkipped) permitTypeClassSkipped++;
@@ -445,10 +601,133 @@ if (require.main === module) {
       }
     }
 
+    // ── 8.5 §3-ARCHETYPE declared-ratio calibration signal ──────────────────
+    // Declared cost is never ASSIGNED on T1–T3 (Decision 2) but stays the
+    // calibration signal: per-tier p50 of model÷declared, computed DB-SIDE via
+    // PERCENTILE_CONT (the CoA OOM precedent — never accumulate ratios in JS).
+    // Best-effort INFO telemetry; > PLACEHOLDER threshold excludes the $1
+    // placeholder filings that made the old Liar's Gate necessary.
+    const declaredRatioRows = [];
+    if (!dryRun) {
+      try {
+        const ratioRes = await pool.query(
+          `SELECT ce.cost_source,
+                  PERCENTILE_CONT(0.5) WITHIN GROUP (
+                    ORDER BY ce.estimated_cost::float8 / p.est_const_cost::float8
+                  ) AS ratio_p50,
+                  COUNT(*)::int AS n
+             FROM cost_estimates ce
+             JOIN permits p ON p.permit_num = ce.permit_num
+                           AND p.revision_num = ce.revision_num
+            WHERE ce.cost_source LIKE 'archetype\\_%'
+              AND ce.estimated_cost IS NOT NULL
+              AND p.est_const_cost > 1000
+            GROUP BY ce.cost_source`,
+        );
+        for (const r of ratioRes.rows) {
+          declaredRatioRows.push({
+            metric: `declared_ratio_p50_${r.cost_source}`,
+            value: r.ratio_p50 != null ? Number(r.ratio_p50).toFixed(2) + `x (n=${r.n})` : 'N/A',
+            threshold: null,
+            status: 'INFO',
+          });
+        }
+      } catch (ratioErr) {
+        pipeline.log.warn('[compute-cost-estimates]', 'declared-ratio telemetry query failed', {
+          err: ratioErr && ratioErr.message,
+        });
+      }
+    }
+
     // ── 9. Emit summary ────────────────────────────────────────────────────
+    // WF1 Spec 83 §3.A re-key — OB-1 cascade + OB-2 zero-coverage FAIL +
+    // OB-3a permit_type_class_skipped_pct + OB-3b matrix_miss_pct.
+    // OB-2 is the architecture-independent gate that catches the 14-day
+    // silent regression mechanism (model_coverage_pct stuck at 0).
     const modelCoveragePct = processed > 0
       ? ((processed - nullEstimates) / processed) * 100
       : 0;
+    const matrixMissPct = processed > 0
+      ? (matrixMisses / processed) * 100
+      : 0;
+    const permitTypeClassSkippedPct = processed > 0
+      ? (permitTypeClassSkipped / processed) * 100
+      : 0;
+    // §3-ARCHETYPE denominators (WF2 2026-07-06). residentialProcessed = every
+    // construction-class row inside the low-rise gate (priced + none'd + T4
+    // fallthrough); matrix misses can only occur on the T4 path, so the gated
+    // miss rate uses t4Processed.
+    const archetypePriced = archetypeT1 + archetypeT2 + archetypeT3 + archetypeAdditive;
+    const residentialProcessed = archetypePriced + archetypeFitBlocked + archetypeZeroTotal
+      + archetypeNofitResidential + archetypeUnpriceableT4;
+    const archetypeCoveragePct = residentialProcessed > 0
+      ? (archetypePriced / residentialProcessed) * 100
+      : 0;
+    const archetypeNofitPct = residentialProcessed > 0
+      ? (archetypeNofitResidential / residentialProcessed) * 100
+      : 0;
+    const t4MatrixMissPct = t4Processed > 0
+      ? (matrixMisses / t4Processed) * 100
+      : 0;
+
+    // All thresholds externalized to logic_variables (Spec 86 Control Panel-tunable).
+    // Defaults documented in scripts/seeds/logic_variables.json.
+    const warnPct      = Number(logicVars.cost_model_coverage_warn_pct);
+    const coverageFail = Number(logicVars.cost_model_coverage_fail_pct);
+    const missWarnPct  = Number(logicVars.cost_matrix_miss_warn_pct);
+    const missFailPct  = Number(logicVars.cost_matrix_miss_fail_pct);
+    const ptcWarnPct   = Number(logicVars.cost_ptc_skipped_warn_pct);
+    const t4MissWarnPct = Number(logicVars.cost_t4_matrix_miss_warn_pct);
+    const t4MissFailPct = Number(logicVars.cost_t4_matrix_miss_fail_pct);
+    const nofitWarnPct  = Number(logicVars.archetype_nofit_residential_warn_pct);
+
+    // OB-2 row — empty-input INFO branch, otherwise PASS/WARN/FAIL on coverage.
+    // Spec 83 §3.A WF1 thresholds: PI-3 mapping predicts ~52% post-fix coverage
+    // (47-57% acceptance band per D2). WARN = <warn_pct; FAIL <= coverageFail
+    // (architecture-independent: catches "matrix never matches anything" class).
+    const modelCoverageRow = !Number.isFinite(modelCoveragePct)
+      ? { metric: 'model_coverage_pct', value: 'N/A', threshold: `>= ${warnPct}%`, status: 'INFO' }
+      : processed === 0
+        ? { metric: 'model_coverage_pct', value: 'N/A', threshold: `>= ${warnPct}%`, status: 'INFO' }
+        : modelCoveragePct <= coverageFail
+          ? { metric: 'model_coverage_pct', value: modelCoveragePct.toFixed(1) + '%', threshold: `> ${coverageFail}%`, status: 'FAIL' }
+          : modelCoveragePct >= warnPct
+            ? { metric: 'model_coverage_pct', value: modelCoveragePct.toFixed(1) + '%', threshold: `>= ${warnPct}%`, status: 'PASS' }
+            : { metric: 'model_coverage_pct', value: modelCoveragePct.toFixed(1) + '%', threshold: `>= ${warnPct}%`, status: 'WARN' };
+
+    // OB-3b matrix_miss_pct — DEMOTED to INFO (§3-ARCHETYPE, WF2 2026-07-06):
+    // the full-population miss rate is meaningless once T1–T3 bypass the matrix
+    // (it can only shrink as archetype coverage grows). The GATED metric is
+    // t4_matrix_miss_pct below, on the T4 denominator, so a T4-only regression
+    // (matrix vocabulary drift) stays visible. Old thresholds kept as context.
+    const matrixMissRow = processed === 0
+      ? { metric: 'matrix_miss_pct', value: 'N/A', threshold: null, status: 'INFO' }
+      : { metric: 'matrix_miss_pct', value: matrixMissPct.toFixed(1) + '%', threshold: `(demoted; was <= ${missWarnPct}%/${missFailPct}%)`, status: 'INFO' };
+
+    // §3-ARCHETYPE t4_matrix_miss_pct — the T4-scoped replacement gate.
+    const t4MatrixMissRow = t4Processed === 0
+      ? { metric: 't4_matrix_miss_pct', value: 'N/A', threshold: `<= ${t4MissWarnPct}%`, status: 'INFO' }
+      : t4MatrixMissPct > t4MissFailPct
+        ? { metric: 't4_matrix_miss_pct', value: t4MatrixMissPct.toFixed(1) + '%', threshold: `<= ${t4MissWarnPct}% WARN, <= ${t4MissFailPct}% FAIL`, status: 'FAIL' }
+        : t4MatrixMissPct > t4MissWarnPct
+          ? { metric: 't4_matrix_miss_pct', value: t4MatrixMissPct.toFixed(1) + '%', threshold: `<= ${t4MissWarnPct}%`, status: 'WARN' }
+          : { metric: 't4_matrix_miss_pct', value: t4MatrixMissPct.toFixed(1) + '%', threshold: `<= ${t4MissWarnPct}%`, status: 'PASS' };
+
+    // §3-ARCHETYPE archetype_map_nofit_residential — the mapper-quality WARN
+    // gate (mapper CALLED and returned null, over the low-rise denominator).
+    const nofitRow = residentialProcessed === 0
+      ? { metric: 'archetype_map_nofit_residential_pct', value: 'N/A', threshold: `<= ${nofitWarnPct}%`, status: 'INFO' }
+      : archetypeNofitPct > nofitWarnPct
+        ? { metric: 'archetype_map_nofit_residential_pct', value: archetypeNofitPct.toFixed(1) + '%', threshold: `<= ${nofitWarnPct}%`, status: 'WARN' }
+        : { metric: 'archetype_map_nofit_residential_pct', value: archetypeNofitPct.toFixed(1) + '%', threshold: `<= ${nofitWarnPct}%`, status: 'PASS' };
+
+    // OB-3a permit_type_class_skipped_pct — externalized threshold.
+    const ptcSkippedRow = processed === 0
+      ? { metric: 'permit_type_class_skipped_pct', value: 'N/A', threshold: `<= ${ptcWarnPct}%`, status: 'INFO' }
+      : permitTypeClassSkippedPct > ptcWarnPct
+        ? { metric: 'permit_type_class_skipped_pct', value: permitTypeClassSkippedPct.toFixed(1) + '%', threshold: `<= ${ptcWarnPct}%`, status: 'WARN' }
+        : { metric: 'permit_type_class_skipped_pct', value: permitTypeClassSkippedPct.toFixed(1) + '%', threshold: `<= ${ptcWarnPct}%`, status: 'PASS' };
+
     const costAuditRows = [
       { metric: 'permits_processed',         value: processed,          threshold: null,    status: 'INFO' },
       { metric: 'permits_inserted',          value: inserted,           threshold: null,    status: 'INFO' },
@@ -457,7 +736,25 @@ if (require.main === module) {
       { metric: 'liar_gate_overrides',       value: liarsGateOverrides, threshold: null,    status: 'INFO' },
       { metric: 'zero_total_bypass',         value: zeroTotalBypasses,  threshold: null,    status: 'INFO' },
       { metric: 'permit_type_class_skipped', value: permitTypeClassSkipped, threshold: null, status: 'INFO' },
-      { metric: 'model_coverage_pct',        value: modelCoveragePct.toFixed(1) + '%', threshold: `>= ${logicVars.cost_model_coverage_warn_pct}%`, status: modelCoveragePct >= logicVars.cost_model_coverage_warn_pct ? 'PASS' : 'WARN' },
+      ptcSkippedRow,
+      modelCoverageRow,
+      matrixMissRow,
+      t4MatrixMissRow,
+      // §3-ARCHETYPE tier + fallthrough rows (WF2 2026-07-06) — tier counts INFO;
+      // the nofit split: mapper-null residential WARN-gated, non-lowrise INFO.
+      { metric: 'archetype_t1_declared_area',   value: archetypeT1,             threshold: null, status: 'INFO' },
+      { metric: 'archetype_t2_parcel',          value: archetypeT2,             threshold: null, status: 'INFO' },
+      { metric: 'archetype_t3_rate',            value: archetypeT3,             threshold: null, status: 'INFO' },
+      { metric: 'archetype_additive_pairs',     value: archetypeAdditive,       threshold: null, status: 'INFO' },
+      { metric: 'archetype_coverage_pct',       value: residentialProcessed > 0 ? archetypeCoveragePct.toFixed(1) + '%' : 'N/A', threshold: null, status: 'INFO' },
+      { metric: 'tier_none_count',              value: archetypeFitBlocked + archetypeZeroTotal, threshold: null, status: 'INFO' },
+      { metric: 'archetype_fit_blocked',        value: archetypeFitBlocked,     threshold: null, status: 'INFO' },
+      { metric: 'archetype_zero_total',         value: archetypeZeroTotal,      threshold: null, status: 'INFO' },
+      { metric: 'archetype_tradeless_count',    value: archetypeTradeless,      threshold: null, status: 'INFO' },
+      { metric: 'archetype_unpriceable_t4',     value: archetypeUnpriceableT4,  threshold: null, status: 'INFO' },
+      { metric: 't4_nonresidential_count',      value: t4NonResidential,        threshold: null, status: 'INFO' },
+      nofitRow,
+      ...declaredRatioRows,
     ];
     // WF3 Pass-2.5 Finding D — gated on >0 to avoid zero-count noise (DeepSeek NIT)
     if (matrixMisses > 0) {
@@ -492,7 +789,16 @@ if (require.main === module) {
       costAuditRows.push({ metric: 'failed_rows',    value: failedRows,    threshold: '== 0', status: 'WARN' });
       costAuditRows.push({ metric: 'failed_batches', value: failedBatches, threshold: '== 0', status: 'WARN' });
     }
-    const costVerdict = failedRows > 0 || modelCoveragePct < logicVars.cost_model_coverage_warn_pct ? 'WARN' : 'PASS';
+    // OB-1 row-derived verdict cascade (Spec 47 §8.2): pick highest severity
+    // from any audit row. Replaces parallel-boolean which couldn't escalate
+    // to FAIL (the 14-day silent regression mechanism — coverage was 0 but
+    // verdict capped at WARN). Now FAIL propagates and the chain orchestrator
+    // can short-circuit downstream consumers.
+    const costVerdict = costAuditRows.some((r) => r.status === 'FAIL')
+      ? 'FAIL'
+      : costAuditRows.some((r) => r.status === 'WARN')
+        ? 'WARN'
+        : 'PASS';
 
     pipeline.emitSummary({
       records_total:   processed,
@@ -512,7 +818,19 @@ if (require.main === module) {
 
     pipeline.emitMeta(
       {
-        permits:                ['permit_num', 'revision_num', 'permit_type', 'structure_type', 'est_const_cost', 'scope_tags'],
+        permits:                [
+          'permit_num', 'revision_num', 'permit_type', 'structure_type', 'est_const_cost', 'scope_tags',
+          // §3-ARCHETYPE (WF2 2026-07-06): mapper inputs + Spec 88 §4D propagated columns
+          'project_type', 'residential_sqm', 'interior_alterations_sqm', 'dwelling_units_created',
+          'neighbourhood_cost_premium',
+          'cost_fb_total', 'cost_coa_total', 'cost_addition_total', 'cost_gut_total',
+          'cost_basement_underpin_per_sqm', 'cost_basement_per_sqm', 'cost_garage_total',
+          'cost_laneway_suite_total', 'cost_garden_suite_total', 'cost_kitchen_per_sqm',
+          'cost_bath_per_sqm', 'cost_solar_total',
+          'opt_aor_gfa_sqm', 'opt_coa_gfa_sqm', 'cur_floor_gfa_sqm', 'cur_pot_2story_gfa_sqm',
+          'max_garage_gfa_sqm', 'max_laneway_suite_gfa_sqm', 'max_garden_suite_gfa_sqm',
+          'cur_est_kitchen_gfa_sqm', 'cur_est_bath_gfa_sqm', 'max_buildable_footprint_sqm',
+        ],
         permit_trades:          ['permit_num', 'revision_num', 'trade_slug'],
         permit_parcels:         ['permit_num', 'revision_num', 'parcel_id'],
         parcels:                ['id', 'lot_size_sqm'],
@@ -522,6 +840,8 @@ if (require.main === module) {
         trade_sqft_rates:       ['trade_slug', 'base_rate_sqft', 'structure_complexity_factor'],
         scope_intensity_matrix: ['permit_type', 'structure_type', 'gfa_allocation_percentage'],
         permit_type_classifications: ['permit_type', 'class'],
+        // §3-ARCHETYPE T3 rates + escalation index (Spec 88 §2.9)
+        archetype_cost_rates:   ['archetype', 'cost_per_sqm', 'cost_adjustment_factor', 'escalation_index_base'],
       },
       {
         cost_estimates: [

@@ -62,75 +62,23 @@ function makeNeighbourhood(
   };
 }
 
-describe('estimateCost — permit-reported path', () => {
-  it('uses est_const_cost directly when > $1,000', () => {
-    const result = estimateCost(
-      makePermit({ est_const_cost: 1_200_000 }),
-      makeParcel(),
-      makeFootprint(),
-      makeNeighbourhood(),
-    );
-    expect(result.cost_source).toBe('permit');
-    expect(result.estimated_cost).toBe(1_200_000);
-    expect(result.cost_range_low).toBe(1_200_000);
-    expect(result.cost_range_high).toBe(1_200_000);
-    expect(result.cost_tier).toBe('large');
-  });
-
-  it('rejects placeholder cost of $1 and falls through to model', () => {
-    const result = estimateCost(
-      makePermit({ est_const_cost: 1 }),
-      makeParcel(),
-      makeFootprint(),
-      makeNeighbourhood(),
-    );
-    expect(result.cost_source).toBe('model');
-  });
-
-  it('exactly $1,000 falls through to model (boundary: > 1000)', () => {
-    const result = estimateCost(
-      makePermit({ est_const_cost: 1000 }),
-      makeParcel(),
-      makeFootprint(),
-      makeNeighbourhood(),
-    );
-    expect(result.cost_source).toBe('model');
-  });
-
-  it('$1,001 is used directly when no geometry is available (gate quiet)', () => {
-    // WF3-06 note: with geometry present the Liar's Gate would fire
-    // against $1,001 vs a ~$1.4M model (0.07% ratio). Passing null
-    // parcel + footprint means modelCost=0 → gate condition
-    // `modelCost > 0` is false → permit path passes through.
-    const result = estimateCost(
-      makePermit({ est_const_cost: 1001 }),
-      null,
-      null,
-      makeNeighbourhood(),
-    );
-    expect(result.cost_source).toBe('permit');
-    expect(result.estimated_cost).toBe(1001);
-    expect(result.is_geometric_override).toBe(false);
-  });
-
-  it('$1,001 with valid geometry triggers the Liar\'s Gate and reclassifies to model', () => {
-    // Mutation-survivor coverage: a permit just above the placeholder
-    // threshold against a non-trivial model must fire the gate. Catches
-    // a class of regressions where the gate accidentally skips small
-    // values.
-    const result = estimateCost(
-      makePermit({ est_const_cost: 1001 }),
-      makeParcel(),
-      makeFootprint(),
-      makeNeighbourhood(),
-    );
-    expect(result.cost_source).toBe('model');
-    expect(result.is_geometric_override).toBe(true);
-    // Model cost: 200 × 2 × 3000 × 1.15 premium (80K income tier) = 1,380,000
-    expect(result.estimated_cost).toBeCloseTo(1_380_000, 0);
-  });
-});
-
+// ─── RETIRED (WF2 §3-ARCHETYPE, 2026-07-06 — Guardian F1-A) ──────────────────
+// Three `estimateCost` V1-inline-path integration blocks were retired here:
+//   1. "permit-reported path" (Liar's-Gate accept/override on est_const_cost)
+//   2. "urban-aware fallback (no footprint)" (residential geometric lot-fallback)
+//   3. "WF3-06 (H-W9) — Liar's Gate in TS estimateCost"
+// Rationale: `estimateCost` has NO production callers — production reads the
+// `cost_estimates` rows the Muscle writes via the shared Brain. For residential
+// low-rise leads the Brain now prices through the archetype ladder, and the
+// Liar's Gate is RETIRED for T1–T3 (Decision 2; kept only for T4). These blocks
+// pinned the pre-archetype inline behavior as canonical, which it no longer is.
+// Replacement coverage (through the REAL production path):
+//   • Liar's Gate (all 4 branches) → cost-model-shared.logic.test.ts `applyLiarsGate`
+//   • Trust/Override/Default/GFA-fallback parity → parity-battery.test.ts
+//   • the archetype ladder that supersedes them → archetype-ladder.logic.test.ts
+//     + the §3-ARCHETYPE block in parity-battery.test.ts (T1/T2 TS↔JS parity)
+// The V1 helper units (determineBaseRate, computeBuildingArea, sumScopeAdditions,
+// …) remain fully tested below — only the retired-behavior integrations were cut.
 describe('estimateCost — base rate categories', () => {
   it('New SFD → $3000/sqm', () => {
     expect(BASE_RATES.sfd).toBe(3000);
@@ -226,66 +174,6 @@ describe('estimateCost — base rate categories', () => {
   });
 });
 
-describe('estimateCost — urban-aware fallback (no footprint)', () => {
-  it('uses 0.7 coverage for urban lots (tenure_renter_pct > 50)', () => {
-    const urban = estimateCost(
-      makePermit(),
-      makeParcel({ lot_size_sqm: 500 }),
-      null,
-      makeNeighbourhood({ tenure_renter_pct: 60 }),
-    );
-    // Urban: 500 × 0.7 × 2 floors = 700 sqm
-    // Suburban: 500 × 0.4 × 2 = 400 sqm
-    const suburban = estimateCost(
-      makePermit(),
-      makeParcel({ lot_size_sqm: 500 }),
-      null,
-      makeNeighbourhood({ tenure_renter_pct: 40 }),
-    );
-    expect(urban.estimated_cost ?? 0).toBeGreaterThan(suburban.estimated_cost ?? 0);
-  });
-
-  it('residential uses 2 floors, commercial uses 1 (distinct area calculations)', () => {
-    // Residential: 500 × 0.4 × 2 floors × 3000 rate × 1.15 premium = 1,380,000
-    // Commercial:  500 × 0.4 × 1 floor  × 4000 rate × 1.15 premium =   920,000
-    const res = estimateCost(
-      makePermit({ permit_type: 'New Building', structure_type: 'Detached Dwelling' }),
-      makeParcel({ lot_size_sqm: 500 }),
-      null,
-      makeNeighbourhood({ tenure_renter_pct: 40, avg_household_income: 80_000 }),
-    );
-    const com = estimateCost(
-      makePermit({ permit_type: 'New Building', structure_type: 'Commercial' }),
-      makeParcel({ lot_size_sqm: 500 }),
-      null,
-      makeNeighbourhood({ tenure_renter_pct: 40, avg_household_income: 80_000 }),
-    );
-    expect(res.estimated_cost).not.toBeNull();
-    expect(com.estimated_cost).not.toBeNull();
-    expect(res.estimated_cost).toBeCloseTo(1_380_000, 0);
-    expect(com.estimated_cost).toBeCloseTo(920_000, 0);
-    // Direction check: residential > commercial in this scenario
-    expect(res.estimated_cost).toBeGreaterThan(com.estimated_cost ?? 0);
-  });
-
-  it('fallback path produces ±50% range, not ±25%', () => {
-    const result = estimateCost(
-      makePermit(),
-      makeParcel({ lot_size_sqm: 500 }),
-      null,
-      makeNeighbourhood(),
-    );
-    expect(result.estimated_cost).not.toBeNull();
-    expect(result.cost_range_low).not.toBeNull();
-    expect(result.cost_range_high).not.toBeNull();
-    const cost = result.estimated_cost ?? 0;
-    const low = result.cost_range_low ?? 0;
-    const high = result.cost_range_high ?? 0;
-    const spread = (high - low) / cost;
-    // ±50% → spread ≈ 1.0 (low is 0.5×, high is 1.5×)
-    expect(spread).toBeCloseTo(1.0, 1);
-  });
-});
 
 describe('estimateCost — premium tiers', () => {
   it('<$60K income → 1.0', () => {
@@ -1129,119 +1017,6 @@ describe('WF3-06 (H-W8) — scope_tags dedup', () => {
   });
 });
 
-describe('WF3-06 (H-W9) — Liar\'s Gate in TS estimateCost', () => {
-  it('fires when permit-reported cost < modelCost × threshold (default 0.25)', () => {
-    // 200 × 2 × 3000 × 1.0 (income 50K → premium 1.0) = 1,200,000 model.
-    // Reported 100K is 8.3% of model, below 25% threshold → gate fires.
-    const r = estimateCost(
-      makePermit({
-        est_const_cost: 100_000,
-        scope_tags: [],
-      }),
-      makeParcel(),
-      makeFootprint(),
-      makeNeighbourhood({ avg_household_income: 50_000 }),
-    );
-    expect(r.cost_source).toBe('model');
-    expect(r.is_geometric_override).toBe(true);
-    expect(r.estimated_cost).toBeCloseTo(1_200_000, 0);
-    expect(r.modeled_gfa_sqm).toBe(400); // 200 × 2
-  });
-
-  it('does NOT fire when permit-reported cost is reasonable vs model', () => {
-    // Same model 1.2M, reported 1.0M = 83% of model. Above 25% → gate silent.
-    const r = estimateCost(
-      makePermit({
-        est_const_cost: 1_000_000,
-        scope_tags: [],
-      }),
-      makeParcel(),
-      makeFootprint(),
-      makeNeighbourhood({ avg_household_income: 50_000 }),
-    );
-    expect(r.cost_source).toBe('permit');
-    expect(r.is_geometric_override).toBe(false);
-    expect(r.estimated_cost).toBe(1_000_000);
-  });
-
-  it('is suppressed when area came from lot-size fallback (usedFallback=true)', () => {
-    // No footprint row → lot-size fallback fires. Reported 100K would
-    // normally trigger the gate, but the fallback's ±50% uncertainty
-    // means the model is unreliable — gate suppressed per JS L241.
-    const r = estimateCost(
-      makePermit({
-        est_const_cost: 100_000,
-        scope_tags: [],
-      }),
-      makeParcel({ lot_size_sqm: 500 }),
-      null, // no footprint
-      makeNeighbourhood({ avg_household_income: 50_000 }),
-    );
-    expect(r.cost_source).toBe('permit');
-    expect(r.is_geometric_override).toBe(false);
-  });
-
-  it('strict < boundary: reported === modelCost × threshold does NOT fire', () => {
-    // Model = 1,200,000. Threshold 0.25. Boundary = 300,000.
-    // JS uses strict `<`, so reported=300000 does NOT fire gate.
-    const r = estimateCost(
-      makePermit({
-        est_const_cost: 300_000,
-        scope_tags: [],
-      }),
-      makeParcel(),
-      makeFootprint(),
-      makeNeighbourhood({ avg_household_income: 50_000 }),
-    );
-    expect(r.cost_source).toBe('permit');
-    expect(r.is_geometric_override).toBe(false);
-  });
-
-  it('custom liarGateThreshold param fires on values above default threshold', () => {
-    // Model 1,200,000. Reported 500K. Default threshold 0.25 → boundary
-    // 300K, so 500K would NOT fire at default. But with threshold 0.5,
-    // boundary becomes 600K, so 500K < 600K → gate fires.
-    const r = estimateCost(
-      makePermit({
-        est_const_cost: 500_000,
-        scope_tags: [],
-      }),
-      makeParcel(),
-      makeFootprint(),
-      makeNeighbourhood({ avg_household_income: 50_000 }),
-      { liarGateThreshold: 0.5 },
-    );
-    expect(r.cost_source).toBe('model');
-    expect(r.is_geometric_override).toBe(true);
-  });
-
-  it('returns is_geometric_override=false and empty trade_contract_values on null-area permit', () => {
-    const r = estimateCost(
-      makePermit({ est_const_cost: null, scope_tags: [] }),
-      null,
-      null,
-      makeNeighbourhood(),
-    );
-    expect(r.estimated_cost).toBe(null);
-    expect(r.is_geometric_override).toBe(false);
-    expect(r.modeled_gfa_sqm).toBe(null);
-    expect(r.trade_contract_values).toEqual({});
-  });
-
-  it('slices trade_contract_values when tradeAllocationPct config provided', () => {
-    const r = estimateCost(
-      makePermit({ est_const_cost: 1_000_000, scope_tags: [] }),
-      makeParcel(),
-      makeFootprint(),
-      makeNeighbourhood(),
-      { tradeAllocationPct: { plumbing: 0.1, electrical: 0.08 } },
-    );
-    expect(r.trade_contract_values).toEqual({
-      plumbing: 100_000,
-      electrical: 80_000,
-    });
-  });
-});
 
 // Note: WF3-06 (H-W8/W9) — JS↔TS parity battery was removed in Phase 2 of
 // spec 83 (WF2-2). The V1 parity battery compared estimateCostInline() in

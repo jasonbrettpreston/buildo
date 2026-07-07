@@ -70,7 +70,7 @@
     "max": 200
   },
   "accessory_max_coverage_pct": {
-    "default": 0.30,
+    "default": 0.3,
     "type": "number",
     "description": "Spec 65 §7 (Phase 3) — max share of usable rear-yard area a garage may cover. CONSUMED by enrich-parcels.js (max-build pass).",
     "min": 0.05,
@@ -105,11 +105,11 @@
     "max": 30
   },
   "min_soft_landscaping_pct": {
-    "default": 0.30,
+    "default": 0.3,
     "type": "number",
     "description": "Spec 65 §7 (Phase 3) — share of the lot that must remain soft landscaping; an accessory pushing greenspace below this is buildable only via a CoA minor variance (drives garage_permission / rear_suite_permission). CONSUMED by enrich-parcels.js (max-build pass).",
     "min": 0.05,
-    "max": 0.90
+    "max": 0.9
   },
   "laneway_suite_storeys": {
     "default": 2,
@@ -478,9 +478,79 @@
   "cost_matrix_miss_fail_pct": {
     "default": 68,
     "type": "number",
-    "description": "WF1 Spec 83 §3.A OB-3b: matrix_miss_pct FAIL threshold. Default 68 = PI-1 predicted miss rate (48%) + 20pp FAIL margin. Catches large-step coverage regressions (e.g., new permit_type vocabulary appearing in CKAN that the matrix doesn't cover).",
+    "description": "WF1 Spec 83 §3.A OB-3b: matrix_miss_pct FAIL threshold. Default 68 = PI-1 predicted miss rate (48%) + 20pp FAIL margin. Catches large-step coverage regressions (e.g., new permit_type vocabulary appearing in CKAN that the matrix doesn't cover). WF2 archetype: DEMOTED to INFO (full-population miss rate is meaningless once T1-T3 bypass the matrix); the gated metric is cost_t4_matrix_miss_*.",
     "min": 0,
     "max": 100
+  },
+  "cost_t4_matrix_miss_warn_pct": {
+    "default": 60,
+    "type": "number",
+    "description": "WF2 archetype (Spec 83 §3): matrix-miss WARN threshold over the T4 population ONLY (leads on the legacy path: non-residential + mapper-null residential). The T4 denominator keeps the gate meaningful after T1-T3 bypass the matrix — a full-population gate would always pass (Observability plan-review item 1).",
+    "min": 0,
+    "max": 100
+  },
+  "cost_t4_matrix_miss_fail_pct": {
+    "default": 80,
+    "type": "number",
+    "description": "WF2 archetype (Spec 83 §3): matrix-miss FAIL threshold over the T4 population — catches a T4-only regression (e.g. matrix vocabulary drift) that the demoted full-population metric can no longer see.",
+    "min": 0,
+    "max": 100
+  },
+  "archetype_nofit_residential_warn_pct": {
+    "default": 25,
+    "type": "number",
+    "description": "WF2 archetype (Spec 83 §3): WARN when mapper-null residential leads (the mapper was CALLED and returned no line) exceed this share of residential processed. A mapper-quality regression signal — deliberately excludes the non-residential bypass population (mapper never called; counted separately as INFO).",
+    "min": 0,
+    "max": 100
+  },
+  "archetype_t1_fsi_min": {
+    "default": 0.05,
+    "type": "number",
+    "description": "WF2 archetype T1 (declared-area) plausibility band floor: own_area/lot below this rejects the declared area (garbage filing) and falls to T2, counted. Mirrors the comps permit_fsi band (Spec 78 P3C).",
+    "min": 0,
+    "max": 1
+  },
+  "archetype_t1_fsi_max": {
+    "default": 8,
+    "type": "number",
+    "description": "WF2 archetype T1 plausibility band ceiling: own_area/lot above this rejects (multi-phase/complex filings, data errors) and falls to T2, counted. Mirrors the comps permit_fsi band.",
+    "min": 1,
+    "max": 100
+  },
+  "archetype_t1_total_cap": {
+    "default": 25000000,
+    "type": "number",
+    "description": "WF2 archetype T1 absolute cap per DWELLING UNIT: T1 price above cap x max(1, dwelling_units_created) falls to T2, counted (Reality-Check: a 17,841 m2 townhouse-complex filing priced $159.9M as a single project; the per-unit divisor keeps legitimate multi-unit complexes while catching single-unit absurdities).",
+    "min": 1000000,
+    "max": 1000000000
+  },
+  "archetype_t2_reno_line_cap": {
+    "default": 10000000,
+    "type": "number",
+    "description": "WF2 archetype T2 plausibility cap for RENO lines (gut/addition/kitchen/bath/basement/underpin/garage/suites) on low-rise residential: a propagated line total above this indicates parcel-side data poison (Reality-Check: live $105M gut scalars from a NULL-lot massing mislink) -> fall to T3-if-priceable else T4, counted per line. Don't-hide: the rejection count is an audit row.",
+    "min": 100000,
+    "max": 1000000000
+  },
+  "archetype_t2_build_line_cap": {
+    "default": 20000000,
+    "type": "number",
+    "description": "WF2 archetype T2 plausibility cap for BUILD lines (max_build/coa_build) on low-rise residential: above -> fallthrough, counted.",
+    "min": 100000,
+    "max": 1000000000
+  },
+  "archetype_t2_build_line_min": {
+    "default": 200000,
+    "type": "number",
+    "description": "WF2 archetype T2 plausibility floor for BUILD lines: a new-build total below this (sliver-parcel envelopes, Reality-Check found 17 rows <$5K) is not a credible build -> fallthrough, counted.",
+    "min": 0,
+    "max": 10000000
+  },
+  "archetype_t3_total_cap": {
+    "default": 15000000,
+    "type": "number",
+    "description": "WF3 archetype T3 (rate-table) absolute cap per DWELLING UNIT: a T3 price (rate x own area x premium) above cap x max(1, dwelling_units_created) falls to T4, counted (Reality-Check WF3 2026-07-06: T3 shipped uncapped; 19 rows >$20M, max $159.9M, from oversized/mislinked parent-parcel own-area inflation). $15M/unit is a judgment cut on a continuous corrupted-area curve (not a statistical elbow); the per-unit divisor protects ~60 legitimate 8-222-unit developments. CoA has no dwelling_units_created -> effectively flat $15M for CoA (intended).",
+    "min": 1000000,
+    "max": 1000000000
   },
   "cost_ptc_skipped_warn_pct": {
     "default": 14.5,
@@ -560,16 +630,16 @@
     "max": 100
   },
   "coa_cost_coverage_threshold_pct": {
-    "default": 70,
+    "default": 65,
     "type": "number",
-    "description": "Day-1 threshold (percent) for CoAs producing a non-NULL estimated_cost in compute-coa-cost-estimates (Spec 42 §6.8 row 668; R5.5 fold #13). Below threshold → audit_table verdict WARN. Set to 70% for first burn-in (Spec 42 §6.3 success target is 80% — threshold gives latitude for early-run coverage gaps from missing parcel links, scope tags, or trade rates). Tune up to 80% once R5.2-R5.4 are at steady-state coverage.",
+    "description": "WF1 Spec 83 SS3.A D3 (CoA OB-2 mirror): coverage WARN threshold. WF2 archetype recalibration: 65 = measured ladder ceiling 68.7% minus margin (cost_coa_total exists on 76.8% of residential CoAs; Severance/Demolition/unlinked consume the rest). Was 70 in the all-safe-skip era.",
     "min": 0,
     "max": 100
   },
   "coa_cost_coverage_fail_pct": {
-    "default": 0,
+    "default": 5,
     "type": "number",
-    "description": "WF1 Spec 83 §3.A D3 (CoA OB-2 mirror): coverage FAIL threshold. Default 0 = architecture-independent gate that catches a 14-day-style silent regression in the CoA cost path (coverage stuck at exactly 0%). Symmetric with cost_model_coverage_fail_pct for the permits path.",
+    "description": "WF2 archetype (Spec 83 SS3): coverage FAIL threshold. 5 = catches a half-broken CoA ladder (coverage collapsing from ~69% toward zero) — the old default 0 only caught the exact-zero structural break; post-activation the gate must catch regressions too.",
     "min": 0,
     "max": 100
   },
@@ -647,6 +717,20 @@
     "default": 70,
     "type": "number",
     "description": "assert-global-coverage: coverage >= this integer pct -> WARN; below -> FAIL (spec 49)",
+    "min": 0,
+    "max": 100
+  },
+  "cost_coverage_pass_pct": {
+    "default": 55,
+    "type": "number",
+    "description": "WF3 F4: assert-global-coverage Step-14 cost_estimates rows PASS floor. Whole-corpus cost coverage is ~62% BY DESIGN under the archetype+safe-skip model (non-residential T4 matrix-miss safe-skip, fit-blocked permissioning, MEC-only nofit are legitimately NULL) — the global 90% bar was inherited indiscriminately and was already red pre-WF2 (40%). Scoped recalibration of these ~6 non-halting observability rows only; global 90/70 untouched (don't blind other row-quality checks). 55 leaves ~7pt headroom over measured 61.8% while still FAILing on a genuine collapse.",
+    "min": 0,
+    "max": 100
+  },
+  "cost_coverage_warn_pct": {
+    "default": 50,
+    "type": "number",
+    "description": "WF3 F4: assert-global-coverage Step-14 cost_estimates rows WARN floor (below -> FAIL). Pairs with cost_coverage_pass_pct.",
     "min": 0,
     "max": 100
   },

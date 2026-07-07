@@ -1,21 +1,28 @@
 #!/usr/bin/env node
 /**
- * compute-coa-cost-estimates.js — CoA-side cost estimator (geometric-only path)
+ * compute-coa-cost-estimates.js — CoA-side cost estimator (archetype ladder + geometric T4)
  *
  * Streams coa_applications joined with parcel/building/neighbourhood/trade
- * context through `estimateCostShared` (the Brain) via the R5.1 substrate
- * (`scripts/lib/coa-cost-model.js`). Writes:
+ * context through the Brain's archetype ladder (`tryArchetypeCost`, via the
+ * `scripts/lib/coa-cost-model.js` `buildCoaArchetypeInput`) FIRST, falling
+ * through to the legacy geometric path (`estimateCostShared`) for T4. Writes:
  *
  *   - `coa_applications` cost columns (modeled_gfa_sqm, estimated_cost,
  *     cost_source, cost_classified_at) for every processed CoA
  *   - `cost_estimates` row (lead_id-keyed PK per mig 145) ONLY when the
  *     Brain returns a non-NULL estimated_cost
  *
- * Spec 83 §Geometric-Only Path: CoA records carry no applicant-declared
- * cost, so the Liar's Gate is dead-code on the CoA path (rawCost=null
- * routes through Brain Branch 2, returning cost_source='model'). This
- * script transforms 'model' → 'geometric' on the way to the DB
- * (mig 145 CHECK extension permits 'geometric').
+ * §3-ARCHETYPE (WF2 Phase C, 2026-07-06): the CoA path now prices low-rise
+ * residential leads from the Spec 88 propagated archetype costs (premium-
+ * INCLUSIVE, lot-validated). CoA carries no applicant-declared area, so the
+ * ladder's T1/T3 (own-area) rungs never fire — CoA prices **T2** (the parcel
+ * line total) or falls through to **T4** (the legacy geometric path). This
+ * ACTIVATES CoA costing (0.0% → the archetype coverage): the old geometric path
+ * always matrix-missed the Surgical Triangle (the `::` key bug) and priced
+ * nothing. `transformCostSource` is RETIRED — archetype cost_source values
+ * (`archetype_parcel` etc.) pass through UNMAPPED with `is_geometric_override =
+ * false` (Spec 83 §3-ARCHETYPE CoA note; the PI-5 fence holds — the CoA path
+ * never passes permit_type into the Brain's matrix machinery).
  *
  * R5.5 plan-review folds applied (4-reviewer convergence, 2026-05-14):
  *   #1 R5.1 substrate field-name fix (in scripts/lib/coa-cost-model.js)
@@ -25,7 +32,7 @@
  *   #5 R5.1 substrate dead-flag removal (same)
  *   #6 null_cost_reasons restructured (this file)
  *   #7 coverage_pct = N/A when processed=0 (this file)
- *   #8 cost_source + is_geometric_override transform (this file)
+ *   #8 cost_source + is_geometric_override transform (RETIRED — Phase C archetype swap)
  *   #9 drop ::text casts on JSONB IS DISTINCT FROM (this file)
  *   #10 column count 16 + BATCH_SIZE formula (this file)
  *   #11 records_new/_updated cost_estimates semantics + coa_applications_updated (this file)
@@ -45,7 +52,8 @@
  * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md §6.5 step 12 + §6.6.D + §6.8 row 668 + §6.11 Phase D R5.5
  *            docs/specs/01-pipeline/47_pipeline_script_protocol.md §R1-R12
  *            docs/specs/01-pipeline/48_pipeline_observability.md §3 (observer consumes audit_table)
- *            docs/specs/01-pipeline/83_lead_cost_model.md §Geometric-Only Path for CoA
+ *            docs/specs/01-pipeline/83_lead_cost_model.md §3-ARCHETYPE (CoA: same ladder minus T1)
+ *            docs/specs/01-pipeline/83_lead_cost_model.md §Geometric-Only Path for CoA (the T4 fallthrough)
  */
 'use strict';
 
@@ -53,8 +61,18 @@ const pipeline = require('./lib/pipeline');
 const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 const { safeParsePositiveInt } = require('./lib/safe-math');
-const { buildCoaConfig, mapCoaRowToBrainInput } = require('./lib/coa-cost-model');
-const { estimateCostShared, MODEL_VERSION } = require('../src/features/leads/lib/cost-model-shared');
+const { buildCoaConfig, mapCoaRowToBrainInput, buildCoaArchetypeInput } = require('./lib/coa-cost-model');
+// §3-ARCHETYPE (WF2 Phase C, 2026-07-06): tryArchetypeCost prices the CoA ladder
+// (T2-or-T4 — no own-area, so T1/T3 never fire); resolveArchetypeRates keeps the
+// Spec 88 §2.9 escalation single-sourced; archetypeMapperOutcome classifies the
+// T4 fallthrough for the nofit-residential gate.
+const {
+  estimateCostShared,
+  tryArchetypeCost,
+  resolveArchetypeRates,
+  archetypeMapperOutcome,
+  MODEL_VERSION,
+} = require('../src/features/leads/lib/cost-model-shared');
 
 // §R2 — advisory lock 4204 (Spec 42 §6.8 Phase D allocation)
 const ADVISORY_LOCK_ID = 4204;
@@ -80,6 +98,21 @@ const ConfigSchema = z
     urban_coverage_ratio:               z.coerce.number().positive().max(1),
     suburban_coverage_ratio:            z.coerce.number().positive().max(1),
     coa_cost_coverage_threshold_pct:    z.coerce.number().finite().nonnegative().max(100),
+    // WF1 Spec 83 §3.A D3 — externalized FAIL threshold for the OB-2 mirror.
+    coa_cost_coverage_fail_pct:         z.coerce.number().finite().min(0).max(100),
+    // §3-ARCHETYPE (WF2 Phase C, 2026-07-06) — ladder guards (mirror the permits
+    // Muscle). T1/T3 never fire on CoA (no own area) so their bounds are inert,
+    // but validated here for symmetry + a clean Control-Panel failure signal.
+    archetype_nofit_residential_warn_pct: z.coerce.number().finite().min(0).max(100),
+    archetype_t1_fsi_min:                 z.coerce.number().positive().finite(),
+    archetype_t1_fsi_max:                 z.coerce.number().positive().finite(),
+    archetype_t1_total_cap:               z.coerce.number().positive().finite(),
+    archetype_t2_reno_line_cap:           z.coerce.number().positive().finite(),
+    archetype_t2_build_line_cap:          z.coerce.number().positive().finite(),
+    archetype_t2_build_line_min:          z.coerce.number().finite().min(0),
+    archetype_t3_total_cap:               z.coerce.number().positive().finite(), // WF3 F2 — inert on CoA (no own area), validated for symmetry
+    // Escalation index (Spec 88 §2.9) — optional; missing → multiplier 1.0.
+    cost_escalation_index:                z.coerce.number().positive().finite().optional(),
   })
   .passthrough();
 
@@ -88,6 +121,13 @@ const ConfigSchema = z
 // Diff-review fold (Gemini MED): regex parse rejects malformed --limit= input.
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
+// --full: reclassify EVERY trade-classified CoA, ignoring the incremental
+// `cost_classified_at` idempotency gate. The manifest declares
+// `compute_coa_cost_estimates.supports_full: true`; this flag makes the code
+// honour that contract. Required to ACTIVATE the WF2 archetype ladder: a prior
+// (pre-archetype, ::-bug) run stamped cost_classified_at on every CoA, so the
+// incremental gate leaves 0 rows eligible until a full refresh runs.
+const fullMode = args.includes('--full');
 const limitMatch = args.find((a) => /^--limit=\d+$/.test(a));
 const rowLimit = limitMatch ? safeParsePositiveInt(limitMatch.split('=')[1], 'limit') : null;
 
@@ -103,6 +143,8 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
     throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   }
   const coverageThresholdPct = logicVars.coa_cost_coverage_threshold_pct;
+  // WF1 Spec 83 §3.A D3 fold — externalized FAIL threshold for the OB-2 mirror.
+  const coverageFailPct = Number(logicVars.coa_cost_coverage_fail_pct);
 
   if (dryRun) pipeline.log.info('[compute-coa-cost-estimates]', 'DRY-RUN mode — no DB writes will occur');
   if (rowLimit) pipeline.log.info('[compute-coa-cost-estimates]', `Row limit: ${rowLimit}`);
@@ -126,9 +168,18 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
     }
 
     // ── Load reference tables (bounded queries — Spec 47 §6.2) ─────────────
-    const [tradeRatesRes, scopeMatrixRes] = await Promise.all([
+    const [tradeRatesRes, scopeMatrixRes, archetypeRatesRes] = await Promise.all([
       pool.query('SELECT trade_slug, base_rate_sqft, structure_complexity_factor FROM trade_sqft_rates'),
       pool.query('SELECT permit_type, structure_type, gfa_allocation_percentage FROM scope_intensity_matrix'),
+      // §3-ARCHETYPE T3 rates — same table Spec 88's engine prices from. On CoA
+      // T3 never fires (no own area), so these are inert; fetched for symmetry
+      // with the permits Muscle + future-proofing if CoA ever gains an own-area field.
+      pool.query(
+        `SELECT archetype, cost_per_sqm::float8 AS cost_per_sqm,
+                cost_adjustment_factor::float8 AS cost_adjustment_factor,
+                escalation_index_base::float8 AS escalation_index_base
+           FROM archetype_cost_rates`,
+      ),
     ]);
 
     // Diff-review fold (W#1 M3): startup guard on empty trade_sqft_rates.
@@ -165,15 +216,35 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
       scopeKeySeen.add(key);
     }
 
+    // §3-ARCHETYPE — pre-resolve T3 rates to premium-EXCLUSIVE per-sqm via the
+    // Brain's single-source escalation helper (Spec 88 §2.9). Empty is a no-op
+    // for CoA (T3 unreachable without an own area).
+    const archetypeRates = resolveArchetypeRates(
+      archetypeRatesRes.rows,
+      logicVars.cost_escalation_index != null ? Number(logicVars.cost_escalation_index) : null,
+    );
+
     const brainConfig = buildCoaConfig({
       tradeRates: tradeRatesRes.rows,
       scopeMatrix: scopeMatrixRes.rows,
+      archetypeRates,
       logicVars,
     });
+    // §3-ARCHETYPE — the config for the EXPLICIT tryArchetypeCost call. The base
+    // brainConfig keeps archetypeEnabled OFF so the T4 fallthrough
+    // (estimateCostShared) runs the legacy path byte-identically.
+    // ROLLBACK KILL-SWITCH (Phase F): `ARCHETYPE_COST_DISABLED=1` turns the CoA
+    // ladder OFF → every CoA falls to the legacy geometric T4 path (which prices
+    // 0.0% — the pre-WF2 CoA baseline). Default ON. See the rollback runbook.
+    const archetypeEnabled = process.env.ARCHETYPE_COST_DISABLED !== '1';
+    const archConfig = { ...brainConfig, archetypeEnabled };
+    if (!archetypeEnabled) {
+      pipeline.log.warn('[compute-coa-cost-estimates]', 'ARCHETYPE_COST_DISABLED=1 — CoA archetype ladder OFF (legacy geometric path only)');
+    }
 
     pipeline.log.info(
       '[compute-coa-cost-estimates]',
-      `Loaded ${tradeRatesRes.rows.length} trade rates + ${scopeMatrixRes.rows.length} scope matrix rows`,
+      `Loaded ${tradeRatesRes.rows.length} trade rates + ${scopeMatrixRes.rows.length} scope matrix rows + ${archetypeRatesRes.rows.length} archetype rates`,
     );
 
     // ── Counters ───────────────────────────────────────────────────────────
@@ -185,6 +256,21 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
     let recordsUpdated = 0;
     let recordsSkipped = 0;    // IS DISTINCT FROM guard short-circuited (no RETURNING row)
     let coaApplicationsUpdated = 0;  // R5.5 fold #11 — side-effect UPDATE rowCount
+
+    // §3-ARCHETYPE (WF2 Phase C, 2026-07-06) — per-tier + fallthrough telemetry,
+    // mirrors the permits Muscle over the CoA denominators. T1/T3 stay 0 on CoA
+    // (no own area); the CoA ladder is T2-or-T4.
+    let archetypeT1 = 0;             // cost_source = archetype_declared_area (never fires on CoA)
+    let archetypeT2 = 0;             // cost_source = archetype_parcel (single line)
+    let archetypeT3 = 0;             // cost_source = archetype_rate (never fires on CoA)
+    let archetypeAdditive = 0;       // archetype_parcel via an additive pair
+    let archetypeFitBlocked = 0;     // fits:false → cost_source 'none'
+    let archetypeZeroTotal = 0;      // present-but-zero scalar → 'none' (tier_none_count)
+    let archetypeTradeless = 0;      // archetype-priced with trade_contract_values = {}
+    let archetypeNofitResidential = 0; // low-rise residential, mapper returned null → T4
+    let archetypeUnpriceableT4 = 0;  // mapped but no scalar + no own area → T4
+    let t4NonResidential = 0;        // outside the low-rise gate → T4 (mapper never called)
+    let t4Processed = 0;             // all rows priced by the legacy geometric path
 
     // R5.5 fold #6 — restructured null_cost_reasons (no_building dropped:
     // lot-size fallback produces a non-null cost, so it's not a null reason).
@@ -211,22 +297,16 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
       ceRows: [],      // cost_estimates rows (only when estimated_cost != null)
     };
 
-    /** Transform Brain output → DB-writable cost_source + is_geometric_override.
-     *
-     * R5.5 fold #8: Brain emits 'model'/'none'/'permit' (last unreachable for
-     * CoA since est_const_cost is always null). Spec 42 §6.6.D mandates
-     * cost_source='geometric' for CoA writes; we transform 'model' → 'geometric'
-     * and force is_geometric_override=true for the non-null path. For null
-     * estimates (Brain returned cost_source='none' on Zero-Total Bypass),
-     * we preserve 'none' on coa_applications and SKIP the cost_estimates
-     * INSERT entirely (cleaner audit semantics than writing 'none' rows).
-     */
-    function transformCostSource(brainOutput) {
-      if (brainOutput.estimated_cost != null) {
-        return { cost_source: 'geometric', is_geometric_override: true };
-      }
-      return { cost_source: 'none', is_geometric_override: false };
-    }
+    // §3-ARCHETYPE (WF2 Phase C, 2026-07-06): `transformCostSource` RETIRED. The
+    // legacy geometric CoA path never produced a non-null cost (every CoA
+    // matrix-missed the Surgical Triangle — the `::` key bug), so the old
+    // 'model'→'geometric' remap was pricing 0.0% of CoAs. The archetype ladder
+    // now supplies the priced rows with their own cost_source values
+    // (`archetype_parcel` etc.) which pass through UNMAPPED, and
+    // `is_geometric_override = false` (nothing was overridden — Spec 83
+    // §3-ARCHETYPE CoA note + Guardian). The Brain's 'none' (fit-blocked /
+    // zero-total / T4 matrix-miss) still yields estimated_cost=null → we skip the
+    // cost_estimates INSERT and write cost_source='none' to coa_applications.
 
     async function flushBatch() {
       if (batch.coaIds.length === 0) return;
@@ -369,6 +449,35 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
         ca.lead_id,
         ca.scope_tags,
         ca.structure_type,
+        -- §3-ARCHETYPE (WF2 Phase C): mapper inputs + Spec 88 §4D propagated
+        -- premium-INCLUSIVE cost scalars + their geom-basis areas, all on
+        -- coa_applications directly (no parcel_cost_menu join). Own-area fields
+        -- (residential_sqm/interior_alterations_sqm) DO NOT exist on CoA → the
+        -- ladder's T1/T3 rungs never fire (T2-or-T4).
+        ca.project_type,
+        ca.neighbourhood_cost_premium::float8 AS neighbourhood_cost_premium,
+        ca.cost_fb_total::float8               AS cost_fb_total,
+        ca.cost_coa_total::float8              AS cost_coa_total,
+        ca.cost_addition_total::float8         AS cost_addition_total,
+        ca.cost_gut_total::float8              AS cost_gut_total,
+        ca.cost_basement_underpin_per_sqm::float8 AS cost_basement_underpin_per_sqm,
+        ca.cost_basement_per_sqm::float8       AS cost_basement_per_sqm,
+        ca.cost_garage_total::float8           AS cost_garage_total,
+        ca.cost_laneway_suite_total::float8    AS cost_laneway_suite_total,
+        ca.cost_garden_suite_total::float8     AS cost_garden_suite_total,
+        ca.cost_kitchen_per_sqm::float8        AS cost_kitchen_per_sqm,
+        ca.cost_bath_per_sqm::float8           AS cost_bath_per_sqm,
+        ca.cost_solar_total::float8            AS cost_solar_total,
+        ca.opt_aor_gfa_sqm::float8             AS opt_aor_gfa_sqm,
+        ca.opt_coa_gfa_sqm::float8             AS opt_coa_gfa_sqm,
+        ca.cur_floor_gfa_sqm::float8           AS cur_floor_gfa_sqm,
+        ca.cur_pot_2story_gfa_sqm::float8      AS cur_pot_2story_gfa_sqm,
+        ca.max_garage_gfa_sqm::float8          AS max_garage_gfa_sqm,
+        ca.max_laneway_suite_gfa_sqm::float8   AS max_laneway_suite_gfa_sqm,
+        ca.max_garden_suite_gfa_sqm::float8    AS max_garden_suite_gfa_sqm,
+        ca.cur_est_kitchen_gfa_sqm::float8     AS cur_est_kitchen_gfa_sqm,
+        ca.cur_est_bath_gfa_sqm::float8        AS cur_est_bath_gfa_sqm,
+        ca.max_buildable_footprint_sqm::float8 AS max_buildable_footprint_sqm,
         lp.parcel_id,
         p.lot_size_sqm::float8        AS lot_size_sqm,
         p.frontage_m::float8          AS frontage_m,
@@ -402,8 +511,12 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
         WHERE lt.lead_id = ca.lead_id
       ) lt_agg ON true
       WHERE (
-              ca.cost_classified_at IS NULL
-           OR ca.cost_classified_at < ca.trade_classified_at
+              -- --full (WF2 activation): bypass the incremental gate and
+              -- reclassify every trade-classified CoA. Normal (incremental) mode
+              -- processes only rows never cost-classified or whose trades were
+              -- reclassified since their last cost run.
+              ${fullMode ? 'ca.trade_classified_at IS NOT NULL' : `ca.cost_classified_at IS NULL
+           OR ca.cost_classified_at < ca.trade_classified_at`}
             )
         -- Diff-review fold (Gemini CRIT): defensive guard against
         -- future-dated trade_classified_at (clock skew / manual DB edit).
@@ -425,9 +538,43 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
       const activeTradesEmpty = !Array.isArray(row.active_trade_slugs) || row.active_trade_slugs.length === 0;
       const noParcel = row.parcel_id == null;
 
-      const brainInput = mapCoaRowToBrainInput(row);
-      const brainOutput = estimateCostShared(brainInput, brainConfig);
-      const { cost_source: dbCostSource, is_geometric_override: dbIsGeometricOverride } = transformCostSource(brainOutput);
+      // §3-ARCHETYPE (WF2 Phase C, 2026-07-06): try the archetype ladder FIRST.
+      // The archRow carries `_is_coa: true` + the §4D propagated scalars; CoA has
+      // no own area so this prices T2 (parcel line total) or returns null (T4).
+      // On null we fall through to the LEGACY geometric path with the UNCHANGED
+      // narrow input (mapCoaRowToBrainInput) → byte-identical T4. The archConfig
+      // is the only place archetypeEnabled is on, so the T4 call runs no ladder.
+      const archRow = buildCoaArchetypeInput(row);
+      const archResult = tryArchetypeCost(archRow, archConfig);
+      const brainOutput = archResult || estimateCostShared(mapCoaRowToBrainInput(row), brainConfig);
+
+      // cost_source + is_geometric_override pass through UNMAPPED (transform
+      // retired). Archetype envelopes carry archetype_* + is_geometric_override
+      // false; the legacy T4 path yields 'none' (estimated_cost null).
+      const dbCostSource = brainOutput.cost_source;
+      const dbIsGeometricOverride = brainOutput.is_geometric_override === true;
+
+      // ── §3-ARCHETYPE tier + fallthrough classification (mirrors permits) ────
+      const isArchetypeSource = typeof brainOutput.cost_source === 'string'
+        && brainOutput.cost_source.startsWith('archetype_');
+      if (isArchetypeSource) {
+        if (brainOutput._archetypeTier === 'additive') archetypeAdditive++;
+        else if (brainOutput._archetypeTier === 't1') archetypeT1++;
+        else if (brainOutput._archetypeTier === 't3') archetypeT3++;
+        else archetypeT2++;
+        if (Object.keys(brainOutput.trade_contract_values || {}).length === 0) archetypeTradeless++;
+      } else if (brainOutput._archetypeFitBlocked) {
+        archetypeFitBlocked++;
+      } else if (brainOutput._archetypeZeroTotal) {
+        archetypeZeroTotal++;
+      } else if (!brainOutput._permitTypeClassSkipped) {
+        // Fell through to the legacy T4 path — split via the Brain's own mapper.
+        t4Processed++;
+        const outcome = archetypeMapperOutcome(archRow);
+        if (outcome === 'mapper_null') archetypeNofitResidential++;
+        else if (outcome === 'mapped') archetypeUnpriceableT4++;
+        else t4NonResidential++;
+      }
 
       // Stage coa_applications UPDATE (always — cursor advancement).
       batch.coaUpdates.push({
@@ -444,7 +591,7 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
         // emits `_usedFallback` as an internal telemetry flag (underscore
         // prefix → unstable API). If a future Brain refactor drops it, this
         // counter silently stays 0; the existence check makes the dependency
-        // explicit.
+        // explicit. Archetype envelopes set _usedFallback=false.
         if ('_usedFallback' in brainOutput && brainOutput._usedFallback) coaWithFallback++;
         // Stage cost_estimates row.
         batch.ceRows.push({
@@ -533,16 +680,44 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
     const fallbackPct = coaWithCost > 0 ? (coaWithFallback / coaWithCost) * 100 : 0;
     const coveragePct = processed > 0 ? (coaWithCost / processed) * 100 : 0;
 
+    // ── §3-ARCHETYPE denominators (WF2 Phase C, mirrors the permits Muscle) ──
+    // residentialProcessed = every low-rise residential CoA that entered the
+    // archetype path (priced + none'd + T4 fallthrough). archetype_coverage_pct
+    // is the archetype-specific view; the primary CoA coverage gate stays the
+    // full-population coverageRow above.
+    const archetypePriced = archetypeT1 + archetypeT2 + archetypeT3 + archetypeAdditive;
+    const residentialProcessed = archetypePriced + archetypeFitBlocked + archetypeZeroTotal
+      + archetypeNofitResidential + archetypeUnpriceableT4;
+    const archetypeCoveragePct = residentialProcessed > 0
+      ? (archetypePriced / residentialProcessed) * 100
+      : 0;
+    const archetypeNofitPct = residentialProcessed > 0
+      ? (archetypeNofitResidential / residentialProcessed) * 100
+      : 0;
+    const nofitWarnPct = Number(logicVars.archetype_nofit_residential_warn_pct);
+
+    // archetype_map_nofit_residential — mapper-quality WARN gate (mapper CALLED
+    // and returned null, over the low-rise denominator).
+    const nofitRow = residentialProcessed === 0
+      ? { metric: 'archetype_map_nofit_residential_pct', value: 'N/A', threshold: `<= ${nofitWarnPct}%`, status: 'INFO' }
+      : archetypeNofitPct > nofitWarnPct
+        ? { metric: 'archetype_map_nofit_residential_pct', value: archetypeNofitPct.toFixed(1) + '%', threshold: `<= ${nofitWarnPct}%`, status: 'WARN' }
+        : { metric: 'archetype_map_nofit_residential_pct', value: archetypeNofitPct.toFixed(1) + '%', threshold: `<= ${nofitWarnPct}%`, status: 'PASS' };
+
     // R5.5 fold #7: emit N/A INFO when processed=0 (don't WARN on healthy empty cursor).
-    const coverageRow =
-      processed === 0
+    // WF1 Spec 83 §3.A re-key (D3 OB-2 mirror): escalate to FAIL when coverage
+    // is exactly 0%, finite-guarded. This is the architecture-independent gate
+    // that the parallel permits pipeline was missing — it caught the 14-day
+    // silent regression mechanism (coverage stuck at 0 but capped at WARN).
+    const coverageRow = !Number.isFinite(coveragePct)
+      ? { metric: 'cost_estimate_coverage_pct', value: 'N/A', threshold: `>= ${coverageThresholdPct}%`, status: 'INFO' }
+      : processed === 0
         ? { metric: 'cost_estimate_coverage_pct', value: 'N/A', threshold: `>= ${coverageThresholdPct}%`, status: 'INFO' }
-        : {
-            metric: 'cost_estimate_coverage_pct',
-            value: coveragePct.toFixed(1) + '%',
-            threshold: `>= ${coverageThresholdPct}%`,
-            status: coveragePct >= coverageThresholdPct ? 'PASS' : 'WARN',
-          };
+        : coveragePct <= coverageFailPct
+          ? { metric: 'cost_estimate_coverage_pct', value: coveragePct.toFixed(1) + '%', threshold: `> ${coverageFailPct}%`, status: 'FAIL' }
+          : coveragePct >= coverageThresholdPct
+            ? { metric: 'cost_estimate_coverage_pct', value: coveragePct.toFixed(1) + '%', threshold: `>= ${coverageThresholdPct}%`, status: 'PASS' }
+            : { metric: 'cost_estimate_coverage_pct', value: coveragePct.toFixed(1) + '%', threshold: `>= ${coverageThresholdPct}%`, status: 'WARN' };
 
     const auditRows = [
       // Diff-review fold (W#2 L1-2): INFO (not WARN) when processed=0 — quiet
@@ -568,6 +743,22 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
         status: 'INFO',
       },
       { metric: 'cost_distribution_p25_p50_p75', value: distributionString, threshold: null, status: 'INFO' },
+      // §3-ARCHETYPE tier + fallthrough rows (WF2 Phase C) — tier counts INFO;
+      // the nofit split: mapper-null residential WARN-gated, non-lowrise INFO.
+      // T1/T3 stay 0 on CoA (no own area — the ladder is T2-or-T4).
+      { metric: 'archetype_t1_declared_area',   value: archetypeT1,             threshold: null, status: 'INFO' },
+      { metric: 'archetype_t2_parcel',          value: archetypeT2,             threshold: null, status: 'INFO' },
+      { metric: 'archetype_t3_rate',            value: archetypeT3,             threshold: null, status: 'INFO' },
+      { metric: 'archetype_additive_pairs',     value: archetypeAdditive,       threshold: null, status: 'INFO' },
+      { metric: 'archetype_coverage_pct',       value: residentialProcessed > 0 ? archetypeCoveragePct.toFixed(1) + '%' : 'N/A', threshold: null, status: 'INFO' },
+      { metric: 'tier_none_count',              value: archetypeFitBlocked + archetypeZeroTotal, threshold: null, status: 'INFO' },
+      { metric: 'archetype_fit_blocked',        value: archetypeFitBlocked,     threshold: null, status: 'INFO' },
+      { metric: 'archetype_zero_total',         value: archetypeZeroTotal,      threshold: null, status: 'INFO' },
+      { metric: 'archetype_tradeless_count',    value: archetypeTradeless,      threshold: null, status: 'INFO' },
+      { metric: 'archetype_unpriceable_t4',     value: archetypeUnpriceableT4,  threshold: null, status: 'INFO' },
+      { metric: 't4_nonresidential_count',      value: t4NonResidential,        threshold: null, status: 'INFO' },
+      { metric: 't4_processed',                 value: t4Processed,             threshold: null, status: 'INFO' },
+      nofitRow,
       // Diff-review fold (W#2 L2-4): Phase H gap as machine-readable audit row.
       // Lets the spec 48 observer distinguish "CoA trade_forecasts coverage is
       // expected-zero" from "classifier is broken." Phase H rekey of
@@ -628,6 +819,16 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
           'neighbourhood_id',
           'trade_classified_at',
           'cost_classified_at',
+          // §3-ARCHETYPE (WF2 Phase C): mapper inputs + Spec 88 §4D propagated
+          // premium-INCLUSIVE cost scalars + their geom-basis areas.
+          'project_type', 'neighbourhood_cost_premium',
+          'cost_fb_total', 'cost_coa_total', 'cost_addition_total', 'cost_gut_total',
+          'cost_basement_underpin_per_sqm', 'cost_basement_per_sqm', 'cost_garage_total',
+          'cost_laneway_suite_total', 'cost_garden_suite_total', 'cost_kitchen_per_sqm',
+          'cost_bath_per_sqm', 'cost_solar_total',
+          'opt_aor_gfa_sqm', 'opt_coa_gfa_sqm', 'cur_floor_gfa_sqm', 'cur_pot_2story_gfa_sqm',
+          'max_garage_gfa_sqm', 'max_laneway_suite_gfa_sqm', 'max_garden_suite_gfa_sqm',
+          'cur_est_kitchen_gfa_sqm', 'cur_est_bath_gfa_sqm', 'max_buildable_footprint_sqm',
         ],
         lead_parcels: ['lead_id', 'parcel_id', 'confidence'],
         parcels: ['id', 'lot_size_sqm', 'frontage_m'],
@@ -638,6 +839,8 @@ pipeline.run('compute-coa-cost-estimates', async (pool) => {
         trades: ['id', 'slug'],
         trade_sqft_rates: ['trade_slug', 'base_rate_sqft', 'structure_complexity_factor'],
         scope_intensity_matrix: ['permit_type', 'structure_type', 'gfa_allocation_percentage'],
+        // §3-ARCHETYPE T3 rates + escalation index per Spec 88 §2.9
+        archetype_cost_rates: ['archetype', 'cost_per_sqm', 'cost_adjustment_factor', 'escalation_index_base'],
       },
       {
         cost_estimates: [

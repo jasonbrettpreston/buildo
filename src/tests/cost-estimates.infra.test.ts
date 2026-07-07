@@ -185,8 +185,20 @@ describe('src/features/leads/lib/cost-model-shared.js — Brain shape', () => {
     expect(brain).toMatch(/new Set\(\s*\(row\.scope_tags/);
   });
 
-  it('applies .toLowerCase().trim() for string sanitization (W12, W21)', () => {
-    expect(brain).toMatch(/\.toLowerCase\(\)\.trim\(\)/);
+  it('uses .trim() only for matrix-lookup sanitization (no .toLowerCase) — WF1 Spec 83 §3.A re-key', () => {
+    // SPEC LINK: docs/specs/01-pipeline/83_lead_cost_model.md §3.A
+    // The Brain MUST use exact production vocabulary (Title Case). Restoring
+    // `.toLowerCase()` to computeEffectiveArea would re-introduce the 14-day
+    // silent cost_source='none' regression. .toLowerCase() remains permitted
+    // in substring-detection helpers (isShellPermit, isCommercial) per the
+    // NORMALIZATION CONTRACT comment.
+    const computeEffectiveAreaFn = brain.match(/function computeEffectiveArea[\s\S]*?^}/m)?.[0] || '';
+    expect(computeEffectiveAreaFn, 'computeEffectiveArea not found').toBeTruthy();
+    // Strip line comments before checking for the disallowed call pattern,
+    // so the NORMALIZATION CONTRACT explainer doesn't trip the assertion.
+    const code = computeEffectiveAreaFn.replace(/\/\/.*$/gm, '');
+    expect(code).not.toMatch(/\.toLowerCase\(\)/);
+    expect(code).toMatch(/\.trim\(\)/);
   });
 
   it('applies complexity factor per-trade (not globally)', () => {
@@ -300,8 +312,13 @@ describe('src/lib/permits/types.ts — CostSource includes "none"', () => {
     types = read('src/lib/permits/types.ts');
   });
 
-  it("CostSource type includes 'none' for Zero-Total Bypass (spec 83 §3 Step D)", () => {
-    expect(types).toMatch(/CostSource.*=.*'permit'.*'model'.*'none'/);
+  it("CostSource type includes 'none' for Zero-Total Bypass (spec 83 §3 Step D) + the WF2 archetype provenances", () => {
+    // `s` (dotAll) — the type is a multi-line union since WF2 §3-ARCHETYPE widened it.
+    expect(types).toMatch(/CostSource\s*=[\s\S]*'permit'[\s\S]*'model'[\s\S]*'none'/);
+    // Pin the WF2 additions (must mirror the mig 209 CHECK): geometric + the 3 archetype tiers.
+    for (const v of ['geometric', 'archetype_declared_area', 'archetype_parcel', 'archetype_rate']) {
+      expect(types).toContain(`'${v}'`);
+    }
   });
 
   it('CostEstimate interface has effective_area_sqm field (migration 096)', () => {

@@ -309,6 +309,12 @@ function classifyLiarGatePath(
   isGeometricOverride: boolean | null,
 ): 'surgical_only' | 'proportional_slicing' | 'none' | null {
   if (costSource == null) return null;
+  // WF2 §3-ARCHETYPE (2026-07-06): the Liar's Gate is RETIRED for the archetype
+  // tiers (T1 archetype_declared_area / T2 archetype_parcel / T3 archetype_rate,
+  // Decision 2). Declared cost is recorded as a calibration signal only, never
+  // overrides the archetype price — so no gate path applies. 'geometric' (legacy
+  // CoA) likewise never ran the gate. Return null explicitly, not by fall-through.
+  if (costSource.startsWith('archetype_') || costSource === 'geometric') return null;
   if (costSource === 'none') return 'none';
   if (costSource === 'model' && isGeometricOverride === true) return 'surgical_only';
   if (costSource === 'permit') return 'proportional_slicing';
@@ -483,7 +489,14 @@ export async function fetchLeadInspect(
   const estimatedTotal = toNumber(m.estimated_cost);
   const cost = m.cost_source
     ? {
-        cost_source: m.cost_source as 'permit' | 'model' | 'none',
+        cost_source: m.cost_source as
+          | 'permit'
+          | 'model'
+          | 'none'
+          | 'geometric'
+          | 'archetype_declared_area'
+          | 'archetype_parcel'
+          | 'archetype_rate',
         is_geometric_override: m.is_geometric_override,
         estimated_cost_total: estimatedTotal,
         modeled_gfa_sqm: toNumber(m.modeled_gfa_sqm),

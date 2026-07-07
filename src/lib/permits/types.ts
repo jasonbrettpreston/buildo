@@ -124,7 +124,17 @@ export interface LeadView {
 // ---------------------------------------------------------------------------
 // Cost estimates (migration 071 — spec 72)
 // ---------------------------------------------------------------------------
-export type CostSource = 'permit' | 'model' | 'none'; // 'none' = zero-total surgical bypass (spec 83 §3 Step D)
+// 'none' = zero-total surgical bypass (spec 83 §3 Step D). WF2 §3-ARCHETYPE
+// (2026-07-06): the archetype ladder adds three provenances + 'geometric' is
+// retained for legacy CoA rows — the full set mirrors the mig 209 CHECK.
+export type CostSource =
+  | 'permit'
+  | 'model'
+  | 'none'
+  | 'geometric'
+  | 'archetype_declared_area'
+  | 'archetype_parcel'
+  | 'archetype_rate';
 export type CostTier = 'small' | 'medium' | 'large' | 'major' | 'mega';
 
 export interface CostEstimate {

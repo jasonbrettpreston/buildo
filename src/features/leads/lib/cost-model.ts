@@ -54,6 +54,44 @@ export interface CostModelPermitInput {
    * is available (defensive — Brain treats null as safe-skip).
    */
   permit_type_class?: PermitTypeClass | null;
+  // -------------------------------------------------------------------
+  // §3-ARCHETYPE (WF2 2026-07-06) — mapper inputs + the Spec 88 §4D
+  // propagated premium-INCLUSIVE scalars + geom-basis areas + the lead's
+  // own declared areas (T1). All optional: absent → the Brain's ladder
+  // finds nothing priceable and falls through to the legacy path, exactly
+  // as a pre-Spec-88 row would. NEVER a deliberate TS↔JS asymmetry — the
+  // parity battery covers these fields (Code Reviewer I4).
+  // -------------------------------------------------------------------
+  /** Spec 41 classifier output — the mapper's FB-gate discriminator. */
+  project_type?: string | null;
+  /** CKAN FSI-delta declared area (new builds/additions) — the T1 basis. */
+  residential_sqm?: number | null;
+  /** CKAN declared interior-alteration area — the T1 basis for reno lines. */
+  interior_alterations_sqm?: number | null;
+  /** Spec 88 §2.6 premium already INSIDE the propagated scalars. */
+  neighbourhood_cost_premium?: number | null;
+  cost_fb_total?: number | null;
+  cost_coa_total?: number | null;
+  cost_addition_total?: number | null;
+  cost_gut_total?: number | null;
+  cost_basement_underpin_per_sqm?: number | null;
+  cost_basement_per_sqm?: number | null;
+  cost_garage_total?: number | null;
+  cost_laneway_suite_total?: number | null;
+  cost_garden_suite_total?: number | null;
+  cost_kitchen_per_sqm?: number | null;
+  cost_bath_per_sqm?: number | null;
+  cost_solar_total?: number | null;
+  opt_aor_gfa_sqm?: number | null;
+  opt_coa_gfa_sqm?: number | null;
+  cur_floor_gfa_sqm?: number | null;
+  cur_pot_2story_gfa_sqm?: number | null;
+  max_garage_gfa_sqm?: number | null;
+  max_laneway_suite_gfa_sqm?: number | null;
+  max_garden_suite_gfa_sqm?: number | null;
+  cur_est_kitchen_gfa_sqm?: number | null;
+  cur_est_bath_gfa_sqm?: number | null;
+  max_buildable_footprint_sqm?: number | null;
 }
 
 export interface CostModelParcelInput {
@@ -412,6 +450,27 @@ interface EstimateCostConfig {
   trustThresholdPct?: number;
   /** Premium income tiers for neighbourhood factor. Defaults to PREMIUM_TIERS. */
   premiumTiers?: Array<{ min: number; max: number | null; multiplier: number }>;
+  // -------------------------------------------------------------------
+  // §3-ARCHETYPE (WF2 2026-07-06) — ladder activation + guards. Mirror of
+  // the Muscle's config build in compute-cost-estimates.js §5. When
+  // archetypeEnabled is absent/false the Brain skips the ladder entirely
+  // (existing callers + tests unchanged).
+  // -------------------------------------------------------------------
+  /** Activates the T1–T3 archetype ladder ahead of Steps A–D. */
+  archetypeEnabled?: boolean;
+  /** Pre-resolved premium-EXCLUSIVE per-sqm rates — build via the Brain's resolveArchetypeRates(). */
+  archetypeRates?: Record<string, number>;
+  /** T1 declared-area plausibility band (own/lot) — logic_variables.archetype_t1_fsi_min/max. */
+  archetypeT1FsiMin?: number;
+  archetypeT1FsiMax?: number;
+  /** T1 absolute cap per dwelling unit — logic_variables.archetype_t1_total_cap. */
+  archetypeT1TotalCap?: number;
+  /** T2 per-line plausibility bounds — logic_variables.archetype_t2_*. */
+  archetypeT2RenoCap?: number;
+  archetypeT2BuildCap?: number;
+  archetypeT2BuildMin?: number;
+  /** T3 per-unit absolute cap — logic_variables.archetype_t3_total_cap (WF3 F2). */
+  archetypeT3TotalCap?: number;
 }
 
 /** The Slicer: per-trade dollar values from total cost. Mirrors JS sliceTradeValues. */
@@ -472,6 +531,35 @@ export function estimateCost(
       tenure_renter_pct: neighbourhood?.tenure_renter_pct ?? null,
       active_trade_slugs: permit.active_trade_slugs ?? [],
       permit_type_class: permit.permit_type_class ?? null,
+      // §3-ARCHETYPE (WF2 2026-07-06) — pass-through of the mapper inputs +
+      // propagated scalar/area columns. `?? null` keeps the row shape
+      // identical to the Muscle's SOURCE_SQL (absent column → SQL NULL).
+      project_type: permit.project_type ?? null,
+      residential_sqm: permit.residential_sqm ?? null,
+      interior_alterations_sqm: permit.interior_alterations_sqm ?? null,
+      neighbourhood_cost_premium: permit.neighbourhood_cost_premium ?? null,
+      cost_fb_total: permit.cost_fb_total ?? null,
+      cost_coa_total: permit.cost_coa_total ?? null,
+      cost_addition_total: permit.cost_addition_total ?? null,
+      cost_gut_total: permit.cost_gut_total ?? null,
+      cost_basement_underpin_per_sqm: permit.cost_basement_underpin_per_sqm ?? null,
+      cost_basement_per_sqm: permit.cost_basement_per_sqm ?? null,
+      cost_garage_total: permit.cost_garage_total ?? null,
+      cost_laneway_suite_total: permit.cost_laneway_suite_total ?? null,
+      cost_garden_suite_total: permit.cost_garden_suite_total ?? null,
+      cost_kitchen_per_sqm: permit.cost_kitchen_per_sqm ?? null,
+      cost_bath_per_sqm: permit.cost_bath_per_sqm ?? null,
+      cost_solar_total: permit.cost_solar_total ?? null,
+      opt_aor_gfa_sqm: permit.opt_aor_gfa_sqm ?? null,
+      opt_coa_gfa_sqm: permit.opt_coa_gfa_sqm ?? null,
+      cur_floor_gfa_sqm: permit.cur_floor_gfa_sqm ?? null,
+      cur_pot_2story_gfa_sqm: permit.cur_pot_2story_gfa_sqm ?? null,
+      max_garage_gfa_sqm: permit.max_garage_gfa_sqm ?? null,
+      max_laneway_suite_gfa_sqm: permit.max_laneway_suite_gfa_sqm ?? null,
+      max_garden_suite_gfa_sqm: permit.max_garden_suite_gfa_sqm ?? null,
+      cur_est_kitchen_gfa_sqm: permit.cur_est_kitchen_gfa_sqm ?? null,
+      cur_est_bath_gfa_sqm: permit.cur_est_bath_gfa_sqm ?? null,
+      max_buildable_footprint_sqm: permit.max_buildable_footprint_sqm ?? null,
     };
     const brainConfig: Record<string, unknown> = {
       tradeRates: config.tradeRates,
@@ -480,6 +568,16 @@ export function estimateCost(
       suburbanCoverageRatio: config.suburbanCoverageRatio ?? FALLBACK_SUBURBAN_COVERAGE,
       liarGateThreshold: config.liarGateThreshold ?? config.trustThresholdPct ?? LIAR_GATE_THRESHOLD_DEFAULT,
       premiumTiers: config.premiumTiers ?? PREMIUM_TIERS.map((t) => ({ min: t.min, max: t.max, multiplier: t.multiplier })),
+      // §3-ARCHETYPE — mirror of the Muscle's config §5 (absent → ladder off).
+      archetypeEnabled: config.archetypeEnabled ?? false,
+      archetypeRates: config.archetypeRates ?? {},
+      archetypeT1FsiMin: config.archetypeT1FsiMin,
+      archetypeT1FsiMax: config.archetypeT1FsiMax,
+      archetypeT1TotalCap: config.archetypeT1TotalCap,
+      archetypeT2RenoCap: config.archetypeT2RenoCap,
+      archetypeT2BuildCap: config.archetypeT2BuildCap,
+      archetypeT2BuildMin: config.archetypeT2BuildMin,
+      archetypeT3TotalCap: config.archetypeT3TotalCap, // WF3 F2
     };
     const result = brainModule.estimateCostShared(row, brainConfig);
 

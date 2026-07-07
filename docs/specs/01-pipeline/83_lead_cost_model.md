@@ -76,7 +76,54 @@ The engine is split into "Muscle" (Execution) and "Brain" (Logic).
 * **Physical Data**: `footprint_area_sqm`, `height_m`, `lot_size_sqm`.
 * **Neighborhood Data**: `avg_household_income`.
 
-### Core Logic (Three-Step Valuation)
+### §3-ARCHETYPE — The archetype cost ladder (WF2 2026-07-06 — the PRIMARY derivation for low-rise residential)
+
+> **This section supersedes Steps A–D for archetype-mapped low-rise residential leads.** The evidence
+> (`docs/reports/wf1-cost-estimate-findings.md`): the geometric path over-predicted additions 2–31×
+> (whole-building massing GFA), under-predicted megaprojects 10–30× (mislinked massing), and the
+> Liar's Gate overrode the model 50–85% of the time. The Spec 88 parcel archetype costs (lot-validated,
+> bylaw-capped, premium-INCLUSIVE) replace it. The CKAN `est_const_cost` is NEVER the assigned cost on
+> this path (recorded as the calibration signal only); costs are NEVER built up from per-trade rates.
+
+**Entry gate:** `isLowRiseResidential(structure_type)` **AND** the archetype mapper
+(`src/features/leads/lib/archetype-cost-map.js`) returns a non-null line. Mapper-null residential
+(MEC/SITE/ENV-only, demolition, repair, tagless) and ALL non-residential remain on Steps A–D
+(the "T4" path) **unchanged** — including its Liar's Gate, matrix safe-skips and placeholder rule.
+
+**The mapper:** normalizes tags (strip any `word:` prefix — `alter:`/`new:`/etc.; fold
+`finished-basement`/`basement-finish`→basement; `second-suite`→gut), maps tag→line, resolves
+multi-scope via the dominance hierarchy `max_build > laneway > addition > gut > underpin > basement >
+garage > kitchen/bath > solar`, with: FB-family tags → `max_build` ONLY when `project_type='new_build'`;
+laneway `structure_type` override; CoA `NewConstruction`(+any accessory tag) → `coa_build`; CoA `Mixed`
+→ dominance over its tags (tagless `Mixed` → `coa_build`); `foundation`→underpin, `structural-beam`→gut,
+`balcony`/`canopy`→null. **Additive pairs** (`underpin+basement`, `kitchen+bath`, `gut+addition`) sum the
+two lines' TOTALS (each per-sqm × its OWN area basis — never Σper-sqm × one area). **Reno-build
+escalation (rule W7, cap-class-bounded — WF3 2026-07-06):** ≥9 active trades + a build-scope line
+(gut/addition/FB) → the FB (`max_build`) line, so a hidden full-rebuild filed as a small reno gets the
+larger build AREA basis. The escalated line carries an **origin cap class**: a GENUINE build signal
+(an FB tag or `project_type='new_build'`) keeps the T2 **build** cap; a reno-origin escalation
+(gut/addition only) is bounded by the T2 **reno** cap (both cap AND min), so an inflated `opt_aor` area
+basis cannot blow a deck/interior-gut past the reno ceiling. W7 detection is preserved (archetype lines
+price off real §4D area, not the legacy 0.25× scope-matrix multiplier W7 was written against, so a
+bounded escalation cannot reintroduce that under-pricing); over-cap reno-origin rows fall to T4.
+
+**The price ladder (first rung that qualifies):**
+| Rung | Price | Guards | `cost_source` |
+|---|---|---|---|
+| **T1** | line per-sqm (= propagated total ÷ propagated area basis) × the lead's OWN area (`residential_sqm` for FB/ADD classes; `interior_alterations_sqm` for gut/kitchen/bath) | area band `own/lot ∈ [archetype_t1_fsi_min, archetype_t1_fsi_max]`; absolute cap `archetype_t1_total_cap × max(1, dwelling_units_created)`; reject → T2, counted | `archetype_declared_area` |
+| **T2** | the parcel's propagated line total | per-line plausibility bounds (`archetype_t2_reno_line_cap` / `archetype_t2_build_line_cap` / `archetype_t2_build_line_min` — parcel-side data poison falls through, counted per line); **`fits:false` → cost = null (a permissioning result, never a fallback)** | `archetype_parcel` |
+| **T3** | `archetype_cost_rates[line] × MAX(1, esc) × adj × OWN area × neighbourhood_cost_premium` — only when an own area exists (no derived-area invention) | zero/absent rate or area → T4; **absolute cap `archetype_t3_total_cap × max(1, dwelling_units_created)` (WF3 F2 — an inflated own-area basis from an oversized/mislinked parent parcel falls to T4, counted `t3_cap`; CoA has no `dwelling_units_created` → effectively flat, intended)** | `archetype_rate` |
+| any | zero/null total anywhere → `{cost_source:'none', estimated_cost:null}` (the Zero-Total-Bypass analog), counted `tier_none_count` | | `none` |
+
+**Trade slicing (Decision 4):** `trade_contract_values` = the archetype total sliced by
+`weight(slug) ∝ trade_sqft_rates.base_rate_sqft × structure_complexity_factor` over the lead's OWN
+deduped `active_trade_slugs` (a rough allocation, not bottom-up — revisit at Spec 88 P3). Trade-less
+lead → `{}`, counted. `modeled_gfa_sqm`/`effective_area_sqm` carry the archetype-basis area.
+**Premium contract (Spec 88 §2.6):** T1/T2 values are premium-INCLUSIVE — the premium is NEVER re-applied.
+**CoA:** same ladder minus T1; `is_geometric_override = false` (nothing was overridden); the PI-5 fence
+holds (the CoA path never passes `permit_type` into the Brain's matrix machinery).
+
+### Core Logic (Three-Step Valuation) — the T4 / legacy path (mapper-null residential + non-residential)
 
 > **permit_type_class gating (WF2 #3, implemented 2026-05-08, depends on mig 120 / Spec 80 §5):** the cost model only applies the Surgical Triangle when `permit_type_class = 'construction'`. Non-construction classes (`signage`, `administrative`, `safety_upgrade`, `unclassified`) short-circuit BEFORE Step A (GFA), Step B (Area_Eff), Step C (trade valuation), and Step D (Liar's Gate) → `cost_source = 'none'`, `estimated_cost = null`, `trade_contract_values = {}`. The gate is enforced at the Brain layer (`src/features/leads/lib/cost-model-shared.js`) so both the Muscle and the TS shim inherit the same byte-identical short-circuit. The Muscle's SOURCE_SQL gains `LEFT JOIN permit_type_classifications` with `COALESCE(ptc.class, 'unclassified')` and a startup guard refuses to run when the lookup table is empty (Spec 47 §R5). Eliminates the $29M-for-2-signs class of bug surfaced by the WF3 investigation 2026-05-08 (sign permits inheriting host-building GFA in the Surgical Triangle). Detailed behavior table: see Spec 80 §5 "Cost-model behaviors". The reserved `signage` class will be unlocked once a future WF3 adds description-level subtype detection inside `Designated Structures`.
 
@@ -94,7 +141,7 @@ Calculate the physical baseline of the structure.
 The "Surgical Triangle" lookup using `classify-scope.js` result, Permit Type, and Structure Type.
 **Area_Eff** = GFA * Permit Type Allocation %
 
-> **Archetype `geom_basis` (Spec 65 §6 SC-5 / Spec 80 §5.B.1, 2026-06-22):** the project's archetype selects WHICH parcel floor-area field feeds the `GFA` above — FB→`max_buildable_gfa_sqm` (new build), ADD→`cur_storey_gfa_sqm` (add-storey headroom), BAS→`cur_basement_gfa_sqm`, KIT/BTH→`cur_est_kitchen_gfa_sqm`/`cur_est_bath_gfa_sqm`, INT→`cur_interior_reno_gfa_sqm`, LANE→`max_rear_suite_gfa_sqm` (laneway⊕garden, Spec 65 §7), GAR→`max_garage_gfa_sqm` (Spec 65 §7); `null` (ENV/MEC/SITE) keeps today's permit-GFA path. NULL geom_basis value (e.g. LANE on a no-fit lot) → safe-skip. Phases 2–3 ship the map + the parcel fields only; the cost-model read of `geom_basis` is a later WF (no wiring change here yet).
+> **Archetype `geom_basis` (Spec 65 §6 SC-5 / Spec 80 §5.B.1, 2026-06-22):** the project's archetype selects WHICH parcel floor-area field feeds the `GFA` above — FB→`max_buildable_gfa_sqm` (new build), ADD→`cur_storey_gfa_sqm` (add-storey headroom), BAS→`cur_basement_gfa_sqm`, KIT/BTH→`cur_est_kitchen_gfa_sqm`/`cur_est_bath_gfa_sqm`, INT→`cur_interior_reno_gfa_sqm`, LANE→`max_rear_suite_gfa_sqm` (laneway⊕garden, Spec 65 §7), GAR→`max_garage_gfa_sqm` (Spec 65 §7); `null` (ENV/MEC/SITE) keeps today's permit-GFA path. NULL geom_basis value (e.g. LANE on a no-fit lot) → safe-skip. ~~Phases 2–3 ship the map + the parcel fields only; the cost-model read of `geom_basis` is a later WF (no wiring change here yet).~~ **DEFERRAL CLOSED (WF2 2026-07-06):** the archetype wiring shipped as §3-ARCHETYPE above — the mapper + ladder consume the parcel archetype costs directly; this Step-B geom_basis note now describes only the T4/legacy path.
 
 > **Matrix-miss safe-skip (WF3 Pass-2.5 Finding D, 2026-05-21):** When the `scope_intensity_matrix` has no row for the `(permit_type, structure_type)` pair AND `permit_type_class = 'construction'` (Spec 80 §5), the cost model **safe-skips** with `cost_source = 'none'` and `estimated_cost = null` — instead of the previous "miss → default to 1.0 (full GFA)" behavior. The pre-fix behavior produced $14M-style cost balloons on trade-specific permits (a 119m² plumbing scope inside a 46K-sqm office got the full 46K sqm → $14M). The matrix-miss envelope is byte-symmetric with the existing `permit_type_class != 'construction'` short-circuit: `modeled_gfa_sqm = null`, `effective_area_sqm = null`, `trade_contract_values = {}`, `is_geometric_override = false`. Telemetry counters (`matrix_misses`, `matrix_miss_unique_keys`, `matrix_miss_top_keys`) emit to `audit_table` so operators can prioritize incremental matrix backfill — see §3.A Operator Runbook below.
 

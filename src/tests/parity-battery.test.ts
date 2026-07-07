@@ -115,6 +115,37 @@ function toRow(input: ParityInput): Record<string, unknown> {
     lot_size_sqm:          input.parcel?.lot_size_sqm ?? null,
     avg_household_income:  input.neighbourhood?.avg_household_income ?? null,
     tenure_renter_pct:     input.neighbourhood?.tenure_renter_pct ?? null,
+    // §3-ARCHETYPE (WF2 2026-07-06): the JS Brain reads these off the flat row;
+    // the TS shim (cost-model.ts:535-560) passes them from `permit`. `toRow`
+    // MUST mirror that pass-through or the archetype parity cases would compare
+    // TS-with-scalars against JS-without and false-fail. Every field the shim
+    // forwards is forwarded here — no deliberate TS↔JS asymmetry (Code Reviewer I4).
+    project_type:                   input.permit.project_type ?? null,
+    residential_sqm:                input.permit.residential_sqm ?? null,
+    interior_alterations_sqm:       input.permit.interior_alterations_sqm ?? null,
+    neighbourhood_cost_premium:     input.permit.neighbourhood_cost_premium ?? null,
+    cost_fb_total:                  input.permit.cost_fb_total ?? null,
+    cost_coa_total:                 input.permit.cost_coa_total ?? null,
+    cost_addition_total:            input.permit.cost_addition_total ?? null,
+    cost_gut_total:                 input.permit.cost_gut_total ?? null,
+    cost_basement_underpin_per_sqm: input.permit.cost_basement_underpin_per_sqm ?? null,
+    cost_basement_per_sqm:          input.permit.cost_basement_per_sqm ?? null,
+    cost_garage_total:              input.permit.cost_garage_total ?? null,
+    cost_laneway_suite_total:       input.permit.cost_laneway_suite_total ?? null,
+    cost_garden_suite_total:        input.permit.cost_garden_suite_total ?? null,
+    cost_kitchen_per_sqm:           input.permit.cost_kitchen_per_sqm ?? null,
+    cost_bath_per_sqm:              input.permit.cost_bath_per_sqm ?? null,
+    cost_solar_total:               input.permit.cost_solar_total ?? null,
+    opt_aor_gfa_sqm:                input.permit.opt_aor_gfa_sqm ?? null,
+    opt_coa_gfa_sqm:                input.permit.opt_coa_gfa_sqm ?? null,
+    cur_floor_gfa_sqm:              input.permit.cur_floor_gfa_sqm ?? null,
+    cur_pot_2story_gfa_sqm:         input.permit.cur_pot_2story_gfa_sqm ?? null,
+    max_garage_gfa_sqm:             input.permit.max_garage_gfa_sqm ?? null,
+    max_laneway_suite_gfa_sqm:      input.permit.max_laneway_suite_gfa_sqm ?? null,
+    max_garden_suite_gfa_sqm:       input.permit.max_garden_suite_gfa_sqm ?? null,
+    cur_est_kitchen_gfa_sqm:        input.permit.cur_est_kitchen_gfa_sqm ?? null,
+    cur_est_bath_gfa_sqm:           input.permit.cur_est_bath_gfa_sqm ?? null,
+    max_buildable_footprint_sqm:    input.permit.max_buildable_footprint_sqm ?? null,
   };
 }
 
@@ -134,8 +165,13 @@ const PARITY_FIELDS = [
 ] as const;
 
 function assertParity(input: ParityInput, label: string) {
-  const tsResult = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, SHARED_CONFIG);
-  const jsResult = estimateCostShared(toRow(input), SHARED_CONFIG);
+  assertParityWith(input, label, SHARED_CONFIG);
+}
+
+/** Parity assertion parametrized by config — used by the archetype block (ARCH_CONFIG). */
+function assertParityWith(input: ParityInput, label: string, config: Record<string, unknown>) {
+  const tsResult = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, config);
+  const jsResult = estimateCostShared(toRow(input), config);
 
   for (const field of PARITY_FIELDS) {
     expect(
@@ -172,8 +208,58 @@ function makePermit(overrides: MakePermitOverrides): CostModelPermitInput & { pe
     // WF2 #3: default to 'construction' so existing fixtures keep their surgical
     // path. Non-construction fixtures override explicitly to test the gate.
     permit_type_class: overrides.permit_type_class === undefined ? 'construction' : overrides.permit_type_class,
+    // §3-ARCHETYPE (WF2 2026-07-06): forward the ladder inputs so archetype
+    // parity fixtures reach BOTH paths (the base factory only copied the pre-
+    // archetype subset; unforwarded overrides were silently dropped → the JS
+    // side never saw the scalars). Undefined stays undefined → treated as null.
+    // `?? null` (never leave `undefined`) — exactOptionalPropertyTypes forbids an
+    // explicit undefined on a non-optional-undefined field. null is equivalent for
+    // the Brain's Number.isFinite guards.
+    project_type:                   overrides.project_type ?? null,
+    residential_sqm:                overrides.residential_sqm ?? null,
+    interior_alterations_sqm:       overrides.interior_alterations_sqm ?? null,
+    neighbourhood_cost_premium:     overrides.neighbourhood_cost_premium ?? null,
+    cost_fb_total:                  overrides.cost_fb_total ?? null,
+    cost_coa_total:                 overrides.cost_coa_total ?? null,
+    cost_addition_total:            overrides.cost_addition_total ?? null,
+    cost_gut_total:                 overrides.cost_gut_total ?? null,
+    cost_basement_underpin_per_sqm: overrides.cost_basement_underpin_per_sqm ?? null,
+    cost_basement_per_sqm:          overrides.cost_basement_per_sqm ?? null,
+    cost_garage_total:              overrides.cost_garage_total ?? null,
+    cost_laneway_suite_total:       overrides.cost_laneway_suite_total ?? null,
+    cost_garden_suite_total:        overrides.cost_garden_suite_total ?? null,
+    cost_kitchen_per_sqm:           overrides.cost_kitchen_per_sqm ?? null,
+    cost_bath_per_sqm:              overrides.cost_bath_per_sqm ?? null,
+    cost_solar_total:               overrides.cost_solar_total ?? null,
+    opt_aor_gfa_sqm:                overrides.opt_aor_gfa_sqm ?? null,
+    opt_coa_gfa_sqm:                overrides.opt_coa_gfa_sqm ?? null,
+    cur_floor_gfa_sqm:              overrides.cur_floor_gfa_sqm ?? null,
+    cur_pot_2story_gfa_sqm:         overrides.cur_pot_2story_gfa_sqm ?? null,
+    max_garage_gfa_sqm:             overrides.max_garage_gfa_sqm ?? null,
+    max_laneway_suite_gfa_sqm:      overrides.max_laneway_suite_gfa_sqm ?? null,
+    max_garden_suite_gfa_sqm:       overrides.max_garden_suite_gfa_sqm ?? null,
+    cur_est_kitchen_gfa_sqm:        overrides.cur_est_kitchen_gfa_sqm ?? null,
+    cur_est_bath_gfa_sqm:           overrides.cur_est_bath_gfa_sqm ?? null,
+    max_buildable_footprint_sqm:    overrides.max_buildable_footprint_sqm ?? null,
   };
 }
+
+// §3-ARCHETYPE (WF2 2026-07-06): the ladder guards mirror the seeded
+// logic_variables (archetype_ladder.logic.test.ts GUARDS). ARCH_CONFIG turns the
+// ladder ON for the archetype parity block; SHARED_CONFIG keeps it OFF so every
+// pre-archetype branch above stays byte-identical to its committed baseline.
+const ARCH_CONFIG = {
+  ...SHARED_CONFIG,
+  archetypeEnabled: true,
+  archetypeRates: {} as Record<string, number>,
+  archetypeT1FsiMin: 0.05,
+  archetypeT1FsiMax: 8,
+  archetypeT1TotalCap: 25_000_000,
+  archetypeT2RenoCap: 10_000_000,
+  archetypeT2BuildCap: 20_000_000,
+  archetypeT2BuildMin: 200_000,
+  archetypeT3TotalCap: 15_000_000,
+};
 
 const GOOD_FOOTPRINT: CostModelFootprintInput = { footprint_area_sqm: 200, estimated_stories: 2 };
 const GOOD_PARCEL: CostModelParcelInput = { lot_size_sqm: 400, frontage_m: 10 };
@@ -815,5 +901,86 @@ describe('parity-battery — WF2 #3 permit_type_class gate (cost_source="none" f
     expect(ts.cost_source).not.toBe('none');
     expect(ts.estimated_cost).not.toBeNull();
     expect((ts.estimated_cost ?? 0)).toBeGreaterThan(0);
+  });
+});
+
+// ─── §3-ARCHETYPE ladder parity (WF2 2026-07-06) ─────────────────────────────
+// Code Reviewer I4: the TS shim gained archetype field pass-through + the ladder
+// runs inside the shared Brain. These cases prove the shim and the Muscle price
+// the ladder identically — if `toRow`/`makePermit` ever drop a scalar, or the
+// shim's row construction diverges, a field mismatch fails here. Fixtures mirror
+// archetype-ladder.logic.test.ts (gut line: cost_gut_total total, area basis
+// cur_pot_2story_gfa_sqm, own-area basis interior_alterations_sqm).
+describe('parity-battery — §3-ARCHETYPE ladder (ARCH_CONFIG)', () => {
+  const archPermit = (over: Partial<CostModelPermitInput> & { permit_num: string }) =>
+    makePermit({
+      permit_type: 'Small Residential Projects',
+      structure_type: 'SFD - Detached',
+      project_type: 'renovation',
+      work: 'Interior Alterations',
+      est_const_cost: 50_000,
+      scope_tags: ['alter:interior-alterations'],
+      dwelling_units_created: 0,
+      storeys: 2,
+      active_trade_slugs: ['framing', 'electrical'],
+      neighbourhood_cost_premium: 1.2,
+      cost_gut_total: 480_000,
+      cur_pot_2story_gfa_sqm: 240,
+      ...over,
+    });
+  const ARCH_PARCEL: CostModelParcelInput = { lot_size_sqm: 400, frontage_m: 12 };
+  const ARCH_FOOTPRINT: CostModelFootprintInput = { footprint_area_sqm: 120, estimated_stories: 2 };
+
+  it('A1: T1 declared-area (own area × per-sqm) — TS == JS', () => {
+    const input: ParityInput = {
+      permit: archPermit({ permit_num: 'A1', interior_alterations_sqm: 100 }),
+      parcel: ARCH_PARCEL, footprint: ARCH_FOOTPRINT, neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParityWith(input, 'A1', ARCH_CONFIG);
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, ARCH_CONFIG);
+    expect(ts.cost_source).toBe('archetype_declared_area');
+    expect(ts.estimated_cost).toBe(200_000);
+  });
+
+  it('A2: T1 FSI-band reject → T2 parcel total — TS == JS', () => {
+    const input: ParityInput = {
+      permit: archPermit({ permit_num: 'A2', interior_alterations_sqm: 10 }),
+      parcel: ARCH_PARCEL, footprint: ARCH_FOOTPRINT, neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParityWith(input, 'A2', ARCH_CONFIG);
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, ARCH_CONFIG);
+    expect(ts.cost_source).toBe('archetype_parcel');
+    expect(ts.estimated_cost).toBe(480_000);
+  });
+
+  it('A3: no own area → T2 parcel total (the CoA-shaped path) — TS == JS', () => {
+    const input: ParityInput = {
+      permit: archPermit({ permit_num: 'A3', interior_alterations_sqm: null }),
+      parcel: ARCH_PARCEL, footprint: ARCH_FOOTPRINT, neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParityWith(input, 'A3', ARCH_CONFIG);
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, ARCH_CONFIG);
+    expect(ts.cost_source).toBe('archetype_parcel');
+  });
+
+  it('A4: non-lowrise structure_type falls through to T4 — TS == JS (byte-identical legacy)', () => {
+    const input: ParityInput = {
+      permit: archPermit({ permit_num: 'A4', structure_type: 'Office', active_trade_slugs: ['plumbing'] }),
+      parcel: ARCH_PARCEL, footprint: ARCH_FOOTPRINT, neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParityWith(input, 'A4', ARCH_CONFIG);
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, ARCH_CONFIG);
+    expect(String(ts.cost_source).startsWith('archetype_')).toBe(false);
+  });
+
+  it('A5: zero propagated total → cost_source="none" (Zero-Total analog) — TS == JS', () => {
+    const input: ParityInput = {
+      permit: archPermit({ permit_num: 'A5', cost_gut_total: 0 }),
+      parcel: ARCH_PARCEL, footprint: ARCH_FOOTPRINT, neighbourhood: MID_NEIGHBOURHOOD,
+    };
+    assertParityWith(input, 'A5', ARCH_CONFIG);
+    const ts = estimateCost(input.permit, input.parcel, input.footprint, input.neighbourhood, ARCH_CONFIG);
+    expect(ts.cost_source).toBe('none');
+    expect(ts.estimated_cost).toBeNull();
   });
 });

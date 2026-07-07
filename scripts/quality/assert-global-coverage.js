@@ -45,12 +45,20 @@ const LOGIC_VARS_SCHEMA = z.object({
   // .passthrough() still lets other logic_vars flow through, but these are explicitly validated.
   vocab_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
   vocab_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
+  // WF3 F4 — the archetype-era cost-coverage floor for the Step-14 cost_estimates rows
+  // (whole-corpus cost coverage is ~62% by design; the global 90% is unreachable + was
+  // already red pre-WF2). Scoped to these ~6 rows via calibratedRow; global stays 90/70.
+  cost_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
+  cost_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
 }).passthrough().refine(
   d => d.profiling_coverage_warn_pct < d.profiling_coverage_pass_pct,
   { message: 'profiling_coverage_warn_pct must be strictly less than profiling_coverage_pass_pct' },
 ).refine(
   d => d.vocab_coverage_warn_pct < d.vocab_coverage_pass_pct,
   { message: 'vocab_coverage_warn_pct must be strictly less than vocab_coverage_pass_pct' },
+).refine(
+  d => d.cost_coverage_warn_pct <= d.cost_coverage_pass_pct,
+  { message: 'cost_coverage_warn_pct must be <= cost_coverage_pass_pct' },
 );
 
 // Vocabulary-coverage matrix (Spec 49 §3/§4 — the value/vocabulary dimension). Each triple measures
@@ -80,6 +88,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
     const warnPct = logicVars.profiling_coverage_warn_pct;
     const vocabPassPct = logicVars.vocab_coverage_pass_pct;
     const vocabWarnPct = logicVars.vocab_coverage_warn_pct;
+    // WF3 F4 — archetype-era cost-coverage floor for the Step-14 estimate/tier/range/area rows.
+    const costPassPct = logicVars.cost_coverage_pass_pct;
+    const costWarnPct = logicVars.cost_coverage_warn_pct;
 
     const isCoaChain = process.env.PIPELINE_CHAIN === 'coa';
     const isSourcesChain = process.env.PIPELINE_CHAIN === 'sources'; // WF3: the parcels-table profile
@@ -1125,17 +1136,23 @@ pipeline.run('assert-global-coverage', async (pool) => {
 
       // Step 14 — compute_cost_estimates (Denom A table coverage + Denom F row quality)
       rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.permits_covered',       parseInt(misc.permits_with_cost_estimate, 10), permitsTotal));
-      rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.estimated_cost',        parseInt(ce.estimated_cost_pop, 10),           ceTotal || null));
+      // WF3 F4 — estimate/tier/range/area coverage is legitimately ~62% under the archetype+
+      // safe-skip model (non-residential T4 matrix-miss, fit-blocked, MEC-only nofit are NULL by
+      // design), so these rows use the recalibrated cost floor via calibratedRow, NOT the global
+      // 90% gate. cost_source/premium_factor/complexity_score/model_version/is_geometric_override/
+      // trade_contract_values are populated on EVERY priced row regardless of tier → stay on the
+      // global coverageRow gate.
+      rows.push(calibratedRow('Step 14 — compute_cost_estimates', 'cost_estimates.estimated_cost',        parseInt(ce.estimated_cost_pop, 10),           ceTotal || null, costPassPct, costWarnPct));
       rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.cost_source',           parseInt(ce.cost_source_pop, 10),              ceTotal || null));
-      rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.cost_tier',             parseInt(ce.cost_tier_pop, 10),                ceTotal || null));
-      rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.cost_range_low',        parseInt(ce.cost_range_low_pop, 10),           ceTotal || null));
-      rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.cost_range_high',       parseInt(ce.cost_range_high_pop, 10),          ceTotal || null));
+      rows.push(calibratedRow('Step 14 — compute_cost_estimates', 'cost_estimates.cost_tier',             parseInt(ce.cost_tier_pop, 10),                ceTotal || null, costPassPct, costWarnPct));
+      rows.push(calibratedRow('Step 14 — compute_cost_estimates', 'cost_estimates.cost_range_low',        parseInt(ce.cost_range_low_pop, 10),           ceTotal || null, costPassPct, costWarnPct));
+      rows.push(calibratedRow('Step 14 — compute_cost_estimates', 'cost_estimates.cost_range_high',       parseInt(ce.cost_range_high_pop, 10),          ceTotal || null, costPassPct, costWarnPct));
       rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.premium_factor',        parseInt(ce.premium_factor_pop, 10),           ceTotal || null));
       rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.complexity_score',      parseInt(ce.complexity_score_pop, 10),         ceTotal || null));
       rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.model_version',         parseInt(ce.model_version_pop, 10),            ceTotal || null));
       rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.is_geometric_override', parseInt(ce.is_geometric_override_pop, 10),    ceTotal || null));
-      rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.modeled_gfa_sqm',       parseInt(ce.modeled_gfa_sqm_pop, 10),          ceTotal || null));
-      rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.effective_area_sqm',    parseInt(ce.effective_area_sqm_pop, 10),       ceTotal || null));
+      rows.push(calibratedRow('Step 14 — compute_cost_estimates', 'cost_estimates.modeled_gfa_sqm',       parseInt(ce.modeled_gfa_sqm_pop, 10),          ceTotal || null, costPassPct, costWarnPct));
+      rows.push(calibratedRow('Step 14 — compute_cost_estimates', 'cost_estimates.effective_area_sqm',    parseInt(ce.effective_area_sqm_pop, 10),       ceTotal || null, costPassPct, costWarnPct));
       rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.trade_contract_values', parseInt(ce.trade_contract_values_pop, 10),    ceTotal || null));
       rows.push(coverageRow('Step 14 — compute_cost_estimates', 'cost_estimates.computed_at',           parseInt(ce.computed_at_pop, 10),              ceTotal || null));
 

@@ -249,7 +249,22 @@ export const LeadInspectLiarGateSchema = z.object({
 });
 
 export const LeadInspectCostSchema = z.object({
-  cost_source: z.enum(['permit', 'model', 'none']).nullable(),
+  // WF2 §3-ARCHETYPE (2026-07-06): the archetype ladder writes three new
+  // provenances (T1 archetype_declared_area / T2 archetype_parcel / T3
+  // archetype_rate). 'geometric' retained for legacy CoA rows (mig 209). The
+  // enum MUST mirror the mig 209 CHECK exactly — an unmodelled value here makes
+  // the whole lead-inspect API 500 on the first archetype-priced lead.
+  cost_source: z
+    .enum([
+      'permit',
+      'model',
+      'none',
+      'geometric',
+      'archetype_declared_area',
+      'archetype_parcel',
+      'archetype_rate',
+    ])
+    .nullable(),
   is_geometric_override: z.boolean().nullable(),
   /** TOTAL project cost — clearly distinguished from per-trade slice. */
   estimated_cost_total: z.number().nullable(),
