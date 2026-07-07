@@ -264,6 +264,79 @@ more severe but NEVER downgrades a script-set verdict, and preserves `SKIP`/`UNK
 enforces the §3.6 "row-derived, never parallel-boolean" rule at the SDK level — a `cov_*`/`dq_`/`err_`
 FAIL now turns its step red without each script re-deriving its own verdict.
 
+### 4.5 Coverage-gate row vocabulary (assert-global-coverage.js) _(NEW 2026-07)_
+
+`assert-global-coverage.js` — the corpus-wide coverage gate (chain step 27 / lock 111) — is
+the canonical builder of coverage `audit_table.rows`. It emits a small vocabulary of row
+shapes, all on the **same** `{ metric, value, threshold, status }` rail the admin UI and the
+SDK auto-inject share. New coverage assertions MUST reuse these shapes, not invent per-field
+verdict logic:
+
+| Builder | Gate | Use |
+|---------|------|-----|
+| `coverageRow(step, field, pop, denom)` | PASS ≥ `passPct`%, WARN ≥ `warnPct`% (default 90/70, logic_variables-loaded) | Standard field coverage. |
+| `externalRow(step, field, pop, denom)` | PASS ≥ 10%, WARN ≥ 5% | Third-party scraper fields (phone, email, website, WSIB) — low coverage is normal. |
+| `calibratedRow(step, field, pop, denom, fieldPassPct, fieldWarnPct)` | Per-field explicit thresholds (e.g. zoning 80/75) | Fields whose achievable ceiling differs from the global gate. Params are deliberately **named** `fieldPassPct`/`fieldWarnPct` (not the outer `passPct`/`warnPct`) so a caller that forgets to pass thresholds fails loudly instead of silently inheriting the global gate. |
+| `infoRow(step, field, value)` | none — always `INFO` | Structural sparsity / count-only metrics, no traffic light. |
+| `vocabRow(step, col, present, vocabSize)` / `profileVocabTriple(t)` | PASS ≥ `vocabPassPct`%, WARN ≥ `vocabWarnPct`% | Value/vocabulary dimension (distinct values present vs the defining vocabulary). Backs the SDK `cov_*` primitive (§4.3) via the shared `resolveAndCountTriple`; an **unresolved** triple (bad identifier / missing column / type mismatch / timeout) becomes a VISIBLE `WARN` row, never a silent INFO-skip. |
+
+### 4.6 Denominator honesty — batch- vs subset- vs corpus-scoped coverage _(NEW 2026-07)_
+
+A coverage `%` is only trustworthy if its **denominator names the population the field is
+expected to be present in**. Three recurring traps:
+
+- **Corpus flatters the servable subset.** The CoA cost-coverage row read ~58% against the
+  whole `coa_applications` corpus but only ~49% on the OPEN (non-terminal, geocoded) subset
+  the feed actually serves — priced CoAs skew closed, so the corpus number over-reports what
+  a consumer sees. Gate the row on the **subset the consumer reads**, not the corpus.
+- **Born-red / scoped-denominator gates.** Whole-corpus cost coverage is ~62% *by design*
+  (many permits are legitimately unpriceable), so a global 90% gate sits **permanently red**
+  and desensitizes operators. `assert-global-coverage.js` (~L49) scopes those few cost rows
+  via `calibratedRow` while the global rail stays 90/70. Scope the denominator/threshold to
+  the **achievable** population; never leave a structurally-unreachable global gate red.
+- **Path-bypass metrics.** After a code path is bypassed for a subset, a metric measured over
+  the FULL population (rather than the sub-population that path serves) reports a phantom gap.
+  Measure over the population the step actually acts on, and say which population that is.
+
+### 4.7 Active-scoped vs all-rows counters _(NEW 2026-07)_
+
+A counter that counts **rows written** cannot observe a state change on rows it did not
+rewrite. The CoA trade fan-out derives `lead_trades.is_active` from bundle provenance
+(commit `9883656`): a lead can **lose** `is_active` without any new row being written. A
+health/coverage counter that reads `count(*)` over written rows will silently miss the
+deactivation and over-report live coverage. Count over the **active-scoped** predicate
+(`WHERE is_active`) — the state you actually serve — not over all-rows-ever-written.
+
+### 4.8 Magnitude floors vs `> 0` floors for reference tables _(NEW 2026-07)_
+
+For reference / source-load tables (GIS layers, centreline, bylaw tables), a `count > 0`
+gate **passes on a catastrophic partial load** — one row of an expected 500K clears it.
+Assert a **magnitude floor** (an expected order-of-magnitude minimum) so a truncated ingest
+turns the step red instead of green. The sources-chain honesty gates are the pattern: GIS /
+scoped max-build coverage floors (`1f8ca38`), bylaw WARN floors (`173f0d1`), back-ref
+confidence floor (`fb593a9`).
+
+### 4.9 First-deploy posture must carry its re-tightening condition observably _(NEW 2026-07)_
+
+When a gate is loosened for a first-deploy / cold-start window (relaxed thresholds while a
+calibration cohort fills), the relaxation MUST be **self-announcing on every run** and carry
+a **machine-observable re-tightening condition** — never a silent, forgettable bypass. The
+`calibration_thresholds_relaxed` WARN row (commit `c6310d6`) emits on EVERY run while the
+relaxed values are in effect, and flips to FAIL-advice once a companion INFO row
+(`calibration_cohort_fill_pct`) recovers past the strict-PASS point: the loosening is loud
+and permanent-by-choice-only. The CoA gate's `coa_audit_gate_warn_accepted` WARN row is the
+same shape — a sanctioned bypass made as loud as the failure it suppresses (cf. §3.7's
+first-deploy spike runbook posture).
+
+### 4.10 `records_total` honesty on Mutator steps _(NEW 2026-07)_
+
+Only **Observer** archetype scripts (Spec 30 §2.1; §3.5 here) null the three top-level
+counters (`records_total`/`records_new`/`records_updated`). A **Mutator** step MUST report a
+real primary-entity `records_total` per Spec 47 §11 — nulling or zeroing the counter on a
+step that writes rows hides the work and zeroes `sys_velocity_rows_sec`. The Spec 80
+archetype cost writes (commit `4442fb7`) are Mutators: `records_total` = the permits / CoA
+rows evaluated, never null. Reserve null counters for genuinely read-only Observers.
+
 </behavior>
 
 ---
