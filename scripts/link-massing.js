@@ -46,6 +46,9 @@ const BATCH_SIZE = 500;
 const GRID_SIZE = 0.003; // ~333m grid cells (same as old BBOX_OFFSET)
 const PARAM_FLUSH_THRESHOLD = 30000; // §9.2: flush before hitting PG 65,535 limit
 
+// WF2 P11-2 — link_massing --full gate (pure helpers in scripts/lib for testability).
+const { LINK_MASSING_CODE_VERSION, decideMassingFull, evaluateMassingFullGate } = require('./lib/massing-full-gate');
+
 /**
  * Reproject a GeoJSON geometry from EPSG:3857 (Web Mercator) to EPSG:4326 (WGS84).
  * Building footprints are stored in Mercator; parcels + centroids are in WGS84.
@@ -168,7 +171,16 @@ pipeline.run('link-massing', async (pool) => {
   const garageMaxSqm        = logicVars.massing_garage_max_sqm;
   const nearestMaxDistanceM = logicVars.massing_nearest_max_distance_m;
 
-  const FULL_MODE = pipeline.isFullMode();
+  // WF2 P11-2 — gate the full relink. --full (from the manifest sources chain_args)
+  // now PERMITS a full relink; the gate decides whether one is actually needed.
+  const explicitFull = pipeline.isFullMode();
+  const forceFull = process.env.LINK_MASSING_FORCE_FULL === '1';
+  const massingGate = await evaluateMassingFullGate(pool);
+  const FULL_MODE = decideMassingFull({ explicitFull, forceFull, gateChanged: massingGate.changed });
+  const fullModeReason = forceFull ? 'force_full_env'
+    : (explicitFull && massingGate.changed) ? `gate:${massingGate.reason}`
+    : (explicitFull ? `incremental:gate_${massingGate.reason}` : 'incremental:no_full_arg');
+  pipeline.log.info('[link-massing]', `full-gate: explicitFull=${explicitFull} force=${forceFull} gate.changed=${massingGate.changed} (${massingGate.reason}) → ${FULL_MODE ? 'FULL' : 'INCREMENTAL'}`);
   const startTime = Date.now();
 
   // Detect PostGIS fast path: requires BOTH the PostGIS extension AND the
@@ -699,6 +711,11 @@ pipeline.run('link-massing', async (pool) => {
     records_updated: parcelsLinked,
     records_meta: {
       duration_ms: durationMs,
+      // WF2 P11-2 — full-gate signals: read by the next run to decide full-vs-incremental.
+      code_version: LINK_MASSING_CODE_VERSION,
+      building_footprints_count: massingGate.buildingCount,
+      full_mode: FULL_MODE,
+      full_mode_reason: fullModeReason,
       parcels_processed: processed,
       parcels_linked: parcelsLinked,
       buildings_matched: buildingsMatched,
