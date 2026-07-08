@@ -351,6 +351,13 @@ an existing chain MUST be scheduled in the same serialized job, or given its own
 the two invocations are genuinely independent. (Chain-order lock:
 `src/tests/chain.logic.test.ts`.)
 
+**The option space (pick deliberately, not by default):**
+1. **Serialize (chosen).** One job, chains back-to-back. Zero engine change, freshness by order. Cost: the combined wall-clock must fit the daily window; a hung first chain blocks the second (mitigate with a hard-timeout watchdog on the runner).
+2. **Chain-scoped lock IDs.** Give the shared step a *different* `ADVISORY_LOCK_ID` per chain (e.g. `base*100 + chainOffset`) so the two invocations never contend. Enables true parallelism, but doubles the compute of the shared step (it fully runs in each chain) and needs a defined offset scheme so a third chain doesn't collide.
+3. **Explicit skip-acceptance WITH observability.** Keep the SKIP, but make it LOUD: the skipping step emits a WARN audit row (`step_skipped_lock_contention`) instead of a silent green SKIP, so a dropped step is visible in `pipeline_runs`. Correct only where the shared step is genuinely idempotent-per-window and a skip is truly harmless; never where a downstream gate asserts the step ran.
+
+The silent-green SKIP (do nothing) is the one non-option — it is the bug §5.6 exists to prevent.
+
 ---
 
 ## 6. Data Access Patterns
@@ -1301,6 +1308,8 @@ WHERE (tf.urgency IS NULL OR tf.urgency <> 'expired')
 WHERE tf.urgency IS NOT NULL AND tf.urgency <> 'expired'
 ```
 
+**`NOT IN (subquery)` vs `NOT EXISTS` — prefer `NOT EXISTS`.** The two are NOT equivalent under NULLs. `col NOT IN (SELECT x FROM t)` returns NULL (→ excludes ALL rows) the moment `t.x` contains a single NULL — a silent whole-result wipeout. `NOT EXISTS (SELECT 1 FROM t WHERE t.x = col)` is NULL-safe: a NULL `t.x` simply fails the `=` and the row is kept. Default to `NOT EXISTS` for anti-joins on any column that is not `NOT NULL`-constrained; reserve `NOT IN` for literal lists you control (and even then guard the nullable-column case above).
+
 ### 15.2 Inequality comparisons with nullable columns
 
 ```sql
@@ -1430,9 +1439,14 @@ Document the decision either way with a comment:
 
 ### Cross-Spec Dependencies
 - **Relies on:** `docs/specs/pipeline/40_pipeline_system.md` (pipeline_runs schema, SDK contracts)
-- **Relies on:** `docs/specs/00_engineering_standards.md` §9 (pipeline & script safety)
+- **Relies on:** `docs/specs/00_engineering_standards.md` §9 (pipeline & script safety), §5.5 (test-layer map — which layer a script/migration change must add)
 - **Consumed by:** Any WF1 that adds a new pipeline step
 - **Consumed by:** Any WF3 reviewing an existing script against the reference standard
+
+### Related AI-operator references (lazy-Read)
+- `docs/runbook/README.md` — runbook + one-off maintenance-script index + deploy-ordering rules (seed-before-code, migrate --verify, detached-run + chain-lock hazard, reset-then-drain). Read before running a chain, backfill, or reset.
+- `docs/reference/logic-variables-registry.md` — every `logic_variables` key → default/bounds/consumers (`npm run logic-vars-docs`); the vars a §R4 Zod schema consumes.
+- `docs/reference/data-lineage-map.md` — column → producing step → consuming steps, from the §R11 `emitMeta` contracts (`npm run lineage-docs`).
 
 ---
 
@@ -1603,6 +1617,8 @@ node scripts/deepseek-review.js plan
 
 Output all four review responses before asking the user to confirm Phase B execution.
 The independent Claude worktree agent runs AFTER migration execution, before commit (WF6).
+
+> **Fallback when the adversarial review scripts are unavailable** (missing API key, network down, script error): the gate is NOT waived. Substitute a documented **manual senior review** — a human (or the independent worktree reviewer) works the same checklist (§18.8) against the proposed SQL and records the verdict in the task — before Phase B. An unrunnable reviewer downgrades to manual review; it never downgrades to "no review."
 
 ### 18.8 Migration self-review checklist (FK-specific)
 
