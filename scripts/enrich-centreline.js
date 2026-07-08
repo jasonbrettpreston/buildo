@@ -21,6 +21,10 @@ const SPEC_VERSION = '1.1'; // L10
 // The §8c producer, read via the cross-run contract. run-chain records it as
 // 'sources:load_centreline' (NOT the spec §9 literal 'source-centreline' — the #409 trap).
 const PRODUCER_NAME = 'sources:load_centreline';
+// This step's OWN run name (run-chain records it chain-prefixed). The version-skip
+// gate reads the last completed run under this name. assertCentrelineEnriched
+// (enrich-permits.js §8e L24b) accepts both this and the bare 'enrich_centreline'.
+const SELF_NAME = 'sources:enrich_centreline';
 const TAG = '[enrich-centreline]';
 
 // Thresholds (future-tunable via logic_variables; hardcoded per the enrich-ravines precedent).
@@ -261,6 +265,53 @@ UPDATE parcels p
         OR p.centreline_dataset_version_when_enriched IS DISTINCT FROM $1);
 `;
 
+// WF2 P11-1 — version-skip gate. Scoped variant of BUILD_TEMP_SQL: restrict the
+// expensive parcel_segments join to parcels whose lineage stamp is NULL or a
+// different producer version ($1 = current source_dataset_version). The #418
+// geometry-change fence (load-parcels.js) NULLs the stamp on any moved parcel, so
+// this set is exactly {new, moved, never-linked} — the only parcels whose centreline
+// derivation can have changed when the producer dataset is unchanged.
+// Note: the DROP is stripped — a parameterized ($1) query uses the extended
+// protocol, which forbids multiple statements. The scoped path runs the DROP
+// separately (see enrichCentreline), then this single CREATE...AS with $1.
+const BUILD_TEMP_SQL_SCOPED = BUILD_TEMP_SQL
+  .replace('DROP TABLE IF EXISTS tmp_centreline_enrich;', '')
+  .replace(
+    'WHERE p.geom IS NOT NULL AND ST_IsValid(p.geom)        -- F2 geom-validity (precedent)',
+    'WHERE p.geom IS NOT NULL AND ST_IsValid(p.geom)        -- F2 geom-validity (precedent)\n'
+      + '    AND (p.centreline_dataset_version_when_enriched IS DISTINCT FROM $1)  -- WF2 P11-1: NULL/stale-stamp parcels only',
+  );
+
+// Read the producer version stamped by the LAST completed enrich_centreline run
+// (the run row, NOT the per-parcel column — a stray per-parcel value must not
+// defeat the gate). Prefer the meta field; fall back to the audit row emitted by
+// pre-P11 runs so the gate works on the very first post-deploy run.
+async function readLastEnrichedVersion(pool) {
+  const res = await pool.query(
+    `SELECT records_meta FROM pipeline_runs WHERE pipeline = $1 AND status = 'completed' ORDER BY completed_at DESC LIMIT 1`,
+    [SELF_NAME],
+  );
+  if (res.rows.length === 0) return null;
+  const meta = res.rows[0].records_meta || {};
+  const fromMeta = (meta.centreline_enrich || {}).source_dataset_version;
+  if (fromMeta) return fromMeta;
+  const auditRows = ((meta.audit_table || {}).rows) || [];
+  const row = auditRows.find((r) => r.metric === 'centreline_source_dataset_version');
+  return row ? row.value : null;
+}
+
+// Count valid-geom parcels whose stamp is NULL/stale vs the current version — the
+// work set for an unchanged-version run. Zero ⇒ full skip; >0 ⇒ scoped recompute.
+async function countStaleParcels(pool, version) {
+  const { rows } = await pool.query(
+    `SELECT COUNT(*)::int AS n FROM parcels
+      WHERE geom IS NOT NULL AND ST_IsValid(geom)
+        AND (centreline_dataset_version_when_enriched IS DISTINCT FROM $1)`,
+    [version],
+  );
+  return rows[0].n;
+}
+
 // ---------------------------------------------------------------------------
 // Consumer read protocol (§9 / DEC-E) — 4-tier + extract source_dataset_version.
 // ---------------------------------------------------------------------------
@@ -324,9 +375,15 @@ async function assertPreconditions(client) {
   }
 }
 
-/** Engine — builds the temp table + UPDATEs, on the caller's transaction client. */
-async function enrichCentreline(client, { sourceDatasetVersion }) {
-  await client.query(BUILD_TEMP_SQL);
+/** Engine — builds the temp table + UPDATEs, on the caller's transaction client.
+ *  `scoped` (WF2 P11-1) restricts the build to NULL/stale-stamp parcels only. */
+async function enrichCentreline(client, { sourceDatasetVersion, scoped = false }) {
+  if (scoped) {
+    await client.query('DROP TABLE IF EXISTS tmp_centreline_enrich'); // separate — param query is single-statement
+    await client.query(BUILD_TEMP_SQL_SCOPED, [sourceDatasetVersion]);
+  } else {
+    await client.query(BUILD_TEMP_SQL);
+  }
   const upd = await client.query(UPDATE_SQL, [sourceDatasetVersion]);
   // Per-priority + boolean tallies from the materialized temp (one pass, no re-join).
   const t = (await client.query(`
@@ -354,6 +411,18 @@ function round1(n) {
   return Math.round(n * 10) / 10;
 }
 
+// WF2 P11-1 — pure mode decision (exported for the regression lock). The producer
+// dataset version drives it; the per-parcel staleCount only refines unchanged-version
+// runs into skip (0 stale) vs incremental (>0 stale).
+//   - changed version (or no prior run) → 'full'  (recompute everything, re-stamp)
+//   - unchanged + >0 NULL/stale parcels → 'incremental'  (recompute just those)
+//   - unchanged + 0 stale parcels       → 'skip'  (nothing to do; completed row only)
+function decideCentrelineMode({ lastVersion, currentVersion, staleCount }) {
+  const versionUnchanged = lastVersion !== null && lastVersion !== undefined && lastVersion === currentVersion;
+  if (!versionUnchanged) return 'full';
+  return staleCount === 0 ? 'skip' : 'incremental';
+}
+
 /** Grade the 5 diagnostic audit rows (pure — exported for the logic test). L21 is the gate. */
 function gradeDiagnosticRows({ zeroPct, invalidGeom, namePct, nodeNullPct, addrNullPct }) {
   return [
@@ -366,17 +435,89 @@ function gradeDiagnosticRows({ zeroPct, invalidGeom, namePct, nodeNullPct, addrN
   ];
 }
 
+// WF2 P11-1 — Observer-style completed emission for the version-skip (mode='skip')
+// and reduced-recompute (mode='incremental') paths. MUST land a status='completed'
+// pipeline_runs row with a fresh completed_at (records_updated:0/N) — explicitly NOT
+// the withAdvisoryLock lock-contention SKIP payload: assertCentrelineEnriched
+// (enrich-permits.js §8e L24b) HALTs the daily permits/coa chain unless a *completed*
+// enrich_centreline run post-dates the latest load-parcels. The stamps are preserved
+// (unchanged version ⇒ ~97% coverage stands), so the L24c coverage gate also passes.
+function emitReducedSummary({ mode, staleCount, updated, sourceDatasetVersion, RUN_AT, t0 }) {
+  const reason = mode === 'skip' ? 'version_and_geometry_unchanged' : 'version_unchanged_incremental';
+  const rows = [
+    { metric: 'enrich_centreline_mode', value: mode, status: 'INFO' },
+    { metric: 'enrich_centreline_skip_reason', value: reason, status: 'INFO' },
+    { metric: 'parcels_recomputed', value: staleCount, status: 'INFO' },
+    { metric: 'parcels_enriched_count', value: updated, status: 'INFO' },
+    { metric: 'centreline_source_dataset_version', value: sourceDatasetVersion, status: 'INFO' },
+    { metric: 'enrich_centreline_duration_ms', value: Date.now() - t0, status: 'INFO' },
+  ];
+  pipeline.emitSummary({
+    records_total: null, // Enrich archetype — does not create rows
+    records_new: null,
+    records_updated: updated,
+    records_meta: {
+      audit_table: {
+        phase: ADVISORY_LOCK_ID,
+        name: 'Parcel centreline enrichment (version-skip)',
+        verdict: 'PASS',
+        rows,
+      },
+      centreline_enrich: {
+        spec_version: SPEC_VERSION,
+        source_dataset_version: sourceDatasetVersion, // the gate reads this next run
+        mode,
+        skip_reason: reason,
+        parcels_recomputed: staleCount,
+        parcels_updated: updated,
+        completed_at: RUN_AT.toISOString(),
+      },
+    },
+  });
+  pipeline.emitMeta(
+    { parcels: ['id', 'geom', 'centreline_dataset_version_when_enriched'], toronto_centreline: ['geom'] },
+    // skip writes nothing; incremental writes the same derived cols as a full run.
+    mode === 'incremental'
+      ? { parcels: ['is_corner_lot', 'is_through_lot', 'primary_frontage_street_name', 'abuts_laneway', 'centreline_dataset_version_when_enriched'] }
+      : {},
+  );
+}
+
 async function main(pool) {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const t0 = Date.now(); // elapsed-time only (allowed)
     const RUN_AT = await pipeline.getDbTimestamp(pool); // §R3.5 — DB clock for completed_at
     const { sourceDatasetVersion } = await readCentrelineContract(pool);
 
+    // ── WF2 P11-1 version-skip gate ──────────────────────────────────────────
+    // If the producer dataset version is unchanged since the last completed run,
+    // only NULL/stale-stamp parcels (new/moved/never-linked, per the #418 fence)
+    // can have changed. Recompute just those (incremental); if none, full skip.
+    const lastVersion = await readLastEnrichedVersion(pool);
+    // staleCount only needed to distinguish skip vs incremental when the version is unchanged.
+    const staleCount = (lastVersion !== null && lastVersion === sourceDatasetVersion)
+      ? await countStaleParcels(pool, sourceDatasetVersion)
+      : null;
+    const mode = decideCentrelineMode({ lastVersion, currentVersion: sourceDatasetVersion, staleCount });
+
+    if (mode === 'skip') {
+      pipeline.log.info(TAG, `version unchanged (${sourceDatasetVersion}) + 0 stale parcels — full skip (completed row emitted)`);
+      emitReducedSummary({ mode, staleCount: 0, updated: 0, sourceDatasetVersion, RUN_AT, t0 });
+      return { ok: true, mode };
+    }
+
     let result;
     await pipeline.withTransaction(pool, async (client) => {
       await assertPreconditions(client);
-      result = await enrichCentreline(client, { sourceDatasetVersion });
+      result = await enrichCentreline(client, { sourceDatasetVersion, scoped: mode === 'incremental' });
     });
+
+    if (mode === 'incremental') {
+      pipeline.log.info(TAG, `version unchanged (${sourceDatasetVersion}) — reduced recompute of ${staleCount} stale parcels (updated ${result.updated})`);
+      emitReducedSummary({ mode, staleCount, updated: result.updated, sourceDatasetVersion, RUN_AT, t0 });
+      return { ok: true, mode };
+    }
+
     const tally = result.tally;
 
     // Diagnostics over the parcel population (cheap COUNTs; F5b/F5c/G4 + L21 zero-intersection).
@@ -429,6 +570,8 @@ async function main(pool) {
         },
         centreline_enrich: {
           spec_version: SPEC_VERSION,
+          source_dataset_version: sourceDatasetVersion, // WF2 P11-1: the version-skip gate reads this next run
+          mode: 'full',
           parcels_updated: result.updated,
           parcels_with_zero_centreline_intersections_count: zeroCount,
           parcels_with_zero_centreline_intersections_pct: zeroPct,
@@ -468,11 +611,17 @@ if (require.main === module) {
 module.exports = {
   ADVISORY_LOCK_ID,
   PRODUCER_NAME,
+  SELF_NAME,
   BUILD_TEMP_SQL,
+  BUILD_TEMP_SQL_SCOPED,
   UPDATE_SQL,
   readCentrelineContract,
+  readLastEnrichedVersion,
+  countStaleParcels,
+  decideCentrelineMode,
   assertPreconditions,
   enrichCentreline,
+  emitReducedSummary,
   verdictCascade,
   gradeDiagnosticRows,
 };

@@ -53,3 +53,70 @@ describe('verdictCascade — row-derived FAIL > WARN > PASS', () => {
     expect(ec.verdictCascade([{ status: 'FAIL' }, { status: 'WARN' }])).toBe('FAIL');
   });
 });
+
+// WF2 P11-1 — version-skip gate regression locks.
+describe('decideCentrelineMode — the version-skip gate', () => {
+  const V = '79029bb3';
+  it('changed producer version → full recompute (re-stamp all)', () => {
+    expect(ec.decideCentrelineMode({ lastVersion: 'OLD', currentVersion: V, staleCount: 0 })).toBe('full');
+  });
+  it('no prior run (null lastVersion) → full (bootstrap)', () => {
+    expect(ec.decideCentrelineMode({ lastVersion: null, currentVersion: V, staleCount: null })).toBe('full');
+  });
+  it('unchanged version + a NULL/stale-stamp parcel → INCREMENTAL, never skipped', () => {
+    expect(ec.decideCentrelineMode({ lastVersion: V, currentVersion: V, staleCount: 1 })).toBe('incremental');
+    expect(ec.decideCentrelineMode({ lastVersion: V, currentVersion: V, staleCount: 14512 })).toBe('incremental');
+  });
+  it('unchanged version + zero stale parcels → full skip', () => {
+    expect(ec.decideCentrelineMode({ lastVersion: V, currentVersion: V, staleCount: 0 })).toBe('skip');
+  });
+});
+
+describe('BUILD_TEMP_SQL_SCOPED — the incremental restriction', () => {
+  it('adds the NULL/stale-stamp predicate ($1 = current version) to the full build', () => {
+    expect(ec.BUILD_TEMP_SQL_SCOPED).not.toBe(ec.BUILD_TEMP_SQL);
+    expect(ec.BUILD_TEMP_SQL_SCOPED).toContain('centreline_dataset_version_when_enriched IS DISTINCT FROM $1');
+    expect((ec.BUILD_TEMP_SQL_SCOPED.match(/\$1/g) || []).length).toBe(1);
+    expect(ec.BUILD_TEMP_SQL).not.toContain('IS DISTINCT FROM $1');
+  });
+});
+
+describe('emitReducedSummary — Observer-style COMPLETED emission (not a lock SKIP)', () => {
+  const V = '79029bb3';
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pipeline = require('../../scripts/lib/pipeline.js');
+  function capture(mode: string, staleCount: number, updated: number) {
+    const origS = pipeline.emitSummary;
+    const origM = pipeline.emitMeta;
+    let summary: Record<string, unknown> = {};
+    let writes: Record<string, unknown> = {};
+    pipeline.emitSummary = (s: Record<string, unknown>) => { summary = s; };
+    pipeline.emitMeta = (_r: unknown, w: Record<string, unknown>) => { writes = w; };
+    try {
+      ec.emitReducedSummary({ mode, staleCount, updated, sourceDatasetVersion: V, RUN_AT: new Date('2026-07-08T10:00:00Z'), t0: Date.now() });
+    } finally {
+      pipeline.emitSummary = origS;
+      pipeline.emitMeta = origM;
+    }
+    return { summary, writes };
+  }
+
+  it('skip: records_updated 0, PASS verdict, carries source_dataset_version, writes nothing', () => {
+    const { summary, writes } = capture('skip', 0, 0);
+    const meta = summary.records_meta as { audit_table: { verdict: string }, centreline_enrich: Record<string, unknown> };
+    expect(summary.records_updated).toBe(0);
+    expect(meta.audit_table.verdict).toBe('PASS');
+    expect(meta.centreline_enrich.source_dataset_version).toBe(V); // gate reads this next run
+    expect(meta.centreline_enrich.skip_reason).toBe('version_and_geometry_unchanged');
+    expect(writes).toEqual({}); // no writes → stamps preserved → assertCentrelineEnriched coverage holds
+  });
+
+  it('incremental: records_updated N, writes the derived parcel cols, reason=incremental', () => {
+    const { summary, writes } = capture('incremental', 14512, 3);
+    const meta = summary.records_meta as { centreline_enrich: Record<string, unknown> };
+    expect(summary.records_updated).toBe(3);
+    expect(meta.centreline_enrich.skip_reason).toBe('version_unchanged_incremental');
+    expect(meta.centreline_enrich.parcels_recomputed).toBe(14512);
+    expect((writes as { parcels?: string[] }).parcels).toContain('centreline_dataset_version_when_enriched');
+  });
+});
