@@ -11,7 +11,8 @@ As a salesperson, I need builder entities automatically enriched with phone numb
 ## 2. Chain Definition
 
 **Trigger:** `node scripts/run-chain.js entities` or `POST /api/admin/pipelines/chain_entities`
-**Schedule:** On-demand (admin-triggered, cost-sensitive due to API spend)
+**Schedule:** Scheduled daily 03:00 ET (`local-cron.js` `entities`) — but **effectively inert**: the chain no-ops without `SERPER_API_KEY` (`enrich-web-search.js` skips web-search enrichment when the key is unset), and the dev-box cron has not executed it since **early March 2026** (last `pipeline_runs` rows 2026-03-10). Net result today: ~1% contact coverage; the daily entry is retained (see below) but the API-spend gate means it does nothing until the key is provisioned. The `permits`/`coa`/`sources` chains never invoke these steps — so their `entities.primary_phone/email/website` coverage is legitimately near-zero (asserted as INFO, not FAIL, in `assert-global-coverage.js`).
+> **Cron-entry decision (WF2 P10):** KEEP the daily entry — it is the correct cadence for when `SERPER_API_KEY` is provisioned, and the Serper gate makes an un-keyed run a safe no-op (no wasted spend). The gate is the spend control, not the absence of a schedule. `local-cron.js` carries an inline comment stating this so the entry is not mistaken for dead config.
 **Steps:** 2 (sequential)
 **Gate:** None
 

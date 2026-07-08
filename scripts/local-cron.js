@@ -62,6 +62,10 @@ const SCHEDULES = [
     label: 'Sources (Quarterly)',
   },
   {
+    // NOT dead config: kept daily on purpose (Spec 45). The chain no-ops without
+    // SERPER_API_KEY (enrich-web-search.js), so an un-keyed run is a safe zero-spend
+    // no-op — the Serper key is the spend gate, not the schedule. Provision the key
+    // to activate; contact coverage is ~1% until then.
     chainIds: ['entities'],
     cron: '0 3 * * *',             // 3 AM ET daily — after core ingestion
     label: 'Entities Enrichment (Daily)',

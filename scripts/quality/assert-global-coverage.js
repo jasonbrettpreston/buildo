@@ -1023,13 +1023,15 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(coverageRow('Step 6 — extract_builders', 'entities.permit_count',          parseInt(ea.permit_count_pop, 10),   entitiesTotal));
       rows.push(coverageRow('Step 6 — extract_builders', 'entities.entity_type',           parseInt(ea.entity_type_pop, 10),    entitiesTotal));
       rows.push(coverageRow('Step 6 — extract_builders', 'entities.last_seen_at',          parseInt(ea.last_seen_at_pop, 10),   entitiesTotal));
-      // WF2 P6.5 [41-#4]: primary_phone / primary_email / website are populated
-      // by the on-demand, Serper-gated `entities` chain (manifest scripts:107-109)
-      // — a DORMANT chain that permits/coa/sources NEVER invoke. Over a
-      // permits-chain run these fields are legitimately near-zero, so an
-      // externalRow (which FAILs below 5%) is a false regression. infoRow —
-      // contacts arrive via the dormant entities chain (Spec 45). The producers
-      // are NOT retired (do not delete the steps — would orphan Spec 45).
+      // WF2 P6.5 [41-#4] / P10 Spec 45 reconcile: primary_phone / primary_email /
+      // website are populated by the `entities` chain (manifest scripts:107-109),
+      // which permits/coa/sources NEVER invoke. Three-layer truth (traced): the
+      // chain IS scheduled daily 03:00 (local-cron.js `entities`) but is
+      // effectively inert — it no-ops without SERPER_API_KEY (enrich-web-search.js)
+      // AND the dev-box cron has not executed it since early March 2026. So over a
+      // permits-chain run these fields are legitimately near-zero — an externalRow
+      // (FAILs below 5%) would be a false regression; infoRow instead. The
+      // producers are NOT retired (do not delete the steps — would orphan Spec 45).
       rows.push(infoRow(    'Step 6 — extract_builders', 'entities.primary_phone (via entities chain — Spec 45)', parseInt(ea.phone_pop, 10),   entitiesTotal));
       rows.push(infoRow(    'Step 6 — extract_builders', 'entities.primary_email (via entities chain — Spec 45)', parseInt(ea.email_pop, 10),   entitiesTotal));
       rows.push(infoRow(    'Step 6 — extract_builders', 'entities.website (via entities chain — Spec 45)',       parseInt(ea.website_pop, 10), entitiesTotal));
