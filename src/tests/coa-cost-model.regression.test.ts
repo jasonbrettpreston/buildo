@@ -23,6 +23,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import * as fs from 'fs';
+import * as path from 'path';
+import { LeadInspectCostSchema } from '../lib/admin/lead-schemas';
+import type { CostSource } from '../lib/permits/types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { buildCoaConfig, mapCoaRowToBrainInput, buildCoaArchetypeInput } = require('../../scripts/lib/coa-cost-model');
@@ -173,5 +177,34 @@ describe('CoA archetype path — PI-5 fence re-locked against the new ladder (Ph
       opt_coa_gfa_sqm: 2000,
     });
     expect(tryArchetypeCost(archRow, ARCH_CONFIG)).toBeNull();
+  });
+});
+
+// WF2 P5 label-truth finding (GRD-F5): the 'geometric' cost_source is RETIRED
+// for NEW CoA rows (they now write 'archetype_parcel'), but it is NOT dead code —
+// legacy CoA rows (mig 209 CHECK) still carry it, the CoA muscle writes it
+// contextually, refresh-snapshot counts it, and the types/schemas include it.
+// This lock guards against a future "dead code" refactor pruning the live
+// readers of 'geometric' — pruning any of these silently breaks legacy leads
+// (a lead-inspect API 500 on the first legacy 'geometric' row, or a snapshot
+// bucket that drops those rows).
+describe("cost_source='geometric' remains a valid, handled enum value (P5 label-truth lock)", () => {
+  it('the lead-inspect API Zod enum still accepts geometric (else the API 500s on legacy rows)', () => {
+    // LeadInspectCostSchema.cost_source MUST mirror the mig 209 CHECK exactly.
+    const parsed = LeadInspectCostSchema.shape.cost_source.parse('geometric');
+    expect(parsed).toBe('geometric');
+  });
+
+  it('the CostSource type union still includes geometric (compile-time)', () => {
+    // If a refactor drops 'geometric' from the union, this line fails to compile.
+    const s: CostSource = 'geometric';
+    expect(s).toBe('geometric');
+  });
+
+  it('refresh-snapshot.js still counts geometric in the from_model bucket', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/refresh-snapshot.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    // The cost_source IN (...) FILTER that rolls legacy geometric into from_model.
+    expect(content).toMatch(/cost_source IN \([\s\S]*?'geometric'[\s\S]*?\)/);
   });
 });
