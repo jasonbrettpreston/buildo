@@ -45,8 +45,51 @@ force env → FULL_MODE = true (escape hatch)
 - `massing-full-gate.logic.test.ts` — `decideMassingFull`, data/code/bootstrap change-detection, and the source contract that a FULL run still runs the ghost-link cleanup.
 - `load-parcels-ravine-invalidation.db.test.ts` — the #418 centreline stamp NULLs on geom change, preserved on address-only change.
 
-## Acceptance chain run (measured)
+## Acceptance chain run (measured — 2026-07-08, detached `run-chain.js sources`)
 
-_Filled in on chain completion (background monitor). This run is NOT a clean unchanged re-run — the centreline source republished (see above), so centreline ran full; the measured wall-clock therefore reflects a changed-source quarterly run, not the ~69-min unchanged case. The unchanged-case win is proven by the standalone smoke (11.2 s vs 92 min) + the massing gate read (incremental)._
+**Terminal: `completed_with_warnings` · wall-clock 8,821.9 s = 147.0 min · all 27 steps landed `pipeline_runs` rows.**
 
-<!-- STEP TABLE + WALL CLOCK inserted post-run -->
+This run is NOT a clean unchanged re-run: the centreline source **genuinely republished mid-window** (Last-Modified 2026-07-07 18:15; content hash `79029bb3…`→`80496e67…`, 47,368 deleted / 47,363 inserted features), so the centreline gate CORRECTLY chose `full` — the live proof of the changed-version→full safety path. The **massing gate fired live**: `link_massing` ran **8.5 s** (`incremental:gate_unchanged`) instead of the pre-P11 ~21.9 min full relink — the measured P11-2 win.
+
+| Step | Status | Secs | Gate note |
+|------|--------|------|-----------|
+| assert_schema | completed | 4.4 | |
+| address_points | completed | 42.9 | |
+| geocode_permits | completed | 12.2 | WARN (pre-existing) |
+| parcels | completed | 79.8 | |
+| load_ravines | completed | 0.7 | |
+| load_heritage | completed | 0.8 | |
+| load_centreline | completed | 33.5 | source REPUBLISHED (new hash `80496e67…`) |
+| link_parcel_addresses | completed | 199.4 | |
+| compute_centroids | completed | 7.0 | |
+| link_parcels | completed | 7.8 | |
+| enrich_ravines | completed | 8.9 | |
+| enrich_heritage | completed | 38.9 | |
+| **enrich_centreline** | completed | **5,225.7 (87.1 min)** | **mode=full — gate correctly detected the changed version**; 472,002 re-stamped; new version recorded for the next-run gate |
+| massing | completed | 50.2 | |
+| **link_massing** | completed | **8.5** | **incremental:gate_unchanged (count 427,077, code v2)** — vs ~21.9 min pre-P11 |
+| neighbourhoods | completed | 12.8 | |
+| link_neighbourhoods | completed | 3.2 | WARN (94.8% known residual) |
+| load_wsib | completed | 0.3 | |
+| link_wsib | completed | 99.7 | |
+| load_zoning | completed | 0.8 | |
+| enrich_parcels | completed | 2,790.6 (46.5 min) | `--full` (P6.7-chosen, out of P11 scope) |
+| compute_parcel_cost_estimates | completed | 74.7 | |
+| assert_global_coverage | completed | 12.4 | |
+| assert_parcel_sanity | completed | 17.6 | WARN (known watches) |
+| refresh_snapshot | completed | 36.0 | |
+| assert_data_bounds | completed | 5.2 | WARN (known residuals) |
+| assert_engine_health | completed | 47.5 | WARN (pre-existing) |
+
+WARNs are the documented known-residual set (link_neighbourhoods 94.8%, sanity/bounds watches, engine health) — stable residuals, not regressions.
+
+### Runtime accounting vs the P6.7-D baseline (181.9 min)
+- **This run: 147.0 min** = baseline − ~21.7 min (massing gate, live) − ~5.5 min (centreline full ran 87.1 vs 92.6) − ~6.5 min (enrich_parcels 46.5 vs 53.0 run-to-run variance).
+- **Projected genuinely-unchanged re-run:** 147.0 − 87.1 (full centreline) + ~0.2-1 (reduced centreline; standalone measured 11.2 s) ≈ **~61 min** — comfortably under the plan's ~69-min target; `enrich_parcels --full` (46.5-53 min) is the dominant residual, as scoped.
+
+### assertCentrelineEnriched — direct SQL predicate verification (permits chain NOT run, per plan)
+```
+L24b recency: enriched_at 2026-07-08 15:27:46 >= parcels_at 2026-07-08 13:55:44 → TRUE
+L24c coverage: 0.9701 >= centreline_propagation_coverage_min 0.90 → TRUE
+```
+The daily permits/coa chain would NOT be halted. Next-run gate inputs verified in the run rows: `centreline_enrich.source_dataset_version = 80496e67…` (enrich) and `code_version=v2-building-centroid-in-parcel / building_footprints_count=427077` (link_massing) — an unchanged next run fires BOTH gates.
