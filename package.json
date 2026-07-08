@@ -21,6 +21,8 @@
     "seed:trades": "npx tsx scripts/seed-trades.ts",
     "spec:tests": "node scripts/harvest-tests.mjs",
     "db:docs": "node scripts/generate-db-docs.mjs",
+    "logic-vars-docs": "node scripts/generate-logic-vars-docs.mjs",
+    "lineage-docs": "node scripts/generate-lineage-docs.mjs",
     "local-cron": "node scripts/local-cron.js",
     "prepare": "husky",
     "biome:check": "biome check",

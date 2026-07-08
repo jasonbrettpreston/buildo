@@ -39,6 +39,8 @@ These are universal "Gravity" constants. They act as baseline rules, fallbacks, 
 | `coa_imminent_window_days` | CRM (CoA branch) | **WF1 2026-05-13:** Days before a CoA `hearing_date` triggers IMMINENT alert (default 7). Used by `update-tracked-projects.js` CoA branch instead of `predicted_start - NOW()`. |
 
 > The table above is illustrative; the **single source of truth** for the full key set is `scripts/seeds/logic_variables.json`. Schema parity between that file, `scripts/lib/config-loader.js` (`FALLBACK_LOGIC_VARS`), and `src/lib/admin/control-panel.ts` (`LOGIC_VAR_DEFAULTS`) is enforced by `src/tests/control-panel.logic.test.ts`. Adding a new variable means appending to the JSON; the admin UI grouping lives in `src/features/admin-controls/components/GlobalConfigCard.tsx` `GROUPS`.
+>
+> **AI-operator index:** the generated `docs/reference/logic-variables-registry.md` (`npm run logic-vars-docs`) lists every variable — including the migration-only JSONB vars absent from the seed JSON — with its default, bounds, and consuming scripts.
 
 ## 2. Trade Matrix Logic (`trade_configurations`)
 

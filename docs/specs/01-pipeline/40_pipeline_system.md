@@ -298,4 +298,8 @@ Each quality script emits an `audit_table` in `records_meta` with per-metric PAS
 ### Cross-Spec Dependencies
 - **Consumed by:** All chain specs, all source specs, all step specs
 - **Relies on:** `00_engineering_standards.md` §9 (Pipeline & Script Safety)
+
+### Generated AI-operator references
+- `docs/reference/logic-variables-registry.md` (`npm run logic-vars-docs`) — every `logic_variables` key → default/bounds/kind/consuming scripts (the config-loader / `logicVars` surface).
+- `docs/reference/data-lineage-map.md` (`npm run lineage-docs`) — column → producing step → consuming steps, derived from `pipeline_runs.records_meta.pipeline_meta`.
 </constraints>
