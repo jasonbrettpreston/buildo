@@ -25,6 +25,14 @@ const pool = pipeline.createPool();
 
 const RUN_CHAIN_SCRIPT = path.resolve(__dirname, 'run-chain.js');
 
+// Hard per-chain timeout (WF2 P8 hardening, Gemini P11-pass + adversarial
+// amendment). A chain that HANGS (never exits) would otherwise block every
+// subsequent chain in the serialized coa→permits job forever — the primary
+// pipeline (permits) would silently never run. 90 min is comfortably above the
+// ~55 min measured combined coa+permits runtime, so a healthy chain never trips
+// it; a hung one is SIGKILLed and the job continues to the next chain.
+const CHAIN_TIMEOUT_MS = 90 * 60 * 1000;
+
 // ---------------------------------------------------------------------------
 // Schedule definitions
 // ---------------------------------------------------------------------------
@@ -97,18 +105,46 @@ function triggerChain(chainId, label) {
       stdio: 'inherit',
     });
 
+    // triggerChain always RESOLVES (never rejects) — a chain crash, a failed
+    // start, or a hard-timeout kill must all be non-fatal to the serialized job
+    // so the next chain (permits) still runs. `settled` guards against a
+    // double-resolve if close fires right after the timeout kill.
+    let settled = false;
+    let timer;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      resolve();
+    };
+
+    // Hard timeout: a hung chain (never exits) is SIGKILLed so it can't block
+    // the rest of the serialized job. Logged CRITICAL — this is an anomaly.
+    timer = setTimeout(() => {
+      pipeline.log.error(
+        '[local-cron]',
+        `CRITICAL: ${label} exceeded ${CHAIN_TIMEOUT_MS / 60000}min hard timeout — killing chain_${chainId} and continuing to the next chain.`,
+      );
+      try {
+        child.kill('SIGKILL');
+      } catch (err) {
+        pipeline.log.warn('[local-cron]', `failed to kill chain_${chainId}: ${err.message}`);
+      }
+      finish();
+    }, CHAIN_TIMEOUT_MS);
+
     child.on('close', (code) => {
       if (code !== 0) {
         pipeline.log.error('[local-cron]', `${label} failed with exit code ${code}`);
       } else {
         pipeline.log.info('[local-cron]', `${label} completed successfully.`);
       }
-      resolve();
+      finish();
     });
 
     child.on('error', (err) => {
       pipeline.log.error('[local-cron]', `${label} failed to start: ${err.message}`);
-      resolve();
+      finish();
     });
   });
 }
@@ -129,15 +165,33 @@ for (const schedule of SCHEDULES) {
       // previous one's completion before starting (the freshness contract for
       // the coa→permits job; harmless for single-chain jobs).
       for (const chainId of schedule.chainIds) {
-        const running = await isChainRunning(chainId);
-        if (running) {
-          pipeline.log.info(
+        // Failure ISOLATION (WF2 P8 hardening, Gemini P11-pass): each chain runs
+        // independently — a crash, a failed start, a HANG (hard-timeout kill),
+        // OR an unexpected throw in one chain must NEVER skip the remaining
+        // chains. triggerChain already resolves (never rejects) on a non-zero
+        // exit and enforces CHAIN_TIMEOUT_MS on a hung chain, so a coa CRASH or
+        // HANG still continues to permits; this try/catch additionally
+        // guarantees continue-on-failure against any throw in
+        // isChainRunning/triggerChain. An `&&`-style short-circuit here would
+        // trade the old silent-skip bug for a silent-TOTAL-failure of the
+        // primary pipeline (permits). Locked by chain.logic.test.ts
+        // ("serialized job continues to the next chain when one chain fails").
+        try {
+          const running = await isChainRunning(chainId);
+          if (running) {
+            pipeline.log.info(
+              '[local-cron]',
+              `Skipping chain_${chainId} (${schedule.label}) — already running.`,
+            );
+            continue;
+          }
+          await triggerChain(chainId, `${schedule.label} :: chain_${chainId}`);
+        } catch (err) {
+          pipeline.log.error(
             '[local-cron]',
-            `Skipping chain_${chainId} (${schedule.label}) — already running.`,
+            `chain_${chainId} (${schedule.label}) errored unexpectedly — continuing to next chain: ${err.message}`,
           );
-          continue;
         }
-        await triggerChain(chainId, `${schedule.label} :: chain_${chainId}`);
       }
     },
     { timezone: 'America/Toronto' }

@@ -379,6 +379,40 @@ describe('Chain Orchestrator Script', () => {
     expect(content).not.toMatch(/chainIds:\s*\[\s*'permits'\s*\]/);
     expect(content).not.toMatch(/chainIds:\s*\[\s*'coa'\s*\]/);
   });
+
+  // WF2 P8 hardening (Gemini P11-pass + adversarial amendment) — failure
+  // ISOLATION lock. The serialized coa→permits job must CONTINUE to the next
+  // chain when one chain fails (crash, hang, or unexpected throw): a coa-chain
+  // failure must never skip the permits chain (the primary pipeline). An
+  // `&&`-style coupling, an unguarded throw, or a hang with no timeout would
+  // trade the old silent-skip bug for a silent-TOTAL-failure of permits.
+  it('serialized job continues to the next chain when one chain fails (failure isolation)', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/local-cron.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    // The per-chain loop body must be wrapped in try/catch so an unexpected
+    // throw in one iteration cannot skip the remaining chains.
+    expect(content).toMatch(/for\s*\(const\s+chainId\s+of\s+schedule\.chainIds\)\s*\{[\s\S]*?try\s*\{/);
+    // The catch must log-and-continue, never re-throw.
+    expect(content).toMatch(/catch\s*\(err\)\s*\{[\s\S]*?continuing to next chain/);
+    // triggerChain must RESOLVE on a non-zero child exit (not reject), so a
+    // crash in one chain does not reject up into the loop and skip permits.
+    expect(content).not.toMatch(/child\.on\('close'[\s\S]*?reject\(/);
+  });
+
+  // WF2 P8 adversarial amendment — HANG isolation. A chain that never exits
+  // would block every subsequent chain in the serialized job forever; the hard
+  // timeout SIGKILLs it and continues. Pin the constant + the kill/continue
+  // behavior (not unit-testable without spawning a real hung process).
+  it('a hung chain is killed on a hard timeout and the job continues (hang isolation)', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/local-cron.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    // Hard timeout constant present and above the ~55min measured combined runtime.
+    expect(content).toMatch(/const CHAIN_TIMEOUT_MS = 90 \* 60 \* 1000;/);
+    // A setTimeout fires SIGKILL on the child and logs CRITICAL, then resolves.
+    expect(content).toMatch(/setTimeout\([\s\S]*?CRITICAL[\s\S]*?child\.kill\('SIGKILL'\)/);
+    // The timeout path resolves (finish) so the loop advances to the next chain.
+    expect(content).toMatch(/child\.kill\('SIGKILL'\);[\s\S]*?finish\(\)/);
+  });
 });
 
 describe('Pipeline Route Chain Registration', () => {
