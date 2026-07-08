@@ -3,6 +3,7 @@
 **Declare your Domain Mode at task start** (see §Domain Rules).
 
 Full WF execution plans: `.claude/workflows.md` — read when a WF is triggered, not before.
+Operator runbook + one-off script index: `docs/runbook/README.md` — read before running a chain, backfill, or reset.
 
 ---
 
