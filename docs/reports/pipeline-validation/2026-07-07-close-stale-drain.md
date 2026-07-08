@@ -79,3 +79,6 @@ Residual would-close after drain: **0**.
 - `stale_closure_abort_pct` restored to 10 (seed default unchanged; no code/config file edited).
 
 **Not pushed** (per instruction).
+
+## Addendum — lifecycle completion (orchestrator, 2026-07-07)
+The drained rows were not dirty by the classifier's incremental predicate (close-stale changes status, not last_seen_at). Completed the drain's intent: `UPDATE permits SET matched_rule = NULL` scoped to the backup table (40,402), then one standalone `classify-lifecycle-phase` run — all 40,402 reclassified to **P19** via rule 4 (verdict PASS, 39,757 transitions ledgered, stalled_count 33,877 → 23,754 as closed permits left the stall set). The next forecast run closes their windows. Root-cause follow-up filed: close-stale should mark its rows dirty itself.
