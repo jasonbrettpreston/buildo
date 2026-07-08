@@ -25,7 +25,7 @@
  *     Mercator). Re-running after completion is a no-op (correct 4326 rows
  *     are ST_Within the envelope -> skipped, never double-transformed).
  *   - Monotonic id cursor + batched: per-batch lock duration stays small.
- *   - Advisory lock 117 — single instance at a time.
+ *   - Advisory lock 121 — single instance at a time.
  *   - Followed by VACUUM ANALYZE (outside any transaction).
  *
  * Usage: node scripts/one-time/backfill-building-footprints-geom.js
