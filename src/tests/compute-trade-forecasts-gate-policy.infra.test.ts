@@ -44,9 +44,12 @@ describe('compute-trade-forecasts.js — D2a externalized calibration thresholds
     expect(content).toMatch(/calibThresholdsRelaxed = calibWarnPct > STRICT_CALIB_WARN_PCT \|\| calibFailPct > STRICT_CALIB_FAIL_PCT/);
   });
 
-  it('emits calibration_thresholds_relaxed (WARN when relaxed) + calibration_cohort_fill_pct (INFO)', () => {
+  it('emits calibration_thresholds_relaxed (P8 three-state guard) + calibration_cohort_fill_pct (INFO)', () => {
     expect(content).toMatch(/metric:\s*'calibration_thresholds_relaxed'/);
-    expect(content).toMatch(/status:\s*calibThresholdsRelaxed \? 'WARN' : 'PASS'/);
+    // WF2 P8 escalation (Gemini P9-pass): status now driven by the three-state
+    // classifier (PASS strict / WARN relaxed+cold / FAIL relaxed+recovered).
+    expect(content).toMatch(/status:\s*calibRelaxedStatus/);
+    expect(content).toMatch(/calibRelaxedStatus = classifyCalibrationThresholdStatus\(/);
     expect(content).toMatch(/metric:\s*'calibration_cohort_fill_pct'/);
     expect(content).toMatch(/const calibCohortFillPct = 100 - defaultPct;/);
   });
@@ -75,9 +78,12 @@ describe('compute-trade-forecasts.js — D3a CoA gate policy (pass_or_warn)', ()
     expect(content).toMatch(/coaGateStatus = `blocked_by_\$\{\(coaGateLastVerdict \|\| 'null'\)\.toLowerCase\(\)\}`/);
   });
 
-  it('emits coa_audit_gate_warn_accepted WARN row mirroring grace/force bypass rows', () => {
+  it('emits coa_audit_gate_warn_accepted row with the P8 three-state re-tightening guard', () => {
     expect(content).toMatch(/metric: 'coa_audit_gate_warn_accepted'/);
-    expect(content).toMatch(/status: coaGateWarnAccepted \? 'WARN' : 'INFO'/);
+    // WF2 P8 amendment: WARN while accepting a WARN verdict; FAIL once calibration
+    // recovers to PASS while coa_gate_policy is still pass_or_warn (config drift).
+    expect(content).toMatch(/status: classifyCoaGateWarnAcceptedStatus\(/);
+    expect(content).toMatch(/coaCalibrationPassGrade = true;/);
   });
 
   it('preserves the review-locked override ordering (verdict → grace → force-active last)', () => {

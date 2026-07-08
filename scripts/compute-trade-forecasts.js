@@ -20,6 +20,7 @@ const {
   SKIP_PHASES_SQL,
 } = require('./lib/lifecycle-phase');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
+const { classifyCalibrationThresholdStatus, classifyCoaGateWarnAcceptedStatus } = require('./lib/calibration-guard');
 
 // PHASE_ORDINAL imported from shared lib. TRADE_TARGET_PHASE loaded from
 // trade_configurations at runtime via shared config loader. Falls back to
@@ -280,6 +281,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   let coaGateLastVerdict = null;
   // D3a: set true when a WARN verdict is accepted under coa_gate_policy='pass_or_warn'.
   let coaGateWarnAccepted = false;
+  // WF2 P8 amendment: set true when the gate's calibration verdict is a clean PASS
+  // (recovered health). Combined with a still-loose coa_gate_policy this drives the
+  // coa_audit_gate_warn_accepted row to FAIL (config drift — revert to pass_only).
+  let coaCalibrationPassGrade = false;
   try {
     const { rows: gateRows } = await pool.query(
       `SELECT id, status, started_at, records_meta->'audit_table'->>'verdict' AS verdict
@@ -301,6 +306,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       } else if (coaGateLastVerdict === 'PASS') {
         coaGateActive = true;
         coaGateStatus = 'pass';
+        coaCalibrationPassGrade = true;   // WF2 P8: clean PASS = recovered calibration health
       } else if (coaGateLastVerdict === 'WARN' && coaGatePolicy === 'pass_or_warn') {
         // D3a: a WARN verdict within the freshness window activates the CoA branch under the
         // pass_or_warn policy. Strictly narrower than the already-sanctioned cold-start grace
@@ -1300,6 +1306,14 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   const calibFailPct = logicVars.forecast_default_calibration_fail_pct;
   const calibThresholdsRelaxed = calibWarnPct > STRICT_CALIB_WARN_PCT || calibFailPct > STRICT_CALIB_FAIL_PCT;
   const calibCohortFillPct = 100 - defaultPct;
+  // WF2 P8 escalation (Gemini P9-pass): three-state guard — PASS (strict active) /
+  // WARN (relaxed + cohorts still cold) / FAIL (relaxed + cohorts RECOVERED past
+  // the strict-PASS point = config drift demanding a return to strict thresholds).
+  const calibRelaxedStatus = classifyCalibrationThresholdStatus({
+    relaxed: calibThresholdsRelaxed,
+    defaultPct,
+    strictWarnPct: STRICT_CALIB_WARN_PCT,
+  });
 
   // Phase F.1 audit row classifications (v3 HIGH-J + v3 HIGH-I + v4 HIGH-F folds).
   // coa_audit_gate_status — INFO for healthy (pass) + first-deploy-grace cold-start.
@@ -1364,10 +1378,19 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     // D3a (OB-F6 / GRD-F2): the third bypass, as loud as the two it joins. A WARN calibration
     // verdict was accepted under coa_gate_policy='pass_or_warn' — writes flow on a sample-size
     // caveat rather than a clean PASS; operator should monitor. Value carries the accepted verdict.
+    // WF2 P8 amendment (Gemini): three-state re-tightening guard mirroring
+    // calibration_thresholds_relaxed. WARN while a WARN verdict is accepted under
+    // pass_or_warn (calibration cold). FAIL once the calibration verdict recovers
+    // to a clean PASS while the policy is STILL pass_or_warn — the loose policy is
+    // no longer needed and persisting it is config drift demanding a revert.
     { metric: 'coa_audit_gate_warn_accepted',
       value: coaGateWarnAccepted ? 1 : 0,
-      threshold: `policy=${coaGatePolicy}; == 0 under pass_only. If 1, a WARN calibration verdict activated the CoA branch — set coa_gate_policy=pass_only to revert once calibration returns to PASS`,
-      status: coaGateWarnAccepted ? 'WARN' : 'INFO' },
+      threshold: `policy=${coaGatePolicy}; == 0 under pass_only. WARN while a WARN verdict is accepted (calibration cold); FAIL once calibration recovers to PASS while policy is still pass_or_warn — set coa_gate_policy=pass_only to revert`,
+      status: classifyCoaGateWarnAcceptedStatus({
+        policy: coaGatePolicy,
+        warnAccepted: coaGateWarnAccepted,
+        calibrationPassGrade: coaCalibrationPassGrade,
+      }) },
     {
       metric: 'coa_anchor_fallback_pct',
       value: coaAnchorFallbackPct.toFixed(1) + '%',
@@ -1413,8 +1436,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     {
       metric: 'calibration_thresholds_relaxed',
       value: `warn=${calibWarnPct}/fail=${calibFailPct} (strict warn=${STRICT_CALIB_WARN_PCT}/fail=${STRICT_CALIB_FAIL_PCT})`,
-      threshold: `restore strict warn=${STRICT_CALIB_WARN_PCT}/fail=${STRICT_CALIB_FAIL_PCT} once calibration_cohort_fill_pct recovers past the strict-PASS point`,
-      status: calibThresholdsRelaxed ? 'WARN' : 'PASS',
+      threshold: `WARN while relaxed AND cohorts cold; FAIL once calibration_cohort_fill_pct recovers past the strict-PASS point (default_calibration_pct < ${STRICT_CALIB_WARN_PCT}%) — restore strict warn=${STRICT_CALIB_WARN_PCT}/fail=${STRICT_CALIB_FAIL_PCT}`,
+      status: calibRelaxedStatus,
     },
     {
       metric: 'calibration_cohort_fill_pct',
