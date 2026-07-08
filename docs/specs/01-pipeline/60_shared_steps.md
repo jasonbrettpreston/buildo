@@ -196,6 +196,19 @@ FAIL); repaired on the next chain run via the `IS DISTINCT FROM` guard.
 3. Upsert to `data_quality_snapshots` via `ON CONFLICT (snapshot_date) DO UPDATE`
 4. Include inspection coverage metrics
 
+**Sequential-run coherence (WF2 P8, verified 2026-07-07):** the step is
+**chain-agnostic** — it recomputes EVERY metric (permit *and* CoA) from the live
+tables on every invocation. In the serialized coa→permits daily job it runs twice
+back-to-back (coa chain, then permits chain). The second (permits) run UPSERTs the
+**same daily row** keyed on `snapshot_date` (additive — one row per day, never a
+duplicate) and **recomputes the `coa_*` columns fresh from `coa_applications`**,
+which the coa chain already committed earlier in the job. The permits-chain run
+therefore writes coa metrics that are **as-fresh-or-fresher, never stale/clobbered**
+— there is no coa-side value stored by the coa run that the permits run overwrites
+with a stale value. Verified on the P7 rows: `coa:refresh_snapshot` (20:00) then
+`permits:refresh_snapshot` (20:39) left one 2026-07-07 row with fully-populated
+`coa_*` columns (`created_at` = the permits-run time).
+
 **Edge Cases:** `active_permits = 0` → division by zero guarded. Massing query fails → caught, defaults to 0.
 
 **Testing:** `quality.logic.test.ts`, `quality.infra.test.ts`
