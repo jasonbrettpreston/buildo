@@ -20,6 +20,25 @@ const ZC = `CASE WHEN upper(zoning_class) LIKE 'RD%' THEN 'RD' WHEN upper(zoning
    WHEN upper(zoning_class) LIKE 'RA%' THEN 'RA' ELSE 'R' END`;
 const LOWRISE = `upper(zoning_class) LIKE 'RD%' OR upper(zoning_class) LIKE 'RS%' OR upper(zoning_class) LIKE 'RT%'`;
 
+// ── P12-A2: magnitude accepted-by-id exception lists ────────────────────────
+// A CHECK may carry `accept: [id,…]` — the CURRENT population of a magnitude
+// BOUND that we investigated and found LEGIT (not a bug). The count then filters
+// those ids OUT, so the check reads 0 until a NEW parcel crosses the threshold —
+// which flags distinctly (WARN) as a regression signal (a fresh mislink or data
+// poison). Post-A1 (NULL-lot backfill + max-build re-derive + cost re-run,
+// 2026-07-08) the mislink class is 0 and the $667M NULL-lot cost_addition monster
+// is gone (capped to ≤$117.7M once its lot was backfilled).
+//
+// COST_FB_GT15M_LEGIT: 24 lowrise (RD/RS/RT) parcels modeling a >$15M max-build —
+// all large-lot detached (1,400–2,000 m² lots, FSI ~1.0, footprint ≈33% of lot,
+// no mislink). The cost is the internally-consistent opportunity-menu maximum, not
+// a mispriced build (Spec 83 §3-ARCHETYPE semantic pin).
+const COST_FB_GT15M_LEGIT = [7402,76620,240610,308831,393793,393848,393866,393872,393885,415256,417357,430889,430890,452644,452653,452655,452677,452682,452703,452936,452944,452950,474449,476327];
+// COST_ADDITION_GT50M_LEGIT: 42 huge-lot parcels (25K–88K m² — estates /
+// institutional / assembled lots) whose per-sqm addition rate × the large area
+// yields a >$50M line. No mislink; the magnitude is the lot area, not a bug.
+const COST_ADDITION_GT50M_LEGIT = [1096,3021,15436,41830,48643,81364,105495,105525,120450,123813,133347,134995,138167,162520,175697,175909,179540,186327,189058,207546,242291,244885,257628,291670,292205,300270,326738,341581,347402,349013,356988,361751,364903,417376,425388,454880,459774,467393,471142,473844,482958,1944521];
+
 // { family, id, why(seed bug/law), applies (extra population filter), bad (violation predicate), sev,
 //   gate? (true = a ZERO-BASELINE invariant; a non-zero count FAIL-gates the pipeline chain) }
 const CHECKS = [
@@ -59,6 +78,16 @@ const CHECKS = [
   { fam: 'BOUND', id: 'bylaw_height_per_storey_generous', why: 'visibility: generous height + low storey cap (genuine low-density zoning, not a bug)', applies: `bylaw_max_height_m IS NOT NULL AND bylaw_max_stories IS NOT NULL AND bylaw_max_stories > 0`, bad: `bylaw_max_height_m / bylaw_max_stories > 5.5`, sev: 'INFO' },
   { fam: 'BOUND', id: 'opt_storeys_gt_12', why: 'physical', applies: `opt_aor_storeys IS NOT NULL OR opt_coa_storeys IS NOT NULL`, bad: `opt_aor_storeys > 12 OR opt_coa_storeys > 12`, sev: 'MED' },
   { fam: 'BOUND', id: 'newbuild_cost_per_sqm_out_of_band', why: 'cost-rate sanity ($186–1115/ft²)', applies: `cost_fb_total IS NOT NULL AND opt_aor_gfa_sqm > 0`, bad: `cost_fb_total / opt_aor_gfa_sqm < 2000 OR cost_fb_total / opt_aor_gfa_sqm > 12000`, sev: 'MED' },
+  // P12-A1.5: NULL-lot family tripwire. lot_size_sqm feeds the LIVE cost-model T1
+  // FSI gate + fallback GFA; a GFA/cost-bearing parcel with NULL lot silently
+  // skipped those paths (the invisible tail A1 fixed). Post-backfill = 0; a new
+  // NULL here is a load regression (STATEDAREA absent AND geom absent/invalid).
+  { fam: 'BOUND', id: 'nulllot_on_gfa_or_cost_bearing', why: 'A1: lot_size NULL on a GFA/cost-bearing parcel (unvalidatable tail)', applies: `max_buildable_gfa_sqm IS NOT NULL OR cost_fb_total IS NOT NULL`, bad: `lot_size_sqm IS NULL`, sev: 'MED' },
+  // P12-A2: magnitude exception-list watches (COMPLEMENTARY to the per-sqm band
+  // above — these bound the ABSOLUTE total). Current members accepted (large-lot
+  // legit, investigated 2026-07-08); a NEW member crossing the line → WARN.
+  { fam: 'BOUND', id: 'lowrise_cost_fb_gt_15m', why: 'A2: new lowrise >$15M max-build (mislink/poison if not a big lot)', applies: `(${LOWRISE}) AND cost_fb_total IS NOT NULL`, bad: `cost_fb_total > 15000000`, sev: 'MED', accept: COST_FB_GT15M_LEGIT },
+  { fam: 'BOUND', id: 'cost_addition_gt_50m', why: 'A2: new >$50M addition line (huge-lot artifact; watch for new members)', applies: `cost_addition_total IS NOT NULL`, bad: `cost_addition_total > 50000000`, sev: 'MED', accept: COST_ADDITION_GT50M_LEGIT },
   // ---- INVARIANTS (cross-field) — the zero-baseline coherence laws are GATED ----
   { fam: 'INVARIANT', id: 'opt_aor_gfa_gt_opt_coa_gfa', why: 'CoA ≥ as-of-right (coherence)', applies: `opt_aor_gfa_sqm IS NOT NULL AND opt_coa_gfa_sqm IS NOT NULL`, bad: `opt_aor_gfa_sqm > opt_coa_gfa_sqm + 0.5`, sev: 'HIGH', gate: true },
   { fam: 'INVARIANT', id: 'opt_aor_storeys_gt_opt_coa_storeys', why: 'CoA storeys ≥ as-of-right', applies: `opt_aor_storeys IS NOT NULL AND opt_coa_storeys IS NOT NULL`, bad: `opt_aor_storeys > opt_coa_storeys`, sev: 'MED' },
@@ -113,10 +142,17 @@ function verdictCascade(rows) {
 // in the audit_table rows).
 async function runSanity(pool, { samples = false } = {}) {
   const cols = CHECKS.map((c) => {
-    const base = `count(*) FILTER (WHERE (${c.applies}) AND (${c.bad}))::int AS "v_${c.id}",
+    // P12-A2: accepted-by-id exception list. The violation predicate excludes the
+    // documented current population so the count reads 0 until a NEW parcel crosses
+    // the threshold (which then flags distinctly). Numeric-literal ids only (no
+    // interpolation risk); empty/absent `accept` → the raw predicate unchanged.
+    const bad = (Array.isArray(c.accept) && c.accept.length)
+      ? `(${c.bad}) AND id <> ALL(ARRAY[${c.accept.map(Number).join(',')}]::int[])`
+      : c.bad;
+    const base = `count(*) FILTER (WHERE (${c.applies}) AND (${bad}))::int AS "v_${c.id}",
      count(*) FILTER (WHERE ${c.applies})::int AS "p_${c.id}"`;
     return samples
-      ? `${base},\n     (array_agg(id) FILTER (WHERE (${c.applies}) AND (${c.bad})))[1:6] AS "s_${c.id}"`
+      ? `${base},\n     (array_agg(id) FILTER (WHERE (${c.applies}) AND (${bad})))[1:6] AS "s_${c.id}"`
       : base;
   }).join(',\n');
   const row = (await pool.query(`SELECT count(*)::int AS total,\n${cols}\nFROM parcels WHERE ${RES}`)).rows[0];

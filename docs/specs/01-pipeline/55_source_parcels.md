@@ -53,7 +53,8 @@ The Toronto Open Data Property Boundaries CSV historically published 7 columns. 
 | `street_type_normalized` | TEXT | **LEGACY** — same as above | |
 | `date_effective` | DATE | **LEGACY** — same as above | |
 | `stated_area_raw` | TEXT | CSV `STATEDAREA` | |
-| `lot_size_sqm` / `lot_size_sqft` | NUMERIC | derived from `geometry` | |
+| `lot_size_sqm` / `lot_size_sqft` | NUMERIC | **CSV `STATEDAREA`** via `parseStatedArea` (load-parcels.js) — the SOURCE-stated lot area, **not** derived from geometry (doc-rot corrected WF2 P12-A1: the loader has polygon area in hand but deliberately uses STATEDAREA). NULL = source-absent. | |
+| `lot_size_source` | TEXT | provenance (WF2 P12-A1, mig 214): `'stated'` (STATEDAREA) \| `'geom_backfill'` (the ~8.9K source-NULL rows backfilled with `ROUND(ST_Area(geom::geography),2)` so the LIVE cost-model T1 FSI gate + fallback GFA no longer silently skip them; 6 invalid-geom rows remain NULL). Consumers reading mixed semantics must split on this column. | |
 
 **Enrichment-written columns (NOT load-parcels — listed here as the parcels-schema SoT):** zoning feed (Spec 65 §2, mig 165), max-build envelope (Spec 65 §4, mig 185), and the **existing-structure feed** (Spec 65 §5, mig 187): `existing_footprint_sqm`, `existing_stories`, `existing_height_m`, `existing_gfa_sqm`, `existing_width_m`, `existing_length_m`, `existing_structure_confidence` (TEXT high/low), `existing_other_structures_count`, `existing_other_structures_sqm`, `existing_greenspace_sqm` — derived by `enrich-parcels.js` from the PRIMARY linked building (Spec 56 massing) + lot; NULL where no building is linked. Propagated to permits + coa_applications (mig 188).
 
