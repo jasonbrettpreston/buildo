@@ -467,10 +467,14 @@ pipeline.run('classify-coa-trades', async (pool) => {
         threshold: `<= ${activeTradesWarnMax}`,
         status: activeFanoutStatus,
       },
+      // Denominator honesty (P8 panel, DeepSeek #4): the histogram counts only
+      // CoAs with >=1 active trade — zero-active leads (severance/consent-only)
+      // are EXCLUDED by construction. The metric name carries the scope so an
+      // operator comparing it to the all-rows mean is not misled.
       {
-        metric: 'median_active_trades_per_lead',
+        metric: 'median_active_trades_per_lead_nonzero',
         value: coaWithActiveTrades > 0 ? medianActiveTradesPerLead : 'N/A',
-        threshold: null,
+        threshold: 'denominator = CoAs with >=1 active trade only',
         status: 'INFO',
       },
       { metric: 'coa_with_active_trades', value: coaWithActiveTrades, threshold: null, status: 'INFO' },

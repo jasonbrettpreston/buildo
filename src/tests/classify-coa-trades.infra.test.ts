@@ -326,8 +326,8 @@ describe('classify-coa-trades.js — WF2 P6.5 active-scoped fan-out telemetry', 
     expect(src).toMatch(/coa_active_trades_warn_max/);
   });
 
-  it('emits median_active_trades_per_lead + coa_with_active_trades (P7 median acceptance)', () => {
-    expect(src).toMatch(/metric:\s*'median_active_trades_per_lead'/);
+  it('emits median_active_trades_per_lead_nonzero + coa_with_active_trades (P7 median acceptance; renamed for denominator honesty — P8 panel DeepSeek #4)', () => {
+    expect(src).toMatch(/metric:\s*'median_active_trades_per_lead_nonzero'/);
     expect(src).toMatch(/metric:\s*'coa_with_active_trades'/);
   });
 
