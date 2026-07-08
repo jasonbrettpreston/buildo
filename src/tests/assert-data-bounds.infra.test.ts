@@ -103,6 +103,23 @@ describe('assert-data-bounds.js — threshold externalization (§6.4)', () => {
     expect(SRC).not.toMatch(/tcFreshness > 48\b/);
   });
 
+  // ── P12-B2: CoA forward-link sub-0.85 identity-floor watch ───────────────
+  it('seed has coa_forward_link_sub085_warn_pct (default 59, bounds sane)', () => {
+    const entry = SEED.coa_forward_link_sub085_warn_pct;
+    if (!entry) throw new Error('coa_forward_link_sub085_warn_pct missing from seed JSON');
+    expect(entry.default).toBe(59);
+    expect(entry.type).toBe('number');
+    expect(entry.min).toBeGreaterThan(0);
+    expect(entry.max).toBe(100);
+  });
+
+  it('reads coa_forward_link_sub085_warn_pct from logicVars + emits the audit row', () => {
+    expect(SRC).toMatch(/logicVars\.coa_forward_link_sub085_warn_pct/);
+    expect(SRC).toMatch(/coa_forward_link_sub085_pct/);
+    // WARN (regression signal), never FAIL — a below-floor link is honest, not corrupt.
+    expect(SRC).toMatch(/coaSub085 > coaSub085WarnPct \? 'WARN' : 'PASS'/);
+  });
+
   // ── Infrastructure ──────────────────────────────────────────────────────
   it('uses LOGIC_VARS_SCHEMA for validation', () => {
     expect(SRC).toMatch(/LOGIC_VARS_SCHEMA/);

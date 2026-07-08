@@ -391,6 +391,13 @@
     "min": 1,
     "max": 720
   },
+  "coa_forward_link_sub085_warn_pct": {
+    "default": 59,
+    "type": "number",
+    "description": "P12-B2: max acceptable percentage of LINKED coa_applications whose linked_confidence is below the 0.85 identity floor (a same-street/geo/flagged tier that must not surface as identity). Baseline sub-0.85 share ~54% (17,842 of 33,114 linked, 2026-07-08); seeded at baseline+5 so a regression in link quality WARNs. assert-data-bounds coa section.",
+    "min": 1,
+    "max": 100
+  },
   "lifecycle_unclassified_max": {
     "default": 100,
     "type": "number",

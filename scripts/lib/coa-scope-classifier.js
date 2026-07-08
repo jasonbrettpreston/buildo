@@ -40,6 +40,17 @@ const RESIDENTIAL_PATTERNS = [
   /\bsecondary\s+suite\b/i,
   /\blaneway\s+(suite|house)\b/i,
   /\bresidential\b/i,
+  // P12-C3: top untyped-but-non-empty CoA description shapes are rear-yard
+  // residential ACCESSORY structures that carried no use-class keyword. These are
+  // unambiguously residential in the CoA minor-variance context (a commercial lot
+  // does not file a CoA for a rear-yard "garden suite" / "detached garage").
+  // Recovers ~1,188 of the 7,195 addressable NULLs. Deliberately NOT typing bare
+  // "addition" / severance / easement / planning-act descriptions — those are
+  // genuinely use-class-ambiguous and stay NULL (honest, not chased to 100%).
+  /\bgarden\s+suite\b/i,
+  /\bdetached\s+garage\b/i,
+  /\baccessory\s+(dwelling|building|structure)\b/i,
+  /\bancillary\s+(building|structure)\b/i,
 ];
 
 const COMMERCIAL_PATTERNS = [
@@ -82,7 +93,15 @@ const NEW_CONSTRUCTION_PATTERNS = [
 ];
 
 const ADDITION_PATTERNS = [
-  /\baddition\b/i,
+  // P12-C1: "lot addition" / "land addition" / "parcel addition" is a SEVERANCE
+  // land-transfer term (consent to sever a portion of land onto an adjacent lot),
+  // NOT a building addition. The bare /\baddition\b/ leaked the construction
+  // `addition` tag onto ~271 pure land-division consent applications → active ADD
+  // trades on no-construction leads. Negative lookbehind excludes the land sense
+  // while preserving genuine building additions ("rear addition", "two storey
+  // addition"). A real sever+build ("construct a new dwelling on the severed lot")
+  // still tags via NEW_CONSTRUCTION_PATTERNS and keeps its trades.
+  /(?<!\b(?:lot|land|parcel)\s)\baddition\b/i,
   /\bextend(ing|ed)?\b/i,
   /\bextension\b/i,
   /\benlarge(ment|d|ing)?\b/i,

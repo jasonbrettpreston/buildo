@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (402) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (403) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (3) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **405** logic variables (402 numeric, 3 JSONB).
+Total: **406** logic variables (403 numeric, 3 JSONB).
 
 ---
 
@@ -42,6 +42,7 @@ Total: **405** logic variables (402 numeric, 3 JSONB).
 | `coa_bylaw_max_fsi_null_warn_pct` | numeric | 97 | 0 – 100 | — | seed | WF2 P6.5 — enrich-permits (coa target) bylaw_max_fsi NULL-rate WARN floor. Baseline 93.9+3; structural nulls, WARN-above-baseline, never FAIL. |
 | `coa_cost_coverage_fail_pct` | numeric | 5 | 0 – 100 | — | seed | WF2 archetype (Spec 83 SS3): coverage FAIL threshold. 5 = catches a half-broken CoA ladder (coverage collapsing from ~69% toward zero) — the old default 0 only caught the exact-zero structural break; post-activation the gate must catch regressions too. |
 | `coa_cost_coverage_threshold_pct` | numeric | 65 | 0 – 100 | — | seed | WF1 Spec 83 SS3.A D3 (CoA OB-2 mirror): coverage WARN threshold. WF2 archetype recalibration: 65 = measured ladder ceiling 68.7% minus margin (cost_coa_total exists on 76.8% of residential CoAs; Severance/Demolition/unlinked consume the rest). Was 70 in the all-safe-skip era. |
+| `coa_forward_link_sub085_warn_pct` | numeric | 59 | 1 – 100 | `scripts/quality/assert-data-bounds.js` | seed | P12-B2: max acceptable percentage of LINKED coa_applications whose linked_confidence is below the 0.85 identity floor (a same-street/geo/flagged tier that must not surface as identity). Baseline sub-0.85 share ~54% (17,842 of 33,114 linked, 2026-07-08); seeded at baseline+5 so a regression in link quality WARNs. assert-data-bounds coa section. |
 | `coa_freshness_fail_days` | numeric | 135 | 14 – 365 | `scripts/quality/assert-coa-freshness.js` | seed | WF2 P6.5 — days since last CoA ingestion before assert-coa-freshness escalates from WARN to FAIL (portal likely dead, not just slow). Default 135 ≈ 3× the 45-day WARN floor. Empty-table branch stays WARN (fresh-staging, not portal rot). |
 | `coa_freshness_warn_days` | numeric | 45 | 7 – 180 | `scripts/quality/assert-coa-freshness.js` | seed | Days since last CoA ingestion before assert-coa-freshness emits a portal-rot WARN (data may be frozen in CKAN) |
 | `coa_gate_calibration_window_days` | numeric | 7 | — | `scripts/compute-trade-forecasts.js` | seed | Phase F.1 CoA audit-verdict gate freshness window: compute_phase_calibration must have a permits-chain pipeline_runs row within this many days for the gate to consult its verdict. Older runs trigger no_prior_run state. Default 7 aligns with Spec 48 §3.4 baseline window. Operator may raise this if calibration runs are less frequent than weekly. |
@@ -427,4 +428,4 @@ Total: **405** logic variables (402 numeric, 3 JSONB).
 
 ---
 
-*Generated from 391 seed vars + 14 migration-only vars + 98 consumer-mapped keys across 2 script dirs.*
+*Generated from 392 seed vars + 14 migration-only vars + 99 consumer-mapped keys across 2 script dirs.*

@@ -26,6 +26,7 @@ const LOGIC_VARS_SCHEMA = z.object({
   cost_est_null_rate_warn_pct:     z.coerce.number().finite().positive(),
   cost_est_min_tiers:              z.coerce.number().finite().positive().int(),
   calibration_freshness_warn_hours: z.coerce.number().finite().positive(),
+  coa_forward_link_sub085_warn_pct: z.coerce.number().finite().positive(),
 }).passthrough();
 
 const SLUG = 'assert_data_bounds';
@@ -54,6 +55,7 @@ pipeline.run('assert-data-bounds', async (pool) => {
   const costEstNullWarnPct    = logicVars.cost_est_null_rate_warn_pct;
   const costEstMinTiers       = logicVars.cost_est_min_tiers;
   const calibFreshnessHours   = logicVars.calibration_freshness_warn_hours;
+  const coaSub085WarnPct      = logicVars.coa_forward_link_sub085_warn_pct;
 
   const startMs = Date.now();
   let runId = null;
@@ -246,6 +248,29 @@ pipeline.run('assert-data-bounds', async (pool) => {
         console.log('  OK: No orphaned CoA links');
       }
 
+      // P12-B2: forward-link sub-identity share. linked_permit_num is set at every
+      // tier (0.95/0.85 identity, 0.60 geo, 0.10 flagged). Consumers now apply a
+      // ≥0.85 identity floor (Spec 60 §Link-CoA); this watches the sub-0.85 share so
+      // a REGRESSION in link quality (more geo/flagged links) surfaces. Baseline ~54%.
+      const sub085Pct = await pool.query(
+        `SELECT ROUND(100.0 * COUNT(*) FILTER (WHERE linked_confidence IS NULL OR linked_confidence < 0.85)
+                       / NULLIF(COUNT(*), 0), 1) AS pct
+           FROM coa_applications WHERE linked_permit_num IS NOT NULL`
+      );
+      const coaSub085 = sub085Pct.rows[0].pct != null ? parseFloat(sub085Pct.rows[0].pct) : 0;
+      coaAuditRows.push({
+        metric: 'coa_forward_link_sub085_pct',
+        value: coaSub085,
+        threshold: `<= ${coaSub085WarnPct}`,
+        status: coaSub085 > coaSub085WarnPct ? 'WARN' : 'PASS',
+      });
+      if (coaSub085 > coaSub085WarnPct) {
+        warnings.push(`CoA forward-link sub-0.85 share ${coaSub085}% exceeds ${coaSub085WarnPct}% (link-quality regression)`);
+        console.log(`  WARN: CoA sub-0.85 link share ${coaSub085}% > ${coaSub085WarnPct}%`);
+      } else {
+        console.log(`  OK: CoA sub-0.85 link share ${coaSub085}% within baseline (<= ${coaSub085WarnPct}%)`);
+      }
+
       const nullAddress = await count(
         `SELECT COUNT(*) FROM coa_applications WHERE address IS NULL OR TRIM(address) = ''`
       );
@@ -288,6 +313,45 @@ pipeline.run('assert-data-bounds', async (pool) => {
         console.log(`  WARN: ${ancientHearing} coa_applications with ancient hearing dates`);
       } else {
         console.log(`  OK: Ancient hearing dates within baseline (${ancientHearing})`);
+      }
+
+      // P12-C2: CoA served-cost + modeled-envelope magnitude watches (per-APPLICATION,
+      // distinct from the parcel-level coa_fsi_gt_5 BOUND in parcel-sanity-audit.js).
+      // estimated_cost is the SERVED lead cost. The >$10M tail is the archetype_parcel
+      // opportunity-menu cost on oversized opt-envelopes (~1,350m² GFA @ ~$8.7k/sqm =
+      // a modeling artifact, not an applicant declaration — see the Spec 76/83 label,
+      // C4). WARN watches with documented baselines (regression signal, never a cap).
+      const coaCostGt10m = await count(
+        `SELECT COUNT(*) FROM coa_applications WHERE estimated_cost > 10000000`
+      );
+      coaAuditRows.push({ metric: 'coa_estimated_cost_gt10m', value: coaCostGt10m, threshold: '<= 80', status: coaCostGt10m > 80 ? 'WARN' : 'PASS' });
+      if (coaCostGt10m > 80) {
+        warnings.push(`${coaCostGt10m} coa_applications with estimated_cost > $10M (baseline ~64 archetype-parcel envelope tail)`);
+        console.log(`  WARN: ${coaCostGt10m} CoA estimated_cost > $10M (> baseline 64)`);
+      } else {
+        console.log(`  OK: CoA estimated_cost > $10M within baseline (${coaCostGt10m})`);
+      }
+
+      const coaAppFsiGt5 = await count(
+        `SELECT COUNT(*) FROM coa_applications WHERE coa_fsi > 5`
+      );
+      coaAuditRows.push({ metric: 'coa_app_fsi_gt5', value: coaAppFsiGt5, threshold: '== 0', status: coaAppFsiGt5 > 0 ? 'WARN' : 'PASS' });
+      if (coaAppFsiGt5 > 0) {
+        warnings.push(`${coaAppFsiGt5} coa_applications with coa_fsi > 5 (max observed 3.15 — model/propagation regression)`);
+        console.log(`  WARN: ${coaAppFsiGt5} CoA with coa_fsi > 5`);
+      } else {
+        console.log(`  OK: No CoA with coa_fsi > 5 (max ~3.15)`);
+      }
+
+      const coaGfaGt3Lot = await count(
+        `SELECT COUNT(*) FROM coa_applications WHERE lot_size_sqm > 0 AND max_buildable_gfa_sqm > 3 * lot_size_sqm`
+      );
+      coaAuditRows.push({ metric: 'coa_maxbuild_gfa_gt3lot', value: coaGfaGt3Lot, threshold: '<= 45', status: coaGfaGt3Lot > 45 ? 'WARN' : 'PASS' });
+      if (coaGfaGt3Lot > 45) {
+        warnings.push(`${coaGfaGt3Lot} coa_applications with max_buildable_gfa_sqm > 3x lot (baseline ~29 oversized-envelope)`);
+        console.log(`  WARN: ${coaGfaGt3Lot} CoA with max_buildable_gfa > 3x lot`);
+      } else {
+        console.log(`  OK: CoA max_buildable_gfa > 3x lot within baseline (${coaGfaGt3Lot})`);
       }
 
       // Phase G (Spec 42 §6.11): PRE-permit retirement count=0 gate; mirrors the row in

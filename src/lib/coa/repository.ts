@@ -1,5 +1,6 @@
 import { query } from '@/lib/db/client';
 import type { CoaApplication } from '@/lib/coa/types';
+import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
 
 // ---------------------------------------------------------------------------
 // CoA application data-access layer
@@ -36,6 +37,9 @@ export async function getCoaByPermit(
       first_seen_at       AS created_at
     FROM coa_applications
     WHERE linked_permit_num = $1
+      -- P12-B1: identity floor — a sub-0.85 link is a same-street/wrong-house or
+      -- cross-ward geo association; surfacing it as this permit's CoA is wrong-property.
+      AND linked_confidence >= ${COA_IDENTITY_LINK_MIN_CONFIDENCE}
     ORDER BY hearing_date DESC`,
     [permit_num]
   );

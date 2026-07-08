@@ -6,6 +6,7 @@ import { resolveStories, inferMassingUseType } from '@/lib/massing/geometry';
 import type { MassingUseType } from '@/lib/massing/geometry';
 import { getCoaByPermit } from '@/lib/coa/repository';
 import { mapCoaToPermitDto } from '@/lib/coa/pre-permits';
+import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
 import type { CoaApplication } from '@/lib/coa/types';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
@@ -52,7 +53,10 @@ export const GET = withApiEnvelope(async function GET(
           description,
           applicant,
           sub_type,
-          linked_permit_num,
+          -- P12-B1: identity floor — suppress a sub-0.85 linked permit so the
+          -- CoA detail never shows a same-street/wrong-house permit as "linked".
+          CASE WHEN linked_confidence >= ${COA_IDENTITY_LINK_MIN_CONFIDENCE}
+               THEN linked_permit_num END AS linked_permit_num,
           NULL                AS linked_permit_revision,
           linked_confidence   AS link_confidence,
           first_seen_at       AS created_at

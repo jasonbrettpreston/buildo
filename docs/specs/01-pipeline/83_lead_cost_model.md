@@ -85,6 +85,8 @@ The engine is split into "Muscle" (Execution) and "Brain" (Logic).
 > bylaw-capped, premium-INCLUSIVE) replace it. The CKAN `est_const_cost` is NEVER the assigned cost on
 > this path (recorded as the calibration signal only); costs are NEVER built up from per-trade rates.
 
+> **Semantic pin (consumer note, WF2 P12-C4 / P13-7):** the `archetype_parcel` cost + its trade/product bundle is the parcel's **opportunity menu** — the modeled cost and trades of the maximal build the LOT could support — **not** the applicant's declared permit/CoA scope. A $3.86M / 28-trade archetype attached to a $38K HVAC permit, or a >$10M CoA cost on a ~1,350 m² opt-envelope, is the menu doing its job, not a mispriced application. Surfaces that show it MUST label it as opportunity, not applicant intent.
+
 **Entry gate:** `isLowRiseResidential(structure_type)` **AND** the archetype mapper
 (`src/features/leads/lib/archetype-cost-map.js`) returns a non-null line. Mapper-null residential
 (MEC/SITE/ENV-only, demolition, repair, tagless) and ALL non-residential remain on Steps A–D

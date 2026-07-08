@@ -127,6 +127,10 @@ Tier order is a waterfall: each tier's UPDATE only touches rows still `linked_pe
 row settles at its highest-confidence tier. Multiple permits at one address → most recent
 (`COALESCE(issued_date, application_date) DESC`, then highest `permit_num`) wins via `DISTINCT ON (ca.id)`.
 
+**Consumer contract — the identity floor (`>= 0.85`, WF2 P12-B1):** the field is dual-purpose and `linked_permit_num` is written at **every** tier (0.95/0.85 identity, 0.60/0.50 geo, 0.10 flagged). Reads split by intent:
+- **Identity reads** — "surface THIS property's permit" or "this CoA is already permitted" (`src/lib/coa/repository.ts` `getCoaByPermit`, `/api/coa`, `/api/permits/[id]` CoA detail, the Spec 76 lead-inspector cross-stream panel, and the pre-permit existence checks in `src/lib/coa/pre-permits.ts` + `/api/admin/stats`) — require **`linked_confidence >= 0.85`** (`COA_IDENTITY_LINK_MIN_CONFIDENCE`, `src/lib/coa/link-confidence.ts`). A sub-0.85 link is a same-street/wrong-house (Tier 2) or cross-ward (Tier 1c) association; surfacing it as the identity permit shows the WRONG property, and letting it suppress a genuine pre-permit is the same wrong-property error.
+- **Geo-inheritance reads** — lat/long/ward enrichment (below) — keep the **`>= 0.60`** floor. The 0.10 Tier-1c bucket is a deliberate geo-only fence, never treated as identity. The field is **never cleared** by the floor; it is a read-time filter only.
+
 **Cross-ward unlink pre-pass:** before linking, the script UNLINKs any CoA whose retained ward disagrees
 with its linked permit's ward (`LTRIM(ward,'0')` compare, excluding the intentional 0.10 Tier-1c
 matches). It also NULLs the corresponding `permits.linked_coa_application_number` back-ref when no other

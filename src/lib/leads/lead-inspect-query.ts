@@ -20,6 +20,7 @@ import type {
   LeadInspectTradeRow,
 } from '@/lib/admin/lead-schemas';
 import { phaseName } from '@/lib/classification/phase-names';
+import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
 import {
   buildTimeline,
   type CalibrationRow,
@@ -645,6 +646,7 @@ interface CoaMainRow {
   lifecycle_stage: string | null;
   bid_value: string | null;
   linked_permit_num: string | null;
+  linked_confidence: string | null;
   group_label: string | null;  group_color: string | null;  group_icon: string | null;
   block_label: string | null;  block_color: string | null;  block_icon: string | null;
   stage_label: string | null;  stage_color: string | null;  stage_icon: string | null;
@@ -668,6 +670,7 @@ const COA_MAIN_SQL = `
     ca.lifecycle_group, ca.lifecycle_block, ca.lifecycle_stage,
     ca.bid_value::text        AS bid_value,
     ca.linked_permit_num,
+    ca.linked_confidence::text AS linked_confidence,
     usc.group_label, usc.group_color, usc.group_icon,
     usc.block_label, usc.block_color, usc.block_icon,
     usc.stage_label, usc.stage_color, usc.stage_icon
@@ -826,6 +829,16 @@ async function fetchCoaPanel(
 
   const c = mainRes.rows[0]!;
 
+  // P12-B1: identity floor. linked_permit_num is set at any tier (incl. 0.60 geo
+  // and 0.10 cross-ward flagged); surfacing a sub-0.85 link to the inspector shows
+  // the WRONG permit. Gate the cross-stream + linked-permit reads on the identity
+  // floor — treat a sub-0.85 link as no link for permit-identity purposes.
+  const linkedConfidenceNum = c.linked_confidence != null ? Number(c.linked_confidence) : null;
+  const identityLinkedPermitNum =
+    linkedConfidenceNum != null && linkedConfidenceNum >= COA_IDENTITY_LINK_MIN_CONFIDENCE
+      ? c.linked_permit_num
+      : null;
+
   // Cross-stream timeline parameters (diff-stage CRIT-Ind/DS): pass paddedRevision so Arm 1 exact-match
   // hits the actually-inspected revision (NOT hardcoded :00 which doubled rev-00 rows and missed rev-01+).
   // $1 = the active lead (the one user is inspecting); $2 = bare permit_num for LIKE; $3 = linked CoA leadId.
@@ -835,7 +848,7 @@ async function fetchCoaPanel(
     args.parentLeadType === 'coa'
       ? args.coaLeadId
       : `permit:${args.permit_num}:${args.paddedRevision}`;
-  const $2 = args.parentLeadType === 'coa' ? c.linked_permit_num : args.permit_num;
+  const $2 = args.parentLeadType === 'coa' ? identityLinkedPermitNum : args.permit_num;
   const $3 = args.parentLeadType === 'permit' ? args.coaLeadId : null;
 
   // Value sanitization: reject SQL LIKE metacharacters in permit_num (mig 132 trigger format is alphanumeric+hyphen).
@@ -855,8 +868,8 @@ async function fetchCoaPanel(
       COA_CROSS_STREAM_SQL,
       [activeLeadId, $2 != null && !/[%_\\]/.test($2) ? $2 : null, $3],
     ),
-    c.linked_permit_num != null
-      ? pool.query<CoaLinkedPermitRow>(COA_LINKED_PERMIT_SQL, [c.linked_permit_num])
+    identityLinkedPermitNum != null
+      ? pool.query<CoaLinkedPermitRow>(COA_LINKED_PERMIT_SQL, [identityLinkedPermitNum])
       : Promise.resolve({ rows: [] as CoaLinkedPermitRow[] }),
   ]);
 

@@ -102,6 +102,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'cost_est_null_rate_warn_pct',
   'cost_est_min_tiers',
   'calibration_freshness_warn_hours',
+  'coa_forward_link_sub085_warn_pct', // WF2 P12-B2 — CoA forward-link sub-0.85 identity-floor share watch
   'lifecycle_unclassified_max',
   'lifecycle_live_status_null_warn_count', // WF2 P3 — WARN threshold for live_status_null_count + never_classified_count drain-lag breakouts
   'scraper_error_rate_warn_pct',

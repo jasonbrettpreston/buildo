@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   try {
@@ -16,7 +17,9 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     let paramIdx = 1;
 
     if (permitNum) {
-      conditions.push(`linked_permit_num = $${paramIdx}`);
+      // P12-B1: identity floor — only surface CoAs identity-linked to this permit
+      // (≥0.85); sub-0.85 links are same-street/wrong-house or geo associations.
+      conditions.push(`linked_permit_num = $${paramIdx} AND linked_confidence >= ${COA_IDENTITY_LINK_MIN_CONFIDENCE}`);
       params.push(permitNum);
       paramIdx++;
     }

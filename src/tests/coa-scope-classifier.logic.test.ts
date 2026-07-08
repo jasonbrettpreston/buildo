@@ -106,6 +106,59 @@ describe('coa-scope-classifier — NULL sentinel for scope_tags (R8 FAIL-2 fix)'
   });
 });
 
+describe('coa-scope-classifier — P12-C1 lot-addition severance leak (dual-path)', () => {
+  const LOT_ADDITION = 'To obtain consent to sever a portion of the land for the purpose of a lot addition.';
+
+  it('lot-addition severance does NOT emit the construction `addition` tag (TS)', () => {
+    const out = classifyCoaScope({ description: LOT_ADDITION });
+    expect(out.scope_tags ?? []).not.toContain('addition');
+    expect(out.project_type).not.toBe('Addition');
+    expect(out.scope_tags ?? []).toContain('severance');
+  });
+
+  it('lot-addition severance does NOT emit `addition` (JS parity)', () => {
+    const out = jsLib.classifyCoaScope({ description: LOT_ADDITION });
+    expect(out.scope_tags ?? []).not.toContain('addition');
+  });
+
+  it('genuine BUILDING addition still emits the `addition` tag (no over-suppression)', () => {
+    for (const lib of [classifyCoaScope, jsLib.classifyCoaScope]) {
+      const out = lib({ description: 'To construct a two-storey rear addition to the dwelling.' });
+      expect(out.scope_tags ?? []).toContain('addition');
+    }
+  });
+
+  it('sever+build keeps its construction signal (new-construction, not suppressed)', () => {
+    const out = classifyCoaScope({ description: 'Consent to sever and construct a new detached dwelling on the severed lot.' });
+    expect(out.scope_tags ?? []).toContain('new-construction');
+    expect(out.scope_tags ?? []).toContain('severance');
+  });
+});
+
+describe('coa-scope-classifier — P12-C3 residential-accessory use-class (dual-path)', () => {
+  const cases = [
+    'To construct a new garden suite in the rear yard.',
+    'To construct a new detached garage in the rear yard.',
+    'To construct a one-storey ancillary building (detached garage).',
+    'Accessory dwelling in the rear yard.',
+  ];
+  for (const desc of cases) {
+    it(`types "${desc.slice(0, 40)}…" as residential (TS + JS)`, () => {
+      expect(classifyCoaScope({ description: desc }).coa_type_class).toBe('residential');
+      expect(jsLib.classifyCoaScope({ description: desc }).coa_type_class).toBe('residential');
+    });
+  }
+
+  it('land-only ops stay un-use-classed (NULL — honest, not chased)', () => {
+    for (const d of [
+      'To obtain consent to create an easement/right-of-way.',
+      'To obtain consent for the technical severance of the property.',
+    ]) {
+      expect(classifyCoaScope({ description: d }).coa_type_class).toBeNull();
+    }
+  });
+});
+
 describe('coa-scope-classifier — live R0 sample regression', () => {
   it('classifies "construct new dwelling" → residential / NewConstruction', () => {
     const out = classifyCoaScope({ description: 'To construct a new dwelling.' });

@@ -109,6 +109,13 @@ const RESIDENTIAL_PATTERNS: RegExp[] = [
   /\bsecondary\s+suite\b/i,
   /\blaneway\s+(suite|house)\b/i,
   /\bresidential\b/i,
+  // P12-C3 (mirrors scripts/lib/coa-scope-classifier.js — dual-path parity):
+  // rear-yard residential accessory structures untyped for lack of a use-class
+  // keyword. Unambiguously residential in the CoA minor-variance context.
+  /\bgarden\s+suite\b/i,
+  /\bdetached\s+garage\b/i,
+  /\baccessory\s+(dwelling|building|structure)\b/i,
+  /\bancillary\s+(building|structure)\b/i,
 ];
 
 const COMMERCIAL_PATTERNS: RegExp[] = [
@@ -146,7 +153,11 @@ const NEW_CONSTRUCTION_PATTERNS: RegExp[] = [
 ];
 
 const ADDITION_PATTERNS: RegExp[] = [
-  /\baddition\b/i,
+  // P12-C1 (mirrors scripts/lib/coa-scope-classifier.js — dual-path parity):
+  // "lot/land/parcel addition" is a severance land-transfer term, not a building
+  // addition. Negative lookbehind excludes the land sense; genuine building
+  // additions ("rear addition") still match.
+  /(?<!\b(?:lot|land|parcel)\s)\baddition\b/i,
   /\bextend(ing|ed)?\b/i,
   /\bextension\b/i,
   /\benlarge(ment|d|ing)?\b/i,

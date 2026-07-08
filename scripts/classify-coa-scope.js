@@ -215,6 +215,10 @@ pipeline.run('classify-coa-scope', async (pool) => {
     const scopeClassifiedPct = processed > 0 ? (scopeClassified / processed) * 100 : 0;
     const unmappedPct = processed > 0 ? (unmappedScope / processed) * 100 : 0;
     const structureTypedPct = processed > 0 ? (structureTyped / processed) * 100 : 0;
+    // P12-C3: coa_type_class coverage. NULL = descriptions carrying no use-class
+    // signal (empty, or land-only ops: severance / easement / planning-act). INFO,
+    // not a gate — a portion is honestly un-use-classable by design.
+    const coaTypeClassNullPct = processed > 0 ? (noClass / processed) * 100 : 0;
 
     const auditRows = [
       { metric: 'coa_processed',         value: processed,                                        threshold: null,                                       status: 'INFO' },
@@ -222,6 +226,7 @@ pipeline.run('classify-coa-scope', async (pool) => {
       { metric: 'unmapped_scope_count',  value: unmappedPct.toFixed(1) + '%',                     threshold: `<= ${unmappedThresholdPct}%`,              status: unmappedPct <= unmappedThresholdPct ? 'PASS' : 'WARN' },
       { metric: 'scope_classified_pct',  value: scopeClassifiedPct.toFixed(1) + '%',              threshold: `>= ${100 - unmappedThresholdPct}%`,        status: unmappedPct <= unmappedThresholdPct ? 'PASS' : 'WARN' },
       { metric: 'no_class',              value: noClass,                                          threshold: null,                                       status: 'INFO' },
+      { metric: 'coa_type_class_null_pct', value: coaTypeClassNullPct.toFixed(1) + '%',            threshold: null,                                       status: 'INFO' },
       { metric: 'no_project_type',       value: noProjectType,                                    threshold: null,                                       status: 'INFO' },
       // structure_type (Spec 83 §3.A archetype) — step-level visibility (INFO); the gated
       // coverage row lives in assert_global_coverage (Spec 49). Description-only signal,

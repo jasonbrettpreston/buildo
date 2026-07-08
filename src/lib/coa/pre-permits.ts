@@ -1,5 +1,6 @@
 import { query } from '@/lib/db/client';
 import type { CoaApplication } from '@/lib/coa/types';
+import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
 
 // ---------------------------------------------------------------------------
 // Pre-Permit qualifying logic
@@ -13,15 +14,19 @@ const PRE_PERMIT_WINDOW_DAYS = 90;
  *
  * Criteria:
  *  - Decision is "Approved" or "Approved with Conditions"
- *  - Not yet linked to a building permit
+ *  - Not yet linked to a building permit (P12-B1: an identity-linked permit, ≥0.85;
+ *    a sub-0.85 same-street/geo link does NOT count as "permitted" and must not
+ *    suppress pre-permit surfacing — the same wrong-property class as the B1 reads)
  *  - Decision date within the last 90 days
  */
 export function isQualifyingPrePermit(
-  coa: { decision: string; decision_date: string | Date | null; linked_permit_num: string | null },
+  coa: { decision: string; decision_date: string | Date | null; linked_permit_num: string | null; linked_confidence?: number | string | null },
   now: Date = new Date()
 ): boolean {
   if (!APPROVED_DECISIONS.includes(coa.decision)) return false;
-  if (coa.linked_permit_num) return false;
+  const linkConf = coa.linked_confidence != null ? Number(coa.linked_confidence) : null;
+  const identityLinked = coa.linked_permit_num != null && linkConf != null && linkConf >= COA_IDENTITY_LINK_MIN_CONFIDENCE;
+  if (identityLinked) return false;
   if (!coa.decision_date) return false;
 
   const decisionDate = typeof coa.decision_date === 'string'
@@ -95,7 +100,9 @@ export async function getUpcomingLeads(options: UpcomingLeadsOptions = {}): Prom
 
   const conditions = [
     "decision IN ('Approved', 'Approved with Conditions')",
-    'linked_permit_num IS NULL',
+    // P12-B1: unlinked-for-existence = no identity link (≥0.85). A sub-0.85
+    // same-street/geo link must not exclude a genuine pre-permit from surfacing.
+    `(linked_permit_num IS NULL OR linked_confidence < ${COA_IDENTITY_LINK_MIN_CONFIDENCE})`,
     "decision_date >= NOW() - INTERVAL '90 days'",
   ];
   const values: unknown[] = [];

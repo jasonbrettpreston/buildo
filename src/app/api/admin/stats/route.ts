@@ -3,6 +3,7 @@ import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { PIPELINE_TABLE_MAP } from '@/lib/admin/funnel';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
 
 /**
  * GET /api/admin/stats - Return system-wide statistics for the admin dashboard.
@@ -93,9 +94,11 @@ export const GET = withApiEnvelope(async function GET() {
          WHERE linked_permit_num IS NOT NULL`
       ),
       query<{ count: string }>(
+        // P12-B1: pre-permit qualifier — unlinked-for-existence = no identity
+        // link (≥0.85); a sub-0.85 same-street/geo link must not suppress surfacing.
         `SELECT COUNT(*)::text AS count FROM coa_applications
          WHERE decision IN ('Approved', 'Approved with Conditions')
-           AND linked_permit_num IS NULL
+           AND (linked_permit_num IS NULL OR linked_confidence < ${COA_IDENTITY_LINK_MIN_CONFIDENCE})
            AND decision_date >= NOW() - INTERVAL '90 days'`
       ),
       // Geocoded permits
