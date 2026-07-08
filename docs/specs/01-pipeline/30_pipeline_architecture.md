@@ -116,6 +116,8 @@ The SDK's `emitSummary()` automatically appends these rows to every script's `au
 
 These require **zero script changes** — the SDK computes them from data already passed to `emitSummary()`.
 
+> **AI-operator lineage:** each step's `emitMeta` reads/writes contract is merged into `pipeline_runs.records_meta.pipeline_meta`; the generated `docs/reference/data-lineage-map.md` (`npm run lineage-docs`) turns it into a column → producing-step → consuming-steps map.
+
 ### 3.2 Opt-In Metrics (via `telemetry_context`)
 
 Scripts can pass an optional `telemetry_context` object to `emitSummary()` for deeper tracking:
