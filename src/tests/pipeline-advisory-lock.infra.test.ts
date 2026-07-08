@@ -80,12 +80,17 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // Lock 115 assigned from free range; owning spec is 54 (Source: Address
   // Points) but spec ID is taken by load-address-points historically.
   'scripts/link-parcel-addresses.js': 115,
-  // Lock 116 reservation — Phase 2a one-time backfill:
-  //   scripts/one-time/backfill-address-points-geom.js
-  // One-time scripts are NOT in scripts/manifest.json, so the manifest-
-  // coverage assertion at line 191 below does not enforce their presence
-  // here. This comment serves as the §A.5 registry record so a future
-  // developer assigning a new lock ID does not silently collide with 116.
+  // One-time backfills (scripts/one-time/) — NOT in scripts/manifest.json, so the
+  // manifest-coverage assertion does not enforce them; they ARE covered by the
+  // one-time/backfill uniqueness scan + the registry-vs-code agreement test below.
+  // 121 was reassigned from 117 (WF2 P10-4) — 117 belongs to compute-parcel-cost-
+  // estimates.js (Spec 88); the collision was invisible while the uniqueness test
+  // scanned manifest scripts only.
+  'scripts/one-time/backfill-address-points-geom.js':         116,
+  'scripts/one-time/backfill-coa-street-name-normalized.js':  118,
+  'scripts/one-time/backfill-coa-structure-type.js':          119,
+  'scripts/one-time/backfill-coa-products.js':                120,
+  'scripts/one-time/backfill-building-footprints-geom.js':    121,
   // §A.5 record — scripts/one-time/backfill-parcels-zoning-index.js (Spec 65) +
   //   scripts/one-time/backfill-permits-coa-zoning-index.js (Spec 66):
   //   NO advisory lock (idempotent CREATE INDEX CONCURRENTLY IF NOT EXISTS,
@@ -166,6 +171,25 @@ const uniqueJsFiles = Array.from(
   ),
 );
 
+// One-time / backfill scripts are NOT in the manifest, but they DO acquire
+// advisory locks (§A.5) — so their IDs must be unique against the manifest set.
+// A live 117 collision (compute-parcel-cost-estimates vs backfill-building-
+// footprints-geom) hid here until WF2 P10-4 extended the scan to these dirs.
+const EXTRA_LOCK_DIRS = ['scripts/one-time', 'scripts/backfill'];
+function collectExtraLockedScripts(): string[] {
+  const out: string[] = [];
+  for (const dir of EXTRA_LOCK_DIRS) {
+    const abs = path.join(REPO_ROOT, dir);
+    if (!fs.existsSync(abs)) continue;
+    for (const f of fs.readdirSync(abs)) {
+      if (f.endsWith('.js')) out.push(`${dir}/${f}`);
+    }
+  }
+  return out;
+}
+// The full set of lock-bearing JS files: manifest chain steps + one-time/backfill.
+const allLockedJsFiles = Array.from(new Set([...uniqueJsFiles, ...collectExtraLockedScripts()]));
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -176,6 +200,25 @@ function readScript(relPath: string): string {
 function extractLockId(source: string): number | null {
   const m = source.match(/const ADVISORY_LOCK_ID\s*=\s*(\d+)/);
   return m ? parseInt(m[1]!, 10) : null;
+}
+
+// Parse the §A.5 Bundle-G registry table out of Spec 47 → { script → id }.
+// Rows flagged RETIRED (deleted scripts kept for history) are skipped. This is
+// the spec-table half of the "spec ↔ constant" agreement check; §5.2's
+// canonical table and the LOCK_ID_REGISTRY constant must not diverge.
+const SPEC_47_PATH = path.join(REPO_ROOT, 'docs/specs/01-pipeline/47_pipeline_script_protocol.md');
+function parseSpecA5Table(): Record<string, number> {
+  const md = fs.readFileSync(SPEC_47_PATH, 'utf8');
+  const start = md.indexOf('### A.5');
+  const body = start >= 0 ? md.slice(start) : md;
+  const out: Record<string, number> = {};
+  for (const line of body.split('\n')) {
+    if (/retired/i.test(line)) continue;
+    // | **117** | `scripts/compute-parcel-cost-estimates.js` | ... |
+    const m = line.match(/^\|\s*\*{0,2}(\d+)\*{0,2}\s*\|\s*`(scripts\/[^`]+\.js)`/);
+    if (m) out[m[2]!] = parseInt(m[1]!, 10);
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -206,14 +249,14 @@ describe('Pipeline Advisory Lock Compliance (§47 §R2)', () => {
     }
   });
 
-  it('all ADVISORY_LOCK_IDs are unique across all JS scripts', () => {
+  it('all ADVISORY_LOCK_IDs are unique across all JS scripts (incl. one-time/backfill)', () => {
     const seen = new Map<number, string>();
     const duplicates: string[] = [];
 
-    for (const file of uniqueJsFiles) {
+    for (const file of allLockedJsFiles) {
       const source = readScript(file);
       const id = extractLockId(source);
-      if (id === null) continue; // already caught by the per-script test above
+      if (id === null) continue; // no lock (e.g. backfill/ DDL scripts) — skip
 
       if (seen.has(id)) {
         duplicates.push(`ID ${id} used by both "${seen.get(id)}" and "${file}"`);
@@ -244,5 +287,31 @@ describe('Pipeline Advisory Lock Compliance (§47 §R2)', () => {
       unregistered,
       'All manifest JS scripts must appear in LOCK_ID_REGISTRY',
     ).toEqual([]);
+  });
+
+  // WF2 P10-4: the SECOND agreement axis. The existing "registry ↔ code" block
+  // pins constant-vs-source; this pins the constant against Spec 47 §A.5's
+  // markdown table (previously prose-only at 47:1813) so the human-readable
+  // registry can't silently diverge from the machine-checked one.
+  it('LOCK_ID_REGISTRY constant agrees with the Spec 47 §A.5 markdown table', () => {
+    const table = parseSpecA5Table();
+    const mismatches: string[] = [];
+
+    // Every §A.5 (non-retired) row must match the constant.
+    for (const [file, id] of Object.entries(table)) {
+      if (!(file in LOCK_ID_REGISTRY)) {
+        mismatches.push(`§A.5 lists ${file} = ${id} but it is absent from LOCK_ID_REGISTRY`);
+      } else if (LOCK_ID_REGISTRY[file] !== id) {
+        mismatches.push(`§A.5 lists ${file} = ${id} but LOCK_ID_REGISTRY has ${LOCK_ID_REGISTRY[file]}`);
+      }
+    }
+    // Every constant entry must appear in the §A.5 table.
+    for (const [file, id] of Object.entries(LOCK_ID_REGISTRY)) {
+      if (!(file in table)) {
+        mismatches.push(`LOCK_ID_REGISTRY has ${file} = ${id} but §A.5 table omits it`);
+      }
+    }
+
+    expect(mismatches, 'Spec 47 §A.5 table and LOCK_ID_REGISTRY must agree').toEqual([]);
   });
 });

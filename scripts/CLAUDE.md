@@ -22,6 +22,8 @@ Read tool calls in a single message:
 | `docs/specs/01-pipeline/47_pipeline_script_protocol.md` | **Mandatory** — §R1-R12 skeleton, advisory lock, emitSummary, emitMeta |
 | `docs/specs/00-architecture/01_database_schema.md` | Current schema |
 
+**AI-operator docs (lazy-Read, generated):** `docs/reference/logic-variables-registry.md` (every logic var → default/bounds/consumers, `npm run logic-vars-docs`) · `docs/reference/data-lineage-map.md` (column → producer → consumers, `npm run lineage-docs`) · `docs/runbook/README.md` (runbook + one-off script index + deploy-ordering rules).
+
 ---
 
 ## Spec 47 — Mandatory Script Skeleton (§R1–R12)
@@ -41,8 +43,10 @@ const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs } = require('./lib/config-loader');
 const { z } = require('zod');
 
-// §R2 — lock ID = spec number
-const ADVISORY_LOCK_ID = [spec_number];
+// §R2 — lock ID: assign per Spec 47 §A.5 registry (spec number if globally
+// unique, else next-free). Uniqueness + table↔constant↔code agreement enforced
+// by src/tests/pipeline-advisory-lock.infra.test.ts.
+const ADVISORY_LOCK_ID = [id_from_§A.5];
 
 // §R4 — Zod config schema (validate all consumed env/logicVars upfront)
 const ConfigSchema = z.object({ ... });

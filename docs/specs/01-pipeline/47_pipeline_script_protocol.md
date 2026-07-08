@@ -46,8 +46,8 @@ const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs } = require('./lib/config-loader');
 // ... additional lib imports
 
-// §R2 — Advisory lock ID (MANDATORY — see §5)
-const ADVISORY_LOCK_ID = [spec_number]; // e.g. 88 for spec 88_foo.md
+// §R2 — Advisory lock ID (MANDATORY — assign per §A.5 registry, see §5.2)
+const ADVISORY_LOCK_ID = [id_from_§A.5]; // spec number if globally unique, else next-free (§A.5)
 
 // §R3 — Batch size constants (MANDATORY if doing batch writes — see §6)
 const BATCH_SIZE = Math.floor(65535 / [column_count]); // §9.2 compliance
@@ -266,12 +266,18 @@ produce race conditions on DELETE/UPSERT, double-fired alerts, and non-determini
 ### 5.2 Lock ID convention
 
 ```
-ADVISORY_LOCK_ID = spec number of the owning spec (e.g. 88 for spec 88_foo.md)
+ADVISORY_LOCK_ID = the ID assigned by the §A.5 registry (NOT simply "the spec number")
 ```
 
-This makes lock IDs human-traceable in `pg_locks` and prevents silent collisions between
-scripts. **Failure mode (83-W7):** `compute-cost-estimates.js` used lock ID 74 (wrong spec
-number). Any script that legitimately uses lock 74 would silently contend with it.
+The spec number is the DEFAULT only when it is globally unique across all scripts. When it
+is already taken, or a script has no single owning spec, the ID comes from the free range per
+the **§A.5 assignment rules** — e.g. compute-parcel-cost-estimates (Spec 88, but 88 is
+classify-permits) = **117**; load/enrich-centreline (Spec 62, but 62 is enrich-heritage) =
+**63/64**. `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §A.5 is the canonical table;
+`src/tests/pipeline-advisory-lock.infra.test.ts` enforces uniqueness + table↔constant↔code
+agreement (incl. one-time/backfill dirs). This keeps lock IDs human-traceable in `pg_locks`
+and prevents silent collisions. **Failure mode (83-W7):** `compute-cost-estimates.js` used
+lock ID 74 (wrong spec number); any script legitimately using lock 74 would silently contend.
 
 ### 5.3 Lock MUST be acquired via `pipeline.withAdvisoryLock()`
 
@@ -1769,7 +1775,7 @@ and registry-vs-code agreement.
 | **55** | `scripts/load-parcels.js` | 4 — Load/Ingest | NO |
 | **56** | `scripts/load-massing.js` | 4 — Load/Ingest | NO |
 | **57** | `scripts/load-neighbourhoods.js` | 4 — Load/Ingest | NO |
-| **71** | `scripts/compute-timing-calibration.js` | 5 — Maintenance | YES — `computed_at` |
+| **71** | `scripts/compute-timing-calibration.js` | RETIRED (v1; superseded by compute-timing-calibration-v2=86) | — |
 | **80** | `scripts/reclassify-all.js` | 1 — Classify | YES — `scope_classified_at`, permit_trades, permit_products |
 | **81** | `scripts/compute-opportunity-scores.js` | Bundle A | YES — `computed_at` |
 | **82** | `scripts/update-tracked-projects.js` | Bundle A | YES — timestamps |
@@ -1790,14 +1796,14 @@ and registry-vs-code agreement.
 | **97** | `scripts/load-wsib.js` | 4 — Load/Ingest | YES — `last_seen_at` |
 | **98** | `scripts/close-stale-permits.js` | 5 — Maintenance | NO — `NOW()` in WHERE only |
 | **99** | `scripts/compute-centroids.js` | 5 — Maintenance | NO |
-| **100** | `scripts/create-pre-permits.js` | 5 — Maintenance | YES — `last_seen_at` |
+| **100** | `scripts/create-pre-permits.js` | RETIRED (Phase G, Spec 42 §6.11) | — |
 | **101** | `scripts/purge-lead-views.js` | 5 — Maintenance | NO — deletes only |
 | **102** | `scripts/quality/assert-schema.js` | 6 — Quality | NO — read-only probe |
 | **103** | `scripts/quality/assert-data-bounds.js` | 6 — Quality | NO — read-only probe |
 | **104** | `scripts/quality/assert-engine-health.js` | 6 — Quality | NO — snapshot recording |
 | **105** | `scripts/quality/assert-network-health.js` | 6 — Quality | NO — read-only probe |
 | **106** | `scripts/quality/assert-staleness.js` | 6 — Quality | NO — read-only probe |
-| **107** | `scripts/quality/assert-pre-permit-aging.js` | 6 — Quality | NO — read-only probe |
+| **107** | `scripts/quality/assert-pre-permit-aging.js` | RETIRED (Phase G; slot reused by assert-parcel-sanity) | — |
 | **108** | `scripts/quality/assert-coa-freshness.js` | 6 — Quality | NO — read-only probe |
 | **109** | `scripts/quality/assert-lifecycle-phase-distribution.js` | 6 — Quality | NO — read-only probe |
 | **110** | `scripts/quality/assert-entity-tracing.js` | 6 — Quality | NO — read-only probe |
@@ -1809,6 +1815,26 @@ and registry-vs-code agreement.
 | **116** | `scripts/one-time/backfill-address-points-geom.js` | One-time backfill (WF1 #parcel-address-bridge Phase 2a — not in manifest.json) | NO — pure UPDATE on existing rows; no timestamp columns written |
 | **63** | `scripts/load-centreline.js` | 4 — Load/Ingest (Spec 62 §8c) | YES — `updated_at` (RUN_AT-bound) |
 | **64** | `scripts/enrich-centreline.js` | 3 — Enrich (Spec 62 §8d) | NO — set-based UPDATE of parcels corner/through/frontage + lineage |
+| **58** | `scripts/load-zoning.js` | 4 — Load/Ingest (Spec 58) | NO |
+| **59** | `scripts/load-ravines.js` | 4 — Load/Ingest (Spec 59 §8c) | YES — source ingest timestamps |
+| **60** | `scripts/enrich-ravines.js` | 3 — Enrich (Spec 59 §8d) | NO — set-based parcels ravine enrichment |
+| **61** | `scripts/load-heritage.js` | 4 — Load/Ingest (Spec 61 §8c) | YES — source ingest timestamps |
+| **62** | `scripts/enrich-heritage.js` | 3 — Enrich (Spec 61 §8d) | NO — set-based parcels heritage enrichment |
+| **65** | `scripts/enrich-parcels.js` | 3 — Enrich (Spec 65) | YES — `zoning_enriched_at` + max-build/opt/existing lineage |
+| **66** | `scripts/enrich-permits.js` | 3 — Enrich (Spec 66; ONE file, two manifest entries enrich_permits / enrich_coa_zoning via ENRICH_TARGET → one shared lock) | YES — enrichment lineage |
+| **78** | `scripts/compute-build-norms.js` | 5 — Compute (Spec 78) | YES — `computed_at` |
+| **93** | `scripts/compute-phase-calibration.js` | 5 — Compute | YES — `computed_at` |
+| **195** | `scripts/compute-storey-norms.js` | 5 — Compute (Spec 195/neighbourhood_storey_norms) | YES — `computed_at` |
+| **117** | `scripts/compute-parcel-cost-estimates.js` | 5 — Compute (Spec 88) — owning-spec lock 88 taken by classify-permits; 117 = next-free per the compute-phase-calibration precedent | YES — `computed_at` |
+| **107** | `scripts/quality/assert-parcel-sanity.js` | 6 — Quality (WF2; reuses the freed 107 slot, ex-assert-pre-permit-aging Phase G) | NO — read-only probe |
+| **4201** | `scripts/link-coa-to-parcels.js` | Phase D Wave 4 — CoA (Spec 42 §6.8 allocation 4201–4205) | YES — `parcel_linked_at` |
+| **4202** | `scripts/classify-coa-scope.js` | Phase D Wave 4 — CoA (Spec 42 §6.8) | YES — `scope_classified_at` |
+| **4203** | `scripts/classify-coa-trades.js` | Phase D Wave 4 — CoA (Spec 42 §6.8) | YES — `trade_classified_at` |
+| **4204** | `scripts/compute-coa-cost-estimates.js` | Phase D Wave 4 — CoA (Spec 42 §6.8) | YES — `cost_classified_at` |
+| **118** | `scripts/one-time/backfill-coa-street-name-normalized.js` | One-time backfill (Spec 42 / 54 — bridge JOIN key; not in manifest.json) | NO |
+| **119** | `scripts/one-time/backfill-coa-structure-type.js` | One-time backfill (Spec 42 §6.6.D; not in manifest.json) | NO |
+| **120** | `scripts/one-time/backfill-coa-products.js` | One-time backfill (Spec 80 §5.B; not in manifest.json) | NO |
+| **121** | `scripts/one-time/backfill-building-footprints-geom.js` | One-time backfill (Spec 56; not in manifest.json) — **reassigned from 117** (WF2 P10-4) which belongs to compute-parcel-cost-estimates | NO — pure UPDATE on existing rows |
 
 > **§5.2 exception (Spec 62 lock 63/64).** Spec 62's natural §5.2 ID (62) and its sibling (63) were intended for load/enrich-centreline, but **62 is already assigned to `enrich-heritage.js`** and the spec's pre-implementation guess of **65/66 collides with `enrich-parcels`/`enrich-permits`**. Per the §5.2 next-free-gap exception, `load-centreline.js` = **63** and `enrich-centreline.js` = **64** (added in §8d). The hardcoded `LOCK_ID_REGISTRY` constant in `src/tests/pipeline-advisory-lock.infra.test.ts` MUST carry the same entries (the registry-coverage + uniqueness tests enforce this) — this is NOT optional. (The Spec 58/59/61 source-loader locks 58/59/60/61/62 are likewise canonical in that test file; this Bundle-G table predates them.)
 

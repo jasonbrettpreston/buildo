@@ -36,7 +36,12 @@ const pipeline = require('../lib/pipeline');
 const { safeParseIntOrNull } = require('../lib/safe-math');
 
 const TAG = '[backfill-building-footprints-geom]';
-const ADVISORY_LOCK_ID = 117;
+// Lock 121: reassigned from 117 (WF2 P10-4) — 117 is compute-parcel-cost-estimates.js
+// (Spec 88, §A.5). One-time scripts are not in manifest.json, so the manifest-
+// coverage assertion did not catch the collision; the uniqueness test now scans
+// scripts/one-time + scripts/backfill (§A.5 registry). 121 = next-free after the
+// one-time backfill block 116/118/119/120.
+const ADVISORY_LOCK_ID = 121;
 const BATCH_SIZE = 5000;
 
 // Rows needing geom: source geometry present, and geom is either NULL or holds
