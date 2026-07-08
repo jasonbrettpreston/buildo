@@ -29,6 +29,7 @@ const {
   PHASE_ORDINAL,
 } = require('./lib/lifecycle-phase');
 const { loadMarketplaceConfigs } = require('./lib/config-loader');
+const { runSelfFeed } = require('./lib/self-feed-tracked-projects');
 
 // Terminal phases that should trigger auto-archive regardless of
 // ordinal comparison. PHASE_ORDINAL omits these, so isWindowClosed
@@ -239,6 +240,35 @@ pipeline.run('update-tracked-projects', async (pool) => {
       'trade_configurations returned 0 valid entries — using TRADE_TARGET_PHASE_FALLBACK',
     );
   }
+  // ═══════════════════════════════════════════════════════════
+  // Step 0: Self-feed tracked_projects from lead_views.saved (Spec 82 KFM-1)
+  //
+  // Real saves land in lead_views.saved (src/app/api/leads/save/route.ts →
+  // record-lead-view.ts) but this engine reads its work queue FROM
+  // tracked_projects, which no production code populates. Without this bridge
+  // every push notification is muted AND Spec 81's competition/saturation
+  // signal (rebuilt FROM tracked_projects into lead_analytics in Step 4) reads
+  // zero for real users. The self-feed is the validated option (C): idempotent
+  // INSERT + re-save-after-archive REACTIVATE, ON CONFLICT DO NOTHING so no
+  // existing row's memory columns are ever clobbered. See scripts/lib/
+  // self-feed-tracked-projects.js for the design + the pre-existing
+  // uniq_tracked_projects_lead_id (mig 140) coa-multi-user limitation.
+  //
+  // Runs INSIDE the advisory lock (isolation) and BEFORE the SOURCE stream so
+  // this run's own alert/analytics work sees the freshly-materialized saves.
+  // ═══════════════════════════════════════════════════════════
+  let selfFeedInserted = 0;
+  let selfFeedReactivated = 0;
+  await pipeline.withTransaction(pool, async (client) => {
+    const r = await runSelfFeed(client, RUN_AT);
+    selfFeedInserted = r.inserted;
+    selfFeedReactivated = r.reactivated;
+  });
+  pipeline.log.info(
+    '[tracked-projects]',
+    `Self-feed: ${selfFeedInserted} inserted, ${selfFeedReactivated} reactivated from lead_views.saved`,
+  );
+
   // ═══════════════════════════════════════════════════════════
   // Step 1: Stream all active tracked projects with forecast data
   //
@@ -1096,6 +1126,9 @@ pipeline.run('update-tracked-projects', async (pool) => {
   const totalAlerts = stallAlerts + recoveryAlerts + imminentAlerts
     + coaStallAlerts + coaRecoveryAlerts + coaImminentAlerts + coaDecisionAlerts;
   const auditTableRows = [
+    // Spec 82 KFM-1 self-feed telemetry (INFO — row-derived verdict untouched).
+    { metric: 'self_feed_inserted',    value: selfFeedInserted,    threshold: null, status: 'INFO' },
+    { metric: 'self_feed_reactivated', value: selfFeedReactivated, threshold: null, status: 'INFO' },
     { metric: 'alerts_evaluated',  value: totalRowsPermit + totalRowsCoa, threshold: null, status: 'INFO' },
     { metric: 'alerts_delivered',  value: totalAlerts,  threshold: null, status: 'INFO' },
     { metric: 'delivery_errors',   value: deliveryErrors, threshold: 0, status: deliveryErrors > 0 ? 'FAIL' : 'PASS' },
@@ -1146,6 +1179,8 @@ pipeline.run('update-tracked-projects', async (pool) => {
     records_updated: totalUpdated,
     failed_sample: orphanedCoaSample.length > 0 ? orphanedCoaSample : undefined,
     records_meta: {
+      self_feed_inserted: selfFeedInserted,
+      self_feed_reactivated: selfFeedReactivated,
       active_tracked: totalRowsPermit + totalRowsCoa,
       total_rows_permit: totalRowsPermit,
       total_rows_coa: totalRowsCoa,
@@ -1184,10 +1219,13 @@ pipeline.run('update-tracked-projects', async (pool) => {
       trade_configurations: ['trade_slug', 'imminent_window_days', 'bid_phase_cutoff', 'work_phase_target'],
       // Phase F.2 reads
       coa_applications: ['lead_id', 'lifecycle_phase', 'lifecycle_stalled', 'lifecycle_group', 'status', 'decision', 'hearing_date', 'lifecycle_classified_at', 'last_seen_at'],
+      // Step 0 self-feed source (Spec 82 KFM-1).
+      lead_views: ['user_id', 'lead_key', 'lead_type', 'permit_num', 'revision_num', 'trade_slug', 'saved'],
       pipeline_runs: ['pipeline', 'started_at'],
     },
     {
-      tracked_projects: ['status', 'last_notified_urgency', 'last_notified_stalled', 'notified_decision_rendered', 'updated_at'],
+      // Step 0 self-feed INSERTs new rows + REACTIVATEs archived rows (status).
+      tracked_projects: ['user_id', 'permit_num', 'revision_num', 'trade_slug', 'lead_id', 'claimed_at', 'status', 'last_notified_urgency', 'last_notified_stalled', 'notified_decision_rendered', 'updated_at'],
       lead_analytics: ['lead_key', 'tracking_count', 'saving_count', 'updated_at'],
       // Phase F.2: 3 new notification subtypes write here (existing pattern; new types per Spec 82 §4)
       notifications: ['user_id', 'type', 'permit_num', 'trade_slug', 'title', 'body', 'created_at'],

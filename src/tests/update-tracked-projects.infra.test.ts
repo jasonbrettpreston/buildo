@@ -719,3 +719,67 @@ describe('Phase F.2 — update-tracked-projects.js CoA branch (WF1 v4)', () => {
   });
 });
 
+// ── P9a: self-feed tracked_projects from lead_views.saved (Spec 82 KFM-1) ──
+// The re-save-after-archive re-activation semantics + ON CONFLICT preservation
+// are behaviorally exercised in src/tests/db/self-feed-tracked-projects.db.test.ts.
+// These static locks pin the wiring shape into the engine.
+describe('scripts/update-tracked-projects.js — P9a self-feed (Spec 82 KFM-1)', () => {
+  let SRC: string;
+  const libRead = () =>
+    fs.readFileSync(
+      path.resolve(__dirname, '../..', 'scripts/lib/self-feed-tracked-projects.js'),
+      'utf-8',
+    );
+  let LIB: string;
+  beforeAll(() => {
+    SRC = read('scripts/update-tracked-projects.js');
+    LIB = libRead();
+  });
+
+  it('P9a-1: engine imports + runs the self-feed helper inside a transaction, before the SOURCE stream', () => {
+    expect(SRC).toMatch(/require\(['"]\.\/lib\/self-feed-tracked-projects['"]\)/);
+    expect(SRC).toMatch(/await\s+runSelfFeed\(client,\s*RUN_AT\)/);
+    // Step 0 must precede the Step-1 SOURCE stream (self-feed feeds this run).
+    const feedIdx = SRC.indexOf('runSelfFeed');
+    const streamIdx = SRC.indexOf('pipeline.streamQuery(pool, SQL');
+    expect(feedIdx).toBeGreaterThan(-1);
+    expect(streamIdx).toBeGreaterThan(feedIdx);
+  });
+
+  it('P9a-2: INSERT reads lead_views.saved for both permit + coa lead_types, DO NOTHING (memory preserved)', () => {
+    expect(LIB).toMatch(/INSERT INTO tracked_projects/);
+    expect(LIB).toMatch(/lv\.saved\s*=\s*true/);
+    expect(LIB).toMatch(/lv\.lead_type\s*=\s*'permit'/);
+    expect(LIB).toMatch(/lv\.lead_type\s*=\s*'coa'/);
+    // NO conflict target — handles all three unique arbiters (incl. the GLOBAL
+    // uniq_tracked_projects_lead_id from mig 140) so a re-save never errors.
+    expect(LIB).toMatch(/ON CONFLICT DO NOTHING/);
+    expect(LIB).not.toMatch(/ON CONFLICT\s*\(/);
+  });
+
+  it('P9a-3: coa rows key lead_id off lead_key; permit rows leave lead_id NULL', () => {
+    expect(LIB).toMatch(/lv\.lead_key AS lead_id/);
+    // permit branch projects NULL lead_id (multi-user safe; Branch A reads permits.lead_id)
+    expect(LIB).toMatch(/NULL::text AS lead_id/);
+  });
+
+  it('P9a-4: REACTIVATE flips archived → saved without touching memory columns', () => {
+    expect(LIB).toMatch(/UPDATE tracked_projects tp[\s\S]{0,120}SET status = 'saved'/);
+    expect(LIB).toMatch(/tp\.status = 'archived'/);
+    // Only status + updated_at are written — memory columns must NOT appear in SET.
+    const setBlock = LIB.match(/SET status = 'saved', updated_at = \$1::timestamptz/);
+    expect(setBlock).toBeTruthy();
+    expect(LIB).not.toMatch(/SET[\s\S]{0,80}last_notified/);
+  });
+
+  it('P9a-5: emits self_feed_inserted + self_feed_reactivated audit rows (INFO)', () => {
+    expect(SRC).toMatch(/metric:\s*['"]self_feed_inserted['"][\s\S]{0,80}status:\s*['"]INFO['"]/);
+    expect(SRC).toMatch(/metric:\s*['"]self_feed_reactivated['"][\s\S]{0,80}status:\s*['"]INFO['"]/);
+  });
+
+  it('P9a-6: emitMeta declares lead_views read + tracked_projects insert-column writes (Spec 47 §R11)', () => {
+    expect(SRC).toMatch(/lead_views:\s*\[[\s\S]{0,200}'saved'/);
+    expect(SRC).toMatch(/tracked_projects:\s*\[[\s\S]{0,250}'lead_id'[\s\S]{0,120}'status'/);
+  });
+});
+
