@@ -194,6 +194,16 @@ may flag the spike as `CRITICAL`/`HIGH`.
 Phase I.1's `lifecycle_status_history` deploy is the canonical example — see
 `docs/runbook/I1_first_deploy_spike.md`.
 
+**Inverse case — a regularly-REDUCED step (WF2 P11-1 fold).** The mirror of a spike:
+`enrich_centreline` now runs a version-skip gate (Spec 62 §3.11), so on an unchanged
+quarterly source its `records_updated` reads `0`/`N` instead of ~472K, and its audit set
+shrinks to the reduced `enrich_centreline_mode` / `skip_reason` rows. This is the designed
+steady state, NOT a coverage regression or a stalled step — the DeepSeek narrative may flag
+the drop for the quiet window. Pre-ack: a reduced/skip run still emits a `completed` row with
+a fresh `completed_at` and preserves the ~97% `centreline_dataset_version_when_enriched`
+coverage, so `assertCentrelineEnriched` stays green; a genuine regression would instead show
+a `failed`/absent run or coverage below `centreline_propagation_coverage_min`.
+
 ### 3.8 Per-step observability validation _(NEW 2026-05-19 — Spec 79 fold)_
 
 Per-step §3.6 dual-pattern + §3.7 first-deploy spike compliance is validated per Spec 79 §2 checklist items C2, C3, C4, C6 plus C12 tripwires (per-risk-class profile per Spec 79 §10). Validation records under `docs/reports/pipeline-validation/{permits,coa}/` show actual `pipeline_runs.records_meta` JSON and audit_table.rows shape — never asserted compliance without the actual JSON.

@@ -367,6 +367,18 @@ Single `pipeline.emitSummary` call at the END of the successful path (per Spec 4
 
 Data represents a point-in-time snapshot per `source_dataset_version`. Daily-publish cadence means downstream enrichment reflects a 1-7 day window of source freshness (per L9). Admin UI MUST display `source_dataset_version` to communicate the snapshot date.
 
+### 3.11 `enrich_centreline` version-skip gate (WF2 P11-1)
+
+The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost (~92 min). Because centreline is a QUARTERLY source, the vast majority of runs re-derive an unchanged result. The gate makes the recompute proportional to actual change:
+
+- **Signal:** the producer `source_dataset_version` (from the last completed `sources:load_centreline` run) vs the version the LAST completed `sources:enrich_centreline` run recorded in its `records_meta.centreline_enrich.source_dataset_version` (a bare-run fallback reads the `centreline_source_dataset_version` audit row). The **run row**, never the per-parcel column (which carries a legit-NULL zero-intersection tail + strays).
+- **Unchanged version → row-level scope:** only parcels whose `centreline_dataset_version_when_enriched` is NULL/stale are recomputed. The `load-parcels.js` #418 geometry-change fence (DEC-FENCE2) NULLs that stamp on any moved parcel, so the stale set is exactly {new, moved, never-linked} — the only parcels whose corner/through/frontage/laneway can have changed. **Zero stale → full skip.** (In practice a permanent ~14.5K zero-intersection tail keeps every unchanged run in the *reduced* band rather than a true zero-skip — still seconds, not 92 min.)
+- **Changed version (or no prior run) → full recompute** and re-stamp (the mode='full' path is unchanged).
+- **Chain-safety (load-bearing):** the reduced and skip paths BOTH emit a `status='completed'` run row with a fresh `completed_at` (Observer-style PASS, `records_updated:0/N`, audit rows `enrich_centreline_mode` + `enrich_centreline_skip_reason`) — explicitly NOT the `withAdvisoryLock` lock-contention SKIP payload. `assertCentrelineEnriched` (enrich-permits §8e L24b/c) HALTs the daily permits/coa chain unless a *completed* enrich_centreline run post-dates the latest load-parcels AND coverage ≥ `centreline_propagation_coverage_min`; the skip preserves the stamps, so both hold.
+- **Spec 48 §3.7 pre-ack:** enrich_centreline is now a *regularly-reduced* step — its `records_updated` will read 0/N (not ~472K) on unchanged runs; that is the designed steady state, not a regression.
+
+> **Filed (not done here):** the §11 magic numbers (20 m proximity / 20-segment cap / 13 m abutment) → logic_variables externalization remains a filed follow-up (non-trivial: seed + Zod + tests). See `docs/reports/review_followups.md`.
+
 ---
 
 ## 4. Testing Mandate (Spec 47 §6 + Spec 48 §3.6 compliance)
