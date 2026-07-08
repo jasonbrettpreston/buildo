@@ -33,6 +33,11 @@ describe('load-parcels.js — DEC-FENCE2 source contract (#418)', () => {
     expect(SCRIPT).toMatch(
       /heritage_dataset_version_when_enriched = CASE\s*\n\s*WHEN parcels\.geometry::jsonb IS DISTINCT FROM EXCLUDED\.geometry::jsonb\s*\n\s*THEN NULL ELSE parcels\.heritage_dataset_version_when_enriched END/,
     );
+    // WF2 P11-1: the centreline arm is the load-bearing precondition for the
+    // enrich_centreline row-level version-skip gate.
+    expect(SCRIPT).toMatch(
+      /centreline_dataset_version_when_enriched = CASE\s*\n\s*WHEN parcels\.geometry::jsonb IS DISTINCT FROM EXCLUDED\.geometry::jsonb\s*\n\s*THEN NULL ELSE parcels\.centreline_dataset_version_when_enriched END/,
+    );
   });
 });
 
@@ -54,7 +59,10 @@ describe.skipIf(!dbAvailable())('load-parcels.js — DEC-FENCE2 stamp invalidati
         THEN NULL ELSE parcels.ravine_dataset_version_when_enriched END,
       heritage_dataset_version_when_enriched = CASE
         WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
-        THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END
+        THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END,
+      centreline_dataset_version_when_enriched = CASE
+        WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+        THEN NULL ELSE parcels.centreline_dataset_version_when_enriched END
     WHERE parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
        OR (NULLIF(EXCLUDED.address_number, '') IS NOT NULL
            AND parcels.address_number IS DISTINCT FROM EXCLUDED.address_number)`;
@@ -63,9 +71,10 @@ describe.skipIf(!dbAvailable())('load-parcels.js — DEC-FENCE2 stamp invalidati
     await pool.query("DELETE FROM parcels WHERE parcel_id = 'FENCE2-001'");
     await pool.query(
       `INSERT INTO parcels (parcel_id, geometry, address_number,
-         ravine_dataset_version_when_enriched, heritage_dataset_version_when_enriched)
-       VALUES ('FENCE2-001', $1, '100', $2, $3)`,
-      [G1, stamps ? 'rv1' : null, stamps ? 'hv1' : null],
+         ravine_dataset_version_when_enriched, heritage_dataset_version_when_enriched,
+         centreline_dataset_version_when_enriched)
+       VALUES ('FENCE2-001', $1, '100', $2, $3, $4)`,
+      [G1, stamps ? 'rv1' : null, stamps ? 'hv1' : null, stamps ? 'cv1' : null],
     );
   }
 
@@ -74,27 +83,30 @@ describe.skipIf(!dbAvailable())('load-parcels.js — DEC-FENCE2 stamp invalidati
     await pool.end();
   });
 
-  it('geometry change NULLs BOTH the ravine and heritage stamps (→ recomputed downstream)', async () => {
+  it('geometry change NULLs the ravine, heritage AND centreline stamps (→ recomputed downstream)', async () => {
     await seed();
     await pool.query(UPSERT, ['FENCE2-001', G2, '100']); // geom changes, address same
     const { rows } = await pool.query(
-      `SELECT ravine_dataset_version_when_enriched AS rv, heritage_dataset_version_when_enriched AS hv
+      `SELECT ravine_dataset_version_when_enriched AS rv, heritage_dataset_version_when_enriched AS hv,
+              centreline_dataset_version_when_enriched AS cv
          FROM parcels WHERE parcel_id = 'FENCE2-001'`,
     );
     expect(rows[0].rv).toBeNull();
     expect(rows[0].hv).toBeNull();
+    expect(rows[0].cv).toBeNull();
   });
 
-  it('address-only change PRESERVES both stamps (geom-invariant → no needless recompute)', async () => {
+  it('address-only change PRESERVES all three stamps (geom-invariant → no needless recompute)', async () => {
     await seed();
     await pool.query(UPSERT, ['FENCE2-001', G1, '200']); // same geom, address changes
     const { rows } = await pool.query(
       `SELECT ravine_dataset_version_when_enriched AS rv, heritage_dataset_version_when_enriched AS hv,
-              address_number AS addr
+              centreline_dataset_version_when_enriched AS cv, address_number AS addr
          FROM parcels WHERE parcel_id = 'FENCE2-001'`,
     );
     expect(rows[0].addr).toBe('200'); // the address update did happen …
     expect(rows[0].rv).toBe('rv1');   // … but the ravine stamp survived
     expect(rows[0].hv).toBe('hv1');   // … and the heritage stamp survived
+    expect(rows[0].cv).toBe('cv1');   // … and the centreline stamp survived
   });
 });

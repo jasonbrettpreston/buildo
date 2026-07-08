@@ -335,18 +335,26 @@ pipeline.run('load-parcels', async (pool) => {
           date_effective = COALESCE(EXCLUDED.date_effective, parcels.date_effective),
           is_irregular = EXCLUDED.is_irregular,
           -- DEC-FENCE2 (#418): invalidate the downstream enrichment lineage stamps when a
-          -- parcel's GEOMETRY changes, so enrich_ravines / enrich_heritage recompute it (a
-          -- moved parcel can cross a ravine / HCD boundary). Gated on geometry change ONLY —
-          -- an address-only update (also in the WHERE below) is geom-invariant, so it must
-          -- NOT force an expensive ravine KNN recompute. NULL stamp ⇒ the consumer's
-          -- version-skip sees the parcel as stale ⇒ scoped recompute. New parcels INSERT with
-          -- a NULL stamp by default (mig 168/171, no DEFAULT) → already stale.
+          -- parcel's GEOMETRY changes, so enrich_ravines / enrich_heritage / enrich_centreline
+          -- recompute it (a moved parcel can cross a ravine / HCD boundary, or gain/lose a
+          -- corner / laneway abutment / change its primary frontage street). Gated on geometry
+          -- change ONLY — an address-only update (also in the WHERE below) is geom-invariant, so
+          -- it must NOT force an expensive recompute. NULL stamp ⇒ the consumer's version-skip
+          -- sees the parcel as stale ⇒ scoped recompute. New parcels INSERT with a NULL stamp by
+          -- default (mig 168/171, no DEFAULT) → already stale.
+          -- WF2 P11-1: the centreline arm is the LOAD-BEARING precondition for the
+          -- enrich_centreline row-level version-skip gate — without it, a moved parcel keeps a
+          -- non-NULL centreline stamp and the gate would skip it (stale corner/frontage/laneway
+          -- = a silent correctness bug).
           ravine_dataset_version_when_enriched = CASE
             WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
             THEN NULL ELSE parcels.ravine_dataset_version_when_enriched END,
           heritage_dataset_version_when_enriched = CASE
             WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
-            THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END
+            THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END,
+          centreline_dataset_version_when_enriched = CASE
+            WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+            THEN NULL ELSE parcels.centreline_dataset_version_when_enriched END
         WHERE parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
           OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm
           OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type
