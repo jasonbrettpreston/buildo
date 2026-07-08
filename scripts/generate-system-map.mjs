@@ -15,15 +15,18 @@ import path from 'path';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const SPECS_DIR = path.join(ROOT, 'docs', 'specs');
+const DOCS_DIR = path.join(ROOT, 'docs');
 const OUTPUT = path.join(SPECS_DIR, '00-architecture', '00_system_map.md');
 
-// Directory → display name mapping (order determines output order)
+// Directory → display name mapping (order determines output order).
+// `base` defaults to SPECS_DIR; generated reference docs live under docs/.
 const SECTIONS = [
   { dir: '00-architecture', name: 'Architecture & Standards' },
   { dir: '01-pipeline',     name: 'Pipeline (Data Engineering)' },
   { dir: '02-web-admin',    name: 'Web Admin' },
   { dir: '03-mobile',       name: 'Mobile (Lead Feed)' },
   { dir: 'archive',         name: 'Archive (Deprecated)' },
+  { dir: 'reference',       name: 'Reference & Generated Docs', base: DOCS_DIR, pathPrefix: 'docs/' },
 ];
 
 // Skip these directories entirely
@@ -142,10 +145,12 @@ let md = `# Buildo System Map
 `;
 
 for (const section of SECTIONS) {
-  const files = collectSpecs(SPECS_DIR, section.dir);
+  const base = section.base || SPECS_DIR;
+  const files = collectSpecs(base, section.dir);
   if (files.length === 0) continue;
 
-  const specs = files.map(f => ({ ...parseSpec(f.absPath), relPath: f.relPath }));
+  const prefix = section.pathPrefix || '';
+  const specs = files.map(f => ({ ...parseSpec(f.absPath), relPath: `${prefix}${f.relPath}` }));
 
   md += `## ${section.name}\n\n`;
   md += `| # | Spec File | Feature | Implementation | Tests | Status |\n`;
