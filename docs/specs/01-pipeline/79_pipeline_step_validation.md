@@ -191,7 +191,7 @@ See `docs/runbook/pipeline_step_validation_walkthrough.md` for the canonical bri
 
 ## 4. Permits Chain Step Map
 
-`scripts/manifest.json` `chains.permits` is authoritative (29 steps post-Phase G).
+`scripts/manifest.json` `chains.permits` is authoritative (32 steps (per manifest — counts are DERIVED, not pinned)).
 
 | # | Slug | Agent | Notes |
 |---|------|-------|-------|
@@ -256,7 +256,7 @@ See `docs/runbook/pipeline_step_validation_walkthrough.md` for the canonical bri
 | Surface | Concrete checks | Mutation? |
 |---------|-----------------|-----------|
 | Lead Detail Inspector (Spec 76) | (a) Permit lead URL → 200 + populated envelope; (b) CoA lead → 200 + CoaClassificationPanel renders 12 sub-sections; (c) cross-stream timeline ordered `(transitioned_at ASC, id ASC)`; (d) no double-fetch on transitions | READ-ONLY |
-| Freshness Timeline (Spec 30 §2.3) | (a) Every of 29 permits + 15 CoA steps shows recent successful run; (b) verdict color matches `pipeline_runs.records_meta->'audit_table'->>'verdict'`; (c) no "stale" badges on this-session steps | READ-ONLY |
+| Freshness Timeline (Spec 30 §2.3) | (a) Every of 32 permits + 16 CoA steps (per manifest) shows recent successful run; (b) verdict color matches `pipeline_runs.records_meta->'audit_table'->>'verdict'`; (c) no "stale" badges on this-session steps | READ-ONLY |
 | Pipelines/Resync (Spec 86) | (a) Single-step trigger UI lists all manifest slugs; (b) trigger `assert_schema` (zero-write) → queues + completes; (c) new pipeline_runs row | One trigger — safest step |
 | Flight Center | (a) Feed lists ≥1 actionable lead; (b) lead has non-NULL `opportunity_score`, `predicted_start_date`, `cost_estimate`, `trade_slug`; (c) sort-by-score works | READ-ONLY |
 | Test Feed Tool | (a) Default fixture → 200 + valid JSON; (b) JSON includes `lead_id` in canonical form | READ-ONLY |
@@ -336,7 +336,7 @@ Findings live in `docs/reports/pipeline-validation/wf3-queue.md` with this 6-col
 - **Priority order:** CRIT → HIGH → MED → LOW. Within a tier, order by frequency (universal > 4/4 > 11/12 > 5/12 etc.).
 - **One finding per WF3 commit** (matches the project's per-finding cadence). Bundling is reserved for findings sharing a single root cause AND a single file.
 - **Adversarial review on both PLAN and IMPLEMENTATION** is the default for §7a-sourced WF3s (per user direction 2026-05-20): Gemini Pro + DeepSeek-R1 review the active task before authorization, and again on the diff before commit. Independent reviewer always runs in a worktree. This is stricter than the standard WF3 protocol in `feedback_review_protocol.md` because §7a findings are by definition things the existing test suite missed.
-- **Doc-only meta-items** (like Finding L itself) may skip the adversarial PLAN gate at user discretion — the §10 note in the active task should call this out so the user can override.
+- **Doc-only meta-items** (like Finding L itself) may skip the adversarial PLAN gate at user discretion — the §11 note in the active task should call this out so the user can override.
 
 ### §7a.6 When to invoke §7a
 
