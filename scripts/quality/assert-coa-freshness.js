@@ -113,7 +113,7 @@ pipeline.run('assert-coa-freshness', async (pool) => {
   const rows = [
     { metric: 'total_records', value: totalRecords, threshold: null, status: 'INFO' },
     { metric: 'last_ingestion', value: maxLastSeen ? new Date(maxLastSeen).toISOString().split('T')[0] : 'never', threshold: null, status: 'INFO' },
-    { metric: 'ingestion_days_ago', value: ingestionDaysAgo, threshold: `< ${freshnessDays} WARN / < ${freshnessFailDays} FAIL`, status: freshnessStatus },
+    { metric: 'ingestion_days_ago', value: ingestionDaysAgo, threshold: `>= ${freshnessDays}d WARN / >= ${freshnessFailDays}d FAIL — CKAN feed likely frozen; check the scraper`, status: freshnessStatus },
     { metric: 'max_decision_date', value: maxDecisionDate || 'none', threshold: null, status: 'INFO' },
     { metric: 'max_hearing_date', value: maxHearingDate || 'none', threshold: null, status: 'INFO' },
   ];
