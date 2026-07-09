@@ -34,8 +34,8 @@ describe('classify-permits.js — file existence', () => {
   });
 });
 
-describe('classify-permits.js — is_active always true (WF1: phase time-gate removed)', () => {
-  it('is_active is hardcoded to true in classifyPermit — never set from isTradeActiveInPhase result', () => {
+describe('classify-permits.js — is_active (WF1 time-gate removed; P13-3 bundle-prior demotion)', () => {
+  it('is_active is never set from isTradeActiveInPhase result (phase time-gate removed WF1)', () => {
     const content = src();
     // Must NOT assign is_active from the isActive variable inside classifyPermit
     expect(content).not.toMatch(/is_active\s*:\s*isActive/);
@@ -43,12 +43,29 @@ describe('classify-permits.js — is_active always true (WF1: phase time-gate re
     expect(content).not.toMatch(/is_active\s*:\s*isTradeActiveInPhase/);
   });
 
-  it('all four classification tiers set is_active: true', () => {
+  it('DIRECT classification tiers (tag/rule/fallback/realtor) stay is_active: true', () => {
     const content = src();
-    // Count occurrences of is_active: true in tradeMatch objects — must be >= 4
+    // The direct tag/rule/fallback/realtor emissions must remain active — at least 4
+    // is_active: true sites survive the P13-3 bundle-prior demotion.
     const matches = content.match(/is_active\s*:\s*true/g);
     expect(matches).toBeTruthy();
     expect((matches ?? []).length).toBeGreaterThanOrEqual(4);
+  });
+
+  // P13-3 regression lock: the archetype bundle-prior tier-2 emission is DEMOTED to
+  // is_active: false so bundle-only recall no longer inflates every forecast/score.
+  // The direct-hit guard (`merged.has(slug)` → continue) keeps direct matches active.
+  it('P13-3: the bundle-prior tier-2 emission sets is_active: false', () => {
+    const content = src();
+    // The bundle-prior tradeMatch is the block carrying `confidence: bundleConf`;
+    // its is_active must be false (the only false site in classifyPermit).
+    const bundleBlock = content.match(/tier:\s*2,[\s\S]{0,220}?confidence:\s*bundleConf,[\s\S]{0,900}?is_active:\s*(true|false)/);
+    expect(bundleBlock, 'bundle-prior tradeMatch block not found').toBeTruthy();
+    expect(bundleBlock?.[1], 'bundle-prior must be is_active: false (P13-3)').toBe('false');
+    // And the direct-hit dedup guard that keeps direct matches active is preserved.
+    expect(content).toMatch(/if\s*\(\s*merged\.has\(slug\)\s*\)\s*continue/);
+    // applyScopeLimit / NARROW_SCOPE_CODES gate stays wired (scope-limit preserved).
+    expect(content).toMatch(/applyScopeLimit\(/);
   });
 
   it('isTradeActiveInPhase function still exists — used by calculateLeadScore for +15 boost', () => {
@@ -65,18 +82,29 @@ describe('classify-permits.js — is_active always true (WF1: phase time-gate re
   });
 });
 
-describe('classifier.ts — dual code path mirrors is_active: true (§7.1)', () => {
+describe('classifier.ts — dual code path mirrors classify-permits.js (§7.1; P13-3)', () => {
   it('TS classifier does not set is_active from isTradeActiveInPhase result', () => {
     const content = tsSrc();
     expect(content).not.toMatch(/is_active\s*:\s*isActive\b/);
     expect(content).not.toMatch(/is_active\s*:\s*isTradeActiveInPhase/);
   });
 
-  it('TS classifier sets is_active: true at all trade match sites', () => {
+  it('TS classifier keeps DIRECT trade match sites is_active: true', () => {
     const content = tsSrc();
     const matches = content.match(/is_active\s*:\s*true/g);
     expect(matches).toBeTruthy();
     expect((matches ?? []).length).toBeGreaterThanOrEqual(4);
+  });
+
+  // P13-3 dual-path mirror lock: the TS bundle prior must match the JS (is_active: false).
+  it('P13-3: TS classifier bundle prior sets is_active: false (mirrors classify-permits.js)', () => {
+    const content = tsSrc();
+    const bundleBlock = content.match(/tier:\s*2,[\s\S]{0,80}?confidence:\s*bundleConf,[\s\S]{0,120}?is_active:\s*(true|false)/g);
+    expect(bundleBlock, 'TS bundle-prior blocks not found').toBeTruthy();
+    // Both bundle-prior sites (partial + merged.set) must be is_active: false.
+    for (const block of bundleBlock ?? []) {
+      expect(block, 'TS bundle prior must be is_active: false (P13-3)').toMatch(/is_active:\s*false/);
+    }
   });
 });
 

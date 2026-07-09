@@ -596,13 +596,16 @@ export function classifyPermit(
     if (merged.has(slug)) continue; // a direct hit already won (its confidence ≥ bundle-tier)
     const trade = getTradeBySlug(slug);
     if (!trade) continue;
+    // P13-3: bundle-prior emissions are DEMOTED to is_active=false (dual-path mirror of
+    // scripts/classify-permits.js). Bundle-only recall trades persist for vocab coverage
+    // but no longer inflate forecasts/scores; direct hits above win via merged.has(slug).
     const partial: Partial<TradeMatch> = {
       trade_id: trade.id,
       trade_slug: slug,
       trade_name: trade.name,
       tier: 2,
       confidence: bundleConf,
-      is_active: true,
+      is_active: false,
       phase,
     };
     merged.set(slug, {
@@ -613,7 +616,7 @@ export function classifyPermit(
       trade_name: trade.name,
       tier: 2,
       confidence: bundleConf,
-      is_active: true,
+      is_active: false,
       phase,
       lead_score: calculateLeadScore(permit, partial, phase),
     });

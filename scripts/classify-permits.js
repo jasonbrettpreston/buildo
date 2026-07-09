@@ -615,7 +615,13 @@ function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitCla
       trade_slug: slug,
       tier: 2,
       confidence: bundleConf,
-      is_active: true,
+      // P13-3: bundle-prior emissions are DEMOTED to is_active=false (the permit-side
+      // twin of P6.6's CoA `is_active = !fromBundle`). This loop only emits pure archetype
+      // bundle-prior trades — the `merged.has(slug)` guard above means any DIRECT tag/rule
+      // hit already won the slot and stays active. Bundle-only recall trades persist for
+      // vocab coverage (no is_active predicate on the trade_vocab dataFilter) but no longer
+      // inflate every forecast/score. applyScopeLimit/NARROW_SCOPE_CODES (below) unchanged.
+      is_active: false,
       phase,
     };
     tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
