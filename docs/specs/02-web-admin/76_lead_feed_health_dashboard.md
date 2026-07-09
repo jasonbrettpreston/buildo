@@ -173,6 +173,8 @@ The test-feed endpoint does NOT require a `user_profiles` entry — it construct
 
 ### 3.4 Flight Center Tool (NEW — Cycle 3 amendment 2026-05-06)
 
+> **SUPERSEDED by Spec 36 (Flight Center Tool) — 2026-07-09.** The Flight Center has been promoted to a standalone admin tool at `/admin/flight-center` with its own persistence (`admin_watchlist`, migration 215) and its own admin-guarded routes (`/api/admin/leads/watchlist**`). The `lead_views`-backed, `admin-test`-sentinel design documented in this §3.4 (and its four constraints — single-trade profile, auto-archive eviction, coa-rejecting save Zod, self-feed coupling) is retired; see Spec 36 §4 for the replacement contract. The nested page `/admin/lead-feed/flight-center` now `permanentRedirect`s to `/admin/flight-center`. This section is retained for historical context only.
+
 **Goal:** admin-side mirror of the mobile Flight Board UX (Spec 77 §3.2). Admins save permits to their own **admin-scoped flight board**, view it, and tap a card to open the Flight Job Detail Inspector (§3.6) inline — mirroring the mobile `[flight-job].tsx` navigation path 1:1.
 
 **Architectural decision: admin-scoped, NOT impersonation.**

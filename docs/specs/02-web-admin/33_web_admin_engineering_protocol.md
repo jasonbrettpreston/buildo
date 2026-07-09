@@ -157,6 +157,6 @@ Authority: **Spec 34 web-admin testing protocol** (sibling spec). Summary here:
 **Cross-spec dependencies:**
 - **Authoritative for:** all `src/app/admin/**`, `src/app/api/admin/**`, `src/components/admin/**`.
 - **Relies on:** Spec 34 (web-admin testing protocol), Spec 35 (web-admin state architecture). Spec 47 pipeline script protocol (for shared SQL discipline). Spec 30 App Health Dashboard (consumer of the observability mandates here).
-- **Consumed by:** Spec 21, 26, 30, 76, 86 (every web-admin feature spec must follow this protocol).
+- **Consumed by:** Spec 21, 26, 30, 36, 76, 86 (every web-admin feature spec must follow this protocol).
 
 **Amendment process:** changes to this spec require a doc-only WF2 commit cross-referencing the impact on consumer specs (21/26/30/76/86) so they can be updated in lockstep. Three documented incidents (paywallStore.clear/reset rename, FlashList v1/v2 transition, Spec 92 §4.4 60s window — all caught by the 2026-05-06 mobile-spec audit) traced to the protocol-vs-feature drift this amendment process prevents.
