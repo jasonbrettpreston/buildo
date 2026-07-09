@@ -386,6 +386,76 @@ Examples (real values from `trade_configurations` / Spec 85 `TRADE_TARGET_PHASE`
 
 ---
 
+## 5.C Trade Attachment — Current Rules & Archetypes [P14-A baseline; the P14-D decision will finalize]
+
+> **Status:** CURRENT-state snapshot (code truth, 2026-07-09), NOT the proposed model. §5.B.5 above
+> is the DESIGN table; this §5.C is the "before" the P14 redesign measures against — every archetype
+> × its code-accurate trade complement + every attachment/gate rule × firing condition × tier.
+> Full file:line + WHY: `docs/reports/pipeline-validation/2026-07-09-p14-trade-attachment-rule-inventory.md`.
+> Measured evaluation of the alternatives: `docs/reports/pipeline-validation/2026-07-09-p14-trade-attachment-evaluation.md`.
+> **P14-D will REPLACE this section with the finalized approach.**
+
+**Live classifier reality:** the trade classifier is the inline `TAG_TRADE_MATRIX` + archetype
+bundle prior — NOT the DB `trade_mapping_rules` (only 6 active tier-1 rows; tiers 2/3 inactive).
+
+### 5.C.1 Attachment rules (firing condition × tier × is_active)
+
+Order of operations in `classifyPermit` (`scripts/classify-permits.js:487-633`):
+
+| # | Rule | Fires when | Tier | is_active | Source |
+|---|---|---|---|---|---|
+| 1 | Tier-1 DB rules | `work` matches an active `trade_mapping_rules` row (6 live) | 1 | true | `:494-521` |
+| 2 | **Narrow-scope early-return** | `permit_num` code ∈ NARROW_SCOPE_CODES (PLB/HVA/DRN/PSA/FSU/DEM/STS/MSA/SHO/FND/TPS/PCL) | 1 | true | `:524-548` — **skips rules 3-5**; tier-1 hit → scope-limit, else code's allowed set @0.80 |
+| 3 | Tier-2 tag-trade matrix | `scope_tags` hits a matrix key (58 keys + 16 aliases) | 2 | true | `:550-576` — the primary EVIDENCE path |
+| 4 | Work-field fallback | rules 1+3 emitted 0 trades | 1 | true (`fromFallback`) | `:579-597` |
+| 5 | **Archetype bundle prior** | `deriveArchetypes(project_type, scope_tags)` ≠ [] | 2 | **FALSE (P13-3)** | `:600-629` @ bundle conf 0.55; `merged.has` guard keeps direct hits active |
+| 6 | applyScopeLimit | always (post-merge) | — filter | — | WORK_SCOPE_EXCLUSIONS subtract by `work` (`:414-432`) |
+| 7 | Class gate | always | — filter | — | `permit_type_class` allowlist (`:477-478`) |
+| 8 | Realtor append | class=construction ∧ permit_type∈REALTOR_RELEVANT_TYPES ∧ 'commercial'∉tags | 1 | true, conf 1.0 | trade 33 (`:447-467`) |
+
+CoA twin (`scripts/lib/coa-trade-classifier.js:292-306`): tag-matrix + bundle prior, `is_active =
+!fromBundle` (P6.6). No narrow-scope/work-fallback (CoAs carry no permit_num code / `work`).
+
+**Two distinct "type" signals:** `permit_num` code (NARROW_SCOPE_CODES, strongest gate,
+early-returns) vs `permit_type` string (`permit_type_class` mig 120, gates whole matrix + realtor).
+`structure_type` does NOT gate permit-side trades (only the cost path: `isLowRiseResidential` +
+laneway override in `mapToLines`).
+
+### 5.C.2 Archetype × trade complement (code truth, `archetypes.js:31-119`)
+
+`deriveArchetypes` unions the codes implied by `project_type` (new_build→FB, addition→ADD,
+renovation→INT, mechanical→MEC; demolition/repair/other→null, `repair`→[] early-return) and each
+`scope_tag` (`TAG_ARCHETYPE`). `bundleSlugsFor` unions the complements below (deprecated
+`temporary-fencing` never emitted).
+
+| code | # trades | trade complement |
+|---|--:|---|
+| **FB** full-build | 32 | excavation, shoring, concrete, structural-steel, framing, masonry, roofing, plumbing, hvac, electrical, fire-protection, insulation, drywall, painting, flooring, glazing, elevator, demolition, landscaping, waterproofing, trim-work, millwork-cabinetry, tiling, stone-countertops, eavestrough-siding, solar, security, caulking, drain-plumbing, overhead-doors, site-preparation, site-maintenance |
+| **LANE** laneway/garden | 32 | = FB complement |
+| **ADD** addition | 26 | site-preparation, excavation, shoring, concrete, structural-steel, framing, masonry, roofing, glazing, eavestrough-siding, plumbing, hvac, electrical, fire-protection, insulation, drywall, flooring, painting, trim-work, demolition, waterproofing, decking-fences, caulking, drain-plumbing, overhead-doors, site-maintenance |
+| **BAS** basement | 18 | site-preparation, excavation, shoring, concrete, waterproofing, framing, drain-plumbing, plumbing, hvac, electrical, insulation, drywall, tiling, flooring, painting, trim-work, demolition, site-maintenance |
+| **INT** interior-reno | 13 | demolition, framing, electrical, drywall, glazing, tiling, flooring, painting, trim-work, millwork-cabinetry, security, caulking, site-maintenance |
+| **GAR** garage/accessory | 12 | site-preparation, excavation, concrete, framing, masonry, roofing, glazing, electrical, eavestrough-siding, demolition, overhead-doors, site-maintenance |
+| **BTH** bathroom-reno | 11 | plumbing, electrical, drywall, tiling, flooring, painting, trim-work, millwork-cabinetry, stone-countertops, caulking, site-maintenance |
+| **KIT** kitchen-reno | 10 | plumbing, electrical, drywall, tiling, flooring, painting, trim-work, millwork-cabinetry, stone-countertops, site-maintenance |
+| **SITE** site-landscape | 9 | site-preparation, excavation, concrete, framing, drain-plumbing, landscaping, decking-fences, pool-installation, overhead-doors |
+| **ENV** envelope | 7 | masonry, roofing, glazing, insulation, eavestrough-siding, solar, caulking |
+| **MEC** mechanical | 6 | plumbing, hvac, electrical, fire-protection, security, drain-plumbing |
+
+### 5.C.3 Measured consequence (the redesign's motivation)
+
+- Post-P13-3 the bundle prior is `is_active=false`, so **13 trades have 0 active leads corpus-wide**
+  (bundle-only, never emitted by the live JS matrix): caulking, decking-fences, eavestrough-siding,
+  millwork-cabinetry, overhead-doors, pool-installation, security, site-maintenance, site-preparation,
+  solar, stone-countertops, tiling, trim-work.
+- On the 122-permit inspection ground-truth corpus (PARTIAL — deep_scrapes paused): evidence-only
+  recall 38.2% / prec(insp) 65.8%; pre-P13-3 recall 62.6% / prec 37.8%; the **scope-mapped UNION of
+  full archetype complements does NOT beat the baseline** (recall 54.9%, prec 31.2%) because each
+  cost-line's complement IS the coarse bundle above. The lever is bundle LEANNESS, not selection.
+  See the evaluation report for the per-stratum + marginal-archetype-curve detail.
+
+---
+
 <testing>
 ## 6. Testing Mandate
 - **Logic:** `classification.logic.test.ts` (trade completeness, slug-to-ID mapping, tier routing)
