@@ -224,12 +224,14 @@ The engine joins with `permit_trades`. If a trade was not identified during clas
 #### Step D: The "Liar's Gate" Validation
 Final audit against city `est_const_cost`:
 * **Zero-Total Bypass (CRITICAL)**: If `Surgical_Total === 0` (e.g., no active trades found), immediately return `$0` for all trades and set `cost_source: 'none'`. Do NOT attempt proportional slicing.
-* **Default**: If Reported <= $1,000, use Surgical Total exclusively.
+* **Default**: If Reported <= $1,000 (lower placeholder floor `PLACEHOLDER_COST_THRESHOLD`) **OR Reported >= `permit_declared_cost_ceiling` ($500M upper sentinel, WF2 P13-2)**, use Surgical Total exclusively. The **upper sentinel** mirrors the lower placeholder floor: an implausibly-high declared cost (e.g. the exact-$1e9 round-number filings on 38–39 storey towers) is a placeholder, not a real bid, so the model takes over rather than passing the sentinel through as a trusted `cost_source='permit'`. (Before P13-2 the Gate was lower-guard-only.)
 * **Override**: If Reported < (Surgical_Total * 0.25), use Surgical Total. Set `is_geometric_override = TRUE`.
 * **Trust (Proportional Slicing)**: If Reported > (Surgical_Total * 0.25), use our $/sqft rates to determine Relative Weight:
   * **Benchmark**: Calculate what each trade should cost via Surgical model.
   * **Weight**: Calculate % each trade contributes to our theoretical total.
   * **Slice**: Apply those % weights to the city's reported total.
+
+**Legacy magnitude clamp (WF2 P13-1 / P13-2).** After the ladder + Steps A–D resolve, a **legacy** row (`cost_source IN ('model','permit')`) whose `estimated_cost` exceeds `cost_est_legacy_cost_ceiling_cad` ($50M) OR whose `modeled_gfa_sqm` exceeds `cost_est_legacy_gfa_ceiling_sqm` (50,000 m²) is **nulled** (`estimated_cost/cost_tier/cost_range_* → NULL`, `cost_source` preserved) and counted in `legacy_bound_exceeded`. This is the honest *"we cannot price this"* outcome for rows priced on **mislinked whole-campus / whole-block massing GFA** — e.g. Sunnybrook's 792K m² campus footprint attributed to an elevator-cab permit → ~$985M, or 264K–303K m² block massing on a single condo revision. It is **NOT a cap** (a cap would leave a wrong number at $50M): the mislinked GFA input is untrustworthy, so the derived cost is discarded. Archetype (lot-validated) sources are **exempt** — the archetype caps already bound them. The clamp is durable (runs every compute); `assert-data-bounds` carries the residual WARN gate (`cost_estimate_over_ceiling` / `modeled_gfa_over_ceiling`) with an accepted-by-id exception list for genuine large multi-unit developments. Fixing the underlying massing mislinks is tracked as a separate follow-up (out of the cost-model scope).
 
 ##### The three `cost_source = 'none'` paths (WF3 Pass-2.5 Finding E re-characterization, 2026-05-21)
 

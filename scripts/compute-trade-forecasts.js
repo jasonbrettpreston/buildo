@@ -1290,6 +1290,24 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
     'SELECT calibration_method, COUNT(*)::int AS n FROM trade_forecasts GROUP BY 1',
   );
   const calibrationDistribution = Object.fromEntries(calDist.map((r) => [r.calibration_method, r.n]));
+
+  // P13-5: per-urgency synthetic-share provenance. The in-bounds urgency shape is
+  // manufactured while calibration is cold (most rows on the level-5 default prior), so
+  // each urgency bucket carries WHAT % of its rows sit on that default — the numbers
+  // arrive with their honesty. INFO only (visibility; the real de-synthesizer is the
+  // calibration-history backfill, RC5/D2c). Grouped in ONE scan.
+  const { rows: urgSynRows } = await pool.query(
+    `SELECT urgency,
+            COUNT(*) FILTER (WHERE calibration_method = 'default')::int AS syn,
+            COUNT(*)::int AS n
+       FROM trade_forecasts GROUP BY urgency ORDER BY urgency`,
+  );
+  const urgencySyntheticRows = urgSynRows.map((r) => ({
+    metric: `synthetic_share_${r.urgency}`,
+    value: (r.n > 0 ? (100 * r.syn / r.n) : 0).toFixed(1) + '%',
+    threshold: `${r.syn}/${r.n} on default calibration (provenance, not a gate)`,
+    status: 'INFO',
+  }));
   // Avoid div-by-zero on an empty table (e.g., fresh environment)
   const totalForecasts = postRowCount > 0 ? postRowCount : 1;
   const defaultPct = ((calibrationDistribution.default ?? 0) / totalForecasts) * 100;
@@ -1445,6 +1463,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       threshold: `> ${(100 - STRICT_CALIB_WARN_PCT)}% ⇒ default_calibration_pct < ${STRICT_CALIB_WARN_PCT}% (strict-PASS): restore strict warn/fail thresholds`,
       status: 'INFO',
     },
+    // P13-5: per-urgency synthetic-share provenance (the urgency shape's honesty).
+    ...urgencySyntheticRows,
     {
       metric: 'expired_urgency_pct',
       value: expiredPct.toFixed(1) + '%',

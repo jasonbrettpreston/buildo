@@ -24,6 +24,15 @@ describe('scripts/compute-trade-forecasts.js — script shape', () => {
     expect(content).toMatch(/require\(['"]\.\/lib\/lifecycle-phase['"]\)/);
   });
 
+  // P13-5: per-urgency synthetic-share provenance rows — each urgency bucket carries
+  // the % of its rows on the level-5 default prior (INFO; the urgency shape's honesty).
+  it('P13-5: emits per-urgency synthetic_share provenance INFO rows', () => {
+    // grouped by urgency + calibration_method='default' in one scan
+    expect(content).toMatch(/FILTER \(WHERE calibration_method = 'default'\)/);
+    expect(content).toMatch(/synthetic_share_\$\{r\.urgency\}/);
+    expect(content).toMatch(/\.\.\.urgencySyntheticRows/);
+  });
+
   it('loads calibration data into a nested Map', () => {
     expect(content).toMatch(/calMap/);
     expect(content).toMatch(/new Map\(\)/);

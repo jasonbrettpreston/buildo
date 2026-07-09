@@ -582,6 +582,31 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
       );
     }
 
+    // ─── P13-6: bid_value coverage (honest INFO) ──────────────────────
+    // bid_value is a universal_stream_catalog 0–1 lead-value weight keyed on
+    // (source:status). classify-lifecycle-phase writes it for CoA (100%) but the
+    // PERMITS classification path never maps it (0%), even though the catalog carries
+    // bid_values for 30 of 53 permit statuses. So permits.bid_value is a POPULATE GAP,
+    // not by-design absence. INFO row surfaces the coverage; the populate decision is
+    // filed as a follow-up (wiring the permits UPDATE to map catalog bid_value is more
+    // than a one-liner — array plumbing + the IS-DISTINCT-FROM UPSERT guard).
+    const { rows: bidCovRows } = await pool.query(
+      `SELECT
+         (SELECT COUNT(*)::int FROM permits) AS p_total,
+         (SELECT COUNT(bid_value)::int FROM permits) AS p_cov,
+         (SELECT COUNT(*)::int FROM coa_applications) AS c_total,
+         (SELECT COUNT(bid_value)::int FROM coa_applications) AS c_cov`,
+    );
+    const bc = bidCovRows[0];
+    const pPct = bc.p_total > 0 ? (100 * bc.p_cov / bc.p_total) : 0;
+    const cPct = bc.c_total > 0 ? (100 * bc.c_cov / bc.c_total) : 0;
+    auditRows.push({
+      metric: 'bid_value_coverage',
+      value: `permits ${pPct.toFixed(1)}% / coa ${cPct.toFixed(1)}%`,
+      threshold: 'INFO — permits bid_value is an unwired populate gap (catalog has 30/53 permit-status bid_values); coa fully mapped. Follow-up filed.',
+      status: 'INFO',
+    });
+
     // ─── Cross-status checks (preserved) ─────────────────────────────
     const { rows: crossCheck1 } = await pool.query(
       `SELECT COUNT(*)::int AS n FROM permits
