@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (403) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (406) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (3) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **406** logic variables (403 numeric, 3 JSONB).
+Total: **409** logic variables (406 numeric, 3 JSONB).
 
 ---
 
@@ -66,6 +66,8 @@ Total: **406** logic variables (403 numeric, 3 JSONB).
 | `cost_coverage_pass_pct` | numeric | 55 | 0 – 100 | `scripts/quality/assert-global-coverage.js` | seed | WF3 F4: assert-global-coverage Step-14 cost_estimates rows PASS floor. Whole-corpus cost coverage is ~62% BY DESIGN under the archetype+safe-skip model (non-residential T4 matrix-miss safe-skip, fit-blocked permissioning, MEC-only nofit are legitimately NULL) — the global 90% bar was inherited indiscriminately and was already red pre-WF2 (40%). Scoped recalibration of these ~6 non-halting observability rows only; global 90/70 untouched (don't blind other row-quality checks). 55 leaves ~7pt headroom over measured 61.8% while still FAILing on a genuine collapse. |
 | `cost_coverage_warn_pct` | numeric | 50 | 0 – 100 | `scripts/quality/assert-global-coverage.js` | seed | WF3 F4: assert-global-coverage Step-14 cost_estimates rows WARN floor (below -> FAIL). Pairs with cost_coverage_pass_pct. |
 | `cost_escalation_index` | numeric | 100.0 | — (migration-seeded) | — | migration 205 | Spec 88 §2.9: StatCan BCPI Toronto CMA index (current). escalation = MAX(1, index/base). Manually updated quarterly; its row updated_at is the index staleness clock. |
+| `cost_est_legacy_cost_ceiling_cad` | numeric | 50000000 | 1000000 – 2000000000 | `scripts/quality/assert-data-bounds.js` | seed | P13-1/P13-2: magnitude ceiling (CAD) on cost_estimates.estimated_cost for the LEGACY geometric/permit-passthrough sources (cost_source IN ('model','permit')). Above this a legacy row is treated as implausible (the mislinked-massing tail: whole-campus/whole-block GFA attributed to a single permit — e.g. Sunnybrook 792K m² on an elevator-cab permit). compute-cost-estimates nulls estimated_cost (keeps cost_source) via the durable clamp; assert-data-bounds WARNs on any residual not in the accepted-by-id list. Archetype (lot-validated) sources are exempt — the archetype caps already bound them. |
+| `cost_est_legacy_gfa_ceiling_sqm` | numeric | 50000 | 10000 – 5000000 | `scripts/quality/assert-data-bounds.js` | seed | P13-1/P13-2: magnitude ceiling (m²) on cost_estimates.modeled_gfa_sqm for LEGACY sources. A single permit modeling >50,000 m² GFA is almost always mislinked whole-block/campus massing (max observed 1.89M m²). Rows breaching this are nulled by the compute clamp; assert-data-bounds WARNs on residual priced rows (estimated_cost IS NOT NULL) above it. |
 | `cost_est_min_tiers` | numeric | 2 | 1 – 20 | `scripts/quality/assert-data-bounds.js` | seed | Minimum number of distinct cost_tier values expected in cost_estimates; fewer triggers a data-quality warning |
 | `cost_est_null_rate_warn_pct` | numeric | 80 | 1 – 100 | `scripts/quality/assert-data-bounds.js` | seed | Maximum acceptable percentage of NULL estimated_cost rows in cost_estimates before a data-quality warning is emitted |
 | `cost_index_stale_months` | numeric | 4 | — (migration-seeded) | — | migration 205 | Spec 88 §2.9: WARN when the cost_escalation_index row's updated_at is older than this (months). |
@@ -386,6 +388,7 @@ Total: **406** logic variables (403 numeric, 3 JSONB).
 | `mislink_footprint_lot_tol` | numeric | 0.05 | 0 – 1 | `scripts/enrich-parcels.js` | seed | Spec 65 §5 (WF3-A) — mislink guard tolerance: existing_footprint > lot_size_sqm × (1 + this) means the WRONG building was linked (block/neighbour attribution); the whole existing structure is NULLed + existing_data_quality_flag='footprint_exceeds_lot'. CONSUMED by enrich-parcels.js. Operator-tunable. |
 | `model_range_pct` | numeric | 0.20 | — (migration-seeded) | — | migration 156 | CoA geometric cost-model range as a fraction (Spec 83 §3.A). The cost estimate ±range produces the displayed low/high envelope. Default 0.20 = ±20%. Operator-tunable via Spec 86 Control Panel. |
 | `pending_closed_grace_days` | numeric | 30 | 1 – 365 | `scripts/close-stale-permits.js` | seed | Days a permit must remain in Pending Closed status before being promoted to Closed |
+| `permit_declared_cost_ceiling` | numeric | 500000000 | 10000000 – 2000000000 | — | seed | P13-2: upper-sentinel ceiling (CAD) on a permit's declared est_const_cost in the Liar's Gate. A declared cost above this is treated as a placeholder (the mirror of PLACEHOLDER_COST_THRESHOLD's lower guard — e.g. the exact-$1e9 round-number filings on 38-39 storey towers) and the geometric model takes over instead of passing the sentinel through as cost_source='permit'. Seeded at $500M: above the largest plausible single-permit declared build, below the $1e9 placeholder band. |
 | `permits_bylaw_max_coverage_null_warn_pct` | numeric | 72 | 0 – 100 | — | seed | WF2 P6.5 — enrich-permits bylaw_max_coverage NULL-rate WARN floor (density zones regulate by FSI-not-coverage). Baseline 66.3+5.75; WARN-above-baseline, never FAIL. |
 | `permits_bylaw_max_fsi_null_warn_pct` | numeric | 88 | 0 – 100 | — | seed | WF2 P6.5 — enrich-permits bylaw_max_fsi NULL-rate WARN floor. Nulls are ~100% STRUCTURAL (residential zones regulate by coverage-not-FSI) so this WARNs only above baseline+margin (83.0+5); never FAIL. |
 | `phase_b_revision_num_max_length` | numeric | 2 | — (migration-seeded) | — | migration 136 | Phase B preflight — MAX(LENGTH(revision_num)) on permits; surface for review if exceeded |
@@ -428,4 +431,4 @@ Total: **406** logic variables (403 numeric, 3 JSONB).
 
 ---
 
-*Generated from 392 seed vars + 14 migration-only vars + 99 consumer-mapped keys across 2 script dirs.*
+*Generated from 395 seed vars + 14 migration-only vars + 101 consumer-mapped keys across 2 script dirs.*

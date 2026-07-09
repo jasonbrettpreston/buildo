@@ -73,6 +73,12 @@ const COST_MODEL_CONFIG_SCHEMA = z.object({
   // (per-dataset coverage trust gate not yet implemented in the Brain).
   // Remains seeded in logic_variables.json and ZERO_IS_INVALID for future use.
   liar_gate_threshold:            z.coerce.number().positive().max(1),
+  // P13-2 upper sentinel + P13-1/P13-2 legacy magnitude ceilings (Spec 83). Validated
+  // at startup so a missing/out-of-range value fails fast instead of silently disabling
+  // the placeholder guard / clamp.
+  permit_declared_cost_ceiling:     z.coerce.number().finite().positive(),
+  cost_est_legacy_cost_ceiling_cad: z.coerce.number().finite().positive(),
+  cost_est_legacy_gfa_ceiling_sqm:  z.coerce.number().finite().positive(),
   cost_model_coverage_warn_pct:   z.coerce.number().finite().positive(),
   // WF1 Spec 83 §3.A — externalized OB-2/OB-3a/OB-3b thresholds. Validated at
   // startup so a missing or out-of-range Spec 86 Control Panel value fails
@@ -383,6 +389,8 @@ if (require.main === module) {
       urbanCoverageRatio:    logicVars.urban_coverage_ratio,
       suburbanCoverageRatio: logicVars.suburban_coverage_ratio,
       liarGateThreshold:     logicVars.liar_gate_threshold,
+      // P13-2 upper sentinel threaded into the Liar's Gate (Step D).
+      permitDeclaredCostCeiling: Number(logicVars.permit_declared_cost_ceiling),
       // §3-ARCHETYPE (WF2 2026-07-06) — the T1–T3 ladder ahead of Steps A–D.
       // Zod-validated above; Number() coercion here because logic_variables
       // values arrive as text.
@@ -438,6 +446,16 @@ if (require.main === module) {
     let archetypeUnpriceableT4 = 0;  // mapped but no scalar + no own area → T4
     let t4NonResidential = 0;        // outside the low-rise gate → T4 (mapper never called)
     let t4Processed = 0;             // all rows priced by the legacy Steps A–D
+    let legacyBoundExceeded = 0;     // P13-2 — legacy rows nulled by the magnitude clamp
+
+    // P13-1/P13-2 durable magnitude clamp: a LEGACY (model/permit) row whose
+    // estimated_cost or modeled_gfa_sqm breaches the ceiling is priced on
+    // mislinked/whole-campus massing GFA — the honest outcome is "we cannot price
+    // this", so estimated_cost is nulled (cost_source is kept, recording that the
+    // legacy path was tried). Archetype (lot-validated) sources are exempt. Runs
+    // every compute, so a one-off DB null can't be re-inflated on the next run.
+    const legacyCostCeiling = Number(logicVars.cost_est_legacy_cost_ceiling_cad);
+    const legacyGfaCeiling  = Number(logicVars.cost_est_legacy_gfa_ceiling_sqm);
 
     try {
       const sourceSQL = rowLimit ? `${SOURCE_SQL} LIMIT ${rowLimit}` : SOURCE_SQL;
@@ -464,6 +482,20 @@ if (require.main === module) {
         // short-circuited BEFORE pricing, producing an all-zero (meaningless)
         // audit — it could not serve as a shadow of the archetype ladder.
         const estimate = estimateCostShared(row, config);
+
+        // P13-1/P13-2 magnitude clamp (durable — see the counter declaration above).
+        const isLegacySource = estimate.cost_source === 'model' || estimate.cost_source === 'permit';
+        if (isLegacySource && estimate.estimated_cost != null
+            && (estimate.estimated_cost > legacyCostCeiling
+                || (estimate.modeled_gfa_sqm != null && estimate.modeled_gfa_sqm > legacyGfaCeiling))) {
+          estimate.estimated_cost   = null;
+          estimate.cost_tier        = null;
+          estimate.cost_range_low   = null;
+          estimate.cost_range_high  = null;
+          estimate._boundExceeded   = true;
+          legacyBoundExceeded++;
+        }
+
         if (!dryRun) batchByLeadId.set(getBatchLeadId(estimate), estimate);
 
         if (estimate.estimated_cost == null) nullEstimates++;
@@ -753,6 +785,10 @@ if (require.main === module) {
       { metric: 'archetype_tradeless_count',    value: archetypeTradeless,      threshold: null, status: 'INFO' },
       { metric: 'archetype_unpriceable_t4',     value: archetypeUnpriceableT4,  threshold: null, status: 'INFO' },
       { metric: 't4_nonresidential_count',      value: t4NonResidential,        threshold: null, status: 'INFO' },
+      // P13-2 — legacy (model/permit) rows nulled by the magnitude clamp because their
+      // cost/GFA rode mislinked whole-campus massing. INFO (an honest 'cannot price'
+      // outcome, not a run failure); assert-data-bounds carries the residual WARN gate.
+      { metric: 'legacy_bound_exceeded',        value: legacyBoundExceeded,     threshold: null, status: 'INFO' },
       nofitRow,
       ...declaredRatioRows,
     ];

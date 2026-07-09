@@ -27,7 +27,21 @@ const LOGIC_VARS_SCHEMA = z.object({
   cost_est_min_tiers:              z.coerce.number().finite().positive().int(),
   calibration_freshness_warn_hours: z.coerce.number().finite().positive(),
   coa_forward_link_sub085_warn_pct: z.coerce.number().finite().positive(),
+  cost_est_legacy_cost_ceiling_cad: z.coerce.number().finite().positive(),
+  cost_est_legacy_gfa_ceiling_sqm:  z.coerce.number().finite().positive(),
 }).passthrough();
+
+// P13-1: magnitude-gate accepted-by-id exception list (ported from the P12-A2
+// convention in parcel-sanity-audit.js — the `<> ALL(ARRAY[...])` predicate, keyed
+// on permit_num here). These 3 permit_nums are GENUINE large multi-unit developments
+// whose model/rate cost legitimately exceeds the $50M ceiling (investigated 2026-07-09,
+// all cost_source='archetype_rate', the lot-validated ladder — not the mislinked-massing
+// tail): '04 202812 BLD' 8-block/222-unit rowhousing $104M; '07 129713 BLD' 187 stacked
+// townhomes $99.9M; '06 196930 BLD' 72 stacked townhomes $53.4M. The gate reads 0 for
+// these; a NEW permit crossing the ceiling flags distinctly (WARN) as a mislink/poison
+// regression signal. The legacy (model/permit) tail is nulled by compute's clamp — after
+// that runs, only accepted rows remain > ceiling.
+const COST_MAG_ACCEPT = ['04 202812 BLD', '07 129713 BLD', '06 196930 BLD'];
 
 const SLUG = 'assert_data_bounds';
 const ADVISORY_LOCK_ID = 103;
@@ -56,6 +70,8 @@ pipeline.run('assert-data-bounds', async (pool) => {
   const costEstMinTiers       = logicVars.cost_est_min_tiers;
   const calibFreshnessHours   = logicVars.calibration_freshness_warn_hours;
   const coaSub085WarnPct      = logicVars.coa_forward_link_sub085_warn_pct;
+  const legacyCostCeiling     = logicVars.cost_est_legacy_cost_ceiling_cad;
+  const legacyGfaCeiling      = logicVars.cost_est_legacy_gfa_ceiling_sqm;
 
   const startMs = Date.now();
   let runId = null;
@@ -832,6 +848,52 @@ pipeline.run('assert-data-bounds', async (pool) => {
           if (tierCount < costEstMinTiers) {
             warnings.push(`cost_estimates has only ${tierCount} distinct tier(s) — expected >= ${costEstMinTiers}`);
             console.warn(`  WARN: Only ${tierCount} distinct cost tier(s)`);
+          }
+
+          // P13-1: magnitude gates on estimated_cost + modeled_gfa_sqm. The dominant
+          // tail is legacy geometric-model rows on MISLINKED whole-campus/whole-block
+          // massing GFA (e.g. Sunnybrook 792K m² attributed to an elevator-cab permit,
+          // priced ~$985M). compute-cost-estimates nulls these via the durable clamp;
+          // these rows catch any RESIDUAL (pre-clamp-run) or NEW breach not in the
+          // accepted-by-id list. Cost gate = all sources minus accepted; GFA gate scoped
+          // to estimated_cost IS NOT NULL so a nulled legacy row drops out (its corrupt
+          // modeled_gfa is a defunct diagnostic once we've declared 'cannot price').
+          const acceptClause = `permit_num <> ALL($1::text[])`;
+          const costMagRes = await pool.query(
+            `SELECT COUNT(*)::int AS n FROM cost_estimates
+              WHERE estimated_cost > ${Number(legacyCostCeiling)} AND ${acceptClause}`,
+            [COST_MAG_ACCEPT],
+          );
+          const costMagCount = costMagRes.rows[0].n;
+          const gfaMagRes = await pool.query(
+            `SELECT COUNT(*)::int AS n FROM cost_estimates
+              WHERE modeled_gfa_sqm > ${Number(legacyGfaCeiling)}
+                AND estimated_cost IS NOT NULL AND ${acceptClause}`,
+            [COST_MAG_ACCEPT],
+          );
+          const gfaMagCount = gfaMagRes.rows[0].n;
+          if (permitsAuditTable) {
+            const costStatus = costMagCount > 0 ? 'WARN' : 'PASS';
+            const gfaStatus  = gfaMagCount  > 0 ? 'WARN' : 'PASS';
+            permitsAuditTable.rows.push(
+              { metric: 'cost_estimate_over_ceiling', value: costMagCount,
+                threshold: `== 0 (> $${(Number(legacyCostCeiling) / 1e6).toFixed(0)}M, ${COST_MAG_ACCEPT.length} accepted)`,
+                status: costStatus },
+              { metric: 'modeled_gfa_over_ceiling', value: gfaMagCount,
+                threshold: `== 0 (priced, > ${(Number(legacyGfaCeiling) / 1000).toFixed(0)}K m²)`,
+                status: gfaStatus },
+            );
+            if ((costMagCount > 0 || gfaMagCount > 0) && permitsAuditTable.verdict === 'PASS') {
+              permitsAuditTable.verdict = 'WARN';
+            }
+          }
+          if (costMagCount > 0) {
+            warnings.push(`${costMagCount} cost_estimates over the $${(Number(legacyCostCeiling) / 1e6).toFixed(0)}M magnitude ceiling (unaccepted)`);
+            console.warn(`  WARN: ${costMagCount} cost_estimates > $${(Number(legacyCostCeiling) / 1e6).toFixed(0)}M (legacy mislinked-massing tail — clamp nulls these)`);
+          }
+          if (gfaMagCount > 0) {
+            warnings.push(`${gfaMagCount} priced cost_estimates with modeled_gfa_sqm > ${(Number(legacyGfaCeiling) / 1000).toFixed(0)}K m²`);
+            console.warn(`  WARN: ${gfaMagCount} priced rows with implausible modeled GFA`);
           }
         }
       } catch (ceErr) {

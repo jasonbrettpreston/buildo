@@ -504,6 +504,30 @@ describe('applyLiarsGate', () => {
     expect(keys).toContain('plumbing');
     expect(keys).toContain('electrical');
   });
+
+  // P13-2 upper-sentinel guard — a declared cost above permit_declared_cost_ceiling is
+  // a placeholder (e.g. the exact-$1e9 round-number filings), so the model takes over
+  // rather than passing the sentinel through as a trusted cost_source='permit'.
+  it('P13-2: reported ≥ upper sentinel → model path (placeholder), not permit passthrough', () => {
+    const ceiling = 500_000_000;
+    const result = applyLiarsGate(1_000_000_000, surgicalTotal, tradeVals, threshold, false, ceiling);
+    expect(result.cost_source).toBe('model');
+    expect(result.estimated_cost).toBe(Math.round(surgicalTotal));
+    expect(result.is_geometric_override).toBe(false); // Branch 2, not the Liar's-Gate override
+  });
+
+  it('P13-2: reported below the upper sentinel still trusts the permit cost', () => {
+    // 30000 < ceiling and ≥ surgical × threshold → Branch 4 (trust) unchanged
+    const result = applyLiarsGate(30000, surgicalTotal, tradeVals, threshold, false, 500_000_000);
+    expect(result.cost_source).toBe('permit');
+    expect(result.estimated_cost).toBe(30000);
+  });
+
+  it('P13-2: default Infinity ceiling preserves legacy passthrough (no regression)', () => {
+    const result = applyLiarsGate(1_000_000_000, surgicalTotal, tradeVals, threshold, false);
+    expect(result.cost_source).toBe('permit');
+    expect(result.estimated_cost).toBe(1_000_000_000);
+  });
 });
 
 // ---------------------------------------------------------------------------

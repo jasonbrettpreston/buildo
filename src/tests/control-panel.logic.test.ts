@@ -101,6 +101,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'builder_null_rate_warn_pct',
   'cost_est_null_rate_warn_pct',
   'cost_est_min_tiers',
+  'cost_est_legacy_cost_ceiling_cad', // WF2 P13-1/P13-2 — legacy cost magnitude ceiling
+  'cost_est_legacy_gfa_ceiling_sqm',  // WF2 P13-1/P13-2 — legacy modeled-GFA magnitude ceiling
+  'permit_declared_cost_ceiling',     // WF2 P13-2 — Liar's-Gate upper sentinel
   'calibration_freshness_warn_hours',
   'coa_forward_link_sub085_warn_pct', // WF2 P12-B2 — CoA forward-link sub-0.85 identity-floor share watch
   'lifecycle_unclassified_max',

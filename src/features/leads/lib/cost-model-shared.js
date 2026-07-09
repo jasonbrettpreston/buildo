@@ -62,6 +62,8 @@
  * @property {number} [trustThresholdPct]       — logic_variables.trust_threshold_pct
  *   (reserved for Spec 83 Phase 2 coverage trust gate — not yet consumed by any Brain function)
  * @property {number} liarGateThreshold        — logic_variables.liar_gate_threshold
+ * @property {number} [permitDeclaredCostCeiling] — logic_variables.permit_declared_cost_ceiling
+ *   (P13-2 upper sentinel; Infinity/absent disables the guard)
  * @property {Array<{min:number,max:number|null,multiplier:number}>} premiumTiers
  *   — income → neighbourhood premium multiplier table
  */
@@ -357,7 +359,11 @@ function computeSurgicalTotal(row, areaEff, isShell, premium, config) {
  *
  * Branching (evaluated in order):
  *  1. Zero-Total Bypass: if surgicalTotal === 0 → cost_source='none', estimated_cost=null.
- *  2. Default: if est_const_cost is null or ≤ PLACEHOLDER_COST_THRESHOLD → cost_source='model'.
+ *  2. Default: if est_const_cost is null, ≤ PLACEHOLDER_COST_THRESHOLD, OR ≥ the upper
+ *     sentinel (permitDeclaredCostCeiling) → cost_source='model'. The upper guard mirrors
+ *     the lower placeholder floor: a declared cost above the ceiling (e.g. the exact-$1e9
+ *     round-number filings) is a placeholder, so the model takes over rather than passing
+ *     the sentinel through as a trusted permit cost (P13-2).
  *  3. Override: if est_const_cost < surgicalTotal × threshold → cost_source='model', override=true.
  *  4. Trust (Proportional Slicing): otherwise → cost_source='permit', slice relatively.
  *
@@ -368,6 +374,7 @@ function computeSurgicalTotal(row, areaEff, isShell, premium, config) {
  * @param {Record<string,number>}     tradeValues      — per-trade surgical values
  * @param {number}                    liarGateThreshold
  * @param {boolean}                   usedFallback
+ * @param {number}                    [permitDeclaredCostCeiling]  — P13-2 upper sentinel; Infinity disables
  * @returns {{
  *   estimated_cost: number|null,
  *   cost_source: 'permit'|'model'|'none',
@@ -377,7 +384,7 @@ function computeSurgicalTotal(row, areaEff, isShell, premium, config) {
  *   zeroTotalBypass: boolean,
  * }}
  */
-function applyLiarsGate(reportedCost, surgicalTotal, tradeValues, liarGateThreshold, usedFallback) {
+function applyLiarsGate(reportedCost, surgicalTotal, tradeValues, liarGateThreshold, usedFallback, permitDeclaredCostCeiling = Infinity) {
   // Branch 1: Zero-Total Bypass (CRITICAL — spec 83 §3 Step D)
   if (surgicalTotal === 0) {
     return {
@@ -392,9 +399,14 @@ function applyLiarsGate(reportedCost, surgicalTotal, tradeValues, liarGateThresh
 
   // Float Guard: surgicalTotal is now guaranteed > 0
   const threshold = Number.isFinite(liarGateThreshold) ? liarGateThreshold : 0.25;
+  // P13-2 upper sentinel: an implausibly-high declared cost (e.g. the exact-$1e9
+  // round-number filings) is a placeholder, not a real bid. Default Infinity keeps
+  // legacy callers unchanged; the pipeline threads permit_declared_cost_ceiling.
+  const upperSentinel = Number.isFinite(permitDeclaredCostCeiling) ? permitDeclaredCostCeiling : Infinity;
 
-  // Branch 2: Default — reported cost is absent or below placeholder
-  if (reportedCost === null || !Number.isFinite(reportedCost) || reportedCost <= PLACEHOLDER_COST_THRESHOLD) {
+  // Branch 2: Default — reported cost is absent, below placeholder, or above the upper sentinel
+  if (reportedCost === null || !Number.isFinite(reportedCost)
+      || reportedCost <= PLACEHOLDER_COST_THRESHOLD || reportedCost >= upperSentinel) {
     return {
       estimated_cost: Math.round(surgicalTotal),
       cost_source: 'model',
@@ -899,7 +911,9 @@ function estimateCostShared(row, config) {
 
   // ── Step D: Liar's Gate ─────────────────────────────────────────────────
   const liarThreshold = config ? config.liarGateThreshold : 0.25;
-  const gate = applyLiarsGate(rawCost, surgicalTotal, tradeValues, liarThreshold, usedFallback);
+  const permitDeclaredCostCeiling = (config && Number.isFinite(config.permitDeclaredCostCeiling))
+    ? config.permitDeclaredCostCeiling : Infinity;
+  const gate = applyLiarsGate(rawCost, surgicalTotal, tradeValues, liarThreshold, usedFallback, permitDeclaredCostCeiling);
 
   // ── Complexity + Tier ───────────────────────────────────────────────────
   const complexity = computeComplexityScore(row);
