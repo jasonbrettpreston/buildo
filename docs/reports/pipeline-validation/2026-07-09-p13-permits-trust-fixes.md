@@ -170,3 +170,6 @@ conditioned on `permit_type`** — a trade-specific permit's bundle should be it
 building's archetype. Inspection ground-truth for these permit_types (do MS/PS leads ever involve the
 bundle's other trades?) would let P14 separate informative bundles (New Building / Additions) from pure
 noise (trade-specific).
+
+## Addendum — P13-3 realization (orchestrator, user sign-off 2026-07-09)
+Backup `_backup_permit_trades_active_20260709` (3,018,864 rows) → watermark reset (252,753 permits) → `classify-permits` standalone (16 min, run row recorded). Landed: **1,761,779 bundle emissions → is_active=false** (all tier-2/conf-0.55 bundle-path rows); 127,704 direct-matrix rows at coincidental tier-2/0.55 correctly PRESERVED active (the code keys on emission path, not the tier/conf proxy — the 62.6% projection was proxy-based; actual shrink 58.4%). Active per permit: mean 12.16 → **5.06**, median 3 → **1**. Forecasts/scores re-derive on the next nightly chain run (expected delta, P8-caveat pattern).
