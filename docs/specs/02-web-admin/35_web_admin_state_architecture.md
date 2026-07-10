@@ -70,7 +70,9 @@ This table is **normative**. Adding a field to an admin store requires adding a 
 | `app_health` (Spec 30) | `GET /api/admin/app-health` | `['admin', 'app-health']` | 60s (poll) | B1 |
 | `lead_feed_health` | `GET /api/admin/leads/health` | `['admin', 'lead-feed-health']` | 10s (poll) | B1 |
 | `test_feed_results` | `GET /api/admin/leads/test-feed?<params>` | `['admin', 'test-feed', params]` | 0 (on-demand) | B1 |
-| `flight_center_board` | `GET /api/leads/flight-board` | `['admin', 'flight-board']` (admin-uid scoped) | 30s | B1 |
+| `flight_center_board` (RETIRED 2026-07-09 — the Spec 76 §3.4 prototype read; superseded by the `admin_watchlist` row below per Spec 36) | ~~`GET /api/leads/flight-board`~~ | ~~`['admin', 'flight-board']`~~ | — | — |
+| `admin_watchlist` (Spec 36 — the Flight Center flight list) | `GET /api/admin/leads/watchlist` | `['admin', 'flight-center', 'board', offset]` | 30s | B1 |
+| `watchlist_search` (Spec 36 — address → permit/coa resolution) | `GET /api/admin/leads/watchlist/search?q=` | `['admin', 'flight-center', 'search', q]` | 30s | B1 |
 | `lead_detail` (Spec 76 §3.5 Cycle 3 — mobile thin-shape endpoint; admin inspector uses `lead_inspect` row below from Cycle 7+8) | `GET /api/leads/detail/:id` | `['admin', 'lead-detail', id]` | 60s | B1 |
 | `lead_inspect` (Spec 76 §3.5 Cycle 7+8 — admin diagnostic inspector with 8 base panels + Phase F.4 CoA Classification panel) | `GET /api/admin/leads/inspect/:id` | `['admin', 'lead-inspect', id]` | 30s | B1 |
 | `flight_job_detail` (Spec 76 §3.6) | `GET /api/leads/flight-board/detail/:id` | `['admin', 'flight-job-detail', id]` | 60s | B1 |
@@ -81,7 +83,7 @@ This table is **normative**. Adding a field to an admin store requires adding a 
 | Store | Owned fields | Writer | Reader | Bridge to server |
 |---|---|---|---|---|
 | `useControlPanelStore` (Spec 86) | `draft.logic_variables`, `draft.trade_matrix`, `draft.scope_intensity_matrix`, `draft.pendingDeltas`, `isDraftDirty` | Component edit handlers (B2) | ControlPanelShell components | B3 (commit) → B1 invalidation |
-| `useFlightCenterStore` (Spec 76 §3.4 — PENDING implementation) | `selectedLeadId`, `inspectorOpen`, `inspectorMode: 'lead' \| 'flight-job'` | FlightCenterTool component | FlightCenterTool + InspectorDrawer | None (UI state only — does NOT mirror server data) |
+| `useFlightCenterStore` (Spec 36 — IMPLEMENTED 2026-07-09; re-homed from the Spec 76 §3.4 PENDING row) | `selectedIds: Set<number>` (bulk selection), `searchQuery`, `inspectorOpen`, `selectedLeadId`. **`inspectorMode: 'lead' \| 'flight-job'` is RETIRED** — single inspect-endpoint drawer (Spec 36 [PF11]); an intentional edit, not an omission. | FlightCenterTool + SearchPermitsModal | FlightCenterTool tree | None (UI state only — the drawer's initialData row is looked up from the TanStack cache, never mirrored here). B3 note: `useBulkSaveToWatchlist` / `useBulkDeleteFromWatchlist` follow §B3 — breadcrumb + `admin_action_performed` BEFORE the network call, Sonner toast rendering `{added, skipped_existing, failed}`, `onSettled` invalidation of `['admin','flight-center','board']`; bulk-delete is optimistic-with-rollback across cached pages. |
 | `useAdminCommandStore` (Spec 33 §14 — PENDING implementation) | `commandPaletteOpen`, `recentCommands` | cmd+k handler | CommandPalette | None (UI state only) |
 
 **Hard rules for admin draft stores:**
@@ -211,7 +213,7 @@ useEffect(() => {
 function clearAdminSession(): void {
   queryClient.clear();                               // Layer 2 purge
   useControlPanelStore.getState().discardDraft();    // Layer 3 fan-out
-  useFlightCenterStore.getState().reset();           // Layer 3 fan-out (PENDING implementation)
+  useFlightCenterStore.getState().reset();           // Layer 3 fan-out (IMPLEMENTED — src/lib/admin/session.ts, Spec 36)
   useAdminCommandStore.getState().reset();           // Layer 3 fan-out (PENDING implementation)
   // Layer 4 (localStorage) UI prefs are PRESERVED — they're admin-account-agnostic.
   Sentry.setUser(null);
@@ -324,7 +326,7 @@ Every B3 mutation MUST have a `*.logic.test.ts` asserting:
 
 ### 8.5 Store-enumeration test
 
-`src/tests/admin-store-reset.coverage.test.ts` (TBD) walks `src/components/admin/` and `src/app/admin/` for `create<*Store>(` regex; asserts each has a corresponding `.discardDraft()` or `.reset()` call in `clearAdminSession()`. Mirror of mobile Spec 99 §8.5 (`storeReset.coverage.test.ts`).
+`src/tests/admin-store-reset.coverage.test.ts` (IMPLEMENTED 2026-07-09, Spec 36 P15) walks `src/features/**/store/` for zustand `use*Store` modules and asserts each has a corresponding `.reset()` / `.resetStore()` / `.discardDraft()` call in `resetAdminStores()` (`src/lib/admin/session.ts` — the `clearAdminSession()` + §B4 `handleAdminUidChange()` fan-out site). Mirror of mobile Spec 99 §8.5 (`storeReset.coverage.test.ts`).
 
 ### 8.6 Render-stability tests
 
@@ -342,5 +344,5 @@ Spec 35 §6.3 mandates `isFetching` NOT in render gates. A mandates-lint test (T
 **Cross-spec dependencies:**
 - **Authoritative for:** state architecture across `src/app/admin/**`, `src/app/api/admin/**`, `src/components/admin/**`.
 - **Relies on:** Spec 33 (engineering protocol), Spec 34 (testing protocol).
-- **Consumed by:** Spec 21, 26, 30, 76, 86 (every web-admin feature spec must conform to this state architecture).
+- **Consumed by:** Spec 21, 26, 30, 36, 76, 86 (every web-admin feature spec must conform to this state architecture).
 - **Mobile parallel:** `docs/specs/03-mobile/99_mobile_state_architecture.md`. Most rules transfer 1:1 (atomic selectors, B5 fan-out, gate-stability, action telemetry); the omission is mobile §B6 (mid-session 401 refresh) — web admin's session-cookie auth handles that server-side.

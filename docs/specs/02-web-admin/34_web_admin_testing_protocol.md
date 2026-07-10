@@ -73,7 +73,7 @@ Every major admin route MUST have an E2E flow. The list below is the **launch-bl
 | `tests/e2e/market-metrics.spec.ts` | Spec 26 §3.3 | `/admin/market-metrics` renders all 6 KPI sections, period toggle (MTD / YTD) works. |
 | `tests/e2e/control-panel.spec.ts` | Spec 86 | `/admin/control-panel` renders the 4 grids, draft state activates on edit, save triggers diff modal, save confirmation calls the resync endpoint. |
 | `tests/e2e/lead-feed-test-feed.spec.ts` | Spec 76 §3.2–§3.3 | `/admin/lead-feed` renders the Test Feed Tool, form submission returns scored results + debug overlay. |
-| `tests/e2e/lead-feed-flight-center.spec.ts` | Spec 76 §3.4 (PENDING implementation) | Admin saves a permit, Flight Center renders the saved board, tap-card opens the Flight Job Detail Inspector drawer. **Blocked until Cycle 4 implementation lands.** |
+| `tests/e2e/flight-center.spec.ts` | Spec 36 (PENDING — re-pointed from the Spec 76 §3.4 row 2026-07-09; the nested page now redirects to `/admin/flight-center`) | Page loads + auth redirect; search → save → board; bulk-select → delete-confirm; card → drawer (delayed badge + expected start). **Blocked on bootstrapping the Playwright harness (the repo has no `tests/e2e/` yet — filed in `docs/reports/review_followups.md`); the `.ui` suite carries the interaction coverage meanwhile.** |
 | `tests/e2e/lead-feed-inspectors.spec.ts` | Spec 76 §3.5 + §3.6 (PENDING implementation) | Lead Detail Inspector + Flight Job Detail Inspector each accept a `lead_id`, render the corresponding endpoint output, schema-drift surfaces as a parse error. **Blocked until Cycle 4.** |
 | `tests/e2e/app-health.spec.ts` | Spec 30 (PENDING implementation) | `/admin/app-health` renders 5 tiles, each tile renders one of {ok, unavailable} states, deep-link buttons present and target the correct external URL. **Blocked until Spec 30 implementation cycle.** |
 
@@ -215,4 +215,4 @@ Mobile Spec 98 §4 explicitly excludes UI snapshot testing. Web-admin DOES use R
 **Cross-spec dependencies:**
 - **Authoritative for:** test surface in `src/tests/**` and `tests/e2e/**` for any code under `src/app/admin/**`, `src/app/api/admin/**`, `src/components/admin/**`.
 - **Relies on:** Spec 33 (engineering protocol — defines what's testable), Spec 35 §8 (test mandate enumeration).
-- **Consumed by:** Spec 21, 26, 30, 76, 86 (every web-admin feature spec must satisfy this protocol).
+- **Consumed by:** Spec 21, 26, 30, 36, 76, 86 (every web-admin feature spec must satisfy this protocol).
