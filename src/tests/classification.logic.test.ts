@@ -1176,3 +1176,139 @@ describe('classifyPermit — permit_type_class integration (WF2 #2)', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// P16 16C — lean inference layer (Spec 80 §5.C; gated on inferenceEnabled)
+// ---------------------------------------------------------------------------
+
+describe('P16 16C — lean inference layer (classifyPermit)', () => {
+  // [BUG-6] gate-OFF default: without the option, output is EVIDENCE-ONLY (P13-3 posture) —
+  // no attachment_basis='inference' rows, and no inactive bundle rows either (loop retired).
+  it('gate OFF (default): no inference rows AND no inactive bundle rows', () => {
+    const permit = createMockPermit({
+      permit_num: '21 111222 BLD 00',
+      permit_type: 'Small Residential Projects',
+      work: 'Interior Alterations',
+    });
+    const matches = classifyPermit(permit, ALL_RULES, ['alter:kitchen'], {
+      permitClass: 'construction',
+      projectType: 'renovation',
+    });
+    expect(matches.some((m) => m.attachment_basis === 'inference')).toBe(false);
+    expect(matches.some((m) => !m.is_active)).toBe(false);
+  });
+
+  // D7 un-starve: a KIT-scoped permit carries the full lean kitchen complement ACTIVE —
+  // trades the evidence path already emits stay evidence (union: evidence wins the slot);
+  // the evidence-missed remainder arrives at the inference tier (active, basis, conf 0.50).
+  // (Corpus-level starvation is a JS-matrix property; the TS matrix emits tiling/cabinetry
+  // directly for kitchen tags, so here they land as evidence — the UNION guarantee is the lock.)
+  it('gate ON: KIT-scoped permit attaches the kitchen complement (evidence-missed → inference)', () => {
+    const permit = createMockPermit({
+      permit_num: '21 111333 BLD 00',
+      permit_type: 'Small Residential Projects',
+      work: 'Interior Alterations',
+    });
+    const matches = classifyPermit(permit, ALL_RULES, ['alter:kitchen'], {
+      permitClass: 'construction',
+      projectType: 'renovation',
+      inferenceEnabled: true,
+    });
+    const slugs = matches.map((m) => m.trade_slug);
+    // The whole lean kitchen complement is present and ACTIVE (whichever basis won the slot).
+    for (const t of ['tiling', 'millwork-cabinetry', 'stone-countertops', 'trim-work']) {
+      expect(slugs, `kitchen complement trade missing: ${t}`).toContain(t);
+      expect(matches.find((m) => m.trade_slug === t)?.is_active).toBe(true);
+    }
+    // At least one complement trade the TS evidence matrix misses arrives at the inference tier.
+    const inf = matches.filter((m) => m.attachment_basis === 'inference');
+    expect(inf.length).toBeGreaterThan(0);
+    for (const m of inf) {
+      expect(m.is_active).toBe(true);
+      expect(m.confidence).toBe(0.5);
+      expect(m.tier).toBe(2);
+    }
+  });
+
+  // [GRD-2] narrow-permit-gains-no-inference (behavior level): a PLB code permit early-returns
+  // before the inference layer — gate ON adds NOTHING.
+  it('gate ON: narrow-scope (PLB) permit gains no inference rows', () => {
+    const permit = createMockPermit({
+      permit_num: '22 654321 PLB 00',
+      permit_type: 'Plumbing(PS)',
+      work: 'Building Permit Related(PS)',
+    });
+    const matches = classifyPermit(permit, ALL_RULES, ['new:kitchen', 'new:bathroom'], {
+      permitClass: 'construction',
+      projectType: 'renovation',
+      inferenceEnabled: true,
+    });
+    expect(matches.some((m) => m.attachment_basis === 'inference')).toBe(false);
+    expect(matches.every((m) => m.trade_slug === 'plumbing' || m.trade_slug === 'realtor')).toBe(true);
+  });
+
+  // [GRD-8] coincidental-0.55 value lock (closes followups:2547): a DIRECT tag-matrix hit whose
+  // confidence happens to be 0.55 (the old bundle tier) or 0.50 (the inference tier) must stay
+  // EVIDENCE-basis + active — the value must never be used to infer the path.
+  it('coincidental low-confidence DIRECT matrix hits stay evidence-basis + active', () => {
+    const permit = createMockPermit({
+      permit_num: '21 111444 BLD 00',
+      permit_type: 'Small Residential Projects',
+      work: 'Interior Alterations',
+    });
+    const matches = classifyPermit(permit, ALL_RULES, ['alter:kitchen', 'alter:interior-alterations'], {
+      permitClass: 'construction',
+      projectType: 'renovation',
+      inferenceEnabled: true,
+    });
+    const lowConfDirect = matches.filter(
+      (m) => m.confidence <= 0.55 && m.attachment_basis !== 'inference',
+    );
+    // Every non-inference row (whatever its confidence) is active with basis ≠ 'inference'.
+    for (const m of lowConfDirect) {
+      expect(m.is_active).toBe(true);
+    }
+    // And inference rows are exactly the attachment_basis==='inference' set — identified by
+    // BASIS, never by the 0.50/0.55 confidence value [FAB4].
+    const byValue = matches.filter((m) => m.confidence === 0.5);
+    const byBasis = matches.filter((m) => m.attachment_basis === 'inference');
+    expect(byBasis.length).toBeGreaterThan(0);
+    // byValue may legitimately include coincidental direct hits — the sets need not be equal;
+    // what MUST hold: every basis-inference row serves active at tier 2.
+    for (const m of byBasis) {
+      expect(m.is_active).toBe(true);
+      expect(m.tier).toBe(2);
+    }
+    expect(byValue.length).toBeGreaterThanOrEqual(byBasis.length === 0 ? 0 : 1);
+  });
+
+  // D1 union: evidence hits keep their slot — an inference pass never overwrites a direct hit.
+  it('gate ON: evidence hits are never overwritten by inference (D1 union)', () => {
+    const permit = createMockPermit({
+      permit_num: '21 111555 BLD 00',
+      permit_type: 'Small Residential Projects',
+      work: 'Interior Alterations',
+    });
+    const tags = ['alter:kitchen'];
+    const off = classifyPermit(permit, ALL_RULES, tags, {
+      permitClass: 'construction', projectType: 'renovation',
+    });
+    const on = classifyPermit(permit, ALL_RULES, tags, {
+      permitClass: 'construction', projectType: 'renovation', inferenceEnabled: true,
+    });
+    const offBySlug = new Map(off.map((m) => [m.trade_slug, m]));
+    for (const m of on) {
+      const evid = offBySlug.get(m.trade_slug);
+      if (evid) {
+        // The evidence row's tier/confidence/basis survive untouched.
+        expect(m.confidence).toBe(evid.confidence);
+        expect(m.tier).toBe(evid.tier);
+        expect(m.attachment_basis).not.toBe('inference');
+      }
+    }
+    // And the ON set is a superset of the OFF set (additive, never replacement).
+    for (const m of off) {
+      expect(on.some((x) => x.trade_slug === m.trade_slug)).toBe(true);
+    }
+  });
+});

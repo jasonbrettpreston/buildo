@@ -23,17 +23,32 @@ const TIER_CONFIDENCE: Record<number, number> = {
   2: 0.80,
 };
 
-// Spec 80 §5.B.5 — default bundle-tier confidence for archetype-implied trades.
-// Sits BELOW direct tag/rule hits (so MAX-dedup never lets a bundle row override a
-// real hit) but at/above the lead-feed gate (0.5) so the implied trades are REAL
-// leads, not coverage-only. Operator-tunable via the `archetype_bundle_confidence`
-// logic_variable on the pipeline side (passed through ClassifyPermitOptions).
-const BUNDLE_TIER_CONFIDENCE = 0.55;
-
 // The deprecated trades (Spec 80 §5.B.6) — never bundle-emit these.
 const DEPRECATED_SLUGS: ReadonlySet<string> = new Set(
   TRADES.filter((t) => t.kind === 'deprecated').map((t) => t.slug),
 );
+
+// ---------------------------------------------------------------------------
+// P16 16C (Spec 80 §5.C) — lean scope-mapped inference layer inputs.
+// The complement + line detector live in the Brain-side JS module (single source of
+// truth shared with scripts/classify-permits.js — §7.1 dual-path). TS→JS require is
+// the sanctioned pattern (precedent: cost-model.ts:16 requires cost-model-shared).
+// ---------------------------------------------------------------------------
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const archetypeCostMap = require('../../features/leads/lib/archetype-cost-map') as {
+  mapToLines: (lead: {
+    projectType: string | null | undefined;
+    scopeTags: string[] | null | undefined;
+    structureType: string | null | undefined;
+    isCoa: boolean;
+    activeTradeCount: number;
+  }) => { lines: string[]; mapKind: string } | null;
+  complementTradesFor: (lines: string[]) => string[];
+};
+const { mapToLines, complementTradesFor } = archetypeCostMap;
+// [FAB4] — inference-tier confidence. DESCRIPTIVE ONLY: serving/ranking authority is
+// attachment_basis, never this value. Mirrors scripts/classify-permits.js.
+const INFERENCE_TIER_CONFIDENCE = 0.50;
 
 // ---------------------------------------------------------------------------
 // Matching helpers (kept for Tier 1 rule matching)
@@ -473,11 +488,20 @@ export interface ClassifyPermitOptions {
    */
   projectType?: string | null;
   /**
-   * Bundle-tier confidence for archetype-implied trades (default
-   * BUNDLE_TIER_CONFIDENCE). Pipeline passes the `archetype_bundle_confidence`
-   * logic_variable so it is operator-tunable.
+   * Bundle-tier confidence for archetype-implied trades. P16 16C: the trade bundle
+   * prior is RETIRED (replaced by the lean inference layer); this value now only
+   * anchors telemetry on the script side. Retained for API stability — unused here.
    */
   bundleConfidence?: number;
+  /**
+   * P16 16C (Spec 80 §5.C [BUG-6]) — hard gate for the lean scope-mapped inference layer
+   * (mirrors the `p16_inference_layer_enabled` logic_variable). Default false: evidence-only
+   * emission, the P13-3 precision posture preserved. When true, LINE_TRADE_COMPLEMENT trades
+   * for the mapToLines-detected cost lines are UNIONed onto evidence at is_active=true /
+   * attachment_basis='inference' / confidence 0.50 (descriptive only — ranking authority is
+   * the basis, never the value).
+   */
+  inferenceEnabled?: boolean;
 }
 
 /**
@@ -598,43 +622,53 @@ export function classifyPermit(
     }
   }
 
-  // Archetype bundle prior (Spec 80 §5.B.5) — recall boost for implied trades the
-  // direct tag/rule/fallback paths miss (the low-signal interior-finish + service
-  // trades). Bundle-tier confidence sits below direct hits; MAX-dedup keeps any
-  // existing (higher-confidence) hit. Added to `merged` BEFORE applyScopeLimit so
-  // NARROW_SCOPE_CODES + WORK_SCOPE_EXCLUSIONS gate bundle emissions like all others.
-  // Deprecated trades are never bundle-emitted.
-  const bundleConf = options?.bundleConfidence ?? BUNDLE_TIER_CONFIDENCE;
-  const archetypes = deriveArchetypes(options?.projectType, tags);
-  const { trades: bundleTrades } = bundleSlugsFor(archetypes, DEPRECATED_SLUGS);
-  for (const slug of bundleTrades) {
-    if (merged.has(slug)) continue; // a direct hit already won (its confidence ≥ bundle-tier)
-    const trade = getTradeBySlug(slug);
-    if (!trade) continue;
-    // P13-3: bundle-prior emissions are DEMOTED to is_active=false (dual-path mirror of
-    // scripts/classify-permits.js). Bundle-only recall trades persist for vocab coverage
-    // but no longer inflate forecasts/scores; direct hits above win via merged.has(slug).
-    const partial: Partial<TradeMatch> = {
-      trade_id: trade.id,
-      trade_slug: slug,
-      trade_name: trade.name,
-      tier: 2,
-      confidence: bundleConf,
-      is_active: false,
-      phase,
-    };
-    merged.set(slug, {
-      permit_num: permit.permit_num ?? '',
-      revision_num: permit.revision_num ?? '',
-      trade_id: trade.id,
-      trade_slug: slug,
-      trade_name: trade.name,
-      tier: 2,
-      confidence: bundleConf,
-      is_active: false,
-      phase,
-      lead_score: calculateLeadScore(permit, partial, phase),
+  // P16 16C (Spec 80 §5.C): lean scope-mapped INFERENCE layer — takes the retired coarse archetype
+  // bundle prior's slot (dual-path mirror of scripts/classify-permits.js). [GRD-1]: the old bundle
+  // loop cannot coexist with this one — it filled `merged` with is_active=false slugs FIRST, so the
+  // merged.has() guard would skip exactly the overlap set inference exists to re-activate. The
+  // P13-3 demotion fence is KNOWINGLY extended into retirement + measured lean inference (16B GO).
+  // HARD-GATED on options.inferenceEnabled [BUG-6] (default false → evidence-only, P13-3 posture
+  // byte-preserved). Emitted BEFORE applyScopeLimit + the permit_type ceiling + applyClassGating
+  // [GRD-2] — a narrow/class-gated permit gains NO inference trades. mapToLines → null (T4) keeps
+  // the permit evidence-only by construction.
+  if (options?.inferenceEnabled) {
+    const mapped = mapToLines({
+      projectType: options?.projectType ?? null,
+      scopeTags: tags,
+      structureType: permit.structure_type ?? null,
+      isCoa: false,
+      activeTradeCount: merged.size, // evidence count — the W7 escalation input
     });
+    if (mapped && mapped.lines) {
+      for (const slug of complementTradesFor(mapped.lines)) {
+        if (merged.has(slug)) continue; // an evidence hit already won the slot (D1 union)
+        const trade = getTradeBySlug(slug);
+        if (!trade) continue;
+        const partial: Partial<TradeMatch> = {
+          trade_id: trade.id,
+          trade_slug: slug,
+          trade_name: trade.name,
+          tier: 2,
+          confidence: INFERENCE_TIER_CONFIDENCE,
+          is_active: true,
+          phase,
+        };
+        merged.set(slug, {
+          permit_num: permit.permit_num ?? '',
+          revision_num: permit.revision_num ?? '',
+          trade_id: trade.id,
+          trade_slug: slug,
+          trade_name: trade.name,
+          tier: 2,
+          confidence: INFERENCE_TIER_CONFIDENCE,
+          // D1/D5: inference SERVES (is_active=true) but ranks below evidence BY BASIS.
+          is_active: true,
+          attachment_basis: 'inference',
+          phase,
+          lead_score: calculateLeadScore(permit, partial, phase),
+        });
+      }
+    }
   }
 
   let allMatches = applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);

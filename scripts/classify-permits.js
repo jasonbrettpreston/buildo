@@ -35,6 +35,15 @@ const { deriveArchetypes, bundleSlugsFor } = require('./lib/archetypes');
 // DEPRECATED_SLUGS derived from trades.ts kind on the TS side).
 const DEPRECATED_TRADE_SLUGS = new Set(['temporary-fencing']);
 const BUNDLE_TIER_CONFIDENCE_DEFAULT = 0.55;
+// P16 16C (Spec 80 §5.C) — the lean scope-mapped inference layer. mapToLines detects the cost
+// line(s); LINE_TRADE_COMPLEMENT supplies the lean, inspection-calibrated trade complement
+// (16B GO gate 2026-07-10: hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2). scripts→src
+// require is the sanctioned direction (precedent: compute-cost-estimates.js requires the Brain).
+const { mapToLines, complementTradesFor } = require('../src/features/leads/lib/archetype-cost-map');
+// [FAB4] — inference-tier confidence. DESCRIPTIVE ONLY: serving/ranking authority is
+// attachment_basis, never this value (clears the feed's ≥0.5 floor; sits below the 0.55
+// tag-matrix band; no serving logic may depend on it).
+const INFERENCE_TIER_CONFIDENCE = 0.50;
 // Spec 80 §5.B — product classifier (wire the dormant permit_products). Tag-driven
 // (mirror of src/lib/classification/classifier.ts classifyProducts); the archetype
 // {products} bundle is a deferred enhancement (review_followups 80-vnext-P2).
@@ -54,6 +63,8 @@ const LOGIC_VARS_SCHEMA = z
     vocab_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
     // Spec 80 §5.B.5 — bundle-tier confidence for archetype-implied trades.
     archetype_bundle_confidence: z.coerce.number().min(0).max(1).default(0.55),
+    // P16 §5.C [BUG-6] — hard gate for the lean inference layer (0 = OFF, evidence-only).
+    p16_inference_layer_enabled: z.coerce.number().int().min(0).max(1).default(0),
   })
   .passthrough()
   .refine((d) => d.vocab_coverage_warn_pct < d.vocab_coverage_pass_pct, {
@@ -501,7 +512,7 @@ function applyClassGating(matches, permit, phase, runAt, realtorAvailable, permi
   return appendRealtorMatch(filtered, permit, phase, runAt, realtorAvailable);
 }
 
-function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitClass = 'unclassified', bundleConf = BUNDLE_TIER_CONFIDENCE_DEFAULT) {
+function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitClass = 'unclassified', inferenceEnabled = false) {
   const phase = determinePhase(permit, runAt);
   const code = extractPermitCode(permit.permit_num);
   const isNarrowScope = code != null && NARROW_SCOPE_CODES[code] != null;
@@ -614,35 +625,49 @@ function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitCla
     }
   }
 
-  // Step 4: Archetype bundle prior (Spec 80 §5.B.5) — recall boost for the implied
-  // trades the tag/rule/fallback paths miss. Bundle-tier confidence sits below direct
-  // hits; MAX-dedup keeps any existing (higher) hit. Merged BEFORE applyScopeLimit so
-  // NARROW_SCOPE_CODES + WORK_SCOPE_EXCLUSIONS gate bundle emissions like all others.
-  // Mirror of classifier.ts. Deprecated trades never bundle-emitted.
-  const archetypes = deriveArchetypes(permit.project_type, scopeTags);
-  const { trades: bundleTrades } = bundleSlugsFor(archetypes, DEPRECATED_TRADE_SLUGS);
-  for (const slug of bundleTrades) {
-    if (merged.has(slug)) continue; // a direct hit already won (confidence >= bundle-tier)
-    const tradeId = SLUG_TO_ID.get(slug);
-    if (!tradeId) continue;
-    const tradeMatch = {
-      permit_num: permit.permit_num,
-      revision_num: permit.revision_num,
-      trade_id: tradeId,
-      trade_slug: slug,
-      tier: 2,
-      confidence: bundleConf,
-      // P13-3: bundle-prior emissions are DEMOTED to is_active=false (the permit-side
-      // twin of P6.6's CoA `is_active = !fromBundle`). This loop only emits pure archetype
-      // bundle-prior trades — the `merged.has(slug)` guard above means any DIRECT tag/rule
-      // hit already won the slot and stays active. Bundle-only recall trades persist for
-      // vocab coverage (no is_active predicate on the trade_vocab dataFilter) but no longer
-      // inflate every forecast/score. applyScopeLimit/NARROW_SCOPE_CODES (below) unchanged.
-      is_active: false,
-      phase,
-    };
-    tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
-    merged.set(slug, tradeMatch);
+  // Step 4 (P16 16C, Spec 80 §5.C): lean scope-mapped INFERENCE layer — takes the retired coarse
+  // archetype bundle prior's slot. [GRD-1 disposition]: the old loop CANNOT be retained beside this
+  // one — it filled `merged` with is_active=false slugs FIRST, so the merged.has() guard would make
+  // the inference layer SKIP exactly the overlap set it exists to re-activate. The P13-3 fence
+  // (804d90f; introducing literal from feature commit f7a604a, no Severity/Lesson-routing footer)
+  // is KNOWINGLY extended, not silently retired: bundle DEMOTION evolves into bundle RETIREMENT +
+  // a measured lean inference tier (16B GO gate). HARD-GATED on p16_inference_layer_enabled
+  // [BUG-6]: OFF → this block emits NOTHING (evidence-only, P13-3 posture byte-preserved).
+  // Emitted BEFORE applyScopeLimit + the permit_type ceiling + applyClassGating [GRD-2], so a
+  // narrow/class-gated permit gains NO inference trades. attached = evidence ∪ lean_inference (D1):
+  // the merged.has(slug) guard keeps every evidence hit's slot. A permit whose scope maps to NO
+  // cost line (mapToLines → null, the T4 selector) stays evidence-only by construction.
+  if (inferenceEnabled) {
+    const mapped = mapToLines({
+      projectType: permit.project_type,
+      scopeTags,
+      structureType: permit.structure_type,
+      isCoa: false,
+      activeTradeCount: merged.size, // evidence count — the W7 escalation input
+    });
+    if (mapped && mapped.lines) {
+      for (const slug of complementTradesFor(mapped.lines)) {
+        if (merged.has(slug)) continue; // an evidence hit already won the slot (D1 union)
+        const tradeId = SLUG_TO_ID.get(slug);
+        if (!tradeId) continue;
+        const tradeMatch = {
+          permit_num: permit.permit_num,
+          revision_num: permit.revision_num,
+          trade_id: tradeId,
+          trade_slug: slug,
+          tier: 2,
+          confidence: INFERENCE_TIER_CONFIDENCE,
+          // P16 D1/D5: inference rows SERVE (is_active=true) but rank below evidence BY BASIS —
+          // consumers read attachment_basis, not the 0.50 confidence value [FAB4].
+          is_active: true,
+          attachment_basis: 'inference',
+          phase,
+          fromLines: mapped.lines, // transient (not persisted) — feeds the FB-line watch counter
+        };
+        tradeMatch.lead_score = calculateLeadScore(permit, tradeMatch, phase, runAt);
+        merged.set(slug, tradeMatch);
+      }
+    }
   }
 
   let final = applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);
@@ -668,9 +693,14 @@ pipeline.run('classify-permits', async (pool) => {
     throw new Error(`logicVars validation failed: ${vocabValidation.errors.join('; ')}`);
   }
   // Spec 80 §5.B.5 — bundle-tier confidence (operator-tunable; default if the
-  // logic_variable is absent in the DB).
+  // logic_variable is absent in the DB). Post-16C the bundle prior is retired; the value
+  // still anchors the strong/weak signal counters (a hit above it = direct evidence).
   const archetypeBundleConfidence =
     Number(logicVars.archetype_bundle_confidence) || BUNDLE_TIER_CONFIDENCE_DEFAULT;
+  // P16 §5.C [BUG-6] — the lean inference layer's hard gate. OFF (0, the seeded default) →
+  // classifyPermit emits evidence-only; ON (1, flipped in 16F after the 16E consumer contract) →
+  // lean inference rows emit at is_active=true / attachment_basis='inference'.
+  const inferenceEnabled = Number(logicVars.p16_inference_layer_enabled) === 1;
   // Product vocab (slug -> {id, name}) loaded once from product_groups (Spec 80 §5.B.3).
   // Single source of truth — the JS classifier does NOT duplicate the product vocab.
   const productGroupsRes = await pool.query('SELECT id, slug, name FROM product_groups');
@@ -762,6 +792,13 @@ pipeline.run('classify-permits', async (pool) => {
   // P16 D2 — count permits where the permit_type ceiling legitimately bites (broad-scope +
   // ceiling permit_type; code-carrying narrow permits early-return before the ceiling applies).
   let permitTypeCeilingApplied = 0;
+  // P16 16C — inference-layer telemetry (feeds the 16F §R10 bands): rows emitted at
+  // attachment_basis='inference', permits gaining ≥1 inference row, and the FB-line
+  // (max_build/coa_build) share — the stratum the 122-permit corpus could NOT validate
+  // (zero large new-builds in the hold-out; watched, not assumed — Gemini fold).
+  let inferenceRowsEmitted = 0;
+  let permitsWithInference = 0;
+  let fbLineInferenceRows = 0;
   let lastPermitNum = '';
   let lastRevisionNum = '';
 
@@ -818,7 +855,7 @@ pipeline.run('classify-permits', async (pool) => {
       const ceilCode = extractPermitCode(permit.permit_num);
       const ceilNarrow = ceilCode != null && NARROW_SCOPE_CODES[ceilCode] != null;
       if (!ceilNarrow && permitTypeCeilingFor(permit.permit_type)) permitTypeCeilingApplied++;
-      const matches = classifyPermit(permit, allRules, RUN_AT, realtorAvailable, permitClass, archetypeBundleConfidence);
+      const matches = classifyPermit(permit, allRules, RUN_AT, realtorAvailable, permitClass, inferenceEnabled);
       if (matches.length > 0) {
         // Dedup by (permit_num, revision_num, trade_id) - keep highest confidence
         const dedupMap = new Map();
@@ -833,6 +870,18 @@ pipeline.run('classify-permits', async (pool) => {
 
         permitsWithTrades++;
         totalMatches += dedupedMatches.length;
+
+        let permitHadInference = false;
+        for (const m of dedupedMatches) {
+          if (m.attachment_basis === 'inference') {
+            inferenceRowsEmitted++;
+            permitHadInference = true;
+            if (Array.isArray(m.fromLines) && (m.fromLines.includes('max_build') || m.fromLines.includes('coa_build'))) {
+              fbLineInferenceRows++;
+            }
+          }
+        }
+        if (permitHadInference) permitsWithInference++;
 
         for (const m of dedupedMatches) {
           // STRONG = a direct tag/rule hit above the bundle tier. A bundle row (conf ==
@@ -1123,6 +1172,21 @@ pipeline.run('classify-permits', async (pool) => {
     // correctness mechanism firing (plumbing/mechanical/drain permit_types capped to their family);
     // INFO by nature — a large count is not a defect, it is the residual the ceiling is designed for.
     { metric: 'permit_type_ceiling_applied_count', value: permitTypeCeilingApplied, threshold: null, status: 'INFO' },
+    // P16 16C (§R10) — lean inference layer telemetry. Gate state + emission volume; the mean-band
+    // WARN/FAIL tripwires + starvation bands land with the 16F re-run (they need corpus-wide state,
+    // not a run increment).
+    { metric: 'inference_layer_enabled', value: inferenceEnabled ? 1 : 0, threshold: null, status: 'INFO' },
+    { metric: 'inference_rows_emitted', value: inferenceRowsEmitted, threshold: null, status: 'INFO' },
+    { metric: 'permits_with_inference', value: permitsWithInference, threshold: null, status: 'INFO' },
+    // FB-line (max_build/coa_build) inference volume — the stratum the partial corpus could not
+    // validate (zero large new-builds in the hold-out). WARN when it dominates emission (>40%) so
+    // the unvalidated stratum is WATCHED until the deep_scrapes re-measure (Gemini fold).
+    {
+      metric: 'fb_line_inference_rows',
+      value: fbLineInferenceRows,
+      threshold: '<= 40% of inference_rows_emitted',
+      status: inferenceRowsEmitted > 0 && fbLineInferenceRows / inferenceRowsEmitted > 0.4 ? 'WARN' : 'INFO',
+    },
   ];
 
   // cov_* vocabulary coverage (Spec 30 §3 / 48 §3.5): distinct trade_ids emitted vs the trades

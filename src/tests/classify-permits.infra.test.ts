@@ -52,20 +52,52 @@ describe('classify-permits.js — is_active (WF1 time-gate removed; P13-3 bundle
     expect((matches ?? []).length).toBeGreaterThanOrEqual(4);
   });
 
-  // P13-3 regression lock: the archetype bundle-prior tier-2 emission is DEMOTED to
-  // is_active: false so bundle-only recall no longer inflates every forecast/score.
-  // The direct-hit guard (`merged.has(slug)` → continue) keeps direct matches active.
-  it('P13-3: the bundle-prior tier-2 emission sets is_active: false', () => {
+  // P16 16C [GRD-1]: the P13-3 demoted bundle-prior loop is KNOWINGLY RETIRED, and its old lock
+  // ("bundle-prior tier-2 emission sets is_active: false") retires WITH it. The fence's intent
+  // (bundle-only recall must not inflate forecasts/scores at full weight) carries forward via the
+  // lean inference layer: hard-gated on p16_inference_layer_enabled, attachment_basis='inference'
+  // (consumers rank/weight by basis, D5), confidence 0.50 descriptive-only [FAB4].
+  it('P16 16C: the coarse bundle-prior loop is retired from the TRADE path', () => {
     const content = src();
-    // The bundle-prior tradeMatch is the block carrying `confidence: bundleConf`;
-    // its is_active must be false (the only false site in classifyPermit).
-    const bundleBlock = content.match(/tier:\s*2,[\s\S]{0,220}?confidence:\s*bundleConf,[\s\S]{0,900}?is_active:\s*(true|false)/);
-    expect(bundleBlock, 'bundle-prior tradeMatch block not found').toBeTruthy();
-    expect(bundleBlock?.[1], 'bundle-prior must be is_active: false (P13-3)').toBe('false');
-    // And the direct-hit dedup guard that keeps direct matches active is preserved.
+    const body = content.slice(
+      content.indexOf('function classifyPermit('),
+      content.indexOf('// Main'),
+    );
+    // classifyPermit must not emit archetype bundle trades any more (bundleSlugsFor survives
+    // ONLY in the products path) and must carry NO inactive emission site.
+    expect(body).not.toMatch(/bundleSlugsFor\(/);
+    expect(body).not.toMatch(/is_active\s*:\s*false/);
+  });
+
+  it('P16 16C: lean inference emission is HARD-GATED, active, basis-inference, conf 0.50', () => {
+    const content = src();
+    // Gate guard present…
+    expect(content).toMatch(/if\s*\(\s*inferenceEnabled\s*\)\s*\{/);
+    // …and the emission block: tier 2 + INFERENCE_TIER_CONFIDENCE + is_active: true + basis.
+    const block = content.match(/tier:\s*2,[\s\S]{0,120}?confidence:\s*INFERENCE_TIER_CONFIDENCE,[\s\S]{0,700}?is_active:\s*(true|false),[\s\S]{0,220}?attachment_basis:\s*'inference'/);
+    expect(block, 'inference tradeMatch block not found').toBeTruthy();
+    expect(block?.[1], 'inference rows must SERVE (is_active: true — D1/D5)').toBe('true');
+    expect(content).toMatch(/INFERENCE_TIER_CONFIDENCE\s*=\s*0\.50?\b/);
+    // The evidence-hit union guard + downstream gates are preserved [GRD-2].
     expect(content).toMatch(/if\s*\(\s*merged\.has\(slug\)\s*\)\s*continue/);
-    // applyScopeLimit / NARROW_SCOPE_CODES gate stays wired (scope-limit preserved).
     expect(content).toMatch(/applyScopeLimit\(/);
+    // The gate reads the logic variable (seeded default OFF).
+    expect(content).toMatch(/p16_inference_layer_enabled/);
+  });
+
+  // [GRD-2] narrow-permit-gains-no-inference lock: the inference block sits INSIDE the
+  // broad-scope path — narrow (code-carrying) permits early-return BEFORE it.
+  it('P16 16C: narrow-scope permits early-return BEFORE the inference layer', () => {
+    const content = src();
+    const body = content.slice(
+      content.indexOf('function classifyPermit('),
+      content.indexOf('// Main'),
+    );
+    const narrowReturn = body.indexOf('if (isNarrowScope)');
+    const inferenceBlock = body.indexOf('if (inferenceEnabled)');
+    expect(narrowReturn).toBeGreaterThan(-1);
+    expect(inferenceBlock).toBeGreaterThan(-1);
+    expect(narrowReturn, 'narrow early-return must precede the inference layer').toBeLessThan(inferenceBlock);
   });
 
   it('isTradeActiveInPhase function still exists — used by calculateLeadScore for +15 boost', () => {
@@ -96,15 +128,18 @@ describe('classifier.ts — dual code path mirrors classify-permits.js (§7.1; P
     expect((matches ?? []).length).toBeGreaterThanOrEqual(4);
   });
 
-  // P13-3 dual-path mirror lock: the TS bundle prior must match the JS (is_active: false).
-  it('P13-3: TS classifier bundle prior sets is_active: false (mirrors classify-permits.js)', () => {
+  // P16 16C dual-path mirror lock (supersedes the P13-3 bundle lock, retired knowingly with the
+  // bundle loop): the TS trade path carries the SAME gated lean inference layer as the JS.
+  it('P16 16C: TS classifier mirrors the retired bundle + gated inference layer', () => {
     const content = tsSrc();
-    const bundleBlock = content.match(/tier:\s*2,[\s\S]{0,80}?confidence:\s*bundleConf,[\s\S]{0,120}?is_active:\s*(true|false)/g);
-    expect(bundleBlock, 'TS bundle-prior blocks not found').toBeTruthy();
-    // Both bundle-prior sites (partial + merged.set) must be is_active: false.
-    for (const block of bundleBlock ?? []) {
-      expect(block, 'TS bundle prior must be is_active: false (P13-3)').toMatch(/is_active:\s*false/);
-    }
+    // The trade bundle loop is gone — no bundleConf-carrying trade emission remains.
+    expect(content).not.toMatch(/confidence:\s*bundleConf,/);
+    // Gated inference block present, is_active: true, basis 'inference'.
+    expect(content).toMatch(/options\?\.inferenceEnabled/);
+    const block = content.match(/confidence:\s*INFERENCE_TIER_CONFIDENCE,[\s\S]{0,400}?is_active:\s*true,[\s\S]{0,200}?attachment_basis:\s*'inference'/);
+    expect(block, 'TS inference emission block not found').toBeTruthy();
+    // Products bundle survives (bundleSlugsFor still used in classifyProducts).
+    expect(content).toMatch(/bundleSlugsFor\(/);
   });
 });
 
