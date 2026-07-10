@@ -82,12 +82,12 @@ This table is **normative**. Adding a field to an admin store requires adding a 
 
 | Store | Owned fields | Writer | Reader | Bridge to server |
 |---|---|---|---|---|
-| `useControlPanelStore` (Spec 86) | `draft.logic_variables`, `draft.trade_matrix`, `draft.scope_intensity_matrix`, `draft.pendingDeltas`, `isDraftDirty` | Component edit handlers (B2) | ControlPanelShell components | B3 (commit) → B1 invalidation |
+| `useAdminControlsStore` (Spec 86 — ⚠️ this is the REAL export name; the store is at `src/features/admin-controls/store/useAdminControlsStore.ts`, NOT `useControlPanelStore`) | `productionConfig`, `draftConfig` (nested `MarketplaceConfig` — logic vars / trade matrix / scope-intensity cells live inside it), `hasUnsavedChanges` | Component edit handlers (`updateDraftLogicVar`/`updateDraftTradeConfig`/`updateDraftScopeCell`, B2) | ControlPanelShell components | B3 (`commitDrafts` on save, `resetDrafts` on discard, `resetStore` on logout) → B1 invalidation |
 | `useFlightCenterStore` (Spec 36 — IMPLEMENTED 2026-07-09; re-homed from the Spec 76 §3.4 PENDING row) | `selectedIds: Set<number>` (bulk selection), `searchQuery`, `inspectorOpen`, `selectedLeadId`. **`inspectorMode: 'lead' \| 'flight-job'` is RETIRED** — single inspect-endpoint drawer (Spec 36 [PF11]); an intentional edit, not an omission. | FlightCenterTool + SearchPermitsModal | FlightCenterTool tree | None (UI state only — the drawer's initialData row is looked up from the TanStack cache, never mirrored here). B3 note: `useBulkSaveToWatchlist` / `useBulkDeleteFromWatchlist` follow §B3 — breadcrumb + `admin_action_performed` BEFORE the network call, Sonner toast rendering `{added, skipped_existing, failed}`, `onSettled` invalidation of `['admin','flight-center','board']`; bulk-delete is optimistic-with-rollback across cached pages. |
 | `useAdminCommandStore` (Spec 33 §14 — PENDING implementation) | `commandPaletteOpen`, `recentCommands` | cmd+k handler | CommandPalette | None (UI state only) |
 
 **Hard rules for admin draft stores:**
-- Each store is feature-scoped (`useControlPanelStore`, `useFlightCenterStore`, etc.). A "kitchen sink" admin store is BANNED per Spec 33 §7.
+- Each store is feature-scoped (`useAdminControlsStore`, `useFlightCenterStore`, etc.). A "kitchen sink" admin store is BANNED per Spec 33 §7.
 - Draft fields use `null` to indicate "not yet edited" (read from Layer 2). Once edited, the draft holds the user's pending value.
 - Every store has a `commitDraft(serverData)` action that resets the draft to match server-fetched state (called after successful B3 mutation).
 - Every store has a `discardDraft()` action that clears all pending edits.
@@ -206,13 +206,15 @@ useEffect(() => {
 - Admin uid REFRESH (same admin, claim refresh) MUST NOT clear the cache — that's a wasteful round-trip.
 - `Sentry.setUser({ id })` set/clear pair mirrors mobile Spec 99 §7.5 + Spec 33 §11.
 
+**Implementation status (P15, 2026-07-10):** the handler is REAL and test-enforced — `handleAdminUidChange(queryClient, previousUid, nextUid)` in `src/lib/admin/session.ts` implements exactly the CHANGE-clears / REFRESH-no-ops contract above. But the **client provider that OBSERVES the session uid and CALLS the handler is NOT yet mounted** — no admin-layout client provider exists. So the uid-change trigger is **contract + test enforced, not runtime-invoked** (the `useEffect` block shown above is the target shape, not live code). Mounting the provider is a filed follow-up (`docs/reports/review_followups.md`, 2026-07-10). Same status is annotated inline at §B5.
+
 ### B5 — Logout → Local Reset (the global fan-out)
 
 **Pattern:**
 ```ts
 function clearAdminSession(): void {
   queryClient.clear();                               // Layer 2 purge
-  useControlPanelStore.getState().discardDraft();    // Layer 3 fan-out
+  useAdminControlsStore.getState().resetStore();     // Layer 3 fan-out (real export + action names)
   useFlightCenterStore.getState().reset();           // Layer 3 fan-out (WIRED in src/lib/admin/session.ts, Spec 36 — MOUNT PENDING: no admin-layout client provider observes the session uid, so the §B4 uid-change trigger is contract+test-enforced but not runtime-invoked; see review_followups 2026-07-10)
   useAdminCommandStore.getState().reset();           // Layer 3 fan-out (PENDING implementation)
   // Layer 4 (localStorage) UI prefs are PRESERVED — they're admin-account-agnostic.
@@ -248,17 +250,17 @@ Mirror of mobile Spec 99 §6.1.
 
 ```ts
 // ✅ ALLOWED — selects a primitive
-const isDirty = useControlPanelStore((s) => s.isDraftDirty);
+const isDirty = useAdminControlsStore((s) => s.hasUnsavedChanges);
 
 // ❌ BANNED — returns object reference; causes re-render on every set
-const draft = useControlPanelStore((s) => s.draft);
+const draft = useAdminControlsStore((s) => s.draftConfig);
 ```
 
 For object selectors, use `useShallow` from `zustand/shallow`:
 
 ```ts
-const { isDraftDirty, pendingDeltas } = useControlPanelStore(
-  useShallow((s) => ({ isDraftDirty: s.isDraftDirty, pendingDeltas: s.pendingDeltas }))
+const { hasUnsavedChanges, draftConfig } = useAdminControlsStore(
+  useShallow((s) => ({ hasUnsavedChanges: s.hasUnsavedChanges, draftConfig: s.draftConfig }))
 );
 ```
 
@@ -278,9 +280,15 @@ Mirror of mobile Spec 99 §6.6. `setDraft({...newDraft})` MUST short-circuit whe
 
 ### 7.1 Admin action telemetry
 
-Every state-mutating admin action (B3 mutation) MUST emit:
-1. `Sentry.addBreadcrumb({ category: 'admin_action', message: <action>, data: { target } })` — synchronous; fires before the network call.
-2. `track('admin_action_performed', { action, target })` — PostHog event; the `action` and `target` keys are whitelisted in admin analytics (parallel to mobile `analytics.ts` `ALLOWED_KEYS`).
+⚠️ **Server and client use DIFFERENT helpers — do not conflate them (P15):**
+
+- **Client-side (the B3 mutation hook, `"use client"`):** every state-mutating admin action MUST emit, **BEFORE the network call** (intent capture):
+  1. `Sentry.addBreadcrumb({ category: 'admin_action', message: <action>, data: { target } })` — synchronous.
+  2. `captureEvent('admin_action_performed', { action, target })` from **`src/lib/observability/capture.ts`** (wraps `posthog-js`). Precedent: `src/features/admin-flight-center/api/useBulkSaveToWatchlist.ts` / `useBulkDeleteFromWatchlist.ts`.
+- **Server-side (the route handler):** emit `track(distinctId, 'admin_action_performed', { action, target })` from **`src/lib/admin/analytics.ts`** — a fire-and-forget (`void track(...)`) PostHog POST. `distinctId` MUST be the **hashed** admin uid (`sha256(uid).slice(0,16)`, §7.3), never the raw uid. `action`/`target` are whitelisted in admin analytics (`ALLOWED_KEYS`, parallel to mobile `analytics.ts`); unlisted keys are dropped.
+- **Read-only surfaces** (no mutation) emit `captureEvent` ONLY — no `admin_action` breadcrumb (mutation-scoped). Precedent: Spec 89 §2.6 `ParcelCostTool`.
+
+There is **no** client `track(...)` and **no** server `captureEvent(...)`; using the wrong helper for the side silently drops the event (`captureEvent` no-ops outside the browser; `track` needs a `distinctId`).
 
 ### 7.2 Cache invalidation telemetry
 
