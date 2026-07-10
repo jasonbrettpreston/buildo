@@ -48,8 +48,10 @@ npx playwright test --ui        # opens Playwright UI mode for debugging
 
 ## 3. End-to-End (E2E) Testing Strategy
 
+> ⚠️ **STATUS (2026-07-10): the Playwright E2E harness DOES NOT EXIST YET.** `playwright` is a devDependency, but there is **no `tests/e2e/` directory, no login fixture, no seed, no CI E2E job** — every flow in §3.2 is PENDING, and this entire section is the *target design*, not live infrastructure. **Do NOT plan a feature assuming you can write or run an E2E flow** — you can't until the harness is bootstrapped (its own task; filed in `docs/reports/review_followups.md`). Until then, the **real testing bar** is the Vitest triad — `*.logic.test.ts` + `*.infra.test.ts` + `*.ui.test.tsx` (+ `*.db.test.ts` under `BUILDO_TEST_DB=1`) — per §4 and the Spec 35 §8 mandates. P15 Flight Center carried its full interaction coverage in the `.ui` suite for exactly this reason. The **store-enumeration coverage test** (Spec 35 §8.5, `src/tests/admin-store-reset.coverage.test.ts`) is now REAL and enforced.
+
 **Tool:** Playwright (NOT Maestro — that's mobile-only per Spec 98).
-**Location:** `tests/e2e/` (new directory; mirrors the existing `mobile/maestro/` pattern but for web).
+**Location:** `tests/e2e/` (**does not exist yet** — the target directory; mirrors the existing `mobile/maestro/` pattern but for web).
 
 Playwright validates critical admin user journeys from the perspective of a black-box operator. Tests interact with the rendered UI via accessibility tree (preferred) and CSS selectors (fallback). Per Spec 33 §10 testing mandate, every major admin route MUST have at least a smoke flow.
 
@@ -208,7 +210,7 @@ The admin uses PostGIS for geospatial queries (`/api/admin/leads/test-feed` cons
 
 ### 6.3 Why no React Testing Library mandate for every component
 
-Mobile Spec 98 §4 explicitly excludes UI snapshot testing. Web-admin DOES use RTL but selectively — primitives from shadcn/ui are upstream-tested; admin compositions get RTL coverage only when their internal state machine is non-trivial (e.g., the `<HealthTile>` component with three render states). Snapshot tests are BANNED — they encode current behavior as truth and produce noise on every visual change.
+Mobile Spec 98 §4 explicitly excludes UI snapshot testing. Web-admin DOES use RTL but selectively — admin UI is hand-rolled from Tailwind + native elements (no third-party UI kit; Spec 33 §6), so compositions get RTL coverage only when their internal state machine is non-trivial (e.g., the `<HealthTile>` component with three render states, or the Flight Center bulk-select → confirm flow). Snapshot tests are BANNED — they encode current behavior as truth and produce noise on every visual change.
 
 ---
 
