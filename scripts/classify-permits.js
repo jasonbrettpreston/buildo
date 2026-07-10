@@ -389,6 +389,23 @@ const NARROW_SCOPE_CODES = {
   PCL: ['electrical', 'plumbing', 'hvac'],
 };
 
+// PERMIT_TYPE_CEILING (P16 §5.C / D2) — a `permit_type`-STRING family cap; the complement to the
+// `permit_num`-CODE NARROW_SCOPE_CODES above. Fires ONLY on the plumbing/mechanical/drain permit_types
+// whose permit_num carries NO narrow code (the disjoint residual — code-carrying permits early-return
+// via the isNarrowScope branch, unchanged). Families mirror the single-trade NARROW_SCOPE_CODES entries
+// (PLB→plumbing, HVA→hvac, DRN→drain-plumbing) so the ceiling and the code-path stay consistent.
+// Applied to the broad-scope `final` set (after applyScopeLimit, before applyClassGating) so the realtor
+// append + class gating still run. Evidence-minimal by design (D2): 0 movement on code-carrying permits.
+const PERMIT_TYPE_CEILING = {
+  'Plumbing(PS)': ['plumbing'],
+  'Mechanical(MS)': ['hvac'],
+  'Drain and Site Service': ['drain-plumbing'],
+};
+/** The permit_type family ceiling, or null when the permit_type has no family cap. */
+function permitTypeCeilingFor(permitType) {
+  return (permitType && PERMIT_TYPE_CEILING[permitType]) || null;
+}
+
 const WORK_SCOPE_EXCLUSIONS = {
   'interior alterations': ['excavation', 'shoring', 'roofing', 'landscaping', 'waterproofing'],
   'underpinning': ['roofing', 'glazing', 'landscaping', 'elevator', 'painting', 'flooring'],
@@ -628,7 +645,12 @@ function classifyPermit(permit, rules, runAt, realtorAvailable = true, permitCla
     merged.set(slug, tradeMatch);
   }
 
-  const final = applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);
+  let final = applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);
+  // P16 D2 — permit_type family ceiling for the code-LESS plumbing/mechanical/drain residual
+  // (isNarrowScope permits already early-returned above, so this only bites broad-scope permits
+  // whose permit_type is by-definition single-family). MUST NOT touch code-carrying permits.
+  const ceiling = permitTypeCeilingFor(permit.permit_type);
+  if (ceiling) final = final.filter((m) => ceiling.includes(m.trade_slug));
   return applyClassGating(final, permit, phase, runAt, realtorAvailable, permitClass);
 }
 
@@ -737,6 +759,9 @@ pipeline.run('classify-permits', async (pool) => {
     safety_upgrade: 0,
     unclassified: 0,
   };
+  // P16 D2 — count permits where the permit_type ceiling legitimately bites (broad-scope +
+  // ceiling permit_type; code-carrying narrow permits early-return before the ceiling applies).
+  let permitTypeCeilingApplied = 0;
   let lastPermitNum = '';
   let lastRevisionNum = '';
 
@@ -789,6 +814,10 @@ pipeline.run('classify-permits', async (pool) => {
       // classifier filters non-construction trade matches per Spec 80 §5.
       const permitClass = classifyPermitType(permitClassMap, permit.permit_type);
       classCounters[permitClass] = (classCounters[permitClass] ?? 0) + 1;
+      // P16 D2 telemetry — ceiling bites only broad-scope permits (narrow codes early-return).
+      const ceilCode = extractPermitCode(permit.permit_num);
+      const ceilNarrow = ceilCode != null && NARROW_SCOPE_CODES[ceilCode] != null;
+      if (!ceilNarrow && permitTypeCeilingFor(permit.permit_type)) permitTypeCeilingApplied++;
       const matches = classifyPermit(permit, allRules, RUN_AT, realtorAvailable, permitClass, archetypeBundleConfidence);
       if (matches.length > 0) {
         // Dedup by (permit_num, revision_num, trade_id) - keep highest confidence
@@ -812,11 +841,16 @@ pipeline.run('classify-permits', async (pool) => {
           if (m.confidence > archetypeBundleConfidence && !m.fromFallback) strongSignalTradeIds.add(m.trade_id);
           else weakSignalTradeIds.add(m.trade_id);
           insertParams.push(
-            `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`
+            `($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`
           );
+          // P16 D4 — attachment_basis provenance. In 16A every emitted row derives it from is_active
+          // (evidence path = active; the coarse bundle-prior = inactive = 'inference'), matching the
+          // mig-216 backfill. 16C sets m.attachment_basis explicitly on lean-inference rows, which
+          // takes precedence here.
+          const basis = m.attachment_basis || (m.is_active ? 'evidence' : 'inference');
           insertValues.push(
             m.permit_num, m.revision_num, m.trade_id, m.tier,
-            m.confidence, m.is_active, m.phase, m.lead_score
+            m.confidence, m.is_active, m.phase, m.lead_score, basis
           );
         }
       }
@@ -853,27 +887,29 @@ pipeline.run('classify-permits', async (pool) => {
     // Collect permit keys for ghost trade cleanup
     const batchPermitKeys = batch.rows.map(p => `${p.permit_num}--${p.revision_num}`);
 
-    // Batch insert — sub-batch to stay under 65535 param limit (8 params per row + 1 RUN_AT → max 4000 rows)
+    // Batch insert — sub-batch to stay under 65535 param limit (9 params per row + 1 RUN_AT → max 4000 rows)
+    const COLS_PER_ROW = 9; // P16: was 8; +attachment_basis
     const MAX_ROWS_PER_INSERT = 4000;
     for (let i = 0; i < insertParams.length; i += MAX_ROWS_PER_INSERT) {
       const chunk = insertParams.slice(i, i + MAX_ROWS_PER_INSERT);
-      // Append RUN_AT as the last param; its index = chunk.length * 8 + 1
-      const valChunk = [...insertValues.slice(i * 8, (i + MAX_ROWS_PER_INSERT) * 8), RUN_AT];
-      const runAtIdx = chunk.length * 8 + 1;
+      // Append RUN_AT as the last param; its index = chunk.length * COLS_PER_ROW + 1
+      const valChunk = [...insertValues.slice(i * COLS_PER_ROW, (i + MAX_ROWS_PER_INSERT) * COLS_PER_ROW), RUN_AT];
+      const runAtIdx = chunk.length * COLS_PER_ROW + 1;
       // Re-number params for this chunk
       let pIdx = 1;
       const renumbered = [];
       for (let r = 0; r < chunk.length; r++) {
-        renumbered.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++})`);
+        renumbered.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++})`);
       }
       await pipeline.withTransaction(pool, async (client) => {
         const result = await client.query(
-          `INSERT INTO permit_trades (permit_num, revision_num, trade_id, tier, confidence, is_active, phase, lead_score)
+          `INSERT INTO permit_trades (permit_num, revision_num, trade_id, tier, confidence, is_active, phase, lead_score, attachment_basis)
            VALUES ${renumbered.join(', ')}
            ON CONFLICT (permit_num, revision_num, trade_id)
            DO UPDATE SET tier = EXCLUDED.tier, confidence = EXCLUDED.confidence,
                          is_active = EXCLUDED.is_active, phase = EXCLUDED.phase,
-                         lead_score = EXCLUDED.lead_score, classified_at = $${runAtIdx}::timestamptz
+                         lead_score = EXCLUDED.lead_score, attachment_basis = EXCLUDED.attachment_basis,
+                         classified_at = $${runAtIdx}::timestamptz
            RETURNING permit_num`,
           valChunk
         );
@@ -891,7 +927,7 @@ pipeline.run('classify-permits', async (pool) => {
       // Ghost trade cleanup: delete trades that no longer match after reclassification.
       // Uses bulk unnest DELETE (single query) instead of per-permit loop to avoid N+1.
       const validTradeIds = new Map(); // "pnum--rev" -> Set<trade_id>
-      for (let i = 0; i < insertValues.length; i += 8) {
+      for (let i = 0; i < insertValues.length; i += 9) { // P16: 9 cols/row (+attachment_basis)
         const key = `${insertValues[i]}--${insertValues[i + 1]}`;
         if (!validTradeIds.has(key)) validTradeIds.set(key, new Set());
         validTradeIds.get(key).add(insertValues[i + 2]);
@@ -1083,6 +1119,10 @@ pipeline.run('classify-permits', async (pool) => {
     { metric: 'class.administrative', value: classCounters.administrative, threshold: null, status: 'INFO' },
     { metric: 'class.safety_upgrade', value: classCounters.safety_upgrade, threshold: null, status: 'INFO' },
     { metric: 'class.unclassified', value: classCounters.unclassified, threshold: null, status: 'INFO' },
+    // P16 D2 (§R10, [BUG-1]) — permit_type family ceiling applications this run. A count of a
+    // correctness mechanism firing (plumbing/mechanical/drain permit_types capped to their family);
+    // INFO by nature — a large count is not a defect, it is the residual the ceiling is designed for.
+    { metric: 'permit_type_ceiling_applied_count', value: permitTypeCeilingApplied, threshold: null, status: 'INFO' },
   ];
 
   // cov_* vocabulary coverage (Spec 30 §3 / 48 §3.5): distinct trade_ids emitted vs the trades
@@ -1117,7 +1157,7 @@ pipeline.run('classify-permits', async (pool) => {
       },
     },
   });
-  pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "project_type", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"], "product_groups": ["id", "slug", "name"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "classified_at"], "permit_products": ["permit_num", "revision_num", "product_id", "product_slug", "product_name", "confidence"] });
+  pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "project_type", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"], "product_groups": ["id", "slug", "name"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "attachment_basis", "classified_at"], "permit_products": ["permit_num", "revision_num", "product_id", "product_slug", "product_name", "confidence"] });
   });
   if (!lockResult.acquired) return;
 });

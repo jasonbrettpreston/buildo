@@ -130,6 +130,21 @@ const WORK_SCOPE_EXCLUSIONS: Record<string, string[]> = {
   'Garage Repair/Reconstruction': ['elevator', 'landscaping', 'pool-installation'],
 };
 
+/**
+ * PERMIT_TYPE_CEILING (P16 §5.C / D2) — dual-path mirror of scripts/classify-permits.js. A
+ * `permit_type`-STRING family cap, complement to the `permit_num`-CODE NARROW_SCOPE_CODES. Fires
+ * only on the plumbing/mechanical/drain permit_types whose permit_num carries no narrow code
+ * (code-carrying permits early-return via the narrow-scope path, unchanged).
+ */
+export const PERMIT_TYPE_CEILING: Record<string, string[]> = {
+  'Plumbing(PS)': ['plumbing'],
+  'Mechanical(MS)': ['hvac'],
+  'Drain and Site Service': ['drain-plumbing'],
+};
+function permitTypeCeilingFor(permitType: string | null | undefined): string[] | null {
+  return (permitType && PERMIT_TYPE_CEILING[permitType]) || null;
+}
+
 function applyScopeLimit(
   matches: TradeMatch[],
   permitNum: string | undefined,
@@ -622,9 +637,13 @@ export function classifyPermit(
     });
   }
 
-  const allMatches = Array.from(merged.values());
+  let allMatches = applyScopeLimit(Array.from(merged.values()), permit.permit_num, permit.work);
+  // P16 D2 — permit_type family ceiling for the code-LESS plumbing/mechanical/drain residual
+  // (narrow-scope permits already early-returned above). Dual-path mirror of classify-permits.js.
+  const ceiling = permitTypeCeilingFor(permit.permit_type);
+  if (ceiling) allMatches = allMatches.filter((m) => ceiling.includes(m.trade_slug));
   return applyClassGating(
-    applyScopeLimit(allMatches, permit.permit_num, permit.work),
+    allMatches,
     permit,
     phase,
     realtorAvailable,

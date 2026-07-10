@@ -30,15 +30,16 @@ DECLARE
 BEGIN
     IF TG_OP = 'INSERT' THEN
         new_lead_id := 'permit:' || NEW.permit_num || ':' || LPAD(NEW.revision_num, 2, '0');
-        INSERT INTO lead_trades (lead_id, trade_id, tier, confidence, is_active, phase, lead_score, classified_at)
-        VALUES (new_lead_id, NEW.trade_id, NEW.tier, NEW.confidence, NEW.is_active, NEW.phase, NEW.lead_score, NEW.classified_at)
+        INSERT INTO lead_trades (lead_id, trade_id, tier, confidence, is_active, phase, lead_score, classified_at, attachment_basis)
+        VALUES (new_lead_id, NEW.trade_id, NEW.tier, NEW.confidence, NEW.is_active, NEW.phase, NEW.lead_score, NEW.classified_at, NEW.attachment_basis)
         ON CONFLICT (lead_id, trade_id) DO UPDATE SET
             tier = EXCLUDED.tier,
             confidence = EXCLUDED.confidence,
             is_active = EXCLUDED.is_active,
             phase = EXCLUDED.phase,
             lead_score = EXCLUDED.lead_score,
-            classified_at = EXCLUDED.classified_at;
+            classified_at = EXCLUDED.classified_at,
+            attachment_basis = EXCLUDED.attachment_basis;
         RETURN NEW;
 
     ELSIF TG_OP = 'UPDATE' THEN
@@ -59,15 +60,16 @@ BEGIN
         -- inserted to permit_trades before this trigger was installed),
         -- the upsert restores parity instead of silently missing the
         -- WHERE-by-zero-rows case.
-        INSERT INTO lead_trades (lead_id, trade_id, tier, confidence, is_active, phase, lead_score, classified_at)
-        VALUES (new_lead_id, NEW.trade_id, NEW.tier, NEW.confidence, NEW.is_active, NEW.phase, NEW.lead_score, NEW.classified_at)
+        INSERT INTO lead_trades (lead_id, trade_id, tier, confidence, is_active, phase, lead_score, classified_at, attachment_basis)
+        VALUES (new_lead_id, NEW.trade_id, NEW.tier, NEW.confidence, NEW.is_active, NEW.phase, NEW.lead_score, NEW.classified_at, NEW.attachment_basis)
         ON CONFLICT (lead_id, trade_id) DO UPDATE SET
             tier = EXCLUDED.tier,
             confidence = EXCLUDED.confidence,
             is_active = EXCLUDED.is_active,
             phase = EXCLUDED.phase,
             lead_score = EXCLUDED.lead_score,
-            classified_at = EXCLUDED.classified_at;
+            classified_at = EXCLUDED.classified_at,
+            attachment_basis = EXCLUDED.attachment_basis;
         RETURN NEW;
 
     ELSIF TG_OP = 'DELETE' THEN

@@ -264,6 +264,13 @@ export interface TradeMatch {
   is_active: boolean;
   phase: string;
   lead_score: number;
+  /**
+   * P16 D4 — provenance of the attachment. 'evidence' = a direct tag/rule/narrow/work-fallback
+   * hit (served/active tier); 'inference' = a scope-mapped lean complement (16C) OR the legacy
+   * coarse bundle-prior. Optional: the permit writer derives it from is_active when omitted (16A);
+   * the 16C lean-inference layer sets it explicitly.
+   */
+  attachment_basis?: 'evidence' | 'inference';
 }
 
 export interface TradeMappingRule {

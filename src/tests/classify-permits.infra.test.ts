@@ -181,3 +181,52 @@ describe('classify-permits.js — protocol compliance', () => {
     expect(content).toMatch(/filterTradesByClass\(/);
   });
 });
+
+// ─── P16 D2 — permit_type family ceiling (complement to NARROW_SCOPE_CODES) ──
+describe('classify-permits.js — P16 permit_type ceiling (D2)', () => {
+  it('defines PERMIT_TYPE_CEILING for the plumbing/mechanical/drain permit_types', () => {
+    const content = src();
+    expect(content).toMatch(/PERMIT_TYPE_CEILING\s*=/);
+    expect(content).toMatch(/'Plumbing\(PS\)'\s*:\s*\[\s*'plumbing'\s*\]/);
+    expect(content).toMatch(/'Mechanical\(MS\)'\s*:\s*\[\s*'hvac'\s*\]/);
+    expect(content).toMatch(/'Drain and Site Service'\s*:\s*\[\s*'drain-plumbing'\s*\]/);
+  });
+
+  it('applies the ceiling on the BROAD-scope final set (after applyScopeLimit, before applyClassGating)', () => {
+    const content = src();
+    // The ceiling filter must sit between applyScopeLimit and the final applyClassGating return —
+    // narrow (code-carrying) permits early-return above and are never touched.
+    expect(content).toMatch(/permitTypeCeilingFor\(permit\.permit_type\)/);
+    expect(content).toMatch(/final\s*=\s*final\.filter\(\(m\)\s*=>\s*ceiling\.includes\(m\.trade_slug\)\)/);
+  });
+
+  it('emits the permit_type_ceiling_applied_count audit row (§R10, [BUG-1])', () => {
+    const content = src();
+    expect(content).toMatch(/permit_type_ceiling_applied_count/);
+  });
+
+  it('dual-path: classifier.ts mirrors PERMIT_TYPE_CEILING', () => {
+    const content = tsSrc();
+    expect(content).toMatch(/PERMIT_TYPE_CEILING/);
+    expect(content).toMatch(/permitTypeCeilingFor\(permit\.permit_type\)/);
+  });
+});
+
+// ─── P16 D4 — attachment_basis provenance emission ──
+describe('classify-permits.js — P16 attachment_basis (D4)', () => {
+  it('derives attachment_basis from is_active (evidence|inference) when not set explicitly', () => {
+    const content = src();
+    expect(content).toMatch(/attachment_basis\s*\|\|\s*\(m\.is_active\s*\?\s*'evidence'\s*:\s*'inference'\)/);
+  });
+
+  it('INSERT + ON CONFLICT SET carry attachment_basis', () => {
+    const content = src();
+    expect(content).toMatch(/INSERT INTO permit_trades[\s\S]*?attachment_basis\)/);
+    expect(content).toMatch(/attachment_basis\s*=\s*EXCLUDED\.attachment_basis/);
+  });
+
+  it('emitMeta writes list includes attachment_basis on permit_trades', () => {
+    const content = src();
+    expect(content).toMatch(/"permit_trades":\s*\[[^\]]*"attachment_basis"[^\]]*\]/);
+  });
+});

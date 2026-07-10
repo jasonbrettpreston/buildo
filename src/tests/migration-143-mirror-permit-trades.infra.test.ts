@@ -39,9 +39,11 @@ describe('migration 143 — mirror permit_trades → lead_trades trigger (Phase 
     expect(sql).toMatch(/ON\s+CONFLICT\s*\(\s*lead_id\s*,\s*trade_id\s*\)\s+DO\s+UPDATE/i);
   });
 
-  it('INSERT mirrors all upserted columns (tier, confidence, is_active, phase, lead_score, classified_at)', () => {
-    // ON CONFLICT DO UPDATE SET must update each mutable column
-    for (const col of ['tier', 'confidence', 'is_active', 'phase', 'lead_score', 'classified_at']) {
+  it('INSERT mirrors all upserted columns (tier, confidence, is_active, phase, lead_score, classified_at, attachment_basis)', () => {
+    // ON CONFLICT DO UPDATE SET must update each mutable column.
+    // P16 (mig 216): attachment_basis provenance is carried through the mirror (both branches) —
+    // pinned here so a future edit that drops it from the col-list/VALUES/SET is caught.
+    for (const col of ['tier', 'confidence', 'is_active', 'phase', 'lead_score', 'classified_at', 'attachment_basis']) {
       expect(sql).toMatch(new RegExp(`${col}\\s*=\\s*EXCLUDED\\.${col}`, 'i'));
     }
   });
