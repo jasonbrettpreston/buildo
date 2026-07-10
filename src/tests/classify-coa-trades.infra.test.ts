@@ -245,8 +245,12 @@ describe('classify-coa-trades.js — Spec 80 §5.B.5 Phase 3 archetype bundle wi
     expect(src).toMatch(/archetype_bundle_confidence:\s*z\.coerce\.number\(\)[\s\S]*?\.default\(/);
   });
 
-  it('bundleConf + DEPRECATED_TRADE_SLUGS threaded into classifyCoaTrades', () => {
-    expect(src).toMatch(/classifyCoaTrades\(\s*row\s*,\s*bundleConf\s*,\s*DEPRECATED_TRADE_SLUGS\s*\)/);
+  it('P16 16D: classifyCoaTrades takes the { inferenceEnabled } gate (bundleConf threading retired)', () => {
+    // KNOWING update: the coarse bundle prior is retired (16D), so bundleConf is no longer
+    // threaded; the inference gate option replaces it. DEPRECATED filtering moved inside the
+    // complement (COMPLEMENT_EXCLUDED_SLUGS) + the products path keeps DEPRECATED_TRADE_SLUGS.
+    expect(src).toMatch(/classifyCoaTrades\(\s*row\s*,\s*\{\s*inferenceEnabled\s*\}\s*\)/);
+    expect(src).toMatch(/classifyCoaProducts\(row,\s*DEPRECATED_TRADE_SLUGS\)/);
   });
 
   it('project_type read by the source SELECT AND declared in emitMeta reads (§R11 contract)', () => {
@@ -258,7 +262,12 @@ describe('classify-coa-trades.js — Spec 80 §5.B.5 Phase 3 archetype bundle wi
 
   it('precision counters emitted as INFO audit rows (Spec 48 §3.6 — even at value 0)', () => {
     expect(src).toMatch(/metric:\s*'coa_trades_strong_signal'[\s\S]*?status:\s*'INFO'/);
-    expect(src).toMatch(/metric:\s*'coa_trades_bundle_only'[\s\S]*?status:\s*'INFO'/);
+    // P16 16D KNOWING update: coa_trades_bundle_only retired with the bundle prior;
+    // coa_trades_inference is the provenance companion now.
+    expect(src).toMatch(/metric:\s*'coa_trades_inference'[\s\S]*?status:\s*'INFO'/);
+    // The retired metric must not be EMITTED any more (a prose mention in comments is fine).
+    expect(src).not.toMatch(/metric:\s*'coa_trades_bundle_only'/);
+    expect(src).not.toMatch(/coa_trades_bundle_only:/);
   });
 
   // Spec 80 §5.B — CoA product classification (lead_products, mig 184)
@@ -285,36 +294,55 @@ describe('classify-coa-trades.js — Spec 80 §5.B.5 Phase 3 archetype bundle wi
 
   it('REGRESSION: the existing lead_trades trade path is unchanged (product block is additive)', () => {
     expect(src).toMatch(/INSERT INTO lead_trades/);
-    expect(src).toMatch(/LEAD_TRADES_COL_COUNT\s*=\s*8/);
+    // P16 16D [A2]: 9 cols (+attachment_basis) — KNOWING update of the old 8-col pin.
+    expect(src).toMatch(/LEAD_TRADES_COL_COUNT\s*=\s*9/);
     expect(src).toMatch(/ON CONFLICT \(lead_id, trade_id\) DO UPDATE SET/);
     expect(src).toMatch(/REALTOR_TRADE_ID/);
     expect(src).toMatch(/batch\.coaIds\.push\(row\.id\)/);
   });
 });
 
-describe('classify-coa-trades.js — WF2 P6.6 CoA fan-out fix (is_active = !fromBundle)', () => {
+describe('classify-coa-trades.js — P16 16D attachment_basis (supersedes the P6.6 !fromBundle locks)', () => {
   const src = fs.readFileSync(SCRIPT, 'utf-8');
 
-  it('is_active in the tag-matrix lead_trades push is `!fromBundle` (NOT hardcoded true)', () => {
-    // The matrix push array (index 4 = is_active) must derive from bundle
-    // provenance. Bundle-only recall rows persist as is_active=false; direct
-    // tag-matrix hits stay active.
-    expect(src).toMatch(/!fromBundle,/);
-    // Guard: the OLD hardcoded `true,` must NOT appear as the is_active element
-    // of the matrix push (realtor append still uses `true` — that stays active).
-    const matrixBlock = src.match(/for \(const \{ slug, confidence, fromBundle \}[\s\S]*?tradeSlugDist\.set\(slug/);
-    expect(matrixBlock?.[0]).toMatch(/!fromBundle,/);
-    expect(matrixBlock?.[0]).not.toMatch(/\n\s*true,\s*\n\s*null, \/\/ phase/);
+  // P16 16D KNOWING lock update: is_active is TRUE for both bases (inference SERVES, D1/D5);
+  // the provenance moved to the attachment_basis column. The P6.6 fence's INTENT (bundle
+  // fan-out must not inflate forecasts at full weight) carries forward via basis-aware
+  // consumers (16E) + the retirement of the coarse bundle prior.
+  it('the matrix push carries attachment_basis as its provenance element [A2]', () => {
+    const matrixBlock = src.match(/for \(const \{ slug, confidence, attachment_basis \}[\s\S]*?tradeSlugDist\.set\(slug/);
+    expect(matrixBlock?.[0]).toMatch(/attachment_basis, \/\/ P16 D4/);
   });
 
-  it('realtor append stays is_active=true (realtor is always active)', () => {
+  it('INSERT col-list + ON CONFLICT SET carry attachment_basis [A2]', () => {
+    const m = src.match(/INSERT\s+INTO\s+lead_trades\s*\(([\s\S]*?)\)\s*VALUES/i);
+    expect(m?.[1]).toMatch(/\battachment_basis\b/);
+    expect(src).toMatch(/attachment_basis\s*=\s*EXCLUDED\.attachment_basis/);
+  });
+
+  it('inference emission is HARD-GATED on p16_inference_layer_enabled [BUG-6]', () => {
+    expect(src).toMatch(/p16_inference_layer_enabled/);
+    expect(src).toMatch(/classifyCoaTrades\(row,\s*\{\s*inferenceEnabled\s*\}\s*\)/);
+  });
+
+  it('realtor append stays is_active=true + evidence-basis', () => {
     const realtorBlock = src.match(/REALTOR_TRADE_ID,[\s\S]*?realtorAppendCount\+\+/);
     expect(realtorBlock?.[0]).toMatch(/true,/);
+    expect(realtorBlock?.[0]).toMatch(/'evidence',/);
   });
 
-  it('coaTradesStrong/coaTradesBundleOnly partition maps to the active/inactive split', () => {
-    // strong (non-bundle) increments the per-CoA active counter; bundle-only does not.
-    expect(src).toMatch(/else \{ coaTradesStrong\+\+; activeThisCoa\+\+; \}/);
+  it('[GRD-3] the evidence-scoped counter preserves the P6.6 partition honesty', () => {
+    // evidence rows increment BOTH coaTradesStrong and the per-CoA evidence counter —
+    // the `evidenceThisCoa == strong-count-per-CoA` identity pin.
+    expect(src).toMatch(/else \{ coaTradesStrong\+\+; evidenceThisCoa\+\+; \}/);
+    // and the evidence-scoped audit rows exist beside the all-active gate.
+    expect(src).toMatch(/median_evidence_trades_per_lead_nonzero/);
+    expect(src).toMatch(/avg_evidence_trades_per_lead/);
+  });
+
+  it('emitMeta writes include attachment_basis; reads include structure_type [BUG-5]', () => {
+    expect(src).toMatch(/'attachment_basis',\s*\n\s*'classified_at',/);
+    expect(src).toMatch(/'structure_type',/);
   });
 });
 

@@ -34,6 +34,25 @@
 import { deriveArchetypes, bundleSlugsFor } from './archetypes';
 import { lookupProductsForTags } from './tag-product-matrix';
 
+// P16 16D (Spec 80 §5.C) — the lean scope-mapped inference layer (CoA twin of the permit-side
+// 16C classifier.ts wiring). The complement + line detector live in the Brain-side JS module
+// (single source of truth shared with scripts/lib/coa-trade-classifier.js — §7.1 dual-path).
+// TS→JS require is the sanctioned pattern (precedent: cost-model.ts:16).
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const archetypeCostMap = require('../../features/leads/lib/archetype-cost-map') as {
+  mapToLines: (lead: {
+    projectType: string | null | undefined;
+    scopeTags: readonly unknown[] | null | undefined;
+    structureType: string | null | undefined;
+    isCoa: boolean;
+    activeTradeCount: number;
+  }) => { lines: string[]; mapKind: string } | null;
+  complementTradesFor: (lines: string[]) => string[];
+};
+const { mapToLines, complementTradesFor } = archetypeCostMap;
+/** [FAB4] inference-tier confidence — DESCRIPTIVE ONLY (ranking authority = attachment_basis). */
+export const INFERENCE_TIER_CONFIDENCE = 0.50;
+
 // Product-confidence tiers — DUPLICATED verbatim from scripts/classify-permits.js:42-43
 // (and src/lib/classification/classifier.ts) to keep the CoA product path in lockstep with
 // the permit path WITHOUT touching the live permit file. A parity test pins both sites to
@@ -209,6 +228,8 @@ export function lookupTradesForTags(scopeTags: readonly unknown[] | null | undef
 export interface CoaRowForTrades {
   project_type?: string | null;
   scope_tags?: readonly unknown[] | null;
+  /** P16 16D — feeds mapToLines' laneway/rear-suite structure override (optional). */
+  structure_type?: string | null;
 }
 
 // CoA PascalCase project_type → permit-side project_type key. Demolition/Severance/
@@ -274,39 +295,66 @@ export function deriveArchetypesForCoa(
   return deriveArchetypes(mappedPt, mappedTags);
 }
 
-/** A classified CoA trade plus its provenance — `fromBundle` is true ONLY when
- *  the direct tag-matrix did not emit the slug (the archetype bundle is its sole
- *  source). The honest precision signal, independent of the confidence value. */
+/** P16 16D — a classified CoA trade plus its PROVENANCE. Replaces the 2-state `fromBundle`
+ *  boolean: 'evidence' = a direct tag-matrix hit; 'inference' = the lean scope-mapped
+ *  complement is its sole source. Independent of the confidence value [FAB4]. */
 export interface CoaTradeMatch extends TradeMatch {
+  attachment_basis: 'evidence' | 'inference';
+}
+
+/** Product-path provenance (UNCHANGED by P16 — the product bundle prior stays; only the
+ *  TRADE bundle prior was retired). `fromBundle` = the archetype bundle is the sole source. */
+export interface CoaProductMatch {
+  slug: string;
+  confidence: number;
   fromBundle: boolean;
 }
 
+/** Options for classifyCoaTrades (P16 16D). */
+export interface ClassifyCoaTradesOptions {
+  /** [BUG-6] hard gate — mirrors the p16_inference_layer_enabled logic_variable.
+   *  Default false → evidence-only emission. */
+  inferenceEnabled?: boolean;
+}
+
 /**
- * CoA trade classification = direct tag-matrix path + archetype bundle prior,
- * MAX-deduped (a direct hit above the bundle tier wins; the bundle only fills
- * low-signal trades). Deprecated slugs are never bundle-emitted. Returns a
- * deduped, slug-sorted array of { slug, confidence, fromBundle } (mirrors the
- * permit twin's `!fromFallback` provenance so a direct hit at exactly the bundle
- * tier is still a direct/"strong" signal). tier/phase/lead_score are attached by
- * the caller (tier 3, phase null for CoA).
+ * CoA trade classification (P16 16D) = direct tag-matrix EVIDENCE path + the gated lean
+ * scope-mapped INFERENCE layer — the CoA twin of the permit-side 16C wiring. The coarse
+ * archetype bundle prior is RETIRED (P6.6 demoted it; 16D replaces `fromBundle` with the
+ * 3-state attachment_basis provenance so inference SERVES while ranking below evidence
+ * by BASIS). Severance/Demolition: no matrix tags + null mapToLines → 0 rows (the P6.6
+ * severance-0-active fence PRESERVED). Returns deduped, slug-sorted
+ * [{ slug, confidence, attachment_basis }]; tier/phase/lead_score attached by the caller.
  */
 export function classifyCoaTrades(
   row: CoaRowForTrades,
-  bundleConf: number,
-  deprecatedSlugs?: ReadonlySet<string>,
+  opts: ClassifyCoaTradesOptions = {},
 ): CoaTradeMatch[] {
-  const best = new Map<string, number>();
-  const directSlugs = new Set<string>();
+  const inferenceEnabled = opts.inferenceEnabled === true;
+  const out = new Map<string, { confidence: number; attachment_basis: 'evidence' | 'inference' }>();
   for (const { slug, confidence } of lookupTradesForTags(row.scope_tags)) {
-    directSlugs.add(slug);
-    if (confidence > (best.get(slug) ?? 0)) best.set(slug, confidence);
+    const cur = out.get(slug);
+    if (!cur || confidence > cur.confidence) {
+      out.set(slug, { confidence, attachment_basis: 'evidence' });
+    }
   }
-  const archetypes = deriveArchetypesForCoa(row.project_type, row.scope_tags);
-  for (const slug of bundleSlugsFor(archetypes, deprecatedSlugs).trades) {
-    if (bundleConf > (best.get(slug) ?? 0)) best.set(slug, bundleConf);
+  if (inferenceEnabled) {
+    const mapped = mapToLines({
+      projectType: row.project_type,
+      scopeTags: row.scope_tags,
+      structureType: row.structure_type,
+      isCoa: true,
+      activeTradeCount: out.size,
+    });
+    if (mapped && mapped.lines) {
+      for (const slug of complementTradesFor(mapped.lines)) {
+        if (out.has(slug)) continue; // an evidence hit already won the slot (D1 union)
+        out.set(slug, { confidence: INFERENCE_TIER_CONFIDENCE, attachment_basis: 'inference' });
+      }
+    }
   }
-  return Array.from(best.entries())
-    .map(([slug, confidence]) => ({ slug, confidence, fromBundle: !directSlugs.has(slug) }))
+  return Array.from(out.entries())
+    .map(([slug, v]) => ({ slug, confidence: v.confidence, attachment_basis: v.attachment_basis }))
     .sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
@@ -319,7 +367,7 @@ export function classifyCoaTrades(
 export function classifyCoaProducts(
   row: CoaRowForTrades,
   deprecatedSlugs?: ReadonlySet<string>,
-): CoaTradeMatch[] {
+): CoaProductMatch[] {
   const best = new Map<string, number>();
   const directSlugs = new Set<string>();
   for (const slug of lookupProductsForTags((row.scope_tags ?? []) as string[])) {

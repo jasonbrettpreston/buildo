@@ -44,7 +44,6 @@ const {
   classifyCoaProducts,
   shouldAppendRealtor,
   DEPRECATED_TRADE_SLUGS,
-  BUNDLE_TIER_CONFIDENCE_DEFAULT,
 } = require('./lib/coa-trade-classifier');
 const { checkRealtorAvailable, REALTOR_TRADE_ID } = require('./lib/pipeline-realtor-availability');
 const manifest = require('./manifest.json');
@@ -59,10 +58,18 @@ const LOGIC_VARS_SCHEMA = z
     // cov_* vocabulary-coverage thresholds (Spec 30 §3 / 48 §3.5 — the cov_ primitive).
     vocab_coverage_pass_pct: z.coerce.number().int().min(0).max(100),
     vocab_coverage_warn_pct: z.coerce.number().int().min(0).max(100),
-    // Spec 80 §5.B.5 — bundle-tier confidence for archetype-implied trades (mig 182).
+    // Spec 80 §5.B.5 — bundle-tier confidence (mig 182). P16 16D: the trade bundle prior is
+    // RETIRED; the var stays validated (products/telemetry heritage) but is no longer consumed here.
     archetype_bundle_confidence: z.coerce.number().min(0).max(1).default(0.55),
-    // WF2 P6.5 — active-scoped fan-out WARN ceiling (mean active trades/CoA).
+    // WF2 P6.5 — active-scoped fan-out WARN ceiling (mean active trades/CoA). P16 16D
+    // reconciliation [GRD-3]: this ceiling now governs the ALL-ACTIVE variant (evidence +
+    // inference + realtor). 18 sits above the largest lean complement (coa_build = 16 by
+    // design — build-line CoAs legitimately reach ~16-18) while still catching the P6.6-class
+    // 33-trade re-inflation. The permit-side D7 [8,11]/13 band does NOT govern CoA (its corpus
+    // is build-line-heavy); choice recorded in the P16 eval report + Spec 80 §5.C.
     coa_active_trades_warn_max: z.coerce.number().finite().positive().max(35).default(18),
+    // P16 §5.C [BUG-6] — hard gate for the lean inference layer (0 = OFF, evidence-only).
+    p16_inference_layer_enabled: z.coerce.number().int().min(0).max(1).default(0),
   })
   .passthrough()
   .refine((d) => d.vocab_coverage_warn_pct < d.vocab_coverage_pass_pct, {
@@ -70,10 +77,11 @@ const LOGIC_VARS_SCHEMA = z
   });
 
 // Spec 47 §6.3: BATCH_SIZE = Math.floor(65535 / COL_COUNT). The lead_trades
-// INSERT emits 8 columns per row (lead_id, trade_id, tier, confidence,
-// is_active, phase, lead_score, classified_at). The Math.min(1000, ...) cap
-// is memory-bounded (in-process batch staging), not param-bounded.
-const LEAD_TRADES_COL_COUNT = 8;
+// INSERT emits 9 columns per row (lead_id, trade_id, tier, confidence,
+// is_active, phase, lead_score, attachment_basis, classified_at — P16 16D added
+// attachment_basis [A2]). The Math.min(1000, ...) cap is memory-bounded
+// (in-process batch staging), not param-bounded.
+const LEAD_TRADES_COL_COUNT = 9;
 const INSERT_BATCH_SIZE = Math.min(1000, Math.floor(65535 / LEAD_TRADES_COL_COUNT));
 // Spec 80 §5.B — lead_products (mig 184). Its OWN param fence (4 cols: lead_id,
 // product_id, confidence, classified_at) — NOT shared with the 8-col trade fence.
@@ -92,11 +100,11 @@ pipeline.run('classify-coa-trades', async (pool) => {
     throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
   }
   const unmappedThresholdPct = logicVars.coa_trades_unmapped_threshold_pct;
-  // WF2 P6.5 — active fan-out WARN ceiling (default 18 via schema).
+  // WF2 P6.5 — active fan-out WARN ceiling (default 18 via schema). Post-16D this governs
+  // the ALL-ACTIVE mean (evidence + inference + realtor) — see the Zod schema note [GRD-3].
   const activeTradesWarnMax = Number(logicVars.coa_active_trades_warn_max ?? 18);
-  // Spec 80 §5.B.5 — bundle-tier confidence (mirror classify-permits.js; falls back to
-  // the default when the logic_var is absent so the bundle prior still fires).
-  const bundleConf = Number(logicVars.archetype_bundle_confidence) || BUNDLE_TIER_CONFIDENCE_DEFAULT;
+  // P16 §5.C [BUG-6] — the lean inference layer's hard gate (seeded OFF; flips in 16F).
+  const inferenceEnabled = Number(logicVars.p16_inference_layer_enabled) === 1;
 
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     // R8 fold #3 — realtor availability startup guard. Without trades.id=33
@@ -127,21 +135,28 @@ pipeline.run('classify-coa-trades', async (pool) => {
     let residentialCount = 0;
     let realtorAppendCount = 0;
     let slugResolutionMissCount = 0;
-    // Spec 80 §5.B.5 precision counters (Spec 48 §3.6 INFO rows — emit even at 0).
-    // strong = a direct tag-matrix hit above the bundle tier; bundle_only = trades
-    // carried at exactly the bundle tier (low/no direct signal). Row-derived from the
-    // emitted confidence; the realtor append is excluded (not a matrix/bundle trade).
-    let coaTradesStrong = 0;
-    let coaTradesBundleOnly = 0;
-    // WF2 P6.5 — active-scoped fan-out telemetry. Post-P6.6, `is_active` is
-    // `!fromBundle`, so active rows per CoA = direct-matrix (strong) hits +
-    // realtor append. The legacy `avg_trades_per_lead` counts ALL written rows
-    // (strong + bundle-only + realtor ≈ 31) and stays INFO; this active-scoped
-    // mean/histogram is the real fan-out signal (WARN above ~18, expected ~15).
-    // Denominator = CoAs with ≥1 ACTIVE row (severance-only legitimately 0).
+    // Spec 80 §5.C P16 16D provenance counters (Spec 48 §3.6 INFO rows — emit even at 0).
+    // strong/evidence = a direct tag-matrix hit (attachment_basis='evidence'); inference =
+    // the lean scope-mapped complement is the slug's sole source ('inference', gated).
+    // The coarse bundle prior is RETIRED — coa_trades_bundle_only retired WITH it (knowingly).
+    // The realtor append is excluded from both (not a matrix/complement trade).
+    let coaTradesStrong = 0;    // evidence-basis rows
+    let coaTradesInference = 0; // inference-basis rows (0 while the gate is OFF)
+    // [GRD-3] counter re-scope: post-16D active = evidence + inference + realtor, so the P6.6
+    // `active == strong` identity breaks BY DESIGN. Split telemetry:
+    //   (a) EVIDENCE-scoped mean/median (preserves P6.6's fan-out honesty — the direct-signal
+    //       distribution, INFO);
+    //   (b) ALL-ACTIVE mean/median governed by the operator ceiling coa_active_trades_warn_max
+    //       (18 — sits above the largest lean complement coa_build=16; catches 33-trade
+    //       re-inflation; the permit D7 [8,11]/13 band does NOT govern the build-line-heavy CoA
+    //       corpus — reconciliation recorded in the P16 eval report).
+    // Denominators = CoAs with ≥1 row in the respective scope (severance-only legitimately 0).
     let coaWithActiveTrades = 0;
     let activeTradeRowsTotal = 0;
-    const activeTradesPerCoaHist = new Map(); // active-count → #CoAs, for the median.
+    const activeTradesPerCoaHist = new Map(); // ALL-ACTIVE count → #CoAs, for the median.
+    let coaWithEvidenceTrades = 0;
+    let evidenceTradeRowsTotal = 0;
+    const evidenceTradesPerCoaHist = new Map(); // EVIDENCE count → #CoAs, for the median.
     // Spec 80 §5.B product counters (INFO).
     let coaWithProducts = 0;
     let productRowsWritten = 0;
@@ -159,7 +174,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
     // Batched INSERT staging.
     const batch = {
       coaIds: [],
-      rows: [],   // each entry: [lead_id, trade_id, tier, confidence, is_active, phase, lead_score]
+      rows: [],   // each entry: [lead_id, trade_id, tier, confidence, is_active, phase, lead_score, attachment_basis]
       leadIds: [],     // every processed CoA lead_id — drives the lead_products resync (Spec 80 §5.B)
       productRows: [], // each entry: [lead_id, product_id, confidence]
     };
@@ -167,16 +182,16 @@ pipeline.run('classify-coa-trades', async (pool) => {
     async function flushBatch() {
       if (batch.rows.length === 0 && batch.coaIds.length === 0) return;
 
-      // Build the INSERT VALUES clause + params. 8 params per row.
+      // Build the INSERT VALUES clause + params. 9 params per row (P16 16D: +attachment_basis).
       const insertValuesParts = [];
       const insertParams = [];
       let p = 1;
       for (const row of batch.rows) {
         insertValuesParts.push(
-          `($${p++}::text, $${p++}::int, $${p++}::int, $${p++}::numeric, $${p++}::boolean, $${p++}::varchar, $${p++}::int, $${p++}::timestamptz)`,
+          `($${p++}::text, $${p++}::int, $${p++}::int, $${p++}::numeric, $${p++}::boolean, $${p++}::varchar, $${p++}::int, $${p++}::text, $${p++}::timestamptz)`,
         );
-        // [lead_id, trade_id, tier, confidence, is_active, phase, lead_score]
-        insertParams.push(row[0], row[1], row[2], row[3], row[4], row[5], row[6], RUN_AT);
+        // [lead_id, trade_id, tier, confidence, is_active, phase, lead_score, attachment_basis]
+        insertParams.push(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], RUN_AT);
       }
 
       await pipeline.withTransaction(pool, async (client) => {
@@ -186,15 +201,16 @@ pipeline.run('classify-coa-trades', async (pool) => {
           // true INSERTs from ON CONFLICT UPDATEs (records_new vs _updated).
           const result = await client.query(
             `INSERT INTO lead_trades
-               (lead_id, trade_id, tier, confidence, is_active, phase, lead_score, classified_at)
+               (lead_id, trade_id, tier, confidence, is_active, phase, lead_score, attachment_basis, classified_at)
              VALUES ${insertValuesParts.join(', ')}
              ON CONFLICT (lead_id, trade_id) DO UPDATE SET
-               tier          = EXCLUDED.tier,
-               confidence    = EXCLUDED.confidence,
-               is_active     = EXCLUDED.is_active,
-               phase         = EXCLUDED.phase,
-               lead_score    = EXCLUDED.lead_score,
-               classified_at = EXCLUDED.classified_at
+               tier             = EXCLUDED.tier,
+               confidence       = EXCLUDED.confidence,
+               is_active        = EXCLUDED.is_active,
+               phase            = EXCLUDED.phase,
+               lead_score       = EXCLUDED.lead_score,
+               attachment_basis = EXCLUDED.attachment_basis,
+               classified_at    = EXCLUDED.classified_at
              RETURNING (xmax = 0) AS is_insert`,
             insertParams,
           );
@@ -250,7 +266,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
     // idempotency cursor + (l) requires scope_tags IS NOT NULL.
     const sourceStream = pipeline.streamQuery(
       pool,
-      `SELECT id, lead_id, scope_tags, coa_type_class, project_type, scope_classified_at
+      `SELECT id, lead_id, scope_tags, coa_type_class, project_type, structure_type, scope_classified_at
          FROM coa_applications
         WHERE scope_tags IS NOT NULL
           AND scope_classified_at IS NOT NULL
@@ -262,15 +278,15 @@ pipeline.run('classify-coa-trades', async (pool) => {
     for await (const row of sourceStream) {
       processed++;
 
-      // Matrix lookup + §5.B.5 archetype bundle prior (R5.1 substrate handles
-      // case-insensitivity + type-guard; classifyCoaTrades MAX-dedups direct hits
-      // with bundle-tier trades and filters deprecated slugs).
-      const matches = classifyCoaTrades(row, bundleConf, DEPRECATED_TRADE_SLUGS);
+      // P16 16D — direct tag-matrix EVIDENCE + the gated lean INFERENCE layer (the coarse
+      // bundle prior is RETIRED; classifyCoaTrades returns attachment_basis provenance).
+      const matches = classifyCoaTrades(row, { inferenceEnabled });
 
       // R8 fold #2 — lead_score formula committed: Math.round(confidence * 100).
       const tradeRows = [];
-      let activeThisCoa = 0; // WF2 P6.5 — active (is_active=true) rows for THIS CoA.
-      for (const { slug, confidence, fromBundle } of matches) {
+      let evidenceThisCoa = 0; // [GRD-3] evidence-basis rows for THIS CoA (P6.6 honesty scope).
+      let activeThisCoa = 0;   // ALL-ACTIVE rows for THIS CoA (evidence + inference + realtor).
+      for (const { slug, confidence, attachment_basis } of matches) {
         const tradeId = SLUG_TO_ID.get(slug);
         if (tradeId == null) {
           // R8 fold #9 — schema-drift catch: matrix emits a slug not in trades.
@@ -278,11 +294,11 @@ pipeline.run('classify-coa-trades', async (pool) => {
           if (slugResolutionMissSet.size < SLUG_MISS_CAP) slugResolutionMissSet.add(slug);
           continue;
         }
-        // Spec 80 §5.B.5 precision: strong = emitted by the direct tag-matrix;
-        // bundle_only = the archetype bundle is the slug's sole source (provenance,
-        // not a confidence proxy — a direct hit at exactly the bundle tier is strong).
-        if (fromBundle) coaTradesBundleOnly++;
-        else { coaTradesStrong++; activeThisCoa++; } // WF2 P6.5 — strong = active post-P6.6.
+        // P16 16D provenance split: evidence = direct tag-matrix; inference = the lean
+        // complement's sole-source rows (gated — 0 while p16_inference_layer_enabled=0).
+        if (attachment_basis === 'inference') coaTradesInference++;
+        else { coaTradesStrong++; evidenceThisCoa++; }
+        activeThisCoa++;
         tradeRows.push([
           row.lead_id,
           tradeId,
@@ -291,17 +307,14 @@ pipeline.run('classify-coa-trades', async (pool) => {
           // Tier-3 is the CoA-specific value, NOT a mirror of permit Tier-2.
           3,
           confidence,
-          // WF2 P6.6 — is_active = !fromBundle. Previously hardcoded `true`,
-          // which activated every archetype-bundle trade (NewConstruction→FB=32,
-          // Addition→ADD=26, Alteration→INT=13) with NONE of the permit-side
-          // gates — inflating CoA fan-out to ~33/35 active trades. Direct
-          // tag-matrix hits stay active; bundle-only recall rows persist as
-          // is_active=false (vocab 35/35 coverage unchanged — the manifest
-          // trade_vocab dataFilter has no is_active predicate). severance-only
-          // → 0 active preserved.
-          !fromBundle,
+          // P16 16D — is_active = true for BOTH bases (D1/D5: inference SERVES; ranking
+          // authority is attachment_basis, never is_active or the 0.50 confidence). The
+          // P6.6 `!fromBundle` demotion evolves into bundle RETIREMENT + measured lean
+          // inference (16B GO gate); severance-only → 0 rows preserved (null mapToLines).
+          true,
           null, // phase — determineCoaPhase always null at CoA submission
           Math.round(confidence * 100),
+          attachment_basis, // P16 D4 — provenance column [A2]
         ]);
         tradeSlugDist.set(slug, (tradeSlugDist.get(slug) ?? 0) + 1);
       }
@@ -320,6 +333,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
           true,
           null,
           Math.round(realtorConfidence * 100),
+          'evidence', // P16 D4 — the realtor append is a direct (gated) signal, not inference
         ]);
         tradeSlugDist.set(realtorSlug, (tradeSlugDist.get(realtorSlug) ?? 0) + 1);
         realtorAppendCount++;
@@ -332,14 +346,22 @@ pipeline.run('classify-coa-trades', async (pool) => {
       } else {
         coaZeroTrades++;
       }
-      // WF2 P6.5 — active-scoped fan-out: count CoAs with ≥1 active row + the
-      // per-CoA active histogram for the P7 median acceptance.
+      // WF2 P6.5 + P16 [GRD-3] — dual-scope fan-out: the ALL-ACTIVE histogram (gate) and the
+      // EVIDENCE-scoped histogram (P6.6 honesty, INFO). Denominators = ≥1 row in scope.
       if (activeThisCoa > 0) {
         coaWithActiveTrades++;
         activeTradeRowsTotal += activeThisCoa;
         activeTradesPerCoaHist.set(
           activeThisCoa,
           (activeTradesPerCoaHist.get(activeThisCoa) ?? 0) + 1,
+        );
+      }
+      if (evidenceThisCoa > 0) {
+        coaWithEvidenceTrades++;
+        evidenceTradeRowsTotal += evidenceThisCoa;
+        evidenceTradesPerCoaHist.set(
+          evidenceThisCoa,
+          (evidenceTradesPerCoaHist.get(evidenceThisCoa) ?? 0) + 1,
         );
       }
       // R8 fold #8 — every CoA gets its id staged so trade_classified_at
@@ -406,24 +428,31 @@ pipeline.run('classify-coa-trades', async (pool) => {
     // entries surface in the UI).
     const avgTradesPerLead = coaWithTrades > 0 ? totalLeadTradeRows / coaWithTrades : 0;
 
-    // WF2 P6.5 — active-scoped fan-out mean + median (over CoAs with ≥1 active
-    // row). WARN above `activeTradesWarnMax` (default 18); expected ~15 post-P6.6.
+    // WF2 P6.5 + P16 [GRD-3] — ALL-ACTIVE fan-out mean + median (over CoAs with ≥1 active
+    // row). WARN above `activeTradesWarnMax` (18 — above the coa_build=16 lean complement,
+    // below the 33-trade P6.6-class blowup).
     const avgActiveTradesPerLead =
       coaWithActiveTrades > 0 ? activeTradeRowsTotal / coaWithActiveTrades : 0;
     // Median from the histogram (bounded — active counts are small integers).
-    let medianActiveTradesPerLead = 0;
-    if (coaWithActiveTrades > 0) {
-      const sortedCounts = [...activeTradesPerCoaHist.keys()].sort((a, b) => a - b);
-      const midpoint = coaWithActiveTrades / 2;
+    const histMedian = (hist, denominator) => {
+      if (denominator <= 0) return 0;
+      const sortedCounts = [...hist.keys()].sort((a, b) => a - b);
+      const midpoint = denominator / 2;
       let cumulative = 0;
       for (const count of sortedCounts) {
-        cumulative += activeTradesPerCoaHist.get(count);
-        if (cumulative >= midpoint) { medianActiveTradesPerLead = count; break; }
+        cumulative += hist.get(count);
+        if (cumulative >= midpoint) return count;
       }
-    }
+      return 0;
+    };
+    const medianActiveTradesPerLead = histMedian(activeTradesPerCoaHist, coaWithActiveTrades);
     const activeFanoutStatus =
       coaWithActiveTrades === 0 ? 'INFO'
         : avgActiveTradesPerLead > activeTradesWarnMax ? 'WARN' : 'PASS';
+    // [GRD-3] EVIDENCE-scoped companions (P6.6's honesty scope — INFO, not the gate).
+    const avgEvidenceTradesPerLead =
+      coaWithEvidenceTrades > 0 ? evidenceTradeRowsTotal / coaWithEvidenceTrades : 0;
+    const medianEvidenceTradesPerLead = histMedian(evidenceTradesPerCoaHist, coaWithEvidenceTrades);
 
     const auditRows = [
       // Worktree#2 IMP-1: surface the empty-cursor first-run via a WARN row
@@ -478,6 +507,24 @@ pipeline.run('classify-coa-trades', async (pool) => {
         status: 'INFO',
       },
       { metric: 'coa_with_active_trades', value: coaWithActiveTrades, threshold: null, status: 'INFO' },
+      // P16 [GRD-3] — EVIDENCE-scoped companions: preserve P6.6's direct-signal honesty now
+      // that active = evidence + inference + realtor. INFO (the gate is the all-active mean).
+      {
+        metric: 'avg_evidence_trades_per_lead',
+        value: coaWithEvidenceTrades > 0 ? avgEvidenceTradesPerLead.toFixed(2) : 'N/A',
+        threshold: null,
+        status: 'INFO',
+      },
+      {
+        metric: 'median_evidence_trades_per_lead_nonzero',
+        value: coaWithEvidenceTrades > 0 ? medianEvidenceTradesPerLead : 'N/A',
+        threshold: 'denominator = CoAs with >=1 evidence trade only',
+        status: 'INFO',
+      },
+      // P16 16D (§R10, [BUG-3] partial — starvation/precision bands land with the 16F re-run):
+      // inference-layer gate state + emission volume.
+      { metric: 'inference_layer_enabled', value: inferenceEnabled ? 1 : 0, threshold: null, status: 'INFO' },
+      { metric: 'coa_inference_rows_emitted', value: coaTradesInference, threshold: null, status: 'INFO' },
       // R8 fold #9 — schema-drift catch. == 0 FAIL is the right threshold here
       // (this catches matrix↔trades-table divergence, not data sparsity).
       {
@@ -489,13 +536,12 @@ pipeline.run('classify-coa-trades', async (pool) => {
       { metric: 'records_new', value: recordsNew, threshold: null, status: 'INFO' },
       { metric: 'records_updated', value: recordsUpdated, threshold: null, status: 'INFO' },
       { metric: 'total_lead_trades_written', value: totalLeadTradeRows, threshold: null, status: 'INFO' },
-      // Spec 80 §5.B.5 / Spec 48 §3.6 — precision split of emitted construction
-      // trades by PROVENANCE (realtor append excluded): strong = emitted by the
-      // direct tag-matrix; bundle_only = the archetype bundle is the slug's sole
-      // source. INFO, emitted every run even at value 0 (the steady-state signal).
-      // Bundle-only proportion tracks the recall-vs-precision tradeoff.
+      // Spec 80 §5.C / Spec 48 §3.6 — precision split of emitted construction trades by
+      // PROVENANCE (realtor append excluded): strong = attachment_basis='evidence' (direct
+      // tag-matrix); inference = the lean complement's sole-source rows. INFO, emitted every
+      // run even at 0. (coa_trades_bundle_only retired WITH the coarse bundle prior — P16 16D.)
       { metric: 'coa_trades_strong_signal', value: coaTradesStrong, threshold: null, status: 'INFO' },
-      { metric: 'coa_trades_bundle_only', value: coaTradesBundleOnly, threshold: null, status: 'INFO' },
+      { metric: 'coa_trades_inference', value: coaTradesInference, threshold: null, status: 'INFO' },
       // Spec 80 §5.B — product classification (lead_products, mig 184). INFO counters;
       // the gated vocab-coverage lives in assert_global_coverage (Spec 49 §4).
       { metric: 'coa_with_products', value: coaWithProducts, threshold: null, status: 'INFO' },
@@ -537,7 +583,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
         residential_count: residentialCount,
         realtor_append_count: realtorAppendCount,
         coa_trades_strong_signal: coaTradesStrong,
-        coa_trades_bundle_only: coaTradesBundleOnly,
+        coa_trades_inference: coaTradesInference,
         slug_resolution_miss_count: slugResolutionMissCount,
         // Worktree#2 IMP-3: actionable diagnostic. Capped at SLUG_MISS_CAP (50).
         slug_resolution_misses: Array.from(slugResolutionMissSet).sort(),
@@ -560,6 +606,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
           'scope_tags',
           'coa_type_class',
           'project_type',
+          'structure_type',
           'scope_classified_at',
           'trade_classified_at',
         ],
@@ -575,6 +622,7 @@ pipeline.run('classify-coa-trades', async (pool) => {
           'is_active',
           'phase',
           'lead_score',
+          'attachment_basis',
           'classified_at',
         ],
         lead_products: ['lead_id', 'product_id', 'confidence', 'classified_at'],

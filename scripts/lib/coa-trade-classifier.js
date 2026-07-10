@@ -37,6 +37,14 @@
 
 const { deriveArchetypes, bundleSlugsFor } = require('./archetypes');
 const { lookupProductsForTags } = require('./tag-product-matrix');
+// P16 16D (Spec 80 §5.C) — the lean scope-mapped inference layer, CoA twin of the permit-side
+// 16C wiring. mapToLines is ALREADY CoA-aware (isCoa branches; structure-less rows default
+// safely — Integration verified 2026-07-09 + 16A spike). scripts→src require is the
+// sanctioned direction (precedent: compute-cost-estimates.js requires the Brain).
+const { mapToLines, complementTradesFor } = require('../../src/features/leads/lib/archetype-cost-map');
+// [FAB4] — inference-tier confidence. DESCRIPTIVE ONLY: serving/ranking authority is
+// attachment_basis, never this value. Mirrors classify-permits.js.
+const INFERENCE_TIER_CONFIDENCE = 0.50;
 
 // Product-confidence tiers — DUPLICATED verbatim from scripts/classify-permits.js:42-43
 // (and src/lib/classification/classifier.ts) to keep the CoA product path in lockstep
@@ -278,30 +286,48 @@ function deriveArchetypesForCoa(projectType, scopeTags) {
 }
 
 /**
- * CoA trade classification = direct tag-matrix path + archetype bundle prior,
- * MAX-deduped (a direct hit above the bundle tier wins; the bundle only fills
- * low-signal trades). Deprecated slugs are never bundle-emitted. Returns a
- * deduped, slug-sorted array of { slug, confidence, fromBundle } where
- * `fromBundle` is true ONLY when the direct tag-matrix did not emit the slug
- * at all (the archetype bundle is its sole source) — this is the honest
- * precision signal (mirrors the permit twin's `!fromFallback`), independent of
- * the confidence value, so a direct hit at exactly the bundle tier is still a
- * direct ("strong") signal. tier/phase/lead_score are attached by the caller
- * (tier 3, phase null for CoA).
+ * CoA trade classification (P16 16D) = direct tag-matrix EVIDENCE path + the gated lean
+ * scope-mapped INFERENCE layer — the CoA twin of the permit-side 16C wiring.
+ *
+ * The coarse archetype bundle prior is RETIRED here [GRD-1 twin]: P6.6 demoted its rows to
+ * is_active=false; 16D replaces the 2-state `fromBundle` boolean with the attachment_basis
+ * provenance ('evidence' | 'inference') so the lean inference layer SERVES (is_active=true)
+ * while ranking below evidence BY BASIS (D1/D5). Deprecated slugs are excluded from the
+ * complement (COMPLEMENT_EXCLUDED_SLUGS). Severance/Demolition CoAs: no matrix tags + a
+ * null mapToLines → 0 rows (the P6.6 severance-0-active fence PRESERVED).
+ *
+ * @param {object} row  { project_type, scope_tags, structure_type }
+ * @param {object} [opts]  { inferenceEnabled?: boolean } — [BUG-6] hard gate, mirrors the
+ *   p16_inference_layer_enabled logic_variable. Default false → evidence-only.
+ * @returns deduped, slug-sorted [{ slug, confidence, attachment_basis }]; tier/phase/
+ *   lead_score are attached by the caller (tier 3, phase null for CoA).
  */
-function classifyCoaTrades(row, bundleConf, deprecatedSlugs) {
-  const best = new Map();
-  const directSlugs = new Set();
+function classifyCoaTrades(row, opts = {}) {
+  const inferenceEnabled = opts.inferenceEnabled === true;
+  const out = new Map(); // slug → { confidence, attachment_basis }
   for (const { slug, confidence } of lookupTradesForTags(row.scope_tags)) {
-    directSlugs.add(slug);
-    if (confidence > (best.get(slug) ?? 0)) best.set(slug, confidence);
+    const cur = out.get(slug);
+    if (!cur || confidence > cur.confidence) {
+      out.set(slug, { confidence, attachment_basis: 'evidence' });
+    }
   }
-  const archetypes = deriveArchetypesForCoa(row.project_type, row.scope_tags);
-  for (const slug of bundleSlugsFor(archetypes, deprecatedSlugs).trades) {
-    if (bundleConf > (best.get(slug) ?? 0)) best.set(slug, bundleConf);
+  if (inferenceEnabled) {
+    const mapped = mapToLines({
+      projectType: row.project_type,
+      scopeTags: row.scope_tags,
+      structureType: row.structure_type,
+      isCoa: true,
+      activeTradeCount: out.size, // evidence count (permit-only W7 escalation ignores it for CoA)
+    });
+    if (mapped && mapped.lines) {
+      for (const slug of complementTradesFor(mapped.lines)) {
+        if (out.has(slug)) continue; // an evidence hit already won the slot (D1 union)
+        out.set(slug, { confidence: INFERENCE_TIER_CONFIDENCE, attachment_basis: 'inference' });
+      }
+    }
   }
-  return Array.from(best.entries())
-    .map(([slug, confidence]) => ({ slug, confidence, fromBundle: !directSlugs.has(slug) }))
+  return Array.from(out.entries())
+    .map(([slug, v]) => ({ slug, confidence: v.confidence, attachment_basis: v.attachment_basis }))
     .sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
@@ -397,4 +423,6 @@ module.exports = {
   classifyCoaProducts,
   PRODUCT_TAG_CONFIDENCE,
   PRODUCT_BUNDLE_CONFIDENCE,
+  // P16 16D — the lean inference layer's confidence constant (descriptive-only [FAB4]).
+  INFERENCE_TIER_CONFIDENCE,
 };

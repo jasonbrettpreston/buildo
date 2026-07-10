@@ -28,6 +28,8 @@ import {
   COA_TAG_TO_ARCHETYPE_TAG,
   DEPRECATED_TRADE_SLUGS,
   BUNDLE_TIER_CONFIDENCE_DEFAULT,
+  // P16 16D — the lean inference layer's confidence constant.
+  INFERENCE_TIER_CONFIDENCE,
 } from '@/lib/classification/coa-trade-classifier';
 import { ARCHETYPE_BUNDLES } from '@/lib/classification/archetypes';
 import { TRADES } from '@/lib/classification/trades';
@@ -313,16 +315,22 @@ describe('coa-trade-classifier — deriveArchetypesForCoa (CoA vocab translation
   });
 });
 
-describe('coa-trade-classifier — classifyCoaTrades (direct matrix + bundle, MAX-dedup)', () => {
-  const BC = BUNDLE_TIER_CONFIDENCE_DEFAULT;
+describe('coa-trade-classifier — classifyCoaTrades (P16 16D: evidence + gated lean inference)', () => {
+  // P16 16D KNOWING lock update: the coarse archetype bundle prior is RETIRED and the 2-state
+  // `fromBundle` boolean replaced by attachment_basis ('evidence'|'inference'). The old
+  // bundle-fill locks retire WITH it; the new contract is pinned below.
 
-  it('no-archetype CoA (variance-only) → no bundle, no direct hits → []', () => {
-    const out = classifyCoaTrades({ project_type: 'Severance', scope_tags: ['severance'] }, BC, DEPRECATED_TRADE_SLUGS);
-    expect(out).toEqual([]);
+  it('no-line CoA (variance-only Severance) → no evidence, no inference → [] (gate ON or OFF)', () => {
+    const row = { project_type: 'Severance', scope_tags: ['severance'] };
+    expect(classifyCoaTrades(row)).toEqual([]);
+    expect(classifyCoaTrades(row, { inferenceEnabled: true })).toEqual([]);
   });
 
-  it('returns a bounded, deduped, slug-sorted {slug, confidence, fromBundle} set', () => {
-    const out = classifyCoaTrades({ project_type: 'Alteration', scope_tags: ['renovation'] }, BC, DEPRECATED_TRADE_SLUGS);
+  it('returns a bounded, deduped, slug-sorted {slug, confidence, attachment_basis} set', () => {
+    const out = classifyCoaTrades(
+      { project_type: 'Alteration', scope_tags: ['renovation'] },
+      { inferenceEnabled: true },
+    );
     expect(out.length).toBeGreaterThan(0);
     const slugs = out.map((r) => r.slug);
     expect(slugs).toEqual([...slugs].sort());
@@ -330,84 +338,105 @@ describe('coa-trade-classifier — classifyCoaTrades (direct matrix + bundle, MA
     for (const r of out) {
       expect(typeof r.slug).toBe('string');
       expect(typeof r.confidence).toBe('number');
-      expect(typeof r.fromBundle).toBe('boolean');
+      expect(['evidence', 'inference']).toContain(r.attachment_basis);
       // pure function emits no tier/phase — those are caller-applied constants.
-      expect(Object.keys(r).sort()).toEqual(['confidence', 'fromBundle', 'slug']);
+      expect(Object.keys(r).sort()).toEqual(['attachment_basis', 'confidence', 'slug']);
     }
   });
 
-  it('provenance: a direct-matrix hit at exactly the bundle tier is strong (fromBundle=false), not bundle-only', () => {
-    // `fence` → direct framing@0.55; SITE bundle ALSO lists framing → merged 0.55. A naive
-    // `confidence > bundleConf` proxy would mislabel it bundle_only; provenance keeps it strong.
-    const out = classifyCoaTrades({ project_type: null, scope_tags: ['fence'] }, BC, DEPRECATED_TRADE_SLUGS);
+  it('gate OFF (default): output is the direct tag-matrix EVIDENCE set only', () => {
+    const out = classifyCoaTrades({ project_type: 'Alteration', scope_tags: ['renovation'] });
+    expect(out.length).toBeGreaterThan(0);
+    for (const r of out) expect(r.attachment_basis).toBe('evidence');
+    // The old bundle-fill trade (millwork-cabinetry via INT) does NOT appear when gated OFF.
+    expect(out.some((r) => r.slug === 'millwork-cabinetry')).toBe(false);
+  });
+
+  it('coincidental-tier value lock: a direct hit at 0.55 stays EVIDENCE (provenance ≠ confidence)', () => {
+    // `fence` → direct framing@0.55 (the old bundle tier). The basis must be path-keyed.
+    const out = classifyCoaTrades({ project_type: null, scope_tags: ['fence'] }, { inferenceEnabled: true });
     const framing = out.find((r) => r.slug === 'framing');
     expect(framing?.confidence).toBe(0.55);
-    expect(framing?.fromBundle).toBe(false);
-    // a SITE-bundle trade the fence matrix never emits IS bundle-only.
-    expect(out.find((r) => r.slug === 'site-preparation')?.fromBundle).toBe(true);
+    expect(framing?.attachment_basis).toBe('evidence');
+    // fence maps to NO cost line (mapToLines → null) → no inference rows ride along.
+    expect(out.every((r) => r.attachment_basis === 'evidence')).toBe(true);
   });
 
-  it('condo → FB bundle (Integration fold — mirrors TAG_ALIASES condo→apartment)', () => {
-    const out = classifyCoaTrades({ project_type: null, scope_tags: ['condo'] }, BC, DEPRECATED_TRADE_SLUGS);
-    expect(out.some((r) => r.slug === 'trim-work')).toBe(true); // FB-bundle finish trade
-    expect(out.some((r) => r.slug === 'millwork-cabinetry')).toBe(true);
+  it('gate ON: renovation (gut line) fills evidence-missed finish trades at 0.50 inference', () => {
+    // Alteration+renovation → TAG_LINE renovation→gut → the lean gut complement carries
+    // millwork-cabinetry/tiling/trim-work, which the `interior` matrix never emits.
+    const out = classifyCoaTrades(
+      { project_type: 'Alteration', scope_tags: ['renovation'] },
+      { inferenceEnabled: true },
+    );
+    for (const starved of ['millwork-cabinetry', 'tiling', 'trim-work']) {
+      const r = out.find((x) => x.slug === starved);
+      expect(r, `gut complement trade missing: ${starved}`).toBeTruthy();
+      expect(r?.attachment_basis).toBe('inference');
+      expect(r?.confidence).toBe(INFERENCE_TIER_CONFIDENCE);
+    }
+    // D1 union: a direct hit keeps its slot + confidence (drywall@0.70 from the interior matrix).
+    const drywall = out.find((r) => r.slug === 'drywall');
+    expect(drywall?.confidence).toBe(0.7);
+    expect(drywall?.attachment_basis).toBe('evidence');
   });
 
-  it('MAX-dedup: a direct hit above the bundle tier wins over the bundle', () => {
-    // `renovation` → interior matrix emits drywall@0.70; INT bundle also lists drywall.
-    // 0.70 > 0.55, so the direct confidence must survive.
-    const out = classifyCoaTrades({ project_type: null, scope_tags: ['renovation'] }, BC, DEPRECATED_TRADE_SLUGS);
-    expect(out.find((r) => r.slug === 'drywall')?.confidence).toBe(0.7);
-  });
-
-  it('bundle fills a low-signal trade the direct matrix never emits, at exactly the bundle tier', () => {
-    // INT bundle includes millwork-cabinetry; the `interior` trade matrix does not.
-    const out = classifyCoaTrades({ project_type: null, scope_tags: ['renovation'] }, BC, DEPRECATED_TRADE_SLUGS);
-    expect(out.find((r) => r.slug === 'millwork-cabinetry')?.confidence).toBe(BC);
-  });
-
-  it('never emits a deprecated trade (temporary-fencing) even on a full-build CoA', () => {
-    const out = classifyCoaTrades({ project_type: 'NewConstruction', scope_tags: ['dwelling'] }, BC, DEPRECATED_TRADE_SLUGS);
+  it('never emits a deprecated trade (temporary-fencing) even on a full-build CoA, gate ON', () => {
+    const out = classifyCoaTrades(
+      { project_type: 'NewConstruction', scope_tags: ['dwelling'] },
+      { inferenceEnabled: true },
+    );
     expect(out.some((r) => r.slug === 'temporary-fencing')).toBe(false);
   });
 
-  it('a full-build CoA lights up bundle-only finish/service trades absent from the direct matrix', () => {
-    const out = classifyCoaTrades({ project_type: 'NewConstruction', scope_tags: ['dwelling'] }, BC, DEPRECATED_TRADE_SLUGS);
+  it('gate ON: NewConstruction (coa_build line) attaches its lean complement as inference', () => {
+    const out = classifyCoaTrades(
+      { project_type: 'NewConstruction', scope_tags: ['dwelling'] },
+      { inferenceEnabled: true },
+    );
     const slugs = new Set(out.map((r) => r.slug));
-    // these are FB-bundle trades the build-sfd trade-matrix entry never emits.
+    // lean coa_build complement trades the build-sfd matrix never emits:
     expect(slugs.has('trim-work')).toBe(true);
     expect(slugs.has('millwork-cabinetry')).toBe(true);
     expect(slugs.has('tiling')).toBe(true);
+    // …and the RETIRED coarse-FB-only trades are GONE (leanness — D6): elevator/structural-steel
+    // were FB-bundle recall; the lean complement excludes them.
+    expect(slugs.has('elevator')).toBe(false);
+    expect(slugs.has('structural-steel')).toBe(false);
   });
 });
 
-describe('coa-trade-classifier — WF2 P6.6 is_active = !fromBundle partition contract', () => {
-  const BC = BUNDLE_TIER_CONFIDENCE_DEFAULT;
-
-  // classify-coa-trades.js sets lead_trades.is_active = !fromBundle. This pins the
-  // provenance partition that mapping depends on: direct tag-matrix hits (active)
-  // vs archetype-bundle-only recall (inactive). If the classifier's fromBundle
-  // provenance regressed, the fan-out fix would silently mis-activate.
-  it('NewConstruction+dwelling: direct build-sfd trades are ACTIVE (fromBundle=false)', () => {
-    const out = classifyCoaTrades({ project_type: 'NewConstruction', scope_tags: ['dwelling'] }, BC, DEPRECATED_TRADE_SLUGS);
-    // framing is a direct build-sfd matrix hit → active.
-    expect(out.find((r) => r.slug === 'framing')?.fromBundle).toBe(false);
+describe('coa-trade-classifier — P16 16D attachment_basis partition contract (supersedes P6.6 fromBundle)', () => {
+  // classify-coa-trades.js now writes is_active=true for BOTH bases and persists
+  // attachment_basis; ranking authority is the BASIS (D1/D5). These pin the partition.
+  it('NewConstruction+dwelling: direct build-sfd trades are EVIDENCE', () => {
+    const out = classifyCoaTrades(
+      { project_type: 'NewConstruction', scope_tags: ['dwelling'] },
+      { inferenceEnabled: true },
+    );
+    expect(out.find((r) => r.slug === 'framing')?.attachment_basis).toBe('evidence');
   });
 
-  it('NewConstruction+dwelling: FB-bundle-only trades are present-but-INACTIVE (fromBundle=true)', () => {
-    const out = classifyCoaTrades({ project_type: 'NewConstruction', scope_tags: ['dwelling'] }, BC, DEPRECATED_TRADE_SLUGS);
-    // FB-bundle recall trades the build-sfd direct matrix never emits → inactive.
-    for (const bundleOnly of ['elevator', 'structural-steel']) {
-      const r = out.find((x) => x.slug === bundleOnly);
-      if (r) expect(r.fromBundle).toBe(true); // present → must be bundle-only (inactive)
-    }
-  });
-
-  it('severance-only CoA → [] → 0 active trades (variance work has no trade fan-out)', () => {
-    const out = classifyCoaTrades({ project_type: 'Severance', scope_tags: ['severance'] }, BC, DEPRECATED_TRADE_SLUGS);
+  it('severance-only CoA → [] → 0 active trades (the P6.6 fence PRESERVED through 16D)', () => {
+    const out = classifyCoaTrades(
+      { project_type: 'Severance', scope_tags: ['severance'] },
+      { inferenceEnabled: true },
+    );
     expect(out).toEqual([]);
-    // is_active = !fromBundle over an empty set → 0 active rows.
-    expect(out.filter((r) => !r.fromBundle).length).toBe(0);
+  });
+
+  it('structure-type laneway override: a laneway CoA maps to the laneway complement', () => {
+    const out = classifyCoaTrades(
+      {
+        project_type: 'Alteration',
+        scope_tags: ['renovation'],
+        structure_type: 'Laneway / Rear Yard Suite',
+      },
+      { inferenceEnabled: true },
+    );
+    // The laneway_suite lean complement carries eavestrough-siding (starved trade) —
+    // proof the structure override reached mapToLines.
+    expect(out.find((r) => r.slug === 'eavestrough-siding')?.attachment_basis).toBe('inference');
   });
 });
 
@@ -436,8 +465,8 @@ describe('coa-trade-classifier — Phase 3 bundle slug integrity (R4) + JS↔TS 
     expect(BUNDLE_TIER_CONFIDENCE_DEFAULT).toBe(jsLib.BUNDLE_TIER_CONFIDENCE_DEFAULT);
   });
 
-  it('parity: deriveArchetypesForCoa + classifyCoaTrades over fixtures', () => {
-    const FIXTURES: Array<{ pt: string | null; tags: unknown[] }> = [
+  it('parity: deriveArchetypesForCoa + classifyCoaTrades over fixtures (both gate states)', () => {
+    const FIXTURES: Array<{ pt: string | null; tags: unknown[]; st?: string | null }> = [
       { pt: 'NewConstruction', tags: ['dwelling'] },
       { pt: 'Alteration', tags: ['renovation', 'kitchen'] },
       { pt: 'Addition', tags: ['rear-addition'] },
@@ -446,15 +475,23 @@ describe('coa-trade-classifier — Phase 3 bundle slug integrity (R4) + JS↔TS 
       { pt: null, tags: ['accessory-structure', 'garage'] },
       { pt: 'Demolition', tags: ['demolition'] },
       { pt: 'NewConstruction', tags: ['Dwelling', null, 42, ''] },
+      { pt: 'Alteration', tags: ['renovation'], st: 'Laneway / Rear Yard Suite' },
     ];
-    for (const { pt, tags } of FIXTURES) {
+    for (const { pt, tags, st } of FIXTURES) {
       expect(deriveArchetypesForCoa(pt, tags as unknown[])).toEqual(jsLib.deriveArchetypesForCoa(pt, tags));
-      const tsRow = { project_type: pt, scope_tags: tags as unknown[] };
-      const jsRow = { project_type: pt, scope_tags: tags };
-      expect(classifyCoaTrades(tsRow, BUNDLE_TIER_CONFIDENCE_DEFAULT, DEPRECATED_TRADE_SLUGS)).toEqual(
-        jsLib.classifyCoaTrades(jsRow, jsLib.BUNDLE_TIER_CONFIDENCE_DEFAULT, jsLib.DEPRECATED_TRADE_SLUGS),
-      );
+      const tsRow = { project_type: pt, scope_tags: tags as unknown[], structure_type: st ?? null };
+      const jsRow = { project_type: pt, scope_tags: tags, structure_type: st ?? null };
+      for (const inferenceEnabled of [false, true]) {
+        expect(classifyCoaTrades(tsRow, { inferenceEnabled })).toEqual(
+          jsLib.classifyCoaTrades(jsRow, { inferenceEnabled }),
+        );
+      }
     }
+  });
+
+  it('parity: INFERENCE_TIER_CONFIDENCE matches JS↔TS (0.50, descriptive-only [FAB4])', () => {
+    expect(INFERENCE_TIER_CONFIDENCE).toBe(0.5);
+    expect(jsLib.INFERENCE_TIER_CONFIDENCE).toBe(0.5);
   });
 });
 
