@@ -106,8 +106,10 @@ Create a single React page (or tabbed view) in the Admin dashboard with four dis
 ### Phase 1: Foundation & Tooling
 **Objective:** Establish the directory structure, install UI primitives, and enforce type safety.
 
+> ⚠️ **HISTORICAL / SUPERSEDED (2026-07-10).** This checklist predates the discovery that **shadcn/ui is not initialized in this repo** (no `components.json`). The control panel actually shipped with **hand-rolled Tailwind + native elements** (`src/features/admin-controls/` — see `ConfirmSyncModal.tsx`, `useAdminControlsStore.ts`), NOT shadcn CLI output. **Do NOT run `npx shadcn add`** — it is not the house convention. See Spec 33 §6 (authority) for the real UI approach. The steps below are retained for historical traceability only.
+
 - [ ] **Initialize Feature Folder:** Create `src/features/admin-controls/` with `api/`, `components/`, `lib/`, and `store/` subdirectories.
-- [ ] **Install Shadcn Primitives:** Run the CLI to add the required UI blocks:
+- [ ] ~~**Install Shadcn Primitives**~~ (SUPERSEDED — shadcn not installed; hand-roll from Tailwind + native elements per Spec 33 §6). Formerly:
   - `npx shadcn@latest add tabs`
   - `npx shadcn@latest add table`
   - `npx shadcn@latest add card`
