@@ -213,7 +213,7 @@ useEffect(() => {
 function clearAdminSession(): void {
   queryClient.clear();                               // Layer 2 purge
   useControlPanelStore.getState().discardDraft();    // Layer 3 fan-out
-  useFlightCenterStore.getState().reset();           // Layer 3 fan-out (IMPLEMENTED — src/lib/admin/session.ts, Spec 36)
+  useFlightCenterStore.getState().reset();           // Layer 3 fan-out (WIRED in src/lib/admin/session.ts, Spec 36 — MOUNT PENDING: no admin-layout client provider observes the session uid, so the §B4 uid-change trigger is contract+test-enforced but not runtime-invoked; see review_followups 2026-07-10)
   useAdminCommandStore.getState().reset();           // Layer 3 fan-out (PENDING implementation)
   // Layer 4 (localStorage) UI prefs are PRESERVED — they're admin-account-agnostic.
   Sentry.setUser(null);
