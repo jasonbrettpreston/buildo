@@ -1,27 +1,30 @@
-// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.4
-//             docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.1
-//             docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §3 + §5
-//             docs/specs/02-web-admin/35_web_admin_state_architecture.md §B3
+// 🔗 SPEC LINK: docs/specs/02-web-admin/36_flight_center_tool.md §2 + §4.2
+//             docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §9 + §14
+//             docs/specs/02-web-admin/35_web_admin_state_architecture.md §3.2 + §7.1
 //
-// Web port of mobile SearchPermitsSheet. Search permits by permit_num
-// or address (full-text, app-wide, no geo filter), claim via
-// POST /api/leads/save → permit appears on the admin's Flight Center.
+// Flight Center address search — REWRITTEN onto the Spec 36 admin routes
+// [PF-HOOKS]: useWatchlistSearch (GET /api/admin/leads/watchlist/search,
+// permits + coa arms) + useBulkSaveToWatchlist (POST bulk save). The old
+// consumer-route hooks (useSearchPermits / useSavePermit) are retired.
 //
-// UI notes:
-//   - Fixed-position overlay (not <dialog>) — <dialog> requires
-//     `dialog.showModal()` imperative API + has focus-trap quirks
-//     across browsers; a fixed overlay with backdrop + Esc handler is
-//     more predictable for the Cycle 4 scope.
-//   - 300ms debounce on the search input — matches mobile cadence
-//     and keeps PostgreSQL ILIKE load proportional to typing speed.
-//   - Auto-focus on open; Esc closes.
+// Search box (req 2): 300ms debounced input → useWatchlistSearch (enabled at
+// 2+ chars). Results render per-row "Add" AND a bulk "Add all shown" action
+// (req 3); already-watched rows come back as skipped_existing in the summary
+// toast [PF5]. searchQuery is store-owned (Spec 35 §3.2).
+//
+// UI notes: fixed-position overlay (repo precedent — SearchPermitsModal v1 /
+// ConfirmSyncModal); Esc closes; auto-focus on open. Read-only search emits
+// captureEvent('admin_watchlist_searched') only — no mutation breadcrumb
+// (Spec 89 §2.6 read-only precedent).
 
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchPermits } from '@/features/admin-flight-center/api/useSearchPermits';
-import { useSavePermit } from '@/features/admin-flight-center/api/useSavePermit';
-import type { SearchResultItem } from '@/lib/admin/lead-schemas';
+import React, { useEffect, useRef, useState } from 'react';
+import { useWatchlistSearch } from '@/features/admin-flight-center/api/useWatchlistSearch';
+import { useBulkSaveToWatchlist } from '@/features/admin-flight-center/api/useBulkSaveToWatchlist';
+import { useFlightCenterStore } from '@/features/admin-flight-center/store/useFlightCenterStore';
+import { captureEvent } from '@/lib/observability/capture';
+import type { WatchlistSearchItem, WatchlistSaveItem } from '@/lib/admin/watchlist-schemas';
 
 interface Props {
   isOpen: boolean;
@@ -30,32 +33,61 @@ interface Props {
 
 const DEBOUNCE_MS = 300;
 
+/** Map a search hit to the bulk-save wire item (address → address_snapshot [PF8]). */
+function toSaveItem(item: WatchlistSearchItem): WatchlistSaveItem {
+  if (item.lead_type === 'permit') {
+    return {
+      lead_type: 'permit',
+      // SAFETY: the permit search arm always returns non-null identifiers.
+      permit_num: item.permit_num as string,
+      revision_num: item.revision_num as string,
+      address: item.address || undefined,
+    };
+  }
+  return {
+    lead_type: 'coa',
+    // SAFETY: the coa search arm filters application_number IS NOT NULL.
+    coa_application_number: item.coa_application_number as string,
+    address: item.address || undefined,
+  };
+}
+
 export function SearchPermitsModal({ isOpen, onClose }: Props) {
-  const [rawQuery, setRawQuery] = useState('');
+  const searchQuery = useFlightCenterStore((s) => s.searchQuery);
+  const setSearchQuery = useFlightCenterStore((s) => s.setSearchQuery);
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounce raw input → debouncedQuery → useSearchPermits.
+  // Debounce store query → debouncedQuery → useWatchlistSearch.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQuery(rawQuery);
+      setDebouncedQuery(searchQuery);
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [rawQuery]);
+  }, [searchQuery]);
 
-  const { data, isFetching, isError } = useSearchPermits(debouncedQuery);
-  const savePermit = useSavePermit();
+  const { data, isFetching, isError } = useWatchlistSearch(debouncedQuery);
+  const bulkSave = useBulkSaveToWatchlist();
 
-  // Reset query + focus the input when the modal opens.
+  const trimmed = debouncedQuery.trim();
+
+  // Read-only telemetry: one captureEvent per executed (debounced) search.
+  useEffect(() => {
+    if (isOpen && trimmed.length >= 2) {
+      captureEvent('admin_watchlist_searched', { q_length: trimmed.length });
+    }
+  }, [isOpen, trimmed]);
+
+  // Reset the query + focus the input when the modal opens.
   useEffect(() => {
     if (isOpen) {
-      setRawQuery('');
+      setSearchQuery('');
       setDebouncedQuery('');
       const t = setTimeout(() => inputRef.current?.focus(), 0);
       return () => clearTimeout(t);
     }
     return undefined;
-  }, [isOpen]);
+  }, [isOpen, setSearchQuery]);
 
   // Escape closes the modal.
   useEffect(() => {
@@ -67,62 +99,38 @@ export function SearchPermitsModal({ isOpen, onClose }: Props) {
     return () => window.removeEventListener('keydown', handler);
   }, [isOpen, onClose]);
 
-  const handleClaim = useCallback(
-    (item: SearchResultItem) => {
-      // Guard double-tap during pending mutation.
-      if (savePermit.isPending) return;
-      savePermit.mutate(
-        {
-          permit_num: item.permit_num,
-          revision_num: item.revision_num,
-          // Synthesize an optimistic FlightBoardItem from the search
-          // hit. Fields the search response doesn't carry are filled
-          // with neutral placeholders; the real values are hydrated
-          // by the onSuccess invalidation that refetches the board.
-          optimisticItem: {
-            permit_num: item.permit_num,
-            revision_num: item.revision_num,
-            address: item.address,
-            lifecycle_phase: item.lifecycle_phase,
-            lifecycle_stalled: false,
-            predicted_start: null,
-            p25_days: null,
-            p75_days: null,
-            temporal_group: 'on_the_horizon',
-            updated_at: new Date().toISOString(),
-          },
-        },
-        {
-          onSuccess: () => {
-            onClose();
-          },
-        },
-      );
-    },
-    [savePermit, onClose],
-  );
-
   if (!isOpen) return null;
 
   const results = data?.data ?? [];
-  const trimmed = debouncedQuery.trim();
+
+  const addOne = (item: WatchlistSearchItem) => {
+    if (bulkSave.isPending) return;
+    bulkSave.mutate({ items: [toSaveItem(item)] });
+  };
+
+  const addAll = () => {
+    if (bulkSave.isPending || results.length === 0) return;
+    bulkSave.mutate({ items: results.map(toSaveItem) });
+  };
 
   return (
     <div
       data-testid="search-permits-modal"
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-20"
       onClick={(e) => {
-        // Backdrop click closes; clicks inside the modal panel don't.
+        // Backdrop click closes; clicks inside the modal panel do not.
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
         role="dialog"
-        aria-label="Search permits"
+        aria-label="Search projects"
         className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl"
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Search permits</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Find projects — permits &amp; CoAs
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -136,22 +144,13 @@ export function SearchPermitsModal({ isOpen, onClose }: Props) {
         <input
           ref={inputRef}
           type="text"
-          value={rawQuery}
-          onChange={(e) => setRawQuery(e.target.value)}
-          placeholder="Address or permit number..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Address, permit number, or CoA application number..."
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
           aria-label="Search query"
           data-testid="search-permits-input"
         />
-
-        {savePermit.isError && (
-          <div
-            data-testid="search-permits-save-error"
-            className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800"
-          >
-            Failed to save permit. Please try again.
-          </div>
-        )}
 
         <div className="mt-4 max-h-96 overflow-y-auto">
           {isFetching && trimmed.length >= 2 && (
@@ -171,36 +170,67 @@ export function SearchPermitsModal({ isOpen, onClose }: Props) {
           )}
           {!isFetching && trimmed.length >= 2 && results.length === 0 && !isError && (
             <p data-testid="search-permits-empty" className="text-xs text-gray-500">
-              No permits found.
+              No matching projects found.
             </p>
           )}
-          <ul data-testid="search-permits-results" className="divide-y divide-gray-100">
-            {results.map((item) => (
-              <li
-                key={`${item.permit_num}-${item.revision_num}`}
-                className="flex items-start justify-between py-3"
+
+          {results.length > 0 && (
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs text-gray-500">{results.length} result(s)</p>
+              <button
+                type="button"
+                onClick={addAll}
+                disabled={bulkSave.isPending}
+                data-testid="search-permits-add-all"
+                className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <div className="min-w-0 flex-1 pr-3">
-                  <p className="truncate text-sm font-semibold text-gray-900">
-                    {item.address || item.permit_num}
-                  </p>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                    <span className="font-mono">{item.permit_num}</span>
-                    {item.lifecycle_phase && <span>{item.lifecycle_phase}</span>}
-                    {item.status && <span>{item.status}</span>}
+                {bulkSave.isPending ? 'Adding…' : 'Add all shown →'}
+              </button>
+            </div>
+          )}
+
+          <ul data-testid="search-permits-results" className="divide-y divide-gray-100">
+            {results.map((item) => {
+              const id =
+                item.lead_type === 'permit'
+                  ? `${item.permit_num}--${item.revision_num}`
+                  : `COA-${item.coa_application_number}`;
+              return (
+                <li key={id} className="flex items-start justify-between py-2 px-1">
+                  <div className="min-w-0 flex-1 pr-3">
+                    <p className="truncate text-sm font-semibold text-gray-900">
+                      {item.address || id}
+                    </p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                          item.lead_type === 'coa'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
+                        {item.lead_type === 'coa' ? 'CoA' : 'Permit'}
+                      </span>
+                      <span className="font-mono">
+                        {item.lead_type === 'permit'
+                          ? item.permit_num
+                          : item.coa_application_number}
+                      </span>
+                      {item.lifecycle_phase && <span>{item.lifecycle_phase}</span>}
+                    </div>
                   </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleClaim(item)}
-                  disabled={savePermit.isPending}
-                  data-testid={`search-permits-claim-${item.permit_num}`}
-                  className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {savePermit.isPending ? 'Saving…' : 'Save →'}
-                </button>
-              </li>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => addOne(item)}
+                    disabled={bulkSave.isPending}
+                    data-testid={`search-permits-claim-${item.lead_type === 'permit' ? item.permit_num : item.coa_application_number}`}
+                    className="rounded-md border border-blue-600 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {bulkSave.isPending ? 'Adding…' : 'Add →'}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>

@@ -33,8 +33,10 @@ export default function AdminLeadFeedPage() {
             More tools
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* [PF9] Repointed to the standalone Spec 36 tool — the nested
+                page is a permanentRedirect; the card must not dangle on it. */}
             <Link
-              href="/admin/lead-feed/flight-center"
+              href="/admin/flight-center"
               className="group bg-white rounded-xl border border-gray-200 p-6 hover:border-blue-300 hover:shadow-lg transition-all"
             >
               <div className="text-3xl mb-3">🛫</div>
@@ -42,8 +44,8 @@ export default function AdminLeadFeedPage() {
                 Flight Center
               </h3>
               <p className="text-sm text-gray-500 mt-1">
-                Search permits, claim them to your admin Flight Board, watch
-                the predicted-start window.
+                Standalone watchlist tool — search any address, save permits and
+                CoAs, watch the delayed / expected-start signals.
               </p>
             </Link>
 

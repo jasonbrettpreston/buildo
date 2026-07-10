@@ -55,7 +55,14 @@ type EventName =
   | 'admin_pipeline_resync_triggered'
   // Parcel Cost Model Tool (Spec 89) — read-only lookup interactions (§13.1)
   | 'admin_parcel_lookup_searched'
-  | 'admin_parcel_group_expanded';
+  | 'admin_parcel_group_expanded'
+  // Flight Center Tool (Spec 36) — Spec 35 §7.1 B3 mutation event (client
+  // side of the route's server-side track(); action ∈ {watchlist_save,
+  // watchlist_bulk_save, watchlist_bulk_delete}) + read-only interactions
+  // (Spec 89 §2.6 read-only precedent — captureEvent only, no breadcrumb).
+  | 'admin_action_performed'
+  | 'admin_watchlist_searched'
+  | 'admin_watchlist_inspect_opened';
 
 type EventProperties = Record<string, unknown>;
 

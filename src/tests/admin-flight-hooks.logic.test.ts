@@ -1,39 +1,32 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.4 + §3.5 + §3.6
+// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.5 + §3.6
 //             docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §5 + §13
-//             docs/specs/02-web-admin/35_web_admin_state_architecture.md §B3
 //
-// Hook tests for the six admin-flight-center TanStack Query hooks. Each
-// hook gets: happy path, Zod-parse-failure, and (for the mutations)
-// optimistic-then-rollback. The hooks themselves use the global fetch,
-// which we mock per-test; React-state assertions go through @testing-
-// library/react `renderHook` + `waitFor`.
+// Hook tests for the SURVIVING admin-flight-center detail hooks
+// (useFlightBoardDetail, useLeadDetail — their routes are unchanged by
+// Spec 36). The four consumer-route hooks this file previously locked
+// (useAdminFlightBoard / useSavePermit / useUnsavePermit / useSearchPermits)
+// were RETIRED by Spec 36 P15-15C [PF-HOOKS] — their replacements
+// (useWatchlist / useBulkSaveToWatchlist / useBulkDeleteFromWatchlist /
+// useWatchlistSearch) are locked in
+// src/tests/admin-watchlist-hooks.logic.test.ts.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query';
 import React from 'react';
 
-import { useAdminFlightBoard, ADMIN_FLIGHT_BOARD_QUERY_KEY } from '@/features/admin-flight-center/api/useAdminFlightBoard';
 import { useFlightBoardDetail, FlightBoardDetailError } from '@/features/admin-flight-center/api/useFlightBoardDetail';
 import { useLeadDetail, LeadDetailError } from '@/features/admin-flight-center/api/useLeadDetail';
-import { useSavePermit } from '@/features/admin-flight-center/api/useSavePermit';
-import { useUnsavePermit } from '@/features/admin-flight-center/api/useUnsavePermit';
-import { useSearchPermits } from '@/features/admin-flight-center/api/useSearchPermits';
-import type { FlightBoardItem, FlightBoardResult } from '@/lib/admin/lead-schemas';
+import type { FlightBoardItem } from '@/lib/admin/lead-schemas';
 
 vi.mock('@/lib/logger', () => ({
   logError: vi.fn(),
   logWarn: vi.fn(),
   logInfo: vi.fn(),
-}));
-
-vi.mock('@sentry/nextjs', () => ({
-  addBreadcrumb: vi.fn(),
-  captureException: vi.fn(),
 }));
 
 const VALID_FLIGHT_ITEM: FlightBoardItem = {
@@ -76,10 +69,8 @@ let mockFetch: ReturnType<typeof vi.fn>;
 
 function makeWrapper() {
   // Each test gets its own QueryClient so cache state doesn't leak
-  // between tests (vital for the optimistic-rollback assertions which
-  // inspect cache snapshots). gcTime: Infinity is critical — entries
-  // we set via setQueryData have no observers, and gcTime: 0 would
-  // sweep them out before the assertion gets to read them.
+  // between tests. gcTime: Infinity keeps observer-less entries alive
+  // long enough for assertions.
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: Infinity },
@@ -111,45 +102,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
-});
-
-// ===========================================================================
-// useAdminFlightBoard
-// ===========================================================================
-
-describe('useAdminFlightBoard', () => {
-  it('parses a valid response into a FlightBoardResult', async () => {
-    mockFetch.mockResolvedValueOnce(
-      mockJsonResponse({ data: [VALID_FLIGHT_ITEM] }),
-    );
-    const { Wrapper } = makeWrapper();
-    const { result } = renderHook(() => useAdminFlightBoard(), { wrapper: Wrapper });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.data).toHaveLength(1);
-    expect(result.current.data?.data[0]?.permit_num).toBe('20-101234');
-  });
-
-  it('non-2xx response surfaces network error', async () => {
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 500 }));
-    const { Wrapper } = makeWrapper();
-    const { result } = renderHook(() => useAdminFlightBoard(), { wrapper: Wrapper });
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.error?.message).toMatch(/500/);
-  });
-
-  it('Zod parse failure throws via throwOnError (schema drift = contract bug)', async () => {
-    // Server returned a malformed item — temporal_group not in the enum.
-    mockFetch.mockResolvedValueOnce(
-      mockJsonResponse({
-        data: [{ ...VALID_FLIGHT_ITEM, temporal_group: 'someday' }],
-      }),
-    );
-    const { Wrapper } = makeWrapper();
-    const { result } = renderHook(() => useAdminFlightBoard(), { wrapper: Wrapper });
-    // throwOnError converts the ZodError into an unhandled hook state;
-    // TanStack still surfaces it via `isError` on the next tick.
-    await waitFor(() => expect(result.current.isError).toBe(true));
-  });
 });
 
 // ===========================================================================
@@ -238,315 +190,5 @@ describe('useLeadDetail', () => {
     renderHook(() => useLeadDetail(''), { wrapper: Wrapper });
     await new Promise((r) => setTimeout(r, 10));
     expect(mockFetch).not.toHaveBeenCalled();
-  });
-});
-
-// ===========================================================================
-// useSavePermit (Spec 35 §B3 optimistic + rollback)
-// ===========================================================================
-
-describe('useSavePermit', () => {
-  it('optimistically inserts the supplied item into the flight-board cache', async () => {
-    const { queryClient, Wrapper } = makeWrapper();
-    // Seed the cache with an empty board.
-    queryClient.setQueryData<FlightBoardResult>(ADMIN_FLIGHT_BOARD_QUERY_KEY, {
-      data: [],
-    });
-    // Save POST resolves successfully.
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
-
-    const { result } = renderHook(() => useSavePermit(), { wrapper: Wrapper });
-    await act(async () => {
-      await result.current.mutateAsync({
-        permit_num: '20-101234',
-        revision_num: '00',
-        optimisticItem: VALID_FLIGHT_ITEM,
-      });
-    });
-    // After successful save, the onSuccess invalidation kicks; verify
-    // the optimistic write landed by checking the cache pre-invalidation
-    // is impractical, so assert the invalidate was queued instead.
-    const cached = queryClient.getQueryData<FlightBoardResult>(
-      ADMIN_FLIGHT_BOARD_QUERY_KEY,
-    );
-    // The invalidation triggers a refetch; with no refetch handler the
-    // cache remains the optimistic value. Either way the row must be present.
-    expect(
-      cached?.data.some(
-        (i) => i.permit_num === '20-101234' && i.revision_num === '00',
-      ),
-    ).toBe(true);
-  });
-
-  it('rolls back the optimistic insert on save failure (Spec 35 §B3)', async () => {
-    const { queryClient, Wrapper } = makeWrapper();
-    const startingBoard: FlightBoardResult = { data: [] };
-    queryClient.setQueryData(ADMIN_FLIGHT_BOARD_QUERY_KEY, startingBoard);
-    // Save POST FAILS — non-2xx → useSavePermit throws.
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 500 }));
-
-    const { result } = renderHook(() => useSavePermit(), { wrapper: Wrapper });
-    await act(async () => {
-      try {
-        await result.current.mutateAsync({
-          permit_num: '20-101234',
-          revision_num: '00',
-          optimisticItem: VALID_FLIGHT_ITEM,
-        });
-      } catch {
-        // Expected — the mutation throws on 5xx.
-      }
-    });
-
-    // Rollback assertion — cache MUST be back to the original empty
-    // board (NOT containing the optimistic item).
-    const cached = queryClient.getQueryData<FlightBoardResult>(
-      ADMIN_FLIGHT_BOARD_QUERY_KEY,
-    );
-    expect(cached?.data).toHaveLength(0);
-  });
-
-  it('sends canonical lead_id format `${permit_num}--${revision_num}` to /api/leads/save (Spec 91 §4.3.1)', async () => {
-    const { queryClient, Wrapper } = makeWrapper();
-    queryClient.setQueryData<FlightBoardResult>(ADMIN_FLIGHT_BOARD_QUERY_KEY, {
-      data: [],
-    });
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
-
-    const { result } = renderHook(() => useSavePermit(), { wrapper: Wrapper });
-    await act(async () => {
-      await result.current.mutateAsync({
-        permit_num: '24-101234-BLD',
-        revision_num: '01',
-      });
-    });
-    expect(mockFetch).toHaveBeenCalledOnce();
-    const [url, init] = mockFetch.mock.calls[0] ?? [];
-    expect(url).toBe('/api/leads/save');
-    const body = JSON.parse((init as { body: string }).body) as {
-      lead_id: string;
-      lead_type: string;
-      saved: boolean;
-    };
-    // Canonical: double-dash separator, NO `permit-` prefix. Toronto permit
-    // numbers contain single dashes (e.g. `24-101234-BLD`); the server
-    // parser splits on the FIRST `--` only, so the permit_num is preserved
-    // verbatim on the left of the split.
-    expect(body.lead_id).toBe('24-101234-BLD--01');
-    expect(body.lead_type).toBe('permit');
-    expect(body.saved).toBe(true);
-  });
-
-  it('emits a Sentry admin_action breadcrumb in onMutate (Spec 35 §7.1)', async () => {
-    const Sentry = await import('@sentry/nextjs');
-    const breadcrumbSpy = vi.mocked(Sentry.addBreadcrumb);
-    const { queryClient, Wrapper } = makeWrapper();
-    queryClient.setQueryData<FlightBoardResult>(ADMIN_FLIGHT_BOARD_QUERY_KEY, {
-      data: [],
-    });
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
-
-    const { result } = renderHook(() => useSavePermit(), { wrapper: Wrapper });
-    await act(async () => {
-      await result.current.mutateAsync({
-        permit_num: '20-101234',
-        revision_num: '00',
-      });
-    });
-    // Spec 35 §7.1: every state-mutating admin action MUST emit a
-    // category:'admin_action' breadcrumb. Spec 99 §B3 timing: in
-    // onMutate, BEFORE the network call, so failed mutations still
-    // record user intent.
-    expect(breadcrumbSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        category: 'admin_action',
-        message: 'save_permit',
-        data: expect.objectContaining({
-          permit_num: '20-101234',
-          revision_num: '00',
-        }),
-      }),
-    );
-  });
-
-  it('skips optimistic write when no item is supplied (still calls server)', async () => {
-    const { queryClient, Wrapper } = makeWrapper();
-    queryClient.setQueryData<FlightBoardResult>(ADMIN_FLIGHT_BOARD_QUERY_KEY, {
-      data: [VALID_FLIGHT_ITEM],
-    });
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
-
-    const { result } = renderHook(() => useSavePermit(), { wrapper: Wrapper });
-    await act(async () => {
-      await result.current.mutateAsync({
-        permit_num: '20-101234',
-        revision_num: '00',
-      });
-    });
-    expect(mockFetch).toHaveBeenCalledOnce();
-    const call = mockFetch.mock.calls[0];
-    expect(call?.[0]).toBe('/api/leads/save');
-  });
-});
-
-// ===========================================================================
-// useUnsavePermit
-// ===========================================================================
-
-describe('useUnsavePermit', () => {
-  it('optimistically removes the row + invalidates on success', async () => {
-    const { queryClient, Wrapper } = makeWrapper();
-    queryClient.setQueryData<FlightBoardResult>(ADMIN_FLIGHT_BOARD_QUERY_KEY, {
-      data: [VALID_FLIGHT_ITEM],
-    });
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
-
-    const { result } = renderHook(() => useUnsavePermit(), { wrapper: Wrapper });
-    await act(async () => {
-      await result.current.mutateAsync({
-        permit_num: '20-101234',
-        revision_num: '00',
-      });
-    });
-    const cached = queryClient.getQueryData<FlightBoardResult>(
-      ADMIN_FLIGHT_BOARD_QUERY_KEY,
-    );
-    expect(cached?.data).toHaveLength(0);
-  });
-
-  it('rolls back the optimistic removal on failure', async () => {
-    const { queryClient, Wrapper } = makeWrapper();
-    queryClient.setQueryData<FlightBoardResult>(ADMIN_FLIGHT_BOARD_QUERY_KEY, {
-      data: [VALID_FLIGHT_ITEM],
-    });
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 500 }));
-
-    const { result } = renderHook(() => useUnsavePermit(), { wrapper: Wrapper });
-    await act(async () => {
-      try {
-        await result.current.mutateAsync({
-          permit_num: '20-101234',
-          revision_num: '00',
-        });
-      } catch {
-        // expected
-      }
-    });
-    const cached = queryClient.getQueryData<FlightBoardResult>(
-      ADMIN_FLIGHT_BOARD_QUERY_KEY,
-    );
-    // Rollback restored the row.
-    expect(cached?.data).toHaveLength(1);
-  });
-
-  it('sends canonical lead_id format with saved:false to /api/leads/save', async () => {
-    const { Wrapper } = makeWrapper();
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
-
-    const { result } = renderHook(() => useUnsavePermit(), { wrapper: Wrapper });
-    await act(async () => {
-      await result.current.mutateAsync({
-        permit_num: '24-101234-BLD',
-        revision_num: '01',
-      });
-    });
-    const [url, init] = mockFetch.mock.calls[0] ?? [];
-    expect(url).toBe('/api/leads/save');
-    const body = JSON.parse((init as { body: string }).body) as {
-      lead_id: string;
-      saved: boolean;
-    };
-    expect(body.lead_id).toBe('24-101234-BLD--01');
-    expect(body.saved).toBe(false);
-  });
-
-  it('emits a Sentry admin_action:unsave_permit breadcrumb in onMutate', async () => {
-    const Sentry = await import('@sentry/nextjs');
-    const breadcrumbSpy = vi.mocked(Sentry.addBreadcrumb);
-    const { Wrapper } = makeWrapper();
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 200 }));
-
-    const { result } = renderHook(() => useUnsavePermit(), { wrapper: Wrapper });
-    await act(async () => {
-      await result.current.mutateAsync({
-        permit_num: '20-101234',
-        revision_num: '00',
-      });
-    });
-    expect(breadcrumbSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        category: 'admin_action',
-        message: 'unsave_permit',
-        data: expect.objectContaining({
-          permit_num: '20-101234',
-          revision_num: '00',
-        }),
-      }),
-    );
-  });
-});
-
-// ===========================================================================
-// useSearchPermits
-// ===========================================================================
-
-describe('useSearchPermits', () => {
-  it('is inert when query length < 2 (no fetch)', async () => {
-    const { Wrapper } = makeWrapper();
-    renderHook(() => useSearchPermits('q'), { wrapper: Wrapper });
-    await new Promise((r) => setTimeout(r, 10));
-    expect(mockFetch).not.toHaveBeenCalled();
-  });
-
-  it('is inert when query is whitespace-only', async () => {
-    const { Wrapper } = makeWrapper();
-    renderHook(() => useSearchPermits('   '), { wrapper: Wrapper });
-    await new Promise((r) => setTimeout(r, 10));
-    expect(mockFetch).not.toHaveBeenCalled();
-  });
-
-  it('fetches and parses when query length >= 2', async () => {
-    mockFetch.mockResolvedValueOnce(
-      mockJsonResponse({
-        data: [
-          {
-            permit_num: '20-101234',
-            revision_num: '00',
-            address: '123 Queen St W',
-            lifecycle_phase: 'permit-issued',
-            status: 'open',
-          },
-        ],
-      }),
-    );
-    const { Wrapper } = makeWrapper();
-    const { result } = renderHook(() => useSearchPermits('queen'), {
-      wrapper: Wrapper,
-    });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.data).toHaveLength(1);
-  });
-
-  it('non-2xx surfaces error', async () => {
-    mockFetch.mockResolvedValueOnce(mockJsonResponse({}, { status: 500 }));
-    const { Wrapper } = makeWrapper();
-    const { result } = renderHook(() => useSearchPermits('queen'), {
-      wrapper: Wrapper,
-    });
-    await waitFor(() => expect(result.current.isError).toBe(true));
-  });
-
-  it('Zod parse failure on malformed search response', async () => {
-    mockFetch.mockResolvedValueOnce(
-      mockJsonResponse({
-        // Malformed: top-level `results` instead of `data`.
-        results: [{ permit_num: '20-101234' }],
-      }),
-    );
-    const { Wrapper } = makeWrapper();
-    const { result } = renderHook(() => useSearchPermits('queen'), {
-      wrapper: Wrapper,
-    });
-    await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });
