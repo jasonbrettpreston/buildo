@@ -36,9 +36,27 @@ interface RecordLeadViewResult {
 }
 
 /**
+ * Minimal key-only structural input for `buildLeadKey`. Spec 36 (P15-15B)
+ * adds the `coa` branch for the admin watchlist WITHOUT widening the shared
+ * `RecordLeadViewInput` union (which stays permit|builder — `recordLeadView`
+ * and the lead_views write path never see a coa through this lib).
+ * `RecordLeadViewInput`'s members are structurally assignable to the
+ * permit/builder arms here, so existing callers are unaffected.
+ */
+export type LeadKeyInput =
+  | { lead_type: 'permit'; permit_num: string; revision_num: string }
+  | { lead_type: 'builder'; entity_id: number }
+  | { lead_type: 'coa'; coa_application_number: string };
+
+/**
  * Build the deterministic `lead_key` per spec 70 §Database Schema:
  *   permit lead → `permit:{permit_num}:{revision_num}` (revision zero-padded to 2 digits)
  *   builder lead → `builder:{entity_id}`
+ *   coa lead    → `coa:{application_number}` (verbatim, NO padding — byte-exact
+ *                 match for the `'coa:' || ca.application_number` format used by
+ *                 trade_forecasts.lead_id / lead_trades.lead_id producers
+ *                 (get-lead-feed.ts, lead-inspect-query.ts); the Spec 36 §2
+ *                 watchlist forecast join depends on this exact format)
  *
  * Normalization: the permits table has historical drift between `'0'` and
  * `'00'` for the zero revision (migration 001 loader uses `'00'` but some
@@ -52,7 +70,14 @@ interface RecordLeadViewResult {
  * Exported so the API route layer (Phase 2) can echo the same key in its
  * response payload if needed.
  */
-export function buildLeadKey(input: RecordLeadViewInput): string {
+// Accepts EITHER the full RecordLeadViewInput (existing callers + the
+// record-lead-view test locks pass full literals — excess-property checks
+// would reject them against the key-only shape) OR the minimal LeadKeyInput.
+// Both unions discriminate on lead_type, so narrowing is unaffected.
+export function buildLeadKey(input: LeadKeyInput | RecordLeadViewInput): string {
+  if (input.lead_type === 'coa') {
+    return `coa:${input.coa_application_number}`;
+  }
   if (input.lead_type === 'permit') {
     // Normalize to EXACTLY 2 characters matching PostgreSQL's
     // `LPAD(p.revision_num, 2, '0')` in LEAD_FEED_SQL. PostgreSQL

@@ -71,6 +71,7 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 |--------|-----|
 | `scripts/backfill-realtor-permit-trades.js` | Realtor-append permit-trade backfill (lock 114) |
 | `scripts/analysis/wf2-reset-coa-trade-classification.js` | Reset `coa_applications.trade_classified_at` so the classify-coa-trades dirty predicate drains ALL rows (backs up `(id, trade_classified_at)` first; re-fires downstream cost) |
+| `scripts/analysis/backfill-admin-watchlist.js` | Spec 36 [PF6]: seed `admin_watchlist` (mig 215) from the admins' `lead_views.saved=true` rows (reads `ADMIN_USER_IDS` env; `--confirm` to write; idempotent ON CONFLICT). Run ONCE after migration 215 |
 | `scripts/analysis/_tmp_reset_coa_links.js` | Ad-hoc CoA link reset (temporary) |
 
 ---
