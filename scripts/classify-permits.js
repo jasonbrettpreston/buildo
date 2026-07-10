@@ -39,11 +39,29 @@ const BUNDLE_TIER_CONFIDENCE_DEFAULT = 0.55;
 // line(s); LINE_TRADE_COMPLEMENT supplies the lean, inspection-calibrated trade complement
 // (16B GO gate 2026-07-10: hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2). scripts→src
 // require is the sanctioned direction (precedent: compute-cost-estimates.js requires the Brain).
-const { mapToLines, complementTradesFor } = require('../src/features/leads/lib/archetype-cost-map');
+const { mapToLines, complementTradesFor, LINE_TRADE_COMPLEMENT } = require('../src/features/leads/lib/archetype-cost-map');
 // [FAB4] — inference-tier confidence. DESCRIPTIVE ONLY: serving/ranking authority is
 // attachment_basis, never this value (clears the feed's ≥0.5 floor; sits below the 0.55
 // tag-matrix band; no serving logic may depend on it).
 const INFERENCE_TIER_CONFIDENCE = 0.50;
+// P16 16F [D7 bands — GLOBAL-band resolution, ratified panel fold]: the flat per-archetype
+// FAIL>13 would trip on build lines BY DESIGN (the honest max_build/coa_build complements are
+// 16 trades; addition 12; laneway/garden 11), so the band governs the CORPUS-WIDE mean of
+// active trades per permit-with-trades (16B whole-corpus mean attached 10.6 passes; the
+// eval-corpus band was [8,11]). Per-line spikes are watched via the p95/max companion rows.
+// Values mirror docs/specs/_contracts.json `p16_gate.mean_warn/mean_fail` (contracts lock).
+const INFERENCE_MEAN_WARN = 11;
+const INFERENCE_MEAN_FAIL = 13;
+// [FAB2] — the 13 trades measured 0-active corpus-wide (P14 evaluation, Spec 80 §5.C).
+// The FAIL band = the subset a 16B-authored complement legitimately COVERS (derived FROM
+// LINE_TRADE_COMPLEMENT at runtime, never hand-maintained); the remainder is the enumerated
+// WARN/INFO band (no line honestly implies them — accepted or routed elsewhere).
+// temporary-fencing is deprecated-for-emission and deliberately NOT in this list (D8d).
+const STARVED_TRADE_SLUGS = [
+  'caulking', 'decking-fences', 'eavestrough-siding', 'millwork-cabinetry', 'overhead-doors',
+  'pool-installation', 'security', 'site-maintenance', 'site-preparation', 'solar',
+  'stone-countertops', 'tiling', 'trim-work',
+];
 // Spec 80 §5.B — product classifier (wire the dormant permit_products). Tag-driven
 // (mirror of src/lib/classification/classifier.ts classifyProducts); the archetype
 // {products} bundle is a deferred enhancement (review_followups 80-vnext-P2).
@@ -1144,7 +1162,60 @@ pipeline.run('classify-permits', async (pool) => {
   const cumulativeTotal = safeParsePositiveInt(cumulativeResult.rows[0].total, 'total');
   const classificationCoverage = cumulativeTotal > 0 ? (cumulativeClassified / cumulativeTotal) * 100 : 0;
   const avgTradesPerPermit = totalMatches / Math.max(permitsWithTrades, 1);
-  const classifyHasWarns = classificationCoverage < 95;
+
+  // ── P16 16F §R10 bands (D7 + [FAB2] + [FAB1v2]) — CORPUS-WIDE post-run state ──
+  // Cumulative queries (same convention as classification_coverage above): the bands govern
+  // the standing corpus, not the run increment, so incremental runs stay honest.
+  const distResult = await pool.query(
+    `WITH per_permit AS (
+       SELECT permit_num, revision_num,
+              COUNT(*) FILTER (WHERE is_active) AS act,
+              COUNT(*) FILTER (WHERE attachment_basis = 'evidence' AND is_active) AS ev
+         FROM permit_trades
+        GROUP BY permit_num, revision_num
+     )
+     SELECT round(avg(act) FILTER (WHERE act > 0), 2)  AS mean_active,
+            percentile_disc(0.95) WITHIN GROUP (ORDER BY act) FILTER (WHERE act > 0) AS p95_active,
+            max(act)                                    AS max_active,
+            round(avg(ev)  FILTER (WHERE ev  > 0), 2)  AS mean_evidence
+       FROM per_permit`,
+  );
+  const meanActive = safeParseFloat(distResult.rows[0].mean_active ?? '0', 'mean_active');
+  const p95Active = Number(distResult.rows[0].p95_active ?? 0);
+  const maxActive = Number(distResult.rows[0].max_active ?? 0);
+  const meanEvidence = safeParseFloat(distResult.rows[0].mean_evidence ?? '0', 'mean_evidence');
+  // [FAB1v2] agreement surface: every row must carry a basis (backfill stamped the corpus;
+  // every 16A+ writer emits it) — a NULL is a missed writer, hard-FAIL.
+  const basisNullResult = await pool.query(
+    `SELECT COUNT(*) AS n FROM permit_trades WHERE attachment_basis IS NULL`,
+  );
+  const basisNullCount = safeParsePositiveInt(basisNullResult.rows[0].n, 'basis_null');
+  // [FAB2] starvation two-band — FAIL band DERIVED from the complement table.
+  const complementCoveredSlugs = new Set(complementTradesFor(Object.keys(LINE_TRADE_COMPLEMENT)));
+  const starvedFailBand = STARVED_TRADE_SLUGS.filter((s) => complementCoveredSlugs.has(s));
+  const starvedInfoBand = STARVED_TRADE_SLUGS.filter((s) => !complementCoveredSlugs.has(s));
+  const starvedResult = await pool.query(
+    `SELECT t.slug, COUNT(pt.id) FILTER (WHERE pt.is_active) AS act
+       FROM trades t
+       LEFT JOIN permit_trades pt ON pt.trade_id = t.id
+      WHERE t.slug = ANY($1)
+      GROUP BY t.slug`,
+    [STARVED_TRADE_SLUGS],
+  );
+  const starvedActive = new Map(starvedResult.rows.map((r) => [r.slug, Number(r.act)]));
+  const failBandStillStarved = starvedFailBand.filter((s) => (starvedActive.get(s) ?? 0) === 0);
+  const infoBandStillStarved = starvedInfoBand.filter((s) => (starvedActive.get(s) ?? 0) === 0);
+  // Band statuses fire only with the gate ON (gate OFF = the designed pre-16F state where
+  // the covered starved trades are legitimately 0-active — a FAIL there would be noise).
+  const meanBandStatus = !inferenceEnabled ? 'INFO'
+    : meanActive > INFERENCE_MEAN_FAIL ? 'FAIL'
+    : meanActive > INFERENCE_MEAN_WARN ? 'WARN' : 'PASS';
+  const starvedFailStatus = !inferenceEnabled ? 'INFO'
+    : failBandStillStarved.length > 0 ? 'FAIL' : 'PASS';
+  // Evidence-mean creep guard (D7d proxy): the D1 union must leave the evidence posture
+  // untouched — corpus baseline 5.06 (2026-07-10); WARN on upward creep past 7.
+  const evidenceMeanStatus = !inferenceEnabled ? 'INFO' : meanEvidence > 7 ? 'WARN' : 'PASS';
+
   const classifyAuditRows = [
     { metric: 'permits_processed', value: processed, threshold: null, status: 'INFO' },
     { metric: 'run_classified', value: permitsWithTrades, threshold: null, status: 'INFO' },
@@ -1187,6 +1258,46 @@ pipeline.run('classify-permits', async (pool) => {
       threshold: '<= 40% of inference_rows_emitted',
       status: inferenceRowsEmitted > 0 && fbLineInferenceRows / inferenceRowsEmitted > 0.4 ? 'WARN' : 'INFO',
     },
+    // ── P16 16F §R10 bands (corpus-wide; INFO while the gate is OFF) ──
+    // D7(a) GLOBAL band (panel-ratified): mean active trades per permit-with-trades.
+    {
+      metric: 'inference_mean_trades_per_permit',
+      value: meanActive,
+      threshold: `WARN > ${INFERENCE_MEAN_WARN}, FAIL > ${INFERENCE_MEAN_FAIL} (global band; build-line complements are 16 by design)`,
+      status: meanBandStatus,
+    },
+    // DeepSeek companion: an average hides permit-level spikes.
+    { metric: 'inference_p95_trades_per_permit', value: p95Active, threshold: null, status: 'INFO' },
+    { metric: 'inference_max_trades_per_permit', value: maxActive, threshold: null, status: 'INFO' },
+    // D7(d) precision-regression proxy: the D1 union must not move the evidence posture
+    // (corpus baseline mean-evidence 5.06; the full prec(insp) guard is the eval harness re-run).
+    {
+      metric: 'evidence_mean_trades_per_permit',
+      value: meanEvidence,
+      threshold: '<= 7 (baseline 5.06 — D1: evidence posture unchanged by inference)',
+      status: evidenceMeanStatus,
+    },
+    // [FAB2] starvation-recovery two-band (FAIL band derived FROM LINE_TRADE_COMPLEMENT).
+    {
+      metric: 'starved_trades_recovered_fail_band',
+      value: `${starvedFailBand.length - failBandStillStarved.length}/${starvedFailBand.length} recovered` +
+        (failBandStillStarved.length ? ` — still 0-active: ${failBandStillStarved.join(', ')}` : ''),
+      threshold: 'every complement-covered starved trade > 0 active post-re-run',
+      status: starvedFailStatus,
+    },
+    {
+      metric: 'starved_trades_uncovered_band',
+      value: `${starvedInfoBand.join(', ') || '(none)'}${infoBandStillStarved.length ? ` — still 0-active: ${infoBandStillStarved.join(', ')}` : ''}`,
+      threshold: 'no line honestly implies these — enumerated + ACCEPTED (or routed to another mechanism)',
+      status: 'INFO',
+    },
+    // [FAB1v2] backfill-vs-writer agreement surface: a NULL basis = a missed writer.
+    {
+      metric: 'attachment_basis_null_count',
+      value: basisNullCount,
+      threshold: '== 0',
+      status: basisNullCount === 0 ? 'PASS' : 'FAIL',
+    },
   ];
 
   // cov_* vocabulary coverage (Spec 30 §3 / 48 §3.5): distinct trade_ids emitted vs the trades
@@ -1216,7 +1327,11 @@ pipeline.run('classify-permits', async (pool) => {
       audit_table: {
         phase: 11,
         name: 'Trade Classification',
-        verdict: classifyHasWarns ? 'WARN' : 'PASS',
+        // P16 16F (Spec 47 §8.2, KNOWING fix): verdict is ROW-DERIVED, never a parallel
+        // boolean — the old `classifyHasWarns ? 'WARN' : 'PASS'` could not see the new
+        // FAIL-able band rows (and was itself the anti-pattern the Observability charter bans).
+        verdict: classifyAuditRows.some((r) => r.status === 'FAIL') ? 'FAIL'
+          : classifyAuditRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS',
         rows: classifyAuditRows,
       },
     },

@@ -386,42 +386,115 @@ Examples (real values from `trade_configurations` / Spec 85 `TRADE_TARGET_PHASE`
 
 ---
 
-## 5.C Trade Attachment — Current Rules & Archetypes [P14-A baseline; the P14-D decision will finalize]
+## 5.C Trade Attachment — FINAL model (P16, 2026-07-10): evidence + lean scope-mapped inference
 
-> **Status:** CURRENT-state snapshot (code truth, 2026-07-09), NOT the proposed model. §5.B.5 above
-> is the DESIGN table; this §5.C is the "before" the P14 redesign measures against — every archetype
-> × its code-accurate trade complement + every attachment/gate rule × firing condition × tier.
-> Full file:line + WHY: `docs/reports/pipeline-validation/2026-07-09-p14-trade-attachment-rule-inventory.md`.
-> Measured evaluation of the alternatives: `docs/reports/pipeline-validation/2026-07-09-p14-trade-attachment-evaluation.md`.
-> **P14-D will REPLACE this section with the finalized approach.**
+> **Status:** CANONICAL (P14-D executed as P16; the panel-converged D1-D8 decision record).
+> The P14-A "before" snapshot is retained below as §5.C.6 (SUPERSEDED) so the CURRENT→FINAL
+> delta stays explicit. Gate evidence: `docs/reports/pipeline-validation/2026-07-09-p16-lean-complement-eval.md`
+> (16B GO: hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2 — PROVISIONAL, 122-permit corpus;
+> deep_scrapes re-measure is a standing obligation). Rule inventory (pre-P16 file:lines):
+> `2026-07-09-p14-trade-attachment-rule-inventory.md`.
 
-**Live classifier reality:** the trade classifier is the inline `TAG_TRADE_MATRIX` + archetype
-bundle prior — NOT the DB `trade_mapping_rules` (only 6 active tier-1 rows; tiers 2/3 inactive).
+**The model (D1):** `attached = evidence ∪ lean_inference`. The EVIDENCE layer (direct
+tag/rule/narrow/work-fallback hits) is preserved byte-for-byte as the precision posture; the
+INFERENCE layer attaches the lean, inspection-calibrated `LINE_TRADE_COMPLEMENT` of each
+`mapToLines`-detected cost line. Provenance is the FIRST-CLASS column
+`attachment_basis IN ('evidence','inference')` on `permit_trades` + `lead_trades` (mig 216 +
+the mig-143 mirror), NOT a tier value (D4). Both bases SERVE (`is_active=true`); consumers
+rank/weight by BASIS, never by the descriptive 0.50 inference confidence ([FAB4]/D5).
 
-### 5.C.1 Attachment rules (firing condition × tier × is_active)
+### 5.C.1 Attachment rules (FINAL — firing condition × tier × basis)
 
-Order of operations in `classifyPermit` (`scripts/classify-permits.js:487-633`):
+Order of operations in `classifyPermit` (`scripts/classify-permits.js`):
 
-| # | Rule | Fires when | Tier | is_active | Source |
+| # | Rule | Fires when | Tier | is_active / basis | WHY |
 |---|---|---|---|---|---|
-| 1 | Tier-1 DB rules | `work` matches an active `trade_mapping_rules` row (6 live) | 1 | true | `:494-521` |
-| 2 | **Narrow-scope early-return** | `permit_num` code ∈ NARROW_SCOPE_CODES (PLB/HVA/DRN/PSA/FSU/DEM/STS/MSA/SHO/FND/TPS/PCL) | 1 | true | `:524-548` — **skips rules 3-5**; tier-1 hit → scope-limit, else code's allowed set @0.80 |
-| 3 | Tier-2 tag-trade matrix | `scope_tags` hits a matrix key (58 keys + 16 aliases) | 2 | true | `:550-576` — the primary EVIDENCE path |
-| 4 | Work-field fallback | rules 1+3 emitted 0 trades | 1 | true (`fromFallback`) | `:579-597` |
-| 5 | **Archetype bundle prior** | `deriveArchetypes(project_type, scope_tags)` ≠ [] | 2 | **FALSE (P13-3)** | `:600-629` @ bundle conf 0.55; `merged.has` guard keeps direct hits active |
-| 6 | applyScopeLimit | always (post-merge) | — filter | — | WORK_SCOPE_EXCLUSIONS subtract by `work` (`:414-432`) |
-| 7 | Class gate | always | — filter | — | `permit_type_class` allowlist (`:477-478`) |
-| 8 | Realtor append | class=construction ∧ permit_type∈REALTOR_RELEVANT_TYPES ∧ 'commercial'∉tags | 1 | true, conf 1.0 | trade 33 (`:447-467`) |
+| 1 | Tier-1 DB rules | `work` matches an active `trade_mapping_rules` row (6 live) | 1 | true / evidence | strongest direct signal |
+| 2 | **Narrow-scope early-return** | `permit_num` code ∈ NARROW_SCOPE_CODES | 1 | true / evidence | code-carrying companion permits carry ONE narrow scope; **skips 3-5 — a narrow permit gains NO inference** [GRD-2 lock] |
+| 3 | Tier-2 tag-trade matrix | `scope_tags` hits a matrix key | 2 | true / evidence | the primary evidence path |
+| 4 | Work-field fallback | rules 1+3 emitted 0 trades | 1 | true / evidence (`fromFallback`) | never leave a construction permit trade-less |
+| 5 | **Lean inference layer (P16)** | gate ON ∧ `mapToLines(permit)` ≠ null | 2 | **true / 'inference'**, conf 0.50 | the retired bundle prior's slot; complement of the DETECTED cost line(s), UNIONed under `merged.has` (evidence keeps its slot); no line → evidence-only |
+| 6 | applyScopeLimit | always (post-merge) | filter | — | WORK_SCOPE_EXCLUSIONS subtract by `work` |
+| 6b | **Permit-type ceiling (P16 D2)** | broad-scope ∧ permit_type ∈ {Plumbing(PS)→plumbing, Mechanical(MS)→hvac, Drain and Site Service→drain-plumbing} | filter | — | the `permit_type`-STRING complement to the `permit_num`-CODE gate (the code-less residual) |
+| 7 | Class gate | always | filter | — | `permit_type_class` allowlist (mig 120) |
+| 8 | Realtor append | class=construction ∧ permit_type gate ∧ 'commercial'∉tags | 1 | true / evidence, conf 1.0 | Spec 91 persona |
 
-CoA twin (`scripts/lib/coa-trade-classifier.js:292-306`): tag-matrix + bundle prior, `is_active =
-!fromBundle` (P6.6). No narrow-scope/work-fallback (CoAs carry no permit_num code / `work`).
+**Gate [BUG-6]:** rule 5 is HARD-gated on `logic_variables.p16_inference_layer_enabled`
+(OFF → evidence-only, the P13-3 posture byte-preserved; flipped ON at 16F). Dual-path mirror:
+`src/lib/classification/classifier.ts` (`options.inferenceEnabled`).
 
-**Two distinct "type" signals:** `permit_num` code (NARROW_SCOPE_CODES, strongest gate,
-early-returns) vs `permit_type` string (`permit_type_class` mig 120, gates whole matrix + realtor).
-`structure_type` does NOT gate permit-side trades (only the cost path: `isLowRiseResidential` +
-laneway override in `mapToLines`).
+**CoA twin (16D):** `classifyCoaTrades(row, { inferenceEnabled })` — direct tag-matrix =
+evidence; lean complement of the CoA-aware `mapToLines` lines = inference; the 2-state
+`fromBundle` boolean is RETIRED. Severance/Demolition → 0 rows (P6.6 fence preserved). The
+realtor append is evidence. Writers persist `attachment_basis` (9-col INSERT, both scripts).
 
-### 5.C.2 Archetype × trade complement (code truth, `archetypes.js:31-119`)
+**Consumer contract (16E, D5):** feed — inference admitted by the is_active+conf≥0.5 predicate,
+ranked below equal-pillar evidence via a deterministic 1-point relevance nudge + badged via the
+projected `attachment_basis`; supplier — permit-arm guard `(tier ≤ 1 OR confidence > 0.55 OR
+attachment_basis = 'inference')` (confidence-band route FORBIDDEN); forecasts — basis projected
+in both SOURCE_SQL branches, inference banded at `inference_weight` (0.5×) of the calibration
+sample; scores — transitive only (no direct lead_trades read; locked).
+
+### 5.C.2 Cost line × LEAN trade complement (FINAL — `LINE_TRADE_COMPLEMENT`)
+
+Source of truth: `src/features/leads/lib/archetype-cost-map.js`. One entry per EXISTING
+`LINE_DEFS` cost line (D6 — no new archetype codes). Calibration: whole-corpus per-inspectable-
+trade TP/FP (service trades hvac/plumbing/drain-plumbing/demolition/shoring/site-preparation
+DROPPED at 0-9% precision as inference adds — the evidence layer owns them); the un-starve
+finishing trades are the deliberate D7 re-attachments. `temporary-fencing` excluded (D8d).
+
+| line | n | complement |
+|---|--:|---|
+| max_build / coa_build | 16 | excavation, concrete, framing, insulation, roofing, masonry, electrical, drywall, painting, flooring, waterproofing, trim-work, tiling, millwork-cabinetry, stone-countertops, eavestrough-siding |
+| addition | 12 | excavation, concrete, framing, insulation, roofing, masonry, electrical, drywall, painting, flooring, trim-work, eavestrough-siding |
+| gut | 9 | framing, insulation, electrical, drywall, painting, flooring, trim-work, tiling, millwork-cabinetry |
+| underpin | 4 | excavation, concrete, waterproofing, framing |
+| basement | 9 | framing, insulation, electrical, drywall, painting, flooring, tiling, waterproofing, trim-work |
+| garage | 9 | excavation, concrete, framing, roofing, masonry, electrical, eavestrough-siding, overhead-doors, glazing |
+| laneway_suite / garden_suite | 11 | excavation, concrete, framing, insulation, roofing, electrical, drywall, painting, flooring, trim-work, eavestrough-siding |
+| kitchen | 8 | electrical, drywall, painting, flooring, tiling, millwork-cabinetry, stone-countertops, trim-work |
+| bath | 9 | electrical, drywall, painting, flooring, tiling, millwork-cabinetry, stone-countertops, waterproofing, caulking |
+| solar | 3 | electrical, roofing, solar |
+
+**Union-vs-dominance contract (D7e, test-locked):** trade attachment = the UNION of ALL
+detected lines' complements; COST aggregation (`mapToLines`) stays DOMINANCE — trades never
+follow cost's dominance (a garden-suite line dominating price does not drop the co-scope
+garage line's framers). Lock: `p16-line-trade-complement.logic.test.ts`.
+
+### 5.C.3 Bounds + observability contract (D7 / [FAB2] / [FAB1v2])
+
+- `inference_mean_trades_per_permit` — corpus-wide mean active/permit-with-trades; **GLOBAL
+  band WARN > 11 / FAIL > 13** (`_contracts.json p16_gate.mean_warn/mean_fail`; the per-archetype
+  FAIL>13 was retired — the honest build complements are 16 by design); p95/max companion rows.
+- `starved_trades_recovered_fail_band` — the 8 complement-covered starved trades (caulking,
+  eavestrough-siding, millwork-cabinetry, overhead-doors, solar, stone-countertops, tiling,
+  trim-work) must each be >0 active post-re-run, else FAIL. **Derived FROM the complement
+  table at runtime**, never hand-maintained (anti-Goodhart).
+- `starved_trades_uncovered_band` — decking-fences, pool-installation, security,
+  site-maintenance, site-preparation: enumerated + ACCEPTED (no line honestly implies them), INFO.
+- `evidence_mean_trades_per_permit` — the D1 precision-posture proxy (baseline 5.06; WARN > 7).
+- `attachment_basis_null_count == 0` — hard FAIL (a NULL basis = a missed writer) [FAB1v2].
+- `fb_line_inference_rows` — WARN > 40% of inference emission (the new-build stratum the
+  122-permit corpus could not validate — watched until the deep_scrapes re-measure).
+- CoA: `avg_active_trades_per_lead` gated by `coa_active_trades_warn_max` (18 — above the
+  16-trade coa_build complement; the permit D7 band does not govern the build-line-heavy CoA
+  corpus) + evidence-scoped mean/median honesty rows [GRD-3] + `coa_trades_inference`.
+- All band statuses are INFO while the gate is OFF (no false FAIL in the designed pre-flip state).
+
+### 5.C.6 SUPERSEDED — P14-A pre-P16 snapshot (the "before"; retired 2026-07-10)
+
+> Everything below describes the RETIRED coarse-bundle model (code truth as of 2026-07-09,
+> pre-16C). Kept so the CURRENT→FINAL delta is explicit. The bundle prior itself was retired
+> in 16C/16D ([GRD-1]); `ARCHETYPE_BUNDLES` remains LIVE for the PRODUCTS path only (§5.B).
+
+**(superseded) Live classifier reality:** the trade classifier was the inline `TAG_TRADE_MATRIX`
++ archetype bundle prior — NOT the DB `trade_mapping_rules` (only 6 active tier-1 rows).
+
+**(superseded) Attachment rules:** rules 1-4/6-8 as in the FINAL table above, plus the retired
+rule 5: archetype bundle prior (`deriveArchetypes ≠ []` → bundle @conf 0.55, tier 2,
+**is_active FALSE since P13-3**, `merged.has` guard). CoA twin: `is_active = !fromBundle` (P6.6).
+
+### (superseded) 5.C.2-old Archetype × trade complement (code truth, `archetypes.js:31-119`)
 
 `deriveArchetypes` unions the codes implied by `project_type` (new_build→FB, addition→ADD,
 renovation→INT, mechanical→MEC; demolition/repair/other→null, `repair`→[] early-return) and each
@@ -442,25 +515,28 @@ renovation→INT, mechanical→MEC; demolition/repair/other→null, `repair`→[
 | **ENV** envelope | 7 | masonry, roofing, glazing, insulation, eavestrough-siding, solar, caulking |
 | **MEC** mechanical | 6 | plumbing, hvac, electrical, fire-protection, security, drain-plumbing |
 
-### 5.C.3 Measured consequence (the redesign's motivation)
+### (superseded) 5.C.3-old Measured consequence (what motivated P16)
 
-- Post-P13-3 the bundle prior is `is_active=false`, so **13 trades have 0 active leads corpus-wide**
+- Post-P13-3 the bundle prior was `is_active=false`, so **13 trades had 0 active leads corpus-wide**
   (bundle-only, never emitted by the live JS matrix): caulking, decking-fences, eavestrough-siding,
   millwork-cabinetry, overhead-doors, pool-installation, security, site-maintenance, site-preparation,
   solar, stone-countertops, tiling, trim-work.
 - On the 122-permit inspection ground-truth corpus (PARTIAL — deep_scrapes paused): evidence-only
   recall 38.2% / prec(insp) 65.8%; pre-P13-3 recall 62.6% / prec 37.8%; the **scope-mapped UNION of
-  full archetype complements does NOT beat the baseline** (recall 54.9%, prec 31.2%) because each
-  cost-line's complement IS the coarse bundle above. The lever is bundle LEANNESS, not selection.
-  See the evaluation report for the per-stratum + marginal-archetype-curve detail.
+  full archetype complements did NOT beat the baseline** (recall 54.9%, prec 31.2%) because each
+  cost-line's complement IS the coarse bundle above. The lever was bundle LEANNESS, not selection —
+  exactly what the P16 FINAL model above implements (scenario 6: recall 61.4% / prec 70.5% hold-out).
 
 ---
 
 <testing>
 ## 6. Testing Mandate
-- **Logic:** `classification.logic.test.ts` (trade completeness, slug-to-ID mapping, tier routing)
+- **Logic:** `classification.logic.test.ts` (trade completeness, slug-to-ID mapping, tier routing; P16 gated-inference behavior locks — gate-OFF evidence-only, KIT complement union, PLB-no-inference, coincidental-0.55 value lock, D1 superset)
 - **Logic:** `pipeline-sdk.logic.test.ts` (32 trades present in TRADES array)
 - **Logic:** `classify-sync.logic.test.ts` (dual-path sync for trades + scope)
+- **Logic (P16):** `p16-line-trade-complement.logic.test.ts` (complement shape/leanness + the union-vs-dominance invariant D7e); `coa-trade-classifier.logic.test.ts` (JS↔TS parity over both gate states + the attachment_basis partition)
+- **Infra (P16):** `classify-permits.infra.test.ts` (ceiling, gated emission, §R10 bands, row-derived verdict); `classify-coa-trades.infra.test.ts` (9-col [A2] + [GRD-3] counters); `compute-trade-forecasts.infra.test.ts` (inference_weight extern + both-branch basis); `supplier-leads.logic.test.ts` + `get-lead-feed.logic.test.ts` (D5 serving-by-basis); `contracts.infra.test.ts` (p16_gate thresholds + D7 band)
+- **DB (P16):** `216_attachment_basis.db.test.ts` (CHECK + mirror-trigger propagation)
 </testing>
 
 ---
@@ -468,7 +544,7 @@ renovation→INT, mechanical→MEC; demolition/repair/other→null, `repair`→[
 <constraints>
 ## 7. Operating Boundaries
 - **Target Files:** `src/lib/classification/trades.ts`, `src/lib/classification/phases.ts`, `src/lib/classification/groups.ts`, `src/lib/classification/tag-trade-matrix.ts`, `src/lib/classification/permit-type-class.ts`
-- **Dual-path scripts:** `scripts/classify-permits.js`, `scripts/classify-permit-phase.js`, `scripts/reclassify-all.js`
+- **Dual-path scripts:** `scripts/classify-permits.js`, `scripts/classify-permit-phase.js`, `scripts/reclassify-all.js`; **P16 dual paths:** `classify-permits.js` ↔ `classifier.ts`, `scripts/lib/coa-trade-classifier.js` ↔ `src/lib/classification/coa-trade-classifier.ts` (both consume `LINE_TRADE_COMPLEMENT`/`mapToLines` from `src/features/leads/lib/archetype-cost-map.js` — the single source of truth; the mig-143 trigger mirrors `attachment_basis` permit_trades→lead_trades)
 - **Consumed by:** `chain_permits.md` (steps 4, 5, 13), `60_shared_steps.md`
 - **Operator-facing rendering (WF2 #4 2026-05-08):** the admin Lead Detail Inspector (Spec 76 §3.5 Cycle 7) renders the trade vocabulary defined in §2 in its Trades panel — every `permit_trades` row with `confidence`, plus an `is_default_fallback` flag (true when `confidence === 0.55`, signaling tag-trade-matrix default with no permit-specific signal). The construction-phase vocabulary (§3) renders in the Lifecycle panel.
 </constraints>

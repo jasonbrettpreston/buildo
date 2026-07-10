@@ -85,6 +85,9 @@
     "recall_floor": 0.50,
     "prec_floor": 0.558,
     "mean_lo": 8,
-    "mean_hi": 11
+    "mean_hi": 11,
+    "$comment_bands": "P16 16F [D7 — GLOBAL-band resolution, panel-ratified 2026-07-10]: mean_warn/mean_fail govern the CORPUS-WIDE mean of active trades per permit-with-trades in classify-permits.js audit rows (a flat per-archetype FAIL>13 would trip on the honest 16-trade build complements BY DESIGN; the whole-corpus 16B mean 10.6 passes). Consumers: scripts/classify-permits.js (INFERENCE_MEAN_WARN / INFERENCE_MEAN_FAIL).",
+    "mean_warn": 11,
+    "mean_fail": 13
   }
 }

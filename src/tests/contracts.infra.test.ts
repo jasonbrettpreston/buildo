@@ -96,6 +96,8 @@ interface Contracts {
     prec_floor: number;
     mean_lo: number;
     mean_hi: number;
+    mean_warn: number;
+    mean_fail: number;
   };
 }
 
@@ -462,6 +464,19 @@ const rules: Rule[] = [
     value: contracts.p16_gate.mean_hi,
     file: 'scripts/analysis/p14-trade-attachment-evaluation.js',
     pattern: new RegExp(`meanHi:\\s*${contracts.p16_gate.mean_hi}\\b`),
+  },
+  // ---- P16 16F D7 global band (classify-permits §R10 rows) ----
+  {
+    name: 'p16_gate.mean_warn → classify-permits INFERENCE_MEAN_WARN',
+    value: contracts.p16_gate.mean_warn,
+    file: 'scripts/classify-permits.js',
+    pattern: new RegExp(`INFERENCE_MEAN_WARN\\s*=\\s*${contracts.p16_gate.mean_warn}\\b`),
+  },
+  {
+    name: 'p16_gate.mean_fail → classify-permits INFERENCE_MEAN_FAIL',
+    value: contracts.p16_gate.mean_fail,
+    file: 'scripts/classify-permits.js',
+    pattern: new RegExp(`INFERENCE_MEAN_FAIL\\s*=\\s*${contracts.p16_gate.mean_fail}\\b`),
   },
 ];
 

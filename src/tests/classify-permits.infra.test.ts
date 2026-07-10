@@ -265,3 +265,43 @@ describe('classify-permits.js — P16 attachment_basis (D4)', () => {
     expect(content).toMatch(/"permit_trades":\s*\[[^\]]*"attachment_basis"[^\]]*\]/);
   });
 });
+
+// ─── P16 16F — §R10 corpus-wide band rows (D7 global band + [FAB2] + [FAB1v2]) ──
+describe('classify-permits.js — P16 16F audit bands', () => {
+  it('D7 global band: inference_mean_trades_per_permit with WARN/FAIL thresholds from contracts', () => {
+    const content = src();
+    expect(content).toMatch(/INFERENCE_MEAN_WARN\s*=\s*11\b/);
+    expect(content).toMatch(/INFERENCE_MEAN_FAIL\s*=\s*13\b/);
+    expect(content).toMatch(/metric:\s*'inference_mean_trades_per_permit'/);
+    // p95/max companions (an average hides permit-level spikes — DeepSeek).
+    expect(content).toMatch(/metric:\s*'inference_p95_trades_per_permit'/);
+    expect(content).toMatch(/metric:\s*'inference_max_trades_per_permit'/);
+  });
+
+  it('[FAB2] starvation two-band: FAIL band DERIVED from LINE_TRADE_COMPLEMENT (not hand-maintained)', () => {
+    const content = src();
+    expect(content).toMatch(/complementTradesFor\(Object\.keys\(LINE_TRADE_COMPLEMENT\)\)/);
+    expect(content).toMatch(/metric:\s*'starved_trades_recovered_fail_band'/);
+    expect(content).toMatch(/metric:\s*'starved_trades_uncovered_band'/);
+    // temporary-fencing stays OUT of the starvation list (D8d).
+    const listBlock = content.match(/STARVED_TRADE_SLUGS\s*=\s*\[([\s\S]*?)\]/);
+    expect(listBlock?.[1]).not.toMatch(/temporary-fencing/);
+  });
+
+  it('[FAB1v2] attachment_basis_null_count is a hard == 0 gate', () => {
+    const content = src();
+    expect(content).toMatch(/metric:\s*'attachment_basis_null_count'/);
+    expect(content).toMatch(/basisNullCount === 0 \? 'PASS' : 'FAIL'/);
+  });
+
+  it('the audit verdict is ROW-DERIVED (Spec 47 §8.2 — no parallel boolean)', () => {
+    const content = src();
+    expect(content).toMatch(/verdict:\s*classifyAuditRows\.some\(\(r\) => r\.status === 'FAIL'\)/);
+    expect(content).not.toMatch(/verdict:\s*classifyHasWarns/);
+  });
+
+  it('band statuses are gated on inferenceEnabled (gate OFF → INFO, no false FAIL)', () => {
+    const content = src();
+    expect(content).toMatch(/!inferenceEnabled \? 'INFO'/);
+  });
+});
