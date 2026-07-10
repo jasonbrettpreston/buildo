@@ -125,6 +125,11 @@ interface LeadFeedItemBase {
   // server-side. Sourced via LEFT JOIN to lead_views in
   // get-lead-feed.ts (COALESCE/bool_or to false for unviewed leads).
   is_saved: boolean;
+  // P16 16E (Spec 80 §5.C, D5): attachment provenance of the trade match this feed row
+  // rode in on. 'evidence' = direct tag/rule/narrow hit; 'inference' = the lean
+  // scope-mapped complement (served BY BASIS at conf 0.50, ranked below equal-pillar
+  // evidence via a relevance nudge). NULL on builder/coa rows + pre-P16 data.
+  attachment_basis: 'evidence' | 'inference' | null;
 }
 
 export interface PermitLeadFeedItem extends LeadFeedItemBase {

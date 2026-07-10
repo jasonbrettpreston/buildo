@@ -108,6 +108,12 @@ const LOGIC_VARS_SCHEMA = z.object({
   // empty exclusion set, which is the safe default (nothing excluded, unmapped
   // counter still fires). z.string() array so a poisoned non-string entry throws.
   forecast_excluded_trade_slugs:       z.array(z.string()).optional(),
+  // P16 16E [Gemini MEDIUM pinned] — provenance weight for INFERENCE-basis trade attachments
+  // in the forecast input aggregation: an inference row's calibration sample is scaled by this
+  // factor BEFORE classifyConfidence banding (an inference attachment needs 1/weight× the
+  // evidence sample to reach the same confidence band). 0.5 default; panel-adjustable.
+  // Ranking/serving authority remains attachment_basis (D5) — this weights, never gates.
+  inference_weight:                    z.coerce.number().finite().min(0).max(1).default(0.5),
 }).passthrough();
 
 // ─── Phase F.1 module-local helpers ─────────────────────────────────────────
@@ -584,6 +590,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
        GROUP BY permit_num
     )
     -- Branch A: permit-side
+    -- P16 16E [GRD-4]: attachment_basis projected in BOTH branches — the provenance input
+    -- to the inference_weight confidence banding + the inference_forecast_inputs_count row.
     SELECT p.permit_num, p.revision_num, p.lead_id, t.slug AS trade_slug,
            p.lifecycle_phase, p.phase_started_at, p.permit_type,
            NULL::text AS project_type, NULL::text AS coa_type_class,
@@ -591,7 +599,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
            p.lifecycle_stalled, p.issued_date, p.application_date,
            NULL::date AS decision_date, NULL::date AS hearing_date,
            NULL::timestamptz AS first_seen_at,
-           lp.last_passed_inspection_date
+           lp.last_passed_inspection_date,
+           pt.attachment_basis
       FROM permit_trades pt
       JOIN trades t ON t.id = pt.trade_id
       JOIN permits p ON p.permit_num = pt.permit_num
@@ -636,7 +645,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
            ca.lifecycle_stalled,
            NULL::date AS issued_date, NULL::date AS application_date,
            ca.decision_date, ca.hearing_date, ca.first_seen_at,
-           NULL::timestamptz AS last_passed_inspection_date
+           NULL::timestamptz AS last_passed_inspection_date,
+           lt.attachment_basis
       FROM lead_trades lt
       JOIN trades t ON t.id = lt.trade_id
       JOIN coa_applications ca ON ca.lead_id = lt.lead_id
@@ -670,6 +680,16 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
   // Kept OUTSIDE records_total (skipped before totalRows++) and OUTSIDE unmapped_trades.
   let excludedRows = 0;
   const excludedSlugsSeen = new Set();
+  // P16 16E [D-1] — inference-basis rows entering the forecast inputs (the consumption
+  // boundary counter; 0 while the p16_inference_layer_enabled gate is OFF).
+  let inferenceForecastInputs = 0;
+  // P16 16E — provenance weight (Zod-defaulted 0.5; see LOGIC_VARS_SCHEMA note).
+  const inferenceWeight = Number(logicVars.inference_weight ?? 0.5);
+  // Weighted calibration-sample input for classifyConfidence: inference-basis rows
+  // contribute at inference_weight× (an inference attachment needs 1/weight× the sample
+  // to reach the same confidence band). Evidence/legacy-NULL rows pass through untouched.
+  const weightedSample = (sample, basis) =>
+    basis === 'inference' ? Math.floor(sample * inferenceWeight) : sample;
   let upserted = 0;
   let upsertedCoa = 0;
   let anchorFallbackCount = 0; // permit-side fallback count
@@ -738,6 +758,10 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       excludedSlugsSeen.add(row.trade_slug);
       continue;
     }
+
+    // P16 16E [D-1] — count inference-basis rows at the consumption boundary (both branches;
+    // after the excluded-slug skip so the counter mirrors what actually enters the engine).
+    if (row.attachment_basis === 'inference') inferenceForecastInputs++;
 
     // ═════════════════════════════════════════════════════════════════════
     // Phase F.1 CoA branch dispatch (v2 CRIT folds + v3/v4 hardening)
@@ -809,7 +833,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
         logicVars.urgency_overdue_days,
         logicVars.urgency_upcoming_days,
       );
-      const confidence = classifyConfidence(cal.sample, cal.method === 'default');
+      // P16 16E — inference-basis rows band at inference_weight× the calibration sample.
+      const confidence = classifyConfidence(weightedSample(cal.sample, row.attachment_basis), cal.method === 'default');
 
       // v2 MED 12 fold: explicit cases + throw on unknown source (unreachable via selectCoaAnchor enum)
       let finalCalMethod;
@@ -1012,7 +1037,8 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       logicVars.urgency_overdue_days,
       logicVars.urgency_upcoming_days,
     );
-    const confidence = classifyConfidence(cal.sample, cal.method === 'default');
+    // P16 16E — inference-basis rows band at inference_weight× the calibration sample.
+    const confidence = classifyConfidence(weightedSample(cal.sample, row.attachment_basis), cal.method === 'default');
     // WF3 B2-H3: anchor-source-specific calibration_method. Preserves
     // 'fallback_issued' for issued_date anchors (existing dashboards +
     // infra test pin this label) and adds granular labels for the other
@@ -1441,6 +1467,11 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       threshold: null,
       status: 'INFO',
     },
+    // P16 16E [D-1] — inference-basis rows entering the forecast inputs (0 while the
+    // p16_inference_layer_enabled gate is OFF). Their confidence bands at inference_weight×
+    // the calibration sample (provenance weighting — never full-weight P13-3-style inflation).
+    { metric: 'inference_forecast_inputs_count', value: inferenceForecastInputs, threshold: null, status: 'INFO' },
+    { metric: 'inference_weight', value: inferenceWeight, threshold: null, status: 'INFO' },
     {
       metric: 'default_calibration_pct',
       value: defaultPct.toFixed(1) + '%',
@@ -1567,13 +1598,13 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
 
   pipeline.emitMeta(
     {
-      permit_trades: ['permit_num', 'revision_num', 'trade_id', 'is_active'],
+      permit_trades: ['permit_num', 'revision_num', 'trade_id', 'is_active', 'attachment_basis'],
       trades: ['id', 'slug'],
       permits: ['permit_num', 'revision_num', 'lifecycle_phase', 'lifecycle_stalled', 'phase_started_at', 'permit_type', 'issued_date', 'application_date'],
       permit_inspections: ['permit_num', 'inspection_date', 'status'],
       phase_calibration: ['from_phase', 'to_phase', 'permit_type', 'median_days', 'p25_days', 'p75_days', 'sample_size'],
-      // Phase F.1 reads (CoA UNION + gate)
-      lead_trades: ['lead_id', 'trade_id', 'is_active'],
+      // Phase F.1 reads (CoA UNION + gate) — P16 16E [BUG-5]: +attachment_basis both branches
+      lead_trades: ['lead_id', 'trade_id', 'is_active', 'attachment_basis'],
       coa_applications: ['lead_id', 'lifecycle_phase', 'lifecycle_seq', 'lifecycle_group', 'lifecycle_stalled', 'project_type', 'coa_type_class', 'decision_date', 'hearing_date', 'first_seen_at'],
       lifecycle_transitions: ['lead_id', 'transitioned_at'],
       phase_stay_calibration: ['permit_type', 'project_type', 'coa_type_class', 'from_seq', 'to_seq', 'median_days', 'p25_days', 'p75_days', 'sample_size'],

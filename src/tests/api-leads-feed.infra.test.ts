@@ -119,6 +119,8 @@ const sampleResult = {
       cost_tier: 'large' as const,
       estimated_cost: 750000,
       is_saved: false,
+      // P16 16E — attachment provenance (evidence = a direct tag/rule hit).
+      attachment_basis: 'evidence' as const,
       lifecycle_phase: 'P7a',
       lifecycle_stalled: false,
       target_window: 'bid' as const,

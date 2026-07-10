@@ -52,10 +52,21 @@ describe('LEAD_FEED_SQL — structure', () => {
     expect((LEAD_FEED_SQL.match(/opportunity_score/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 
-  it('computes relevance_score as sum of 4 pillars in ranked CTE', () => {
+  it('computes relevance_score as sum of 4 pillars minus the P16 inference nudge in ranked CTE', () => {
+    // P16 16E (D5, KNOWING update): the 4-pillar sum gains a deterministic 1-point decrement
+    // for attachment_basis='inference' rows so inference ranks strictly below equal-pillar
+    // evidence (basis is the ranking authority — never the 0.50 confidence value [FAB4]).
     expect(LEAD_FEED_SQL).toMatch(
-      /\(proximity_score \+ timing_score \+ value_score \+ opportunity_score\) AS relevance_score/,
+      /\(proximity_score \+ timing_score \+ value_score \+ opportunity_score[\s\S]{0,220}?- CASE WHEN attachment_basis = 'inference' THEN 1 ELSE 0 END\) AS relevance_score/,
     );
+  });
+
+  it('P16 16E: attachment_basis is projected through the UNION arms (permit live, builder NULL)', () => {
+    expect(LEAD_FEED_SQL).toMatch(/pt\.attachment_basis/);
+    expect(LEAD_FEED_SQL).toMatch(/NULL::text AS attachment_basis/);
+    // The 3-arm variant carries it through the explicit unified column lists (coa = NULL).
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/opportunity_type, attachment_basis, lead_type/);
+    expect(LEAD_FEED_SQL_WITH_COA).toMatch(/NULL::text AS attachment_basis, lead_type/);
   });
 
   it('uses cursor pagination via row tuple comparison', () => {

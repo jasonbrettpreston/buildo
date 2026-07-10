@@ -974,3 +974,41 @@ describe('compute-trade-forecasts.js — CoA gate grace bypass + force-active (S
     expect(SRC).toMatch(/coa_gate_force_active\s*:\s*z\.coerce\.number\(\)\.int\(\)[\s\S]{0,80}?\.default\(\s*0\s*\)/);
   });
 });
+
+// ─── P16 16E — inference provenance weighting (Gemini MEDIUM pinned; [GRD-4][D-1]) ───
+describe('compute-trade-forecasts.js — P16 16E inference weighting', () => {
+  const SRC = fs.readFileSync(
+    path.resolve(repoRoot, 'scripts/compute-trade-forecasts.js'),
+    'utf-8',
+  );
+
+  it('inference_weight is EXTERNALIZED as a Zod-validated logic_variable (default 0.5)', () => {
+    expect(SRC).toMatch(/inference_weight\s*:\s*z\.coerce\.number\(\)[\s\S]{0,120}?\.default\(\s*0\.5\s*\)/);
+    expect(SRC).toMatch(/logicVars\.inference_weight/);
+  });
+
+  it('[GRD-4] SOURCE_SQL projects attachment_basis in BOTH branches', () => {
+    // Branch A projects the permit_trades column; Branch B the lead_trades column.
+    expect(SRC).toMatch(/pt\.attachment_basis/);
+    expect(SRC).toMatch(/lt\.attachment_basis/);
+  });
+
+  it('the weighting applies at BOTH classifyConfidence call sites (permit + CoA branches)', () => {
+    const weighted = SRC.match(/classifyConfidence\(weightedSample\(cal\.sample,\s*row\.attachment_basis\)/g) ?? [];
+    expect(weighted.length).toBe(2);
+    // No unweighted classifyConfidence(cal.sample, ...) call survives in the row loop.
+    expect(SRC).not.toMatch(/classifyConfidence\(cal\.sample,/);
+    // The weight scales the sample for inference-basis rows only.
+    expect(SRC).toMatch(/basis === 'inference' \? Math\.floor\(sample \* inferenceWeight\) : sample/);
+  });
+
+  it('[D-1] inference_forecast_inputs_count is emitted at the consumption boundary', () => {
+    expect(SRC).toMatch(/metric:\s*'inference_forecast_inputs_count'/);
+    expect(SRC).toMatch(/if \(row\.attachment_basis === 'inference'\) inferenceForecastInputs\+\+/);
+  });
+
+  it('[BUG-5] emitMeta reads declare attachment_basis on permit_trades AND lead_trades', () => {
+    expect(SRC).toMatch(/permit_trades:\s*\[[^\]]*'attachment_basis'[^\]]*\]/);
+    expect(SRC).toMatch(/lead_trades:\s*\[[^\]]*'attachment_basis'[^\]]*\]/);
+  });
+});

@@ -248,6 +248,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'coa_bylaw_max_coverage_null_warn_pct',
   // P16 §5.C [BUG-6] — hard gate for the lean scope-mapped inference layer (seeded OFF).
   'p16_inference_layer_enabled',
+  // P16 16E — provenance weight for inference-basis forecast inputs (0.5× default).
+  'inference_weight',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

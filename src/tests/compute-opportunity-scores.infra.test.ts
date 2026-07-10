@@ -676,3 +676,28 @@ describe('compute-opportunity-scores.js — Phase F.3 lead_id rekey + CoA consum
   });
 });
 
+
+// ─── P16 16E [GRD-5] — provenance weighting is TRANSITIVE for scores ───
+// compute-opportunity-scores reads trade_forecasts ONLY; it must have NO direct
+// permit_trades/lead_trades read. Scores inherit the inference_weight provenance
+// weighting via the forecast inputs (compute-trade-forecasts applies it at the
+// classifyConfidence banding). If a direct trades-table read ever appears here,
+// it MUST be made provenance-aware (attachment_basis) — this lock forces that
+// conversation instead of a silent full-weight regression.
+describe('P16 16E [GRD-5] — no direct lead_trades/permit_trades read in scores', () => {
+  const content = fs.readFileSync(
+    path.resolve(__dirname, '../..', 'scripts/compute-opportunity-scores.js'),
+    'utf-8',
+  );
+
+  it('the scores SQL never reads permit_trades or lead_trades directly', () => {
+    expect(content).not.toMatch(/FROM\s+permit_trades/i);
+    expect(content).not.toMatch(/JOIN\s+permit_trades/i);
+    expect(content).not.toMatch(/FROM\s+lead_trades/i);
+    expect(content).not.toMatch(/JOIN\s+lead_trades/i);
+  });
+
+  it('the scores source remains trade_forecasts (the transitive provenance channel)', () => {
+    expect(content).toMatch(/FROM\s+trade_forecasts\s+tf/i);
+  });
+});

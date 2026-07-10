@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (407) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (408) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (3) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **410** logic variables (407 numeric, 3 JSONB).
+Total: **411** logic variables (408 numeric, 3 JSONB).
 
 ---
 
@@ -94,6 +94,7 @@ Total: **410** logic variables (407 numeric, 3 JSONB).
 | `garden_suite_min_rear_yard_m` | numeric | 5 | 2 – 30 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — externalized garden-suite min usable rear-yard depth (m); default = previously-hardcoded. CONSUMED by enrich-parcels.js (max-build pass). |
 | `garden_suite_storeys` | numeric | 1 | 1 – 4 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — garden suite storeys; suite footprint = GFA / storeys for the greenspace test. CONSUMED by enrich-parcels.js (max-build pass). |
 | `income_premium_tiers` | JSONB | {"100000": 1.2, "150000": 1.5} | — (migration-seeded) | — | migration 097 | JSON map of neighbourhood median income (CAD) bracket → cost multiplier. Keys are income thresholds (lowest → highest), values are multipliers. E.g. {"100000": 1.2, "150000": 1.5} |
+| `inference_weight` | numeric | 0.5 | 0 – 1 | `scripts/compute-trade-forecasts.js` | seed | Spec 80 §5.C / P16-16E [Gemini MEDIUM pinned] — provenance weight for INFERENCE-basis trade attachments in compute-trade-forecasts.js input aggregation: an inference row's calibration sample is scaled by this factor before classifyConfidence banding (needs 1/weight x the evidence sample for the same confidence band). Ranking/serving authority stays attachment_basis (D5) — this weights, never gates. Panel-adjustable; 0.5 = the pinned default so re-activated inference never re-creates P13-3 full-weight inflation. CONSUMED by scripts/compute-trade-forecasts.js. |
 | `inspection_stall_days` | numeric | 300 | 30 – 730 | `scripts/classify-inspection-status.js` | seed | Days without inspection activity before an Active Inspection permit is reclassified as Stalled |
 | `laneway_suite_max_gfa_sqm` | numeric | 120 | 20 – 400 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — by-law cap on a laneway suite GFA (m², ~2-storey). CONSUMED by enrich-parcels.js (max-build pass). |
 | `laneway_suite_min_lot_sqm` | numeric | 230 | 100 – 2000 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — minimum lot area (m²) for a laneway suite. CONSUMED by enrich-parcels.js (max-build pass). |
@@ -432,4 +433,4 @@ Total: **410** logic variables (407 numeric, 3 JSONB).
 
 ---
 
-*Generated from 396 seed vars + 14 migration-only vars + 101 consumer-mapped keys across 2 script dirs.*
+*Generated from 397 seed vars + 14 migration-only vars + 102 consumer-mapped keys across 2 script dirs.*

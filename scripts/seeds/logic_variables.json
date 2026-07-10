@@ -2768,5 +2768,12 @@
     "min": 0,
     "max": 1,
     "description": "Spec 80 §5.C / P16-D3 [BUG-6] — HARD gate for the lean scope-mapped inference layer in classify-permits.js + classify-coa-trades.js. 0 = OFF (evidence-only emission; 16C/16D wire the code but emit NO inference rows). 1 = ON (the LINE_TRADE_COMPLEMENT lean inference is UNIONed onto evidence at is_active=true / attachment_basis='inference'). Seeded OFF on the 16B GO gate (2026-07-10, hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2); flips to 1 in 16F only AFTER 16E's consumer contract ships. A NO-GO complement cannot ship by accident. The deep_scrapes-resume re-measure can flip it back to 0."
+  },
+  "inference_weight": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 80 §5.C / P16-16E [Gemini MEDIUM pinned] — provenance weight for INFERENCE-basis trade attachments in compute-trade-forecasts.js input aggregation: an inference row's calibration sample is scaled by this factor before classifyConfidence banding (needs 1/weight x the evidence sample for the same confidence band). Ranking/serving authority stays attachment_basis (D5) — this weights, never gates. Panel-adjustable; 0.5 = the pinned default so re-activated inference never re-creates P13-3 full-weight inflation. CONSUMED by scripts/compute-trade-forecasts.js."
   }
 }

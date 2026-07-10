@@ -233,7 +233,12 @@ export const LEAD_FEED_SQL = `
         WHEN p.permit_type ILIKE '%new building%'
           OR p.permit_type ILIKE '%new house%'          THEN 'newbuild'
         ELSE 'unknown'
-      END AS opportunity_type
+      END AS opportunity_type,
+      -- P16 16E (D5): attachment provenance projected for basis-aware ranking + card badging.
+      -- The is_active + conf>=0.5 predicate below ADMITS inference rows (conf 0.50) BY DESIGN;
+      -- serving authority is the basis, and the ranked CTE nudges inference below equal-pillar
+      -- evidence. NULL only on pre-mig-216 rows (the live backfill stamped every row).
+      pt.attachment_basis
     FROM permits p
     JOIN permit_trades pt USING (permit_num, revision_num)
     JOIN trades t ON t.id = pt.trade_id
@@ -423,7 +428,9 @@ export const LEAD_FEED_SQL = `
       -- lines up. Builder leads are always 'high' confidence (we know
       -- they have active permits) and always 'builder-led' opportunity.
       'high'::text AS timing_confidence,
-      'builder-led'::text AS opportunity_type
+      'builder-led'::text AS opportunity_type,
+      -- P16 16E: builder leads aggregate many permits — no single attachment provenance.
+      NULL::text AS attachment_basis
     FROM entities e
     JOIN entity_projects ep ON ep.entity_id = e.id AND ep.role = 'Builder'
     JOIN permits p
@@ -494,7 +501,11 @@ export const LEAD_FEED_SQL = `
   ),
   ranked AS (
     SELECT *,
-      (proximity_score + timing_score + value_score + opportunity_score) AS relevance_score
+      -- P16 16E (D5): inference-basis rows rank strictly below equal-pillar evidence rows —
+      -- a deterministic 1-point relevance nudge (cursor-safe: computed identically every
+      -- request; the ranking AUTHORITY is the basis, never the 0.50 confidence [FAB4]).
+      (proximity_score + timing_score + value_score + opportunity_score
+        - CASE WHEN attachment_basis = 'inference' THEN 1 ELSE 0 END) AS relevance_score
     FROM unified
   )
   SELECT * FROM ranked
@@ -688,7 +699,7 @@ const COA_CANDIDATES_CTE = `
 export const LEAD_FEED_SQL_WITH_COA = LEAD_FEED_SQL
   .replace(
     /  unified AS \(\r?\n    SELECT \* FROM permit_candidates\r?\n    UNION ALL\r?\n    SELECT \* FROM builder_candidates\r?\n  \),/,
-    `${COA_CANDIDATES_CTE}\n  unified AS (\n    SELECT permit_num, revision_num, status, permit_type, description, street_num, street_name, neighbourhood_name, cost_tier, estimated_cost, lifecycle_phase, lifecycle_stalled, competition_count, active_permits_nearby, avg_project_cost, is_saved, entity_id, legal_name, business_size, primary_phone, primary_email, website, photo_url, latitude, longitude, distance_m, proximity_score, timing_score, value_score, opportunity_score, timing_confidence, opportunity_type, lead_type, lead_id, NULL::float8 AS modeled_gfa_sqm, NULL::float8 AS bid_value, NULL::text AS target_window, NULL::text AS predicted_start, NULL::text AS application_number FROM permit_candidates\n    UNION ALL\n    SELECT permit_num, revision_num, status, permit_type, description, street_num, street_name, neighbourhood_name, cost_tier, estimated_cost, lifecycle_phase, lifecycle_stalled, competition_count, active_permits_nearby, avg_project_cost, is_saved, entity_id, legal_name, business_size, primary_phone, primary_email, website, photo_url, latitude, longitude, distance_m, proximity_score, timing_score, value_score, opportunity_score, timing_confidence, opportunity_type, lead_type, lead_id, NULL::float8 AS modeled_gfa_sqm, NULL::float8 AS bid_value, NULL::text AS target_window, NULL::text AS predicted_start, NULL::text AS application_number FROM builder_candidates\n    UNION ALL\n    SELECT permit_num, revision_num, status, permit_type, description, street_num, street_name, neighbourhood_name, cost_tier, estimated_cost, lifecycle_phase, lifecycle_stalled, competition_count, active_permits_nearby, avg_project_cost, is_saved, entity_id, legal_name, business_size, primary_phone, primary_email, website, photo_url, latitude, longitude, distance_m, proximity_score, timing_score, value_score, opportunity_score, timing_confidence, opportunity_type, lead_type, lead_id, modeled_gfa_sqm, bid_value, target_window, predicted_start, application_number FROM coa_candidates\n  ),`,
+    `${COA_CANDIDATES_CTE}\n  unified AS (\n    SELECT permit_num, revision_num, status, permit_type, description, street_num, street_name, neighbourhood_name, cost_tier, estimated_cost, lifecycle_phase, lifecycle_stalled, competition_count, active_permits_nearby, avg_project_cost, is_saved, entity_id, legal_name, business_size, primary_phone, primary_email, website, photo_url, latitude, longitude, distance_m, proximity_score, timing_score, value_score, opportunity_score, timing_confidence, opportunity_type, attachment_basis, lead_type, lead_id, NULL::float8 AS modeled_gfa_sqm, NULL::float8 AS bid_value, NULL::text AS target_window, NULL::text AS predicted_start, NULL::text AS application_number FROM permit_candidates\n    UNION ALL\n    SELECT permit_num, revision_num, status, permit_type, description, street_num, street_name, neighbourhood_name, cost_tier, estimated_cost, lifecycle_phase, lifecycle_stalled, competition_count, active_permits_nearby, avg_project_cost, is_saved, entity_id, legal_name, business_size, primary_phone, primary_email, website, photo_url, latitude, longitude, distance_m, proximity_score, timing_score, value_score, opportunity_score, timing_confidence, opportunity_type, attachment_basis, lead_type, lead_id, NULL::float8 AS modeled_gfa_sqm, NULL::float8 AS bid_value, NULL::text AS target_window, NULL::text AS predicted_start, NULL::text AS application_number FROM builder_candidates\n    UNION ALL\n    SELECT permit_num, revision_num, status, permit_type, description, street_num, street_name, neighbourhood_name, cost_tier, estimated_cost, lifecycle_phase, lifecycle_stalled, competition_count, active_permits_nearby, avg_project_cost, is_saved, entity_id, legal_name, business_size, primary_phone, primary_email, website, photo_url, latitude, longitude, distance_m, proximity_score, timing_score, value_score, opportunity_score, timing_confidence, opportunity_type, NULL::text AS attachment_basis, lead_type, lead_id, modeled_gfa_sqm, bid_value, target_window, predicted_start, application_number FROM coa_candidates\n  ),`,
   );
 
 // Module-load sanity check: if the replacement didn't fire (e.g., the
@@ -745,6 +756,10 @@ interface LeadFeedRow {
   // comprehensive review as the cross-phase contract amendment.
   timing_confidence: 'high' | 'medium' | 'low';
   opportunity_type: 'homeowner' | 'newbuild' | 'builder-led' | 'unknown';
+  // P16 16E (D5) — attachment provenance. 'inference' rows serve (is_active=true, conf 0.50)
+  // but rank below equal-pillar evidence via the `ranked` CTE nudge and carry the badge to
+  // the card. NULL on builder/coa rows + pre-P16 unbackfilled data.
+  attachment_basis: 'evidence' | 'inference' | null;
   // Lifecycle phase (migration 085, WF2). NULL on builder rows and on
   // unclassified permits. The mapRow boundary passes it through to
   // PermitLeadFeedItem.lifecycle_phase where displayLifecyclePhase()
@@ -869,6 +884,8 @@ function mapRow(row: LeadFeedRow, tradeSlug: string): LeadFeedItem | null {
     // COALESCE/bool_or fallback to false, so the row value is
     // ALWAYS a boolean — no narrowing needed here.
     is_saved: row.is_saved,
+    // P16 16E (D5): attachment provenance for the card badge (null on builder/coa rows).
+    attachment_basis: row.attachment_basis ?? null,
   };
 
   if (row.lead_type === 'permit') {

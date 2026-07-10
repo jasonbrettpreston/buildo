@@ -16,8 +16,17 @@ describe('Spec 87 v1 — supplier leads SQL contract', () => {
     expect(SUPPLIER_LEADS_SQL).toMatch(/st\.supplier_id = \$1/);
   });
 
-  it('FENCE 1 — permit rows carry the tier/confidence precision guard (not is_active alone)', () => {
-    expect(SUPPLIER_LEADS_SQL).toMatch(/lt\.lead_id LIKE 'permit:%' AND \(lt\.tier <= 1 OR lt\.confidence > 0\.55\)/);
+  it('FENCE 1 — permit rows carry the tier/confidence guard + the P16 16E basis clause', () => {
+    // P16 16E [D5 MANDATE, KNOWING update]: lean-inference rows (conf 0.50) serve BY BASIS —
+    // `OR lt.attachment_basis = 'inference'` — never by raising their confidence past the
+    // 0.55 numeric guard (coupling the serving axis to a magic number is FORBIDDEN).
+    expect(SUPPLIER_LEADS_SQL).toMatch(
+      /lt\.lead_id LIKE 'permit:%' AND \(lt\.tier <= 1 OR lt\.confidence > 0\.55 OR lt\.attachment_basis = 'inference'\)/,
+    );
+  });
+
+  it('P16 16E — attachment_basis is projected for provenance badging', () => {
+    expect(SUPPLIER_LEADS_SQL).toMatch(/lt\.attachment_basis/);
   });
 
   it('FENCE 2 — coa rows are gated behind the disableCoa ($2) killswitch parity', () => {
