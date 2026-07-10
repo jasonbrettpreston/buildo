@@ -79,5 +79,12 @@
     "rate_gut_sqm": 3229,
     "rate_addition_sqm": 4306,
     "solar_adj_factor": 0.75
+  },
+  "p16_gate": {
+    "$comment": "Spec 80 §5.C / P16-D3 [FAB3] — the 16B lean-complement GO/NO-GO gate thresholds (scored on the held-out half of the 122-permit inspection corpus). recall_floor: recovering toward the 62.6% pre-P13-3 anchor; prec_floor: 10 pts off the 65.8% evidence baseline (a union necessarily dips precision); mean_lo/mean_hi: the target attached-trades/permit band (evidence-only is 6.0, pre-P13-3 16.6 is the inflation avoided). Consumer: scripts/analysis/p14-trade-attachment-evaluation.js (gateThresholds). 2026-07-10 GO: hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2.",
+    "recall_floor": 0.50,
+    "prec_floor": 0.558,
+    "mean_lo": 8,
+    "mean_hi": 11
   }
 }

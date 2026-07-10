@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (406) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (407) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (3) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **409** logic variables (406 numeric, 3 JSONB).
+Total: **410** logic variables (407 numeric, 3 JSONB).
 
 ---
 
@@ -387,6 +387,7 @@ Total: **409** logic variables (406 numeric, 3 JSONB).
 | `min_soft_landscaping_pct` | numeric | 0.3 | 0.05 – 0.9 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — share of the lot that must remain soft landscaping; an accessory pushing greenspace below this is buildable only via a CoA minor variance (drives garage_permission / rear_suite_permission). CONSUMED by enrich-parcels.js (max-build pass). |
 | `mislink_footprint_lot_tol` | numeric | 0.05 | 0 – 1 | `scripts/enrich-parcels.js` | seed | Spec 65 §5 (WF3-A) — mislink guard tolerance: existing_footprint > lot_size_sqm × (1 + this) means the WRONG building was linked (block/neighbour attribution); the whole existing structure is NULLed + existing_data_quality_flag='footprint_exceeds_lot'. CONSUMED by enrich-parcels.js. Operator-tunable. |
 | `model_range_pct` | numeric | 0.20 | — (migration-seeded) | — | migration 156 | CoA geometric cost-model range as a fraction (Spec 83 §3.A). The cost estimate ±range produces the displayed low/high envelope. Default 0.20 = ±20%. Operator-tunable via Spec 86 Control Panel. |
+| `p16_inference_layer_enabled` | numeric | 0 | 0 – 1 | — | seed | Spec 80 §5.C / P16-D3 [BUG-6] — HARD gate for the lean scope-mapped inference layer in classify-permits.js + classify-coa-trades.js. 0 = OFF (evidence-only emission; 16C/16D wire the code but emit NO inference rows). 1 = ON (the LINE_TRADE_COMPLEMENT lean inference is UNIONed onto evidence at is_active=true / attachment_basis='inference'). Seeded OFF on the 16B GO gate (2026-07-10, hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2); flips to 1 in 16F only AFTER 16E's consumer contract ships. A NO-GO complement cannot ship by accident. The deep_scrapes-resume re-measure can flip it back to 0. |
 | `pending_closed_grace_days` | numeric | 30 | 1 – 365 | `scripts/close-stale-permits.js` | seed | Days a permit must remain in Pending Closed status before being promoted to Closed |
 | `permit_declared_cost_ceiling` | numeric | 500000000 | 10000000 – 2000000000 | — | seed | P13-2: upper-sentinel ceiling (CAD) on a permit's declared est_const_cost in the Liar's Gate. A declared cost above this is treated as a placeholder (the mirror of PLACEHOLDER_COST_THRESHOLD's lower guard — e.g. the exact-$1e9 round-number filings on 38-39 storey towers) and the geometric model takes over instead of passing the sentinel through as cost_source='permit'. Seeded at $500M: above the largest plausible single-permit declared build, below the $1e9 placeholder band. |
 | `permits_bylaw_max_coverage_null_warn_pct` | numeric | 72 | 0 – 100 | — | seed | WF2 P6.5 — enrich-permits bylaw_max_coverage NULL-rate WARN floor (density zones regulate by FSI-not-coverage). Baseline 66.3+5.75; WARN-above-baseline, never FAIL. |
@@ -431,4 +432,4 @@ Total: **409** logic variables (406 numeric, 3 JSONB).
 
 ---
 
-*Generated from 395 seed vars + 14 migration-only vars + 101 consumer-mapped keys across 2 script dirs.*
+*Generated from 396 seed vars + 14 migration-only vars + 101 consumer-mapped keys across 2 script dirs.*

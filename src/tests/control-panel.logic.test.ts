@@ -246,6 +246,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'permits_bylaw_max_coverage_null_warn_pct',
   'coa_bylaw_max_fsi_null_warn_pct',
   'coa_bylaw_max_coverage_null_warn_pct',
+  // P16 §5.C [BUG-6] — hard gate for the lean scope-mapped inference layer (seeded OFF).
+  'p16_inference_layer_enabled',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

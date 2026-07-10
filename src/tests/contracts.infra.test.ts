@@ -91,6 +91,12 @@ interface Contracts {
     rate_addition_sqm: number;
     solar_adj_factor: number;
   };
+  p16_gate: {
+    recall_floor: number;
+    prec_floor: number;
+    mean_lo: number;
+    mean_hi: number;
+  };
 }
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -431,6 +437,31 @@ const rules: Rule[] = [
     pattern: new RegExp(
       `'SOLAR',\\s*${contracts.parcel_cost_model.rate_solar_sqm},\\s*${contracts.parcel_cost_model.solar_adj_factor.toFixed(3)}\\b`,
     ),
+  },
+  // ---- P16 lean-complement GO/NO-GO gate (Spec 80 §5.C) ----
+  {
+    name: 'p16_gate.recall_floor → eval harness gateThresholds.recallFloor',
+    value: contracts.p16_gate.recall_floor,
+    file: 'scripts/analysis/p14-trade-attachment-evaluation.js',
+    pattern: new RegExp(`recallFloor:\\s*${contracts.p16_gate.recall_floor}\\b`),
+  },
+  {
+    name: 'p16_gate.prec_floor → eval harness gateThresholds.precFloor',
+    value: contracts.p16_gate.prec_floor,
+    file: 'scripts/analysis/p14-trade-attachment-evaluation.js',
+    pattern: new RegExp(`precFloor:\\s*${contracts.p16_gate.prec_floor}\\b`),
+  },
+  {
+    name: 'p16_gate.mean_lo → eval harness gateThresholds.meanLo',
+    value: contracts.p16_gate.mean_lo,
+    file: 'scripts/analysis/p14-trade-attachment-evaluation.js',
+    pattern: new RegExp(`meanLo:\\s*${contracts.p16_gate.mean_lo}\\b`),
+  },
+  {
+    name: 'p16_gate.mean_hi → eval harness gateThresholds.meanHi',
+    value: contracts.p16_gate.mean_hi,
+    file: 'scripts/analysis/p14-trade-attachment-evaluation.js',
+    pattern: new RegExp(`meanHi:\\s*${contracts.p16_gate.mean_hi}\\b`),
   },
 ];
 

@@ -2761,5 +2761,12 @@
     "min": 0,
     "max": 1,
     "description": "Spec 79 §7a WF3 #2 — operator safety valve for compute-trade-forecasts.js CoA audit-verdict gate. 0 = normal gate behavior (calibration verdict + cold-start grace decide). 1 = force CoA writes regardless of calibration verdict; use for post-grace deadlocks where coa_cohort_presence remains 0 after 7 days. When 1, script emits WARN audit row + pipeline.log.warn on every run; reset to 0 once root cause is resolved."
+  },
+  "p16_inference_layer_enabled": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 80 §5.C / P16-D3 [BUG-6] — HARD gate for the lean scope-mapped inference layer in classify-permits.js + classify-coa-trades.js. 0 = OFF (evidence-only emission; 16C/16D wire the code but emit NO inference rows). 1 = ON (the LINE_TRADE_COMPLEMENT lean inference is UNIONed onto evidence at is_active=true / attachment_basis='inference'). Seeded OFF on the 16B GO gate (2026-07-10, hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2); flips to 1 in 16F only AFTER 16E's consumer contract ships. A NO-GO complement cannot ship by accident. The deep_scrapes-resume re-measure can flip it back to 0."
   }
 }

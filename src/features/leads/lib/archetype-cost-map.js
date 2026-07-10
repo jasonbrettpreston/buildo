@@ -89,6 +89,81 @@ const TAG_LINE = {
   solar: 'solar',
 };
 
+// ── P16 §5.C — LINE_TRADE_COMPLEMENT (the lean line→trade inference map) ─────
+// D3/D6: a NEW, inspection-calibrated LEAN complement per EXISTING cost line (NOT per archetype
+// code; NOT the coarse ARCHETYPE_BUNDLES — FB=32/ADD=26/INT=13 — that made scenario 3 DOMINATE the
+// baseline). Each entry is the LEAN core set of trades that genuinely show up for that scope, chosen
+// so the INSPECTABLE-trade members (excavation/shoring/concrete/framing/plumbing/drain-plumbing/hvac/
+// fire-protection/demolition/site-preparation/pool-installation/landscaping/security — the trades a
+// permit_inspections stage can evidence) stay tight (precision guard, D7d), while the non-inspectable
+// finishing trades (electrical/drywall/paint/flooring/insulation/roofing/masonry/trim/tiling/cabinetry/
+// countertops/eavestrough/waterproofing/caulking) re-attach the genuinely-scope-implied STARVED trades
+// (D7 un-starve: tiling/trim-work/millwork-cabinetry/stone-countertops in KIT/BTH/gut; overhead-doors in
+// GAR; solar in the solar line; eavestrough-siding/site-preparation in the build lines).
+// temporary-fencing is DEPRECATED (Spec 80 §5.B.2) and is deliberately EXCLUDED.
+// Attached at the INFERENCE tier (UNIONed onto evidence per D1) — never replaces an evidence hit.
+// CALIBRATION (2026-07-10, 122-permit corpus): the SERVICE inspectable trades
+// (plumbing/hvac/drain-plumbing/demolition/site-preparation/shoring) are pure false-positives AS
+// INFERENCE ADDS (hvac 0 TP/69 FP, plumbing 0/38, demolition 0/61, drain-plumbing 3/48) — the
+// evidence layer already attaches them where real, so re-adding them only tanks prec(insp). They are
+// EXCLUDED from every complement. The kept inspectable trades are the ENVELOPE/structural ones the
+// evidence layer genuinely misses but inspections confirm (framing 40 TP/58%, insulation 42/55%,
+// excavation 15/52%, concrete 7/37%). Everything else is NON-inspectable finishing (precision-neutral,
+// the D7 un-starve: tiling/trim/millwork-cabinetry/stone-countertops/overhead-doors/solar/
+// eavestrough-siding/caulking). This is the leanness lever D3 identifies.
+const LINE_TRADE_COMPLEMENT = {
+  // Full new build (SFD envelope) — envelope structural + finishes; services left to evidence.
+  max_build: ['excavation', 'concrete', 'framing', 'insulation', 'roofing', 'masonry', 'electrical',
+    'drywall', 'painting', 'flooring', 'waterproofing', 'trim-work', 'tiling', 'millwork-cabinetry',
+    'stone-countertops', 'eavestrough-siding'],
+  // CoA build envelope — same lean full-build set (the CoA twin of max_build).
+  coa_build: ['excavation', 'concrete', 'framing', 'insulation', 'roofing', 'masonry', 'electrical',
+    'drywall', 'painting', 'flooring', 'waterproofing', 'trim-work', 'tiling', 'millwork-cabinetry',
+    'stone-countertops', 'eavestrough-siding'],
+  // Addition (new envelope grafted onto existing) — build-lite, no deep interior-finish set.
+  addition: ['excavation', 'concrete', 'framing', 'insulation', 'roofing', 'masonry', 'electrical',
+    'drywall', 'painting', 'flooring', 'trim-work', 'eavestrough-siding'],
+  // Interior gut — framing + finishes (demolition/services excluded: pure FP as inference).
+  gut: ['framing', 'insulation', 'electrical', 'drywall', 'painting', 'flooring', 'trim-work', 'tiling',
+    'millwork-cabinetry'],
+  // Underpinning — the below-grade structural core only (shoring/drain excluded: FP).
+  underpin: ['excavation', 'concrete', 'waterproofing', 'framing'],
+  // Basement finish — framing + finishes over an existing/new slab.
+  basement: ['framing', 'insulation', 'electrical', 'drywall', 'painting', 'flooring', 'tiling',
+    'waterproofing', 'trim-work'],
+  // Detached garage — foundation + shell + door (un-starves overhead-doors, D7).
+  garage: ['excavation', 'concrete', 'framing', 'roofing', 'masonry', 'electrical', 'eavestrough-siding',
+    'overhead-doors', 'glazing'],
+  // Laneway suite — a lean mini-build envelope + finishes.
+  laneway_suite: ['excavation', 'concrete', 'framing', 'insulation', 'roofing', 'electrical', 'drywall',
+    'painting', 'flooring', 'trim-work', 'eavestrough-siding'],
+  // Garden suite — same lean mini-build set as laneway.
+  garden_suite: ['excavation', 'concrete', 'framing', 'insulation', 'roofing', 'electrical', 'drywall',
+    'painting', 'flooring', 'trim-work', 'eavestrough-siding'],
+  // Kitchen — finish-only; un-starves tiling/cabinetry/countertops/trim (D7). No inspectable member.
+  kitchen: ['electrical', 'drywall', 'painting', 'flooring', 'tiling', 'millwork-cabinetry',
+    'stone-countertops', 'trim-work'],
+  // Bath — finish-only + waterproofing/caulking; un-starves tiling/cabinetry/countertops (D7).
+  bath: ['electrical', 'drywall', 'painting', 'flooring', 'tiling', 'millwork-cabinetry',
+    'stone-countertops', 'waterproofing', 'caulking'],
+  // Solar — roof PV; un-starves solar (D7). No inspectable member.
+  solar: ['electrical', 'roofing', 'solar'],
+};
+
+// P16 D8d — trade slugs deliberately kept OUT of any complement (deprecated-for-emission).
+const COMPLEMENT_EXCLUDED_SLUGS = new Set(['temporary-fencing']);
+
+/** The lean inference complement (deduped, deprecated-excluded) for a set of detected lines. */
+function complementTradesFor(lines) {
+  const out = new Set();
+  for (const line of lines || []) {
+    for (const slug of LINE_TRADE_COMPLEMENT[line] || []) {
+      if (!COMPLEMENT_EXCLUDED_SLUGS.has(slug)) out.add(slug);
+    }
+  }
+  return Array.from(out);
+}
+
 // Dominance: the higher line already prices the whole project when scopes co-occur (except the
 // additive pairs below, which are genuinely two menu items).
 const DOMINANCE = ['max_build', 'coa_build', 'laneway_suite', 'garden_suite', 'addition', 'gut',
@@ -215,4 +290,4 @@ function mapToLines(lead) {
   };
 }
 
-module.exports = { LINE_DEFS, TAG_LINE, FB_TAGS, DOMINANCE, ADDITIVE_PAIRS, RENO_BUILD_TRADE_THRESHOLD, normalizeTag, mapToLines, isLowRiseResidential, LOW_RISE_RESIDENTIAL_RE };
+module.exports = { LINE_DEFS, TAG_LINE, FB_TAGS, DOMINANCE, ADDITIVE_PAIRS, RENO_BUILD_TRADE_THRESHOLD, normalizeTag, mapToLines, isLowRiseResidential, LOW_RISE_RESIDENTIAL_RE, LINE_TRADE_COMPLEMENT, COMPLEMENT_EXCLUDED_SLUGS, complementTradesFor };

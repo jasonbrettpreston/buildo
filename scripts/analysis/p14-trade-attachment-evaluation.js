@@ -15,7 +15,8 @@
 
 const { Client } = require('pg');
 const { ARCHETYPE_BUNDLES, deriveArchetypes } = require('../lib/archetypes');
-const { mapToLines } = require('../../src/features/leads/lib/archetype-cost-map');
+const { mapToLines, complementTradesFor } = require('../../src/features/leads/lib/archetype-cost-map');
+const crypto = require('crypto');
 
 // ── stage_name → trade-slug ground-truth map ────────────────────────────────
 // Only stages that name a SPECIFIC trade are mapped. Milestone/rollup stages
@@ -156,8 +157,17 @@ async function main() {
       (['PLB', 'PSA', 'DRN', 'STS', 'HVA', 'MSA'].includes(narrowCode(num)));
     const cap = (s) => isPlumbCeiling ? new Set([...s].filter((t) => PLUMBING_FAMILY.has(t))) : s;
 
+    // (6) P16 lean scope-mapped complement — UNIONED onto evidence-only per D1
+    // (attached = evidence ∪ lean_inference). The complement derives from the SAME mapToLines
+    // detection as scenario 3, but attaches LINE_TRADE_COMPLEMENT (lean) instead of the coarse
+    // ARCHETYPE_BUNDLES. Faithful to 16C: inference is gated by the same narrow/permit_type ceiling
+    // (a narrow/plumb-ceiling permit gains NO inference), so we cap() the complement before union.
+    const complement = mapped && mapped.lines ? new Set(complementTradesFor(mapped.lines)) : new Set();
+    const gatedComplement = cap(complement); // narrow/plumb permits get no non-family inference
+    const lean6 = new Set([...evid, ...gatedComplement]); // evidence ∪ lean inference
+
     records.push({ num, p, stratum: stratumOf(p), truth,
-      alt: { pre: preP13, evid, scope: scopeUnion,
+      alt: { pre: preP13, evid, scope: scopeUnion, lean6,
         ceilEvid: cap(evid), ceilPre: cap(preP13), ceilScope: cap(scopeUnion) } });
   }
 
@@ -187,6 +197,7 @@ async function main() {
     ['(5a) plumbing ceiling on evidence-only (2)', 'ceilEvid'],
     ['(5b) plumbing ceiling on pre-P13-3 (1)', 'ceilPre'],
     ['(5c) plumbing ceiling on scope-union (3)', 'ceilScope'],
+    ['(6) P16 lean complement ∪ evidence', 'lean6'],
   ];
 
   // per-trade lead-volume impact (corpus-wide, from full DB) — starvation check
@@ -304,7 +315,75 @@ async function main() {
   L.push(`Permits with NO derivable archetype (deriveArchetypes → []): **${uncovered}** of ${perPermitArch.length}.`);
   L.push('');
 
+  // ── (6) P16 GO/NO-GO gate: DEV/HOLD-OUT split + bootstrap CIs ──────────────
+  // Deterministic stratified split (md5(permit_num) order, alternate within each stratum) so the
+  // complement is CALIBRATED on DEV and SCORED on the held-out half (n≈61 → CIs mandatory).
+  const md5 = (s) => crypto.createHash('md5').update(String(s)).digest('hex');
+  const byStrat = new Map();
+  for (const r of records) { if (!byStrat.has(r.stratum)) byStrat.set(r.stratum, []); byStrat.get(r.stratum).push(r); }
+  const dev = [], hold = [];
+  for (const [, recs] of byStrat) {
+    const sorted = recs.slice().sort((a, b) => (md5(a.num) < md5(b.num) ? -1 : 1));
+    sorted.forEach((r, i) => (i % 2 === 0 ? dev : hold).push(r));
+  }
+  // seeded RNG (mulberry32) for a reproducible percentile bootstrap.
+  const mulberry32 = (a) => () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  function bootCI(recs, key, pick, B = 3000, seed = 20260710) {
+    const rng = mulberry32(seed); const n = recs.length; const vals = [];
+    for (let b = 0; b < B; b++) { const s = []; for (let i = 0; i < n; i++) s.push(recs[Math.floor(rng() * n)]); vals.push(pick(score(s, key))); }
+    vals.sort((x, y) => x - y);
+    return [vals[Math.floor(0.025 * B)], vals[Math.floor(0.975 * B)]];
+  }
+  const pct = (x) => (x * 100).toFixed(1) + '%';
+  const ciPct = (ci) => `[${pct(ci[0])}, ${pct(ci[1])}]`;
+  const ciNum = (ci) => `[${ci[0].toFixed(1)}, ${ci[1].toFixed(1)}]`;
+
+  L.push('## (6) P16 lean-complement GO/NO-GO gate (DEV/HOLD-OUT + bootstrap 95% CI)');
+  L.push('');
+  const stratSplit = new Map();
+  for (const r of records) { const k = r.stratum; if (!stratSplit.has(k)) stratSplit.set(k, [0, 0]); }
+  for (const r of dev) stratSplit.get(r.stratum)[0]++;
+  for (const r of hold) stratSplit.get(r.stratum)[1]++;
+  L.push('| Stratum | DEV n | HOLD n |'); L.push('|---|--:|--:|');
+  for (const [k, [d, h]] of stratSplit) L.push(`| ${k} | ${d} | ${h} |`);
+  L.push(`| **total** | **${dev.length}** | **${hold.length}** |`);
+  L.push('');
+  // Gate thresholds — MIRROR of docs/specs/_contracts.json `p16_gate` (pinned by contracts.infra.test.ts).
+  const gateThresholds = { recallFloor: 0.5, precFloor: 0.558, meanLo: 8, meanHi: 11 };
+  function gateRow(label, recs) {
+    const s = score(recs, 'lean6');
+    return { label, s,
+      recallCI: bootCI(recs, 'lean6', (x) => x.recall),
+      precCI: bootCI(recs, 'lean6', (x) => x.precInsp),
+      meanCI: bootCI(recs, 'lean6', (x) => x.meanAttached) };
+  }
+  const evidHold = score(hold, 'evid');
+  const rows6 = [['HOLD-OUT (gate)', hold], ['DEV', dev], ['whole corpus', records]].map(([lab, r]) => gateRow(lab, r));
+  L.push('| Split | mean attached (95% CI) | recall (95% CI) | prec(insp) (95% CI) |');
+  L.push('|---|---|---|---|');
+  for (const g of rows6) {
+    L.push(`| ${g.label} | ${g.s.meanAttached.toFixed(1)} ${ciNum(g.meanCI)} | ${pct(g.s.recall)} ${ciPct(g.recallCI)} | ${pct(g.s.precInsp)} ${ciPct(g.precCI)} |`);
+  }
+  L.push('');
+  L.push(`Evidence-only baseline on the HOLD split (reference): recall ${pct(evidHold.recall)}, prec(insp) ${pct(evidHold.precInsp)}, mean ${evidHold.meanAttached.toFixed(1)}.`);
+  L.push('');
+  const holdG = rows6[0].s;
+  const goRecall = holdG.recall > gateThresholds.recallFloor;
+  const goPrec = holdG.precInsp >= gateThresholds.precFloor;
+  const goMean = holdG.meanAttached >= gateThresholds.meanLo && holdG.meanAttached <= gateThresholds.meanHi;
+  const GO = goRecall && goPrec && goMean;
+  L.push('**Gate (all three on the HOLD-OUT, point estimates):**');
+  L.push(`- recall > ${pct(gateThresholds.recallFloor)}: ${pct(holdG.recall)} → ${goRecall ? 'PASS' : 'FAIL'}`);
+  L.push(`- prec(insp) ≥ ${pct(gateThresholds.precFloor)} (10 pts off the 65.8% evidence baseline [FAB3]): ${pct(holdG.precInsp)} → ${goPrec ? 'PASS' : 'FAIL'}`);
+  L.push(`- mean attached ∈ [${gateThresholds.meanLo}, ${gateThresholds.meanHi}]: ${holdG.meanAttached.toFixed(1)} → ${goMean ? 'PASS' : 'FAIL'}`);
+  L.push('');
+  L.push(`### VERDICT: **${GO ? 'GO' : 'NO-GO'}** _(PROVISIONAL — 122-permit partial corpus; deep_scrapes-resume re-measure is a STANDING OBLIGATION)_`);
+  L.push('');
+  L.push('_CIs are a 3000-sample percentile bootstrap over the split permits (seed 20260710). The point estimate governs the gate; the CI states the small-n uncertainty (Gemini/DeepSeek converged ruling)._');
+
   console.log(L.join('\n'));
+  // Machine-readable gate line for the caller (stderr, so it does not pollute the md report on stdout).
+  console.error(`P16_GATE_VERDICT=${GO ? 'GO' : 'NO-GO'} recall=${holdG.recall.toFixed(4)} prec_insp=${holdG.precInsp.toFixed(4)} mean=${holdG.meanAttached.toFixed(3)} hold_n=${hold.length} dev_n=${dev.length}`);
   await c.end();
 }
 main().catch((e) => { console.error(e); process.exit(1); });
