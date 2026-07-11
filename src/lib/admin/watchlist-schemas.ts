@@ -23,11 +23,11 @@ export const WatchlistItemSchema = z.object({
   address: z.string(),
   lifecycle_phase: z.string().nullable(),
   lifecycle_stalled: z.boolean(),
-  /** Project-level aggregated expected start — MIN(predicted_start) across ACTIVE-trade forecasts ([ORC3]/[PF-G3]). */
+  /** Project-level expected start — the EARLIEST predicted_start row across ACTIVE-trade forecasts ([ORC3]/[PF-G3]). */
   predicted_start: z.string().nullable(),
   p25_days: z.number().nullable(),
   p75_days: z.number().nullable(),
-  /** MAX(opportunity_score) across the lead's active-trade forecasts, null-safe ([ORC4]). */
+  /** Score FROM the same earliest-start forecast row (same-row semantics, Spec 36 §4 — "score at next start"), null-safe ([ORC4]). */
   opportunity_score: z.number().nullable(),
   temporal_group: z.enum(['action_required', 'departing_soon', 'on_the_horizon']),
   saved_at: z.string(),

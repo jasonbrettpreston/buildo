@@ -19,12 +19,14 @@
 // Forecast join: ON tf.lead_id = admin_watchlist.lead_key — trade_forecasts
 // PK is (trade_slug, lead_id) with permit_num/revision_num NULLABLE, so
 // lead_id is the ONE uniform key covering permit AND coa rows ([ORC3]).
-// Project-level expected start = MIN(tf.predicted_start) gated through the
+// Project-level expected start = the EARLIEST predicted_start row across the
 // lead's ACTIVE trades ([PF-G3]): permit arm via permit_trades.is_active,
 // coa arm via lead_trades.is_active (the coa classifier's output table).
-// temporal_group is computed server-side via the computeWatchlistTemporalGroup
-// aggregation wrapper — the shared computeTemporalGroup stays untouched
-// ([ORC4]/[PF12]).
+// opportunity_score is FROM THE SAME earliest-start row (same-row semantics —
+// start and score are consistent, never from two different forecast rows;
+// see Spec 36 §4). temporal_group is computed server-side via the
+// computeWatchlistTemporalGroup aggregation wrapper — the shared
+// computeTemporalGroup stays untouched ([ORC4]/[PF12]).
 
 import { createHash } from 'node:crypto';
 import type { NextRequest } from 'next/server';
@@ -107,10 +109,13 @@ interface WatchlistRow {
 // [PF7] UNION ALL — the permit arm and the coa arm each SELECT the same
 // column interface. Source tables are LEFT JOINed so a watchlist row whose
 // underlying permit/coa row disappears still renders from address_snapshot
-// (no-auto-eviction contract, Spec 36 §4a). The forecast LATERALs gate
-// through the lead's ACTIVE trades ([PF-G3]) — permit_trades for permits,
-// lead_trades for coa (both trade-id keyed; trades.slug bridges to
-// tf.trade_slug).
+// (no-auto-eviction contract, Spec 36 §4a). The single fc LATERAL per arm
+// gates through the lead's ACTIVE trades ([PF-G3]) — permit_trades for
+// permits, lead_trades for coa (both trade-id keyed; trades.slug bridges to
+// tf.trade_slug) — and supplies predicted_start, p25/p75 AND
+// opportunity_score from the SAME earliest-start row (same-row semantics:
+// a lead whose only active forecasts lack predicted_start reads a null
+// score — non-actionable anyway; Spec 36 §4).
 const WATCHLIST_SQL = `
   SELECT * FROM (
     SELECT
@@ -130,14 +135,14 @@ const WATCHLIST_SQL = `
       fc.predicted_start,
       fc.p25_days,
       fc.p75_days,
-      sc.opportunity_score,
+      fc.opportunity_score,
       aw.saved_at::text AS saved_at
     FROM admin_watchlist aw
     LEFT JOIN permits p
       ON p.permit_num = aw.permit_num
       AND p.revision_num = aw.revision_num
     LEFT JOIN LATERAL (
-      SELECT tf.predicted_start::text AS predicted_start, tf.p25_days, tf.p75_days
+      SELECT tf.predicted_start::text AS predicted_start, tf.p25_days, tf.p75_days, tf.opportunity_score
       FROM trade_forecasts tf
       WHERE tf.lead_id = aw.lead_key
         AND tf.predicted_start IS NOT NULL
@@ -153,20 +158,6 @@ const WATCHLIST_SQL = `
       ORDER BY tf.predicted_start ASC
       LIMIT 1
     ) fc ON true
-    LEFT JOIN LATERAL (
-      SELECT MAX(tf.opportunity_score) AS opportunity_score
-      FROM trade_forecasts tf
-      WHERE tf.lead_id = aw.lead_key
-        AND EXISTS (
-          SELECT 1
-          FROM permit_trades pt
-          JOIN trades t ON t.id = pt.trade_id
-          WHERE pt.permit_num = aw.permit_num
-            AND pt.revision_num = aw.revision_num
-            AND pt.is_active = true
-            AND t.slug = tf.trade_slug
-        )
-    ) sc ON true
     WHERE aw.admin_uid = $1
       AND aw.lead_type = 'permit'
 
@@ -185,13 +176,13 @@ const WATCHLIST_SQL = `
       fc.predicted_start,
       fc.p25_days,
       fc.p75_days,
-      sc.opportunity_score,
+      fc.opportunity_score,
       aw.saved_at::text AS saved_at
     FROM admin_watchlist aw
     LEFT JOIN coa_applications c
       ON c.application_number = aw.coa_application_number
     LEFT JOIN LATERAL (
-      SELECT tf.predicted_start::text AS predicted_start, tf.p25_days, tf.p75_days
+      SELECT tf.predicted_start::text AS predicted_start, tf.p25_days, tf.p75_days, tf.opportunity_score
       FROM trade_forecasts tf
       WHERE tf.lead_id = aw.lead_key
         AND tf.predicted_start IS NOT NULL
@@ -206,19 +197,6 @@ const WATCHLIST_SQL = `
       ORDER BY tf.predicted_start ASC
       LIMIT 1
     ) fc ON true
-    LEFT JOIN LATERAL (
-      SELECT MAX(tf.opportunity_score) AS opportunity_score
-      FROM trade_forecasts tf
-      WHERE tf.lead_id = aw.lead_key
-        AND EXISTS (
-          SELECT 1
-          FROM lead_trades lt
-          JOIN trades t ON t.id = lt.trade_id
-          WHERE lt.lead_id = aw.lead_key
-            AND lt.is_active = true
-            AND t.slug = tf.trade_slug
-        )
-    ) sc ON true
     WHERE aw.admin_uid = $1
       AND aw.lead_type = 'coa'
   ) board

@@ -10,6 +10,8 @@
 //   · the [PF7] UNION ALL flight-list JOIN to permits + trade_forecasts with
 //     the [PF-G3] active-trade gate (inactive trades cannot supply the
 //     expected start),
+//   · SAME-ROW semantics (Spec 36 §4): opportunity_score comes FROM the
+//     earliest-start forecast row — never a MAX() over a different row,
 //   · the coa watch round-trip,
 //   · [PF10] no-auto-eviction: a lifecycle-advanced permit still returns.
 //
@@ -80,17 +82,50 @@ describe.skipIf(!dbAvailable())('migration 215 — admin_watchlist + flight-list
         ('WL 900001', '00', 'wl-trade-inactive', 'permit:WL 900001:00', '2026-08-01', 3, 9, 90)
       ON CONFLICT DO NOTHING
     `);
+    // Same-row fixture (Spec 36 §4): a SECOND permit with TWO ACTIVE trades
+    // where the earliest-start row is NOT the max-score row. The old
+    // MAX(opportunity_score) LATERAL would have returned 95 here; same-row
+    // semantics must return 40 (the score ON the earliest-start row). The
+    // WL 900001 fixture alone cannot catch this — its single active trade
+    // supplies both start and score.
+    await pool.query(`
+      INSERT INTO permits (permit_num, revision_num, permit_type, status,
+                           street_num, street_name, lifecycle_phase, lifecycle_stalled)
+      VALUES ('WL 900002', '00', 'TEST', 'Permit Issued', '34', 'WATCH ST', 'P12', false)
+      ON CONFLICT DO NOTHING
+    `);
+    await pool.query(`
+      INSERT INTO trades (slug, name) VALUES ('wl-trade-early', 'WL Early'), ('wl-trade-late', 'WL Late')
+      ON CONFLICT DO NOTHING
+    `);
+    await pool.query(`
+      INSERT INTO permit_trades (permit_num, revision_num, trade_id, is_active)
+      SELECT 'WL 900002', '00', t.id, true
+      FROM trades t WHERE t.slug IN ('wl-trade-early', 'wl-trade-late')
+      ON CONFLICT DO NOTHING
+    `);
+    await pool.query(`
+      INSERT INTO trade_forecasts (permit_num, revision_num, trade_slug, lead_id, predicted_start, p25_days, p75_days, opportunity_score)
+      VALUES
+        ('WL 900002', '00', 'wl-trade-early', 'permit:WL 900002:00', '2026-08-15', 5, 12, 40),
+        ('WL 900002', '00', 'wl-trade-late',  'permit:WL 900002:00', '2026-10-01', 9, 30, 95)
+      ON CONFLICT DO NOTHING
+    `);
   });
 
   afterAll(async () => {
     if (!pool) return;
     await pool.query('DELETE FROM admin_watchlist WHERE admin_uid IN ($1, $2)', [UID, OTHER_UID]);
-    await pool.query("DELETE FROM trade_forecasts WHERE lead_id = 'permit:WL 900001:00'");
     await pool.query(
-      "DELETE FROM permit_trades WHERE permit_num = 'WL 900001' AND revision_num = '00'",
+      "DELETE FROM trade_forecasts WHERE lead_id IN ('permit:WL 900001:00', 'permit:WL 900002:00')",
     );
-    await pool.query("DELETE FROM trades WHERE slug IN ('wl-trade-active', 'wl-trade-inactive')");
-    await pool.query("DELETE FROM permits WHERE permit_num = 'WL 900001'");
+    await pool.query(
+      "DELETE FROM permit_trades WHERE permit_num IN ('WL 900001', 'WL 900002') AND revision_num = '00'",
+    );
+    await pool.query(
+      "DELETE FROM trades WHERE slug IN ('wl-trade-active', 'wl-trade-inactive', 'wl-trade-early', 'wl-trade-late')",
+    );
+    await pool.query("DELETE FROM permits WHERE permit_num IN ('WL 900001', 'WL 900002')");
     await pool.query("DELETE FROM coa_applications WHERE application_number = 'WL-A1/26'");
     await pool.end();
   });
@@ -166,14 +201,35 @@ describe.skipIf(!dbAvailable())('migration 215 — admin_watchlist + flight-list
     const res = await pool.query<ListRow>(WATCHLIST_SQL, [UID, 50, 0]);
     const permitRow = res.rows.find((r) => r.lead_key === 'permit:WL 900001:00');
     expect(permitRow).toBeDefined();
-    // The inactive trade's 2026-08-01 forecast must NOT win the MIN.
+    // The inactive trade's 2026-08-01 forecast must NOT win the earliest-start pick.
     expect(permitRow!.predicted_start).toBe('2026-09-10');
     expect(permitRow!.p25_days).toBe(7);
     expect(permitRow!.p75_days).toBe(21);
-    // MAX(score) is likewise active-gated: 40, not the inactive 90.
+    // The score is likewise active-gated (same-row): 40, not the inactive 90.
     expect(permitRow!.opportunity_score).toBe(40);
     // address_snapshot wins over the live street-concat ([PF8]).
     expect(permitRow!.address).toBe('12 WATCH ST');
+  });
+
+  it('same-row semantics — opportunity_score comes FROM the earliest-start row, not a MAX across rows (Spec 36 §4)', async () => {
+    if (!pool) return;
+    await pool.query(
+      `INSERT INTO admin_watchlist (admin_uid, lead_type, lead_key, permit_num, revision_num, address_snapshot)
+       VALUES ($1, 'permit', 'permit:WL 900002:00', 'WL 900002', '00', '34 WATCH ST')
+       ON CONFLICT (admin_uid, lead_key) DO NOTHING`,
+      [UID],
+    );
+    const res = await pool.query<ListRow>(WATCHLIST_SQL, [UID, 50, 0]);
+    const row = res.rows.find((r) => r.lead_key === 'permit:WL 900002:00');
+    expect(row).toBeDefined();
+    // BOTH trades are active. The earliest-start row (wl-trade-early,
+    // 2026-08-15) carries score 40; the later row carries the HIGHER score
+    // 95. Same-row semantics: start, window AND score all come from the
+    // earliest-start row — a MAX() regression would surface 95 here.
+    expect(row!.predicted_start).toBe('2026-08-15');
+    expect(row!.p25_days).toBe(5);
+    expect(row!.p75_days).toBe(12);
+    expect(row!.opportunity_score).toBe(40);
   });
 
   it('[PF10] no-auto-eviction — a lifecycle-ADVANCED permit still returns from the list SQL', async () => {
