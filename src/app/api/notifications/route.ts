@@ -1,17 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
+// SPEC LINK: docs/specs/01-pipeline/101_notification_dispatch.md §3 (Auth Matrix)
+//
+// GET  /api/notifications  — the authenticated user's notification history.
+// PATCH /api/notifications — mark one / all of the caller's notifications read.
+//
+// SECURITY (P25 25A): the user identity is derived from the verified Firebase
+// session, NOT from a client-supplied `user_id` query param. The pre-P25 handler
+// trusted `searchParams.get('user_id')`, so any authenticated caller could read
+// (or mark read) ANY user's notifications by passing a different id — a classic
+// IDOR. The middleware already gates `/api/notifications` as `authenticated`
+// (route-guard.ts:98); this handler now binds every query to the session uid.
+
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
+import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+  const userId = await getUserIdFromSession(request);
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const searchParams = request.nextUrl.searchParams;
-  const userId = searchParams.get('user_id');
   const unreadOnly = searchParams.get('unread_only') === 'true';
   const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
   const offset = parseInt(searchParams.get('offset') || '0', 10);
-
-  if (!userId) {
-    return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
-  }
 
   const conditions = ['user_id = $1'];
   const params: unknown[] = [userId];
@@ -55,19 +69,20 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 });
 
 export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) {
-  const body = await request.json();
-  const { notification_id, user_id, action } = body;
-
-  if (!user_id) {
-    return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
+  const userId = await getUserIdFromSession(request);
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const body = await request.json();
+  const { notification_id, action } = body;
 
   if (action === 'mark_all_read') {
     const result = await query<{ id: number }>(
       `UPDATE notifications SET is_read = true
        WHERE user_id = $1 AND is_read = false
        RETURNING id`,
-      [user_id]
+      [userId]
     );
     return NextResponse.json({ updated: result.length });
   }
@@ -75,7 +90,7 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
   if (action === 'mark_read' && notification_id) {
     await query(
       'UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2',
-      [notification_id, user_id]
+      [notification_id, userId]
     );
     return NextResponse.json({ success: true });
   }
