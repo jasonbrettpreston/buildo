@@ -290,6 +290,73 @@ describe('POST /api/leads/save — 400 INVALID_LEAD_ID', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// P21 21A: feed-format id acceptance at the save endpoint
+// ---------------------------------------------------------------------------
+
+describe('POST /api/leads/save — P21 feed-format permit lead_id forms', () => {
+  it('accepts NUM:REV (feed-emitted colon form) and dispatches save', async () => {
+    setHappyPathMocks(1);
+    const res = await POST(
+      makeRequest({
+        lead_id: '24-101234:01',
+        lead_type: 'permit',
+        saved: true,
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(mockedRecordLeadView).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lead_type: 'permit',
+        permit_num: '24-101234',
+        revision_num: '01',
+        action: 'save',
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('accepts permit:NUM:REV (lead_key form) and dispatches save', async () => {
+    setHappyPathMocks(2);
+    const res = await POST(
+      makeRequest({
+        lead_id: 'permit:24-101234:01',
+        lead_type: 'permit',
+        saved: true,
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(mockedRecordLeadView).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lead_type: 'permit',
+        permit_num: '24-101234',
+        revision_num: '01',
+        action: 'save',
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('still rejects permit lead_id with no separator at all (single-dash only)', async () => {
+    // Auth must be satisfied first so the route reaches lead_id validation.
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 59 });
+    // '24-101234-01' uses only single dashes which are internal to permit_num —
+    // no valid separator present, so parse fails → 400
+    const res = await POST(
+      makeRequest({
+        lead_id: '24-101234-01',
+        lead_type: 'permit',
+        saved: true,
+      }),
+    );
+    expect(res.status).toBe(400);
+    const body = (await readJson(res)) as { error: { code: string } };
+    expect(body.error.code).toBe('INVALID_LEAD_ID');
+    expect(mockedRecordLeadView).not.toHaveBeenCalled();
+  });
+});
+
 describe('POST /api/leads/save — 400 VALIDATION_FAILED', () => {
   beforeEach(() => {
     mockedGetUserContext.mockResolvedValue(sampleContext);

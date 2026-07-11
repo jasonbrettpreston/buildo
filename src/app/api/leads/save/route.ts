@@ -97,13 +97,18 @@ function parseSaveLeadId(
   leadType: 'permit' | 'builder',
 ): ParsedPermitId | ParsedBuilderId | null {
   if (leadType === 'permit') {
-    // Reject ambiguous inputs: more than one `--` means either the client
-    // sent garbage or the permit_num itself contains `--` (which the
-    // canonical parser preserves verbatim — fine for URL parsing where
-    // the UI controls input, but unsafe at the open save endpoint where
-    // any client can post).
-    const first = leadId.indexOf('--');
-    if (first === -1 || first !== leadId.lastIndexOf('--')) return null;
+    // Old form (NUM--REV): reject if there is more than one `--` (ambiguous
+    // — the canonical parseLeadId preserves later `--` inside revision_num
+    // for URL-path params where the UI controls input, but the open save
+    // endpoint must be stricter).
+    // New forms (NUM:REV, permit:NUM:REV): Toronto permit_num never contains
+    // `:`, so the colon is an unambiguous separator and no uniqueness guard
+    // is needed. Inputs without `--` are allowed through to parseLeadId
+    // which handles both colon forms. (P21 additive extension, 2026-07-11)
+    if (leadId.includes('--')) {
+      const first = leadId.indexOf('--');
+      if (first !== leadId.lastIndexOf('--')) return null;
+    }
     const parsed = parseLeadId(leadId);
     if (!parsed || parsed.kind !== 'permit') return null;
     return {

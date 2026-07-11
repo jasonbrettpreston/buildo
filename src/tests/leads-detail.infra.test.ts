@@ -259,6 +259,49 @@ describe('GET /api/leads/detail/[id] — 404', () => {
 });
 
 // ---------------------------------------------------------------------------
+// P21 21A: feed-format id acceptance (NUM:REV and permit:NUM:REV)
+// ---------------------------------------------------------------------------
+
+describe('GET /api/leads/detail/[id] — P21 feed-format id forms', () => {
+  it('accepts NUM:REV (feed-emitted colon form) and returns 200', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [sampleRow] });
+
+    const res = await GET(makeRequest(), makeContext('24 101234:01'));
+    expect(res.status).toBe(200);
+    const body = (await readJson(res)) as { data: Record<string, unknown> };
+    expect(body.data).toMatchObject({
+      permit_num: '24 101234',
+      revision_num: '01',
+    });
+  });
+
+  it('accepts permit:NUM:REV (lead_key form) and returns 200', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [sampleRow] });
+
+    const res = await GET(makeRequest(), makeContext('permit:24 101234:01'));
+    expect(res.status).toBe(200);
+    const body = (await readJson(res)) as { data: Record<string, unknown> };
+    expect(body.data).toMatchObject({
+      permit_num: '24 101234',
+      revision_num: '01',
+    });
+  });
+
+  it('accepts coa: lowercase prefix and routes to CoA branch', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    // CoA branch fires a different SQL; mock returns empty → 404
+    mockedPool.query.mockResolvedValueOnce({ rowCount: 0, rows: [] });
+
+    const res = await GET(makeRequest(), makeContext('coa:A0123/24EYK'));
+    // 404 is correct — no matching CoA row in the mock; the point is we
+    // reached the CoA branch (400 INVALID_LEAD_ID would mean parseLeadId failed)
+    expect(res.status).toBe(404);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 500 leak prevention
 // ---------------------------------------------------------------------------
 

@@ -12,7 +12,9 @@ import { ZodError } from 'zod';
 // ---------------------------------------------------------------------------
 
 const validPermitItem = {
-  lead_id: 'permit-23-145678-BLD--01',
+  // True wire form: feed emits `permit_num:LPAD(revision_num,2,'0')` (no prefix).
+  // Replaced the invented `permit-23-145678-BLD--01` placeholder (P21 21A).
+  lead_id: '23 145678 BLD:01',
   lead_type: 'permit',
   distance_m: 500,
   proximity_score: 25,

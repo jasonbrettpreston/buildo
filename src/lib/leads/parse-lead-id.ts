@@ -29,6 +29,52 @@ export function parseLeadId(raw: string | undefined | null): ParsedLeadId | null
     return { kind: 'coa', application_number };
   }
 
+  // ── P21: Additive colon-form id support (Spec 91 §id-format, 2026-07-11) ──
+  //
+  // The mobile lead feed (get-lead-feed.ts, permit_candidates CTE) emits
+  // lead_id as `${permit_num}:${LPAD(revision_num,2,'0')}` — no prefix.
+  // The lead_key column and lead_trades use `permit:${permit_num}:${revision_num}`.
+  // All three new colon forms are accepted here additively; the existing
+  // `COA-` and `--` branches above/below are deliberate fences and MUST NOT
+  // be altered.
+  //
+  // Toronto permit_num format assumption: `YY-NNNNNN-TYPE` (e.g. `23-145678-BLD`)
+  // or `YY NNNNNN TYPE` (space-separated). Single dashes and spaces are legal
+  // within permit_num; COLONS are not — the colon is therefore an unambiguous
+  // separator for the new forms.
+
+  // coa: lowercase prefix (feed-emitted: `coa:${ca.application_number}`)
+  if (id.startsWith('coa:')) {
+    const application_number = id.slice('coa:'.length);
+    if (application_number.length === 0) return null;
+    return { kind: 'coa', application_number };
+  }
+
+  // permit: explicit prefix (lead_key / lead_trades: `permit:${num}:${LPAD(rev,2,'0')}`)
+  // Use lastIndexOf so the full permit_num is captured as the initial segment
+  // and revision_num is always the final colon-delimited part.
+  if (id.startsWith('permit:')) {
+    const rest = id.slice('permit:'.length);
+    const lastColon = rest.lastIndexOf(':');
+    if (lastColon <= 0) return null;
+    const permit_num = rest.slice(0, lastColon);
+    const revision_num = rest.slice(lastColon + 1);
+    if (permit_num.length === 0 || revision_num.length === 0) return null;
+    return { kind: 'permit', permit_num, revision_num };
+  }
+
+  // NUM:REV — feed-emitted colon form (no prefix; checked after `permit:` and
+  // `coa:` guards so those prefixes match first). revision_num must not itself
+  // contain `:` (that would be a different, unrecognised encoding).
+  if (id.includes(':')) {
+    const colonIdx = id.indexOf(':');
+    const permit_num = id.slice(0, colonIdx);
+    const revision_num = id.slice(colonIdx + 1);
+    if (permit_num.length === 0 || revision_num.length === 0) return null;
+    if (revision_num.includes(':')) return null;
+    return { kind: 'permit', permit_num, revision_num };
+  }
+
   // Permit branch: split on `--`. Toronto permit numbers contain single
   // dashes (`23-145678-BLD`) so a `--` only appears as the encoded
   // separator. Use indexOf+slice rather than split to support permit
