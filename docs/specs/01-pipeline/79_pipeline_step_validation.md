@@ -207,7 +207,7 @@ See `docs/runbook/pipeline_step_validation_walkthrough.md` for the canonical bri
 | 10 | link_neighbourhoods | Compliance | |
 | 11 | link_massing | Compliance | |
 | 12 | link_similar | Compliance | |
-| 13 | classify_permits | Compliance | |
+| 13 | classify_permits | Compliance | **P16 (2026-07-10): value-changing distribution-drift profile — T9 (distribution drift) + T11 (silent-population shift) apply.** The lean-inference flip is a DESIGNED step-change (Spec 48 §3.7 pre-ack in the P16 report): mean active trades/permit rises ~5.1→8-11 band, the 8 complement-covered starved trades flip >0 active, ~1.76M coarse-bundle rows retire. EXIT criteria: `inference_mean_trades_per_permit` in band, `starved_trades_recovered_fail_band` PASS, `evidence_mean_trades_per_permit` ≤7, `attachment_basis_null_count`=0. The 7-day observer must record this as EXPECTED, not drift. |
 | 14 | backfill_realtor_permit_trades | Compliance | Spec 84 §8.5 realtor work_phase |
 | 15 | compute_cost_estimates | Calculations | §11.2 invariants |
 | 16 | compute_timing_calibration_v2 | Calculations | §11.3 invariants |
@@ -236,7 +236,7 @@ See `docs/runbook/pipeline_step_validation_walkthrough.md` for the canonical bri
 | 3 | assert_coa_freshness | Compliance | |
 | 4 | link_coa_to_parcels | Compliance | Phase D §6.6.X lat/long ownership |
 | 5 | classify_coa_scope | Compliance | |
-| 6 | classify_coa_trades | Compliance | |
+| 6 | classify_coa_trades | Compliance | **P16 (2026-07-10): value-changing distribution-drift profile — T9 + T11 apply** (twin of permits step 13; §3.7 pre-ack in the P16 report). Designed step-change: coarse bundle rows retire, all rows go active with `attachment_basis` provenance; all-active mean governed by `coa_active_trades_warn_max` (18); severance-only stays 0 rows. EXIT: `avg_active_trades_per_lead` ≤18, `coa_trades_inference` > 0, evidence-scoped median stable. |
 | 7 | compute_coa_cost_estimates | Calculations | §11.10 invariants — geometric-only per Spec 83 §3.A |
 | 8 | link_coa | (cross-ref permits #17) | |
 | 9-11 | refresh_snapshot, assert_data_bounds, assert_engine_health | (cross-ref permits #18-20) | |
