@@ -20,8 +20,8 @@ if echo "$MSG" | grep -qE '^[vV]?[0-9]+\.[0-9]+\.[0-9]+'; then
   exit 0
 fi
 
-# Enforce: type(NN[a-z]_spec)!?: description
-if echo "$MSG" | grep -qE '^(feat|fix|refactor|test|docs|chore)\([0-9]{2}[a-z]?_[a-z0-9_]+\)!?: .+'; then
+# Enforce: type(NN[a-z]_spec)!?: description — 2-3 digit spec IDs (specs reached 100 in 2026-07)
+if echo "$MSG" | grep -qE '^(feat|fix|refactor|test|docs|chore)\([0-9]{2,3}[a-z]?_[a-z0-9_]+\)!?: .+'; then
   exit 0
 fi
 
@@ -33,7 +33,7 @@ echo "  Example:  feat(28_data_quality): add pipeline status polling"
 echo "  Breaking: refactor(01_database)!: drop legacy table"
 echo ""
 echo "  Allowed types: feat, fix, refactor, test, docs, chore"
-echo "  Spec ID must start with a 2-digit number (optionally followed by a letter): 00_, 08b_, 28_, etc."
+echo "  Spec ID must start with a 2-3 digit number (optionally followed by a letter): 00_, 08b_, 28_, 100_, etc."
 echo ""
 echo "  Your message: $MSG"
 echo ""
