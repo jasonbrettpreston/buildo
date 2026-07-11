@@ -1,8 +1,14 @@
 // 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.2
 //
-// GET /api/admin/leads/test-feed — admin test feed endpoint.
-// Bypasses user profile auth — constructs a synthetic LeadFeedInput.
-// Returns the same data envelope as /api/leads/feed plus a _debug block.
+// GET /api/admin/leads/test-feed — admin test/browse feed endpoint.
+// Bypasses user profile auth — constructs a synthetic LeadFeedInput — but
+// still sits behind the per-route admin guard (Spec 33 §8: middleware is
+// bypassable, so verifyAdminAuth runs as the FIRST line). It now powers the
+// admin Feed Browser (Spec 76 §3.2), so the CoA UNION arm is enabled
+// (`disableCoa: false`) and a `lead_type` axis lets the operator scope to
+// permit / coa / all. Returns the same data envelope as /api/leads/feed plus
+// a _debug block. radius_km + limit are Zod-clamped to MAX_RADIUS_KM /
+// MAX_FEED_LIMIT (DoS bound).
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
@@ -10,6 +16,7 @@ import { z } from 'zod';
 import { pool } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+import { verifyAdminAuth } from '@/lib/auth/verify-admin';
 import { getLeadFeed } from '@/features/leads/lib/get-lead-feed';
 import { DEFAULT_RADIUS_KM, MAX_RADIUS_KM } from '@/features/leads/lib/distance';
 import { DEFAULT_FEED_LIMIT, MAX_FEED_LIMIT } from '@/features/leads/lib/get-lead-feed';
@@ -27,9 +34,23 @@ const testFeedSchema = z.object({
   trade_slug: z.string().min(1).max(50),
   radius_km: z.coerce.number().finite().positive().max(MAX_RADIUS_KM).default(DEFAULT_RADIUS_KM),
   limit: z.coerce.number().int().min(1).max(MAX_FEED_LIMIT).default(DEFAULT_FEED_LIMIT),
+  // Spec 91 §3.1 filter axis — 'all' (permit+builder+coa), 'permit', or 'coa'.
+  // Defaulted to 'all' at the boundary; forwarded to getLeadFeed.
+  lead_type: z.enum(['all', 'permit', 'coa']).default('all'),
 });
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+  // Spec 33 §8 admin auth boundary — FIRST line, before params/DB. This
+  // endpoint powers a real admin browsing surface, so the guard is explicit
+  // (route classification alone is not defense-in-depth).
+  const adminCtx = await verifyAdminAuth(request);
+  if (!adminCtx) {
+    return NextResponse.json(
+      { data: null, error: { code: 'UNAUTHORIZED', message: 'Admin auth required' }, meta: null },
+      { status: 401 },
+    );
+  }
+
   try {
     const parsed = testFeedSchema.safeParse(
       Object.fromEntries(request.nextUrl.searchParams),
@@ -75,6 +96,12 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
         lng: params.lng,
         radius_km: params.radius_km,
         limit: params.limit,
+        lead_type: params.lead_type,
+        // Spec 76 §3.2 Feed Browser — the CoA UNION arm is written, tested,
+        // and data-live; enable it here (the killswitch default-OFF is a
+        // mobile-renderability gate, not a data gate) so admins can browse
+        // CoA leads. The lead_type axis still scopes which arms appear.
+        disableCoa: false,
       },
       pool,
     );

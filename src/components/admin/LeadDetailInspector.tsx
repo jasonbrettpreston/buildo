@@ -37,6 +37,7 @@ import {
   ClassifierPendingBanner,
   OrphanLinkedCoaBanner,
 } from '@/components/admin/lead-inspector/CoaClassificationPanel';
+import { leadIdToInspectorSegment } from '@/lib/admin/lead-id-inspector';
 
 interface Props {
   /** Optional pre-filled id (URL deep-link from Test Feed Tool). */
@@ -75,20 +76,10 @@ export function LeadDetailInspector({ initialId = null }: Props) {
   const handleNavigate = useCallback(
     (nextLeadId: string) => {
       // Translate DB lead_id ('permit:NUM:REV' or 'coa:APP-NUM') back to the
-      // URL-segment encoding ('NUM--REV' or 'COA-APP-NUM').
-      let nextSegment: string;
-      if (nextLeadId.startsWith('permit:')) {
-        const rest = nextLeadId.slice(7);
-        const sep = rest.indexOf(':');
-        if (sep <= 0) return;
-        const permitNum = rest.slice(0, sep);
-        const revisionNum = rest.slice(sep + 1);
-        nextSegment = `${permitNum}--${revisionNum}`;
-      } else if (nextLeadId.startsWith('coa:')) {
-        nextSegment = `COA-${nextLeadId.slice(4)}`;
-      } else {
-        return;
-      }
+      // URL-segment encoding ('NUM--REV' or 'COA-APP-NUM'). Shared with the
+      // Feed Browser click-through (Spec 76 §3.2) via one source of truth.
+      const nextSegment = leadIdToInspectorSegment(nextLeadId);
+      if (nextSegment === null) return;
 
       if (nextSegment === activeId) return; // idempotency guard
 

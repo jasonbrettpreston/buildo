@@ -306,6 +306,18 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
               lead_type: 'coa',
               coa_application_number: item.coa_application_number,
             });
+      // Conflict rule (Spec 36 §2): when an item carries BOTH a lead_key and
+      // component parts, the recomputed canonical key must AGREE with the
+      // client's — a mismatch fails THAT ITEM ([PF5] per-item shape), never
+      // the batch. The client key is only ever verified, never used as the
+      // stored key (buildLeadKey output is authoritative either way).
+      if (item.lead_key !== undefined && item.lead_key !== lead_key) {
+        failed.push({
+          index,
+          reason: `lead_key mismatch: item carries '${item.lead_key}' but the component parts resolve to '${lead_key}'`,
+        });
+        return;
+      }
       valid.push({ index, item, lead_key });
     });
 
@@ -385,11 +397,17 @@ export const DELETE = withApiEnvelope(async function DELETE(request: NextRequest
     const body = BulkDeleteBodySchema.safeParse(raw);
     if (!body.success) return badRequestZod(body.error);
 
+    // Dedupe post-Zod (the `.max(1000)` cap in BulkDeleteBodySchema applies
+    // to the RAW array — duplicates are legal input). `deleted` derives from
+    // the RETURNING rowCount, so duplicates could never double-count; this
+    // keeps the ANY($2) array minimal (perf/cosmetic).
+    const ids = [...new Set(body.data.ids)];
+
     // Spec 35 §7.1 — breadcrumb + track BEFORE the write.
     Sentry.addBreadcrumb({
       category: 'admin_action',
       message: 'watchlist_bulk_delete',
-      data: { target: 'admin_watchlist', id_count: body.data.ids.length },
+      data: { target: 'admin_watchlist', id_count: ids.length },
     });
     void track(hashAdminUid(adminCtx.uid), 'admin_action_performed', {
       action: 'watchlist_bulk_delete',
@@ -400,7 +418,7 @@ export const DELETE = withApiEnvelope(async function DELETE(request: NextRequest
     // HARD delete, admin_uid-scoped — a guessed foreign id is inert.
     const delRes = await pool.query(
       `DELETE FROM admin_watchlist WHERE admin_uid = $1 AND id = ANY($2::int[]) RETURNING id`,
-      [adminCtx.uid, body.data.ids],
+      [adminCtx.uid, ids],
     );
 
     const response = { deleted: delRes.rowCount ?? 0 };

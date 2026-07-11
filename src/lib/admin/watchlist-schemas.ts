@@ -63,12 +63,18 @@ export const WatchlistQuerySchema = z
 
 // Per-item schema — bulk-save validates ITEMS individually with safeParse
 // ([PF5]): one bad item must not reject the batch. `.strict()` per item.
+// `lead_key` is OPTIONAL on both arms: the canonical key is always
+// RECOMPUTED server-side via buildLeadKey from the component parts; a
+// client-supplied lead_key is verified for AGREEMENT and the item fails
+// (per-item, PF5 shape) on mismatch — never trusted as the key itself.
 export const WatchlistSaveItemSchema = z.discriminatedUnion('lead_type', [
   z
     .object({
       lead_type: z.literal('permit'),
       permit_num: z.string().trim().min(1).max(30),
       revision_num: z.string().trim().min(1).max(10),
+      /** Optional client echo — verified against buildLeadKey, never trusted. */
+      lead_key: z.string().trim().min(1).max(120).optional(),
       /** Written to address_snapshot ([PF8]). */
       address: z.string().trim().max(500).optional(),
     })
@@ -77,6 +83,8 @@ export const WatchlistSaveItemSchema = z.discriminatedUnion('lead_type', [
     .object({
       lead_type: z.literal('coa'),
       coa_application_number: z.string().trim().min(1).max(50),
+      /** Optional client echo — verified against buildLeadKey, never trusted. */
+      lead_key: z.string().trim().min(1).max(120).optional(),
       address: z.string().trim().max(500).optional(),
     })
     .strict(),

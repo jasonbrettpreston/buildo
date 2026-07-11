@@ -214,6 +214,36 @@ describe('watchlist routes — Zod boundary (§8.3)', () => {
     expect(body.data.failed[0]?.index).toBe(1);
   });
 
+  it('POST conflict rule — an item carrying BOTH lead_key and component parts fails THAT ITEM on mismatch (per-item, [PF5] shape)', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery.mockResolvedValueOnce({ rows: [{ id: 1 }], rowCount: 1 } as never);
+    const res = await POST(
+      makeRequest({
+        method: 'POST',
+        body: {
+          items: [
+            // Mismatch: parts resolve to 'permit:20-1:00' via buildLeadKey.
+            { lead_type: 'permit', permit_num: '20-1', revision_num: '00', lead_key: 'permit:99-9:00' },
+            // Agreement: recomputed key matches (incl. the zero-pad rule) → accepted.
+            { lead_type: 'permit', permit_num: '20-2', revision_num: '0', lead_key: 'permit:20-2:00' },
+          ],
+        },
+      }),
+    );
+    expect(res.status).toBe(200); // batch is NOT rejected
+    const body = (await res.json()) as {
+      data: { added: number; failed: Array<{ index: number; reason: string }> };
+    };
+    expect(body.data.failed).toHaveLength(1);
+    expect(body.data.failed[0]?.index).toBe(0);
+    expect(body.data.failed[0]?.reason).toMatch(/lead_key mismatch/);
+    expect(body.data.added).toBe(1);
+    // The stored key is the RECOMPUTED canonical one, never the client echo.
+    const [, params] = mockedQuery.mock.calls[0] ?? [];
+    expect(params).toContain('permit:20-2:00');
+    expect(params).not.toContain('permit:99-9:00');
+  });
+
   it('POST derives added vs skipped_existing from the RETURNING rowcount', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     // 2 valid items, but ON CONFLICT DO NOTHING only returned 1 id.
@@ -241,14 +271,37 @@ describe('watchlist routes — Zod boundary (§8.3)', () => {
     expect((await DELETE(makeRequest({ method: 'DELETE', body: { ids: ['x'] } }))).status).toBe(400);
   });
 
-  it('search: short q → 400; miss → 200 empty (a miss is a result, not an error)', async () => {
+  it('DELETE dedupes ids post-Zod — ANY($2) receives the Set, not the raw array', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery.mockResolvedValueOnce({ rows: [{ id: 5 }, { id: 7 }], rowCount: 2 } as never);
+    const res = await DELETE(
+      makeRequest({ method: 'DELETE', body: { ids: [5, 5, 7, 5] } }),
+    );
+    expect(res.status).toBe(200);
+    // The SQL param array is deduped (order-preserving Set semantics).
+    const [, params] = mockedQuery.mock.calls[0] ?? [];
+    expect(params).toEqual([SESSION_CTX.uid, [5, 7]]);
+    // deleted still derives from the RETURNING rowCount (real rows only).
+    const body = (await res.json()) as { data: { deleted: number } };
+    expect(body.data.deleted).toBe(2);
+  });
+
+  it('search: q min-length ≥2 enforced at the Zod layer — 400 below it (kills the single-char trgm-scan DoS vector); miss → 200 empty', async () => {
+    // 1-char q → 400 BEFORE any pool access (WatchlistSearchQuerySchema .min(2)).
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     expect((await SEARCH_GET(makeRequest({ search: 'q=a', pathname: '/api/admin/leads/watchlist/search' }))).status).toBe(400);
+    expect(mockedQuery).not.toHaveBeenCalled();
+    // Empty/missing q → 400 too.
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    expect((await SEARCH_GET(makeRequest({ search: '', pathname: '/api/admin/leads/watchlist/search' }))).status).toBe(400);
+    expect(mockedQuery).not.toHaveBeenCalled();
 
+    // Exactly 2 chars passes the boundary; a miss is a 200 empty result,
+    // not an error.
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
     const res = await SEARCH_GET(
-      makeRequest({ search: 'q=nowhere', pathname: '/api/admin/leads/watchlist/search' }),
+      makeRequest({ search: 'q=no', pathname: '/api/admin/leads/watchlist/search' }),
     );
     expect(res.status).toBe(200);
     const body = (await res.json()) as { data: unknown[] };

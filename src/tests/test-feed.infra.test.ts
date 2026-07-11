@@ -66,6 +66,32 @@ describe('Test Feed API route — file shape', () => {
     expect(testFeedRoute).toContain('try {');
     expect(testFeedRoute).toContain('catch (err)');
   });
+
+  // Spec 76 §3.2 Feed Browser (Phase 18) — the endpoint now powers a real
+  // admin browsing surface, so it must carry the explicit per-route guard,
+  // enable the CoA arm, and accept the lead_type scoping axis.
+  it('guards with verifyAdminAuth before reading params (Spec 33 §8)', () => {
+    expect(testFeedRoute).toContain('verifyAdminAuth');
+    const authPos = testFeedRoute.indexOf('verifyAdminAuth(request)');
+    const parsePos = testFeedRoute.indexOf('testFeedSchema.safeParse');
+    expect(authPos).toBeGreaterThan(-1);
+    expect(authPos).toBeLessThan(parsePos);
+  });
+
+  it('accepts a lead_type filter axis (all | permit | coa)', () => {
+    expect(testFeedRoute).toContain('lead_type');
+    expect(testFeedRoute).toMatch(/z\.enum\(\[\s*'all',\s*'permit',\s*'coa'\s*\]\)/);
+  });
+
+  it('enables the CoA UNION arm for the browser (disableCoa: false)', () => {
+    expect(testFeedRoute).toContain('disableCoa: false');
+  });
+
+  it('forwards lead_type into the getLeadFeed input', () => {
+    const feedCallPos = testFeedRoute.indexOf('getLeadFeed(');
+    const slice = testFeedRoute.slice(feedCallPos, feedCallPos + 400);
+    expect(slice).toContain('lead_type: params.lead_type');
+  });
 });
 
 describe('Production feed route — imports test-feed-utils for PostGIS check', () => {

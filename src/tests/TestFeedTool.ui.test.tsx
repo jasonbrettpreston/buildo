@@ -8,6 +8,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const toastSuccess = vi.fn();
+const toastError = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    success: (...a: unknown[]) => toastSuccess(...a),
+    error: (...a: unknown[]) => toastError(...a),
+  },
+}));
+
 import { TestFeedTool } from '@/components/admin/TestFeedTool';
 
 // ---------------------------------------------------------------------------
@@ -219,5 +229,176 @@ describe('TestFeedTool — error states', () => {
       expect(screen.queryByTestId('debug-panel')).toBeNull();
       expect(screen.getByText(/DB error/i)).toBeDefined();
     });
+  });
+});
+
+// ===========================================================================
+// Feed Browser (Spec 76 §3.2, Phase 18) — lead_type axis, scoping statement,
+// dense table, watchlist saved-state + save, inspect click-through.
+// ===========================================================================
+
+beforeEach(() => {
+  toastSuccess.mockClear();
+  toastError.mockClear();
+});
+
+function browserResponse(
+  data: Array<Record<string, unknown>>,
+): Record<string, unknown> {
+  return {
+    data,
+    meta: { count: data.length, radius_km: 10 },
+    _debug: {
+      query_duration_ms: 12,
+      permits_in_results: data.filter((d) => d.lead_type === 'permit').length,
+      builders_in_results: 0,
+      score_distribution: null,
+      pillar_averages: null,
+    },
+  };
+}
+
+/** Queue a feed response then a watchlist GET response for one runQuery. */
+function queueQuery(
+  feed: Record<string, unknown>,
+  watchlistKeys: string[] = [],
+) {
+  fetchMock.mockResolvedValueOnce({ ok: true, json: async () => feed });
+  fetchMock.mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({ data: watchlistKeys.map((lead_key) => ({ lead_key })) }),
+  });
+}
+
+describe('TestFeedTool — Feed Browser lead_type axis', () => {
+  it('renders a lead_type selector defaulting to "all"', () => {
+    render(<TestFeedTool />);
+    const sel = screen.getByLabelText(/lead type/i) as HTMLSelectElement;
+    expect(sel.value).toBe('all');
+  });
+
+  it('sends the selected lead_type in the query string', async () => {
+    queueQuery(browserResponse([]));
+    render(<TestFeedTool />);
+    fireEvent.change(screen.getByLabelText(/lead type/i), {
+      target: { value: 'coa' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /run test query/i }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalled();
+    });
+    const firstUrl = String(fetchMock.mock.calls[0]?.[0]);
+    expect(firstUrl).toContain('lead_type=coa');
+  });
+});
+
+describe('TestFeedTool — Feed Browser scoping + table', () => {
+  it('states the single-trade + single-point scope explicitly', async () => {
+    queueQuery(
+      browserResponse([
+        { lead_type: 'permit', lead_id: '20-101234:00', permit_num: '20-101234', revision_num: '00', relevance_score: 80 },
+      ]),
+    );
+    render(<TestFeedTool />);
+    fireEvent.click(screen.getByRole('button', { name: /run test query/i }));
+    await waitFor(() => {
+      expect(screen.getByTestId('feed-browser-scope')).toBeDefined();
+    });
+    const scope = screen.getByTestId('feed-browser-scope');
+    expect(scope.textContent).toMatch(/Viewing as/i);
+    expect(scope.textContent).toContain('43.6532');
+    expect(scope.textContent).toMatch(/single-trade/i);
+  });
+
+  it('renders a dense results table with a row per lead', async () => {
+    queueQuery(
+      browserResponse([
+        { lead_type: 'permit', lead_id: '20-101234:00', permit_num: '20-101234', revision_num: '00', relevance_score: 80 },
+        { lead_type: 'coa', lead_id: 'coa:A0001-2024', application_number: 'A0001-2024', relevance_score: 70 },
+      ]),
+    );
+    render(<TestFeedTool />);
+    fireEvent.click(screen.getByRole('button', { name: /run test query/i }));
+    await waitFor(() => {
+      expect(screen.getByTestId('feed-browser-table')).toBeDefined();
+    });
+    expect(screen.getByTestId('feed-browser-row-0')).toBeDefined();
+    expect(screen.getByTestId('feed-browser-row-1')).toBeDefined();
+  });
+});
+
+describe('TestFeedTool — Feed Browser inspect click-through', () => {
+  it('prepends permit: and links to the NUM--REV inspector segment', async () => {
+    queueQuery(
+      browserResponse([
+        { lead_type: 'permit', lead_id: '20-101234:00', permit_num: '20-101234', revision_num: '00', relevance_score: 80 },
+      ]),
+    );
+    render(<TestFeedTool />);
+    fireEvent.click(screen.getByRole('button', { name: /run test query/i }));
+    const link = (await screen.findByTestId('feed-browser-inspect-0')) as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toContain('id=20-101234--00');
+  });
+
+  it('passes CoA ids through to the COA- inspector segment', async () => {
+    queueQuery(
+      browserResponse([
+        { lead_type: 'coa', lead_id: 'coa:A0001-2024', application_number: 'A0001-2024', relevance_score: 70 },
+      ]),
+    );
+    render(<TestFeedTool />);
+    fireEvent.click(screen.getByRole('button', { name: /run test query/i }));
+    const link = (await screen.findByTestId('feed-browser-inspect-0')) as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toContain('id=COA-A0001-2024');
+  });
+});
+
+describe('TestFeedTool — Feed Browser watchlist saved-state', () => {
+  it('reads saved-state from admin_watchlist (shows ✓ Saved, no Save button)', async () => {
+    queueQuery(
+      browserResponse([
+        { lead_type: 'permit', lead_id: '20-101234:00', permit_num: '20-101234', revision_num: '00', relevance_score: 80 },
+      ]),
+      ['permit:20-101234:00'],
+    );
+    render(<TestFeedTool />);
+    fireEvent.click(screen.getByRole('button', { name: /run test query/i }));
+    await waitFor(() => {
+      expect(screen.getByTestId('feed-browser-saved-0')).toBeDefined();
+    });
+    expect(screen.queryByTestId('feed-browser-save-0')).toBeNull();
+  });
+
+  it('POSTs to /api/admin/leads/watchlist and flips to Saved on click', async () => {
+    queueQuery(
+      browserResponse([
+        { lead_type: 'permit', lead_id: '20-101234:00', permit_num: '20-101234', revision_num: '00', relevance_score: 80 },
+      ]),
+    );
+    render(<TestFeedTool />);
+    fireEvent.click(screen.getByRole('button', { name: /run test query/i }));
+    const saveBtn = await screen.findByTestId('feed-browser-save-0');
+
+    // POST watchlist response
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { added: 1, skipped_existing: 0, failed: [] } }),
+    });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('feed-browser-saved-0')).toBeDefined();
+    });
+    const postCall = fetchMock.mock.calls.find(
+      (c) => String(c[0]).endsWith('/api/admin/leads/watchlist') && c[1]?.method === 'POST',
+    );
+    expect(postCall).toBeDefined();
+    const body = JSON.parse((postCall![1] as RequestInit).body as string);
+    expect(body.items[0]).toMatchObject({
+      lead_type: 'permit',
+      permit_num: '20-101234',
+      revision_num: '00',
+    });
+    expect(toastSuccess).toHaveBeenCalled();
   });
 });
