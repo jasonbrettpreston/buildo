@@ -198,6 +198,17 @@ const query = useQuery({
 - **`refetchOnReconnect` defaults to `true` and MUST stay enabled** for `['user-profile']` so a returning-from-offline user gets a fresh profile (Stripe webhook may have flipped `subscription_status` during the offline window). The 2026-05-02 incident #3 root cause is **not** `refetchOnReconnect` — it's that AppLayout's render gate gates on `isFetching` (per §6.5 BANNED). Surgical fix: strip `isFetching` from the gate condition (§9.4); `refetchOnReconnect` stays on.
 - Validation: every response MUST be parsed through a Zod schema before TanStack stores it (Spec 90 §13 Zod Boundary).
 
+**Query-key registry (the stable, parameterized keys in use).** Adding a new server query requires a row here:
+
+| Query key | Owner hook | Notes |
+|-----------|-----------|-------|
+| `['user-profile']` | `useUserProfile` | PII — excluded from MMKV persistence (§2.1) |
+| `['lead-feed', params]` | `useLeadFeed` | public permit data; persists normally |
+| `['flight-board']` | `useFlightBoard` | saved-board rows |
+| `['lead-detail', id]` | `useLeadDetail` | single lead |
+| `['parcel-search', q]` | `useParcelSearch` (Spec 100) | debounced typeahead; public cadastral data; persists normally |
+| `['parcel-lookup', parcelId]` | `useParcelLookup` (Spec 100) | the parcel detail; depends ONLY on `parcelId` (query-key hygiene — never on the search string) |
+
 ### B2 — TanStack → Zustand (server-to-local hydration)
 
 **Pattern:**

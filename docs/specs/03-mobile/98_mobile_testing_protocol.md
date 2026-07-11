@@ -99,6 +99,10 @@ The boundaries below are illustrative examples within those mandates.
 - `snapCoord.ts`: Verify 500m snapping logic and Toronto bounding box re-validation.
 - `formatCurrency.ts`: Verify CAD formatting for permit valuations.
 
+**Parcel Cost Tool (Spec 100)** — Spec 90 §13 (Zod boundary) + Spec 100 §6
+- `useParcelLookup.test.ts`: `fetchParcelLookup` Zod-parses the whitelist envelope (`raw.data`); miss (`match:null, parcel:null`) is a valid parse; drift → `ParcelLookupSchemaError`; the CROSS-CONTRACT LOCK (a server-emitted `parcelId` from the SEARCH response pipes into the LOOKUP path, same schema); `shouldRetryParcelLookup` skips 400/403/429/drift.
+- `parcelCostFormat.test.ts`: envelope-fallback label ("maximum envelope" when `opt_aor` null), absent ≠ `fits:false`, `getCostLine`/`costLineState`, currency/FSI/area formatters, and `SponsorSlot` renders `null` while flag-off.
+
 ## 5. Continuous Integration (CI)
 **Tool:** GitHub Actions + EAS (Expo Application Services)
 

@@ -20,6 +20,15 @@ export const forbiddenTradeMismatch = (requested: string, actual: string) =>
   );
 
 /**
+ * 403 for an inactive subscription on a value-payload route. Spec 100 §5: the mobile Parcel
+ * Cost Tool serves the proprietary cost model, so it enforces subscription state SERVER-SIDE
+ * (a deliberate first for a consumer route) rather than relying solely on the client AppLayout
+ * gate. Fired when `subscription_status` is not in {trial, active, past_due, admin_managed}.
+ */
+export const forbiddenSubscription = () =>
+  err('SUBSCRIPTION_REQUIRED', 'An active subscription is required to view parcel details', 403);
+
+/**
  * 429 with `Retry-After` header per RFC 6585. The value is the lower bound
  * in seconds before the client may retry — `withRateLimit` doesn't expose
  * a precise reset time, so we use a conservative 60s default that matches

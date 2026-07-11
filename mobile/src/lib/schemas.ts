@@ -256,3 +256,120 @@ export const SearchResultSchema = z.object({
 });
 
 export type SearchResult = z.infer<typeof SearchResultSchema>;
+
+// ---------------------------------------------------------------------------
+// Consumer Parcel Cost Tool (Spec 100 §3 — mobile mirror of the server whitelist)
+//
+// Mirrors src/app/api/parcels/lookup/types.ts ConsumerParcelLookupResponse. The hook parses
+// `raw.data` through ConsumerParcelLookupResultSchema. Tier-3 diagnostic `groups` are NOT part
+// of the contract (Spec 100 §2.2); the server strips them and this schema never expects them.
+// ---------------------------------------------------------------------------
+
+export const ParcelCostLineSchema = z
+  .object({
+    total: z.number().nullable().optional(),
+    per_sqm: z.number().nullable().optional(),
+    area: z.number().nullable().optional(),
+    area_confidence: z.string().nullable().optional(),
+    norm_basis: z.string().nullable().optional(),
+    fits: z.boolean().optional(),
+  })
+  .passthrough();
+export type ParcelCostLine = z.infer<typeof ParcelCostLineSchema>;
+
+// The menu is a record: `_schema_version` (number) + per-line objects. Values may also be a raw
+// number/string (defensive — matches the server CostMenuSchema union).
+export const ParcelCostMenuSchema = z.record(
+  z.string(),
+  z.union([ParcelCostLineSchema, z.number(), z.string()]),
+);
+export type ParcelCostMenu = z.infer<typeof ParcelCostMenuSchema>;
+
+export const ParcelCostScalarsSchema = z.record(z.string(), z.number().nullable());
+export const ParcelAreaHeadlinesSchema = z.record(
+  z.string(),
+  z.union([z.number(), z.string()]).nullable(),
+);
+
+export const ParcelNearbySummarySchema = z
+  .object({
+    headline: z.string(),
+    basis: z.string(),
+    coa_approval_rate: z.union([z.number(), z.string()]).nullable().optional(),
+    typical_fsi: z.number().nullable().optional(),
+    comp_fsi_basis: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export const ParcelCoaProjectSchema = z.object({
+  applicationNumber: z.string().nullable(),
+  address: z.string().nullable(),
+  status: z.string().nullable(),
+  decision: z.string().nullable(),
+  decisionDate: z.string().nullable(),
+  hearingDate: z.string().nullable(),
+  description: z.string().nullable(),
+  projectType: z.string().nullable(),
+  modeledGfaSqm: z.number().nullable(),
+  estimatedCost: z.number().nullable(),
+});
+export type ParcelCoaProject = z.infer<typeof ParcelCoaProjectSchema>;
+
+export const ParcelComparableBuildSchema = z.object({
+  address: z.string().nullable(),
+  lot_sqm: z.number().nullable(),
+  frontage_m: z.number().nullable(),
+  distance_m: z.number().nullable(),
+  work_type: z.string().nullable(),
+  permit_gfa_sqm: z.number().nullable(),
+  permit_fsi: z.number().nullable(),
+  storeys: z.number().nullable(),
+  coa_decision: z.string().nullable(),
+  build_ratio: z.number().nullable(),
+  structure_family: z.string().nullable(),
+});
+export type ParcelComparableBuild = z.infer<typeof ParcelComparableBuildSchema>;
+
+export const ParcelCompStatsSchema = z.object({
+  compCount: z.number().nullable(),
+  compDominantBuild: z.string().nullable(),
+  compBuildRatioP50: z.number().nullable(),
+  compFsiP50: z.number().nullable(),
+  neighbourhoodId: z.number().nullable(),
+  neighbourhoodCostPremium: z.number().nullable(),
+});
+
+export const ConsumerParcelSchema = z.object({
+  costMenu: z.object({
+    menu: ParcelCostMenuSchema.nullable(),
+    scalars: ParcelCostScalarsSchema.nullable(),
+  }),
+  areas: ParcelAreaHeadlinesSchema,
+  neighbourhood: z.object({
+    summary: ParcelNearbySummarySchema.nullable(),
+    compStats: ParcelCompStatsSchema,
+    coaProjects: z.array(ParcelCoaProjectSchema),
+    comparableBuilds: z.array(ParcelComparableBuildSchema).nullable(),
+  }),
+});
+export type ConsumerParcel = z.infer<typeof ConsumerParcelSchema>;
+
+export const ParcelMatchSchema = z.object({
+  parcelId: z.string(),
+  matchType: z.enum(['exact', 'typeahead', 'direct']),
+  address: z.string(),
+});
+export const ParcelCandidateSchema = z.object({
+  parcelId: z.string(),
+  address: z.string(),
+});
+
+export const ConsumerParcelLookupResultSchema = z.object({
+  match: ParcelMatchSchema.nullable(),
+  candidates: z.array(ParcelCandidateSchema),
+  warnings: z.array(z.string()),
+  parcel: ConsumerParcelSchema.nullable(),
+});
+export type ConsumerParcelLookupResult = z.infer<typeof ConsumerParcelLookupResultSchema>;
+export type ParcelMatch = z.infer<typeof ParcelMatchSchema>;
+export type ParcelCandidate = z.infer<typeof ParcelCandidateSchema>;

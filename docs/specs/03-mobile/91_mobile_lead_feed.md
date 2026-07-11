@@ -47,6 +47,9 @@ Located primarily in `mobile/app/(app)/index.tsx` and `mobile/src/components/fee
 **Tab Bar Scroll Behaviour**
 The tab bar hides on downward scroll and reveals on upward scroll for the Feed and Flight Board screens, adding ~15-20% visible content area without sacrificing navigation access. Implementation: track `lastScrollY` via a module-level ref; on FlashList `onScroll` (throttled at 16ms), if `deltaY > 5` animate tab bar `translateY` to `80` (hidden); if `deltaY < -5` animate back to `0` (shown). Apply a Reanimated `useAnimatedStyle` to the tab navigator's wrapper view. **This behaviour applies only to Feed and Flight Board** — Map and Settings always show the tab bar.
 
+**Parcels tab (Spec 100)**
+A fifth tab, `parcel-tool` (title "Parcels"), hosts the standalone home-looker Parcel Cost Tool — a nested Stack (search → detail) defined in `mobile/app/(app)/parcel-tool/`. It is NOT part of the lead-feed algorithm (no `trade_slug` calibration, no saves, no flight board); it is a separate read-only surface governed entirely by **Spec 100**. The tab bar always shows on its screens (no hide-on-scroll wiring).
+
 **Scroll-to-Top on Active Tab Re-Tap**
 Tapping an already-active Feed tab scrolls the FlashList back to offset 0 (animated). Implemented via the React Navigation `tabPress` listener: if `navigation.isFocused()` is already true, call `flashListRef.current?.scrollToOffset({ offset: 0, animated: true })`. Apple HIG standard behaviour, expected by power users.
 

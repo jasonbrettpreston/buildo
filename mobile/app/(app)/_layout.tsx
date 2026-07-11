@@ -282,6 +282,8 @@ export default function AppLayout() {
           }}
         />
         <Tabs.Screen name="map" options={{ title: 'Map' }} />
+        {/* Spec 100 — standalone home-looker Parcel Cost Tool (search → detail nested Stack). */}
+        <Tabs.Screen name="parcel-tool" options={{ title: 'Parcels' }} />
         <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
       </Tabs>
     </ErrorBoundary>

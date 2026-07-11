@@ -97,6 +97,9 @@ const AUTHENTICATED_API_ROUTES = [
   '/api/quality/refresh',
   '/api/notifications',
   '/api/leads', // Phase 2 lead feed routes — require Firebase session
+  // Spec 100 §3 — consumer Parcel Cost Tool lookup. Session (Bearer) required; the handler
+  // additionally enforces a server-side subscription gate on the proprietary cost payload.
+  '/api/parcels',
   // Spec 96 §10 Step 4b: nonce-issuing checkout endpoint. Listed explicitly
   // (rather than relying on the fail-closed default) so the auth contract
   // is visible at a glance and grep-friendly.
