@@ -36,6 +36,13 @@ Instead of a flat list, the UI groups jobs using section headers for immediate v
 | **Departing Soon** | `predicted_start` ≤ 14 days | `border-l-2 border-amber-500` | `text-amber-400` |
 | **On the Horizon** | `predicted_start` > 14 days | `border-l-2 border-zinc-600` | `text-zinc-400` |
 
+**Demotion Rule (WF3 #13 Finding F — implemented in `src/lib/leads/flight-board-temporal.ts`)**
+Before the table above is consulted, `opportunity_score` is checked. If `opportunity_score == null` (no cost data — the forecast's LEFT JOIN returned no row) or `opportunity_score <= 0` (genuinely computed zero from heavy competition decay), the row is unconditionally placed in **On the Horizon**, regardless of `predicted_start` position or `lifecycle_stalled` status. This prevents meaningless leads from piling up in the Action Required bucket — the most prominent slot — where operators cannot act on them.
+
+The demotion fires **before** the `lifecycle_stalled` check: a stalled-but-meaningless lead is still meaningless, and the operator gains nothing from top billing on a permit with no opportunity signal.
+
+Live impact (2026-07-11 baseline, 1,046,609 permit forecast rows): ≈24,109 rows have `opportunity_score=0` and ≈185,680 rows have `opportunity_score=null` (no forecast yet) — together **~20%** of the flight-board candidate pool is demoted to On the Horizon by this rule.
+
 Section header container: `flex-row items-center justify-between py-3 px-4 bg-zinc-950 border-b border-zinc-800/50`. Label: `font-mono text-xs tracking-widest uppercase pl-3`. Count (right-aligned): `font-mono text-xs text-zinc-600`.
 
 **Card Layout (Compact — Airport Departure Board)**
@@ -76,6 +83,29 @@ bgOpacity.value = withSequence(
 ```
 The flash draws the eye to what changed without obscuring card content.
 
+**LIST endpoint response shape** (`GET /api/leads/flight-board`, implemented in `src/app/api/leads/flight-board/route.ts`):
+
+```
+{ data: FlightBoardItem[], error: null, meta: null }
+```
+
+Each `FlightBoardItem`:
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `permit_num` | `string` | Toronto permit number |
+| `revision_num` | `string` | Revision (zero-padded, e.g. `"00"`) |
+| `address` | `string` | Formatted from `street_num` + `street_name`; fallback `permit_num--revision_num` |
+| `lifecycle_phase` | `string \| null` | Current permit lifecycle phase (e.g. `"P7a"`) |
+| `lifecycle_stalled` | `boolean` | True when the permit is in a zombie-loop |
+| `predicted_start` | `string \| null` | ISO date `YYYY-MM-DD` from `trade_forecasts`; null if no forecast |
+| `p25_days` | `number \| null` | Best-case offset from forecast |
+| `p75_days` | `number \| null` | Worst-case offset from forecast |
+| `temporal_group` | `'action_required' \| 'departing_soon' \| 'on_the_horizon'` | Computed by `computeTemporalGroup` (see §3.2 demotion rule) |
+| `updated_at` | `string` | ISO 8601 timestamp from `permits.updated_at` — drives the amber update flash |
+
+Auto-archive: permits whose `lifecycle_phase` has advanced past the viewer's trade `work_phase` are filtered out server-side before the response is returned (route.ts :94-98). They do not appear in the list even if the user has them saved. Group-order: `action_required` first, `departing_soon` second, `on_the_horizon` last; within each group items are sorted by `predicted_start ASC` (null floats to bottom).
+
 **Backend signal:** the `GET /api/leads/flight-board` list response includes `updated_at: string` (ISO 8601) per item, sourced from `permits.updated_at` (added in migration 115). `permits.updated_at` is auto-maintained by the `set_updated_at` BEFORE-UPDATE trigger from migration 100, so any change in the ingestion pipeline propagates without code changes.
 
 **Client tracking:** the mobile client maintains `{ [permitId]: lastSeenUpdatedAt }` in MMKV (key `flight-board-last-seen`) via `mobile/src/store/flightBoardSeenStore.ts` (Zustand + persist middleware; per Spec 99 §3.4c, reset on sign-out via §B5). On every list render, the parent passes `hasUpdate={item.updated_at !== mmkvSeen[permitId]}` to `FlightCard`; first-sight rows (no MMKV entry) do NOT flash. After the user opens the detail screen for a permit, the parent writes the current `updated_at` back to MMKV so subsequent renders are quiet until the next backend change. Cross-reference: Spec 92 §4.4 (animation contract — defers here for the trigger rule). Spec 98 §3.2 testID: `flight-card-update-flash` on the AnimatedView overlay.
@@ -86,7 +116,7 @@ Tapping a flight board card pushes a new detail screen to the navigation stack.
 
 **Header**
 * Full Address (`address`) — `text-zinc-100 text-xl font-bold`
-* Street View Image (cached via `expo-image`, `contentFit="cover"`)
+* Street View Image — **UNBUILT** (deferred; not in the `FlightBoardDetail` type or the current API response)
 
 **Timeline Engine Data**
 * Target Date: `predicted_start` — `font-mono text-amber-500 text-2xl font-bold`
@@ -102,9 +132,14 @@ Tapping a flight board card pushes a new detail screen to the navigation stack.
 * Delay Flag: `lifecycle_stalled` → red `"⚠ DELAYED"` badge
 * Urgency Signal: `predicted_start` ≤ 7 days → amber `"⚡ URGENT"` badge
 
-**Contextual Data**
-* Full permit description, `estimated_cost`, `cost_tier`, `sq_footage`
-* Neighborhood profile (`income_tier`, area trends)
+**Contextual Data (partially UNBUILT — see note)**
+* Full permit description — *built*
+* `estimated_cost` — **UNBUILT** (not in `FlightBoardDetail`; see `src/app/api/leads/flight-board/detail/[id]/types.ts` for the current contract)
+* `cost_tier` — **UNBUILT** (not in `FlightBoardDetail`)
+* `sq_footage` — **UNBUILT** (not in `FlightBoardDetail`)
+* Neighborhood profile (`income_tier`, area trends) — **UNBUILT** (not in `FlightBoardDetail`)
+
+The live `FlightBoardDetail` type (`src/app/api/leads/flight-board/detail/[id]/types.ts`) is the authoritative contract. These fields are Phase 2 scope and will require a migration + API change before they can appear on the detail screen.
 
 **Actions & Lifecycle**
 * **"Remove from Board":** Manual override. See §4.1 for undo behaviour.
@@ -133,7 +168,7 @@ Industry standard (Gmail, iOS Mail, WhatsApp): never fire a destructive action i
 1. User swipes left on a card. Red "Remove" action panel revealed: `bg-red-600 w-20 items-center justify-center rounded-r-xl`. Label: `"Remove"` in `text-white font-mono text-xs`. Full swipe threshold: 80px.
 2. On full swipe: fire `heavyImpact()` haptic immediately. Card disappears (optimistic removal via `queryClient.setQueryData`).
 3. **Undo snackbar appears** at bottom of screen, above tab bar: `bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 flex-row justify-between items-center`. Left: `"Job removed."` in `text-zinc-300 text-sm`. Right: `"UNDO"` `<Pressable>` in `text-amber-400 font-mono text-sm`. 44px touch target.
-4. After 3 seconds: snackbar dismisses, DELETE mutation fires. On API error: restore card via snapshot, show error toast.
+4. After 3 seconds: snackbar dismisses, `POST /api/leads/save { lead_id, lead_type: 'permit', saved: false }` fires (implemented in `mobile/src/hooks/useRemoveFromBoard.ts`). On API error: restore card via snapshot, show error toast.
 5. If user taps UNDO before 3 seconds: `clearTimeout`, restore card via `queryClient.setQueryData`, dismiss snackbar with no mutation.
 
 *Rationale:* Accidental swipes are common on job sites (work gloves, vibration, phone in pocket). The cost of an accidental deletion is high — user must find and re-claim the permit. Undo is the correct pattern. References: Gmail, iOS Mail research confirms undo availability significantly reduces complaint rates.
@@ -164,8 +199,8 @@ If the device loses connection, the Flight Board MUST NOT show a generic error s
 ## 5. State & API Flow (TanStack Query)
 
 * **Data Fetching:** Uses `useQuery` (not infinite scroll — the personal board fits in memory). `staleTime: 30000`, `gcTime: 3600000`.
-* **Optimistic Updates with Undo:** See §4.1 for the complete undo-window pattern. The DELETE mutation is deferred 3 seconds to allow user-initiated cancellation. Error rollback restores the TanStack Query snapshot.
-* **`captureEvent`:** `'job_removed_from_board'` fired on successful DELETE mutation (not on optimistic remove, in case of undo).
+* **Optimistic Updates with Undo:** See §4.1 for the complete undo-window pattern. The `POST /api/leads/save { saved: false }` mutation is deferred 3 seconds to allow user-initiated cancellation. Error rollback restores the TanStack Query snapshot.
+* **`captureEvent`:** `'job_removed_from_board'` fired on successful save mutation (not on optimistic remove, in case of undo).
 
 ## 6. Design System Directives
 
@@ -199,3 +234,48 @@ Delta Air Lines uses iOS Live Activities for real-time gate change tracking — 
 
 **Android Dynamic Notifications**
 Equivalent to iOS Live Activities: persistent notification with expandable timeline gauge. Same deferred scope as Live Activities.
+
+## Operating Boundaries
+
+**Target Files**
+
+| Layer | Path |
+|-------|------|
+| LIST endpoint | `src/app/api/leads/flight-board/route.ts` |
+| DETAIL endpoint | `src/app/api/leads/flight-board/detail/[id]/route.ts` |
+| DETAIL types | `src/app/api/leads/flight-board/detail/[id]/types.ts` |
+| Temporal grouping | `src/lib/leads/flight-board-temporal.ts` |
+| Remove mutation | `mobile/src/hooks/useRemoveFromBoard.ts` |
+| Save route (shared) | `src/app/api/leads/save/route.ts` |
+| Tests | `src/tests/flight-board.infra.test.ts`, `src/tests/flight-board-detail.infra.test.ts`, `src/tests/flight-board-temporal.logic.test.ts`, `src/tests/db/flight-board-roundtrip.db.test.ts` |
+
+**Out-of-Scope Files**
+
+* `scripts/compute-trade-forecasts.js` — the producer of `trade_forecasts` rows; this spec describes the consumer only
+* `mobile/src/screens/FlightBoard*.tsx` — UI component; this spec describes the API contract, not the React Native implementation
+* `src/app/api/leads/feed/route.ts` — the discovery feed; the flight board is a separate endpoint
+
+**Cross-Spec Dependencies**
+
+| Spec | Dependency |
+|------|-----------|
+| Spec 85 (`85_trade_forecast_engine.md`) | `trade_forecasts` producer; the stale-purge DELETE guarantees no orphaned forecasts |
+| Spec 81 (`81_opportunity_score_engine.md`) | `opportunity_score` on `trade_forecasts`; null/≤0 triggers the demotion rule (§3.2) |
+| Spec 84 (`84_lifecycle_phase_engine.md`) | `lifecycle_phase` + `lifecycle_stalled` on `permits`; drives auto-archive and action_required |
+| Spec 76 (`76_lead_feed_health_dashboard.md`) | Admin-side Flight Center uses the same save route |
+| Spec 36 (`36_flight_center_tool.md`) | Admin Flight Center — co-authority on the save/unsave API contract |
+| Spec 91 (`91_mobile_lead_feed.md`) | P21 colon-form lead_id (§4.3.1) accepted by the detail endpoint's `parseLeadId` |
+
+## Known Failure Modes
+
+**KFM-1 — Null opportunity_score demotes ~20% of board rows**
+Permits with no trade_forecasts row or a zero-score forecast are placed in `on_the_horizon` regardless of `predicted_start` urgency. These are NOT bugs — they reflect permits with insufficient cost data to produce a meaningful opportunity signal. The correct resolution is to improve cost coverage (Spec 83/88), not to suppress the demotion rule.
+
+**KFM-2 — Auto-archive is trade-specific**
+The auto-archive filter (`route.ts :94-98`) compares the permit's `lifecycle_phase` against the **viewer's** trade `work_phase`. A permit that has passed plumbing's work phase but not framing's will appear archived for a plumber but still live for a framer. This is by design: the board tracks the relevance of a permit to a specific trade.
+
+**KFM-3 — Stale forecasts after CoA chain delay**
+`trade_forecasts` is populated by the permits chain (6 AM) and the CoA chain (runs before permits per Spec 85 §4). If the nightly cron fails, forecast rows age silently — `predicted_start` does not expire automatically. The stale-purge DELETE in `compute-trade-forecasts.js :1131-1205` handles cleanup on the next successful run.
+
+**KFM-4 — Detail endpoint accepts both `--` and colon-form ids**
+The `GET /api/leads/flight-board/detail/:id` endpoint accepts both the URL-segment form (`permit_num--revision_num`) and the P21 colon-form (`permit_num:revision_num`). The mobile deep-link path uses `--` form; the list → detail navigation may use the colon-form. Both are handled by `parseLeadId` (`src/lib/leads/parse-lead-id.ts`). CoA ids return 400 (flight board tracks permits only).
