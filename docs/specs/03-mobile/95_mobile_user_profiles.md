@@ -90,8 +90,8 @@ All 5 columns are NOT NULL with safe defaults (set in migration 117 to match the
 
 | Column | Type | Notes |
 |--------|------|-------|
-| `account_preset` | TEXT | `'tradesperson' \| 'realtor' \| 'manufacturer'` |
-| `trade_slugs_override` | TEXT[] | Manufacturer: multiple or all trades. Null for individual accounts. |
+| `account_preset` | TEXT | `'tradesperson' \| 'realtor' \| 'manufacturer' \| 'supplier'` (`'supplier'` added P24, migration 217). |
+| `trade_slugs_override` | TEXT[] | Manufacturer / multi-trade supplier: the extra trades of the SELECTED-TRADE set (§2.5.2). Null for single-trade accounts. |
 | `radius_cap_km` | INTEGER | Maximum radius enforced server-side. Null = no cap (manufacturers). |
 
 **Manufacturer `trade_slug` note:** Manufacturer accounts have `trade_slug = NULL`. The `trade_slugs_override` array is their trade list. All API and client logic that reads `trade_slug` must handle `NULL` by checking `trade_slugs_override` when `account_preset = 'manufacturer'`. **Manufacturer accounts cannot update `trade_slug` via PATCH** — the 400 guard applies to ALL accounts. For manufacturers, `trade_slug` is permanently `NULL` and `trade_slugs_override` is their trade list.
@@ -111,13 +111,18 @@ All 5 columns are NOT NULL with safe defaults (set in migration 117 to match the
 
 **Implication:** the algorithm in Spec 91 §3 / Spec 77 §3.2 reads `trade_slug` ONLY. A profile with `account_preset='realtor'` but `trade_slug='roofing'` would receive a roofer's feed — `trade_slug` wins. Onboarding (Spec 94) is the gate that ensures the two stay aligned per the matrix in Spec 91 §1.3.
 
-**The three valid `(account_preset, trade_slug)` combinations:**
+**The valid `(account_preset, trade_slug)` combinations:**
 
 | `account_preset` | `trade_slug` | Notes |
 |---|---|---|
-| `'tradesperson'` | one of 32 construction slugs from `src/lib/classification/trades.ts` | The dominant case |
+| `'tradesperson'` | one of the 34 construction/product slugs from `src/lib/classification/trades.ts` | The dominant case |
+| `'supplier'` | one product-trade slug (their product's trade, e.g. `glazing` for a window manufacturer) | **P24 (2026-07-11).** Architecturally identical to a tradesperson — a single trade, the standard feed. `account_preset='supplier'` is a UX/billing hint only; it never branches the feed. Self-serve (derived by `deriveAccountPreset`) or admin-provisioned. May hold a multi-trade set via `trade_slugs_override` (the SELECTED-TRADE model — see §2.5.2). |
 | `'realtor'` | `'realtor'` | Mobile onboarding wires this; backend wire-up shipped end-to-end as of 2026-05-11 (WF3 #realtor-backfill closes the final coverage gap on `permit_trades`) — see Spec 91 §3.5 items 1-4. Maestro coverage (item 5) still queued. |
-| `'manufacturer'` | `NULL` (uses `trade_slugs_override` array) | Admin-managed B2B; bypasses the standard feed entirely |
+| `'manufacturer'` | `NULL` (uses `trade_slugs_override` array) | Admin-managed B2B multi-trade. **P24:** `get-user-context` now serves a manufacturer whose `trade_slugs_override` is populated (set = override, primary = first element) instead of 401'ing — the desired implicit un-401. |
+
+### 2.5.2 The SELECTED-TRADE model (P24)
+
+An account HOLDS a trade **set** (`trade_slugs = [trade_slug] ∪ trade_slugs_override`, deduped, NULL-safe); the app OPERATES on ONE selected trade at a time. `get-user-context` returns `trade_slugs` + `primary_trade_slug` alongside the legacy `trade_slug` (= primary, retained for compatibility). Every consumer endpoint keeps its single-trade SQL spine and takes the selected trade validated ∈ the set: the 403 gates (`feed`, `view`) become membership checks; flight-board LIST/DETAIL accept an optional `trade_slug` param ∈ set (default primary). The mobile **trade switcher** renders only when the set > 1 and writes `filterStore.tradeSlug` (a single string). Single-trade accounts (the overwhelming majority) see zero behavioral change. Saves/boards are naturally per-selected-trade (`lead_views UNIQUE(user_id, lead_key, trade_slug)`). The blended-feed-with-matched-trade-badges variant is the documented v2 (filed).
 
 **Anti-pattern (rejected):** branching the algorithm on `account_preset`. Doing so would mean the same `trade_slug` value produces different feeds depending on the persona — undebuggable, untestable, and impossible to A/B from the admin Test Feed Tool. The `account_preset` axis exists for UX/billing/onboarding ONLY.
 

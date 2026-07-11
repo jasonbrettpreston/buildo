@@ -22,7 +22,7 @@
 
 ### 3.1 The Trade List
 
-A single full-screen scrollable list — no profession picker screen. Grouped by category with sticky section headers. 32 trades + Realtor/Real Estate Agent.
+A single full-screen scrollable list — no profession picker screen. Grouped by category with sticky section headers. 34 trades + Realtor/Real Estate Agent (35 total — the Spec 80 canonical taxonomy; the earlier "32" predates the 3 trades added in Spec 80 §5.B.6: overhead-doors, site-preparation, site-maintenance). Product-supplier personas pick their product trade here (a window manufacturer picks `glazing`); the `supplier` persona is derived server-side at onboarding completion (Spec 21 §4 / `deriveAccountPreset`), not chosen on this screen. Suppliers flow straight to the feed — the auth gate needs NO new branch (`decideAuthGateRoute` only special-cases `manufacturer`; a supplier routes through the normal onboarding→feed path).
 
 ```
 SITE & STRUCTURE          MECHANICAL & ELECTRICAL
@@ -434,7 +434,7 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 
 **Step 3 — Trade selection screen**
 - File: `mobile/app/(onboarding)/profession.tsx`
-- `<SectionList>` with 6 sticky category headers. 32 trades + Realtor. `stickySectionHeadersEnabled={true}` (required for Android). No `useEffect` for data — trade list is static JSON (Spec 90 §5).
+- `<SectionList>` with 6 sticky category headers. 34 trades + Realtor (35 total; `tradeData.ts` is verified to enumerate all 35 post-Spec-80). `stickySectionHeadersEnabled={true}` (required for Android). No `useEffect` for data — trade list is static JSON (Spec 90 §5).
 - Section header: `bg-zinc-900 px-4 py-2 border-b border-zinc-800` · `font-mono text-[11px] text-zinc-400 uppercase tracking-widest`
 - Row unselected: `flex-row items-center justify-between px-4 min-h-[52px] border-b border-zinc-800/40 active:bg-zinc-800` · `accessibilityRole="radio"` · `accessibilityState={{ selected: false }}`
 - Row selected: add `border-l-[3px] border-amber-500 bg-amber-500/5 pl-3` · amber checkmark right (`<Check size={16} color="#f59e0b" />` from `lucide-react-native`) · `accessibilityState={{ selected: true }}`

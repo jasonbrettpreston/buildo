@@ -21,9 +21,12 @@ The full set of `account_preset` values (Spec 95 §3.1):
 
 | `account_preset` | `trade_slug` | Feed semantics | Onboarding | Subscription |
 |---|---|---|---|---|
-| `'tradesperson'` | one of 32 construction trades | This spec — calibrated to that trade's `work_phase` | Standard (Spec 94 §3) | Trial → paid (Spec 96) |
+| `'tradesperson'` | one of the 34 construction/product trades | This spec — calibrated to that trade's `work_phase` | Standard (Spec 94 §3) | Trial → paid (Spec 96) |
+| `'supplier'` (P24) | one product-trade slug (e.g. `glazing`) | This spec — IDENTICAL to a tradesperson (a supplier feeds off its product trade; the persona never branches the algorithm) | Standard (Spec 94 §3); persona derived server-side | Trial → paid (Spec 96) |
 | `'realtor'` | `'realtor'` | This spec — calibrated to `'realtor'` `work_phase` (earliest + latest extremes) | Standard with realtor-specific radius default + always-fixed address (Spec 94 §3.1 trade list + §4 Path R) | Trial → paid (Spec 96) |
-| `'manufacturer'` | `NULL` (uses `trade_slugs_override` array) | **Not customer-facing.** Admin-managed B2B; bypasses this spec entirely. | Onboarding bypass (Spec 94 §7) | Admin-managed (Spec 95 §3.1; Spec 96 §expiration excludes manufacturers) |
+| `'manufacturer'` | `NULL` (uses `trade_slugs_override` array) | **B2B multi-trade.** Served via the SELECTED-TRADE set (Spec 95 §2.5.2) — P24 un-401'd manufacturers with a populated override. | Onboarding bypass (Spec 94 §7) | Admin-managed (Spec 95 §3.1; Spec 96 §expiration excludes manufacturers) |
+
+> **`lead_type='builder'` is NOT a persona (P24 finding).** The feed's third arm `lead_type='builder'` is a competitive-entity aggregation (contractors/builders recommended to a viewer), NOT a mislabel of the `realtor` persona. An earlier plan premise ("rename `builder`→`realtor`") was investigated and rejected: `realtor` is a `trade_slug` persona (fully separate, already shipped end-to-end), and `lead_type='builder'` is orthogonal — renaming it would collide with the persona and mislabel competitor-entity leads. The honest v1 keeps `lead_type='builder'` as-is; a future rename to a clearer value (`'entity'`/`'competitor'`) with a both-values migration is filed, independent of the persona axis.
 
 **Single source of truth:** `account_preset` is a UX hint (drives onboarding flow + welcome copy). **`trade_slug` is the authoritative input to this spec's algorithm.** A profile with `account_preset='realtor'` but `trade_slug='roofing'` would receive a roofer's feed — `trade_slug` wins. Onboarding (Spec 94) is the gate that ensures the two stay aligned per the matrix above.
 
