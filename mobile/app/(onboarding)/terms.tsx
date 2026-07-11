@@ -14,6 +14,7 @@ import { useFilterStore } from '@/store/filterStore';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { logQueryInvalidate } from '@/lib/queryTelemetry';
 import { ProgressStepper } from '@/components/onboarding/ProgressStepper';
+import type { UserProfileType } from '@/lib/userProfile.schema';
 
 const TOS_URL = 'https://buildo.app/terms';
 const PRIVACY_URL = 'https://buildo.app/privacy';
@@ -69,11 +70,19 @@ export default function TermsScreen() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      // Step 1: write ToS acceptance timestamp.
-      await fetchWithAuth('/api/user-profile', {
-        method: 'PATCH',
-        body: JSON.stringify({ tos_accepted_at: new Date().toISOString() }),
-      });
+      // Step 1: write ToS acceptance timestamp — skip if already set.
+      // The ['user-profile'] query is always populated by the time the
+      // user reaches this screen (onboarding flow; AuthGate ensures the
+      // profile is loaded before routing here). Reading from the cache
+      // avoids a redundant PATCH that would be rejected by the server's
+      // TOS_IMMUTABLE fence anyway (Spec 95 §server guard). (P21 21B)
+      const profile = queryClient.getQueryData<UserProfileType>(['user-profile']);
+      if (!profile?.tos_accepted_at) {
+        await fetchWithAuth('/api/user-profile', {
+          method: 'PATCH',
+          body: JSON.stringify({ tos_accepted_at: new Date().toISOString() }),
+        });
+      }
 
       if (goesToComplete) {
         // Path L / Path R: proceed to animated completion screen.
