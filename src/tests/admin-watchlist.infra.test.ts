@@ -130,6 +130,21 @@ describe('watchlist routes — auth gates (§8.2 + [PF1])', () => {
     expect(mockedQuery).not.toHaveBeenCalled();
   });
 
+  it('[CSRF] cross-origin mutation → 401, NOT 403 — enforcement lives in the shared guard, not the route', async () => {
+    // The Origin allowlist check is enforced INSIDE verifyAdminAuth
+    // (verify-admin.ts:62-74 short-circuit via isOriginAllowed :151-157,
+    // default-deny; suite: verify-admin.logic.test.ts:193-270). The route
+    // carries NO Origin code — a cross-origin POST surfaces here as the
+    // guard returning null, which the route maps to 401 Unauthorized.
+    // 403 is reserved for the [PF1] admin_key session-write rejection.
+    mockedVerify.mockResolvedValueOnce(null); // the guard's CSRF null
+    const res = await POST(
+      makeRequest({ method: 'POST', body: { items: [{ lead_type: 'permit', permit_num: 'X', revision_num: '00' }] } }),
+    );
+    expect(res.status).toBe(401);
+    expect(mockedQuery).not.toHaveBeenCalled();
+  });
+
   it('[PF1] GET stays 200 on admin_key auth (reads allowed on all three modes)', async () => {
     mockedVerify.mockResolvedValueOnce(ADMIN_KEY_CTX);
     mockedQuery

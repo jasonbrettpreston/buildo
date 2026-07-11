@@ -404,6 +404,15 @@ export function FlightCenterTool() {
                                 <p className="truncate text-sm font-semibold text-gray-900">
                                   {item.address || segment}
                                 </p>
+                                {/* address_snapshot staleness honesty (Spec 36
+                                    §2): the address is a save-time snapshot,
+                                    not a live read — say so. */}
+                                <p
+                                  className="mt-0.5 text-[10px] text-gray-400"
+                                  title={`Address snapshot captured when saved: ${item.saved_at}`}
+                                >
+                                  as of {item.saved_at.slice(0, 10)}
+                                </p>
                                 <p className="mt-0.5 truncate font-mono text-xs text-gray-500">
                                   {item.lead_type === 'coa' ? (
                                     <span className="mr-1 rounded bg-purple-100 px-1 text-[10px] font-semibold text-purple-800">

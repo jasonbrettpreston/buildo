@@ -4,11 +4,13 @@
 //
 // UI test for the standalone Flight Center Tool (Spec 36 — rewritten off the
 // Spec 76 §3.4 prototype). Asserts: skeleton → 3 temporal sections, card
-// placement, expected-start formatting, STALLED badge, empty/error states,
+// placement, expected-start formatting, the "as of {saved_at}"
+// address_snapshot staleness sub-text, STALLED badge, empty/error states,
 // search modal open + hint, bulk-select → confirm dialog → optimistic delete,
 // drawer with the PROMINENT flight-semantics header (DELAYED badge +
-// EXPECTED START [PF14] initialData path), and the [PF10] no-auto-eviction
-// posture (a lifecycle-advanced row still renders).
+// EXPECTED START [PF14] initialData path) — for the permit AND the coa card
+// (coa-through-drawer) — and the [PF10] no-auto-eviction posture (a
+// lifecycle-advanced row still renders).
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
@@ -208,6 +210,19 @@ describe('<FlightCenterTool> — Spec 36 board grouping', () => {
     ).toBeDefined();
   });
 
+  it('renders the address_snapshot staleness sub-text — "as of {saved_at}" (Spec 36 §2 honesty)', async () => {
+    installFetchDispatch([ITEM_ACTION]);
+    const { Wrapper } = makeWrapper();
+    render(<FlightCenterTool />, { wrapper: Wrapper });
+    await waitFor(() => screen.getByTestId('flight-center-card-20-101234--00'));
+
+    const card = screen.getByTestId('flight-center-card-20-101234--00');
+    const asOf = within(card).getByText('as of 2026-07-01');
+    expect(asOf).toBeDefined();
+    // Tooltip carries the full save timestamp.
+    expect(asOf.getAttribute('title')).toMatch(/2026-07-01T12:00:00Z/);
+  });
+
   it('falls back to "No prediction yet" when predicted_start is null', async () => {
     installFetchDispatch([ITEM_HORIZON_COA]);
     const { Wrapper } = makeWrapper();
@@ -324,6 +339,33 @@ describe('<FlightCenterTool> — detail drawer (req 4, [PF14])', () => {
     expect(
       within(drawer).getByTestId('lead-detail-inspector-mock').getAttribute('data-initial-id'),
     ).toBe('20-555000--00');
+  });
+
+  it('coa card → drawer opens with the FlightSemanticsHeader (NET-NEW coa-through-drawer path; inspector stays mocked)', async () => {
+    installFetchDispatch([ITEM_HORIZON_COA]);
+    const { Wrapper } = makeWrapper();
+    render(<FlightCenterTool />, { wrapper: Wrapper });
+    await waitFor(() => screen.getByTestId('flight-center-card-COA-A0123/24TEY'));
+
+    expect(screen.queryByTestId('flight-center-inspector-drawer')).toBeNull();
+    fireEvent.click(screen.getByLabelText(/Inspect 99 Front St/i));
+
+    const drawer = screen.getByTestId('flight-center-inspector-drawer');
+    expect(drawer).toBeDefined();
+    // The flight-semantics header renders for the coa row: null forecast →
+    // the honest "No prediction yet" fallback; not stalled/past-due → no
+    // DELAYED badge.
+    expect(within(drawer).getByTestId('flight-center-drawer-header')).toBeDefined();
+    expect(within(drawer).getByTestId('flight-center-expected-start').textContent).toMatch(
+      /No prediction yet/,
+    );
+    expect(within(drawer).queryByTestId('flight-center-delayed-badge')).toBeNull();
+    // The 8-panel LeadDetailInspector stays MOCKED here (its coverage lives
+    // in admin-detail-inspectors.ui.test.tsx); the drawer hands it the COA
+    // inspect segment id.
+    expect(
+      within(drawer).getByTestId('lead-detail-inspector-mock').getAttribute('data-initial-id'),
+    ).toBe('COA-A0123/24TEY');
   });
 
   it('clicking the drawer backdrop closes it', async () => {
