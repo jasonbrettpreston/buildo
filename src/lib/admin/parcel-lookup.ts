@@ -18,6 +18,7 @@ import {
   NearbyBuildsSummarySchema,
   CoaProjectSchema,
   GROUP_KEYS,
+  type ComparableBuild,
   type CoaProject,
   type GroupKey,
   type ParcelCandidate,
@@ -182,7 +183,7 @@ export async function resolveAddress(q: string): Promise<Resolution> {
      WHERE ap.linear_name_normalized LIKE $1
        AND ($2::text IS NULL OR ap.addr_num_normalized = $2)
        AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
-       AND ap.maint_stage = 'REGULAR'
+       AND UPPER(ap.maint_stage) = 'REGULAR'
      ORDER BY address LIMIT 10`,
     [streetName + '%', num || null],
   );
@@ -219,7 +220,7 @@ export async function fetchCoaProjects(neighbourhoodId: number | null): Promise<
             modeled_gfa_sqm::float8 AS "modeledGfaSqm", estimated_cost::float8 AS "estimatedCost"
      FROM coa_applications
      WHERE neighbourhood_id = $1
-     ORDER BY (decision IS NULL) DESC, hearing_date DESC NULLS LAST
+     ORDER BY (decision IS NULL) DESC, hearing_date DESC NULLS LAST, application_number ASC
      LIMIT 20`,
     [neighbourhoodId],
   );
@@ -275,7 +276,7 @@ export function assembleParcelPayload(
     warnings.push('some nearby CoA projects unavailable (data shape drift — logged)');
     logWarn('[api/parcel-lookup]', 'jsonb-drift', { field: 'coa_projects', parcelId });
   }
-  const comparableBuilds = Array.isArray(row.comparable_builds) ? (row.comparable_builds as unknown[]) : null;
+  const comparableBuilds = Array.isArray(row.comparable_builds) ? (row.comparable_builds as ComparableBuild[]) : null;
 
   // Tier 3 — the mapped groups, values passed through verbatim (presentation only).
   const groups = {} as Record<GroupKey, Record<string, unknown>>;

@@ -59,7 +59,10 @@ describe('lib SQL locks (Spec 89 Known Failure Modes)', () => {
   });
   it('the PRODUCTION-CORRECT address_status filter (NULL/CURRENT/NONE — the WF3 hotfix parity)', () => {
     expect(lib()).toMatch(/address_status IS NULL OR UPPER\(ap\.address_status\) IN \('CURRENT', 'NONE'\)/);
-    expect(lib()).toMatch(/maint_stage = 'REGULAR'/);
+    expect(lib()).toMatch(/UPPER\(ap\.maint_stage\) = 'REGULAR'/);
+  });
+  it('CoA ORDER BY includes application_number ASC tiebreaker', () => {
+    expect(lib()).toMatch(/application_number ASC/);
   });
   it('READ-ONLY: the lib contains no INSERT/UPDATE/DELETE', () => {
     expect(lib()).not.toMatch(/\b(INSERT INTO|UPDATE\s+\w+\s+SET|DELETE FROM)\b/);

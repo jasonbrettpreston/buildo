@@ -31,13 +31,13 @@ Exactly one of `q` / `parcelId` (400 otherwise). `verifyAdminAuth` first line; `
 1. Parse with `@/lib/parcels/address` (`normalizeAddressNumber` + `parseLinearName` — the EXISTING TS mirror of `scripts/lib/address-normalizers.js`; the two files carry cross-reference comments and a parity test pins them. Two deliberate rules are preserved, not fixed: *first-street-type-token-wins* and *trailing-directional-strip* — established JOIN-key behaviors).
 2. Exact match: `parcels(addr_num_normalized, street_name_normalized)` via `idx_parcels_address`.
 3. Miss/multi → typeahead on `address_points` **normalized columns** (prefix match on `addr_num_normalized` + `linear_name_normalized` — both btree-indexed; `address_full` is NOT indexed and MUST NOT be the filter) with the **production-correct status filter**:
-   `(address_status IS NULL OR UPPER(address_status) IN ('CURRENT','NONE')) AND maint_stage = 'REGULAR'`
+   `(address_status IS NULL OR UPPER(address_status) IN ('CURRENT','NONE')) AND UPPER(maint_stage) = 'REGULAR'`
    (live data is 100% `'None'`/NULL — `address_status='CURRENT'` alone matches ZERO rows; this mirrors the link-parcels/link-coa WF3 hotfix) → `parcel_address_points` bridge → ≤10 `candidates`.
 4. `parcelId` path bypasses resolution (candidates click through by id — re-querying by address text can re-ambiguate on corner lots/condos).
 
 **Parcel read:** ONE row, **explicit projection of ALL columns except `geometry`/`geom`** (map blobs; `centroid_lat/lng` kept). Raw SQL via the `query()` helper (`@/lib/db/client`) — the Spec 88 cost columns are absent from drizzle `schema.ts` (known mig-206 drift). Exhaustiveness is **enforced by the schema-drift test** (§6), not by promise.
 
-**Nearby CoA:** `SELECT application_number, address, status, decision, decision_date, hearing_date, description, project_type, modeled_gfa_sqm, estimated_cost FROM coa_applications WHERE neighbourhood_id = $1 ORDER BY (decision IS NULL) DESC, hearing_date DESC NULLS LAST LIMIT 20` (`idx_coa_neighbourhood`). `parcels.neighbourhood_id IS NULL` → skip the query, `coaProjects: []`.
+**Nearby CoA:** `SELECT application_number, address, status, decision, decision_date, hearing_date, description, project_type, modeled_gfa_sqm, estimated_cost FROM coa_applications WHERE neighbourhood_id = $1 ORDER BY (decision IS NULL) DESC, hearing_date DESC NULLS LAST, application_number ASC LIMIT 20` (`idx_coa_neighbourhood`). `parcels.neighbourhood_id IS NULL` → skip the query, `coaProjects: []`.
 
 **Response** (`src/app/api/admin/parcels/lookup/types.ts` — the frozen contract):
 ```ts
@@ -46,7 +46,7 @@ interface ParcelLookupResponse {
   candidates: Array<{ parcelId: string; address: string }>;
   warnings: string[];                       // tier-degradation notices
   parcel: {
-    costMenu: { menu: CostMenu | null; scalars: CostScalars };   // tier 1 (deep-validated)
+    costMenu: { menu: CostMenu | null; scalars: CostScalars | null };  // tier 1 (deep-validated; scalars null if parse fails)
     areas: AreaHeadlines;                                        // tier 1
     neighbourhood: { summary: NearbyBuildsSummary | null; coaProjects: CoaProject[];
                      comparableBuilds: unknown[] | null; compStats: CompStats };  // tier 2
@@ -91,6 +91,8 @@ Every `parcels` column appears in **exactly one** tier. The schema-drift test as
 | Malformed/empty `q` · both/neither params | 400 `badRequestZod` |
 | Injection attempt (`"; DROP TABLE…`) | parameterized SQL → safe miss (tested) |
 | JSONB drift | tier degrades to null + `warnings[]` + logWarn (§2.4) |
+
+**Per-field-null vs tier-parse-failure:** A Tier-1 or Tier-2 field that is NULL in the DB produces a dash in the UI (`—`) with **no warning** (normal absent data). A tier-level parse failure (JSONB shape drift) sets the WHOLE tier object to `null` and appends a `warnings[]` entry. These are mutually exclusive states — do not conflate them.
 
 ## 6. Test Plan (Spec 34 triad + E2E)
 

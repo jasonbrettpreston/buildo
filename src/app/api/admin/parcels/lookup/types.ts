@@ -76,6 +76,23 @@ export const CoaProjectSchema = z.object({
 });
 export type CoaProject = z.infer<typeof CoaProjectSchema>;
 
+export const ComparableBuildSchema = z
+  .object({
+    address: z.string().nullable(),
+    lot_sqm: z.number().nullable(),
+    frontage_m: z.number().nullable(),
+    distance_m: z.number().nullable(),
+    work_type: z.string().nullable(),
+    permit_gfa_sqm: z.number().nullable(),
+    permit_fsi: z.number().nullable(),
+    storeys: z.number().nullable(),
+    coa_decision: z.string().nullable(),
+    build_ratio: z.number().nullable(),
+    structure_family: z.string().nullable(),
+  })
+  .passthrough();
+export type ComparableBuild = z.infer<typeof ComparableBuildSchema>;
+
 export const CompStatsSchema = z.object({
   compCount: z.number().nullable(),
   compDominantBuild: z.string().nullable(),
@@ -112,12 +129,12 @@ export const ParcelCandidateSchema = z.object({ parcelId: z.string(), address: z
 export type ParcelCandidate = z.infer<typeof ParcelCandidateSchema>;
 
 export const ParcelPayloadSchema = z.object({
-  costMenu: z.object({ menu: CostMenuSchema.nullable(), scalars: CostScalarsSchema }),
+  costMenu: z.object({ menu: CostMenuSchema.nullable(), scalars: CostScalarsSchema.nullable() }),
   areas: AreaHeadlinesSchema,
   neighbourhood: z.object({
     summary: NearbyBuildsSummarySchema.nullable(),
     coaProjects: z.array(CoaProjectSchema),
-    comparableBuilds: z.array(z.unknown()).nullable(),
+    comparableBuilds: z.array(ComparableBuildSchema).nullable(),
     compStats: CompStatsSchema,
   }),
   groups: z.record(z.enum(GROUP_KEYS), z.record(z.string(), z.unknown())),

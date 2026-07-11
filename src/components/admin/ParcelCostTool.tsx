@@ -96,6 +96,8 @@ function CostLineRow({ id, line }: { id: string; line: CostLine | null }) {
           <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">doesn’t fit</span>
         ) : fits === true ? (
           <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">fits</span>
+        ) : fits === undefined ? (
+          <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">?</span>
         ) : null}
       </td>
     </tr>
@@ -198,14 +200,14 @@ export function ParcelCostTool() {
       )}
 
       {/* Miss */}
-      {data && !data.match && data.candidates.length === 0 && (
+      {!lookup.isLoading && data && !data.match && data.candidates.length === 0 && (
         <div className="mt-8 rounded-md border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
           No parcel found for that address.
         </div>
       )}
 
       {/* Candidates (ambiguous) — click through by parcelId, never by re-parsed text */}
-      {data && !data.match && data.candidates.length > 0 && (
+      {!lookup.isLoading && data && !data.match && data.candidates.length > 0 && (
         <div className="mt-8">
           <p className="text-sm font-medium text-gray-700">Did you mean:</p>
           <ul className="mt-2 divide-y divide-gray-100 rounded-md border border-gray-200 bg-white">
@@ -228,7 +230,7 @@ export function ParcelCostTool() {
       )}
 
       {/* Parcel view — the NORMATIVE 3-tier order */}
-      {data?.match && data.parcel && (
+      {!lookup.isLoading && data?.match && data.parcel && (
         <div className="mt-8 space-y-8">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{data.match.address || data.match.parcelId}</h2>
@@ -270,19 +272,23 @@ export function ParcelCostTool() {
               </p>
             )}
             {/* The 12 headline cost scalars — rendered ALWAYS (even when the per-line menu is null). */}
-            <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 text-sm md:grid-cols-4">
-              {Object.entries(data.parcel.costMenu.scalars).map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-2 border-b border-gray-50 py-1">
-                  <span className="text-gray-500">{prettify(k.replace(/^cost_/, ''))}</span>
-                  <span className="tabular-nums text-gray-800">
-                    {v == null ? '—' : k.endsWith('_per_sqm') ? `$${Math.round(v).toLocaleString()}/m²` : money(v)}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {data.parcel.costMenu.scalars ? (
+              <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 text-sm md:grid-cols-4">
+                {Object.entries(data.parcel.costMenu.scalars).map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-2 border-b border-gray-50 py-1">
+                    <span className="text-gray-500">{prettify(k.replace(/^cost_/, ''))}</span>
+                    <span className="tabular-nums text-gray-800">
+                      {v == null ? '—' : k.endsWith('_per_sqm') ? `$${Math.round(v).toLocaleString()}/m²` : money(v)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-gray-500">Cost scalars unavailable.</p>
+            )}
             <h4 className="mt-4 text-sm font-semibold text-gray-700">Areas</h4>
             <div className="mt-1 grid grid-cols-2 gap-x-6 gap-y-1 text-sm md:grid-cols-4">
-              {Object.entries(data.parcel.areas).map(([k, v]) => (
+              {data.parcel.areas && Object.entries(data.parcel.areas).map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-2 border-b border-gray-50 py-1">
                   <span className="text-gray-500">{prettify(k)}</span>
                   <span className="tabular-nums text-gray-800">
@@ -306,7 +312,7 @@ export function ParcelCostTool() {
             )}
 
             <h4 className="mt-4 text-sm font-semibold text-gray-700">Projects in front of the CoA</h4>
-            {data.parcel.neighbourhood.coaProjects.length > 0 ? (
+            {(data.parcel.neighbourhood.coaProjects?.length ?? 0) > 0 ? (
               <div className="mt-2 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -320,7 +326,7 @@ export function ParcelCostTool() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.parcel.neighbourhood.coaProjects.map((p, i) => (
+                    {(data.parcel.neighbourhood.coaProjects ?? []).map((p, i) => (
                       <tr key={`${p.applicationNumber ?? i}`} className="border-b border-gray-100 align-top last:border-0">
                         <td className="py-2 pr-3 font-mono text-xs">{p.applicationNumber ?? '—'}</td>
                         <td className="py-2 pr-3">

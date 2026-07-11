@@ -197,3 +197,51 @@ describe('<ParcelCostTool> parcel view (the NORMATIVE 3 tiers)', () => {
     expect(screen.getByText('Parcel Cost Model Tool')).toBeTruthy();
   });
 });
+
+describe('<ParcelCostTool> tier-degradation null-guards (Spec 89 §2.4 crash-proofing)', () => {
+  it('null scalars: no crash; scalars section absent or shows fallback', () => {
+    const p = payload();
+    (p.parcel.costMenu as { scalars: unknown }).scalars = null;
+    mockUseParcelLookup.mockReturnValue({ ...idle, data: p });
+    expect(() => render(<ParcelCostTool />)).not.toThrow();
+    // no $1,200,000 scalar value visible (was from scalars)
+    expect(screen.queryByText('$1,200,000')).toBeNull();
+  });
+
+  it('null coaProjects: no crash; "No CoA applications" shown', () => {
+    const p = payload();
+    (p.parcel.neighbourhood as { coaProjects: unknown }).coaProjects = null;
+    mockUseParcelLookup.mockReturnValue({ ...idle, data: p });
+    expect(() => render(<ParcelCostTool />)).not.toThrow();
+    expect(screen.getByText(/No CoA applications/)).toBeTruthy();
+  });
+
+  it('loading state: does NOT render previous parcel data during a new lookup', () => {
+    // First render: show a parcel
+    mockUseParcelLookup.mockReturnValue({ ...idle, data: payload() });
+    const { rerender } = render(<ParcelCostTool />);
+
+    // Submit a search to set submittedQ (so the loading skeleton gate is satisfied)
+    fireEvent.change(screen.getByLabelText('Address'), { target: { value: '26 Hurlingham Cres' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+
+    // Parcel heading is visible while not loading
+    expect(screen.getByText('26 Hurlingham Cres')).toBeTruthy();
+
+    // Re-render with isLoading=true (new search in flight) — stale data should be hidden
+    mockUseParcelLookup.mockReturnValue({ ...idle, data: payload(), isLoading: true });
+    rerender(<ParcelCostTool />);
+    expect(screen.queryByText('26 Hurlingham Cres')).toBeNull();
+    expect(screen.getByRole('status', { name: 'Loading' })).toBeTruthy();
+  });
+
+  it('fits===undefined renders an honest unknown badge (not silently suppressed)', () => {
+    const p = payload();
+    // Add a line with fits explicitly undefined (absent key means undefined)
+    (p.parcel.costMenu.menu as Record<string, unknown>)['basement_reno'] = { total: 50000, per_sqm: 1000, area: 50 };
+    mockUseParcelLookup.mockReturnValue({ ...idle, data: p });
+    render(<ParcelCostTool />);
+    // Should show "?" for the fits column on lines where fits is undefined
+    expect(screen.queryAllByText('?').length).toBeGreaterThan(0);
+  });
+});

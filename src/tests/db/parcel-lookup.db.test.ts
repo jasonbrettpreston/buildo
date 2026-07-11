@@ -80,7 +80,7 @@ describe.skipIf(!dbAvailable())('Spec 89 parcel-lookup — live DB', () => {
     const { payload, warnings } = assembleParcelPayload(row!, []);
     expect(payload.costMenu.menu).not.toBeNull();       // deep-validated, not degraded
     expect(warnings).toHaveLength(0);
-    expect(Object.keys(payload.costMenu.scalars)).toContain('cost_fb_total');
+    expect(Object.keys(payload.costMenu.scalars ?? {})).toContain('cost_fb_total');
   }, 30_000);
 
   // ── (b) Deterministic fixtures (edge cases, run everywhere) ────────────────
