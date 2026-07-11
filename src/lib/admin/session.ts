@@ -24,6 +24,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import * as Sentry from '@sentry/nextjs';
 import { useAdminControlsStore } from '@/features/admin-controls/store/useAdminControlsStore';
 import { useFlightCenterStore } from '@/features/admin-flight-center/store/useFlightCenterStore';
+import { useUserDirectoryStore } from '@/features/admin-users/store/useUserDirectoryStore';
 
 /**
  * Layer-3 fan-out: reset EVERY admin Zustand store. §8.5 coverage-test
@@ -32,6 +33,7 @@ import { useFlightCenterStore } from '@/features/admin-flight-center/store/useFl
 export function resetAdminStores(): void {
   useAdminControlsStore.getState().resetStore();
   useFlightCenterStore.getState().reset();
+  useUserDirectoryStore.getState().reset();
 }
 
 /**
