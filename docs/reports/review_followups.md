@@ -3,7 +3,66 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Weekly Triage — 2026-07-11
+_Automated triage run. All items in this file are **zombies** (no `last_reviewed` field exists; every section was added ≤ 2026-05-20, which is ≥ 7 weeks before today). `last_reviewed: 2026-07-11` stamped on all active sections below._
+
+**Counts:**
+| Metric | Value |
+|---|---|
+| Total active deferred items (numbered + unnumbered) | ~310 |
+| Zombie items (no `last_reviewed` OR > 4 weeks old) | **All 310** |
+| Proposed PROMOTE → WF3 | 7 |
+| Proposed KILL | 5 |
+| Proposed CONVERT (lint / test / lessons / spec) | 4 |
+| Bulk DEFER (refreshed, new `triage_after: 2026-08-08`) | ~294 |
+
+### PROMOTE — convert to active WF3 (high severity, still relevant)
+
+| # | Item | File / Location | Reason |
+|---|---|---|---|
+| P1 | `clampedLimit = NaN` + `clampedKm = NaN` when input undefined | `src/features/leads/lib/get-lead-feed.ts` | HIGH: breaks entire feed / empty feed for any request without explicit limit or radius. One-line `??` fix. |
+| P2 | `builder_candidates` LEFT JOIN WSIB `WHERE business_size IS NOT NULL` acts as INNER JOIN | `src/features/leads/lib/get-lead-feed.ts` | HIGH: silently drops 30-50 % of builder leads (new contractors, GTA-condition failures). |
+| P3 | `coa_applications` missing GIST spatial index on `(latitude, longitude)` | new migration | HIGH (live-verify #119): every CoA feed request does a 380 K-row seq scan (4.4 s). **MUST land before CoA killswitch flipped OFF.** |
+| P4 | `ACTIVE_STATUSES` hardcoded literal in `backfill-realtor-permit-trades.js` — not imported from TS canonical source | `scripts/backfill-realtor-permit-trades.js` | HIGH: wrong values cause silent full-miss; startup guard catches empty, not wrong. Extract to `scripts/lib/active-statuses.js` mirror + parity test. |
+| P5 | Falsy-`0` in `computeGfa` (`row.storeys \|\| 1`) + `computeEffectiveArea` (`pct > 0`) + `computeTradeValue` | `src/features/leads/lib/cost-model-shared.js:188,227,286` | HIGH × 2 + MED: 0-storey/0-pct permits inflate to full-GFA/cost. Bundle all three falsy-`0` cases in one WF3. |
+| P6 | §4 B6 concurrent 401 thundering-herd — spec promises exactly-once retry but admits N parallel `getIdToken(true)` | `mobile/src/lib/apiClient.ts` | HIGH: explicit "known limitation" that violates Spec 99 "bridges safe by construction." ~15 LoC single-flight promise. |
+| P7 | ~40 K orphan `permit_trades` rows from pre-gating era (non-construction permits) | `scripts/classify-permits.js` or one-shot WF3 DELETE | HIGH: WF2 #2 gating prevents new wrong rows but ~40 K stale rows persist. |
+
+### KILL — superseded, cost > benefit, or irrelevant
+
+| # | Item | Reason |
+|---|---|---|
+| K1 | `shoelaceArea` function + `isProjected` variable dead code in `load-massing.js` | Introduced as dead by WF2 #C; `npm run dead-code` will surface it. KILL. |
+| K2 | `SQM_TO_SQFT` constant unused in `load-massing.js` | Same WF2 #C origin. KILL. |
+| K3 | Gemini HIGH "`title` attribute inaccessibility" (WF1 #C rejected in-session) | Already formally rejected; not actionable. KILL. |
+| K4 | NIT — `lifecycle_transitions` comment alignment (mig 139 plan-review carry-overs) | Phase H will revisit these columns. Tracking cost > benefit. KILL. |
+| K5 | "Pre-existing broader bug: `get-lead-feed.ts:100` colon separator" (Spec 76 WF2 P5) | **RESOLVED** by WF3 #3 CoA UNION arm (2026-05-20). CoA uses `tf.lead_id` directly; parseLeadId handles permit side. Remove from queue. KILL. |
+
+### CONVERT — route to stronger destination (per Spec 05 §2)
+
+| # | Item | Destination |
+|---|---|---|
+| C1 | MMKV ban lacks automated enforcement (WF1 candidates table, §2.1) | **Lint rule** — `no-restricted-imports` for `react-native-mmkv` outside `mobile/src/lib/persistence/`. Author the ESLint config change as a standalone WF2. |
+| C2 | §8.5 store-enum `create<...>(` regex misses factory pattern → §B5 PIPEDA coverage hole | **Test** — replace regex with explicit allow-list in `spec99.mandates.lint.test.ts`. Low LoC WF2. |
+| C3 | Adversarial Pattern Notes section (false-positive rates, 3-step verification protocol) | **lessons.md** — route to `tasks/lessons.md §ADVERSARIAL_REVIEW`. Not a deferred code item; reference material only. |
+| C4 | `feedback_review_protocol.md` "skip adversarial on doc-only WFs" update (Hygiene Practice §7) | **Spec** — update `feedback_review_protocol.md` directly as a standalone doc commit. Not a code-review follow-up. |
+
+### Bulk DEFER — `triage_after: 2026-08-08`
+
+All remaining ~294 items are deferred for 4 weeks. Rationale buckets:
+- **Phase H work**: explicitly owned by the Phase H migration plan; not actionable until Phase G ships.
+- **Operational hardening gated on benchmarks**: escalate only when production metrics show degradation.
+- **Pre-existing architectural debt (WF1 epics)**: do not promote without a dedicated planning session.
+- **Spec drift / doc-only**: queue for the next spec housekeeping batch.
+- **NIT / style**: defer indefinitely per Hygiene Practice §2.
+
+---
+
+
+---
+
 ## Phase F.4 (Lead Inspector CoA Classification Panel) — diff-stage 4-reviewer DEFERs (2026-05-17)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + Observability worktree) on F.4 v4.1 implementation. 11 BUG findings fixed in commit (1 CRIT + 7 HIGH + 3 MED). Items below are DEFERs.
 
@@ -263,7 +322,7 @@ _Source: Gemini + DeepSeek + worktree code-reviewer of `scripts/backfill-realtor
 
 | Severity | Item | Rationale |
 |---|---|---|
-| HIGH | `ACTIVE_STATUSES` hardcoded literal not imported from `src/lib/quality/metrics.ts:473` (canonical source). | Real drift risk. The R9 §R5 startup guard catches the empty-array case but not the "wrong-values" case. Fix: extract `ACTIVE_STATUSES` to `scripts/lib/active-statuses.js` JS mirror with a parity test against the TS source. Defer to a follow-up WF3 that touches the canonical filter — bundling here would expand scope into the TS dual-path. |
+| HIGH **[→ PROMOTE P4]** | `ACTIVE_STATUSES` hardcoded literal not imported from `src/lib/quality/metrics.ts:473` (canonical source). | Real drift risk. The R9 §R5 startup guard catches the empty-array case but not the "wrong-values" case. Fix: extract `ACTIVE_STATUSES` to `scripts/lib/active-statuses.js` JS mirror with a parity test against the TS source. Defer to a follow-up WF3 that touches the canonical filter — bundling here would expand scope into the TS dual-path. |
 | HIGH | `REALTOR_RELEVANT_TYPES` imported from JS mirror; drift between JS and TS sets unchecked at runtime. | Already regression-locked by `src/tests/permit-type-class.logic.test.ts` — drift between JS and TS sets fails CI. The reviewer's concern was that this lock isn't visible from the backfill script; the comment now points at the mirror file but the test coverage is real. Defer. |
 | MED | `totalActivePermits` snapshot at startup races against concurrent classify-permits writes. | False-WARN/false-PASS risk on coverage comparison is real but small (the window is the few seconds between the count query and the final emitSummary, and the discrepancy at scale would be tens of rows out of ~95K — invisible at the verdict threshold). Defer; not worth the SQL complexity of a re-count. |
 | MED | Hardcoded `tier=1, confidence=1.0` not documented + not compared against classify-permits' realtor write. | Realtor rows have no signal-derived tier or confidence (every eligible permit gets the row regardless of permit content); 1.0 is the canonical "no signal" / "tier-1 default" value. Defer adding a comment to next-touch. |
@@ -344,7 +403,7 @@ _Source: Gemini review of `load-massing.js` + DeepSeek review of `mig 122` + wor
 | MEDIUM | `downloadFile` redirect handling has no depth limit. | Pre-existing. Add depth counter. Defer. |
 | MEDIUM | `processed < 400000` is hardcoded magic threshold. | Pre-existing. Make dynamic (95% of last run). Defer. |
 | LOW | `shoelaceArea` is now dead code. | Introduced as dead by WF2 #C. Cleanup follow-up. Defer. |
-| LOW | `SQM_TO_SQFT` constant unused. | Same — dead post-WF2-#C. Cleanup follow-up. Defer. |
+| LOW **[→ KILL K2]** | `SQM_TO_SQFT` constant unused. | Same — dead post-WF2-#C. Cleanup follow-up. Defer. |
 | LOW | MD5 hash truncated to 12 chars (48-bit collision risk). | Pre-existing. Use full digest. Defer. |
 | NIT | Progress reporting brittle on chunk boundaries. | Pre-existing. Defer. |
 
@@ -363,7 +422,7 @@ _Source: Gemini review of `load-massing.js` + DeepSeek review of `mig 122` + wor
 | Severity | Item | Rationale |
 |---|---|---|
 | DEFER (worktree, conf 88) | `isProjected` variable is declared but never used after WF2 #C — true dead code. | Cleanup follow-up. Defer. |
-| DEFER (worktree, conf 88) | `shoelaceArea` function is now unused. | Same as Gemini LOW. Defer. |
+| DEFER (worktree, conf 88) **[→ KILL K1 dupe]** | `shoelaceArea` function is now unused. | Same as Gemini LOW. Defer. |
 | DEFER (worktree, conf 85) | `SQM_TO_SQFT` constant unused. | Same as Gemini LOW. Defer. |
 | DEFER (worktree, conf 82) | Double `ST_Area` call in mig 122 + post-INSERT UPDATE — no CSE. CTE-based version would compute once. | Perf nit; 114.9s for 427K rows means current form is acceptable. Defer. |
 
@@ -439,9 +498,9 @@ _Source: Gemini review of `compute-cost-estimates.js` + DeepSeek review of `get-
 
 | Severity | Item | Why deferred |
 |---|---|---|
-| HIGH | **`clampedLimit = NaN` when `input.limit` undefined** — `Math.max(1, undefined) → NaN`; `LIMIT $5::int` then errors at PG. Breaks the entire feed for any request without explicit `limit`. | WF3 — add `?? DEFAULT_FEED_LIMIT` before clamp. Check whether route-handler validation already prevents undefined from reaching this code. |
-| HIGH | **`clampedKm = NaN` when `input.radius_km` undefined** — `ST_DWithin` with NaN meters silently returns false → empty feed. | WF3 — bundle with the limit fix. |
-| HIGH | **`builder_candidates` `LEFT JOIN wsib_per_entity` filtered by `WHERE w.business_size IS NOT NULL`** acts as INNER JOIN — silently drops 30-50% of builder leads (new contractors, GTA-condition failures). Pre-existing performance optimization that introduced a regression. | WF3 — remove the WHERE; UI handles NULL business_size. Verify against Spec 91 §4.3 builder-display contract. |
+| HIGH **[→ PROMOTE P1]** | **`clampedLimit = NaN` when `input.limit` undefined** — `Math.max(1, undefined) → NaN`; `LIMIT $5::int` then errors at PG. Breaks the entire feed for any request without explicit `limit`. | WF3 — add `?? DEFAULT_FEED_LIMIT` before clamp. Check whether route-handler validation already prevents undefined from reaching this code. |
+| HIGH **[→ PROMOTE P1]** | **`clampedKm = NaN` when `input.radius_km` undefined** — `ST_DWithin` with NaN meters silently returns false → empty feed. | WF3 — bundle with the limit fix. |
+| HIGH **[→ PROMOTE P2]** | **`builder_candidates` `LEFT JOIN wsib_per_entity` filtered by `WHERE w.business_size IS NOT NULL`** acts as INNER JOIN — silently drops 30-50% of builder leads (new contractors, GTA-condition failures). Pre-existing performance optimization that introduced a regression. | WF3 — remove the WHERE; UI handles NULL business_size. Verify against Spec 91 §4.3 builder-display contract. |
 | MEDIUM | **Cursor pagination NULL CASE** — malformed cursor with NULL lead_id → empty page → client thinks feed is exhausted. | WF3 — COALESCE the CASE or validate cursor in route handler. |
 | MEDIUM | **`competition_count` not trade-scoped** — counts saves across all trades; same user counted multiple times if they saved the same permit for different trades. | WF3 — add `AND lv2.trade_slug = $1` to the subquery. Verify Spec 91 expectation. |
 | MEDIUM | **`proximity_score` CASE re-evaluates `geography <->` 8× per row** — wasteful for 30-row feed; expensive for builder CTE aggregate. | WF3 — compute distance once in subquery, reference column in CASE. |
@@ -472,8 +531,8 @@ _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared
 
 | Severity | Source | Item | Planned Home |
 |---|---|---|---|
-| HIGH | Gemini WF2 #3 review | **Falsy-`0` in `computeGfa` `(row.storeys || 1)`** at `src/features/leads/lib/cost-model-shared.js:188`. A permit correctly listing 0 storeys (e.g., foundation-only) gets defaulted to 1 — inflates GFA. Pre-existing, not introduced by WF2 #3. **Fix:** swap `||` → `??`. | WF3 — same change in `(row.estimated_stories ?? row.storeys ?? 1)`. Bundle with the next two HIGHs (all share the same falsy-`0` root cause). |
-| HIGH | Gemini WF2 #3 review | **Falsy-`0` in `computeEffectiveArea` `pct > 0` gate** at `src/features/leads/lib/cost-model-shared.js:227`. A `gfa_allocation_percentage = 0` row in `scope_intensity_matrix` (valid configuration meaning "no construction area") falls through to the matrix-miss branch and defaults to 1.0 (full GFA). Same pattern as the storeys bug — could grossly inflate cost for a minor permit on a large structure. Pre-existing. **Fix:** change to `if (pct !== undefined)` so `pct === 0` short-circuits correctly. | WF3 — bundle with the storeys fix; both share the same root cause. |
+| HIGH **[→ PROMOTE P5]** | Gemini WF2 #3 review | **Falsy-`0` in `computeGfa` `(row.storeys || 1)`** at `src/features/leads/lib/cost-model-shared.js:188`. A permit correctly listing 0 storeys (e.g., foundation-only) gets defaulted to 1 — inflates GFA. Pre-existing, not introduced by WF2 #3. **Fix:** swap `||` → `??`. | WF3 — same change in `(row.estimated_stories ?? row.storeys ?? 1)`. Bundle with the next two HIGHs (all share the same falsy-`0` root cause). |
+| HIGH **[→ PROMOTE P5]** | Gemini WF2 #3 review | **Falsy-`0` in `computeEffectiveArea` `pct > 0` gate** at `src/features/leads/lib/cost-model-shared.js:227`. A `gfa_allocation_percentage = 0` row in `scope_intensity_matrix` (valid configuration meaning "no construction area") falls through to the matrix-miss branch and defaults to 1.0 (full GFA). Same pattern as the storeys bug — could grossly inflate cost for a minor permit on a large structure. Pre-existing. **Fix:** change to `if (pct !== undefined)` so `pct === 0` short-circuits correctly. | WF3 — bundle with the storeys fix; both share the same root cause. |
 | MEDIUM | Gemini WF2 #3 review | **Falsy-`0` in `computeTradeValue` `complexity_factor \|\| 1.0`** at `src/features/leads/lib/cost-model-shared.js:286`. Operator-set `0` is silently overridden to 1.0. Pre-existing. **Fix:** `??` instead of `\|\|`. | WF3 — bundle with the two HIGHs above (one commit covers all three falsy-`0` cases). |
 | LOW | Gemini WF2 #3 review | **Proportional slicing rounding error** at `src/features/leads/lib/cost-model-shared.js:393`. Sum of `Math.round(weight * reportedCost)` per trade may not equal `reportedCost` (off-by-pennies for many trades). Pre-existing. **Fix:** remainder distribution OR document in JSDoc. | WF3 — low priority; document in JSDoc as the simpler fix. |
 | LOW | Gemini WF2 #3 review | **Brittle `includes()` keyword detection** at `isShellPermit` / `isCommercial` (`cost-model-shared.js:151–164`). False positives on substrings (e.g., "nutshell-shaped roof", "Commercial Electric Inc."). Pre-existing. **Fix:** word-boundary regex `\bshell\b` / `\bcommercial\b`. | WF3 — low priority; needs a regression-test fixture to confirm no false negatives on tokenized permit types. |
@@ -490,6 +549,7 @@ _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared
 ---
 
 ## 🔴 Maestro-First — Frontend Candidates (pull only on observed symptoms)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 **Pivot 2026-05-05:** session-end decision was to abandon speculative pre-Maestro patches (the FC1+FC2+FC3 batch I attempted at commit `3709025`, reverted via `2ccb8c0`). The right signal is running Maestro against the current architecture and fixing only what genuinely manifests. The candidates below remain open, scoped, and ready to pull from when matching symptoms appear in Maestro logs — but DO NOT pre-emptively patch.
 
@@ -505,12 +565,13 @@ _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared
 ---
 
 ## Active Open Items
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 ### Code-fix WF3 candidates (non-frontend-critical)
 
 | Severity | Source | Item | Planned Home |
 |---|---|---|---|
-| HIGH | Gemini WF2 M1+M2+M3 batch | **§4 B6 concurrent 401 thundering herd needs a mutex.** Currently noted as "low risk known limitation" in `apiClient.ts:69-71` + the new B6 spec rules. Gemini argues a single in-flight refresh promise that subsequent 401s `await` is structurally correct. Real concern under burst-401 scenarios (deploy-induced 401 storm; post-network-restoration retries). | WF3 — implement promise-mutex in `mobile/src/lib/apiClient.ts`; amend §4 B6 spec rules to require it. **Promote to Architectural Reinforcement section.** |
+| HIGH **[→ PROMOTE P6]** | Gemini WF2 M1+M2+M3 batch | **§4 B6 concurrent 401 thundering herd needs a mutex.** Currently noted as "low risk known limitation" in `apiClient.ts:69-71` + the new B6 spec rules. Gemini argues a single in-flight refresh promise that subsequent 401s `await` is structurally correct. Real concern under burst-401 scenarios (deploy-induced 401 storm; post-network-restoration retries). | WF3 — implement promise-mutex in `mobile/src/lib/apiClient.ts`; amend §4 B6 spec rules to require it. **Promote to Architectural Reinforcement section.** |
 | HIGH | Gemini WF2 M1+M2+M3 batch | **§4 B3 version-counter design discussion** — spec defaults to naive rollback (post-2026-05-05 revision); re-read-before-rollback is recommended for high-contention fields. Gemini argues version-counter is structurally correct vs. either. Decision can wait until a high-contention field surfaces a real issue. | Open design discussion — no action until a real bug surfaces. |
 
 ### Spec-amendment WF2 candidates
@@ -527,7 +588,7 @@ _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared
 
 | Severity | Source | Item | Planned Home |
 |---|---|---|---|
-| MEDIUM | M1+M2+M3 #9 (Gemini) | **MMKV ban lacks automated enforcement.** §2.1 hard rule banning direct `createMMKV().getString()` outside `mobile/src/lib/persistence/` is verified manually only. | WF1 — add ESLint rule banning `react-native-mmkv` imports outside the allowed module list. |
+| MEDIUM **[→ CONVERT C1: lint]** | M1+M2+M3 #9 (Gemini) | **MMKV ban lacks automated enforcement.** §2.1 hard rule banning direct `createMMKV().getString()` outside `mobile/src/lib/persistence/` is verified manually only. | WF1 — add ESLint rule banning `react-native-mmkv` imports outside the allowed module list. |
 
 ### WF3 (telemetry baseline) deferrals (2026-05-06)
 
@@ -590,6 +651,7 @@ _Source: Gemini + DeepSeek + worktree code-reviewer review of `cost-model-shared
 ---
 
 ## 📱 Pre-Spec-99 Mobile Findings — Still Valid Post-Architecture
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 Surfaced 2026-05-05 verification pass against the BEFORE state of this file (commit `bb4bdc9~1`). These are mobile findings from 2026-04-23 batches (Mobile Ph4-7, Phase 8.0, Design-audit) that the prior cleanup dropped under the "dormant >1 week" rule. **Spec 99's architectural change did NOT obsolete them** — Spec 99 restructured state management; these are UI/screen/schema gaps orthogonal to that. Each row verified against current HEAD before promotion.
 
@@ -628,13 +690,14 @@ Plus historical resolved (verified already-fixed in this triage):
 ---
 
 ## 🟢 Architectural Reinforcement — close spec-vs-code gaps (high-leverage)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 These are NOT race patches. They are gaps where the spec promises something the implementation does not actually guarantee, OR places where a bridge has a "known limitation" footnote that violates the architecture's "safe by construction" principle. Closing these reinforces the architecture rather than patching around it. Each is small + high-leverage.
 
 | Item | Gap shape | Why it reinforces |
 |---|---|---|
 | **§9.21 lint check `app/`-only enforcement** (LOW) | The `searchTree` boolean check has TWO paths (src/ and app/). The `src/` path is permanently `true` because the helper file at `mobile/src/lib/queryTelemetry.ts` matches the `logQueryInvalidate(` regex itself. So the §7.2 mandate's enforcement runs through `app/` ONLY. A future change that orphans all `app/` callers would silently pass. | Replace `searchTree` boolean with `countMatches` returning a number; require count ≥ 2 (helper + ≥1 caller). Makes the §7.2 lint actually enforce what its comment claims. |
-| **§8.5 store-enum import-based discovery** (LOW) | Currently regex-discovers `create<...>(` patterns in `mobile/src/store/*.ts`. A factory pattern (`createStore(...)`) silently bypasses; new store added via factory → no `.reset()` enforcement → stale data leaks across users on shared device (a §B5 PIPEDA-class bug). | Replace regex with maintained allow-list OR import-graph parsing of `useXxxStore` exports across the directory. Makes §B5 store-reset coverage robust to future Zustand idiom changes. |
+| **§8.5 store-enum import-based discovery** (LOW) **[→ CONVERT C2: test]** | Currently regex-discovers `create<...>(` patterns in `mobile/src/store/*.ts`. A factory pattern (`createStore(...)`) silently bypasses; new store added via factory → no `.reset()` enforcement → stale data leaks across users on shared device (a §B5 PIPEDA-class bug). | Replace regex with maintained allow-list OR import-graph parsing of `useXxxStore` exports across the directory. Makes §B5 store-reset coverage robust to future Zustand idiom changes. |
 | **§4 B2 server-payload coupling** (MEDIUM) | `hydrateFilter(query.data)` and `hydrateUserProfile(query.data)` pass the FULL TanStack response into both stores. §3.1 mandates "exactly ONE store owns each field" — but each bridge call exposes both stores to fields neither owns. | Refactor `useUserProfile.ts` hydration calls to pass per-store sub-objects: `hydrateFilter({tradeSlug, radiusKm, ...})`. Tightens single-ownership at the bridge boundary. ~10 lines of code change. |
 | **§4 B6 thundering-herd mutex** (HIGH) | Spec says "exactly-once retry per call chain" but admits N parallel `getIdToken(true)` calls under burst-401. The asterisk itself violates Spec 99's "bridges are safe by construction" principle. | Implement single-flight promise in `apiClient.ts`: first 401 starts the refresh, subsequent 401s `await` the same promise. Removes the "known limitation" footnote. ~15 lines. |
 | **§B4 idToken-gate documentation** (MEDIUM) | Commit `ffd9851` added the idToken gate to `useUserProfile` that mitigates the §B4 cache invalidation race — but the mitigation isn't called out in §B4's spec text. Future contributor reading §B4 wouldn't know the gate exists or why removing it would re-open a race. | Add a one-paragraph "Implementation note" under §B4 documenting the `useUserProfile.ts:enabled` gate as the canonical mitigation. ~5 lines of spec edit. Closes implicit knowledge. |
@@ -651,6 +714,7 @@ These are NOT race patches. They are gaps where the spec promises something the 
 ---
 
 ## Adversarial Pattern Notes
+_[→ CONVERT C3: route verification protocol to `tasks/lessons.md`. This is reference material, not a code follow-up queue.]_
 
 Across the H1-H5 + M1-M3 + §7.2 + §9.21 + M1+M2+M3 WF3/WF2 batches this session, the 3-agent Multi-Agent Review pattern produced these false-positive rates on Spec 99 doc-only and code amendments:
 
@@ -779,7 +843,7 @@ Source: 3-agent Multi-Agent Review of `POST /api/leads/save` + the lead_id-forma
 
 - **Content-Type validation uses `.includes` not `.startsWith` (Gemini NIT).** `'text/plain; comment="application/json"'` would technically pass `.includes('application/json')`. Mirrors the existing `/api/leads/view` pattern (consistency); change both at once or neither. Defer to a sweep PR.
 
-- **Pre-existing broader bug: SQL `lead_id` separator mismatch.** `get-lead-feed.ts:100` builds `lead_id` as `permit_num || ':' || revision_num` (colon), but `parseLeadId` and the new `/api/leads/save` route expect `--`. Mobile's feed→detail flow (`router.push(`/(app)/[lead]?id=${item.lead_id}`)`) passes the colon-separated id into the URL where `parseLeadId` fails — separate WF3 needed. NOT introduced by P5; surfaced during P5 review.
+- ~~**Pre-existing broader bug: SQL `lead_id` separator mismatch.**~~ **[→ KILL K5 — RESOLVED by WF3 #3 CoA UNION arm 2026-05-20]** `get-lead-feed.ts:100` builds `lead_id` as `permit_num || ':' || revision_num` (colon), but `parseLeadId` and the new `/api/leads/save` route expect `--`. Mobile's feed→detail flow (`router.push(`/(app)/[lead]?id=${item.lead_id}`)`) passes the colon-separated id into the URL where `parseLeadId` fails — separate WF3 needed. NOT introduced by P5; surfaced during P5 review.
 
 
 ---
@@ -979,7 +1043,7 @@ Source: Multi-Agent Review (Gemini + DeepSeek + worktree code-reviewer) of WF2 #
 3. ✅ Test coverage: 30+ existing call sites in `classification.logic.test.ts` updated with `{ permitClass: 'construction' }` to preserve the asserted matrix behavior under the new contract
 4. ✅ Spec amendments: Spec 41 step 13 (replaced WF2 #1 forward-ref with implemented behavior table), Spec 80 §5 (Consumer behaviors subsection), Spec 91 §3.5 (realtor gating note), Spec 47 §10.2 (per-class behavior policies subsection)
 
-**Followup WF3 candidate (carved out):** **Orphan cleanup of pre-existing wrong rows.** WF3 investigation 2026-05-08 found 14,090 wrong Fire/Security Upgrade trade rows + 12,026 Designated Structures trade rows + 3,657 DCs DeferredFees trade rows + ~10,141 wrong realtor rows on non-construction permits. WF2 #2's gating prevents NEW wrong rows from being written, but the existing rows persist until either (a) `classify-permits.js --full` re-runs (mass UPSERT path) or (b) an explicit DELETE pass scoped per non-construction permit_type. Filed as a small WF3 to run after WF2 #2 + #3 stabilize.
+**[→ PROMOTE P7] Followup WF3 candidate (carved out):** **Orphan cleanup of pre-existing wrong rows.** WF3 investigation 2026-05-08 found 14,090 wrong Fire/Security Upgrade trade rows + 12,026 Designated Structures trade rows + 3,657 DCs DeferredFees trade rows + ~10,141 wrong realtor rows on non-construction permits. WF2 #2's gating prevents NEW wrong rows from being written, but the existing rows persist until either (a) `classify-permits.js --full` re-runs (mass UPSERT path) or (b) an explicit DELETE pass scoped per non-construction permit_type. Filed as a small WF3 to run after WF2 #2 + #3 stabilize.
 
 
 
@@ -1237,6 +1301,7 @@ Phase D DELIVERED 2026-05-14. R5.1 → R5.5 → R5.6 commit chain captured in Sp
 ---
 
 ## Phase E.1 diff-stage 4-reviewer findings (2026-05-14)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 Phase E.1 (#lifecycle-phase-engine-migration-E.1) commit covers bug 84-W12 substrate fix + `mapToUniversalStream` + TS twin extension + 14 spec amendments. 4-reviewer diff-stage review surfaced these PRE-EXISTING bugs (NOT introduced by E.1) — filed as future WF3 candidates rather than blocking commit.
 
@@ -1282,6 +1347,7 @@ Phase E.1 DELIVERED 2026-05-14. Substrate-only commit per Spec 42 §6.11. Same-S
 ---
 
 ## Phase E.3 diff-stage 4-reviewer findings (2026-05-15)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 Phase E.3 (#lifecycle-phase-engine-migration-E.3) commit covers CoA-side granular cohort calibration extension (`scripts/compute-phase-calibration.js` rewrite + migration 147 + manifest CoA-chain add + 4 spec amendments). Plan trajectory: v1=18 → v2=14 → v3=15 → v4=13 (5 rounds plan-review; user authorized direct PLAN LOCK at v5). Diff-stage 4-reviewer round (Gemini + DeepSeek + Independent + Observability) — 0 CRITs, 5 real findings folded inline (v6), 2 verified false positives, 6 deferrals.
 
@@ -1316,6 +1382,7 @@ E.4 (per-seq band tuning + `assert-lifecycle-phase-distribution.js` extension) a
 ---
 
 ## Phase E.4 diff-stage 4-reviewer findings (2026-05-16)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 Phase E.4 (#lifecycle-phase-engine-migration-E.4) commit covers per-seq distribution band assertion in `scripts/quality/assert-lifecycle-phase-distribution.js` (110 per-seq bands alongside the existing 19 phase-keyed bands), migration 148 (logic_variables INSERTs + lifecycle_seq_unclassified_max), migration 149 (CONCURRENTLY partial indices on `lifecycle_seq` columns), 221 new `scripts/seeds/logic_variables.json` entries, 3 new test files + 1 extension (65 tests pass), and 2 spec amendments. Plan trajectory: 4 plan-review rounds (v1=14 → v2=8 → v3=9 → v4 PLAN LOCK per user authorization). Diff-stage 4-reviewer round surfaced 2 real findings folded inline, 2 verified false positives, 10 deferrals.
 
@@ -1352,6 +1419,7 @@ E.5 (band recalibration operational gate — promotes `seqBandsWarn++` to `seqBa
 ---
 
 ## assert-lifecycle-phase-distribution.js / mig 150 — Phase E.5 deferrals (2026-05-16)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 Source: 4-reviewer diff-stage round on Phase E.5 v4 (per-kind posture flag promotion gate). Gemini + DeepSeek raised pre-existing E.4 design concerns (out of E.5's per-kind posture flag scope). Independent + Observability both **PASS** with no Critical/High findings at confidence ≥80. All findings deferred per user authorization (defer-all + WF6 commit).
 
@@ -1388,6 +1456,7 @@ Plan trajectory: 4 plan-review rounds (v1=incomplete-fold → v2=incomplete-fold
 ---
 
 ## compute-trade-forecasts.js / mig 151 + mig 152 — Phase F.1 deferrals (2026-05-16)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 Source: 4-reviewer diff-stage round on Phase F.1 v4 (CoA UNION extension + trade_forecasts PK swap + dual stale-purge + audit-verdict gate). Plan trajectory: 4 plan-review rounds (v1=16 → v2=18 → v3=14 → v4 PLAN LOCK per user authorization). Diff-stage: zero CRIT, 4 real HIGH folds applied inline (#158-#161), 2 MED folds applied inline (#162-#163), all other findings DEFER (#164-#176).
 
@@ -1431,6 +1500,7 @@ F.2 (update-tracked-projects.js CoA branch — stall thresholds, hearing-date im
 ---
 
 ## update-tracked-projects.js / mig 153 + mig 154 — Phase F.2 deferrals (2026-05-16)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 Source: 4-reviewer diff-stage round on Phase F.2 v4 (CoA branch in update-tracked-projects.js + tracked_projects schema relaxation + 1 new CoA logic_variable + 3 new notification subtypes + decision-keyed auto-archive). Plan trajectory: 4 plan-review rounds (v1=25 → v2=22 → v3=28 → v4 PLAN LOCK direct per user authorization — v3 plateaued, targeted-Edit folds were accumulating stale residue). Diff-stage: 4 CRIT folds applied inline (#177-#180), 2 HIGH folds applied inline (#181-#182), 1 IMPORTANT fold applied inline (#183), 1 doc-gap fold applied inline (#184), all other findings DEFER (#185-#193). One Gemini HIGH (#185) verified as false positive.
 
@@ -1472,6 +1542,7 @@ F.3 (compute-opportunity-scores.js CoA consumer) and F.4 (Lead Inspector CoA pan
 ---
 
 ## compute-opportunity-scores.js — Phase F.3 deferrals (2026-05-17)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 Source: 4-reviewer diff-stage round on Phase F.3 v4 (lead_id rekey + CoA consumer end-to-end). Plan trajectory: 4 plan-review rounds (v1=30 → v2=31 → v3=33 → v4 PLAN LOCK direct per user authorization — same plateau pattern as F.2 v3). Diff-stage: 4 real folds applied inline (#194-#197), 4 verified false positives, 5 pre-existing patterns deferred, 2 cosmetic-only deferred.
 
@@ -1513,6 +1584,7 @@ OPERATOR PRE-ACK: Day 0 of F.3 — `coa_first_deploy_grace: true` is INFO-only (
 F.4 (Lead Inspector CoA panel — Spec 76 §3.5 UI) follows next.
 
 ## Phase I.1.1a (close-out of Phase I.1 deferrals — commit pending)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 DIFF-STAGE 4-reviewer round on Phase I.1.1a produced 7 BUGs folded into the diff and 3 DEFERs:
 
@@ -1535,6 +1607,7 @@ Also folded: Gemini MED (Test #11 afterEach cleanup logs failures via console.er
 Verification: `npm run typecheck` clean; `npm run lint` clean for new file; `npm run test` 6246 passed.
 
 ## Phase I.1.1b (Spec 84 permit classifier extension — commit pending)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 PLAN-STAGE 4-reviewer round (3 convergent CRITs + 8 HIGHs + several MEDs) + DIFF-STAGE 4-reviewer round (1 CRIT + 5 HIGHs/IMPORTANTs) folded into v2 plan + implementation. DeepSeek SAVEPOINT CRIT was a verified false positive (pattern already shipped in Phase I.1).
 
@@ -1573,6 +1646,7 @@ Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passe
 ---
 
 ## WF3 Pass-2 bundled (per-seq audit + CoA coverage gap) — Multi-agent review (2026-05-19)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 3-reviewer review on the bundled Pass-2 WF3 (assert-lifecycle-phase-distribution + assert-global-coverage). **0 in-scope issues** — Independent reviewer's worktree was stale and didn't pick up the edits (false-positive); Gemini + DeepSeek surfaced pre-existing concerns in untouched lines. All deferred:
 
@@ -1591,6 +1665,7 @@ Verification: typecheck PASS; lint clean for new code; `npm run test` 6286 passe
 ---
 
 ## WF3 CoA Lead Inspector schema drift (Spec 79 §7 Surface 1) — Multi-agent review (2026-05-20)
+_last_reviewed: 2026-07-11 | triage_after: 2026-08-08_
 
 2-reviewer review (DeepSeek + Independent) on the 4-drift fix in `src/lib/leads/lead-inspect-query.ts`. The 4 in-scope crashes are correctly fixed (Red Light → Green Light cycle confirmed; live API returns 200). All other findings are pre-existing concerns in untouched lines:
 
@@ -1651,5 +1726,5 @@ DeepSeek + Independent IMPL review. **5 folds applied inline** (4 from Independe
 | 116 | DEFER | DeepSeek LOW | Repeated `ca.location::geography <-> ST_MakePoint(...)` computation in proximity_score CASE. | Same pattern as permit + builder branches (long-standing). Micro-opt; 15-30 rows × 7 branches × ~10µs = negligible. Defer (established pattern). |
 | 117 | DEFER | DeepSeek LOW | `LeadFeedRow` interface over-promises CoA fields on permit/builder rows. | TS makes the optional fields explicit (`?`). mapRow guards via `lead_type === 'coa'` discriminator before reading them. No runtime risk. Defer. |
 | 118 | DEFER | DeepSeek NIT | `TIMING_DISPLAY_BY_CONFIDENCE` deprecated since WF2 (2026-04-11) but still exported. | Out of scope. Cleanup task. |
-| 119 | DEFER | Live-verify discovered | `EXPLAIN ANALYZE` on `lead_type=all` shows **Parallel Seq Scan on coa_applications** (4.4s execution). `coa_applications` has **no GIST spatial index** on `(latitude, longitude)` — every request does a seq scan of 380K rows. | The killswitch (LEAD_FEED_DISABLE_COA=1 default = ENABLED) protects production: while the CoA arm is disabled in prod, this cost is not incurred. **MUST FIX before flipping the killswitch off in prod.** The mobile-card-readiness follow-up WF that enables the killswitch must ALSO ship a migration adding `CREATE INDEX CONCURRENTLY ... USING GIST (ST_MakePoint(longitude, latitude)) WHERE latitude IS NOT NULL AND longitude IS NOT NULL`. Tracked here as the gate condition. |
+| 119 | **[→ PROMOTE P3 — MUST FIX before CoA killswitch OFF]** | Live-verify discovered | `EXPLAIN ANALYZE` on `lead_type=all` shows **Parallel Seq Scan on coa_applications** (4.4s execution). `coa_applications` has **no GIST spatial index** on `(latitude, longitude)` — every request does a seq scan of 380K rows. | The killswitch (LEAD_FEED_DISABLE_COA=1 default = ENABLED) protects production: while the CoA arm is disabled in prod, this cost is not incurred. **MUST FIX before flipping the killswitch off in prod.** The mobile-card-readiness follow-up WF that enables the killswitch must ALSO ship a migration adding `CREATE INDEX CONCURRENTLY ... USING GIST (ST_MakePoint(longitude, latitude)) WHERE latitude IS NOT NULL AND longitude IS NOT NULL`. Tracked here as the gate condition. |
 
