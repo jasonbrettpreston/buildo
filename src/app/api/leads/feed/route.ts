@@ -63,9 +63,13 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     if (!parsed.success) return badRequestZod(parsed.error);
     const params = parsed.data;
 
-    // 3. Trade slug authorization — server compares the requested trade to
-    //    the user's profile trade. Mismatch returns 403 per spec 70.
-    if (params.trade_slug !== ctx.trade_slug) {
+    // 3. Trade slug authorization — P24-24A SELECTED-TRADE model: the requested
+    //    trade must be a MEMBER of the account's trade set (not merely equal to
+    //    the primary). Single-trade accounts (set = [primary]) behave exactly as
+    //    before. Mismatch (requested ∉ set) returns 403 per spec 70. The 403 copy
+    //    still cites the primary as "your profile trade" — accurate enough for a
+    //    request that named a trade the account does not hold at all.
+    if (!ctx.trade_slugs.includes(params.trade_slug)) {
       return forbiddenTradeMismatch(params.trade_slug, ctx.trade_slug);
     }
 

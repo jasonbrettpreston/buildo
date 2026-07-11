@@ -34,7 +34,8 @@ export const UserProfileSchema = z.object({
   tos_accepted_at: z.string().nullable(),
   account_deleted_at: z.string().nullable(),
   // Admin-configured
-  account_preset: z.enum(['tradesperson', 'realtor', 'manufacturer']).nullable(),
+  // 'supplier' added P24-24A: the self-serve product persona (Spec 21 §4).
+  account_preset: z.enum(['tradesperson', 'realtor', 'manufacturer', 'supplier']).nullable(),
   trade_slugs_override: z.array(z.string()).nullable(),
   radius_cap_km: z.number().int().nullable(),
   // Notification preferences — flattened from JSONB to 5 sibling columns in

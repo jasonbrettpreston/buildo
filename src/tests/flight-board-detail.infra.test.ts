@@ -22,9 +22,12 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-function makeRequest(): NextRequest {
+function makeRequest(search = ''): NextRequest {
   return {
-    nextUrl: { pathname: '/api/leads/flight-board/detail/x' },
+    nextUrl: {
+      pathname: '/api/leads/flight-board/detail/x',
+      searchParams: new URLSearchParams(search),
+    },
     method: 'GET',
   } as unknown as NextRequest;
 }
@@ -36,6 +39,8 @@ function makeContext(id: string) {
 const sampleContext = {
   uid: 'firebase-uid-abc',
   trade_slug: 'plumbing',
+  primary_trade_slug: 'plumbing',
+  trade_slugs: ['plumbing'],
   display_name: null,
   subscription_status: null,
 };

@@ -36,9 +36,12 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-function makeRequest(): NextRequest {
+function makeRequest(search = ''): NextRequest {
   return {
-    nextUrl: { pathname: '/api/leads/flight-board' },
+    nextUrl: {
+      pathname: '/api/leads/flight-board',
+      searchParams: new URLSearchParams(search),
+    },
     method: 'GET',
   } as unknown as NextRequest;
 }
@@ -112,6 +115,8 @@ const atWorkPhase = {
 const plumbingContext = {
   uid: 'p22-test-uid',
   trade_slug: 'plumbing',          // work_phase = P12 (PHASE_INDEX = 15) per TRADE_TARGET_PHASE
+  primary_trade_slug: 'plumbing',
+  trade_slugs: ['plumbing'],
   display_name: null,
   subscription_status: null,
 };

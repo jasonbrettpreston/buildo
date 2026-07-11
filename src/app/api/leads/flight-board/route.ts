@@ -10,7 +10,7 @@ import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { pool } from '@/lib/db/client';
 import { ok } from '@/features/leads/api/envelope';
-import { internalError, unauthorized } from '@/features/leads/api/error-mapping';
+import { forbiddenTradeMismatch, internalError, unauthorized } from '@/features/leads/api/error-mapping';
 import { TRADE_TARGET_PHASE } from '@/lib/classification/lifecycle-phase';
 import {
   computeTemporalGroup,
@@ -79,12 +79,22 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     const ctx = await getCurrentUserContext(request, pool);
     if (!ctx) return unauthorized();
 
+    // P24-24A SELECTED-TRADE model — optional ?trade_slug picks which trade in
+    // the account's set to render the board for (defaults to the primary). Must
+    // be a member of the set. Single-trade accounts pass null → primary → no
+    // change. The switcher (Spec 95 §2.5.1) writes this param.
+    const requestedTrade = request.nextUrl.searchParams.get('trade_slug');
+    const selectedTrade = requestedTrade ?? ctx.primary_trade_slug;
+    if (!ctx.trade_slugs.includes(selectedTrade)) {
+      return forbiddenTradeMismatch(selectedTrade, ctx.primary_trade_slug);
+    }
+
     const result = await pool.query<FlightBoardRow>(FLIGHT_BOARD_SQL, [
       ctx.uid,
-      ctx.trade_slug,
+      selectedTrade,
     ]);
 
-    const tradeTarget = TRADE_TARGET_PHASE[ctx.trade_slug];
+    const tradeTarget = TRADE_TARGET_PHASE[selectedTrade];
     const workPhaseIdx = tradeTarget ? (PHASE_INDEX[tradeTarget.work_phase] ?? 999) : 999;
 
     const now = new Date();

@@ -19,6 +19,7 @@ import { pool } from '@/lib/db/client';
 import { ok } from '@/features/leads/api/envelope';
 import {
   badRequestInvalidId,
+  forbiddenTradeMismatch,
   internalError,
   notFound,
   unauthorized,
@@ -86,9 +87,17 @@ export const GET = withApiEnvelope(async function GET(
     // A CoA id is a malformed request for this endpoint.
     if (parsed.kind !== 'permit') return badRequestInvalidId();
 
+    // P24-24A SELECTED-TRADE model — optional ?trade_slug ∈ the account's set,
+    // defaulting to the primary. Single-trade accounts are unchanged.
+    const requestedTrade = request.nextUrl.searchParams.get('trade_slug');
+    const selectedTrade = requestedTrade ?? ctx.primary_trade_slug;
+    if (!ctx.trade_slugs.includes(selectedTrade)) {
+      return forbiddenTradeMismatch(selectedTrade, ctx.primary_trade_slug);
+    }
+
     const result = await pool.query<FlightBoardDetailRow>(
       FLIGHT_BOARD_DETAIL_SQL,
-      [ctx.uid, parsed.permit_num, parsed.revision_num, ctx.trade_slug],
+      [ctx.uid, parsed.permit_num, parsed.revision_num, selectedTrade],
     );
     // Belt-and-braces — rowCount === 0 SHOULD short-circuit, but the explicit
     // guard satisfies noUncheckedIndexedAccess without a non-null assertion.

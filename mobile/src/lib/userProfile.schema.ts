@@ -81,7 +81,8 @@ export const UserProfileSchema = z.object({
   tos_accepted_at: z.string().datetime({ offset: true }).nullable(),
   account_deleted_at: z.string().datetime({ offset: true }).nullable(),
   // Admin-configured
-  account_preset: z.enum(['tradesperson', 'realtor', 'manufacturer']).nullable(),
+  // 'supplier' added P24-24A: the self-serve product persona (Spec 21 §4).
+  account_preset: z.enum(['tradesperson', 'realtor', 'manufacturer', 'supplier']).nullable(),
   // trade_slugs_override + radius_cap_km INTENTIONALLY OMITTED — same
   // rationale as stripe_customer_id above. Both are admin-internal
   // (Spec 95 §2.5) and were excluded from `CLIENT_SAFE_COLUMNS` in the

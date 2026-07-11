@@ -4,6 +4,7 @@ import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { CLIENT_SAFE_SELECT_LIST } from '@/lib/userProfile.schema';
 
 export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   const uid = await getUserIdFromSession(request);
@@ -47,13 +48,17 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
 
     const restoredStatus = account_preset === 'manufacturer' ? 'admin_managed' : 'expired';
 
+    // P24-24A — RETURNING * leaked stripe_customer_id / radius_cap_km /
+    // trade_slugs_override (admin-internal + PII) to the mobile client. Return
+    // only the client-safe column list, matching the /api/user-profile GET+PATCH
+    // convention (userProfile.schema.ts).
     const updated = await query<Record<string, unknown>>(
       `UPDATE user_profiles
        SET account_deleted_at = NULL,
            subscription_status = $2,
            updated_at = NOW()
        WHERE user_id = $1
-       RETURNING *`,
+       RETURNING ${CLIENT_SAFE_SELECT_LIST}`,
       [uid, restoredStatus],
     );
 

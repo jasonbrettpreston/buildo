@@ -30,6 +30,7 @@ import {
   applyFallbackTrialInitIfNeeded,
   applyTrialExpirationIfNeeded,
 } from '@/lib/subscription/expiration';
+import { deriveAccountPreset } from '@/lib/classification/account-preset';
 
 const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' } as const;
 
@@ -327,6 +328,17 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     if (fields.lifecycle_stalled_pref !== undefined) addField('lifecycle_stalled_pref', fields.lifecycle_stalled_pref);
     if (fields.start_date_urgent !== undefined) addField('start_date_urgent', fields.start_date_urgent);
     if (fields.notification_schedule !== undefined) addField('notification_schedule', fields.notification_schedule);
+
+    // P24-24A — derive account_preset server-side at onboarding completion so
+    // self-serve rows (which onboard with a NULL preset) get a persona for the
+    // admin directory filter. ONLY when currently NULL — never overwrite an
+    // admin-set preset (manufacturer / enterprise supplier). Deterministic:
+    // realtor slug → 'realtor'; a product trade → 'supplier'; else 'tradesperson'
+    // (Spec 21 §4). Purely a UX/billing axis — never feeds the lead algorithm.
+    if (fields.onboarding_complete === true && existing.account_preset == null) {
+      const effectiveTrade = (tradeSlugFirstWrite ?? existing.trade_slug) as string | null;
+      addField('account_preset', deriveAccountPreset(effectiveTrade));
+    }
 
     // onboarding_complete=true + non-manufacturer + not already subscribed → start trial
     if (

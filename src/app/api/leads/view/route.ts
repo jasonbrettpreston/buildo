@@ -70,9 +70,12 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     if (!parsed.success) return badRequestZod(parsed.error);
     const body = parsed.data;
 
-    // 3. Trade slug authorization — server compares the body trade to the
-    //    user's profile trade. Mismatch returns 403 per spec 70.
-    if (body.trade_slug !== ctx.trade_slug) {
+    // 3. Trade slug authorization — P24-24A SELECTED-TRADE model: the body trade
+    //    must be a MEMBER of the account's trade set. The save is keyed on this
+    //    selected trade (lead_views UNIQUE(user_id, lead_key, trade_slug)), so a
+    //    multi-trade user saves per selected business. Single-trade accounts are
+    //    unchanged. Mismatch (body trade ∉ set) returns 403 per spec 70.
+    if (!ctx.trade_slugs.includes(body.trade_slug)) {
       return forbiddenTradeMismatch(body.trade_slug, ctx.trade_slug);
     }
 

@@ -67,6 +67,8 @@ function makeRequest(
 const sampleContext = {
   uid: 'firebase-uid-abc',
   trade_slug: 'plumbing',
+  primary_trade_slug: 'plumbing',
+  trade_slugs: ['plumbing'],
   display_name: null,
   subscription_status: null,
 };
@@ -332,6 +334,8 @@ describe('POST /api/leads/view — 403 Forbidden', () => {
     mockedGetUserContext.mockResolvedValueOnce({
       uid: 'u1',
       trade_slug: 'electrical',
+      primary_trade_slug: 'electrical',
+      trade_slugs: ['electrical'],
       display_name: null,
       subscription_status: null,
     });
@@ -347,6 +351,8 @@ describe('POST /api/leads/view — 403 Forbidden', () => {
     mockedGetUserContext.mockResolvedValueOnce({
       uid: 'u1',
       trade_slug: 'electrical',
+      primary_trade_slug: 'electrical',
+      trade_slugs: ['electrical'],
       display_name: null,
       subscription_status: null,
     });
@@ -358,6 +364,8 @@ describe('POST /api/leads/view — 403 Forbidden', () => {
     mockedGetUserContext.mockResolvedValueOnce({
       uid: 'u1',
       trade_slug: 'electrical',
+      primary_trade_slug: 'electrical',
+      trade_slugs: ['electrical'],
       display_name: null,
       subscription_status: null,
     });

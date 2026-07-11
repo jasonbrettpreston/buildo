@@ -88,6 +88,8 @@ const validQuery = '?lat=43.65&lng=-79.38&trade_slug=plumbing';
 const sampleContext = {
   uid: 'firebase-uid-abc',
   trade_slug: 'plumbing',
+  primary_trade_slug: 'plumbing',
+  trade_slugs: ['plumbing'],
   display_name: null,
   subscription_status: null,
 };
@@ -312,6 +314,8 @@ describe('GET /api/leads/feed — 400 Validation', () => {
     mockedGetUserContext.mockResolvedValueOnce({
       uid: 'u1',
       trade_slug: 'electrical', // matches the LAST query value
+      primary_trade_slug: 'electrical',
+      trade_slugs: ['electrical'],
       display_name: null,
       subscription_status: null,
     });
@@ -338,6 +342,8 @@ describe('GET /api/leads/feed — 403 Forbidden', () => {
     mockedGetUserContext.mockResolvedValueOnce({
       uid: 'u1',
       trade_slug: 'electrical',
+      primary_trade_slug: 'electrical',
+      trade_slugs: ['electrical'],
       display_name: null,
       subscription_status: null,
     });
@@ -353,6 +359,8 @@ describe('GET /api/leads/feed — 403 Forbidden', () => {
     mockedGetUserContext.mockResolvedValueOnce({
       uid: 'u1',
       trade_slug: 'electrical',
+      primary_trade_slug: 'electrical',
+      trade_slugs: ['electrical'],
       display_name: null,
       subscription_status: null,
     });
@@ -364,11 +372,47 @@ describe('GET /api/leads/feed — 403 Forbidden', () => {
     mockedGetUserContext.mockResolvedValueOnce({
       uid: 'u1',
       trade_slug: 'electrical',
+      primary_trade_slug: 'electrical',
+      trade_slugs: ['electrical'],
       display_name: null,
       subscription_status: null,
     });
     await GET(makeRequest(validQuery));
     expect(mockedWithRateLimit).not.toHaveBeenCalled();
+  });
+
+  // P24-24A SELECTED-TRADE model — a requested trade that is a MEMBER of a
+  // multi-trade account's set is accepted (200), even when it is not the
+  // primary; a requested trade OUTSIDE the set is still 403.
+  it('accepts a non-primary trade that is a member of the account trade set (200)', async () => {
+    mockedGetUserContext.mockResolvedValueOnce({
+      uid: 'u1',
+      trade_slug: 'framing', // primary
+      primary_trade_slug: 'framing',
+      trade_slugs: ['framing', 'plumbing'],
+      display_name: null,
+      subscription_status: null,
+    });
+    mockedWithRateLimit.mockResolvedValueOnce({ allowed: true, remaining: 29 });
+    mockedGetLeadFeed.mockResolvedValueOnce(sampleResult);
+    const res = await GET(makeRequest(validQuery)); // requests plumbing ∈ set
+    expect(res.status).toBe(200);
+    const call = mockedGetLeadFeed.mock.calls[0];
+    expect(call?.[0].trade_slug).toBe('plumbing'); // the SELECTED trade drives the feed
+  });
+
+  it('returns 403 when the requested trade is outside a multi-trade set', async () => {
+    mockedGetUserContext.mockResolvedValueOnce({
+      uid: 'u1',
+      trade_slug: 'framing',
+      primary_trade_slug: 'framing',
+      trade_slugs: ['framing', 'electrical'],
+      display_name: null,
+      subscription_status: null,
+    });
+    const res = await GET(makeRequest(validQuery)); // requests plumbing ∉ set
+    expect(res.status).toBe(403);
+    expect(mockedGetLeadFeed).not.toHaveBeenCalled();
   });
 });
 
@@ -451,6 +495,8 @@ describe('GET /api/leads/feed — composition correctness', () => {
     mockedGetUserContext.mockResolvedValueOnce({
       uid: 'firebase-uid-from-token',
       trade_slug: 'plumbing',
+      primary_trade_slug: 'plumbing',
+      trade_slugs: ['plumbing'],
       display_name: null,
       subscription_status: null,
     });
