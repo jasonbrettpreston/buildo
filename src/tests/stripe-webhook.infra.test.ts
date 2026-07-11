@@ -164,11 +164,14 @@ describe('POST /api/webhooks/stripe — 200 happy paths', () => {
     expect(updateSql).toMatch(/last_stripe_event_at IS NULL OR last_stripe_event_at <\s+\$\d/);
   });
 
-  it('UPDATE includes stripe_customer_id forgery guard on the user_id path', async () => {
-    // Stripe-metadata forgery guard: the user_id-path UPDATE must only
-    // fire when the user has no customer ID yet OR the existing one matches
-    // the event's customer ID, limiting the blast radius if a Stripe-side
-    // compromise lets an attacker set metadata.user_id on a victim's UID.
+  it('user_id path writes customer id AUTHORITATIVELY and drops the customer-id equality guard (P26 re-subscriber fix)', async () => {
+    // P26: the previous customer-id equality guard on the user_id path
+    // (`stripe_customer_id IS NULL OR = $2`) broke re-subscribers — a returning
+    // customer gets a NEW cus_ id that never matches the stored one, so
+    // activation silently matched 0 rows. The fence against metadata.user_id
+    // forgery is now that only OUR checkout route can set metadata.user_id /
+    // client_reference_id; the customer id is written authoritatively so a
+    // re-subscribe overwrites cus_OLD with cus_NEW.
     mockedConstructEvent.mockReturnValueOnce({
       id: 'evt_test_meta',
       type: 'customer.subscription.created',
@@ -189,11 +192,66 @@ describe('POST /api/webhooks/stripe — 200 happy paths', () => {
 
     const updateSql = fakeClientQuery.mock.calls[1]?.[0] as string;
     expect(updateSql).toMatch(/WHERE user_id = \$\d/);
-    expect(updateSql).toMatch(/stripe_customer_id IS NULL OR stripe_customer_id = \$\d/);
+    // The customer-id equality guard must be GONE from the user_id path.
+    expect(updateSql).not.toMatch(/stripe_customer_id IS NULL OR stripe_customer_id = \$\d/);
+    // Customer id is written authoritatively (= $2), not COALESCE(existing, $2).
+    expect(updateSql).toMatch(/stripe_customer_id = \$2/);
+    expect(updateSql).not.toMatch(/COALESCE\(stripe_customer_id/);
+    // The out-of-order guard stays.
+    expect(updateSql).toMatch(/last_stripe_event_at IS NULL OR last_stripe_event_at <\s+\$\d/);
     // Params order on user_id path: [status, customer_id, user_id, event_created_at]
     const params = fakeClientQuery.mock.calls[1]?.[1] as unknown[];
     expect(params[2]).toBe('firebase-uid-xyz');
     expect(params[3]).toBeInstanceOf(Date);
+  });
+
+  it('activates on checkout.session.completed via client_reference_id → user_id (routes the metadata-primary UPDATE)', async () => {
+    mockedConstructEvent.mockReturnValueOnce({
+      id: 'evt_checkout_done',
+      type: 'checkout.session.completed',
+      created: FIXED_EVENT_TS_S,
+      data: {
+        object: {
+          client_reference_id: 'firebase-uid-abc',
+          customer: 'cus_checkout_1',
+        },
+      },
+    });
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_checkout_done' }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [] });
+
+    const res = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
+
+    expect(res.status).toBe(200);
+    const updateSql = fakeClientQuery.mock.calls[1]?.[0] as string;
+    expect(updateSql).toMatch(/WHERE user_id = \$\d/);
+    const params = fakeClientQuery.mock.calls[1]?.[1] as unknown[];
+    expect(params[0]).toBe('active');
+    expect(params[1]).toBe('cus_checkout_1');
+    expect(params[2]).toBe('firebase-uid-abc');
+  });
+
+  it('flips past_due → active on invoice.payment_succeeded via the customer-id fallback', async () => {
+    mockedConstructEvent.mockReturnValueOnce({
+      id: 'evt_pay_ok',
+      type: 'invoice.payment_succeeded',
+      created: FIXED_EVENT_TS_S,
+      data: { object: { customer: 'cus_recovered' } },
+    });
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_pay_ok' }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [] });
+
+    const res = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
+
+    expect(res.status).toBe(200);
+    const updateSql = fakeClientQuery.mock.calls[1]?.[0] as string;
+    // No metadata.user_id on an invoice → customer-id fallback branch.
+    expect(updateSql).toMatch(/WHERE stripe_customer_id = \$\d/);
+    const params = fakeClientQuery.mock.calls[1]?.[1] as unknown[];
+    expect(params[0]).toBe('active');
+    expect(params[1]).toBe('cus_recovered');
   });
 });
 

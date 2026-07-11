@@ -104,6 +104,11 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // Bundle A — Compute (already compliant pre-Bundle G)
   'scripts/compute-opportunity-scores.js':   81,
   'scripts/update-tracked-projects.js':      82,
+  // Spec 101 (dispatch-notifications, P25): owning-spec lock 101 collides with
+  // purge-lead-views.js and 122 with a one-time backfill; per the
+  // compute-phase-calibration precedent (free-ID when the slot is taken), 123 is
+  // assigned from the free range.
+  'scripts/dispatch-notifications.js':       123,
   'scripts/compute-cost-estimates.js':       83,
   'scripts/compute-storey-norms.js':         195,
   'scripts/compute-build-norms.js':          78,

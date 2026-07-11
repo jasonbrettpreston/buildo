@@ -61,9 +61,9 @@ const NOTIFICATION_TITLES = {
 };
 
 // spec 47 §6.3: stay under 65,535 parameters.
-// notifications INSERT: 7 cols per row — user_id, type, permit_num,
-// trade_slug, title, body, created_at → Math.floor(65535 / 7) = 9362.
-const ALERT_INSERT_COLS = 7;
+// notifications INSERT: 8 cols per row — user_id, type, permit_num,
+// trade_slug, title, body, created_at, lead_id (P25 25A) → floor(65535/8) = 8191.
+const ALERT_INSERT_COLS = 8;
 const ALERT_BATCH_SIZE  = Math.floor(65535 / ALERT_INSERT_COLS);
 
 // Zod schema for per-trade config fields consumed by this script.
@@ -682,6 +682,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
         user_id: row.user_id,
         type: 'STALL_WARNING',
         permit_num: row.permit_num,
+        revision_num: row.revision_num,
         trade_slug: row.trade_slug,
         title: NOTIFICATION_TITLES.STALL_WARNING,
         body: `Schedule Alert: The site at ${row.permit_num} just stalled. Your ${row.trade_slug} target date has been pushed back to ${dateStr}.`,
@@ -699,6 +700,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
         user_id: row.user_id,
         type: 'STALL_CLEARED',
         permit_num: row.permit_num,
+        revision_num: row.revision_num,
         trade_slug: row.trade_slug,
         title: NOTIFICATION_TITLES.STALL_CLEARED,
         body: `Schedule Alert: The stop-work at ${row.permit_num} has been cleared. Construction is resuming.`,
@@ -724,6 +726,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
         user_id: row.user_id,
         type: 'START_IMMINENT',
         permit_num: row.permit_num,
+        revision_num: row.revision_num,
         trade_slug: row.trade_slug,
         title: NOTIFICATION_TITLES.START_IMMINENT,
         body: `Action Required: Your ${row.trade_slug} job at ${row.permit_num} is IMMINENT (within ${row.imminent_window_days} days). Expected start: ${dateStr}.`,
@@ -1002,7 +1005,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
           const batch = alerts.slice(i, i + ALERT_BATCH_SIZE);
           const tuples = batch.map((_, idx) => {
             const base = idx * ALERT_INSERT_COLS;
-            return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7})`;
+            return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`;
           }).join(', ');
           const params = batch.flatMap((a) => [
             a.user_id, a.type,
@@ -1011,10 +1014,18 @@ pipeline.run('update-tracked-projects', async (pool) => {
             // if extractCoaApplicationNumber returned null — prevents NULL in notifications.permit_num.
             a.coa_application_number || a.permit_num || 'unknown-coa',
             a.trade_slug, a.title, a.body, RUN_AT,
+            // P25 25A: the canonical lead_id column (mig 218) — retires the
+            // coa-in-permit_num polymorphism (Spec 82 §4 F.4). CoA rows key on
+            // `coa:<application_number>`; permit rows on `permit:<num>:<rev>`.
+            a.coa_application_number
+              ? `coa:${a.coa_application_number}`
+              : (a.permit_num != null && a.revision_num != null
+                  ? `permit:${a.permit_num}:${a.revision_num}`
+                  : null),
           ]);
           await client.query(
             `INSERT INTO notifications
-               (user_id, type, permit_num, trade_slug, title, body, created_at)
+               (user_id, type, permit_num, trade_slug, title, body, created_at, lead_id)
              VALUES ${tuples}`,
             params,
           );
@@ -1228,7 +1239,7 @@ pipeline.run('update-tracked-projects', async (pool) => {
       tracked_projects: ['user_id', 'permit_num', 'revision_num', 'trade_slug', 'lead_id', 'claimed_at', 'status', 'last_notified_urgency', 'last_notified_stalled', 'notified_decision_rendered', 'updated_at'],
       lead_analytics: ['lead_key', 'tracking_count', 'saving_count', 'updated_at'],
       // Phase F.2: 3 new notification subtypes write here (existing pattern; new types per Spec 82 §4)
-      notifications: ['user_id', 'type', 'permit_num', 'trade_slug', 'title', 'body', 'created_at'],
+      notifications: ['user_id', 'type', 'permit_num', 'trade_slug', 'title', 'body', 'created_at', 'lead_id'],
     },
   );
   }, { skipEmit: false }); // end withAdvisoryLock

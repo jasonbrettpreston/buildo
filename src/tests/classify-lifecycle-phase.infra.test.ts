@@ -641,17 +641,19 @@ describe('migration 111 — notification_prefs_repair', () => {
     expect(MIGRATION_SRC).toContain('notification_schedule');
   });
 
-  it('classify-lifecycle-phase.js queries flat notification columns (post-117 §9.14)', () => {
-    // Pre-migration-117 the script SELECTed `up.notification_prefs` (JSONB).
-    // Post-117 the script reads the flat columns directly: phase_changed,
-    // lifecycle_stalled_pref, start_date_urgent, notification_schedule.
-    const classifySrc = read('scripts/classify-lifecycle-phase.js');
-    expect(classifySrc).toContain('up.phase_changed');
-    expect(classifySrc).toContain('up.lifecycle_stalled_pref');
-    expect(classifySrc).toContain('up.start_date_urgent');
-    expect(classifySrc).toContain('up.notification_schedule');
-    // The legacy JSONB read is gone:
-    expect(classifySrc).not.toContain('up.notification_prefs');
+  it('the flat notification pref columns are read by the dispatcher (P25 25A moved the pref gate)', () => {
+    // Pre-migration-117 the sender SELECTed `up.notification_prefs` (JSONB).
+    // Post-117 the flat columns are read directly. P25 25A MOVED the pref gate
+    // out of classify-lifecycle-phase.js (now an enqueuer) into the single
+    // dispatch_notifications step — so the flat-column reads live there now.
+    const dispatchSrc = read('scripts/dispatch-notifications.js');
+    expect(dispatchSrc).toContain('up.phase_changed');
+    expect(dispatchSrc).toContain('up.lifecycle_stalled_pref');
+    expect(dispatchSrc).toContain('up.start_date_urgent');
+    expect(dispatchSrc).toContain('up.notification_schedule');
+    // The legacy JSONB read is gone everywhere:
+    expect(read('scripts/classify-lifecycle-phase.js')).not.toContain('up.notification_prefs');
+    expect(dispatchSrc).not.toContain('up.notification_prefs');
   });
 });
 
@@ -685,29 +687,42 @@ describe('scripts/classify-lifecycle-phase.js — WF3 push dispatch hardening', 
     expect(unnestMatches).toBeGreaterThanOrEqual(2);
   });
 
-  it('START_DATE_URGENT DISTINCT ON is paired with matching ORDER BY tiebreaker (WF3 ORDER-BY fix)', () => {
+  it('START_DATE_URGENT DISTINCT ON is paired with matching ORDER BY tiebreaker (WF3 ORDER-BY fix; P25 re-keyed to user)', () => {
     // Pre-WF3 the SELECT DISTINCT ON had no ORDER BY, so PostgreSQL
     // returned an arbitrary row per group — silently dropping
     // legitimate subscribers OR picking the wrong predicted_start.
+    // P25 25A: the enqueuer emits one row per saved USER (the dispatcher fans
+    // out to the user's device tokens), so the DISTINCT ON tuple + its matching
+    // ORDER BY are now keyed on lv.user_id instead of dt.push_token. The
+    // tiebreaker (predicted_start ASC = earliest-actionable) is PRESERVED.
     expect(classifySrc).toMatch(
-      /DISTINCT ON \(tf\.permit_num,\s*tf\.revision_num,\s*dt\.push_token\)[\s\S]*?ORDER BY\s+tf\.permit_num,\s*tf\.revision_num,\s*dt\.push_token,\s*tf\.predicted_start\s+ASC/,
+      /DISTINCT ON \(tf\.permit_num,\s*tf\.revision_num,\s*lv\.user_id\)[\s\S]*?ORDER BY\s+tf\.permit_num,\s*tf\.revision_num,\s*lv\.user_id,\s*tf\.predicted_start\s+ASC/,
     );
   });
 
-  it('callExpoPushApi rejects on non-2xx HTTP status (WF3 silent push-loss fix)', () => {
-    // Pre-WF3 the function resolved on any HTTP response without
-    // inspecting status code. A 4xx/5xx (rate limit, auth failure,
-    // malformed payload) was silently parsed as success.
-    expect(classifySrc).toMatch(/status\s*<\s*200\s*\|\|\s*status\s*>=\s*300/);
-    expect(classifySrc).toMatch(/Expo Push API \$\{status\}/);
+  it('the Expo transport hardening moved to push-dispatch.js (non-2xx reject; P25 25A)', () => {
+    // Pre-WF3 the sender resolved on any HTTP response without inspecting the
+    // status code. P25 25A EXTRACTED the hardened transport into
+    // scripts/lib/push-dispatch.js (transport-injectable) — the reject-on-non-2xx
+    // guard now lives there, and its runtime behaviour is locked by
+    // push-dispatch.logic.test.ts. classify-lifecycle-phase.js no longer talks
+    // to Expo at all (it enqueues).
+    const pushSrc = read('scripts/lib/push-dispatch.js');
+    expect(pushSrc).toMatch(/statusCode\s*<\s*200\s*\|\|\s*statusCode\s*>=\s*300/);
+    expect(pushSrc).toMatch(/Expo Push API \$\{statusCode\}/);
+    // No Expo invocation/definition remains in the classifier (a bare comment
+    // mention of the moved function name is fine — assert on the call/def form).
+    expect(classifySrc).not.toMatch(/callExpoPushApi\s*\(/);
+    expect(classifySrc).not.toContain('exp.host');
   });
 
-  it('callExpoPushApi parses per-ticket Expo errors and warns (WF3 silent push-loss fix)', () => {
-    // Expo returns 200 with errors embedded in the JSON body. The
-    // hardening parses `parsed.data[]` for `status: 'error'` tickets
-    // and surfaces a summary via pipeline.log.warn.
-    expect(classifySrc).toContain("t.status === 'error'");
-    expect(classifySrc).toMatch(/per-ticket errors/);
+  it('per-ticket Expo error surfacing moved to push-dispatch.js (P25 25A)', () => {
+    // Expo returns 200 with per-ticket errors embedded in the body. The parse
+    // (aligning tickets to input tokens so the dispatcher prunes the EXACT dead
+    // token) lives in push-dispatch.js; runtime-locked by push-dispatch.logic.test.ts.
+    const pushSrc = read('scripts/lib/push-dispatch.js');
+    expect(pushSrc).toMatch(/top-level errors/);
+    expect(pushSrc).toContain('DeviceNotRegistered');
   });
 });
 

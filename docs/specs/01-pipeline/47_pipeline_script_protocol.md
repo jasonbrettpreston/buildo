@@ -1829,6 +1829,7 @@ and registry-vs-code agreement.
 | **114** | `scripts/backfill-realtor-permit-trades.js` | 5 — Maintenance | YES — `classified_at` |
 | **115** | `scripts/link-parcel-addresses.js` | 2 — Link (WF1 #parcel-address-bridge Phase 2c) | NO — `parcel_address_points.computed_at` is a script-bound RUN_AT write but the value is bookkeeping (when this run produced the link), not a business-event timestamp. Spec 47 §14.2 RUN_AT discipline applied (captured inside withAdvisoryLock + passed as $3, NOT inline NOW()). |
 | **116** | `scripts/one-time/backfill-address-points-geom.js` | One-time backfill (WF1 #parcel-address-bridge Phase 2a — not in manifest.json) | NO — pure UPDATE on existing rows; no timestamp columns written |
+| **123** | `scripts/dispatch-notifications.js` | 5 — Compute/Delivery (Spec 101, P25) | YES — `notification_dispatches.dispatched_at` + `notifications.sent_at` (RUN_AT-bound, captured inside withAdvisoryLock). Owning spec 101 taken by purge-lead-views + 122 by a one-time backfill; 123 from the free range. |
 | **63** | `scripts/load-centreline.js` | 4 — Load/Ingest (Spec 62 §8c) | YES — `updated_at` (RUN_AT-bound) |
 | **64** | `scripts/enrich-centreline.js` | 3 — Enrich (Spec 62 §8d) | NO — set-based UPDATE of parcels corner/through/frontage + lineage |
 | **58** | `scripts/load-zoning.js` | 4 — Load/Ingest (Spec 58) | NO |

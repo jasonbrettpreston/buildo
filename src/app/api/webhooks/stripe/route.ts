@@ -4,10 +4,21 @@
 // (no Firebase auth) verified by the Stripe-Signature header against
 // STRIPE_WEBHOOK_SECRET. Updates user_profiles.subscription_status based
 // on the event type:
+//   checkout.session.completed                              → 'active' + stripe_customer_id
+//                                                             (identity via client_reference_id → user_id)
 //   customer.subscription.created/updated (status='active') → 'active' + stripe_customer_id
+//   invoice.payment_succeeded                               → 'active'  (past_due recovery)
 //   invoice.payment_failed                                  → 'past_due'
 //   customer.subscription.deleted                           → 'expired'
 //   anything else                                           → 200 no-op
+//
+// Re-subscriber correctness (Spec 20 §4.2 / P26): a RETURNING subscriber
+// checks out again and Stripe mints a BRAND-NEW customer id (cus_NEW). The
+// metadata.user_id path below writes `stripe_customer_id = $2` AUTHORITATIVELY
+// (not COALESCE) and no longer gates on customer-id equality, so the new id
+// overwrites the stale stored one and the account re-activates. Without this,
+// the old guard silently matched 0 rows (stored cus_OLD ≠ event cus_NEW) and
+// the paying re-subscriber was never reactivated.
 //
 // Idempotency: the dedup INSERT into stripe_webhook_events and the
 // user_profiles UPDATE happen inside a single db.transaction() so a
@@ -99,8 +110,30 @@ function mapSubscriptionStatus(status: Stripe.Subscription.Status): WebhookOutco
   }
 }
 
+function clientReferenceIdOf(session: Stripe.Checkout.Session): string | null {
+  const value = session.client_reference_id;
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
 function classifyEvent(event: Stripe.Event): WebhookOutcome {
   switch (event.type) {
+    case 'checkout.session.completed': {
+      // The belt to subscription.created's suspenders: the FIRST signal that a
+      // web checkout succeeded. Our /api/subscribe/exchange route sets
+      // `client_reference_id = <firebase_uid>` when creating the session, so we
+      // recover the internal user_id directly (no metadata dependency) and the
+      // customer id Stripe minted for this checkout. Routes through the
+      // metadata-primary UPDATE (userId non-null) which writes the customer id
+      // authoritatively — correct for both first-time and re-subscribers.
+      // Existing out-of-order + dedup guards make any double-activation with
+      // subscription.created inert.
+      const session = event.data.object as Stripe.Checkout.Session;
+      return {
+        newStatus: 'active',
+        stripeCustomerId: customerIdFromUnknown(session.customer),
+        userId: clientReferenceIdOf(session) ?? userIdFromMetadata(session.metadata),
+      };
+    }
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
       const sub = event.data.object as Stripe.Subscription;
@@ -113,6 +146,19 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         newStatus,
         stripeCustomerId: customerIdFromUnknown(sub.customer),
         userId: userIdFromMetadata(sub.metadata),
+      };
+    }
+    case 'invoice.payment_succeeded': {
+      // Recurring payment cleared, or a past_due account recovered its card in
+      // the Stripe portal. Invoice objects do NOT carry the subscription's
+      // metadata.user_id, so identity resolves via the stripe_customer_id
+      // fallback branch (userId null) — the customer id was stored on the
+      // original activation. Flips past_due → active.
+      const invoice = event.data.object as Stripe.Invoice;
+      return {
+        newStatus: 'active',
+        stripeCustomerId: customerIdFromUnknown(invoice.customer),
+        userId: userIdFromMetadata(invoice.metadata),
       };
     }
     case 'invoice.payment_failed': {
@@ -210,41 +256,47 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       }
 
       // Identify the target row:
-      //   1. Prefer event metadata.user_id — set by the web checkout when it
-      //      creates the Stripe customer/subscription (see types.ts contract
-      //      with `buildo.com/subscribe` page). This is fail-closed: if the
-      //      metadata is correct, no missed `subscription.created` can
-      //      orphan a later `subscription.deleted` because BOTH carry the
-      //      same metadata.
-      //   2. Fall back to stripe_customer_id when metadata is absent (legacy
-      //      events from before metadata wiring, or third-party tools that
-      //      bypass the web checkout).
+      //   1. Prefer event metadata.user_id / client_reference_id — set by OUR
+      //      web checkout (/api/subscribe/exchange) when it creates the Stripe
+      //      session with `client_reference_id` AND
+      //      `subscription_data.metadata.user_id`. This is fail-closed: if the
+      //      linkage is present, no missed `subscription.created` can orphan a
+      //      later `subscription.deleted` because BOTH carry the same user_id.
+      //   2. Fall back to stripe_customer_id when the linkage is absent
+      //      (invoice.payment_succeeded/_failed, legacy events, or third-party
+      //      tools that bypass the web checkout).
       //
-      // Both paths are guarded against:
-      //   (a) Out-of-order delivery — `last_stripe_event_at IS NULL OR
-      //       last_stripe_event_at < $eventCreatedAt`. Stripe does not
-      //       guarantee delivery order, so a delayed subscription.updated
-      //       arriving after a subscription.deleted would otherwise
-      //       overwrite 'expired' back to 'active'. We track the latest
-      //       processed event timestamp per user and reject older events
-      //       (rowCount === 0, no log noise — expected behaviour).
-      //   (b) Stripe-metadata forgery — `stripe_customer_id IS NULL OR
-      //       stripe_customer_id = $2`. The user_id-path UPDATE only fires
-      //       if the user has no customer yet OR the existing customer
-      //       matches the event's. This limits blast radius if a Stripe
-      //       admin compromise allowed setting `metadata.user_id` to a
-      //       victim's UID on an unrelated subscription.
+      // Both paths are guarded against out-of-order delivery —
+      // `last_stripe_event_at IS NULL OR last_stripe_event_at < $eventCreatedAt`.
+      // Stripe does not guarantee delivery order, so a delayed
+      // subscription.updated arriving after a subscription.deleted would
+      // otherwise overwrite 'expired' back to 'active'. We track the latest
+      // processed event timestamp per user and reject older events (rowCount
+      // === 0, no log noise — expected behaviour).
+      //
+      // FORGERY FENCE (relocated — P26): the previous customer-id equality
+      // guard on the user_id path (`stripe_customer_id IS NULL OR = $2`) was
+      // REMOVED because it broke the re-subscriber flow — a returning customer
+      // gets a NEW cus_ id every checkout, which never equals the stored one,
+      // so activation silently matched 0 rows. The real fence against
+      // metadata.user_id forgery is that `metadata.user_id` /
+      // `client_reference_id` are set ONLY by our own checkout route
+      // server-side; Stripe gives the paying customer no way to write them.
+      // The customer id is therefore written AUTHORITATIVELY (`= $2`, not
+      // COALESCE) so a re-subscribe overwrites cus_OLD with cus_NEW. Every
+      // event that reaches this branch (checkout.session.completed,
+      // subscription.created/updated) carries a customer id, so $2 is non-null
+      // here.
       const eventCreatedAt = new Date(event.created * 1000);
       let result;
       if (outcome.userId !== null) {
         result = await client.query(
           `UPDATE user_profiles
            SET subscription_status = $1,
-               stripe_customer_id = COALESCE(stripe_customer_id, $2),
+               stripe_customer_id = $2,
                last_stripe_event_at = $4,
                updated_at = NOW()
            WHERE user_id = $3
-             AND (stripe_customer_id IS NULL OR stripe_customer_id = $2)
              AND (last_stripe_event_at IS NULL OR last_stripe_event_at < $4)`,
           [outcome.newStatus, outcome.stripeCustomerId, outcome.userId, eventCreatedAt],
         );

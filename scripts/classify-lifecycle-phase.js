@@ -21,9 +21,11 @@
  */
 'use strict';
 
-const https = require('https');
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
+// P25 25A — canonical notification type constants (the single source of truth
+// for the strings the mobile parser routes on). Replaces the inline literals.
+const NOTIF = require('./lib/notification-types');
 const {
   classifyLifecyclePhase,
   // Phase E.2 (2026-05-14): consumer switched back from classifyCoaPhaseLegacy
@@ -39,320 +41,199 @@ const { computeIsOrphan } = require('./lib/orphan-detection');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
 // ─────────────────────────────────────────────────────────────────
-// Push notification dispatch (spec 92 §2.2)
-// Dispatches LIFECYCLE_PHASE_CHANGED and LIFECYCLE_STALLED pushes to
-// users who have saved a permit. Wrapped in try-catch — failure MUST
-// NOT abort the classification run.
+// Notification ENQUEUE (P25 25A — Spec 101)
+//
+// Pre-P25 this file was a DIRECT Expo sender (callExpoPushApi + inline
+// schedule/pref gates + a proven double-send). It is now an ENQUEUER: it
+// resolves the saved-lead subscribers and writes intent rows into the
+// `notifications` queue. The single gated `dispatch_notifications` step reads
+// the queue, applies the pref/schedule gates + the once-per-day ledger dedup,
+// and is the ONLY code that talks to Expo (via scripts/lib/push-dispatch.js).
+//
+// KNOWINGLY MOVED (Regression-Guardian): the delivery gates — the pref columns
+// (phase_changed / lifecycle_stalled_pref / start_date_urgent) and the
+// notification_schedule window (formerly isScheduleAllowed) — moved to the
+// dispatcher, superseded by the ledger for cross-run dedup. The hardened
+// callExpoPushApi moved to scripts/lib/push-dispatch.js (transport-injectable).
+//
+// PRESERVED here: the TRIGGER conditions (phase transitions; newly-stalled
+// false->true; predicted-start 6-7 day window), the PIPEDA-scrubbed bodies
+// (no permit_num in the visible body — routing identity rides data.entity_id via
+// lead_id), and the load-bearing fence "a notification failure MUST NOT abort
+// the classification run" (enqueue is best-effort post-commit at the call sites).
 // ─────────────────────────────────────────────────────────────────
 
-const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
-
-// EST/EDT gate — checks whether the current Toronto local time falls
-// within the user's notification_schedule window. Uses Intl.DateTimeFormat
-// to correctly handle DST (Toronto is UTC-5 EST in winter, UTC-4 EDT in
-// summer — ~65% of the year). Hardcoding -5 would silently drop the first
-// hour of the morning window (6–7 AM EDT) for ~8 months of the year.
-const _torontoHourFmt = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/Toronto',
-  hour: 'numeric',
-  hour12: false,
-});
-
-function isScheduleAllowed(schedule, nowUtcMs) {
-  const hour = parseInt(_torontoHourFmt.format(new Date(nowUtcMs)), 10);
-  if (schedule === 'morning') return hour >= 6 && hour < 9;
-  if (schedule === 'evening') return hour >= 17 && hour < 20;
-  return true; // 'anytime'
-}
-
-// WF3 2026-05-04 hardening (review_followups.md classify-lifecycle-phase
-// bundle): Expo Push API returns 200 with errors embedded in the JSON
-// body (per-ticket `status:'error'` + top-level errors). Pre-WF3 this
-// function resolved on any HTTP response without inspecting status code
-// or body — silently dropping pushes on 4xx/5xx, rate-limit responses,
-// and per-ticket DeviceNotRegistered errors. Now the function rejects on
-// non-2xx and parses Expo's per-ticket error array, throwing a
-// summarised error that the caller's catch surfaces via pipeline.log.
-function callExpoPushApi(messages) {
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify(messages);
-    const req = https.request(
-      EXPO_PUSH_URL,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body),
-        },
-      },
-      (res) => {
-        let data = '';
-        res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () => {
-          const status = res.statusCode ?? 0;
-          if (status < 200 || status >= 300) {
-            reject(new Error(`Expo Push API ${status}: ${data.slice(0, 500)}`));
-            return;
-          }
-          // Parse JSON body to surface per-ticket errors. Expo returns
-          // `{ data: [{ status: 'ok'|'error', message?, details? }, ...] }`
-          // OR `{ errors: [...] }` on top-level failure.
-          let parsed;
-          try {
-            parsed = JSON.parse(data);
-          } catch {
-            // Non-JSON 2xx body — exotic but treat as success per the
-            // pre-WF3 contract; the body is unused by callers.
-            resolve(data);
-            return;
-          }
-          if (Array.isArray(parsed?.errors) && parsed.errors.length > 0) {
-            reject(new Error(`Expo Push API top-level errors: ${JSON.stringify(parsed.errors).slice(0, 500)}`));
-            return;
-          }
-          // Surface per-ticket errors so the caller can log them. We don't
-          // reject on per-ticket errors (some tickets succeeded) — just
-          // attach a summary the caller can warn on.
-          const tickets = Array.isArray(parsed?.data) ? parsed.data : [];
-          const errored = tickets.filter((t) => t && t.status === 'error');
-          if (errored.length > 0) {
-            const summary = errored
-              .slice(0, 5)
-              .map((t) => `${t.details?.error ?? 'unknown'}: ${t.message ?? ''}`)
-              .join('; ');
-            pipeline.log.warn(
-              '[classify-lifecycle-phase/push]',
-              `Expo Push API returned ${errored.length}/${tickets.length} per-ticket errors`,
-              { sample: summary },
-            );
-          }
-          resolve(data);
-        });
-      },
+// Batched INSERT into the notifications queue. 8 cols/row; chunked under the
+// 65535 param limit. created_at = RUN_AT (Spec 47 §14.2 — the DB clock, not NOW()).
+const NOTIF_INSERT_COLS = 8;
+const NOTIF_INSERT_BATCH = Math.floor((65535 - 1) / NOTIF_INSERT_COLS);
+async function insertNotificationRows(pool, rows, RUN_AT) {
+  if (rows.length === 0) return;
+  for (let i = 0; i < rows.length; i += NOTIF_INSERT_BATCH) {
+    const batch = rows.slice(i, i + NOTIF_INSERT_BATCH);
+    const tuples = batch.map((_, idx) => {
+      const b = idx * NOTIF_INSERT_COLS;
+      return `($${b + 1}, $${b + 2}, $${b + 3}, $${b + 4}, $${b + 5}, $${b + 6}, $${b + 7}, $${b + 8})`;
+    }).join(', ');
+    const params = batch.flatMap((r) => [
+      r.user_id, r.type, r.permit_num, r.trade_slug ?? null,
+      r.title, r.body, r.lead_id, RUN_AT,
+    ]);
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, permit_num, trade_slug, title, body, lead_id, created_at)
+       VALUES ${tuples}`,
+      params,
     );
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
+  }
 }
 
-// Dispatches pushes for a set of permit phase changes and stall events.
+// Enqueues LIFECYCLE_PHASE_CHANGED + LIFECYCLE_STALLED intent rows for a set of
+// permit phase changes and newly-stalled permits.
 // pool: pg pool; transitions: [{permit_num, revision_num, phase}];
-// stalledPermits: [{permit_num, revision_num}] (newly stalled rows).
+// stalledPermits: [{permit_num, revision_num}] (newly stalled rows);
+// RUN_AT: the DB clock captured for this run (created_at).
 //
-// WF3 2026-05-04 (review_followups.md classify-lifecycle-phase bundle):
-// pre-WF3 the inner loop issued ONE pool.query per transition AND per
-// stalled permit. With thousands of phase changes daily, this tipped
-// Cloud SQL into connection exhaustion and held the advisory lock for
-// the duration. Now each subroutine issues a SINGLE batched query using
-// `(permit_num, revision_num) IN (SELECT * FROM unnest(...))` — see
-// Spec 99 §9.14 commentary for column types (`permit_num text`,
-// `revision_num varchar(10)`).
-async function dispatchPhaseChangePushes(pool, transitions, stalledPermits) {
-  const nowMs = Date.now();
-  const messages = [];
+// One notifications row per (saved user, lead, type). NO device_tokens / prefs
+// join here — recipient + pref resolution and the schedule window moved to the
+// dispatcher. The null-filter (WF3 Gemini HIGH) is PRESERVED: a tuple-IN with a
+// NULL element returns UNKNOWN and would silently drop the affected permits.
+async function enqueuePhaseChangeNotifications(pool, transitions, stalledPermits, RUN_AT) {
+  const rowsToInsert = [];
 
-  // LIFECYCLE_PHASE_CHANGED — batched lookup. WF3 Phase 7 amendment
-  // (Gemini HIGH): defensively filter out rows with null permit_num or
-  // revision_num before flattening into the unnest arrays. Tuple-IN with
-  // a NULL element returns UNKNOWN (per SQL spec), so `(lv.permit_num,
-  // lv.revision_num) IN (SELECT ...)` would silently drop the affected
-  // permits. `permits.revision_num` is currently NOT NULL by schema, so
-  // the filter is defense-in-depth against future migrations that relax
-  // the constraint OR upstream code that ever produces a {permit_num: ...,
-  // revision_num: null} transition row.
   if (transitions.length > 0) {
-    const validTransitions = transitions.filter(
-      (t) => t.permit_num != null && t.revision_num != null,
-    );
-    const permitNums = validTransitions.map((t) => t.permit_num);
-    const revisionNums = validTransitions.map((t) => t.revision_num);
-    let rows;
-    try {
-      const result = await pool.query(
-        `SELECT lv.permit_num, lv.revision_num, dt.push_token,
-                up.phase_changed, up.notification_schedule
-           FROM lead_views lv
-           JOIN device_tokens dt ON dt.user_id = lv.user_id
-           JOIN user_profiles up ON up.user_id = lv.user_id
-          WHERE (lv.permit_num, lv.revision_num) IN (
-                  SELECT * FROM unnest($1::text[], $2::varchar[])
-                )
-            AND lv.saved = true`,
-        [permitNums, revisionNums],
-      );
-      rows = result.rows;
-    } catch (err) {
-      pipeline.log.warn(
-        '[classify-lifecycle-phase/push]',
-        `PHASE_CHANGED batched query failed for ${transitions.length} transitions`,
-        { err: err.message },
-      );
-      rows = [];
-    }
-
-    for (const row of rows) {
-      if (!row.phase_changed) continue;
-      if (!isScheduleAllowed(row.notification_schedule || 'anytime', nowMs)) continue;
-      messages.push({
-        to: row.push_token,
-        title: 'Phase Update',
-        // PIPEDA: no permit_num in the visible body — Expo logs push bodies for
-        // delivery diagnostics. Routing identity is carried in data.entity_id below.
-        body: 'A job you are tracking has advanced to the next phase.',
-        data: {
-          notification_type: 'LIFECYCLE_PHASE_CHANGED',
-          route_domain: 'flight_board',
-          entity_id: `${row.permit_num}--${row.revision_num}`,
-          urgency: 'normal',
-        },
-      });
+    const valid = transitions.filter((t) => t.permit_num != null && t.revision_num != null);
+    if (valid.length > 0) {
+      let saved;
+      try {
+        const result = await pool.query(
+          `SELECT lv.user_id, lv.permit_num, lv.revision_num, lv.trade_slug
+             FROM lead_views lv
+            WHERE (lv.permit_num, lv.revision_num) IN (
+                    SELECT * FROM unnest($1::text[], $2::varchar[])
+                  )
+              AND lv.saved = true`,
+          [valid.map((t) => t.permit_num), valid.map((t) => t.revision_num)],
+        );
+        saved = result.rows;
+      } catch (err) {
+        pipeline.log.warn(
+          '[classify-lifecycle-phase/enqueue]',
+          `PHASE_CHANGED saved-lead query failed for ${transitions.length} transitions`,
+          { err: err.message },
+        );
+        saved = [];
+      }
+      for (const s of saved) {
+        rowsToInsert.push({
+          user_id: s.user_id,
+          type: NOTIF.LIFECYCLE_PHASE_CHANGED,
+          permit_num: s.permit_num,
+          trade_slug: s.trade_slug,
+          title: 'Phase Update',
+          // PIPEDA: no permit_num in the visible body — routing identity rides
+          // lead_id (dispatcher derives data.entity_id = NUM--REV from it).
+          body: 'A job you are tracking has advanced to the next phase.',
+          lead_id: `permit:${s.permit_num}:${s.revision_num}`,
+        });
+      }
     }
   }
 
-  // LIFECYCLE_STALLED — batched lookup. Bypasses schedule gate (spec §2.2).
-  // Same null-filter rationale as the PHASE_CHANGED branch above.
   if (stalledPermits.length > 0) {
-    const validStalled = stalledPermits.filter(
-      (s) => s.permit_num != null && s.revision_num != null,
-    );
-    const permitNums = validStalled.map((s) => s.permit_num);
-    const revisionNums = validStalled.map((s) => s.revision_num);
-    let rows;
-    try {
-      const result = await pool.query(
-        // Spec 99 §9.14: read the lifecycle_stalled_pref column (renamed
-        // from notification_prefs.lifecycle_stalled to disambiguate from
-        // permits.lifecycle_stalled in joins).
-        `SELECT lv.permit_num, lv.revision_num, dt.push_token, up.lifecycle_stalled_pref
-           FROM lead_views lv
-           JOIN device_tokens dt ON dt.user_id = lv.user_id
-           JOIN user_profiles up ON up.user_id = lv.user_id
-          WHERE (lv.permit_num, lv.revision_num) IN (
-                  SELECT * FROM unnest($1::text[], $2::varchar[])
-                )
-            AND lv.saved = true`,
-        [permitNums, revisionNums],
-      );
-      rows = result.rows;
-    } catch (err) {
-      pipeline.log.warn(
-        '[classify-lifecycle-phase/push]',
-        `LIFECYCLE_STALLED batched query failed for ${stalledPermits.length} permits`,
-        { err: err.message },
-      );
-      rows = [];
-    }
-
-    for (const row of rows) {
-      if (!row.lifecycle_stalled_pref) continue;
-      // No schedule gate — stall alerts always deliver immediately
-      messages.push({
-        to: row.push_token,
-        title: 'Delayed',
-        // PIPEDA: no permit_num in body — routing identity in data.entity_id below.
-        body: 'A job you are tracking has been flagged as stalled by the city.',
-        data: {
-          notification_type: 'LIFECYCLE_STALLED',
-          route_domain: 'flight_board',
-          entity_id: `${row.permit_num}--${row.revision_num}`,
-          urgency: 'stalled',
-        },
-      });
+    const valid = stalledPermits.filter((s) => s.permit_num != null && s.revision_num != null);
+    if (valid.length > 0) {
+      let saved;
+      try {
+        const result = await pool.query(
+          `SELECT lv.user_id, lv.permit_num, lv.revision_num, lv.trade_slug
+             FROM lead_views lv
+            WHERE (lv.permit_num, lv.revision_num) IN (
+                    SELECT * FROM unnest($1::text[], $2::varchar[])
+                  )
+              AND lv.saved = true`,
+          [valid.map((s) => s.permit_num), valid.map((s) => s.revision_num)],
+        );
+        saved = result.rows;
+      } catch (err) {
+        pipeline.log.warn(
+          '[classify-lifecycle-phase/enqueue]',
+          `LIFECYCLE_STALLED saved-lead query failed for ${stalledPermits.length} permits`,
+          { err: err.message },
+        );
+        saved = [];
+      }
+      for (const s of saved) {
+        rowsToInsert.push({
+          user_id: s.user_id,
+          type: NOTIF.LIFECYCLE_STALLED,
+          permit_num: s.permit_num,
+          trade_slug: s.trade_slug,
+          title: 'Delayed',
+          body: 'A job you are tracking has been flagged as stalled by the city.',
+          lead_id: `permit:${s.permit_num}:${s.revision_num}`,
+        });
+      }
     }
   }
 
-  if (messages.length === 0) return;
-
-  // Expo Push API accepts up to 100 messages per request
-  for (let i = 0; i < messages.length; i += 100) {
-    const chunk = messages.slice(i, i + 100);
-    try {
-      await callExpoPushApi(chunk);
-    } catch (err) {
-      pipeline.log.warn('[classify-lifecycle-phase/push]', `Expo Push API call failed (${chunk.length} msgs)`, { err: err.message });
-    }
+  await insertNotificationRows(pool, rowsToInsert, RUN_AT);
+  if (rowsToInsert.length > 0) {
+    pipeline.log.info('[classify-lifecycle-phase/enqueue]', `Enqueued ${rowsToInsert.length} phase/stall notification(s)`);
   }
-
-  pipeline.log.info('[classify-lifecycle-phase/push]', `Dispatched ${messages.length} push notification(s)`);
 }
 
-// Dispatches START_DATE_URGENT pushes for permits predicted to start within 7 days.
-// Bypasses the schedule gate (spec §2.2 — urgency override).
-// Runs once per pipeline run after classification — fire-and-forget, MUST NOT abort.
-async function dispatchStartDateUrgentPushes(pool) {
-  const nowMs = Date.now();
+// Enqueues START_DATE_URGENT intent rows for permits predicted to start in the
+// 6-7 day window. The urgency override (no schedule gate) is realised in the
+// dispatcher (START_DATE_URGENT is not schedule-gated). Runs once per run after
+// classification — best-effort, MUST NOT abort.
+//
+// The DISTINCT ON tiebreaker (WF3 2026-05-04) is PRESERVED but now keyed on
+// (permit, revision, user_id) rather than (…, push_token) — the enqueuer emits
+// one row per saved USER, not per device token (the dispatcher fans out to the
+// user's tokens). `tf.predicted_start ASC` still picks the earliest-actionable
+// forecast when multiple trade forecasts share the 6-7 day window.
+async function enqueueStartDateUrgentNotifications(pool, RUN_AT) {
   let rows;
   try {
     const result = await pool.query(
-      // Spec 99 §9.14: read the start_date_urgent column directly.
-      //
-      // WF3 2026-05-04 (review_followups.md classify-lifecycle-phase
-      // bundle): added ORDER BY clause matching the DISTINCT ON tuple +
-      // a tiebreaker. PostgreSQL's `SELECT DISTINCT ON (cols)` without
-      // a matching ORDER BY returns an arbitrary row per group — could
-      // silently drop legitimate subscribers OR return the wrong
-      // predicted_start. The tiebreaker `tf.predicted_start ASC` picks
-      // the earliest predicted_start when a (permit, revision, token)
-      // tuple has multiple forecast rows in the 6-7 day window (rare
-      // but possible across multiple trade forecasts on the same
-      // permit) — earliest date wins because the urgency message is
-      // stated as "starting in N days", and the user wants the
-      // earliest-actionable signal.
-      `SELECT DISTINCT ON (tf.permit_num, tf.revision_num, dt.push_token)
-              tf.permit_num, tf.revision_num, dt.push_token,
-              up.start_date_urgent, tf.predicted_start
+      `SELECT DISTINCT ON (tf.permit_num, tf.revision_num, lv.user_id)
+              lv.user_id, tf.permit_num, tf.revision_num, lv.trade_slug, tf.predicted_start
          FROM trade_forecasts tf
          JOIN lead_views lv
            ON lv.permit_num = tf.permit_num
           AND lv.revision_num = tf.revision_num
           AND lv.saved = true
-         JOIN device_tokens dt ON dt.user_id = lv.user_id
-         JOIN user_profiles up ON up.user_id = lv.user_id
         WHERE tf.predicted_start IS NOT NULL
           AND tf.predicted_start >= NOW() + INTERVAL '6 days'
           AND tf.predicted_start <= NOW() + INTERVAL '7 days'
-        ORDER BY tf.permit_num, tf.revision_num, dt.push_token, tf.predicted_start ASC`,
+        ORDER BY tf.permit_num, tf.revision_num, lv.user_id, tf.predicted_start ASC`,
     );
     rows = result.rows;
   } catch (err) {
-    pipeline.log.warn('[classify-lifecycle-phase/push]', 'START_DATE_URGENT query failed', { err: err.message });
+    pipeline.log.warn('[classify-lifecycle-phase/enqueue]', 'START_DATE_URGENT saved-lead query failed', { err: err.message });
     return;
   }
 
-  const messages = [];
-  for (const row of rows) {
-    if (!row.start_date_urgent) continue;
-    // No schedule gate — start-date alerts bypass the window (spec §2.2)
+  const nowMs = Date.now();
+  const rowsToInsert = rows.map((row) => {
     const daysUntil = Math.ceil(
       (new Date(row.predicted_start).getTime() - nowMs) / (1000 * 60 * 60 * 24),
     );
-    messages.push({
-      to: row.push_token,
+    return {
+      user_id: row.user_id,
+      type: NOTIF.START_DATE_URGENT,
+      permit_num: row.permit_num,
+      trade_slug: row.trade_slug,
       title: 'Work Starting Soon',
-      // PIPEDA: no permit_num in body — routing identity in data.entity_id below.
       body: `A saved job is predicted to start in ${daysUntil} day${daysUntil === 1 ? '' : 's'}.`,
-      data: {
-        notification_type: 'START_DATE_URGENT',
-        route_domain: 'flight_board',
-        entity_id: `${row.permit_num}--${row.revision_num}`,
-        urgency: 'urgent',
-      },
-    });
+      lead_id: `permit:${row.permit_num}:${row.revision_num}`,
+    };
+  });
+
+  await insertNotificationRows(pool, rowsToInsert, RUN_AT);
+  if (rowsToInsert.length > 0) {
+    pipeline.log.info('[classify-lifecycle-phase/enqueue]', `Enqueued ${rowsToInsert.length} START_DATE_URGENT notification(s)`);
   }
-
-  if (messages.length === 0) return;
-
-  for (let i = 0; i < messages.length; i += 100) {
-    const chunk = messages.slice(i, i + 100);
-    try {
-      await callExpoPushApi(chunk);
-    } catch (err) {
-      pipeline.log.warn('[classify-lifecycle-phase/push]', `Expo Push API call failed for START_DATE_URGENT (${chunk.length} msgs)`, { err: err.message });
-    }
-  }
-
-  pipeline.log.info('[classify-lifecycle-phase/push]', `Dispatched ${messages.length} START_DATE_URGENT push notification(s)`);
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1065,9 +946,9 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     // false alerts on the first pipeline run.
     const stalledRows = batch.filter((r) => r.stalled === true && r.old_stalled === false);
     try {
-      await dispatchPhaseChangePushes(pool, transitions, stalledRows);
+      await enqueuePhaseChangeNotifications(pool, transitions, stalledRows, RUN_AT);
     } catch (err) {
-      pipeline.log.warn('[classify-lifecycle-phase/push]', 'dispatchPhaseChangePushes threw unexpectedly', { err: err.message });
+      pipeline.log.warn('[classify-lifecycle-phase/enqueue]', 'enqueuePhaseChangeNotifications threw unexpectedly', { err: err.message });
     }
 
     // Progress log every 50 batches
@@ -1738,11 +1619,11 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
     );
   }
 
-  // START_DATE_URGENT dispatch — fire-and-forget, MUST NOT abort the run.
+  // START_DATE_URGENT enqueue — best-effort, MUST NOT abort the run.
   try {
-    await dispatchStartDateUrgentPushes(pool);
+    await enqueueStartDateUrgentNotifications(pool, RUN_AT);
   } catch (err) {
-    pipeline.log.warn('[classify-lifecycle-phase/push]', 'dispatchStartDateUrgentPushes threw unexpectedly', { err: err.message });
+    pipeline.log.warn('[classify-lifecycle-phase/enqueue]', 'enqueueStartDateUrgentNotifications threw unexpectedly', { err: err.message });
   }
 
   // Phase E.2: audit_table.verdict computed from row statuses per Spec 47 §R10.
@@ -1823,6 +1704,9 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
         'lifecycle_classified_at',
       ],
       universal_stream_catalog: ['seq', 'lifecycle_group', 'lifecycle_block', 'lifecycle_stage', 'phase', 'bid_value', 'source', 'status'],
+      // P25 25A — the notification enqueuer resolves saved subscribers.
+      lead_views: ['user_id', 'permit_num', 'revision_num', 'trade_slug', 'saved'],
+      trade_forecasts: ['permit_num', 'revision_num', 'predicted_start'],
     },
     {
       permits: [
@@ -1841,6 +1725,8 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
       // Phase I.1: lifecycle_status_history ledger writes (Tier 3 per Spec 47 §R9).
       // Both permit-side and CoA-side classifier rows write through this table.
       lifecycle_status_history: ['lead_id', 'from_status', 'to_status', 'from_seq', 'to_seq', 'from_phase', 'to_phase', 'transitioned_at', 'detected_by', 'permit_type', 'coa_type_class', 'project_type'],
+      // P25 25A — the notification enqueuer writes intent rows to the queue.
+      notifications: ['user_id', 'type', 'permit_num', 'trade_slug', 'title', 'body', 'lead_id', 'created_at'],
     },
   );
 

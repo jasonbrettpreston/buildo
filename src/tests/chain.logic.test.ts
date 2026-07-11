@@ -30,7 +30,7 @@ describe('Pipeline Chain Definitions', () => {
     // an actual recurring chain step, not a one-shot operator script.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(32); // +enrich_permits (Spec 66 WF3); +compute_storey_norms (Spec 65 §8 WF3-C1); +compute_build_norms (Spec 78 P1)
+    expect(chain!.steps).toHaveLength(33); // +enrich_permits (Spec 66 WF3); +compute_storey_norms (Spec 65 §8 WF3-C1); +compute_build_norms (Spec 78 P1); +dispatch_notifications (Spec 101 P25 25A, after update_tracked_projects)
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs.indexOf('enrich_permits')).toBe(slugs.indexOf('link_parcels') + 1);
     expect(slugs).not.toContain('enrich_wsib_builders');
@@ -83,7 +83,7 @@ describe('Pipeline Chain Definitions', () => {
     // WF3 2026-04-25 — backup_db appended as final maintenance step (step 28).
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
     const slugs = chain.steps.map((s) => s.slug);
-    const tail = slugs.slice(-9);
+    const tail = slugs.slice(-10);
     expect(tail).toEqual([
       'classify_lifecycle_phase',
       'assert_lifecycle_phase_distribution',
@@ -91,6 +91,7 @@ describe('Pipeline Chain Definitions', () => {
       'compute_trade_forecasts',
       'compute_opportunity_scores',
       'update_tracked_projects',
+      'dispatch_notifications', // Spec 101 P25 25A — the ONE sender, after the enqueuers
       'assert_entity_tracing',
       'assert_global_coverage',
       'backup_db',
@@ -204,7 +205,8 @@ describe('Pipeline Chain Definitions', () => {
     expect(permits!.steps[permits!.steps.length - 2]!.slug).toBe('assert_global_coverage');
     expect(permits!.steps[permits!.steps.length - 3]!.slug).toBe('assert_entity_tracing');
     // WF1 #B 2026-05-09: tail grew by 1 (compute_phase_calibration step 23).
-    expect(permits!.steps[permits!.steps.length - 9]!.slug).toBe('classify_lifecycle_phase');
+    // P25 25A: tail grew by 1 more (dispatch_notifications after update_tracked_projects) → -10.
+    expect(permits!.steps[permits!.steps.length - 10]!.slug).toBe('classify_lifecycle_phase');
   });
 
   it('sources chain ends with assert_engine_health', () => {

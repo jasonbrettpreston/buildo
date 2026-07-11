@@ -82,6 +82,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   compute_trade_forecasts:       { name: 'Trade Forecasts',       group: 'classify' },
   compute_opportunity_scores:    { name: 'Opportunity Scores',    group: 'classify' },
   update_tracked_projects:       { name: 'Update Tracked Projects', group: 'classify' },
+  dispatch_notifications:        { name: 'Dispatch Notifications', group: 'classify' },
   // Snapshot (1) — capture metrics
   refresh_snapshot:   { name: 'Refresh Snapshot',      group: 'snapshot' },
   // Quality (6) — CQA validation
@@ -136,7 +137,7 @@ const STEP_INDENT: Record<string, number> = {
   enrich_permits: 1, link_neighbourhoods: 1, link_massing: 1, link_similar: 1,
   classify_permits: 1, compute_storey_norms: 1, compute_build_norms: 1, backfill_realtor_permit_trades: 1, compute_cost_estimates: 1, compute_parcel_cost_estimates: 1,
   compute_timing_calibration_v2: 1, link_coa: 1, refresh_snapshot: 1,
-  compute_trade_forecasts: 1, compute_opportunity_scores: 1, update_tracked_projects: 1,
+  compute_trade_forecasts: 1, compute_opportunity_scores: 1, update_tracked_projects: 1, dispatch_notifications: 1,
   link_coa_to_parcels: 1, enrich_coa_zoning: 1, classify_coa_scope: 1, classify_coa_trades: 1,
   compute_coa_cost_estimates: 1, link_parcel_addresses: 1, compute_centroids: 1,
   enrich_ravines: 1, enrich_heritage: 1, enrich_centreline: 1, enrich_parcels: 1,
