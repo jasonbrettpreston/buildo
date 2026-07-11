@@ -63,18 +63,26 @@ export function ControlPanelShell() {
   }
 
   async function handleConfirm() {
+    // Phase 1 — persist the draft to the DB.
+    // On failure: keep modal open + preserve draft (user can retry or discard).
+    // admin_gravity_save_failed telemetry is fired in useUpdateConfigs.onError;
+    // admin_gravity_adjusted telemetry is fired in useUpdateConfigs.onSuccess.
     try {
-      // useUpdateConfigs calls computeDiff() internally — no arg needed.
-      // admin_gravity_save_failed telemetry is fired in useUpdateConfigs.onError;
-      // admin_gravity_adjusted telemetry is fired in useUpdateConfigs.onSuccess.
-      // Do not duplicate either here.
       await applyUpdate();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      toast.error(`Failed to save: ${msg}`);
+      return; // keep modal open; draft preserved for retry
+    }
+
+    // Phase 2 — trigger the pipeline.
+    // Save already succeeded; close the modal regardless of pipeline outcome.
+    setShowConfirm(false);
+    try {
       await triggerPipeline();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      toast.error(`Failed to apply: ${msg}`);
-    } finally {
-      setShowConfirm(false);
+      toast.warning(`Saved — but pipeline trigger failed: ${msg}`);
     }
   }
 

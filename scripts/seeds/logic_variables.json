@@ -433,6 +433,13 @@
     "min": 0,
     "max": 100000
   },
+  "lifecycle_status_history_retention_days": {
+    "default": 1825,
+    "type": "number",
+    "description": "Days to retain rows in lifecycle_status_history (default 1825 = 5 years per Spec 86 §1). Long retention supports forecast cohort segmentation by traversal pattern across the median 1,078-day CoA→permit lag. Hard floor: must be ≥ 730 to support typical CoA cohort learning. Seeded in DB by mig 136.",
+    "min": 730,
+    "max": 3650
+  },
   "scraper_error_rate_warn_pct": {
     "default": 5,
     "type": "number",

@@ -10,6 +10,7 @@ import {
   TradeConfigUpdateSchema,
   ScopeMatrixUpdateSchema,
 } from '@/lib/admin/control-panel';
+import { GROUPS, JSON_KEYS } from '@/features/admin-controls/components/GlobalConfigCard';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
@@ -250,6 +251,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'p16_inference_layer_enabled',
   // P16 16E — provenance weight for inference-basis forecast inputs (0.5× default).
   'inference_weight',
+  // Spec 86 §1 — lifecycle_status_history ledger retention (mig 136, default 1825 = 5 years).
+  // Added to seeds JSON in P20 GROUPS reconciliation (v3 CRIT-4 gap discovery).
+  'lifecycle_status_history_retention_days',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
@@ -264,6 +268,34 @@ describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
       (k) => !EXPECTED_LOGIC_VAR_KEYS.includes(k),
     );
     expect(extra).toHaveLength(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GROUPS reconciliation — GROUPS (numeric) ⊆ logic_variables.json
+//
+// Guards against the drift where a key is added to GlobalConfigCard's GROUPS
+// but its default is never registered in seeds JSON (the SSoT for LOGIC_VAR_DEFAULTS).
+// A missing seed default means the control-panel PUT would silently accept a
+// draft value that has no registered baseline — the Delta Guard and fallback
+// config-loader would both see an undefined default and produce incorrect guards.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('GROUPS reconciliation — GlobalConfigCard GROUPS ⊆ logic_variables.json keys', () => {
+  const jsonPath = path.join(REPO_ROOT, 'scripts', 'seeds', 'logic_variables.json');
+
+  type LogicVarMeta = { default: number; type: string };
+  let jsonData: Record<string, LogicVarMeta> = {};
+  try {
+    jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8')) as Record<string, LogicVarMeta>;
+  } catch { /* handled by the readable test below */ }
+
+  const allGroupNumericKeys = GROUPS.flatMap((g) => g.keys).filter((k) => !JSON_KEYS.has(k));
+
+  it('all numeric GROUPS keys exist in logic_variables.json', () => {
+    for (const key of allGroupNumericKeys) {
+      expect(jsonData, `GROUPS key "${key}" missing from logic_variables.json`).toHaveProperty(key);
+    }
   });
 });
 

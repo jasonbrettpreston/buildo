@@ -15,8 +15,12 @@ import { DeltaGuardInput } from './DeltaGuardInput';
 import { JsonTiersEditor } from './JsonTiersEditor';
 import { useAdminControlsStore } from '../store/useAdminControlsStore';
 
-/** Logical groups for display — covers all numeric keys + income_premium_tiers. */
-const GROUPS: Array<{ label: string; keys: string[] }> = [
+/**
+ * Logical groups for display — covers all numeric keys + income_premium_tiers.
+ * EXPORTED for the reconciliation test in src/tests/control-panel.logic.test.ts,
+ * which asserts: all GROUPS numeric keys (excluding JSON_KEYS) ⊆ logic_variables.json.
+ */
+export const GROUPS: Array<{ label: string; keys: string[] }> = [
   {
     label: 'Lead Scoring',
     keys: [
@@ -95,6 +99,10 @@ const GROUPS: Array<{ label: string; keys: string[] }> = [
       'coa_match_conf_medium',
       'snapshot_coa_conf_high',
       'coa_freshness_warn_days',
+      // Phase F.2 — CRM CoA stall thresholds + imminent-alert window (mig 136 + mig 154).
+      // coa_stall_threshold_p2_days: distinct from coa_stall_threshold (P1 intake stall).
+      'coa_stall_threshold_p2_days',
+      'coa_imminent_window_days',
     ],
   },
   {
@@ -149,10 +157,20 @@ const GROUPS: Array<{ label: string; keys: string[] }> = [
     ],
   },
   {
+    // Spec 86 §1 — lifecycle_status_history ledger retention policy.
+    // Default 1825 (5 years) to support CoA cohort segmentation. Seeded by mig 136.
+    label: 'Lifecycle Ledger',
+    keys: [
+      'lifecycle_status_history_retention_days',
+    ],
+  },
+  {
     // Spec 84 §3.4 — distribution bands consumed by
-    // scripts/quality/assert-lifecycle-phase-distribution.js. Tunable
-    // here so operators can widen/tighten bands without a code deploy
+    // scripts/quality/assert-lifecycle-phase-distribution.js via PHASE_TO_LOGIC_VAR_SUFFIX.
+    // Tunable here so operators can widen/tighten bands without a code deploy
     // when fresh CKAN data shifts the snapshot.
+    // NOTE: lifecycle_seq_band_<N>_min/_max (×220) are rendered dynamically below
+    // these static groups — they are too numerous to hardcode here.
     label: 'Lifecycle Phase Distribution Bands',
     keys: [
       // Cross-status drift thresholds (Strangler Fig: enriched_status vs lifecycle_*)
@@ -187,7 +205,8 @@ const GROUPS: Array<{ label: string; keys: string[] }> = [
   },
 ];
 
-const JSON_KEYS = new Set(['income_premium_tiers']);
+/** EXPORTED for reconciliation test — keys rendered via JsonTiersEditor, not DeltaGuardInput. */
+export const JSON_KEYS = new Set(['income_premium_tiers']);
 
 /**
  * Returns an appropriate input step for a given logic_variable key.
@@ -208,7 +227,7 @@ function stepFor(key: string): number {
   // Lifecycle band/threshold keys are integer row counts, not ratios.
   // Must short-circuit BEFORE the "_threshold" includes() check below
   // (which would otherwise return 0.01 — wrong step for counts in the thousands).
-  if (key.startsWith('lifecycle_band_') || key.startsWith('lifecycle_cross_')) return 1;
+  if (key.startsWith('lifecycle_band_') || key.startsWith('lifecycle_cross_') || key.startsWith('lifecycle_seq_band_')) return 1;
   if (
     key.endsWith('_conf') ||
     key.endsWith('_conf_high') ||
@@ -227,10 +246,25 @@ interface GlobalConfigCardProps {
   variables: LogicVariableRow[];
 }
 
+// Regex that matches lifecycle_seq_band_<N>_min / lifecycle_seq_band_<N>_max keys.
+// These are seeded via mig 148 (one pair per Universal Stream catalog seq) — too
+// numerous to hardcode in GROUPS; rendered dynamically from the DB-loaded variables prop.
+const SEQ_BAND_PATTERN = /^lifecycle_seq_band_(\d+)_(min|max)$/;
+
 export function GlobalConfigCard({ variables }: GlobalConfigCardProps) {
   const updateDraftLogicVar = useAdminControlsStore((s) => s.updateDraftLogicVar);
 
   const byKey = new Map(variables.map((v) => [v.key, v]));
+
+  // Build sorted seq-number list for dynamic rendering (empty if no seq-band keys present).
+  const seqBandSeqs: number[] = React.useMemo(() => {
+    const seqs = new Set<number>();
+    for (const v of variables) {
+      const m = SEQ_BAND_PATTERN.exec(v.key);
+      if (m) seqs.add(Number(m[1]));
+    }
+    return Array.from(seqs).sort((a, b) => a - b);
+  }, [variables]);
 
   return (
     <div className="space-y-6">
@@ -277,6 +311,57 @@ export function GlobalConfigCard({ variables }: GlobalConfigCardProps) {
           </div>
         </section>
       ))}
+
+      {/* Dynamic seq-band section — lifecycle_seq_band_<N>_min/_max (×220 max).
+          Rendered only when the DB-loaded variables contain seq-band keys (mig 148). */}
+      {seqBandSeqs.length > 0 && (
+        <section aria-label="Lifecycle Seq Bands">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 border-b border-gray-100 pb-1">
+            Lifecycle Seq Bands
+            <span className="ml-2 normal-case font-normal text-gray-400">
+              ({seqBandSeqs.length} seqs — consumed by assert-lifecycle-phase-distribution.js)
+            </span>
+          </h3>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {seqBandSeqs.map((seq) => {
+              const minKey = `lifecycle_seq_band_${seq}_min`;
+              const maxKey = `lifecycle_seq_band_${seq}_max`;
+              const minRow = byKey.get(minKey);
+              const maxRow = byKey.get(maxKey);
+              return (
+                <React.Fragment key={seq}>
+                  {minRow && (
+                    <div className="pt-5">
+                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        {minKey}
+                      </label>
+                      <DeltaGuardInput
+                        varKey={minKey}
+                        value={minRow.value ?? 0}
+                        onChange={(val) => updateDraftLogicVar(minKey, val)}
+                        step={1}
+                      />
+                    </div>
+                  )}
+                  {maxRow && (
+                    <div className="pt-5">
+                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        {maxKey}
+                      </label>
+                      <DeltaGuardInput
+                        varKey={maxKey}
+                        value={maxRow.value ?? 0}
+                        onChange={(val) => updateDraftLogicVar(maxKey, val)}
+                        step={1}
+                      />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

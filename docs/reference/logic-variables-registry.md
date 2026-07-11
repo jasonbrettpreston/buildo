@@ -7,7 +7,7 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (408) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (408) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 13 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (3) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
@@ -372,7 +372,7 @@ Total: **411** logic variables (408 numeric, 3 JSONB).
 | `lifecycle_seq_band_promote_to_fail_expected_data_missing` | numeric | 0 | 0 – 1 | `scripts/quality/assert-lifecycle-phase-distribution.js` | seed | Phase E.5 gate for `expected_data_missing` kind (band has min > 0 but zero observed rows — possible data deletion or classifier-skip). 0=WARN (default); 1=FAIL (after verifying no structurally-absent seqs remain; see Spec 84 §3.4 structural-absence resolution path). |
 | `lifecycle_seq_band_promote_to_fail_no_band_configured` | numeric | 0 | 0 – 1 | `scripts/quality/assert-lifecycle-phase-distribution.js` | seed | Phase E.5 gate for `no_band_configured` kind (seq present in data but no band loaded — operator config gap). 0=WARN (default); 1=FAIL (rare). See Spec 84 §3.4. |
 | `lifecycle_seq_unclassified_max` | numeric | 5000 | 0 – 100000 | `scripts/quality/assert-lifecycle-phase-distribution.js` | seed | Max row count where lifecycle_seq IS NULL on permits or coa_applications. WARN threshold (E.4); Phase D + E.2 first-run state expected to violate. Tighten via E.5 after ramp-up. |
-| `lifecycle_status_history_retention_days` | numeric | 1825 | — (migration-seeded) | — | migration 136 | Default 5 years per Spec 86 §1; lifecycle_status_history rows older than this can be archived |
+| `lifecycle_status_history_retention_days` | numeric | 1825 | 730 – 3650 | — | seed | Days to retain rows in lifecycle_status_history (default 1825 = 5 years per Spec 86 §1). Long retention supports forecast cohort segmentation by traversal pattern across the median 1,078-day CoA→permit lag. Hard floor: must be ≥ 730 to support typical CoA cohort learning. Seeded in DB by mig 136. |
 | `lifecycle_unclassified_max` | numeric | 100 | 0 – 10000 | `scripts/quality/assert-lifecycle-phase-distribution.js` | seed | Maximum number of non-terminal permits/CoAs with a NULL lifecycle_phase before assert-lifecycle-phase-distribution emits a FAIL (strongest correctness gate) |
 | `los_base_cap` | numeric | 30 | 1 – 100 | `scripts/compute-opportunity-scores.js` | seed | Maximum LoS base score before multipliers are applied |
 | `los_base_divisor` | numeric | 10000 | 100 – 100000 | `scripts/compute-opportunity-scores.js` | seed | Divisor applied to construction cost when computing the LoS base score |
@@ -433,4 +433,4 @@ Total: **411** logic variables (408 numeric, 3 JSONB).
 
 ---
 
-*Generated from 397 seed vars + 14 migration-only vars + 102 consumer-mapped keys across 2 script dirs.*
+*Generated from 398 seed vars + 13 migration-only vars + 102 consumer-mapped keys across 2 script dirs.*

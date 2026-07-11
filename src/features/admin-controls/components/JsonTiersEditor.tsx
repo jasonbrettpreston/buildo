@@ -42,8 +42,14 @@ export function JsonTiersEditor({ value, onChange }: JsonTiersEditorProps) {
       const coerced = parsed as Record<string, unknown>;
       const result: Record<string, number> = {};
       for (const [k, v] of Object.entries(coerced)) {
-        if (typeof v !== 'number' || !Number.isFinite(v)) {
-          setParseError(`Value for key "${k}" must be a finite number`);
+        // Keys must be positive integer strings (income thresholds in CAD)
+        const parsed_k = parseInt(k, 10);
+        if (!Number.isInteger(parsed_k) || parsed_k <= 0 || String(parsed_k) !== k) {
+          setParseError(`Key "${k}" must be a positive integer string (e.g. "100000")`);
+          return;
+        }
+        if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) {
+          setParseError(`Value for key "${k}" must be a positive finite number`);
           return;
         }
         result[k] = v;
