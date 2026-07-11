@@ -1,4 +1,6 @@
-// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.4 + §2.4
+// 🔗 SPEC LINK: docs/specs/02-web-admin/36_flight_center_tool.md §2 + §4
+// (Phase 18 re-point: the admin-uid sentinel is consumed by the standalone
+//  Spec 36 Flight Center — its former Spec 76 §3.4 home moved to Spec 36.)
 //
 // Logic test for the admin-uid sentinel resolver. Coverage: default,
 // env-var override, env-var trim/empty fallback.

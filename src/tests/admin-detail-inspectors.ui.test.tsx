@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.5 + §3.6
+// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.5 (Lead Detail Inspector)
+//             docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.3.1 (Flight Job Detail — integration home Spec 36)
 //             docs/specs/02-web-admin/34_web_admin_testing_protocol.md §4.1
+// (Phase 18 re-point: §3.5 stays in Spec 76; the §3.6 Flight-Center integration moved to Spec 36.)
 //
 // UI tests for <LeadDetailInspector> and <FlightJobDetailInspector>.
 // Three render states each (idle / loading / result-or-error) + the

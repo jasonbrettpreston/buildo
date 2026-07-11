@@ -133,7 +133,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     // logs. Production keeps the canned message to avoid leaking internals.
     // Dev-mode messages are passed through `sanitizePgErrorMessage` to
     // strip any pg connection-string credentials (node-postgres#3145).
-    // Matches the pattern in /api/admin/leads/health/route.ts.
+    // (Phase 18: the prior reference to /api/admin/leads/health/route.ts was
+    // stale — that health route was never built; see Spec 76 §3.1 DEFERRED.)
     const message = process.env.NODE_ENV === 'production'
       ? 'Feed query failed'
       : sanitizePgErrorMessage(error.message);

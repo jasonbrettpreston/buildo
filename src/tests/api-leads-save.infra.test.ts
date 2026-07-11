@@ -1,6 +1,8 @@
-// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.4
+// 🔗 SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §3.2 (Save Mutation)
 //             docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.1
-//             docs/specs/03-mobile/91_mobile_lead_feed.md §3.2
+// (Phase 18 re-point: /api/leads/save is the mobile consumer save; the former
+//  Spec 76 §3.4 Flight-Center home moved to Spec 36 and admin saves now use
+//  /api/admin/leads/watchlist — this consumer route is Spec 91/77 only.)
 //
 // Infra tests for POST /api/leads/save. Covers the `{lead_id, lead_type,
 // saved}` body contract, lead_id parsing for both permits + builders,

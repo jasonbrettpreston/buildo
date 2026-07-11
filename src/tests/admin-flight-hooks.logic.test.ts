@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
-// 🔗 SPEC LINK: docs/specs/02-web-admin/76_lead_feed_health_dashboard.md §3.5 + §3.6
+// 🔗 SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.3.1 (LeadDetail hook)
+//             docs/specs/03-mobile/77_mobile_crm_flight_board.md §3.3.1 (FlightBoardDetail hook — integration home Spec 36)
 //             docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §5 + §13
+// (Phase 18 re-point: the flight hooks' Spec 76 §3.5/§3.6 home moved to the mobile contracts + Spec 36.)
 //
 // Hook tests for the SURVIVING admin-flight-center detail hooks
 // (useFlightBoardDetail, useLeadDetail — their routes are unchanged by

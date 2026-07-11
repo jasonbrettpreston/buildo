@@ -2,11 +2,13 @@ import { Pool, PoolClient, QueryResultRow } from 'pg';
 import { logError } from '@/lib/logger';
 
 // Pool sizing: default is 10, which is too small for admin dashboard
-// routes that fan out 10-20 parallel COUNT queries (`getLeadFeedReadiness`
-// runs ~8 after consolidation, plus getCostCoverage + getEngagement = 12
-// per /api/admin/leads/health request). With default 10 + connectionTimeoutMillis
-// 5000, the overflow queries time out with "timeout exceeded when trying to
-// connect" before the primary batch finishes. WF3 2026-04-10 regression fix.
+// routes that fan out 10-20 parallel COUNT queries (e.g. the admin stats +
+// coverage endpoints run ~12 aggregate queries per request). With default 10
+// + connectionTimeoutMillis 5000, the overflow queries time out with "timeout
+// exceeded when trying to connect" before the primary batch finishes. WF3
+// 2026-04-10 regression fix. (Phase 18: the prior `getLeadFeedReadiness` /
+// `/api/admin/leads/health` reference was stale — that health route was never
+// built; see Spec 76 §3.1 DEFERRED.)
 //
 // 20 leaves headroom for: ~12 readiness queries + 2-3 concurrent requests
 // + transaction clients from pipeline scripts. Postgres default max_connections

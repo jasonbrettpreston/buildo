@@ -9,10 +9,12 @@ The suite has four distinct sub-tools (added 2026-05-06 by Cycle 3 amendment):
 
 | Sub-tool | Section | Mirror of mobile screen | Endpoint(s) probed |
 |---|---|---|---|
-| **Test Feed Tool** | §3.2, §3.3 | `(app)/index.tsx` lead feed | `GET /api/admin/leads/test-feed` |
-| **Flight Center Tool** | §3.4 | `(app)/flight-board.tsx` saved board | `GET /api/leads/flight-board`, `POST /api/leads/save` |
-| **Lead Detail Inspector** | §3.5 | `(app)/[lead].tsx` (Spec 91 §4.3) | `GET /api/leads/detail/:id` |
-| **Flight Job Detail Inspector** | §3.6 | `(app)/[flight-job].tsx` (Spec 77 §3.3) | `GET /api/leads/flight-board/detail/:id` |
+| **Feed Browser** (was Test Feed Tool) | §3.2 | `(app)/index.tsx` lead feed | `GET /api/admin/leads/test-feed` + `GET/POST /api/admin/leads/watchlist` |
+| **Flight Center Tool** → **MOVED to Spec 36** | ~~§3.4~~ | `(app)/flight-board.tsx` saved board | `/api/admin/leads/watchlist**` (`admin_watchlist`) |
+| **Lead Detail Inspector** | §3.5 | `(app)/[lead].tsx` (Spec 91 §4.3) | `GET /api/admin/leads/inspect/:id` (admin-scoped, Cycle 7/8) |
+| **Flight Job Detail Inspector** | §3.6 (integration → Spec 36) | `(app)/[flight-job].tsx` (Spec 77 §3.3) | `GET /api/leads/flight-board/detail/:id` |
+
+> **Phase 18 audit (2026-07-10):** the §3.1/§3.3 **Lead Feed Health dashboard was never built** (DEFER + PRUNE); the §3.4/§3.6 **Flight Center** was promoted to the standalone **Spec 36** tool. This spec's live surfaces are the **Feed Browser (§3.2)** and the **Lead Detail Inspector + CoA panel (§3.5)**.
 
 **User Story:** as an admin, I need to be able to (a) run a feed query without a mobile device to verify the algorithm, (b) save permits to my own admin-scoped flight board so I can validate the save → flight-board flow end-to-end, and (c) directly inspect either of the two detail endpoints by pasting a `lead_id` so I can spot-check the `cost_estimates` join (LeadDetail), the `temporal_group` classification (FlightBoardDetail), or the cold-boot deep-link path that WF1-B unblocked.
 
@@ -117,6 +119,16 @@ The test-feed endpoint does NOT require a `user_profiles` entry — it construct
 
 ### 3.1 Lead Feed Health Endpoint
 
+> **DEFERRED — NEVER BUILT (Phase 18 audit, 2026-07-10).** The health endpoint
+> `GET /api/admin/leads/health` and its query lib `src/lib/admin/lead-feed-health.ts`
+> were specced (Cycle 1) but never implemented — no route, lib, or dashboard exists
+> on disk. The metrics it would surface largely duplicate `assert-global-coverage.js`
+> (step 27), the Step Output Inspector, and `/api/admin/stats`. Decision 3 (Phase 18):
+> **DEFER + PRUNE** — this section is retained as a design record; if the live health
+> dashboard is wanted later it is a clean standalone WF1 (traffic-light precedence +
+> a DB-load/indexing analysis for the 10s-poll aggregates attached). The §3.1/§3.3
+> contract below is NOT a live surface.
+
 - **Inputs:** Admin auth (cookie or header). No query params.
 - **Core Logic:**
   1. Query `data_quality_snapshots` for latest row (cost/timing columns)
@@ -130,13 +142,14 @@ The test-feed endpoint does NOT require a `user_profiles` entry — it construct
   - cost_estimates table empty → `cost_coverage.total = 0`, `feed_ready_pct` drops (cost pillar missing)
   - timing_calibration empty → `timing_types_calibrated = 0`, `timing_freshness_hours = null`
 
-### 3.2 Test Feed Endpoint
+### 3.2 Test Feed Endpoint + Feed Browser
 
-- **Inputs:** Admin auth + query params: `lat`, `lng`, `trade_slug`, `radius_km` (default 10), `limit` (default 15)
+- **Inputs:** Admin auth + query params: `lat`, `lng`, `trade_slug`, `radius_km` (default 10, Zod-clamped to `MAX_RADIUS_KM`), `limit` (default 15, clamped to `MAX_FEED_LIMIT`), `lead_type` (`all` | `permit` | `coa`, default `all` — Spec 91 §3.1 filter axis).
+- **Auth:** `verifyAdminAuth(request)` is the FIRST line of the handler (Spec 33 §8 per-route guard, added Phase 18 — the endpoint powers a real browsing surface, so route classification alone is not defense-in-depth). It still bypasses `getCurrentUserContext` and synthesizes the feed input.
 - **Core Logic:**
-  1. Validate params with Zod (same schema as `/api/leads/feed` minus the cursor)
+  1. Verify admin auth; then validate params with Zod (same schema as `/api/leads/feed` minus the cursor, plus `lead_type`)
   2. **Pre-flight:** verify PostGIS extension is installed via `isPostgisAvailable(pool)`. If missing (local dev without the extension), short-circuit to `503 DEV_ENV_MISSING_POSTGIS` with install instructions. Production Cloud SQL has PostGIS so this path is a cache hit in prod.
-  3. Construct `LeadFeedInput` with a synthetic `user_id = 'admin-test'`
+  3. Construct `LeadFeedInput` with a synthetic `user_id = 'admin-test'`, forwarding `lead_type` and `disableCoa: false` — the CoA UNION arm is enabled for the browser (the killswitch default-OFF is a mobile-renderability gate, not a data gate; the CoA arm is written, tested, and data-live). The `lead_type` axis still scopes which arms appear.
   4. Call `getLeadFeed(input, pool)` — same function the real feed uses
   5. Compute `_debug` block from results: score stats, pillar averages, coverage metrics
   6. Return full response with debug overlay
@@ -145,11 +158,30 @@ The test-feed endpoint does NOT require a `user_profiles` entry — it construct
   - No permits in radius → `data: []`, `_debug.permits_in_radius: 0`
   - Invalid trade_slug → 400 with field-level error
   - Trade has no permits → empty results (valid, shows feed gap)
-  - `is_saved` field on LeadFeedItem always `false` for admin-test user (the `lead_views.saved` DB column has no rows for synthetic user_id)
+  - `is_saved` field on LeadFeedItem always `false` for admin-test user (the `lead_views.saved` DB column has no rows for synthetic user_id) — the Feed Browser therefore reads saved-state from `admin_watchlist` instead (see below), NOT from `is_saved`.
   - **PostGIS missing (dev only):** 503 with `code: 'DEV_ENV_MISSING_POSTGIS'` and a message describing OS-level install steps. The production Cloud SQL instance has PostGIS by default.
-  - **Runtime query error:** 500 with sanitized dev-mode message (via `sanitizePgErrorMessage`), production returns the canned `"Feed query failed"`. Added WF3 2026-04-11 to close the last opaque-500 in the Lead Feed Health endpoints.
+  - **Runtime query error:** 500 with sanitized dev-mode message (via `sanitizePgErrorMessage`), production returns the canned `"Feed query failed"`. Added WF3 2026-04-11 to close the last opaque-500 in the feed endpoints.
+  - **Unauthenticated:** 401 `UNAUTHORIZED` from the first-line guard.
+
+#### 3.2.1 Feed Browser UI (Phase 18, 2026-07-10)
+
+`<TestFeedTool>` (mounted at `/admin/lead-feed`) is the admin **Feed Browser**. It is a SINGLE-trade, single-point geographic simulation — NOT the full lead corpus — and states that scope explicitly ("Viewing as {trade} @ {lat}, {lng} within {radius} km — single-trade + single-point scope") so an operator never mistakes a partial result for a data gap.
+
+- **Controls:** lat / lng (number), trade (native select), `lead_type` (native select: All / Permit / CoA), radius (range). "Run Test Query" fires the request (on-demand; no polling).
+- **Results:** a dense table (Spec 33 §9) — one row per lead with Type / ID / Address / Score / Actions.
+- **Inspect click-through:** each row's canonical lead_id is derived via `feedLeadIdToCanonical` (the feed emits bare `NUM:REV` for permits, so `permit:` is prepended; `coa:APP` ids pass through) then translated to the Lead Detail Inspector URL segment via `leadIdToInspectorSegment` (`src/lib/admin/lead-id-inspector.ts` — the ONE translation source, shared with `LeadDetailInspector.handleNavigate`). Builder rows and malformed ids get no link.
+- **Save:** the Save action POSTs to the EXISTING `POST /api/admin/leads/watchlist` (Spec 36 `admin_watchlist`; Decision 2A — NOT the consumer `POST /api/leads/save`). Idempotent (`ON CONFLICT DO NOTHING`). Builders are not persistable (permit/coa only).
+- **Saved-state:** on each query the browser reads `GET /api/admin/leads/watchlist` and marks rows whose canonical key (`permit:NUM:REV` / `coa:APP`) is already on the board (✓ Saved). This read is best-effort + isolated — a watchlist failure never blanks the freshly-loaded feed.
 
 ### 3.3 Dashboard UI
+
+> **DEFERRED — NEVER BUILT (Phase 18 audit, 2026-07-10).** `LeadFeedHealthDashboard.tsx`
+> and the 10s-poll traffic-light UI described below do not exist on disk. `/admin/lead-feed`
+> renders only `<TestFeedTool>` (the §3.2 Feed Browser). The traffic-light /
+> cost-coverage / servable-funnel spec below is preserved as the design record for the
+> deferred build (Decision 3). It is NOT a live surface — the CoA cost-coverage and
+> servable-funnel metrics it references are emitted to `pipeline_runs` by
+> `refresh-snapshot.js`, not to a request-time dashboard.
 
 - **Inputs:** Admin navigates to `/admin/lead-feed`
 - **Core Logic:**
@@ -270,26 +302,30 @@ When the inspector loads a lead with `lead_id LIKE 'coa:%'` (or a permit lead wi
 
 Implementation hand-off: data layer at `src/lib/leads/lead-inspect-query.ts` adds the CoA-side JOIN; UI component at `src/components/admin/lead-inspector/CoaClassificationPanel.tsx` (NEW).
 
-**Goal (preserved from Cycle 3):** admin pastes a `lead_id` (or selects from the Test Feed Tool result set), sees the full Spec 91 §4.3 `LeadDetail` payload — `cost.modeled_gfa_sqm`, `cost.range_low`/`range_high`, `neighbourhood.avg_household_income`, `target_window`, `opportunity_score`, `competition_count`, `applicant`, `work_description`, `is_saved` (scoped to the admin uid).
-
-**Endpoint:** `GET /api/leads/detail/:id` (Spec 91 §4.3.1). Reuses unmodified — admin auth bypass already exists per §2.6 pattern.
-
-**Use cases:**
-- Verify the `is_saved` SQL change from WF1-A (commit `657faf8`) for a known permit.
-- Spot-check `cost_estimates` join quality for a specific permit (mirror of the data-quality dashboard but for the rendered shape).
-- Confirm `target_window` / `opportunity_score` / `competition_count` for a permit an admin is investigating from a customer support ticket.
-- Validate the `LeadDetailSchema` (Zod) parses cleanly against the actual server payload — catches schema-vs-server drift WF1-A's deploy-skew test guards in unit tests but doesn't catch in production.
-
-**UI:** form with `lead_id` text input (accepts `${permit_num}--${revision_num}` for permits, `COA-${app_number}` for CoA — same shape Spec 91 §4.3.1 documents). "Inspect" button → renders the `LeadDetail` shape in a JSON tree view + a structured side-by-side rendering of the rendered fields.
-
-**Edge cases:**
-- Invalid `lead_id` shape → 400 from endpoint; UI shows the validation error verbatim.
-- Permit not on user's saved board (404 from endpoint per Spec 91 §4.3.1 — backend uses `lead_views.saved=true` LATERAL filter): for the admin-scoped variant, the admin's own save state is what matters. **NOTE:** Spec 91 §4.3.1 `LeadDetail` endpoint is `lead_views`-scoped (returns 404 if the user hasn't saved the permit). The Lead Detail Inspector therefore inherits this scoping — admin must save the permit via §3.4 first, OR a future amendment relaxes the LATERAL gate for admin auth. For Cycle 3 the inspector documents this constraint; deeper change is out of scope.
-- Schema drift (server returns malformed payload) → Zod parse fails; UI shows the parse error + raw response side-by-side for debugging.
+> **STALE Cycle-3 pass-through RETIRED (Phase 18 audit, 2026-07-10).** The
+> original §3.5 documented a thin pass-through to `GET /api/leads/detail/:id`
+> (Spec 91 §4.3.1) that was `lead_views.saved=true`-scoped — which forced the
+> caveat "admin must save the permit via §3.4 first". That is FALSE for the
+> shipped inspector: the Cycle 7/8 tool consumes the admin-only, admin-scoped
+> `GET /api/admin/leads/inspect/:id` (documented above), which reads ANY
+> permit/CoA with NO save-first gate and NO `admin-test` sentinel. The stale
+> "save via §3.4 first" edge case, the `/api/leads/detail/:id` endpoint line,
+> and the Cycle-3 `is_saved`/`admin-test` references are removed. The live
+> behaviour is the 8-panel + CoA-panel diagnostic shape specified in the
+> Cycle 7/8 amendments above. `is_saved` in the inspector is `saved_by_admin`
+> (admin-scoped `admin_watchlist` state), not the mobile consumer flag.
 
 ### 3.6 Flight Job Detail Inspector (NEW — Cycle 3 amendment 2026-05-06)
 
-**Goal:** admin pastes a `lead_id` (or taps a card from §3.4 Flight Center), sees the Spec 77 §3.3.1 `FlightBoardDetail` payload — list-item shape (permit_num, revision_num, address, lifecycle_phase, lifecycle_stalled, predicted_start, p25_days, p75_days, temporal_group) plus `updated_at`.
+> **Flight Center scope moved to Spec 36 (Phase 18, 2026-07-10).** The card-tap
+> entry point referenced below (§3.4 Flight Center) is now the standalone Spec 36
+> tool (`/admin/flight-center`, `admin_watchlist`). The `FlightJobDetailInspector`
+> component + its `useFlightBoardDetail` hook remain, probing the Spec 77 §3.3.1
+> `FlightBoardDetail` contract; their spec home for the Flight-Center integration
+> is **Spec 36**. This section is retained for the endpoint-shape contrast with
+> §3.5. The FlightBoardDetail contract itself is owned by Spec 77 §3.3.1.
+
+**Goal:** admin pastes a `lead_id` (or taps a card from the Flight Center — Spec 36), sees the Spec 77 §3.3.1 `FlightBoardDetail` payload — list-item shape (permit_num, revision_num, address, lifecycle_phase, lifecycle_stalled, predicted_start, p25_days, p75_days, temporal_group) plus `updated_at`.
 
 **Endpoint:** `GET /api/leads/flight-board/detail/:id` (Spec 77 §3.3.1). Reuses unmodified.
 
@@ -343,9 +379,15 @@ For the admin Test Feed Tool / Flight Center this means: there's nothing to expo
 <testing>
 ## 4. Testing Mandate
 <!-- TEST_INJECT_START -->
-- **Logic:** `lead-feed-health.logic.test.ts` — readiness calculation (3-way intersection), engagement aggregation, cost coverage math, edge cases (empty tables, null values)
-- **Infra:** `lead-feed-health.infra.test.ts` — API route shape (response envelope, auth enforcement, Zod validation on test-feed params)
-- **UI:** `LeadFeedHealthDashboard.ui.test.tsx` — readiness gauge rendering, traffic light states, engagement chart data, test feed form interaction, loading/error states, mobile viewport (375px)
+Aligned to the tests ACTUALLY on disk (Phase 18, 2026-07-10). The §3.1/§3.3
+health-dashboard tests (`lead-feed-health.*`, `LeadFeedHealthDashboard.ui`) were
+never authored because the surface was never built (see §3.1/§3.3 DEFERRED).
+- **Infra (Feed Browser):** `test-feed.infra.test.ts` — route file shape: `verifyAdminAuth` before params, Zod (`lead_type` enum, radius/limit clamps), `disableCoa: false`, PostGIS pre-flight ordering, envelope + error handling.
+- **Logic (debug):** `test-feed-utils.logic.test.ts` — `computeTestFeedDebug` score-distribution / pillar-average math + edge cases.
+- **UI (Feed Browser):** `TestFeedTool.ui.test.tsx` — form + `lead_type` axis, scope statement, dense table, inspect click-through (permit→`NUM--REV`, coa→`COA-APP`), watchlist saved-state + Save POST, loading/error states, 375px viewport.
+- **UI (Lead Detail + Flight Job inspectors):** `admin-detail-inspectors.ui.test.tsx` — three render states, deep-link reactivity, cross-stream navigation.
+- **UI (CoA panel):** `CoaClassificationPanel.ui.test.tsx` — 13 sub-sections, 110-position scrubber a11y, qualitative bid-moment band (never the raw number), `<script>`/`<img onerror>` XSS locks + `dangerouslySetInnerHTML` source ban, atomic header reconciliation, verified-link chip, null-forecast grouping.
+- **Infra/DB (inspect endpoint):** `admin-leads-inspect.infra.test.ts` + `lead-inspect-query.infra.test.ts` + `db/lead-inspect-query.db.test.ts` — `GET /api/admin/leads/inspect/:id` shape, auth, `>= 0.85` linked-permit floor.
 <!-- TEST_INJECT_END -->
 </testing>
 
@@ -355,14 +397,22 @@ For the admin Test Feed Tool / Flight Center this means: there's nothing to expo
 ## 5. Operating Boundaries
 
 ### Target Files
-**Existing (pre-Cycle 3):**
-- `src/app/api/admin/leads/health/route.ts` — health endpoint
-- `src/app/api/admin/leads/test-feed/route.ts` — test feed endpoint
-- `src/lib/admin/lead-feed-health.ts` — query functions
-- `src/lib/quality/types.ts` — DataQualitySnapshot interface extension
+**On disk (shipped):**
+- `src/app/api/admin/leads/test-feed/route.ts` — Feed Browser endpoint (§3.2)
+- `src/components/admin/TestFeedTool.tsx` — Feed Browser UI (§3.2)
+- `src/lib/admin/test-feed-utils.ts` — PostGIS pre-flight + `_debug` computation
+- `src/lib/admin/lead-id-inspector.ts` — `feedLeadIdToCanonical` + `leadIdToInspectorSegment` (shared browser↔inspector translation, Phase 18)
+- `src/app/admin/lead-feed/page.tsx` — admin page (mounts `<TestFeedTool>` only)
+- `src/app/admin/lead-feed/inspector/page.tsx` — Lead Detail / Flight Job inspector tabs (§3.5/§3.6)
+- `src/components/admin/LeadDetailInspector.tsx` — Lead Detail Inspector (§3.5)
+- `src/components/admin/lead-inspector/CoaClassificationPanel.tsx` — CoA Classification panel (§3.5 Cycle 8)
+- `src/app/api/admin/leads/inspect/[id]/route.ts` + `src/lib/leads/lead-inspect-query.ts` — the admin-scoped inspect endpoint (§3.5)
 - `src/app/api/admin/stats/route.ts` — lead_views additions
-- `src/app/admin/lead-feed/page.tsx` — admin page
-- `src/components/LeadFeedHealthDashboard.tsx` — dashboard component
+
+**PRUNED — never built (Phase 18; §3.1/§3.3 DEFERRED):**
+- ~~`src/app/api/admin/leads/health/route.ts`~~ — health endpoint (does not exist)
+- ~~`src/lib/admin/lead-feed-health.ts`~~ — query functions (does not exist)
+- ~~`src/components/LeadFeedHealthDashboard.tsx`~~ — dashboard component (does not exist)
 
 **Cycle 3 amendment additions (implementation lands in separate WF1):**
 - `src/app/admin/lead-feed/flight-center/page.tsx` — Flight Center Tool page
