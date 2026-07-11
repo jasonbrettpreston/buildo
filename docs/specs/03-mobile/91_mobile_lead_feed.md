@@ -54,7 +54,22 @@ Tapping an already-active Feed tab scrolls the FlashList back to offset 0 (anima
 
 The feed acts as a "Dumb Glass" client. All heavy geospatial computations (Haversine) and algorithmic scoring are handled by the Next.js backend. The UI consumes the modernised pipeline payload:
 
-* `lead_id`: `string` — universal lead identity. `'permit:<num>:<rev>'` or `'coa:<application_number>'`. Discriminator for cross-stream UI behavior (e.g., CoA-only filter, lifecycle_seq sort, CoA classification panel).
+* `lead_id`: `string` — universal lead identity. Discriminator for cross-stream UI behavior (e.g., CoA-only filter, lifecycle_seq sort, CoA classification panel).
+
+  **Feed-emitted forms (server → client, P21 2026-07-11):**
+  | Type | Wire form | Example |
+  |------|-----------|---------|
+  | permit | `${permit_num}:${LPAD(revision_num,2,'0')}` | `23-145678-BLD:01` |
+  | coa | `coa:${application_number}` | `coa:A0123/24EYK` |
+
+  **All accepted forms (client → server, via `parseLeadId`):**
+  * `NUM:REV` — feed-emitted permit form (no prefix; Toronto permit_num never contains `:`).
+  * `permit:NUM:REV` — lead_key / lead_trades canonical form.
+  * `COA-APP` — legacy CoA URL form (uppercase prefix, dash separator).
+  * `coa:APP` — feed-emitted CoA form (lowercase prefix, colon separator).
+  * `NUM--REV` — legacy permit URL form (double-dash separator, unchanged).
+
+  The server's `parseSaveLeadId` guard (save route :105-107) accepts all colon forms; the double-dash uniqueness check only fires when `--` is present.
 * `lead_type`: `'permit' | 'coa' | 'realtor'` — for chip styling + filter logic.
 * `opportunity_score`: `number` (0–100 bimodal score).
 * `target_window`: `'bid' | 'work'` (The bimodal routing flag).
@@ -73,6 +88,12 @@ The feed acts as a "Dumb Glass" client. All heavy geospatial computations (Haver
 * `decision`, `decision_date`, `hearing_date`
 
 All required fields are in the Zod schema (`PermitLeadFeedItemSchema`). `competition_count` must be `z.number().int().nonnegative()`.
+
+`is_saved` is included in the feed emission (get-lead-feed.ts `permit_candidates` CTE, `lv_p` LATERAL JOIN ~:168 `COALESCE(lv_p.saved, false) AS is_saved`). It reflects the requesting user's saved-state at the time of the feed fetch; SaveButton reads it to populate the initial heart fill.
+
+**Keyset pagination contract (`cursor_lead_id`):** the feed's next-page cursor is a JSON-encoded `{score, lead_type, lead_id}` tuple (server type `LeadFeedCursor`; mobile Zod type `LeadFeedCursorSchema`). The `lead_id` segment carries the feed-emitted form (e.g. `23-145678-BLD:01` for permits, `coa:A0123/24EYK` for CoA). Clients send it as `?cursor_lead_id=<base64>` on subsequent pages. The server's `$6/$7/$8` parameters decode it; page 1 sends `cursor: undefined`. The cursor is stable across the id-format change — the emitted form is exactly what the server uses for tie-breaking.
+
+> **P21 scope note (2026-07-11):** trade-type chips, CoA lead card distinct styling, super-cluster map pins, Street View integration, and lifecycle_seq sort modes are deferred to P25. P21 delivers only the additive id-format parser seam (§3 feed-emitted forms + parseLeadId / parseSaveLeadId) and the ToS PATCH idempotency wedge (terms.tsx). No existing UI components were added or modified.
 
 ### 3.1 Lead-type filter + sort (WF1 #coa-pipeline-parity-phase-a, 2026-05-13)
 
