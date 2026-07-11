@@ -1,106 +1,111 @@
-# Spec 21 — Admin User Management & Config Hub
+# Spec 21 — Admin User Management
 
-**Status:** ACTIVE
-**Cross-references:** Spec 95 (User Profiles), Spec 96 (Mobile Subscription), Spec 20 (Stripe Web Checkout)
+**Status:** IMPLEMENTED (P24-24B, 2026-07-11)
+**Spec version:** 2.0 (full rewrite — the Config Hub half was superseded by the built Spec 86 Control Panel; §5 deleted, see §9)
+**Cross-references:** Spec 95 (User Profiles — the data model + the selected-trade axis), Spec 96 (Mobile Subscription), Spec 20 (Stripe Web Checkout — subscription-ops routes), Spec 33 (admin engineering protocol), Spec 35 (admin state architecture), Spec 86 (Control Panel — the former Config Hub), Spec 89 (Parcel Cost Tool — the recent admin-tool convention exemplar).
 
 ## 1. Goal & Context
-The Buildo Admin portal (`/admin`) currently monitors the backend pipeline health and data quality. This specification expands the Admin portal to support Customer Success operations and dynamic system configuration. 
 
-It defines two new sections:
-1. **User Directory (`/admin/users`)**: Search, view, and modify user profiles and subscriptions.
-2. **Configuration Hub (`/admin/config`)**: A GUI to adjust database `logic_variables` without requiring code changes.
+The Buildo Admin portal (`/admin`) is an internal, desktop-first Customer-Success and operations tool. This spec defines the **User Management** section: a searchable user directory, a per-account detail view, an audited mutation set, and supplier/enterprise account provisioning.
+
+It is the surface for the account model defined in Spec 95: an account holds a **trade SET** (`trade_slug` = primary ∪ `trade_slugs_override`) and a **persona** (`account_preset` ∈ `tradesperson | realtor | supplier | manufacturer`). The `account_preset` axis is UX/billing only — it never feeds the lead algorithm (Spec 95 §2.5.1). The admin here can view and edit any account's trade set (the **JOIN EDITOR**), persona, subscription state, and lifecycle.
 
 ## 2. Authentication & Authorization
-Both `/admin/users` and `/admin/config` must be tightly guarded.
-- **Middleware:** `src/middleware.ts` must enforce that the current user has `isAdmin === true` (or the equivalent admin claim) before serving these routes.
-- **API Guard:** Every route under `/api/admin/*` must verify the admin session cookie/token before processing the request. 
+
+- **Per-route guard, NOT middleware.** Every handler under `/api/admin/users/**` calls `verifyAdminAuth(request)` as its first line (Spec 33 §5/§8). Middleware is defense-in-depth only.
+- **Three auth modes** (`verify-admin.ts`): `session` (real per-admin Firebase uid, checked against the `ADMIN_USER_IDS` allowlist), `admin_key` (shared CI sentinel), `dev_bypass` (local dev).
+- **Mutations require an attributable admin.** POST/PATCH reject `admin_key` with 403 (a shared sentinel cannot own an audit trail). `session` and `dev_bypass` are permitted. Reads are allowed on all three modes.
+- **`is_admin` column:** NOT built. The env-var `ADMIN_USER_IDS` allowlist is the pragmatic interim (`verify-admin.ts:22-28`). When a future migration adds `user_profiles.is_admin`, `verifyAdminAuth` is a one-line swap; call sites are unaffected.
 
 ## 3. User Directory (`/admin/users`)
 
-### 3.1 Search & List View
-A data table (e.g., Shadcn `<DataTable />`) displaying all registered users.
-- **Searchable by:** Email, Phone Number, Full Name.
-- **Columns:** User ID, Email, Phone, Profession (`trade_slug` / `account_preset`), Subscription Status, Sign-up Date.
-- **Pagination:** Server-side pagination via Drizzle `limit` and `offset` is mandatory. Do not fetch all users into memory.
+### 3.1 Directory (`GET /api/admin/users`)
+Paginated (`USER_DIRECTORY_PAGE_SIZE = 25`, offset in `meta`).
+- **Search (`q`):** substring ILIKE across `email`, `phone_number`, `full_name`, `company_name`.
+- **Filters:** `preset`, `subscription_status`, `trade_slug` (matches the primary `trade_slug` OR membership in `trade_slugs_override` — historic rows have NULL preset, so filtering by trade is the reliable path until the §Migration backfill lands everywhere).
+- **Row columns:** user_id, email, phone, name, company, primary trade, override, preset, subscription_status, onboarding_complete, account_deleted_at, created_at.
+- All predicates are parameterized (no value interpolation).
 
-### 3.2 User Detail View (`/admin/users/[id]`)
-Clicking a user row opens their full profile.
+### 3.2 Detail (`GET /api/admin/users/[uid]`)
+Full profile + activity counts (`saved_count`, `view_events`). Admin sees more than the mobile client (`stripe_customer_id` for the Stripe dashboard link-out; `trade_slugs_override` for the JOIN editor) — this is an admin-only surface behind `verifyAdminAuth`.
 
-**Card 1: Identity & Profile**
-- Full Name, Company, Email, Phone.
-- `trade_slug` and `location_mode` (with home base coordinates if applicable).
+- **Card 1 — Identity & Profile:** name, company, email, phone, primary trade + override set, `location_mode`.
+- **Card 2 — Subscription & State:** `subscription_status`, `trial_started_at`, Stripe Customer ID as a **link-out** to the Stripe Dashboard (never a rebuilt billing UI), plus the **Subscription-Ops** section (§6).
+- **Card 3 — Persona & Trades:** `account_preset` + the JOIN EDITOR (§4).
+- **Deletion-window accounts are SHOWN, not hidden.** Admins legitimately service the 30-day recovery window. A detail view of an account with `account_deleted_at` set is annotated (`meta.deleted = true`) AND writes a `view_deleted_account` audit row (the access is attributable, never silent).
 
-**Card 2: Subscription & State**
-- `subscription_status` (Dropdown: `trial`, `active`, `past_due`, `expired`, `admin_managed`, `cancelled_pending_deletion`).
-- `trial_started_at`
-- Stripe Customer ID (link directly to the Stripe Dashboard for this customer).
+## 4. Mutations (`PATCH /api/admin/users/[uid]`)
 
-### 3.3 Customer Support Actions
-Admins can perform the following overrides on a user:
-1. **Extend Trial:** Adjusts `trial_started_at` to a newer date and resets `subscription_status` to `'trial'`.
-2. **Manual Revoke:** Changes `subscription_status` to `'expired'`.
-3. **Delete Account:** Triggers the Firebase Auth deletion and nullifies PII in `user_profiles`, setting status to `'cancelled_pending_deletion'`.
-4. **Impersonation:** (Deferred to Phase 2) — generating a magic link to log in as the user.
+A discriminated union on `action`. **Every mutation requires a mandatory `reason` (3–500 chars) and writes exactly one `admin_audit_log` row.**
 
-*(Note: Financial actions like issuing refunds or cancelling paid Stripe subscriptions are handled inside the Stripe Dashboard by clicking the Stripe Customer ID link. Do not rebuild Stripe's billing UI inside Buildo.)*
+| action | effect |
+|---|---|
+| `set_trades` | THE JOIN EDITOR — multi-select from the 35 trades. Writes `trade_slug = trade_slugs[0]` (primary) + `trade_slugs_override = rest`. |
+| `set_preset` | Sets `account_preset` (`tradesperson | realtor | supplier | manufacturer`). |
+| `extend_trial` | `subscription_status='trial'`, `trial_started_at` set so the trial expires in exactly `days` days (default 14). |
+| `revoke` | Revoke subscription → `subscription_status='expired'`. |
+| `suspend` | Suspend access → `subscription_status='expired'` (audit action distinguishes intent; a dedicated `'suspended'` status is a future enum addition — see §Known Failure Modes). |
+| `delete` | Firebase `deleteUser` (best-effort) + PII nullify + `account_deleted_at=NOW()` + `cancelled_pending_deletion`, then the RTBF audit scrub (§3.4). |
+| `admin_managed`/comp | via `set_preset`/subscription mutation (§6). |
 
-## 4. Manufacturer & Enterprise Onboarding
-Manufacturers bypass the standard mobile onboarding and Stripe checkout. They are provisioned manually by admins.
+**Mutation guards:**
+- Targeting an `ADMIN_USER_IDS` allowlist member → 403 (ALL actions — an admin account is never mutable through this tool).
+- Self-target on a **destructive** action (`revoke`, `suspend`, `delete`) → 403.
+- Rate-bucketed per admin (Spec 33 §12 posture).
 
-### 4.1 "Create Enterprise User" Flow
-A modal in the Admin portal that accepts:
-- Email
-- Company Name
-- Selected Trades (Multi-select array)
-- Radius Cap (km)
+### 3.4 Audit Logging & PII
+
+Every mutation writes to `admin_audit_log(admin_uid, action, target_uid, old_value JSONB, new_value JSONB, reason, created_at)` (migration 217).
+
+**PII-FACT convention (non-negotiable):** for a PII field (`full_name`, `phone_number`, `email`, `backup_email`, `company_name`) the log records the FACT that the field changed — the value is replaced with `'<redacted>'` by `redactPii` before the row is written. A compliance reader learns *who changed what field, when, and why* without the log itself becoming a PII store.
+
+**Right-to-be-forgotten:** on a hard delete, `scrub_admin_audit_for_target(target_uid)` (migration 217) NULLs `old_value`/`new_value` on every audit row for that target — the fact-of-action rows remain; the payloads go.
+
+## 5. Supplier & Enterprise Provisioning (`POST /api/admin/users`)
+
+Suppliers may self-serve (Spec 94 onboarding) OR be admin-provisioned here; enterprise/manufacturer accounts are admin-only.
 
 **Execution:**
-1. Calls Firebase Admin SDK `admin.auth().createUser({ email })` to generate a UID.
-2. Sends a Firebase Password Reset email to the user so they can set their own password.
-3. Inserts into `user_profiles`:
-   - `user_id`: the new UID
-   - `account_preset`: `'manufacturer'`
-   - `trade_slug`: `NULL`
-   - `trade_slugs_override`: `['plumbing', 'electrical', ...]` (The selected trades)
-   - `radius_cap_km`: The assigned cap.
-   - `subscription_status`: `'admin_managed'`
+1. Firebase `createUser({ email })` → new uid. **Idempotent re-create:** an existing email adopts its uid (`auth/email-already-exists` → `getUserByEmail`) instead of failing.
+2. `generatePasswordResetLink(email)` so the user sets their own password (email delivery via the email service is a follow-up; the link is returned/logged for now).
+3. Insert `user_profiles`: `account_preset` (`supplier` | `manufacturer`), `trade_slug = trade_slugs[0]`, `trade_slugs_override = rest`, `radius_cap_km`, `subscription_status = 'admin_managed'`, `onboarding_complete = false`. `ON CONFLICT (user_id) DO UPDATE` (idempotent).
+4. **Rollback:** if the DB insert fails after WE created the Firebase user this call, delete the Firebase user (no orphaned login that lands nowhere).
+5. Audit row (`create_account`).
 
-When the manufacturer logs into the mobile app, the AuthGate will see `onboarding_complete = false` but will immediately bypass it because `account_preset = manufacturer`, taking them straight to their multi-trade feed.
+## 6. Subscription-Ops (P26 alignment)
 
-## 5. Configuration Hub (`/admin/config`)
-A GUI to manage `logic_variables`. This replaces the need to run SQL migrations to change pipeline variables or app behavior.
+The Subscription card carries an OPS section backed by the P26 subscription routes under `/api/admin/users/[uid]/subscription/*` (reconcile / retry-cancel / events — see Spec 20). This spec owns the SURFACE:
+1. **Reconcile:** shows stored-vs-Stripe drift and offers an admin-confirmed "apply Stripe truth" action (reason-fielded + audit-logged like every other mutation).
+2. **Failed-cancel badge + retry:** visible when `stripe_cancel_failed_at` is set (column arrives via the P26 26D migration; the UI guards on column presence if it lands first).
+3. **Webhook-events history:** a compact list on the card.
+4. `admin_managed` / comp status changes join the §4 mutation set.
 
-### 5.1 UI Layout
-The page is organized into categorical cards:
-- **Mobile App Settings:** Free trial length, default radius, max radius.
-- **Pricing Configuration:** Stripe Price IDs for Trades, Realtors, and Manufacturers.
-- **Pipeline Data Quality:** Tolerances for scraper errors, missing cost estimates.
-- **Lead Scoring (LoS):** Multipliers and penalties for the scoring algorithm.
+The directory (§3.1) gains a `stripe_cancel_failed` filter. If the P26 routes are absent when the surface renders, it degrades gracefully (route-404 handled).
 
-### 5.2 Editing Mechanism
-- The UI fetches all rows from `SELECT key, value, description FROM logic_variables`.
-- Each variable renders as an input field (number or text depending on the variable type) accompanied by its `description`.
-- **Save Action:** 
-  1. Triggers `PATCH /api/admin/config`.
-  2. Executes `INSERT INTO logic_variables (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2`.
-  3. Returns a success toast.
+## 7. Out of Scope
 
-### 5.3 Required New Logic Variables
-The initial rollout of the Config Hub must ensure the following variables are seeded via `apply-logic-variables.js`:
+Impersonation (magic-link login as user); invites; self-serve role management; password resets (owned by Firebase); Stripe billing UI (link out to the Stripe Dashboard); the former Config Hub (§9). The Stripe subscription-cancel-on-delete atomicity lives in the money-loop lane (P24 WS2 / Spec 20).
 
-**Auth & Onboarding:**
-- `free_trial_days` (default `14`)
-- `otp_lockout_threshold` (default `5`)
-- `checkout_nonce_expiry_mins` (default `15`)
-- `onboarding_default_radius_km` (default `50`)
-- `onboarding_max_radius_km` (default `150`)
-- `manufacturer_radius_cap_km` (default `500`)
+## 8. Operating Boundaries
 
-**Pricing (Stripe):**
-- `stripe_price_id_trade`
-- `stripe_price_id_realtor`
-- `stripe_price_id_manufacturer`
-- `stripe_portal_url`
+**Target files:**
+- `src/app/api/admin/users/route.ts` (directory GET + creation POST)
+- `src/app/api/admin/users/[uid]/route.ts` (detail GET + mutation PATCH)
+- `src/lib/admin/user-management-schemas.ts`, `src/lib/admin/admin-audit.ts`
+- `src/app/admin/users/**` (directory + detail pages, store, hooks)
+- `migrations/217_account_preset_supplier_admin_audit_log.sql`
 
-### 5.4 Audit Logging
-Any change made in the Configuration Hub MUST be logged to an `admin_audit_log` table (or Sentry) including the `admin_user_id`, the `logic_variable` key modified, the `old_value`, and the `new_value`. This prevents silent system degradation caused by accidental config changes.
+**Out-of-scope files:** the consumer lead endpoints (`/api/leads/**`) — the selected-trade plumbing is P24-24A, not this tool; the Stripe subscription routes (`/api/admin/users/[uid]/subscription/*`) — owned by the P26 lane.
+
+**Cross-spec dependencies:** Spec 95 (data model), Spec 96 (subscription), Spec 20 (Stripe ops), Spec 33/35/89 (admin conventions), Spec 86 (Control Panel).
+
+## 9. §5 Config Hub — DELETED
+
+The v1 Configuration Hub (`/admin/config`, a GUI over `logic_variables`) is **superseded by the built Spec 86 Control Panel** (`/admin/control-panel`, `useAdminControlsStore`), which shipped the logic-variable / trade-multiplier / scope-matrix editor with its own audit trail. The Config Hub section is removed to prevent a phantom-spec plan against a surface that already exists elsewhere. Any config-editing work belongs to Spec 86.
+
+## 10. Known Failure Modes
+
+- **`suspend` shares the `expired` status.** There is no dedicated `'suspended'` subscription_status in the enum; `revoke` and `suspend` both write `'expired'` and are distinguished only by the audit action. A true suspended state is a future enum addition (migration + `chk_subscription_status` widen).
+- **Preset derivation ambiguity.** `deriveAccountPreset` (Spec 95 / account-preset.ts) maps a product trade → `supplier` at self-serve onboarding. A self-serve *tradesperson* and a *product-supplier* who pick the same product trade are indistinguishable by `trade_slug` alone — both derive `supplier`. This is the mandated explicit mapping; a persona/signup-path signal would disambiguate it and is the intended refinement.
+- **Password-reset email delivery is not wired.** Creation generates the reset link; actually emailing it needs the email service (deferred).
+- **Full-suite husky gate + multi-lane commits.** When a concurrent lane leaves the shared test suite transiently red, a User-Management commit that is independently green (typecheck/lint/footgun/own tests) may bypass the full-suite step — documented in the commit.
