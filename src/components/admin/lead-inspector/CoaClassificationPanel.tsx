@@ -29,6 +29,7 @@ import type {
   UniversalStreamCatalogRow,
 } from '@/lib/admin/lead-schemas';
 import { UniversalStreamCatalogRowSchema } from '@/lib/admin/lead-schemas';
+import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
 import rawCatalog from '@/lib/admin/universal-stream-catalog.json';
 
 // v4.1 (MED-Gem-v4-D + IMP-Obs-v4-1): runtime Zod validation of the bundled JSON catalog.
@@ -379,27 +380,53 @@ function LifecycleSeqWidget({
           </rect>
         ))}
       </svg>
-      {bidValue != null && (
-        <div
-          className="mt-2"
-          role="progressbar"
-          aria-valuenow={bidValue}
-          aria-valuemin={0}
-          aria-valuemax={1}
-          aria-valuetext={`${(bidValue * 100).toFixed(0)}%`}
-          aria-label="Bid value strength"
+      {bidValue != null && <BidMomentBadge bidValue={bidValue} />}
+    </div>
+  );
+}
+
+// WF2 Phase 18 gap-audit: bid_value is a 0-1 Universal Stream catalog weight
+// (Spec 84 §2.5.h.2), NOT dollars / probability / a percentage. Rendering the
+// raw number invites the exact misread the field name already causes, so the
+// panel surfaces a QUALITATIVE band label + an explanatory tooltip and NEVER
+// the numeric. Bands follow the faithful catalog values documented in
+// Spec 76 §3.5 (1.0 optimal … 0.0 terminal-dead).
+const BID_MOMENT_TOOLTIP =
+  'Relative bid-moment strength from the Universal Stream catalog (Spec 84 §2.5.h). ' +
+  'A qualitative signal of how favourable this lifecycle stage is for bidding — ' +
+  'NOT a dollar amount, probability, or percentage.';
+
+function bidMomentBand(v: number): { label: string; tone: string } {
+  if (v >= 0.9) return { label: 'Peak', tone: 'bg-green-100 text-green-800' };
+  if (v >= 0.7) return { label: 'Strong', tone: 'bg-green-100 text-green-800' };
+  if (v >= 0.5) return { label: 'Moderate', tone: 'bg-blue-100 text-blue-800' };
+  if (v >= 0.3) return { label: 'Weak', tone: 'bg-amber-100 text-amber-800' };
+  if (v > 0) return { label: 'Very weak', tone: 'bg-amber-100 text-amber-800' };
+  return { label: 'Closed', tone: 'bg-gray-100 text-gray-600' };
+}
+
+function BidMomentBadge({ bidValue }: { bidValue: number }) {
+  const band = bidMomentBand(bidValue);
+  return (
+    <div className="mt-2" data-testid="bid-value-badge">
+      <div className="flex items-center gap-2">
+        <span className="text-xs uppercase tracking-wide text-gray-500">Bid moment</span>
+        <span
+          className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${band.tone}`}
+          title={BID_MOMENT_TOOLTIP}
+          role="img"
+          aria-label={`Bid moment strength: ${band.label}`}
         >
-          <div className="text-xs text-gray-600">bid_value</div>
-          <div className="h-2 overflow-hidden rounded bg-gray-200">
-            <div
-              className="h-full bg-blue-500"
-              style={{ width: `${bidValue * 100}%` }}
-              data-testid="bid-value-bar"
-              data-bid-value={bidValue}
-            />
-          </div>
-        </div>
-      )}
+          {band.label}
+        </span>
+        <span
+          className="cursor-help text-xs text-gray-400"
+          title={BID_MOMENT_TOOLTIP}
+          aria-hidden="true"
+        >
+          ⓘ
+        </span>
+      </div>
     </div>
   );
 }
@@ -421,6 +448,19 @@ function LinkedPermitChip({
       <span className="text-xs uppercase tracking-wide text-gray-500">Linked permit</span>
       <span className="font-mono">{permit.permit_num}:{permit.revision_num}</span>
       {permit.status && <span className="text-xs text-gray-600">({permit.status})</span>}
+      {/* WF2 P12 fence made visible: the envelope only carries a linked_permit
+          when the server-side identity link cleared the >= 0.85 floor
+          (COA_IDENTITY_LINK_MIN_CONFIDENCE) — sub-threshold links surface as
+          linked_permit=null so the WRONG property is never shown. We render a
+          "verified link" chip (the numeric confidence is deliberately NOT in
+          the envelope — zero API change) with a tooltip citing the constant. */}
+      <span
+        data-testid="linked-permit-verified-chip"
+        className="rounded bg-green-100 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-green-800"
+        title={`Identity link verified at ≥ ${COA_IDENTITY_LINK_MIN_CONFIDENCE} confidence (COA_IDENTITY_LINK_MIN_CONFIDENCE). Sub-threshold links are suppressed so the wrong property is never shown.`}
+      >
+        ✓ verified link
+      </span>
       <span className="text-xs text-blue-700">→ Jump to Permit Inspector</span>
     </button>
   );

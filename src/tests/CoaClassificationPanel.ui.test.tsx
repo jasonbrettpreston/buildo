@@ -15,6 +15,8 @@
 //   - OrphanLinkedCoaBanner has role="alert" + aria-live="assertive"
 
 import React from 'react';
+import fs from 'node:fs';
+import path from 'node:path';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { LeadInspectCoa } from '@/lib/admin/lead-schemas';
@@ -312,7 +314,11 @@ describe('<CoaClassificationPanel> — 110-position lifecycle scrubber', () => {
     expect(screen.getByText(/Not classified yet/i)).toBeDefined();
   });
 
-  it('renders the bid_value bar with role="progressbar" and correct aria-valuenow', () => {
+  // WF2 Phase 18 gap-audit — bid_value is now rendered as a QUALITATIVE band
+  // label + explanatory tooltip, NEVER the raw number (the old progressbar
+  // exposed 0.72 via aria-valuenow; that misread the catalog weight as a
+  // percentage). This deliberately supersedes the prior progressbar pin.
+  it('renders bid_value as a qualitative band label, never the raw number', () => {
     render(
       <CoaClassificationPanel
         data={makeCoa({ lifecycle_seq: 47, bid_value: 0.72 })}
@@ -320,10 +326,63 @@ describe('<CoaClassificationPanel> — 110-position lifecycle scrubber', () => {
         onNavigate={vi.fn()}
       />,
     );
-    const bar = screen.getByRole('progressbar');
-    expect(bar.getAttribute('aria-valuenow')).toBe('0.72');
-    expect(bar.getAttribute('aria-valuemin')).toBe('0');
-    expect(bar.getAttribute('aria-valuemax')).toBe('1');
+    const badge = screen.getByTestId('bid-value-badge');
+    // 0.72 falls in the "Strong" band (>= 0.7)
+    expect(badge.textContent).toContain('Strong');
+    // The raw number / percentage must NOT appear anywhere in the badge
+    expect(badge.textContent).not.toContain('0.72');
+    expect(badge.textContent).not.toContain('72');
+    expect(badge.textContent).not.toContain('%');
+    // No progressbar exposing the raw aria-valuenow
+    expect(screen.queryByRole('progressbar')).toBeNull();
+  });
+
+  it('bid_value badge carries an explanatory tooltip (not-dollars/probability)', () => {
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({ lifecycle_seq: 47, bid_value: 0.95 })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const badge = screen.getByTestId('bid-value-badge');
+    expect(badge.textContent).toContain('Peak'); // >= 0.9
+    // The tooltip is on the inner band chip (role="img" + title).
+    const chip = badge.querySelector('[role="img"]') as HTMLElement | null;
+    expect(chip).not.toBeNull();
+    expect(chip?.getAttribute('title') ?? '').toMatch(/NOT a dollar|qualitative/i);
+  });
+
+  it('null-forecast grouping: null bid_value renders no bid badge (verify-and-pin)', () => {
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({ lifecycle_seq: 47, bid_value: null })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId('bid-value-badge')).toBeNull();
+  });
+
+  it('null-forecast grouping: null group/block/stage labels fall back without crashing (verify-and-pin)', () => {
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({
+          lifecycle_seq: 47,
+          group_label: null,
+          block_label: null,
+          stage_label: null,
+        })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    // Scrubber still renders (seq is set); the position chips fall back to
+    // their generic labels rather than throwing on the null grouping.
+    expect(screen.getByTestId('lifecycle-scrubber-svg')).toBeDefined();
+    expect(screen.getByTestId('lifecycle-chip-group').textContent).toContain('group');
+    expect(screen.getByTestId('lifecycle-chip-block').textContent).toContain('block');
+    expect(screen.getByTestId('lifecycle-chip-stage').textContent).toContain('stage');
   });
 });
 
@@ -366,6 +425,32 @@ describe('<CoaClassificationPanel> — linked permit chip', () => {
     );
     const chip = screen.getByTestId('linked-permit-chip');
     expect(chip.textContent).toContain('24-123456:00');
+  });
+
+  // WF2 Phase 18 gap-audit — the numeric linked_confidence is deliberately
+  // NOT in the envelope (zero API change). A present linked_permit already
+  // means the server cleared the >= 0.85 floor, so we surface a "verified
+  // link" chip whose tooltip CITES the constant (0.85).
+  it('renders a "verified link" chip citing COA_IDENTITY_LINK_MIN_CONFIDENCE (no numeric confidence)', () => {
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({
+          linked_permit: {
+            lead_id: 'permit:24-123456:00',
+            permit_num: '24-123456',
+            revision_num: '00',
+            status: 'Permit Issued',
+          },
+        })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const verified = screen.getByTestId('linked-permit-verified-chip');
+    expect(verified.textContent).toMatch(/verified link/i);
+    const title = verified.getAttribute('title') ?? '';
+    expect(title).toContain('COA_IDENTITY_LINK_MIN_CONFIDENCE');
+    expect(title).toContain('0.85');
   });
 });
 
@@ -487,6 +572,43 @@ describe('<CoaClassificationPanel> — parent context label', () => {
     );
     expect(screen.getByText('Linked CoA (cross-stream)')).toBeDefined();
   });
+
+  // WF2 Phase 18 gap-audit — atomic no-flicker header reconciliation. The
+  // visible header label AND the section aria-label both derive from
+  // parentLeadType in a single render (props-driven, no internal fetch
+  // state), so a parentLeadType swap replaces BOTH atomically with no stale
+  // label surviving.
+  it('reconciles header label + aria-label atomically on parentLeadType change', () => {
+    const { rerender } = render(
+      <CoaClassificationPanel data={makeCoa()} parentLeadType="coa" onNavigate={vi.fn()} />,
+    );
+    const panel = screen.getByTestId('coa-classification-panel');
+    expect(screen.getByText('Primary')).toBeDefined();
+    expect(panel.getAttribute('aria-label')).toContain('Primary');
+
+    rerender(
+      <CoaClassificationPanel data={makeCoa()} parentLeadType="permit" onNavigate={vi.fn()} />,
+    );
+    // Header + aria-label both flipped; the old label is fully gone (no flicker/dup).
+    expect(screen.getByText('Linked CoA (cross-stream)')).toBeDefined();
+    expect(screen.queryByText('Primary')).toBeNull();
+    expect(screen.getByTestId('coa-classification-panel').getAttribute('aria-label')).toContain(
+      'Linked CoA (cross-stream)',
+    );
+  });
+});
+
+// WF2 Phase 18 gap-audit — prescriptive XSS boundary: the panel MUST NOT use
+// dangerouslySetInnerHTML anywhere (esp. the description path). JSX
+// auto-escape is the only sanctioned rendering path for CKAN free-text.
+describe('<CoaClassificationPanel> — dangerouslySetInnerHTML source ban (Phase 18)', () => {
+  it('the component source contains no dangerouslySetInnerHTML', () => {
+    const src = fs.readFileSync(
+      path.resolve(__dirname, '../components/admin/lead-inspector/CoaClassificationPanel.tsx'),
+      'utf-8',
+    );
+    expect(src).not.toContain('dangerouslySetInnerHTML');
+  });
 });
 
 // WF3 #14 Pass-2.5 Finding I (2026-05-22) — CoA description rendering.
@@ -582,6 +704,24 @@ describe('<CoaClassificationPanel> — description (WF3 #14 Finding I)', () => {
     // Defense-in-depth: assert NO actual <script> element was created
     // inside the panel section as a result of rendering the description.
     expect(section.querySelector('script')).toBeNull();
+  });
+
+  // WF2 Phase 18 gap-audit — the prescriptive XSS lock: an inert
+  // `<img src=x onerror=...>` attribute-vector payload must render as literal
+  // text with NO <img> element (which would fire onerror in a real browser).
+  it('XSS lock (Phase 18): <img onerror> payload renders as literal text, no <img> element', () => {
+    const imgPayload = '<img src=x onerror=alert(1)>';
+    render(
+      <CoaClassificationPanel
+        data={makeCoa({ description: imgPayload })}
+        parentLeadType="coa"
+        onNavigate={vi.fn()}
+      />,
+    );
+    const section = screen.getByTestId('coa-panel-section-description');
+    expect(section.textContent).toContain('<img src=x onerror=alert(1)>');
+    // No live <img> node materialized from the description string.
+    expect(section.querySelector('img')).toBeNull();
   });
 });
 
