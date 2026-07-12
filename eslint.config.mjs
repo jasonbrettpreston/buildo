@@ -162,6 +162,21 @@ const eslintConfig = [
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
+  // P25 notification tests that require()-import CommonJS pipeline modules
+  // (dispatch-notifications.js + scripts/lib/{push-dispatch,notification-types}.js
+  // are CommonJS; a TS import would need .d.ts shims). Mirrors the
+  // cost-model-shared override above. (Pays the 25A --no-verify lint debt.)
+  {
+    files: [
+      'src/tests/notification-dispatch-contract.logic.test.ts',
+      'src/tests/notification-types.logic.test.ts',
+      'src/tests/push-dispatch.logic.test.ts',
+      'src/tests/db/dispatch-notifications.db.test.ts',
+    ],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
   // Pipeline utility/seed/legacy scripts — exempt from strict rules (one-off tooling)
   {
     files: ['scripts/seed-*.js', 'scripts/seed-*.ts', 'scripts/migrate.js', 'scripts/poc-*.js', 'scripts/backfill/**', 'scripts/analysis/**'],

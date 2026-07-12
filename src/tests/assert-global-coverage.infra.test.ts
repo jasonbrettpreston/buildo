@@ -193,7 +193,7 @@ describe('manifest.json — chain wiring', () => {
     const permitsChain: string[] = manifest.chains.permits;
     expect(permitsChain[permitsChain.length - 1]).toBe('backup_db');
     expect(permitsChain[permitsChain.length - 2]).toBe('assert_global_coverage');
-    expect(permitsChain).toHaveLength(32); // +compute_storey_norms (Spec 65 §8 WF3-C1); +compute_build_norms (Spec 78 P1)
+    expect(permitsChain).toHaveLength(33); // +compute_storey_norms (Spec 65 §8 WF3-C1); +compute_build_norms (Spec 78 P1); +dispatch_notifications (P25 25A)
   });
 
   it('assert_global_coverage is last step in coa chain (step 15 post-Phase G retirement of create_pre_permits + assert_pre_permit_aging)', () => {

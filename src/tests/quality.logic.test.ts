@@ -515,7 +515,8 @@ describe('Pipeline Registry', () => {
     // +1 compute_build_norms added (Spec 78 P1 2026-06-26)
     // +1 compute_parcel_cost_estimates added (Spec 88 P1 2026-06-30)
     // +1 assert_global_coverage / +1 assert_parcel_sanity (WF Spec 49 parcels observability 2026-07)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(66);
+    // +1 dispatch_notifications (P25 25A, permits chain after update_tracked_projects; gated OFF)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(67);
   });
 
   it('groups are correct: 14 ingest, 22 link, 17 classify, 2 snapshot, 10 quality', () => {
@@ -541,7 +542,7 @@ describe('Pipeline Registry', () => {
     // +1 classify: compute_parcel_cost_estimates (Spec 88 P1 2026-06-30)
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(14);
     expect(groups.filter((g) => g === 'link')).toHaveLength(22);
-    expect(groups.filter((g) => g === 'classify')).toHaveLength(17);
+    expect(groups.filter((g) => g === 'classify')).toHaveLength(18); // +dispatch_notifications (P25 25A, group 'classify')
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(11); // +assert_parcel_sanity (WF2)
   });
@@ -579,7 +580,7 @@ describe('Pipeline Chains', () => {
     // WF3 #realtor-backfill 2026-05-09: +1 step (backfill_realtor_permit_trades
     // between classify_permits and compute_cost_estimates).
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(32); // +enrich_permits (Spec 66 WF3); +compute_storey_norms (Spec 65 §8 WF3-C1); +compute_build_norms (Spec 78 P1)
+    expect(permits.steps).toHaveLength(33); // +enrich_permits (Spec 66 WF3); +compute_storey_norms (Spec 65 §8 WF3-C1); +compute_build_norms (Spec 78 P1); +dispatch_notifications (P25 25A, after update_tracked_projects)
     expect(permits!.steps[0]!.slug).toBe('assert_schema');
     expect(permits!.steps[1]!.slug).toBe('permits');
     expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('backup_db');
@@ -590,7 +591,9 @@ describe('Pipeline Chains', () => {
     // WF3 #realtor-backfill 2026-05-09: insertion point is mid-chain (between
     // classify_permits and compute_cost_estimates), so the tail offset for
     // classify_lifecycle_phase is unchanged: tail-9 still points to it.
-    expect(permits!.steps[permits.steps.length - 9]!.slug).toBe('classify_lifecycle_phase');
+    // tail-10 (was tail-9): dispatch_notifications (P25 25A) inserted between
+    // update_tracked_projects and assert_entity_tracing pushed the tail out by 1.
+    expect(permits!.steps[permits.steps.length - 10]!.slug).toBe('classify_lifecycle_phase');
   });
 
   it('permits chain has link_wsib as indent-1 step (not sub-step)', () => {

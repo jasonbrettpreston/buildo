@@ -9,7 +9,17 @@ import { query } from '@/lib/db/client';
 
 // User-behavioral tables (Firebase user_id per row) — EXCLUDED from the inspector allow-list.
 // The inspector is for pipeline data-quality transparency, not end-user behavior.
-const PII_EXCLUDED = new Set<string>(['lead_views', 'tracked_projects', 'lead_analytics']);
+// Per-user behavior/notification tables are NOT inspectable via the admin
+// step-output surface (same policy as lead_views/tracked_projects/lead_analytics):
+// notifications + notification_dispatches record who was messaged about which
+// lead (P25 dispatch_notifications step) — sensitive per-user history, excluded.
+const PII_EXCLUDED = new Set<string>([
+  'lead_views',
+  'tracked_projects',
+  'lead_analytics',
+  'notifications',
+  'notification_dispatches',
+]);
 
 type ManifestScripts = Record<string, { telemetry_tables?: string[] }>;
 const SCRIPTS = (manifest as unknown as { scripts?: ManifestScripts }).scripts ?? {};
