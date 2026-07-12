@@ -31,6 +31,7 @@ const {
   DISPATCHABLE_TYPES_V1,
   PREF_COLUMN_BY_TYPE,
   isScheduleGated,
+  entityIdFromLead,
 } = require('./lib/notification-types');
 
 // §R2 — advisory lock id. 101 (the spec number) was taken by purge-lead-views.js,
@@ -82,15 +83,9 @@ function scheduleWindow(schedule, hour) {
   return { inWindow: true, endHour: 24 }; // anytime
 }
 
-// lead_id (permit:NUM:REV) → the mobile deep-link entity_id (NUM--REV). Matches
-// the pre-P25 payload contract + mobile/app/(app)/[flight-job].tsx:132 parser.
-function entityIdFromLead(leadId, permitNum) {
-  if (typeof leadId === 'string' && leadId.startsWith('permit:')) {
-    const parts = leadId.split(':');
-    if (parts.length >= 3) return `${parts[1]}--${parts[2]}`;
-  }
-  return permitNum != null ? String(permitNum) : null;
-}
+// entityIdFromLead (the NUM--REV deep-link composition) is imported from
+// ./lib/notification-types — the shared home so the cross-contract lock test
+// can require the REAL composition without executing pipeline.run.
 
 // type → the urgency label the pre-P25 payload carried.
 function urgencyForType(type) {

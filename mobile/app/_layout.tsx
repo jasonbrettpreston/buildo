@@ -350,6 +350,7 @@ function NotificationHandlers() {
   trackRender('NotificationHandlers');
   const router = useRouter();
   const incrementUnread = useNotificationStore((s) => s.incrementUnread);
+  const clearUnread = useNotificationStore((s) => s.clearUnread);
   const [toast, setToast] = useState<ToastState | null>(null);
 
   useEffect(() => {
@@ -367,6 +368,10 @@ function NotificationHandlers() {
 
       // navigate() switches tab without pushing a stack frame; push() stacks the detail on top.
       if (routeDomain === 'flight_board') {
+        // P25 25D — tapping a notification is an explicit acknowledgement, so
+        // clear the unread dot here too (pre-P25 it only cleared on tab focus,
+        // leaving a stale dot when the tap deep-linked straight to a detail).
+        clearUnread();
         router.navigate('/(app)/flight-board');
         if (entityId) {
           router.push(`/(app)/[flight-job]?id=${entityId}`);
@@ -412,7 +417,7 @@ function NotificationHandlers() {
       tapSubscription.remove();
       foregroundSubscription.remove();
     };
-  }, [router, incrementUnread]);
+  }, [router, incrementUnread, clearUnread]);
 
   if (!toast) return null;
 

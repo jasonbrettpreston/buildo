@@ -17,7 +17,10 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  AppState,
+  Linking,
 } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -28,7 +31,8 @@ import { useFilterStore } from '@/store/filterStore';
 import { usePatchProfile } from '@/hooks/usePatchProfile';
 import { useAuthStore } from '@/store/authStore';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { lightImpact } from '@/lib/haptics';
+import { requestPermissionAndRegister } from '@/lib/pushTokens';
+import { lightImpact, errorNotification } from '@/lib/haptics';
 import * as Haptics from 'expo-haptics';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
 
@@ -99,7 +103,76 @@ function ManageSubscriptionRow() {
   );
 }
 
-function usePatchPrefs() {
+// P25 25D — OS-level notification permission status row. Three states:
+//   granted            → render nothing (the pref toggles below are the UI).
+//   denied+canAskAgain → "Enable notifications" re-prompt (this is ALSO the
+//                        Maybe-Later re-request path: a user who dismissed the
+//                        SaveButton pre-prompt re-requests here — pre-P25 that
+//                        dismissal was permanent, the only requester was the
+//                        first-save modal).
+//   denied+!canAskAgain→ the OS will silently ignore requestPermissionsAsync,
+//                        so honest UX = say it is blocked + Linking.openSettings.
+// Permission state re-checks when the app returns to foreground (the user may
+// have just flipped the toggle in system settings).
+function NotificationPermissionRow() {
+  const queryClient = useQueryClient();
+  const { data: perm } = useQuery({
+    queryKey: ['notification-permission'],
+    queryFn: () => Notifications.getPermissionsAsync(),
+    staleTime: 0,
+  });
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        void queryClient.invalidateQueries({ queryKey: ['notification-permission'] });
+      }
+    });
+    return () => sub.remove();
+  }, [queryClient]);
+
+  if (!perm || perm.status === 'granted') return null;
+
+  const canAskAgain = perm.canAskAgain;
+  return (
+    <Pressable
+      onPress={() => {
+        lightImpact();
+        if (canAskAgain) {
+          void requestPermissionAndRegister().then(() => {
+            void queryClient.invalidateQueries({ queryKey: ['notification-permission'] });
+          });
+        } else {
+          void Linking.openSettings();
+        }
+      }}
+      className="px-4 py-3 border-b border-zinc-800/50 bg-amber-500/10 active:bg-amber-500/20"
+      style={{ minHeight: 52 }}
+      accessibilityRole="button"
+      accessibilityLabel={canAskAgain ? 'Enable notifications' : 'Open system settings to enable notifications'}
+      testID="notification-permission-row"
+    >
+      <Text className="text-amber-500 text-sm font-semibold">
+        {canAskAgain ? 'Enable notifications' : 'Notifications are blocked'}
+      </Text>
+      <Text className="text-zinc-400 text-xs mt-0.5">
+        {canAskAgain
+          ? 'Alerts are off. Tap to allow phase, stall, and start-date alerts.'
+          : 'The OS is blocking alerts for Buildo. Tap to open system settings.'}
+      </Text>
+    </Pressable>
+  );
+}
+
+// P25 25D — optimistic update WITH rollback. Pre-P25 the mutation had no
+// onError/onMutate: the Switch flipped visually (its own internal state) but the
+// PATCH ran silently in the background, and on failure NOTHING reverted or
+// signalled — a "silent visual lie" (the toggle looked applied when it was not).
+// Now the query cache is updated optimistically (so the bound Switch reflects the
+// intent immediately AND consistently) and rolled back on error with the
+// error-notification haptic (the mobile convention for "check the screen").
+// `onError` lets the screen surface a transient error banner.
+function usePatchPrefs(onErrorSignal?: () => void) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (patch: Partial<NotificationPrefs>) =>
@@ -107,8 +180,25 @@ function usePatchPrefs() {
         method: 'PATCH',
         body: JSON.stringify(patch),
       }),
-    onSuccess: () => {
-      // Spec 99 §7.2 — non-trivial invalidate (mutation onSuccess, not onSettled)
+    onMutate: async (patch: Partial<NotificationPrefs>) => {
+      await queryClient.cancelQueries({ queryKey: ['notification-prefs'] });
+      const previous = queryClient.getQueryData<NotificationPrefs>(['notification-prefs']);
+      queryClient.setQueryData<NotificationPrefs>(['notification-prefs'], (old) => ({
+        ...(old ?? DEFAULT_PREFS),
+        ...patch,
+      }));
+      return { previous };
+    },
+    onError: (_err, _patch, context) => {
+      // Revert to the pre-mutation snapshot — the toggle visibly snaps back.
+      if (context?.previous) {
+        queryClient.setQueryData<NotificationPrefs>(['notification-prefs'], context.previous);
+      }
+      errorNotification();
+      onErrorSignal?.();
+    },
+    onSettled: () => {
+      // Spec 99 §7.2 — reconcile with the server after the optimistic write.
       logQueryInvalidate('notification-prefs');
       void queryClient.invalidateQueries({ queryKey: ['notification-prefs'] });
     },
@@ -227,32 +317,32 @@ export default function SettingsScreen() {
               Notifications
             </Text>
 
-            {/* Minimum value threshold */}
-            <View className="px-4 py-3 border-b border-zinc-800/50">
+            {/* P25 25D — OS-permission state (re-prompt / open-settings). Also
+                the Maybe-Later re-request path. Renders nothing when granted. */}
+            <NotificationPermissionRow />
+
+            {/* Minimum value threshold — P25 25D: DISABLED + "coming soon".
+                The NEW_HIGH_VALUE_LEAD type this slider gates has zero server
+                implementation in v1 (fenced to 25F/v1.1); an interactive slider
+                that changes nothing is a silent lie, so it is visibly inert. */}
+            <View className="px-4 py-3 border-b border-zinc-800/50 opacity-50">
               <View className="flex-row justify-between items-center mb-2">
                 <Text className="text-zinc-100 text-sm">Minimum Job Value</Text>
-                <Text className="font-mono text-amber-500 text-xs uppercase">
-                  {prefs.new_lead_min_cost_tier}
+                <Text className="font-mono text-zinc-500 text-xs uppercase">
+                  Coming soon
                 </Text>
               </View>
               <Slider
-                accessibilityLabel="Minimum job value tier for new lead notifications"
-                accessibilityValue={{
-                  min: 0,
-                  max: 2,
-                  now: costIndex >= 0 ? costIndex : 1,
-                  text: prefs.new_lead_min_cost_tier,
-                }}
+                accessibilityLabel="Minimum job value tier for new lead notifications (coming soon)"
+                disabled
+                accessibilityState={{ disabled: true }}
                 minimumValue={0}
                 maximumValue={2}
                 step={1}
                 value={costIndex >= 0 ? costIndex : 1}
-                onSlidingComplete={(val) => {
-                  updatePref('new_lead_min_cost_tier', COST_TIERS[Math.round(val)]);
-                }}
-                minimumTrackTintColor="#f59e0b"
+                minimumTrackTintColor="#52525b"
                 maximumTrackTintColor="#3f3f46"
-                thumbTintColor="#f59e0b"
+                thumbTintColor="#52525b"
               />
               <View className="flex-row justify-between mt-1">
                 <Text className="font-mono text-xs text-zinc-600">Low</Text>

@@ -67,6 +67,25 @@ const PREF_COLUMN_BY_TYPE = Object.freeze({
 // than sent immediately.
 const SCHEDULE_GATED_TYPES = Object.freeze([LIFECYCLE_PHASE_CHANGED]);
 
+/**
+ * lead_id (permit:NUM:REV) → the mobile deep-link entity_id (NUM--REV).
+ *
+ * CROSS-CONTRACT SEAM (the Spec 91 class): the mobile board detail route parses
+ * this with `id.split('--')` (mobile/app/(app)/[flight-job].tsx:133). The feed's
+ * colon-format lead ids are NOT valid here — the 2026-07 mobile audit found a
+ * dead product loop from exactly this mismatch class (`NUM:REV` emitted where
+ * `NUM--REV` was parsed). Locked by notification-dispatch-contract.logic.test.ts.
+ * Lives here (not in dispatch-notifications.js) so tests can require it without
+ * executing pipeline.run.
+ */
+function entityIdFromLead(leadId, permitNum) {
+  if (typeof leadId === 'string' && leadId.startsWith('permit:')) {
+    const parts = leadId.split(':');
+    if (parts.length >= 3) return `${parts[1]}--${parts[2]}`;
+  }
+  return permitNum != null ? String(permitNum) : null;
+}
+
 /** True when `type` should be delivered in v1. */
 function isDispatchableV1(type) {
   return DISPATCHABLE_TYPES_V1.includes(type);
@@ -89,6 +108,7 @@ module.exports = {
   FENCED_TYPES_V1,
   PREF_COLUMN_BY_TYPE,
   SCHEDULE_GATED_TYPES,
+  entityIdFromLead,
   isDispatchableV1,
   isScheduleGated,
 };

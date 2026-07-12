@@ -15,6 +15,20 @@ const mmkv = createMMKV({ id: 'push-tokens' });
 const PUSH_TOKEN_KEY = 'expo_push_token';
 const HAS_ASKED_KEY = 'hasAskedPermission';
 
+// P25 25D — Android 13+ REQUIRES a notification channel to exist BEFORE the
+// permission request, or pushes are silently never delivered (no channel = no
+// delivery, even with permission granted). This was a zero-hit gap pre-P25.
+// Idempotent: setNotificationChannelAsync upserts the channel. No-op on iOS.
+export async function ensureAndroidChannel(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync('default', {
+    name: 'Job Alerts',
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 250, 250, 250],
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+  });
+}
+
 export function hasAskedPermission(): boolean {
   return mmkv.getBoolean(HAS_ASKED_KEY) ?? false;
 }
@@ -44,6 +58,8 @@ export async function registerPushToken(): Promise<void> {
 }
 
 export async function requestPermissionAndRegister(): Promise<boolean> {
+  // P25 25D — create the Android channel BEFORE requesting permission.
+  await ensureAndroidChannel();
   const { status } = await Notifications.requestPermissionsAsync();
   if (status !== 'granted') return false;
   await registerPushToken();
