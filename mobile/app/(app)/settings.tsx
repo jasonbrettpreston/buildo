@@ -24,23 +24,22 @@ import * as Notifications from 'expo-notifications';
 import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as WebBrowser from 'expo-web-browser';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { logQueryInvalidate } from '@/lib/queryTelemetry';
 import { useFilterStore } from '@/store/filterStore';
 import { usePatchProfile } from '@/hooks/usePatchProfile';
 import { useAuthStore } from '@/store/authStore';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { usePortalSession } from '@/hooks/usePortalSession';
 import { requestPermissionAndRegister } from '@/lib/pushTokens';
 import { lightImpact, errorNotification } from '@/lib/haptics';
 import * as Haptics from 'expo-haptics';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
 
-// Stripe Customer Portal entry — Spec 96 §7. Real portal session creation
-// (POST returning a one-off portal URL) is a separate task; this static
-// link routes the user to the buildo.com billing page where they sign in
-// and are redirected to their portal.
-const BILLING_PORTAL_URL = 'https://buildo.com/account/billing';
+// Stripe Customer Portal entry — Spec 96 §7 (P26-26C). The row mints a real
+// one-off portal session via usePortalSession (POST
+// /api/subscribe/portal-session). The pre-P26 static billing-page link is
+// gone — a static URL cannot authenticate the user into their portal.
 
 // Spec 99 §9.14 (2026-05-04): cost-tier reconciled to canonical 3-value enum
 // (was a divergent 5-value set unique to this screen); `lifecycle_stalled`
@@ -71,12 +70,15 @@ const DEFAULT_PREFS: NotificationPrefs = {
   notification_schedule: 'anytime',
 };
 
-// Spec 96 §7. Hidden when account_preset = 'manufacturer' (admin-managed
-// accounts have no consumer billing UI). Opens the buildo.com billing page
-// in the in-app browser; the user signs in there and is redirected to the
-// Stripe Customer Portal for cancel / payment-method updates.
+// Spec 96 §7 (P26-26C). Hidden when account_preset = 'manufacturer'
+// (admin-managed accounts have no consumer billing UI — the hide is kept
+// verbatim). Tapping mints a one-off Stripe Customer Portal session and
+// opens it in the in-app browser; cancel / payment-method updates /
+// past_due recovery all live in the portal. Status changes made there
+// arrive via webhook + the AppState re-fetch.
 function ManageSubscriptionRow() {
   const { data: profile } = useUserProfile();
+  const { openPortal, isLoading, error } = usePortalSession();
   if (!profile || profile.account_preset === 'manufacturer') return null;
   return (
     <>
@@ -86,18 +88,29 @@ function ManageSubscriptionRow() {
       <Pressable
         onPress={() => {
           lightImpact();
-          void WebBrowser.openBrowserAsync(BILLING_PORTAL_URL);
+          void openPortal();
         }}
+        disabled={isLoading}
         className="px-4 py-4 border-b border-zinc-800/50 active:bg-zinc-900"
         style={{ minHeight: 52 }}
         accessibilityRole="button"
-        accessibilityLabel="Manage subscription at buildo.com"
+        accessibilityLabel="Manage subscription"
         testID="manage-subscription"
       >
-        <Text className="text-zinc-100 text-sm">Manage subscription at buildo.com →</Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-zinc-100 text-sm">Manage subscription →</Text>
+          {isLoading ? <ActivityIndicator size="small" color="#f59e0b" /> : null}
+        </View>
         <Text className="text-zinc-500 text-xs mt-0.5">
           Cancel, update payment, or change plan
         </Text>
+        {error ? (
+          <Text className="text-red-400 text-xs mt-1">
+            {error.kind === 'no_customer'
+              ? 'No billing to manage yet — subscribe first.'
+              : 'Couldn’t open billing — try again.'}
+          </Text>
+        ) : null}
       </Pressable>
     </>
   );
@@ -428,11 +441,11 @@ export default function SettingsScreen() {
         )}
 
         {/* ── Subscription ─────────────────────────────────────────────
-            Spec 96 §7. Hidden for manufacturer accounts (account_preset =
-            'manufacturer') because their access is admin-managed and they
-            should never see consumer billing UI. Real Stripe Customer
-            Portal session creation is deferred — this opens the billing
-            page on buildo.com which handles portal redirect. */}
+            Spec 96 §7 (P26-26C). Hidden for manufacturer accounts
+            (account_preset = 'manufacturer') because their access is
+            admin-managed and they should never see consumer billing UI.
+            Mints a one-off Stripe Customer Portal session per tap via
+            usePortalSession. */}
         <ManageSubscriptionRow />
 
         {/* ── Account Actions ──────────────────────────────────────────
