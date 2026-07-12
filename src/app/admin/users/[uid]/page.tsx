@@ -15,6 +15,9 @@ import { useUserDetail, useUserMutation, type UserDetail } from '@/features/admi
 import { ACCOUNT_PRESET_VALUES, ASSIGNABLE_TRADE_SLUGS } from '@/lib/admin/user-management-schemas';
 import type { AdminUserMutation } from '@/lib/admin/user-management-schemas';
 import { SubscriptionOps } from './SubscriptionOps';
+// P25 25C — read-only Notifications card (Spec 102): masked device tokens,
+// the 5 notification prefs, last dispatch. Owned by the Notifications tool.
+import { NotificationsCard } from '@/components/admin/NotificationsCard';
 
 export default function AdminUserDetailPage({ params }: { params: Promise<{ uid: string }> }) {
   const { uid } = use(params);
@@ -50,6 +53,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ uid:
             <ProfileCard d={data.detail} />
             <SubscriptionCard d={data.detail} uid={uid} run={run} pending={mutation.isPending} />
             <PersonaCard d={data.detail} run={run} pending={mutation.isPending} />
+            <NotificationsCard uid={uid} />
           </>
         )}
       </main>
