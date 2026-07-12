@@ -37,17 +37,10 @@ import Stripe from 'stripe';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { withTransaction } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
-
-// Stripe API version is pinned to the SDK default. Pinning explicitly here
-// would require coordination with the Stripe dashboard; leaving it default
-// means the SDK and the dashboard stay aligned through SDK upgrades.
-function getStripeClient(): Stripe {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) {
-    throw new Error('STRIPE_SECRET_KEY is not configured');
-  }
-  return new Stripe(key);
-}
+// getStripeClient extracted to the shared module (P26-26B) so the
+// checkout-session, portal, and delete-cancel paths construct the SDK
+// identically. The API-version-pinning note lives there.
+import { getStripeClient, mapStripeSubStatus } from '@/lib/stripe/client';
 
 function getWebhookSecret(): string {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -62,9 +55,10 @@ interface WebhookOutcome {
   stripeCustomerId: string | null;
   /**
    * Internal Buildo user_id, when the Stripe object carries it in metadata.
-   * The web checkout (out of scope for this task) is contracted to write
-   * `metadata: { user_id: <firebase_uid> }` when creating the Stripe customer
-   * and subscription. When present, we match by user_id instead of
+   * The web checkout (/api/subscribe/exchange, P26-26B) writes BOTH
+   * `subscription_data.metadata.user_id = <firebase_uid>` AND
+   * `client_reference_id = <firebase_uid>` when creating the checkout
+   * session. When present, we match by user_id instead of
    * stripe_customer_id — that closes the fail-open gap where a missed or
    * delayed `subscription.created` event would otherwise prevent later
    * `subscription.deleted` events from revoking access.
@@ -95,20 +89,9 @@ function userIdFromMetadata(metadata: Stripe.Metadata | null | undefined): strin
 // `cancel_at_period_end = true`, so users retain access through the paid
 // period and only `subscription.deleted` correctly times the cutoff.
 //
-// 'unpaid' DOES revoke access — Stripe sets this status only after dunning
-// retries are exhausted, so the user has already lost their subscription.
-function mapSubscriptionStatus(status: Stripe.Subscription.Status): WebhookOutcome['newStatus'] {
-  switch (status) {
-    case 'active':
-      return 'active';
-    case 'past_due':
-      return 'past_due';
-    case 'unpaid':
-      return 'expired';
-    default:
-      return null;
-  }
-}
+// mapSubscriptionStatus lives in @/lib/stripe/client (mapStripeSubStatus) as the
+// single source of truth, shared with the admin reconcile route so the
+// drift-detector can never drift from what the webhook actually writes.
 
 function clientReferenceIdOf(session: Stripe.Checkout.Session): string | null {
   const value = session.client_reference_id;
@@ -141,7 +124,7 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
       // and unpaid both end access — write 'expired'. The customer.subscription.deleted
       // event is the canonical "access ends now" signal; canceled here covers
       // the rare case where the event arrives via an updated event first.
-      const newStatus = mapSubscriptionStatus(sub.status);
+      const newStatus = mapStripeSubStatus(sub.status);
       return {
         newStatus,
         stripeCustomerId: customerIdFromUnknown(sub.customer),
@@ -234,11 +217,14 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       // Dedup INSERT: returns 0 rows when the event_id is already present.
       // We check rowCount inside the transaction to short-circuit cleanly
       // without a stale read against the previous transaction.
+      // Populate event_type + stripe_customer_id (mig 221) so the admin
+      // per-user webhook history (Spec 21 §6) can correlate events to a
+      // customer. Additive to the dedup contract — event_id PK is unchanged.
       const inserted = await client.query<{ event_id: string }>(
-        `INSERT INTO stripe_webhook_events (event_id) VALUES ($1)
+        `INSERT INTO stripe_webhook_events (event_id, event_type, stripe_customer_id) VALUES ($1, $2, $3)
          ON CONFLICT (event_id) DO NOTHING
          RETURNING event_id`,
-        [event.id],
+        [event.id, event.type, outcome.stripeCustomerId],
       );
       if (inserted.rowCount === 0) {
         // Already processed by a concurrent retry — exit transaction without
@@ -287,6 +273,17 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       // event that reaches this branch (checkout.session.completed,
       // subscription.created/updated) carries a customer id, so $2 is non-null
       // here.
+      //
+      // DELETION-STATE FENCE (P26-26D): both branches additionally refuse to
+      // touch a row whose subscription_status is 'cancelled_pending_deletion'.
+      // 26D's delete-time cancel schedules cancel_at_period_end, so Stripe
+      // fires customer.subscription.updated NOW (status still 'active') and
+      // customer.subscription.deleted LATER at period end — without this fence
+      // EITHER event would overwrite the deletion state to 'active'/'expired',
+      // which un-blocks the session route's DELETION_BLOCKED check and would
+      // let a deleted account re-subscribe (the exact contract Spec 96 §2
+      // forbids). Reactivation (Spec 95 §6.4) restores 'expired' explicitly,
+      // after which webhook writes apply normally again.
       const eventCreatedAt = new Date(event.created * 1000);
       let result;
       if (outcome.userId !== null) {
@@ -297,7 +294,8 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
                last_stripe_event_at = $4,
                updated_at = NOW()
            WHERE user_id = $3
-             AND (last_stripe_event_at IS NULL OR last_stripe_event_at < $4)`,
+             AND (last_stripe_event_at IS NULL OR last_stripe_event_at < $4)
+             AND subscription_status IS DISTINCT FROM 'cancelled_pending_deletion'`,
           [outcome.newStatus, outcome.stripeCustomerId, outcome.userId, eventCreatedAt],
         );
       } else if (outcome.stripeCustomerId !== null) {
@@ -307,7 +305,8 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
                last_stripe_event_at = $3,
                updated_at = NOW()
            WHERE stripe_customer_id = $2
-             AND (last_stripe_event_at IS NULL OR last_stripe_event_at < $3)`,
+             AND (last_stripe_event_at IS NULL OR last_stripe_event_at < $3)
+             AND subscription_status IS DISTINCT FROM 'cancelled_pending_deletion'`,
           [outcome.newStatus, outcome.stripeCustomerId, eventCreatedAt],
         );
       } else {
