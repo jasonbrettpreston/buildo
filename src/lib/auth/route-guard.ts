@@ -44,6 +44,13 @@ export const PUBLIC_PATHS = [
   '/',
   '/login',
   '/signup',
+  // Spec 20 §3.2 (P26-26B): the web checkout page family. The visitor is a
+  // mobile-handoff user with NO web session — the nonce in the query string
+  // is the credential (exchanged via POST /api/subscribe/exchange). The
+  // success/cancel pages are Stripe redirect targets and equally sessionless.
+  '/subscribe',
+  '/subscribe/success',
+  '/subscribe/cancel',
 ] as const;
 
 /** Path prefixes that are always public */
@@ -73,6 +80,14 @@ const PUBLIC_EXACT_API_PATHS: ReadonlySet<string> = new Set([
   // internally. Without this entry the fail-closed default would 401
   // every webhook before our handler could run.
   '/api/webhooks/stripe',
+  // Nonce-exchange checkout endpoint (Spec 20 §3.2, P26-26B). The web
+  // browser mid-handoff has NO Firebase session — the single-use nonce in
+  // the POST body is the credential (the exact trap the plan caught:
+  // /api/subscribe/* would otherwise prefix-inherit 'authenticated' from
+  // AUTHENTICATED_API_ROUTES below). Exact-match: sibling paths like
+  // /api/subscribe/session and /api/subscribe/portal-session stay
+  // authenticated.
+  '/api/subscribe/exchange',
 ]);
 
 /** Exact public file paths */

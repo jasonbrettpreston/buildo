@@ -50,6 +50,14 @@ function resolveCheckoutBaseUrl(): string {
 // instead of silently opening a browser to a paid-in-full page.
 const ALREADY_ENTITLED_STATUSES = new Set(['active', 'admin_managed']);
 
+// past_due (P26-26C fold): the user HAS a live subscription whose payment is
+// failing — a fresh checkout would create a SECOND subscription (double
+// billing) instead of fixing the card. Route them to the Customer Portal
+// (POST /api/subscribe/portal-session), where payment-method recovery lives.
+// Distinct 400 code so the client can route toward the portal; walling
+// past_due out with a generic error would prevent recovery entirely.
+const PORTAL_ROUTED_STATUSES = new Set(['past_due']);
+
 // Statuses that block ANY new subscription activity. cancelled_pending_deletion
 // means the user has confirmed account deletion (Spec 96 §2) — they must NOT
 // be able to re-subscribe through this endpoint, which would partially
@@ -97,6 +105,9 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       const status = profileRows.rows[0]!.subscription_status;
       if (status !== null && DELETION_BLOCKED_STATUSES.has(status)) {
         return { kind: 'deletion_blocked' as const };
+      }
+      if (status !== null && PORTAL_ROUTED_STATUSES.has(status)) {
+        return { kind: 'past_due_portal' as const };
       }
       if (status !== null && ALREADY_ENTITLED_STATUSES.has(status)) {
         return { kind: 'already_entitled' as const };
@@ -160,6 +171,24 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
           error: {
             code: 'ACCOUNT_PENDING_DELETION',
             message: 'Account is pending deletion and cannot resubscribe.',
+          },
+          meta: null,
+        },
+        { status: 400 },
+      );
+    }
+    if (result.kind === 'past_due_portal') {
+      // P26-26C fold: past_due means a LIVE subscription with a failing
+      // payment. A new checkout would double-bill; the fix (card update)
+      // lives in the Customer Portal. The distinct code routes the client
+      // to POST /api/subscribe/portal-session.
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            code: 'PAST_DUE_USE_PORTAL',
+            message:
+              'Your subscription has a payment issue — update your payment method instead of starting a new checkout.',
           },
           meta: null,
         },
