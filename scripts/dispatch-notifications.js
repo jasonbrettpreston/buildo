@@ -156,9 +156,19 @@ pipeline.run('dispatch-notifications', async (pool) => {
             deadTokens.add(t.push_token);
           }
         }
-        for (const tok of deadTokens) {
-          const res = await pool.query('DELETE FROM device_tokens WHERE push_token = $1', [tok]);
-          tokensPruned += res.rowCount ?? 0;
+        // The Expo receipt HTTP call above is now COMPLETE — the token DELETEs
+        // run in their OWN transaction (§47 §R9). A transaction is NEVER held
+        // open across the network I/O.
+        if (deadTokens.size > 0) {
+          const pruned = await pipeline.withTransaction(pool, async (client) => {
+            let n = 0;
+            for (const tok of deadTokens) {
+              const res = await client.query('DELETE FROM device_tokens WHERE push_token = $1', [tok]);
+              n += res.rowCount ?? 0;
+            }
+            return n; // return-then-add keeps the count correct across a 40P01 retry
+          });
+          tokensPruned += pruned;
         }
       }
     } catch (err) {
@@ -257,17 +267,27 @@ pipeline.run('dispatch-notifications', async (pool) => {
       });
     }
 
-    // ── Record deferrals in the ledger (idempotent).
-    for (const d of deferrals) {
-      const res = await pool.query(
-        `INSERT INTO notification_dispatches (user_id, lead_id, type, toronto_date, push_token, status, detail, dispatched_at)
-         VALUES ($1, $2, $3, $4::date, $5, $6, $7, $8::timestamptz)
-         ON CONFLICT (user_id, lead_id, type, toronto_date) DO NOTHING`,
-        [d.userId, d.leadId, d.type, today, d.token, d.status, d.detail, RUN_AT],
-      );
-      if ((res.rowCount ?? 0) > 0) {
-        if (d.status === 'deferred_expired') deferredExpired++; else deferred++;
-      }
+    // ── Record deferrals in the ledger (idempotent). No network I/O here —
+    // one atomic transaction for the whole deferral batch (§47 §R9).
+    if (deferrals.length > 0) {
+      const counts = await pipeline.withTransaction(pool, async (client) => {
+        let def = 0;
+        let defExp = 0;
+        for (const d of deferrals) {
+          const res = await client.query(
+            `INSERT INTO notification_dispatches (user_id, lead_id, type, toronto_date, push_token, status, detail, dispatched_at)
+             VALUES ($1, $2, $3, $4::date, $5, $6, $7, $8::timestamptz)
+             ON CONFLICT (user_id, lead_id, type, toronto_date) DO NOTHING`,
+            [d.userId, d.leadId, d.type, today, d.token, d.status, d.detail, RUN_AT],
+          );
+          if ((res.rowCount ?? 0) > 0) {
+            if (d.status === 'deferred_expired') defExp++; else def++;
+          }
+        }
+        return { def, defExp }; // return-then-add: correct across a 40P01 retry
+      });
+      deferred += counts.def;
+      deferredExpired += counts.defExp;
     }
 
     // ── Send eligible rows in chunks of <=100.
@@ -296,39 +316,52 @@ pipeline.run('dispatch-notifications', async (pool) => {
         continue;
       }
 
-      // Align tickets to chunk by index (push-dispatch preserves order).
-      for (let j = 0; j < chunk.length; j++) {
-        const e = chunk[j];
-        const t = tickets[j];
-        if (t && t.status === 'ok') {
-          const res = await pool.query(
-            `INSERT INTO notification_dispatches (user_id, lead_id, type, toronto_date, push_token, expo_ticket_id, status, dispatched_at)
-             VALUES ($1, $2, $3, $4::date, $5, $6, 'sent', $7::timestamptz)
-             ON CONFLICT (user_id, lead_id, type, toronto_date) DO NOTHING`,
-            [e.userId, e.leadId, e.type, today, e.token, t.id, RUN_AT],
-          );
-          if ((res.rowCount ?? 0) > 0) dispatched++;
-          await pool.query(
-            'UPDATE notifications SET is_sent = true, sent_at = $2::timestamptz WHERE id = $1',
-            [e.notificationId, RUN_AT],
-          );
-        } else {
-          deliveryErrors++;
-          const err = t?.error ?? 'unknown';
-          // Ticket-time prune (25B): DeviceNotRegistered → delete the EXACT token
-          // (never the user's other devices).
-          if (err === DEVICE_NOT_REGISTERED && e.token) {
-            const res = await pool.query('DELETE FROM device_tokens WHERE push_token = $1', [e.token]);
-            tokensPruned += res.rowCount ?? 0;
+      // The Expo send HTTP call is COMPLETE. The per-chunk ledger writes +
+      // is_sent flips + dead-token prunes run in ONE transaction AFTER the
+      // network I/O (§47 §R9 — a transaction is never held across the send).
+      // Tickets align to `chunk` by index (push-dispatch preserves order).
+      const deltas = await pipeline.withTransaction(pool, async (client) => {
+        let sent = 0;
+        let errs = 0;
+        let pruned = 0;
+        for (let j = 0; j < chunk.length; j++) {
+          const e = chunk[j];
+          const t = tickets[j];
+          if (t && t.status === 'ok') {
+            const res = await client.query(
+              `INSERT INTO notification_dispatches (user_id, lead_id, type, toronto_date, push_token, expo_ticket_id, status, dispatched_at)
+               VALUES ($1, $2, $3, $4::date, $5, $6, 'sent', $7::timestamptz)
+               ON CONFLICT (user_id, lead_id, type, toronto_date) DO NOTHING`,
+              [e.userId, e.leadId, e.type, today, e.token, t.id, RUN_AT],
+            );
+            if ((res.rowCount ?? 0) > 0) sent++;
+            await client.query(
+              'UPDATE notifications SET is_sent = true, sent_at = $2::timestamptz WHERE id = $1',
+              [e.notificationId, RUN_AT],
+            );
+          } else {
+            errs++;
+            const err = t?.error ?? 'unknown';
+            // Ticket-time prune (25B): DeviceNotRegistered → delete the EXACT token
+            // (never the user's other devices).
+            if (err === DEVICE_NOT_REGISTERED && e.token) {
+              const res = await client.query('DELETE FROM device_tokens WHERE push_token = $1', [e.token]);
+              pruned += res.rowCount ?? 0;
+            }
+            await client.query(
+              `INSERT INTO notification_dispatches (user_id, lead_id, type, toronto_date, push_token, status, detail, dispatched_at)
+               VALUES ($1, $2, $3, $4::date, $5, 'error', $6, $7::timestamptz)
+               ON CONFLICT (user_id, lead_id, type, toronto_date) DO NOTHING`,
+              [e.userId, e.leadId, e.type, today, e.token, String(err).slice(0, 200), RUN_AT],
+            );
           }
-          await pool.query(
-            `INSERT INTO notification_dispatches (user_id, lead_id, type, toronto_date, push_token, status, detail, dispatched_at)
-             VALUES ($1, $2, $3, $4::date, $5, 'error', $6, $7::timestamptz)
-             ON CONFLICT (user_id, lead_id, type, toronto_date) DO NOTHING`,
-            [e.userId, e.leadId, e.type, today, e.token, String(err).slice(0, 200), RUN_AT],
-          );
         }
-      }
+        // return-then-add so the counters stay correct across a 40P01 retry
+        return { sent, errs, pruned };
+      });
+      dispatched += deltas.sent;
+      deliveryErrors += deltas.errs;
+      tokensPruned += deltas.pruned;
     }
 
     // §R10 — audit rows.

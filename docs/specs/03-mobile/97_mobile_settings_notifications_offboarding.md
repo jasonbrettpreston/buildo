@@ -70,11 +70,11 @@ All editable fields save on blur (text fields) or toggle (switches) — no expli
 
 The NOTIFICATIONS section exposes all five preference keys from `notification_prefs` JSONB (Spec 92 §2.3 and Spec 95 §2.4):
 
-**New lead cost threshold** (slider):
-- Determines `notification_prefs.new_lead_min_cost_tier` — the minimum job value that triggers a `NEW_HIGH_VALUE_LEAD` push
-- Slider values: `low` | `medium` | `high` (or display as dollar ranges: `< $100k` | `$100k–$500k` | `> $500k`)
+**New lead cost threshold** (slider) — **DEAD PREF in v1, rendered "coming soon" (P25 25D):**
+- It *would* determine `notification_prefs.new_lead_min_cost_tier` — the minimum job value that triggers a `NEW_HIGH_VALUE_LEAD` push — BUT `NEW_HIGH_VALUE_LEAD` has **zero server implementation**: it is a FENCED type in v1 (`scripts/lib/notification-types.js` `FENCED_TYPES_V1`), never enqueued, never dispatched. Writing the tier therefore changes nothing today.
+- v1 UX: the slider is **disabled + labeled "coming soon"** (25D) so the control does not lie about a working feature. It graduates in 25F/v1.1 behind its own gate, when the server `NEW_HIGH_VALUE_LEAD` enqueuer ships.
+- Slider values (when live): `low` | `medium` | `high` (or dollar ranges: `< $100k` | `$100k–$500k` | `> $500k`)
 - Styling: same `@react-native-community/slider` spec as Radius Slider (§4) — `minimumTrackTintColor="#f59e0b"`, amber thumb, `onSlidingComplete` fires PATCH
-- PATCH sends merged `notification_prefs: { ...existing, new_lead_min_cost_tier: newValue }` (server merges partial per Spec 95 Step 3)
 
 **Phase toggles** (three independent switches):
 - `notification_prefs.phase_changed` → "Phase changes" — default `true`
@@ -131,6 +131,12 @@ Two legacy toggle groupings (now fine-grained via §2.1 JSONB controls). For bac
 - Triggered by: daily Cloud Function sweep of tracked permits
 
 **Notification hardware layer:** Per Spec 92 — `expo-notifications` token registration, foreground notification handling, and badge count management governed by Spec 92. This spec defines the notification types and triggers only.
+
+> **P25 AMENDMENT — endpoint + mechanism truth (the mandates moved to Spec 101).** The §2.3 descriptions above are legacy and partly doc-rot. The current truth:
+> - **Delivery is a pipeline step, NOT Cloud Functions.** There is no Cloud Function sweep. The `LIFECYCLE_PHASE_CHANGED` / `LIFECYCLE_STALLED` / `START_DATE_URGENT` pushes are ENQUEUED by `classify-lifecycle-phase.js` + `update-tracked-projects.js` and delivered by the single gated `dispatch_notifications` chain step (`docs/specs/01-pipeline/101_notification_dispatch.md`), inert until `notifications_dispatch_enabled = 1`.
+> - **Payload shape** is the Spec 92 §3.1 form — `data: { notification_type, route_domain: "flight_board", entity_id: "NUM--REV", urgency }` — NOT the `{ permitNum, revisionNum }` shown in the legacy examples above.
+> - **Read endpoint is now session-authed.** `GET /api/notifications` previously took `user_id` as a query param and returned ANY user's history (an IDOR defect). P25 (commit `4be135a`) fixed it: the read + `PATCH` (mark-read) both derive the user from the session, never a client-supplied id. The admin dispatch-log read path is the separate authed `/admin/notifications` surface (Spec 102).
+> - **Preference gates** live on `user_profiles` flat columns (`phase_changed` / `lifecycle_stalled_pref` / `start_date_urgent`, mig 117); the dispatcher reads them per row (`PREF_COLUMN_BY_TYPE`). Prefs are per-ACCOUNT (no per-trade surface).
 
 ### 2.4 Deep Link Handling
 

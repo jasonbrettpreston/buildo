@@ -64,7 +64,7 @@ To maintain the "Dumb Glass" architecture and strictly protect PII, the backend 
 
 ### 3.1 The Standardised Payload Fields
 
-When the Next.js API calls the Expo Push Service, the `data` object must strictly adhere to:
+When the dispatcher (`scripts/dispatch-notifications.js`, P25) calls the Expo Push Service, the `data` object must strictly adhere to:
 
 ```json
 {
@@ -72,17 +72,20 @@ When the Next.js API calls the Expo Push Service, the `data` object must strictl
   "title": "Framing Phase Reached",
   "body": "123 Main St has passed foundation inspection.",
   "data": {
-    "notification_type": "PHASE_CHANGED",
+    "notification_type": "LIFECYCLE_PHASE_CHANGED",
     "route_domain": "flight_board",
-    "entity_id": "permit_12345abc",
+    "entity_id": "12345 ABC BLD--00",
     "urgency": "normal"
   }
 }
 ```
 
+* `notification_type`: one of the EXACT emitted strings `LIFECYCLE_PHASE_CHANGED` | `LIFECYCLE_STALLED` | `START_DATE_URGENT` (see the canonical-module note below — the earlier `"PHASE_CHANGED"` example was doc-rot; the code has always emitted the `LIFECYCLE_`-prefixed form, and the mobile toast routes on it).
 * `route_domain`: Enum (`lead_feed` | `flight_board`). Determines which visual tab the user lands in.
-* `entity_id`: The unique ID used to fetch full details via TanStack Query upon opening.
+* `entity_id`: the deep-link key in **`NUM--REV`** form (permit_num + `--` + zero-padded revision), derived from the queue's `lead_id` (`permit:NUM:REV`) by `entityIdFromLead`. It is NOT the colon feed-id form — the board detail route parses `id.split('--')`. This seam is locked by `src/tests/notification-dispatch-contract.logic.test.ts`.
 * `urgency`: Enum (`normal` | `urgent` | `stalled`). Used by the mobile app to determine local toast styling and type dot colour.
+
+> **P25 AMENDMENT — canonical type module (module extraction).** The notification type strings are no longer scattered across the sender, the queue-writer, the mobile toast enum, and this spec. They live in ONE source of truth: `scripts/lib/notification-types.js` (`DISPATCHABLE_TYPES_V1`, `FENCED_TYPES_V1`, `PREF_COLUMN_BY_TYPE`, `SCHEDULE_GATED_TYPES`, `entityIdFromLead`), pinned to the mobile `NotificationToast.tsx` strings by `src/tests/notification-types.logic.test.ts`. The v1 dispatchable set is exactly the three above; `NEW_HIGH_VALUE_LEAD` and all `COA_*` subtypes are FENCED (recognised, never sent) in v1.
 
 ### 3.2 Deep Linking & State Hydration
 
