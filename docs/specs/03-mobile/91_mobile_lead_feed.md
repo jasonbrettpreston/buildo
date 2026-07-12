@@ -22,7 +22,7 @@ The full set of `account_preset` values (Spec 95 §3.1):
 | `account_preset` | `trade_slug` | Feed semantics | Onboarding | Subscription |
 |---|---|---|---|---|
 | `'tradesperson'` | one of the 34 construction/product trades | This spec — calibrated to that trade's `work_phase` | Standard (Spec 94 §3) | Trial → paid (Spec 96) |
-| `'supplier'` (P24) | one product-trade slug (e.g. `glazing`) | This spec — IDENTICAL to a tradesperson (a supplier feeds off its product trade; the persona never branches the algorithm) | Standard (Spec 94 §3); persona derived server-side | Trial → paid (Spec 96) |
+| `'supplier'` (P24) | one product-trade slug (e.g. `glazing`) | This spec — IDENTICAL to a tradesperson (a supplier feeds off its product trade; the persona never branches the algorithm) | Standard (Spec 94 §3); preset EXPLICIT-ONLY — admin-set, never derived from the trade (Spec 21 §4 v2) | Trial → paid (Spec 96) |
 | `'realtor'` | `'realtor'` | This spec — calibrated to `'realtor'` `work_phase` (earliest + latest extremes) | Standard with realtor-specific radius default + always-fixed address (Spec 94 §3.1 trade list + §4 Path R) | Trial → paid (Spec 96) |
 | `'manufacturer'` | `NULL` (uses `trade_slugs_override` array) | **B2B multi-trade.** Served via the SELECTED-TRADE set (Spec 95 §2.5.2) — P24 un-401'd manufacturers with a populated override. | Onboarding bypass (Spec 94 §7) | Admin-managed (Spec 95 §3.1; Spec 96 §expiration excludes manufacturers) |
 

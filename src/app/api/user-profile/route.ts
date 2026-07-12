@@ -332,9 +332,12 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     // P24-24A — derive account_preset server-side at onboarding completion so
     // self-serve rows (which onboard with a NULL preset) get a persona for the
     // admin directory filter. ONLY when currently NULL — never overwrite an
-    // admin-set preset (manufacturer / enterprise supplier). Deterministic:
-    // realtor slug → 'realtor'; a product trade → 'supplier'; else 'tradesperson'
-    // (Spec 21 §4). Purely a UX/billing axis — never feeds the lead algorithm.
+    // admin-set preset (manufacturer / enterprise supplier). Deterministic
+    // (Spec 21 §4 v2): realtor slug → 'realtor'; else 'tradesperson'.
+    // 'supplier' is EXPLICIT-ONLY (admin provisioning / the audited join-editor
+    // set_preset), never derived from the trade — a trade slug cannot
+    // distinguish a plumber from a plumbing-supply manufacturer. Purely a
+    // UX/billing axis — never feeds the lead algorithm.
     if (fields.onboarding_complete === true && existing.account_preset == null) {
       const effectiveTrade = (tradeSlugFirstWrite ?? existing.trade_slug) as string | null;
       addField('account_preset', deriveAccountPreset(effectiveTrade));

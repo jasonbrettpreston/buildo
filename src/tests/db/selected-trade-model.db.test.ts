@@ -59,8 +59,11 @@ describe.skipIf(!dbAvailable())('SELECTED-TRADE model on seeded accounts', () =>
     expect(res.rows[0]!.account_preset).toBe('supplier');
   });
 
-  it('deriveAccountPreset matches each seeded persona (the shipped mapping)', () => {
-    expect(deriveAccountPreset('glazing')).toBe('supplier');
+  it('deriveAccountPreset matches the v2 mapping (supplier explicit-only, never derived)', () => {
+    // The seeded '_p24m_supplier' row carries preset='supplier' via the EXPLICIT
+    // path (its INSERT — modelling admin provisioning), NOT via derivation:
+    // a product trade like glazing derives 'tradesperson' (v2 overrule).
+    expect(deriveAccountPreset('glazing')).toBe('tradesperson');
     expect(deriveAccountPreset('realtor')).toBe('realtor');
     expect(deriveAccountPreset('concrete')).toBe('tradesperson');
   });

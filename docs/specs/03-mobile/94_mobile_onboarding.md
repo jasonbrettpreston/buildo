@@ -22,7 +22,7 @@
 
 ### 3.1 The Trade List
 
-A single full-screen scrollable list — no profession picker screen. Grouped by category with sticky section headers. 34 trades + Realtor/Real Estate Agent (35 total — the Spec 80 canonical taxonomy; the earlier "32" predates the 3 trades added in Spec 80 §5.B.6: overhead-doors, site-preparation, site-maintenance). Product-supplier personas pick their product trade here (a window manufacturer picks `glazing`); the `supplier` persona is derived server-side at onboarding completion (Spec 21 §4 / `deriveAccountPreset`), not chosen on this screen. Suppliers flow straight to the feed — the auth gate needs NO new branch (`decideAuthGateRoute` only special-cases `manufacturer`; a supplier routes through the normal onboarding→feed path).
+A single full-screen scrollable list — no profession picker screen. Grouped by category with sticky section headers. 34 trades + Realtor/Real Estate Agent (35 total — the Spec 80 canonical taxonomy; the earlier "32" predates the 3 trades added in Spec 80 §5.B.6: overhead-doors, site-preparation, site-maintenance). Product-supplier personas pick their product trade here (a window manufacturer picks `glazing`) and onboard as a normal account — self-serve derivation stamps `tradesperson` (or `realtor`); the **`supplier` preset is EXPLICIT-ONLY** (admin provisioning or the audited Spec 21 join-editor re-label) until a future onboarding persona step exists (Spec 21 §4 v2 — a trade slug cannot distinguish a plumber from a plumbing-supply manufacturer). Suppliers flow straight to the feed — the auth gate needs NO new branch (`decideAuthGateRoute` only special-cases `manufacturer`; a supplier routes through the normal onboarding→feed path).
 
 ```
 SITE & STRUCTURE          MECHANICAL & ELECTRICAL

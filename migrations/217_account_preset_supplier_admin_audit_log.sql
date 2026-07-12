@@ -7,10 +7,15 @@
 --      persona; architecturally identical to a tradesperson). Original CHECK is
 --      in migration 114:49-50.
 --   2. Backfill NULL account_preset on existing rows so the new admin directory
---      filter is not born broken. Deterministic partition mirroring
---      src/lib/classification/account-preset.ts (realtor -> realtor; a product
---      trade -> supplier; other construction trade -> tradesperson; a NULL-trade
---      row with a multi-trade override -> manufacturer; otherwise tradesperson).
+--      filter is not born broken. Deterministic, mirroring
+--      src/lib/classification/account-preset.ts v2 (realtor -> realtor; a
+--      NULL-trade row with a multi-trade override -> manufacturer; else
+--      tradesperson). 'supplier' is EXPLICIT-ONLY (admin provisioning / the
+--      audited join-editor set_preset) and is NEVER inferred from the trade —
+--      the v1 product-trade partition was overruled 2026-07-11 (in-place edit
+--      pre-push; dev table was 0 rows): a trade slug cannot distinguish a
+--      plumber from a plumbing-supply manufacturer, and the majority self-serve
+--      persona must not be mislabeled.
 --   3. admin_audit_log table + a right-to-be-forgotten scrub function. PII-FACT
 --      convention: PII-field mutations record the FACT of the change (which
 --      field, by whom, when) in old_value/new_value as a redaction marker, NEVER
@@ -39,18 +44,11 @@ ALTER TABLE user_profiles DROP CONSTRAINT IF EXISTS chk_account_preset;
 ALTER TABLE user_profiles ADD CONSTRAINT chk_account_preset
   CHECK (account_preset IN ('tradesperson', 'realtor', 'manufacturer', 'supplier'));
 
--- 2. NULL-preset backfill. Runs AFTER the CHECK widen so a derived 'supplier'
---    value is admissible. Product-trade slug list mirrors PRODUCT_TRADE_SLUGS
---    in src/lib/classification/account-preset.ts (Spec 80 §5.B.4).
+-- 2. NULL-preset backfill (v2 — supplier explicit-only, never inferred).
+--    Mirrors deriveAccountPreset in src/lib/classification/account-preset.ts.
 UPDATE user_profiles
 SET account_preset = CASE
   WHEN trade_slug = 'realtor' THEN 'realtor'
-  WHEN trade_slug IN (
-    'framing','masonry','roofing','plumbing','hvac','electrical','insulation',
-    'drywall','painting','flooring','glazing','trim-work','millwork-cabinetry',
-    'tiling','stone-countertops','decking-fences','eavestrough-siding',
-    'overhead-doors','site-preparation','site-maintenance'
-  ) THEN 'supplier'
   WHEN trade_slug IS NOT NULL THEN 'tradesperson'
   WHEN trade_slugs_override IS NOT NULL AND array_length(trade_slugs_override, 1) > 0 THEN 'manufacturer'
   ELSE 'tradesperson'
