@@ -1063,9 +1063,18 @@ pipeline.run('update-tracked-projects', async (pool) => {
     // CoA lead_key uses the canonical `lead_id` value directly (tp.lead_id already starts with
     // 'coa:' for the CoA branch); permit lead_key keeps the legacy LPAD-revision_num form for
     // backward compatibility with the existing lead_analytics rows.
+    // lead_analytics.lead_id is NOT NULL (mig 141). It carries the SAME value as
+    // lead_key here: for permits the canonical lead_id is 'permit:<num>:<LPAD2 rev>'
+    // (mig 132 trigger — identical to the lead_key built below), and for CoA the
+    // lead_key IS tp.lead_id ('coa:<app#>'). So lead_id = lead_key satisfies the
+    // NOT NULL + UNIQUE index AND matches the audit-fk-orphans join
+    // (la.lead_id = permits.lead_id / coa_applications.lead_id). Omitting it threw
+    // 23502 and crashed the permits chain on any populated tracked_projects
+    // (P25 review — Regression Guardian CRITICAL; the mig-141 "table is empty"
+    // assumption was invalidated by self-feed-tracked-projects, 2026-07-07).
     const { rows: syncedRows } = await client.query(`
-      INSERT INTO lead_analytics (lead_key, tracking_count, saving_count, updated_at)
-      SELECT lead_key, tracking_count, saving_count, updated_at FROM (
+      INSERT INTO lead_analytics (lead_key, lead_id, tracking_count, saving_count, updated_at)
+      SELECT lead_key, lead_key AS lead_id, tracking_count, saving_count, updated_at FROM (
         -- Permit branch (existing — backward-compatible LPAD lead_key shape)
         SELECT
           'permit:' || tp.permit_num || ':' || LPAD(tp.revision_num::text, 2, '0') AS lead_key,
@@ -1077,7 +1086,15 @@ pipeline.run('update-tracked-projects', async (pool) => {
           AND tp.permit_num IS NOT NULL
           AND tp.revision_num IS NOT NULL
           AND (tp.lead_id IS NULL OR tp.lead_id NOT LIKE 'coa:%')
-        GROUP BY tp.permit_num, tp.revision_num
+        -- GROUP BY the LPAD'd revision (the lead_key form), NOT the raw
+        -- revision_num — else raw-distinct revisions that pad to the same key
+        -- (e.g. '0' and '00', 168 such permit groups live) emit the SAME
+        -- lead_key twice into one INSERT, and ON CONFLICT (lead_key) cannot
+        -- affect a row twice → Postgres 21000 crash of the permits chain
+        -- (P25 review — Reality-Check, reproduced live). Colliding revisions
+        -- correctly aggregate into one lead_analytics row, matching how the
+        -- LPAD lead_key already collapses them in the feed (get-lead-feed).
+        GROUP BY tp.permit_num, LPAD(tp.revision_num::text, 2, '0')
 
         UNION ALL
 

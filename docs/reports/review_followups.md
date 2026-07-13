@@ -2591,3 +2591,9 @@ The committed engine is INERT (notifications_dispatch_enabled=0) and the panel C
 
 ### Minor notifications-GET hardening (DeepSeek — mostly filed, NaN fixed)
 - dynamic WHERE interpolation is safe-but-fragile (hardcoded fragments); hardcoded paramIdx=2 brittle; 3-query count race (total/unread consistency). Hardening, not live bugs.
+
+## update-tracked-projects.js — Gemini findings surfaced during the P25 lead_analytics-fix panel (2026-07-13, pre-existing, NOT the fix's scope)
+The lead_analytics NOT-NULL + 21000-collision crash is FIXED (`lead_id = lead_key` + GROUP BY the LPAD'd key; Reality-Check reproduced the 21000, Integration confirmed the value). These are OTHER pre-existing issues Gemini flagged on the same file — need independent verification before action:
+- **[verify] `isWindowClosed` uses `>=` not `>`** (~:654): Gemini reads Spec 82 §8 item #8 as mandating `>` (archive after PASSING the target phase, not on reaching it); with `>=` a lead may auto-archive the day its phase becomes relevant. Confirm against Spec 82 §8 + the intended semantics.
+- **[verify — Gemini vs P25-Guardian DISAGREE] `stallOffResetUrgencyIds` may have no UPDATE** (~:950-998): Gemini says the categorizer populates `stallOffResetUrgencyIds` but no UPDATE writes `last_notified_stalled=false` for it (→ future stall alerts suppressed). The P25 Regression Guardian read the same block as preserved (:918-982). Resolve by re-reading the actual SQL execution set.
+- **[verify] deploy-age query uses `NOW()` not `RUN_AT`** (~:207-212): a midnight-cross could compute `coaFirstDeployGrace` on a different day than the rest of the run (Spec 47 §14). Low.

@@ -113,6 +113,16 @@ describe('scripts/update-tracked-projects.js — CRM assistant shape', () => {
     expect(content).toMatch(/saving_count/);
     // Uses LPAD with ::text cast to match canonical key format
     expect(content).toMatch(/LPAD\(tp\.revision_num::text, 2, '0'\)/);
+    // REGRESSION LOCK (P25 review — Guardian CRITICAL): the INSERT MUST populate
+    // the NOT-NULL lead_id (mig 141) or it throws 23502 and crashes the permits
+    // chain on any populated tracked_projects. lead_id = lead_key (both are the
+    // canonical 'permit:<num>:<LPAD2>' / 'coa:<app#>' form).
+    expect(content).toMatch(/INSERT INTO lead_analytics \(lead_key, lead_id,/);
+    expect(content).toMatch(/SELECT lead_key, lead_key AS lead_id,/);
+    // REGRESSION LOCK (P25 review — Reality-Check CRITICAL): GROUP BY the LPAD'd
+    // revision (the lead_key form), NOT raw revision_num — else '0'/'00' collide
+    // on lead_key and ON CONFLICT double-hits → 21000 crash.
+    expect(content).toMatch(/GROUP BY tp\.permit_num, LPAD\(tp\.revision_num::text, 2, '0'\)/);
   });
 
   it('zeros out lead_analytics for fully-archived permits', () => {
@@ -695,7 +705,8 @@ describe('Phase F.2 — update-tracked-projects.js CoA branch (WF1 v4)', () => {
   });
 
   it('F.2-35: diff-CRIT-3 — lead_analytics UNIONs CoA leads (Gemini CRIT 1)', () => {
-    expect(SRC).toMatch(/INSERT INTO lead_analytics[\s\S]{0,1500}UNION ALL[\s\S]{0,500}tp\.lead_id\s+AS\s+lead_key/i);
+    // window widened for the P25 lead_id + GROUP-BY-collision fix comments in the permit branch
+    expect(SRC).toMatch(/INSERT INTO lead_analytics[\s\S]{0,2200}UNION ALL[\s\S]{0,500}tp\.lead_id\s+AS\s+lead_key/i);
     expect(SRC).toMatch(/la\.lead_key\s*=\s*tp\.lead_id/);
   });
 
