@@ -24,8 +24,13 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const unreadOnly = searchParams.get('unread_only') === 'true';
-  const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
-  const offset = parseInt(searchParams.get('offset') || '0', 10);
+  // Clamp + NaN-guard: a non-numeric ?limit/?offset (e.g. ?limit=abc) must not
+  // reach the SQL as `LIMIT NaN` (P25 review — DeepSeek). offset is capped to
+  // bound deep-pagination scans.
+  const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
+  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 50;
+  const rawOffset = parseInt(searchParams.get('offset') || '0', 10);
+  const offset = Number.isFinite(rawOffset) ? Math.min(Math.max(rawOffset, 0), 100_000) : 0;
 
   const conditions = ['user_id = $1'];
   const params: unknown[] = [userId];
