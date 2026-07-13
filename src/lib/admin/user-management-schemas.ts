@@ -54,7 +54,12 @@ export const UserDirectoryQuerySchema = z
     subscription_status: z.enum(SUBSCRIPTION_STATUS_VALUES).optional(),
     // P26-26D sweep surface (Spec 21 §6): filter to accounts with an outstanding
     // delete-time Stripe-cancel failure (stripe_cancel_failed_at IS NOT NULL).
-    stripe_cancel_failed: z.coerce.boolean().optional(),
+    // Explicit 'true'/'false' enum — NOT z.coerce.boolean() (which coerces every
+    // non-empty string, incl. 'false'/'0', to true — P26 review R2 Integration).
+    stripe_cancel_failed: z
+      .enum(['true', 'false'])
+      .transform((v) => v === 'true')
+      .optional(),
     offset: z.coerce.number().int().nonnegative().max(1_000_000).default(0),
   })
   .strict();
