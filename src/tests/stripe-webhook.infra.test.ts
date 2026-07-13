@@ -194,9 +194,16 @@ describe('POST /api/webhooks/stripe — 200 happy paths', () => {
     expect(updateSql).toMatch(/WHERE user_id = \$\d/);
     // The customer-id equality guard must be GONE from the user_id path.
     expect(updateSql).not.toMatch(/stripe_customer_id IS NULL OR stripe_customer_id = \$\d/);
-    // Customer id is written authoritatively (= $2), not COALESCE(existing, $2).
-    expect(updateSql).toMatch(/stripe_customer_id = \$2/);
-    expect(updateSql).not.toMatch(/COALESCE\(stripe_customer_id/);
+    // Customer id written via COALESCE($2, existing): authoritative when the
+    // event carries a customer (re-subscriber — cus_NEW overwrites cus_OLD,
+    // since this event is 'active' with a non-null $2), but never NULLs the
+    // stored id on a customer-less event (P26 review — Gemini HIGH).
+    expect(updateSql).toMatch(/stripe_customer_id = COALESCE\(\$2, stripe_customer_id\)/);
+    // Superseded-subscription fence (P26 review — Reality-Check CRITICAL): an
+    // activating ('active') event still claims the customer; a revoking event
+    // only applies when the event's customer matches the current stored one, so
+    // a stale terminal event from an old sub can't downgrade a re-subscriber.
+    expect(updateSql).toMatch(/\$1 = 'active' OR stripe_customer_id IS NOT DISTINCT FROM \$2/);
     // The out-of-order guard stays.
     expect(updateSql).toMatch(/last_stripe_event_at IS NULL OR last_stripe_event_at <\s+\$\d/);
     // Params order on user_id path: [status, customer_id, user_id, event_created_at]

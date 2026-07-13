@@ -18,7 +18,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { verifyAdminAuth, parseAdminAllowlist, type AdminContext } from '@/lib/auth/verify-admin';
-import { pool } from '@/lib/db/client';
+import { pool, withTransaction } from '@/lib/db/client';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod, internalError } from '@/features/leads/api/error-mapping';
 import { logError, logWarn } from '@/lib/logger';
@@ -172,31 +172,45 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest, co
       );
     }
 
-    // Defense-in-depth: the WHERE fence mirrors the webhook — even if the row
-    // flipped to the deletion state between the read and the write, we never
-    // overwrite it.
-    const updated = await pool.query(
-      `UPDATE user_profiles
-          SET subscription_status = $1, updated_at = NOW()
-        WHERE user_id = $2
-          AND subscription_status IS DISTINCT FROM 'cancelled_pending_deletion'`,
-      [stripeStatus, targetUid],
-    );
-    if (updated.rowCount === 0) {
-      // The fence caught a concurrent deletion — report as conflict.
+    // Atomic mutation + audit (P26 review — DeepSeek/Observability CRITICAL):
+    // the UPDATE and its admin_audit_log row commit together or not at all, so
+    // an audit-write failure can never leave a mutated-but-unaudited (and, per
+    // the no-drift short-circuit above, unrecoverable) account.
+    // The WHERE fence excludes BOTH protected statuses (P26 review — the SQL
+    // guard, not just the read-time check at line ~158, so a concurrent flip to
+    // 'admin_managed' or the deletion state during the Stripe round-trip can't
+    // be overwritten). last_stripe_event_at = NOW() blocks a subsequently-
+    // arriving STALE webhook from reverting this operator decision (Gemini MED).
+    let applied = false;
+    await withTransaction(async (client) => {
+      const updated = await client.query(
+        `UPDATE user_profiles
+            SET subscription_status = $1, last_stripe_event_at = NOW(), updated_at = NOW()
+          WHERE user_id = $2
+            AND subscription_status NOT IN ('cancelled_pending_deletion', 'admin_managed')`,
+        [stripeStatus, targetUid],
+      );
+      if ((updated.rowCount ?? 0) === 0) {
+        // The fence caught a concurrent state change — no mutation, no audit.
+        return;
+      }
+      await writeAdminAudit(
+        {
+          adminUid: adminCtx.uid,
+          action: 'subscription_reconcile_apply',
+          targetUid,
+          oldValue: { subscription_status: stored },
+          newValue: { subscription_status: stripeStatus },
+          reason,
+        },
+        client,
+      );
+      applied = true;
+    });
+
+    if (!applied) {
       return err('CONFLICT', 'Account state changed concurrently; reconcile not applied', 409);
     }
-
-    // Audit is load-bearing: a failure here fails the request (an unaudited
-    // admin mutation is a compliance hole).
-    await writeAdminAudit({
-      adminUid: adminCtx.uid,
-      action: 'subscription_reconcile_apply',
-      targetUid,
-      oldValue: { subscription_status: stored },
-      newValue: { subscription_status: stripeStatus },
-      reason,
-    });
 
     return ok(
       { stored_status: stored, stripe_status: stripeStatus, applied: true },

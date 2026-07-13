@@ -52,10 +52,23 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     // trade_slugs_override (admin-internal + PII) to the mobile client. Return
     // only the client-safe column list, matching the /api/user-profile GET+PATCH
     // convention (userProfile.schema.ts).
+    // Reset the Stripe bookkeeping tied to the SUPERSEDED subscription (P26
+    // review — Reality-Check CRITICAL/HIGH). Both columns reference the old
+    // sub the deletion scheduled to cancel; leaving them stale lets a later
+    // terminal event or an operator sweep act on the wrong subscription after
+    // the user re-subscribes with a fresh customer id:
+    //   - last_stripe_event_at = NULL: clears the out-of-order watermark tied
+    //     to the old sub (the webhook's superseded-subscription fence is the
+    //     primary guard; this is belt-and-suspenders).
+    //   - stripe_cancel_failed_at = NULL: the old sub's cancel debt is moot on
+    //     reactivation; a re-subscribe mints a new customer, so retrying the
+    //     old cancel would target the wrong (or a live) subscription.
     const updated = await query<Record<string, unknown>>(
       `UPDATE user_profiles
        SET account_deleted_at = NULL,
            subscription_status = $2,
+           last_stripe_event_at = NULL,
+           stripe_cancel_failed_at = NULL,
            updated_at = NOW()
        WHERE user_id = $1
        RETURNING ${CLIENT_SAFE_SELECT_LIST}`,

@@ -57,7 +57,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     Object.fromEntries(request.nextUrl.searchParams),
   );
   if (!parsed.success) return badRequestZod(parsed.error);
-  const { q, preset, trade_slug, subscription_status, offset } = parsed.data;
+  const { q, preset, trade_slug, subscription_status, stripe_cancel_failed, offset } = parsed.data;
 
   try {
     const where: string[] = [];
@@ -77,6 +77,11 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     if (preset) add((i) => `account_preset = $${i}`, preset);
     if (trade_slug) add((i) => `(trade_slug = $${i} OR $${i} = ANY(trade_slugs_override))`, trade_slug);
     if (subscription_status) add((i) => `subscription_status = $${i}`, subscription_status);
+    // P26-26D sweep surface (Spec 21 §6): outstanding delete-time cancel debt.
+    // Boolean-valued (no bind param) — IS [NOT] NULL on the marker column.
+    if (stripe_cancel_failed !== undefined) {
+      where.push(`stripe_cancel_failed_at IS ${stripe_cancel_failed ? 'NOT NULL' : 'NULL'}`);
+    }
 
     const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
 

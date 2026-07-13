@@ -356,21 +356,24 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
       account_deleted_at: new Date(),
       subscription_status: 'cancelled_pending_deletion',
     }).where(eq(userProfiles.user_id, uid));
-    // 2. Cancel Stripe subscription if stripe_customer_id is set
-    if (profile.stripe_customer_id) {
-      // Look up the active subscription — do NOT assume a subscription ID;
-      // trial users who never paid have no Stripe subscription.
-      const subscriptions = await stripe.subscriptions.list({
-        customer: profile.stripe_customer_id,
-        status: 'active',
-        limit: 1,
-      });
-      if (subscriptions.data.length > 0) {
-        await stripe.subscriptions.cancel(subscriptions.data[0].id);
-      }
-      // No active subscription (trial user who never paid) → skip silently
-    }
   });
+  // 2. Delete-time Stripe cancel (P26-26D; the 2026-07-12 period-end ruling).
+  //    OUTSIDE the DB transaction — network I/O is never held inside a tx, and
+  //    the cancel is loud-non-fatal (a Stripe outage must not block deletion).
+  //    Uses the SHARED helper cancelAllStripeSubscriptions (@/lib/stripe/client):
+  //    it lists status:'all', skips terminal states, and schedules
+  //    cancel_at_period_end on EVERY live sub (not just the first `active` one —
+  //    past_due/trialing subs bill too). On throw: logError + set the durable
+  //    stripe_cancel_failed_at marker (mig 220) for the sweep/retry route. The
+  //    admin delete action (PATCH /api/admin/users/[uid]) cancels identically.
+  if (profile.stripe_customer_id) {
+    try {
+      await cancelAllStripeSubscriptions(profile.stripe_customer_id);
+    } catch (stripeErr) {
+      logError('[user-profile/delete]', stripeErr, { uid, stage: 'stripe_cancel' });
+      await markStripeCancelFailed(uid); // SET stripe_cancel_failed_at = NOW()
+    }
+  }
   // 3. Revoke all Firebase sessions server-side (outside DB transaction — Firebase Admin)
   await admin.auth().revokeRefreshTokens(uid);
   ```

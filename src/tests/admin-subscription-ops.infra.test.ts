@@ -19,7 +19,17 @@ vi.mock('@/lib/auth/verify-admin', async () => {
   const actual = await vi.importActual<typeof import('@/lib/auth/verify-admin')>('@/lib/auth/verify-admin');
   return { ...actual, verifyAdminAuth: vi.fn() };
 });
-vi.mock('@/lib/db/client', () => ({ pool: { query: vi.fn() } }));
+// pool.query AND the withTransaction client.query route to the SAME mock, so the
+// existing call-index assertions (SELECT = call 0, UPDATE = call 1) still hold
+// after the reconcile/retry-cancel routes moved their mutation+audit into a
+// transaction (P26 review — atomicity fix).
+vi.mock('@/lib/db/client', () => {
+  const q = vi.fn();
+  return {
+    pool: { query: q },
+    withTransaction: vi.fn(async (fn: (c: { query: typeof q }) => unknown) => fn({ query: q })),
+  };
+});
 vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logWarn: vi.fn(), logInfo: vi.fn() }));
 vi.mock('@/lib/admin/admin-audit', () => ({ writeAdminAudit: vi.fn().mockResolvedValue(undefined) }));
 
@@ -156,7 +166,10 @@ describe('POST reconcile apply', () => {
     const body = await res.json();
     expect(body.data).toMatchObject({ stored_status: 'expired', stripe_status: 'active', applied: true });
     const updateSql = String(mockedQuery.mock.calls[1]![0]);
-    expect(updateSql).toMatch(/IS DISTINCT FROM 'cancelled_pending_deletion'/);
+    // Fence excludes BOTH protected statuses (P26 review — admin_managed race)
+    expect(updateSql).toMatch(/NOT IN \('cancelled_pending_deletion', 'admin_managed'\)/);
+    // Bumps the watermark so a stale webhook can't revert the operator decision
+    expect(updateSql).toMatch(/last_stripe_event_at = NOW\(\)/);
     expect(mockedAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'subscription_reconcile_apply',
@@ -164,6 +177,7 @@ describe('POST reconcile apply', () => {
         newValue: { subscription_status: 'active' },
         reason: 'stripe shows active',
       }),
+      expect.anything(), // the withTransaction client (atomic mutation+audit)
     );
   });
 
@@ -200,7 +214,7 @@ describe('POST retry-cancel', () => {
   it('success → cancels, clears marker, audits', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
-      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1', stripe_cancel_failed_at: '2026-07-12T00:00:00Z' }] } as never)
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1', stripe_cancel_failed_at: '2026-07-12T00:00:00Z', account_deleted_at: '2026-07-12T00:00:00Z' }] } as never)
       .mockResolvedValueOnce({ rowCount: 1 } as never); // clear marker
     mockSubsList.mockResolvedValueOnce({ data: [{ id: 'sub_a', status: 'active' }] });
     mockSubsUpdate.mockResolvedValueOnce({});
@@ -211,18 +225,36 @@ describe('POST retry-cancel', () => {
     expect(mockSubsUpdate).toHaveBeenCalledWith('sub_a', { cancel_at_period_end: true });
     const clearSql = String(mockedQuery.mock.calls[1]![0]);
     expect(clearSql).toMatch(/stripe_cancel_failed_at = NULL/);
-    expect(mockedAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'subscription_retry_cancel' }));
+    expect(mockedAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'subscription_retry_cancel' }), expect.anything());
   });
 
   it('Stripe throw → 502, marker RETAINED (no clear, no false success)', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    mockedQuery.mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1', stripe_cancel_failed_at: '2026-07-12T00:00:00Z' }] } as never);
+    mockedQuery.mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1', stripe_cancel_failed_at: '2026-07-12T00:00:00Z', account_deleted_at: '2026-07-12T00:00:00Z' }] } as never);
     mockSubsList.mockRejectedValueOnce(new Error('stripe down'));
     const res = await RETRY_POST(req({ body: { reason: 'operator retry' } }), ctx('t1'));
     expect(res.status).toBe(502);
     // no clear UPDATE, no audit
     expect(mockedQuery).toHaveBeenCalledTimes(1);
     expect(mockedAudit).not.toHaveBeenCalled();
+  });
+
+  // REGRESSION LOCK (P26 review — Reality-Check HIGH): a REACTIVATED account
+  // (account_deleted_at NULL) with a stale marker must clear the marker WITHOUT
+  // touching Stripe — else the sweep/retry would cancel the user's new, live,
+  // paying subscription.
+  it('reactivated account (account_deleted_at NULL) → clears marker, NO Stripe cancel', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_new', stripe_cancel_failed_at: '2026-07-12T00:00:00Z', account_deleted_at: null }] } as never)
+      .mockResolvedValueOnce({ rowCount: 1 } as never); // clear marker
+    const res = await RETRY_POST(req({ body: { reason: 'sweep' } }), ctx('t1'));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.data).toEqual({ cleared: true, cancelled_count: 0 });
+    expect(body.meta.note).toBe('stale_marker_account_reactivated');
+    expect(mockSubsList).not.toHaveBeenCalled(); // the live subscription is untouched
+    expect(mockSubsUpdate).not.toHaveBeenCalled();
   });
 });
 

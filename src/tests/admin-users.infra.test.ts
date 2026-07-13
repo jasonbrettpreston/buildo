@@ -27,10 +27,12 @@ vi.mock('@/lib/admin/admin-audit', () => ({
 }));
 // No Firebase SDK in the test env → apps.length === 0 (dev synthetic path).
 vi.mock('firebase-admin', () => ({ apps: [], auth: () => ({}) }));
+vi.mock('@/lib/stripe/client', () => ({ cancelAllStripeSubscriptions: vi.fn().mockResolvedValue(1) }));
 
 import { verifyAdminAuth, type AdminContext } from '@/lib/auth/verify-admin';
 import { pool } from '@/lib/db/client';
 import { writeAdminAudit, scrubAdminAuditForTarget } from '@/lib/admin/admin-audit';
+import { cancelAllStripeSubscriptions } from '@/lib/stripe/client';
 import { GET as DIR_GET, POST as CREATE_POST } from '@/app/api/admin/users/route';
 import { GET as DETAIL_GET, PATCH } from '@/app/api/admin/users/[uid]/route';
 
@@ -38,6 +40,7 @@ const mockedVerify = vi.mocked(verifyAdminAuth);
 const mockedQuery = vi.mocked(pool.query);
 const mockedAudit = vi.mocked(writeAdminAudit);
 const mockedScrub = vi.mocked(scrubAdminAuditForTarget);
+const mockedCancelSubs = vi.mocked(cancelAllStripeSubscriptions);
 
 const SESSION_CTX: AdminContext = { uid: 'admin-session-1', authMethod: 'session' };
 const ADMIN_KEY_CTX: AdminContext = { uid: 'admin-key', authMethod: 'admin_key' };
@@ -179,6 +182,26 @@ describe('admin/users PATCH — mutations audit', () => {
     expect(mockedScrub).toHaveBeenCalledWith('target-1');
   });
 
+  // REGRESSION LOCK (P26 review — Code Reviewer CRITICAL): admin delete MUST
+  // cancel the Stripe subscription (else the deleted account bills forever with
+  // no marker/recovery path). Mirrors the self-serve delete route.
+  it('delete cancels the Stripe subscription when the account has a customer', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    process.env.ADMIN_USER_IDS = 'other-admin';
+    mockedQuery.mockResolvedValue({ rows: [{ ...PROFILE_ROW, stripe_customer_id: 'cus_admin_del' }], rowCount: 1 } as never);
+    const res = await PATCH(makeRequest({ method: 'PATCH', body: { action: 'delete', reason: 'admin ban' } }), makeContext('target-1'));
+    expect(res.status).toBe(200);
+    expect(mockedCancelSubs).toHaveBeenCalledWith('cus_admin_del');
+  });
+
+  it('delete does NOT call Stripe when the account has no customer', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    process.env.ADMIN_USER_IDS = 'other-admin';
+    const res = await PATCH(makeRequest({ method: 'PATCH', body: { action: 'delete', reason: 'trial user' } }), makeContext('target-1'));
+    expect(res.status).toBe(200);
+    expect(mockedCancelSubs).not.toHaveBeenCalled(); // PROFILE_ROW has no stripe_customer_id
+  });
+
   it('extend_trial sets status=trial and audits', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     const res = await PATCH(makeRequest({ method: 'PATCH', body: { action: 'extend_trial', days: 30, reason: 'goodwill extension' } }), makeContext('target-1'));
@@ -209,6 +232,18 @@ describe('admin/users GET directory + detail', () => {
     expect(String(countCall[0])).toContain('ILIKE');
     expect(countCall[1]).toContain('%alice%');
     expect(countCall[1]).toContain('supplier');
+  });
+
+  // REGRESSION LOCK (P26 review — Code Reviewer HIGH): the sweep-surface filter
+  // Spec 21 §6 promises must actually exist (it was documented but unbuilt).
+  it('stripe_cancel_failed=true filters to the marker IS NOT NULL', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ total: 0 }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
+    const res = await DIR_GET(makeRequest({ search: 'stripe_cancel_failed=true' }));
+    expect(res.status).toBe(200);
+    expect(String(mockedQuery.mock.calls[0]![0])).toContain('stripe_cancel_failed_at IS NOT NULL');
   });
 
   it('detail 404 for unknown uid', async () => {

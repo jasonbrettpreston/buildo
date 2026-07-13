@@ -52,6 +52,9 @@ export const UserDirectoryQuerySchema = z
     preset: z.enum(ACCOUNT_PRESET_VALUES).optional(),
     trade_slug: z.string().trim().max(50).optional(),
     subscription_status: z.enum(SUBSCRIPTION_STATUS_VALUES).optional(),
+    // P26-26D sweep surface (Spec 21 §6): filter to accounts with an outstanding
+    // delete-time Stripe-cancel failure (stripe_cancel_failed_at IS NOT NULL).
+    stripe_cancel_failed: z.coerce.boolean().optional(),
     offset: z.coerce.number().int().nonnegative().max(1_000_000).default(0),
   })
   .strict();

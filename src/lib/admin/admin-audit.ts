@@ -57,9 +57,18 @@ export interface AdminAuditParams {
  * can decide whether the audit failure should fail the request (it should — an
  * unaudited admin mutation is a compliance hole).
  */
-export async function writeAdminAudit(params: AdminAuditParams): Promise<void> {
+// A minimal query-runner both `pool` and a transaction `PoolClient` satisfy —
+// so a caller can pass its withTransaction client to make the mutation and its
+// audit row commit atomically (P26 review — an UPDATE that commits before a
+// failing audit write is an unrecoverable compliance hole).
+type AuditExecutor = { query: (text: string, values?: unknown[]) => Promise<unknown> };
+
+export async function writeAdminAudit(
+  params: AdminAuditParams,
+  executor: AuditExecutor = pool,
+): Promise<void> {
   const { adminUid, action, targetUid, oldValue, newValue, reason } = params;
-  await pool.query(
+  await executor.query(
     `INSERT INTO admin_audit_log (admin_uid, action, target_uid, old_value, new_value, reason)
      VALUES ($1, $2, $3, $4, $5, $6)`,
     [

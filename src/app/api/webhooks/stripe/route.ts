@@ -120,10 +120,11 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
       const sub = event.data.object as Stripe.Subscription;
-      // Spec §10 Step 5 mapping: covers active / past_due directly. canceled
-      // and unpaid both end access — write 'expired'. The customer.subscription.deleted
-      // event is the canonical "access ends now" signal; canceled here covers
-      // the rare case where the event arrives via an updated event first.
+      // Mapping via the shared mapStripeSubStatus (single source): active ->
+      // 'active', past_due -> 'past_due', unpaid -> 'expired'. Everything else,
+      // INCLUDING `canceled`, maps to null (no-op) here — customer.subscription.deleted
+      // is the sole canonical "access ends now" signal, so a `canceled` status
+      // on an .updated event deliberately does NOT revoke access on its own.
       const newStatus = mapStripeSubStatus(sub.status);
       return {
         newStatus,
@@ -287,15 +288,28 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       const eventCreatedAt = new Date(event.created * 1000);
       let result;
       if (outcome.userId !== null) {
+        // SUPERSEDED-SUBSCRIPTION FENCE (P26 review — Reality-Check CRITICAL):
+        //   `$1 = 'active' OR stripe_customer_id IS NOT DISTINCT FROM $2`
+        // An ACTIVATING event (newStatus 'active') still claims the customer id
+        // authoritatively (the re-subscriber fix — a returning customer's new
+        // cus_id must win). But a REVOKING/downgrading event ('expired' /
+        // 'past_due') only applies when the event's customer matches the
+        // profile's CURRENT stripe_customer_id — so a terminal event from an
+        // OLD, superseded subscription (delete -> reactivate -> re-subscribe
+        // with a fresh cus_NEW; the period-end old sub fires .deleted weeks
+        // later) can NOT downgrade the user's live, paid new subscription.
+        // stripe_customer_id uses COALESCE so a customer-less event never NULLs
+        // the stored id (Gemini HIGH).
         result = await client.query(
           `UPDATE user_profiles
            SET subscription_status = $1,
-               stripe_customer_id = $2,
+               stripe_customer_id = COALESCE($2, stripe_customer_id),
                last_stripe_event_at = $4,
                updated_at = NOW()
            WHERE user_id = $3
              AND (last_stripe_event_at IS NULL OR last_stripe_event_at < $4)
-             AND subscription_status IS DISTINCT FROM 'cancelled_pending_deletion'`,
+             AND subscription_status IS DISTINCT FROM 'cancelled_pending_deletion'
+             AND ($1 = 'active' OR stripe_customer_id IS NOT DISTINCT FROM $2)`,
           [outcome.newStatus, outcome.stripeCustomerId, outcome.userId, eventCreatedAt],
         );
       } else if (outcome.stripeCustomerId !== null) {

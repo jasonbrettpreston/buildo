@@ -78,6 +78,12 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest, cont
       count: events.length,
       limit,
       last_stripe_event_at: profile.last_stripe_event_at,
+      // Honesty label (P26 review — Observability): this history is filtered by
+      // the profile's CURRENT stripe_customer_id. A user who churned and
+      // re-subscribed got a fresh customer id, so events recorded under a prior
+      // customer id are not shown here — last_stripe_event_at (updated on every
+      // match regardless of customer) is the true latest-touch signal.
+      scope: 'current_stripe_customer_id',
     });
   } catch (cause) {
     return internalError(cause, { route: 'GET /api/admin/users/[uid]/subscription/events' });

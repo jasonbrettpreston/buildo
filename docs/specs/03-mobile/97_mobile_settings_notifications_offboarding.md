@@ -192,7 +192,7 @@ On confirm:
 - Client calls `POST /api/user-profile/delete` (Spec 95 Step 3a — dedicated deletion endpoint).
 - The server endpoint atomically handles:
   1. Sets `account_deleted_at = NOW()`, `subscription_status = 'cancelled_pending_deletion'` on `user_profiles`
-  2. Cancels Stripe subscription via `stripe.subscriptions.cancel(subscriptionId)` if `stripe_customer_id IS NOT NULL` (no refund — `prorate: false`). Subscription lookup: `stripe.subscriptions.list({ customer: stripe_customer_id, status: 'active', limit: 1 })`. If no active subscription (trial user who never paid), skip Stripe cancellation silently.
+  2. Schedules **period-end** cancellation on ALL the customer's live subscriptions if `stripe_customer_id IS NOT NULL` — the shared `cancelAllStripeSubscriptions` helper (`@/lib/stripe/client`) lists `status:'all'`, skips terminal states, and calls `stripe.subscriptions.update(sub.id, { cancel_at_period_end: true })` on each (the 2026-07-12 ruling — the deleter keeps the paid period). Loud-non-fatal: on a Stripe error, `logError` + set the durable `stripe_cancel_failed_at` marker (mig 220) for the sweep/retry route; deletion still succeeds. Runs OUTSIDE the DB transaction (network I/O). Trial users with no subscription → helper is a no-op.
   3. Calls `admin.auth().revokeRefreshTokens(uid)` to immediately invalidate all active sessions across all devices
 - **Do NOT use `PATCH /api/user-profile`** — `subscription_status` and `account_deleted_at` are server-only fields blocked by the PATCH whitelist (Spec 95 Step 3).
 - On `POST /api/user-profile/delete` success: client calls `firebase.auth().signOut()` → navigate `/(auth)/sign-in`.
@@ -206,7 +206,7 @@ If user signs back in within 30 days:
 - Show reactivation prompt: *"Welcome back. Your account is scheduled for deletion on [date]. Reactivate to keep your account?"* (`days_remaining` drives the date display)
 - On confirm: client calls `POST /api/user-profile/reactivate` (Spec 95 Step 3b — dedicated reactivation endpoint). The server determines `restored_status` and applies atomically:
   - If `account_preset = 'manufacturer'` → restore to `'admin_managed'` (not `'expired'` — manufacturers must never see the consumer paywall)
-  - All other presets → restore to `'expired'` (the original Stripe subscription was cancelled at deletion time; user must re-subscribe via `buildo.com`)
+  - All other presets → restore to `'expired'` (the original subscription was scheduled to cancel at period end on deletion; reactivation also clears `stripe_cancel_failed_at` + `last_stripe_event_at`, both scoped to that superseded subscription; the user re-subscribes via `buildo.com` with a fresh customer id — Spec 20 §4.2/§6)
   - **Do NOT use the general `PATCH /api/user-profile`** — `account_deleted_at` and `subscription_status` are server-only fields blocked by the PATCH whitelist (Spec 95 Step 3).
 - Post-reactivation sequence: (1) PATCH succeeds → (2) dismiss reactivation modal → (3) AuthGate proceeds (`onboarding_complete = true`) → (4) subscription gate handles the restored status
 - If the user was on `trial` prior to deletion, the trial does not resume — they are directed to subscribe at `buildo.com`

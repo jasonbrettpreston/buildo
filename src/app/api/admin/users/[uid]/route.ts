@@ -24,6 +24,7 @@ import { badRequestZod, internalError } from '@/features/leads/api/error-mapping
 import { logError, logWarn } from '@/lib/logger';
 import { track } from '@/lib/admin/analytics';
 import { writeAdminAudit, scrubAdminAuditForTarget } from '@/lib/admin/admin-audit';
+import { cancelAllStripeSubscriptions } from '@/lib/stripe/client';
 import {
   AdminUserMutationSchema,
   DESTRUCTIVE_ACTIONS,
@@ -50,6 +51,7 @@ const DETAIL_COLUMNS = `
   user_id, email, phone_number, full_name, company_name, display_name,
   trade_slug, trade_slugs_override, account_preset, radius_km, radius_cap_km,
   location_mode, subscription_status, trial_started_at, stripe_customer_id,
+  stripe_cancel_failed_at,
   onboarding_complete, tos_accepted_at, account_deleted_at, lead_views_count,
   created_at, updated_at
 `;
@@ -282,6 +284,31 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest, 
            WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
           [tUid],
         );
+        // Delete-time Stripe cancel (P26 review — Code Reviewer CRITICAL). Spec
+        // 21 §7 assigns cancel-on-delete to the money loop; the admin delete
+        // action reaches the same 'cancelled_pending_deletion' terminal state as
+        // the self-serve delete route, so it MUST cancel identically — without
+        // this an admin-deleted user's subscription bills forever, with no
+        // marker set and no recovery path (reconcile/retry-cancel both refuse a
+        // cancelled_pending_deletion / no-marker row). Loud-non-fatal: a Stripe
+        // outage never blocks the deletion, but sets the durable
+        // stripe_cancel_failed_at marker so the sweep/retry route surfaces it.
+        const stripeCustomerId = existing.stripe_customer_id as string | null;
+        if (stripeCustomerId) {
+          try {
+            await cancelAllStripeSubscriptions(stripeCustomerId);
+          } catch (stripeErr) {
+            logError(TAG, stripeErr, { stage: 'stripe_cancel', targetUid: tUid });
+            try {
+              await pool.query(
+                `UPDATE user_profiles SET stripe_cancel_failed_at = NOW(), updated_at = NOW() WHERE user_id = $1`,
+                [tUid],
+              );
+            } catch (markerErr) {
+              logError(TAG, markerErr, { stage: 'stripe_cancel_marker', targetUid: tUid });
+            }
+          }
+        }
         // Audit the fact of deletion (PII in old snapshot is redacted by the
         // writer), THEN scrub residual payloads for this target (RTBF).
         await writeAdminAudit({

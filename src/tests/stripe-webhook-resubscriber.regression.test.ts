@@ -84,10 +84,16 @@ describe('re-subscriber: stored cus_OLD + metadata event carrying cus_NEW', () =
     expect(updateSql).toMatch(/WHERE user_id = \$3/);
     // The equality guard that broke re-subscribers must NOT be present.
     expect(updateSql).not.toMatch(/stripe_customer_id IS NULL OR stripe_customer_id = \$2/);
-    // cus_NEW is written authoritatively — NOT COALESCE(existing, new) which
-    // would have preserved the stale cus_OLD.
-    expect(updateSql).toMatch(/stripe_customer_id = \$2/);
+    // cus_NEW is written authoritatively via COALESCE($2, existing) — new-first,
+    // so a non-null incoming customer (this event) OVERWRITES cus_OLD (the
+    // re-subscriber fix). This is NOT the old broken existing-first
+    // COALESCE(stripe_customer_id, $2) which preserved the stale cus_OLD.
+    expect(updateSql).toMatch(/stripe_customer_id = COALESCE\(\$2, stripe_customer_id\)/);
     expect(updateSql).not.toMatch(/COALESCE\(stripe_customer_id/);
+    // P26-review superseded-subscription fence: activating ('active') events —
+    // like this re-subscribe — still claim the customer id ($1='active' short-
+    // circuits the guard), so the re-subscriber overwrite is preserved.
+    expect(updateSql).toMatch(/\$1 = 'active' OR stripe_customer_id IS NOT DISTINCT FROM \$2/);
 
     // Activation + the NEW customer id land in params.
     expect(params[0]).toBe('active');

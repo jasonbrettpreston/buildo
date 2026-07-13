@@ -16,7 +16,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { verifyAdminAuth, parseAdminAllowlist, type AdminContext } from '@/lib/auth/verify-admin';
-import { pool } from '@/lib/db/client';
+import { pool, withTransaction } from '@/lib/db/client';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod, internalError } from '@/features/leads/api/error-mapping';
 import { logError, logWarn } from '@/lib/logger';
@@ -71,8 +71,8 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest, co
   }
 
   try {
-    const res = await pool.query<{ stripe_customer_id: string | null; stripe_cancel_failed_at: string | null }>(
-      `SELECT stripe_customer_id, stripe_cancel_failed_at FROM user_profiles WHERE user_id = $1`,
+    const res = await pool.query<{ stripe_customer_id: string | null; stripe_cancel_failed_at: string | null; account_deleted_at: string | null }>(
+      `SELECT stripe_customer_id, stripe_cancel_failed_at, account_deleted_at FROM user_profiles WHERE user_id = $1`,
       [targetUid],
     );
     const profile = res.rows[0];
@@ -81,21 +81,43 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest, co
     if (!profile.stripe_cancel_failed_at) {
       return err('BAD_REQUEST', 'No outstanding cancel debt for this user', 400);
     }
-    if (!profile.stripe_customer_id) {
-      // Marker set but no customer — cannot retry; clear it so the debt stops
-      // showing (there is nothing to cancel), audit-logged with that reason.
-      await pool.query(
-        `UPDATE user_profiles SET stripe_cancel_failed_at = NULL, updated_at = NOW() WHERE user_id = $1`,
-        [targetUid],
-      );
-      await writeAdminAudit({
-        adminUid: adminCtx.uid,
-        action: 'subscription_retry_cancel',
-        targetUid,
-        oldValue: { stripe_cancel_failed_at: profile.stripe_cancel_failed_at },
-        newValue: { stripe_cancel_failed_at: null, note: 'no_stripe_customer' },
-        reason,
+
+    // Clears the marker + writes the audit row ATOMICALLY (P26 review — a
+    // marker-clear that commits before a failing audit write is an unaudited
+    // mutation). The Stripe call, when made, stays OUTSIDE the transaction
+    // (network I/O is never held inside a DB transaction).
+    const clearMarker = (note: string, cancelled: number) =>
+      withTransaction(async (client) => {
+        await client.query(
+          `UPDATE user_profiles SET stripe_cancel_failed_at = NULL, updated_at = NOW() WHERE user_id = $1`,
+          [targetUid],
+        );
+        await writeAdminAudit(
+          {
+            adminUid: adminCtx.uid,
+            action: 'subscription_retry_cancel',
+            targetUid,
+            oldValue: { stripe_cancel_failed_at: profile.stripe_cancel_failed_at },
+            newValue: { stripe_cancel_failed_at: null, cancelled_count: cancelled, note },
+            reason,
+          },
+          client,
+        );
       });
+
+    // GATE (P26 review — Reality-Check HIGH): only retry a cancel for an account
+    // that is STILL deleted. If it was reactivated (account_deleted_at IS NULL),
+    // this marker is stale debt from the OLD subscription; the user has since
+    // re-subscribed with a fresh customer id, so canceling the LIVE customer now
+    // would cancel their paying subscription. Clear the stale marker WITHOUT
+    // touching Stripe.
+    if (!profile.account_deleted_at) {
+      await clearMarker('stale_marker_account_reactivated', 0);
+      return ok({ cleared: true, cancelled_count: 0 }, { note: 'stale_marker_account_reactivated' });
+    }
+    if (!profile.stripe_customer_id) {
+      // Marker set but no customer — nothing to cancel; clear the marker.
+      await clearMarker('no_stripe_customer', 0);
       return ok({ cleared: true, cancelled_count: 0 }, { note: 'no_stripe_customer' });
     }
 
@@ -115,20 +137,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest, co
       return err('STRIPE_CANCEL_FAILED', 'Stripe cancel retry failed; marker retained', 502);
     }
 
-    await pool.query(
-      `UPDATE user_profiles SET stripe_cancel_failed_at = NULL, updated_at = NOW() WHERE user_id = $1`,
-      [targetUid],
-    );
-
-    await writeAdminAudit({
-      adminUid: adminCtx.uid,
-      action: 'subscription_retry_cancel',
-      targetUid,
-      oldValue: { stripe_cancel_failed_at: profile.stripe_cancel_failed_at },
-      newValue: { stripe_cancel_failed_at: null, cancelled_count: cancelledCount },
-      reason,
-    });
-
+    await clearMarker('retried', cancelledCount);
     return ok({ cleared: true, cancelled_count: cancelledCount }, { audited: true });
   } catch (cause) {
     logError(TAG, cause, { stage: 'retry_cancel_outer', targetUid });
