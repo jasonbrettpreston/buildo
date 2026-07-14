@@ -111,6 +111,8 @@ Operator runbook + one-off script index: `docs/runbook/README.md` — read befor
 
 ## Review Agent Reference
 
+> **Canonical roster:** `docs/specs/00-architecture/08_agents.md` (Spec 08) — the full roster (incl. the ratified Schema-Fidelity, Ground-truth, Compliance, User-Advocate, Security, Operating-Model-Compliance roles), the two substrates (CLI vs Task agent), the cost/composition rules ("menu, not checklist"), the operating-manual summary, and copy-paste spawn templates (§10). The below is the WF trigger summary; Spec 08 governs on any conflict.
+
 Triggered as named steps inside WF1, WF2, WF3 — not standalone.
 
 **All agents:** Spawn with `isolation: "worktree"` (exceptions: **Integration** and **Regression Guardian** run in the main tree — see their entries below). Inputs: spec path + modified files + one-sentence summary. No checklist provided — each agent generates its own from the spec and diff. Output: PASS/FAIL per item with line numbers.

@@ -114,6 +114,8 @@ pipeline.run('[slug]', async (pool) => {
 
 ## Multi-Agent Review (WF1/WF2) — Exact Execution Pattern
 
+> **Roster + roles + spawn templates:** `docs/specs/00-architecture/08_agents.md` (Spec 08). For Backend/Pipeline, compose from: Reality-Check + Schema-Fidelity + Observability + Integration + Regression Guardian + Ground-truth + the Gemini/DeepSeek CLIs (+ Security on money/auth/PII). Menu, not checklist — drop roles the change doesn't trigger; always Round-2.
+
 Run these **in a single message** (three parallel tool calls) after Pre-Review Self-Checklist:
 
 ```
