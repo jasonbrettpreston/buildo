@@ -1,7 +1,9 @@
 # Spec 34 — Web Admin Testing Protocol
 
 **Status:** ACTIVE
-**Cross-references:** Spec 33 (Web Admin Engineering Protocol), Spec 35 (Web Admin State Architecture), Spec 30 (App Health Dashboard), Spec 76 (Lead-Feed Tooling), Spec 86 (Control Panel)
+**Cross-references:** Spec 33 (Web Admin Engineering Protocol), Spec 35 (Web Admin State Architecture), Spec 30 (App Health Dashboard), Spec 76 (Lead-Feed Tooling), Spec 86 (Control Panel), Spec 08 (Agent Architecture), engineering_standards §14 (Prevention Loop)
+
+> **Prevention loop (admin home):** the admin-tagged rows of the prevention registry (`docs/specs/00_engineering_standards.md` §14) live here. New CRITICAL/HIGH review findings (Spec 08 roster) that yield an *admin* rule become protocol/test requirements in this spec and, where deterministic, a gate. Recent: SELECT-includes-every-typed-client-field (the `DETAIL_COLUMNS` dead-UI class), mutation+audit-atomic on admin routes.
 
 **Numbering note:** Spec 34 in `docs/specs/02-web-admin/` parallels Spec 98 in `docs/specs/03-mobile/` (mobile testing protocol). The 98 slot is taken by mobile; web-admin uses 34 to disambiguate.
 

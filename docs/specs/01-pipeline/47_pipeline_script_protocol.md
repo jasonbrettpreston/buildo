@@ -3,6 +3,8 @@
 **Applies to:** Every new CommonJS script added to `scripts/` that runs as a step in any
 pipeline chain (`permits`, `coa`, `sources`, `deep_scrapes`, `entities`).
 
+> **Prevention loop (backend/pipeline home):** the backend-tagged rows of the cross-cutting prevention registry — `docs/specs/00_engineering_standards.md` §14 — live here. New CRITICAL/HIGH review findings (Spec 08 roster) that yield a *pipeline* rule are added as protocol requirements in this spec and, where deterministic, promoted to a footgun/husky gate. Recent: NOT-NULL-column coverage, `ON CONFLICT`-GROUP-BY-arbiter, mutation+audit-atomic (§R9).
+
 **Derived from:** Systematic review of scripts 81-86 (`docs/reports/script_review_80_86/`),
 adversarial + observability + spec-compliance review outputs, and `classify-lifecycle-phase.js`
 as the reference implementation.
