@@ -32,21 +32,28 @@ npm run review:deepseek -- plan                    # reviews .cursor/active_task
 ```
 Env keys: `GEMINI_API_KEY`, `DEEPSEEK_API_KEY` (in `.env`). The `spec`/`plan` commands are how agents review at **plan altitude** (§5.2).
 
-## 3. The current roster (as-built)
+## 3. The roster
 
-Each agent: its **question**, its **substrate**, its **source of truth**, and its **fire trigger**. Isolation defaults to a worktree; the three that must see live state (Integration, Regression Guardian, Reality-Check) run in the **main tree**.
+The full assurance roster — one heterogeneous menu, each role defined by **the one question no other role asks**. Isolation defaults to a worktree; the roles that must see live state run in the **main tree** (+ live DB where noted). §5 gives each role's deeper rationale, dependencies, and fire-conditions; §6 the domain rosters; §7 the composition rules; §10 the copy-paste spawn templates.
 
-| # | Agent | The one question it asks | Substrate | Source of truth |
-|---|-------|--------------------------|-----------|-----------------|
-| A1 | **Gemini (adversarial)** | "What would a hostile expert of a different model lineage catch?" | CLI (Gemini 2.5 Pro) | the file + spec text |
-| A2 | **DeepSeek (adversarial)** | Same, different lineage → different blind spots | CLI (DeepSeek-R1) | the file + spec text |
-| A3 | **Code Reviewer** | "Is the code correct, typed, telemetered, free of dead code?" | `feature-dev:code-reviewer` | the diff + repo conventions |
-| A4 | **Observability** | "Is every state change auditable? Do counters/verdicts/producer-consumer contracts hold?" | `feature-dev:code-reviewer` | the diff + Spec 47/48/79 |
-| A5 | **Integration** | "Does this match the REAL codebase — SDK signatures, chain wiring, seams, migration mechanics — not the spec's idealized version?" | `general-purpose`, **main tree** | the live code + manifest |
-| A6 | **Regression Guardian** | "For every deleted/altered line — WHY did it exist? Is that intent knowingly preserved?" (Chesterton's Fence) | `feature-dev:code-explorer`, **main tree** | `git blame`/`log -p` + `tasks/lessons.md` |
-| A7 | **Reality-Check** | "Are the output VALUES physically/domain-plausible?" — the only role that reads output data, not code | `pipeline-reality-check`, **main tree + live DB** | the actual computed rows |
+| # | Agent | The one question it asks | Substrate |
+|---|-------|--------------------------|-----------|
+| A1 | **Gemini (adversarial)** | "What would a hostile expert of a different model lineage catch?" | CLI (Gemini 2.5 Pro) |
+| A2 | **DeepSeek (adversarial)** | Same question, different lineage → different blind spots | CLI (DeepSeek-R1) |
+| A3 | **Code Reviewer** | "Is the code correct, typed, telemetered, free of dead code?" | `feature-dev:code-reviewer` |
+| A4 | **Observability** | "Is every state change auditable? Do counters/verdicts/producer-consumer contracts hold?" | `feature-dev:code-reviewer` |
+| A5 | **Integration** | "Does this match the REAL codebase — SDK signatures, wiring, seams, migration mechanics — not the spec's idealized version?" | `general-purpose` · main tree |
+| A6 | **Regression Guardian** | "For every deleted/altered line — WHY did it exist? Is that intent knowingly preserved?" (Chesterton's Fence) | `feature-dev:code-explorer` · main tree |
+| A7 | **Reality-Check** | "Are the output VALUES physically/domain-plausible?" — reads data, not code | `pipeline-reality-check` · main tree + DB |
+| A8 | **Schema-Fidelity** | "Does every DB field read/written EXIST with the assumed type, nullability, constraint, and ON CONFLICT arbiter?" | `general-purpose` · main tree + DB |
+| A9 | **Ground-truth** | "Is the SPEC still TRUE against live code/DB/behavior?" (gates Compliance) | `general-purpose` · main tree + DB |
+| A10 | **Compliance** | "Does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?" | DeepSeek `spec` / `general-purpose` |
+| A11 | **User-Advocate (UX)** | "Does this serve the human on the other end?" (journey, states, a11y, honest copy) | `general-purpose` / `frontend-design` |
+| A12 | **Security** | "How is this exploited?" — authz/IDOR/injection/secrets/PII/forgery/replay (money/auth/PII/admin only) | `/security-review` / `general-purpose` |
+| A13 | **Op-Model Compliance** | "Did WE follow the doctrine?" — meta-audit of the decision trail (WF6 exit gate only) | DeepSeek CLI |
+| A14 | **Roster Manager** | "Is the ROSTER itself right — who earns their keep, who to improve, what's missing?" (periodic meta-governance) | `general-purpose` / workflow |
 
-**Note on "Compliance":** it is NOT currently a distinct agent — spec-vs-implementation checking is spread across A1/A2 (which generate a checklist from the spec's Behavioral Contract) and A3. §5.1 formalizes it as its own role, because it answers a question the others only partially cover.
+**Not every agent runs on every change** — the roster is a MENU (§7.7). Compose the smallest *diverse* panel for the change's actual risks (§6) + Round-2 (§5.3). Security fires only on money/auth/PII/admin; Op-Model Compliance only at WF6; Roster Manager on a periodic cadence (§5.9).
 </architecture>
 
 ---
@@ -74,17 +81,17 @@ Every agent finding must be expressible in these terms (a §3 risk class, a §8 
 
 ---
 
-## 5. Additional roles & clarifications (RATIFIED 2026-07-14)
+## 5. Role rationale, dependencies & fire-conditions
 
-These close gaps the current roster (§3) left. **All ratified 2026-07-14;** the rationale for each is a real, recent failure. Spawn-prompt templates for every role are in §10.
+Deeper notes for the roles whose value, dependencies, or gating need spelling out (the rest are self-evident from §3). Each rationale is grounded in a real, recent failure. Spawn-prompt templates for every role are in §10.
 
-### 5.1 Compliance (spec → code) — PROMOTE to a first-class role
+### 5.1 Compliance (spec → code)
 **Question:** *Given a spec and the implementation, does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?* Item-by-item, spec-clause → code-line, PASS/FAIL.
 **Substrate:** DeepSeek CLI at plan altitude (`spec <path>`), or a `general-purpose` agent for the code diff.
 **Distinct from A3/A5 because:** Code Reviewer asks "is the code good?"; Integration asks "does it match the *codebase*?"; Compliance asks "does it match the *spec*?" — a clause the spec mandates but the code omits (e.g. Spec 21 §6's phantom `stripe_cancel_failed` directory filter, which the spec promised and the code never built) is a Compliance finding no other role owns.
 **HARD DEPENDENCY:** Compliance is only meaningful if the spec is TRUE. Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction (manual §8.3).
 
-### 5.2 Ground-truth (reality → spec) — NEW ROLE (recommended)
+### 5.2 Ground-truth (reality → spec)
 **Question:** *Is the SPEC still true?* For each load-bearing claim in the spec, verify it against the live code / DB / behavior; report every drift as "spec §X says A; reality is B."
 **Substrate:** `general-purpose` (main tree + live DB) — it needs to read code AND query the schema/data.
 **Absorbs "spec-freshness enforcement":** you do NOT need a separate up-to-dateness agent — spec drift IS this agent's primary output. Enforcement = (a) Ground-truth runs at the START of any WF that touches a spec-governed area, and (b) a **standing periodic Ground-truth sweep** (a scheduled routine — see §7) that diffs high-traffic specs against reality and files drift to `review_followups.md`. This directly serves CLAUDE.md Prime Directive #10 (spec-first, no assumptions).
@@ -93,23 +100,23 @@ These close gaps the current roster (§3) left. **All ratified 2026-07-14;** the
 ### 5.3 Round-2 adjudication — FORMALIZE the existing practice
 Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
 
-### 5.4 Schema-Fidelity — NEW ROLE (strongly recommended)
+### 5.4 Schema-Fidelity
 **Question:** *Does every DB field this change reads/writes actually exist in the live schema with the assumed type, nullability, and constraints?* Cross-checks column existence, type, `NOT NULL` (+ default), `UNIQUE`/PK, FK, and `ON CONFLICT` arbiters against `docs/specs/00-architecture/01_database_schema.md` + the live `information_schema` + the generated `src/lib/db/generated/schema.ts`.
 **Substrate:** `general-purpose` (main tree + live DB).
-**Why (validated THIS session):** the `DETAIL_COLUMNS` omission (a NOT-NULL-marker column never SELECTed → dead UI), the `lead_analytics` NOT-NULL `lead_id` crash (23502), and the LPAD `lead_key` collision (21000, an `ON CONFLICT`-arbiter that could be hit twice) were ALL schema-fidelity failures. This is the highest-ROI proposed agent for backend/admin.
+**Why (validated THIS session):** the `DETAIL_COLUMNS` omission (a NOT-NULL-marker column never SELECTed → dead UI), the `lead_analytics` NOT-NULL `lead_id` crash (23502), and the LPAD `lead_key` collision (21000, an `ON CONFLICT`-arbiter that could be hit twice) were ALL schema-fidelity failures. This is the highest-ROI role for backend/admin.
 
-### 5.5 User-Advocate (UX) — NEW ROLE (recommended for frontend/mobile)
+### 5.5 User-Advocate (UX)
 **Question:** *Does this serve the human on the other end?* The consumer journey end-to-end; the empty/loading/error/denied states; accessibility (roles, labels, focus); honest copy (never a false "done"); the "what would make the user stop needing to ask" test (manual §1).
 **Substrate:** `general-purpose`, or `frontend-design` skill context for design work.
 **Why:** every other agent asks "is it correct?"; none asks "is it good *to use*?" The success-page-must-not-lie and the honest-boundary findings this session were UX-adjacent; a dedicated advocate owns them.
 
-### 5.7 Security — NEW ROLE (recommended, DOMAIN-GATED)
+### 5.7 Security (domain-gated)
 **Question:** *How is this exploited?* — authz/IDOR (identity from session, never a client-supplied id), injection, secrets/PII exposure, forgery fences, rate-limiting, replay/idempotency of privileged actions.
 **Substrate:** the existing **`/security-review` skill** run as a panel step, or a `general-purpose` agent with a security lens.
 **Fires ONLY on:** money (Stripe), auth, PII, and admin surfaces — NOT every diff (that's what makes it affordable to keep sharp).
 **Distinct because:** every other role asks "is it correct?"; Security asks "is it *safe against an adversary*?" Documented failures: the unauthenticated `GET /api/notifications` (IDOR — user_id as a query param), the webhook `metadata.user_id` forgery-fence question, the admin `test-send` abuse surface.
 
-### 5.8 Operating-Model Compliance ("decision-truth") — NEW ROLE (recommended, EXIT-GATE ONLY, lean)
+### 5.8 Operating-Model Compliance (decision-truth, exit-gate)
 **Question:** *Did WE follow the doctrine?* — a meta-auditor of the WORK's decision trail, not the code. Reads `.cursor/active_task.md` (the folds + rejected-findings-with-reasons), the fix commits, and `review_followups.md`, and checks them against the operating manual: was each folded finding's premise verified (§6.3)? did Ground-truth gate Compliance (§5.1)? any eager fix (§8.4) or scope-creep (§8.6)? was the manual's five-question self-test actually applied?
 **Substrate:** DeepSeek CLI (cheap; reads the plan + manual + diff), **one pass at WF6** (the exit gate) — NOT a per-review panel member.
 **Distinct because:** it is the antibody to the manual's own 11th mistake — *treating the manual as a checklist to satisfy rather than a way of working to inhabit.* No code-reviewing role audits the orchestrator's process.
@@ -117,6 +124,17 @@ Not a new agent — a **mandatory second pass**. After the panel returns finding
 
 ### 5.6 Candidates from `review_followups.md` (lower priority; consider as MODES, not new agents)
 The followup log's recurring bug classes suggest these could be **checklists a schema/observability agent runs**, rather than standalone agents: **migration-safety** (UP/DOWN, NOT-NULL-without-default, `CONCURRENTLY` on large tables, idempotent DDL — partly covered by the husky migration hooks); **idempotency/dedup** (once-per-day keys, `ON CONFLICT`, cross-run memory — the notification double-send class); **lock-registry** (advisory-lock id collisions — covered by `pipeline-advisory-lock.infra.test.ts`). Recommendation: fold into Schema-Fidelity (migration/dedup) and Observability (idempotency-telemetry) rather than proliferate roles.
+
+### 5.9 Roster Manager (meta-governance, periodic)
+**Question:** *Is the ROSTER itself the right set — who earns their keep, who to improve, what's missing or redundant?* Runs on a **periodic cadence (every ~15 panels, or monthly)**, NOT per-review.
+**Substrate:** `general-purpose` (reads the recent panels' findings + git history + `review_followups.md`), or a small Workflow.
+**Four responsibilities — all ADVISORY** (it *recommends*; a human ratifies — it never auto-mints or auto-retires an agent):
+1. **Score the roster from evidence and WRITE THE RESULTS BACK INTO §7b of THIS spec** (the living scoreboard). Per agent over the window: panels run, real (confirmed) findings, false-premise rate, severity-weighted value, one-line note. The §7b table is the single stat surface for the roster, and the Roster Manager is its ONLY writer — it stamps `Last updated: <date>, window: <N panels>` each run.
+2. **Recommend NEW roles/lenses** — mine `review_followups.md` + recent CRITICAL/HIGH escapes for recurring bug CLASSES no current agent owns (the growth mechanism).
+3. **Recommend IMPROVEMENTS** to existing spawn prompts (§10) — a lens that keeps missing a class; a role with a high false-premise rate that needs a tighter premise-verification instruction.
+4. **Recommend RETIREMENT** of dead-weight roles — an agent that found nothing real across the window is pure cost (the pruning counter to §9 role-proliferation).
+**Output:** a dated recommendation block appended to `review_followups.md` + the §7b scoreboard update, for human ratification.
+**Why:** without it the roster either ossifies (misses emerging bug classes) or bloats (accumulates dead-weight). The Roster Manager is the roster's **homeostasis** — it operationalizes both of the user's concerns ("is this too many?" → retirement; "recommend new agents" → growth) from measured value, not opinion.
 
 ---
 
@@ -147,14 +165,20 @@ Each domain gets a **default roster**. Adversarial (A1/A2) + the doctrine read a
 7. **The roster is a MENU, not a checklist.** Never run all ~12 roles on one change. Compose the **smallest DIVERSE panel that covers this change's actual risks** (typically 5–8 lenses) + round-2. Lens-diversity beats agent-count (manual §6.2): running the whole menu floods you with the ⅓-false-premise noise (§9) it takes longer to triage than the bugs are worth. Security fires only on money/auth/PII/admin; Op-Model Compliance only at WF6; Reality-Check/Schema-Fidelity/Ground-truth only when values/DB-fields/spec-claims are in play.
 8. **Spend on reality-touching agents; economize on file-readers.** Empirically (§7b), the agents that verify against reality — Reality-Check (runs code / queries the live DB), Integration, Schema-Fidelity, Ground-truth — catch the subtlest, highest-severity bugs and carry the lowest false-premise rate, because they don't guess. The file-only CLIs (Gemini/DeepSeek) are cheap breadth, not ground truth (§9 CLI blind spots). Budget accordingly: a FEW reality-touching Claude agents + a couple of cheap DeepSeek lens-passes beats a large panel of file-readers.
 
-## 7b. Effectiveness (empirical, 2026-07 P24/P25/P26 review cycles) — keep updated
-Ranked by severity-per-finding and premise-accuracy on real review cycles (update as evidence accrues):
-1. **Reality-Check** — most effective. The only role that verifies by EXECUTION (ran the actual SQL in a transaction to REPRODUCE the `21000` LPAD-collision crash live; traced the P26 delete→reactivate→resubscribe CRITICAL value-by-value; also correctly *refuted* false premises, e.g. zero-sub→expired-is-safe). Lowest false-premise rate.
-2. **Integration** — best signal-to-noise on seams; cleanly CONFIRMS and REFUTES (caught the `DETAIL_COLUMNS` dead-UI seam; confirmed the rest correct).
-3. **Code Reviewer** — highest-impact single catch (admin-delete-never-cancels-Stripe → bills-forever).
-4. **Observability / Regression Guardian** — highest breadth of real bugs (the P25 gate-flip-blocker list; the `lead_analytics` crash).
-5. **Gemini / DeepSeek (CLIs)** — valuable different-lineage breadth, but the highest false-premise rate (cannot see the tree/DB) — their wiring/schema/value claims MUST be adjudicated by a tool-having agent before folding.
-**Takeaway:** reach for a reality-touching agent whenever the risk is a wrong VALUE, a broken SEAM, or a stale SPEC; reach for the cheap CLIs for breadth of correctness/adversarial lenses.
+## 7b. Effectiveness scoreboard — MAINTAINED BY THE ROSTER MANAGER (A14, §5.9)
+> **Last updated: 2026-07-13 · window: P24/P25/P26 review cycles (SEED data).** This table is machine-owned: the Roster Manager OVERWRITES it each run (every ~15 panels) and re-stamps the date/window. Do not hand-edit — file evidence to `review_followups.md` and let A14 fold it in.
+
+| Agent | Real findings (window) | False-premise rate | Highest catch | Value note |
+|-------|------------------------|--------------------|---------------|-----------|
+| **Reality-Check** | high | **lowest** (verifies by execution) | reproduced the `21000` crash live; P26 stale-subscription CRITICAL | **#1** — only role that reads VALUES / runs code; reach for wrong-value / seam / stale-spec risk |
+| **Integration** | high | low | `DETAIL_COLUMNS` dead-UI seam; confirmed the rest | best seam signal-to-noise; cleanly confirms AND refutes |
+| **Code Reviewer** | med-high | low-med | admin-delete-bills-forever (CRITICAL) | highest single-catch impact |
+| **Observability** | high (breadth) | low-med | the P25 gate-flip-blocker list | broad real-bug coverage on pipeline/audit |
+| **Regression Guardian** | med (breadth) | low-med | `lead_analytics` NOT-NULL crash | intent-preservation; confirms fences |
+| **Gemini / DeepSeek (CLI)** | med | **highest** (no tree/DB) | reconcile atomicity; NULL-write | cheap different-lineage breadth; MUST be adjudicated by a tool-having agent before folding |
+| **Schema-Fidelity / Ground-truth / Compliance / User-Advocate / Security / Op-Model** | *no window data yet (newly ratified)* | — | — | A14 populates after their first cycles |
+
+**Standing takeaway (until A14 re-derives):** spend on reality-touching agents (A5/A7/A8/A9); the file-only CLIs are breadth, not ground truth (§7 rule 8, §9 CLI blind spots).
 
 ---
 
@@ -167,7 +191,8 @@ Ranked by severity-per-finding and premise-accuracy on real review cycles (updat
 - **Panel-of-clones.** Running five agents that share a lens finds one bug five times (manual §6.2). The roster is deliberately heterogeneous — enforce lens-diversity, not agent-count.
 - **Compliance against fiction.** Checking code against a stale spec (§5.1 dependency). Mitigated by Ground-truth-first.
 - **Adversarial false premises.** ~⅓ of findings are wrong about the code/premise (manual §6.3). Mitigated by round-2 + premise-verification before folding. **Never fix a finding without verifying its premise** (manual §8.4 — the eager fix).
-- **Role proliferation.** Every new "agent" is context + cost. Prefer adding a *lens/checklist* to an existing tool-having agent over a new `subagent_type` (§5.6). The bar for a new first-class role: it asks a question NO existing role asks AND that question has a documented, recurring failure behind it.
+- **Role proliferation.** Every new "agent" is context + cost. Prefer adding a *lens/checklist* to an existing tool-having agent over a new `subagent_type` (§5.6). The bar for a new first-class role: it asks a question NO existing role asks AND that question has a documented, recurring failure behind it. The **Roster Manager (A14) is the pruning mechanism** — it recommends retiring dead-weight roles from measured value.
+- **Meta-governance overhead.** A13 (Op-Model Compliance) and A14 (Roster Manager) are meta-layers — powerful, but prone to becoming self-referential bureaucracy. Keep A13 to one WF6 pass and A14 to a periodic cadence; both are ADVISORY (they recommend; a human ratifies — never auto-mint/retire). The §7b scoreboard is **machine-owned by A14** — a hand-edit is drift.
 - **CLI blind spots.** Gemini/DeepSeek see only the file(s) passed — they cannot verify against the real codebase/DB and WILL confidently hallucinate integration facts. Their findings on wiring/schema/values must be adjudicated by a tool-having agent (Integration/Schema-Fidelity/Reality-Check) before folding.
 
 ---
@@ -208,6 +233,7 @@ CLI equivalent (no tools): `npm run review:{gemini,deepseek} -- review <file> --
 | **Security** | `/security-review` skill OR `general-purpose` | "How is this exploited? Authz/IDOR (identity from session, never a client id), injection, secrets/PII exposure, forgery fences, rate-limiting, replay/idempotency of privileged actions. Fires only on money/auth/PII/admin surfaces." |
 | **Round-2 adjudication** | DeepSeek + `general-purpose` (Integration) | "You are adjudicating the panel's PROPOSED findings, not the code. For EACH finding: is the premise factually true (verify)? is the ruling already settled (cite where)? does the fix cost less than the risk? Return keep/reject per finding, rejections WITH reasons (manual §6.3, §8.4)." |
 | **Operating-Model Compliance** | DeepSeek CLI · WF6 ONLY | "Meta-audit of the WORK's decision trail (.cursor/active_task.md folds + rejected-findings-with-reasons + the fix commits) against the operating manual: was each folded finding's premise verified (§6.3)? did Ground-truth gate Compliance? any eager fix (§8.4) or scope-creep (§8.6)? was the five-question self-test applied? Keep it lean — one pass." |
+| **Roster Manager** | `general-purpose` / Workflow · PERIODIC (~every 15 panels) | "Read the last ~15 panels' findings + git history + review_followups.md. (1) Score each agent (real findings, false-premise rate, severity-weighted value) and OVERWRITE the §7b scoreboard in docs/specs/00-architecture/08_agents.md, re-stamping the date+window — you are its only writer. (2) Mine review_followups + recent CRITICAL/HIGH escapes for recurring bug classes no agent owns → recommend new roles. (3) Recommend spawn-prompt improvements + retirements. ADVISORY only — append a dated recommendation block to review_followups.md for human ratification; never auto-mint/retire." |
 
 ### 10.3 Composing a panel (the rule, §7.7)
 Pick the domain roster (§6) → drop roles whose trigger the change doesn't hit (no DB fields → skip Schema-Fidelity/Reality-Check; not money/auth/PII → skip Security; pure net-new → skip Guardian) → spawn the survivors in parallel with the preamble + lens → collect → **Round-2** → triage (BUG → WF3; DEFER → review_followups). Op-Model Compliance runs once at WF6.
