@@ -387,8 +387,8 @@ Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subs
 - Determines `restored_status`:
   - `account_preset = 'manufacturer'` → `'admin_managed'`
   - All others (including prior `trial`) → `'expired'` (trial does not resume; user must subscribe at buildo.com)
-- Sets `account_deleted_at = NULL`, `subscription_status = restored_status` atomically.
-- Returns 200 with updated profile. Client receives `subscription_status = 'expired'` or `'admin_managed'` and the subscription gate handles routing.
+- Sets `account_deleted_at = NULL`, `subscription_status = restored_status`, **`last_stripe_event_at = NULL`**, and **`stripe_cancel_failed_at = NULL`** atomically. The last two are scoped to the SUPERSEDED subscription (P26-26E review): clearing `last_stripe_event_at` drops the watermark tied to the old sub, and clearing `stripe_cancel_failed_at` retires moot cancel debt — a re-subscribe mints a fresh customer id, so a stale terminal event or an operator sweep must not act on the old one (Spec 20 §4.2/§6; the webhook's superseded-subscription fence is the primary guard, these are belt-and-suspenders).
+- Returns 200 with only the CLIENT_SAFE column list (not `RETURNING *` — P24-24A leak fix). Client receives `subscription_status = 'expired'` or `'admin_managed'` and the subscription gate handles routing.
 - Returns 400 if recovery window has passed (> 30 days). Returns 400 if account is not in deletion state.
 - Try-catch + `logError`.
 

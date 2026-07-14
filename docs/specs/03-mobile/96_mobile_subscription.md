@@ -118,7 +118,9 @@ All billing management occurs on the web — no in-app payment UI. This is inten
 
 **Cancellation:** User cancels via Stripe Customer Portal on web. Subscriptions are configured with `cancel_at_period_end = true` — the user retains access through the end of their paid period, then `subscription_status = 'expired'` is written by the `customer.subscription.deleted` webhook. User sees paywall on next app open after the billing period ends.
 
-**Resubscription:** User re-subscribes via `buildo.com` — same flow as initial payment.
+**Resubscription:** User re-subscribes via `buildo.com` — same flow as initial payment. A returning subscriber gets a NEW Stripe customer id; the webhook's metadata-primary path re-activates authoritatively (the P26 re-subscriber fix — Spec 20 §4.2).
+
+> **Canonical money-loop spec:** the full server route family (`/api/subscribe/session` → `/exchange` → `/portal-session`, the `/api/webhooks/stripe` event map, delete-time period-end cancel, the admin subscription-ops routes) is owned and kept-to-truth in **Spec 20 (Stripe Web Checkout)**; this spec covers the mobile-facing surface only. The mobile `usePortalSession` hook (26C) replaces the static billing URL with `POST /api/subscribe/portal-session`. Operator validation: `docs/runbook/stripe_webhook_smoke.md`.
 
 ## 8. Manufacturer Accounts
 
