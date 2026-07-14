@@ -283,8 +283,11 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       // EITHER event would overwrite the deletion state to 'active'/'expired',
       // which un-blocks the session route's DELETION_BLOCKED check and would
       // let a deleted account re-subscribe (the exact contract Spec 96 §2
-      // forbids). Reactivation (Spec 95 §6.4) restores 'expired' explicitly,
-      // after which webhook writes apply normally again.
+      // forbids). Reactivation (Spec 95 §6.4) clears the deletion state and
+      // restores the LIVE Stripe status (WF3 2026-07-14 — 'active'/'past_due'
+      // if the period-end sub is still live, else 'expired'), re-stamping
+      // last_stripe_event_at to the reactivation instant so this guard stays
+      // forward-only; webhook writes then apply normally again.
       const eventCreatedAt = new Date(event.created * 1000);
       let result;
       if (outcome.userId !== null) {

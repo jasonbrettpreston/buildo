@@ -62,6 +62,11 @@ function restoredStatusArg(): unknown {
   return (updateCall?.[1] as unknown[])?.[1];
 }
 
+/** The raw SQL text of the UPDATE (the 2nd query call). */
+function updateSql(): string {
+  return String(mockQuery.mock.calls[1]?.[0]);
+}
+
 describe('POST /api/user-profile/reactivate — live Stripe access restore (WF3, period-end)', () => {
   it('a LIVE active sub restores subscription_status = active (within the paid period)', async () => {
     mockGetUser.mockResolvedValueOnce('uid-r1');
@@ -78,6 +83,14 @@ describe('POST /api/user-profile/reactivate — live Stripe access restore (WF3,
     expect(restoredStatusArg()).toBe('active');
     const body = (await res.json()) as { data: { subscription_status: string } };
     expect(body.data.subscription_status).toBe('active');
+    // Load-bearing UPDATE clauses (Chesterton's Fence — Regression Guardian +
+    // Code Reviewer): the out-of-order watermark is RE-STAMPED to NOW() (NOT
+    // cleared to NULL, which would disable the webhook's out-of-order guard on
+    // the same-customer live-restore path), and the moot cancel-debt marker is
+    // cleared. Pin the SQL so a future refactor can't silently drop them.
+    expect(updateSql()).toMatch(/last_stripe_event_at = NOW\(\)/);
+    expect(updateSql()).not.toMatch(/last_stripe_event_at = NULL/);
+    expect(updateSql()).toMatch(/stripe_cancel_failed_at = NULL/);
   });
 
   it('a past_due live sub restores subscription_status = past_due (routed to portal to fix payment)', async () => {

@@ -13,7 +13,9 @@ import { logError } from '@/lib/logger';
 // customer.subscription.updated now and .deleted LATER at period end; the
 // webhook's `IS DISTINCT FROM 'cancelled_pending_deletion'` fence keeps both
 // from overwriting the deletion state. Reactivation within the 30-day window
-// needs no Stripe resurrection (reactivate lands 'expired' → re-subscribe).
+// restores the LIVE Stripe status (WF3 2026-07-14): if the period-end sub is
+// still live it lands 'active'/'past_due', else 'expired' — see
+// reactivate/route.ts + Spec 95 §6.4.
 import { cancelAllStripeSubscriptions } from '@/lib/stripe/client';
 
 export const POST = withApiEnvelope(async function POST(request: NextRequest) {

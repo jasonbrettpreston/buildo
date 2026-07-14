@@ -93,26 +93,31 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     // trade_slugs_override (admin-internal + PII) to the mobile client. Return
     // only the client-safe column list, matching the /api/user-profile GET+PATCH
     // convention (userProfile.schema.ts).
-    // Reset the Stripe bookkeeping tied to the subscription the deletion
-    // scheduled to cancel (P26 review — Reality-Check CRITICAL/HIGH). Safe under
-    // BOTH reactivation outcomes: (a) re-subscribe with a fresh customer id — a
-    // stale terminal event / operator sweep could otherwise act on the wrong
-    // sub; (b) live-restore on the SAME customer (the 2026-07-14 ruling above) —
-    // clearing the watermark only lets the genuine period-end `.deleted` (a
-    // FUTURE event) apply, and no older in-flight event can set a status worse
-    // than the sub's real live state. The webhook's deletion + superseded-sub
-    // fences remain the primary guards; these clears are belt-and-suspenders:
-    //   - last_stripe_event_at = NULL: clears the out-of-order watermark tied
-    //     to the old sub (the webhook's superseded-subscription fence is the
-    //     primary guard; this is belt-and-suspenders).
-    //   - stripe_cancel_failed_at = NULL: the old sub's cancel debt is moot on
-    //     reactivation; a re-subscribe mints a new customer, so retrying the
-    //     old cancel would target the wrong (or a live) subscription.
+    // Stripe bookkeeping on reactivation (P26 review + WF3 2026-07-14 round-2):
+    //   - stripe_cancel_failed_at = NULL: retire any moot delete-time cancel
+    //     debt (the user is staying). Known edge: if the delete-time cancel
+    //     itself FAILED, the sub was never scheduled to cancel, so clearing the
+    //     marker leaves a fully-live sub — benign (favors the user; nothing left
+    //     to retry-cancel once reactivated). Spec 95 §6.4 Known Failure Modes
+    //     (Regression Guardian F3).
+    //   - last_stripe_event_at = NOW(): RE-STAMP the out-of-order watermark to
+    //     the reactivation instant — do NOT clear it to NULL. The webhook's
+    //     superseded-sub fence (`$1='active' OR stripe_customer_id IS NOT
+    //     DISTINCT FROM $2`, webhook route:312) only guards the RE-SUBSCRIBE
+    //     topology (a fresh cus_NEW ≠ the stored id); on the live-restore path
+    //     the customer id is UNCHANGED, so that fence passes for EVERY event and
+    //     the watermark is the ONLY guard against a stale/delayed same-customer
+    //     event (e.g. an already-resolved invoice.payment_failed) downgrading
+    //     the freshly-restored status. NULL would DISABLE it (the guard
+    //     `last_stripe_event_at IS NULL OR ... < $4` is unconditionally true —
+    //     Regression Guardian). NOW() keeps it forward-only: the genuine future
+    //     period-end `.deleted` (created > now) still applies; stale events
+    //     (created < now) are rejected.
     const updated = await query<Record<string, unknown>>(
       `UPDATE user_profiles
        SET account_deleted_at = NULL,
            subscription_status = $2,
-           last_stripe_event_at = NULL,
+           last_stripe_event_at = NOW(),
            stripe_cancel_failed_at = NULL,
            updated_at = NOW()
        WHERE user_id = $1
