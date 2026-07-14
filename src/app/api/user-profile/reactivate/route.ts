@@ -4,6 +4,7 @@ import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { query } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { getStripeClient, deriveEffectiveStripeStatus } from '@/lib/stripe/client';
 import { CLIENT_SAFE_SELECT_LIST } from '@/lib/userProfile.schema';
 
 export const POST = withApiEnvelope(async function POST(request: NextRequest) {
@@ -16,8 +17,12 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   }
 
   try {
-    const rows = await query<{ account_deleted_at: string | null; account_preset: string | null }>(
-      `SELECT account_deleted_at, account_preset FROM user_profiles WHERE user_id = $1`,
+    const rows = await query<{
+      account_deleted_at: string | null;
+      account_preset: string | null;
+      stripe_customer_id: string | null;
+    }>(
+      `SELECT account_deleted_at, account_preset, stripe_customer_id FROM user_profiles WHERE user_id = $1`,
       [uid],
     );
 
@@ -28,7 +33,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       );
     }
 
-    const { account_deleted_at, account_preset } = rows[0]!;
+    const { account_deleted_at, account_preset, stripe_customer_id } = rows[0]!;
 
     if (!account_deleted_at) {
       return NextResponse.json(
@@ -46,17 +51,57 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       );
     }
 
-    const restoredStatus = account_preset === 'manufacturer' ? 'admin_managed' : 'expired';
+    // Determine the status to restore.
+    //  - Manufacturer is a comp/admin_managed account, independent of Stripe —
+    //    it must NEVER see the consumer paywall, so it skips the Stripe read.
+    //  - Everyone else: because delete now schedules PERIOD-END cancel (the
+    //    2026-07-12 ruling), the sub stays LIVE until period end. A user who
+    //    reactivates within that already-paid window should get their real live
+    //    status back (RULED 2026-07-14 — review_followups D3), not be forced to
+    //    re-subscribe. deriveEffectiveStripeStatus is the money-loop SSOT
+    //    (shared with the admin reconcile route). We do NOT clear
+    //    cancel_at_period_end — access lasts the remaining paid period, then
+    //    lapses to 'expired' via the period-end `.deleted` webhook unless the
+    //    user re-subscribes.
+    //  - LOUD-NON-FATAL: a Stripe outage / unconfigured key must never block
+    //    reactivation — fall back to 'expired' and log. The account is restored
+    //    either way; a subsequent webhook or admin reconcile corrects the status.
+    let restoredStatus: 'admin_managed' | 'active' | 'past_due' | 'expired';
+    if (account_preset === 'manufacturer') {
+      restoredStatus = 'admin_managed';
+    } else {
+      restoredStatus = 'expired';
+      if (stripe_customer_id) {
+        try {
+          const stripe = getStripeClient();
+          const subs = await stripe.subscriptions.list({
+            customer: stripe_customer_id,
+            status: 'all',
+            limit: 100,
+          });
+          restoredStatus = deriveEffectiveStripeStatus(subs.data);
+        } catch (stripeErr) {
+          logError('[user-profile/reactivate] live Stripe status read failed; defaulting to expired', stripeErr, {
+            uid,
+          });
+          restoredStatus = 'expired';
+        }
+      }
+    }
 
     // P24-24A — RETURNING * leaked stripe_customer_id / radius_cap_km /
     // trade_slugs_override (admin-internal + PII) to the mobile client. Return
     // only the client-safe column list, matching the /api/user-profile GET+PATCH
     // convention (userProfile.schema.ts).
-    // Reset the Stripe bookkeeping tied to the SUPERSEDED subscription (P26
-    // review — Reality-Check CRITICAL/HIGH). Both columns reference the old
-    // sub the deletion scheduled to cancel; leaving them stale lets a later
-    // terminal event or an operator sweep act on the wrong subscription after
-    // the user re-subscribes with a fresh customer id:
+    // Reset the Stripe bookkeeping tied to the subscription the deletion
+    // scheduled to cancel (P26 review — Reality-Check CRITICAL/HIGH). Safe under
+    // BOTH reactivation outcomes: (a) re-subscribe with a fresh customer id — a
+    // stale terminal event / operator sweep could otherwise act on the wrong
+    // sub; (b) live-restore on the SAME customer (the 2026-07-14 ruling above) —
+    // clearing the watermark only lets the genuine period-end `.deleted` (a
+    // FUTURE event) apply, and no older in-flight event can set a status worse
+    // than the sub's real live state. The webhook's deletion + superseded-sub
+    // fences remain the primary guards; these clears are belt-and-suspenders:
     //   - last_stripe_event_at = NULL: clears the out-of-order watermark tied
     //     to the old sub (the webhook's superseded-subscription fence is the
     //     primary guard; this is belt-and-suspenders).
