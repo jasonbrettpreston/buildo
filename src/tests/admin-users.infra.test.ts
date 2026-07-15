@@ -18,7 +18,16 @@ vi.mock('@/lib/auth/verify-admin', async () => {
   return { ...actual, verifyAdminAuth: vi.fn() };
 });
 
-vi.mock('@/lib/db/client', () => ({ pool: { query: vi.fn() } }));
+// withTransaction runs the callback with a client whose .query IS the same
+// mocked pool.query, so the mutation's UPDATE (now inside the txn, P24 close-out
+// audit-atomicity fix) is still observed by mockedQuery.
+vi.mock('@/lib/db/client', () => {
+  const query = vi.fn();
+  return {
+    pool: { query },
+    withTransaction: vi.fn(async (fn: (client: { query: typeof query }) => unknown) => fn({ query })),
+  };
+});
 vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logWarn: vi.fn(), logInfo: vi.fn() }));
 vi.mock('@/lib/admin/analytics', () => ({ track: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@/lib/admin/admin-audit', () => ({

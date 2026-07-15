@@ -18,7 +18,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { verifyAdminAuth, parseAdminAllowlist, type AdminContext } from '@/lib/auth/verify-admin';
-import { pool } from '@/lib/db/client';
+import { pool, withTransaction } from '@/lib/db/client';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod, internalError } from '@/features/leads/api/error-mapping';
 import { logError, logWarn } from '@/lib/logger';
@@ -187,85 +187,98 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest, 
     existing: Record<string, unknown>,
   ): Promise<{ row: Record<string, unknown> }> {
     switch (m.action) {
+      // Every case wraps its UPDATE + writeAdminAudit in ONE transaction (P24
+      // close-out CRIT — an UPDATE that commits before a failing audit write is
+      // an unrecoverable compliance hole; the executor param exists for exactly
+      // this). Network calls (Firebase/Stripe in delete) stay OUTSIDE the txn.
       case 'set_trades': {
         const [primary, ...rest] = m.trade_slugs;
         const override = rest.length > 0 ? rest : null;
-        const updated = await pool.query<Record<string, unknown>>(
-          `UPDATE user_profiles
-             SET trade_slug = $2, trade_slugs_override = $3, updated_at = NOW()
-           WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
-          [tUid, primary, override],
-        );
-        await writeAdminAudit({
-          adminUid: adminCtx!.uid,
-          action: 'set_trades',
-          targetUid: tUid,
-          oldValue: { trade_slug: existing.trade_slug, trade_slugs_override: existing.trade_slugs_override },
-          newValue: { trade_slug: primary, trade_slugs_override: override },
-          reason: m.reason,
+        return withTransaction(async (client) => {
+          const updated = await client.query<Record<string, unknown>>(
+            `UPDATE user_profiles
+               SET trade_slug = $2, trade_slugs_override = $3, updated_at = NOW()
+             WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
+            [tUid, primary, override],
+          );
+          await writeAdminAudit({
+            adminUid: adminCtx!.uid,
+            action: 'set_trades',
+            targetUid: tUid,
+            oldValue: { trade_slug: existing.trade_slug, trade_slugs_override: existing.trade_slugs_override },
+            newValue: { trade_slug: primary, trade_slugs_override: override },
+            reason: m.reason,
+          }, client);
+          return { row: updated.rows[0]! };
         });
-        return { row: updated.rows[0]! };
       }
       case 'set_preset': {
-        const updated = await pool.query<Record<string, unknown>>(
-          `UPDATE user_profiles SET account_preset = $2, updated_at = NOW()
-           WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
-          [tUid, m.account_preset],
-        );
-        await writeAdminAudit({
-          adminUid: adminCtx!.uid,
-          action: 'set_preset',
-          targetUid: tUid,
-          oldValue: { account_preset: existing.account_preset },
-          newValue: { account_preset: m.account_preset },
-          reason: m.reason,
+        return withTransaction(async (client) => {
+          const updated = await client.query<Record<string, unknown>>(
+            `UPDATE user_profiles SET account_preset = $2, updated_at = NOW()
+             WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
+            [tUid, m.account_preset],
+          );
+          await writeAdminAudit({
+            adminUid: adminCtx!.uid,
+            action: 'set_preset',
+            targetUid: tUid,
+            oldValue: { account_preset: existing.account_preset },
+            newValue: { account_preset: m.account_preset },
+            reason: m.reason,
+          }, client);
+          return { row: updated.rows[0]! };
         });
-        return { row: updated.rows[0]! };
       }
       case 'extend_trial': {
         // Set the trial window so it expires in exactly `days` days
         // (expiration = trial_started_at + 14d, per Spec 96).
-        const updated = await pool.query<Record<string, unknown>>(
-          `UPDATE user_profiles
-             SET subscription_status = 'trial',
-                 trial_started_at = NOW() - INTERVAL '14 days' + make_interval(days => $2),
-                 updated_at = NOW()
-           WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
-          [tUid, m.days],
-        );
-        await writeAdminAudit({
-          adminUid: adminCtx!.uid,
-          action: 'extend_trial',
-          targetUid: tUid,
-          oldValue: { subscription_status: existing.subscription_status, trial_started_at: existing.trial_started_at },
-          newValue: { subscription_status: 'trial', trial_days_remaining: m.days },
-          reason: m.reason,
+        return withTransaction(async (client) => {
+          const updated = await client.query<Record<string, unknown>>(
+            `UPDATE user_profiles
+               SET subscription_status = 'trial',
+                   trial_started_at = NOW() - INTERVAL '14 days' + make_interval(days => $2),
+                   updated_at = NOW()
+             WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
+            [tUid, m.days],
+          );
+          await writeAdminAudit({
+            adminUid: adminCtx!.uid,
+            action: 'extend_trial',
+            targetUid: tUid,
+            oldValue: { subscription_status: existing.subscription_status, trial_started_at: existing.trial_started_at },
+            newValue: { subscription_status: 'trial', trial_days_remaining: m.days },
+            reason: m.reason,
+          }, client);
+          return { row: updated.rows[0]! };
         });
-        return { row: updated.rows[0]! };
       }
       case 'revoke':
       case 'suspend': {
         // Both block access via subscription_status='expired'; the audit action
         // distinguishes intent (a dedicated 'suspended' status is a future enum
         // addition — documented in Spec 21).
-        const updated = await pool.query<Record<string, unknown>>(
-          `UPDATE user_profiles SET subscription_status = 'expired', updated_at = NOW()
-           WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
-          [tUid],
-        );
-        await writeAdminAudit({
-          adminUid: adminCtx!.uid,
-          action: m.action,
-          targetUid: tUid,
-          oldValue: { subscription_status: existing.subscription_status },
-          newValue: { subscription_status: 'expired' },
-          reason: m.reason,
+        return withTransaction(async (client) => {
+          const updated = await client.query<Record<string, unknown>>(
+            `UPDATE user_profiles SET subscription_status = 'expired', updated_at = NOW()
+             WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
+            [tUid],
+          );
+          await writeAdminAudit({
+            adminUid: adminCtx!.uid,
+            action: m.action,
+            targetUid: tUid,
+            oldValue: { subscription_status: existing.subscription_status },
+            newValue: { subscription_status: 'expired' },
+            reason: m.reason,
+          }, client);
+          return { row: updated.rows[0]! };
         });
-        return { row: updated.rows[0]! };
       }
       case 'delete': {
-        // Best-effort Firebase deletion (non-fatal — the DB row is
-        // authoritative). Then PII nullify + mark for deletion.
+        // --- Network calls FIRST, OUTSIDE the txn (§R9 — never hold a txn across
+        // I/O). Both best-effort/loud-non-fatal: a Firebase or Stripe outage must
+        // never block the DB deletion (the DB row is authoritative).
         try {
           const admin = await import('firebase-admin');
           if (admin.apps.length > 0) {
@@ -274,53 +287,53 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest, 
         } catch (firebaseErr) {
           logError(TAG, firebaseErr, { stage: 'firebase_delete', targetUid: tUid });
         }
-        const updated = await pool.query<Record<string, unknown>>(
-          `UPDATE user_profiles
-             SET full_name = NULL, phone_number = NULL, email = NULL,
-                 backup_email = NULL, company_name = NULL,
-                 account_deleted_at = NOW(),
-                 subscription_status = 'cancelled_pending_deletion',
-                 updated_at = NOW()
-           WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
-          [tUid],
-        );
-        // Delete-time Stripe cancel (P26 review — Code Reviewer CRITICAL). Spec
-        // 21 §7 assigns cancel-on-delete to the money loop; the admin delete
-        // action reaches the same 'cancelled_pending_deletion' terminal state as
-        // the self-serve delete route, so it MUST cancel identically — without
-        // this an admin-deleted user's subscription bills forever, with no
-        // marker set and no recovery path (reconcile/retry-cancel both refuse a
-        // cancelled_pending_deletion / no-marker row). Loud-non-fatal: a Stripe
-        // outage never blocks the deletion, but sets the durable
-        // stripe_cancel_failed_at marker so the sweep/retry route surfaces it.
+        // Delete-time Stripe cancel (P26 review — Code Reviewer CRITICAL). Spec 21
+        // §7 assigns cancel-on-delete to the money loop; the admin delete reaches
+        // the same 'cancelled_pending_deletion' terminal state as the self-serve
+        // delete route, so it MUST cancel identically — else an admin-deleted
+        // user's subscription bills forever. A cancel failure sets the durable
+        // stripe_cancel_failed_at marker (folded into the atomic write below) so
+        // the sweep/retry route surfaces it.
+        let stripeCancelFailed = false;
         const stripeCustomerId = existing.stripe_customer_id as string | null;
         if (stripeCustomerId) {
           try {
             await cancelAllStripeSubscriptions(stripeCustomerId);
           } catch (stripeErr) {
             logError(TAG, stripeErr, { stage: 'stripe_cancel', targetUid: tUid });
-            try {
-              await pool.query(
-                `UPDATE user_profiles SET stripe_cancel_failed_at = NOW(), updated_at = NOW() WHERE user_id = $1`,
-                [tUid],
-              );
-            } catch (markerErr) {
-              logError(TAG, markerErr, { stage: 'stripe_cancel_marker', targetUid: tUid });
-            }
+            stripeCancelFailed = true;
           }
         }
-        // Audit the fact of deletion (PII in old snapshot is redacted by the
-        // writer), THEN scrub residual payloads for this target (RTBF).
-        await writeAdminAudit({
-          adminUid: adminCtx!.uid,
-          action: 'delete',
-          targetUid: tUid,
-          oldValue: { subscription_status: existing.subscription_status, had_pii: true },
-          newValue: { account_deleted_at: 'set', subscription_status: 'cancelled_pending_deletion' },
-          reason: m.reason,
+        // --- Atomic: PII-nullify + terminal state + (marker on cancel failure) +
+        // the audit row in ONE transaction (P24 close-out CRIT — a mutation must
+        // never commit without its audit; for delete the un-audited state is
+        // irreversible PII destruction with no attribution).
+        const { row } = await withTransaction(async (client) => {
+          const updated = await client.query<Record<string, unknown>>(
+            `UPDATE user_profiles
+               SET full_name = NULL, phone_number = NULL, email = NULL,
+                   backup_email = NULL, company_name = NULL,
+                   account_deleted_at = NOW(),
+                   subscription_status = 'cancelled_pending_deletion',
+                   stripe_cancel_failed_at = CASE WHEN $2 THEN NOW() ELSE stripe_cancel_failed_at END,
+                   updated_at = NOW()
+             WHERE user_id = $1 RETURNING ${DETAIL_COLUMNS}`,
+            [tUid, stripeCancelFailed],
+          );
+          await writeAdminAudit({
+            adminUid: adminCtx!.uid,
+            action: 'delete',
+            targetUid: tUid,
+            oldValue: { subscription_status: existing.subscription_status, had_pii: true },
+            newValue: { account_deleted_at: 'set', subscription_status: 'cancelled_pending_deletion' },
+            reason: m.reason,
+          }, client);
+          return { row: updated.rows[0]! };
         });
+        // RTBF scrub — a separate step (NULLs residual payloads on ALL prior audit
+        // rows for the target). Runs after the delete-fact audit is committed.
         await scrubAdminAuditForTarget(tUid);
-        return { row: updated.rows[0]! };
+        return { row };
       }
     }
   }
