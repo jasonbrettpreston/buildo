@@ -26,6 +26,7 @@
 //   T12 chunk-build cap   — many rows for one user in a sub-100 chunk still respect the per-day cap (25E #5)
 //   T13 URGENT freshness  — stale URGENT dropped; equally-old PHASE/STALL kept (scoped sweep) (25E #4)
 //   T14 fenced types      — a STALL_WARNING row is never selected or sent (25E #9)
+//   T15 no device token   — a tokenless saver row is retired + counted, never an invisible backlog (25E output)
 //
 // Why in-process (not execSync): the transport is injected via a JS global, which
 // cannot cross a child-process boundary. pipeline.run is import-safe (no
@@ -464,6 +465,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
       // Past 20:00 ET → the window has passed → expired (no stale push).
       expect(ledger[0]!.status).toBe('deferred_expired');
       expect(sentTo(token)).toHaveLength(0);
+      expect(await isSent(nId)).toBe(true); // deferred_expired is TERMINAL (spec §4 "dropped") — retired, not re-tried next day
     }
   });
 
@@ -550,5 +552,19 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
     expect(sentTo(token)).toHaveLength(0);       // not a DISPATCHABLE type
     expect(await isSent(fenced)).toBe(false);    // left untouched in the queue
     expect(await ledgerFor(uid)).toHaveLength(0);
+  });
+
+  it('T15 — no device token (25E output panel / spec §4): a tokenless saver row is retired + counted, never an invisible backlog', async () => {
+    const uid = 'p25e-t15';
+    await seedUser(uid); // NB: no seedToken — the user has zero device_tokens rows
+    const nId = await enqueue(uid, 'LIFECYCLE_PHASE_CHANGED', 'permit:P25E-T15:00', 'P25E-T15');
+
+    await runDispatcher();
+
+    // Pre-fix: the INNER JOIN never even saw this row → is_sent stayed false forever.
+    expect(await isSent(nId)).toBe(true);        // retired (no-op, counted)
+    expect(await sentAt(nId)).toBeNull();        // never pushed
+    expect(sentMessages).toHaveLength(0);        // nothing sent
+    expect(await ledgerFor(uid)).toHaveLength(0); // no ledger row (counted via the audit metric, not the ledger)
   });
 });

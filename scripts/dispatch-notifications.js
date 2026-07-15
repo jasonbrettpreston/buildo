@@ -61,7 +61,11 @@ const CONFIG_SCHEMA = z.object({
   // parsed (:~99) BEFORE the kill-switch check, so a missing/undefined DB value
   // must NOT throw (a throw here aborts the whole permits chain and skips
   // backup_db). 168h == the 6-7 day URGENT enqueue horizon.
-  notifications_max_stale_hours: z.coerce.number().int().positive().default(168),
+  // `.default` handles a missing (undefined) row; `.catch` degrades ANY other
+  // parse failure (a hypothetical null/bad DB value) to the default instead of
+  // throwing — this field is parsed BEFORE the kill-switch, and a throw here
+  // would abort the whole permits chain (and skip backup_db).
+  notifications_max_stale_hours: z.coerce.number().int().positive().default(168).catch(168),
 }).passthrough();
 
 // The America/Toronto calendar date (YYYY-MM-DD) for a given instant — DST-aware.
@@ -147,6 +151,12 @@ pipeline.run('dispatch-notifications', async (pool) => {
     let staleDropped = 0;          // 25E #4 — URGENT rows retired past the freshness bound
     let duplicatesSuppressed = 0;  // 25E #1 — duplicate queue rows retired without a send
     let ceilingHit = 0;            // 25E #6 — eligible rows left for next run by the memory ceiling
+    // Skip-path observability (25E output panel — Spec 47 §11.4 "skips must be traceable").
+    let noDeviceToken = 0;         // user has no push token — retired (spec §4 "no-op, counted")
+    let disabledTypeSkipped = 0;   // type in the operator kill-list
+    let prefGatedSkipped = 0;      // the per-type user preference is off
+    let noLeadIdSkipped = 0;       // no routing identity (lead_id + permit_num both null)
+    const noTokenIds = [];         // notification ids to retire (is_sent=true, sent_at=NULL)
 
     // ── Receipt pass (25B): fetch receipts for the PRIOR run's sent tickets and
     // prune any exact token that resolved to DeviceNotRegistered (~24h lag).
@@ -285,7 +295,7 @@ pipeline.run('dispatch-notifications', async (pool) => {
               up.phase_changed, up.lifecycle_stalled_pref, up.start_date_urgent,
               up.notification_schedule
          FROM notifications n
-         JOIN device_tokens dt ON dt.user_id = n.user_id
+         LEFT JOIN device_tokens dt ON dt.user_id = n.user_id
          JOIN user_profiles up ON up.user_id = n.user_id
         WHERE n.type = ANY($1::text[])
           AND n.is_sent = false
@@ -300,16 +310,23 @@ pipeline.run('dispatch-notifications', async (pool) => {
       [DISPATCHABLE_TYPES_V1, today],
     )) {
       const type = row.type;
-      if (disabledSet.has(type)) continue;
+      if (disabledSet.has(type)) { disabledTypeSkipped++; continue; }
 
-      // Per-type preference gate (a false pref column silences the type).
+      // Per-type preference gate (a false pref column silences the type). Counted
+      // but NOT retired — a row sends if the user re-enables the pref later.
       const prefCol = PREF_COLUMN_BY_TYPE[type];
-      if (prefCol === 'phase_changed' && !row.phase_changed) continue;
-      if (prefCol === 'lifecycle_stalled_pref' && !row.lifecycle_stalled_pref) continue;
-      if (prefCol === 'start_date_urgent' && !row.start_date_urgent) continue;
+      if (prefCol === 'phase_changed' && !row.phase_changed) { prefGatedSkipped++; continue; }
+      if (prefCol === 'lifecycle_stalled_pref' && !row.lifecycle_stalled_pref) { prefGatedSkipped++; continue; }
+      if (prefCol === 'start_date_urgent' && !row.start_date_urgent) { prefGatedSkipped++; continue; }
 
       const leadId = row.lead_id || row.permit_num;
-      if (!leadId) continue; // cannot key the ledger / route without an identity
+      if (!leadId) { noLeadIdSkipped++; continue; } // no routing identity
+
+      // No device token (LEFT JOIN → null token): the row cannot be delivered.
+      // Spec §4 "no device token → no-op, counted". Retire it (is_sent=true,
+      // sent_at=NULL) so a tokenless/web-only saver does not accumulate an
+      // invisible, ever-rescanned backlog — and make it VISIBLE via the counter.
+      if (!row.push_token) { noDeviceToken++; noTokenIds.push(row.notification_id); continue; }
 
       // Schedule gate (25B + 25E #3). Only schedule-gated types (PHASE_CHANGED)
       // respect the window, keyed on the user's notification_schedule pref.
@@ -319,7 +336,11 @@ pipeline.run('dispatch-notifications', async (pool) => {
         if (!inWindow) {
           if (hour >= endHour) {
             // The window has already PASSED earlier today → expire (no stale push).
+            // deferred_expired is TERMINAL (spec §4 "counted, dropped") — it carries
+            // the notification id so the deferral-write retires it (is_sent=true),
+            // unlike a throttle 'deferred' which stays is_sent=false to retry.
             deferrals.push({
+              notificationId: row.notification_id,
               userId: row.user_id, leadId, type, token: row.push_token,
               status: 'deferred_expired',
               detail: `schedule=${schedule} hour=${hour} past valid_until_hour=${endHour}`,
@@ -386,6 +407,18 @@ pipeline.run('dispatch-notifications', async (pool) => {
         return res.rowCount ?? 0;
       });
       duplicatesSuppressed += n;
+    }
+
+    // ── Retire tokenless rows (25E output panel — spec §4 "no device token →
+    // no-op, counted"). Pure DB, no Expo I/O (§R9). sent_at=NULL = never pushed.
+    if (noTokenIds.length > 0) {
+      await pipeline.withTransaction(pool, async (client) => {
+        await client.query(
+          `UPDATE notifications SET is_sent = true, sent_at = NULL
+             WHERE id = ANY($1::int[]) AND is_sent = false`,
+          [noTokenIds],
+        );
+      });
     }
 
     // ── Send eligible rows in chunks of <=100, enforcing the per-user/day cap at
@@ -503,6 +536,7 @@ pipeline.run('dispatch-notifications', async (pool) => {
       const counts = await pipeline.withTransaction(pool, async (client) => {
         let def = 0;
         let defExp = 0;
+        const expiredIds = [];
         for (const d of deferrals) {
           const res = await client.query(
             `INSERT INTO notification_dispatches (user_id, lead_id, type, toronto_date, push_token, status, detail, dispatched_at)
@@ -513,6 +547,17 @@ pipeline.run('dispatch-notifications', async (pool) => {
           if ((res.rowCount ?? 0) > 0) {
             if (d.status === 'deferred_expired') defExp++; else def++;
           }
+          if (d.status === 'deferred_expired' && d.notificationId != null) expiredIds.push(d.notificationId);
+        }
+        // deferred_expired is a TERMINAL drop (spec §4) → retire the queue row so
+        // it is not re-streamed next day and delivered late. Throttle 'deferred'
+        // rows are intentionally left is_sent=false to retry. In the SAME txn.
+        if (expiredIds.length > 0) {
+          await client.query(
+            `UPDATE notifications SET is_sent = true, sent_at = NULL
+               WHERE id = ANY($1::int[]) AND is_sent = false`,
+            [expiredIds],
+          );
         }
         return { def, defExp }; // return-then-add: correct across a 40P01 retry
       });
@@ -532,6 +577,12 @@ pipeline.run('dispatch-notifications', async (pool) => {
       { metric: 'stale_dropped', value: staleDropped, threshold: '0 ideal', status: staleDropped > 0 ? 'WARN' : 'PASS' },
       { metric: 'duplicates_suppressed', value: duplicatesSuppressed, threshold: null, status: 'PASS' },
       { metric: 'eligible_ceiling_hit', value: ceilingHit, threshold: '0 required', status: ceilingHit > 0 ? 'WARN' : 'PASS' },
+      // Skip-path visibility (Spec 47 §11.4 — no silent drop). Retired/skipped
+      // rows the send path never counts otherwise.
+      { metric: 'no_device_token', value: noDeviceToken, threshold: null, status: 'PASS' },
+      { metric: 'disabled_type_skipped', value: disabledTypeSkipped, threshold: null, status: 'PASS' },
+      { metric: 'pref_gated_skipped', value: prefGatedSkipped, threshold: null, status: 'PASS' },
+      { metric: 'no_lead_id_skipped', value: noLeadIdSkipped, threshold: '0 ideal', status: noLeadIdSkipped > 0 ? 'WARN' : 'PASS' },
     ];
     const verdict = auditRows.some((r) => r.status === 'FAIL') ? 'FAIL'
       : auditRows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
@@ -552,12 +603,12 @@ pipeline.run('dispatch-notifications', async (pool) => {
         notifications: ['id', 'user_id', 'type', 'lead_id', 'permit_num', 'title', 'body', 'is_sent', 'created_at'],
         device_tokens: ['user_id', 'push_token'],
         user_profiles: ['user_id', 'phase_changed', 'lifecycle_stalled_pref', 'start_date_urgent', 'notification_schedule'],
-        notification_dispatches: ['user_id', 'lead_id', 'type', 'toronto_date', 'expo_ticket_id', 'receipt_checked_at'],
+        notification_dispatches: ['user_id', 'lead_id', 'type', 'toronto_date', 'push_token', 'expo_ticket_id', 'status', 'dispatched_at', 'receipt_checked_at'],
       },
       {
-        notification_dispatches: ['user_id', 'lead_id', 'type', 'toronto_date', 'push_token', 'expo_ticket_id', 'status', 'detail', 'receipt_checked_at'],
+        notification_dispatches: ['user_id', 'lead_id', 'type', 'toronto_date', 'push_token', 'expo_ticket_id', 'status', 'detail', 'dispatched_at', 'receipt_checked_at'],
         notifications: ['is_sent', 'sent_at'],
-        device_tokens: [],
+        device_tokens: ['push_token'], // the DeviceNotRegistered prune DELETEs by token
       },
       ['ExpoPush'],
     );

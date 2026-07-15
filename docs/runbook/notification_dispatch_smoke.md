@@ -81,7 +81,10 @@ UPDATE logic_variables SET variable_value = 1 WHERE variable_key = 'notification
 
 **After the flip:** watch the first in-chain run's audit rows — `dispatched`, `delivery_errors`,
 `tokens_pruned`, `deferred`, `deferred_expired`, `stale_dropped`, `duplicates_suppressed`,
-`eligible_ceiling_hit`. A `delivery_errors` / `tokens_pruned` spike on run 1 is the signal to
+`eligible_ceiling_hit`, `no_device_token`, `disabled_type_skipped`, `pref_gated_skipped`,
+`no_lead_id_skipped`. A `delivery_errors` / `tokens_pruned` spike on run 1 is the signal to
 re-check token hygiene; a non-zero `eligible_ceiling_hit` means the queue exceeded the in-memory
-ceiling (backlog not swept — remainder drains next run). Revert instantly by setting the variable
-back to `0` (the engine returns to inert SKIP on the next run — no code deploy needed).
+ceiling (backlog not swept — remainder drains next run); a large `no_device_token` is expected
+(web-only / no-push-permission savers — their rows are retired, not accumulated); a non-zero
+`no_lead_id_skipped` is a data anomaly worth investigating. Revert instantly by setting the
+variable back to `0` (the engine returns to inert SKIP on the next run — no code deploy needed).
