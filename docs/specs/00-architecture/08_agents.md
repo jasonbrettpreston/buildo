@@ -103,7 +103,11 @@ Not a new agent — a **mandatory second pass**. After the panel returns finding
 ### 5.4 Schema-Fidelity
 **Question:** *Does every DB field this change reads/writes actually exist in the live schema with the assumed type, nullability, and constraints?* Cross-checks column existence, type, `NOT NULL` (+ default), `UNIQUE`/PK, FK, and `ON CONFLICT` arbiters against `docs/specs/00-architecture/01_database_schema.md` + the live `information_schema` + the generated `src/lib/db/generated/schema.ts`.
 **Substrate:** `general-purpose` (main tree + live DB).
-**Why (validated THIS session):** the `DETAIL_COLUMNS` omission (a NOT-NULL-marker column never SELECTed → dead UI), the `lead_analytics` NOT-NULL `lead_id` crash (23502), and the LPAD `lead_key` collision (21000, an `ON CONFLICT`-arbiter that could be hit twice) were ALL schema-fidelity failures. This is the highest-ROI role for backend/admin.
+**Why (validated THIS session):** the `DETAIL_COLUMNS` omission (a NOT-NULL-marker column never SELECTed → dead UI), the `lead_analytics` NOT-NULL `lead_id` crash (23502), and the LPAD `lead_key` collision (21000, an `ON CONFLICT`-arbiter that could be hit twice) were ALL schema-fidelity failures. This is the highest-ROI role for backend/admin. **It fires at BOTH altitudes** — at PLAN it verifies the assumed columns/types/arbiters *before* the writer is coded (would have pre-empted the 23502 + 21000); at OUTPUT it verifies the actual writes.
+
+### 5.4b Reality-Check — dual-altitude (the only role effective at PLAN and OUTPUT on VALUES)
+**At PLAN altitude:** RC stress-tests the plan's numeric assumptions against the CURRENT DB's real data — it runs the SQL the plan implies against live rows to surface the value that will be insane once the code ships. VALIDATED: during the WF2 archetype-cost PLAN review it queried parcels 1944170/1944175 and found a **$105.24M** gut-line (NULL-lot mislink) + the **$159.9M** T3 tail BEFORE any cost code existed (`review_followups.md` 25/2510). For every field the plan adds/derives it demands a plausibility bound (zone-aware) + the named cross-field invariants + an audit-row count for each cap/drop/default.
+**At OUTPUT altitude:** it reads the re-run output VALUES (the shadow-audit of the 19 T3 rows > $20M), separating genuine bugs from not-yet-re-run data. RC is the #1 role and the only one that reads values at both altitudes — it lives in both the reality-grounder class (plan) and the output-dependent class (values).
 
 ### 5.5 User-Advocate (UX)
 **Question:** *Does this serve the human on the other end?* The consumer journey end-to-end; the empty/loading/error/denied states; accessibility (roles, labels, focus); honest copy (never a false "done"); the "what would make the user stop needing to ask" test (manual §1).
@@ -128,12 +132,13 @@ The followup log's recurring bug classes suggest these could be **checklists a s
 ### 5.9 Roster Manager (meta-governance, periodic)
 **Question:** *Is the ROSTER itself the right set — who earns their keep, who to improve, what's missing or redundant?* Runs on a **periodic cadence (every ~15 panels, or monthly)**, NOT per-review.
 **Substrate:** `general-purpose` (reads the recent panels' findings + git history + `review_followups.md`), or a small Workflow.
-**Four responsibilities — all ADVISORY** (it *recommends*; a human ratifies — it never auto-mints or auto-retires an agent):
+**Five responsibilities — all ADVISORY** (it *recommends*; a human ratifies — it never auto-mints or auto-retires an agent):
 1. **Score the roster from evidence and WRITE THE RESULTS BACK INTO §7b of THIS spec** (the living scoreboard). Per agent over the window: panels run, real (confirmed) findings, false-premise rate, severity-weighted value, one-line note. The §7b table is the single stat surface for the roster, and the Roster Manager is its ONLY writer — it stamps `Last updated: <date>, window: <N panels>` each run.
 2. **Recommend NEW roles/lenses** — mine `review_followups.md` + recent CRITICAL/HIGH escapes for recurring bug CLASSES no current agent owns (the growth mechanism).
 3. **Recommend IMPROVEMENTS** to existing spawn prompts (§10) — a lens that keeps missing a class; a role with a high false-premise rate that needs a tighter premise-verification instruction.
 4. **Recommend RETIREMENT** of dead-weight roles — an agent that found nothing real across the window is pure cost (the pruning counter to §9 role-proliferation).
-**Output:** a dated recommendation block appended to `review_followups.md` + the §7b scoreboard update, for human ratification.
+5. **Own the §6.4 two-altitude roster table.** A14 is the ONLY writer of the per-WF PLAN/OUTPUT roster table (§6.4), alongside §7b — it re-derives both from the window's measured per-altitude effectiveness each cadence and re-stamps the date/window. A hand-edit to §6.4 or §7b is drift.
+**Output:** a dated recommendation block appended to `review_followups.md` + the §7b scoreboard + §6.4 table update, for human ratification.
 **Why:** without it the roster either ossifies (misses emerging bug classes) or bloats (accumulates dead-weight). The Roster Manager is the roster's **homeostasis** — it operationalizes both of the user's concerns ("is this too many?" → retirement; "recommend new agents" → growth) from measured value, not opinion.
 **Extended mandate — recommend PREVENTION, not just detection (§5.11):** for each recurring finding class, A14 also asks *"what standing PROTOCOL RULE or GATE would prevent this class?"* and recommends it into the right doc — so the loop grows agents AND protocols.
 
@@ -165,32 +170,69 @@ Each domain gets a **default roster**. Adversarial (A1/A2) + the doctrine read a
 - **Reality-Check / Schema-Fidelity / Ground-truth** fire when **DB fields, derived values, or spec claims** are touched.
 - **Operating-Model Compliance (§5.8)** runs ONCE at **WF6** (the exit gate) for every WF — it audits the process, not the domain.
 
+## 6.4 Two altitudes, per WF — the PLAN roster and the OUTPUT roster
+*(Owned by the Roster Manager, A14 §5.9 — machine-maintained alongside §7b.)*
+
+Plan review and output review are COMPLEMENTARY, not redundant (validated this quarter: Reality-Check found the **$105.24M** gut-line and the **$159.9M** T3 tail at PLAN altitude, before the cost code existed — `review_followups.md` lines 25/2510). Every WF runs a PLAN roster (points agents at `.cursor/active_task.md` + the live tree/DB) and, after implementation, an OUTPUT roster (points them at the diff + re-run values).
+
+Three agent classes behave differently across the two altitudes:
+- **Reasoners** (Gemini, DeepSeek, Code-Reviewer-on-design): plan BREADTH, HIGHEST false-premise rate — always adjudicated by a grounder before folding (§9). Code Reviewer crosses toward grounder at OUTPUT altitude.
+- **Reality-grounders** (Reality-Check, Schema-Fidelity, Ground-truth, **Integration**): trustworthy at BOTH altitudes (lowest false-premise rates — RC lowest by execution, Ground-truth 0/5, Schema-Fidelity 0/2, Integration low). They refute the reasoners' plan hallucinations. Spend here.
+- **Diff/output-dependent** (Regression Guardian; Op-Model). Reality-Check is BOTH a grounder (plan) AND output-dependent (values) — the one role in two classes.
+
+Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · **GT**=Ground-truth · **Gm**=Gemini · **DS**=DeepSeek · **CR**=Code-Reviewer · **Ob**=Observability · **RG**=Regression-Guardian · **Co**=Compliance · **UX**=User-Advocate · **Sec**=Security · **R2**=Round-2 (§5.3).
+
+| WF | Domain | PLAN roster | OUTPUT roster |
+|----|--------|-------------|---------------|
+| **WF1** | Backend/Pipeline | Gm+DS(×lens)+CR+**I**+**GT**+**SF**+Ob+RC\* | I+CR+Ob+SF+RG\*\*+RC\*+R2 |
+| WF1 | Admin | Gm+DS+CR+**I**+**SF**+GT→Co | I+CR+SF+Co+RG\*\*+Sec\*\*\*+UX+R2 |
+| WF1 | Frontend/Mobile | Gm+DS+CR+**I**+UX+Co | I+CR+UX+Co+RG\*\*+Sec\*\*\*+R2 |
+| **WF2** | Backend/Pipeline | Gm+DS(×lens)+CR+**I**+**GT**+**SF**+Ob+RC\* | I+CR+Ob+SF+**RG**+RC\*+R2 |
+| WF2 | Admin | Gm+DS+CR+**I**+**SF**+GT→Co | I+CR+SF+Co+**RG**+Sec\*\*\*+UX+R2 |
+| WF2 | Frontend/Mobile | Gm+DS+CR+**I**+UX+Co | I+CR+UX+Co+**RG**+Sec\*\*\*+R2 |
+| **WF3** | Backend/Pipeline | **LEAN:** (RC\* or GT)+**I**+DS(1) | Independent+**RG**+RC\*+adversarial-on-request+R2 |
+| WF3 | Admin | **LEAN:** SF\*+**I**+DS(1) | I+CR+**RG**+Sec\*\*\*+R2 |
+| WF3 | Frontend/Mobile | **LEAN:** **I**+DS(1)(+GT) | I+CR+**RG**+UX+R2 |
+
+**Integration (I) is a STANDING PLAN member for WF1/WF2 Backend/Pipeline AND Admin-web** — its plan-altitude job is verifying the plan's codebase / wiring / schema-seeding / migration-mechanics assumptions against reality (25E: it converged with SF+CR on the seed-mechanism CRITICAL — mig 218 vs `logic_variables.json` — and confirmed classify runs in both chains, dispatch permits-only). No "only if the plan leans on codebase facts" hedge.
+
+**WF3 now HAS a lean plan roster** (previously none): 2–3 grounders that verify the fix's PREMISE before code — the antibody to the eager fix (§8.4; ~⅓ of findings have false premises). Verify the bug is the disease, not the symptom (`review_followups.md` line 2512), before authorizing.
+
+\* RC/GT/SF fire by SUBJECT-MATTER, not altitude — RC when values/derived-fields are in play, SF when DB fields are written, GT when spec claims are load-bearing — at BOTH altitudes. \*\* WF1 RG only if the diff edits existing shared files. \*\*\* Sec only on money/auth/PII/admin. R2 = Round-2 adjudication (§5.3).
+
 ## 7. Rules & economics
 
-1. **Two altitudes, same roles.** *Plan review* points agents at `.cursor/active_task.md` (via CLI `plan`/`spec`, or an agent reading the plan) — hunts completeness/consistency BEFORE code exists. *Output review* points them at the diff. Plan-altitude review is the default for WF1/WF2 kickoff and is where the cheapest agents (DeepSeek `plan`) earn the most.
+1. **Two altitudes, same roles — both mandatory per WF (§6.4).** *Plan review* points agents at `.cursor/active_task.md` + the live tree/DB (grounders query reality; CLIs read the plan text) — hunts completeness/consistency/factual-correctness BEFORE code. *Output review* points them at the diff + re-run values. The two are COMPLEMENTARY: the reality-grounders (RC/SF/GT/Integration) earn their keep at BOTH — RC caught the $105.24M gut-line and the $159.9M T3 tail at PLAN altitude (`review_followups.md` 25/2510). WF3 runs a LEAN plan roster (premise-verifiers only); it is no longer output-only.
 2. **Ground-truth gates Compliance** (§5.1/§5.2): validate the spec against reality before checking code against the spec.
 3. **Round-2 always** for money/pipeline-critical work (§5.3): panel → DeepSeek+Integration adjudicate the findings → fold survivors, file rejections with reasons.
-4. **Cost-tiering — "more agents" affordably.** DeepSeek is cheap and a distinct lineage: use it for **breadth** — run it multiple times with *different lens prompts* (e.g. one pass for security, one for idempotency, one for spec-compliance) rather than one generic pass. Reserve the pricier Claude Task agents for roles that **need tools** (Integration/Guardian/Reality-Check/Schema-Fidelity/Ground-truth — they read the tree, git, or the DB; a CLI can't). Never spend a tool-having Claude agent on a job a DeepSeek CLI can do from the file text alone.
+4. **Cost-tiering — DeepSeek as multi-pass breadth at BOTH altitudes.** DeepSeek is ~free and a distinct lineage. NEVER run one generic pass — run the LENS SET in parallel, each a narrow prompt: (1) `spec` = the Compliance (A10) substrate, (2) security, (3) idempotency/dedup, (4) error-paths/degrade-safety. Run the set at plan AND output for WF1/WF2; at output for WF3. Every DeepSeek finding is adjudicated by a tool-having grounder before folding (§9 CLI blind spots — the 25E cursor-leak HIGH was a false premise refuted by `streamQuery` try/finally). Reserve the pricier Claude Task agents for the tool-needing roles (Integration/Guardian/Reality-Check/Schema-Fidelity/Ground-truth — they read the tree, git, or the DB; a CLI can't).
 5. **Panel sizing scales to stakes.** "quick check" → a couple of lenses, single-vote. "thoroughly audit / money code / pipeline data" → full domain roster + round-2 (manual: scale to what's asked).
 6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
 7. **The roster is a MENU, not a checklist.** Never run all ~12 roles on one change. Compose the **smallest DIVERSE panel that covers this change's actual risks** (typically 5–8 lenses) + round-2. Lens-diversity beats agent-count (manual §6.2): running the whole menu floods you with the ⅓-false-premise noise (§9) it takes longer to triage than the bugs are worth. Security fires only on money/auth/PII/admin; Op-Model Compliance only at WF6; Reality-Check/Schema-Fidelity/Ground-truth only when values/DB-fields/spec-claims are in play.
 8. **Spend on reality-touching agents; economize on file-readers.** Empirically (§7b), the agents that verify against reality — Reality-Check (runs code / queries the live DB), Integration, Schema-Fidelity, Ground-truth — catch the subtlest, highest-severity bugs and carry the lowest false-premise rate, because they don't guess. The file-only CLIs (Gemini/DeepSeek) are cheap breadth, not ground truth (§9 CLI blind spots). Budget accordingly: a FEW reality-touching Claude agents + a couple of cheap DeepSeek lens-passes beats a large panel of file-readers.
 
 ## 7b. Effectiveness scoreboard — MAINTAINED BY THE ROSTER MANAGER (A14, §5.9)
-> **Last updated: 2026-07-13 · window: P24/P25/P26 review cycles (SEED data).** This table is machine-owned: the Roster Manager OVERWRITES it each run (every ~15 panels) and re-stamps the date/window. Do not hand-edit — file evidence to `review_followups.md` and let A14 fold it in.
+> **Last updated: 2026-07-15 · window: P24/P25/P26 + the two 25E panels (plan `823a7c1e`→output `00486949`) + the 2026-07-14 new-agent blind test.** Machine-owned: A14 OVERWRITES each run (~every 15 panels) and re-stamps date/window. Do not hand-edit — file evidence to `review_followups.md`; A14 folds it. Columns split PLAN vs OUTPUT effectiveness (§6.4).
 
-| Agent | Real findings (window) | False-premise rate | Highest catch | Value note |
-|-------|------------------------|--------------------|---------------|-----------|
-| **Reality-Check** | high | **lowest** (verifies by execution) | reproduced the `21000` crash live; P26 stale-subscription CRITICAL | **#1** — only role that reads VALUES / runs code; reach for wrong-value / seam / stale-spec risk |
-| **Integration** | high | low | `DETAIL_COLUMNS` dead-UI seam; confirmed the rest | best seam signal-to-noise; cleanly confirms AND refutes |
-| **Code Reviewer** | med-high | low-med | admin-delete-bills-forever (CRITICAL) | highest single-catch impact |
-| **Observability** | high (breadth) | low-med | the P25 gate-flip-blocker list | broad real-bug coverage on pipeline/audit |
-| **Regression Guardian** | med (breadth) | low-med | `lead_analytics` NOT-NULL crash | intent-preservation; confirms fences |
-| **Gemini / DeepSeek (CLI)** | med | **highest** (no tree/DB) | reconcile atomicity; NULL-write | cheap different-lineage breadth; MUST be adjudicated by a tool-having agent before folding |
-| **Ground-truth / Op-Model / Schema-Fidelity** | *first window 2026-07-14 — see review_followups "New-agent empirical validation"; A14 to fold* | Ground-truth **0/5**, Op-Model **~1/4**, Schema-Fidelity **0/2** (all < §6.3 ⅓) | Ground-truth: pinpointed the Spec 95/97 immediate-cancel drift blind; Op-Model: the plan-of-record still ruling immediate while period-end shipped (a finding NO code-lens produced) | strong first showing for the reality-touching trio; A14 owns the numeric fold |
-| **Compliance / User-Advocate / Security** | *no window data yet (newly ratified)* | — | — | A14 populates after their first cycles |
+| Agent | PLAN value | OUTPUT value | False-premise rate | Highest catch (this window) |
+|-------|-----------|--------------|--------------------|------------------------------|
+| **Reality-Check** | **#1 — grounder** | **#1 — value-reader** | **lowest** (verifies by execution) | PLAN: $105.24M gut-line + $159.9M T3 tail before code (rf 25/2510); escalation cap-swap genuine bug (2513) |
+| **Integration** | **standing (firm)** | high | low | PLAN: seed-mechanism CRITICAL (mig 218 vs logic_variables.json), both-chains/permits-only; OUTPUT: 25E PUSH-SAFE + DETAIL_COLUMNS seam |
+| **Schema-Fidelity** | high (pre-write) | high | **0/2** (blind test) | pre-empts NOT-NULL 23502 / ON-CONFLICT arbiter double-hit; stayed in-lane in blind test |
+| **Ground-truth** | **high (plan-gating)** | high | **0/5** (blind test, best) | pinpointed Spec 95 §9 + 97 §3.1 immediate-cancel drift blind, with line numbers |
+| **Code Reviewer** | med-high (design) | high (near-grounder) | low-med | PLAN: 25E seed convergence + torontoHour→24; OUTPUT: tokenless INNER-JOIN CRITICAL + deferred_expired terminal-drop (`00486949`) |
+| **Observability** | high (design audit/dedup) | high | low-med | PLAN: multi-trade dup-enqueue + evening-undeliverable + dead-letter types; OUTPUT: §11.4 skip counters |
+| **Regression Guardian** | advisory (no diff yet) | med (intent-preservation) | low-med | OUTPUT: 25E PASS-7-fences; P25 lead_analytics NOT-NULL crash |
+| **Gemini** | med (breadth) | med | **highest** (no tree/DB) | PLAN: first-flip backlog-storm + failure-unaware throttle |
+| **DeepSeek** | med (breadth) | med | **highest** (no tree/DB) | OUTPUT: Zod `.catch(168)` degrade-belt. REFUTED: cursor-leak HIGH (streamQuery try/finally) — logged for false-premise tracking |
+| **Op-Model Compliance** | n/a | **GATE (WF6)** | ~1/4 (blind test) | plan-of-record still ruling immediate-cancel while period-end shipped — a finding NO code-lens produced (tool-having substrate required) |
+| **Compliance / User-Advocate / Security** | — | — | no window data yet | A14 populates after their first cycles |
 
-**Standing takeaway (until A14 re-derives):** spend on reality-touching agents (A5/A7/A8/A9); the file-only CLIs are breadth, not ground truth (§7 rule 8, §9 CLI blind spots).
+**Standing takeaways (until A14 re-derives):**
+1. **Spend on grounders at BOTH altitudes** (RC/I/SF/GT) — lowest false-premise, catch the subtlest/highest-severity bugs, and RC/GT/SF now proven strong at PLAN altitude (the $105.24M catch; the 0/5 & 0/2 blind-test rates). **Caveat (n):** the 0/5 · 0/2 · ~1/4 rates are from a single near-output blind test — plan-altitude value for GT/SF/Op-Model is extrapolated from charter, to be re-measured at plan altitude next cadence. Compliance/UX/Security have zero window data — their §6.4 placement is charter-derived, not measured.
+2. **Integration is a firm plan member**, not conditional.
+3. **DeepSeek = multi-lens breadth**, always grounder-adjudicated; it was under-used generically this window.
+4. **WF3 gains a lean grounder plan pass** — the eager-fix antibody.
 
 ---
 
@@ -248,4 +290,4 @@ CLI equivalent (no tools): `npm run review:{gemini,deepseek} -- review <file> --
 | **Roster Manager** | `general-purpose` / Workflow · PERIODIC (~every 15 panels) | "Read the last ~15 panels' findings + git history + review_followups.md. (1) Score each agent (real findings, false-premise rate, severity-weighted value) and OVERWRITE the §7b scoreboard in docs/specs/00-architecture/08_agents.md, re-stamping the date+window — you are its only writer. (2) Mine review_followups + recent CRITICAL/HIGH escapes for recurring bug classes → recommend new roles AND, per §5.11, new PROTOCOL RULES/GATES into the right doc (engineering_standards / domain-admin / scripts-CLAUDE / 03-mobile). (3) Recommend spawn-prompt improvements + retirements. ADVISORY only — append a dated recommendation block to review_followups.md for human ratification; never auto-mint/retire." |
 
 ### 10.3 Composing a panel (the rule, §7.7)
-Pick the domain roster (§6) → drop roles whose trigger the change doesn't hit (no DB fields → skip Schema-Fidelity/Reality-Check; not money/auth/PII → skip Security; pure net-new → skip Guardian) → spawn the survivors in parallel with the preamble + lens → collect → **Round-2** → triage (BUG → WF3; DEFER → review_followups). Op-Model Compliance runs once at WF6.
+Pick the domain roster (§6) + the per-WF PLAN or OUTPUT column (§6.4) → drop roles whose **SUBJECT-MATTER** trigger the change doesn't hit — the trigger is subject-matter, NOT altitude: no DB fields → skip Schema-Fidelity; no derived/enriched values → skip Reality-Check; no spec claims → skip Ground-truth; not money/auth/PII → skip Security; WF1 pure net-new → skip Guardian. When the subject-matter IS present, Reality-Check / Schema-Fidelity / Ground-truth / Integration fire at **BOTH altitudes** (at plan they stress-test the plan's assumptions against the live tree/DB; at output they read the diff + re-run values) → spawn survivors in parallel with the preamble + lens → collect → **Round-2** → triage (BUG → WF3; DEFER → review_followups). Op-Model Compliance runs once at WF6.

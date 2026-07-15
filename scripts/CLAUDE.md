@@ -115,6 +115,8 @@ pipeline.run('[slug]', async (pool) => {
 ## Multi-Agent Review (WF1/WF2) — Exact Execution Pattern
 
 > **Roster + roles + spawn templates:** `docs/specs/00-architecture/08_agents.md` (Spec 08). For Backend/Pipeline, compose from: Reality-Check + Schema-Fidelity + Observability + Integration + Regression Guardian + Ground-truth + the Gemini/DeepSeek CLIs (+ Security on money/auth/PII). Menu, not checklist — drop roles the change doesn't trigger; always Round-2.
+>
+> **Two altitudes (Spec 08 §6.4):** run the PLAN roster BEFORE code (Integration + Ground-truth + Schema-Fidelity + Reality-Check are the standing grounders — RC stress-tests derived-field assumptions against the live DB, which caught the $105.24M gut-line at plan altitude) AND the OUTPUT roster on the diff + re-run values. WF3 gets a lean grounder-only plan pass (the eager-fix antibody). DeepSeek = the 4-lens set (spec/security/idempotency/error-paths), each adjudicated by a grounder.
 
 Run these **in a single message** (three parallel tool calls) after Pre-Review Self-Checklist:
 
