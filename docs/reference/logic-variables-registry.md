@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (410) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 17 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (411) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 18 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (5) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **415** logic variables (410 numeric, 5 JSONB).
+Total: **416** logic variables (411 numeric, 5 JSONB).
 
 ---
 
@@ -391,6 +391,7 @@ Total: **415** logic variables (410 numeric, 5 JSONB).
 | `notifications_disabled_types` | JSONB | [] | — (migration-seeded) | — | migration 218 | JSONB array of notification type strings the dispatcher must skip (operator kill-list, in addition to the code-fenced types). |
 | `notifications_dispatch_enabled` | numeric | 0 | — (migration-seeded) | — | migration 218 | Master kill-switch for the dispatch_notifications step. 0=OFF (no pushes sent), 1=ON. Seeded OFF; flipped ON last after the engine is validated. |
 | `notifications_max_per_user_per_day` | numeric | 10 | — (migration-seeded) | — | migration 218 | Throttle: max notifications delivered per user per Toronto calendar day. Excess rows are deferred, not sent. |
+| `notifications_max_stale_hours` | numeric | 168 | — (migration-seeded) | — | migration 222 | Freshness bound in hours for START_DATE_URGENT queue rows. A URGENT row older than this has an elapsed predicted-start (its starts-in-N-days body is now false); the dispatcher retires it as stale_dropped instead of sending. Scoped to START_DATE_URGENT only. 168h is the 6-7 day URGENT enqueue horizon. The dispatcher also carries a Zod default so a missing row never throws. |
 | `p16_inference_layer_enabled` | numeric | 0 | 0 – 1 | — | seed | Spec 80 §5.C / P16-D3 [BUG-6] — HARD gate for the lean scope-mapped inference layer in classify-permits.js + classify-coa-trades.js. 0 = OFF (evidence-only emission; 16C/16D wire the code but emit NO inference rows). 1 = ON (the LINE_TRADE_COMPLEMENT lean inference is UNIONed onto evidence at is_active=true / attachment_basis='inference'). Seeded OFF on the 16B GO gate (2026-07-10, hold-out recall 61.4% / prec(insp) 70.5% / mean 10.2); flips to 1 in 16F only AFTER 16E's consumer contract ships. A NO-GO complement cannot ship by accident. The deep_scrapes-resume re-measure can flip it back to 0. |
 | `pending_closed_grace_days` | numeric | 30 | 1 – 365 | `scripts/close-stale-permits.js` | seed | Days a permit must remain in Pending Closed status before being promoted to Closed |
 | `permit_declared_cost_ceiling` | numeric | 500000000 | 10000000 – 2000000000 | — | seed | P13-2: upper-sentinel ceiling (CAD) on a permit's declared est_const_cost in the Liar's Gate. A declared cost above this is treated as a placeholder (the mirror of PLACEHOLDER_COST_THRESHOLD's lower guard — e.g. the exact-$1e9 round-number filings on 38-39 storey towers) and the geometric model takes over instead of passing the sentinel through as cost_source='permit'. Seeded at $500M: above the largest plausible single-permit declared build, below the $1e9 placeholder band. |
@@ -437,4 +438,4 @@ Total: **415** logic variables (410 numeric, 5 JSONB).
 
 ---
 
-*Generated from 398 seed vars + 17 migration-only vars + 102 consumer-mapped keys across 2 script dirs.*
+*Generated from 398 seed vars + 18 migration-only vars + 102 consumer-mapped keys across 2 script dirs.*

@@ -21,7 +21,11 @@
 //   T7  throttle          — max_per_user_per_day caps sends; the excess is DEFERRED, not dropped
 //   T8  ticket-time prune — DeviceNotRegistered prunes the EXACT dead token, never the user's other device
 //   T9  receipt-time prune— the next-run receipt pass prunes a token whose prior ticket resolved dead
-//   T10 quiet-hours defer — a schedule-gated type out-of-window is DEFERRED with a valid_until, never sent
+//   T10 evening-in-morning— a schedule-gated row is delivered in the once-daily run, never looped as 'deferred' (25E #3)
+//   T11 in-run dedup      — duplicate queue rows → ONE push, both rows retired (fresher wins) (25E #1)
+//   T12 chunk-build cap   — many rows for one user in a sub-100 chunk still respect the per-day cap (25E #5)
+//   T13 URGENT freshness  — stale URGENT dropped; equally-old PHASE/STALL kept (scoped sweep) (25E #4)
+//   T14 fenced types      — a STALL_WARNING row is never selected or sent (25E #9)
 //
 // Why in-process (not execSync): the transport is injected via a JS global, which
 // cannot cross a child-process boundary. pipeline.run is import-safe (no
@@ -43,7 +47,7 @@ const _torontoDateFmt = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Toronto', year: 'numeric', month: '2-digit', day: '2-digit',
 });
 const _torontoHourFmt = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/Toronto', hour: 'numeric', hour12: false,
+  timeZone: 'America/Toronto', hour: 'numeric', hourCycle: 'h23', // lockstep with dispatch-notifications.js (25E #8)
 });
 function torontoDate(d: Date): string { return _torontoDateFmt.format(d); }
 function torontoHour(d: Date): number { return parseInt(_torontoHourFmt.format(d), 10); }
@@ -175,6 +179,21 @@ async function isSent(notificationId: number): Promise<boolean> {
     `SELECT is_sent FROM notifications WHERE id = $1`, [notificationId],
   );
   return rows[0]!.is_sent;
+}
+// sent_at is NULL for a row retired without a push (stale-drop / dedup-suppress),
+// a timestamp for a real delivery (25E sent_at convention).
+async function sentAt(notificationId: number): Promise<Date | null> {
+  const { rows } = await pool!.query<{ sent_at: Date | null }>(
+    `SELECT sent_at FROM notifications WHERE id = $1`, [notificationId],
+  );
+  return rows[0]!.sent_at;
+}
+// Backdate a queue row so freshness/staleness paths can be exercised deterministically.
+async function backdate(notificationId: number, interval: string): Promise<void> {
+  await pool!.query(
+    `UPDATE notifications SET created_at = NOW() - $2::interval WHERE id = $1`,
+    [notificationId, interval],
+  );
 }
 async function tokenExists(userId: string, token: string): Promise<boolean> {
   const { rows } = await pool!.query(
@@ -417,28 +436,119 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
     expect(await tokenExists(uid, token)).toBe(false); // receipt-time prune by exact token
   });
 
-  it('T10 — quiet-hours defer: a schedule-gated type out-of-window is DEFERRED with valid_until, never sent', async () => {
-    // PHASE_CHANGED is the only schedule-gated type. Force out-of-window regardless
-    // of wall-clock: choose a schedule whose window excludes the current Toronto hour,
-    // and compute the exact expected status via the engine's own rule.
-    const h = torontoHour(NOW());
-    const schedule = (h >= 6 && h < 9) ? 'evening' : 'morning';
-    const endHour = schedule === 'morning' ? 9 : 20;
-    const expectedStatus = h >= endHour ? 'deferred_expired' : 'deferred';
-
+  it('T10 — evening-in-morning (25E #3): a schedule-gated row is delivered in the once-daily run, NEVER left in a permanent quiet-hours "deferred" loop', async () => {
+    // OLD engine: an out-of-window schedule-gated row got status 'deferred' every
+    // run; under the once-daily 6AM cron an 'evening' (17-20) window is never
+    // reached → it looped FOREVER, never delivered. NEW rule: an unreachable-but-
+    // not-yet-passed window is DELIVERED in this run; only a window that already
+    // PASSED today expires. Invariant (wall-clock-independent): the row is NEVER
+    // left as a plain 'deferred' for a schedule reason.
     const uid = 'p25e-t10';
     const token = 'ExponentPushToken[T10]';
-    await seedUser(uid, { notification_schedule: schedule, phase_changed: true });
+    await seedUser(uid, { notification_schedule: 'evening', phase_changed: true });
     await seedToken(uid, token);
     const nId = await enqueue(uid, 'LIFECYCLE_PHASE_CHANGED', 'permit:P25E-T10:00', 'P25E-T10');
 
     await runDispatcher();
 
-    expect(sentTo(token)).toHaveLength(0);   // deferred, never sent out-of-window
-    expect(await isSent(nId)).toBe(false);
     const ledger = await ledgerFor(uid);
     expect(ledger).toHaveLength(1);
-    expect(ledger[0]!.status).toBe(expectedStatus);
-    expect(ledger[0]!.detail).toContain('valid_until_hour'); // the per-type valid_until
+    expect(['sent', 'deferred_expired']).toContain(ledger[0]!.status); // never a plain 'deferred'
+    const h = torontoHour(NOW());
+    if (h < 20) {
+      // Evening window (ends 20:00 ET) not yet passed → delivered in this run.
+      expect(ledger[0]!.status).toBe('sent');
+      expect(sentTo(token)).toHaveLength(1);
+      expect(await isSent(nId)).toBe(true);
+    } else {
+      // Past 20:00 ET → the window has passed → expired (no stale push).
+      expect(ledger[0]!.status).toBe('deferred_expired');
+      expect(sentTo(token)).toHaveLength(0);
+    }
+  });
+
+  it('T11 — in-run dedup (25E #1): duplicate queue rows (same user/lead/type/device) → ONE push, both rows retired', async () => {
+    const uid = 'p25e-t11';
+    const token = 'ExponentPushToken[T11]';
+    await seedUser(uid);
+    await seedToken(uid, token);
+    // Two identical URGENT rows (the cross-chain re-insert / multi-trade fan-out).
+    const a = await enqueue(uid, 'START_DATE_URGENT', 'permit:P25E-T11:00', 'P25E-T11');
+    const b = await enqueue(uid, 'START_DATE_URGENT', 'permit:P25E-T11:00', 'P25E-T11');
+
+    await runDispatcher();
+
+    expect(sentTo(token)).toHaveLength(1);        // exactly ONE Expo push, not two
+    expect(await isSent(a)).toBe(true);
+    expect(await isSent(b)).toBe(true);           // BOTH queue rows retired
+    // The fresher row (b) is the one sent (sent_at set); the older (a) is the
+    // suppressed duplicate (sent_at NULL — retired without a push).
+    expect(await sentAt(b)).not.toBeNull();
+    expect(await sentAt(a)).toBeNull();
+    const ledger = await ledgerFor(uid);
+    expect(ledger.filter((r) => r.status === 'sent')).toHaveLength(1);
+  });
+
+  it('T12 — chunk-build cap (25E #5): many rows for one user in a single sub-100 chunk still respect the per-day cap', async () => {
+    // The pre-fix bug: N rows for one user in one chunk were all pushed to Expo
+    // before any post-success cap check. The cap must gate CHUNK-BUILD.
+    await setThrottle(3);
+    const uid = 'p25e-t12';
+    const token = 'ExponentPushToken[T12]';
+    await seedUser(uid);
+    await seedToken(uid, token);
+    for (let k = 0; k < 8; k++) {
+      await enqueue(uid, 'LIFECYCLE_STALLED', `permit:P25E-T12-${k}:00`, `P25E-T12-${k}`);
+    }
+
+    await runDispatcher();
+
+    expect(sentTo(token)).toHaveLength(3); // exactly the cap — not all 8
+    const ledger = await ledgerFor(uid);
+    expect(ledger.filter((r) => r.status === 'sent')).toHaveLength(3);
+    expect(ledger.filter((r) => r.status === 'deferred')).toHaveLength(5); // excess deferred, not lost
+  });
+
+  it('T13 — URGENT freshness sweep is SCOPED (25E #4 / Guardian): stale URGENT dropped; equally-old PHASE/STALL kept', async () => {
+    const uid = 'p25e-t13';
+    const token = 'ExponentPushToken[T13]';
+    await seedUser(uid);
+    await seedToken(uid, token);
+    // notifications_max_stale_hours = 168 (mig 222 seed). Backdate past it.
+    const staleUrgent = await enqueue(uid, 'START_DATE_URGENT', 'permit:P25E-T13U:00', 'P25E-T13U');
+    await backdate(staleUrgent, '200 hours');
+    const staleStalled = await enqueue(uid, 'LIFECYCLE_STALLED', 'permit:P25E-T13S:00', 'P25E-T13S');
+    await backdate(staleStalled, '200 hours');
+    await enqueue(uid, 'START_DATE_URGENT', 'permit:P25E-T13F:00', 'P25E-T13F'); // fresh — sent normally
+
+    await runDispatcher();
+
+    // Stale URGENT: retired without a push (freshness bound); ledger 'stale_dropped'.
+    expect(await isSent(staleUrgent)).toBe(true);
+    expect(await sentAt(staleUrgent)).toBeNull();
+    const ledger = await ledgerFor(uid);
+    const staleRow = ledger.find((r) => r.lead_id === 'permit:P25E-T13U:00');
+    expect(staleRow!.status).toBe('stale_dropped');
+    expect(sentTo(token).some((m) => m.data.entity_id === 'P25E-T13U--00')).toBe(false);
+    // Equally-old LIFECYCLE_STALLED: NOT dropped (unconditional-retry fence) → sent.
+    expect(await isSent(staleStalled)).toBe(true);
+    expect(await sentAt(staleStalled)).not.toBeNull();
+    expect(ledger.find((r) => r.lead_id === 'permit:P25E-T13S:00')!.status).toBe('sent');
+    // Fresh URGENT: sent normally.
+    expect(ledger.find((r) => r.lead_id === 'permit:P25E-T13F:00')!.status).toBe('sent');
+  });
+
+  it('T14 — fenced types (25E #9): a STALL_WARNING queue row is never selected or sent', async () => {
+    const uid = 'p25e-t14';
+    const token = 'ExponentPushToken[T14]';
+    await seedUser(uid);
+    await seedToken(uid, token);
+    const fenced = await enqueue(uid, 'STALL_WARNING', 'permit:P25E-T14:00', 'P25E-T14');
+
+    await runDispatcher();
+
+    expect(sentTo(token)).toHaveLength(0);       // not a DISPATCHABLE type
+    expect(await isSent(fenced)).toBe(false);    // left untouched in the queue
+    expect(await ledgerFor(uid)).toHaveLength(0);
   });
 });
