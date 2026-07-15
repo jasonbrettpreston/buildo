@@ -10,7 +10,7 @@
 
 ## 2. Notification Matrix (The Triggers)
 
-The Next.js backend is responsible for evaluating rules and dispatching pushes. The mobile app receives two distinct categories of notifications:
+The **pipeline dispatcher** `scripts/dispatch-notifications.js` (Spec 101, the `dispatch_notifications` step in the permits chain) evaluates the queue and dispatches pushes — NOT a Next.js request handler (that was the pre-P25 design; corrected 25E). The mobile app receives two distinct categories of notifications:
 
 ### 2.1 Lead Feed (Discovery Engine)
 
@@ -40,11 +40,11 @@ Tradespeople must have granular control over what interrupts their day. The `set
 * **Notification Schedule:** A 3-option segmented control defining WHEN non-urgent notifications are delivered:
     * `"Morning"` — 6AM–9AM EST (pre-site window; tradespeople plan their day before arriving)
     * `"Anytime"` — no time restriction (default)
-    * `"Evening"` — 5PM–8PM EST (end-of-day planning window)
+    * `"Evening"` — 5PM–8PM EST (end-of-day planning window). **NOTE (25E #3):** the dispatcher runs once daily at ~6 AM ET, so an evening window is never reached in-hour; under the current single-cron cadence an evening-pref phase-change is **delivered in the morning run** (best-effort) rather than deferred forever. This becomes a literal 5-8PM delivery only if an evening dispatch cron is added (Spec 101 §4 step 5 reversal fence).
     * Urgency overrides (`LIFECYCLE_STALLED`, `START_DATE_URGENT`) always bypass this gate.
     * *Rationale:* Consumer apps peak at 8PM. Tradespeople start work at 6–7AM. The morning window is the power window for this audience — validated by field use patterns. Default `"Anytime"` is non-breaking for existing users.
 * **Settings UI:** `bg-zinc-800` segmented control container; amber highlight on selected option; `font-mono text-xs` labels.
-* **Backend Sync:** All preferences sync to 5 sibling columns on `user_profiles` (flattened from a single `notification_prefs` JSONB column in migration 117 per Spec 99 §9.14). The Next.js dispatch engine reads the flat columns directly before calling the Expo Push API.
+* **Backend Sync:** All preferences sync to 5 sibling columns on `user_profiles` (flattened from a single `notification_prefs` JSONB column in migration 117 per Spec 99 §9.14). The Spec 101 pipeline dispatcher (`scripts/dispatch-notifications.js`) reads the flat columns directly before calling the Expo Push API. (Corrected 25E — it is a pipeline step, not a Next.js handler.)
 
 **`user_profiles` notification columns** (migration 117 — Spec 99 §9.14):
 
@@ -202,7 +202,7 @@ The settings screen follows the same Industrial Utilitarian token set as Spec 91
 
 ### 6.3 `notification_schedule` Dispatch Logic (Backend)
 
-When the Next.js dispatch engine evaluates whether to send a notification:
+When the pipeline dispatcher (`scripts/dispatch-notifications.js`, Spec 101) evaluates whether to send a notification:
 
 ```typescript
 const userTz = 'America/Toronto';

@@ -57,17 +57,31 @@ UPDATE logic_variables SET variable_value = 1 WHERE variable_key = 'notification
 
 **Green evidence required BEFORE the flip (all must hold):**
 
-1. `dispatch-notifications.db.test.ts` — 10/10 green (`BUILDO_TEST_DB=1`).
+1. `dispatch-notifications.db.test.ts` — 14/14 green (`BUILDO_TEST_DB=1`).
 2. The device-boundary smoke above — passed end-to-end on a physical Android 13+ device
    (delivery + tap → board detail).
 3. `bash scripts/hooks/ast-grep-leads.sh` — exit 0 (no bare-mutation; transactions never held
    across the Expo network call).
 4. A DRY observation run with the gate still `0`: confirm the SKIP summary appears in
-   `pipeline_runs` for `dispatch_notifications` in both daily chains (the step is wired and inert).
-5. Throttle + disabled-types levers confirmed present in `logic_variables`
-   (`notifications_max_per_user_per_day`, `notifications_disabled_types`).
+   `pipeline_runs` for `dispatch_notifications` in the **permits chain** (25E #10 — the step is
+   registered ONLY in `chains.permits`, immediately after `update_tracked_projects`; it is
+   deliberately absent from `chains.coa`, so do NOT look for it there — confirm its absence in the
+   manifest as part of this check).
+5. Throttle + disabled-types + freshness levers confirmed present in `logic_variables`
+   (`notifications_max_per_user_per_day`, `notifications_disabled_types`, `notifications_max_stale_hours`).
+6. **Pre-flip backlog check (25E #4).** With the gate still `0`, measure the accumulated queue:
+   `SELECT type, COUNT(*), MIN(created_at), MAX(created_at) FROM notifications WHERE is_sent=false GROUP BY type`.
+   The URGENT freshness sweep auto-drops URGENT rows older than `notifications_max_stale_hours`
+   (168h) on the first run; PHASE_CHANGED / LIFECYCLE_STALLED do NOT auto-drop. If the non-URGENT
+   backlog is large (stale phase-changes accumulated over weeks), sweep them once BEFORE flipping
+   (`UPDATE notifications SET is_sent=true, sent_at=NULL WHERE is_sent=false AND type IN
+   ('LIFECYCLE_PHASE_CHANGED','LIFECYCLE_STALLED') AND created_at < NOW() - INTERVAL '<N> days'`)
+   so the first live run does not deliver a burst of stale phase updates. NO-GO if the backlog is
+   unexpectedly huge — investigate before flipping.
 
 **After the flip:** watch the first in-chain run's audit rows — `dispatched`, `delivery_errors`,
-`tokens_pruned`, `deferred`, `deferred_expired`. A `delivery_errors` spike or a `tokens_pruned`
-spike on run 1 is the signal to re-check token hygiene. Revert instantly by setting the variable
+`tokens_pruned`, `deferred`, `deferred_expired`, `stale_dropped`, `duplicates_suppressed`,
+`eligible_ceiling_hit`. A `delivery_errors` / `tokens_pruned` spike on run 1 is the signal to
+re-check token hygiene; a non-zero `eligible_ceiling_hit` means the queue exceeded the in-memory
+ceiling (backlog not swept — remainder drains next run). Revert instantly by setting the variable
 back to `0` (the engine returns to inert SKIP on the next run — no code deploy needed).
