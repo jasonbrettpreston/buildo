@@ -72,6 +72,7 @@ export interface DirectoryQueryArgs {
   preset?: string;
   subscription_status?: string;
   trade_slug?: string;
+  stripe_cancel_failed?: boolean; // P26-26D sweep surface (Spec 21 §6)
   offset?: number;
 }
 
@@ -81,6 +82,8 @@ function buildDirectoryUrl(args: DirectoryQueryArgs): string {
   if (args.preset) p.set('preset', args.preset);
   if (args.subscription_status) p.set('subscription_status', args.subscription_status);
   if (args.trade_slug) p.set('trade_slug', args.trade_slug);
+  // Only send when ON — the route enum is 'true'/'false'; omit = no filter.
+  if (args.stripe_cancel_failed) p.set('stripe_cancel_failed', 'true');
   if (args.offset) p.set('offset', String(args.offset));
   const qs = p.toString();
   return `/api/admin/users${qs ? `?${qs}` : ''}`;

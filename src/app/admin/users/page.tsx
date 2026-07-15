@@ -15,13 +15,13 @@ import { useUserDirectory, useCreateUser } from '@/features/admin-users/api/useA
 import { ACCOUNT_PRESET_VALUES, SUBSCRIPTION_STATUS_VALUES, ASSIGNABLE_TRADE_SLUGS } from '@/lib/admin/user-management-schemas';
 
 export default function AdminUsersPage() {
-  const { q, preset, subscription_status, trade_slug, offset, setFilter, nextPage, prevPage } = useUserDirectoryStore();
-  const { data, isLoading, isError, error } = useUserDirectory({ q, preset, subscription_status, trade_slug, offset });
+  const { q, preset, subscription_status, trade_slug, stripe_cancel_failed, offset, setFilter, nextPage, prevPage } = useUserDirectoryStore();
+  const { data, isLoading, isError, error } = useUserDirectory({ q, preset, subscription_status, trade_slug, stripe_cancel_failed, offset });
   const [createOpen, setCreateOpen] = useState(false);
 
   const total = data?.total ?? 0;
   const limit = data?.limit ?? 25;
-  const page = offset + 1;
+  const page = Math.floor(offset / limit) + 1; // offset is a raw row offset, not a page index
   const pages = Math.max(1, Math.ceil(total / limit));
 
   return (
@@ -47,7 +47,7 @@ export default function AdminUsersPage() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Filters */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 grid grid-cols-1 md:grid-cols-6 gap-3">
           <input
             value={q}
             onChange={(e) => setFilter('q', e.target.value)}
@@ -66,6 +66,15 @@ export default function AdminUsersPage() {
             <option value="">Any trade</option>
             {ASSIGNABLE_TRADE_SLUGS.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
+          {/* P26-26D sweep surface (Spec 21 §6): accounts with an outstanding delete-time Stripe-cancel failure. */}
+          <label className="flex items-center gap-2 text-sm text-gray-700 border border-gray-300 rounded-lg px-3 py-2">
+            <input
+              type="checkbox"
+              checked={stripe_cancel_failed}
+              onChange={(e) => setFilter('stripe_cancel_failed', e.target.checked)}
+            />
+            Cancel-failed
+          </label>
         </div>
 
         {isLoading && <p className="text-sm text-gray-500">Loading…</p>}
@@ -117,7 +126,7 @@ export default function AdminUsersPage() {
               <span>{total} total · page {page} / {pages}</span>
               <div className="flex gap-2">
                 <button disabled={offset === 0} onClick={() => prevPage(limit)} className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40">Prev</button>
-                <button disabled={page >= pages} onClick={nextPage} className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40">Next</button>
+                <button disabled={page >= pages} onClick={() => nextPage(limit)} className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40">Next</button>
               </div>
             </div>
           </div>

@@ -29,7 +29,7 @@ const INITIAL: UserDirectoryFilters = {
 
 interface UserDirectoryState extends UserDirectoryFilters {
   setFilter: <K extends keyof UserDirectoryFilters>(key: K, value: UserDirectoryFilters[K]) => void;
-  nextPage: () => void;
+  nextPage: (pageSize: number) => void;
   prevPage: (pageSize: number) => void;
   reset: () => void;
 }
@@ -41,11 +41,14 @@ export const useUserDirectoryStore = create<UserDirectoryState>((set, get) => ({
     // on an out-of-range page of a freshly-filtered result set.
     set({ [key]: value, ...(key !== 'offset' ? { offset: 0 } : {}) } as Partial<UserDirectoryState>);
   },
-  nextPage() {
-    set({ offset: get().offset + 1 });
+  // offset is a RAW ROW offset (the route does LIMIT/OFFSET). Paging steps by a
+  // full page, not a single row (P24 close-out CRIT — the old +1 made rows past
+  // the first page unreachable and overlapped pages 24/25).
+  nextPage(pageSize) {
+    set({ offset: get().offset + Math.max(1, pageSize) });
   },
   prevPage(pageSize) {
-    set({ offset: Math.max(0, get().offset - 1 * (pageSize > 0 ? 1 : 1)) });
+    set({ offset: Math.max(0, get().offset - Math.max(1, pageSize)) });
   },
   reset() {
     const s = get();
