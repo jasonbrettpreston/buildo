@@ -2634,3 +2634,23 @@ User-directed roster update: formalize per-WF PLAN + OUTPUT rosters. A14 (Roster
 - **CONFIRMED (verified vs record): Reality-Check performs strongly at PLAN altitude** — it caught the $105.24M gut-line (rf line 25) + the $159.9M T3 tail (rf 2510) BEFORE the cost code existed, by stress-testing the plan's assumptions against live DB rows. RC/SF/GT/Integration are the "reality-grounders effective at BOTH altitudes."
 - **Integration promoted to a STANDING plan-review member** (WF1/WF2 Backend/Pipeline + Admin) — no longer conditional. **WF3 gains a lean grounder-only plan roster** (the eager-fix antibody). **DeepSeek standardized as a 4-lens set** (spec/security/idempotency/error-paths), grounder-adjudicated.
 - **RESIDUALS TO RE-MEASURE (A14 caveats — do not read as validated):** the Ground-truth 0/5 · Schema-Fidelity 0/2 · Op-Model ~1/4 false-premise rates are from a SINGLE near-output blind test (n=1); their PLAN-altitude value is extrapolated from charter — re-measure at plan altitude next cadence. Compliance / User-Advocate / Security have ZERO window data — their §6.4 placement is charter-derived, not measured. A14 to fold real numbers on their first cycles.
+
+## P24 Close-out — Admin User Management output panel (2026-07-15, 8-lens: GT+Integration+Security+Schema-Fidelity+Code-Reviewer+Guardian+DeepSeek×2)
+The `--no-verify` debt is PAID (tree husky-green 7966+; batteries re-ran 48/48 + 126/126 live). The P24↔P26 subscription seam is VERIFIED FIXED end-to-end (all 4 fetch contracts match; routes exist; graceful 404). Spec 21 substantially TRUE. **Every DeepSeek CRITICAL was a false premise** (firebase-delete "dead code" = the CR-verified creation-path idiom; dev_bypass, stack-leak, extend_trial, phone-column — all refuted by tool-having agents; §9 CLI blind spots). `account_preset` does NOT feed the lead algorithm (3× confirmed: Integration grep + CR + Guardian). Schema-Fidelity PASS (mig 217 correct, no 23502/23514).
+
+**FIXED this close-out** (commits this session):
+- **[CRIT ×3-converge] mutation+audit non-atomic** → each `applyMutation` case wrapped in `withTransaction` + executor (delete keeps Firebase/Stripe network calls outside the txn).
+- **[CRIT] directory pagination stepped by 1 row** → `nextPage`/`prevPage` step by `pageSize`; page = `floor(offset/limit)+1`; +logic test.
+- **[HIGH ×2-converge] `stripe_cancel_failed` filter missing-wire** → threaded through `DirectoryQueryArgs`+`buildDirectoryUrl`+a page checkbox.
+- **[MED] RTBF scrub omitted `reason`** (Security F2) → mig 223 NULLs `reason` too (admin-typed free-text could hold PII); +db test.
+- Doc folds: Spec 21 §4/§7 (inline Stripe cancel), §10 (backfill divergence), §2 (citation), §4 (rate-limit downgraded to not-wired); lessons.md set-membership.
+
+**FILED — deferred / follow-ups:**
+- **[WF3 — user ruled FIX NOW, queued next] selected-trade model incomplete** (Guardian F1): `leads/save`/`detail/[id]`/`search` key off the PRIMARY trade, so a multi-trade user viewing trade B saves under A. CROSS-DOMAIN: server side = accept an optional `?trade_slug` validated against `ctx.trade_slugs` (mirror feed's `forbiddenTradeMismatch`, default primary) + infra tests; mobile side = the save/detail/search calls must send the currently-selected trade. Doing as a dedicated WF3 right after this close-out (not rushed at session tail; Guardian just re-verified these routes' fences).
+- **[MED systemic] admin-surface rate-limiting not wired** (GT/Sec/CR) — no limiter on `/api/admin/**`; admins are allowlisted (low exposure); Spec 33 §12 is about query budgets, not per-admin throttle. Own follow-up if/when needed.
+- **[LOW · Security F3] reactivate route skips the admin Origin/CSRF gate** — `getUserIdFromSession`, own-row only, 30-day window; mobile endpoint. Add the Origin check or document.
+- **[INFO · Security F4] admin_key = unaudited full-PII reads** — documented shared-secret model; operator rotation/scoping note.
+- **[LOW · Integration F2] vestigial 404 degradation** — SubscriptionOps "routes not deployed" text now misfires on a genuine user-not-found 404 (rare race); distinguish the 404 kinds.
+- **[LOW · Schema-Fidelity] `assignableTradeSlug` no max-length vs `trade_slug` varchar(50)** — 22001 if a slug >50 chars; current slugs short.
+- **[LOW · DeepSeek] creation POST adopts an existing uid without an admin-allowlist guard** — actor is already admin; `ON CONFLICT DO UPDATE` on an admin's email. Add a symmetry guard.
+- **[LOW · convention] delete audit `oldValue` uses `had_pii: true`** not per-field redact — intentional (delete nullifies all PII; records the FACT). Documented, not a bug.

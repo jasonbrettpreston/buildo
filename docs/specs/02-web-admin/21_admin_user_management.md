@@ -15,7 +15,7 @@ It is the surface for the account model defined in Spec 95: an account holds a *
 - **Per-route guard, NOT middleware.** Every handler under `/api/admin/users/**` calls `verifyAdminAuth(request)` as its first line (Spec 33 §5/§8). Middleware is defense-in-depth only.
 - **Three auth modes** (`verify-admin.ts`): `session` (real per-admin Firebase uid, checked against the `ADMIN_USER_IDS` allowlist), `admin_key` (shared CI sentinel), `dev_bypass` (local dev).
 - **Mutations require an attributable admin.** POST/PATCH reject `admin_key` with 403 (a shared sentinel cannot own an audit trail). `session` and `dev_bypass` are permitted. Reads are allowed on all three modes.
-- **`is_admin` column:** NOT built. The env-var `ADMIN_USER_IDS` allowlist is the pragmatic interim (`verify-admin.ts:22-28`). When a future migration adds `user_profiles.is_admin`, `verifyAdminAuth` is a one-line swap; call sites are unaffected.
+- **`is_admin` column:** NOT built. The env-var `ADMIN_USER_IDS` allowlist is the pragmatic interim (enforced at `verify-admin.ts:104-105` via `parseAdminAllowlist`). When a future migration adds `user_profiles.is_admin`, `verifyAdminAuth` is a one-line swap; call sites are unaffected.
 
 ## 3. User Directory (`/admin/users`)
 
@@ -45,13 +45,13 @@ A discriminated union on `action`. **Every mutation requires a mandatory `reason
 | `extend_trial` | `subscription_status='trial'`, `trial_started_at` set so the trial expires in exactly `days` days (default 14). |
 | `revoke` | Revoke subscription → `subscription_status='expired'`. |
 | `suspend` | Suspend access → `subscription_status='expired'` (audit action distinguishes intent; a dedicated `'suspended'` status is a future enum addition — see §Known Failure Modes). |
-| `delete` | Firebase `deleteUser` (best-effort) + PII nullify + `account_deleted_at=NOW()` + `cancelled_pending_deletion`, then the RTBF audit scrub (§3.4). |
+| `delete` | Firebase `deleteUser` (best-effort) + **inline Stripe cancel** (`cancelAllStripeSubscriptions`, loud-non-fatal → `stripe_cancel_failed_at` marker on failure) + PII nullify + `account_deleted_at=NOW()` + `cancelled_pending_deletion`, then the RTBF audit scrub (§3.4). The PII-nullify UPDATE + the audit row are written in ONE transaction (network calls stay outside it). |
 | `admin_managed`/comp | via `set_preset`/subscription mutation (§6). |
 
 **Mutation guards:**
 - Targeting an `ADMIN_USER_IDS` allowlist member → 403 (ALL actions — an admin account is never mutable through this tool).
 - Self-target on a **destructive** action (`revoke`, `suspend`, `delete`) → 403.
-- Rate-bucketed per admin (Spec 33 §12 posture).
+- **Rate-limiting: NOT YET WIRED** (P24 close-out — Ground-truth/Security/Code-Reviewer). No limiter is invoked on the `/api/admin/users/**` routes today; this is a systemic gap across the whole admin surface (admins are `ADMIN_USER_IDS`-allowlisted, so the exposure is low), filed as a follow-up in `review_followups.md`. The prior "rate-bucketed per admin" claim was aspirational.
 
 ### 3.4 Audit Logging & PII
 
@@ -84,7 +84,7 @@ The directory (§3.1) gains a `stripe_cancel_failed` filter. If the P26 routes a
 
 ## 7. Out of Scope
 
-Impersonation (magic-link login as user); invites; self-serve role management; password resets (owned by Firebase); Stripe billing UI (link out to the Stripe Dashboard); the former Config Hub (§9). The Stripe subscription-cancel-on-delete atomicity lives in the money-loop lane (P24 WS2 / Spec 20).
+Impersonation (magic-link login as user); invites; self-serve role management; password resets (owned by Firebase); Stripe billing UI (link out to the Stripe Dashboard); the former Config Hub (§9). (Note — corrected P24 close-out: the admin `delete` action DOES cancel Stripe inline (§4 delete row), reaching the same terminal state as the self-serve delete route; it is not deferred to a separate lane.)
 
 ## 8. Operating Boundaries
 
@@ -106,6 +106,6 @@ The v1 Configuration Hub (`/admin/config`, a GUI over `logic_variables`) is **su
 ## 10. Known Failure Modes
 
 - **`suspend` shares the `expired` status.** There is no dedicated `'suspended'` subscription_status in the enum; `revoke` and `suspend` both write `'expired'` and are distinguished only by the audit action. A true suspended state is a future enum addition (migration + `chk_subscription_status` widen).
-- **`supplier` is EXPLICIT-ONLY (v2 ruling, 2026-07-11).** `deriveAccountPreset` (account-preset.ts) maps realtor → `realtor`, everything else → `tradesperson`. It NEVER derives `supplier` — a trade slug cannot distinguish a self-serve plumber from a plumbing-supply manufacturer, and the majority self-serve persona must not be mislabeled (preset drives the admin directory + future billing). `supplier` is set only by an explicit signal: admin provisioning (§5) or the join-editor `set_preset` (§4, one audited click) — until a future onboarding persona step exists. (The v1 trade_products-partition derivation was overruled; migration 217's backfill matches v2.)
+- **`supplier` is EXPLICIT-ONLY (v2 ruling, 2026-07-11).** `deriveAccountPreset` (account-preset.ts) maps realtor → `realtor`, everything else → `tradesperson`. It NEVER derives `supplier` — a trade slug cannot distinguish a self-serve plumber from a plumbing-supply manufacturer, and the majority self-serve persona must not be mislabeled (preset drives the admin directory + future billing). `supplier` is set only by an explicit signal: admin provisioning (§5) or the join-editor `set_preset` (§4, one audited click) — until a future onboarding persona step exists. (The v1 trade_products-partition derivation was overruled; migration 217's backfill matches v2 on the load-bearing claim — supplier is never inferred — with one backfill-only divergence: the migration maps a NULL-trade row with a non-empty `trade_slugs_override` to `manufacturer`, a branch `deriveAccountPreset` does not have. Inert today, `user_profiles` = 0 rows; the two never contend on the same row since both fire only on NULL.)
 - **Password-reset email delivery is not wired.** Creation generates the reset link; actually emailing it needs the email service (deferred).
 - **Full-suite husky gate + multi-lane commits.** When a concurrent lane leaves the shared test suite transiently red, a User-Management commit that is independently green (typecheck/lint/footgun/own tests) may bypass the full-suite step — documented in the commit.

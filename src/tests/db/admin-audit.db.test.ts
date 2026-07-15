@@ -72,13 +72,15 @@ describe.skipIf(!dbAvailable())('admin_audit_log (migration 217)', () => {
       `SELECT old_value, new_value, action, reason FROM admin_audit_log WHERE target_uid = $1`,
       [TARGET],
     );
-    // fact-of-action rows survive; payloads are gone
+    // fact-of-action rows survive; ALL payloads are gone — incl. the free-text
+    // `reason` (P24 close-out / mig 223: admin-typed reason could hold PII and
+    // was never redacted, so it must be scrubbed too, not just old/new_value).
     expect(after.rows.length).toBe(rowCountBefore);
     for (const r of after.rows) {
       expect(r.old_value).toBeNull();
       expect(r.new_value).toBeNull();
-      expect(r.action).toBeTruthy(); // the FACT remains
-      expect(r.reason).toBeTruthy();
+      expect(r.reason).toBeNull(); // 223: reason is now scrubbed (was a PII leak)
+      expect(r.action).toBeTruthy(); // the FACT remains (action / admin_uid / created_at)
     }
   });
 });
