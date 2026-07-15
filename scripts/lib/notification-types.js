@@ -36,6 +36,16 @@ const COA_HEARING_IMMINENT = 'COA_HEARING_IMMINENT';
 const COA_DECISION_RENDERED = 'COA_DECISION_RENDERED';
 const COA_STALLED = 'COA_STALLED';
 
+// Spec 82 claimed-state alert subtypes written by update-tracked-projects.js (the
+// claimed-lead evaluator). FENCED in v1 (25E #9): they fire only on CLAIMED leads
+// and mobile has no claim flow, so ~none are written today. Fencing makes the
+// engine recognise-and-skip them explicitly rather than leave them as an
+// unrecognised dead-letter class. Doc/contract-only — the dispatcher already
+// excludes any non-DISPATCHABLE type via `type = ANY(DISPATCHABLE_TYPES_V1)`.
+const STALL_WARNING = 'STALL_WARNING';
+const STALL_CLEARED = 'STALL_CLEARED';
+const START_IMMINENT = 'START_IMMINENT';
+
 // The set the dispatcher will actually deliver in v1.
 const DISPATCHABLE_TYPES_V1 = Object.freeze([
   LIFECYCLE_PHASE_CHANGED,
@@ -49,6 +59,9 @@ const FENCED_TYPES_V1 = Object.freeze([
   COA_HEARING_IMMINENT,
   COA_DECISION_RENDERED,
   COA_STALLED,
+  STALL_WARNING,
+  STALL_CLEARED,
+  START_IMMINENT,
 ]);
 
 // type → the user_profiles preference column that gates it. A row whose pref
@@ -104,6 +117,9 @@ module.exports = {
   COA_HEARING_IMMINENT,
   COA_DECISION_RENDERED,
   COA_STALLED,
+  STALL_WARNING,
+  STALL_CLEARED,
+  START_IMMINENT,
   DISPATCHABLE_TYPES_V1,
   FENCED_TYPES_V1,
   PREF_COLUMN_BY_TYPE,

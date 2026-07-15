@@ -39,6 +39,20 @@ describe('notification-types — canonical constants', () => {
     }
   });
 
+  it('the claimed-state STALL_*/START_IMMINENT alerts are FENCED, not a dead-letter class (25E #9)', () => {
+    // update-tracked-projects.js writes these on CLAIMED leads (mobile has no
+    // claim flow → ~none today). Fencing them makes the engine recognise-and-skip
+    // rather than leave them unrecognised by both lists.
+    for (const t of ['STALL_WARNING', 'STALL_CLEARED', 'START_IMMINENT']) {
+      expect(NOTIF.FENCED_TYPES_V1).toContain(t);
+      expect(NOTIF.DISPATCHABLE_TYPES_V1).not.toContain(t);
+      expect(NOTIF.isDispatchableV1(t)).toBe(false);
+    }
+    expect(NOTIF.STALL_WARNING).toBe('STALL_WARNING');
+    expect(NOTIF.STALL_CLEARED).toBe('STALL_CLEARED');
+    expect(NOTIF.START_IMMINENT).toBe('START_IMMINENT');
+  });
+
   it('each dispatchable type maps to a user_profiles pref column', () => {
     expect(NOTIF.PREF_COLUMN_BY_TYPE.LIFECYCLE_PHASE_CHANGED).toBe('phase_changed');
     expect(NOTIF.PREF_COLUMN_BY_TYPE.LIFECYCLE_STALLED).toBe('lifecycle_stalled_pref');

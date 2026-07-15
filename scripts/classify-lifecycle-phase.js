@@ -106,12 +106,20 @@ async function enqueuePhaseChangeNotifications(pool, transitions, stalledPermits
       let saved;
       try {
         const result = await pool.query(
-          `SELECT lv.user_id, lv.permit_num, lv.revision_num, lv.trade_slug
+          // DISTINCT ON collapses lead_views UNIQUE(user_id, lead_key, trade_slug)
+          // fan-out — a multi-trade saved lead has N rows per (permit,rev), which
+          // without this would enqueue N identical notifications → N pushes (25E
+          // #2). Added ADDITIVELY (the unnest-IN batched shape from the WF3 N+1
+          // fix is preserved). trade_slug is any-of (the payload body is
+          // trade-agnostic); the ORDER BY tiebreaker makes the pick deterministic.
+          `SELECT DISTINCT ON (lv.user_id, lv.permit_num, lv.revision_num)
+                  lv.user_id, lv.permit_num, lv.revision_num, lv.trade_slug
              FROM lead_views lv
             WHERE (lv.permit_num, lv.revision_num) IN (
                     SELECT * FROM unnest($1::text[], $2::varchar[])
                   )
-              AND lv.saved = true`,
+              AND lv.saved = true
+            ORDER BY lv.user_id, lv.permit_num, lv.revision_num, lv.trade_slug`,
           [valid.map((t) => t.permit_num), valid.map((t) => t.revision_num)],
         );
         saved = result.rows;
@@ -145,12 +153,20 @@ async function enqueuePhaseChangeNotifications(pool, transitions, stalledPermits
       let saved;
       try {
         const result = await pool.query(
-          `SELECT lv.user_id, lv.permit_num, lv.revision_num, lv.trade_slug
+          // DISTINCT ON collapses lead_views UNIQUE(user_id, lead_key, trade_slug)
+          // fan-out — a multi-trade saved lead has N rows per (permit,rev), which
+          // without this would enqueue N identical notifications → N pushes (25E
+          // #2). Added ADDITIVELY (the unnest-IN batched shape from the WF3 N+1
+          // fix is preserved). trade_slug is any-of (the payload body is
+          // trade-agnostic); the ORDER BY tiebreaker makes the pick deterministic.
+          `SELECT DISTINCT ON (lv.user_id, lv.permit_num, lv.revision_num)
+                  lv.user_id, lv.permit_num, lv.revision_num, lv.trade_slug
              FROM lead_views lv
             WHERE (lv.permit_num, lv.revision_num) IN (
                     SELECT * FROM unnest($1::text[], $2::varchar[])
                   )
-              AND lv.saved = true`,
+              AND lv.saved = true
+            ORDER BY lv.user_id, lv.permit_num, lv.revision_num, lv.trade_slug`,
           [valid.map((s) => s.permit_num), valid.map((s) => s.revision_num)],
         );
         saved = result.rows;
