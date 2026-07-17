@@ -3,7 +3,77 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Weekly Triage — 2026-07-17
+
+**last_reviewed: 2026-07-17** | Triage run by scheduled agent. Next triage: 2026-08-14.
+
+**Queue health:** ALL sections are zombies — last content was added 2026-05-20, ≥8 weeks before this triage. No prior `last_reviewed` date existed.
+
+**Counts (approximate):**
+- Total active DEFER items: ~295 (numbered items + unnumbered bullets)
+- Zombie items (no `last_reviewed` OR `last_reviewed` > 4 weeks): **295** (100%)
+- Items refreshed (last_reviewed set to today): all sections
+- Sections with a proposed change of status: see below
+
+**Proposed actions:**
+
+| Action | Count | Items |
+|---|---|---|
+| **PROMOTE → WF3** | 5 | See §PROMOTE below |
+| **KILL** | 6 | See §KILL below |
+| **CONVERT** | 3 | See §CONVERT below |
+| **DEFER** (reason + new date 2026-08-14) | ~281 | All remaining items |
+
+### PROMOTE → WF3 (high severity + still relevant)
+
+1. **CoA GIST spatial index** — Item 119 in "WF3 #3 CoA UNION arm" section (2026-05-20). Marked as **"MUST FIX before flipping the killswitch off in prod"** — `coa_applications` has no GIST spatial index on `(latitude, longitude)`, causing a 4.4s Parallel Seq Scan per lead feed request when the CoA killswitch is flipped. This is a production gate condition. Severity: de facto CRITICAL. File as `WF3` with spec ref `Spec 79 §7a Finding K` + `Spec 91 §4.2`.
+
+2. **PostHog subscription funnel instrumentation** — "Active Open Items — Spec-amendment WF2 candidates" section, HIGH item from Spec 96 WF5 audit (2026-04-30). Only `subscription_expired_to_active` is wired; `paywall_shown`, `subscribe_button_clicked`, `checkout_initiated`, `checkout_completed`, `subscribe_failed` are all missing. Affects revenue/conversion analytics — blind spot for business metrics. Severity: HIGH. File as `WF3`.
+
+3. **WF3-A: Backup-email persistence bridge** — "WF2 Spec 93 RNFirebase migration — WF3 candidates FILED 2026-05-15" section. Planning note at `.cursor/deferred_task_spec93_backup_email_persistence.md`. Already has a planning file; promote to active WF3.
+
+4. **WF3-B: Auth-state reset placement data leak** — Same section, 2026-05-15. Planning note at `.cursor/deferred_task_spec93_authstate_reset_placement.md`. Already has a planning file; promote.
+
+5. **WF3-C: @sentry/react-native v7→v8 upgrade** — Same section, 2026-05-15. Planning note at `.cursor/deferred_task_spec93_sentry_v8_upgrade.md`. Already has a planning file; promote.
+
+### KILL (superseded, irrelevant, or cost > benefit)
+
+1. **`shoelaceArea` / `SQM_TO_SQFT` / `isProjected` dead code** — "WF2 #C (2026-05-09) load-massing.js" section (3 separate LOW items). All three are dead code introduced by WF2 #C's refactor that has been deferred 8+ weeks. These are 3-line deletions, not worthy of tracked deferred items. KILL; next time `load-massing.js` is touched, delete inline without a separate tracked entry.
+
+2. **Phase F.4 "1MB JSON file synchronous parse blocks main thread" (Gemini HIGH)** — Phase F.4 deferrals section. Reason stated inline: false premise (actual file is 43KB, not 1MB). Already documented as deferred on false premise. KILL — this was always a false finding.
+
+3. **mig 139 "NIT: colon separator in dup sample is ambiguous" (DeepSeek NIT)** — mig 139 section. Trade_slug values are slugified (no colons); cosmetic. After 8+ weeks with no recurrence, cost > benefit of tracking. KILL.
+
+4. **WF3 (2026-05-08) realtor sub-gating "Option B deferred" (LOW future enhancement)** — the `REALTOR_RELEVANT_TYPES` DB-column enhancement. Only worth filing if a 6th residential type emerges. After 8+ weeks, business hasn't needed it. KILL; re-open if the business condition arises.
+
+5. **WF1 #B (2026-05-09) "Spec 86 §4 chain-step table not updated"** — DEFER note. The compute-phase-calibration script was substantially rewritten in Phase E.3; this specific chain-step-table item was either addressed there or superseded. KILL (verify against current Spec 86 §4 if uncertain).
+
+6. **Phase F.4 "LOW: `bidValue * 100` width style unclamped"** — already has `z.number().min(0).max(1)` Zod boundary. Documented inline as "defense-in-depth, not needed." After 8+ weeks, zero incidents. KILL.
+
+### CONVERT (route to stronger destination per Spec 05 §2)
+
+1. **`FlightCard` negative urgency badge count** — "Pre-Spec-99 Mobile Findings §Maestro-MAYBE" section (LOW). `Math.ceil(daysUntilStart!)` with no `Math.max(0, ...)` floor. This has a deterministic reproducer and a one-line fix. **CONVERT → test**: add a logic test asserting `daysUntilStart < 0` produces `0` (or a non-negative value), and fix the one-liner inline. No dedicated WF needed.
+
+2. **§9.21 lint check `countMatches` replacement** — "Architectural Reinforcement" section (LOW). The `searchTree` boolean check is structurally inert for the `src/` path. **CONVERT → lint/code fix**: replace `searchTree` boolean with a `countMatches >= 2` check in the existing `spec99.mandates.lint.test.ts`. One-file change, no new WF.
+
+3. **MMKV adapter silent error swallowing across ALL stores** — "WF1-C deferrals (2026-05-06)" + "WF3 (telemetry baseline) deferrals" (LOW convergent Gemini+DeepSeek). This is a project-wide catch-block pattern. **CONVERT → tasks/lessons.md**: add a lesson entry that every new MMKV adapter store MUST add `Sentry.captureException` in the catch block. Makes the convention sticky at session start rather than relying on a future WF.
+
+### DEFER (all remaining items — new triage_after: 2026-08-14)
+
+All items not listed above: deferred to 2026-08-14. If still unreviewed at that date, items at HIGH severity should be auto-promoted to KILL unless there is clear evidence of active work or operational risk.
+
+Key items to watch before next triage:
+- **`get-lead-feed.ts` NaN bugs** (`clampedLimit` / `clampedKm` when undefined) — verify whether route-handler Zod validation prevents `undefined` from reaching these calls. If unprotected, promote to WF3.
+- **`cost-model-shared.js` falsy-0 bugs** (3 HIGHs: `storeys || 1`, `pct > 0 gate`, `complexity_factor || 1.0`) — silent cost inflation; still unaddressed after 8+ weeks. Next triage: promote if not fixed.
+- **84-W11 P3/P4/P5 phase collision** (BLOCKED) — blocked on classifier switching to `INTAKE_P3` naming. Remains blocked until Spec 84 §6 W11 is resolved.
+- **`lifecycle_status_history` write gap** (item 110, Phase E.2 → Phase F gap) — Phase F classifier writes deferred from E.2; still outstanding.
+
+---
+
+---
+
 ## Phase F.4 (Lead Inspector CoA Classification Panel) — diff-stage 4-reviewer DEFERs (2026-05-17)
+_last_reviewed: 2026-07-17 — DEFER all items (triage_after: 2026-08-14). No items meet PROMOTE threshold; all are pre-existing or low-blast-radius concerns. KILL: "1MB JSON parse" (item 1, false premise — actual file 43KB). KILL: "bidValue * 100 unclamped" (item 4, Zod boundary already enforces)._
 
 Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + Observability worktree) on F.4 v4.1 implementation. 11 BUG findings fixed in commit (1 CRIT + 7 HIGH + 3 MED). Items below are DEFERs.
 
@@ -34,6 +104,7 @@ Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + 
 ---
 
 ## classify-coa-scope.js R5.3 — plan-review + Pre-Review deferrals (2026-05-14)
+_last_reviewed: 2026-07-17 — DEFER all (triage_after: 2026-08-14). All CRIT items were pre-existing or already fixed in prior commits. Remaining items are out-of-scope spec/operational concerns for future WFs._
 
 Source: 3-reviewer adversarial plan review (Gemini + DeepSeek + worktree feature-dev:code-reviewer) on the WF1 R5.3 plan, plus Pre-Review Self-Checklist item (l) verification against the live script.
 
