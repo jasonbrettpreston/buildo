@@ -29,6 +29,8 @@
         { "file": "scripts/seed-coa.js",                "reason": "Seed script — inert, not in active chain" },
         { "file": "scripts/seeds/apply-logic-variables.js", "reason": "Seed script — inert, not in active chain" },
         { "file": "scripts/backfill/seed-pipeline-runs.js", "reason": "One-time backfill — inert, not in active chain" },
+        { "file": "scripts/bootstrap-first-admin.js",   "reason": "One-shot operator CLI (Phase 1 admin provisioning) — single idempotent UPDATE, not in any chain" },
+        { "file": "scripts/wipe-supabase-auth-state.js", "reason": "Abort/rollback operator CLI — sequential deletes are deliberately independent (partial progress on abort is acceptable and reported)" },
         { "file": "scripts/reclassify-all.js",          "reason": "One-off maintenance script — not in active chain" },
         { "file": "scripts/quality/assert-schema.js",   "reason": "CQA script — pipeline_runs INSERT is observation time recording, not data mutation" },
         { "file": "scripts/quality/assert-data-bounds.js", "reason": "CQA script — pipeline_runs INSERT is observation time recording" },
