@@ -51,7 +51,8 @@ Concrete conditions under which we should revisit this decision (e.g., "table gr
 | [003](003-on-delete-cascade-on-permits-fk.md) | ON DELETE CASCADE on `lead_views.permit_num` FK | Accepted |
 | [004](004-manual-create-index-concurrently.md) | Manual `CREATE INDEX CONCURRENTLY` for `permits.location` GIST | Accepted |
 | [005](005-hardcoded-retry-after-60.md) | Hardcoded `Retry-After: 60` on rate-limited responses | Accepted |
-| [006](006-firebase-uid-not-fk.md) | `user_id` columns store Firebase UIDs without FK | Accepted |
+| [006](006-firebase-uid-not-fk.md) | `user_id` columns store Firebase UIDs without FK | Superseded by ADR-007 |
+| [007](007-supabase-auth-uuid-fk.md) | `user_id` columns converted to `uuid` FKs to `auth.users` (Supabase migration) | Accepted |
 
 ## How to add an ADR
 

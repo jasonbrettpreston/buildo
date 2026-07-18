@@ -1,6 +1,6 @@
 # ADR 006: `user_id` columns store Firebase UIDs without a FK to a users table
 
-**Status:** Accepted
+**Status:** Superseded by [ADR 007](007-supabase-auth-uuid-fk.md) (2026-07-18) — Supabase migration converts these columns to `uuid` with FKs to `auth.users` (D6, `.cursor/active_task.md` Phase 1.4). Content below is historical record of the pre-migration Firebase-UID design.
 **Date:** 2026-04-08
 **Decision-makers:** core team
 
