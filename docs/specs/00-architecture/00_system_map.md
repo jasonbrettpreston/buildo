@@ -17,6 +17,7 @@
 | 113 | `00-architecture/113_supabase_infrastructure.md` | Supabase Infrastructure | `scripts/lib/ssl-config.js`, `scripts/lib/pipeline.js`, `scripts/migrate.js`, +6 more | — | ACTIVE |
 | 114 | `00-architecture/114_rls_policy_catalog.md` | RLS Policy Catalog | `src/lib/auth/verify-admin.ts` | — | ACTIVE |
 | 115 | `00-architecture/115_scheduling.md` | Pipeline Scheduling (GitHub Actions + pg_cron) | `scripts/check-chain-running.js`, `scripts/lib/chain-concurrency.js`, `scripts/run-chain.js`, +4 more | — | ACTIVE |
+| 116 | `00-architecture/116_multi_product_architecture.md` | Multi-Product Application Architecture | `src/app/api/webhooks/stripe/` | — | DECIDED 2026-07-18 (4 enumerated open items carry recommended defaults; none block the migration critical path) |
 | 13 | `00-architecture/13_authentication.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/types.ts`, `src/lib/auth/route-guard.ts`, +7 more | `src/tests/auth.logic.test.ts`, `src/tests/auth-get-user.logic.test.ts`, `src/tests/middleware.logic.test.ts` | Done |
 | 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture | — | — | Active |
 
