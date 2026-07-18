@@ -278,7 +278,16 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+-- search_path pin mandatory on every SECURITY DEFINER function (Spec 113 §6 /
+-- migration 225 lesson; Supabase advisor lint function_search_path_mutable) —
+-- Schema-Fidelity 2026-07-18: this template originally omitted it (spec defect,
+-- fixed). NOTE (Ground-truth 2026-07-18): under D1/Spec 113 §10 (Data API
+-- disabled, raw-pg app connections) this trigger's JWT-claims check is INERT —
+-- request.jwt.claims is never set, NULL comparison never raises. It is a
+-- defense-in-depth layer for any future Data-API re-enable ONLY; the REAL
+-- control on is_admin writes is application-layer authorization (any future
+-- admin-promotion route MUST independently re-verify caller privilege).
 
 CREATE TRIGGER trg_prevent_is_admin_self_escalation
   BEFORE UPDATE ON profiles
