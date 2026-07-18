@@ -1,0 +1,4 @@
+{
+  "ignoreCommand": "exit 0",
+  "//": "INTERIM DEPLOY GUARD (Supabase migration program, 2026-07-18): exit 0 = Vercel SKIPS every build. The repo is connected to Vercel but the app is still Firebase-coupled until program Phase 1-2; an accidental deploy would ship broken auth with Supabase env vars injected. REMOVE this ignoreCommand at Phase 4.1 (deploy phase). Repo-side control per revision-panel finding — dashboard pause alone is not an engineering control."
+}
