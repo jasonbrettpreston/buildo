@@ -85,16 +85,34 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       }
     }
 
-    // Revoke all Firebase refresh tokens so existing sessions cannot be reused
-    try {
-      const admin = await import('firebase-admin');
-      if (admin.apps.length > 0) {
-        await admin.auth().revokeRefreshTokens(uid);
-      }
-    } catch (firebaseErr) {
-      // Non-fatal: log but don't fail the deletion — DB state is authoritative
-      logError('[user-profile/delete]', firebaseErr, { uid, stage: 'revoke_tokens' });
-    }
+    // KNOWN GAP, intentionally NOT implemented as a ban — flagged for
+    // Security sign-off rather than shipped as a guess (P1-G5 Admin-SDK-
+    // successor site for Firebase's `revokeRefreshTokens`).
+    //
+    // `@supabase/supabase-js`'s GoTrueAdminApi (confirmed via source read of
+    // this installed version) has NO "invalidate all existing sessions for
+    // a user id, without blocking future sign-in" method:
+    //   - `admin.signOut(jwt, scope)` takes the USER'S OWN live JWT (which
+    //     this server-side deletion flow does not have), not a uid — it
+    //     cannot be called here at all.
+    //   - `admin.updateUserById(uid, { ban_duration })` is the closest
+    //     primitive but is semantically WRONG for this call site: it blocks
+    //     the account from EVER signing in again until unbanned, which
+    //     directly conflicts with this route's own 30-day reactivation
+    //     window (`user-profile/reactivate/route.ts` restores the account
+    //     — banning here with no matching unban on that path would
+    //     permanently lock out every reactivated user, a worse regression
+    //     than leaving the existing session live for its natural ~1hr
+    //     expiry).
+    // Net effect: a deleted user's already-issued access token remains
+    // valid until its own natural expiry (unchanged Supabase default ~1hr)
+    // instead of being force-revoked immediately. DB state
+    // (`account_deleted_at`) is authoritative and already gates every
+    // route that matters; this is a narrower blast radius than the
+    // Firebase-era immediate revocation, not a correctness bug in the
+    // deletion itself. Revisit if/when a wave touches
+    // `user-profile/reactivate/route.ts` and can implement ban+unban as a
+    // matched pair.
 
     return NextResponse.json({ data: { ok: true }, error: null, meta: null });
   } catch (err) {

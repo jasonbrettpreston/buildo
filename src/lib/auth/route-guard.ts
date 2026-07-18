@@ -51,6 +51,16 @@ export const PUBLIC_PATHS = [
   '/subscribe',
   '/subscribe/success',
   '/subscribe/cancel',
+  // Phase 1 Item 1 (`.cursor/phase1_plan.md`) — the Supabase OAuth
+  // code-exchange callback (`src/app/auth/callback/route.ts`). MUST be
+  // public: this route IS how a Google-OAuth visitor becomes authenticated
+  // (it exchanges the `?code=` for the session) — gating it behind
+  // `classifyRoute`'s fail-closed default would redirect the callback
+  // request to /login before it ever runs, making Google sign-in
+  // unreachable. This is the one narrow, additive deviation from this
+  // file's otherwise-zero-changes disposition this phase (`.cursor/
+  // phase1_plan.md` Item 2's route-guard.ts row) — flagged, not silent.
+  '/auth/callback',
 ] as const;
 
 /** Path prefixes that are always public */

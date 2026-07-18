@@ -4,15 +4,16 @@
 // Admin User Management — directory + account creation (P24-24B).
 //   GET  — paginated directory. Search email/phone/name/company; filter by
 //          preset / trade_slug (primary OR override) / subscription_status.
-//   POST — supplier/enterprise provisioning: Firebase createUser + password
-//          reset link + profile insert. Rolls back the Firebase user on DB
-//          failure; idempotent re-create on an existing email.
+//   POST — supplier/enterprise provisioning: Supabase admin.createUser +
+//          password reset link + profile insert. Rolls back the Supabase
+//          user on DB failure; idempotent re-create on an existing email.
 //
 // Auth: verifyAdminAuth FIRST line. POST requires an attributable session admin.
 
 import { createHash } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { verifyAdminAuth, type AdminContext } from '@/lib/auth/verify-admin';
 import { pool } from '@/lib/db/client';
@@ -21,6 +22,7 @@ import { badRequestZod, internalError } from '@/features/leads/api/error-mapping
 import { logError, logWarn } from '@/lib/logger';
 import { track } from '@/lib/admin/analytics';
 import { writeAdminAudit } from '@/lib/admin/admin-audit';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
   USER_DIRECTORY_PAGE_SIZE,
   UserDirectoryQuerySchema,
@@ -141,38 +143,55 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   const [primaryTrade, ...restTrades] = body.trade_slugs;
   const override = restTrades.length > 0 ? restTrades : null;
 
-  let firebaseUid: string | null = null;
-  let firebaseCreated = false; // did WE create it this call (rollback candidate)?
+  let supabaseUid: string | null = null;
+  let accountCreated = false; // did WE create it this call (rollback candidate)?
   let resetLink: string | null = null;
 
   try {
-    // 1. Firebase user. Idempotent: an existing email adopts its uid instead of
-    //    failing (idempotent re-create). No SDK in dev → synthetic uid so the
-    //    DB + audit path is still testable locally (never reached in prod,
-    //    where the SDK is initialized and admin.apps.length > 0).
-    const admin = await import('firebase-admin');
-    if (admin.apps.length > 0) {
+    // 1. Supabase auth user. Idempotent: an existing email adopts its uid
+    //    instead of failing (idempotent re-create). No SUPABASE_SECRET_KEY
+    //    configured in dev → synthetic uid so the DB + audit path is still
+    //    testable locally (never reached in prod, where the secret key is
+    //    always configured — Spec 113 §3).
+    if (process.env.SUPABASE_SECRET_KEY) {
+      const supabaseAdmin = createAdminClient();
       try {
-        const created = await admin.auth().createUser({ email: body.email });
-        firebaseUid = created.uid;
-        firebaseCreated = true;
+        const { data, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+          email: body.email,
+          email_confirm: true,
+        });
+        if (createErr) throw createErr;
+        supabaseUid = data.user!.id;
+        accountCreated = true;
       } catch (createErr) {
         const code = (createErr as { code?: string }).code;
-        if (code === 'auth/email-already-exists') {
-          const existing = await admin.auth().getUserByEmail(body.email);
-          firebaseUid = existing.uid; // adopt — do NOT mark firebaseCreated (no rollback)
+        if (code === 'email_exists') {
+          // P1-G5 Admin-SDK-successor note: GoTrueAdminApi (confirmed via
+          // source read, installed @supabase/supabase-js version) has no
+          // dedicated by-email lookup — listUsers() is the only primitive,
+          // paginated and unfiltered server-side. Bounded scan; Buildo is
+          // pre-launch (zero real users at time of writing) so this is a
+          // low-risk stopgap, not a scale-tested path.
+          const existing = await findUserByEmail(supabaseAdmin, body.email);
+          if (!existing) throw createErr; // truly unexpected — surface it
+          supabaseUid = existing.id; // adopt — do NOT mark accountCreated (no rollback)
         } else {
           throw createErr;
         }
       }
       try {
-        resetLink = await admin.auth().generatePasswordResetLink(body.email);
+        const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'recovery',
+          email: body.email,
+        });
+        if (linkErr) throw linkErr;
+        resetLink = linkData?.properties?.action_link ?? null;
       } catch (linkErr) {
         // Non-fatal: the account exists; the reset link can be re-issued.
         logError(TAG, linkErr, { stage: 'reset_link' });
       }
     } else {
-      firebaseUid = `dev_${body.account_preset}_${createHash('sha256').update(body.email).digest('hex').slice(0, 12)}`;
+      supabaseUid = `dev_${body.account_preset}_${createHash('sha256').update(body.email).digest('hex').slice(0, 12)}`;
     }
 
     // 2. Profile insert (idempotent on user_id). Enterprise/manufacturer +
@@ -193,18 +212,19 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
                radius_cap_km = EXCLUDED.radius_cap_km,
                updated_at = NOW()
          RETURNING user_id, email, account_preset, trade_slug, trade_slugs_override, subscription_status`,
-        [firebaseUid, body.email, body.company_name ?? null, body.account_preset, primaryTrade, override, body.radius_cap_km ?? null],
+        [supabaseUid, body.email, body.company_name ?? null, body.account_preset, primaryTrade, override, body.radius_cap_km ?? null],
       );
       dbRow = insertRes.rows[0]!;
     } catch (dbErr) {
-      // ROLLBACK the Firebase user if WE created it this call — otherwise a
-      // Firebase account with no profile leaks (a login that lands nowhere).
-      if (firebaseCreated && firebaseUid) {
+      // ROLLBACK the Supabase user if WE created it this call — otherwise a
+      // Supabase account with no profile leaks (a login that lands nowhere).
+      if (accountCreated && supabaseUid) {
         try {
-          const admin = await import('firebase-admin');
-          if (admin.apps.length > 0) await admin.auth().deleteUser(firebaseUid);
+          if (process.env.SUPABASE_SECRET_KEY) {
+            await createAdminClient().auth.admin.deleteUser(supabaseUid);
+          }
         } catch (rbErr) {
-          logError(TAG, rbErr, { stage: 'rollback_firebase', firebaseUid });
+          logError(TAG, rbErr, { stage: 'rollback_supabase', supabaseUid });
         }
       }
       throw dbErr;
@@ -213,7 +233,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     await writeAdminAudit({
       adminUid: adminCtx.uid,
       action: 'create_account',
-      targetUid: firebaseUid,
+      targetUid: supabaseUid,
       newValue: { account_preset: body.account_preset, trade_slug: primaryTrade, trade_slugs_override: override, email_provided: true },
       reason: body.reason,
     });
@@ -225,9 +245,32 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
 
     return ok(
       { ...dbRow, password_reset_link: resetLink },
-      { created: firebaseCreated },
+      { created: accountCreated },
     );
   } catch (cause) {
     return internalError(cause, { route: 'POST /api/admin/users' });
   }
 });
+
+/**
+ * `GoTrueAdminApi` has no dedicated by-email lookup (P1-G5 note above) —
+ * paginate `listUsers()` until a match or exhaustion. Bounded to
+ * `MAX_PAGES * PER_PAGE` users; re-evaluate if Buildo's admin-provisioned
+ * account volume ever approaches that ceiling.
+ */
+async function findUserByEmail(
+  supabaseAdmin: SupabaseClient,
+  email: string,
+): Promise<{ id: string } | null> {
+  const PER_PAGE = 200;
+  const MAX_PAGES = 25; // 5,000 users
+  const target = email.toLowerCase();
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: PER_PAGE });
+    if (error) throw error;
+    const match = data.users.find((u) => u.email?.toLowerCase() === target);
+    if (match) return { id: match.id };
+    if (data.users.length < PER_PAGE) break; // last page reached
+  }
+  return null;
+}

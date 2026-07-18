@@ -1,5 +1,6 @@
 // Next.js Middleware — Route protection
-// SPEC LINK: docs/specs/13_auth.md
+// SPEC LINK: docs/specs/00-architecture/13_authentication.md §3.5, §4
+//            .cursor/phase1_plan.md Item 1 + Item 2 (middleware.ts row)
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import {
@@ -10,33 +11,41 @@ import {
   DEV_SESSION_COOKIE,
   extractBearerToken,
 } from '@/lib/auth/route-guard';
+import { updateSession } from '@/lib/supabase/middleware';
 
 /**
- * Next.js middleware runs in the **edge runtime**, where firebase-admin (Node-only)
- * cannot execute. We therefore split auth verification into two layers:
+ * Next.js middleware runs in the **edge runtime**. Auth verification splits
+ * into two layers (Spec 13 §3.5, unchanged shape from the Firebase era):
  *
- *   1. Edge layer (this file): a fast cookie *shape* pre-check via
- *      `isValidSessionCookie` — confirms the `__session` cookie exists and looks
- *      like a 3-segment JWT. Cheap, no network, no crypto.
+ *   1. Edge layer (this file): `updateSession` (`src/lib/supabase/
+ *      middleware.ts`) refreshes the Supabase session cookie transparently
+ *      as a SIDE EFFECT of calling `getClaims()` — its result is never read
+ *      for the routing decision below (fail-open contract, see that file's
+ *      header). Routing itself is a cheap PRESENCE check: does a Supabase
+ *      `sb-*` session cookie or a shape-valid Bearer token exist. No
+ *      cryptographic verification happens here.
  *
- *   2. Node layer (`src/lib/auth/get-user.ts`): full Firebase Admin
- *      `verifyIdToken()` call inside individual API route handlers, which run
- *      in the Node runtime and can use firebase-admin. Returns the verified
- *      uid or null.
+ *   2. Node layer (`src/lib/auth/get-user.ts`): full `getClaims()`/
+ *      `getUser()` verification inside individual API route handlers, which
+ *      run in the Node runtime. Returns the verified uid or null.
  *
  * Route handlers that need a real verified user MUST call
- * `getUserIdFromSession(request)` — they cannot rely on middleware alone.
+ * `getClaimsUid(request)`/`getVerifiedUid(request)` — they cannot rely on
+ * middleware alone.
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const routeClass = classifyRoute(pathname);
 
-  // Public routes — pass through
+  // Public routes — pass through. Still runs the Supabase refresh pass (a
+  // logged-in user browsing a public data route shouldn't silently go
+  // stale) but its result never gates access here.
   if (routeClass === 'public') {
-    return NextResponse.next();
+    return updateSession(request);
   }
 
-  // Dev mode — inject dev session cookie and allow all routes
+  // Dev mode — inject dev session cookie and allow all routes. UNCHANGED,
+  // byte-identical to the Firebase era (Spec 13 §4 dev-mode site 1/3).
   if (isDevMode()) {
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
     if (!sessionCookie) {
@@ -67,28 +76,39 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for session cookie (browser / SSR) OR Bearer token (mobile clients)
-  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const bearerToken = extractBearerToken(request.headers.get('authorization'));
-  const hasValidSession = isValidSessionCookie(sessionCookie) || isValidSessionCookie(bearerToken);
+  // Real (non-dev) session path: run the Supabase refresh pass FIRST
+  // (`src/lib/supabase/middleware.ts` design note) — its result is
+  // fail-open refresh plumbing, never read for the routing decision below.
+  const response = await updateSession(request);
 
-  // Admin routes — require session + admin key header for API routes
+  // Check for a Supabase session cookie (browser / SSR) OR a shape-valid
+  // Bearer token (mobile clients). The cookie is NOT named `__session`
+  // anymore for a real session (Item 1) — `@supabase/ssr` owns its own
+  // chunked `sb-*` cookie naming, and this is a PRESENCE check only.
+  // Middleware performs no cryptographic verification (Spec 13 §3.5) — full
+  // verification stays in `get-user.ts`'s Node runtime.
+  const bearerToken = extractBearerToken(request.headers.get('authorization'));
+  const hasValidSession = hasSupabaseSessionCookie(request) || isValidSessionCookie(bearerToken);
+
+  // Admin routes — require session (or the CI-credential path, re-checked
+  // independently inside verify-admin.ts).
   if (routeClass === 'admin') {
     // API routes: return 401
     if (pathname.startsWith('/api/')) {
       if (!hasValidSession) {
-        // Allow admin API key as fallback (for pipeline scripts, CI)
-        const adminKey = request.headers.get('x-admin-key');
-        const expectedKey = process.env.ADMIN_API_KEY;
-        if (expectedKey && adminKey === expectedKey) {
-          return NextResponse.next();
-        }
+        // Admin-key fallback REMOVED from middleware (Item 2 recommendation,
+        // adopted): verify-admin.ts's mode 2 already re-checks the CI
+        // credential as defense-in-depth (Spec 33 §5 — "middleware-only
+        // admin protection is insufficient" is exactly why verify-admin.ts
+        // exists ON TOP of middleware). A second independent copy of the
+        // secret-comparison logic here duplicated the check without adding
+        // real safety, and is retired as part of this swap.
         return NextResponse.json(
           { error: 'Authentication required' },
           { status: 401 }
         );
       }
-      return NextResponse.next();
+      return response;
     }
     // Admin pages: redirect to login
     if (!hasValidSession) {
@@ -96,7 +116,7 @@ export function middleware(request: NextRequest) {
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
-    return NextResponse.next();
+    return response;
   }
 
   // Authenticated routes — require session
@@ -114,10 +134,24 @@ export function middleware(request: NextRequest) {
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
-    return NextResponse.next();
+    return response;
   }
 
-  return NextResponse.next();
+  return response;
+}
+
+/**
+ * Presence-only check for a Supabase session cookie. `@supabase/ssr` names
+ * its cookie `sb-<project-ref>-auth-token`, chunked into `.0`/`.1`/… suffixes
+ * when the session exceeds a single cookie's size budget — `includes` covers
+ * both the unchunked and chunked forms. NOT a shape/signature check (that
+ * would require the Node-runtime SDK) — an empty or garbage cookie value
+ * still passes this presence check and is rejected later by `get-user.ts`.
+ */
+function hasSupabaseSessionCookie(request: NextRequest): boolean {
+  return request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token') && c.value.length > 0);
 }
 
 // Tell Next.js which routes to run middleware on

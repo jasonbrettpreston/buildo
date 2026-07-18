@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (411) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 18 seeded via migrations only (last column notes the migration).
-- **JSONB vars** (5) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
+- **Numeric vars** (411) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
+- **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **416** logic variables (411 numeric, 5 JSONB).
+Total: **417** logic variables (411 numeric, 6 JSONB).
 
 ---
 
@@ -427,6 +427,7 @@ Total: **416** logic variables (411 numeric, 5 JSONB).
 | `stall_penalty_precon` | numeric | 45 | 1 – 365 | `scripts/compute-trade-forecasts.js` | seed | Days without phase progression before a pre-construction lead is considered stalled |
 | `storey_height_m` | numeric | 3 | 2 – 6 | `scripts/enrich-parcels.js` | seed | Spec 65 §6 (Phase 2) — residential storey height (metres) for the height→storey translation (max_build_stories = round(bylaw_max_height_m / storey_height) when the by-law gives no storey count). Non-residential zones use a taller inline value. CONSUMED by enrich-parcels.js (max-build pass). |
 | `stripe_price_id_default` | JSONB | "" | — (migration-seeded) | — | migration 219 | Spec 20 §2 / P26-26B — the Stripe Price ID (price_...) for the single-price v1 subscription checkout. JSONB string; empty = unconfigured (checkout-session route returns the named STRIPE_PRICE_NOT_CONFIGURED 500). Set from the Stripe dashboard (Products -> Price -> API ID). Role-based pricing (stripe_price_id_trade/realtor/manufacturer) is v-next per the Spec 20 rewrite. CONSUMED by src/app/api/subscribe/exchange/route.ts. |
+| `stripe_price_product_map` | JSONB | {} | — (migration-seeded) | — | migration 228 | Spec 116 N2 / Phase 1 — maps a Stripe Price ID (price_...) to the Buildo product it entitles (one of entitlements.product's CHECK values). Empty object = unconfigured; webhook/reconcile/reactivate fall back to lead_gen (OD5 default) and log a WARN when a price is unmapped. Operator sets real price->product pairs from the Stripe dashboard. CONSUMED by src/lib/stripe/client.ts resolvePriceProduct(). |
 | `suburban_coverage_ratio` | numeric | 0.4 | 0.01 – 1 | — | seed | GFA coverage ratio applied to suburban parcels when estimating construction area (Spec 83 §3) |
 | `trust_threshold_pct` | numeric | 0.25 | 0.01 – 1 | — | seed | Minimum fraction of permits with parcel-linked cost data before a coverage ratio is trusted (Spec 83 §4) |
 | `urban_coverage_ratio` | numeric | 0.7 | 0.01 – 1 | — | seed | GFA coverage ratio applied to urban parcels when estimating construction area (Spec 83 §3) |
@@ -438,4 +439,4 @@ Total: **416** logic variables (411 numeric, 5 JSONB).
 
 ---
 
-*Generated from 398 seed vars + 18 migration-only vars + 102 consumer-mapped keys across 2 script dirs.*
+*Generated from 398 seed vars + 19 migration-only vars + 102 consumer-mapped keys across 2 script dirs.*

@@ -191,6 +191,12 @@ const eslintConfig = [
       // above: destructive, human-gated, not chain-registered).
       'scripts/restore-db.js',
       'scripts/validation/supabase-load-gates.js',
+      // Supabase migration Phase 1 (phase1_plan.md Item 3, P1-F3a/Item 7) —
+      // one-off operator CLIs: provisions/promotes the first admin via the
+      // service-role Admin API, and wipes local Supabase auth state on an
+      // aborted migration attempt. Same rationale as restore-db.js above.
+      'scripts/bootstrap-first-admin.js',
+      'scripts/wipe-supabase-auth-state.js',
     ],
     rules: {
       'no-restricted-syntax': 'off',

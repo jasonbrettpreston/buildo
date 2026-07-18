@@ -1,11 +1,20 @@
 'use client';
 
+// SPEC LINK: docs/specs/00-architecture/13_authentication.md §3.3, §4
+//            .cursor/phase1_plan.md Item 1 + Item 2 (LoginForm.tsx row)
+//
+// Email/password: posts to the Server Actions in `src/lib/supabase/
+// actions.ts` (`signInAction`/`signUpAction`), which run server-side against
+// the httpOnly-cookieOptions server client — the credentials themselves
+// never produce a client-writable cookie at any point.
+// Google: calls `signInWithOAuth` directly from the BROWSER client
+// (`src/lib/supabase/browser.ts`) — a client-side redirect only, writes no
+// session cookie itself (the callback route's server-side exchange does,
+// `src/app/auth/callback/route.ts`).
+
 import { useState } from 'react';
-import {
-  signInWithEmail,
-  signUpWithEmail,
-  signInWithGoogle,
-} from '@/lib/auth/session';
+import { signInAction, signUpAction } from '@/lib/supabase/actions';
+import { createClient } from '@/lib/supabase/browser';
 import type { AccountType } from '@/lib/auth/types';
 
 interface LoginFormProps {
@@ -27,10 +36,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     setLoading(true);
 
     try {
-      if (mode === 'login') {
-        await signInWithEmail(email, password);
-      } else {
-        await signUpWithEmail(email, password, name, accountType);
+      const result =
+        mode === 'login'
+          ? await signInAction(email, password)
+          : await signUpAction(email, password, name, accountType);
+      if (result.error) {
+        setError(result.error);
+        return;
       }
       onSuccess?.();
     } catch (err) {
@@ -44,8 +56,15 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     setError('');
     setLoading(true);
     try {
-      await signInWithGoogle();
-      onSuccess?.();
+      const supabase = createClient();
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (oauthError) throw oauthError;
+      // signInWithOAuth navigates the browser away to Google — no
+      // onSuccess() call here; the callback route drives the post-auth
+      // redirect once the code exchange completes.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign-in failed');
     } finally {

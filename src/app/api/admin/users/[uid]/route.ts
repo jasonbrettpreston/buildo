@@ -25,6 +25,7 @@ import { logError, logWarn } from '@/lib/logger';
 import { track } from '@/lib/admin/analytics';
 import { writeAdminAudit, scrubAdminAuditForTarget } from '@/lib/admin/admin-audit';
 import { cancelAllStripeSubscriptions } from '@/lib/stripe/client';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
   AdminUserMutationSchema,
   DESTRUCTIVE_ACTIONS,
@@ -277,15 +278,16 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest, 
       }
       case 'delete': {
         // --- Network calls FIRST, OUTSIDE the txn (§R9 — never hold a txn across
-        // I/O). Both best-effort/loud-non-fatal: a Firebase or Stripe outage must
+        // I/O). Both best-effort/loud-non-fatal: a Supabase or Stripe outage must
         // never block the DB deletion (the DB row is authoritative).
+        // P1-G5 Admin-SDK-successor site: admin.auth().deleteUser(tUid) ->
+        // supabase.auth.admin.deleteUser(tUid) — a clean 1:1 swap (hard-deletes
+        // the auth.users row, same as Firebase's deleteUser).
         try {
-          const admin = await import('firebase-admin');
-          if (admin.apps.length > 0) {
-            await admin.auth().deleteUser(tUid);
-          }
-        } catch (firebaseErr) {
-          logError(TAG, firebaseErr, { stage: 'firebase_delete', targetUid: tUid });
+          const supabaseAdmin = createAdminClient();
+          await supabaseAdmin.auth.admin.deleteUser(tUid);
+        } catch (supabaseErr) {
+          logError(TAG, supabaseErr, { stage: 'supabase_delete', targetUid: tUid });
         }
         // Delete-time Stripe cancel (P26 review — Code Reviewer CRITICAL). Spec 21
         // §7 assigns cancel-on-delete to the money loop; the admin delete reaches

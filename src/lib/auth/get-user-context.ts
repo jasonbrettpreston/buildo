@@ -1,24 +1,42 @@
 // 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §API Endpoints
+//             docs/specs/00-architecture/13_authentication.md §3.2, §3.3
 //
-// Server-side helper combining Firebase auth + user_profiles lookup.
+// Server-side helper combining Supabase auth + user_profiles lookup.
 // Phase 2 leads routes call this once at the top of the handler to get
 // {uid, trade_slug, display_name} or null. Never throws — returns null
 // on any failure so the route can return 401 cleanly.
 //
 // The four "null" cases the caller treats identically (return 401):
 //   1. No session cookie
-//   2. Cookie shape invalid (not 3-segment JWT)
-//   3. Firebase JWT verification failed (expired / revoked / malformed)
+//   2. Cookie shape invalid (not 3-segment JWT) — Bearer path only, Item 1
+//   3. Supabase JWT verification failed (expired / revoked / malformed)
 //   4. Profile lookup failed (authenticated but no profile row yet)
 //
 // Future onboarding flow may need to disambiguate "user has no profile"
 // from "user not authenticated" to redirect to onboarding instead of
 // login. That's a Phase 2+ concern; the contract here is "any failure
 // means anonymous, can't access leads".
+//
+// Auth-provider swap only (`.cursor/phase1_plan.md` P1-F2.4): this is a
+// READ-only helper (every consumer is a GET-shaped feed/detail route), so it
+// uses `getClaimsUid` (Spec 13 §3.2's read-path default) rather than the
+// revocation-checked `getVerifiedUid`.
+//
+// `subscription_status` is INTENTIONALLY still read off the legacy
+// `user_profiles.subscription_status` column, NOT dropped from
+// `UserContext` yet. `.cursor/phase1_plan.md` Item 2's table describes this
+// field as removed at this same step, but Item 4 (the `entitlements` table +
+// full writer/reader swap, migrations 226-230) is a SEPARATE wave
+// (P1-F3d) outside this WF's authorized scope — a sibling agent owns
+// `migrations/`. Dropping the field here now, before `entitlements` exists
+// and before `leads/view/route.ts` (R2, the one live reader) is repointed
+// at it, would break that route with no successor in place. Per this task's
+// explicit sequencing note: kept fed by the legacy column until P1-F3d lands
+// the entitlements swap — flagged here, not silently deviated from the plan.
 
 import type { NextRequest } from 'next/server';
 import type { Pool } from 'pg';
-import { getUserIdFromSession } from '@/lib/auth/get-user';
+import { getClaimsUid } from '@/lib/auth/get-user';
 import { isDevMode } from '@/lib/auth/route-guard';
 import { logError } from '@/lib/logger';
 
@@ -44,12 +62,12 @@ export async function getCurrentUserContext(
   request: NextRequest,
   pool: Pool,
 ): Promise<UserContext | null> {
-  // Defense in depth: getUserIdFromSession is documented as never-throws,
+  // Defense in depth: getClaimsUid is documented as never-throws,
   // but its contract isn't enforced at the type level. Wrap the call so
   // a future regression in the auth helper can't escape this function.
   let uid: string | null;
   try {
-    uid = await getUserIdFromSession(request);
+    uid = await getClaimsUid(request);
   } catch (err) {
     logError('[auth/get-user-context]', err, { stage: 'session-verify' });
     return null;

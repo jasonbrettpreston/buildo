@@ -613,13 +613,29 @@ describe('Middleware Route Protection', () => {
     expect(src).toContain('Authentication required');
   });
 
-  it('middleware supports X-Admin-Key header for admin API fallback', () => {
-    const src = fs.readFileSync(
+  it('middleware does NOT duplicate the X-Admin-Key/CI-credential check (Supabase swap, .cursor/phase1_plan.md Item 2)', () => {
+    // Pre-swap, middleware.ts carried its OWN independent X-Admin-Key/
+    // ADMIN_API_KEY comparison as a fallback, duplicating verify-admin.ts's
+    // check. Item 2's adopted recommendation: the middleware-level copy is
+    // retired — Spec 33 §5 already establishes verify-admin.ts as the
+    // defense-in-depth layer ON TOP OF middleware, not a second independent
+    // gate that must also know the CI-credential secret. This regression
+    // lock now asserts the ABSENCE of that duplicate, and that the real
+    // check lives solely in verify-admin.ts (CI_ADMIN_TOKEN successor,
+    // Spec 13 §3.7).
+    const middlewareSrc = fs.readFileSync(
       path.join(__dirname, '../middleware.ts'),
       'utf-8'
     );
-    expect(src).toContain('x-admin-key');
-    expect(src).toContain('ADMIN_API_KEY');
+    expect(middlewareSrc).not.toContain('x-admin-key');
+    expect(middlewareSrc).not.toContain('ADMIN_API_KEY');
+
+    const verifyAdminSrc = fs.readFileSync(
+      path.join(__dirname, '../lib/auth/verify-admin.ts'),
+      'utf-8'
+    );
+    expect(verifyAdminSrc).toContain('x-admin-key');
+    expect(verifyAdminSrc).toContain('CI_ADMIN_TOKEN');
   });
 
   it('admin API routes are protected by middleware classification', async () => {
