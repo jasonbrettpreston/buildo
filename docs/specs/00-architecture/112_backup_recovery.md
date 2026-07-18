@@ -1,151 +1,457 @@
 # Spec 112 — Database Backup & Recovery
 
+**Status:** ACTIVE
+**SPEC LINK:** `docs/specs/00-architecture/112_backup_recovery.md`
+
+<requirements>
 ## 1. Goal & User Story
 
-Provide a reliable, automated backup layer for the Buildo PostgreSQL database so that data can
-be recovered following accidental deletion, migration failure, or infrastructure corruption.
-Without this, the Data Safety production readiness vector is blocked (scored 1 in 2026-04-24
-WF5 audit).
+Provide a reliable backup **and restore** layer for Buildo's Supabase-hosted PostgreSQL database
+so data can be recovered following accidental deletion, migration failure, or infrastructure
+corruption. Without this, the Data Safety production readiness vector is blocked (scored 1 in
+2026-04-24 WF5 audit; the underlying gap re-opens with every provider change until restore
+tooling actually exists).
+
+This is a **rewrite for Supabase**, replacing the Cloud SQL/GCS design, per the authorized
+2026-07-18 Supabase + Vercel migration program (`.cursor/active_task.md` v2.1, Decision D9) and
+`docs/specs/00-architecture/113_supabase_infrastructure.md` §9. **Spec 113 §9 is the POLICY
+layer** (PITR posture, the two-layer split, the restore-tooling requirement, OP4 re-homing
+scope) — **this spec is the SCRIPT/PROCEDURE layer** that implements that policy. Where the two
+disagree, Spec 113 governs (see §12 Cross-Spec Dependencies).
+
+The two-layer strategy itself (managed backups + a portable logical dump) carries over unchanged
+in shape from the original Cloud SQL/GCS design — only the provider underneath, the destination
+of the portable layer, and the presence of actual restore tooling change. Restore tooling did
+**not** exist before this rewrite (a real gap, not a doc omission) — Decision D9 identifies
+building it as in-scope work (`.cursor/active_task.md` Phase 3.3; Spec 113 §9.2).
+</requirements>
 
 ---
 
-## 2. Two-Layer Strategy
+<architecture>
+## 2. Two-Layer Strategy (Decision D9, 2026-07-18 program plan)
 
-| Layer | Mechanism | Frequency | Recovery Time |
-|-------|-----------|-----------|---------------|
-| **Layer 1 — Cloud SQL Automated Backups** | Built-in PITR (Point-in-Time Recovery) | Every 4 hours (configurable) | Minutes via Cloud Console |
-| **Layer 2 — Logical pg_dump to GCS** | `scripts/backup-db.js` | On-demand or Cloud Scheduler | Minutes via `pg_restore` |
+| Layer | Mechanism | Frequency | Retention | Recovery Time |
+|-------|-----------|-----------|-----------|---------------|
+| **Layer 1 — Supabase managed backups** | Built-in daily backup, included at Pro tier | Daily | 7 days | Minutes, via Supabase dashboard or Management API |
+| **Layer 2 — Portable logical dump** | `scripts/backup-db.js` → off-Supabase destination | Nightly (chain-triggered, §6) | `BACKUP_RETAIN_DAYS` (default 30) | Minutes, via `scripts/restore-db.js` (§4.3, NEW) |
 
-Layer 1 is infrastructure configuration — no code. Layer 2 is a portable logical backup that
-can be restored to any PostgreSQL instance (not just Cloud SQL), useful for schema migration
-testing and cross-environment seeding.
+Layer 1 is infrastructure configuration — no code, no `gcloud`-equivalent CLI (Supabase's daily
+backup is enabled by tier, not a flag Buildo's repo sets). Layer 2 is a portable logical backup
+restorable to **any** PostgreSQL instance, not just Supabase — the property that matters most
+right after leaving one managed-Postgres provider for another: Layer 2 must not silently become
+provider-locked again.
 
----
+**PITR (Point-in-Time Recovery) is a third, separate Supabase capability** — a paid add-on on
+every tier, giving continuous WAL-based recovery to any second rather than the daily-granularity
+snapshot Layer 1 provides. §3 is the decision record for why it is off at launch.
 
-## 3. Behavioral Contract
+### 2.1 Portable-layer destination (decision deferred to Phase 3.3)
 
-### Layer 1 — Cloud SQL Automated Backup
+**Supabase Storage is explicitly NOT an acceptable destination for Layer 2.** Landing the
+nightly dump in Supabase Storage keeps the "portable" layer on the same provider as Layer 1 and
+the primary database — an outage or account-level incident affecting Supabase would affect both
+layers simultaneously, which is the exact scenario Layer 2 exists to guard against (see §9,
+"Dump landing on-provider defeating portability"). The destination MUST be off-Supabase.
 
-Enable via `gcloud`:
+Two off-Supabase options were identified; **the choice between them is a Phase 3.3
+implementation decision, not made by this spec**:
 
-```bash
-# Enable automated backups with 7-day retention and PITR
-gcloud sql instances patch buildo-production \
-  --backup-start-time=03:00 \
-  --enable-bin-log \
-  --retained-backups-count=7 \
-  --retained-transaction-log-days=7
+| Option | Description | Trade-offs |
+|---|---|---|
+| **A — External object storage** (e.g. S3, Cloudflare R2, Backblaze B2) | Same operational shape as the retired GCS destination — credentialed API upload, lifecycle-rule pruning, retrievable from anywhere | Recurring cost (small, dump-sized); a new third-party credential to manage in Vault (§11 of Spec 113); genuinely off-provider |
+| **B — Operator local/NAS target** | `backup-db.js` writes the dump to a filesystem path reachable from the runner (operator's machine, home NAS, mapped network drive) | Zero recurring cost; **interim-grade** — no automated offsite copy unless the operator layers one on, single point of failure if that machine/drive fails, availability depends on the runner having filesystem access to it (GitHub Actions runners do NOT have this by default, so Option B implies either a self-hosted runner or a separate sync step) |
 
-# Verify
-gcloud sql instances describe buildo-production \
-  --format="json(settings.backupConfiguration)"
-```
-
-**Point-in-Time Recovery (PITR):**
-
-```bash
-# Restore to a specific timestamp
-gcloud sql instances clone buildo-production buildo-recovery \
-  --point-in-time="2026-04-24T14:30:00.000Z"
-```
-
-### Layer 2 — Logical pg_dump Script
-
-**Script:** `scripts/backup-db.js`
-**Advisory Lock ID:** 112 (spec number convention, §5.2 of spec 47)
-
-**Primary trigger:** The permits chain (`scripts/manifest.json` `chains.permits`), as its final
-step after all data writes and CQA assertions pass. This satisfies the OP4 check in spec 07 §C5
-(requires a completed `backup_db` run within the last 25 hours). Cloud Scheduler is a secondary
-trigger for production resilience when the permits chain is skipped (gate: `records_new = 0`).
-
-**Inputs:**
-- `DATABASE_URL` or `PG_*` env vars (same as the pipeline pool)
-- `BACKUP_GCS_BUCKET` (required — GCS bucket name, e.g. `buildo-db-backups`)
-- `BACKUP_RETAIN_DAYS` (optional — default 30; structural constant; not in `logic_variables`)
-- `GOOGLE_APPLICATION_CREDENTIALS` (optional — falls back to Application Default Credentials in Cloud environment)
-
-**Outputs:**
-- GCS object: `gs://${BACKUP_GCS_BUCKET}/pg_dump/${YYYY-MM-DD}/${ISO_TIMESTAMP}.dump`
-- Custom format (`--format=custom`) — supports parallel `pg_restore -j N`
-- `emitSummary` with `backup_size_bytes`, `gcs_path`, `blobs_pruned`, `retain_days`
-- `emitMeta` reads: none; writes: none (external GCS only)
-
-**Retention:** Any `.dump` object under `pg_dump/` older than `BACKUP_RETAIN_DAYS` days is
-deleted at the end of a successful backup run. Prune failure logs WARN and does not abort.
-
-**Restore procedure:**
-
-```bash
-# Download latest backup
-gsutil cp gs://buildo-db-backups/pg_dump/2026-04-24/2026-04-24T03-00-00.dump ./restore.dump
-
-# Restore to target database
-pg_restore \
-  --host=$PG_HOST \
-  --port=$PG_PORT \
-  --username=$PG_USER \
-  --dbname=$PG_DATABASE \
-  --jobs=4 \
-  --no-owner \
-  --no-acl \
-  restore.dump
-```
+Whoever implements Phase 3.3 MUST record the choice as an amendment to this section (mirroring
+how Spec 113 §8.2 handles its own deferred Network Restrictions decision) — the decision is
+deferred, not the documentation of it. Until then, the env var name for the destination is a
+placeholder (§4.2).
+</architecture>
 
 ---
 
-## 4. Edge Cases
+<architecture>
+## 3. PITR Decision Record (Decision D9, 2026-07-18 program plan)
 
-- **Missing `BACKUP_GCS_BUCKET`:** Script emits a SKIP summary (`records_meta.skipped: true`) and
-  exits 0. No advisory lock is acquired. No pg_dump is attempted. Chain continues. This is the
-  correct behaviour for local dev environments where `BACKUP_GCS_BUCKET` is not set. Production
-  Cloud Run environments always have the secret mounted.
-- **pg_dump non-zero exit:** Error re-thrown inside the lock scope. `pipeline.run` records
-  `status='failed'`. GCS upload is never initiated — no partial/corrupt object written.
-- **GCS upload failure mid-stream:** Stream `error` event is caught, re-thrown. The partially
-  uploaded object is abandoned (not deleted). Next successful run overwrites via a new timestamped
-  object name. Orphan cleanup is handled by bucket lifecycle rules (set `Age` condition to
-  `BACKUP_RETAIN_DAYS + 2` days as a safety net).
-- **Retention prune failure:** Caught separately, logged as WARN. Backup is still considered
-  successful — old objects accumulate until the next successful prune.
-- **Concurrent runs:** Advisory lock 112 prevents two backup runs from overlapping. Second
+**PITR is OFF at launch.** This is an explicit human decision made at program authorization, not
+a default arrived at by omission or cost-avoidance alone.
+
+**Rationale:** zero users exist at cutover, so there is no catastrophic-loss blast radius yet.
+Daily 7-day managed backups (Layer 1) plus a nightly off-Supabase logical dump (Layer 2) cover
+the realistic recovery need at this stage — the marginal RTO/RPO improvement PITR buys over
+daily+nightly is not worth its cost and operational overhead before there is anyone to lose data
+for.
+
+**Standing objection on record:** the Gemini adversarial review (S6 panel, 2026-07-18) rated
+PITR-off **CRITICAL for RTO** and re-raised the objection in the Round-2 panel. The operator's
+explicit ruling stands regardless — see `.cursor/active_task.md` §Panel Adjudication Log,
+"HUMAN DECISION at authorization." This section is that decision's system-of-record; it is not
+re-litigated by implementation work.
+
+**Revisit trigger: first paying user** — not a calendar date, not "before launch," not a review
+cadence. Whoever re-opens this decision at that trigger MUST update this section (and §2's
+strategy table) in the same change that enables PITR, per Spec 113 §9's identical instruction —
+the two specs must never describe different PITR postures.
+
+**What "turning PITR on" actually costs later — see §9** (Known Failure Modes): it is not a free
+toggle, budget for it before the trigger fires rather than at the moment it does.
+</architecture>
+
+---
+
+<behavior>
+## 4. Behavioral Contract
+
+### 4.1 Layer 1 — Supabase Managed Daily Backups
+
+No code. Configured via the Supabase dashboard (Database → Backups) at the Pro tier
+(`.cursor/active_task.md` G7: PITR/backup posture is per-tier). Verification is a dashboard
+check or the Supabase Management API — there is no repo-side script analogous to the old
+`gcloud sql instances describe --format="json(settings.backupConfiguration)"` command, because
+this layer is not repo-managed configuration.
+
+### 4.2 Layer 2 — `scripts/backup-db.js` (rewrite contract)
+
+**Script path and Advisory Lock ID are unchanged: `scripts/backup-db.js`, lock ID `112`**
+(Spec 47 §A.5 registry — the spec-number default remains globally unique; no reassignment
+needed).
+
+**Retired:**
+- `BACKUP_GCS_BUCKET` env var
+- `GOOGLE_APPLICATION_CREDENTIALS` env var
+- `@google-cloud/storage` dependency and all GCS-specific stream/prune logic
+
+**New inputs, per Spec 113 §3's environment contract:**
+
+| Var | Environment | Purpose |
+|---|---|---|
+| `DATABASE_URL` | Local stack | `pg_dump` target connection string (ephemeral local Supabase) |
+| `SUPABASE_DATABASE_URL` | Cloud project | `pg_dump` target connection string |
+| `SUPABASE_CA_CERT_PATH` | Cloud project | CA-pinned TLS, appended to the connection string as libpq params (see below) |
+| `BACKUP_DEST_*` (placeholder — name fixed at Phase 3.3, §2.1) | Both | Destination credential/path for the portable dump |
+| `BACKUP_RETAIN_DAYS` | Both | Unchanged — structural constant, default 30, Zod-validated, not in `logic_variables` (same rationale as before: retention-policy changes require engineering review) |
+
+**TLS note — `pg_dump`/`pg_restore` do NOT go through `scripts/lib/ssl-config.js`.** That
+helper (Spec 113 §4.1) constructs a `ssl` config object for the `pg` npm module's connection
+pools; `pg_dump`/`pg_restore` are separate binaries that negotiate TLS via libpq directly, not
+through node-postgres. To get the equivalent CA-pinned `verify-full` behavior Spec 113 §4
+mandates, cloud invocations MUST supply `sslmode=verify-full` and `sslrootcert=$SUPABASE_CA_CERT_PATH`
+either as connection-string query params or as the `PGSSLMODE`/`PGSSLROOTCERT` environment
+variables passed to the spawned `pg_dump`/`pg_restore` process. Local-stack invocations use the
+local no-TLS mode per Spec 113 §4.2 — no CA params needed.
+
+**Object naming:** unchanged pattern (`pg_dump/${YYYY-MM-DD}/${ISO_TIMESTAMP}.dump`), now under
+whatever path/prefix convention the Phase 3.3 destination uses.
+
+**NEW — baseline manifest sidecar.** Alongside the `.dump` object, `backup-db.js` writes a
+`.manifest.json` sidecar (same path, `.manifest.json` suffix instead of `.dump`) capturing the
+gate-baseline metrics `restore-db.js` needs to validate against (§4.3):
+- per-table row counts (all tables, not a sample)
+- invalid-geometry id sets for `parcels` and `building_footprints` (not just counts — Spec 113
+  §13's GEOS-drift failure mode requires an id-set diff, and a count alone cannot express that)
+- sequence `last_value` for every sequence
+- `mv_monthly_permit_stats` row count
+- `postgis_full_version()` output, recorded at backup time
+- `RUN_AT` (DB-clock timestamp, §R3.5)
+
+Without this sidecar, "exact row count match" at restore time has nothing to diff against —
+restoring a dump and comparing it to itself proves nothing. The sidecar generalizes the
+one-time G10 gate baseline (`.cursor/active_task.md` G10, captured for the Phase 0.5/4.0
+migration load) into a **standing, every-backup** artifact so any future restore — not just the
+migration-era one — has a real baseline.
+
+**Outputs (renamed/generalized from the GCS-specific shape):**
+- `records_meta.backup_size_bytes` — unchanged
+- `records_meta.dest_path` — replaces `gcs_path` (destination-agnostic; the Phase 3.3 value is a
+  URI or filesystem path depending on the chosen option)
+- `records_meta.blobs_pruned` — unchanged in meaning, generalized in mechanism (destination
+  lifecycle rule for object storage; explicit prune loop for a local/NAS path)
+- `records_meta.retain_days` — unchanged
+- `records_meta.manifest_path` — NEW, the sidecar's location, needed by `restore-db.js`
+- `audit_table` — unchanged shape (phase 112, PASS/WARN/FAIL rows)
+
+### 4.3 `scripts/restore-db.js` (NEW)
+
+This script does not exist yet — it is the identified gap Spec 113 §9.2 requires closing.
+
+**Not a manifest/chain step.** `restore-db.js` is a **standalone, operator-invoked CLI**, in the
+same category as `scripts/migrate.js` — not wrapped in `pipeline.run`/the Spec 47 §R1–R12
+skeleton, and not registered in `scripts/manifest.json`. Rationale: restore is inherently
+destructive, human-gated, and not a step that should ever be safely auto-re-runnable inside an
+unattended chain — the same reasoning that already keeps `migrate.js` outside the pipeline
+skeleton. Invocation: `node scripts/restore-db.js --dump=<path-or-uri> --target=<local|cloud>
+[--verify-only]`.
+
+**Core contract (Spec 113 §9.2, verbatim rule):** `pg_restore --single-transaction
+--exit-on-error` is the primary restore path. Where that combination is not viable for a given
+restore (e.g., certain `--no-owner`/`--no-acl` cross-role scenarios, or a partial/table-scoped
+restore that must legitimately continue past expected non-fatal notices), use a
+**stderr-gated wrapper** instead: spawn `pg_restore`, capture stderr, and treat **any** stderr
+output as failure. Never assume partial success is success — this is the exact failure mode
+plain `pg_restore` defaults to (§9).
+
+**Restore-validation = re-run the G10 gate suite**, generalized as a reusable library (not a
+bespoke one-off script) so both the Phase 0.5/4.0 migration-era load and every future restore
+call the same gates:
+- **Per-table exact row counts** — vs the backup-time baseline manifest (§4.2), not vs an
+  arbitrary "looks right" heuristic.
+- **Invalid-geom id-set diff** — for `parcels`/`building_footprints`, compare the restored
+  database's invalid-geometry **id set** to the manifest's id set. A matching count with a
+  different id set is a genuine drift signal, not a pass (Spec 113 §13).
+- **Sequence `last_value` sync** — every sequence's restored `last_value` vs the manifest;
+  exact match expected for a same-point restore (a lagging sequence risks a future PK collision).
+- **Matview verify-or-refresh** — compare `mv_monthly_permit_stats` row count to the manifest;
+  if stale, `REFRESH MATERIALIZED VIEW` and log it explicitly rather than silently accepting a
+  stale matview as a pass.
+- **Sanity-audit triple** — re-run `scripts/analysis/parcel-sanity-audit.js`'s FAIL/WARN/INFO
+  gate and diff its counts against the manifest's recorded baseline; a **new** FAIL is a broken
+  restore, not pre-existing source-data noise (the same distinction G10 draws for the migration
+  load).
+- **`postgis_full_version()` both sides** — record the manifest's captured source-side value
+  next to a freshly queried target-side value; a version delta is a flagged finding, not
+  silently ignored.
+
+**Output:** a restore-validation report (console, plus an `emitSummary`-shaped JSON for anyone
+scripting around it) with PASS/FAIL per gate. A restore is not "done" until every gate reports
+PASS, or a human explicitly acknowledges a WARN — mirroring the operator sign-off pattern D6
+already established for the 0-row HALT check (`.cursor/active_task.md` D6).
+</behavior>
+
+---
+
+<architecture>
+## 5. Version-Aware Dump/Restore
+
+Three PostgreSQL versions coexist across environments during Phases 0–3 (Spec 113 §12
+coexistence window): dev Docker `buildo_pgdata` = **PG15**, CI ephemeral containers =
+**PG16** (`postgis/postgis:16-3.4-alpine`), Supabase (local stack and cloud project) = **PG17**
+(17.6 confirmed 2026-07-18).
+
+**Client-version rule:** the `pg_dump`/`pg_restore` **client binary** used by `backup-db.js` and
+`restore-db.js` MUST be at least as new as the highest PostgreSQL server version touched in
+either direction of the operation — in practice, pin the PG17-line client toolchain, not
+whatever `pg_dump` happens to ship alongside the local PG15 Docker image or CI's PG16 container.
+An older client dumping or restoring a newer server can fail on catalog/object features it does
+not recognize; this is silent or opaquely-worded far more often than it is an obvious version
+error. This is a live, not theoretical, risk here specifically because three server versions are
+simultaneously in play during the coexistence window (Spec 113 §12), not a generic caveat.
+
+Guard: CI/operator tooling installs (or the workflow container provides) the PG17-line
+`pg_dump`/`pg_restore` binaries explicitly, rather than relying on whatever version is bundled
+with the local dev or CI Postgres image.
+</architecture>
+
+---
+
+<architecture>
+## 6. Backup Cadence Trigger (mechanism unchanged + Decision D8 addition)
+
+**Primary trigger — unchanged.** `backup_db` remains the final step of `chains.permits`
+(`scripts/manifest.json` L91) — it runs whenever the permits chain runs. What changes is *how*
+the permits chain itself gets scheduled: per Decision D8, nightly/must-succeed chains now run on
+a **GitHub Actions runner executing `scripts/run-chain.js` directly** (Spec 113 §8.1), not via
+Cloud Scheduler → Cloud Run, which is retired along with the rest of the Google stack.
+
+**Secondary/safety-net trigger — also GitHub Actions, not `pg_cron`.** The original design used
+Cloud Scheduler as a secondary trigger when the permits chain was skipped. That role is now
+filled by a **dedicated nightly GitHub Actions workflow invoking `backup-db.js` directly** (not
+the full chain) when `pipeline_runs` has no `completed` `backup_db` row within the last 25
+hours — the same OP4 threshold (§7). `pg_cron` is explicitly **forbidden** for this role: Spec
+113 §8.4 states plainly that a must-succeed job — `backup_db` is named as one of the four
+examples — must never be scheduled via `pg_cron`, because `pg_cron`/`pg_net` give no retry and
+no alert and silently skip execution when the database is unhealthy.
+</architecture>
+
+---
+
+<behavior>
+## 7. OP4 Re-homing (Spec 07 §OP4 — description only; NOT applied by this spec)
+
+Spec 07 §OP4 (`docs/specs/00-architecture/07_backend_prod_eval.md` L482-489) currently reads:
+
+```
+psql $DATABASE_URL -c \
+  "SELECT verdict, run_at FROM pipeline_runs \
+   WHERE step_name = 'backup_db' ORDER BY run_at DESC LIMIT 1;"
+```
+Pass: `verdict = completed`, `run_at` within last 25h (daily schedule).
+
+**This query is UNCHANGED and remains valid as written** (Spec 113 §9.3): `pipeline_runs.step_name
+= 'backup_db'` is populated identically by `backup-db.js` regardless of what storage the dump
+lands on — only the underlying destination changed, not the pipeline-run bookkeeping the check
+reads. The `psql` command block itself requires **no edit**.
+
+The required Spec 07 text update — a **separate task, not performed by this spec-authoring
+work** — is prose-only: replace the surrounding GCS/Cloud-Console references with the
+Supabase-managed-backup + off-Supabase-portable-dump language of §2 above, and update any
+`$DATABASE_URL` framing that currently implies a Cloud SQL connection string to reflect Spec 113
+§3's `SUPABASE_DATABASE_URL` naming. No file under `docs/specs/00-architecture/07_backend_prod_eval.md`
+is modified as part of this rewrite (see §12 Out-of-Scope Files).
+</behavior>
+
+---
+
+<behavior>
+## 8. Edge Cases
+
+- **Missing destination env var (`BACKUP_DEST_*`, name TBD Phase 3.3):** same shape as the
+  original `BACKUP_GCS_BUCKET`-missing case — `backup-db.js` emits a SKIP summary
+  (`records_meta.skipped: true`), exits 0, acquires no advisory lock, chain continues. Correct
+  behavior for local dev where the destination is not configured.
+- **`pg_dump` non-zero exit:** unchanged — error re-thrown inside the advisory-lock scope,
+  `pipeline.run` records `status='failed'`, destination upload never initiated.
+- **Upload/write failure mid-stream to the destination:** generalized from the original
+  GCS-specific stream handling — the partially written object/file is abandoned (not deleted);
+  the next successful run overwrites via a new timestamped name. Orphan cleanup is
+  destination-specific: a bucket lifecycle rule for Option A (external object storage), or an
+  explicit find-and-prune step for Option B (local/NAS) — decided alongside the Phase 3.3
+  destination choice (§2.1).
+- **Retention prune failure:** unchanged — caught separately, logged WARN, backup still
+  considered successful.
+- **Concurrent `backup-db.js` runs:** unchanged — advisory lock 112 serializes them; the second
   invocation emits a SKIP summary and exits 0.
-- **Non-integer `BACKUP_RETAIN_DAYS`:** Zod validation throws at startup with a clear message.
+- **Non-integer `BACKUP_RETAIN_DAYS`:** unchanged — Zod validation throws at startup.
+- **NEW — restore invoked against a non-empty target database:** `pg_restore`'s default behavior
+  against a target that already has conflicting objects can silently skip or error per-object.
+  `restore-db.js` MUST require the operator to state (via a flag, not inference) whether the
+  target is expected empty — the Phase 0.5/4.0 fresh-load pattern — or an in-place
+  disaster-recovery restore, which needs `--clean` or an explicit pre-restore `DROP SCHEMA` as a
+  separate, confirmed destructive step. Never inferred from the target's current state.
+- **NEW — baseline manifest missing or stale:** if a dump predates this rewrite (no
+  `.manifest.json` sidecar) or the sidecar is unreadable, `restore-db.js` MUST refuse to report a
+  gate PASS with nothing to diff against. It falls back to reporting raw restored-side counts
+  only, explicitly flagged `NO-BASELINE` — never silently upgraded to a PASS.
+</behavior>
 
 ---
 
-## 5. Operating Boundaries
+<failure_modes>
+## 9. Known Failure Modes
 
-### Target Files
-- `scripts/backup-db.js` — the backup script
-- `scripts/manifest.json` — script registry entry
-- `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §A.5 — lock ID 112 registration
-
-### Out-of-Scope Files
-- `src/app/api/` — no API trigger for backup; triggered daily via the permits chain (see §3 trigger note)
-- `migrations/` — no schema changes
-- Cloud Scheduler configuration — infrastructure provisioned outside this repo
-
-### Cross-Spec Dependencies
-- **Relies on:** `docs/specs/01-pipeline/47_pipeline_script_protocol.md` (script protocol)
-- **Relies on:** `docs/specs/01-pipeline/40_pipeline_system.md` (pipeline_runs, SDK contracts)
-- **Relies on:** `docs/specs/00-architecture/01_database_schema.md` (authoritative schema being backed up)
+- **`pg_restore` exit-0-past-errors default.** Plain `pg_restore`, invoked without
+  `--exit-on-error`, can complete with exit code 0 while individual statements inside the dump
+  failed (permission errors, already-exists conflicts, etc.), surfacing only stderr warnings a
+  naive caller ignores — a restore that "succeeded" by exit code while silently dropping data.
+  Guard: §4.3's mandatory `--single-transaction --exit-on-error`, or the stderr-gated wrapper
+  where that combination is not viable — either way, "no stderr output" is the pass condition,
+  not "exit code 0."
+- **Enabling PITR is not a free toggle.** Turning PITR on at the §3 revisit trigger is not a
+  superset upgrade of the daily-backup layer: on Supabase, enabling PITR can require bumping off
+  the smallest ("Small") compute tier, and a PITR-based restore is a **full-downtime** operation
+  (the project is unavailable during the restore), unlike a lightweight clone/snapshot flow.
+  Whoever flips D9 to ON at the revisit trigger must budget for both the compute-floor cost
+  increase and an announced maintenance window — not assume it is a same-day config change.
+- **Dump landing on-provider defeats the point of Layer 2.** If Phase 3.3 defaults the portable
+  destination to Supabase Storage — the path of least resistance, same dashboard, same billing —
+  the "portable" layer stops being portable: a Supabase-side outage or account incident then
+  affects Layer 1 and Layer 2 simultaneously, which is precisely the scenario Layer 2 exists to
+  guard against. Guard: §2.1 explicitly excludes Supabase Storage from the destination options;
+  this section exists so the Phase 3.3 implementer re-reads the constraint before optimizing for
+  convenience over the stated goal.
+- **Backup freshness silently stale past 25h.** If both the primary (permits chain) and
+  secondary (dedicated nightly workflow) GitHub Actions triggers fail silently — a GitHub
+  Actions platform outage, a rotated secret breaking auth to Supabase, or a runner IP falling off
+  an allowlist under whichever Network Restrictions option Phase 3.2 picks (Spec 113 §8.2) — the
+  only thing that surfaces the gap is OP4 (§7), which is a **manual** checklist item, not an
+  automated alert. Nothing pages anyone on a stale backup. This gap is carried over unchanged
+  from the original Cloud SQL/GCS design, not introduced here — flagged because the GitHub
+  Actions migration adds a new class of silent-failure cause (IP-allowlist drift, GH-side
+  secret/auth breakage) that Cloud Scheduler's failure surface did not have, without changing
+  the (still manual) detection story.
+</failure_modes>
 
 ---
 
-## 6. Producer / Consumer Contracts
+<testing>
+## 10. Testing Mandate
+<!-- TEST_INJECT_START -->
+- **Logic:** `src/tests/backup-db.logic.test.ts` — retire GCS-specific mocks, keep the same
+  behavioral coverage against the new destination abstraction: SKIP-on-missing-destination-env,
+  retention-prune-failure-is-WARN-not-FAIL, advisory-lock skip-on-concurrent-run, non-integer
+  `BACKUP_RETAIN_DAYS` Zod throw, baseline-manifest sidecar written alongside the dump. MUST be
+  rewritten in the same commit as `backup-db.js` itself (Phase 3.3) — not a follow-up.
+- **Infra (NEW):** `src/tests/restore-db.infra.test.ts` (needs a live target DB —
+  `BUILDO_TEST_DB=1`) — `--single-transaction --exit-on-error` failure propagation; stderr-gated
+  wrapper's "any stderr = fail" behavior; each G10-style gate's diff logic (row-count mismatch,
+  invalid-geom id-set mismatch vs count-only match, sequence lag detection, stale-matview
+  detect-and-refresh, sanity-audit-triple new-FAIL detection, `postgis_full_version()` mismatch
+  flagged); the `NO-BASELINE` fallback path when the manifest sidecar is absent.
+<!-- TEST_INJECT_END -->
+</testing>
 
-This script is an **Observer archetype** — it reads the DB via pg_dump (not SELECT queries)
-and writes only to GCS. It has no downstream consumers within the pipeline system.
+---
 
-`emitSummary` fields:
+<behavior>
+## 11. Producer / Consumer Contracts
+
+`backup-db.js` remains an **Observer archetype** (Spec 47 §12) — it reads the DB via `pg_dump`
+(not `SELECT` queries) and writes only to the destination + the baseline manifest sidecar. It
+has no downstream in-pipeline consumers.
+
+`emitSummary` fields (Layer 2, `backup-db.js`):
 | Field | Type | Meaning |
 |-------|------|---------|
 | `records_total` | null | Observer pattern — no row-level processing |
 | `records_new` | null | Observer pattern |
 | `records_updated` | null | Observer pattern |
 | `records_meta.backup_size_bytes` | number | Compressed dump file size |
-| `records_meta.gcs_path` | string | Full GCS URI of the backup object |
-| `records_meta.blobs_pruned` | number | Objects deleted by retention pruning |
+| `records_meta.dest_path` | string | Full destination URI/path of the backup object (replaces `gcs_path`) |
+| `records_meta.manifest_path` | string | Location of the `.manifest.json` gate-baseline sidecar (§4.2) |
+| `records_meta.blobs_pruned` | number | Objects/files deleted by retention pruning |
 | `records_meta.retain_days` | number | Effective retention window used |
-| `records_meta.audit_table` | object | Phase 112, verdict PASS/FAIL |
+| `records_meta.audit_table` | object | Phase 112, verdict PASS/FAIL/WARN |
+
+`restore-db.js` is **not** a Spec 47 pipeline step (§4.3) and does not emit `emitSummary`/
+`emitMeta` in the pipeline sense; its restore-validation report (§4.3 Output) is the analogous
+artifact for a standalone operator CLI.
+</behavior>
+
+---
+
+<constraints>
+## 12. Operating Boundaries
+
+### Target Files
+- `scripts/backup-db.js` — rewrite: destination + connection-string changes, GCS retirement,
+  baseline manifest sidecar (§4.2)
+- `scripts/restore-db.js` — **NEW** (§4.3)
+- `scripts/manifest.json` — `backup_db` step entry, L91 position (re-homing only — `step_name`
+  and chain position unchanged, per Spec 113 §9.3)
+- `src/tests/backup-db.logic.test.ts` — rewrite, same commit as `scripts/backup-db.js`
+- `src/tests/restore-db.infra.test.ts` — **NEW**, same commit as `scripts/restore-db.js`
+- `.github/workflows/` — new nightly permits-chain workflow + secondary backup-only safety-net
+  workflow (Spec 113 §8.1/§8.2; this spec does not own the workflow YAML content, only the
+  trigger semantics described in §6)
+- `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §A.5 — lock ID 112 registration
+  (unchanged — still the spec-number default, still globally unique)
+
+### Out-of-Scope Files
+- `docs/specs/00-architecture/07_backend_prod_eval.md` §OP4 — the text update described in §7 is
+  a **separate task**; this rewrite does not modify Spec 07.
+- `docs/specs/00-architecture/113_supabase_infrastructure.md` — this spec implements §9's
+  policy; it does not restate or amend the policy layer itself. Any apparent conflict resolves
+  in favor of Spec 113.
+- `src/app/api/` — no API trigger for backup or restore; both remain script-level,
+  operator/chain-triggered.
+- `migrations/` — no schema changes.
+- Cloud Scheduler / `gcloud` configuration — retired outright, not migrated. Supabase-side
+  configuration is dashboard/Management-API driven (§4.1) plus GitHub Actions (§6), not a
+  repo-tracked infra-as-code surface this spec owns.
+
+### Cross-Spec Dependencies
+- **Relies on:** `docs/specs/00-architecture/113_supabase_infrastructure.md` §9 (the backup
+  policy this spec implements: PITR-off decision, two-layer split, restore-tooling requirement,
+  OP4 re-homing scope), §3 (env/key contract), §4 (TLS/CA-pinning rules applied here in libpq
+  terms), §8 (scheduling — GitHub Actions compute backend, `pg_cron` prohibition for must-succeed
+  jobs), §12 (dev-workflow coexistence — the three-PostgreSQL-version window §5 depends on), §13
+  (GEOS-version geometry drift — the invalid-geom id-set diff gate in §4.3 exists because of it).
+- **Relies on:** `docs/specs/01-pipeline/47_pipeline_script_protocol.md` (script protocol —
+  `backup-db.js` keeps its §R1–R12 skeleton; `restore-db.js` is deliberately outside that
+  skeleton, per §4.3's `migrate.js`-precedent rationale).
+- **Relies on:** `docs/specs/00-architecture/01_database_schema.md` (the schema being backed up
+  and restored).
+- **Relies on:** `.cursor/active_task.md` (Decision D9, Ground truth G8/G10 — the program-plan
+  authority this rewrite executes against).
+- **Consumed by:** `docs/specs/00-architecture/07_backend_prod_eval.md` §OP4 (reads
+  `pipeline_runs.step_name = 'backup_db'`, unchanged query, §7).
+</constraints>
