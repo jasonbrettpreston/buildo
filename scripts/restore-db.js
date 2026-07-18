@@ -44,6 +44,20 @@
  *   --skip-gates             don't run the G10 gate suite after a successful restore.
  *   --verify-only             run the G10 gate suite only — no dump, no restore, no truncate.
  *
+ * PRECONDITION — non-empty target (cloud / Phase 4.0 runs), Spec 112 §8 edge case:
+ * TRUNCATE runs BEFORE pg_restore, not inside the same `--single-transaction` scope as the
+ * restore itself — so `--single-transaction` protects the RESTORE step's atomicity, it does
+ * NOT make the whole TRUNCATE-then-restore sequence undoable. A mid-run infra failure (killed
+ * process, lost connection, host reboot) between TRUNCATE and a completed pg_restore leaves the
+ * target truncated, not rolled back to its pre-run state. The TOC preflight (below) removes the
+ * *wrong-dump* failure class (refusing to truncate tables the dump can't actually restore) but
+ * does NOT remove the *infra-failure-mid-restore* class. For any target whose current data
+ * cannot be regenerated (an irreplaceable cloud database — this is never true of the Phase 0.5
+ * local-stack load, which is always re-run fresh from Docker per D13), the operator MUST take a
+ * target-side safety dump (e.g. `pg_dump` of the target itself) before invoking this script with
+ * `--mode=fresh` — restore-db.js does not do this automatically, and this is the operator
+ * mitigation for that residual gap.
+ *
  * SPEC LINK: docs/specs/00-architecture/112_backup_recovery.md §4.3
  * SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §5, §9.2, §13
  * SPEC LINK: .cursor/active_task.md (Phase 0.5, Ground truth G10)
@@ -270,6 +284,83 @@ function buildPgRestoreArgs({ dumpPath, targetConnectionString }) {
   ];
 }
 
+/** Strip a single matching pair of double quotes, the only quoting `pg_restore --list` uses for identifiers needing it. */
+function unquoteTocIdent(s) {
+  if (s.length >= 2 && s[0] === '"' && s[s.length - 1] === '"') return s.slice(1, -1);
+  return s;
+}
+
+/**
+ * TOC preflight (Spec 112 §4.3, the CRITICAL gate) — pure parse of
+ * `pg_restore --list <dump>` output into the set of tables the dump can
+ * actually restore. Extracted as a pure function (no spawn) so
+ * src/tests/restore-db.infra.test.ts can feed it real `pg_restore --list`
+ * output and src/tests/restore-db.logic.test.ts can feed it synthetic
+ * fixtures without spawning a process.
+ *
+ * A `TABLE DATA` TOC line has the shape:
+ *   <dumpId>; <catalog-oid> <oid> TABLE DATA <schema> <table> <owner>
+ * e.g. `3312; 0 16463 TABLE DATA public trades postgres`. Schema/table are
+ * occasionally double-quoted by pg_restore (mixed-case or reserved-word
+ * identifiers) — unquoted before being added to the set.
+ *
+ * @param {string} listOutput - raw stdout of `pg_restore --list <dump>`
+ * @returns {Set<string>} lowercase `schema.table` strings covered by TABLE DATA entries
+ */
+function parseTocTables(listOutput) {
+  const tables = new Set();
+  const lines = (listOutput || '').split('\n');
+  const tocLineRe = /^\d+;\s+\d+\s+\d+\s+TABLE DATA\s+(\S+)\s+(\S+)\s+\S+\s*$/;
+  for (const line of lines) {
+    const m = line.match(tocLineRe);
+    if (!m) continue;
+    const schema = unquoteTocIdent(m[1]);
+    const table = unquoteTocIdent(m[2]);
+    tables.add(`${schema}.${table}`.toLowerCase());
+  }
+  return tables;
+}
+
+/**
+ * Spec 112 §4.3 TOC preflight rule: FAIL (nothing truncated) unless every
+ * table about to be truncated is covered by the dump's TOC ∩ scope. Assumes
+ * `public` schema (this script's TRUNCATE/pg_dump `--table` args are always
+ * `public.<table>`, per `buildTruncateSql`/`buildPgDumpArgs`).
+ *
+ * @param {Set<string>} tocTables - output of parseTocTables
+ * @param {string[]} scopedTables - bare table names about to be truncated+restored
+ * @returns {{ covered: boolean, missing: string[] }}
+ */
+function checkTocCoversScope(tocTables, scopedTables) {
+  const missing = scopedTables.filter((t) => !tocTables.has(`public.${t}`.toLowerCase()));
+  return { covered: missing.length === 0, missing };
+}
+
+/**
+ * §1a/§1b cleanup-pathing decision — pure, no fs access. Decides WHICH of
+ * the three dump-path modes a given parsed-args object selects, and whether
+ * the eventual mkdtemp() directory this run creates (if any) is temp/
+ * deletable. Extracted so the branch logic is unit-testable without a real
+ * filesystem: `run()` calls this once, then does the actual `mkdtempSync`
+ * itself only for the `'temp'` mode.
+ *
+ * - `'existing'` — operator supplied --dump=<path>. NEVER temp — this path
+ *   is never created or deleted by this script, regardless of --keep-dump.
+ * - `'explicit-out'` — operator supplied --dump-out=<path> (no --dump=).
+ *   NEVER temp — an explicit output location is not auto-cleaned, mirroring
+ *   the "existing" case's never-delete-a-named-path rule.
+ * - `'temp'` — neither given: this run creates its own private mkdtemp()
+ *   directory. Deletable (`dumpIsTemp: true`) unless --keep-dump was passed.
+ *
+ * @param {{ dumpPath: string|null, dumpOut: string|null, keepDump: boolean }} args
+ * @returns {{ mode: 'existing'|'explicit-out'|'temp', dumpIsTemp: boolean }}
+ */
+function decideDumpPlan(args) {
+  if (args.dumpPath) return { mode: 'existing', dumpIsTemp: false };
+  if (args.dumpOut) return { mode: 'explicit-out', dumpIsTemp: false };
+  return { mode: 'temp', dumpIsTemp: !args.keepDump };
+}
+
 // ---------------------------------------------------------------------------
 // I/O helpers
 // ---------------------------------------------------------------------------
@@ -348,81 +439,128 @@ async function run() {
 
     const targetConnectionString = gates.resolveTargetConnectionString(args.target);
 
+    // §1a — a private mkdtemp() directory, not a predictable os.tmpdir() file
+    // path, is where the auto-generated dump is written: mkdtemp's 0700-mode,
+    // uniquely-named directory defeats the TOCTOU/symlink race a shared,
+    // guessable tmpdir path is exposed to (a concurrent process — or an
+    // attacker — pre-creating/symlinking the exact predictable filename
+    // between "path computed" and "pg_dump opens it for write"). Only created
+    // when we're generating a fresh dump ourselves (no --dump=, no
+    // --dump-out=); a user-supplied --dump= path is NEVER touched by this
+    // directory or the cleanup below.
+    const dumpPlan = decideDumpPlan(args);
     let dumpPath = args.dumpPath;
-    let dumpIsTemp = false;
-    if (!dumpPath) {
-      dumpPath = args.dumpOut || path.join(os.tmpdir(), `buildo-restore-${Date.now()}.dump`);
-      dumpIsTemp = !args.dumpOut && !args.keepDump;
+    let dumpTempDir = null;
+    const dumpIsTemp = dumpPlan.dumpIsTemp;
 
-      const sourceConn = {
-        host: process.env.PG_HOST || 'localhost',
-        port: parseInt(process.env.PG_PORT || '5432', 10),
-        user: process.env.PG_USER || 'postgres',
-        database: process.env.PG_DATABASE || 'buildo',
-      };
-      // Spec 112 §4.2 — pg_dump/pg_restore don't go through ssl-config.js's
-      // pg-Pool-shaped return value; TLS is negotiated via PGSSLMODE/PGSSLROOTCERT
-      // env vars passed to the spawned process. Source here is always the
-      // Docker dev DB (loopback), so no TLS is needed.
-      const dumpEnv = { PGPASSWORD: process.env.PG_PASSWORD || 'postgres' };
-      if (!isLocalMode({ host: sourceConn.host })) {
-        throw new Error('restore-db.js only supports a loopback SOURCE (Docker dev DB) in Phase 0.5 tooling.');
+    try {
+      if (dumpPlan.mode !== 'existing') {
+        if (dumpPlan.mode === 'explicit-out') {
+          dumpPath = args.dumpOut;
+        } else {
+          dumpTempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'buildo-restore-'));
+          dumpPath = path.join(dumpTempDir, 'source.dump');
+        }
+
+        const sourceConn = {
+          host: process.env.PG_HOST || 'localhost',
+          port: parseInt(process.env.PG_PORT || '5432', 10),
+          user: process.env.PG_USER || 'postgres',
+          database: process.env.PG_DATABASE || 'buildo',
+        };
+        // Spec 112 §4.2 — pg_dump/pg_restore don't go through ssl-config.js's
+        // pg-Pool-shaped return value; TLS is negotiated via PGSSLMODE/PGSSLROOTCERT
+        // env vars passed to the spawned process. Source here is always the
+        // Docker dev DB (loopback), so no TLS is needed.
+        const dumpEnv = { PGPASSWORD: process.env.PG_PASSWORD || 'postgres' };
+        if (!isLocalMode({ host: sourceConn.host })) {
+          throw new Error('restore-db.js only supports a loopback SOURCE (Docker dev DB) in Phase 0.5 tooling.');
+        }
+
+        console.log(`[restore-db] pg_dump --data-only -> ${dumpPath} (${tables.length} tables)`);
+        const dumpResult = await spawnCapture(
+          'pg_dump',
+          buildPgDumpArgs({ tables, outFile: dumpPath, source: sourceConn }),
+          dumpEnv
+        );
+        const dumpGate = stderrGateDecision(dumpResult);
+        if (!dumpGate.pass) {
+          throw new Error(`[restore-db] pg_dump FAILED: ${dumpGate.reason}\nstderr:\n${dumpResult.stderr}`);
+        }
+        console.log('[restore-db] pg_dump OK (no stderr)');
+      } else {
+        console.log(`[restore-db] using existing dump: ${dumpPath}`);
       }
 
-      console.log(`[restore-db] pg_dump --data-only -> ${dumpPath} (${tables.length} tables)`);
-      const dumpResult = await spawnCapture(
-        'pg_dump',
-        buildPgDumpArgs({ tables, outFile: dumpPath, source: sourceConn }),
-        dumpEnv
+      // §1c — TOC preflight (Spec 112 §4.3, the CRITICAL gate). Runs for
+      // BOTH a freshly generated dump AND an operator-supplied --dump=,
+      // and — this is the point — strictly BEFORE any TRUNCATE. A dump
+      // that can't actually restore every table this run is about to wipe
+      // must never be allowed to wipe them anyway.
+      console.log('[restore-db] pg_restore --list (TOC preflight)');
+      const listResult = await spawnCapture('pg_restore', ['--list', dumpPath]);
+      if (listResult.exitCode !== 0) {
+        throw new Error(
+          `[restore-db] pg_restore --list FAILED (exit ${listResult.exitCode}) — cannot verify TOC ` +
+            `coverage, refusing to proceed. Nothing was truncated.\n${listResult.stderr || listResult.stdout}`
+        );
+      }
+      const tocTables = parseTocTables(listResult.stdout);
+      const tocCheck = checkTocCoversScope(tocTables, tables);
+      if (!tocCheck.covered) {
+        throw new Error(
+          `[restore-db] TOC preflight FAILED (Spec 112 §4.3) — dump has no TABLE DATA entry for: ` +
+            `${tocCheck.missing.join(', ')}. Refusing to TRUNCATE target tables this dump cannot ` +
+            `restore. Nothing was truncated. (dump=${dumpPath})`
+        );
+      }
+      console.log(`[restore-db] TOC preflight OK — dump covers all ${tables.length} scoped table(s)`);
+
+      // CASCADE only for a full-scope run (every eligible table truncated+
+      // reloaded together — see buildTruncateSql's doc comment for why a
+      // --tables-scoped run must NOT cascade into out-of-scope dependents).
+      const isFullRun = !args.tables;
+      console.log(
+        `[restore-db] TRUNCATE ${tables.length} target table(s) before restore ` +
+          `(idempotent re-run, D13; cascade=${isFullRun})`
       );
-      const dumpGate = stderrGateDecision(dumpResult);
-      if (!dumpGate.pass) {
-        throw new Error(`[restore-db] pg_dump FAILED: ${dumpGate.reason}\nstderr:\n${dumpResult.stderr}`);
+      await truncateTargetTables(targetPool, tables, { cascade: isFullRun });
+
+      const restoreEnv = {};
+      if (!isLocalMode({ connectionString: targetConnectionString })) {
+        const caCertPath = process.env.SUPABASE_CA_CERT_PATH;
+        if (!caCertPath) {
+          throw new Error('SUPABASE_CA_CERT_PATH is not set — required for a non-loopback (cloud) restore target (Spec 113 §4).');
+        }
+        restoreEnv.PGSSLMODE = 'verify-full';
+        restoreEnv.PGSSLROOTCERT = caCertPath;
       }
-      console.log('[restore-db] pg_dump OK (no stderr)');
-    } else {
-      console.log(`[restore-db] using existing dump: ${dumpPath}`);
-    }
 
-    // CASCADE only for a full-scope run (every eligible table truncated+
-    // reloaded together — see buildTruncateSql's doc comment for why a
-    // --tables-scoped run must NOT cascade into out-of-scope dependents).
-    const isFullRun = !args.tables;
-    console.log(
-      `[restore-db] TRUNCATE ${tables.length} target table(s) before restore ` +
-        `(idempotent re-run, D13; cascade=${isFullRun})`
-    );
-    await truncateTargetTables(targetPool, tables, { cascade: isFullRun });
-
-    const restoreEnv = {};
-    if (!isLocalMode({ connectionString: targetConnectionString })) {
-      const caCertPath = process.env.SUPABASE_CA_CERT_PATH;
-      if (!caCertPath) {
-        throw new Error('SUPABASE_CA_CERT_PATH is not set — required for a non-loopback (cloud) restore target (Spec 113 §4).');
+      console.log('[restore-db] pg_restore --single-transaction --exit-on-error');
+      const restoreResult = await spawnCapture(
+        'pg_restore',
+        buildPgRestoreArgs({ dumpPath, targetConnectionString }),
+        restoreEnv
+      );
+      const restoreGate = stderrGateDecision(restoreResult);
+      if (!restoreGate.pass) {
+        // --single-transaction means the DB itself already rolled back on error;
+        // nothing further to undo here.
+        throw new Error(`[restore-db] pg_restore FAILED: ${restoreGate.reason}\nstderr:\n${restoreResult.stderr}`);
       }
-      restoreEnv.PGSSLMODE = 'verify-full';
-      restoreEnv.PGSSLROOTCERT = caCertPath;
-    }
-
-    console.log('[restore-db] pg_restore --single-transaction --exit-on-error');
-    const restoreResult = await spawnCapture(
-      'pg_restore',
-      buildPgRestoreArgs({ dumpPath, targetConnectionString }),
-      restoreEnv
-    );
-    const restoreGate = stderrGateDecision(restoreResult);
-    if (!restoreGate.pass) {
-      // --single-transaction means the DB itself already rolled back on error;
-      // nothing further to undo here.
-      throw new Error(`[restore-db] pg_restore FAILED: ${restoreGate.reason}\nstderr:\n${restoreResult.stderr}`);
-    }
-    console.log('[restore-db] pg_restore OK (no stderr) — restore committed');
-
-    if (dumpIsTemp) {
-      try {
-        fs.unlinkSync(dumpPath);
-      } catch (err) {
-        console.warn(`[restore-db] could not remove temp dump file ${dumpPath}: ${err.message}`);
+      console.log('[restore-db] pg_restore OK (no stderr) — restore committed');
+    } finally {
+      // §1b — cleanup runs on EVERY path out of the block above: success,
+      // pg_dump failure, TOC-preflight failure, truncate failure, or
+      // pg_restore failure. Only removes a directory THIS run created
+      // (dumpTempDir is null for both an operator --dump= and an explicit
+      // --dump-out=) and only when the operator didn't ask to --keep-dump.
+      if (dumpTempDir && dumpIsTemp) {
+        try {
+          fs.rmSync(dumpTempDir, { recursive: true, force: true });
+        } catch (err) {
+          console.warn(`[restore-db] could not remove temp dump dir ${dumpTempDir}: ${err.message}`);
+        }
       }
     }
 
@@ -458,6 +596,10 @@ module.exports = {
   buildTruncateSql,
   buildPgDumpArgs,
   buildPgRestoreArgs,
+  unquoteTocIdent,
+  parseTocTables,
+  checkTocCoversScope,
+  decideDumpPlan,
   spawnCapture,
   checkClientVersion,
   truncateTargetTables,

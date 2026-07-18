@@ -13,12 +13,15 @@
  *       not a pass — Spec 113 §13 GEOS-version drift)
  *   (c) sequence last_value comparison (pg_depend-derived ownership, not a
  *       `<table>_id_seq` naming-convention guess)
- *   (d) mv_monthly_permit_stats row count; REFRESH + note if target is stale
- *       (matviews are NOT populated by a data-only restore)
+ *   (d) mv_monthly_permit_stats row count; ALWAYS REFRESH before comparing,
+ *       not just when empty (matviews are NOT populated by a data-only
+ *       restore, and a non-empty-but-stale matview is a false pass otherwise)
  *   (e) postgis_full_version() recorded both sides
  *   (f) exact pinned-baseline assertions (G10: parcels/permits/coa/footprints)
  *   (g) double-precision epsilon check for parcels.ravine_distance_m on a
- *       1000-row keyed sample (relative epsilon 1e-9)
+ *       1000-row keyed sample (relative epsilon 1e-9); a source-populated/
+ *       target-null (or vice versa) mismatch is reported explicitly as a
+ *       `nullMismatch`, distinct from a genuinely missing id
  *
  * Every gate is scope-aware: when `restore-db.js --tables=t1,t2` loads only a
  * subset (e.g. the Phase 0.5 smoke test), gates whose table isn't in scope
@@ -182,6 +185,17 @@ function checkBaselineAssertions(counts, scopedTables) {
  * float rule for the 0.5 gate). Rows are `{ id, value }` keyed on the same PK
  * both sides (a data-only restore never renumbers PKs).
  *
+ * Null handling: a row present on both sides with `value: null` on both is
+ * fine (nothing to compare, not a failure). A row where exactly ONE side is
+ * null — source populated but target null, or vice versa — is a
+ * `nullMismatch`: a genuine drift signal (the value did not survive whatever
+ * produced the target side) that must be reported explicitly rather than
+ * folded into `missingKeys` (a different failure mode: the id itself absent
+ * from the target sample) or silently treated as a 0-vs-value numeric diff
+ * (which the old `value ?? 0` coalescing did — masking a null as a real
+ * epsilon-scale value of exactly 0, passing by coincidence unless the other
+ * side was also near 0).
+ *
  * @param {{id: number, value: number|null}[]} sourceRows
  * @param {{id: number, value: number|null}[]} targetRows
  * @param {{ relEpsilon?: number }} [opts]
@@ -194,13 +208,21 @@ function compareRavineEpsilonSample(sourceRows, targetRows, opts = {}) {
   let targetSum = 0;
   let maxAbsDiff = 0;
   const missingKeys = [];
+  const nullMismatches = [];
   for (const { id, value } of sourceRows) {
     if (!targetMap.has(id)) {
       missingKeys.push(id);
       continue;
     }
     const targetValue = targetMap.get(id);
+    const sourceIsNull = value === null || value === undefined;
+    const targetIsNull = targetValue === null || targetValue === undefined;
+    if (sourceIsNull !== targetIsNull) {
+      nullMismatches.push({ id, source: value, target: targetValue });
+      continue;
+    }
     count += 1;
+    if (sourceIsNull && targetIsNull) continue; // both null — matched, nothing numeric to compare
     sourceSum += value ?? 0;
     targetSum += targetValue ?? 0;
     const absDiff = Math.abs((value ?? 0) - (targetValue ?? 0));
@@ -208,7 +230,8 @@ function compareRavineEpsilonSample(sourceRows, targetRows, opts = {}) {
   }
   const sumAbsDiff = Math.abs(sourceSum - targetSum);
   const sumRelDiff = sourceSum !== 0 ? sumAbsDiff / Math.abs(sourceSum) : sumAbsDiff;
-  const status = missingKeys.length === 0 && sumRelDiff <= relEpsilon ? 'PASS' : 'FAIL';
+  const status =
+    missingKeys.length === 0 && nullMismatches.length === 0 && sumRelDiff <= relEpsilon ? 'PASS' : 'FAIL';
   return {
     status,
     count,
@@ -218,6 +241,7 @@ function compareRavineEpsilonSample(sourceRows, targetRows, opts = {}) {
     sumRelDiff,
     maxAbsDiff,
     missingKeys,
+    nullMismatches,
     relEpsilon,
   };
 }
@@ -296,6 +320,7 @@ async function getPostgisVersion(pool) {
   return res.rows[0].v;
 }
 
+/** SOURCE sample — the population of interest (rows source claims a ravine value for). */
 async function getRavineSample(pool, sampleSize = RAVINE_EPSILON_SAMPLE_SIZE) {
   const res = await pool.query(
     `SELECT id, ravine_distance_m AS value FROM public.parcels
@@ -303,6 +328,31 @@ async function getRavineSample(pool, sampleSize = RAVINE_EPSILON_SAMPLE_SIZE) {
     [sampleSize]
   );
   return res.rows.map((r) => ({ id: r.id, value: r.value === null ? null : Number(r.value) }));
+}
+
+/**
+ * TARGET sample for a fixed id list — deliberately NOT filtered by
+ * `IS NOT NULL` (unlike getRavineSample). Fetching the target's value for
+ * exactly the SOURCE's non-null-sample ids, whatever that value is (real
+ * number or null), is what lets compareRavineEpsilonSample detect a
+ * source-populated/target-null XOR mismatch — the old design queried both
+ * sides independently with the same `IS NOT NULL` filter, so a value that
+ * went missing on the target (restore/computation dropped it) never showed
+ * up in the target's own sample at all and was folded into the generic
+ * `missingKeys` bucket instead of being flagged as the null-drift it is. An
+ * id absent from the target table entirely also resolves to `value: null`
+ * here (same observable outcome — the value did not survive).
+ * @param {import('pg').Pool} pool
+ * @param {number[]} ids
+ */
+async function getRavineSampleForIds(pool, ids) {
+  if (!ids || ids.length === 0) return [];
+  const res = await pool.query(
+    `SELECT id, ravine_distance_m AS value FROM public.parcels WHERE id = ANY($1::int[])`,
+    [ids]
+  );
+  const byId = new Map(res.rows.map((r) => [r.id, r.value === null ? null : Number(r.value)]));
+  return ids.map((id) => ({ id, value: byId.has(id) ? byId.get(id) : null }));
 }
 
 // ---------------------------------------------------------------------------
@@ -408,13 +458,15 @@ async function runAllGates({ sourcePool, targetPool, tables }) {
   // whenever `permits` (its backing data) is in scope.
   const matviewName = 'mv_monthly_permit_stats';
   if (scopedSet.has('permits')) {
-    let targetMvCount = await getMatviewCount(targetPool, matviewName);
-    let refreshed = false;
-    if (targetMvCount === 0) {
-      await refreshMatview(targetPool, matviewName);
-      targetMvCount = await getMatviewCount(targetPool, matviewName);
-      refreshed = true;
-    }
+    // ALWAYS refresh before comparing (Spec 112 §4.3 matview verify-or-
+    // refresh gate) — an empty-only refresh (the old behavior) compares
+    // STALE contents whenever the target matview is non-empty but outdated:
+    // e.g. a --tables-scoped restore that reloaded `permits` without
+    // touching the matview leaves row-count>0 but content stale relative to
+    // the freshly restored base data, and the old `if (targetMvCount === 0)`
+    // guard would silently accept that stale snapshot as a pass.
+    await refreshMatview(targetPool, matviewName);
+    const targetMvCount = await getMatviewCount(targetPool, matviewName);
     // Ground truth is the SOURCE's LIVE defining query, not its stored
     // snapshot: the source matview may be stale relative to its base tables
     // (2026-07-18 first full load: snapshot 4,190 vs live 4,239 — the target,
@@ -440,9 +492,7 @@ async function runAllGates({ sourcePool, targetPool, tables }) {
         ...(sourceSnapshot !== sourceLive
           ? { note: 'source matview snapshot is stale vs its live defining query — comparison uses LIVE' }
           : {}),
-        ...(refreshed
-          ? { refreshed: 'target matview was empty (data-only restore does not populate matviews) — REFRESH MATERIALIZED VIEW run before comparison' }
-          : {}),
+        refreshed: 'target matview REFRESH MATERIALIZED VIEW run before comparison (always, not just when empty — Spec 112 §4.3)',
       },
     });
   } else {
@@ -470,10 +520,13 @@ async function runAllGates({ sourcePool, targetPool, tables }) {
 
   // (g) ravine_distance_m double-precision epsilon check
   if (scopedSet.has('parcels')) {
-    const [sourceSample, targetSample] = await Promise.all([
-      getRavineSample(sourcePool),
-      getRavineSample(targetPool),
-    ]);
+    // SOURCE sample anchors the population (its non-null ravine rows); the
+    // TARGET side is fetched for those SAME ids, unfiltered, so a value that
+    // went null on the target is visible as a null-mismatch rather than
+    // silently disappearing into a same-shaped "missing" bucket (see
+    // getRavineSampleForIds's doc comment).
+    const sourceSample = await getRavineSample(sourcePool);
+    const targetSample = await getRavineSampleForIds(targetPool, sourceSample.map((r) => r.id));
     const epsilonResult = compareRavineEpsilonSample(sourceSample, targetSample);
     rows.push({
       gate: 'ravine_distance_m_epsilon',
@@ -481,7 +534,12 @@ async function runAllGates({ sourcePool, targetPool, tables }) {
       source: epsilonResult.sourceSum,
       target: epsilonResult.targetSum,
       status: epsilonResult.status,
-      detail: { sumRelDiff: epsilonResult.sumRelDiff, maxAbsDiff: epsilonResult.maxAbsDiff, missingKeys: epsilonResult.missingKeys.length },
+      detail: {
+        sumRelDiff: epsilonResult.sumRelDiff,
+        maxAbsDiff: epsilonResult.maxAbsDiff,
+        missingKeys: epsilonResult.missingKeys.length,
+        nullMismatches: epsilonResult.nullMismatches,
+      },
     });
   } else {
     rows.push({ gate: 'ravine_distance_m_epsilon', metric: 'sample', source: null, target: null, status: 'SKIP' });
@@ -589,6 +647,7 @@ module.exports = {
   refreshMatview,
   getPostgisVersion,
   getRavineSample,
+  getRavineSampleForIds,
   resolveSourcePool,
   resolveTargetConnectionString,
   resolveTargetPool,

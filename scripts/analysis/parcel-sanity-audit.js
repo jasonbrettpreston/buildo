@@ -152,7 +152,7 @@ async function runSanity(pool, { samples = false } = {}) {
     const base = `count(*) FILTER (WHERE (${c.applies}) AND (${bad}))::int AS "v_${c.id}",
      count(*) FILTER (WHERE ${c.applies})::int AS "p_${c.id}"`;
     return samples
-      ? `${base},\n     (array_agg(id) FILTER (WHERE (${c.applies}) AND (${bad})))[1:6] AS "s_${c.id}"`
+      ? `${base},\n     (array_agg(id ORDER BY id) FILTER (WHERE (${c.applies}) AND (${bad})))[1:6] AS "s_${c.id}"`
       : base;
   }).join(',\n');
   const row = (await pool.query(`SELECT count(*)::int AS total,\n${cols}\nFROM parcels WHERE ${RES}`)).rows[0];

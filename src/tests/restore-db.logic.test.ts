@@ -24,6 +24,13 @@ const restoreDb = require('../../scripts/restore-db.js') as {
   buildTruncateSql: (tables: string[], opts?: { cascade: boolean }) => string | null;
   buildPgDumpArgs: (a: { tables: string[]; outFile: string; source: { host: string; port: number; user: string; database: string } }) => string[];
   buildPgRestoreArgs: (a: { dumpPath: string; targetConnectionString: string }) => string[];
+  unquoteTocIdent: (s: string) => string;
+  parseTocTables: (listOutput: string) => Set<string>;
+  checkTocCoversScope: (tocTables: Set<string>, scopedTables: string[]) => { covered: boolean; missing: string[] };
+  decideDumpPlan: (a: { dumpPath: string | null; dumpOut: string | null; keepDump: boolean }) => {
+    mode: 'existing' | 'explicit-out' | 'temp';
+    dumpIsTemp: boolean;
+  };
   MIN_CLIENT_MAJOR: number;
 };
 
@@ -50,7 +57,16 @@ const gates = require('../../scripts/validation/supabase-load-gates.js') as {
     a: { id: number; value: number | null }[],
     b: { id: number; value: number | null }[],
     opts?: { relEpsilon?: number }
-  ) => { status: string; count: number; sumRelDiff: number; maxAbsDiff: number; missingKeys: number[] };
+  ) => {
+    status: string;
+    count: number;
+    sourceSum: number;
+    targetSum: number;
+    sumRelDiff: number;
+    maxAbsDiff: number;
+    missingKeys: number[];
+    nullMismatches: { id: number; source: number | null; target: number | null }[];
+  };
   rollUpVerdict: (rows: { status: string }[]) => string;
   G10_ROW_COUNT_BASELINE: Record<string, number>;
   G10_INVALID_GEOM_EXPECTED_COUNT: Record<string, number>;
@@ -231,6 +247,97 @@ describe('restore-db.js — buildPgDumpArgs / buildPgRestoreArgs', () => {
   });
 });
 
+describe('restore-db.js — parseTocTables / checkTocCoversScope (Spec 112 §4.3 TOC preflight, the CRITICAL gate)', () => {
+  const SAMPLE_LIST_OUTPUT = `;
+; Archive created at 2026-07-18 12:00:00 UTC
+;     dbname: buildo
+;     TOC Entries: 4
+;     Format: CUSTOM
+;
+;
+; Selected TOC Entries:
+;
+3; 2615 12345 SCHEMA - public postgres
+181; 0 16400 TABLE DATA public parcels postgres
+182; 0 16410 TABLE DATA public permits postgres
+183; 0 16420 TABLE DATA public "Trades" postgres
+`;
+
+  it('parses TABLE DATA lines into a lowercase schema.table set, ignoring non-TABLE-DATA TOC lines', () => {
+    const toc = restoreDb.parseTocTables(SAMPLE_LIST_OUTPUT);
+    expect(toc.has('public.parcels')).toBe(true);
+    expect(toc.has('public.permits')).toBe(true);
+    expect(toc.size).toBe(3);
+  });
+
+  it('unquotes a double-quoted identifier (mixed-case table name)', () => {
+    const toc = restoreDb.parseTocTables(SAMPLE_LIST_OUTPUT);
+    expect(toc.has('public.trades')).toBe(true); // "Trades" -> trades (lowercased)
+  });
+
+  it('returns an empty set for empty/garbage input rather than throwing', () => {
+    expect(restoreDb.parseTocTables('').size).toBe(0);
+    expect(restoreDb.parseTocTables('not a toc listing at all').size).toBe(0);
+  });
+
+  it('checkTocCoversScope: covered=true when every scoped table has a TABLE DATA entry', () => {
+    const toc = restoreDb.parseTocTables(SAMPLE_LIST_OUTPUT);
+    const result = restoreDb.checkTocCoversScope(toc, ['parcels', 'permits']);
+    expect(result.covered).toBe(true);
+    expect(result.missing).toEqual([]);
+  });
+
+  it('checkTocCoversScope: covered=false and reports EVERY missing table when the dump is a crafted minimal subset (the exact CRITICAL scenario)', () => {
+    const toc = restoreDb.parseTocTables(SAMPLE_LIST_OUTPUT); // has parcels, permits, trades only
+    const result = restoreDb.checkTocCoversScope(toc, ['parcels', 'trade_products', 'lead_trades']);
+    expect(result.covered).toBe(false);
+    expect(result.missing).toEqual(['trade_products', 'lead_trades']);
+  });
+
+  it('checkTocCoversScope against a TOC with zero TABLE DATA entries (e.g. a schema-only dump) refuses everything', () => {
+    const schemaOnlyToc = restoreDb.parseTocTables('3; 2615 12345 SCHEMA - public postgres\n');
+    const result = restoreDb.checkTocCoversScope(schemaOnlyToc, ['parcels']);
+    expect(result.covered).toBe(false);
+    expect(result.missing).toEqual(['parcels']);
+  });
+});
+
+describe('restore-db.js — decideDumpPlan (§1a/§1b cleanup-pathing decision — never delete a user-supplied --dump=)', () => {
+  it('defaults (no --dump, no --dump-out, no --keep-dump) -> temp mode, deletable', () => {
+    const plan = restoreDb.decideDumpPlan({ dumpPath: null, dumpOut: null, keepDump: false });
+    expect(plan).toEqual({ mode: 'temp', dumpIsTemp: true });
+  });
+
+  it('--keep-dump with no explicit path -> still temp mode, but NOT deletable', () => {
+    const plan = restoreDb.decideDumpPlan({ dumpPath: null, dumpOut: null, keepDump: true });
+    expect(plan).toEqual({ mode: 'temp', dumpIsTemp: false });
+  });
+
+  it('--dump-out=<path> -> explicit-out mode, never deletable (regardless of --keep-dump)', () => {
+    expect(restoreDb.decideDumpPlan({ dumpPath: null, dumpOut: '/tmp/mine.dump', keepDump: false })).toEqual({
+      mode: 'explicit-out',
+      dumpIsTemp: false,
+    });
+    expect(restoreDb.decideDumpPlan({ dumpPath: null, dumpOut: '/tmp/mine.dump', keepDump: true })).toEqual({
+      mode: 'explicit-out',
+      dumpIsTemp: false,
+    });
+  });
+
+  it('--dump=<path> -> existing mode, NEVER deletable — a user-supplied dump is never touched by cleanup', () => {
+    expect(restoreDb.decideDumpPlan({ dumpPath: '/tmp/theirs.dump', dumpOut: null, keepDump: false })).toEqual({
+      mode: 'existing',
+      dumpIsTemp: false,
+    });
+  });
+
+  it('--dump= takes precedence over --dump-out when both are somehow set', () => {
+    const plan = restoreDb.decideDumpPlan({ dumpPath: '/tmp/theirs.dump', dumpOut: '/tmp/mine.dump', keepDump: false });
+    expect(plan.mode).toBe('existing');
+    expect(plan.dumpIsTemp).toBe(false);
+  });
+});
+
 describe('supabase-load-gates.js — EXCLUDED_TABLES (the logic_variables decision)', () => {
   it('excludes schema_migrations and spatial_ref_sys only', () => {
     expect(gates.EXCLUDED_TABLES).toEqual(['schema_migrations', 'spatial_ref_sys']);
@@ -389,6 +496,43 @@ describe('supabase-load-gates.js — compareRavineEpsilonSample (gate g: double-
     const result = gates.compareRavineEpsilonSample(source, target);
     expect(result.status).toBe('FAIL');
     expect(result.missingKeys).toEqual([2]);
+  });
+
+  it('null==null on both sides is fine — matched, no numeric contribution, no mismatch', () => {
+    const rows = [{ id: 1, value: null }, { id: 2, value: 42.0 }];
+    const result = gates.compareRavineEpsilonSample(rows, rows);
+    expect(result.status).toBe('PASS');
+    expect(result.nullMismatches).toEqual([]);
+    expect(result.count).toBe(2);
+  });
+
+  it('FAILs and reports a nullMismatch when source is populated but target is null (the value did not survive)', () => {
+    const source = [{ id: 1, value: 100.0 }];
+    const target = [{ id: 1, value: null }];
+    const result = gates.compareRavineEpsilonSample(source, target);
+    expect(result.status).toBe('FAIL');
+    expect(result.nullMismatches).toEqual([{ id: 1, source: 100.0, target: null }]);
+  });
+
+  it('FAILs and reports a nullMismatch when source is null but target is populated (the reverse XOR)', () => {
+    const source = [{ id: 1, value: null }];
+    const target = [{ id: 1, value: 7.5 }];
+    const result = gates.compareRavineEpsilonSample(source, target);
+    expect(result.status).toBe('FAIL');
+    expect(result.nullMismatches).toEqual([{ id: 1, source: null, target: 7.5 }]);
+  });
+
+  it('does NOT coalesce a null-mismatch into the numeric epsilon sum as a value-vs-0 comparison', () => {
+    // Before the fix, `value ?? 0` would treat a null as exactly 0 and fold
+    // it into sourceSum/targetSum — this asserts the null-mismatch row is
+    // excluded from the numeric sums entirely, not counted as a 0.
+    const source = [{ id: 1, value: null }, { id: 2, value: 10.0 }];
+    const target = [{ id: 1, value: 3.0 }, { id: 2, value: 10.0 }];
+    const result = gates.compareRavineEpsilonSample(source, target);
+    expect(result.nullMismatches).toEqual([{ id: 1, source: null, target: 3.0 }]);
+    expect(result.sourceSum).toBe(10.0);
+    expect(result.targetSum).toBe(10.0);
+    expect(result.status).toBe('FAIL'); // still fails overall due to the null mismatch
   });
 });
 

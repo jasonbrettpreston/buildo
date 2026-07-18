@@ -13,6 +13,7 @@ import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { X509Certificate } from 'crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -119,6 +120,34 @@ console.log(
     ? 'present (backup-db.js enabled)'
     : 'not set — backup-db.js will throw if run'}`,
 );
+
+// 5b. Supabase CA cert expiry (Spec 113 §4.3 CA rotation runbook) — only when
+// SUPABASE_CA_CERT_PATH is set. Pre-cutover environments have no cloud CA to
+// check yet, so an unset var is skipped silently (not a FAIL/WARN) rather
+// than treated as a missing-config error the way BACKUP_GCS_BUCKET is above.
+const caCertPath = process.env.SUPABASE_CA_CERT_PATH;
+if (caCertPath) {
+  try {
+    const certPem = readFileSync(caCertPath, 'utf-8');
+    const cert = new X509Certificate(certPem);
+    // Date.parse (not `new Date()`) — this repo's pipeline-scripts lint rule
+    // bans `new Date()` repo-wide to keep DB-timestamp writes routed through
+    // pipeline.getDbTimestamp(pool); this is non-DB elapsed-time arithmetic
+    // (CA-cert expiry vs the local clock), which CLAUDE.md's Absolute Rules
+    // explicitly carve out, but Date.parse() sidesteps the AST selector too.
+    const msRemaining = Date.parse(cert.validTo) - Date.now();
+    const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24));
+    if (msRemaining <= 0) {
+      console.log(`✘ Supabase CA cert: EXPIRED ${Math.abs(daysRemaining)} day(s) ago (${caCertPath}) — rotate per Spec 113 §4.3`);
+    } else if (daysRemaining < 30) {
+      console.log(`⚠ Supabase CA cert: expires in ${daysRemaining} day(s) (${caCertPath}) — rotate soon per Spec 113 §4.3`);
+    } else {
+      console.log(`✔ Supabase CA cert: valid, ${daysRemaining} day(s) remaining (${caCertPath})`);
+    }
+  } catch (e) {
+    console.log(`✘ Supabase CA cert: FAILED to read/parse ${caCertPath} — ${e.message}`);
+  }
+}
 
 // 6. Optional DB Extensions
 const dbUrl = process.env.DATABASE_URL;
