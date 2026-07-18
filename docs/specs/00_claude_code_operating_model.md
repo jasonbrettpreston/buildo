@@ -326,7 +326,7 @@ These run at the start of a session or before generating an active task — not 
 | **Sonner** | Toast notifications. | Admin | Custom alert banners and `alert()`/`confirm()` are banned. |
 | **Tremor** | Dashboard data viz (`<ProgressCircle>`, `<BarList>`, `<Tracker>`). | Admin | Pairs with Shadcn — both Apache 2.0, both copy-paste. |
 | **Sentry** | Error tracking wired into `app/[...]/error.tsx` route boundaries. | Admin | `console.log` in committed code is banned — use `Sentry.captureException()`. |
-| **Firebase Auth** | Authentication with `verifyIdToken` in middleware. | Admin + Expo | Production auth. Never swap for Clerk or other providers without architectural approval. |
+| **Supabase Auth (GoTrue)** | Authentication with `supabase.auth.getClaims()` (local JWKS verify) in the `src/lib/auth/` helpers; `getUser()` for revocation-sensitive mutations. | Admin + Expo | Production auth. Architectural approval granted 2026-07-18 (Supabase migration program, `.cursor/active_task.md` v2.1 + Spec 113) — supersedes Firebase Auth. Never swap providers without a new architectural-approval event. |
 | **Maestro** (`maestro test`) | E2E flow testing on real device/emulator builds. Smoke flows run on every PR via Maestro Cloud + EAS Workflows; full suite runs nightly. | Expo | Expo Go does not work — must use a development build. |
 
 ### Backend / Pipeline Stack
