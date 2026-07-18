@@ -30,6 +30,7 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { resolveSslConfig } = require('./lib/ssl-config');
 
 const TRACKING_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -74,15 +75,22 @@ async function run() {
   const dryRun = process.argv.includes('--dry-run');
   const verifyOnly = process.argv.includes('--verify');
 
+  // Spec 113 §4.1 — resolveSslConfig is the only place an `ssl` config is
+  // constructed; the branch taken here (connectionString vs discrete PG_*
+  // options) is unchanged — only the `ssl` key is added to each.
   const pool = new Pool(
     process.env.DATABASE_URL
-      ? { connectionString: process.env.DATABASE_URL }
+      ? {
+          connectionString: process.env.DATABASE_URL,
+          ssl: resolveSslConfig({ connectionString: process.env.DATABASE_URL }),
+        }
       : {
           host: process.env.PG_HOST || 'localhost',
           port: parseInt(process.env.PG_PORT || '5432', 10),
           database: process.env.PG_DATABASE || 'buildo',
           user: process.env.PG_USER || 'postgres',
           password: process.env.PG_PASSWORD || '',
+          ssl: resolveSslConfig({ host: process.env.PG_HOST || 'localhost' }),
         }
   );
 

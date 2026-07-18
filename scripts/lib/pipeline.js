@@ -22,6 +22,7 @@
  */
 const { Pool } = require('pg');
 const { resolveAndCountTriple } = require('./vocab-coverage');
+const { resolveSslConfig } = require('./ssl-config');
 
 // ---------------------------------------------------------------------------
 // Pool Creation — single standardized pattern (PG_* env vars)
@@ -53,14 +54,17 @@ function createPool() {
       'PG_PASSWORD env var is required in production/staging — refusing to start pipeline pool without it',
     );
   }
+  const host = process.env.PG_HOST || 'localhost';
   return new Pool({
-    host: process.env.PG_HOST || 'localhost',
+    host,
     port,
     database: process.env.PG_DATABASE || 'buildo',
     user: process.env.PG_USER || 'postgres',
     // Dev fallback only; the isProd guard above makes this line unreachable
     // when NODE_ENV is production or staging.
     password: pgPassword || 'postgres',
+    // Spec 113 §4.1 — the only place an `ssl` config is constructed.
+    ssl: resolveSslConfig({ host }),
   });
 }
 

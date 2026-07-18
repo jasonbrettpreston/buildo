@@ -33,6 +33,10 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
+// scripts/lib/ssl-config.js is CommonJS (`module.exports = { resolveSslConfig, ... }`);
+// Node's ESM loader statically resolves named imports from CJS modules via
+// cjs-module-lexer, so this named import works without a default-import shim.
+import { resolveSslConfig } from '../lib/ssl-config.js';
 
 dotenv.config();
 
@@ -71,12 +75,17 @@ const RECORD_PATH = resolve(REPORTS_DIR, chainArg, `step_${STEP_NUM_PADDED}_${st
 // ─────────────────────────────────────────────────────────────────────────────
 
 function createPool() {
+  // Explicit 'localhost' default (matching pg's own fallback when `host` is
+  // omitted) so ssl resolution and the actual connection target never diverge.
+  const host = process.env.PG_HOST || 'localhost';
   return new Pool({
-    host: process.env.PG_HOST,
+    host,
     port: process.env.PG_PORT,
     database: process.env.PG_DATABASE,
     user: process.env.PG_USER || 'postgres',
     password: process.env.PG_PASSWORD || 'postgres',
+    // Spec 113 §4.1 — the only place an `ssl` config is constructed.
+    ssl: resolveSslConfig({ host }),
   });
 }
 

@@ -1,5 +1,6 @@
 import { Pool, PoolClient, QueryResultRow } from 'pg';
 import { logError } from '@/lib/logger';
+import { resolveSslConfig } from './ssl-config';
 
 // Pool sizing: default is 10, which is too small for admin dashboard
 // routes that fan out 10-20 parallel COUNT queries (e.g. the admin stats +
@@ -30,10 +31,17 @@ function parsePositiveIntEnv(value: string | undefined, fallback: number): numbe
 const POOL_MAX = parsePositiveIntEnv(process.env.PG_POOL_MAX, 20);
 const POOL_CONNECTION_TIMEOUT_MS = parsePositiveIntEnv(process.env.PG_CONNECTION_TIMEOUT_MS, 10000);
 
+// Spec 113 §4.1 — resolveSslConfig (src/lib/db/ssl-config.ts, the ADR-001 TS
+// twin of scripts/lib/ssl-config.js) is the only place an `ssl` config is
+// constructed. It is environment-aware by TARGET HOST, not NODE_ENV: a
+// loopback host (Docker dev DB, local `supabase start`) gets no TLS; any
+// non-loopback host gets CA-pinned verify-full and throws if
+// SUPABASE_CA_CERT_PATH is missing. `rejectUnauthorized: false` — the weak
+// setting this used to ship in production (Spec 113 §4 G4) — is retired.
 const poolConfig = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+      ssl: resolveSslConfig({ connectionString: process.env.DATABASE_URL }),
       max: POOL_MAX,
       connectionTimeoutMillis: POOL_CONNECTION_TIMEOUT_MS,
       idleTimeoutMillis: 30000,
@@ -44,6 +52,7 @@ const poolConfig = process.env.DATABASE_URL
       database: process.env.PG_DATABASE || 'buildo',
       user: process.env.PG_USER || 'postgres',
       password: process.env.PG_PASSWORD || '',
+      ssl: resolveSslConfig({ host: process.env.PG_HOST || 'localhost' }),
       max: POOL_MAX,
       connectionTimeoutMillis: POOL_CONNECTION_TIMEOUT_MS,
       idleTimeoutMillis: 30000,
