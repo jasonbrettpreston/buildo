@@ -179,7 +179,19 @@ const eslintConfig = [
   },
   // Pipeline utility/seed/legacy scripts — exempt from strict rules (one-off tooling)
   {
-    files: ['scripts/seed-*.js', 'scripts/seed-*.ts', 'scripts/migrate.js', 'scripts/poc-*.js', 'scripts/backfill/**', 'scripts/analysis/**'],
+    files: [
+      'scripts/seed-*.js',
+      'scripts/seed-*.ts',
+      'scripts/migrate.js',
+      'scripts/poc-*.js',
+      'scripts/backfill/**',
+      'scripts/analysis/**',
+      // Spec 112 §4.3 — standalone operator CLIs, deliberately outside the
+      // pipeline.run/§R1-R12 skeleton (same rationale as scripts/migrate.js
+      // above: destructive, human-gated, not chain-registered).
+      'scripts/restore-db.js',
+      'scripts/validation/supabase-load-gates.js',
+    ],
     rules: {
       'no-restricted-syntax': 'off',
     },
