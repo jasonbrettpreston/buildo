@@ -1,5 +1,7 @@
 # Spec 21 — Admin User Management
 
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
+
 **Status:** IMPLEMENTED (P24-24B, 2026-07-11)
 **Spec version:** 2.0 (full rewrite — the Config Hub half was superseded by the built Spec 86 Control Panel; §5 deleted, see §9)
 **Cross-references:** Spec 95 (User Profiles — the data model + the selected-trade axis), Spec 96 (Mobile Subscription), Spec 20 (Stripe Web Checkout — subscription-ops routes), Spec 33 (admin engineering protocol), Spec 35 (admin state architecture), Spec 86 (Control Panel — the former Config Hub), Spec 89 (Parcel Cost Tool — the recent admin-tool convention exemplar).

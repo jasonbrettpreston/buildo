@@ -1,5 +1,7 @@
 # Stripe webhook + checkout smoke (P26-26E)
 
+> **Note (2026-07-18):** the seeded Firebase uid flow below changes to a Supabase uuid at Supabase migration program Phase 1 (`.cursor/active_task.md`); this runbook is rewritten then.
+
 **Owning spec:** `docs/specs/02-web-admin/20_stripe_web_checkout.md` (the money loop as built)
 **Purpose:** First-validation of the LIVE Stripe event shapes against the webhook state machine + a real end-to-end test-card checkout. The mocked-SDK suites (13 test files) prove the *logic*; this runbook is the one thing they can't — that Stripe's *actual* payloads parse and drive the right DB transitions. **Human step — needs a Stripe test-mode account + the CLI + the app running.**
 

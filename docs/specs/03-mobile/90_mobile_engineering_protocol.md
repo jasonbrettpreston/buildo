@@ -1,5 +1,7 @@
 # Spec 90 — Mobile Engineering Protocol & Architecture (The Pivot)
 
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
 > **Prevention loop (frontend/mobile home):** the frontend-tagged rows of the prevention registry (`docs/specs/00_engineering_standards.md` §14) live here. New CRITICAL/HIGH review findings (Spec 08 roster — incl. the User-Advocate/UX lens) that yield a *mobile* rule become protocol requirements in this spec and, where deterministic, a gate.
 
 ## 1. Goal & User Story

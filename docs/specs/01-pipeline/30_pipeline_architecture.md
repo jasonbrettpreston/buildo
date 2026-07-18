@@ -1,5 +1,7 @@
 # Pipeline Architecture v2.0 — SDK-First, Infrastructure-Defended
 
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 3** of `.cursor/active_task.md`.
+
 > **Status (verified 2026-07-07):** foundational doc; chain inventory + scheduling reconciled against
 > `scripts/manifest.json` and `scripts/local-cron.js`. See §2.3 (chain inventory & scheduling) and §5.4
 > (verdict semantics — a FAIL verdict does NOT halt a chain).

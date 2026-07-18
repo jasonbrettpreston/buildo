@@ -1,5 +1,7 @@
 # Lead Feed — Integrated Implementation Guide
 
+> Archived spec — Firebase/Firestore content superseded by the Supabase migration (2026-07-18, Spec 113). Historical record only.
+
 > **Status: FUTURE BUILD** — Implementation blueprint, not yet built.
 > **Purpose:** Single source of truth that brings together architecture, design, research, and React best practices into a component-by-component implementation plan.
 

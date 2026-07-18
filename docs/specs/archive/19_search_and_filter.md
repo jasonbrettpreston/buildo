@@ -1,5 +1,7 @@
 # Spec 19 -- Search & Filter
 
+> Archived spec — Firebase/Firestore content superseded by the Supabase migration (2026-07-18, Spec 113). Historical record only.
+
 ---
 
 <requirements>

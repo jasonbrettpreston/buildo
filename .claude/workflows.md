@@ -381,7 +381,7 @@ Do not modify `.eas/workflows/` config without a WF2.
 
 ## WF12: Mobile Safe Launch (Expo + Android Emulator)
 
-*Native dev build sequence per Spec 98 §2.2. Required before Maestro E2E flows can run; Maestro cannot drive Expo Go because the app uses native modules (Firebase Auth, Reanimated worklets, Sentry). Use this when `expo run:android` is hanging, when you hit a `Failed to resolve plugin` error, or when adb says "no devices".*
+*Native dev build sequence per Spec 98 §2.2. Required before Maestro E2E flows can run; Maestro cannot drive Expo Go because the app uses native modules (Firebase Auth, Reanimated worklets, Sentry). Use this when `expo run:android` is hanging, when you hit a `Failed to resolve plugin` error, or when adb says "no devices". (Firebase Auth is replaced by supabase-js — a pure-JS lib, no native module — at program Phase 2; the native-module list shrinks accordingly.)*
 
 ### Pre-Flight (one-time setup, Windows)
 - **Android Studio installed** with a Pixel 8 (API 34+) virtual device created.

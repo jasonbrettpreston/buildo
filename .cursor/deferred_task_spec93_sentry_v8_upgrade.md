@@ -1,4 +1,7 @@
 # Deferred WF3: @sentry/react-native v7→v8 upgrade for RN 0.81 + New Architecture
+
+NOTE (2026-07-18): RNFirebase/Firebase-UID references below are superseded by the Supabase migration program (`.cursor/active_task.md`); re-ground this task against Spec 93/13 rewrites before executing.
+
 **Status:** Deferred — awaiting pickup
 **Workflow:** WF3 — Fix
 **Domain Mode:** Admin (mobile/ Expo source)

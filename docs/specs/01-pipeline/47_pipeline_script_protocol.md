@@ -1,5 +1,7 @@
 # Pipeline Script Protocol — New Step Authoring Standard
 
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 3** of `.cursor/active_task.md`.
+
 **Applies to:** Every new CommonJS script added to `scripts/` that runs as a step in any
 pipeline chain (`permits`, `coa`, `sources`, `deep_scrapes`, `entities`).
 

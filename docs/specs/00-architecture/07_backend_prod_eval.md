@@ -1,4 +1,7 @@
 # Backend Production Readiness Evaluation
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phases 1+3** of `.cursor/active_task.md`.
+
 **Spec:** `docs/specs/00-architecture/07_backend_prod_eval.md`
 **Version:** 1.1 — 2026-04-26 (relevance scoping + V11 API Frontend Readiness)
 **Scope:** `scripts/`, `migrations/`, `src/app/api/`, `src/lib/db/`, pipeline `src/lib/` modules

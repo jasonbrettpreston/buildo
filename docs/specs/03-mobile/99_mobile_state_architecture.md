@@ -1,5 +1,7 @@
 # Spec 99 — Mobile State Architecture & Ownership Protocol
 
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
 **Status:** ACTIVE
 **Cross-references:** Spec 90 (Engineering Protocol §7), Spec 93 (Auth & AuthGate routing), Spec 94 (Onboarding), Spec 95 (User Profiles — server is canonical), Spec 96 (Subscription gate)
 **As-is audit:** `docs/reports/mobile_state_audit_2026-05-02.md`

@@ -1,5 +1,7 @@
 # Spec 35 — Web Admin State Architecture & Ownership Protocol
 
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
+
 **Status:** ACTIVE
 **Cross-references:** Spec 33 (Web Admin Engineering Protocol), Spec 34 (Web Admin Testing Protocol), Spec 30 (App Health Dashboard), Spec 86 (Control Panel — establishes the admin-draft Zustand precedent)
 

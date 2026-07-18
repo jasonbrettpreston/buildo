@@ -1,5 +1,7 @@
 # Runbook: Full DB Rebuild — 2026-06-10 drift recovery
 
+> **Note (2026-07-18):** `buildo_pgdata` (Docker) remains the authoritative dev DB until the Supabase migration program's Phase 0.8 cutover (`.cursor/active_task.md`); post-cutover the local dev DB is `supabase start` — see Spec 113 §12.
+
 **Status:** PLAN — awaiting authorization
 **Domain:** Backend/Pipeline (ops/recovery — no `src/` code change)
 **Context:** The persistent dev DB (`localhost:5432/buildo`, container `buildo-postgis`, named volume `buildo_pgdata`) holds only 45 of 70 expected tables and an out-of-order partial schema (ravine parcels cols present; zoning/heritage/centreline + ~25 core lead/lifecycle/cost/calibration tables absent; `logic_variables` AND `cost_estimates` + `scope_intensity_matrix` absent). The state matches no clean migration point, so incremental catch-up is unreliable. Rebuild the schema cleanly and restore the irreplaceable data. See [[feedback_db_drift_prevention]].

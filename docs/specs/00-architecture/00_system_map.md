@@ -13,8 +13,11 @@
 | 06 | `00-architecture/06_permits_rest_api.md` | Permit Data API | `src/app/api/permits/route.ts`, `src/app/api/permits/[id]/route.ts`, `src/app/api/permits/geo/route.ts`, +2 more | `src/tests/api.infra.test.ts` | Done |
 | 07 | `00-architecture/07_backend_prod_eval.md` | Backend Production Readiness Evaluation | `src/lib/logger.ts`, `src/app/api/leads/feed/route.ts` | — | Done |
 | 08 | `00-architecture/08_agents.md` | Agent Architecture (Review & Assurance Roster) | `src/lib/db/generated/schema.ts` | — | ACTIVE (v1, 2026-07-14) |
-| 112 | `00-architecture/112_backup_recovery.md` | Database Backup & Recovery | `scripts/backup-db.js`, `scripts/manifest.json` | — | Done |
-| 13 | `00-architecture/13_authentication.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/session.ts`, `src/lib/auth/types.ts`, +7 more | `src/tests/auth.logic.test.ts`, `src/tests/auth-get-user.logic.test.ts`, `src/tests/firebase-admin.logic.test.ts`, +1 more | Done |
+| 112 | `00-architecture/112_backup_recovery.md` | Database Backup & Recovery | `scripts/backup-db.js`, `scripts/restore-db.js`, `scripts/manifest.json`, +2 more | `src/tests/backup-db.logic.test.ts`, `src/tests/restore-db.infra.test.ts` | ACTIVE |
+| 113 | `00-architecture/113_supabase_infrastructure.md` | Supabase Infrastructure | `scripts/lib/ssl-config.js`, `scripts/lib/pipeline.js`, `scripts/migrate.js`, +6 more | — | ACTIVE |
+| 114 | `00-architecture/114_rls_policy_catalog.md` | RLS Policy Catalog | `src/lib/auth/verify-admin.ts` | — | ACTIVE |
+| 115 | `00-architecture/115_scheduling.md` | Pipeline Scheduling (GitHub Actions + pg_cron) | `scripts/check-chain-running.js`, `scripts/lib/chain-concurrency.js`, `scripts/run-chain.js`, +4 more | — | ACTIVE |
+| 13 | `00-architecture/13_authentication.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/types.ts`, `src/lib/auth/route-guard.ts`, +7 more | `src/tests/auth.logic.test.ts`, `src/tests/auth-get-user.logic.test.ts`, `src/tests/middleware.logic.test.ts` | Done |
 | 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture | — | — | Active |
 
 ## Pipeline (Data Engineering)
@@ -86,7 +89,7 @@
 | 90 | `03-mobile/90_mobile_engineering_protocol.md` | Mobile Engineering Protocol & Architecture (The Pivot) | — | — | Done |
 | 91 | `03-mobile/91_mobile_lead_feed.md` | Mobile Lead Feed (Discovery Engine) | `src/app/api/leads/detail/[id]/types.ts` | `src/tests/db/realtor-gating.db.test.ts` | ACTIVE (Mobile Pivot) |
 | 92 | `03-mobile/92_mobile_engagement_hardware.md` | Mobile Engagement & Hardware (Pillar 3) | — | `src/tests/notification-dispatch-contract.logic.test.ts`, `src/tests/notification-types.logic.test.ts` | Done |
-| 93 | `03-mobile/93_mobile_auth.md` | Mobile Authentication | `src/lib/auth/route-guard.ts` | — | ACTIVE |
+| 93 | `03-mobile/93_mobile_auth.md` | Mobile Authentication | `src/lib/auth/route-guard.ts`, `src/lib/auth/get-user.ts`, `src/lib/auth/verify-admin.ts` | — | ACTIVE |
 | 94 | `03-mobile/94_mobile_onboarding.md` | Mobile Onboarding | `src/app/api/onboarding/suppliers/route.ts`, `src/lib/auth/get-user.ts` | `src/tests/onboarding-suppliers.infra.test.ts` | ACTIVE |
 | 95 | `03-mobile/95_mobile_user_profiles.md` | Mobile User Profiles | `src/lib/classification/trades.ts`, `src/app/api/user-profile/route.ts`, `src/lib/auth/get-user.ts`, +4 more | `src/tests/user-profiles.infra.test.ts`, `src/tests/user-profiles.security.test.ts`, `src/tests/user-profiles-schema.infra.test.ts` | ACTIVE |
 | 96 | `03-mobile/96_mobile_subscription.md` | Mobile Subscription & Paywall | `src/app/api/user-profile/route.ts`, `src/app/api/subscribe/session/route.ts`, `src/lib/auth/get-user.ts`, +2 more | `src/tests/subscribe-session.infra.test.ts`, `src/tests/stripe-webhook.infra.test.ts`, `src/tests/stripe-webhook.security.test.ts`, +1 more | ACTIVE |

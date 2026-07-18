@@ -53,7 +53,7 @@ The only Next.js frontend is the admin panel — an internal desktop-first tool.
 | Toast notifications | **Sonner** (`import { Toaster, toast } from 'sonner'`) | Standalone dep (NOT "via shadcn"). NEVER build custom alert banners or use `alert()`. |
 | Error tracking | **Sentry** (`@sentry/nextjs`) wired into `app/[...]/error.tsx` boundaries | Source maps uploaded on build. |
 | Product analytics | server: **`track()`** (`src/lib/admin/analytics.ts`, hashed uid) · client: **`captureEvent()`** (`src/lib/observability/capture.ts`) + Sentry breadcrumb | ⚠️ Two different helpers — see Spec 33 §11 / Spec 35 §7.1. Wrong side = event silently dropped. |
-| Auth | **Firebase Admin SDK**, `verifyAdminAuth(request)` as the FIRST line of every `/api/admin/**` handler | ⚠️ **Per-route guard, NOT middleware** (Spec 33 §8 — middleware is bypassable). Per-admin identity ONLY on the `session` path (§8.1). |
+| Auth | **Firebase Admin SDK**, `verifyAdminAuth(request)` as the FIRST line of every `/api/admin/**` handler | ⚠️ **Per-route guard, NOT middleware** (Spec 33 §8 — middleware is bypassable). Per-admin identity ONLY on the `session` path (§8.1). Row current until Supabase migration program Phase 1; swap governed by Spec 13 rewrite + Spec 113. |
 | Animations / charts | **none installed** | ⚠️ `motion`/`framer-motion`, `recharts`, `@tremor/react` are NOT deps. Prefer CSS/SVG; adding any is a Spec 33 amendment. |
 
 ---

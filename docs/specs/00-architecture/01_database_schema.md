@@ -1,5 +1,7 @@
 # Spec 01 -- Database Schema
 
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1.4** of `.cursor/active_task.md`.
+
 ## 1. Goal & User Story
 Provide a normalized PostgreSQL schema storing 237K+ building permits with change tracking, trade classification, builder enrichment, and spatial data so that every downstream feature queries a single authoritative data store.
 
@@ -17,7 +19,10 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 - **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback. CoA FK to permits is intentionally omitted (composite PK incompatible with single-column reference) — enforced via CQA Tier 2 referential audit instead. PostgreSQL ENUMs deferred for `status` columns to accommodate upstream Toronto Open Data changes.
 
 <!-- DB_SCHEMA_START -->
-### Tables (44)
+### Tables (46)
+
+<!-- STALENESS FIX 2026-07-18: table list was missing `lead_view_events` and `subscribe_nonces` (both live — migration 114, src/lib/db/generated/schema.ts). Added below; independent of the Supabase migration program. -->
+
 
 | Table | Columns | Indexes |
 |-------|---------|--------|
@@ -35,6 +40,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `entity_projects` | 7 | 5 |
 | `inspection_stage_map` | 8 | 2 |
 | `lead_analytics` | 4 | 0 |
+| `lead_view_events` | 4 | 0 |
 | `lead_views` | 11 | 5 |
 | `logic_variables` | 5 | 0 |
 | `neighbourhoods` | 22 | 3 |
@@ -56,6 +62,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `scope_intensity_matrix` | 4 | 0 |
 | `scraper_queue` | 8 | 1 |
 | `spatial_ref_sys` | 5 | 0 |
+| `subscribe_nonces` | 3 | 0 |
 | `sync_runs` | 12 | 0 |
 | `tracked_projects` | 10 | 3 |
 | `trade_configurations` | 8 | 0 |
@@ -319,6 +326,17 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `tracking_count` | INTEGER | NO | 0 |
 | `saving_count` | INTEGER | NO | 0 |
 | `updated_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `lead_view_events` (4 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `user_id` | TEXT | NO | - |
+| `permit_num` | TEXT | NO | - |
+| `revision_num` | TEXT | NO | - |
+| `viewed_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+Composite PK `(user_id, permit_num, revision_num)`; FK `fk_lve_user` → `user_profiles(user_id)` ON DELETE CASCADE. FK-exempt on `permit_num`/`revision_num` (covers both permits and pre-permit CoA — no single FK target). Migration 114.
 
 #### `lead_views` (11 columns)
 
@@ -657,6 +675,16 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `auth_srid` | INTEGER | YES | - |
 | `srtext` | CHARACTER VARYING(2048) | YES | - |
 | `proj4text` | CHARACTER VARYING(2048) | YES | - |
+
+#### `subscribe_nonces` (3 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `nonce` | TEXT | NO | - |
+| `user_id` | TEXT | NO | - |
+| `expires_at` | TIMESTAMP WITH TIME ZONE | NO | now() + '00:15:00'::interval |
+
+PK `nonce`; FK `user_id` → `user_profiles(user_id)` ON DELETE CASCADE. Migration 114.
 
 #### `sync_runs` (12 columns)
 

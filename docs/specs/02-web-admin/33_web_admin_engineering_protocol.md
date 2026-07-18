@@ -1,5 +1,7 @@
 # Spec 33 — Web Admin Engineering Protocol & Architecture
 
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
+
 ## 1. Goal & User Story
 
 **Goal:** define the engineering foundation for the Buildo admin web app at `/admin/*` so customer-success operators, growth ops, and engineering can confidently run pipeline diagnostics, edit `logic_variables`, manage user accounts, and inspect mobile-side telemetry without each contributor re-deriving architectural conventions.

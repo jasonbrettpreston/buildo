@@ -1,4 +1,7 @@
 # Active Task: Spec 95 Mobile User Profiles — API + Store Foundation
+
+NOTE (2026-07-18): RNFirebase/Firebase-UID references below are superseded by the Supabase migration program (`.cursor/active_task.md`); re-ground this task against Spec 93/13 rewrites before executing.
+
 **Status:** Planning
 **Workflow:** WF1 — Genesis
 **Domain Mode:** Cross-Domain — modifies `src/app/api/` Next.js routes AND `mobile/` Expo source. Read `.claude/domain-crossdomain.md` before implementation. ✓

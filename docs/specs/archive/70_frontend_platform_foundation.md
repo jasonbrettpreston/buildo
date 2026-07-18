@@ -1,5 +1,7 @@
 # 70 Frontend Platform Foundation
 
+> Archived spec — Firebase/Firestore content superseded by the Supabase migration (2026-07-18, Spec 113). Historical record only.
+
 **Status:** IMPLEMENTED (Baseline Architecture)
 **Purpose:** Establishes the global frontend architecture, rendering strategies, state management rules, and security boundaries for the Buildo application.
 

@@ -1,5 +1,7 @@
 # 101 Notification Dispatch Engine
 
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
+
 <requirements>
 ## 1. Goal & User Story
 

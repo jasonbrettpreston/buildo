@@ -1,5 +1,7 @@
 # Spec 20 — Stripe Web Checkout & Billing
 
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
+
 **Status:** ACTIVE
 **Cross-references:** Spec 96 (Mobile Subscription), Spec 95 (User Profiles), Spec 21 (Admin User Management — the Subscription-Ops admin surface), Spec 93 (Auth touchpoints)
 
