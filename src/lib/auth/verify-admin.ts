@@ -32,6 +32,7 @@
 
 import { timingSafeEqual } from 'node:crypto';
 import type { NextRequest } from 'next/server';
+import { consumeBackupCode } from '@/lib/admin/backup-codes';
 import { getVerifiedUid } from '@/lib/auth/get-user';
 import { isDevMode } from '@/lib/auth/route-guard';
 import { pool } from '@/lib/db/client';
@@ -143,6 +144,24 @@ export async function verifyAdminAuth(
       const supabase = await createClient();
       const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (data?.currentLevel !== 'aal2') {
+        // Backup-code alternative (P1-F4.3 / fold 22): an admin below aal2
+        // (lost/replaced authenticator) may present ONE unused backup code
+        // via the `x-admin-backup-code` header. Consumption is single-use
+        // and race-guarded (see backup-codes.ts) — a replayed code fails.
+        // This is a per-request pass, NOT an aal2 upgrade: the session stays
+        // aal1, so every subsequent admin request burns another code until
+        // the admin re-enrolls — by design, backup codes are a recovery
+        // ramp, not a standing second factor.
+        const backupCode = request.headers.get('x-admin-backup-code');
+        if (backupCode) {
+          const consumed = await consumeBackupCode(uid, backupCode);
+          if (consumed) {
+            logWarn('[auth/verify-admin]', 'MFA backup code consumed as challenge alternative', { uid });
+            return { uid, authMethod: 'session' };
+          }
+          logWarn('[auth/verify-admin]', 'invalid or already-used MFA backup code presented', { uid });
+          return null;
+        }
         logWarn('[auth/verify-admin]', 'admin session below aal2 — MFA challenge required', { uid });
         return null;
       }

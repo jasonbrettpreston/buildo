@@ -38,6 +38,11 @@ vi.mock('@/lib/supabase/server', () => ({
   })),
 }));
 
+const mockConsumeBackupCode = vi.fn();
+vi.mock('@/lib/admin/backup-codes', () => ({
+  consumeBackupCode: (...args: unknown[]) => mockConsumeBackupCode(...args),
+}));
+
 import { getVerifiedUid, type VerifiedUid } from '@/lib/auth/get-user';
 import { isDevMode } from '@/lib/auth/route-guard';
 import { logWarn, logError } from '@/lib/logger';
@@ -81,6 +86,7 @@ beforeEach(() => {
   mockedIsDevMode.mockReturnValue(false);
   mockPoolQuery.mockReset();
   mockGetAal.mockReset();
+  mockConsumeBackupCode.mockReset();
   process.env = { ...ORIGINAL_ENV };
 });
 
@@ -286,6 +292,88 @@ describe('verifyAdminAuth — MFA gate (landed, inert until ADMIN_MFA_ENFORCED=t
       '[auth/verify-admin]',
       expect.stringMatching(/aal2/),
       expect.any(Object),
+    );
+  });
+});
+
+describe('verifyAdminAuth — MFA backup-code challenge alternative (P1-F4.3 / fold 22)', () => {
+  function armAal1AdminSession(uid = 'admin-uid') {
+    mockedGetUid.mockResolvedValueOnce(asVerifiedUid(uid));
+    mockPoolQuery.mockResolvedValueOnce({ rows: [{ is_admin: true }] });
+    mockGetAal.mockResolvedValueOnce({ data: { currentLevel: 'aal1' }, error: null });
+  }
+
+  it('enforced + aal1 + valid unused backup code header → session context (code consumed)', async () => {
+    process.env.ADMIN_MFA_ENFORCED = 'true';
+    armAal1AdminSession();
+    mockConsumeBackupCode.mockResolvedValueOnce(true);
+
+    const ctx = await verifyAdminAuth(
+      makeRequest({ 'x-admin-backup-code': 'a1b2-c3d4-e5f6-a7b8' }),
+    );
+    expect(ctx).toEqual({ uid: 'admin-uid', authMethod: 'session' });
+    expect(mockConsumeBackupCode).toHaveBeenCalledWith('admin-uid', 'a1b2-c3d4-e5f6-a7b8');
+    expect(mockedLogWarn).toHaveBeenCalledWith(
+      '[auth/verify-admin]',
+      expect.stringMatching(/backup code consumed/i),
+      expect.objectContaining({ uid: 'admin-uid' }),
+    );
+  });
+
+  it('enforced + aal1 + invalid/used backup code → denied (single-use holds)', async () => {
+    process.env.ADMIN_MFA_ENFORCED = 'true';
+    armAal1AdminSession();
+    mockConsumeBackupCode.mockResolvedValueOnce(false);
+
+    const ctx = await verifyAdminAuth(
+      makeRequest({ 'x-admin-backup-code': 'ffff-ffff-ffff-ffff' }),
+    );
+    expect(ctx).toBeNull();
+    expect(mockedLogWarn).toHaveBeenCalledWith(
+      '[auth/verify-admin]',
+      expect.stringMatching(/invalid or already-used/i),
+      expect.objectContaining({ uid: 'admin-uid' }),
+    );
+  });
+
+  it('enforced + aal2 already reached → backup-code path never consulted (no code burned)', async () => {
+    process.env.ADMIN_MFA_ENFORCED = 'true';
+    mockedGetUid.mockResolvedValueOnce(asVerifiedUid('admin-uid'));
+    mockPoolQuery.mockResolvedValueOnce({ rows: [{ is_admin: true }] });
+    mockGetAal.mockResolvedValueOnce({ data: { currentLevel: 'aal2' }, error: null });
+
+    const ctx = await verifyAdminAuth(
+      makeRequest({ 'x-admin-backup-code': 'a1b2-c3d4-e5f6-a7b8' }),
+    );
+    expect(ctx?.authMethod).toBe('session');
+    expect(mockConsumeBackupCode).not.toHaveBeenCalled();
+  });
+
+  it('gate INERT (env unset) → backup-code path never consulted even when the header is present', async () => {
+    mockedGetUid.mockResolvedValueOnce(asVerifiedUid('admin-uid'));
+    mockPoolQuery.mockResolvedValueOnce({ rows: [{ is_admin: true }] });
+
+    const ctx = await verifyAdminAuth(
+      makeRequest({ 'x-admin-backup-code': 'a1b2-c3d4-e5f6-a7b8' }),
+    );
+    expect(ctx?.authMethod).toBe('session');
+    expect(mockGetAal).not.toHaveBeenCalled();
+    expect(mockConsumeBackupCode).not.toHaveBeenCalled();
+  });
+
+  it('enforced + aal1 + consume throws (DB down) → fail closed with mfa-check logError', async () => {
+    process.env.ADMIN_MFA_ENFORCED = 'true';
+    armAal1AdminSession();
+    mockConsumeBackupCode.mockRejectedValueOnce(new Error('connection refused'));
+
+    const ctx = await verifyAdminAuth(
+      makeRequest({ 'x-admin-backup-code': 'a1b2-c3d4-e5f6-a7b8' }),
+    );
+    expect(ctx).toBeNull();
+    expect(mockedLogError).toHaveBeenCalledWith(
+      '[auth/verify-admin]',
+      expect.any(Error),
+      expect.objectContaining({ stage: 'mfa-check' }),
     );
   });
 });
