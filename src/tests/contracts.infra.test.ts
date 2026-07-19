@@ -46,7 +46,10 @@ interface Contracts {
     coord_precision: number;
   };
   schema: {
-    firebase_uid_max: number;
+    // firebase_uid_max RETIRED 2026-07-18 (ADR-007 / D6, migration 229):
+    // uid columns are uuid FKs now — no max-width concept survives.
+    entitlement_products: string[];
+    entitlement_statuses: string[];
     trade_slug_max: number;
     permit_num_max: number;
     revision_num_max: number;
@@ -186,18 +189,11 @@ const rules: Rule[] = [
   // reintroduces a fit score, add the constant back and re-point this
   // check at the new consumer file.
   // ---- schema widths ----
-  {
-    name: 'schema.firebase_uid_max → user_profiles VARCHAR',
-    value: contracts.schema.firebase_uid_max,
-    file: 'migrations/075_user_profiles.sql',
-    pattern: new RegExp(`user_id\\s+VARCHAR\\(${contracts.schema.firebase_uid_max}\\)`),
-  },
-  {
-    name: 'schema.firebase_uid_max → lead_views widen migration',
-    value: contracts.schema.firebase_uid_max,
-    file: 'migrations/076_lead_views_user_id_widen.sql',
-    pattern: new RegExp(`TYPE\\s+VARCHAR\\(${contracts.schema.firebase_uid_max}\\)`),
-  },
+  // schema.firebase_uid_max rows RETIRED 2026-07-18 (ADR-007 / D6): migration
+  // 229 converted user_id/admin_uid to uuid FKs on auth.users, so the
+  // VARCHAR-width locks against migrations 075/076 assert a shape that no
+  // longer exists live. The entitlement_products/entitlement_statuses locks
+  // below are the successors (array-valued, own describe block after `rules`).
   {
     name: 'schema.trade_slug_max → user_profiles trade_slug VARCHAR',
     value: contracts.schema.trade_slug_max,
@@ -535,6 +531,40 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
     });
   }
 
+  // ---- entitlement enums (array-valued contracts, ADR-007 / Spec 116 N2) ----
+  // Locks the two _contracts.json arrays against BOTH their DB truth
+  // (migration 228's CHECK clauses) and their code consumer
+  // (src/lib/entitlements/index.ts PRODUCTS / ENTITLEMENT_STATUSES), so a
+  // product/status addition cannot drift between constraint, contract, and
+  // the TypeScript union.
+  const quotedList = (values: string[]) => values.map((v) => `'${v}'`).join(`,\\s*`);
+
+  it('schema.entitlement_products → migration 228 chk_entitlements_product CHECK', () => {
+    const sql = fs.readFileSync(path.join(REPO_ROOT, 'migrations/228_entitlements.sql'), 'utf8');
+    const pattern = new RegExp(
+      `chk_entitlements_product\\s*\\n?\\s*CHECK \\(product IN \\(${quotedList(contracts.schema.entitlement_products)}\\)\\)`,
+    );
+    expect(sql).toMatch(pattern);
+  });
+
+  it('schema.entitlement_statuses → migration 228 chk_entitlements_status CHECK', () => {
+    const sql = fs.readFileSync(path.join(REPO_ROOT, 'migrations/228_entitlements.sql'), 'utf8');
+    const pattern = new RegExp(
+      `chk_entitlements_status\\s*\\n?\\s*CHECK \\(status IN \\(${quotedList(contracts.schema.entitlement_statuses)}\\)\\)`,
+    );
+    expect(sql).toMatch(pattern);
+  });
+
+  it('schema.entitlement_products → src/lib/entitlements PRODUCTS constant', async () => {
+    const mod = await import('../lib/entitlements');
+    expect([...mod.PRODUCTS]).toEqual(contracts.schema.entitlement_products);
+  });
+
+  it('schema.entitlement_statuses → src/lib/entitlements ENTITLEMENT_STATUSES constant', async () => {
+    const mod = await import('../lib/entitlements');
+    expect([...mod.ENTITLEMENT_STATUSES]).toEqual(contracts.schema.entitlement_statuses);
+  });
+
   // ADR existence check: every accepted ADR in the docs/adr/ index must
   // exist as a non-empty file. Prevents accidental deletion that would
   // strand the source-file `// ADR:` header references.
@@ -545,6 +575,7 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
     '004-manual-create-index-concurrently.md',
     '005-hardcoded-retry-after-60.md',
     '006-firebase-uid-not-fk.md',
+    '007-supabase-auth-uuid-fk.md',
   ];
   for (const adr of adrs) {
     it(`ADR exists and is non-empty: docs/adr/${adr}`, () => {

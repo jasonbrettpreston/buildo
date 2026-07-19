@@ -30,7 +30,8 @@ export const CONTRACTS = {
     coord_precision: 1000,
   },
   schema: {
-    firebase_uid_max: 128,
+    // firebase_uid_max retired 2026-07-18 (ADR-007 / migration 229): uid
+    // columns are uuid FKs to auth.users — no max-width concept survives.
     trade_slug_max: 50,
     permit_num_max: 30,
     revision_num_max: 10,

@@ -83,3 +83,27 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 3. **Detached run for >10 min chains + the dying-session chain-lock hazard.** The interactive harness kills a foreground shell at ~10 min. Launch long chains DETACHED and poll `pipeline_runs` — see `docs/runbook/scope_intensity_matrix_rekey_baseline_spike.md` for the proven pattern. Hazard: a session that dies mid-run leaves the transaction-level advisory lock held only until the connection drops; a step relying on `withAdvisoryLock` will **SKIP (not queue)** on contention, so never start a second chain that shares steps while one is still running.
 4. **`HERITAGE_ACCEPT_MASS_DELETE=1` is a one-time re-key guard.** `load-heritage.js` refuses a mass-delete re-key without it; set it (and back up `heritage_properties`) only for the deliberate register re-key — see `source_heritage_first_deploy_spike.md`.
 5. **Reset-then-drain for terminal-row reclassification.** ~87% of CoAs are terminal and never re-seen, so the incremental dirty predicate won't touch them; a corpus-wide reclassify needs a scoped, logged, backed-up `*_classified_at = NULL` reset FIRST (e.g. `wf2-reset-coa-trade-classification.js`), which also re-fires the downstream cost step.
+
+---
+
+## 4. pgTAP RLS suite (release-gating, Spec 114 §10)
+
+**What:** `supabase/tests/rls_class_a.test.sql` / `rls_class_b.test.sql` /
+`rls_class_c.test.sql` — pgTAP positive+negative locks for every RLS policy in
+the Spec 114 catalog (Class A owner tables incl. `entitlements`, Class B
+default-deny + the §11 "table added without RLS" introspection guard, Class C
+`profiles` + the `is_admin` self-escalation trigger).
+
+**Invoke:** `supabase test db` (local stack must be up — `supabase start`;
+runs pg_prove against `127.0.0.1:54322`). Each file is a single transaction
+that seeds throwaway `auth.users` rows, applies TRANSIENT grants (the live
+posture keeps zero standing grants for `anon`/`authenticated`, Spec 114 §1),
+asserts, and rolls back — no state persists.
+
+**Cadence (D12: release-gating, NOT per-commit):** run alongside the
+`migrate.js` fresh-replay validation before any push that touches
+`migrations/` or auth/RLS-adjacent code — i.e. the same gate where
+`BUILDO_TEST_DB=1 npm run test:db` runs. It is NOT wired into Husky
+pre-commit or `npm run verify`. A red introspection row means a migration
+added a table without `ENABLE ROW LEVEL SECURITY` (Spec 114 §11) — fix the
+migration, never the exclusion list, unless Spec 114 §2 is amended first.

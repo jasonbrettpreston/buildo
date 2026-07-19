@@ -31,7 +31,8 @@ vi.mock('@/constants/contracts', () => ({
     feed: { max_limit: 30 },
     geo: { max_radius_km: 50 },
     schema: {
-      firebase_uid_max: 128,
+      // firebase_uid_max retired 2026-07-18 (ADR-007 / migration 229) —
+      // stub mirrors mobile/src/constants/contracts.ts, which dropped it.
       trade_slug_max: 50,
       permit_num_max: 30,
       revision_num_max: 10,

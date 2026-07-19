@@ -126,7 +126,7 @@ export function createMockPermit(overrides: Partial<Permit> = {}): Permit {
 export function createMockLeadView(overrides: Partial<LeadView> = {}): LeadView {
   return {
     id: 1,
-    user_id: 'firebase-uid-abc123',
+    user_id: '00000000-0000-0000-0000-000000000001',
     lead_key: 'permit:24 101234:01',
     lead_type: 'permit',
     permit_num: '24 101234',
@@ -192,7 +192,7 @@ export function createMockInspectionStageMapRow(
 
 export function createMockUserProfile(overrides: Partial<UserProfile> = {}): UserProfile {
   return {
-    user_id: 'firebase-uid-abc123',
+    user_id: '00000000-0000-0000-0000-000000000001',
     trade_slug: 'plumbing',
     display_name: null,
     created_at: new Date('2026-04-01T00:00:00Z'),

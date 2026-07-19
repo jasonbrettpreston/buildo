@@ -32,17 +32,18 @@ export interface Queryable {
   ): Promise<QueryResult<R>>;
 }
 
-// Mirrors migration 228's chk_entitlements_product CHECK constraint. The
-// `_contracts.json` keys (schema.entitlement_products / entitlement_statuses)
-// land with migration 229's commit (plan P1-F3g, next wave) — these constants
-// become consumers of those keys at that point.
+// Mirrors migration 228's chk_entitlements_product CHECK constraint AND the
+// `_contracts.json` key schema.entitlement_products (landed with migration
+// 229's commit, plan P1-F3g) — contracts.infra.test.ts locks all three
+// against each other.
 export const PRODUCTS = ['lead_gen', 'flight_center'] as const;
 export type Product = (typeof PRODUCTS)[number];
 
 /** OD5 (RULED): the shipped parcel tool + every Phase-1 gate folds into lead_gen. */
 export const DEFAULT_PRODUCT: Product = 'lead_gen';
 
-// Mirrors migration 228's chk_entitlements_status CHECK constraint.
+// Mirrors migration 228's chk_entitlements_status CHECK constraint AND
+// `_contracts.json` schema.entitlement_statuses (contracts.infra.test.ts).
 export const ENTITLEMENT_STATUSES = [
   'trial',
   'active',
@@ -59,12 +60,12 @@ export type EntitlementStatus = (typeof ENTITLEMENT_STATUSES)[number];
  * `e.trial_started_at` keep the exact response field names mobile's
  * UserProfileSchema parses (plan Item 4, R6 mobile-contract freeze).
  *
- * `::text` on BOTH sides: pre-229 `up.user_id` is VARCHAR while `e.user_id`
- * is UUID (uuid = varchar has no operator); post-229 both are UUID but the
- * text/text compare stays valid either way. Drop the casts when 229 lands.
- * Index use is irrelevant at this table's pre-launch row counts.
+ * Plain uuid = uuid compare: migration 229 converted `up.user_id` to UUID
+ * (FK auth.users), matching `e.user_id` — the interim `::text` casts the
+ * pre-229 wave carried (uuid = varchar has no operator) are dropped, per
+ * that wave's own drop-casts note.
  */
-export const LEAD_GEN_ENTITLEMENT_JOIN = `LEFT JOIN entitlements e ON e.user_id::text = up.user_id::text AND e.product = 'lead_gen'`;
+export const LEAD_GEN_ENTITLEMENT_JOIN = `LEFT JOIN entitlements e ON e.user_id = up.user_id AND e.product = 'lead_gen'`;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

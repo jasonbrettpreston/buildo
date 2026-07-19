@@ -27,7 +27,9 @@
     "coord_precision": 1000
   },
   "schema": {
-    "firebase_uid_max": 128,
+    "$comment": "firebase_uid_max RETIRED 2026-07-18 (ADR-007 / D6, migration 229): user_id/admin_uid are uuid FKs to auth.users — a uuid column has no max-width concept. entitlement_products/entitlement_statuses mirror migration 228's chk_entitlements_product/chk_entitlements_status CHECK clauses; consumers: src/lib/entitlements/index.ts PRODUCTS/ENTITLEMENT_STATUSES (pinned by contracts.infra.test.ts).",
+    "entitlement_products": ["lead_gen", "flight_center"],
+    "entitlement_statuses": ["trial", "active", "past_due", "expired", "cancelled_pending_deletion", "admin_managed"],
     "trade_slug_max": 50,
     "permit_num_max": 30,
     "revision_num_max": 10
