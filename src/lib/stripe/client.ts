@@ -17,6 +17,7 @@
 // — the 26-FOLDS §R5-style env-presence guard.
 
 import Stripe from 'stripe';
+import { resolvePriceProduct, type Product, type Queryable } from '@/lib/entitlements';
 
 export function getStripeClient(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -85,6 +86,55 @@ export function deriveEffectiveStripeStatus(
     if (mapped === 'past_due') best = 'past_due';
   }
   return best;
+}
+
+/** The Stripe Price ID a subscription bills against (single-price-per-sub v1). */
+export function subscriptionPriceId(sub: Stripe.Subscription): string | null {
+  return sub.items?.data?.[0]?.price?.id ?? null;
+}
+
+/**
+ * The subscription's current period end as a Date. Stripe SDK v18+ (API
+ * 2025-03-31 "basil") moved `current_period_end` off Subscription onto each
+ * SubscriptionItem — single-price v1 subscriptions have exactly one item, so
+ * the first item's window IS the subscription's window.
+ */
+export function subscriptionCurrentPeriodEnd(sub: Stripe.Subscription): Date | null {
+  const unixSeconds = sub.items?.data?.[0]?.current_period_end;
+  return typeof unixSeconds === 'number' ? new Date(unixSeconds * 1000) : null;
+}
+
+/** Narrow a `string | <expandable object> | null` Stripe reference to its id. */
+export function stripeRefId(input: unknown): string | null {
+  if (typeof input === 'string') return input;
+  if (input && typeof input === 'object' && 'id' in input && typeof input.id === 'string') {
+    return input.id;
+  }
+  return null;
+}
+
+/**
+ * Per-product successor to `deriveEffectiveStripeStatus` (plan Item 4): groups
+ * a customer's subscriptions by the product their price maps to
+ * (`resolvePriceProduct`, OD5 default lead_gen), then applies the existing
+ * single-status priority logic per group. Both legacy call sites (W4
+ * reactivate, W7 reconcile) consume this map; the single-status helper remains
+ * exported as the per-group primitive.
+ */
+export async function deriveEffectiveStripeStatusByProduct(
+  db: Queryable,
+  subs: Stripe.Subscription[],
+): Promise<Map<Product, 'active' | 'past_due' | 'expired'>> {
+  const byProduct = new Map<Product, Stripe.Subscription[]>();
+  for (const sub of subs) {
+    const product = await resolvePriceProduct(db, subscriptionPriceId(sub));
+    byProduct.set(product, [...(byProduct.get(product) ?? []), sub]);
+  }
+  const result = new Map<Product, 'active' | 'past_due' | 'expired'>();
+  for (const [product, prodSubs] of byProduct) {
+    result.set(product, deriveEffectiveStripeStatus(prodSubs));
+  }
+  return result;
 }
 
 /**

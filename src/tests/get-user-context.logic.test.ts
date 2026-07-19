@@ -1,8 +1,11 @@
 // 🔗 SPEC LINK: docs/specs/03-mobile/71_lead_feed_discovery_interface.md §API Endpoints
 //              docs/specs/00-architecture/13_authentication.md §3.2
-//              .cursor/phase1_plan.md P1-F2.4 (getClaimsUid — read-path swap only;
-//              subscription_status intentionally still fed by the legacy
-//              user_profiles column, see get-user-context.ts's own header)
+//              .cursor/phase1_plan.md P1-F2.4 (getClaimsUid — read-path swap) +
+//              Item 4 R1 (P1-F3d): UserContext keeps the subscription_status
+//              FIELD NAME but the value is now the lead_gen ENTITLEMENT status
+//              via LEFT JOIN — null for a zero-entitlement user, same contract
+//              the legacy nullable column gave both consumers (R2 leads/view,
+//              R4 parcels/lookup)
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Pool, QueryResult, QueryResultRow } from 'pg';
 import type { NextRequest } from 'next/server';
@@ -128,18 +131,22 @@ describe('getCurrentUserContext', () => {
     expect(params[0]).toBe('firebase-uid-abc');
   });
 
-  it('queries the user_profiles table and selects subscription_status', async () => {
+  it('sources subscription_status from the lead_gen entitlements LEFT JOIN (R1 — never the legacy column)', async () => {
     vi.mocked(getClaimsUid).mockResolvedValueOnce('firebase-uid-abc');
     const mock = createMockPool();
     mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: null, subscription_status: null }]));
     await getCurrentUserContext(makeRequest(), mock as unknown as Pool);
-    const sql = mock.query.mock.calls[0]?.[0];
-    expect(String(sql)).toMatch(/FROM user_profiles/);
-    expect(String(sql)).toMatch(/WHERE user_id = \$1/);
-    expect(String(sql)).toMatch(/subscription_status/);
+    const sql = String(mock.query.mock.calls[0]?.[0]);
+    expect(sql).toMatch(/FROM user_profiles up/);
+    expect(sql).toMatch(/WHERE up\.user_id = \$1/);
+    expect(sql).toMatch(/LEFT JOIN entitlements e/);
+    expect(sql).toMatch(/e\.product = 'lead_gen'/);
+    expect(sql).toMatch(/e\.status AS subscription_status/);
+    // The legacy user_profiles column read is gone (P1-F3d grep gate).
+    expect(sql).not.toMatch(/up\.subscription_status/);
   });
 
-  it('propagates subscription_status = null when DB returns null', async () => {
+  it('propagates subscription_status = null when the user has no entitlement row (JOIN null)', async () => {
     vi.mocked(getClaimsUid).mockResolvedValueOnce('firebase-uid-abc');
     const mock = createMockPool();
     mock.query.mockResolvedValueOnce(qr([{ trade_slug: 'plumbing', display_name: null, subscription_status: null }]));

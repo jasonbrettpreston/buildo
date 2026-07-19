@@ -1,8 +1,18 @@
 // SPEC LINK: docs/specs/03-mobile/95_mobile_user_profiles.md §5 API Contract, §6 Route Logic
 //             docs/specs/03-mobile/96_mobile_subscription.md §10 Step 4 (GET fallback init + trial expiration)
+//             docs/specs/00-architecture/116_multi_product_architecture.md §4 N2 + OD5
+//
+// Entitlements swap (`.cursor/phase1_plan.md` Item 4 W3 + R6): the trial
+// lifecycle now lives on the per-product `entitlements` table ('lead_gen'
+// throughout Phase 1, OD5). The GET/PATCH response keeps the EXACT field
+// names `subscription_status` / `trial_started_at` mobile's UserProfileSchema
+// parses, sourced via a LEFT JOIN on the lead_gen entitlement row — a
+// zero-entitlement user yields `subscription_status: null,
+// trial_started_at: null` (never undefined/omitted/error — the R6 mobile
+// contract, fold 16).
 //
 // WF3 2026-05-04 hardening (review_followups.md /api/user-profile bundle):
-//  (a) `SELECT *` / `RETURNING *` replaced with `CLIENT_SAFE_SELECT_LIST` —
+//  (a) `SELECT *` / `RETURNING *` replaced with the client-safe column list —
 //      pre-WF3 the route leaked `stripe_customer_id` (PII), `radius_cap_km`
 //      (admin-internal), and `trade_slugs_override` (admin-internal) on
 //      every response, AND any new internal column added to the table
@@ -23,9 +33,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
-import { query } from '@/lib/db/client';
+import { query, withTransaction } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
-import { CLIENT_SAFE_SELECT_LIST, UserProfileUpdateSchema } from '@/lib/userProfile.schema';
+import { CLIENT_SAFE_JOINED_SELECT, UserProfileUpdateSchema } from '@/lib/userProfile.schema';
+import { LEAD_GEN_ENTITLEMENT_JOIN, initTrialEntitlement } from '@/lib/entitlements';
 import {
   applyFallbackTrialInitIfNeeded,
   applyTrialExpirationIfNeeded,
@@ -33,6 +44,11 @@ import {
 import { deriveAccountPreset } from '@/lib/classification/account-preset';
 
 const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' } as const;
+
+// The frozen mobile-contract profile read: user_profiles + the lead_gen
+// entitlement row (R6 — LEFT JOIN so a zero-entitlement user gets nulls,
+// not a missing key or an error).
+const PROFILE_SELECT_SQL = `SELECT ${CLIENT_SAFE_JOINED_SELECT} FROM user_profiles up ${LEAD_GEN_ENTITLEMENT_JOIN} WHERE up.user_id = $1`;
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const uid = await getUserIdFromSession(request);
@@ -46,21 +62,17 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   try {
     // Spec 96 §10 Step 4: run the trial-state helpers BEFORE the SELECT so the
     // returned profile reflects any post-write state. Both helpers are
-    // idempotent — they no-op when their predicate doesn't match — and they
-    // RETURNING * so we could short-circuit, but reading the row again after
-    // both helpers run is simpler and the cost is one indexed lookup.
+    // idempotent — they no-op when their predicate doesn't match. Product is
+    // 'lead_gen' explicitly (OD5 — the only live product this phase).
     //
-    // Order matters: fallback init first (might write status='trial'), then
+    // Order matters: fallback init first (might create a 'trial' row), then
     // expiration check (might immediately flip 'trial' → 'expired' if the
     // PATCH was missed and the trial window has already passed). This
     // matches the canonical flow that PATCH would have followed.
-    await applyFallbackTrialInitIfNeeded(uid);
-    await applyTrialExpirationIfNeeded(uid);
+    await applyFallbackTrialInitIfNeeded(uid, 'lead_gen');
+    await applyTrialExpirationIfNeeded(uid, 'lead_gen');
 
-    const rows = await query<Record<string, unknown>>(
-      `SELECT ${CLIENT_SAFE_SELECT_LIST} FROM user_profiles WHERE user_id = $1`,
-      [uid],
-    );
+    const rows = await query<Record<string, unknown>>(PROFILE_SELECT_SQL, [uid]);
 
     if (rows.length === 0) {
       return NextResponse.json(
@@ -118,7 +130,7 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
 
   try {
     const rows = await query<Record<string, unknown>>(
-      `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, home_base_lat, home_base_lng, tos_accepted_at, subscription_status
+      `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, home_base_lat, home_base_lng, tos_accepted_at
        FROM user_profiles WHERE user_id = $1`,
       [uid],
     );
@@ -128,7 +140,7 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       // New user — auto-create skeleton row (trade_slug nullable after migration 114)
       await query(`INSERT INTO user_profiles (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`, [uid]);
       const created = await query<Record<string, unknown>>(
-        `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, home_base_lat, home_base_lng, tos_accepted_at, subscription_status
+        `SELECT account_deleted_at, account_preset, trade_slug, radius_cap_km, location_mode, home_base_lat, home_base_lng, tos_accepted_at
          FROM user_profiles WHERE user_id = $1`,
         [uid],
       );
@@ -343,22 +355,20 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
       addField('account_preset', deriveAccountPreset(effectiveTrade));
     }
 
-    // onboarding_complete=true + non-manufacturer + not already subscribed → start trial
-    if (
-      fields.onboarding_complete === true &&
-      existing.account_preset !== 'manufacturer' &&
-      !existing.subscription_status
-    ) {
-      setClauses.push(`trial_started_at = NOW()`);
-      setClauses.push(`subscription_status = 'trial'`);
-    }
+    // onboarding_complete=true + non-manufacturer → trial bootstrap on the
+    // lead_gen ENTITLEMENT row (plan Item 4 W3). The legacy "not already
+    // subscribed" guard is now structural: initTrialEntitlement is
+    // `ON CONFLICT DO NOTHING`, so any existing row (active subscriber,
+    // expired trial, admin_managed comp) blocks re-init. Runs as a separate
+    // statement in the SAME transaction as the user_profiles UPDATE (fold 21
+    // — a mid-write failure must not leave onboarding_complete=true with no
+    // entitlement row).
+    const startTrial =
+      fields.onboarding_complete === true && existing.account_preset !== 'manufacturer';
 
     // No writable fields in body — return current profile without a phantom write
     if (setClauses.length === 0) {
-      const full = await query<Record<string, unknown>>(
-        `SELECT ${CLIENT_SAFE_SELECT_LIST} FROM user_profiles WHERE user_id = $1`,
-        [uid],
-      );
+      const full = await query<Record<string, unknown>>(PROFILE_SELECT_SQL, [uid]);
       return NextResponse.json({ data: full[0], error: null, meta: null });
     }
 
@@ -374,16 +384,31 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     const whereClause = tradeSlugFirstWrite !== null
       ? 'WHERE user_id = $1 AND trade_slug IS NULL'
       : 'WHERE user_id = $1';
-    const updated = await query<Record<string, unknown>>(
-      `UPDATE user_profiles SET ${setClauses.join(', ')} ${whereClause} RETURNING ${CLIENT_SAFE_SELECT_LIST}`,
-      params,
-    );
 
-    if (tradeSlugFirstWrite !== null && updated.length === 0) {
+    // fold 21: user_profiles UPDATE + entitlements trial INSERT commit
+    // together or not at all; the final joined SELECT rides the same
+    // transaction so the response reflects the committed state.
+    const outcome = await withTransaction(async (client) => {
+      const updated = await client.query(
+        `UPDATE user_profiles SET ${setClauses.join(', ')} ${whereClause} RETURNING user_id`,
+        params,
+      );
+      if ((updated.rowCount ?? 0) === 0) {
+        return {
+          kind: tradeSlugFirstWrite !== null ? ('trade_race' as const) : ('not_found' as const),
+        };
+      }
+      if (startTrial) {
+        await initTrialEntitlement(client, uid, 'lead_gen');
+      }
+      const full = await client.query<Record<string, unknown>>(PROFILE_SELECT_SQL, [uid]);
+      return { kind: 'ok' as const, row: full.rows[0] ?? null };
+    });
+
+    if (outcome.kind === 'trade_race') {
       // Race-loss: another concurrent PATCH won the trade_slug first-write
-      // between our SELECT (line ~94) and our UPDATE here. Read back the
-      // winning value so the client can reconcile and surface a friendly
-      // error.
+      // between our SELECT and our UPDATE. Read back the winning value so
+      // the client can reconcile and surface a friendly error.
       const winning = await query<{ trade_slug: string | null }>(
         `SELECT trade_slug FROM user_profiles WHERE user_id = $1`,
         [uid],
@@ -409,13 +434,13 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest) 
     // the client when a concurrent DELETE (e.g., account_deleted_at
     // flow running in parallel) removed the row between our SELECT
     // and our UPDATE. Narrow race but a real footgun.
-    if (updated.length === 0) {
+    if (outcome.kind === 'not_found' || outcome.row === null) {
       return NextResponse.json(
         { data: null, error: { code: 'NOT_FOUND', message: 'Profile not found' }, meta: null },
         { status: 404 },
       );
     }
-    return NextResponse.json({ data: updated[0], error: null, meta: null });
+    return NextResponse.json({ data: outcome.row, error: null, meta: null });
   } catch (err) {
     logError('[user-profile/PATCH]', err, { uid });
     return NextResponse.json(

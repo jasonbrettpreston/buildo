@@ -1,4 +1,9 @@
 // SPEC LINK: docs/specs/03-mobile/96_mobile_subscription.md §10 Step 4b + Testing Gates
+//            docs/specs/00-architecture/116_multi_product_architecture.md §4 N2 + OD5
+//
+// Entitlements rewrite (`.cursor/phase1_plan.md` P1-F5.2, R3): gates read the
+// (uid, 'lead_gen') entitlements row (second FOR UPDATE lock) instead of
+// user_profiles.subscription_status.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
@@ -19,6 +24,8 @@ import { POST } from '@/app/api/subscribe/session/route';
 
 const mockedGetUid = vi.mocked(getUserIdFromSession);
 
+const UID = '00000000-0000-0000-0000-00000000d002';
+
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.SUBSCRIBE_CHECKOUT_BASE_URL = 'https://buildo.com/subscribe';
@@ -32,25 +39,29 @@ function makeRequest(): NextRequest {
   } as unknown as NextRequest;
 }
 
-// Helper: queue [SELECT profile, SELECT existing nonce, INSERT nonce] for the
-// happy-path transaction body.
+// Helper: queue [profile lock, entitlement lock, SELECT existing nonce,
+// INSERT nonce] for the happy-path transaction body.
 function queueHappyPath(status: string | null) {
   fakeClientQuery
-    .mockResolvedValueOnce({ rowCount: 1, rows: [{ subscription_status: status }] })
+    .mockResolvedValueOnce({ rowCount: 1, rows: [{ account_deleted_at: null }] })
+    .mockResolvedValueOnce(
+      status === null
+        ? { rowCount: 0, rows: [] }
+        : { rowCount: 1, rows: [{ status, trial_started_at: null }] },
+    )
     .mockResolvedValueOnce({ rowCount: 0, rows: [] }) // no existing nonce
     .mockResolvedValueOnce({ rowCount: 1, rows: [] }); // INSERT
 }
 
 describe('POST /api/subscribe/session — security', () => {
   it('URL never contains user_id or email (PII boundary)', async () => {
-    const sensitiveUid = 'firebase-uid-PII-LEAK-PATTERN';
-    mockedGetUid.mockResolvedValueOnce(sensitiveUid);
+    mockedGetUid.mockResolvedValueOnce(UID);
     queueHappyPath('expired');
 
     const res = await POST(makeRequest());
     const body = (await res.json()) as { data: { url: string } };
 
-    expect(body.data.url).not.toContain(sensitiveUid);
+    expect(body.data.url).not.toContain(UID);
     expect(body.data.url).not.toMatch(/uid=|user_id=|email=|user=/i);
   });
 
@@ -59,15 +70,13 @@ describe('POST /api/subscribe/session — security', () => {
     // unexpired nonce before exchange prevents nonce-table churn from
     // double-tap CTAs. The first call inserts; the second finds the
     // existing row and returns the same URL.
-    mockedGetUid.mockResolvedValue('uid-x');
+    mockedGetUid.mockResolvedValue(UID);
     // First request: no existing nonce → INSERT
-    fakeClientQuery
-      .mockResolvedValueOnce({ rowCount: 1, rows: [{ subscription_status: 'trial' }] })
-      .mockResolvedValueOnce({ rowCount: 0, rows: [] })
-      .mockResolvedValueOnce({ rowCount: 1, rows: [] });
+    queueHappyPath('trial');
     // Second request: existing nonce found → reuse
     fakeClientQuery
-      .mockResolvedValueOnce({ rowCount: 1, rows: [{ subscription_status: 'trial' }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ account_deleted_at: null }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ status: 'trial', trial_started_at: null }] })
       .mockResolvedValueOnce({
         rowCount: 1,
         rows: [{ nonce: 'reused-nonce-9999' }],
@@ -86,7 +95,7 @@ describe('POST /api/subscribe/session — security', () => {
   });
 
   it('nonce is a UUID-shaped string (not a guessable counter)', async () => {
-    mockedGetUid.mockResolvedValueOnce('uid-x');
+    mockedGetUid.mockResolvedValueOnce(UID);
     queueHappyPath('trial');
 
     const res = await POST(makeRequest());
@@ -97,18 +106,17 @@ describe('POST /api/subscribe/session — security', () => {
     expect(nonce).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
   });
 
-  it('rejects already-active users without creating a nonce row', async () => {
-    mockedGetUid.mockResolvedValueOnce('uid-active');
-    fakeClientQuery.mockResolvedValueOnce({
-      rowCount: 1,
-      rows: [{ subscription_status: 'active' }],
-    });
+  it('rejects already-active users (lead_gen entitlement) without creating a nonce row', async () => {
+    mockedGetUid.mockResolvedValueOnce(UID);
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ account_deleted_at: null }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ status: 'active', trial_started_at: null }] });
 
     await POST(makeRequest());
 
-    // SELECT profile only — no nonce SELECT or INSERT
-    expect(fakeClientQuery).toHaveBeenCalledTimes(1);
-    expect(fakeClientQuery.mock.calls[0]?.[0]).toContain('SELECT');
+    // Profile lock + entitlement lock only — no nonce SELECT or INSERT
+    expect(fakeClientQuery).toHaveBeenCalledTimes(2);
+    expect(fakeClientQuery.mock.calls[1]?.[0]).toContain('FROM entitlements');
   });
 
   it('unauthenticated request never queries the DB', async () => {
@@ -117,16 +125,27 @@ describe('POST /api/subscribe/session — security', () => {
     expect(fakeClientQuery).not.toHaveBeenCalled();
   });
 
-  it('cancelled_pending_deletion users cannot resubscribe (deletion contract)', async () => {
-    mockedGetUid.mockResolvedValueOnce('uid-deleting');
+  it('deletion-marked accounts cannot resubscribe (deletion contract, account-level flag)', async () => {
+    mockedGetUid.mockResolvedValueOnce(UID);
     fakeClientQuery.mockResolvedValueOnce({
       rowCount: 1,
-      rows: [{ subscription_status: 'cancelled_pending_deletion' }],
+      rows: [{ account_deleted_at: '2026-07-01T00:00:00Z' }],
     });
 
     const res = await POST(makeRequest());
     expect(res.status).toBe(400);
-    // SELECT profile only — no nonce SELECT or INSERT
+    // Account-level short-circuit — no entitlement/nonce statements at all
     expect(fakeClientQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('a deletion-marked ENTITLEMENT row also blocks resubscribe (belt to the account flag)', async () => {
+    mockedGetUid.mockResolvedValueOnce(UID);
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ account_deleted_at: null }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ status: 'cancelled_pending_deletion', trial_started_at: null }] });
+
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(400);
+    expect(fakeClientQuery).toHaveBeenCalledTimes(2);
   });
 });

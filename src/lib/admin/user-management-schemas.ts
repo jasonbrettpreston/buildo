@@ -6,6 +6,7 @@
 
 import { z } from 'zod';
 import { TRADES } from '@/lib/classification/trades';
+import { PRODUCTS } from '@/lib/entitlements';
 
 export const USER_DIRECTORY_PAGE_SIZE = 25;
 
@@ -42,6 +43,14 @@ const assignableTradeSlug = z
   .string()
   .trim()
   .refine((s) => ASSIGNABLE_TRADE_SET.has(s), { message: 'unknown trade slug' });
+
+// Entitlements swap (`.cursor/phase1_plan.md` Item 4 W6): subscription
+// mutations are per-product. Optional for the single-product window — the
+// route defaults an omitted product to 'lead_gen' (OD5). Values mirror
+// migration 228's chk_entitlements_product via the shared PRODUCTS constant
+// (the `_contracts.json` schema.entitlement_products key lands with 229's
+// commit, next wave, and PRODUCTS becomes its consumer then).
+const productField = z.enum(PRODUCTS).optional();
 
 // ---------------------------------------------------------------------------
 // Directory GET — search + filter + pagination
@@ -84,14 +93,17 @@ export const AdminUserMutationSchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('extend_trial'),
     days: z.coerce.number().int().min(1).max(365).default(14),
+    product: productField,
     reason: reasonSchema,
   }),
   z.object({
     action: z.literal('revoke'), // revoke subscription → expired
+    product: productField,
     reason: reasonSchema,
   }),
   z.object({
     action: z.literal('suspend'), // suspend account access → expired (audit-distinct)
+    product: productField,
     reason: reasonSchema,
   }),
   z.object({

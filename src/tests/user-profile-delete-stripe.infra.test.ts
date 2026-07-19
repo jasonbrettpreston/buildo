@@ -37,6 +37,7 @@ vi.mock('@/lib/db/client', () => ({
 }));
 vi.mock('@/lib/logger', () => ({
   logError: vi.fn(),
+  logWarn: vi.fn(),
 }));
 
 import { POST as DELETE_POST } from '@/app/api/user-profile/delete/route';
@@ -62,9 +63,10 @@ function makePOST(pathname: string): NextRequest {
 describe('POST /api/user-profile/delete — Stripe cancel (P26-26D, period-end)', () => {
   it('schedules cancel_at_period_end on EVERY non-terminal subscription (multi-sub)', async () => {
     mockGetUser.mockResolvedValueOnce('uid-del-1');
-    mockQuery
-      .mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: 'cus_del_1' }]) // SELECT
-      .mockResolvedValueOnce(undefined); // deletion UPDATE
+    // The deletion UPDATE + entitlement fan-out ride the txn client now
+    // (fakeTxQuery) — `query` serves only the SELECT (and the marker on
+    // failure paths).
+    mockQuery.mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: 'cus_del_1' }]); // SELECT
     mockSubsList.mockResolvedValueOnce({
       data: [
         { id: 'sub_active', status: 'active' },
@@ -103,7 +105,6 @@ describe('POST /api/user-profile/delete — Stripe cancel (P26-26D, period-end)'
     mockGetUser.mockResolvedValueOnce('uid-del-2');
     mockQuery
       .mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: 'cus_del_2' }])
-      .mockResolvedValueOnce(undefined) // deletion UPDATE
       .mockResolvedValueOnce(undefined); // marker UPDATE
     mockSubsList.mockRejectedValueOnce(new Error('stripe is down'));
 
@@ -125,8 +126,7 @@ describe('POST /api/user-profile/delete — Stripe cancel (P26-26D, period-end)'
     mockGetUser.mockResolvedValueOnce('uid-del-3');
     mockQuery
       .mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: 'cus_del_3' }])
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(undefined);
+      .mockResolvedValueOnce(undefined); // marker UPDATE
     mockSubsList.mockResolvedValueOnce({
       data: [
         { id: 'sub_a', status: 'active' },
@@ -146,9 +146,7 @@ describe('POST /api/user-profile/delete — Stripe cancel (P26-26D, period-end)'
 
   it('makes NO Stripe calls when the profile has no customer id', async () => {
     mockGetUser.mockResolvedValueOnce('uid-del-4');
-    mockQuery
-      .mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: null }])
-      .mockResolvedValueOnce(undefined);
+    mockQuery.mockResolvedValueOnce([{ account_deleted_at: null, stripe_customer_id: null }]);
 
     const res = await DELETE_POST(makePOST('/api/user-profile/delete'));
 
@@ -158,8 +156,10 @@ describe('POST /api/user-profile/delete — Stripe cancel (P26-26D, period-end)'
   });
 });
 
-describe('webhook deletion-state fence (P26-26D)', () => {
-  it('both UPDATE branches refuse to overwrite cancelled_pending_deletion', async () => {
+describe('webhook deletion-state fence (P26-26D, on the entitlements upsert)', () => {
+  const UID_DELETED = '00000000-0000-0000-0000-00000000de1e';
+
+  it('the customer-fallback branch refuses to overwrite cancelled_pending_deletion', async () => {
     // 26D schedules cancel_at_period_end, so Stripe fires subscription.updated
     // now and subscription.deleted at period end. The fence keeps EITHER event
     // from flipping the deletion state to 'active'/'expired' (which would
@@ -169,11 +169,12 @@ describe('webhook deletion-state fence (P26-26D)', () => {
       id: 'evt_postdelete',
       type: 'customer.subscription.deleted',
       created: 1717250000,
-      data: { object: { customer: 'cus_del_1', status: 'canceled' } },
+      data: { object: { id: 'sub_del_1', customer: 'cus_del_1', status: 'canceled' } },
     });
     fakeTxQuery
       .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_postdelete' }] }) // dedup
-      .mockResolvedValueOnce({ rowCount: 0, rows: [] }); // UPDATE — fence rejects
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ user_id: UID_DELETED }] }) // customer → user
+      .mockResolvedValueOnce({ rowCount: 0, rows: [] }); // upsert — fence rejects
 
     const res = await WEBHOOK_POST(
       {
@@ -185,8 +186,9 @@ describe('webhook deletion-state fence (P26-26D)', () => {
     );
 
     expect(res.status).toBe(200); // Stripe must not retry — 0 rows is expected
-    const updateSql = fakeTxQuery.mock.calls[1]?.[0] as string;
-    expect(updateSql).toMatch(/IS DISTINCT FROM 'cancelled_pending_deletion'/);
+    const upsertSql = fakeTxQuery.mock.calls[2]?.[0] as string;
+    expect(upsertSql).toContain('INSERT INTO entitlements');
+    expect(upsertSql).toMatch(/entitlements\.status IS DISTINCT FROM 'cancelled_pending_deletion'/);
   });
 
   it('the fence is present on the metadata-primary branch too', async () => {
@@ -196,15 +198,16 @@ describe('webhook deletion-state fence (P26-26D)', () => {
       created: 1717250000,
       data: {
         object: {
+          id: 'sub_del_9',
           customer: 'cus_del_9',
           status: 'active',
-          metadata: { user_id: 'uid-deleted-user' },
+          metadata: { user_id: UID_DELETED },
         },
       },
     });
     fakeTxQuery
       .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_postdelete_meta' }] })
-      .mockResolvedValueOnce({ rowCount: 0, rows: [] });
+      .mockResolvedValueOnce({ rowCount: 0, rows: [] }); // upsert — fence rejects
 
     const res = await WEBHOOK_POST(
       {
@@ -216,8 +219,8 @@ describe('webhook deletion-state fence (P26-26D)', () => {
     );
 
     expect(res.status).toBe(200);
-    const updateSql = fakeTxQuery.mock.calls[1]?.[0] as string;
-    expect(updateSql).toMatch(/WHERE user_id = \$\d/);
-    expect(updateSql).toMatch(/IS DISTINCT FROM 'cancelled_pending_deletion'/);
+    const upsertSql = fakeTxQuery.mock.calls[1]?.[0] as string;
+    expect(upsertSql).toContain('INSERT INTO entitlements');
+    expect(upsertSql).toMatch(/entitlements\.status IS DISTINCT FROM 'cancelled_pending_deletion'/);
   });
 });

@@ -23,6 +23,8 @@ import { logError, logWarn } from '@/lib/logger';
 import { track } from '@/lib/admin/analytics';
 import { writeAdminAudit } from '@/lib/admin/admin-audit';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { withTransaction } from '@/lib/db/client';
+import { LEAD_GEN_ENTITLEMENT_JOIN, upsertEntitlementStatus } from '@/lib/entitlements';
 import {
   USER_DIRECTORY_PAGE_SIZE,
   UserDirectoryQuerySchema,
@@ -42,10 +44,15 @@ function hashAdminUid(uid: string): string {
   return createHash('sha256').update(uid).digest('hex').slice(0, 16);
 }
 
+// Entitlements swap (`.cursor/phase1_plan.md` Item 4 R5): the directory's
+// subscription_status column/filter derives from the lead_gen `entitlements`
+// row (LEFT JOIN — a zero-entitlement user shows null, as the legacy nullable
+// column did). All user_profiles columns are `up.`-qualified because
+// entitlements shares `user_id`/`created_at` names.
 const DIRECTORY_COLUMNS = `
-  user_id, email, phone_number, full_name, company_name,
-  trade_slug, trade_slugs_override, account_preset,
-  subscription_status, onboarding_complete, account_deleted_at, created_at
+  up.user_id, up.email, up.phone_number, up.full_name, up.company_name,
+  up.trade_slug, up.trade_slugs_override, up.account_preset,
+  e.status AS subscription_status, up.onboarding_complete, up.account_deleted_at, up.created_at
 `;
 
 // ---------------------------------------------------------------------------
@@ -72,31 +79,37 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     if (q) {
       add(
         (i) =>
-          `(email ILIKE $${i} OR phone_number ILIKE $${i} OR full_name ILIKE $${i} OR company_name ILIKE $${i})`,
+          `(up.email ILIKE $${i} OR up.phone_number ILIKE $${i} OR up.full_name ILIKE $${i} OR up.company_name ILIKE $${i})`,
         `%${q}%`,
       );
     }
-    if (preset) add((i) => `account_preset = $${i}`, preset);
-    if (trade_slug) add((i) => `(trade_slug = $${i} OR $${i} = ANY(trade_slugs_override))`, trade_slug);
-    if (subscription_status) add((i) => `subscription_status = $${i}`, subscription_status);
+    if (preset) add((i) => `up.account_preset = $${i}`, preset);
+    if (trade_slug) add((i) => `(up.trade_slug = $${i} OR $${i} = ANY(up.trade_slugs_override))`, trade_slug);
+    // R5: the status filter matches the lead_gen entitlement status (LEFT
+    // JOIN — a user with no entitlement row can never match a status value,
+    // same as the legacy NULL column never matched one).
+    if (subscription_status) add((i) => `e.status = $${i}`, subscription_status);
     // P26-26D sweep surface (Spec 21 §6): outstanding delete-time cancel debt.
     // Boolean-valued (no bind param) — IS [NOT] NULL on the marker column.
     if (stripe_cancel_failed !== undefined) {
-      where.push(`stripe_cancel_failed_at IS ${stripe_cancel_failed ? 'NOT NULL' : 'NULL'}`);
+      where.push(`up.stripe_cancel_failed_at IS ${stripe_cancel_failed ? 'NOT NULL' : 'NULL'}`);
     }
 
     const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
+    // The join is applied to BOTH queries so the e.status filter (and the
+    // count it paginates against) see identical row sets.
+    const fromSql = `FROM user_profiles up ${LEAD_GEN_ENTITLEMENT_JOIN}`;
 
     const countRes = await pool.query<{ total: number }>(
-      `SELECT COUNT(*)::int AS total FROM user_profiles ${whereSql}`,
+      `SELECT COUNT(*)::int AS total ${fromSql} ${whereSql}`,
       params,
     );
 
     const limitIdx = params.length + 1;
     const offsetIdx = params.length + 2;
     const rowsRes = await pool.query<Record<string, unknown>>(
-      `SELECT ${DIRECTORY_COLUMNS} FROM user_profiles ${whereSql}
-       ORDER BY created_at DESC NULLS LAST, user_id
+      `SELECT ${DIRECTORY_COLUMNS} ${fromSql} ${whereSql}
+       ORDER BY up.created_at DESC NULLS LAST, up.user_id
        LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
       [...params, USER_DIRECTORY_PAGE_SIZE, offset],
     );
@@ -194,27 +207,46 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       supabaseUid = `dev_${body.account_preset}_${createHash('sha256').update(body.email).digest('hex').slice(0, 12)}`;
     }
 
-    // 2. Profile insert (idempotent on user_id). Enterprise/manufacturer +
-    //    supplier are admin-managed: no trial, no client onboarding.
+    // 2. Profile insert (idempotent on user_id) + the lead_gen entitlement row
+    //    (`.cursor/phase1_plan.md` Item 4 R5): enterprise/manufacturer +
+    //    supplier are admin-managed — status now lives on `entitlements`
+    //    ('admin_managed', product 'lead_gen' in the single-product window).
+    //    Both writes ride ONE transaction (R5: "inside the existing — or
+    //    newly-added — transaction") so a provisioned profile can never
+    //    commit without its entitlement. The response row keeps the
+    //    subscription_status field name, echoing the entitlement upsert
+    //    (null on the dev-fallback synthetic uid, which is not
+    //    entitlements-keyable — dev-only path).
     let dbRow: Record<string, unknown>;
     try {
-      const insertRes = await pool.query<Record<string, unknown>>(
-        `INSERT INTO user_profiles
-           (user_id, email, company_name, account_preset, trade_slug, trade_slugs_override,
-            radius_cap_km, subscription_status, onboarding_complete)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, 'admin_managed', false)
-         ON CONFLICT (user_id) DO UPDATE
-           SET email = EXCLUDED.email,
-               company_name = EXCLUDED.company_name,
-               account_preset = EXCLUDED.account_preset,
-               trade_slug = EXCLUDED.trade_slug,
-               trade_slugs_override = EXCLUDED.trade_slugs_override,
-               radius_cap_km = EXCLUDED.radius_cap_km,
-               updated_at = NOW()
-         RETURNING user_id, email, account_preset, trade_slug, trade_slugs_override, subscription_status`,
-        [supabaseUid, body.email, body.company_name ?? null, body.account_preset, primaryTrade, override, body.radius_cap_km ?? null],
-      );
-      dbRow = insertRes.rows[0]!;
+      dbRow = await withTransaction(async (client) => {
+        const insertRes = await client.query<Record<string, unknown>>(
+          `INSERT INTO user_profiles
+             (user_id, email, company_name, account_preset, trade_slug, trade_slugs_override,
+              radius_cap_km, onboarding_complete)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, false)
+           ON CONFLICT (user_id) DO UPDATE
+             SET email = EXCLUDED.email,
+                 company_name = EXCLUDED.company_name,
+                 account_preset = EXCLUDED.account_preset,
+                 trade_slug = EXCLUDED.trade_slug,
+                 trade_slugs_override = EXCLUDED.trade_slugs_override,
+                 radius_cap_km = EXCLUDED.radius_cap_km,
+                 updated_at = NOW()
+           RETURNING user_id, email, account_preset, trade_slug, trade_slugs_override`,
+          [supabaseUid, body.email, body.company_name ?? null, body.account_preset, primaryTrade, override, body.radius_cap_km ?? null],
+        );
+        const entitlementRows = await upsertEntitlementStatus(
+          client,
+          supabaseUid!,
+          'lead_gen',
+          'admin_managed',
+        );
+        return {
+          ...insertRes.rows[0]!,
+          subscription_status: entitlementRows > 0 ? 'admin_managed' : null,
+        };
+      });
     } catch (dbErr) {
       // ROLLBACK the Supabase user if WE created it this call — otherwise a
       // Supabase account with no profile leaks (a login that lands nowhere).

@@ -9,8 +9,13 @@
 //
 // HONEST BOUNDARY: rows written before mig 221 carry a NULL stripe_customer_id
 // and cannot be attributed to a customer — the per-user view is "history since
-// the correlation columns shipped". user_profiles.last_stripe_event_at (mig
-// 116, always populated) is returned in meta as the true last-touch time.
+// the correlation columns shipped". The last-touch watermark is per-product on
+// `entitlements.last_stripe_event_at` since the N2 swap
+// (`.cursor/phase1_plan.md` Item 4) — meta returns MAX() across the user's
+// entitlement rows as the account-level "true last-touch time" this view
+// always reported (the events list itself is customer-scoped, i.e. spans all
+// products, so the max — not any single product's watermark — is the honest
+// counterpart).
 //
 // Auth: verifyAdminAuth FIRST line. Read-only — no audit row.
 
@@ -19,6 +24,7 @@ import { NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { verifyAdminAuth } from '@/lib/auth/verify-admin';
 import { pool } from '@/lib/db/client';
+import { isUuid } from '@/lib/entitlements';
 import { ok, err } from '@/features/leads/api/envelope';
 import { internalError } from '@/features/leads/api/error-mapping';
 
@@ -48,8 +54,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest, cont
     : DEFAULT_LIMIT;
 
   try {
-    const profileRes = await pool.query<{ stripe_customer_id: string | null; last_stripe_event_at: string | null }>(
-      `SELECT stripe_customer_id, last_stripe_event_at FROM user_profiles WHERE user_id = $1`,
+    const profileRes = await pool.query<{ stripe_customer_id: string | null }>(
+      `SELECT stripe_customer_id FROM user_profiles WHERE user_id = $1`,
       [uid],
     );
     const profile = profileRes.rows[0];
@@ -57,6 +63,17 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest, cont
 
     if (!profile.stripe_customer_id) {
       return ok([], { count: 0, last_stripe_event_at: null, reason: 'no_stripe_customer' });
+    }
+
+    // Account-level last-touch: MAX across the user's per-product entitlement
+    // watermarks (see header). Null for a user with no entitlement rows.
+    let lastStripeEventAt: string | null = null;
+    if (isUuid(uid)) {
+      const watermarkRes = await pool.query<{ last_stripe_event_at: string | null }>(
+        `SELECT MAX(last_stripe_event_at) AS last_stripe_event_at FROM entitlements WHERE user_id = $1`,
+        [uid],
+      );
+      lastStripeEventAt = watermarkRes.rows[0]?.last_stripe_event_at ?? null;
     }
 
     const rows = await pool.query<{ event_id: string; event_type: string | null; processed_at: string }>(
@@ -77,12 +94,14 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest, cont
     return ok(events, {
       count: events.length,
       limit,
-      last_stripe_event_at: profile.last_stripe_event_at,
+      last_stripe_event_at: lastStripeEventAt,
       // Honesty label (P26 review — Observability): this history is filtered by
       // the profile's CURRENT stripe_customer_id. A user who churned and
       // re-subscribed got a fresh customer id, so events recorded under a prior
       // customer id are not shown here — last_stripe_event_at (updated on every
-      // match regardless of customer) is the true latest-touch signal.
+      // match regardless of customer) is the true latest-touch signal. (Under
+      // W8's one-Customer-per-user reuse this split can no longer occur for
+      // post-swap accounts; the label stays for the pre-reuse rows.)
       scope: 'current_stripe_customer_id',
     });
   } catch (cause) {

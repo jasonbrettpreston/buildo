@@ -22,22 +22,20 @@
 // uses `getClaimsUid` (Spec 13 §3.2's read-path default) rather than the
 // revocation-checked `getVerifiedUid`.
 //
-// `subscription_status` is INTENTIONALLY still read off the legacy
-// `user_profiles.subscription_status` column, NOT dropped from
-// `UserContext` yet. `.cursor/phase1_plan.md` Item 2's table describes this
-// field as removed at this same step, but Item 4 (the `entitlements` table +
-// full writer/reader swap, migrations 226-230) is a SEPARATE wave
-// (P1-F3d) outside this WF's authorized scope — a sibling agent owns
-// `migrations/`. Dropping the field here now, before `entitlements` exists
-// and before `leads/view/route.ts` (R2, the one live reader) is repointed
-// at it, would break that route with no successor in place. Per this task's
-// explicit sequencing note: kept fed by the legacy column until P1-F3d lands
-// the entitlements swap — flagged here, not silently deviated from the plan.
+// Entitlements swap (`.cursor/phase1_plan.md` Item 4 R1, P1-F3d wave): the
+// `subscription_status` FIELD NAME is KEPT on UserContext (its consumers —
+// leads/view R2's trial counter and parcels/lookup R4's subscription gate —
+// depend on it), but the VALUE is now the per-product `entitlements` row's
+// status for 'lead_gen' (OD5: every Phase-1 gate, including the parcel tool,
+// folds into lead_gen), sourced via a LEFT JOIN. A zero-entitlement user
+// reads null — exactly what the legacy nullable column yielded, so both
+// consumers' gating semantics are unchanged (null → not trial / not active).
 
 import type { NextRequest } from 'next/server';
 import type { Pool } from 'pg';
 import { getClaimsUid } from '@/lib/auth/get-user';
 import { isDevMode } from '@/lib/auth/route-guard';
+import { LEAD_GEN_ENTITLEMENT_JOIN } from '@/lib/entitlements';
 import { logError } from '@/lib/logger';
 
 interface UserContext {
@@ -90,13 +88,17 @@ export async function getCurrentUserContext(
       );
     }
 
+    // R1: subscription_status is the lead_gen ENTITLEMENT status (LEFT JOIN —
+    // no row means null, matching the legacy nullable-column contract).
     const res = await pool.query<{
       trade_slug: string | null;
       trade_slugs_override: string[] | null;
       display_name: string | null;
       subscription_status: string | null;
     }>(
-      `SELECT trade_slug, trade_slugs_override, display_name, subscription_status FROM user_profiles WHERE user_id = $1`,
+      `SELECT up.trade_slug, up.trade_slugs_override, up.display_name, e.status AS subscription_status
+       FROM user_profiles up ${LEAD_GEN_ENTITLEMENT_JOIN}
+       WHERE up.user_id = $1`,
       [uid],
     );
     const row = res.rows[0];

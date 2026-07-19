@@ -1,14 +1,30 @@
 // SPEC LINK: docs/specs/02-web-admin/20_stripe_web_checkout.md §4.2
 //            docs/specs/03-mobile/96_mobile_subscription.md §10 Step 5
+//            docs/specs/00-architecture/116_multi_product_architecture.md §4 N2 + OD3
 //
-// REGRESSION LOCK (P26 — the money fix). Pins the re-subscriber correctness
-// contract: a returning subscriber whose stored stripe_customer_id is cus_OLD,
-// receiving a metadata.user_id-carrying event that mints cus_NEW, MUST be
-// re-activated AND have cus_NEW stored authoritatively. The pre-P26 guard
-// (`stripe_customer_id IS NULL OR = $2` + `COALESCE(stripe_customer_id, $2)`)
-// silently matched 0 rows (cus_OLD ≠ cus_NEW) and left a paying customer
-// locked out. If a future refactor reintroduces either the equality guard or
-// the COALESCE-prefer-existing write, this test fails.
+// REGRESSION LOCK (P26 money fix, rewritten for entitlements —
+// `.cursor/phase1_plan.md` P1-F5.2 + P1-F5.5c). Two contracts pinned:
+//
+// 1. RE-SUBSCRIBER: a returning subscriber's ACTIVATING event must claim the
+//    (user_id, product) entitlement row even though the row still tracks the
+//    old, since-cancelled subscription id — the superseded-subscription fence
+//    ($3='active' short-circuit) must never block an activation. The legacy
+//    equality-guard bug (activation silently matching 0 rows for a paying
+//    returner) must stay dead. (Under W8 one-Customer-per-user the customer
+//    id no longer churns, but the SUBSCRIPTION id still does on every
+//    re-subscribe — the fence is keyed on sub id now, so the same failure
+//    mode would reappear there if the short-circuit were dropped.)
+//
+// 2. REVERSE-ORDER EVENTS [fold 17]: Stripe does not guarantee delivery
+//    order. Two subscription.updated events for the same (user_id, product)
+//    processed in REVERSE chronological order (newer event.created processed
+//    FIRST) must resolve with the older event rejected — the watermark fence
+//    compares the STRIPE EVENT timestamp (EXCLUDED.last_stripe_event_at =
+//    event.created), never wall-clock processing time. If a refactor swaps
+//    the watermark param to NOW(), the older event's param would carry the
+//    LATER wall-clock instant and would win — these assertions fail.
+//    (The SQL fence itself is additionally exercised against the live
+//    entitlements table by the P1-F3d smoke run.)
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
@@ -20,9 +36,6 @@ vi.mock('stripe', () => ({
   })),
 }));
 
-// The fake client models a live user_profiles row with a STALE customer id.
-// It captures the WHERE clause + params so we can assert the UPDATE would have
-// matched the row (guard-free) and would write cus_NEW.
 const fakeClientQuery = vi.fn();
 vi.mock('@/lib/db/client', () => ({
   withTransaction: vi.fn(async (fn: (client: unknown) => Promise<unknown>) =>
@@ -31,9 +44,11 @@ vi.mock('@/lib/db/client', () => ({
 }));
 
 import { POST } from '@/app/api/webhooks/stripe/route';
+import { _resetPriceProductMapCacheForTests } from '@/lib/entitlements';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  _resetPriceProductMapCacheForTests();
   process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
   process.env.STRIPE_WEBHOOK_SECRET = 'whsec_dummy';
 });
@@ -48,57 +63,148 @@ function makeRequest(body: string, headers: Record<string, string> = {}): NextRe
   } as unknown as NextRequest;
 }
 
-const FIXED_EVENT_TS_S = 1717250000;
+const T0 = 1717250000; // 2024-06-01T13:53:20Z
+const UID = '00000000-0000-0000-0000-0000000000ab';
 
-describe('re-subscriber: stored cus_OLD + metadata event carrying cus_NEW', () => {
-  it('activates AND stores cus_NEW authoritatively (no customer-id equality guard, no COALESCE)', async () => {
-    // A returning subscriber. Stripe mints cus_NEW for the fresh checkout; the
-    // subscription carries our metadata.user_id. The stored row still holds
-    // cus_OLD from the previous, since-cancelled subscription.
-    mockedConstructEvent.mockReturnValueOnce({
-      id: 'evt_resub_1',
-      type: 'customer.subscription.created',
-      created: FIXED_EVENT_TS_S,
-      data: {
-        object: {
-          customer: 'cus_NEW',
-          status: 'active',
-          metadata: { user_id: 'firebase-uid-returning' },
-        },
+function subscriptionEvent(opts: {
+  eventId: string;
+  subId: string;
+  status: string;
+  created: number;
+  type?: 'customer.subscription.created' | 'customer.subscription.updated' | 'customer.subscription.deleted';
+}) {
+  return {
+    id: opts.eventId,
+    type: opts.type ?? 'customer.subscription.updated',
+    created: opts.created,
+    data: {
+      object: {
+        id: opts.subId,
+        customer: 'cus_stable',
+        status: opts.status,
+        metadata: { user_id: UID },
       },
-    });
-    // Dedup INSERT succeeds; the UPDATE matches the row (1 row) precisely
-    // because the equality guard is gone.
+    },
+  };
+}
+
+function upsertCall(n = 0) {
+  const calls = fakeClientQuery.mock.calls.filter(
+    (c) => typeof c[0] === 'string' && (c[0] as string).includes('INSERT INTO entitlements'),
+  );
+  return { sql: (calls[n]?.[0] ?? '') as string, params: (calls[n]?.[1] ?? []) as unknown[] };
+}
+
+describe('re-subscriber: activating event claims the row despite a superseded tracked sub id', () => {
+  it("the fence short-circuits on $3='active' so a fresh subscription (new sub id) re-activates", async () => {
+    // delete → reactivate → re-subscribe topology: the lead_gen row still
+    // tracks sub_OLD; the fresh checkout's subscription.created carries
+    // sub_NEW. Activation must apply (the row is claimed, sub_NEW stored).
+    mockedConstructEvent.mockReturnValueOnce(
+      subscriptionEvent({
+        eventId: 'evt_resub_1',
+        subId: 'sub_NEW',
+        status: 'active',
+        created: T0,
+        type: 'customer.subscription.created',
+      }),
+    );
     fakeClientQuery
-      .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_resub_1' }] })
-      .mockResolvedValueOnce({ rowCount: 1, rows: [] });
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_resub_1' }] }) // dedup
+      .mockResolvedValueOnce({ rowCount: 1, rows: [] }); // upsert applies
 
     const res = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ received: true });
 
-    const updateSql = fakeClientQuery.mock.calls[1]?.[0] as string;
-    const params = fakeClientQuery.mock.calls[1]?.[1] as unknown[];
+    const { sql, params } = upsertCall();
+    // The activating short-circuit — WITHOUT it, sub_NEW ≠ sub_OLD would
+    // fence out the activation and re-create the P26 locked-out-payer bug.
+    expect(sql).toMatch(/\$3 = 'active' OR entitlements\.stripe_subscription_id IS NOT DISTINCT FROM EXCLUDED\.stripe_subscription_id/);
+    // The new subscription id is what gets stored (COALESCE new-first).
+    expect(sql).toMatch(/stripe_subscription_id = COALESCE\(EXCLUDED\.stripe_subscription_id, entitlements\.stripe_subscription_id\)/);
+    expect(params[2]).toBe('active');
+    expect(params[3]).toBe('sub_NEW');
+  });
 
-    // Identity via user_id, not the stale customer id.
-    expect(updateSql).toMatch(/WHERE user_id = \$3/);
-    // The equality guard that broke re-subscribers must NOT be present.
-    expect(updateSql).not.toMatch(/stripe_customer_id IS NULL OR stripe_customer_id = \$2/);
-    // cus_NEW is written authoritatively via COALESCE($2, existing) — new-first,
-    // so a non-null incoming customer (this event) OVERWRITES cus_OLD (the
-    // re-subscriber fix). This is NOT the old broken existing-first
-    // COALESCE(stripe_customer_id, $2) which preserved the stale cus_OLD.
-    expect(updateSql).toMatch(/stripe_customer_id = COALESCE\(\$2, stripe_customer_id\)/);
-    expect(updateSql).not.toMatch(/COALESCE\(stripe_customer_id/);
-    // P26-review superseded-subscription fence: activating ('active') events —
-    // like this re-subscribe — still claim the customer id ($1='active' short-
-    // circuits the guard), so the re-subscriber overwrite is preserved.
-    expect(updateSql).toMatch(/\$1 = 'active' OR stripe_customer_id IS NOT DISTINCT FROM \$2/);
+  it('a REVOKING event from a superseded subscription is fence-gated (sub-id equality required)', async () => {
+    // The period-end .deleted from sub_OLD arrives weeks after the user
+    // re-subscribed on sub_NEW. status='expired' does NOT short-circuit the
+    // fence, so the SQL requires the row's tracked sub id to match — the
+    // mocked 0-row result models the fence rejecting it; the route must
+    // treat that as an expected stale delivery (200, no throw).
+    mockedConstructEvent.mockReturnValueOnce(
+      subscriptionEvent({
+        eventId: 'evt_old_deleted',
+        subId: 'sub_OLD',
+        status: 'canceled',
+        created: T0 + 100,
+        type: 'customer.subscription.deleted',
+      }),
+    );
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_old_deleted' }] }) // dedup
+      .mockResolvedValueOnce({ rowCount: 0, rows: [] }); // fence rejects
 
-    // Activation + the NEW customer id land in params.
-    expect(params[0]).toBe('active');
-    expect(params[1]).toBe('cus_NEW');
-    expect(params[2]).toBe('firebase-uid-returning');
-    expect(params[3]).toBeInstanceOf(Date);
+    const res = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
+    expect(res.status).toBe(200);
+    const { params } = upsertCall();
+    // subscription.deleted classifies to 'expired' — the revoking path.
+    expect(params[2]).toBe('expired');
+    expect(params[3]).toBe('sub_OLD');
+  });
+});
+
+describe('reverse-order delivery [fold 17]: older event processed second must lose', () => {
+  it('both events carry their OWN event.created as the watermark param — never wall clock', async () => {
+    const newer = subscriptionEvent({
+      eventId: 'evt_newer',
+      subId: 'sub_1',
+      status: 'active',
+      created: T0 + 500, // chronologically NEWER
+    });
+    const older = subscriptionEvent({
+      eventId: 'evt_older',
+      subId: 'sub_1',
+      status: 'past_due',
+      created: T0, // chronologically OLDER, processed SECOND
+    });
+
+    // Process the NEWER event first.
+    mockedConstructEvent.mockReturnValueOnce(newer);
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_newer' }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [] }); // applies
+    const res1 = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
+    expect(res1.status).toBe(200);
+
+    // Then the OLDER event arrives late (retry/queue delay).
+    mockedConstructEvent.mockReturnValueOnce(older);
+    fakeClientQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ event_id: 'evt_older' }] })
+      .mockResolvedValueOnce({ rowCount: 0, rows: [] }); // watermark fence rejects
+    const res2 = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
+    expect(res2.status).toBe(200); // stale delivery is EXPECTED, never a retry-500
+
+    const first = upsertCall(0);
+    const second = upsertCall(1);
+
+    // The watermark param ($6) is each event's OWN Stripe timestamp. At the
+    // moment the older event is processed, wall clock is LATER than both —
+    // a NOW()-keyed watermark would let the older event win. The param
+    // values prove the fence compares creation order, not processing order.
+    expect((first.params[5] as Date).getTime()).toBe((T0 + 500) * 1000);
+    expect((second.params[5] as Date).getTime()).toBe(T0 * 1000);
+    expect((second.params[5] as Date).getTime()).toBeLessThan((first.params[5] as Date).getTime());
+
+    // And the fence in both statements is the EXCLUDED-vs-row comparison the
+    // live table enforces (exercised for real by the P1-F3d smoke run).
+    for (const { sql } of [first, second]) {
+      expect(sql).toMatch(/entitlements\.last_stripe_event_at IS NULL OR entitlements\.last_stripe_event_at < EXCLUDED\.last_stripe_event_at/);
+      expect(sql).not.toMatch(/last_stripe_event_at = NOW\(\)/);
+    }
+
+    // The older event's rejection (rowCount 0) rides the same 200 contract.
+    expect(second.params[2]).toBe('past_due');
   });
 });

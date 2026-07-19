@@ -6,11 +6,19 @@ import { NextRequest } from 'next/server';
 vi.mock('@/lib/auth/get-user', () => ({
   getUserIdFromSession: vi.fn(),
 }));
+// PATCH's write path now rides withTransaction (entitlements fold 21) — the
+// transaction client returns pg QueryResult shapes ({rowCount, rows}).
+const fakeTxQuery = vi.fn();
 vi.mock('@/lib/db/client', () => ({
   query: vi.fn(),
+  pool: { query: vi.fn() },
+  withTransaction: vi.fn(async (fn: (client: unknown) => Promise<unknown>) =>
+    fn({ query: fakeTxQuery }),
+  ),
 }));
 vi.mock('@/lib/logger', () => ({
   logError: vi.fn(),
+  logWarn: vi.fn(),
 }));
 vi.mock('@/lib/api/with-api-envelope', () => ({
   withApiEnvelope: (handler: (...args: unknown[]) => unknown) => handler,
@@ -71,42 +79,59 @@ function setupAuth(profile = BASE_PROFILE) {
   mockQuery.mockResolvedValueOnce([profile]);
 }
 
+/** Txn write path: UPDATE succeeds, final joined SELECT returns `finalRow`. */
+function stubTxnWrite(finalRow: Record<string, unknown>) {
+  fakeTxQuery.mockImplementation(async (sql: string) => {
+    if (sql.startsWith('UPDATE user_profiles')) {
+      return { rowCount: 1, rows: [{ user_id: 'uid-abc' }] };
+    }
+    return { rowCount: 1, rows: [finalRow] };
+  });
+}
+
 describe('PATCH /api/user-profile — whitelist security', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Spec 96 GET handler now runs two helper UPDATEs before the SELECT.
+    // Spec 96 GET handler now runs two helper writes before the SELECT.
     // Default both to no-op (empty rows) so unstubbed paths don't crash.
     mockQuery.mockResolvedValue([]);
   });
 
-  it('strips subscription_status silently — returns 200 with field unchanged', async () => {
+  it('strips subscription_status silently — returns 200 with field unchanged (server-owned, entitlements-sourced)', async () => {
     setupAuth();
     const unchanged = { ...BASE_PROFILE, subscription_status: null };
-    mockQuery.mockResolvedValueOnce([unchanged]);
+    stubTxnWrite(unchanged);
     const res = await PATCH(makePATCH({ full_name: 'Bob', subscription_status: 'active' }));
     expect(res.status).toBe(200);
     const body = await res.json() as { data: typeof unchanged };
     // subscription_status must not have been written (still null as per DB mock)
     expect(body.data.subscription_status).toBeNull();
+    // Defense-in-depth: no statement in the write path touches entitlements'
+    // status from a client-supplied value (the only entitlement write PATCH
+    // can EVER issue is the server-side trial bootstrap).
+    const statusWrite = fakeTxQuery.mock.calls.find(
+      (c) => (c[0] as string).includes("'active'"),
+    );
+    expect(statusWrite).toBeUndefined();
   });
 
   it('strips account_deleted_at silently — returns 200', async () => {
     setupAuth();
-    mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
+    stubTxnWrite(BASE_PROFILE);
     const res = await PATCH(makePATCH({ full_name: 'Bob', account_deleted_at: '2099-01-01T00:00:00Z' }));
     expect(res.status).toBe(200);
   });
 
   it('strips trade_slugs_override silently — returns 200', async () => {
     setupAuth();
-    mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
+    stubTxnWrite(BASE_PROFILE);
     const res = await PATCH(makePATCH({ full_name: 'Bob', trade_slugs_override: ['hvac', 'plumbing'] }));
     expect(res.status).toBe(200);
   });
 
   it('strips lead_views_count silently — returns 200', async () => {
     setupAuth();
-    mockQuery.mockResolvedValueOnce([BASE_PROFILE]);
+    stubTxnWrite(BASE_PROFILE);
     const res = await PATCH(makePATCH({ full_name: 'Bob', lead_views_count: 9999 }));
     expect(res.status).toBe(200);
   });
@@ -134,7 +159,7 @@ describe('PATCH /api/user-profile — whitelist security', () => {
     // account_preset is not in UserProfileUpdateSchema, so Zod strips it silently
     mockGetUser.mockResolvedValueOnce('uid-mfr');
     mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, account_preset: 'manufacturer' }]);
-    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, account_preset: 'manufacturer' }]);
+    stubTxnWrite({ ...BASE_PROFILE, account_preset: 'manufacturer' });
     const res = await PATCH(makePATCH({ full_name: 'Bob', account_preset: 'admin_managed' }));
     expect(res.status).toBe(200);
     // account_preset unchanged — the mock returns the manufacturer row
@@ -144,11 +169,10 @@ describe('PATCH /api/user-profile — whitelist security', () => {
 
   it('GET returns own profile — WHERE clause scoped to authenticated UID', async () => {
     mockGetUser.mockResolvedValueOnce('uid-abc');
-    // Two helper UPDATEs (no-op, return []) then the SELECT
-    mockQuery
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ ...BASE_PROFILE, user_id: 'uid-abc' }]);
+    // 'uid-abc' is not uuid-shaped, so the per-product trial helpers no-op
+    // WITHOUT issuing SQL (entitlements is UUID-keyed) — the first query call
+    // is the joined profile SELECT itself.
+    mockQuery.mockResolvedValueOnce([{ ...BASE_PROFILE, user_id: 'uid-abc' }]);
     const req = new NextRequest('http://localhost/api/user-profile');
     const res = await GET(req);
     expect(res.status).toBe(200);

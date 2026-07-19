@@ -55,6 +55,10 @@ const mockedAudit = vi.mocked(writeAdminAudit);
 const SESSION_CTX: AdminContext = { uid: 'admin-session-1', authMethod: 'session' };
 const ADMIN_KEY_CTX: AdminContext = { uid: 'admin-key', authMethod: 'admin_key' };
 
+// Entitlements are UUID-keyed — the stored-entitlements read no-ops on
+// non-uuid target uids, so reconcile fixtures use a uuid target.
+const TARGET = '00000000-0000-0000-0000-00000000e001';
+
 function req(opts: { body?: unknown; search?: string } = {}): NextRequest {
   return {
     method: 'GET',
@@ -77,56 +81,81 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 // reconcile GET
 // ---------------------------------------------------------------------------
-describe('GET reconcile', () => {
+describe('GET reconcile (per-product array — W7 shape change)', () => {
   it('401 without admin', async () => {
     mockedVerify.mockResolvedValueOnce(null);
-    const res = await RECONCILE_GET(req(), ctx('t1'));
+    const res = await RECONCILE_GET(req(), ctx(TARGET));
     expect(res.status).toBe(401);
   });
 
-  it('no stripe customer → not reconcilable, drift false', async () => {
+  it('no stripe customer → not reconcilable, stored rows echoed with stripe_status null', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    mockedQuery.mockResolvedValueOnce({ rows: [{ subscription_status: 'trial', stripe_customer_id: null }] } as never);
-    const res = await RECONCILE_GET(req(), ctx('t1'));
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: null }] } as never) // profile
+      .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'trial' }] } as never); // stored entitlements
+    const res = await RECONCILE_GET(req(), ctx(TARGET));
     const body = await res.json();
     expect(res.status).toBe(200);
-    expect(body.data).toEqual({ stored_status: 'trial', stripe_status: null, drift: false });
+    expect(body.data).toEqual({
+      products: [{ product: 'lead_gen', stored_status: 'trial', stripe_status: null, drift: false }],
+    });
+    expect(body.meta.reason).toBe('no_stripe_customer');
     expect(mockSubsList).not.toHaveBeenCalled();
   });
 
-  it('detects drift when stored diverges from Stripe truth', async () => {
+  it('detects per-product drift when stored diverges from Stripe truth', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    mockedQuery.mockResolvedValueOnce({ rows: [{ subscription_status: 'expired', stripe_customer_id: 'cus_1' }] } as never);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
+      .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'expired' }] } as never);
+    // No price on the sub fixture → OD5-default product 'lead_gen'.
     mockSubsList.mockResolvedValueOnce({ data: [{ status: 'active' }] });
-    const res = await RECONCILE_GET(req(), ctx('t1'));
+    const res = await RECONCILE_GET(req(), ctx(TARGET));
     const body = await res.json();
-    expect(body.data).toEqual({ stored_status: 'expired', stripe_status: 'active', drift: true });
+    expect(body.data.products).toEqual([
+      expect.objectContaining({ product: 'lead_gen', stored_status: 'expired', stripe_status: 'active', drift: true }),
+    ]);
+  });
+
+  it('a stored row with NO live subscription reads Stripe truth "expired" (the no-subs case)', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
+      .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'active' }] } as never);
+    mockSubsList.mockResolvedValueOnce({ data: [] });
+    const res = await RECONCILE_GET(req(), ctx(TARGET));
+    const body = await res.json();
+    expect(body.data.products).toEqual([
+      expect.objectContaining({ product: 'lead_gen', stored_status: 'active', stripe_status: 'expired', drift: true }),
+    ]);
   });
 
   it('protected state (admin_managed) never reports actionable drift', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    mockedQuery.mockResolvedValueOnce({ rows: [{ subscription_status: 'admin_managed', stripe_customer_id: 'cus_1' }] } as never);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
+      .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'admin_managed' }] } as never);
     mockSubsList.mockResolvedValueOnce({ data: [{ status: 'canceled' }] });
-    const res = await RECONCILE_GET(req(), ctx('t1'));
+    const res = await RECONCILE_GET(req(), ctx(TARGET));
     const body = await res.json();
-    expect(body.data.drift).toBe(false);
-    expect(body.meta.protected).toBe(true);
+    expect(body.data.products[0].drift).toBe(false);
+    expect(body.meta.protected).toEqual(['lead_gen']);
   });
 });
 
 // ---------------------------------------------------------------------------
 // reconcile POST (apply)
 // ---------------------------------------------------------------------------
-describe('POST reconcile apply', () => {
+describe('POST reconcile apply (per-product — W7)', () => {
   it('admin_key → 403 (unattributable)', async () => {
     mockedVerify.mockResolvedValueOnce(ADMIN_KEY_CTX);
-    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'drift' } }), ctx('t1'));
+    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'drift' } }), ctx(TARGET));
     expect(res.status).toBe(403);
   });
 
   it('missing reason → 400', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    const res = await RECONCILE_POST(req({ body: { apply: true } }), ctx('t1'));
+    const res = await RECONCILE_POST(req({ body: { apply: true } }), ctx(TARGET));
     expect(res.status).toBe(400);
   });
 
@@ -138,58 +167,105 @@ describe('POST reconcile apply', () => {
 
   it('protected state (cancelled_pending_deletion) → 409, never mutated', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    mockedQuery.mockResolvedValueOnce({ rows: [{ subscription_status: 'cancelled_pending_deletion', stripe_customer_id: 'cus_1' }] } as never);
-    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'drift observed' } }), ctx('t1'));
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
+      .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'cancelled_pending_deletion' }] } as never);
+    mockSubsList.mockResolvedValueOnce({ data: [] });
+    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'drift observed' } }), ctx(TARGET));
     expect(res.status).toBe(409);
     expect(mockedAudit).not.toHaveBeenCalled();
-    // only the SELECT ran — no UPDATE
-    expect(mockedQuery).toHaveBeenCalledTimes(1);
+    // only the profile SELECT + stored-entitlements SELECT ran — no upsert
+    expect(mockedQuery).toHaveBeenCalledTimes(2);
   });
 
-  it('no drift → applied:false, no audit', async () => {
+  it('no drift → applied [], no audit', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    mockedQuery.mockResolvedValueOnce({ rows: [{ subscription_status: 'active', stripe_customer_id: 'cus_1' }] } as never);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
+      .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'active' }] } as never);
     mockSubsList.mockResolvedValueOnce({ data: [{ status: 'active' }] });
-    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'drift observed' } }), ctx('t1'));
+    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'drift observed' } }), ctx(TARGET));
     const body = await res.json();
-    expect(body.data.applied).toBe(false);
+    expect(body.data.applied).toEqual([]);
+    expect(body.meta.drift).toBe(false);
     expect(mockedAudit).not.toHaveBeenCalled();
   });
 
-  it('drift → UPDATE (fenced) + audit written', async () => {
+  it('drift → fenced entitlements upsert + one audit row per product changed', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
-      .mockResolvedValueOnce({ rows: [{ subscription_status: 'expired', stripe_customer_id: 'cus_1' }] } as never)
-      .mockResolvedValueOnce({ rowCount: 1 } as never); // UPDATE
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never) // profile
+      .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'expired' }] } as never) // stored
+      .mockResolvedValueOnce({ rowCount: 1 } as never); // upsert
     mockSubsList.mockResolvedValueOnce({ data: [{ status: 'active' }] });
-    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'stripe shows active' } }), ctx('t1'));
+    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'stripe shows active' } }), ctx(TARGET));
     const body = await res.json();
-    expect(body.data).toMatchObject({ stored_status: 'expired', stripe_status: 'active', applied: true });
-    const updateSql = String(mockedQuery.mock.calls[1]![0]);
-    // Fence excludes BOTH protected statuses (P26 review — admin_managed race)
-    expect(updateSql).toMatch(/NOT IN \('cancelled_pending_deletion', 'admin_managed'\)/);
+    expect(body.data.applied).toEqual([{ product: 'lead_gen', from: 'expired', to: 'active' }]);
+    const upsertSql = String(mockedQuery.mock.calls[2]![0]);
+    // Per-product upsert (repairs a missing row too) with the SQL-level fence
+    // excluding BOTH protected statuses (P26 review — admin_managed race)
+    expect(upsertSql).toMatch(/INSERT INTO entitlements/);
+    expect(upsertSql).toMatch(/NOT IN \('cancelled_pending_deletion', 'admin_managed'\)/);
     // Bumps the watermark so a stale webhook can't revert the operator decision
-    expect(updateSql).toMatch(/last_stripe_event_at = NOW\(\)/);
+    expect(upsertSql).toMatch(/last_stripe_event_at = NOW\(\)/);
+    expect(mockedQuery.mock.calls[2]![1]).toEqual([TARGET, 'lead_gen', 'active']);
     expect(mockedAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'subscription_reconcile_apply',
-        oldValue: { subscription_status: 'expired' },
-        newValue: { subscription_status: 'active' },
+        oldValue: { product: 'lead_gen', subscription_status: 'expired' },
+        newValue: { product: 'lead_gen', subscription_status: 'active' },
         reason: 'stripe shows active',
       }),
       expect.anything(), // the withTransaction client (atomic mutation+audit)
     );
   });
 
-  it('concurrent deletion (UPDATE rowCount 0) → 409, no false success', async () => {
+  it('a live subscription with NO stored row is drift the apply REPAIRS (insert arm)', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
-      .mockResolvedValueOnce({ rows: [{ subscription_status: 'expired', stripe_customer_id: 'cus_1' }] } as never)
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
+      .mockResolvedValueOnce({ rows: [] } as never) // zero stored rows (webhook gap)
+      .mockResolvedValueOnce({ rowCount: 1 } as never); // upsert INSERT arm
+    mockSubsList.mockResolvedValueOnce({ data: [{ status: 'active' }] });
+    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'webhook gap repair' } }), ctx(TARGET));
+    const body = await res.json();
+    expect(body.data.applied).toEqual([{ product: 'lead_gen', from: null, to: 'active' }]);
+  });
+
+  it('concurrent state change (upsert rowCount 0) → 409, no false success', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
+      .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'expired' }] } as never)
       .mockResolvedValueOnce({ rowCount: 0 } as never);
     mockSubsList.mockResolvedValueOnce({ data: [{ status: 'active' }] });
-    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'stripe shows active' } }), ctx('t1'));
+    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'stripe shows active' } }), ctx(TARGET));
     expect(res.status).toBe(409);
     expect(mockedAudit).not.toHaveBeenCalled();
+  });
+
+  it('optional product body field scopes the apply to that product only', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
+      .mockResolvedValueOnce({
+        rows: [
+          { product: 'flight_center', status: 'expired' },
+          { product: 'lead_gen', status: 'expired' },
+        ],
+      } as never)
+      .mockResolvedValueOnce({ rowCount: 1 } as never); // ONE upsert only
+    // Both stored rows drift against the (empty-price → lead_gen) live sub;
+    // flight_center's live truth is 'expired' == stored, so only lead_gen
+    // drifts anyway — but the scope filter is what we're pinning here.
+    mockSubsList.mockResolvedValueOnce({ data: [{ status: 'active' }] });
+    const res = await RECONCILE_POST(
+      req({ body: { apply: true, reason: 'scoped', product: 'lead_gen' } }),
+      ctx(TARGET),
+    );
+    const body = await res.json();
+    expect(body.data.applied).toEqual([{ product: 'lead_gen', from: 'expired', to: 'active' }]);
+    expect(mockedAudit).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -270,25 +346,29 @@ describe('GET events', () => {
 
   it('no stripe customer → empty list', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    mockedQuery.mockResolvedValueOnce({ rows: [{ stripe_customer_id: null, last_stripe_event_at: null }] } as never);
-    const res = await EVENTS_GET(req(), ctx('t1'));
+    mockedQuery.mockResolvedValueOnce({ rows: [{ stripe_customer_id: null }] } as never);
+    const res = await EVENTS_GET(req(), ctx(TARGET));
     const body = await res.json();
     expect(body.data).toEqual([]);
     expect(body.meta.reason).toBe('no_stripe_customer');
   });
 
-  it('surfaces event_type as `type`, newest first', async () => {
+  it('surfaces event_type as `type`, newest first; watermark = MAX over the per-product entitlement rows', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
-      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1', last_stripe_event_at: '2026-07-12T09:00:00Z' }] } as never)
+      .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never) // profile
+      .mockResolvedValueOnce({ rows: [{ last_stripe_event_at: '2026-07-12T09:00:00Z' }] } as never) // MAX(entitlements)
       .mockResolvedValueOnce({ rows: [
         { event_id: 'evt_2', event_type: 'invoice.payment_succeeded', processed_at: '2026-07-12T09:00:00Z' },
         { event_id: 'evt_1', event_type: null, processed_at: '2026-07-11T09:00:00Z' },
       ] } as never);
-    const res = await EVENTS_GET(req(), ctx('t1'));
+    const res = await EVENTS_GET(req(), ctx(TARGET));
     const body = await res.json();
     expect(body.data[0]).toEqual({ event_id: 'evt_2', type: 'invoice.payment_succeeded', processed_at: '2026-07-12T09:00:00Z' });
     expect(body.data[1].type).toBeNull(); // pre-mig-221 row → null type, honest
     expect(body.meta.last_stripe_event_at).toBe('2026-07-12T09:00:00Z');
+    // The watermark is entitlements-derived now (N2) — MAX across products.
+    const watermarkSql = String(mockedQuery.mock.calls[1]![0]);
+    expect(watermarkSql).toMatch(/MAX\(last_stripe_event_at\)[\s\S]*FROM entitlements/);
   });
 });

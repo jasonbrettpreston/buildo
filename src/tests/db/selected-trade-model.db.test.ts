@@ -16,8 +16,12 @@ import { deriveAccountPreset } from '@/lib/classification/account-preset';
 
 const pool = getTestPool();
 
-// The exact projection get-user-context.ts reads.
-const CTX_SQL = `SELECT trade_slug, trade_slugs_override, display_name, subscription_status FROM user_profiles WHERE user_id = $1`;
+// The user_profiles projection get-user-context.ts reads (post-entitlements
+// swap, `.cursor/phase1_plan.md` P1-F3d: subscription_status left this
+// projection — it now LEFT JOINs the lead_gen entitlements row, which these
+// non-uuid seed accounts can never have; the trade-set assertions below are
+// entitlement-independent).
+const CTX_SQL = `SELECT trade_slug, trade_slugs_override, display_name FROM user_profiles WHERE user_id = $1`;
 
 // Replicates the helper's NULL-safe set builder (kept tiny; the canonical impl
 // is get-user-context.ts, unit-pinned separately).
@@ -40,8 +44,8 @@ describe.skipIf(!dbAvailable())('SELECTED-TRADE model on seeded accounts', () =>
   beforeAll(async () => {
     for (const s of SEED) {
       await pool!.query(
-        `INSERT INTO user_profiles (user_id, trade_slug, trade_slugs_override, account_preset, subscription_status, onboarding_complete)
-         VALUES ($1, $2, $3, $4, 'admin_managed', true)
+        `INSERT INTO user_profiles (user_id, trade_slug, trade_slugs_override, account_preset, onboarding_complete)
+         VALUES ($1, $2, $3, $4, true)
          ON CONFLICT (user_id) DO UPDATE SET trade_slug = EXCLUDED.trade_slug, trade_slugs_override = EXCLUDED.trade_slugs_override, account_preset = EXCLUDED.account_preset`,
         [s.user_id, s.trade_slug, s.override, s.preset],
       );

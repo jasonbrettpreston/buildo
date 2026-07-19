@@ -8,6 +8,7 @@
 // reasons at the boundary.
 
 import { z } from 'zod';
+import { PRODUCTS } from '@/lib/entitlements';
 
 const reasonField = z
   .string()
@@ -15,9 +16,15 @@ const reasonField = z
   .min(3, 'A reason of at least 3 characters is required (audit-logged)')
   .max(500);
 
-/** POST /api/admin/users/[uid]/subscription/reconcile — apply Stripe truth. */
+/**
+ * POST /api/admin/users/[uid]/subscription/reconcile — apply Stripe truth.
+ * Entitlements swap (`.cursor/phase1_plan.md` Item 4 W7): `product` optionally
+ * scopes the apply to ONE product's entitlement row; omitted = reconcile every
+ * product with drift (one audit row per product actually changed).
+ */
 export const ReconcileApplySchema = z.object({
   apply: z.literal(true),
+  product: z.enum(PRODUCTS).optional(),
   reason: reasonField,
 });
 export type ReconcileApply = z.infer<typeof ReconcileApplySchema>;

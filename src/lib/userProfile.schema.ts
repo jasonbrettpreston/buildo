@@ -75,6 +75,13 @@ export type UserProfileType = z.infer<typeof UserProfileSchema>;
 // is consumed externally — by `/api/user-profile/route.ts`. Removing
 // the `export` per WF3 dead-code sweep (knip flagged it as an unused
 // export — verified zero importers via grep).
+// Entitlements swap (`.cursor/phase1_plan.md` Item 4 / Spec 116 N2):
+// `subscription_status` and `trial_started_at` are NO LONGER user_profiles
+// columns in this list — they are sourced from the lead_gen `entitlements`
+// row via `CLIENT_SAFE_JOINED_SELECT` below, keeping the exact response
+// field names mobile's UserProfileSchema parses (R6 mobile-contract freeze:
+// a zero-entitlement user serialises `subscription_status: null,
+// trial_started_at: null` — never undefined/omitted, fold 16).
 const CLIENT_SAFE_COLUMNS = [
   'user_id',
   'trade_slug',
@@ -93,8 +100,6 @@ const CLIENT_SAFE_COLUMNS = [
   'radius_km',
   'supplier_selection',
   'lead_views_count',
-  'subscription_status',
-  'trial_started_at',
   'onboarding_complete',
   'tos_accepted_at',
   'account_deleted_at',
@@ -105,7 +110,16 @@ const CLIENT_SAFE_COLUMNS = [
   'start_date_urgent',
   'notification_schedule',
 ] as const;
-export const CLIENT_SAFE_SELECT_LIST = CLIENT_SAFE_COLUMNS.join(', ');
+
+/**
+ * SELECT list for queries shaped `FROM user_profiles up LEFT JOIN
+ * entitlements e ...` (pair with LEAD_GEN_ENTITLEMENT_JOIN from
+ * `@/lib/entitlements`). The `e.` aliases restore the two entitlement-sourced
+ * fields under their frozen mobile-contract names.
+ */
+export const CLIENT_SAFE_JOINED_SELECT =
+  CLIENT_SAFE_COLUMNS.map((c) => `up.${c}`).join(', ') +
+  ', e.status AS subscription_status, e.trial_started_at';
 
 export const UserProfileUpdateSchema = z
   .object({

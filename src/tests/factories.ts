@@ -201,6 +201,37 @@ export function createMockUserProfile(overrides: Partial<UserProfile> = {}): Use
   };
 }
 
+// Spec 116 N2 — per-product entitlement row (migration 228 shape). uuid
+// user_id (entitlements is UUID-keyed / FK auth.users, unlike the pre-229
+// user_profiles factory above, which keeps its legacy string uid until the
+// 229 wave retires it repo-wide).
+export interface EntitlementRow {
+  user_id: string;
+  product: 'lead_gen' | 'flight_center';
+  status: 'trial' | 'active' | 'past_due' | 'expired' | 'cancelled_pending_deletion' | 'admin_managed';
+  stripe_subscription_id: string | null;
+  current_period_end: Date | null;
+  trial_started_at: Date | null;
+  last_stripe_event_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export function createMockEntitlement(overrides: Partial<EntitlementRow> = {}): EntitlementRow {
+  return {
+    user_id: '00000000-0000-0000-0000-000000000001',
+    product: 'lead_gen',
+    status: 'trial',
+    stripe_subscription_id: null,
+    current_period_end: null,
+    trial_started_at: new Date('2026-04-01T00:00:00Z'),
+    last_stripe_event_at: null,
+    created_at: new Date('2026-04-01T00:00:00Z'),
+    updated_at: new Date('2026-04-01T00:00:00Z'),
+    ...overrides,
+  };
+}
+
 export function createMockTrade(overrides: Partial<Trade> = {}): Trade {
   return {
     id: 1,

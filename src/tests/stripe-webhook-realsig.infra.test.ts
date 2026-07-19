@@ -40,14 +40,19 @@ function makeRequest(body: string, headers: Record<string, string> = {}): NextRe
 }
 
 describe('POST /api/webhooks/stripe — real Stripe signature verification', () => {
-  it('accepts a genuinely-signed checkout.session.completed and activates', async () => {
+  // entitlements.user_id is UUID-keyed (Spec 116 N2) — the signed fixture's
+  // client_reference_id must be uuid-shaped or the route (correctly) skips
+  // the entitlement write as a pre-229 legacy uid.
+  const UID_REAL = '00000000-0000-0000-0000-0000000000fe';
+
+  it('accepts a genuinely-signed checkout.session.completed and activates the lead_gen entitlement', async () => {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
     const payload = JSON.stringify({
       id: 'evt_realsig_1',
       object: 'event',
       type: 'checkout.session.completed',
       created: 1717250000,
-      data: { object: { client_reference_id: 'uid-real', customer: 'cus_real' } },
+      data: { object: { client_reference_id: UID_REAL, customer: 'cus_real' } },
     });
     const header = stripe.webhooks.generateTestHeaderString({ payload, secret: WEBHOOK_SECRET });
 
@@ -59,9 +64,14 @@ describe('POST /api/webhooks/stripe — real Stripe signature verification', () 
 
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ received: true });
+    // The entitlements upsert: [user_id, product, status, ...] — OD5-default
+    // product on a checkout event (no price data).
+    const upsertSql = fakeClientQuery.mock.calls[1]?.[0] as string;
+    expect(upsertSql).toContain('INSERT INTO entitlements');
     const params = fakeClientQuery.mock.calls[1]?.[1] as unknown[];
-    expect(params[0]).toBe('active');
-    expect(params[2]).toBe('uid-real');
+    expect(params[0]).toBe(UID_REAL);
+    expect(params[1]).toBe('lead_gen');
+    expect(params[2]).toBe('active');
   });
 
   it('rejects a real payload signed with the WRONG secret (400, no DB write)', async () => {
@@ -71,7 +81,7 @@ describe('POST /api/webhooks/stripe — real Stripe signature verification', () 
       object: 'event',
       type: 'checkout.session.completed',
       created: 1717250000,
-      data: { object: { client_reference_id: 'uid-real', customer: 'cus_real' } },
+      data: { object: { client_reference_id: UID_REAL, customer: 'cus_real' } },
     });
     const header = stripe.webhooks.generateTestHeaderString({ payload, secret: 'whsec_attacker_secret' });
 

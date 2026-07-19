@@ -1,27 +1,36 @@
 // SPEC LINK: docs/specs/03-mobile/96_mobile_subscription.md §10 Step 5
+//            docs/specs/00-architecture/116_multi_product_architecture.md §4 N2 + OD3/OD5
 //
 // POST /api/webhooks/stripe — Stripe-only webhook receiver. Public route
-// (no Firebase auth) verified by the Stripe-Signature header against
-// STRIPE_WEBHOOK_SECRET. Updates user_profiles.subscription_status based
-// on the event type:
-//   checkout.session.completed                              → 'active' + stripe_customer_id
-//                                                             (identity via client_reference_id → user_id)
-//   customer.subscription.created/updated (status='active') → 'active' + stripe_customer_id
+// (no session auth) verified by the Stripe-Signature header against
+// STRIPE_WEBHOOK_SECRET. Upserts per-product `entitlements` rows (Spec 116
+// N2; `.cursor/phase1_plan.md` Item 4 W1 — the legacy
+// user_profiles.subscription_status write surface is retired) based on the
+// event type:
+//   checkout.session.completed                              → 'active' (OD5 default product;
+//                                                             identity via client_reference_id → user_id)
+//   customer.subscription.created/updated (status='active') → 'active' (price → product fan-out, OD3)
 //   invoice.payment_succeeded                               → 'active'  (past_due recovery)
 //   invoice.payment_failed                                  → 'past_due'
 //   customer.subscription.deleted                           → 'expired'
 //   anything else                                           → 200 no-op
 //
-// Re-subscriber correctness (Spec 20 §4.2 / P26): a RETURNING subscriber
-// checks out again and Stripe mints a BRAND-NEW customer id (cus_NEW). The
-// metadata.user_id path below writes `stripe_customer_id = $2` AUTHORITATIVELY
-// (not COALESCE) and no longer gates on customer-id equality, so the new id
-// overwrites the stale stored one and the account re-activates. Without this,
-// the old guard silently matched 0 rows (stored cus_OLD ≠ event cus_NEW) and
-// the paying re-subscriber was never reactivated.
+// PRICE → PRODUCT FAN-OUT (OD3, independent per-product subscriptions):
+// customer.subscription.* events carry their price directly
+// (items.data[0].price.id) and are the AUTHORITATIVE product-resolution
+// events, mapped via `resolvePriceProduct` (logic_variables.
+// stripe_price_product_map, ~60s TTL cache). checkout.session.completed does
+// NOT carry price data without an extra expand round-trip — rather than add
+// a Stripe API call inside the handler it writes the OD5-default product
+// ('lead_gen'); the authoritative assignment corrects itself when
+// subscription.created arrives moments later (the same belt-and-suspenders
+// relationship the single-product design documented). invoice.* events
+// resolve their product via the invoice's subscription reference against
+// entitlements.stripe_subscription_id (no Stripe round-trip); an invoice
+// with no resolvable subscription falls back to lead_gen and logs a WARN.
 //
 // Idempotency: the dedup INSERT into stripe_webhook_events and the
-// user_profiles UPDATE happen inside a single db.transaction() so a
+// entitlements upsert happen inside a single db.transaction() so a
 // concurrent retry from Stripe cannot apply the same event twice. The
 // transaction returns early when the INSERT collides (already-processed
 // event), so the body is never re-applied.
@@ -36,11 +45,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { withTransaction } from '@/lib/db/client';
-import { logError } from '@/lib/logger';
+import { logError, logWarn } from '@/lib/logger';
 // getStripeClient extracted to the shared module (P26-26B) so the
 // checkout-session, portal, and delete-cancel paths construct the SDK
 // identically. The API-version-pinning note lives there.
-import { getStripeClient, mapStripeSubStatus } from '@/lib/stripe/client';
+import {
+  getStripeClient,
+  mapStripeSubStatus,
+  subscriptionPriceId,
+  subscriptionCurrentPeriodEnd,
+  stripeRefId,
+} from '@/lib/stripe/client';
+import {
+  resolvePriceProduct,
+  upsertEntitlementFromStripeEvent,
+  isUuid,
+  DEFAULT_PRODUCT,
+  type Product,
+} from '@/lib/entitlements';
 
 function getWebhookSecret(): string {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -56,22 +78,30 @@ interface WebhookOutcome {
   /**
    * Internal Buildo user_id, when the Stripe object carries it in metadata.
    * The web checkout (/api/subscribe/exchange, P26-26B) writes BOTH
-   * `subscription_data.metadata.user_id = <firebase_uid>` AND
-   * `client_reference_id = <firebase_uid>` when creating the checkout
-   * session. When present, we match by user_id instead of
-   * stripe_customer_id — that closes the fail-open gap where a missed or
-   * delayed `subscription.created` event would otherwise prevent later
-   * `subscription.deleted` events from revoking access.
+   * `subscription_data.metadata.user_id = <uid>` AND
+   * `client_reference_id = <uid>` when creating the checkout session. When
+   * present, we match by user_id instead of stripe_customer_id — that closes
+   * the fail-open gap where a missed or delayed `subscription.created` event
+   * would otherwise prevent later `subscription.deleted` events from revoking
+   * access.
    */
   userId: string | null;
+  /** items.data[0].price.id on subscription.* events; null elsewhere. */
+  priceId: string | null;
+  /** The Stripe Subscription id this event belongs to, when resolvable. */
+  subscriptionId: string | null;
+  /** items.data[0].current_period_end on subscription.* events (net-new N2 column). */
+  currentPeriodEnd: Date | null;
+  /**
+   * invoice.* events don't carry price data — resolve their product by
+   * looking up which entitlement row tracks `subscriptionId` instead of
+   * mapping a price (see header).
+   */
+  resolveProductViaSubscription: boolean;
 }
 
 function customerIdFromUnknown(input: unknown): string | null {
-  if (typeof input === 'string') return input;
-  if (input && typeof input === 'object' && 'id' in input && typeof input.id === 'string') {
-    return input.id;
-  }
-  return null;
+  return stripeRefId(input);
 }
 
 function userIdFromMetadata(metadata: Stripe.Metadata | null | undefined): string | null {
@@ -82,20 +112,26 @@ function userIdFromMetadata(metadata: Stripe.Metadata | null | undefined): strin
 
 // Maps Stripe subscription.status to our internal status. Returns null for
 // statuses we don't act on (`incomplete`, `incomplete_expired`, `trialing`,
-// `paused`, `canceled` — none of which should mutate our own
-// subscription_status). The single source of truth for access revocation is
+// `paused`, `canceled` — none of which should mutate our own entitlement
+// status). The single source of truth for access revocation is
 // `customer.subscription.deleted` (handled in classifyEvent), not any
 // status mapping here — Spec 96 §7 configures subscriptions with
 // `cancel_at_period_end = true`, so users retain access through the paid
 // period and only `subscription.deleted` correctly times the cutoff.
 //
-// mapSubscriptionStatus lives in @/lib/stripe/client (mapStripeSubStatus) as the
-// single source of truth, shared with the admin reconcile route so the
-// drift-detector can never drift from what the webhook actually writes.
+// mapStripeSubStatus lives in @/lib/stripe/client as the single source of
+// truth, shared with the admin reconcile route so the drift-detector can
+// never drift from what the webhook actually writes.
 
 function clientReferenceIdOf(session: Stripe.Checkout.Session): string | null {
   const value = session.client_reference_id;
   return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+/** Invoice → its subscription id. Stripe SDK v18+ moved the top-level
+ *  `invoice.subscription` field under `parent.subscription_details`. */
+function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
+  return stripeRefId(invoice.parent?.subscription_details?.subscription ?? null);
 }
 
 function classifyEvent(event: Stripe.Event): WebhookOutcome {
@@ -103,18 +139,19 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
     case 'checkout.session.completed': {
       // The belt to subscription.created's suspenders: the FIRST signal that a
       // web checkout succeeded. Our /api/subscribe/exchange route sets
-      // `client_reference_id = <firebase_uid>` when creating the session, so we
-      // recover the internal user_id directly (no metadata dependency) and the
-      // customer id Stripe minted for this checkout. Routes through the
-      // metadata-primary UPDATE (userId non-null) which writes the customer id
-      // authoritatively — correct for both first-time and re-subscribers.
-      // Existing out-of-order + dedup guards make any double-activation with
-      // subscription.created inert.
+      // `client_reference_id = <uid>` when creating the session, so we
+      // recover the internal user_id directly (no metadata dependency).
+      // No price data without an expand call — writes the OD5-default
+      // product; subscription.created is the authoritative corrector.
       const session = event.data.object as Stripe.Checkout.Session;
       return {
         newStatus: 'active',
         stripeCustomerId: customerIdFromUnknown(session.customer),
         userId: clientReferenceIdOf(session) ?? userIdFromMetadata(session.metadata),
+        priceId: null,
+        subscriptionId: stripeRefId(session.subscription),
+        currentPeriodEnd: null,
+        resolveProductViaSubscription: false,
       };
     }
     case 'customer.subscription.created':
@@ -130,19 +167,26 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         newStatus,
         stripeCustomerId: customerIdFromUnknown(sub.customer),
         userId: userIdFromMetadata(sub.metadata),
+        priceId: subscriptionPriceId(sub),
+        subscriptionId: sub.id,
+        currentPeriodEnd: subscriptionCurrentPeriodEnd(sub),
+        resolveProductViaSubscription: false,
       };
     }
     case 'invoice.payment_succeeded': {
       // Recurring payment cleared, or a past_due account recovered its card in
       // the Stripe portal. Invoice objects do NOT carry the subscription's
       // metadata.user_id, so identity resolves via the stripe_customer_id
-      // fallback branch (userId null) — the customer id was stored on the
-      // original activation. Flips past_due → active.
+      // fallback branch (userId null). Flips past_due → active.
       const invoice = event.data.object as Stripe.Invoice;
       return {
         newStatus: 'active',
         stripeCustomerId: customerIdFromUnknown(invoice.customer),
         userId: userIdFromMetadata(invoice.metadata),
+        priceId: null,
+        subscriptionId: invoiceSubscriptionId(invoice),
+        currentPeriodEnd: null,
+        resolveProductViaSubscription: true,
       };
     }
     case 'invoice.payment_failed': {
@@ -151,6 +195,10 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         newStatus: 'past_due',
         stripeCustomerId: customerIdFromUnknown(invoice.customer),
         userId: userIdFromMetadata(invoice.metadata),
+        priceId: null,
+        subscriptionId: invoiceSubscriptionId(invoice),
+        currentPeriodEnd: null,
+        resolveProductViaSubscription: true,
       };
     }
     case 'customer.subscription.deleted': {
@@ -159,10 +207,22 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         newStatus: 'expired',
         stripeCustomerId: customerIdFromUnknown(sub.customer),
         userId: userIdFromMetadata(sub.metadata),
+        priceId: subscriptionPriceId(sub),
+        subscriptionId: sub.id,
+        currentPeriodEnd: subscriptionCurrentPeriodEnd(sub),
+        resolveProductViaSubscription: false,
       };
     }
     default:
-      return { newStatus: null, stripeCustomerId: null, userId: null };
+      return {
+        newStatus: null,
+        stripeCustomerId: null,
+        userId: null,
+        priceId: null,
+        subscriptionId: null,
+        currentPeriodEnd: null,
+        resolveProductViaSubscription: false,
+      };
   }
 }
 
@@ -242,7 +302,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
         return;
       }
 
-      // Identify the target row:
+      // Identify the target USER:
       //   1. Prefer event metadata.user_id / client_reference_id — set by OUR
       //      web checkout (/api/subscribe/exchange) when it creates the Stripe
       //      session with `client_reference_id` AND
@@ -251,115 +311,119 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       //      later `subscription.deleted` because BOTH carry the same user_id.
       //   2. Fall back to stripe_customer_id when the linkage is absent
       //      (invoice.payment_succeeded/_failed, legacy events, or third-party
-      //      tools that bypass the web checkout).
+      //      tools that bypass the web checkout). `user_profiles.
+      //      stripe_customer_id` stays the customer-level 1:1 identity bridge
+      //      (plan Item 4 legacy-column disposition) — under W8's
+      //      one-Customer-per-user reuse, /api/subscribe/exchange creates and
+      //      stores it BEFORE any webhook can fire, so this route no longer
+      //      writes it (the legacy authoritative-overwrite re-subscriber fix
+      //      is superseded by Customer reuse: the id never changes).
       //
-      // Both paths are guarded against out-of-order delivery —
-      // `last_stripe_event_at IS NULL OR last_stripe_event_at < $eventCreatedAt`.
-      // Stripe does not guarantee delivery order, so a delayed
-      // subscription.updated arriving after a subscription.deleted would
-      // otherwise overwrite 'expired' back to 'active'. We track the latest
-      // processed event timestamp per user and reject older events (rowCount
-      // === 0, no log noise — expected behaviour).
-      //
-      // FORGERY FENCE (relocated — P26): the previous customer-id equality
-      // guard on the user_id path (`stripe_customer_id IS NULL OR = $2`) was
-      // REMOVED because it broke the re-subscriber flow — a returning customer
-      // gets a NEW cus_ id every checkout, which never equals the stored one,
-      // so activation silently matched 0 rows. The real fence against
-      // metadata.user_id forgery is that `metadata.user_id` /
+      // FORGERY FENCE (P26, carried forward): `metadata.user_id` /
       // `client_reference_id` are set ONLY by our own checkout route
       // server-side; Stripe gives the paying customer no way to write them.
-      // The customer id is therefore written AUTHORITATIVELY (`= $2`, not
-      // COALESCE) so a re-subscribe overwrites cus_OLD with cus_NEW. Every
-      // event that reaches this branch (checkout.session.completed,
-      // subscription.created/updated) carries a customer id, so $2 is non-null
-      // here.
-      //
-      // DELETION-STATE FENCE (P26-26D): both branches additionally refuse to
-      // touch a row whose subscription_status is 'cancelled_pending_deletion'.
-      // 26D's delete-time cancel schedules cancel_at_period_end, so Stripe
-      // fires customer.subscription.updated NOW (status still 'active') and
-      // customer.subscription.deleted LATER at period end — without this fence
-      // EITHER event would overwrite the deletion state to 'active'/'expired',
-      // which un-blocks the session route's DELETION_BLOCKED check and would
-      // let a deleted account re-subscribe (the exact contract Spec 96 §2
-      // forbids). Reactivation (Spec 95 §6.4) clears the deletion state and
-      // restores the LIVE Stripe status (WF3 2026-07-14 — 'active'/'past_due'
-      // if the period-end sub is still live, else 'expired'), re-stamping
-      // last_stripe_event_at to the reactivation instant so this guard stays
-      // forward-only; webhook writes then apply normally again.
-      const eventCreatedAt = new Date(event.created * 1000);
-      let result;
-      if (outcome.userId !== null) {
-        // SUPERSEDED-SUBSCRIPTION FENCE (P26 review — Reality-Check CRITICAL):
-        //   `$1 = 'active' OR stripe_customer_id IS NOT DISTINCT FROM $2`
-        // An ACTIVATING event (newStatus 'active') still claims the customer id
-        // authoritatively (the re-subscriber fix — a returning customer's new
-        // cus_id must win). But a REVOKING/downgrading event ('expired' /
-        // 'past_due') only applies when the event's customer matches the
-        // profile's CURRENT stripe_customer_id — so a terminal event from an
-        // OLD, superseded subscription (delete -> reactivate -> re-subscribe
-        // with a fresh cus_NEW; the period-end old sub fires .deleted weeks
-        // later) can NOT downgrade the user's live, paid new subscription.
-        // stripe_customer_id uses COALESCE so a customer-less event never NULLs
-        // the stored id (Gemini HIGH).
-        result = await client.query(
-          `UPDATE user_profiles
-           SET subscription_status = $1,
-               stripe_customer_id = COALESCE($2, stripe_customer_id),
-               last_stripe_event_at = $4,
-               updated_at = NOW()
-           WHERE user_id = $3
-             AND (last_stripe_event_at IS NULL OR last_stripe_event_at < $4)
-             AND subscription_status IS DISTINCT FROM 'cancelled_pending_deletion'
-             AND ($1 = 'active' OR stripe_customer_id IS NOT DISTINCT FROM $2)`,
-          [outcome.newStatus, outcome.stripeCustomerId, outcome.userId, eventCreatedAt],
+      let userId = outcome.userId;
+      if (userId === null && outcome.stripeCustomerId !== null) {
+        const userRes = await client.query<{ user_id: string }>(
+          `SELECT user_id FROM user_profiles WHERE stripe_customer_id = $1`,
+          [outcome.stripeCustomerId],
         );
-      } else if (outcome.stripeCustomerId !== null) {
-        result = await client.query(
-          `UPDATE user_profiles
-           SET subscription_status = $1,
-               last_stripe_event_at = $3,
-               updated_at = NOW()
-           WHERE stripe_customer_id = $2
-             AND (last_stripe_event_at IS NULL OR last_stripe_event_at < $3)
-             AND subscription_status IS DISTINCT FROM 'cancelled_pending_deletion'`,
-          [outcome.newStatus, outcome.stripeCustomerId, eventCreatedAt],
-        );
-      } else {
-        // Both identifiers missing — log and skip. The dedup row remains
-        // committed so the same orphan event isn't reprocessed indefinitely.
+        userId = userRes.rows[0]?.user_id ?? null;
+      }
+      if (userId === null) {
+        // Neither identifier resolved a user — log and skip. The dedup row
+        // remains committed so the same orphan event isn't reprocessed
+        // indefinitely.
         logError(
           '[stripe-webhook]',
-          new Error('Stripe event has neither metadata.user_id nor a customer id'),
-          { event_id: event.id, event_type: event.type, attempted_status: outcome.newStatus },
+          new Error('Stripe event resolved no user (missing/unknown metadata.user_id and customer id)'),
+          { event_id: event.id, event_type: event.type, attempted_status: outcome.newStatus,
+            stripe_customer_id: outcome.stripeCustomerId },
+        );
+        return;
+      }
+      if (!isUuid(userId)) {
+        // Pre-229 legacy/dev uid shapes cannot key an entitlements row (UUID
+        // FK to auth.users) — treated as no-row-matched, never a 500/retry.
+        logError(
+          '[stripe-webhook]',
+          new Error('Resolved user id is not a Supabase uuid — entitlement write skipped'),
+          { event_id: event.id, event_type: event.type, user_id: userId },
         );
         return;
       }
 
-      if (result.rowCount === 0) {
-        // No row matched. Three possible causes, distinguishable only by a
+      // Identify the target PRODUCT (OD3 fan-out):
+      //   - subscription.* events map their price via resolvePriceProduct.
+      //   - checkout.session.completed carries no price → OD5 default.
+      //   - invoice.* events carry neither price nor metadata — resolve via
+      //     which entitlement row tracks the invoice's subscription id (the
+      //     partial index on stripe_subscription_id), avoiding a Stripe API
+      //     round-trip inside the webhook; unresolvable → OD5 default + WARN.
+      let product: Product;
+      if (outcome.resolveProductViaSubscription) {
+        product = DEFAULT_PRODUCT;
+        if (outcome.subscriptionId !== null) {
+          const prodRes = await client.query<{ product: Product }>(
+            `SELECT product FROM entitlements WHERE stripe_subscription_id = $1 LIMIT 1`,
+            [outcome.subscriptionId],
+          );
+          if (prodRes.rows[0]) {
+            product = prodRes.rows[0].product;
+          } else {
+            logWarn('[stripe-webhook]', 'invoice subscription matches no entitlement row — defaulting to lead_gen', {
+              event_id: event.id,
+              subscription_id: outcome.subscriptionId,
+            });
+          }
+        } else {
+          logWarn('[stripe-webhook]', 'invoice event carries no subscription reference — defaulting to lead_gen', {
+            event_id: event.id,
+          });
+        }
+      } else {
+        product = await resolvePriceProduct(client, outcome.priceId);
+      }
+
+      // Per-product entitlement upsert — all three legacy fences preserved
+      // (out-of-order watermark keyed on event.created [fold 17], deletion
+      // fence, superseded-subscription fence now keyed on
+      // stripe_subscription_id). See upsertEntitlementFromStripeEvent.
+      const eventCreatedAt = new Date(event.created * 1000);
+      const rowCount = await upsertEntitlementFromStripeEvent(client, {
+        userId,
+        product,
+        status: outcome.newStatus,
+        stripeSubscriptionId: outcome.subscriptionId,
+        currentPeriodEnd: outcome.currentPeriodEnd,
+        eventCreatedAt,
+      });
+
+      if (rowCount === 0) {
+        // No row applied. Three possible causes, distinguishable only by a
         // follow-up SELECT (skipped here for cost):
-        //   (a) user_id / stripe_customer_id doesn't exist (account
-        //       deleted before Stripe cleanup, or stale identifier)
-        //   (b) stripe_customer_id mismatch in the WHERE guard (potential
-        //       Stripe-metadata forgery — see the user_id branch above)
-        //   (c) Out-of-order event — last_stripe_event_at >= $4, rejected
-        //       intentionally as a stale delivery
+        //   (a) Out-of-order event — last_stripe_event_at >= event.created,
+        //       rejected intentionally as a stale delivery
+        //   (b) Deletion fence — the (user, product) row is
+        //       'cancelled_pending_deletion' and must not be resurrected
+        //   (c) Superseded-subscription fence — a terminal event from an old
+        //       subscription that no longer matches the row's tracked sub id
         // We log all three the same way; do NOT throw, because throwing
         // would roll back the dedup row and Stripe would retry forever.
         // Operations should grep on `event: 'no_row_matched'` and
-        // disambiguate by checking the user_profile row state.
+        // disambiguate by checking the entitlements row state.
         logError(
           '[stripe-webhook]',
-          new Error('No user_profiles row matched event identifiers (or stale event)'),
+          new Error('No entitlements row applied (stale, deletion-fenced, or superseded event)'),
           {
             event: 'no_row_matched',
             event_id: event.id,
             event_type: event.type,
             event_created_at: eventCreatedAt.toISOString(),
-            user_id: outcome.userId,
+            user_id: userId,
+            product,
             stripe_customer_id: outcome.stripeCustomerId,
+            stripe_subscription_id: outcome.subscriptionId,
             attempted_status: outcome.newStatus,
           },
         );

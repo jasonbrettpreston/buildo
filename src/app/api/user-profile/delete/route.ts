@@ -3,8 +3,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
-import { query } from '@/lib/db/client';
+import { query, withTransaction } from '@/lib/db/client';
 import { logError } from '@/lib/logger';
+import { markAllEntitlementsCancelledPendingDeletion } from '@/lib/entitlements';
 // cancelAllStripeSubscriptions (period-end, P26-26D) is the SHARED helper in
 // @/lib/stripe/client so the delete-time cancel and the admin retry-cancel
 // route stay byte-identical. Delete-time semantics: schedule
@@ -45,14 +46,23 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       return NextResponse.json({ data: { ok: true }, error: null, meta: null });
     }
 
-    await query(
-      `UPDATE user_profiles
-       SET account_deleted_at = NOW(),
-           subscription_status = 'cancelled_pending_deletion',
-           updated_at = NOW()
-       WHERE user_id = $1`,
-      [uid],
-    );
+    // Entitlements swap (`.cursor/phase1_plan.md` Item 4 W5): deletion is
+    // account-level — account_deleted_at on user_profiles PLUS a fan-out to
+    // EVERY entitlement row the user has (no product filter, deliberately:
+    // 'cancelled_pending_deletion' must block re-subscribe on all products).
+    // Both writes commit together or not at all (fold: withTransaction added
+    // this phase — a mid-write failure must not leave a deleted account with
+    // live entitlements, or vice versa).
+    await withTransaction(async (client) => {
+      await client.query(
+        `UPDATE user_profiles
+         SET account_deleted_at = NOW(),
+             updated_at = NOW()
+         WHERE user_id = $1`,
+        [uid],
+      );
+      await markAllEntitlementsCancelledPendingDeletion(client, uid);
+    });
 
     // Delete-time Stripe cancel (P26-26D): schedule cancel_at_period_end for
     // every live subscription (user ruling 2026-07-12 — deleter keeps the paid

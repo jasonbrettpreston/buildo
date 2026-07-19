@@ -24,6 +24,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getUserIdFromSession } from '@/lib/auth/get-user';
 import { withTransaction } from '@/lib/db/client';
+import { getEntitlementStatusForUpdate, DEFAULT_PRODUCT } from '@/lib/entitlements';
 import { logError } from '@/lib/logger';
 import type { SubscribeSessionResponse } from './types';
 
@@ -77,11 +78,19 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   try {
     const baseUrl = resolveCheckoutBaseUrl();
 
-    // Wrap SELECT + INSERT in a single transaction with a row-level lock to
-    // close the TOCTOU race: a concurrent webhook flipping subscription_status
-    // to 'active' between the SELECT and the INSERT would otherwise still
-    // issue a useless checkout URL. FOR UPDATE serialises with the webhook's
-    // UPDATE on the same row.
+    // Wrap the reads + INSERT in a single transaction with row-level locks to
+    // close the TOCTOU race: a concurrent webhook flipping the lead_gen
+    // entitlement to 'active' between the read and the INSERT would otherwise
+    // still issue a useless checkout URL. Entitlements swap
+    // (`.cursor/phase1_plan.md` Item 4 R3): the single legacy lock splits
+    // into TWO locks in the same transaction —
+    //   1. user_profiles FOR UPDATE: the deletion-blocked check is genuinely
+    //      ACCOUNT-level (account_deleted_at — W5 sets it in the same txn as
+    //      the entitlement fan-out) and doesn't need entitlements at all.
+    //   2. the (uid, 'lead_gen') entitlements row FOR UPDATE: the
+    //      portal-routed / already-entitled checks — serialises with the
+    //      webhook's upsert on the same row. Zero rows (first-time
+    //      subscriber) takes no lock and proceeds to mint a nonce normally.
     //
     // Idempotent within the 15-min nonce window: if a valid unexpired nonce
     // already exists for this user (e.g. double-tap on the CTA), reuse it
@@ -89,8 +98,8 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     // safe to call repeatedly within a checkout window without polluting the
     // nonce table.
     const result = await withTransaction(async (client) => {
-      const profileRows = await client.query<{ subscription_status: string | null }>(
-        `SELECT subscription_status FROM user_profiles WHERE user_id = $1 FOR UPDATE`,
+      const profileRows = await client.query<{ account_deleted_at: string | null }>(
+        `SELECT account_deleted_at FROM user_profiles WHERE user_id = $1 FOR UPDATE`,
         [uid],
       );
 
@@ -102,8 +111,16 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
         return { kind: 'no_profile' as const };
       }
 
-      const status = profileRows.rows[0]!.subscription_status;
+      if (profileRows.rows[0]!.account_deleted_at !== null) {
+        return { kind: 'deletion_blocked' as const };
+      }
+
+      const entitlement = await getEntitlementStatusForUpdate(client, uid, DEFAULT_PRODUCT);
+      const status = entitlement?.status ?? null;
       if (status !== null && DELETION_BLOCKED_STATUSES.has(status)) {
+        // Belt to account_deleted_at's suspenders: a deletion-marked
+        // entitlement row blocks checkout even if the account-level flag was
+        // somehow cleared out of band.
         return { kind: 'deletion_blocked' as const };
       }
       if (status !== null && PORTAL_ROUTED_STATUSES.has(status)) {

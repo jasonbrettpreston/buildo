@@ -13,8 +13,12 @@
 //      already-consumed, and never-existed are DELIBERATELY indistinguishable
 //      (an attacker probing nonce values learns nothing about which failure
 //      mode they hit).
-//   3. Create the Stripe Checkout Session (mode: subscription) carrying BOTH
-//      linkage fields — `client_reference_id` AND
+//   3. Resolve the user's Stripe Customer (W8, `.cursor/phase1_plan.md`
+//      Item 4 / fold 4): reuse user_profiles.stripe_customer_id when stored;
+//      create-and-store exactly once otherwise (one Customer per user — the
+//      invoice-event identity bridge). Then create the Stripe Checkout
+//      Session (mode: subscription) on that Customer, carrying BOTH linkage
+//      fields — `client_reference_id` AND
 //      `subscription_data.metadata.user_id` — so checkout.session.completed
 //      AND every customer.subscription.* event can resolve the internal user
 //      without depending on stripe_customer_id (the re-subscriber contract;
@@ -129,12 +133,37 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
     const stripe = getStripeClient();
     const baseUrl = resolveSubscribeBaseUrl();
 
-    // customer_email pre-fills the Stripe checkout form when we have one.
-    const emailRows = await query<{ email: string | null }>(
-      `SELECT email FROM user_profiles WHERE user_id = $1`,
+    // Stripe Customer REUSE (`.cursor/phase1_plan.md` Item 4 W8, fold 4):
+    // one Customer per user, forever. A stored stripe_customer_id is passed
+    // as `customer:` so Stripe reuses it; a NEW Customer is created ONLY on
+    // the first-ever checkout and persisted back onto user_profiles. This
+    // keeps stripe_customer_id a stable 1:1 identity bridge — the webhook's
+    // customer-id-fallback identification path (invoice events carry no
+    // metadata.user_id) depends on exactly that, and a second product's
+    // checkout landing on the SAME Customer is what lets its invoice events
+    // resolve too. The COALESCE write guard makes concurrent first checkouts
+    // race-safe: the loser adopts the winner's stored id (and its own
+    // just-created Customer is simply never used — inert, no billing state).
+    const profileRows = await query<{ email: string | null; stripe_customer_id: string | null }>(
+      `SELECT email, stripe_customer_id FROM user_profiles WHERE user_id = $1`,
       [userId],
     );
-    const email = emailRows[0]?.email ?? null;
+    const email = profileRows[0]?.email ?? null;
+    let customerId = profileRows[0]?.stripe_customer_id ?? null;
+    if (!customerId) {
+      const created = await stripe.customers.create({
+        ...(email ? { email } : {}),
+        metadata: { user_id: userId },
+      });
+      const stored = await query<{ stripe_customer_id: string }>(
+        `UPDATE user_profiles
+         SET stripe_customer_id = COALESCE(stripe_customer_id, $2), updated_at = NOW()
+         WHERE user_id = $1
+         RETURNING stripe_customer_id`,
+        [userId, created.id],
+      );
+      customerId = stored[0]?.stripe_customer_id ?? created.id;
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -143,7 +172,10 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       // one re-opens the re-subscriber / missed-event identity gap.
       client_reference_id: userId,
       subscription_data: { metadata: { user_id: userId } },
-      ...(email ? { customer_email: email } : {}),
+      // W8: always the stored/created Customer — never customer_email (Stripe
+      // rejects passing both, and an email-only session would mint a NEW
+      // Customer per checkout, breaking the 1:1 bridge above).
+      customer: customerId,
       success_url: `${baseUrl}/success`,
       cancel_url: `${baseUrl}/cancel`,
     });

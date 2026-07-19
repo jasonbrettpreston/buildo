@@ -125,30 +125,32 @@ describe('POST /api/subscribe/portal-session', () => {
   });
 });
 
-describe('POST /api/subscribe/session — the past_due fold (P26-26C)', () => {
+describe('POST /api/subscribe/session — the past_due fold (P26-26C, entitlements-gated)', () => {
+  // The session route now takes TWO locks (R3): user_profiles account check +
+  // the (uid, 'lead_gen') entitlements row. uuid uid — the entitlement read
+  // no-ops on non-uuid shapes.
+  const UID_PD = '00000000-0000-0000-0000-00000000d0fd';
+
   it('routes past_due users toward the portal (400 PAST_DUE_USE_PORTAL, no nonce minted)', async () => {
-    mockedGetUid.mockResolvedValueOnce('uid-pd-1');
-    // The session route's transaction: profile SELECT returns past_due.
-    fakeTxQuery.mockResolvedValueOnce({
-      rowCount: 1,
-      rows: [{ subscription_status: 'past_due' }],
-    });
+    mockedGetUid.mockResolvedValueOnce(UID_PD);
+    fakeTxQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ account_deleted_at: null }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ status: 'past_due', trial_started_at: null }] });
 
     const res = await SESSION_POST(makeRequest('/api/subscribe/session'));
 
     expect(res.status).toBe(400);
     expect((await res.json()).error.code).toBe('PAST_DUE_USE_PORTAL');
     // A second checkout would double-bill: assert NO nonce SELECT/INSERT
-    // followed the status check (only the profile SELECT ran).
-    expect(fakeTxQuery).toHaveBeenCalledTimes(1);
+    // followed the status check (only the two lock reads ran).
+    expect(fakeTxQuery).toHaveBeenCalledTimes(2);
   });
 
   it('still blocks active users with ALREADY_ENTITLED (fold does not widen the gate)', async () => {
-    mockedGetUid.mockResolvedValueOnce('uid-pd-2');
-    fakeTxQuery.mockResolvedValueOnce({
-      rowCount: 1,
-      rows: [{ subscription_status: 'active' }],
-    });
+    mockedGetUid.mockResolvedValueOnce(UID_PD);
+    fakeTxQuery
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ account_deleted_at: null }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ status: 'active', trial_started_at: null }] });
 
     const res = await SESSION_POST(makeRequest('/api/subscribe/session'));
 

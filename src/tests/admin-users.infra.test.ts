@@ -227,6 +227,78 @@ describe('admin/users PATCH — mutations audit', () => {
 });
 
 // ===========================================================================
+// Entitlements swap (plan Item 4 W6 + R7/R8) — per-product mutation writes.
+// uuid target: the entitlement helpers no-op on non-uuid uids, so these are
+// the cases that exercise the REAL upsert SQL.
+// ===========================================================================
+describe('admin/users PATCH — entitlements writes (W6)', () => {
+  const TARGET_UUID = '00000000-0000-0000-0000-00000000ad01';
+
+  it('revoke upserts status=expired on the lead_gen entitlement (default product) with a FOR UPDATE oldValue read (R8)', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [PROFILE_ROW], rowCount: 1 } as never) // existing (joined)
+      .mockResolvedValueOnce({ rows: [{ status: 'active', trial_started_at: null }], rowCount: 1 } as never) // FOR UPDATE oldValue
+      .mockResolvedValueOnce({ rowCount: 1, rows: [] } as never) // entitlement upsert
+      .mockResolvedValueOnce({ rows: [PROFILE_ROW], rowCount: 1 } as never); // joined re-select
+    const res = await PATCH(
+      makeRequest({ method: 'PATCH', body: { action: 'revoke', reason: 'chargeback abuse' } }),
+      makeContext(TARGET_UUID),
+    );
+    expect(res.status).toBe(200);
+    // R8: the audit oldValue snapshot comes from the row-locked entitlements read.
+    const lockSql = String(mockedQuery.mock.calls[1]![0]);
+    expect(lockSql).toMatch(/FROM entitlements WHERE user_id = \$1 AND product = \$2 FOR UPDATE/);
+    const upsertSql = String(mockedQuery.mock.calls[2]![0]);
+    expect(upsertSql).toContain('INSERT INTO entitlements');
+    expect(mockedQuery.mock.calls[2]![1]).toEqual([TARGET_UUID, 'lead_gen', 'expired']);
+    expect(mockedAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'revoke',
+        oldValue: { product: 'lead_gen', subscription_status: 'active' },
+        newValue: { product: 'lead_gen', subscription_status: 'expired' },
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('extend_trial honours an explicit product and preserves the 14-day window arithmetic', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [PROFILE_ROW], rowCount: 1 } as never) // existing
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never) // FOR UPDATE — no row yet
+      .mockResolvedValueOnce({ rowCount: 1, rows: [] } as never) // trial upsert
+      .mockResolvedValueOnce({ rows: [PROFILE_ROW], rowCount: 1 } as never); // joined re-select
+    const res = await PATCH(
+      makeRequest({ method: 'PATCH', body: { action: 'extend_trial', days: 30, product: 'flight_center', reason: 'beta cohort' } }),
+      makeContext(TARGET_UUID),
+    );
+    expect(res.status).toBe(200);
+    const upsertSql = String(mockedQuery.mock.calls[2]![0]);
+    expect(upsertSql).toMatch(/NOW\(\) - INTERVAL '14 days' \+ make_interval\(days => \$3\)/);
+    expect(mockedQuery.mock.calls[2]![1]).toEqual([TARGET_UUID, 'flight_center', 30]);
+  });
+
+  it('delete fans out cancelled_pending_deletion to EVERY entitlement row (no product filter)', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    process.env.ADMIN_USER_IDS = 'other-admin';
+    mockedQuery.mockResolvedValue({ rows: [PROFILE_ROW], rowCount: 1 } as never);
+    const res = await PATCH(
+      makeRequest({ method: 'PATCH', body: { action: 'delete', reason: 'user requested deletion' } }),
+      makeContext(TARGET_UUID),
+    );
+    expect(res.status).toBe(200);
+    const fanOut = mockedQuery.mock.calls.find((c) => String(c[0]).includes('UPDATE entitlements'));
+    expect(fanOut).toBeDefined();
+    expect(String(fanOut![0])).toContain(`'cancelled_pending_deletion'`);
+    expect(String(fanOut![0])).not.toContain('product =');
+    // The user_profiles PII-nullify no longer writes the retired status column.
+    const piiUpdate = mockedQuery.mock.calls.find((c) => String(c[0]).includes('account_deleted_at = NOW()'));
+    expect(String(piiUpdate![0])).not.toContain('subscription_status');
+  });
+});
+
+// ===========================================================================
 // Directory + detail
 // ===========================================================================
 describe('admin/users GET directory + detail', () => {
@@ -241,6 +313,13 @@ describe('admin/users GET directory + detail', () => {
     expect(String(countCall[0])).toContain('ILIKE');
     expect(countCall[1]).toContain('%alice%');
     expect(countCall[1]).toContain('supplier');
+    // R5: the status filter matches the lead_gen entitlement (LEFT JOIN) —
+    // applied to the count AND rows queries identically.
+    expect(String(countCall[0])).toContain('LEFT JOIN entitlements e');
+    expect(String(countCall[0])).toContain('e.status = ');
+    const rowsCall = mockedQuery.mock.calls[1]!;
+    expect(String(rowsCall[0])).toContain('LEFT JOIN entitlements e');
+    expect(String(rowsCall[0])).toContain('e.status AS subscription_status');
   });
 
   // REGRESSION LOCK (P26 review — Code Reviewer HIGH): the sweep-surface filter
