@@ -133,6 +133,12 @@ export const CreateUserBodySchema = z
     account_preset: z.enum(['supplier', 'manufacturer']),
     trade_slugs: z.array(assignableTradeSlug).min(1).max(35),
     radius_cap_km: z.coerce.number().int().min(1).max(1000).optional(),
+    // [P1-F6 fold — Security H1] Adopting an EXISTING Supabase auth user on an
+    // email collision is no longer implicit: the admin must confirm identity
+    // out-of-band and retry with adopt_existing: true. Without it the route
+    // returns a distinct 409 (EMAIL_ALREADY_REGISTERED) instead of silently
+    // attaching a profile to an account the admin may not control.
+    adopt_existing: z.boolean().optional(),
     reason: reasonSchema,
   })
   .strict();

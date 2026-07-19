@@ -20,7 +20,8 @@ import { maskPushToken } from '@/lib/admin/mask-push-token';
 const TAG = '[api/admin/notifications]';
 
 const querySchema = z.object({
-  user_id: z.string().min(1).max(128).optional(),
+  // uuid ([P1-F6 fold]): user ids are Supabase auth uuids post-Phase-1.
+  user_id: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 });

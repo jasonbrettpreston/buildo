@@ -4,15 +4,16 @@
 // POST /api/subscribe/session — issues a single-use, 15-minute-TTL nonce
 // for the buildo.com checkout flow. The nonce, NOT the UID or email, is
 // what travels in the URL query string. The web checkout page exchanges
-// the nonce server-to-server to recover the Firebase UID and immediately
-// invalidates the row, so the URL is safe to log, share with referrers,
-// or land in browser history without leaking PII.
+// the nonce server-to-server to recover the user's Supabase uid and
+// immediately invalidates the row, so the URL is safe to log, share with
+// referrers, or land in browser history without leaking PII.
+// (De-Firebased [P1-F6 fold — Guardian F5]: auth is Supabase post-Phase-1.)
 //
 // Status code matrix:
 //   200 — `{ data: { url }, error: null, meta: null }`
 //   400 — already-active or admin_managed (no checkout needed) /
 //         account pending deletion / non-prod env without override
-//   401 — no Firebase session
+//   401 — no session
 //   500 — sanitised error envelope (incl. data inconsistency: auth user
 //         with no profile row, which is unrecoverable from the client)
 //

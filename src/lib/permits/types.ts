@@ -183,7 +183,7 @@ export interface InspectionStageMapRow {
 // User profile (migration 075)
 // ---------------------------------------------------------------------------
 export interface UserProfile {
-  user_id: string; // Firebase UID
+  user_id: string; // Supabase auth uid (uuid) — was a Firebase UID pre-Phase-1
   trade_slug: string;
   display_name: string | null;
   created_at: Date;

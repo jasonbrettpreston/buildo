@@ -34,9 +34,13 @@ vi.mock('@/lib/db/client', () => ({
 }));
 
 import { POST } from '@/app/api/subscribe/exchange/route';
+import { _resetPriceProductMapCacheForTests } from '@/lib/entitlements';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // The price→product map cache is module-level (~60s TTL) — reset it so each
+  // test's logic_variables mock is deterministic ([P1-F6 fold] metadata.product).
+  _resetPriceProductMapCacheForTests();
   process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
   process.env.SUBSCRIBE_CHECKOUT_BASE_URL = 'https://staging.buildo.com/subscribe';
 });
@@ -57,8 +61,11 @@ const VALID_NONCE = '123e4567-e89b-12d3-a456-426614174000';
 const UID = 'uid-exchange-1';
 
 /** Queue the happy-path mocks for a FIRST-EVER checkout (no stored Customer):
- *  consumed nonce, configured price, profile row, Customer create + store. */
-function queueFirstCheckout(opts: { email?: string | null; storedCustomer?: string | null } = {}) {
+ *  consumed nonce, configured price, profile row, Customer create + store,
+ *  price→product map read (metadata.product stamp, [P1-F6 fold]). */
+function queueFirstCheckout(
+  opts: { email?: string | null; storedCustomer?: string | null; productMap?: Record<string, string> } = {},
+) {
   const email = opts.email === undefined ? 'user@example.com' : opts.email;
   fakeTxQuery.mockResolvedValueOnce({ rowCount: 1, rows: [{ user_id: UID }] });
   fakeQuery.mockResolvedValueOnce([{ variable_value_json: 'price_live_123' }]); // logic var
@@ -69,6 +76,10 @@ function queueFirstCheckout(opts: { email?: string | null; storedCustomer?: stri
     mockCustomersCreate.mockResolvedValueOnce({ id: 'cus_created_1' });
     fakeQuery.mockResolvedValueOnce([{ stripe_customer_id: 'cus_created_1' }]); // COALESCE store
   }
+  // resolvePriceProduct's cache-miss read of stripe_price_product_map:
+  fakeQuery.mockResolvedValueOnce([
+    { variable_value_json: opts.productMap ?? { price_live_123: 'lead_gen' } },
+  ]);
   mockSessionsCreate.mockResolvedValueOnce({
     id: 'cs_test_1',
     url: 'https://checkout.stripe.com/c/pay/cs_test_1',
@@ -112,6 +123,10 @@ describe('POST /api/subscribe/exchange — happy path', () => {
     // BOTH linkage fields — the webhook contract.
     expect(params.client_reference_id).toBe(UID);
     expect(params.subscription_data).toEqual({ metadata: { user_id: UID } });
+    // [P1-F6 fold — Gemini MED race] the product is stamped on the session
+    // metadata at creation, from the same price→product source of truth the
+    // webhook uses — checkout.session.completed activates the right product.
+    expect(params.metadata).toEqual({ product: 'lead_gen' });
     // W8: customer, never customer_email (Stripe rejects both together, and
     // email-only sessions mint a fresh Customer per checkout).
     expect(params.customer).toBe('cus_created_1');
@@ -144,6 +159,8 @@ describe('POST /api/subscribe/exchange — happy path', () => {
     fakeQuery.mockResolvedValueOnce([
       { email: 'user@example.com', stripe_customer_id: 'cus_created_1' },
     ]);
+    // No second map read queued — the module-level ~60s cache from checkout
+    // #1 serves the product resolution.
     mockSessionsCreate.mockResolvedValueOnce({ id: 'cs_test_2', url: 'https://checkout.stripe.com/c/pay/cs_test_2' });
     const res2 = await POST(makeRequest({ nonce: VALID_NONCE }));
     expect(res2.status).toBe(200);
@@ -175,12 +192,29 @@ describe('POST /api/subscribe/exchange — happy path', () => {
     // the concurrent winner's already-stored id — the session must use THAT.
     mockCustomersCreate.mockResolvedValueOnce({ id: 'cus_loser' });
     fakeQuery.mockResolvedValueOnce([{ stripe_customer_id: 'cus_winner' }]);
+    fakeQuery.mockResolvedValueOnce([{ variable_value_json: { price_live_123: 'lead_gen' } }]); // map read
     mockSessionsCreate.mockResolvedValueOnce({ id: 'cs_r', url: 'https://checkout.stripe.com/c/r' });
 
     const res = await POST(makeRequest({ nonce: VALID_NONCE }));
     expect(res.status).toBe(200);
     const params = mockSessionsCreate.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(params.customer).toBe('cus_winner');
+  });
+
+  // [P1-F6 fold — Gemini MED race] a NON-default product's price stamps its
+  // OWN product on the session metadata — the webhook activates flight_center
+  // directly off checkout.session.completed instead of racing the default.
+  it('stamps metadata.product from the price→product map for a non-default product', async () => {
+    queueFirstCheckout({
+      storedCustomer: 'cus_stored_fc',
+      productMap: { price_live_123: 'flight_center' },
+    });
+
+    const res = await POST(makeRequest({ nonce: VALID_NONCE }));
+
+    expect(res.status).toBe(200);
+    const params = mockSessionsCreate.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(params.metadata).toEqual({ product: 'flight_center' });
   });
 });
 
@@ -261,7 +295,8 @@ describe('POST /api/subscribe/exchange — named config 500s', () => {
     fakeTxQuery.mockResolvedValueOnce({ rowCount: 1, rows: [{ user_id: 'uid-5' }] });
     fakeQuery
       .mockResolvedValueOnce([{ variable_value_json: 'price_live_123' }])
-      .mockResolvedValueOnce([{ email: null, stripe_customer_id: 'cus_5' }]);
+      .mockResolvedValueOnce([{ email: null, stripe_customer_id: 'cus_5' }])
+      .mockResolvedValueOnce([{ variable_value_json: { price_live_123: 'lead_gen' } }]); // map read
     mockSessionsCreate.mockRejectedValueOnce(new Error('stripe upstream SECRET_X1'));
 
     const res = await POST(makeRequest({ nonce: VALID_NONCE }));

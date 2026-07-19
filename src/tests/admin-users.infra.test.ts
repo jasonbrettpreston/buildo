@@ -34,11 +34,30 @@ vi.mock('@/lib/admin/admin-audit', () => ({
   writeAdminAudit: vi.fn().mockResolvedValue(undefined),
   scrubAdminAuditForTarget: vi.fn().mockResolvedValue(0),
 }));
-// No Firebase SDK in the test env → apps.length === 0 (dev synthetic path).
-vi.mock('firebase-admin', () => ({ apps: [], auth: () => ({}) }));
 vi.mock('@/lib/stripe/client', () => ({ cancelAllStripeSubscriptions: vi.fn().mockResolvedValue(1) }));
 
+// Supabase admin client mock — exercised ONLY when a test sets
+// SUPABASE_SECRET_KEY (the email_exists / adopt_existing paths, P1-F6 fold
+// Security H1). Env unset (default) keeps the dev-synthetic-uid path.
+const mockSbCreateUser = vi.fn();
+const mockSbGenerateLink = vi.fn();
+const mockSbListUsers = vi.fn();
+const mockSbDeleteUser = vi.fn();
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: () => ({
+    auth: {
+      admin: {
+        createUser: mockSbCreateUser,
+        generateLink: mockSbGenerateLink,
+        listUsers: mockSbListUsers,
+        deleteUser: mockSbDeleteUser,
+      },
+    },
+  }),
+}));
+
 import { verifyAdminAuth, type AdminContext } from '@/lib/auth/verify-admin';
+import { logWarn } from '@/lib/logger';
 import { pool } from '@/lib/db/client';
 import { writeAdminAudit, scrubAdminAuditForTarget } from '@/lib/admin/admin-audit';
 import { cancelAllStripeSubscriptions } from '@/lib/stripe/client';
@@ -82,9 +101,11 @@ const PROFILE_ROW = {
 
 // deterministic env for the admin-allowlist guard
 const ORIGINAL_ENV = process.env.ADMIN_USER_IDS;
+const ORIGINAL_SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.ADMIN_USER_IDS = 'admin-session-1,other-admin';
+  delete process.env.SUPABASE_SECRET_KEY; // default: dev-synthetic uid path
   // default: query returns a single profile row unless overridden per-test
   mockedQuery.mockResolvedValue({ rows: [PROFILE_ROW], rowCount: 1 } as never);
 });
@@ -359,7 +380,7 @@ describe('admin/users GET directory + detail', () => {
 // Create
 // ===========================================================================
 describe('admin/users POST create', () => {
-  it('creates a supplier (dev synthetic uid), inserts profile, audits', async () => {
+  it('creates a supplier (dev synthetic uid), inserts profile, audits — and the reset-link response is no-store', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery.mockResolvedValueOnce({
       rows: [{ user_id: 'dev_supplier_x', email: 'a@b.com', account_preset: 'supplier', trade_slug: 'glazing', trade_slugs_override: null, subscription_status: 'admin_managed' }],
@@ -370,6 +391,9 @@ describe('admin/users POST create', () => {
     );
     expect(res.status).toBe(200);
     expect(mockedAudit.mock.calls[0]![0].action).toBe('create_account');
+    // [P1-F6 fold — Security M1] the response can carry a live credential
+    // (password_reset_link) — it must never be cacheable.
+    expect(res.headers.get('cache-control')).toBe('no-store');
   });
 
   it('400 on an invalid trade slug', async () => {
@@ -381,6 +405,93 @@ describe('admin/users POST create', () => {
   });
 });
 
+// ===========================================================================
+// email_exists → adopt-existing gate ([P1-F6 fold] Security H1)
+// ===========================================================================
+describe('admin/users POST create — email_exists adoption gate', () => {
+  const EXISTING_UUID = '00000000-0000-0000-0000-00000000ee01';
+  const CREATE_BODY = {
+    email: 'taken@example.com',
+    account_preset: 'supplier',
+    trade_slugs: ['glazing'],
+    reason: 'onboard existing-email supplier',
+  };
+
+  function armEmailExists() {
+    process.env.SUPABASE_SECRET_KEY = 'sb_secret_test';
+    mockSbCreateUser.mockResolvedValueOnce({ data: null, error: { code: 'email_exists' } });
+  }
+
+  it('409 EMAIL_ALREADY_REGISTERED without adopt_existing — no adoption, no audit', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    armEmailExists();
+
+    const res = await CREATE_POST(makeRequest({ method: 'POST', body: CREATE_BODY }));
+
+    expect(res.status).toBe(409);
+    const body = (await res.json()) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe('EMAIL_ALREADY_REGISTERED');
+    expect(body.error.message).toMatch(/out-of-band/i);
+    expect(body.error.message).toMatch(/adopt_existing/);
+    // The existing account is never looked up, never adopted, never audited.
+    expect(mockSbListUsers).not.toHaveBeenCalled();
+    expect(mockedAudit).not.toHaveBeenCalled();
+  });
+
+  it('adopt_existing: false is the same 409 as omitting the flag', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    armEmailExists();
+
+    const res = await CREATE_POST(
+      makeRequest({ method: 'POST', body: { ...CREATE_BODY, adopt_existing: false } }),
+    );
+
+    expect(res.status).toBe(409);
+    expect(mockSbListUsers).not.toHaveBeenCalled();
+  });
+
+  it('adopt_existing: true adopts the existing uid — distinguishable logWarn + adopted_existing audit detail + no-store', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    armEmailExists();
+    mockSbListUsers.mockResolvedValueOnce({
+      data: { users: [{ id: EXISTING_UUID, email: 'taken@example.com' }] },
+      error: null,
+    });
+    mockSbGenerateLink.mockResolvedValueOnce({
+      data: { properties: { action_link: 'https://reset.example/one-time' } },
+      error: null,
+    });
+
+    const res = await CREATE_POST(
+      makeRequest({ method: 'POST', body: { ...CREATE_BODY, adopt_existing: true } }),
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      data: { password_reset_link: string | null };
+      meta: { created: boolean };
+    };
+    // Adopted, not created — no rollback candidate.
+    expect(body.meta.created).toBe(false);
+    expect(body.data.password_reset_link).toBe('https://reset.example/one-time');
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    // Distinguishable adoption log: uid + hashed email + actor, never raw email.
+    const adoptionWarn = vi
+      .mocked(logWarn)
+      .mock.calls.find((c) => /adopted EXISTING/i.test(String(c[1])));
+    expect(adoptionWarn).toBeDefined();
+    expect(adoptionWarn![2]).toMatchObject({ uid: EXISTING_UUID, actor: 'admin-session-1' });
+    expect(JSON.stringify(adoptionWarn![2])).not.toContain('taken@example.com');
+    // Audit row carries the adoption marker.
+    expect(mockedAudit).toHaveBeenCalledOnce();
+    expect(mockedAudit.mock.calls[0]![0].newValue).toMatchObject({ adopted_existing: true });
+    // The Supabase user was NOT ours to roll back.
+    expect(mockSbDeleteUser).not.toHaveBeenCalled();
+  });
+});
+
 afterAll(() => {
   process.env.ADMIN_USER_IDS = ORIGINAL_ENV;
+  if (ORIGINAL_SUPABASE_KEY === undefined) delete process.env.SUPABASE_SECRET_KEY;
+  else process.env.SUPABASE_SECRET_KEY = ORIGINAL_SUPABASE_KEY;
 });

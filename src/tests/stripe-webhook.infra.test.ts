@@ -30,8 +30,12 @@ vi.mock('@/lib/db/client', () => ({
   ),
 }));
 
+// Logger mocked so the multi-item OD3 WARN ([P1-F6 fold]) is assertable.
+vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logWarn: vi.fn(), logInfo: vi.fn() }));
+
 import { POST } from '@/app/api/webhooks/stripe/route';
 import { _resetPriceProductMapCacheForTests } from '@/lib/entitlements';
+import { logWarn } from '@/lib/logger';
 
 beforeEach(() => {
   // clearAllMocks (not resetAllMocks) — `reset` wipes the Stripe constructor's
@@ -135,9 +139,10 @@ describe('POST /api/webhooks/stripe — 200 happy paths', () => {
     const res = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
 
     expect(res.status).toBe(200);
-    // The fallback SELECT resolves user_id from stripe_customer_id.
+    // The fallback SELECT resolves user_id from stripe_customer_id —
+    // LIMIT 1-bounded ([P1-F6 fold]).
     const lookupSql = fakeClientQuery.mock.calls[1]?.[0] as string;
-    expect(lookupSql).toMatch(/SELECT user_id FROM user_profiles WHERE stripe_customer_id = \$1/);
+    expect(lookupSql).toMatch(/SELECT user_id FROM user_profiles WHERE stripe_customer_id = \$1 LIMIT 1/);
     expect(fakeClientQuery.mock.calls[1]?.[1]).toEqual(['cus_test_pd']);
     const { params } = upsertCall();
     expect(params[0]).toBe(UID_A);
@@ -283,6 +288,104 @@ describe('POST /api/webhooks/stripe — 200 happy paths', () => {
     expect(params[1]).toBe('lead_gen');
     expect(params[2]).toBe('active');
     expect(params[3]).toBe('sub_from_checkout');
+  });
+
+  // [P1-F6 fold — Gemini MED race] the exchange route stamps metadata.product
+  // at session creation; the handler reads it (validated against PRODUCTS)
+  // BEFORE the OD5 default — checkout.completed lands the RIGHT entitlement.
+  it('checkout.session.completed with metadata.product=flight_center activates flight_center directly', async () => {
+    mockedConstructEvent.mockReturnValueOnce({
+      id: 'evt_checkout_fc',
+      type: 'checkout.session.completed',
+      created: FIXED_EVENT_TS_S,
+      data: {
+        object: {
+          client_reference_id: UID_A,
+          customer: 'cus_checkout_fc',
+          subscription: 'sub_fc_checkout',
+          metadata: { product: 'flight_center' },
+        },
+      },
+    });
+    mockDedupHit();
+    fakeClientQuery.mockResolvedValueOnce({ rowCount: 1, rows: [] }); // upsert
+
+    const res = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
+
+    expect(res.status).toBe(200);
+    const { params } = upsertCall();
+    expect(params[0]).toBe(UID_A);
+    expect(params[1]).toBe('flight_center');
+    expect(params[2]).toBe('active');
+    expect(params[3]).toBe('sub_fc_checkout');
+    // Direct metadata read — no price→product map query happened.
+    expect(
+      fakeClientQuery.mock.calls.some((c) => String(c[0]).includes('stripe_price_product_map')),
+    ).toBe(false);
+  });
+
+  it('checkout.session.completed with an INVALID metadata.product falls back to the OD5 default', async () => {
+    mockedConstructEvent.mockReturnValueOnce({
+      id: 'evt_checkout_bad_meta',
+      type: 'checkout.session.completed',
+      created: FIXED_EVENT_TS_S,
+      data: {
+        object: {
+          client_reference_id: UID_A,
+          customer: 'cus_checkout_bad',
+          subscription: 'sub_bad_meta',
+          metadata: { product: 'not-a-real-product' },
+        },
+      },
+    });
+    mockDedupHit();
+    fakeClientQuery.mockResolvedValueOnce({ rowCount: 1, rows: [] }); // upsert
+
+    const res = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
+
+    expect(res.status).toBe(200);
+    const { params } = upsertCall();
+    expect(params[1]).toBe('lead_gen');
+  });
+
+  // [P1-F6 fold] multi-item subscriptions are unsupported under OD3 — the
+  // handler uses items.data[0] and logs LOUDLY so the drift is operator-visible.
+  it('WARNs when a subscription event carries multiple items (OD3 single-item contract)', async () => {
+    mockedConstructEvent.mockReturnValueOnce({
+      id: 'evt_multi_item',
+      type: 'customer.subscription.created',
+      created: FIXED_EVENT_TS_S,
+      data: {
+        object: {
+          id: 'sub_multi_1',
+          customer: 'cus_multi_item',
+          status: 'active',
+          metadata: { user_id: UID_A },
+          items: {
+            data: [
+              { price: { id: 'price_a' }, current_period_end: FIXED_EVENT_TS_S + 86_400 },
+              { price: { id: 'price_b' }, current_period_end: FIXED_EVENT_TS_S + 86_400 },
+            ],
+          },
+        },
+      },
+    });
+    mockDedupHit();
+    // resolvePriceProduct cache-miss read (price_a → lead_gen implicit default):
+    fakeClientQuery.mockResolvedValueOnce({ rowCount: 1, rows: [{ variable_value_json: {} }] });
+    fakeClientQuery.mockResolvedValueOnce({ rowCount: 1, rows: [] }); // upsert
+
+    const res = await POST(makeRequest('raw', { 'stripe-signature': 'sig' }));
+
+    expect(res.status).toBe(200);
+    const multiWarn = vi
+      .mocked(logWarn)
+      .mock.calls.find((c) => /multiple items/i.test(String(c[1])));
+    expect(multiWarn).toBeDefined();
+    expect(multiWarn![2]).toMatchObject({ subscription_id: 'sub_multi_1', item_count: 2 });
+    // item[0]'s price drives the resolution — the upsert still lands.
+    const { params } = upsertCall();
+    expect(params[3]).toBe('sub_multi_1');
   });
 });
 

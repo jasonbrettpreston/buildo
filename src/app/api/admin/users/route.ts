@@ -158,6 +158,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
 
   let supabaseUid: string | null = null;
   let accountCreated = false; // did WE create it this call (rollback candidate)?
+  let adoptedExisting = false; // [P1-F6 fold — Security H1] audit-distinct adoption marker
   let resetLink: string | null = null;
 
   try {
@@ -179,6 +180,19 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       } catch (createErr) {
         const code = (createErr as { code?: string }).code;
         if (code === 'email_exists') {
+          // [P1-F6 fold — Security H1] Adoption of an existing auth user is
+          // GATED on an explicit admin confirmation: without adopt_existing
+          // in the body, an admin typo (or a squatter pre-registering a
+          // supplier's email) would silently hand the provisioned profile to
+          // an account the admin never verified. Distinct 409 so the client
+          // can prompt for out-of-band identity confirmation and retry.
+          if (body.adopt_existing !== true) {
+            return err(
+              'EMAIL_ALREADY_REGISTERED',
+              'An auth account with this email already exists. Confirm the account owner’s identity out-of-band, then retry with adopt_existing: true to attach the profile to the existing account.',
+              409,
+            );
+          }
           // P1-G5 Admin-SDK-successor note: GoTrueAdminApi (confirmed via
           // source read, installed @supabase/supabase-js version) has no
           // dedicated by-email lookup — listUsers() is the only primitive,
@@ -188,6 +202,14 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
           const existing = await findUserByEmail(supabaseAdmin, body.email);
           if (!existing) throw createErr; // truly unexpected — surface it
           supabaseUid = existing.id; // adopt — do NOT mark accountCreated (no rollback)
+          adoptedExisting = true;
+          // [P1-F6 fold — Security H1] Distinguishable log line: adoption is a
+          // trust-sensitive event (email hashed — server logs carry no raw PII).
+          logWarn(TAG, 'adopted EXISTING Supabase auth user for admin-provisioned account (adopt_existing confirmed)', {
+            uid: existing.id,
+            email_hash: createHash('sha256').update(body.email.toLowerCase()).digest('hex').slice(0, 16),
+            actor: adminCtx.uid,
+          });
         } else {
           throw createErr;
         }
@@ -266,7 +288,14 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       adminUid: adminCtx.uid,
       action: 'create_account',
       targetUid: supabaseUid,
-      newValue: { account_preset: body.account_preset, trade_slug: primaryTrade, trade_slugs_override: override, email_provided: true },
+      newValue: {
+        account_preset: body.account_preset,
+        trade_slug: primaryTrade,
+        trade_slugs_override: override,
+        email_provided: true,
+        // [P1-F6 fold — Security H1] adoption is audit-distinct from creation.
+        ...(adoptedExisting ? { adopted_existing: true } : {}),
+      },
       reason: body.reason,
     });
 
@@ -275,10 +304,16 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       auth_method: adminCtx.authMethod,
     });
 
-    return ok(
+    const response = ok(
       { ...dbRow, password_reset_link: resetLink },
       { created: accountCreated },
     );
+    // [P1-F6 fold — Security M1] password_reset_link is a LIVE credential:
+    // this response must never land in any shared/proxy/browser cache. The
+    // admin UI displays it once with copy-once discipline (see
+    // src/app/admin/users/page.tsx ResetLinkPanel) and never persists it.
+    response.headers.set('Cache-Control', 'no-store');
+    return response;
   } catch (cause) {
     return internalError(cause, { route: 'POST /api/admin/users' });
   }

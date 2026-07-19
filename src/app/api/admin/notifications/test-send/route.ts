@@ -32,7 +32,8 @@ function hashAdminUid(uid: string): string {
 const bodySchema = z.object({
   // Either an explicit token, or a user_id whose most-recent device we target.
   push_token: z.string().regex(/^ExponentPushToken\[.+\]$/).optional(),
-  user_id: z.string().min(1).max(128).optional(),
+  // uuid ([P1-F6 fold]): user ids are Supabase auth uuids post-Phase-1.
+  user_id: z.string().uuid().optional(),
   title: z.string().min(1).max(120).default('Buildo test notification'),
   body: z.string().min(1).max(300).default('Test push from the admin Notifications tool. Tap to open the flight board.'),
 }).refine((b) => b.push_token || b.user_id, {

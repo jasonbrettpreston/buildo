@@ -61,8 +61,24 @@ import {
   upsertEntitlementFromStripeEvent,
   isUuid,
   DEFAULT_PRODUCT,
+  PRODUCTS,
   type Product,
 } from '@/lib/entitlements';
+
+/**
+ * [P1-F6 fold] `logError` is contractually non-throwing (console + Sentry,
+ * both guarded) — but several calls below run INSIDE the dedup transaction,
+ * where a thrown log would roll back the dedup row and forge an infinite
+ * Stripe retry loop. One line of insurance against that contract ever
+ * regressing; logging must never poison the transaction.
+ */
+function safeLogError(...args: Parameters<typeof logError>): void {
+  try {
+    logError(...args);
+  } catch {
+    /* deliberately swallowed — see docstring */
+  }
+}
 
 function getWebhookSecret(): string {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -88,6 +104,13 @@ interface WebhookOutcome {
   userId: string | null;
   /** items.data[0].price.id on subscription.* events; null elsewhere. */
   priceId: string | null;
+  /**
+   * [P1-F6 fold — Gemini MED race] `session.metadata.product` on
+   * checkout.session.completed — stamped by /api/subscribe/exchange at
+   * session creation from the SAME price→product map the webhook uses.
+   * Validated against PRODUCTS before use; null elsewhere / when absent.
+   */
+  metadataProduct: string | null;
   /** The Stripe Subscription id this event belongs to, when resolvable. */
   subscriptionId: string | null;
   /** items.data[0].current_period_end on subscription.* events (net-new N2 column). */
@@ -128,6 +151,23 @@ function clientReferenceIdOf(session: Stripe.Checkout.Session): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
+/**
+ * [P1-F6 fold] Multi-item subscriptions are unsupported under OD3 (one
+ * product per independent subscription) — every read below uses
+ * items.data[0]. Log LOUDLY when Stripe hands us more than one item so an
+ * operator notices before entitlements silently drift.
+ */
+function warnIfMultiItem(sub: Stripe.Subscription, eventId: string): void {
+  const itemCount = sub.items?.data?.length ?? 0;
+  if (itemCount > 1) {
+    logWarn('[stripe-webhook]', 'subscription carries multiple items — unsupported under OD3, using items.data[0] only', {
+      event_id: eventId,
+      subscription_id: sub.id,
+      item_count: itemCount,
+    });
+  }
+}
+
 /** Invoice → its subscription id. Stripe SDK v18+ moved the top-level
  *  `invoice.subscription` field under `parent.subscription_details`. */
 function invoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
@@ -141,14 +181,20 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
       // web checkout succeeded. Our /api/subscribe/exchange route sets
       // `client_reference_id = <uid>` when creating the session, so we
       // recover the internal user_id directly (no metadata dependency).
-      // No price data without an expand call — writes the OD5-default
-      // product; subscription.created is the authoritative corrector.
+      // No price data without an expand call — but the exchange route now
+      // stamps `metadata.product` at session creation ([P1-F6 fold — Gemini
+      // MED race]), so the handler activates the RIGHT product directly;
+      // the OD5 default remains only the no-metadata fallback (legacy /
+      // third-party sessions), with subscription.created as corrector.
       const session = event.data.object as Stripe.Checkout.Session;
+      const metadataProduct = session.metadata?.product;
       return {
         newStatus: 'active',
         stripeCustomerId: customerIdFromUnknown(session.customer),
         userId: clientReferenceIdOf(session) ?? userIdFromMetadata(session.metadata),
         priceId: null,
+        metadataProduct:
+          typeof metadataProduct === 'string' && metadataProduct.length > 0 ? metadataProduct : null,
         subscriptionId: stripeRefId(session.subscription),
         currentPeriodEnd: null,
         resolveProductViaSubscription: false,
@@ -163,11 +209,13 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
       // is the sole canonical "access ends now" signal, so a `canceled` status
       // on an .updated event deliberately does NOT revoke access on its own.
       const newStatus = mapStripeSubStatus(sub.status);
+      warnIfMultiItem(sub, event.id); // [P1-F6 fold] OD3 single-item contract
       return {
         newStatus,
         stripeCustomerId: customerIdFromUnknown(sub.customer),
         userId: userIdFromMetadata(sub.metadata),
         priceId: subscriptionPriceId(sub),
+        metadataProduct: null,
         subscriptionId: sub.id,
         currentPeriodEnd: subscriptionCurrentPeriodEnd(sub),
         resolveProductViaSubscription: false,
@@ -184,6 +232,7 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         stripeCustomerId: customerIdFromUnknown(invoice.customer),
         userId: userIdFromMetadata(invoice.metadata),
         priceId: null,
+        metadataProduct: null,
         subscriptionId: invoiceSubscriptionId(invoice),
         currentPeriodEnd: null,
         resolveProductViaSubscription: true,
@@ -196,6 +245,7 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         stripeCustomerId: customerIdFromUnknown(invoice.customer),
         userId: userIdFromMetadata(invoice.metadata),
         priceId: null,
+        metadataProduct: null,
         subscriptionId: invoiceSubscriptionId(invoice),
         currentPeriodEnd: null,
         resolveProductViaSubscription: true,
@@ -203,11 +253,13 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
     }
     case 'customer.subscription.deleted': {
       const sub = event.data.object as Stripe.Subscription;
+      warnIfMultiItem(sub, event.id); // [P1-F6 fold] OD3 single-item contract
       return {
         newStatus: 'expired',
         stripeCustomerId: customerIdFromUnknown(sub.customer),
         userId: userIdFromMetadata(sub.metadata),
         priceId: subscriptionPriceId(sub),
+        metadataProduct: null,
         subscriptionId: sub.id,
         currentPeriodEnd: subscriptionCurrentPeriodEnd(sub),
         resolveProductViaSubscription: false,
@@ -219,6 +271,7 @@ function classifyEvent(event: Stripe.Event): WebhookOutcome {
         stripeCustomerId: null,
         userId: null,
         priceId: null,
+        metadataProduct: null,
         subscriptionId: null,
         currentPeriodEnd: null,
         resolveProductViaSubscription: false,
@@ -324,8 +377,12 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       // server-side; Stripe gives the paying customer no way to write them.
       let userId = outcome.userId;
       if (userId === null && outcome.stripeCustomerId !== null) {
+        // LIMIT 1 ([P1-F6 fold]): stripe_customer_id is contractually 1:1 with
+        // a user (W8), but the column carries no UNIQUE constraint — bound the
+        // scan so a data-integrity breach degrades to one deterministic row,
+        // never an unbounded read.
         const userRes = await client.query<{ user_id: string }>(
-          `SELECT user_id FROM user_profiles WHERE stripe_customer_id = $1`,
+          `SELECT user_id FROM user_profiles WHERE stripe_customer_id = $1 LIMIT 1`,
           [outcome.stripeCustomerId],
         );
         userId = userRes.rows[0]?.user_id ?? null;
@@ -334,7 +391,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
         // Neither identifier resolved a user — log and skip. The dedup row
         // remains committed so the same orphan event isn't reprocessed
         // indefinitely.
-        logError(
+        safeLogError(
           '[stripe-webhook]',
           new Error('Stripe event resolved no user (missing/unknown metadata.user_id and customer id)'),
           { event_id: event.id, event_type: event.type, attempted_status: outcome.newStatus,
@@ -345,7 +402,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       if (!isUuid(userId)) {
         // Pre-229 legacy/dev uid shapes cannot key an entitlements row (UUID
         // FK to auth.users) — treated as no-row-matched, never a 500/retry.
-        logError(
+        safeLogError(
           '[stripe-webhook]',
           new Error('Resolved user id is not a Supabase uuid — entitlement write skipped'),
           { event_id: event.id, event_type: event.type, user_id: userId },
@@ -355,13 +412,21 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
 
       // Identify the target PRODUCT (OD3 fan-out):
       //   - subscription.* events map their price via resolvePriceProduct.
-      //   - checkout.session.completed carries no price → OD5 default.
+      //   - checkout.session.completed carries no price, but our exchange
+      //     route stamps `metadata.product` at session creation ([P1-F6 fold
+      //     — Gemini MED race]) — read it (validated against PRODUCTS)
+      //     BEFORE falling back to the OD5 default.
       //   - invoice.* events carry neither price nor metadata — resolve via
       //     which entitlement row tracks the invoice's subscription id (the
       //     partial index on stripe_subscription_id), avoiding a Stripe API
       //     round-trip inside the webhook; unresolvable → OD5 default + WARN.
       let product: Product;
-      if (outcome.resolveProductViaSubscription) {
+      if (
+        outcome.metadataProduct !== null &&
+        (PRODUCTS as readonly string[]).includes(outcome.metadataProduct)
+      ) {
+        product = outcome.metadataProduct as Product;
+      } else if (outcome.resolveProductViaSubscription) {
         product = DEFAULT_PRODUCT;
         if (outcome.subscriptionId !== null) {
           const prodRes = await client.query<{ product: Product }>(
@@ -412,7 +477,7 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
         // would roll back the dedup row and Stripe would retry forever.
         // Operations should grep on `event: 'no_row_matched'` and
         // disambiguate by checking the entitlements row state.
-        logError(
+        safeLogError(
           '[stripe-webhook]',
           new Error('No entitlements row applied (stale, deletion-fenced, or superseded event)'),
           {

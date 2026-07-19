@@ -116,6 +116,10 @@ describe('parseCiAllowedIps', () => {
   it('parses comma-separated IPs with whitespace trimming', () => {
     expect(parseCiAllowedIps('1.2.3.4, 5.6.7.8')).toEqual(['1.2.3.4', '5.6.7.8']);
   });
+
+  it('normalizes IPv6-mapped IPv4 entries so either notation is accepted ([P1-F6 fold])', () => {
+    expect(parseCiAllowedIps('::ffff:1.2.3.4, 5.6.7.8')).toEqual(['1.2.3.4', '5.6.7.8']);
+  });
 });
 
 describe('getClientIp', () => {
@@ -139,6 +143,12 @@ describe('getClientIp', () => {
   it('falls back to the RIGHTMOST x-forwarded-for entry (proxy-appended), never the client-controllable leftmost', () => {
     const req = makeRequest({ 'x-forwarded-for': ' 203.0.113.5 , 70.41.3.18 ' });
     expect(getClientIp(req)).toBe('70.41.3.18');
+  });
+
+  it('normalizes an IPv6-mapped IPv4 caller (::ffff:1.2.3.4 → 1.2.3.4) on every header path ([P1-F6 fold])', () => {
+    expect(getClientIp(makeRequest({ 'x-vercel-forwarded-for': '::ffff:198.51.100.7' }))).toBe('198.51.100.7');
+    expect(getClientIp(makeRequest({ 'x-real-ip': ' ::ffff:198.51.100.9 ' }))).toBe('198.51.100.9');
+    expect(getClientIp(makeRequest({ 'x-forwarded-for': '203.0.113.5, ::ffff:70.41.3.18' }))).toBe('70.41.3.18');
   });
 });
 
@@ -211,6 +221,26 @@ describe('verifyAdminAuth — CI_ADMIN_TOKEN + CI_ADMIN_ALLOWED_IPS (Spec 13 §3
     mockedGetUid.mockResolvedValueOnce(null);
     const ctx = await verifyAdminAuth(makeRequest({ 'x-admin-key': 'much-longer-key' }));
     expect(ctx).toBeNull();
+  });
+
+  // [P1-F6 fold — DeepSeek] IPv6-mapped-IPv4 normalization: either notation
+  // on either side of the allowlist compare must match.
+  it('IPv6-mapped caller matches a plain-IPv4 allowlist entry', async () => {
+    process.env.CI_ADMIN_TOKEN = 'test-ci-secret';
+    process.env.CI_ADMIN_ALLOWED_IPS = '203.0.113.5';
+    const ctx = await verifyAdminAuth(
+      makeRequest({ 'x-admin-key': 'test-ci-secret', 'x-forwarded-for': '::ffff:203.0.113.5' }),
+    );
+    expect(ctx).toEqual({ uid: 'admin-key', authMethod: 'admin_key' });
+  });
+
+  it('plain-IPv4 caller matches an IPv6-mapped allowlist entry', async () => {
+    process.env.CI_ADMIN_TOKEN = 'test-ci-secret';
+    process.env.CI_ADMIN_ALLOWED_IPS = '::ffff:203.0.113.5';
+    const ctx = await verifyAdminAuth(
+      makeRequest({ 'x-admin-key': 'test-ci-secret', 'x-forwarded-for': '203.0.113.5' }),
+    );
+    expect(ctx).toEqual({ uid: 'admin-key', authMethod: 'admin_key' });
   });
 });
 
@@ -388,6 +418,13 @@ describe('parseAllowedOrigins', () => {
       parseAllowedOrigins('https://Admin.Buildo.app, https://Staging.Buildo.app'),
     ).toEqual(['https://admin.buildo.app', 'https://staging.buildo.app']);
   });
+
+  // [P1-F6 fold — DeepSeek] strict URL parse of allowlist entries.
+  it('canonicalizes entries (trailing slash dropped) and DROPS malformed / literal-null entries', () => {
+    expect(
+      parseAllowedOrigins('https://admin.buildo.app/, null, not a url, https://staging.buildo.app'),
+    ).toEqual(['https://admin.buildo.app', 'https://staging.buildo.app']);
+  });
 });
 
 describe('verifyAdminAuth — Spec 33 §13 CSRF Origin gate', () => {
@@ -419,6 +456,28 @@ describe('verifyAdminAuth — Spec 33 §13 CSRF Origin gate', () => {
     const ctx = await verifyAdminAuth(
       makeRequest({ origin: 'https://evil.example.com' }, 'POST'),
     );
+    expect(ctx).toBeNull();
+    expect(mockedGetUid).not.toHaveBeenCalled();
+  });
+
+  // [P1-F6 fold — DeepSeek] a literal `null` Origin (sandboxed iframe /
+  // data: page) can NEVER match — even when a misconfigured allowlist
+  // contains the string 'null'.
+  it('rejects a literal "null" Origin even when the allowlist contains "null"', async () => {
+    process.env.ADMIN_ALLOWED_ORIGINS = 'null, https://admin.buildo.app';
+    const ctx = await verifyAdminAuth(makeRequest({ origin: 'null' }, 'POST'));
+    expect(ctx).toBeNull();
+    expect(mockedGetUid).not.toHaveBeenCalled();
+  });
+
+  it('rejects a malformed (unparseable) Origin header', async () => {
+    const ctx = await verifyAdminAuth(makeRequest({ origin: 'not a url at all' }, 'POST'));
+    expect(ctx).toBeNull();
+    expect(mockedGetUid).not.toHaveBeenCalled();
+  });
+
+  it('rejects a non-http(s) Origin scheme (file:)', async () => {
+    const ctx = await verifyAdminAuth(makeRequest({ origin: 'file:///C:/evil.html' }, 'POST'));
     expect(ctx).toBeNull();
     expect(mockedGetUid).not.toHaveBeenCalled();
   });

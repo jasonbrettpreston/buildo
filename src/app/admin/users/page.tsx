@@ -148,6 +148,10 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
   const [presetVal, setPresetVal] = useState<'supplier' | 'manufacturer'>('supplier');
   const [trades, setTrades] = useState<string[]>([]);
   const [reason, setReason] = useState('');
+  // [P1-F6 fold — Security M1] One-time material held ONLY in local state —
+  // never in the query cache, never re-fetchable (the BackupCodesPanel
+  // discipline, src/app/admin/security/page.tsx). Closing the modal = gone.
+  const [resetLink, setResetLink] = useState<string | null>(null);
 
   const toggle = (slug: string) =>
     setTrades((cur) => (cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug]));
@@ -161,13 +165,30 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
       { email, company_name: company || undefined, account_preset: presetVal, trade_slugs: trades, reason },
       {
         onSuccess: (d) => {
-          toast.success('Account created' + (d.password_reset_link ? ' — reset link generated' : ''));
-          onClose();
+          if (d.password_reset_link) {
+            // Hold the link for a single copy-once display; do NOT close yet.
+            toast.success('Account created — copy the reset link now');
+            setResetLink(d.password_reset_link);
+          } else {
+            toast.success('Account created');
+            onClose();
+          }
         },
         onError: (e) => toast.error(e.message),
       },
     );
   };
+
+  if (resetLink) {
+    return (
+      <div role="alertdialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Password reset link</h2>
+          <ResetLinkPanel link={resetLink} onDone={onClose} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div role="alertdialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -196,6 +217,45 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
             {create.isPending ? 'Creating…' : 'Create'}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// One-time password-reset-link display
+// ---------------------------------------------------------------------------
+// [P1-F6 fold — Security M1] The reset link is a live credential. Same
+// one-time/copy-once discipline as BackupCodesPanel (admin/security): shown
+// exactly once from ephemeral local state, never written to any store, gone
+// when the panel closes. The API response itself is Cache-Control: no-store.
+function ResetLinkPanel({ link, onDone }: { link: string; onDone: () => void }) {
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success('Reset link copied');
+    } catch {
+      toast.error('Copy failed — select and copy manually');
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+        This password reset link is shown <strong>once</strong> and grants access to the account.
+        Copy it now and deliver it to the account owner through a trusted channel — it cannot be
+        retrieved again (a fresh link can be re-issued if lost).
+      </div>
+      <code className="block bg-gray-100 rounded-lg px-3 py-2 font-mono text-xs break-all select-all">
+        {link}
+      </code>
+      <div className="flex gap-2">
+        <button onClick={() => void copy()} className="text-sm border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50">
+          Copy link
+        </button>
+        <button onClick={onDone} className="text-sm bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700">
+          I have copied the link
+        </button>
       </div>
     </div>
   );

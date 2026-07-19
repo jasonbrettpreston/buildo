@@ -42,12 +42,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { query, withTransaction } from '@/lib/db/client';
+import { resolvePriceProduct, type Queryable } from '@/lib/entitlements';
 import { logError } from '@/lib/logger';
 import {
   getStripeClient,
   resolveSubscribeBaseUrl,
   StripeNotConfiguredError,
 } from '@/lib/stripe/client';
+
+// resolvePriceProduct takes a pg-shaped Queryable ({ query } → { rows }); the
+// route's `query` helper returns bare rows — adapt rather than import `pool`
+// so tests keep a single db-client mock surface.
+const queryable = {
+  query: async (text: string, values?: unknown[]) => ({ rows: await query(text, values) }),
+} as unknown as Queryable;
 
 // Nonces are randomUUID() (36 chars). Bound the accepted shape so junk bodies
 // fail fast without touching the database.
@@ -165,12 +173,22 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest) {
       customerId = stored[0]?.stripe_customer_id ?? created.id;
     }
 
+    // [P1-F6 fold — Gemini MED race] Resolve the PRODUCT at session-creation
+    // time from the price id, via the same source of truth the webhook uses
+    // (logic_variables.stripe_price_product_map). Stamped on the session's
+    // metadata so checkout.session.completed can activate the RIGHT product
+    // immediately instead of writing the OD5 default and waiting for
+    // subscription.created to correct it — kills the default-product race
+    // window for non-default products.
+    const product = await resolvePriceProduct(queryable, priceId);
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
       // BOTH linkage fields — the webhook contract (see header). Losing either
       // one re-opens the re-subscriber / missed-event identity gap.
       client_reference_id: userId,
+      metadata: { product },
       subscription_data: { metadata: { user_id: userId } },
       // W8: always the stored/created Customer — never customer_email (Stripe
       // rejects passing both, and an email-only session would mint a NEW

@@ -194,16 +194,32 @@ export function parseAdminAllowlist(raw: string | undefined): string[] {
 }
 
 /**
+ * [P1-F6 fold — DeepSeek] Normalize an IPv6-mapped IPv4 address
+ * (`::ffff:1.2.3.4` → `1.2.3.4`). Node/proxy stacks surface the caller IP in
+ * either form depending on the socket family — without normalizing BOTH the
+ * caller IP and the allowlist entries, `::ffff:1.2.3.4` never matches a plain
+ * `1.2.3.4` allowlist entry (and vice versa) and the CI path silently falls
+ * through to session auth.
+ */
+function normalizeIp(ip: string): string {
+  const trimmed = ip.trim();
+  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(trimmed);
+  return mapped ? mapped[1]! : trimmed;
+}
+
+/**
  * Parse the `CI_ADMIN_ALLOWED_IPS` env var (successor to the old
  * `ADMIN_ALLOWED_ORIGINS`-adjacent shape) into an IP allowlist.
- * Comma-separated, whitespace-trimmed, empty entries dropped.
+ * Comma-separated, whitespace-trimmed, empty entries dropped. Entries are
+ * IPv6-mapped-IPv4-normalized so either notation matches (see normalizeIp).
  */
 export function parseCiAllowedIps(raw: string | undefined): string[] {
   if (!raw) return [];
   return raw
     .split(',')
     .map((s) => s.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map(normalizeIp);
 }
 
 /**
@@ -234,30 +250,47 @@ export function getClientIp(request: NextRequest): string | null {
   // then falls through to the session path). The IP allowlist is a SECONDARY
   // factor on top of the constant-time CI_ADMIN_TOKEN compare — never the
   // primary gate.
+  // All returns are IPv6-mapped-IPv4-normalized ([P1-F6 fold — DeepSeek]) so
+  // a `::ffff:1.2.3.4` caller matches a plain `1.2.3.4` allowlist entry.
   const vercelIp = request.headers.get('x-vercel-forwarded-for');
   if (vercelIp) {
     const first = vercelIp.split(',')[0]?.trim();
-    if (first) return first;
+    if (first) return normalizeIp(first);
   }
   const realIp = request.headers.get('x-real-ip')?.trim();
-  if (realIp) return realIp;
+  if (realIp) return normalizeIp(realIp);
   const forwardedFor = request.headers.get('x-forwarded-for');
   if (!forwardedFor) return null;
   const entries = forwardedFor.split(',').map((s) => s.trim()).filter(Boolean);
-  return entries[entries.length - 1] ?? null;
+  const last = entries[entries.length - 1];
+  return last ? normalizeIp(last) : null;
 }
 
 /**
- * Parse the `ADMIN_ALLOWED_ORIGINS` env var into a host-only origin array.
- * Comma-separated, whitespace-trimmed, empty entries dropped, lowercased
- * for case-insensitive match. Exported for test injection.
+ * Parse the `ADMIN_ALLOWED_ORIGINS` env var into a canonical-origin array.
+ * Comma-separated, whitespace-trimmed, empty entries dropped. Each entry is
+ * strict-URL-parsed to its canonical `URL.origin` (lowercased scheme+host,
+ * trailing slash / path debris dropped); entries that fail to parse — or
+ * whose canonical origin is the literal `'null'` — are DROPPED, so a
+ * misconfigured allowlist can never accidentally admit the `Origin: null`
+ * sentinel or a malformed value. [P1-F6 fold — DeepSeek]
+ * Exported for test injection.
  */
 export function parseAllowedOrigins(raw: string | undefined): string[] {
   if (!raw) return [];
   return raw
     .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      // Deliberate fail-closed parse ([P1-F6 fold]): a malformed allowlist ENTRY
+      // must drop out of the allowlist (null → filtered), never widen it.
+      // URL.canParse (Node 19.9+) instead of try/catch — no silent catch handler.
+      if (!URL.canParse(entry)) return null;
+      const origin = new URL(entry).origin;
+      return origin === 'null' ? null : origin.toLowerCase();
+    })
+    .filter((s): s is string => s !== null);
 }
 
 /**
@@ -265,15 +298,34 @@ export function parseAllowedOrigins(raw: string | undefined): string[] {
  * the `ADMIN_ALLOWED_ORIGINS` allowlist. Default-deny: missing Origin
  * header on a state-mutating request fails the check.
  *
+ * [P1-F6 fold — DeepSeek] The header is STRICT-URL-parsed before comparison:
+ * a literal `null` Origin (sandboxed iframe, data:/file: page, some
+ * redirects) and any malformed/unparseable value can NEVER match — parse
+ * failure is an immediate reject, and both sides of the comparison are
+ * canonical `URL.origin` values.
+ *
  * Note: `Referer` is NOT a substitute — Origin is the spec-mandated header
  * for CSRF (Referer can be stripped by browser policy).
  */
 function isOriginAllowed(request: NextRequest): boolean {
-  const origin = request.headers.get('origin');
-  if (!origin) return false;
+  const originHeader = request.headers.get('origin');
+  if (!originHeader) return false;
+  let origin: string;
+  try {
+    const parsed = new URL(originHeader);
+    // Canonical origin only; non-http(s) schemes (data:, file:, blob:) parse
+    // to origin 'null' or opaque values — reject anything that is not a real
+    // web origin.
+    if (parsed.origin === 'null' || (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')) {
+      return false;
+    }
+    origin = parsed.origin.toLowerCase();
+  } catch {
+    return false; // 'null', garbage, or malformed — never a match.
+  }
   const allowed = parseAllowedOrigins(process.env.ADMIN_ALLOWED_ORIGINS);
   if (allowed.length === 0) return false; // Default-deny on misconfiguration.
-  return allowed.includes(origin.toLowerCase());
+  return allowed.includes(origin);
 }
 
 /**
