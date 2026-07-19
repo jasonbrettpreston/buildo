@@ -613,22 +613,28 @@ describe('Middleware Route Protection', () => {
     expect(src).toContain('Authentication required');
   });
 
-  it('middleware does NOT duplicate the X-Admin-Key/CI-credential check (Supabase swap, .cursor/phase1_plan.md Item 2)', () => {
-    // Pre-swap, middleware.ts carried its OWN independent X-Admin-Key/
-    // ADMIN_API_KEY comparison as a fallback, duplicating verify-admin.ts's
-    // check. Item 2's adopted recommendation: the middleware-level copy is
-    // retired — Spec 33 §5 already establishes verify-admin.ts as the
-    // defense-in-depth layer ON TOP OF middleware, not a second independent
-    // gate that must also know the CI-credential secret. This regression
-    // lock now asserts the ABSENCE of that duplicate, and that the real
-    // check lives solely in verify-admin.ts (CI_ADMIN_TOKEN successor,
-    // Spec 13 §3.7).
+  it('middleware passes x-admin-key PRESENCE through but NEVER compares the secret (P1-F4 break-glass fix, 2026-07-19)', () => {
+    // Two-part contract (found live at the Phase 1 P1-F4 break-glass proof):
+    //   1. TRANSPORT: an x-admin-key-bearing request has no session cookie by
+    //      definition — middleware must let it through to the route handler
+    //      (presence-only check), else the CI/break-glass path is unreachable
+    //      (the previous full-removal behavior 401'd it at the edge).
+    //   2. VERIFICATION: the secret COMPARISON lives SOLELY in
+    //      verify-admin.ts mode 2 (CI_ADMIN_TOKEN, Spec 13 §3.7) — middleware
+    //      must never read the expected token or compare values (Item 2's
+    //      no-duplicate-gate rule still holds; a wrong token still 401s in
+    //      verify-admin.ts).
     const middlewareSrc = fs.readFileSync(
       path.join(__dirname, '../middleware.ts'),
       'utf-8'
     );
-    expect(middlewareSrc).not.toContain('x-admin-key');
+    // Presence passthrough exists…
+    expect(middlewareSrc).toContain("request.headers.get('x-admin-key')");
+    // …but no comparison material: no expected-token env reads, no
+    // constant-time compare, no legacy key name.
+    expect(middlewareSrc).not.toContain('CI_ADMIN_TOKEN');
     expect(middlewareSrc).not.toContain('ADMIN_API_KEY');
+    expect(middlewareSrc).not.toContain('timingSafe');
 
     const verifyAdminSrc = fs.readFileSync(
       path.join(__dirname, '../lib/auth/verify-admin.ts'),

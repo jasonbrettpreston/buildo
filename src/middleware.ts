@@ -95,14 +95,24 @@ export async function middleware(request: NextRequest) {
   if (routeClass === 'admin') {
     // API routes: return 401
     if (pathname.startsWith('/api/')) {
-      if (!hasValidSession) {
-        // Admin-key fallback REMOVED from middleware (Item 2 recommendation,
-        // adopted): verify-admin.ts's mode 2 already re-checks the CI
-        // credential as defense-in-depth (Spec 33 §5 — "middleware-only
-        // admin protection is insufficient" is exactly why verify-admin.ts
-        // exists ON TOP of middleware). A second independent copy of the
-        // secret-comparison logic here duplicated the check without adding
-        // real safety, and is retired as part of this swap.
+      // Secret COMPARISON removed from middleware (Item 2 recommendation —
+      // verify-admin.ts mode 2 is the sole verifier), but the TRANSPORT must
+      // pass through: an x-admin-key-bearing request has no session cookie by
+      // definition, and 401ing it here makes the CI/break-glass path
+      // unreachable (found live at the Phase 1 P1-F4 break-glass proof,
+      // 2026-07-19 — unit tests call verifyAdminAuth directly and could not
+      // see this). Presence-only check: a wrong token still 401s in
+      // verify-admin.ts (negative control verified).
+      //
+      // SECURITY-REVIEW ADJUDICATION (2026-07-19, presence-only flagged as
+      // "fail-open"): REJECTED — presence-only is this middleware's designed
+      // posture for BOTH credentials (a garbage sb-* cookie also passes;
+      // Spec 13 §3.5: middleware performs no cryptographic verification).
+      // The authoritative, constant-time, fail-closed gate is verifyAdminAuth
+      // as the FIRST LINE of every admin route (Spec 33 §5). Re-adding a
+      // secret compare here would recreate the duplicated-verifier the P1
+      // output panel retired, in the Edge runtime, for zero security delta.
+      if (!hasValidSession && !request.headers.get('x-admin-key')) {
         return NextResponse.json(
           { error: 'Authentication required' },
           { status: 401 }

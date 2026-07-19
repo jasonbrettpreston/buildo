@@ -96,6 +96,12 @@ export function useMfaVerify() {
       captureEvent('admin_action_performed', { action: 'mfa_verify_attempted', target: 'security' });
     },
     onSuccess: () => {
+      // This refetch makes the status report the factor as VERIFIED while the
+      // one-time backup-codes panel is still on screen. The page holds the
+      // plaintext codes in local component state and renders the panel as its
+      // FIRST branch (dismissed only by the explicit "I have saved these
+      // codes" button) — a status refetch must never unmount it (live repro,
+      // P1-F4 shakeout 2026-07-19).
       void qc.invalidateQueries({ queryKey: [...ADMIN_SECURITY_KEY, 'mfa-status'] });
     },
     onError: (mutationErr) => logError('[admin/security/verify]', mutationErr, {}),

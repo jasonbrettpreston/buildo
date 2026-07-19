@@ -26,6 +26,12 @@
  * migration 067 missing after postgis-less deploys). Root cause was the
  * "run everything every time" loop with no record of what was applied.
  */
+// Self-load .env (does not override already-set env). Post-cutover fix
+// (2026-07-19): bare `npm run migrate` (e.g. inside safe-start) previously
+// ran without DB credentials because nothing loaded .env — masked for years
+// by the Docker dev DB's permissive auth, exposed by the Supabase local
+// stack requiring a real password (SASL error).
+require('dotenv').config();
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');

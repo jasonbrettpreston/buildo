@@ -19,7 +19,7 @@
 //      credential's SCOPE changes.
 //   3. session — a verified Supabase session, checked against
 //      `profiles.is_admin` (Spec 13 §3.6's "one-line swap" seam the
-//      original `ADMIN_USER_IDS` comment anticipated). Uses `getVerifiedUid`
+//      original env-allowlist comment anticipated). Uses `getVerifiedUid`
 //      (getUser()-grade, revocation-checked) — admin auth is high-stakes
 //      regardless of whether the specific route is a read or a write.
 //
@@ -36,6 +36,7 @@ import { consumeBackupCode } from '@/lib/admin/backup-codes';
 import { getVerifiedUid } from '@/lib/auth/get-user';
 import { isDevMode } from '@/lib/auth/route-guard';
 import { pool } from '@/lib/db/client';
+import { isUuid, type Queryable } from '@/lib/entitlements';
 import { logError, logWarn } from '@/lib/logger';
 import { createClient } from '@/lib/supabase/server';
 
@@ -175,22 +176,30 @@ export async function verifyAdminAuth(
 }
 
 /**
- * Parse the `ADMIN_USER_IDS` env var into a uid array.
+ * True when the uid's `profiles.is_admin` flag is set (Spec 13 §3.6 — the
+ * DB is the single source of admin truth; the legacy env-var admin allowlist
+ * is fully retired as of the P1-F4.4 close-out).
  *
- * Retained as a standalone utility (NOT used by `verifyAdminAuth`'s mode 3
- * anymore — that now queries `profiles.is_admin`, Spec 13 §3.6) because
- * `src/app/api/admin/users/[uid]/route.ts`'s Guard 1 ("never mutate an
- * admin allowlist member") still reads it directly. Migrating that guard to
- * `profiles.is_admin` is out of this WF's file scope (`.cursor/
- * phase1_plan.md` P1-F2/P1-F5.1) — flagged as a follow-up, not silently
- * dropped: removing this export would break that route's compile.
+ * Shared by the user-management mutation routes' TARGET guard ("never mutate
+ * an admin account") — a different mechanism from caller auth: those routes
+ * refuse to mutate an admin account regardless of who is asking.
+ * (`verifyAdminAuth` mode 3 keeps its own inline read of the same flag: its
+ * uid is pre-verified — always a UUID — and its fail-closed logging shape is
+ * distinct; both paths read the identical `profiles.is_admin` truth.)
+ *
+ * Takes a `Queryable` so callers inside a transaction can pass their client.
+ * Non-UUID uids (dev/legacy shapes) cannot have a `profiles` row (UUID PK,
+ * FK auth.users) and short-circuit to false instead of raising 22P02.
+ * DB errors PROPAGATE — callers decide the fail-closed shape (the mutation
+ * routes map to 500 via `internalError`, never a silent allow).
  */
-export function parseAdminAllowlist(raw: string | undefined): string[] {
-  if (!raw) return [];
-  return raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+export async function isProfileAdmin(db: Queryable, uid: string): Promise<boolean> {
+  if (!isUuid(uid)) return false;
+  const res = await db.query<{ is_admin: boolean }>(
+    `SELECT is_admin FROM profiles WHERE id = $1`,
+    [uid],
+  );
+  return res.rows[0]?.is_admin === true;
 }
 
 /**

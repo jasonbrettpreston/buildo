@@ -25,7 +25,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
-import { verifyAdminAuth, parseAdminAllowlist, type AdminContext } from '@/lib/auth/verify-admin';
+import { verifyAdminAuth, isProfileAdmin, type AdminContext } from '@/lib/auth/verify-admin';
 import { pool, withTransaction } from '@/lib/db/client';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod, internalError } from '@/features/leads/api/error-mapping';
@@ -204,13 +204,14 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest, co
   if (!parsed.success) return badRequestZod(parsed.error);
   const { reason, product: requestedProduct } = parsed.data;
 
-  // Never mutate an admin allowlist member.
-  const adminUids = parseAdminAllowlist(process.env.ADMIN_USER_IDS);
-  if (adminUids.includes(targetUid)) {
-    return err('FORBIDDEN', 'Cannot mutate an admin account', 403);
-  }
-
   try {
+    // Never mutate an admin account — profiles.is_admin on the TARGET uid
+    // (P1-F4.4 close-out; successor to the retired env-var admin allowlist).
+    // Inside the try: a lookup failure must 500, never silently allow.
+    if (await isProfileAdmin(pool, targetUid)) {
+      return err('FORBIDDEN', 'Cannot mutate an admin account', 403);
+    }
+
     const profile = await loadProfile(targetUid);
     if (!profile) return err('NOT_FOUND', 'User not found', 404);
     if (!profile.stripe_customer_id) {

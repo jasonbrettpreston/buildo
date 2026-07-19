@@ -45,10 +45,11 @@ vi.mock('@/lib/admin/backup-codes', () => ({
 
 import { getVerifiedUid, type VerifiedUid } from '@/lib/auth/get-user';
 import { isDevMode } from '@/lib/auth/route-guard';
+import type { Queryable } from '@/lib/entitlements';
 import { logWarn, logError } from '@/lib/logger';
 import {
   verifyAdminAuth,
-  parseAdminAllowlist,
+  isProfileAdmin,
   parseAllowedOrigins,
   parseCiAllowedIps,
   getClientIp,
@@ -94,17 +95,38 @@ afterEach(() => {
   process.env = { ...ORIGINAL_ENV };
 });
 
-describe('parseAdminAllowlist (retained utility — see verify-admin.ts docstring)', () => {
-  it('returns empty array when env var is undefined', () => {
-    expect(parseAdminAllowlist(undefined)).toEqual([]);
+describe('isProfileAdmin (target-guard helper — P1-F4.4 close-out)', () => {
+  const TARGET_UUID = '22222222-2222-2222-2222-222222222222';
+  const db = { query: (...args: unknown[]) => mockPoolQuery(...args) } as unknown as Queryable;
+
+  it('short-circuits false for a non-UUID uid WITHOUT querying (no 22P02 on dev/legacy uid shapes)', async () => {
+    await expect(isProfileAdmin(db, 'dev-user')).resolves.toBe(false);
+    await expect(isProfileAdmin(db, 'dev_supplier_x')).resolves.toBe(false);
+    expect(mockPoolQuery).not.toHaveBeenCalled();
   });
 
-  it('parses comma-separated uids with whitespace trimming', () => {
-    expect(parseAdminAllowlist('uid1, uid2 ,uid3')).toEqual(['uid1', 'uid2', 'uid3']);
+  it('returns true when profiles.is_admin is true for the uid', async () => {
+    mockPoolQuery.mockResolvedValueOnce({ rows: [{ is_admin: true }] });
+    await expect(isProfileAdmin(db, TARGET_UUID)).resolves.toBe(true);
+    expect(mockPoolQuery).toHaveBeenCalledWith(
+      expect.stringContaining('FROM profiles'),
+      [TARGET_UUID],
+    );
   });
 
-  it('drops empty entries from trailing/leading commas', () => {
-    expect(parseAdminAllowlist(',uid1,,uid2,')).toEqual(['uid1', 'uid2']);
+  it('returns false when is_admin is false', async () => {
+    mockPoolQuery.mockResolvedValueOnce({ rows: [{ is_admin: false }] });
+    await expect(isProfileAdmin(db, TARGET_UUID)).resolves.toBe(false);
+  });
+
+  it('returns false when no profiles row exists', async () => {
+    mockPoolQuery.mockResolvedValueOnce({ rows: [] });
+    await expect(isProfileAdmin(db, TARGET_UUID)).resolves.toBe(false);
+  });
+
+  it('PROPAGATES a DB error — the caller owns the fail-closed shape (500, never a silent allow)', async () => {
+    mockPoolQuery.mockRejectedValueOnce(new Error('connection refused'));
+    await expect(isProfileAdmin(db, TARGET_UUID)).rejects.toThrow('connection refused');
   });
 });
 

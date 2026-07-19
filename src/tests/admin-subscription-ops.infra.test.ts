@@ -4,7 +4,8 @@
 // Infra battery for the admin Subscription-Ops routes (P26-26-ADMIN). Mocked
 // pool + verifyAdminAuth + admin-audit + stripe. Asserts the money-code spine:
 //   - verifyAdminAuth 401; admin_key mutation 403 (attributable writes only)
-//   - allowlist-target 403; Zod 400 (missing reason)
+//   - admin-target 403 (profiles.is_admin on the TARGET, P1-F4.4); Zod 400
+//     (missing reason)
 //   - reconcile PROTECTED-STATE fence (deleted/comp → 409, never mutated)
 //   - reconcile drift → UPDATE + audit; no-drift → no audit; concurrent-delete
 //     fence (rowCount 0 → 409)
@@ -72,10 +73,12 @@ function req(opts: { body?: unknown; search?: string } = {}): NextRequest {
 }
 const ctx = (uid: string) => ({ params: Promise.resolve({ uid }) });
 
+// Target-is-admin guard (P1-F4.4): reconcile POST reads profiles.is_admin on
+// the TARGET uid via isProfileAdmin — the uuid TARGET consumes ONE leading
+// pool.query per POST test; non-UUID targets (retry-cancel 't1') skip it.
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
-  process.env.ADMIN_USER_IDS = 'admin-session-1';
 });
 
 // ---------------------------------------------------------------------------
@@ -159,28 +162,35 @@ describe('POST reconcile apply (per-product — W7)', () => {
     expect(res.status).toBe(400);
   });
 
-  it('targeting an admin allowlist member → 403', async () => {
+  it('targeting an admin account (profiles.is_admin true) → 403, nothing else runs', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'drift observed' } }), ctx('admin-session-1'));
+    mockedQuery.mockResolvedValueOnce({ rows: [{ is_admin: true }] } as never); // is_admin guard
+    const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'drift observed' } }), ctx(TARGET));
     expect(res.status).toBe(403);
+    expect(String(mockedQuery.mock.calls[0]![0])).toContain('FROM profiles');
+    expect(mockedQuery).toHaveBeenCalledTimes(1); // guard only — no profile load, no Stripe
+    expect(mockSubsList).not.toHaveBeenCalled();
+    expect(mockedAudit).not.toHaveBeenCalled();
   });
 
   it('protected state (cancelled_pending_deletion) → 409, never mutated', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
+      .mockResolvedValueOnce({ rows: [] } as never) // is_admin guard (no profiles row)
       .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
       .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'cancelled_pending_deletion' }] } as never);
     mockSubsList.mockResolvedValueOnce({ data: [] });
     const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'drift observed' } }), ctx(TARGET));
     expect(res.status).toBe(409);
     expect(mockedAudit).not.toHaveBeenCalled();
-    // only the profile SELECT + stored-entitlements SELECT ran — no upsert
-    expect(mockedQuery).toHaveBeenCalledTimes(2);
+    // only guard + profile SELECT + stored-entitlements SELECT ran — no upsert
+    expect(mockedQuery).toHaveBeenCalledTimes(3);
   });
 
   it('no drift → applied [], no audit', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
+      .mockResolvedValueOnce({ rows: [] } as never) // is_admin guard
       .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
       .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'active' }] } as never);
     mockSubsList.mockResolvedValueOnce({ data: [{ status: 'active' }] });
@@ -194,6 +204,7 @@ describe('POST reconcile apply (per-product — W7)', () => {
   it('drift → fenced entitlements upsert + one audit row per product changed', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
+      .mockResolvedValueOnce({ rows: [] } as never) // is_admin guard
       .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never) // profile
       .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'expired' }] } as never) // stored
       .mockResolvedValueOnce({ rowCount: 1 } as never); // upsert
@@ -201,14 +212,14 @@ describe('POST reconcile apply (per-product — W7)', () => {
     const res = await RECONCILE_POST(req({ body: { apply: true, reason: 'stripe shows active' } }), ctx(TARGET));
     const body = await res.json();
     expect(body.data.applied).toEqual([{ product: 'lead_gen', from: 'expired', to: 'active' }]);
-    const upsertSql = String(mockedQuery.mock.calls[2]![0]);
+    const upsertSql = String(mockedQuery.mock.calls[3]![0]);
     // Per-product upsert (repairs a missing row too) with the SQL-level fence
     // excluding BOTH protected statuses (P26 review — admin_managed race)
     expect(upsertSql).toMatch(/INSERT INTO entitlements/);
     expect(upsertSql).toMatch(/NOT IN \('cancelled_pending_deletion', 'admin_managed'\)/);
     // Bumps the watermark so a stale webhook can't revert the operator decision
     expect(upsertSql).toMatch(/last_stripe_event_at = NOW\(\)/);
-    expect(mockedQuery.mock.calls[2]![1]).toEqual([TARGET, 'lead_gen', 'active']);
+    expect(mockedQuery.mock.calls[3]![1]).toEqual([TARGET, 'lead_gen', 'active']);
     expect(mockedAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'subscription_reconcile_apply',
@@ -223,6 +234,7 @@ describe('POST reconcile apply (per-product — W7)', () => {
   it('a live subscription with NO stored row is drift the apply REPAIRS (insert arm)', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
+      .mockResolvedValueOnce({ rows: [] } as never) // is_admin guard
       .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
       .mockResolvedValueOnce({ rows: [] } as never) // zero stored rows (webhook gap)
       .mockResolvedValueOnce({ rowCount: 1 } as never); // upsert INSERT arm
@@ -235,6 +247,7 @@ describe('POST reconcile apply (per-product — W7)', () => {
   it('concurrent state change (upsert rowCount 0) → 409, no false success', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
+      .mockResolvedValueOnce({ rows: [] } as never) // is_admin guard
       .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
       .mockResolvedValueOnce({ rows: [{ product: 'lead_gen', status: 'expired' }] } as never)
       .mockResolvedValueOnce({ rowCount: 0 } as never);
@@ -247,6 +260,7 @@ describe('POST reconcile apply (per-product — W7)', () => {
   it('optional product body field scopes the apply to that product only', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
+      .mockResolvedValueOnce({ rows: [] } as never) // is_admin guard
       .mockResolvedValueOnce({ rows: [{ stripe_customer_id: 'cus_1' }] } as never)
       .mockResolvedValueOnce({
         rows: [

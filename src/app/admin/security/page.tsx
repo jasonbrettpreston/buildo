@@ -82,7 +82,24 @@ export default function AdminSecurityPage() {
         {status && (
           <section className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-1">Authenticator app (TOTP)</h2>
-            {verifiedFactor ? (
+            {backupCodes ? (
+              // One-time backup-codes panel — MUST be the FIRST branch. After
+              // verify succeeds, the mfa-status refetch (invalidated in
+              // useMfaVerify.onSuccess) reports the factor as verified; if
+              // `verifiedFactor` won the branch, the panel unmounted before
+              // the operator could save the codes (live repro, P1-F4 shakeout
+              // 2026-07-19). The codes live in local state that survives
+              // refetches; the panel dismisses ONLY via the explicit
+              // "I have saved these codes" button below.
+              <BackupCodesPanel
+                codes={backupCodes}
+                onDone={() => {
+                  setEnrollment(null);
+                  setBackupCodes(null);
+                  toast.success('MFA enrollment complete');
+                }}
+              />
+            ) : verifiedFactor ? (
               <div className="space-y-3">
                 <p className="text-sm text-green-700">
                   ✓ Enrolled{verifiedFactor.friendly_name ? ` — ${verifiedFactor.friendly_name}` : ''}
@@ -103,31 +120,20 @@ export default function AdminSecurityPage() {
                 </button>
               </div>
             ) : enrollment ? (
-              backupCodes ? (
-                <BackupCodesPanel
-                  codes={backupCodes}
-                  onDone={() => {
-                    setEnrollment(null);
-                    setBackupCodes(null);
-                    toast.success('MFA enrollment complete');
-                  }}
-                />
-              ) : (
-                <VerifyPanel
-                  enrollment={enrollment}
-                  pending={verify.isPending}
-                  onVerify={(code) =>
-                    verify.mutate(
-                      { factor_id: enrollment.factor_id, code },
-                      {
-                        onSuccess: (data) => setBackupCodes(data.backup_codes),
-                        onError: (e) => toast.error(e.message),
-                      },
-                    )
-                  }
-                  onCancel={() => setEnrollment(null)}
-                />
-              )
+              <VerifyPanel
+                enrollment={enrollment}
+                pending={verify.isPending}
+                onVerify={(code) =>
+                  verify.mutate(
+                    { factor_id: enrollment.factor_id, code },
+                    {
+                      onSuccess: (data) => setBackupCodes(data.backup_codes),
+                      onError: (e) => toast.error(e.message),
+                    },
+                  )
+                }
+                onCancel={() => setEnrollment(null)}
+              />
             ) : (
               <div className="space-y-3">
                 <p className="text-sm text-gray-600">

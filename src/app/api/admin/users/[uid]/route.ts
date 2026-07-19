@@ -19,14 +19,15 @@
 // Auth: verifyAdminAuth FIRST line. Mutations require authMethod !== 'admin_key'
 // (the shared CI sentinel cannot perform per-admin-attributable writes). Every
 // mutation writes exactly one admin_audit_log row (PII-redacted). Guards:
-//   - targeting an ADMIN_USER_IDS allowlist member → 403 (all actions)
+//   - targeting an admin account (profiles.is_admin on the TARGET uid,
+//     P1-F4.4 — successor to the retired env-var admin allowlist) → 403
 //   - self-target on a DESTRUCTIVE action (revoke/suspend/delete) → 403
 
 import { createHash } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
-import { verifyAdminAuth, parseAdminAllowlist, type AdminContext } from '@/lib/auth/verify-admin';
+import { verifyAdminAuth, isProfileAdmin, type AdminContext } from '@/lib/auth/verify-admin';
 import { pool, withTransaction } from '@/lib/db/client';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod, internalError } from '@/features/leads/api/error-mapping';
@@ -186,22 +187,24 @@ export const PATCH = withApiEnvelope(async function PATCH(request: NextRequest, 
   if (!parsed.success) return badRequestZod(parsed.error);
   const mutation = parsed.data;
 
-  // Guard 1 — never mutate an admin allowlist member (all actions).
-  const adminUids = parseAdminAllowlist(process.env.ADMIN_USER_IDS);
-  if (adminUids.includes(targetUid)) {
-    logWarn(TAG, 'refused mutation targeting an admin allowlist member', {
-      action: mutation.action,
-      by: hashAdminUid(adminCtx.uid),
-    });
-    return err('FORBIDDEN', 'Cannot mutate an admin account', 403);
-  }
-
-  // Guard 2 — no self-target on destructive actions.
+  // Guard 1 — no self-target on destructive actions.
   if (DESTRUCTIVE_ACTIONS.has(mutation.action) && targetUid === adminCtx.uid) {
     return err('FORBIDDEN', 'Cannot perform a destructive action on your own account', 403);
   }
 
   try {
+    // Guard 2 — never mutate an admin account (all actions). Target-is-admin
+    // reads profiles.is_admin on the TARGET uid (P1-F4.4 close-out — the
+    // legacy env-var admin allowlist is retired). Inside the try: a lookup
+    // failure must 500, never silently allow the mutation.
+    if (await isProfileAdmin(pool, targetUid)) {
+      logWarn(TAG, 'refused mutation targeting an admin account', {
+        action: mutation.action,
+        by: hashAdminUid(adminCtx.uid),
+      });
+      return err('FORBIDDEN', 'Cannot mutate an admin account', 403);
+    }
+
     const existingRes = await pool.query<Record<string, unknown>>(DETAIL_SELECT_SQL, [targetUid]);
     const existing = existingRes.rows[0];
     if (!existing) return err('NOT_FOUND', 'User not found', 404);

@@ -17,6 +17,41 @@ import { X509Certificate } from 'crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Clean a raw dotenv value: strip matching quote pairs first, then strip
+// inline comments only for unquoted values. This prevents truncating quoted
+// values containing # (e.g., SECRET="my #1 password").
+function cleanEnvValue(raw) {
+  let val = raw.trim();
+  const quoteMatch = val.match(/^(['"])(.*)\1$/);
+  if (quoteMatch) {
+    val = quoteMatch[2];
+  } else {
+    val = val.replace(/\s+#.*$/, '');
+    // Re-check for quotes that may remain after comment removal (e.g., VAL='hello' # comment)
+    const innerQuote = val.match(/^(['"])(.*)\1$/);
+    if (innerQuote) val = innerQuote[2];
+  }
+  return val;
+}
+
+// Parse a dotenv-style file into a plain map (NO process.env mutation) —
+// used by the env-plane mismatch check to resolve .env + .env.local the way
+// Next.js would (pragmatic re-implementation: parse both, .env.local wins).
+function parseEnvFile(filePath) {
+  const map = {};
+  if (!existsSync(filePath)) return map;
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    for (const line of content.split('\n')) {
+      const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$/);
+      if (match) map[match[1]] = cleanEnvValue(match[2]);
+    }
+  } catch (err) {
+    console.warn(`⚠️  Warning: could not read ${filePath}: ${err.message}`);
+  }
+  return map;
+}
+
 // Load .env if present (manual parse — no dotenv dependency)
 const envPath = resolve(__dirname, '..', '.env');
 const hasEnv = existsSync(envPath);
@@ -26,19 +61,7 @@ if (hasEnv) {
     for (const line of envContent.split('\n')) {
       const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$/);
       if (match && !process.env[match[1]]) {
-        let val = match[2].trim();
-        // Strip matching quote pairs first, then strip inline comments only for unquoted values.
-        // This prevents truncating quoted values containing # (e.g., SECRET="my #1 password").
-        const quoteMatch = val.match(/^(['"])(.*)\1$/);
-        if (quoteMatch) {
-          val = quoteMatch[2];
-        } else {
-          val = val.replace(/\s+#.*$/, '');
-          // Re-check for quotes that may remain after comment removal (e.g., VAL='hello' # comment)
-          const innerQuote = val.match(/^(['"])(.*)\1$/);
-          if (innerQuote) val = innerQuote[2];
-        }
-        process.env[match[1]] = val;
+        process.env[match[1]] = cleanEnvValue(match[2]);
       }
     }
   } catch (err) {
@@ -87,6 +110,49 @@ try {
   const summary = (out.match(/^Verify:.*$/m) || [])[0];
   const detail = summary ? summary.trim() : (out.split('\n').find((l) => l.trim()) || e.message).trim();
   console.log(`✘ Migrations: ${detail} — DB behind code; run \`npm run migrate\` (details: node scripts/migrate.js --verify)`);
+}
+
+// 2c. Env-plane mismatch (Spec 113 §3 — the trap hit live 2026-07-19): the
+// app's AUTH plane (NEXT_PUBLIC_SUPABASE_URL) and the DB plane (DATABASE_URL /
+// PG_*) must agree. Cloud Supabase URL + loopback DB means the app
+// authenticates against CLOUD users while reading/writing the LOCAL DB.
+// Resolution is pragmatic: parse .env AND .env.local directly (the way Next.js
+// layers them — .env.local wins); the check says so in its message because
+// process.env alone would miss a .env.local override.
+{
+  const nextResolvedEnv = {
+    ...parseEnvFile(envPath),
+    ...parseEnvFile(resolve(__dirname, '..', '.env.local')),
+  };
+  const hostOf = (url) => {
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return null;
+    }
+  };
+  const isLoopback = (host) =>
+    host === 'localhost' || host === '::1' || host === '[::1]' || host === '0.0.0.0' || /^127\./.test(host);
+
+  const supaUrl = nextResolvedEnv.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const planeDbUrl = nextResolvedEnv.DATABASE_URL || process.env.DATABASE_URL;
+  const planePgHost = nextResolvedEnv.PG_HOST || process.env.PG_HOST || 'localhost';
+  if (supaUrl) {
+    const supaHost = hostOf(supaUrl);
+    const dbHost = planeDbUrl ? hostOf(planeDbUrl) : planePgHost;
+    if (supaHost && dbHost && !isLoopback(supaHost) && isLoopback(dbHost)) {
+      console.log(
+        `⚠ Env planes MIXED: NEXT_PUBLIC_SUPABASE_URL → ${supaHost} (non-loopback/cloud) while DATABASE_URL/PG_* → ${dbHost} (loopback). ` +
+        `The app will AUTH against cloud Supabase but read/write the LOCAL DB. ` +
+        `Checked .env + .env.local with .env.local precedence (as Next.js resolves them). ` +
+        `Fix: put the local-stack NEXT_PUBLIC_SUPABASE_* overrides in .env.local, or point DATABASE_URL/PG_* at the cloud DB (Spec 113 §3).`,
+      );
+    } else if (supaHost && dbHost) {
+      console.log(
+        `✔ Env planes: NEXT_PUBLIC_SUPABASE_URL (${supaHost}) and DB (${dbHost}) agree — checked .env + .env.local (.env.local wins)`,
+      );
+    }
+  }
 }
 
 // 3. Project Config

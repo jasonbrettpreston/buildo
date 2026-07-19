@@ -1,6 +1,14 @@
 // Logic Layer Tests — Route protection middleware
 // SPEC LINK: docs/specs/13_auth.md
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+
+// The middleware behavioral tests at the bottom of this file exercise the real
+// `middleware()` export; updateSession is refresh plumbing whose result never
+// gates routing (fail-open contract) — stub it with a recognizable sentinel.
+const PASSTHROUGH_SENTINEL = vi.hoisted(() => ({ __updateSessionPassthrough: true }));
+vi.mock('@/lib/supabase/middleware', () => ({
+  updateSession: vi.fn(async () => PASSTHROUGH_SENTINEL),
+}));
 import {
   classifyRoute,
   isPublicRoute,
@@ -363,3 +371,65 @@ describe('Middleware dev-mode cookie injection (Bug #1 regression lock)', () => 
 // purge (2026-04-22). The tradesperson lead feed is now served by the Expo
 // mobile client. The dev-seed tests above have been deleted along with the
 // page itself.
+
+// ---------------------------------------------------------------------------
+// Middleware — x-admin-key HEADER PRESENCE passthrough (P1-F4 break-glass fix,
+// 2026-07-19). An x-admin-key-bearing request has no session cookie by
+// definition; middleware must pass it through to the route handler, where
+// verify-admin.ts performs the ONLY secret comparison (CI_ADMIN_TOKEN,
+// Spec 13 §3.7). Middleware itself never compares the secret — a wrong token
+// still passes middleware and 401s in verify-admin.ts (negative control
+// verified live). Behavioral tests against the real middleware() export.
+// ---------------------------------------------------------------------------
+
+import { middleware } from '@/middleware';
+import type { NextRequest } from 'next/server';
+
+function makeAdminApiRequest(headers: Record<string, string> = {}): NextRequest {
+  return {
+    nextUrl: { pathname: '/api/admin/stats' },
+    url: 'http://localhost:3000/api/admin/stats',
+    cookies: {
+      get: () => undefined,
+      getAll: () => [], // no sb-* session cookie
+    },
+    headers: {
+      get: (key: string) => headers[key.toLowerCase()] ?? null,
+    },
+  } as unknown as NextRequest;
+}
+
+describe('middleware — admin API x-admin-key presence passthrough', () => {
+  const originalDevMode = process.env.DEV_MODE;
+  const originalCiToken = process.env.CI_ADMIN_TOKEN;
+
+  beforeEach(() => {
+    delete process.env.DEV_MODE; // real (non-dev) path
+  });
+
+  afterEach(() => {
+    if (originalDevMode === undefined) delete process.env.DEV_MODE;
+    else process.env.DEV_MODE = originalDevMode;
+    if (originalCiToken === undefined) delete process.env.CI_ADMIN_TOKEN;
+    else process.env.CI_ADMIN_TOKEN = originalCiToken;
+  });
+
+  it('no session + x-admin-key present → passes middleware (updateSession passthrough, no 401)', async () => {
+    const res = await middleware(makeAdminApiRequest({ 'x-admin-key': 'some-ci-token' }));
+    expect(res).toBe(PASSTHROUGH_SENTINEL as unknown as Awaited<ReturnType<typeof middleware>>);
+  });
+
+  it('no session + no x-admin-key header → 401 at the edge', async () => {
+    const res = (await middleware(makeAdminApiRequest())) as Response;
+    expect(res.status).toBe(401);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe('Authentication required');
+  });
+
+  it('never compares the secret: a WRONG x-admin-key value still passes middleware even with CI_ADMIN_TOKEN set (verification is solely verify-admin.ts)', async () => {
+    process.env.CI_ADMIN_TOKEN = 'the-real-secret';
+    const res = await middleware(makeAdminApiRequest({ 'x-admin-key': 'definitely-wrong' }));
+    // Presence-only: middleware lets it through; verify-admin.ts 401s it later.
+    expect(res).toBe(PASSTHROUGH_SENTINEL as unknown as Awaited<ReturnType<typeof middleware>>);
+  });
+});

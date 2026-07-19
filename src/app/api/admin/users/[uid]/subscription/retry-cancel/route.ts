@@ -15,7 +15,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
-import { verifyAdminAuth, parseAdminAllowlist, type AdminContext } from '@/lib/auth/verify-admin';
+import { verifyAdminAuth, isProfileAdmin, type AdminContext } from '@/lib/auth/verify-admin';
 import { pool, withTransaction } from '@/lib/db/client';
 import { ok, err } from '@/features/leads/api/envelope';
 import { badRequestZod, internalError } from '@/features/leads/api/error-mapping';
@@ -65,12 +65,14 @@ export const POST = withApiEnvelope(async function POST(request: NextRequest, co
   if (!parsed.success) return badRequestZod(parsed.error);
   const { reason } = parsed.data;
 
-  const adminUids = parseAdminAllowlist(process.env.ADMIN_USER_IDS);
-  if (adminUids.includes(targetUid)) {
-    return err('FORBIDDEN', 'Cannot mutate an admin account', 403);
-  }
-
   try {
+    // Never mutate an admin account — profiles.is_admin on the TARGET uid
+    // (P1-F4.4 close-out; successor to the retired env-var admin allowlist).
+    // Inside the try: a lookup failure must 500, never silently allow.
+    if (await isProfileAdmin(pool, targetUid)) {
+      return err('FORBIDDEN', 'Cannot mutate an admin account', 403);
+    }
+
     const res = await pool.query<{ stripe_customer_id: string | null; stripe_cancel_failed_at: string | null; account_deleted_at: string | null }>(
       `SELECT stripe_customer_id, stripe_cancel_failed_at, account_deleted_at FROM user_profiles WHERE user_id = $1`,
       [targetUid],

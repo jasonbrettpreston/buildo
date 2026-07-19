@@ -99,14 +99,15 @@ const PROFILE_ROW = {
   account_deleted_at: null,
 };
 
-// deterministic env for the admin-allowlist guard
-const ORIGINAL_ENV = process.env.ADMIN_USER_IDS;
+// Target-is-admin guard (P1-F4.4): the routes read profiles.is_admin on the
+// TARGET uid via isProfileAdmin — non-UUID targets short-circuit false without
+// a query; UUID targets consume ONE leading pool.query (mock accordingly).
 const ORIGINAL_SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
 beforeEach(() => {
   vi.clearAllMocks();
-  process.env.ADMIN_USER_IDS = 'admin-session-1,other-admin';
   delete process.env.SUPABASE_SECRET_KEY; // default: dev-synthetic uid path
   // default: query returns a single profile row unless overridden per-test
+  // (for the is_admin guard lookup this row has no is_admin → not an admin)
   mockedQuery.mockResolvedValue({ rows: [PROFILE_ROW], rowCount: 1 } as never);
 });
 
@@ -159,21 +160,34 @@ describe('admin/users PATCH — guards', () => {
     expect(res.status).toBe(400);
   });
 
-  it('403 when targeting an ADMIN_USER_IDS allowlist member (all actions)', async () => {
+  it('403 when targeting an admin account — profiles.is_admin on the TARGET uid (all actions, P1-F4.4)', async () => {
+    const ADMIN_TARGET = '00000000-0000-0000-0000-00000000ad99';
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery.mockResolvedValueOnce({ rows: [{ is_admin: true }], rowCount: 1 } as never); // guard lookup
     const res = await PATCH(
       makeRequest({ method: 'PATCH', body: { action: 'set_preset', account_preset: 'supplier', reason: 'demote admin' } }),
-      makeContext('other-admin'),
+      makeContext(ADMIN_TARGET),
     );
     expect(res.status).toBe(403);
+    expect(mockedAudit).not.toHaveBeenCalled();
+    // The guard read profiles.is_admin for the TARGET, not an env allowlist.
+    expect(String(mockedQuery.mock.calls[0]![0])).toContain('FROM profiles');
+    expect(mockedQuery.mock.calls[0]![1]).toEqual([ADMIN_TARGET]);
+  });
+
+  it('500 (fail closed, no mutation) when the target-is-admin lookup throws', async () => {
+    mockedVerify.mockResolvedValueOnce(SESSION_CTX);
+    mockedQuery.mockRejectedValueOnce(new Error('db down')); // guard lookup fails
+    const res = await PATCH(
+      makeRequest({ method: 'PATCH', body: { action: 'revoke', reason: 'test' } }),
+      makeContext('00000000-0000-0000-0000-00000000ad99'),
+    );
+    expect(res.status).toBe(500);
     expect(mockedAudit).not.toHaveBeenCalled();
   });
 
   it('403 on self-target for a destructive action', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    // NOTE: admin-session-1 is also in the allowlist, so use a session admin
-    // that is NOT allowlisted to isolate the self-target guard.
-    process.env.ADMIN_USER_IDS = 'other-admin';
     const res = await PATCH(
       makeRequest({ method: 'PATCH', body: { action: 'delete', reason: 'delete self' } }),
       makeContext('admin-session-1'),
@@ -202,7 +216,6 @@ describe('admin/users PATCH — mutations audit', () => {
 
   it('delete nullifies PII, marks deleted, audits, then scrubs', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    process.env.ADMIN_USER_IDS = 'other-admin'; // target-1 is not an admin
     const res = await PATCH(makeRequest({ method: 'PATCH', body: { action: 'delete', reason: 'user requested deletion' } }), makeContext('target-1'));
     expect(res.status).toBe(200);
     const updateCall = mockedQuery.mock.calls.find((c) => String(c[0]).includes('account_deleted_at = NOW()'));
@@ -217,7 +230,6 @@ describe('admin/users PATCH — mutations audit', () => {
   // no marker/recovery path). Mirrors the self-serve delete route.
   it('delete cancels the Stripe subscription when the account has a customer', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    process.env.ADMIN_USER_IDS = 'other-admin';
     mockedQuery.mockResolvedValue({ rows: [{ ...PROFILE_ROW, stripe_customer_id: 'cus_admin_del' }], rowCount: 1 } as never);
     const res = await PATCH(makeRequest({ method: 'PATCH', body: { action: 'delete', reason: 'admin ban' } }), makeContext('target-1'));
     expect(res.status).toBe(200);
@@ -226,7 +238,6 @@ describe('admin/users PATCH — mutations audit', () => {
 
   it('delete does NOT call Stripe when the account has no customer', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    process.env.ADMIN_USER_IDS = 'other-admin';
     const res = await PATCH(makeRequest({ method: 'PATCH', body: { action: 'delete', reason: 'trial user' } }), makeContext('target-1'));
     expect(res.status).toBe(200);
     expect(mockedCancelSubs).not.toHaveBeenCalled(); // PROFILE_ROW has no stripe_customer_id
@@ -258,6 +269,7 @@ describe('admin/users PATCH — entitlements writes (W6)', () => {
   it('revoke upserts status=expired on the lead_gen entitlement (default product) with a FOR UPDATE oldValue read (R8)', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never) // is_admin guard (uuid target — no profiles row)
       .mockResolvedValueOnce({ rows: [PROFILE_ROW], rowCount: 1 } as never) // existing (joined)
       .mockResolvedValueOnce({ rows: [{ status: 'active', trial_started_at: null }], rowCount: 1 } as never) // FOR UPDATE oldValue
       .mockResolvedValueOnce({ rowCount: 1, rows: [] } as never) // entitlement upsert
@@ -268,11 +280,11 @@ describe('admin/users PATCH — entitlements writes (W6)', () => {
     );
     expect(res.status).toBe(200);
     // R8: the audit oldValue snapshot comes from the row-locked entitlements read.
-    const lockSql = String(mockedQuery.mock.calls[1]![0]);
+    const lockSql = String(mockedQuery.mock.calls[2]![0]);
     expect(lockSql).toMatch(/FROM entitlements WHERE user_id = \$1 AND product = \$2 FOR UPDATE/);
-    const upsertSql = String(mockedQuery.mock.calls[2]![0]);
+    const upsertSql = String(mockedQuery.mock.calls[3]![0]);
     expect(upsertSql).toContain('INSERT INTO entitlements');
-    expect(mockedQuery.mock.calls[2]![1]).toEqual([TARGET_UUID, 'lead_gen', 'expired']);
+    expect(mockedQuery.mock.calls[3]![1]).toEqual([TARGET_UUID, 'lead_gen', 'expired']);
     expect(mockedAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'revoke',
@@ -286,6 +298,7 @@ describe('admin/users PATCH — entitlements writes (W6)', () => {
   it('extend_trial honours an explicit product and preserves the 14-day window arithmetic', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
     mockedQuery
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never) // is_admin guard (uuid target — no profiles row)
       .mockResolvedValueOnce({ rows: [PROFILE_ROW], rowCount: 1 } as never) // existing
       .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never) // FOR UPDATE — no row yet
       .mockResolvedValueOnce({ rowCount: 1, rows: [] } as never) // trial upsert
@@ -295,14 +308,15 @@ describe('admin/users PATCH — entitlements writes (W6)', () => {
       makeContext(TARGET_UUID),
     );
     expect(res.status).toBe(200);
-    const upsertSql = String(mockedQuery.mock.calls[2]![0]);
+    const upsertSql = String(mockedQuery.mock.calls[3]![0]);
     expect(upsertSql).toMatch(/NOW\(\) - INTERVAL '14 days' \+ make_interval\(days => \$3\)/);
-    expect(mockedQuery.mock.calls[2]![1]).toEqual([TARGET_UUID, 'flight_center', 30]);
+    expect(mockedQuery.mock.calls[3]![1]).toEqual([TARGET_UUID, 'flight_center', 30]);
   });
 
   it('delete fans out cancelled_pending_deletion to EVERY entitlement row (no product filter)', async () => {
     mockedVerify.mockResolvedValueOnce(SESSION_CTX);
-    process.env.ADMIN_USER_IDS = 'other-admin';
+    // uuid target: the leading is_admin guard lookup consumes the default
+    // mockResolvedValue (PROFILE_ROW has no is_admin → not an admin).
     mockedQuery.mockResolvedValue({ rows: [PROFILE_ROW], rowCount: 1 } as never);
     const res = await PATCH(
       makeRequest({ method: 'PATCH', body: { action: 'delete', reason: 'user requested deletion' } }),
@@ -491,7 +505,6 @@ describe('admin/users POST create — email_exists adoption gate', () => {
 });
 
 afterAll(() => {
-  process.env.ADMIN_USER_IDS = ORIGINAL_ENV;
   if (ORIGINAL_SUPABASE_KEY === undefined) delete process.env.SUPABASE_SECRET_KEY;
   else process.env.SUPABASE_SECRET_KEY = ORIGINAL_SUPABASE_KEY;
 });
