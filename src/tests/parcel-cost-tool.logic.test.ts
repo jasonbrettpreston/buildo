@@ -63,6 +63,27 @@ describe('parseFreeTextAddress', () => {
     expect(r.num).toBe('26');
     expect(typeof r.streetName).toBe('string');
   });
+
+  // WF3 FIX (2026-07-20): a trailing ", <city>[, <province>]" suffix — the
+  // shape a real operator gets from copy-pasting a full postal address —
+  // previously folded into the street name via parseLinearName ("DERWYN ,
+  // TORONTO"), matching ZERO rows against parcels/address_points (both are
+  // comma-free street-name feeds). Live-reproduced: "41 Derwyn Road,
+  // Toronto" resolved to `match: null` pre-fix; "41 Derwyn Road" alone
+  // resolved correctly. Truncating at the first comma fixes it without
+  // touching the shared `@/lib/parcels/address` normalizer (Spec 89 Known
+  // Failure Modes: "third normalizer copy" is the guarded failure mode —
+  // this fix stays local to the free-text splitter, one step BEFORE
+  // parseLinearName runs).
+  it('strips a trailing ", <city>" suffix before parsing (Parcel Cost Model Tool symptom)', () => {
+    expect(parseFreeTextAddress('41 Derwyn Road, Toronto')).toEqual({ num: '41', streetName: 'DERWYN' });
+  });
+  it('strips a trailing ", <city>, <province>" suffix', () => {
+    expect(parseFreeTextAddress('41 Derwyn Road, Toronto, ON')).toEqual({ num: '41', streetName: 'DERWYN' });
+  });
+  it('no comma present → unchanged (regression guard against over-truncating)', () => {
+    expect(parseFreeTextAddress('26 Hurlingham Cres')).toEqual({ num: '26', streetName: 'HURLINGHAM' });
+  });
 });
 
 describe('Spec 89 §4 mapping consistency', () => {

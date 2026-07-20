@@ -40,6 +40,7 @@ import type {
   LeadFeedResult,
 } from '@/features/leads/types';
 import { TRADE_TARGET_PHASE } from '@/lib/classification/lifecycle-phase';
+import { isUuid } from '@/lib/entitlements';
 import { logError, logWarn } from '@/lib/logger';
 
 /**
@@ -153,7 +154,7 @@ export const LEAD_FEED_SQL = `
         FROM lead_views lv2
         WHERE lv2.lead_key = ('permit:' || p.permit_num || ':' || LPAD(p.revision_num, 2, '0'))
           AND lv2.saved = true
-          AND lv2.user_id != $9::text
+          AND lv2.user_id != $9::uuid
           AND lv2.lead_type = 'permit'
       ) AS competition_count,
       NULL::int        AS active_permits_nearby,
@@ -271,7 +272,7 @@ export const LEAD_FEED_SQL = `
     -- regression because the test in get-lead-feed.logic.test.ts
     -- codified the wrong format. Caught by independent reviewer I4.
     LEFT JOIN lead_views lv_p
-      ON lv_p.user_id = $9::text
+      ON lv_p.user_id = $9::uuid
      AND lv_p.lead_key = ('permit:' || p.permit_num || ':' || LPAD(p.revision_num, 2, '0'))
      AND lv_p.permit_num = p.permit_num
      AND lv_p.revision_num = p.revision_num
@@ -474,7 +475,7 @@ export const LEAD_FEED_SQL = `
     -- always false for every builder lead in the feed. Independent
     -- reviewer C1 (Phase 0-3 bundle).
     LEFT JOIN lead_views lv_b
-      ON lv_b.user_id = $9::text
+      ON lv_b.user_id = $9::uuid
      AND lv_b.lead_key = ('builder:' || e.id::text)
      AND lv_b.entity_id = e.id
      AND lv_b.trade_slug = $1
@@ -582,7 +583,7 @@ const COA_CANDIDATES_CTE = `
         FROM lead_views lv2
         WHERE lv2.lead_key = ('coa:' || ca.application_number)
           AND lv2.saved = true
-          AND lv2.user_id != $9::text
+          AND lv2.user_id != $9::uuid
           AND lv2.lead_type = 'coa'
       ) AS competition_count,
       NULL::int        AS active_permits_nearby,
@@ -647,7 +648,7 @@ const COA_CANDIDATES_CTE = `
       ON tf.lead_id = ('coa:' || ca.application_number)
      AND tf.trade_slug = $1
     LEFT JOIN lead_views lv_c
-      ON lv_c.user_id = $9::text
+      ON lv_c.user_id = $9::uuid
      AND lv_c.lead_key = ('coa:' || ca.application_number)
      AND lv_c.lead_type = 'coa'
      -- IMPL-review v1 fold (Indep HIGH-1, 2026-05-20): trade_slug
@@ -1013,6 +1014,17 @@ export async function getLeadFeed(
   const leadTypeFilter = input.lead_type ?? 'all';
 
   try {
+    // Migration 229 (Supabase Phase 1, D6) converted lead_views.user_id to
+    // UUID (FK auth.users) — the four lv_p/lv_b/lv_c/lv2 sites below bind $9
+    // as `::uuid`. A real caller (`/api/leads/feed`) always supplies a
+    // verified Supabase uuid, but the admin Test Feed Tool
+    // (`/api/admin/leads/test-feed`) passes the synthetic 'admin-test'
+    // sentinel (src/lib/admin/admin-uid.ts) — binding that raw string to a
+    // `::uuid` parameter throws 22P02 (invalid uuid syntax). Normalize to
+    // NULL instead: the same no-op convention `@/lib/entitlements` already
+    // uses for non-uuid uids (`NULL::uuid` never satisfies `=` or `!=`,
+    // which is behaviourally identical to "no saved-state row exists").
+    const safeUserId = isUuid(input.user_id) ? input.user_id : null;
     const params: unknown[] = [
       input.trade_slug,
       input.lng,
@@ -1022,7 +1034,7 @@ export async function getLeadFeed(
       input.cursor?.score ?? null,
       input.cursor?.lead_type ?? null,
       input.cursor?.lead_id ?? null,
-      input.user_id, // $9 — Phase 3-vi: keyed for the lead_views LEFT JOIN
+      safeUserId, // $9 — Phase 3-vi: keyed for the lead_views LEFT JOIN (uuid or NULL)
       leadTypeFilter, // $10 — Spec 91 §3.1 filter axis (WF3 #3 fold)
     ];
 

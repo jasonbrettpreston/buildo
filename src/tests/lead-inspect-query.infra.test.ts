@@ -218,20 +218,34 @@ describe('lead-inspect-query.ts — Cross-stream timeline event_date (Spec 79 §
     expect(matches.length).toBe(3);
   });
 
-  it('ORDER BY uses TZ-deterministic COALESCE(event_date, (transitioned_at AT TIME ZONE \'UTC\')::date)', () => {
+  // WF3 FIX (Supabase Phase 1 satellite, symptom C root cause): a bare
+  // ORDER BY directly on the 3-arm UNION ALL resolves `event_date`/
+  // `transitioned_at` against the UNION's projected (TEXT) column types —
+  // `text AT TIME ZONE 'UTC'` has no operator (42883 on EVERY call, live-
+  // reproduced). The fix wraps the UNION as a `cross_stream` subquery and
+  // moves ORDER BY to the outer (non-set-op) SELECT, where the TEXT columns
+  // can be re-cast back to DATE/TIMESTAMPTZ for the sort computation —
+  // Postgres also forbids re-casting a set-operation's own output column in
+  // its own ORDER BY (0A000), which is why the subquery wrap (not just an
+  // in-place cast) is required.
+  it('ORDER BY runs on the outer, non-set-op SELECT over a `cross_stream` subquery (not directly on the UNION)', () => {
+    expect(crossStreamBlock).toMatch(/\)\s*cross_stream\s*\n\s*ORDER BY/);
+  });
+
+  it('ORDER BY uses TZ-deterministic COALESCE(event_date::date, (transitioned_at::timestamptz AT TIME ZONE \'UTC\')::date) on the outer query', () => {
     expect(crossStreamBlock).toMatch(
-      /COALESCE\(\s*event_date\s*,\s*\(\s*transitioned_at\s+AT\s+TIME\s+ZONE\s+'UTC'\s*\)::date\s*\)\s*ASC/,
+      /COALESCE\(\s*cross_stream\.event_date::date\s*,\s*\(\s*cross_stream\.transitioned_at::timestamptz\s+AT\s+TIME\s+ZONE\s+'UTC'\s*\)::date\s*\)\s*ASC/,
     );
   });
 
   it('ORDER BY has the "real-event_date rows sort before detected-only rows" tie-break (Gemini CRIT fold)', () => {
     expect(crossStreamBlock).toMatch(
-      /CASE\s+WHEN\s+event_date\s+IS\s+NOT\s+NULL\s+THEN\s+0\s+ELSE\s+1\s+END\s+ASC/,
+      /CASE\s+WHEN\s+cross_stream\.event_date\s+IS\s+NOT\s+NULL\s+THEN\s+0\s+ELSE\s+1\s+END\s+ASC/,
     );
   });
 
   it('ORDER BY preserves transitioned_at ASC + id ASC for absolute determinism', () => {
-    expect(crossStreamBlock).toMatch(/transitioned_at\s+ASC\s*,\s*\n?\s*id\s+ASC/);
+    expect(crossStreamBlock).toMatch(/transitioned_at::timestamptz\s+ASC\s*,\s*\n?\s*cross_stream\.id\s+ASC/);
   });
 
   it('The plan-v1 TZ-dependent form COALESCE(event_date::timestamptz, transitioned_at) is NOT present (regression lock)', () => {

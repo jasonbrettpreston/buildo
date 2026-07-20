@@ -55,6 +55,15 @@ export interface LeadDetailRow {
 
 // $1 permit_num · $2 revision_num · $3 trade_slug · $4 viewer's user_id (excluded from competition count, scopes own-save)
 //
+// $4 (and COA_LEAD_DETAIL_SQL's $3) are cast `::uuid` — migration 229
+// (Supabase Phase 1, D6) converted lead_views.user_id to UUID (FK
+// auth.users). The route handler MUST pass a verified Supabase uuid here
+// (or NULL) — a stale `::text` cast previously shipped and threw 42883
+// ("operator does not exist: uuid <> text") on every real request; a raw
+// non-uuid string (e.g. the dev-bypass 'dev-user' sentinel) would instead
+// throw 22P02 ("invalid input syntax for type uuid"). See the route's own
+// `isUuid` guard at the call site.
+//
 // competition_count must match the feed's semantic exactly so the same
 // permit reports the same number on both list and detail screens:
 //   - keyed on lead_key (`'permit:' || permit_num || ':' || LPAD(revision_num, 2, '0')`)
@@ -108,14 +117,14 @@ export const LEAD_DETAIL_SQL = `
     FROM lead_views lv2
     WHERE lv2.lead_key = ('permit:' || p.permit_num || ':' || LPAD(p.revision_num, 2, '0'))
       AND lv2.saved = true
-      AND lv2.user_id != $4::text
+      AND lv2.user_id != $4::uuid
       AND lv2.lead_type = 'permit'
   ) lv_count ON TRUE
   LEFT JOIN LATERAL (
     SELECT EXISTS (
       SELECT 1 FROM lead_views lv_own
       WHERE lv_own.lead_key = ('permit:' || p.permit_num || ':' || LPAD(p.revision_num, 2, '0'))
-        AND lv_own.user_id = $4::text
+        AND lv_own.user_id = $4::uuid
         AND lv_own.saved = true
         AND lv_own.lead_type = 'permit'
     ) AS saved
@@ -303,14 +312,14 @@ export const COA_LEAD_DETAIL_SQL = `
     FROM lead_views lv2
     WHERE lv2.lead_key = ('coa:' || ca.application_number)
       AND lv2.saved = true
-      AND lv2.user_id != $3::text
+      AND lv2.user_id != $3::uuid
       AND lv2.lead_type = 'coa'
   ) lv_count ON TRUE
   LEFT JOIN LATERAL (
     SELECT EXISTS (
       SELECT 1 FROM lead_views lv_own
       WHERE lv_own.lead_key = ('coa:' || ca.application_number)
-        AND lv_own.user_id = $3::text
+        AND lv_own.user_id = $3::uuid
         AND lv_own.saved = true
         AND lv_own.lead_type = 'coa'
     ) AS saved

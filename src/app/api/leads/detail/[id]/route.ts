@@ -22,6 +22,7 @@ import type { NextRequest } from 'next/server';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { pool } from '@/lib/db/client';
+import { isUuid } from '@/lib/entitlements';
 import { ok } from '@/features/leads/api/envelope';
 import {
   badRequestInvalidId,
@@ -54,6 +55,16 @@ export const GET = withApiEnvelope(async function GET(
     const parsed = parseLeadId(id);
     if (parsed === null) return badRequestInvalidId();
 
+    // Migration 229 (Supabase Phase 1, D6): lead_views.user_id is UUID (FK
+    // auth.users); LEAD_DETAIL_SQL/COA_LEAD_DETAIL_SQL cast the viewer's uid
+    // param `::uuid`. `ctx.uid` is a verified Supabase uuid in production,
+    // but the dev-bypass path (`getCurrentUserContext`, isDevMode()) can
+    // yield the non-uuid 'dev-user' sentinel — binding that raw string to a
+    // `::uuid` parameter throws 22P02. Normalize to NULL (the
+    // `@/lib/entitlements` no-op convention for non-uuid uids: NULL::uuid
+    // never satisfies `=`/`!=`, i.e. "no saved-state row exists").
+    const safeUid = isUuid(ctx.uid) ? ctx.uid : null;
+
     if (parsed.kind === 'coa') {
       // Phase G: dispatch to CoA branch reading coa_applications directly.
       // The DB-canonical lead_id `coa:${application_number}` is constructed
@@ -61,7 +72,7 @@ export const GET = withApiEnvelope(async function GET(
       const coaResult = await pool.query<CoaLeadDetailRow>(COA_LEAD_DETAIL_SQL, [
         parsed.application_number,
         ctx.trade_slug,
-        ctx.uid,
+        safeUid,
       ]);
       const coaRow = coaResult.rows[0];
       if (!coaRow) return notFound();
@@ -72,7 +83,7 @@ export const GET = withApiEnvelope(async function GET(
       parsed.permit_num,
       parsed.revision_num,
       ctx.trade_slug,
-      ctx.uid,
+      safeUid,
     ]);
     // Belt-and-braces — rowCount === 0 SHOULD short-circuit, but the explicit
     // guard satisfies noUncheckedIndexedAccess without a non-null assertion.

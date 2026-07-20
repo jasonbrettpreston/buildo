@@ -11,7 +11,7 @@
 //
 //   1. A permit + a lead_views row (saved=true, user_id=ctx.uid) →
 //      detail returns is_saved=true. Pins the lv_self LATERAL EXISTS +
-//      `$4::text` user_id binding.
+//      `$4::uuid` user_id binding.
 //   2. Same permit, same row, BUT user_id != ctx.uid → detail returns
 //      is_saved=false. Pins user-scope (would fail if `$2` was used
 //      where `$4` is required).
@@ -19,6 +19,14 @@
 //      is_saved=false. Pins the EXISTS-returns-boolean-not-null contract.
 //   4. Same permit, lead_views row with saved=false (user un-saved) →
 //      detail returns is_saved=false. Pins read-after-write.
+//
+// Migration 229 (Supabase Phase 1, D6) converted lead_views.user_id to
+// UUID with a real FK to auth.users(id) — a bare non-uuid sentinel string
+// (the pre-229 shape this test used) now fails the INSERT outright (22P02
+// or a FK violation). Fixture users are real `auth.users` rows, following
+// the pattern established by offboarding-sweep.db.test.ts: self-detect
+// `auth.users` availability (absent on a bare-Postgres test container that
+// hasn't provisioned the Supabase `auth` schema) and skip gracefully.
 //
 // Skipped if BUILDO_TEST_DB=1 / DATABASE_URL is not set so the default
 // `npm run test` doesn't fail when Docker isn't running locally.
@@ -36,11 +44,13 @@ const pool = getTestPool();
 const PERMIT_NUM = 'TEST 999500';
 const PERMIT_REV = '00';
 const TRADE_SLUG = 'plumbing';
-const SAVED_USER = 'detail-test-uid-saved';
-const OTHER_USER = 'detail-test-uid-other';
 const TEST_LAT = 43.65;
 const TEST_LNG = -79.38;
 const LEAD_KEY = `permit:${PERMIT_NUM}:${PERMIT_REV}`;
+
+let hasAuthUsers = false;
+let SAVED_USER: string | null = null;
+let OTHER_USER: string | null = null;
 
 async function runDetailQuery(viewerUid: string): Promise<LeadDetailRow | null> {
   if (!pool) return null;
@@ -56,6 +66,21 @@ async function runDetailQuery(viewerUid: string): Promise<LeadDetailRow | null> 
 describe.skipIf(!dbAvailable())('LEAD_DETAIL_SQL — is_saved roundtrip (WF1-A regression guard)', () => {
   beforeAll(async () => {
     if (!pool) return;
+
+    const authCheck = await pool.query<{ has_auth: boolean }>(
+      `SELECT to_regclass('auth.users') IS NOT NULL AS has_auth`,
+    );
+    hasAuthUsers = authCheck.rows[0]?.has_auth === true;
+    if (!hasAuthUsers) return;
+
+    const u1 = await pool.query<{ id: string }>(
+      `INSERT INTO auth.users (id) VALUES (gen_random_uuid()) RETURNING id`,
+    );
+    SAVED_USER = u1.rows[0]!.id;
+    const u2 = await pool.query<{ id: string }>(
+      `INSERT INTO auth.users (id) VALUES (gen_random_uuid()) RETURNING id`,
+    );
+    OTHER_USER = u2.rows[0]!.id;
 
     await pool.query(
       `INSERT INTO trades (slug, name)
@@ -77,19 +102,22 @@ describe.skipIf(!dbAvailable())('LEAD_DETAIL_SQL — is_saved roundtrip (WF1-A r
 
   afterAll(async () => {
     if (!pool) return;
-    await pool.query(`DELETE FROM lead_views WHERE user_id IN ($1, $2)`, [
-      SAVED_USER,
-      OTHER_USER,
-    ]);
+    if (SAVED_USER || OTHER_USER) {
+      await pool.query(`DELETE FROM lead_views WHERE user_id = ANY($1::uuid[])`, [
+        [SAVED_USER, OTHER_USER].filter((id): id is string => id !== null),
+      ]);
+    }
     await pool.query(`DELETE FROM permits WHERE permit_num = $1`, [PERMIT_NUM]);
+    if (SAVED_USER) await pool.query(`DELETE FROM auth.users WHERE id = $1`, [SAVED_USER]);
+    if (OTHER_USER) await pool.query(`DELETE FROM auth.users WHERE id = $1`, [OTHER_USER]);
     await pool.end();
   });
 
   it('returns is_saved=false when no lead_views row exists for any user', async () => {
-    if (!pool) return;
+    if (!pool || !hasAuthUsers) return;
     await pool.query(`DELETE FROM lead_views WHERE lead_key = $1`, [LEAD_KEY]);
 
-    const row = await runDetailQuery(SAVED_USER);
+    const row = await runDetailQuery(SAVED_USER!);
     expect(row).not.toBeNull();
     expect(row!.saved).toBe(false);
 
@@ -98,7 +126,7 @@ describe.skipIf(!dbAvailable())('LEAD_DETAIL_SQL — is_saved roundtrip (WF1-A r
   });
 
   it('returns is_saved=true after the viewer saves the permit (lv_self user_id=$4 binding)', async () => {
-    if (!pool) return;
+    if (!pool || !hasAuthUsers) return;
     await pool.query(`DELETE FROM lead_views WHERE lead_key = $1`, [LEAD_KEY]);
     await pool.query(
       `INSERT INTO lead_views (lead_key, lead_type, permit_num, revision_num,
@@ -107,7 +135,7 @@ describe.skipIf(!dbAvailable())('LEAD_DETAIL_SQL — is_saved roundtrip (WF1-A r
       [LEAD_KEY, PERMIT_NUM, PERMIT_REV, SAVED_USER, TRADE_SLUG],
     );
 
-    const row = await runDetailQuery(SAVED_USER);
+    const row = await runDetailQuery(SAVED_USER!);
     expect(row).not.toBeNull();
     expect(row!.saved).toBe(true);
 
@@ -118,9 +146,9 @@ describe.skipIf(!dbAvailable())('LEAD_DETAIL_SQL — is_saved roundtrip (WF1-A r
   it('returns is_saved=false for a different viewer when only the SAVED_USER has saved (user-scope guard)', async () => {
     // Continues from the previous test's seeded state — saved row exists for
     // SAVED_USER. OTHER_USER queries the same permit and must see false.
-    if (!pool) return;
+    if (!pool || !hasAuthUsers) return;
 
-    const row = await runDetailQuery(OTHER_USER);
+    const row = await runDetailQuery(OTHER_USER!);
     expect(row).not.toBeNull();
     // Critical: if the SQL bound user_id to $2 (revision_num) instead of $4,
     // both users would see the same value. This pins the user_id=$4 binding.
@@ -131,14 +159,14 @@ describe.skipIf(!dbAvailable())('LEAD_DETAIL_SQL — is_saved roundtrip (WF1-A r
   });
 
   it('returns is_saved=false after the viewer un-saves (read-after-write)', async () => {
-    if (!pool) return;
+    if (!pool || !hasAuthUsers) return;
     await pool.query(
       `UPDATE lead_views SET saved = false, saved_at = NULL
        WHERE lead_key = $1 AND user_id = $2`,
       [LEAD_KEY, SAVED_USER],
     );
 
-    const row = await runDetailQuery(SAVED_USER);
+    const row = await runDetailQuery(SAVED_USER!);
     expect(row).not.toBeNull();
     expect(row!.saved).toBe(false);
 

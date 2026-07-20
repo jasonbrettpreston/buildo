@@ -335,10 +335,31 @@ describe('LEAD_FEED_SQL — structure', () => {
   it('passes user_id as $9 parameter to LEAD_FEED_SQL', async () => {
     const mock = createMockPool();
     mock.query.mockResolvedValueOnce(qr([]));
-    await getLeadFeed(makeInput({ user_id: 'firebase-uid-test-9' }), mock as unknown as Pool);
+    // Migration 229 converted lead_views.user_id to UUID (FK auth.users) —
+    // $9 is now cast `::uuid` in the SQL (see the four `$9::uuid` sites), so
+    // a realistic caller passes a real Supabase uuid, not a Firebase-shaped id.
+    const uid = '11111111-1111-4111-8111-111111111111';
+    await getLeadFeed(makeInput({ user_id: uid }), mock as unknown as Pool);
     const params = mock.query.mock.calls[0]?.[1];
     expect(params).toBeDefined();
-    expect(params[8]).toBe('firebase-uid-test-9');
+    expect(params[8]).toBe(uid);
+  });
+
+  // Regression lock (P1 uuid-fk residual): migration 229 converted
+  // lead_views.user_id to UUID. Non-uuid sentinel uids (the admin Test Feed
+  // Tool's 'admin-test', src/lib/admin/admin-uid.ts) MUST NOT be sent as the
+  // $9::uuid parameter — Postgres 22P02 ("invalid input syntax for type
+  // uuid") on bind. getLeadFeed normalizes any non-uuid input.user_id to
+  // NULL before binding — NULL::uuid never matches an `=` or `!=` predicate,
+  // which is the same no-op convention `@/lib/entitlements` uses for
+  // non-uuid uids (never throw; behave like "no saved-state row exists").
+  it('normalizes a non-uuid user_id (e.g. the admin-test sentinel) to NULL for the $9 parameter — never binds a raw non-uuid string to a uuid column', async () => {
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    await getLeadFeed(makeInput({ user_id: 'admin-test' }), mock as unknown as Pool);
+    const params = mock.query.mock.calls[0]?.[1];
+    expect(params).toBeDefined();
+    expect(params[8]).toBeNull();
   });
 
   it('mirrors widened columns as NULL on the other branch (UNION ALL shape)', () => {
@@ -356,7 +377,10 @@ describe('LEAD_FEED_SQL — structure', () => {
     // where saved=true and user_id != $9. Same lead_key format as is_saved.
     expect(LEAD_FEED_SQL).toMatch(/COUNT\(DISTINCT lv2\.user_id\)::int/);
     expect(LEAD_FEED_SQL).toMatch(/lv2\.saved = true/);
-    expect(LEAD_FEED_SQL).toMatch(/lv2\.user_id != \$9::text/);
+    // Migration 229: lead_views.user_id is UUID (FK auth.users) — the $9
+    // param is cast `::uuid`, not `::text` (a stale `::text` cast here would
+    // 42883 "operator does not exist: uuid <> text" at query time).
+    expect(LEAD_FEED_SQL).toMatch(/lv2\.user_id != \$9::uuid/);
     expect(LEAD_FEED_SQL).toMatch(/lv2\.lead_type = 'permit'/);
     expect(LEAD_FEED_SQL).toMatch(/AS competition_count/);
   });

@@ -21,6 +21,7 @@ import type {
 } from '@/lib/admin/lead-schemas';
 import { phaseName } from '@/lib/classification/phase-names';
 import { COA_IDENTITY_LINK_MIN_CONFIDENCE } from '@/lib/coa/link-confidence';
+import { isUuid } from '@/lib/entitlements';
 import {
   buildTimeline,
   type CalibrationRow,
@@ -166,7 +167,7 @@ const MAIN_SQL = `
       SELECT 1 FROM lead_views lv2
       WHERE lv2.lead_key = 'permit:' || p.permit_num || ':' || LPAD(p.revision_num, 2, '0')
         AND lv2.saved = true
-        AND lv2.user_id = $3
+        AND lv2.user_id = $3::uuid
     ) AS saved_by_admin
   FROM permits p
   LEFT JOIN cost_estimates ce
@@ -328,7 +329,17 @@ export async function fetchLeadInspect(
   pool: Pool,
   args: FetchLeadInspectArgs,
 ): Promise<LeadInspect | null> {
-  const params = [args.permit_num, args.revision_num, args.adminUid];
+  // Migration 229 (Supabase Phase 1, D6) converted lead_views.user_id to
+  // UUID (FK auth.users) — MAIN_SQL's $3 (`saved_by_admin` EXISTS check)
+  // casts `::uuid`. `adminUid` is a real Supabase uuid for the normal
+  // `session` verifyAdminAuth path, but the `admin_key` / `dev_bypass` modes
+  // yield the non-uuid sentinels 'admin-key' / 'dev-user'
+  // (src/lib/auth/verify-admin.ts) — binding either raw would throw 22P02
+  // ("invalid input syntax for type uuid"). Normalize to NULL first: the
+  // same no-op convention `@/lib/entitlements` uses for non-uuid uids
+  // (NULL::uuid never satisfies `=`, i.e. "not saved by this admin").
+  const safeAdminUid = isUuid(args.adminUid) ? args.adminUid : null;
+  const params = [args.permit_num, args.revision_num, safeAdminUid];
 
   const mainRes = await pool.query<MainRow>(MAIN_SQL, params);
   if (mainRes.rowCount === 0) return null;
@@ -729,33 +740,52 @@ const COA_LEAD_TRADES_SQL = `
 // (operators see real milestones first); within same date + same kind,
 // observation order (transitioned_at ASC) preserves insertion sequence;
 // final id ASC for absolute determinism.
+//
+// WF3 FIX (Supabase Phase 1 satellite, symptom C root cause): the 3-arm
+// UNION ALL projects `transitioned_at::text` / `event_date::text` (so each
+// arm's output types agree — required for a UNION). An ORDER BY directly on
+// a set-operation's output resolves against those UNIONED (text) column
+// types, NOT the underlying `lifecycle_status_history` columns — so
+// `transitioned_at AT TIME ZONE 'UTC'` was being asked to run on TEXT, which
+// has no `timezone(unknown, text)` overload (42883 at query time, on EVERY
+// call — reproduced live: any permit/CoA inspection with a linked pair hits
+// this unconditionally, since fetchCoaPanel always runs the full 3-arm
+// query). Postgres also forbids re-casting a set-operation's output column
+// directly in its own ORDER BY (0A000 "invalid UNION/INTERSECT/EXCEPT ORDER
+// BY clause") — so the cast can't just be added back in place. Fix: wrap the
+// UNION as a subquery and order the OUTER (plain, non-set-op) SELECT, where
+// arbitrary expressions — including re-casting the TEXT columns back to
+// their real types for the sort computation — are unrestricted. The
+// row/column SHAPE returned to callers (CoaCrossStreamRow) is unchanged.
 const COA_CROSS_STREAM_SQL = `
-  SELECT lead_id,
-         CASE WHEN lead_id LIKE 'coa:%' THEN 'coa' ELSE 'permit' END AS lead_type,
-         from_status, to_status, transitioned_at::text AS transitioned_at,
-         event_date::text AS event_date, id::int AS id
-    FROM lifecycle_status_history
-   WHERE lead_id = $1
-  UNION ALL
-  SELECT lead_id, 'permit', from_status, to_status, transitioned_at::text,
-         event_date::text AS event_date, id::int
-    FROM lifecycle_status_history
-   WHERE $2::text IS NOT NULL
-     AND $2::text <> ''
-     AND lead_id LIKE 'permit:' || $2::text || ':%' ESCAPE '\\'
-     AND lead_id <> $1
-  UNION ALL
-  SELECT lead_id, 'coa', from_status, to_status, transitioned_at::text,
-         event_date::text AS event_date, id::int
-    FROM lifecycle_status_history
-   WHERE $3::text IS NOT NULL
-     AND lead_id = $3::text
-     AND lead_id <> $1
+  SELECT * FROM (
+    SELECT lead_id,
+           CASE WHEN lead_id LIKE 'coa:%' THEN 'coa' ELSE 'permit' END AS lead_type,
+           from_status, to_status, transitioned_at::text AS transitioned_at,
+           event_date::text AS event_date, id::int AS id
+      FROM lifecycle_status_history
+     WHERE lead_id = $1
+    UNION ALL
+    SELECT lead_id, 'permit', from_status, to_status, transitioned_at::text,
+           event_date::text AS event_date, id::int
+      FROM lifecycle_status_history
+     WHERE $2::text IS NOT NULL
+       AND $2::text <> ''
+       AND lead_id LIKE 'permit:' || $2::text || ':%' ESCAPE '\\'
+       AND lead_id <> $1
+    UNION ALL
+    SELECT lead_id, 'coa', from_status, to_status, transitioned_at::text,
+           event_date::text AS event_date, id::int
+      FROM lifecycle_status_history
+     WHERE $3::text IS NOT NULL
+       AND lead_id = $3::text
+       AND lead_id <> $1
+  ) cross_stream
    ORDER BY
-     COALESCE(event_date, (transitioned_at AT TIME ZONE 'UTC')::date) ASC,
-     CASE WHEN event_date IS NOT NULL THEN 0 ELSE 1 END ASC,
-     transitioned_at ASC,
-     id ASC
+     COALESCE(cross_stream.event_date::date, (cross_stream.transitioned_at::timestamptz AT TIME ZONE 'UTC')::date) ASC,
+     CASE WHEN cross_stream.event_date IS NOT NULL THEN 0 ELSE 1 END ASC,
+     cross_stream.transitioned_at::timestamptz ASC,
+     cross_stream.id ASC
 `;
 
 const COA_LINKED_PERMIT_SQL = `

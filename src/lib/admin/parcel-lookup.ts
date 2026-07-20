@@ -131,13 +131,26 @@ export interface Resolution {
   truncated?: boolean;
 }
 
-/** Split "26 Hurlingham Cres" → { num: '26', streetName: 'HURLINGHAM' } via the shared rules. */
+/**
+ * Split "26 Hurlingham Cres" → { num: '26', streetName: 'HURLINGHAM' } via the shared rules.
+ *
+ * WF3 FIX (2026-07-20, Parcel Cost Model Tool symptom): a real operator types (or
+ * copy-pastes) a full postal address, which commonly carries a trailing
+ * ", <city>[, <province>]" suffix — e.g. "41 Derwyn Road, Toronto". Without
+ * stripping it, `parseLinearName` folded the city into the street name
+ * ("DERWYN , TORONTO"), which matches ZERO rows in `parcels`/`address_points`
+ * (live-reproduced: "41 Derwyn Road, Toronto" → no match; "41 Derwyn Road"
+ * alone → exact match). `parcels`/`address_points` street names never
+ * legitimately contain a comma (Toronto's LINEAR_NAME_FULL / addr-point
+ * feeds are comma-free), so truncating at the first comma is safe.
+ */
 export function parseFreeTextAddress(q: string): { num: string; streetName: string } {
-  const m = q.trim().match(/^(\S+)\s+(.+)$/);
+  const withoutCitySuffix = q.split(',')[0]!.trim();
+  const m = withoutCitySuffix.match(/^(\S+)\s+(.+)$/);
   if (m && /\d/.test(m[1]!)) {
     return { num: normalizeAddressNumber(m[1]), streetName: parseLinearName(m[2]!).street_name };
   }
-  return { num: '', streetName: parseLinearName(q).street_name };
+  return { num: '', streetName: parseLinearName(withoutCitySuffix).street_name };
 }
 
 const displayAddress = `TRIM(COALESCE(address_number, '') || ' ' || COALESCE(linear_name_full, ''))`;

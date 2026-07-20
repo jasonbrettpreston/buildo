@@ -39,8 +39,13 @@ function makeContext(id: string) {
   return { params: Promise.resolve({ id }) };
 }
 
+// Migration 229 (Supabase Phase 1, D6) converted lead_views.user_id to
+// UUID — the route normalizes ctx.uid via `isUuid` before binding it as
+// COA_LEAD_DETAIL_SQL's $3, so realistic fixtures use a real uuid shape
+// (a stale Firebase-shaped id would now normalize to NULL — see the
+// dedicated regression test below).
 const sampleContext = {
-  uid: 'firebase-uid-abc',
+  uid: '22222222-2222-4222-8222-222222222222',
   trade_slug: 'plumbing',
   primary_trade_slug: 'plumbing',
   trade_slugs: ['plumbing'],
@@ -107,7 +112,7 @@ describe('GET /api/leads/detail/[id] — CoA branch (Phase G)', () => {
 
     expect(mockedPool.query).toHaveBeenCalledWith(
       expect.stringContaining('FROM coa_applications ca'),
-      ['A0123-24EYK', 'plumbing', 'firebase-uid-abc'],
+      ['A0123-24EYK', 'plumbing', sampleContext.uid],
     );
   });
 
@@ -119,6 +124,22 @@ describe('GET /api/leads/detail/[id] — CoA branch (Phase G)', () => {
     expect(res.status).toBe(404);
     const body = (await readJson(res)) as { error: { code: string } };
     expect(body.error.code).toBe('NOT_FOUND');
+  });
+
+  // Regression lock (P1 uuid-fk residual): COA_LEAD_DETAIL_SQL's $3 also
+  // casts `::uuid` now — a non-uuid ctx.uid must normalize to NULL, never
+  // forward raw (would 22P02 on a real DB; see leads-detail.infra.test.ts
+  // for the permit-branch equivalent).
+  it('normalizes a non-uuid ctx.uid to NULL before binding $3 on the CoA branch', async () => {
+    mockedGetUserContext.mockResolvedValueOnce({ ...sampleContext, uid: 'dev-user' });
+    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [sampleCoaRow] });
+
+    await GET(makeRequest(), makeContext('COA-A0123-24EYK'));
+
+    expect(mockedPool.query).toHaveBeenCalledWith(
+      expect.stringContaining('FROM coa_applications ca'),
+      ['A0123-24EYK', 'plumbing', null],
+    );
   });
 });
 
@@ -214,7 +235,9 @@ describe('COA_LEAD_DETAIL_SQL — SQL contract', () => {
   });
 
   it('competition_count excludes the viewer via user_id != $3', () => {
-    expect(COA_LEAD_DETAIL_SQL).toMatch(/lv2\.user_id != \$3::text/);
+    // Migration 229: lead_views.user_id is UUID (FK auth.users) — $3 casts
+    // `::uuid`, not `::text` (a stale `::text` cast 42883s at query time).
+    expect(COA_LEAD_DETAIL_SQL).toMatch(/lv2\.user_id != \$3::uuid/);
     expect(COA_LEAD_DETAIL_SQL).toMatch(/lv2\.lead_type = 'coa'/);
   });
 });

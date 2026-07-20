@@ -184,9 +184,29 @@ describe('GET /api/leads/detail/[id] — 200', () => {
     const { LEAD_DETAIL_SQL } = await import('@/lib/leads/lead-detail-query');
     expect(LEAD_DETAIL_SQL).toMatch(/lv_self/);
     expect(LEAD_DETAIL_SQL).toMatch(/SELECT EXISTS\s*\(/);
-    expect(LEAD_DETAIL_SQL).toMatch(/lv_own\.user_id\s*=\s*\$4::text/);
+    // Migration 229: lead_views.user_id is UUID (FK auth.users) — $4 casts
+    // `::uuid`, not `::text` (a stale `::text` cast 42883s at query time).
+    expect(LEAD_DETAIL_SQL).toMatch(/lv_own\.user_id\s*=\s*\$4::uuid/);
     expect(LEAD_DETAIL_SQL).toMatch(/lv_own\.saved\s*=\s*true/);
     expect(LEAD_DETAIL_SQL).toMatch(/lv_self\.saved AS saved/);
+  });
+
+  // Regression lock (P1 uuid-fk residual): $4/$3 now bind `::uuid`. A
+  // non-uuid ctx.uid (the dev-bypass 'dev-user' sentinel — real in local
+  // dev via getCurrentUserContext, src/lib/auth/get-user-context.ts) must
+  // NEVER be forwarded raw to pool.query, or Postgres throws 22P02
+  // ("invalid input syntax for type uuid") on bind. The route normalizes
+  // via `isUuid` to NULL first — assert the actual bound parameter here,
+  // not just the SQL shape (a mocked pool can't catch a real-DB 22P02, but
+  // it CAN catch the route forwarding the wrong value).
+  it('normalizes a non-uuid ctx.uid (e.g. dev-bypass "dev-user") to NULL before binding $4 — never forwards a raw non-uuid string', async () => {
+    mockedGetUserContext.mockResolvedValueOnce({ ...sampleContext, uid: 'dev-user' });
+    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [sampleRow] });
+
+    const res = await GET(makeRequest(), makeContext('24 101234--01'));
+    expect(res.status).toBe(200);
+    const callParams = mockedPool.query.mock.calls[0]?.[1] as unknown[];
+    expect(callParams[3]).toBeNull();
   });
 });
 
