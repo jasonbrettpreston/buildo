@@ -6,7 +6,7 @@
 // opens the screen with an empty `useFlightBoard()` cache. Calls
 // `GET /api/leads/flight-board/detail/:id` per Spec 77 §3.3.1 contract.
 //
-// Authorization: client-side we gate on `idToken` to avoid a cold-boot 401
+// Authorization: client-side we gate on `accessToken` to avoid a cold-boot 401
 // before authStore rehydrates the Bearer token (Spec 99 §B4). Server-side
 // authorization is enforced by the SQL — endpoint returns 404 when the user
 // does not have the permit saved (lead_views.user_id = ctx.uid AND saved =
@@ -47,9 +47,9 @@ export async function fetchFlightJobDetail(id: string): Promise<FlightBoardDetai
 
 /**
  * Fetch a single flight-board permit by id when the list cache is empty
- * (cold-boot deep-link case). Gated on `id` presence + `idToken` per Spec 99
- * §B4 + WF3 M1+M2+M3 #4 (idToken gate avoids cold-boot 401 round-trip when
- * authStore rehydrates `user.uid` without `idToken`).
+ * (cold-boot deep-link case). Gated on `id` presence + `accessToken` per Spec
+ * 99 §B4 + WF3 M1+M2+M3 #4 (accessToken gate avoids cold-boot 401 round-trip
+ * when authStore rehydrates `user.uid` without `accessToken`).
  *
  * @param id `${permit_num}--${revision_num}` from the deep-link route.
  * @param options `enabled` — caller's gating signal (e.g. only enable when
@@ -74,12 +74,12 @@ export function useFlightJobDetail(
   id: string | undefined,
   options?: { enabled?: boolean },
 ) {
-  const idToken = useAuthStore((s) => s.idToken);
+  const accessToken = useAuthStore((s) => s.accessToken);
   return useQuery({
     queryKey: ['flight-job-detail', id],
     queryFn: () => fetchFlightJobDetail(id!),
     staleTime: 60_000,
-    enabled: !!id && !!idToken && (options?.enabled ?? true),
+    enabled: !!id && !!accessToken && (options?.enabled ?? true),
     retry: shouldRetryFlightJobDetail,
   });
 }

@@ -1,11 +1,18 @@
 // SPEC LINK: docs/specs/03-mobile/93_mobile_auth.md §3.2 Account Linking, §4 Account Linking Bottom Sheet
+//
+// P2-G7: Supabase Auth has no `fetchSignInMethodsForEmail` equivalent — a
+// deliberate anti-account-enumeration design choice. The sheet therefore
+// names ONLY the attempted method ({newMethod}); the old `existingMethod`
+// prop and the Firebase provider-ID → display-name `providerName()` mapper
+// are removed. The primary action is a generic "Back to sign in" that
+// returns the user to the standard sign-in stack — they pick their original
+// method themselves (Spec 93 §4 Account Linking Bottom Sheet).
 import { forwardRef, useImperativeHandle, useRef, useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Link2 } from 'lucide-react-native';
 
 interface AccountLinkingSheetProps {
-  existingMethod: string;
   newMethod: string;
   onLinkPress: () => void;
   onDismiss: () => void;
@@ -16,25 +23,8 @@ export interface AccountLinkingSheetRef {
   close: () => void;
 }
 
-// Map Firebase provider IDs to user-facing names. fetchSignInMethodsForEmail
-// returns provider IDs like 'password', 'google.com', 'apple.com', 'phone'.
-export function providerName(providerId: string): string {
-  switch (providerId) {
-    case 'password':
-      return 'email';
-    case 'google.com':
-      return 'Google';
-    case 'apple.com':
-      return 'Apple';
-    case 'phone':
-      return 'phone';
-    default:
-      return providerId;
-  }
-}
-
 export const AccountLinkingSheet = forwardRef<AccountLinkingSheetRef, AccountLinkingSheetProps>(
-  ({ existingMethod, newMethod, onLinkPress, onDismiss }, ref) => {
+  ({ newMethod, onLinkPress, onDismiss }, ref) => {
     const sheetRef = useRef<BottomSheet>(null);
 
     useImperativeHandle(ref, () => ({
@@ -68,17 +58,17 @@ export const AccountLinkingSheet = forwardRef<AccountLinkingSheetRef, AccountLin
             Email already registered
           </Text>
           <Text className="text-zinc-400 text-sm text-center mb-6">
-            An account with this email already exists. Sign in with {existingMethod} to link your{' '}
-            {newMethod} account.
+            An account with this email already exists. Sign in with your original method, then
+            link your {newMethod} account from there.
           </Text>
           <Pressable
             onPress={onLinkPress}
             className="bg-amber-500 active:bg-amber-600 rounded-2xl py-3.5 mx-4 w-full items-center min-h-[52px] justify-center"
             accessibilityRole="button"
-            accessibilityLabel={`Sign in with ${existingMethod}`}
+            accessibilityLabel="Back to sign in"
           >
             <Text className="text-zinc-950 font-semibold text-sm">
-              Sign in with {existingMethod}
+              Back to sign in
             </Text>
           </Pressable>
           <Pressable

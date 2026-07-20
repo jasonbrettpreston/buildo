@@ -1,6 +1,6 @@
 // SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.3 Detailed Investigation View
 //             docs/specs/03-mobile/99_mobile_state_architecture.md §B1 (TanStack canonical)
-//             docs/specs/03-mobile/99_mobile_state_architecture.md §B4 (idToken gate)
+//             docs/specs/03-mobile/99_mobile_state_architecture.md §B4 (accessToken gate)
 //             docs/specs/03-mobile/98_mobile_testing_protocol.md §3.2 (testIDs)
 //             docs/specs/01-pipeline/83_lead_cost_model.md §2 (cost source-of-truth)
 //             docs/specs/01-pipeline/85_trade_forecast_engine.md §2 (timing source-of-truth)

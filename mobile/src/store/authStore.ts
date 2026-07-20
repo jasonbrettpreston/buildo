@@ -3,9 +3,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKV } from 'react-native-mmkv';
-import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import type { Session } from '@supabase/supabase-js';
 import * as Sentry from '@sentry/react-native';
-import { auth } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { useFilterStore } from '@/store/filterStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
@@ -61,10 +61,14 @@ interface User {
 
 interface AuthState {
   user: User | null;
-  idToken: string | null;
+  // Holds the Supabase ACCESS token (`session.access_token`) — renamed from
+  // `idToken` in the Spec 93 SDK swap (P2-D3 REVERSED): the value is an
+  // access token, not an identity assertion; the old name invited forwarding
+  // it as one (credential-type confusion).
+  accessToken: string | null;
   isLoading: boolean;
   _hasHydrated: boolean;
-  setAuth: (user: User, idToken: string) => void;
+  setAuth: (user: User, accessToken: string) => void;
   clearAuth: () => void;
   setLoading: (loading: boolean) => void;
   setHasHydrated: (v: boolean) => void;
@@ -73,8 +77,8 @@ interface AuthState {
 
 /**
  * Reset all in-memory + on-disk session state. Runs everything `signOut()`
- * does AFTER the Firebase `auth().signOut()` call, but is also invoked from
- * the listener's null branch when Firebase fires a forced sign-out
+ * does AFTER the Supabase `auth.signOut()` call, but is also invoked from
+ * the listener's null branch when Supabase fires a forced sign-out
  * (admin disable, password change on another device, project token
  * revocation per Spec 93 §3.1).
  *
@@ -118,7 +122,7 @@ function clearLocalSessionState(): void {
   useFlightBoardSeenStore.getState().reset();
   // Inline auth zero (matches `clearAuth()` semantics — kept inline to
   // make the full session-clear visible in one place).
-  useAuthStore.setState({ user: null, idToken: null, isLoading: false });
+  useAuthStore.setState({ user: null, accessToken: null, isLoading: false });
   // PostHog identity reset AFTER stores so the distinctId is cleared at
   // a clean session boundary; subsequent events use anonymous distinctId.
   resetIdentity();
@@ -134,11 +138,11 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      idToken: null,
+      accessToken: null,
       isLoading: true,
       _hasHydrated: false,
-      setAuth: (user, idToken) => set({ user, idToken, isLoading: false }),
-      clearAuth: () => set({ user: null, idToken: null, isLoading: false }),
+      setAuth: (user, accessToken) => set({ user, accessToken, isLoading: false }),
+      clearAuth: () => set({ user: null, accessToken: null, isLoading: false }),
       setLoading: (loading) => set({ isLoading: loading }),
       setHasHydrated: (v) => set({ _hasHydrated: v }),
       signOut: async () => {
@@ -146,23 +150,24 @@ export const useAuthStore = create<AuthState>()(
         // event is attributed to the outgoing session, not the next user
         // who might sign in on this device.
         track('signout_initiated');
-        // WF2 P2 review #11 (DeepSeek): wrap the Firebase call in
-        // try/finally so that a Firebase failure (network blip, expired
-        // refresh token, Firebase unreachable) does NOT skip the
-        // downstream PIPEDA-critical cleanup. Pre-fix, a thrown
-        // signOut() would leave the user logged in locally with stale
-        // Zustand + TanStack caches — exactly the leak the §9.12
-        // storeReset coverage test is meant to prevent at the static
-        // layer.
+        // WF2 P2 review #11 (DeepSeek): wrap the SDK call in try/finally so
+        // that a Supabase failure (network blip, expired refresh token,
+        // GoTrue unreachable) does NOT skip the downstream PIPEDA-critical
+        // cleanup. Pre-fix, a thrown signOut() would leave the user logged
+        // in locally with stale Zustand + TanStack caches — exactly the
+        // leak the §9.12 storeReset coverage test is meant to prevent at
+        // the static layer.
         //
         // The full local cleanup runs via `clearLocalSessionState()` —
         // shared with the listener's null branch (forced sign-out path)
         // so both flows produce identical disk + memory state.
         try {
-          await auth().signOut();
+          await supabase.auth.signOut();
         } catch (err) {
+          // Token-never-in-logs: the AuthError carries code/message/status
+          // only — never pass the session/token object into Sentry extras.
           Sentry.captureException(err, {
-            extra: { context: 'authStore.signOut: firebase signOut failed; running cleanup anyway' },
+            extra: { context: 'authStore.signOut: supabase signOut failed; running cleanup anyway' },
           });
         } finally {
           clearLocalSessionState();
@@ -172,10 +177,11 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth',
       storage: createJSONStorage(() => mmkvStorage),
-      // Persist only the Firebase uid. email + displayName are PII under PIPEDA
-      // and are re-hydrated from the Firebase Auth listener on each cold boot
-      // (setAuth is called with the full user object there). idToken is also
-      // excluded — short-lived, refreshed on listener attach.
+      // Persist only the Supabase uid (auth.users.id uuid, D6). email +
+      // displayName are PII under PIPEDA and are re-hydrated from the
+      // Supabase auth listener on each cold boot (setAuth is called with the
+      // full user object there). accessToken is also excluded — short-lived,
+      // re-delivered by the listener's INITIAL_SESSION fire on boot.
       partialize: (state) => ({
         user: state.user ? { uid: state.user.uid, email: null, displayName: null } : null,
       }),
@@ -195,19 +201,19 @@ export const useAuthStore = create<AuthState>()(
   ),
 );
 
-// Wires the RNFirebase onAuthStateChanged listener into the store. Call once
+// Wires the Supabase onAuthStateChange listener into the store. Call once
 // from RootLayout in mobile/app/_layout.tsx — returns the unsubscribe function
 // so React's useEffect cleanup detaches the listener on unmount.
 //
 // UID-change cache invalidation: the PersistQueryClientProvider rehydrates the
 // `['user-profile']` query from MMKV on cold boot. If the cached profile was
 // written by a previous user (e.g., DEV_MODE 'dev-user' from a prior session,
-// or a different Firebase account on a shared device), the AuthGate would
-// route on stale `onboarding_complete` until the network refetch completes —
-// which previously caused a render loop with the (onboarding) layout's
-// independent router (since fixed). The check below is module-scoped so it
-// also catches the cold-boot first-fire (lastKnownUid === null) and clears
-// any persisted query data before AuthGate ever reads it.
+// or a different account on a shared device), the AuthGate would route on
+// stale `onboarding_complete` until the network refetch completes — which
+// previously caused a render loop with the (onboarding) layout's independent
+// router (since fixed). The check below is module-scoped so it also catches
+// the cold-boot first-fire (lastKnownUid === null) and clears any persisted
+// query data before AuthGate ever reads it.
 //
 // `lastKnownUid` is intentionally NOT reset on sign-out: Spec 93 §3.4 mandates
 // that MMKV is preserved across sign-out so the same user re-signing in on the
@@ -226,16 +232,27 @@ export function __resetLastKnownUidForTests(): void {
   lastKnownUid = null;
 }
 
-export function initFirebaseAuthListener(): () => void {
-  return auth().onAuthStateChanged((firebaseUser: FirebaseAuthTypes.User | null) => {
-    if (firebaseUser) {
-      // Capture the uid at fire-time so a late-resolving getIdToken from a
-      // PRIOR fire cannot clobber the current user's identity in setAuth().
-      // RNFirebase can fire onAuthStateChanged multiple times in quick
-      // succession on init / token refresh; without this guard, A's
-      // getIdToken().then() could win the race and overwrite B's setAuth.
-      const expectedUid = firebaseUser.uid;
-      const isUidChange = lastKnownUid !== expectedUid;
+// REGRESSION-GUARDIAN NOTE (P2-F2.2, [panel-fold: Gemini MED + Ground
+// truth(c)]): the Firebase-era `expectedUid` capture-at-fire-time /
+// stale-`getIdToken()`-resolution race guard is REMOVED here, not ported.
+// The fence it defended: RNFirebase's `onAuthStateChanged` delivered the
+// user synchronously but the token via a SEPARATE async `getIdToken()`
+// step — a second fire's token promise could resolve after a later fire's
+// and clobber the wrong user's identity in `setAuth()`. Supabase's
+// `onAuthStateChange` delivers `session.access_token` SYNCHRONOUSLY in the
+// same callback — there is no second async step for a later fire to race
+// against, so the race is structurally impossible, not merely unlikely.
+// The same applies to the old `getIdToken().catch(clearAuth)` fallback
+// (token fetch cannot fail separately from session delivery). The
+// `lastKnownUid` staleness bookkeeping (telemetry gating + UID-change cache
+// invalidation) is preserved as-is, re-keyed off `session.user.id`.
+export function initSupabaseAuthListener(): () => void {
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
+    if (session?.user) {
+      const uid = session.user.id;
+      const isUidChange = lastKnownUid !== uid;
       if (isUidChange) {
         // First-fire OR genuine UID change. Telemetry on real transitions
         // only (not the cold-boot first-fire where lastKnownUid was null) so
@@ -246,57 +263,43 @@ export function initFirebaseAuthListener(): () => void {
             category: 'auth',
             message: 'uid_change_cache_invalidated',
             level: 'info',
-            data: { from: lastKnownUid, to: expectedUid },
+            data: { from: lastKnownUid, to: uid },
           });
           track('auth_user_switch');
         }
-        // Update lastKnownUid synchronously so concurrent listener fires
-        // observe the new value. Cache invalidation MUST happen AFTER setAuth
-        // (see .then() below) — invalidating before would trigger a refetch
-        // using the OLD bearer token (Gemini WF3-§9.1 review F7).
-        lastKnownUid = expectedUid;
+        lastKnownUid = uid;
       }
-      void firebaseUser
-        .getIdToken()
-        .then((idToken) => {
-          // Stale-resolution guard: if a newer listener fire has already
-          // advanced lastKnownUid past us, drop this token write — it would
-          // otherwise overwrite the current user's identity with the
-          // previous user's. Compare against the captured expectedUid.
-          if (lastKnownUid !== expectedUid) return;
-          useAuthStore.getState().setAuth(
-            {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName,
-            },
-            idToken,
-          );
-          // Identify the user in PostHog using the opaque Firebase uid as
-          // distinctId — no email/displayName/phone is sent (Spec 90 §11).
-          identifyUser(firebaseUser.uid);
-          // Spec 99 §7.5 — Sentry crash attribution. Same opaque uid; no
-          // email/displayName/phone (PIPEDA). Without this, individual user
-          // reports of crashes cannot be correlated with Sentry events.
-          Sentry.setUser({ id: firebaseUser.uid });
-          // Cache invalidation AFTER setAuth: the next refetch uses the
-          // just-set new bearer (Spec 99 §B4 + Gemini WF3-§9.1 F7).
-          // Pre-fix, invalidate fired synchronously above and the refetch
-          // raced setAuth — sending the OLD token to the server.
-          if (isUidChange) {
-            // Spec 99 §7.2 — non-trivial invalidate (auth listener, not mutation onSettled)
-            logQueryInvalidate('user-profile');
-            void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-          }
-        })
-        .catch(() => {
-          // Token fetch failure is rare but can happen if Firebase is unreachable
-          // immediately after auth state change. Treat as signed-out so the
-          // AuthGate redirects to sign-in rather than leaving the user in limbo.
-          // Same stale-fire guard: don't clear if a newer fire moved on.
-          if (lastKnownUid !== expectedUid) return;
-          useAuthStore.getState().clearAuth();
-        });
+      // `session.access_token` arrives synchronously — setAuth runs BEFORE
+      // the cache invalidation below so the next refetch uses the just-set
+      // new bearer (Spec 99 §B4 + Gemini WF3-§9.1 F7 ordering fence,
+      // preserved from the Firebase implementation).
+      useAuthStore.getState().setAuth(
+        {
+          uid,
+          email: session.user.email ?? null,
+          // GoTrue populates user_metadata from the OIDC token's profile
+          // claims on first Google/Apple sign-in; email/phone sign-ups have
+          // no full_name at this stage (Spec 93 §5 Step 2 — display name
+          // was always null until Onboarding in that path, same as before).
+          displayName:
+            (session.user.user_metadata?.full_name as string | undefined) ?? null,
+        },
+        session.access_token,
+      );
+      // Identify the user in PostHog using the opaque Supabase uuid as
+      // distinctId — no email/displayName/phone is sent (Spec 90 §11).
+      identifyUser(uid);
+      // Spec 99 §7.5 — Sentry crash attribution. Same opaque uuid; no
+      // email/displayName/phone (PIPEDA). Without this, individual user
+      // reports of crashes cannot be correlated with Sentry events.
+      Sentry.setUser({ id: uid });
+      // Cache invalidation AFTER setAuth: the next refetch uses the
+      // just-set new bearer (Spec 99 §B4 + Gemini WF3-§9.1 F7).
+      if (isUidChange) {
+        // Spec 99 §7.2 — non-trivial invalidate (auth listener, not mutation onSettled)
+        logQueryInvalidate('user-profile');
+        void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      }
     } else {
       // Note: do NOT reset lastKnownUid here (Spec 93 §3.4 fast-path).
       //
@@ -349,4 +352,5 @@ export function initFirebaseAuthListener(): () => void {
       clearLocalSessionState();
     }
   });
+  return () => subscription.unsubscribe();
 }

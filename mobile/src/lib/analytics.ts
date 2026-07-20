@@ -4,10 +4,11 @@
 // Spec 90 §11 mandates PII stripping, so all event payloads pass through a
 // whitelist (`ALLOWED_KEYS`) that drops any key not enumerated in the funnel
 // catalogue documented in the WF3 active task. Email, phone number,
-// displayName, idToken etc. cannot leak into PostHog regardless of how a
+// displayName, accessToken etc. cannot leak into PostHog regardless of how a
 // caller composes the props object.
 //
-// Identity: Firebase `uid` is used as PostHog `distinctId` via `identifyUser`.
+// Identity: the Supabase `uid` (auth.users.id uuid, D6) is used as PostHog
+// `distinctId` via `identifyUser`.
 // The uid is an opaque server-generated token (not personally identifying on
 // its own). User properties on `identify` are limited to `{ first_seen_at }`.
 import PostHog from 'posthog-react-native';
@@ -47,7 +48,15 @@ function getClient(): PostHog | null {
 //   - subscription_status: enum 'trial'/'active'/'expired'/etc. — not PII.
 //   - tier: enum 'small'/'medium'/'large'/'major'/'mega' — cost tier from
 //     Spec 83; categorical, not PII.
+// Spec 116 N6 (multi-product architecture, P2-F2.11 — MANDATORY, not
+// optional): every tracked event carries a `product` dimension so lead_gen
+// events remain distinguishable once additional products ship. The key is
+// whitelisted here AND injected by `track()` itself (value 'lead_gen') —
+// callers never pass it manually.
+const PRODUCT_DIMENSION = 'lead_gen';
+
 const ALLOWED_KEYS = new Set([
+  'product',
   'screen',
   'method',
   'code',
@@ -70,6 +79,7 @@ const ALLOWED_KEYS = new Set([
 ] as const);
 
 type AllowedKey =
+  | 'product'
   | 'screen'
   | 'method'
   | 'code'
@@ -112,7 +122,9 @@ export function track(eventName: string, props?: Record<string, unknown>): void 
   const c = getClient();
   if (!c) return;
   try {
-    c.capture(eventName, stripPii(props));
+    // Spec 116 N6: the product dimension is merged into EVERY event, after
+    // stripPii so a caller-supplied `product` key can never override it.
+    c.capture(eventName, { ...stripPii(props), product: PRODUCT_DIMENSION });
   } catch {
     // Telemetry failure is intentionally silent — a broken capture call must
     // never crash an auth flow or surface to the user.
@@ -120,8 +132,8 @@ export function track(eventName: string, props?: Record<string, unknown>): void 
 }
 
 // Tracks the uid we have already identified in this PostHog session so a
-// second `identifyUser(sameUid)` call (which fires on every Firebase token
-// refresh and cold boot via onAuthStateChanged) does NOT overwrite the
+// second `identifyUser(sameUid)` call (which fires on every Supabase token
+// refresh and cold boot via onAuthStateChange) does NOT overwrite the
 // `first_seen_at` user property. PostHog's `identify` is upsert semantics —
 // resending it with a new timestamp would destroy the cohort data §11
 // intends to capture. `resetIdentity()` clears this so a different user

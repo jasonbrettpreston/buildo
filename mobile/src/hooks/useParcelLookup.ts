@@ -58,11 +58,11 @@ export function shouldRetryParcelLookup(failureCount: number, err: unknown): boo
  */
 export function useParcelSearch(q: string) {
   const trimmed = q.trim();
-  const idToken = useAuthStore((s) => s.idToken);
+  const accessToken = useAuthStore((s) => s.accessToken);
   return useQuery({
     queryKey: ['parcel-search', trimmed],
     queryFn: () => fetchParcelLookup({ q: trimmed }),
-    enabled: trimmed.length >= 3 && !!idToken,
+    enabled: trimmed.length >= 3 && !!accessToken,
     staleTime: 60_000,
     retry: shouldRetryParcelLookup,
   });
@@ -73,11 +73,11 @@ export function useParcelSearch(q: string) {
  * fold #9 query-key hygiene) — never on the search query string.
  */
 export function useParcelLookup(parcelId: string | undefined) {
-  const idToken = useAuthStore((s) => s.idToken);
+  const accessToken = useAuthStore((s) => s.accessToken);
   return useQuery({
     queryKey: ['parcel-lookup', parcelId],
     queryFn: () => fetchParcelLookup({ parcelId: parcelId! }),
-    enabled: !!parcelId && !!idToken,
+    enabled: !!parcelId && !!accessToken,
     staleTime: 60_000,
     retry: shouldRetryParcelLookup,
   });

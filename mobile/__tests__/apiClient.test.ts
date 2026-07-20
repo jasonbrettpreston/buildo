@@ -7,15 +7,16 @@
 //  - ApiError(403) thrown on generic 403 (no ACCOUNT_DELETED code)
 //  - ApiError(404) thrown on 404 (no retry — deterministic new-user state)
 //  - NetworkError thrown on fetch() failure
+//  - 401 → supabase.auth.refreshSession() → single retry (isRetry guard)
 
 // Stateful authStore mock: setAuth mutates the inner state so that the
-// recursive fetchWithAuthInternal call (after a 401 token refresh) reads
-// the REFRESHED idToken, not the original. Without this, the §B6 retry
+// recursive fetchWithAuthInternal call (after a 401 session refresh) reads
+// the REFRESHED accessToken, not the original. Without this, the §B6 retry
 // path silently sends the stale bearer on the second fetch and no test
 // can detect a regression where setAuth is dropped.
 jest.mock('@/store/authStore', () => {
   const initial = {
-    idToken: 'test-token',
+    accessToken: 'test-token',
     user: { uid: 'user-1', email: null, displayName: null } as {
       uid: string;
       email: string | null;
@@ -24,8 +25,8 @@ jest.mock('@/store/authStore', () => {
   };
   let state: typeof initial & { setAuth: jest.Mock } = {
     ...initial,
-    setAuth: jest.fn((user: typeof initial.user, idToken: string) => {
-      state = { ...state, user, idToken };
+    setAuth: jest.fn((user: typeof initial.user, accessToken: string) => {
+      state = { ...state, user, accessToken };
     }),
   };
   return {
@@ -35,8 +36,8 @@ jest.mock('@/store/authStore', () => {
       _resetMockState: () => {
         state = {
           ...initial,
-          setAuth: jest.fn((user: typeof initial.user, idToken: string) => {
-            state = { ...state, user, idToken };
+          setAuth: jest.fn((user: typeof initial.user, accessToken: string) => {
+            state = { ...state, user, accessToken };
           }),
         };
       },
@@ -44,17 +45,24 @@ jest.mock('@/store/authStore', () => {
   };
 });
 
-// RNFirebase: `auth` is a factory function — `auth()` returns the instance with
-// currentUser. apiClient.ts calls `auth().currentUser?.getIdToken(true)`.
-jest.mock('@/lib/firebase', () => {
-  const instance = { currentUser: { getIdToken: jest.fn() } };
-  const authFn: any = jest.fn(() => instance);
-  // Expose the singleton instance off the function so tests can `requireMock`
-  // and reach `auth.currentUser.getIdToken` regardless of whether they go
-  // through `auth()` or pull the underlying instance directly.
-  authFn.currentUser = instance.currentUser;
-  return { auth: authFn };
-});
+// Supabase client mock — apiClient.ts calls `supabase.auth.refreshSession()`
+// on 401 (replaces `auth().currentUser?.getIdToken(true)`). Resolves the
+// same `{ data: { session }, error }` envelope the real SDK returns; the
+// retried request's Bearer must equal `session.access_token` — the exact
+// value Phase-1's server verifier (get-user.ts getClaims/getUser) checks.
+const mockRefreshSession = jest.fn();
+jest.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      refreshSession: (...a: unknown[]) => mockRefreshSession(...a),
+    },
+  },
+}));
+
+const mockCaptureException = jest.fn();
+jest.mock('@sentry/react-native', () => ({
+  captureException: (...a: unknown[]) => mockCaptureException(...a),
+}));
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
@@ -70,8 +78,24 @@ function makeResponse(status: number, body: unknown): Response {
   } as unknown as Response;
 }
 
+/** A refreshed-session envelope in the real supabase-js shape. */
+function makeRefreshedSession(accessToken: string) {
+  return {
+    data: {
+      session: {
+        access_token: accessToken,
+        refresh_token: `refresh-${accessToken}`,
+        user: { id: 'user-1', email: null },
+      },
+      user: { id: 'user-1', email: null },
+    },
+    error: null,
+  };
+}
+
 beforeEach(() => {
   mockFetch.mockReset();
+  mockCaptureException.mockClear();
 });
 
 describe('fetchWithAuth — AccountDeletedError', () => {
@@ -153,17 +177,7 @@ describe('fetchWithAuth — ApiError / NetworkError', () => {
   });
 });
 
-// RED LIGHT for first test: before the 401 retry fix, fetchWithAuth throws ApiError(401)
-// immediately on first 401 without ever calling getIdToken — mockFetch only fires once.
-describe('fetchWithAuth — 401 token refresh retry (Spec 99 §B6)', () => {
-  function getIdTokenMock(): jest.Mock {
-    return (
-      jest.requireMock('@/lib/firebase') as {
-        auth: { currentUser: { getIdToken: jest.Mock } };
-      }
-    ).auth.currentUser.getIdToken;
-  }
-
+describe('fetchWithAuth — 401 session refresh retry (Spec 99 §B6)', () => {
   function getSetAuthMock(): jest.Mock {
     return (
       jest.requireMock('@/store/authStore') as {
@@ -173,7 +187,7 @@ describe('fetchWithAuth — 401 token refresh retry (Spec 99 §B6)', () => {
   }
 
   beforeEach(() => {
-    getIdTokenMock().mockReset();
+    mockRefreshSession.mockReset();
     (
       jest.requireMock('@/store/authStore') as {
         useAuthStore: { _resetMockState: () => void };
@@ -181,20 +195,20 @@ describe('fetchWithAuth — 401 token refresh retry (Spec 99 §B6)', () => {
     ).useAuthStore._resetMockState();
   });
 
-  it('retries with fresh token on 401 and resolves', async () => {
-    getIdTokenMock().mockResolvedValue('refreshed-token');
+  it('retries with fresh session on 401 and resolves — Bearer equals session.access_token (real server contract)', async () => {
+    mockRefreshSession.mockResolvedValue(makeRefreshedSession('refreshed-token'));
     mockFetch
       .mockResolvedValueOnce(makeResponse(401, { error: 'Unauthorized' }))
       .mockResolvedValueOnce(makeResponse(200, { data: 'ok' }));
     const result = await fetchWithAuth<{ data: string }>('/api/leads/feed');
     expect(result).toEqual({ data: 'ok' });
-    expect(getIdTokenMock()).toHaveBeenCalledWith(true);
+    expect(mockRefreshSession).toHaveBeenCalledTimes(1);
     expect(mockFetch).toHaveBeenCalledTimes(2);
 
     // Spec 99 §B6 contract: the refreshed token MUST be (a) written to
-    // authStore via setAuth and (b) carried as the Bearer on the retry.
-    // Without these two assertions a regression that calls getIdToken
-    // but drops the result would still pass.
+    // authStore via setAuth and (b) carried as the Bearer on the retry —
+    // this is `session.access_token`, the exact value get-user.ts's
+    // getClaims()/getUser() verifies server-side (Phase-1 contract).
     // Capture the setAuth mock once — calling getSetAuthMock() twice would
     // pull a fresh reference if a future refactor adds a mid-test reset,
     // silently producing a confusing pass/fail (Independent reviewer #1).
@@ -216,7 +230,7 @@ describe('fetchWithAuth — 401 token refresh retry (Spec 99 §B6)', () => {
   });
 
   it('throws ApiError(401) when retry also returns 401', async () => {
-    getIdTokenMock().mockResolvedValue('refreshed-token');
+    mockRefreshSession.mockResolvedValue(makeRefreshedSession('refreshed-token'));
     mockFetch
       .mockResolvedValueOnce(makeResponse(401, { error: 'Unauthorized' }))
       .mockResolvedValueOnce(makeResponse(401, { error: 'Unauthorized' }));
@@ -226,12 +240,65 @@ describe('fetchWithAuth — 401 token refresh retry (Spec 99 §B6)', () => {
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
-  it('throws ApiError(401) when getIdToken throws', async () => {
-    getIdTokenMock().mockRejectedValue(new Error('Firebase network error'));
+  it('throws ApiError(401) when refreshSession throws', async () => {
+    mockRefreshSession.mockRejectedValue(new Error('Supabase network error'));
     mockFetch.mockResolvedValueOnce(makeResponse(401, { error: 'Unauthorized' }));
     const err = await fetchWithAuth('/api/leads/feed').catch((e) => e);
     expect(err).toBeInstanceOf(ApiError);
     expect((err as ApiError).status).toBe(401);
     expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws ApiError(401) when refreshSession resolves with an error envelope', async () => {
+    mockRefreshSession.mockResolvedValue({
+      data: { session: null, user: null },
+      error: Object.assign(new Error('Invalid Refresh Token'), {
+        name: 'AuthApiError',
+        code: 'refresh_token_not_found',
+        status: 400,
+      }),
+    });
+    mockFetch.mockResolvedValueOnce(makeResponse(401, { error: 'Unauthorized' }));
+    const err = await fetchWithAuth('/api/leads/feed').catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).status).toBe(401);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('token-never-in-logs: refresh failure telemetry carries NO session/token material (P2 plan, GT MED)', async () => {
+    // Simulated refreshSession failure → Sentry.captureException fires, but
+    // the captured error + extras must contain no session object, no
+    // access_token/refresh_token value, and no Bearer string.
+    mockCaptureException.mockClear();
+    mockRefreshSession.mockResolvedValue({
+      data: { session: null, user: null },
+      error: Object.assign(new Error('Invalid Refresh Token'), {
+        name: 'AuthApiError',
+        code: 'refresh_token_not_found',
+        status: 400,
+      }),
+    });
+    mockFetch.mockResolvedValueOnce(makeResponse(401, { error: 'Unauthorized' }));
+    await fetchWithAuth('/api/leads/feed').catch(() => undefined);
+    expect(mockCaptureException).toHaveBeenCalledTimes(1);
+    const [capturedErr, hint] = mockCaptureException.mock.calls[0] as [
+      Error,
+      { extra?: Record<string, unknown> } | undefined,
+    ];
+    // The captured value is the AuthError itself (code/message/status only).
+    expect(capturedErr).toBeInstanceOf(Error);
+    const serialized = JSON.stringify({
+      message: capturedErr.message,
+      ...(capturedErr as unknown as Record<string, unknown>),
+      hint,
+    });
+    // No token VALUES anywhere in the captured payload (the GoTrue error
+    // CODE string `refresh_token_not_found` is fine — the rule bans token
+    // material and session objects, not error codes).
+    expect(serialized).not.toContain('test-token');
+    expect(serialized).not.toContain('Bearer ');
+    expect(hint?.extra ?? {}).not.toHaveProperty('session');
+    expect(hint?.extra ?? {}).not.toHaveProperty('accessToken');
+    expect(hint?.extra ?? {}).not.toHaveProperty('access_token');
   });
 });

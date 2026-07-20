@@ -16,7 +16,7 @@ jest.mock('@/lib/apiClient', () => ({
 
 jest.mock('@/store/authStore', () => ({
   useAuthStore: Object.assign(jest.fn(() => 'tok-1'), {
-    getState: () => ({ idToken: 'tok-1' }),
+    getState: () => ({ accessToken: 'tok-1' }),
     setState: jest.fn(),
   }),
 }));

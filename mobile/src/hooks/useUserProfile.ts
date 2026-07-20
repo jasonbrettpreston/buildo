@@ -51,21 +51,21 @@ export function useUserProfile(options?: { enabled?: boolean }) {
   const hydrateFilter = useFilterStore((s) => s.hydrate);
   const hydrateUserProfile = useUserProfileStore((s) => s.hydrate);
   // Spec 99 §B4 + WF3 M1+M2+M3 #4 (Gemini): the authStore persist `partialize`
-  // intentionally excludes idToken (line 161-165), so cold-boot rehydration
-  // produces { user: { uid }, idToken: null }. Without this idToken gate,
+  // intentionally excludes accessToken, so cold-boot rehydration produces
+  // { user: { uid }, accessToken: null }. Without this accessToken gate,
   // the query fires with the stale (null) bearer → server returns 401 →
   // apiClient interceptor refreshes → retry. Functionally correct but
-  // wastes a round-trip on every cold boot. Gating on idToken means the
-  // query waits until the Firebase listener's getIdToken().then(setAuth)
-  // populates the new token, at which point enabled flips and the query
-  // fires once with the right bearer.
-  const idToken = useAuthStore((s) => s.idToken);
+  // wastes a round-trip on every cold boot. Gating on accessToken means the
+  // query waits until the Supabase listener's setAuth populates the new
+  // token, at which point enabled flips and the query fires once with the
+  // right bearer.
+  const accessToken = useAuthStore((s) => s.accessToken);
 
   const query = useQuery({
     queryKey: ['user-profile'],
     queryFn: fetchProfile,
     staleTime: 300_000,
-    enabled: (options?.enabled ?? true) && !!idToken,
+    enabled: (options?.enabled ?? true) && !!accessToken,
     // No retry for deterministic states: 403 (deleted account), 404 (new user),
     // schema-drift parse failure (retrying won't fix server returning malformed
     // data — wastes bandwidth + emits duplicate Sentry events).

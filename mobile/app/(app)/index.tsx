@@ -54,8 +54,8 @@ export default function LeadFeedScreen() {
   // optimistic step inside the hook — calling it directly here would re-
   // introduce the lossy local-only pattern that §9.16 closed.
   const { mutate: patchProfile } = usePatchProfile();
-  // Gate on idToken: prevents queries firing before Firebase Auth resolves on cold boot.
-  const idToken = useAuthStore((s) => s.idToken);
+  // Gate on accessToken: prevents queries firing before Supabase auth resolves on cold boot.
+  const accessToken = useAuthStore((s) => s.accessToken);
   const { mutate: saveLead } = useSaveLead();
   const [filterOpen, setFilterOpen] = useState(false);
   const listRef = useRef<FlashListRef<LeadFeedItem>>(null);
@@ -70,7 +70,7 @@ export default function LeadFeedScreen() {
     paywallDismissed && profile?.subscription_status === 'expired';
 
   const feedParams =
-    !isInlineBlurMode && coords && tradeSlug && idToken
+    !isInlineBlurMode && coords && tradeSlug && accessToken
       ? { lat: coords.lat, lng: coords.lng, tradeSlug, radiusKm }
       : null;
 

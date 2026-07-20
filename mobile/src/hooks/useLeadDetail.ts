@@ -1,6 +1,6 @@
 // SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.3 + §4.3.1 (API contract)
 //             docs/specs/03-mobile/99_mobile_state_architecture.md §B1 (Server → TanStack Query bridge)
-//             docs/specs/03-mobile/99_mobile_state_architecture.md §B4 (idToken gate)
+//             docs/specs/03-mobile/99_mobile_state_architecture.md §B4 (accessToken gate)
 //             docs/specs/03-mobile/90_mobile_engineering_protocol.md §11 (Bearer auth)
 //             docs/specs/03-mobile/90_mobile_engineering_protocol.md §13 (Zod boundary)
 //
@@ -10,7 +10,7 @@
 // walk would resolve empty when the feed query hadn't loaded yet, leaving
 // the user staring at "Lead not found".
 //
-// Authorization: client-side gate on `idToken` to avoid a cold-boot 401
+// Authorization: client-side gate on `accessToken` to avoid a cold-boot 401
 // before authStore rehydrates the Bearer token (Spec 99 §B4). Server-side
 // authorization is enforced by the SQL — endpoint returns 404 when the
 // permit row is missing; `is_saved` is scoped to the viewer via lv_self
@@ -67,7 +67,7 @@ export function shouldRetryLeadDetail(failureCount: number, err: unknown): boole
 /**
  * Fetch a single lead by id (`${permit_num}--${revision_num}` for permits,
  * `COA-${application_number}` for CoA leads — the latter currently 404s).
- * Gated on `id` presence + `idToken` per Spec 99 §B4.
+ * Gated on `id` presence + `accessToken` per Spec 99 §B4.
  *
  * @param id `${permit_num}--${revision_num}` from the deep-link / route param.
  * @param options `enabled` — caller's gating signal.
@@ -76,12 +76,12 @@ export function useLeadDetail(
   id: string | undefined,
   options?: { enabled?: boolean },
 ) {
-  const idToken = useAuthStore((s) => s.idToken);
+  const accessToken = useAuthStore((s) => s.accessToken);
   return useQuery({
     queryKey: ['lead-detail', id],
     queryFn: () => fetchLeadDetail(id!),
     staleTime: 60_000,
-    enabled: !!id && !!idToken && (options?.enabled ?? true),
+    enabled: !!id && !!accessToken && (options?.enabled ?? true),
     retry: shouldRetryLeadDetail,
   });
 }

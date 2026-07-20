@@ -23,23 +23,22 @@ jest.mock('react-native-mmkv', () => ({
   }),
 }));
 
-// stateDebug imports the 6 stores → authStore → @react-native-firebase/auth.
-// In Jest the native module is unavailable; mock the firebase shim to keep
+// stateDebug imports the 6 stores → authStore → @/lib/supabase (which
+// fail-fast throws on missing EXPO_PUBLIC_SUPABASE_* env vars and touches
+// AppState/AsyncStorage at module load). Mock the client factory to keep
 // the import graph resolvable. The actual functionality is unused (this
 // suite only exercises stateDebug, not auth).
-jest.mock('@/lib/firebase', () => ({
-  auth: jest.fn(() => ({
-    onAuthStateChanged: jest.fn(() => jest.fn()),
-    signOut: jest.fn(() => Promise.resolve()),
-    signInWithPhoneNumber: jest.fn(),
-  })),
-}));
-jest.mock('@react-native-firebase/auth', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    onAuthStateChanged: jest.fn(() => jest.fn()),
-    signOut: jest.fn(() => Promise.resolve()),
-  })),
+jest.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      onAuthStateChange: jest.fn(() => ({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })),
+      signOut: jest.fn(() => Promise.resolve({ error: null })),
+      signInWithOtp: jest.fn(),
+      verifyOtp: jest.fn(),
+    },
+  },
 }));
 jest.mock('@sentry/react-native', () => ({
   init: jest.fn(),

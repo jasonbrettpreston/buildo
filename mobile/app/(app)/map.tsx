@@ -29,13 +29,13 @@ export default function MapScreen() {
   const { coords } = useLocation();
   const radiusKm = useFilterStore((s) => s.radiusKm);
   const tradeSlug = useFilterStore((s) => s.tradeSlug);
-  // Gate on idToken so the feed query doesn't fire before Firebase Auth resolves
-  // on cold boot (matches the pattern in app/(app)/index.tsx).
-  const idToken = useAuthStore((s) => s.idToken);
+  // Gate on accessToken so the feed query doesn't fire before Supabase auth
+  // resolves on cold boot (matches the pattern in app/(app)/index.tsx).
+  const accessToken = useAuthStore((s) => s.accessToken);
   const [filterOpen, setFilterOpen] = useState(false);
 
   const feedParams =
-    coords && tradeSlug && idToken
+    coords && tradeSlug && accessToken
       ? { lat: coords.lat, lng: coords.lng, tradeSlug, radiusKm }
       : null;
 

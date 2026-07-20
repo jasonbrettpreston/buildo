@@ -13,24 +13,48 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import * as Google from 'expo-auth-session/providers/google';
+import {
+  GoogleSignin,
+  isSuccessResponse,
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 import { prepareAppleNonce } from '@/lib/appleAuth';
-import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Sentry from '@sentry/react-native';
-import { auth } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { track } from '@/lib/analytics';
-import { mapFirebaseError, isAccountLinkingError } from '@/lib/firebaseErrors';
+import { mapSupabaseError, isAccountLinkingError } from '@/lib/supabaseErrors';
+import { PHONE_AUTH_ENABLED } from '@/lib/featureFlags';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { PhoneInputField } from '@/components/auth/PhoneInputField';
 import { OtpInputField } from '@/components/auth/OtpInputField';
 import {
   AccountLinkingSheet,
-  providerName,
   type AccountLinkingSheetRef,
 } from '@/components/auth/AccountLinkingSheet';
 
 type AuthMode = 'idle' | 'email' | 'phone-input' | 'phone-otp';
+
+// The provider identity captured from an `email_exists` rejection, replayed
+// through `supabase.auth.linkIdentity({ provider, token, nonce })` after the
+// user re-authenticates with their original method (Spec 93 §3.2 native
+// ID-token linking path). Replaces the Firebase `pendingCredential` object.
+interface PendingIdentity {
+  provider: 'google' | 'apple';
+  token: string;
+  /** Raw nonce for Apple tokens (the token embeds SHA-256(rawNonce)); absent for Google — see P2-F3.1 note below. */
+  nonce?: string;
+}
+
+// Native Google Sign-In config (Spec 93 §5 Step 4): webClientId is the
+// Supabase-dashboard Google provider's WEB client ID — required for the
+// idToken audience GoTrue verifies. Configure once at module load;
+// sign-up.tsx has no Google button so this stays sign-in-only.
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+});
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -53,20 +77,22 @@ export default function SignInScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpError, setOtpError] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  // RNFirebase returns a confirmation object from signInWithPhoneNumber that
-  // owns the SMS session — kept in a ref so it survives re-renders between
-  // the phone-input and OTP-entry screens. Replaces the verificationId string
-  // used by the JS-SDK PhoneAuthProvider flow.
-  const confirmationRef = useRef<FirebaseAuthTypes.ConfirmationResult | null>(null);
+  // Supabase `signInWithOtp({ phone })` returns NO confirmation handle
+  // (P2-G6) — verification takes the phone number directly via
+  // `verifyOtp({ phone, token, type: 'sms' })`, so the ref holds the E.164
+  // string itself. Replaces the RNFirebase ConfirmationResult object.
+  const pendingPhoneRef = useRef<string | null>(null);
 
-  // Account linking state
-  const [linkingExistingMethod, setLinkingExistingMethod] = useState('');
+  // Account linking state (Spec 93 §3.2 — Manual Linking). The sheet copy
+  // names ONLY the attempted method (P2-G7): Supabase has no
+  // fetchSignInMethodsForEmail equivalent by design (anti-enumeration).
   const [linkingNewMethod, setLinkingNewMethod] = useState('');
-  const [pendingCredential, setPendingCredential] = useState<FirebaseAuthTypes.AuthCredential | null>(null);
-  // The email captured from auth/account-exists-with-different-credential. Used
-  // to verify that the just-completed sign-in matches the account we expect to
-  // link to — prevents linking a Google credential to an unrelated user's
-  // session if the user dismisses the linking sheet and signs in elsewhere.
+  const [pendingIdentity, setPendingIdentity] = useState<PendingIdentity | null>(null);
+  // The email that produced the linking conflict (when the provider response
+  // exposes it). Used to verify that the just-completed sign-in matches the
+  // account we expect to link to — prevents linking a Google/Apple identity
+  // to an unrelated user's session if the user dismisses the linking sheet
+  // and signs in elsewhere. (Fence preserved from the Firebase version.)
   const [linkingExpectedEmail, setLinkingExpectedEmail] = useState('');
   const linkingSheetRef = useRef<AccountLinkingSheetRef>(null);
   const phoneSheetRef = useRef<BottomSheet>(null);
@@ -87,26 +113,11 @@ export default function SignInScreen() {
     track('auth_screen_viewed', { screen: 'sign-in' });
   }, []);
 
-  // Tracks the last googleResponse instance the success-handler effect has
-  // processed, so re-renders triggered by other state changes (e.g.,
-  // pendingCredential) don't cause the same response to be processed twice.
-  const lastProcessedGoogleResponseRef = useRef<typeof googleResponse | null>(null);
-
   // Global "any auth method in flight" — used as a mutex so the user can't
   // start a second method while the first is pending and corrupt the
-  // linkingNewMethod / pendingCredential state.
+  // linkingNewMethod / pendingIdentity state.
   const isAuthenticating =
     appleLoading || googleLoading || emailLoading || phoneLoading || otpLoading;
-
-  // Google OAuth — useIdTokenAuthRequest is the implicit flow that populates
-  // params.id_token directly (vs useAuthRequest code flow which returns a code
-  // that requires a separate exchange step). Firebase needs the id_token, so
-  // the implicit flow is the correct choice for native sign-in.
-  const [, googleResponse, googlePromptAsync] = Google.useIdTokenAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  });
 
   // Resets all transient form state when switching between idle/email/phone
   // modes so a stale errorMessage or half-typed input doesn't leak between
@@ -116,135 +127,86 @@ export default function SignInScreen() {
     setOtpError(false);
   }, []);
 
-  // After a successful sign-in via the existing method, attach any pending
-  // credential captured from the prior auth/account-exists-with-different-credential
-  // failure. This completes the spec §3.2 linking flow — without it, pending
-  // credentials are captured but never merged.
+  // After a successful sign-in via the user's original method, attach any
+  // pending identity captured from the prior `email_exists` rejection via
+  // `supabase.auth.linkIdentity()` (Spec 93 §3.2). Without it, pending
+  // identities are captured but never merged.
   //
   // Only links if the just-completed sign-in's email matches the email that
-  // produced the linking error. Without this guard, a user who dismisses the
-  // sheet and signs in to an unrelated account would have the pending
-  // credential silently attached (and rejected by Firebase) to the wrong UID.
-  const linkPendingCredential = useCallback(
-    async (currentUser: FirebaseAuthTypes.User | null) => {
-      if (!pendingCredential || !currentUser) return;
-      if (linkingExpectedEmail && currentUser.email?.toLowerCase() !== linkingExpectedEmail.toLowerCase()) {
-        // Wrong account — discard the pending credential rather than attempt
-        // a link that would fail with auth/credential-already-in-use.
-        setPendingCredential(null);
+  // produced the linking error (when known). Without this guard, a user who
+  // dismisses the sheet and signs in to an unrelated account would have the
+  // pending identity attached to the wrong uuid.
+  const linkPendingIdentity = useCallback(
+    async (currentUser: { email?: string | null } | null) => {
+      if (!pendingIdentity || !currentUser) return;
+      if (
+        linkingExpectedEmail &&
+        currentUser.email?.toLowerCase() !== linkingExpectedEmail.toLowerCase()
+      ) {
+        // Wrong account — discard the pending identity rather than attempt
+        // a link GoTrue would reject.
+        setPendingIdentity(null);
         setLinkingExpectedEmail('');
         return;
       }
       try {
-        await currentUser.linkWithCredential(pendingCredential);
+        const { error } = await supabase.auth.linkIdentity({
+          provider: pendingIdentity.provider,
+          token: pendingIdentity.token,
+          ...(pendingIdentity.nonce ? { nonce: pendingIdentity.nonce } : {}),
+        });
+        if (error) throw error;
         track('auth_account_link_completed', {
-          existing_method: linkingExistingMethod || 'email',
-          new_method: linkingNewMethod || 'unknown',
+          new_method: linkingNewMethod || pendingIdentity.provider,
         });
       } catch (err) {
         // Linking failure is non-fatal — the user is still authenticated with
         // their existing method. Surface to telemetry so we can detect a
-        // pattern of linking failures (often signals a Firebase config issue).
-        Sentry.captureException(err, { tags: { layer: 'auth', op: 'linkWithCredential' } });
+        // pattern of linking failures (often signals a provider config issue).
+        // Token-never-in-logs: AuthError code/message only — never the
+        // session/token object or the pending identity token.
+        Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+          tags: { layer: 'auth', op: 'linkIdentity' },
+        });
         track('auth_account_link_failed', {
-          existing_method: linkingExistingMethod || 'email',
-          new_method: linkingNewMethod || 'unknown',
+          new_method: linkingNewMethod || pendingIdentity.provider,
           code: (err as { code?: string }).code ?? 'unknown',
         });
       } finally {
-        setPendingCredential(null);
+        setPendingIdentity(null);
         setLinkingExpectedEmail('');
       }
     },
-    [pendingCredential, linkingExpectedEmail, linkingExistingMethod, linkingNewMethod],
+    [pendingIdentity, linkingExpectedEmail, linkingNewMethod],
   );
 
-  const handleAuthError = useCallback(async (err: unknown, attemptedMethod?: string) => {
-    const code = (err as { code?: string }).code;
-    if (isAccountLinkingError(code)) {
-      // Look up which provider already owns this email so we can tell the user
-      // which method to sign in with first.
-      // RNFirebase puts the conflicting email + credential under `userInfo`
-      // (not `customData` like the JS SDK). Both fields preserve the same
-      // semantics — the email belongs to the existing account, the credential
-      // is the one the user just attempted to sign in with.
-      const errorEmail =
-        (err as { userInfo?: { email?: string } }).userInfo?.email ??
-        (err as { customData?: { email?: string } }).customData?.email ??
-        '';
-      const credential =
-        (err as { userInfo?: { authCredential?: FirebaseAuthTypes.AuthCredential } }).userInfo
-          ?.authCredential ??
-        (err as { credential?: FirebaseAuthTypes.AuthCredential }).credential ??
-        null;
-      let existingProviderId = 'password';
-      if (errorEmail) {
-        setLinkingExpectedEmail(errorEmail);
-        try {
-          const methods = await auth().fetchSignInMethodsForEmail(errorEmail);
-          existingProviderId = methods[0] ?? 'password';
-          setLinkingExistingMethod(providerName(existingProviderId));
-        } catch {
-          setLinkingExistingMethod('email');
-        }
+  const handleAuthError = useCallback(
+    async (
+      err: unknown,
+      attemptedMethod?: string,
+      pending?: PendingIdentity,
+      attemptedEmail?: string,
+    ) => {
+      const code = (err as { code?: string }).code;
+      if (isAccountLinkingError(code)) {
+        // Supabase deliberately cannot reveal WHICH provider owns this email
+        // (anti-account-enumeration, Spec 93 §3.2/P2-G7) — the sheet copy
+        // names only the attempted method and routes back to the sign-in
+        // stack; the user picks their original method themselves.
+        if (attemptedEmail) setLinkingExpectedEmail(attemptedEmail);
+        if (pending) setPendingIdentity(pending);
+        linkingSheetRef.current?.expand();
+        track('auth_account_link_shown', {
+          new_method: attemptedMethod ?? 'unknown',
+        });
+        return;
       }
-      setPendingCredential(credential);
-      linkingSheetRef.current?.expand();
-      track('auth_account_link_shown', {
-        existing_method: providerName(existingProviderId),
-        new_method: attemptedMethod ?? 'unknown',
-      });
-      return;
-    }
-    const message = mapFirebaseError(code);
-    if (message) setErrorMessage(message);
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-  }, []);
-
-  // Google response handler — runs whenever the OAuth flow returns.
-  // Dedupe via a ref so re-renders triggered by other state (pendingCredential
-  // changing during a linking flow) don't cause the same response to be
-  // processed twice — which would attempt a second signInWithCredential with
-  // a stale id_token.
-  useEffect(() => {
-    if (!googleResponse) return;
-    if (lastProcessedGoogleResponseRef.current === googleResponse) return;
-    lastProcessedGoogleResponseRef.current = googleResponse;
-
-    if (googleResponse.type !== 'success') {
-      if (googleResponse.type === 'error') {
-        setErrorMessage('Google sign-in failed. Please try again.');
-        track('auth_method_failed', { method: 'google', code: 'oauth_response_error' });
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-      setGoogleLoading(false);
-      return;
-    }
-    const idToken = googleResponse.params.id_token;
-    if (!idToken) {
-      setErrorMessage('Google sign-in returned no token. Try again.');
-      track('auth_method_failed', { method: 'google', code: 'no_id_token' });
-      setGoogleLoading(false);
-      return;
-    }
-    void (async () => {
-      try {
-        setLinkingNewMethod('Google');
-        const credential = auth.GoogleAuthProvider.credential(idToken);
-        const result = await auth().signInWithCredential(credential);
-        await linkPendingCredential(result.user);
-        track('auth_method_succeeded', { method: 'google' });
-        if (isMountedRef.current) {
-          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }
-      } catch (err) {
-        track('auth_method_failed', { method: 'google', code: (err as { code?: string }).code ?? 'unknown' });
-        if (isMountedRef.current) await handleAuthError(err, 'google');
-      } finally {
-        if (isMountedRef.current) setGoogleLoading(false);
-      }
-    })();
-  }, [googleResponse, handleAuthError, linkPendingCredential]);
+      const message = mapSupabaseError(code);
+      if (message) setErrorMessage(message);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    },
+    [],
+  );
 
   // Resend cooldown ticker (30s after each "Send code" press).
   useEffect(() => {
@@ -256,15 +218,19 @@ export default function SignInScreen() {
   const handleAppleSignIn = useCallback(async () => {
     if (isAuthenticating) return;
     track('auth_method_attempted', { method: 'apple' });
+    let identityToken: string | null = null;
+    let rawNonceForLink: string | undefined;
+    let appleEmail: string | undefined;
     try {
       setAppleLoading(true);
       setErrorMessage('');
       setLinkingNewMethod('Apple');
-      // RNFirebase requires the same nonce used in Apple's sign-in to verify
-      // the identity token. Apple receives the SHA-256 hash and signs over
-      // it; Firebase recomputes the hash from the raw value and rejects the
-      // token if it doesn't match. The pure helper at mobile/src/lib/appleAuth.ts
-      // keeps the relationship unit-testable per Spec 93 §10.
+      // Nonce contract (Spec 93 §2.3): Apple receives the SHA-256 hash and
+      // signs the identity token over it; Supabase receives the *raw* value
+      // via signInWithIdToken({ nonce }) and recomputes the hash server-side
+      // to verify it matches the token's nonce claim. Fresh pair per attempt.
+      // The pure helper at mobile/src/lib/appleAuth.ts keeps the relationship
+      // unit-testable per Spec 93 §10.
       const { rawNonce, hashedNonce } = await prepareAppleNonce();
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
@@ -273,35 +239,103 @@ export default function SignInScreen() {
         ],
         nonce: hashedNonce,
       });
-      const { identityToken } = credential;
+      identityToken = credential.identityToken;
+      appleEmail = credential.email ?? undefined;
       if (!identityToken) throw new Error('No identity token from Apple');
-      const firebaseCredential = auth.AppleAuthProvider.credential(identityToken, rawNonce);
-      const result = await auth().signInWithCredential(firebaseCredential);
-      await linkPendingCredential(result.user);
+      rawNonceForLink = rawNonce;
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: identityToken,
+        nonce: rawNonce,
+      });
+      if (error) throw error;
+      await linkPendingIdentity(data.user);
       track('auth_method_succeeded', { method: 'apple' });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err: unknown) {
       // ERR_REQUEST_CANCELED fires when the user dismisses the Apple sheet —
-      // not an error, just a no-op return.
+      // not an error, just a no-op return (provider-SDK cancel, not a
+      // Supabase error — Spec 93 §5 Step 1).
       if ((err as { code?: string }).code === 'ERR_REQUEST_CANCELED') return;
       track('auth_method_failed', { method: 'apple', code: (err as { code?: string }).code ?? 'unknown' });
-      await handleAuthError(err, 'apple');
+      await handleAuthError(
+        err,
+        'apple',
+        identityToken && rawNonceForLink
+          ? { provider: 'apple', token: identityToken, nonce: rawNonceForLink }
+          : undefined,
+        appleEmail,
+      );
     } finally {
       setAppleLoading(false);
     }
-  }, [handleAuthError, linkPendingCredential, isAuthenticating]);
+  }, [handleAuthError, linkPendingIdentity, isAuthenticating]);
 
-  const handleGoogleSignIn = useCallback(() => {
+  const handleGoogleSignIn = useCallback(async () => {
     if (isAuthenticating) return;
     track('auth_method_attempted', { method: 'google' });
-    // Set loading immediately so the button shows the spinner while the user
-    // is in the OAuth web flow. The success/error effect below resets it.
-    setGoogleLoading(true);
-    setErrorMessage('');
-    void googlePromptAsync().catch(() => {
-      setGoogleLoading(false);
-    });
-  }, [googlePromptAsync, isAuthenticating]);
+    // NOTE (P2-F3.1 verification, 2026-07-19): custom nonce support is a PAID
+    // "Universal" feature of @react-native-google-signin — the FREE Original
+    // API pinned here (13.3.1) has no nonce parameter (`SignInParams` is
+    // `{ loginHint?: string }` only), so the Google ID token carries no nonce
+    // claim and NO nonce is passed to `signInWithIdToken` (passing one would
+    // make GoTrue reject the token as a claim mismatch). This is the
+    // Supabase-documented free-tier pattern; Apple keeps the full nonce
+    // contract. The plan's Item 3 nonce-pair instruction assumed free-line
+    // nonce support — that premise failed live verification; flagged for the
+    // output-review panel.
+    let googleIdToken: string | null = null;
+    let googleEmail: string | undefined;
+    try {
+      setGoogleLoading(true);
+      setErrorMessage('');
+      setLinkingNewMethod('Google');
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+      if (!isSuccessResponse(response)) {
+        // User cancelled the native picker — no error message (same contract
+        // as the old auth/popup-closed-by-user empty-string branch).
+        return;
+      }
+      // Local variable holding GOOGLE's native ID token — unrelated to the
+      // authStore `accessToken` field (P2-D3 rename); this value is an
+      // identity assertion consumed once by signInWithIdToken, never stored.
+      googleIdToken = response.data.idToken;
+      googleEmail = response.data.user.email ?? undefined;
+      if (!googleIdToken) {
+        setErrorMessage('Google sign-in returned no token. Try again.');
+        track('auth_method_failed', { method: 'google', code: 'no_id_token' });
+        return;
+      }
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: googleIdToken,
+      });
+      if (error) throw error;
+      await linkPendingIdentity(data.user);
+      track('auth_method_succeeded', { method: 'google' });
+      if (isMountedRef.current) {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (err) {
+      if (isErrorWithCode(err) && err.code === statusCodes.IN_PROGRESS) {
+        // A previous native sign-in is still resolving — swallow, the
+        // isAuthenticating mutex already blocks double-taps at the JS layer.
+        return;
+      }
+      track('auth_method_failed', { method: 'google', code: (err as { code?: string }).code ?? 'unknown' });
+      if (isMountedRef.current) {
+        await handleAuthError(
+          err,
+          'google',
+          googleIdToken ? { provider: 'google', token: googleIdToken } : undefined,
+          googleEmail,
+        );
+      }
+    } finally {
+      if (isMountedRef.current) setGoogleLoading(false);
+    }
+  }, [handleAuthError, linkPendingIdentity, isAuthenticating]);
 
   const handleEmailSignIn = useCallback(async () => {
     if (isAuthenticating) return;
@@ -314,8 +348,9 @@ export default function SignInScreen() {
       setEmailLoading(true);
       setErrorMessage('');
       setLinkingNewMethod('email');
-      const result = await auth().signInWithEmailAndPassword(email, password);
-      await linkPendingCredential(result.user);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      await linkPendingIdentity(data.user);
       track('auth_method_succeeded', { method: 'email' });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
@@ -324,7 +359,7 @@ export default function SignInScreen() {
     } finally {
       setEmailLoading(false);
     }
-  }, [email, password, handleAuthError, linkPendingCredential, isAuthenticating]);
+  }, [email, password, handleAuthError, linkPendingIdentity, isAuthenticating]);
 
   const handleSendCode = useCallback(async () => {
     if (isAuthenticating) return;
@@ -337,11 +372,13 @@ export default function SignInScreen() {
       setPhoneLoading(true);
       setErrorMessage('');
       setLinkingNewMethod('phone');
-      // RNFirebase: no JS-side reCAPTCHA. Play Integrity (Android) / APN
-      // silent-push (iOS) handle bot prevention natively. The returned
-      // confirmation owns the SMS session and is consumed in handleVerifyOtp.
-      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
-      confirmationRef.current = confirmation;
+      // Supabase: no confirmation handle is returned (P2-G6) — hold the
+      // phone number itself; verifyOtp takes it directly. Bot prevention is
+      // GoTrue's SMS rate limits (over_sms_send_rate_limit), not Play
+      // Integrity/APN (Spec 93 §6 — no device-attestation equivalent).
+      const { error } = await supabase.auth.signInWithOtp({ phone: phoneNumber });
+      if (error) throw error;
+      pendingPhoneRef.current = phoneNumber;
       setMode('phone-otp');
       setResendCooldown(30);
     } catch (err) {
@@ -358,48 +395,48 @@ export default function SignInScreen() {
         setOtpLoading(true);
         setOtpError(false);
         setErrorMessage('');
-        const confirmation = confirmationRef.current;
-        if (!confirmation) {
-          // Defensive: confirmation was never set (handleSendCode not called or
-          // failed). Surface a clear error rather than null-deref.
+        const phone = pendingPhoneRef.current;
+        if (!phone) {
+          // Defensive: no phone-auth session active (handleSendCode not
+          // called or failed). Surface a clear error rather than null-deref.
           throw Object.assign(new Error('No phone-auth session active'), {
-            code: 'auth/missing-verification-id',
+            code: 'otp_expired',
           });
         }
-        const result = await confirmation.confirm(code);
-        await linkPendingCredential(result?.user ?? null);
+        const { data, error } = await supabase.auth.verifyOtp({
+          phone,
+          token: code,
+          type: 'sms',
+        });
+        if (error) throw error;
+        await linkPendingIdentity(data.user);
         track('auth_otp_verified');
         track('auth_method_succeeded', { method: 'phone' });
         Keyboard.dismiss();
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch (err) {
         setOtpError(true);
+        // Token-never-in-logs: only the error CODE reaches telemetry — never
+        // the session object verifyOtp resolves with.
         track('auth_method_failed', { method: 'phone', code: (err as { code?: string }).code ?? 'unknown' });
         await handleAuthError(err, 'phone');
       } finally {
         setOtpLoading(false);
       }
     },
-    [handleAuthError, linkPendingCredential],
+    [handleAuthError, linkPendingIdentity],
   );
 
-  const handleLinkExisting = useCallback(async () => {
-    // Close the linking sheet and route the user into the existing method's
-    // sign-in surface. After that sign-in resolves, linkPendingCredential
-    // (called from each handler) attaches the captured credential.
+  const handleBackToSignIn = useCallback(() => {
+    // P2-G7: Supabase cannot name the existing method, so the sheet's primary
+    // action returns the user to the standard sign-in stack — they pick their
+    // original method themselves. After that sign-in resolves,
+    // linkPendingIdentity (called from each handler) attaches the captured
+    // identity.
     linkingSheetRef.current?.close();
-    if (linkingExistingMethod === 'email') {
-      setMode('email');
-    } else if (linkingExistingMethod === 'phone') {
-      // The phone-input surface lives inside phoneSheetRef — the sheet must
-      // be expanded explicitly, otherwise setMode reveals nothing.
-      setMode('phone-input');
-      phoneSheetRef.current?.expand();
-    }
-    // For Apple/Google existing methods, the user taps the corresponding
-    // button again on the idle stack. Adding a transient toast cue is
-    // tracked in review_followups.md.
-  }, [linkingExistingMethod]);
+    resetTransientState();
+    setMode('idle');
+  }, [resetTransientState]);
 
   return (
     <SafeAreaView className="flex-1 bg-zinc-950">
@@ -435,19 +472,24 @@ export default function SignInScreen() {
               <Text className="text-zinc-600 text-xs">or</Text>
               <View className="flex-1 h-px bg-zinc-800" />
             </View>
-            <Pressable
-              onPress={() => {
-                resetTransientState();
-                setMode('phone-input');
-                phoneSheetRef.current?.expand();
-              }}
-              className="bg-zinc-900 border border-zinc-700 rounded-2xl py-4 px-5 flex-row items-center justify-center w-full min-h-[52px] active:bg-zinc-800"
-              accessibilityRole="button"
-              accessibilityLabel="Continue with Phone"
-              testID="phone-button"
-            >
-              <Text className="text-zinc-100 text-sm font-semibold">Continue with Phone</Text>
-            </Pressable>
+            {/* D15 / P2-D1 entry point (a): phone-OTP is gated OFF. The flow
+                below (sheet, OTP, verifyOtp) stays fully wired — flipping
+                PHONE_AUTH_ENABLED re-enables it with no code archaeology. */}
+            {PHONE_AUTH_ENABLED && (
+              <Pressable
+                onPress={() => {
+                  resetTransientState();
+                  setMode('phone-input');
+                  phoneSheetRef.current?.expand();
+                }}
+                className="bg-zinc-900 border border-zinc-700 rounded-2xl py-4 px-5 flex-row items-center justify-center w-full min-h-[52px] active:bg-zinc-800"
+                accessibilityRole="button"
+                accessibilityLabel="Continue with Phone"
+                testID="phone-button"
+              >
+                <Text className="text-zinc-100 text-sm font-semibold">Continue with Phone</Text>
+              </Pressable>
+            )}
             <Pressable
               onPress={() => {
                 resetTransientState();
@@ -550,7 +592,7 @@ export default function SignInScreen() {
         onChange={(idx) => {
           if (idx === -1) {
             setMode('idle');
-            confirmationRef.current = null;
+            pendingPhoneRef.current = null;
             setPhoneNumber('');
             resetTransientState();
           }
@@ -644,13 +686,12 @@ export default function SignInScreen() {
       {/* Account linking sheet */}
       <AccountLinkingSheet
         ref={linkingSheetRef}
-        existingMethod={linkingExistingMethod || 'email'}
         newMethod={linkingNewMethod || 'this account'}
-        onLinkPress={handleLinkExisting}
+        onLinkPress={handleBackToSignIn}
         onDismiss={() => {
-          // Don't clear pendingCredential here — the user may dismiss the
-          // sheet and continue signing in with the existing method, at
-          // which point linkPendingCredential will pick it up. It's only
+          // Don't clear pendingIdentity here — the user may dismiss the
+          // sheet and continue signing in with their original method, at
+          // which point linkPendingIdentity will pick it up. It's only
           // cleared after a successful link or a fresh auth attempt.
         }}
       />

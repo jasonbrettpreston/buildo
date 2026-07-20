@@ -5,7 +5,7 @@
 //             docs/specs/03-mobile/90_mobile_engineering_protocol.md §11
 import '../global.css';
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator, LogBox } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator, LogBox, Linking } from 'react-native';
 import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
@@ -14,7 +14,8 @@ import * as Sentry from '@sentry/react-native';
 import { queryClient } from '@/lib/queryClient';
 import { mmkvPersister } from '@/lib/mmkvPersister';
 import { shouldDehydrateQueryFn } from '@/lib/persistFilter';
-import { useAuthStore, initFirebaseAuthListener } from '@/store/authStore';
+import { useAuthStore, initSupabaseAuthListener } from '@/store/authStore';
+import { parseConfirmDeepLink } from '@/lib/confirmEmail';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useOnboardingStore } from '@/store/onboardingStore';
@@ -86,14 +87,14 @@ interface ReactivationState {
 
 function AuthGate() {
   trackRender('AuthGate');
-  // Per-field selectors so a token refresh (idToken change) doesn't re-run the
-  // AuthGate effect (which only depends on user + segments + _hasHydrated).
+  // Per-field selectors so a token refresh (accessToken change) doesn't re-run
+  // the AuthGate effect (which only depends on user + segments + _hasHydrated).
   const user = useAuthStore((s) => s.user);
   const _hasHydrated = useAuthStore((s) => s._hasHydrated);
   const signOut = useAuthStore((s) => s.signOut);
 
   // Server-driven routing — Spec 95 §4 / Spec 93 §3.6.
-  // Only enabled once Firebase auth has resolved and a user is present.
+  // Only enabled once Supabase auth has resolved and a user is present.
   const { data: profile, error: profileError, isLoading: profileLoading } = useUserProfile({
     enabled: !!user,
   });
@@ -148,7 +149,7 @@ function AuthGate() {
     // treats falsy user_id as "wait" via its stale-profile guard.
     if (profile && !profile.user_id) {
       Sentry.captureMessage('stale_profile_missing_user_id', {
-        extra: { firebaseUid: user?.uid, profileKeys: Object.keys(profile) },
+        extra: { supabaseUid: user?.uid, profileKeys: Object.keys(profile) },
       });
     }
 
@@ -333,16 +334,46 @@ function AuthGate() {
   return null;
 }
 
-// Mounts the Firebase onAuthStateChanged listener once at app boot. The store
-// receives the user (or null on sign-out) and AuthGate routes accordingly.
+// Mounts the Supabase onAuthStateChange listener once at app boot. The store
+// receives the session (or null on sign-out) and AuthGate routes accordingly.
 // Lives in its own component so the listener subscribe/unsubscribe lifecycle
 // is tied to RootLayout mount/unmount — not to AuthGate re-renders.
-function FirebaseAuthListener() {
-  trackRender('FirebaseAuthListener');
+function SupabaseAuthListener() {
+  trackRender('SupabaseAuthListener');
   useEffect(() => {
-    const unsubscribe = initFirebaseAuthListener();
+    const unsubscribe = initSupabaseAuthListener();
     return unsubscribe;
   }, []);
+  return null;
+}
+
+// P2-D4 email-confirmation deep-link catch (P2-F3.4 resolution): expo-router
+// ~6.0.23 extracts custom-scheme URLs as host+pathname, so
+// `maxbld://auth/confirm` maps to route path `/auth/confirm` — which no file
+// inside the stripped `(auth)` group can match. This listener catches the
+// confirmation URL (cold-start initial URL + warm `url` events), parses the
+// one-time PKCE `?code=`, and forwards into the `/(auth)/confirm` route,
+// which owns the `exchangeCodeForSession` call + error states. Every other
+// URL (push deep links, OAuth redirects) is ignored — parseConfirmDeepLink
+// returns null for non-confirmation URLs.
+function EmailConfirmLinkCatcher() {
+  trackRender('EmailConfirmLinkCatcher');
+  const router = useRouter();
+  useEffect(() => {
+    const handleUrl = (url: string | null) => {
+      if (!url) return;
+      const parsed = parseConfirmDeepLink(url);
+      if (!parsed) return;
+      router.replace(
+        parsed.code
+          ? `/(auth)/confirm?code=${encodeURIComponent(parsed.code)}`
+          : '/(auth)/confirm',
+      );
+    };
+    void Linking.getInitialURL().then(handleUrl);
+    const subscription = Linking.addEventListener('url', ({ url }) => handleUrl(url));
+    return () => subscription.remove();
+  }, [router]);
   return null;
 }
 
@@ -487,7 +518,8 @@ export default function RootLayout() {
             buster: 'wf3-pii-strip-1',
           }}
         >
-          <FirebaseAuthListener />
+          <SupabaseAuthListener />
+          <EmailConfirmLinkCatcher />
           <AuthGate />
           <NotificationHandlers />
           <Stack screenOptions={{ headerShown: false }} />

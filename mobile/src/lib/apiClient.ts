@@ -1,4 +1,5 @@
-import { auth } from '@/lib/firebase';
+import * as Sentry from '@sentry/react-native';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { ApiError, AccountDeletedError, RateLimitError, NetworkError } from '@/lib/errors';
 
@@ -6,7 +7,7 @@ import { ApiError, AccountDeletedError, RateLimitError, NetworkError } from '@/l
 // module with zero side-effect imports). Re-exported here for backward
 // compatibility — existing callers continue to `import { ApiError, ... }
 // from '@/lib/apiClient'`. Pure modules + their unit tests should import
-// from `@/lib/errors` directly to avoid pulling firebase/MMKV into the
+// from `@/lib/errors` directly to avoid pulling supabase/MMKV into the
 // import graph.
 export { ApiError, AccountDeletedError, RateLimitError, NetworkError };
 
@@ -17,15 +18,15 @@ async function fetchWithAuthInternal<T>(
   options?: RequestInit,
   isRetry = false,
 ): Promise<T> {
-  const { idToken } = useAuthStore.getState();
+  const { accessToken } = useAuthStore.getState();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options?.headers as Record<string, string> | undefined),
   };
 
-  if (idToken) {
-    headers['Authorization'] = `Bearer ${idToken}`;
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
   let response: Response;
@@ -62,23 +63,38 @@ async function fetchWithAuthInternal<T>(
     throw new ApiError(403, 'Forbidden');
   }
 
-  // 401 intercept: force-refresh the Firebase idToken and retry once.
-  // Firebase tokens expire after ~1 hour; a cold-boot or long background session
-  // can produce a 401 on the first post-expiry request. The isRetry guard prevents
-  // infinite loops if the server keeps returning 401 after a fresh token.
-  // Known limitation: concurrent 401s each call getIdToken(true) independently —
-  // Firebase deduplicates the network refresh but the store receives two setAuth
-  // writes. Low risk in practice; tracked in review_followups.md (concurrent 401 mutex).
+  // 401 intercept: refresh the Supabase session and retry once. Supabase
+  // access tokens expire (default ~1 hour); a cold-boot or long background
+  // session can produce a 401 on the first post-expiry request. The isRetry
+  // guard prevents infinite loops if the server keeps returning 401 after a
+  // fresh token.
+  // Concurrent 401s: auth-js 2.110.7 single-flights concurrent
+  // `refreshSession()` calls internally (`refreshingDeferred` in
+  // `_callRefreshToken`) — the old review_followups "concurrent 401 mutex"
+  // concern is resolved by the SDK swap (P2-F1.1 verification, 2026-07-19).
   if (response.status === 401 && !isRetry) {
     try {
       const { user } = useAuthStore.getState();
-      const newToken = await auth().currentUser?.getIdToken(true);
-      if (newToken && user) {
-        useAuthStore.getState().setAuth(user, newToken);
+      const { data, error } = await supabase.auth.refreshSession();
+      const session = data?.session ?? null;
+      if (!error && session && user) {
+        useAuthStore.getState().setAuth(user, session.access_token);
         return fetchWithAuthInternal<T>(path, options, true);
       }
-    } catch {
-      // Token refresh failed (Firebase unreachable, no currentUser) — fall through
+      if (error) {
+        // Token-never-in-logs (P2 plan, Standards Compliance): log the
+        // AuthError (code/message/status) only — NEVER the session/token
+        // object — so no bearer material reaches Sentry.
+        Sentry.captureException(error, {
+          extra: { context: 'apiClient: 401 refreshSession failed' },
+        });
+      }
+    } catch (err) {
+      // Refresh threw (Supabase unreachable, storage failure) — fall
+      // through to the typed 401. Code/message only; never session/token.
+      Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+        extra: { context: 'apiClient: 401 refreshSession threw' },
+      });
     }
     throw new ApiError(401, 'Unauthorized');
   }
@@ -107,7 +123,8 @@ async function fetchWithAuthInternal<T>(
 
 /**
  * Authenticated fetch for all Buildo API routes.
- * Attaches `Authorization: Bearer <idToken>` from the auth store.
+ * Attaches `Authorization: Bearer <accessToken>` (the Supabase access token)
+ * from the auth store.
  * Throws typed errors so callers can handle each class without inspecting
  * status codes directly.
  */

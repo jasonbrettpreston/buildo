@@ -62,15 +62,38 @@ describe('analytics helpers', () => {
       (process.env as Record<string, string>).EXPO_PUBLIC_POSTHOG_API_KEY = 'phc_test_key';
     });
 
-    it('track() forwards whitelisted props to PostHog.capture', () => {
+    it('track() forwards whitelisted props to PostHog.capture (+ mandatory product dimension)', () => {
       const { track, __resetForTests } = require('@/lib/analytics');
       __resetForTests();
       track('auth_method_attempted', { method: 'google' });
       expect(mockCapture).toHaveBeenCalledTimes(1);
-      expect(mockCapture).toHaveBeenCalledWith('auth_method_attempted', { method: 'google' });
+      expect(mockCapture).toHaveBeenCalledWith('auth_method_attempted', {
+        method: 'google',
+        product: 'lead_gen',
+      });
     });
 
-    it('track() strips PII keys (email, phone, displayName, idToken)', () => {
+    // Spec 116 N6 (P2-F2.11, MANDATORY): every tracked event carries the
+    // product dimension so lead_gen events stay distinguishable once
+    // additional products ship.
+    it('track() injects product: "lead_gen" on every event — even with no props', () => {
+      const { track, __resetForTests } = require('@/lib/analytics');
+      __resetForTests();
+      track('signout_initiated');
+      expect(mockCapture).toHaveBeenCalledWith('signout_initiated', { product: 'lead_gen' });
+    });
+
+    it('product survives stripPii and a caller-supplied product cannot override it', () => {
+      const { track, __resetForTests } = require('@/lib/analytics');
+      __resetForTests();
+      track('paywall_shown', { product: 'evil_override', tier: 'small' });
+      const propsArg = mockCapture.mock.calls[0][1] as Record<string, unknown>;
+      // The injected value wins (spread order: injection AFTER stripPii).
+      expect(propsArg.product).toBe('lead_gen');
+      expect(propsArg.tier).toBe('small');
+    });
+
+    it('track() strips PII keys (email, phone, displayName, accessToken)', () => {
       const { track, __resetForTests } = require('@/lib/analytics');
       __resetForTests();
       track('auth_method_succeeded', {
@@ -78,14 +101,17 @@ describe('analytics helpers', () => {
         email: 'leak@example.com',
         phone: '+14165551234',
         displayName: 'Some Person',
-        idToken: 'super-secret-jwt',
+        accessToken: 'super-secret-jwt',
       });
-      expect(mockCapture).toHaveBeenCalledWith('auth_method_succeeded', { method: 'google' });
+      expect(mockCapture).toHaveBeenCalledWith('auth_method_succeeded', {
+        method: 'google',
+        product: 'lead_gen',
+      });
       const propsArg = mockCapture.mock.calls[0][1] as Record<string, unknown>;
       expect(propsArg).not.toHaveProperty('email');
       expect(propsArg).not.toHaveProperty('phone');
       expect(propsArg).not.toHaveProperty('displayName');
-      expect(propsArg).not.toHaveProperty('idToken');
+      expect(propsArg).not.toHaveProperty('accessToken');
     });
 
     it('track() preserves all whitelisted keys (catalogue completeness)', () => {
@@ -104,6 +130,7 @@ describe('analytics helpers', () => {
         new_method: 'apple',
         code: 'auth/credential-already-in-use',
         screen: 'sign-in',
+        product: 'lead_gen',
       });
     });
 

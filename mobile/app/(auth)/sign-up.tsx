@@ -1,24 +1,35 @@
 // SPEC LINK: docs/specs/03-mobile/93_mobile_auth.md §4 Email Sign-Up, §5 Step 5
+//             (P2-D4 amendment — email confirmations ON + "check your email" state)
 import { View, Text, Pressable, ActivityIndicator, TextInput, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { auth } from '@/lib/firebase';
-import { mapFirebaseError } from '@/lib/firebaseErrors';
+import { supabase } from '@/lib/supabase';
+import { mapSupabaseError } from '@/lib/supabaseErrors';
+import { resendSignupConfirmation } from '@/lib/confirmEmail';
+import { PHONE_AUTH_ENABLED, resolveSignUpMethod, type SignUpMethod } from '@/lib/featureFlags';
 import { track } from '@/lib/analytics';
 import { PhoneInputField } from '@/components/auth/PhoneInputField';
 import { OtpInputField } from '@/components/auth/OtpInputField';
 
-type SignUpMethod = 'email' | 'phone';
 type PhoneStage = 'input' | 'otp' | 'backup-email';
+
+// P2-D4 (operator ruling 2026-07-19): email confirmations are ON at launch.
+// The redirect target is the POST-rename scheme from day one (Item 5 lands
+// before this ships; zero installed users means no in-flight link under the
+// old scheme). The deep-link catch is app/(auth)/confirm.tsx via the root
+// layout's EmailConfirmLinkCatcher (P2-F3.4 resolution — see confirmEmail.ts).
+const EMAIL_CONFIRM_REDIRECT = 'maxbld://auth/confirm';
 
 export default function SignUpScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ method?: string }>();
-  const initialMethod = (params.method === 'phone' ? 'phone' : 'email') as SignUpMethod;
+  // D15 / P2-D1 entry point (c): the initialMethod COMPUTATION is gated —
+  // a stale `?method=phone` deep link must never land the user in the phone
+  // flow while the flag is off, even though the buttons are hidden elsewhere.
+  const initialMethod = resolveSignUpMethod(params.method);
 
   const [method, setMethod] = useState<SignUpMethod>(initialMethod);
   const [errorMessage, setErrorMessage] = useState('');
@@ -28,6 +39,12 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
+
+  // P2-D4 "check your email" state: signUp() resolves with session: null
+  // while confirmations are ON — the screen must not strand the user.
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
 
   // Phone state
   const [phoneStage, setPhoneStage] = useState<PhoneStage>('input');
@@ -39,10 +56,10 @@ export default function SignUpScreen() {
   const [backupEmail, setBackupEmail] = useState('');
   const [backupLoading, setBackupLoading] = useState(false);
 
-  // RNFirebase confirmation result is the SMS-session handle returned from
-  // signInWithPhoneNumber. Replaces the verificationId string used by the JS
-  // SDK PhoneAuthProvider flow.
-  const confirmationRef = useRef<FirebaseAuthTypes.ConfirmationResult | null>(null);
+  // Supabase `signInWithOtp({ phone })` returns NO confirmation handle
+  // (P2-G6) — the ref holds the E.164 phone string itself; verifyOtp takes
+  // the number directly. Replaces the RNFirebase ConfirmationResult object.
+  const pendingPhoneRef = useRef<string | null>(null);
   const phoneSheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
@@ -55,9 +72,9 @@ export default function SignUpScreen() {
   // Fire ONCE on mount with the initialMethod the user arrived with. Tying
   // this to `method` would re-fire every time the user toggles between
   // email and phone within the same session, inflating funnel counts.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     track('signup_screen_viewed', { method: initialMethod });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 30s cooldown after each "Send code" press — abuse protection per spec §4.
@@ -69,7 +86,7 @@ export default function SignUpScreen() {
 
   const handleAuthError = useCallback(async (err: unknown) => {
     const code = (err as { code?: string }).code;
-    const message = mapFirebaseError(code);
+    const message = mapSupabaseError(code);
     if (message) setErrorMessage(message);
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
   }, []);
@@ -86,16 +103,43 @@ export default function SignUpScreen() {
     try {
       setEmailLoading(true);
       setErrorMessage('');
-      await auth().createUserWithEmailAndPassword(email, password);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: EMAIL_CONFIRM_REDIRECT },
+      });
+      if (error) throw error;
       track('signup_completed', { method: 'email' });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // AuthGate routes to onboarding via onAuthStateChanged.
+      if (!data.session) {
+        // P2-D4: confirmations ON — no session until the emailed link is
+        // tapped on this device. Render the explicit "check your email"
+        // state (UX reviewer HIGH: never strand the user on a dead form).
+        setAwaitingConfirmation(true);
+      }
+      // If a session DID arrive (confirmations toggled off in some env),
+      // the auth listener fires and AuthGate routes to onboarding.
     } catch (err) {
       await handleAuthError(err);
     } finally {
       setEmailLoading(false);
     }
   }, [email, password, confirmPassword, handleAuthError]);
+
+  const handleResendConfirmation = useCallback(async () => {
+    // [verify-pass fold] Resend affordance: mail-provider security scanners
+    // can prefetch/consume the one-time PKCE code before the real tap —
+    // resend mints a fresh link. Logic lives in confirmEmail.ts (unit-tested).
+    if (resendLoading) return;
+    setResendLoading(true);
+    setResendMessage('');
+    const result = await resendSignupConfirmation(email);
+    setResendMessage(result.message);
+    if (!result.ok) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+    setResendLoading(false);
+  }, [email, resendLoading]);
 
   const handleSendCode = useCallback(async () => {
     if (!phoneNumber || phoneNumber.length < 12) {
@@ -106,11 +150,12 @@ export default function SignUpScreen() {
     try {
       setPhoneLoading(true);
       setErrorMessage('');
-      // RNFirebase: no JS-side reCAPTCHA. Play Integrity (Android) / APN
-      // silent-push (iOS) handle bot prevention natively. Returned confirmation
-      // owns the SMS session and is consumed in handleVerifyOtp.
-      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
-      confirmationRef.current = confirmation;
+      // Supabase phone OTP creates the user automatically on first verify —
+      // no separate "create" call (Spec 93 §5 Step 5). Bot prevention is
+      // GoTrue's SMS rate limits, not Play Integrity/APN (Spec 93 §6).
+      const { error } = await supabase.auth.signInWithOtp({ phone: phoneNumber });
+      if (error) throw error;
+      pendingPhoneRef.current = phoneNumber;
       setPhoneStage('otp');
       setResendCooldown(30);
     } catch (err) {
@@ -127,23 +172,30 @@ export default function SignUpScreen() {
         setOtpLoading(true);
         setOtpError(false);
         setErrorMessage('');
-        const confirmation = confirmationRef.current;
-        if (!confirmation) {
+        const phone = pendingPhoneRef.current;
+        if (!phone) {
           throw Object.assign(new Error('No phone-auth session active'), {
-            code: 'auth/missing-verification-id',
+            code: 'otp_expired',
           });
         }
-        // Note: confirmation.confirm creates the Firebase user if they don't
-        // exist (phone auth has no separate "create" call). The backup-email
-        // capture happens AFTER the Firebase user is created — Spec 95
-        // onboarding writes it to user_profiles.
-        await confirmation.confirm(code);
+        // Note: verifyOtp creates the Supabase user if they don't exist
+        // (phone auth has no separate "create" call). The backup-email
+        // capture happens AFTER the user is created — Spec 95 onboarding
+        // writes it to user_profiles.
+        const { error } = await supabase.auth.verifyOtp({
+          phone,
+          token: code,
+          type: 'sms',
+        });
+        if (error) throw error;
         track('auth_otp_verified');
         Keyboard.dismiss();
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setPhoneStage('backup-email');
       } catch (err) {
         setOtpError(true);
+        // Token-never-in-logs: only the error CODE reaches telemetry — never
+        // the session object verifyOtp resolves with.
         track('auth_method_failed', { method: 'phone', code: (err as { code?: string }).code ?? 'unknown' });
         await handleAuthError(err);
       } finally {
@@ -182,7 +234,47 @@ export default function SignUpScreen() {
           </View>
         </View>
 
-        {method === 'email' && (
+        {method === 'email' && awaitingConfirmation && (
+          <View className="w-full" testID="signup-check-email">
+            <Text
+              className="text-zinc-100 text-xl font-bold mb-4"
+              accessibilityRole="header"
+            >
+              Check your email
+            </Text>
+            <Text className="text-zinc-400 text-sm mb-6 leading-relaxed">
+              We sent a confirmation link to{' '}
+              <Text className="text-zinc-100">{email}</Text>. Open it on this
+              device to finish creating your account.
+            </Text>
+            <Pressable
+              onPress={() => {
+                void handleResendConfirmation();
+              }}
+              disabled={resendLoading}
+              style={{ opacity: resendLoading ? 0.7 : 1 }}
+              className="bg-zinc-900 border border-zinc-700 rounded-2xl py-4 w-full items-center min-h-[52px] justify-center"
+              accessibilityRole="button"
+              accessibilityLabel="Resend confirmation email"
+              testID="signup-resend"
+            >
+              {resendLoading ? (
+                <ActivityIndicator size="small" color="#71717a" />
+              ) : (
+                <Text className="text-zinc-100 text-sm font-semibold">
+                  Resend confirmation email
+                </Text>
+              )}
+            </Pressable>
+            {resendMessage.length > 0 && (
+              <Text className="text-zinc-500 text-xs text-center mt-3" testID="signup-resend-message">
+                {resendMessage}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {method === 'email' && !awaitingConfirmation && (
           <View className="w-full">
             <Text
               className="text-zinc-100 text-xl font-bold mb-6"
@@ -239,14 +331,18 @@ export default function SignUpScreen() {
                 <Text className="text-zinc-950 font-semibold text-sm">Create account</Text>
               )}
             </Pressable>
-            <Pressable
-              onPress={() => setMethod('phone')}
-              className="mt-4 items-center"
-            >
-              <Text className="text-zinc-500 text-sm">
-                Or <Text className="text-amber-500">sign up with phone</Text>
-              </Text>
-            </Pressable>
+            {/* D15 / P2-D1 entry point (b): the in-page phone toggle is
+                render-gated. The sheet + OTP flow below stays fully wired. */}
+            {PHONE_AUTH_ENABLED && (
+              <Pressable
+                onPress={() => setMethod('phone')}
+                className="mt-4 items-center"
+              >
+                <Text className="text-zinc-500 text-sm">
+                  Or <Text className="text-amber-500">sign up with phone</Text>
+                </Text>
+              </Pressable>
+            )}
             {errorMessage.length > 0 && (
               <Text className="text-red-400 text-xs text-center mt-4">{errorMessage}</Text>
             )}
@@ -276,7 +372,7 @@ export default function SignUpScreen() {
             // Closing the sheet returns the user to email signup, not silently dismissing them.
             setMethod('email');
             setPhoneStage('input');
-            confirmationRef.current = null;
+            pendingPhoneRef.current = null;
             setOtpError(false);
           }
         }}

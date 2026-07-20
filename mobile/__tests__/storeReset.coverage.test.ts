@@ -149,8 +149,9 @@ describe('storeReset coverage — Spec 99 §B5 + §8.5', () => {
     // authStore doesn't call .reset() on itself; it inlines the reset.
     // Post-WF3 forced-signout unification: this lives inside
     // `clearLocalSessionState()` rather than directly in `signOut()`,
-    // but the regex still matches anywhere in the file.
-    expect(signOutSrc).toMatch(/set\s*\(\s*\{\s*user:\s*null,\s*idToken:\s*null/);
+    // but the regex still matches anywhere in the file. Field renamed
+    // idToken → accessToken in the Spec 93 Supabase swap (P2-D3 REVERSED).
+    expect(signOutSrc).toMatch(/set\s*\(\s*\{\s*user:\s*null,\s*accessToken:\s*null/);
   });
 
   // WF3 forced-signout unification: the same cleanup MUST run on the
