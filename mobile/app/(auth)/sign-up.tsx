@@ -226,12 +226,9 @@ export default function SignUpScreen() {
   return (
     <SafeAreaView className="flex-1 bg-zinc-950">
       <View className="flex-1 px-6">
-        {/* Wordmark — same as sign-in but mb-10 */}
+        {/* Wordmark — same as sign-in but mb-10 (text-only "MaxBLD", P2-F5.4) */}
         <View className="items-center mb-10 mt-10">
-          <View className="flex-row items-center">
-            <View className="w-10 h-10 rounded-xl bg-amber-500 mr-3" />
-            <Text className="text-zinc-100 text-2xl font-bold">Buildo</Text>
-          </View>
+          <Text className="text-zinc-100 text-2xl font-bold">MaxBLD</Text>
         </View>
 
         {method === 'email' && awaitingConfirmation && (

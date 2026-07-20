@@ -198,6 +198,11 @@ interface SubscribableStore<T> {
   subscribe: (listener: (state: T, prev: T) => void) => () => void;
 }
 
+// Token-never-in-logs (P2 output-panel fold): even in DEV, never print bearer
+// material — a 40-char prefix of a JWT is still credential-shaped text in the
+// Metro console. Redact by key name; presence/absence still logs.
+const REDACTED_KEYS = new Set(['accessToken', 'refreshToken', 'token']);
+
 function subscribeStore<T extends object>(name: string, store: SubscribableStore<T>): void {
   store.subscribe((state, prev) => {
     const changed: string[] = [];
@@ -206,6 +211,10 @@ function subscribeStore<T extends object>(name: string, store: SubscribableStore
       const b = state[key];
       if (typeof a === 'function' || typeof b === 'function') continue;
       if (!Object.is(a, b)) {
+        if (REDACTED_KEYS.has(String(key))) {
+          changed.push(`${String(key)}: ${a ? '<set>' : stringify(a)} → ${b ? '<set>' : stringify(b)}`);
+          continue;
+        }
         changed.push(`${String(key)}: ${stringify(a)} → ${stringify(b)}`);
       }
     }

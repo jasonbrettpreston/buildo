@@ -19,7 +19,7 @@
       "usesAppleSignIn": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Allow Buildo to access your location to find nearby construction leads.",
+        "NSLocationWhenInUseUsageDescription": "Allow MaxBLD to access your location to find nearby construction leads.",
         "UIBackgroundModes": ["remote-notification"]
       }
     },
@@ -55,7 +55,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow Buildo to access your location to find nearby construction leads."
+          "locationWhenInUsePermission": "Allow MaxBLD to access your location to find nearby construction leads."
         }
       ],
       "expo-apple-authentication",

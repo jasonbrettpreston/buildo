@@ -74,7 +74,7 @@ export default function ParcelSearchScreen() {
 
         {outsideToronto ? (
           <Text className="text-amber-500/80 text-xs mt-2">
-            Buildo currently covers Toronto — results are limited to Toronto addresses.
+            MaxBLD currently covers Toronto — results are limited to Toronto addresses.
           </Text>
         ) : null}
 

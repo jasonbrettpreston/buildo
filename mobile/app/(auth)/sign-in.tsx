@@ -20,6 +20,7 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import { prepareAppleNonce } from '@/lib/appleAuth';
+import { emailFromIdToken } from '@/lib/jwtClaims';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Sentry from '@sentry/react-native';
 import { supabase } from '@/lib/supabase';
@@ -139,10 +140,20 @@ export default function SignInScreen() {
   const linkPendingIdentity = useCallback(
     async (currentUser: { email?: string | null } | null) => {
       if (!pendingIdentity || !currentUser) return;
-      if (
-        linkingExpectedEmail &&
-        currentUser.email?.toLowerCase() !== linkingExpectedEmail.toLowerCase()
-      ) {
+      if (!linkingExpectedEmail) {
+        // Fail-safe (P2 output-panel fold): the expected email could not be
+        // captured (provider withheld it AND the token carried no email
+        // claim) — discard rather than link unguarded, else a sign-in to an
+        // unrelated account would attach the pending identity to the wrong
+        // uuid. The user stays signed in; the identity simply isn't merged.
+        track('auth_account_link_failed', {
+          new_method: linkingNewMethod || pendingIdentity.provider,
+          code: 'expected_email_unknown',
+        });
+        setPendingIdentity(null);
+        return;
+      }
+      if (currentUser.email?.toLowerCase() !== linkingExpectedEmail.toLowerCase()) {
         // Wrong account — discard the pending identity rather than attempt
         // a link GoTrue would reject.
         setPendingIdentity(null);
@@ -240,7 +251,10 @@ export default function SignInScreen() {
         nonce: hashedNonce,
       });
       identityToken = credential.identityToken;
-      appleEmail = credential.email ?? undefined;
+      // credential.email is null on every sign-in after the first — fall back
+      // to the identity token's own email claim so the linking guard in
+      // linkPendingIdentity stays armed (P2 output-panel fold; jwtClaims.ts).
+      appleEmail = credential.email ?? emailFromIdToken(identityToken);
       if (!identityToken) throw new Error('No identity token from Apple');
       rawNonceForLink = rawNonce;
       const { data, error } = await supabase.auth.signInWithIdToken({
@@ -441,12 +455,11 @@ export default function SignInScreen() {
   return (
     <SafeAreaView className="flex-1 bg-zinc-950">
       <View className="flex-1 items-center justify-center px-6">
-        {/* Wordmark */}
+        {/* Wordmark — text-only "MaxBLD" per Spec 117 §5 Placeholder Policy
+            (P2-F5.4: the amber-square-plus-text pattern retires with the
+            Buildo name; logo art lands with the brand asset wave). */}
         <View className="items-center mb-12">
-          <View className="flex-row items-center">
-            <View className="w-10 h-10 rounded-xl bg-amber-500 mr-3" />
-            <Text className="text-zinc-100 text-2xl font-bold">Buildo</Text>
-          </View>
+          <Text className="text-zinc-100 text-2xl font-bold">MaxBLD</Text>
           <Text className="text-zinc-500 text-sm text-center mt-1">Leads for the trades.</Text>
         </View>
 

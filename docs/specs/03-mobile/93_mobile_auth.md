@@ -72,7 +72,7 @@ AppState.addEventListener('change', (state: AppStateStatus) => {
 
 **Storage adapter — OPTIONAL upgrade, not required for launch:** the adapter above stores the full session object (access token + refresh token + user metadata, serialized) in plain `AsyncStorage`, which is unencrypted on-device storage. `expo-secure-store` (iOS Keychain / Android Keystore) is **not** a drop-in replacement — SecureStore enforces a hard per-key value limit (2048 bytes on Android Keystore-backed storage), and a serialized Supabase session routinely exceeds that. The documented workaround is a wrap, not a swap: generate a random AES encryption key once, store **only that key** (small, fits SecureStore) in `expo-secure-store`, and use it to encrypt/decrypt the session blob written to `AsyncStorage`. This is a deferred hardening item — AsyncStorage's plaintext-on-disk exposure is judged acceptable at launch (zero users, pre-launch, matches the existing `mmkvPersister` Layer 4a/4b PII posture precedent, Spec 99 §2.1) — not a blocking requirement for Phase 2.2.
 
-### 2.2 Sign-in methods (all four required at launch, unchanged from prior versions of this spec)
+### 2.2 Sign-in methods (four wired in code; phone GATED OFF at launch — D15, see §8 amendment)
 
 | Method | Primary Use Case | Supabase mechanism |
 |--------|-----------------|-------|
@@ -83,6 +83,8 @@ AppState.addEventListener('change', (state: AppStateStatus) => {
 
 **Screen location:** `mobile/app/(auth)/sign-in.tsx`, `mobile/app/(auth)/sign-up.tsx` — unchanged.
 
+**D15 (2026-07-18 program plan, executed 2026-07-19):** the Phone/SMS row is fully implemented and wired but **gated off at all three entry points** by `PHONE_AUTH_ENABLED = false` in `mobile/src/lib/featureFlags.ts` — (a) sign-in's "Continue with Phone" button render, (b) sign-up's in-page method Pressable, (c) sign-up's `initialMethod` computation from a `?method=phone` deep-link param. Supabase phone auth requires a paid SMS provider Firebase used to bundle; zero users at cutover → ship email+Google+Apple only. Re-enabling is a one-line flag flip plus removing the three guards (§8).
+
 **Sign-in screen button order (Apple guideline compliance) — unchanged:**
 ```
 [ Sign in with Apple    ]   ← required equal prominence
@@ -92,7 +94,9 @@ AppState.addEventListener('change', (state: AppStateStatus) => {
 [ Continue with Email   ]
 ```
 
-### 2.3 Nonce rule (Google + Apple — same rule, both providers)
+### 2.3 Nonce rule (design: both providers — SHIPPED: Apple only; Google deviation, see §8.3)
+
+**§8.3 deviation (2026-07-19, implementation-verified):** the free line of `@react-native-google-signin/google-signin` has **no nonce support** (paid Universal-tier feature — the plan panel's contrary premise was refuted against installed source 13.3.1/16.1.2). The shipped Google path uses Supabase's documented no-nonce pattern (audience-bound ID token, GoTrue-verified); **Apple keeps the full nonce contract below unchanged.** Deviation-locked in `useAuth.test.ts`; paid-tier upgrade filed as a Phase-4 security-pass item in `docs/reports/review_followups.md`. The rest of this section states the DESIGN rule, which Apple implements today and Google adopts if/when the paid tier lands.
 
 Both native sign-in SDKs (Apple's and Google's) receive the **SHA-256 hash** of a locally generated random nonce; Supabase receives the **raw (unhashed) nonce** and recomputes the hash server-side to verify it matches the one embedded in the ID token's `nonce` claim. This is the identical shape to the pre-rewrite Firebase nonce contract (§5 Step 4) — only the verifying party changes from `auth.AppleAuthProvider.credential(idToken, rawNonce)` to `supabase.auth.signInWithIdToken({ provider, token, nonce: rawNonce })`. A mismatch (wrong half sent to the wrong party, algorithm swap) makes Supabase reject the credential with an `AuthApiError` — the same failure class as Firebase's `auth/invalid-credential`, re-mapped in `supabaseErrors.ts` (§5 Step 1). `mobile/src/lib/appleAuth.ts`'s `prepareAppleNonce()` is **unchanged** — it is a pure, provider-agnostic nonce-pair generator; only which call receives which half changes (§5 Step 4).
 
@@ -145,6 +149,8 @@ For Apple Sign-In and phone, the same pattern applies (`linkIdentity({ token, pr
 ### 3.3 SMS Account Recovery
 
 SMS users must provide a backup email address during onboarding (Spec 94 §3.3). This is the recovery path if they lose or change their phone number. Without a backup email, account recovery requires contacting Buildo support. Unchanged from the Firebase version — this is a Buildo-side `user_profiles` field, not an Auth-provider mechanism, and carries over untouched.
+
+**Vacuous under D15 (§2.2, §8):** with all three phone entry points gated off, no user can currently reach the flow this section describes recovery for. The section is retained, not deleted — D15 is a flag flip, not a feature removal; this text becomes live again the day `PHONE_AUTH_ENABLED` flips.
 
 ### 3.4 Sign-Out Behaviour
 
@@ -456,7 +462,7 @@ plus the native `android/build.gradle:9` and `android/app/build.gradle:186` goog
 **Step 5 — Sign-up screen**
 - File: `mobile/app/(auth)/sign-up.tsx`
 - Same container and visual language as sign-in screen (`bg-zinc-950 flex-1 px-6`). Wordmark at top (same as sign-in, `mb-10`). No 4-button stack — sign-up is always method-specific (user selected their method on sign-in screen).
-- **Email/password path:** email field + password field per §4 email field spec. Password confirmation field: same styling, `autoComplete="new-password"`. Submit calls `supabase.auth.signUp({ email, password })`. Submit button: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full items-center mt-4`. In-button spinner per §4 pattern.
+- **Email/password path:** email field + password field per §4 email field spec. Password confirmation field: same styling, `autoComplete="new-password"`. Submit calls `supabase.auth.signUp({ email, password, options: { emailRedirectTo: 'maxbld://auth/confirm' } })` — **email confirmations are ON at launch (P2-D4, §8.1)**: `signUp()` resolves with `session: null`; the screen renders an explicit "check your email" state with a resend action rather than proceeding, and the deep-link catch (§8.2) completes the session. Submit button: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 w-full items-center mt-4`. In-button spinner per §4 pattern.
 - **SMS path:** phone input bottom sheet flow identical to sign-in (reuse component; `signInWithOtp`/`verifyOtp` create a new user automatically if the phone number is unrecognized — no separate "sign-up" call for phone). After OTP verified: show backup email field in the same sheet before proceeding — `text-zinc-500 text-xs mb-1` label "Recovery email" + email `TextInput` per §4 spec. Backup email is a Buildo `user_profiles` field (Spec 95), not a Supabase Auth identity — not verified at registration.
 - Auth captures identity only — profile data written in Onboarding (Spec 94), not here. Unchanged.
 - "Already have an account?" link: `text-zinc-500 text-sm text-center mt-6` with `text-amber-500` "Sign in" tap target → `router.replace('/(auth)/sign-in')`.
@@ -538,3 +544,27 @@ plus the native `android/build.gradle:9` and `android/app/build.gradle:186` goog
 - Decision D7 (2026-07-18 program plan) — auth posture (asymmetric JWT keys, SMS/email rate-limit configuration referenced in §6)
 - Decision G6 (2026-07-18 program plan) — mobile push verdict; governs the exact keep/remove native-config split in §5 Step 0
 - Spec 90 §4 — native dev build required (Spec 98); Expo Go is not supported (unchanged — `supabase-js` has no native module, but Apple/Google native sign-in SDKs do)
+
+## 8. Phase 2 Implementation Amendment — SHIPPED design (2026-07-19, commits `f1473bc9` + `a7a190a5`)
+
+This section records where the shipped Phase 2 implementation deliberately amends the spec text above. It is the SHIPPED design, not a future prerequisite — on conflict with earlier sections, §8 governs. Plan-of-record: `.cursor/phase2_plan.md` (P2-D1..D4 + panel adjudication).
+
+### 8.1 Email confirmations ON at launch (P2-D4, operator ruling 2026-07-19)
+
+`supabase/config.toml` ships `[auth.email] enable_confirmations = true` (verified live: `MAILER_AUTOCONFIRM=false`). `signUp()` is called with `options: { emailRedirectTo: 'maxbld://auth/confirm' }` (`mobile/app/(auth)/sign-up.tsx` — the post-rename scheme from day one; no `com.buildo://` link was ever in flight). Because confirmation is pending, `signUp()` resolves with `session: null`; `sign-up.tsx` renders an explicit **"check your email" state** with a **"Resend confirmation email"** action (`supabase.auth.resend({ type: 'signup', email })`) — the resend mitigates mail-provider security scanners prefetching and consuming the one-time code (documented Supabase limitation, not preventable in code). Cloud-dashboard parity (redirect-URL allowlist carrying `maxbld://auth/confirm`, confirmations ON) is a Phase 2 close-out human step.
+
+### 8.2 Deep-link catch mechanism (P2-F3.4 resolution)
+
+With the client factory's **explicit `flowType: 'pkce'`** (`mobile/src/lib/supabase.ts` — supabase-js's base client defaults to *implicit* on native, unlike `@supabase/ssr`), GoTrue emits a one-time `?code=` param on the confirmation redirect. Mechanism, verified against expo-router `~6.0.23`'s own `extractPathFromURL` fork: custom-scheme URLs extract as `host + pathname`, so `maxbld://auth/confirm` maps to route path `/auth/confirm` — unreachable by any file inside the stripped `(auth)` route group. The catch is therefore a **root-layout `Linking` listener** (`EmailConfirmLinkCatcher` in `mobile/app/_layout.tsx`) that parses the URL (`parseConfirmDeepLink`, `mobile/src/lib/confirmEmail.ts` — unit-testable leaf module) and forwards to the **`mobile/app/(auth)/confirm.tsx`** route (path `/confirm`), which calls `exchangeCodeForSession(code)` exactly once (one-time-code re-run guard). On success the session is established, `onAuthStateChange` fires, and AuthGate's existing 5-branch routing takes over unchanged. Two distinct failure states: `'invalid'` (expired/consumed/malformed link → generic copy) and `'same-device'` (`pkce_code_verifier_not_found`/`bad_code_verifier` — link opened on a different device/install or AsyncStorage cleared since `signUp()` → "open this link on the device you signed up with" copy). **Android scheme-squatting on `maxbld://` is a knowingly accepted interim risk**; verified App Links (HTTPS) are the tracked post-launch hardening (`docs/reports/review_followups.md`).
+
+### 8.3 Google sign-in ships WITHOUT a nonce (deviation from §2.3's design rule)
+
+The free line of `@react-native-google-signin/google-signin` has no nonce parameter (paid Universal-tier feature; verified in installed source 13.3.1/16.1.2 — the plan panel's "free-line nonce confirmed" premise was wrong). Shipped: Supabase's documented no-nonce Google pattern — the ID token is audience-bound to the configured `webClientId` and GoTrue-verified. Apple retains the full §2.3 nonce contract. Deviation-locked in `useAuth.test.ts`; the paid-tier nonce upgrade is a Phase-4 security-pass item in `review_followups.md`.
+
+### 8.4 Phone-OTP gated off at launch (D15) — mechanism
+
+`mobile/src/lib/featureFlags.ts` exports `PHONE_AUTH_ENABLED = false` (pure-constant leaf module; tests override via `jest.mock('@/lib/featureFlags', () => ({ PHONE_AUTH_ENABLED: true }))`). All three entry points gate on it (§2.2's D15 note); the `signInWithOtp`/`verifyOtp` call sites, bottom-sheet UI, and backup-email step remain fully wired in the tree. §2.2's original "all four required at launch" header and §3.3's recovery flow are amended/vacuous respectively until the flag flips.
+
+### 8.5 Consequential file additions (supersedes §7 Target Files where they differ)
+
+`mobile/src/lib/{supabase,supabaseErrors,confirmEmail,featureFlags}.ts`, `mobile/app/(auth)/confirm.tsx`, the `EmailConfirmLinkCatcher` in `mobile/app/_layout.tsx`; the `accessToken` rename (P2-D3 REVERSED — full 10-site blast radius) additionally touched `mobile/src/hooks/{useUserProfile,useParcelLookup,useLeadDetail,useFlightJobDetail}.ts`, `mobile/app/(app)/{map,index,[lead]}.tsx`, and 3 test mocks beyond the 7 named Jest files; `mobile/__tests__/{confirmEmail,phoneGate.coverage,accountDeletion.coverage}.test.ts` are new. All 12 Maestro flows (not 2) carry the `ca.maxbld.app` appId after the Spec 117 rename.

@@ -17,7 +17,7 @@ appId: ca.maxbld.app
     # clearState: false — preserves the Expo dev client's cached Metro bundler
     # URL. Wiping that with clearState: true leaves the dev client unable to
     # find Metro and the app launches to a black screen. The unique timestamped
-    # email below guarantees a fresh Firebase account per run regardless of
+    # email below guarantees a fresh Supabase account per run regardless of
     # whether prior auth tokens are still in keychain.
     clearState: false
 # Generate a unique email up-front via evalScript and stash on output.* so the
@@ -26,7 +26,7 @@ appId: ca.maxbld.app
 # `output.uniqueEmail` shows up in Maestro's run logs.
 - evalScript: ${output.uniqueEmail = 'newuser_' + Date.now() + '@buildo.app'}
 - extendedWaitUntil:
-    visible: "Buildo"
+    visible: "MaxBLD"
     timeout: 70000  # Match auth.yaml — observed cold-start can exceed 30s on dev builds.
 # The "Sign up" tap target is the amber footer link on the sign-in screen,
 # not "Continue with Email" (which routes existing users into the email form).

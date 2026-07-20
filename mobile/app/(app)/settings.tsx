@@ -171,7 +171,7 @@ function NotificationPermissionRow() {
       <Text className="text-zinc-400 text-xs mt-0.5">
         {canAskAgain
           ? 'Alerts are off. Tap to allow phase, stall, and start-date alerts.'
-          : 'The OS is blocking alerts for Buildo. Tap to open system settings.'}
+          : 'The OS is blocking alerts for MaxBLD. Tap to open system settings.'}
       </Text>
     </Pressable>
   );

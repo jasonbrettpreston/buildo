@@ -12,7 +12,7 @@ appId: ca.maxbld.app
     # (Spec 98 §2.2) where clearState is safe because the JS bundle is baked in.
     clearState: false
 - extendedWaitUntil:
-    visible: "Buildo"
+    visible: "MaxBLD"
     timeout: 45000
 # On Android the Apple button is hidden — assert the always-present Google button.
 - assertVisible: "Sign in with Google"

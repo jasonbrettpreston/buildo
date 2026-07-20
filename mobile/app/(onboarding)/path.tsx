@@ -13,7 +13,7 @@ export default function PathScreen() {
     <SafeAreaView className="flex-1 bg-zinc-950 justify-center" edges={['top', 'bottom']}>
 
       <Text className="text-zinc-100 text-2xl font-bold text-center px-6 mb-2">
-        How will you use Buildo?
+        How will you use MaxBLD?
       </Text>
       <Text className="text-zinc-400 text-sm text-center px-6 mb-10">
         Choose the experience that fits your workflow.

@@ -170,6 +170,18 @@ describe('fetchWithAuth — ApiError / NetworkError', () => {
     expect((err as ApiError).status).toBe(404);
   });
 
+  it('generic error path caps the body at 120 chars — >120-char payloads are replaced, never truncated-but-included (PII guard, Guardian F2 lock)', async () => {
+    // Load-bearing sanitization (apiClient.ts generic !ok path): a long server
+    // payload could carry PII (addresses, names, permit details) into the
+    // thrown ApiError.message and onward into Sentry breadcrumbs.
+    const longBody = 'x'.repeat(121);
+    mockFetch.mockResolvedValueOnce(makeResponse(500, longBody));
+    await expect(fetchWithAuth('/api/test')).rejects.toThrow('HTTP 500');
+    // Short bodies pass through verbatim (pre-existing contract, unchanged).
+    mockFetch.mockResolvedValueOnce(makeResponse(500, 'server exploded'));
+    await expect(fetchWithAuth('/api/test')).rejects.toThrow('server exploded');
+  });
+
   it('throws NetworkError on fetch() rejection', async () => {
     mockFetch.mockRejectedValueOnce(new Error('net::ERR_CONNECTION_REFUSED'));
     const err = await fetchWithAuth('/api/user-profile').catch((e) => e);

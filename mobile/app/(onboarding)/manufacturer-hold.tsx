@@ -25,9 +25,9 @@ export default function ManufacturerHoldScreen() {
         onPress={() => void WebBrowser.openBrowserAsync('mailto:support@buildo.app')}
         className="bg-zinc-800 border border-zinc-700 rounded-2xl py-4 px-8 mt-10 min-h-[52px] flex-row items-center justify-center"
         accessibilityRole="button"
-        accessibilityLabel="Contact Buildo support"
+        accessibilityLabel="Contact MaxBLD support"
       >
-        <Text className="text-zinc-100 font-bold text-base">Contact Buildo</Text>
+        <Text className="text-zinc-100 font-bold text-base">Contact MaxBLD</Text>
       </Pressable>
     </SafeAreaView>
   );

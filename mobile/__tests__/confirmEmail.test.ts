@@ -133,6 +133,12 @@ describe('parseConfirmDeepLink — root-layout catcher URL matcher (P2-F3.4)', (
     expect(parseConfirmDeepLink('maxbld://auth/confirm?error_code=otp_expired')).toEqual({ code: null });
   });
 
+  it('malformed percent-encoding degrades to code:null instead of throwing (P2 output-panel MED — attacker-controllable URL must never crash the Linking listener)', () => {
+    expect(parseConfirmDeepLink('maxbld://auth/confirm?code=%E0%A4%A')).toEqual({ code: null });
+    expect(parseConfirmDeepLink('maxbld://auth/confirm?code=%')).toEqual({ code: null });
+    expect(parseConfirmDeepLink('maxbld://auth/confirm?code=%ZZ')).toEqual({ code: null });
+  });
+
   it('returns null for every non-confirmation URL (push deep links, OAuth redirects must not be swallowed)', () => {
     expect(parseConfirmDeepLink('maxbld://')).toBeNull();
     expect(parseConfirmDeepLink('maxbld://auth/confirmation?code=x')).toBeNull();

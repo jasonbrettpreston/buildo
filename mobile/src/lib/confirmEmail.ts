@@ -92,7 +92,16 @@ export function parseConfirmDeepLink(url: string): ConfirmDeepLink | null {
   const match = /^[a-z][a-z0-9+.-]*:\/\/auth\/confirm(?:[/?#]|$)/i.exec(url);
   if (!match) return null;
   const codeMatch = /[?&]code=([^&#]+)/.exec(url);
-  return { code: codeMatch ? decodeURIComponent(codeMatch[1]) : null };
+  if (!codeMatch) return { code: null };
+  // The URL is attacker-controllable (any app/webpage can fire the scheme) —
+  // malformed percent-encoding makes decodeURIComponent throw URIError, which
+  // would propagate out of the root-layout Linking listener and crash the app
+  // (P2 output-panel MED). Degrade to the 'invalid' path instead.
+  try {
+    return { code: decodeURIComponent(codeMatch[1]) };
+  } catch {
+    return { code: null };
+  }
 }
 
 export interface ResendResult {

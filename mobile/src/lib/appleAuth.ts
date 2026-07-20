@@ -1,14 +1,16 @@
 // SPEC LINK: docs/specs/03-mobile/93_mobile_auth.md §3.1 + §10 — Apple Sign-In nonce contract
 //
-// The Apple ↔ Firebase sign-in handshake is security-critical:
+// The Apple ↔ Supabase sign-in handshake is security-critical (Spec 93 §2.3;
+// header updated in the P2 output-panel fold — the function body is unchanged
+// since the Firebase era, it was always provider-agnostic):
 //   - Apple receives the SHA-256 of the rawNonce via signInAsync({ nonce: hashedNonce })
 //     and signs the identity token over that hash.
-//   - Firebase receives the *raw* value via AppleAuthProvider.credential(idToken, rawNonce)
-//     and recomputes SHA-256(rawNonce) to verify Apple's signature against the
-//     identity token's nonce claim.
+//   - Supabase receives the *raw* value via signInWithIdToken({ provider: 'apple',
+//     token: identityToken, nonce: rawNonce }) and GoTrue recomputes
+//     SHA-256(rawNonce) to verify it against the identity token's nonce claim.
 //
 // If the hash relationship breaks (algorithm swap, dropped hash, mismatched
-// nonce halves), Firebase rejects the credential and sign-in silently fails.
+// nonce halves), GoTrue rejects the credential with an opaque AuthApiError.
 // Extracted into a pure helper so the relationship is unit-testable without
 // rendering the sign-in screen.
 

@@ -172,15 +172,23 @@ describe('storeReset coverage — Spec 99 §B5 + §8.5', () => {
     expect(callCount).toBeGreaterThanOrEqual(3);
   });
 
-  it('listener null branch is guarded by `lastKnownUid !== null` so cold-boot first-fire does NOT thrash the persisted cache', () => {
-    // Adversarial probe: the listener fires null on every cold boot
-    // before Firebase resolves a cached session. Without this guard,
-    // every app launch by an unauthenticated user would call
-    // `mmkvPersister.removeClient()` and wipe the offline-first
-    // TanStack cache. The guard distinguishes "genuine forced
-    // sign-out" (lastKnownUid was set) from "cold-boot pre-auth
-    // state" (lastKnownUid still null).
+  it('listener null branch: `lastKnownUid !== null` gates TELEMETRY only; cleanup runs UNCONDITIONALLY (WF3 M1+M2+M3 #5)', () => {
+    // P2 output-panel fold (Guardian F1, 2026-07-20): this test previously
+    // claimed the guard prevented cold-boot cache thrash — that guard was
+    // deliberately retired (WF3 crash-recovery fix: skipping cleanup on a
+    // cold-boot null fire left a crashed session's persisted blob on disk).
+    // The CURRENT invariant, behaviorally locked in useAuth.test.ts
+    // ("cold-boot null-fire runs full cleanup but skips forced_signout
+    // telemetry"): cleanup is unconditional; only the Sentry breadcrumb +
+    // `track('forced_signout')` sit inside the lastKnownUid guard so
+    // unauthenticated cold boots don't emit forced-signout events.
     const fullSrc = fs.readFileSync(SIGNOUT_FILE, 'utf-8');
-    expect(fullSrc).toMatch(/if\s*\(\s*lastKnownUid\s*!==\s*null\s*\)/);
+    // (1) The guard exists and contains the telemetry call.
+    const guarded = /if\s*\(\s*lastKnownUid\s*!==\s*null\s*\)\s*\{[\s\S]{0,600}?track\(\s*'forced_signout'\s*\)/.exec(fullSrc);
+    expect(guarded).not.toBeNull();
+    // (2) The null-branch cleanup call comes AFTER the guarded telemetry —
+    // i.e., outside the guard, unconditional.
+    const afterGuard = fullSrc.slice((guarded?.index ?? 0) + (guarded?.[0].length ?? 0));
+    expect(afterGuard).toMatch(/clearLocalSessionState\s*\(\s*\)/);
   });
 });
