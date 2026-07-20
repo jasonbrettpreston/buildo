@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { FlightCenterTool } from '@/components/admin/FlightCenterTool';
 
 export const metadata = {
-  title: 'Flight Center — Buildo Admin',
+  title: 'Flight Center — MaxBLD Admin',
 };
 
 export default function FlightCenterPage() {

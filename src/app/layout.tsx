@@ -3,7 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Buildo - Lead Generation for Trades',
+  title: 'MaxBLD - Lead Generation for Trades',
   description: 'Discover building permits and connect with construction projects in Toronto',
 };
 
