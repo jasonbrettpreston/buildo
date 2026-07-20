@@ -401,19 +401,39 @@ describe('Chain Orchestrator Script', () => {
     expect(content).not.toMatch(/child\.on\('close'[\s\S]*?reject\(/);
   });
 
-  // WF2 P8 adversarial amendment — HANG isolation. A chain that never exits
-  // would block every subsequent chain in the serialized job forever; the hard
-  // timeout SIGKILLs it and continues. Pin the constant + the kill/continue
+  // WF2 P8 adversarial amendment, AMENDED Spec 115 §7 item 4 (P3-F3,
+  // 2026-07-20) — HANG isolation. A chain that never exits would block every
+  // subsequent chain in the serialized job forever; the hard timeout now
+  // escalates SIGTERM-then-SIGKILL-after-grace (prod parity with GitHub
+  // Actions' own timeout-minutes behavior) instead of an immediate SIGKILL,
+  // and continues regardless. Pin the constants + the escalation/continue
   // behavior (not unit-testable without spawning a real hung process).
-  it('a hung chain is killed on a hard timeout and the job continues (hang isolation)', () => {
+  it('a hung chain is escalated SIGTERM-then-SIGKILL-after-grace on a hard timeout and the job continues (hang isolation, prod parity)', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/local-cron.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');
     // Hard timeout constant present and above the ~55min measured combined runtime.
     expect(content).toMatch(/const CHAIN_TIMEOUT_MS = 90 \* 60 \* 1000;/);
-    // A setTimeout fires SIGKILL on the child and logs CRITICAL, then resolves.
-    expect(content).toMatch(/setTimeout\([\s\S]*?CRITICAL[\s\S]*?child\.kill\('SIGKILL'\)/);
-    // The timeout path resolves (finish) so the loop advances to the next chain.
-    expect(content).toMatch(/child\.kill\('SIGKILL'\);[\s\S]*?finish\(\)/);
+    // Grace period constant for the SIGTERM-then-SIGKILL escalation.
+    expect(content).toMatch(/const KILL_GRACE_MS = 10 \* 1000;/);
+    // The hard timeout sends SIGTERM first and logs CRITICAL.
+    expect(content).toMatch(/setTimeout\([\s\S]*?CRITICAL[\s\S]*?child\.kill\('SIGTERM'\)/);
+    // A nested escalation timer force-kills with SIGKILL if the child hasn't
+    // exited after the grace period.
+    expect(content).toMatch(/killTimer = setTimeout\([\s\S]*?child\.kill\('SIGKILL'\)/);
+    // The timeout path resolves (finish) immediately after sending SIGTERM —
+    // the loop advances to the next chain without waiting for the grace period.
+    expect(content).toMatch(/child\.kill\('SIGTERM'\);[\s\S]*?killTimer = setTimeout\([\s\S]*?finish\(\)/);
+  });
+
+  // Spec 115 §7 item 2 (P3-F3) — the isChainRunning extraction to the shared
+  // scripts/lib/chain-concurrency.js helper is LIMITED to that one function;
+  // triggerChain and the scheduler loop stay in local-cron.js unmodified
+  // (the locks above still assert on their literal source text).
+  it('isChainRunning delegates to the shared chain-concurrency helper', () => {
+    const scriptPath = path.resolve(__dirname, '../../scripts/local-cron.js');
+    const content = fs.readFileSync(scriptPath, 'utf-8');
+    expect(content).toMatch(/require\(['"]\.\/lib\/chain-concurrency['"]\)/);
+    expect(content).toMatch(/chainConcurrency\.isChainRunning\(pool, chainId\)/);
   });
 });
 

@@ -190,6 +190,12 @@ const eslintConfig = [
       // above: destructive, human-gated, not chain-registered).
       'scripts/restore-db.js',
       'scripts/validation/supabase-load-gates.js',
+      // Spec 115 §4 — scripts/check-chain-running.js is a GitHub-Actions-
+      // invoked standalone CLI guard step, not a chain step: no
+      // pipeline.run()/§R1-R12 wrapper, same rationale as restore-db.js
+      // above (it connects directly via SUPABASE_DATABASE_URL before any
+      // chain has started).
+      'scripts/check-chain-running.js',
       // Supabase migration Phase 1 (phase1_plan.md Item 3, P1-F3a/Item 7) —
       // one-off operator CLIs: provisions/promotes the first admin via the
       // service-role Admin API, and wipes local Supabase auth state on an

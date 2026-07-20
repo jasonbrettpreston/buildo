@@ -25,6 +25,46 @@ const fs = require('fs');
 
 let _pool = null; // Module-level reference for fatal handler cleanup
 
+// Module-level references for the SIGINT/SIGTERM handler below (Spec 115 §4
+// item 6, P3-D7) — the handler needs to reach whichever chain/step run row is
+// CURRENTLY in flight when the signal arrives, which is only known inside
+// run()'s local scope otherwise. Both are set as soon as their respective
+// pipeline_runs row exists and are read-only from the handler's perspective.
+let _chainRunId = null;
+let _currentStepRunId = null;
+let _terminating = false; // guards against double-handling (GH sends SIGINT then SIGTERM ~7.5s later)
+
+// GitHub Actions sends SIGINT first on a timeout-minutes expiry or a
+// cancelled run, then SIGTERM ~7.5s later if the process hasn't exited
+// (Integration LOW-7) — a handler registered only for SIGTERM would miss the
+// far more common first signal entirely. On receipt of either, mark the
+// in-flight rows 'failed' immediately rather than leaving them 'running'
+// until the 12h TTL (Spec 115 §4 items 4-6 — this is the item-6 gap items
+// 4-5 only detect after the fact).
+async function handleTerminationSignal(signal) {
+  if (_terminating) return;
+  _terminating = true;
+  const ids = [_chainRunId, _currentStepRunId].filter((id) => id !== null && id !== undefined);
+  if (ids.length > 0 && _pool) {
+    try {
+      await _pool.query(
+        `UPDATE pipeline_runs
+         SET status = 'failed', completed_at = NOW(),
+             error_message = 'Terminated (SIGINT/SIGTERM — likely GH Actions timeout/cancellation)'
+         WHERE id = ANY($1) AND status = 'running'`,
+        [ids]
+      );
+    } catch (err) {
+      pipeline.log.error('[run-chain]', `Failed to mark run(s) as failed on ${signal}: ${err.message}`, { ids });
+    }
+  }
+  if (_pool) { try { await _pool.end(); } catch { /* best effort */ } }
+  process.exit(1);
+}
+
+process.on('SIGINT', () => { handleTerminationSignal('SIGINT'); });
+process.on('SIGTERM', () => { handleTerminationSignal('SIGTERM'); });
+
 async function run() {
   const pool = pipeline.createPool();
   _pool = pool;
@@ -133,6 +173,7 @@ async function run() {
       pipeline.log.warn('[run-chain]', `Could not insert chain tracking row: ${err.message}`);
     }
   }
+  _chainRunId = chainRunId; // visible to the SIGINT/SIGTERM handler above
 
   // Pre-fetch enabled/disabled state for pipeline steps in THIS chain.
   // H-W19: chain_id = NULL means "disabled globally across all chains";
@@ -332,6 +373,7 @@ async function run() {
     } catch (err) {
       pipeline.log.warn('[run-chain]', `Could not insert step tracking row: ${err.message}`);
     }
+    _currentStepRunId = stepRunId; // visible to the SIGINT/SIGTERM handler above
 
     // T1/T2/T4 Telemetry: capture pre-run DB state for transparency
     let preTelemetry = null;

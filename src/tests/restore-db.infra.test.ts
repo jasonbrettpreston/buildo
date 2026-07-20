@@ -89,6 +89,12 @@ describe.skipIf(!RUN)('scripts/restore-db.js — infra (real pg_dump/pg_restore 
     if (!pool) return;
     await pool.query(`DROP TABLE IF EXISTS public.${TABLE_A}`);
     await pool.query(`DROP TABLE IF EXISTS public.${TABLE_B}`);
+    // Belt-and-suspenders: if the stderr-gate test's timeout/crash ever
+    // interrupts its rename-back `finally`, the renamed table would otherwise
+    // persist and poison the NEXT run's beforeAll (CREATE IF NOT EXISTS
+    // recreates TABLE_A alongside the orphan) — observed 2026-07-20 after a
+    // hard session crash mid-suite.
+    await pool.query(`DROP TABLE IF EXISTS public._restore_infra_a_renamed`);
     await pool.end();
   });
 
@@ -130,7 +136,11 @@ describe.skipIf(!RUN)('scripts/restore-db.js — infra (real pg_dump/pg_restore 
       await pool.query(`ALTER TABLE public._restore_infra_a_renamed RENAME TO ${TABLE_A}`);
       unlinkSync(dumpPath);
     }
-  });
+    // 30s timeout: spawns real pg_dump + pg_restore binaries — under full-suite
+    // parallel load the 5s vitest default times out MID-TEST (observed
+    // 2026-07-20), aborting between the rename and the rename-back finally and
+    // cascading failures into the two tests below (missing-relation).
+  }, 30_000);
 
   it('TOC preflight: a dump missing a scoped table is correctly flagged as not-covered by parseTocTables/checkTocCoversScope against REAL pg_restore --list output', async () => {
     await pool.query(`TRUNCATE public.${TABLE_A}, public.${TABLE_B}`);
@@ -164,7 +174,7 @@ describe.skipIf(!RUN)('scripts/restore-db.js — infra (real pg_dump/pg_restore 
     } finally {
       unlinkSync(dumpPath);
     }
-  });
+  }, 30_000);
 
   it('single-transaction atomicity: a restore that fails partway (PK violation on the 2nd row) leaves the target\'s pre-existing rows completely untouched', async () => {
     // Dump source state: two rows.
@@ -199,5 +209,5 @@ describe.skipIf(!RUN)('scripts/restore-db.js — infra (real pg_dump/pg_restore 
     } finally {
       unlinkSync(dumpPath);
     }
-  });
+  }, 30_000);
 });

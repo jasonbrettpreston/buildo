@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 /**
- * Local Cron Worker — Automated Pipeline Scheduling
+ * Local development convenience only — NOT the production scheduler.
+ * Production scheduling is GitHub Actions
+ * (docs/specs/00-architecture/115_scheduling.md). This file exists so a
+ * developer can exercise the same 3 chain schedules locally without waiting
+ * for a cron tick.
  *
- * Runs alongside the Next.js dev server to trigger pipeline chains
- * on schedule. Uses node-cron with America/Toronto timezone.
+ * Demoted (not retired) at Phase 3.2 of the Supabase migration — Spec 115
+ * §7. Runs alongside the Next.js dev server to trigger pipeline chains on
+ * schedule. Uses node-cron with America/Toronto timezone.
  *
  * Improvements:
  *   - spawn (not execFile) prevents buffer overflow on long pipelines
@@ -15,11 +20,13 @@
  *
  * SPEC LINK: docs/specs/01-pipeline/30_pipeline_architecture.md
  * SPEC LINK: docs/specs/01-pipeline/40_pipeline_system.md
+ * SPEC LINK: docs/specs/00-architecture/115_scheduling.md §7
  */
 const cron = require('node-cron');
 const { spawn } = require('child_process');
 const path = require('path');
 const pipeline = require('./lib/pipeline');
+const chainConcurrency = require('./lib/chain-concurrency');
 
 const pool = pipeline.createPool();
 
@@ -30,8 +37,16 @@ const RUN_CHAIN_SCRIPT = path.resolve(__dirname, 'run-chain.js');
 // subsequent chain in the serialized coa→permits job forever — the primary
 // pipeline (permits) would silently never run. 90 min is comfortably above the
 // ~55 min measured combined coa+permits runtime, so a healthy chain never trips
-// it; a hung one is SIGKILLed and the job continues to the next chain.
+// it; a hung one is escalated SIGTERM-then-SIGKILL (below) and the job
+// continues to the next chain regardless of whether the child has exited yet.
 const CHAIN_TIMEOUT_MS = 90 * 60 * 1000;
+
+// SIGTERM-then-SIGKILL-after-grace (Spec 115 §7 item 4, prod parity — GitHub
+// Actions itself sends SIGTERM before a force kill, §3) — replaces the
+// previous immediate SIGKILL. 10s is generous enough for a well-behaved
+// child to flush its own SIGINT/SIGTERM handler (run-chain.js's own
+// termination handler, Spec 115 §4 item 6) before being force-killed.
+const KILL_GRACE_MS = 10 * 1000;
 
 // ---------------------------------------------------------------------------
 // Schedule definitions
@@ -77,17 +92,18 @@ const SCHEDULES = [
 // 12-hour staleness threshold prevents permanent zombie locks from crashes
 // ---------------------------------------------------------------------------
 
+// Delegates to scripts/lib/chain-concurrency.js — the SAME query
+// scripts/check-chain-running.js (the GitHub Actions guard step) uses, so
+// the "exact query" Spec 113 §8.3 requires stays byte-identical across both
+// callers instead of two independently-evolving copies (Spec 115 §7 item 2).
+// The extraction is LIMITED to this function — triggerChain and the
+// scheduler loop below are unchanged (chain.logic.test.ts source-scan locks
+// on their literal shape).
 async function isChainRunning(chainId) {
   const chainSlug = `chain_${chainId}`;
   try {
-    const res = await pool.query(
-      `SELECT id FROM pipeline_runs
-       WHERE pipeline = $1 AND status = 'running'
-         AND started_at > NOW() - INTERVAL '12 hours'
-       LIMIT 1`,
-      [chainSlug]
-    );
-    return res.rows.length > 0;
+    const { running } = await chainConcurrency.isChainRunning(pool, chainId);
+    return running;
   } catch (err) {
     pipeline.log.error('[local-cron]', `DB check failed for ${chainSlug}: ${err.message}`);
     // If we can't check, skip to be safe
@@ -115,6 +131,10 @@ function triggerChain(chainId, label) {
     // double-resolve if close fires right after the timeout kill.
     let settled = false;
     let timer;
+    let killTimer; // SIGKILL escalation timer — deliberately NOT cleared by
+                    // finish() below, since finish() fires the moment SIGTERM
+                    // is sent (to unblock the serialized loop) while the
+                    // escalation itself must keep counting down independently.
     const finish = () => {
       if (settled) return;
       settled = true;
@@ -122,22 +142,38 @@ function triggerChain(chainId, label) {
       resolve();
     };
 
-    // Hard timeout: a hung chain (never exits) is SIGKILLed so it can't block
-    // the rest of the serialized job. Logged CRITICAL — this is an anomaly.
+    // Hard timeout: a hung chain (never exits) is escalated SIGTERM-then-
+    // SIGKILL (prod parity with GitHub Actions' own timeout-minutes behavior,
+    // Spec 115 §3/§7 item 4) so it can't block the rest of the serialized
+    // job. Logged CRITICAL — this is an anomaly.
     timer = setTimeout(() => {
       pipeline.log.error(
         '[local-cron]',
-        `CRITICAL: ${label} exceeded ${CHAIN_TIMEOUT_MS / 60000}min hard timeout — killing chain_${chainId} and continuing to the next chain.`,
+        `CRITICAL: ${label} exceeded ${CHAIN_TIMEOUT_MS / 60000}min hard timeout — sending SIGTERM to chain_${chainId} and continuing to the next chain.`,
       );
       try {
-        child.kill('SIGKILL');
+        child.kill('SIGTERM');
       } catch (err) {
-        pipeline.log.warn('[local-cron]', `failed to kill chain_${chainId}: ${err.message}`);
+        pipeline.log.warn('[local-cron]', `failed to SIGTERM chain_${chainId}: ${err.message}`);
       }
+      // Give the child KILL_GRACE_MS to exit cleanly (e.g. its own
+      // SIGTERM handler, Spec 115 §4 item 6) before force-killing it.
+      killTimer = setTimeout(() => {
+        pipeline.log.warn(
+          '[local-cron]',
+          `${label} did not exit ${KILL_GRACE_MS / 1000}s after SIGTERM — SIGKILLing chain_${chainId}.`,
+        );
+        try {
+          child.kill('SIGKILL');
+        } catch (err) {
+          pipeline.log.warn('[local-cron]', `failed to SIGKILL chain_${chainId}: ${err.message}`);
+        }
+      }, KILL_GRACE_MS);
       finish();
     }, CHAIN_TIMEOUT_MS);
 
     child.on('close', (code) => {
+      if (killTimer) clearTimeout(killTimer);
       if (code !== 0) {
         pipeline.log.error('[local-cron]', `${label} failed with exit code ${code}`);
       } else {
@@ -147,6 +183,7 @@ function triggerChain(chainId, label) {
     });
 
     child.on('error', (err) => {
+      if (killTimer) clearTimeout(killTimer);
       pipeline.log.error('[local-cron]', `${label} failed to start: ${err.message}`);
       finish();
     });
