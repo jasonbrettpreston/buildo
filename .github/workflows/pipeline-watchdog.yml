@@ -39,8 +39,8 @@ jobs:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
     timeout-minutes: 30      # this workflow's own work is a handful of SELECTs + at most one backup-db.js run; 30 min covers a slow backup fallback with headroom
     concurrency:
-      group: pipeline-watchdog
-      cancel-in-progress: false
+      group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name so a
+      cancel-in-progress: false       # future rename can't drift the concurrency group out of sync
     steps:
       - uses: actions/checkout@v4
 
@@ -86,12 +86,45 @@ jobs:
         # This workflow reaches pg_dump via the direct backup-db.js
         # invocation below (Spec 115 §3's PG17-client mandate).
         run: |
-          sudo apt-get update -y
+          # F8 fold 2026-07-20: only ONE `apt-get update` here, immediately
+          # after the PGDG repo is added — see chain-coa-permits.yml's
+          # identical step for the full rationale (the redundant update
+          # before a stock-Ubuntu-package install with no repo change yet
+          # is dropped).
           sudo apt-get install -y postgresql-common
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get update -y
           sudo apt-get install -y postgresql-client-17
 
+      # EXIT-CODE CHOREOGRAPHY (F8 fold 2026-07-20, DeepSeek MED — verified
+      # end-to-end, not just re-asserted): three steps, two of which
+      # deliberately do NOT determine the job's conclusion on their own.
+      #
+      #   1. freshness_check (continue-on-error: true) — a non-zero exit
+      #      here (chains stale and/or backup missing) does NOT fail the
+      #      job by itself; GitHub Actions still records this step's
+      #      $GITHUB_OUTPUT writes (chains_fresh/backup_fresh/
+      #      permits_running) regardless of its exit code — writeOutput()
+      #      in check-pipeline-freshness.js runs before the script's own
+      #      process.exitCode is ever consulted, so `steps.freshness_check.
+      #      outputs.*` below are always populated. Without
+      #      continue-on-error here, a stale-but-recoverable result would
+      #      hard-fail the job on THIS step and step 2 (the fallback) would
+      #      never run — the two-invocation trap this comment exists to
+      #      document as CLOSED, not open: `continue-on-error: true` is
+      #      already present above.
+      #   2. backup_fallback — runs ONLY when step 1 says the backup is
+      #      missing, the chains are otherwise fresh, and permits is not
+      #      currently running (race guard, Spec 115 §2.5). Its own
+      #      exit code is not gated on directly by anything downstream —
+      #      step 3 re-checks reality instead of trusting this step's
+      #      conclusion.
+      #   3. freshness_recheck (if: always(), PLAIN — no continue-on-error)
+      #      — this is the ONLY step whose exit code determines the job's
+      #      conclusion. If chains are still stale or the backup is still
+      #      missing after the optional fallback attempt, THIS step exits 1
+      #      and reddens the job (Spec 115 §2.5's "still missing after the
+      #      direct invocation -> exit 1").
       - name: Check pipeline freshness (initial)
         id: freshness_check
         continue-on-error: true   # a red result here may still be resolved by the fallback step below — the FINAL recheck is the step that actually reddens the job
@@ -109,6 +142,6 @@ jobs:
 
       - name: Check pipeline freshness (final)
         id: freshness_recheck
-        if: always()
+        if: always()   # NOT continue-on-error — this step's exit code is the job's verdict
         run: node scripts/check-pipeline-freshness.js >> "$GITHUB_OUTPUT"
         env: *pipeline-env

@@ -9,7 +9,8 @@
  * Usage: node scripts/check-chain-running.js <chainId>
  *   chainId: bare chain id (e.g. 'coa', 'permits') — NOT pre-prefixed with
  *   `chain_`; this script prefixes it internally to match
- *   `run-chain.js`'s `chainSlug` convention (run-chain.js L61).
+ *   `run-chain.js`'s `chainSlug` convention (run-chain.js L101, F8 fold
+ *   2026-07-20 — corrected from a stale L61 citation).
  *
  * Writes `skip=true|false` to `$GITHUB_OUTPUT` (the modern
  * `::set-output`-replacement mechanism); falls back to a plain
@@ -34,7 +35,11 @@
  * SPEC LINK: docs/specs/00-architecture/115_scheduling.md §4
  */
 'use strict';
-require('dotenv').config();
+// F8 fold 2026-07-20 (CLI hygiene): dotenv is for local/manual invocation
+// only — on a GitHub Actions runner the workflow's own `env:` block is the
+// sole source of truth, and loading a stray repo-root `.env` (if one ever
+// existed on the runner) should never silently shadow it.
+if (!process.env.GITHUB_ACTIONS) require('dotenv').config();
 
 const fs = require('fs');
 const { Pool } = require('pg');
@@ -71,7 +76,10 @@ async function run() {
     // Same fail-safe-skip-but-loud posture as a live DB-check error (item 3,
     // P3-D8 amendment) — a missing connection string can never check the DB,
     // so it must not silently green-light a chain start either.
-    console.error('[check-chain-running] SUPABASE_DATABASE_URL is not set — cannot check chain status.');
+    console.error(
+      '::error title=Chain concurrency check::SUPABASE_DATABASE_URL is not set — cannot check ' +
+        `chain_${chainId} status.`
+    );
     writeOutput('skip', 'true');
     process.exitCode = 1;
     return;
@@ -104,7 +112,7 @@ async function run() {
   } catch (err) {
     // Item 3 (P3-D8 amendment): fail-safe skip=true, but exit 1 — an
     // unreachable DB is an outage signal, not a silent green skip.
-    console.error(`[check-chain-running] DB check failed for chain_${chainId}: ${err.message}`);
+    console.error(`::error title=Chain concurrency check::DB check failed for chain_${chainId}: ${err.message}`);
     writeOutput('skip', 'true');
     process.exitCode = 1;
   } finally {

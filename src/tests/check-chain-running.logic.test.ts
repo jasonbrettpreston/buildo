@@ -74,3 +74,27 @@ describe('check-chain-running.js — writeOutput', () => {
     logSpy.mockRestore();
   });
 });
+
+describe('check-chain-running.js — source-scan invariants (F8 fold 2026-07-20)', () => {
+  const source = () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    return fs.readFileSync(path.resolve(__dirname, '../../scripts/check-chain-running.js'), 'utf-8');
+  };
+
+  it('gates dotenv.config() behind !GITHUB_ACTIONS (CLI hygiene)', () => {
+    expect(source()).toMatch(/if\s*\(\s*!process\.env\.GITHUB_ACTIONS\s*\)\s*require\(['"]dotenv['"]\)\.config\(\)/);
+  });
+
+  it('uses ::error GitHub Actions annotations for the missing-env and DB-error branches (annotation consistency)', () => {
+    const src = source();
+    expect(src).toMatch(/::error title=Chain concurrency check::SUPABASE_DATABASE_URL is not set/);
+    expect(src).toMatch(/::error title=Chain concurrency check::DB check failed/);
+  });
+
+  it('cites the current run-chain.js chainSlug line (not the stale L61 citation)', () => {
+    expect(source()).not.toMatch(/run-chain\.js L61/);
+  });
+});

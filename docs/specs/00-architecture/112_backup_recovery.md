@@ -282,7 +282,8 @@ Rather than a standalone backup-only workflow, the secondary trigger described a
 implemented as one check inside a single freshness-watchdog workflow that also checks
 permits/coa chain freshness (Spec 115 §2.5's item 1 and item 2 respectively). It matches BOTH
 row shapes `backup_db` can be written under: the scoped-slug `permits:backup_db` step row
-(`run-chain.js:321`, written when the permits chain runs its final step normally) and a
+(`run-chain.js:362`, F8 fold 2026-07-20 — corrected from a stale L321 citation; written when
+the permits chain runs its final step normally) and a
 standalone `backup_db` slug row (written when the watchdog itself invokes `backup-db.js`
 directly). The watchdog additionally guards against invoking the safety net while a permits
 chain is currently running (a race — that in-flight chain may complete its own `backup_db` step
@@ -470,8 +471,15 @@ artifact for a standalone operator CLI.
   (unchanged — still the spec-number default, still globally unique)
 
 ### Out-of-Scope Files
-- `docs/specs/00-architecture/07_backend_prod_eval.md` §OP4 — the text update described in §7 is
-  a **separate task**; this rewrite does not modify Spec 07.
+- `docs/specs/00-architecture/07_backend_prod_eval.md` §OP4 — the text update described in §7 was
+  planned as **a separate task**, out of scope for this spec-authoring work. **CORRECTED (F8
+  fold, 2026-07-20 — Regression Guardian): that claim did not hold.** Spec 07 §OP4 WAS in fact
+  edited at P3-F6 (see the `<!-- CORRECTED 2026-07-20 (P3-F6, Spec 112 §7) -->` comment directly
+  above the corrected query in `07_backend_prod_eval.md`'s own OP4 section) — the non-existent
+  `step_name` column bug §7 above documents is identical in both specs, and fixing it only here
+  while leaving Spec 07's copy broken would have left the two documents disagreeing about a query
+  an operator might actually run. This out-of-scope line is retained as a record of the ORIGINAL
+  intent, not as a currently-true boundary claim.
 - `docs/specs/00-architecture/113_supabase_infrastructure.md` — this spec implements §9's
   policy; it does not restate or amend the policy layer itself. Any apparent conflict resolves
   in favor of Spec 113.

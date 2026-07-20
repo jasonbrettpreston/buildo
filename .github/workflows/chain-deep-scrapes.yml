@@ -44,8 +44,8 @@ jobs:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
     timeout-minutes: 120     # 90 (chain) + checkout/setup/xvfb/cache/migrate-verify headroom
     concurrency:
-      group: chain-deep-scrapes
-      cancel-in-progress: false
+      group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name so a
+      cancel-in-progress: false       # future rename can't drift the concurrency group out of sync
     steps:
       - uses: actions/checkout@v4
 
@@ -63,9 +63,11 @@ jobs:
       - run: pip install -r scripts/requirements.txt
 
       - name: Install Xvfb (proxy-forced headed Chrome requires a display server)
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y xvfb
+        # F8 fold 2026-07-20: no `apt-get update` here — xvfb is a stock
+        # Ubuntu package and no third-party repo has been added at this
+        # point in the job (unlike the PG17-client step elsewhere, which
+        # DOES need one immediately after adding the PGDG repo).
+        run: sudo apt-get install -y xvfb
 
       - name: Restore scraper stealth profiles
         # Persistent profiles keep the browser fingerprint stable across runs
@@ -75,6 +77,24 @@ jobs:
         # eviction) degrades to a fresh profile — visible only via a lower
         # scrape-success rate in that run's pipeline_runs verdict (§9's
         # "ephemeral-profile cache miss" known failure mode), no separate alert.
+        #
+        # CACHE-POISONING DEBUGGING (F8 fold, Security MED): this cache is
+        # keyed per-workflow (`buildo-scraper-profiles-${{ github.workflow
+        # }}-...`) and this workflow ONLY runs via `schedule`/`workflow_dispatch`
+        # — never a `pull_request`-family trigger, which is what would let an
+        # untrusted fork poison a cache entry a later trusted run then
+        # restores (the classic GitHub Actions cache-poisoning vector). If
+        # scrapes start failing persistently with fingerprint/stealth
+        # symptoms (WAF challenges that didn't happen before, a profile that
+        # looks corrupt), the first debugging step is to clear this cache
+        # (Actions tab → Caches, or bump the key) before suspecting the
+        # scraper logic itself.
+        #
+        # FENCE: never add a `pull_request`-family trigger to this workflow
+        # while it shares this cache namespace — doing so would open exactly
+        # the poisoning vector described above against a workflow that
+        # spawns a real headed-Chrome browser with residential-proxy
+        # credentials in scope.
         uses: actions/cache@v4
         with:
           path: ~/.buildo-scraper
@@ -121,6 +141,16 @@ jobs:
             require('fs').appendFileSync(process.env.GITHUB_ENV, lines.join('\n') + '\n');
           "
         env: *pipeline-env
+
+      - name: Mask PG_PASSWORD in logs (F8 fold 2026-07-20, Security MED)
+        # GitHub only auto-masks the EXACT secret string it was given
+        # (SUPABASE_DATABASE_URL) — PG_PASSWORD, extracted out of it by the
+        # step above and exposed via $GITHUB_ENV starting THIS step, is a
+        # different string as far as the log-masking engine is concerned and
+        # would otherwise appear in plain text if any later step's output
+        # ever echoes it (directly or via a crashing child process). Mask it
+        # explicitly, immediately after it becomes available.
+        run: echo "::add-mask::$PG_PASSWORD"
 
       - name: Guard — deep_scrapes concurrency check
         id: deep_scrapes_guard

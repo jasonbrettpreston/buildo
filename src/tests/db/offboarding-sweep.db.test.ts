@@ -1,5 +1,7 @@
 // SPEC LINK: docs/specs/00-architecture/115_scheduling.md §5 (offboarding_sweep_30day)
 // SPEC LINK: migrations/233_pg_cron_maintenance_catalog.sql
+// SPEC LINK: migrations/235_offboarding_sweep_hardening.sql (F8 fold 2026-07-20 — WHEN
+//   OTHERS exception arm + durable pipeline_runs summary row, asserted below)
 //
 // P3-F5 (Phase 3 Supabase migration) — real-DB battery for the
 // `public.offboarding_sweep_30day()` function: a per-user loop over
@@ -153,6 +155,62 @@ describe.skipIf(!dbAvailable())('public.offboarding_sweep_30day (migration 233)'
 
     const notificationRow = await pool.query(`SELECT id FROM notifications WHERE user_id = $1`, [user1Id]);
     expect(notificationRow.rowCount).toBe(0);
+  });
+
+  it('function body contains a WHEN OTHERS exception arm alongside WHEN foreign_key_violation (F8 fold, migration 235)', async () => {
+    if (!pool) return;
+    // A non-FK error for one user must not abort the whole batch — this is
+    // a static assertion on the live function definition (pg_get_functiondef)
+    // rather than a simulated fault injection, per the fold's own fallback
+    // instruction (an unexpected-constraint fixture is not cheap to author
+    // safely against a real auth.users/CASCADE topology).
+    const def = await pool.query<{ def: string }>(
+      `SELECT pg_get_functiondef('public.offboarding_sweep_30day()'::regprocedure) AS def`,
+    );
+    expect(def.rows).toHaveLength(1);
+    expect(def.rows[0]!.def).toMatch(/WHEN\s+foreign_key_violation\s+THEN/i);
+    expect(def.rows[0]!.def).toMatch(/WHEN\s+OTHERS\s+THEN/i);
+    // pg_get_functiondef renders a SET clause as `SET search_path TO 'pg_catalog'`
+    // (quoted) — verified directly against a scratch pg_temp function during
+    // authoring, not assumed from the CREATE FUNCTION source text.
+    expect(def.rows[0]!.def).toMatch(/SET\s+search_path\s+TO\s+'pg_catalog'/i);
+  });
+
+  it('writes a durable pipeline_runs summary row (F8 fold, migration 235 — pg_cron does not capture RAISE WARNING output)', async () => {
+    if (!pool || !authAvailable) return;
+
+    const before = await pool.query<{ now: string }>(`SELECT clock_timestamp() AS now`);
+    const boundary = before.rows[0]!.now;
+
+    const sweep = await pool.query<{ deleted_count: number; skipped_count: number }>(
+      `SELECT * FROM public.offboarding_sweep_30day()`,
+    );
+    const { deleted_count: deletedCount, skipped_count: skippedCount } = sweep.rows[0]!;
+
+    const runRow = await pool.query<{
+      pipeline: string;
+      status: string;
+      started_at: string;
+      completed_at: string | null;
+      records_meta: { deleted_count: number; skipped_count: number; skipped_user_ids: string[] };
+    }>(
+      `SELECT pipeline, status, started_at, completed_at, records_meta
+         FROM pipeline_runs
+        WHERE pipeline = 'offboarding_sweep' AND started_at >= $1
+        ORDER BY started_at DESC
+        LIMIT 1`,
+      [boundary],
+    );
+    expect(runRow.rowCount).toBe(1);
+    const row = runRow.rows[0]!;
+    expect(row.status).toBe('completed');
+    expect(row.completed_at).not.toBeNull();
+    expect(row.records_meta.deleted_count).toBe(deletedCount);
+    expect(row.records_meta.skipped_count).toBe(skippedCount);
+    expect(Array.isArray(row.records_meta.skipped_user_ids)).toBe(true);
+    // User 2 (RESTRICT-fenced) is still eligible-but-skipped on this run —
+    // it must appear in skipped_user_ids.
+    expect(row.records_meta.skipped_user_ids).toContain(user2Id);
   });
 
   it('skips-and-surfaces the audit-authoring user: the RESTRICT fence holds, the row survives', async () => {

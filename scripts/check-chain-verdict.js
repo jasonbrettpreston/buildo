@@ -42,7 +42,11 @@
  * SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.4
  */
 'use strict';
-require('dotenv').config();
+// F8 fold 2026-07-20 (CLI hygiene): dotenv is for local/manual invocation
+// only — on a GitHub Actions runner the workflow's own `env:` block is the
+// sole source of truth, and loading a stray repo-root `.env` (if one ever
+// existed on the runner) should never silently shadow it.
+if (!process.env.GITHUB_ACTIONS) require('dotenv').config();
 
 const { Pool } = require('pg');
 const { resolveSslConfig } = require('./lib/ssl-config');
@@ -80,7 +84,7 @@ async function run() {
 
   const connectionString = process.env.SUPABASE_DATABASE_URL;
   if (!connectionString) {
-    console.error('[check-chain-verdict] SUPABASE_DATABASE_URL is not set — cannot read chain verdict.');
+    console.error('::error title=Chain verdict check::SUPABASE_DATABASE_URL is not set — cannot read chain verdict.');
     process.exitCode = 1;
     return;
   }
@@ -103,7 +107,7 @@ async function run() {
     const { ok, reason } = classifyVerdict(res.rows[0]);
     if (!ok) {
       console.error(
-        `[check-chain-verdict] ${chainSlug} verdict is a FAIL (${reason}) — orchestrator ` +
+        `::error title=Chain verdict check::${chainSlug} verdict is a FAIL (${reason}) — orchestrator ` +
           'exit-0-on-scrape-failure masking (Spec 115 §2.4) means the process exit code ' +
           'alone would have reported this run green.'
       );
@@ -113,7 +117,7 @@ async function run() {
 
     console.log(`[check-chain-verdict] ${chainSlug} verdict OK (${reason})`);
   } catch (err) {
-    console.error(`[check-chain-verdict] DB check failed for ${chainSlug}: ${err.message}`);
+    console.error(`::error title=Chain verdict check::DB check failed for ${chainSlug}: ${err.message}`);
     process.exitCode = 1;
   } finally {
     await pool.end().catch(() => {});

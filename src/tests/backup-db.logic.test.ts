@@ -178,3 +178,53 @@ describe('backup-db.js — S3-compatible destination invariants (Spec 112 §2.1/
     expect(source).toMatch(/manifest_path/);
   });
 });
+
+describe('backup-db.js — F8 fold 2026-07-20 (Gemini findings)', () => {
+  it('throws when backupSizeBytes is 0 after a nominally-successful upload', () => {
+    const source = scriptSource();
+    expect(source).toMatch(/backupSizeBytes\s*===\s*0/);
+    const zeroByteBlock = source.slice(source.indexOf('backupSizeBytes === 0'));
+    expect(zeroByteBlock.slice(0, 200)).toMatch(/throw new Error/);
+  });
+
+  it('uses pg-connection-string to parse the pg_dump target, not a hand-rolled new URL() parser', () => {
+    const source = scriptSource();
+    expect(source).toMatch(/require\(['"]pg-connection-string['"]\)/);
+    expect(source).not.toMatch(/new URL\(connectionString\)/);
+  });
+
+  it('prune cutoff uses Date.now(), not RUN_AT (retention arithmetic is not a DB write)', () => {
+    const source = scriptSource();
+    const pruneBlock = source.slice(source.indexOf('Retention pruning'));
+    expect(pruneBlock).toMatch(/new Date\(Date\.now\(\)\s*-\s*config\.retainDays/);
+    expect(pruneBlock).not.toMatch(/RUN_AT\.getTime\(\)/);
+  });
+
+  it('listAllObjects filters page-by-page via an onPage callback rather than buffering the full listing', () => {
+    const source = scriptSource();
+    const fnBody = source.slice(
+      source.indexOf('async function listAllObjects'),
+      source.indexOf('async function listAllObjects') + 800
+    );
+    expect(fnBody).toMatch(/onPage/);
+    expect(fnBody).not.toMatch(/const objects = \[\]/);
+  });
+
+  it('captures pg_dump stderr into the pgDumpError message on a non-zero exit', () => {
+    const source = scriptSource();
+    expect(source).toMatch(/stdio:\s*\[\s*'ignore',\s*'pipe',\s*'pipe'\s*\]/);
+    expect(source).toMatch(/pgDumpStderrChunks/);
+    expect(source).toMatch(/Buffer\.concat\(pgDumpStderrChunks\)/);
+  });
+
+  it('supports an optional BACKUP_S3_REGION env var, defaulting to "auto"', () => {
+    const source = scriptSource();
+    expect(source).toMatch(/BACKUP_S3_REGION/);
+    expect(source).toMatch(/DEFAULT_S3_REGION\s*=\s*'auto'/);
+  });
+
+  it('does not contain the no-op .replace(\'Z\', \'Z\') (dead code removed)', () => {
+    const source = scriptSource();
+    expect(source).not.toMatch(/\.replace\(['"]Z['"],\s*['"]Z['"]\)/);
+  });
+});

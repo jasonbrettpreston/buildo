@@ -21,6 +21,7 @@
 const { spawn } = require('child_process');
 const { S3Client, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
+const { parse: parsePgConnectionString } = require('pg-connection-string');
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const { safeParsePositiveInt } = require('./lib/safe-math');
@@ -47,52 +48,63 @@ const DEFAULT_RETAIN_DAYS = 30;
 // the explicit `endpoint` below fully determines where requests land, and the
 // AWS SDK v3 S3 client only requires SOME non-empty `region` string to
 // construct successfully. 'auto' is Cloudflare R2's own documented value and
-// is accepted as an opaque placeholder by Backblaze B2's S3-compatible API —
-// Spec 112 §4.2 does not add a BACKUP_S3_REGION var (vendor choice is meant
-// to be a zero-code-fork decision), so this is hardcoded rather than
-// threaded through another env var.
-const S3_REGION = 'auto';
+// is accepted as an opaque placeholder by Backblaze B2's S3-compatible API.
+// Spec 112 §4.2 does not add a BACKUP_S3_REGION var to the required contract
+// (vendor choice is meant to be a zero-code-fork decision) — but an optional
+// override is still honored (F8 fold 2026-07-20, Gemini) for the rare
+// S3-compatible provider that DOES care about a real region value, without
+// forcing every other deployment to set a var it doesn't need.
+const DEFAULT_S3_REGION = 'auto';
 
 const ConfigSchema = z.object({
   s3Endpoint: z.string().min(1),
   s3Bucket: z.string().min(1),
   s3AccessKeyId: z.string().min(1),
   s3SecretAccessKey: z.string().min(1),
+  s3Region: z.string().min(1),
   retainDays: z.number().int().positive(),
 });
 
 /**
  * Parse a Postgres connection string into the discrete pieces `pg_dump`
- * needs, mirroring the derivation `.github/workflows/chain-deep-scrapes.yml`
- * already does in shell for aic-orchestrator.py — kept in sync in spirit
- * (host/port/database/user/password via URL parsing + decodeURIComponent),
- * reimplemented in JS here since backup-db.js needs it at runtime, not at
- * workflow-authoring time.
+ * needs. Delegates to `pg-connection-string` (ships as a direct dependency
+ * of `pg`, already present in node_modules — F8 fold 2026-07-20, Gemini)
+ * rather than a hand-rolled `new URL()` parse: the hand-rolled version
+ * duplicated logic the ecosystem-standard parser already gets right
+ * (IPv6 hosts, connection-string quirks `new URL()` doesn't handle), and
+ * every other Postgres-connecting piece of this codebase already trusts `pg`
+ * itself to parse connection strings for the exact same reason.
  * @param {string} connectionString
  * @returns {{ host: string, port: string, database: string, user: string, password: string }}
  */
 function parseConnectionString(connectionString) {
-  const u = new URL(connectionString);
+  const parsed = parsePgConnectionString(connectionString);
   return {
-    host: u.hostname,
-    port: u.port || '5432',
-    database: decodeURIComponent(u.pathname.replace(/^\//, '')),
-    user: decodeURIComponent(u.username),
-    password: decodeURIComponent(u.password),
+    host: parsed.host || '',
+    // pg-connection-string returns '' (not null) when no port is present in
+    // the connection string — preserve the same '5432' default the old
+    // hand-rolled parser had.
+    port: parsed.port || '5432',
+    database: parsed.database || '',
+    user: parsed.user || '',
+    password: parsed.password || '',
   };
 }
 
 /**
  * List every object under a prefix, paginating past ListObjectsV2's
  * 1000-key page cap (unlike the retired GCS SDK's `bucket.getFiles()`,
- * which auto-paginated internally).
+ * which auto-paginated internally), invoking `onPage` once per page instead
+ * of buffering the full listing in memory (F8 fold 2026-07-20, Gemini — a
+ * bucket with years of daily backups could otherwise accumulate an
+ * unbounded in-memory array before a single delete happens).
  * @param {S3Client} s3Client
  * @param {string} bucket
  * @param {string} prefix
- * @returns {Promise<{ Key: string, LastModified: Date }[]>}
+ * @param {(page: { Key: string, LastModified: Date }[]) => Promise<void>} onPage
+ * @returns {Promise<void>}
  */
-async function listAllObjects(s3Client, bucket, prefix) {
-  const objects = [];
+async function listAllObjects(s3Client, bucket, prefix, onPage) {
   let continuationToken;
   do {
     const page = await s3Client.send(
@@ -102,10 +114,9 @@ async function listAllObjects(s3Client, bucket, prefix) {
         ContinuationToken: continuationToken,
       })
     );
-    for (const obj of page.Contents || []) objects.push(obj);
+    await onPage(page.Contents || []);
     continuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
   } while (continuationToken);
-  return objects;
 }
 
 pipeline.run('backup-db', async (pool) => {
@@ -137,6 +148,7 @@ pipeline.run('backup-db', async (pool) => {
     s3Bucket: rawBucket.trim(),
     s3AccessKeyId: rawAccessKeyId.trim(),
     s3SecretAccessKey: rawSecretAccessKey.trim(),
+    s3Region: process.env.BACKUP_S3_REGION?.trim() || DEFAULT_S3_REGION,
     retainDays: rawRetain,
   });
 
@@ -180,7 +192,7 @@ pipeline.run('backup-db', async (pool) => {
     // filename component and summary timestamp — no DB write occurs.
     const RUN_AT = await pipeline.getDbTimestamp(pool);
 
-    const isoStamp = RUN_AT.toISOString().replace(/[:.]/g, '-').replace('Z', 'Z');
+    const isoStamp = RUN_AT.toISOString().replace(/[:.]/g, '-');
     const dateStr = RUN_AT.toISOString().slice(0, 10);
     const objectName = `pg_dump/${dateStr}/${isoStamp}.dump`;
     const manifestObjectName = `pg_dump/${dateStr}/${isoStamp}.manifest.json`;
@@ -194,7 +206,7 @@ pipeline.run('backup-db', async (pool) => {
 
     const s3Client = new S3Client({
       endpoint: config.s3Endpoint,
-      region: S3_REGION,
+      region: config.s3Region,
       credentials: {
         accessKeyId: config.s3AccessKeyId,
         secretAccessKey: config.s3SecretAccessKey,
@@ -222,15 +234,27 @@ pipeline.run('backup-db', async (pool) => {
     // multipart-upload flow built exactly for this case; added alongside
     // @aws-sdk/client-s3 rather than hand-rolling a buffering workaround.
     let backupSizeBytes = 0;
+    // stdio[2] is 'pipe' (not 'inherit', F8 fold 2026-07-20, Gemini) so
+    // pg_dump's stderr is captured into pgDumpStderrChunks below AND
+    // simultaneously mirrored to this process's own stderr — no loss of
+    // live log visibility, but a failure's root cause now also lands
+    // inside pgDumpError's own message instead of only in a separate,
+    // easily-scrolled-past log stream.
     const pgDump = spawn('pg_dump', pgArgs, {
       env: {
         ...process.env,
         PGPASSWORD: pg.password || '',
         ...tlsEnv,
       },
-      stdio: ['ignore', 'pipe', 'inherit'],
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
     pgDump.stdout.on('data', (chunk) => { backupSizeBytes += chunk.length; });
+
+    const pgDumpStderrChunks = [];
+    pgDump.stderr.on('data', (chunk) => {
+      pgDumpStderrChunks.push(chunk);
+      process.stderr.write(chunk);
+    });
 
     // pgDumpFailed guards against a truncated/corrupt upload "succeeding":
     // if pg_dump exits non-zero mid-stream, its stdout ends without an
@@ -249,7 +273,11 @@ pipeline.run('backup-db', async (pool) => {
       pgDump.on('close', (code) => {
         if (code !== 0) {
           pgDumpFailed = true;
-          pgDumpError = new Error(`[backup-db] pg_dump exited with code ${code}`);
+          const stderrText = Buffer.concat(pgDumpStderrChunks).toString('utf-8').trim();
+          pgDumpError = new Error(
+            `[backup-db] pg_dump exited with code ${code}` +
+              (stderrText ? `: ${stderrText}` : '')
+          );
           reject(pgDumpError);
         } else {
           resolve();
@@ -287,6 +315,22 @@ pipeline.run('backup-db', async (pool) => {
       dest_path: destPath,
       size_bytes: backupSizeBytes,
     });
+
+    // F8 fold 2026-07-20 (Gemini): a zero-byte dump is not a successful
+    // backup, even though pg_dump exited 0 and the S3 upload "completed" —
+    // an empty dump most plausibly means pg_dump wrote nothing before some
+    // silent early termination this code didn't otherwise catch. Without
+    // this throw, the audit_table row below would still record
+    // backup_size_bytes=0/status=FAIL but the pipeline run itself would be
+    // reported as a PASS-shaped Observer summary — a green run with a FAIL
+    // audit row is exactly the trap Spec 47's audit-table convention exists
+    // to prevent. Throwing here routes it through pipeline.run's normal
+    // failed-run handling instead.
+    if (backupSizeBytes === 0) {
+      throw new Error(
+        `[backup-db] pg_dump produced a 0-byte dump at ${destPath} — refusing to treat this as a successful backup.`
+      );
+    }
 
     // ── Baseline manifest sidecar (Spec 112 §4.2 — NEW) ──────────────────
     // Generalizes the one-time G10 gate baseline into a standing,
@@ -336,9 +380,24 @@ pipeline.run('backup-db', async (pool) => {
     // individually by LastModified.
     let blobsPruned = 0;
     try {
-      const cutoff = new Date(RUN_AT.getTime() - config.retainDays * 86_400_000);
-      const objects = await listAllObjects(s3Client, config.s3Bucket, 'pg_dump/');
-      const toDelete = objects.filter((o) => o.LastModified && o.LastModified < cutoff);
+      // F8 fold 2026-07-20 (Gemini): the cutoff is evaluated against actual
+      // wall-clock "now" (Date.now()), not RUN_AT — RUN_AT is a DB-clock
+      // timestamp captured before pg_dump/upload/manifest-generation ran
+      // and exists to give this run's own artifacts a consistent identity
+      // (per spec 47 §14.1's DB-clock-for-DB-writes rule), not to answer
+      // "how old is too old to keep" for a purely local, non-DB-write
+      // comparison against S3 object LastModified timestamps.
+      const cutoff = new Date(Date.now() - config.retainDays * 86_400_000);
+      // Filter page-by-page inside the listAllObjects callback (F8 fold,
+      // Gemini) rather than buffering every object under pg_dump/ into one
+      // array first — a bucket with years of daily backups could otherwise
+      // hold the entire listing in memory before a single delete happens.
+      const toDelete = [];
+      await listAllObjects(s3Client, config.s3Bucket, 'pg_dump/', async (page) => {
+        for (const o of page) {
+          if (o.LastModified && o.LastModified < cutoff) toDelete.push(o);
+        }
+      });
       // S3 DeleteObjects accepts up to 1000 keys per call — batch rather
       // than one DeleteObjectCommand per key.
       for (let i = 0; i < toDelete.length; i += 1000) {

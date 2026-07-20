@@ -21,8 +21,10 @@ jobs:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
     timeout-minutes: 210     # 90 (coa) + 90 (permits) + checkout/setup/PG17-client/migrate-verify headroom
     concurrency:
-      group: chain-coa-permits
-      cancel-in-progress: false   # queue, never cancel a run mid-flight (Spec 115 §2.2)
+      group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name rather
+      cancel-in-progress: false       # than a hand-copied literal, so a future rename can't drift
+                                       # the concurrency group out of sync with the file it guards
+                                       # (queue, never cancel a run mid-flight — Spec 115 §2.2)
     steps:
       - uses: actions/checkout@v4
 
@@ -70,7 +72,13 @@ jobs:
         # Spec 112 §5's client-version rule (client >= highest server version
         # touched, PG17 here) is not satisfied by ubuntu-latest's default.
         run: |
-          sudo apt-get update -y
+          # F8 fold 2026-07-20: only ONE `apt-get update` here, immediately
+          # after the PGDG repo is added — that's the update that's actually
+          # load-bearing (it's what makes postgresql-client-17 visible to
+          # apt). The runner's baked-in index is already fresh enough for
+          # `postgresql-common` itself (a stock Ubuntu package, no
+          # third-party repo involved yet at that point), so the redundant
+          # update before it is dropped.
           sudo apt-get install -y postgresql-common
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get update -y
@@ -89,6 +97,22 @@ jobs:
         run: node scripts/run-chain.js coa
         env: *pipeline-env
 
+      - name: Verdict check — coa (F8 fold 2026-07-20)
+        # run-chain.js only process.exit(1)s on a thrown step failure
+        # (failedStep) — a verdict-only FAIL (chainStatus =
+        # 'completed_with_errors', run-chain.js:587) still exits 0. Without
+        # this step this workflow shows green on a coa audit-FAIL run,
+        # generalizing the same exit-0 masking chain-deep-scrapes.yml's
+        # check-chain-verdict.js step already guards against (Integration
+        # HIGH-2). continue-on-error so a coa verdict FAIL does not skip
+        # permits (same isolation contract as the `coa` step itself); its
+        # outcome is folded into "Surface coa failure for alerting" below.
+        id: coa_verdict
+        if: always() && steps.coa_guard.outputs.skip != 'true'
+        continue-on-error: true
+        run: node scripts/check-chain-verdict.js coa
+        env: *pipeline-env
+
       - name: Guard — permits concurrency check
         id: permits_guard
         if: always()
@@ -102,8 +126,18 @@ jobs:
         run: node scripts/run-chain.js permits   # pipeline; its failure MUST redden the job
         env: *pipeline-env
 
+      - name: Verdict check — permits (F8 fold 2026-07-20)
+        # Plain (not continue-on-error) — permits is the primary pipeline;
+        # a verdict-only FAIL here must redden the job exactly like the
+        # `permits` step itself, same reasoning as chain-deep-scrapes.yml's
+        # verdict-check step.
+        id: permits_verdict
+        if: always() && steps.permits_guard.outputs.skip != 'true'
+        run: node scripts/check-chain-verdict.js permits
+        env: *pipeline-env
+
       - name: Surface coa failure for alerting
-        if: always() && steps.coa.outcome == 'failure'
+        if: always() && (steps.coa.outcome == 'failure' || steps.coa_verdict.outcome == 'failure')
         run: |
-          echo "::error::coa chain failed — permits ran regardless (isolation preserved), but this run must be marked failed for GH notification alerting."
+          echo "::error::coa chain failed (thrown step failure or a FAIL verdict) — permits ran regardless (isolation preserved), but this run must be marked failed for GH notification alerting."
           exit 1

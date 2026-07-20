@@ -58,6 +58,19 @@ async function handleTerminationSignal(signal) {
       pipeline.log.error('[run-chain]', `Failed to mark run(s) as failed on ${signal}: ${err.message}`, { ids });
     }
   }
+  // F8 fold 2026-07-20 (Guardian): unlike the normal-completion path below
+  // (L627-645), which explicitly releases the chain advisory lock via
+  // `pg_advisory_unlock(2, hashtext(...))` on the SAME pinned client that
+  // acquired it, this signal-handling path does NOT call
+  // pg_advisory_unlock at all. That is intentional, not an oversight:
+  // session-level advisory locks (the two-int `pg_advisory_lock(2, ...)`
+  // form this chain lock uses) are automatically released by Postgres when
+  // the session that holds them ends — `_pool.end()` closes every
+  // connection in the pool, which tears down the session and releases the
+  // lock as a side effect. Trying to explicitly unlock here would race the
+  // pool teardown for no benefit; the exit code below (`process.exit(1)`)
+  // guarantees the process — and therefore the session — is gone shortly
+  // after this point regardless.
   if (_pool) { try { await _pool.end(); } catch { /* best effort */ } }
   process.exit(1);
 }

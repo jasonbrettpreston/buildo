@@ -30,6 +30,7 @@ file for the full procedure; this index is the map.
 | `source_heritage_first_deploy_spike.md` | `load_heritage` first-deploy spike (Spec 61 §8c; `HERITAGE_ACCEPT_MASS_DELETE` re-key) |
 | `source_ravines_first_deploy_spike.md` | `source-ravines` first-deploy spike (Spec 48 §3.7 baseline-spike pre-ack) |
 | `spec80_coa_bundle_first_deploy_spike.md` | Spec 80 §5.B.5 Phase 3 CoA archetype-bundle first-deploy spike |
+| `stripe_cancel_failed_sweep.md` | Weekly sweep of `stripe_cancel_failed_at` markers — deleted users whose delete-time Stripe cancel failed (Spec 20 §6; a missed sweep = a deleted user still being billed) |
 | `WF1_parcel_address_bridge_first_deploy.md` | WF1 parcel↔address bridge first deploy |
 
 ### `docs/specs/01-pipeline/runbooks/` — spec-scoped procedures
@@ -73,6 +74,8 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 | `scripts/analysis/wf2-reset-coa-trade-classification.js` | Reset `coa_applications.trade_classified_at` so the classify-coa-trades dirty predicate drains ALL rows (backs up `(id, trade_classified_at)` first; re-fires downstream cost) |
 | `scripts/analysis/backfill-admin-watchlist.js` | Spec 36 [PF6]: seed `admin_watchlist` (mig 215) from the admins' `lead_views.saved=true` rows (reads `ADMIN_USER_IDS` env; `--confirm` to write; idempotent ON CONFLICT). Run ONCE after migration 215 |
 | `scripts/analysis/_tmp_reset_coa_links.js` | Ad-hoc CoA link reset (temporary) |
+| `scripts/seed-pipeline-schedules.js` | Spec 115 §6: seed/re-seed `pipeline_schedules`' operator-ruled cadences for all 5 chains (idempotent `ON CONFLICT (pipeline, COALESCE(chain_id,'__ALL__'))`) |
+| `scripts/seed-cron-secret.js` | Spec 113 §8.1/§11: generate + write a random `CRON_SECRET` into Supabase Vault via `vault_upsert_secret` (mig 234); re-running rotates the secret |
 
 ---
 

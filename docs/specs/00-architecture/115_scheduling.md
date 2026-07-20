@@ -237,8 +237,24 @@ watchdog checks for it.
 
 **Checks against `pipeline_runs` (both required — neither substitutes for the other):**
 
-1. **Chain freshness.** A completed `chain_permits` run AND a completed `chain_coa` run,
-   each within the last 25h. Missing either → `exit 1` (the job goes red, firing GitHub's
+1. **Chain freshness — ALL FIVE scheduled chains (AMENDED, F8 fold 2026-07-20).** The
+   original scope here was `chain_permits` + `chain_coa` only; live review of
+   `check-pipeline-freshness.js` found it never grew to cover the other 3 chains this same
+   spec's §2 table schedules, leaving `chain_sources`/`chain_entities`/`chain_deep_scrapes`
+   with NO absence-detection coverage at all. The check now requires a completed run for
+   EVERY applicable chain, each within its own window:
+   - `chain_coa`, `chain_permits` — 25h (unchanged, Spec 07 §OP4 SLA).
+   - `chain_entities` — 26h (daily cadence + buffer).
+   - `chain_sources` — 204h (8 days + 12h slack — weekly Sunday cadence).
+   - `chain_deep_scrapes` — weekday-aware, since it never runs Sat/Sun (§2.4): the check does
+     not apply at all on Sat/Sun (no run is expected — not the same as "stale"), 72h on
+     Monday (reaches back through the weekend to Friday's last slot), 26h Tue-Fri.
+   A "completed" run means `pipeline_runs.status` is one of `completed` /
+   `completed_with_warnings` / `completed_with_errors` (F8 fold — this check is
+   ABSENCE detection only; pass/fail visibility now comes from
+   `scripts/check-chain-verdict.js`'s per-run verdict-check steps in each chain workflow,
+   which generalize the exit-0-masking guard §2.4 already required for `deep_scrapes` to
+   all 5 chains). Missing any applicable chain → `exit 1` (the job goes red, firing GitHub's
    run-failure notification per §3). This closes the gap GitHub's own per-workflow
    notifications structurally cannot: a scheduled workflow that never fires at all (a
    platform outage, a `schedule:` block that silently stopped triggering) produces no run
@@ -246,7 +262,8 @@ watchdog checks for it.
    completed run catches that.
 2. **Backup freshness + safety-net trigger.** A completed backup within the last 25h,
    matching BOTH row shapes `backup_db` can be written under (P3-G6): the scoped-slug
-   `permits:backup_db` step row (`run-chain.js:321`) and a standalone `backup_db` slug row
+   `permits:backup_db` step row (`run-chain.js:362`, F8 fold 2026-07-20 — corrected from a
+   stale L321 citation) and a standalone `backup_db` slug row
    (a direct, non-chain invocation). If no such row exists within 25h AND the `permits`
    chain is not CURRENTLY running (a race guard — a permits chain in flight may complete
    its own `backup_db` step moments later; invoking `backup-db.js` concurrently with that

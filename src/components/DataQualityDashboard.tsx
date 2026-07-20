@@ -189,10 +189,20 @@ const HealthBanner = React.memo(function HealthBanner({
 // ---------------------------------------------------------------------------
 // ChainFreshnessRow — compact freshness chip row (P3-D9, Spec 115 §2.5)
 //
-// Reads the SAME `chain_freshness` block the pipeline-watchdog workflow's
-// own checks read (GET /api/admin/stats) — an operator looking at this chip
-// row sees the same freshness picture the watchdog alerts on, not a second,
-// independently-derived one.
+// CORRECTED (F8 fold, 2026-07-20): this reads GET /api/admin/stats'
+// `chain_freshness` block, which this route computes with its OWN
+// MAX(completed_at)-per-chain query (below) — it does NOT literally read
+// pipeline-watchdog.yml's check-pipeline-freshness.js output; the two are
+// independently-derived queries, not one shared computation. They are kept
+// analogous on purpose (same RAN_STATUSES-equivalent status set, same
+// per-chain hour windows for coa/permits/sources/entities) so an operator
+// looking at this chip row sees a picture that SHOULD never disagree with
+// what the watchdog alerts on — but the deep_scrapes weekday rule below
+// (Infinity-on-weekend, 24h Tue-Fri) is a close approximation of, not
+// byte-identical to, check-pipeline-freshness.js's own version (which skips
+// the check entirely on weekends and uses 26h Tue-Fri) — see that script's
+// header comment for the exact rationale if the two ever need to be
+// reconciled further.
 // ---------------------------------------------------------------------------
 
 interface ChainFreshnessRowProps {

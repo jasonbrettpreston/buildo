@@ -291,12 +291,21 @@ export const GET = withApiEnvelope(async function GET() {
       // pipeline_runs table may not exist yet
     }
 
-    // Chain freshness (P3-D9, Spec 115 §2.5) — the SAME facts the
-    // pipeline-watchdog workflow's own freshness checks read: MAX(completed_at)
-    // per chain, scoped to runs that actually reached a terminal "ran"
-    // status (a chain that never started or is still running is not stale,
-    // it is simply absent from the numerator; `failed`/`cancelled` runs are
-    // also excluded — a crashed run should not count as "fresh data landed").
+    // Chain freshness (P3-D9, Spec 115 §2.5) — computes the same underlying
+    // facts as the pipeline-watchdog workflow's own freshness checks
+    // (scripts/check-pipeline-freshness.js): MAX(completed_at) per chain,
+    // scoped to runs that actually reached a terminal "ran" status (a chain
+    // that never started or is still running is not stale, it is simply
+    // absent from the numerator; `failed`/`cancelled` runs are also
+    // excluded — a crashed run should not count as "fresh data landed").
+    // VERIFIED (F8 fold, 2026-07-20): the 3-status set below —
+    // 'completed' | 'completed_with_warnings' | 'completed_with_errors' —
+    // was checked against run-chain.js's chainStatus assignment
+    // (run-chain.js:584-589, all three ARE real, live-written statuses, not
+    // a stale/fictional one) and against check-pipeline-freshness.js's own
+    // RAN_STATUSES constant, which was aligned to this same 3-status set in
+    // the same fold. This is an independently-computed query, not a shared
+    // one — see DataQualityDashboard.tsx's ChainFreshnessRow comment.
     // Stale thresholds per Spec 115 §2/§2.5: >25h coa/permits, >8d (192h)
     // sources, >26h entities. deep_scrapes runs weekdays-only 3x/day
     // (Spec 115 §2 table) — its threshold is business-day-aware so a Monday

@@ -19,8 +19,8 @@ jobs:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
     timeout-minutes: 120     # 90 (chain) + checkout/setup/migrate-verify headroom
     concurrency:
-      group: chain-sources
-      cancel-in-progress: false
+      group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name so a
+      cancel-in-progress: false       # future rename can't drift the concurrency group out of sync
     steps:
       - uses: actions/checkout@v4
 
@@ -63,4 +63,16 @@ jobs:
         if: steps.sources_guard.outputs.skip != 'true'
         timeout-minutes: 90
         run: node scripts/run-chain.js sources
+        env: *pipeline-env
+
+      - name: Verdict check — sources (F8 fold 2026-07-20)
+        # run-chain.js only process.exit(1)s on a thrown step failure — a
+        # verdict-only FAIL (chainStatus = 'completed_with_errors',
+        # run-chain.js:587) still exits 0, which would show this workflow
+        # green on an audit-FAIL run without this step (mirrors
+        # chain-deep-scrapes.yml's existing check-chain-verdict.js step,
+        # generalized — Integration HIGH-2 / Observability HIGH).
+        id: sources_verdict
+        if: always() && steps.sources_guard.outputs.skip != 'true'
+        run: node scripts/check-chain-verdict.js sources
         env: *pipeline-env

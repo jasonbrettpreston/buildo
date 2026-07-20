@@ -17,8 +17,11 @@ import { join } from 'node:path';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const checkPipelineFreshness = require('../../scripts/check-pipeline-freshness.js') as {
   writeOutput: (key: string, value: string) => void;
+  deepScrapesWindow: (utcDay: number) => { applies: boolean; windowHours: number | null };
   FRESHNESS_WINDOW_HOURS: number;
+  CHAIN_WINDOWS_HOURS: Record<string, number>;
   BACKUP_SLUGS: string[];
+  RAN_STATUSES: string[];
 };
 
 describe('check-pipeline-freshness.js — script presence', () => {
@@ -27,15 +30,18 @@ describe('check-pipeline-freshness.js — script presence', () => {
     expect(scriptPath).toMatch(/check-pipeline-freshness\.js$/);
   });
 
-  it('exports writeOutput, run, hasCompletedWithin, FRESHNESS_WINDOW_HOURS, BACKUP_SLUGS', () => {
+  it('exports writeOutput, run, hasCompletedWithin, deepScrapesWindow, FRESHNESS_WINDOW_HOURS, CHAIN_WINDOWS_HOURS, BACKUP_SLUGS, RAN_STATUSES', () => {
     expect(typeof checkPipelineFreshness.writeOutput).toBe('function');
+    expect(typeof checkPipelineFreshness.deepScrapesWindow).toBe('function');
     expect(typeof checkPipelineFreshness.FRESHNESS_WINDOW_HOURS).toBe('number');
+    expect(typeof checkPipelineFreshness.CHAIN_WINDOWS_HOURS).toBe('object');
     expect(Array.isArray(checkPipelineFreshness.BACKUP_SLUGS)).toBe(true);
+    expect(Array.isArray(checkPipelineFreshness.RAN_STATUSES)).toBe(true);
   });
 });
 
-describe('check-pipeline-freshness.js — constants (Spec 115 §2.5 / Spec 112 §6, P3-G6)', () => {
-  it('FRESHNESS_WINDOW_HOURS is 25 — the Spec 07 §OP4 / Spec 115 §2.5 SLA', () => {
+describe('check-pipeline-freshness.js — constants (Spec 115 §2.5 / Spec 112 §6, P3-G6, F8 fold 2026-07-20)', () => {
+  it('FRESHNESS_WINDOW_HOURS is 25 — the Spec 07 §OP4 / Spec 115 §2.5 SLA (chain_coa/chain_permits/backup)', () => {
     expect(checkPipelineFreshness.FRESHNESS_WINDOW_HOURS).toBe(25);
   });
 
@@ -43,6 +49,38 @@ describe('check-pipeline-freshness.js — constants (Spec 115 §2.5 / Spec 112 �
     expect(checkPipelineFreshness.BACKUP_SLUGS.sort()).toEqual(
       ['backup_db', 'permits:backup_db'].sort()
     );
+  });
+
+  it('RAN_STATUSES is the three-status "chain landed data" set — excludes failed/cancelled', () => {
+    expect(checkPipelineFreshness.RAN_STATUSES.sort()).toEqual(
+      ['completed', 'completed_with_errors', 'completed_with_warnings'].sort()
+    );
+  });
+
+  it('CHAIN_WINDOWS_HOURS covers coa/permits/sources/entities with the F8-fold windows (deep_scrapes is date-aware, not here)', () => {
+    expect(checkPipelineFreshness.CHAIN_WINDOWS_HOURS).toEqual({
+      chain_coa: 25,
+      chain_permits: 25,
+      chain_sources: 204,
+      chain_entities: 26,
+    });
+  });
+});
+
+describe('check-pipeline-freshness.js — deepScrapesWindow (F8 fold 2026-07-20, weekday-aware)', () => {
+  it('does not apply on Saturday (6) or Sunday (0)', () => {
+    expect(checkPipelineFreshness.deepScrapesWindow(0)).toEqual({ applies: false, windowHours: null });
+    expect(checkPipelineFreshness.deepScrapesWindow(6)).toEqual({ applies: false, windowHours: null });
+  });
+
+  it('applies with a 72h window on Monday (1) — reaches back through the weekend', () => {
+    expect(checkPipelineFreshness.deepScrapesWindow(1)).toEqual({ applies: true, windowHours: 72 });
+  });
+
+  it('applies with a 26h window Tuesday(2) through Friday(5)', () => {
+    for (const day of [2, 3, 4, 5]) {
+      expect(checkPipelineFreshness.deepScrapesWindow(day)).toEqual({ applies: true, windowHours: 26 });
+    }
   });
 });
 
@@ -121,5 +159,44 @@ describe('check-pipeline-freshness.js — source-scan invariants', () => {
     );
     expect(source).toMatch(/require\(['"]\.\/lib\/chain-concurrency['"]\)/);
     expect(source).toMatch(/isChainRunning/);
+  });
+
+  it('gates dotenv.config() behind !GITHUB_ACTIONS (F8 fold — CLI hygiene)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/check-pipeline-freshness.js'),
+      'utf-8'
+    );
+    expect(source).toMatch(/if\s*\(\s*!process\.env\.GITHUB_ACTIONS\s*\)\s*require\(['"]dotenv['"]\)\.config\(\)/);
+  });
+
+  it('constructs the freshness interval as a single ::interval-cast parameter, not string concatenation (F8 fold)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/check-pipeline-freshness.js'),
+      'utf-8'
+    );
+    expect(source).toMatch(/NOW\(\)\s*-\s*\$3::interval/);
+  });
+
+  it('constructs the Pool inside the try block so a construction-time throw hits the same fail-safe catch (F8 fold)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/check-pipeline-freshness.js'),
+      'utf-8'
+    );
+    const tryIdx = source.indexOf('try {');
+    const poolIdx = source.indexOf('pool = new Pool(');
+    expect(tryIdx).toBeGreaterThan(-1);
+    expect(poolIdx).toBeGreaterThan(tryIdx);
   });
 });
