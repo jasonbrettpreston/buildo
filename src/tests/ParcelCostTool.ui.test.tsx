@@ -238,7 +238,7 @@ describe('<ParcelCostTool> tier-degradation null-guards (Spec 89 §2.4 crash-pro
   it('fits===undefined renders an honest unknown badge (not silently suppressed)', () => {
     const p = payload();
     // Add a line with fits explicitly undefined (absent key means undefined)
-    (p.parcel.costMenu.menu as Record<string, unknown>)['basement_reno'] = { total: 50000, per_sqm: 1000, area: 50 };
+    (p.parcel.costMenu.menu as Record<string, unknown>)['basement'] = { total: 50000, per_sqm: 1000, area: 50 };
     mockUseParcelLookup.mockReturnValue({ ...idle, data: p });
     render(<ParcelCostTool />);
     // Should show "?" for the fits column on lines where fits is undefined

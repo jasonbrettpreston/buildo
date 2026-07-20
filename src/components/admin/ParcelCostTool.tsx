@@ -30,8 +30,13 @@ import {
 const SearchSchema = z.object({ q: z.string().trim().min(3, 'enter at least 3 characters') });
 
 // Presentation labels (fallback = prettified raw key — presentation only, never filtered).
-const LINE_LABELS: Record<string, string> = {
-  full_build: 'Max build (as-of-right)',
+// KEYS MUST MATCH scripts/lib/parcel-cost.js PARCEL_COST_LINES[].id exactly —
+// the engine's JSONB keys are the lookup contract (drift-locked in
+// parcel-cost-line-keys.logic.test.ts). Shipped with full_build/basement_reno/
+// addition_storey since 4b1712ff — keys the engine NEVER emitted, rendering
+// those 3 lines "n/a" on 100% of parcels (RC investigation 2026-07-20).
+export const LINE_LABELS: Record<string, string> = {
+  max_build: 'Max build (as-of-right)',
   coa_build: 'Max build (with CoA)',
   solar_max: 'Solar (max build)',
   solar_coa: 'Solar (CoA build)',
@@ -41,9 +46,9 @@ const LINE_LABELS: Record<string, string> = {
   bath: 'Bathroom',
   garage: 'Garage',
   basement_underpin: 'Basement (underpin)',
-  basement_reno: 'Basement (reno)',
+  basement: 'Basement (reno)',
   gut: 'Gut renovation',
-  addition_storey: 'Addition + storey',
+  addition: 'Addition + storey',
 };
 const GROUP_LABELS: Record<GroupKey, string> = {
   identity: 'Identity & location',
