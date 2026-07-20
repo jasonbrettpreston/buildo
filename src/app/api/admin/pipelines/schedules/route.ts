@@ -31,7 +31,12 @@ export const PUT = withApiEnvelope(async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'pipeline and cadence are required' }, { status: 400 });
     }
 
-    const validCadences = ['Daily', 'Quarterly', 'Annual'];
+    // Spec 115 §6 (P3-G11): 'Weekly' (sources) and 'Weekdays (3x Daily)'
+    // (deep_scrapes) added alongside the pipeline_schedules seed — an
+    // un-extended enum would make this PUT silently reject those two
+    // pipelines' cadence the moment an operator touches them through the
+    // admin dashboard.
+    const validCadences = ['Daily', 'Weekly', 'Weekdays (3x Daily)', 'Quarterly', 'Annual'];
     if (!validCadences.includes(cadence)) {
       return NextResponse.json({ error: `cadence must be one of: ${validCadences.join(', ')}` }, { status: 400 });
     }

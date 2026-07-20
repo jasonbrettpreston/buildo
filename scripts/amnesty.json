@@ -40,7 +40,8 @@
         { "file": "scripts/quality/assert-pre-permit-aging.js", "reason": "CQA script — read-only probe" },
         { "file": "scripts/quality/assert-coa-freshness.js", "reason": "CQA script — read-only probe" },
         { "file": "scripts/quality/assert-lifecycle-phase-distribution.js", "reason": "CQA script — read-only probe" },
-        { "file": "scripts/purge-lead-views.js",        "reason": "Batched DELETE is idempotent and crash-safe; each batch is independent" }
+        { "file": "scripts/purge-lead-views.js",        "reason": "Batched DELETE is idempotent and crash-safe; each batch is independent" },
+        { "file": "scripts/seed-pipeline-schedules.js", "reason": "Inert idempotent seed (ON CONFLICT DO UPDATE, re-runnable) — Spec 115 §6; standalone CLI outside pipeline.run()" }
       ]
     },
     "new-date-ban": {
