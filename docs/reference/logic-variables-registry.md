@@ -101,7 +101,7 @@ Total: **417** logic variables (411 numeric, 6 JSONB).
 | `laneway_suite_min_rear_yard_m` | numeric | 5 | 2 – 30 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — minimum usable rear-yard depth (m) for a laneway suite. CONSUMED by enrich-parcels.js (max-build pass). |
 | `laneway_suite_storeys` | numeric | 2 | 1 – 4 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — laneway suite storeys; suite footprint = GFA / storeys for the greenspace test. CONSUMED by enrich-parcels.js (max-build pass). |
 | `lead_expiry_days` | numeric | 90 | — (migration-seeded) | — | migration 093 | TTL in days for claimed_unverified tracked projects before auto-archive |
-| `lead_view_retention_days` | numeric | 90 | 7 – 365 | `scripts/purge-lead-views.js` | seed | PIPEDA/GDPR retention window in days for lead_views rows; rows older than this are purged nightly by purge-lead-views.js |
+| `lead_view_retention_days` | numeric | 90 | 7 – 365 | — | seed | PIPEDA/GDPR retention window in days for lead_views rows; rows older than this are purged daily by the pg_cron job lead_views_retention_purge (Spec 115 §5, migration 233) — retired scripts/purge-lead-views.js (P3-F6, 2026-07-20) previously read this same variable |
 | `liar_gate_threshold` | numeric | 0.25 | 0.01 – 1 | — | seed | Minimum fraction of active permits with cost estimate before the Liar's Gate override triggers (Spec 83 §4) |
 | `lifecycle_band_coa_p1_max` | numeric | 80 | 0 – 10000 | — | seed | Max count for CoA lifecycle_phase=P1 (application received). |
 | `lifecycle_band_coa_p1_min` | numeric | 30 | 0 – 10000 | — | seed | Min count for CoA lifecycle_phase=P1 (application received). Small counts; ±30% tolerance. |
@@ -439,4 +439,4 @@ Total: **417** logic variables (411 numeric, 6 JSONB).
 
 ---
 
-*Generated from 398 seed vars + 19 migration-only vars + 102 consumer-mapped keys across 2 script dirs.*
+*Generated from 398 seed vars + 19 migration-only vars + 101 consumer-mapped keys across 2 script dirs.*

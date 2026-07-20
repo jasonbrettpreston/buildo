@@ -306,9 +306,15 @@ npx vitest run src/tests/audit-fk-orphans.logic.test.ts 2>&1 | tail -5
 
 ### D4: Backup script is spec-47 compliant
 ```
-grep -n "withAdvisoryLock\|emitSummary\|emitMeta\|BACKUP_GCS_BUCKET\|pipeline\.run" \
+grep -n "withAdvisoryLock\|emitSummary\|emitMeta\|BACKUP_S3_ENDPOINT\|pipeline\.run" \
   scripts/backup-db.js 2>/dev/null
 ```
+<!-- CORRECTED 2026-07-20 (P3-F6, Spec 112 §4.2 rewrite): BACKUP_GCS_BUCKET
+     retired along with @google-cloud/storage — backup-db.js now targets an
+     S3-compatible destination (BACKUP_S3_ENDPOINT/BUCKET/ACCESS_KEY_ID/
+     SECRET_ACCESS_KEY, Spec 112 §2.1/§4.2). This grep pattern always found
+     0 matches for BACKUP_GCS_BUCKET post-rewrite, making D4 unconditionally
+     FAIL a compliant script. -->
 - **Pass:** All 5 patterns present; script exists
 - **Evidence:** _(paste)_  **Status:** PASS / FAIL
 
@@ -483,12 +489,29 @@ grep -roh "process\.env\.[A-Z_]*" scripts/*.js src/app/api/ src/lib/db/ \
 - **Evidence:** _(paste list + confirm each is documented)_  **Status:** PASS / FAIL
 
 ### OP4: DB backup has run successfully
+<!-- CORRECTED 2026-07-20 (P3-F6, Spec 112 §7): the query below never
+     matched the live schema — pipeline_runs has NO step_name/verdict/run_at
+     columns (live-verified: id, pipeline, started_at, completed_at, status,
+     records_total, records_new, records_updated, error_message,
+     duration_ms, records_meta — migrations 033/041). Backups are now
+     Supabase-managed (Layer 1, dashboard-configured daily snapshots) plus a
+     nightly off-Supabase portable logical dump via scripts/backup-db.js to
+     an S3-compatible destination (Layer 2, Spec 112 §2/§4.2) — replacing
+     the retired Cloud SQL/GCS design this checklist originally described.
+     $DATABASE_URL is the local-stack var (Spec 113 §3 D14); the cloud
+     project this check targets in production reads SUPABASE_DATABASE_URL. -->
 ```
-psql $DATABASE_URL -c \
-  "SELECT verdict, run_at FROM pipeline_runs \
-   WHERE step_name = 'backup_db' ORDER BY run_at DESC LIMIT 1;"
+psql "$SUPABASE_DATABASE_URL" -c \
+  "SELECT pipeline, status, completed_at FROM pipeline_runs \
+   WHERE pipeline IN ('permits:backup_db', 'backup_db') AND status = 'completed' \
+   ORDER BY completed_at DESC LIMIT 1;"
 ```
-- **Pass:** `verdict = completed`, `run_at` within last 25h (daily schedule)
+- **Pass:** a row exists, `completed_at` within the last 25h (daily schedule). The
+  `pipeline` column matches EITHER the scoped-slug `permits:backup_db` shape
+  (written when the permits chain runs `backup_db` as its own final step,
+  `run-chain.js:321`) or the standalone `backup_db` slug (written when
+  `pipeline-watchdog.yml`'s safety net invokes `scripts/backup-db.js`
+  directly, Spec 115 §2.5).
 - **Evidence:** _(paste)_  **Status:** PASS / FAIL
 
 **V10 Score:** ___ / 3

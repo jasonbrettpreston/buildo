@@ -1700,7 +1700,6 @@ that would tune the value.
 | `quality/assert-engine-health.js` | lines 28–31 | `DEAD_TUPLE_RATIO`, `SEQ_SCAN_RATIO`, `SEQ_SCAN_MIN_ROWS`, `PING_PONG_RATIO` | Ops-tunable but not user-visible; no PM/RevOps stakeholder identified |
 | `run-chain.js` | lines 180–181 | `BLOAT_WARN_THRESHOLD=0.30`, `BLOAT_ABORT_THRESHOLD=0.50` | Pre-flight bloat policy; tuning without engineering review could abort production chains silently |
 | `load-parcels.js` | line 115 | `IRREGULARITY_THRESHOLD=0.95` | Affects geometric overrides; unclear stakeholder, no spec coverage |
-| `purge-lead-views.js` | line 37 | `RETENTION_DAYS=90` | PIPEDA/legal compliance constant; requires legal sign-off before making user-tunable |
 
 ---
 
@@ -1817,7 +1816,7 @@ and registry-vs-code agreement.
 | **98** | `scripts/close-stale-permits.js` | 5 — Maintenance | NO — `NOW()` in WHERE only |
 | **99** | `scripts/compute-centroids.js` | 5 — Maintenance | NO |
 | **100** | `scripts/create-pre-permits.js` | RETIRED (Phase G, Spec 42 §6.11) | — |
-| **101** | `scripts/purge-lead-views.js` | 5 — Maintenance | NO — deletes only |
+| **101** | `scripts/purge-lead-views.js` | RETIRED (P3-F6, Spec 112 rewrite 2026-07-20 — deleted outright; retention sweep absorbed into pg_cron `lead_views_retention_purge`, Spec 115 §5, migration 233) | — |
 | **102** | `scripts/quality/assert-schema.js` | 6 — Quality | NO — read-only probe |
 | **103** | `scripts/quality/assert-data-bounds.js` | 6 — Quality | NO — read-only probe |
 | **104** | `scripts/quality/assert-engine-health.js` | 6 — Quality | NO — snapshot recording |
@@ -1828,7 +1827,7 @@ and registry-vs-code agreement.
 | **109** | `scripts/quality/assert-lifecycle-phase-distribution.js` | 6 — Quality | NO — read-only probe |
 | **110** | `scripts/quality/assert-entity-tracing.js` | 6 — Quality | NO — read-only probe |
 | **111** | `scripts/quality/assert-global-coverage.js` | 6 — Quality | NO — read-only probe |
-| **112** | `scripts/backup-db.js` | 7 — Maintenance | NO — GCS write only, no DB tables |
+| **112** | `scripts/backup-db.js` | 7 — Maintenance | NO — S3-compatible write only (P3-F6, Spec 112 rewrite 2026-07-20), no DB write |
 | **113** | `scripts/observe-chain.js` | 7 — Maintenance | NO — reads pipeline_runs only, no writes |
 | **114** | `scripts/backfill-realtor-permit-trades.js` | 5 — Maintenance | YES — `classified_at` |
 | **115** | `scripts/link-parcel-addresses.js` | 2 — Link (WF1 #parcel-address-bridge Phase 2c) | NO — `parcel_address_points.computed_at` is a script-bound RUN_AT write but the value is bookkeeping (when this run produced the link), not a business-event timestamp. Spec 47 §14.2 RUN_AT discipline applied (captured inside withAdvisoryLock + passed as $3, NOT inline NOW()). |

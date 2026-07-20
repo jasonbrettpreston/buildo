@@ -884,7 +884,7 @@
   "lead_view_retention_days": {
     "default": 90,
     "type": "number",
-    "description": "PIPEDA/GDPR retention window in days for lead_views rows; rows older than this are purged nightly by purge-lead-views.js",
+    "description": "PIPEDA/GDPR retention window in days for lead_views rows; rows older than this are purged daily by the pg_cron job lead_views_retention_purge (Spec 115 §5, migration 233) — retired scripts/purge-lead-views.js (P3-F6, 2026-07-20) previously read this same variable",
     "min": 7,
     "max": 365
   },

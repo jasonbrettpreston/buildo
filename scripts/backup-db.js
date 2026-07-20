@@ -1,23 +1,41 @@
 #!/usr/bin/env node
 /**
- * backup-db — pg_dump the full Buildo database and stream it to GCS.
+ * backup-db — pg_dump the full Buildo database and stream it to an
+ * S3-compatible off-Supabase destination (Backblaze B2 or Cloudflare R2 —
+ * vendor finalized at bucket-creation time, both S3-compatible so no code
+ * fork; Spec 112 §2.1 RESOLVED 2026-07-20).
  *
- * Reads the database using the standard PG_* / DATABASE_URL env vars. Uploads
- * a custom-format pg_dump to gs://${BACKUP_GCS_BUCKET}/pg_dump/${date}/${iso}.dump.
- * Prunes objects older than BACKUP_RETAIN_DAYS (default 30). Retention prune
- * failure is non-fatal — backup itself is always the critical path.
+ * Uploads a custom-format pg_dump to
+ * ${BACKUP_S3_ENDPOINT}/${BACKUP_S3_BUCKET}/pg_dump/${date}/${iso}.dump,
+ * plus a `.manifest.json` sidecar (same path, `.manifest.json` suffix)
+ * capturing the gate-baseline metrics `restore-db.js` diffs against
+ * (Spec 112 §4.2). Prunes objects older than BACKUP_RETAIN_DAYS
+ * (default 30). Retention prune failure is non-fatal — backup itself is
+ * always the critical path.
  *
  * SPEC LINK: docs/specs/00-architecture/112_backup_recovery.md
+ * SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §3, §4
  */
 'use strict';
 
 const { spawn } = require('child_process');
-const { Storage } = require('@google-cloud/storage');
+const { S3Client, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
 const { z } = require('zod');
 const pipeline = require('./lib/pipeline');
 const { safeParsePositiveInt } = require('./lib/safe-math');
+const { isLocalMode } = require('./lib/ssl-config');
+const {
+  EXCLUDED_TABLES,
+  getBaseTables,
+  getRowCounts,
+  getInvalidGeomIds,
+  getSequenceValues,
+  getMatviewCount,
+  getPostgisVersion,
+} = require('./validation/supabase-load-gates');
 
-// §R2 — Advisory lock ID (spec 112)
+// §R2 — Advisory lock ID (spec 112) — unchanged across the GCS -> S3 rewrite.
 const ADVISORY_LOCK_ID = 112;
 
 // BACKUP_RETAIN_DAYS is a structural constant (spec 47 §A.2 retention/compliance
@@ -25,23 +43,87 @@ const ADVISORY_LOCK_ID = 112;
 // engineering review, not self-service Admin Panel access.
 const DEFAULT_RETAIN_DAYS = 30;
 
+// R2/B2 (any generic S3-compatible destination) do not use AWS-style regions —
+// the explicit `endpoint` below fully determines where requests land, and the
+// AWS SDK v3 S3 client only requires SOME non-empty `region` string to
+// construct successfully. 'auto' is Cloudflare R2's own documented value and
+// is accepted as an opaque placeholder by Backblaze B2's S3-compatible API —
+// Spec 112 §4.2 does not add a BACKUP_S3_REGION var (vendor choice is meant
+// to be a zero-code-fork decision), so this is hardcoded rather than
+// threaded through another env var.
+const S3_REGION = 'auto';
+
 const ConfigSchema = z.object({
-  bucket: z.string().min(1),
+  s3Endpoint: z.string().min(1),
+  s3Bucket: z.string().min(1),
+  s3AccessKeyId: z.string().min(1),
+  s3SecretAccessKey: z.string().min(1),
   retainDays: z.number().int().positive(),
 });
 
+/**
+ * Parse a Postgres connection string into the discrete pieces `pg_dump`
+ * needs, mirroring the derivation `.github/workflows/chain-deep-scrapes.yml`
+ * already does in shell for aic-orchestrator.py — kept in sync in spirit
+ * (host/port/database/user/password via URL parsing + decodeURIComponent),
+ * reimplemented in JS here since backup-db.js needs it at runtime, not at
+ * workflow-authoring time.
+ * @param {string} connectionString
+ * @returns {{ host: string, port: string, database: string, user: string, password: string }}
+ */
+function parseConnectionString(connectionString) {
+  const u = new URL(connectionString);
+  return {
+    host: u.hostname,
+    port: u.port || '5432',
+    database: decodeURIComponent(u.pathname.replace(/^\//, '')),
+    user: decodeURIComponent(u.username),
+    password: decodeURIComponent(u.password),
+  };
+}
+
+/**
+ * List every object under a prefix, paginating past ListObjectsV2's
+ * 1000-key page cap (unlike the retired GCS SDK's `bucket.getFiles()`,
+ * which auto-paginated internally).
+ * @param {S3Client} s3Client
+ * @param {string} bucket
+ * @param {string} prefix
+ * @returns {Promise<{ Key: string, LastModified: Date }[]>}
+ */
+async function listAllObjects(s3Client, bucket, prefix) {
+  const objects = [];
+  let continuationToken;
+  do {
+    const page = await s3Client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+      })
+    );
+    for (const obj of page.Contents || []) objects.push(obj);
+    continuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (continuationToken);
+  return objects;
+}
+
 pipeline.run('backup-db', async (pool) => {
 
-  // §R5 — Startup guard: BACKUP_GCS_BUCKET is required in production but optional in
-  // local dev. Emit SKIP (not throw) so the permits chain continues cleanly when the
-  // var is absent. Production GCS bucket is always set via Cloud Run secrets.
-  const rawBucket = process.env.BACKUP_GCS_BUCKET;
-  if (!rawBucket || rawBucket.trim() === '') {
+  // §R5 — Startup guard: BACKUP_S3_* is required in production but optional in
+  // local dev. Emit SKIP (not throw) so the permits chain continues cleanly when
+  // the destination is not configured — mirrors the retired BACKUP_GCS_BUCKET
+  // guard's SKIP-if-unconfigured posture exactly (Spec 112 §4.2/§8).
+  const rawEndpoint = process.env.BACKUP_S3_ENDPOINT;
+  const rawBucket = process.env.BACKUP_S3_BUCKET;
+  const rawAccessKeyId = process.env.BACKUP_S3_ACCESS_KEY_ID;
+  const rawSecretAccessKey = process.env.BACKUP_S3_SECRET_ACCESS_KEY;
+  if (!rawEndpoint?.trim() || !rawBucket?.trim() || !rawAccessKeyId?.trim() || !rawSecretAccessKey?.trim()) {
     pipeline.emitSummary({
       records_total: null,
       records_new: null,
       records_updated: null,
-      records_meta: { skipped: true, reason: 'BACKUP_GCS_BUCKET not configured — no backup on this environment' },
+      records_meta: { skipped: true, reason: 'BACKUP_S3_* not fully configured — no backup on this environment' },
     });
     return;
   }
@@ -50,7 +132,43 @@ pipeline.run('backup-db', async (pool) => {
     ? safeParsePositiveInt(process.env.BACKUP_RETAIN_DAYS, 'BACKUP_RETAIN_DAYS')
     : DEFAULT_RETAIN_DAYS;
 
-  const config = ConfigSchema.parse({ bucket: rawBucket.trim(), retainDays: rawRetain });
+  const config = ConfigSchema.parse({
+    s3Endpoint: rawEndpoint.trim(),
+    s3Bucket: rawBucket.trim(),
+    s3AccessKeyId: rawAccessKeyId.trim(),
+    s3SecretAccessKey: rawSecretAccessKey.trim(),
+    retainDays: rawRetain,
+  });
+
+  // §R5 — pg_dump target connection: SUPABASE_DATABASE_URL (cloud project),
+  // falling back to DATABASE_URL (local stack) — Spec 113 §3 D14 env
+  // contract. Parsed into discrete PG* args below rather than read from
+  // discrete PG_HOST/PG_PORT/... env vars (Spec 112 §4.2).
+  const connectionString = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
+  if (!connectionString?.trim()) {
+    throw new Error('[backup-db] Neither SUPABASE_DATABASE_URL nor DATABASE_URL is set — cannot pg_dump.');
+  }
+  const pg = parseConnectionString(connectionString);
+
+  // Non-loopback (cloud Supabase) targets require CA-pinned verify-full TLS
+  // via libpq env vars — pg_dump/pg_restore are separate binaries that do
+  // NOT go through scripts/lib/ssl-config.js's `pg`-pool ssl config object
+  // (Spec 112 §4.2 TLS note); only the loopback-vs-cloud DECISION is
+  // mirrored here via isLocalMode, reused rather than reimplemented so the
+  // two never drift on what counts as "local".
+  const targetIsLocal = isLocalMode({ connectionString });
+  const tlsEnv = {};
+  if (!targetIsLocal) {
+    const caCertPath = process.env.SUPABASE_CA_CERT_PATH;
+    if (!caCertPath) {
+      throw new Error(
+        '[backup-db] SUPABASE_CA_CERT_PATH is not set — a non-loopback pg_dump target requires ' +
+          'CA-pinned verify-full TLS (Spec 113 §4). Refusing to pg_dump without a pinned CA.'
+      );
+    }
+    tlsEnv.PGSSLMODE = 'verify-full';
+    tlsEnv.PGSSLROOTCERT = caCertPath;
+  }
 
   // §R6 — Advisory lock
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
@@ -65,98 +183,175 @@ pipeline.run('backup-db', async (pool) => {
     const isoStamp = RUN_AT.toISOString().replace(/[:.]/g, '-').replace('Z', 'Z');
     const dateStr = RUN_AT.toISOString().slice(0, 10);
     const objectName = `pg_dump/${dateStr}/${isoStamp}.dump`;
+    const manifestObjectName = `pg_dump/${dateStr}/${isoStamp}.manifest.json`;
 
     pipeline.log.info('[backup-db]', 'Starting pg_dump', {
-      bucket: config.bucket,
+      bucket: config.s3Bucket,
       object: objectName,
       retain_days: config.retainDays,
+      target_is_local: targetIsLocal,
     });
 
-    // Build pg_dump args from PG_* env vars (same as the pool uses)
-    const pgArgs = ['--format=custom', '--no-password'];
-    if (process.env.PG_HOST) pgArgs.push('--host', process.env.PG_HOST);
-    if (process.env.PG_PORT) pgArgs.push('--port', process.env.PG_PORT);
-    if (process.env.PG_USER) pgArgs.push('--username', process.env.PG_USER);
-    if (process.env.PG_DATABASE) pgArgs.push(process.env.PG_DATABASE);
+    const s3Client = new S3Client({
+      endpoint: config.s3Endpoint,
+      region: S3_REGION,
+      credentials: {
+        accessKeyId: config.s3AccessKeyId,
+        secretAccessKey: config.s3SecretAccessKey,
+      },
+      // Path-style addressing is the safest universal default across
+      // arbitrary S3-compatible providers (not every provider supports
+      // virtual-hosted-style buckets the way AWS S3 does).
+      forcePathStyle: true,
+    });
 
-    const storage = new Storage();
-    const bucket = storage.bucket(config.bucket);
-    const file = bucket.file(objectName);
+    const pgArgs = [
+      '--format=custom', '--no-password',
+      '--host', pg.host,
+      '--port', pg.port,
+      '--username', pg.user,
+      pg.database,
+    ];
 
-    // Stream pg_dump stdout directly to GCS — no temp file on disk.
+    // Stream pg_dump stdout directly into an S3 multipart upload — no temp
+    // file on disk, and no need to know the dump size ahead of time.
+    // NOTE: @aws-sdk/client-s3's PutObjectCommand does NOT reliably support
+    // a raw Readable Body of unknown length (aws/aws-sdk-js-v3#5479,
+    // #4979 — hangs on retry, "cannot determine length of [object Object]").
+    // @aws-sdk/lib-storage's Upload wraps the same S3Client in a supported
+    // multipart-upload flow built exactly for this case; added alongside
+    // @aws-sdk/client-s3 rather than hand-rolling a buffering workaround.
     let backupSizeBytes = 0;
-    await new Promise((resolve, reject) => {
-      // stdio: ['ignore', 'pipe', 'inherit'] — stdout piped for GCS upload;
-      // stderr goes directly to console so pg_dump progress is visible.
-      const pgDump = spawn('pg_dump', pgArgs, {
-        env: {
-          ...process.env,
-          PGPASSWORD: process.env.PG_PASSWORD || '',
-        },
-        stdio: ['ignore', 'pipe', 'inherit'],
-      });
+    const pgDump = spawn('pg_dump', pgArgs, {
+      env: {
+        ...process.env,
+        PGPASSWORD: pg.password || '',
+        ...tlsEnv,
+      },
+      stdio: ['ignore', 'pipe', 'inherit'],
+    });
+    pgDump.stdout.on('data', (chunk) => { backupSizeBytes += chunk.length; });
 
-      const writeStream = file.createWriteStream({
-        metadata: {
-          contentType: 'application/octet-stream',
-          metadata: { run_at: RUN_AT.toISOString(), spec: '112_backup_recovery' },
-        },
-        resumable: true,
-      });
-
-      // pgDumpFailed guards the 'finish' handler: GCS signals upload complete
-      // before the 'close' event fires when pg_dump exits non-zero. Without
-      // this flag the Promise resolves on a partial/corrupt object.
-      let pgDumpFailed = false;
-
-      pgDump.stdout.on('data', (chunk) => {
-        backupSizeBytes += chunk.length;
-      });
-
-      pgDump.stdout.pipe(writeStream);
-
+    // pgDumpFailed guards against a truncated/corrupt upload "succeeding":
+    // if pg_dump exits non-zero mid-stream, its stdout ends without an
+    // explicit error (a clean EOF from the OS's point of view) — the S3
+    // Upload would otherwise complete on a partial dump. Racing the upload
+    // against pg_dump's own exit lets a non-zero exit override an
+    // otherwise-successful-looking upload.
+    let pgDumpFailed = false;
+    let pgDumpError = null;
+    const pgDumpExit = new Promise((resolve, reject) => {
       pgDump.on('error', (err) => {
         pgDumpFailed = true;
-        writeStream.destroy();
-        reject(new Error(`[backup-db] pg_dump spawn error: ${err.message}`));
+        pgDumpError = new Error(`[backup-db] pg_dump spawn error: ${err.message}`);
+        reject(pgDumpError);
       });
-
       pgDump.on('close', (code) => {
         if (code !== 0) {
           pgDumpFailed = true;
-          writeStream.destroy();
-          reject(new Error(`[backup-db] pg_dump exited with code ${code}`));
+          pgDumpError = new Error(`[backup-db] pg_dump exited with code ${code}`);
+          reject(pgDumpError);
+        } else {
+          resolve();
         }
-      });
-
-      writeStream.on('error', (err) => {
-        reject(new Error(`[backup-db] GCS upload error: ${err.message}`));
-      });
-
-      writeStream.on('finish', () => {
-        if (!pgDumpFailed) resolve();
       });
     });
 
-    const gcsPath = `gs://${config.bucket}/${objectName}`;
+    const upload = new Upload({
+      client: s3Client,
+      params: {
+        Bucket: config.s3Bucket,
+        Key: objectName,
+        Body: pgDump.stdout,
+        ContentType: 'application/octet-stream',
+        Metadata: { run_at: RUN_AT.toISOString(), spec: '112_backup_recovery' },
+      },
+    });
+
+    try {
+      await Promise.all([upload.done(), pgDumpExit]);
+    } catch (err) {
+      await upload.abort().catch((abortErr) => {
+        pipeline.log.warn('[backup-db]', 'Upload abort after failure also failed (non-fatal, orphan multipart upload may remain)', {
+          error: abortErr.message,
+        });
+      });
+      // Surface pg_dump's own error as the root cause when it failed —
+      // an S3 stream-abort error triggered BY that failure is a symptom,
+      // not the cause.
+      throw pgDumpFailed ? pgDumpError : err;
+    }
+
+    const destPath = `${config.s3Endpoint.replace(/\/+$/, '')}/${config.s3Bucket}/${objectName}`;
     pipeline.log.info('[backup-db]', 'Upload complete', {
-      gcs_path: gcsPath,
+      dest_path: destPath,
       size_bytes: backupSizeBytes,
     });
 
+    // ── Baseline manifest sidecar (Spec 112 §4.2 — NEW) ──────────────────
+    // Generalizes the one-time G10 gate baseline into a standing,
+    // every-backup artifact restore-db.js diffs against. Reuses the exact
+    // same read helpers scripts/validation/supabase-load-gates.js already
+    // implements for the G10 gate (row counts, invalid-geom id sets,
+    // sequence values, matview count, postgis version) rather than
+    // duplicating that query surface here.
+    const allTables = (await getBaseTables(pool)).filter((t) => !EXCLUDED_TABLES.includes(t));
+    const rowCounts = await getRowCounts(pool, allTables);
+    const invalidGeomIds = {
+      parcels: await getInvalidGeomIds(pool, 'parcels'),
+      building_footprints: await getInvalidGeomIds(pool, 'building_footprints'),
+    };
+    const sequenceValues = await getSequenceValues(pool);
+    const mvMonthlyPermitStatsCount = await getMatviewCount(pool, 'mv_monthly_permit_stats');
+    const postgisFullVersion = await getPostgisVersion(pool);
+
+    const manifest = {
+      run_at: RUN_AT.toISOString(),
+      spec: '112_backup_recovery',
+      row_counts: rowCounts,
+      invalid_geom_ids: invalidGeomIds,
+      sequence_values: sequenceValues,
+      mv_monthly_permit_stats_count: mvMonthlyPermitStatsCount,
+      postgis_full_version: postgisFullVersion,
+    };
+    const manifestBody = JSON.stringify(manifest);
+
+    const manifestUpload = new Upload({
+      client: s3Client,
+      params: {
+        Bucket: config.s3Bucket,
+        Key: manifestObjectName,
+        Body: manifestBody,
+        ContentType: 'application/json',
+        Metadata: { run_at: RUN_AT.toISOString(), spec: '112_backup_recovery' },
+      },
+    });
+    await manifestUpload.done();
+    const manifestPath = `${config.s3Endpoint.replace(/\/+$/, '')}/${config.s3Bucket}/${manifestObjectName}`;
+    pipeline.log.info('[backup-db]', 'Manifest sidecar written', { manifest_path: manifestPath });
+
     // Retention pruning — non-fatal: a prune failure must not abort the backup.
+    // Naturally prunes both `.dump` objects and their `.manifest.json`
+    // sidecars, since both live under the same pg_dump/ prefix and are aged
+    // individually by LastModified.
     let blobsPruned = 0;
     try {
       const cutoff = new Date(RUN_AT.getTime() - config.retainDays * 86_400_000);
-      const [files] = await bucket.getFiles({ prefix: 'pg_dump/' });
-      for (const f of files) {
-        const created = f.metadata.timeCreated ? new Date(f.metadata.timeCreated) : null;
-        if (created && created < cutoff) {
-          await f.delete();
-          blobsPruned++;
-        }
+      const objects = await listAllObjects(s3Client, config.s3Bucket, 'pg_dump/');
+      const toDelete = objects.filter((o) => o.LastModified && o.LastModified < cutoff);
+      // S3 DeleteObjects accepts up to 1000 keys per call — batch rather
+      // than one DeleteObjectCommand per key.
+      for (let i = 0; i < toDelete.length; i += 1000) {
+        const batch = toDelete.slice(i, i + 1000);
+        await s3Client.send(
+          new DeleteObjectsCommand({
+            Bucket: config.s3Bucket,
+            Delete: { Objects: batch.map((o) => ({ Key: o.Key })) },
+          })
+        );
+        blobsPruned += batch.length;
       }
-      pipeline.log.info('[backup-db]', `Pruned ${blobsPruned} old backup(s)`, {
+      pipeline.log.info('[backup-db]', `Pruned ${blobsPruned} old backup object(s)`, {
         retain_days: config.retainDays,
         cutoff: cutoff.toISOString(),
       });
@@ -169,8 +364,9 @@ pipeline.run('backup-db', async (pool) => {
     const durationMs = Date.now() - startMs;
 
     const auditRows = [
-      { metric: 'gcs_path',          value: gcsPath,          threshold: null,    status: 'INFO' },
+      { metric: 'dest_path',          value: destPath,         threshold: null,    status: 'INFO' },
       { metric: 'backup_size_bytes',  value: backupSizeBytes,  threshold: '> 0',   status: backupSizeBytes > 0 ? 'PASS' : 'FAIL' },
+      { metric: 'manifest_path',      value: manifestPath,     threshold: null,    status: 'INFO' },
       { metric: 'blobs_pruned',       value: blobsPruned,      threshold: null,    status: 'INFO' },
       { metric: 'retain_days',        value: config.retainDays, threshold: null,   status: 'INFO' },
     ];
@@ -183,12 +379,13 @@ pipeline.run('backup-db', async (pool) => {
       records_meta: {
         duration_ms: durationMs,
         backup_size_bytes: backupSizeBytes,
-        gcs_path: gcsPath,
+        dest_path: destPath,
+        manifest_path: manifestPath,
         blobs_pruned: blobsPruned,
         retain_days: config.retainDays,
         audit_table: {
           phase: 112,
-          name: 'DB Backup to GCS',
+          name: 'DB Backup to S3-compatible storage',
           verdict: auditRows.some((r) => r.status === 'FAIL') ? 'FAIL'
                  : auditRows.some((r) => r.status === 'WARN') ? 'WARN'
                  : 'PASS',
@@ -197,10 +394,20 @@ pipeline.run('backup-db', async (pool) => {
       },
     });
 
+    // reads: pg_dump bypasses the pool for the dump itself, but the
+    // manifest-sidecar generation (above) does read every base table plus
+    // pg_sequences/pg_extension via scripts/validation/supabase-load-gates.js
+    // — declared here so emitMeta reflects the real read surface, not the
+    // pre-manifest-sidecar Observer framing.
+    const readsMeta = {};
+    for (const t of allTables) readsMeta[t] = ['*'];
+    readsMeta.pg_sequences = ['sequencename', 'last_value'];
+    readsMeta.pg_extension = ['extversion'];
+
     pipeline.emitMeta(
-      {},   // reads: pg_dump bypasses the pool — no table-level reads to declare
-      {},   // writes: GCS only, no DB tables written
-      ['GCS'],
+      readsMeta,
+      {},   // writes: no DB tables written
+      ['S3'],
     );
 
   }); // withAdvisoryLock

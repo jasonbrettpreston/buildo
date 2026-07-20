@@ -1,0 +1,114 @@
+# pipeline-watchdog.yml — daily freshness watchdog (Spec 115 §2.5, P3-D9).
+# Restores the program-plan freshness-watchdog mandate that had been dropped
+# from the original scheduling plan (GT BLOCKING-1). Also implements Spec
+# 112 §6's backup safety-net role, merged into this single workflow rather
+# than a separate one.
+#
+# SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.5, §3, §4
+# SPEC LINK: docs/specs/00-architecture/112_backup_recovery.md §6, §7
+# SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §4, §8
+#
+# Inertness (P3-D6, Spec 115 §3): the `schedule:` block below is committed
+# COMMENTED OUT. Phase 4.3 activation is a single PR that uncomments it.
+# `workflow_dispatch` stays active for manual testing before and after
+# activation.
+#
+# Checks (BOTH required — neither substitutes for the other, Spec 115 §2.5):
+#   (i)  chain freshness  — a completed chain_permits AND chain_coa run,
+#        each within 25h. Missing either -> the job goes red (no fallback
+#        exists for a chain that never ran).
+#   (ii) backup freshness + safety-net trigger — a completed backup within
+#        25h, matching BOTH row shapes backup_db can be written under
+#        (permits:backup_db scoped step row, or a standalone backup_db
+#        slug). If missing AND the permits chain is not CURRENTLY running
+#        (race guard — an in-flight permits chain may complete its own
+#        backup_db step moments later), this workflow invokes
+#        scripts/backup-db.js directly, then re-checks. Still missing after
+#        that -> the job goes red.
+
+name: pipeline-watchdog
+
+on:
+  # Phase 4.3 activation — uncomment (Spec 115 §3)
+  # schedule:
+  #   - cron: '30 15 * * *'   # daily, after the 11:00 UTC nightly coa->permits window + ~3h worst case (Spec 115 §2.5)
+  workflow_dispatch: {}
+
+jobs:
+  freshness-watchdog:
+    runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
+    timeout-minutes: 30      # this workflow's own work is a handful of SELECTs + at most one backup-db.js run; 30 min covers a slow backup fallback with headroom
+    concurrency:
+      group: pipeline-watchdog
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Guard — environment (SUPABASE_DATABASE_URL + CA cert + ET drift)
+        id: env_guard
+        env: &pipeline-env
+          PIPELINE_CHAIN: ${{ github.workflow }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+          BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          BACKUP_S3_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          BACKUP_S3_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+        run: |
+          # A missing GitHub secret interpolates to an empty string and does
+          # NOT, on its own, fail a workflow — inertness never rests on that
+          # (Spec 115 §3/§8/G9). This guard protects manual workflow_dispatch
+          # invocations, which ARE live pre-4.3, from silently no-op-ing
+          # against an empty connection string.
+          if [ -z "$SUPABASE_DATABASE_URL" ]; then
+            echo "::error::SUPABASE_DATABASE_URL is empty — refusing to proceed (Spec 115 §3/§4 item 3 fail-safe-loud posture)."
+            exit 1
+          fi
+          if [ ! -f "$SUPABASE_CA_CERT_PATH" ]; then
+            echo "::error::CA cert not found at SUPABASE_CA_CERT_PATH=$SUPABASE_CA_CERT_PATH — every non-loopback connection in this workflow requires it (Spec 113 §4.2/§4.3). scripts/lib/ssl-config.js will throw the same fact per-connection if this guard is bypassed."
+            exit 1
+          fi
+          ET_NOW=$(TZ='America/Toronto' date '+%Y-%m-%d %H:%M:%S %Z')
+          echo "::notice title=ET drift check::Current America/Toronto time is ${ET_NOW} — this workflow's cron is a single fixed-UTC expression (Spec 115 §2.1); it never skips on DST drift, this notice is observability only."
+
+      - name: Pre-flight — migrate.js --verify (runbook rule 2)
+        run: node scripts/migrate.js --verify
+        env: *pipeline-env
+
+      - name: Install PostgreSQL 17 client (PGDG apt repo)
+        # This workflow reaches pg_dump via the direct backup-db.js
+        # invocation below (Spec 115 §3's PG17-client mandate).
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client-17
+
+      - name: Check pipeline freshness (initial)
+        id: freshness_check
+        continue-on-error: true   # a red result here may still be resolved by the fallback step below — the FINAL recheck is the step that actually reddens the job
+        run: node scripts/check-pipeline-freshness.js >> "$GITHUB_OUTPUT"
+        env: *pipeline-env
+
+      - name: Fallback — run backup-db.js directly (Spec 112 §6 safety net)
+        id: backup_fallback
+        if: >-
+          steps.freshness_check.outputs.backup_fresh != 'true' &&
+          steps.freshness_check.outputs.chains_fresh == 'true' &&
+          steps.freshness_check.outputs.permits_running != 'true'
+        run: node scripts/backup-db.js
+        env: *pipeline-env
+
+      - name: Check pipeline freshness (final)
+        id: freshness_recheck
+        if: always()
+        run: node scripts/check-pipeline-freshness.js >> "$GITHUB_OUTPUT"
+        env: *pipeline-env

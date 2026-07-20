@@ -28,7 +28,8 @@
     "@ast-grep/cli",
     "eslint-config-next",
     "@stryker-mutator/api",
-    "@google-cloud/storage"
+    "@aws-sdk/client-s3",
+    "@aws-sdk/lib-storage"
   ],
   "ignoreBinaries": ["tsx", "sqlfluff", "wait-on"]
 }

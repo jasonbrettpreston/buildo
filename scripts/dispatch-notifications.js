@@ -34,8 +34,11 @@ const {
   entityIdFromLead,
 } = require('./lib/notification-types');
 
-// §R2 — advisory lock id. 101 (the spec number) was taken by purge-lead-views.js,
-// and 122 by a one-time backfill, so 123 is assigned from the free range
+// §R2 — advisory lock id. 101 (the spec number) was taken by purge-lead-views.js
+// at the time this lock was assigned (101 retired P3-F6 2026-07-20 — the
+// script was deleted, not reused; this lock stays at 123 rather than
+// reclaiming 101, per the free-ID precedent below), and 122 by a one-time
+// backfill, so 123 is assigned from the free range
 // (compute-phase-calibration precedent). Registered in
 // src/tests/pipeline-advisory-lock.infra.test.ts + Spec 47 §A.5.
 const ADVISORY_LOCK_ID = 123;

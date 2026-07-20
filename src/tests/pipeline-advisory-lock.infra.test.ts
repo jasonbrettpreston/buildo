@@ -64,7 +64,9 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/close-stale-permits.js':  98,
   'scripts/compute-centroids.js':    99,
   // Phase G (Spec 42 §6.11): 'scripts/create-pre-permits.js' (lock 100) retired.
-  'scripts/purge-lead-views.js':     101,
+  // P3-F6 (Spec 112 rewrite, 2026-07-20): 'scripts/purge-lead-views.js' (lock 101)
+  // retired — deleted outright, its retention sweep absorbed into the
+  // pg_cron `lead_views_retention_purge` job (Spec 115 §5, migration 233).
   'scripts/refresh-snapshot.js':     40,
   // Wave 3 — Enrich
   'scripts/enrich-web-search.js':    45,

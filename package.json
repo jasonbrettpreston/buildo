@@ -50,7 +50,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",
-    "@google-cloud/storage": "^7.19.0",
+    "@aws-sdk/client-s3": "^3.1090.0",
+    "@aws-sdk/lib-storage": "^3.1090.0",
     "@google/genai": "^1.48.0",
     "@sentry/nextjs": "^10.47.0",
     "@supabase/ssr": "^0.12.3",

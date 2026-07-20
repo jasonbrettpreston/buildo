@@ -129,6 +129,19 @@ delete.
   `docs/specs/00-architecture/115_scheduling.md` §5), which is a more appropriate home for
   a pure-SQL, missable-without-incident maintenance task than a script nothing was
   currently even scheduling reliably.
+  **Note (P3-F6, 2026-07-20):** this "same-commit-as-D6" ruling was missed at Phase 1 —
+  migration 229 (the D6 uuid/FK conversion) landed 2026-07-17 and the script survived,
+  un-retired, for three days across two more migrations. The deletion actually executed at
+  Phase 3 F6 (Spec 112 backup-script rewrite), re-anchored to the pg_cron
+  `lead_views_retention_purge` catalog job (migration 233) landing first — the same
+  no-retention-gap rationale this ADR states above (deletion must not create a window where
+  neither the script nor its replacement is purging `lead_views`). The gap this created in
+  practice: none — migration 233 (2026-07-20) landed before this deletion in the same Phase
+  3 window, so retention coverage was never actually discontinuous; the risk was in the
+  three-day period between 229 and 233 where a manual `purge-lead-views.js` invocation was
+  the only enforcement, identical to its pre-D6 behavior. Recorded here as the acknowledgment
+  this ADR's own "same commit" instruction asked for, even though it was honored at F6, not
+  Phase 1.
 - The `firebase_uid_max = 128` contract (`docs/specs/_contracts.json`,
   `mobile/src/constants/contracts.ts`, locked by `src/tests/contracts.infra.test.ts` L188-
   200 against `migrations/075_user_profiles.sql` and `migrations/076_lead_views_user_id_
