@@ -247,8 +247,7 @@ plain `===` check.
 ### 8.2 Network Restrictions vs. GitHub-hosted runner IPs
 
 GitHub-hosted runners do not have static IPs, which is in tension with Supabase Network
-Restrictions (an IP-allowlist feature). Three options, **decision made explicitly at Phase 3.2
-implementation** — this spec intentionally does not pre-select one:
+Restrictions (an IP-allowlist feature). Three options were identified:
 
 1. **Allowlist GitHub's published Actions IP ranges** — these ranges rotate; requires either a
    periodic sync job to keep the allowlist current or accepting rotation lag as a risk.
@@ -258,8 +257,33 @@ implementation** — this spec intentionally does not pre-select one:
    narrow-scope, Vault-stored credential treated as fully sensitive. An accepted risk model for
    a solo-dev, pre-launch project.
 
-Whichever option is picked at Phase 3.2 MUST be recorded as an amendment to this section — the
-decision is deferred, not the documentation of it.
+**RESOLVED 2026-07-20 (Phase 3.2 operator ruling — mandated amendment) — option 3 chosen:**
+Network Restrictions stay OFF; security rests on CA-pinned `verify-full` TLS (§4) plus the
+`SUPABASE_DATABASE_URL` credential treated as fully sensitive (GitHub encrypted secret, never
+logged — Spec 115 §3). This applies to **every** GitHub Actions workflow in the scheduling
+migration, **including `deep_scrapes`** (Spec 115 §2.4) — the one workflow whose runner choice
+was genuinely contested, because its WAF-sensitive scraping traffic is the exact class of
+concern a self-hosted runner's static IP might otherwise argue for.
+
+`deep_scrapes` is GitHub-hosted for the same option-3 reasoning, reinforced by two
+scraping-specific facts: the Decodo residential proxy carries ALL of `aic-orchestrator.py`'s
+AIC traffic, so the runner's own datacenter IP is never WAF-visible to AIC in the first place —
+removing the strongest argument for a self-hosted runner's static, reputation-managed IP; and
+the proxy-forced headed-Chrome requirement is handled mechanically via `xvfb-run` on the
+GitHub-hosted Linux runner, with `actions/cache` persisting `~/.buildo-scraper/` stealth
+profiles between runs to approximate the profile continuity a persistent self-hosted box would
+give for free. Decodo proxy credentials join `SUPABASE_DATABASE_URL` in GitHub encrypted
+secrets per §11's CI-runner carve-out.
+
+**Operator's decisive factor (2026-07-20):** a self-hosted runner on the operator's own
+machine would mean headed Chrome windows opening multiple times per weekday business-hours
+day (Spec 115 §2's `0 15,18,21 * * 1-5` cadence) — disrupting the local workday every run.
+With the proxy already neutralizing the WAF-visibility argument for self-hosting, there was no
+remaining reason to accept that disruption. Gemini's standing objection (self-hosted runners
+on a public repo carry fork-PR code-execution risk per GitHub's own guidance, so GitHub-hosted
++ proxy is "the solvable engineering problem" rather than the risk to accept) is satisfied by
+this ruling — the self-hosted-public-repo risk it warned against never materializes, because
+no self-hosted runner is used anywhere in this migration.
 
 ### 8.3 `isChainRunning` concurrency semantics
 
@@ -282,9 +306,19 @@ rather than leaving a `running` row to be discovered only by the alert.
 (`034_mv_monthly_permit_stats`), VACUUM/cleanup jobs, and the deferred 30-day
 account-deletion sweep (Spec 97 — never built, so this is net-new with zero regression risk).
 `pg_cron`/`pg_net` give **no retry and no alert**, and silently skip execution when the database
-is unhealthy. **A must-succeed job (any of the `permits`/`coa`/`sources`/`entities` chains,
-`backup_db`) MUST NEVER be scheduled via `pg_cron`** — must-succeed jobs are GitHub-Actions-only
-(§8.1).
+is unhealthy. **A must-succeed job (any of the `permits`/`coa`/`sources`/`entities`/
+`deep_scrapes` chains, `backup_db`) MUST NEVER be scheduled via `pg_cron`** — must-succeed jobs
+are GitHub-Actions-only (§8.1).
+
+**AMENDED 2026-07-20 — `deep_scrapes` explicitly joins the never-pg_cron set,** argued rather
+than merely asserted: `pg_cron` executes SQL inside the Postgres backend process — it has no
+mechanism to spawn or supervise an external Python process at all, let alone one that drives a
+proxy-routed, `xvfb`-hosted, headed-Chrome browser session (`aic-orchestrator.py`, Spec 115
+§2.4). This is a **structural incapability**, not a policy choice weighed against
+`permits`/`coa`/`sources`/`entities` (which at least COULD theoretically run as `pg_net`-invoked
+HTTP triggers, however inadvisable) — `pg_cron` cannot run `deep_scrapes` under any
+configuration, so its must-succeed classification above is a belt-and-suspenders restatement
+of an impossibility, not the load-bearing reason `deep_scrapes` is GitHub-Actions-only.
 
 ### 8.5 `pipeline_schedules` wiring
 
@@ -374,6 +408,24 @@ defeats the purpose of using Vault at all (see §13, Vault statement-log leak).
 
 **Access scope:** only `service_role` (server-side pipeline/admin environments) may invoke the
 RPC. `anon`/`authenticated` roles have no path to Vault-backed secrets, directly or via the RPC.
+Concretely: the write-RPC migration includes an explicit `REVOKE EXECUTE ... FROM anon,
+authenticated, public` alongside `GRANT EXECUTE ... TO service_role` — the access-scope rule
+above is enforced at the grant level, not left as a convention the RPC's `SECURITY DEFINER`
+body alone is trusted to honor.
+
+**AMENDED 2026-07-20 — CI-runner credential carve-out (Spec 115 / Phase 3.2).** The rule above
+governs **pipeline secrets accessed at runtime by application/pipeline code** (third-party API
+keys, credentials `scripts/` reads while running). It does **not** extend to the credentials a
+GitHub Actions **workflow-execution environment** itself needs merely to start running:
+`SUPABASE_DATABASE_URL` (the Postgres connection string every chain workflow needs before it
+can even query Vault) and the Decodo residential-proxy credentials `deep_scrapes` needs to route
+its scraping traffic (Spec 115 §2.4). These live in **GitHub encrypted secrets**, injected into
+the workflow's `env:` block (Spec 115 §3) — Vault has no mechanism to hand a secret to a
+workflow that hasn't connected to the database yet, so this class of credential is structurally
+outside Vault's reach regardless of policy preference. **Vault remains the DB-side secret
+store** for everything a *running* script subsequently needs once it has its DB connection —
+this carve-out narrows to exactly the bootstrap credentials, not a general escape hatch for
+pipeline secrets that could otherwise live in Vault.
 </architecture>
 
 ---

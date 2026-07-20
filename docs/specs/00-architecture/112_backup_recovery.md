@@ -66,6 +66,19 @@ Whoever implements Phase 3.3 MUST record the choice as an amendment to this sect
 how Spec 113 §8.2 handles its own deferred Network Restrictions decision) — the decision is
 deferred, not the documentation of it. Until then, the env var name for the destination is a
 placeholder (§4.2).
+
+**RESOLVED 2026-07-20 (Phase 3.2 operator ruling, folded ahead of Phase 3.3 implementation) —
+Option A chosen:** an S3-compatible external object-storage bucket. The specific vendor
+(Backblaze B2 vs. Cloudflare R2) is **finalized at bucket-creation time**, not by this
+amendment — both are S3-compatible, so the choice between them requires no code fork and no
+further spec amendment once made. The env var names are fixed as:
+
+- `BACKUP_S3_ENDPOINT`
+- `BACKUP_S3_BUCKET`
+- `BACKUP_S3_ACCESS_KEY_ID`
+- `BACKUP_S3_SECRET_ACCESS_KEY`
+
+These resolve §4.2's `BACKUP_DEST_*` placeholder — see §4.2's env table, updated to match.
 </architecture>
 
 ---
@@ -128,7 +141,10 @@ needed).
 | `DATABASE_URL` | Local stack | `pg_dump` target connection string (ephemeral local Supabase) |
 | `SUPABASE_DATABASE_URL` | Cloud project | `pg_dump` target connection string |
 | `SUPABASE_CA_CERT_PATH` | Cloud project | CA-pinned TLS, appended to the connection string as libpq params (see below) |
-| `BACKUP_DEST_*` (placeholder — name fixed at Phase 3.3, §2.1) | Both | Destination credential/path for the portable dump |
+| `BACKUP_S3_ENDPOINT` | Both — **RESOLVED 2026-07-20, §2.1** | S3-compatible endpoint (B2 or R2; vendor finalized at bucket creation) |
+| `BACKUP_S3_BUCKET` | Both | Destination bucket name |
+| `BACKUP_S3_ACCESS_KEY_ID` | Both | S3-compatible access key id |
+| `BACKUP_S3_SECRET_ACCESS_KEY` | Both | S3-compatible secret access key |
 | `BACKUP_RETAIN_DAYS` | Both | Unchanged — structural constant, default 30, Zod-validated, not in `logic_variables` (same rationale as before: retention-policy changes require engineering review) |
 
 **TLS note — `pg_dump`/`pg_restore` do NOT go through `scripts/lib/ssl-config.js`.** That
@@ -260,6 +276,18 @@ hours — the same OP4 threshold (§7). `pg_cron` is explicitly **forbidden** fo
 113 §8.4 states plainly that a must-succeed job — `backup_db` is named as one of the four
 examples — must never be scheduled via `pg_cron`, because `pg_cron`/`pg_net` give no retry and
 no alert and silently skip execution when the database is unhealthy.
+
+**RESOLVED 2026-07-20 — the safety-net trigger is `pipeline-watchdog.yml` (Spec 115 §2.5).**
+Rather than a standalone backup-only workflow, the secondary trigger described above is
+implemented as one check inside a single freshness-watchdog workflow that also checks
+permits/coa chain freshness (Spec 115 §2.5's item 1 and item 2 respectively). It matches BOTH
+row shapes `backup_db` can be written under: the scoped-slug `permits:backup_db` step row
+(`run-chain.js:321`, written when the permits chain runs its final step normally) and a
+standalone `backup_db` slug row (written when the watchdog itself invokes `backup-db.js`
+directly). The watchdog additionally guards against invoking the safety net while a permits
+chain is currently running (a race — that in-flight chain may complete its own `backup_db` step
+moments later, and a concurrent direct invocation would double-run it), a refinement beyond
+this section's original design.
 </architecture>
 
 ---
@@ -276,17 +304,33 @@ psql $DATABASE_URL -c \
 ```
 Pass: `verdict = completed`, `run_at` within last 25h (daily schedule).
 
-**This query is UNCHANGED and remains valid as written** (Spec 113 §9.3): `pipeline_runs.step_name
-= 'backup_db'` is populated identically by `backup-db.js` regardless of what storage the dump
-lands on — only the underlying destination changed, not the pipeline-run bookkeeping the check
-reads. The `psql` command block itself requires **no edit**.
+**CORRECTED 2026-07-20 — this query does NOT match the live schema and cannot run as
+written.** A live-verified check of `pipeline_runs` found **no `step_name` column at all** —
+the table's columns are `pipeline`, `status`, `started_at`, `completed_at`, `error_message`,
+etc., never `step_name`/`verdict`/`run_at`. The quoted block above was always aspirational
+prose, not a query anyone could actually paste into `psql` against this schema. The corrected
+query, reflecting both the real column names AND §6's scoped-slug shape (P3-G6 — `backup_db`
+is written under `permits:backup_db` when it runs as the permits chain's final step, or under
+a bare `backup_db` slug when the §6 safety-net watchdog invokes it directly):
+
+```
+psql "$SUPABASE_DATABASE_URL" -c \
+  "SELECT pipeline, status, completed_at FROM pipeline_runs \
+   WHERE pipeline IN ('permits:backup_db', 'backup_db') AND status = 'completed' \
+   ORDER BY completed_at DESC LIMIT 1;"
+```
+Pass: a row exists, `completed_at` within the last 25h.
 
 The required Spec 07 text update — a **separate task, not performed by this spec-authoring
 work** — is prose-only: replace the surrounding GCS/Cloud-Console references with the
-Supabase-managed-backup + off-Supabase-portable-dump language of §2 above, and update any
-`$DATABASE_URL` framing that currently implies a Cloud SQL connection string to reflect Spec 113
-§3's `SUPABASE_DATABASE_URL` naming. No file under `docs/specs/00-architecture/07_backend_prod_eval.md`
-is modified as part of this rewrite (see §12 Out-of-Scope Files).
+Supabase-managed-backup + off-Supabase-portable-dump language of §2 above, replace the
+non-existent-column query above with the corrected one, and update the `$DATABASE_URL` framing
+that currently implies a Cloud SQL connection string to Spec 113 §3's `SUPABASE_DATABASE_URL`
+naming. **Spec 07's own §OP4 text carries the identical `step_name`/non-existent-column error**
+and needs the same fix applied at that separate task's F6-equivalent step — flagged here so
+the fix isn't independently rediscovered as a second bug. No file under
+`docs/specs/00-architecture/07_backend_prod_eval.md` is modified as part of this rewrite (see
+§12 Out-of-Scope Files).
 </behavior>
 
 ---

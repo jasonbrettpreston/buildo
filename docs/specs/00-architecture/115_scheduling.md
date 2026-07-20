@@ -17,10 +17,11 @@ as buildable artifacts — exact workflow YAML shape, exact job/script contracts
 pg_cron job catalog — without duplicating Spec 113 §8's prose. Where this spec repeats a
 fact from Spec 113, it is citing it, not re-deciding it.
 
-**In scope:** the 3 GitHub Actions workflow definitions; workflow anatomy (checkout, env,
+**In scope:** the 5 GitHub Actions workflow definitions (4 chain workflows + the
+pipeline-freshness watchdog, §2/§2.4/§2.5); workflow anatomy (checkout, env,
 secrets, invocation, timeout, alerting); the `isChainRunning` re-implementation contract;
 the pg_cron job catalog; `pipeline_schedules` wiring; `scripts/local-cron.js` disposition;
-the Network Restrictions decision placeholder.
+the Network Restrictions decision record (§8).
 
 **Out of scope:** Vault RPC internals (Spec 113 §11), TLS/CA mechanics beyond citing where
 the workflow reads them (Spec 113 §4), `backup-db.js` script internals (Spec 112 rewrite),
@@ -32,17 +33,23 @@ RLS policy content (the RLS Policy Catalog spec), application-level auth (Spec 1
 <architecture>
 ## 2. GitHub Actions Workflow Definitions
 
-**Three workflows**, one per `scripts/local-cron.js` schedule entry (`local-cron.js`
-L40-73, current production cadences — preserved exactly, including the coa→permits
-freshness contract and its serialization requirement, L41-53). All three invoke
-`scripts/run-chain.js` directly on the GitHub Actions runner (Spec 113 §8.1 — no Vercel
-function ever hosts a chain).
+**Four chain workflows** (AMENDED 2026-07-20 — operator cadence rulings supersede the
+original "preserved exactly" stance and `local-cron.js`'s legacy cadences; the coa→permits
+freshness contract and its serialization requirement, `local-cron.js` L41-53, are
+preserved unchanged). All invoke `scripts/run-chain.js` directly on the GitHub Actions
+runner (Spec 113 §8.1 — no Vercel function ever hosts a chain).
 
-| # | File | Chain(s) | Cadence (ET, as today) | Cadence (UTC cron — see §2.1 DST note) |
+| # | File | Chain(s) | Cadence (operator-ruled 2026-07-20) | UTC cron (see §2.1 DST note) |
 |---|---|---|---|---|
-| 1 | `.github/workflows/chain-coa-permits.yml` | `coa` → `permits`, **serialized in one workflow** | 6 AM ET weekdays | `0 11 * * 1-5` |
-| 2 | `.github/workflows/chain-sources.yml` | `sources` | 8 AM ET, 1st of quarter | `0 13 1 1,4,7,10 *` |
-| 3 | `.github/workflows/chain-entities.yml` | `entities` | 3 AM ET daily | `0 8 * * *` |
+| 1 | `.github/workflows/chain-coa-permits.yml` | `coa` → `permits`, **serialized in one workflow** | ~6 AM ET, EVERY night (×7) | `0 11 * * *` |
+| 2 | `.github/workflows/chain-sources.yml` | `sources` | WEEKLY, ~8 AM ET Sunday | `0 13 * * 0` |
+| 3 | `.github/workflows/chain-entities.yml` | `entities` | 3 AM ET daily (unchanged) | `0 8 * * *` |
+| 4 | `.github/workflows/chain-deep-scrapes.yml` | `deep_scrapes` (§2.4) | 3×/day, **WEEKDAYS ONLY, business hours** (~10 AM/1 PM/4 PM EST · 11/2/5 EDT) | `0 15,18,21 * * 1-5` |
+
+The deep_scrapes slots deliberately start at 15:00 UTC — clearing the 11:00 UTC nightly
+coa→permits window plus its ~3h worst case, because `deep_scrapes` SHARES
+`refresh_snapshot`/`assert_data_bounds`/`assert_engine_health` with the nightly chains and
+shared-step advisory locks SKIP on contention rather than queue (runbook §3 rule 3).
 
 ### 2.1 UTC / DST note
 
@@ -61,8 +68,17 @@ accepted drift**, not a bug to fix in this cutover:
   target, only fresher-by-less-than-expected once per DST transition window.
 - A DST-exact schedule would require two cron lines per workflow (one for each DST regime)
   each gated by an in-job date check to skip the wrong half of the year — real complexity
-  for a cosmetic 1-hour wobble twice a year. **Deferred hardening**, not built now (see
-  §7 Known Failure Modes).
+  for a cosmetic 1-hour wobble twice a year.
+
+**AMENDED 2026-07-20 (program-plan panel reconciliation):** the program plan's D8 panel
+ruled "single UTC cron + in-job ET check (dual entries rejected as drift-prone)". This
+spec's accepted-drift stance and that ruling are reconciled as follows: each workflow keeps
+a SINGLE UTC cron entry (no dual lines), and the concurrency-guard step additionally logs
+the current America/Toronto time and emits a `::notice` drift annotation (the in-job ET
+check, observability-grade — it never skips a run, honoring this section's rationale that
+late-not-early drift is safe). The deep_scrapes slots (§2) are chosen to remain inside
+business hours under BOTH DST regimes, so drift never pushes them outside the operator's
+weekday/business-hours ruling.
 
 ### 2.2 `chain-coa-permits.yml` job shape (serialization + failure isolation)
 
@@ -75,7 +91,7 @@ loop into GitHub Actions step semantics:
 ```yaml
 jobs:
   coa-then-permits:
-    runs-on: ubuntu-latest   # TODO Phase 3.2: confirm against Spec 113 §8.2 decision
+    runs-on: ubuntu-latest   # RESOLVED Phase 3.2 (2026-07-20): GitHub-hosted for ALL workflows — Spec 113 §8.2 option 3 ruled (restrictions off + strong auth); deep_scrapes also GH-hosted (§2.4)
     timeout-minutes: 210     # 90 (coa) + 90 (permits) + checkout/setup/report headroom
     concurrency:
       group: chain-coa-permits
@@ -156,6 +172,100 @@ Decision D9 (Spec 113 §9.3: "the trigger mechanism does not change") with **zer
 workflow surface. Do not add a separate "backup" step to this workflow; doing so would
 double-run the backup and desynchronize it from the chain-completion signal
 `backup_db` currently depends on.
+
+### 2.4 `chain-deep-scrapes.yml` — deep_scrapes workflow
+
+**Runner (operator-ruled 2026-07-20 — Spec 113 §8.2 amendment, option 3): GitHub-hosted**
+(`runs-on: ubuntu-latest`), same as the other three chain workflows. The Decodo
+residential proxy carries ALL AIC traffic the `inspections` step (`aic-orchestrator.py`)
+generates, so the GitHub-hosted runner's own datacenter IP is never WAF-visible to AIC —
+the exact property that would otherwise argue for a self-hosted runner (P3-D1's option
+(a)). Because the proxy forces headed Chrome (P3-G4), the workflow runs the orchestrator
+under `xvfb-run` on the Linux runner (`xvfb-run -a python3 scripts/aic-orchestrator.py
+...`, matching whatever invocation the `inspections` step already uses locally, with a
+guarded `RuntimeError` — not a silent hang — if `xvfb-run` is unavailable). Persistent
+stealth profiles (`~/.buildo-scraper/profile-worker-N`) are restored between runs via
+`actions/cache` keyed on the workflow name, because a fresh ephemeral GitHub-hosted runner
+otherwise has no profile history between runs — profile continuity is part of what keeps
+the browser fingerprint stable across scrapes. A cache miss (first run, or a cache
+eviction) degrades to a fresh profile; this is visible only after the fact, via the
+scrape-success verdicts in `pipeline_runs` (§9's "ephemeral-profile cache miss" failure
+mode) — there is no separate cache-miss alert. Decodo proxy credentials live in GitHub
+encrypted secrets per Spec 113 §11's CI-runner carve-out (the workflow-execution
+credential class, distinct from the Vault-stored pipeline-secret class §11 otherwise
+mandates). A `concurrency:` group (`chain-deep-scrapes`, `cancel-in-progress: false`)
+prevents two deep_scrapes runs from overlapping, mirroring §2.2's rationale for the
+coa→permits workflow. Operator's decisive factor for GitHub-hosted over self-hosted:
+headed Chrome windows running on the operator's own box would disrupt the local workday
+every 3 hours on weekdays; the proxy already removes the WAF-visibility argument for
+self-hosting.
+
+**Chain shape:** `deep_scrapes` is the 7-step chain at `manifest.json:115-118`
+(`inspections`, `classify_inspection_status`, `assert_network_health`,
+`refresh_snapshot`, `assert_data_bounds`, `assert_engine_health`, `assert_staleness`) —
+not the single-step chain an earlier draft assumed. The last three of those seven steps
+(`refresh_snapshot`, `assert_data_bounds`, `assert_engine_health`) are SHARED with the
+nightly `coa`/`permits` chains — the §2 table's slot rationale (deep_scrapes slots
+starting at 15:00 UTC) exists specifically so this chain's shared-step invocations never
+land inside the 11:00 UTC nightly window, where the shared steps' advisory locks SKIP on
+contention rather than queue (runbook §3 rule 3) and would silently drop deep_scrapes' own
+pass over those steps.
+
+**CRITICAL failure-detection contract (Integration HIGH-2, P3-G4):** `aic-orchestrator.py`
+exits 0 on a scrape-level failure BY DESIGN — a verdict-only FAIL surfaces as
+`run-chain.js`'s `completed_with_errors` chain status, which is itself a normal (exit 0)
+process termination; only a hard orchestrator crash exits non-zero. A workflow that gates
+solely on the `run-chain.js` process exit code would therefore report GREEN on a scrape
+that fully failed — the opposite of what this whole migration exists to fix (§7's "missed
+run visibility" gap). `chain-deep-scrapes.yml` MUST, after invoking `node
+scripts/run-chain.js deep_scrapes`, separately query `pipeline_runs` for that run's
+`status`/verdict and `exit 1` if the status is `completed_with_errors` (or any step's
+`records_meta.audit_table.verdict` is `FAIL`) — generalizing §2.2's coa red-flip pattern: a
+step that reads the real DB-recorded outcome and reddens the job itself, rather than
+trusting the child process's own exit code.
+
+**Shared anatomy:** the same `check-chain-running.js` guard + `timeout-minutes: 90` +
+`env: *pipeline-env` (§3) pattern as `chain-sources.yml`/`chain-entities.yml`, plus the
+PG17-client and `migrate.js --verify` steps §3 mandates for every workflow reaching
+`pg_dump` or `run-chain.js`.
+
+### 2.5 `pipeline-watchdog.yml` — freshness watchdog (restores the dropped program mandate, P3-D9)
+
+**Cadence:** daily `30 15 * * *` UTC — after the 11:00 UTC nightly coa→permits window plus
+its ~3h worst case, so the same night's permits/backup run has had time to land before the
+watchdog checks for it.
+
+**Checks against `pipeline_runs` (both required — neither substitutes for the other):**
+
+1. **Chain freshness.** A completed `chain_permits` run AND a completed `chain_coa` run,
+   each within the last 25h. Missing either → `exit 1` (the job goes red, firing GitHub's
+   run-failure notification per §3). This closes the gap GitHub's own per-workflow
+   notifications structurally cannot: a scheduled workflow that never fires at all (a
+   platform outage, a `schedule:` block that silently stopped triggering) produces no run
+   to notify about — only an independent daily check that looks for the ABSENCE of a
+   completed run catches that.
+2. **Backup freshness + safety-net trigger.** A completed backup within the last 25h,
+   matching BOTH row shapes `backup_db` can be written under (P3-G6): the scoped-slug
+   `permits:backup_db` step row (`run-chain.js:321`) and a standalone `backup_db` slug row
+   (a direct, non-chain invocation). If no such row exists within 25h AND the `permits`
+   chain is not CURRENTLY running (a race guard — a permits chain in flight may complete
+   its own `backup_db` step moments later; invoking `backup-db.js` concurrently with that
+   would double-run it) → invoke `scripts/backup-db.js` directly. This IS Spec 112 §6's
+   safety-net role, merged into this single workflow rather than a separate one —
+   cross-reference Spec 112 §6, which now points back here for the trigger mechanism. If a
+   completed backup still cannot be confirmed after the direct invocation → `exit 1`.
+
+**Workflow anatomy:** PG17-client install step (this workflow reaches `pg_dump` via the
+direct `backup-db.js` invocation, §3's mandate); `migrate.js --verify` pre-flight; the
+`SUPABASE_DATABASE_URL` non-empty guard (§3/§8's inertness note). `runs-on: ubuntu-latest`;
+`workflow_dispatch` active; `schedule:` block committed commented-out per §8/P3-D6 until
+Phase 4.3.
+
+**Dashboard surfacing (implemented at F4, referenced here only):** `GET
+/api/admin/stats` and `DataQualityDashboard.tsx` gain a per-chain `last_completed_at`
+freshness block reading the same `pipeline_runs` facts this workflow checks — an operator
+looking at the dashboard sees the same freshness picture the watchdog alerts on, not a
+second, independently-derived one.
 </architecture>
 
 ---
@@ -200,6 +310,34 @@ env:
   must-succeed chains live in GitHub Actions, not pg_cron**, restated from Spec 113 §8.4.
   No custom alerting integration is required for this cutover; if paging/Slack alerting is
   wanted later, it hooks the same run-conclusion event and is out of scope here.
+- **PG17 client provisioning** — every workflow whose steps reach `pg_dump`/`pg_restore`
+  (the `backup_db` step inside `chain-coa-permits.yml`'s `permits` invocation, and
+  `pipeline-watchdog.yml`'s direct `backup-db.js` safety-net invocation, §2.5) installs the
+  PG17-line `postgresql-client-17` package (PGDG apt repo) as an explicit step before that
+  invocation — Spec 112 §5's client-version rule (client ≥ highest server version touched,
+  PG17 here) is not satisfied by whatever `pg_dump` ships on `ubuntu-latest` by default.
+  Workflows that never invoke `pg_dump`/`pg_restore` (`chain-sources.yml`,
+  `chain-entities.yml`, `chain-deep-scrapes.yml`) do not need this step.
+- **`migrate.js --verify` pre-flight** — every workflow that invokes `run-chain.js` runs
+  `node scripts/migrate.js --verify` as a step immediately after `npm ci` and before the
+  first chain/guard step. This is the runbook §3 rule-2 deploy-ordering requirement encoded
+  as an automated step rather than left to operator discipline: a workflow whose target
+  schema has drifted (an unapplied or checksum-mismatched migration) fails loudly here,
+  before any pipeline script runs against a schema it wasn't written for.
+- **UTC/DST drift** — every workflow's concurrency-guard step additionally logs the current
+  America/Toronto time and emits a `::notice` drift annotation; see §2.1 for the full
+  reconciliation this implements (single UTC cron entry + observability-grade in-job ET
+  check, never a skip).
+- **Inertness mechanism (P3-D6).** Every workflow file in §2 is committed with its
+  `schedule:` block PRESENT BUT COMMENTED OUT, with `workflow_dispatch:` left active for
+  manual testing. This is deliberately NOT gated by secret presence: a missing GitHub
+  secret interpolates to an empty string and does not, on its own, fail a workflow — relying
+  on that for inertness would be a silent trap the moment the secret is later provisioned
+  for an unrelated reason. Phase 4.3 activation is a single PR that uncomments every
+  `schedule:` block at once. Independent of activation state, the concurrency-guard step in
+  every workflow still verifies `SUPABASE_DATABASE_URL` is non-empty and `exit 1`s loudly if
+  it is absent — this protects manual `workflow_dispatch` invocations (which ARE live
+  pre-4.3) from silently no-op-ing against an empty connection string.
 </architecture>
 
 ---
@@ -229,10 +367,16 @@ SELECT id, started_at FROM pipeline_runs
 2. **Running** (row found, `started_at` within 12h) → write `skip=true`, exit 0 (this is a
    legitimate skip, not a script failure — mirrors `local-cron.js`'s `continue` on a
    positive `isChainRunning` result, L184-190).
-3. **DB check itself errors** (connection failure, etc.) → **fail-safe skip**: write
-   `skip=true`, exit 0, log the error via `console.error` (visible in the Actions log).
-   This preserves `local-cron.js`'s explicit fail-safe posture (L91-95: "If we can't check,
-   skip to be safe") — an unreachable DB is not a green light to double-fire a chain.
+3. **DB check itself errors** (connection failure, etc.) → **fail-safe skip, loudly (P3-D8
+   amendment, 2026-07-20 — Spec 115 §4 item 3):** write `skip=true` AND `exit 1`, log the
+   error via `console.error` (visible in the Actions log). The `skip=true` half preserves
+   `local-cron.js`'s original fail-safe posture (L91-95: "If we can't check, skip to be
+   safe") — an unreachable DB is never a green light to double-fire a chain. The `exit 1`
+   half is new: the original design (`skip=true`, exit 0) made a DB outage indistinguishable
+   from a legitimate "chain already running" skip — both looked like a quiet green no-op.
+   An unreachable database is an OUTAGE SIGNAL, not a routine skip, and must redden the
+   job and fire GitHub's failure notification (§3) so an operator investigates rather than
+   the chain silently not running for however many days the outage lasts.
 4. **12-hour TTL self-expiry** is inherited automatically from the query's own
    `started_at > NOW() - INTERVAL '12 hours'` clause — a crashed run older than 12h simply
    stops matching, unblocking new runs with no separate cleanup step (Spec 113 §8.3).
@@ -243,17 +387,23 @@ SELECT id, started_at FROM pipeline_runs
    `echo "::warning title=Stale pipeline_runs row::chain_${chainId} run id=${row.id} still 'running' since ${row.started_at} (>12h) — investigate; it is no longer blocking new runs but its status is a dashboard lie."` —
    surfaced in the Actions run summary UI. This does **not** rewrite the stale row's status;
    it is visibility only, distinct from item 6.
-6. **Explicit terminal status on abnormal exit (new, D8):** `scripts/run-chain.js` MUST
-   install a `SIGTERM` handler that, on receipt, immediately issues
-   `UPDATE pipeline_runs SET status = 'failed', completed_at = NOW(), error_message = 'Terminated (SIGTERM — likely GH Actions timeout-minutes)' WHERE id = ANY($1)` for the
-   current `chainRunId` and any still-`running` `stepRunId`, before exiting. This closes
-   the actual gap the 12h-TTL/alert pair (items 4-5) only detects after the fact: a
-   `timeout-minutes`-triggered kill (or, previously, `local-cron.js`'s own `SIGKILL` of the
-   `run-chain.js` child, L133 — which had **no equivalent handler and shares this exact
-   gap today**) currently leaves the row `running` until the 12h TTL, not immediately
-   `failed`. `SIGKILL`-class deaths (OOM, host failure) cannot be caught by any handler —
-   those still rely on items 4-5, which is why both mechanisms are required, not either
-   alone.
+6. **Explicit terminal status on abnormal exit (D8, AMENDED — SIGINT + SIGTERM, P3-D7):**
+   `scripts/run-chain.js` MUST install handlers for **both `SIGINT` and `SIGTERM`** — GitHub
+   Actions sends `SIGINT` first on a `timeout-minutes` expiry or a cancelled run, then
+   `SIGTERM` roughly 7.5s later if the process hasn't exited (Integration LOW-7); a handler
+   registered only for `SIGTERM` would miss the first, more common signal entirely. On
+   receipt of either, the handler immediately issues
+   `UPDATE pipeline_runs SET status = 'failed', completed_at = NOW(), error_message = 'Terminated (SIGINT/SIGTERM — likely GH Actions timeout/cancellation)' WHERE id = ANY($1) AND status = 'running'`
+   for the current `chainRunId` and any still-`running` `stepRunId`, before exiting. The
+   `error_message` column is live-verified to exist on `pipeline_runs`; there is NO
+   `step_name` column (see Spec 112 §7's corresponding correction) — the `UPDATE` targets
+   rows by `id`, not by a `step_name` match. This closes the actual gap the 12h-TTL/alert
+   pair (items 4-5) only detects after the fact: a `timeout-minutes`-triggered kill (or,
+   previously, `local-cron.js`'s own `SIGKILL` of the `run-chain.js` child, L133 — which had
+   **no equivalent handler and shares this exact gap today**) currently leaves the row
+   `running` until the 12h TTL, not immediately `failed`. `SIGKILL`-class deaths (OOM, host
+   failure) cannot be caught by any handler — those still rely on items 4-5, which is why
+   both mechanisms are required, not either alone.
 
 `check-chain-running.js` and `run-chain.js`'s chain-level advisory lock (`run-chain.js`
 L67-116) are **complementary, not redundant**: the DB-row check runs *before* spawning
@@ -279,15 +429,60 @@ current HEAD as of this spec).
 
 | Job name | Schedule | Action | Silent-skip is safe because… |
 |---|---|---|---|
-| `mv_monthly_permit_stats_refresh` | Nightly, off-peak (e.g. `30 9 * * *` UTC — after the coa→permits workflow) | `REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_permit_stats;` | **Net-new** — no automated refresh exists in the codebase today (`034_mv_monthly_permit_stats.sql` created it; nothing schedules its refresh). A missed refresh leaves yesterday's snapshot visible one more day; the dashboard consuming it (`docs/specs/02-web-admin/26_admin_dashboard.md`) already tolerates staleness by design. `CONCURRENTLY` requires the matview's existing unique index (verify at implementation — Reality-Check plan-altitude concern, not resolved here). |
-| `lead_views_retention_purge` | Daily, `0 9 * * *` UTC | `DELETE FROM lead_views WHERE viewed_at < NOW() - (SELECT COALESCE(variable_value::int, 90) FROM logic_variables WHERE variable_key = 'lead_view_retention_days') * INTERVAL '1 day';` | Pure retention housekeeping (Spec 70 §Database Schema, PIPEDA 90-day SLA). A day's delay in purging past-window rows is not a data-integrity incident — it is the *same* risk profile the old `purge-lead-views.js` "task 1" half already carried as a manually-scheduled script (§6). Reads the tunable retention window from `logic_variables` rather than hardcoding 90, preserving the admin-configurable behavior the JS script had. |
-| `offboarding_sweep_30day` | Daily, `0 10 * * *` UTC | `DELETE FROM auth.users WHERE raw_user_meta_data->>'account_deleted_at' IS NOT NULL AND (raw_user_meta_data->>'account_deleted_at')::timestamptz < NOW() - INTERVAL '30 days';` *(exact predicate depends on where `account_deleted_at` lives post-migration — see caveat below)* | **Net-new** — Spec 97 §3.2/L502 documents this sweep as a "TODO: Phase 2" Cloud Function that was **never built** (mobile settings spec, offboarding flow). Zero regression risk: today, nothing purges past-30-day self-deleted accounts at all. Under D6's `auth.users(id)` FK + CASCADE (10-table inventory, Spec 113/ADR-007), deleting the `auth.users` row is now sufficient — the CASCADE network removes every dependent row (`lead_views`, `lead_view_events`, `device_tokens`, `subscribe_nonces`, `tracked_projects`, `notifications`, `notification_dispatches`, `user_profiles`) in one statement; `admin_watchlist`/`admin_audit_log` intentionally do **not** cascade (SET NULL/RESTRICT, ADR-007) and are unaffected. **Caveat (flagged for Phase 3.2, not resolved here):** whether `account_deleted_at` lives on `user_profiles` (current shape, migration 502-referenced) or gets mirrored into `auth.users` metadata is a Spec 13/Spec 97-rewrite decision this scheduling spec does not own — the job's exact `WHERE` predicate MUST be finalized against whichever spec lands that column, not assumed here. |
+| `mv_monthly_permit_stats_refresh` | Nightly, `30 14 * * *` UTC — **AMENDED 2026-07-20**: re-timed to land AFTER the amended nightly window (coa→permits now runs `0 11 * * *` UTC every night, §2, plus its ~3h worst case) | `REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_permit_stats;` | **Net-new** — no automated refresh exists in the codebase today (`034_mv_monthly_permit_stats.sql` created it; nothing schedules its refresh). A missed refresh leaves yesterday's snapshot visible one more day; the dashboard consuming it (`docs/specs/02-web-admin/26_admin_dashboard.md`) already tolerates staleness by design. `CONCURRENTLY` requires the matview's own unique index — **VERIFIED** (`idx_mv_monthly_month_type`, live-checked; the earlier "verify at implementation" hedge is closed). *Pre-existing oddity fixed by this amendment: the original `30 9 * * *` UTC comment claimed to run "after" an `0 11 * * *`-equivalent workflow while actually preceding it by 1.5h — the new `30 14 * * *` slot is genuinely after, not just nominally.* |
+| `lead_views_retention_purge` | Daily, `0 9 * * *` UTC | `DELETE FROM lead_views WHERE viewed_at < NOW() - make_interval(days => (SELECT COALESCE(variable_value::int, 90) FROM logic_variables WHERE variable_key = 'lead_view_retention_days'));` — **AMENDED (Schema-Fidelity F5):** `logic_variables.variable_value` is `NUMERIC`, not an interval-multipliable type; `make_interval(days => ...)` is the correct cast, replacing the earlier `... * INTERVAL '1 day'` shape which does not type-check against a `NUMERIC` operand the same way. | Pure retention housekeeping (Spec 70 §Database Schema, PIPEDA 90-day SLA). A day's delay in purging past-window rows is not a data-integrity incident — it is the *same* risk profile the old `purge-lead-views.js` "task 1" half already carried as a manually-scheduled script (§6). Reads the tunable retention window from `logic_variables` rather than hardcoding 90, preserving the admin-configurable behavior the JS script had. |
+| `offboarding_sweep_30day` | Daily, `0 10 * * *` UTC | **AMENDED (Schema-Fidelity F3/F4) — predicate + execution shape rewritten to reality:** the sweep no longer targets `auth.users.raw_user_meta_data` (no such mirrored column exists — see caveat resolution below); it reads `user_profiles.account_deleted_at` (mig 114:32, live-verified as the ONLY location this timestamp lives). Because `admin_audit_log.admin_uid` is `ON DELETE RESTRICT` (mig 229:96-106, a **deliberate fence** — an audit trail must survive the account that authored it), a single batch `DELETE FROM auth.users WHERE ...` aborts ENTIRELY the moment it hits any swept user who ever authored an audit-log row, blocking every OTHER eligible user's deletion too. The job therefore runs **PER-USER**, in a `DO` block loop over `user_profiles WHERE account_deleted_at < NOW() - INTERVAL '30 days'`, with **per-row exception handling**: a `DELETE FROM auth.users WHERE id = <row>` wrapped so a `foreign_key_violation` on that specific row is caught, `RAISE WARNING`'d (surfaced in `cron.job_run_details`, visible to an operator without a separate alert channel) and skipped rather than aborting the whole sweep — the skipped, audit-authoring user is left for manual RTBF scrub (the same pattern the P24 work already established). Non-audit-authoring users still delete normally via `auth.users`'s CASCADE network onto the 10-table D6 inventory. A partial index `CREATE INDEX ... ON user_profiles (account_deleted_at) WHERE account_deleted_at IS NOT NULL` rides the same catalog migration (Gemini MED — cheap insurance for what would otherwise be a full-table scan every run). | **Net-new** — Spec 97 §3.2 **(L504, corrected from an earlier L502 mis-cite)** documents this sweep as a "TODO: Phase 2" Cloud Function that was **never built** (mobile settings spec, offboarding flow). Zero regression risk: today, nothing purges past-30-day self-deleted accounts at all. |
 
 This table is **extensible without a spec amendment**: a new pg_cron job may be added
 directly as a migration provided it satisfies the must-not-be-must-succeed constraint
 above; it does not need to be enumerated here first. VACUUM/ANALYZE tuning beyond
 Postgres's own autovacuum is deliberately not itemized — add an entry if and when a
 specific table's autovacuum settings prove insufficient, rather than pre-guessing one now.
+
+**All call sites in this catalog are schema-qualified** (`cron.schedule(...)`,
+`net.http_post(...)` where applicable) — see §5a for why that is the actual portability
+guarantee, not a schema pin.
+</architecture>
+
+---
+
+<architecture>
+## 5a. Schema Determinism — `pg_cron` / `pg_net` Call-Site Rule
+
+The original program-plan bullet (`.cursor/active_task.md` Phase 3.2, pre-2026-07-20) called
+for "pinning pg_cron/pg_net to the `extensions` schema." That mechanism is **impossible as
+worded and unnecessary for correctness** (Schema-Fidelity F1 + Integration + DeepSeek,
+converged CRITICAL finding, P3-G8):
+
+- **pg_cron 1.6.4** is live-verified `extnamespace = pg_catalog`, `extrelocatable = false` —
+  control-file-fixed. It CANNOT be moved to `extensions` or anywhere else, ever. Its entire
+  callable surface (`cron.schedule`, `cron.unschedule`, `cron.job`, `cron.job_run_details`,
+  …) is hardcoded in the **`cron`** schema regardless of which schema the extension's own
+  catalog entry lists.
+- **pg_net 0.20.3** is likewise non-relocatable; its functions are hardcoded in the **`net`**
+  schema.
+- Both are therefore **search_path-independent** from any call site that schema-qualifies
+  its calls — pinning an extension's catalog-entry schema buys nothing for callers that
+  already write `cron.*`/`net.*` explicitly.
+
+**Migration 224's missing `SCHEMA extensions` clause on its `CREATE EXTENSION` statements is
+CORRECT, not a defect** to retroactively "fix." The schema-determinism migration (§5, P3-D4
+mechanism ①, authored at implementation) instead:
+
+1. **Asserts/NOTICEs the live layout** — `extnamespace`/`extrelocatable` for both
+   extensions, and the schema housing each extension's catalog entry — so a future drift is
+   visible in migration output rather than silently assumed.
+2. **Adds `SCHEMA extensions` to the pg_net `CREATE EXTENSION IF NOT EXISTS`, for fresh
+   installs only**, guarded on the `extensions` schema existing (it does **not** exist on
+   Docker/CI images, where pg_net would otherwise fail to install at all if the clause were
+   unconditional). This affects only where pg_net's catalog entry is *recorded* — not where
+   its functions live, which remain hardcoded `net.*` either way.
+
+**The durable rule, and the actual guarantee:** every call site in this codebase invokes
+`cron.schedule(...)`, `cron.unschedule(...)`, `net.http_post(...)`, etc. **schema-qualified —
+never bare, never relying on `search_path` to resolve them.** That qualification, not a
+schema pin, is what makes these extensions' behavior identical across the three
+simultaneously-live Postgres instances of the Phase 0–3 coexistence window (Spec 113 §12).
 </architecture>
 
 ---
@@ -302,17 +497,53 @@ route.ts` L294-309, feeding `src/components/DataQualityDashboard.tsx` L79/426/46
 never written with a real value and never consulted by any scheduler (`run-chain.js` reads
 this table only for the unrelated `enabled` disable-flag, L144-154 — never `cron_expression`).
 
-**Phase 3.2 MUST write real values** — one `UPDATE`/seed per row, keyed by the `pipeline`
-slug already used for the `enabled` toggle (`chain_${chainId}` per §4, or the bare
-`chainId` — match whatever `run-chain.js`'s existing `disabledSlugs` lookup expects,
-verified at implementation, not re-derived here):
+**AMENDED 2026-07-20 (P3-G11) — the seed mechanism, row inventory, and values below all
+replace the earlier draft, which used a dead `ON CONFLICT` precedent and omitted rows that
+do not yet exist.**
+
+**Row inventory (live-verified):** `pipeline_schedules` currently holds 27 **step-level**
+rows, ALL with `chain_id = NULL` and `cron_expression = NULL`. There are **no** `sources`,
+`entities`, or `deep_scrapes` rows at all today — a plain `UPDATE ... WHERE pipeline = ...`
+silently no-ops for all three, writing nothing. The values below are therefore written via
+`INSERT`, not `UPDATE`.
+
+**Seed mechanism:** the seed runs as an **idempotent, re-runnable SCRIPT**
+(`scripts/seed-pipeline-schedules.js`, authored at P3-F5, not a one-shot migration), using
+
+```sql
+INSERT INTO pipeline_schedules (pipeline, cadence, cron_expression, chain_id, enabled)
+VALUES ($1, $2, $3, NULL, TRUE)
+ON CONFLICT (pipeline, COALESCE(chain_id, '__ALL__'))
+DO UPDATE SET cadence = EXCLUDED.cadence, cron_expression = EXCLUDED.cron_expression
+```
+
+matching the expression-index unique constraint migration 095 actually left in place
+(`idx_pipeline_schedules_scope (pipeline, COALESCE(chain_id,'__ALL__'))` — the 038-era plain
+`PRIMARY KEY (pipeline)` this table's original design assumed is GONE). The admin PATCH
+handler (`route.ts:80-86`) already targets this exact `ON CONFLICT` shape successfully — it
+is the working precedent this seed script copies; migration 048's `ON CONFLICT (pipeline)`
+shape would fail at runtime today (no such constraint exists to infer against) and MUST NOT
+be copied. New rows use `chain_id = NULL` (global scope) — migration 095's `chain_id` CHECK
+constraint excludes `'deep_scrapes'` from its allowed values, which is fine here since none
+of these rows need per-chain scoping; noted for any future per-chain-scoped schedule.
+
+**Values written (per-pipeline, matching §2's amended cadences):**
 
 | `pipeline` | `cadence` | `cron_expression` |
 |---|---|---|
-| `coa` | `Daily` | `0 11 * * 1-5` (§2 table) |
-| `permits` | `Daily` | `0 11 * * 1-5` |
-| `sources` | `Quarterly` | `0 13 1 1,4,7,10 *` |
+| `coa` | `Daily` | `0 11 * * *` |
+| `permits` | `Daily` | `0 11 * * *` |
+| `sources` | `Weekly` | `0 13 * * 0` |
 | `entities` | `Daily` | `0 8 * * *` |
+| `deep_scrapes` | `Weekdays (3x Daily)` | `0 15,18,21 * * 1-5` |
+
+**Cadence enum extension (same change as the seed script — P3-G11):** the admin PUT
+handler's cadence validator (`src/app/api/admin/pipelines/schedules/route.ts:34`,
+`['Daily','Quarterly','Annual']`) is extended to
+`['Daily', 'Weekly', 'Weekdays (3x Daily)', 'Quarterly', 'Annual']` in the SAME change as
+the seed — an un-extended enum would make the admin UI's own `PUT` silently reject the
+`sources`/`deep_scrapes` rows' cadence the moment an operator touches them through the
+dashboard.
 
 Writing these values is the entire scope of this wiring step — it does **not** make
 `pipeline_schedules` authoritative over scheduling (GitHub Actions' own workflow YAML
@@ -346,13 +577,27 @@ no file):**
    115_scheduling.md`). This file exists so a developer can exercise the same 3 chain
    schedules locally without waiting for a cron tick."*
 2. `isChainRunning` (`local-cron.js` L80-96) MUST be refactored to **call the same query
-   logic as `scripts/check-chain-running.js`** (§4) — e.g. both import a shared
+   logic as `scripts/check-chain-running.js`** (§4) — both import the shared
    `scripts/lib/chain-concurrency.js` helper — rather than maintaining two independently-
    evolving copies of the "exact query" Spec 113 §8.3 requires to stay exact. A future edit
    to the concurrency query that only touches one of the two files is exactly the kind of
-   drift this rule exists to prevent.
+   drift this rule exists to prevent. **The extraction is LIMITED to `isChainRunning`
+   itself** (P3-G3) — `triggerChain` and the scheduler loop STAY in `local-cron.js`
+   unchanged. `src/tests/chain.logic.test.ts`'s source-scan locks assert on literal text
+   inside `local-cron.js` (the try/catch shape, the `CHAIN_TIMEOUT_MS` constant, the kill
+   sequence) — pulling those into the shared helper would break those locks for no benefit,
+   since neither `triggerChain` nor the loop is part of the "exact query" duplication risk
+   §4/§8.3 are guarding against.
 3. `npm run local-cron` stays as the invocation entrypoint; no rename required by this
    spec.
+4. **Timeout escalation becomes SIGTERM-then-SIGKILL-after-grace** (prod parity, Gemini
+   MED): the existing hard `CHAIN_TIMEOUT_MS` (90 min) timeout now sends `SIGTERM` first,
+   logs CRITICAL, and only escalates to `SIGKILL` if the child has not exited after a grace
+   period — mirroring §3's note that GitHub Actions itself sends `SIGTERM` before a force
+   kill, rather than `local-cron.js`'s previous immediate `SIGKILL`. The pinned test
+   literals in `chain.logic.test.ts` are updated in the same commit to match the new
+   kill-sequence shape, not deleted (the underlying lock's intent — a hung chain never
+   blocks the rest of the serialized job — is unchanged).
 
 `local-cron.js` is explicitly **out of scope for the GitHub Actions workflows in §2** —
 it is never invoked by CI/CD and holds no production credential it doesn't already hold
@@ -362,24 +607,24 @@ today (developer's own `.env`).
 ---
 
 <architecture>
-## 8. Network Restrictions — Amendment Placeholder
+## 8. Network Restrictions — RESOLVED 2026-07-20
 
-Spec 113 §8.2 already documents the 3 candidate options (allowlist GitHub's published
-Actions IP ranges / self-hosted runner / restrictions off + strong auth) and states the
-decision is made explicitly at Phase 3.2 implementation time. **This spec does not
-duplicate or pre-select among them.** When Phase 3.2 makes the call:
+Spec 113 §8.2 documented 3 candidate options (allowlist GitHub's published Actions IP
+ranges / self-hosted runner / restrictions off + strong auth) and deferred the decision to
+Phase 3.2 implementation time. **That decision has now landed:** option 3 — Network
+Restrictions OFF, strong auth alone (CA-pinned `verify-full` TLS, §4, plus a narrow-scope,
+Vault-adjacent credential treated as fully sensitive). The ruling is recorded as the
+authoritative amendment to **Spec 113 §8.2** (not duplicated here beyond this pointer) —
+that section is the durable policy record for the decision, including the operator's
+rationale and deep_scrapes' inclusion in the same ruling.
 
-- The chosen option MUST be recorded as an **amendment to Spec 113 §8.2** (not to this
-  spec) — that section is the durable policy record for the decision.
-- This spec's workflow YAML (§2.2) carries a `# TODO Phase 3.2` marker on `runs-on:` for
-  exactly this reason: `runs-on: ubuntu-latest` (GitHub-hosted) only holds if option 1 or 3
-  is chosen; option 2 (self-hosted runner) changes that line to `runs-on: self-hosted`
-  (plus label(s) per whatever runner-host provisioning Phase 3.2 sets up) across all three
-  workflow files in §2.
-- If option 1 (allowlist rotation) is chosen, the periodic sync job it requires is itself a
-  pg_cron-**inappropriate** must-succeed-adjacent concern (a missed sync silently starts
-  rejecting legitimate runner IPs) — it should run as its own GitHub Actions scheduled
-  workflow, not a §5 pg_cron entry, when/if built.
+Consequently `runs-on: ubuntu-latest` (GitHub-hosted) is the final value — not a
+placeholder — across **all five** workflow files this spec defines: the four chain
+workflows in §2 (`chain-coa-permits.yml`, `chain-sources.yml`, `chain-entities.yml`,
+`chain-deep-scrapes.yml`, §2.4) plus `pipeline-watchdog.yml` (§2.5). The `# TODO Phase 3.2`
+marker an earlier draft of §2.2 carried on `runs-on:` is resolved, not left open — there is
+no self-hosted-runner branch to build for options 1/2, and no periodic allowlist-sync job
+is needed (option 1's would-be pg_cron-inappropriate concern is moot).
 </architecture>
 
 ---
@@ -392,11 +637,33 @@ duplicate or pre-select among them.** When Phase 3.2 makes the call:
   itself can't connect. Guard: §5's catalog is scoped exclusively to jobs where a missed
   cycle is a no-op, never a must-succeed job (Spec 113 §8.4) — this failure mode is
   *accepted*, not mitigated, for every job in the catalog by construction.
-- **GitHub-hosted runner IP rotation vs. Network Restrictions allowlist** — if §8's Phase
-  3.2 decision lands on option 1, GitHub's published Actions IP ranges rotate over time; a
-  stale allowlist silently starts rejecting legitimate scheduled runs (connection refused,
-  visible as a `run-chain.js` startup failure, not a silent no-op — at least it's loud).
-  Guard: the periodic allowlist-sync job noted in §8, or pick option 2/3 instead.
+- **GitHub-hosted runner IP rotation vs. Network Restrictions allowlist** — moot as of
+  §8's 2026-07-20 resolution: option 3 (restrictions off + strong auth) was chosen
+  precisely because it has no IP-allowlist surface to rotate against. Retained here as a
+  historical note in case a future revisit reopens the option-1 path.
+- **DB-check error was a silent green skip before P3-D8** — the original §4 item 3 design
+  (`skip=true`, exit 0 on a DB-check error) made an unreachable database indistinguishable
+  from a legitimate "already running" skip in the Actions UI — both looked like a quiet,
+  green no-op. §4 item 3's amendment (`skip=true` AND `exit 1`) closes this: the guard step
+  itself now reddens and fires GitHub's failure notification on a DB-check error, while
+  still refusing to double-fire the chain. If a future edit reverts to exit-0-on-error, this
+  exact silent-outage gap reopens.
+- **Ephemeral-profile cache miss (deep_scrapes, §2.4)** — a GitHub-hosted runner's
+  `actions/cache` restore of `~/.buildo-scraper/profile-worker-N` can miss (first run after
+  a cache eviction, or the 10GB-per-repo cache-size limit evicting the stealth-profile
+  entries in favor of other workflows' caches) — the run then proceeds with a fresh
+  fingerprint instead of the aged one. This degrades scrape reliability but is not a hard
+  failure; it surfaces only indirectly, via a lower scrape-success rate in that run's
+  `pipeline_runs` verdict, not a distinct alert. Guard: none dedicated — this is an accepted
+  limitation of the GitHub-hosted (vs. self-hosted, persistent-disk) runner choice, priced
+  into P3-D1's ruling.
+- **Orchestrator exit-0 masking (§2.4)** — `aic-orchestrator.py` exits 0 on a scrape-level
+  failure by design (verdict-only FAIL → `run-chain.js`'s `completed_with_errors` → exit 0).
+  A workflow that gated only on the `run-chain.js` process exit code would show GREEN on a
+  fully-failed scrape. Guard: §2.4's failure-detection contract requires
+  `chain-deep-scrapes.yml` to separately read the chain's `pipeline_runs` status/verdict
+  after the run and `exit 1` on `completed_with_errors`/FAIL — this is why the workflow
+  cannot simply trust `node scripts/run-chain.js deep_scrapes`'s own exit code.
 - **Concurrent workflow runs racing `isChainRunning`** — a manual `workflow_dispatch`
   trigger overlapping a scheduled run creates a narrow TOCTOU window between
   `check-chain-running.js`'s read and `run-chain.js`'s own advisory-lock acquisition (§4).
@@ -418,8 +685,15 @@ duplicate or pre-select among them.** When Phase 3.2 makes the call:
   through the 12h-aware `check-chain-running.js` query) shows a phantom in-progress run for
   up to half a day. This is a real, currently-unfixed gap in the codebase as of this spec
   (§4 item 6) — not a hypothetical regression risk.
-- **DST cron drift (§2.1)** — accepted, not a bug; documented so a future reviewer doesn't
-  "fix" it into a two-cron-line date-gated scheme without re-reading this rationale.
+- **DST cron drift (§2.1) — accepted AND reconciled, not a bug.** The underlying drift (a
+  fixed UTC cron tracks EST year-round, landing 1h later than nominal ET during EDT) is
+  still accepted, not "fixed" into a two-cron-line date-gated scheme. What changed
+  2026-07-20: the program-plan panel's "single UTC cron + in-job ET check" ruling is now
+  BUILT, not just documented as a future option — every workflow's guard step logs the
+  current America/Toronto time and emits a `::notice` drift annotation (observability-
+  grade; it never skips a run). A future reviewer re-reading this bullet should look at
+  §2.1's "AMENDED 2026-07-20" paragraph for the reconciliation, not re-propose the
+  dual-cron-line scheme the panel already rejected as drift-prone.
 </failure_modes>
 
 ---
@@ -431,20 +705,30 @@ duplicate or pre-select among them.** When Phase 3.2 makes the call:
 - `.github/workflows/chain-coa-permits.yml` (new — §2.2)
 - `.github/workflows/chain-sources.yml` (new — §2.2)
 - `.github/workflows/chain-entities.yml` (new — §2.2)
+- `.github/workflows/chain-deep-scrapes.yml` (new — §2.4)
+- `.github/workflows/pipeline-watchdog.yml` (new — §2.5; also the file that implements
+  Spec 112 §6's backup safety-net role, merged in rather than a separate workflow)
 - `scripts/check-chain-running.js` (new — the `isChainRunning` re-implementation, §4)
 - `scripts/lib/chain-concurrency.js` (new — shared query helper imported by both
   `check-chain-running.js` and the demoted `local-cron.js`, §4/§7)
-- `scripts/run-chain.js` (`SIGTERM` handler addition, §4 item 6 — the only behavioral
-  change to this file; all other `run-chain.js` behavior is unmodified)
-- `scripts/local-cron.js` (header + `isChainRunning` refactor to shared helper — demoted,
-  not deleted, §7)
+- `scripts/run-chain.js` (`SIGINT`+`SIGTERM` handler addition, §4 item 6 — the only
+  behavioral change to this file; all other `run-chain.js` behavior is unmodified)
+- `scripts/local-cron.js` (header + `isChainRunning` refactor to shared helper + SIGTERM-
+  then-SIGKILL-after-grace timeout escalation — demoted, not deleted, §7)
 - `scripts/certs/supabase-ca.pem` (new — committed CA cert, §3; governed by Spec 113 §4.3's
   rotation runbook, not re-specified here)
-- `migrations/` (new — pg_cron job registrations per §5's catalog, next available number)
-- `src/app/api/admin/pipelines/schedules/route.ts`, `src/app/api/admin/stats/route.ts`,
-  `src/components/DataQualityDashboard.tsx` — **read-only consumers**, not modified by this
-  spec; §6's `pipeline_schedules` writes are a data change (seed/UPDATE), not a code change
-  to these files.
+- `migrations/` (new — the schema-determinism migration §5a + pg_cron job registrations
+  per §5's catalog, next available number at implementation)
+- `scripts/seed-pipeline-schedules.js` (new — the idempotent `pipeline_schedules` seed
+  script, §6)
+- `src/app/api/admin/pipelines/schedules/route.ts` — **cadence enum edit** (§6, extending
+  `['Daily','Quarterly','Annual']` to include `'Weekly'` and the multi-daily display value)
+  in the SAME change as the seed script; otherwise a read-only consumer.
+- `src/app/api/admin/stats/route.ts`, `src/components/DataQualityDashboard.tsx` — gain the
+  per-chain `last_completed_at` freshness block (§2.5, implemented at F4); otherwise
+  read-only consumers of §6's `pipeline_schedules` writes, which are a data change
+  (seed/`INSERT ... ON CONFLICT`), not a code change to these files beyond the freshness
+  block.
 
 ### Out-of-Scope Files
 - `scripts/backup-db.js` internals — Spec 112's rewrite; §2.3 only states that
