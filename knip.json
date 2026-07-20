@@ -1,12 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    "src/app/**/*.{ts,tsx}",
-    "functions/src/**/*.ts"
+    "src/app/**/*.{ts,tsx}"
   ],
   "project": [
-    "src/**/*.{ts,tsx}",
-    "functions/src/**/*.ts"
+    "src/**/*.{ts,tsx}"
   ],
   "ignore": [
     "src/tests/**",
@@ -30,9 +28,7 @@
     "@ast-grep/cli",
     "eslint-config-next",
     "@stryker-mutator/api",
-    "@google-cloud/storage",
-    "@google-cloud/functions-framework",
-    "@google-cloud/pubsub"
+    "@google-cloud/storage"
   ],
   "ignoreBinaries": ["tsx", "sqlfluff", "wait-on"]
 }

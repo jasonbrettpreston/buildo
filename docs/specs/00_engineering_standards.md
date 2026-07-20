@@ -167,7 +167,7 @@ The six layers of §5.2 are complementary, not interchangeable. Pick the layer t
   - Regex `s` flag (dotAll) requires ES2018+ — use `[\s\S]` instead.
   - `process.env.NODE_ENV = 'test'` fails due to literal type narrowing — use `(process.env as Record<string, string>).NODE_ENV = 'test'`.
   - `typeof globalThis.google` breaks in Next.js client bundles — use `(window as any).google`.
-  - The `functions/` directory (Cloud Functions) has its own `tsconfig.json` and MUST be excluded from the root config.
+  - The `functions/` directory (Cloud Functions, deleted 2026-07-20 — Supabase migration Phase 3.1, zero live references) formerly had its own `tsconfig.json` excluded from the root config.
 
 ---
 

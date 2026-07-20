@@ -306,7 +306,7 @@ consumer itself.
 
 ### Out-of-Scope Files
 - `src/app/api/` — API routes have their own error handling standards (§2.2 of engineering_standards.md)
-- `functions/` — Cloud Functions have separate deployment lifecycle
+- ~~`functions/` — Cloud Functions~~ (deleted 2026-07-20, Supabase migration Phase 3.1 — logic long since covered by the permits chain)
 
 ### Cross-Spec Dependencies
 - **Relies on:** `00_engineering_standards.md` (§9 pipeline standards)
