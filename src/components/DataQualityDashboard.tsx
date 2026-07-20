@@ -76,6 +76,7 @@ interface AdminStats {
   wsib_lead_pool: number;
   wsib_with_trade: number;
   pipeline_last_run: Record<string, PipelineRunInfo>;
+  chain_freshness?: Record<string, { last_completed_at: string | null; stale: boolean }>;
   pipeline_schedules: Record<string, { cadence: string; cron_expression: string | null; enabled: boolean }>;
   db_schema_map?: Record<string, string[]>;
   live_table_counts?: Record<string, number>;
@@ -181,6 +182,55 @@ const HealthBanner = React.memo(function HealthBanner({
           </div>
         </div>
       )}
+    </div>
+  );
+});
+
+// ---------------------------------------------------------------------------
+// ChainFreshnessRow — compact freshness chip row (P3-D9, Spec 115 §2.5)
+//
+// Reads the SAME `chain_freshness` block the pipeline-watchdog workflow's
+// own checks read (GET /api/admin/stats) — an operator looking at this chip
+// row sees the same freshness picture the watchdog alerts on, not a second,
+// independently-derived one.
+// ---------------------------------------------------------------------------
+
+interface ChainFreshnessRowProps {
+  chainFreshness: Record<string, { last_completed_at: string | null; stale: boolean }>;
+}
+
+const CHAIN_FRESHNESS_LABELS: { slug: string; label: string }[] = [
+  { slug: 'chain_coa', label: 'CoA' },
+  { slug: 'chain_permits', label: 'Permits' },
+  { slug: 'chain_sources', label: 'Sources' },
+  { slug: 'chain_entities', label: 'Entities' },
+  { slug: 'chain_deep_scrapes', label: 'Deep Scrapes' },
+];
+
+const ChainFreshnessRow = React.memo(function ChainFreshnessRow({
+  chainFreshness,
+}: ChainFreshnessRowProps) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white px-4 py-2.5">
+      <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">
+        Chain freshness (GitHub Actions schedule — Spec 115 §2.5)
+      </p>
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5 md:gap-x-6">
+        {CHAIN_FRESHNESS_LABELS.map(({ slug, label }) => {
+          const info = chainFreshness[slug];
+          const lastCompleted = info?.last_completed_at
+            ? new Date(info.last_completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : 'Never';
+          const stale = info?.stale ?? true;
+          return (
+            <div key={slug} className="flex items-center gap-1.5 text-xs">
+              <span className={`inline-block w-2 h-2 rounded-full ${stale ? 'bg-red-500' : 'bg-green-500'}`} />
+              <span className="text-gray-600 font-medium">{label}</span>
+              <span className={stale ? 'text-red-600' : 'text-gray-400'}>{lastCompleted}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 });
@@ -476,6 +526,11 @@ export function DataQualityDashboard() {
             {...(stats?.live_table_counts !== undefined && { liveTableCounts: stats.live_table_counts })}
           />
           </div>
+
+          {/* Chain freshness chip row — near the schedules display (P3-D9) */}
+          {stats?.chain_freshness && (
+            <ChainFreshnessRow chainFreshness={stats.chain_freshness} />
+          )}
 
           {/* Dismissible schedule notice */}
           {!dismissedNotice && (

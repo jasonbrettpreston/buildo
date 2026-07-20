@@ -196,6 +196,12 @@ const eslintConfig = [
       // above (it connects directly via SUPABASE_DATABASE_URL before any
       // chain has started).
       'scripts/check-chain-running.js',
+      // Spec 115 §2.4 — scripts/check-chain-verdict.js is the same class of
+      // standalone CLI, run AFTER a chain completes rather than before: it
+      // reads the aic-orchestrator.py exit-0-masking verdict directly from
+      // pipeline_runs, outside the pipeline.run()/§R1-R12 skeleton, same
+      // rationale as check-chain-running.js immediately above.
+      'scripts/check-chain-verdict.js',
       // Supabase migration Phase 1 (phase1_plan.md Item 3, P1-F3a/Item 7) —
       // one-off operator CLIs: provisions/promotes the first admin via the
       // service-role Admin API, and wipes local Supabase auth state on an

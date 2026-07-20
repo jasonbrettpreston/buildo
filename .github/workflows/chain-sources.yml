@@ -1,0 +1,66 @@
+# chain-sources.yml — single-chain `sources` workflow (weekly).
+#
+# SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2, §2.1, §3, §4
+# SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §4, §8
+#
+# Inertness (P3-D6, Spec 115 §3): `schedule:` committed COMMENTED OUT.
+# Phase 4.3 activation = one PR uncommenting it. `workflow_dispatch` active.
+
+name: chain-sources
+
+on:
+  # Phase 4.3 activation — uncomment (Spec 115 §3)
+  # schedule:
+  #   - cron: '0 13 * * 0'   # ~8 AM ET Sunday, weekly (Spec 115 §2 table row 2; §2.1 DST note)
+  workflow_dispatch: {}
+
+jobs:
+  sources:
+    runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
+    timeout-minutes: 120     # 90 (chain) + checkout/setup/migrate-verify headroom
+    concurrency:
+      group: chain-sources
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Guard — environment (SUPABASE_DATABASE_URL + CA cert + ET drift)
+        id: env_guard
+        env: &pipeline-env
+          PIPELINE_CHAIN: ${{ github.workflow }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+        run: |
+          if [ -z "$SUPABASE_DATABASE_URL" ]; then
+            echo "::error::SUPABASE_DATABASE_URL is empty — refusing to proceed (Spec 115 §3/§4 item 3 fail-safe-loud posture)."
+            exit 1
+          fi
+          if [ ! -f "$SUPABASE_CA_CERT_PATH" ]; then
+            echo "::error::CA cert not found at SUPABASE_CA_CERT_PATH=$SUPABASE_CA_CERT_PATH — every non-loopback connection in this workflow requires it (Spec 113 §4.2/§4.3). scripts/lib/ssl-config.js will throw the same fact per-connection if this guard is bypassed."
+            exit 1
+          fi
+          ET_NOW=$(TZ='America/Toronto' date '+%Y-%m-%d %H:%M:%S %Z')
+          echo "::notice title=ET drift check::Current America/Toronto time is ${ET_NOW} — this workflow's cron is a single fixed-UTC expression (Spec 115 §2.1); it never skips on DST drift, this notice is observability only."
+
+      - name: Pre-flight — migrate.js --verify (runbook rule 2)
+        run: node scripts/migrate.js --verify
+        env: *pipeline-env
+
+      - name: Guard — sources concurrency check
+        id: sources_guard
+        run: node scripts/check-chain-running.js sources >> "$GITHUB_OUTPUT"
+        env: *pipeline-env
+
+      - name: Run sources chain
+        id: sources
+        if: steps.sources_guard.outputs.skip != 'true'
+        timeout-minutes: 90
+        run: node scripts/run-chain.js sources
+        env: *pipeline-env

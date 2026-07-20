@@ -291,6 +291,61 @@ export const GET = withApiEnvelope(async function GET() {
       // pipeline_runs table may not exist yet
     }
 
+    // Chain freshness (P3-D9, Spec 115 §2.5) — the SAME facts the
+    // pipeline-watchdog workflow's own freshness checks read: MAX(completed_at)
+    // per chain, scoped to runs that actually reached a terminal "ran"
+    // status (a chain that never started or is still running is not stale,
+    // it is simply absent from the numerator; `failed`/`cancelled` runs are
+    // also excluded — a crashed run should not count as "fresh data landed").
+    // Stale thresholds per Spec 115 §2/§2.5: >25h coa/permits, >8d (192h)
+    // sources, >26h entities. deep_scrapes runs weekdays-only 3x/day
+    // (Spec 115 §2 table) — its threshold is business-day-aware so a Monday
+    // read doesn't false-positive on the Fri→Mon weekend gap; over the
+    // weekend itself the chip is never marked stale (no run is expected).
+    const chainFreshness: Record<string, { last_completed_at: string | null; stale: boolean }> = {};
+    try {
+      const CHAIN_SLUGS = ['chain_coa', 'chain_permits', 'chain_sources', 'chain_entities', 'chain_deep_scrapes'];
+      const freshnessRows = await query<{ pipeline: string; last_completed_at: Date | null }>(
+        `SELECT pipeline, MAX(completed_at) AS last_completed_at
+           FROM pipeline_runs
+          WHERE pipeline = ANY($1)
+            AND status IN ('completed', 'completed_with_warnings', 'completed_with_errors')
+          GROUP BY pipeline`,
+        [CHAIN_SLUGS]
+      );
+      const lastCompletedByChain: Record<string, Date | null> = {};
+      for (const row of freshnessRows) lastCompletedByChain[row.pipeline] = row.last_completed_at;
+
+      const nowMs = Date.now();
+      // Business-day-aware threshold for deep_scrapes: Monday needs to reach
+      // back through the weekend to Friday's last slot (~21:00 UTC); Sat/Sun
+      // never flag stale since no run is expected on those days.
+      const utcDay = new Date().getUTCDay(); // 0=Sun .. 6=Sat
+      const deepScrapesThresholdHours = utcDay === 1 ? 72 : (utcDay === 0 || utcDay === 6) ? Infinity : 24;
+
+      const STALE_THRESHOLD_HOURS: Record<string, number> = {
+        chain_coa: 25,
+        chain_permits: 25,
+        chain_sources: 192, // 8 days
+        chain_entities: 26,
+        chain_deep_scrapes: deepScrapesThresholdHours,
+      };
+
+      for (const slug of CHAIN_SLUGS) {
+        const lastCompletedAt = lastCompletedByChain[slug] ?? null;
+        const thresholdHours = STALE_THRESHOLD_HOURS[slug] ?? 25;
+        const stale = !lastCompletedAt
+          ? true
+          : (nowMs - new Date(lastCompletedAt).getTime()) / (1000 * 60 * 60) > thresholdHours;
+        chainFreshness[slug] = {
+          last_completed_at: lastCompletedAt ? new Date(lastCompletedAt).toISOString() : null,
+          stale,
+        };
+      }
+    } catch {
+      // pipeline_runs table may not exist yet — chain_freshness degrades to {}
+    }
+
     // Pipeline schedules from DB
     const pipelineSchedules: Record<string, { cadence: string; cron_expression: string | null; enabled: boolean }> = {};
     try {
@@ -390,6 +445,8 @@ export const GET = withApiEnvelope(async function GET() {
       lead_views_saved: p(leadViewsSavedResult),
       // Pipeline freshness
       pipeline_last_run: pipelineLastRun,
+      // Chain freshness (P3-D9, Spec 115 §2.5) — last COMPLETED run + stale flag, per chain
+      chain_freshness: chainFreshness,
       // Pipeline schedules
       pipeline_schedules: pipelineSchedules,
       // Live DB schema for pipeline description tiles

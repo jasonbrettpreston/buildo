@@ -1,0 +1,109 @@
+# chain-coa-permits.yml — coa → permits, serialized in one workflow.
+#
+# SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2, §2.1, §2.2, §3, §4
+# SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §4, §8
+#
+# Inertness (P3-D6, Spec 115 §3 "Inertness mechanism"): the `schedule:` block
+# below is committed COMMENTED OUT. Phase 4.3 activation is a single PR that
+# uncomments it. `workflow_dispatch` stays active for manual testing before
+# and after activation.
+
+name: chain-coa-permits
+
+on:
+  # Phase 4.3 activation — uncomment (Spec 115 §3)
+  # schedule:
+  #   - cron: '0 11 * * *'   # ~6 AM ET nightly, ×7 (Spec 115 §2 table row 1; §2.1 DST note)
+  workflow_dispatch: {}
+
+jobs:
+  coa-then-permits:
+    runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
+    timeout-minutes: 210     # 90 (coa) + 90 (permits) + checkout/setup/PG17-client/migrate-verify headroom
+    concurrency:
+      group: chain-coa-permits
+      cancel-in-progress: false   # queue, never cancel a run mid-flight (Spec 115 §2.2)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Guard — environment (SUPABASE_DATABASE_URL + CA cert + ET drift)
+        id: env_guard
+        env: &pipeline-env
+          PIPELINE_CHAIN: ${{ github.workflow }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+        run: |
+          # A missing GitHub secret interpolates to an empty string and does
+          # NOT, on its own, fail a workflow — inertness never rests on that
+          # (Spec 115 §3/§8/G9). This guard protects manual workflow_dispatch
+          # invocations, which ARE live pre-4.3, from silently no-op-ing
+          # against an empty connection string.
+          if [ -z "$SUPABASE_DATABASE_URL" ]; then
+            echo "::error::SUPABASE_DATABASE_URL is empty — refusing to proceed (Spec 115 §3/§4 item 3 fail-safe-loud posture)."
+            exit 1
+          fi
+          # CA-pinned verify-full TLS (Spec 113 §4) requires the committed CA
+          # PEM to actually be present in the checked-out workspace.
+          if [ ! -f "$SUPABASE_CA_CERT_PATH" ]; then
+            echo "::error::CA cert not found at SUPABASE_CA_CERT_PATH=$SUPABASE_CA_CERT_PATH — every non-loopback connection in this workflow requires it (Spec 113 §4.2/§4.3). scripts/lib/ssl-config.js will throw the same fact per-connection if this guard is bypassed."
+            exit 1
+          fi
+          # DST drift is deliberate, accepted, and reconciled via observability
+          # rather than a second cron line (Spec 115 §2.1 AMENDED 2026-07-20) —
+          # this never skips a run, it only logs the drift.
+          ET_NOW=$(TZ='America/Toronto' date '+%Y-%m-%d %H:%M:%S %Z')
+          echo "::notice title=ET drift check::Current America/Toronto time is ${ET_NOW} — this workflow's cron is a single fixed-UTC expression (Spec 115 §2.1); it never skips on DST drift, this notice is observability only."
+
+      - name: Pre-flight — migrate.js --verify (runbook rule 2)
+        run: node scripts/migrate.js --verify
+        env: *pipeline-env
+
+      - name: Install PostgreSQL 17 client (PGDG apt repo)
+        # backup_db (the permits chain's final step, §2.3) spawns pg_dump —
+        # Spec 112 §5's client-version rule (client >= highest server version
+        # touched, PG17 here) is not satisfied by ubuntu-latest's default.
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client-17
+
+      - name: Guard — coa concurrency check
+        id: coa_guard
+        run: node scripts/check-chain-running.js coa >> "$GITHUB_OUTPUT"
+        env: *pipeline-env
+
+      - name: Run coa chain
+        id: coa
+        if: steps.coa_guard.outputs.skip != 'true'
+        continue-on-error: true      # isolation: a coa failure must not skip permits (Spec 115 §2.2)
+        timeout-minutes: 90
+        run: node scripts/run-chain.js coa
+        env: *pipeline-env
+
+      - name: Guard — permits concurrency check
+        id: permits_guard
+        if: always()
+        run: node scripts/check-chain-running.js permits >> "$GITHUB_OUTPUT"
+        env: *pipeline-env
+
+      - name: Run permits chain
+        id: permits
+        if: always() && steps.permits_guard.outputs.skip != 'true'
+        timeout-minutes: 90            # NOT continue-on-error — this is the primary
+        run: node scripts/run-chain.js permits   # pipeline; its failure MUST redden the job
+        env: *pipeline-env
+
+      - name: Surface coa failure for alerting
+        if: always() && steps.coa.outcome == 'failure'
+        run: |
+          echo "::error::coa chain failed — permits ran regardless (isolation preserved), but this run must be marked failed for GH notification alerting."
+          exit 1

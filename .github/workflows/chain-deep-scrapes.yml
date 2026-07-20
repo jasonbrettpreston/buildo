@@ -1,0 +1,165 @@
+# chain-deep-scrapes.yml — the 7-step `deep_scrapes` chain (manifest.json:115-118):
+# inspections, classify_inspection_status, assert_network_health,
+# refresh_snapshot, assert_data_bounds, assert_engine_health, assert_staleness.
+#
+# SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2, §2.1, §2.4, §3, §4
+# SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §4, §8.2, §8.4, §11
+#
+# Inertness (P3-D6, Spec 115 §3): `schedule:` committed COMMENTED OUT.
+# Phase 4.3 activation = one PR uncommenting it. `workflow_dispatch` active.
+#
+# Runner (Spec 113 §8.2 option 3, ruled 2026-07-20): GitHub-hosted. The Decodo
+# residential proxy carries ALL of aic-orchestrator.py's AIC traffic, so the
+# runner's own datacenter IP is never WAF-visible to AIC — the exact property
+# that would otherwise argue for a self-hosted runner. Because the proxy
+# forces headed Chrome (Spec 115 §2.4), the run step wraps the node PARENT in
+# xvfb-run so $DISPLAY inherits down through run-chain.js's spawned python3
+# child to the Chrome process nodriver launches — matching the guarded
+# RuntimeError aic-scraper-nodriver.py raises if proxy mode is headed with no
+# $DISPLAY set (its own error message recommends this exact invocation).
+#
+# INTEGRATION FINDING (not a spec 115/113 defect — out of scope for both per
+# their own Operating Boundaries, which exclude aic-orchestrator.py internals):
+# aic-orchestrator.py's get_db_connection() (scripts/aic-orchestrator.py L119-126)
+# reads discrete PG_HOST/PG_PORT/PG_DATABASE/PG_USER/PG_PASSWORD env vars via
+# psycopg2 — never SUPABASE_DATABASE_URL — and passes no sslmode/sslrootcert,
+# so a raw discrete-var wiring here would connect WITHOUT the CA-pinned
+# verify-full TLS Spec 113 §4 mandates. The "Derive PG_* env" step below
+# parses SUPABASE_DATABASE_URL into those discrete vars AND sets
+# PGSSLMODE=verify-full / PGSSLROOTCERT=<CA path> — libpq (which psycopg2
+# wraps) reads PGSSLMODE/PGSSLROOTCERT as environment-variable defaults for
+# any connection parameter not explicitly passed in code, so this closes the
+# TLS gap without touching the .py file (out of scope for this spec).
+
+name: chain-deep-scrapes
+
+on:
+  # Phase 4.3 activation — uncomment (Spec 115 §3)
+  # schedule:
+  #   - cron: '0 15,18,21 * * 1-5'   # weekdays-only, business hours both DST regimes (Spec 115 §2 table row 4; §2.1)
+  workflow_dispatch: {}
+
+jobs:
+  deep-scrapes:
+    runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
+    timeout-minutes: 120     # 90 (chain) + checkout/setup/xvfb/cache/migrate-verify headroom
+    concurrency:
+      group: chain-deep-scrapes
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install -r scripts/requirements.txt
+
+      - name: Install Xvfb (proxy-forced headed Chrome requires a display server)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y xvfb
+
+      - name: Restore scraper stealth profiles
+        # Persistent profiles keep the browser fingerprint stable across runs
+        # (Spec 115 §2.4). Key includes run_id so every run always saves a
+        # fresh cache entry; restore-keys prefix-matches the most recent
+        # prior entry on a miss. A cache miss (first run, or 10GB-per-repo
+        # eviction) degrades to a fresh profile — visible only via a lower
+        # scrape-success rate in that run's pipeline_runs verdict (§9's
+        # "ephemeral-profile cache miss" known failure mode), no separate alert.
+        uses: actions/cache@v4
+        with:
+          path: ~/.buildo-scraper
+          key: buildo-scraper-profiles-${{ github.workflow }}-${{ github.run_id }}
+          restore-keys: |
+            buildo-scraper-profiles-${{ github.workflow }}-
+
+      - name: Guard — environment (SUPABASE_DATABASE_URL + CA cert + ET drift)
+        id: env_guard
+        env: &pipeline-env
+          PIPELINE_CHAIN: ${{ github.workflow }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+        run: |
+          if [ -z "$SUPABASE_DATABASE_URL" ]; then
+            echo "::error::SUPABASE_DATABASE_URL is empty — refusing to proceed (Spec 115 §3/§4 item 3 fail-safe-loud posture)."
+            exit 1
+          fi
+          if [ ! -f "$SUPABASE_CA_CERT_PATH" ]; then
+            echo "::error::CA cert not found at SUPABASE_CA_CERT_PATH=$SUPABASE_CA_CERT_PATH — every non-loopback connection in this workflow requires it (Spec 113 §4.2/§4.3). scripts/lib/ssl-config.js will throw the same fact per-connection if this guard is bypassed."
+            exit 1
+          fi
+          ET_NOW=$(TZ='America/Toronto' date '+%Y-%m-%d %H:%M:%S %Z')
+          echo "::notice title=ET drift check::Current America/Toronto time is ${ET_NOW} — this workflow's cron is a single fixed-UTC expression (Spec 115 §2.1); the §2 table's business-hours slots are chosen to stay in-window under both DST regimes."
+
+      - name: Pre-flight — migrate.js --verify (runbook rule 2)
+        run: node scripts/migrate.js --verify
+        env: *pipeline-env
+
+      - name: Derive PG_* connection vars for aic-orchestrator.py (+ TLS bridge)
+        # See the file-header INTEGRATION FINDING above.
+        run: |
+          node -e "
+            const u = new URL(process.env.SUPABASE_DATABASE_URL);
+            const lines = [
+              'PG_HOST=' + u.hostname,
+              'PG_PORT=' + (u.port || '5432'),
+              'PG_DATABASE=' + decodeURIComponent(u.pathname.replace(/^\//, '')),
+              'PG_USER=' + decodeURIComponent(u.username),
+              'PG_PASSWORD=' + decodeURIComponent(u.password),
+              'PGSSLMODE=verify-full',
+              'PGSSLROOTCERT=' + process.env.SUPABASE_CA_CERT_PATH,
+            ];
+            require('fs').appendFileSync(process.env.GITHUB_ENV, lines.join('\n') + '\n');
+          "
+        env: *pipeline-env
+
+      - name: Guard — deep_scrapes concurrency check
+        id: deep_scrapes_guard
+        run: node scripts/check-chain-running.js deep_scrapes >> "$GITHUB_OUTPUT"
+        env: *pipeline-env
+
+      - name: Run deep_scrapes chain
+        id: deep_scrapes
+        if: steps.deep_scrapes_guard.outputs.skip != 'true'
+        timeout-minutes: 90
+        # Wraps the node PARENT (run-chain.js), not the python child directly,
+        # so $DISPLAY is present in the environment run-chain.js spawns its
+        # python3 child with (run-chain.js's stepEnv = {...process.env, ...} —
+        # it inherits whatever xvfb-run set on this shell).
+        run: xvfb-run -a node scripts/run-chain.js deep_scrapes
+        # NOTE: GitHub Actions supports plain YAML anchors/aliases (GA since
+        # 2025-09-18) but explicitly does NOT support merge keys (`<<:`) — a
+        # merge key here would be a workflow-parse error, not silently
+        # ignored. The *pipeline-env keys are therefore repeated verbatim
+        # rather than merged; keep this block in sync with the &pipeline-env
+        # anchor above if that anchor's keys ever change.
+        env:
+          PIPELINE_CHAIN: ${{ github.workflow }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+          PROXY_HOST: ${{ secrets.DECODO_PROXY_HOST }}
+          PROXY_PORT: ${{ secrets.DECODO_PROXY_PORT }}
+          PROXY_USER: ${{ secrets.DECODO_PROXY_USER }}
+          PROXY_PASS: ${{ secrets.DECODO_PROXY_PASS }}
+          SCRAPER_WORKERS: ${{ vars.SCRAPER_WORKERS }}
+          SCRAPE_BATCH_SIZE: ${{ vars.SCRAPE_BATCH_SIZE }}
+          SCRAPE_MAX_PERMITS: ${{ vars.SCRAPE_MAX_PERMITS }}
+          SCRAPE_PERMIT_TYPE: ${{ vars.SCRAPE_PERMIT_TYPE }}
+
+      - name: Verdict check — deep_scrapes (orchestrator exit-0 masking guard)
+        # aic-orchestrator.py exits 0 on a scrape-level failure by design
+        # (Integration HIGH-2, Spec 115 §2.4) — a `run-chain.js` exit code of
+        # 0 does NOT mean the scrape succeeded. This step separately reads
+        # the DB-recorded chain verdict and reddens the job if it was a FAIL.
+        if: always() && steps.deep_scrapes_guard.outputs.skip != 'true'
+        run: node scripts/check-chain-verdict.js deep_scrapes
+        env: *pipeline-env
