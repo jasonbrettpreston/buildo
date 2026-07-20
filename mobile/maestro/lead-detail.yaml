@@ -20,7 +20,7 @@
 # detail endpoint returns 404 and the flow exits at lead-detail-not-found.
 # Document the seed step in mobile/maestro/README when CI integration lands.
 
-appId: com.buildo.app
+appId: ca.maxbld.app
 ---
 - launchApp:
     # See auth.yaml for the clearState: false rationale (Expo dev-client
@@ -29,7 +29,7 @@ appId: com.buildo.app
 
 # Open the detail screen directly via deep link — bypasses the feed list,
 # simulating the push-notification cold-boot path that WF1-A made resilient.
-- openLink: "buildo://(app)/lead?id=permit_test_123"
+- openLink: "maxbld://(app)/lead?id=permit_test_123"
 
 # Cold-boot loading state — the useLeadDetail hook is fetching; WF1-A's
 # rewrite shows a 4-block skeleton while in flight.

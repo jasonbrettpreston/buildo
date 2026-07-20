@@ -19,7 +19,7 @@
 # breaks under Maestro automation in CI, fall back to Option B (a
 # `scripts/seed-realtor-test-account.js` that pre-creates a known
 # realtor account; the flow signs into that instead).
-appId: com.buildo.app
+appId: ca.maxbld.app
 ---
 - launchApp:
     clearState: true

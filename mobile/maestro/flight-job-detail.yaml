@@ -25,7 +25,7 @@
 # row + saved=true in lead_views for the test user. Without the fixture
 # the detail endpoint returns 404 and the flow exits at the not-found UX.
 
-appId: com.buildo.app
+appId: ca.maxbld.app
 ---
 - launchApp:
     # See auth.yaml for the clearState: false rationale.
@@ -34,7 +34,7 @@ appId: com.buildo.app
 # Open the detail screen directly via deep link — bypasses the flight
 # board list, simulating the push-notification cold-boot path that WF1-B
 # made resilient.
-- openLink: "buildo://(app)/flight-job?id=permit_test_123"
+- openLink: "maxbld://(app)/flight-job?id=permit_test_123"
 
 # Cold-boot UX: the screen header is always rendered; the body shows a
 # 3-block skeleton while either useFlightBoard or useFlightJobDetail

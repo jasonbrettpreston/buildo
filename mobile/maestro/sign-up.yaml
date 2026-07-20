@@ -7,11 +7,11 @@
 # onboarding". The full 7-step onboarding walk is a separate flow (deferred).
 #
 # Date.now() generates a unique millisecond epoch per run so each invocation
-# creates a fresh Firebase user — Firebase rejects "email already in use".
+# creates a fresh Supabase user — Supabase rejects "email already in use".
 # Maestro evaluates JavaScript inside ${...} template strings (v1.31+).
 # Note: ${CURRENT_TIMESTAMP} is NOT a Maestro built-in — it evaluated as
 # undefined and produced "newuser_undefined@buildo.app" on prior runs.
-appId: com.buildo.app
+appId: ca.maxbld.app
 ---
 - launchApp:
     # clearState: false — preserves the Expo dev client's cached Metro bundler

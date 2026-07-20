@@ -1,7 +1,7 @@
 # SPEC LINK: docs/specs/03-mobile/93_mobile_auth.md §5 Testing Gates
 # Smoke flow: cold launch → email sign-in → feed → sign out → return to sign-in.
-# Requires a test account in Firebase Auth with the credentials below.
-appId: com.buildo.app
+# Requires a test account in Supabase Auth (test project) with the credentials below.
+appId: ca.maxbld.app
 ---
 - launchApp:
     # clearState: false — the Expo dev client caches Metro's bundler URL in app

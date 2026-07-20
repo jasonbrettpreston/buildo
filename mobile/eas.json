@@ -9,6 +9,10 @@
       "distribution": "internal",
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "REPLACE_WITH_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "REPLACE_WITH_SUPABASE_PUBLISHABLE_KEY"
       }
     },
     "preview": {
@@ -16,12 +20,20 @@
       "channel": "preview",
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "REPLACE_WITH_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "REPLACE_WITH_SUPABASE_PUBLISHABLE_KEY"
       }
     },
     "production": {
       "channel": "production",
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "REPLACE_WITH_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "REPLACE_WITH_SUPABASE_PUBLISHABLE_KEY"
       }
     }
   },

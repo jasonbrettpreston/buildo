@@ -1,4 +1,4 @@
-appId: com.buildo.app
+appId: ca.maxbld.app
 ---
 - launchApp:
     clearState: false

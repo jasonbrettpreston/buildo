@@ -27,7 +27,7 @@
 # flow is covered by auth.yaml; this flow assumes the user is already
 # signed in OR runs after auth.yaml in a CI suite.
 
-appId: com.buildo.app
+appId: ca.maxbld.app
 ---
 - launchApp:
     # See auth.yaml for the clearState: false rationale (Expo dev-client

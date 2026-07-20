@@ -1,6 +1,6 @@
 # SPEC LINK: docs/specs/03-mobile/94_mobile_onboarding.md §10 Testing Gates
 # Maestro E2E: Path L full flow — profession → path → GPS → supplier skip → ToS → feed
-appId: com.buildo.app
+appId: ca.maxbld.app
 ---
 - launchApp
 
