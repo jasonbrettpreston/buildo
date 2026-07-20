@@ -1,19 +1,35 @@
 'use client';
 
-// SPEC LINK: docs/specs/00-architecture/13_authentication.md §3.3, §4
+// SPEC LINK: docs/specs/00-architecture/13_authentication.md §3.3, §3.6, §4, §4a
 //            .cursor/phase1_plan.md Item 1 + Item 2 (LoginForm.tsx row)
 //
 // Email/password: posts to the Server Actions in `src/lib/supabase/
-// actions.ts` (`signInAction`/`signUpAction`), which run server-side against
-// the httpOnly-cookieOptions server client — the credentials themselves
-// never produce a client-writable cookie at any point.
+// actions.ts` (`signInAction`/`signUpAction`/`mfaChallengeAction`/
+// `mfaVerifyAction`), which run server-side against the httpOnly-
+// cookieOptions server client — the credentials themselves never produce a
+// client-writable cookie at any point.
 // Google: calls `signInWithOAuth` directly from the BROWSER client
 // (`src/lib/supabase/browser.ts`) — a client-side redirect only, writes no
 // session cookie itself (the callback route's server-side exchange does,
 // `src/app/auth/callback/route.ts`).
-
+//
+// Admin TOTP step-up (WF3 2026-07-20 fix): `signInAction` only ever reaches
+// aal1 (GoTrue does not block the password grant for MFA-enrolled accounts).
+// Before this fix, LoginForm called `onSuccess?.()` unconditionally the
+// moment the password check passed — an admin's session silently stayed at
+// aal1 forever, every subsequent `/api/admin/*` call 401'd
+// (`verify-admin.ts`'s aal2 gate), and NOTHING in the UI ever told the
+// operator a code was needed, which read as the sign-in button hanging.
+// When `signInAction` reports `mfaRequired`, this component now opens a
+// TOTP challenge (`mfaChallengeAction` + `mfaVerifyAction`) instead of
+// finishing sign-in. Per Spec 13 §4a, backup codes in this codebase are a
+// PER-REQUEST header bypass consumed inside individual `/api/admin/*` calls
+// (`verify-admin.ts`, `x-admin-backup-code`) — there is no GoTrue primitive
+// to mint an aal2 session from a backup code, so a login-time backup-code
+// *session* fallback isn't a real Spec 13 path; a lost-authenticator admin
+// is pointed at that recovery mechanism instead of a fabricated code field.
 import { useState } from 'react';
-import { signInAction, signUpAction } from '@/lib/supabase/actions';
+import { signInAction, signUpAction, mfaChallengeAction, mfaVerifyAction } from '@/lib/supabase/actions';
 import { createClient } from '@/lib/supabase/browser';
 import type { AccountType } from '@/lib/auth/types';
 
@@ -30,6 +46,15 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // MFA step-up state. `mfaFactorId` non-null is what switches the form into
+  // the code-entry view. `mfaChallengeId` is re-fetched on every attempt
+  // (see `handleMfaSubmit`) rather than reused, so a stale/expired challenge
+  // can never strand the operator on a code that will never verify.
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaError, setMfaError] = useState('');
+  const [mfaLoading, setMfaLoading] = useState(false);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -44,12 +69,50 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         setError(result.error);
         return;
       }
+      if (result.mfaRequired && result.factorId) {
+        setMfaFactorId(result.factorId);
+        return;
+      }
       onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleMfaSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!mfaFactorId) return;
+    setMfaError('');
+    setMfaLoading(true);
+
+    try {
+      // Fresh challenge per attempt (see state comment above) — a wrong code
+      // must not also risk failing on an expired challenge.
+      const challenge = await mfaChallengeAction(mfaFactorId);
+      if (challenge.error || !challenge.challengeId) {
+        setMfaError(challenge.error ?? 'Could not start a verification challenge');
+        return;
+      }
+      const result = await mfaVerifyAction(mfaFactorId, challenge.challengeId, mfaCode);
+      if (result.error) {
+        setMfaError(result.error);
+        setMfaCode('');
+        return;
+      }
+      onSuccess?.();
+    } catch (err) {
+      setMfaError(err instanceof Error ? err.message : 'Verification failed');
+    } finally {
+      setMfaLoading(false);
+    }
+  }
+
+  function cancelMfa() {
+    setMfaFactorId(null);
+    setMfaCode('');
+    setMfaError('');
   }
 
   async function handleGoogle() {
@@ -72,11 +135,69 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     }
   }
 
+  if (mfaFactorId) {
+    return (
+      <div className="w-full max-w-sm mx-auto">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+            Verification code
+          </h2>
+          <p className="text-sm text-gray-500 text-center mb-6">
+            Enter the 6-digit code from your authenticator app.
+          </p>
+
+          <form onSubmit={handleMfaSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="mfa-code" className="block text-sm font-medium text-gray-700 mb-1">
+                Code
+              </label>
+              <input
+                id="mfa-code"
+                type="text"
+                required
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                placeholder="123456"
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {mfaError && <p className="text-sm text-red-600">{mfaError}</p>}
+
+            <button
+              type="submit"
+              disabled={mfaLoading || mfaCode.length !== 6}
+              className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              {mfaLoading ? 'Verifying...' : 'Verify'}
+            </button>
+            <button
+              type="button"
+              onClick={cancelMfa}
+              disabled={mfaLoading}
+              className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
+            >
+              Back to sign in
+            </button>
+          </form>
+
+          <p className="text-center text-xs text-gray-500 mt-4">
+            Lost your authenticator? Ask another admin for a backup-code recovery, or use the
+            break-glass admin path — backup codes are not entered here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-sm mx-auto">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-xl font-bold text-gray-900 text-center mb-6">
-          {mode === 'login' ? 'Sign In to Buildo' : 'Create Account'}
+          {mode === 'login' ? 'Sign In to MaxBLD' : 'Create Account'}
         </h2>
 
         {/* Google Sign In */}
@@ -119,10 +240,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           {mode === 'signup' && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="signup-name" className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
                 </label>
                 <input
+                  id="signup-name"
                   type="text"
                   required
                   value={name}
@@ -148,10 +270,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">
               Email
             </label>
             <input
+              id="login-email"
               type="email"
               required
               value={email}
@@ -161,10 +284,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
             <input
+              id="login-password"
               type="password"
               required
               minLength={6}

@@ -21,7 +21,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="mb-8 text-center">
         <Link href="/" className="text-3xl font-bold text-gray-900">
-          Buildo
+          MaxBLD
         </Link>
         <p className="text-sm text-gray-500 mt-1">
           Lead Generation for Toronto Trades
@@ -40,7 +40,16 @@ export default function LoginPage() {
           </p>
         </div>
       )}
-      <LoginForm onSuccess={() => router.push('/dashboard')} />
+      <LoginForm
+        onSuccess={() => {
+          // Honor the middleware's ?redirect= bounce target (same handling as
+          // the dev-bypass above); same-origin paths only — never an absolute
+          // URL (open-redirect guard). F8-era fold, satellite observation #2.
+          const params = new URLSearchParams(window.location.search);
+          const redirect = params.get('redirect') || '/dashboard';
+          router.push(redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/dashboard');
+        }}
+      />
     </div>
   );
 }
