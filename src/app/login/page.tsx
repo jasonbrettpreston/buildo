@@ -6,6 +6,17 @@ import { LoginForm } from '@/components/auth/LoginForm';
 
 const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
 
+// Same-origin path guard for the ?redirect= bounce target. Rejects absolute
+// URLs, protocol-relative (`//evil`), AND backslash variants (`/\evil` — some
+// browsers normalize \ to /, a classic open-redirect filter bypass flagged by
+// the commit security review).
+function safeRedirectPath(raw: string | null): string {
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//') || raw.includes('\\')) {
+    return '/dashboard';
+  }
+  return raw;
+}
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -13,8 +24,7 @@ export default function LoginPage() {
     // In dev mode, the middleware auto-injects the session cookie.
     // Just navigate to the target page and middleware handles the rest.
     const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect') || '/dashboard';
-    router.push(redirect);
+    router.push(safeRedirectPath(params.get('redirect')));
   }
 
   return (
@@ -42,12 +52,10 @@ export default function LoginPage() {
       )}
       <LoginForm
         onSuccess={() => {
-          // Honor the middleware's ?redirect= bounce target (same handling as
-          // the dev-bypass above); same-origin paths only — never an absolute
-          // URL (open-redirect guard). F8-era fold, satellite observation #2.
+          // Honor the middleware's ?redirect= bounce target via the shared
+          // same-origin guard above.
           const params = new URLSearchParams(window.location.search);
-          const redirect = params.get('redirect') || '/dashboard';
-          router.push(redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/dashboard');
+          router.push(safeRedirectPath(params.get('redirect')));
         }}
       />
     </div>
