@@ -143,8 +143,23 @@ pipeline.run('backup-db', async (pool) => {
     ? safeParsePositiveInt(process.env.BACKUP_RETAIN_DAYS, 'BACKUP_RETAIN_DAYS')
     : DEFAULT_RETAIN_DAYS;
 
+  // Endpoint normalization (live-shakeout 2026-07-21): B2's console shows the
+  // bare host (`s3.<region>.backblazeb2.com`); the S3 SDK requires a full URL
+  // and otherwise dies mid-upload with an opaque `Invalid URL` TypeError.
+  // Prepend https:// when the scheme is absent, then validate NOW — a
+  // misconfigured endpoint must fail fast here (§R5), never after pg_dump has
+  // already streamed gigabytes into a doomed upload.
+  const normalizedEndpoint = /^https?:\/\//i.test(rawEndpoint.trim())
+    ? rawEndpoint.trim()
+    : `https://${rawEndpoint.trim()}`;
+  try {
+    new URL(normalizedEndpoint);
+  } catch {
+    throw new Error(`[backup-db] BACKUP_S3_ENDPOINT is not a valid URL/host: "${rawEndpoint.trim()}"`);
+  }
+
   const config = ConfigSchema.parse({
-    s3Endpoint: rawEndpoint.trim(),
+    s3Endpoint: normalizedEndpoint,
     s3Bucket: rawBucket.trim(),
     s3AccessKeyId: rawAccessKeyId.trim(),
     s3SecretAccessKey: rawSecretAccessKey.trim(),
@@ -296,9 +311,16 @@ pipeline.run('backup-db', async (pool) => {
       },
     });
 
+    const uploadDone = upload.done();
     try {
-      await Promise.all([upload.done(), pgDumpExit]);
+      await Promise.all([uploadDone, pgDumpExit]);
     } catch (err) {
+      // Late-second-rejection guard (live-shakeout 2026-07-21): once one of
+      // the raced promises rejects, the OTHER may still reject later — attach
+      // no-op handlers so a straggler can't crash the process as an
+      // unhandledRejection after the primary error was already thrown.
+      uploadDone.catch(() => {});
+      pgDumpExit.catch(() => {});
       await upload.abort().catch((abortErr) => {
         pipeline.log.warn('[backup-db]', 'Upload abort after failure also failed (non-fatal, orphan multipart upload may remain)', {
           error: abortErr.message,
