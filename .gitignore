@@ -21,6 +21,10 @@
 # misc
 .DS_Store
 *.pem
+# Exception: the Supabase Root CA is PUBLIC and committed BY DESIGN
+# (Spec 113 §4.3 / Spec 115 §3 — workflows read it from the checkout;
+# rotation = normal PR). The *.pem blanket above keeps protecting keys.
+!scripts/certs/supabase-ca.pem
 
 # debug
 npm-debug.log*
