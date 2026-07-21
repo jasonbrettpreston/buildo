@@ -96,10 +96,24 @@ function parseArgs(argv) {
     skipGates: false,
     verifyOnly: false,
     iReallyMeanToTruncate: false,
+    skipTruncate: false,
   };
   for (const raw of argv) {
     if (raw === '--i-really-mean-to-truncate') {
       args.iReallyMeanToTruncate = true;
+      continue;
+    }
+    // --skip-truncate: bypass the pre-restore TRUNCATE entirely. Correct ONLY
+    // when the target is freshly empty (e.g. the Phase-4.0 cloud greenfield
+    // load of a table SUBSET): a partial --tables scope truncates non-CASCADE,
+    // which Postgres refuses when an OUT-OF-SCOPE table (an intentionally
+    // excluded, empty user table) carries an FK INTO an in-scope table. An
+    // empty target needs no truncation at all, so skipping sidesteps the FK
+    // barrier. The truncate guard's "target empty?" check still runs and would
+    // catch a NON-empty target here (pg_restore --data-only would then dup-key,
+    // a loud failure). Never combine with a populated target.
+    if (raw === '--skip-truncate') {
+      args.skipTruncate = true;
       continue;
     }
     if (raw === '--verify-only') {
@@ -610,11 +624,19 @@ async function run() {
       // reloaded together — see buildTruncateSql's doc comment for why a
       // --tables-scoped run must NOT cascade into out-of-scope dependents).
       const isFullRun = !args.tables;
-      console.log(
-        `[restore-db] TRUNCATE ${tables.length} target table(s) before restore ` +
-          `(idempotent re-run, D13; cascade=${isFullRun})`
-      );
-      await truncateTargetTables(targetPool, tables, { cascade: isFullRun });
+      if (args.skipTruncate) {
+        console.log(
+          `[restore-db] --skip-truncate: skipping TRUNCATE of ${tables.length} table(s) ` +
+            `(target asserted empty — greenfield subset load; the truncate guard's ` +
+            `empty-target check already ran).`
+        );
+      } else {
+        console.log(
+          `[restore-db] TRUNCATE ${tables.length} target table(s) before restore ` +
+            `(idempotent re-run, D13; cascade=${isFullRun})`
+        );
+        await truncateTargetTables(targetPool, tables, { cascade: isFullRun });
+      }
 
       const restoreEnv = {};
       if (!isLocalMode({ connectionString: targetConnectionString })) {

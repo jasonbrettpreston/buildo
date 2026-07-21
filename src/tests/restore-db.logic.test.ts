@@ -16,6 +16,7 @@ const restoreDb = require('../../scripts/restore-db.js') as {
     skipGates: boolean;
     verifyOnly: boolean;
     iReallyMeanToTruncate: boolean;
+    skipTruncate: boolean;
   };
   validateArgs: (args: ReturnType<typeof restoreDb.parseArgs>) => void;
   truncateGuardDecision: (a: {
@@ -114,6 +115,11 @@ describe('restore-db.js — parseArgs', () => {
   it('defaults iReallyMeanToTruncate to false and parses --i-really-mean-to-truncate', () => {
     expect(restoreDb.parseArgs([]).iReallyMeanToTruncate).toBe(false);
     expect(restoreDb.parseArgs(['--i-really-mean-to-truncate']).iReallyMeanToTruncate).toBe(true);
+  });
+
+  it('defaults skipTruncate to false and parses --skip-truncate (greenfield empty-target subset load)', () => {
+    expect(restoreDb.parseArgs([]).skipTruncate).toBe(false);
+    expect(restoreDb.parseArgs(['--skip-truncate']).skipTruncate).toBe(true);
   });
 
   it('ignores unrecognized flags instead of crashing', () => {
