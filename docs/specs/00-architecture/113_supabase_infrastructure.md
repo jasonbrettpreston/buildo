@@ -60,7 +60,7 @@ spec violation.
 |---|---|---|---|---|---|
 | **Local stack** (`supabase start`) | `DATABASE_URL` — ephemeral, CLI-printed (`postgresql://postgres:postgres@127.0.0.1:54322/postgres`) | `NEXT_PUBLIC_SUPABASE_URL` (`http://127.0.0.1:54321`) + CLI-generated demo anon key | CLI-generated demo `service_role` key (safe only because it never leaves localhost — MUST NOT be reused for any non-local project) | `supabase start` / `supabase status` | `.env.local` (gitignored, developer-managed); pipeline scripts during Phase 0 local dev |
 | **Cloud project** `gcnatfpacuhsytcbaszi` (dev use pre-launch, then production) | `SUPABASE_DATABASE_URL` (`.env`, gitignored) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...`) | `SUPABASE_SECRET_KEY` (`sb_secret_...`) | Supabase dashboard → API settings, pasted into `.env` by operator | `scripts/lib/pipeline.js`, `scripts/migrate.js`, `scripts/validation/run-step.mjs`, `src/lib/db/client.ts`, `src/lib/supabase/` server factory |
-| **Vercel** (prod + preview deploys) | `DATABASE_URL` (transaction-pooler form, §5) — auto-synced | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — auto-synced | `SUPABASE_SECRET_KEY` — auto-synced, **server-only Vercel env, never `NEXT_PUBLIC_*`** | Supabase–Vercel integration (Phase 4.1) | Next.js server code only (API routes, server components, `src/lib/supabase/` server factory) |
+| **Vercel** (prod + preview deploys) | **`POSTGRES_URL`** (transaction-pooler **6543**, §5) for app runtime + **`POSTGRES_URL_NON_POOLING`** (direct/session **5432**, §5) for migration/tooling — both auto-injected by the Supabase–Vercel integration. The app's raw-`pg` pool reads `POSTGRES_URL` via the `src/lib/db/client.ts` alias `process.env.POSTGRES_URL ?? process.env.DATABASE_URL` (OD-A). **The integration does NOT inject `DATABASE_URL`** — the prior spec text naming `DATABASE_URL` in this cell was factually wrong (corrected P4 fold 2026-07-21; `src/lib/db/client.ts:41` still reads `DATABASE_URL`, hence the alias). | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — auto-synced | `SUPABASE_SECRET_KEY` — auto-synced, **server-only Vercel env, never `NEXT_PUBLIC_*`** | Supabase–Vercel integration (Phase 4.1) | Next.js server code only (API routes, server components, `src/lib/supabase/` server factory) |
 | **EAS build profiles** (mobile) | n/a — mobile never opens a raw DB connection | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | **NEVER present in any mobile build profile or bundle** — the secret key is root-equivalent and Expo bundles are fully extractable | `eas.json` per-profile `env` blocks (development/preview/production) | `mobile/src/lib/supabase.ts` client factory only |
 
 **Rule:** a secret key (`sb_secret_*`, `service_role`, or the local CLI's `service_role` demo
@@ -86,6 +86,31 @@ Phase 5.1. They do not map 1:1 onto Supabase equivalents:
 
 `auth/config.ts` also boots Firestore — deleted, not ported (Firestore has no Supabase
 equivalent and G3/G2 already establish it as dead weight).
+
+### 3.2 Non-injected Vercel environment variables (operator-set — added P4 fold 2026-07-21)
+
+The Supabase–Vercel integration injects ONLY the Postgres/Supabase connection surface (§3 Vercel
+row). Every other secret the deployed app depends on is **operator-set in the Vercel dashboard
+per environment** — the integration does not provide them, so a build can go green with any of
+these silently absent/inert. `scripts/verify-vercel-env.js` (Phase 4.1) MUST assert their
+presence (and DEV_MODE's absence) across production+preview+development so prod cannot ship with
+MFA off, Stripe webhooks dead, or DEV_MODE auth-bypass live.
+
+| Var | Injected by integration? | Purpose | Prod requirement |
+|---|---|---|---|
+| `ADMIN_MFA_ENFORCED` | No — operator-set | Spec 13 gate that forces TOTP MFA enrollment/challenge on admin auth; inert/false = admins can sign in without a second factor | MUST be present and `=true` in prod |
+| `STRIPE_SECRET_KEY` | No — operator-set | Server-side Stripe API key for payment/subscription operations | MUST be present (server-only, never `NEXT_PUBLIC_*`) |
+| `STRIPE_WEBHOOK_SECRET` | No — operator-set | Verifies Stripe webhook signatures; absent = webhook handler cannot authenticate events (silently dead billing) | MUST be present (server-only) |
+| `RESEND_API_KEY` | No — operator-set | Transactional email via Resend; also backs Supabase Auth SMTP (`smtp.resend.com`, §Phase 4.1e) for recovery/confirmation links | MUST be present |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | No — operator-set | Error/exception monitoring (server DSN + client-visible DSN); absent = production errors go unobserved | SHOULD be present; `NEXT_PUBLIC_SENTRY_DSN` is a known-public value (allowlisted, §verify-vercel-env) |
+| `CRON_SECRET` | No — operator-set | Guards any HTTP-triggered cron/trigger surface, compared constant-time (§8.1); absent = an unauthenticated trigger endpoint | MUST be present (server-only) |
+| `DEV_MODE` | No — operator-set | Local/dev auth-bypass + relaxed-guard flag; if truthy in prod the app runs with development auth posture | MUST be **absent or false** in prod — `verify-vercel-env.js` asserts absence |
+
+The three `NEXT_PUBLIC_*`-eligible values here (`NEXT_PUBLIC_SENTRY_DSN`) plus the Supabase
+publishable key and URL are the **only** values permitted to appear in a `NEXT_PUBLIC_*`/
+`EXPO_PUBLIC_*` var — §verify-vercel-env's negative check is an allowlist: any OTHER value in a
+public-prefixed var (especially a `postgres://`/DB-password shape, a legacy `eyJ…` service-role
+JWT, or an `sb_secret_*` key) is a leak finding.
 </architecture>
 
 ---
