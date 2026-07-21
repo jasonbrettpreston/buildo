@@ -95,8 +95,13 @@ function parseArgs(argv) {
     keepDump: false,
     skipGates: false,
     verifyOnly: false,
+    iReallyMeanToTruncate: false,
   };
   for (const raw of argv) {
+    if (raw === '--i-really-mean-to-truncate') {
+      args.iReallyMeanToTruncate = true;
+      continue;
+    }
     if (raw === '--verify-only') {
       args.verifyOnly = true;
       continue;
@@ -337,6 +342,48 @@ function checkTocCoversScope(tocTables, scopedTables) {
 }
 
 /**
+ * Destructive-truncate guard (Phase 4 F0 step 0, Gemini CRITICAL fold #3) —
+ * pure decision, no DB access. This one-off tool must not become a post-launch
+ * landmine: a `--target` that already holds REAL users or data must not be
+ * silently TRUNCATEd. The Phase-4.0 cloud load runs against an EMPTY cloud, so
+ * the zero-row path returns `tripped: false` and needs NO flag; a populated
+ * (post-launch / accidentally-repointed) remote target trips and refuses unless
+ * the operator passes `--i-really-mean-to-truncate`.
+ *
+ * `authUsersCount > 0` (any registered human) is the primary production signal;
+ * `dataRowCount > dataThreshold` (a canonical data-bearing table, e.g. parcels)
+ * is the secondary one. Either trips the guard.
+ *
+ * @param {{ authUsersCount: number, dataRowCount: number, override: boolean, dataThreshold?: number }} args
+ * @returns {{ allowed: boolean, tripped: boolean, reason: string }}
+ */
+const TRUNCATE_GUARD_DATA_THRESHOLD = 0; // any real data rows in the probe table is a signal
+
+function truncateGuardDecision({ authUsersCount, dataRowCount, override, dataThreshold = TRUNCATE_GUARD_DATA_THRESHOLD }) {
+  const users = Number(authUsersCount) || 0;
+  const data = Number(dataRowCount) || 0;
+  const populated = users > 0 || data > dataThreshold;
+  if (!populated) {
+    return { allowed: true, tripped: false, reason: 'target is empty/derived — safe to TRUNCATE (no flag needed)' };
+  }
+  if (override) {
+    return {
+      allowed: true,
+      tripped: true,
+      reason: `target holds ${users} auth.users + ${data} data row(s) — proceeding under --i-really-mean-to-truncate`,
+    };
+  }
+  return {
+    allowed: false,
+    tripped: true,
+    reason:
+      `REFUSING to TRUNCATE: target holds ${users} auth.users row(s) and ${data} data row(s) ` +
+      `(> ${dataThreshold}). This looks like a populated/production database. Pass ` +
+      `--i-really-mean-to-truncate to override if this is intentional.`,
+  };
+}
+
+/**
  * §1a/§1b cleanup-pathing decision — pure, no fs access. Decides WHICH of
  * the three dump-path modes a given parsed-args object selects, and whether
  * the eventual mkdtemp() directory this run creates (if any) is temp/
@@ -407,6 +454,25 @@ async function truncateTargetTables(targetPool, tables, opts) {
   await targetPool.query(sql);
 }
 
+/**
+ * Count rows in a fixed table expression (e.g. `auth.users`, `public.parcels`),
+ * returning 0 if the relation/schema does not exist yet (a pre-schema-catch-up
+ * or partially-migrated target). `tableExpr` is a hardcoded literal, never
+ * operator input, so no identifier quoting is required.
+ * @param {import('pg').Pool} pool
+ * @param {string} tableExpr
+ * @returns {Promise<number>}
+ */
+async function countTableRowsSafe(pool, tableExpr) {
+  try {
+    const res = await pool.query(`SELECT count(*)::bigint AS n FROM ${tableExpr}`);
+    return Number(res.rows[0].n);
+  } catch (err) {
+    console.warn(`[restore-db] could not count ${tableExpr} for truncate guard (treating as 0): ${err.message}`);
+    return 0;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -438,6 +504,30 @@ async function run() {
     await checkClientVersion();
 
     const targetConnectionString = gates.resolveTargetConnectionString(args.target);
+
+    // Destructive-truncate guard (Phase 4 F0 step 0, Gemini CRITICAL fold #3).
+    // Scoped to a NON-LOOPBACK (cloud/remote) target ONLY: a loopback SOURCE→
+    // local target is the D13 truncate-first re-run flow (Phase 0.5), which by
+    // design reloads a fully-populated local DB on every run and must NOT be
+    // gated. A remote target that already holds real users/data, however, is a
+    // post-launch landmine — refuse to TRUNCATE it without an explicit override.
+    // The Phase-4.0 cloud load runs against an EMPTY cloud, so this passes with
+    // no flag; only a populated remote target trips it.
+    if (!isLocalMode({ connectionString: targetConnectionString })) {
+      const [authUsersCount, dataRowCount] = await Promise.all([
+        countTableRowsSafe(targetPool, 'auth.users'),
+        countTableRowsSafe(targetPool, 'public.parcels'),
+      ]);
+      const guard = truncateGuardDecision({
+        authUsersCount,
+        dataRowCount,
+        override: args.iReallyMeanToTruncate,
+      });
+      if (!guard.allowed) {
+        throw new Error(`[restore-db] ${guard.reason}`);
+      }
+      console.log(`[restore-db] truncate guard: ${guard.reason}`);
+    }
 
     // §1a — a private mkdtemp() directory, not a predictable os.tmpdir() file
     // path, is where the auto-generated dump is written: mkdtemp's 0700-mode,
@@ -600,8 +690,11 @@ module.exports = {
   parseTocTables,
   checkTocCoversScope,
   decideDumpPlan,
+  truncateGuardDecision,
+  TRUNCATE_GUARD_DATA_THRESHOLD,
   spawnCapture,
   checkClientVersion,
   truncateTargetTables,
+  countTableRowsSafe,
   run,
 };

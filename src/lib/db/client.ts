@@ -31,6 +31,25 @@ function parsePositiveIntEnv(value: string | undefined, fallback: number): numbe
 const POOL_MAX = parsePositiveIntEnv(process.env.PG_POOL_MAX, 20);
 const POOL_CONNECTION_TIMEOUT_MS = parsePositiveIntEnv(process.env.PG_CONNECTION_TIMEOUT_MS, 10000);
 
+// Spec 113 §3 — DB connection-string var alias (OD-A, Phase 4 ballot #1). The
+// Vercel↔Supabase native integration injects `POSTGRES_URL` (the pooled 6543
+// runtime string) into the DEPLOYED APP's environment; it does NOT inject
+// `DATABASE_URL`. Local dev + pipeline/scripts keep `DATABASE_URL` (they run on
+// the runner with SUPABASE_DATABASE_URL, never Vercel-injected POSTGRES_URL).
+// Prefer POSTGRES_URL when present so the Vercel-deployed app's raw-pg pool has
+// a connection string, falling back to DATABASE_URL for local dev. This alias is
+// scoped to THIS app-runtime pool only — migrate.js and the pipeline scripts are
+// intentionally NOT aliased.
+//
+// Exported for the client.ts alias regression test (src/tests/db-client.logic.test.ts).
+export function resolveRuntimeConnectionString(
+  env: NodeJS.ProcessEnv = process.env
+): string | undefined {
+  return env.POSTGRES_URL ?? env.DATABASE_URL;
+}
+
+const RUNTIME_CONNECTION_STRING = resolveRuntimeConnectionString();
+
 // Spec 113 §4.1 — resolveSslConfig (src/lib/db/ssl-config.ts, the ADR-001 TS
 // twin of scripts/lib/ssl-config.js) is the only place an `ssl` config is
 // constructed. It is environment-aware by TARGET HOST, not NODE_ENV: a
@@ -38,10 +57,10 @@ const POOL_CONNECTION_TIMEOUT_MS = parsePositiveIntEnv(process.env.PG_CONNECTION
 // non-loopback host gets CA-pinned verify-full and throws if
 // SUPABASE_CA_CERT_PATH is missing. `rejectUnauthorized: false` — the weak
 // setting this used to ship in production (Spec 113 §4 G4) — is retired.
-const poolConfig = process.env.DATABASE_URL
+const poolConfig = RUNTIME_CONNECTION_STRING
   ? {
-      connectionString: process.env.DATABASE_URL,
-      ssl: resolveSslConfig({ connectionString: process.env.DATABASE_URL }),
+      connectionString: RUNTIME_CONNECTION_STRING,
+      ssl: resolveSslConfig({ connectionString: RUNTIME_CONNECTION_STRING }),
       max: POOL_MAX,
       connectionTimeoutMillis: POOL_CONNECTION_TIMEOUT_MS,
       idleTimeoutMillis: 30000,

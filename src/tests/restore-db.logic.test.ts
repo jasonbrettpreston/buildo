@@ -15,8 +15,16 @@ const restoreDb = require('../../scripts/restore-db.js') as {
     keepDump: boolean;
     skipGates: boolean;
     verifyOnly: boolean;
+    iReallyMeanToTruncate: boolean;
   };
   validateArgs: (args: ReturnType<typeof restoreDb.parseArgs>) => void;
+  truncateGuardDecision: (a: {
+    authUsersCount: number;
+    dataRowCount: number;
+    override: boolean;
+    dataThreshold?: number;
+  }) => { allowed: boolean; tripped: boolean; reason: string };
+  TRUNCATE_GUARD_DATA_THRESHOLD: number;
   parsePgToolVersion: (v: string) => { major: number; minor: number; patch: number; raw: string };
   isClientVersionSufficient: (v: { major: number }, minMajor?: number) => boolean;
   stderrGateDecision: (a: { exitCode: number; stderr: string }) => { pass: boolean; reason: string };
@@ -101,6 +109,11 @@ describe('restore-db.js — parseArgs', () => {
     expect(args.verifyOnly).toBe(true);
     expect(args.skipGates).toBe(true);
     expect(args.keepDump).toBe(true);
+  });
+
+  it('defaults iReallyMeanToTruncate to false and parses --i-really-mean-to-truncate', () => {
+    expect(restoreDb.parseArgs([]).iReallyMeanToTruncate).toBe(false);
+    expect(restoreDb.parseArgs(['--i-really-mean-to-truncate']).iReallyMeanToTruncate).toBe(true);
   });
 
   it('ignores unrecognized flags instead of crashing', () => {
@@ -335,6 +348,39 @@ describe('restore-db.js — decideDumpPlan (§1a/§1b cleanup-pathing decision �
     const plan = restoreDb.decideDumpPlan({ dumpPath: '/tmp/theirs.dump', dumpOut: '/tmp/mine.dump', keepDump: false });
     expect(plan.mode).toBe('existing');
     expect(plan.dumpIsTemp).toBe(false);
+  });
+});
+
+describe('restore-db.js — truncateGuardDecision (Phase 4 F0 step 0, Gemini CRITICAL fold #3)', () => {
+  it('allows an EMPTY target with no flag — the Phase-4.0 cloud load path', () => {
+    const d = restoreDb.truncateGuardDecision({ authUsersCount: 0, dataRowCount: 0, override: false });
+    expect(d.allowed).toBe(true);
+    expect(d.tripped).toBe(false);
+  });
+
+  it('REFUSES a target holding auth.users rows without the override flag', () => {
+    const d = restoreDb.truncateGuardDecision({ authUsersCount: 3, dataRowCount: 0, override: false });
+    expect(d.allowed).toBe(false);
+    expect(d.tripped).toBe(true);
+    expect(d.reason).toMatch(/REFUSING to TRUNCATE/);
+    expect(d.reason).toMatch(/--i-really-mean-to-truncate/);
+  });
+
+  it('REFUSES a target holding data rows (parcels) above the threshold without the flag', () => {
+    const d = restoreDb.truncateGuardDecision({ authUsersCount: 0, dataRowCount: 486530, override: false });
+    expect(d.allowed).toBe(false);
+    expect(d.tripped).toBe(true);
+  });
+
+  it('ALLOWS a populated target when --i-really-mean-to-truncate is passed', () => {
+    const d = restoreDb.truncateGuardDecision({ authUsersCount: 3, dataRowCount: 486530, override: true });
+    expect(d.allowed).toBe(true);
+    expect(d.tripped).toBe(true);
+    expect(d.reason).toMatch(/proceeding under --i-really-mean-to-truncate/);
+  });
+
+  it('TRUNCATE_GUARD_DATA_THRESHOLD is 0 (any real data-bearing rows are a signal)', () => {
+    expect(restoreDb.TRUNCATE_GUARD_DATA_THRESHOLD).toBe(0);
   });
 });
 
