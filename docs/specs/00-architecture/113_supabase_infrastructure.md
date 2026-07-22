@@ -60,7 +60,7 @@ spec violation.
 |---|---|---|---|---|---|
 | **Local stack** (`supabase start`) | `DATABASE_URL` — ephemeral, CLI-printed (`postgresql://postgres:postgres@127.0.0.1:54322/postgres`) | `NEXT_PUBLIC_SUPABASE_URL` (`http://127.0.0.1:54321`) + CLI-generated demo anon key | CLI-generated demo `service_role` key (safe only because it never leaves localhost — MUST NOT be reused for any non-local project) | `supabase start` / `supabase status` | `.env.local` (gitignored, developer-managed); pipeline scripts during Phase 0 local dev |
 | **Cloud project** `gcnatfpacuhsytcbaszi` (dev use pre-launch, then production) | `SUPABASE_DATABASE_URL` (`.env`, gitignored) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...`) | `SUPABASE_SECRET_KEY` (`sb_secret_...`) | Supabase dashboard → API settings, pasted into `.env` by operator | `scripts/lib/pipeline.js`, `scripts/migrate.js`, `scripts/validation/run-step.mjs`, `src/lib/db/client.ts`, `src/lib/supabase/` server factory |
-| **Vercel** (prod + preview deploys) | **`POSTGRES_URL`** (transaction-pooler **6543**, §5) for app runtime + **`POSTGRES_URL_NON_POOLING`** (direct/session **5432**, §5) for migration/tooling — both auto-injected by the Supabase–Vercel integration. The app's raw-`pg` pool reads `POSTGRES_URL` via the `src/lib/db/client.ts` alias `process.env.POSTGRES_URL ?? process.env.DATABASE_URL` (OD-A). **The integration does NOT inject `DATABASE_URL`** — the prior spec text naming `DATABASE_URL` in this cell was factually wrong (corrected P4 fold 2026-07-21; `src/lib/db/client.ts:41` still reads `DATABASE_URL`, hence the alias). | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — auto-synced | `SUPABASE_SECRET_KEY` — auto-synced, **server-only Vercel env, never `NEXT_PUBLIC_*`** | Supabase–Vercel integration (Phase 4.1) | Next.js server code only (API routes, server components, `src/lib/supabase/` server factory) |
+| **Vercel** (prod + preview deploys) | **`POSTGRES_URL`** (transaction-pooler **6543**, §5) for app runtime + **`POSTGRES_URL_NON_POOLING`** (direct/session **5432**, §5) for migration/tooling — both auto-injected by the Supabase–Vercel integration. The app's raw-`pg` pool reads `POSTGRES_URL` via the `src/lib/db/client.ts` alias `env.POSTGRES_URL?.trim() || env.DATABASE_URL?.trim() || undefined` (OD-A; empty/whitespace values fall through — P4-F0 fold C3, `resolveRuntimeConnectionString` at `client.ts:52-56`; do NOT reintroduce `??`, whose empty-string shadowing is the exact bug C3 fixed). **The integration does NOT inject `DATABASE_URL`** — the prior spec text naming `DATABASE_URL` in this cell was factually wrong (corrected P4 fold 2026-07-21). | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — auto-synced | `SUPABASE_SECRET_KEY` — auto-synced, **server-only Vercel env, never `NEXT_PUBLIC_*`** | Supabase–Vercel integration (Phase 4.1) | Next.js server code only (API routes, server components, `src/lib/supabase/` server factory) |
 | **EAS build profiles** (mobile) | n/a — mobile never opens a raw DB connection | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | **NEVER present in any mobile build profile or bundle** — the secret key is root-equivalent and Expo bundles are fully extractable | `eas.json` per-profile `env` blocks (development/preview/production) | `mobile/src/lib/supabase.ts` client factory only |
 
 **Rule:** a secret key (`sb_secret_*`, `service_role`, or the local CLI's `service_role` demo
@@ -102,7 +102,7 @@ MFA off, Stripe webhooks dead, or DEV_MODE auth-bypass live.
 | `STRIPE_SECRET_KEY` | No — operator-set | Server-side Stripe API key for payment/subscription operations | MUST be present (server-only, never `NEXT_PUBLIC_*`) |
 | `STRIPE_WEBHOOK_SECRET` | No — operator-set | Verifies Stripe webhook signatures; absent = webhook handler cannot authenticate events (silently dead billing) | MUST be present (server-only) |
 | `RESEND_API_KEY` | No — operator-set | Transactional email via Resend; also backs Supabase Auth SMTP (`smtp.resend.com`, §Phase 4.1e) for recovery/confirmation links | MUST be present |
-| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | No — operator-set | Error/exception monitoring (server DSN + client-visible DSN); absent = production errors go unobserved | SHOULD be present; `NEXT_PUBLIC_SENTRY_DSN` is a known-public value (allowlisted, §verify-vercel-env) |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | No — operator-set | Error/exception monitoring (server DSN + client-visible DSN); absent = production errors go unobserved | SHOULD be present; `verify-vercel-env.js` enforces stricter-than-SHOULD: hard-fail on **production**, WARN on preview/development (P4-F0 fold C4). `NEXT_PUBLIC_SENTRY_DSN` is a known-public value (allowlisted, §verify-vercel-env) |
 | `CRON_SECRET` | No — operator-set | Guards any HTTP-triggered cron/trigger surface, compared constant-time (§8.1); absent = an unauthenticated trigger endpoint | MUST be present (server-only) |
 | `DEV_MODE` | No — operator-set | Local/dev auth-bypass + relaxed-guard flag; if truthy in prod the app runs with development auth posture | MUST be **absent or false** in prod — `verify-vercel-env.js` asserts absence |
 
@@ -125,11 +125,15 @@ not a pattern to extend into the pipeline pools.
 
 ### 4.1 Shared helper
 
-`scripts/lib/ssl-config.js` (new) is the **only** place an SSL config object is constructed.
-`scripts/lib/pipeline.js` (`createPool`), `scripts/migrate.js`, `scripts/validation/run-step.mjs`,
-and `src/lib/db/client.ts` MUST import it rather than construct their own `ssl` key. Any new
-Postgres pool anywhere in the codebase MUST go through this helper (§0.2b pool sweep) or carry
-an explicit `// LOCAL-ONLY` annotation for hardcoded-localhost diagnostic scripts.
+`scripts/lib/ssl-config.js` (new) is the **only** place an SSL config object is constructed
+for `scripts/`-side code: `scripts/lib/pipeline.js` (`createPool`), `scripts/migrate.js`, and
+`scripts/validation/run-step.mjs` MUST import it rather than construct their own `ssl` key.
+**Recorded exception (Round-3 truth-up):** `src/lib/db/client.ts` imports the ADR-001 TS twin
+`src/lib/db/ssl-config.ts` — a second, manually-synced constructor with identical logic (same
+LOOPBACK_HOSTS, same fail-fast branches; the sync obligation is documented in both files'
+headers). Any new Postgres pool anywhere in the codebase MUST go through the helper for its
+side (§0.2b pool sweep) or carry an explicit `// LOCAL-ONLY` annotation for
+hardcoded-localhost diagnostic scripts.
 
 ### 4.2 Environment-aware behavior
 
@@ -388,7 +392,7 @@ not assumed to already work.
 
 Spec 07 §OP4 ("backup within 25h", a manual checklist item, not code) is updated to describe the
 Supabase-hosted flow. `backup_db` remains the final step of `chains.permits`
-(`scripts/manifest.json` L91) — the trigger mechanism does not change, only what it backs up
+(`scripts/manifest.json` L90) — the trigger mechanism does not change, only what it backs up
 and where the dump lands.
 </architecture>
 
@@ -408,10 +412,11 @@ way, so the originally-prescribed unkeyed-curl check is unsound. The sound verif
 BOTH of:
 1. the dashboard toggle observed OFF (Project Settings → Data API), AND
 2. a **KEYED probe** — the same curl carrying a valid publishable/anon key
-   (`-H "apikey: <publishable-key>"`): a DISABLED Data API returns a no-schema/service-
-   unavailable response (503, or a 401 with no PostgREST schema payload); an ENABLED one
-   returns PostgREST's OpenAPI/schema response. Verified live against the cloud project
-   2026-07-22 (valid key → 503 no-schema = positively disabled).
+   (`-H "apikey: <publishable-key>"`): a DISABLED Data API returns a no-schema response —
+   the observed status code varies by gateway path (503 observed 2026-07-22 morning; 401
+   `"Secret API key required"` observed same day by a later re-probe) — while an ENABLED one
+   returns PostgREST's OpenAPI/schema response. **The discriminator is the ABSENCE of a
+   PostgREST schema payload, not a specific status code** — do not pin an expected code.
 
 Local-stack disable+verify is **Phase 0.6b**;
 cloud disable+verify is **Phase 0.7** (the cloud project has no schema to expose before then, so

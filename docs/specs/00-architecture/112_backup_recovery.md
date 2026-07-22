@@ -239,7 +239,7 @@ node scripts/restore-db.js --target=cloud --verify-only        # gates only, no 
 | `--mode=fresh` | **REQUIRED for any actual restore.** The operator explicitly states the target is expected-empty/idempotently reloadable (§8 edge case — never inferred from DB state). `--mode=dr` (in-place `--clean`/DROP SCHEMA restore) is NOT implemented — refuses. |
 | `--tables=t1,t2` | Restrict the load to an explicit table subset (validated against the source∩target eligible list). |
 | `--dump=<path>` | Restore this existing dump instead of dumping SOURCE fresh. Never deleted by cleanup. |
-| `--dump-out=<path>` | Where to write the fresh dump (default: a private mkdtemp file, deleted after success unless `--keep-dump`). Never auto-cleaned. |
+| `--dump-out=<path>` | Where to write the fresh dump. An explicit `--dump-out` path is never auto-cleaned; the default (a private mkdtemp file) is deleted on EVERY exit path — success or failure — unless `--keep-dump`. |
 | `--keep-dump` | Don't delete the auto-generated dump after a successful restore. |
 | `--skip-gates` | Don't run the G10 gate suite after a successful restore. |
 | `--verify-only` | Run the G10 gate suite only — no dump, no restore, no truncate; `--mode` not required. |
@@ -406,12 +406,14 @@ the fix isn't independently rediscovered as a second bug. No file under
 <behavior>
 ## 8. Edge Cases
 
-- **Missing destination env var (`BACKUP_DEST_*`, name TBD Phase 3.3):** same shape as the
+- **Missing destination env var (`BACKUP_S3_*`, resolved §2.1/§4.2):** same shape as the
   original `BACKUP_GCS_BUCKET`-missing case — `backup-db.js` emits a SKIP summary
   (`records_meta.skipped: true`), exits 0, acquires no advisory lock, chain continues. Correct
   behavior for local dev where the destination is not configured.
-- **`pg_dump` non-zero exit:** unchanged — error re-thrown inside the advisory-lock scope,
-  `pipeline.run` records `status='failed'`, destination upload never initiated.
+- **`pg_dump` non-zero exit:** error re-thrown inside the advisory-lock scope, `pipeline.run`
+  records `status='failed'`. Note (Round-3 truth-up): in the shipped streaming design the S3
+  multipart upload starts CONCURRENTLY with `pg_dump` and is **aborted** on failure — the
+  outcome is the same (no completed object), but "upload never initiated" was wrong.
 - **Upload/write failure mid-stream to the destination:** generalized from the original
   GCS-specific stream handling — the partially written object/file is abandoned (not deleted);
   the next successful run overwrites via a new timestamped name. Orphan cleanup is
@@ -429,10 +431,13 @@ the fix isn't independently rediscovered as a second bug. No file under
   target is expected empty — the Phase 0.5/4.0 fresh-load pattern — or an in-place
   disaster-recovery restore, which needs `--clean` or an explicit pre-restore `DROP SCHEMA` as a
   separate, confirmed destructive step. Never inferred from the target's current state.
-- **NEW — baseline manifest missing or stale:** if a dump predates this rewrite (no
-  `.manifest.json` sidecar) or the sidecar is unreadable, `restore-db.js` MUST refuse to report a
-  gate PASS with nothing to diff against. It falls back to reporting raw restored-side counts
-  only, explicitly flagged `NO-BASELINE` — never silently upgraded to a PASS.
+- **Baseline manifest missing or stale (Round-3 truth-up — the §4.3 amendment applies here
+  too):** the shipped gates never read the manifest sidecar at all — they compare LIVE SOURCE
+  vs TARGET (§4.3 amendment note), so there is no `NO-BASELINE` mode and none is needed for
+  the migration-era loads this tooling serves. A restore-only validation of a HISTORICAL dump
+  (no live source) is exactly the manifest-consumer build-out filed in `review_followups.md`;
+  when built, its no-sidecar behavior MUST be refuse-to-PASS (never silently upgraded), which
+  is what the original `NO-BASELINE` clause here intended.
 </behavior>
 
 ---
@@ -482,12 +487,15 @@ the fix isn't independently rediscovered as a second bug. No file under
   retention-prune-failure-is-WARN-not-FAIL, advisory-lock skip-on-concurrent-run, non-integer
   `BACKUP_RETAIN_DAYS` Zod throw, baseline-manifest sidecar written alongside the dump. MUST be
   rewritten in the same commit as `backup-db.js` itself (Phase 3.3) — not a follow-up.
-- **Infra (NEW):** `src/tests/restore-db.infra.test.ts` (needs a live target DB —
+- **Infra:** `src/tests/restore-db.infra.test.ts` (needs a live target DB —
   `BUILDO_TEST_DB=1`) — `--single-transaction --exit-on-error` failure propagation; stderr-gated
-  wrapper's "any stderr = fail" behavior; each G10-style gate's diff logic (row-count mismatch,
-  invalid-geom id-set mismatch vs count-only match, sequence lag detection, stale-matview
-  detect-and-refresh, sanity-audit-triple new-FAIL detection, `postgis_full_version()` mismatch
-  flagged); the `NO-BASELINE` fallback path when the manifest sidecar is absent.
+  wrapper's "any stderr = fail" behavior against real binary output; TOC-preflight parse of real
+  `pg_restore --list` output; the C1 fail-closed probe (`countTableRowsSafe` null on non-42P01/
+  3F000) and the C2 `getAuthLinkedTables` live FK derivation. Gate diff logic (row-count,
+  id-set-vs-count, sequence lag, ravine nullMismatch) is covered synthetically in
+  `restore-db.logic.test.ts`. (Round-3 truth-up: the previously-listed "sanity-audit-triple
+  new-FAIL detection" and "`NO-BASELINE` fallback" tests described the never-built
+  manifest-baseline architecture — see the §4.3 amendment note.)
 <!-- TEST_INJECT_END -->
 </testing>
 
@@ -508,10 +516,11 @@ has no downstream in-pipeline consumers.
 | `records_updated` | null | Observer pattern |
 | `records_meta.backup_size_bytes` | number | Compressed dump file size |
 | `records_meta.dest_path` | string | Full destination URI/path of the backup object (replaces `gcs_path`) |
-| `records_meta.manifest_path` | string | Location of the `.manifest.json` gate-baseline sidecar (§4.2) |
+| `records_meta.manifest_path` | string \| null | Location of the `.manifest.json` gate-baseline sidecar (§4.2); `null` when sidecar generation/upload failed (non-fatal, C5b) |
 | `records_meta.blobs_pruned` | number | Objects/files deleted by retention pruning |
 | `records_meta.retain_days` | number | Effective retention window used |
-| `records_meta.audit_table` | object | Phase 112, verdict PASS/FAIL/WARN |
+| `records_meta.duration_ms` | number | Wall-clock run duration |
+| `records_meta.audit_table` | object | Phase 112, verdict PASS/FAIL/WARN (incl. `manifest_status` + `retention_prune_status` rows, §4.2) |
 
 `restore-db.js` is **not** a Spec 47 pipeline step (§4.3) and does not emit `emitSummary`/
 `emitMeta` in the pipeline sense; its restore-validation report (§4.3 Output) is the analogous
@@ -527,7 +536,7 @@ artifact for a standalone operator CLI.
 - `scripts/backup-db.js` — rewrite: destination + connection-string changes, GCS retirement,
   baseline manifest sidecar (§4.2)
 - `scripts/restore-db.js` — **NEW** (§4.3)
-- `scripts/manifest.json` — `backup_db` step entry, L91 position (re-homing only — `step_name`
+- `scripts/manifest.json` — `backup_db` step entry, L90 position (re-homing only — `step_name`
   and chain position unchanged, per Spec 113 §9.3)
 - `src/tests/backup-db.logic.test.ts` — rewrite, same commit as `scripts/backup-db.js`
 - `src/tests/restore-db.infra.test.ts` — **NEW**, same commit as `scripts/restore-db.js`

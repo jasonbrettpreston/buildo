@@ -2740,3 +2740,15 @@ Fold commits: `35e7a989` (C1+C2 guard/exclusion) · `8d90f5ef` (C3+C4 env/client
 - **[DeepSeek CRITICAL] "isLocalMode TLS false-negative"** — false premise: `isLocalMode` is a host-based LOOPBACK_HOSTS check (`ssl-config.js:64-70`), not a string-prefix match; the claimed bypass input resolves non-local correctly.
 - **[Gemini CRITICAL] PGPASSWORD exposure** — premise overstated (owner-only environ; standard libpq mechanism). Hygiene note deferred instead (above).
 - **[Schema-Fidelity] "pipeline_schedules row 1595 arrived via bulk restore"** — false: the dump predates the row by 12h; the row was a documented in-session manual copy.
+
+### Round-3 full-scope re-verification (2026-07-22, GT/Integration/RC re-run over Round-1 scope)
+**Panel verdicts:** GT — S1/S2/S3 amendments substantially truthful, 1 new HIGH code defect (CASCADE, FIXED `47830494`) + spec residue (FIXED, docs commit); Integration — fold holds, unscoped cloud `--verify-only` now VERDICT: PASS with the 13-table exclusion firing, cron=3/seed=5/schema untouched; Reality-Check — VERDICT SANE, C6 blind-spot closure proven (cloud target log line, byte-identical 32-check cloud-vs-local diff).
+
+**PROMOTED to the P4 hardening WF2 (operator-directed 2026-07-22):** GT#4 public-var name-allowlist tier · GT#5 supabase/migrations emptiness guard · GT#6 coexistence-window closure text · GT#7 PG_POOL_MAX pin check — see `.cursor/` WF2 plan.
+
+**DEFERRED (Round-3):**
+- **[LOW · Integration] `PGSSL_DISABLE=1` classifies ANY target as local** (`scripts/lib/ssl-config.js:66`) — bypasses both the truncate guard and the C2 auto-exclusion for a cloud target. Pre-existing escape-hatch semantics, test-pinned. Candidate: restore-db refuses `PGSSL_DISABLE=1` + `--target=cloud`.
+- **[INFO · Integration] `G10_MATVIEW_EXPECTED_ROWS` pin (4190) stale vs live 4239** — harmless by design (comparison uses the source's live defining query; the pin is detail-only), but the constant matches no observable reality.
+- **[INFO · Integration] `SUPABASE_SECRET_KEY` has no verify-vercel-env presence check** — settled scope per the P4 plan ballot ("the 6 criticals"); a failed integration sync would ship green with a dead Supabase server factory. Improvement note.
+- **[CHECK-GAP · Reality-Check] `comp_fsi_p50` has no upper BOUND** — only the `<0.05` INFO check exists; a 15-parcel `R`-zone contamination cluster (identical 6.62 on ~220–260 m² lots) is caught by DISTRIBUTION today, but if it ever became the zone majority DISTRIBUTION goes blind (the RD-FSI-2.0 failure mode). Candidate: zone-aware upper BOUND (e.g. `>4` lowrise) as a permanent gate; threshold needs population validation first.
+- **[NIT, footgun-blocked] `check-pipeline-freshness.js:24` stale `run-chain.js:362` comment** — any edit to that file trips its pre-existing `sql-now` footgun (whole-file scope); fix rides whichever WF3 next refactors the file's NOW() usage. Same-family nit: restore-db.js header's `--dump-out` line still says "deleted after a successful restore" (deleted on every exit path).
