@@ -68,6 +68,12 @@ const REQUIRED_PRESENT = [
   'STRIPE_WEBHOOK_SECRET', // operator-set (§3.2)
   'RESEND_API_KEY', // operator-set (§3.2)
   'CRON_SECRET', // operator-set (§3.2)
+  // 7th critical (operator-RULED 2026-07-22, twice-raised escalation): the
+  // integration-injected server key. §13's documented failure mode is the
+  // Vercel↔Supabase integration silently failing to provision keys on
+  // asymmetric-JWT (sb_*) projects — absent, the Supabase server factory is
+  // dead while the build ships green.
+  'SUPABASE_SECRET_KEY',
 ];
 
 // Groups where ANY ONE of the listed vars satisfies the requirement.
@@ -84,6 +90,14 @@ const REQUIRED_GROUPS = [
       'NEXT_PUBLIC_SUPABASE_ANON_KEY',
       'SUPABASE_ANON_KEY',
     ],
+    // POSITIVE shape assertion (operator-RULED 2026-07-22, GT F1 upgrade):
+    // presence alone let a WRONGLY-provisioned key pass (the shape scan is a
+    // negative blocklist — an anon-role legacy JWT or garbage in the
+    // publishable slot isn't secret-shaped, so nothing flagged it). The
+    // satisfying value must be sb_publishable_* or an anon-role legacy JWT —
+    // the two legitimate forms. Error in EVERY env: a mis-shaped key means
+    // auth cannot work anywhere; nothing legitimate is mis-shaped.
+    shape: 'publishable',
   },
   { label: 'Sentry DSN', anyOf: ['SENTRY_DSN', 'NEXT_PUBLIC_SENTRY_DSN'], warnOutsideProduction: true },
 ];
@@ -328,7 +342,24 @@ function evaluateEnv(env, targetEnv) {
   for (const group of REQUIRED_GROUPS) {
     const satisfiedBy = group.anyOf.find((n) => isPresent(env[n]));
     if (satisfiedBy) {
-      findings.push({ level: 'ok', check: 'presence', name: satisfiedBy, message: `present (${group.label})` });
+      if (group.shape === 'publishable') {
+        const v = String(env[satisfiedBy]).trim();
+        const validShape = /^sb_publishable_/.test(v) || decodeJwtRole(v) === 'anon';
+        findings.push(
+          validShape
+            ? { level: 'ok', check: 'presence', name: satisfiedBy, message: `present (${group.label}, valid key shape)` }
+            : {
+                level: 'error',
+                check: 'presence',
+                name: satisfiedBy,
+                message:
+                  `WRONGLY PROVISIONED — value is neither an sb_publishable_* key nor an anon-role ` +
+                  `legacy JWT (Spec 113 §13 silent key non-provisioning; auth cannot work with this value)`,
+              }
+        );
+      } else {
+        findings.push({ level: 'ok', check: 'presence', name: satisfiedBy, message: `present (${group.label})` });
+      }
     } else {
       // C4: SHOULD-grade groups (Spec 113 §3.2) demote to WARN off-prod.
       const level = group.warnOutsideProduction && targetEnv !== 'production' ? 'warn' : 'error';

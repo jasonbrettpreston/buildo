@@ -55,6 +55,9 @@ function validEnv(): Record<string, string | undefined> {
     // P4 hardening H4 (Guardian F1): the fixture carries the ruled value so
     // "a correctly configured production env is green" stays the pinned truth.
     PG_POOL_MAX: '5',
+    // 7th critical (operator-ruled 2026-07-22): the integration-injected
+    // server key. Server-only var — never public-prefixed, so no Tier-1 scan.
+    SUPABASE_SECRET_KEY: 'sb_secret_redactedtestvalue0123456789',
   };
 }
 
@@ -72,6 +75,7 @@ describe('verify-vercel-env — evaluateEnv presence (Spec 113 §3/§3.2)', () =
     'STRIPE_WEBHOOK_SECRET',
     'RESEND_API_KEY',
     'CRON_SECRET',
+    'SUPABASE_SECRET_KEY', // 7th critical, operator-ruled 2026-07-22
   ];
   for (const missing of criticals) {
     it(`fails when the critical var ${missing} is absent`, () => {
@@ -97,6 +101,36 @@ describe('verify-vercel-env — evaluateEnv presence (Spec 113 §3/§3.2)', () =
     const result = vve.evaluateEnv(env, 'production');
     expect(result.ok).toBe(false);
     expect(result.findings.some((f) => f.level === 'error' && /publishable\/anon key/.test(f.message))).toBe(true);
+  });
+
+  it('positive shape assertion (ruled 2026-07-22): a WRONGLY-provisioned publishable key fails in EVERY env — garbage in the slot is not "present"', () => {
+    for (const targetEnv of ['production', 'preview', 'development'] as const) {
+      const env = validEnv();
+      env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'not-a-key-at-all';
+      const result = vve.evaluateEnv(env, targetEnv);
+      expect(result.ok).toBe(false);
+      const hit = result.findings.find(
+        (f) => f.name === 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY' && f.check === 'presence' && f.level === 'error'
+      );
+      expect(hit?.message).toMatch(/WRONGLY PROVISIONED/);
+      expect(hit?.message).not.toContain('not-a-key-at-all'); // never echo
+    }
+  });
+
+  it('positive shape assertion: an anon-role legacy JWT in the ANON_KEY slot is a VALID legitimate form', () => {
+    const env = validEnv();
+    delete env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY = makeJwt('anon');
+    expect(vve.evaluateEnv(env, 'production').ok).toBe(true);
+  });
+
+  it('positive shape assertion: a service_role JWT in the publishable slot fails BOTH the shape assert and the Tier-1 leak scan', () => {
+    const env = validEnv();
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = makeJwt('service_role');
+    const result = vve.evaluateEnv(env, 'production');
+    expect(result.ok).toBe(false);
+    expect(result.findings.some((f) => f.name === 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY' && f.check === 'presence' && f.level === 'error')).toBe(true);
+    expect(result.findings.some((f) => f.name === 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY' && f.check === 'leaked_secret' && f.level === 'error')).toBe(true);
   });
 
   it("fails when ADMIN_MFA_ENFORCED is not exactly 'true'", () => {
@@ -144,7 +178,7 @@ describe('verify-vercel-env — C4 env-scoping (Spec 113 §3.2: MFA/Sentry hard-
     expect(vve.evaluateEnv(env, 'production').ok).toBe(false);
   });
 
-  it('the six REQUIRED_PRESENT criticals still hard-fail on EVERY env — only MFA/Sentry are scoped', () => {
+  it('the REQUIRED_PRESENT criticals (7 incl. SUPABASE_SECRET_KEY, ruled 2026-07-22) still hard-fail on EVERY env — only MFA/Sentry are scoped', () => {
     const env = validEnv();
     delete env.STRIPE_WEBHOOK_SECRET;
     delete env.ADMIN_MFA_ENFORCED; // warn-only on preview — must not mask the Stripe error

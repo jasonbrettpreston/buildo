@@ -572,13 +572,14 @@ spare."
   publishable key correctly on asymmetric-JWT (new-format `sb_*` key) projects, which Buildo
   is on. Guard (truth-up, P4 hardening WF2 2026-07-22 — the prior "comparing actual Vercel env
   values against the Supabase dashboard's keys" sentence described an unbuilt and
-  SEC-3-incompatible mechanism): `verify-vercel-env.js` asserts presence of the publishable
-  key group over the build's own `process.env` (§3.2) — a **missing/empty or secret-shaped**
-  provisioning failure fails the check without ever pulling dashboard values. (Precision,
-  Round-2 GT F1: the shape scan is a negative blocklist — a wrongly-provisioned but
-  non-secret-shaped value, e.g. an anon-role legacy JWT in the publishable slot, passes; a
-  positive `sb_publishable_*`-shape assertion on the group is the stronger upgrade, filed.)
-  The dashboard-side half of the comparison remains a manual F1-checklist eyeball.
+  SEC-3-incompatible mechanism): `verify-vercel-env.js` asserts, over the build's own
+  `process.env` and without ever pulling dashboard values: (a) **presence of
+  `SUPABASE_SECRET_KEY`** as the 7th REQUIRED_PRESENT critical (operator-RULED 2026-07-22 —
+  absent means the integration silently failed to sync and the Supabase server factory is
+  dead), and (b) a **positive shape assertion on the publishable key group** — the satisfying
+  value must be `sb_publishable_*` or an anon-role legacy JWT, error in EVERY env otherwise
+  (a wrongly-provisioned key means auth cannot work anywhere). The dashboard-side half of the
+  comparison remains a manual F1-checklist eyeball.
 - **GEOS-version geometry drift** — PostGIS/GEOS version differences between source and target
   change `ST_IsValid` results on borderline geometries; this is a real data-integrity risk, not
   a cosmetic version mismatch. Ground truth G10 pins the baseline invalid-geometry sets exactly:
