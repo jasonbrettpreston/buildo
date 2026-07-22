@@ -11,7 +11,7 @@
  * step / CI job is responsible for invoking this with the target environment's
  * variables already in `process.env`.
  *
- * Three checks (Spec 113 §3 / §3.2):
+ * Five checks (Spec 113 §3 / §3.2 / §5):
  *   (a) PRESENCE — every runtime-critical var is present & non-empty, and
  *       ADMIN_MFA_ENFORCED === 'true' (so prod can never ship green with MFA
  *       inert or the Stripe webhook dead). MFA + the SHOULD-grade Sentry DSN
@@ -19,14 +19,26 @@
  *       (P4-F0 fold C4 — the DEV_MODE env-scoping pattern).
  *   (b) DEV_MODE ABSENT/false — in production, DEV_MODE / NEXT_PUBLIC_DEV_MODE
  *       must be absent or explicitly 'false'.
- *   (c) NO LEAKED SECRET — every NEXT_PUBLIC_* / EXPO_PUBLIC_* var is inspected;
- *       a known-public value SHAPE (sb_publishable_*, the project https URL, a
- *       Sentry ingest DSN, a phc_* PostHog key) is permitted, and ANY OTHER
- *       public var whose value matches a secret shape is FLAGGED (never printing
- *       the value): postgres(ql):// or a password-bearing connection string, a
- *       legacy service_role JWT (eyJ… decoded, role === service_role), an
- *       sb_secret_* key, a Stripe secret (sk_live_/sk_test_/whsec_), or a bare
- *       long hex/base64 blob.
+ *   (c) NO LEAKED SECRET (Tier 1, hard-fail EVERY env) — every NEXT_PUBLIC_* /
+ *       EXPO_PUBLIC_* var is inspected; a known-public value SHAPE
+ *       (sb_publishable_*, the project https URL, a Sentry ingest DSN, a phc_*
+ *       PostHog key) is permitted, and ANY OTHER public var whose value matches
+ *       a secret shape is FLAGGED (never printing the value): postgres(ql):// or
+ *       a password-bearing connection string, a legacy service_role JWT (eyJ…
+ *       decoded, role === service_role), an sb_secret_* key, a Stripe secret
+ *       (sk_live_/sk_test_/whsec_), or a bare long hex/base64 blob.
+ *   (d) NAME ALLOWLIST (Tier 2, P4-hardening H1) — any public-prefixed var
+ *       whose NAME is not on PUBLIC_VAR_NAME_ALLOWLIST (nor a platform-injected
+ *       NEXT_PUBLIC_VERCEL_* system var) is flagged: `error` on production AND
+ *       preview, `warn` on development. Catches novel-format secrets Tier 1's
+ *       shape blocklist can't recognize. Both tiers evaluate every public var
+ *       INDEPENDENTLY — an unknown-name + secret-shaped var emits TWO findings.
+ *       The finding prints the var NAME only, never the value.
+ *   (e) PG_POOL_MAX PIN (P4-hardening H4, Spec 113 §5) — must be a plain
+ *       integer 1..10 (ruled value 5): `error` on production AND preview
+ *       (preview shares the one cloud DB), `warn` on development. A missing/
+ *       invalid value makes the runtime silently fall back to the unsafe
+ *       single-server default of 20 (src/lib/db/client.ts parsePositiveIntEnv).
  *
  * Target env: `--env=production|preview|development` arg, else `VERCEL_ENV`, else
  * 'production'. The SAME script is meant to run once PER environment — the plan
@@ -80,6 +92,45 @@ const REQUIRED_GROUPS = [
 const DEV_MODE_VARS = ['DEV_MODE', 'NEXT_PUBLIC_DEV_MODE'];
 
 const PUBLIC_VAR_PREFIXES = ['NEXT_PUBLIC_', 'EXPO_PUBLIC_'];
+
+// ---------------------------------------------------------------------------
+// H1 Tier 2 — public-var NAME allowlist (P4 hardening WF2, 2026-07-22).
+// Frozen from the 3-way-verified live census (Integration + Schema-Fidelity +
+// Reality-Check): every NEXT_PUBLIC_* name actually read by live src/ code,
+// plus the legacy anon-key group member. Names NOT here (and not matching the
+// platform prefix below) flag as unknown-name — the tier that catches
+// novel-format secrets Tier 1's shape blocklist can't recognize. Drift is
+// test-enforced (census-sync + REQUIRED_GROUPS-subset invariants in
+// src/tests/verify-vercel-env.logic.test.ts) — add the entry AND the reading
+// code in the same commit.
+// NB: NEXT_PUBLIC_GOOGLE_MAPS_KEY's 39-char AIza… value narrowly evades the
+// 40-char blob regex in secretShapeReason — this name tier is the only check
+// that ever sees it (PropertyPhoto.tsx:41).
+const PUBLIC_VAR_NAME_ALLOWLIST = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY', // legacy group member (REQUIRED_GROUPS)
+  'NEXT_PUBLIC_SENTRY_DSN',
+  'NEXT_PUBLIC_DEV_MODE', // value policed by the dev_mode check, not here
+  'NEXT_PUBLIC_POSTHOG_KEY',
+  'NEXT_PUBLIC_POSTHOG_HOST',
+  'NEXT_PUBLIC_GOOGLE_MAPS_KEY',
+];
+
+// Vercel's "Automatically expose System Environment Variables" injects
+// NEXT_PUBLIC_VERCEL_URL/_ENV/_GIT_* etc. into every build — platform-owned
+// names structurally invisible to any repo grep; never treat as unknown.
+const PUBLIC_VAR_NAME_PREFIX_ALLOW = ['NEXT_PUBLIC_VERCEL_'];
+
+// H4 — PG_POOL_MAX pin (Spec 113 §5; ruled value 5, 2026-07-22). Ceiling kept
+// as a band (not the ruled value) so the operator can tune 1..10 without a
+// code change. Reality-Check's live margin data (2026-07-22): Supavisor's
+// EMPIRICAL backend ceiling is ~14-17 (wave-timed), not the raw max_conn=90 —
+// max 10 leaves only ~1-2 concurrent Fluid instances of headroom, max 5
+// leaves ~3; the current unpinned default of 20 can contend with a SINGLE
+// instance. Measured cost of 5 vs 20 on the admin 33-query stats fan-out:
+// +1.2-1.4s (~15-18%) on a 7.3-7.7s baseline pool size doesn't move.
+const PG_POOL_MAX_PROD_CEILING = 10;
 
 // ---------------------------------------------------------------------------
 // Pure predicates — exported for src/tests/verify-vercel-env.logic.test.ts.
@@ -169,6 +220,86 @@ function isPublicVarName(name) {
 }
 
 /**
+ * H1 Tier 2 — is this public-prefixed NAME known? (allowlist ∪ platform
+ * prefix carve-out). Pure; case-sensitive by design (env names are
+ * case-sensitive on the Linux/Vercel platforms in play).
+ * @param {string} name
+ */
+function isAllowlistedPublicVarName(name) {
+  return (
+    PUBLIC_VAR_NAME_ALLOWLIST.includes(name) ||
+    PUBLIC_VAR_NAME_PREFIX_ALLOW.some((p) => name.startsWith(p))
+  );
+}
+
+/**
+ * The exposure-tier level for exposure-type findings (H1 Tier 2 unknown-name,
+ * H4 pool-max): `error` on production AND preview, `warn` on development.
+ * A PRINCIPLED deviation from the C4 pattern (which scopes degradation-type
+ * findings like a missing Sentry DSN to prod-only hard-fail): preview deploys
+ * share the one cloud project and bake NEXT_PUBLIC_* values into durable,
+ * immutable bundles at BUILD time — Deployment Protection is a toggle, the
+ * artifact is forever — and a preview-scoped var never meets the production
+ * tier at all, so warn-off-prod would make that class warn-only permanently
+ * (Security F1 ruling, P4 hardening WF2 panel 2026-07-22). `vercel dev`
+ * (development) yields no deployed bundle → warn is correct there.
+ * @param {'production'|'preview'|'development'} targetEnv
+ * @returns {'error'|'warn'}
+ */
+function exposureLevel(targetEnv) {
+  return targetEnv === 'development' ? 'warn' : 'error';
+}
+
+/**
+ * H4 — classify a PG_POOL_MAX value against BOTH the ceiling contract and the
+ * runtime's actual parse semantics (src/lib/db/client.ts parsePositiveIntEnv:
+ * parseInt(v,10), fallback to 20 unless finite and > 0). Verifier rule:
+ * trim → plain digits only → integer in [1, ceiling]. Accepts ' 5 ' / '05'
+ * (which the runtime honors identically); rejects '5.9'/'7abc'/'0x10'/'1e2'
+ * (which parseInt silently mangles) and '0' (which the runtime silently
+ * DISCARDS, falling back to 20) — so every verifier-passing string parses
+ * identically at runtime, with no verifier-pass/runtime-discard gap
+ * (Code Reviewer + Schema-Fidelity adjudication, P4 hardening WF2).
+ *
+ * @param {string|undefined} value
+ * @param {number} [ceiling]
+ * @returns {{ status: 'ok'|'missing'|'fallback'|'exceeds_ceiling', parsed: number|null, message: string }}
+ */
+function classifyPoolMax(value, ceiling = PG_POOL_MAX_PROD_CEILING) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return {
+      status: 'missing',
+      parsed: null,
+      message: `MISSING — the runtime silently falls back to the unsafe single-server default of 20 (Spec 113 §5; ruled value 5)`,
+    };
+  }
+  const v = String(value).trim();
+  if (!/^\d{1,2}$/.test(v)) {
+    return {
+      status: 'fallback',
+      parsed: null,
+      message: `not a plain 1-2 digit integer — the runtime silently mangles or discards it and falls back to the unsafe default of 20`,
+    };
+  }
+  const parsed = parseInt(v, 10);
+  if (parsed === 0) {
+    return {
+      status: 'fallback',
+      parsed: 0,
+      message: `is 0 — the runtime silently DISCARDS non-positive values and falls back to the unsafe default of 20`,
+    };
+  }
+  if (parsed > ceiling) {
+    return {
+      status: 'exceeds_ceiling',
+      parsed,
+      message: `= ${parsed} — honored by the runtime but exceeds the ceiling of ${ceiling} (ruled value 5; Supavisor's empirical backend ceiling is ~14-17)`,
+    };
+  }
+  return { status: 'ok', parsed, message: `= ${parsed} (within [1, ${ceiling}])` };
+}
+
+/**
  * Evaluate an env object against the presence + DEV_MODE + leaked-secret
  * contract for a given target environment. Pure; does not touch process.env.
  *
@@ -240,17 +371,54 @@ function evaluateEnv(env, targetEnv) {
     }
   }
 
-  // (c) leaked-secret scan over public vars
+  // (c) + (d) — the two-tier public-var scan. BOTH tiers evaluate every
+  // public var INDEPENDENTLY (P4 hardening H1, Observability fold): an
+  // unknown-name + secret-shaped var emits TWO findings — the Tier-1 error
+  // must never be masked by a Tier-2 result, and vice versa.
   for (const name of Object.keys(env)) {
     if (!isPublicVarName(name)) continue;
     const value = env[name];
     if (!isPresent(value)) continue;
+    // Tier 1 — secret-shape blocklist (hard-fail every env, unchanged).
     const { verdict, reason } = classifyPublicVar(name, value);
     if (verdict === 'flag') {
       findings.push({ level: 'error', check: 'leaked_secret', name, message: `${reason} in a public var` });
     } else {
       findings.push({ level: 'ok', check: 'leaked_secret', name, message: reason });
     }
+    // Tier 2 — name allowlist. Message carries the NAME + a fixed reason
+    // string, NEVER the value (a novel-format secret would re-leak into
+    // retained build logs otherwise — Security F2, test-locked).
+    if (!isAllowlistedPublicVarName(name)) {
+      findings.push({
+        level: exposureLevel(targetEnv),
+        check: 'public_var_name',
+        name,
+        message:
+          'name is not on PUBLIC_VAR_NAME_ALLOWLIST — a public var this repo does not know about ' +
+          '(possible novel-format secret or leftover retired config); add it to the allowlist in the ' +
+          'same PR if legitimate',
+      });
+    }
+  }
+
+  // (e) PG_POOL_MAX pin (P4 hardening H4, Spec 113 §5).
+  const poolMax = classifyPoolMax(env.PG_POOL_MAX);
+  if (poolMax.status === 'ok') {
+    findings.push({ level: 'ok', check: 'pool_max', name: 'PG_POOL_MAX', message: poolMax.message });
+  } else {
+    findings.push({ level: exposureLevel(targetEnv), check: 'pool_max', name: 'PG_POOL_MAX', message: poolMax.message });
+  }
+  // Companion visibility: the WF3 2026-04-10 fence survives the pin only
+  // because PG_CONNECTION_TIMEOUT_MS defaults to 10s — surface it when set so
+  // a future operator can't shrink both knobs blind (Integration fold).
+  if (isPresent(env.PG_CONNECTION_TIMEOUT_MS)) {
+    findings.push({
+      level: 'ok',
+      check: 'pool_max',
+      name: 'PG_CONNECTION_TIMEOUT_MS',
+      message: `set to ${String(env.PG_CONNECTION_TIMEOUT_MS).trim()}ms — pairs with PG_POOL_MAX (pool waiters queue up to this long; default 10000ms)`,
+    });
   }
 
   const ok = !findings.some((f) => f.level === 'error');
@@ -314,12 +482,18 @@ module.exports = {
   REQUIRED_PRESENT,
   REQUIRED_GROUPS,
   DEV_MODE_VARS,
+  PUBLIC_VAR_NAME_ALLOWLIST,
+  PUBLIC_VAR_NAME_PREFIX_ALLOW,
+  PG_POOL_MAX_PROD_CEILING,
   isPresent,
   decodeJwtRole,
   isKnownPublicShape,
   secretShapeReason,
   classifyPublicVar,
   isPublicVarName,
+  isAllowlistedPublicVarName,
+  exposureLevel,
+  classifyPoolMax,
   evaluateEnv,
   resolveTargetEnv,
   run,

@@ -1,6 +1,8 @@
 // Logic Layer Tests — Vercel env-verification (scripts/verify-vercel-env.js)
-// SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §3, §3.2
+// SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §3, §3.2, §5
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const vve = require('../../scripts/verify-vercel-env.js') as {
@@ -16,6 +18,18 @@ const vve = require('../../scripts/verify-vercel-env.js') as {
   classifyPublicVar: (name: string, value: string) => { verdict: 'allow' | 'flag'; reason: string };
   decodeJwtRole: (value: string) => string | null;
   resolveTargetEnv: (argv: string[], env: Record<string, string | undefined>) => string;
+  PUBLIC_VAR_NAME_ALLOWLIST: string[];
+  PUBLIC_VAR_NAME_PREFIX_ALLOW: string[];
+  PG_POOL_MAX_PROD_CEILING: number;
+  REQUIRED_GROUPS: { label: string; anyOf: string[] }[];
+  isPublicVarName: (name: string) => boolean;
+  isAllowlistedPublicVarName: (name: string) => boolean;
+  exposureLevel: (targetEnv: string) => 'error' | 'warn';
+  classifyPoolMax: (value: string | undefined, ceiling?: number) => {
+    status: 'ok' | 'missing' | 'fallback' | 'exceeds_ceiling';
+    parsed: number | null;
+    message: string;
+  };
 };
 
 /** Build an unsigned JWT whose payload carries the given role claim. */
@@ -38,6 +52,9 @@ function validEnv(): Record<string, string | undefined> {
     RESEND_API_KEY: 're_redactedvalue',
     NEXT_PUBLIC_SENTRY_DSN: 'https://abc123@o12345.ingest.sentry.io/67890',
     CRON_SECRET: 'a-strong-cron-secret-value',
+    // P4 hardening H4 (Guardian F1): the fixture carries the ruled value so
+    // "a correctly configured production env is green" stays the pinned truth.
+    PG_POOL_MAX: '5',
   };
 }
 
@@ -186,9 +203,13 @@ describe('verify-vercel-env — leaked-secret allowlist scan (public vars)', () 
     ).toBe(true);
   });
 
-  it('does NOT flag an anon-role JWT in a public var (anon key is public)', () => {
+  it('does NOT flag an anon-role JWT VALUE in an allowlisted public var (anon key is public — Tier-1 concern)', () => {
+    // P4 hardening H1 (Guardian F2): re-targeted from the synthetic name
+    // NEXT_PUBLIC_ANON (which Tier 2 now correctly flags as unknown) onto the
+    // allowlisted legacy name, preserving this test's original intent: an
+    // anon-role JWT's VALUE is legitimately public.
     const env = validEnv();
-    env.NEXT_PUBLIC_ANON = makeJwt('anon');
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY = makeJwt('anon');
     expect(vve.evaluateEnv(env, 'production').ok).toBe(true);
   });
 
@@ -208,6 +229,140 @@ describe('verify-vercel-env — leaked-secret allowlist scan (public vars)', () 
     expect(result.ok).toBe(false);
     expect(result.findings.some((f) => f.name === 'NEXT_PUBLIC_LEAK1' && f.level === 'error')).toBe(true);
     expect(result.findings.some((f) => f.name === 'EXPO_PUBLIC_LEAK2' && f.level === 'error')).toBe(true);
+  });
+});
+
+describe('verify-vercel-env — H1 Tier 2 name allowlist (P4 hardening WF2)', () => {
+  it('an unknown-name public var is an ERROR in production AND preview, WARN in development (exposure tier, not the C4 tier)', () => {
+    for (const [envName, level] of [['production', 'error'], ['preview', 'error'], ['development', 'warn']] as const) {
+      const env = validEnv();
+      env.NEXT_PUBLIC_TOTALLY_NOVEL = 'some-benign-looking-value';
+      const result = vve.evaluateEnv(env, envName);
+      const hit = result.findings.find((f) => f.name === 'NEXT_PUBLIC_TOTALLY_NOVEL' && f.check === 'public_var_name');
+      expect(hit?.level).toBe(level);
+      expect(result.ok).toBe(level !== 'error');
+    }
+  });
+
+  it('every allowlisted name passes the name tier (no public_var_name finding)', () => {
+    const env = validEnv();
+    env.NEXT_PUBLIC_GOOGLE_MAPS_KEY = 'AIzaSyA1234567890abcdefghijklmnopqrstu'; // 39 chars — evades the 40-char blob regex
+    env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_abc123';
+    env.NEXT_PUBLIC_POSTHOG_HOST = 'https://us.i.posthog.com';
+    const result = vve.evaluateEnv(env, 'production');
+    expect(result.findings.filter((f) => f.check === 'public_var_name' && f.level !== 'ok')).toEqual([]);
+    expect(result.ok).toBe(true);
+  });
+
+  it('platform-injected NEXT_PUBLIC_VERCEL_* system vars are carved out (Integration/SF HIGH — invisible to any repo grep)', () => {
+    const env = validEnv();
+    env.NEXT_PUBLIC_VERCEL_URL = 'my-app-abc123.vercel.app';
+    env.NEXT_PUBLIC_VERCEL_ENV = 'production';
+    env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA = 'a'.repeat(30);
+    const result = vve.evaluateEnv(env, 'production');
+    expect(result.findings.some((f) => f.check === 'public_var_name' && f.level === 'error')).toBe(false);
+    expect(result.ok).toBe(true);
+  });
+
+  it('BOTH tiers fire independently: an unknown-name + secret-shaped var emits TWO findings (the masking quadrant, Observability #1)', () => {
+    const env = validEnv();
+    env.NEXT_PUBLIC_RANDOM = 'sk_live_0123456789abcdef0123';
+    const result = vve.evaluateEnv(env, 'development'); // even where the name tier is warn-only…
+    const tier1 = result.findings.find((f) => f.name === 'NEXT_PUBLIC_RANDOM' && f.check === 'leaked_secret');
+    const tier2 = result.findings.find((f) => f.name === 'NEXT_PUBLIC_RANDOM' && f.check === 'public_var_name');
+    expect(tier1?.level).toBe('error'); // …the Tier-1 secret-shape error is NEVER masked
+    expect(tier2?.level).toBe('warn');
+    expect(result.ok).toBe(false);
+  });
+
+  it('never-echo: the Tier-2 finding message contains the NAME only, never the value (Security F2)', () => {
+    const plantedValue = 'maybe-a-novel-format-secret-abc987';
+    const env = validEnv();
+    env.NEXT_PUBLIC_MYSTERY = plantedValue;
+    const result = vve.evaluateEnv(env, 'production');
+    const hit = result.findings.find((f) => f.name === 'NEXT_PUBLIC_MYSTERY' && f.check === 'public_var_name');
+    expect(hit).toBeDefined();
+    expect(hit?.message).not.toContain(plantedValue);
+  });
+
+  it('an EXPO_PUBLIC_* var in a Vercel env is name-unknown → flagged (it has no legitimate Vercel presence)', () => {
+    const env = validEnv();
+    env.EXPO_PUBLIC_API_URL = 'https://buildo.app';
+    const result = vve.evaluateEnv(env, 'production');
+    expect(result.findings.some((f) => f.name === 'EXPO_PUBLIC_API_URL' && f.check === 'public_var_name' && f.level === 'error')).toBe(true);
+  });
+});
+
+describe('verify-vercel-env — H4 PG_POOL_MAX pin (P4 hardening WF2, Spec 113 §5)', () => {
+  it('classifyPoolMax: the full adjudicated matrix (trim → digits-only → range; zero runtime-discard gap)', () => {
+    expect(vve.classifyPoolMax('5').status).toBe('ok');
+    expect(vve.classifyPoolMax('05').status).toBe('ok'); // runtime honors as 5
+    expect(vve.classifyPoolMax(' 5 ').status).toBe('ok'); // runtime honors (parseInt skips whitespace)
+    expect(vve.classifyPoolMax('10').status).toBe('ok');
+    expect(vve.classifyPoolMax(undefined).status).toBe('missing');
+    expect(vve.classifyPoolMax('').status).toBe('missing');
+    expect(vve.classifyPoolMax('0').status).toBe('fallback'); // runtime DISCARDS → default 20
+    expect(vve.classifyPoolMax('abc').status).toBe('fallback');
+    expect(vve.classifyPoolMax('5.9').status).toBe('fallback'); // runtime would mangle to 5 — verifier stricter
+    expect(vve.classifyPoolMax('7abc').status).toBe('fallback');
+    expect(vve.classifyPoolMax('0x10').status).toBe('fallback'); // parseInt(…,10) → 0 → silent discard
+    expect(vve.classifyPoolMax('1e2').status).toBe('fallback');
+    expect(vve.classifyPoolMax('11').status).toBe('exceeds_ceiling');
+  });
+
+  it('message differentiates silent-fallback-to-20 from honored-but-over-ceiling (Observability #2)', () => {
+    expect(vve.classifyPoolMax(undefined).message).toMatch(/falls back to the unsafe single-server default of 20/);
+    expect(vve.classifyPoolMax('abc').message).toMatch(/falls back to the unsafe default of 20/);
+    expect(vve.classifyPoolMax('11').message).toMatch(/honored by the runtime but exceeds the ceiling/);
+  });
+
+  it('missing PG_POOL_MAX is an ERROR in production and preview, WARN in development', () => {
+    for (const [envName, level] of [['production', 'error'], ['preview', 'error'], ['development', 'warn']] as const) {
+      const env = validEnv();
+      delete env.PG_POOL_MAX;
+      const result = vve.evaluateEnv(env, envName);
+      const hit = result.findings.find((f) => f.name === 'PG_POOL_MAX' && f.check === 'pool_max');
+      expect(hit?.level).toBe(level);
+      expect(result.ok).toBe(level !== 'error');
+    }
+  });
+
+  it("the ruled value '5' passes everywhere; PG_CONNECTION_TIMEOUT_MS is surfaced when set (both-knobs visibility)", () => {
+    const env = validEnv();
+    env.PG_CONNECTION_TIMEOUT_MS = '10000';
+    const result = vve.evaluateEnv(env, 'production');
+    expect(result.ok).toBe(true);
+    expect(result.findings.some((f) => f.name === 'PG_CONNECTION_TIMEOUT_MS' && /10000ms/.test(f.message))).toBe(true);
+  });
+});
+
+describe('verify-vercel-env — allowlist drift invariants (DeepSeek + CR #4)', () => {
+  it("REQUIRED_GROUPS' public-prefixed names are a subset of the allowlist — the two hand-maintained lists cannot silently diverge", () => {
+    const groupPublicNames = vve.REQUIRED_GROUPS.flatMap((g) => g.anyOf).filter((n) => vve.isPublicVarName(n));
+    const offenders = groupPublicNames.filter((n) => !vve.isAllowlistedPublicVarName(n));
+    expect(offenders).toEqual([]);
+  });
+
+  it('census-sync: every NEXT_PUBLIC_* name referenced in live src/ code is allowlisted (add the entry with the reading code, same commit)', () => {
+    const SRC = path.resolve(__dirname, '..');
+    const offenders = new Map<string, string>();
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name === 'tests' && dir === SRC) continue; // fixtures use deliberately-unknown names
+          walk(full);
+        } else if (/\.(ts|tsx)$/.test(entry.name)) {
+          const source = fs.readFileSync(full, 'utf-8');
+          for (const m of source.matchAll(/NEXT_PUBLIC_[A-Z0-9_]+/g)) {
+            const name = m[0];
+            if (!vve.isAllowlistedPublicVarName(name)) offenders.set(name, path.relative(SRC, full));
+          }
+        }
+      }
+    };
+    walk(SRC);
+    expect(Object.fromEntries(offenders)).toEqual({});
   });
 });
 
