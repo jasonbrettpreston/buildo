@@ -106,11 +106,23 @@ MFA off, Stripe webhooks dead, or DEV_MODE auth-bypass live.
 | `CRON_SECRET` | No — operator-set | Guards any HTTP-triggered cron/trigger surface, compared constant-time (§8.1); absent = an unauthenticated trigger endpoint | MUST be present (server-only) |
 | `DEV_MODE` | No — operator-set | Local/dev auth-bypass + relaxed-guard flag; if truthy in prod the app runs with development auth posture | MUST be **absent or false** in prod — `verify-vercel-env.js` asserts absence |
 
-The three `NEXT_PUBLIC_*`-eligible values here (`NEXT_PUBLIC_SENTRY_DSN`) plus the Supabase
-publishable key and URL are the **only** values permitted to appear in a `NEXT_PUBLIC_*`/
-`EXPO_PUBLIC_*` var — §verify-vercel-env's negative check is an allowlist: any OTHER value in a
-public-prefixed var (especially a `postgres://`/DB-password shape, a legacy `eyJ…` service-role
-JWT, or an `sb_secret_*` key) is a leak finding.
+**Public-var scan (rewritten to shipped truth, P4 hardening WF2 2026-07-22 — the prior
+"allowlist over values" sentence described an unbuilt design).** `verify-vercel-env.js` runs a
+TWO-TIER check over every `NEXT_PUBLIC_*`/`EXPO_PUBLIC_*` var, both tiers independently:
+- **Tier 1 — secret-shape blocklist, hard-fail EVERY env:** a `postgres://`/password-bearing
+  connection string, a legacy `eyJ…` service-role JWT, an `sb_secret_*` key, a Stripe secret
+  (`sk_live_`/`sk_test_`/`whsec_`), or a bare long hex/base64 blob in a public var is an
+  `error`, never printing the value.
+- **Tier 2 — NAME allowlist:** the legitimate public var names are the census-frozen 8
+  (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY` legacy, `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_DEV_MODE`,
+  `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`) plus
+  the platform-injected `NEXT_PUBLIC_VERCEL_*` prefix. Any OTHER public-prefixed name —
+  including a novel-format secret Tier 1's shapes can't recognize — is `error` on production
+  AND preview, `warn` on development (exposure-tier: preview shares the cloud project and bakes
+  values into durable bundles at build time; `vercel dev` yields no deployed bundle). Drift is
+  test-enforced (census-sync + REQUIRED_GROUPS-subset invariants) — a new public var requires
+  its allowlist entry in the same commit.
 </architecture>
 
 ---
@@ -178,6 +190,18 @@ pooler host** — port 6543 has been transaction-mode-only since 2025-02-28. The
 get session-mode semantics on 6543; any script needing session state MUST target 5432 (direct
 or session pooler), full stop.
 
+**The "pinned low pool `max`" mechanism (P4 hardening WF2, 2026-07-22 — ruled value 5):** the
+operator sets `PG_POOL_MAX=5` explicitly in the Vercel production + preview envs (consumed by
+`src/lib/db/client.ts`'s `parsePositiveIntEnv`, which otherwise silently falls back to the
+single-server default of 20), and `verify-vercel-env.js` asserts it — plain integer in
+`[1, 10]`, `error` on production/preview, `warn` on development. The verifier is invoked
+MANUALLY per environment at the F1 checklist / pre-deploy — there is no automated build-time
+wiring (the settled SEC-3 env-only design); the assertion fires when the checklist runs, not
+continuously. Live margin data (Reality-Check 2026-07-22): Supavisor's empirical backend
+ceiling is ~14–17 connections (not the raw `max_connections=90`), so the unpinned default of
+20 can contend with a SINGLE Fluid-Compute instance; 5 leaves ~3 instances of headroom at a
+measured +1.2–1.4s cost on the admin 33-query stats fan-out.
+
 **IPv6 fact:** Supabase's direct connection (non-pooled, 5432 on the project host) is
 **IPv6-only by default**. A pipeline host without IPv6 egress cannot reach it and MUST fall back
 to the session-mode pooler (also 5432, on the pooler host) or provision the IPv4 add-on.
@@ -243,10 +267,18 @@ stack, cloud project, and (historically) Cloud SQL. It tracks applied migrations
 limited to **local stack lifecycle only** (`supabase start`/`stop`/`status`) — never schema
 authorship or synchronization.
 
-**Guard:** `ai-env-check.mjs` and the pre-commit hook MUST fail if `supabase/migrations/`
-contains any files. Its presence is a leading indicator of CLI-driven schema drift bypassing
-`migrate.js` — the guard fires on the file's mere existence, not on its content, because by the
-time content exists the drift has already happened.
+**Guard (SHIPPED, P4 hardening WF2 2026-07-22):** `src/tests/schema-authority.logic.test.ts`
+FAILS if `supabase/migrations/` holds any file other than a `.gitkeep` placeholder — and
+because the husky pre-commit gauntlet runs the full `npm run test`, the test IS the pre-commit
+enforcement. `ai-env-check.mjs` carries the matching **report-only** visibility line (it never
+sets a non-zero exit code, by that script's standing convention — enforcement lives in the
+test, visibility in the pre-flight). The guard fires on file existence, not content, because by
+the time content exists the drift has already happened. **Recorded residuals:** `git commit
+--no-verify` bypasses the gauntlet (no CI backstop runs the full suite on PRs today; caught at
+the next local test run or pre-flight), and a push-then-delete-the-files slip applies
+out-of-band DDL that neither this tripwire nor `migrate.js --verify`'s checksum ledger can see
+— inherent to an unhookable external CLI, accepted and stated rather than silently claimed
+covered.
 
 **Deferred hardening (recorded, not built in this program):** a dedicated `migration_runner`
 Postgres role holding DDL privileges, with day-to-day application/developer roles restricted to
@@ -478,12 +510,24 @@ AND data.** All non-migration WF work (feature work unrelated to this migration)
 running against it; pipeline chains keep mutating it. This is a deliberate coexistence window,
 not a background inconsistency to tolerate.
 
-**Rules during coexistence:**
+> **COEXISTENCE WINDOW CLOSED (P4 hardening WF2 truth-up, 2026-07-22).** The D13 cutover
+> executed **2026-07-18 EOD** (operator flipped the canonical dev `.env` to local Supabase;
+> Phase-0 output panel same day — `review_followups.md` "Phase 0" section; commit `45a9def0`
+> 2026-07-19 references "post-cutover"; re-verified live 2026-07-22 via `inet_server_addr()`).
+> The rules below are HISTORICAL — they governed Phases 0–3 and are retained for the record.
+> The dual-verify obligation is discharged going forward by (a) the single local
+> `migrate.js --verify` in `ai-env-check.mjs` and (b) Spec 115 §3's per-workflow
+> `migrate.js --verify` against cloud inside every chain workflow — drift is checked exactly
+> where it would do damage, without coupling every local pre-flight to cloud reachability.
+> (The `ai-env-check.mjs` dual-instance verify described below was never built; by closure it
+> is no longer owed.)
+
+**Rules during coexistence (HISTORICAL — window closed 2026-07-18):**
 - Every migration authored during Phases 0–3 MUST be replayed to **both** Docker
   `buildo_pgdata` and local Supabase before being considered landed.
 - `ai-env-check.mjs` runs `migrate.js --verify` against **both** instances during this window —
   drift between them is an **automated failure**, not a process-discipline reminder left to the
-  developer to remember.
+  developer to remember. *(Never built — see the closure note above.)*
 - The 0.5 data load into local Supabase is schema-plus-data at that moment, but Docker keeps
   mutating afterward (chains run against it during 0.6–0.7) — so the data load is **re-run
   fresh from Docker immediately before cutover** (Phase 0.8), not assumed still current.
@@ -491,13 +535,14 @@ not a background inconsistency to tolerate.
   window. These are **schema-fidelity tests** (do migrations apply, do constraints hold) — they
   are explicitly **not** Supabase-integration tests, and are not expected to catch
   Supabase-specific behavior. `ssl-config.js`'s local no-TLS mode covers them, plus the one
-  dedicated TLS-required container test (§4.4).
+  dedicated TLS-required container test (§4.4). *(Still true post-closure.)*
 
-**Cutover moment:** Phase 0.8 PASS (full G10 data-integrity gate suite green against the
-freshly re-loaded local Supabase instance) flips the canonical dev `.env` `DATABASE_URL` to
-local Supabase. `docker-compose.yml` / `buildo_pgdata` are kept as an **offline emergency
-restore target** through Phase 5.2, then decommissioned in the final documentation sweep — they
-are not deleted at cutover, only demoted from "authoritative" to "cold spare."
+**Cutover moment (EXECUTED 2026-07-18 EOD):** Phase 0.8 PASS (full G10 data-integrity gate
+suite green against the freshly re-loaded local Supabase instance) flipped the canonical dev
+`.env` `DATABASE_URL` to local Supabase. `docker-compose.yml` / `buildo_pgdata` are kept as an
+**offline emergency restore target** through Phase 5.2, then decommissioned in the final
+documentation sweep — not deleted at cutover, only demoted from "authoritative" to "cold
+spare."
 </architecture>
 
 ---
@@ -523,9 +568,12 @@ are not deleted at cutover, only demoted from "authoritative" to "cold spare."
   (§5) + the Phase 4.4 post-launch Supavisor connection-count monitoring window.
 - **Env-sync asymmetric-JWT bug** — the Vercel↔Supabase integration may fail to provision the
   publishable key correctly on asymmetric-JWT (new-format `sb_*` key) projects, which Buildo
-  is on. Guard: Phase 4.1's automated env-verification script comparing actual Vercel env
-  values against the Supabase dashboard's keys — a manual-only check is explicitly insufficient
-  here because the failure mode is silent.
+  is on. Guard (truth-up, P4 hardening WF2 2026-07-22 — the prior "comparing actual Vercel env
+  values against the Supabase dashboard's keys" sentence described an unbuilt and
+  SEC-3-incompatible mechanism): `verify-vercel-env.js` asserts presence + key-SHAPE of the
+  publishable key group over the build's own `process.env` (§3.2) — a missing or
+  wrongly-provisioned key fails the check without ever pulling dashboard values. The
+  dashboard-side half of the comparison remains a manual F1-checklist eyeball.
 - **GEOS-version geometry drift** — PostGIS/GEOS version differences between source and target
   change `ST_IsValid` results on borderline geometries; this is a real data-integrity risk, not
   a cosmetic version mismatch. Ground truth G10 pins the baseline invalid-geometry sets exactly:
@@ -551,8 +599,9 @@ are not deleted at cutover, only demoted from "authoritative" to "cold spare."
 - `mobile/src/lib/supabase.ts` (new — mobile client factory, key contract §3)
 - `supabase/config.toml`, `supabase/migrations/` (CLI local-stack scaffolding only — MUST stay
   empty of schema-owning files per the §7 guard)
-- `scripts/ai-env-check.mjs` (CA-expiry check §4.3, dual-DB `migrate.js --verify` §12,
-  `supabase/migrations/` emptiness guard §7)
+- `scripts/ai-env-check.mjs` (CA-expiry check §4.3, single local `migrate.js --verify` — the
+  §12 dual-DB verify closed with the coexistence window 2026-07-18, `supabase/migrations/`
+  emptiness visibility line §7 — enforcement lives in `src/tests/schema-authority.logic.test.ts`)
 - `.github/workflows/` (new — chain-runner workflows, §8)
 - `migrations/` (new: pg_cron + pg_net enablement, §6)
 - `scripts/manifest.json` (`backup_db` step, §9.3 — re-homing only, not re-ordering)
