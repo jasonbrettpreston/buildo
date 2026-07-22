@@ -51,6 +51,12 @@ const restoreDb = require('../../scripts/restore-db.js') as {
   stderrGateDecision: (a: { exitCode: number; stderr: string }) => { pass: boolean; reason: string };
   parseTocTables: (listOutput: string) => Set<string>;
   checkTocCoversScope: (tocTables: Set<string>, scopedTables: string[]) => { covered: boolean; missing: string[] };
+  countTableRowsSafe: (pool: Pool, tableExpr: string) => Promise<number | null>;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const gatesLib = require('../../scripts/validation/supabase-load-gates.js') as {
+  getAuthLinkedTables: (pool: Pool) => Promise<string[]>;
 };
 
 function pgToolsAvailable(): boolean {
@@ -95,6 +101,9 @@ describe.skipIf(!RUN)('scripts/restore-db.js — infra (real pg_dump/pg_restore 
     // recreates TABLE_A alongside the orphan) — observed 2026-07-20 after a
     // hard session crash mid-suite.
     await pool.query(`DROP TABLE IF EXISTS public._restore_infra_a_renamed`);
+    // Belt for the C2 auth-derivation test's probe table (its own finally
+    // normally drops it; a mid-test crash would otherwise orphan it).
+    await pool.query(`DROP TABLE IF EXISTS public._authlink_probe`);
     await pool.end();
   });
 
@@ -173,6 +182,60 @@ describe.skipIf(!RUN)('scripts/restore-db.js — infra (real pg_dump/pg_restore 
       expect(bRows.rows[0].n).toBe(1);
     } finally {
       unlinkSync(dumpPath);
+    }
+  }, 30_000);
+
+  it('countTableRowsSafe (C1): a real count for an existing table, 0 for a missing relation, null (fail-closed) for a malformed probe', async () => {
+    await pool.query(`TRUNCATE public.${TABLE_A}`);
+    await pool.query(`INSERT INTO public.${TABLE_A} (id, val) VALUES (1, 'x'), (2, 'y')`);
+
+    // existing relation → real count
+    expect(await restoreDb.countTableRowsSafe(pool, `public.${TABLE_A}`)).toBe(2);
+    // 42P01 undefined_table → genuinely absent, counts as 0 (a table that
+    // does not exist cannot hold data — NOT the fail-open bug class)
+    expect(await restoreDb.countTableRowsSafe(pool, 'public._restore_infra_definitely_absent')).toBe(0);
+    // 3F000 invalid_schema_name → same
+    expect(await restoreDb.countTableRowsSafe(pool, '_no_such_schema_.users')).toBe(0);
+    // any OTHER probe failure (here: a syntax error) → null → the guard
+    // FAILS CLOSED on it (the old code returned 0 here — the C1 CRITICAL)
+    expect(await restoreDb.countTableRowsSafe(pool, 'public.broken syntax here')).toBeNull();
+  }, 30_000);
+
+  it('getAuthLinkedTables (C2): [] without an auth schema; derives exactly the FK-into-auth.users tables when one exists', async () => {
+    // NEVER create/drop the auth schema when the harness DB already has one
+    // (DATABASE_URL may point at a REAL local Supabase stack — destroying its
+    // auth schema would be catastrophic). The full create-and-derive path runs
+    // only on an auth-less harness DB (CI service container / testcontainer).
+    const authSchemaExisted =
+      ((await pool.query(`SELECT 1 FROM pg_namespace WHERE nspname = 'auth'`)).rowCount ?? 0) > 0;
+    const before = await gatesLib.getAuthLinkedTables(pool);
+    expect(before).not.toContain('_authlink_probe');
+
+    if (authSchemaExisted) {
+      // Real Supabase stack: just assert the derivation runs cleanly and
+      // returns only public-table names (no schema qualifiers, no errors).
+      expect(Array.isArray(before)).toBe(true);
+      for (const t of before) expect(t).not.toContain('.');
+      return;
+    }
+
+    // Auth-less harness: no auth schema → empty derivation, no error…
+    expect(before).toEqual([]);
+    // …then build a minimal auth.users + one linked table and assert the
+    // derivation returns exactly the linked one (everything created here is
+    // ours to drop — the schema did not exist).
+    await pool.query(`CREATE SCHEMA auth`);
+    try {
+      await pool.query(`CREATE TABLE auth.users (id uuid PRIMARY KEY)`);
+      await pool.query(
+        `CREATE TABLE public._authlink_probe (id int PRIMARY KEY, user_id uuid REFERENCES auth.users(id))`
+      );
+      const linked = await gatesLib.getAuthLinkedTables(pool);
+      expect(linked).toEqual(['_authlink_probe']);
+      expect(linked).not.toContain(TABLE_A); // no FK → not derived
+    } finally {
+      await pool.query(`DROP TABLE IF EXISTS public._authlink_probe`);
+      await pool.query(`DROP SCHEMA IF EXISTS auth CASCADE`);
     }
   }, 30_000);
 

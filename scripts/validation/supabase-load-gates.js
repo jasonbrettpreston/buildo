@@ -39,7 +39,7 @@
 'use strict';
 
 const { Pool } = require('pg');
-const { resolveSslConfig } = require('../lib/ssl-config');
+const { resolveSslConfig, isLocalMode } = require('../lib/ssl-config');
 
 // ---------------------------------------------------------------------------
 // Constants — G10 pinned baseline (live dev DB, 2026-07-18 Reality-Check)
@@ -105,6 +105,34 @@ function quoteIdent(name) {
     throw new Error(`Refusing to quote unsafe identifier: ${JSON.stringify(name)}`);
   }
   return `"${name}"`;
+}
+
+/**
+ * Auth-linked auto-exclusion decision (P4-F0 fold C2, Integration MED —
+ * reproduced live). Pure; the DB half is getAuthLinkedTables below.
+ *
+ * On a REMOTE (non-loopback) target, public tables carrying an FK into
+ * auth.users are never source-comparable: greenfield-empty at load time
+ * (their dev rows reference dev auth.users uuids absent on cloud), and
+ * holding REAL user rows that diverge from the dev source after launch. An
+ * UNSCOPED run against such a target must exclude them — the F0 session's
+ * hand-typed 68-table CLI list, codified. Two carve-outs:
+ *   - a LOCAL target keeps them (the D13 full-load flow loads and verifies
+ *     user tables against the local stack's own auth.users);
+ *   - an explicit `--tables` scope wins verbatim (operator override — the
+ *     request already passed computeTableList validation).
+ *
+ * @param {{ tables: string[], authLinkedTables: string[], requested?: string[]|null, targetIsLocal: boolean }} args
+ * @returns {{ tables: string[], excluded: string[] }}
+ */
+function applyAuthLinkedExclusion({ tables, authLinkedTables, requested = null, targetIsLocal }) {
+  if (targetIsLocal || (requested && requested.length > 0)) {
+    return { tables, excluded: [] };
+  }
+  const authSet = new Set(authLinkedTables || []);
+  const excluded = tables.filter((t) => authSet.has(t));
+  if (excluded.length === 0) return { tables, excluded };
+  return { tables: tables.filter((t) => !authSet.has(t)), excluded };
 }
 
 /**
@@ -264,6 +292,34 @@ async function getBaseTables(pool) {
      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
      ORDER BY table_name`
   );
+  return res.rows.map((r) => r.table_name);
+}
+
+/**
+ * The DB half of the C2 auth-linked exclusion: derive, from the TARGET's own
+ * pg_constraint, every public table with a direct FK into auth.users. Returns
+ * [] when the auth schema / auth.users doesn't exist (the Docker dev source,
+ * a plain-Postgres target) — the join against the auth-side pg_namespace
+ * simply matches nothing, no error. Derived at runtime so the list can never
+ * go stale as migrations add user-linked tables (Integration's live query,
+ * codified verbatim).
+ * @param {import('pg').Pool} pool
+ * @returns {Promise<string[]>} sorted public table names
+ */
+async function getAuthLinkedTables(pool) {
+  const res = await pool.query(`
+    SELECT DISTINCT rel.relname AS table_name
+    FROM pg_constraint con
+    JOIN pg_class rel  ON rel.oid  = con.conrelid
+    JOIN pg_namespace reln ON reln.oid = rel.relnamespace
+    JOIN pg_class ref  ON ref.oid  = con.confrelid
+    JOIN pg_namespace refn ON refn.oid = ref.relnamespace
+    WHERE con.contype = 'f'
+      AND reln.nspname = 'public'
+      AND refn.nspname = 'auth'
+      AND ref.relname  = 'users'
+    ORDER BY 1
+  `);
   return res.rows.map((r) => r.table_name);
 }
 
@@ -602,7 +658,22 @@ async function runCli() {
   const targetPool = resolveTargetPool(targetArg);
   try {
     const [sourceTables, targetTables] = await Promise.all([getBaseTables(sourcePool), getBaseTables(targetPool)]);
-    const tables = computeTableList({ sourceTables, targetTables, requested: requestedTables });
+    let tables = computeTableList({ sourceTables, targetTables, requested: requestedTables });
+
+    // C2 — unscoped verify vs a remote target auto-excludes auth-linked
+    // tables (see applyAuthLinkedExclusion; the false-FAIL Integration
+    // reproduced live on the F0 cloud verify).
+    const targetIsLocal = isLocalMode({ connectionString: resolveTargetConnectionString(targetArg) });
+    const authLinkedTables = await getAuthLinkedTables(targetPool);
+    const exclusion = applyAuthLinkedExclusion({ tables, authLinkedTables, requested: requestedTables, targetIsLocal });
+    tables = exclusion.tables;
+    if (exclusion.excluded.length > 0) {
+      console.log(
+        `[supabase-load-gates] auto-excluded ${exclusion.excluded.length} auth-linked table(s) ` +
+          `(FK → auth.users, derived from target pg_constraint): ${exclusion.excluded.join(', ')}`
+      );
+    }
+
     const report = await runAllGates({ sourcePool, targetPool, tables });
     printReport(report);
     if (report.verdict === 'FAIL') process.exitCode = 1;
@@ -630,6 +701,7 @@ module.exports = {
   LOCAL_TARGET_DEFAULT,
   // pure functions
   computeTableList,
+  applyAuthLinkedExclusion,
   quoteIdent,
   compareRowCounts,
   compareIdSets,
@@ -639,6 +711,7 @@ module.exports = {
   rollUpVerdict,
   // DB-touching functions
   getBaseTables,
+  getAuthLinkedTables,
   getRowCounts,
   getInvalidGeomIds,
   getSequenceOwnership,

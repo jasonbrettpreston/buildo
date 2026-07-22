@@ -109,9 +109,12 @@ function parseArgs(argv) {
     // which Postgres refuses when an OUT-OF-SCOPE table (an intentionally
     // excluded, empty user table) carries an FK INTO an in-scope table. An
     // empty target needs no truncation at all, so skipping sidesteps the FK
-    // barrier. The truncate guard's "target empty?" check still runs and would
-    // catch a NON-empty target here (pg_restore --data-only would then dup-key,
-    // a loud failure). Never combine with a populated target.
+    // barrier. The truncate guard's emptiness check runs ONLY for a
+    // NON-LOOPBACK target (P4-F0 fold C1: it now probes the actual scoped
+    // tables + the auth.users/parcels belt, and FAILS CLOSED on probe error);
+    // on a LOOPBACK target no guard runs at all — the only remaining net for
+    // a mistakenly-populated local target is pg_restore --data-only dup-key
+    // failing loudly. Never combine with a populated target.
     if (raw === '--skip-truncate') {
       args.skipTruncate = true;
       continue;
@@ -356,45 +359,113 @@ function checkTocCoversScope(tocTables, scopedTables) {
 }
 
 /**
- * Destructive-truncate guard (Phase 4 F0 step 0, Gemini CRITICAL fold #3) —
- * pure decision, no DB access. This one-off tool must not become a post-launch
- * landmine: a `--target` that already holds REAL users or data must not be
- * silently TRUNCATEd. The Phase-4.0 cloud load runs against an EMPTY cloud, so
- * the zero-row path returns `tripped: false` and needs NO flag; a populated
- * (post-launch / accidentally-repointed) remote target trips and refuses unless
- * the operator passes `--i-really-mean-to-truncate`.
+ * Destructive-truncate guard (Phase 4 F0 step 0, Gemini CRITICAL fold #3;
+ * reworked P4-F0 output-panel fold C1) — pure decision, no DB access. This
+ * one-off tool must not become a post-launch landmine: a `--target` that
+ * already holds REAL users or data must not be silently TRUNCATEd. The
+ * Phase-4.0 cloud load runs against an EMPTY cloud, so the zero-row path
+ * returns `tripped: false` and needs NO flag; a populated (post-launch /
+ * accidentally-repointed) remote target trips and refuses unless the operator
+ * passes `--i-really-mean-to-truncate`.
  *
- * `authUsersCount > 0` (any registered human) is the primary production signal;
- * `dataRowCount > dataThreshold` (a canonical data-bearing table, e.g. parcels)
- * is the secondary one. Either trips the guard.
+ * C1 rework (Code Reviewer CRITICAL, 4-reviewer converge): the probe set is
+ * the ACTUAL tables about to be truncated (`dataRowCounts`, one entry per
+ * scoped table — a `--tables=trades,...` subset holding data must trip the
+ * guard even when parcels/auth.users are empty), with `auth.users` retained
+ * as the primary production signal and `public.parcels` as a belt probe.
+ * A `null` count means the probe itself FAILED — the guard FAILS CLOSED on
+ * it (an unverifiable target is treated as populated, never as empty).
  *
- * @param {{ authUsersCount: number, dataRowCount: number, override: boolean, dataThreshold?: number }} args
+ * @param {{ authUsersCount: number|null, dataRowCounts: Record<string, number|null>, override: boolean, dataThreshold?: number }} args
  * @returns {{ allowed: boolean, tripped: boolean, reason: string }}
  */
-const TRUNCATE_GUARD_DATA_THRESHOLD = 0; // any real data rows in the probe table is a signal
+const TRUNCATE_GUARD_DATA_THRESHOLD = 0; // any real data rows in a probed table is a signal
 
-function truncateGuardDecision({ authUsersCount, dataRowCount, override, dataThreshold = TRUNCATE_GUARD_DATA_THRESHOLD }) {
-  const users = Number(authUsersCount) || 0;
-  const data = Number(dataRowCount) || 0;
-  const populated = users > 0 || data > dataThreshold;
-  if (!populated) {
-    return { allowed: true, tripped: false, reason: 'target is empty/derived — safe to TRUNCATE (no flag needed)' };
+function truncateGuardDecision({ authUsersCount, dataRowCounts, override, dataThreshold = TRUNCATE_GUARD_DATA_THRESHOLD }) {
+  const counts = dataRowCounts || {};
+
+  // FAIL CLOSED (C1): a probe that errored (null/undefined count) means we
+  // could NOT verify emptiness — refuse unless the operator overrides.
+  const unprobeable = [];
+  if (authUsersCount === null || authUsersCount === undefined) unprobeable.push('auth.users');
+  for (const [expr, n] of Object.entries(counts)) {
+    if (n === null || n === undefined) unprobeable.push(expr);
   }
+  if (unprobeable.length > 0) {
+    if (override) {
+      return {
+        allowed: true,
+        tripped: true,
+        reason:
+          `probe failed for ${unprobeable.join(', ')} — proceeding under --i-really-mean-to-truncate ` +
+          `(operator-asserted; emptiness could NOT be verified)`,
+      };
+    }
+    return {
+      allowed: false,
+      tripped: true,
+      reason:
+        `REFUSING to TRUNCATE: could not count ${unprobeable.join(', ')} — the guard fails CLOSED on a ` +
+        `probe error (an unverifiable target is treated as populated, never as empty). Fix ` +
+        `connectivity/permissions, or pass --i-really-mean-to-truncate if you are certain the target is safe.`,
+    };
+  }
+
+  const users = Number(authUsersCount) || 0;
+  const populatedTables = Object.entries(counts).filter(([, n]) => Number(n) > dataThreshold);
+  if (users === 0 && populatedTables.length === 0) {
+    return {
+      allowed: true,
+      tripped: false,
+      reason: `target is empty across auth.users + ${Object.keys(counts).length} probed table(s) — safe to TRUNCATE (no flag needed)`,
+    };
+  }
+  const detail =
+    `${users} auth.users row(s)` +
+    (populatedTables.length > 0
+      ? ` and data rows in ${populatedTables.map(([t, n]) => `${t}=${n}`).join(', ')}`
+      : '');
   if (override) {
     return {
       allowed: true,
       tripped: true,
-      reason: `target holds ${users} auth.users + ${data} data row(s) — proceeding under --i-really-mean-to-truncate`,
+      reason: `target holds ${detail} — proceeding under --i-really-mean-to-truncate`,
     };
   }
   return {
     allowed: false,
     tripped: true,
     reason:
-      `REFUSING to TRUNCATE: target holds ${users} auth.users row(s) and ${data} data row(s) ` +
-      `(> ${dataThreshold}). This looks like a populated/production database. Pass ` +
-      `--i-really-mean-to-truncate to override if this is intentional.`,
+      `REFUSING to TRUNCATE: target holds ${detail} (threshold ${dataThreshold}). This looks like a ` +
+      `populated/production database. Pass --i-really-mean-to-truncate to override if this is intentional.`,
   };
+}
+
+/**
+ * The truncate guard's probe list (C1): the ACTUAL tables this run is about to
+ * truncate/restore, plus the two fixed belt probes — `auth.users` (any
+ * registered human = production signal) and `public.parcels` (canonical
+ * data-bearing table) — which are retained even when out of scope. Table names
+ * pass through quoteIdent (they come from information_schema via
+ * computeTableList, but defense-in-depth is free here).
+ * @param {string[]} scopedTables
+ * @returns {string[]} probe expressions, `auth.users` first
+ */
+function buildGuardProbeExprs(scopedTables) {
+  const exprs = new Set(['auth.users', `public.${quoteIdent('parcels')}`]);
+  for (const t of scopedTables || []) exprs.add(`public.${quoteIdent(t)}`);
+  return [...exprs];
+}
+
+/**
+ * Whether the destructive-truncate guard applies to a target (C1 regression
+ * lock, Guardian MED-1): a LOOPBACK target is the D13 truncate-first re-run
+ * flow (Phase 0.5) — by design it reloads a fully-populated local DB every
+ * run and must NOT be gated. Any non-loopback (cloud/remote) target is.
+ * @param {string} targetConnectionString
+ */
+function truncateGuardApplies(targetConnectionString) {
+  return !isLocalMode({ connectionString: targetConnectionString });
 }
 
 /**
@@ -469,21 +540,33 @@ async function truncateTargetTables(targetPool, tables, opts) {
 }
 
 /**
- * Count rows in a fixed table expression (e.g. `auth.users`, `public.parcels`),
- * returning 0 if the relation/schema does not exist yet (a pre-schema-catch-up
- * or partially-migrated target). `tableExpr` is a hardcoded literal, never
- * operator input, so no identifier quoting is required.
+ * Count rows in a table expression from buildGuardProbeExprs (quoteIdent-
+ * validated or the fixed `auth.users` literal — never raw operator input).
+ *
+ * Returns:
+ *  - a number for a successful count;
+ *  - 0 ONLY when the relation/schema genuinely does not exist (SQLSTATE
+ *    42P01 undefined_table / 3F000 invalid_schema_name — a table that does
+ *    not exist cannot hold data, e.g. a pre-schema-catch-up target);
+ *  - null for ANY other probe failure (network, auth, permission, timeout)
+ *    — the caller's truncateGuardDecision FAILS CLOSED on null (P4-F0 fold
+ *    C1: the old code returned 0 here, silently waving a populated-but-
+ *    unreachable target through the guard).
  * @param {import('pg').Pool} pool
  * @param {string} tableExpr
- * @returns {Promise<number>}
+ * @returns {Promise<number|null>}
  */
 async function countTableRowsSafe(pool, tableExpr) {
   try {
     const res = await pool.query(`SELECT count(*)::bigint AS n FROM ${tableExpr}`);
     return Number(res.rows[0].n);
   } catch (err) {
-    console.warn(`[restore-db] could not count ${tableExpr} for truncate guard (treating as 0): ${err.message}`);
-    return 0;
+    if (err.code === '42P01' || err.code === '3F000') {
+      console.warn(`[restore-db] ${tableExpr} does not exist on target — counting as 0 for the truncate guard: ${err.message}`);
+      return 0;
+    }
+    console.warn(`[restore-db] probe FAILED for ${tableExpr} (guard fails closed): ${err.message}`);
+    return null;
   }
 }
 
@@ -503,7 +586,34 @@ async function run() {
       gates.getBaseTables(sourcePool),
       gates.getBaseTables(targetPool),
     ]);
-    const tables = gates.computeTableList({ sourceTables, targetTables, requested: args.tables });
+    let tables = gates.computeTableList({ sourceTables, targetTables, requested: args.tables });
+
+    const targetConnectionString = gates.resolveTargetConnectionString(args.target);
+    const targetIsLocal = !truncateGuardApplies(targetConnectionString);
+
+    // Auth-linked auto-exclusion (P4-F0 fold C2, Integration MED — reproduced
+    // live): on a REMOTE target, tables carrying an FK into auth.users are
+    // greenfield-empty by design (their dev rows point at dev auth.users uuids
+    // absent on cloud) and later hold REAL user rows that never match the dev
+    // source — an unscoped run must not load or false-FAIL-verify them. The
+    // exclusion list is DERIVED from the target's pg_constraint, never a
+    // hand-typed CLI argument (the F0 session's 68-table list, codified).
+    // Local targets and explicit --tables scopes are untouched (D13 full-load
+    // flow / operator wins).
+    const authLinkedTables = await gates.getAuthLinkedTables(targetPool);
+    const authExclusion = gates.applyAuthLinkedExclusion({
+      tables,
+      authLinkedTables,
+      requested: args.tables,
+      targetIsLocal,
+    });
+    tables = authExclusion.tables;
+    if (authExclusion.excluded.length > 0) {
+      console.log(
+        `[restore-db] auto-excluded ${authExclusion.excluded.length} auth-linked table(s) ` +
+          `(FK → auth.users, derived from target pg_constraint): ${authExclusion.excluded.join(', ')}`
+      );
+    }
 
     console.log(`[restore-db] target=${args.target} mode=${args.verifyOnly ? 'verify-only' : args.mode}`);
     console.log(`[restore-db] table scope (${tables.length}): ${tables.join(', ')}`);
@@ -517,24 +627,29 @@ async function run() {
 
     await checkClientVersion();
 
-    const targetConnectionString = gates.resolveTargetConnectionString(args.target);
-
-    // Destructive-truncate guard (Phase 4 F0 step 0, Gemini CRITICAL fold #3).
-    // Scoped to a NON-LOOPBACK (cloud/remote) target ONLY: a loopback SOURCE→
-    // local target is the D13 truncate-first re-run flow (Phase 0.5), which by
-    // design reloads a fully-populated local DB on every run and must NOT be
-    // gated. A remote target that already holds real users/data, however, is a
-    // post-launch landmine — refuse to TRUNCATE it without an explicit override.
-    // The Phase-4.0 cloud load runs against an EMPTY cloud, so this passes with
-    // no flag; only a populated remote target trips it.
-    if (!isLocalMode({ connectionString: targetConnectionString })) {
-      const [authUsersCount, dataRowCount] = await Promise.all([
-        countTableRowsSafe(targetPool, 'auth.users'),
-        countTableRowsSafe(targetPool, 'public.parcels'),
-      ]);
+    // Destructive-truncate guard (Phase 4 F0 step 0, Gemini CRITICAL fold #3;
+    // reworked P4-F0 fold C1). Scoped to a NON-LOOPBACK (cloud/remote) target
+    // ONLY (truncateGuardApplies): a loopback SOURCE→local target is the D13
+    // truncate-first re-run flow (Phase 0.5), which by design reloads a fully-
+    // populated local DB on every run and must NOT be gated. A remote target
+    // that already holds real users/data, however, is a post-launch landmine —
+    // refuse to TRUNCATE it without an explicit override. C1: the probe now
+    // covers the ACTUAL scoped tables (+ auth.users/parcels belt) and FAILS
+    // CLOSED on probe error. The Phase-4.0 cloud load runs against an EMPTY
+    // cloud, so this passes with no flag; only a populated remote target trips.
+    let guardRan = false;
+    if (!targetIsLocal) {
+      guardRan = true;
+      const probeExprs = buildGuardProbeExprs(tables);
+      const countEntries = await Promise.all(
+        probeExprs.map(async (expr) => [expr, await countTableRowsSafe(targetPool, expr)])
+      );
+      const countsByExpr = Object.fromEntries(countEntries);
+      const authUsersCount = countsByExpr['auth.users'];
+      delete countsByExpr['auth.users'];
       const guard = truncateGuardDecision({
         authUsersCount,
-        dataRowCount,
+        dataRowCounts: countsByExpr,
         override: args.iReallyMeanToTruncate,
       });
       if (!guard.allowed) {
@@ -627,8 +742,10 @@ async function run() {
       if (args.skipTruncate) {
         console.log(
           `[restore-db] --skip-truncate: skipping TRUNCATE of ${tables.length} table(s) ` +
-            `(target asserted empty — greenfield subset load; the truncate guard's ` +
-            `empty-target check already ran).`
+            `(target asserted empty — greenfield subset load; ` +
+            (guardRan
+              ? `the truncate guard probed the scoped tables + auth.users/parcels belt above).`
+              : `LOOPBACK target — NO truncate guard ran; a populated table will dup-key loudly in pg_restore).`)
         );
       } else {
         console.log(
@@ -713,6 +830,8 @@ module.exports = {
   checkTocCoversScope,
   decideDumpPlan,
   truncateGuardDecision,
+  buildGuardProbeExprs,
+  truncateGuardApplies,
   TRUNCATE_GUARD_DATA_THRESHOLD,
   spawnCapture,
   checkClientVersion,

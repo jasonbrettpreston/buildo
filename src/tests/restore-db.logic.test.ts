@@ -20,11 +20,13 @@ const restoreDb = require('../../scripts/restore-db.js') as {
   };
   validateArgs: (args: ReturnType<typeof restoreDb.parseArgs>) => void;
   truncateGuardDecision: (a: {
-    authUsersCount: number;
-    dataRowCount: number;
+    authUsersCount: number | null;
+    dataRowCounts: Record<string, number | null>;
     override: boolean;
     dataThreshold?: number;
   }) => { allowed: boolean; tripped: boolean; reason: string };
+  buildGuardProbeExprs: (scopedTables: string[]) => string[];
+  truncateGuardApplies: (targetConnectionString: string) => boolean;
   TRUNCATE_GUARD_DATA_THRESHOLD: number;
   parsePgToolVersion: (v: string) => { major: number; minor: number; patch: number; raw: string };
   isClientVersionSufficient: (v: { major: number }, minMajor?: number) => boolean;
@@ -77,6 +79,12 @@ const gates = require('../../scripts/validation/supabase-load-gates.js') as {
     nullMismatches: { id: number; source: number | null; target: number | null }[];
   };
   rollUpVerdict: (rows: { status: string }[]) => string;
+  applyAuthLinkedExclusion: (a: {
+    tables: string[];
+    authLinkedTables: string[];
+    requested?: string[] | null;
+    targetIsLocal: boolean;
+  }) => { tables: string[]; excluded: string[] };
   G10_ROW_COUNT_BASELINE: Record<string, number>;
   G10_INVALID_GEOM_EXPECTED_COUNT: Record<string, number>;
 };
@@ -357,29 +365,90 @@ describe('restore-db.js — decideDumpPlan (§1a/§1b cleanup-pathing decision �
   });
 });
 
-describe('restore-db.js — truncateGuardDecision (Phase 4 F0 step 0, Gemini CRITICAL fold #3)', () => {
+describe('restore-db.js — truncateGuardDecision (Phase 4 F0 step 0; C1 rework: scope-aware probes + fail-closed)', () => {
   it('allows an EMPTY target with no flag — the Phase-4.0 cloud load path', () => {
-    const d = restoreDb.truncateGuardDecision({ authUsersCount: 0, dataRowCount: 0, override: false });
+    const d = restoreDb.truncateGuardDecision({
+      authUsersCount: 0,
+      dataRowCounts: { 'public."parcels"': 0, 'public."trades"': 0 },
+      override: false,
+    });
     expect(d.allowed).toBe(true);
     expect(d.tripped).toBe(false);
   });
 
   it('REFUSES a target holding auth.users rows without the override flag', () => {
-    const d = restoreDb.truncateGuardDecision({ authUsersCount: 3, dataRowCount: 0, override: false });
+    const d = restoreDb.truncateGuardDecision({
+      authUsersCount: 3,
+      dataRowCounts: { 'public."parcels"': 0 },
+      override: false,
+    });
     expect(d.allowed).toBe(false);
     expect(d.tripped).toBe(true);
     expect(d.reason).toMatch(/REFUSING to TRUNCATE/);
     expect(d.reason).toMatch(/--i-really-mean-to-truncate/);
   });
 
-  it('REFUSES a target holding data rows (parcels) above the threshold without the flag', () => {
-    const d = restoreDb.truncateGuardDecision({ authUsersCount: 0, dataRowCount: 486530, override: false });
+  it('REFUSES a target holding data rows (parcels belt probe) above the threshold without the flag', () => {
+    const d = restoreDb.truncateGuardDecision({
+      authUsersCount: 0,
+      dataRowCounts: { 'public."parcels"': 486530 },
+      override: false,
+    });
     expect(d.allowed).toBe(false);
     expect(d.tripped).toBe(true);
   });
 
+  it('C1 CRITICAL scenario: REFUSES when a SCOPED table (--tables subset) holds rows even though auth.users AND parcels are empty — the old fixed probe was blind to this', () => {
+    const d = restoreDb.truncateGuardDecision({
+      authUsersCount: 0,
+      dataRowCounts: { 'public."parcels"': 0, 'public."trades"': 36, 'public."logic_variables"': 397 },
+      override: false,
+    });
+    expect(d.allowed).toBe(false);
+    expect(d.tripped).toBe(true);
+    expect(d.reason).toMatch(/"trades"=36/);
+    expect(d.reason).toMatch(/"logic_variables"=397/);
+  });
+
+  it('C1 fail-closed: REFUSES when the auth.users probe errored (null count) — an unverifiable target is never treated as empty', () => {
+    const d = restoreDb.truncateGuardDecision({
+      authUsersCount: null,
+      dataRowCounts: { 'public."parcels"': 0 },
+      override: false,
+    });
+    expect(d.allowed).toBe(false);
+    expect(d.tripped).toBe(true);
+    expect(d.reason).toMatch(/fails CLOSED/);
+    expect(d.reason).toMatch(/auth\.users/);
+  });
+
+  it('C1 fail-closed: REFUSES when any scoped-table probe errored (null count)', () => {
+    const d = restoreDb.truncateGuardDecision({
+      authUsersCount: 0,
+      dataRowCounts: { 'public."parcels"': 0, 'public."trades"': null },
+      override: false,
+    });
+    expect(d.allowed).toBe(false);
+    expect(d.reason).toMatch(/trades/);
+  });
+
+  it('C1 fail-closed + override: proceeds but marks tripped and names the unverifiable probe', () => {
+    const d = restoreDb.truncateGuardDecision({
+      authUsersCount: null,
+      dataRowCounts: {},
+      override: true,
+    });
+    expect(d.allowed).toBe(true);
+    expect(d.tripped).toBe(true);
+    expect(d.reason).toMatch(/could NOT be verified/);
+  });
+
   it('ALLOWS a populated target when --i-really-mean-to-truncate is passed', () => {
-    const d = restoreDb.truncateGuardDecision({ authUsersCount: 3, dataRowCount: 486530, override: true });
+    const d = restoreDb.truncateGuardDecision({
+      authUsersCount: 3,
+      dataRowCounts: { 'public."parcels"': 486530 },
+      override: true,
+    });
     expect(d.allowed).toBe(true);
     expect(d.tripped).toBe(true);
     expect(d.reason).toMatch(/proceeding under --i-really-mean-to-truncate/);
@@ -387,6 +456,40 @@ describe('restore-db.js — truncateGuardDecision (Phase 4 F0 step 0, Gemini CRI
 
   it('TRUNCATE_GUARD_DATA_THRESHOLD is 0 (any real data-bearing rows are a signal)', () => {
     expect(restoreDb.TRUNCATE_GUARD_DATA_THRESHOLD).toBe(0);
+  });
+});
+
+describe('restore-db.js — buildGuardProbeExprs (C1: the guard probes what the run actually truncates)', () => {
+  it('always includes the auth.users + public.parcels belt probes, auth.users first', () => {
+    const exprs = restoreDb.buildGuardProbeExprs([]);
+    expect(exprs[0]).toBe('auth.users');
+    expect(exprs).toContain('public."parcels"');
+  });
+
+  it('adds every scoped table, deduplicating parcels against the belt probe', () => {
+    const exprs = restoreDb.buildGuardProbeExprs(['trades', 'parcels', 'logic_variables']);
+    expect(exprs).toContain('public."trades"');
+    expect(exprs).toContain('public."logic_variables"');
+    expect(exprs.filter((e) => e === 'public."parcels"')).toHaveLength(1);
+    expect(exprs).toHaveLength(4); // auth.users + parcels + trades + logic_variables
+  });
+
+  it('refuses an injection-shaped table name (quoteIdent defense-in-depth)', () => {
+    expect(() => restoreDb.buildGuardProbeExprs(['parcels; DROP TABLE users; --'])).toThrow();
+  });
+});
+
+describe('restore-db.js — truncateGuardApplies (Guardian MED-1 regression lock: loopback bypass is intentional)', () => {
+  it('does NOT apply to a loopback target — the D13 local truncate-first re-run flow must stay ungated', () => {
+    expect(restoreDb.truncateGuardApplies('postgresql://postgres:postgres@127.0.0.1:54322/postgres')).toBe(false);
+    expect(restoreDb.truncateGuardApplies('postgresql://postgres:postgres@localhost:5432/buildo')).toBe(false);
+  });
+
+  it('APPLIES to any non-loopback (cloud/remote) target', () => {
+    expect(
+      restoreDb.truncateGuardApplies('postgresql://postgres.abc:pw@aws-0-ca-central-1.pooler.supabase.com:5432/postgres')
+    ).toBe(true);
+    expect(restoreDb.truncateGuardApplies('postgresql://u:p@db.gcnatfpacuhsytcbaszi.supabase.co:5432/postgres')).toBe(true);
   });
 });
 
@@ -606,5 +709,39 @@ describe('supabase-load-gates.js — quoteIdent (shared identifier-safety guard)
   it('quotes a valid identifier and rejects an injection-shaped one', () => {
     expect(gates.quoteIdent('mv_monthly_permit_stats')).toBe('"mv_monthly_permit_stats"');
     expect(() => gates.quoteIdent('parcels; DROP TABLE users; --')).toThrow();
+  });
+});
+
+describe('supabase-load-gates.js — applyAuthLinkedExclusion (P4-F0 fold C2: codified auth-linked exclusion)', () => {
+  const AUTH_LINKED = ['profiles', 'user_profiles', 'lead_views', 'notifications'];
+  const ALL = ['lead_views', 'notifications', 'parcels', 'permits', 'profiles', 'trades', 'user_profiles'];
+
+  it('UNSCOPED run vs a REMOTE target excludes every auth-linked table and reports them', () => {
+    const r = gates.applyAuthLinkedExclusion({ tables: ALL, authLinkedTables: AUTH_LINKED, requested: null, targetIsLocal: false });
+    expect(r.tables).toEqual(['parcels', 'permits', 'trades']);
+    expect(r.excluded).toEqual(['lead_views', 'notifications', 'profiles', 'user_profiles']);
+  });
+
+  it('a LOCAL target keeps auth-linked tables in scope — the D13 full-load flow must not lose coverage', () => {
+    const r = gates.applyAuthLinkedExclusion({ tables: ALL, authLinkedTables: AUTH_LINKED, requested: null, targetIsLocal: true });
+    expect(r.tables).toEqual(ALL);
+    expect(r.excluded).toEqual([]);
+  });
+
+  it('an explicit --tables scope wins verbatim — the operator may deliberately include an auth-linked table', () => {
+    const r = gates.applyAuthLinkedExclusion({
+      tables: ['profiles', 'trades'],
+      authLinkedTables: AUTH_LINKED,
+      requested: ['profiles', 'trades'],
+      targetIsLocal: false,
+    });
+    expect(r.tables).toEqual(['profiles', 'trades']);
+    expect(r.excluded).toEqual([]);
+  });
+
+  it('no auth-linked tables on the target (plain Postgres, no auth schema) → scope unchanged', () => {
+    const r = gates.applyAuthLinkedExclusion({ tables: ALL, authLinkedTables: [], requested: null, targetIsLocal: false });
+    expect(r.tables).toEqual(ALL);
+    expect(r.excluded).toEqual([]);
   });
 });
