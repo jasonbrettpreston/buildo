@@ -251,19 +251,22 @@ function exposureLevel(targetEnv) {
 }
 
 /**
- * H4 — classify a PG_POOL_MAX value against BOTH the ceiling contract and the
- * runtime's actual parse semantics (src/lib/db/client.ts parsePositiveIntEnv:
- * parseInt(v,10), fallback to 20 unless finite and > 0). Verifier rule:
- * trim → plain digits only → integer in [1, ceiling]. Accepts ' 5 ' / '05'
- * (which the runtime honors identically); rejects '5.9'/'7abc'/'0x10'/'1e2'
- * (which parseInt silently mangles) and '0' (which the runtime silently
- * DISCARDS, falling back to 20) — so every verifier-passing string parses
- * identically at runtime, with no verifier-pass/runtime-discard gap
- * (Code Reviewer + Schema-Fidelity adjudication, P4 hardening WF2).
+ * H4 — classify a PG_POOL_MAX value by MIRRORING the runtime's actual parse
+ * semantics (src/lib/db/client.ts parsePositiveIntEnv: parseInt(v,10) — a
+ * PREFIX parser — with fallback to 20 unless finite and > 0), so every
+ * message tells the truth about what the runtime would really do (Round-2
+ * output fold, 5-reviewer message-accuracy converge: '100' and '010' are
+ * HONORED by the runtime, not discarded; '5.9'/'7abc'/'1e2' are prefix-
+ * mangled to 5/7/1 and honored; only NaN/<=0 genuinely falls back to 20).
+ *
+ * Statuses: 'ok' (canonical integer within [1, ceiling]) · 'missing' ·
+ * 'fallback' (runtime discards → default 20) · 'noncanonical' (runtime
+ * prefix-honors an unintended integer) · 'exceeds_ceiling' (honored, over).
+ * Everything except 'ok' is a finding at exposureLevel.
  *
  * @param {string|undefined} value
  * @param {number} [ceiling]
- * @returns {{ status: 'ok'|'missing'|'fallback'|'exceeds_ceiling', parsed: number|null, message: string }}
+ * @returns {{ status: 'ok'|'missing'|'fallback'|'noncanonical'|'exceeds_ceiling', parsed: number|null, message: string }}
  */
 function classifyPoolMax(value, ceiling = PG_POOL_MAX_PROD_CEILING) {
   if (value === undefined || value === null || String(value).trim() === '') {
@@ -274,26 +277,27 @@ function classifyPoolMax(value, ceiling = PG_POOL_MAX_PROD_CEILING) {
     };
   }
   const v = String(value).trim();
-  if (!/^\d{1,2}$/.test(v)) {
+  const parsed = parseInt(v, 10); // mirror parsePositiveIntEnv exactly
+  const runtimeHonors = Number.isFinite(parsed) && parsed > 0;
+  if (!runtimeHonors) {
     return {
       status: 'fallback',
-      parsed: null,
-      message: `not a plain 1-2 digit integer — the runtime silently mangles or discards it and falls back to the unsafe default of 20`,
-    };
-  }
-  const parsed = parseInt(v, 10);
-  if (parsed === 0) {
-    return {
-      status: 'fallback',
-      parsed: 0,
-      message: `is 0 — the runtime silently DISCARDS non-positive values and falls back to the unsafe default of 20`,
+      parsed: Number.isFinite(parsed) ? parsed : null,
+      message: `unparseable or non-positive — the runtime silently DISCARDS it and falls back to the unsafe default of 20`,
     };
   }
   if (parsed > ceiling) {
     return {
       status: 'exceeds_ceiling',
       parsed,
-      message: `= ${parsed} — honored by the runtime but exceeds the ceiling of ${ceiling} (ruled value 5; Supavisor's empirical backend ceiling is ~14-17)`,
+      message: `honored by the runtime as ${parsed} — exceeds the ceiling of ${ceiling} (ruled value 5; Supavisor's empirical backend ceiling is ~14-17)`,
+    };
+  }
+  if (!/^\d+$/.test(v)) {
+    return {
+      status: 'noncanonical',
+      parsed,
+      message: `not a plain integer — the runtime would prefix-parse it and honor ${parsed}; set a clean integer (ruled value 5)`,
     };
   }
   return { status: 'ok', parsed, message: `= ${parsed} (within [1, ${ceiling}])` };
@@ -378,17 +382,13 @@ function evaluateEnv(env, targetEnv) {
   for (const name of Object.keys(env)) {
     if (!isPublicVarName(name)) continue;
     const value = env[name];
-    if (!isPresent(value)) continue;
-    // Tier 1 — secret-shape blocklist (hard-fail every env, unchanged).
-    const { verdict, reason } = classifyPublicVar(name, value);
-    if (verdict === 'flag') {
-      findings.push({ level: 'error', check: 'leaked_secret', name, message: `${reason} in a public var` });
-    } else {
-      findings.push({ level: 'ok', check: 'leaked_secret', name, message: reason });
-    }
-    // Tier 2 — name allowlist. Message carries the NAME + a fixed reason
-    // string, NEVER the value (a novel-format secret would re-leak into
-    // retained build logs otherwise — Security F2, test-locked).
+    // Tier 2 — name allowlist — runs REGARDLESS of value presence (Round-2
+    // output fold, Code Reviewer: a present-but-EMPTY unknown name — a
+    // blanked-not-deleted leftover or a dashboard stub — is exactly the
+    // leftover-retired-config class this tier exists to catch). Message
+    // carries the NAME + a fixed reason string, NEVER the value (a
+    // novel-format secret would re-leak into retained build logs otherwise —
+    // Security F2, test-locked).
     if (!isAllowlistedPublicVarName(name)) {
       findings.push({
         level: exposureLevel(targetEnv),
@@ -397,8 +397,17 @@ function evaluateEnv(env, targetEnv) {
         message:
           'name is not on PUBLIC_VAR_NAME_ALLOWLIST — a public var this repo does not know about ' +
           '(possible novel-format secret or leftover retired config); add it to the allowlist in the ' +
-          'same PR if legitimate',
+          'same PR if legitimate, or delete the var',
       });
+    }
+    // Tier 1 — secret-shape blocklist (hard-fail every env, unchanged) —
+    // needs a value to classify.
+    if (!isPresent(value)) continue;
+    const { verdict, reason } = classifyPublicVar(name, value);
+    if (verdict === 'flag') {
+      findings.push({ level: 'error', check: 'leaked_secret', name, message: `${reason} in a public var` });
+    } else {
+      findings.push({ level: 'ok', check: 'leaked_secret', name, message: reason });
     }
   }
 
@@ -439,6 +448,7 @@ function resolveTargetEnv(argv, env) {
     if (m) target = m[1];
   }
   if (!target) target = env.VERCEL_ENV || 'production';
+  target = String(target).trim(); // '--env= production' must not silently normalize (Round-2 nit)
   return ['production', 'preview', 'development'].includes(target) ? target : 'production';
 }
 

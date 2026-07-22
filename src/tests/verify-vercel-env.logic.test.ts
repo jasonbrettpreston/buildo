@@ -26,7 +26,7 @@ const vve = require('../../scripts/verify-vercel-env.js') as {
   isAllowlistedPublicVarName: (name: string) => boolean;
   exposureLevel: (targetEnv: string) => 'error' | 'warn';
   classifyPoolMax: (value: string | undefined, ceiling?: number) => {
-    status: 'ok' | 'missing' | 'fallback' | 'exceeds_ceiling';
+    status: 'ok' | 'missing' | 'fallback' | 'noncanonical' | 'exceeds_ceiling';
     parsed: number | null;
     message: string;
   };
@@ -184,9 +184,11 @@ describe('verify-vercel-env — leaked-secret allowlist scan (public vars)', () 
     env.NEXT_PUBLIC_DB = 'postgresql://user:secretpw@host:5432/db';
     const result = vve.evaluateEnv(env, 'production');
     expect(result.ok).toBe(false);
-    const hit = result.findings.find((f) => f.name === 'NEXT_PUBLIC_DB' && f.level === 'error');
+    // target the Tier-1 finding by check (order-independent — Tier 2 now also
+    // fires on this unknown name, which is correct and separately asserted)
+    const hit = result.findings.find((f) => f.name === 'NEXT_PUBLIC_DB' && f.check === 'leaked_secret');
     expect(hit).toBeDefined();
-    expect(hit?.check).toBe('leaked_secret');
+    expect(hit?.level).toBe('error');
     // must NOT echo the secret value
     expect(hit?.message).not.toContain('secretpw');
   });
@@ -285,6 +287,16 @@ describe('verify-vercel-env — H1 Tier 2 name allowlist (P4 hardening WF2)', ()
     expect(hit?.message).not.toContain(plantedValue);
   });
 
+  it('a present-but-EMPTY unknown-name var still gets the Tier-2 finding — the blanked-not-deleted leftover class (Round-2, Code Reviewer)', () => {
+    const env = validEnv();
+    env.NEXT_PUBLIC_RETIRED_DEBUG_FLAG = '';
+    const result = vve.evaluateEnv(env, 'production');
+    const tier2 = result.findings.find((f) => f.name === 'NEXT_PUBLIC_RETIRED_DEBUG_FLAG' && f.check === 'public_var_name');
+    expect(tier2?.level).toBe('error');
+    // Tier 1 has no value to classify — no leaked_secret finding for it
+    expect(result.findings.some((f) => f.name === 'NEXT_PUBLIC_RETIRED_DEBUG_FLAG' && f.check === 'leaked_secret')).toBe(false);
+  });
+
   it('an EXPO_PUBLIC_* var in a Vercel env is name-unknown → flagged (it has no legitimate Vercel presence)', () => {
     const env = validEnv();
     env.EXPO_PUBLIC_API_URL = 'https://buildo.app';
@@ -294,26 +306,36 @@ describe('verify-vercel-env — H1 Tier 2 name allowlist (P4 hardening WF2)', ()
 });
 
 describe('verify-vercel-env — H4 PG_POOL_MAX pin (P4 hardening WF2, Spec 113 §5)', () => {
-  it('classifyPoolMax: the full adjudicated matrix (trim → digits-only → range; zero runtime-discard gap)', () => {
+  it('classifyPoolMax: the full matrix, mirroring parsePositiveIntEnv exactly (Round-2 output fold — every status tells the runtime truth)', () => {
     expect(vve.classifyPoolMax('5').status).toBe('ok');
     expect(vve.classifyPoolMax('05').status).toBe('ok'); // runtime honors as 5
     expect(vve.classifyPoolMax(' 5 ').status).toBe('ok'); // runtime honors (parseInt skips whitespace)
     expect(vve.classifyPoolMax('10').status).toBe('ok');
+    expect(vve.classifyPoolMax('010').status).toBe('ok'); // runtime honors as 10 — within ceiling
     expect(vve.classifyPoolMax(undefined).status).toBe('missing');
     expect(vve.classifyPoolMax('').status).toBe('missing');
     expect(vve.classifyPoolMax('0').status).toBe('fallback'); // runtime DISCARDS → default 20
+    expect(vve.classifyPoolMax('00').status).toBe('fallback');
     expect(vve.classifyPoolMax('abc').status).toBe('fallback');
-    expect(vve.classifyPoolMax('5.9').status).toBe('fallback'); // runtime would mangle to 5 — verifier stricter
-    expect(vve.classifyPoolMax('7abc').status).toBe('fallback');
     expect(vve.classifyPoolMax('0x10').status).toBe('fallback'); // parseInt(…,10) → 0 → silent discard
-    expect(vve.classifyPoolMax('1e2').status).toBe('fallback');
+    // prefix-parsed-and-HONORED forms — the runtime uses the mangled integer,
+    // it does NOT fall back to 20 (5-reviewer message-accuracy converge):
+    expect(vve.classifyPoolMax('5.9')).toMatchObject({ status: 'noncanonical', parsed: 5 });
+    expect(vve.classifyPoolMax('7abc')).toMatchObject({ status: 'noncanonical', parsed: 7 });
+    expect(vve.classifyPoolMax('1e2')).toMatchObject({ status: 'noncanonical', parsed: 1 });
     expect(vve.classifyPoolMax('11').status).toBe('exceeds_ceiling');
+    expect(vve.classifyPoolMax('100')).toMatchObject({ status: 'exceeds_ceiling', parsed: 100 }); // honored as 100 — NOT "falls back to 20"
   });
 
-  it('message differentiates silent-fallback-to-20 from honored-but-over-ceiling (Observability #2)', () => {
+  it('messages tell the truth about the runtime outcome per class (Observability #2 + Round-2)', () => {
     expect(vve.classifyPoolMax(undefined).message).toMatch(/falls back to the unsafe single-server default of 20/);
-    expect(vve.classifyPoolMax('abc').message).toMatch(/falls back to the unsafe default of 20/);
-    expect(vve.classifyPoolMax('11').message).toMatch(/honored by the runtime but exceeds the ceiling/);
+    expect(vve.classifyPoolMax('abc').message).toMatch(/DISCARDS it and falls back to the unsafe default of 20/);
+    expect(vve.classifyPoolMax('11').message).toMatch(/honored by the runtime as 11 — exceeds the ceiling/);
+    expect(vve.classifyPoolMax('100').message).toMatch(/honored by the runtime as 100/);
+    expect(vve.classifyPoolMax('5.9').message).toMatch(/prefix-parse it and honor 5/);
+    // a fallback-class message must NEVER claim an honored value, and vice versa
+    expect(vve.classifyPoolMax('100').message).not.toMatch(/falls back/);
+    expect(vve.classifyPoolMax('abc').message).not.toMatch(/honor/);
   });
 
   it('missing PG_POOL_MAX is an ERROR in production and preview, WARN in development', () => {
@@ -362,6 +384,17 @@ describe('verify-vercel-env — allowlist drift invariants (DeepSeek + CR #4)', 
       }
     };
     walk(SRC);
+    // Root-level Next.js config/instrumentation files sit OUTSIDE src/ but
+    // are bundle-relevant (sentry.client.config.ts reads NEXT_PUBLIC_SENTRY_DSN)
+    // — scan top-level .ts/.tsx too (Round-2, Guardian INFO).
+    const ROOT = path.resolve(SRC, '..');
+    for (const entry of fs.readdirSync(ROOT, { withFileTypes: true })) {
+      if (!entry.isFile() || !/\.(ts|tsx)$/.test(entry.name)) continue;
+      const source = fs.readFileSync(path.join(ROOT, entry.name), 'utf-8');
+      for (const m of source.matchAll(/NEXT_PUBLIC_[A-Z0-9_]+/g)) {
+        if (!vve.isAllowlistedPublicVarName(m[0])) offenders.set(m[0], entry.name);
+      }
+    }
     expect(Object.fromEntries(offenders)).toEqual({});
   });
 });

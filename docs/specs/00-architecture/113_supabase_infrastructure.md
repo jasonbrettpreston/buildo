@@ -112,7 +112,9 @@ TWO-TIER check over every `NEXT_PUBLIC_*`/`EXPO_PUBLIC_*` var, both tiers indepe
 - **Tier 1 — secret-shape blocklist, hard-fail EVERY env:** a `postgres://`/password-bearing
   connection string, a legacy `eyJ…` service-role JWT, an `sb_secret_*` key, a Stripe secret
   (`sk_live_`/`sk_test_`/`whsec_`), or a bare long hex/base64 blob in a public var is an
-  `error`, never printing the value.
+  `error`, never printing the value. A known-PUBLIC shape is exempted first
+  (`sb_publishable_*`, the project https URL, a Sentry ingest DSN, a `phc_*` PostHog key —
+  false-positive suppression; Tier 2 still name-checks such a var).
 - **Tier 2 — NAME allowlist:** the legitimate public var names are the census-frozen 8
   (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
   `NEXT_PUBLIC_SUPABASE_ANON_KEY` legacy, `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_DEV_MODE`,
@@ -570,10 +572,13 @@ spare."
   publishable key correctly on asymmetric-JWT (new-format `sb_*` key) projects, which Buildo
   is on. Guard (truth-up, P4 hardening WF2 2026-07-22 — the prior "comparing actual Vercel env
   values against the Supabase dashboard's keys" sentence described an unbuilt and
-  SEC-3-incompatible mechanism): `verify-vercel-env.js` asserts presence + key-SHAPE of the
-  publishable key group over the build's own `process.env` (§3.2) — a missing or
-  wrongly-provisioned key fails the check without ever pulling dashboard values. The
-  dashboard-side half of the comparison remains a manual F1-checklist eyeball.
+  SEC-3-incompatible mechanism): `verify-vercel-env.js` asserts presence of the publishable
+  key group over the build's own `process.env` (§3.2) — a **missing/empty or secret-shaped**
+  provisioning failure fails the check without ever pulling dashboard values. (Precision,
+  Round-2 GT F1: the shape scan is a negative blocklist — a wrongly-provisioned but
+  non-secret-shaped value, e.g. an anon-role legacy JWT in the publishable slot, passes; a
+  positive `sb_publishable_*`-shape assertion on the group is the stronger upgrade, filed.)
+  The dashboard-side half of the comparison remains a manual F1-checklist eyeball.
 - **GEOS-version geometry drift** — PostGIS/GEOS version differences between source and target
   change `ST_IsValid` results on borderline geometries; this is a real data-integrity risk, not
   a cosmetic version mismatch. Ground truth G10 pins the baseline invalid-geometry sets exactly:

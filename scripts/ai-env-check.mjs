@@ -165,21 +165,29 @@ console.log(`✔ Pipeline SDK: ${existsSync(resolve(__dirname, 'lib', 'pipeline.
 // instead. Visibility only, per this script's report-only convention; the
 // ENFORCING gate is src/tests/schema-authority.logic.test.ts inside the husky
 // pre-commit gauntlet.
-const supaMigrationsDir = resolve(__dirname, '..', 'supabase', 'migrations');
-if (existsSync(supaMigrationsDir)) {
-  const offending = readdirSync(supaMigrationsDir).filter((f) => f !== '.gitkeep');
-  if (offending.length > 0) {
-    console.log(
-      `✘ Schema authority: supabase/migrations/ holds ${offending.length} file(s) — ` +
-        `${offending.slice(0, 5).join(', ')}${offending.length > 5 ? ', …' : ''} — ` +
-        `scripts/migrate.js is the ONLY schema authority (Spec 113 §7); re-author the DDL as ` +
-        `migrations/NNN_*.sql and delete these`,
-    );
+// try/catch per this file's report-only invariant (Round-2 output fold,
+// Guardian MED: an unguarded readdirSync throw — permissions, ENOTDIR, a
+// TOCTOU race — would abort the whole pre-flight and silently cancel every
+// downstream check; a crash is not a report).
+try {
+  const supaMigrationsDir = resolve(__dirname, '..', 'supabase', 'migrations');
+  if (existsSync(supaMigrationsDir)) {
+    const offending = readdirSync(supaMigrationsDir).filter((f) => f !== '.gitkeep');
+    if (offending.length > 0) {
+      console.log(
+        `✘ Schema authority: supabase/migrations/ holds ${offending.length} file(s) — ` +
+          `${offending.slice(0, 5).join(', ')}${offending.length > 5 ? ', …' : ''} — ` +
+          `scripts/migrate.js is the ONLY schema authority (Spec 113 §7); re-author the DDL as ` +
+          `migrations/NNN_*.sql and delete these`,
+      );
+    } else {
+      console.log('✔ Schema authority: supabase/migrations/ empty — migrate.js is the sole authority');
+    }
   } else {
-    console.log('✔ Schema authority: supabase/migrations/ empty — migrate.js is the sole authority');
+    console.log('✔ Schema authority: supabase/migrations/ absent — migrate.js is the sole authority');
   }
-} else {
-  console.log('✔ Schema authority: supabase/migrations/ absent — migrate.js is the sole authority');
+} catch (e) {
+  console.log(`✘ Schema authority: check FAILED — ${e.message}`);
 }
 
 // 4. Git State
