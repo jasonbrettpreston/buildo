@@ -2,10 +2,10 @@
 // (a few parcels flagged by different audit checks + several that trip NOTHING), dumps EVERY enriched
 // field per parcel, and annotates each with the exact audit checks it trips. Read the raw values next
 // to the flags: an implausible value with NO flag = an audit MISS to add a check for.
-// Dev DB (postgres@localhost:5432/buildo). Usage: node scripts/analysis/parcel-field-dump.js [id,id,...]
+// Target DB: DATABASE_URL when set, else the Docker dev DB — via the shared makeCliPool (C6).
+// Usage: node scripts/analysis/parcel-field-dump.js [id,id,...]
 'use strict';
-const { Pool } = require('pg');
-const { CHECKS, RES } = require('./parcel-sanity-audit.js');
+const { CHECKS, RES, makeCliPool } = require('./parcel-sanity-audit.js');
 
 // The enriched field families to show (real column names verified against the live schema).
 const FIELDS = {
@@ -20,7 +20,9 @@ const FIELDS = {
 const ALLCOLS = Object.values(FIELDS).flat();
 
 (async () => {
-  const pool = new Pool({ host: 'localhost', port: 5432, user: 'postgres', password: 'postgres', database: 'buildo' });
+  // C6: shares makeCliPool with the sanity audit — DATABASE_URL-aware +
+  // logs the graded target (see parcel-sanity-audit.js for the rationale).
+  const pool = makeCliPool('parcel-field-dump');
 
   // Build the sample: from args, else auto-pick 1 flagged parcel per (up to 8) tripped BOUND/INVARIANT
   // checks + 4 CLEAN parcels (trip zero checks) so we can eyeball both failure and success.

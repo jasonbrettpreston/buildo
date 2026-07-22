@@ -3,8 +3,11 @@
 //   BOUNDS      — per-field, ZONE-AWARE range checks (a value wrong only for its zone, e.g. RD FSI 2.0)
 //   INVARIANTS  — cross-field relationships that must hold (opt_aor ≤ opt_coa, new_build ≤ coa_build, …)
 //   DISTRIBUTION— per-zone outliers (median + robust spread) — catches contamination we haven't named yet
-// Each check seeded from a real bug OR a physical/domain law. Dev DB (postgres@localhost:5432/buildo).
+// Each check seeded from a real bug OR a physical/domain law.
+// Target DB: DATABASE_URL when set (cloud-capable, TLS via ssl-config), else the Docker dev DB
+// (postgres@localhost:5432/buildo). The graded target is always logged (C6).
 // Usage: node scripts/analysis/parcel-sanity-audit.js
+//        DATABASE_URL=<cloud-url> node -r dotenv/config scripts/analysis/parcel-sanity-audit.js
 //
 // WF2: exports `runSanity(pool)` — a SINGLE-SCAN fold of all BOUND/INVARIANT checks + parallel DISTRIBUTION
 // queries (77s → ~12-15s) — consumed by the `assert_parcel_sanity` pipeline step (scripts/quality/). Each
@@ -12,6 +15,25 @@
 // whose reappearance is a definite regression → the step FAIL-gates the chain on it (Spec 48 §3.6).
 'use strict';
 const { Pool } = require('pg');
+const { resolveSslConfig } = require('../lib/ssl-config');
+
+// CLI pool factory (P4-F0 fold C6, Reality-Check): the entrypoints used a
+// HARDCODED localhost:5432 dev-DB pool — pointed "at cloud" they silently
+// graded the local DB while claiming to check cloud (the exact blind spot the
+// F0 output review hit). Now DATABASE_URL wins when set (with ssl-config's
+// host-aware TLS — cloud targets get CA-pinned verify-full), falling back to
+// the historical Docker dev-DB default, and ALWAYS logs which DB it is
+// grading — the silence was the bug, not just the target.
+function makeCliPool(label) {
+  const connectionString = process.env.DATABASE_URL;
+  if (connectionString && connectionString.trim()) {
+    const redacted = connectionString.replace(/:\/\/([^:@/]+):[^@]+@/, '://$1:***@');
+    console.log(`[${label}] grading DATABASE_URL target: ${redacted}`);
+    return new Pool({ connectionString, ssl: resolveSslConfig({ connectionString }) });
+  }
+  console.log(`[${label}] DATABASE_URL not set — grading the default local dev DB (localhost:5432/buildo)`);
+  return new Pool({ host: 'localhost', port: 5432, user: 'postgres', password: 'postgres', database: 'buildo' });
+}
 
 // Residential scope + a zone-class bucket used by the zone-aware checks.
 const RES = `zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%'`;
@@ -166,7 +188,7 @@ async function runSanity(pool, { samples = false } = {}) {
     WITH base AS (SELECT id, (${ZC}) AS zc, (${f.expr})::float8 AS f FROM parcels WHERE ${RES} AND (${f.expr}) IS NOT NULL),
     stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,
                      percentile_cont(0.99) WITHIN GROUP (ORDER BY f) AS p99 FROM base GROUP BY zc)
-    SELECT count(*)::int AS viol, (array_agg(b.id ORDER BY b.f DESC))[1:6] AS samples,
+    SELECT count(*)::int AS viol, (array_agg(b.id ORDER BY b.f DESC, b.id))[1:6] AS samples,
            round(max(b.f)::numeric, 2) AS worst
     FROM base b JOIN stats s ON s.zc = b.zc
     WHERE b.f > s.p99 AND b.f > 3 * GREATEST(s.med, 0.0001)`;
@@ -179,7 +201,7 @@ async function runSanity(pool, { samples = false } = {}) {
 }
 
 async function runAudit() {
-  const pool = new Pool({ host: 'localhost', port: 5432, user: 'postgres', password: 'postgres', database: 'buildo' });
+  const pool = makeCliPool('parcel-sanity-audit');
   const { total, results, dist } = await runSanity(pool, { samples: true });
   await pool.end();
   console.log(`\n=== PARCEL SANITY AUDIT — ${total.toLocaleString()} residential parcels ===\n`);
@@ -214,7 +236,7 @@ async function runAudit() {
   }
 }
 
-module.exports = { CHECKS, DIST_FIELDS, RES, ZC, LOWRISE, runSanity, statusFor, verdictCascade };
+module.exports = { CHECKS, DIST_FIELDS, RES, ZC, LOWRISE, runSanity, statusFor, verdictCascade, makeCliPool };
 
 if (require.main === module) {
   runAudit().catch((e) => { console.error(e); process.exit(1); });

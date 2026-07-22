@@ -228,3 +228,35 @@ describe('backup-db.js — F8 fold 2026-07-20 (Gemini findings)', () => {
     expect(source).not.toMatch(/\.replace\(['"]Z['"],\s*['"]Z['"]\)/);
   });
 });
+
+describe('backup-db.js — P4-F0 fold C5 (Observability: audit-row completeness)', () => {
+  it('C5a: a prune failure emits a retention_prune_status WARN row, distinct from a healthy blobs_pruned=0', () => {
+    const source = scriptSource();
+    expect(source).toMatch(/retention_prune_status/);
+    expect(source).toMatch(/pruneFailed\s*=\s*true/);
+    // the WARN status must be derived from the prune-failure flag
+    expect(source).toMatch(/pruneFailed\s*\?\s*'WARN'/);
+  });
+
+  it('C5b: the manifest sidecar is NON-FATAL — try/catch with pipeline.log.warn and a manifest_status WARN row', () => {
+    const source = scriptSource();
+    expect(source).toMatch(/manifest_status/);
+    const manifestBlock = source.slice(source.indexOf('Baseline manifest sidecar'));
+    expect(manifestBlock).toMatch(/try\s*\{/);
+    expect(manifestBlock).toMatch(/catch\s*\(manifestErr\)/);
+    expect(manifestBlock).toMatch(/pipeline\.log\.warn/);
+  });
+
+  it('C5b: audit rows are built incrementally — dest_path/backup_size_bytes recorded BEFORE the manifest block so its failure cannot erase the dump-success facts', () => {
+    const source = scriptSource();
+    const auditRowsIdx = source.indexOf('const auditRows = [');
+    const manifestIdx = source.indexOf('Baseline manifest sidecar');
+    expect(auditRowsIdx).toBeGreaterThan(-1);
+    expect(manifestIdx).toBeGreaterThan(-1);
+    expect(auditRowsIdx).toBeLessThan(manifestIdx);
+    // dest_path + backup_size_bytes live in that initial block
+    const initialBlock = source.slice(auditRowsIdx, manifestIdx);
+    expect(initialBlock).toMatch(/dest_path/);
+    expect(initialBlock).toMatch(/backup_size_bytes/);
+  });
+});

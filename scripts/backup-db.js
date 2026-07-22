@@ -354,6 +354,15 @@ pipeline.run('backup-db', async (pool) => {
       );
     }
 
+    // Audit rows are built INCREMENTALLY from here on (P4-F0 fold C5b,
+    // Observability): dest_path + backup_size_bytes are recorded the moment
+    // the dump lands, so a later manifest/prune failure can never erase the
+    // dump-success facts from the summary.
+    const auditRows = [
+      { metric: 'dest_path',          value: destPath,         threshold: null,    status: 'INFO' },
+      { metric: 'backup_size_bytes',  value: backupSizeBytes,  threshold: '> 0',   status: backupSizeBytes > 0 ? 'PASS' : 'FAIL' },
+    ];
+
     // ── Baseline manifest sidecar (Spec 112 §4.2 — NEW) ──────────────────
     // Generalizes the one-time G10 gate baseline into a standing,
     // every-backup artifact restore-db.js diffs against. Reuses the exact
@@ -361,46 +370,64 @@ pipeline.run('backup-db', async (pool) => {
     // implements for the G10 gate (row counts, invalid-geom id sets,
     // sequence values, matview count, postgis version) rather than
     // duplicating that query surface here.
-    const allTables = (await getBaseTables(pool)).filter((t) => !EXCLUDED_TABLES.includes(t));
-    const rowCounts = await getRowCounts(pool, allTables);
-    const invalidGeomIds = {
-      parcels: await getInvalidGeomIds(pool, 'parcels'),
-      building_footprints: await getInvalidGeomIds(pool, 'building_footprints'),
-    };
-    const sequenceValues = await getSequenceValues(pool);
-    const mvMonthlyPermitStatsCount = await getMatviewCount(pool, 'mv_monthly_permit_stats');
-    const postgisFullVersion = await getPostgisVersion(pool);
+    //
+    // NON-FATAL like the retention prune (P4-F0 fold C5b): the dump IS the
+    // backup — a failed sidecar degrades restore validation (gates fall back
+    // to live-source comparison), it does not undo the dump. A failure emits
+    // a WARN audit row instead of aborting the whole run and discarding the
+    // dump-success facts.
+    let manifestPath = null;
+    let allTables = [];
+    try {
+      allTables = (await getBaseTables(pool)).filter((t) => !EXCLUDED_TABLES.includes(t));
+      const rowCounts = await getRowCounts(pool, allTables);
+      const invalidGeomIds = {
+        parcels: await getInvalidGeomIds(pool, 'parcels'),
+        building_footprints: await getInvalidGeomIds(pool, 'building_footprints'),
+      };
+      const sequenceValues = await getSequenceValues(pool);
+      const mvMonthlyPermitStatsCount = await getMatviewCount(pool, 'mv_monthly_permit_stats');
+      const postgisFullVersion = await getPostgisVersion(pool);
 
-    const manifest = {
-      run_at: RUN_AT.toISOString(),
-      spec: '112_backup_recovery',
-      row_counts: rowCounts,
-      invalid_geom_ids: invalidGeomIds,
-      sequence_values: sequenceValues,
-      mv_monthly_permit_stats_count: mvMonthlyPermitStatsCount,
-      postgis_full_version: postgisFullVersion,
-    };
-    const manifestBody = JSON.stringify(manifest);
+      const manifest = {
+        run_at: RUN_AT.toISOString(),
+        spec: '112_backup_recovery',
+        row_counts: rowCounts,
+        invalid_geom_ids: invalidGeomIds,
+        sequence_values: sequenceValues,
+        mv_monthly_permit_stats_count: mvMonthlyPermitStatsCount,
+        postgis_full_version: postgisFullVersion,
+      };
+      const manifestBody = JSON.stringify(manifest);
 
-    const manifestUpload = new Upload({
-      client: s3Client,
-      params: {
-        Bucket: config.s3Bucket,
-        Key: manifestObjectName,
-        Body: manifestBody,
-        ContentType: 'application/json',
-        Metadata: { run_at: RUN_AT.toISOString(), spec: '112_backup_recovery' },
-      },
-    });
-    await manifestUpload.done();
-    const manifestPath = `${config.s3Endpoint.replace(/\/+$/, '')}/${config.s3Bucket}/${manifestObjectName}`;
-    pipeline.log.info('[backup-db]', 'Manifest sidecar written', { manifest_path: manifestPath });
+      const manifestUpload = new Upload({
+        client: s3Client,
+        params: {
+          Bucket: config.s3Bucket,
+          Key: manifestObjectName,
+          Body: manifestBody,
+          ContentType: 'application/json',
+          Metadata: { run_at: RUN_AT.toISOString(), spec: '112_backup_recovery' },
+        },
+      });
+      await manifestUpload.done();
+      manifestPath = `${config.s3Endpoint.replace(/\/+$/, '')}/${config.s3Bucket}/${manifestObjectName}`;
+      pipeline.log.info('[backup-db]', 'Manifest sidecar written', { manifest_path: manifestPath });
+      auditRows.push({ metric: 'manifest_status', value: manifestPath, threshold: null, status: 'PASS' });
+    } catch (manifestErr) {
+      pipeline.log.warn('[backup-db]', 'Manifest sidecar generation/upload FAILED — the dump itself succeeded (non-fatal; restore gates fall back to live-source comparison)', {
+        error: manifestErr.message,
+      });
+      auditRows.push({ metric: 'manifest_status', value: `FAILED: ${manifestErr.message}`, threshold: null, status: 'WARN' });
+    }
 
     // Retention pruning — non-fatal: a prune failure must not abort the backup.
     // Naturally prunes both `.dump` objects and their `.manifest.json`
     // sidecars, since both live under the same pg_dump/ prefix and are aged
     // individually by LastModified.
     let blobsPruned = 0;
+    let pruneFailed = false;
+    let pruneErrorMessage = null;
     try {
       // F8 fold 2026-07-20 (Gemini): the cutoff is evaluated against actual
       // wall-clock "now" (Date.now()), not RUN_AT — RUN_AT is a DB-clock
@@ -437,6 +464,8 @@ pipeline.run('backup-db', async (pool) => {
         cutoff: cutoff.toISOString(),
       });
     } catch (pruneErr) {
+      pruneFailed = true;
+      pruneErrorMessage = pruneErr.message;
       pipeline.log.warn('[backup-db]', 'Retention prune failed — backup still succeeded', {
         error: pruneErr.message,
       });
@@ -444,13 +473,15 @@ pipeline.run('backup-db', async (pool) => {
 
     const durationMs = Date.now() - startMs;
 
-    const auditRows = [
-      { metric: 'dest_path',          value: destPath,         threshold: null,    status: 'INFO' },
-      { metric: 'backup_size_bytes',  value: backupSizeBytes,  threshold: '> 0',   status: backupSizeBytes > 0 ? 'PASS' : 'FAIL' },
-      { metric: 'manifest_path',      value: manifestPath,     threshold: null,    status: 'INFO' },
-      { metric: 'blobs_pruned',       value: blobsPruned,      threshold: null,    status: 'INFO' },
-      { metric: 'retain_days',        value: config.retainDays, threshold: null,   status: 'INFO' },
-    ];
+    // P4-F0 fold C5a (Observability): a prune FAILURE gets its own WARN row —
+    // the old blobs_pruned=0 INFO row was indistinguishable from a healthy
+    // nothing-old-enough-to-prune run, so unpruned retention could grow
+    // invisibly for months.
+    auditRows.push(
+      { metric: 'blobs_pruned',            value: blobsPruned,      threshold: null, status: 'INFO' },
+      { metric: 'retention_prune_status',  value: pruneFailed ? `FAILED: ${pruneErrorMessage}` : 'ok', threshold: null, status: pruneFailed ? 'WARN' : 'PASS' },
+      { metric: 'retain_days',             value: config.retainDays, threshold: null, status: 'INFO' },
+    );
 
     pipeline.emitSummary({
       // Observer archetype — no row-level DB processing (spec 47 §12, observer scripts)
