@@ -262,8 +262,9 @@ watchdog checks for it.
    completed run catches that.
 2. **Backup freshness + safety-net trigger.** A completed backup within the last 25h,
    matching BOTH row shapes `backup_db` can be written under (P3-G6): the scoped-slug
-   `permits:backup_db` step row (`run-chain.js:362`, F8 fold 2026-07-20 — corrected from a
-   stale L321 citation) and a standalone `backup_db` slug row
+   `permits:backup_db` step row (the scoped-slug INSERT at `run-chain.js:379` + completion
+   UPDATE at `:508` — S3 fold 2026-07-22, corrected from a stale `:362` citation which lands
+   on a closing brace) and a standalone `backup_db` slug row
    (a direct, non-chain invocation). If no such row exists within 25h AND the `permits`
    chain is not CURRENTLY running (a race guard — a permits chain in flight may complete
    its own `backup_db` step moments later; invoking `backup-db.js` concurrently with that

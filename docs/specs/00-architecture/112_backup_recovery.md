@@ -176,6 +176,13 @@ one-time G10 gate baseline (`.cursor/active_task.md` G10, captured for the Phase
 migration load) into a **standing, every-backup** artifact so any future restore — not just the
 migration-era one — has a real baseline.
 
+> **Consumption status (S1 truth-up, 2026-07-22):** the sidecar is **produced for future
+> consumption — nothing in the repo reads it yet.** The shipped restore gates (§4.3) validate
+> against the LIVE source DB instead; the manifest-consumer build-out (restore-only validation
+> of a historical dump without a live source) is filed in `review_followups.md`. Sidecar
+> generation/upload is **non-fatal** (P4-F0 fold C5b): a failure emits a WARN
+> `manifest_status` audit row and the dump itself still counts as a successful backup.
+
 **Outputs (renamed/generalized from the GCS-specific shape):**
 - `records_meta.backup_size_bytes` — unchanged
 - `records_meta.dest_path` — replaces `gcs_path` (destination-agnostic; the Phase 3.3 value is a
@@ -183,54 +190,113 @@ migration-era one — has a real baseline.
 - `records_meta.blobs_pruned` — unchanged in meaning, generalized in mechanism (destination
   lifecycle rule for object storage; explicit prune loop for a local/NAS path)
 - `records_meta.retain_days` — unchanged
-- `records_meta.manifest_path` — NEW, the sidecar's location, needed by `restore-db.js`
-- `audit_table` — unchanged shape (phase 112, PASS/WARN/FAIL rows)
+- `records_meta.manifest_path` — NEW, the sidecar's location (`null` when sidecar
+  generation/upload failed — see the non-fatal note above)
+- `audit_table` — phase 112, PASS/WARN/FAIL rows, built incrementally so
+  `dest_path`/`backup_size_bytes` always reach the summary once the dump lands (C5b); includes
+  a `manifest_status` row (PASS with path / WARN on failure) and a `retention_prune_status`
+  row (PASS `ok` / WARN on prune failure — distinct from a healthy `blobs_pruned=0`, C5a)
 
-### 4.3 `scripts/restore-db.js` (NEW)
+### 4.3 `scripts/restore-db.js` (SHIPPED — rewritten to as-built truth, P4-F0 fold S1, 2026-07-22)
 
-This script does not exist yet — it is the identified gap Spec 113 §9.2 requires closing.
+> **Amendment note (Ground-truth CRITICAL, 2026-07-22).** This section originally documented a
+> **manifest-baseline** validation architecture — gates diffing the restored target against the
+> backup-time `.manifest.json` sidecar — that was **never built**. The shipped gates compare the
+> **LIVE SOURCE database** (the Docker dev DB) against the TARGET instead: a stronger guarantee
+> for the migration-era loads this tooling serves (both sides queried at validation time), but a
+> *different* one — it requires the source DB to still exist and cannot validate a restore of a
+> historical dump on its own. The `.manifest.json` sidecar (§4.2) is **produced for future
+> consumption — no consumer exists in the repo yet**; the manifest-consumer build-out is filed
+> in `docs/reports/review_followups.md` ("P4-F0 output panel").
 
 **Not a manifest/chain step.** `restore-db.js` is a **standalone, operator-invoked CLI**, in the
 same category as `scripts/migrate.js` — not wrapped in `pipeline.run`/the Spec 47 §R1–R12
 skeleton, and not registered in `scripts/manifest.json`. Rationale: restore is inherently
 destructive, human-gated, and not a step that should ever be safely auto-re-runnable inside an
 unattended chain — the same reasoning that already keeps `migrate.js` outside the pipeline
-skeleton. Invocation: `node scripts/restore-db.js --dump=<path-or-uri> --target=<local|cloud>
-[--verify-only]`.
+skeleton.
+
+**Two modes:**
+1. **Combined dump+restore** (no `--dump=`): `pg_dump`s the SOURCE (PG_* env vars — the Docker
+   dev DB, loopback-only) straight into a temp file, then restores it into TARGET. The Phase
+   0.5/4.0 data-load shape.
+2. **Restore-only** (`--dump=<path>`): restores an existing dump file — the disaster-recovery
+   shape (e.g. a nightly `backup-db.js` artifact).
+
+**Usage (runnable examples):**
+```
+node scripts/restore-db.js --target=local --mode=fresh
+node scripts/restore-db.js --target=local --mode=fresh --tables=trades,logic_variables
+node scripts/restore-db.js --dump=./pg_dump/2026-07-18.dump --target=local --mode=fresh
+node scripts/restore-db.js --target=cloud --verify-only        # gates only, no dump/restore
+```
+
+**Flags (all ten):**
+
+| Flag | Meaning |
+|---|---|
+| `--target=local\|cloud` | Which env-contract connection to restore into (D14). Default `local`. |
+| `--mode=fresh` | **REQUIRED for any actual restore.** The operator explicitly states the target is expected-empty/idempotently reloadable (§8 edge case — never inferred from DB state). `--mode=dr` (in-place `--clean`/DROP SCHEMA restore) is NOT implemented — refuses. |
+| `--tables=t1,t2` | Restrict the load to an explicit table subset (validated against the source∩target eligible list). |
+| `--dump=<path>` | Restore this existing dump instead of dumping SOURCE fresh. Never deleted by cleanup. |
+| `--dump-out=<path>` | Where to write the fresh dump (default: a private mkdtemp file, deleted after success unless `--keep-dump`). Never auto-cleaned. |
+| `--keep-dump` | Don't delete the auto-generated dump after a successful restore. |
+| `--skip-gates` | Don't run the G10 gate suite after a successful restore. |
+| `--verify-only` | Run the G10 gate suite only — no dump, no restore, no truncate; `--mode` not required. |
+| `--i-really-mean-to-truncate` | Override the destructive-truncate guard (below). |
+| `--skip-truncate` | Skip the pre-restore TRUNCATE entirely — correct ONLY for a greenfield-empty target subset load (a partial `--tables` scope truncates non-CASCADE, which out-of-scope FKs into in-scope tables would block; an empty target needs no truncation). |
+
+**Destructive-truncate guard (P4-F0 folds: scope-aware + fail-closed).** For any NON-LOOPBACK
+target (a loopback target is the D13 truncate-first local re-run flow and is deliberately
+ungated), the CLI probes — before any TRUNCATE — the **actual tables about to be truncated**
+plus two fixed belt probes (`auth.users`, `public.parcels`). Any registered human in
+`auth.users` or any data row in a probed table refuses the run unless
+`--i-really-mean-to-truncate` is passed. A probe that ERRORS (network/auth/permission) **fails
+closed** — the target is treated as populated, never as empty; only a genuinely absent
+relation/schema (SQLSTATE 42P01/3F000) counts as zero.
+
+**Auth-linked auto-exclusion (P4-F0 fold C2).** On a remote target, an UNSCOPED run
+auto-excludes every public table carrying an FK into `auth.users` — derived at runtime from the
+target's `pg_constraint` (13 tables as of 2026-07-22), logged by name, never a hand-typed list.
+Rationale: those tables are greenfield-empty at load time (dev rows reference dev `auth.users`
+uuids absent on cloud) and hold real, source-divergent user rows after launch — never
+source-comparable. Local targets and explicit `--tables` scopes are untouched.
+
+**TOC preflight (the CRITICAL truncate gate).** Before any TRUNCATE, `pg_restore --list` is
+parsed and every table about to be truncated must have a `TABLE DATA` entry in the dump's TOC —
+a dump that cannot restore a table must never be allowed to wipe it. Runs for both fresh and
+operator-supplied dumps.
 
 **Core contract (Spec 113 §9.2, verbatim rule):** `pg_restore --single-transaction
---exit-on-error` is the primary restore path. Where that combination is not viable for a given
-restore (e.g., certain `--no-owner`/`--no-acl` cross-role scenarios, or a partial/table-scoped
-restore that must legitimately continue past expected non-fatal notices), use a
-**stderr-gated wrapper** instead: spawn `pg_restore`, capture stderr, and treat **any** stderr
-output as failure. Never assume partial success is success — this is the exact failure mode
-plain `pg_restore` defaults to (§9).
+--exit-on-error` is the primary restore path (note: NOT `--disable-triggers` — Supabase's
+`postgres` role is not superuser; pg_dump's FK-ordered TOC makes trigger-enforced restore safe).
+On top of that, a **stderr-gated wrapper** treats **any** stderr output as failure for both
+`pg_dump` and `pg_restore` — "no stderr output" is the pass condition, never "exit code 0"
+(§9). Never assume partial success is success.
 
-**Restore-validation = re-run the G10 gate suite**, generalized as a reusable library (not a
-bespoke one-off script) so both the Phase 0.5/4.0 migration-era load and every future restore
-call the same gates:
-- **Per-table exact row counts** — vs the backup-time baseline manifest (§4.2), not vs an
-  arbitrary "looks right" heuristic.
-- **Invalid-geom id-set diff** — for `parcels`/`building_footprints`, compare the restored
-  database's invalid-geometry **id set** to the manifest's id set. A matching count with a
-  different id set is a genuine drift signal, not a pass (Spec 113 §13).
-- **Sequence `last_value` sync** — every sequence's restored `last_value` vs the manifest;
-  exact match expected for a same-point restore (a lagging sequence risks a future PK collision).
-- **Matview verify-or-refresh** — compare `mv_monthly_permit_stats` row count to the manifest;
-  if stale, `REFRESH MATERIALIZED VIEW` and log it explicitly rather than silently accepting a
-  stale matview as a pass.
-- **Sanity-audit triple** — re-run `scripts/analysis/parcel-sanity-audit.js`'s FAIL/WARN/INFO
-  gate and diff its counts against the manifest's recorded baseline; a **new** FAIL is a broken
-  restore, not pre-existing source-data noise (the same distinction G10 draws for the migration
-  load).
-- **`postgis_full_version()` both sides** — record the manifest's captured source-side value
-  next to a freshly queried target-side value; a version delta is a flagged finding, not
-  silently ignored.
+**Restore-validation = the G10 gate suite** (`scripts/validation/supabase-load-gates.js`), a
+reusable library both `restore-db.js` and the standalone CLI invoke — never a bespoke one-off
+comparison. **All gates compare LIVE SOURCE vs TARGET** (see the amendment note above); gates
+whose table is outside a `--tables` scope report SKIP, not a false PASS/FAIL:
+- **(a) Per-table exact row counts** — every in-scope table, both sides.
+- **(b) Invalid-geom id-set diff** — `parcels`/`building_footprints`: a matching COUNT with a
+  different **id set** is a genuine GEOS-drift signal, not a pass (Spec 113 §13). Also asserted
+  against the pinned G10 expected counts (16/17).
+- **(c) Sequence `last_value` sync** — ownership derived via `pg_depend` (not a naming-convention
+  guess), scoped to in-scope tables; exact match expected (a lagging sequence risks PK collisions).
+- **(d) Matview verify-or-refresh** — the target `mv_monthly_permit_stats` is ALWAYS refreshed
+  before comparison, and ground truth is the SOURCE's **live defining query** (its stored
+  snapshot may itself be stale), with the delta logged explicitly.
+- **(e) `postgis_full_version()` both sides** — recorded as INFO; a version delta is a flagged
+  finding, not a failure (gate (b) is the actual drift detector).
+- **(f) G10 pinned-baseline assertions** — exact row counts for permits/parcels/coa/footprints.
+- **(g) `ravine_distance_m` epsilon check** — 1000-row keyed sample, relative epsilon 1e-9, with
+  source-populated/target-null XOR reported as an explicit `nullMismatch`.
 
-**Output:** a restore-validation report (console, plus an `emitSummary`-shaped JSON for anyone
-scripting around it) with PASS/FAIL per gate. A restore is not "done" until every gate reports
-PASS, or a human explicitly acknowledges a WARN — mirroring the operator sign-off pattern D6
-already established for the 0-row HALT check (`.cursor/active_task.md` D6).
+**Output:** a restore-validation report (console table, plus an `emitSummary`-shaped JSON for
+anyone scripting around it) with PASS/FAIL/SKIP per gate and a row-derived verdict. A restore is
+not "done" until every gate reports PASS, or a human explicitly acknowledges a WARN — mirroring
+the operator sign-off pattern D6 already established for the 0-row HALT check.
 </behavior>
 
 ---
@@ -263,7 +329,7 @@ with the local dev or CI Postgres image.
 ## 6. Backup Cadence Trigger (mechanism unchanged + Decision D8 addition)
 
 **Primary trigger — unchanged.** `backup_db` remains the final step of `chains.permits`
-(`scripts/manifest.json` L91) — it runs whenever the permits chain runs. What changes is *how*
+(`scripts/manifest.json` L90) — it runs whenever the permits chain runs. What changes is *how*
 the permits chain itself gets scheduled: per Decision D8, nightly/must-succeed chains now run on
 a **GitHub Actions runner executing `scripts/run-chain.js` directly** (Spec 113 §8.1), not via
 Cloud Scheduler → Cloud Run, which is retired along with the rest of the Google stack.
@@ -282,7 +348,8 @@ Rather than a standalone backup-only workflow, the secondary trigger described a
 implemented as one check inside a single freshness-watchdog workflow that also checks
 permits/coa chain freshness (Spec 115 §2.5's item 1 and item 2 respectively). It matches BOTH
 row shapes `backup_db` can be written under: the scoped-slug `permits:backup_db` step row
-(`run-chain.js:362`, F8 fold 2026-07-20 — corrected from a stale L321 citation; written when
+(the scoped-slug INSERT at `run-chain.js:379` and its completion UPDATE at `:508` — S3 fold
+2026-07-22, corrected from a stale `:362` citation which is a closing brace; written when
 the permits chain runs its final step normally) and a
 standalone `backup_db` slug row (written when the watchdog itself invokes `backup-db.js`
 directly). The watchdog additionally guards against invoking the safety net while a permits

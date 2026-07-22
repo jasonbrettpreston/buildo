@@ -401,9 +401,19 @@ and where the dump lands.
 in the current architecture needs it through Phase 5 (Philosophy A, Decision D1: Next.js is the
 single API gateway; `supabase-js` is for auth only; the pipeline and admin keep raw `pg`).
 
-**Verification method:** curl the project's REST endpoint directly (e.g.
-`curl -i https://<project>.supabase.co/rest/v1/`) and confirm a disabled/blocked response — a
-dashboard toggle alone is not verification. Local-stack disable+verify is **Phase 0.6b**;
+**Verification method (S2 correction, P4-F0 fold 2026-07-22 — proven live):** an UNKEYED curl
+of the REST endpoint (`curl -i https://<project>.supabase.co/rest/v1/`) **cannot distinguish
+enabled from disabled** — the API gateway rejects a key-less request identically (401) either
+way, so the originally-prescribed unkeyed-curl check is unsound. The sound verification is
+BOTH of:
+1. the dashboard toggle observed OFF (Project Settings → Data API), AND
+2. a **KEYED probe** — the same curl carrying a valid publishable/anon key
+   (`-H "apikey: <publishable-key>"`): a DISABLED Data API returns a no-schema/service-
+   unavailable response (503, or a 401 with no PostgREST schema payload); an ENABLED one
+   returns PostgREST's OpenAPI/schema response. Verified live against the cloud project
+   2026-07-22 (valid key → 503 no-schema = positively disabled).
+
+Local-stack disable+verify is **Phase 0.6b**;
 cloud disable+verify is **Phase 0.7** (the cloud project has no schema to expose before then, so
 verifying earlier would be meaningless). Network Restrictions (§8.2) gate Postgres connections
 only — they do **not** gate the Data API's HTTPS surface, so disabling the Data API is a
