@@ -415,7 +415,7 @@ async function getRavineSampleForIds(pool, ids) {
 // Connection resolution — shared by the CLI entry and restore-db.js
 // ---------------------------------------------------------------------------
 
-/** Source is always the Docker dev DB (PG_* env vars), per Phase 0.5's `.env` contract. */
+/** Source is the PG_*-addressed dev DB (post-D13 cutover: the local Supabase stack at 54322; originally the Docker dev DB), per the `.env` contract. */
 function resolveSourcePool() {
   const host = process.env.PG_HOST || 'localhost';
   return new Pool({

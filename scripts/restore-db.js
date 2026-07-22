@@ -73,10 +73,11 @@ const { isLocalMode } = require('./lib/ssl-config');
 const gates = require('./validation/supabase-load-gates');
 
 // Client-tool minimum major version (Spec 112 §5) — the pg_dump/pg_restore
-// BINARY must be >= the highest Postgres server version in play. During the
-// Phase 0-3 coexistence window that's Supabase's PG17 (local stack + cloud),
-// not the Docker source's PG15 or CI's PG16 — an older client dumping/
-// restoring a newer server fails silently/opaquely far more often than not.
+// BINARY must be >= the highest Postgres server version in play: Supabase's
+// PG17 (post-D13 cutover the PG_*-addressed dev source is ITSELF the local
+// Supabase PG17 stack; the retired Docker source was PG15, CI is PG16) — an
+// older client dumping/restoring a newer server fails silently/opaquely far
+// more often than not.
 const MIN_CLIENT_MAJOR = 17;
 
 // ---------------------------------------------------------------------------
@@ -469,6 +470,25 @@ function truncateGuardApplies(targetConnectionString) {
 }
 
 /**
+ * Whether the pre-restore TRUNCATE may use CASCADE (Round-3 fold GT#1,
+ * 2026-07-22 — a defect the C2 auto-exclusion introduced). CASCADE is safe
+ * ONLY when the statement's table list covers EVERY eligible table: no
+ * operator `--tables` scope AND nothing auto-excluded. After the C2
+ * auth-linked exclusion, an unscoped remote run is no longer full-scope —
+ * the excluded tables sit OUTSIDE the statement's list, and CASCADE would
+ * silently truncate an excluded auth-linked dependent (`lead_views` FKs into
+ * `permits`/`entities` ON DELETE CASCADE, mig 070 + 229) that is not in the
+ * dump and never reloaded — real-user data loss the exclusion log implied
+ * was protected. With plain TRUNCATE the FK barrier fails LOUDLY instead;
+ * the operator then uses --skip-truncate (empty greenfield target) or an
+ * explicit scope — never silent data loss.
+ * @param {{ requested: string[]|null, excludedCount: number }} args
+ */
+function cascadeAllowed({ requested, excludedCount }) {
+  return (!requested || requested.length === 0) && excludedCount === 0;
+}
+
+/**
  * §1a/§1b cleanup-pathing decision — pure, no fs access. Decides WHICH of
  * the three dump-path modes a given parsed-args object selects, and whether
  * the eventual mkdtemp() directory this run creates (if any) is temp/
@@ -735,10 +755,11 @@ async function run() {
       }
       console.log(`[restore-db] TOC preflight OK — dump covers all ${tables.length} scoped table(s)`);
 
-      // CASCADE only for a full-scope run (every eligible table truncated+
-      // reloaded together — see buildTruncateSql's doc comment for why a
-      // --tables-scoped run must NOT cascade into out-of-scope dependents).
-      const isFullRun = !args.tables;
+      // CASCADE only for a GENUINELY full-scope run — no --tables scope AND
+      // no auth-linked auto-exclusion (see cascadeAllowed's doc comment for
+      // the Round-3 GT#1 data-loss scenario; buildTruncateSql's for the
+      // original scoped-run rationale).
+      const isFullRun = cascadeAllowed({ requested: args.tables, excludedCount: authExclusion.excluded.length });
       if (args.skipTruncate) {
         console.log(
           `[restore-db] --skip-truncate: skipping TRUNCATE of ${tables.length} table(s) ` +
@@ -832,6 +853,7 @@ module.exports = {
   truncateGuardDecision,
   buildGuardProbeExprs,
   truncateGuardApplies,
+  cascadeAllowed,
   TRUNCATE_GUARD_DATA_THRESHOLD,
   spawnCapture,
   checkClientVersion,

@@ -27,6 +27,7 @@ const restoreDb = require('../../scripts/restore-db.js') as {
   }) => { allowed: boolean; tripped: boolean; reason: string };
   buildGuardProbeExprs: (scopedTables: string[]) => string[];
   truncateGuardApplies: (targetConnectionString: string) => boolean;
+  cascadeAllowed: (a: { requested: string[] | null; excludedCount: number }) => boolean;
   TRUNCATE_GUARD_DATA_THRESHOLD: number;
   parsePgToolVersion: (v: string) => { major: number; minor: number; patch: number; raw: string };
   isClientVersionSufficient: (v: { major: number }, minMajor?: number) => boolean;
@@ -476,6 +477,22 @@ describe('restore-db.js — buildGuardProbeExprs (C1: the guard probes what the 
 
   it('refuses an injection-shaped table name (quoteIdent defense-in-depth)', () => {
     expect(() => restoreDb.buildGuardProbeExprs(['parcels; DROP TABLE users; --'])).toThrow();
+  });
+});
+
+describe('restore-db.js — cascadeAllowed (Round-3 GT#1: CASCADE must never reach auto-excluded auth-linked tables)', () => {
+  it('allows CASCADE only for a genuinely full-scope run: unscoped AND zero auto-exclusions', () => {
+    expect(restoreDb.cascadeAllowed({ requested: null, excludedCount: 0 })).toBe(true);
+    expect(restoreDb.cascadeAllowed({ requested: [], excludedCount: 0 })).toBe(true);
+  });
+
+  it('GT#1 scenario: an unscoped REMOTE run with auth-linked tables auto-excluded must NOT cascade — lead_views (FK→permits ON DELETE CASCADE, auth-linked) would be silently truncated and never reloaded', () => {
+    expect(restoreDb.cascadeAllowed({ requested: null, excludedCount: 13 })).toBe(false);
+  });
+
+  it('an operator --tables scope never cascades (original buildTruncateSql rationale preserved)', () => {
+    expect(restoreDb.cascadeAllowed({ requested: ['trades'], excludedCount: 0 })).toBe(false);
+    expect(restoreDb.cascadeAllowed({ requested: ['trades'], excludedCount: 5 })).toBe(false);
   });
 });
 

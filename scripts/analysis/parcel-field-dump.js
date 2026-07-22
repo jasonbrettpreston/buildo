@@ -34,10 +34,15 @@ const ALLCOLS = Object.values(FIELDS).flat();
         `SELECT id FROM parcels WHERE ${RES} AND (${c.applies}) AND (${c.bad}) ORDER BY id LIMIT 1`)).rows[0];
       if (r && flagged.length < 8 && !flagged.includes(r.id)) flagged.push(r.id);
     }
+    // Deterministic pseudo-random spread (Round-3 RC finding, 2026-07-22):
+    // the old random() ordering made the CLEAN sample differ every run — a
+    // CLEAN parcel exposing an audit miss in one run might never be sampled
+    // again. md5(id) keeps the selection spread across the id space (not just
+    // the lowest ids) while byte-identical across repeated runs on the same data.
     const clean = (await pool.query(
       `SELECT id FROM parcels WHERE ${RES} AND opt_aor_gfa_sqm IS NOT NULL AND cost_fb_total IS NOT NULL
          AND NOT (${CHECKS.filter((c) => c.fam !== 'DIST').map((c) => `((${c.applies}) AND (${c.bad}))`).join(' OR ')})
-       ORDER BY random() LIMIT 4`)).rows.map((x) => x.id);
+       ORDER BY md5(id::text) LIMIT 4`)).rows.map((x) => x.id);
     ids = [...flagged, ...clean];
   }
 

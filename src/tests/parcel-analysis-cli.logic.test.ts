@@ -65,4 +65,10 @@ describe('parcel-field-dump.js — C6 shares the sanity audit CLI pool', () => {
     expect(source).not.toMatch(/new Pool\(/);
     expect(source).not.toMatch(/require\(['"]pg['"]\)/);
   });
+
+  it('Round-3 RC: the CLEAN-parcel auto-picker is deterministic (md5(id) spread, never ORDER BY random())', () => {
+    const source = dumpSource();
+    expect(source).not.toMatch(/ORDER BY random\(\)/);
+    expect(source).toMatch(/ORDER BY md5\(id::text\)/);
+  });
 });
