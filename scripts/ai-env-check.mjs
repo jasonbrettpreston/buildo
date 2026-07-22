@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------
 
 import { execSync } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { X509Certificate } from 'crypto';
@@ -158,6 +158,29 @@ try {
 // 3. Project Config
 console.log(`✔ .env file: ${hasEnv ? 'present' : 'MISSING'}`);
 console.log(`✔ Pipeline SDK: ${existsSync(resolve(__dirname, 'lib', 'pipeline.js')) ? 'present' : 'MISSING'}`);
+
+// Spec 113 §7 schema-authority tripwire (P4 hardening H2): migrate.js is the
+// SOLE schema authority — files in supabase/migrations/ mean someone used the
+// Supabase CLI migration flow (`supabase db push` / `supabase migration new`)
+// instead. Visibility only, per this script's report-only convention; the
+// ENFORCING gate is src/tests/schema-authority.logic.test.ts inside the husky
+// pre-commit gauntlet.
+const supaMigrationsDir = resolve(__dirname, '..', 'supabase', 'migrations');
+if (existsSync(supaMigrationsDir)) {
+  const offending = readdirSync(supaMigrationsDir).filter((f) => f !== '.gitkeep');
+  if (offending.length > 0) {
+    console.log(
+      `✘ Schema authority: supabase/migrations/ holds ${offending.length} file(s) — ` +
+        `${offending.slice(0, 5).join(', ')}${offending.length > 5 ? ', …' : ''} — ` +
+        `scripts/migrate.js is the ONLY schema authority (Spec 113 §7); re-author the DDL as ` +
+        `migrations/NNN_*.sql and delete these`,
+    );
+  } else {
+    console.log('✔ Schema authority: supabase/migrations/ empty — migrate.js is the sole authority');
+  }
+} else {
+  console.log('✔ Schema authority: supabase/migrations/ absent — migrate.js is the sole authority');
+}
 
 // 4. Git State
 run('git branch --show-current', 'Git branch');
