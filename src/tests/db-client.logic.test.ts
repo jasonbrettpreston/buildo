@@ -35,4 +35,25 @@ describe('resolveRuntimeConnectionString — Spec 113 §3 DB-var alias (OD-A)', 
     const env = {} as unknown as NodeJS.ProcessEnv;
     expect(resolveRuntimeConnectionString(env)).toBeUndefined();
   });
+
+  it('C3: an empty-string POSTGRES_URL is treated as absent — DATABASE_URL wins, not the shadow', () => {
+    const env = {
+      POSTGRES_URL: '',
+      DATABASE_URL: 'postgresql://dev:pw@127.0.0.1:54322/postgres',
+    } as unknown as NodeJS.ProcessEnv;
+    expect(resolveRuntimeConnectionString(env)).toBe('postgresql://dev:pw@127.0.0.1:54322/postgres');
+  });
+
+  it('C3: a whitespace-only POSTGRES_URL is also treated as absent', () => {
+    const env = {
+      POSTGRES_URL: '   ',
+      DATABASE_URL: 'postgresql://dev:pw@127.0.0.1:54322/postgres',
+    } as unknown as NodeJS.ProcessEnv;
+    expect(resolveRuntimeConnectionString(env)).toBe('postgresql://dev:pw@127.0.0.1:54322/postgres');
+  });
+
+  it('C3: both empty resolves to undefined (PG_* branch), never an empty string', () => {
+    const env = { POSTGRES_URL: '', DATABASE_URL: '' } as unknown as NodeJS.ProcessEnv;
+    expect(resolveRuntimeConnectionString(env)).toBeUndefined();
+  });
 });

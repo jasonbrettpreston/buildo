@@ -14,7 +14,9 @@
  * Three checks (Spec 113 §3 / §3.2):
  *   (a) PRESENCE — every runtime-critical var is present & non-empty, and
  *       ADMIN_MFA_ENFORCED === 'true' (so prod can never ship green with MFA
- *       inert or the Stripe webhook dead).
+ *       inert or the Stripe webhook dead). MFA + the SHOULD-grade Sentry DSN
+ *       hard-fail PRODUCTION only, demoting to WARN on preview/development
+ *       (P4-F0 fold C4 — the DEV_MODE env-scoping pattern).
  *   (b) DEV_MODE ABSENT/false — in production, DEV_MODE / NEXT_PUBLIC_DEV_MODE
  *       must be absent or explicitly 'false'.
  *   (c) NO LEAKED SECRET — every NEXT_PUBLIC_* / EXPO_PUBLIC_* var is inspected;
@@ -57,6 +59,9 @@ const REQUIRED_PRESENT = [
 ];
 
 // Groups where ANY ONE of the listed vars satisfies the requirement.
+// `warnOutsideProduction: true` (P4-F0 fold C4): Spec 113 §3.2 grades the
+// Sentry DSN as SHOULD — a missing DSN hard-fails production but only WARNs
+// preview/development (an unSentried preview build is degraded, not broken).
 const REQUIRED_GROUPS = [
   { label: 'Supabase project URL', anyOf: ['SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL'] },
   {
@@ -68,7 +73,7 @@ const REQUIRED_GROUPS = [
       'SUPABASE_ANON_KEY',
     ],
   },
-  { label: 'Sentry DSN', anyOf: ['SENTRY_DSN', 'NEXT_PUBLIC_SENTRY_DSN'] },
+  { label: 'Sentry DSN', anyOf: ['SENTRY_DSN', 'NEXT_PUBLIC_SENTRY_DSN'], warnOutsideProduction: true },
 ];
 
 // DEV_MODE family — must be absent or 'false' in production (§3.2).
@@ -167,9 +172,12 @@ function isPublicVarName(name) {
  * Evaluate an env object against the presence + DEV_MODE + leaked-secret
  * contract for a given target environment. Pure; does not touch process.env.
  *
+ * `warn`-level findings (C4: off-prod MFA/Sentry) never fail the run — `ok`
+ * is derived from `error` findings only.
+ *
  * @param {Record<string, string|undefined>} env
  * @param {'production'|'preview'|'development'} targetEnv
- * @returns {{ ok: boolean, targetEnv: string, findings: { level: 'ok'|'error', check: string, name: string, message: string }[] }}
+ * @returns {{ ok: boolean, targetEnv: string, findings: { level: 'ok'|'warn'|'error', check: string, name: string, message: string }[] }}
  */
 function evaluateEnv(env, targetEnv) {
   const findings = [];
@@ -187,23 +195,31 @@ function evaluateEnv(env, targetEnv) {
     if (satisfiedBy) {
       findings.push({ level: 'ok', check: 'presence', name: satisfiedBy, message: `present (${group.label})` });
     } else {
+      // C4: SHOULD-grade groups (Spec 113 §3.2) demote to WARN off-prod.
+      const level = group.warnOutsideProduction && targetEnv !== 'production' ? 'warn' : 'error';
       findings.push({
-        level: 'error',
+        level,
         check: 'presence',
         name: group.anyOf.join(' | '),
-        message: `MISSING — ${group.label} requires one of these to be set`,
+        message: `MISSING — ${group.label} requires one of these to be set${level === 'warn' ? ` (WARN on ${targetEnv}; hard-fail on production)` : ''}`,
       });
     }
   }
-  // ADMIN_MFA_ENFORCED must be exactly 'true'
+  // ADMIN_MFA_ENFORCED must be exactly 'true' — hard-fail scoped to
+  // PRODUCTION only (P4-F0 fold C4, Code Reviewer + GT-7: Spec 113 §3.2's
+  // "admins sign in without a second factor" consequence is a prod posture;
+  // preview/development enforcing it blocked legitimate non-prod deploys —
+  // the same env-scoping pattern DEV_MODE already uses). Off-prod it WARNs.
   if (env.ADMIN_MFA_ENFORCED === 'true') {
     findings.push({ level: 'ok', check: 'presence', name: 'ADMIN_MFA_ENFORCED', message: "=== 'true'" });
   } else {
     findings.push({
-      level: 'error',
+      level: targetEnv === 'production' ? 'error' : 'warn',
       check: 'presence',
       name: 'ADMIN_MFA_ENFORCED',
-      message: `must === 'true' (got ${isPresent(env.ADMIN_MFA_ENFORCED) ? 'a non-true value' : 'MISSING'})`,
+      message:
+        `must === 'true' in production (got ${isPresent(env.ADMIN_MFA_ENFORCED) ? 'a non-true value' : 'MISSING'})` +
+        (targetEnv === 'production' ? '' : ` — WARN on ${targetEnv}`),
     });
   }
 
@@ -265,14 +281,21 @@ function resolveTargetEnv(argv, env) {
 function printReport(result) {
   console.log(`[verify-vercel-env] target env: ${result.targetEnv}`);
   for (const f of result.findings) {
-    const tag = f.level === 'error' ? '✗ FAIL' : '✓ ok';
+    const tag = f.level === 'error' ? '✗ FAIL' : f.level === 'warn' ? '⚠ warn' : '✓ ok';
     console.log(`  ${tag}  [${f.check}] ${f.name} — ${f.message}`);
   }
   const errors = result.findings.filter((f) => f.level === 'error');
+  const warns = result.findings.filter((f) => f.level === 'warn');
   if (result.ok) {
-    console.log(`[verify-vercel-env] PASS — ${result.findings.length} checks, 0 failures`);
+    console.log(
+      `[verify-vercel-env] PASS — ${result.findings.length} checks, 0 failures` +
+        (warns.length ? ` (${warns.length} warning(s))` : '')
+    );
   } else {
-    console.error(`[verify-vercel-env] FAIL — ${errors.length} finding(s) for env=${result.targetEnv}`);
+    console.error(
+      `[verify-vercel-env] FAIL — ${errors.length} finding(s) for env=${result.targetEnv}` +
+        (warns.length ? ` (+${warns.length} warning(s))` : '')
+    );
   }
 }
 

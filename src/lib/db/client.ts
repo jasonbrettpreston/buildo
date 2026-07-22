@@ -41,11 +41,18 @@ const POOL_CONNECTION_TIMEOUT_MS = parsePositiveIntEnv(process.env.PG_CONNECTION
 // scoped to THIS app-runtime pool only — migrate.js and the pipeline scripts are
 // intentionally NOT aliased.
 //
+// An empty-string (or whitespace-only) POSTGRES_URL is treated as ABSENT
+// (P4-F0 fold C3, Code Reviewer): with `??`, a dashboard-set `POSTGRES_URL=""`
+// would shadow a valid DATABASE_URL, silently dropping the pool to the PG_*
+// localhost defaults in a deployed environment. `||` + trim makes both vars
+// fall through on empty, and a both-empty env resolves to undefined (the
+// PG_* branch), never `""`.
+//
 // Exported for the client.ts alias regression test (src/tests/db-client.logic.test.ts).
 export function resolveRuntimeConnectionString(
   env: NodeJS.ProcessEnv = process.env
 ): string | undefined {
-  return env.POSTGRES_URL ?? env.DATABASE_URL;
+  return env.POSTGRES_URL?.trim() || env.DATABASE_URL?.trim() || undefined;
 }
 
 const RUNTIME_CONNECTION_STRING = resolveRuntimeConnectionString();

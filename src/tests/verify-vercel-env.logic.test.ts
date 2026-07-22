@@ -10,7 +10,7 @@ const vve = require('../../scripts/verify-vercel-env.js') as {
   ) => {
     ok: boolean;
     targetEnv: string;
-    findings: { level: 'ok' | 'error'; check: string; name: string; message: string }[];
+    findings: { level: 'ok' | 'warn' | 'error'; check: string; name: string; message: string }[];
   };
   secretShapeReason: (value: string) => string | null;
   classifyPublicVar: (name: string, value: string) => { verdict: 'allow' | 'flag'; reason: string };
@@ -88,6 +88,52 @@ describe('verify-vercel-env — evaluateEnv presence (Spec 113 §3/§3.2)', () =
     const result = vve.evaluateEnv(env, 'production');
     expect(result.ok).toBe(false);
     expect(result.findings.some((f) => f.level === 'error' && f.name === 'ADMIN_MFA_ENFORCED')).toBe(true);
+  });
+});
+
+describe('verify-vercel-env — C4 env-scoping (Spec 113 §3.2: MFA/Sentry hard-fail production only)', () => {
+  for (const targetEnv of ['preview', 'development'] as const) {
+    it(`ADMIN_MFA_ENFORCED missing on ${targetEnv} is a WARN, not a failure`, () => {
+      const env = validEnv();
+      delete env.ADMIN_MFA_ENFORCED;
+      const result = vve.evaluateEnv(env, targetEnv);
+      expect(result.ok).toBe(true);
+      expect(result.findings.some((f) => f.level === 'warn' && f.name === 'ADMIN_MFA_ENFORCED')).toBe(true);
+      expect(result.findings.some((f) => f.level === 'error' && f.name === 'ADMIN_MFA_ENFORCED')).toBe(false);
+    });
+
+    it(`a missing Sentry DSN on ${targetEnv} is a WARN (Spec 113 §3.2 SHOULD), not a failure`, () => {
+      const env = validEnv();
+      delete env.NEXT_PUBLIC_SENTRY_DSN;
+      const result = vve.evaluateEnv(env, targetEnv);
+      expect(result.ok).toBe(true);
+      expect(result.findings.some((f) => f.level === 'warn' && /Sentry DSN/.test(f.message))).toBe(true);
+    });
+  }
+
+  it('production still hard-fails a missing Sentry DSN', () => {
+    const env = validEnv();
+    delete env.NEXT_PUBLIC_SENTRY_DSN;
+    const result = vve.evaluateEnv(env, 'production');
+    expect(result.ok).toBe(false);
+    expect(result.findings.some((f) => f.level === 'error' && /Sentry DSN/.test(f.message))).toBe(true);
+  });
+
+  it('production still hard-fails a missing/false ADMIN_MFA_ENFORCED (the original §3.2 posture is untouched)', () => {
+    const env = validEnv();
+    env.ADMIN_MFA_ENFORCED = 'false';
+    expect(vve.evaluateEnv(env, 'production').ok).toBe(false);
+    delete env.ADMIN_MFA_ENFORCED;
+    expect(vve.evaluateEnv(env, 'production').ok).toBe(false);
+  });
+
+  it('the six REQUIRED_PRESENT criticals still hard-fail on EVERY env — only MFA/Sentry are scoped', () => {
+    const env = validEnv();
+    delete env.STRIPE_WEBHOOK_SECRET;
+    delete env.ADMIN_MFA_ENFORCED; // warn-only on preview — must not mask the Stripe error
+    const result = vve.evaluateEnv(env, 'preview');
+    expect(result.ok).toBe(false);
+    expect(result.findings.some((f) => f.level === 'error' && f.name === 'STRIPE_WEBHOOK_SECRET')).toBe(true);
   });
 });
 
