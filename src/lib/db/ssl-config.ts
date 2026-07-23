@@ -84,9 +84,12 @@ export function isLocalMode(opts: SslConfigOpts): boolean {
  *
  * - Local `supabase start` / Docker dev DB / CI containers (loopback host,
  *   or an explicit local-mode override): no TLS.
- * - Any non-loopback (cloud Supabase) target: CA-pinned `verify-full`,
- *   reading the CA PEM from SUPABASE_CA_CERT_PATH. THROWS if the env var or
- *   file is missing — fail-fast per Spec 47 §R5. NEVER falls back to
+ * - Any non-loopback (cloud Supabase) target: CA-pinned `verify-full`. CA
+ *   source precedence (F1g fold 2026-07-23): SUPABASE_CA_CERT (inline PEM) >
+ *   SUPABASE_CA_CERT_PATH (file) > the bundled Supabase root imported from
+ *   ./supabase-ca (build-traced for Vercel — no operator config needed; env
+ *   vars are the rotation/override path). THROWS only on an explicit-but-
+ *   unreadable path or an unrepairable inline value. NEVER falls back to
  *   `rejectUnauthorized: false` (banned repo-wide, Spec 113 §4).
  */
 export function resolveSslConfig(opts: SslConfigOpts = {}): PoolConfig['ssl'] {
@@ -139,6 +142,10 @@ export function resolveSslConfig(opts: SslConfigOpts = {}): PoolConfig['ssl'] {
     // must-configure step for the one host this app ever targets (Supabase).
     // A hypothetical non-Supabase non-loopback target still fails CLOSED — at
     // handshake, when its chain doesn't match this pinned root.
+    // Observable, not silent (Gemini HIGH / Guardian theme): announce that the
+    // built-in default is in play, so a pinned-vs-configured cert is never a
+    // guess in the logs.
+    console.warn('resolveSslConfig: no CA env var set — pinning the bundled Supabase root CA (src/lib/db/supabase-ca.ts)');
     return { ca: SUPABASE_CA_PEM, rejectUnauthorized: true };
   }
 

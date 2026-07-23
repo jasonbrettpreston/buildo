@@ -149,13 +149,21 @@ headers). Any new Postgres pool anywhere in the codebase MUST go through the hel
 side (§0.2b pool sweep) or carry an explicit `// LOCAL-ONLY` annotation for
 hardcoded-localhost diagnostic scripts.
 
-**Inline-content form (F1g fold, 2026-07-23):** both helpers accept **`SUPABASE_CA_CERT`** —
-the CA certificate CONTENT itself — taking precedence over `SUPABASE_CA_CERT_PATH`. This is
-the REQUIRED form on Vercel serverless: an env-var file path cannot be traced into the
-function bundle (`fs.readFileSync` on a dynamic path is invisible to Next.js output tracing —
-the first F1g preview build died at collect-page-data on exactly this). The PEM is public
-(committed at `scripts/certs/supabase-ca.pem`); `verify-vercel-env.js` asserts the group
-(inline or path) as a required presence.
+**CA source precedence (F1g fold, 2026-07-23 — final):** `resolveSslConfig` resolves the CA in
+this order for a non-loopback target: **`SUPABASE_CA_CERT`** (inline PEM content) → **`SUPABASE_CA_CERT_PATH`**
+(file) → **the BUNDLED Supabase root**. The bundled root is the committed public PEM compiled
+into the app: the TS twin imports `src/lib/db/supabase-ca.ts` (build-traced for Vercel — a file
+PATH cannot be traced into a serverless function bundle, which killed three F1g preview builds
+at collect-page-data / runtime); the JS twin reads `scripts/certs/supabase-ca.pem` (always
+present in the runner/CI context). Both are byte-identical, drift-locked by a test. **No CA env
+var is required** — the bundled default covers the one host this app targets (Supabase), so the
+env vars are the rotation/override path only; the fallback logs a one-line notice so a
+pinned-vs-configured cert is always observable. Fail-closed is preserved: every non-loopback
+branch is `verify-full` against the correct public root, `rejectUnauthorized: true`, never an
+unverified connection. `verify-vercel-env.js` treats the CA override as **OPTIONAL** (absent →
+INFO; present-inline → still shape-validated, since a garbage override would beat the good
+bundled cert and break TLS). The PEM is PUBLIC (verifies the server's identity, not a
+credential); rotation before its 2031-04-26 expiry is a code change either way.
 
 ### 4.2 Environment-aware behavior
 

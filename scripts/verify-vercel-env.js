@@ -109,11 +109,16 @@ const REQUIRED_GROUPS = [
   // hadn't asserted it. On Vercel the INLINE form (SUPABASE_CA_CERT, the PEM
   // content) is the correct one — a file path can't be traced into the
   // serverless bundle; the path form remains valid for runner/CI contexts.
-  // shape: 'pem' (Guardian G1 fold): the inline var must contain an actual
-  // certificate block — presence-only let garbage pass the verifier and die
-  // at runtime, the exact class this group exists to close.
-  { label: 'Supabase DB CA cert (inline PEM or path)', anyOf: ['SUPABASE_CA_CERT', 'SUPABASE_CA_CERT_PATH'], shape: 'pem' },
 ];
+
+// OPTIONAL CA-cert override (relaxed from REQUIRED, F1g bundled-CA fold
+// 2026-07-23, Guardian MED): the deployed app now pins a BUNDLED Supabase root
+// (src/lib/db/supabase-ca.ts) when no CA env var is set, so SUPABASE_CA_CERT /
+// _PATH are no longer required — they are a rotation/override path only. When
+// present, the inline form is still shape-validated (a garbage value would
+// take precedence over the good bundled cert and break TLS — the exact F1g
+// failure). Absent = INFO (bundled default in play), not a failure.
+const OPTIONAL_CA_GROUP = { label: 'Supabase DB CA cert override', anyOf: ['SUPABASE_CA_CERT', 'SUPABASE_CA_CERT_PATH'] };
 
 // DEV_MODE family — must be absent or 'false' in production (§3.2).
 const DEV_MODE_VARS = ['DEV_MODE', 'NEXT_PUBLIC_DEV_MODE'];
@@ -370,21 +375,6 @@ function evaluateEnv(env, targetEnv) {
                   `legacy JWT (Spec 113 §13 silent key non-provisioning; auth cannot work with this value)`,
               }
         );
-      } else if (group.shape === 'pem' && satisfiedBy === 'SUPABASE_CA_CERT') {
-        // Only the INLINE var carries content; the _PATH form is a file path
-        // (unverifiable here — validated at runtime by resolveSslConfig).
-        findings.push(
-          normalizeInlinePem(String(env[satisfiedBy])) !== null
-            ? { level: 'ok', check: 'presence', name: satisfiedBy, message: `present (${group.label}, valid PEM block)` }
-            : {
-                level: 'error',
-                check: 'presence',
-                name: satisfiedBy,
-                message:
-                  'WRONGLY PROVISIONED — set but contains no PEM certificate block; the runtime would ' +
-                  'fail-close on every DB connection (paste the CONTENT of scripts/certs/supabase-ca.pem)',
-              }
-        );
       } else {
         findings.push({ level: 'ok', check: 'presence', name: satisfiedBy, message: `present (${group.label})` });
       }
@@ -398,6 +388,35 @@ function evaluateEnv(env, targetEnv) {
         message: `MISSING — ${group.label} requires one of these to be set${level === 'warn' ? ` (WARN on ${targetEnv}; hard-fail on production)` : ''}`,
       });
     }
+  }
+
+  // OPTIONAL CA-cert override (F1g bundled-CA fold): absent = INFO (the bundled
+  // Supabase root is pinned at runtime); present-inline = must be a real PEM
+  // block (a garbage value overrides the good bundled cert and breaks TLS).
+  const caSatisfiedBy = OPTIONAL_CA_GROUP.anyOf.find((n) => isPresent(env[n]));
+  if (!caSatisfiedBy) {
+    findings.push({
+      level: 'ok',
+      check: 'presence',
+      name: OPTIONAL_CA_GROUP.anyOf.join(' | '),
+      message: 'absent — the runtime pins the BUNDLED Supabase root CA (no override configured; OK)',
+    });
+  } else if (caSatisfiedBy === 'SUPABASE_CA_CERT') {
+    findings.push(
+      normalizeInlinePem(String(env[caSatisfiedBy])) !== null
+        ? { level: 'ok', check: 'presence', name: caSatisfiedBy, message: 'present (CA override, valid PEM block)' }
+        : {
+            level: 'error',
+            check: 'presence',
+            name: caSatisfiedBy,
+            message:
+              'WRONGLY PROVISIONED — set but contains no PEM certificate block; this OVERRIDES the good ' +
+              'bundled cert and breaks TLS. Delete it (the bundled cert is used automatically) or paste ' +
+              'the CONTENT of scripts/certs/supabase-ca.pem.',
+          }
+    );
+  } else {
+    findings.push({ level: 'ok', check: 'presence', name: caSatisfiedBy, message: 'present (CA override, path form)' });
   }
   // ADMIN_MFA_ENFORCED must be exactly 'true' — hard-fail scoped to
   // PRODUCTION only (P4-F0 fold C4, Code Reviewer + GT-7: Spec 113 §3.2's

@@ -98,15 +98,15 @@ describe('verify-vercel-env — evaluateEnv presence (Spec 113 §3/§3.2)', () =
     expect(result.findings.some((f) => f.level === 'error' && f.check === 'presence' && /Supabase project URL/.test(f.message))).toBe(true);
   });
 
-  it('F1g fold: fails when the Supabase CA cert group (inline PEM or path) is entirely absent — the exact gap the first preview build exposed', () => {
+  it('bundled-CA fold: the CA override is now OPTIONAL — absent → INFO ok (the bundled root is pinned at runtime), not a failure', () => {
     const env = validEnv();
     delete env.SUPABASE_CA_CERT;
     const result = vve.evaluateEnv(env, 'production');
-    expect(result.ok).toBe(false);
-    expect(result.findings.some((f) => f.level === 'error' && /CA cert/.test(f.message))).toBe(true);
+    expect(result.ok).toBe(true);
+    expect(result.findings.some((f) => /bundled Supabase root CA/i.test(f.message) && f.level === 'ok')).toBe(true);
   });
 
-  it('Guardian G1 fold: a set-but-garbage SUPABASE_CA_CERT fails the verifier (presence-only would pass it and die at runtime)', () => {
+  it('bundled-CA fold: a set-but-garbage SUPABASE_CA_CERT still fails — a garbage override beats the good bundled cert and breaks TLS', () => {
     const env = validEnv();
     env.SUPABASE_CA_CERT = 'not a pem at all';
     const result = vve.evaluateEnv(env, 'production');
@@ -116,7 +116,7 @@ describe('verify-vercel-env — evaluateEnv presence (Spec 113 §3/§3.2)', () =
     ).toBe(true);
   });
 
-  it('Guardian G1 fold: the path form satisfies the group without content checking (a path is validated at runtime, not here)', () => {
+  it('bundled-CA fold: the path override form satisfies without content checking (validated at runtime)', () => {
     const env = validEnv();
     delete env.SUPABASE_CA_CERT;
     env.SUPABASE_CA_CERT_PATH = './scripts/certs/supabase-ca.pem';

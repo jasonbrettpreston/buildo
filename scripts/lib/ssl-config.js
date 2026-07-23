@@ -11,10 +11,14 @@
  * Rules (Spec 113 §4.2):
  *   - Local `supabase start` / Docker dev DB / CI containers (loopback host,
  *     or explicit local-mode override): no TLS.
- *   - Any non-loopback (cloud Supabase) target: CA-pinned `verify-full`,
- *     reading the CA PEM from SUPABASE_CA_CERT_PATH. THROWS if the env var
- *     or file is missing — fail-fast per Spec 47 §R5. NEVER falls back to
- *     `rejectUnauthorized: false` (banned repo-wide, Spec 113 §4).
+ *   - Any non-loopback (cloud Supabase) target: CA-pinned `verify-full`. CA
+ *     source precedence (F1g fold 2026-07-23): SUPABASE_CA_CERT (inline PEM) >
+ *     SUPABASE_CA_CERT_PATH (file) > the committed bundled Supabase root
+ *     (scripts/certs/supabase-ca.pem). No env var needed — the bundled default
+ *     covers the one host this app targets; env vars are the rotation/override
+ *     path. THROWS only on an explicit-but-unreadable path or an
+ *     unrepairable inline value. NEVER falls back to `rejectUnauthorized:
+ *     false` (banned repo-wide, Spec 113 §4).
  *
  * Twin: `src/lib/db/client.ts` imports `src/lib/db/ssl-config.ts`, a
  * manually-synced TS mirror of this file (ADR-001 dual code path —
@@ -156,8 +160,18 @@ function resolveSslConfig(opts) {
     // from src/lib/db/supabase-ca.ts — the two are byte-identical, drift-
     // locked by src/tests/ssl-config.logic.test.ts). Still CA-pinned verify-
     // full, never rejectUnauthorized:false — a non-Supabase target fails
-    // CLOSED at handshake, not open.
-    return { ca: fs.readFileSync(path.join(__dirname, '..', 'certs', 'supabase-ca.pem'), 'utf8'), rejectUnauthorized: true };
+    // CLOSED at handshake, not open. Observable, not silent (Gemini/Guardian).
+    console.warn('resolveSslConfig: no CA env var set — pinning the bundled Supabase root CA (scripts/certs/supabase-ca.pem)');
+    const bundledPath = path.join(__dirname, '..', 'certs', 'supabase-ca.pem');
+    try {
+      return { ca: fs.readFileSync(bundledPath, 'utf8'), rejectUnauthorized: true };
+    } catch (err) {
+      // Descriptive over a raw ENOENT (Guardian LOW) — still fail-closed.
+      throw new Error(
+        `resolveSslConfig: bundled CA at ${bundledPath} is unreadable (${err.message}) and no CA env ` +
+          'var is set — refusing to fall back to an unverified connection.'
+      );
+    }
   }
 
   let ca;
