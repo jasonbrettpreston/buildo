@@ -27,6 +27,23 @@ export type SslConfigOpts = {
 export const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
 
 /**
+ * Rebuild a canonical PEM from ANY mangled inline form (F1g fold,
+ * 2026-07-23): real newlines (untouched), literal `\n` escapes (unescaped),
+ * or a dashboard-flattened single line with spaces (base64 body re-wrapped
+ * at 64 chars). Returns null when no certificate block is present.
+ * Keep byte-aligned with scripts/lib/ssl-config.js.
+ */
+export function normalizeInlinePem(raw: string): string | null {
+  const unescaped = String(raw).replace(/\\n/g, '\n');
+  const m = unescaped.match(/-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----/);
+  if (!m) return null;
+  const body = (m[1] ?? '').replace(/\s+/g, '');
+  if (!body) return null;
+  const lines = body.match(/.{1,64}/g) || [];
+  return `-----BEGIN CERTIFICATE-----\n${lines.join('\n')}\n-----END CERTIFICATE-----\n`;
+}
+
+/**
  * Resolve the target host from either connection-string style opts
  * (`connectionString` — DATABASE_URL/SUPABASE_DATABASE_URL) or discrete
  * options style (`host` — PG_HOST etc.). Falls back to SUPABASE_DATABASE_URL
@@ -79,7 +96,20 @@ export function resolveSslConfig(opts: SslConfigOpts = {}): PoolConfig['ssl'] {
   // content-in-env is safe. Keep byte-aligned with scripts/lib/ssl-config.js.
   const caCertInline = process.env.SUPABASE_CA_CERT;
   if (caCertInline && caCertInline.trim()) {
-    return { ca: caCertInline, rejectUnauthorized: true };
+    // Dashboard env fields mangle multi-line PEMs (newlines flattened to
+    // spaces or stored as literal \n) — a mangled PEM yields an EMPTY trust
+    // store and the exact SELF_SIGNED_CERT_IN_CHAIN failure the first F1g
+    // runtime hit. Rebuild canonically from any of the three forms; throw
+    // loud if no certificate block survives (never feed garbage to TLS).
+    const ca = normalizeInlinePem(caCertInline);
+    if (!ca) {
+      throw new Error(
+        'resolveSslConfig: SUPABASE_CA_CERT is set but contains no PEM certificate block ' +
+          '(-----BEGIN CERTIFICATE----- … -----END CERTIFICATE-----). Re-paste the cert content ' +
+          '(scripts/certs/supabase-ca.pem) — refusing to fall back to an unverified connection.'
+      );
+    }
+    return { ca, rejectUnauthorized: true };
   }
 
   const caCertPath = opts.caCertPath || process.env.SUPABASE_CA_CERT_PATH;

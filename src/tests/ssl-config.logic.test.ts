@@ -153,6 +153,27 @@ describe('ssl-config — resolveSslConfig', () => {
       expect(result.ca).toContain('FAKE');
     });
 
+    it('MANGLED inline PEM forms all rebuild to the identical canonical cert (the Vercel paste-flattening that caused SELF_SIGNED_CERT_IN_CHAIN)', () => {
+      const canonical = '-----BEGIN CERTIFICATE-----\nFAKEBODY0123\n-----END CERTIFICATE-----\n';
+      const forms = [
+        '-----BEGIN CERTIFICATE-----\nFAKEBODY0123\n-----END CERTIFICATE-----\n', // proper multiline
+        '-----BEGIN CERTIFICATE-----\\nFAKEBODY0123\\n-----END CERTIFICATE-----', // literal \n escapes
+        '-----BEGIN CERTIFICATE----- FAKEBODY0123 -----END CERTIFICATE-----', // dashboard space-flattened
+      ];
+      for (const form of forms) {
+        process.env.SUPABASE_CA_CERT = form;
+        const result = resolveSslConfig({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' }) as { ca: string };
+        expect(result.ca).toBe(canonical);
+      }
+    });
+
+    it('a set-but-garbage SUPABASE_CA_CERT (no certificate block) throws loud — never feeds garbage to TLS', () => {
+      process.env.SUPABASE_CA_CERT = 'definitely not a pem';
+      expect(() => resolveSslConfig({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' })).toThrow(
+        /no PEM certificate block/
+      );
+    });
+
     it('IPv6 loopback literal ([::1] in a connection string) → no TLS', () => {
       expect(
         resolveSslConfig({ connectionString: 'postgres://user:pass@[::1]:5432/buildo' })
