@@ -174,6 +174,25 @@ describe('ssl-config — resolveSslConfig', () => {
       );
     });
 
+    it('a MULTI-CERT bundle is preserved in full — every block rebuilt, in order (Round-2: bundles are standard; never silently truncate)', () => {
+      process.env.SUPABASE_CA_CERT =
+        '-----BEGIN CERTIFICATE----- BODYONE -----END CERTIFICATE----- ' +
+        '-----BEGIN CERTIFICATE----- BODYTWO -----END CERTIFICATE-----';
+      const result = resolveSslConfig({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' }) as { ca: string };
+      expect(result.ca).toContain('BODYONE');
+      expect(result.ca).toContain('BODYTWO');
+      expect(result.ca.indexOf('BODYONE')).toBeLessThan(result.ca.indexOf('BODYTWO'));
+      expect((result.ca.match(/BEGIN CERTIFICATE/g) || []).length).toBe(2);
+    });
+
+    it('a garbage/empty FILE at SUPABASE_CA_CERT_PATH throws loud (Round-2: no opaque OpenSSL no-start-line downstream)', () => {
+      const garbagePath = join(tmpDir, 'garbage.pem');
+      writeFileSync(garbagePath, 'not a pem at all');
+      expect(() =>
+        resolveSslConfig({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co', caCertPath: garbagePath })
+      ).toThrow(/contains no PEM certificate/);
+    });
+
     it('IPv6 loopback literal ([::1] in a connection string) → no TLS', () => {
       expect(
         resolveSslConfig({ connectionString: 'postgres://user:pass@[::1]:5432/buildo' })

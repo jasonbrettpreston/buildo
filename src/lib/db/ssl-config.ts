@@ -35,12 +35,18 @@ export const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
  */
 export function normalizeInlinePem(raw: string): string | null {
   const unescaped = String(raw).replace(/\\n/g, '\n');
-  const m = unescaped.match(/-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----/);
-  if (!m) return null;
-  const body = (m[1] ?? '').replace(/\s+/g, '');
-  if (!body) return null;
-  const lines = body.match(/.{1,64}/g) || [];
-  return `-----BEGIN CERTIFICATE-----\n${lines.join('\n')}\n-----END CERTIFICATE-----\n`;
+  // ALL certificate blocks, in order (Round-2 fold, Gemini+DeepSeek converge):
+  // node's TLS `ca` accepts concatenated PEMs, and CA BUNDLES are standard
+  // practice — silently keeping only the first block would truncate a bundle.
+  const blocks = [...unescaped.matchAll(/-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----/g)];
+  const rebuilt: string[] = [];
+  for (const m of blocks) {
+    const body = (m[1] ?? '').replace(/\s+/g, '');
+    if (!body) continue;
+    const lines = body.match(/.{1,64}/g) || [];
+    rebuilt.push(`-----BEGIN CERTIFICATE-----\n${lines.join('\n')}\n-----END CERTIFICATE-----\n`);
+  }
+  return rebuilt.length > 0 ? rebuilt.join('') : null;
 }
 
 /**
@@ -105,8 +111,9 @@ export function resolveSslConfig(opts: SslConfigOpts = {}): PoolConfig['ssl'] {
     if (!ca) {
       throw new Error(
         'resolveSslConfig: SUPABASE_CA_CERT is set but contains no PEM certificate block ' +
-          '(-----BEGIN CERTIFICATE----- … -----END CERTIFICATE-----). Re-paste the cert content ' +
-          '(scripts/certs/supabase-ca.pem) — refusing to fall back to an unverified connection.'
+          '(-----BEGIN CERTIFICATE----- … -----END CERTIFICATE-----). Ensure the VARIABLE holds the ' +
+          'certificate CONTENT (e.g. the text of scripts/certs/supabase-ca.pem), not a file path — ' +
+          'refusing to fall back to an unverified connection.'
       );
     }
     return { ca, rejectUnauthorized: true };
@@ -131,6 +138,16 @@ export function resolveSslConfig(opts: SslConfigOpts = {}): PoolConfig['ssl'] {
       `resolveSslConfig: could not read CA cert at SUPABASE_CA_CERT_PATH=${caCertPath} ` +
         `(${message}). A non-loopback Postgres target requires CA-pinned verify-full ` +
         'TLS (Spec 113 §4) — refusing to fall back to an unverified connection.'
+    );
+  }
+  // Content validation only (Round-2 fold, Gemini MED): an empty/garbage FILE
+  // previously produced an opaque OpenSSL "no start line" failure downstream.
+  // Validate the same way as the inline form but pass the ORIGINAL bytes —
+  // pre-existing path-form consumers keep byte-identical behavior.
+  if (normalizeInlinePem(ca) === null) {
+    throw new Error(
+      `resolveSslConfig: file at SUPABASE_CA_CERT_PATH=${caCertPath} contains no PEM certificate ` +
+        'block — refusing to fall back to an unverified connection.'
     );
   }
 
