@@ -33,8 +33,30 @@
 
 const fs = require('fs');
 const path = require('path');
+const { X509Certificate } = require('crypto');
 
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
+
+/**
+ * Does `pem` parse as a real X.509 certificate? (F1g fold, 2026-07-23) —
+ * normalizeInlinePem repairs FORMATTING but cannot detect TRUNCATION: a
+ * partial paste re-wraps into a syntactically-valid-looking PEM whose DER is
+ * incomplete, which then fails at the TLS handshake as SELF_SIGNED_CERT. A
+ * real X.509 parse catches it so an unusable configured cert can be IGNORED
+ * in favor of the bundled default. Keep byte-aligned with src/lib/db/ssl-config.ts.
+ * @param {string|null|undefined} pem
+ * @returns {boolean}
+ */
+function isParseableCert(pem) {
+  if (!pem) return false;
+  try {
+    // eslint-disable-next-line no-new
+    new X509Certificate(pem);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Rebuild a canonical PEM from ANY mangled inline form (F1g fold,
@@ -116,86 +138,51 @@ function resolveSslConfig(opts) {
     return undefined;
   }
 
-  // Inline PEM content takes precedence (F1g fold, 2026-07-23): on Vercel
-  // serverless, an env-var FILE PATH cannot work — fs.readFileSync on a
-  // dynamic path is invisible to Next.js output tracing, so the cert file
-  // never lands in the function bundle (build passes, every DB route 500s at
-  // runtime). SUPABASE_CA_CERT carries the certificate CONTENT itself; the
-  // PEM is public (committed at scripts/certs/supabase-ca.pem), so
-  // content-in-env is safe. Keep byte-aligned with src/lib/db/ssl-config.ts.
+  // CA source precedence with VALIDATED fall-through (F1g fold, 2026-07-23):
+  // SUPABASE_CA_CERT (inline) > SUPABASE_CA_CERT_PATH (file) > bundled root.
+  // Each configured source is used ONLY if it parses as a real X.509 cert —
+  // a truncated/garbage env paste re-wraps into a valid-LOOKING PEM whose DER
+  // is incomplete and fails at the TLS handshake as SELF_SIGNED_CERT (the
+  // symptom that burned four preview builds). An unusable source is WARNED and
+  // skipped, never used and never fatal; the committed bundled root is the
+  // guaranteed floor. Every branch returns rejectUnauthorized:true against a
+  // real pinned root — fail-closed preserved; a bad paste can't break the app.
+  // Keep byte-aligned with src/lib/db/ssl-config.ts.
+
+  // (1) inline env content
   const caCertInline = process.env.SUPABASE_CA_CERT;
   if (caCertInline && caCertInline.trim()) {
-    // Both-set ambiguity warn (Guardian G2 fold): a lingering inline paste in
-    // a dev .env silently overrides the path form for every dotenv-loading
-    // script (migrate/restore-db) — make the precedence observable. Fires
-    // ONLY when both are set; single-source configs stay quiet.
     if (process.env.SUPABASE_CA_CERT_PATH) {
-      console.warn(
-        'resolveSslConfig: SUPABASE_CA_CERT (inline) is taking precedence over SUPABASE_CA_CERT_PATH — both are set'
-      );
+      console.warn('resolveSslConfig: SUPABASE_CA_CERT (inline) takes precedence over SUPABASE_CA_CERT_PATH — both are set');
     }
-    // Dashboard env fields mangle multi-line PEMs (newlines flattened to
-    // spaces or stored as literal \n) — a mangled PEM yields an EMPTY trust
-    // store and the exact SELF_SIGNED_CERT_IN_CHAIN failure the first F1g
-    // runtime hit. Rebuild canonically from any of the three forms; throw
-    // loud if no certificate block survives (never feed garbage to TLS).
     const ca = normalizeInlinePem(caCertInline);
-    if (!ca) {
-      throw new Error(
-        'resolveSslConfig: SUPABASE_CA_CERT is set but contains no PEM certificate block ' +
-          '(-----BEGIN CERTIFICATE----- … -----END CERTIFICATE-----). Ensure the VARIABLE holds the ' +
-          'certificate CONTENT (e.g. the text of scripts/certs/supabase-ca.pem), not a file path — ' +
-          'refusing to fall back to an unverified connection.'
-      );
-    }
-    return { ca, rejectUnauthorized: true };
+    if (isParseableCert(ca)) return { ca, rejectUnauthorized: true };
+    console.warn('resolveSslConfig: SUPABASE_CA_CERT is set but is not a parseable X.509 certificate (truncated/garbage?) — IGNORING it and falling through to the bundled Supabase root CA');
   }
 
+  // (2) explicit file path
   const caCertPath = o.caCertPath || process.env.SUPABASE_CA_CERT_PATH;
-  if (!caCertPath) {
-    // Bundled fallback (F1g fold, 2026-07-23): no env var configured → pin the
-    // committed Supabase Root CA. The JS twin runs on a runner/CI where the
-    // committed PEM file is always present, so it reads it directly (the TS
-    // twin, bundled for Vercel where fs is unreliable, imports the constant
-    // from src/lib/db/supabase-ca.ts — the two are byte-identical, drift-
-    // locked by src/tests/ssl-config.logic.test.ts). Still CA-pinned verify-
-    // full, never rejectUnauthorized:false — a non-Supabase target fails
-    // CLOSED at handshake, not open. Observable, not silent (Gemini/Guardian).
-    console.warn('resolveSslConfig: no CA env var set — pinning the bundled Supabase root CA (scripts/certs/supabase-ca.pem)');
-    const bundledPath = path.join(__dirname, '..', 'certs', 'supabase-ca.pem');
+  if (caCertPath) {
     try {
-      return { ca: fs.readFileSync(bundledPath, 'utf8'), rejectUnauthorized: true };
+      const ca = fs.readFileSync(caCertPath, 'utf8');
+      if (isParseableCert(ca)) return { ca, rejectUnauthorized: true };
+      console.warn(`resolveSslConfig: file at SUPABASE_CA_CERT_PATH=${caCertPath} is not a parseable X.509 certificate — IGNORING it and falling through to the bundled Supabase root CA`);
     } catch (err) {
-      // Descriptive over a raw ENOENT (Guardian LOW) — still fail-closed.
-      throw new Error(
-        `resolveSslConfig: bundled CA at ${bundledPath} is unreadable (${err.message}) and no CA env ` +
-          'var is set — refusing to fall back to an unverified connection.'
-      );
+      console.warn(`resolveSslConfig: could not read SUPABASE_CA_CERT_PATH=${caCertPath} (${err.message}) — falling through to the bundled Supabase root CA`);
     }
   }
 
-  let ca;
+  // (3) bundled root — the guaranteed floor (committed PEM, always present in
+  // the runner/CI context; the TS twin imports the byte-identical constant).
+  console.warn('resolveSslConfig: pinning the bundled Supabase root CA (scripts/certs/supabase-ca.pem)');
+  const bundledPath = path.join(__dirname, '..', 'certs', 'supabase-ca.pem');
   try {
-    ca = fs.readFileSync(caCertPath, 'utf8');
+    return { ca: fs.readFileSync(bundledPath, 'utf8'), rejectUnauthorized: true };
   } catch (err) {
     throw new Error(
-      `resolveSslConfig: could not read CA cert at SUPABASE_CA_CERT_PATH=${caCertPath} ` +
-        `(${err.message}). A non-loopback Postgres target requires CA-pinned verify-full ` +
-        'TLS (Spec 113 §4) — refusing to fall back to an unverified connection.'
+      `resolveSslConfig: bundled CA at ${bundledPath} is unreadable (${err.message}) — refusing to fall back to an unverified connection.`
     );
   }
-  // Content validation only (Round-2 fold, Gemini MED): an empty/garbage FILE
-  // previously produced an opaque OpenSSL "no start line" failure downstream.
-  // Validate the same way as the inline form but pass the ORIGINAL bytes —
-  // pre-existing path-form consumers keep byte-identical behavior.
-  if (normalizeInlinePem(ca) === null) {
-    throw new Error(
-      `resolveSslConfig: file at SUPABASE_CA_CERT_PATH=${caCertPath} contains no PEM certificate ` +
-        'block — refusing to fall back to an unverified connection.'
-    );
-  }
-
-  return { ca, rejectUnauthorized: true };
 }
 
-module.exports = { resolveSslConfig, isLocalMode, extractHost, normalizeInlinePem, LOOPBACK_HOSTS };
+module.exports = { resolveSslConfig, isLocalMode, extractHost, normalizeInlinePem, isParseableCert, LOOPBACK_HOSTS };
