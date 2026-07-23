@@ -16,6 +16,7 @@
  */
 import fs from 'fs';
 import type { PoolConfig } from 'pg';
+import { SUPABASE_CA_PEM } from './supabase-ca';
 
 export type SslConfigOpts = {
   connectionString?: string;
@@ -130,12 +131,15 @@ export function resolveSslConfig(opts: SslConfigOpts = {}): PoolConfig['ssl'] {
 
   const caCertPath = opts.caCertPath || process.env.SUPABASE_CA_CERT_PATH;
   if (!caCertPath) {
-    throw new Error(
-      'resolveSslConfig: neither SUPABASE_CA_CERT (inline PEM content) nor ' +
-        'SUPABASE_CA_CERT_PATH is set — a non-loopback Postgres ' +
-        'target requires CA-pinned verify-full TLS (Spec 113 §4). Refusing to connect ' +
-        'without a pinned CA rather than falling back to an unverified connection.'
-    );
+    // Bundled fallback (F1g fold, 2026-07-23): no env var configured → pin the
+    // committed Supabase Root CA compiled into the bundle (src/lib/db/
+    // supabase-ca.ts). This does NOT weaken the fail-closed posture — the
+    // connection is STILL CA-pinned verify-full against the correct public
+    // root, never rejectUnauthorized:false; it only removes the operator's
+    // must-configure step for the one host this app ever targets (Supabase).
+    // A hypothetical non-Supabase non-loopback target still fails CLOSED — at
+    // handshake, when its chain doesn't match this pinned root.
+    return { ca: SUPABASE_CA_PEM, rejectUnauthorized: true };
   }
 
   let ca: string;

@@ -28,6 +28,7 @@
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
 
@@ -148,12 +149,15 @@ function resolveSslConfig(opts) {
 
   const caCertPath = o.caCertPath || process.env.SUPABASE_CA_CERT_PATH;
   if (!caCertPath) {
-    throw new Error(
-      'resolveSslConfig: neither SUPABASE_CA_CERT (inline PEM content) nor ' +
-        'SUPABASE_CA_CERT_PATH is set — a non-loopback Postgres ' +
-        'target requires CA-pinned verify-full TLS (Spec 113 §4). Refusing to connect ' +
-        'without a pinned CA rather than falling back to an unverified connection.'
-    );
+    // Bundled fallback (F1g fold, 2026-07-23): no env var configured → pin the
+    // committed Supabase Root CA. The JS twin runs on a runner/CI where the
+    // committed PEM file is always present, so it reads it directly (the TS
+    // twin, bundled for Vercel where fs is unreliable, imports the constant
+    // from src/lib/db/supabase-ca.ts — the two are byte-identical, drift-
+    // locked by src/tests/ssl-config.logic.test.ts). Still CA-pinned verify-
+    // full, never rejectUnauthorized:false — a non-Supabase target fails
+    // CLOSED at handshake, not open.
+    return { ca: fs.readFileSync(path.join(__dirname, '..', 'certs', 'supabase-ca.pem'), 'utf8'), rejectUnauthorized: true };
   }
 
   let ca;

@@ -7,9 +7,10 @@
 // No DB — pure host-detection + CA-file-read logic.
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { SUPABASE_CA_PEM } from '@/lib/db/supabase-ca';
 type SslConfigOpts = {
   connectionString?: string;
   host?: string;
@@ -84,18 +85,19 @@ describe('ssl-config — resolveSslConfig', () => {
       expect(resolveSslConfig({ host: 'db.example.supabase.co' })).toBeUndefined();
     });
 
-    it('non-loopback host without SUPABASE_CA_CERT_PATH throws (fail-fast, no silent fallback)', () => {
-      expect(() => resolveSslConfig({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' })).toThrow(
-        /SUPABASE_CA_CERT_PATH/
-      );
+    it('non-loopback host with NO env CA → pins the bundled Supabase CA (F1g fold: fail-closed via a pinned root, not a throw)', () => {
+      const result = resolveSslConfig({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' }) as { ca: string; rejectUnauthorized: true };
+      expect(result.rejectUnauthorized).toBe(true); // NEVER an unverified connection
+      expect(result.ca).toContain('BEGIN CERTIFICATE');
+      expect(result.ca).toBe(SUPABASE_CA_PEM);
     });
 
-    it('non-loopback connectionString (SUPABASE_DATABASE_URL form) without CA path throws', () => {
-      expect(() =>
-        resolveSslConfig({
-          connectionString: 'postgresql://postgres:pw@db.gcnatfpacuhsytcbaszi.supabase.co:5432/postgres',
-        })
-      ).toThrow(/SUPABASE_CA_CERT_PATH/);
+    it('non-loopback connectionString (SUPABASE_DATABASE_URL form) with NO env CA → pins the bundled Supabase CA', () => {
+      const result = resolveSslConfig({
+        connectionString: 'postgresql://postgres:pw@db.gcnatfpacuhsytcbaszi.supabase.co:5432/postgres',
+      }) as { ca: string; rejectUnauthorized: true };
+      expect(result.rejectUnauthorized).toBe(true);
+      expect(result.ca).toBe(SUPABASE_CA_PEM);
     });
 
     it('non-loopback host with a missing CA file throws (does not silently continue)', () => {
@@ -204,13 +206,7 @@ describe('ssl-config — resolveSslConfig', () => {
         () => resolveSslConfig({ host: '127.0.0.1' }),
         () => resolveSslConfig({ host: 'localhost' }),
         () => resolveSslConfig({ host: 'db.example.supabase.co', local: true }),
-        () => {
-          try {
-            return resolveSslConfig({ host: 'db.example.supabase.co' });
-          } catch {
-            return undefined; // the throw path IS the "no insecure fallback" guarantee
-          }
-        },
+        () => resolveSslConfig({ host: 'db.example.supabase.co' }), // bundled-CA fallback path
         () => resolveSslConfig({ host: 'db.example.supabase.co', caCertPath }),
       ];
       for (const run of cases) {
@@ -240,9 +236,31 @@ describe('ssl-config — resolveSslConfig', () => {
   it('an explicit host takes precedence over SUPABASE_DATABASE_URL (canonical call sites are never affected by it)', () => {
     process.env.SUPABASE_DATABASE_URL =
       'postgresql://postgres:pw@db.gcnatfpacuhsytcbaszi.supabase.co:5432/postgres';
-    // No SUPABASE_CA_CERT_PATH set — if the explicit loopback host were
-    // overridden by the SUPABASE_DATABASE_URL fallback, this would throw.
+    // Explicit loopback host → no TLS regardless of the SUPABASE_DATABASE_URL fallback.
     expect(jsLib.resolveSslConfig({ host: 'localhost' })).toBeUndefined();
     expect(resolveSslConfigTs({ host: 'localhost' })).toBeUndefined();
+  });
+
+  describe('bundled Supabase CA (F1g fold — build-traced fallback, no operator paste)', () => {
+    const committedPem = readFileSync(join(__dirname, '../../scripts/certs/supabase-ca.pem'), 'utf8');
+
+    it('drift-lock: the bundled TS constant is byte-identical to the committed scripts/certs/supabase-ca.pem', () => {
+      expect(SUPABASE_CA_PEM).toBe(committedPem);
+    });
+
+    it('both twins pin the SAME bundled CA when no env var is set (JS reads the file, TS imports the constant)', () => {
+      // caCertPath deleted in beforeEach; no SUPABASE_CA_CERT either
+      const js = jsLib.resolveSslConfig({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' }) as { ca: string };
+      const ts = resolveSslConfigTs({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' }) as { ca: string };
+      expect(js.ca).toBe(committedPem);
+      expect(ts.ca).toBe(committedPem);
+    });
+
+    it('an explicit env CA (SUPABASE_CA_CERT_PATH) still OVERRIDES the bundled fallback', () => {
+      process.env.SUPABASE_CA_CERT_PATH = caCertPath; // holds FAKE
+      const ts = resolveSslConfigTs({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' }) as { ca: string };
+      expect(ts.ca).toContain('FAKE');
+      expect(ts.ca).not.toBe(committedPem);
+    });
   });
 });
