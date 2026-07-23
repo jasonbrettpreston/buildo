@@ -46,6 +46,7 @@ describe('ssl-config — resolveSslConfig', () => {
   beforeEach(() => {
     process.env = { ...ORIGINAL_ENV };
     delete process.env.SUPABASE_CA_CERT_PATH;
+    delete process.env.SUPABASE_CA_CERT;
     delete process.env.SUPABASE_DATABASE_URL;
     delete process.env.PGSSL_DISABLE;
     tmpDir = mkdtempSync(join(tmpdir(), 'ssl-config-test-'));
@@ -126,6 +127,30 @@ describe('ssl-config — resolveSslConfig', () => {
         ca: expect.stringContaining('BEGIN CERTIFICATE'),
         rejectUnauthorized: true,
       });
+    });
+
+    it('SUPABASE_CA_CERT (inline PEM content, F1g fold) → CA-pinned verify-full with NO file read', () => {
+      process.env.SUPABASE_CA_CERT = '-----BEGIN CERTIFICATE-----\nINLINE\n-----END CERTIFICATE-----\n';
+      const result = resolveSslConfig({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' });
+      expect(result).toEqual({
+        ca: expect.stringContaining('INLINE'),
+        rejectUnauthorized: true,
+      });
+    });
+
+    it('inline SUPABASE_CA_CERT takes precedence over SUPABASE_CA_CERT_PATH', () => {
+      process.env.SUPABASE_CA_CERT = '-----BEGIN CERTIFICATE-----\nINLINE\n-----END CERTIFICATE-----\n';
+      process.env.SUPABASE_CA_CERT_PATH = caCertPath; // holds FAKE, not INLINE
+      const result = resolveSslConfig({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' }) as { ca: string };
+      expect(result.ca).toContain('INLINE');
+      expect(result.ca).not.toContain('FAKE');
+    });
+
+    it('an empty/whitespace SUPABASE_CA_CERT falls through to the path form (never pins an empty CA)', () => {
+      process.env.SUPABASE_CA_CERT = '   ';
+      process.env.SUPABASE_CA_CERT_PATH = caCertPath;
+      const result = resolveSslConfig({ host: 'db.gcnatfpacuhsytcbaszi.supabase.co' }) as { ca: string };
+      expect(result.ca).toContain('FAKE');
     });
 
     it('IPv6 loopback literal ([::1] in a connection string) → no TLS', () => {

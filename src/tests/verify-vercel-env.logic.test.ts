@@ -58,6 +58,9 @@ function validEnv(): Record<string, string | undefined> {
     // 7th critical (operator-ruled 2026-07-22): the integration-injected
     // server key. Server-only var — never public-prefixed, so no Tier-1 scan.
     SUPABASE_SECRET_KEY: 'sb_secret_redactedtestvalue0123456789',
+    // F1g fold: the deployed pool always targets non-loopback — the CA cert
+    // group (inline PEM on Vercel) is required or the build/runtime fail-closes.
+    SUPABASE_CA_CERT: '-----BEGIN CERTIFICATE-----\nTESTPEM\n-----END CERTIFICATE-----',
   };
 }
 
@@ -93,6 +96,14 @@ describe('verify-vercel-env — evaluateEnv presence (Spec 113 §3/§3.2)', () =
     const result = vve.evaluateEnv(env, 'production');
     expect(result.ok).toBe(false);
     expect(result.findings.some((f) => f.level === 'error' && f.check === 'presence' && /Supabase project URL/.test(f.message))).toBe(true);
+  });
+
+  it('F1g fold: fails when the Supabase CA cert group (inline PEM or path) is entirely absent — the exact gap the first preview build exposed', () => {
+    const env = validEnv();
+    delete env.SUPABASE_CA_CERT;
+    const result = vve.evaluateEnv(env, 'production');
+    expect(result.ok).toBe(false);
+    expect(result.findings.some((f) => f.level === 'error' && /CA cert/.test(f.message))).toBe(true);
   });
 
   it('fails when the publishable/anon key group is entirely absent', () => {

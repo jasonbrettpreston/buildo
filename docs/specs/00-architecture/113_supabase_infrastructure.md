@@ -149,6 +149,14 @@ headers). Any new Postgres pool anywhere in the codebase MUST go through the hel
 side (§0.2b pool sweep) or carry an explicit `// LOCAL-ONLY` annotation for
 hardcoded-localhost diagnostic scripts.
 
+**Inline-content form (F1g fold, 2026-07-23):** both helpers accept **`SUPABASE_CA_CERT`** —
+the CA certificate CONTENT itself — taking precedence over `SUPABASE_CA_CERT_PATH`. This is
+the REQUIRED form on Vercel serverless: an env-var file path cannot be traced into the
+function bundle (`fs.readFileSync` on a dynamic path is invisible to Next.js output tracing —
+the first F1g preview build died at collect-page-data on exactly this). The PEM is public
+(committed at `scripts/certs/supabase-ca.pem`); `verify-vercel-env.js` asserts the group
+(inline or path) as a required presence.
+
 ### 4.2 Environment-aware behavior
 
 - **Local `supabase start` + CI containers:** local no-TLS / own-cert mode — the local stack's

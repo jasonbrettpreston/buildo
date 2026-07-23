@@ -100,6 +100,14 @@ const REQUIRED_GROUPS = [
     shape: 'publishable',
   },
   { label: 'Sentry DSN', anyOf: ['SENTRY_DSN', 'NEXT_PUBLIC_SENTRY_DSN'], warnOutsideProduction: true },
+  // F1g fold (2026-07-23, blind spot exposed by the first preview build):
+  // the deployed app's pool ALWAYS targets a non-loopback host, and
+  // resolveSslConfig fail-closes without a pinned CA — the build died at
+  // collect-page-data with SUPABASE_CA_CERT_PATH unset, and this verifier
+  // hadn't asserted it. On Vercel the INLINE form (SUPABASE_CA_CERT, the PEM
+  // content) is the correct one — a file path can't be traced into the
+  // serverless bundle; the path form remains valid for runner/CI contexts.
+  { label: 'Supabase DB CA cert (inline PEM or path)', anyOf: ['SUPABASE_CA_CERT', 'SUPABASE_CA_CERT_PATH'] },
 ];
 
 // DEV_MODE family — must be absent or 'false' in production (§3.2).

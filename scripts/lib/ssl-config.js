@@ -86,10 +86,23 @@ function resolveSslConfig(opts) {
     return undefined;
   }
 
+  // Inline PEM content takes precedence (F1g fold, 2026-07-23): on Vercel
+  // serverless, an env-var FILE PATH cannot work — fs.readFileSync on a
+  // dynamic path is invisible to Next.js output tracing, so the cert file
+  // never lands in the function bundle (build passes, every DB route 500s at
+  // runtime). SUPABASE_CA_CERT carries the certificate CONTENT itself; the
+  // PEM is public (committed at scripts/certs/supabase-ca.pem), so
+  // content-in-env is safe. Keep byte-aligned with src/lib/db/ssl-config.ts.
+  const caCertInline = process.env.SUPABASE_CA_CERT;
+  if (caCertInline && caCertInline.trim()) {
+    return { ca: caCertInline, rejectUnauthorized: true };
+  }
+
   const caCertPath = o.caCertPath || process.env.SUPABASE_CA_CERT_PATH;
   if (!caCertPath) {
     throw new Error(
-      'resolveSslConfig: SUPABASE_CA_CERT_PATH is not set — a non-loopback Postgres ' +
+      'resolveSslConfig: neither SUPABASE_CA_CERT (inline PEM content) nor ' +
+        'SUPABASE_CA_CERT_PATH is set — a non-loopback Postgres ' +
         'target requires CA-pinned verify-full TLS (Spec 113 §4). Refusing to connect ' +
         'without a pinned CA rather than falling back to an unverified connection.'
     );
