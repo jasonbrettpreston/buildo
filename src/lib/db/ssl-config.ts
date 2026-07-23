@@ -29,6 +29,29 @@ export type SslConfigOpts = {
 export const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
 
 /**
+ * Strip libpq SSL query params (`sslmode`, `sslrootcert`, `sslcert`, `sslkey`)
+ * from a Postgres connection string (F1g root-cause fix, 2026-07-23). When a
+ * connection string carries `sslmode=`, node-postgres/pg-connection-string
+ * builds its OWN `ssl` config from it and DISCARDS a separately-passed
+ * `ssl:{ca,...}` object — so our CA-pinned config is silently dropped and TLS
+ * verifies against nothing, throwing SELF_SIGNED_CERT_IN_CHAIN. The Vercel–
+ * Supabase integration injects `POSTGRES_URL` WITH `?sslmode=require`, which is
+ * exactly this trap (reproduced live). Removing these params lets the explicit
+ * `ssl` config from resolveSslConfig govern. Non-ssl params are preserved;
+ * a non-URL/garbage string is returned unchanged (the caller handles it).
+ * Keep byte-aligned with scripts/lib/ssl-config.js.
+ */
+export function stripSslParams(connectionString: string): string {
+  try {
+    const u = new URL(connectionString);
+    for (const p of ['sslmode', 'sslrootcert', 'sslcert', 'sslkey', 'ssl']) u.searchParams.delete(p);
+    return u.toString();
+  } catch {
+    return connectionString;
+  }
+}
+
+/**
  * Rebuild a canonical PEM from ANY mangled inline form (F1g fold,
  * 2026-07-23): real newlines (untouched), literal `\n` escapes (unescaped),
  * or a dashboard-flattened single line with spaces (base64 body re-wrapped
@@ -47,9 +70,14 @@ export const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
  */
 export function isParseableCert(pem: string | null | undefined): boolean {
   if (!pem) return false;
+  // Validate EVERY certificate block (Guardian F3, empirically confirmed):
+  // new X509Certificate(bundle) parses only the FIRST block, so a bundle whose
+  // 2nd+ block is truncated would otherwise pass. A single cert has one block.
+  const blocks = String(pem).match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g);
+  if (!blocks || blocks.length === 0) return false;
   try {
     // eslint-disable-next-line no-new
-    new X509Certificate(pem);
+    for (const b of blocks) new X509Certificate(b);
     return true;
   } catch {
     return false;
@@ -110,9 +138,11 @@ export function isLocalMode(opts: SslConfigOpts): boolean {
  *   source precedence (F1g fold 2026-07-23): SUPABASE_CA_CERT (inline PEM) >
  *   SUPABASE_CA_CERT_PATH (file) > the bundled Supabase root imported from
  *   ./supabase-ca (build-traced for Vercel — no operator config needed; env
- *   vars are the rotation/override path). THROWS only on an explicit-but-
- *   unreadable path or an unrepairable inline value. NEVER falls back to
- *   `rejectUnauthorized: false` (banned repo-wide, Spec 113 §4).
+ *   vars are the rotation/override path). Any UNUSABLE configured source (an
+ *   unreadable path, or an inline/file value that isn't a parseable X.509
+ *   cert — isParseableCert) is WARNED and SKIPPED, not fatal — the bundled
+ *   root is the guaranteed floor. NEVER falls back to `rejectUnauthorized:
+ *   false` (banned repo-wide, Spec 113 §4).
  */
 export function resolveSslConfig(opts: SslConfigOpts = {}): PoolConfig['ssl'] {
   if (isLocalMode(opts)) {

@@ -1,6 +1,6 @@
 import { Pool, PoolClient, QueryResultRow } from 'pg';
 import { logError } from '@/lib/logger';
-import { resolveSslConfig } from './ssl-config';
+import { resolveSslConfig, stripSslParams } from './ssl-config';
 
 // Pool sizing: default is 10, which is too small for admin dashboard
 // routes that fan out 10-20 parallel COUNT queries (e.g. the admin stats +
@@ -66,7 +66,13 @@ const RUNTIME_CONNECTION_STRING = resolveRuntimeConnectionString();
 // setting this used to ship in production (Spec 113 §4 G4) — is retired.
 const poolConfig = RUNTIME_CONNECTION_STRING
   ? {
-      connectionString: RUNTIME_CONNECTION_STRING,
+      // stripSslParams (F1g root-cause fix): a connection string carrying
+      // `sslmode=` makes node-postgres build its own TLS and DISCARD the
+      // `ssl` object below (dropping our pinned CA → SELF_SIGNED_CERT_IN_CHAIN).
+      // Vercel injects POSTGRES_URL with `?sslmode=require`; strip it so the
+      // explicit resolveSslConfig ssl governs. Host detection uses the
+      // ORIGINAL string (params don't affect the host).
+      connectionString: stripSslParams(RUNTIME_CONNECTION_STRING),
       ssl: resolveSslConfig({ connectionString: RUNTIME_CONNECTION_STRING }),
       max: POOL_MAX,
       connectionTimeoutMillis: POOL_CONNECTION_TIMEOUT_MS,

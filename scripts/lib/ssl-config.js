@@ -16,8 +16,10 @@
  *     SUPABASE_CA_CERT_PATH (file) > the committed bundled Supabase root
  *     (scripts/certs/supabase-ca.pem). No env var needed — the bundled default
  *     covers the one host this app targets; env vars are the rotation/override
- *     path. THROWS only on an explicit-but-unreadable path or an
- *     unrepairable inline value. NEVER falls back to `rejectUnauthorized:
+ *     path. Any UNUSABLE configured source (unreadable path, or an inline/file
+ *     value that isn't a parseable X.509 cert — isParseableCert) is WARNED and
+ *     SKIPPED, not fatal — the bundled root is the floor; only a missing/
+ *     corrupt BUNDLED file throws. NEVER falls back to `rejectUnauthorized:
  *     false` (banned repo-wide, Spec 113 §4).
  *
  * Twin: `src/lib/db/client.ts` imports `src/lib/db/ssl-config.ts`, a
@@ -38,6 +40,30 @@ const { X509Certificate } = require('crypto');
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
 
 /**
+ * Strip libpq SSL query params (`sslmode`, `sslrootcert`, `sslcert`, `sslkey`)
+ * from a Postgres connection string (F1g root-cause fix, 2026-07-23). When a
+ * connection string carries `sslmode=`, node-postgres/pg-connection-string
+ * builds its OWN `ssl` config from it and DISCARDS a separately-passed
+ * `ssl:{ca,...}` object — so our CA-pinned config is silently dropped and TLS
+ * verifies against nothing, throwing SELF_SIGNED_CERT_IN_CHAIN. The Vercel–
+ * Supabase integration injects `POSTGRES_URL` WITH `?sslmode=require`, which is
+ * exactly this trap (reproduced live). Removing these params lets the explicit
+ * `ssl` config from resolveSslConfig govern. Keep byte-aligned with
+ * src/lib/db/ssl-config.ts.
+ * @param {string} connectionString
+ * @returns {string}
+ */
+function stripSslParams(connectionString) {
+  try {
+    const u = new URL(connectionString);
+    for (const p of ['sslmode', 'sslrootcert', 'sslcert', 'sslkey', 'ssl']) u.searchParams.delete(p);
+    return u.toString();
+  } catch {
+    return connectionString;
+  }
+}
+
+/**
  * Does `pem` parse as a real X.509 certificate? (F1g fold, 2026-07-23) —
  * normalizeInlinePem repairs FORMATTING but cannot detect TRUNCATION: a
  * partial paste re-wraps into a syntactically-valid-looking PEM whose DER is
@@ -49,9 +75,14 @@ const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
  */
 function isParseableCert(pem) {
   if (!pem) return false;
+  // Validate EVERY certificate block (Guardian F3, empirically confirmed):
+  // new X509Certificate(bundle) parses only the FIRST block, so a bundle whose
+  // 2nd+ block is truncated would otherwise pass. A single cert has one block.
+  const blocks = String(pem).match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g);
+  if (!blocks || blocks.length === 0) return false;
   try {
     // eslint-disable-next-line no-new
-    new X509Certificate(pem);
+    for (const b of blocks) new X509Certificate(b);
     return true;
   } catch {
     return false;
@@ -185,4 +216,4 @@ function resolveSslConfig(opts) {
   }
 }
 
-module.exports = { resolveSslConfig, isLocalMode, extractHost, normalizeInlinePem, isParseableCert, LOOPBACK_HOSTS };
+module.exports = { resolveSslConfig, isLocalMode, extractHost, normalizeInlinePem, isParseableCert, stripSslParams, LOOPBACK_HOSTS };

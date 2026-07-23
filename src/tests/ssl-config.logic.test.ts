@@ -24,8 +24,9 @@ type ResolveSslConfigFn = (opts?: SslConfigOpts) => SslConfigResult;
 const jsLib = require('../../scripts/lib/ssl-config') as {
   resolveSslConfig: ResolveSslConfigFn;
   isParseableCert: (pem: string | null | undefined) => boolean;
+  stripSslParams: (cs: string) => string;
 };
-import { resolveSslConfig as resolveSslConfigTsRaw, isParseableCert as isParseableCertTs } from '@/lib/db/ssl-config';
+import { resolveSslConfig as resolveSslConfigTsRaw, isParseableCert as isParseableCertTs, stripSslParams as stripSslParamsTs } from '@/lib/db/ssl-config';
 // The TS twin's return type is pg's PoolConfig['ssl'] (broader than our
 // {ca, rejectUnauthorized} shape); narrow it here so both twins share one
 // call signature in the table-driven cases below — the assertions
@@ -251,6 +252,27 @@ describe('ssl-config — resolveSslConfig', () => {
         warnSpy.mockRestore();
       }
     });
+  });
+
+  describe('stripSslParams (F1g root-cause fix — sslmode drops the ssl.ca, both twins)', () => {
+    for (const [label, strip] of [
+      ['scripts/lib/ssl-config.js (CJS)', jsLib.stripSslParams],
+      ['src/lib/db/ssl-config.ts (TS twin)', stripSslParamsTs],
+    ] as const) {
+      it(`${label}: removes sslmode + libpq ssl params, preserves the rest`, () => {
+        // the exact Vercel POSTGRES_URL shape
+        expect(strip('postgres://u:p@aws-0-ca-central-1.pooler.supabase.com:6543/postgres?sslmode=require'))
+          .toBe('postgres://u:p@aws-0-ca-central-1.pooler.supabase.com:6543/postgres');
+        // multiple params, ssl-ones removed, non-ssl preserved
+        const out = strip('postgres://u:p@h:6543/db?sslmode=verify-full&sslrootcert=/x&application_name=app&sslcert=/y&sslkey=/z');
+        expect(out).toContain('application_name=app');
+        expect(out).not.toMatch(/sslmode|sslrootcert|sslcert|sslkey/);
+        // no ssl params → unchanged (host/port/path intact)
+        expect(strip('postgres://u:p@h:5432/db')).toContain('h:5432/db');
+        // garbage → returned unchanged, never throws
+        expect(strip('not a url')).toBe('not a url');
+      });
+    }
   });
 
   describe('isParseableCert (F1g fold — X.509 validity gate, both twins)', () => {
