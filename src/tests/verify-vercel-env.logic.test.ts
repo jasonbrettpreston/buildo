@@ -106,6 +106,23 @@ describe('verify-vercel-env — evaluateEnv presence (Spec 113 §3/§3.2)', () =
     expect(result.findings.some((f) => f.level === 'error' && /CA cert/.test(f.message))).toBe(true);
   });
 
+  it('Guardian G1 fold: a set-but-garbage SUPABASE_CA_CERT fails the verifier (presence-only would pass it and die at runtime)', () => {
+    const env = validEnv();
+    env.SUPABASE_CA_CERT = 'not a pem at all';
+    const result = vve.evaluateEnv(env, 'production');
+    expect(result.ok).toBe(false);
+    expect(
+      result.findings.some((f) => f.name === 'SUPABASE_CA_CERT' && f.level === 'error' && /no PEM certificate block/.test(f.message))
+    ).toBe(true);
+  });
+
+  it('Guardian G1 fold: the path form satisfies the group without content checking (a path is validated at runtime, not here)', () => {
+    const env = validEnv();
+    delete env.SUPABASE_CA_CERT;
+    env.SUPABASE_CA_CERT_PATH = './scripts/certs/supabase-ca.pem';
+    expect(vve.evaluateEnv(env, 'production').ok).toBe(true);
+  });
+
   it('fails when the publishable/anon key group is entirely absent', () => {
     const env = validEnv();
     delete env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;

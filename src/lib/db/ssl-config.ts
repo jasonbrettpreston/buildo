@@ -102,6 +102,15 @@ export function resolveSslConfig(opts: SslConfigOpts = {}): PoolConfig['ssl'] {
   // content-in-env is safe. Keep byte-aligned with scripts/lib/ssl-config.js.
   const caCertInline = process.env.SUPABASE_CA_CERT;
   if (caCertInline && caCertInline.trim()) {
+    // Both-set ambiguity warn (Guardian G2 fold): a lingering inline paste in
+    // a dev .env silently overrides the path form for every dotenv-loading
+    // script (migrate/restore-db) — make the precedence observable. Fires
+    // ONLY when both are set; single-source configs stay quiet.
+    if (process.env.SUPABASE_CA_CERT_PATH) {
+      console.warn(
+        'resolveSslConfig: SUPABASE_CA_CERT (inline) is taking precedence over SUPABASE_CA_CERT_PATH — both are set'
+      );
+    }
     // Dashboard env fields mangle multi-line PEMs (newlines flattened to
     // spaces or stored as literal \n) — a mangled PEM yields an EMPTY trust
     // store and the exact SELF_SIGNED_CERT_IN_CHAIN failure the first F1g

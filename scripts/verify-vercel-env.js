@@ -56,6 +56,8 @@
  */
 'use strict';
 
+const { normalizeInlinePem } = require('./lib/ssl-config');
+
 // ---------------------------------------------------------------------------
 // Presence contract (Spec 113 §3 / §3.2)
 // ---------------------------------------------------------------------------
@@ -107,7 +109,10 @@ const REQUIRED_GROUPS = [
   // hadn't asserted it. On Vercel the INLINE form (SUPABASE_CA_CERT, the PEM
   // content) is the correct one — a file path can't be traced into the
   // serverless bundle; the path form remains valid for runner/CI contexts.
-  { label: 'Supabase DB CA cert (inline PEM or path)', anyOf: ['SUPABASE_CA_CERT', 'SUPABASE_CA_CERT_PATH'] },
+  // shape: 'pem' (Guardian G1 fold): the inline var must contain an actual
+  // certificate block — presence-only let garbage pass the verifier and die
+  // at runtime, the exact class this group exists to close.
+  { label: 'Supabase DB CA cert (inline PEM or path)', anyOf: ['SUPABASE_CA_CERT', 'SUPABASE_CA_CERT_PATH'], shape: 'pem' },
 ];
 
 // DEV_MODE family — must be absent or 'false' in production (§3.2).
@@ -363,6 +368,21 @@ function evaluateEnv(env, targetEnv) {
                 message:
                   `WRONGLY PROVISIONED — value is neither an sb_publishable_* key nor an anon-role ` +
                   `legacy JWT (Spec 113 §13 silent key non-provisioning; auth cannot work with this value)`,
+              }
+        );
+      } else if (group.shape === 'pem' && satisfiedBy === 'SUPABASE_CA_CERT') {
+        // Only the INLINE var carries content; the _PATH form is a file path
+        // (unverifiable here — validated at runtime by resolveSslConfig).
+        findings.push(
+          normalizeInlinePem(String(env[satisfiedBy])) !== null
+            ? { level: 'ok', check: 'presence', name: satisfiedBy, message: `present (${group.label}, valid PEM block)` }
+            : {
+                level: 'error',
+                check: 'presence',
+                name: satisfiedBy,
+                message:
+                  'WRONGLY PROVISIONED — set but contains no PEM certificate block; the runtime would ' +
+                  'fail-close on every DB connection (paste the CONTENT of scripts/certs/supabase-ca.pem)',
               }
         );
       } else {
