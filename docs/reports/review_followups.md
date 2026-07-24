@@ -3,6 +3,65 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Weekly Triage — 2026-07-24
+
+**Triaged by:** Automated weekly routine (Spec 05 §6)
+**Triaged on:** 2026-07-24
+**Next triage_after:** 2026-08-21
+**Zombie threshold:** 2026-06-26 (4 weeks ago)
+
+### Summary
+
+| Category | Count |
+|---|---|
+| Total sections | 57 |
+| Total line-items (estimated) | ~210 |
+| Zombies flagged (no `last_reviewed` field existed before this triage) | ALL |
+| PROMOTE → WF3 | 10 |
+| KILL | 5 |
+| CONVERT (to stronger destination per Spec 05 §2) | 4 |
+| DEFER (refreshed, `triage_after: 2026-08-21`) | ~191 |
+
+### PROMOTE → WF3 (Action Required)
+
+| ID | Severity | Finding | Source Section |
+|---|---|---|---|
+| P1 | CRITICAL | Backup-email persistence bridge missing — signup writes backup email to Supabase Auth but never persists to `user_profiles`; mobile reads from wrong table. Planning file: `.cursor/deferred_task_spec93_backup_email_persistence.md` | WF2 Spec 93 WF3-A |
+| P2 | CRITICAL | Auth-state reset placement leaks data on forced sign-out — `resetAuthState()` called after redirect allows stale data read window. Planning file: `.cursor/deferred_task_spec93_authstate_reset_placement.md` | WF2 Spec 93 WF3-B |
+| P3 | HIGH | `@sentry/react-native` v7→v8 upgrade required for RN 0.81 + New Architecture compatibility. Planning file: `.cursor/deferred_task_spec93_sentry_v8_upgrade.md` | WF2 Spec 93 WF3-C |
+| P4 | HIGH×2 | `clampedLimit = NaN` when `input.limit` undefined → PG `LIMIT $5::int` error; `clampedKm = NaN` when `input.radius_km` undefined → `ST_DWithin` returns false → empty feed | WF3 2026-05-08 (neighbourhoods FK-join section) |
+| P5 | HIGH | `builder_candidates LEFT JOIN wsib_per_entity` + `WHERE w.business_size IS NOT NULL` acts as INNER JOIN — silently drops 30–50% of builder leads | WF3 2026-05-08 (neighbourhoods FK-join section) |
+| P6 | HIGH×2 | `computeGfa` falsy-0 on `storeys \|\| 1`; `computeEffectiveArea` falsy-0 on `pct > 0` gate in `cost-model-shared.js` — inflates cost for 0-storey and 0-allocation permits | WF2 #3 2026-05-08 (cost-model-shared.js section) |
+| P7 | HIGH | Orphan cleanup — 14,090 Fire/Security Upgrade rows + 12,026 Designated Structures + 3,657 DeferredFees + ~10,141 wrong realtor rows in `permit_trades` for non-construction permits | Spec 41/80/91 WF2 #2 |
+| P8 | HIGH | `lead_id` separator mismatch: `get-lead-feed.ts:100` builds `permit_num \|\ \|':'\|\ \|revision_num` (colon) but `parseLeadId` expects `--` separator → mobile feed→detail navigation broken | Spec 76 WF2 Cycle 4 P5 |
+| P9 | HIGH | `coa_applications` missing GIST spatial index on `(latitude, longitude)` → 4.4s Parallel Seq Scan on every feed request; BLOCKER before flipping `LEAD_FEED_DISABLE_COA=1` OFF. Migration: `CREATE INDEX CONCURRENTLY ... USING GIST (ST_MakePoint(longitude, latitude)) WHERE latitude IS NOT NULL AND longitude IS NOT NULL` | WF3 #3 CoA UNION arm, item #119 (2026-05-20) |
+| P10 | HIGH | `classify-lifecycle-phase.js` writes unprefixed `P3/P4/P5` for permit intake instead of `INTAKE_P3/P4/P5` → "CoA Approved" shown as completed phase for building permits in inspector lifecycle panel; must fix before any user-visible release of lifecycle panel | WF1 #B Spec 84 bug 84-W11 (2026-05-09) |
+
+### KILL (No Further Action)
+
+| ID | Severity | Finding | Reason |
+|---|---|---|---|
+| K1 | HIGH | Phase F.4 Gemini: "1MB JSON file synchronous parse blocks main thread" | FALSE PREMISE — actual file is 43KB; Gemini misread `9KB × 110 rows` as 1MB; sub-millisecond parse on desktop admin |
+| K2 | CRITICAL | classify-coa-scope.js R5.3 DeepSeek: `lead_id` LPAD truncation collision risk | ALREADY FIXED — commit `4b9ff32` (WF3 #lpad-revision-num-collision) corrected per Spec 42 §6.6.A.1 |
+| K3 | LOW | WF2 #C load-massing.js Gemini: `shoelaceArea` dead code | Dead since WF2 #C — acknowledged technical debt; cost of WF3 exceeds benefit |
+| K4 | LOW | WF2 #C load-massing.js: `SQM_TO_SQFT` constant unused | Same as K3 |
+| K5 | LOW | WF2 #C load-massing.js: `isProjected` variable declared but never used | Same as K3 |
+
+### CONVERT → Stronger Destination (Spec 05 §2)
+
+| ID | Severity | Finding | Destination |
+|---|---|---|---|
+| C1 | MED | MMKV ban lacks automated enforcement — hard rule banning direct `createMMKV().getString()` outside `mobile/src/lib/persistence/` verified manually only | → WF1: ESLint `no-restricted-imports` rule targeting `react-native-mmkv` |
+| C2 | MED | `useUserProfile.ts:enabled` idToken-gate not documented in §B4 spec text | → Doc-only WF2: 5-line spec §B4 edit |
+| C3 | LOW | §8.5 store-enumeration test regex `create<...>(` misses factory pattern | → WF3: fix test file regex |
+| C4 | LOW | §9.21 lint-check comment overstates enforcement — `srcCallerFound` is permanently true via helper file | → Pair with C3 WF3 |
+
+### All other items: DEFER
+`last_reviewed: 2026-07-24` · `triage_after: 2026-08-21`
+
+---
+
+
 ## Phase F.4 (Lead Inspector CoA Classification Panel) — diff-stage 4-reviewer DEFERs (2026-05-17)
 
 Source: 4-reviewer diff-stage round (Gemini + DeepSeek + Independent worktree + Observability worktree) on F.4 v4.1 implementation. 11 BUG findings fixed in commit (1 CRIT + 7 HIGH + 3 MED). Items below are DEFERs.
