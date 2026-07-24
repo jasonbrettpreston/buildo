@@ -4,15 +4,7 @@ import { useState, useEffect } from 'react';
 import { FilterPanel } from '@/components/search/FilterPanel';
 import { PermitFeed } from '@/components/permits/PermitFeed';
 import { MobileNav } from '@/components/layout/MobileNav';
-
-interface DashboardStats {
-  total_permits: number;
-  active_permits: number;
-  permits_this_week: number;
-  coa_total: number;
-  coa_linked: number;
-  coa_upcoming: number;
-}
+import { type DashboardStats, isValidDashboardStats } from '@/lib/admin/dashboard-stats';
 
 export default function DashboardPage() {
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -20,8 +12,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetch('/api/admin/stats')
-      .then((r) => r.json())
-      .then((data) => setStats(data))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setStats(isValidDashboardStats(data) ? data : null))
       .catch(() => {});
   }, []);
 
@@ -58,19 +50,19 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <StatCard
             label="Total Permits"
-            value={stats ? stats.total_permits.toLocaleString() : '--'}
+            value={stats?.total_permits?.toLocaleString() ?? '--'}
           />
           <StatCard
             label="Active Permits"
-            value={stats ? stats.active_permits.toLocaleString() : '--'}
+            value={stats?.active_permits?.toLocaleString() ?? '--'}
           />
           <StatCard
             label="New This Week"
-            value={stats ? stats.permits_this_week.toLocaleString() : '--'}
+            value={stats?.permits_this_week?.toLocaleString() ?? '--'}
           />
           <StatCard
             label="Upcoming Pre-Permits"
-            value={stats ? stats.coa_upcoming.toLocaleString() : '--'}
+            value={stats?.coa_upcoming?.toLocaleString() ?? '--'}
             accent="purple"
           />
         </div>
@@ -79,11 +71,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
           <StatCard
             label="CoA Applications"
-            value={stats ? stats.coa_total.toLocaleString() : '--'}
+            value={stats?.coa_total?.toLocaleString() ?? '--'}
           />
           <StatCard
             label="CoA Linked to Permits"
-            value={stats ? stats.coa_linked.toLocaleString() : '--'}
+            value={stats?.coa_linked?.toLocaleString() ?? '--'}
           />
           <StatCard
             label="CoA Unlinked"

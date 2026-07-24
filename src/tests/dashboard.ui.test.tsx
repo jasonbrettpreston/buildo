@@ -1,6 +1,56 @@
 // 🔗 SPEC LINKS: docs/specs/15_dashboard_tradesperson.md, 16_dashboard_company.md, 17_dashboard_supplier.md
 // Dashboard page logic: stat display, navigation, filter state
 import { describe, it, expect } from 'vitest';
+import { isValidDashboardStats } from '@/lib/admin/dashboard-stats';
+
+// WF3 regression lock: /api/admin/stats returns a truthy error envelope on a
+// 500 (DB failure) — `{ error }` from the route or `{ data: null, error, meta }`
+// from withApiEnvelope. The old client did `setStats(data)` unconditionally, so
+// the error object passed the `stats ?` guard and `stats.total_permits
+// .toLocaleString()` threw on undefined → whole dashboard white-screened.
+// isValidDashboardStats must reject every non-stats shape so the page degrades
+// to `--` instead of crashing.
+describe('Dashboard stats payload guard (white-screen regression)', () => {
+  const VALID = {
+    total_permits: 237000,
+    active_permits: 219000,
+    permits_this_week: 480,
+    coa_total: 33400,
+    coa_linked: 29694,
+    coa_upcoming: 512,
+  };
+
+  it('accepts a well-formed stats payload', () => {
+    expect(isValidDashboardStats(VALID)).toBe(true);
+  });
+
+  it('rejects the route-level 500 error shape', () => {
+    expect(isValidDashboardStats({ error: 'Failed to fetch system statistics' })).toBe(false);
+  });
+
+  it('rejects the withApiEnvelope error envelope', () => {
+    expect(
+      isValidDashboardStats({ data: null, error: { code: 'DATABASE_ERROR', message: 'x' }, meta: null })
+    ).toBe(false);
+  });
+
+  it('rejects null / undefined / non-objects', () => {
+    expect(isValidDashboardStats(null)).toBe(false);
+    expect(isValidDashboardStats(undefined)).toBe(false);
+    expect(isValidDashboardStats('oops')).toBe(false);
+    expect(isValidDashboardStats(42)).toBe(false);
+  });
+
+  it('rejects a partial payload missing a numeric field', () => {
+    const { coa_upcoming, ...partial } = VALID;
+    void coa_upcoming;
+    expect(isValidDashboardStats(partial)).toBe(false);
+  });
+
+  it('rejects a payload with a null field (would throw on .toLocaleString)', () => {
+    expect(isValidDashboardStats({ ...VALID, total_permits: null })).toBe(false);
+  });
+});
 
 describe('Dashboard StatCard Logic', () => {
   function formatStatValue(
