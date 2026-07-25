@@ -17,7 +17,7 @@ on:
 jobs:
   sources:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
-    timeout-minutes: 120     # 90 (chain) + checkout/setup/migrate-verify headroom
+    timeout-minutes: 210     # sources chain runs ~2h (2026-07-25 operator); 180 (chain) + checkout/setup/migrate-verify headroom. GitHub-hosted job ceiling is 360 min.
     concurrency:
       group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name so a
       cancel-in-progress: false       # future rename can't drift the concurrency group out of sync
@@ -61,7 +61,7 @@ jobs:
       - name: Run sources chain
         id: sources
         if: steps.sources_guard.outputs.skip != 'true'
-        timeout-minutes: 90
+        timeout-minutes: 180   # sources runs ~2h (operator 2026-07-25) — 90 killed it mid-chain. 3h covers a slow run; under the 360-min GitHub-hosted job ceiling.
         run: node scripts/run-chain.js sources
         env: *pipeline-env
 
