@@ -249,12 +249,28 @@ describe('settings — manage subscription link', () => {
     expect(settingsSrc).toMatch(/return null/);
   });
 
-  it('opens the billing page via expo-web-browser', () => {
+  it('wires the manage-subscription row to usePortalSession.openPortal', () => {
+    // P26: the static buildo.com/account/billing link was replaced by a
+    // per-tap Stripe Customer Portal session. settings.tsx delegates to
+    // usePortalSession; the browser-open lives in that hook (asserted below).
     const settingsSrc = fs.readFileSync(
       path.join(__dirname, '../app/(app)/settings.tsx'),
       'utf8',
     );
-    expect(settingsSrc).toMatch(/WebBrowser\.openBrowserAsync/);
-    expect(settingsSrc).toMatch(/buildo\.com\/account\/billing/);
+    expect(settingsSrc).toMatch(/usePortalSession/);
+    expect(settingsSrc).toMatch(/openPortal\(\)/);
+  });
+
+  it('opens the Stripe Customer Portal via expo-web-browser (usePortalSession)', () => {
+    // The browser-open + portal endpoint moved out of settings.tsx into the
+    // hook in P26. This is where the old WebBrowser.openBrowserAsync coverage
+    // now lives — pointed at the dynamic portal session, not the retired
+    // static buildo.com/account/billing URL.
+    const portalHookSrc = fs.readFileSync(
+      path.join(__dirname, '../src/hooks/usePortalSession.ts'),
+      'utf8',
+    );
+    expect(portalHookSrc).toMatch(/WebBrowser\.openBrowserAsync/);
+    expect(portalHookSrc).toMatch(/\/api\/subscribe\/portal-session/);
   });
 });
