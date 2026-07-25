@@ -68,25 +68,13 @@ describe('Web Search Enrichment Infrastructure', () => {
     });
   });
 
-  describe('Pipeline Registration', () => {
-    const routePath = path.resolve(__dirname, '../app/api/admin/pipelines/[slug]/route.ts');
-
-    it('route.ts contains enrich_wsib_builders pipeline slug', () => {
-      const content = fs.readFileSync(routePath, 'utf-8');
-      expect(content).toContain('enrich_wsib_builders');
-    });
-
-    it('route.ts contains enrich_named_builders pipeline slug', () => {
-      const content = fs.readFileSync(routePath, 'utf-8');
-      expect(content).toContain('enrich_named_builders');
-    });
-
-    it('route.ts maps both enrichment slugs to enrich-web-search.js', () => {
-      const content = fs.readFileSync(routePath, 'utf-8');
-      expect(content).toContain("enrich_wsib_builders: 'scripts/enrich-web-search.js'");
-      expect(content).toContain("enrich_named_builders: 'scripts/enrich-web-search.js'");
-    });
-  });
+  // "Pipeline Registration" describe DELETED (WF2 route rewrite, 2026-07-25).
+  // These tests asserted the ROUTE mapped the individual enrichment step slugs
+  // (enrich_wsib_builders / enrich_named_builders) to scripts/enrich-web-search.js.
+  // The route no longer maps individual steps to scripts — only chain_* slugs are
+  // dispatchable (individual-step runs are intentionally unsupported on cloud). The
+  // enrichment steps still run inside the entities chain; their manifest wiring is
+  // asserted by the "Chain Orchestrator" describe below (unchanged).
 
   describe('Chain Orchestrator', () => {
     it('manifest.json entities chain contains enrich_wsib_builders and enrich_named_builders', () => {

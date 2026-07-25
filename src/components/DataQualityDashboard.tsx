@@ -106,12 +106,14 @@ interface HealthBannerProps {
 const HealthBanner = React.memo(function HealthBanner({
   pipelineLastRun,
 }: HealthBannerProps) {
+  // CoA first — it runs before Permits (coa→permits combined chain). Cadences
+  // match the 2026-07-20 cron rulings (WF2).
   const CHAINS: { id: string; label: string; cadence: string; rootSlug: string }[] = [
-    { id: 'permits', label: 'Permits', cadence: 'Daily', rootSlug: 'permits' },
     { id: 'coa', label: 'CoA', cadence: 'Daily', rootSlug: 'coa' },
+    { id: 'permits', label: 'Permits', cadence: 'Daily', rootSlug: 'permits' },
     { id: 'entities', label: 'Entities', cadence: 'Daily', rootSlug: 'enrich_wsib_builders' },
-    { id: 'sources', label: 'Sources', cadence: 'Quarterly', rootSlug: 'address_points' },
-    { id: 'deep_scrapes', label: 'Deep Scrapes', cadence: 'Weekly', rootSlug: 'inspections' },
+    { id: 'sources', label: 'Sources', cadence: 'Weekly', rootSlug: 'address_points' },
+    { id: 'deep_scrapes', label: 'Deep Scrapes', cadence: 'Weekdays', rootSlug: 'inspections' },
   ];
 
   const now = Date.now();
@@ -120,6 +122,7 @@ const HealthBanner = React.memo(function HealthBanner({
   function getChainVerdict(info: typeof pipelineLastRun[string] | undefined): { label: string; cls: string } {
     if (!info?.last_run_at) return { label: '—', cls: 'text-gray-400 bg-gray-50 border-gray-200' };
     if (info.status === 'running') return { label: 'RUNNING', cls: 'text-blue-600 bg-blue-50 border-blue-200' };
+    if (info.status === 'cancelled') return { label: 'CANCELLED', cls: 'text-orange-600 bg-orange-50 border-orange-200' };
     if (info.status === 'failed') return { label: 'FAIL', cls: 'text-red-700 bg-red-50 border-red-200' };
     if (info.status === 'completed_with_errors') return { label: 'FAIL', cls: 'text-red-700 bg-red-50 border-red-200' };
     if (info.status === 'completed_with_warnings') return { label: 'WARN', cls: 'text-yellow-700 bg-yellow-50 border-yellow-200' };
@@ -128,7 +131,7 @@ const HealthBanner = React.memo(function HealthBanner({
 
   function getRecordsSummary(info: typeof pipelineLastRun[string] | undefined): string {
     if (!info?.last_run_at) return '';
-    if (info.status === 'running') return '';
+    if (info.status === 'running' || info.status === 'cancelled') return '';
     const n = info.records_new ?? 0;
     if (n > 0) return `${n.toLocaleString()} new`;
     return 'No changes';
@@ -260,8 +263,11 @@ export function DataQualityDashboard() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   // Grace period: keep recently-triggered slugs in runningPipelines even if
-  // they haven't appeared in stats yet (belt-and-suspenders for spawn delay).
-  const TRIGGER_GRACE_MS = 15_000;
+  // they haven't appeared in stats yet. WF2: a dispatched chain runs on the
+  // GitHub Actions runner, which takes ~30–60s to boot (checkout + npm ci +
+  // migrate --verify + PG17 client) before run-chain.js writes the pipeline_runs
+  // row — this is the client-side "dispatching" window until that row lands.
+  const TRIGGER_GRACE_MS = 90_000;
   const triggerTimestamps = useRef<Map<string, number>>(new Map());
 
   const fetchData = useCallback(() => {
@@ -406,10 +412,16 @@ export function DataQualityDashboard() {
     setRunningPipelines((prev) => new Set(prev).add(slug));
     try {
       const res = await fetch(`/api/admin/pipelines/${slug}`, { method: 'POST' });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        throw new Error(body.error || body.message || `Failed with status ${res.status}`);
-      }
+      if (res.ok) return;
+      const body = await res.json().catch(() => null);
+      // §4.4 envelope: error is { code, message }. Tolerate a flat string too.
+      const message = body?.error?.message
+        ?? (typeof body?.error === 'string' ? body.error : body?.message)
+        ?? `HTTP ${res.status}`;
+      // 409 = the chain is already running — keep it shown as running (the next
+      // poll confirms the real row); no red error banner for a non-error case.
+      if (res.status === 409) return;
+      throw new Error(message);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setPipelineErrors((prev) => [...prev, `${slug}: ${msg}`]);
@@ -421,8 +433,11 @@ export function DataQualityDashboard() {
     try {
       const res = await fetch(`/api/admin/pipelines/${slug}`, { method: 'DELETE' });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        throw new Error(body.error || body.message || `Failed with status ${res.status}`);
+        const body = await res.json().catch(() => null);
+        const message = body?.error?.message
+          ?? (typeof body?.error === 'string' ? body.error : body?.message)
+          ?? `HTTP ${res.status}`;
+        throw new Error(message);
       }
       // Don't remove from runningPipelines here — let polling detect the
       // cancelled status naturally. This keeps the Stop button visible and

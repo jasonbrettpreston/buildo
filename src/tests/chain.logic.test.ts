@@ -302,7 +302,9 @@ describe('Entities Chain (4th Pillar)', () => {
 describe('UI Chain Ordering (Dependency Hierarchy)', () => {
   it('renders daily pipelines first, then sources (foundation), then deep_scrapes', () => {
     const ids = PIPELINE_CHAINS.map((c) => c.id);
-    expect(ids).toEqual(['permits', 'coa', 'entities', 'wsib', 'sources', 'deep_scrapes']);
+    // WF2 combined chain (2026-07-25): CoA runs first, then Permits (chain-coa-permits.yml),
+    // so the UI now orders coa before permits.
+    expect(ids).toEqual(['coa', 'permits', 'entities', 'wsib', 'sources', 'deep_scrapes']);
   });
 });
 
@@ -1219,12 +1221,14 @@ describe('Sources chain registration completeness (Bug C11)', () => {
     expect(sources!.steps.length).toBeGreaterThan(0);
   });
 
-  it('chain_sources trigger route maps to run-chain.js', () => {
+  it('chain_sources trigger route maps to its GitHub Actions workflow', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
       'utf-8'
     );
-    expect(source).toContain("chain_sources: 'scripts/run-chain.js'");
+    // WF2 rewrite (2026-07-25): the route dispatches a workflow instead of spawning
+    // run-chain.js. chain_sources now maps to its workflow file, not the script.
+    expect(source).toContain("chain_sources: 'chain-sources.yml'");
   });
 
   it('chain_sources is in CHAIN_SLUGS set', () => {
@@ -1263,19 +1267,11 @@ describe('API Route Chain Row Ownership (B2/B9/B10)', () => {
     'utf-8'
   );
 
-  it('B2: API callback skips status/error_message overwrite for chain slugs', () => {
-    const source = routeSource();
-    // The callback should check isChain and skip the UPDATE for chains,
-    // since run-chain.js manages its own row status and error_message.
-    expect(source).toMatch(/isChain[\s\S]{0,500}skip|isChain[\s\S]{0,500}chain.*manages|!isChain[\s\S]{0,200}UPDATE pipeline_runs/);
-  });
-
-  it('B9: stale-run cleanup marks orphaned running rows as failed', () => {
-    const source = routeSource();
-    // Before starting a new run, there should be a sweep that marks
-    // old running rows (older than timeout) as failed — not just same-slug cancellation.
-    expect(source).toMatch(/running[\s\S]{0,300}(stale|orphan|timeout|older|interval)/i);
-  });
+  // B2 (callback isChain-skip) and B9 (stale-run cleanup sweep) tests DELETED:
+  // the WF2 route rewrite (2026-07-25) no longer spawns run-chain.js and no longer
+  // owns/writes pipeline_runs rows from the route. It dispatches a GitHub Actions
+  // workflow; run-chain.js on the runner owns the rows exactly as before. There is
+  // no route-side callback UPDATE and no stale-run sweep to assert anymore.
 
   it('B6: no empty catch blocks in API route', () => {
     const source = routeSource();
@@ -1290,23 +1286,20 @@ describe('Concurrent chain prevention (B11)', () => {
     'utf-8'
   );
 
-  it('B11: POST returns 409 if process already running for same slug', () => {
+  it('B11: POST returns 409 when the chain is already running (pre-dispatch DB guard)', () => {
     const source = routeSource();
-    // Guard checks runningProcesses map before spawning
-    expect(source).toMatch(/runningProcesses\.get\(slug\)|runningProcesses\.has\(slug\)/);
+    // WF2 rewrite: the concurrency guard is now a pre-dispatch DB check
+    // (anyChainRunning → 409) instead of an in-process runningProcesses map.
+    // A double-click otherwise fires two workflow_dispatches → a duplicate GH run.
+    expect(source).toMatch(/anyChainRunning|status = 'running'/);
     expect(source).toContain('already running');
-    expect(source).toContain('status: 409');
+    expect(source).toContain('ALREADY_RUNNING');
   });
 
-  it('B11: POST kills previous child process when force-cancelling stale rows', () => {
-    const source = routeSource();
-    // Force-cancel path should also SIGTERM the old process
-    const cancelBlock = source.slice(
-      source.indexOf('Force-cancel'),
-      source.indexOf('Stale-run cleanup')
-    );
-    expect(cancelBlock).toMatch(/child\.kill|\.kill\(/);
-  });
+  // B11 "POST kills previous child process" test DELETED: the route no longer
+  // spawns a child process (no child_process / runningProcesses map), so there is
+  // no process to SIGTERM. Cancellation is now a GitHub-run cancel — see
+  // admin-pipeline-dispatch.logic.test.ts for the dispatch/cancel coverage.
 });
 
 describe('Chain Completion Report per-step summary (B3)', () => {

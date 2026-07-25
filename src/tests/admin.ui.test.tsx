@@ -796,7 +796,10 @@ describe('Pipeline Trigger Endpoint', () => {
       path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
       'utf-8'
     );
-    expect(source).toMatch(/ALLOWED_PIPELINES|PIPELINE_SCRIPTS/);
+    // WF2 rewrite (2026-07-25): the dispatchable-slug allowlist is now CHAIN_WORKFLOWS
+    // (only chain_* slugs are dispatchable) — the old ALLOWED_PIPELINES/PIPELINE_SCRIPTS
+    // script map is gone.
+    expect(source).toMatch(/CHAIN_WORKFLOWS|DISPATCHABLE_WORKFLOWS/);
   });
 });
 
@@ -862,56 +865,27 @@ describe('Cross-platform ZIP extraction in load-massing.js', () => {
   });
 });
 
-describe('Pipeline route captures stderr and validates script', () => {
-
-  it('pipeline route captures stderr from child process', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
-      'utf-8'
-    );
-    expect(source).toMatch(/stderr/);
-  });
-
-  it('pipeline route validates script exists before spawn', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
-      'utf-8'
-    );
-    expect(source).toMatch(/existsSync|access/);
-  });
-
-  it('pipeline route spawns script even if pipeline_runs table is missing', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'),
-      'utf-8'
-    );
-    expect(source).toMatch(/try\s*\{[\s\S]*?INSERT INTO pipeline_runs[\s\S]*?\}\s*catch/);
-    expect(source).toMatch(/runId.*null/);
-  });
-});
+// "Pipeline route captures stderr and validates script" describe DELETED
+// (WF2 route rewrite, 2026-07-25). The route no longer spawns a child process, so
+// there is no stderr to capture, no local script to validate with existsSync, and
+// no route-side INSERT INTO pipeline_runs. run-chain.js on the GitHub runner owns
+// the process, stderr, and the pipeline_runs row exactly as before.
 
 describe('Pipeline run concurrency handling', () => {
   const routeSource = () => fs.readFileSync(
     path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
   );
 
-  it('force-cancels stale running rows before inserting a new run', () => {
-    const source = routeSource();
-    expect(source).toContain('Superseded by new run');
-    expect(source).toMatch(/UPDATE pipeline_runs[\s\S]*?SET status = 'cancelled'[\s\S]*?WHERE status = 'running'/);
-  });
+  // "force-cancels stale running rows before inserting a new run" and "no stale
+  // threshold windows" tests DELETED (WF2 route rewrite, 2026-07-25). POST no longer
+  // inserts a pipeline_runs row and no longer force-cancels stale rows ("Superseded
+  // by new run" is gone). Concurrency is now a pre-dispatch DB read (anyChainRunning
+  // over a 12h window → 409) that skips the GitHub dispatch — the 409 guard below.
 
-  it('rejects with 409 when pipeline process is already running (B11)', () => {
+  it('rejects with 409 when the chain is already running (B11)', () => {
     const source = routeSource();
     expect(source).toContain('already running');
-    expect(source).toContain('status: 409');
-  });
-
-  it('no stale threshold windows — all running rows are cancelled', () => {
-    const source = routeSource();
-    // No time-based thresholds — force-cancel everything
-    expect(source).not.toContain("INTERVAL '2 hours'");
-    expect(source).not.toContain("INTERVAL '60 minutes'");
+    expect(source).toContain('ALREADY_RUNNING');
   });
 });
 
@@ -1457,16 +1431,17 @@ describe('FreshnessTimeline pipeline tiles', () => {
 // ---------------------------------------------------------------------------
 
 describe('Pipeline API route fixes', () => {
-  it('API route force-cancels stale DB rows AND guards with 409 for live processes (B11)', () => {
+  it('API route guards with 409 when the chain is already running (B11)', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../../src/app/api/admin/pipelines/[slug]/route.ts'),
       'utf-8'
     );
-    // Force-cancel stale DB rows
-    expect(source).toContain('Superseded by new run');
-    // 409 guard for live processes
+    // WF2 rewrite (2026-07-25): no more spawn / "Superseded by new run" stale-row
+    // force-cancel. The concurrency guard is now a pre-dispatch DB check
+    // (anyChainRunning → 409) that skips the GitHub dispatch when a run is live.
+    expect(source).toMatch(/anyChainRunning|status = 'running'/);
     expect(source).toContain('already running');
-    expect(source).toContain('status: 409');
+    expect(source).toContain('ALREADY_RUNNING');
   });
 
   it('Toggle PATCH uses UPSERT for missing pipeline_schedules rows', () => {
@@ -1845,32 +1820,13 @@ describe('Mobile viewport (375px) — controls always visible', () => {
 // Chain trigger race condition fix — API must insert chain row before spawn
 // ---------------------------------------------------------------------------
 
-describe('Chain trigger inserts pipeline_runs row before spawning process', () => {
-  const routeSource = () => fs.readFileSync(
-    path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
-  );
-
-  it('API route inserts pipeline_runs row for chain slugs (no isChain skip)', () => {
-    const source = routeSource();
-    // The old guard `if (!isChain)` around the INSERT should be removed.
-    // The INSERT should run for ALL pipelines (chains included) so the row
-    // exists immediately when polling starts.
-    expect(source).not.toMatch(/if\s*\(\s*!isChain\s*\)\s*\{[\s\S]*?INSERT INTO pipeline_runs/);
-  });
-
-  it('API route passes runId to chain script as CLI argument', () => {
-    const source = routeSource();
-    // For chains, the runId should be passed so run-chain.js can reuse it
-    expect(source).toMatch(/runId/);
-    expect(source).toMatch(/String\(runId\)/);
-  });
-
-  it('API route parses PIPELINE_SUMMARY from script stdout', () => {
-    const source = routeSource();
-    expect(source).toContain('PIPELINE_SUMMARY');
-    expect(source).toContain('records_total');
-  });
-});
+// "Chain trigger inserts pipeline_runs row before spawning process" describe DELETED
+// (WF2 route rewrite, 2026-07-25). The route no longer inserts a pre-run pipeline_runs
+// row, no longer spawns run-chain.js, no longer passes a runId CLI argument, and no
+// longer parses PIPELINE_SUMMARY from stdout. It dispatches a GitHub Actions workflow;
+// run-chain.js on the runner owns the rows + PIPELINE_SUMMARY exactly as before.
+// The runner-side external-runId acceptance is still covered by the describe below
+// (that one asserts scripts/run-chain.js, which is unchanged).
 
 describe('run-chain.js accepts external run ID argument', () => {
   const chainSource = () => fs.readFileSync(
@@ -2016,14 +1972,16 @@ describe('Stop/cancel button for running chains', () => {
     expect(source).toContain("'cancelled'");
   });
 
-  it('DELETE handler validates slug against ALLOWED_PIPELINES', () => {
+  it('DELETE handler validates slug against the chain allowlist', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
     );
-    // Extract the DELETE function body
+    // WF2 rewrite (2026-07-25): DELETE validates the slug against CHAIN_WORKFLOWS
+    // (rejecting an unmapped slug with 400 "Invalid chain") — the old
+    // ALLOWED_PIPELINES script allowlist is gone.
     const deleteIdx = source.indexOf('async function DELETE');
     const deleteBody = source.slice(deleteIdx, deleteIdx + 500);
-    expect(deleteBody).toContain('ALLOWED_PIPELINES');
+    expect(deleteBody).toContain('CHAIN_WORKFLOWS');
   });
 
   it('Stop button has 44px min touch target', () => {
@@ -2102,20 +2060,21 @@ describe('run-chain.js cancellation check between steps', () => {
 // Fix 4: API route kills child process on DELETE
 // ---------------------------------------------------------------------------
 
-describe('API route kills child process on cancel', () => {
-  it('stores running child processes in a map', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
-    );
-    expect(source).toMatch(/runningProcesses|childProcesses|activeProcesses/);
-  });
+// "API route kills child process on cancel" describe DELETED (WF2 route rewrite,
+// 2026-07-25). The route no longer holds a runningProcesses/child_process map and
+// DELETE no longer SIGTERMs a local child. DELETE now cancels the GitHub Actions
+// run (cancelWorkflowRun) and marks the workflow's chain rows 'cancelled'. The
+// dispatch/cancel path is covered by admin-pipeline-dispatch.logic.test.ts.
+describe('DELETE cancels the GitHub Actions run (WF2 rewrite)', () => {
+  const routeSource = () => fs.readFileSync(
+    path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
+  );
 
-  it('DELETE handler kills the child process', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
-    );
+  it('DELETE calls cancelWorkflowRun and marks chain rows cancelled', () => {
+    const source = routeSource();
     const deleteBody = source.slice(source.indexOf('async function DELETE'));
-    expect(deleteBody).toMatch(/\.kill|process\.kill/);
+    expect(deleteBody).toContain('cancelWorkflowRun');
+    expect(deleteBody).toMatch(/status\s*=\s*'cancelled'/);
   });
 });
 

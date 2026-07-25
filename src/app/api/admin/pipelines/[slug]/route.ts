@@ -1,359 +1,181 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/client';
-import { logError, logWarn } from '@/lib/logger';
-import { spawn, ChildProcess } from 'child_process';
-import path from 'path';
-import fs from 'fs';
+import { logError } from '@/lib/logger';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
-
-/** Track running child processes so DELETE can kill them */
-const runningProcesses = new Map<string, ChildProcess>();
+import { verifyAdminAuth } from '@/lib/auth/verify-admin';
+import { dispatchWorkflow, cancelWorkflowRun, GithubDispatchError } from '@/lib/admin/github-dispatch';
 
 /**
- * Map of allowed pipeline slugs to their script paths (relative to project root).
+ * Admin pipeline trigger — dispatches a GitHub Actions workflow (WF2, 2026-07-25).
+ *
+ * The chains run on the GH runner (Spec 113 §8 / D8). The previous implementation
+ * `spawn`ed run-chain.js inside the Vercel serverless function, which the platform
+ * kills on response return → the pipeline_runs row stuck at 'running'. This route
+ * now dispatches the workflow; run-chain.js on the runner owns pipeline_runs
+ * exactly as before (rows, records_meta, verdict) — the admin panels poll unchanged.
+ *
+ * Only CHAIN slugs are dispatchable; individual-step runs are intentionally
+ * unsupported on cloud (operator decision). coa + permits share the combined
+ * coa→permits workflow.
  */
-const PIPELINE_SCRIPTS: Record<string, string> = {
-  // Ingest (load raw data)
-  permits: 'scripts/load-permits.js',
-  coa: 'scripts/load-coa.js',
-  builders: 'scripts/extract-builders.js',
-  address_points: 'scripts/load-address-points.js',
-  parcels: 'scripts/load-parcels.js',
-  massing: 'scripts/load-massing.js',
-  neighbourhoods: 'scripts/load-neighbourhoods.js',
-  // Link (join data sources)
-  geocode_permits: 'scripts/geocode-permits.js',
-  link_parcels: 'scripts/link-parcels.js',
-  link_neighbourhoods: 'scripts/link-neighbourhoods.js',
-  link_massing: 'scripts/link-massing.js',
-  link_coa: 'scripts/link-coa.js',
-  // Enrich (augment records)
-  enrich_wsib_builders: 'scripts/enrich-web-search.js',
-  enrich_named_builders: 'scripts/enrich-web-search.js',
-  load_wsib: 'scripts/load-wsib.js',
-  link_wsib: 'scripts/link-wsib.js',
-  // Scrape (external portal data)
-  inspections: 'scripts/aic-orchestrator.py',
-  // Classify (derive fields)
-  classify_scope: 'scripts/classify-scope.js',
-  classify_permits: 'scripts/classify-permits.js',
-  // Compute centroids
-  compute_centroids: 'scripts/compute-centroids.js',
-  // Link similar + pre-permits
-  link_similar: 'scripts/link-similar.js',
-  create_pre_permits: 'scripts/create-pre-permits.js',
-  // Snapshot (capture metrics)
-  refresh_snapshot: 'scripts/refresh-snapshot.js',
-  // Quality (CQA validation)
-  assert_schema: 'scripts/quality/assert-schema.js',
-  assert_data_bounds: 'scripts/quality/assert-data-bounds.js',
-  assert_network_health: 'scripts/quality/assert-network-health.js',
-  assert_staleness: 'scripts/quality/assert-staleness.js',
-  assert_pre_permit_aging: 'scripts/quality/assert-pre-permit-aging.js',
-  assert_coa_freshness: 'scripts/quality/assert-coa-freshness.js',
-  // Chain orchestrators
-  chain_permits: 'scripts/run-chain.js',
-  chain_coa: 'scripts/run-chain.js',
-  chain_sources: 'scripts/run-chain.js',
-  chain_entities: 'scripts/run-chain.js',
-  chain_wsib: 'scripts/run-chain.js',
-  chain_deep_scrapes: 'scripts/run-chain.js',
+
+const CHAIN_WORKFLOWS: Record<string, string> = {
+  chain_coa: 'chain-coa-permits.yml',
+  chain_permits: 'chain-coa-permits.yml',
+  chain_sources: 'chain-sources.yml',
+  chain_entities: 'chain-entities.yml',
+  chain_deep_scrapes: 'chain-deep-scrapes.yml',
 };
 
-const CHAIN_SLUGS = new Set(['chain_permits', 'chain_coa', 'chain_sources', 'chain_entities', 'chain_wsib', 'chain_deep_scrapes']);
+/**
+ * The pipeline_runs chain rows each workflow produces (for the 409 guard + the
+ * cancel row-marking). The combined workflow produces BOTH chain_coa and
+ * chain_permits — cancelling must target both (a coa-only cancel would leave
+ * permits running; RC finding).
+ */
+const WORKFLOW_CHAINS: Record<string, string[]> = {
+  'chain-coa-permits.yml': ['chain_coa', 'chain_permits'],
+  'chain-sources.yml': ['chain_sources'],
+  'chain-entities.yml': ['chain_entities'],
+  'chain-deep-scrapes.yml': ['chain_deep_scrapes'],
+};
 
-const ALLOWED_PIPELINES = Object.keys(PIPELINE_SCRIPTS);
+/** Exported for the mapping-existence test (every value must be a real workflow file). */
+export const DISPATCHABLE_WORKFLOWS = CHAIN_WORKFLOWS;
+
+// Engineering Standards §4.4: every response uses the { data, error, meta } envelope.
+function ok(data: unknown, status = 200): NextResponse {
+  return NextResponse.json({ data, error: null, meta: null }, { status });
+}
+function fail(code: string, message: string, status: number): NextResponse {
+  return NextResponse.json({ data: null, error: { code, message }, meta: null }, { status });
+}
+function unauthorized(): NextResponse {
+  return fail('UNAUTHORIZED', 'Admin auth required', 401);
+}
+/** Map a GithubDispatchError to an HTTP status: config→500, network→503, upstream GitHub→502. */
+function ghStatus(err: GithubDispatchError): number {
+  if (err.code === 'NO_TOKEN' || err.code === 'NO_REPO') return 500;
+  if (err.code === 'NETWORK') return 503;
+  return 502; // AUTH / NOT_FOUND / DISPATCH_FAILED — upstream GitHub problem
+}
+
+async function slugParam(context: unknown): Promise<string> {
+  const { slug } = await (context as { params: Promise<{ slug: string }> }).params;
+  return slug;
+}
 
 /**
- * POST /api/admin/pipelines/[slug] - Trigger a manual pipeline run.
- *
- * Creates a pipeline_runs row, spawns the script in the background,
- * and returns immediately with the run ID.
+ * isChainRunning "exact query" (Spec 113 §8.3 / G8): a 'running' row inside the
+ * 12h TTL window. Matches the chain slug directly — run-chain.js inserts
+ * pipeline = chain_<id>, which is exactly the admin slug.
  */
-export const POST = withApiEnvelope(async function POST(
-  request: NextRequest,
-  context?: unknown
-) {
-  // SAFETY: Next.js App Router always passes { params } in context for dynamic segments
-  const { slug } = await (context as { params: Promise<{ slug: string }> }).params;
+async function anyChainRunning(chains: string[]): Promise<boolean> {
+  const rows = await query<{ id: number }>(
+    `SELECT id FROM pipeline_runs
+      WHERE pipeline = ANY($1) AND status = 'running'
+        AND started_at > NOW() - INTERVAL '12 hours'
+      LIMIT 1`,
+    [chains],
+  );
+  return rows.length > 0;
+}
 
-  if (!ALLOWED_PIPELINES.includes(slug)) {
-    return NextResponse.json(
-      { error: `Invalid pipeline: ${slug}. Allowed: ${ALLOWED_PIPELINES.join(', ')}` },
-      { status: 400 }
+/**
+ * POST /api/admin/pipelines/[slug] — dispatch the chain's GitHub Actions workflow.
+ */
+export const POST = withApiEnvelope(async function POST(request: NextRequest, context?: unknown) {
+  const adminCtx = await verifyAdminAuth(request);
+  if (!adminCtx) return unauthorized();
+
+  const slug = await slugParam(context);
+  const workflowFile = CHAIN_WORKFLOWS[slug];
+  if (!workflowFile) {
+    return fail(
+      'INVALID_SLUG',
+      slug.startsWith('chain_')
+        ? `Chain ${slug} has no scheduled workflow and cannot be run from the admin.`
+        : 'Manual step runs are not supported on cloud — run the chain.',
+      400,
     );
   }
 
-  // Validate script exists before spawning
-  const scriptRel = PIPELINE_SCRIPTS[slug];
-  if (!scriptRel) {
-    return NextResponse.json(
-      { error: `No script mapping for pipeline: ${slug}` },
-      { status: 500 }
-    );
-  }
-  const scriptPath = path.resolve(process.cwd(), scriptRel);
-  if (!fs.existsSync(scriptPath)) {
-    return NextResponse.json(
-      { error: `Script not found: ${scriptRel}` },
-      { status: 500 }
-    );
-  }
-
-  const isChain = CHAIN_SLUGS.has(slug);
-
-  // Concurrency guard: reject if a live process is already running for this slug.
-  // Prevents resource contention (B11: concurrent chains slow classify_permits from
-  // ~10 min to 88+ min, exceeding the 1-hour timeout).
-  const existingChild = runningProcesses.get(slug);
-  if (existingChild && !existingChild.killed) {
-    return NextResponse.json(
-      { error: `Pipeline ${slug} is already running` },
-      { status: 409 }
-    );
-  }
-
-  // Force-cancel any previous 'running' rows for this slug.
-  // Previous runs may be stale (dev server restart, process crash) and would
-  // permanently block future runs. Also kill the OS process if still alive.
-  const staleChild = runningProcesses.get(slug);
-  if (staleChild && !staleChild.killed) {
-    staleChild.kill('SIGTERM');
-    runningProcesses.delete(slug);
-  }
+  // Pre-dispatch concurrency guard: without it a double-click fires two dispatches
+  // → GitHub queues a full DUPLICATE serialized run. Reject if the workflow's
+  // chain(s) are already running, giving immediate feedback and skipping the GH call.
+  const chains = WORKFLOW_CHAINS[workflowFile] ?? [slug];
   try {
-    await query(
-      `UPDATE pipeline_runs
-       SET status = 'cancelled', error_message = 'Superseded by new run', completed_at = NOW()
-       WHERE status = 'running'
-         AND pipeline = $1`,
-      [slug]
-    );
+    if (await anyChainRunning(chains)) {
+      return fail('ALREADY_RUNNING', `Pipeline ${slug} is already running`, 409);
+    }
   } catch (err) {
-    logError(`[pipelines/${slug}]`, err, { event: 'cancel_stale_failed' });
+    // A DB error on the guard shouldn't hard-block the operator — the workflow's
+    // own check-chain-running.js guard is a second line of defense (fail-open by design).
+    logError(`[pipelines/${slug}]`, err, { event: 'running_check_failed' });
   }
 
-  // Stale-run cleanup: mark any orphaned 'running' rows older than the timeout
-  // threshold as failed. This catches processes killed by timeout, server restart,
-  // or crash where the callback never fired to update the row.
-  // Exclude LONG_RUNNING pipelines which can legitimately run for 24+ hours.
-  const LONG_RUNNING_PIPELINES = ['enrich_wsib_registry', 'enrich_wsib_builders', 'enrich_named_builders', 'inspections', 'chain_wsib'];
   try {
-    await query(
-      `UPDATE pipeline_runs
-       SET status = 'failed', error_message = 'Process timed out or orphaned — cleaned up on next run', completed_at = NOW()
-       WHERE status = 'running'
-         AND started_at < NOW() - INTERVAL '70 minutes'
-         AND pipeline != ALL($1)`,
-      [LONG_RUNNING_PIPELINES]
-    );
+    await dispatchWorkflow(workflowFile);
+    return ok({ status: 'dispatched', pipeline: slug, workflow: workflowFile });
   } catch (err) {
-    logError(`[pipelines/${slug}]`, err, { event: 'stale_orphan_cleanup_failed' });
-  }
-
-  // Insert tracking row for ALL pipelines (including chains) so the row exists
-  // immediately for UI polling. Chain script receives the runId to avoid duplicates.
-  let runId: number | null = null;
-  try {
-    const rows = await query<{ id: number }>(
-      `INSERT INTO pipeline_runs (pipeline, started_at, status)
-       VALUES ($1, NOW(), 'running')
-       RETURNING id`,
-      [slug]
-    );
-    runId = rows[0]?.id ?? null;
-  } catch (trackErr) {
-    logWarn(`[pipelines/${slug}]`, 'pipeline_runs table not available — running without tracking', { error: trackErr instanceof Error ? trackErr.message : String(trackErr) });
-  }
-
-  // Bug 1 fix: Use spawn (not execFile) — execFile pipes stdin which causes
-  // pg pool.connect() to hang on Windows. spawn with 'ignore' stdin avoids this.
-  // Also supports ?force=true for chain recovery (Bug 2).
-  const forceMode = request.nextUrl.searchParams.get('force') === 'true';
-
-  try {
-    const startMs = Date.now();
-
-    // For chain slugs, pass the chain ID and the pre-created runId so the
-    // chain script reuses it instead of inserting a duplicate tracking row.
-    const args = isChain
-      ? [scriptPath, slug.replace(/^chain_/, ''), ...(runId ? [String(runId)] : []), ...(forceMode ? ['--force'] : [])]
-      : [scriptPath];
-    const LONG_RUNNING = new Set(['enrich_wsib_registry', 'enrich_wsib_builders', 'enrich_named_builders', 'inspections', 'chain_wsib']);
-    const timeout = LONG_RUNNING.has(slug) ? 86_400_000 : isChain ? 7_200_000 : 600_000; // 24h enrichment/scrape, 2h other chains, 10min individual
-
-    // Detect Python scripts and use the correct runtime.
-    const isPython = scriptPath.endsWith('.py');
-    const runtime = isPython
-      ? (process.platform === 'win32' ? 'python' : 'python3')
-      : 'node';
-
-    // spawn with stdin='ignore' to prevent Windows pg connection hang.
-    // stdout/stderr are piped for PIPELINE_SUMMARY/META parsing.
-    const child = spawn(runtime, args, {
-      env: process.env,
-      stdio: ['ignore', 'pipe', 'pipe'],
+    logError(`[pipelines/${slug}]`, err, {
+      event: 'dispatch_failed',
+      code: err instanceof GithubDispatchError ? err.code : undefined,
     });
-
-    // Buffer stdout/stderr for parsing after process exits
-    let stdout = '';
-    let stderr = '';
-    child.stdout.on('data', (data: Buffer) => { stdout += data.toString('utf-8'); });
-    child.stderr.on('data', (data: Buffer) => { stderr += data.toString('utf-8'); });
-
-    // Timeout: kill the process if it exceeds the limit
-    const timeoutHandle = setTimeout(() => {
-      if (!child.killed) {
-        child.kill('SIGTERM');
-        // Give 5s for graceful shutdown, then force-kill
-        setTimeout(() => { if (!child.killed) child.kill('SIGKILL'); }, 5000);
-      }
-    }, timeout);
-
-    child.on('close', async (code) => {
-      clearTimeout(timeoutHandle);
-      runningProcesses.delete(slug);
-
-      const err = code !== 0;
-      if (err) {
-        logError(`[pipelines/${slug}]`, new Error(`Script exited with code ${code}`), {
-          event: 'script_failed', run_id: runId, stderr: stderr?.slice(0, 2000),
-        });
-      }
-
-      // isChain guard: skip the status/error_message UPDATE — run-chain.js
-      // manages its own row. The chain script sets status (completed/failed/cancelled)
-      // and a clean error_message directly. If we overwrite here, we'd replace it
-      // with raw stderr content (assert_schema warnings, JSON log entries, etc.).
-      // The stale-run cleanup (above) handles the case where the chain process
-      // dies without updating its row (timeout, crash).
-      if (isChain) return;
-
-      const durationMs = Date.now() - startMs;
-      const status = err ? 'failed' : 'completed';
-      // Prefer stderr for error details, fall back to exit code
-      const errorMsg = err
-        ? (stderr?.trim() || `Process exited with code ${code}`).slice(0, 4000)
-        : null;
-
-      // Parse PIPELINE_SUMMARY from stdout for record counts + records_meta
-      let recordsTotal: number | null = null;
-      let recordsNew: number | null = null;
-      let recordsUpdated: number | null = null;
-      let recordsMeta: Record<string, unknown> | null = null;
-      // Use last PIPELINE_SUMMARY line — orchestrator emits its aggregate after
-      // workers stream theirs. .match() returns the first; we need the last.
-      const summaryMatches = [...(stdout?.matchAll(/PIPELINE_SUMMARY:(.+)/g) ?? [])];
-      const summaryMatch = summaryMatches.length > 0 ? summaryMatches[summaryMatches.length - 1] : null;
-      if (summaryMatch && summaryMatch[1]) {
-        try {
-          const summary = JSON.parse(summaryMatch[1]);
-          recordsTotal = summary.records_total ?? null;
-          recordsNew = summary.records_new ?? null;
-          recordsUpdated = summary.records_updated ?? null;
-          recordsMeta = summary.records_meta ?? null;
-        } catch (parseErr) { logError(`[pipelines/${slug}]`, parseErr, { event: 'malformed_pipeline_summary' }); }
-      }
-
-      // Parse PIPELINE_META from stdout for self-documented reads/writes
-      const metaMatches = [...(stdout?.matchAll(/PIPELINE_META:(.+)/g) ?? [])];
-      const metaMatch = metaMatches.length > 0 ? metaMatches[metaMatches.length - 1] : null;
-      if (metaMatch && metaMatch[1]) {
-        try {
-          const pipelineMeta = JSON.parse(metaMatch[1]);
-          recordsMeta = { ...(recordsMeta || {}), pipeline_meta: pipelineMeta };
-        } catch (parseErr) { logError(`[pipelines/${slug}]`, parseErr, { event: 'malformed_pipeline_meta' }); }
-      }
-
-      if (runId) {
-        try {
-          await query(
-            `UPDATE pipeline_runs
-               SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,
-                   records_total = COALESCE($5, records_total),
-                   records_new = COALESCE($6, records_new),
-                   records_updated = COALESCE($7, records_updated),
-                   records_meta = COALESCE($8::jsonb, records_meta)
-               WHERE id = $4`,
-            [status, durationMs, errorMsg, runId, recordsTotal, recordsNew, recordsUpdated,
-             recordsMeta ? JSON.stringify(recordsMeta) : null]
-          );
-        } catch (updateErr) {
-          logError(`[pipelines/${slug}]`, updateErr, { event: 'run_update_failed', run_id: runId });
-        }
-      }
-    });
-
-    child.on('error', (spawnErr) => {
-      clearTimeout(timeoutHandle);
-      runningProcesses.delete(slug);
-      logError(`[pipelines/${slug}]`, spawnErr, { event: 'spawn_failed', run_id: runId });
-    });
-
-    // Track process for cancellation
-    runningProcesses.set(slug, child);
-
-    // Detach so the API response isn't blocked
-    child.unref();
-
-    return NextResponse.json({ run_id: runId, pipeline: slug, status: 'running' });
-  } catch (err) {
-    logError(`[pipelines/${slug}]`, err, { event: 'trigger_failed' });
-    return NextResponse.json(
-      { error: 'Failed to trigger pipeline' },
-      { status: 500 }
-    );
+    return err instanceof GithubDispatchError
+      ? fail(err.code, err.message, ghStatus(err))
+      : fail('INTERNAL', 'Failed to dispatch pipeline', 500);
   }
 });
 
 /**
- * DELETE /api/admin/pipelines/[slug] - Cancel a running pipeline/chain.
+ * DELETE /api/admin/pipelines/[slug] — cancel the chain's in-flight run.
  *
- * Sets all 'running' rows for the given slug to 'cancelled'.
+ * Cancels the WHOLE GitHub run (for the combined coa→permits workflow, a DB-row
+ * cancel alone would leave permits to run after coa is cancelled), then marks
+ * every 'running'/'queued' pipeline_runs row for the workflow's chains (and their
+ * scoped step rows) 'cancelled' so the UI reflects it immediately.
  */
-export const DELETE = withApiEnvelope(async function DELETE(
-  _request: NextRequest,
-  context?: unknown
-) {
-  // SAFETY: Next.js App Router always passes { params } in context for dynamic segments
-  const { slug } = await (context as { params: Promise<{ slug: string }> }).params;
+export const DELETE = withApiEnvelope(async function DELETE(request: NextRequest, context?: unknown) {
+  const adminCtx = await verifyAdminAuth(request);
+  if (!adminCtx) return unauthorized();
 
-  if (!ALLOWED_PIPELINES.includes(slug)) {
-    return NextResponse.json(
-      { error: `Invalid pipeline: ${slug}` },
-      { status: 400 }
-    );
+  const slug = await slugParam(context);
+  const workflowFile = CHAIN_WORKFLOWS[slug];
+  if (!workflowFile) {
+    return fail('INVALID_SLUG', `Invalid chain: ${slug}`, 400);
   }
+  const chains = WORKFLOW_CHAINS[workflowFile] ?? [slug];
 
   try {
-    // Kill the running child process if one exists for this slug
-    const child = runningProcesses.get(slug);
-    if (child && !child.killed) {
-      child.kill('SIGTERM');
-      runningProcesses.delete(slug);
-    }
-
-    // Cancel the chain slug itself AND any chain-scoped step rows (e.g. permits:link_similar)
-    const chainPrefix = slug.replace(/^chain_/, '');
+    const { cancelled, runId } = await cancelWorkflowRun(workflowFile);
+    // Mark the chain rows AND their scoped step rows cancelled. run-chain.js names
+    // step rows `<chainId>:<step>` (e.g. `coa:link_similar`), so a `chain_coa` slug
+    // maps to the `coa:%` LIKE pattern. This DB flag is itself a cancel signal —
+    // run-chain.js polls its own row between steps and self-aborts on 'cancelled'
+    // (so the mark is intentionally unconditional, not gated on the GH-run cancel).
     const result = await query<{ id: number }>(
       `UPDATE pipeline_runs
-       SET status = 'cancelled', error_message = 'Cancelled by user', completed_at = NOW()
-       WHERE status = 'running'
-         AND (pipeline = $1 OR pipeline LIKE $2)
-       RETURNING id`,
-      [slug, `${chainPrefix}:%`]
+          SET status = 'cancelled', error_message = 'Cancelled by user', completed_at = NOW()
+        WHERE status IN ('running', 'queued')
+          AND (pipeline = ANY($1) OR pipeline LIKE ANY($2))
+        RETURNING id`,
+      [chains, chains.map((c) => `${c.replace(/^chain_/, '')}:%`)],
     );
-
-    return NextResponse.json({
+    return ok({
       cancelled: result.length,
+      gh_run_cancelled: cancelled,
+      gh_run_id: runId ?? null,
       pipeline: slug,
       status: 'cancelled',
     });
   } catch (err) {
-    logError(`[pipelines/${slug}]`, err, { event: 'cancel_failed' });
-    return NextResponse.json(
-      { error: 'Failed to cancel pipeline' },
-      { status: 500 }
-    );
+    logError(`[pipelines/${slug}]`, err, {
+      event: 'cancel_failed',
+      code: err instanceof GithubDispatchError ? err.code : undefined,
+    });
+    return err instanceof GithubDispatchError
+      ? fail(err.code, err.message, ghStatus(err))
+      : fail('INTERNAL', 'Failed to cancel pipeline', 500);
   }
 });

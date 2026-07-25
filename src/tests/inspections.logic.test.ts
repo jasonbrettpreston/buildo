@@ -811,20 +811,16 @@ describe('Pipeline route wiring for inspections', () => {
   const routePath = path.resolve(__dirname, '../app/api/admin/pipelines/[slug]/route.ts');
   const routeSource = fs.readFileSync(routePath, 'utf-8');
 
-  it('inspections slug maps to aic-orchestrator.py (not legacy JS scraper)', () => {
-    expect(routeSource).toContain("inspections: 'scripts/aic-orchestrator.py'");
-    expect(routeSource).not.toContain("inspections: 'scripts/poc-aic-scraper-v2.js'");
-  });
+  // "inspections slug maps to aic-orchestrator.py" and "spawn logic detects .py"
+  // tests DELETED (WF2 route rewrite, 2026-07-25). The route no longer maps
+  // individual-step slugs and no longer spawns anything — only chain_* slugs are
+  // dispatchable (individual-step runs are intentionally unsupported on cloud), so
+  // there is no inspections→script mapping and no python-runtime detection in the
+  // route to assert. The orchestrator script itself is unchanged (test below).
 
   it('aic-orchestrator.py script exists on disk', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/aic-orchestrator.py');
     expect(fs.existsSync(scriptPath)).toBe(true);
-  });
-
-  it('spawn logic detects .py scripts and uses python runtime', () => {
-    // Route must have logic to choose python/python3 for .py files
-    expect(routeSource).toMatch(/\.py['"`]/);
-    expect(routeSource).toMatch(/python/);
   });
 });
 
@@ -1061,21 +1057,8 @@ describe('classify-permit-phase.js SQL correctness', () => {
   });
 });
 
-describe('PIPELINE_SUMMARY capture uses last occurrence', () => {
-  const routeSource = fs.readFileSync(
-    path.resolve(__dirname, '../app/api/admin/pipelines/[slug]/route.ts'), 'utf-8'
-  );
-
-  it('route.ts captures last PIPELINE_SUMMARY, not first (orchestrator aggregate)', () => {
-    // Workers stream PIPELINE_SUMMARY before the orchestrator emits its aggregate.
-    // .match() returns the first occurrence — must use lastIndexOf or matchAll.
-    const parseBlock = routeSource.slice(
-      routeSource.indexOf('Parse PIPELINE_SUMMARY'),
-      routeSource.indexOf('Parse PIPELINE_META')
-    );
-    // Must NOT use simple .match() which returns the first match
-    expect(parseBlock).not.toMatch(/stdout\?\.match\s*\(\s*\/PIPELINE_SUMMARY/);
-    // Must find the LAST occurrence
-    expect(parseBlock).toMatch(/last|lastIndexOf|reverse|pop|matchAll/i);
-  });
-});
+// "PIPELINE_SUMMARY capture uses last occurrence" describe DELETED (WF2 route
+// rewrite, 2026-07-25). This test asserted the ROUTE parsed PIPELINE_SUMMARY from
+// spawned-script stdout. The route no longer spawns and no longer parses
+// PIPELINE_SUMMARY — run-chain.js on the GitHub runner owns that parsing (unchanged).
+// The route-side assertion has no target anymore.

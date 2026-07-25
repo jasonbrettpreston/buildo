@@ -565,9 +565,10 @@ describe('Pipeline Chains', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 6 chains: permits, coa, entities, wsib, sources, deep_scrapes', () => {
+  it('has exactly 6 chains: coa, permits, entities, wsib, sources, deep_scrapes', () => {
+    // WF2 2026-07-25: CoA ordered before Permits (coa→permits combined chain).
     const ids = PIPELINE_CHAINS.map((c) => c.id);
-    expect(ids).toEqual(['permits', 'coa', 'entities', 'wsib', 'sources', 'deep_scrapes']);
+    expect(ids).toEqual(['coa', 'permits', 'entities', 'wsib', 'sources', 'deep_scrapes']);
   });
 
   it('permits chain has 29 steps ending with backup_db (Phase G removed create_pre_permits)', () => {

@@ -625,6 +625,49 @@ today (developer's own `.env`).
 ---
 
 <architecture>
+## 7a. Admin Manual Trigger — GitHub `workflow_dispatch` (WF2, 2026-07-25)
+
+The admin data-quality page "Run" button no longer executes a chain in-process. The
+previous implementation `spawn`ed `node scripts/run-chain.js` inside the Next.js API route
+(`src/app/api/admin/pipelines/[slug]/route.ts`); on Vercel the serverless sandbox is
+terminated the instant the HTTP response returns, so the detached child was killed before
+it ran and the `pipeline_runs` row stuck at `'running'` (Spec 113 §8.1 — no Vercel function
+ever hosts a chain, manual or scheduled).
+
+**Mechanism.** `POST /api/admin/pipelines/{chain_slug}`:
+1. `verifyAdminAuth` (Spec 33 §5) — first line of both POST and DELETE.
+2. Pre-dispatch guard: the §4 `isChainRunning` query (`pipeline = ANY(chains) AND
+   status='running' AND started_at > NOW() - INTERVAL '12 hours'`) → **409** if the chain
+   (or, for the combined workflow, either `chain_coa`/`chain_permits`) is already running,
+   so a double-click never queues a duplicate run. Fail-open on a DB error — the workflow's
+   own `check-chain-running.js` (§4) is the second guard.
+3. GitHub REST `workflow_dispatch` (`POST /repos/{owner}/{repo}/actions/workflows/{file}/
+   dispatches`, ref = default branch) via `src/lib/admin/github-dispatch.ts`. The run then
+   executes on the GH runner and `run-chain.js` writes `pipeline_runs` **exactly as for a
+   scheduled run** — the admin panels poll unchanged (reporting continuity).
+
+**Chain → workflow map.** `chain_coa` and `chain_permits` both dispatch `chain-coa-permits.yml`
+(coa→permits combined, §2.2); `chain_sources`/`chain_entities`/`chain_deep_scrapes` dispatch
+their own files. **Only chains are dispatchable** — individual-step runs and `chain_wsib`
+(no workflow) return 400. The UI reflects this: CoA = "Run CoA → Permits", Permits = disabled
+"Runs with CoA", WSIB = "GitHub Actions only"; the per-step "Run" buttons are removed.
+
+**Cancel.** `DELETE` cancels the whole GitHub run (`cancelWorkflowRun` lists the workflow's
+in-progress/queued/waiting run and `POST .../runs/{id}/cancel`, needs `actions:read`), then
+marks the workflow's `chain_*` rows and their `<chainId>:%` step rows `'cancelled'`. For the
+combined workflow a DB-row-only cancel would leave permits to run after coa is cancelled, so
+the whole-run cancel is required; the `'cancelled'` DB flag is itself a cancel signal
+`run-chain.js` self-aborts on (§4 poll between steps).
+
+**Env (Vercel).** `GITHUB_DISPATCH_TOKEN` (fine-grained PAT, `actions:read`+`actions:write`,
+this repo), `GITHUB_REPO` (`owner/repo`), `GITHUB_DISPATCH_REF` (default `main`). The token is
+server-side only — never returned, never logged. All route responses use the §4.4
+`{ data, error, meta }` envelope.
+</architecture>
+
+---
+
+<architecture>
 ## 8. Network Restrictions — RESOLVED 2026-07-20
 
 Spec 113 §8.2 documented 3 candidate options (allowlist GitHub's published Actions IP

@@ -63,29 +63,10 @@ describe('WSIB Registry Infrastructure', () => {
     });
   });
 
-  describe('Pipeline Registration', () => {
-    const routePath = path.resolve(__dirname, '../app/api/admin/pipelines/[slug]/route.ts');
-
-    it('route.ts contains load_wsib pipeline slug', () => {
-      const content = fs.readFileSync(routePath, 'utf-8');
-      expect(content).toContain('load_wsib');
-    });
-
-    it('route.ts contains link_wsib pipeline slug', () => {
-      const content = fs.readFileSync(routePath, 'utf-8');
-      expect(content).toContain('link_wsib');
-    });
-
-    it('route.ts maps load_wsib to scripts/load-wsib.js', () => {
-      const content = fs.readFileSync(routePath, 'utf-8');
-      expect(content).toContain("load_wsib: 'scripts/load-wsib.js'");
-    });
-
-    it('route.ts maps link_wsib to scripts/link-wsib.js', () => {
-      const content = fs.readFileSync(routePath, 'utf-8');
-      expect(content).toContain("link_wsib: 'scripts/link-wsib.js'");
-    });
-  });
+  // WF2 2026-07-25: individual-step route mappings (load_wsib/link_wsib →
+  // scripts) were removed — the admin pipeline route now dispatches CHAIN
+  // workflows only, not individual steps. The scripts still exist (covered by
+  // the Pipeline Scripts describe below) and run via the chain on the GH runner.
 
   describe('Pipeline Scripts', () => {
     it('load-wsib.js exists', () => {

@@ -165,12 +165,12 @@ const STEP_TELEMETRY_TABLES: Record<string, string> = (() => {
 // (Spec 47 single source of truth) — adding a step there flows to the UI automatically, removing
 // the hand-maintained-duplicate drift class (WF2 2026-06-11).
 const CHAIN_META: ReadonlyArray<{ id: string; label: string; description: string; comingSoon?: boolean }> = [
-  { id: 'permits',      label: 'Permits Pipeline',            description: 'Daily — when building permits are loaded' },
-  { id: 'coa',          label: 'CoA Pipeline',                description: 'Daily — when Committee of Adjustment data is loaded' },
+  { id: 'coa',          label: 'CoA Pipeline',                description: 'Daily — Committee of Adjustment; runs first, then Permits' },
+  { id: 'permits',      label: 'Permits Pipeline',            description: 'Daily — runs automatically after CoA (combined chain)' },
   { id: 'entities',     label: 'Corporate Entities Pipeline', description: 'Daily — missing contact enrichment via web scraping' },
-  { id: 'wsib',         label: 'WSIB Enrichment',             description: 'Annual — enrich WSIB registry with contact data via web search' },
-  { id: 'sources',      label: 'Source Data Updates',         description: 'Quarterly/Annual — reference data refreshes' },
-  { id: 'deep_scrapes', label: 'Deep Scrapes',                description: 'Weekly — AIC portal inspection scraping via REST API' },
+  { id: 'wsib',         label: 'WSIB Enrichment',             description: 'No scheduled workflow — run via GitHub Actions if needed' },
+  { id: 'sources',      label: 'Source Data Updates',         description: 'Weekly — reference data refreshes' },
+  { id: 'deep_scrapes', label: 'Deep Scrapes',                description: 'Weekdays ×3/day — AIC portal inspection scraping' },
 ];
 
 export const PIPELINE_CHAINS: PipelineChain[] = CHAIN_META.map((meta) => ({
@@ -523,17 +523,28 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
           const chainSlug = `chain_${chain.id}`;
           const isChainRunning = runningPipelines.has(chainSlug);
 
+          // WF2: only chains with a GitHub Actions workflow are dispatchable from
+          // the admin (the run executes on the GH runner, not Vercel). Permits runs
+          // as part of the combined CoA→Permits workflow — no independent Run; WSIB
+          // has no scheduled workflow.
+          const DISPATCHABLE_CHAINS = new Set(['coa', 'sources', 'entities', 'deep_scrapes']);
+          const isDispatchable = DISPATCHABLE_CHAINS.has(chain.id);
+          const runsWithCoa = chain.id === 'permits';
           // Disable Run All if chain is coming soon or all toggleable steps are disabled
           const toggleableSteps = chain.steps.filter((s) => !NON_TOGGLEABLE_SLUGS.has(s.slug));
           const allStepsDisabled = toggleableSteps.length > 0 &&
             toggleableSteps.every((s) => disabledPipelines?.has(s.slug));
-          const runAllDisabled = isChainRunning || !!chain.comingSoon || allStepsDisabled;
+          const runAllDisabled = isChainRunning || !!chain.comingSoon || allStepsDisabled || !isDispatchable;
           const runAllLabel = chain.comingSoon
             ? 'Coming Soon'
+            : !isDispatchable
+            ? (runsWithCoa ? 'Runs with CoA' : 'GitHub Actions only')
             : allStepsDisabled
             ? 'All Steps Disabled'
             : isChainRunning
             ? 'Running...'
+            : chain.id === 'coa'
+            ? 'Run CoA → Permits'
             : 'Run All';
 
           return (
@@ -898,23 +909,9 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 <span className="md:hidden">&#128269;</span>
                               </Link>
                             )}
-                            {/* Run button — hidden for infrastructure steps */}
-                            {!NON_TOGGLEABLE_SLUGS.has(step.slug) && (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleRun(step.slug); }}
-                                disabled={isRunning || isDisabled}
-                                className={`text-[9px] px-2.5 py-1 rounded border min-h-[44px] ${
-                                  isRunning
-                                    ? 'border-blue-200 text-blue-400 cursor-not-allowed'
-                                    : isDisabled
-                                    ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                                    : 'border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                                }`}
-                              >
-                                <span className="hidden md:inline">Run</span>
-                                <span className="md:hidden">&#9654;</span>
-                              </button>
-                            )}
+                            {/* WF2: per-step Run removed — individual steps are not
+                                dispatchable on cloud; runs go through the chain
+                                (GitHub Actions). The enable/disable toggle stays. */}
 
                             {/* Toggle switch — hidden for infrastructure steps */}
                             {onToggle && !NON_TOGGLEABLE_SLUGS.has(step.slug) && (
