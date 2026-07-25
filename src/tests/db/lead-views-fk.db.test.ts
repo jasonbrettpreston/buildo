@@ -14,9 +14,26 @@ import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 const pool = getTestPool();
 
+// mig 229 converted lead_views.user_id varchar→uuid with a FK to
+// auth.users(id), so the child lead_views INSERT now needs a real uuid
+// user_id AND a matching auth.users parent row. IMPORTANT: the cascade
+// UNDER TEST here is still the migration-070 PERMITS FK — deleting the
+// parent PERMIT cascade-deletes the lead_views row. That topology is
+// unchanged by mig 229 (only the user_id column type/FK changed), so the
+// auth.users row is a seed prerequisite, NOT the cascade source; the test's
+// intent (permit purge removes orphaned lead_views) is preserved verbatim.
+// uuid prefix `1eadf000-` ('lead'/'f000' are valid hex digits).
+const FK_TEST_UID = '1eadf000-0000-4000-8000-000000000001';
+
 describe.skipIf(!dbAvailable())('migration 070 — lead_views FK CASCADE', () => {
   beforeAll(async () => {
     if (!pool) return;
+    // Seed the auth.users parent first (mig 229 FK prerequisite for the
+    // lead_views child insert below).
+    await pool.query(
+      `INSERT INTO auth.users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
+      [FK_TEST_UID],
+    );
     // Insert a parent permit + a child lead_views row pointing at it.
     await pool.query(`
       INSERT INTO permits (permit_num, revision_num, permit_type, status,
@@ -28,16 +45,19 @@ describe.skipIf(!dbAvailable())('migration 070 — lead_views FK CASCADE', () =>
     `);
     await pool.query(
       `INSERT INTO lead_views (user_id, lead_key, lead_type, permit_num, revision_num, entity_id, trade_slug, viewed_at, saved)
-       VALUES ('fk-test-uid', 'permit:FK 999001:00', 'permit', 'FK 999001', '00', NULL, 'plumbing', NOW(), false)
+       VALUES ($1, 'permit:FK 999001:00', 'permit', 'FK 999001', '00', NULL, 'plumbing', NOW(), false)
        ON CONFLICT DO NOTHING`,
+      [FK_TEST_UID],
     );
   });
 
   afterAll(async () => {
     if (!pool) return;
     // Defensive cleanup in case the cascade test was skipped or partial.
-    await pool.query("DELETE FROM lead_views WHERE user_id = 'fk-test-uid'");
+    await pool.query(`DELETE FROM lead_views WHERE user_id = $1`, [FK_TEST_UID]);
     await pool.query("DELETE FROM permits WHERE permit_num = 'FK 999001'");
+    // Parent identity row last (its lead_views children are already gone).
+    await pool.query(`DELETE FROM auth.users WHERE id = $1`, [FK_TEST_UID]);
     await pool.end();
   });
 
@@ -45,7 +65,8 @@ describe.skipIf(!dbAvailable())('migration 070 — lead_views FK CASCADE', () =>
     if (!pool) return;
     // Sanity: row exists pre-delete.
     const before = await pool.query<{ c: string }>(
-      "SELECT COUNT(*)::text AS c FROM lead_views WHERE user_id = 'fk-test-uid'",
+      `SELECT COUNT(*)::text AS c FROM lead_views WHERE user_id = $1`,
+      [FK_TEST_UID],
     );
     expect(Number(before.rows[0]?.c)).toBe(1);
 
@@ -54,7 +75,8 @@ describe.skipIf(!dbAvailable())('migration 070 — lead_views FK CASCADE', () =>
 
     // Child should be gone.
     const after = await pool.query<{ c: string }>(
-      "SELECT COUNT(*)::text AS c FROM lead_views WHERE user_id = 'fk-test-uid'",
+      `SELECT COUNT(*)::text AS c FROM lead_views WHERE user_id = $1`,
+      [FK_TEST_UID],
     );
     expect(Number(after.rows[0]?.c)).toBe(0);
   });

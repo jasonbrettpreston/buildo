@@ -32,7 +32,7 @@
     "review:gemini": "node scripts/gemini-review.js",
     "review:deepseek": "node scripts/deepseek-review.js",
     "generate:script": "node scripts/generate-script.mjs",
-    "test:db": "BUILDO_TEST_DB=1 vitest run src/tests/db",
+    "test:db": "BUILDO_TEST_DB=1 vitest run src/tests/db --no-file-parallelism",
     "test:property": "vitest run src/tests/property",
     "test:mutation": "stryker run",
     "test:mutation:dry": "stryker run --dryRunOnly"

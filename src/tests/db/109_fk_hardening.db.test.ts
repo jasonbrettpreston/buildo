@@ -26,13 +26,33 @@ const P2 = 'FK109-002';
 const REV = '00';
 // Neighbourhood identifier from the Toronto source data (not the SERIAL id).
 const TEST_NEIGH_SRC_ID = 99901;
+// Migration 229 (Supabase Phase 1, D6) converted tracked_projects.user_id to
+// UUID with a real FK to auth.users(id) ON DELETE CASCADE. The pre-229 string
+// sentinel ('fk109-user') now fails the INSERT with 22P02 (invalid uuid) /
+// 23503 (FK violation). Fixture user is a real auth.users row, following the
+// pattern in offboarding-sweep.db.test.ts / lead-detail-saved-state.db.test.ts:
+// self-detect auth.users availability and skip the FK-dependent cases gracefully
+// when it is absent (a bare-postgis container without the Supabase auth schema).
+const FK109_USER_ID = 'fc109000-0000-4000-8000-000000000001';
 
 describe.skipIf(!dbAvailable())('migration 109 — Tier 2 FK hardening', () => {
   let syncRunId: number;
   let neighbourhoodSerialId: number;
+  let hasAuthUsers = false;
 
   beforeAll(async () => {
     if (!pool) return;
+
+    const authCheck = await pool.query<{ has_auth: boolean }>(
+      `SELECT to_regclass('auth.users') IS NOT NULL AS has_auth`,
+    );
+    hasAuthUsers = authCheck.rows[0]?.has_auth === true;
+    if (hasAuthUsers) {
+      await pool.query(
+        `INSERT INTO auth.users (id) VALUES ($1) ON CONFLICT DO NOTHING`,
+        [FK109_USER_ID],
+      );
+    }
 
     await pool.query(
       `INSERT INTO permits (permit_num, revision_num)
@@ -66,6 +86,11 @@ describe.skipIf(!dbAvailable())('migration 109 — Tier 2 FK hardening', () => {
       `DELETE FROM neighbourhoods WHERE neighbourhood_id = $1`,
       [TEST_NEIGH_SRC_ID],
     );
+    // Removing the auth.users parent CASCADEs away any tracked_projects rows
+    // seeded under FK109_USER_ID (mig 229 fk_tracked_projects_user).
+    if (hasAuthUsers) {
+      await pool.query(`DELETE FROM auth.users WHERE id = $1`, [FK109_USER_ID]);
+    }
     await pool.end();
   });
 
@@ -178,13 +203,13 @@ describe.skipIf(!dbAvailable())('migration 109 — Tier 2 FK hardening', () => {
 
   describe('fk_tracked_projects_permits — CASCADE', () => {
     it('accepts tracked_projects row with a valid parent permit', async () => {
-      if (!pool) return;
+      if (!pool || !hasAuthUsers) return;
       await expect(
         pool.query(
           `INSERT INTO tracked_projects (user_id, permit_num, revision_num, trade_slug)
-           VALUES ('fk109-user', $1, $2, 'plumbing')
+           VALUES ($1, $2, $3, 'plumbing')
            ON CONFLICT DO NOTHING`,
-          [P1, REV],
+          [FK109_USER_ID, P1, REV],
         ),
       ).resolves.toBeDefined();
     });
@@ -196,11 +221,12 @@ describe.skipIf(!dbAvailable())('migration 109 — Tier 2 FK hardening', () => {
     // canonical anchor now. The two specs below codify the NEW behavior.
 
     it('accepts tracked_projects row referencing a non-existent permit (mig 153 dropped fk_tracked_projects_permits for CoA support)', async () => {
-      if (!pool) return;
+      if (!pool || !hasAuthUsers) return;
       await expect(
         pool.query(
           `INSERT INTO tracked_projects (user_id, permit_num, revision_num, trade_slug)
-           VALUES ('fk109-user', 'ORPHAN-109', '00', 'plumbing')`,
+           VALUES ($1, 'ORPHAN-109', '00', 'plumbing')`,
+          [FK109_USER_ID],
         ),
       ).resolves.toBeDefined();
       // cleanup
@@ -208,14 +234,15 @@ describe.skipIf(!dbAvailable())('migration 109 — Tier 2 FK hardening', () => {
     });
 
     it('does NOT cascade-delete tracked_projects when the parent permit is deleted (mig 153 dropped CASCADE)', async () => {
-      if (!pool) return;
+      if (!pool || !hasAuthUsers) return;
       await pool.query(
         `INSERT INTO permits (permit_num, revision_num)
          VALUES ('FK109-TP-CAS', '00') ON CONFLICT DO NOTHING`,
       );
       await pool.query(
         `INSERT INTO tracked_projects (user_id, permit_num, revision_num, trade_slug)
-         VALUES ('fk109-user', 'FK109-TP-CAS', '00', 'electrical')`,
+         VALUES ($1, 'FK109-TP-CAS', '00', 'electrical')`,
+        [FK109_USER_ID],
       );
 
       await pool.query(`DELETE FROM permits WHERE permit_num = 'FK109-TP-CAS'`);

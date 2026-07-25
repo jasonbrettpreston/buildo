@@ -57,7 +57,7 @@ export const T3_GROUPS: Record<GroupKey, readonly string[]> = {
   lot_address: [
     'address_number', 'linear_name_full', 'addr_num_normalized', 'street_name_normalized',
     'street_type_normalized', 'stated_area_raw', 'frontage_m', 'frontage_ft', 'depth_m', 'depth_ft',
-    'lot_size_confidence', 'lot_size_basis',
+    'lot_size_confidence', 'lot_size_basis', 'lot_size_source',
   ],
   zoning: [
     'zoning_class', 'zoning_zn_string', 'zoning_gen_zone', 'zoning_holding', 'zone_status',

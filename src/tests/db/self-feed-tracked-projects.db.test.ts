@@ -20,8 +20,12 @@ const { runSelfFeed } = require('../../../scripts/lib/self-feed-tracked-projects
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 const pool = getTestPool();
-const U = 'p9a_selffeed_user';
-const U2 = 'p9a_selffeed_user2';
+// mig 229 converted lead_views.user_id / tracked_projects.user_id varchar→uuid and
+// added FKs to auth.users(id). U/U2 are real uuids sharing this file's own hex
+// prefix '9a5e0000-' (distinct from the dispatch file's '25e00000-'); cleanup below
+// is IN-scoped to exactly these two ids. PN is a permit_num (text) — left as-is.
+const U = '9a5e0000-0000-4000-8000-000000000001';
+const U2 = '9a5e0000-0000-4000-8000-000000000002';
 const PN = 'P9A-TEST-0001';
 const RUN_AT = '2026-07-07T12:00:00Z';
 
@@ -31,11 +35,18 @@ describe.skipIf(!dbAvailable())('self-feed tracked_projects (Spec 82 KFM-1)', ()
   async function cleanup() {
     await pool!.query(`DELETE FROM tracked_projects WHERE user_id IN ($1,$2)`, [U, U2]);
     await pool!.query(`DELETE FROM lead_views WHERE user_id IN ($1,$2)`, [U, U2]);
+    await pool!.query(`DELETE FROM auth.users WHERE id IN ($1,$2)`, [U, U2]);
     await pool!.query(`DELETE FROM permits WHERE permit_num = $1`, [PN]);
   }
 
   beforeEach(async () => {
     await cleanup();
+    // lead_views/tracked_projects.user_id FK auth.users(id) since mig 229 —
+    // the identity rows must exist before any fixture insert.
+    await pool!.query(
+      `INSERT INTO auth.users (id) VALUES ($1),($2) ON CONFLICT (id) DO NOTHING`,
+      [U, U2],
+    );
     // Minimal permits row for the lead_views permit-side FK.
     await pool!.query(
       `INSERT INTO permits (permit_num, revision_num, first_seen_at, last_seen_at,

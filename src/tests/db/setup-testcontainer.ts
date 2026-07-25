@@ -78,7 +78,78 @@ export async function setup(): Promise<() => Promise<void>> {
   };
 }
 
+// Minimal Supabase baseline the migration set legitimately depends on but a
+// bare postgis/postgis image does not provide. On the real target (Supabase
+// local stack + cloud) GoTrue always creates the `auth` schema, `auth.users`,
+// `auth.uid()`, and the `anon`/`authenticated`/`service_role` roles;
+// migrations 226/228/229/230/231/233/234/235 reference them (FK to auth.users,
+// RLS policies calling auth.uid(), and un-guarded GRANT/REVOKE on those roles —
+// e.g. mig 233 `REVOKE ... FROM anon, authenticated`). Without this, migrate.js
+// aborts globalSetup (first at mig 226 `schema "auth" does not exist`, then at
+// mig 233 `role "anon" does not exist`) and the ENTIRE db-test suite fails
+// before a single test runs. This is the CI image's counterpart to PostGIS
+// being pre-baked: a foundational baseline the real target always has. The
+// OPTIONAL Supabase extensions (pg_cron/pg_net/vault) are self-guarded inside
+// their own migrations (224/232/233/234) and correctly skip on this image —
+// only the auth schema + roles are foundational and (partly) unguarded.
+// Kept to exactly the referenced surface: auth.users(id), auth.uid(), 3 roles.
+const SUPABASE_AUTH_BASELINE_SQL = `
+  DO $roles$
+  BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+      CREATE ROLE anon NOLOGIN NOINHERIT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+      CREATE ROLE authenticated NOLOGIN NOINHERIT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+      CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+    END IF;
+  END
+  $roles$;
+
+  CREATE SCHEMA IF NOT EXISTS auth;
+  CREATE TABLE IF NOT EXISTS auth.users (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid()
+  );
+  CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
+    LANGUAGE sql STABLE
+    AS $fn$ SELECT (NULLIF(current_setting('request.jwt.claims', true), '')::json ->> 'sub')::uuid $fn$;
+`;
+
+async function seedSupabaseAuthBaseline(databaseUrl: string): Promise<void> {
+  // The container's port opens before Postgres finishes initdb, so a query
+  // fired at that instant hits FATAL 57P03 "the database system is starting up"
+  // (or a refused connection). Retry through that transient window — the same
+  // resilience migrate.js already has. In CI the db-tests workflow health-checks
+  // Postgres before running the suite, so this only matters for the local
+  // testcontainers path.
+  const deadline = Date.now() + 30_000;
+  for (let attempt = 1; ; attempt++) {
+    // eslint-disable-next-line no-restricted-syntax -- test harness owns its own pool (see getTestPool)
+    const pool = new Pool({ connectionString: databaseUrl });
+    try {
+      await pool.query(SUPABASE_AUTH_BASELINE_SQL);
+      await pool.end();
+      return;
+    } catch (err) {
+      await pool.end().catch(() => {});
+      const code = (err as { code?: string }).code;
+      const transient =
+        code === '57P03' || // starting up
+        code === 'ECONNREFUSED' ||
+        code === '08006' || // connection failure
+        code === '08001'; // unable to connect
+      if (!transient || Date.now() > deadline) throw err;
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+}
+
 async function runMigrations(databaseUrl: string): Promise<void> {
+  // Provision the Supabase auth baseline BEFORE migrate.js — several migrations
+  // FK to auth.users / call auth.uid() and would otherwise hard-fail here.
+  await seedSupabaseAuthBaseline(databaseUrl);
   // Use the existing scripts/migrate.js runner for parity with production.
   // It reads PG_* env vars; we translate from DATABASE_URL.
   const url = new URL(databaseUrl);

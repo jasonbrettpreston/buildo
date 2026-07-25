@@ -31,7 +31,10 @@ const pool = getTestPool();
 const PERMIT_NUM = 'TEST P21RT-001';
 const PERMIT_REV = '00';
 const TRADE_SLUG = 'plumbing';
-const USER_ID = 'p21-roundtrip-uid';
+// user_id is uuid since mig 229 (varchar→uuid + FK auth.users). A deterministic
+// uuid sharing this file's hex prefix 'feed0000-' keeps the fixture FK-valid and
+// its rows hermetically scoped (replaces the old 'p21-roundtrip-uid' string sentinel).
+const USER_ID = 'feed0000-0000-4000-8000-000000000001';
 // The feed-emitted form: permit_num || ':' || LPAD(revision_num, 2, '0')
 const EXPECTED_LEAD_ID = `${PERMIT_NUM}:${PERMIT_REV}`;
 // The canonical lead_key written by buildLeadKey / recordLeadView
@@ -48,6 +51,9 @@ describe.skipIf(!dbAvailable())('feed lead_id round-trip — P21 lock (Spec 91 �
     await pool.query(`DELETE FROM permit_trades WHERE permit_num = $1`, [PERMIT_NUM]);
     await pool.query(`DELETE FROM permits WHERE permit_num = $1`, [PERMIT_NUM]);
     await pool.query(`DELETE FROM user_profiles WHERE user_id = $1`, [USER_ID]);
+    // auth.users parent last — its ON DELETE CASCADE (mig 229) covers user_profiles /
+    // lead_views, but the explicit deletes above run first and are harmless no-ops.
+    await pool.query(`DELETE FROM auth.users WHERE id = $1`, [USER_ID]);
   }
 
   beforeAll(async () => {
@@ -58,6 +64,12 @@ describe.skipIf(!dbAvailable())('feed lead_id round-trip — P21 lock (Spec 91 �
     await pool.query(
       `INSERT INTO trades (slug, name) VALUES ($1, 'Plumbing') ON CONFLICT (slug) DO NOTHING`,
       [TRADE_SLUG],
+    );
+
+    // auth.users identity row — user_profiles.user_id / lead_views.user_id FK it (mig 229).
+    await pool.query(
+      `INSERT INTO auth.users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
+      [USER_ID],
     );
 
     // user_profiles row — trade_slug NOT NULL mandatory (Spec 75 §DB constraint)

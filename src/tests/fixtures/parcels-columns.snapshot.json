@@ -98,6 +98,7 @@
   "linear_name_full",
   "lot_size_basis",
   "lot_size_confidence",
+  "lot_size_source",
   "lot_size_sqft",
   "lot_size_sqm",
   "market_exceeds_bylaw",

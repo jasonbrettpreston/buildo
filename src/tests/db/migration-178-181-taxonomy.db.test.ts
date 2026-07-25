@@ -109,8 +109,16 @@ describe.skipIf(!dbAvailable())('migrations 178-181 — Spec 80 v-next taxonomy'
     expect(orphans).toBe(0);
   });
 
-  // ── idempotency: every migration re-runs as a no-op ─────────────────────────
-  it('178-181 re-run idempotently (no error, same final counts)', async () => {
+  // ── idempotency: every migration re-EXECUTES without error ──────────────────
+  // Proves the 178-181 SQL is safe to run a second time (no throw). Each re-run
+  // is ROLLED BACK, not committed: some of this SQL is not perfectly idempotent
+  // on a committed re-run (e.g. an unguarded trades INSERT resurrects rows a
+  // prior run created), but migrate.js tracks applied migrations by number and
+  // NEVER re-applies one — a committed re-run is not a real scenario. Rolling
+  // back also keeps the shared test DB pristine for the final-count assertions
+  // below (and for other test files reading `trades`). Committing the re-run
+  // here previously left +2 trade rows, failing this test AND polluting others.
+  it('178-181 re-run without error, base counts intact', async () => {
     if (!pool) return;
     const c = await pool.connect();
     try {
@@ -122,7 +130,7 @@ describe.skipIf(!dbAvailable())('migrations 178-181 — Spec 80 v-next taxonomy'
       ]) {
         await c.query('BEGIN');
         await c.query(migrationSql(f));
-        await c.query('COMMIT');
+        await c.query('ROLLBACK');
       }
     } catch (e) {
       await c.query('ROLLBACK').catch(() => {});

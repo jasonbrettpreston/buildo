@@ -10,13 +10,18 @@
 //
 // Run: BUILDO_TEST_DB=1 npm run test:db -- admin-audit
 
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 import { redactPii } from '@/lib/admin/admin-audit';
 
 const pool = getTestPool();
+// target_uid was NOT converted by migration 229 (it is not a FK identity
+// column) — it stays TEXT, so this sentinel remains a plain string.
 const TARGET = 'p24-audit-target-uid';
-const ADMIN = 'p24-audit-admin-uid';
+// admin_uid WAS converted to UUID (mig 229) with a real FK to auth.users(id)
+// ON DELETE RESTRICT + NOT NULL. Deterministic uuid (file-unique `2024a000-…`
+// prefix), seeded as a real auth.users row in beforeAll so the FK is satisfied.
+const ADMIN = '2024a000-0000-4000-8000-0000000000a1';
 
 async function insertAudit(action: string, oldV: unknown, newV: unknown, reason: string): Promise<void> {
   await pool!.query(
@@ -27,8 +32,18 @@ async function insertAudit(action: string, oldV: unknown, newV: unknown, reason:
 }
 
 describe.skipIf(!dbAvailable())('admin_audit_log (migration 217)', () => {
+  beforeAll(async () => {
+    // Seed the admin as a real auth.users row so the mig-229 FK
+    // (admin_audit_log.admin_uid → auth.users.id, ON DELETE RESTRICT) holds.
+    if (pool) await pool.query(`INSERT INTO auth.users (id) VALUES ($1) ON CONFLICT DO NOTHING`, [ADMIN]);
+  });
+
   afterAll(async () => {
-    if (pool) await pool.query(`DELETE FROM admin_audit_log WHERE target_uid = $1`, [TARGET]);
+    if (!pool) return;
+    // Delete the audit rows BEFORE the auth.users parent — the FK is ON DELETE
+    // RESTRICT, so the parent cannot be removed while authored rows remain.
+    await pool.query(`DELETE FROM admin_audit_log WHERE target_uid = $1`, [TARGET]);
+    await pool.query(`DELETE FROM auth.users WHERE id = $1`, [ADMIN]);
   });
 
   it('PII-FACT: redactPii masks PII values but keeps non-PII values + all keys', () => {

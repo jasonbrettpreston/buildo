@@ -13,11 +13,17 @@
 //
 // Run: BUILDO_TEST_DB=1 npm run test:db -- subscribe-nonce-roundtrip
 
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 const pool = getTestPool();
-const UID = 'p26e-nonce-user';
+// Migration 229 (Supabase Phase 1, D6) converted subscribe_nonces.user_id AND
+// user_profiles.user_id to UUID with real FKs to auth.users(id). A bare non-uuid
+// sentinel now fails on insert (22P02) and a valid uuid absent from auth.users
+// fails the FK (23503) — so this is a deterministic uuid (file-unique
+// `2026e000-…` prefix) seeded as a real auth.users row in beforeAll. The `nonce`
+// column is unrelated text and its sentinels stay plain strings.
+const UID = '2026e000-0000-4000-8000-0000000000a1';
 
 // The exact consume the exchange route runs (single statement, atomic).
 async function consume(nonce: string): Promise<string | null> {
@@ -29,10 +35,18 @@ async function consume(nonce: string): Promise<string | null> {
 }
 
 describe.skipIf(!dbAvailable())('subscribe_nonces single-use round-trip (P26-26E)', () => {
+  beforeAll(async () => {
+    // Seed the user as a real auth.users row so both mig-229 FKs
+    // (user_profiles.user_id and subscribe_nonces.user_id → auth.users.id) hold.
+    if (pool) await pool.query(`INSERT INTO auth.users (id) VALUES ($1) ON CONFLICT DO NOTHING`, [UID]);
+  });
+
   afterAll(async () => {
     if (!pool) return;
+    // Children first (nonces + profile), then the auth.users parent last.
     await pool.query(`DELETE FROM subscribe_nonces WHERE user_id = $1`, [UID]);
     await pool.query(`DELETE FROM user_profiles WHERE user_id = $1`, [UID]);
+    await pool.query(`DELETE FROM auth.users WHERE id = $1`, [UID]);
   });
 
   it('issue → consume once (returns user_id) → second consume returns null (the 400 path)', async () => {

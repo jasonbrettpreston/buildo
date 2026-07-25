@@ -34,7 +34,8 @@
 // promise the dispatcher fires at module scope, then await it.
 //
 // Hermeticity: every assertion is SCOPED to this file's user_ids / tokens
-// (prefix 'p25e-') so a concurrent db-test file's queue rows cannot perturb it.
+// (uuid prefix '25e00000-', see mkUid) so a concurrent db-test file's queue rows
+// cannot perturb it.
 //
 // Run: BUILDO_TEST_DB=1 npx vitest run src/tests/db/dispatch-notifications.db.test.ts
 
@@ -42,6 +43,16 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 const pool = getTestPool();
+
+// ── uuid identity namespace (mig 229 converted user_id varchar→uuid) ────────────
+// Every fixture user_id is a real uuid sharing the hex prefix '25e00000-' so the
+// hermetic prefix-scoped cleanup (WHERE user_id::text LIKE '25e00000-%') stays
+// scoped to THIS file's rows — exactly the hermeticity the old 'p25e-' string
+// sentinel gave before the type conversion. mkUid(N) maps test N → its uuid.
+// NB: only user_id COLUMN values become uuids; lead_id / permit_num / entity_id /
+// push_token stay plain-text 'P25E-*' strings (they are text columns, not identity).
+const UID_NS = '25e00000-0000-4000-8000-';
+const mkUid = (n: number): string => UID_NS + String(n).padStart(12, '0');
 
 // ── Toronto calendar helpers (mirror dispatch-notifications.js:64-76) ──────────
 const _torontoDateFmt = new Intl.DateTimeFormat('en-CA', {
@@ -126,7 +137,7 @@ async function setDisabledTypes(arr: string[]): Promise<void> {
   );
 }
 
-// ── fixture seeders (all user_ids share the 'p25e-' prefix for cleanup) ─────────
+// ── fixture seeders (all user_ids are uuids sharing the '25e00000-' prefix) ─────
 async function seedUser(
   userId: string,
   prefs: Partial<{
@@ -134,6 +145,12 @@ async function seedUser(
     start_date_urgent: boolean; notification_schedule: string;
   }> = {},
 ): Promise<void> {
+  // user_profiles/device_tokens/notifications/notification_dispatches.user_id all
+  // FK auth.users(id) since mig 229 — the identity row must exist first.
+  await pool!.query(
+    `INSERT INTO auth.users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
+    [userId],
+  );
   await pool!.query(
     `INSERT INTO user_profiles
        (user_id, trade_slug, phase_changed, lifecycle_stalled_pref, start_date_urgent, notification_schedule)
@@ -236,18 +253,20 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
 
   afterAll(async () => {
     delete (globalThis as Record<string, unknown>).__BUILDO_PUSH_TRANSPORT__;
-    await pool.query(`DELETE FROM notification_dispatches WHERE user_id LIKE 'p25e-%'`);
-    await pool.query(`DELETE FROM notifications         WHERE user_id LIKE 'p25e-%'`);
-    await pool.query(`DELETE FROM device_tokens         WHERE user_id LIKE 'p25e-%'`);
-    await pool.query(`DELETE FROM user_profiles         WHERE user_id LIKE 'p25e-%'`);
+    await pool.query(`DELETE FROM notification_dispatches WHERE user_id::text LIKE '25e00000-%'`);
+    await pool.query(`DELETE FROM notifications         WHERE user_id::text LIKE '25e00000-%'`);
+    await pool.query(`DELETE FROM device_tokens         WHERE user_id::text LIKE '25e00000-%'`);
+    await pool.query(`DELETE FROM user_profiles         WHERE user_id::text LIKE '25e00000-%'`);
+    await pool.query(`DELETE FROM auth.users            WHERE id::text      LIKE '25e00000-%'`);
     await pool.end();
   });
 
   beforeEach(async () => {
-    await pool.query(`DELETE FROM notification_dispatches WHERE user_id LIKE 'p25e-%'`);
-    await pool.query(`DELETE FROM notifications         WHERE user_id LIKE 'p25e-%'`);
-    await pool.query(`DELETE FROM device_tokens         WHERE user_id LIKE 'p25e-%'`);
-    await pool.query(`DELETE FROM user_profiles         WHERE user_id LIKE 'p25e-%'`);
+    await pool.query(`DELETE FROM notification_dispatches WHERE user_id::text LIKE '25e00000-%'`);
+    await pool.query(`DELETE FROM notifications         WHERE user_id::text LIKE '25e00000-%'`);
+    await pool.query(`DELETE FROM device_tokens         WHERE user_id::text LIKE '25e00000-%'`);
+    await pool.query(`DELETE FROM user_profiles         WHERE user_id::text LIKE '25e00000-%'`);
+    await pool.query(`DELETE FROM auth.users            WHERE id::text      LIKE '25e00000-%'`);
     await setGate(true);
     await setThrottle(10);
     await setDisabledTypes([]);
@@ -256,7 +275,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
 
   it('T1 — inert gate: notifications_dispatch_enabled=0 → SKIP (no sends, no ledger, queue untouched)', async () => {
     await setGate(false);
-    const uid = 'p25e-t1';
+    const uid = mkUid(1);
     await seedUser(uid);
     await seedToken(uid, 'ExponentPushToken[T1]');
     const nId = await enqueue(uid, 'LIFECYCLE_STALLED', 'permit:P25E-T1:00', 'P25E-T1');
@@ -269,7 +288,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
   });
 
   it('T2 — dispatch: eligible row sent once; ledger sent-row + Toronto-date + is_sent + payload contract', async () => {
-    const uid = 'p25e-t2';
+    const uid = mkUid(2);
     const token = 'ExponentPushToken[T2]';
     await seedUser(uid);
     await seedToken(uid, token);
@@ -298,7 +317,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
   });
 
   it('T3 — dedup re-run: a second same-day run re-sends nothing (kills the double-chain-run send)', async () => {
-    const uid = 'p25e-t3';
+    const uid = mkUid(3);
     const token = 'ExponentPushToken[T3]';
     await seedUser(uid);
     await seedToken(uid, token);
@@ -315,7 +334,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
   });
 
   it('T4 — ledger dedup is LEDGER-keyed, not is_sent-keyed: a tuple in today\'s ledger is excluded even when is_sent=false', async () => {
-    const uid = 'p25e-t4';
+    const uid = mkUid(4);
     const token = 'ExponentPushToken[T4]';
     const leadId = 'permit:P25E-T4:00';
     await seedUser(uid);
@@ -337,7 +356,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
   });
 
   it('T5 — pref-gate: a false pref column silences ITS type only', async () => {
-    const uid = 'p25e-t5';
+    const uid = mkUid(5);
     const token = 'ExponentPushToken[T5]';
     await seedUser(uid, { lifecycle_stalled_pref: false, start_date_urgent: true });
     await seedToken(uid, token);
@@ -358,7 +377,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
 
   it('T6 — disabled-types JSONB kill-list suppresses a type regardless of pref', async () => {
     await setDisabledTypes(['LIFECYCLE_STALLED']);
-    const uid = 'p25e-t6';
+    const uid = mkUid(6);
     const token = 'ExponentPushToken[T6]';
     await seedUser(uid); // all prefs ON
     await seedToken(uid, token);
@@ -373,7 +392,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
 
   it('T7 — throttle: max_per_user_per_day caps sends and DEFERS the excess (not dropped)', async () => {
     await setThrottle(1);
-    const uid = 'p25e-t7';
+    const uid = mkUid(7);
     const token = 'ExponentPushToken[T7]';
     await seedUser(uid);
     await seedToken(uid, token);
@@ -391,7 +410,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
   });
 
   it('T8 — ticket-time prune: DeviceNotRegistered prunes the EXACT dead token, never the user\'s other device', async () => {
-    const uid = 'p25e-t8';
+    const uid = mkUid(8);
     const bad = 'ExponentPushToken[T8-BAD]';
     const good = 'ExponentPushToken[T8-GOOD]';
     await seedUser(uid);
@@ -412,7 +431,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
   });
 
   it('T9 — receipt-time prune: the next-run receipt pass prunes a token whose prior ticket resolved dead', async () => {
-    const uid = 'p25e-t9';
+    const uid = mkUid(9);
     const token = 'ExponentPushToken[T9]';
     await seedUser(uid);
     await seedToken(uid, token);
@@ -444,7 +463,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
     // not-yet-passed window is DELIVERED in this run; only a window that already
     // PASSED today expires. Invariant (wall-clock-independent): the row is NEVER
     // left as a plain 'deferred' for a schedule reason.
-    const uid = 'p25e-t10';
+    const uid = mkUid(10);
     const token = 'ExponentPushToken[T10]';
     await seedUser(uid, { notification_schedule: 'evening', phase_changed: true });
     await seedToken(uid, token);
@@ -470,7 +489,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
   });
 
   it('T11 — in-run dedup (25E #1): duplicate queue rows (same user/lead/type/device) → ONE push, both rows retired', async () => {
-    const uid = 'p25e-t11';
+    const uid = mkUid(11);
     const token = 'ExponentPushToken[T11]';
     await seedUser(uid);
     await seedToken(uid, token);
@@ -495,7 +514,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
     // The pre-fix bug: N rows for one user in one chunk were all pushed to Expo
     // before any post-success cap check. The cap must gate CHUNK-BUILD.
     await setThrottle(3);
-    const uid = 'p25e-t12';
+    const uid = mkUid(12);
     const token = 'ExponentPushToken[T12]';
     await seedUser(uid);
     await seedToken(uid, token);
@@ -512,7 +531,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
   });
 
   it('T13 — URGENT freshness sweep is SCOPED (25E #4 / Guardian): stale URGENT dropped; equally-old PHASE/STALL kept', async () => {
-    const uid = 'p25e-t13';
+    const uid = mkUid(13);
     const token = 'ExponentPushToken[T13]';
     await seedUser(uid);
     await seedToken(uid, token);
@@ -541,7 +560,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
   });
 
   it('T14 — fenced types (25E #9): a STALL_WARNING queue row is never selected or sent', async () => {
-    const uid = 'p25e-t14';
+    const uid = mkUid(14);
     const token = 'ExponentPushToken[T14]';
     await seedUser(uid);
     await seedToken(uid, token);
@@ -555,7 +574,7 @@ describe.skipIf(!dbAvailable())('dispatch-notifications — mock-transport headl
   });
 
   it('T15 — no device token (25E output panel / spec §4): a tokenless saver row is retired + counted, never an invisible backlog', async () => {
-    const uid = 'p25e-t15';
+    const uid = mkUid(15);
     await seedUser(uid); // NB: no seedToken — the user has zero device_tokens rows
     const nId = await enqueue(uid, 'LIFECYCLE_PHASE_CHANGED', 'permit:P25E-T15:00', 'P25E-T15');
 

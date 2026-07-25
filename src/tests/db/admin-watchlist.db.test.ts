@@ -32,8 +32,14 @@ const routeSrc = fs.readFileSync(
 );
 const WATCHLIST_SQL = /const WATCHLIST_SQL = `([\s\S]*?)`;/.exec(routeSrc)?.[1] as string;
 
-const UID = 'wl-test-admin';
-const OTHER_UID = 'wl-test-other';
+// Migration 229 (Supabase Phase 1, D6) converted admin_watchlist.admin_uid to
+// UUID with a real FK to auth.users(id) ON DELETE SET NULL. A bare non-uuid
+// sentinel now fails the INSERT (22P02) and a valid uuid absent from auth.users
+// fails the FK (23503) — so these are deterministic uuids (file-unique
+// `2015a000-…` prefix) seeded as real auth.users rows in beforeAll, following
+// the pattern established by offboarding-sweep/lead-detail-saved-state.
+const UID = '2015a000-0000-4000-8000-0000000000a1';
+const OTHER_UID = '2015a000-0000-4000-8000-0000000000a2';
 
 interface ListRow {
   id: number;
@@ -51,6 +57,12 @@ interface ListRow {
 describe.skipIf(!dbAvailable())('migration 215 — admin_watchlist + flight-list SQL', () => {
   beforeAll(async () => {
     if (!pool) return;
+    // Seed the two admins as real auth.users rows so the mig-229 FK
+    // (admin_watchlist.admin_uid → auth.users.id) is satisfied on insert.
+    await pool.query(
+      `INSERT INTO auth.users (id) VALUES ($1), ($2) ON CONFLICT DO NOTHING`,
+      [UID, OTHER_UID],
+    );
     // Parent fixtures: one permit with trades+forecasts, one coa.
     await pool.query(`
       INSERT INTO permits (permit_num, revision_num, permit_type, status,
@@ -127,6 +139,9 @@ describe.skipIf(!dbAvailable())('migration 215 — admin_watchlist + flight-list
     );
     await pool.query("DELETE FROM permits WHERE permit_num IN ('WL 900001', 'WL 900002')");
     await pool.query("DELETE FROM coa_applications WHERE application_number = 'WL-A1/26'");
+    // Remove the seeded auth.users rows last (watchlist children already gone
+    // above; the FK is SET NULL so this is order-tolerant, but keep it after).
+    await pool.query('DELETE FROM auth.users WHERE id IN ($1, $2)', [UID, OTHER_UID]);
     await pool.end();
   });
 

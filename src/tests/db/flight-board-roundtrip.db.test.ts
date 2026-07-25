@@ -44,7 +44,10 @@ const PERMIT_NUM = 'TEST P22RT-001';     // main round-trip + null-score
 const PERMIT_ARCHIVE = 'TEST P22RT-002'; // auto-archive + invariant
 const REV = '00';
 const TRADE_SLUG = 'plumbing';
-const USER_ID = 'p22-roundtrip-uid';
+// user_id is uuid since mig 229 (varchar→uuid + FK auth.users). A deterministic
+// uuid sharing this file's hex prefix 'f11e0000-' keeps the fixture FK-valid and
+// its rows hermetically scoped (replaces the old 'p22-roundtrip-uid' string sentinel).
+const USER_ID = 'f11e0000-0000-4000-8000-000000000001';
 
 // P21 colon-form: feed-emitted `${permit_num}:${LPAD(revision_num, 2, '0')}`
 const COLON_FORM_ID = `${PERMIT_NUM}:${REV}`;
@@ -156,6 +159,9 @@ describe.skipIf(!dbAvailable())('flight-board SQL round-trip — P22 lock (Spec 
       PERMIT_NUM, PERMIT_ARCHIVE,
     ]);
     await pool.query(`DELETE FROM user_profiles WHERE user_id = $1`, [USER_ID]);
+    // auth.users parent last — its ON DELETE CASCADE (mig 229) covers user_profiles /
+    // lead_views, but the explicit deletes above run first and are harmless no-ops.
+    await pool.query(`DELETE FROM auth.users WHERE id = $1`, [USER_ID]);
   }
 
   beforeAll(async () => {
@@ -166,6 +172,12 @@ describe.skipIf(!dbAvailable())('flight-board SQL round-trip — P22 lock (Spec 
     await pool.query(
       `INSERT INTO trades (slug, name) VALUES ($1, 'Plumbing') ON CONFLICT (slug) DO NOTHING`,
       [TRADE_SLUG],
+    );
+
+    // auth.users identity row — user_profiles.user_id / lead_views.user_id FK it (mig 229).
+    await pool.query(
+      `INSERT INTO auth.users (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
+      [USER_ID],
     );
 
     // user_profiles row — trade_slug NOT NULL mandatory

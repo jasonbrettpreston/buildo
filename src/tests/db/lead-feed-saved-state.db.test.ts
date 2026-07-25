@@ -35,15 +35,20 @@ import type { LeadFeedItem } from '@/features/leads/types';
 
 const pool = getTestPool();
 
-// Test fixture identifiers — all prefixed `TEST 9991` / `feed-test-`
-// so the afterAll cleanup is targeted and concurrent tests are
-// unaffected.
+// Test fixture identifiers — permit_num/trade prefixed `TEST 9991` /
+// `plumbing`; the two user_ids are real uuids sharing the hex prefix
+// `1eadfeed-` because mig 229 converted lead_views.user_id varchar→uuid
+// with a FK to auth.users(id). The afterAll cleanup targets these so
+// concurrent tests are unaffected. NB: only user_id is a uuid COLUMN —
+// permit_num / lead_key / trade_slug stay plain-text.
 const PERMIT_NUM_A = 'TEST 999100';
 const PERMIT_NUM_B = 'TEST 999101';
 const PERMIT_REV = '00';
 const TRADE_SLUG = 'plumbing';
-const SAVED_USER = 'feed-test-uid-saved';
-const OTHER_USER = 'feed-test-uid-other';
+// uuid identity namespace (8-4-4-4-12; 'lead'/'feed' are valid hex digits).
+const UID_NS = '1eadfeed-0000-4000-8000-';
+const SAVED_USER = UID_NS + '000000000001';
+const OTHER_USER = UID_NS + '000000000002';
 const ENTITY_LEGAL_NAME = 'TEST 999100 BUILDER CO';
 const ENTITY_NAME_NORM = 'test 999100 builder co';
 const TEST_LAT = 43.65;
@@ -56,6 +61,13 @@ let entityId: number | null = null;
 describe.skipIf(!dbAvailable())('LEAD_FEED_SQL — is_saved roundtrip (Phase 3-vi regression guard)', () => {
   beforeAll(async () => {
     if (!pool) return;
+
+    // lead_views.user_id FKs auth.users(id) since mig 229 — both identity
+    // rows must exist before recordLeadView() inserts a lead_views row.
+    await pool.query(
+      `INSERT INTO auth.users (id) VALUES ($1), ($2) ON CONFLICT (id) DO NOTHING`,
+      [SAVED_USER, OTHER_USER],
+    );
 
     // Trade row — `plumbing` should already exist from migration 002
     // seeding, but defensively ensure it.
@@ -206,6 +218,11 @@ describe.skipIf(!dbAvailable())('LEAD_FEED_SQL — is_saved roundtrip (Phase 3-v
     await pool.query(
       `DELETE FROM permits WHERE permit_num IN ($1, $2)`,
       [PERMIT_NUM_A, PERMIT_NUM_B],
+    );
+    // Parent identity rows last (lead_views children already gone above).
+    await pool.query(
+      `DELETE FROM auth.users WHERE id IN ($1, $2)`,
+      [SAVED_USER, OTHER_USER],
     );
     await pool.end();
   });
