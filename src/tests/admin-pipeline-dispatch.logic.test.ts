@@ -69,10 +69,6 @@ describe('Admin pipeline dispatch — chain→workflow mapping', () => {
     }
   });
 
-  it('exposes the DISPATCHABLE_WORKFLOWS export for downstream tooling', () => {
-    const source = fs.readFileSync(routePath, 'utf-8');
-    expect(source).toContain('export const DISPATCHABLE_WORKFLOWS');
-  });
 });
 
 // ---------------------------------------------------------------------------

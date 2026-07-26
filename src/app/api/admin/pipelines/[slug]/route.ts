@@ -40,9 +40,6 @@ const WORKFLOW_CHAINS: Record<string, string[]> = {
   'chain-deep-scrapes.yml': ['chain_deep_scrapes'],
 };
 
-/** Exported for the mapping-existence test (every value must be a real workflow file). */
-export const DISPATCHABLE_WORKFLOWS = CHAIN_WORKFLOWS;
-
 // Engineering Standards §4.4: every response uses the { data, error, meta } envelope.
 function ok(data: unknown, status = 200): NextResponse {
   return NextResponse.json({ data, error: null, meta: null }, { status });
