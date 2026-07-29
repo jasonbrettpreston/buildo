@@ -22,7 +22,7 @@
  */
 const { Pool } = require('pg');
 const { resolveAndCountTriple } = require('./vocab-coverage');
-const { resolveSslConfig } = require('./ssl-config');
+const { resolveSslConfig, stripSslParams } = require('./ssl-config');
 
 // ---------------------------------------------------------------------------
 // Pool Creation — single standardized pattern (PG_* env vars)
@@ -31,8 +31,27 @@ const { resolveSslConfig } = require('./ssl-config');
 /**
  * Create a PostgreSQL connection pool using PG_* environment variables.
  * Every pipeline script MUST use this instead of inline `new Pool(...)`.
+ *
+ * Spec 113 §3 (D14): when no discrete PG_HOST is configured, fall back to the
+ * SUPABASE_DATABASE_URL connection string — the cloud-project var GitHub
+ * Actions chain workflows inject (Spec 115 §4), which set no PG_* at all.
+ * PG_HOST keeps precedence: local dev `.env` carries BOTH (PG_* → local
+ * stack, SUPABASE_DATABASE_URL → cloud), and the discrete vars winning is
+ * what keeps a local chain run from silently targeting the cloud DB.
  */
 function createPool() {
+  if (!process.env.PG_HOST && process.env.SUPABASE_DATABASE_URL) {
+    const connectionString = process.env.SUPABASE_DATABASE_URL;
+    return new Pool({
+      // stripSslParams (F1g root-cause class): an sslmode=/sslrootcert=
+      // query param in the URL makes pg build its own ssl config and
+      // silently DISCARD the pinned-CA `ssl` object below.
+      connectionString: stripSslParams(connectionString),
+      // Spec 113 §4.1 — resolveSslConfig is the only place `ssl` is built;
+      // connectionString style pins the CA for any non-loopback host.
+      ssl: resolveSslConfig({ connectionString }),
+    });
+  }
   const rawPort = process.env.PG_PORT || '5432';
   const port = parseInt(rawPort, 10);
   if (!Number.isFinite(port) || port < 1 || port > 65535) {

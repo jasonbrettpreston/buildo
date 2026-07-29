@@ -58,6 +58,61 @@ describe('Pipeline SDK', () => {
         else env.PG_PASSWORD = origPassword;
       }
     });
+
+    it('Spec 113 §3 D14: falls back to SUPABASE_DATABASE_URL when PG_HOST is unset (GH Actions chain workflows)', () => {
+      const env = process.env as Record<string, string | undefined>;
+      const origHost = env.PG_HOST;
+      const origUrl = env.SUPABASE_DATABASE_URL;
+      try {
+        delete env.PG_HOST;
+        env.SUPABASE_DATABASE_URL = 'postgresql://ci:pw@127.0.0.1:5432/buildo_ci';
+        const pool = pipeline.createPool();
+        expect(pool.options.connectionString).toBe('postgresql://ci:pw@127.0.0.1:5432/buildo_ci');
+        pool.end().catch(() => {});
+      } finally {
+        if (origHost === undefined) delete env.PG_HOST;
+        else env.PG_HOST = origHost;
+        if (origUrl === undefined) delete env.SUPABASE_DATABASE_URL;
+        else env.SUPABASE_DATABASE_URL = origUrl;
+      }
+    });
+
+    it('F1g class: strips sslmode= from the SUPABASE_DATABASE_URL fallback so pg cannot discard the pinned-CA ssl config', () => {
+      const env = process.env as Record<string, string | undefined>;
+      const origHost = env.PG_HOST;
+      const origUrl = env.SUPABASE_DATABASE_URL;
+      try {
+        delete env.PG_HOST;
+        env.SUPABASE_DATABASE_URL = 'postgresql://ci:pw@127.0.0.1:5432/buildo_ci?sslmode=require';
+        const pool = pipeline.createPool();
+        expect(pool.options.connectionString).not.toContain('sslmode');
+        pool.end().catch(() => {});
+      } finally {
+        if (origHost === undefined) delete env.PG_HOST;
+        else env.PG_HOST = origHost;
+        if (origUrl === undefined) delete env.SUPABASE_DATABASE_URL;
+        else env.SUPABASE_DATABASE_URL = origUrl;
+      }
+    });
+
+    it('Spec 113 §3 D14: discrete PG_HOST wins over SUPABASE_DATABASE_URL — a local dev run must never silently target the cloud DB', () => {
+      const env = process.env as Record<string, string | undefined>;
+      const origHost = env.PG_HOST;
+      const origUrl = env.SUPABASE_DATABASE_URL;
+      try {
+        env.PG_HOST = '127.0.0.1';
+        env.SUPABASE_DATABASE_URL = 'postgresql://cloud:pw@db.example-project.supabase.co:5432/postgres';
+        const pool = pipeline.createPool();
+        expect(pool.options.connectionString).toBeUndefined();
+        expect(pool.options.host).toBe('127.0.0.1');
+        pool.end().catch(() => {});
+      } finally {
+        if (origHost === undefined) delete env.PG_HOST;
+        else env.PG_HOST = origHost;
+        if (origUrl === undefined) delete env.SUPABASE_DATABASE_URL;
+        else env.SUPABASE_DATABASE_URL = origUrl;
+      }
+    });
   });
 
   describe('WF3 B3-H7: telemetry uses Number() on bigint columns (no parseInt truncation)', () => {

@@ -36,7 +36,7 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { resolveSslConfig } = require('./lib/ssl-config');
+const { resolveSslConfig, stripSslParams } = require('./lib/ssl-config');
 
 const TRACKING_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -84,11 +84,18 @@ async function run() {
   // Spec 113 §4.1 — resolveSslConfig is the only place an `ssl` config is
   // constructed; the branch taken here (connectionString vs discrete PG_*
   // options) is unchanged — only the `ssl` key is added to each.
+  // Spec 113 §3 (D14): SUPABASE_DATABASE_URL is the fallback connection
+  // string — GitHub Actions chain workflows (Spec 115 §4) inject only that
+  // var for the `--verify` pre-flight. DATABASE_URL (local stack) wins when
+  // both are set so local runs stay local.
+  const connStr = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL;
   const pool = new Pool(
-    process.env.DATABASE_URL
+    connStr
       ? {
-          connectionString: process.env.DATABASE_URL,
-          ssl: resolveSslConfig({ connectionString: process.env.DATABASE_URL }),
+          // stripSslParams (F1g root-cause class): sslmode= in the URL
+          // would make pg discard the pinned-CA `ssl` object below.
+          connectionString: stripSslParams(connStr),
+          ssl: resolveSslConfig({ connectionString: connStr }),
         }
       : {
           host: process.env.PG_HOST || 'localhost',
