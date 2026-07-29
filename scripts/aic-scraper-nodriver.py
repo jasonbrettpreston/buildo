@@ -81,8 +81,8 @@ else:
 # Do NOT filter on folderTypeDesc — AIC uses different labels than our DB permit_type.
 TARGET_SECTIONS = ['BLD']
 
-BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE', '10'))
-MAX_PERMITS = int(os.environ.get('SCRAPE_MAX_PERMITS', '0'))  # 0 = unlimited
+BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE') or '10')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)
+MAX_PERMITS = int(os.environ.get('SCRAPE_MAX_PERMITS') or '0')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)  # 0 = unlimited
 
 # Proxy configuration (Decodo residential rotating proxy)
 PROXY_HOST = os.environ.get('PROXY_HOST', '')
@@ -127,7 +127,7 @@ BATCH_SIZE_MAX = max(BATCH_SIZE_MIN, min(20, BATCH_SIZE + 5))
 
 # Browser TTL — max batches before force-killing Chrome to prevent memory bloat.
 # Only applies in non-proxy mode (proxy mode already kills after each batch).
-BROWSER_MAX_BATCHES = int(os.environ.get('BROWSER_MAX_BATCHES', '50'))
+BROWSER_MAX_BATCHES = int(os.environ.get('BROWSER_MAX_BATCHES') or '50')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)
 
 
 # ---------------------------------------------------------------------------
@@ -226,7 +226,7 @@ def log(level, tag, msg, context=None):
 def get_db_connection():
     return psycopg2.connect(
         host=os.environ.get('PG_HOST', 'localhost'),
-        port=int(os.environ.get('PG_PORT', '5432')),
+        port=int(os.environ.get('PG_PORT') or '5432'),  # `or`: empty-string-safe, same as module-level env reads
         dbname=os.environ.get('PG_DATABASE', 'buildo'),
         user=os.environ.get('PG_USER', 'postgres'),
         password=os.environ.get('PG_PASSWORD', 'postgres'),

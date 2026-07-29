@@ -49,9 +49,9 @@ if env_path.exists():
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-NUM_WORKERS = int(os.environ.get('SCRAPER_WORKERS', '1'))
-BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE', '10'))
-MAX_PERMITS = int(os.environ.get('SCRAPE_MAX_PERMITS', '0'))  # 0 = unlimited
+NUM_WORKERS = int(os.environ.get('SCRAPER_WORKERS') or '1')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)
+BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE') or '10')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)
+MAX_PERMITS = int(os.environ.get('SCRAPE_MAX_PERMITS') or '0')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)  # 0 = unlimited
 STALE_CLAIM_MINUTES = 30
 MAX_PREFLIGHT_FAILURES = 2
 
@@ -119,7 +119,7 @@ def emit_meta(reads, writes, external=None):
 def get_db_connection():
     return psycopg2.connect(
         host=os.environ.get('PG_HOST', 'localhost'),
-        port=int(os.environ.get('PG_PORT', '5432')),
+        port=int(os.environ.get('PG_PORT') or '5432'),  # `or`: empty-string-safe, same as module-level env reads
         dbname=os.environ.get('PG_DATABASE', 'buildo'),
         user=os.environ.get('PG_USER', 'postgres'),
         password=os.environ.get('PG_PASSWORD', 'postgres'),
