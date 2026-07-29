@@ -122,6 +122,33 @@ class TestProxyExtension:
         finally:
             scraper.cleanup_proxy_extension(ext_dir)
 
+    def test_proxy_scheme_defaults_to_https_not_http(self, scraper, monkeypatch):
+        """Decodo speaks http/https/socks5 on one port, but only https works here.
+
+        Plain-http-to-proxy means HTTPS targets need a CONNECT tunnel, and that
+        tunnel is reset (verified 2026-07-29, reproduced with -k so it is the
+        tunnel, not cert validation) — the cause of the CI browser rendering
+        "site can't be reached" for every HTTPS page. socks5 is out because
+        Chrome cannot authenticate to a SOCKS proxy at all.
+        """
+        assert scraper.PROXY_SCHEME == 'https'
+
+    def test_background_script_uses_the_configured_scheme(self, scraper, monkeypatch):
+        monkeypatch.setattr(scraper, 'PROXY_HOST', 'proxy.example.com')
+        monkeypatch.setattr(scraper, 'PROXY_PORT', '7777')
+        monkeypatch.setattr(scraper, 'PROXY_USER', 'user')
+        monkeypatch.setattr(scraper, 'PROXY_PASS', 'secret')
+        monkeypatch.setattr(scraper, 'PROXY_SCHEME', 'https')
+
+        ext_dir = scraper.build_proxy_extension('sess-scheme')
+        try:
+            body = open(os.path.join(ext_dir, 'background.js')).read()
+
+            assert 'scheme: "https"' in body
+            assert 'scheme: "http"' not in body
+        finally:
+            scraper.cleanup_proxy_extension(ext_dir)
+
     def test_background_script_routes_and_authenticates(self, scraper, monkeypatch):
         monkeypatch.setattr(scraper, 'PROXY_HOST', 'proxy.example.com')
         monkeypatch.setattr(scraper, 'PROXY_PORT', '7777')

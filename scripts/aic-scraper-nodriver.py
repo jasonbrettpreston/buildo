@@ -95,6 +95,19 @@ PROXY_HOST = os.environ.get('PROXY_HOST', '')
 PROXY_PORT = os.environ.get('PROXY_PORT', '')
 PROXY_USER = os.environ.get('PROXY_USER', '')
 PROXY_PASS = os.environ.get('PROXY_PASS', '')
+# How Chrome talks TO the proxy. Decodo's endpoint speaks http, https and
+# socks5 on the same port, but the three do NOT behave alike here:
+#   https  — TLS to the proxy. VERIFIED WORKING (2026-07-29 probe returned a
+#            residential IP over an HTTPS target).
+#   http   — plain to the proxy, so HTTPS targets need a CONNECT tunnel, and
+#            that tunnel is RESET (verified, and reproduced with -k, so it is
+#            the tunnel and not certificate validation). This was the default
+#            and is the reason the CI browser rendered "site can't be reached"
+#            for every HTTPS page while the runner itself reached them fine.
+#   socks5 — also works via curl, but Chrome CANNOT authenticate to a SOCKS
+#            proxy (it ignores credentials and never fires onAuthRequired), so
+#            it is unusable here without provider-side IP whitelisting.
+PROXY_SCHEME = os.environ.get('PROXY_SCHEME') or 'https'
 
 # ---------------------------------------------------------------------------
 # Stealth — randomize fingerprint to look like organic human traffic
@@ -281,7 +294,7 @@ def build_proxy_extension(session_id):
 var config = {{
     mode: "fixed_servers",
     rules: {{
-        singleProxy: {{ scheme: "http", host: "{PROXY_HOST}", port: parseInt("{PROXY_PORT}") }},
+        singleProxy: {{ scheme: "{PROXY_SCHEME}", host: "{PROXY_HOST}", port: parseInt("{PROXY_PORT}") }},
         bypassList: ["localhost"]
     }}
 }};
