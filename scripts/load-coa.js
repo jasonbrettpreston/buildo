@@ -616,6 +616,15 @@ pipeline.run('load-coa', async (pool) => {
     { metric: 'avg_latency_ms', value: avgLatency, threshold: null, status: 'INFO' },
     { metric: 'schema_mismatch_count', value: tel.schema_drift.length, threshold: '== 0', status: tel.schema_drift.length > 0 ? 'FAIL' : 'PASS' },
     { metric: 'max_days_stale', value: maxDaysStale, threshold: '< 45', status: maxDaysStale !== null && maxDaysStale >= 45 ? 'WARN' : 'PASS' },
+    // Spec 37 tripwire (2026-07-29): the CKAN feeds currently publish NO
+    // CONTACT_NAME data (Active resource lacks the field entirely; Closed
+    // resource carries it 100% blank), so the CoA→entities extraction is
+    // DEFERRED (operator ruling, reaffirming Spec 42 "SKIP v1 — revisit if
+    // applicant data proves useful"). WARN — not PASS — the moment names
+    // reappear: that is the build signal for the Spec 37 CoA extraction
+    // step, and capture timing matters because the upsert overwrites
+    // `applicant` on any data_hash change (a later blanking would lose them).
+    { metric: 'applicant_names_present', value: mapped.filter((m) => m.applicant !== null).length, threshold: 'signal: > 0 → build Spec 37 CoA entity extraction (deferred 2026-07-29)', status: mapped.some((m) => m.applicant !== null) ? 'WARN' : 'PASS' },
     // Phase I.1: lifecycle_status_history ledger counters (Spec 47 §11.2 Overflow Rule).
     // Unconditional emission of both rows. WARN-grade error gate (NOT FAIL) preserves
     // primary upsert verdict on ledger failures per Tier 3 SAVEPOINT pattern.

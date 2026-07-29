@@ -8,6 +8,19 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
+describe('load-coa.js — Spec 37 applicant-names tripwire (deferred CoA entity extraction)', () => {
+  it('emits the applicant_names_present audit row, WARN-on-presence (the build signal)', () => {
+    const src = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/load-coa.js'),
+      'utf-8',
+    );
+    expect(src).toContain("metric: 'applicant_names_present'");
+    // WARN when names appear (not on absence) — presence is the signal to
+    // build the Spec 37 CoA extraction step, deferred 2026-07-29.
+    expect(src).toMatch(/applicant !== null\) \? 'WARN' : 'PASS'/);
+  });
+});
+
 describe('load-coa.js — lifecycle_status_history ledger writer (Phase I.1)', () => {
   let src: string;
 
