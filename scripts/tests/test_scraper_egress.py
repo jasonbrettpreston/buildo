@@ -160,3 +160,106 @@ class TestLogBrowserTargets:
         assert result == ['page:about:blank']
         assert any(e.get('context', {}).get('event') == 'browser_targets'
                    for e in captured_logs)
+
+
+class TestHostEgressIpCache:
+    """The memo's TTL is a CORRECTNESS control, not just a rate-limit saver.
+
+    verify_proxied_egress compares the browser's IP against this value, so a
+    stale entry can make an UNPROXIED browser look proxied — the exact silent
+    failure the tripwire exists to prevent (Regression Guardian finding (c):
+    the old code asserted "a runner's IP does not change mid-run" in a comment
+    while `refresh=True` was dead code).
+    """
+
+    def _clear(self, scraper):
+        scraper._host_egress_ip_cache.clear()
+
+    def test_probes_once_then_serves_from_cache(self, scraper, monkeypatch):
+        self._clear(scraper)
+        calls = []
+
+        class FakeResp:
+            def read(self):
+                calls.append(1)
+                return b'{"ip": "203.0.113.7"}'
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+
+        monkeypatch.setattr(scraper.urllib.request, 'urlopen', lambda *a, **k: FakeResp())
+
+        first = scraper.host_egress_ip(now=1000.0)
+        second = scraper.host_egress_ip(now=1000.0 + 10)
+
+        assert first == second == '203.0.113.7'
+        assert len(calls) == 1, 'second call must be served from the memo'
+        self._clear(scraper)
+
+    def test_reprobes_after_the_ttl_expires(self, scraper, monkeypatch):
+        """A stale baseline is a false-PASS risk, so it must expire."""
+        self._clear(scraper)
+        bodies = [b'{"ip": "203.0.113.7"}', b'{"ip": "198.51.100.99"}']
+
+        class FakeResp:
+            def read(self):
+                return bodies.pop(0) if bodies else b'{"ip": "198.51.100.99"}'
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+
+        monkeypatch.setattr(scraper.urllib.request, 'urlopen', lambda *a, **k: FakeResp())
+
+        first = scraper.host_egress_ip(now=1000.0)
+        later = scraper.host_egress_ip(now=1000.0 + scraper.HOST_EGRESS_IP_TTL_S + 1)
+
+        assert first == '203.0.113.7'
+        assert later == '198.51.100.99', 'must re-probe once the TTL lapses'
+        self._clear(scraper)
+
+    def test_refresh_forces_a_reprobe(self, scraper, monkeypatch):
+        """`refresh=True` must be live code, not a decorative parameter."""
+        self._clear(scraper)
+        bodies = [b'{"ip": "203.0.113.7"}', b'{"ip": "198.51.100.99"}']
+
+        class FakeResp:
+            def read(self):
+                return bodies.pop(0) if bodies else b'{"ip": "198.51.100.99"}'
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+
+        monkeypatch.setattr(scraper.urllib.request, 'urlopen', lambda *a, **k: FakeResp())
+
+        scraper.host_egress_ip(now=1000.0)
+        forced = scraper.host_egress_ip(now=1000.0 + 1, refresh=True)
+
+        assert forced == '198.51.100.99'
+        self._clear(scraper)
+
+    def test_failed_probe_does_not_poison_or_extend_the_cache(self, scraper, monkeypatch):
+        """A transient outage must neither cache None nor renew a stale entry."""
+        self._clear(scraper)
+
+        class FakeResp:
+            def read(self):
+                return b'{"ip": "203.0.113.7"}'
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+
+        monkeypatch.setattr(scraper.urllib.request, 'urlopen', lambda *a, **k: FakeResp())
+        scraper.host_egress_ip(now=1000.0)
+
+        monkeypatch.setattr(scraper.urllib.request, 'urlopen',
+                            lambda *a, **k: (_ for _ in ()).throw(OSError('down')))
+        stale_moment = 1000.0 + scraper.HOST_EGRESS_IP_TTL_S + 1
+
+        assert scraper.host_egress_ip(now=stale_moment) is None, 'outage must report unknown'
+        assert scraper._host_egress_ip_cache['ip'] == '203.0.113.7'
+        assert scraper._host_egress_ip_cache['at'] == 1000.0, 'a failure must not renew the TTL'
+        self._clear(scraper)

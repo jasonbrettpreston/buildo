@@ -458,28 +458,42 @@ def _extract_ip(raw):
     return found.group(0) if found else None
 
 
-_host_egress_ip_cache = []  # one-element memo; [] = not yet probed
+# Re-probe the host IP at least this often. A stale value is not merely
+# useless — verify_proxied_egress compares against it, so if the host's real
+# egress IP changed while the cache held the OLD one, an unproxied browser
+# would report an IP that differs from the stale value and PASS. That is the
+# precise silent-unproxied failure this tripwire exists to prevent, so the
+# "a runner's IP does not change mid-run" assumption is enforced with a TTL
+# rather than asserted in a comment (it holds for ephemeral CI runners; it
+# does not necessarily hold for a long-lived desktop or db-queue session).
+HOST_EGRESS_IP_TTL_S = float(os.environ.get('SCRAPER_HOST_IP_TTL_S') or '900')
+
+_host_egress_ip_cache = {}  # {'ip': str, 'at': float}; empty = not yet probed
 
 
-def host_egress_ip(timeout=15, refresh=False):
+def host_egress_ip(timeout=15, refresh=False, now=None):
     """This process's own public IP — i.e. what UNPROXIED traffic looks like.
 
-    Memoized: bootstrap runs per BATCH in proxy mode ("1 batch = 1 IP") and
-    again on every WAF rotation, so probing the echo service each time would
-    mean thousands of calls to one free endpoint while draining the queue —
-    an avoidable rate-limit risk on a dependency that can fail the chain.
-    A runner's own egress IP does not change mid-run.
+    Memoized with a TTL: bootstrap runs per BATCH in proxy mode ("1 batch =
+    1 IP") and again on every WAF rotation, so probing the echo service every
+    time would mean thousands of calls to one free endpoint while draining the
+    queue — an avoidable rate-limit risk on a dependency that can fail the
+    chain. The TTL bounds how stale the comparison baseline can get.
     """
-    if _host_egress_ip_cache and not refresh:
-        return _host_egress_ip_cache[0]
+    now = time.time() if now is None else now
+    cached = _host_egress_ip_cache
+    if cached and not refresh and (now - cached['at']) < HOST_EGRESS_IP_TTL_S:
+        return cached['ip']
     try:
         with urllib.request.urlopen(EGRESS_ECHO_URL, timeout=timeout) as resp:
             found = _extract_ip(resp.read().decode('utf-8', errors='replace'))
     except (urllib.error.URLError, OSError, ValueError):
         return None
     if found:
+        # Only a SUCCESSFUL probe refreshes the cache: a transient echo outage
+        # must not poison it, and must not extend a stale entry's life either.
         _host_egress_ip_cache.clear()
-        _host_egress_ip_cache.append(found)
+        _host_egress_ip_cache.update({'ip': found, 'at': now})
     return found
 
 
