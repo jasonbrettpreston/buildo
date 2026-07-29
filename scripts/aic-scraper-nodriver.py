@@ -439,37 +439,70 @@ def _extract_ip(raw):
     text = text.strip()
     if not text:
         return None
-    if text.startswith('{'):
+    # Unwrap up to two layers of JSON: the body may be a JSON document, or a
+    # JSON-encoded STRING containing one (nodriver hands values back encoded).
+    for _ in range(2):
+        if not text.startswith(('{', '"')):
+            break
         try:
-            return str(json.loads(text).get('ip') or '').strip() or None
-        except (ValueError, AttributeError):
-            return None
-    return text if re.match(r'^[0-9a-fA-F:.]+$', text) else None
+            decoded = json.loads(text)
+        except ValueError:
+            break
+        if isinstance(decoded, dict):
+            return str(decoded.get('ip') or '').strip() or None
+        text = str(decoded).strip()
+    if re.match(r'^[0-9a-fA-F:.]+$', text):
+        return text
+    # Last resort: an IP embedded in a text body (a <pre>-rendered JSON page).
+    found = re.search('(?:[0-9]{1,3}[.]){3}[0-9]{1,3}', text)
+    return found.group(0) if found else None
 
 
-def host_egress_ip(timeout=15):
-    """This process's own public IP — i.e. what UNPROXIED traffic looks like."""
+_host_egress_ip_cache = []  # one-element memo; [] = not yet probed
+
+
+def host_egress_ip(timeout=15, refresh=False):
+    """This process's own public IP — i.e. what UNPROXIED traffic looks like.
+
+    Memoized: bootstrap runs per BATCH in proxy mode ("1 batch = 1 IP") and
+    again on every WAF rotation, so probing the echo service each time would
+    mean thousands of calls to one free endpoint while draining the queue —
+    an avoidable rate-limit risk on a dependency that can fail the chain.
+    A runner's own egress IP does not change mid-run.
+    """
+    if _host_egress_ip_cache and not refresh:
+        return _host_egress_ip_cache[0]
     try:
         with urllib.request.urlopen(EGRESS_ECHO_URL, timeout=timeout) as resp:
-            return _extract_ip(resp.read().decode('utf-8', errors='replace'))
+            found = _extract_ip(resp.read().decode('utf-8', errors='replace'))
     except (urllib.error.URLError, OSError, ValueError):
         return None
+    if found:
+        _host_egress_ip_cache.clear()
+        _host_egress_ip_cache.append(found)
+    return found
 
 
 _HOST_IP_UNSET = object()  # distinct from None, which means "known to be unknown"
 
 
-async def verify_proxied_egress(page, host_ip=_HOST_IP_UNSET):
+async def verify_proxied_egress(browser, host_ip=_HOST_IP_UNSET):
     """FAIL-LOUD tripwire: prove the BROWSER's traffic is not leaving via this host.
 
-    This asserts the invariant that actually matters — am I proxied? — rather
-    than inferring it from the proxy extension's presence. The previous version
-    looked for a `chrome-extension://*/background.js` target and rejected a
-    browser whose targets were only `['page:about:blank']`; MV3 service workers
-    are lazily started and are not reliably enumerated by Target.getTargets
-    without a discovery filter, so that check produced a FALSE NEGATIVE on the
-    GH runner (2026-07-29 run 30496893882) — it can fail a browser that is in
-    fact correctly proxied.
+    Asserts the invariant that actually matters — am I proxied? — rather than
+    inferring it from the proxy extension's presence. An earlier version looked
+    for a `chrome-extension://*/background.js` target and rejected a browser
+    whose targets were only ['page:about:blank']; MV3 service workers start
+    lazily and are not reliably enumerated, so that produced a FALSE NEGATIVE
+    on the GH runner (run 30496893882) against a browser whose extension had in
+    fact loaded (run 30498062060 later listed both service workers).
+
+    NAVIGATES to the echo service rather than fetch()ing it: at this point in
+    bootstrap the tab is about:blank, whose opaque origin makes a cross-origin
+    fetch throw — nodriver then returns an ExceptionDetails object rather than
+    raising, which is exactly what broke run 30498062060. Navigation has no such
+    restriction. The scraper's own AIC fetches are fine because they run on the
+    AIC origin.
 
     Why it must fail loud rather than warn: the MV3 extension supplies BOTH the
     proxy route and its credentials, so if it does not load there is no error at
@@ -482,16 +515,14 @@ async def verify_proxied_egress(page, host_ip=_HOST_IP_UNSET):
     # determine it"), which must fail loud rather than trigger a re-fetch.
     if host_ip is _HOST_IP_UNSET:
         host_ip = host_egress_ip()
-    raw = await page.evaluate(
-        f"(async () => {{ const r = await fetch({json.dumps(EGRESS_ECHO_URL)},"
-        " {cache: 'no-store'}); return await r.text(); }})()",
-        await_promise=True,
-    )
+
+    page = await browser.get(EGRESS_ECHO_URL)
+    raw = await page.evaluate('document.body.innerText', await_promise=False)
     browser_ip = _extract_ip(raw)
     if not browser_ip:
         raise RuntimeError(
-            f"Could not determine the browser's egress IP from {EGRESS_ECHO_URL} "
-            f"(got {str(raw)[:120]!r}) — refusing to scrape unverified"
+            f"Could not read the browser's egress IP by navigating to {EGRESS_ECHO_URL} "
+            f"(page body was {str(raw)[:160]!r}) — refusing to scrape unverified"
         )
     if not host_ip:
         raise RuntimeError(
@@ -607,6 +638,10 @@ def build_browser_args(profile, proxy_ext_dir=None, chrome_log=None, platform=No
     use_headless = True
     if proxy_ext_dir:
         args.append(f'--load-extension={proxy_ext_dir}')
+        # nodriver adds this whenever extensions are loaded (config.py:186-187);
+        # reproduced for parity with the flag set the local runs are proven
+        # against, since attach mode means nodriver contributes nothing.
+        args.append('--enable-unsafe-extension-debugging')
         # Branded Chrome removed --load-extension in 137 and removed THIS
         # opt-out in 142, so on recent branded builds the extension cannot be
         # loaded at all; unbranded Chromium / Chrome for Testing are exempt and
@@ -747,6 +782,28 @@ def _resolve_chrome_executable():
     return find_chrome_executable()
 
 
+async def stop_and_terminate(browser, worker_id=None):
+    """Close the CDP session AND kill the browser process we spawned.
+
+    Both halves are required in attach mode: browser.stop() only disconnects
+    the websocket. nodriver's connect_existing path never populates
+    `_process`/`_process_pid` (core/browser.py:370-372 skips the spawn block),
+    so stop()'s own terminate/kill calls hit None inside a swallowed
+    `except (Exception,)`, and its last-resort branch tests
+    `browser_process_pid` — a typo for `_process_pid` — so it never fires.
+    Calling stop() alone therefore leaves a live Chrome holding our profile
+    dir, which clear_stale_profile_locks would then unlock for a SECOND
+    concurrent Chrome on the same profile (SQLite corruption, not just a leak).
+    """
+    if browser is not None:
+        try:
+            browser.stop()
+        except Exception:  # noqa: BLE001
+            log('WARN', '[scraper]', 'browser.stop() failed; killing the process anyway',
+                {'event': 'browser_stop_failed'})
+    return terminate_spawned_chrome(worker_id)
+
+
 def terminate_spawned_chrome(worker_id=None, timeout=8):
     """Kill the Chrome WE spawned for this worker, process group and all.
 
@@ -845,7 +902,7 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
             # the extension by its service-worker target rejected a browser
             # whose targets were only ['page:about:blank'] on the GH runner.
             await log_browser_targets(page)
-            await verify_proxied_egress(page)
+            await verify_proxied_egress(browser)
 
         # Fix headless screen dimensions to match viewport (nodriver#2242)
         await inject_screen_overrides(page, profile)
@@ -865,13 +922,8 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
         await page.sleep(random.uniform(0.8, 2.0))
         return browser, page, profile
     except Exception as err:
-        try:
-            browser.stop()
         # Teardown must never mask the real bootstrap error.
-        except Exception:  # noqa: BLE001
-            log('WARN', '[scraper]', 'browser.stop() failed during bootstrap unwind',
-                {'event': 'browser_stop_failed'})
-        terminate_spawned_chrome(worker_id)  # we own the pid; never leave an orphan
+        await stop_and_terminate(browser, worker_id)
         raise err
 
 
@@ -939,7 +991,7 @@ async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id
                 passed, reason = await preflight_stealth_check(page)
                 if not passed:
                     log('ERROR', '[scraper]', f'PREFLIGHT_FAIL: {reason}')
-                    browser.stop()
+                    await stop_and_terminate(browser, worker_id)
                     raise Exception(f'Preflight failed: {reason}')
                 log('INFO', '[scraper]', 'Preflight stealth check passed')
 
@@ -1380,7 +1432,7 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
         if tel['consecutive_empty'] >= WAF_TRAP_THRESHOLD:
             log('WARN', worker_tag, f"WAF trap detected ({tel['consecutive_empty']} consecutive empty). Re-bootstrapping...")
             try:
-                browser.stop()
+                await stop_and_terminate(browser, tel.get("_worker_id"))
                 # Rotate proxy session to get a new IP
                 if PROXY_HOST:
                     cleanup_proxy_extension(proxy_ext_dir)
@@ -1580,7 +1632,7 @@ async def main():
             # In db-queue mode, the outer bootstrap is only for non-proxy runs.
             # For proxy runs, each batch builds its own session. Kill the initial browser.
             if browser and PROXY_HOST:
-                browser.stop()
+                await stop_and_terminate(browser, tel.get("_worker_id"))
                 browser = None
 
             while True:
@@ -1628,7 +1680,7 @@ async def main():
                         # Browser may be dead — force cleanup
                         if browser:
                             try:
-                                browser.stop()
+                                await stop_and_terminate(browser, tel.get("_worker_id"))
                             except Exception:
                                 pass
                             browser = None
@@ -1638,7 +1690,7 @@ async def main():
                     if browser and (PROXY_HOST or batch_num % BROWSER_MAX_BATCHES == 0):
                         if not PROXY_HOST:
                             log('INFO', worker_tag, f'Browser TTL: recycling after {BROWSER_MAX_BATCHES} batches')
-                        browser.stop()
+                        await stop_and_terminate(browser, tel.get("_worker_id"))
                         browser = None
                 finally:
                     conn.close()
@@ -1684,7 +1736,7 @@ async def main():
     finally:
         if browser:
             try:
-                browser.stop()
+                await stop_and_terminate(browser, tel.get("_worker_id"))
             except Exception:
                 pass
         # Clean up proxy extension directory
