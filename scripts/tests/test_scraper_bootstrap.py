@@ -159,62 +159,15 @@ class TestBuildBrowserArgs:
 
 
 # ---------------------------------------------------------------------------
-# verify_proxy_extension_loaded — the unproxied-scraping tripwire
+# verify_proxy_extension_loaded — MOVED
 # ---------------------------------------------------------------------------
-class FakeTarget:
-    def __init__(self, url, type_='service_worker'):
-        self.url = url
-        self.type_ = type_
-
-
-class FakeConnection:
-    def __init__(self, targets):
-        self._targets = targets
-        self.calls = 0
-
-    async def send(self, _cmd):
-        self.calls += 1
-        return self._targets
-
-
-class FakeBrowser:
-    def __init__(self, connection):
-        self.connection = connection
-
-
-@pytest.mark.asyncio
-class TestVerifyProxyExtensionLoaded:
-    async def test_passes_when_the_extension_service_worker_is_present(self, scraper):
-        browser = FakeBrowser(FakeConnection([
-            FakeTarget('about:blank', 'page'),
-            FakeTarget('chrome-extension://abcdef/background.js'),
-        ]))
-
-        await scraper.verify_proxy_extension_loaded(browser)  # must not raise
-
-    async def test_raises_when_no_extension_target_exists(self, scraper):
-        """The Chrome>=137 silent-drop case: scraping would go out UNPROXIED."""
-        browser = FakeBrowser(FakeConnection([FakeTarget('about:blank', 'page')]))
-
-        with pytest.raises(RuntimeError, match='UNPROXIED'):
-            await scraper.verify_proxy_extension_loaded(browser)
-
-    async def test_missing_connection_reports_liveness_not_attributeerror(self, scraper):
-        """Regression lock for run 30490094619.
-
-        This check once ran before any CDP round-trip and crashed with
-        "'NoneType' object has no attribute 'send'", replacing nodriver's real
-        "Failed to connect to browser" and costing a full cloud debug cycle.
-        """
-        with pytest.raises(RuntimeError, match='no CDP connection'):
-            await scraper.verify_proxy_extension_loaded(FakeBrowser(None))
-
-    async def test_error_names_the_targets_it_saw(self, scraper):
-        """A tripwire that fires must say what it observed, or it just moves the mystery."""
-        browser = FakeBrowser(FakeConnection([FakeTarget('https://example.com', 'page')]))
-
-        with pytest.raises(RuntimeError, match='example.com'):
-            await scraper.verify_proxy_extension_loaded(browser)
+# Its locks now live in test_scraper_launch_attach.py: the tripwire takes the
+# PAGE (a Tab) rather than the browser, because `browser.connection` is a
+# nodriver internal and `Tab.send` is the version-stable path. The retired
+# "missing connection reports liveness" test asserted a premise I later
+# RETRACTED — the source shows that NoneType error most likely originated
+# inside browser.get(), not in the tripwire (see G4 in
+# .cursor/wf3_deep_scrapes_cdp_handshake.md).
 
 
 # ---------------------------------------------------------------------------

@@ -1,2 +1,7 @@
-nodriver>=0.48
+# EXACT pin, not >=: an unbounded spec meant CI silently resolved 0.50.3 while
+# the only version this scraper is proven against (locally + the attach-mode
+# probe) is 0.48.1 — i.e. cloud runs were never the code the operator tested.
+# Upgrading is a deliberate, separately validated task; see
+# .cursor/wf3_deep_scrapes_cdp_handshake.md G3.
+nodriver==0.48.1
 psycopg2-binary>=2.9

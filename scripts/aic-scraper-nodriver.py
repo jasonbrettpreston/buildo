@@ -30,11 +30,15 @@ import os
 import random
 import re
 import shutil
+import signal
+import socket
 import stat
 import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -424,30 +428,29 @@ def dump_chrome_launch_log(worker_id, max_lines=40):
         {'event': 'chrome_launch_log', 'path': path, 'lines': lines[-max_lines:]})
 
 
-async def verify_proxy_extension_loaded(browser):
+async def verify_proxy_extension_loaded(page):
     """FAIL-LOUD tripwire: confirm the proxy-auth extension actually loaded.
 
-    Chrome >=137 (branded) removed --load-extension; the opt-out feature flag
-    (see bootstrap_session) is documented as temporary. If the flag stops
-    working, the failure is NOT a proxy-auth error — the extension silently
-    never loads, chrome.proxy is never set, and every request goes DIRECT
-    from the runner's datacenter IP, exposing the scraper to the WAF.
+    This is the ONLY thing standing between a silently-unloaded extension and
+    scraping UNPROXIED from the host's own IP. The extension supplies both the
+    proxy route (`chrome.proxy.settings.set`) and its credentials, so if it
+    does not load there is no error — traffic simply goes direct, and
+    preflight_stealth_check documents absent extensions as normal.
 
-    The extension's MV3 service worker appears as a chrome-extension://
-    target ending in /background.js within moments of launch; its absence
-    means the extension did not load. Raises RuntimeError (bootstrap-fatal,
-    same path as the DISPLAY guard) rather than scraping unproxied.
+    That is not hypothetical: branded Chrome removed `--load-extension` in 137
+    and removed the `DisableLoadExtensionCommandLineSwitch` opt-out in 142, so
+    on any recent BRANDED Chrome the extension cannot load at all. Unbranded
+    Chromium and Chrome for Testing are exempt — which is why the CI runner
+    deliberately uses its Chromium build, and why an operator running this
+    locally against branded Chrome will (correctly) trip this guard.
+
+    Takes the PAGE (a Tab), not the browser: `Connection.send` and
+    `class Tab(Connection)` are stable across nodriver versions, while
+    `browser.connection` is an internal attribute that is not.
     """
-    if browser.connection is None:
-        # Never mask a connection-level failure with our own AttributeError:
-        # if there is no CDP connection, the browser never came up and that
-        # is the fact worth reporting (2026-07-29 run 30490094619, where this
-        # tripwire replaced nodriver's real error with 'NoneType' has no
-        # attribute 'send' on retry attempts).
-        raise RuntimeError('Cannot verify proxy extension: browser has no CDP connection (Chrome did not come up)')
     targets = []
     for _ in range(6):  # MV3 service worker registration is async — poll up to ~3s
-        targets = await browser.connection.send(uc.cdp.target.get_targets())
+        targets = await page.send(uc.cdp.target.get_targets())
         for t in targets:
             if t.url.startswith('chrome-extension://') and t.url.endswith('/background.js'):
                 return
@@ -478,18 +481,50 @@ async def inject_screen_overrides(page, profile):
     """, await_promise=False)
 
 
-# nodriver injects this exact --disable-features value before any custom arg,
-# and Chrome honors only the LAST occurrence of a repeated switch — so our
-# opt-out below must repeat these or it would silently strip site isolation.
+# nodriver's own --disable-features value. We launch Chrome ourselves now (see
+# launch_chrome), so we must supply this rather than inherit it — and our
+# Chrome>=137 opt-out must repeat it, because Chrome honors only the LAST
+# occurrence of a repeated switch.
 NODRIVER_DISABLED_FEATURES = 'IsolateOrigins,site-per-process'
 
+# Flags nodriver would have passed if it were launching. Reproduced verbatim
+# from nodriver/core/config.py:118-129 + 179-199 (pinned 0.48.1) because in
+# attach mode nodriver adds nothing to the command line. Dropping any of these
+# changes the browser's behavior/fingerprint relative to the proven local runs.
+NODRIVER_DEFAULT_ARGS = [
+    '--remote-allow-origins=*',
+    '--no-first-run',
+    '--no-service-autorun',
+    '--no-default-browser-check',
+    '--homepage=about:blank',
+    '--no-pings',
+    '--password-store=basic',
+    '--disable-infobars',
+    '--disable-breakpad',
+    '--disable-dev-shm-usage',
+    '--disable-session-crashed-bubble',
+    '--disable-search-engine-choice-screen',
+]
 
-def build_browser_args(profile, proxy_ext_dir=None, chrome_log=None, platform=None):
+# How long to wait for Chrome's DevTools endpoint. nodriver's own budget is a
+# hardcoded 2.25s (browser.py:425-449) which a cold profile on a CI runner
+# exceeds just creating its databases — the entire reason we launch and poll
+# ourselves. Generous by default; an unresponsive browser still fails loudly.
+DEVTOOLS_READY_TIMEOUT_S = float(os.environ.get('SCRAPER_DEVTOOLS_TIMEOUT_S') or '60')
+
+# Chrome processes we spawned, per worker — so teardown kills a pid we OWN
+# rather than pattern-matching the process table (never `pkill chrome`: this
+# also runs on the operator's own desktop).
+_spawned_browsers = {}
+
+
+def build_browser_args(profile, proxy_ext_dir=None, chrome_log=None, platform=None,
+                       debug_port=None, profile_dir=None):
     """Pure launch-flag builder — returns (browser_args, use_headless).
 
-    Extracted from bootstrap_session so the flag contract is unit-testable
-    without launching Chrome (the Chrome>=137 opt-out and the DISPLAY guard
-    were both cloud-only failures before this harness existed).
+    Pure and unit-tested because every flag here was a cloud-only failure at
+    some point: the Chrome>=137 opt-out, the DISPLAY guard, and now the
+    remote-debugging flags we own since moving to attach mode.
 
     Raises RuntimeError when proxy mode would need headed Chrome with no
     display server — the same fail-fast the caller has always had.
@@ -499,15 +534,19 @@ def build_browser_args(profile, proxy_ext_dir=None, chrome_log=None, platform=No
         f"--window-size={profile['w']},{profile['h']}",
         '--disable-blink-features=AutomationControlled',  # suppress cdc_ variables
     ]
+    args += NODRIVER_DEFAULT_ARGS
+    disabled_features = NODRIVER_DISABLED_FEATURES
     use_headless = True
     if proxy_ext_dir:
         args.append(f'--load-extension={proxy_ext_dir}')
-        # Chrome >=137 (branded) ignores --load-extension unless this removal
-        # feature is opted out; verify_proxy_extension_loaded() is the tripwire
-        # for when the opt-out itself stops working (Google calls it temporary).
-        args.append(
-            f'--disable-features={NODRIVER_DISABLED_FEATURES},DisableLoadExtensionCommandLineSwitch'
-        )
+        # Branded Chrome removed --load-extension in 137 and removed THIS
+        # opt-out in 142, so on recent branded builds the extension cannot be
+        # loaded at all; unbranded Chromium / Chrome for Testing are exempt and
+        # are what we run. Kept because it still helps branded 137-141 and is
+        # inert elsewhere (Chrome ignores unknown feature names) — but
+        # verify_proxy_extension_loaded, not this flag, is what guarantees we
+        # never scrape unproxied.
+        disabled_features += ',DisableLoadExtensionCommandLineSwitch'
         use_headless = False  # Extensions require headed mode
         # Headed mode on Linux requires a display server (X11/Wayland) or Xvfb.
         # Without one Chrome dies with "cannot open display" — fail fast, clearly.
@@ -516,10 +555,164 @@ def build_browser_args(profile, proxy_ext_dir=None, chrome_log=None, platform=No
                 'Proxy mode requires headed Chrome but no DISPLAY is set. '
                 'Run with: xvfb-run -a python3 scripts/aic-orchestrator.py'
             )
+    # Exactly one --disable-features switch: Chrome keeps only the last.
+    args.append(f'--disable-features={disabled_features}')
+    if profile_dir:
+        args.append(f'--user-data-dir={profile_dir}')
+    if use_headless:
+        args.append('--headless=new')
+    if debug_port:
+        # NOT --no-sandbox: de3ff6dd deliberately kept Chrome's real sandbox
+        # (relaxing the AppArmor sysctl instead) so the WAF-sensitive scraper
+        # has no launch-flag divergence from the operator's local runs.
+        args += [f'--remote-debugging-port={debug_port}',
+                 '--remote-debugging-host=127.0.0.1']
     if chrome_log:
-        # Chrome's own log is the only channel that states why it exited.
+        # Chrome's own log is the only channel that states why it exited. Safe
+        # to leave on: we spawn with stdio=DEVNULL, so unlike nodriver (which
+        # PIPEs and never drains — browser.py:417-419) a full pipe buffer
+        # cannot stall startup here.
         args += ['--enable-logging', f'--log-file={chrome_log}']
     return args, use_headless
+
+
+def find_free_port():
+    """Ask the OS for a free ephemeral port.
+
+    Inherently TOCTOU (the port is unreserved between here and Chrome's bind —
+    the same race as nodriver/core/util.py:139-143), which is why
+    wait_for_devtools falls back to reading DevToolsActivePort: if Chrome could
+    not bind this port it picks another, stays alive, and writes the real one
+    there.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.bind(('127.0.0.1', 0))
+        return sock.getsockname()[1]
+    finally:
+        sock.close()
+
+
+def read_devtools_active_port(profile_dir):
+    """Read the port Chrome ACTUALLY bound, or None.
+
+    Chrome writes `DevToolsActivePort` into the profile dir: line 1 is the
+    port, line 2 the browser ws path. nodriver never reads this file (zero
+    references package-wide), which is why a failed port bind leaves it
+    permanently blind to a live browser.
+    """
+    path = os.path.join(profile_dir, 'DevToolsActivePort')
+    try:
+        with open(path, 'r', errors='replace') as fh:
+            first = fh.readline().strip()
+        return int(first) if first.isdigit() else None
+    except (OSError, ValueError):
+        return None
+
+
+def wait_for_devtools(port, proc=None, profile_dir=None, timeout=None):
+    """Poll until Chrome's DevTools HTTP endpoint answers. Returns (port, info).
+
+    Replaces nodriver's hardcoded 2.25s budget (its five probes expire while a
+    cold CI profile is still creating its favicon/quota/password-store
+    databases). Raises a RuntimeError that NAMES the cause — elapsed time, the
+    port, and the process return code — rather than nodriver's cause-agnostic
+    "Failed to connect to browser".
+    """
+    timeout = DEVTOOLS_READY_TIMEOUT_S if timeout is None else timeout
+    deadline = time.time() + timeout
+    candidates = [port]
+    while time.time() < deadline:
+        for candidate in list(candidates):
+            try:
+                with urllib.request.urlopen(
+                        f'http://127.0.0.1:{candidate}/json/version', timeout=5) as resp:
+                    info = json.loads(resp.read().decode('utf-8', errors='replace'))
+            except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError):
+                continue  # not listening yet — that is the normal case here
+            else:
+                if candidate != port:
+                    log('WARN', '[scraper]', 'Chrome bound a different debugging port than requested',
+                        {'event': 'devtools_port_drift', 'requested': port, 'actual': candidate})
+                return candidate, info
+        if proc is not None and proc.poll() is not None:
+            raise RuntimeError(
+                f'Chrome exited during startup (returncode={proc.returncode}) before its '
+                f'DevTools endpoint on port {port} answered — see the chrome_launch_log dump'
+            )
+        # Chrome may have bound a port other than the one we asked for (see
+        # find_free_port); DevToolsActivePort is the only place it says so.
+        if profile_dir:
+            actual = read_devtools_active_port(profile_dir)
+            if actual and actual not in candidates:
+                candidates.append(actual)
+        time.sleep(0.25)
+    raise RuntimeError(
+        f'Chrome DevTools endpoint did not answer on port {port} within {timeout:.0f}s '
+        f'(process alive={proc is None or proc.poll() is None}) — raise '
+        f'SCRAPER_DEVTOOLS_TIMEOUT_S if this runner is merely slow'
+    )
+
+
+def launch_chrome(browser_args, worker_id=None):
+    """Spawn Chrome ourselves so we own its lifetime. Returns the Popen.
+
+    We launch rather than let nodriver do it because nodriver: gives the
+    handshake only 2.25s, never reads DevToolsActivePort, PIPEs stdio it never
+    drains, and raises from inside start() — leaving no handle to kill the
+    browser it just spawned (which then holds the profile and breaks every
+    retry). Owning the process fixes all four.
+    """
+    exe = str(_resolve_chrome_executable())
+    kwargs = {'stdout': subprocess.DEVNULL, 'stderr': subprocess.DEVNULL,
+              'stdin': subprocess.DEVNULL}
+    if sys.platform != 'win32':
+        # Own process group: Chrome's renderer/GPU children must die with it.
+        kwargs['start_new_session'] = True
+    proc = subprocess.Popen([exe, *browser_args], **kwargs)
+    _spawned_browsers[worker_id] = proc
+    return proc
+
+
+def _resolve_chrome_executable():
+    from nodriver.core.config import find_chrome_executable
+    return find_chrome_executable()
+
+
+def terminate_spawned_chrome(worker_id=None, timeout=8):
+    """Kill the Chrome WE spawned for this worker, process group and all.
+
+    Idempotent and never raises: teardown must not be able to fail a run.
+    Deliberately pid-based — never `pkill chrome`, which on the operator's own
+    desktop would kill their browser, and on a shared runner someone else's.
+    """
+    proc = _spawned_browsers.pop(worker_id, None)
+    if proc is None or proc.poll() is not None:
+        return False
+    try:
+        if sys.platform != 'win32':
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+        else:
+            proc.terminate()
+    except OSError as err:
+        log('WARN', '[scraper]', f'Could not signal spawned Chrome: {err}',
+            {'event': 'chrome_terminate_failed'})
+    try:
+        proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        try:
+            if sys.platform != 'win32':
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            else:
+                proc.kill()
+        except OSError:
+            pass
+    log('INFO', '[scraper]', 'Terminated spawned Chrome',
+        {'event': 'chrome_terminated', 'worker_id': worker_id})
+    return True
+
+
+atexit.register(lambda: [terminate_spawned_chrome(w) for w in list(_spawned_browsers)])
 
 
 async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
@@ -554,22 +747,35 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
     except OSError:
         pass  # a stale log is worth less than the attempt — never block launch on it
 
-    browser_args, use_headless = build_browser_args(profile, proxy_ext_dir, chrome_log)
+    # WE launch Chrome, nodriver only attaches (uc.start with BOTH host and
+    # port sets its connect_existing path, browser.py:370-375). nodriver's own
+    # launch gives the DevTools handshake a hardcoded 2.25s — less than a cold
+    # CI profile spends creating its databases — never reads
+    # DevToolsActivePort, PIPEs stdio it never drains, and raises from inside
+    # start() leaving no handle to kill the browser it just spawned (which then
+    # owns the profile and breaks every retry). Owning the process fixes all four.
+    debug_port = find_free_port()
+    browser_args, _use_headless = build_browser_args(
+        profile, proxy_ext_dir, chrome_log, debug_port=debug_port, profile_dir=profile_dir)
 
     log_chrome_diagnostics()
-    browser = await uc.start(
-        headless=use_headless,
-        browser_args=browser_args,
-        user_data_dir=profile_dir,
-    )
+    proc = launch_chrome(browser_args, worker_id=worker_id)
+    actual_port, version_info = wait_for_devtools(
+        debug_port, proc=proc, profile_dir=profile_dir)
+    log('INFO', '[scraper]', 'Chrome DevTools ready', {
+        'event': 'devtools_ready',
+        'port': actual_port,
+        'browser': (version_info or {}).get('Browser'),
+    })
+    browser = await uc.start(host='127.0.0.1', port=actual_port)
     try:
         page = await browser.get('about:blank')
 
-        # AFTER the first real CDP round-trip: a connection-level failure then
-        # surfaces as nodriver's own error rather than being pre-empted by the
-        # extension tripwire (which judges extension presence, not liveness).
+        # Extension presence is judged via the PAGE (a Tab), never
+        # browser.connection — Connection.send + Tab(Connection) are stable
+        # across nodriver versions; that attribute is not.
         if proxy_ext_dir:
-            await verify_proxy_extension_loaded(browser)
+            await verify_proxy_extension_loaded(page)
 
         # Fix headless screen dimensions to match viewport (nodriver#2242)
         await inject_screen_overrides(page, profile)
@@ -589,7 +795,13 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
         await page.sleep(random.uniform(0.8, 2.0))
         return browser, page, profile
     except Exception as err:
-        browser.stop()
+        try:
+            browser.stop()
+        # Teardown must never mask the real bootstrap error.
+        except Exception:  # noqa: BLE001
+            log('WARN', '[scraper]', 'browser.stop() failed during bootstrap unwind',
+                {'event': 'browser_stop_failed'})
+        terminate_spawned_chrome(worker_id)  # we own the pid; never leave an orphan
         raise err
 
 
@@ -666,6 +878,11 @@ async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id
             last_error = err
             log('ERROR', '[scraper]', str(err), {'event': 'bootstrap_failed', 'attempt': attempt})
             dump_chrome_launch_log(worker_id)
+            # Kill our Chrome before retrying AND after the final attempt (the
+            # `raise` below exits the loop, so a before-next-attempt-only kill
+            # would leak the last one). A survivor owns the profile and would
+            # make every subsequent attempt fail identically.
+            terminate_spawned_chrome(worker_id)
             if attempt < 3:
                 log('INFO', '[scraper]', f'Retrying bootstrap in 10s...')
                 await asyncio.sleep(10)
