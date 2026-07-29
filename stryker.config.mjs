@@ -16,8 +16,8 @@
 //   npm run test:mutation:dry  # first-time setup verification
 //   npm run test:mutation      # full run, ~3-5 min
 //
-// Threshold: 50% break (script fails if mutation score drops below 50%).
-// First-run baseline is expected to be lower; track in review_followups.md.
+// Threshold: 75% break (script fails if mutation score drops below 75% —
+// raised from the initial 50% on 2026-04-08, see `thresholds` below).
 
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
@@ -31,7 +31,8 @@ export default {
     'src/features/leads/lib/cost-model.ts',
     'src/features/leads/lib/distance.ts',
     'src/features/leads/lib/record-lead-view.ts',
-    'src/features/leads/lib/builder-query.ts',
+    // builder-query.ts was deleted — entry removed 2026-07-29 (mutation-score
+    // WF3). Keep this list in sync with .github/workflows/mutation.yml paths.
   ],
 
   // Note: NOT excluding SQL via `ignorePatterns` — that would also exclude

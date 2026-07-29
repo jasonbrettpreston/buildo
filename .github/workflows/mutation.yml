@@ -2,12 +2,12 @@ name: Mutation Testing
 
 # Stryker mutation testing — automated so it cannot be forgotten.
 # Runs in two modes:
-#   1. Weekly cron — full mutation run on the 4 targeted lib files,
+#   1. Weekly cron — full mutation run on the targeted lib files,
 #      surfaces drift in test quality even when no PR is open.
 #   2. Per-PR — only when one of the mutation targets actually changed.
 #      Skips otherwise so the 3-5 min run doesn't tax every PR.
 #
-# A failing run (mutation score < 50%) blocks merge per the threshold
+# A failing run (mutation score < 75%) blocks merge per the threshold
 # in stryker.config.mjs. Adjust the threshold there, not here.
 #
 # See docs/specs/00_engineering_standards.md §12.13.
@@ -22,11 +22,9 @@ on:
       - 'src/features/leads/lib/cost-model.ts'
       - 'src/features/leads/lib/distance.ts'
       - 'src/features/leads/lib/record-lead-view.ts'
-      - 'src/features/leads/lib/builder-query.ts'
       - 'src/tests/cost-model.logic.test.ts'
       - 'src/tests/distance.logic.test.ts'
       - 'src/tests/record-lead-view.logic.test.ts'
-      - 'src/tests/builder-query.logic.test.ts'
       - 'stryker.config.mjs'
       - '.github/workflows/mutation.yml'
   workflow_dispatch:

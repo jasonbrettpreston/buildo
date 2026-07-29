@@ -1025,3 +1025,587 @@ describe('WF3-06 (H-W8) — scope_tags dedup', () => {
 // (cost-model-shared.js) — estimateCostInline no longer exists. The full V2
 // surgical parity battery now lives in src/tests/parity-battery.test.ts and
 // covers 40+ test cases across all spec 83 branches.
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Mutation-survivor triage — ROUND 2 (2026-07-29, WF3 mutation-score red)
+// The weekly Stryker run (30273538219) dropped cost-model.ts to 63.10%
+// (aggregate 67.80 < break 75) after WF2 §3-ARCHETYPE (4442fb75) retired the
+// V1 Liar's-Gate integration blocks and added ~100 lines (the Brain-path row/
+// config builder). The blocks below re-pin V1 boundary BEHAVIOR through the
+// current public contract (NOT the retired pre-archetype semantics — the V1
+// inline path is still live for callers without config.tradeRates), and
+// exercise the §3-ARCHETYPE pass-through fields so a dropped/nulled field in
+// the shim's row builder changes observable output.
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('V1 placeholder-cost threshold — exact boundary (PLACEHOLDER_COST_THRESHOLD=1000)', () => {
+  // footprint 100 sqm × 1 storey × sfd $3000 × premium 1.0 = model $300,000.
+  // liarGateThreshold:0 disables the gate (strict `<` can never fire) so these
+  // pin ONLY the placeholder dispatch, not the override.
+  function at(est: number | null) {
+    return estimateCost(
+      makePermit({ est_const_cost: est, permit_type: 'New Building', structure_type: 'Detached Dwelling', scope_tags: [] }),
+      null,
+      makeFootprint({ footprint_area_sqm: 100, estimated_stories: 1 }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+      { liarGateThreshold: 0 },
+    );
+  }
+
+  it('est exactly $1000 (boundary) is a placeholder → model path, NOT trusted', () => {
+    const r = at(1000);
+    expect(r.cost_source).toBe('model');
+    expect(r.estimated_cost).toBe(300_000);
+    expect(r.is_geometric_override).toBe(false);
+  });
+
+  it('est $1001 (just above boundary) IS trusted → permit path', () => {
+    const r = at(1001);
+    expect(r.cost_source).toBe('permit');
+    expect(r.estimated_cost).toBe(1001);
+    // permit-reported costs carry no range
+    expect(r.cost_range_low).toBe(1001);
+    expect(r.cost_range_high).toBe(1001);
+  });
+
+  it('est $0 (below boundary) → model path', () => {
+    const r = at(0);
+    expect(r.cost_source).toBe('model');
+    expect(r.estimated_cost).toBe(300_000);
+  });
+});
+
+describe("V1 Liar's Gate — exact boundary + threshold override + fallback suppression", () => {
+  // model = 100 sqm × 1 storey × $3000 × 1.0 = $300,000; default gate = ×0.25 = $75,000.
+  function gateAt(est: number, config?: { liarGateThreshold?: number }) {
+    return estimateCost(
+      makePermit({ est_const_cost: est, permit_type: 'New Building', structure_type: 'Detached Dwelling', scope_tags: [] }),
+      null,
+      makeFootprint({ footprint_area_sqm: 100, estimated_stories: 1 }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+      config,
+    );
+  }
+
+  it('reported $74,999 (just below model×0.25) → geometric override fires', () => {
+    const r = gateAt(74_999);
+    expect(r.cost_source).toBe('model');
+    expect(r.is_geometric_override).toBe(true);
+    expect(r.estimated_cost).toBe(300_000);
+    // override uses the MODEL range (±25%, footprint basis — not fallback ±50%)
+    expect(r.cost_range_low).toBe(225_000);
+    expect(r.cost_range_high).toBe(375_000);
+    expect(r.modeled_gfa_sqm).toBe(100);
+  });
+
+  it('reported exactly $75,000 (= model×0.25, strict <) → trusted, NO override', () => {
+    const r = gateAt(75_000);
+    expect(r.cost_source).toBe('permit');
+    expect(r.is_geometric_override).toBe(false);
+    expect(r.estimated_cost).toBe(75_000);
+    expect(r.cost_range_low).toBe(75_000);
+    expect(r.cost_range_high).toBe(75_000);
+  });
+
+  it('config.liarGateThreshold=0.5 raises the gate: $149,999 overridden, $150,000 trusted', () => {
+    const over = gateAt(149_999, { liarGateThreshold: 0.5 });
+    expect(over.is_geometric_override).toBe(true);
+    expect(over.estimated_cost).toBe(300_000);
+    const trusted = gateAt(150_000, { liarGateThreshold: 0.5 });
+    expect(trusted.is_geometric_override).toBe(false);
+    expect(trusted.estimated_cost).toBe(150_000);
+  });
+
+  it('gate is SUPPRESSED on lot-size fallback (±50% uncertainty carve-out)', () => {
+    // fallback: 1000 sqm lot × 0.4 suburban × 2 floors = 800 sqm × $3000 = $2.4M model.
+    // Reported $10,000 is far below the gate but usedFallback=true → trusted.
+    const r = estimateCost(
+      makePermit({ est_const_cost: 10_000, permit_type: 'New Building', structure_type: 'Detached Dwelling', scope_tags: [] }),
+      makeParcel({ lot_size_sqm: 1000 }),
+      null,
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+    expect(r.cost_source).toBe('permit');
+    expect(r.is_geometric_override).toBe(false);
+    expect(r.estimated_cost).toBe(10_000);
+  });
+});
+
+describe('V1 range percentages — exact ±25% model / ±50% fallback / 0% permit', () => {
+  it('footprint-based model estimate carries ±25% exactly', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, permit_type: 'New Building', structure_type: 'Detached Dwelling', scope_tags: [] }),
+      null,
+      makeFootprint({ footprint_area_sqm: 100, estimated_stories: 1 }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+    expect(r.estimated_cost).toBe(300_000);
+    expect(r.cost_range_low).toBe(225_000);
+    expect(r.cost_range_high).toBe(375_000);
+    expect(r.modeled_gfa_sqm).toBe(100);
+  });
+
+  it('lot-fallback model estimate carries ±50% exactly', () => {
+    // 1000 × 0.4 × 2 = 800 sqm × $3000 = $2.4M → low $1.2M, high $3.6M
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, permit_type: 'New Building', structure_type: 'Detached Dwelling', scope_tags: [] }),
+      makeParcel({ lot_size_sqm: 1000 }),
+      null,
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+    expect(r.estimated_cost).toBe(2_400_000);
+    expect(r.cost_range_low).toBe(1_200_000);
+    expect(r.cost_range_high).toBe(3_600_000);
+    expect(r.modeled_gfa_sqm).toBe(800);
+  });
+
+  it('trusted permit cost keeps modeled_gfa_sqm from the geometry that ran the gate', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: 900_000 }),
+      makeParcel(),
+      makeFootprint(), // 200 × 2 = 400 sqm
+      makeNeighbourhood(),
+    );
+    expect(r.cost_source).toBe('permit');
+    expect(r.modeled_gfa_sqm).toBe(400);
+  });
+});
+
+describe('V1 tradeAllocationPct slicing (sliceTradeValues)', () => {
+  it('slices the trusted permit cost by pct, rounds, and DROPS zero slices', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: 200_001 }),
+      null,
+      makeFootprint(),
+      makeNeighbourhood(),
+      { liarGateThreshold: 0, tradeAllocationPct: { plumbing: 0.1, electrical: 0, hvac: 0.005 } },
+    );
+    expect(r.estimated_cost).toBe(200_001);
+    // 200,001 × 0.1 = 20,000.1 → 20,000 (rounded); electrical 0% is DROPPED (val > 0 filter)
+    expect(r.trade_contract_values).toEqual({ plumbing: 20_000, hvac: 1_000 });
+  });
+
+  it('no tradeAllocationPct config → empty trade_contract_values on the model path', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: null }),
+      makeParcel(),
+      makeFootprint(),
+      makeNeighbourhood(),
+    );
+    expect(r.cost_source).toBe('model');
+    expect(r.trade_contract_values).toEqual({});
+  });
+});
+
+describe('V1 display formatting — formatDollarShort boundaries + label thresholds', () => {
+  it('model range spanning the $1M format boundary renders "$600K–$1.0M estimated · Large Job" exactly', () => {
+    // Addition rate: 400 sqm × 1 storey × $2000 × 1.0 = $800,000 → low 600K, high exactly 1.0M.
+    // Complexity: largeFootprint +15 only (< 40, no label); premium 1.0 (no label).
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, permit_type: 'Addition', structure_type: 'Detached Dwelling', scope_tags: [] }),
+      null,
+      makeFootprint({ footprint_area_sqm: 400, estimated_stories: 1 }),
+      makeNeighbourhood({ avg_household_income: null, tenure_renter_pct: 0 }),
+    );
+    expect(r.estimated_cost).toBe(800_000);
+    expect(r.display).toBe('$600K–$1.0M estimated · Large Job');
+  });
+
+  it('low of exactly $1000 renders "$1K" (>= boundary), giving "$1K–$3K estimated · Small Job"', () => {
+    // fallback: 1.25 sqm lot × 0.4 × 2 = 1 sqm × $2000 = $2000 model → low 1000, high 3000.
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, permit_type: 'Addition', structure_type: 'Detached Dwelling', scope_tags: [] }),
+      makeParcel({ lot_size_sqm: 1.25 }),
+      null,
+      makeNeighbourhood({ avg_household_income: null, tenure_renter_pct: 0 }),
+    );
+    expect(r.estimated_cost).toBe(2000);
+    expect(r.display).toBe('$1K–$3K estimated · Small Job');
+  });
+
+  it('sub-$1000 values render whole dollars: "$400–$1K estimated · Small Job"', () => {
+    // fallback: 0.5 sqm lot × 0.4 × 2 = 0.4 sqm × $2000 ≈ $800 → low ≈ 400, high ≈ 1200.
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, permit_type: 'Addition', structure_type: 'Detached Dwelling', scope_tags: [] }),
+      makeParcel({ lot_size_sqm: 0.5 }),
+      null,
+      makeNeighbourhood({ avg_household_income: null, tenure_renter_pct: 0 }),
+    );
+    expect(r.display).toBe('$400–$1K estimated · Small Job');
+  });
+
+  it('complexity 30 (below the 40 label boundary) omits "Complex scope"', () => {
+    // storeys 7 → +30 highRise only (Addition = not a new build, no +10)
+    const r = estimateCost(
+      makePermit({ est_const_cost: 2_500_000, permit_type: 'Addition', storeys: 7, scope_tags: [] }),
+      null,
+      makeFootprint({ footprint_area_sqm: 150 }),
+      makeNeighbourhood({ avg_household_income: 50_000 }),
+    );
+    expect(r.complexity_score).toBe(30);
+    expect(r.display).not.toContain('Complex scope');
+  });
+});
+
+describe('V1 complexity — storeys ?? footprint fallback chain', () => {
+  it('null permit.storeys falls back to footprint.estimated_stories for the high-rise signal', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, permit_type: 'Interior Alteration', storeys: null, dwelling_units_created: 1, scope_tags: [] }),
+      null,
+      makeFootprint({ footprint_area_sqm: 150, estimated_stories: 7 }),
+      makeNeighbourhood({ avg_household_income: 70_000 }),
+    );
+    expect(r.complexity_score).toBe(30);
+  });
+
+  it('null storeys AND null footprint → no high-rise signal, score 0', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: 2_000_000, permit_type: 'Interior Alteration', storeys: null, dwelling_units_created: 1, scope_tags: [] }),
+      null,
+      null,
+      makeNeighbourhood({ avg_household_income: 70_000 }),
+    );
+    expect(r.complexity_score).toBe(0);
+    // no geometry at all → modeled_gfa_sqm stays null on the trusted path
+    expect(r.modeled_gfa_sqm).toBeNull();
+  });
+});
+
+describe('V1 computeBuildingArea — remaining fallback edges', () => {
+  it('footprint with null stories falls back to the parcel path with the exact fallback cost', () => {
+    // parcel 500 × 0.4 × 2 = 400 sqm × $3000 = $1.2M (suburban, renter 0)
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, permit_type: 'New Building', structure_type: 'Detached Dwelling', scope_tags: [] }),
+      makeParcel({ lot_size_sqm: 500 }),
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: null }),
+      makeNeighbourhood({ avg_household_income: 50_000, tenure_renter_pct: 0 }),
+    );
+    expect(r.estimated_cost).toBe(1_200_000);
+    expect(r.modeled_gfa_sqm).toBe(400);
+  });
+
+  it('NULL neighbourhood on the parcel fallback defaults renter pct to 0 → suburban coverage', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, permit_type: 'New Building', structure_type: 'Detached Dwelling', scope_tags: [] }),
+      makeParcel({ lot_size_sqm: 500 }),
+      null,
+      null,
+    );
+    // 500 × 0.4 × 2 = 400 sqm × $3000 × 1.0 (null income) = $1.2M
+    expect(r.estimated_cost).toBe(1_200_000);
+    expect(r.premium_factor).toBe(1.0);
+  });
+
+  it('Path 3 (no cost, no geometry) returns the full null envelope', () => {
+    const r = estimateCost(
+      makePermit({ est_const_cost: null, permit_type: 'Interior Alteration', scope_tags: [] }),
+      null,
+      null,
+      makeNeighbourhood({ avg_household_income: 120_000 }),
+    );
+    expect(r.estimated_cost).toBeNull();
+    expect(r.cost_source).toBe('model');
+    expect(r.cost_tier).toBeNull();
+    expect(r.cost_range_low).toBeNull();
+    expect(r.cost_range_high).toBeNull();
+    expect(r.is_geometric_override).toBe(false);
+    expect(r.modeled_gfa_sqm).toBeNull();
+    expect(r.premium_factor).toBe(1.35); // premium still computed for telemetry
+    expect(r.trade_contract_values).toEqual({});
+    expect(r.display).toBe('Cost estimate unavailable');
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Brain-path delegation block (config.tradeRates present) — §3-ARCHETYPE row
+// pass-through + config defaults. Each test makes ONE (or one cluster of)
+// shim-forwarded field(s) output-relevant so a nulled/dropped field in the
+// cost-model.ts row builder changes the result. Ladder mechanics themselves
+// are pinned in archetype-ladder.logic.test.ts + parity-battery.test.ts; here
+// we only need the TS shim's forwarding to be load-bearing.
+// ───────────────────────────────────────────────────────────────────────────
+
+const BRAIN_RATES = {
+  plumbing: { base_rate_sqft: 100, structure_complexity_factor: 1.0 },
+  electrical: { base_rate_sqft: 300, structure_complexity_factor: 1.0 },
+};
+
+const ARCH_CONFIG = {
+  tradeRates: BRAIN_RATES,
+  scopeMatrix: { 'New Building::SFD': 1.0 },
+  archetypeEnabled: true,
+  archetypeT1FsiMin: 0.05,
+  archetypeT1FsiMax: 8,
+  archetypeT1TotalCap: 25_000_000,
+  archetypeT2RenoCap: 10_000_000,
+  archetypeT2BuildCap: 20_000_000,
+  archetypeT2BuildMin: 200_000,
+  archetypeT3TotalCap: 15_000_000,
+};
+
+/** Low-rise residential, construction-class permit — the archetype entry gate. */
+function archPermit(overrides: Partial<CostModelPermitInput> = {}): CostModelPermitInput {
+  return makePermit({
+    permit_type_class: 'construction',
+    structure_type: 'SFD',
+    est_const_cost: null,
+    scope_tags: [],
+    ...overrides,
+  });
+}
+
+describe('Brain path §3-ARCHETYPE — shim row pass-through (T2 parcel totals)', () => {
+  it('max_build line: cost_fb_total + opt_aor_gfa_sqm + premium forwarded (T2, archetype_parcel)', () => {
+    const r = estimateCost(
+      archPermit({
+        project_type: 'new_build',
+        cost_fb_total: 1_500_000,
+        opt_aor_gfa_sqm: 300,
+        neighbourhood_cost_premium: 1.2,
+        active_trade_slugs: ['plumbing', 'electrical'],
+      }),
+      null, null, null, ARCH_CONFIG,
+    );
+    expect(r.cost_source).toBe('archetype_parcel');
+    expect(r.estimated_cost).toBe(1_500_000);
+    expect(r.modeled_gfa_sqm).toBe(300);
+    expect(r.effective_area_sqm).toBe(300);
+    expect(r.premium_factor).toBe(1.2);
+    expect(r.cost_range_low).toBe(1_125_000);
+    expect(r.cost_range_high).toBe(1_875_000);
+    expect(r.cost_tier).toBe('large');
+    expect(r.is_geometric_override).toBe(false);
+    // Decision-4 slicing over the shim-forwarded active_trade_slugs (rates 100 vs 300)
+    expect(r.trade_contract_values).toEqual({ plumbing: 375_000, electrical: 1_125_000 });
+    // archetype = model-style display with the en-dash range
+    expect(r.display).toBe('$1.1M–$1.9M estimated · Large Job');
+  });
+
+  it('T1 declared-area rung: residential_sqm + lot forwarded (archetype_declared_area)', () => {
+    // per-sqm = 1.5M / 300 = $5000; own area 250; fsi 250/400 = 0.625 ∈ [0.05, 8]
+    const r = estimateCost(
+      archPermit({ project_type: 'new_build', cost_fb_total: 1_500_000, opt_aor_gfa_sqm: 300, residential_sqm: 250 }),
+      makeParcel({ lot_size_sqm: 400 }),
+      null, null, ARCH_CONFIG,
+    );
+    expect(r.cost_source).toBe('archetype_declared_area');
+    expect(r.estimated_cost).toBe(1_250_000);
+    expect(r.modeled_gfa_sqm).toBe(250);
+  });
+
+  it('addition line: cost_addition_total + cur_floor_gfa_sqm forwarded', () => {
+    const r = estimateCost(
+      archPermit({ scope_tags: ['addition'], cost_addition_total: 400_000, cur_floor_gfa_sqm: 120 }),
+      null, null, null, ARCH_CONFIG,
+    );
+    expect(r.cost_source).toBe('archetype_parcel');
+    expect(r.estimated_cost).toBe(400_000);
+    expect(r.modeled_gfa_sqm).toBe(120);
+  });
+
+  it('underpin+basement additive pair: both per-sqm scalars × cur_floor area, summed', () => {
+    const r = estimateCost(
+      archPermit({
+        scope_tags: ['underpinning', 'basement'],
+        cost_basement_underpin_per_sqm: 800,
+        cost_basement_per_sqm: 500,
+        cur_floor_gfa_sqm: 100,
+      }),
+      null, null, null, ARCH_CONFIG,
+    );
+    expect(r.cost_source).toBe('archetype_parcel');
+    expect(r.estimated_cost).toBe(130_000); // 800×100 + 500×100
+    expect(r.modeled_gfa_sqm).toBe(200); // both bases summed
+  });
+
+  it('kitchen+bath additive pair: per-sqm scalars × their OWN estimated areas', () => {
+    const r = estimateCost(
+      archPermit({
+        scope_tags: ['kitchen', 'bathroom'],
+        cost_kitchen_per_sqm: 3000,
+        cur_est_kitchen_gfa_sqm: 20,
+        cost_bath_per_sqm: 4000,
+        cur_est_bath_gfa_sqm: 10,
+      }),
+      null, null, null, ARCH_CONFIG,
+    );
+    expect(r.estimated_cost).toBe(100_000); // 60K + 40K
+    expect(r.modeled_gfa_sqm).toBe(30);
+  });
+
+  it('garage line: cost_garage_total + max_garage_gfa_sqm forwarded', () => {
+    const r = estimateCost(
+      archPermit({ scope_tags: ['garage'], cost_garage_total: 90_000, max_garage_gfa_sqm: 45 }),
+      null, null, null, ARCH_CONFIG,
+    );
+    expect(r.estimated_cost).toBe(90_000);
+    expect(r.modeled_gfa_sqm).toBe(45);
+  });
+
+  it('garage fit-gate: NULL scalar = fits:false → cost null + unavailable display', () => {
+    const r = estimateCost(
+      archPermit({ scope_tags: ['garage'] }),
+      null, null, null, ARCH_CONFIG,
+    );
+    expect(r.cost_source).toBe('none');
+    expect(r.estimated_cost).toBeNull();
+    expect(r.cost_tier).toBeNull();
+    expect(r.display).toBe('Cost estimate unavailable');
+    expect(r.trade_contract_values).toEqual({});
+  });
+
+  it('laneway_suite line: cost_laneway_suite_total + max_laneway_suite_gfa_sqm forwarded', () => {
+    const r = estimateCost(
+      archPermit({ scope_tags: ['laneway-suite'], cost_laneway_suite_total: 350_000, max_laneway_suite_gfa_sqm: 60 }),
+      null, null, null, ARCH_CONFIG,
+    );
+    expect(r.estimated_cost).toBe(350_000);
+    expect(r.modeled_gfa_sqm).toBe(60);
+  });
+
+  it('solar line: cost_solar_total + max_buildable_footprint_sqm forwarded', () => {
+    const r = estimateCost(
+      archPermit({ scope_tags: ['solar'], cost_solar_total: 30_000, max_buildable_footprint_sqm: 150 }),
+      null, null, null, ARCH_CONFIG,
+    );
+    expect(r.estimated_cost).toBe(30_000);
+    expect(r.modeled_gfa_sqm).toBe(150);
+  });
+
+  it('T3 rate rung: archetypeRates + interior_alterations_sqm + premium forwarded (archetype_rate)', () => {
+    // gut line, no parcel scalar → T3 = INT $2000/sqm × 50 sqm own area × premium 1.2
+    const r = estimateCost(
+      archPermit({ scope_tags: ['renovation'], interior_alterations_sqm: 50, neighbourhood_cost_premium: 1.2 }),
+      null, null, null,
+      { ...ARCH_CONFIG, archetypeRates: { INT: 2000 } },
+    );
+    expect(r.cost_source).toBe('archetype_rate');
+    expect(r.estimated_cost).toBe(120_000);
+    expect(r.modeled_gfa_sqm).toBe(50);
+  });
+
+  it('archetype premium ≥1.35 + complexity 40 drive both display labels through the Brain branch', () => {
+    const r = estimateCost(
+      archPermit({
+        project_type: 'new_build',
+        cost_fb_total: 2_000_000,
+        opt_aor_gfa_sqm: 300,
+        neighbourhood_cost_premium: 1.5,
+        storeys: 7, // +30 highRise; 'New Building' default permit_type → +10 newBuild = 40
+      }),
+      null, null, null, ARCH_CONFIG,
+    );
+    expect(r.premium_factor).toBe(1.5);
+    expect(r.complexity_score).toBe(40);
+    expect(r.display).toContain('Premium neighbourhood');
+    expect(r.display).toContain('Complex scope');
+  });
+
+  it('archetypeEnabled ABSENT → ladder stays OFF even with scalars present (T4 surgical)', () => {
+    const r = estimateCost(
+      archPermit({
+        project_type: 'new_build',
+        cost_fb_total: 1_500_000,
+        opt_aor_gfa_sqm: 300,
+        active_trade_slugs: ['plumbing'],
+      }),
+      null,
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: 2 }),
+      null,
+      { tradeRates: BRAIN_RATES, scopeMatrix: { 'New Building::SFD': 1.0 } },
+    );
+    // surgical: 400 sqm × $100 × 1.0 × 1.0 = $40,000 — NOT the $1.5M archetype total
+    expect(r.cost_source).toBe('model');
+    expect(r.estimated_cost).toBe(40_000);
+  });
+});
+
+describe('Brain path — shim config defaults + display source dispatch', () => {
+  it('trusted permit cost through the Brain renders the full-dollar (non-estimated) display', () => {
+    const r = estimateCost(
+      archPermit({
+        structure_type: 'Office Building', // not low-rise → T4
+        est_const_cost: 500_000,
+        active_trade_slugs: ['plumbing'],
+      }),
+      null,
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: 2 }),
+      null,
+      { tradeRates: BRAIN_RATES, scopeMatrix: { 'New Building::Office Building': 1.0 } },
+    );
+    // surgical 400×100 = $40K; reported $500K ≥ gate → trusted
+    expect(r.cost_source).toBe('permit');
+    expect(r.estimated_cost).toBe(500_000);
+    expect(r.display).toContain('$500,000');
+    expect(r.display).not.toContain('estimated');
+    expect(r.trade_contract_values).toEqual({ plumbing: 500_000 });
+  });
+
+  it('trustThresholdPct is honored when liarGateThreshold is absent (?? chain)', () => {
+    // surgical $40K; gate at 0.9 → $36K. Reported $20K < $36K → override.
+    // (With the 0.25 default the gate is $10K and $20K would be TRUSTED.)
+    const r = estimateCost(
+      archPermit({
+        structure_type: 'Office Building',
+        est_const_cost: 20_000,
+        active_trade_slugs: ['plumbing'],
+      }),
+      null,
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: 2 }),
+      null,
+      { tradeRates: BRAIN_RATES, scopeMatrix: { 'New Building::Office Building': 1.0 }, trustThresholdPct: 0.9 },
+    );
+    expect(r.is_geometric_override).toBe(true);
+    expect(r.estimated_cost).toBe(40_000);
+  });
+
+  it('custom urbanCoverageRatio reaches the Brain GFA fallback (not the 0.7 default)', () => {
+    // SFD (residential, 2 fallback floors), ladder disabled (no archetypeEnabled), mapper-null.
+    // renter 60% > 50 → urban: 1000 × 0.5 × 2 = 1000 sqm GFA; areaEff ×0.5 = 500 → $50K
+    const r = estimateCost(
+      archPermit({ active_trade_slugs: ['plumbing'] }),
+      makeParcel({ lot_size_sqm: 1000 }),
+      null,
+      makeNeighbourhood({ avg_household_income: null, tenure_renter_pct: 60 }),
+      {
+        tradeRates: BRAIN_RATES,
+        scopeMatrix: { 'New Building::SFD': 0.5 },
+        urbanCoverageRatio: 0.5,
+        suburbanCoverageRatio: 0.25,
+      },
+    );
+    expect(r.modeled_gfa_sqm).toBe(1000);
+    expect(r.estimated_cost).toBe(50_000);
+  });
+
+  it('custom suburbanCoverageRatio reaches the Brain GFA fallback (not the 0.4 default)', () => {
+    // renter 0 ≤ 50 → suburban: 1000 × 0.25 × 2 = 500 sqm GFA; areaEff ×0.5 = 250 → $25K
+    const r = estimateCost(
+      archPermit({ active_trade_slugs: ['plumbing'] }),
+      makeParcel({ lot_size_sqm: 1000 }),
+      null,
+      makeNeighbourhood({ avg_household_income: null, tenure_renter_pct: 0 }),
+      {
+        tradeRates: BRAIN_RATES,
+        scopeMatrix: { 'New Building::SFD': 0.5 },
+        urbanCoverageRatio: 0.5,
+        suburbanCoverageRatio: 0.25,
+      },
+    );
+    expect(r.modeled_gfa_sqm).toBe(500);
+    expect(r.estimated_cost).toBe(25_000);
+  });
+
+  it('premiumTiers default map (config omits premiumTiers) still applies income tiers', () => {
+    // income $250K → top tier 1.85; surgical $40K × 1.85 = $74K
+    const r = estimateCost(
+      archPermit({ structure_type: 'Office Building', active_trade_slugs: ['plumbing'] }),
+      null,
+      makeFootprint({ footprint_area_sqm: 200, estimated_stories: 2 }),
+      makeNeighbourhood({ avg_household_income: 250_000, tenure_renter_pct: 0 }),
+      { tradeRates: BRAIN_RATES, scopeMatrix: { 'New Building::Office Building': 1.0 } },
+    );
+    expect(r.premium_factor).toBe(1.85);
+    expect(r.estimated_cost).toBe(74_000);
+  });
+});
