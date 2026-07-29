@@ -31,6 +31,15 @@ describe('scripts/migrate.js — file shape', () => {
     expect(content).toMatch(/crypto\.createHash\(['"]sha256['"]\)/);
   });
 
+  it('checksums are line-ending invariant (2026-07-29: 28 CRLF-worktree checksums false-drifted on the LF Linux-runner checkout)', () => {
+    expect(content).toMatch(/\.replace\(\/\\r\\n\/g, '\\n'\)/);
+    // The one-off that reconciled pre-normalization rows must stay in-repo
+    // (referenced from the sha256 comment; idempotent).
+    expect(
+      fs.existsSync(path.resolve(__dirname, '../../scripts/analysis/reconcile-migration-checksums.js')),
+    ).toBe(true);
+  });
+
   it('skips already-applied migrations when checksum matches', () => {
     expect(content).toMatch(/skippedCount/);
     expect(content).toMatch(/applied\.has\(file\)/);

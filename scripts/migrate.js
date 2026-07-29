@@ -48,7 +48,14 @@ const TRACKING_TABLE_SQL = `
 `;
 
 function sha256(str) {
-  return crypto.createHash('sha256').update(str).digest('hex');
+  // Normalize CRLF→LF before hashing (2026-07-29): checksums must be
+  // line-ending invariant. 28 migrations were applied from a Windows
+  // worktree whose files were CRLF on disk while their git blobs are LF —
+  // the recorded checksums matched only the CRLF bytes, so the first
+  // Linux-runner checkout (LF) reported 28 false DRIFTs and failed the
+  // chain-coa-permits pre-flight. Pre-normalization rows are reconciled by
+  // scripts/analysis/reconcile-migration-checksums.js (idempotent).
+  return crypto.createHash('sha256').update(str.replace(/\r\n/g, '\n')).digest('hex');
 }
 
 async function ensureTrackingTable(pool) {

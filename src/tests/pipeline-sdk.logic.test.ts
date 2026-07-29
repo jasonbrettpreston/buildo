@@ -77,6 +77,33 @@ describe('Pipeline SDK', () => {
       }
     });
 
+    it('statement_timeout: createPool wraps pool.connect so each new client gets the session SET before checkout (Supavisor drops startup params — verified live)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { Pool } = require('pg');
+      const pool = pipeline.createPool();
+      expect(pool.connect).not.toBe(Pool.prototype.connect);
+      expect(pool.connect.name).toBe('connectWithTimeout');
+      pool.end().catch(() => {});
+    });
+
+    it('statement_timeout: throws on a non-numeric or negative PIPELINE_STATEMENT_TIMEOUT_MS', () => {
+      const env = process.env as Record<string, string | undefined>;
+      const orig = env.PIPELINE_STATEMENT_TIMEOUT_MS;
+      try {
+        env.PIPELINE_STATEMENT_TIMEOUT_MS = 'not-a-number';
+        expect(() => pipeline.createPool()).toThrow(/PIPELINE_STATEMENT_TIMEOUT_MS/);
+        env.PIPELINE_STATEMENT_TIMEOUT_MS = '-5';
+        expect(() => pipeline.createPool()).toThrow(/PIPELINE_STATEMENT_TIMEOUT_MS/);
+        env.PIPELINE_STATEMENT_TIMEOUT_MS = '300000';
+        const pool = pipeline.createPool();
+        expect(pool).toBeDefined();
+        pool.end().catch(() => {});
+      } finally {
+        if (orig === undefined) delete env.PIPELINE_STATEMENT_TIMEOUT_MS;
+        else env.PIPELINE_STATEMENT_TIMEOUT_MS = orig;
+      }
+    });
+
     it('F1g class: strips sslmode= from the SUPABASE_DATABASE_URL fallback so pg cannot discard the pinned-CA ssl config', () => {
       const env = process.env as Record<string, string | undefined>;
       const origHost = env.PG_HOST;

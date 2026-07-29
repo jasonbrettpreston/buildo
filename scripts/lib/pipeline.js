@@ -39,10 +39,67 @@ const { resolveSslConfig, stripSslParams } = require('./ssl-config');
  * stack, SUPABASE_DATABASE_URL → cloud), and the discrete vars winning is
  * what keeps a local chain run from silently targeting the cloud DB.
  */
+/**
+ * Pipeline pools override the server-session statement_timeout (2026-07-29):
+ * the Supabase cloud default is 2min, which killed link_wsib mid-chain on
+ * the first GH-runner dispatch (backlogged UPDATE > 120s). Chains are batch
+ * jobs whose statements legitimately run many minutes (§11 centreline is a
+ * 48-min step); their outer bound is the workflow step `timeout-minutes`,
+ * not a per-statement cap. Default 0 (no cap — the historical local-dev
+ * semantics every chain was built under); override via
+ * PIPELINE_STATEMENT_TIMEOUT_MS.
+ *
+ * Mechanism (all three alternatives tested live against the cloud pooler):
+ * the Supavisor session-mode pooler DROPS both the startup-packet `options`
+ * parameter and the `statement_timeout` startup param — only a session
+ * `SET` on the established connection sticks. A bare pool.on('connect')
+ * SET races the first checked-out query (deprecation-warns today; pg@9
+ * removes the implicit queueing that makes it survivable), so instead
+ * pool.connect is wrapped: each NEW physical client gets one awaited
+ * `SET statement_timeout` before it is ever handed to a caller. Covers
+ * pool.query too (it acquires via pool.connect internally).
+ */
+function withPipelineStatementTimeout(pool) {
+  const raw = process.env.PIPELINE_STATEMENT_TIMEOUT_MS;
+  const timeoutMs = raw === undefined ? 0 : parseInt(raw, 10);
+  if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
+    throw new Error(
+      `PIPELINE_STATEMENT_TIMEOUT_MS must be a non-negative integer (ms), got: ${JSON.stringify(raw)}`
+    );
+  }
+  const setSql = `SET statement_timeout TO ${timeoutMs}`;
+  const configured = new WeakSet();
+  const origConnect = pool.connect.bind(pool);
+  pool.connect = function connectWithTimeout(cb) {
+    if (typeof cb === 'function') {
+      return origConnect((err, client, release) => {
+        if (err || configured.has(client)) return cb(err, client, release);
+        client.query(setSql).then(
+          () => { configured.add(client); cb(null, client, release); },
+          (setErr) => { release(setErr); cb(setErr); },
+        );
+      });
+    }
+    return origConnect().then(async (client) => {
+      if (!configured.has(client)) {
+        try {
+          await client.query(setSql);
+        } catch (setErr) {
+          client.release(setErr);
+          throw setErr;
+        }
+        configured.add(client);
+      }
+      return client;
+    });
+  };
+  return pool;
+}
+
 function createPool() {
   if (!process.env.PG_HOST && process.env.SUPABASE_DATABASE_URL) {
     const connectionString = process.env.SUPABASE_DATABASE_URL;
-    return new Pool({
+    return withPipelineStatementTimeout(new Pool({
       // stripSslParams (F1g root-cause class): an sslmode=/sslrootcert=
       // query param in the URL makes pg build its own ssl config and
       // silently DISCARD the pinned-CA `ssl` object below.
@@ -50,7 +107,7 @@ function createPool() {
       // Spec 113 §4.1 — resolveSslConfig is the only place `ssl` is built;
       // connectionString style pins the CA for any non-loopback host.
       ssl: resolveSslConfig({ connectionString }),
-    });
+    }));
   }
   const rawPort = process.env.PG_PORT || '5432';
   const port = parseInt(rawPort, 10);
@@ -74,7 +131,7 @@ function createPool() {
     );
   }
   const host = process.env.PG_HOST || 'localhost';
-  return new Pool({
+  return withPipelineStatementTimeout(new Pool({
     host,
     port,
     database: process.env.PG_DATABASE || 'buildo',
@@ -84,7 +141,7 @@ function createPool() {
     password: pgPassword || 'postgres',
     // Spec 113 §4.1 — the only place an `ssl` config is constructed.
     ssl: resolveSslConfig({ host }),
-  });
+  }));
 }
 
 // ---------------------------------------------------------------------------
