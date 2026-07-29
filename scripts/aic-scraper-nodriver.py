@@ -478,6 +478,50 @@ async def inject_screen_overrides(page, profile):
     """, await_promise=False)
 
 
+# nodriver injects this exact --disable-features value before any custom arg,
+# and Chrome honors only the LAST occurrence of a repeated switch — so our
+# opt-out below must repeat these or it would silently strip site isolation.
+NODRIVER_DISABLED_FEATURES = 'IsolateOrigins,site-per-process'
+
+
+def build_browser_args(profile, proxy_ext_dir=None, chrome_log=None, platform=None):
+    """Pure launch-flag builder — returns (browser_args, use_headless).
+
+    Extracted from bootstrap_session so the flag contract is unit-testable
+    without launching Chrome (the Chrome>=137 opt-out and the DISPLAY guard
+    were both cloud-only failures before this harness existed).
+
+    Raises RuntimeError when proxy mode would need headed Chrome with no
+    display server — the same fail-fast the caller has always had.
+    """
+    platform = platform if platform is not None else sys.platform
+    args = [
+        f"--window-size={profile['w']},{profile['h']}",
+        '--disable-blink-features=AutomationControlled',  # suppress cdc_ variables
+    ]
+    use_headless = True
+    if proxy_ext_dir:
+        args.append(f'--load-extension={proxy_ext_dir}')
+        # Chrome >=137 (branded) ignores --load-extension unless this removal
+        # feature is opted out; verify_proxy_extension_loaded() is the tripwire
+        # for when the opt-out itself stops working (Google calls it temporary).
+        args.append(
+            f'--disable-features={NODRIVER_DISABLED_FEATURES},DisableLoadExtensionCommandLineSwitch'
+        )
+        use_headless = False  # Extensions require headed mode
+        # Headed mode on Linux requires a display server (X11/Wayland) or Xvfb.
+        # Without one Chrome dies with "cannot open display" — fail fast, clearly.
+        if platform != 'win32' and not os.environ.get('DISPLAY'):
+            raise RuntimeError(
+                'Proxy mode requires headed Chrome but no DISPLAY is set. '
+                'Run with: xvfb-run -a python3 scripts/aic-orchestrator.py'
+            )
+    if chrome_log:
+        # Chrome's own log is the only channel that states why it exited.
+        args += ['--enable-logging', f'--log-file={chrome_log}']
+    return args, use_headless
+
+
 async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
     """Launch Chrome via CDP and establish AIC session with warm entry.
 
@@ -487,32 +531,6 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
     """
     # Coherent fingerprint profile — viewport, platform, and UA match
     profile = random.choice(FINGERPRINT_PROFILES)
-    vw, vh = profile['w'], profile['h']
-    browser_args = [
-        f'--window-size={vw},{vh}',
-        '--disable-blink-features=AutomationControlled',  # suppress cdc_ variables
-    ]
-    use_headless = True
-    if proxy_ext_dir:
-        browser_args.append(f'--load-extension={proxy_ext_dir}')
-        # Chrome >=137 (branded) ignores --load-extension unless the removal
-        # feature is opted out. Chrome keeps only the LAST --disable-features
-        # switch on the command line, and nodriver always injects its own
-        # (IsolateOrigins,site-per-process) BEFORE custom args — so this value
-        # must repeat nodriver's features or it would silently strip them.
-        # verify_proxy_extension_loaded() is the tripwire for when this
-        # opt-out itself stops working (Google documents it as temporary).
-        browser_args.append(
-            '--disable-features=IsolateOrigins,site-per-process,DisableLoadExtensionCommandLineSwitch'
-        )
-        use_headless = False  # Extensions require headed mode
-        # Guard: headed mode on Linux requires a display server (X11/Wayland) or Xvfb.
-        # Without one, Chrome crashes with "cannot open display". Fail fast with clear message.
-        if sys.platform != 'win32' and not os.environ.get('DISPLAY'):
-            raise RuntimeError(
-                'Proxy mode requires headed Chrome but no DISPLAY is set. '
-                'Run with: xvfb-run -a python3 scripts/aic-orchestrator.py'
-            )
 
     # Persistent profile dir — reuse cookies/localStorage across runs
     profile_name = f'worker-{worker_id}' if worker_id else 'standalone'
@@ -535,7 +553,8 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
             os.remove(chrome_log)
     except OSError:
         pass  # a stale log is worth less than the attempt — never block launch on it
-    browser_args += ['--enable-logging', f'--log-file={chrome_log}']
+
+    browser_args, use_headless = build_browser_args(profile, proxy_ext_dir, chrome_log)
 
     log_chrome_diagnostics()
     browser = await uc.start(

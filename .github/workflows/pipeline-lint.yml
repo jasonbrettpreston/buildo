@@ -42,6 +42,26 @@ jobs:
       - run: pip install ruff
       - run: ruff check scripts/*.py
 
+  pytest:
+    # Unit harness for scripts/*.py — no DB, no browser, no network.
+    # Exists because three consecutive cloud-only failures (2026-07-29 runs
+    # 30485096998 / 30487133930 / 30490094619) were all pure-logic seams in
+    # the scraper/orchestrator: an empty-string env var defeating an int
+    # default, a total worker wipeout reporting PASS, and a bootstrap tripwire
+    # masking nodriver's real error. Each cost a ~6-minute Actions round-trip
+    # to find; all four are now pinned here.
+    name: Pytest (Pipeline Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      # Runtime deps too: the harness imports the real modules rather than
+      # re-implementing them, so a missing dep must fail here, not skip.
+      - run: pip install -r scripts/requirements.txt -r scripts/requirements-dev.txt
+      - run: python -m pytest scripts/tests
+
   validate-migrations:
     # Regression-lock for the mig-118 antipattern (active SQL after `-- DOWN`
     # crashes scripts/migrate.js because the runner doesn't parse markers).

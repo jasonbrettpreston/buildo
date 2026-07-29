@@ -133,3 +133,6 @@ so the scheduled `chain_sources` `load_wsib` step SKIPs (PASS + instructions row
 
 Note: rows once enriched with no contacts found are never retried; a true refresh pass
 requires resetting `last_enriched_at` (deliberate — Spec 45/46 spend control).
+
+## Python harness (`npm run test:py`)
+Unit tests for `scripts/*.py` live in `scripts/tests/` (pytest, no DB / no browser / no network). Install once with `pip install -r scripts/requirements-dev.txt`; the chains install `requirements.txt` only, so the harness can never affect a production run. CI runs it as the `Pytest (Pipeline Python)` job in `pipeline-lint.yml`. Added 2026-07-29 after three consecutive cloud-only failures (GH runs 30485096998 / 30487133930 / 30490094619) all turned out to be pure-logic seams costing a ~6-minute Actions round-trip each. Run it before pushing any `scripts/*.py` change.

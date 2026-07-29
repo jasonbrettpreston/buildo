@@ -105,3 +105,8 @@ reports/mutation/
 .review-*
 
 backups/
+
+# Python bytecode (pipeline scripts + harness)
+__pycache__/
+*.py[cod]
+.pytest_cache/

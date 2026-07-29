@@ -1,0 +1,7 @@
+# Dev/test-only python deps — NOT installed by the pipeline chains.
+# Chain workflows install scripts/requirements.txt only, so nothing here can
+# affect a production run. Install locally with:
+#   pip install -r scripts/requirements-dev.txt
+# Run with: npm run test:py
+pytest>=8.0
+pytest-asyncio>=0.24
