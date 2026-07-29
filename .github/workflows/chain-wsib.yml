@@ -1,0 +1,98 @@
+# chain-wsib.yml — on-demand `wsib` chain (Serper contact enrichment of wsib_registry).
+#
+# SPEC LINK: docs/specs/00-architecture/115_scheduling.md §3, §4, §7a
+# SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §4, §8
+# SPEC LINK: docs/specs/01-pipeline/46_wsib_enrichment.md
+#
+# NO schedule — Spec 46: on-demand, operator-triggered after the annual WSIB
+# CSV load (cost-sensitive: real Serper API spend). workflow_dispatch only.
+#
+# Sizing (2026-07-29): the enrichment queue after an annual reload is tens of
+# thousands of rows; a single GH job caps at 360 minutes. manifest.json pins
+# ENRICH_LIMIT=6000 per run (~3.5s/row budget inside the step timeout), and
+# enrichment is once-per-row durable (`last_enriched_at` stamped per row,
+# skip-forever) — so the operator RE-DISPATCHES this workflow until the
+# pending queue reaches 0. Each run finishes cleanly inside the cap; a
+# mid-run kill would leave a 'running' pipeline_runs row that blocks the
+# next dispatch until stale-cleanup, which is why the limit is conservative.
+
+name: chain-wsib
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  wsib:
+    runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth)
+    timeout-minutes: 355
+    concurrency:
+      group: ${{ github.workflow }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Guard — environment (SUPABASE_DATABASE_URL + SERPER_API_KEY + CA cert)
+        id: env_guard
+        env: &pipeline-env
+          PIPELINE_CHAIN: ${{ github.workflow }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+        run: |
+          if [ -z "$SUPABASE_DATABASE_URL" ]; then
+            echo "::error::SUPABASE_DATABASE_URL is empty — refusing to proceed (Spec 115 §3/§4 item 3 fail-safe-loud posture)."
+            exit 1
+          fi
+          # This workflow exists ONLY to spend Serper quota on contact
+          # enrichment — a missing key would otherwise no-op 6000 rows
+          # "successfully" (enrich scripts skip without the key). Fail loud.
+          if [ -z "$SERPER_API_KEY" ]; then
+            echo "::error::SERPER_API_KEY is empty — this workflow's entire purpose is Serper enrichment; add the repo secret before dispatching (Spec 46)."
+            exit 1
+          fi
+          if [ ! -f "$SUPABASE_CA_CERT_PATH" ]; then
+            echo "::error::CA cert not found at SUPABASE_CA_CERT_PATH=$SUPABASE_CA_CERT_PATH — every non-loopback connection in this workflow requires it (Spec 113 §4.2/§4.3)."
+            exit 1
+          fi
+
+      - name: Pre-flight — migrate.js --verify (runbook rule 2)
+        run: node scripts/migrate.js --verify
+        env: *pipeline-env
+
+      - name: Guard — wsib concurrency check
+        id: wsib_guard
+        run: node scripts/check-chain-running.js wsib >> "$GITHUB_OUTPUT"
+        env: *pipeline-env
+
+      - name: Run wsib chain
+        id: wsib
+        if: steps.wsib_guard.outputs.skip != 'true'
+        timeout-minutes: 340
+        run: node scripts/run-chain.js wsib
+        env: *pipeline-env
+
+      - name: Verdict check — wsib
+        id: wsib_verdict
+        if: always() && steps.wsib_guard.outputs.skip != 'true'
+        run: node scripts/check-chain-verdict.js wsib
+        env: *pipeline-env
+
+      - name: Report pending queue (re-dispatch until 0)
+        if: always() && steps.wsib_guard.outputs.skip != 'true'
+        run: |
+          node -e "
+          const pipeline = require('./scripts/lib/pipeline');
+          const pool = pipeline.createPool();
+          pool.query(\"SELECT count(*) FROM wsib_registry WHERE last_enriched_at IS NULL AND is_gta = true\").then(r => {
+            console.log('::notice title=WSIB enrichment queue::' + r.rows[0].count + ' rows still pending (is_gta pre-filter only; the NAICS/size filters trim further at run time). Re-dispatch this workflow until 0.');
+            return pool.end();
+          });
+          "
+        env: *pipeline-env
