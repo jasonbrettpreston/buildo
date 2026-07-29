@@ -234,39 +234,11 @@ class TestTerminateSpawnedChrome:
             scraper._spawned_browsers.pop('w2', None)
 
 
-class FakeTab:
-    """A Tab stand-in — deliberately has NO `.connection` attribute.
-
-    Regression lock: the tripwire once read `browser.connection`, a nodriver
-    internal. It must depend only on Tab.send, which is stable across versions.
-    """
-
-    def __init__(self, urls):
-        self._urls = urls
-        self.sends = 0
-
-    async def send(self, _cmd):
-        self.sends += 1
-        return [type('T', (), {'url': u, 'type_': 'service_worker'})() for u in self._urls]
-
-
-@pytest.mark.asyncio
-class TestTripwireUsesTheTab:
-    async def test_passes_with_extension_target(self, scraper):
-        tab = FakeTab(['about:blank', 'chrome-extension://abc/background.js'])
-
-        await scraper.verify_proxy_extension_loaded(tab)
-
-        assert tab.sends >= 1, 'must actually query CDP'
-
-    async def test_raises_when_extension_absent(self, scraper):
-        with pytest.raises(RuntimeError, match='UNPROXIED'):
-            await scraper.verify_proxy_extension_loaded(FakeTab(['about:blank']))
-
-    async def test_does_not_touch_browser_connection(self, scraper):
-        """FakeTab has no `.connection`; an AttributeError here is the old bug."""
-        tab = FakeTab(['chrome-extension://x/background.js'])
-
-        await scraper.verify_proxy_extension_loaded(tab)
-
-        assert not hasattr(tab, 'connection')
+# NOTE: the target-visibility tripwire that used to be locked here is GONE.
+# It judged "is the extension loaded?" by looking for a
+# chrome-extension://*/background.js target and rejected a browser whose
+# targets were only ['page:about:blank'] (GH run 30496893882) — but MV3 service
+# workers are lazily started and not reliably enumerated by Target.getTargets
+# without a discovery filter, so it could fail a correctly-proxied browser.
+# Replaced by verify_proxied_egress, which proves the invariant that matters;
+# its locks live in test_scraper_egress.py.

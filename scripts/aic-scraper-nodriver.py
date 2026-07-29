@@ -428,40 +428,108 @@ def dump_chrome_launch_log(worker_id, max_lines=40):
         {'event': 'chrome_launch_log', 'path': path, 'lines': lines[-max_lines:]})
 
 
-async def verify_proxy_extension_loaded(page):
-    """FAIL-LOUD tripwire: confirm the proxy-auth extension actually loaded.
+EGRESS_ECHO_URL = os.environ.get('SCRAPER_EGRESS_ECHO_URL') or 'https://api.ipify.org?format=json'
 
-    This is the ONLY thing standing between a silently-unloaded extension and
-    scraping UNPROXIED from the host's own IP. The extension supplies both the
-    proxy route (`chrome.proxy.settings.set`) and its credentials, so if it
-    does not load there is no error — traffic simply goes direct, and
-    preflight_stealth_check documents absent extensions as normal.
 
-    That is not hypothetical: branded Chrome removed `--load-extension` in 137
-    and removed the `DisableLoadExtensionCommandLineSwitch` opt-out in 142, so
-    on any recent BRANDED Chrome the extension cannot load at all. Unbranded
-    Chromium and Chrome for Testing are exempt — which is why the CI runner
-    deliberately uses its Chromium build, and why an operator running this
-    locally against branded Chrome will (correctly) trip this guard.
+def _extract_ip(raw):
+    """Pull an IP string out of the echo service's response (JSON or bare text)."""
+    if raw is None:
+        return None
+    text = raw if isinstance(raw, str) else str(raw)
+    text = text.strip()
+    if not text:
+        return None
+    if text.startswith('{'):
+        try:
+            return str(json.loads(text).get('ip') or '').strip() or None
+        except (ValueError, AttributeError):
+            return None
+    return text if re.match(r'^[0-9a-fA-F:.]+$', text) else None
 
-    Takes the PAGE (a Tab), not the browser: `Connection.send` and
-    `class Tab(Connection)` are stable across nodriver versions, while
-    `browser.connection` is an internal attribute that is not.
+
+def host_egress_ip(timeout=15):
+    """This process's own public IP — i.e. what UNPROXIED traffic looks like."""
+    try:
+        with urllib.request.urlopen(EGRESS_ECHO_URL, timeout=timeout) as resp:
+            return _extract_ip(resp.read().decode('utf-8', errors='replace'))
+    except (urllib.error.URLError, OSError, ValueError):
+        return None
+
+
+_HOST_IP_UNSET = object()  # distinct from None, which means "known to be unknown"
+
+
+async def verify_proxied_egress(page, host_ip=_HOST_IP_UNSET):
+    """FAIL-LOUD tripwire: prove the BROWSER's traffic is not leaving via this host.
+
+    This asserts the invariant that actually matters — am I proxied? — rather
+    than inferring it from the proxy extension's presence. The previous version
+    looked for a `chrome-extension://*/background.js` target and rejected a
+    browser whose targets were only `['page:about:blank']`; MV3 service workers
+    are lazily started and are not reliably enumerated by Target.getTargets
+    without a discovery filter, so that check produced a FALSE NEGATIVE on the
+    GH runner (2026-07-29 run 30496893882) — it can fail a browser that is in
+    fact correctly proxied.
+
+    Why it must fail loud rather than warn: the MV3 extension supplies BOTH the
+    proxy route and its credentials, so if it does not load there is no error at
+    all — traffic silently goes direct from this host's IP, exposing a
+    WAF-sensitive scraper. Spec 115 §3/§4's fail-safe-loud posture applies: if
+    we cannot PROVE we are proxied, we do not scrape. bootstrap_with_retry
+    retries, so a transient echo-service outage costs attempts, not silence.
     """
-    targets = []
-    for _ in range(6):  # MV3 service worker registration is async — poll up to ~3s
-        targets = await page.send(uc.cdp.target.get_targets())
-        for t in targets:
-            if t.url.startswith('chrome-extension://') and t.url.endswith('/background.js'):
-                return
-        await asyncio.sleep(0.5)
-    seen = sorted(f'{t.type_}:{t.url}' for t in targets)
-    raise RuntimeError(
-        'Proxy-auth extension did not load (no chrome-extension://*/background.js target '
-        'after 3s). Likely Chrome >=137 --load-extension removal with the '
-        'DisableLoadExtensionCommandLineSwitch opt-out no longer honored — scraping would '
-        f'run UNPROXIED from this host. Targets seen: {seen}'
+    # Sentinel, not None: None is a MEANINGFUL value here ("we could not
+    # determine it"), which must fail loud rather than trigger a re-fetch.
+    if host_ip is _HOST_IP_UNSET:
+        host_ip = host_egress_ip()
+    raw = await page.evaluate(
+        f"(async () => {{ const r = await fetch({json.dumps(EGRESS_ECHO_URL)},"
+        " {cache: 'no-store'}); return await r.text(); }})()",
+        await_promise=True,
     )
+    browser_ip = _extract_ip(raw)
+    if not browser_ip:
+        raise RuntimeError(
+            f"Could not determine the browser's egress IP from {EGRESS_ECHO_URL} "
+            f"(got {str(raw)[:120]!r}) — refusing to scrape unverified"
+        )
+    if not host_ip:
+        raise RuntimeError(
+            f"Could not determine this host's egress IP from {EGRESS_ECHO_URL}, so "
+            f"'am I proxied?' is unanswerable (browser reported {browser_ip}) — "
+            "refusing to scrape unverified"
+        )
+    if browser_ip == host_ip:
+        raise RuntimeError(
+            f"Browser egress IP {browser_ip} equals this host's own IP — traffic is "
+            'UNPROXIED. The MV3 proxy extension carries both the proxy route and its '
+            'credentials, so a silent non-load means direct scraping from this host. '
+            'Branded Chrome removed --load-extension in 137 and its opt-out in 142; '
+            'use unbranded Chromium or Chrome for Testing.'
+        )
+    log('INFO', '[scraper]', 'Proxied egress confirmed', {
+        'event': 'proxied_egress_verified',
+        'browser_ip_suffix': browser_ip.rsplit('.', 1)[-1] if '.' in browser_ip else '?',
+        'differs_from_host': True,
+    })
+    return browser_ip
+
+
+async def log_browser_targets(page):
+    """Log the target list — diagnostic only, never a gate.
+
+    Target visibility is exactly what proved unreliable for judging whether the
+    extension loaded, so this records what we saw without deciding anything.
+    """
+    try:
+        targets = await page.send(uc.cdp.target.get_targets())
+        seen = sorted(f'{getattr(t, "type_", "?")}:{getattr(t, "url", "?")[:80]}' for t in targets)
+    except Exception as err:  # noqa: BLE001
+        log('WARN', '[scraper]', f'Could not enumerate targets: {err}',
+            {'event': 'target_enumeration_failed'})
+        return []
+    log('INFO', '[scraper]', 'Browser targets', {'event': 'browser_targets', 'targets': seen})
+    return seen
 
 
 async def inject_screen_overrides(page, profile):
@@ -771,11 +839,13 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
     try:
         page = await browser.get('about:blank')
 
-        # Extension presence is judged via the PAGE (a Tab), never
-        # browser.connection — Connection.send + Tab(Connection) are stable
-        # across nodriver versions; that attribute is not.
         if proxy_ext_dir:
-            await verify_proxy_extension_loaded(page)
+            # Log what targets exist (diagnostic), then PROVE we are proxied by
+            # egress IP. Target visibility is not evidence of proxying: judging
+            # the extension by its service-worker target rejected a browser
+            # whose targets were only ['page:about:blank'] on the GH runner.
+            await log_browser_targets(page)
+            await verify_proxied_egress(page)
 
         # Fix headless screen dimensions to match viewport (nodriver#2242)
         await inject_screen_overrides(page, profile)
