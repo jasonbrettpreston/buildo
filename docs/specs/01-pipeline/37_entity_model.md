@@ -26,6 +26,7 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
 
 ## 3. Behavioral Contract
 - **Inputs:** Permits (builder_name), CoA applications (applicant), WSIB registry entries. Data migration from existing `builders` table.
+  > **IMPLEMENTATION STATUS (verified 2026-07-29):** the CoA input path is NOT YET IMPLEMENTED — entities are extracted solely from `permits.builder_name` (`scripts/extract-builders.js`); `load-coa.js` contains no entity code and CoA currently yields zero entities. CoA extraction (builder/architect/owner/agent roles) is planned — WF opened 2026-07-29 (operator-directed).
 - **Core Logic:**
   - **Entity Resolution:** Each unique normalized name maps to one `entities` row. Normalization: uppercase, collapse whitespace, strip corporate suffixes (INC, LTD, CORP, etc.). Implemented in `src/lib/builders/normalize.ts`.
   - **Junction Linking:** `entity_projects` connects entities to permits (via permit_num/revision_num) and CoA applications (via coa_file_num) with a role enum (Builder, Architect, Applicant, Owner, Agent, Engineer).

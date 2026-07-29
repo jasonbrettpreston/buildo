@@ -46,7 +46,7 @@ refresh_snapshot → assert_data_bounds → assert_engine_health
 | 15 | `link_massing` | `link-massing.js` | Link parcels to building footprints via building-centroid-in-parcel PostGIS predicate. `--full` (via `manifest.scripts.link_massing.chain_args.sources`) now **permits** a full relink; the **WF2 P11-2 gate** does one only when the `building_footprints` count or `LINK_MASSING_CODE_VERSION` changed (Spec 56 §3), else incremental | parcel_buildings |
 | 16 | `neighbourhoods` | `load-neighbourhoods.js` | Ingest neighbourhood boundaries + Census income profiles | neighbourhoods |
 | 17 | `link_neighbourhoods` | `link-neighbourhoods.js` | Assign neighbourhood_id to permits via point-in-polygon (default/incremental mode — no `chain_args.sources` --full override). Carries a documented N+1 hot spot | permits |
-| 18 | `load_wsib` | `load-wsib.js` | Download Ontario WSIB contractor registry | wsib_registry |
+| 18 | `load_wsib` | `load-wsib.js` | Load the Ontario WSIB contractor registry from a MANUAL annual download (wsib.ca — no download URL exists). In chain context with no `--file` the step emits a PASS/SKIPPED summary with operator instructions (`load-wsib.js:89-127`) and `wsib_registry` stays at its last snapshot; refresh = operator-run `node scripts/load-wsib.js --file data/BusinessClassificationDetails(YYYY).csv` (see runbook §WSIB annual refresh, Spec 52) | wsib_registry |
 | 19 | `link_wsib` | `link-wsib.js` | Re-match builders against fresh WSIB data (default/incremental mode — no `chain_args.sources` --full override) | entities |
 | 20 | `load_zoning` | `load-zoning.js` | Ingest Toronto Zoning By-law (569-2013) — 10 CKAN **DataStore** layers (not SHP ZIP; `_id` upsert key) into the zoning tables | `zoning_bylaw_areas` + 9 overlays |
 | 21 | `enrich_parcels` | `enrich-parcels.js` | The multi-pass parcel enrichment engine (`--full` in sources chain via `manifest.scripts.enrich_parcels.chain_args.sources`): zoning by-law feed (class/FSI/coverage/height/overlays, Spec 58/65) + max-build envelope (footprint/box/GFA/suite/constraints, Spec 65 §4) + existing-structure & reno/build scenario GFAs (Spec 65) + optimal-lot-config + comparable-builds scalars (Spec 78) + `neighbourhood_id` (NULL-sentinel). Consumes the `load_zoning` §9 contract | `parcels` |
@@ -74,7 +74,7 @@ Every other step (including `link_parcels`, `link_neighbourhoods`, `link_wsib`, 
 
 ### Inputs
 - Toronto Open Data GIS endpoints (address points CSV, parcels CSV, massing shapefiles, neighbourhood GeoJSON)
-- Ontario WSIB registry CSV
+- Ontario WSIB registry CSV (manual annual download — the chain step SKIPs (PASS) without it; see Spec 52)
 - Google Maps Geocoding API (fallback)
 
 ### Core Logic
@@ -105,7 +105,7 @@ Every other step (including `link_parcels`, `link_neighbourhoods`, `link_wsib`, 
 ### Edge Cases
 - City GIS portal returning 500 → chain halts (no partial spatial data)
 - Neighbourhood boundary changes (rare, ~annual) → old permits may shift neighbourhoods
-- WSIB download truncated → could drop previously matched builders (no rollback protection)
+- WSIB CSV absent in chain context (the normal scheduled-runner case) → `load_wsib` SKIPs with PASS + instructions row; a truncated operator-supplied CSV could still drop previously matched builders (no rollback protection)
 - `link_neighbourhoods` + `compute_centroids` N+1 patterns → performance hot spots (documented, not yet batched); the `--full` `enrich_parcels` + cascaded cost recompute is the dominant runtime contributor (~18 min enrich on a ~105 min chain)
 </behavior>
 

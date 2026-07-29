@@ -14,7 +14,7 @@ As a business analyst, I need the Ontario Workplace Safety and Insurance Board r
 |----------|-------|
 | **Source** | Ontario WSIB CSV (Class G — Construction only) |
 | **Format** | CSV |
-| **Schedule** | Quarterly (via `chain_sources`) |
+| **Schedule** | Annual MANUAL download (wsib.ca, no stable URL). The `chain_sources` `load_wsib` step SKIPs (PASS + instructions) when no `--file` is provided — the scheduled-runner case. Operator procedure: runbook §WSIB annual refresh |
 | **Script** | `scripts/load-wsib.js` |
 | **Filter** | Class G (Construction) only, deduplicated by normalized name + address |
 
@@ -24,8 +24,13 @@ As a business analyst, I need the Ontario Workplace Safety and Insurance Board r
 | `legal_name_normalized` | TEXT | PK part 1 — uppercased, trimmed |
 | `mailing_address` | TEXT | PK part 2 |
 | `trade_name` | TEXT | Operating/trade name |
-| `status` | TEXT | "Active", "Lapsed", etc. |
-| `class_code` | TEXT | WSIB class (filtered to "G") |
+| `predominant_class` | TEXT | WSIB class (loader keeps Class G only) |
+| `naics_code` / `naics_description` | TEXT | NAICS classification |
+| `subclass` / `subclass_description` | TEXT | G1 residential · G3 foundation/exterior · G4 building equipment · G5 specialty trades · G6 non-res, etc. |
+| `business_size` | TEXT | e.g. Small/Medium/Large |
+| `is_gta` | BOOLEAN | Computed per-row at load; gates the Serper enrichment queue (Spec 46) |
+
+> NOTE (2026-07-29): earlier versions listed `status`/`class_code` columns — they do not exist; the table above matches `load-wsib.js`'s real loaded columns. The CSV carries **no contact fields**; `primary_phone`/`primary_email`/`website` on `wsib_registry` are populated only by Serper enrichment (Spec 46).
 
 **Composite PK:** `(legal_name_normalized, mailing_address)`
 **Upsert:** `ON CONFLICT DO UPDATE`

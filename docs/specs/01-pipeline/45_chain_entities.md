@@ -11,7 +11,7 @@ As a salesperson, I need builder entities automatically enriched with phone numb
 ## 2. Chain Definition
 
 **Trigger:** `node scripts/run-chain.js entities` or `POST /api/admin/pipelines/chain_entities`
-**Schedule:** Scheduled daily 03:00 ET (`local-cron.js` `entities`) — but **effectively inert**: the chain no-ops without `SERPER_API_KEY` (`enrich-web-search.js` skips web-search enrichment when the key is unset), and the dev-box cron has not executed it since **early March 2026** (last `pipeline_runs` rows 2026-03-10). Net result today: ~1% contact coverage; the daily entry is retained (see below) but the API-spend gate means it does nothing until the key is provisioned. The `permits`/`coa`/`sources` chains never invoke these steps — so their `entities.primary_phone/email/website` coverage is legitimately near-zero (asserted as INFO, not FAIL, in `assert-global-coverage.js`).
+**Schedule:** Daily 08:00 UTC (~3 AM ET) via GitHub Actions `chain-entities.yml` cron (Spec 115; activated 2026-07-29 `f7993025`) — but **effectively inert**: the chain no-ops without `SERPER_API_KEY` (`enrich-web-search.js` skips web-search enrichment when the key is unset), and the workflow env deliberately omits `SERPER_API_KEY` (operator ruling 2026-07-29: keep daily runs Serper-inert; the annual `wsib_registry` enrichment via `chain-wsib.yml` workflow_dispatch is the spend path instead — Spec 46). Last real enrichment: 2026-03-10. Net result today: ~1% contact coverage; the daily entry is retained (see below) but the API-spend gate means it does nothing until the key is provisioned. The `permits`/`coa`/`sources` chains never invoke these steps — so their `entities.primary_phone/email/website` coverage is legitimately near-zero (asserted as INFO, not FAIL, in `assert-global-coverage.js`).
 > **Cron-entry decision (WF2 P10):** KEEP the daily entry — it is the correct cadence for when `SERPER_API_KEY` is provisioned, and the Serper gate makes an un-keyed run a safe no-op (no wasted spend). The gate is the spend control, not the absence of a schedule. `local-cron.js` carries an inline comment stating this so the entry is not mistaken for dead config.
 **Steps:** 2 (sequential)
 **Gate:** None
@@ -48,9 +48,9 @@ Both steps run the **same script** (`enrich-web-search.js`) with different envir
    - **Likely individuals** — 2-3 word names without business keywords and no WSIB match (e.g., "YAN WANG")
    - **Generic WSIB trade names** — under 4 characters or in blocklist (e.g., "Contracting", "General Contracting")
    - Skipped entities are marked `last_enriched_at = NOW()` to prevent re-processing. Skip counts tracked in `records_meta.skipped`.
-2. **WSIB builders** — query entities where `wsib_match IS NOT NULL` and `(phone IS NULL OR email IS NULL)`. For each, execute Google search via Serper API. Parse results for phone, email, website. Write to entity record with `records_meta` tracking.
-3. **Named builders** — query remaining entities where `name IS NOT NULL` and `(phone IS NULL OR email IS NULL)` and `wsib_match IS NULL`. Same enrichment flow.
-4. **Rate limiting** — Serper API has daily quota. Script tracks usage and stops when approaching limit.
+2. **WSIB builders** — query entities that are WSIB-matched and `last_enriched_at IS NULL` (once-per-row forever — rows enriched with no contacts found are NOT retried; a refresh pass requires resetting `last_enriched_at`). For each, execute Google search via Serper API. Parse results for phone, email, website. Write to entity record with `records_meta` tracking.
+3. **Named builders** — remaining entities with `last_enriched_at IS NULL` and no WSIB match, ordered by `permit_count DESC`. Same enrichment flow.
+4. **Rate limiting** — the real caps are `ENRICH_LIMIT` (rows per run) + an `ENRICH_RATE_MS` inter-call sleep. (There is NO in-script quota tracker — an earlier version of this spec claimed one.)
 5. **Deduplication** — normalized name matching prevents re-enriching the same entity across runs.
 6. **City extraction** — `extractCity()` validates WSIB mailing address parts, skipping PO Box, Suite, Unit, province abbreviations, and postal codes to avoid malformed search queries.
 
@@ -59,7 +59,7 @@ Both steps run the **same script** (`enrich-web-search.js`) with different envir
 - `records_meta` includes enrichment telemetry (searched, found, rate_limited)
 
 ### Edge Cases
-- Serper API daily limit reached → script stops gracefully, remaining builders deferred to next run
+- `ENRICH_LIMIT` reached → run ends cleanly; remaining rows stay `last_enriched_at IS NULL` and are picked up next run
 - Generic builder names ("John Smith Construction") → may return irrelevant results; confidence scoring filters noise
 - Same builder with multiple permit appearances → enriched once via entity deduplication
 - Numbered corporations (e.g., "1000287552 ONTARIO INC") → skipped by pre-flight filter

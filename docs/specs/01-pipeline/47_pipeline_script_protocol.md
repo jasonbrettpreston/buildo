@@ -1,6 +1,6 @@
 # Pipeline Script Protocol — New Step Authoring Standard
 
-> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 3** of `.cursor/active_task.md`.
+> ℹ **Execution model (2026-07-29):** chains run on GitHub Actions cron against the cloud Supabase DB (Spec 115); the connection/TLS contract is Spec 113 §3/§4 (`SUPABASE_DATABASE_URL`, session-mode pooler, CA-pinned verify-full). `scripts/lib/pipeline.js createPool()` is the connection authority.
 
 **Applies to:** Every new CommonJS script added to `scripts/` that runs as a step in any
 pipeline chain (`permits`, `coa`, `sources`, `deep_scrapes`, `entities`).
@@ -267,6 +267,21 @@ if (!Number.isFinite(multiplier)) {
 No exceptions. Two concurrent runs of the same script (nightly chain + admin manual re-trigger)
 produce race conditions on DELETE/UPSERT, double-fired alerts, and non-deterministic scores.
 
+> **Pooler-mode constraint (2026-07-29):** advisory locks (the xact locks here AND
+> run-chain.js's session-level chain lock) plus `pg-query-stream` cursors depend on session
+> state — they require a DIRECT connection or the SESSION-mode pooler (port 5432). Routing
+> through the transaction-mode pooler (6543) silently breaks them — Spec 113 §3 routing
+> table + G7 govern; this is why `SUPABASE_DATABASE_URL` must be the 5432 session pooler.
+>
+> **statement_timeout (2026-07-29, `fa9e984c`):** the cloud session default is **2min**
+> (killed `link_wsib` on the first GH dispatch). `createPool()` therefore gives every new
+> physical client one awaited `SET statement_timeout` before first use — default `0`
+> (chains are batch jobs; their outer bound is the workflow step `timeout-minutes`),
+> override via `PIPELINE_STATEMENT_TIMEOUT_MS`. Delivered as a per-client SET because the
+> Supavisor session pooler DROPS startup params (`options` and the `statement_timeout`
+> startup param — all verified live). Scripts MUST NOT assume a server-side per-statement
+> cap exists, nor re-SET it themselves.
+
 ### 5.2 Lock ID convention
 
 ```
@@ -346,9 +361,11 @@ wall-clock time, the second chain's shared step finds the lock held, **silently 
 work**, emits a SKIP summary, and the chain **continues green** having dropped that step. No
 error, no FAIL — the operator sees a healthy run that quietly did less than it should have.
 
-**Mitigation — serialize, never stagger.** `local-cron.js` runs the `coa` and `permits`
-chains as **one serialized weekday job** (`coa` first, `permits` only after `coa`
-completes), *not* two staggered cron hours. A stagger where the first chain overruns its
+**Mitigation — serialize, never stagger.** Production serialization lives in
+`.github/workflows/chain-coa-permits.yml` (Spec 115 §2/§2.2): one workflow runs `coa` then
+`permits` back-to-back under a queue-never-cancel `concurrency` group, *not* two staggered
+cron hours. (`local-cron.js` retains the same serialized shape as a LOCAL-DEV convenience
+only — it is not the production scheduler.) A stagger where the first chain overruns its
 window would let the second chain's shared steps hit held locks and silently drop them.
 Serialization eliminates the overlap class entirely. Any new chain that reuses a step from
 an existing chain MUST be scheduled in the same serialized job, or given its own lock ID if
@@ -1034,9 +1051,13 @@ DB queries:
 // 1. Non-empty arrays used in SQL guards
 if (DEAD_STATUS_ARRAY.length === 0) throw new Error('DEAD_STATUS_ARRAY empty');
 
-// 2. Required environment variables
-if (!process.env.PG_HOST) throw new Error('PG_HOST not set');
-// (pool creation will fail anyway, but explicit error is clearer)
+// 2. Required environment variables — do NOT hard-require PG_HOST: the
+// GitHub Actions chain workflows (Spec 115 §4) inject ONLY
+// SUPABASE_DATABASE_URL, and pipeline.createPool() falls back to it when
+// PG_HOST is unset (PG_* keeps precedence so a local run never silently
+// targets cloud — Spec 113 §3 D14). Require only vars the SCRIPT itself
+// consumes (API keys, buckets); leave connection resolution to createPool.
+if (!process.env.REQUIRED_API_KEY) throw new Error('REQUIRED_API_KEY not set');
 
 // 3. After config load: validate all keys
 const config = validateConfig(logicVars); // Zod schema — throws on fail
@@ -1051,10 +1072,10 @@ before proceeding to WF6.
 
 ```
 Concurrency
-[ ] Advisory lock acquired on a DEDICATED client (pool.connect), not pool.query
-[ ] Lock ID == spec number (e.g. spec 88 → ADVISORY_LOCK_ID = 88)
-[ ] Lock released in try/finally → innermost finally always calls lockClient.release()
-[ ] Skip path releases the lock client BEFORE return (not just in finally)
+[ ] Advisory lock via pipeline.withAdvisoryLock (transaction-scoped pg_try_advisory_xact_lock — NOT the retired manual session-lock/lockClient pattern, see §5.3)
+[ ] Lock ID from the §A.5 registry (spec number only when globally unique, else next-free — §5.2)
+[ ] Lock auto-released on commit/rollback (xact-scoped) — no manual release paths to audit
+[ ] Skip path returns cleanly after withAdvisoryLock reports acquired:false (§R12)
 [ ] No Promise.all([client.query, client.query]) inside withTransaction on the same client
 
 Config & Validation

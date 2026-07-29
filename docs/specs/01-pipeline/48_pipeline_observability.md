@@ -6,6 +6,18 @@
 As a developer, after any pipeline chain completes, I want an AI agent to automatically read the run's warnings and failures alongside the 7-day historical baseline, then append a structured findings report — so I can identify regressions, anomalies, and critical issues without manually diffing `pipeline_runs` records.
 </requirements>
 
+> **EXECUTION-MODEL SPLIT (2026-07-29):** the `observe-chain.js` path this spec describes
+> (run-chain.js detached-spawn → DeepSeek analysis → report file append) is
+> **LOCAL-OPERATOR-ONLY**. On GitHub Actions (Spec 115, the production scheduler) it
+> produces nothing: no chain workflow env carries `DEEPSEEK_API_KEY`, the detached child is
+> reaped at job teardown, and the report file lands on the ephemeral runner filesystem with
+> no artifact upload. Production chain-health observability is instead the
+> `check-chain-verdict.js` step in every chain workflow (gates the run RED on a
+> verdict-only FAIL that run-chain.js exits 0 on) + GitHub notification alerting, and the
+> admin dispatch surface of Spec 115 §7a. OPEN DECISION (not ruled): keep observe-chain
+> local-only, or make it real on CI (DEEPSEEK secret + synchronous run + upload-artifact) —
+> a future WF2.
+
 ---
 
 <architecture>

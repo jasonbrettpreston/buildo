@@ -356,6 +356,14 @@ env:
   every workflow still verifies `SUPABASE_DATABASE_URL` is non-empty and `exit 1`s loudly if
   it is absent — this protects manual `workflow_dispatch` invocations (which ARE live
   pre-4.3) from silently no-op-ing against an empty connection string.
+- **Known-inert paths under the live schedules (2026-07-29).** Two scheduled steps are
+  deliberately partial on runners: ① `chain_sources` → `load_wsib` SKIPs with a PASS/SKIPPED
+  audit row — the WSIB registry CSV is an annual MANUAL download (Spec 52; runbook §WSIB
+  annual refresh); `wsib_registry` refreshes only via the operator-run loader. ② `chain_entities`
+  runs daily but its workflow env deliberately omits `SERPER_API_KEY`, so both steps skip —
+  the missing key is the Serper SPEND GATE (Spec 45; operator ruling 2026-07-29: keep daily
+  inert; annual registry enrichment runs via `chain-wsib.yml` instead). These are knowing
+  carve-outs, not bugs — but note both paths look green in GH while doing partial/no work.
 </architecture>
 
 ---
@@ -648,8 +656,11 @@ ever hosts a chain, manual or scheduled).
 
 **Chain → workflow map.** `chain_coa` and `chain_permits` both dispatch `chain-coa-permits.yml`
 (coa→permits combined, §2.2); `chain_sources`/`chain_entities`/`chain_deep_scrapes` dispatch
-their own files. **Only chains are dispatchable** — individual-step runs and `chain_wsib`
-(no workflow) return 400. The UI reflects this: CoA = "Run CoA → Permits", Permits = disabled
+their own files. **Only chains are dispatchable** — individual-step runs and `chain_wsib` return 400 from
+the admin API (as of 2026-07-29 `chain_wsib` DOES have a GitHub Actions workflow —
+`chain-wsib.yml`, `workflow_dispatch` only, no cron, `SERPER_API_KEY`-guarded, ENRICH_LIMIT
+6000/run with re-dispatch-until-drained semantics per Spec 46 — but it stays
+admin-non-dispatchable by design: it is annual, operator-triggered, real-spend). The UI reflects this: CoA = "Run CoA → Permits", Permits = disabled
 "Runs with CoA", WSIB = "GitHub Actions only"; the per-step "Run" buttons are removed.
 
 **Cancel.** `DELETE` cancels the whole GitHub run (`cancelWorkflowRun` lists the workflow's

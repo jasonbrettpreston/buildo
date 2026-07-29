@@ -110,3 +110,26 @@ asserts, and rolls back — no state persists.
 pre-commit or `npm run verify`. A red introspection row means a migration
 added a table without `ENABLE ROW LEVEL SECURITY` (Spec 114 §11) — fix the
 migration, never the exclusion list, unless Spec 114 §2 is amended first.
+
+## 5. WSIB annual refresh (registry + contact enrichment)
+
+The Ontario WSIB contractor registry is a MANUAL annual download — there is no stable URL,
+so the scheduled `chain_sources` `load_wsib` step SKIPs (PASS + instructions row) on runners
+(Spec 52). Cloud state as of 2026-07-29: 121,116 Class G rows (2026-03-05 snapshot), 0 contacts.
+
+1. Download the Business Classification CSV from wsib.ca (annual).
+2. From a machine with cloud credentials in `.env`:
+   `node scripts/load-wsib.js --file "data/BusinessClassificationDetails(YYYY).csv"`
+   — keeps all of Class G (builders AND trades: G1/G3/G4/G5/G6), computes `is_gta` per-row
+   (this also repairs the 2026-03 all-false `is_gta` state that blocks the enrichment queue),
+   and never overwrites previously-enriched contact columns (Spec 46 edge case).
+3. Serper contact enrichment IN THE CLOUD: GitHub → Actions → `chain-wsib` → Run workflow.
+   Requires the `SERPER_API_KEY` repo secret (real API spend — Spec 46 "on-demand,
+   cost-sensitive"). Each dispatch processes ≤ `ENRICH_LIMIT` (manifest: 6000) rows and
+   finishes inside the GH job cap; progress is durable per-row (`last_enriched_at`
+   skip-forever) — **re-dispatch until the workflow's queue notice reports 0 pending**.
+4. No further action: the nightly permits chain's `link_wsib` step propagates registry
+   contacts onto matched entities automatically (COALESCE copy, Spec 46 §2).
+
+Note: rows once enriched with no contacts found are never retried; a true refresh pass
+requires resetting `last_enriched_at` (deliberate — Spec 45/46 spend control).
