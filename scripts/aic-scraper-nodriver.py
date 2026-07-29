@@ -31,7 +31,9 @@ import random
 import re
 import shutil
 import stat
+import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -352,6 +354,76 @@ def clear_stale_profile_locks(profile_dir):
     return removed
 
 
+_chrome_diagnostics_logged = False
+
+
+def chrome_launch_log_path(worker_id):
+    """Path Chrome writes its own launch log to (per worker, outside the cached profile)."""
+    name = f'worker-{worker_id}' if worker_id else 'standalone'
+    return os.path.join(tempfile.gettempdir(), f'buildo-chrome-{name}.log')
+
+
+def log_chrome_diagnostics():
+    """Log WHICH Chrome nodriver resolved, once per process.
+
+    nodriver reports every launch problem as the same generic "Failed to
+    connect to browser" regardless of cause, so the binary's identity is the
+    first thing worth knowing when it fails on a runner we can't shell into:
+    a snap-confined chromium (Ubuntu's default) cannot be driven with a
+    custom user-data-dir the way a real .deb Chrome can, and a missing
+    binary looks identical in the nodriver message.
+    """
+    global _chrome_diagnostics_logged
+    if _chrome_diagnostics_logged:
+        return
+    _chrome_diagnostics_logged = True
+
+    detail = {'event': 'chrome_diagnostics', 'display': os.environ.get('DISPLAY') or None}
+    exe = None
+    try:
+        from nodriver.core.config import find_chrome_executable
+        exe = find_chrome_executable()
+    except Exception as err:  # resolution itself can raise when nothing is installed
+        detail['resolution_error'] = str(err)[:300]
+    detail['executable'] = str(exe) if exe else None
+    if exe:
+        try:
+            detail['real_path'] = os.path.realpath(str(exe))
+        except OSError as err:
+            detail['real_path_error'] = str(err)[:200]
+        try:
+            probe = subprocess.run(
+                [str(exe), '--version'], capture_output=True, text=True, timeout=20,
+            )
+            detail['version'] = ((probe.stdout or '') + (probe.stderr or '')).strip()[:200]
+        except Exception as err:
+            detail['version_error'] = str(err)[:200]
+    log('INFO', '[scraper]', 'Chrome environment', detail)
+
+
+def dump_chrome_launch_log(worker_id, max_lines=40):
+    """Surface the tail of Chrome's OWN log after a bootstrap failure.
+
+    This is the only channel that states why Chrome exited — nodriver's
+    "Failed to connect to browser" is cause-agnostic and the process's
+    stderr is not ours to read (nodriver owns the subprocess).
+    """
+    path = chrome_launch_log_path(worker_id)
+    try:
+        with open(path, 'r', errors='replace') as fh:
+            lines = [ln.rstrip() for ln in fh if ln.strip()]
+    except OSError as err:
+        log('WARN', '[scraper]', f'No Chrome launch log to read at {path}: {err}',
+            {'event': 'chrome_launch_log_missing'})
+        return
+    if not lines:
+        log('WARN', '[scraper]', f'Chrome launch log at {path} is empty — Chrome likely died before initializing logging',
+            {'event': 'chrome_launch_log_empty'})
+        return
+    log('ERROR', '[scraper]', 'Chrome launch log tail',
+        {'event': 'chrome_launch_log', 'path': path, 'lines': lines[-max_lines:]})
+
+
 async def verify_proxy_extension_loaded(browser):
     """FAIL-LOUD tripwire: confirm the proxy-auth extension actually loaded.
 
@@ -366,6 +438,14 @@ async def verify_proxy_extension_loaded(browser):
     means the extension did not load. Raises RuntimeError (bootstrap-fatal,
     same path as the DISPLAY guard) rather than scraping unproxied.
     """
+    if browser.connection is None:
+        # Never mask a connection-level failure with our own AttributeError:
+        # if there is no CDP connection, the browser never came up and that
+        # is the fact worth reporting (2026-07-29 run 30490094619, where this
+        # tripwire replaced nodriver's real error with 'NoneType' has no
+        # attribute 'send' on retry attempts).
+        raise RuntimeError('Cannot verify proxy extension: browser has no CDP connection (Chrome did not come up)')
+    targets = []
     for _ in range(6):  # MV3 service worker registration is async — poll up to ~3s
         targets = await browser.connection.send(uc.cdp.target.get_targets())
         for t in targets:
@@ -446,15 +526,31 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
             'profile_dir': profile_dir,
         })
 
+    # Chrome writes its own launch log here — the only channel that says WHY it
+    # exited (dump_chrome_launch_log reads it on bootstrap failure). Truncated
+    # per attempt so a dump never shows a previous attempt's tail.
+    chrome_log = chrome_launch_log_path(worker_id)
+    try:
+        if os.path.exists(chrome_log):
+            os.remove(chrome_log)
+    except OSError:
+        pass  # a stale log is worth less than the attempt — never block launch on it
+    browser_args += ['--enable-logging', f'--log-file={chrome_log}']
+
+    log_chrome_diagnostics()
     browser = await uc.start(
         headless=use_headless,
         browser_args=browser_args,
         user_data_dir=profile_dir,
     )
     try:
+        page = await browser.get('about:blank')
+
+        # AFTER the first real CDP round-trip: a connection-level failure then
+        # surfaces as nodriver's own error rather than being pre-empted by the
+        # extension tripwire (which judges extension presence, not liveness).
         if proxy_ext_dir:
             await verify_proxy_extension_loaded(browser)
-        page = await browser.get('about:blank')
 
         # Fix headless screen dimensions to match viewport (nodriver#2242)
         await inject_screen_overrides(page, profile)
@@ -550,6 +646,7 @@ async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id
         except Exception as err:
             last_error = err
             log('ERROR', '[scraper]', str(err), {'event': 'bootstrap_failed', 'attempt': attempt})
+            dump_chrome_launch_log(worker_id)
             if attempt < 3:
                 log('INFO', '[scraper]', f'Retrying bootstrap in 10s...')
                 await asyncio.sleep(10)
