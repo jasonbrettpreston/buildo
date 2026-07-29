@@ -430,6 +430,23 @@ def dump_chrome_launch_log(worker_id, max_lines=40):
 
 EGRESS_ECHO_URL = os.environ.get('SCRAPER_EGRESS_ECHO_URL') or 'https://api.ipify.org?format=json'
 
+# Chrome's network-error interstitial. Distinguishing "the browser could not
+# reach the echo service" from "the browser reached it and reported an IP" is
+# load-bearing: see verify_proxied_egress for why the former is evidence FOR
+# proxying rather than a reason to refuse.
+_UNREACHABLE_MARKERS = (
+    "site can't be reached",
+    'site cannot be reached',
+    'ERR_',
+    'took too long to respond',
+    'temporarily down or moved permanently',
+)
+
+
+def _looks_unreachable(body):
+    text = (body if isinstance(body, str) else str(body or '')).lower()
+    return any(marker.lower() in text for marker in _UNREACHABLE_MARKERS)
+
 
 def _extract_ip(raw):
     """Pull an IP string out of the echo service's response (JSON or bare text)."""
@@ -530,10 +547,31 @@ async def verify_proxied_egress(browser, host_ip=_HOST_IP_UNSET):
     if host_ip is _HOST_IP_UNSET:
         host_ip = host_egress_ip()
 
+    if not host_ip:
+        raise RuntimeError(
+            f"Could not determine this host's egress IP from {EGRESS_ECHO_URL}, so "
+            "'am I proxied?' is unanswerable — refusing to scrape unverified"
+        )
+
     page = await browser.get(EGRESS_ECHO_URL)
     raw = await page.evaluate('document.body.innerText', await_promise=False)
     browser_ip = _extract_ip(raw)
     if not browser_ip:
+        if _looks_unreachable(raw):
+            # The host reached this service moments ago (host_ip is set), so a
+            # browser that could NOT reach it is provably not on the host's
+            # direct path — an extension that failed to load would have left
+            # the browser with plain direct internet. Treat as proxied-but-
+            # destination-blocked: surfaced loudly, but not a reason to fail a
+            # scrape that routes to a different host entirely. Refusing here
+            # would repeat the false-negative that the target-visibility check
+            # already cost us (run 30496893882).
+            log('WARN', '[scraper]', 'Echo service unreachable from the browser but reachable from '
+                'this host — traffic is not on the direct path (treating as proxied)', {
+                    'event': 'proxied_egress_indirect',
+                    'echo_url': EGRESS_ECHO_URL,
+                })
+            return None
         raise RuntimeError(
             f"Could not read the browser's egress IP by navigating to {EGRESS_ECHO_URL} "
             f"(page body was {str(raw)[:160]!r}) — refusing to scrape unverified"

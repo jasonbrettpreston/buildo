@@ -111,19 +111,53 @@ class TestVerifyProxiedEgress:
         with pytest.raises(RuntimeError, match='browser'):
             await scraper.verify_proxied_egress(FakeBrowser(page._body), host_ip='203.0.113.7')
 
-    async def test_raises_when_host_ip_unknown(self, scraper):
-        """Without the host's own IP the question is unanswerable — refuse."""
-        page = FakePage(json.dumps({'ip': '198.51.100.22'}))
-
-        with pytest.raises(RuntimeError, match='unanswerable'):
-            await scraper.verify_proxied_egress(FakeBrowser(page._body), host_ip=None)
-
     async def test_message_names_the_branded_chrome_cause(self, scraper):
         """The error should tell the operator what to actually DO about it."""
         page = FakePage(json.dumps({'ip': '203.0.113.7'}))
 
         with pytest.raises(RuntimeError, match='Chrome for Testing'):
             await scraper.verify_proxied_egress(FakeBrowser(page._body), host_ip='203.0.113.7')
+
+    async def test_unreachable_echo_is_evidence_of_proxying_not_a_refusal(
+            self, scraper, captured_logs):
+        """Validation 8 (run 30499270494): the browser rendered Chrome's network
+        error page for the echo service while THIS HOST reached it fine.
+
+        A browser whose extension failed to load has plain direct internet and
+        would have reached it exactly as the host did, so failing here would
+        refuse a scrape over evidence that actually points AT proxying — the
+        same false-negative shape as the retired target-visibility gate.
+        """
+        browser = FakeBrowser(
+            "This site can't be reached\n\nThe webpage at https://api.ipify.org/ "
+            'might be temporarily down or moved permanently.')
+
+        result = await scraper.verify_proxied_egress(browser, host_ip='203.0.113.7')
+
+        assert result is None, 'unverified-but-indirect, not a hard pass'
+        assert any(e.get('context', {}).get('event') == 'proxied_egress_indirect'
+                   for e in captured_logs), 'must be surfaced loudly, never silent'
+
+    async def test_err_interstitials_are_recognized(self, scraper, captured_logs):
+        browser = FakeBrowser('ERR_TUNNEL_CONNECTION_FAILED')
+
+        assert await scraper.verify_proxied_egress(browser, host_ip='203.0.113.7') is None
+
+    async def test_unknown_garbage_still_refuses(self, scraper):
+        """Only RECOGNIZED unreachability is benign; anything else stays fatal."""
+        browser = FakeBrowser('<html>Some unexpected interstitial</html>')
+
+        with pytest.raises(RuntimeError, match='refusing to scrape unverified'):
+            await scraper.verify_proxied_egress(browser, host_ip='203.0.113.7')
+
+    async def test_unknown_host_ip_is_checked_before_navigating(self, scraper):
+        """If we cannot establish the baseline, do not even drive the browser."""
+        browser = FakeBrowser(json.dumps({'ip': '198.51.100.22'}))
+
+        with pytest.raises(RuntimeError, match='unanswerable'):
+            await scraper.verify_proxied_egress(browser, host_ip=None)
+
+        assert browser.navigated_to is None, 'must fail before navigating'
 
     async def test_navigates_rather_than_fetching(self, scraper):
         """fetch() on about:blank has an opaque origin and throws — nodriver then
