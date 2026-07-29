@@ -1,6 +1,9 @@
 name: Mobile CI
 
 on:
+  # Manual trigger for validating the workflow itself (runs unit-tests only —
+  # the eas-update job is push:main-gated and head_commit is absent on dispatch).
+  workflow_dispatch: {}
   pull_request:
     paths:
       - 'mobile/**'
@@ -76,6 +79,12 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
       - name: EAS Update
-        run: eas update --branch production --message "${{ github.event.head_commit.message }}" --non-interactive
+        # Commit message via env indirection, NOT inline ${{ }} interpolation in
+        # `run:` — commit messages contain backticks/quotes/newlines (every
+        # Claude-authored message does), which bash executes/explodes as extra
+        # args (broke run 30159803476), and inline interpolation of commit text
+        # is a script-injection vector besides. First line only for --message.
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: eas update --branch production --message "$(printf '%s' "$COMMIT_MSG" | head -n1)" --non-interactive
