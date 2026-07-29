@@ -152,6 +152,16 @@ jobs:
         # explicitly, immediately after it becomes available.
         run: echo "::add-mask::$PG_PASSWORD"
 
+      - name: Allow Chrome sandboxed launch (Ubuntu 24 AppArmor userns restriction)
+        # ubuntu-latest (24.04) ships kernel.apparmor_restrict_unprivileged_userns=1,
+        # which kills Chrome's sandboxed launch instantly — nodriver reports
+        # "Failed to connect to browser" after 3 bootstrap attempts (first-cron
+        # finding 2026-07-29, run 30485096998: 0 permits attempted against a
+        # 10,981-pending queue). Relaxing the sysctl preserves Chrome's REAL
+        # sandbox — identical browser behavior to local operator runs, no
+        # --no-sandbox launch-flag divergence for the WAF-sensitive scraper.
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Guard — deep_scrapes concurrency check
         id: deep_scrapes_guard
         run: node scripts/check-chain-running.js deep_scrapes >> "$GITHUB_OUTPUT"

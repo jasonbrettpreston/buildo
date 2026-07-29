@@ -460,7 +460,7 @@ async def main():
     finally:
         stats_conn.close()
 
-    emit_summary({
+    summary_payload = {
         'records_total': agg['permits_attempted'],
         'records_new': agg['total_upserted'],
         'records_updated': agg['status_changes'],
@@ -496,10 +496,24 @@ async def main():
             'audit_table': {
                 'phase': 1,
                 'name': 'Data Ingestion (Multi-Worker)',
-                'verdict': 'FAIL' if (miss_status == 'FAIL' or agg['preflight_failures'] >= MAX_PREFLIGHT_FAILURES) else 'PASS',
+                # Verdict is derived from rows below (repo Observability rule:
+                # row-derived cascade, never a parallel boolean) — see 'verdict'
+                # assignment after audit_rows.
+                'verdict': None,  # placeholder — replaced below from rows
                 'rows': [
                     {'metric': 'workers_total', 'value': agg['workers_total'], 'threshold': None, 'status': 'INFO'},
-                    {'metric': 'preflight_failures', 'value': agg['preflight_failures'], 'threshold': f'< {MAX_PREFLIGHT_FAILURES}', 'status': 'FAIL' if agg['preflight_failures'] >= MAX_PREFLIGHT_FAILURES else 'PASS'},
+                    # Total-wipeout is a FAIL regardless of the absolute constant:
+                    # MAX_PREFLIGHT_FAILURES=2 was tuned for a multi-worker fleet,
+                    # so a single-worker run whose only worker died (Chrome
+                    # bootstrap, proxy preflight) previously passed 1 < 2 and the
+                    # step reported PASS on a 0-attempt run against 10,981 pending
+                    # (first-cron false-green, 2026-07-29 run 30485096998).
+                    {'metric': 'preflight_failures', 'value': agg['preflight_failures'], 'threshold': f'< {MAX_PREFLIGHT_FAILURES} and < workers_total', 'status': 'FAIL' if (agg['preflight_failures'] >= MAX_PREFLIGHT_FAILURES or (agg['workers_total'] > 0 and agg['preflight_failures'] >= agg['workers_total'])) else 'PASS'},
+                    # A clean scrape of nothing is only legitimate when there was
+                    # nothing to scrape — 0 attempted with a non-empty pending
+                    # queue means the scraping machinery failed, whatever the
+                    # exit codes said.
+                    {'metric': 'zero_attempted_with_pending_queue', 'value': f"attempted={agg['permits_attempted']} pending={queue_stats.get('pending', 0)}", 'threshold': 'attempted > 0 when pending > 0', 'status': 'FAIL' if (agg['permits_attempted'] == 0 and queue_stats.get('pending', 0) > 0) else 'PASS'},
                     {'metric': 'permits_attempted', 'value': agg['permits_attempted'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'permits_found', 'value': agg['permits_found'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'enriched_updates', 'value': agg['enriched_updates'], 'threshold': None, 'status': 'INFO'},
@@ -515,7 +529,13 @@ async def main():
                 ],
             },
         },
-    })
+    }
+    # Row-derived verdict cascade (Observability rule — a status row that FAILs
+    # must be able to redden the verdict without a hand-maintained boolean).
+    _audit = summary_payload['records_meta']['audit_table']
+    _statuses = [r['status'] for r in _audit['rows']]
+    _audit['verdict'] = 'FAIL' if 'FAIL' in _statuses else ('WARN' if 'WARN' in _statuses else 'PASS')
+    emit_summary(summary_payload)
 
     emit_meta(
         {
