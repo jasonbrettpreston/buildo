@@ -323,6 +323,64 @@ def cleanup_proxy_extension(ext_dir):
 # ---------------------------------------------------------------------------
 # Browser — nodriver CDP (no WebDriver)
 # ---------------------------------------------------------------------------
+def clear_stale_profile_locks(profile_dir):
+    """Remove Chrome Singleton* lock artifacts from a profile dir.
+
+    A profile restored from CI cache (or copied across hosts) can carry a
+    SingletonLock symlink naming another host/PID — Chrome then refuses to
+    start ("profile appears to be in use by another computer") and exits
+    immediately, which nodriver surfaces only as a generic "Failed to
+    connect to browser" (2026-07-29, GH run 30487133930: a crashed run's
+    cache-saved profile bricked every subsequent cloud run). Locks are only
+    meaningful within the host session that created them, and each worker
+    owns its own profile dir, so removal at bootstrap is always safe.
+
+    Returns the list of removed file names.
+    """
+    removed = []
+    for name in ('SingletonLock', 'SingletonSocket', 'SingletonCookie'):
+        path = os.path.join(profile_dir, name)
+        try:
+            os.lstat(path)  # lstat, not exists() — these are symlinks whose targets never resolve
+        except OSError:
+            continue  # absent — the normal case
+        try:
+            os.remove(path)
+            removed.append(name)
+        except OSError as err:
+            log('WARN', '[scraper]', f'Could not remove stale profile lock {name}: {err}')
+    return removed
+
+
+async def verify_proxy_extension_loaded(browser):
+    """FAIL-LOUD tripwire: confirm the proxy-auth extension actually loaded.
+
+    Chrome >=137 (branded) removed --load-extension; the opt-out feature flag
+    (see bootstrap_session) is documented as temporary. If the flag stops
+    working, the failure is NOT a proxy-auth error — the extension silently
+    never loads, chrome.proxy is never set, and every request goes DIRECT
+    from the runner's datacenter IP, exposing the scraper to the WAF.
+
+    The extension's MV3 service worker appears as a chrome-extension://
+    target ending in /background.js within moments of launch; its absence
+    means the extension did not load. Raises RuntimeError (bootstrap-fatal,
+    same path as the DISPLAY guard) rather than scraping unproxied.
+    """
+    for _ in range(6):  # MV3 service worker registration is async — poll up to ~3s
+        targets = await browser.connection.send(uc.cdp.target.get_targets())
+        for t in targets:
+            if t.url.startswith('chrome-extension://') and t.url.endswith('/background.js'):
+                return
+        await asyncio.sleep(0.5)
+    seen = sorted(f'{t.type_}:{t.url}' for t in targets)
+    raise RuntimeError(
+        'Proxy-auth extension did not load (no chrome-extension://*/background.js target '
+        'after 3s). Likely Chrome >=137 --load-extension removal with the '
+        'DisableLoadExtensionCommandLineSwitch opt-out no longer honored — scraping would '
+        f'run UNPROXIED from this host. Targets seen: {seen}'
+    )
+
+
 async def inject_screen_overrides(page, profile):
     """Override screen dimensions to match the chosen viewport profile.
 
@@ -357,6 +415,16 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
     use_headless = True
     if proxy_ext_dir:
         browser_args.append(f'--load-extension={proxy_ext_dir}')
+        # Chrome >=137 (branded) ignores --load-extension unless the removal
+        # feature is opted out. Chrome keeps only the LAST --disable-features
+        # switch on the command line, and nodriver always injects its own
+        # (IsolateOrigins,site-per-process) BEFORE custom args — so this value
+        # must repeat nodriver's features or it would silently strip them.
+        # verify_proxy_extension_loaded() is the tripwire for when this
+        # opt-out itself stops working (Google documents it as temporary).
+        browser_args.append(
+            '--disable-features=IsolateOrigins,site-per-process,DisableLoadExtensionCommandLineSwitch'
+        )
         use_headless = False  # Extensions require headed mode
         # Guard: headed mode on Linux requires a display server (X11/Wayland) or Xvfb.
         # Without one, Chrome crashes with "cannot open display". Fail fast with clear message.
@@ -370,6 +438,13 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
     profile_name = f'worker-{worker_id}' if worker_id else 'standalone'
     profile_dir = os.path.join(Path.home(), '.buildo-scraper', f'profile-{profile_name}')
     os.makedirs(profile_dir, exist_ok=True)
+    removed_locks = clear_stale_profile_locks(profile_dir)
+    if removed_locks:
+        log('INFO', '[scraper]', 'Removed stale Chrome profile locks', {
+            'event': 'stale_profile_lock_removed',
+            'files': removed_locks,
+            'profile_dir': profile_dir,
+        })
 
     browser = await uc.start(
         headless=use_headless,
@@ -377,6 +452,8 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
         user_data_dir=profile_dir,
     )
     try:
+        if proxy_ext_dir:
+            await verify_proxy_extension_loaded(browser)
         page = await browser.get('about:blank')
 
         # Fix headless screen dimensions to match viewport (nodriver#2242)
