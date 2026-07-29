@@ -35,8 +35,8 @@ name: chain-deep-scrapes
 
 on:
   # Phase 4.3 activation — uncomment (Spec 115 §3)
-  # schedule:
-  #   - cron: '0 15,18,21 * * 1-5'   # weekdays-only, business hours both DST regimes (Spec 115 §2 table row 4; §2.1)
+  schedule:
+    - cron: '0 15,18,21 * * 1-5'   # weekdays-only, business hours both DST regimes (Spec 115 §2 table row 4; §2.1)
   workflow_dispatch: {}
 
 jobs:

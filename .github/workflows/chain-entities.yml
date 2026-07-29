@@ -10,8 +10,8 @@ name: chain-entities
 
 on:
   # Phase 4.3 activation — uncomment (Spec 115 §3)
-  # schedule:
-  #   - cron: '0 8 * * *'   # 3 AM ET daily, unchanged (Spec 115 §2 table row 3; §2.1 DST note)
+  schedule:
+    - cron: '0 8 * * *'   # 3 AM ET daily, unchanged (Spec 115 §2 table row 3; §2.1 DST note)
   workflow_dispatch: {}
 
 jobs:

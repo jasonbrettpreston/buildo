@@ -11,9 +11,9 @@
 name: chain-coa-permits
 
 on:
-  # Phase 4.3 activation — uncomment (Spec 115 §3)
-  # schedule:
-  #   - cron: '0 11 * * *'   # ~6 AM ET nightly, ×7 (Spec 115 §2 table row 1; §2.1 DST note)
+  # Phase 4.3 activation (2026-07-25): schedule live. Spec 115 §3.
+  schedule:
+    - cron: '0 11 * * *'   # ~6 AM ET nightly, ×7 (Spec 115 §2 table row 1; §2.1 DST note)
   workflow_dispatch: {}
 
 jobs:

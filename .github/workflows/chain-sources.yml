@@ -10,8 +10,8 @@ name: chain-sources
 
 on:
   # Phase 4.3 activation — uncomment (Spec 115 §3)
-  # schedule:
-  #   - cron: '0 13 * * 0'   # ~8 AM ET Sunday, weekly (Spec 115 §2 table row 2; §2.1 DST note)
+  schedule:
+    - cron: '0 13 * * 0'   # ~8 AM ET Sunday, weekly (Spec 115 §2 table row 2; §2.1 DST note)
   workflow_dispatch: {}
 
 jobs:

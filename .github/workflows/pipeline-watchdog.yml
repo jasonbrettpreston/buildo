@@ -30,8 +30,8 @@ name: pipeline-watchdog
 
 on:
   # Phase 4.3 activation — uncomment (Spec 115 §3)
-  # schedule:
-  #   - cron: '30 15 * * *'   # daily, after the 11:00 UTC nightly coa->permits window + ~3h worst case (Spec 115 §2.5)
+  schedule:
+    - cron: '30 15 * * *'   # daily, after the 11:00 UTC nightly coa->permits window + ~3h worst case (Spec 115 §2.5)
   workflow_dispatch: {}
 
 jobs:
