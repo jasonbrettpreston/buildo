@@ -32,6 +32,26 @@ The operator suggested saving a complete scraper file for the retained approach.
 * **logError Mandate:** N/A (Python) — structured `log()`.
 * **UI Layout:** N/A.
 
+## Results — CLOUD-VALIDATED 2026-07-30 (run 30589243948, conclusion: success)
+| Path | B/permit | Evidence |
+|---|---|---|
+| Browser, 12-permit probe (the alarming number) | 322,000 | run 30577993600 |
+| Browser, 60 permits (amortised) | 105,266 | run 30581163413 |
+| Browser, after the byte cuts | 32,025 | run 30582877429 |
+| **HTTP transport, cloud, 60 permits** | **6,614** | run 30589243948 |
+
+60 permits · 34 found · **85 new rows** · `anomalous_miss_rate 5.0% PASS` · every chain step
+PASS (only pre-existing WARNs: network-health latency, staleness coverage). Per-host bytes are
+now just `secure.toronto.ca` 392,793 + `api.ipify.org` 4,043 — no www.toronto.ca, no ArcGIS, no
+jQuery, no analytics, because there are no pages. **10k permits/week ≈ 66 MB (~2% of the 3 GB
+plan).**
+
+**Defect found by this run and fixed:** transport counters reported 21 requests for a 60-permit,
+10-rotation run — rotation builds a new transport, so reading the final object reports only the
+last generation. Now folded at every rotation (`fold_transport_counters`), locked in
+`test_scraper_transport.py::TestCounterFolding`. The relay's own per-generation accounting was
+unaffected and is what gave the authoritative 396,836 B total.
+
 ## Execution Plan
 - [ ] 1. `HttpTransport` + `fetch_permit_chain_http` + `SCRAPER_TRANSPORT` gate (default `browser`, so the attested local path is unchanged)
 - [ ] 2. Dispatch in `scrape_year_sequence`; HTTP-mode loop in `main()` that skips all browser bootstrap

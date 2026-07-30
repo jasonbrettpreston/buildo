@@ -1917,6 +1917,20 @@ class HttpTransport:
             pass
 
 
+def fold_transport_counters(tel, transport):
+    """Bank a transport generation's counters before it is replaced.
+
+    Rotation builds a NEW HttpTransport, so reading the final object's counters
+    reports only the last generation — run 30589243948 showed 21 requests for a
+    60-permit, 10-rotation run. Exactly the defect already fixed once for the
+    relay's byte lines; the same discipline applies here.
+    """
+    if transport is None:
+        return
+    tel['http_requests'] = tel.get('http_requests', 0) + transport.requests
+    tel['http_bytes_down'] = tel.get('http_bytes_down', 0) + transport.bytes_down
+
+
 def verify_http_egress(transport, host_ip=None):
     """Prove the HTTP transport is proxied before it touches the portal.
 
@@ -2368,6 +2382,7 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag):
                 terminate_spawned_relay(worker_id)
                 new_relay = start_proxy_relay(
                     build_proxy_session_id(worker_id, int(time.time())), worker_id=worker_id)
+                fold_transport_counters(tel, transport)
                 transport.close()
                 transport = HttpTransport(relay_url=new_relay)
                 tel['session_bootstraps'] += 1
@@ -2408,6 +2423,7 @@ async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag
                 terminate_spawned_relay(worker)
                 relay_url = start_proxy_relay(
                     build_proxy_session_id(worker, int(time.time())), worker_id=worker)
+                fold_transport_counters(tel, transport)
                 transport.close()
                 transport = HttpTransport(relay_url=relay_url)
                 tel['session_bootstraps'] += 1
@@ -2847,8 +2863,9 @@ async def main():
                 await run_http_mode(args, transport, tel, start_ms, worker_tag)
             finally:
                 tel['transport'] = TRANSPORT_HTTP
-                tel['http_requests'] = transport.requests
-                tel['http_bytes_down'] = transport.bytes_down
+                # Fold the FINAL generation; earlier ones were banked at each
+                # rotation (see fold_transport_counters).
+                fold_transport_counters(tel, transport)
                 transport.close()
             emit_summary(compute_summary(tel, start_ms))
             emit_meta(

@@ -183,6 +183,26 @@ class TestChainContract:
         assert result['results'][0]['stages'][0]['desc'] == 'Footings/Foundations'
 
 
+class TestCounterFolding:
+    def test_counters_accumulate_across_rotations(self, scraper):
+        """Run 30589243948 reported 21 requests for a 60-permit, 10-rotation
+        run: rotation builds a NEW transport, so reading the final object
+        reports only the last generation. Same defect class already fixed once
+        for the relay's byte lines."""
+        tel = scraper.make_telemetry()
+        for requests, byte_count in ((7, 1000), (5, 800), (9, 1500)):
+            t = make_transport(scraper)
+            t.requests, t.bytes_down = requests, byte_count
+            scraper.fold_transport_counters(tel, t)
+        assert tel['http_requests'] == 21
+        assert tel['http_bytes_down'] == 3300
+
+    def test_folding_none_is_safe(self, scraper):
+        tel = scraper.make_telemetry()
+        scraper.fold_transport_counters(tel, None)
+        assert tel.get('http_requests', 0) == 0
+
+
 class TestEgressProof:
     def test_refuses_when_transport_ip_equals_host_ip(self, scraper, monkeypatch):
         """The C5 invariant, unchanged: 'is a proxy configured?' is not 'is
