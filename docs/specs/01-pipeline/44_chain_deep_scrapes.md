@@ -106,8 +106,16 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
 ### Edge Cases
 - **Portal lists only PASSED stages (observed 2026-07-30)** — `stages: []` is the NORMAL
   answer for any permit that has not yet passed a stage (probe #7: two Inspection-status
-  permits, both legitimately empty). An empty list is not a miss, a WAF block, or an error;
-  `not_found_rate` gates must account for this
+  permits, both legitimately empty). An empty list is not a miss, a WAF block, or an error.
+  **Empty outcomes are therefore a TAXONOMY, not one counter** (WF3 2026-07-30):
+  `address_not_found` / `no_target_folders` are queue-anomalous (our own feed said the permit
+  exists); `no_stages` / `no_inspection_link` are the portal answering honestly. The audit
+  gate is `anomalous_miss_rate < 20%` — computed over the anomalous class only — with
+  `not_found_count` + the benign counts emitted as INFO rows and the full
+  `not_found_breakdown` in `scraper_telemetry`. Only anomalous misses feed the
+  `consecutive_empty` WAF-trap counter and the 90% early-abort. A `no_stages` permit gets
+  `last_scraped_at` stamped (the DB must remember the portal answered, or the staleness
+  monitor counts it never-scraped forever and the queue re-buys the same empty answer)
 - AIC returns HTML instead of JSON → WAF block detected, proxy rotated
 - Permit has `status = 'Revision Issued'` on AIC → no inspections data (only rev 00 has them)
 - `showStatus = false` on permit detail → no inspection link available, set `enriched_status = 'Permit Issued'`

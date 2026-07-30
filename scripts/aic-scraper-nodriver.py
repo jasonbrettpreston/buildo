@@ -1883,7 +1883,7 @@ async def scrape_year_sequence(page, year_seq, conn):
     props = chain_result.get('properties', [])
     if not props:
         log('INFO', '[scraper]', f'No property found for {year_seq}')
-        return {'searched': 1, 'scraped': 0, 'upserted': 0}
+        return {'searched': 1, 'scraped': 0, 'upserted': 0, 'outcome': 'address_not_found'}
 
     results = chain_result.get('results', [])
     folders = chain_result.get('folders', [])
@@ -1891,7 +1891,7 @@ async def scrape_year_sequence(page, year_seq, conn):
 
     if not target_folders:
         log('INFO', '[scraper]', f'{year_seq}: no target folders found')
-        return {'searched': 1, 'scraped': 0, 'upserted': 0}
+        return {'searched': 1, 'scraped': 0, 'upserted': 0, 'outcome': 'no_target_folders'}
 
     log('INFO', '[scraper]', f'{year_seq}: {len(folders)} folders, {len(target_folders)} target permits', {
         'all': [f"{f['folderYear']} {f['folderSequence']} {f['folderSection']} [{f['statusDesc']}]" for f in folders]
@@ -1901,6 +1901,8 @@ async def scrape_year_sequence(page, year_seq, conn):
     upserted = 0
     enriched_updates = 0
     status_changes = 0
+    saw_no_stages = False
+    saw_no_link = False
 
     cur = conn.cursor()
     try:
@@ -1909,6 +1911,7 @@ async def scrape_year_sequence(page, year_seq, conn):
                 log('INFO', '[scraper]', f"{result['permit_num']}: {result['error']}")
                 # Permits with no_processes/no_status_link — set Permit Issued
                 if result['error'] in ('no_processes', 'no_status_link'):
+                    saw_no_link = True
                     cur.execute(
                         "UPDATE permits SET enriched_status = 'Permit Issued', last_scraped_at = NOW() "
                         "WHERE permit_num = %s AND enriched_status IS DISTINCT FROM 'Permit Issued'",
@@ -1921,6 +1924,18 @@ async def scrape_year_sequence(page, year_seq, conn):
                             "UPDATE permits SET last_scraped_at = NOW() WHERE permit_num = %s",
                             (result['permit_num'],)
                         )
+                elif result['error'] == 'no_stages':
+                    saw_no_stages = True
+                    # The portal ANSWERED: the permit exists and no stage has
+                    # been passed yet (the page lists only passed stages).
+                    # Stamp last_scraped_at so the DB remembers we asked —
+                    # without it the staleness monitor counts this permit
+                    # never_scraped forever and the queue re-buys the same
+                    # empty answer every cycle.
+                    cur.execute(
+                        "UPDATE permits SET last_scraped_at = NOW() WHERE permit_num = %s",
+                        (result['permit_num'],)
+                    )
                 continue
 
             # Upsert stages
@@ -1993,9 +2008,18 @@ async def scrape_year_sequence(page, year_seq, conn):
     finally:
         cur.close()
 
+    if scraped > 0:
+        outcome = 'scraped'
+    elif saw_no_stages:
+        outcome = 'no_stages'
+    elif saw_no_link:
+        outcome = 'no_inspection_link'
+    else:
+        outcome = 'no_target_folders'
     return {
         'searched': 1, 'scraped': scraped, 'upserted': upserted,
         'enriched_updates': enriched_updates, 'status_changes': status_changes,
+        'outcome': outcome,
     }
 
 
@@ -2107,26 +2131,57 @@ def complete_batch_in_queue(conn, year_seqs, worker_id, failed=None):
 # ---------------------------------------------------------------------------
 # Scrape loop — shared between standalone and worker modes
 # ---------------------------------------------------------------------------
+# Outcomes that are the portal's own confirmed answers — the permit exists
+# and simply has no passed stage / no inspection link yet. NORMAL results
+# (roughly half of in-flight permits post the passed-only portal change);
+# they must trip neither the WAF-trap counter nor the miss-rate gate.
+BENIGN_EMPTY_OUTCOMES = frozenset({'no_stages', 'no_inspection_link'})
+
+
+def accumulate_result(tel, result):
+    """Fold one permit's scrape result into the telemetry dict.
+
+    The empty outcomes are NOT one thing (measurement run 30574728762 FAILed
+    its gate at 41.7% by lumping them): `address_not_found`/`no_target_folders`
+    are queue-anomalous (our own feed said this permit exists), while
+    `no_stages`/`no_inspection_link` are the portal answering honestly. Only
+    the anomalous class feeds `consecutive_empty` (the WAF-trap heuristic —
+    G4: three legitimate answers must never force a pointless rotation).
+    """
+    tel['permits_attempted'] += 1
+    if result.get('scraped', 0) > 0:
+        tel['permits_found'] += 1
+        tel['permits_scraped'] += result['scraped']
+        tel['consecutive_empty'] = 0
+    elif result.get('searched', 0) > 0 and result.get('scraped', 0) == 0:
+        tel['not_found_count'] += 1
+        outcome = result.get('outcome', 'address_not_found')
+        breakdown = tel.setdefault('not_found_breakdown', {})
+        breakdown[outcome] = breakdown.get(outcome, 0) + 1
+        if outcome not in BENIGN_EMPTY_OUTCOMES:
+            tel['consecutive_empty'] += 1
+            tel['consecutive_empty_max'] = max(tel['consecutive_empty_max'], tel['consecutive_empty'])
+    tel['total_upserted'] += result.get('upserted', 0)
+    tel['enriched_updates'] += result.get('enriched_updates', 0)
+    tel['status_changes'] += result.get('status_changes', 0)
+    if result.get('retry_exhausted'):
+        tel['proxy_errors'] += 1
+        # WAF blocks (retry exhausted) should also trigger proxy rotation
+        tel['consecutive_empty'] += WAF_TRAP_THRESHOLD  # force immediate rotation
+
+
+def anomalous_miss_count(tel):
+    """Misses that are genuinely anomalous — permit unknown to the portal."""
+    breakdown = tel.get('not_found_breakdown', {})
+    return sum(n for outcome, n in breakdown.items()
+               if outcome not in BENIGN_EMPTY_OUTCOMES)
+
+
 async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]', profile=None):
     """Core scrape loop for a list of year_seq combos. Mutates tel in place."""
 
     def accumulate(result):
-        tel['permits_attempted'] += 1
-        if result.get('scraped', 0) > 0:
-            tel['permits_found'] += 1
-            tel['permits_scraped'] += result['scraped']
-            tel['consecutive_empty'] = 0
-        elif result.get('searched', 0) > 0 and result.get('scraped', 0) == 0:
-            tel['not_found_count'] += 1
-            tel['consecutive_empty'] += 1
-            tel['consecutive_empty_max'] = max(tel['consecutive_empty_max'], tel['consecutive_empty'])
-        tel['total_upserted'] += result.get('upserted', 0)
-        tel['enriched_updates'] += result.get('enriched_updates', 0)
-        tel['status_changes'] += result.get('status_changes', 0)
-        if result.get('retry_exhausted'):
-            tel['proxy_errors'] += 1
-            # WAF blocks (retry exhausted) should also trigger proxy rotation
-            tel['consecutive_empty'] += WAF_TRAP_THRESHOLD  # force immediate rotation
+        accumulate_result(tel, result)
 
     for i, year_seq in enumerate(year_seqs):
         progress_pct = (i + 1) / len(year_seqs) * 100
@@ -2213,9 +2268,12 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
             except Exception:
                 pass  # noise visit failed — non-fatal
 
-        # Early abort on sustained misses
-        if i >= 9 and (i + 1) % 10 == 0 and tel['not_found_count'] / tel['permits_attempted'] >= 0.9:
-            log('WARN', worker_tag, f"Early abort: {tel['not_found_count']}/{tel['permits_attempted']} not found")
+        # Early abort on sustained ANOMALOUS misses (permit unknown to the
+        # portal). Benign empties (no stage passed yet) are honest answers and
+        # must not abort a healthy run — post the passed-only portal change
+        # they are roughly half of all in-flight permits.
+        if i >= 9 and (i + 1) % 10 == 0 and anomalous_miss_count(tel) / tel['permits_attempted'] >= 0.9:
+            log('WARN', worker_tag, f"Early abort: {anomalous_miss_count(tel)}/{tel['permits_attempted']} anomalous misses")
             break
 
     return browser, page
@@ -2225,7 +2283,7 @@ def make_telemetry():
     """Create a fresh telemetry dict."""
     return {
         'permits_attempted': 0, 'permits_found': 0, 'permits_scraped': 0,
-        'not_found_count': 0, 'enriched_updates': 0, 'proxy_errors': 0,
+        'not_found_count': 0, 'not_found_breakdown': {}, 'enriched_updates': 0, 'proxy_errors': 0,
         'consecutive_empty': 0, 'consecutive_empty_max': 0,
         'session_bootstraps': 0, 'session_failures': 0,
         'schema_drift': [], 'status_changes': 0, 'total_upserted': 0,
@@ -2240,7 +2298,11 @@ def compute_summary(tel, start_ms):
     p50 = latencies[len(latencies) // 2]
     p95 = latencies[int(len(latencies) * 0.95)]
     duration_ms = int(time.time() * 1000 - start_ms)
-    miss_rate = (tel['not_found_count'] / tel['permits_attempted'] * 100) if tel['permits_attempted'] > 0 else 0
+    # Gate on ANOMALOUS misses only (permit unknown to the portal). Benign
+    # empties — no stage passed yet, no inspection link — are the portal's own
+    # answers and gated them at 41.7%/50% "FAIL" on healthy runs.
+    anomalous = anomalous_miss_count(tel)
+    miss_rate = (anomalous / tel['permits_attempted'] * 100) if tel['permits_attempted'] > 0 else 0
     miss_status = 'FAIL' if miss_rate >= 20 else 'PASS'
 
     return {
@@ -2253,6 +2315,7 @@ def compute_summary(tel, start_ms):
                 'permits_found': tel['permits_found'],
                 'permits_scraped': tel['permits_scraped'],
                 'not_found_count': tel['not_found_count'],
+                'not_found_breakdown': tel.get('not_found_breakdown', {}),
                 'enriched_updates': tel['enriched_updates'],
                 'proxy_errors': tel['proxy_errors'],
                 'consecutive_empty_max': tel['consecutive_empty_max'],
@@ -2296,7 +2359,9 @@ def compute_summary(tel, start_ms):
                     {'metric': 'permits_found', 'value': tel['permits_found'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'enriched_updates', 'value': tel['enriched_updates'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'not_found_count', 'value': tel['not_found_count'], 'threshold': None, 'status': 'INFO'},
-                    {'metric': 'not_found_rate', 'value': f'{miss_rate:.1f}%', 'threshold': '< 20%', 'status': miss_status},
+                    {'metric': 'no_stages_yet', 'value': tel.get('not_found_breakdown', {}).get('no_stages', 0), 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'no_inspection_link', 'value': tel.get('not_found_breakdown', {}).get('no_inspection_link', 0), 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'anomalous_miss_rate', 'value': f'{miss_rate:.1f}%', 'threshold': '< 20%', 'status': miss_status},
                     {'metric': 'records_inserted', 'value': tel['total_upserted'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'records_updated', 'value': tel['status_changes'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'duration_ms', 'value': duration_ms, 'threshold': None, 'status': 'INFO'},

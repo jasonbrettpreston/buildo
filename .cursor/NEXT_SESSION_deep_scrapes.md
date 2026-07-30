@@ -190,6 +190,21 @@ restore we are going to use it regardless") — CDP Fetch interception before fi
 allow-set verbatim from v2, `script` fence locked, relay byte accounting + filter counters in
 telemetry, `SCRAPER_RESOURCE_BLOCKING` default OFF / workflow ON. See the ladder table.
 
+**L4 validation run 30576202397 — FILTER PROVEN:** `resources_blocked=269 / allowed=242`, WAF
+challenge passed WITH the filter on (no `d138bb04` signature), 6 permits → ~22 stages scraped
+through it, rotation clean. Two follow-on fixes shipped: ① `3b701521` relay bytes read 0 —
+Chrome's keep-alive tunnels never close before relay teardown, so `connectionClosed` counted
+nothing; relay now sums LIVE sockets + emits periodic cumulative BYTES lines, scraper folds
+per relay GENERATION on EOF (rotation restarts the relay at zero — latest-wins dropped earlier
+batches). ② The **empty-outcome taxonomy WF3** (operator-authorized "yes"): outcomes split
+into anomalous (`address_not_found`/`no_target_folders`) vs benign (`no_stages`/
+`no_inspection_link`); gate re-keyed to `anomalous_miss_rate < 20%`; only anomalous misses
+feed `consecutive_empty` (G4 — 3 benign answers could previously force a pointless rotation)
+and the 90% early-abort; `no_stages` permits now stamp `last_scraped_at` (staleness monitor
+stops counting them never-scraped; queue stops re-buying the same empty answer); breakdown
+emitted in telemetry + INFO audit rows; worker AND orchestrator mirrors updated; Spec 44 edge
+case rewritten; locks in `test_scraper_outcomes.py`.
+
 ## The one open defect — ~~start here~~ FIXED above; kept for the eliminated-layers table
 
 `page.evaluate()` raises/returns a nodriver `ExceptionDetails` object, and our calling code

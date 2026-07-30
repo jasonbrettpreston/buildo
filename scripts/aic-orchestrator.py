@@ -194,7 +194,8 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
     worker_tag = f'[worker-{worker_id}]'
     worker_tel = {
         'permits_attempted': 0, 'permits_found': 0, 'permits_scraped': 0,
-        'not_found_count': 0, 'proxy_errors': 0, 'session_bootstraps': 0,
+        'not_found_count': 0, 'not_found_breakdown': {}, 'proxy_errors': 0,
+        'session_bootstraps': 0,
         'session_failures': 0, 'total_upserted': 0, 'status_changes': 0,
         'enriched_updates': 0, 'preflight_passed': True, 'latencies': [],
         'workers_completed': 0, 'consecutive_empty_max': 0,
@@ -280,6 +281,9 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
                 worker_tel['permits_found'] += sc_tel.get('permits_found', 0)
                 worker_tel['permits_scraped'] += sc_tel.get('permits_scraped', 0)
                 worker_tel['not_found_count'] += sc_tel.get('not_found_count', 0)
+                for outcome, n in (sc_tel.get('not_found_breakdown') or {}).items():
+                    worker_tel['not_found_breakdown'][outcome] = \
+                        worker_tel['not_found_breakdown'].get(outcome, 0) + n
                 worker_tel['proxy_errors'] += sc_tel.get('proxy_errors', 0)
                 worker_tel['session_bootstraps'] += sc_tel.get('session_bootstraps', 0)
                 worker_tel['session_failures'] += sc_tel.get('session_failures', 0)
@@ -320,7 +324,7 @@ def aggregate_telemetry(worker_results):
     """Aggregate telemetry from all workers into a single dict."""
     agg = {
         'permits_attempted': 0, 'permits_found': 0, 'permits_scraped': 0,
-        'not_found_count': 0, 'proxy_errors': 0, 'session_bootstraps': 0,
+        'not_found_count': 0, 'not_found_breakdown': {}, 'proxy_errors': 0, 'session_bootstraps': 0,
         'session_failures': 0, 'total_upserted': 0, 'status_changes': 0,
         'enriched_updates': 0, 'preflight_failures': 0,
         'workers_total': len(worker_results),
@@ -334,6 +338,8 @@ def aggregate_telemetry(worker_results):
         agg['permits_found'] += w.get('permits_found', 0)
         agg['permits_scraped'] += w.get('permits_scraped', 0)
         agg['not_found_count'] += w.get('not_found_count', 0)
+        for outcome, n in (w.get('not_found_breakdown') or {}).items():
+            agg['not_found_breakdown'][outcome] = agg['not_found_breakdown'].get(outcome, 0) + n
         agg['proxy_errors'] += w.get('proxy_errors', 0)
         agg['session_bootstraps'] += w.get('session_bootstraps', 0)
         agg['session_failures'] += w.get('session_failures', 0)
@@ -449,7 +455,15 @@ async def main():
     p50 = latencies[len(latencies) // 2]
     p95 = latencies[int(len(latencies) * 0.95)]
     duration_ms = int(time.time() * 1000 - start_ms)
-    miss_rate = (agg['not_found_count'] / agg['permits_attempted'] * 100) if agg['permits_attempted'] > 0 else 0
+    # Gate on ANOMALOUS misses only (address/permit unknown to the portal) —
+    # `no_stages`/`no_inspection_link` are the portal's own honest answers
+    # (the status page lists only PASSED stages, so ~half of in-flight permits
+    # are legitimately empty) and gated healthy runs FAIL at 41.7%/50%.
+    # Mirrors accumulate_result()/anomalous_miss_count() in the worker.
+    breakdown = agg.get('not_found_breakdown', {})
+    anomalous = sum(n for outcome, n in breakdown.items()
+                    if outcome not in ('no_stages', 'no_inspection_link'))
+    miss_rate = (anomalous / agg['permits_attempted'] * 100) if agg['permits_attempted'] > 0 else 0
     miss_status = 'FAIL' if miss_rate >= 20 else 'PASS'
 
     # Queue stats — fresh connection since the populate connection was closed hours ago
@@ -476,6 +490,7 @@ async def main():
                 'permits_found': agg['permits_found'],
                 'permits_scraped': agg['permits_scraped'],
                 'not_found_count': agg['not_found_count'],
+                'not_found_breakdown': agg.get('not_found_breakdown', {}),
                 'enriched_updates': agg['enriched_updates'],
                 'proxy_errors': agg['proxy_errors'],
                 'consecutive_empty_max': agg['consecutive_empty_max'],
@@ -532,7 +547,9 @@ async def main():
                     {'metric': 'permits_attempted', 'value': agg['permits_attempted'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'permits_found', 'value': agg['permits_found'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'enriched_updates', 'value': agg['enriched_updates'], 'threshold': None, 'status': 'INFO'},
-                    {'metric': 'not_found_rate', 'value': f'{miss_rate:.1f}%', 'threshold': '< 20%', 'status': miss_status},
+                    {'metric': 'no_stages_yet', 'value': breakdown.get('no_stages', 0), 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'no_inspection_link', 'value': breakdown.get('no_inspection_link', 0), 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'anomalous_miss_rate', 'value': f'{miss_rate:.1f}%', 'threshold': '< 20%', 'status': miss_status},
                     {'metric': 'records_inserted', 'value': agg['total_upserted'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'records_updated', 'value': agg['status_changes'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'duration_ms', 'value': duration_ms, 'threshold': None, 'status': 'INFO'},
