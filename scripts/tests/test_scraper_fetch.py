@@ -87,6 +87,28 @@ class TestEvaluateFetch:
         assert err == 'fetch_error:EvaluateNonString'
 
 
+class TestQueueInputSanitization:
+    """Both adversarial reviewers (2026-07-30) converged on the same asymmetry:
+    portal-supplied RSNs were sanitized before JS interpolation, but
+    year/sequence — which come from scraper_queue, our OWN database and the
+    far more reachable input — were interpolated raw."""
+
+    def test_crafted_year_seq_cannot_break_out_of_the_js_literal(self, scraper):
+        import asyncio
+
+        class FakePage:
+            async def evaluate(self, js, await_promise=False):
+                raise AssertionError('must never reach evaluate with unsafe input')
+
+        with pytest.raises(ValueError, match='Unsafe value'):
+            asyncio.run(scraper.fetch_permit_chain(
+                FakePage(), '24', "100000'});alert(1);//"))
+
+    def test_well_formed_permits_are_unchanged(self, scraper):
+        assert scraper.sanitize_js_value('24') == '24'
+        assert scraper.sanitize_js_value('171259') == '171259'
+
+
 class TestJsTemplatesParse:
     def test_catch_sites_escape_the_stack_split(self):
         """A literal newline inside a JS string literal is a SyntaxError that

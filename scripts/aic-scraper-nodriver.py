@@ -2039,6 +2039,17 @@ async def fetch_permit_chain_http(transport, year, sequence):
 async def fetch_permit_chain(page, year, sequence):
     """Execute 4-step API chain inside Chrome via page.evaluate(fetch)."""
 
+    # Sanitize the QUEUE-supplied values too, not just the portal-supplied ones.
+    # Both adversarial reviewers converged here (2026-07-30) and the asymmetry
+    # was real and backwards: propertyRsn/folderRsn/processRsn come from the
+    # portal's own JSON and were sanitized, while year/sequence come from
+    # scraper_queue — our own database, and by far the more reachable input —
+    # and were interpolated into the JS template raw. A crafted year_seq could
+    # close the string literal and run arbitrary JS in the portal's origin.
+    # No behaviour change for well-formed input: these are always "24"/"171259".
+    year = sanitize_js_value(year)
+    sequence = sanitize_js_value(sequence)
+
     # Step 1: Search properties
     step1 = await evaluate_fetch(page, f"""
         (async () => {{
