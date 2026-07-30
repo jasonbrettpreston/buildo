@@ -91,12 +91,12 @@ async function run() {
   });
 
   try {
-    const { running } = await isChainRunning(pool, chainId);
+    const { running, row: blocking } = await isChainRunning(pool, chainId);
 
     // Item 5 — stale-row alert, same query pass, independent of skip/exit.
     const staleRow = await findStaleRunningRow(pool, chainId);
     if (staleRow) {
-      console.log(
+      console.error(
         `::warning title=Stale pipeline_runs row::chain_${chainId} run id=${staleRow.id} ` +
           `still 'running' since ${staleRow.started_at} (>12h) — investigate; it is no ` +
           `longer blocking new runs but its status is a dashboard lie.`
@@ -105,9 +105,12 @@ async function run() {
 
     writeOutput('skip', running ? 'true' : 'false');
     if (running) {
-      console.log(`[check-chain-running] chain_${chainId} is already running — skip=true`);
+      console.error(
+        `[check-chain-running] chain_${chainId} is already running (blocking row id=` +
+          `${blocking && blocking.id}, started_at=${blocking && blocking.started_at}) — skip=true`
+      );
     } else {
-      console.log(`[check-chain-running] chain_${chainId} is not running — skip=false`);
+      console.error(`[check-chain-running] chain_${chainId} is not running — skip=false`);
     }
   } catch (err) {
     // Item 3 (P3-D8 amendment): fail-safe skip=true, but exit 1 — an
