@@ -311,6 +311,12 @@ def build_upstream_proxy_url(session_id, worker_id=None):
     return f'{PROXY_SCHEME}://{user}:{password}@{PROXY_HOST}:{port}'
 
 
+# Stable local port per worker. The browser gets --proxy-server=<port> at
+# LAUNCH, so rotating the upstream session must reuse the same local port —
+# otherwise the relay moves and the still-running browser points at a dead one.
+_relay_ports = {}
+
+
 def start_proxy_relay(session_id, worker_id=None, timeout=30):
     """Run a local unauthenticated relay that holds the upstream credentials.
 
@@ -324,8 +330,10 @@ def start_proxy_relay(session_id, worker_id=None, timeout=30):
     if not PROXY_HOST:
         return None
     upstream = build_upstream_proxy_url(session_id, worker_id)
+    # Reuse this worker's port across session rotations (see _relay_ports).
+    want_port = _relay_ports.get(worker_id, 0)
     proc = subprocess.Popen(
-        ['node', PROXY_RELAY_JS, upstream, '0'],
+        ['node', PROXY_RELAY_JS, upstream, str(want_port)],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
         **({'start_new_session': True} if sys.platform != 'win32' else {}),
     )
@@ -339,6 +347,10 @@ def start_proxy_relay(session_id, worker_id=None, timeout=30):
             except ValueError:
                 continue
             if url:
+                try:
+                    _relay_ports[worker_id] = int(url.rsplit(':', 1)[1])
+                except (ValueError, IndexError):
+                    pass
                 log('INFO', '[scraper]', 'Proxy relay ready', {
                     'event': 'proxy_relay_ready',
                     'local_url': url,
@@ -814,7 +826,6 @@ BANDWIDTH_GUARD_ARGS = [
     '--disable-domain-reliability',
     '--safebrowsing-disable-auto-update',
     '--metrics-recording-only',
-    '--disable-background-timer-throttling',
 ]
 
 # Feature-level equivalents; merged into the SINGLE --disable-features switch
@@ -1024,7 +1035,7 @@ def launch_chrome(browser_args, worker_id=None):
     if _browser_launch_count[0] > MAX_BROWSER_LAUNCHES:
         raise RuntimeError(
             f'Refusing to launch Chrome #{_browser_launch_count[0]}: exceeded '
-            f'SCRAPER_MAX_BROWSER_LAUNCHES={MAX_BROWSER_LAUNCHES}. A WAF-block loop '
+            f'SCRAPER_MAX_BROWSER_LAUNCHES={MAX_BROWSER_LAUNCHES}. This is a COST ceiling, not a stealth signal — do not read it as CDP compromise. A WAF-block loop '
             'rotates the session on every trap and each rotation costs a full cold '
             'browser start over metered proxy bandwidth — stop, do not spend.'
         )
@@ -2000,9 +2011,12 @@ async def main():
                                 pass
                             browser = None
 
-                    # Kill browser after each batch in proxy mode (1 batch = 1 IP),
-                    # or after BROWSER_MAX_BATCHES in non-proxy mode (memory TTL).
-                    if browser and (PROXY_HOST or batch_num % BROWSER_MAX_BATCHES == 0):
+                    # Recycle on the memory TTL only. NOT `PROXY_HOST or ...`:
+                    # that fired every batch in production, forcing a cold Chrome
+                    # per batch (116 launches in run 30506470111, and the launch
+                    # ceiling then tripped on healthy runs). Rotation on an actual
+                    # WAF signal is scrape_loop's trap branch, which already exists.
+                    if browser and batch_num % BROWSER_MAX_BATCHES == 0:
                         if not PROXY_HOST:
                             log('INFO', worker_tag, f'Browser TTL: recycling after {BROWSER_MAX_BATCHES} batches')
                         await stop_and_terminate(browser, tel.get("_worker_id"))

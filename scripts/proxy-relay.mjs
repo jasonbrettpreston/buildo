@@ -43,22 +43,42 @@ if (!upstreamUrl) {
   process.exit(2);
 }
 
-// Suffix match on the hostname. Deny-by-default: anything not listed here is
-// refused locally and never touches the paid upstream.
-const DEFAULT_ALLOW = [
-  'toronto.ca',        // the AIC portal + its warm-entry pages
-  'api.ipify.org',     // the proxied-egress proof
+// BLOCK-list, deliberately NOT an allowlist. Deny-by-default was reviewed as a
+// re-run of the d138bb04 "WAF JavaScript Trap" (2026-03-15): starving the
+// portal's bot-challenge script shadow-banned the session permanently, and
+// because a refused request here surfaces only as a quiet per-resource 500,
+// that failure is INVISIBLE — indistinguishable from "the portal returned
+// nothing". Bot-management vendors serve their challenge JS from their OWN
+// domains, so an allowlist of *.toronto.ca cannot be known to be complete.
+// The cost driver, by contrast, is small and enumerable: block that, allow the
+// rest. Overridable via SCRAPER_PROXY_BLOCKLIST.
+const DEFAULT_BLOCK = [
+  'gvt1.com',                        // edgedl.me.gvt1.com — 1.76 GB / $6.60 in one run
+  'dl.google.com',
+  'update.googleapis.com',
+  'clients2.google.com',
+  'clients2.googleusercontent.com',
+  'android.clients.google.com',
+  'translate.googleapis.com',
+  'translate-pa.googleapis.com',
+  'translate.google.com',
+  'content-autofill.googleapis.com',
+  'safebrowsingohttpgateway.googleapis.com',
+  'optimizationguide-pa.googleapis.com',
+  'accounts.google.com',
+  'mtalk.google.com',
+  'connectivitycheck.gstatic.com',
 ];
-const allowSuffixes = (process.env.SCRAPER_PROXY_ALLOWLIST || '')
+const blockSuffixes = (process.env.SCRAPER_PROXY_BLOCKLIST || '')
   .split(',')
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
-const ALLOW = allowSuffixes.length ? allowSuffixes : DEFAULT_ALLOW;
+const BLOCK = blockSuffixes.length ? blockSuffixes : DEFAULT_BLOCK;
 
 function isAllowed(hostname) {
   if (!hostname) return false;
   const host = String(hostname).toLowerCase().replace(/\.$/, '');
-  return ALLOW.some((suffix) => host === suffix || host.endsWith(`.${suffix}`));
+  return !BLOCK.some((suffix) => host === suffix || host.endsWith(`.${suffix}`));
 }
 
 let blocked = 0;
@@ -74,10 +94,8 @@ const server = new Server({
       // with an error and never opens an upstream connection, so zero metered
       // bytes are spent. Logged so a wrongly-blocked host is visible, not a
       // silent mystery — the failure mode this whole session kept hitting.
-      process.stderr.write(
-        `proxy-relay: BLOCKED ${hostname} (not in allowlist: ${ALLOW.join(',')})\n`
-      );
-      throw new Error(`Host ${hostname} is not on the scraper proxy allowlist`);
+      process.stderr.write(`proxy-relay: BLOCKED ${hostname} (cost blocklist)\n`);
+      throw new Error(`Host ${hostname} is on the scraper proxy cost blocklist`);
     }
     allowed += 1;
     return { upstreamProxyUrl: upstreamUrl, ignoreUpstreamProxyCertificate: true };
