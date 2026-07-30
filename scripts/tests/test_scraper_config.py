@@ -254,3 +254,56 @@ class TestAkamaiTunedBackoff:
             SCRAPE_PERMIT_TYPE='')
 
         assert (mod.MAX_RETRIES, mod.RETRY_BASE_MS, mod.WAF_TRAP_THRESHOLD) == (7, 1234, 9)
+
+
+class TestGeoEnforcement:
+    """C6 (rung L2) — the exit IP must be Canadian, and the guard is not optional.
+
+    Decodo selects geography by HOSTNAME + PORT BAND, not by a username key: an
+    earlier `;country=CA` username append was investigated and removed as incorrect
+    (aedd4cd1). `gate.decodo.com` draws from the global rotating pool and is
+    geo-fenced by the AIC portal. We were scraping a Toronto municipal portal
+    through Brazilian exit IPs, which is a first-order bot signal.
+    """
+
+    def test_geo_fenced_gateway_is_refused(self, scraper):
+        with pytest.raises(RuntimeError, match='geo-fence'):
+            scraper.assert_proxy_geo_is_canadian('gate.decodo.com', 10001)
+
+    def test_canadian_sticky_lane_is_accepted(self, scraper):
+        scraper.assert_proxy_geo_is_canadian('ca.decodo.com', 20001)  # must not raise
+
+    def test_rotating_port_is_refused_on_the_canadian_host(self, scraper):
+        """Port 20000 rotates: the exit IP cannot be pinned to one address."""
+        with pytest.raises(RuntimeError, match='20001-29999'):
+            scraper.assert_proxy_geo_is_canadian('ca.decodo.com', 20000)
+
+    def test_no_country_key_is_added_to_the_username(self, scraper):
+        """Regression lock: `;country=CA` was disproven and must not return."""
+        username = scraper.build_proxy_username('w1t123', user='acct')
+
+        assert 'country' not in username.lower(), (
+            'geo is selected by hostname and port band; a username country key was '
+            'investigated and removed as incorrect (aedd4cd1)'
+        )
+
+
+class TestBandwidthGuard:
+    """C7 layer one — Chrome's own background traffic is billable behind a proxy."""
+
+    def test_defaults_off_so_the_unmetered_local_path_is_unchanged(self, scraper):
+        assert scraper.BANDWIDTH_GUARD is False
+
+    def test_component_update_is_disabled_when_enabled(self, scraper):
+        """--disable-component-update is the flag that stops the 1.76 GB one."""
+        assert '--disable-component-update' in scraper.BANDWIDTH_GUARD_ARGS
+
+    def test_guard_flags_are_applied_only_when_enabled(self, scraper, monkeypatch):
+        profile = scraper.FINGERPRINT_PROFILES[0]
+
+        off, _ = scraper.build_browser_args(profile, platform='linux')
+        monkeypatch.setattr(scraper, 'BANDWIDTH_GUARD', True)
+        on, _ = scraper.build_browser_args(profile, platform='linux')
+
+        assert '--disable-component-update' not in off
+        assert '--disable-component-update' in on

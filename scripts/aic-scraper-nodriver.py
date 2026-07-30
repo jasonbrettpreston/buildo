@@ -110,8 +110,11 @@ PROXY_PASS = os.environ.get('PROXY_PASS', '')
 # to work locally. Restoring `if PROXY_HOST:` would restore the accident, not the
 # capability. Proxying is now a declared state; unproxied is also a declared state.
 #
-# L0 supports 'none' only. 'relay' arrives with the relay port at rung L2.
-SUPPORTED_PROXY_MODES = ('none',)
+# 'relay' is live from rung L2. The MV3 extension is retired and does not return:
+# branded Chrome >=137 silently drops --load-extension, and an idle MV3 service
+# worker is evicted mid-run while chrome.proxy settings persist — so the browser
+# keeps routing through the proxy while unable to authenticate. Both silent.
+SUPPORTED_PROXY_MODES = ('none', 'relay')
 PROXY_MODE = (os.environ.get('SCRAPER_PROXY_MODE') or 'none').strip().lower()
 
 
@@ -135,16 +138,17 @@ def assert_proxy_config_coherent():
     """
     if PROXY_MODE not in SUPPORTED_PROXY_MODES:
         raise RuntimeError(
-            f"SCRAPER_PROXY_MODE={PROXY_MODE!r} is not supported on this build. "
-            f"Supported: {', '.join(SUPPORTED_PROXY_MODES)}. The relay path lands at "
-            f"rung L2 of the WF2 restore; until then a proxied run is not possible.")
+            f"SCRAPER_PROXY_MODE={PROXY_MODE!r} is not supported. "
+            f"Supported: {', '.join(SUPPORTED_PROXY_MODES)}.")
+    if proxy_enabled():
+        # C6 fires for every proxied run — not an opt-in an operator can forget.
+        assert_proxy_geo_is_canadian()
     if PROXY_HOST and not proxy_enabled():
         raise RuntimeError(
             "PROXY_HOST is set but SCRAPER_PROXY_MODE is 'none', so this run will NOT "
             "be proxied. Proxying is now an explicit choice: set SCRAPER_PROXY_MODE "
-            "(currently only 'none' is supported; 'relay' arrives at rung L2). If an "
-            "unproxied run is what you want, unset PROXY_HOST or set "
-            "SCRAPER_ALLOW_UNPROXIED=1 to acknowledge it.")
+            "to 'relay'. If an unproxied run is what you want, unset PROXY_HOST or "
+            "set SCRAPER_ALLOW_UNPROXIED=1 to acknowledge it.")
 
 
 # ---------------------------------------------------------------------------
@@ -577,7 +581,7 @@ async def inject_screen_overrides(page, profile):
 
 
 def build_browser_args(profile, debug_port=None, profile_dir=None,
-                       chrome_log=None, platform=None):
+                       chrome_log=None, platform=None, relay_url=None):
     """Build Chrome's launch flags and decide headedness. Pure — no browser needed.
 
     Extracted as a pure function precisely so the launch surface is testable without
@@ -617,6 +621,20 @@ def build_browser_args(profile, debug_port=None, profile_dir=None,
             'Run with: xvfb-run -a python3 scripts/aic-orchestrator.py'
         )
 
+    if relay_url:
+        # C3: Chrome only ever sees a local, unauthenticated forwarder. Credentials
+        # live in the relay's argv, never on Chrome's command line.
+        browser_args.append(f'--proxy-server={relay_url}')
+        # Chrome bypasses proxies for loopback by DEFAULT, which would send the
+        # egress probe direct and make an unproxied run look proxied.
+        browser_args.append('--proxy-bypass-list=<-loopback>')
+
+    if BANDWIDTH_GUARD:
+        # C7 layer one. Chrome's own background chatter is billable the moment a
+        # proxy is in the path; --disable-component-update is the 1.76 GB one.
+        browser_args += BANDWIDTH_GUARD_ARGS
+        browser_args.append(f'--disable-features={BANDWIDTH_GUARD_FEATURES}')
+
     if debug_port is not None:
         # Attach mode (L1): nodriver supplies nothing, so we supply everything.
         browser_args += NODRIVER_DEFAULT_ARGS
@@ -652,6 +670,439 @@ def build_browser_args(profile, debug_port=None, profile_dir=None,
     # Chrome's real sandbox stays ON (de3ff6dd fence): no launch-flag divergence
     # from the operator's local runs for a WAF-sensitive scraper.
     return browser_args, use_headless
+
+
+# ---------------------------------------------------------------------------
+# C3/C5/C6/C7 (WF2 restore, rung L2) — the proxy path.
+#
+# The MV3 extension is retired (L0). The relay replaces it: a local, unauthenticated
+# forwarder that holds the Decodo credentials so Chrome only ever sees a plain
+# `--proxy-server=http://127.0.0.1:PORT`. That separation is what makes the two
+# things the extension could not do possible:
+#   * rotate the exit IP WITHOUT recycling the browser — restarting the relay on the
+#     SAME pinned local port swaps the Decodo session while Chrome keeps running.
+#     Killing Chrome per batch instead is what turned a WAF loop into 116 cold
+#     starts and ~1.76 GB of metered traffic.
+#   * enforce a host blocklist at the chokepoint, which flags alone cannot do.
+#
+# On CONNECT the relay pipes raw bytes rather than terminating TLS, so the browser's
+# JA3/ALPN fingerprint reaches the origin intact. mitmproxy must never be
+# substituted — it re-originates TLS and destroys exactly that.
+# ---------------------------------------------------------------------------
+_spawned_relays = {}
+# One local port pinned per worker, so a rotation reuses it and Chrome's
+# --proxy-server never has to change.
+_relay_ports = {}
+_host_egress_ip_cache = {'ip': None, 'at': 0.0}
+
+
+PROXY_RELAY_JS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'proxy-relay.mjs')
+
+# Relay subprocesses we spawned, per worker — same ownership discipline as
+# _spawned_browsers: kill a pid we own, never pattern-match the process table.
+_spawned_relays = {}
+
+EGRESS_ECHO_URL = os.environ.get('SCRAPER_EGRESS_ECHO_URL') or 'https://api.ipify.org?format=json'
+
+# Chrome's network-error interstitial. Distinguishing "the browser could not
+# reach the echo service" from "the browser reached it and reported an IP" is
+# load-bearing: see verify_proxied_egress for why the former is evidence FOR
+# proxying rather than a reason to refuse.
+_UNREACHABLE_MARKERS = (
+    "site can't be reached",
+    'site cannot be reached',
+    'ERR_',
+    'took too long to respond',
+    'temporarily down or moved permanently',
+)
+
+HOST_EGRESS_IP_TTL_S = float(os.environ.get('SCRAPER_HOST_IP_TTL_S') or '900')
+
+_host_egress_ip_cache = {}  # {'ip': str, 'at': float}; empty = not yet probed
+
+def build_upstream_proxy_url(session_id, worker_id=None):
+    """The credentialed upstream URL handed to the relay (never to Chrome)."""
+    from urllib.parse import quote
+    user = quote(build_proxy_username(session_id), safe='')
+    password = quote(PROXY_PASS, safe='')
+    port = resolve_proxy_port(worker_id)
+    return f'{PROXY_SCHEME}://{user}:{password}@{PROXY_HOST}:{port}'
+
+
+# Stable local port per worker. The browser gets --proxy-server=<port> at
+# LAUNCH, so rotating the upstream session must reuse the same local port —
+# otherwise the relay moves and the still-running browser points at a dead one.
+_relay_ports = {}
+
+def start_proxy_relay(session_id, worker_id=None, timeout=30):
+    """Run a local unauthenticated relay that holds the upstream credentials.
+
+    Returns its `http://127.0.0.1:PORT` URL, which Chrome can use with a plain
+    --proxy-server and NO extension. Replaces the MV3 extension because
+    branded Chrome removed --load-extension (137) and its opt-out (142), and an
+    evicted MV3 service worker silently stops answering onAuthRequired while
+    chrome.proxy settings persist — the browser keeps routing through the proxy
+    while unable to authenticate.
+    """
+    if not PROXY_HOST:
+        return None
+    upstream = build_upstream_proxy_url(session_id, worker_id)
+    # Reuse this worker's port across session rotations (see _relay_ports).
+    want_port = _relay_ports.get(worker_id, 0)
+    proc = subprocess.Popen(
+        ['node', PROXY_RELAY_JS, upstream, str(want_port)],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        **({'start_new_session': True} if sys.platform != 'win32' else {}),
+    )
+    _spawned_relays[worker_id] = proc
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        line = proc.stdout.readline()
+        if line:
+            try:
+                url = json.loads(line).get('url')
+            except ValueError:
+                continue
+            if url:
+                try:
+                    _relay_ports[worker_id] = int(url.rsplit(':', 1)[1])
+                except (ValueError, IndexError):
+                    pass
+                log('INFO', '[scraper]', 'Proxy relay ready', {
+                    'event': 'proxy_relay_ready',
+                    'local_url': url,
+                    'upstream_host': PROXY_HOST,
+                    'upstream_port': resolve_proxy_port(worker_id),
+                    'scheme': PROXY_SCHEME,
+                })
+                return url
+        if proc.poll() is not None:
+            err = (proc.stderr.read() or '').strip()[:200]
+            raise RuntimeError(f'Proxy relay exited (rc={proc.returncode}) before listening: {err}')
+    terminate_spawned_relay(worker_id)
+    raise RuntimeError(f'Proxy relay did not report a listening URL within {timeout}s')
+
+def terminate_spawned_relay(worker_id=None, timeout=8):
+    """Kill the relay we spawned for this worker. Idempotent; never raises."""
+    proc = _spawned_relays.pop(worker_id, None)
+    if proc is None or proc.poll() is not None:
+        return False
+    try:
+        if sys.platform != 'win32':
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+        else:
+            proc.terminate()
+    except OSError as err:
+        log('WARN', '[scraper]', f'Could not signal proxy relay: {err}',
+            {'event': 'relay_terminate_failed'})
+    try:
+        proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        try:
+            proc.kill()
+        except OSError:
+            pass
+    log('INFO', '[scraper]', 'Terminated proxy relay',
+        {'event': 'proxy_relay_terminated', 'worker_id': worker_id})
+    return True
+
+def _extract_ip(raw):
+    """Pull an IP string out of the echo service's response (JSON or bare text)."""
+    if raw is None:
+        return None
+    text = raw if isinstance(raw, str) else str(raw)
+    text = text.strip()
+    if not text:
+        return None
+    # Unwrap up to two layers of JSON: the body may be a JSON document, or a
+    # JSON-encoded STRING containing one (nodriver hands values back encoded).
+    for _ in range(2):
+        if not text.startswith(('{', '"')):
+            break
+        try:
+            decoded = json.loads(text)
+        except ValueError:
+            break
+        if isinstance(decoded, dict):
+            return str(decoded.get('ip') or '').strip() or None
+        text = str(decoded).strip()
+    if re.match(r'^[0-9a-fA-F:.]+$', text):
+        return text
+    # Last resort: an IP embedded in a text body (a <pre>-rendered JSON page).
+    found = re.search('(?:[0-9]{1,3}[.]){3}[0-9]{1,3}', text)
+    return found.group(0) if found else None
+
+
+# Re-probe the host IP at least this often. A stale value is not merely
+# useless — verify_proxied_egress compares against it, so if the host's real
+# egress IP changed while the cache held the OLD one, an unproxied browser
+# would report an IP that differs from the stale value and PASS. That is the
+# precise silent-unproxied failure this tripwire exists to prevent, so the
+# "a runner's IP does not change mid-run" assumption is enforced with a TTL
+# rather than asserted in a comment (it holds for ephemeral CI runners; it
+# does not necessarily hold for a long-lived desktop or db-queue session).
+HOST_EGRESS_IP_TTL_S = float(os.environ.get('SCRAPER_HOST_IP_TTL_S') or '900')
+
+_host_egress_ip_cache = {}  # {'ip': str, 'at': float}; empty = not yet probed
+
+def host_egress_ip(timeout=15, refresh=False, now=None):
+    """This process's own public IP — i.e. what UNPROXIED traffic looks like.
+
+    Memoized with a TTL: bootstrap runs per BATCH in proxy mode ("1 batch =
+    1 IP") and again on every WAF rotation, so probing the echo service every
+    time would mean thousands of calls to one free endpoint while draining the
+    queue — an avoidable rate-limit risk on a dependency that can fail the
+    chain. The TTL bounds how stale the comparison baseline can get.
+    """
+    now = time.time() if now is None else now
+    cached = _host_egress_ip_cache
+    if cached and not refresh and (now - cached['at']) < HOST_EGRESS_IP_TTL_S:
+        return cached['ip']
+    try:
+        with urllib.request.urlopen(EGRESS_ECHO_URL, timeout=timeout) as resp:
+            found = _extract_ip(resp.read().decode('utf-8', errors='replace'))
+    except (urllib.error.URLError, OSError, ValueError):
+        return None
+    if found:
+        # Only a SUCCESSFUL probe refreshes the cache: a transient echo outage
+        # must not poison it, and must not extend a stale entry's life either.
+        _host_egress_ip_cache.clear()
+        _host_egress_ip_cache.update({'ip': found, 'at': now})
+    return found
+
+
+_HOST_IP_UNSET = object()  # distinct from None, which means "known to be unknown"
+
+async def verify_proxied_egress(browser, host_ip=_HOST_IP_UNSET):
+    """FAIL-LOUD tripwire: prove the BROWSER's traffic is not leaving via this host.
+
+    Asserts the invariant that actually matters — am I proxied? — rather than
+    inferring it from the proxy extension's presence. An earlier version looked
+    for a `chrome-extension://*/background.js` target and rejected a browser
+    whose targets were only ['page:about:blank']; MV3 service workers start
+    lazily and are not reliably enumerated, so that produced a FALSE NEGATIVE
+    on the GH runner (run 30496893882) against a browser whose extension had in
+    fact loaded (run 30498062060 later listed both service workers).
+
+    NAVIGATES to the echo service rather than fetch()ing it: at this point in
+    bootstrap the tab is about:blank, whose opaque origin makes a cross-origin
+    fetch throw — nodriver then returns an ExceptionDetails object rather than
+    raising, which is exactly what broke run 30498062060. Navigation has no such
+    restriction. The scraper's own AIC fetches are fine because they run on the
+    AIC origin.
+
+    Why it must fail loud rather than warn: the MV3 extension supplies BOTH the
+    proxy route and its credentials, so if it does not load there is no error at
+    all — traffic silently goes direct from this host's IP, exposing a
+    WAF-sensitive scraper. Spec 115 §3/§4's fail-safe-loud posture applies: if
+    we cannot PROVE we are proxied, we do not scrape. bootstrap_with_retry
+    retries, so a transient echo-service outage costs attempts, not silence.
+    """
+    # Sentinel, not None: None is a MEANINGFUL value here ("we could not
+    # determine it"), which must fail loud rather than trigger a re-fetch.
+    if host_ip is _HOST_IP_UNSET:
+        host_ip = host_egress_ip()
+
+    if not host_ip:
+        raise RuntimeError(
+            f"Could not determine this host's egress IP from {EGRESS_ECHO_URL}, so "
+            "'am I proxied?' is unanswerable — refusing to scrape unverified"
+        )
+
+    page = await browser.get(EGRESS_ECHO_URL)
+    raw = await page.evaluate('document.body.innerText', await_promise=False)
+    browser_ip = _extract_ip(raw)
+    if not browser_ip:
+        if _looks_unreachable(raw):
+            # The host reached this service moments ago (host_ip is set), so a
+            # browser that could NOT reach it is provably not on the host's
+            # direct path — an extension that failed to load would have left
+            # the browser with plain direct internet. Treat as proxied-but-
+            # destination-blocked: surfaced loudly, but not a reason to fail a
+            # scrape that routes to a different host entirely. Refusing here
+            # would repeat the false-negative that the target-visibility check
+            # already cost us (run 30496893882).
+            log('WARN', '[scraper]', 'Echo service unreachable from the browser but reachable from '
+                'this host — traffic is not on the direct path (treating as proxied)', {
+                    'event': 'proxied_egress_indirect',
+                    'echo_url': EGRESS_ECHO_URL,
+                })
+            return None
+        raise RuntimeError(
+            f"Could not read the browser's egress IP by navigating to {EGRESS_ECHO_URL} "
+            f"(page body was {str(raw)[:160]!r}) — refusing to scrape unverified"
+        )
+    if not host_ip:
+        raise RuntimeError(
+            f"Could not determine this host's egress IP from {EGRESS_ECHO_URL}, so "
+            f"'am I proxied?' is unanswerable (browser reported {browser_ip}) — "
+            "refusing to scrape unverified"
+        )
+    if browser_ip == host_ip:
+        raise RuntimeError(
+            f"Browser egress IP {browser_ip} equals this host's own IP — traffic is "
+            'UNPROXIED. The MV3 proxy extension carries both the proxy route and its '
+            'credentials, so a silent non-load means direct scraping from this host. '
+            'Branded Chrome removed --load-extension in 137 and its opt-out in 142; '
+            'use unbranded Chromium or Chrome for Testing.'
+        )
+    log('INFO', '[scraper]', 'Proxied egress confirmed', {
+        'event': 'proxied_egress_verified',
+        'browser_ip_suffix': browser_ip.rsplit('.', 1)[-1] if '.' in browser_ip else '?',
+        'differs_from_host': True,
+    })
+    return browser_ip
+
+async def log_browser_targets(page):
+    """Log the target list — diagnostic only, never a gate.
+
+    Target visibility is exactly what proved unreliable for judging whether the
+    extension loaded, so this records what we saw without deciding anything.
+    """
+    try:
+        targets = await page.send(uc.cdp.target.get_targets())
+        seen = sorted(f'{getattr(t, "type_", "?")}:{getattr(t, "url", "?")[:80]}' for t in targets)
+    except Exception as err:  # noqa: BLE001
+        log('WARN', '[scraper]', f'Could not enumerate targets: {err}',
+            {'event': 'target_enumeration_failed'})
+        return []
+    log('INFO', '[scraper]', 'Browser targets', {'event': 'browser_targets', 'targets': seen})
+    return seen
+
+# ---------------------------------------------------------------------------
+# C7 (rung L2) — the bandwidth guard, layer one: launch flags.
+#
+# A working proxy makes Chrome's OWN background traffic a billable line item. One
+# run billed ~1.76 GB (~$6.60) to edgedl.me.gvt1.com against ~2.7 MB of actual
+# scraping: 99.9% of the spend was Chrome talking to Google. These flags stop it at
+# the source; the relay's blocklist is layer two, because a flag that silently
+# stops working leaves no trace and a future edit can drop one.
+#
+# DEFAULT OFF locally (an unproxied run costs nothing); the workflow pins it ON.
+# ---------------------------------------------------------------------------
+BANDWIDTH_GUARD = (os.environ.get('SCRAPER_BANDWIDTH_GUARD') or '').strip() == '1'
+
+BANDWIDTH_GUARD_ARGS = [
+    '--disable-background-networking',      # umbrella: component update, SB, translate, autofill
+    '--disable-component-update',           # the 1.76 GB one, explicitly
+    '--disable-sync',
+    '--disable-default-apps',
+    '--disable-client-side-phishing-detection',
+    '--disable-domain-reliability',
+    '--safebrowsing-disable-auto-update',
+    '--metrics-recording-only',
+]
+
+# Feature-level equivalents; merged into the SINGLE --disable-features switch
+# (Chrome honors only the last occurrence, which build_browser_args enforces).
+BANDWIDTH_GUARD_FEATURES = (
+    'Translate,OptimizationHints,OptimizationGuideModelDownloading,'
+    'MediaRouter,AutofillServerCommunication,InterestFeedContentSuggestions,'
+    'CalculateNativeWinOcclusion'
+)
+
+NODRIVER_DEFAULT_ARGS = [
+    '--remote-allow-origins=*',
+    '--no-first-run',
+    '--no-service-autorun',
+    '--no-default-browser-check',
+    '--homepage=about:blank',
+    '--no-pings',
+    '--password-store=basic',
+    '--disable-infobars',
+    '--disable-breakpad',
+    '--disable-dev-shm-usage',
+    '--disable-session-crashed-bubble',
+    '--disable-search-engine-choice-screen',
+]
+
+# How long to wait for Chrome's DevTools endpoint. nodriver's own budget is a
+# hardcoded 2.25s (browser.py:425-449) which a cold profile on a CI runner
+# exceeds just creating its databases — the entire reason we launch and poll
+# ourselves. Generous by default; an unresponsive browser still fails loudly.
+DEVTOOLS_READY_TIMEOUT_S = float(os.environ.get('SCRAPER_DEVTOOLS_TIMEOUT_S') or '60')
+
+# Chrome processes we spawned, per worker — so teardown kills a pid we OWN
+# rather than pattern-matching the process table (never `pkill chrome`: this
+# also runs on the operator's own desktop).
+_spawned_browsers = {}
+
+BANDWIDTH_GUARD_FEATURES = (
+    'Translate,OptimizationHints,OptimizationGuideModelDownloading,'
+    'MediaRouter,AutofillServerCommunication,InterestFeedContentSuggestions,'
+    'CalculateNativeWinOcclusion'
+)
+
+NODRIVER_DEFAULT_ARGS = [
+    '--remote-allow-origins=*',
+    '--no-first-run',
+    '--no-service-autorun',
+    '--no-default-browser-check',
+    '--homepage=about:blank',
+    '--no-pings',
+    '--password-store=basic',
+    '--disable-infobars',
+    '--disable-breakpad',
+    '--disable-dev-shm-usage',
+    '--disable-session-crashed-bubble',
+    '--disable-search-engine-choice-screen',
+]
+
+# How long to wait for Chrome's DevTools endpoint. nodriver's own budget is a
+# hardcoded 2.25s (browser.py:425-449) which a cold profile on a CI runner
+# exceeds just creating its databases — the entire reason we launch and poll
+# ourselves. Generous by default; an unresponsive browser still fails loudly.
+DEVTOOLS_READY_TIMEOUT_S = float(os.environ.get('SCRAPER_DEVTOOLS_TIMEOUT_S') or '60')
+
+# Chrome processes we spawned, per worker — so teardown kills a pid we OWN
+# rather than pattern-matching the process table (never `pkill chrome`: this
+# also runs on the operator's own desktop).
+_spawned_browsers = {}
+
+# ---------------------------------------------------------------------------
+# C6 (rung L2) — geo enforcement.
+#
+# Decodo selects geography by HOSTNAME + PORT BAND, not by a username key. An
+# earlier `;country=CA` username append was investigated and REMOVED as incorrect
+# (aedd4cd1, 2026-03-15) — do not reintroduce it without a live curl proof, the way
+# the `user-` prefix fact was proved.
+#
+# `gate.decodo.com:10001` draws from the global rotating pool and is geo-fenced by
+# the AIC portal; `ca.decodo.com` sticky ports (20001-29999) are the Canadian lane.
+# Scraping a Toronto municipal portal from a Brazilian exit IP is a first-order bot
+# signal, and we were doing exactly that: observed exits included 186.225.225.102.
+# ---------------------------------------------------------------------------
+GEO_FENCED_PROXY_HOSTS = ('gate.decodo.com',)
+CANADIAN_PROXY_HOST_HINT = 'ca.decodo.com'
+
+
+def assert_proxy_geo_is_canadian(host=None, port=None):
+    """Refuse to scrape through a geo-fenced or non-Canadian proxy lane.
+
+    Fatal by design when proxying: a wrong-country exit IP must stop the run, not
+    quietly produce a scrape the portal is already suspicious of.
+    """
+    host = (PROXY_HOST if host is None else host or '').strip().lower()
+    if not host:
+        return
+    for fenced in GEO_FENCED_PROXY_HOSTS:
+        if host == fenced or host.endswith('.' + fenced):
+            raise RuntimeError(
+                f'PROXY_HOST={host!r} is the global rotating gateway, which the AIC '
+                f'portal geo-fences (aedd4cd1). Use {CANADIAN_PROXY_HOST_HINT} with a '
+                f'sticky port in 20001-29999 so the exit IP is Canadian.')
+    if CANADIAN_PROXY_HOST_HINT not in host:
+        log('WARN', '[scraper]',
+            f'PROXY_HOST={host!r} is not the known Canadian lane '
+            f'({CANADIAN_PROXY_HOST_HINT}); the exit IP country is unverified.',
+            {'event': 'proxy_geo_unverified', 'proxy_host': host})
+        return
+    resolved = int(port if port is not None else (PROXY_PORT or 0) or 0)
+    if resolved and not (20001 <= resolved <= 29999):
+        raise RuntimeError(
+            f'PROXY_PORT={resolved} is outside the sticky band 20001-29999 on '
+            f'{host}. Port 20000 is the ROTATING pool: the exit IP changes '
+            f'mid-session and cannot be pinned to one Canadian address.')
 
 
 # ---------------------------------------------------------------------------
@@ -928,16 +1379,20 @@ _UNREACHABLE_MARKERS = (
     'temporarily down or moved permanently',
 )
 
-async def bootstrap_session(worker_id=None):
+async def bootstrap_session(worker_id=None, relay_url=None):
     """Launch Chrome via CDP and establish an AIC session with a warm entry.
 
     Runs headed whenever a proxy mode is selected (C9) -- headless-vs-headed is a
     first-order bot signal and the attested runs were headed. On the unproxied
     default path Chrome runs headless, which needs no display server.
+
+    `relay_url` points Chrome at the local forwarder (rung L2). A caller that
+    already owns a relay passes it in so a rotation can reuse the same local port
+    without restarting the browser.
     """
     # Coherent fingerprint profile — viewport, platform, and UA match
     profile = random.choice(FINGERPRINT_PROFILES)
-    browser_args, use_headless = build_browser_args(profile)
+    browser_args, use_headless = build_browser_args(profile, relay_url=relay_url)
 
     # Persistent profile dir — reuse cookies/localStorage across runs
     profile_name = f'worker-{worker_id}' if worker_id else 'standalone'
@@ -951,7 +1406,7 @@ async def bootstrap_session(worker_id=None):
         port = find_free_port()
         launch_args, _ = build_browser_args(
             profile, debug_port=port, profile_dir=profile_dir,
-            chrome_log=chrome_launch_log_path(worker_id))
+            chrome_log=chrome_launch_log_path(worker_id), relay_url=relay_url)
         proc = launch_chrome(launch_args, worker_id=worker_id)
         # Our own readiness budget, replacing nodriver's hardcoded 2.25 s.
         wait_for_devtools(port, proc=proc, profile_dir=profile_dir)
@@ -1037,12 +1492,12 @@ async def preflight_stealth_check(page):
     return True, None
 
 
-async def bootstrap_with_retry(run_preflight=True, worker_id=None):
+async def bootstrap_with_retry(run_preflight=True, worker_id=None, relay_url=None):
     """Bootstrap with retry — 3 attempts with 10s backoff."""
     last_error = None
     for attempt in range(1, 4):
         try:
-            browser, page, profile = await bootstrap_session(worker_id=worker_id)
+            browser, page, profile = await bootstrap_session(worker_id=worker_id, relay_url=relay_url)
             if attempt > 1:
                 log('INFO', '[scraper]', f'Bootstrap succeeded on attempt {attempt}')
 
@@ -1054,6 +1509,14 @@ async def bootstrap_with_retry(run_preflight=True, worker_id=None):
                     await stop_and_terminate(browser, worker_id)
                     raise Exception(f'Preflight failed: {reason}')
                 log('INFO', '[scraper]', 'Preflight stealth check passed')
+
+            if proxy_enabled():
+                # C5 — auto-enabled by the mode, never a separate opt-in an
+                # operator can forget. "Is the proxy configured?" is not "is it
+                # working?": four months of runs recorded proxy_configured=true
+                # while scraping direct. Assert the OUTCOME.
+                await log_browser_targets(browser)
+                await verify_proxied_egress(browser)
 
             return browser, page, attempt, profile
         except Exception as err:
@@ -1499,15 +1962,23 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
         if tel['consecutive_empty'] >= WAF_TRAP_THRESHOLD:
             log('WARN', worker_tag, f"WAF trap detected ({tel['consecutive_empty']} consecutive empty). Re-bootstrapping...")
             try:
-                await stop_and_terminate(browser, tel.get('_worker_id'))
-                # NOTE (WF2 restore, rung L0): IP rotation on WAF trap is UNAVAILABLE
-                # until the relay lands at L2. The extension-rebuild rotation that used
-                # to sit here required relaunching Chrome for every IP change -- the
-                # ~20x byte multiplier this restore exists to remove. The relay rotates
-                # the Decodo session on a pinned local port without touching the browser.
-                # Re-bootstrapping still clears session state, which is the part that
-                # matters on an unproxied run.
-                browser, page, attempts, profile = await bootstrap_with_retry(worker_id=tel.get('_worker_id'))
+                worker = tel.get('_worker_id')
+                await stop_and_terminate(browser, worker)
+                rotated_relay = None
+                if proxy_enabled():
+                    # ROTATE THE IP WITHOUT PAYING FOR IT TWICE. Restarting the relay
+                    # on this worker's PINNED local port swaps the Decodo session —
+                    # a new exit IP — while --proxy-server keeps pointing at the same
+                    # 127.0.0.1:PORT. The extension could only rotate by relaunching
+                    # Chrome, and each cold start re-downloads Chrome's components
+                    # through the metered proxy: 102 traps became 116 launches and
+                    # ~1.76 GB. Rotation is correct; paying for a browser to get it
+                    # is not.
+                    terminate_spawned_relay(worker)
+                    rotated_relay = start_proxy_relay(
+                        build_proxy_session_id(worker, int(time.time())), worker_id=worker)
+                browser, page, attempts, profile = await bootstrap_with_retry(
+                    worker_id=worker, relay_url=rotated_relay)
                 tel['session_bootstraps'] += attempts
                 tel['consecutive_empty'] = 0
             except Exception as err:
@@ -1655,8 +2126,17 @@ async def main():
     log('INFO', worker_tag, 'Launching browser via nodriver (CDP)...')
 
     browser = None
+    relay_url = None
     try:
-        browser, page, bootstrap_attempts, profile = await bootstrap_with_retry(worker_id=tel['_worker_id'])
+        if proxy_enabled():
+            # C3 (rung L2): the relay holds the credentials so Chrome never sees
+            # them. Started INSIDE the try so a relay failure is caught, reported
+            # through PIPELINE_SUMMARY and leaves preflight_passed False — a
+            # failure that escapes main() produces a silent, uncounted dead worker.
+            relay_url = start_proxy_relay(
+                build_proxy_session_id(tel['_worker_id']), worker_id=tel['_worker_id'])
+        browser, page, bootstrap_attempts, profile = await bootstrap_with_retry(
+            worker_id=tel['_worker_id'], relay_url=relay_url)
         tel['session_bootstraps'] = bootstrap_attempts
         log('INFO', worker_tag, 'WAF session established (no WebDriver)')
 
@@ -1795,6 +2275,9 @@ async def main():
         log('ERROR', worker_tag, f'Fatal: {err}')
 
     finally:
+        if proxy_enabled():
+            # The relay's argv carries live credentials — it must never outlive us.
+            terminate_spawned_relay(tel.get('_worker_id'))
         if browser:
             try:
                 await stop_and_terminate(browser, tel.get('_worker_id'))

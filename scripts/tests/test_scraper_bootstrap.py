@@ -109,9 +109,17 @@ class TestProxyMode:
         with pytest.raises(RuntimeError, match='PROXY_HOST is set'):
             scraper.assert_proxy_config_coherent()
 
-    def test_unsupported_mode_names_the_rung(self, scraper, monkeypatch):
-        """'relay' is real but lands at L2 — say so rather than falling back."""
-        monkeypatch.setattr(scraper, 'PROXY_MODE', 'relay')
+    def test_relay_is_a_supported_mode(self, scraper):
+        """'relay' went live at rung L2 and replaces the retired MV3 extension."""
+        assert 'relay' in scraper.SUPPORTED_PROXY_MODES
+        assert 'extension' not in scraper.SUPPORTED_PROXY_MODES, (
+            'the MV3 extension is retired: branded Chrome drops --load-extension '
+            'and an idle service worker is evicted mid-run, both silently'
+        )
+
+    def test_unknown_mode_is_refused_not_silently_ignored(self, scraper, monkeypatch):
+        """A typo must stop the run, never fall back to an unintended path."""
+        monkeypatch.setattr(scraper, 'PROXY_MODE', 'relayy')
         with pytest.raises(RuntimeError, match='not supported'):
             scraper.assert_proxy_config_coherent()
 

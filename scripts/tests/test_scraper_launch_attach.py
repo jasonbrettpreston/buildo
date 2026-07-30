@@ -285,3 +285,50 @@ class TestBrowserLaunchCeiling:
                 scraper.launch_chrome([], worker_id='ceiling-test-2')
         finally:
             scraper._browser_launch_count[0] = 0
+
+
+class TestRelayWiring:
+    """C3 (rung L2) — Chrome talks to a local forwarder, never to Decodo directly."""
+
+    def test_proxy_server_points_at_the_relay(self, scraper):
+        args, _ = scraper.build_browser_args(
+            PROFILE, relay_url='http://127.0.0.1:20501', platform='linux')
+
+        assert '--proxy-server=http://127.0.0.1:20501' in args
+
+    def test_loopback_bypass_is_disabled(self, scraper):
+        """Chrome bypasses proxies for loopback BY DEFAULT.
+
+        Without this the egress probe would go direct and an unproxied run would
+        look proxied — the precise failure this whole rung exists to make visible.
+        """
+        args, _ = scraper.build_browser_args(
+            PROFILE, relay_url='http://127.0.0.1:20501', platform='linux')
+
+        assert '--proxy-bypass-list=<-loopback>' in args
+
+    def test_no_proxy_flags_without_a_relay(self, scraper):
+        args, _ = scraper.build_browser_args(PROFILE, platform='linux')
+
+        assert not [a for a in args if a.startswith('--proxy-')]
+
+    def test_credentials_never_reach_chromes_command_line(self, scraper, monkeypatch):
+        """The relay holds the credentials; Chrome's argv is visible in `ps`."""
+        monkeypatch.setattr(scraper, 'PROXY_USER', 'secret-account')
+        monkeypatch.setattr(scraper, 'PROXY_PASS', 'secret-password')
+        args, _ = scraper.build_browser_args(
+            PROFILE, relay_url='http://127.0.0.1:20501', platform='linux')
+
+        joined = ' '.join(args)
+        assert 'secret-account' not in joined
+        assert 'secret-password' not in joined
+
+    def test_relay_port_is_pinned_per_worker(self, scraper):
+        """Rotation reuses the port so the IP can change without restarting Chrome.
+
+        This is the whole reason the relay beat the extension: the extension could
+        only rotate by relaunching Chrome, and each cold start re-downloads
+        components over the metered proxy (102 traps -> 116 launches -> ~1.76 GB).
+        """
+        assert isinstance(scraper._relay_ports, dict)
+        assert scraper._spawned_relays is not scraper._spawned_browsers
