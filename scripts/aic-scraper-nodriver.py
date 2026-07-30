@@ -1532,15 +1532,70 @@ async def bootstrap_with_retry(run_preflight=True, worker_id=None, relay_url=Non
 # ---------------------------------------------------------------------------
 # Safe JSON parsing — treats non-JSON responses as WAF blocks
 # ---------------------------------------------------------------------------
+# The in-page catch in fetch_permit_chain returns exactly these keys; a dict
+# whose keys fit inside this set is OUR sentinel, never portal data.
+FETCH_SENTINEL_KEYS = {'error', 'message', 'at'}
+
+
+def summarize_exception_details(exc):
+    """One line naming the real page-side error an ExceptionDetails carries.
+
+    nodriver's Tab.evaluate RETURNS cdp.runtime.ExceptionDetails instead of
+    raising when the evaluated JS throws — or never parses at all. The
+    exception's description holds the message JS would have printed
+    ('TypeError: …'), the fact five cloud probes were missing.
+    """
+    parts = []
+    remote = getattr(exc, 'exception', None)
+    if remote is not None:
+        desc = remote.description or remote.value or remote.class_name
+        if desc:
+            parts.append(str(desc).split('\n')[0])
+    text = getattr(exc, 'text', None)
+    if text and text not in ''.join(parts):
+        parts.append(str(text))
+    parts.append(f'at line {getattr(exc, "line_number", "?")}:{getattr(exc, "column_number", "?")}')
+    return ' | '.join(parts)
+
+
+async def evaluate_fetch(page, js, step_label):
+    """Run one in-page fetch snippet and ALWAYS hand back a string.
+
+    A page-side throw comes back as an ExceptionDetails OBJECT (nodriver does
+    not raise); passing that onward is what crashed a run with
+    "'ExceptionDetails' object has no attribute 'strip'". Convert every
+    non-string into the same {error, message, at} sentinel the in-page catch
+    produces, so all failures funnel through one classified path.
+    """
+    raw = await page.evaluate(js, await_promise=True)
+    if isinstance(raw, str):
+        return raw
+    if isinstance(raw, uc.cdp.runtime.ExceptionDetails):
+        detail = summarize_exception_details(raw)
+        log('WARN', '[scraper]', f'page.evaluate threw at {step_label}: {detail}',
+            {'event': 'evaluate_exception', 'step': step_label})
+        return json.dumps({'error': 'EvaluateException', 'message': detail, 'at': step_label})
+    log('WARN', '[scraper]', f'page.evaluate returned {type(raw).__name__} at {step_label}',
+        {'event': 'evaluate_non_string', 'step': step_label})
+    return json.dumps({'error': 'EvaluateNonString', 'message': repr(raw)[:200], 'at': step_label})
+
+
 def safe_json_parse(raw, step_label=''):
     """Parse JSON, returning (data, None) on success or (None, error_snippet) on failure."""
+    if not isinstance(raw, str):
+        # Never string-op a non-string result — name its type instead.
+        log('WARN', '[scraper]', f'Non-string result at {step_label}: {type(raw).__name__}')
+        return None, f'non_string_result:{type(raw).__name__}'
     if not raw or raw.strip().startswith('<'):
         return None, 'html_or_empty'
     try:
         data = json.loads(raw)
-        # Detect AbortController timeout or fetch error sentinel from our JS wrapper
-        if isinstance(data, dict) and 'error' in data and len(data) == 1:
-            log('WARN', '[scraper]', f'Fetch error at {step_label}: {data["error"]}')
+        # Our own error sentinel: AbortController timeout, fetch error, or an
+        # evaluate exception — legacy 1-key {error} and the 3-key shape both.
+        if isinstance(data, dict) and 'error' in data and set(data) <= FETCH_SENTINEL_KEYS:
+            message = data.get('message') or ''
+            log('WARN', '[scraper]', f'Fetch error at {step_label}: {data["error"]}'
+                + (f' — {message}' if message else ''), {'at': data.get('at', '')})
             return None, f'fetch_error:{data["error"]}'
         return data, None
     except (json.JSONDecodeError, ValueError):
@@ -1556,7 +1611,7 @@ async def fetch_permit_chain(page, year, sequence):
     """Execute 4-step API chain inside Chrome via page.evaluate(fetch)."""
 
     # Step 1: Search properties
-    step1 = await page.evaluate(f"""
+    step1 = await evaluate_fetch(page, f"""
         (async () => {{
             const ac = new AbortController();
             const t = setTimeout(() => ac.abort(), {FETCH_TIMEOUT_MS});
@@ -1574,11 +1629,10 @@ async def fetch_permit_chain(page, year, sequence):
                     }})
                 }});
                 return await r.text();
-            }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('
-')[0]}}); }}
+            }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('\\n')[0]}}); }}
             finally {{ clearTimeout(t); }}
         }})()
-    """, await_promise=True)
+    """, 'step1:properties')
 
     props, err = safe_json_parse(step1, 'step1:properties')
     if err:
@@ -1598,7 +1652,7 @@ async def fetch_permit_chain(page, year, sequence):
     await asyncio.sleep(random.uniform(0.1, 0.4))
 
     # Step 2: Get folders
-    step2 = await page.evaluate(f"""
+    step2 = await evaluate_fetch(page, f"""
         (async () => {{
             const ac = new AbortController();
             const t = setTimeout(() => ac.abort(), {FETCH_TIMEOUT_MS});
@@ -1616,11 +1670,10 @@ async def fetch_permit_chain(page, year, sequence):
                     }})
                 }});
                 return await r.text();
-            }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('
-')[0]}}); }}
+            }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('\\n')[0]}}); }}
             finally {{ clearTimeout(t); }}
         }})()
-    """, await_promise=True)
+    """, 'step2:folders')
 
     folders, err = safe_json_parse(step2, 'step2:folders')
     if err:
@@ -1635,7 +1688,7 @@ async def fetch_permit_chain(page, year, sequence):
         await asyncio.sleep(random.uniform(0.1, 0.4))
 
         # Step 3: Get detail
-        step3 = await page.evaluate(f"""
+        step3 = await evaluate_fetch(page, f"""
             (async () => {{
                 const ac = new AbortController();
                 const t = setTimeout(() => ac.abort(), {FETCH_TIMEOUT_MS});
@@ -1644,11 +1697,10 @@ async def fetch_permit_chain(page, year, sequence):
                         method: 'GET', headers: {{ Accept: 'application/json' }}, signal: ac.signal
                     }});
                     return await r.text();
-                }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('
-')[0]}}); }}
+                }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('\\n')[0]}}); }}
                 finally {{ clearTimeout(t); }}
             }})()
-        """, await_promise=True)
+        """, f'step3:detail/{folder_rsn}')
 
         detail, err = safe_json_parse(step3, f'step3:detail/{folder_rsn}')
         if err:
@@ -1667,7 +1719,7 @@ async def fetch_permit_chain(page, year, sequence):
         for proc in processes:
             await asyncio.sleep(random.uniform(0.1, 0.4))
             process_rsn = sanitize_js_value(proc.get('processRsn'))
-            step4 = await page.evaluate(f"""
+            step4 = await evaluate_fetch(page, f"""
                 (async () => {{
                     const ac = new AbortController();
                     const t = setTimeout(() => ac.abort(), {FETCH_TIMEOUT_MS});
@@ -1676,11 +1728,10 @@ async def fetch_permit_chain(page, year, sequence):
                             method: 'GET', headers: {{ Accept: 'application/json' }}, signal: ac.signal
                         }});
                         return await r.text();
-                    }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('
-')[0]}}); }}
+                    }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('\\n')[0]}}); }}
                     finally {{ clearTimeout(t); }}
                 }})()
-            """, await_promise=True)
+            """, f'step4:status/{folder_rsn}/{process_rsn}')
 
             status_data, err = safe_json_parse(step4, f'step4:status/{folder_rsn}/{process_rsn}')
             if err:

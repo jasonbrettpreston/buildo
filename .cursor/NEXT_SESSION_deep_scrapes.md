@@ -10,7 +10,36 @@ Continue the deep-scrapes restore. Read `.cursor/wf2_deep_scrapes_restore.md` fi
 active task, it carries the full panel record, and its ladder table is the source of truth for
 what is done. Branch `wf2/deep-scrapes-restore-l0` (pushed, nothing merged, cron disabled).
 
-## The one open defect — start here
+## ⚡ STATUS UPDATE (2026-07-30, this session) — the defect below is FIXED; probe pending
+
+WF3 executed in-session (Backend/Pipeline; operator pre-authorized: "proceed to the next task -
+fix it then test"). The single defect turned out to be a **cluster of three**, all in the
+evaluate-result path:
+
+1. **Root trigger — `921536a9` introduced a JS SyntaxError.** Its catch-site edit embedded a
+   LITERAL newline inside a JS string literal (`.split('⏎')[0]`) at all 4 sites. Proven with
+   node: the whole IIFE fails to PARSE — this is why "the JS never ran" and why the message
+   capture never captured anything. Fixed: the f-string now carries `\\n` so JS receives the
+   two-char escape.
+2. **nodriver returns, never raises.** `Tab.evaluate` source: `if errors: return errors` — a
+   page-side throw hands back `cdp.runtime.ExceptionDetails` as the RETURN VALUE. New
+   `evaluate_fetch()` wrapper (4 call sites) converts any non-string into the standard
+   `{error, message, at}` sentinel and logs `event: evaluate_exception` with the real message
+   via `summarize_exception_details()`.
+3. **Stale sentinel detection.** `safe_json_parse` matched the sentinel with `len(data) == 1`,
+   but the sentinel has had 3 keys since `921536a9` — once the JS parsed again, the sentinel
+   would have flowed onward as DATA and crashed on `props[0]`. Now: dict with `'error'` whose
+   keys ⊆ `{error, message, at}`; plus a non-string type guard (the `.strip()` crash lock).
+
+Locks: `scripts/tests/test_scraper_fetch.py` (sentinel shapes, ExceptionDetails conversion,
+source-level newline-escape lock). Verified end-to-end in-session: real module's rendered step-1
+JS passes node parse; sentinel path classifies `fetch_error` → `waf_blocked` correctly.
+
+**Next: bounded probe** (`max_permits=2 max_retries=1 chain_timeout_minutes=8`) — the logs
+should now name the ORIGINAL TypeError's message (the pre-`921536a9` fault, e.g. a blocked
+fetch) or simply work. Remember the cancelled-run → `pipeline_runs` stuck-`running` gotcha below.
+
+## The one open defect — ~~start here~~ FIXED above; kept for the eliminated-layers table
 
 `page.evaluate()` raises/returns a nodriver `ExceptionDetails` object, and our calling code
 treats it as a string. The run fails with:
