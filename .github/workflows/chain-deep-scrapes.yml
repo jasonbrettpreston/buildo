@@ -36,29 +36,46 @@ name: chain-deep-scrapes
 on:
   # SCHEDULE DISABLED (WF2 restore, rung L0 — 2026-07-30). Operator-ruled.
   #
-  # The restore returns the retry/WAF constants to their pre-drift defaults
-  # (MAX_RETRIES=3, RETRY_BASE_MS=2000, WAF_TRAP_THRESHOLD=20). Those are correct for
-  # the attested unproxied local path and KNOWN-WRONG for a hostile Akamai edge, which
-  # blocks at ~12 requests / ~10 min and needs minutes-scale backoff. Nobody has
-  # measured the correct cloud values yet, and guessing them is what produced a
-  # 1.76 GB / $6.60 run against a 3 GB/month plan.
+  # The scraper's MODULE defaults (MAX_RETRIES=3, RETRY_BASE_MS=2000,
+  # WAF_TRAP_THRESHOLD=20) are correct for the attested unproxied local path and
+  # measurably wrong against this edge, which blocks at ~12 requests / ~10 min and
+  # clears only after ~5 min idle. The env block below therefore sets the recon's
+  # MEASURED cloud values; shipping the defaults here is what produced a run of 654
+  # requests, 0 rows and 102 WAF traps.
   #
-  # RE-ENABLING THIS BLOCK IS NOT A ONE-LINE CHANGE. The commit that uncomments it MUST
-  # also set, in the env block below, concrete values for:
-  #     SCRAPER_WAF_TRAP_THRESHOLD, SCRAPER_RETRY_BASE_MS
-  # with a link to the measurement run that produced them. The scraper additionally
-  # fails fast on a schedule-triggered proxied run that lacks them.
+  # RE-ENABLING THIS BLOCK IS NOT A ONE-LINE CHANGE. Scheduled runs are unattended,
+  # so before uncommenting: a dispatch probe must have demonstrated a non-zero row
+  # count, and the constants below must be the values that probe used, cited to its
+  # run id. Cadence and caps below are probe-shaped by default and must be raised
+  # deliberately for production.
   #
   # Cadence when restored (Spec 115 §2 row 4, §2.1 — unchanged, only disabled):
   #     cron: '0 15,18,21 * * 1-5'   # weekdays, business hours across both DST regimes
   # schedule:
   #   - cron: '0 15,18,21 * * 1-5'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    # A validation probe must fail FAST. With a 90s retry base, one blocked permit
+    # costs 90+180+360s on retries alone, so an unparameterised dispatch sits near
+    # the chain timeout before telling you anything. These inputs make a probe cheap
+    # to run and quick to read; the defaults are probe-shaped, not production-shaped.
+    inputs:
+      max_permits:
+        description: 'Permit cap (small = probe, 0 = unlimited/production)'
+        required: false
+        default: '3'
+      max_retries:
+        description: 'Retries per permit (1 = fail fast; 3 = production)'
+        required: false
+        default: '1'
+      chain_timeout_minutes:
+        description: 'Hard stop for the chain step'
+        required: false
+        default: '12'
 
 jobs:
   deep-scrapes:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
-    timeout-minutes: 120     # 90 (chain) + checkout/setup/xvfb/cache/migrate-verify headroom
+    timeout-minutes: ${{ fromJSON(inputs.chain_timeout_minutes || '12') + 18 }}   # chain + setup headroom; was 120 (90 chain) + checkout/setup/xvfb/cache/migrate-verify headroom
     concurrency:
       group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name so a
       cancel-in-progress: false       # future rename can't drift the concurrency group out of sync
@@ -171,7 +188,7 @@ jobs:
       - name: Run deep_scrapes chain
         id: deep_scrapes
         if: steps.deep_scrapes_guard.outputs.skip != 'true'
-        timeout-minutes: 90
+        timeout-minutes: ${{ fromJSON(inputs.chain_timeout_minutes || '12') }}
         # Wraps the node PARENT (run-chain.js), not the python child directly,
         # so $DISPLAY is present in the environment run-chain.js spawns its
         # python3 child with (run-chain.js's stepEnv = {...process.env, ...} —
@@ -234,7 +251,10 @@ jobs:
           # 10 minutes per exit IP it would simply burn the 90-minute window
           # reproducing a block. A small cap makes the result attributable and bounds
           # what finding out costs. Raise deliberately, never by default.
-          SCRAPE_MAX_PERMITS: '20'
+          SCRAPE_MAX_PERMITS: ${{ inputs.max_permits || '3' }}
+          # Fail fast on a probe. Each retry waits SCRAPER_RETRY_BASE_MS (90s)
+          # doubling, so 3 retries on one blocked permit is ~10 minutes of sleep.
+          SCRAPER_MAX_RETRIES: ${{ inputs.max_retries || '1' }}
 
       - name: Verdict check — deep_scrapes (orchestrator exit-0 masking guard)
         # aic-orchestrator.py exits 0 on a scrape-level failure by design
