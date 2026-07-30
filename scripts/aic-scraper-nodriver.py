@@ -24,22 +24,15 @@ SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md
 """
 
 import asyncio
-import atexit
 import json
 import os
 import random
 import re
-import shutil
-import signal
 import socket
-import stat
 import subprocess
 import sys
 import tempfile
 import time
-import urllib.error
-import urllib.request
-from datetime import datetime
 from pathlib import Path
 
 import nodriver as uc
@@ -64,19 +57,16 @@ if env_path.exists():
 # Constants
 # ---------------------------------------------------------------------------
 AIC_BASE = 'https://secure.toronto.ca/ApplicationStatus'
-# Tuned to Akamai's MEASURED behaviour (live recon 2026-07-30), not to guesses.
-# The portal enforces cumulative CLIENT REPUTATION: ~12 requests per ~10 minutes,
-# after which EVERY request 403s with a ~430 B HTML page regardless of headers
-# or cookies, clearing only after ~5 minutes idle — and staying sticky, so 2-3
-# requests re-trip it. Under that model the old values were actively harmful:
-# retrying at 2s x3 hammers the edge INSIDE its recovery window (deepening the
-# block), and a 20-request trap threshold spends 20 requests against an edge
-# that is already refusing everything. Retries must outlast the window, and the
-# trap must fire almost immediately so the exit IP rotates instead.
-MAX_RETRIES = int(os.environ.get('SCRAPER_MAX_RETRIES') or '2')
-RETRY_BASE_MS = int(os.environ.get('SCRAPER_RETRY_BASE_MS') or '90000')   # 90s, 180s
-WAF_TRAP_THRESHOLD = int(os.environ.get('SCRAPER_WAF_TRAP_THRESHOLD') or '3')
-SESSION_REFRESH_INTERVAL = 200
+# K6 (WF2 restore): pre-drift DEFAULTS, but env-overridable. The values below are
+# the ones the attested local runs used; the 2026-07-29 cloud tuning (2 / 90000 / 3)
+# was measured through a proxy, from a runner, against an already-blocked Akamai edge
+# and is NOT correct for the unproxied local path. The cloud values are set in the
+# workflow env by the follow-on WF, once an instrumented run has measured them.
+# `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default.
+MAX_RETRIES = int(os.environ.get('SCRAPER_MAX_RETRIES') or '3')
+RETRY_BASE_MS = int(os.environ.get('SCRAPER_RETRY_BASE_MS') or '2000')
+WAF_TRAP_THRESHOLD = int(os.environ.get('SCRAPER_WAF_TRAP_THRESHOLD') or '20')
+SESSION_REFRESH_INTERVAL = int(os.environ.get('SCRAPER_SESSION_REFRESH_INTERVAL') or '200')
 
 # DB permit_type strings — used for queue population queries
 ALL_TARGET_TYPES = [
@@ -104,21 +94,53 @@ PROXY_HOST = os.environ.get('PROXY_HOST', '')
 PROXY_PORT = os.environ.get('PROXY_PORT', '')
 PROXY_USER = os.environ.get('PROXY_USER', '')
 PROXY_PASS = os.environ.get('PROXY_PASS', '')
-# How Chrome talks TO the proxy. Decodo's endpoint speaks http, https and
-# socks5 on the same port, but the three do NOT behave alike here:
-#   https  — TLS to the proxy. VERIFIED WORKING (2026-07-29 probe returned a
-#            residential IP over an HTTPS target).
-#   http   — plain to the proxy, so HTTPS targets need a CONNECT tunnel, and
-#            that tunnel is RESET (verified, and reproduced with -k, so it is
-#            the tunnel and not certificate validation). This was the default
-#            and is the reason the CI browser rendered "site can't be reached"
-#            for every HTTPS page while the runner itself reached them fine.
-#   socks5 — also works via curl, but Chrome CANNOT authenticate to a SOCKS
-#            proxy (it ignores credentials and never fires onAuthRequired), so
-#            it is unusable here without provider-side IP whitelisting.
-PROXY_SCHEME = os.environ.get('PROXY_SCHEME') or 'https'
-# Decodo sticky-session lifetime in minutes (1-1440, provider default 10).
-PROXY_SESSION_DURATION_MIN = int(os.environ.get('PROXY_SESSION_DURATION_MIN') or '30')
+
+# Proxy MODE is an explicit choice, never inferred from PROXY_HOST being present.
+#
+# WHY (WF2 restore, 2026-07-30): before this change, `if PROXY_HOST:` selected the
+# MV3 proxy-auth extension path. Branded Chrome >=137 silently drops
+# `--load-extension`, so on the operator's machine the extension never loaded, the
+# proxy was never applied, and scraping went out DIRECT from a residential IP while
+# telemetry recorded proxy_configured=true. That accident is why the scraper appeared
+# to work locally. Restoring `if PROXY_HOST:` would restore the accident, not the
+# capability. Proxying is now a declared state; unproxied is also a declared state.
+#
+# L0 supports 'none' only. 'relay' arrives with the relay port at rung L2.
+SUPPORTED_PROXY_MODES = ('none',)
+PROXY_MODE = (os.environ.get('SCRAPER_PROXY_MODE') or 'none').strip().lower()
+
+
+def proxy_mode():
+    """The declared proxy mode. Never inferred from credential presence."""
+    return PROXY_MODE
+
+
+def proxy_enabled():
+    """True when a real proxy mechanism is selected. False is a DECLARED state."""
+    return PROXY_MODE != 'none'
+
+
+def assert_proxy_config_coherent():
+    """Fail loudly on a config whose behaviour would not match the operator's belief.
+
+    Two failures are worth stopping a run for, both learned expensively:
+      - credentials present but no mode: the operator believes they are proxied and
+        are not (the pre-2026-07-30 silent-unproxied class).
+      - a mode this rung cannot honour: better a named error than a silent fallback.
+    """
+    if PROXY_MODE not in SUPPORTED_PROXY_MODES:
+        raise RuntimeError(
+            f"SCRAPER_PROXY_MODE={PROXY_MODE!r} is not supported on this build. "
+            f"Supported: {', '.join(SUPPORTED_PROXY_MODES)}. The relay path lands at "
+            f"rung L2 of the WF2 restore; until then a proxied run is not possible.")
+    if PROXY_HOST and not proxy_enabled():
+        raise RuntimeError(
+            "PROXY_HOST is set but SCRAPER_PROXY_MODE is 'none', so this run will NOT "
+            "be proxied. Proxying is now an explicit choice: set SCRAPER_PROXY_MODE "
+            "(currently only 'none' is supported; 'relay' arrives at rung L2). If an "
+            "unproxied run is what you want, unset PROXY_HOST or set "
+            "SCRAPER_ALLOW_UNPROXIED=1 to acknowledge it.")
+
 
 # ---------------------------------------------------------------------------
 # Stealth — randomize fingerprint to look like organic human traffic
@@ -269,15 +291,80 @@ def get_db_connection():
 def build_proxy_session_id(worker_id, timestamp=None):
     """Build a unique Decodo sticky session ID for this worker.
 
-    ALPHANUMERIC ONLY. Decodo parses the username as a hyphen-delimited
-    key-value list (`user-ACCOUNT-session-VALUE-sessionduration-N`), so a
-    session value containing hyphens — as `buildo-worker-1-1753800000` did —
-    makes its parser read `session=buildo` and then choke on `worker` as an
-    unknown key. Verified 2026-07-29: every hyphenated form returned 407.
+    ALPHANUMERIC ONLY. Decodo parses the username as a hyphen-delimited key-value
+    list (`user-ACCOUNT-session-VALUE-sessionduration-N`), so a session value
+    containing hyphens — as `buildo-worker-1-1753800000` did — makes its parser read
+    `session=buildo` and then choke on `worker` as an unknown key. Our own product
+    name contains the delimiter, which is why this bit us. Verified 2026-07-29:
+    every hyphenated form returned 407, and a 407 is invisible in the browser.
     """
     ts = timestamp or int(time.time())
     return f'w{worker_id}t{ts}'.replace('-', '').replace('_', '')
 
+
+
+# Decodo proxy transport facts (K1) — unwired at L0, consumed by the relay at L2.
+# `https` to the proxy is not cosmetic: plain-HTTP CONNECT tunnels are RESET, and
+# socks5 -- though it works via curl -- is unusable because Chrome cannot
+# authenticate to a SOCKS proxy at all.
+PROXY_SCHEME = os.environ.get('PROXY_SCHEME') or 'https'
+# Decodo sticky-session lifetime in minutes (1-1440, provider default 10).
+PROXY_SESSION_DURATION_MIN = int(os.environ.get('PROXY_SESSION_DURATION_MIN') or '30')
+
+# K7a — bounded sample: enough to characterise a response, never enough to flood a
+# run's logs or spill a large payload.
+STEP1_BODY_SAMPLES = int(os.environ.get('SCRAPER_STEP1_BODY_SAMPLES') or '8')
+_step1_samples_logged = [0]
+
+_UNREACHABLE_MARKERS = (
+    "site can't be reached",
+    'site cannot be reached',
+    'ERR_',
+    'took too long to respond',
+    'temporarily down or moved permanently',
+)
+
+# ---------------------------------------------------------------------------
+# K1/K4 (WF2 restore) — Decodo credential + sticky-port helpers.
+#
+# UNWIRED AT RUNG L0 BY DESIGN: their only consumer is the relay, which lands at
+# L2. They are ported now, with tests, because the facts they encode were bought
+# expensively and are easy to get wrong again:
+#   * Decodo parses the username as a HYPHEN-DELIMITED key-value list, and only
+#     when it begins with the literal token `user-`. Verified live: bare account
+#     -> 200; `<account>-session-<id>` -> 407; `user-<account>-session-<id>` -> 200.
+#   * Session ids must therefore be ALPHANUMERIC. A hyphen inside a value ends that
+#     value early: `buildo-worker-1-<ts>` made the parser read `session=buildo` and
+#     choke on `worker`. Our own product name contains the delimiter.
+#   * A 407 is INVISIBLE in a browser -- Chrome renders "This site can't be reached"
+#     for every page, identical to a network outage. Probe with curl, never diagnose
+#     proxy auth from the browser's error page.
+#   * A sticky-proxy PORT pins the exit IP and OVERRIDES any per-session username
+#     suffix, so every worker sharing one port shares one IP. Worker N gets base+N-1.
+# ---------------------------------------------------------------------------
+def build_proxy_username(session_id, user=None, duration_min=None):
+    """Build the Decodo username carrying the sticky-session parameters.
+
+    THE `user-` PREFIX IS LOAD-BEARING AND WAS MISSING — this was the actual
+    cause of the CI proxy failure. Decodo only parses the username as a
+    parameter list when it starts with the literal `user-`; without it the
+    whole string is taken as a plain account name, so `<account>-session-xxx`
+    is simply an unknown user. Verified live 2026-07-29 against the real
+    endpoint: bare `<account>` authenticated (200), `<account>-session-<alnum>`
+    returned 407 "Access denied", and `user-<account>-session-<alnum>`
+    authenticated (200) — including over HTTPS-to-proxy to an HTTPS target,
+    the exact production path.
+
+    A 407 here is invisible in the browser: Chrome just renders "This site
+    can't be reached" for every page, which is precisely what CI showed.
+    """
+    user = PROXY_USER if user is None else user
+    if not user:
+        return session_id
+    duration = PROXY_SESSION_DURATION_MIN if duration_min is None else duration_min
+    # Idempotent: never double-prefix if the operator already stored `user-...`.
+    account = user if user.startswith('user-') else f'user-{user}'
+    return f'{account}-session-{session_id}-sessionduration-{duration}'
 
 def resolve_proxy_port(worker_id, base_port=None):
     """Give each worker its OWN sticky port so they get distinct exit IPs.
@@ -310,202 +397,14 @@ PROXY_RELAY_JS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'proxy
 # _spawned_browsers: kill a pid we own, never pattern-match the process table.
 _spawned_relays = {}
 
-
-def build_upstream_proxy_url(session_id, worker_id=None):
-    """The credentialed upstream URL handed to the relay (never to Chrome)."""
-    from urllib.parse import quote
-    user = quote(build_proxy_username(session_id), safe='')
-    password = quote(PROXY_PASS, safe='')
-    port = resolve_proxy_port(worker_id)
-    return f'{PROXY_SCHEME}://{user}:{password}@{PROXY_HOST}:{port}'
-
-
-# Stable local port per worker. The browser gets --proxy-server=<port> at
-# LAUNCH, so rotating the upstream session must reuse the same local port —
-# otherwise the relay moves and the still-running browser points at a dead one.
-_relay_ports = {}
-
-
-def start_proxy_relay(session_id, worker_id=None, timeout=30):
-    """Run a local unauthenticated relay that holds the upstream credentials.
-
-    Returns its `http://127.0.0.1:PORT` URL, which Chrome can use with a plain
-    --proxy-server and NO extension. Replaces the MV3 extension because
-    branded Chrome removed --load-extension (137) and its opt-out (142), and an
-    evicted MV3 service worker silently stops answering onAuthRequired while
-    chrome.proxy settings persist — the browser keeps routing through the proxy
-    while unable to authenticate.
-    """
-    if not PROXY_HOST:
-        return None
-    upstream = build_upstream_proxy_url(session_id, worker_id)
-    # Reuse this worker's port across session rotations (see _relay_ports).
-    want_port = _relay_ports.get(worker_id, 0)
-    proc = subprocess.Popen(
-        ['node', PROXY_RELAY_JS, upstream, str(want_port)],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-        **({'start_new_session': True} if sys.platform != 'win32' else {}),
-    )
-    _spawned_relays[worker_id] = proc
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        line = proc.stdout.readline()
-        if line:
-            try:
-                url = json.loads(line).get('url')
-            except ValueError:
-                continue
-            if url:
-                try:
-                    _relay_ports[worker_id] = int(url.rsplit(':', 1)[1])
-                except (ValueError, IndexError):
-                    pass
-                log('INFO', '[scraper]', 'Proxy relay ready', {
-                    'event': 'proxy_relay_ready',
-                    'local_url': url,
-                    'upstream_host': PROXY_HOST,
-                    'upstream_port': resolve_proxy_port(worker_id),
-                    'scheme': PROXY_SCHEME,
-                })
-                return url
-        if proc.poll() is not None:
-            err = (proc.stderr.read() or '').strip()[:200]
-            raise RuntimeError(f'Proxy relay exited (rc={proc.returncode}) before listening: {err}')
-    terminate_spawned_relay(worker_id)
-    raise RuntimeError(f'Proxy relay did not report a listening URL within {timeout}s')
-
-
-def terminate_spawned_relay(worker_id=None, timeout=8):
-    """Kill the relay we spawned for this worker. Idempotent; never raises."""
-    proc = _spawned_relays.pop(worker_id, None)
-    if proc is None or proc.poll() is not None:
-        return False
-    try:
-        if sys.platform != 'win32':
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-        else:
-            proc.terminate()
-    except OSError as err:
-        log('WARN', '[scraper]', f'Could not signal proxy relay: {err}',
-            {'event': 'relay_terminate_failed'})
-    try:
-        proc.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        try:
-            proc.kill()
-        except OSError:
-            pass
-    log('INFO', '[scraper]', 'Terminated proxy relay',
-        {'event': 'proxy_relay_terminated', 'worker_id': worker_id})
-    return True
-
-
-def build_proxy_username(session_id, user=None, duration_min=None):
-    """Build the Decodo username carrying the sticky-session parameters.
-
-    THE `user-` PREFIX IS LOAD-BEARING AND WAS MISSING — this was the actual
-    cause of the CI proxy failure. Decodo only parses the username as a
-    parameter list when it starts with the literal `user-`; without it the
-    whole string is taken as a plain account name, so `<account>-session-xxx`
-    is simply an unknown user. Verified live 2026-07-29 against the real
-    endpoint: bare `<account>` authenticated (200), `<account>-session-<alnum>`
-    returned 407 "Access denied", and `user-<account>-session-<alnum>`
-    authenticated (200) — including over HTTPS-to-proxy to an HTTPS target,
-    the exact production path.
-
-    A 407 here is invisible in the browser: Chrome just renders "This site
-    can't be reached" for every page, which is precisely what CI showed.
-    """
-    user = PROXY_USER if user is None else user
-    if not user:
-        return session_id
-    duration = PROXY_SESSION_DURATION_MIN if duration_min is None else duration_min
-    # Idempotent: never double-prefix if the operator already stored `user-...`.
-    account = user if user.startswith('user-') else f'user-{user}'
-    return f'{account}-session-{session_id}-sessionduration-{duration}'
-
-
-def build_proxy_extension(session_id, proxy_port=None):
-    """Create a temp Manifest V3 extension that handles proxy auth silently.
-
-    Chromium ignores user:pass in --proxy-server URLs. The only way to
-    authenticate with a proxy in headless Chrome is via the
-    chrome.webRequest.onAuthRequired event in a background service worker.
-
-    Returns the extension directory path, or None if proxy is not configured.
-    """
-    if not PROXY_HOST:
-        return None
-
-    user_with_session = build_proxy_username(session_id)
-    proxy_port = PROXY_PORT if proxy_port is None else proxy_port
-    ext_dir = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        '..', '.proxy_ext', f'decodo_{session_id}',
-    )
-    ext_dir = os.path.abspath(ext_dir)
-    os.makedirs(ext_dir, exist_ok=True)
-
-    manifest = {
-        "version": "1.0.0",
-        "manifest_version": 3,
-        "name": "Decodo Proxy Auth",
-        "permissions": ["proxy", "webRequest", "webRequestAuthProvider"],
-        "host_permissions": ["<all_urls>"],
-        "background": {"service_worker": "background.js"},
-    }
-
-    background_js = f"""
-var config = {{
-    mode: "fixed_servers",
-    rules: {{
-        singleProxy: {{ scheme: "{PROXY_SCHEME}", host: "{PROXY_HOST}", port: parseInt("{proxy_port}") }},
-        bypassList: ["localhost"]
-    }}
-}};
-chrome.proxy.settings.set({{value: config, scope: "regular"}}, function() {{}});
-chrome.webRequest.onAuthRequired.addListener(
-    function(details, callback) {{
-        callback({{ authCredentials: {{ username: "{user_with_session}", password: "{PROXY_PASS}" }} }});
-    }},
-    {{urls: ["<all_urls>"]}},
-    ['asyncBlocking']
-);
-"""
-
-    with open(os.path.join(ext_dir, 'manifest.json'), 'w') as f:
-        json.dump(manifest, f)
-    with open(os.path.join(ext_dir, 'background.js'), 'w') as f:
-        f.write(background_js)
-
-    # Restrict permissions — credentials are in background.js
-    if sys.platform != 'win32':
-        os.chmod(ext_dir, stat.S_IRWXU)  # 700: owner only
-
-    # Register atexit handler as secondary cleanup (catches crashes before finally)
-    atexit.register(cleanup_proxy_extension, ext_dir)
-
-    return ext_dir
-
-
-def cleanup_proxy_extension(ext_dir):
-    """Remove temporary proxy extension directory and prune empty parent."""
-    if ext_dir and os.path.exists(ext_dir):
-        try:
-            shutil.rmtree(ext_dir)
-        except OSError as err:
-            log('WARN', '[scraper]', f'Failed to clean up proxy extension: {err}')
-        # Prune parent .proxy_ext/ if empty
-        parent = os.path.dirname(ext_dir)
-        try:
-            if parent and os.path.isdir(parent) and not os.listdir(parent):
-                os.rmdir(parent)
-        except OSError:
-            pass
-
-
 # ---------------------------------------------------------------------------
-# Browser — nodriver CDP (no WebDriver)
+# K2 (WF2 restore) — stale profile-lock clearing.
+#
+# A CI-cache-restored Chrome profile carries host-scoped Singleton* locks naming a
+# dead host/PID; Chrome then refuses to start, forever, because once verdicts are
+# honest a failed run never saves a fresh cache and the poisoned entry is restored
+# every time. The cache step is deleted in this same commit -- this is the second
+# layer, and it also covers the operator's local profile after a crashed Chrome.
 # ---------------------------------------------------------------------------
 def clear_stale_profile_locks(profile_dir):
     """Remove Chrome Singleton* lock artifacts from a profile dir.
@@ -515,9 +414,14 @@ def clear_stale_profile_locks(profile_dir):
     start ("profile appears to be in use by another computer") and exits
     immediately, which nodriver surfaces only as a generic "Failed to
     connect to browser" (2026-07-29, GH run 30487133930: a crashed run's
-    cache-saved profile bricked every subsequent cloud run). Locks are only
-    meaningful within the host session that created them, and each worker
-    owns its own profile dir, so removal at bootstrap is always safe.
+    cache-saved profile bricked every subsequent cloud run).
+
+    NOT unconditionally safe, despite what an earlier version of this docstring
+    claimed: if a LIVE Chrome on THIS host holds the profile, removing its lock
+    lets a second Chrome open the same profile and corrupt its SQLite databases.
+    So the guard is directional — a lock naming a DIFFERENT host is always stale
+    (that is the CI-cache case, and it must always be cleared), while a lock
+    naming this host with a live PID is left alone and warned about.
 
     Returns the list of removed file names.
     """
@@ -528,6 +432,12 @@ def clear_stale_profile_locks(profile_dir):
             os.lstat(path)  # lstat, not exists() — these are symlinks whose targets never resolve
         except OSError:
             continue  # absent — the normal case
+        if name == 'SingletonLock' and _lock_held_by_live_local_chrome(path):
+            log('WARN', '[scraper]',
+                'Profile lock is held by a LIVE Chrome on this host — not removing it. '
+                'Close that Chrome, or point this worker at another profile dir.',
+                {'event': 'profile_lock_live', 'path': path})
+            continue
         try:
             os.remove(path)
             removed.append(name)
@@ -536,14 +446,75 @@ def clear_stale_profile_locks(profile_dir):
     return removed
 
 
+def _lock_held_by_live_local_chrome(lock_path):
+    """True only when the lock names THIS host and that PID is still running.
+
+    Chrome writes the SingletonLock symlink target as `<hostname>-<pid>`. A target
+    naming another host can never be live here, which is exactly the CI-cache case
+    we must always clear. Unreadable or unparseable targets are treated as stale —
+    they cannot be shown to be live, and refusing to clear them would re-create the
+    permanently-bricked profile this function exists to prevent.
+    """
+    try:
+        target = os.readlink(lock_path)
+    except OSError:
+        return False
+    host, _, pid_str = target.rpartition('-')
+    if not host or not pid_str.isdigit():
+        return False
+    if host != socket.gethostname():
+        return False  # another host — stale by construction
+    try:
+        os.kill(int(pid_str), 0)   # signal 0: existence check, no signal delivered
+    except (OSError, ValueError):
+        return False
+    return True
+
+
 _chrome_diagnostics_logged = False
 
+# ---------------------------------------------------------------------------
+# K7a (WF2 restore) — WAF-response visibility, and the classifier that makes rung
+# L0 attributable at all.
+#
+# An empty step-1 result is ambiguous: `[]` means the portal genuinely has no such
+# permit, while a ~420-450 byte HTML "Access Denied" page means Akamai has thrown a
+# rate-reputation block. Both previously incremented the same counter, so a fully
+# blocked run and a run over a queue of legitimately-absent permits looked identical
+# -- which is precisely how a day was spent debugging the wrong thing. Classifying
+# them is what lets an L0 failure be attributed instead of guessed at.
+# ---------------------------------------------------------------------------
+def _looks_unreachable(body):
+    text = (body if isinstance(body, str) else str(body or '')).lower()
+    return any(marker.lower() in text for marker in _UNREACHABLE_MARKERS)
 
+def _log_step1_body(raw, reason, year_seq=None):
+    """Log the raw step-1 body prefix so 'empty' stops being ambiguous."""
+    if _step1_samples_logged[0] >= STEP1_BODY_SAMPLES:
+        return
+    _step1_samples_logged[0] += 1
+    body = raw if isinstance(raw, str) else str(raw)
+    log('WARN', '[scraper]', 'AIC step-1 returned no usable properties', {
+        'event': 'step1_body_sample',
+        'reason': reason,
+        'year_seq': year_seq,
+        'body_len': len(body),
+        'body_prefix': body[:400],
+        'sample': f'{_step1_samples_logged[0]}/{STEP1_BODY_SAMPLES}',
+    })
+
+# ---------------------------------------------------------------------------
+# K7b (WF2 restore) — Chrome identity diagnostics.
+#
+# Which browser binary actually ran is not guessable and matters: resolving the CI
+# runner's `/bin/chromium` to an UNBRANDED Chromium build is what disproved the
+# "the runner ships branded Chrome" premise that a whole architecture had been
+# built on. Cheap, once per process, and it gates nothing.
+# ---------------------------------------------------------------------------
 def chrome_launch_log_path(worker_id):
     """Path Chrome writes its own launch log to (per worker, outside the cached profile)."""
     name = f'worker-{worker_id}' if worker_id else 'standalone'
     return os.path.join(tempfile.gettempdir(), f'buildo-chrome-{name}.log')
-
 
 def log_chrome_diagnostics():
     """Log WHICH Chrome nodriver resolved, once per process.
@@ -583,216 +554,6 @@ def log_chrome_diagnostics():
     log('INFO', '[scraper]', 'Chrome environment', detail)
 
 
-def dump_chrome_launch_log(worker_id, max_lines=40):
-    """Surface the tail of Chrome's OWN log after a bootstrap failure.
-
-    This is the only channel that states why Chrome exited — nodriver's
-    "Failed to connect to browser" is cause-agnostic and the process's
-    stderr is not ours to read (nodriver owns the subprocess).
-    """
-    path = chrome_launch_log_path(worker_id)
-    try:
-        with open(path, 'r', errors='replace') as fh:
-            lines = [ln.rstrip() for ln in fh if ln.strip()]
-    except OSError as err:
-        log('WARN', '[scraper]', f'No Chrome launch log to read at {path}: {err}',
-            {'event': 'chrome_launch_log_missing'})
-        return
-    if not lines:
-        log('WARN', '[scraper]', f'Chrome launch log at {path} is empty — Chrome likely died before initializing logging',
-            {'event': 'chrome_launch_log_empty'})
-        return
-    log('ERROR', '[scraper]', 'Chrome launch log tail',
-        {'event': 'chrome_launch_log', 'path': path, 'lines': lines[-max_lines:]})
-
-
-EGRESS_ECHO_URL = os.environ.get('SCRAPER_EGRESS_ECHO_URL') or 'https://api.ipify.org?format=json'
-
-# Chrome's network-error interstitial. Distinguishing "the browser could not
-# reach the echo service" from "the browser reached it and reported an IP" is
-# load-bearing: see verify_proxied_egress for why the former is evidence FOR
-# proxying rather than a reason to refuse.
-_UNREACHABLE_MARKERS = (
-    "site can't be reached",
-    'site cannot be reached',
-    'ERR_',
-    'took too long to respond',
-    'temporarily down or moved permanently',
-)
-
-
-def _looks_unreachable(body):
-    text = (body if isinstance(body, str) else str(body or '')).lower()
-    return any(marker.lower() in text for marker in _UNREACHABLE_MARKERS)
-
-
-def _extract_ip(raw):
-    """Pull an IP string out of the echo service's response (JSON or bare text)."""
-    if raw is None:
-        return None
-    text = raw if isinstance(raw, str) else str(raw)
-    text = text.strip()
-    if not text:
-        return None
-    # Unwrap up to two layers of JSON: the body may be a JSON document, or a
-    # JSON-encoded STRING containing one (nodriver hands values back encoded).
-    for _ in range(2):
-        if not text.startswith(('{', '"')):
-            break
-        try:
-            decoded = json.loads(text)
-        except ValueError:
-            break
-        if isinstance(decoded, dict):
-            return str(decoded.get('ip') or '').strip() or None
-        text = str(decoded).strip()
-    if re.match(r'^[0-9a-fA-F:.]+$', text):
-        return text
-    # Last resort: an IP embedded in a text body (a <pre>-rendered JSON page).
-    found = re.search('(?:[0-9]{1,3}[.]){3}[0-9]{1,3}', text)
-    return found.group(0) if found else None
-
-
-# Re-probe the host IP at least this often. A stale value is not merely
-# useless — verify_proxied_egress compares against it, so if the host's real
-# egress IP changed while the cache held the OLD one, an unproxied browser
-# would report an IP that differs from the stale value and PASS. That is the
-# precise silent-unproxied failure this tripwire exists to prevent, so the
-# "a runner's IP does not change mid-run" assumption is enforced with a TTL
-# rather than asserted in a comment (it holds for ephemeral CI runners; it
-# does not necessarily hold for a long-lived desktop or db-queue session).
-HOST_EGRESS_IP_TTL_S = float(os.environ.get('SCRAPER_HOST_IP_TTL_S') or '900')
-
-_host_egress_ip_cache = {}  # {'ip': str, 'at': float}; empty = not yet probed
-
-
-def host_egress_ip(timeout=15, refresh=False, now=None):
-    """This process's own public IP — i.e. what UNPROXIED traffic looks like.
-
-    Memoized with a TTL: bootstrap runs per BATCH in proxy mode ("1 batch =
-    1 IP") and again on every WAF rotation, so probing the echo service every
-    time would mean thousands of calls to one free endpoint while draining the
-    queue — an avoidable rate-limit risk on a dependency that can fail the
-    chain. The TTL bounds how stale the comparison baseline can get.
-    """
-    now = time.time() if now is None else now
-    cached = _host_egress_ip_cache
-    if cached and not refresh and (now - cached['at']) < HOST_EGRESS_IP_TTL_S:
-        return cached['ip']
-    try:
-        with urllib.request.urlopen(EGRESS_ECHO_URL, timeout=timeout) as resp:
-            found = _extract_ip(resp.read().decode('utf-8', errors='replace'))
-    except (urllib.error.URLError, OSError, ValueError):
-        return None
-    if found:
-        # Only a SUCCESSFUL probe refreshes the cache: a transient echo outage
-        # must not poison it, and must not extend a stale entry's life either.
-        _host_egress_ip_cache.clear()
-        _host_egress_ip_cache.update({'ip': found, 'at': now})
-    return found
-
-
-_HOST_IP_UNSET = object()  # distinct from None, which means "known to be unknown"
-
-
-async def verify_proxied_egress(browser, host_ip=_HOST_IP_UNSET):
-    """FAIL-LOUD tripwire: prove the BROWSER's traffic is not leaving via this host.
-
-    Asserts the invariant that actually matters — am I proxied? — rather than
-    inferring it from the proxy extension's presence. An earlier version looked
-    for a `chrome-extension://*/background.js` target and rejected a browser
-    whose targets were only ['page:about:blank']; MV3 service workers start
-    lazily and are not reliably enumerated, so that produced a FALSE NEGATIVE
-    on the GH runner (run 30496893882) against a browser whose extension had in
-    fact loaded (run 30498062060 later listed both service workers).
-
-    NAVIGATES to the echo service rather than fetch()ing it: at this point in
-    bootstrap the tab is about:blank, whose opaque origin makes a cross-origin
-    fetch throw — nodriver then returns an ExceptionDetails object rather than
-    raising, which is exactly what broke run 30498062060. Navigation has no such
-    restriction. The scraper's own AIC fetches are fine because they run on the
-    AIC origin.
-
-    Why it must fail loud rather than warn: the MV3 extension supplies BOTH the
-    proxy route and its credentials, so if it does not load there is no error at
-    all — traffic silently goes direct from this host's IP, exposing a
-    WAF-sensitive scraper. Spec 115 §3/§4's fail-safe-loud posture applies: if
-    we cannot PROVE we are proxied, we do not scrape. bootstrap_with_retry
-    retries, so a transient echo-service outage costs attempts, not silence.
-    """
-    # Sentinel, not None: None is a MEANINGFUL value here ("we could not
-    # determine it"), which must fail loud rather than trigger a re-fetch.
-    if host_ip is _HOST_IP_UNSET:
-        host_ip = host_egress_ip()
-
-    if not host_ip:
-        raise RuntimeError(
-            f"Could not determine this host's egress IP from {EGRESS_ECHO_URL}, so "
-            "'am I proxied?' is unanswerable — refusing to scrape unverified"
-        )
-
-    page = await browser.get(EGRESS_ECHO_URL)
-    raw = await page.evaluate('document.body.innerText', await_promise=False)
-    browser_ip = _extract_ip(raw)
-    if not browser_ip:
-        if _looks_unreachable(raw):
-            # The host reached this service moments ago (host_ip is set), so a
-            # browser that could NOT reach it is provably not on the host's
-            # direct path — an extension that failed to load would have left
-            # the browser with plain direct internet. Treat as proxied-but-
-            # destination-blocked: surfaced loudly, but not a reason to fail a
-            # scrape that routes to a different host entirely. Refusing here
-            # would repeat the false-negative that the target-visibility check
-            # already cost us (run 30496893882).
-            log('WARN', '[scraper]', 'Echo service unreachable from the browser but reachable from '
-                'this host — traffic is not on the direct path (treating as proxied)', {
-                    'event': 'proxied_egress_indirect',
-                    'echo_url': EGRESS_ECHO_URL,
-                })
-            return None
-        raise RuntimeError(
-            f"Could not read the browser's egress IP by navigating to {EGRESS_ECHO_URL} "
-            f"(page body was {str(raw)[:160]!r}) — refusing to scrape unverified"
-        )
-    if not host_ip:
-        raise RuntimeError(
-            f"Could not determine this host's egress IP from {EGRESS_ECHO_URL}, so "
-            f"'am I proxied?' is unanswerable (browser reported {browser_ip}) — "
-            "refusing to scrape unverified"
-        )
-    if browser_ip == host_ip:
-        raise RuntimeError(
-            f"Browser egress IP {browser_ip} equals this host's own IP — traffic is "
-            'UNPROXIED. The MV3 proxy extension carries both the proxy route and its '
-            'credentials, so a silent non-load means direct scraping from this host. '
-            'Branded Chrome removed --load-extension in 137 and its opt-out in 142; '
-            'use unbranded Chromium or Chrome for Testing.'
-        )
-    log('INFO', '[scraper]', 'Proxied egress confirmed', {
-        'event': 'proxied_egress_verified',
-        'browser_ip_suffix': browser_ip.rsplit('.', 1)[-1] if '.' in browser_ip else '?',
-        'differs_from_host': True,
-    })
-    return browser_ip
-
-
-async def log_browser_targets(page):
-    """Log the target list — diagnostic only, never a gate.
-
-    Target visibility is exactly what proved unreliable for judging whether the
-    extension loaded, so this records what we saw without deciding anything.
-    """
-    try:
-        targets = await page.send(uc.cdp.target.get_targets())
-        seen = sorted(f'{getattr(t, "type_", "?")}:{getattr(t, "url", "?")[:80]}' for t in targets)
-    except Exception as err:  # noqa: BLE001
-        log('WARN', '[scraper]', f'Could not enumerate targets: {err}',
-            {'event': 'target_enumeration_failed'})
-        return []
-    log('INFO', '[scraper]', 'Browser targets', {'event': 'browser_targets', 'targets': seen})
-    return seen
-
-
 async def inject_screen_overrides(page, profile):
     """Override screen dimensions to match the chosen viewport profile.
 
@@ -810,384 +571,68 @@ async def inject_screen_overrides(page, profile):
     """, await_promise=False)
 
 
-# nodriver's own --disable-features value. We launch Chrome ourselves now (see
-# launch_chrome), so we must supply this rather than inherit it — and our
-# Chrome>=137 opt-out must repeat it, because Chrome honors only the LAST
-# occurrence of a repeated switch.
-NODRIVER_DISABLED_FEATURES = 'IsolateOrigins,site-per-process'
+def build_browser_args(profile):
+    """Build Chrome's launch flags and decide headedness. Pure — no browser needed.
 
-# Flags nodriver would have passed if it were launching. Reproduced verbatim
-# from nodriver/core/config.py:118-129 + 179-199 (pinned 0.48.1) because in
-# attach mode nodriver adds nothing to the command line. Dropping any of these
-# changes the browser's behavior/fingerprint relative to the proven local runs.
-# Chrome's own background chatter — component updates (edgedl.me.gvt1.com),
-# Safe Browsing lists, translate, autofill, sync, domain reliability, metrics.
-# This traffic was always happening; it was FREE until the proxy started
-# working, at which point it began flowing through metered residential
-# bandwidth: 1.76 GB to edgedl.me.gvt1.com alone in a single run (~$6.60),
-# dwarfing the 2.7 MB of actual AIC scraping. None of it is needed to scrape.
-BANDWIDTH_GUARD_ARGS = [
-    '--disable-background-networking',      # umbrella: component update, SB, translate, autofill
-    '--disable-component-update',           # the 1.76 GB one, explicitly
-    '--disable-sync',
-    '--disable-default-apps',
-    '--disable-client-side-phishing-detection',
-    '--disable-domain-reliability',
-    '--safebrowsing-disable-auto-update',
-    '--metrics-recording-only',
-]
+    Extracted as a pure function precisely so the launch surface is testable without
+    starting Chrome: a flag regression is otherwise only discoverable by dispatching
+    a CI run, which is the loop this restore exists to escape.
 
-# Feature-level equivalents; merged into the SINGLE --disable-features switch
-# (Chrome honors only the last occurrence, which build_browser_args enforces).
-BANDWIDTH_GUARD_FEATURES = (
-    'Translate,OptimizationHints,OptimizationGuideModelDownloading,'
-    'MediaRouter,AutofillServerCommunication,InterestFeedContentSuggestions,'
-    'CalculateNativeWinOcclusion'
-)
-
-NODRIVER_DEFAULT_ARGS = [
-    '--remote-allow-origins=*',
-    '--no-first-run',
-    '--no-service-autorun',
-    '--no-default-browser-check',
-    '--homepage=about:blank',
-    '--no-pings',
-    '--password-store=basic',
-    '--disable-infobars',
-    '--disable-breakpad',
-    '--disable-dev-shm-usage',
-    '--disable-session-crashed-bubble',
-    '--disable-search-engine-choice-screen',
-]
-
-# How long to wait for Chrome's DevTools endpoint. nodriver's own budget is a
-# hardcoded 2.25s (browser.py:425-449) which a cold profile on a CI runner
-# exceeds just creating its databases — the entire reason we launch and poll
-# ourselves. Generous by default; an unresponsive browser still fails loudly.
-DEVTOOLS_READY_TIMEOUT_S = float(os.environ.get('SCRAPER_DEVTOOLS_TIMEOUT_S') or '60')
-
-# Chrome processes we spawned, per worker — so teardown kills a pid we OWN
-# rather than pattern-matching the process table (never `pkill chrome`: this
-# also runs on the operator's own desktop).
-_spawned_browsers = {}
-
-
-def build_browser_args(profile, proxy_ext_dir=None, chrome_log=None, platform=None,
-                       debug_port=None, profile_dir=None, relay_url=None):
-    """Pure launch-flag builder — returns (browser_args, use_headless).
-
-    Pure and unit-tested because every flag here was a cloud-only failure at
-    some point: the Chrome>=137 opt-out, the DISPLAY guard, and now the
-    remote-debugging flags we own since moving to attach mode.
-
-    Raises RuntimeError when proxy mode would need headed Chrome with no
-    display server — the same fail-fast the caller has always had.
+    Returns (browser_args, use_headless).
     """
-    platform = platform if platform is not None else sys.platform
-    args = [
-        f"--window-size={profile['w']},{profile['h']}",
+    vw, vh = profile['w'], profile['h']
+    browser_args = [
+        f'--window-size={vw},{vh}',
         '--disable-blink-features=AutomationControlled',  # suppress cdc_ variables
     ]
-    args += NODRIVER_DEFAULT_ARGS
-    args += BANDWIDTH_GUARD_ARGS
-    disabled_features = f'{NODRIVER_DISABLED_FEATURES},{BANDWIDTH_GUARD_FEATURES}'
-    use_headless = True
-    if relay_url:
-        # The relay holds the credentials, so Chrome gets a plain, unauthenticated
-        # proxy and needs no extension — which also means no forced headed mode
-        # (headed + Xvfb existed ONLY because --load-extension requires them).
-        args.append(f'--proxy-server={relay_url}')
-        # Chrome bypasses proxies for loopback by default, which would send our
-        # relay-bound traffic straight out. This re-includes loopback.
-        args.append('--proxy-bypass-list=<-loopback>')
-    if proxy_ext_dir:
-        args.append(f'--load-extension={proxy_ext_dir}')
-        # nodriver adds this whenever extensions are loaded (config.py:186-187);
-        # reproduced for parity with the flag set the local runs are proven
-        # against, since attach mode means nodriver contributes nothing.
-        args.append('--enable-unsafe-extension-debugging')
-        # Branded Chrome removed --load-extension in 137 and removed THIS
-        # opt-out in 142, so on recent branded builds the extension cannot be
-        # loaded at all; unbranded Chromium / Chrome for Testing are exempt and
-        # are what we run. Kept because it still helps branded 137-141 and is
-        # inert elsewhere (Chrome ignores unknown feature names) — but
-        # verify_proxy_extension_loaded, not this flag, is what guarantees we
-        # never scrape unproxied.
-        disabled_features += ',DisableLoadExtensionCommandLineSwitch'
-        use_headless = False  # Extensions require headed mode
-        # Headed mode on Linux requires a display server (X11/Wayland) or Xvfb.
-        # Without one Chrome dies with "cannot open display" — fail fast, clearly.
-        if platform != 'win32' and not os.environ.get('DISPLAY'):
-            raise RuntimeError(
-                'Proxy mode requires headed Chrome but no DISPLAY is set. '
-                'Run with: xvfb-run -a python3 scripts/aic-orchestrator.py'
-            )
-    # Exactly one --disable-features switch: Chrome keeps only the last.
-    args.append(f'--disable-features={disabled_features}')
-    if profile_dir:
-        args.append(f'--user-data-dir={profile_dir}')
-    if use_headless:
-        args.append('--headless=new')
-    if debug_port:
-        # NOT --no-sandbox: de3ff6dd deliberately kept Chrome's real sandbox
-        # (relaxing the AppArmor sysctl instead) so the WAF-sensitive scraper
-        # has no launch-flag divergence from the operator's local runs.
-        args += [f'--remote-debugging-port={debug_port}',
-                 '--remote-debugging-host=127.0.0.1']
-    if chrome_log:
-        # Chrome's own log is the only channel that states why it exited. Safe
-        # to leave on: we spawn with stdio=DEVNULL, so unlike nodriver (which
-        # PIPEs and never drains — browser.py:417-419) a full pipe buffer
-        # cannot stall startup here.
-        args += ['--enable-logging', f'--log-file={chrome_log}']
-    return args, use_headless
 
+    # C9 (WF2 restore): headedness is keyed on the PROXY MODE, not on the extension.
+    #
+    # Previously `use_headless` went False only when an extension dir was passed,
+    # because `--load-extension` requires headed Chrome. Retiring the extension would
+    # therefore have made every path headless by default and silently retired the
+    # headed fingerprint with it — headless-vs-headed is a first-order bot signal and
+    # the attested local runs were headed. Keying on the mode also keeps the DISPLAY
+    # guard below reachable instead of turning it into dead code.
+    use_headless = not proxy_enabled()
 
-def find_free_port():
-    """Ask the OS for a free ephemeral port.
-
-    Inherently TOCTOU (the port is unreserved between here and Chrome's bind —
-    the same race as nodriver/core/util.py:139-143), which is why
-    wait_for_devtools falls back to reading DevToolsActivePort: if Chrome could
-    not bind this port it picks another, stays alive, and writes the real one
-    there.
-    """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.bind(('127.0.0.1', 0))
-        return sock.getsockname()[1]
-    finally:
-        sock.close()
-
-
-def read_devtools_active_port(profile_dir):
-    """Read the port Chrome ACTUALLY bound, or None.
-
-    Chrome writes `DevToolsActivePort` into the profile dir: line 1 is the
-    port, line 2 the browser ws path. nodriver never reads this file (zero
-    references package-wide), which is why a failed port bind leaves it
-    permanently blind to a live browser.
-    """
-    path = os.path.join(profile_dir, 'DevToolsActivePort')
-    try:
-        with open(path, 'r', errors='replace') as fh:
-            first = fh.readline().strip()
-        return int(first) if first.isdigit() else None
-    except (OSError, ValueError):
-        return None
-
-
-def wait_for_devtools(port, proc=None, profile_dir=None, timeout=None):
-    """Poll until Chrome's DevTools HTTP endpoint answers. Returns (port, info).
-
-    Replaces nodriver's hardcoded 2.25s budget (its five probes expire while a
-    cold CI profile is still creating its favicon/quota/password-store
-    databases). Raises a RuntimeError that NAMES the cause — elapsed time, the
-    port, and the process return code — rather than nodriver's cause-agnostic
-    "Failed to connect to browser".
-    """
-    timeout = DEVTOOLS_READY_TIMEOUT_S if timeout is None else timeout
-    deadline = time.time() + timeout
-    candidates = [port]
-    while time.time() < deadline:
-        for candidate in list(candidates):
-            try:
-                with urllib.request.urlopen(
-                        f'http://127.0.0.1:{candidate}/json/version', timeout=5) as resp:
-                    info = json.loads(resp.read().decode('utf-8', errors='replace'))
-            except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError):
-                continue  # not listening yet — that is the normal case here
-            else:
-                if candidate != port:
-                    log('WARN', '[scraper]', 'Chrome bound a different debugging port than requested',
-                        {'event': 'devtools_port_drift', 'requested': port, 'actual': candidate})
-                return candidate, info
-        if proc is not None and proc.poll() is not None:
-            raise RuntimeError(
-                f'Chrome exited during startup (returncode={proc.returncode}) before its '
-                f'DevTools endpoint on port {port} answered — see the chrome_launch_log dump'
-            )
-        # Chrome may have bound a port other than the one we asked for (see
-        # find_free_port); DevToolsActivePort is the only place it says so.
-        if profile_dir:
-            actual = read_devtools_active_port(profile_dir)
-            if actual and actual not in candidates:
-                candidates.append(actual)
-        time.sleep(0.25)
-    raise RuntimeError(
-        f'Chrome DevTools endpoint did not answer on port {port} within {timeout:.0f}s '
-        f'(process alive={proc is None or proc.poll() is None}) — raise '
-        f'SCRAPER_DEVTOOLS_TIMEOUT_S if this runner is merely slow'
-    )
-
-
-# Hard ceiling on Chrome spawns per process. A WAF-block loop rotates the
-# session on every trap, and each rotation is a fresh browser: run 30506470111
-# logged 102 WAF traps -> 116 Chrome launches, and since every cold launch
-# re-downloads Chrome's components through the metered proxy that loop alone
-# accounted for ~1.76 GB (~$6.60). Rotation is correct behaviour; unbounded
-# rotation is a cost incident. Fail loudly instead of spending.
-MAX_BROWSER_LAUNCHES = int(os.environ.get('SCRAPER_MAX_BROWSER_LAUNCHES') or '12')
-_browser_launch_count = [0]
-
-
-def launch_chrome(browser_args, worker_id=None):
-    """Spawn Chrome ourselves so we own its lifetime. Returns the Popen.
-
-    We launch rather than let nodriver do it because nodriver: gives the
-    handshake only 2.25s, never reads DevToolsActivePort, PIPEs stdio it never
-    drains, and raises from inside start() — leaving no handle to kill the
-    browser it just spawned (which then holds the profile and breaks every
-    retry). Owning the process fixes all four.
-    """
-    _browser_launch_count[0] += 1
-    if _browser_launch_count[0] > MAX_BROWSER_LAUNCHES:
+    if not use_headless and sys.platform != 'win32' and not os.environ.get('DISPLAY'):
+        # Headed Chrome on Linux needs a display server (X11/Wayland) or Xvfb. Without
+        # one Chrome dies with "cannot open display" — an opaque failure the workflow
+        # header explicitly relies on us pre-empting with a named error.
         raise RuntimeError(
-            f'Refusing to launch Chrome #{_browser_launch_count[0]}: exceeded '
-            f'SCRAPER_MAX_BROWSER_LAUNCHES={MAX_BROWSER_LAUNCHES}. This is a COST ceiling, not a stealth signal — do not read it as CDP compromise. A WAF-block loop '
-            'rotates the session on every trap and each rotation costs a full cold '
-            'browser start over metered proxy bandwidth — stop, do not spend.'
+            f'Proxy mode {proxy_mode()!r} requires headed Chrome but no DISPLAY is set. '
+            'Run with: xvfb-run -a python3 scripts/aic-orchestrator.py'
         )
-    exe = str(_resolve_chrome_executable())
-    kwargs = {'stdout': subprocess.DEVNULL, 'stderr': subprocess.DEVNULL,
-              'stdin': subprocess.DEVNULL}
-    if sys.platform != 'win32':
-        # Own process group: Chrome's renderer/GPU children must die with it.
-        kwargs['start_new_session'] = True
-    proc = subprocess.Popen([exe, *browser_args], **kwargs)
-    _spawned_browsers[worker_id] = proc
-    return proc
+
+    return browser_args, use_headless
 
 
-def _resolve_chrome_executable():
-    from nodriver.core.config import find_chrome_executable
-    return find_chrome_executable()
+async def bootstrap_session(worker_id=None):
+    """Launch Chrome via CDP and establish an AIC session with a warm entry.
 
-
-async def stop_and_terminate(browser, worker_id=None):
-    """Close the CDP session AND kill the browser process we spawned.
-
-    Both halves are required in attach mode: browser.stop() only disconnects
-    the websocket. nodriver's connect_existing path never populates
-    `_process`/`_process_pid` (core/browser.py:370-372 skips the spawn block),
-    so stop()'s own terminate/kill calls hit None inside a swallowed
-    `except (Exception,)`, and its last-resort branch tests
-    `browser_process_pid` — a typo for `_process_pid` — so it never fires.
-    Calling stop() alone therefore leaves a live Chrome holding our profile
-    dir, which clear_stale_profile_locks would then unlock for a SECOND
-    concurrent Chrome on the same profile (SQLite corruption, not just a leak).
-    """
-    if browser is not None:
-        try:
-            browser.stop()
-        except Exception:  # noqa: BLE001
-            log('WARN', '[scraper]', 'browser.stop() failed; killing the process anyway',
-                {'event': 'browser_stop_failed'})
-    return terminate_spawned_chrome(worker_id)
-
-
-def terminate_spawned_chrome(worker_id=None, timeout=8):
-    """Kill the Chrome WE spawned for this worker, process group and all.
-
-    Idempotent and never raises: teardown must not be able to fail a run.
-    Deliberately pid-based — never `pkill chrome`, which on the operator's own
-    desktop would kill their browser, and on a shared runner someone else's.
-    """
-    proc = _spawned_browsers.pop(worker_id, None)
-    if proc is None or proc.poll() is not None:
-        return False
-    try:
-        if sys.platform != 'win32':
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-        else:
-            proc.terminate()
-    except OSError as err:
-        log('WARN', '[scraper]', f'Could not signal spawned Chrome: {err}',
-            {'event': 'chrome_terminate_failed'})
-    try:
-        proc.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        try:
-            if sys.platform != 'win32':
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            else:
-                proc.kill()
-        except OSError:
-            pass
-    log('INFO', '[scraper]', 'Terminated spawned Chrome',
-        {'event': 'chrome_terminated', 'worker_id': worker_id})
-    return True
-
-
-atexit.register(lambda: [terminate_spawned_chrome(w) for w in list(_spawned_browsers)])
-# The relay holds live proxy credentials in its argv — it must never outlive us.
-atexit.register(lambda: [terminate_spawned_relay(w) for w in list(_spawned_relays)])
-
-
-async def bootstrap_session(proxy_ext_dir=None, worker_id=None, relay_url=None):
-    """Launch Chrome via CDP and establish AIC session with warm entry.
-
-    When proxy is configured, runs headed (not headless) because
-    --load-extension is required for MV3 proxy auth and Chrome's
-    headless mode does not support extensions.
+    Runs headed whenever a proxy mode is selected (C9) -- headless-vs-headed is a
+    first-order bot signal and the attested runs were headed. On the unproxied
+    default path Chrome runs headless, which needs no display server.
     """
     # Coherent fingerprint profile — viewport, platform, and UA match
     profile = random.choice(FINGERPRINT_PROFILES)
+    browser_args, use_headless = build_browser_args(profile)
 
     # Persistent profile dir — reuse cookies/localStorage across runs
     profile_name = f'worker-{worker_id}' if worker_id else 'standalone'
     profile_dir = os.path.join(Path.home(), '.buildo-scraper', f'profile-{profile_name}')
     os.makedirs(profile_dir, exist_ok=True)
-    removed_locks = clear_stale_profile_locks(profile_dir)
-    if removed_locks:
-        log('INFO', '[scraper]', 'Removed stale Chrome profile locks', {
-            'event': 'stale_profile_lock_removed',
-            'files': removed_locks,
-            'profile_dir': profile_dir,
-        })
+    clear_stale_profile_locks(profile_dir)   # K2
+    log_chrome_diagnostics()                 # K7b — which binary actually ran
 
-    # Chrome writes its own launch log here — the only channel that says WHY it
-    # exited (dump_chrome_launch_log reads it on bootstrap failure). Truncated
-    # per attempt so a dump never shows a previous attempt's tail.
-    chrome_log = chrome_launch_log_path(worker_id)
-    try:
-        if os.path.exists(chrome_log):
-            os.remove(chrome_log)
-    except OSError:
-        pass  # a stale log is worth less than the attempt — never block launch on it
-
-    # WE launch Chrome, nodriver only attaches (uc.start with BOTH host and
-    # port sets its connect_existing path, browser.py:370-375). nodriver's own
-    # launch gives the DevTools handshake a hardcoded 2.25s — less than a cold
-    # CI profile spends creating its databases — never reads
-    # DevToolsActivePort, PIPEs stdio it never drains, and raises from inside
-    # start() leaving no handle to kill the browser it just spawned (which then
-    # owns the profile and breaks every retry). Owning the process fixes all four.
-    debug_port = find_free_port()
-    browser_args, _use_headless = build_browser_args(
-        profile, proxy_ext_dir, chrome_log, debug_port=debug_port,
-        profile_dir=profile_dir, relay_url=relay_url)
-
-    log_chrome_diagnostics()
-    proc = launch_chrome(browser_args, worker_id=worker_id)
-    actual_port, version_info = wait_for_devtools(
-        debug_port, proc=proc, profile_dir=profile_dir)
-    log('INFO', '[scraper]', 'Chrome DevTools ready', {
-        'event': 'devtools_ready',
-        'port': actual_port,
-        'browser': (version_info or {}).get('Browser'),
-    })
-    browser = await uc.start(host='127.0.0.1', port=actual_port)
+    browser = await uc.start(
+        headless=use_headless,
+        browser_args=browser_args,
+        user_data_dir=profile_dir,
+    )
     try:
         page = await browser.get('about:blank')
-
-        if proxy_ext_dir or relay_url:
-            # Log what targets exist (diagnostic), then PROVE we are proxied by
-            # egress IP. Target visibility is not evidence of proxying: judging
-            # the extension by its service-worker target rejected a browser
-            # whose targets were only ['page:about:blank'] on the GH runner.
-            await log_browser_targets(page)
-            await verify_proxied_egress(browser)
 
         # Fix headless screen dimensions to match viewport (nodriver#2242)
         await inject_screen_overrides(page, profile)
@@ -1207,8 +652,7 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None, relay_url=None):
         await page.sleep(random.uniform(0.8, 2.0))
         return browser, page, profile
     except Exception as err:
-        # Teardown must never mask the real bootstrap error.
-        await stop_and_terminate(browser, worker_id)
+        browser.stop()
         raise err
 
 
@@ -1262,14 +706,12 @@ async def preflight_stealth_check(page):
     return True, None
 
 
-async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id=None,
-                               relay_url=None):
+async def bootstrap_with_retry(run_preflight=True, worker_id=None):
     """Bootstrap with retry — 3 attempts with 10s backoff."""
     last_error = None
     for attempt in range(1, 4):
         try:
-            browser, page, profile = await bootstrap_session(
-                proxy_ext_dir=proxy_ext_dir, worker_id=worker_id, relay_url=relay_url)
+            browser, page, profile = await bootstrap_session(worker_id=worker_id)
             if attempt > 1:
                 log('INFO', '[scraper]', f'Bootstrap succeeded on attempt {attempt}')
 
@@ -1278,7 +720,7 @@ async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id
                 passed, reason = await preflight_stealth_check(page)
                 if not passed:
                     log('ERROR', '[scraper]', f'PREFLIGHT_FAIL: {reason}')
-                    await stop_and_terminate(browser, worker_id)
+                    browser.stop()
                     raise Exception(f'Preflight failed: {reason}')
                 log('INFO', '[scraper]', 'Preflight stealth check passed')
 
@@ -1286,12 +728,6 @@ async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id
         except Exception as err:
             last_error = err
             log('ERROR', '[scraper]', str(err), {'event': 'bootstrap_failed', 'attempt': attempt})
-            dump_chrome_launch_log(worker_id)
-            # Kill our Chrome before retrying AND after the final attempt (the
-            # `raise` below exits the loop, so a before-next-attempt-only kill
-            # would leak the last one). A survivor owns the profile and would
-            # make every subsequent attempt fail identically.
-            terminate_spawned_chrome(worker_id)
             if attempt < 3:
                 log('INFO', '[scraper]', f'Retrying bootstrap in 10s...')
                 await asyncio.sleep(10)
@@ -1301,28 +737,6 @@ async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id
 # ---------------------------------------------------------------------------
 # Safe JSON parsing — treats non-JSON responses as WAF blocks
 # ---------------------------------------------------------------------------
-# Bounded sample: enough to characterise the response, never enough to flood
-# a full run's logs or leak a large payload.
-STEP1_BODY_SAMPLES = int(os.environ.get('SCRAPER_STEP1_BODY_SAMPLES') or '8')
-_step1_samples_logged = [0]
-
-
-def _log_step1_body(raw, reason, year_seq=None):
-    """Log the raw step-1 body prefix so 'empty' stops being ambiguous."""
-    if _step1_samples_logged[0] >= STEP1_BODY_SAMPLES:
-        return
-    _step1_samples_logged[0] += 1
-    body = raw if isinstance(raw, str) else str(raw)
-    log('WARN', '[scraper]', 'AIC step-1 returned no usable properties', {
-        'event': 'step1_body_sample',
-        'reason': reason,
-        'year_seq': year_seq,
-        'body_len': len(body),
-        'body_prefix': body[:400],
-        'sample': f'{_step1_samples_logged[0]}/{STEP1_BODY_SAMPLES}',
-    })
-
-
 def safe_json_parse(raw, step_label=''):
     """Parse JSON, returning (data, None) on success or (None, error_snippet) on failure."""
     if not raw or raw.strip().startswith('<'):
@@ -1372,15 +786,13 @@ async def fetch_permit_chain(page, year, sequence):
 
     props, err = safe_json_parse(step1, 'step1:properties')
     if err:
-        # The body did not parse — log what it WAS. A WAF interstitial and a
-        # transport error look identical in the counters otherwise.
-        _log_step1_body(step1, 'parse_failed', f'{year} {sequence}')
+        # K7a: an unparseable body is the Akamai "Access Denied" page, not a miss.
+        _log_step1_body(step1, 'parse_failed', f'{year}-{sequence}')
         return {'waf_blocked': True, 'properties': [], 'results': []}
     if not props:
-        # Parsed fine but returned nothing. THIS is the case that has been
-        # invisible: an honest not-found and a silently-starved session both
-        # land here, and telemetry counts both as not_found.
-        _log_step1_body(step1, 'empty_result', f'{year} {sequence}')
+        # K7a: valid JSON, empty list -- the portal genuinely has no such permit.
+        # Sampling both branches is what makes "empty" stop being ambiguous.
+        _log_step1_body(step1, 'empty_result', f'{year}-{sequence}')
         return {'properties': [], 'results': []}
 
     property_rsn = sanitize_js_value(props[0].get('propertyRsn', ''))
@@ -1718,8 +1130,7 @@ def complete_batch_in_queue(conn, year_seqs, worker_id, failed=None):
 # ---------------------------------------------------------------------------
 # Scrape loop — shared between standalone and worker modes
 # ---------------------------------------------------------------------------
-async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]',
-                      proxy_ext_dir=None, profile=None, relay_url=None):
+async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]', profile=None):
     """Core scrape loop for a list of year_seq combos. Mutates tel in place."""
 
     def accumulate(result):
@@ -1749,17 +1160,15 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
         if tel['consecutive_empty'] >= WAF_TRAP_THRESHOLD:
             log('WARN', worker_tag, f"WAF trap detected ({tel['consecutive_empty']} consecutive empty). Re-bootstrapping...")
             try:
-                await stop_and_terminate(browser, tel.get("_worker_id"))
-                # Rotate proxy session to get a new IP
-                if PROXY_HOST:
-                    cleanup_proxy_extension(proxy_ext_dir)
-                    new_session_id = build_proxy_session_id(
-                        tel.get('_worker_id', 'standalone'), int(time.time()))
-                    terminate_spawned_relay(tel.get('_worker_id'))
-                    relay_url = start_proxy_relay(new_session_id, tel.get('_worker_id'))
-                    log('INFO', worker_tag, f'Proxy session rotated: {new_session_id}')
-                browser, page, attempts, profile = await bootstrap_with_retry(
-                    worker_id=tel.get('_worker_id'), relay_url=relay_url)
+                browser.stop()
+                # NOTE (WF2 restore, rung L0): IP rotation on WAF trap is UNAVAILABLE
+                # until the relay lands at L2. The extension-rebuild rotation that used
+                # to sit here required relaunching Chrome for every IP change -- the
+                # ~20x byte multiplier this restore exists to remove. The relay rotates
+                # the Decodo session on a pinned local port without touching the browser.
+                # Re-bootstrapping still clears session state, which is the part that
+                # matters on an unproxied run.
+                browser, page, attempts, profile = await bootstrap_with_retry(worker_id=tel.get('_worker_id'))
                 tel['session_bootstraps'] += attempts
                 tel['consecutive_empty'] = 0
             except Exception as err:
@@ -1768,7 +1177,7 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
                 raise RuntimeError(f'Mid-batch WAF rotate failed: {err}')
 
         # Periodic session refresh (non-proxy only — proxy mode uses 1 batch = 1 IP)
-        if i > 0 and i % SESSION_REFRESH_INTERVAL == 0 and not PROXY_HOST:
+        if i > 0 and i % SESSION_REFRESH_INTERVAL == 0 and not proxy_enabled():
             log('INFO', worker_tag, f'Refreshing AIC session (after {i} permits)...')
             try:
                 page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
@@ -1853,8 +1262,14 @@ def compute_summary(tel, start_ms):
                 'status_changes': tel['status_changes'],
                 'error_categories': tel['error_categories'],
                 'last_error': tel['last_error'],
-                'proxy_configured': bool(os.environ.get('PROXY_HOST')),
-                'proxy_host': os.environ.get('PROXY_HOST'),
+                # Derived from the RESOLVED MODE, never from credential presence.
+                # Before 2026-07-30 this read bool(PROXY_HOST) and so reported
+                # proxy_configured=true on runs that scraped DIRECT -- the field lied
+                # for four months. `proxy_mode` is emitted alongside so a reader can
+                # tell "deliberately unproxied by policy" from "misconfigured".
+                'proxy_configured': proxy_enabled(),
+                'proxy_mode': proxy_mode(),
+                'proxy_host': PROXY_HOST if proxy_enabled() else None,
                 'preflight_passed': tel.get('preflight_passed', True),
                 'max_permits_cap': MAX_PERMITS,
                 'capped': MAX_PERMITS > 0 and tel['permits_attempted'] >= MAX_PERMITS,
@@ -1892,34 +1307,17 @@ async def main():
 
     worker_tag = f'[worker-{args["worker_id"]}]' if args['worker_id'] else '[scraper]'
 
-    # Build per-worker proxy extension if proxy is configured
-    proxy_ext_dir = None
-    relay_url = None
-    if PROXY_HOST and args['worker_id']:
-        session_id = build_proxy_session_id(args['worker_id'])
-        relay_url = start_proxy_relay(session_id, args['worker_id'])
-        log('INFO', worker_tag,
-            f'Proxy relay up on {relay_url} -> {PROXY_HOST}:{resolve_proxy_port(args["worker_id"])} session={session_id}')
-    elif PROXY_HOST:
-        session_id = build_proxy_session_id('standalone')
-        relay_url = start_proxy_relay(session_id, tel['_worker_id'])
-        log('INFO', worker_tag,
-            f'Proxy relay up on {relay_url} -> {PROXY_HOST}:{resolve_proxy_port(None)} '
-            f'session={session_id}')
+    # MV3 proxy extension RETIRED (WF2 restore, rung L0).
+    # Branded Chrome >=137 drops --load-extension and an idle MV3 service
+    # worker is evicted mid-run, so the extension was both unreliable and
+    # silent when it failed. The relay replaces it at rung L2.
+    assert_proxy_config_coherent()
 
     log('INFO', worker_tag, 'Launching browser via nodriver (CDP)...')
 
     browser = None
     try:
-        # Relay start lives INSIDE this try: it spawns a subprocess and can time
-        # out, and a crash before the try would exit main() with no
-        # PIPELINE_SUMMARY at all — leaving preflight_passed at its default True
-        # so the orchestrator undercounts the dead worker.
-        if PROXY_HOST and relay_url is None:
-            relay_url = start_proxy_relay(build_proxy_session_id(tel['_worker_id']),
-                                          tel['_worker_id'])
-        browser, page, bootstrap_attempts, profile = await bootstrap_with_retry(
-            worker_id=tel['_worker_id'], relay_url=relay_url)
+        browser, page, bootstrap_attempts, profile = await bootstrap_with_retry(worker_id=tel['_worker_id'])
         tel['session_bootstraps'] = bootstrap_attempts
         log('INFO', worker_tag, 'WAF session established (no WebDriver)')
 
@@ -1949,8 +1347,7 @@ async def main():
                 with open(args['batch_file'], 'r') as f:
                     year_seqs = json.load(f)
                 log('INFO', worker_tag, f'Worker mode: {len(year_seqs)} year_seqs from {args["batch_file"]}')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile,
-                                                  relay_url=relay_url)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, profile=profile)
             finally:
                 conn.close()
 
@@ -1963,8 +1360,8 @@ async def main():
 
             # In db-queue mode, the outer bootstrap is only for non-proxy runs.
             # For proxy runs, each batch builds its own session. Kill the initial browser.
-            if browser and PROXY_HOST:
-                await stop_and_terminate(browser, tel.get("_worker_id"))
+            if browser and proxy_enabled():
+                browser.stop()
                 browser = None
 
             while True:
@@ -1989,24 +1386,14 @@ async def main():
 
                     batch_num += 1
 
-                    # Fresh proxy session per batch (new Decodo sticky session = new IP)
-                    if PROXY_HOST:
-                        cleanup_proxy_extension(proxy_ext_dir)
-                        batch_session_id = build_proxy_session_id(worker_id, int(time.time()))
-                        terminate_spawned_relay(worker_id)
-                        relay_url = start_proxy_relay(batch_session_id, worker_id)
-                        log('INFO', worker_tag, f'Batch {batch_num}: new IP session={batch_session_id}')
-
                     if browser is None:
-                        browser, page, attempts, profile = await bootstrap_with_retry(
-                            worker_id=worker_id, relay_url=relay_url)
+                        browser, page, attempts, profile = await bootstrap_with_retry(worker_id=worker_id)
                         tel['session_bootstraps'] += attempts
                         log('INFO', worker_tag, f'Batch {batch_num}: browser bootstrapped')
 
                     log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
                     try:
-                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile,
-                                                  relay_url=relay_url)
+                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, profile=profile)
                         complete_batch_in_queue(conn, year_seqs, worker_id)
                         log('INFO', worker_tag, f'Batch {batch_num}: complete')
                     except Exception as err:
@@ -2015,20 +1402,17 @@ async def main():
                         # Browser may be dead — force cleanup
                         if browser:
                             try:
-                                await stop_and_terminate(browser, tel.get("_worker_id"))
+                                browser.stop()
                             except Exception:
                                 pass
                             browser = None
 
-                    # Recycle on the memory TTL only. NOT `PROXY_HOST or ...`:
-                    # that fired every batch in production, forcing a cold Chrome
-                    # per batch (116 launches in run 30506470111, and the launch
-                    # ceiling then tripped on healthy runs). Rotation on an actual
-                    # WAF signal is scrape_loop's trap branch, which already exists.
-                    if browser and batch_num % BROWSER_MAX_BATCHES == 0:
-                        if not PROXY_HOST:
+                    # Kill browser after each batch in proxy mode (1 batch = 1 IP),
+                    # or after BROWSER_MAX_BATCHES in non-proxy mode (memory TTL).
+                    if browser and (proxy_enabled() or batch_num % BROWSER_MAX_BATCHES == 0):
+                        if not proxy_enabled():
                             log('INFO', worker_tag, f'Browser TTL: recycling after {BROWSER_MAX_BATCHES} batches')
-                        await stop_and_terminate(browser, tel.get("_worker_id"))
+                        browser.stop()
                         browser = None
                 finally:
                     conn.close()
@@ -2062,8 +1446,7 @@ async def main():
                 year_seqs = [r['year_seq'] for r in rows]
                 random.shuffle(year_seqs)
                 log('INFO', worker_tag, f'Batch mode: {len(year_seqs)} year+sequence combos to scrape (shuffled)')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile,
-                                                  relay_url=relay_url)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, profile=profile)
             finally:
                 conn.close()
 
@@ -2075,14 +1458,11 @@ async def main():
     finally:
         if browser:
             try:
-                await stop_and_terminate(browser, tel.get("_worker_id"))
+                browser.stop()
             except Exception:
                 pass
-        # Clean up proxy extension directory (legacy path; unused once the
-        # relay replaced --load-extension, but harmless if ever re-enabled)
-        if proxy_ext_dir:
-            cleanup_proxy_extension(proxy_ext_dir)
-        terminate_spawned_relay(tel.get('_worker_id'))
+        # Clean up proxy extension directory
+
         # Safety net: kill orphaned Chrome processes spawned by THIS worker only.
         # Each worker uses a unique profile dir (profile-worker-N or profile-standalone).
         # Scoping prevents multi-worker sabotage where one worker kills another's Chrome.

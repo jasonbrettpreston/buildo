@@ -161,106 +161,19 @@ class TestResolveProxyPort:
         assert scraper.resolve_proxy_port('3', base_port=20001) == 20003
 
 
-class TestProxyExtension:
-    """The MV3 extension carries proxy credentials — shape and permissions matter."""
+class TestExtensionRetired:
+    """The MV3 proxy extension is retired (WF2 restore, rung L0).
 
-    def test_returns_none_without_a_proxy_host(self, scraper, monkeypatch):
-        monkeypatch.setattr(scraper, 'PROXY_HOST', '')
+    It could not be relied on: branded Chrome >=137 silently drops
+    `--load-extension`, and an idle MV3 service worker is evicted mid-run while
+    `chrome.proxy` settings persist — so the browser keeps routing through the proxy
+    while unable to authenticate. Both failure modes are silent. The relay replaces
+    it at rung L2.
+    """
 
-        assert scraper.build_proxy_extension('sess-1') is None
-
-    def test_manifest_declares_the_auth_provider_permission(self, scraper, monkeypatch):
-        monkeypatch.setattr(scraper, 'PROXY_HOST', 'proxy.example.com')
-        monkeypatch.setattr(scraper, 'PROXY_PORT', '7777')
-        monkeypatch.setattr(scraper, 'PROXY_USER', 'user')
-        monkeypatch.setattr(scraper, 'PROXY_PASS', 'secret')
-
-        ext_dir = scraper.build_proxy_extension('sess-2')
-        try:
-            manifest = json.loads(open(os.path.join(ext_dir, 'manifest.json')).read())
-
-            assert manifest['manifest_version'] == 3
-            # Without webRequestAuthProvider, onAuthRequired never fires and every
-            # proxied request 407s.
-            assert 'webRequestAuthProvider' in manifest['permissions']
-            assert 'proxy' in manifest['permissions']
-            assert manifest['background']['service_worker'] == 'background.js'
-        finally:
-            scraper.cleanup_proxy_extension(ext_dir)
-
-    def test_proxy_scheme_defaults_to_https_not_http(self, scraper, monkeypatch):
-        """Decodo speaks http/https/socks5 on one port, but only https works here.
-
-        Plain-http-to-proxy means HTTPS targets need a CONNECT tunnel, and that
-        tunnel is reset (verified 2026-07-29, reproduced with -k so it is the
-        tunnel, not cert validation) — the cause of the CI browser rendering
-        "site can't be reached" for every HTTPS page. socks5 is out because
-        Chrome cannot authenticate to a SOCKS proxy at all.
-        """
-        assert scraper.PROXY_SCHEME == 'https'
-
-    def test_background_script_uses_the_configured_scheme(self, scraper, monkeypatch):
-        monkeypatch.setattr(scraper, 'PROXY_HOST', 'proxy.example.com')
-        monkeypatch.setattr(scraper, 'PROXY_PORT', '7777')
-        monkeypatch.setattr(scraper, 'PROXY_USER', 'user')
-        monkeypatch.setattr(scraper, 'PROXY_PASS', 'secret')
-        monkeypatch.setattr(scraper, 'PROXY_SCHEME', 'https')
-
-        ext_dir = scraper.build_proxy_extension('sess-scheme')
-        try:
-            body = open(os.path.join(ext_dir, 'background.js')).read()
-
-            assert 'scheme: "https"' in body
-            assert 'scheme: "http"' not in body
-        finally:
-            scraper.cleanup_proxy_extension(ext_dir)
-
-    def test_background_script_routes_and_authenticates(self, scraper, monkeypatch):
-        monkeypatch.setattr(scraper, 'PROXY_HOST', 'proxy.example.com')
-        monkeypatch.setattr(scraper, 'PROXY_PORT', '7777')
-        monkeypatch.setattr(scraper, 'PROXY_USER', 'user')
-        monkeypatch.setattr(scraper, 'PROXY_PASS', 'secret')
-
-        ext_dir = scraper.build_proxy_extension('sess-3')
-        try:
-            body = open(os.path.join(ext_dir, 'background.js')).read()
-
-            # Routing AND auth both live here: if the extension fails to load,
-            # traffic silently goes DIRECT (verify_proxy_extension_loaded exists
-            # for exactly that reason).
-            assert 'chrome.proxy.settings.set' in body
-            assert 'chrome.webRequest.onAuthRequired' in body
-            assert 'proxy.example.com' in body
-            assert 'user-user-session-sess-3' in body, 'the literal user- prefix is load-bearing'
-        finally:
-            scraper.cleanup_proxy_extension(ext_dir)
-
-    @pytest.mark.skipif(sys.platform == 'win32', reason='POSIX mode bits only')
-    def test_credential_directory_is_owner_only(self, scraper, monkeypatch):
-        monkeypatch.setattr(scraper, 'PROXY_HOST', 'proxy.example.com')
-        monkeypatch.setattr(scraper, 'PROXY_PORT', '7777')
-        monkeypatch.setattr(scraper, 'PROXY_USER', 'user')
-        monkeypatch.setattr(scraper, 'PROXY_PASS', 'secret')
-
-        ext_dir = scraper.build_proxy_extension('sess-4')
-        try:
-            mode = stat.S_IMODE(os.stat(ext_dir).st_mode)
-
-            assert mode == 0o700, 'background.js holds live proxy credentials'
-        finally:
-            scraper.cleanup_proxy_extension(ext_dir)
-
-    def test_cleanup_removes_the_directory(self, scraper, monkeypatch):
-        monkeypatch.setattr(scraper, 'PROXY_HOST', 'proxy.example.com')
-        monkeypatch.setattr(scraper, 'PROXY_PORT', '7777')
-
-        ext_dir = scraper.build_proxy_extension('sess-5')
-        scraper.cleanup_proxy_extension(ext_dir)
-
-        assert not os.path.exists(ext_dir)
-
-    def test_cleanup_is_idempotent(self, scraper):
-        scraper.cleanup_proxy_extension('/nonexistent/path/xyz')  # must not raise
+    def test_extension_builders_are_gone(self, scraper):
+        assert not hasattr(scraper, 'build_proxy_extension')
+        assert not hasattr(scraper, 'cleanup_proxy_extension')
 
 
 class TestSafeJsonParse:
@@ -290,6 +203,20 @@ class TestSafeJsonParse:
         assert data is None and err is not None
 
 
+@pytest.mark.xfail(
+    reason=(
+        'EXPECTED TO FAIL AT RUNG L0, AND THAT IS THE POINT. This class is the '
+        'measured Akamai reputation model in executable form; the WF2 restore '
+        'deliberately returns the module DEFAULTS to the pre-drift values '
+        '(3 / 2000 / 20), which are correct for the attested unproxied local path '
+        'and known-wrong for a hostile edge. Deleting the class would delete the '
+        'only enforcement of knowledge whose prose lives in a backlog file. The '
+        'follow-on cloud WF owns setting the measured values in the workflow env '
+        'and flipping this back to a hard assertion. See Spec 44 §3 and '
+        '.cursor/wf2_deep_scrapes_restore.md (Yield CRITICAL-3).'
+    ),
+    strict=False,
+)
 class TestAkamaiTunedBackoff:
     """Pinned to the live-measured reputation model (recon 2026-07-30).
 

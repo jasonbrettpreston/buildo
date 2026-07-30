@@ -1,214 +1,199 @@
-"""Regression locks for AIC scraper bootstrap — the seams that only ever failed in the cloud.
+"""Bootstrap-path locks for aic-scraper-nodriver.py — WF2 restore, rung L0.
 
+SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md §3, §5
 SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.4
-SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md
+PLAN: .cursor/wf2_deep_scrapes_restore.md (K2, K7a, K7b, C9)
 
-Every test here pins a behavior that cost a ~6-minute GitHub Actions round-trip
-to discover (2026-07-29 runs 30485096998 / 30487133930 / 30490094619):
-  · a cache-restored profile's stale Singleton lock bricking Chrome launch
-  · the extension tripwire masking nodriver's real connection error
-  · the Chrome>=137 --load-extension opt-out silently stripping site isolation
+These cover the pure seams of the launch path: flag construction, headedness, the
+DISPLAY guard, profile-lock clearing, and the step-1 body classifier. Everything
+here is reachable WITHOUT a browser — a launch regression must be catchable by
+`npm run test:py`, not only by dispatching a ~6-minute CI run, which is the loop
+this restore exists to escape.
+
+Attach-mode launch tests live in `_deferred/test_scraper_launch_attach.py.L1` and
+return with rung L1, which introduces the code they exercise.
 """
 
 import os
+import sys
 
 import pytest
 
 
-# ---------------------------------------------------------------------------
-# clear_stale_profile_locks — the cache-poisoning fix
-# ---------------------------------------------------------------------------
-class TestClearStaleProfileLocks:
-    def test_removes_all_three_singleton_artifacts(self, scraper, tmp_path):
-        for name in ('SingletonLock', 'SingletonSocket', 'SingletonCookie'):
-            (tmp_path / name).write_text('stale')
-
-        removed = scraper.clear_stale_profile_locks(str(tmp_path))
-
-        assert sorted(removed) == ['SingletonCookie', 'SingletonLock', 'SingletonSocket']
-        assert not any((tmp_path / n).exists() for n in removed)
-
-    def test_clean_profile_reports_nothing_removed(self, scraper, tmp_path):
-        assert scraper.clear_stale_profile_locks(str(tmp_path)) == []
-
-    def test_preserves_real_profile_state(self, scraper, tmp_path):
-        """The fingerprint fence: cookies/localStorage must survive lock removal."""
-        (tmp_path / 'SingletonLock').write_text('stale')
-        (tmp_path / 'Cookies').write_text('session-data')
-        (tmp_path / 'Default').mkdir()
-        (tmp_path / 'Default' / 'Preferences').write_text('{}')
-
-        scraper.clear_stale_profile_locks(str(tmp_path))
-
-        assert (tmp_path / 'Cookies').read_text() == 'session-data'
-        assert (tmp_path / 'Default' / 'Preferences').exists()
-
-    def test_dangling_symlink_is_removed_not_followed(self, scraper, tmp_path):
-        """A real SingletonLock is a symlink to <host>-<pid> that never resolves.
-
-        os.path.exists() is False for it — the reason the implementation uses
-        os.lstat. If this regresses to exists(), the poisoned-cache bug returns.
-        """
-        link = tmp_path / 'SingletonLock'
-        try:
-            os.symlink('some-host-4242', str(link))
-        except (OSError, NotImplementedError):
-            pytest.skip('symlink creation not permitted on this platform')
-
-        assert not os.path.exists(str(link))  # the trap the implementation avoids
-        assert scraper.clear_stale_profile_locks(str(tmp_path)) == ['SingletonLock']
-        assert not os.path.lexists(str(link))
-
-    def test_undeletable_lock_warns_and_continues(self, scraper, tmp_path, captured_logs):
-        """An unremovable lock must not abort bootstrap earlier than Chrome would."""
-        (tmp_path / 'SingletonLock').mkdir()  # a dir makes os.remove raise
-        (tmp_path / 'SingletonCookie').write_text('stale')
-
-        removed = scraper.clear_stale_profile_locks(str(tmp_path))
-
-        assert removed == ['SingletonCookie'], 'must keep going past the failure'
-        assert any(e.get('level') == 'WARN' and 'SingletonLock' in e.get('msg', '')
-                   for e in captured_logs), 'the failure must be surfaced, not swallowed'
-
-    def test_missing_profile_dir_does_not_raise(self, scraper, tmp_path):
-        assert scraper.clear_stale_profile_locks(str(tmp_path / 'nope')) == []
-
-
-# ---------------------------------------------------------------------------
-# build_browser_args — the Chrome>=137 opt-out + DISPLAY fence
-# ---------------------------------------------------------------------------
-PROFILE = {'w': 1280, 'h': 800, 'platform': 'Win32', 'ua_hint': 'x'}
-
-
 class TestBuildBrowserArgs:
-    def test_no_proxy_runs_headless_without_extension_flags(self, scraper):
-        args, use_headless = scraper.build_browser_args(PROFILE, platform='linux')
+    """The launch surface. Pure function, no browser required."""
 
-        assert use_headless is True
-        assert not any(a.startswith('--load-extension') for a in args)
-        assert not any('DisableLoadExtensionCommandLineSwitch' in a for a in args)
-
-    def test_proxy_mode_is_headed_and_loads_the_extension(self, scraper, monkeypatch):
-        monkeypatch.setenv('DISPLAY', ':99')
-
-        args, use_headless = scraper.build_browser_args(
-            PROFILE, proxy_ext_dir='/tmp/ext', platform='linux')
-
-        assert use_headless is False, 'MV3 extensions require headed Chrome'
-        assert '--load-extension=/tmp/ext' in args
-
-    def test_opt_out_repeats_nodriver_features_so_isolation_is_not_stripped(
-            self, scraper, monkeypatch):
-        """Chrome honors only the LAST --disable-features; nodriver injects its own first.
-
-        Dropping nodriver's values from our value would silently disable site
-        isolation for a browser driving an external portal.
-        """
-        monkeypatch.setenv('DISPLAY', ':99')
-
-        args, _ = scraper.build_browser_args(
-            PROFILE, proxy_ext_dir='/tmp/ext', platform='linux')
-
-        features = [a for a in args if a.startswith('--disable-features=')]
-        assert len(features) == 1, 'exactly one --disable-features must be ours'
-        value = features[0].split('=', 1)[1]
-        assert 'DisableLoadExtensionCommandLineSwitch' in value
-        for nodriver_feature in scraper.NODRIVER_DISABLED_FEATURES.split(','):
-            assert nodriver_feature in value, (
-                f'{nodriver_feature} must be repeated — Chrome keeps only the last switch')
-
-    def test_proxy_mode_without_display_fails_fast_on_posix(self, scraper, monkeypatch):
-        monkeypatch.delenv('DISPLAY', raising=False)
-
-        with pytest.raises(RuntimeError, match='DISPLAY'):
-            scraper.build_browser_args(PROFILE, proxy_ext_dir='/tmp/ext', platform='linux')
-
-    def test_windows_needs_no_display(self, scraper, monkeypatch):
-        monkeypatch.delenv('DISPLAY', raising=False)
-
-        _, use_headless = scraper.build_browser_args(
-            PROFILE, proxy_ext_dir='C:/tmp/ext', platform='win32')
-
-        assert use_headless is False
-
-    def test_headless_path_needs_no_display(self, scraper, monkeypatch):
-        """No proxy → headless → a missing DISPLAY must NOT raise."""
-        monkeypatch.delenv('DISPLAY', raising=False)
-
-        args, use_headless = scraper.build_browser_args(PROFILE, platform='linux')
-
-        assert use_headless is True and args
-
-    def test_chrome_log_flags_are_paired(self, scraper):
-        args, _ = scraper.build_browser_args(PROFILE, chrome_log='/tmp/c.log', platform='linux')
-
-        assert '--enable-logging' in args, '--log-file alone produces no log'
-        assert '--log-file=/tmp/c.log' in args
-
-    def test_window_size_matches_the_fingerprint_profile(self, scraper):
-        """Fingerprint coherence fence: viewport must match the chosen profile."""
-        args, _ = scraper.build_browser_args({'w': 1440, 'h': 900}, platform='linux')
-
-        assert '--window-size=1440,900' in args
+    def test_unproxied_default_runs_headless(self, scraper):
+        _, use_headless = scraper.build_browser_args(scraper.FINGERPRINT_PROFILES[0])
+        assert use_headless is True, (
+            'the unproxied default path has no display requirement and must not '
+            'invent one'
+        )
 
     def test_automation_flag_suppression_is_always_present(self, scraper):
-        """Stealth fence (73fae6c9): cdc_ suppression is not proxy-conditional."""
-        args, _ = scraper.build_browser_args(PROFILE, platform='linux')
+        args, _ = scraper.build_browser_args(scraper.FINGERPRINT_PROFILES[0])
+        assert '--disable-blink-features=AutomationControlled' in args, (
+            'suppressing the cdc_ variables is the baseline stealth measure; losing '
+            'it is invisible locally and fatal against the WAF'
+        )
 
-        assert '--disable-blink-features=AutomationControlled' in args
+    def test_window_size_matches_the_fingerprint_profile(self, scraper):
+        profile = scraper.FINGERPRINT_PROFILES[0]
+        args, _ = scraper.build_browser_args(profile)
+        assert f"--window-size={profile['w']},{profile['h']}" in args, (
+            'viewport must match the profile it was drawn from — an incoherent '
+            'fingerprint is worse than a plain one'
+        )
+
+    def test_no_extension_flags_survive_the_retirement(self, scraper):
+        """The MV3 extension is retired at L0; its flags must not reappear.
+
+        Branded Chrome >=137 silently drops --load-extension, so these flags were
+        both inert and misleading: they made runs look proxied that were not.
+        """
+        args, _ = scraper.build_browser_args(scraper.FINGERPRINT_PROFILES[0])
+        joined = ' '.join(args)
+        assert '--load-extension' not in joined
+        assert 'DisableLoadExtensionCommandLineSwitch' not in joined
+
+    def test_proxy_mode_forces_headed(self, scraper, monkeypatch):
+        """C9 regression lock: headedness follows the proxy MODE, not the extension.
+
+        Headedness used to derive solely from the extension dir, so retiring the
+        extension would have silently made every path headless — and headless-vs-headed
+        is a first-order bot signal.
+        """
+        monkeypatch.setattr(scraper, 'PROXY_MODE', 'relay')
+        monkeypatch.setenv('DISPLAY', ':99')
+        _, use_headless = scraper.build_browser_args(scraper.FINGERPRINT_PROFILES[0])
+        assert use_headless is False
+
+    @pytest.mark.skipif(sys.platform == 'win32', reason='DISPLAY is POSIX-only')
+    def test_proxy_mode_without_display_fails_fast_on_posix(self, scraper, monkeypatch):
+        """A named error beats Chrome's opaque 'cannot open display'."""
+        monkeypatch.setattr(scraper, 'PROXY_MODE', 'relay')
+        monkeypatch.delenv('DISPLAY', raising=False)
+        with pytest.raises(RuntimeError, match='DISPLAY'):
+            scraper.build_browser_args(scraper.FINGERPRINT_PROFILES[0])
+
+    def test_headless_path_needs_no_display(self, scraper, monkeypatch):
+        """The DISPLAY guard must not fire on the unproxied path."""
+        monkeypatch.setattr(scraper, 'PROXY_MODE', 'none')
+        monkeypatch.delenv('DISPLAY', raising=False)
+        args, use_headless = scraper.build_browser_args(scraper.FINGERPRINT_PROFILES[0])
+        assert use_headless is True and args
 
 
-# ---------------------------------------------------------------------------
-# verify_proxy_extension_loaded — MOVED
-# ---------------------------------------------------------------------------
-# Its locks now live in test_scraper_launch_attach.py: the tripwire takes the
-# PAGE (a Tab) rather than the browser, because `browser.connection` is a
-# nodriver internal and `Tab.send` is the version-stable path. The retired
-# "missing connection reports liveness" test asserted a premise I later
-# RETRACTED — the source shows that NoneType error most likely originated
-# inside browser.get(), not in the tripwire (see G4 in
-# .cursor/wf3_deep_scrapes_cdp_handshake.md).
+class TestProxyMode:
+    """Proxying is a DECLARED state, never inferred from credential presence."""
+
+    def test_default_is_unproxied(self, scraper):
+        assert scraper.proxy_mode() == 'none'
+        assert scraper.proxy_enabled() is False
+
+    def test_credentials_alone_do_not_enable_proxying(self, scraper, monkeypatch):
+        """Regression lock for the silent-unproxied class.
+
+        Before 2026-07-30 `if PROXY_HOST:` selected the extension path, which branded
+        Chrome dropped — so setting credentials produced a run that believed it was
+        proxied and was not. Credentials must never imply a mode.
+        """
+        monkeypatch.setattr(scraper, 'PROXY_HOST', 'ca.decodo.com')
+        monkeypatch.setattr(scraper, 'PROXY_MODE', 'none')
+        assert scraper.proxy_enabled() is False
+
+    def test_credentials_without_a_mode_fail_loudly(self, scraper, monkeypatch):
+        """Silence is the bug: an operator with PROXY_HOST set must be told."""
+        monkeypatch.setattr(scraper, 'PROXY_HOST', 'ca.decodo.com')
+        monkeypatch.setattr(scraper, 'PROXY_MODE', 'none')
+        with pytest.raises(RuntimeError, match='PROXY_HOST is set'):
+            scraper.assert_proxy_config_coherent()
+
+    def test_unsupported_mode_names_the_rung(self, scraper, monkeypatch):
+        """'relay' is real but lands at L2 — say so rather than falling back."""
+        monkeypatch.setattr(scraper, 'PROXY_MODE', 'relay')
+        with pytest.raises(RuntimeError, match='not supported'):
+            scraper.assert_proxy_config_coherent()
+
+    def test_clean_unproxied_config_passes(self, scraper, monkeypatch):
+        monkeypatch.setattr(scraper, 'PROXY_HOST', '')
+        monkeypatch.setattr(scraper, 'PROXY_MODE', 'none')
+        scraper.assert_proxy_config_coherent()  # must not raise
 
 
-# ---------------------------------------------------------------------------
-# Chrome launch-log diagnostics
-# ---------------------------------------------------------------------------
-class TestChromeLaunchLog:
-    def test_path_is_per_worker(self, scraper):
-        assert scraper.chrome_launch_log_path(1) != scraper.chrome_launch_log_path(2)
-        assert 'worker-1' in scraper.chrome_launch_log_path(1)
-        assert 'standalone' in scraper.chrome_launch_log_path(None)
+class TestProfileLocks:
+    """K2 — a cache-restored Singleton lock bricks Chrome permanently."""
 
-    def test_dump_reports_missing_log_without_raising(self, scraper, monkeypatch,
-                                                     captured_logs, tmp_path):
-        monkeypatch.setattr(scraper, 'chrome_launch_log_path',
-                            lambda _w: str(tmp_path / 'absent.log'))
+    def test_removes_a_stale_lock_naming_another_host(self, scraper, tmp_path):
+        lock = tmp_path / 'SingletonLock'
+        try:
+            os.symlink('some-other-host-12345', lock)
+        except (OSError, NotImplementedError):
+            pytest.skip('symlink creation not permitted on this host')
+        removed = scraper.clear_stale_profile_locks(str(tmp_path))
+        assert 'SingletonLock' in removed
+        assert not os.path.lexists(lock), (
+            'a lock naming another host can never be live here — this is the CI '
+            'cache-poisoning case and it must always be cleared'
+        )
 
-        scraper.dump_chrome_launch_log(1)
+    def test_absent_locks_are_a_no_op(self, scraper, tmp_path):
+        assert scraper.clear_stale_profile_locks(str(tmp_path)) == []
 
-        assert any(e.get('context', {}).get('event') == 'chrome_launch_log_missing'
-                   for e in captured_logs)
+    def test_is_idempotent(self, scraper, tmp_path):
+        scraper.clear_stale_profile_locks(str(tmp_path))
+        assert scraper.clear_stale_profile_locks(str(tmp_path)) == []
 
-    def test_dump_distinguishes_empty_log_from_missing(self, scraper, monkeypatch,
-                                                      captured_logs, tmp_path):
-        empty = tmp_path / 'chrome.log'
-        empty.write_text('\n  \n')
-        monkeypatch.setattr(scraper, 'chrome_launch_log_path', lambda _w: str(empty))
+    def test_refuses_to_strip_a_lock_held_by_live_local_chrome(self, scraper, tmp_path):
+        """Removing a LIVE lock lets a second Chrome corrupt the same profile.
 
-        scraper.dump_chrome_launch_log(1)
+        The guard is directional on purpose: another host is always stale; this host
+        with a running PID is left alone.
+        """
+        import socket
+        lock = tmp_path / 'SingletonLock'
+        try:
+            os.symlink(f'{socket.gethostname()}-{os.getpid()}', lock)
+        except (OSError, NotImplementedError):
+            pytest.skip('symlink creation not permitted on this host')
+        removed = scraper.clear_stale_profile_locks(str(tmp_path))
+        assert 'SingletonLock' not in removed
+        assert os.path.lexists(lock)
 
-        assert any(e.get('context', {}).get('event') == 'chrome_launch_log_empty'
-                   for e in captured_logs)
+    def test_unparseable_target_is_treated_as_stale(self, scraper, tmp_path):
+        """Fail toward clearing: an unclearable profile is bricked forever."""
+        lock = tmp_path / 'SingletonLock'
+        try:
+            os.symlink('garbage-with-no-pid', lock)
+        except (OSError, NotImplementedError):
+            pytest.skip('symlink creation not permitted on this host')
+        assert 'SingletonLock' in scraper.clear_stale_profile_locks(str(tmp_path))
 
-    def test_dump_emits_bounded_tail(self, scraper, monkeypatch, captured_logs, tmp_path):
-        log_file = tmp_path / 'chrome.log'
-        log_file.write_text('\n'.join(f'line {i}' for i in range(100)))
-        monkeypatch.setattr(scraper, 'chrome_launch_log_path', lambda _w: str(log_file))
 
-        scraper.dump_chrome_launch_log(1, max_lines=10)
+class TestStep1BodyClassifier:
+    """K7a — the instrument that makes rung L0 attributable.
 
-        dumps = [e for e in captured_logs
-                 if e.get('context', {}).get('event') == 'chrome_launch_log']
-        assert len(dumps) == 1
-        lines = dumps[0]['context']['lines']
-        assert len(lines) == 10 and lines[-1] == 'line 99', 'must be the TAIL'
+    An empty step-1 result is ambiguous: `[]` is a genuine not-found, while a
+    ~430-byte HTML page is an Akamai block. Both used to feed the same counter, so a
+    fully-blocked run and a run over legitimately-absent permits looked identical —
+    which is how a day went into debugging the wrong thing.
+    """
+
+    def test_html_access_denied_is_recognised_as_unreachable(self, scraper):
+        assert scraper._looks_unreachable("This site can't be reached")
+
+    def test_empty_json_list_is_not_unreachable(self, scraper):
+        assert not scraper._looks_unreachable('[]')
+
+    def test_sampling_is_bounded(self, scraper, monkeypatch):
+        """Diagnostics must never become the thing that floods a run's logs."""
+        monkeypatch.setattr(scraper, 'STEP1_BODY_SAMPLES', 2)
+        monkeypatch.setattr(scraper, '_step1_samples_logged', [0])
+        for _ in range(5):
+            scraper._log_step1_body('[]', 'empty_result', '24-123456')
+        assert scraper._step1_samples_logged[0] == 2
+
+    def test_logging_never_alters_control_flow(self, scraper, monkeypatch):
+        """It returns None and raises nothing — a diagnostic must not gate."""
+        monkeypatch.setattr(scraper, '_step1_samples_logged', [0])
+        assert scraper._log_step1_body(None, 'parse_failed', None) is None

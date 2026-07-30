@@ -34,9 +34,25 @@
 name: chain-deep-scrapes
 
 on:
-  # Phase 4.3 activation — uncomment (Spec 115 §3)
-  schedule:
-    - cron: '0 15,18,21 * * 1-5'   # weekdays-only, business hours both DST regimes (Spec 115 §2 table row 4; §2.1)
+  # SCHEDULE DISABLED (WF2 restore, rung L0 — 2026-07-30). Operator-ruled.
+  #
+  # The restore returns the retry/WAF constants to their pre-drift defaults
+  # (MAX_RETRIES=3, RETRY_BASE_MS=2000, WAF_TRAP_THRESHOLD=20). Those are correct for
+  # the attested unproxied local path and KNOWN-WRONG for a hostile Akamai edge, which
+  # blocks at ~12 requests / ~10 min and needs minutes-scale backoff. Nobody has
+  # measured the correct cloud values yet, and guessing them is what produced a
+  # 1.76 GB / $6.60 run against a 3 GB/month plan.
+  #
+  # RE-ENABLING THIS BLOCK IS NOT A ONE-LINE CHANGE. The commit that uncomments it MUST
+  # also set, in the env block below, concrete values for:
+  #     SCRAPER_WAF_TRAP_THRESHOLD, SCRAPER_RETRY_BASE_MS
+  # with a link to the measurement run that produced them. The scraper additionally
+  # fails fast on a schedule-triggered proxied run that lacks them.
+  #
+  # Cadence when restored (Spec 115 §2 row 4, §2.1 — unchanged, only disabled):
+  #     cron: '0 15,18,21 * * 1-5'   # weekdays, business hours across both DST regimes
+  # schedule:
+  #   - cron: '0 15,18,21 * * 1-5'
   workflow_dispatch: {}
 
 jobs:
@@ -69,38 +85,23 @@ jobs:
         # DOES need one immediately after adding the PGDG repo).
         run: sudo apt-get install -y xvfb
 
-      - name: Restore scraper stealth profiles
-        # Persistent profiles keep the browser fingerprint stable across runs
-        # (Spec 115 §2.4). Key includes run_id so every run always saves a
-        # fresh cache entry; restore-keys prefix-matches the most recent
-        # prior entry on a miss. A cache miss (first run, or 10GB-per-repo
-        # eviction) degrades to a fresh profile — visible only via a lower
-        # scrape-success rate in that run's pipeline_runs verdict (§9's
-        # "ephemeral-profile cache miss" known failure mode), no separate alert.
-        #
-        # CACHE-POISONING DEBUGGING (F8 fold, Security MED): this cache is
-        # keyed per-workflow (`buildo-scraper-profiles-${{ github.workflow
-        # }}-...`) and this workflow ONLY runs via `schedule`/`workflow_dispatch`
-        # — never a `pull_request`-family trigger, which is what would let an
-        # untrusted fork poison a cache entry a later trusted run then
-        # restores (the classic GitHub Actions cache-poisoning vector). If
-        # scrapes start failing persistently with fingerprint/stealth
-        # symptoms (WAF challenges that didn't happen before, a profile that
-        # looks corrupt), the first debugging step is to clear this cache
-        # (Actions tab → Caches, or bump the key) before suspecting the
-        # scraper logic itself.
-        #
-        # FENCE: never add a `pull_request`-family trigger to this workflow
-        # while it shares this cache namespace — doing so would open exactly
-        # the poisoning vector described above against a workflow that
-        # spawns a real headed-Chrome browser with residential-proxy
-        # credentials in scope.
-        uses: actions/cache@v4
-        with:
-          path: ~/.buildo-scraper
-          key: buildo-scraper-profiles-${{ github.workflow }}-${{ github.run_id }}
-          restore-keys: |
-            buildo-scraper-profiles-${{ github.workflow }}-
+      # PROFILE CACHE DELETED (WF2 restore, rung L0 — 2026-07-30).
+      #
+      # `actions/cache` restored `~/.buildo-scraper` between runs to keep the browser
+      # fingerprint stable. It also restored Chrome's host-scoped `Singleton*` locks,
+      # which name a dead host/PID and make Chrome refuse to start — and because an
+      # honest verdict means a FAILED run never saves a fresh cache entry, the one
+      # poisoned entry was restored FOREVER. It bricked every cloud run until found.
+      # See tasks/lessons.md and .cursor/wf2_deep_scrapes_restore.md (C2).
+      #
+      # DO NOT RESTORE THIS STEP without also solving lock stripping at restore time.
+      # `clear_stale_profile_locks()` in the scraper is the second layer, not a licence
+      # to bring the cache back — belt and braces, not belt or braces.
+      #
+      # FENCE PRESERVED FROM THE DELETED STEP: never add a `pull_request`-family trigger
+      # to this workflow. It spawns a real browser with residential-proxy credentials in
+      # scope, and a fork-poisonable cache entry restored by a trusted run is the classic
+      # GitHub Actions cache-poisoning vector. The fence outlives the cache step.
 
       - name: Guard — environment (SUPABASE_DATABASE_URL + CA cert + ET drift)
         id: env_guard
