@@ -205,6 +205,19 @@ stops counting them never-scraped; queue stops re-buying the same empty answer);
 emitted in telemetry + INFO audit rows; worker AND orchestrator mirrors updated; Spec 44 edge
 case rewritten; locks in `test_scraper_outcomes.py`.
 
+**🟢 RUN 30577993600 — FULLY GREEN (conclusion: success), first in the chain's history.**
+All three fixes proven together: `inspections: PASS` (`anomalous_miss_rate 8.3%`, breakdown
+`{no_stages: 8, no_target_folders: 1}`, 3 permits → 6 stages), L4 filter live (166 blocked /
+211 allowed, WAF fine, rotation clean), **bytes measured: ~4.1 MB / 12-permit run**
+(`relay_bytes_down=3,864,005 up=199,906`). L4 pass criterion MET → ladder rung ✅.
+**Byte honesty:** ~340 KB/permit at batch size 8+4 — a ~25-30% cut vs the ~5-6 MB unfiltered
+baseline, NOT ~375×, because (a) `script` is deliberately allowed (the fence) and JS is the
+bulk of modern page weight, (b) bootstrap dominates small batches. The remaining levers are
+H7 (trim entry/noise page visits — spends bytes AND Akamai budget) and longer sessions /
+bigger batches amortizing bootstrap (v2's ~4 KB/permit was measured on 200-permit sessions).
+Both belong to the follow-on throughput WF. Only remaining WARN: staleness coverage 0.1%
+(converges as scraping scales).
+
 ## The one open defect — ~~start here~~ FIXED above; kept for the eliminated-layers table
 
 `page.evaluate()` raises/returns a nodriver `ExceptionDetails` object, and our calling code
