@@ -1281,6 +1281,28 @@ async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id
 # ---------------------------------------------------------------------------
 # Safe JSON parsing — treats non-JSON responses as WAF blocks
 # ---------------------------------------------------------------------------
+# Bounded sample: enough to characterise the response, never enough to flood
+# a full run's logs or leak a large payload.
+STEP1_BODY_SAMPLES = int(os.environ.get('SCRAPER_STEP1_BODY_SAMPLES') or '8')
+_step1_samples_logged = [0]
+
+
+def _log_step1_body(raw, reason, year_seq=None):
+    """Log the raw step-1 body prefix so 'empty' stops being ambiguous."""
+    if _step1_samples_logged[0] >= STEP1_BODY_SAMPLES:
+        return
+    _step1_samples_logged[0] += 1
+    body = raw if isinstance(raw, str) else str(raw)
+    log('WARN', '[scraper]', 'AIC step-1 returned no usable properties', {
+        'event': 'step1_body_sample',
+        'reason': reason,
+        'year_seq': year_seq,
+        'body_len': len(body),
+        'body_prefix': body[:400],
+        'sample': f'{_step1_samples_logged[0]}/{STEP1_BODY_SAMPLES}',
+    })
+
+
 def safe_json_parse(raw, step_label=''):
     """Parse JSON, returning (data, None) on success or (None, error_snippet) on failure."""
     if not raw or raw.strip().startswith('<'):
@@ -1330,8 +1352,15 @@ async def fetch_permit_chain(page, year, sequence):
 
     props, err = safe_json_parse(step1, 'step1:properties')
     if err:
+        # The body did not parse — log what it WAS. A WAF interstitial and a
+        # transport error look identical in the counters otherwise.
+        _log_step1_body(step1, 'parse_failed', f'{year} {sequence}')
         return {'waf_blocked': True, 'properties': [], 'results': []}
     if not props:
+        # Parsed fine but returned nothing. THIS is the case that has been
+        # invisible: an honest not-found and a silently-starved session both
+        # land here, and telemetry counts both as not_found.
+        _log_step1_body(step1, 'empty_result', f'{year} {sequence}')
         return {'properties': [], 'results': []}
 
     property_rsn = sanitize_js_value(props[0].get('propertyRsn', ''))
