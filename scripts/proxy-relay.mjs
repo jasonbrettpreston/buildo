@@ -54,6 +54,9 @@ if (!upstreamUrl) {
 // rest. Overridable via SCRAPER_PROXY_BLOCKLIST.
 const DEFAULT_BLOCK = [
   'gvt1.com',                        // edgedl.me.gvt1.com — 1.76 GB / $6.60 in one run
+  'google.com',                      // bare google.com — 4.8 MB/run of omnibox/NTP
+                                     // preconnect that the per-subdomain entries below
+                                     // do NOT cover (suffix match is one-directional)
   'dl.google.com',
   'update.googleapis.com',
   'clients2.google.com',
