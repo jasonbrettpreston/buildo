@@ -1574,7 +1574,8 @@ async def fetch_permit_chain(page, year, sequence):
                     }})
                 }});
                 return await r.text();
-            }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError'}}); }}
+            }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('
+')[0]}}); }}
             finally {{ clearTimeout(t); }}
         }})()
     """, await_promise=True)
@@ -1615,7 +1616,8 @@ async def fetch_permit_chain(page, year, sequence):
                     }})
                 }});
                 return await r.text();
-            }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError'}}); }}
+            }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('
+')[0]}}); }}
             finally {{ clearTimeout(t); }}
         }})()
     """, await_promise=True)
@@ -1642,7 +1644,8 @@ async def fetch_permit_chain(page, year, sequence):
                         method: 'GET', headers: {{ Accept: 'application/json' }}, signal: ac.signal
                     }});
                     return await r.text();
-                }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError'}}); }}
+                }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('
+')[0]}}); }}
                 finally {{ clearTimeout(t); }}
             }})()
         """, await_promise=True)
@@ -1673,7 +1676,8 @@ async def fetch_permit_chain(page, year, sequence):
                             method: 'GET', headers: {{ Accept: 'application/json' }}, signal: ac.signal
                         }});
                         return await r.text();
-                    }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError'}}); }}
+                    }} catch(e) {{ return JSON.stringify({{error: e.name || 'FetchError', message: String(e && e.message || e), at: String(e && e.stack || '').split('
+')[0]}}); }}
                     finally {{ clearTimeout(t); }}
                 }})()
             """, await_promise=True)
