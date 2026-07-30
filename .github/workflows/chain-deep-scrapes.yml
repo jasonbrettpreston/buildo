@@ -75,7 +75,11 @@ on:
 jobs:
   deep-scrapes:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
-    timeout-minutes: ${{ fromJSON(inputs.chain_timeout_minutes || '12') + 18 }}   # chain + setup headroom; was 120 (90 chain) + checkout/setup/xvfb/cache/migrate-verify headroom
+    # Fixed, not derived: GitHub Actions expressions have no arithmetic operators,
+    # so this cannot be "chain timeout + setup headroom". Generous enough to cover
+    # setup plus the largest chain timeout a dispatch is likely to ask for; the
+    # chain step carries its own, tighter, input-driven limit.
+    timeout-minutes: 45
     concurrency:
       group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name so a
       cancel-in-progress: false       # future rename can't drift the concurrency group out of sync
