@@ -54,6 +54,27 @@ def log(level, msg, context=None):
     print(json.dumps(payload), flush=True)
 
 
+def load_env_file(path='.env'):
+    """Minimal .env reader so a local proxied run needs no shell gymnastics.
+
+    Deliberately does not overwrite anything already exported — CI sets these
+    from secrets and must always win.
+    """
+    try:
+        with open(path, encoding='utf-8') as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, _, value = line.partition('=')
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+    except OSError:
+        pass  # no .env is normal in CI
+
+
 def build_proxy_url():
     """Decodo upstream, same credential rules the scraper proved the hard way.
 
@@ -137,6 +158,7 @@ def main():
                              '75,885 B navigation is needed at all (the recon '
                              'says a cold client gets 200s on step 1)')
     args = parser.parse_args()
+    load_env_file()
 
     try:
         from curl_cffi import requests as cffi_requests
