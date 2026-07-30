@@ -111,6 +111,64 @@ need a proxied-path allowance) · the two probe #7 permits' queue rows and this 
 
 ---
 
+## ⚡ BANDWIDTH CAMPAIGN (2026-07-30 late) — 322 KB/permit → 6.9 KB/permit
+
+Operator challenged the L4 result ("no way we can't cut this more … 5GB for 10,000 permits
+argh"). Two agents ran: a codebase byte-budget investigation and an external best-practice
+research pass. Both were right, and the second one changed the architecture question.
+
+**Measured progression (all on 60-permit runs unless noted):**
+| Stage | B/permit | 10k/wk | Evidence |
+|---|---|---|---|
+| 12-permit probe (the alarming number) | 322 KB | ~3.2 GB | run 30577993600 |
+| T1 — same code, 60 permits | 105 KB | ~1.05 GB | run 30581163413 |
+| T2 — after the four cuts | **32 KB** | ~320 MB | run 30582877429 |
+| curl_cffi, no browser, cold, proxied | **6.9 KB** | **~69 MB** | local spike |
+
+**Why it looked catastrophic:** cost is ~3.25 MB FIXED per run + a marginal per-permit term.
+Dividing the fixed term by 12 produced 322 KB/permit; it is an artifact of probe size, not a
+per-permit cost. v2's famous ~4 KB/permit was likewise a per-SESSION cost over 200 permits —
+v2 did 0.01 navigations/permit, we did 0.72 (a bootstrap per batch + 2 navigations of "noise"
+every 3-5 permits + a whole session built and discarded). Same allow-set, 72x the navigations.
+
+**R0 per-host attribution (the instrument that ended the guessing), run 30581163413:**
+www.toronto.ca 3,439,422 (54.5%) · secure.toronto.ca 1,989,233 · js.arcgis.com 273,163 ·
+code.jquery.com 169,410 · oracleinfinity.io 148,214 · maps.googleapis.com 116,583. **Over half
+the bill was a host that serves us no data at all.**
+
+**Shipped (`bb28ec55`, all request-REDUCING so WAF standing improves):** ENTRY_URLS pinned to
+v2's bare root · noise visits gated OFF in cloud (+ finally logged — they emitted nothing and
+swallowed failures) · the discarded pre-loop bootstrap deleted (session_bootstraps 2→1) ·
+`Network.setCacheDisabled(false)` after `Fetch.enable` (interception is a documented
+cache-killer) · oracleinfinity.io blocklisted · `SCRAPER_PROXY_BLOCKLIST` now EXTENDS rather
+than REPLACES the 16 defaults (it could silently reopen the $6.60 gvt1.com exposure).
+
+## 🚨 THE ARCHITECTURE FINDING — curl_cffi works, no browser needed (`d1a9a95a`, `f31ca8d9`)
+
+`scripts/spike-curl-impersonate.py` + `.github/workflows/spike-curl-impersonate.yml`
+(measurement only, no DB writes, no chain wiring — the raw-HTTP scope fence is intact).
+
+* **The portal sets NO Akamai sensor cookies.** Only `JSESSIONID`/`WEBTRENDS_ID`; `_abck`,
+  `ak_bmsc`, `bm_sz` all absent, with an `akamai-grn` header confirming Akamai is in front.
+  That is rate/reputation control, NOT the JS-sensor Bot Manager product — so the entire
+  published "solve the sensor in a browser, replay the cookie" problem **does not apply here**.
+  It also means the `~12 req/10 min` recon figure was measured with curl's TLS fingerprint,
+  i.e. a FLOOR, not the ceiling for a Chrome-JA4 client.
+* **Run 1 (local, residential, with warmup):** full 4-step chain, correct stages for
+  21 217696. **Run 2 (through Decodo, `--no-warmup`, genuinely cold): 8/8 OK, 10 stages, 6,897
+  B/permit.** `23 183037` returned exactly the 4 stages the operator read off the portal by
+  hand — agreement with human ground truth, not just HTTP 200s (the spike validates response
+  SHAPE precisely because Akamai's anti-scraper mode is a 200 with hollow fields).
+* **No warm-up page needed at all** — the 75,885 B `setup.do` GET buys nothing on this path.
+* Retires, if adopted: Chrome, xvfb, the CDP handshake, attach mode, the resource filter, the
+  `d138bb04` shadow-ban surface, and most of the relay's reason to exist.
+
+**NOT YET DONE:** runner-side proof (the new workflow can't be dispatched until it reaches the
+default branch — GitHub only registers workflow_dispatch from the default ref); a
+requests-to-block ceiling measurement for the Chrome-JA4 client (the number that sets
+throughput); and the WF1/WF2 to actually adopt it. The browser path is fully working and
+green at 32 KB/permit in the meantime, so this is an upgrade, not a dependency.
+
 ## WF3 — enriched_status under passed-only portal listings (AUTHORIZED "proceed with your plan as is" 2026-07-30; steps 1-6 done, step 7 = correction probe)
 
 **Follow-up task CREATED (operator-requested): "Update lifecycle engine for passed-only
