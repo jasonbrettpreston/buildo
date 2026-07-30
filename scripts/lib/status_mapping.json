@@ -12,7 +12,6 @@
   "enriched_status": {
     "all_not_passed": "Not Passed",
     "all_outstanding": "Permit Issued",
-    "all_passed": "Inspections Complete",
     "mixed": "Active Inspection"
   }
 }

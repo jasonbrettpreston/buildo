@@ -232,12 +232,16 @@ describe('Inspection Parser', () => {
   });
 
   describe('enrichedStatus computation', () => {
+    // PORTAL CHANGE (operator-verified 2026-07-30): the AIC status page lists
+    // ONLY stages already passed, so an all-passed list no longer implies the
+    // regime is finished (ground truth: Occupancy-passed permits still carried
+    // AIC status 'Inspection'). Completion truth is the feed's permits.status;
+    // all-passed therefore derives 'Active Inspection', never a completion claim.
     function computeEnrichedStatus(stages: Array<{ status: string }>): string | null {
       if (!stages.length) return null;
       const statuses = stages.map(s => s.status);
       if (statuses.some(s => s === 'Not Passed')) return 'Not Passed';
       if (statuses.every(s => s === 'Outstanding')) return 'Permit Issued';
-      if (statuses.every(s => s === 'Passed')) return 'Inspections Complete';
       return 'Active Inspection';
     }
 
@@ -257,10 +261,10 @@ describe('Inspection Parser', () => {
       ])).toBe('Permit Issued');
     });
 
-    it('returns Inspections Complete when all passed', () => {
+    it('returns Active Inspection when all passed — a passed-only portal listing must never claim completion', () => {
       expect(computeEnrichedStatus([
         { status: 'Passed' }, { status: 'Passed' },
-      ])).toBe('Inspections Complete');
+      ])).toBe('Active Inspection');
     });
 
     it('returns Active Inspection for mixed passed/outstanding', () => {

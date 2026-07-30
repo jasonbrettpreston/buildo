@@ -109,6 +109,56 @@ mid-inspection permit. (Not a scrape bug — capture is byte-faithful to the por
 need a proxied-path allowance) · the two probe #7 permits' queue rows and this seeded row are
 `completed` honestly · L4 (CDP resource blocking) remains the deliberate last rung.
 
+---
+
+## WF3 — enriched_status under passed-only portal listings (AUTHORIZED "proceed with your plan as is" 2026-07-30; steps 1-6 done, step 7 = correction probe)
+
+**Follow-up task CREATED (operator-requested): "Update lifecycle engine for passed-only
+inspection listings (feed-status completion)"** — Task #1 in the session task list, full brief
+in the task body: ① derive completion from feed status in the permits chain, ② re-derive
+Tier-1 timing assumptions (Outstanding rows never arrive anymore; the 634 outstanding rows are
+March-era fossils), ③ per-build-type stage regimes for remaining-stage timing, ④ review the
+classify-inspection-status.js terminal guard. Blocked until this branch merges and bulk
+scraping resumes.
+
+**Operator ruling (2026-07-30): "I think we use the status from the feed."** Completion truth
+is `permits.status` from the nightly CKAN feed (vocabulary confirmed live: Inspection 130K,
+Pending Closed 43K, Permit Issued 41K, …) — never inferred from a passed-only stage list.
+Ground truth (operator pulled 6 live permits): AIC keeps status 'Inspection' even after
+Occupancy passes (23 183037, 17 172425, 23 132404); stage regimes vary per type AND per
+project ("applicable" stages — 11 Airley has no Excavation/Shoring row).
+
+**Premise verified in code:** `compute_enriched_status` maps all-Passed → 'Inspections
+Complete' (`status_mapping.json` `all_passed`), written at scrape time; Spec 44 §Core-Logic 3
+codifies it — both predate the portal change. Consumers of the literal: only
+`classify-inspection-status.js`'s reactivation terminal-guard (kept — protects historical
+rows) and the JS mirror test. `enriched_status` is near-empty in both DBs (50-51 'Examination'
++ the 1 wrong 'Inspections Complete' probe #8 wrote), so blast radius is minimal.
+
+**Steps** (1-3 executed before the operator asked to see the plan — shown as done, uncommitted):
+1. ✅ `compute_enriched_status`: all-passed falls through to 'Active Inspection' ('mixed');
+   'Not Passed' still wins; all-Outstanding branch retained for robustness. Docstring carries
+   the portal-change evidence.
+2. ✅ `status_mapping.json`: `all_passed` key removed (nothing references it any more).
+3. ✅ `src/tests/inspections.logic.test.ts` mirror: all-passed → 'Active Inspection' lock.
+4. ⬜ Python lock `scripts/tests/test_scraper_enriched_status.py` (SPEC LINK header):
+   all-passed → 'Active Inspection' (failure message cites the portal change) · Not Passed
+   priority · all-Outstanding → 'Permit Issued' · empty/unrecognized → None.
+5. ⬜ Spec 44 truth-up: rewrite §Core-Logic 3 (drop "All Passed → Inspections Complete",
+   state the feed-status rule) + add the portal-behaviour paragraph with the 6 examples.
+6. ⬜ Gates: `npm run test:py` + full `npm run test` + typecheck + lint → commit + push.
+7. ⬜ Cloud correction probe: re-seed `21 217696` (created_at='2000-01-01') + dispatch
+   `max_permits=1` — verifies the fix on the runner AND corrects the one wrong row via the
+   `IS DISTINCT FROM` guard ('Inspections Complete' → 'Active Inspection').
+
+**Non-goals:** per-type stage-regime modelling ("we know what the stages are for the type of
+build" — real, but that is inspection_stage_map / Tier-1 timing-engine territory, filed as
+follow-up) · writing enriched_status on an empty stage list (feed status stands) · gate
+tuning (not_found_rate / latency — already filed) · any change to Stalled/reactivation logic.
+
+**Retirement note:** 'Inspections Complete' stops being scraper-written. If wanted later, it
+can be derived honestly from feed status ('Pending Closed'/'Closed') in the permits chain.
+
 ## The one open defect — ~~start here~~ FIXED above; kept for the eliminated-layers table
 
 `page.evaluate()` raises/returns a nodriver `ExceptionDetails` object, and our calling code

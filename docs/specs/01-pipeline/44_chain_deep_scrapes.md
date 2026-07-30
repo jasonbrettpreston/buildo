@@ -81,11 +81,19 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
 ### Core Logic
 1. **Inspection scraping** — for each permit in queue, execute 4-step API chain. Parse inspection stages: stage name, status (Outstanding/Passed/Not Passed/Partial), date, inspector.
 2. **DB upsert** — `INSERT INTO permit_inspections ON CONFLICT (permit_num, stage_name) DO UPDATE` with `IS DISTINCT FROM` guards. Only updates when status or date actually changes.
-3. **Enriched status derivation** — `classify_inspection_status` computes `enriched_status` from stages:
-   - All Outstanding → `'Permit Issued'`
-   - All Passed → `'Inspections Complete'`
+3. **Enriched status derivation** — the scraper computes `enriched_status` from stages:
    - Any Not Passed → `'Not Passed'`
-   - Mixed → `'Active Inspection'`
+   - All Outstanding → `'Permit Issued'` (unreachable under passed-only listings; retained for robustness)
+   - Otherwise (stages present) → `'Active Inspection'`
+   - **`'Inspections Complete'` is deliberately NOT derivable from stages** (operator-ruled
+     2026-07-30). The portal lists only stages already passed — *"this list reflects applicable
+     mandatory inspection stages that have been passed"* — so an all-passed list means only
+     "inspection activity observed". Ground truth (operator-pulled, 2026-07-30): permits
+     `23 183037`, `17 172425` and `23 132404` all have **Occupancy passed yet AIC status still
+     'Inspection'**; applicable stages vary per project (`23 183037` has no Excavation/Shoring
+     row). Lifecycle completion truth is the FEED's own status (`permits.status`, e.g.
+     `'Pending Closed'`) — deriving a completion state from it belongs to the permits chain
+     (filed follow-up: lifecycle-engine update).
 4. **Network health** — verifies proxy connectivity, checks for WAF blocks in recent pipeline_runs
 5. **Staleness** — flags permits with stale `scraped_at` (> `scrape_stale_days`); operator-tunable 3-tier gate (`staleness_max_stale_over_30d` mig 121); monitors consecutive empty streaks
 
@@ -96,6 +104,10 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
 - Telemetry in `records_meta`: permits_attempted, permits_found, latency p50/p95, proxy errors
 
 ### Edge Cases
+- **Portal lists only PASSED stages (observed 2026-07-30)** — `stages: []` is the NORMAL
+  answer for any permit that has not yet passed a stage (probe #7: two Inspection-status
+  permits, both legitimately empty). An empty list is not a miss, a WAF block, or an error;
+  `not_found_rate` gates must account for this
 - AIC returns HTML instead of JSON → WAF block detected, proxy rotated
 - Permit has `status = 'Revision Issued'` on AIC → no inspections data (only rev 00 has them)
 - `showStatus = false` on permit detail → no inspection link available, set `enriched_status = 'Permit Issued'`

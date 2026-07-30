@@ -228,7 +228,19 @@ def normalize_status(raw):
 
 
 def compute_enriched_status(stages):
-    """Compute enriched_status from scraped inspection stages."""
+    """Compute enriched_status from scraped inspection stages.
+
+    PORTAL CHANGE (operator-verified on the live site, 2026-07-30): the AIC
+    Inspection Status page now lists ONLY stages already passed ("this list
+    reflects applicable mandatory inspection stages that have been passed").
+    "Every scraped stage is Passed" therefore no longer implies the regime is
+    finished — ground truth included permits with Occupancy passed whose AIC
+    status was still 'Inspection' (21 217696 / 23 183037 / 17 172425).
+    Lifecycle completion truth is the FEED's own status (permits.status,
+    e.g. 'Pending Closed'), never inferred from a passed-only stage list —
+    so an all-passed list now means "inspection activity observed", the
+    'mixed' bucket, and 'Inspections Complete' is no longer written here.
+    """
     if not stages:
         return None
     statuses = [normalize_status(s.get('status')) for s in stages]
@@ -237,7 +249,6 @@ def compute_enriched_status(stages):
         return None
     if any(s == 'Not Passed' for s in statuses): return _ENRICHED['all_not_passed']
     if all(s == 'Outstanding' for s in statuses): return _ENRICHED['all_outstanding']
-    if all(s == 'Passed' for s in statuses): return _ENRICHED['all_passed']
     return _ENRICHED['mixed']
 
 
