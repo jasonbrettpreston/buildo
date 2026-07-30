@@ -108,6 +108,8 @@ PROXY_PASS = os.environ.get('PROXY_PASS', '')
 #            proxy (it ignores credentials and never fires onAuthRequired), so
 #            it is unusable here without provider-side IP whitelisting.
 PROXY_SCHEME = os.environ.get('PROXY_SCHEME') or 'https'
+# Decodo sticky-session lifetime in minutes (1-1440, provider default 10).
+PROXY_SESSION_DURATION_MIN = int(os.environ.get('PROXY_SESSION_DURATION_MIN') or '30')
 
 # ---------------------------------------------------------------------------
 # Stealth — randomize fingerprint to look like organic human traffic
@@ -256,9 +258,41 @@ def get_db_connection():
 # Proxy — Decodo sticky sessions via Manifest V3 extension
 # ---------------------------------------------------------------------------
 def build_proxy_session_id(worker_id, timestamp=None):
-    """Build a unique Decodo sticky session ID for this worker."""
+    """Build a unique Decodo sticky session ID for this worker.
+
+    ALPHANUMERIC ONLY. Decodo parses the username as a hyphen-delimited
+    key-value list (`user-ACCOUNT-session-VALUE-sessionduration-N`), so a
+    session value containing hyphens — as `buildo-worker-1-1753800000` did —
+    makes its parser read `session=buildo` and then choke on `worker` as an
+    unknown key. Verified 2026-07-29: every hyphenated form returned 407.
+    """
     ts = timestamp or int(time.time())
-    return f'buildo-worker-{worker_id}-{ts}'
+    return f'w{worker_id}t{ts}'.replace('-', '').replace('_', '')
+
+
+def build_proxy_username(session_id, user=None, duration_min=None):
+    """Build the Decodo username carrying the sticky-session parameters.
+
+    THE `user-` PREFIX IS LOAD-BEARING AND WAS MISSING — this was the actual
+    cause of the CI proxy failure. Decodo only parses the username as a
+    parameter list when it starts with the literal `user-`; without it the
+    whole string is taken as a plain account name, so `<account>-session-xxx`
+    is simply an unknown user. Verified live 2026-07-29 against the real
+    endpoint: bare `<account>` authenticated (200), `<account>-session-<alnum>`
+    returned 407 "Access denied", and `user-<account>-session-<alnum>`
+    authenticated (200) — including over HTTPS-to-proxy to an HTTPS target,
+    the exact production path.
+
+    A 407 here is invisible in the browser: Chrome just renders "This site
+    can't be reached" for every page, which is precisely what CI showed.
+    """
+    user = PROXY_USER if user is None else user
+    if not user:
+        return session_id
+    duration = PROXY_SESSION_DURATION_MIN if duration_min is None else duration_min
+    # Idempotent: never double-prefix if the operator already stored `user-...`.
+    account = user if user.startswith('user-') else f'user-{user}'
+    return f'{account}-session-{session_id}-sessionduration-{duration}'
 
 
 def build_proxy_extension(session_id):
@@ -273,7 +307,7 @@ def build_proxy_extension(session_id):
     if not PROXY_HOST:
         return None
 
-    user_with_session = f'{PROXY_USER}-session-{session_id}' if PROXY_USER else session_id
+    user_with_session = build_proxy_username(session_id)
     ext_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         '..', '.proxy_ext', f'decodo_{session_id}',

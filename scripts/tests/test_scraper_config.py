@@ -95,6 +95,46 @@ class TestPermitTypeFilter:
         assert mod.TARGET_TYPES == []
 
 
+class TestProxyUsername:
+    """Decodo parses the username as a hyphen-delimited key-value list.
+
+    Verified live 2026-07-29 against the real endpoint: bare `<account>` -> 200,
+    `<account>-session-<alnum>` -> 407 "Access denied", and
+    `user-<account>-session-<alnum>` -> 200. Getting this wrong is invisible in
+    the browser: Chrome renders "This site can't be reached" for every page,
+    which is exactly what CI showed for runs 30498062060 / 30499270494.
+    """
+
+    def test_prefixes_the_literal_user_token(self, scraper):
+        built = scraper.build_proxy_username('abc123', user='acct')
+
+        assert built.startswith('user-acct-'), 'without user- Decodo 407s'
+
+    def test_carries_session_and_duration(self, scraper):
+        built = scraper.build_proxy_username('abc123', user='acct', duration_min=30)
+
+        assert built == 'user-acct-session-abc123-sessionduration-30'
+
+    def test_does_not_double_prefix(self, scraper):
+        """An operator may already store the account WITH the prefix."""
+        built = scraper.build_proxy_username('abc123', user='user-acct')
+
+        assert built.startswith('user-acct-')
+        assert not built.startswith('user-user-')
+
+    def test_session_ids_are_alphanumeric_only(self, scraper):
+        """A hyphen in the session value breaks Decodo's username parser."""
+        session = scraper.build_proxy_session_id(1, timestamp=1753800000)
+
+        assert session.isalnum(), f'{session!r} must contain no hyphens'
+
+    def test_session_ids_are_unique_per_worker(self, scraper):
+        a = scraper.build_proxy_session_id(1, timestamp=1753800000)
+        b = scraper.build_proxy_session_id(2, timestamp=1753800000)
+
+        assert a != b
+
+
 class TestProxyExtension:
     """The MV3 extension carries proxy credentials — shape and permissions matter."""
 
@@ -165,7 +205,7 @@ class TestProxyExtension:
             assert 'chrome.proxy.settings.set' in body
             assert 'chrome.webRequest.onAuthRequired' in body
             assert 'proxy.example.com' in body
-            assert 'user-session-sess-3' in body, 'session stickiness per worker'
+            assert 'user-user-session-sess-3' in body, 'the literal user- prefix is load-bearing'
         finally:
             scraper.cleanup_proxy_extension(ext_dir)
 
