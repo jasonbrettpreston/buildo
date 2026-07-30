@@ -82,6 +82,7 @@
     "pg-query-stream": "^4.14.0",
     "playwright": "^1.58.2",
     "posthog-js": "^1.365.1",
+    "proxy-chain": "^3.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "shapefile": "^0.6.6",
