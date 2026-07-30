@@ -54,9 +54,26 @@ the origin was lost one step later. Fixes: egress check runs in its OWN tab (clo
 `setup.do` + asserts origin instead of `about:blank`. Locks in `test_scraper_egress.py`
 (new-tab + closed) — `test_egress_check_never_hijacks_the_scraping_tab`.
 
-**Next: probe again.** Same bounded dispatch. Expected now: real portal JSON (or an honest,
-classified WAF/not-found outcome). Remember the cancelled-run → `pipeline_runs`
-stuck-`running` gotcha below.
+**Probe #7 (run 30569435497) — THE CHAIN WORKS END-TO-END IN THE CLOUD, first time ever.**
+All four `/jaxrs/` steps returned real portal JSON through the relay on the GH runner:
+`24 171259: 3 folders, 1 target permits` → step 3 detail OK → step 4 executed → classified
+`no_stages`; `25 186707: 4 folders` → same. `proxy_errors=0`, egress verified
+(browser IP ≠ host), network-health PASS (latency p50 1993 ms), cost blocklist blocking
+14 Google requests, clean teardown, honest FAIL verdict from the row-derived cascade.
+The only red gate is `not_found_rate 100% (2/2)` — both sampled permits genuinely returned
+`stages: []` from step 4.
+
+**Open adjudication — `no_stages`: reality or bug?** Sample of 2, both BLD [Inspection].
+Cannot be settled from our DB (these permits were never scraped). Options: ① dispatch a
+larger bounded probe (e.g. max_permits=10) and see whether ANY permit yields stages; ② probe
+permits KNOWN to carry stages (the 57 in `permit_inspections`) — but the workflow runs
+db-queue mode; targeting needs either queue manipulation or wiring `--batch-file` worker mode
+into the workflow; ③ operator eyeballs one of the two permits in the portal UI (30 s, from a
+residential IP). The L0 pass criterion ("permits known to carry inspections") points at ②/③.
+
+**Small follow-up found by probe #7:** `log_browser_targets(browser)` warns
+`'Browser' object has no attribute 'send'` — the K7e diagnostic expects a Tab/Connection but
+bootstrap passes the Browser. Diagnostic-only (never gates), 2-line fix + fake update.
 
 ## The one open defect — ~~start here~~ FIXED above; kept for the eliminated-layers table
 
