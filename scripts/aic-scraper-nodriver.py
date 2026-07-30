@@ -799,6 +799,32 @@ NODRIVER_DISABLED_FEATURES = 'IsolateOrigins,site-per-process'
 # from nodriver/core/config.py:118-129 + 179-199 (pinned 0.48.1) because in
 # attach mode nodriver adds nothing to the command line. Dropping any of these
 # changes the browser's behavior/fingerprint relative to the proven local runs.
+# Chrome's own background chatter — component updates (edgedl.me.gvt1.com),
+# Safe Browsing lists, translate, autofill, sync, domain reliability, metrics.
+# This traffic was always happening; it was FREE until the proxy started
+# working, at which point it began flowing through metered residential
+# bandwidth: 1.76 GB to edgedl.me.gvt1.com alone in a single run (~$6.60),
+# dwarfing the 2.7 MB of actual AIC scraping. None of it is needed to scrape.
+BANDWIDTH_GUARD_ARGS = [
+    '--disable-background-networking',      # umbrella: component update, SB, translate, autofill
+    '--disable-component-update',           # the 1.76 GB one, explicitly
+    '--disable-sync',
+    '--disable-default-apps',
+    '--disable-client-side-phishing-detection',
+    '--disable-domain-reliability',
+    '--safebrowsing-disable-auto-update',
+    '--metrics-recording-only',
+    '--disable-background-timer-throttling',
+]
+
+# Feature-level equivalents; merged into the SINGLE --disable-features switch
+# (Chrome honors only the last occurrence, which build_browser_args enforces).
+BANDWIDTH_GUARD_FEATURES = (
+    'Translate,OptimizationHints,OptimizationGuideModelDownloading,'
+    'MediaRouter,AutofillServerCommunication,InterestFeedContentSuggestions,'
+    'CalculateNativeWinOcclusion'
+)
+
 NODRIVER_DEFAULT_ARGS = [
     '--remote-allow-origins=*',
     '--no-first-run',
@@ -843,7 +869,8 @@ def build_browser_args(profile, proxy_ext_dir=None, chrome_log=None, platform=No
         '--disable-blink-features=AutomationControlled',  # suppress cdc_ variables
     ]
     args += NODRIVER_DEFAULT_ARGS
-    disabled_features = NODRIVER_DISABLED_FEATURES
+    args += BANDWIDTH_GUARD_ARGS
+    disabled_features = f'{NODRIVER_DISABLED_FEATURES},{BANDWIDTH_GUARD_FEATURES}'
     use_headless = True
     if relay_url:
         # The relay holds the credentials, so Chrome gets a plain, unauthenticated
