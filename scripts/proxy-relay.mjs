@@ -92,10 +92,25 @@ let allowed = 0;
 let bytesUp = 0;
 let bytesDown = 0;
 
+// Per-host attribution (R0). The relay logs only REFUSED hosts, so what the
+// metered bytes were actually spent ON has never been observable — every
+// byte-budget claim so far has been inference from a recon table. connectionId
+// is handed to us on the way in and keys the byte stats on the way out, so
+// remembering the pairing is all attribution costs.
+const hostByConnection = new Map();
+const bytesByHost = new Map();
+
+function addHostBytes(hostname, up, down) {
+  const key = hostname || 'unknown';
+  const prev = bytesByHost.get(key) || { up: 0, down: 0 };
+  bytesByHost.set(key, { up: prev.up + up, down: prev.down + down });
+}
+
 const server = new Server({
   port: Number(portArg) || 0,
   verbose: false,
-  prepareRequestFunction: ({ hostname }) => {
+  prepareRequestFunction: ({ hostname, connectionId }) => {
+    if (connectionId !== undefined) hostByConnection.set(connectionId, hostname);
     if (!isAllowed(hostname)) {
       blocked += 1;
       // Throwing refuses the request locally: proxy-chain answers the client
@@ -110,10 +125,12 @@ const server = new Server({
   },
 });
 
-server.on('connectionClosed', ({ stats }) => {
+server.on('connectionClosed', ({ connectionId, stats }) => {
   if (!stats) return;
   bytesUp += stats.trgTxBytes || 0;
   bytesDown += stats.trgRxBytes || 0;
+  addHostBytes(hostByConnection.get(connectionId), stats.trgTxBytes || 0, stats.trgRxBytes || 0);
+  hostByConnection.delete(connectionId);
 });
 
 // LIVE totals, not just closed ones: Chrome keeps its tunnels open with
@@ -123,14 +140,34 @@ server.on('connectionClosed', ({ stats }) => {
 function currentTotals() {
   let up = bytesUp;
   let down = bytesDown;
+  // Live sockets, folded per host too — Chrome's keep-alive tunnels are still
+  // open at report time, and they carry most of the bytes.
+  const live = new Map();
   for (const id of server.getConnectionIds()) {
     const s = server.getConnectionStats(id);
-    if (s) {
-      up += s.trgTxBytes || 0;
-      down += s.trgRxBytes || 0;
-    }
+    if (!s) continue;
+    up += s.trgTxBytes || 0;
+    down += s.trgRxBytes || 0;
+    const host = hostByConnection.get(id) || 'unknown';
+    const prev = live.get(host) || { up: 0, down: 0 };
+    live.set(host, { up: prev.up + (s.trgTxBytes || 0), down: prev.down + (s.trgRxBytes || 0) });
   }
-  return { up, down };
+  const perHost = {};
+  for (const [host, v] of bytesByHost) perHost[host] = { up: v.up, down: v.down };
+  for (const [host, v] of live) {
+    const prev = perHost[host] || { up: 0, down: 0 };
+    perHost[host] = { up: prev.up + v.up, down: prev.down + v.down };
+  }
+  return { up, down, perHost };
+}
+
+// Top talkers only — attribution must not become the thing that floods a log.
+function topHostsLine(perHost, limit = 12) {
+  const ranked = Object.entries(perHost)
+    .sort((a, b) => b[1].down - a[1].down)
+    .slice(0, limit)
+    .map(([host, v]) => `${host}=${v.down}`);
+  return ranked.join(' ');
 }
 
 let lastBytesLine = '';
@@ -140,6 +177,7 @@ function reportBytes() {
   if (line !== lastBytesLine) {
     lastBytesLine = line;
     process.stderr.write(`${line}\n`);
+    process.stderr.write(`proxy-relay: HOSTBYTES ${topHostsLine(t.perHost)}\n`);
   }
 }
 const bytesReporter = setInterval(reportBytes, 5000);

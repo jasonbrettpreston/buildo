@@ -581,6 +581,39 @@ def _resource_filter_handler(tab):
     return _on_request_paused
 
 
+async def dump_resource_inventory(page, label):
+    """Log what the page actually loaded, by host and initiator type.
+
+    Free (reads the page's own PerformanceResourceTiming buffer, issues no
+    request) and it is the ONLY way to see which hosts serve the portal's
+    script stack — the relay logs refusals, never admissions, so the candidate
+    list for any blocklist addition is otherwise guesswork. transferSize is 0
+    for cross-origin resources without Timing-Allow-Origin, so treat this as
+    the INVENTORY; relay_bytes_by_host carries the authoritative bytes.
+    """
+    try:
+        raw = await page.evaluate("""
+            JSON.stringify(performance.getEntriesByType('resource').reduce((acc, r) => {
+                let host = 'unknown';
+                try { host = new URL(r.name).hostname; } catch (e) {}
+                const key = host + '|' + (r.initiatorType || '?');
+                acc[key] = acc[key] || {n: 0, transfer: 0};
+                acc[key].n += 1;
+                acc[key].transfer += (r.transferSize || 0);
+                return acc;
+            }, {}))
+        """, await_promise=False)
+        inventory = json.loads(raw) if isinstance(raw, str) else {}
+    except Exception as err:  # noqa: BLE001
+        log('WARN', '[scraper]', f'Could not read resource inventory ({label}): {err}',
+            {'event': 'resource_inventory_failed'})
+        return
+    ranked = sorted(inventory.items(), key=lambda kv: -kv[1].get('transfer', 0))[:25]
+    log('INFO', '[scraper]', f'Resource inventory after {label}',
+        {'event': 'resource_inventory', 'stage': label,
+         'entries': [{'host_type': k, 'n': v['n'], 'transfer': v['transfer']} for k, v in ranked]})
+
+
 async def enable_resource_blocking(tab):
     """Install the v2 allow-set filter on the scraping tab via CDP Fetch.
 
@@ -836,12 +869,15 @@ def start_proxy_relay(session_id, worker_id=None, timeout=30):
 
 def _relay_summary():
     """Aggregate every worker's relay stderr counters for the run summary."""
-    total = {'blocked': 0, 'lines': 0, 'samples': [], 'bytes_up': 0, 'bytes_down': 0}
+    total = {'blocked': 0, 'lines': 0, 'samples': [], 'bytes_up': 0, 'bytes_down': 0,
+             'bytes_by_host': {}}
     for counts in _relay_block_counts.values():
         total['blocked'] += counts.get('blocked', 0)
         total['lines'] += counts.get('lines', 0)
         total['bytes_up'] += counts.get('bytes_up', 0)
         total['bytes_down'] += counts.get('bytes_down', 0)
+        for host, n in (counts.get('bytes_by_host') or {}).items():
+            total['bytes_by_host'][host] = total['bytes_by_host'].get(host, 0) + n
         for sample in counts.get('samples', []):
             if len(total['samples']) < RELAY_STDERR_SAMPLES:
                 total['samples'].append(sample)
@@ -859,7 +895,8 @@ def _drain_relay_stderr(proc, worker_id=None):
     nobody read. A wrongly-blocked host is otherwise invisible.
     """
     counts = _relay_block_counts.setdefault(
-        worker_id, {'blocked': 0, 'lines': 0, 'samples': [], 'bytes_up': 0, 'bytes_down': 0})
+        worker_id, {'blocked': 0, 'lines': 0, 'samples': [],
+                    'bytes_up': 0, 'bytes_down': 0, 'bytes_by_host': {}})
 
     def _pump():
         # This relay GENERATION's cumulative totals. Rotation kills the relay
@@ -868,6 +905,7 @@ def _drain_relay_stderr(proc, worker_id=None):
         # earlier batch's bytes — fold on EOF instead.
         last_up = 0
         last_down = 0
+        gen_hosts = {}
         try:
             for line in proc.stderr:
                 counts['lines'] += 1
@@ -878,6 +916,15 @@ def _drain_relay_stderr(proc, worker_id=None):
                 if m:
                     last_up = int(m.group(1))
                     last_down = int(m.group(2))
+                    continue
+                # R0 attribution: which hosts the metered bytes were spent on.
+                # Cumulative per relay generation, same fold-on-EOF discipline.
+                if text.startswith('proxy-relay: HOSTBYTES '):
+                    gen_hosts.clear()
+                    for pair in text[len('proxy-relay: HOSTBYTES '):].split():
+                        host, _, n = pair.rpartition('=')
+                        if host and n.isdigit():
+                            gen_hosts[host] = int(n)
                     continue
                 if 'BLOCKED' in text:
                     counts['blocked'] += 1
@@ -894,6 +941,8 @@ def _drain_relay_stderr(proc, worker_id=None):
         finally:
             counts['bytes_up'] += last_up
             counts['bytes_down'] += last_down
+            for host, n in gen_hosts.items():
+                counts['bytes_by_host'][host] = counts['bytes_by_host'].get(host, 0) + n
 
     thread = threading.Thread(target=_pump, name=f'relay-stderr-{worker_id}', daemon=True)
     thread.start()
@@ -1517,6 +1566,9 @@ async def bootstrap_session(worker_id=None, relay_url=None):
         await inject_screen_overrides(page, profile)
         await page.sleep(random.uniform(0.8, 2.0))
         await assert_on_aic_origin(page)
+        # R0: what the portal page actually pulled in, by host — the input to
+        # any blocklist decision. Diagnostic only, never gates.
+        await dump_resource_inventory(page, 'setup.do')
         return browser, page, profile
     except Exception as err:
         await stop_and_terminate(browser, worker_id)
@@ -2341,6 +2393,9 @@ def compute_summary(tel, start_ms):
                 # resource filter did. bytes/permit is derivable from these.
                 'relay_bytes_up': _relay_summary()['bytes_up'],
                 'relay_bytes_down': _relay_summary()['bytes_down'],
+                # WHERE the metered bytes went. Until this existed every
+                # byte-budget claim was inference from a recon table.
+                'relay_bytes_by_host': _relay_summary()['bytes_by_host'],
                 'resource_blocking': resource_blocking_enabled(),
                 'resources_allowed': _resource_filter_stats['allowed'],
                 'resources_blocked': _resource_filter_stats['blocked'],
