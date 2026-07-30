@@ -270,6 +270,31 @@ def build_proxy_session_id(worker_id, timestamp=None):
     return f'w{worker_id}t{ts}'.replace('-', '').replace('_', '')
 
 
+def resolve_proxy_port(worker_id, base_port=None):
+    """Give each worker its OWN sticky port so they get distinct exit IPs.
+
+    On `ca.decodo.com` the port selects the mode: 20000 is rotating and
+    20001-29999 are sticky, one exit IP pinned per port. Every worker pointing
+    at 20001 therefore shares a single residential IP — the per-worker
+    `-session-` suffix cannot override a port-level pin — which silently
+    defeats the multi-worker rotation this design assumes. Worker N gets
+    base+N-1; anything non-numeric (standalone) keeps the base port.
+    """
+    base = int(base_port if base_port is not None else (PROXY_PORT or 0) or 0)
+    try:
+        offset = int(str(worker_id)) - 1
+    except (TypeError, ValueError):
+        return base
+    if offset <= 0:
+        return base
+    port = base + offset
+    # Stay inside the sticky band; wrap rather than silently land on 20000
+    # (rotating) or past 29999 (invalid).
+    if base >= 20001 and port > 29999:
+        port = 20001 + ((port - 20001) % 9999)
+    return port
+
+
 def build_proxy_username(session_id, user=None, duration_min=None):
     """Build the Decodo username carrying the sticky-session parameters.
 
@@ -295,7 +320,7 @@ def build_proxy_username(session_id, user=None, duration_min=None):
     return f'{account}-session-{session_id}-sessionduration-{duration}'
 
 
-def build_proxy_extension(session_id):
+def build_proxy_extension(session_id, proxy_port=None):
     """Create a temp Manifest V3 extension that handles proxy auth silently.
 
     Chromium ignores user:pass in --proxy-server URLs. The only way to
@@ -308,6 +333,7 @@ def build_proxy_extension(session_id):
         return None
 
     user_with_session = build_proxy_username(session_id)
+    proxy_port = PROXY_PORT if proxy_port is None else proxy_port
     ext_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         '..', '.proxy_ext', f'decodo_{session_id}',
@@ -328,7 +354,7 @@ def build_proxy_extension(session_id):
 var config = {{
     mode: "fixed_servers",
     rules: {{
-        singleProxy: {{ scheme: "{PROXY_SCHEME}", host: "{PROXY_HOST}", port: parseInt("{PROXY_PORT}") }},
+        singleProxy: {{ scheme: "{PROXY_SCHEME}", host: "{PROXY_HOST}", port: parseInt("{proxy_port}") }},
         bypassList: ["localhost"]
     }}
 }};
@@ -1537,7 +1563,7 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
                     cleanup_proxy_extension(proxy_ext_dir)
                     new_session_id = build_proxy_session_id(
                         tel.get('_worker_id', 'standalone'), int(time.time()))
-                    proxy_ext_dir = build_proxy_extension(new_session_id)
+                    proxy_ext_dir = build_proxy_extension(new_session_id, proxy_port=resolve_proxy_port(tel.get('_worker_id')))
                     log('INFO', worker_tag, f'Proxy session rotated: {new_session_id}')
                 browser, page, attempts, profile = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir, worker_id=tel.get('_worker_id'))
                 tel['session_bootstraps'] += attempts
@@ -1676,12 +1702,14 @@ async def main():
     proxy_ext_dir = None
     if PROXY_HOST and args['worker_id']:
         session_id = build_proxy_session_id(args['worker_id'])
-        proxy_ext_dir = build_proxy_extension(session_id)
-        log('INFO', worker_tag, f'Proxy extension created: {PROXY_HOST}:{PROXY_PORT} session={session_id}')
+        worker_port = resolve_proxy_port(args['worker_id'])
+        proxy_ext_dir = build_proxy_extension(session_id, proxy_port=worker_port)
+        log('INFO', worker_tag, f'Proxy extension created: {PROXY_HOST}:{worker_port} session={session_id}')
     elif PROXY_HOST:
         session_id = build_proxy_session_id('standalone')
-        proxy_ext_dir = build_proxy_extension(session_id)
-        log('INFO', worker_tag, f'Proxy extension created: {PROXY_HOST}:{PROXY_PORT} session={session_id}')
+        worker_port = resolve_proxy_port(None)
+        proxy_ext_dir = build_proxy_extension(session_id, proxy_port=worker_port)
+        log('INFO', worker_tag, f'Proxy extension created: {PROXY_HOST}:{worker_port} session={session_id}')
 
     log('INFO', worker_tag, 'Launching browser via nodriver (CDP)...')
 
@@ -1760,7 +1788,7 @@ async def main():
                     if PROXY_HOST:
                         cleanup_proxy_extension(proxy_ext_dir)
                         batch_session_id = build_proxy_session_id(worker_id, int(time.time()))
-                        proxy_ext_dir = build_proxy_extension(batch_session_id)
+                        proxy_ext_dir = build_proxy_extension(batch_session_id, proxy_port=resolve_proxy_port(worker_id))
                         log('INFO', worker_tag, f'Batch {batch_num}: new IP session={batch_session_id}')
 
                     if browser is None:

@@ -135,6 +135,32 @@ class TestProxyUsername:
         assert a != b
 
 
+class TestResolveProxyPort:
+    """On ca.decodo.com the PORT selects the exit IP: 20000 rotating,
+    20001-29999 sticky (one pinned IP each). Every worker on 20001 therefore
+    shares one residential IP — a `-session-` suffix cannot override a
+    port-level pin — silently defeating multi-worker rotation."""
+
+    def test_each_worker_gets_its_own_port(self, scraper):
+        assert scraper.resolve_proxy_port(1, base_port=20001) == 20001
+        assert scraper.resolve_proxy_port(2, base_port=20001) == 20002
+        assert scraper.resolve_proxy_port(5, base_port=20001) == 20005
+
+    def test_standalone_keeps_the_base_port(self, scraper):
+        assert scraper.resolve_proxy_port(None, base_port=20001) == 20001
+        assert scraper.resolve_proxy_port('standalone', base_port=20001) == 20001
+
+    def test_stays_within_the_sticky_band(self, scraper):
+        """Must never wrap onto 20000 (rotating) or past 29999 (invalid)."""
+        port = scraper.resolve_proxy_port(9999, base_port=20001)
+
+        assert 20001 <= port <= 29999
+
+    def test_numeric_string_worker_ids_work(self, scraper):
+        """worker_id arrives as a string from argv."""
+        assert scraper.resolve_proxy_port('3', base_port=20001) == 20003
+
+
 class TestProxyExtension:
     """The MV3 extension carries proxy credentials — shape and permissions matter."""
 
