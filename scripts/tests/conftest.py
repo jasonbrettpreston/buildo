@@ -65,3 +65,34 @@ def captured_logs(monkeypatch, scraper):
 
     monkeypatch.setattr('builtins.print', fake_print)
     return entries
+
+
+@pytest.fixture
+def reload_scraper(monkeypatch):
+    """Re-import the scraper so module-level env parsing runs under a given env.
+
+    Several constants (batch size, retry/WAF tuning, the launch ceiling) are read
+    at import time, so the only honest way to test their env handling is a fresh
+    import with the environment already in place.
+    """
+    def _reload(**env):
+        for key, value in env.items():
+            if value is None:
+                monkeypatch.delenv(key, raising=False)
+            else:
+                monkeypatch.setenv(key, value)
+        # Neutralize the repo .env so a developer's local file cannot change results.
+        monkeypatch.setattr('pathlib.Path.exists', lambda self: False)
+
+        path = os.path.join(SCRIPTS_DIR, 'aic-scraper-nodriver.py')
+        spec = importlib.util.spec_from_file_location('aic_scraper_reload', path)
+        module = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(module)
+        except ImportError as err:
+            pytest.skip(f'scraper import needs an absent runtime dep: {err}')
+        finally:
+            sys.modules.pop('aic_scraper_reload', None)
+        return module
+
+    return _reload

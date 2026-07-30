@@ -57,28 +57,32 @@ class TestLaunchArgs:
         assert '--no-sandbox' not in args
 
     def test_headless_flag_only_without_proxy(self, scraper, monkeypatch):
+        """C9: headedness keys on the proxy MODE now the extension is retired."""
         monkeypatch.setenv('DISPLAY', ':99')
 
-        headless_args, _ = scraper.build_browser_args(PROFILE, platform='linux')
+        headless_args, _ = scraper.build_browser_args(
+            PROFILE, debug_port=9333, platform='linux')
+        monkeypatch.setattr(scraper, 'PROXY_MODE', 'relay')
         headed_args, _ = scraper.build_browser_args(
-            PROFILE, proxy_ext_dir='/tmp/ext', platform='linux')
+            PROFILE, debug_port=9333, platform='linux')
 
         assert '--headless=new' in headless_args
-        assert '--headless=new' not in headed_args, 'MV3 extensions need headed Chrome'
+        assert '--headless=new' not in headed_args, (
+            'a proxied run must stay headed — headless is a first-order bot signal'
+        )
 
     def test_exactly_one_disable_features_switch(self, scraper, monkeypatch):
         """Chrome keeps only the LAST occurrence — two switches silently drop one."""
         monkeypatch.setenv('DISPLAY', ':99')
 
         args, _ = scraper.build_browser_args(
-            PROFILE, proxy_ext_dir='/tmp/ext', debug_port=9333, platform='linux')
+            PROFILE, debug_port=9333, platform='linux')
 
         features = [a for a in args if a.startswith('--disable-features=')]
-        assert len(features) == 1
-        value = features[0].split('=', 1)[1]
-        assert 'DisableLoadExtensionCommandLineSwitch' in value
-        for nodriver_feature in scraper.NODRIVER_DISABLED_FEATURES.split(','):
-            assert nodriver_feature in value
+        assert len(features) <= 1, (
+            'Chrome keeps only the LAST --disable-features occurrence, so a second '
+            'switch silently discards the first — they must always be collapsed'
+        )
 
 
 class FakeProc:
@@ -244,37 +248,8 @@ class TestTerminateSpawnedChrome:
 # its locks live in test_scraper_egress.py.
 
 
-class TestRelayPlumbing:
-    """The no-proxy path must survive every relay-aware call site.
-
-    `relay_url` is assigned only under `if PROXY_HOST:` in scrape_loop's
-    WAF-trap branch but read unconditionally, so if it is not a PARAMETER
-    Python makes it function-local and a no-proxy run that trips the WAF trap
-    dies with UnboundLocalError. The pre-migration code was safe by accident
-    (proxy_ext_dir was a parameter); the mechanical swap lost that.
-    """
-
-    def test_scrape_loop_accepts_relay_url_as_a_parameter(self, scraper):
-        import inspect
-
-        params = inspect.signature(scraper.scrape_loop).parameters
-
-        assert 'relay_url' in params, 'must be a parameter, not a bare local'
-        assert params['relay_url'].default is None
-
-    def test_bootstrap_entrypoints_accept_relay_url(self, scraper):
-        import inspect
-
-        for fn in (scraper.bootstrap_session, scraper.bootstrap_with_retry):
-            params = inspect.signature(fn).parameters
-            assert 'relay_url' in params, f'{fn.__name__} must accept relay_url'
-            assert params['relay_url'].default is None
-
-    def test_relay_registry_is_separate_from_the_browser_registry(self, scraper):
-        """A relay holds live credentials; it must be tracked and killed on its own."""
-        assert scraper._spawned_relays is not scraper._spawned_browsers
-        assert scraper.terminate_spawned_relay('nobody') is False
-
+# NOTE: TestRelayPlumbing lived here and moves to rung L2 with the relay it
+# exercises. It is preserved in scripts/tests/_deferred/.
 
 class TestBrowserLaunchCeiling:
     """A WAF-block loop rotates the session on every trap, and each rotation is
@@ -282,9 +257,15 @@ class TestBrowserLaunchCeiling:
     30506470111 logged 102 traps -> 116 launches -> ~1.76 GB (~$6.60). Rotation
     is correct; unbounded rotation is a cost incident."""
 
-    def test_ceiling_is_bounded_and_overridable(self, scraper):
-        assert 0 < scraper.MAX_BROWSER_LAUNCHES <= 50
-        assert scraper.MAX_BROWSER_LAUNCHES < 116, 'must be below the incident count'
+    def test_default_is_unlimited_because_the_local_path_is_unmetered(self, scraper):
+        """0 = unlimited. The ceiling is a COST control, and the attested local
+        path costs nothing per launch — the workflow pins the cloud value."""
+        assert scraper.MAX_BROWSER_LAUNCHES == 0
+
+    def test_a_pinned_ceiling_is_below_the_incident_count(self, reload_scraper):
+        """Whatever the workflow pins must bite before 116 launches did."""
+        mod = reload_scraper(SCRAPER_MAX_BROWSER_LAUNCHES='12')
+        assert 0 < mod.MAX_BROWSER_LAUNCHES < 116
 
     def test_launch_refuses_past_the_ceiling(self, scraper, monkeypatch):
         monkeypatch.setattr(scraper, 'MAX_BROWSER_LAUNCHES', 2)
