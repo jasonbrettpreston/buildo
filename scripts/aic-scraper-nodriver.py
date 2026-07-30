@@ -1001,6 +1001,16 @@ def wait_for_devtools(port, proc=None, profile_dir=None, timeout=None):
     )
 
 
+# Hard ceiling on Chrome spawns per process. A WAF-block loop rotates the
+# session on every trap, and each rotation is a fresh browser: run 30506470111
+# logged 102 WAF traps -> 116 Chrome launches, and since every cold launch
+# re-downloads Chrome's components through the metered proxy that loop alone
+# accounted for ~1.76 GB (~$6.60). Rotation is correct behaviour; unbounded
+# rotation is a cost incident. Fail loudly instead of spending.
+MAX_BROWSER_LAUNCHES = int(os.environ.get('SCRAPER_MAX_BROWSER_LAUNCHES') or '12')
+_browser_launch_count = [0]
+
+
 def launch_chrome(browser_args, worker_id=None):
     """Spawn Chrome ourselves so we own its lifetime. Returns the Popen.
 
@@ -1010,6 +1020,14 @@ def launch_chrome(browser_args, worker_id=None):
     browser it just spawned (which then holds the profile and breaks every
     retry). Owning the process fixes all four.
     """
+    _browser_launch_count[0] += 1
+    if _browser_launch_count[0] > MAX_BROWSER_LAUNCHES:
+        raise RuntimeError(
+            f'Refusing to launch Chrome #{_browser_launch_count[0]}: exceeded '
+            f'SCRAPER_MAX_BROWSER_LAUNCHES={MAX_BROWSER_LAUNCHES}. A WAF-block loop '
+            'rotates the session on every trap and each rotation costs a full cold '
+            'browser start over metered proxy bandwidth — stop, do not spend.'
+        )
     exe = str(_resolve_chrome_executable())
     kwargs = {'stdout': subprocess.DEVNULL, 'stderr': subprocess.DEVNULL,
               'stdin': subprocess.DEVNULL}

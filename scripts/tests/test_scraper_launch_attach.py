@@ -274,3 +274,36 @@ class TestRelayPlumbing:
         """A relay holds live credentials; it must be tracked and killed on its own."""
         assert scraper._spawned_relays is not scraper._spawned_browsers
         assert scraper.terminate_spawned_relay('nobody') is False
+
+
+class TestBrowserLaunchCeiling:
+    """A WAF-block loop rotates the session on every trap, and each rotation is
+    a fresh cold browser whose component downloads cross a METERED proxy. Run
+    30506470111 logged 102 traps -> 116 launches -> ~1.76 GB (~$6.60). Rotation
+    is correct; unbounded rotation is a cost incident."""
+
+    def test_ceiling_is_bounded_and_overridable(self, scraper):
+        assert 0 < scraper.MAX_BROWSER_LAUNCHES <= 50
+        assert scraper.MAX_BROWSER_LAUNCHES < 116, 'must be below the incident count'
+
+    def test_launch_refuses_past_the_ceiling(self, scraper, monkeypatch):
+        monkeypatch.setattr(scraper, 'MAX_BROWSER_LAUNCHES', 2)
+        monkeypatch.setattr(scraper, '_resolve_chrome_executable', lambda: 'chrome-not-run')
+        monkeypatch.setattr(scraper._browser_launch_count, '__setitem__',
+                            scraper._browser_launch_count.__setitem__)
+        scraper._browser_launch_count[0] = 2
+
+        with pytest.raises(RuntimeError, match='SCRAPER_MAX_BROWSER_LAUNCHES'):
+            scraper.launch_chrome([], worker_id='ceiling-test')
+
+        scraper._browser_launch_count[0] = 0
+
+    def test_error_names_the_cost_reason(self, scraper, monkeypatch):
+        """The message must tell an operator WHY, not just that a limit tripped."""
+        monkeypatch.setattr(scraper, 'MAX_BROWSER_LAUNCHES', 1)
+        scraper._browser_launch_count[0] = 5
+        try:
+            with pytest.raises(RuntimeError, match='metered proxy bandwidth'):
+                scraper.launch_chrome([], worker_id='ceiling-test-2')
+        finally:
+            scraper._browser_launch_count[0] = 0
