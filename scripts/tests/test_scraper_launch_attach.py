@@ -242,3 +242,35 @@ class TestTerminateSpawnedChrome:
 # without a discovery filter, so it could fail a correctly-proxied browser.
 # Replaced by verify_proxied_egress, which proves the invariant that matters;
 # its locks live in test_scraper_egress.py.
+
+
+class TestRelayPlumbing:
+    """The no-proxy path must survive every relay-aware call site.
+
+    `relay_url` is assigned only under `if PROXY_HOST:` in scrape_loop's
+    WAF-trap branch but read unconditionally, so if it is not a PARAMETER
+    Python makes it function-local and a no-proxy run that trips the WAF trap
+    dies with UnboundLocalError. The pre-migration code was safe by accident
+    (proxy_ext_dir was a parameter); the mechanical swap lost that.
+    """
+
+    def test_scrape_loop_accepts_relay_url_as_a_parameter(self, scraper):
+        import inspect
+
+        params = inspect.signature(scraper.scrape_loop).parameters
+
+        assert 'relay_url' in params, 'must be a parameter, not a bare local'
+        assert params['relay_url'].default is None
+
+    def test_bootstrap_entrypoints_accept_relay_url(self, scraper):
+        import inspect
+
+        for fn in (scraper.bootstrap_session, scraper.bootstrap_with_retry):
+            params = inspect.signature(fn).parameters
+            assert 'relay_url' in params, f'{fn.__name__} must accept relay_url'
+            assert params['relay_url'].default is None
+
+    def test_relay_registry_is_separate_from_the_browser_registry(self, scraper):
+        """A relay holds live credentials; it must be tracked and killed on its own."""
+        assert scraper._spawned_relays is not scraper._spawned_browsers
+        assert scraper.terminate_spawned_relay('nobody') is False

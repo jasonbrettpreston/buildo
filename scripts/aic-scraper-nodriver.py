@@ -1624,7 +1624,8 @@ def complete_batch_in_queue(conn, year_seqs, worker_id, failed=None):
 # ---------------------------------------------------------------------------
 # Scrape loop — shared between standalone and worker modes
 # ---------------------------------------------------------------------------
-async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]', proxy_ext_dir=None, profile=None):
+async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]',
+                      proxy_ext_dir=None, profile=None, relay_url=None):
     """Core scrape loop for a list of year_seq combos. Mutates tel in place."""
 
     def accumulate(result):
@@ -1807,14 +1808,22 @@ async def main():
             f'Proxy relay up on {relay_url} -> {PROXY_HOST}:{resolve_proxy_port(args["worker_id"])} session={session_id}')
     elif PROXY_HOST:
         session_id = build_proxy_session_id('standalone')
-        relay_url = start_proxy_relay(session_id, None)
+        relay_url = start_proxy_relay(session_id, tel['_worker_id'])
         log('INFO', worker_tag,
-            f'Proxy relay up on {relay_url} -> {PROXY_HOST}:{resolve_proxy_port(None)} session={session_id}')
+            f'Proxy relay up on {relay_url} -> {PROXY_HOST}:{resolve_proxy_port(None)} '
+            f'session={session_id}')
 
     log('INFO', worker_tag, 'Launching browser via nodriver (CDP)...')
 
     browser = None
     try:
+        # Relay start lives INSIDE this try: it spawns a subprocess and can time
+        # out, and a crash before the try would exit main() with no
+        # PIPELINE_SUMMARY at all — leaving preflight_passed at its default True
+        # so the orchestrator undercounts the dead worker.
+        if PROXY_HOST and relay_url is None:
+            relay_url = start_proxy_relay(build_proxy_session_id(tel['_worker_id']),
+                                          tel['_worker_id'])
         browser, page, bootstrap_attempts, profile = await bootstrap_with_retry(
             worker_id=tel['_worker_id'], relay_url=relay_url)
         tel['session_bootstraps'] = bootstrap_attempts
@@ -1846,7 +1855,8 @@ async def main():
                 with open(args['batch_file'], 'r') as f:
                     year_seqs = json.load(f)
                 log('INFO', worker_tag, f'Worker mode: {len(year_seqs)} year_seqs from {args["batch_file"]}')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile,
+                                                  relay_url=relay_url)
             finally:
                 conn.close()
 
@@ -1901,7 +1911,8 @@ async def main():
 
                     log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
                     try:
-                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile)
+                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile,
+                                                  relay_url=relay_url)
                         complete_batch_in_queue(conn, year_seqs, worker_id)
                         log('INFO', worker_tag, f'Batch {batch_num}: complete')
                     except Exception as err:
@@ -1954,7 +1965,8 @@ async def main():
                 year_seqs = [r['year_seq'] for r in rows]
                 random.shuffle(year_seqs)
                 log('INFO', worker_tag, f'Batch mode: {len(year_seqs)} year+sequence combos to scrape (shuffled)')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, proxy_ext_dir=proxy_ext_dir, profile=profile,
+                                                  relay_url=relay_url)
             finally:
                 conn.close()
 
