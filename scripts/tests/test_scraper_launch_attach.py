@@ -288,15 +288,12 @@ class TestBrowserLaunchCeiling:
 
     def test_launch_refuses_past_the_ceiling(self, scraper, monkeypatch):
         monkeypatch.setattr(scraper, 'MAX_BROWSER_LAUNCHES', 2)
-        monkeypatch.setattr(scraper, '_resolve_chrome_executable', lambda: 'chrome-not-run')
-        monkeypatch.setattr(scraper._browser_launch_count, '__setitem__',
-                            scraper._browser_launch_count.__setitem__)
         scraper._browser_launch_count[0] = 2
-
-        with pytest.raises(RuntimeError, match='SCRAPER_MAX_BROWSER_LAUNCHES'):
-            scraper.launch_chrome([], worker_id='ceiling-test')
-
-        scraper._browser_launch_count[0] = 0
+        try:
+            with pytest.raises(RuntimeError, match='SCRAPER_MAX_BROWSER_LAUNCHES'):
+                scraper.launch_chrome([], worker_id='ceiling-test')
+        finally:
+            scraper._browser_launch_count[0] = 0
 
     def test_error_names_the_cost_reason(self, scraper, monkeypatch):
         """The message must tell an operator WHY, not just that a limit tripped."""
