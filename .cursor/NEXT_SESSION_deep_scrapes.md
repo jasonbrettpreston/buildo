@@ -75,6 +75,40 @@ residential IP). The L0 pass criterion ("permits known to carry inspections") po
 `'Browser' object has no attribute 'send'` — the K7e diagnostic expects a Tab/Connection but
 bootstrap passes the Browser. Diagnostic-only (never gates), 2-line fix + fake update.
 
+**Portal-behaviour finding (operator-verified on the live site, 2026-07-30 — belongs in the
+Spec 44 §3 portal section at Step 8b):** the Inspection Status page now lists **only stages
+already PASSED** ("this list reflects applicable mandatory inspection stages that have been
+passed") — unpassed/outstanding stages are NOT enumerated, unlike the March-era scrapes whose
+rows included Outstanding stages. Two consequences: ① `stages: []` is the portal's normal
+answer for any permit that has not yet passed a stage — probe #7's two `no_stages` permits are
+almost certainly CORRECT reads, and the `not_found_rate < 20%` gate needs re-thinking for
+inspection-stage semantics; ② the inspection-anchored Tier-1 timing engine will only ever see
+passed stages going forward. Also operator-observed: the portal map/list is very slow to
+render — UI weight, consistent with `setup.do` at 75 885 B.
+
+**Targeted probe #8 (run 30570805311) — ✅ GREEN, capture path PROVEN.** Operator pulled
+`21 217696 BLD 00 NH` (7 Airley Cres) on the live portal — TWO passed stages
+(Excavation/Shoring + Footings/Foundations, both Jun 11 2025). Seeded `'21 217696'` into the
+CLOUD scraper_queue as `pending` with `created_at='2000-01-01'` (claim is `ORDER BY
+created_at`, so it was claimed first); dispatched `max_permits=1`. Result: **"Scraped 2 stages
+for 21 217696 BLD"** matching the portal exactly, `records_new=2` (`permit_inspections`
+792→794 — **the first rows the nodriver scraper has EVER written, and the first cloud-scraped
+rows in the project's history**), ingestion PASS, not_found_rate 0%, data-quality all PASS,
+GH run conclusion SUCCESS. Provenance milestone: the "operator-attested, never data-verified"
+caveat is now closed for the cloud path. Seeder one-off: scratchpad `seed_target_permit.js`
+(cloud DB via SUPABASE_DATABASE_URL).
+
+**New adjudication opened by #8 + the portal finding:** the scraper derived
+`enrichedStatus: "Inspections Complete"` for a permit that is only MID-inspection — the portal
+no longer lists unpassed stages, so "every scraped stage is Passed" no longer implies
+completion. `compute_enriched_status`'s inference predates the portal change; needs a
+Spec 44/38 ruling before bulk scraping, or enriched_status will over-claim on every
+mid-inspection permit. (Not a scrape bug — capture is byte-faithful to the portal.)
+
+**Also open:** avg_latency 3841 ms > 2000 WARN on the proxied path (single sample, gate may
+need a proxied-path allowance) · the two probe #7 permits' queue rows and this seeded row are
+`completed` honestly · L4 (CDP resource blocking) remains the deliberate last rung.
+
 ## The one open defect — ~~start here~~ FIXED above; kept for the eliminated-layers table
 
 `page.evaluate()` raises/returns a nodriver `ExceptionDetails` object, and our calling code
