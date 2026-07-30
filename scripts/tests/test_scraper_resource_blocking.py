@@ -103,3 +103,42 @@ class TestInstall:
         asyncio.run(scraper.enable_resource_blocking(tab))
         assert len(tab.handlers) == 1
         assert len(tab.sent) == 1  # cdp.fetch.enable()
+
+
+class TestRelayByteAccounting:
+    """Run 30576202397 reported relay_bytes=0 for a whole run: Chrome's
+    keep-alive tunnels never close before relay teardown, and a rotation
+    restarts the relay at zero, so byte totals must (a) come from periodic
+    cumulative lines, (b) be folded per relay GENERATION on pipe EOF —
+    latest-wins across generations drops every earlier batch's bytes."""
+
+    def _pump_lines(self, scraper, worker_id, lines):
+        proc = SimpleNamespace(stderr=list(lines))
+        thread = scraper._drain_relay_stderr(proc, worker_id)
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+
+    def test_generations_accumulate_not_overwrite(self, scraper):
+        worker = 'bytes-test-worker'
+        # Generation 1 (batch 1): cumulative lines ending at 5000/90000.
+        self._pump_lines(scraper, worker, [
+            'proxy-relay: BYTES up=2000 down=40000\n',
+            'proxy-relay: BYTES up=5000 down=90000\n',
+        ])
+        # Generation 2 (after rotation): restarts at zero, ends at 1000/20000.
+        self._pump_lines(scraper, worker, [
+            'proxy-relay: BYTES up=1000 down=20000\n',
+        ])
+        counts = scraper._relay_block_counts[worker]
+        assert counts['bytes_up'] == 6000
+        assert counts['bytes_down'] == 110000
+
+    def test_bytes_lines_do_not_pollute_samples(self, scraper):
+        worker = 'bytes-test-worker-2'
+        self._pump_lines(scraper, worker, [
+            'proxy-relay: BYTES up=1 down=2\n',
+            'proxy-relay: BLOCKED accounts.google.com (cost blocklist)\n',
+        ])
+        counts = scraper._relay_block_counts[worker]
+        assert counts['blocked'] == 1
+        assert all('BYTES' not in s for s in counts['samples'])

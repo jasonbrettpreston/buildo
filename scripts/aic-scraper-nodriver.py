@@ -862,17 +862,22 @@ def _drain_relay_stderr(proc, worker_id=None):
         worker_id, {'blocked': 0, 'lines': 0, 'samples': [], 'bytes_up': 0, 'bytes_down': 0})
 
     def _pump():
+        # This relay GENERATION's cumulative totals. Rotation kills the relay
+        # and starts a fresh one whose counters restart at zero, so writing
+        # the latest line straight into `counts` would silently drop every
+        # earlier batch's bytes — fold on EOF instead.
+        last_up = 0
+        last_down = 0
         try:
             for line in proc.stderr:
                 counts['lines'] += 1
                 text = line.strip()
-                # L4 byte accounting: cumulative counters, latest line wins.
-                # Parsed silently — one line per closed connection would
-                # otherwise flood the bounded sample buffer.
+                # L4 byte accounting: cumulative per relay generation. Parsed
+                # silently — periodic lines would flood the sample buffer.
                 m = re.match(r'^proxy-relay: BYTES up=(\d+) down=(\d+)$', text)
                 if m:
-                    counts['bytes_up'] = int(m.group(1))
-                    counts['bytes_down'] = int(m.group(2))
+                    last_up = int(m.group(1))
+                    last_down = int(m.group(2))
                     continue
                 if 'BLOCKED' in text:
                     counts['blocked'] += 1
@@ -886,6 +891,9 @@ def _drain_relay_stderr(proc, worker_id=None):
                         {'event': 'proxy_relay_stderr', 'worker_id': worker_id})
         except (ValueError, OSError):
             pass  # pipe closed on teardown — expected
+        finally:
+            counts['bytes_up'] += last_up
+            counts['bytes_down'] += last_down
 
     thread = threading.Thread(target=_pump, name=f'relay-stderr-{worker_id}', daemon=True)
     thread.start()

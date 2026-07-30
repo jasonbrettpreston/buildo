@@ -111,14 +111,39 @@ const server = new Server({
 });
 
 server.on('connectionClosed', ({ stats }) => {
-  // proxy-chain reports per-connection socket byte counts at close. The line
-  // is CUMULATIVE so the scraper can keep the latest value and lose nothing
-  // if earlier lines are missed.
   if (!stats) return;
   bytesUp += stats.trgTxBytes || 0;
   bytesDown += stats.trgRxBytes || 0;
-  process.stderr.write(`proxy-relay: BYTES up=${bytesUp} down=${bytesDown}\n`);
 });
+
+// LIVE totals, not just closed ones: Chrome keeps its tunnels open with
+// keep-alive until AFTER this relay is torn down, so connectionClosed alone
+// reported 0 for an entire run (run 30576202397). Sum the live sockets too,
+// and emit a CUMULATIVE line periodically — the scraper keeps the latest.
+function currentTotals() {
+  let up = bytesUp;
+  let down = bytesDown;
+  for (const id of server.getConnectionIds()) {
+    const s = server.getConnectionStats(id);
+    if (s) {
+      up += s.trgTxBytes || 0;
+      down += s.trgRxBytes || 0;
+    }
+  }
+  return { up, down };
+}
+
+let lastBytesLine = '';
+function reportBytes() {
+  const t = currentTotals();
+  const line = `proxy-relay: BYTES up=${t.up} down=${t.down}`;
+  if (line !== lastBytesLine) {
+    lastBytesLine = line;
+    process.stderr.write(`${line}\n`);
+  }
+}
+const bytesReporter = setInterval(reportBytes, 5000);
+bytesReporter.unref();
 
 server.on('requestFailed', ({ request, error }) => {
   // Never echo the upstream URL — it carries credentials.
@@ -128,9 +153,13 @@ server.on('requestFailed', ({ request, error }) => {
 });
 
 async function shutdown(code = 0) {
+  // Final cumulative BYTES line BEFORE closing — live sockets are still
+  // countable here; after close they are gone.
+  reportBytes();
+  const t = currentTotals();
   process.stderr.write(
     `proxy-relay: shutting down (allowed=${allowed} blocked=${blocked} ` +
-    `bytes_up=${bytesUp} bytes_down=${bytesDown})\n`
+    `bytes_up=${t.up} bytes_down=${t.down})\n`
   );
   try {
     await server.close(true);
