@@ -147,9 +147,13 @@ rows) and the JS mirror test. `enriched_status` is near-empty in both DBs (50-51
 5. ⬜ Spec 44 truth-up: rewrite §Core-Logic 3 (drop "All Passed → Inspections Complete",
    state the feed-status rule) + add the portal-behaviour paragraph with the 6 examples.
 6. ⬜ Gates: `npm run test:py` + full `npm run test` + typecheck + lint → commit + push.
-7. ⬜ Cloud correction probe: re-seed `21 217696` (created_at='2000-01-01') + dispatch
-   `max_permits=1` — verifies the fix on the runner AND corrects the one wrong row via the
-   `IS DISTINCT FROM` guard ('Inspections Complete' → 'Active Inspection').
+7. ✅ Cloud correction probe #9 (run 30573424808, GREEN): re-scraped `21 217696` — scraper
+   wrote 'Active Inspection' (fix verified on the runner), `enriched_updates=1`, stage rows
+   idempotent (0 new). The classifier then moved it to **'Stalled'** per its designed
+   300-day rule (last passed stage Jun 11 2025) — honest, and DB-verified directly:
+   `21 217696 BLD` enriched_status='Stalled', 2 Passed stage rows. The wrong
+   'Inspections Complete' no longer exists anywhere. Note for Task #1 (lifecycle follow-up):
+   the 300-day Stalled rule now operates on passed-only data — revisit its semantics there.
 
 **Non-goals:** per-type stage-regime modelling ("we know what the stages are for the type of
 build" — real, but that is inspection_stage_map / Tier-1 timing-engine territory, filed as
