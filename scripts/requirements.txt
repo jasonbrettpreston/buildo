@@ -5,3 +5,4 @@
 # .cursor/wf3_deep_scrapes_cdp_handshake.md G3.
 nodriver==0.48.1
 psycopg2-binary>=2.9
+curl_cffi==0.15.0

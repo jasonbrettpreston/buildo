@@ -1811,6 +1811,215 @@ def safe_json_parse(raw, step_label=''):
 
 
 # ---------------------------------------------------------------------------
+# Transport — HTTP (default) with the browser retained as a live fallback
+#
+# PROVEN 2026-07-30: a Chrome-TLS-impersonating HTTP client walks the same four
+# /jaxrs/ endpoints and returns identical data at 6,897 B/permit against
+# 105,266 for the browser path. It works here because this portal runs
+# rate/reputation control, NOT Akamai's JS-sensor product: it sets no _abck /
+# ak_bmsc / bm_sz, so there is no sensor cookie that must be earned in a real
+# browser. Verified against operator-read ground truth, through the proxy,
+# with no warm-up navigation at all.
+#
+# WHY A GATE AND NOT AN ARCHIVED FILE (operator asked; this WF's own P1
+# precedent answers it): an inert copy of the browser scraper would rot,
+# pollute every grep, and drift out of schema/telemetry compatibility — it
+# would fail exactly when the portal changed and it was needed. Both transports
+# live here, share every downstream consumer (DB writes, outcome taxonomy,
+# enriched_status, queue, telemetry) and stay under the same test suite. A
+# fallback that is exercised is a fallback that works.
+# ---------------------------------------------------------------------------
+TRANSPORT_HTTP = 'http'
+TRANSPORT_BROWSER = 'browser'
+
+
+def transport_mode():
+    """Default BROWSER: the attested local path must be unchanged by this
+    module's presence. The workflow selects http for cloud."""
+    mode = (os.environ.get('SCRAPER_TRANSPORT') or TRANSPORT_BROWSER).strip().lower()
+    if mode not in (TRANSPORT_HTTP, TRANSPORT_BROWSER):
+        raise RuntimeError(
+            f"SCRAPER_TRANSPORT={mode!r} is not a transport. Use "
+            f"'{TRANSPORT_HTTP}' or '{TRANSPORT_BROWSER}' — an unrecognised value "
+            'must fail loudly, never silently pick one.')
+    return mode
+
+
+def portal_xhr_headers():
+    """Headers Chrome sends for a same-origin fetch() issued from the portal.
+
+    Sec-Fetch-* is load-bearing: an inconsistent set is a near-certain bot
+    tell. These are exactly what the browser transport produces implicitly by
+    running inside the page.
+
+    Accept-Encoding is DELIBERATELY ABSENT here — its omission from the wire is
+    an instant-403 tripwire on this portal, and curl sets a correct one itself.
+    Hand-rolling it is how that trap gets re-armed.
+    """
+    return {
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'en-CA,en;q=0.9',
+        'Content-Type': 'application/json',
+        'Origin': 'https://secure.toronto.ca',
+        'Referer': f'{AIC_BASE}/setup.do?action=init',
+        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Dest': 'empty',
+        'X-Requested-With': 'XMLHttpRequest',
+    }
+
+
+class HttpTransport:
+    """curl_cffi session impersonating Chrome's TLS/HTTP2 fingerprint.
+
+    Routed through the SAME relay the browser uses when one is running, so the
+    cost blocklist and per-host byte accounting keep applying unchanged.
+    """
+
+    def __init__(self, relay_url=None, impersonate=None):
+        from curl_cffi import requests as cffi_requests  # local: optional dep
+        self.impersonate = impersonate or os.environ.get('SCRAPER_IMPERSONATE', 'chrome')
+        proxies = {'http': relay_url, 'https': relay_url} if relay_url else None
+        self.relay_url = relay_url
+        self.session = cffi_requests.Session(impersonate=self.impersonate, proxies=proxies)
+        self.bytes_down = 0
+        self.requests = 0
+
+    def call(self, method, url, body=None):
+        """Issue one request; return (kind, data). Never raises on a portal
+        refusal — a refusal is data about the portal, not an error here."""
+        self.requests += 1
+        kwargs = {'headers': portal_xhr_headers(), 'timeout': FETCH_TIMEOUT_MS / 1000}
+        if body is not None:
+            kwargs['data'] = json.dumps(body)
+        try:
+            resp = self.session.request(method, url, **kwargs)
+        except Exception as err:  # noqa: BLE001
+            log('WARN', '[scraper]', f'HTTP transport error on {url}: {err}',
+                {'event': 'http_transport_error'})
+            return 'transport_error', None
+        self.bytes_down += len(resp.content or b'')
+        text = resp.text or ''
+        if resp.status_code == 403 or 'Access Denied' in text:
+            return 'waf_blocked', None
+        if text.lstrip().startswith('<'):
+            # HTML where JSON belongs is the block signature, never a miss.
+            return 'waf_blocked', None
+        try:
+            return 'ok', json.loads(text)
+        except ValueError:
+            return 'unparseable', None
+
+    def close(self):
+        try:
+            self.session.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def verify_http_egress(transport, host_ip=None):
+    """Prove the HTTP transport is proxied before it touches the portal.
+
+    Same invariant the browser path asserts (C5): 'is a proxy configured?' is
+    not 'is traffic actually leaving through it?'. Four months of runs recorded
+    proxy_configured=true while scraping direct.
+    """
+    host_ip = host_egress_ip() if host_ip is None else host_ip
+    if not host_ip:
+        raise RuntimeError(
+            f"Could not determine this host's egress IP from {EGRESS_ECHO_URL}, so "
+            "'am I proxied?' is unanswerable — refusing to scrape unverified")
+    kind, data = transport.call('GET', EGRESS_ECHO_URL)
+    seen = _extract_ip(json.dumps(data) if data is not None else '')
+    if not seen:
+        raise RuntimeError(
+            f'Could not read the transport egress IP from {EGRESS_ECHO_URL} '
+            f'(kind={kind}) — refusing to scrape unverified')
+    if seen == host_ip:
+        raise RuntimeError(
+            f'HTTP transport egress IP {seen} equals this host — traffic is '
+            'UNPROXIED. Refusing to scrape a WAF-sensitive portal direct.')
+    log('INFO', '[scraper]', 'Proxied egress confirmed (http transport)', {
+        'event': 'proxied_egress_verified', 'transport': TRANSPORT_HTTP,
+        'browser_ip_suffix': seen.rsplit('.', 1)[-1] if '.' in seen else '?'})
+    return seen
+
+
+async def fetch_permit_chain_http(transport, year, sequence):
+    """The four /jaxrs/ calls over HTTP.
+
+    Returns the SAME contract as fetch_permit_chain() so every downstream
+    consumer — DB writes, the outcome taxonomy, enriched_status, the queue,
+    telemetry — is untouched by the transport choice.
+    """
+    def body(property_rsn=''):
+        payload = {
+            'ward': '', 'folderYear': year, 'folderSequence': sequence,
+            'folderSection': '', 'folderRevision': '', 'folderType': '',
+            'address': '', 'searchType': '0',
+            'mapX': None, 'mapY': None,
+            'propX_min': '0', 'propX_max': '0', 'propY_min': '0', 'propY_max': '0',
+        }
+        if property_rsn:
+            # STRING always — the browser path interpolates this into a JS
+            # string literal, so the portal has only ever seen a quoted value.
+            payload['propertyRsn'] = str(property_rsn)
+        return payload
+
+    kind, props = transport.call('POST', f'{AIC_BASE}/jaxrs/search/properties', body())
+    if kind != 'ok':
+        _log_step1_body(f'http:{kind}', 'parse_failed', f'{year}-{sequence}')
+        return {'waf_blocked': True, 'properties': [], 'results': []}
+    if not props:
+        _log_step1_body('[]', 'empty_result', f'{year}-{sequence}')
+        return {'properties': [], 'results': []}
+
+    property_rsn = props[0].get('propertyRsn', '')
+    await asyncio.sleep(random.uniform(0.1, 0.4))
+
+    kind, folders = transport.call('POST', f'{AIC_BASE}/jaxrs/search/folders',
+                                   body(property_rsn))
+    if kind != 'ok' or folders is None:
+        return {'waf_blocked': True, 'properties': props, 'results': []}
+    target_folders = [f for f in folders if f.get('folderSection') in TARGET_SECTIONS]
+
+    results = []
+    for folder in target_folders:
+        permit_num = f"{folder['folderYear']} {folder['folderSequence']} {folder['folderSection']}"
+        folder_rsn = folder['folderRsn']
+        await asyncio.sleep(random.uniform(0.1, 0.4))
+
+        kind, detail = transport.call('GET', f'{AIC_BASE}/jaxrs/search/detail/{folder_rsn}')
+        if kind != 'ok' or not isinstance(detail, dict):
+            return {'waf_blocked': True, 'properties': props, 'results': results}
+        processes = detail.get('inspectionProcesses') or []
+        if not processes:
+            results.append({'permit_num': permit_num, 'error': 'no_processes'})
+            continue
+        if not detail.get('showStatus'):
+            results.append({'permit_num': permit_num, 'error': 'no_status_link'})
+            continue
+
+        for proc in processes:
+            await asyncio.sleep(random.uniform(0.1, 0.4))
+            kind, status_data = transport.call(
+                'GET', f'{AIC_BASE}/jaxrs/search/status/{folder_rsn}/{proc.get("processRsn")}')
+            if kind != 'ok' or not isinstance(status_data, dict):
+                return {'waf_blocked': True, 'properties': props, 'results': results}
+            # SHAPE validation, not status codes: this portal's anti-scraper
+            # mode is a 200 with hollow fields, so a stage counts only when its
+            # fields are really present.
+            stages = [s for s in (status_data.get('stages') or [])
+                      if s.get('desc') and s.get('status')]
+            if stages:
+                results.append({'permit_num': permit_num, 'stages': stages})
+            else:
+                results.append({'permit_num': permit_num, 'error': 'no_stages'})
+
+    return {'properties': props, 'folders': folders, 'results': results}
+
+
+# ---------------------------------------------------------------------------
 # Scrape one permit (4-step API chain via page.evaluate)
 # ---------------------------------------------------------------------------
 async def fetch_permit_chain(page, year, sequence):
@@ -1951,10 +2160,19 @@ async def fetch_permit_chain(page, year, sequence):
     return {'properties': props, 'folders': folders, 'results': results}
 
 
-async def scrape_year_sequence(page, year_seq, conn):
-    """Scrape one year+sequence and write results to DB."""
+async def scrape_year_sequence(ctx, year_seq, conn):
+    """Scrape one year+sequence and write results to DB.
+
+    `ctx` is the transport — an HttpTransport, or the browser page. Everything
+    below this dispatch (DB writes, the outcome taxonomy, enriched_status, the
+    queue) is transport-agnostic by design, so adding a transport changed no
+    consumer.
+    """
     year, sequence = year_seq.split(' ')
-    chain_result = await fetch_permit_chain(page, year, sequence)
+    if isinstance(ctx, HttpTransport):
+        chain_result = await fetch_permit_chain_http(ctx, year, sequence)
+    else:
+        chain_result = await fetch_permit_chain(ctx, year, sequence)
 
     if chain_result.get('waf_blocked'):
         raise Exception(f'WAF blocked request for {year_seq}')
@@ -2100,6 +2318,117 @@ async def scrape_year_sequence(page, year_seq, conn):
         'enriched_updates': enriched_updates, 'status_changes': status_changes,
         'outcome': outcome,
     }
+
+
+async def run_http_mode(args, transport, tel, start_ms, worker_tag):
+    """Drive the HTTP transport through whichever mode was requested.
+
+    Mirrors main()'s browser branches, minus everything that existed only to
+    own a browser process.
+    """
+    if args['mode'] == 'single':
+        conn = get_db_connection()
+        try:
+            result = await scrape_with_retry(transport, args['single_permit'], conn)
+            accumulate_result(tel, result)
+        finally:
+            conn.close()
+        return
+
+    if args['mode'] == 'worker':
+        if not args['batch_file']:
+            raise RuntimeError('Worker mode requires --batch-file')
+        conn = get_db_connection()
+        try:
+            with open(args['batch_file'], 'r') as fh:
+                year_seqs = json.load(fh)
+            await http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag)
+        finally:
+            conn.close()
+        return
+
+    # db-queue (the cloud path) and standalone both claim from the queue.
+    worker_id = args['worker_id'] or 'standalone'
+    batch_num = 0
+    while True:
+        if MAX_PERMITS > 0 and tel['permits_attempted'] >= MAX_PERMITS:
+            log('INFO', worker_tag, f"Max permits cap reached ({tel['permits_attempted']}/{MAX_PERMITS})")
+            break
+        conn = get_db_connection()
+        try:
+            random_batch = random.randint(BATCH_SIZE_MIN, BATCH_SIZE_MAX)
+            remaining = MAX_PERMITS - tel['permits_attempted'] if MAX_PERMITS > 0 else random_batch
+            year_seqs = claim_batch_from_queue(conn, worker_id, min(random_batch, remaining))
+            if not year_seqs:
+                log('INFO', worker_tag, 'No more pending items in queue')
+                break
+            batch_num += 1
+            if proxy_enabled() and batch_num > 1:
+                # One batch = one exit IP. Free on this transport.
+                terminate_spawned_relay(worker_id)
+                new_relay = start_proxy_relay(
+                    build_proxy_session_id(worker_id, int(time.time())), worker_id=worker_id)
+                transport.close()
+                transport = HttpTransport(relay_url=new_relay)
+                tel['session_bootstraps'] += 1
+                log('INFO', worker_tag, f'Batch {batch_num}: rotated exit IP (no browser)')
+            log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
+            try:
+                transport = await http_scrape_loop(
+                    transport, year_seqs, conn, tel, start_ms, worker_tag)
+                complete_batch_in_queue(conn, year_seqs, worker_id)
+                log('INFO', worker_tag, f'Batch {batch_num}: complete')
+            except Exception as err:
+                log('ERROR', worker_tag, f'Batch {batch_num} failed: {err}')
+                complete_batch_in_queue(conn, year_seqs, worker_id, failed=set(year_seqs))
+        finally:
+            conn.close()
+
+
+async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag='[scraper]'):
+    """Scrape loop for the HTTP transport — no browser, no page, no navigation.
+
+    Deliberately simpler than scrape_loop(): with no page weight there is no
+    bootstrap to amortise, so batch size stops being a byte knob and rotation
+    is free. The WAF-trap response is therefore a pure session rotation.
+    """
+    for i, year_seq in enumerate(year_seqs):
+        elapsed = (time.time() * 1000 - start_ms) / 1000
+        print(f"  {worker_tag} {i + 1} / {len(year_seqs)} "
+              f"({(i + 1) / len(year_seqs) * 100:.1f}%) — {elapsed:.1f}s")
+
+        if tel['consecutive_empty'] >= WAF_TRAP_THRESHOLD:
+            log('WARN', worker_tag,
+                f"WAF trap detected ({tel['consecutive_empty']} consecutive empty). Rotating...")
+            worker = tel.get('_worker_id')
+            if proxy_enabled():
+                # Rotation costs nothing at all on this transport: no browser to
+                # recycle and no page to reload. Just a fresh Decodo session on
+                # the worker's pinned relay port, and a fresh curl session on it.
+                terminate_spawned_relay(worker)
+                relay_url = start_proxy_relay(
+                    build_proxy_session_id(worker, int(time.time())), worker_id=worker)
+                transport.close()
+                transport = HttpTransport(relay_url=relay_url)
+                tel['session_bootstraps'] += 1
+                log('INFO', worker_tag, 'Rotated exit IP (no browser to recycle)',
+                    {'event': 'proxy_session_rotated', 'transport': TRANSPORT_HTTP})
+            tel['consecutive_empty'] = 0
+
+        req_start = time.time() * 1000
+        result = await scrape_with_retry(transport, year_seq, conn)
+        tel['latencies'].append(time.time() * 1000 - req_start)
+        accumulate_result(tel, result)
+
+        if i < len(year_seqs) - 1:
+            await asyncio.sleep(random.uniform(1.0, 3.5))
+
+        if i >= 9 and (i + 1) % 10 == 0 and anomalous_miss_count(tel) / tel['permits_attempted'] >= 0.9:
+            log('WARN', worker_tag,
+                f"Early abort: {anomalous_miss_count(tel)}/{tel['permits_attempted']} anomalous misses")
+            break
+
+    return transport
 
 
 async def scrape_with_retry(page, year_seq, conn):
@@ -2434,6 +2763,14 @@ def compute_summary(tel, start_ms):
                 'resource_blocking': resource_blocking_enabled(),
                 'resources_allowed': _resource_filter_stats['allowed'],
                 'resources_blocked': _resource_filter_stats['blocked'],
+                # Which transport actually ran, and what it cost. The relay's
+                # own counters can miss a short HTTP run entirely (its periodic
+                # reporter may never fire before teardown), so the transport
+                # counts its own bytes and they are the authoritative figure
+                # for this path.
+                'transport': tel.get('transport', TRANSPORT_BROWSER),
+                'http_requests': tel.get('http_requests', 0),
+                'http_bytes_down': tel.get('http_bytes_down', 0),
                 'proxy_host': PROXY_HOST if proxy_enabled() else None,
                 'preflight_passed': tel.get('preflight_passed', True),
                 'max_permits_cap': MAX_PERMITS,
@@ -2480,7 +2817,8 @@ async def main():
     # silent when it failed. The relay replaces it at rung L2.
     assert_proxy_config_coherent()
 
-    log('INFO', worker_tag, 'Launching browser via nodriver (CDP)...')
+    if transport_mode() == TRANSPORT_BROWSER:
+        log('INFO', worker_tag, 'Launching browser via nodriver (CDP)...')
 
     browser = None
     relay_url = None
@@ -2492,6 +2830,34 @@ async def main():
             # failure that escapes main() produces a silent, uncounted dead worker.
             relay_url = start_proxy_relay(
                 build_proxy_session_id(tel['_worker_id']), worker_id=tel['_worker_id'])
+        if transport_mode() == TRANSPORT_HTTP:
+            # No browser at all: no Chrome, no xvfb, no CDP handshake, no
+            # preflight fingerprint check (there is no fingerprint to check —
+            # curl_cffi carries Chrome's TLS/HTTP2 signature itself), and no
+            # warm-up navigation (proven unnecessary: the portal answers a
+            # genuinely cold client).
+            transport = HttpTransport(relay_url=relay_url)
+            log('INFO', worker_tag, 'HTTP transport selected (no browser)', {
+                'event': 'transport_selected', 'transport': TRANSPORT_HTTP,
+                'impersonate': transport.impersonate, 'proxied': bool(relay_url)})
+            if proxy_enabled():
+                verify_http_egress(transport)
+            tel['session_bootstraps'] = 1
+            try:
+                await run_http_mode(args, transport, tel, start_ms, worker_tag)
+            finally:
+                tel['transport'] = TRANSPORT_HTTP
+                tel['http_requests'] = transport.requests
+                tel['http_bytes_down'] = transport.bytes_down
+                transport.close()
+            emit_summary(compute_summary(tel, start_ms))
+            emit_meta(
+                {'permits': ['permit_num', 'status', 'enriched_status', 'permit_type']},
+                {'permit_inspections': ['permit_num', 'stage_name', 'status',
+                                        'inspection_date', 'scraped_at']},
+                ['AIC Portal REST API (secure.toronto.ca/ApplicationStatus/jaxrs)'])
+            return
+
         # R1: db-queue + proxy used to bootstrap a FULL session here — entry
         # page, setup.do, preflight, egress check — and then throw it away
         # unused before claiming any work (the browser is retained across

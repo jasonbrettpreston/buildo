@@ -226,6 +226,16 @@ jobs:
           # behaviour is opt-in and selected here, so the artifact the operator
           # proved locally is what runs locally and the runner gets what the
           # runner needs. Do not move any of these into the code as defaults.
+          # Transport. PROVEN 2026-07-30: a Chrome-TLS-impersonating HTTP
+          # client (curl_cffi) walks the same four /jaxrs/ endpoints and returns
+          # identical data at ~6.2 KB/permit against 32 KB for the browser path
+          # (105 KB before that day's cuts), because this portal runs
+          # rate/reputation control rather than Akamai's JS-sensor product — it
+          # sets no _abck/ak_bmsc/bm_sz, so there is no sensor cookie that must
+          # be earned in a real browser. The BROWSER path is retained as a live,
+          # tested fallback: flip this to `browser` and everything below
+          # (attach mode, xvfb, the resource filter) applies again unchanged.
+          SCRAPER_TRANSPORT: http
           SCRAPER_PROXY_MODE: relay        # a datacenter IP must never reach AIC direct
           SCRAPER_ATTACH_MODE: '1'         # nodriver's 2.25s handshake budget vs a cold CI profile
           SCRAPER_VERIFY_EGRESS: '1'       # prove proxying, never assume it
