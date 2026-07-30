@@ -678,6 +678,8 @@ _relay_ports = {}
 # Blocked-host counts per worker, so the cost blocklist is observable rather than
 # a claim (they previously died on an unread stderr pipe).
 _relay_block_counts = {}
+# Bounded — diagnostics must never become the thing that floods a run's logs.
+RELAY_STDERR_SAMPLES = int(os.environ.get('SCRAPER_RELAY_STDERR_SAMPLES') or '25')
 _host_egress_ip_cache = {'ip': None, 'at': 0.0}
 
 
@@ -749,6 +751,18 @@ def start_proxy_relay(session_id, worker_id=None, timeout=30):
     terminate_spawned_relay(worker_id)
     raise RuntimeError(f'Proxy relay did not report a listening URL within {timeout}s')
 
+def _relay_summary():
+    """Aggregate every worker's relay stderr counters for the run summary."""
+    total = {'blocked': 0, 'lines': 0, 'samples': []}
+    for counts in _relay_block_counts.values():
+        total['blocked'] += counts.get('blocked', 0)
+        total['lines'] += counts.get('lines', 0)
+        for sample in counts.get('samples', []):
+            if len(total['samples']) < RELAY_STDERR_SAMPLES:
+                total['samples'].append(sample)
+    return total
+
+
 def _drain_relay_stderr(proc, worker_id=None):
     """Continuously drain the relay's stderr, counting the hosts it refuses.
 
@@ -759,14 +773,24 @@ def _drain_relay_stderr(proc, worker_id=None):
     evidence of the cost blocklist doing its job, and until now they died on a pipe
     nobody read. A wrongly-blocked host is otherwise invisible.
     """
-    counts = _relay_block_counts.setdefault(worker_id, {'blocked': 0, 'lines': 0})
+    counts = _relay_block_counts.setdefault(
+        worker_id, {'blocked': 0, 'lines': 0, 'samples': []})
 
     def _pump():
         try:
             for line in proc.stderr:
                 counts['lines'] += 1
-                if 'BLOCKED' in line:
+                text = line.strip()
+                if 'BLOCKED' in text:
                     counts['blocked'] += 1
+                # Keep a bounded sample of what the relay actually said. A
+                # `TypeError` in the page tells you a request failed; only the
+                # relay can tell you WHY it failed, and until now those lines died
+                # on a pipe nobody read.
+                if text and len(counts['samples']) < RELAY_STDERR_SAMPLES:
+                    counts['samples'].append(text[:200])
+                    log('WARN', '[scraper]', f'relay: {text[:200]}',
+                        {'event': 'proxy_relay_stderr', 'worker_id': worker_id})
         except (ValueError, OSError):
             pass  # pipe closed on teardown — expected
 
@@ -2057,6 +2081,11 @@ def compute_summary(tel, start_ms):
                 # tell "deliberately unproxied by policy" from "misconfigured".
                 'proxy_configured': proxy_enabled(),
                 'proxy_mode': proxy_mode(),
+                # What the relay refused, and what it said. Without these a request
+                # failure in the page is indistinguishable from a WAF block.
+                'relay_blocked': _relay_summary()['blocked'],
+                'relay_stderr_lines': _relay_summary()['lines'],
+                'relay_stderr_samples': _relay_summary()['samples'],
                 'proxy_host': PROXY_HOST if proxy_enabled() else None,
                 'preflight_passed': tel.get('preflight_passed', True),
                 'max_permits_cap': MAX_PERMITS,
