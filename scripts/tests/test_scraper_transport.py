@@ -203,6 +203,65 @@ class TestCounterFolding:
         assert tel.get('http_requests', 0) == 0
 
 
+class TestVerdictIsRowDerived:
+    """The old verdict read ONE row (`'FAIL' if miss_status == 'FAIL'`), so a
+    run that died before attempting anything left permits_attempted=0, made
+    miss_rate 0.0, and reported PASS — a broken run looking green, the exact
+    class this project keeps getting burned by."""
+
+    def test_fatal_error_with_zero_permits_is_a_FAIL(self, scraper):
+        tel = scraper.make_telemetry()
+        tel['preflight_passed'] = False
+        tel['last_error'] = 'Proxy relay exited before listening'
+        summary = scraper.compute_summary(tel, 0)
+        assert summary['records_meta']['audit_table']['verdict'] == 'FAIL'
+
+    def test_healthy_run_still_passes(self, scraper):
+        tel = scraper.make_telemetry()
+        tel['permits_attempted'] = 10
+        tel['permits_found'] = 8
+        summary = scraper.compute_summary(tel, 0)
+        assert summary['records_meta']['audit_table']['verdict'] == 'PASS'
+
+    def test_verdict_matches_the_rows_it_claims_to_summarise(self, scraper):
+        """Verdict must be READ OFF the rows — never computed beside them."""
+        tel = scraper.make_telemetry()
+        tel['permits_attempted'] = 10
+        tel['not_found_breakdown'] = {'address_not_found': 9}
+        table = scraper.compute_summary(tel, 0)['records_meta']['audit_table']
+        statuses = [r['status'] for r in table['rows']]
+        expected = 'FAIL' if 'FAIL' in statuses else 'WARN' if 'WARN' in statuses else 'PASS'
+        assert table['verdict'] == expected == 'FAIL'
+
+
+class TestResourceBlockingHonesty:
+    def test_reports_not_applicable_on_the_http_transport(self, scraper, monkeypatch):
+        """The workflow sets SCRAPER_RESOURCE_BLOCKING=1 and SCRAPER_TRANSPORT=http
+        together. Emitting `true` beside 0/0 reads as 'on but broken' — the same
+        declare-don't-verify defect as the historical proxy_configured lie."""
+        monkeypatch.setenv('SCRAPER_RESOURCE_BLOCKING', '1')
+        tel = scraper.make_telemetry()
+        tel['transport'] = 'http'
+        telemetry = scraper.compute_summary(tel, 0)['records_meta']['scraper_telemetry']
+        assert telemetry['resource_blocking'] is None
+
+    def test_reports_the_real_state_on_the_browser_transport(self, scraper, monkeypatch):
+        monkeypatch.setenv('SCRAPER_RESOURCE_BLOCKING', '1')
+        tel = scraper.make_telemetry()
+        telemetry = scraper.compute_summary(tel, 0)['records_meta']['scraper_telemetry']
+        assert telemetry['resource_blocking'] is True
+
+
+class TestHollowStageGuardIsShared:
+    def test_both_transports_reject_hollow_stages(self, scraper):
+        """A 200 with hollow fields is a fact about the PORTAL, so the guard
+        cannot live on one transport only — the browser path would otherwise
+        write empty rows and NULL out a good enriched_status."""
+        assert scraper.real_stages([{'desc': None, 'status': None}]) == []
+        assert scraper.real_stages([{'desc': 'Footings/Foundations', 'status': 'Passed'}])
+        assert scraper.real_stages(None) == []
+
+
 class TestEgressProof:
     def test_refuses_when_transport_ip_equals_host_ip(self, scraper, monkeypatch):
         """The C5 invariant, unchanged: 'is a proxy configured?' is not 'is

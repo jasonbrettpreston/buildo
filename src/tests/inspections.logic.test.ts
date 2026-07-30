@@ -855,11 +855,18 @@ describe('Stealth hardening', () => {
     path.resolve(__dirname, '../../scripts/aic-orchestrator.py'), 'utf-8'
   );
 
-  it('has a pool of warm bootstrap entry URLs (not just toronto.ca)', () => {
-    expect(scraperSource).toMatch(/ENTRY_URLS|WARM_URLS|REFERRER_URLS/);
-    // Must have at least 3 different entry points
-    const poolMatch = scraperSource.match(/(ENTRY_URLS|WARM_URLS|REFERRER_URLS)\s*=\s*\[/);
-    expect(poolMatch).not.toBeNull();
+  it('pins the warm entry URL to the bare root (the 5-page pool was KNOWINGLY retired)', () => {
+    // This lock previously claimed "at least 3 different entry points" while
+    // asserting only that the array literal existed — so ENTRY_URLS going 5 -> 1
+    // passed it silently. The pool WAS deliberately retired (2026-07-30): per-host
+    // byte accounting showed www.toronto.ca was 54.5% of the metered bill for zero
+    // data, and the referrer variation it bought is not what the portal keys on —
+    // the Referer/Sec-Fetch-Site pair comes free from the page origin. Pinned to
+    // the exact value the only scraper that ever produced rows used.
+    expect(scraperSource).toMatch(/ENTRY_URLS\s*=\s*\[/);
+    const pool = scraperSource.match(/ENTRY_URLS\s*=\s*\[([\s\S]*?)\]/)?.[1] ?? '';
+    const urls = pool.match(/'https?:[^']+'/g) ?? [];
+    expect(urls).toEqual(["'https://www.toronto.ca'"]);
   });
 
   it('uses random inter-request jitter above 1 second', () => {

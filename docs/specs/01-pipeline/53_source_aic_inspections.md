@@ -75,10 +75,15 @@ Our `permit_num` = `YY NNNNNN TYPE` (3 parts). The portal adds revision + work t
 ### Enriched Status Derivation
 | Condition | `enriched_status` |
 |-----------|-------------------|
-| All stages Outstanding | Permit Issued |
-| All stages Passed | Inspections Complete |
 | Any stage Not Passed | Not Passed |
-| Mixed statuses | Active Inspection |
+| All stages Outstanding | Permit Issued (unreachable under passed-only listings; retained for robustness) |
+| Otherwise (stages present, incl. all Passed) | Active Inspection |
+
+> **`Inspections Complete` is NOT derivable from stages** (operator-ruled 2026-07-30; Spec 44
+> §Core-Logic 3 governs). The portal lists only stages already PASSED, so an all-passed list
+> means "inspection activity observed", never completion — ground truth included permits with
+> Occupancy passed whose AIC status was still `Inspection`. Completion truth is the feed's own
+> `permits.status` (e.g. `Pending Closed`).
 
 ### Outputs
 - `permit_inspections` table: stage-level rows

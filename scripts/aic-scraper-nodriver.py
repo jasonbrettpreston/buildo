@@ -1573,7 +1573,8 @@ async def bootstrap_session(worker_id=None, relay_url=None):
         # Fix headless screen dimensions to match viewport (nodriver#2242)
         await inject_screen_overrides(page, profile)
 
-        # Warm bootstrap: random entry URL for referrer chain variation
+        # Warm bootstrap: single pinned entry URL (the pool was retired — see
+        # ENTRY_URLS). Kept as a list so a future experiment can widen it.
         entry_url = random.choice(ENTRY_URLS)
         try:
             page = await browser.get(entry_url, new_tab=False)
@@ -1845,6 +1846,18 @@ def transport_mode():
     return mode
 
 
+def real_stages(stages):
+    """Keep only stages whose fields are actually populated.
+
+    This portal's documented anti-scraper response to a suspected client is a
+    200 with hollow fields, so a stage counts only when it has both a name and
+    a status. Shared by both transports deliberately: it describes the PORTAL's
+    behaviour, and applying it to one transport only would leave the other able
+    to write empty rows and NULL out a good enriched_status.
+    """
+    return [s for s in (stages or []) if s.get('desc') and s.get('status')]
+
+
 def portal_xhr_headers():
     """Headers Chrome sends for a same-origin fetch() issued from the portal.
 
@@ -2023,8 +2036,7 @@ async def fetch_permit_chain_http(transport, year, sequence):
             # SHAPE validation, not status codes: this portal's anti-scraper
             # mode is a 200 with hollow fields, so a stage counts only when its
             # fields are really present.
-            stages = [s for s in (status_data.get('stages') or [])
-                      if s.get('desc') and s.get('status')]
+            stages = real_stages(status_data.get('stages'))
             if stages:
                 results.append({'permit_num': permit_num, 'stages': stages})
             else:
@@ -2176,7 +2188,13 @@ async def fetch_permit_chain(page, year, sequence):
             status_data, err = safe_json_parse(step4, f'step4:status/{folder_rsn}/{process_rsn}')
             if err:
                 return {'waf_blocked': True, 'properties': props, 'results': results}
-            stages = status_data.get('stages') or []
+            # Shape validation applies to BOTH transports — it is a fact about
+            # the portal, not about how we call it. Without it a hollow-field
+            # 200 (this portal's documented anti-scraper response) counts as a
+            # real stage, marks the permit `scraped`, and drives
+            # compute_enriched_status to None — clobbering a good
+            # enriched_status to NULL.
+            stages = real_stages(status_data.get('stages'))
             if stages:
                 results.append({'permit_num': permit_num, 'stages': stages})
             else:
@@ -2351,14 +2369,21 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag):
     Mirrors main()'s browser branches, minus everything that existed only to
     own a browser process.
     """
+    # RETURNS the transport it ends up holding. Rotation REBINDS a local name,
+    # which never propagates to the caller — so without this the caller would
+    # fold generation 1 a second time (double-count), never fold generations
+    # 2..N (silently dropped), and leak the live session. Exactly the defect
+    # the byte accounting exists to avoid, one layer above where it was fixed.
     if args['mode'] == 'single':
         conn = get_db_connection()
         try:
+            req_start = time.time() * 1000
             result = await scrape_with_retry(transport, args['single_permit'], conn)
+            tel['latencies'].append(time.time() * 1000 - req_start)
             accumulate_result(tel, result)
         finally:
             conn.close()
-        return
+        return transport
 
     if args['mode'] == 'worker':
         if not args['batch_file']:
@@ -2367,10 +2392,11 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag):
         try:
             with open(args['batch_file'], 'r') as fh:
                 year_seqs = json.load(fh)
-            await http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag)
+            transport = await http_scrape_loop(
+                transport, year_seqs, conn, tel, start_ms, worker_tag)
         finally:
             conn.close()
-        return
+        return transport
 
     # db-queue (the cloud path) and standalone both claim from the queue.
     worker_id = args['worker_id'] or 'standalone'
@@ -2409,6 +2435,7 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag):
                 complete_batch_in_queue(conn, year_seqs, worker_id, failed=set(year_seqs))
         finally:
             conn.close()
+    return transport
 
 
 async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag='[scraper]'):
@@ -2748,7 +2775,7 @@ def compute_summary(tel, start_ms):
     miss_rate = (anomalous / tel['permits_attempted'] * 100) if tel['permits_attempted'] > 0 else 0
     miss_status = 'FAIL' if miss_rate >= 20 else 'PASS'
 
-    return {
+    summary = {
         'records_total': tel['permits_attempted'],
         'records_new': tel['total_upserted'],
         'records_updated': tel['status_changes'],
@@ -2787,9 +2814,20 @@ def compute_summary(tel, start_ms):
                 # WHERE the metered bytes went. Until this existed every
                 # byte-budget claim was inference from a recon table.
                 'relay_bytes_by_host': _relay_summary()['bytes_by_host'],
-                'resource_blocking': resource_blocking_enabled(),
+                # Report what the filter DID, not what was configured. The
+                # workflow can set SCRAPER_RESOURCE_BLOCKING=1 while the HTTP
+                # transport runs, in which case no filter is ever installed —
+                # emitting `true` beside 0/0 would read as "on but broken" and
+                # is the same declare-don't-verify defect as the historical
+                # proxy_configured lie. None means "not applicable here".
+                'resource_blocking': (resource_blocking_enabled()
+                                      if tel.get('transport', TRANSPORT_BROWSER) == TRANSPORT_BROWSER
+                                      else None),
                 'resources_allowed': _resource_filter_stats['allowed'],
                 'resources_blocked': _resource_filter_stats['blocked'],
+                # The most expensive per-permit behaviour there is; it must be
+                # countable in the run report, not only in stdout.
+                'noise_visits': tel.get('noise_visits', 0),
                 # Which transport actually ran, and what it cost. The relay's
                 # own counters can miss a short HTTP run entirely (its periodic
                 # reporter may never fire before teardown), so the transport
@@ -2807,8 +2845,22 @@ def compute_summary(tel, start_ms):
             'audit_table': {
                 'phase': 1,
                 'name': 'Data Ingestion',
-                'verdict': 'FAIL' if miss_status == 'FAIL' else 'PASS',
+                # Row-derived cascade (Spec 47 §8.2), NOT a parallel boolean.
+                # The old `'FAIL' if miss_status == 'FAIL' else 'PASS'` read one
+                # row and ignored the rest: a fatal bootstrap/egress failure
+                # left permits_attempted=0, which made miss_rate 0.0 and the
+                # whole run report PASS. Assigned from `rows` below.
+                'verdict': None,
                 'rows': [
+                    # A run that died before attempting anything is a FAIL, not
+                    # a clean scrape of nothing — the orchestrator has had this
+                    # gate for a while and the worker was missing it.
+                    {'metric': 'preflight_passed', 'value': tel.get('preflight_passed', True),
+                     'threshold': '== true',
+                     'status': 'PASS' if tel.get('preflight_passed', True) else 'FAIL'},
+                    {'metric': 'fatal_error', 'value': tel.get('last_error') or 'none',
+                     'threshold': 'none',
+                     'status': 'FAIL' if tel.get('last_error') else 'PASS'},
                     {'metric': 'permits_attempted', 'value': tel['permits_attempted'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'permits_found', 'value': tel['permits_found'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'enriched_updates', 'value': tel['enriched_updates'], 'threshold': None, 'status': 'INFO'},
@@ -2825,6 +2877,13 @@ def compute_summary(tel, start_ms):
             },
         },
     }
+
+    # Spec 47 §8.2 cascade: FAIL beats WARN beats PASS, read off the rows
+    # themselves so a row can never be added without affecting the verdict.
+    statuses = [r['status'] for r in summary['records_meta']['audit_table']['rows']]
+    summary['records_meta']['audit_table']['verdict'] = (
+        'FAIL' if 'FAIL' in statuses else 'WARN' if 'WARN' in statuses else 'PASS')
+    return summary
 
 
 # ---------------------------------------------------------------------------
@@ -2864,6 +2923,10 @@ async def main():
             # warm-up navigation (proven unnecessary: the portal answers a
             # genuinely cold client).
             transport = HttpTransport(relay_url=relay_url)
+            # Set BEFORE anything can fail: a verify_http_egress() raise used to
+            # leave this unset, so the summary reported 'browser' for a run in
+            # which no browser ever existed.
+            tel['transport'] = TRANSPORT_HTTP
             log('INFO', worker_tag, 'HTTP transport selected (no browser)', {
                 'event': 'transport_selected', 'transport': TRANSPORT_HTTP,
                 'impersonate': transport.impersonate, 'proxied': bool(relay_url)})
@@ -2871,7 +2934,9 @@ async def main():
                 verify_http_egress(transport)
             tel['session_bootstraps'] = 1
             try:
-                await run_http_mode(args, transport, tel, start_ms, worker_tag)
+                # Rebind: rotation inside run_http_mode replaces the object.
+                transport = await run_http_mode(
+                    args, transport, tel, start_ms, worker_tag) or transport
             finally:
                 tel['transport'] = TRANSPORT_HTTP
                 # Fold the FINAL generation; earlier ones were banked at each
