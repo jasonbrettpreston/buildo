@@ -231,6 +231,16 @@ Our own ground truth is uncomfortable: **the only architecture that ever wrote a
 
 **Merge unit — STATED (final-gate B4):** the **whole branch merges once**, after the rung ladder stops. Rungs are commits, not merges. **The single exception is safety: C2's cache deletion and the `schedule:` comment-out ride L0's commit**, so that no intermediate state can leave a live cron pointed at a half-built stack — the G15 regression two converging CRITICALs were folded to prevent.
 
+### Ladder progress (updated as rungs land)
+| Rung | Commit | Status | Evidence |
+|---|---|---|---|
+| **L0** | `f910c46e` | ✅ DONE | 74 tests green; scraper 2140→1443 lines; data path byte-identical |
+| **L1** | `1ff1a89b` | ✅ DONE | **Proven on hardware:** Chrome 150 spawned on our port, DevTools answered, `browser._process_pid=None` (nodriver spawned nothing), teardown killed the pid we own |
+| **L2** | `606d0f71` | ✅ DONE | **Proven on hardware:** geo guard passed, relay on `ca.decodo.com:20001`, headed per C9, bandwidth guard applied, **browser egress IP ≠ host IP**, clean teardown. Deliberately did NOT touch `secure.toronto.ca` — no Akamai reputation spent |
+| **L3** | *this* | ⚠ IMPLEMENTED, RUNTIME PROOF DEFERRED | C9 landed early (pulled into L2 by the final gate, since an unconditional ruling cannot arrive after the mode it keys on). The workflow wiring is now **locked by `src/tests/deep-scrapes-workflow.infra.test.ts`**. **`xvfb` is Linux-only, so the headed-under-a-display-server path CANNOT be executed on the operator's Windows box** — its runtime evidence necessarily comes from L5's runner dispatch. Stated rather than quietly claimed |
+| **L4** | — | pending | CDP resource blocking (~375× byte lever; `script` must stay allowed) |
+| **L5** | — | pending | Runner dispatch + the C-W env block; also supplies L3's missing evidence |
+
 **Rules:** one rung per commit, each with its own tests. **Never skip a rung to save time.** A rung's pass criterion is written *before* it is attempted. L5 is the only dispatch, and it validates *mechanics*, not scraper logic (Non-Goals carve-out). The Step 3b probe is **absorbed into L1–L3** — the ladder is a better probe than a throwaway script, because each rung leaves a shippable artifact.
 
 **Why this is the right structure and the previous one was not:** the monolithic version could only tell us *that* something failed. This one tells us *which addition* failed, and lets us keep everything below it. It also means the task delivers value at L0 — the drift is gone and the attested artifact is back — even if every cloud rung above it fails.
