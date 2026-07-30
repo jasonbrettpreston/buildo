@@ -196,6 +196,30 @@ jobs:
           SCRAPE_MAX_PERMITS: ${{ vars.SCRAPE_MAX_PERMITS }}
           SCRAPE_PERMIT_TYPE: ${{ vars.SCRAPE_PERMIT_TYPE }}
 
+          # --- Cloud gate block (WF2 restore, C-W) ---------------------------
+          # The scraper's DEFAULTS are the attested LOCAL configuration:
+          # unproxied, nodriver-launched, no cost guards. Every cloud-specific
+          # behaviour is opt-in and selected here, so the artifact the operator
+          # proved locally is what runs locally and the runner gets what the
+          # runner needs. Do not move any of these into the code as defaults.
+          SCRAPER_PROXY_MODE: relay        # a datacenter IP must never reach AIC direct
+          SCRAPER_ATTACH_MODE: '1'         # nodriver's 2.25s handshake budget vs a cold CI profile
+          SCRAPER_VERIFY_EGRESS: '1'       # prove proxying, never assume it
+          SCRAPER_DEVTOOLS_TIMEOUT_S: '60' # cold-profile readiness budget
+          # Cost ceilings. Both layers are mandatory on a metered path: the launch
+          # flags stop Chrome's own background traffic at the source, and the
+          # relay's blocklist enforces it at the chokepoint. One run without them
+          # billed ~1.76 GB (~$6.60), 99.9% of it Chrome talking to Google.
+          SCRAPER_BANDWIDTH_GUARD: '1'
+          SCRAPER_MAX_BROWSER_LAUNCHES: '12'   # 116 launches was the incident
+          #
+          # DELIBERATELY NOT SET: SCRAPER_WAF_TRAP_THRESHOLD, SCRAPER_RETRY_BASE_MS.
+          # Nobody has measured the correct cloud values. The recon that produced
+          # 90s/3 was taken through a proxy, from a runner, against an Akamai edge
+          # ALREADY in a reputation block — a context that is not this one. The
+          # module defaults (20 / 2000) apply until a measurement run sets them,
+          # and the cron stays disabled until they are.
+
       - name: Verdict check — deep_scrapes (orchestrator exit-0 masking guard)
         # aic-orchestrator.py exits 0 on a scrape-level failure by design
         # (Integration HIGH-2, Spec 115 §2.4) — a `run-chain.js` exit code of
