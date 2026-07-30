@@ -288,3 +288,42 @@ class TestSafeJsonParse:
         data, err = scraper.safe_json_parse('{not json', 'step')
 
         assert data is None and err is not None
+
+
+class TestAkamaiTunedBackoff:
+    """Pinned to the live-measured reputation model (recon 2026-07-30).
+
+    Akamai allows ~12 requests per ~10 minutes per client, then 403s everything
+    for ~5 minutes. Retrying inside that window deepens the block, and a high
+    trap threshold spends requests against an edge already refusing everything.
+    These values are the difference between rotating out of a block and
+    hammering it — the CI signature was 654 requests, 0 rows, 102 traps.
+    """
+
+    def test_retry_backoff_outlasts_the_recovery_window(self, scraper):
+        """First retry must land AFTER Akamai's ~5 min block would start clearing.
+
+        Old value was 2000 ms — three retries all inside the window.
+        """
+        assert scraper.RETRY_BASE_MS >= 60_000, 'seconds-scale retries deepen the block'
+
+    def test_total_retry_span_is_minutes_not_seconds(self, scraper):
+        total_ms = sum(scraper.RETRY_BASE_MS * (2 ** i) for i in range(scraper.MAX_RETRIES))
+
+        assert total_ms >= 240_000, 'the retry ladder must span the ~5 min recovery'
+
+    def test_waf_trap_fires_before_the_budget_is_burned(self, scraper):
+        """Rotate the exit IP after a few empties, not after 20.
+
+        At ~4 calls/permit against a ~12-request budget, 20 consecutive empties
+        is already several permits past the point the edge stopped answering.
+        """
+        assert scraper.WAF_TRAP_THRESHOLD <= 5
+
+    def test_all_three_are_env_overridable(self, monkeypatch):
+        mod = reload_scraper_with_env(
+            monkeypatch, SCRAPER_MAX_RETRIES='7', SCRAPER_RETRY_BASE_MS='1234',
+            SCRAPER_WAF_TRAP_THRESHOLD='9', SCRAPE_BATCH_SIZE='', SCRAPE_MAX_PERMITS='',
+            SCRAPE_PERMIT_TYPE='')
+
+        assert (mod.MAX_RETRIES, mod.RETRY_BASE_MS, mod.WAF_TRAP_THRESHOLD) == (7, 1234, 9)

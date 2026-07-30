@@ -64,9 +64,18 @@ if env_path.exists():
 # Constants
 # ---------------------------------------------------------------------------
 AIC_BASE = 'https://secure.toronto.ca/ApplicationStatus'
-MAX_RETRIES = 3
-RETRY_BASE_MS = 2000
-WAF_TRAP_THRESHOLD = 20
+# Tuned to Akamai's MEASURED behaviour (live recon 2026-07-30), not to guesses.
+# The portal enforces cumulative CLIENT REPUTATION: ~12 requests per ~10 minutes,
+# after which EVERY request 403s with a ~430 B HTML page regardless of headers
+# or cookies, clearing only after ~5 minutes idle — and staying sticky, so 2-3
+# requests re-trip it. Under that model the old values were actively harmful:
+# retrying at 2s x3 hammers the edge INSIDE its recovery window (deepening the
+# block), and a 20-request trap threshold spends 20 requests against an edge
+# that is already refusing everything. Retries must outlast the window, and the
+# trap must fire almost immediately so the exit IP rotates instead.
+MAX_RETRIES = int(os.environ.get('SCRAPER_MAX_RETRIES') or '2')
+RETRY_BASE_MS = int(os.environ.get('SCRAPER_RETRY_BASE_MS') or '90000')   # 90s, 180s
+WAF_TRAP_THRESHOLD = int(os.environ.get('SCRAPER_WAF_TRAP_THRESHOLD') or '3')
 SESSION_REFRESH_INTERVAL = 200
 
 # DB permit_type strings — used for queue population queries
