@@ -295,6 +295,90 @@ def resolve_proxy_port(worker_id, base_port=None):
     return port
 
 
+PROXY_RELAY_JS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'proxy-relay.mjs')
+
+# Relay subprocesses we spawned, per worker — same ownership discipline as
+# _spawned_browsers: kill a pid we own, never pattern-match the process table.
+_spawned_relays = {}
+
+
+def build_upstream_proxy_url(session_id, worker_id=None):
+    """The credentialed upstream URL handed to the relay (never to Chrome)."""
+    from urllib.parse import quote
+    user = quote(build_proxy_username(session_id), safe='')
+    password = quote(PROXY_PASS, safe='')
+    port = resolve_proxy_port(worker_id)
+    return f'{PROXY_SCHEME}://{user}:{password}@{PROXY_HOST}:{port}'
+
+
+def start_proxy_relay(session_id, worker_id=None, timeout=30):
+    """Run a local unauthenticated relay that holds the upstream credentials.
+
+    Returns its `http://127.0.0.1:PORT` URL, which Chrome can use with a plain
+    --proxy-server and NO extension. Replaces the MV3 extension because
+    branded Chrome removed --load-extension (137) and its opt-out (142), and an
+    evicted MV3 service worker silently stops answering onAuthRequired while
+    chrome.proxy settings persist — the browser keeps routing through the proxy
+    while unable to authenticate.
+    """
+    if not PROXY_HOST:
+        return None
+    upstream = build_upstream_proxy_url(session_id, worker_id)
+    proc = subprocess.Popen(
+        ['node', PROXY_RELAY_JS, upstream, '0'],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        **({'start_new_session': True} if sys.platform != 'win32' else {}),
+    )
+    _spawned_relays[worker_id] = proc
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        line = proc.stdout.readline()
+        if line:
+            try:
+                url = json.loads(line).get('url')
+            except ValueError:
+                continue
+            if url:
+                log('INFO', '[scraper]', 'Proxy relay ready', {
+                    'event': 'proxy_relay_ready',
+                    'local_url': url,
+                    'upstream_host': PROXY_HOST,
+                    'upstream_port': resolve_proxy_port(worker_id),
+                    'scheme': PROXY_SCHEME,
+                })
+                return url
+        if proc.poll() is not None:
+            err = (proc.stderr.read() or '').strip()[:200]
+            raise RuntimeError(f'Proxy relay exited (rc={proc.returncode}) before listening: {err}')
+    terminate_spawned_relay(worker_id)
+    raise RuntimeError(f'Proxy relay did not report a listening URL within {timeout}s')
+
+
+def terminate_spawned_relay(worker_id=None, timeout=8):
+    """Kill the relay we spawned for this worker. Idempotent; never raises."""
+    proc = _spawned_relays.pop(worker_id, None)
+    if proc is None or proc.poll() is not None:
+        return False
+    try:
+        if sys.platform != 'win32':
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+        else:
+            proc.terminate()
+    except OSError as err:
+        log('WARN', '[scraper]', f'Could not signal proxy relay: {err}',
+            {'event': 'relay_terminate_failed'})
+    try:
+        proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        try:
+            proc.kill()
+        except OSError:
+            pass
+    log('INFO', '[scraper]', 'Terminated proxy relay',
+        {'event': 'proxy_relay_terminated', 'worker_id': worker_id})
+    return True
+
+
 def build_proxy_username(session_id, user=None, duration_min=None):
     """Build the Decodo username carrying the sticky-session parameters.
 
@@ -743,7 +827,7 @@ _spawned_browsers = {}
 
 
 def build_browser_args(profile, proxy_ext_dir=None, chrome_log=None, platform=None,
-                       debug_port=None, profile_dir=None):
+                       debug_port=None, profile_dir=None, relay_url=None):
     """Pure launch-flag builder — returns (browser_args, use_headless).
 
     Pure and unit-tested because every flag here was a cloud-only failure at
@@ -761,6 +845,14 @@ def build_browser_args(profile, proxy_ext_dir=None, chrome_log=None, platform=No
     args += NODRIVER_DEFAULT_ARGS
     disabled_features = NODRIVER_DISABLED_FEATURES
     use_headless = True
+    if relay_url:
+        # The relay holds the credentials, so Chrome gets a plain, unauthenticated
+        # proxy and needs no extension — which also means no forced headed mode
+        # (headed + Xvfb existed ONLY because --load-extension requires them).
+        args.append(f'--proxy-server={relay_url}')
+        # Chrome bypasses proxies for loopback by default, which would send our
+        # relay-bound traffic straight out. This re-includes loopback.
+        args.append('--proxy-bypass-list=<-loopback>')
     if proxy_ext_dir:
         args.append(f'--load-extension={proxy_ext_dir}')
         # nodriver adds this whenever extensions are loaded (config.py:186-187);
@@ -963,9 +1055,11 @@ def terminate_spawned_chrome(worker_id=None, timeout=8):
 
 
 atexit.register(lambda: [terminate_spawned_chrome(w) for w in list(_spawned_browsers)])
+# The relay holds live proxy credentials in its argv — it must never outlive us.
+atexit.register(lambda: [terminate_spawned_relay(w) for w in list(_spawned_relays)])
 
 
-async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
+async def bootstrap_session(proxy_ext_dir=None, worker_id=None, relay_url=None):
     """Launch Chrome via CDP and establish AIC session with warm entry.
 
     When proxy is configured, runs headed (not headless) because
@@ -1006,7 +1100,8 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
     # owns the profile and breaks every retry). Owning the process fixes all four.
     debug_port = find_free_port()
     browser_args, _use_headless = build_browser_args(
-        profile, proxy_ext_dir, chrome_log, debug_port=debug_port, profile_dir=profile_dir)
+        profile, proxy_ext_dir, chrome_log, debug_port=debug_port,
+        profile_dir=profile_dir, relay_url=relay_url)
 
     log_chrome_diagnostics()
     proc = launch_chrome(browser_args, worker_id=worker_id)
@@ -1021,7 +1116,7 @@ async def bootstrap_session(proxy_ext_dir=None, worker_id=None):
     try:
         page = await browser.get('about:blank')
 
-        if proxy_ext_dir:
+        if proxy_ext_dir or relay_url:
             # Log what targets exist (diagnostic), then PROVE we are proxied by
             # egress IP. Target visibility is not evidence of proxying: judging
             # the extension by its service-worker target rejected a browser
@@ -1102,12 +1197,14 @@ async def preflight_stealth_check(page):
     return True, None
 
 
-async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id=None):
+async def bootstrap_with_retry(run_preflight=True, proxy_ext_dir=None, worker_id=None,
+                               relay_url=None):
     """Bootstrap with retry — 3 attempts with 10s backoff."""
     last_error = None
     for attempt in range(1, 4):
         try:
-            browser, page, profile = await bootstrap_session(proxy_ext_dir=proxy_ext_dir, worker_id=worker_id)
+            browser, page, profile = await bootstrap_session(
+                proxy_ext_dir=proxy_ext_dir, worker_id=worker_id, relay_url=relay_url)
             if attempt > 1:
                 log('INFO', '[scraper]', f'Bootstrap succeeded on attempt {attempt}')
 
@@ -1563,9 +1660,11 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
                     cleanup_proxy_extension(proxy_ext_dir)
                     new_session_id = build_proxy_session_id(
                         tel.get('_worker_id', 'standalone'), int(time.time()))
-                    proxy_ext_dir = build_proxy_extension(new_session_id, proxy_port=resolve_proxy_port(tel.get('_worker_id')))
+                    terminate_spawned_relay(tel.get('_worker_id'))
+                    relay_url = start_proxy_relay(new_session_id, tel.get('_worker_id'))
                     log('INFO', worker_tag, f'Proxy session rotated: {new_session_id}')
-                browser, page, attempts, profile = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir, worker_id=tel.get('_worker_id'))
+                browser, page, attempts, profile = await bootstrap_with_retry(
+                    worker_id=tel.get('_worker_id'), relay_url=relay_url)
                 tel['session_bootstraps'] += attempts
                 tel['consecutive_empty'] = 0
             except Exception as err:
@@ -1700,22 +1799,24 @@ async def main():
 
     # Build per-worker proxy extension if proxy is configured
     proxy_ext_dir = None
+    relay_url = None
     if PROXY_HOST and args['worker_id']:
         session_id = build_proxy_session_id(args['worker_id'])
-        worker_port = resolve_proxy_port(args['worker_id'])
-        proxy_ext_dir = build_proxy_extension(session_id, proxy_port=worker_port)
-        log('INFO', worker_tag, f'Proxy extension created: {PROXY_HOST}:{worker_port} session={session_id}')
+        relay_url = start_proxy_relay(session_id, args['worker_id'])
+        log('INFO', worker_tag,
+            f'Proxy relay up on {relay_url} -> {PROXY_HOST}:{resolve_proxy_port(args["worker_id"])} session={session_id}')
     elif PROXY_HOST:
         session_id = build_proxy_session_id('standalone')
-        worker_port = resolve_proxy_port(None)
-        proxy_ext_dir = build_proxy_extension(session_id, proxy_port=worker_port)
-        log('INFO', worker_tag, f'Proxy extension created: {PROXY_HOST}:{worker_port} session={session_id}')
+        relay_url = start_proxy_relay(session_id, None)
+        log('INFO', worker_tag,
+            f'Proxy relay up on {relay_url} -> {PROXY_HOST}:{resolve_proxy_port(None)} session={session_id}')
 
     log('INFO', worker_tag, 'Launching browser via nodriver (CDP)...')
 
     browser = None
     try:
-        browser, page, bootstrap_attempts, profile = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir, worker_id=tel['_worker_id'])
+        browser, page, bootstrap_attempts, profile = await bootstrap_with_retry(
+            worker_id=tel['_worker_id'], relay_url=relay_url)
         tel['session_bootstraps'] = bootstrap_attempts
         log('INFO', worker_tag, 'WAF session established (no WebDriver)')
 
@@ -1788,11 +1889,13 @@ async def main():
                     if PROXY_HOST:
                         cleanup_proxy_extension(proxy_ext_dir)
                         batch_session_id = build_proxy_session_id(worker_id, int(time.time()))
-                        proxy_ext_dir = build_proxy_extension(batch_session_id, proxy_port=resolve_proxy_port(worker_id))
+                        terminate_spawned_relay(worker_id)
+                        relay_url = start_proxy_relay(batch_session_id, worker_id)
                         log('INFO', worker_tag, f'Batch {batch_num}: new IP session={batch_session_id}')
 
                     if browser is None:
-                        browser, page, attempts, profile = await bootstrap_with_retry(proxy_ext_dir=proxy_ext_dir, worker_id=worker_id)
+                        browser, page, attempts, profile = await bootstrap_with_retry(
+                            worker_id=worker_id, relay_url=relay_url)
                         tel['session_bootstraps'] += attempts
                         log('INFO', worker_tag, f'Batch {batch_num}: browser bootstrapped')
 
@@ -1866,9 +1969,11 @@ async def main():
                 await stop_and_terminate(browser, tel.get("_worker_id"))
             except Exception:
                 pass
-        # Clean up proxy extension directory
+        # Clean up proxy extension directory (legacy path; unused once the
+        # relay replaced --load-extension, but harmless if ever re-enabled)
         if proxy_ext_dir:
             cleanup_proxy_extension(proxy_ext_dir)
+        terminate_spawned_relay(tel.get('_worker_id'))
         # Safety net: kill orphaned Chrome processes spawned by THIS worker only.
         # Each worker uses a unique profile dir (profile-worker-N or profile-standalone).
         # Scoping prevents multi-worker sabotage where one worker kills another's Chrome.
