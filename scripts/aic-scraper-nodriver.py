@@ -889,12 +889,15 @@ async def verify_proxied_egress(browser, host_ip=_HOST_IP_UNSET):
     on the GH runner (run 30496893882) against a browser whose extension had in
     fact loaded (run 30498062060 later listed both service workers).
 
-    NAVIGATES to the echo service rather than fetch()ing it: at this point in
-    bootstrap the tab is about:blank, whose opaque origin makes a cross-origin
-    fetch throw — nodriver then returns an ExceptionDetails object rather than
-    raising, which is exactly what broke run 30498062060. Navigation has no such
-    restriction. The scraper's own AIC fetches are fine because they run on the
-    AIC origin.
+    NAVIGATES to the echo service rather than fetch()ing it: a cross-origin
+    fetch from an arbitrary document throws — nodriver then returns an
+    ExceptionDetails object rather than raising, which is exactly what broke
+    run 30498062060. Navigation has no such restriction. It navigates a NEW
+    tab, never the scraping tab: by this point in bootstrap the main tab is ON
+    the AIC origin, and every /jaxrs/ call inherits the PAGE's origin — probe
+    30568655070 proved that hijacking the main tab here strands the scraper on
+    the echo origin and every data fetch throws 'TypeError: Failed to fetch',
+    which then reads as a WAF block.
 
     Why it must fail loud rather than warn: the MV3 extension supplies BOTH the
     proxy route and its credentials, so if it does not load there is no error at
@@ -919,12 +922,24 @@ async def verify_proxied_egress(browser, host_ip=_HOST_IP_UNSET):
     # "unreachable => treat as proxied" branch and let a completely broken transport
     # start scraping (GH run 30560364087).
     raw = ''
-    for attempt in range(3):
-        page = await browser.get(EGRESS_ECHO_URL)
-        await page.sleep(1.5 + attempt)
-        raw = await page.evaluate('document.body.innerText', await_promise=False)
-        if _extract_ip(raw) or _looks_unreachable(raw):
-            break
+    tab = None
+    try:
+        for attempt in range(3):
+            if tab is None:
+                tab = await browser.get(EGRESS_ECHO_URL, new_tab=True)
+            else:
+                await tab.get(EGRESS_ECHO_URL)
+            await tab.sleep(1.5 + attempt)
+            raw = await tab.evaluate('document.body.innerText', await_promise=False)
+            if _extract_ip(raw) or _looks_unreachable(raw):
+                break
+    finally:
+        if tab is not None:
+            try:
+                await tab.close()
+            except Exception as err:  # noqa: BLE001
+                log('WARN', '[scraper]', f'Could not close the egress-check tab: {err}',
+                    {'event': 'egress_tab_close_failed'})
     browser_ip = _extract_ip(raw)
     if not browser_ip:
         if not str(raw or '').strip():
@@ -1510,6 +1525,12 @@ async def bootstrap_with_retry(run_preflight=True, worker_id=None, relay_url=Non
                 # while scraping direct. Assert the OUTCOME.
                 await log_browser_targets(browser)
                 await verify_proxied_egress(browser)
+                # The egress check runs in its own tab, but PROVE the scraping
+                # tab still holds the AIC origin before handing it to the scrape
+                # loop — origin drift here surfaces three layers later as
+                # 'TypeError: Failed to fetch' on every data call, which reads
+                # as a WAF block (probe 30568655070).
+                await assert_on_aic_origin(page)
 
             return browser, page, attempt, profile
         except Exception as err:
@@ -2026,9 +2047,15 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
                     terminate_spawned_relay(worker)
                     start_proxy_relay(
                         build_proxy_session_id(worker, int(time.time())), worker_id=worker)
-                    # Clear the session state a trap implies without discarding the
-                    # process: a fresh document on the new exit IP.
-                    page = await browser.get('about:blank')
+                    # Re-enter the portal on the new exit IP. NOT about:blank: every
+                    # /jaxrs/ call inherits the PAGE's origin, and an opaque origin
+                    # makes each one throw 'TypeError: Failed to fetch' — probe
+                    # 30568655070 failed its second permit exactly this way.
+                    page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
+                    if profile:
+                        await inject_screen_overrides(page, profile)
+                    await page.sleep(random.uniform(0.8, 2.0))
+                    await assert_on_aic_origin(page)
                     log('INFO', worker_tag, 'Rotated exit IP without recycling the browser',
                         {'event': 'proxy_session_rotated', 'browser_recycled': False})
                 else:

@@ -35,9 +35,28 @@ Locks: `scripts/tests/test_scraper_fetch.py` (sentinel shapes, ExceptionDetails 
 source-level newline-escape lock). Verified end-to-end in-session: real module's rendered step-1
 JS passes node parse; sentinel path classifies `fetch_error` → `waf_blocked` correctly.
 
-**Next: bounded probe** (`max_permits=2 max_retries=1 chain_timeout_minutes=8`) — the logs
-should now name the ORIGINAL TypeError's message (the pre-`921536a9` fault, e.g. a blocked
-fetch) or simply work. Remember the cancelled-run → `pipeline_runs` stuck-`running` gotcha below.
+**Probe #6 (run 30568655070) — the fix WORKED and named the fault:** both permits reported
+`fetch_error: TypeError — Failed to fetch`, cleanly classified (`proxy_errors=2`, honest FAIL
+verdict, sentinel body visible in the step-1 sample). Reading the code with that message in
+hand exposed the real bug, a second finding:
+
+**Finding 2 (FIXED, same session): the egress check hijacked the scraping tab.**
+`bootstrap_session` lands the tab on AIC and asserts the origin — then, on the PROXIED path
+only, `bootstrap_with_retry` runs `verify_proxied_egress(browser)`, which did
+`browser.get(EGRESS_ECHO_URL)` on the SAME tab. Nothing navigated back, so every same-origin
+`/jaxrs/` fetch was actually cross-origin from the echo page → `TypeError: Failed to fetch`.
+The rotation branch had the same class: after an IP rotate it parked the tab on `about:blank`
+(opaque origin — cannot fetch AIC either), which is exactly why probe #6's second permit failed
+the same way after "Rotating...". This is why the attested local (unproxied) path never saw it,
+and why the handoff's "wrong origin — eliminated" was stale: the assert passed at bootstrap,
+the origin was lost one step later. Fixes: egress check runs in its OWN tab (closed after);
+`assert_on_aic_origin(page)` tripwire re-runs AFTER the egress check; rotation re-enters
+`setup.do` + asserts origin instead of `about:blank`. Locks in `test_scraper_egress.py`
+(new-tab + closed) — `test_egress_check_never_hijacks_the_scraping_tab`.
+
+**Next: probe again.** Same bounded dispatch. Expected now: real portal JSON (or an honest,
+classified WAF/not-found outcome). Remember the cancelled-run → `pipeline_runs`
+stuck-`running` gotcha below.
 
 ## The one open defect — ~~start here~~ FIXED above; kept for the eliminated-layers table
 

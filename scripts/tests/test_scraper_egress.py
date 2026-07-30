@@ -25,6 +25,16 @@ class FakePage:
         self._body = echo_body
         self.evaluated = 0
         self.slept = 0.0
+        self.navigations = []
+        self.closed = False
+
+    async def get(self, url, **_kw):
+        # Retry attempts re-navigate the SAME egress tab, never the main tab.
+        self.navigations.append(url)
+        return self
+
+    async def close(self):
+        self.closed = True
 
     async def evaluate(self, _expr, await_promise=False):
         self.evaluated += 1
@@ -47,9 +57,11 @@ class FakeBrowser:
     def __init__(self, echo_body):
         self.page = FakePage(echo_body)
         self.navigated_to = None
+        self.new_tab_flags = []
 
-    async def get(self, url, **_kw):
+    async def get(self, url, **kw):
         self.navigated_to = url
+        self.new_tab_flags.append(bool(kw.get('new_tab', False)))
         return self.page
 
 
@@ -176,6 +188,19 @@ class TestVerifyProxiedEgress:
         await scraper.verify_proxied_egress(browser, host_ip='203.0.113.7')
 
         assert browser.navigated_to == scraper.EGRESS_ECHO_URL
+
+    async def test_egress_check_never_hijacks_the_scraping_tab(self, scraper):
+        """Regression lock — probe 30568655070: the check once navigated the MAIN
+        tab to the echo service AFTER bootstrap had landed it on the AIC origin.
+        Every /jaxrs/ call inherits the page's origin, so both probe permits threw
+        'TypeError: Failed to fetch' and were miscounted as WAF blocks. The check
+        must open its OWN tab and close it when done."""
+        browser = FakeBrowser(json.dumps({'ip': '198.51.100.22'}))
+
+        await scraper.verify_proxied_egress(browser, host_ip='203.0.113.7')
+
+        assert browser.new_tab_flags == [True], 'echo navigation must use new_tab=True'
+        assert browser.page.closed, 'the egress tab must be closed after the check'
 
 
 @pytest.mark.asyncio
