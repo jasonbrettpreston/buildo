@@ -890,10 +890,28 @@ async def verify_proxied_egress(browser, host_ip=_HOST_IP_UNSET):
             "'am I proxied?' is unanswerable — refusing to scrape unverified"
         )
 
-    page = await browser.get(EGRESS_ECHO_URL)
-    raw = await page.evaluate('document.body.innerText', await_promise=False)
+    # Read AFTER the document has had a chance to load. Reading immediately gave an
+    # empty body on the slower proxied path in CI, which then fell through to the
+    # "unreachable => treat as proxied" branch and let a completely broken transport
+    # start scraping (GH run 30560364087).
+    raw = ''
+    for attempt in range(3):
+        page = await browser.get(EGRESS_ECHO_URL)
+        await page.sleep(1.5 + attempt)
+        raw = await page.evaluate('document.body.innerText', await_promise=False)
+        if _extract_ip(raw) or _looks_unreachable(raw):
+            break
     browser_ip = _extract_ip(raw)
     if not browser_ip:
+        if not str(raw or '').strip():
+            # Explicitly NOT the "unreachable => proxied" case. An empty document
+            # proves nothing: it is equally consistent with a dead transport, and
+            # treating it as proof of proxying is what allowed a run to proceed with
+            # every navigation failing. Refuse.
+            raise RuntimeError(
+                f'The browser returned an EMPTY document from {EGRESS_ECHO_URL} after '
+                f'3 attempts. That is not evidence of proxying — it is evidence the '
+                f'browser cannot load anything. Check the relay/proxy transport.')
         if _looks_unreachable(raw):
             # The host reached this service moments ago (host_ip is set), so a
             # browser that could NOT reach it is provably not on the host's
@@ -944,6 +962,9 @@ async def log_browser_targets(page):
         targets = await page.send(uc.cdp.target.get_targets())
         seen = sorted(f'{getattr(t, "type_", "?")}:{getattr(t, "url", "?")[:80]}' for t in targets)
     except Exception as err:  # noqa: BLE001
+        # Diagnostic only — it must never gate a scrape (a false negative here
+        # already cost us run 30496893882). nodriver's Browser has no .send() on
+        # this version, so this is expected to no-op rather than to work.
         log('WARN', '[scraper]', f'Could not enumerate targets: {err}',
             {'event': 'target_enumeration_failed'})
         return []
@@ -1337,17 +1358,57 @@ async def bootstrap_session(worker_id=None, relay_url=None):
             page = await browser.get(entry_url, new_tab=False)
             await inject_screen_overrides(page, profile)
             await page.sleep(random.uniform(1.5, 4.0))
-        except Exception:
-            pass  # entry site may be slow — non-fatal
+        except Exception as err:
+            # Non-fatal — the entry site only shapes the referrer chain — but NOT
+            # silent. A bare `except: pass` here hid a completely broken transport:
+            # every navigation was failing and the first visible symptom was
+            # `fetch()` throwing TypeError three layers later, which the scraper
+            # then mislabelled as a WAF block.
+            log('WARN', '[scraper]', f'Warm entry failed ({entry_url}): {err}',
+                {'event': 'warm_entry_failed', 'url': entry_url})
 
-        # Navigate to AIC portal
+        # Navigate to the AIC portal, and PROVE we landed on it.
         page = await browser.get(f'{AIC_BASE}/setup.do?action=init', new_tab=False)
         await inject_screen_overrides(page, profile)
         await page.sleep(random.uniform(0.8, 2.0))
+        await assert_on_aic_origin(page)
         return browser, page, profile
     except Exception as err:
         await stop_and_terminate(browser, worker_id)
         raise err
+
+
+async def assert_on_aic_origin(page):
+    """Fail loudly unless the page really is on the AIC portal's origin.
+
+    WHY THIS EXISTS (2026-07-30, GH run 30560364087): every data call is issued as
+    `page.evaluate(fetch(...))`, so it inherits the PAGE's origin. If the navigation
+    to setup.do silently failed — a dead proxy, a tunnel refusal, a Chrome error
+    page — the document is not on secure.toronto.ca and a same-origin `/jaxrs/`
+    fetch throws `TypeError: Failed to fetch`. `safe_json_parse` sees a non-JSON
+    body, returns `html_or_empty`, and the scraper reports `waf_blocked`.
+
+    That is how a completely broken transport masqueraded as a WAF block for a
+    whole run: 8 permits, 0 rows, every one logged as WAF. `browser.get()` does not
+    raise on an error page, so nothing upstream of here noticed. Assert the origin
+    instead of assuming it — a wrong origin is a bootstrap failure, not a scrape
+    failure, and the two need completely different responses.
+    """
+    try:
+        href = await page.evaluate('window.location.href', await_promise=False)
+    except Exception as err:
+        raise RuntimeError(f'Could not read the page URL after navigating to AIC: {err}')
+
+    # NOTE: not sanitize_js_value() — that guards values being interpolated INTO a
+    # JS snippet, and would reject a perfectly ordinary URL coming back OUT.
+    href = href if isinstance(href, str) else str(href or '')
+    if 'secure.toronto.ca' not in href:
+        raise RuntimeError(
+            f'Navigation to the AIC portal did not land on it — the document is at '
+            f'{href[:120]!r}. Every /jaxrs/ call inherits this origin and would fail '
+            f'with a TypeError that looks like a WAF block. Check the proxy transport '
+            f'first: this is a bootstrap failure, not a scrape failure.')
+    return href
 
 
 async def preflight_stealth_check(page):

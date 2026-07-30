@@ -205,3 +205,48 @@ class TestStep1BodyClassifier:
         """It returns None and raises nothing — a diagnostic must not gate."""
         monkeypatch.setattr(scraper, '_step1_samples_logged', [0])
         assert scraper._log_step1_body(None, 'parse_failed', None) is None
+
+
+class TestAicOriginAssertion:
+    """The fix for GH run 30560364087 — 8 permits, 0 rows, every one mislabelled WAF.
+
+    Data calls run as `page.evaluate(fetch(...))`, so they inherit the PAGE's origin.
+    When the navigation to setup.do silently failed, the document was not on
+    secure.toronto.ca and every same-origin /jaxrs/ fetch threw `TypeError`, which
+    `safe_json_parse` turned into `html_or_empty` and the scraper reported as
+    `waf_blocked`. A broken transport wore a WAF block's clothes for an entire run.
+    """
+
+    class _Page:
+        def __init__(self, href):
+            self._href = href
+
+        async def evaluate(self, _expr, await_promise=False):
+            if isinstance(self._href, Exception):
+                raise self._href
+            return self._href
+
+    def test_accepts_the_aic_origin(self, scraper):
+        import asyncio
+        page = self._Page('https://secure.toronto.ca/ApplicationStatus/setup.do?action=init')
+        assert asyncio.run(scraper.assert_on_aic_origin(page))
+
+    def test_rejects_a_chrome_error_page(self, scraper):
+        """The exact production failure: navigation died, document is about:blank."""
+        import asyncio
+        page = self._Page('about:blank')
+        with pytest.raises(RuntimeError, match='did not land'):
+            asyncio.run(scraper.assert_on_aic_origin(page))
+
+    def test_error_names_the_transport_not_the_scrape(self, scraper):
+        """An operator must be pointed at the proxy, not at WAF tuning."""
+        import asyncio
+        page = self._Page('chrome-error://chromewebdata/')
+        with pytest.raises(RuntimeError, match='bootstrap failure, not a scrape failure'):
+            asyncio.run(scraper.assert_on_aic_origin(page))
+
+    def test_unreadable_url_is_also_fatal(self, scraper):
+        import asyncio
+        page = self._Page(RuntimeError('detached'))
+        with pytest.raises(RuntimeError, match='Could not read the page URL'):
+            asyncio.run(scraper.assert_on_aic_origin(page))

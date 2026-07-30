@@ -24,12 +24,20 @@ class FakePage:
     def __init__(self, echo_body):
         self._body = echo_body
         self.evaluated = 0
+        self.slept = 0.0
 
     async def evaluate(self, _expr, await_promise=False):
         self.evaluated += 1
         if isinstance(self._body, Exception):
             raise self._body
         return self._body
+
+    async def sleep(self, seconds=0):
+        # The real check waits for the document to load before reading it — reading
+        # immediately returned an empty body on the slower proxied path in CI, which
+        # then read as "unreachable, therefore proxied" and let a broken transport
+        # through (GH run 30560364087). The double records the wait instead of taking it.
+        self.slept += seconds
 
 
 class FakeBrowser:
