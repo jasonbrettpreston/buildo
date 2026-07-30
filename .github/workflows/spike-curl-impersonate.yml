@@ -1,0 +1,76 @@
+# spike-curl-impersonate.yml — MEASUREMENT ONLY, not a pipeline chain.
+#
+# SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md
+#
+# Answers one transport question: can a Chrome-TLS-impersonating HTTP client
+# call the four AIC /jaxrs/ endpoints from a RUNNER (datacenter IP, through the
+# residential proxy), or does that only work from a residential IP?
+#
+# Proven locally 2026-07-30 from the operator's residential IP: the full chain
+# returned the correct stages for 21 217696 with no browser at all, and the
+# portal set NO Akamai sensor cookies (_abck/ak_bmsc/bm_sz absent — only
+# JSESSIONID/WEBTRENDS_ID), which is the signature of rate/reputation control
+# rather than the JS-sensor Bot Manager product. Data chain measured at 5,258 B
+# per permit against 105,266 B for the browser path.
+#
+# This workflow writes NOTHING to the database and touches no chain. It is
+# dispatch-only and deliberately has no schedule.
+#
+# NOTE ON REPUTATION: each permit costs ~4 requests against a portal that
+# blocks at roughly 12 requests / 10 minutes per exit IP. Keep `permits` short
+# and `spacing_s` honest; the point is a verdict, not throughput.
+
+name: spike-curl-impersonate
+
+on:
+  workflow_dispatch:
+    inputs:
+      permits:
+        description: 'Comma-separated "YY SEQUENCE" pairs (e.g. "21 217696,24 130063")'
+        required: true
+        default: '21 217696'
+      spacing_s:
+        description: 'Seconds between requests (portal blocks on cumulative rate)'
+        required: false
+        default: '5'
+      no_warmup:
+        description: 'Skip the 75,885 B portal page GET (tests a genuinely cold client)'
+        type: boolean
+        required: false
+        default: false
+      direct:
+        description: 'DANGER — bypass the proxy, exposing the runner datacenter IP to AIC. Leave false.'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: spike-curl-impersonate
+  cancel-in-progress: false
+
+jobs:
+  spike:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install curl_cffi
+        run: pip install curl_cffi
+
+      - name: Run the transport spike
+        env:
+          PROXY_HOST: ${{ secrets.DECODO_PROXY_HOST }}
+          PROXY_PORT: ${{ secrets.DECODO_PROXY_PORT }}
+          PROXY_USER: ${{ secrets.DECODO_PROXY_USER }}
+          PROXY_PASS: ${{ secrets.DECODO_PROXY_PASS }}
+          SPIKE_SPACING_S: ${{ inputs.spacing_s }}
+        run: |
+          python3 scripts/spike-curl-impersonate.py \
+            --permits "${{ inputs.permits }}" \
+            ${{ inputs.no_warmup && '--no-warmup' || '' }} \
+            ${{ inputs.direct && '--direct' || '' }}
