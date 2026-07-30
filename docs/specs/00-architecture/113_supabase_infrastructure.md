@@ -348,11 +348,16 @@ concern a self-hosted runner's static IP might otherwise argue for.
 scraping-specific facts: the Decodo residential proxy carries ALL of `aic-orchestrator.py`'s
 AIC traffic, so the runner's own datacenter IP is never WAF-visible to AIC in the first place —
 removing the strongest argument for a self-hosted runner's static, reputation-managed IP; and
-the proxy-forced headed-Chrome requirement is handled mechanically via `xvfb-run` on the
-GitHub-hosted Linux runner, with `actions/cache` persisting `~/.buildo-scraper/` stealth
+the browser runs unattended on the GitHub-hosted Linux runner, with `actions/cache` persisting `~/.buildo-scraper/` stealth
 profiles between runs to approximate the profile continuity a persistent self-hosted box would
 give for free. Decodo proxy credentials join `SUPABASE_DATABASE_URL` in GitHub encrypted
-secrets per §11's CI-runner carve-out.
+secrets per §11's CI-runner carve-out. **(Mechanism truth-up 2026-07-30:** the "proxy forces
+headed Chrome, so `xvfb-run`" clause this paragraph originally carried is retired — the MV3
+proxy extension that forced headed mode was replaced by a local relay + plain
+`--proxy-server`, so Chrome runs headless and needs no display server. Spec 115 §2.4's
+"Browser launch + proxy contract" is authoritative; the workflow still invokes `xvfb-run`
+pending CI confirmation of the headless path. The GitHub-hosted ruling itself is unaffected —
+it never depended on the display mechanism.**)**
 
 **Operator's decisive factor (2026-07-20):** a self-hosted runner on the operator's own
 machine would mean headed Chrome windows opening multiple times per weekday business-hours
@@ -391,9 +396,9 @@ are GitHub-Actions-only (§8.1).
 
 **AMENDED 2026-07-20 — `deep_scrapes` explicitly joins the never-pg_cron set,** argued rather
 than merely asserted: `pg_cron` executes SQL inside the Postgres backend process — it has no
-mechanism to spawn or supervise an external Python process at all, let alone one that drives a
-proxy-routed, `xvfb`-hosted, headed-Chrome browser session (`aic-orchestrator.py`, Spec 115
-§2.4). This is a **structural incapability**, not a policy choice weighed against
+mechanism to spawn or supervise an external Python process at all, let alone one that itself
+spawns and supervises a proxy-routed Chrome process plus a local proxy-relay subprocess
+(`aic-orchestrator.py`, Spec 115 §2.4). This is a **structural incapability**, not a policy choice weighed against
 `permits`/`coa`/`sources`/`entities` (which at least COULD theoretically run as `pg_net`-invoked
 HTTP triggers, however inadvisable) — `pg_cron` cannot run `deep_scrapes` under any
 configuration, so its must-succeed classification above is a belt-and-suspenders restatement

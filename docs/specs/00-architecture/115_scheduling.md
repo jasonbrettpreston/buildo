@@ -180,11 +180,18 @@ double-run the backup and desynchronize it from the chain-completion signal
 residential proxy carries ALL AIC traffic the `inspections` step (`aic-orchestrator.py`)
 generates, so the GitHub-hosted runner's own datacenter IP is never WAF-visible to AIC —
 the exact property that would otherwise argue for a self-hosted runner (P3-D1's option
-(a)). Because the proxy forces headed Chrome (P3-G4), the workflow runs the orchestrator
-under `xvfb-run` on the Linux runner (`xvfb-run -a python3 scripts/aic-orchestrator.py
-...`, matching whatever invocation the `inspections` step already uses locally, with a
-guarded `RuntimeError` — not a silent hang — if `xvfb-run` is unavailable). Persistent
-stealth profiles (`~/.buildo-scraper/profile-worker-N`) are restored between runs via
+(a)). **That property was ASPIRATIONAL, not real, until 2026-07-30** — see "Browser launch
++ proxy contract" below: the MV3-extension mechanism that was supposed to deliver it had
+never once put the proxy in this scraper's path anywhere. Headed Chrome is no longer
+required (the extension that forced it is retired), so the orchestrator no longer needs a
+display server; the workflow nonetheless still installs Xvfb and still invokes
+`xvfb-run -a node scripts/run-chain.js deep_scrapes` — wrapping the node PARENT so
+`$DISPLAY` inherits down to the spawned `python3` child — **pending a CI run that confirms
+the headless path on the runner. Dropping Xvfb is a filed follow-up, not a completed
+change.** The guarded `RuntimeError` (not a silent hang) that fires when headed Chrome is
+requested with no `DISPLAY` remains in `build_browser_args`, now reachable only on the
+legacy extension path. Persistent stealth profiles (`~/.buildo-scraper/profile-worker-N`)
+are restored between runs via
 `actions/cache` keyed on the workflow name, because a fresh ephemeral GitHub-hosted runner
 otherwise has no profile history between runs — profile continuity is part of what keeps
 the browser fingerprint stable across scrapes. A cache miss (first run, or a cache
@@ -197,8 +204,124 @@ mandates). A `concurrency:` group (`chain-deep-scrapes`, `cancel-in-progress: fa
 prevents two deep_scrapes runs from overlapping, mirroring §2.2's rationale for the
 coa→permits workflow. Operator's decisive factor for GitHub-hosted over self-hosted:
 headed Chrome windows running on the operator's own box would disrupt the local workday
-every 3 hours on weekdays; the proxy already removes the WAF-visibility argument for
-self-hosting.
+every 3 hours on weekdays (a rationale the headless move below makes moot without changing
+the ruling); the proxy already removes the WAF-visibility argument for self-hosting.
+
+**Browser launch + proxy contract (AMENDED 2026-07-30 — WF3 batch `1271bf17`…`27e39948`).**
+This supersedes the "proxy forces headed Chrome under `xvfb-run`" mechanism the paragraph
+above originally specified. The spec previously named no browser binary, version, or launch
+ownership at all; that gap is what the batch closed.
+
+1. **We launch Chrome; nodriver only ATTACHES** (`7055ce89`). `aic-scraper-nodriver.py`
+   spawns the browser itself (`launch_chrome()`), polls `http://127.0.0.1:<port>/json/version`
+   until it answers (`wait_for_devtools()`), then calls `uc.start(host=..., port=...)`, which
+   takes nodriver's `connect_existing` path and spawns nothing. Forced by four defects in
+   nodriver's own launch path, all confirmed from its source: its DevTools connect budget is a
+   **hardcoded ~2.25 s** (`core/browser.py` — `sleep(0.25)` then five probes 0.5 s apart, with
+   no config knob in either 0.48.1 or 0.50.3), which a cold profile on a CI runner exceeds just
+   creating its favicon/quota/password-store databases; it never reads `DevToolsActivePort`, so
+   a lost port race leaves it blind to a live browser; it `PIPE`s Chrome's stdio and never
+   drains it, so a full 64 KB buffer stalls startup; and it raises from *inside* `start()`,
+   leaving the caller no handle to kill the browser it just spawned — that orphan then holds
+   the profile dir and makes every retry fail identically. Owning the process fixes all four:
+   stdio to `DEVNULL`, our own process group, an env-overridable readiness budget
+   (`SCRAPER_DEVTOOLS_TIMEOUT_S`, default 60 s) that names the cause on timeout (elapsed, port,
+   process return code), a `DevToolsActivePort` fallback when Chrome binds a port other than
+   the one requested, and `terminate_spawned_chrome()` killing a pid we OWN by process group —
+   **never `pkill`/`pgrep`**, since this also runs on the operator's own desktop. `browser.stop()`
+   alone CANNOT kill the process in attach mode (nodriver's `connect_existing` path never
+   populates `_process_pid`), so every teardown site goes through `stop_and_terminate()`
+   (`733e67c4`). Because attach mode means nodriver contributes no flags, the scraper now
+   supplies nodriver's own default argument set verbatim (`NODRIVER_DEFAULT_ARGS`) — dropping
+   any of them would change the browser fingerprint relative to the proven local runs.
+2. **nodriver is EXACT-pinned** (`nodriver==0.48.1` in `scripts/requirements.txt`, `7055ce89`).
+   The previous `>=0.48` meant CI silently resolved 0.50.3 while 0.48.1 is the only version this
+   scraper has ever been proven against — cloud runs were never the code that was tested.
+   Upgrading is a deliberate, separately validated task, not a resolver outcome.
+3. **The proxy is a local unauthenticated relay, not an MV3 extension** (`61705719`,
+   `19869fc4`, `b1bc91e9`). `scripts/proxy-relay.mjs` (Apify `proxy-chain`) holds the Decodo
+   credentials and listens on `127.0.0.1`; Chrome gets a plain
+   `--proxy-server=http://127.0.0.1:PORT` plus `--proxy-bypass-list=<-loopback>` (Chrome
+   bypasses proxies for loopback by default, which would otherwise send relay-bound traffic
+   straight out) and **no extension**. `ignoreProxyCertificate` is required for an `https://`
+   upstream, else proxy-chain's CONNECT fails with 599; it affects only the hop to our own
+   provider — on CONNECT the relay pipes raw bytes rather than terminating TLS, so the browser's
+   JA3/ALPN fingerprint reaches the origin intact (and this is precisely why mitmproxy, which
+   re-originates TLS, must never be substituted here). Why retire the extension: branded Chrome
+   removed `--load-extension` in **137** and removed its `DisableLoadExtensionCommandLineSwitch`
+   opt-out in **142** (unbranded Chromium and Chrome for Testing are exempt *today* — one
+   base-image bump from breaking us), and an idle MV3 service worker is **EVICTED**, taking
+   `onAuthRequired` with it while `chrome.proxy` settings persist — the browser keeps routing
+   through the proxy while unable to authenticate, intermittently and invisibly. The relay is
+   owned with the same discipline as the browser (kill a pid we own, process group on posix,
+   idempotent, `atexit`) because its argv carries live credentials; both mid-run rotation paths
+   (WAF trap, per-batch session) terminate the old relay before starting the new one.
+   `build_proxy_extension()` remains in the file but is now **unreferenced legacy**, retained
+   pending its own deletion review.
+4. **Decodo credential contract — the `user-` prefix is load-bearing** (`3583d824`). Decodo
+   parses the username as a hyphen-delimited key-value list, and only does so when the string
+   begins with the LITERAL token `user-`. Verified live against the real endpoint: bare
+   `<account>` → 200; `<account>-session-<alnum>` → **407 "Access denied"**;
+   `user-<account>-session-<alnum>` → 200, including over HTTPS-to-proxy to an HTTPS target.
+   The format is now `user-<account>-session-<alnum>-sessionduration-N`, built idempotently
+   (never double-prefixed if the operator stores the prefix). **Session IDs must be
+   ALPHANUMERIC** — ours were `buildo-worker-1-<ts>`, and hyphens inside a hyphen-delimited
+   parser make it read `session=buildo` and then choke on `worker` as an unknown key. A 407 is
+   invisible in the browser: Chrome renders "This site can't be reached" for every page, which
+   is exactly what runs 30498062060 / 30499270494 showed while the runner itself reached the
+   same hosts fine.
+5. **Proxy scheme defaults to `https`** (`PROXY_SCHEME`, `ef9bbab2`). Decodo's endpoint speaks
+   http, https and socks5 on the same port, and the three do not behave alike: **https** works
+   (verified, residential IP returned over an HTTPS target) and keeps credentials off the wire
+   in the clear; **plain http** means every HTTPS target needs a CONNECT tunnel and that tunnel
+   is RESET (reproduced with `-k`, so it is the tunnel, not certificate validation) — this was
+   the old default; **socks5** works via curl but is unusable here because **Chrome cannot
+   authenticate to a SOCKS proxy at all** (it ignores credentials and never fires
+   `onAuthRequired`), so it would require provider-side IP allowlisting.
+6. **Per-worker sticky ports** (`c3dff232`). On `ca.decodo.com` the PORT selects the mode:
+   20000 = rotating, 20001-29999 = sticky with ONE exit IP pinned per port. Every worker
+   pointed at 20001, so the multi-worker design's whole premise — distinct residential IPs per
+   worker — was silently false, and a per-worker `-session-` suffix cannot override a
+   port-level pin. `resolve_proxy_port()` now gives worker N `base+N-1`, wrapped inside the
+   sticky band so it can never land on 20000 or past 29999; standalone keeps the base port.
+7. **Proxied-egress tripwire — fail-safe-loud per §3/§4** (`0e32cc84`, `733e67c4`, `0b7dcfa0`,
+   `1b52f03a`). `verify_proxied_egress()` NAVIGATES the browser to an IP echo service
+   (`SCRAPER_EGRESS_ECHO_URL`, default `api.ipify.org`) and asserts the browser's egress IP
+   DIFFERS from this host's own; if it cannot prove proxying it refuses to scrape. It navigates
+   rather than `fetch()`es because at that point the tab is `about:blank`, whose opaque origin
+   makes a cross-origin fetch throw. The host-IP baseline is memoized with a TTL
+   (`HOST_EGRESS_IP_TTL_S`, default 900 s, `SCRAPER_HOST_IP_TTL_S` overrides) because bootstrap
+   runs per batch and on every WAF rotation — an unbounded memo would let a stale baseline fake
+   a proxied verdict. One deliberate asymmetry: an echo service the BROWSER cannot reach while
+   the HOST just did is treated as evidence **OF** proxying (loud `proxied_egress_indirect`
+   WARN, unverified-but-indirect), not grounds to refuse — an unproxied browser has the host's
+   plain direct internet and would have reached it identically. Only an *unrecognized* response,
+   an undeterminable host IP, or a browser reporting THIS HOST's IP are fatal. This check, not
+   any launch flag, is what guarantees we never scrape unproxied. Note the deliberate trade it
+   introduces: bootstrap now depends on an external echo service.
+8. **Historical finding (`43496bcb`) — the proxy had NEVER been in this scraper's path.** The
+   MV3 extension was its only proxy mechanism (routing AND credentials welded into one
+   extension; nothing passed `--proxy-server`), and the operator's local browser is branded
+   Chrome 150, which cannot load it — so local runs scraped DIRECT from a residential IP while
+   telemetry recorded `proxy_configured=true`. The only demonstrably proxied runs were the
+   Playwright scraper deleted 2026-04-16. `scripts/quality/assert-network-health.js` gates
+   `proxy_errors` but reads `proxy_configured` nowhere and has no notion of "was egress actually
+   proxied", so a fully direct run reports `proxy_errors=0` and PASSES — which is why four
+   months of unproxied scraping was invisible. Feeding the `verify_proxied_egress` result into
+   `scraper_telemetry` and gating on it is an open follow-up (`docs/reports/review_followups.md`).
+9. **Python test coverage** (`1271bf17`). `scripts/` had zero, so every scraper logic defect was
+   discoverable only by dispatching a ~6-minute Actions run. `scripts/tests/` (pytest) now runs
+   via `npm run test:py` and a Pytest job in `.github/workflows/pipeline-lint.yml`; the chains
+   install `requirements.txt` only, so the harness cannot reach a production run.
+
+**10. Metered-bandwidth guard (`43496bcb`… + the 2026-07-30 bandwidth commit).** Making the proxy work exposed a cost defect: ALL of Chrome's background traffic began flowing through metered residential bandwidth. One run billed **1.76 GB to `edgedl.me.gvt1.com`** (Google's Chrome component-update CDN, 62 requests averaging ~28 MB) for **~$6.60**, against **2.7 MB** of actual `secure.toronto.ca` scraping — 99.9% of spend was Chrome talking to Google. This traffic always occurred; it was free only because the proxy had never carried anything (see item 9). Two independent layers now apply, because a launch flag that silently regresses costs money: (a) `BANDWIDTH_GUARD_ARGS` — `--disable-background-networking`, `--disable-component-update`, `--disable-sync`, `--safebrowsing-disable-auto-update`, `--disable-domain-reliability`, `--disable-client-side-phishing-detection`, `--metrics-recording-only`, plus Translate/OptimizationHints/MediaRouter/AutofillServerCommunication merged into the single `--disable-features` switch §2.4's invariant enforces; and (b) a **deny-by-default allowlist inside `proxy-relay.mjs`** (`prepareRequestFunction`) — a host not on it is refused locally and never opens an upstream connection, so it cannot spend money even if (a) regresses. Default allowlist `toronto.ca, api.ipify.org`; `SCRAPER_PROXY_ALLOWLIST` overrides; blocks are logged loudly. Verified live: ipify 200 through the relay, `edgedl.me.gvt1.com` and `update.googleapis.com` refused with zero upstream bytes.
+
+**Verification status (be precise — 2026-07-30):** the full path is proven **LOCALLY,
+end-to-end** — relay up on `127.0.0.1` → headless Chrome with no extension → host egress
+`67.213.109.188` vs browser egress `23.16.63.103` → PROXIED OK → clean teardown with both the
+browser and relay registries empty — plus `npm run test:py` green. **The CI validation run is
+still PENDING.** Nothing in this section may be cited as CI-confirmed until a dispatched run
+demonstrates it on the runner; in particular the headless/no-Xvfb claim is a local result only.
 
 **Chain shape:** `deep_scrapes` is the 7-step chain at `manifest.json:115-118`
 (`inspections`, `classify_inspection_status`, `assert_network_health`,
@@ -430,6 +553,17 @@ SELECT id, started_at FROM pipeline_runs
    `running` until the 12h TTL, not immediately `failed`. `SIGKILL`-class deaths (OOM, host
    failure) cannot be caught by any handler — those still rely on items 4-5, which is why
    both mechanisms are required, not either alone.
+7. **Stdout is the MACHINE channel; every human log line goes to stderr (AMENDED 2026-07-30,
+   `27e39948`).** Each workflow invokes the guard as
+   `node scripts/check-chain-running.js <chain> >> "$GITHUB_OUTPUT"`, so *everything* it prints
+   to stdout is appended to the outputs file. Its own reasoning therefore (a) never reached the
+   Actions log and (b) was parsed by GitHub as bogus `key=value` pairs — the "already running —
+   skip=true" line became a key of `[check-chain-running] chain_deep_scrapes is already running
+   — skip`. Three validation runs (11, 12, 13) reported the job GREEN while the chain steps were
+   silently SKIPPED and the guard's decision could not be read at all. Contract: stdout carries
+   the `key=value` pair and nothing else; all logging goes to `console.error`. The "already
+   running" message MUST additionally NAME the blocking row's `id` and `started_at`, so the next
+   skip is diagnosable in one read rather than another dispatch cycle.
 
 `check-chain-running.js` and `run-chain.js`'s chain-level advisory lock (`run-chain.js`
 L67-116) are **complementary, not redundant**: the DB-row check runs *before* spawning
@@ -757,6 +891,28 @@ is needed (option 1's would-be pg_cron-inappropriate concern is moot).
   through the 12h-aware `check-chain-running.js` query) shows a phantom in-progress run for
   up to half a day. This is a real, currently-unfixed gap in the codebase as of this spec
   (§4 item 6) — not a hypothetical regression risk.
+- **A CANCELLED GitHub run strands a `running` row that blocks its chain for 12h, and nothing
+  reaps it (open as of 2026-07-30).** §4 item 6's `SIGINT`/`SIGTERM` handler covers an orderly
+  cancellation, but a `SIGKILL`-class death — a force-cancelled run, a runner eviction, OOM —
+  leaves `pipeline_runs.status = 'running'` behind. `check-chain-running.js` then correctly
+  reports `skip=true` for every subsequent dispatch until the 12h TTL expires, so the chain
+  quietly does not run for up to half a day. There is **no reaper**: item 5 only emits a warning
+  annotation *after* the row has already aged past 12h (i.e. after it has stopped blocking), so
+  the blocking window itself has no signal at all beyond the guard's own skip line (which is
+  only readable at all since `27e39948` — see §4 item 7). Recovery today is a manual
+  `UPDATE pipeline_runs SET status='failed' … WHERE id = <the id the guard now names>`.
+  Candidate fix: a reaper that marks rows `failed` when their run is no longer live, or an
+  age-scaled annotation that fires *inside* the 12h window rather than after it.
+- **`if: … outputs.skip != 'true'` treats an ABSENT output as "proceed".** Every chain workflow
+  gates its run step on `steps.<guard>.outputs.skip != 'true'` (e.g.
+  `chain-deep-scrapes.yml:172`, `:203`). GitHub evaluates a missing output as the empty string,
+  which is `!= 'true'` — so a guard that crashed before writing anything, or whose stdout was
+  redirected/malformed (the exact `27e39948` failure shape), is indistinguishable downstream
+  from a guard that deliberately said "not running, go ahead". The fail-safe posture §4 item 3
+  builds into the guard (`skip=true` on a DB-check error) is therefore only honored when the
+  guard survives long enough to emit it. The robust form asserts the POSITIVE
+  (`outputs.skip == 'false'`), so an absent output blocks rather than proceeds. Open as of
+  2026-07-30 — recorded, not fixed.
 - **DST cron drift (§2.1) — accepted AND reconciled, not a bug.** The underlying drift (a
   fixed UTC cron tracks EST year-round, landing 1h later than nominal ET during EDT) is
   still accepted, not "fixed" into a two-cron-line date-gated scheme. What changed
@@ -789,6 +945,10 @@ is needed (option 1's would-be pg_cron-inappropriate concern is moot).
   then-SIGKILL-after-grace timeout escalation — demoted, not deleted, §7)
 - `scripts/certs/supabase-ca.pem` (new — committed CA cert, §3; governed by Spec 113 §4.3's
   rotation runbook, not re-specified here)
+- `scripts/proxy-relay.mjs` (new — §2.4's local unauthenticated proxy relay; carries a
+  `SPEC LINK` to §2.4, since it exists to serve the deep_scrapes workflow's runner contract)
+- `scripts/requirements.txt` — **pin only** (§2.4 item 2: `nodriver==0.48.1`); the file is
+  otherwise Spec 44's
 - `migrations/` (new — the schema-determinism migration §5a + pg_cron job registrations
   per §5's catalog, next available number at implementation)
 - `scripts/seed-pipeline-schedules.js` (new — the idempotent `pipeline_schedules` seed
@@ -817,6 +977,12 @@ is needed (option 1's would-be pg_cron-inappropriate concern is moot).
   reads, §5 caveat) is that spec's rewrite, not this one's.
 - RLS policy definitions, Network Restrictions' *chosen* option (§8) — explicitly deferred
   to Phase 3.2 and Spec 113 §8.2 respectively.
+- `scripts/aic-scraper-nodriver.py` / `scripts/aic-orchestrator.py` **internals** (scrape
+  loop, queue claiming, telemetry, anti-detection layers) — Spec 44 owns those. §2.4 specifies
+  only the browser-launch and proxy contract those scripts must satisfy *because it is a
+  runner-environment concern* (what the GitHub-hosted runner must provide: display server or
+  not, credentials, egress proof). A change to either script's scraping behavior is a Spec 44
+  change; a change to how it obtains or proves its proxied egress is a §2.4 change.
 
 ### Cross-Spec Dependencies
 - **Relies on:** `docs/specs/00-architecture/113_supabase_infrastructure.md` §3 (env/key
@@ -824,7 +990,9 @@ is needed (option 1's would-be pg_cron-inappropriate concern is moot).
   re-homing); `docs/specs/01-pipeline/47_pipeline_script_protocol.md` (§R1-R12 skeleton —
   `check-chain-running.js` is a new script and follows it where applicable, adapted for its
   non-`pipeline.run()` GH Actions invocation shape); `scripts/manifest.json` (`chains.*`,
-  `backup_db` position).
+  `backup_db` position); `docs/specs/01-pipeline/44_chain_deep_scrapes.md` (the `deep_scrapes`
+  chain this spec schedules — §2.4's launch/proxy contract is mirrored in that spec's
+  Deployment Notes).
 - **Consumed by:** none yet — this is a leaf spec in the current dependency graph. A future
   Network-Restrictions-allowlist-sync spec (§8, §9) would depend on this one's `runs-on:`
   contract if built.
