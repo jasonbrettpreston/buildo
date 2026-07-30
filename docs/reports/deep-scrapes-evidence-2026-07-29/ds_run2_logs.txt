@@ -1,0 +1,925 @@
+﻿2026-07-29T19:35:45.8327929Z Current runner version: '2.336.0'
+2026-07-29T19:35:45.8353921Z ##[group]Runner Image Provisioner
+2026-07-29T19:35:45.8354928Z Hosted Compute Agent
+2026-07-29T19:35:45.8355664Z Version: 20260707.563
+2026-07-29T19:35:45.8356449Z Commit: 02667638d2b423fbc733a8e32a88b44996a3ba6e
+2026-07-29T19:35:45.8357235Z Build Date: 2026-07-07T19:33:50Z
+2026-07-29T19:35:45.8358156Z Worker ID: {c4e6fa0a-e393-40ab-95d7-06ab4a73e72d}
+2026-07-29T19:35:45.8358963Z Azure Region: westcentralus
+2026-07-29T19:35:45.8359699Z ##[endgroup]
+2026-07-29T19:35:45.8361156Z ##[group]Operating System
+2026-07-29T19:35:45.8361899Z Ubuntu
+2026-07-29T19:35:45.8362582Z 24.04.4
+2026-07-29T19:35:45.8363193Z LTS
+2026-07-29T19:35:45.8364156Z ##[endgroup]
+2026-07-29T19:35:45.8364783Z ##[group]Runner Image
+2026-07-29T19:35:45.8365594Z Image: ubuntu-24.04
+2026-07-29T19:35:45.8366237Z Version: 20260720.247.2
+2026-07-29T19:35:45.8367659Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+2026-07-29T19:35:45.8369238Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+2026-07-29T19:35:45.8370391Z ##[endgroup]
+2026-07-29T19:35:45.8371662Z ##[group]GITHUB_TOKEN Permissions
+2026-07-29T19:35:45.8373972Z Contents: read
+2026-07-29T19:35:45.8374653Z Metadata: read
+2026-07-29T19:35:45.8375431Z Packages: read
+2026-07-29T19:35:45.8376103Z ##[endgroup]
+2026-07-29T19:35:45.8378285Z Secret source: Actions
+2026-07-29T19:35:45.8379495Z Prepare workflow directory
+2026-07-29T19:35:45.8785234Z Prepare all required actions
+2026-07-29T19:35:45.8832041Z Getting action download info
+2026-07-29T19:35:46.1893847Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-07-29T19:35:46.8894005Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-07-29T19:35:46.9800495Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-07-29T19:35:47.0700215Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-07-29T19:35:47.2723913Z Complete job name: deep-scrapes
+2026-07-29T19:35:47.3571894Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-29T19:35:47.3581059Z ##[group]Run actions/checkout@v4
+2026-07-29T19:35:47.3581768Z with:
+2026-07-29T19:35:47.3582256Z   repository: jasonbrettpreston/buildo
+2026-07-29T19:35:47.3586329Z   token: ***
+2026-07-29T19:35:47.3586811Z   ssh-strict: true
+2026-07-29T19:35:47.3587284Z   ssh-user: git
+2026-07-29T19:35:47.3587763Z   persist-credentials: true
+2026-07-29T19:35:47.3588285Z   clean: true
+2026-07-29T19:35:47.3588757Z   sparse-checkout-cone-mode: true
+2026-07-29T19:35:47.3589351Z   fetch-depth: 1
+2026-07-29T19:35:47.3589838Z   fetch-tags: false
+2026-07-29T19:35:47.3590306Z   show-progress: true
+2026-07-29T19:35:47.3590781Z   lfs: false
+2026-07-29T19:35:47.3591248Z   submodules: false
+2026-07-29T19:35:47.3591742Z   set-safe-directory: true
+2026-07-29T19:35:47.3592269Z   allow-unsafe-pr-checkout: false
+2026-07-29T19:35:47.3593067Z ##[endgroup]
+2026-07-29T19:35:47.4678546Z Syncing repository: jasonbrettpreston/buildo
+2026-07-29T19:35:47.4681011Z ##[group]Getting Git version info
+2026-07-29T19:35:47.4682106Z Working directory is '/home/runner/work/buildo/buildo'
+2026-07-29T19:35:47.4684550Z [command]/usr/bin/git version
+2026-07-29T19:35:47.4711938Z git version 2.54.0
+2026-07-29T19:35:47.4831250Z ##[endgroup]
+2026-07-29T19:35:47.4839651Z Temporarily overriding HOME='/home/runner/work/_temp/cb52dfab-5b27-4d4f-bc13-f4e681ea4f21' before making global git config changes
+2026-07-29T19:35:47.4842174Z Adding repository directory to the temporary git global config as a safe directory
+2026-07-29T19:35:47.4843694Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/buildo/buildo
+2026-07-29T19:35:47.4845677Z Deleting the contents of '/home/runner/work/buildo/buildo'
+2026-07-29T19:35:47.4846860Z ##[group]Initializing the repository
+2026-07-29T19:35:47.4847627Z [command]/usr/bin/git init /home/runner/work/buildo/buildo
+2026-07-29T19:35:47.4909848Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-07-29T19:35:47.4911703Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-07-29T19:35:47.4918148Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-07-29T19:35:47.4919814Z hint: call:
+2026-07-29T19:35:47.4920818Z hint:
+2026-07-29T19:35:47.4921925Z hint: 	git config --global init.defaultBranch <name>
+2026-07-29T19:35:47.4923270Z hint:
+2026-07-29T19:35:47.4924802Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-07-29T19:35:47.4926723Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-07-29T19:35:47.4928218Z hint:
+2026-07-29T19:35:47.4929138Z hint: 	git branch -m <name>
+2026-07-29T19:35:47.4930324Z hint:
+2026-07-29T19:35:47.4931805Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-07-29T19:35:47.4934042Z Initialized empty Git repository in /home/runner/work/buildo/buildo/.git/
+2026-07-29T19:35:47.4937422Z [command]/usr/bin/git remote add origin https://github.com/jasonbrettpreston/buildo
+2026-07-29T19:35:47.4979820Z ##[endgroup]
+2026-07-29T19:35:47.4981110Z ##[group]Disabling automatic garbage collection
+2026-07-29T19:35:47.4985111Z [command]/usr/bin/git config --local gc.auto 0
+2026-07-29T19:35:47.5019131Z ##[endgroup]
+2026-07-29T19:35:47.5020291Z ##[group]Setting up auth
+2026-07-29T19:35:47.5026034Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-07-29T19:35:47.5068125Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-07-29T19:35:47.5434597Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-07-29T19:35:47.5474494Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-07-29T19:35:47.5731563Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-07-29T19:35:47.5770421Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-07-29T19:35:47.6013810Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-07-29T19:35:47.6054738Z ##[endgroup]
+2026-07-29T19:35:47.6055687Z ##[group]Fetching the repository
+2026-07-29T19:35:47.6063838Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +868683875bab7dbf2520b7d236762b1f42af5f81:refs/remotes/origin/main
+2026-07-29T19:35:49.4981674Z From https://github.com/jasonbrettpreston/buildo
+2026-07-29T19:35:49.4984165Z  * [new ref]         868683875bab7dbf2520b7d236762b1f42af5f81 -> origin/main
+2026-07-29T19:35:49.5012464Z ##[endgroup]
+2026-07-29T19:35:49.5014563Z ##[group]Determining the checkout info
+2026-07-29T19:35:49.5021389Z ##[endgroup]
+2026-07-29T19:35:49.5024815Z [command]/usr/bin/git sparse-checkout disable
+2026-07-29T19:35:49.5070100Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-07-29T19:35:49.5103748Z ##[group]Checking out the ref
+2026-07-29T19:35:49.5107549Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-07-29T19:35:49.6622755Z Switched to a new branch 'main'
+2026-07-29T19:35:49.6625096Z branch 'main' set up to track 'origin/main'.
+2026-07-29T19:35:49.6635724Z ##[endgroup]
+2026-07-29T19:35:49.6681411Z [command]/usr/bin/git log -1 --format=%H
+2026-07-29T19:35:49.6711988Z 868683875bab7dbf2520b7d236762b1f42af5f81
+2026-07-29T19:35:49.7106387Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-29T19:35:49.7112511Z ##[group]Run actions/setup-node@v4
+2026-07-29T19:35:49.7113907Z with:
+2026-07-29T19:35:49.7114888Z   node-version: 20
+2026-07-29T19:35:49.7115900Z   cache: npm
+2026-07-29T19:35:49.7116870Z   always-auth: false
+2026-07-29T19:35:49.7117916Z   check-latest: false
+2026-07-29T19:35:49.7127129Z   token: ***
+2026-07-29T19:35:49.7128092Z ##[endgroup]
+2026-07-29T19:35:49.8577079Z Attempting to download 20...
+2026-07-29T19:35:49.8682250Z (node:2375) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-29T19:35:49.8685978Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-29T19:35:50.7670298Z Acquiring 20.20.2 - x64 from https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz
+2026-07-29T19:35:51.4485455Z Extracting ...
+2026-07-29T19:35:51.4602749Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/2534dfaa-10e6-4459-aa1e-592515c0ce9c -f /home/runner/work/_temp/203dceeb-0ede-4cec-9876-c83f9b38392e
+2026-07-29T19:35:52.5530643Z Adding to the cache ...
+2026-07-29T19:35:54.0826006Z ##[group]Environment details
+2026-07-29T19:35:54.2997382Z node: v20.20.2
+2026-07-29T19:35:54.2998040Z npm: 10.8.2
+2026-07-29T19:35:54.2998438Z yarn: 1.22.22
+2026-07-29T19:35:54.2999149Z ##[endgroup]
+2026-07-29T19:35:54.3019476Z [command]/opt/hostedtoolcache/node/20.20.2/x64/bin/npm config get cache
+2026-07-29T19:35:54.4036538Z /home/runner/.npm
+2026-07-29T19:35:54.6198192Z Cache hit for: node-cache-Linux-x64-npm-6987bb44270f40c13a4b3583ec610787da795ec84d2a03377a85bcc1e2f6b527
+2026-07-29T19:35:54.6311157Z (node:2375) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-07-29T19:35:55.8405229Z Received 37748736 of 295917231 (12.8%), 36.0 MBs/sec
+2026-07-29T19:35:56.8403858Z Received 192937984 of 295917231 (65.2%), 92.0 MBs/sec
+2026-07-29T19:35:57.4163975Z Received 295917231 of 295917231 (100.0%), 109.5 MBs/sec
+2026-07-29T19:35:57.4164645Z Cache Size: ~282 MB (295917231 B)
+2026-07-29T19:35:57.4278694Z [command]/usr/bin/tar -xf /home/runner/work/_temp/a43248c5-49f2-4c72-b079-ead2a3f07d0c/cache.tzst -P -C /home/runner/work/buildo/buildo --use-compress-program unzstd
+2026-07-29T19:35:58.1539624Z Cache restored successfully
+2026-07-29T19:35:58.1684397Z Cache restored from key: node-cache-Linux-x64-npm-6987bb44270f40c13a4b3583ec610787da795ec84d2a03377a85bcc1e2f6b527
+2026-07-29T19:35:58.1873294Z ##[group]Run npm ci
+2026-07-29T19:35:58.1873989Z [36;1mnpm ci[0m
+2026-07-29T19:35:58.1928392Z shell: /usr/bin/bash -e {0}
+2026-07-29T19:35:58.1928702Z ##[endgroup]
+2026-07-29T19:35:59.0679241Z npm warn EBADENGINE Unsupported engine {
+2026-07-29T19:35:59.0680260Z npm warn EBADENGINE   package: '@supabase/auth-js@2.110.7',
+2026-07-29T19:35:59.0681102Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-29T19:35:59.0681953Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-29T19:35:59.0682620Z npm warn EBADENGINE }
+2026-07-29T19:35:59.0683190Z npm warn EBADENGINE Unsupported engine {
+2026-07-29T19:35:59.0684270Z npm warn EBADENGINE   package: '@supabase/functions-js@2.110.7',
+2026-07-29T19:35:59.0685107Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-29T19:35:59.0685944Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-29T19:35:59.0686640Z npm warn EBADENGINE }
+2026-07-29T19:35:59.0687850Z npm warn EBADENGINE Unsupported engine {
+2026-07-29T19:35:59.0688628Z npm warn EBADENGINE   package: '@supabase/postgrest-js@2.110.7',
+2026-07-29T19:35:59.0689428Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-29T19:35:59.0690247Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-29T19:35:59.0690881Z npm warn EBADENGINE }
+2026-07-29T19:35:59.0691404Z npm warn EBADENGINE Unsupported engine {
+2026-07-29T19:35:59.0692157Z npm warn EBADENGINE   package: '@supabase/realtime-js@2.110.7',
+2026-07-29T19:35:59.0692946Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-29T19:35:59.0694164Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-29T19:35:59.0694825Z npm warn EBADENGINE }
+2026-07-29T19:35:59.0695364Z npm warn EBADENGINE Unsupported engine {
+2026-07-29T19:35:59.0696119Z npm warn EBADENGINE   package: '@supabase/storage-js@2.110.7',
+2026-07-29T19:35:59.0696880Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-29T19:35:59.0697724Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-29T19:35:59.0698364Z npm warn EBADENGINE }
+2026-07-29T19:35:59.0698881Z npm warn EBADENGINE Unsupported engine {
+2026-07-29T19:35:59.0699684Z npm warn EBADENGINE   package: '@supabase/supabase-js@2.110.7',
+2026-07-29T19:35:59.0700449Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-29T19:35:59.0701236Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-29T19:35:59.0701848Z npm warn EBADENGINE }
+2026-07-29T19:36:07.2081777Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-07-29T19:36:07.3116842Z npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+2026-07-29T19:36:07.3873756Z npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+2026-07-29T19:36:07.3921991Z npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+2026-07-29T19:36:07.3987101Z npm warn deprecated whatwg-encoding@3.1.1: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+2026-07-29T19:36:07.4114743Z npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+2026-07-29T19:36:07.4708450Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-07-29T19:36:07.5063240Z npm warn deprecated @babel/plugin-proposal-explicit-resource-management@7.27.4: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-explicit-resource-management instead.
+2026-07-29T19:36:07.6025154Z npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+2026-07-29T19:36:07.6646583Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-29T19:36:07.6662886Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-29T19:36:07.6668791Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-29T19:36:07.6707659Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-29T19:36:07.6735695Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-29T19:36:08.4160424Z npm warn deprecated fstream@1.0.12: This package is no longer supported.
+2026-07-29T19:36:09.8305818Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2026-07-29T19:36:09.8601247Z npm warn deprecated text-encoding@0.6.4: no longer maintained
+2026-07-29T19:36:11.0234489Z npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-29T19:36:30.1657894Z 
+2026-07-29T19:36:30.1658654Z > buildo@0.1.0 prepare
+2026-07-29T19:36:30.1659046Z > husky
+2026-07-29T19:36:30.1659215Z 
+2026-07-29T19:36:30.2660608Z 
+2026-07-29T19:36:30.2661327Z added 1523 packages, and audited 1524 packages in 32s
+2026-07-29T19:36:30.2661649Z 
+2026-07-29T19:36:30.2661829Z 280 packages are looking for funding
+2026-07-29T19:36:30.2662189Z   run `npm fund` for details
+2026-07-29T19:36:30.4960498Z 
+2026-07-29T19:36:30.4961143Z 64 vulnerabilities (7 low, 40 moderate, 15 high, 2 critical)
+2026-07-29T19:36:30.4961467Z 
+2026-07-29T19:36:30.4961708Z To address issues that do not require attention, run:
+2026-07-29T19:36:30.4962068Z   npm audit fix
+2026-07-29T19:36:30.4962316Z 
+2026-07-29T19:36:30.4962666Z To address all issues (including breaking changes), run:
+2026-07-29T19:36:30.4963193Z   npm audit fix --force
+2026-07-29T19:36:30.4963442Z 
+2026-07-29T19:36:30.4963798Z Run `npm audit` for details.
+2026-07-29T19:36:30.6530986Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-29T19:36:30.6532235Z ##[group]Run actions/setup-python@v5
+2026-07-29T19:36:30.6532527Z with:
+2026-07-29T19:36:30.6532760Z   python-version: 3.11
+2026-07-29T19:36:30.6533018Z   check-latest: false
+2026-07-29T19:36:30.6535565Z   token: ***
+2026-07-29T19:36:30.6535812Z   update-environment: true
+2026-07-29T19:36:30.6536088Z   allow-prereleases: false
+2026-07-29T19:36:30.6536358Z   freethreaded: false
+2026-07-29T19:36:30.6558235Z ##[endgroup]
+2026-07-29T19:36:30.7934732Z ##[group]Installed versions
+2026-07-29T19:36:30.8030895Z (node:3025) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-29T19:36:30.8031830Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-29T19:36:30.8032557Z Successfully set up CPython (3.11.15)
+2026-07-29T19:36:30.8033278Z ##[endgroup]
+2026-07-29T19:36:30.8181329Z ##[group]Run pip install -r scripts/requirements.txt
+2026-07-29T19:36:30.8181778Z [36;1mpip install -r scripts/requirements.txt[0m
+2026-07-29T19:36:30.8239020Z shell: /usr/bin/bash -e {0}
+2026-07-29T19:36:30.8239316Z env:
+2026-07-29T19:36:30.8239620Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:30.8240122Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-29T19:36:30.8240588Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:30.8241001Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:30.8241392Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:30.8241789Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-29T19:36:30.8242134Z ##[endgroup]
+2026-07-29T19:36:31.6278049Z Collecting nodriver>=0.48 (from -r scripts/requirements.txt (line 1))
+2026-07-29T19:36:31.7253000Z   Downloading nodriver-0.50.3-py3-none-any.whl.metadata (51 kB)
+2026-07-29T19:36:31.8604938Z Collecting psycopg2-binary>=2.9 (from -r scripts/requirements.txt (line 2))
+2026-07-29T19:36:31.8798037Z   Downloading psycopg2_binary-2.9.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2026-07-29T19:36:31.9093941Z Collecting mss (from nodriver>=0.48->-r scripts/requirements.txt (line 1))
+2026-07-29T19:36:31.9302423Z   Downloading mss-10.2.0-py3-none-any.whl.metadata (7.2 kB)
+2026-07-29T19:36:32.0434659Z Collecting websockets>=14 (from nodriver>=0.48->-r scripts/requirements.txt (line 1))
+2026-07-29T19:36:32.0632486Z   Downloading websockets-17.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+2026-07-29T19:36:32.0908422Z Collecting deprecated (from nodriver>=0.48->-r scripts/requirements.txt (line 1))
+2026-07-29T19:36:32.1100410Z   Downloading deprecated-1.3.1-py2.py3-none-any.whl.metadata (5.9 kB)
+2026-07-29T19:36:32.3628473Z Collecting wrapt<3,>=1.10 (from deprecated->nodriver>=0.48->-r scripts/requirements.txt (line 1))
+2026-07-29T19:36:32.3823461Z   Downloading wrapt-2.3.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (7.4 kB)
+2026-07-29T19:36:32.4076315Z Downloading nodriver-0.50.3-py3-none-any.whl (378 kB)
+2026-07-29T19:36:32.4817514Z Downloading psycopg2_binary-2.9.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.3 MB)
+2026-07-29T19:36:32.5906007Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 44.5 MB/s  0:00:00
+2026-07-29T19:36:32.6103030Z Downloading websockets-17.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (220 kB)
+2026-07-29T19:36:32.6313064Z Downloading deprecated-1.3.1-py2.py3-none-any.whl (11 kB)
+2026-07-29T19:36:32.6526533Z Downloading wrapt-2.3.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (161 kB)
+2026-07-29T19:36:32.6735591Z Downloading mss-10.2.0-py3-none-any.whl (67 kB)
+2026-07-29T19:36:32.7126148Z Installing collected packages: wrapt, websockets, psycopg2-binary, mss, deprecated, nodriver
+2026-07-29T19:36:33.2501418Z 
+2026-07-29T19:36:33.2512156Z Successfully installed deprecated-1.3.1 mss-10.2.0 nodriver-0.50.3 psycopg2-binary-2.9.12 websockets-17.0 wrapt-2.3.0
+2026-07-29T19:36:33.3122275Z ##[group]Run sudo apt-get install -y xvfb
+2026-07-29T19:36:33.3122653Z [36;1msudo apt-get install -y xvfb[0m
+2026-07-29T19:36:33.3170669Z shell: /usr/bin/bash -e {0}
+2026-07-29T19:36:33.3170972Z env:
+2026-07-29T19:36:33.3171285Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:33.3171770Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-29T19:36:33.3172242Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:33.3172652Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:33.3173049Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:33.3173995Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-29T19:36:33.3174362Z ##[endgroup]
+2026-07-29T19:36:34.1089390Z Reading package lists...
+2026-07-29T19:36:34.2956171Z Building dependency tree...
+2026-07-29T19:36:34.2965536Z Reading state information...
+2026-07-29T19:36:34.4841303Z xvfb is already the newest version (2:21.1.12-1ubuntu1.6).
+2026-07-29T19:36:34.4842237Z 0 upgraded, 0 newly installed, 0 to remove and 1 not upgraded.
+2026-07-29T19:36:34.4951222Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-29T19:36:34.4952599Z ##[group]Run actions/cache@v4
+2026-07-29T19:36:34.4952881Z with:
+2026-07-29T19:36:34.4953114Z   path: ~/.buildo-scraper
+2026-07-29T19:36:34.4953828Z   key: buildo-scraper-profiles-chain-deep-scrapes-30485096998
+2026-07-29T19:36:34.4954315Z   restore-keys: buildo-scraper-profiles-chain-deep-scrapes-
+
+2026-07-29T19:36:34.4954710Z   enableCrossOsArchive: false
+2026-07-29T19:36:34.4954981Z   fail-on-cache-miss: false
+2026-07-29T19:36:34.4955246Z   lookup-only: false
+2026-07-29T19:36:34.4955485Z   save-always: false
+2026-07-29T19:36:34.4955719Z env:
+2026-07-29T19:36:34.4956002Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.4956490Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-29T19:36:34.4956936Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.4957341Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.4957731Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.4958128Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-29T19:36:34.4958471Z ##[endgroup]
+2026-07-29T19:36:34.6029188Z (node:3067) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-29T19:36:34.6030042Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-29T19:36:34.8084260Z Cache not found for input keys: buildo-scraper-profiles-chain-deep-scrapes-30485096998, buildo-scraper-profiles-chain-deep-scrapes-
+2026-07-29T19:36:34.8175129Z ##[group]Run if [ -z "$SUPABASE_DATABASE_URL" ]; then
+2026-07-29T19:36:34.8175592Z [36;1mif [ -z "$SUPABASE_DATABASE_URL" ]; then[0m
+2026-07-29T19:36:34.8176255Z [36;1m  echo "::error::SUPABASE_DATABASE_URL is empty — refusing to proceed (Spec 115 §3/§4 item 3 fail-safe-loud posture)."[0m
+2026-07-29T19:36:34.8176833Z [36;1m  exit 1[0m
+2026-07-29T19:36:34.8177068Z [36;1mfi[0m
+2026-07-29T19:36:34.8177334Z [36;1mif [ ! -f "$SUPABASE_CA_CERT_PATH" ]; then[0m
+2026-07-29T19:36:34.8178392Z [36;1m  echo "::error::CA cert not found at SUPABASE_CA_CERT_PATH=$SUPABASE_CA_CERT_PATH — every non-loopback connection in this workflow requires it (Spec 113 §4.2/§4.3). scripts/lib/ssl-config.js will throw the same fact per-connection if this guard is bypassed."[0m
+2026-07-29T19:36:34.8179405Z [36;1m  exit 1[0m
+2026-07-29T19:36:34.8179624Z [36;1mfi[0m
+2026-07-29T19:36:34.8179932Z [36;1mET_NOW=$(TZ='America/Toronto' date '+%Y-%m-%d %H:%M:%S %Z')[0m
+2026-07-29T19:36:34.8180965Z [36;1mecho "::notice title=ET drift check::Current America/Toronto time is ${ET_NOW} — this workflow's cron is a single fixed-UTC expression (Spec 115 §2.1); the §2 table's business-hours slots are chosen to stay in-window under both DST regimes."[0m
+2026-07-29T19:36:34.8230161Z shell: /usr/bin/bash -e {0}
+2026-07-29T19:36:34.8230442Z env:
+2026-07-29T19:36:34.8230739Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.8231216Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-29T19:36:34.8231685Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.8232122Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.8232539Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.8232937Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-29T19:36:34.8233320Z   PIPELINE_CHAIN: chain-deep-scrapes
+2026-07-29T19:36:34.8234424Z   SUPABASE_DATABASE_URL: ***
+2026-07-29T19:36:34.8234888Z   SUPABASE_CA_CERT_PATH: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-29T19:36:34.8235337Z ##[endgroup]
+2026-07-29T19:36:34.8398365Z ##[notice]Current America/Toronto time is 2026-07-29 15:36:34 EDT — this workflow's cron is a single fixed-UTC expression (Spec 115 §2.1); the §2 table's business-hours slots are chosen to stay in-window under both DST regimes.
+2026-07-29T19:36:34.8443809Z ##[group]Run node scripts/migrate.js --verify
+2026-07-29T19:36:34.8444191Z [36;1mnode scripts/migrate.js --verify[0m
+2026-07-29T19:36:34.8489581Z shell: /usr/bin/bash -e {0}
+2026-07-29T19:36:34.8490058Z env:
+2026-07-29T19:36:34.8490359Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.8490840Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-29T19:36:34.8491290Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.8491694Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.8492090Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:34.8492497Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-29T19:36:34.8492863Z   PIPELINE_CHAIN: chain-deep-scrapes
+2026-07-29T19:36:34.8494011Z   SUPABASE_DATABASE_URL: ***
+2026-07-29T19:36:34.8494518Z   SUPABASE_CA_CERT_PATH: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-29T19:36:34.8494971Z ##[endgroup]
+2026-07-29T19:36:34.8864937Z ◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+2026-07-29T19:36:35.5686695Z Found 232 migration files
+2026-07-29T19:36:35.5687573Z Tracking table reports 232 previously applied
+2026-07-29T19:36:35.5838470Z Verify: 0 missing, 0 drift
+2026-07-29T19:36:35.6497079Z ##[group]Run node -e "
+2026-07-29T19:36:35.6497400Z [36;1mnode -e "[0m
+2026-07-29T19:36:35.6497725Z [36;1m  const u = new URL(process.env.SUPABASE_DATABASE_URL);[0m
+2026-07-29T19:36:35.6498105Z [36;1m  const lines = [[0m
+2026-07-29T19:36:35.6498380Z [36;1m    'PG_HOST=' + u.hostname,[0m
+2026-07-29T19:36:35.6498693Z [36;1m    'PG_PORT=' + (u.port || '5432'),[0m
+2026-07-29T19:36:35.6499119Z [36;1m    'PG_DATABASE=' + decodeURIComponent(u.pathname.replace(/^\//, '')),[0m
+2026-07-29T19:36:35.6499574Z [36;1m    'PG_USER=' + decodeURIComponent(u.username),[0m
+2026-07-29T19:36:35.6499967Z [36;1m    'PG_PASSWORD=' + decodeURIComponent(u.password),[0m
+2026-07-29T19:36:35.6500331Z [36;1m    'PGSSLMODE=verify-full',[0m
+2026-07-29T19:36:35.6500693Z [36;1m    'PGSSLROOTCERT=' + process.env.SUPABASE_CA_CERT_PATH,[0m
+2026-07-29T19:36:35.6501052Z [36;1m  ];[0m
+2026-07-29T19:36:35.6501497Z [36;1m  require('fs').appendFileSync(process.env.GITHUB_ENV, lines.join('\n') + '\n');[0m
+2026-07-29T19:36:35.6501984Z [36;1m"[0m
+2026-07-29T19:36:35.6549103Z shell: /usr/bin/bash -e {0}
+2026-07-29T19:36:35.6549384Z env:
+2026-07-29T19:36:35.6549684Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.6550149Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-29T19:36:35.6550596Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.6551002Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.6551394Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.6551786Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-29T19:36:35.6552151Z   PIPELINE_CHAIN: chain-deep-scrapes
+2026-07-29T19:36:35.6553077Z   SUPABASE_DATABASE_URL: ***
+2026-07-29T19:36:35.6553727Z   SUPABASE_CA_CERT_PATH: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-29T19:36:35.6554327Z ##[endgroup]
+2026-07-29T19:36:35.6892492Z ##[group]Run echo "::add-mask::$PG_PASSWORD"
+2026-07-29T19:36:35.6893000Z [36;1mecho "::add-mask::$PG_PASSWORD"[0m
+2026-07-29T19:36:35.6941761Z shell: /usr/bin/bash -e {0}
+2026-07-29T19:36:35.6942050Z env:
+2026-07-29T19:36:35.6942361Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.6942832Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-29T19:36:35.6943292Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.6943928Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.6944356Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.6944753Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-29T19:36:35.6945160Z   PG_HOST: aws-0-ca-central-1.pooler.supabase.com
+2026-07-29T19:36:35.6945485Z   PG_PORT: 5432
+2026-07-29T19:36:35.6945730Z   PG_DATABASE: postgres
+2026-07-29T19:36:35.6946243Z   PG_USER: postgres.gcnatfpacuhsytcbaszi
+2026-07-29T19:36:35.6946564Z   PG_PASSWORD: Gobluejays1Gobluejays2
+2026-07-29T19:36:35.6946866Z   PGSSLMODE: verify-full
+2026-07-29T19:36:35.6947254Z   PGSSLROOTCERT: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-29T19:36:35.6947673Z ##[endgroup]
+2026-07-29T19:36:35.7042888Z ##[group]Run node scripts/check-chain-running.js deep_scrapes >> "$GITHUB_OUTPUT"
+2026-07-29T19:36:35.7043684Z [36;1mnode scripts/check-chain-running.js deep_scrapes >> "$GITHUB_OUTPUT"[0m
+2026-07-29T19:36:35.7086821Z shell: /usr/bin/bash -e {0}
+2026-07-29T19:36:35.7087111Z env:
+2026-07-29T19:36:35.7087425Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.7087890Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-29T19:36:35.7088348Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.7088744Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.7089155Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:35.7089549Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-29T19:36:35.7089953Z   PG_HOST: aws-0-ca-central-1.pooler.supabase.com
+2026-07-29T19:36:35.7090283Z   PG_PORT: 5432
+2026-07-29T19:36:35.7090569Z   PG_DATABASE: postgres
+2026-07-29T19:36:35.7090846Z   PG_USER: postgres.gcnatfpacuhsytcbaszi
+2026-07-29T19:36:35.7091272Z   PG_PASSWORD: ***
+2026-07-29T19:36:35.7091521Z   PGSSLMODE: verify-full
+2026-07-29T19:36:35.7091917Z   PGSSLROOTCERT: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-29T19:36:35.7092365Z   PIPELINE_CHAIN: chain-deep-scrapes
+2026-07-29T19:36:35.7093232Z   SUPABASE_DATABASE_URL: ***
+2026-07-29T19:36:35.7093898Z   SUPABASE_CA_CERT_PATH: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-29T19:36:35.7094354Z ##[endgroup]
+2026-07-29T19:36:36.4200815Z ##[group]Run xvfb-run -a node scripts/run-chain.js deep_scrapes
+2026-07-29T19:36:36.4201345Z [36;1mxvfb-run -a node scripts/run-chain.js deep_scrapes[0m
+2026-07-29T19:36:36.4249494Z shell: /usr/bin/bash -e {0}
+2026-07-29T19:36:36.4249789Z env:
+2026-07-29T19:36:36.4250106Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:36.4250575Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-29T19:36:36.4251040Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:36.4251469Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:36.4251881Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:36:36.4252288Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-29T19:36:36.4252692Z   PG_HOST: aws-0-ca-central-1.pooler.supabase.com
+2026-07-29T19:36:36.4253021Z   PG_PORT: 5432
+2026-07-29T19:36:36.4253266Z   PG_DATABASE: postgres
+2026-07-29T19:36:36.4253793Z   PG_USER: postgres.gcnatfpacuhsytcbaszi
+2026-07-29T19:36:36.4254385Z   PG_PASSWORD: ***
+2026-07-29T19:36:36.4254645Z   PGSSLMODE: verify-full
+2026-07-29T19:36:36.4255047Z   PGSSLROOTCERT: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-29T19:36:36.4255509Z   PIPELINE_CHAIN: chain-deep-scrapes
+2026-07-29T19:36:36.4256290Z   SUPABASE_DATABASE_URL: ***
+2026-07-29T19:36:36.4256744Z   SUPABASE_CA_CERT_PATH: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-29T19:36:36.4257215Z   PROXY_HOST: ***
+2026-07-29T19:36:36.4257468Z   PROXY_PORT: ***
+2026-07-29T19:36:36.4257720Z   PROXY_USER: ***
+2026-07-29T19:36:36.4257977Z   PROXY_PASS: ***
+2026-07-29T19:36:36.4258222Z   SCRAPER_WORKERS: 
+2026-07-29T19:36:36.4258468Z   SCRAPE_BATCH_SIZE: 
+2026-07-29T19:36:36.4258719Z   SCRAPE_MAX_PERMITS: 
+2026-07-29T19:36:36.4258963Z   SCRAPE_PERMIT_TYPE: 
+2026-07-29T19:36:36.4259210Z ##[endgroup]
+2026-07-29T19:36:36.9718376Z 
+2026-07-29T19:36:36.9719152Z === Chain: deep_scrapes (7 steps) ===
+2026-07-29T19:36:36.9719574Z 
+2026-07-29T19:36:38.1740762Z {"level":"INFO","tag":"[run-chain]","msg":"Previous chain run failed — gate-skip disabled to process unfinished work"}
+2026-07-29T19:36:38.4942807Z {"level":"INFO","tag":"[run-chain]","msg":"Pre-Flight: PASS (5 tables checked)"}
+2026-07-29T19:36:38.5567414Z [1/7] inspections — starting...
+2026-07-29T19:37:12.0185912Z {"level": "INFO", "tag": "[orchestrator]", "msg": "Starting with 1 workers, batch size 10"}
+2026-07-29T19:37:12.0187406Z {"level": "INFO", "tag": "[orchestrator]", "msg": "Target types: ['Small Residential Projects', 'Building Additions/Alterations', 'New Houses']"}
+2026-07-29T19:37:12.0188838Z {"level": "INFO", "tag": "[orchestrator]", "msg": "Queue: 10981 rows added/recycled, 10981 total pending"}
+2026-07-29T19:37:12.0189925Z {"level": "INFO", "tag": "[orchestrator]", "msg": "Spawning 1 workers (staggered)..."}
+2026-07-29T19:37:12.0191487Z {"level": "INFO", "tag": "[worker-1]", "msg": "Proxy extension created: ***:*** session=buildo-worker-1-1785353803"}
+2026-07-29T19:37:12.0192632Z {"level": "INFO", "tag": "[worker-1]", "msg": "Launching browser via nodriver (CDP)..."}
+2026-07-29T19:37:12.0195429Z {"level": "ERROR", "tag": "[scraper]", "msg": "\n                ---------------------\n                Failed to connect to browser\n                ---------------------\n                One of the causes could be when you are running as root.\n                In that case you need to pass no_sandbox=True \n                ", "context": {"event": "bootstrap_failed", "attempt": 1}}
+2026-07-29T19:37:12.0197419Z {"level": "INFO", "tag": "[scraper]", "msg": "Retrying bootstrap in 10s..."}
+2026-07-29T19:37:12.0200356Z {"level": "ERROR", "tag": "[scraper]", "msg": "\n                ---------------------\n                Failed to connect to browser\n                ---------------------\n                One of the causes could be when you are running as root.\n                In that case you need to pass no_sandbox=True \n                ", "context": {"event": "bootstrap_failed", "attempt": 2}}
+2026-07-29T19:37:12.0202276Z {"level": "INFO", "tag": "[scraper]", "msg": "Retrying bootstrap in 10s..."}
+2026-07-29T19:37:12.0205122Z {"level": "ERROR", "tag": "[scraper]", "msg": "\n                ---------------------\n                Failed to connect to browser\n                ---------------------\n                One of the causes could be when you are running as root.\n                In that case you need to pass no_sandbox=True \n                ", "context": {"event": "bootstrap_failed", "attempt": 3}}
+2026-07-29T19:37:12.0209149Z {"level": "ERROR", "tag": "[worker-1]", "msg": "Fatal: Bootstrap failed after 3 attempts: \n                ---------------------\n                Failed to connect to browser\n                ---------------------\n                One of the causes could be when you are running as root.\n                In that case you need to pass no_sandbox=True \n                "}
+2026-07-29T19:37:12.0212625Z {"level": "INFO", "tag": "[worker-1]", "msg": "Scrape complete", "context": {"permits_attempted": 0, "permits_found": 0, "permits_scraped": 0, "enriched_updates": 0, "status_changes": 0, "proxy_errors": 0, "session_bootstraps": 0, "elapsed": "28.3s"}}
+2026-07-29T19:37:12.0225681Z PIPELINE_SUMMARY:{"records_total": 0, "records_new": 0, "records_updated": 0, "records_meta": {"scraper_telemetry": {"permits_attempted": 0, "permits_found": 0, "permits_scraped": 0, "not_found_count": 0, "enriched_updates": 0, "proxy_errors": 0, "consecutive_empty_max": 0, "session_bootstraps": 0, "session_failures": 0, "schema_drift": [], "status_changes": 0, "error_categories": {}, "last_error": "Bootstrap failed after 3 attempts: \n                ---------------------\n                Failed to connect to browser\n                ---------------------\n                One of the causes could be when you are running as root.\n                In that case you need to pass no_sandbox=True \n                ", "proxy_configured": true, "proxy_host": "***", "preflight_passed": false, "max_permits_cap": 0, "capped": false, "latency": {"p50": 0, "p95": 0, "max": 0}}, "audit_table": {"phase": 1, "name": "Data Ingestion", "verdict": "PASS", "rows": [{"metric": "permits_attempted", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "permits_found", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "enriched_updates", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "not_found_count", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "not_found_rate", "value": "0.0%", "threshold": "< 20%", "status": "PASS"}, {"metric": "records_inserted", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "records_updated", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "duration_ms", "value": 28338, "threshold": null, "status": "INFO"}, {"metric": "exit_code", "value": 0, "threshold": "== 0", "status": "PASS"}, {"metric": "pipeline_summary_emitted", "value": true, "threshold": "== true", "status": "PASS"}]}}}
+2026-07-29T19:37:12.0237276Z PIPELINE_META:{"reads": {"permits": ["permit_num", "status", "enriched_status", "permit_type"]}, "writes": {"permit_inspections": ["permit_num", "stage_name", "status", "inspection_date", "scraped_at"]}, "external": ["AIC Portal REST API (secure.toronto.ca/ApplicationStatus/jaxrs)"]}
+2026-07-29T19:37:12.0240177Z {"level": "INFO", "tag": "[orchestrator]", "msg": "All workers complete", "context": {"workers": 1, "workers_completed": 1, "permits_attempted": 0, "permits_scraped": 0, "preflight_failures": 1, "elapsed": "32.2s"}}
+2026-07-29T19:37:12.0254164Z PIPELINE_SUMMARY:{"records_total": 0, "records_new": 0, "records_updated": 0, "records_meta": {"scraper_telemetry": {"permits_attempted": 0, "permits_found": 0, "permits_scraped": 0, "not_found_count": 0, "enriched_updates": 0, "proxy_errors": 0, "consecutive_empty_max": 0, "session_bootstraps": 0, "session_failures": 0, "schema_drift": [], "status_changes": 0, "error_categories": {}, "last_error": null, "proxy_configured": true, "proxy_host": "***", "max_permits_cap": 0, "capped": false, "preflight_failures": 1, "workers": 1, "workers_completed": 1, "latency": {"p50": 0, "p95": 0, "max": 0}}, "orchestrator": {"workers": 1, "batch_size": 10, "queue_stats": {"pending": 10981}}, "audit_table": {"phase": 1, "name": "Data Ingestion (Multi-Worker)", "verdict": "PASS", "rows": [{"metric": "workers_total", "value": 1, "threshold": null, "status": "INFO"}, {"metric": "preflight_failures", "value": 1, "threshold": "< 2", "status": "PASS"}, {"metric": "permits_attempted", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "permits_found", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "enriched_updates", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "not_found_rate", "value": "0.0%", "threshold": "< 20%", "status": "PASS"}, {"metric": "records_inserted", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "records_updated", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "duration_ms", "value": 32193, "threshold": null, "status": "INFO"}, {"metric": "queue_pending", "value": 10981, "threshold": null, "status": "INFO"}, {"metric": "queue_completed", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "queue_failed", "value": 0, "threshold": null, "status": "INFO"}, {"metric": "exit_code", "value": 0, "threshold": "== 0", "status": "PASS"}, {"metric": "pipeline_summary_emitted", "value": true, "threshold": "== true", "status": "PASS"}]}}}
+2026-07-29T19:37:12.0267071Z PIPELINE_META:{"reads": {"permits": ["permit_num", "status", "enriched_status", "permit_type"], "scraper_queue": ["year_seq", "status", "claimed_by"]}, "writes": {"permit_inspections": ["permit_num", "stage_name", "status", "inspection_date", "scraped_at"], "scraper_queue": ["year_seq", "status", "claimed_at", "completed_at", "claimed_by"]}, "external": ["AIC Portal REST API (secure.toronto.ca/ApplicationStatus/jaxrs)"]}
+2026-07-29T19:37:13.1172099Z [1/7] inspections — completed (34.6s)
+2026-07-29T19:37:13.1172505Z 
+2026-07-29T19:37:13.2439457Z [2/7] classify_inspection_status — starting...
+2026-07-29T19:37:14.8905979Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"allocation_pct sum is 1.0744 (expected 1.0) — normalizing"}
+2026-07-29T19:37:14.8911126Z {"level":"INFO","tag":"[classify-inspection-status]","msg":"Loaded 35 trade configs from control panel"}
+2026-07-29T19:37:15.0188474Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0190065Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0192248Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0194621Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0196059Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0198018Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0199508Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0200747Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0202350Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0203862Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0205118Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0206345Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0207565Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0208821Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0210154Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0211632Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0212917Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0214378Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0215619Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0216861Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0218062Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0219451Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0220705Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0221902Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0223114Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0224535Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0225749Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0226949Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0228155Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0229363Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0230700Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0231914Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0233172Z {"level":"WARN","tag":"[classify-inspection-status]","msg":"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:15.0234268Z {"level":"INFO","tag":"[classify-inspection-status]","msg":"Loaded 417 logic variables from control panel"}
+2026-07-29T19:37:21.0130606Z {"level":"INFO","tag":"[classify-inspection-status]","msg":"Classification complete","context":{"stalled":0,"reactivated":0,"distribution":[{"enriched_status":"Examination","cnt":"51"}]}}
+2026-07-29T19:37:21.0137540Z PIPELINE_SUMMARY:{"records_total":0,"records_new":0,"records_updated":0,"records_meta":{"stalled":0,"reactivated":0,"distribution":[{"status":"Examination","count":51}],"audit_table":{"phase":2,"name":"Inspection Status Classification","verdict":"PASS","rows":[{"metric":"newly_stalled","value":0,"threshold":null,"status":"INFO"},{"metric":"reactivated","value":0,"threshold":null,"status":"INFO"},{"metric":"enriched_examination","value":51,"threshold":null,"status":"INFO"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":7372,"threshold":null,"status":"INFO"}]}}}
+2026-07-29T19:37:21.0140448Z PIPELINE_META:{"reads":{"permits":["permit_num","revision_num","enriched_status","issued_date","application_date","last_seen_at"],"permit_inspections":["permit_num","inspection_date"]},"writes":{"permits":["enriched_status","last_seen_at"]}}
+2026-07-29T19:37:21.0746491Z 
+2026-07-29T19:37:21.0747124Z [classify-inspection-status] completed in 7.4s
+2026-07-29T19:37:21.3670069Z [2/7] classify_inspection_status — completed (8.1s)
+2026-07-29T19:37:21.3670524Z 
+2026-07-29T19:37:21.4924112Z [3/7] assert_network_health — starting...
+2026-07-29T19:37:22.8277206Z {"level":"WARN","tag":"[assert-network-health]","msg":"allocation_pct sum is 1.0744 (expected 1.0) — normalizing"}
+2026-07-29T19:37:22.8282019Z {"level":"INFO","tag":"[assert-network-health]","msg":"Loaded 35 trade configs from control panel"}
+2026-07-29T19:37:22.9537787Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9540274Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9542606Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9545129Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9547259Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9549316Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9551471Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9553887Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9556244Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9559345Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9561702Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9564214Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9566581Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9569134Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9571334Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9573430Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9574919Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9576139Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9577329Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9578528Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9579710Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9580943Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9582355Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9583668Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9584850Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9586014Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9587183Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9588350Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9589508Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9590663Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9591811Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9592965Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9594364Z {"level":"WARN","tag":"[assert-network-health]","msg":"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:22.9595265Z {"level":"INFO","tag":"[assert-network-health]","msg":"Loaded 417 logic variables from control panel"}
+2026-07-29T19:37:22.9595660Z 
+2026-07-29T19:37:22.9595839Z === Phase 2: Scraper Network Health ===
+2026-07-29T19:37:22.9596050Z 
+2026-07-29T19:37:23.0287695Z   PASS: schema_drift_count = 0
+2026-07-29T19:37:23.0288245Z   PASS: proxy_error_rate = 0.0%
+2026-07-29T19:37:23.0288728Z   PASS: avg_latency_ms (p50) = 0ms
+2026-07-29T19:37:23.0289220Z   INFO: max_latency_ms = 0ms
+2026-07-29T19:37:23.0289765Z   PASS: consecutive_empty_hit = false (max: 0)
+2026-07-29T19:37:23.0290377Z   INFO: session_bootstraps = 0
+2026-07-29T19:37:23.0290846Z   PASS: session_failures = 0
+2026-07-29T19:37:23.0291122Z 
+2026-07-29T19:37:23.0291363Z === Network Health: PASS ===
+2026-07-29T19:37:23.0291644Z 
+2026-07-29T19:37:23.0297158Z PIPELINE_SUMMARY:{"records_total":0,"records_new":null,"records_updated":0,"records_meta":{"checks_passed":"all","checks_failed":0,"checks_warned":0,"audit_table":{"phase":2,"name":"Network Health","verdict":"PASS","rows":[{"metric":"schema_drift_count","value":0,"threshold":"== 0","status":"PASS"},{"metric":"proxy_error_rate","value":"0.0%","threshold":"< 5%","status":"PASS"},{"metric":"avg_latency_ms","value":0,"threshold":"< 2000","status":"PASS"},{"metric":"max_latency_ms","value":0,"threshold":null,"status":"INFO"},{"metric":"consecutive_empty_hit","value":false,"threshold":"== false","status":"PASS"},{"metric":"session_bootstraps","value":0,"threshold":null,"status":"INFO"},{"metric":"session_failures","value":0,"threshold":null,"status":"PASS"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":1367,"threshold":null,"status":"INFO"}]}}}
+2026-07-29T19:37:23.0300281Z PIPELINE_META:{"reads":{"pipeline_runs":["records_meta","status","pipeline"]},"writes":{}}
+2026-07-29T19:37:23.0914990Z 
+2026-07-29T19:37:23.0915839Z [assert-network-health] completed in 1.4s
+2026-07-29T19:37:23.1595410Z [3/7] assert_network_health — completed (1.7s)
+2026-07-29T19:37:23.1595716Z 
+2026-07-29T19:37:23.2852683Z [4/7] refresh_snapshot — starting...
+2026-07-29T19:37:24.2784410Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Recapturing data quality snapshot..."}
+2026-07-29T19:37:24.8105075Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"allocation_pct sum is 1.0744 (expected 1.0) — normalizing"}
+2026-07-29T19:37:24.8106383Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Loaded 35 trade configs from control panel"}
+2026-07-29T19:37:24.9361242Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9363862Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9366328Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9369134Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9371368Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9373947Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9394409Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9396321Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9397514Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9398691Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9399879Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9401024Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9402137Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9403273Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9404676Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9405804Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9406922Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9408060Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9409218Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9410357Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9411654Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9412769Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9414102Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9415343Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9416484Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9417601Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9418757Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9419882Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9421008Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9422128Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9423453Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9424686Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9425819Z {"level":"WARN","tag":"[refresh-snapshot]","msg":"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:37:24.9426680Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Loaded 417 logic variables from control panel"}
+2026-07-29T19:41:25.6400697Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Permits: 255481 total, 189756 active"}
+2026-07-29T19:41:25.6401976Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Neighbourhoods (active): 179883 / 189756 = 94.8%"}
+2026-07-29T19:41:25.6403101Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"CoA: 33481 total, 33268 linked = 99.4%"}
+2026-07-29T19:41:25.6404545Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Scope tags: 189756 total, 177099 detailed"}
+2026-07-29T19:41:25.6405781Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Top tags: alter:interior-alterations:33297, new:addition:31211, office:19984, new:garage:17407, new:build-sfd:16513"}
+2026-07-29T19:41:25.6406716Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Nulls: desc=148, builder=179887, cost=82105"}
+2026-07-29T19:41:25.6407535Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Violations: cost_oor=18150, future_issued=0, missing_status=0, total=18150"}
+2026-07-29T19:41:30.3547317Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Inspections: 792 stages, 122 permits, 634 outstanding, 94 passed, 64 not passed"}
+2026-07-29T19:41:31.0145320Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Cost Estimates: 275826 total (7494 permit, 163506 model incl. 129818 archetype, 109281 null)"}
+2026-07-29T19:41:31.8002183Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"CoA cost coverage: corpus 61.2% (20477/33481), open 49.9% (1694/3396); servable funnel 33481→3396→1694→1593→1593"}
+2026-07-29T19:41:31.9361866Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Snapshot updated for Wed Jul 29 2026 00:00:00 GMT+0000 (Coordinated Universal Time):"}
+2026-07-29T19:41:31.9363259Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"  Neighbourhoods: 179883 / 189756 = 94.8%"}
+2026-07-29T19:41:31.9364120Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"  CoA: 33268 / 33481 = 99.4%"}
+2026-07-29T19:41:31.9364728Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"  Scope Class: 189756 classified"}
+2026-07-29T19:41:31.9365375Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"  Scope Tags: 189756 total, 177099 detailed"}
+2026-07-29T19:41:32.0001710Z {"level":"INFO","tag":"[refresh-snapshot]","msg":"Done in 247722ms"}
+2026-07-29T19:41:32.0011201Z PIPELINE_SUMMARY:{"records_total":1,"records_new":0,"records_updated":1,"records_meta":{"duration_ms":247722,"audit_table":{"phase":18,"name":"Refresh Snapshot","verdict":"PASS","rows":[{"metric":"snapshots_created","value":0,"threshold":null,"status":"INFO"},{"metric":"snapshots_updated","value":1,"threshold":null,"status":"INFO"},{"metric":"coa_cost_coverage_pct","value":61.2,"threshold":null,"status":"INFO"},{"metric":"coa_cost_coverage_open_pct","value":49.9,"threshold":null,"status":"INFO"},{"metric":"servable_coa_funnel_total","value":33481,"threshold":null,"status":"INFO"},{"metric":"servable_coa_funnel_geo_open","value":3396,"threshold":null,"status":"INFO"},{"metric":"servable_coa_funnel_cost","value":1694,"threshold":null,"status":"INFO"},{"metric":"servable_coa_funnel_fresh_forecast","value":1593,"threshold":null,"status":"INFO"},{"metric":"servable_coa_funnel_score","value":1593,"threshold":null,"status":"INFO"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":248351,"threshold":null,"status":"INFO"}]}}}
+2026-07-29T19:41:32.0016988Z PIPELINE_META:{"reads":{"permits":["*"],"permit_trades":["*"],"entities":["*"],"permit_parcels":["*"],"coa_applications":["*"],"sync_runs":["*"],"building_footprints":["*"],"parcel_buildings":["*"],"permit_inspections":["*"],"cost_estimates":["cost_source","estimated_cost"],"lead_parcels":["lead_id"],"trade_forecasts":["lead_id","urgency","opportunity_score"]},"writes":{"data_quality_snapshots":["*"]}}
+2026-07-29T19:41:32.0633939Z 
+2026-07-29T19:41:32.0634586Z [refresh-snapshot] completed in 248.4s
+2026-07-29T19:41:32.8389742Z [4/7] refresh_snapshot — completed (249.6s)
+2026-07-29T19:41:32.8390090Z 
+2026-07-29T19:41:32.9743910Z [5/7] assert_data_bounds — starting...
+2026-07-29T19:41:33.7406784Z 
+2026-07-29T19:41:33.7407544Z === CQA Tier 2: Data Bounds Validation ===
+2026-07-29T19:41:33.7407945Z 
+2026-07-29T19:41:34.2796615Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"allocation_pct sum is 1.0744 (expected 1.0) — normalizing"}
+2026-07-29T19:41:34.2798115Z {"level":"INFO","tag":"[assert-data-bounds]","msg":"Loaded 35 trade configs from control panel"}
+2026-07-29T19:41:34.4090998Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4093197Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4095518Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4097662Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4099787Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4101840Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4103991Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4106495Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4107937Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4109218Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4110535Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4111719Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4112900Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4114287Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4115486Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4116644Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4117784Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4119262Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4120584Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4121777Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4122924Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4124177Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4125310Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4126446Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4127584Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4128705Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4129827Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4130959Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4132089Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4133240Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4134737Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4135859Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4136979Z {"level":"WARN","tag":"[assert-data-bounds]","msg":"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:34.4137832Z {"level":"INFO","tag":"[assert-data-bounds]","msg":"Loaded 417 logic variables from control panel"}
+2026-07-29T19:41:34.4894357Z 
+2026-07-29T19:41:34.4895321Z --- Phase 3: Inspection Data Quality (792 rows) ---
+2026-07-29T19:41:34.5552009Z   PASS: null_permit_num = 0
+2026-07-29T19:41:34.6187924Z   PASS: null_stage_name = 0
+2026-07-29T19:41:34.6830807Z   PASS: null_status = 0
+2026-07-29T19:41:34.7474209Z   PASS: null_scraped_at = 0
+2026-07-29T19:41:34.8424328Z   PASS: orphan_inspections = 0
+2026-07-29T19:41:34.9066940Z   PASS: invalid_status = 0
+2026-07-29T19:41:34.9705001Z   PASS: outstanding_with_date = 0
+2026-07-29T19:41:35.0349559Z   PASS: completed_without_date = 0
+2026-07-29T19:41:35.0997677Z   PASS: duplicate_stages = 0
+2026-07-29T19:41:35.1634927Z   PASS: future_dates = 0
+2026-07-29T19:41:35.2271756Z   PASS: ancient_dates = 0
+2026-07-29T19:41:35.2922363Z   PASS: date_before_permit_year = 0
+2026-07-29T19:41:35.2934215Z PIPELINE_SUMMARY:{"records_total":0,"records_new":null,"records_updated":null,"records_meta":{"checks_passed":"all","checks_failed":0,"checks_warned":0,"audit_table":{"phase":3,"name":"Data Quality","verdict":"PASS","rows":[{"metric":"null_permit_num","value":0,"threshold":"== 0","status":"PASS"},{"metric":"null_stage_name","value":0,"threshold":"== 0","status":"PASS"},{"metric":"null_status","value":0,"threshold":"== 0","status":"PASS"},{"metric":"null_scraped_at","value":0,"threshold":"== 0","status":"PASS"},{"metric":"orphan_inspections","value":0,"threshold":"== 0","status":"PASS"},{"metric":"invalid_status","value":0,"threshold":"== 0","status":"PASS"},{"metric":"outstanding_with_date","value":0,"threshold":"== 0","status":"PASS"},{"metric":"completed_without_date","value":0,"threshold":"== 0","status":"PASS"},{"metric":"duplicate_stages","value":0,"threshold":"== 0","status":"PASS"},{"metric":"future_dates","value":0,"threshold":"== 0","status":"PASS"},{"metric":"ancient_dates","value":0,"threshold":"<= 5","status":"PASS"},{"metric":"date_before_permit_year","value":0,"threshold":"== 0","status":"PASS"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":2143,"threshold":null,"status":"INFO"}]}}}
+2026-07-29T19:41:35.2939047Z PIPELINE_META:{"reads":{"permits":["*"],"parcels":["*"],"address_points":["*"],"building_footprints":["*"],"neighbourhoods":["*"],"coa_applications":["*"],"permit_inspections":["*"]},"writes":{"pipeline_runs":["checks_passed","checks_failed","checks_warned"]}}
+2026-07-29T19:41:35.2939845Z 
+2026-07-29T19:41:35.2940021Z === Data Bounds: COMPLETED (0.9s) ===
+2026-07-29T19:41:35.2940241Z 
+2026-07-29T19:41:35.3507378Z 
+2026-07-29T19:41:35.3508233Z [assert-data-bounds] completed in 2.2s
+2026-07-29T19:41:35.4172519Z [5/7] assert_data_bounds — completed (2.4s)
+2026-07-29T19:41:35.4172805Z 
+2026-07-29T19:41:35.5429611Z [6/7] assert_engine_health — starting...
+2026-07-29T19:41:36.4931974Z 
+2026-07-29T19:41:36.4932681Z === CQA Tier 3: Engine Health & Volume Volatility ===
+2026-07-29T19:41:36.4933007Z 
+2026-07-29T19:41:37.0399315Z Monitoring 84 tables
+2026-07-29T19:41:37.0399649Z 
+2026-07-29T19:41:37.1109697Z   OK: address_points — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1110786Z   OK: address_points — seq scan ratio 0.0%
+2026-07-29T19:41:37.1111981Z   OK: admin_audit_log — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1112676Z   OK: admin_backup_codes — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1113851Z   OK: admin_watchlist — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1114507Z   OK: archetype_cost_rates — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1115186Z   OK: building_footprints — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1115843Z   OK: building_footprints — seq scan ratio 0.0%
+2026-07-29T19:41:37.1116484Z   OK: coa_applications — dead tuple ratio 8.8%
+2026-07-29T19:41:37.1117153Z   OK: coa_applications — seq scan ratio 0.0%
+2026-07-29T19:41:37.1117764Z   OK: cost_estimates — dead tuple ratio 0.3%
+2026-07-29T19:41:37.1118402Z   OK: cost_estimates — seq scan ratio 0.0%
+2026-07-29T19:41:37.1119056Z   OK: data_quality_snapshots — dead tuple ratio 10.3%
+2026-07-29T19:41:37.1119703Z   OK: device_tokens — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1121289Z   OK: engine_health_snapshots — dead tuple ratio 3.3%
+2026-07-29T19:41:37.1126212Z   OK: entities — dead tuple ratio 0.9%
+2026-07-29T19:41:37.1126800Z   OK: entitlements — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1127444Z   OK: entity_contacts — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1128053Z   OK: entity_projects — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1128639Z   OK: entity_projects — seq scan ratio 64.6%
+2026-07-29T19:41:37.1129277Z   OK: heritage_districts — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1129947Z   OK: heritage_properties — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1130608Z   OK: inspection_stage_map — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1131258Z   OK: lead_analytics — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1131863Z   OK: lead_parcels — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1132605Z   OK: lead_parcels — seq scan ratio 0.0%
+2026-07-29T19:41:37.1133199Z   OK: lead_products — dead tuple ratio 6.5%
+2026-07-29T19:41:37.1133924Z   OK: lead_products — seq scan ratio 0.0%
+2026-07-29T19:41:37.1134353Z   OK: lead_trades — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1140937Z   OK: lead_trades — seq scan ratio 0.0%
+2026-07-29T19:41:37.1141682Z   OK: lead_view_events — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1142317Z   OK: lead_views — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1142994Z   OK: lifecycle_status_history — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1143891Z   OK: lifecycle_status_history — seq scan ratio 0.4%
+2026-07-29T19:41:37.1144583Z   OK: lifecycle_transitions — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1145241Z   OK: lifecycle_transitions — seq scan ratio 0.1%
+2026-07-29T19:41:37.1145663Z   OK: logic_variables — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1146085Z   OK: mv_monthly_permit_stats — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1146541Z   OK: neighbourhood_build_norms — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1147009Z   OK: neighbourhood_storey_norms — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1147434Z   OK: neighbourhoods — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1147867Z   OK: notification_dispatches — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1148305Z   OK: notifications — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1148725Z   OK: parcel_address_points — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1149170Z   OK: parcel_address_points — seq scan ratio 1.1%
+2026-07-29T19:41:37.1149593Z   OK: parcel_buildings — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1149990Z   OK: parcel_buildings — seq scan ratio 0.0%
+2026-07-29T19:41:37.1150373Z   OK: parcels — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1150731Z   OK: parcels — seq scan ratio 0.0%
+2026-07-29T19:41:37.1151111Z   OK: permit_history — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1151517Z   OK: permit_inspections — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1151911Z   OK: permit_parcels — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1152287Z   OK: permit_parcels — seq scan ratio 0.0%
+2026-07-29T19:41:37.1152713Z   OK: permit_phase_transitions — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1153153Z   OK: permit_phase_transitions — seq scan ratio 65.2%
+2026-07-29T19:41:37.1153802Z   OK: permit_products — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1154243Z   OK: permit_products — seq scan ratio 0.0%
+2026-07-29T19:41:37.1154638Z   OK: permit_trades — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1155202Z   OK: permit_trades — seq scan ratio 0.0%
+2026-07-29T19:41:37.1155650Z   OK: permit_type_classifications — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1156074Z   OK: permits — dead tuple ratio 0.3%
+2026-07-29T19:41:37.1156432Z   OK: permits — seq scan ratio 0.0%
+2026-07-29T19:41:37.1156814Z   OK: phase_calibration — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1157249Z   OK: phase_stay_calibration — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1157658Z   OK: pipeline_runs — dead tuple ratio 2.8%
+2026-07-29T19:41:37.1158049Z   OK: pipeline_schedules — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1158449Z   OK: product_groups — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1158827Z   OK: profiles — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1159183Z   OK: ravines — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1159559Z   OK: schema_migrations — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1159963Z   OK: schema_migrations — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1160357Z   OK: schema_migrations — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1160781Z   OK: scope_intensity_matrix — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1161176Z   OK: scraper_queue — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1161568Z   OK: scraper_queue — seq scan ratio 0.2%
+2026-07-29T19:41:37.1161947Z   OK: spatial_ref_sys — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1162360Z   OK: stripe_webhook_events — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1162775Z   OK: subscribe_nonces — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1163168Z   OK: supplier_products — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1163789Z   OK: supplier_trades — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1164187Z   OK: suppliers — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1164545Z   OK: sync_runs — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1164926Z   OK: toronto_centreline — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1165489Z   OK: toronto_centreline — seq scan ratio 80.0%
+2026-07-29T19:41:37.1165889Z   OK: tracked_projects — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1166310Z   OK: trade_configurations — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1166716Z   OK: trade_forecasts — dead tuple ratio 1.1%
+2026-07-29T19:41:37.1167086Z   OK: trade_forecasts — seq scan ratio 0.0%
+2026-07-29T19:41:37.1167484Z   OK: trade_mapping_rules — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1167880Z   OK: trade_products — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1168264Z   OK: trade_sqft_rates — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1168648Z   OK: trade_suppliers — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1169008Z   OK: trades — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1169417Z   OK: universal_stream_catalog — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1169891Z   OK: universal_stream_trade_signals — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1170315Z   OK: user_profiles — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1170689Z   OK: wsib_registry — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1171070Z   OK: wsib_registry — seq scan ratio 1.3%
+2026-07-29T19:41:37.1171511Z   OK: zoning_building_setback_overlay — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1171968Z   OK: zoning_bylaw_areas — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1172367Z   OK: zoning_bylaw_areas — seq scan ratio 75.6%
+2026-07-29T19:41:37.1172785Z   OK: zoning_height_overlay — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1173233Z   OK: zoning_lot_coverage_overlay — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1173876Z   OK: zoning_parking_zone_overlay — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1174336Z   OK: zoning_policy_area_overlay — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1174784Z   OK: zoning_policy_road_overlay — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1175246Z   OK: zoning_priority_retail_overlay — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1175710Z   OK: zoning_queenstw_eat_overlay — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1176166Z   OK: zoning_rooming_house_overlay — dead tuple ratio 0.0%
+2026-07-29T19:41:37.1176422Z 
+2026-07-29T19:41:37.1176668Z --- Auto-VACUUM ANALYZE (1 tables above 10% dead ratio) ---
+2026-07-29T19:41:37.1952829Z   VACUUM ANALYZE data_quality_snapshots — done (was 10.3% dead)
+2026-07-29T19:41:42.7677046Z 
+2026-07-29T19:41:42.7677755Z   Snapshot: 86 tables written to engine_health_snapshots (41 actually updated)
+2026-07-29T19:41:42.9031710Z PIPELINE_SUMMARY:{"records_total":86,"records_new":null,"records_updated":41,"records_meta":{"checks_passed":"all","checks_warned":0,"checks_failed":0,"tables_checked":86,"tables_vacuumed":1,"engine_health":[{"table_name":"address_points","n_live_tup":525346,"n_dead_tup":0,"dead_ratio":0,"seq_scan":36,"idx_scan":1025587,"seq_ratio":0},{"table_name":"admin_audit_log","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":11,"idx_scan":0,"seq_ratio":1},{"table_name":"admin_backup_codes","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":7,"idx_scan":0,"seq_ratio":1},{"table_name":"admin_watchlist","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":14,"idx_scan":0,"seq_ratio":1},{"table_name":"archetype_cost_rates","n_live_tup":12,"n_dead_tup":0,"dead_ratio":0,"seq_scan":15,"idx_scan":0,"seq_ratio":1},{"table_name":"building_footprints","n_live_tup":427370,"n_dead_tup":0,"dead_ratio":0,"seq_scan":25,"idx_scan":1112753,"seq_ratio":0},{"table_name":"coa_applications","n_live_tup":33481,"n_dead_tup":2955,"dead_ratio":0.0883,"seq_scan":247,"idx_scan":1070205,"seq_ratio":0.0002},{"table_name":"cost_estimates","n_live_tup":275826,"n_dead_tup":851,"dead_ratio":0.0031,"seq_scan":47,"idx_scan":256742,"seq_ratio":0.0002},{"table_name":"data_quality_snapshots","n_live_tup":29,"n_dead_tup":3,"dead_ratio":0.1034,"seq_scan":29,"idx_scan":7,"seq_ratio":0.8056},{"table_name":"device_tokens","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":10,"idx_scan":0,"seq_ratio":1},{"table_name":"engine_health_snapshots","n_live_tup":1093,"n_dead_tup":36,"dead_ratio":0.0329,"seq_scan":12,"idx_scan":185,"seq_ratio":0.0609},{"table_name":"entities","n_live_tup":3964,"n_dead_tup":36,"dead_ratio":0.0091,"seq_scan":73,"idx_scan":80987,"seq_ratio":0.0009},{"table_name":"entitlements","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":8,"idx_scan":0,"seq_ratio":1},{"table_name":"entity_contacts","n_live_tup":93,"n_dead_tup":0,"dead_ratio":0,"seq_scan":31,"idx_scan":0,"seq_ratio":1},{"table_name":"entity_projects","n_live_tup":14542,"n_dead_tup":0,"dead_ratio":0,"seq_scan":31,"idx_scan":17,"seq_ratio":0.6458},{"table_name":"heritage_districts","n_live_tup":29,"n_dead_tup":0,"dead_ratio":0,"seq_scan":27,"idx_scan":0,"seq_ratio":1},{"table_name":"heritage_properties","n_live_tup":8824,"n_dead_tup":0,"dead_ratio":0,"seq_scan":28,"idx_scan":9,"seq_ratio":0.7568},{"table_name":"inspection_stage_map","n_live_tup":21,"n_dead_tup":0,"dead_ratio":0,"seq_scan":25,"idx_scan":0,"seq_ratio":1},{"table_name":"lead_analytics","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":23,"idx_scan":54,"seq_ratio":0.2987},{"table_name":"lead_parcels","n_live_tup":272104,"n_dead_tup":17,"dead_ratio":0.0001,"seq_scan":17,"idx_scan":488942,"seq_ratio":0},{"table_name":"lead_products","n_live_tup":756690,"n_dead_tup":49326,"dead_ratio":0.0652,"seq_scan":25,"idx_scan":52705,"seq_ratio":0.0005},{"table_name":"lead_trades","n_live_tup":2741132,"n_dead_tup":0,"dead_ratio":0,"seq_scan":35,"idx_scan":5108808,"seq_ratio":0},{"table_name":"lead_view_events","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":7,"idx_scan":0,"seq_ratio":1},{"table_name":"lead_views","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":146,"idx_scan":0,"seq_ratio":1},{"table_name":"lifecycle_status_history","n_live_tup":390462,"n_dead_tup":0,"dead_ratio":0,"seq_scan":43,"idx_scan":11029,"seq_ratio":0.0039},{"table_name":"lifecycle_transitions","n_live_tup":34462,"n_dead_tup":0,"dead_ratio":0,"seq_scan":41,"idx_scan":47060,"seq_ratio":0.0009},{"table_name":"logic_variables","n_live_tup":417,"n_dead_tup":0,"dead_ratio":0,"seq_scan":49,"idx_scan":5,"seq_ratio":0.9074},{"table_name":"mv_monthly_permit_stats","n_live_tup":4239,"n_dead_tup":0,"dead_ratio":0,"seq_scan":21,"idx_scan":1,"seq_ratio":0.9545},{"table_name":"neighbourhood_build_norms","n_live_tup":452,"n_dead_tup":0,"dead_ratio":0,"seq_scan":27,"idx_scan":4,"seq_ratio":0.871},{"table_name":"neighbourhood_storey_norms","n_live_tup":147,"n_dead_tup":0,"dead_ratio":0,"seq_scan":28,"idx_scan":2,"seq_ratio":0.9333},{"table_name":"neighbourhoods","n_live_tup":158,"n_dead_tup":0,"dead_ratio":0,"seq_scan":65,"idx_scan":972456,"seq_ratio":0.0001},{"table_name":"notification_dispatches","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":16,"idx_scan":0,"seq_ratio":1},{"table_name":"notifications","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":33,"idx_scan":0,"seq_ratio":1},{"table_name":"parcel_address_points","n_live_tup":511224,"n_dead_tup":0,"dead_ratio":0,"seq_scan":21,"idx_scan":1927,"seq_ratio":0.0108},{"table_name":"parcel_buildings","n_live_tup":520492,"n_dead_tup":0,"dead_ratio":0,"seq_scan":29,"idx_scan":1326527,"seq_ratio":0},{"table_name":"parcels","n_live_tup":486347,"n_dead_tup":0,"dead_ratio":0,"seq_scan":282,"idx_scan":4185853,"seq_ratio":0.0001},{"table_name":"permit_history","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":27,"idx_scan":0,"seq_ratio":1},{"table_name":"permit_inspections","n_live_tup":792,"n_dead_tup":0,"dead_ratio":0,"seq_scan":54,"idx_scan":15,"seq_ratio":0.7826},{"table_name":"permit_parcels","n_live_tup":242500,"n_dead_tup":10,"dead_ratio":0,"seq_scan":79,"idx_scan":258296,"seq_ratio":0.0003},{"table_name":"permit_phase_transitions","n_live_tup":310021,"n_dead_tup":0,"dead_ratio":0,"seq_scan":30,"idx_scan":16,"seq_ratio":0.6522},{"table_name":"permit_products","n_live_tup":2156985,"n_dead_tup":0,"dead_ratio":0,"seq_scan":21,"idx_scan":1998666,"seq_ratio":0},{"table_name":"permit_trades","n_live_tup":1780125,"n_dead_tup":0,"dead_ratio":0,"seq_scan":49,"idx_scan":2355253,"seq_ratio":0},{"table_name":"permit_type_classifications","n_live_tup":25,"n_dead_tup":0,"dead_ratio":0,"seq_scan":19,"idx_scan":1436316,"seq_ratio":0},{"table_name":"permits","n_live_tup":256051,"n_dead_tup":794,"dead_ratio":0.0031,"seq_scan":460,"idx_scan":13250523,"seq_ratio":0},{"table_name":"phase_calibration","n_live_tup":6,"n_dead_tup":0,"dead_ratio":0,"seq_scan":32,"idx_scan":6,"seq_ratio":0.8421},{"table_name":"phase_stay_calibration","n_live_tup":431,"n_dead_tup":0,"dead_ratio":0,"seq_scan":33,"idx_scan":2,"seq_ratio":0.9429},{"table_name":"pipeline_runs","n_live_tup":1668,"n_dead_tup":46,"dead_ratio":0.0276,"seq_scan":22,"idx_scan":2357,"seq_ratio":0.0092},{"table_name":"pipeline_schedules","n_live_tup":30,"n_dead_tup":0,"dead_ratio":0,"seq_scan":25,"idx_scan":8,"seq_ratio":0.7576},{"table_name":"product_groups","n_live_tup":27,"n_dead_tup":0,"dead_ratio":0,"seq_scan":27,"idx_scan":6621330,"seq_ratio":0},{"table_name":"profiles","n_live_tup":1,"n_dead_tup":0,"dead_ratio":0,"seq_scan":5,"idx_scan":7,"seq_ratio":0.4167},{"table_name":"ravines","n_live_tup":854,"n_dead_tup":0,"dead_ratio":0,"seq_scan":27,"idx_scan":0,"seq_ratio":1},{"table_name":"schema_migrations","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":143,"idx_scan":0,"seq_ratio":1},{"table_name":"schema_migrations","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":1,"idx_scan":0,"seq_ratio":1},{"table_name":"schema_migrations","n_live_tup":0,"n_dead_tup":3,"dead_ratio":0,"seq_scan":16,"idx_scan":32,"seq_ratio":0.3333},{"table_name":"scope_intensity_matrix","n_live_tup":32,"n_dead_tup":0,"dead_ratio":0,"seq_scan":17,"idx_scan":0,"seq_ratio":1},{"table_name":"scraper_queue","n_live_tup":10981,"n_dead_tup":0,"dead_ratio":0,"seq_scan":26,"idx_scan":10982,"seq_ratio":0.0024},{"table_name":"spatial_ref_sys","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":3,"idx_scan":63,"seq_ratio":0.0455},{"table_name":"stripe_webhook_events","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":18,"idx_scan":0,"seq_ratio":1},{"table_name":"subscribe_nonces","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":6,"idx_scan":0,"seq_ratio":1},{"table_name":"supplier_products","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":15,"idx_scan":0,"seq_ratio":1},{"table_name":"supplier_trades","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":11,"idx_scan":0,"seq_ratio":1},{"table_name":"suppliers","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":17,"idx_scan":0,"seq_ratio":1},{"table_name":"sync_runs","n_live_tup":65,"n_dead_tup":0,"dead_ratio":0,"seq_scan":36,"idx_scan":0,"seq_ratio":1},{"table_name":"toronto_centreline","n_live_tup":47363,"n_dead_tup":0,"dead_ratio":0,"seq_scan":32,"idx_scan":8,"seq_ratio":0.8},{"table_name":"tracked_projects","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":23,"idx_scan":2,"seq_ratio":0.92},{"table_name":"trade_configurations","n_live_tup":35,"n_dead_tup":0,"dead_ratio":0,"seq_scan":51,"idx_scan":0,"seq_ratio":1},{"table_name":"trade_forecasts","n_live_tup":1112532,"n_dead_tup":12402,"dead_ratio":0.0111,"seq_scan":45,"idx_scan":2225088,"seq_ratio":0},{"table_name":"trade_mapping_rules","n_live_tup":99,"n_dead_tup":0,"dead_ratio":0,"seq_scan":57,"idx_scan":0,"seq_ratio":1},{"table_name":"trade_products","n_live_tup":32,"n_dead_tup":0,"dead_ratio":0,"seq_scan":15,"idx_scan":0,"seq_ratio":1},{"table_name":"trade_sqft_rates","n_live_tup":32,"n_dead_tup":0,"dead_ratio":0,"seq_scan":14,"idx_scan":0,"seq_ratio":1},{"table_name":"trade_suppliers","n_live_tup":127,"n_dead_tup":0,"dead_ratio":0,"seq_scan":20,"idx_scan":0,"seq_ratio":1},{"table_name":"trades","n_live_tup":36,"n_dead_tup":0,"dead_ratio":0,"seq_scan":65,"idx_scan":17123301,"seq_ratio":0},{"table_name":"universal_stream_catalog","n_live_tup":110,"n_dead_tup":0,"dead_ratio":0,"seq_scan":40,"idx_scan":1244,"seq_ratio":0.0312},{"table_name":"universal_stream_trade_signals","n_live_tup":1242,"n_dead_tup":0,"dead_ratio":0,"seq_scan":21,"idx_scan":0,"seq_ratio":1},{"table_name":"user_profiles","n_live_tup":0,"n_dead_tup":0,"dead_ratio":0,"seq_scan":26,"idx_scan":0,"seq_ratio":1},{"table_name":"wsib_registry","n_live_tup":121116,"n_dead_tup":8,"dead_ratio":0.0001,"seq_scan":106,"idx_scan":8020,"seq_ratio":0.013},{"table_name":"zoning_building_setback_overlay","n_live_tup":4,"n_dead_tup":0,"dead_ratio":0,"seq_scan":24,"idx_scan":0,"seq_ratio":1},{"table_name":"zoning_bylaw_areas","n_live_tup":11719,"n_dead_tup":0,"dead_ratio":0,"seq_scan":31,"idx_scan":10,"seq_ratio":0.7561},{"table_name":"zoning_height_overlay","n_live_tup":2528,"n_dead_tup":0,"dead_ratio":0,"seq_scan":15,"idx_scan":8,"seq_ratio":0.6522},{"table_name":"zoning_lot_coverage_overlay","n_live_tup":1242,"n_dead_tup":0,"dead_ratio":0,"seq_scan":14,"idx_scan":8,"seq_ratio":0.6364},{"table_name":"zoning_parking_zone_overlay","n_live_tup":913,"n_dead_tup":0,"dead_ratio":0,"seq_scan":23,"idx_scan":0,"seq_ratio":1},{"table_name":"zoning_policy_area_overlay","n_live_tup":352,"n_dead_tup":0,"dead_ratio":0,"seq_scan":25,"idx_scan":0,"seq_ratio":1},{"table_name":"zoning_policy_road_overlay","n_live_tup":8913,"n_dead_tup":0,"dead_ratio":0,"seq_scan":15,"idx_scan":8,"seq_ratio":0.6522},{"table_name":"zoning_priority_retail_overlay","n_live_tup":643,"n_dead_tup":0,"dead_ratio":0,"seq_scan":25,"idx_scan":0,"seq_ratio":1},{"table_name":"zoning_queenstw_eat_overlay","n_live_tup":4,"n_dead_tup":0,"dead_ratio":0,"seq_scan":24,"idx_scan":0,"seq_ratio":1},{"table_name":"zoning_rooming_house_overlay","n_live_tup":558,"n_dead_tup":0,"dead_ratio":0,"seq_scan":25,"idx_scan":0,"seq_ratio":1}],"audit_table":{"phase":6,"name":"Engine Health","verdict":"PASS","rows":[{"metric":"live_rows","value":792,"threshold":null,"status":"INFO"},{"metric":"dead_rows","value":0,"threshold":null,"status":"INFO"},{"metric":"dead_tuple_pct","value":"0.00%","threshold":"< 10%","status":"PASS"},{"metric":"update_insert_ratio","value":0,"threshold":"< 5.0","status":"PASS"},{"metric":"last_autovacuum","value":"2026-07-22T04:23:48.604Z","threshold":null,"status":"INFO"},{"metric":"sys_velocity_rows_sec","value":12.23,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":7034,"threshold":null,"status":"INFO"}]}}}
+2026-07-29T19:41:42.9064021Z PIPELINE_META:{"reads":{"pg_stat_user_tables":["relname","n_live_tup","n_dead_tup","seq_scan","idx_scan","n_tup_ins","n_tup_upd"]},"writes":{"engine_health_snapshots":["table_name","n_live_tup","n_dead_tup","dead_ratio","seq_scan","idx_scan","seq_ratio"]}}
+2026-07-29T19:41:42.9064979Z 
+2026-07-29T19:41:42.9065158Z === Engine Health: COMPLETED (6.3s) ===
+2026-07-29T19:41:42.9065366Z 
+2026-07-29T19:41:42.9604338Z 
+2026-07-29T19:41:42.9604900Z [assert-engine-health] completed in 7.1s
+2026-07-29T19:41:43.2157815Z [6/7] assert_engine_health — completed (7.7s)
+2026-07-29T19:41:43.2158136Z 
+2026-07-29T19:41:43.3449114Z [7/7] assert_staleness — starting...
+2026-07-29T19:41:44.5853252Z {"level":"WARN","tag":"[assert-staleness]","msg":"allocation_pct sum is 1.0744 (expected 1.0) — normalizing"}
+2026-07-29T19:41:44.5857219Z {"level":"INFO","tag":"[assert-staleness]","msg":"Loaded 35 trade configs from control panel"}
+2026-07-29T19:41:44.7047955Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7050301Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7052581Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7055136Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7057154Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7059046Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7061570Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7063954Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7066308Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7068365Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7070462Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7072628Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7074999Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7077258Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7079636Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7081770Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7084043Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7086073Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7087647Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7089115Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7090260Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7091376Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7092485Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7093876Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7095005Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7096160Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7097282Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7098396Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7099503Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7100789Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7101926Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7103044Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7104279Z {"level":"WARN","tag":"[assert-staleness]","msg":"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback","context":{"raw":null}}
+2026-07-29T19:41:44.7105119Z {"level":"INFO","tag":"[assert-staleness]","msg":"Loaded 417 logic variables from control panel"}
+2026-07-29T19:41:44.7105505Z 
+2026-07-29T19:41:44.7105669Z === Phase 4: Staleness Monitor ===
+2026-07-29T19:41:44.7105862Z 
+2026-07-29T19:41:57.3166079Z   INFO: total_target_permits = 58,647
+2026-07-29T19:41:57.3166750Z   INFO: scraped_permits = 57
+2026-07-29T19:41:57.3167344Z   INFO: never_scraped = 58,590
+2026-07-29T19:41:57.3168005Z   WARN: coverage_pct = 0.1% (early phase) (below floor 10%)
+2026-07-29T19:41:57.4039682Z   WARN: max_days_stale = 137 days (ceiling 60d)
+2026-07-29T19:41:57.4040410Z   WARN: stale_over_30d = 57 (within tolerance 10000)
+2026-07-29T19:41:57.4040783Z 
+2026-07-29T19:41:57.4041038Z === Staleness Monitor: WARN ===
+2026-07-29T19:41:57.4041309Z 
+2026-07-29T19:41:57.4047168Z PIPELINE_SUMMARY:{"records_total":0,"records_new":null,"records_updated":0,"records_meta":{"checks_passed":"all","checks_failed":0,"checks_warned":3,"audit_table":{"phase":4,"name":"Staleness Monitor","verdict":"WARN","rows":[{"metric":"total_target_permits","value":58647,"threshold":null,"status":"INFO"},{"metric":"scraped_permits","value":57,"threshold":null,"status":"INFO"},{"metric":"never_scraped","value":58590,"threshold":null,"status":"INFO"},{"metric":"coverage_pct","value":"0.1%","threshold":">= 10%","status":"WARN"},{"metric":"max_days_stale","value":137,"threshold":"<= 60 days","status":"WARN"},{"metric":"stale_over_30d","value":57,"threshold":"<= 10000","status":"WARN"},{"metric":"sys_velocity_rows_sec","value":0,"threshold":null,"status":"INFO"},{"metric":"sys_duration_ms","value":13886,"threshold":null,"status":"INFO"}]}}}
+2026-07-29T19:41:57.4050637Z PIPELINE_META:{"reads":{"permits":["permit_num","status","permit_type"],"permit_inspections":["permit_num","scraped_at"]},"writes":{}}
+2026-07-29T19:41:57.4620371Z 
+2026-07-29T19:41:57.4621079Z [assert-staleness] completed in 13.9s
+2026-07-29T19:41:57.5250587Z [7/7] assert_staleness — completed (14.2s)
+2026-07-29T19:41:57.5250990Z 
+2026-07-29T19:41:58.1200309Z === Chain deep_scrapes: completed_with_warnings (320.5s) ===
+2026-07-29T19:41:58.1203173Z {"level":"WARN","tag":"[run-chain]","msg":"Chain completed with 1 warning(s)","context":{"step_verdicts":{"inspections":"PASS","classify_inspection_status":"PASS","assert_network_health":"PASS","refresh_snapshot":"PASS","assert_data_bounds":"PASS","assert_engine_health":"PASS","assert_staleness":"WARN"}}}
+2026-07-29T19:41:58.2604775Z ##[group]Run node scripts/check-chain-verdict.js deep_scrapes
+2026-07-29T19:41:58.2605602Z [36;1mnode scripts/check-chain-verdict.js deep_scrapes[0m
+2026-07-29T19:41:58.2672252Z shell: /usr/bin/bash -e {0}
+2026-07-29T19:41:58.2672675Z env:
+2026-07-29T19:41:58.2673147Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:41:58.2674130Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-29T19:41:58.2674875Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:41:58.2675528Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:41:58.2676199Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-29T19:41:58.2676871Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-29T19:41:58.2677507Z   PG_HOST: aws-0-ca-central-1.pooler.supabase.com
+2026-07-29T19:41:58.2678037Z   PG_PORT: 5432
+2026-07-29T19:41:58.2678387Z   PG_DATABASE: postgres
+2026-07-29T19:41:58.2678881Z   PG_USER: postgres.gcnatfpacuhsytcbaszi
+2026-07-29T19:41:58.2679547Z   PG_PASSWORD: ***
+2026-07-29T19:41:58.2679956Z   PGSSLMODE: verify-full
+2026-07-29T19:41:58.2680608Z   PGSSLROOTCERT: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-29T19:41:58.2681350Z   PIPELINE_CHAIN: chain-deep-scrapes
+2026-07-29T19:41:58.2682713Z   SUPABASE_DATABASE_URL: ***
+2026-07-29T19:41:58.2683413Z   SUPABASE_CA_CERT_PATH: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-29T19:41:58.2684336Z ##[endgroup]
+2026-07-29T19:41:58.8784645Z [check-chain-verdict] chain_deep_scrapes verdict OK (status=completed_with_warnings)
+2026-07-29T19:41:58.9538318Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-29T19:41:58.9539525Z Post job cleanup.
+2026-07-29T19:41:59.0640704Z (node:3450) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-29T19:41:59.0641597Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-29T19:41:59.0797987Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/buildo/buildo --files-from manifest.txt --use-compress-program zstdmt
+2026-07-29T19:41:59.3284727Z (node:3450) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-07-29T19:41:59.5545903Z Sent 2611 of 2611 (100.0%), 0.0 MBs/sec
+2026-07-29T19:41:59.6791303Z Cache saved with key: buildo-scraper-profiles-chain-deep-scrapes-30485096998
+2026-07-29T19:41:59.6907547Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-29T19:41:59.6908954Z Post job cleanup.
+2026-07-29T19:41:59.8205445Z (node:3470) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-29T19:41:59.8206307Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-29T19:41:59.8413342Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-29T19:41:59.8415672Z Post job cleanup.
+2026-07-29T19:41:59.9681493Z (node:3478) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-29T19:41:59.9682908Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-29T19:41:59.9685409Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-6987bb44270f40c13a4b3583ec610787da795ec84d2a03377a85bcc1e2f6b527, not saving cache.
+2026-07-29T19:41:59.9812494Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-29T19:41:59.9813971Z Post job cleanup.
+2026-07-29T19:42:00.0675599Z [command]/usr/bin/git version
+2026-07-29T19:42:00.0750814Z git version 2.54.0
+2026-07-29T19:42:00.0791072Z Temporarily overriding HOME='/home/runner/work/_temp/91dd3cba-4001-4667-bc2b-839649dff17b' before making global git config changes
+2026-07-29T19:42:00.0792704Z Adding repository directory to the temporary git global config as a safe directory
+2026-07-29T19:42:00.0796288Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/buildo/buildo
+2026-07-29T19:42:00.0841459Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-07-29T19:42:00.0878916Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-07-29T19:42:00.1146665Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-07-29T19:42:00.1176675Z http.https://github.com/.extraheader
+2026-07-29T19:42:00.1188328Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-07-29T19:42:00.1223320Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-07-29T19:42:00.1500473Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-07-29T19:42:00.1544386Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-07-29T19:42:00.1953933Z Cleaning up orphan processes
+2026-07-29T19:42:00.2302121Z Terminate orphan process: pid (3423) (node)
+2026-07-29T19:42:00.2359061Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4, actions/checkout@v4, actions/setup-node@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

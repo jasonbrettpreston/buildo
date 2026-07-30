@@ -1,0 +1,458 @@
+﻿2026-07-30T01:10:10.2736410Z Current runner version: '2.336.0'
+2026-07-30T01:10:10.2767220Z ##[group]Runner Image Provisioner
+2026-07-30T01:10:10.2768575Z Hosted Compute Agent
+2026-07-30T01:10:10.2769561Z Version: 20260707.563
+2026-07-30T01:10:10.2770271Z Commit: 02667638d2b423fbc733a8e32a88b44996a3ba6e
+2026-07-30T01:10:10.2771221Z Build Date: 2026-07-07T19:33:50Z
+2026-07-30T01:10:10.2772038Z Worker ID: {5901756d-4234-42f8-b458-8f77933ce8c8}
+2026-07-30T01:10:10.2772854Z Azure Region: westus2
+2026-07-30T01:10:10.2773524Z ##[endgroup]
+2026-07-30T01:10:10.2775666Z ##[group]Operating System
+2026-07-30T01:10:10.2776853Z Ubuntu
+2026-07-30T01:10:10.2777492Z 24.04.4
+2026-07-30T01:10:10.2778132Z LTS
+2026-07-30T01:10:10.2778689Z ##[endgroup]
+2026-07-30T01:10:10.2779272Z ##[group]Runner Image
+2026-07-30T01:10:10.2780056Z Image: ubuntu-24.04
+2026-07-30T01:10:10.2780671Z Version: 20260720.247.2
+2026-07-30T01:10:10.2782033Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+2026-07-30T01:10:10.2783819Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+2026-07-30T01:10:10.2784896Z ##[endgroup]
+2026-07-30T01:10:10.2787009Z ##[group]GITHUB_TOKEN Permissions
+2026-07-30T01:10:10.2790060Z Contents: read
+2026-07-30T01:10:10.2791185Z Metadata: read
+2026-07-30T01:10:10.2792273Z Packages: read
+2026-07-30T01:10:10.2793026Z ##[endgroup]
+2026-07-30T01:10:10.2795512Z Secret source: Actions
+2026-07-30T01:10:10.2797223Z Prepare workflow directory
+2026-07-30T01:10:10.3137088Z Prepare all required actions
+2026-07-30T01:10:10.3185269Z Getting action download info
+2026-07-30T01:10:10.6780165Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-07-30T01:10:11.0124687Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-07-30T01:10:11.0992543Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-07-30T01:10:11.1865630Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-07-30T01:10:11.3823946Z Complete job name: deep-scrapes
+2026-07-30T01:10:11.4619017Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-30T01:10:11.4628194Z ##[group]Run actions/checkout@v4
+2026-07-30T01:10:11.4629076Z with:
+2026-07-30T01:10:11.4629580Z   repository: jasonbrettpreston/buildo
+2026-07-30T01:10:11.4633613Z   token: ***
+2026-07-30T01:10:11.4634094Z   ssh-strict: true
+2026-07-30T01:10:11.4634571Z   ssh-user: git
+2026-07-30T01:10:11.4635057Z   persist-credentials: true
+2026-07-30T01:10:11.4635590Z   clean: true
+2026-07-30T01:10:11.4636271Z   sparse-checkout-cone-mode: true
+2026-07-30T01:10:11.4636846Z   fetch-depth: 1
+2026-07-30T01:10:11.4637390Z   fetch-tags: false
+2026-07-30T01:10:11.4637877Z   show-progress: true
+2026-07-30T01:10:11.4638371Z   lfs: false
+2026-07-30T01:10:11.4638858Z   submodules: false
+2026-07-30T01:10:11.4639364Z   set-safe-directory: true
+2026-07-30T01:10:11.4639914Z   allow-unsafe-pr-checkout: false
+2026-07-30T01:10:11.4640746Z ##[endgroup]
+2026-07-30T01:10:11.5666046Z Syncing repository: jasonbrettpreston/buildo
+2026-07-30T01:10:11.5668894Z ##[group]Getting Git version info
+2026-07-30T01:10:11.5737889Z Working directory is '/home/runner/work/buildo/buildo'
+2026-07-30T01:10:11.5739937Z [command]/usr/bin/git version
+2026-07-30T01:10:11.5741025Z git version 2.54.0
+2026-07-30T01:10:11.5776786Z ##[endgroup]
+2026-07-30T01:10:11.5783960Z Temporarily overriding HOME='/home/runner/work/_temp/d9842a34-94a1-478e-82a7-2cddbe75cbfc' before making global git config changes
+2026-07-30T01:10:11.5785414Z Adding repository directory to the temporary git global config as a safe directory
+2026-07-30T01:10:11.5789245Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/buildo/buildo
+2026-07-30T01:10:11.5840541Z Deleting the contents of '/home/runner/work/buildo/buildo'
+2026-07-30T01:10:11.5844457Z ##[group]Initializing the repository
+2026-07-30T01:10:11.5850259Z [command]/usr/bin/git init /home/runner/work/buildo/buildo
+2026-07-30T01:10:11.5965149Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-07-30T01:10:11.5971430Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-07-30T01:10:11.5973763Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-07-30T01:10:11.5975312Z hint: call:
+2026-07-30T01:10:11.5976132Z hint:
+2026-07-30T01:10:11.5976897Z hint: 	git config --global init.defaultBranch <name>
+2026-07-30T01:10:11.5977744Z hint:
+2026-07-30T01:10:11.5978586Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-07-30T01:10:11.5979794Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-07-30T01:10:11.5981197Z hint:
+2026-07-30T01:10:11.5982155Z hint: 	git branch -m <name>
+2026-07-30T01:10:11.5982938Z hint:
+2026-07-30T01:10:11.5983802Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-07-30T01:10:11.5985060Z Initialized empty Git repository in /home/runner/work/buildo/buildo/.git/
+2026-07-30T01:10:11.5987520Z [command]/usr/bin/git remote add origin https://github.com/jasonbrettpreston/buildo
+2026-07-30T01:10:11.6029069Z ##[endgroup]
+2026-07-30T01:10:11.6030303Z ##[group]Disabling automatic garbage collection
+2026-07-30T01:10:11.6032371Z [command]/usr/bin/git config --local gc.auto 0
+2026-07-30T01:10:11.6066878Z ##[endgroup]
+2026-07-30T01:10:11.6068231Z ##[group]Setting up auth
+2026-07-30T01:10:11.6074934Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-07-30T01:10:11.6109519Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-07-30T01:10:11.6498101Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-07-30T01:10:11.6518069Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-07-30T01:10:11.6755014Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-07-30T01:10:11.6791769Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-07-30T01:10:11.7013808Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-07-30T01:10:11.7052174Z ##[endgroup]
+2026-07-30T01:10:11.7052985Z ##[group]Fetching the repository
+2026-07-30T01:10:11.7061749Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +3583d8242bc4158dd3488e06250ed171db7fd6cf:refs/remotes/origin/auto-unblock/validation-2026-05-23
+2026-07-30T01:10:12.9279816Z From https://github.com/jasonbrettpreston/buildo
+2026-07-30T01:10:12.9281698Z  * [new ref]         3583d8242bc4158dd3488e06250ed171db7fd6cf -> origin/auto-unblock/validation-2026-05-23
+2026-07-30T01:10:12.9316349Z ##[endgroup]
+2026-07-30T01:10:12.9317389Z ##[group]Determining the checkout info
+2026-07-30T01:10:12.9320218Z ##[endgroup]
+2026-07-30T01:10:12.9326585Z [command]/usr/bin/git sparse-checkout disable
+2026-07-30T01:10:12.9375456Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-07-30T01:10:12.9413134Z ##[group]Checking out the ref
+2026-07-30T01:10:12.9414141Z [command]/usr/bin/git checkout --progress --force -B auto-unblock/validation-2026-05-23 refs/remotes/origin/auto-unblock/validation-2026-05-23
+2026-07-30T01:10:13.0883765Z Switched to a new branch 'auto-unblock/validation-2026-05-23'
+2026-07-30T01:10:13.0886742Z branch 'auto-unblock/validation-2026-05-23' set up to track 'origin/auto-unblock/validation-2026-05-23'.
+2026-07-30T01:10:13.0897411Z ##[endgroup]
+2026-07-30T01:10:13.0981638Z [command]/usr/bin/git log -1 --format=%H
+2026-07-30T01:10:13.1011237Z 3583d8242bc4158dd3488e06250ed171db7fd6cf
+2026-07-30T01:10:13.1297068Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-30T01:10:13.1299265Z ##[group]Run actions/setup-node@v4
+2026-07-30T01:10:13.1299631Z with:
+2026-07-30T01:10:13.1299919Z   node-version: 20
+2026-07-30T01:10:13.1300212Z   cache: npm
+2026-07-30T01:10:13.1300501Z   always-auth: false
+2026-07-30T01:10:13.1300821Z   check-latest: false
+2026-07-30T01:10:13.1303691Z   token: ***
+2026-07-30T01:10:13.1304022Z ##[endgroup]
+2026-07-30T01:10:13.2673749Z Attempting to download 20...
+2026-07-30T01:10:13.2773688Z (node:2228) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-30T01:10:13.2775017Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-30T01:10:14.0383790Z Acquiring 20.20.2 - x64 from https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz
+2026-07-30T01:10:14.4677536Z Extracting ...
+2026-07-30T01:10:14.4786710Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/06a61907-7a3e-4961-a906-bf0f1bbbcea1 -f /home/runner/work/_temp/2ece577c-2bba-4cf6-85d1-b1547dd05413
+2026-07-30T01:10:15.5066926Z Adding to the cache ...
+2026-07-30T01:10:17.2722447Z ##[group]Environment details
+2026-07-30T01:10:17.4952487Z node: v20.20.2
+2026-07-30T01:10:17.4953343Z npm: 10.8.2
+2026-07-30T01:10:17.4953684Z yarn: 1.22.22
+2026-07-30T01:10:17.4954259Z ##[endgroup]
+2026-07-30T01:10:17.5006815Z [command]/opt/hostedtoolcache/node/20.20.2/x64/bin/npm config get cache
+2026-07-30T01:10:17.6025643Z /home/runner/.npm
+2026-07-30T01:10:17.8882882Z Cache hit for: node-cache-Linux-x64-npm-6987bb44270f40c13a4b3583ec610787da795ec84d2a03377a85bcc1e2f6b527
+2026-07-30T01:10:17.8987140Z (node:2228) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-07-30T01:10:19.2097749Z Received 0 of 295917231 (0.0%), 0.0 MBs/sec
+2026-07-30T01:10:20.2121741Z Received 96468992 of 295917231 (32.6%), 45.9 MBs/sec
+2026-07-30T01:10:21.2121866Z Received 201326592 of 295917231 (68.0%), 63.9 MBs/sec
+2026-07-30T01:10:22.0004557Z Received 295917231 of 295917231 (100.0%), 74.4 MBs/sec
+2026-07-30T01:10:22.0005800Z Cache Size: ~282 MB (295917231 B)
+2026-07-30T01:10:22.0126521Z [command]/usr/bin/tar -xf /home/runner/work/_temp/f9b7fa14-62d8-4b75-941d-63567ffc50a5/cache.tzst -P -C /home/runner/work/buildo/buildo --use-compress-program unzstd
+2026-07-30T01:10:22.7103288Z Cache restored successfully
+2026-07-30T01:10:22.7234280Z Cache restored from key: node-cache-Linux-x64-npm-6987bb44270f40c13a4b3583ec610787da795ec84d2a03377a85bcc1e2f6b527
+2026-07-30T01:10:22.7433609Z ##[group]Run npm ci
+2026-07-30T01:10:22.7433956Z [36;1mnpm ci[0m
+2026-07-30T01:10:22.7483972Z shell: /usr/bin/bash -e {0}
+2026-07-30T01:10:22.7484273Z ##[endgroup]
+2026-07-30T01:10:23.7170558Z npm warn EBADENGINE Unsupported engine {
+2026-07-30T01:10:23.7171601Z npm warn EBADENGINE   package: '@supabase/auth-js@2.110.7',
+2026-07-30T01:10:23.7172560Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-30T01:10:23.7173585Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-30T01:10:23.7174385Z npm warn EBADENGINE }
+2026-07-30T01:10:23.7174998Z npm warn EBADENGINE Unsupported engine {
+2026-07-30T01:10:23.7176161Z npm warn EBADENGINE   package: '@supabase/functions-js@2.110.7',
+2026-07-30T01:10:23.7177614Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-30T01:10:23.7178634Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-30T01:10:23.7179479Z npm warn EBADENGINE }
+2026-07-30T01:10:23.7180230Z npm warn EBADENGINE Unsupported engine {
+2026-07-30T01:10:23.7181171Z npm warn EBADENGINE   package: '@supabase/postgrest-js@2.110.7',
+2026-07-30T01:10:23.7182154Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-30T01:10:23.7183166Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-30T01:10:23.7183910Z npm warn EBADENGINE }
+2026-07-30T01:10:23.7184522Z npm warn EBADENGINE Unsupported engine {
+2026-07-30T01:10:23.7185394Z npm warn EBADENGINE   package: '@supabase/realtime-js@2.110.7',
+2026-07-30T01:10:23.7186584Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-30T01:10:23.7187510Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-30T01:10:23.7188322Z npm warn EBADENGINE }
+2026-07-30T01:10:23.7188971Z npm warn EBADENGINE Unsupported engine {
+2026-07-30T01:10:23.7189874Z npm warn EBADENGINE   package: '@supabase/storage-js@2.110.7',
+2026-07-30T01:10:23.7190798Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-30T01:10:23.7191757Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-30T01:10:23.7192525Z npm warn EBADENGINE }
+2026-07-30T01:10:23.7193140Z npm warn EBADENGINE Unsupported engine {
+2026-07-30T01:10:23.7194037Z npm warn EBADENGINE   package: '@supabase/supabase-js@2.110.7',
+2026-07-30T01:10:23.7194962Z npm warn EBADENGINE   required: { node: '>=22.0.0' },
+2026-07-30T01:10:23.7196157Z npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+2026-07-30T01:10:23.7196955Z npm warn EBADENGINE }
+2026-07-30T01:10:31.6469330Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-07-30T01:10:31.7655753Z npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+2026-07-30T01:10:31.9439444Z npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+2026-07-30T01:10:31.9489772Z npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+2026-07-30T01:10:31.9543264Z npm warn deprecated whatwg-encoding@3.1.1: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+2026-07-30T01:10:31.9709781Z npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+2026-07-30T01:10:32.0270275Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-07-30T01:10:32.0863581Z npm warn deprecated @babel/plugin-proposal-explicit-resource-management@7.27.4: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-explicit-resource-management instead.
+2026-07-30T01:10:32.2176459Z npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+2026-07-30T01:10:32.2829063Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-30T01:10:32.2851989Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-30T01:10:32.2866062Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-30T01:10:32.2914071Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-30T01:10:32.2929817Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-30T01:10:33.2742342Z npm warn deprecated fstream@1.0.12: This package is no longer supported.
+2026-07-30T01:10:33.5779159Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2026-07-30T01:10:33.6217643Z npm warn deprecated text-encoding@0.6.4: no longer maintained
+2026-07-30T01:10:34.8893203Z npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-30T01:11:00.8226792Z 
+2026-07-30T01:11:00.8229233Z > buildo@0.1.0 prepare
+2026-07-30T01:11:00.8229710Z > husky
+2026-07-30T01:11:00.8229909Z 
+2026-07-30T01:11:00.9325135Z 
+2026-07-30T01:11:00.9326150Z added 1523 packages, and audited 1524 packages in 38s
+2026-07-30T01:11:00.9326490Z 
+2026-07-30T01:11:00.9326680Z 280 packages are looking for funding
+2026-07-30T01:11:00.9327019Z   run `npm fund` for details
+2026-07-30T01:11:01.1545258Z 
+2026-07-30T01:11:01.1546429Z 64 vulnerabilities (7 low, 40 moderate, 15 high, 2 critical)
+2026-07-30T01:11:01.1546837Z 
+2026-07-30T01:11:01.1547157Z To address issues that do not require attention, run:
+2026-07-30T01:11:01.1547600Z   npm audit fix
+2026-07-30T01:11:01.1547951Z 
+2026-07-30T01:11:01.1548248Z To address all issues (including breaking changes), run:
+2026-07-30T01:11:01.1548705Z   npm audit fix --force
+2026-07-30T01:11:01.1548908Z 
+2026-07-30T01:11:01.1549075Z Run `npm audit` for details.
+2026-07-30T01:11:01.3025489Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-30T01:11:01.3027133Z ##[group]Run actions/setup-python@v5
+2026-07-30T01:11:01.3027417Z with:
+2026-07-30T01:11:01.3027636Z   python-version: 3.11
+2026-07-30T01:11:01.3027881Z   check-latest: false
+2026-07-30T01:11:01.3030505Z   token: ***
+2026-07-30T01:11:01.3052869Z   update-environment: true
+2026-07-30T01:11:01.3053223Z   allow-prereleases: false
+2026-07-30T01:11:01.3053511Z   freethreaded: false
+2026-07-30T01:11:01.3053762Z ##[endgroup]
+2026-07-30T01:11:01.4351939Z ##[group]Installed versions
+2026-07-30T01:11:01.4442153Z (node:2913) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-30T01:11:01.4443799Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-30T01:11:01.4444701Z Successfully set up CPython (3.11.15)
+2026-07-30T01:11:01.4445578Z ##[endgroup]
+2026-07-30T01:11:01.4614696Z ##[group]Run pip install -r scripts/requirements.txt
+2026-07-30T01:11:01.4615403Z [36;1mpip install -r scripts/requirements.txt[0m
+2026-07-30T01:11:01.4671195Z shell: /usr/bin/bash -e {0}
+2026-07-30T01:11:01.4671463Z env:
+2026-07-30T01:11:01.4671750Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:01.4672233Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-30T01:11:01.4672692Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:01.4673090Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:01.4673670Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:01.4674077Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-30T01:11:01.4674428Z ##[endgroup]
+2026-07-30T01:11:02.4215472Z Collecting nodriver==0.48.1 (from -r scripts/requirements.txt (line 6))
+2026-07-30T01:11:02.5004033Z   Downloading nodriver-0.48.1-py3-none-any.whl.metadata (50 kB)
+2026-07-30T01:11:02.6012841Z Collecting psycopg2-binary>=2.9 (from -r scripts/requirements.txt (line 7))
+2026-07-30T01:11:02.6087560Z   Downloading psycopg2_binary-2.9.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2026-07-30T01:11:02.6261694Z Collecting mss (from nodriver==0.48.1->-r scripts/requirements.txt (line 6))
+2026-07-30T01:11:02.6342142Z   Downloading mss-10.2.0-py3-none-any.whl.metadata (7.2 kB)
+2026-07-30T01:11:02.7351819Z Collecting websockets>=14 (from nodriver==0.48.1->-r scripts/requirements.txt (line 6))
+2026-07-30T01:11:02.7423658Z   Downloading websockets-17.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+2026-07-30T01:11:02.7583810Z Collecting deprecated (from nodriver==0.48.1->-r scripts/requirements.txt (line 6))
+2026-07-30T01:11:02.7654158Z   Downloading deprecated-1.3.1-py2.py3-none-any.whl.metadata (5.9 kB)
+2026-07-30T01:11:03.0284356Z Collecting wrapt<3,>=1.10 (from deprecated->nodriver==0.48.1->-r scripts/requirements.txt (line 6))
+2026-07-30T01:11:03.0364003Z   Downloading wrapt-2.3.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (7.4 kB)
+2026-07-30T01:11:03.0489744Z Downloading nodriver-0.48.1-py3-none-any.whl (366 kB)
+2026-07-30T01:11:03.0861826Z Downloading psycopg2_binary-2.9.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.3 MB)
+2026-07-30T01:11:03.2400689Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 29.7 MB/s  0:00:00
+2026-07-30T01:11:03.2486231Z Downloading websockets-17.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (220 kB)
+2026-07-30T01:11:03.2710836Z Downloading deprecated-1.3.1-py2.py3-none-any.whl (11 kB)
+2026-07-30T01:11:03.2808583Z Downloading wrapt-2.3.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (161 kB)
+2026-07-30T01:11:03.2930758Z Downloading mss-10.2.0-py3-none-any.whl (67 kB)
+2026-07-30T01:11:03.3490815Z Installing collected packages: wrapt, websockets, psycopg2-binary, mss, deprecated, nodriver
+2026-07-30T01:11:03.8378355Z 
+2026-07-30T01:11:03.8389154Z Successfully installed deprecated-1.3.1 mss-10.2.0 nodriver-0.48.1 psycopg2-binary-2.9.12 websockets-17.0 wrapt-2.3.0
+2026-07-30T01:11:03.8396387Z 
+2026-07-30T01:11:03.8396884Z [notice] A new release of pip is available: 26.1.2 -> 26.2
+2026-07-30T01:11:03.8397681Z [notice] To update, run: pip install --upgrade pip
+2026-07-30T01:11:03.8900868Z ##[group]Run sudo apt-get install -y xvfb
+2026-07-30T01:11:03.8901251Z [36;1msudo apt-get install -y xvfb[0m
+2026-07-30T01:11:03.8947312Z shell: /usr/bin/bash -e {0}
+2026-07-30T01:11:03.8947595Z env:
+2026-07-30T01:11:03.8947883Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:03.8948355Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-30T01:11:03.8948826Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:03.8949258Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:03.8949663Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:03.8950072Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-30T01:11:03.8950415Z ##[endgroup]
+2026-07-30T01:11:04.6607140Z Reading package lists...
+2026-07-30T01:11:04.8154167Z Building dependency tree...
+2026-07-30T01:11:04.8163277Z Reading state information...
+2026-07-30T01:11:04.9721705Z xvfb is already the newest version (2:21.1.12-1ubuntu1.6).
+2026-07-30T01:11:04.9722696Z 0 upgraded, 0 newly installed, 0 to remove and 1 not upgraded.
+2026-07-30T01:11:04.9831067Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-30T01:11:04.9832364Z ##[group]Run actions/cache@v4
+2026-07-30T01:11:04.9832630Z with:
+2026-07-30T01:11:04.9832849Z   path: ~/.buildo-scraper
+2026-07-30T01:11:04.9833207Z   key: buildo-scraper-profiles-chain-deep-scrapes-30501840576
+2026-07-30T01:11:04.9833685Z   restore-keys: buildo-scraper-profiles-chain-deep-scrapes-
+
+2026-07-30T01:11:04.9834077Z   enableCrossOsArchive: false
+2026-07-30T01:11:04.9834346Z   fail-on-cache-miss: false
+2026-07-30T01:11:04.9834601Z   lookup-only: false
+2026-07-30T01:11:04.9834827Z   save-always: false
+2026-07-30T01:11:04.9835046Z env:
+2026-07-30T01:11:04.9835313Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:04.9836062Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-30T01:11:04.9836583Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:04.9836982Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:04.9837373Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:04.9837776Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-30T01:11:04.9838114Z ##[endgroup]
+2026-07-30T01:11:05.0879038Z (node:2954) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-30T01:11:05.0880058Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-30T01:11:05.3543250Z Cache not found for input keys: buildo-scraper-profiles-chain-deep-scrapes-30501840576, buildo-scraper-profiles-chain-deep-scrapes-
+2026-07-30T01:11:05.3633796Z ##[group]Run if [ -z "$SUPABASE_DATABASE_URL" ]; then
+2026-07-30T01:11:05.3634243Z [36;1mif [ -z "$SUPABASE_DATABASE_URL" ]; then[0m
+2026-07-30T01:11:05.3634903Z [36;1m  echo "::error::SUPABASE_DATABASE_URL is empty — refusing to proceed (Spec 115 §3/§4 item 3 fail-safe-loud posture)."[0m
+2026-07-30T01:11:05.3635485Z [36;1m  exit 1[0m
+2026-07-30T01:11:05.3635705Z [36;1mfi[0m
+2026-07-30T01:11:05.3636234Z [36;1mif [ ! -f "$SUPABASE_CA_CERT_PATH" ]; then[0m
+2026-07-30T01:11:05.3637306Z [36;1m  echo "::error::CA cert not found at SUPABASE_CA_CERT_PATH=$SUPABASE_CA_CERT_PATH — every non-loopback connection in this workflow requires it (Spec 113 §4.2/§4.3). scripts/lib/ssl-config.js will throw the same fact per-connection if this guard is bypassed."[0m
+2026-07-30T01:11:05.3638323Z [36;1m  exit 1[0m
+2026-07-30T01:11:05.3638539Z [36;1mfi[0m
+2026-07-30T01:11:05.3638821Z [36;1mET_NOW=$(TZ='America/Toronto' date '+%Y-%m-%d %H:%M:%S %Z')[0m
+2026-07-30T01:11:05.3639904Z [36;1mecho "::notice title=ET drift check::Current America/Toronto time is ${ET_NOW} — this workflow's cron is a single fixed-UTC expression (Spec 115 §2.1); the §2 table's business-hours slots are chosen to stay in-window under both DST regimes."[0m
+2026-07-30T01:11:05.3686784Z shell: /usr/bin/bash -e {0}
+2026-07-30T01:11:05.3687052Z env:
+2026-07-30T01:11:05.3687358Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:05.3687827Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-30T01:11:05.3688288Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:05.3688686Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:05.3689085Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:05.3689486Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-30T01:11:05.3689858Z   PIPELINE_CHAIN: chain-deep-scrapes
+2026-07-30T01:11:05.3690711Z   SUPABASE_DATABASE_URL: ***
+2026-07-30T01:11:05.3691153Z   SUPABASE_CA_CERT_PATH: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-30T01:11:05.3691616Z ##[endgroup]
+2026-07-30T01:11:05.3818039Z ##[notice]Current America/Toronto time is 2026-07-29 21:11:05 EDT — this workflow's cron is a single fixed-UTC expression (Spec 115 §2.1); the §2 table's business-hours slots are chosen to stay in-window under both DST regimes.
+2026-07-30T01:11:05.3863476Z ##[group]Run node scripts/migrate.js --verify
+2026-07-30T01:11:05.3863872Z [36;1mnode scripts/migrate.js --verify[0m
+2026-07-30T01:11:05.3906878Z shell: /usr/bin/bash -e {0}
+2026-07-30T01:11:05.3907151Z env:
+2026-07-30T01:11:05.3907436Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:05.3907918Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-30T01:11:05.3908382Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:05.3908793Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:05.3909199Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:05.3909616Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-30T01:11:05.3909997Z   PIPELINE_CHAIN: chain-deep-scrapes
+2026-07-30T01:11:05.3910815Z   SUPABASE_DATABASE_URL: ***
+2026-07-30T01:11:05.3911277Z   SUPABASE_CA_CERT_PATH: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-30T01:11:05.3911719Z ##[endgroup]
+2026-07-30T01:11:05.4254414Z ◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+2026-07-30T01:11:06.2994115Z Found 232 migration files
+2026-07-30T01:11:06.2994738Z Tracking table reports 232 previously applied
+2026-07-30T01:11:06.3103802Z Verify: 0 missing, 0 drift
+2026-07-30T01:11:06.4007711Z ##[group]Run node -e "
+2026-07-30T01:11:06.4008262Z [36;1mnode -e "[0m
+2026-07-30T01:11:06.4008828Z [36;1m  const u = new URL(process.env.SUPABASE_DATABASE_URL);[0m
+2026-07-30T01:11:06.4009490Z [36;1m  const lines = [[0m
+2026-07-30T01:11:06.4009965Z [36;1m    'PG_HOST=' + u.hostname,[0m
+2026-07-30T01:11:06.4010511Z [36;1m    'PG_PORT=' + (u.port || '5432'),[0m
+2026-07-30T01:11:06.4011315Z [36;1m    'PG_DATABASE=' + decodeURIComponent(u.pathname.replace(/^\//, '')),[0m
+2026-07-30T01:11:06.4012168Z [36;1m    'PG_USER=' + decodeURIComponent(u.username),[0m
+2026-07-30T01:11:06.4012891Z [36;1m    'PG_PASSWORD=' + decodeURIComponent(u.password),[0m
+2026-07-30T01:11:06.4013550Z [36;1m    'PGSSLMODE=verify-full',[0m
+2026-07-30T01:11:06.4014220Z [36;1m    'PGSSLROOTCERT=' + process.env.SUPABASE_CA_CERT_PATH,[0m
+2026-07-30T01:11:06.4014875Z [36;1m  ];[0m
+2026-07-30T01:11:06.4015640Z [36;1m  require('fs').appendFileSync(process.env.GITHUB_ENV, lines.join('\n') + '\n');[0m
+2026-07-30T01:11:06.4016741Z [36;1m"[0m
+2026-07-30T01:11:06.4062288Z shell: /usr/bin/bash -e {0}
+2026-07-30T01:11:06.4062563Z env:
+2026-07-30T01:11:06.4062850Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4063333Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-30T01:11:06.4063798Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4064220Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4064613Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4065042Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-30T01:11:06.4065414Z   PIPELINE_CHAIN: chain-deep-scrapes
+2026-07-30T01:11:06.4066594Z   SUPABASE_DATABASE_URL: ***
+2026-07-30T01:11:06.4067035Z   SUPABASE_CA_CERT_PATH: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-30T01:11:06.4067478Z ##[endgroup]
+2026-07-30T01:11:06.4369815Z ##[group]Run echo "::add-mask::$PG_PASSWORD"
+2026-07-30T01:11:06.4370206Z [36;1mecho "::add-mask::$PG_PASSWORD"[0m
+2026-07-30T01:11:06.4411225Z shell: /usr/bin/bash -e {0}
+2026-07-30T01:11:06.4411505Z env:
+2026-07-30T01:11:06.4411789Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4412262Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-30T01:11:06.4412729Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4413317Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4413715Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4414137Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-30T01:11:06.4414535Z   PG_HOST: aws-0-ca-central-1.pooler.supabase.com
+2026-07-30T01:11:06.4414859Z   PG_PORT: 5432
+2026-07-30T01:11:06.4415080Z   PG_DATABASE: postgres
+2026-07-30T01:11:06.4415382Z   PG_USER: postgres.gcnatfpacuhsytcbaszi
+2026-07-30T01:11:06.4415696Z   PG_PASSWORD: Gobluejays1Gobluejays2
+2026-07-30T01:11:06.4416515Z   PGSSLMODE: verify-full
+2026-07-30T01:11:06.4416919Z   PGSSLROOTCERT: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-30T01:11:06.4417342Z ##[endgroup]
+2026-07-30T01:11:06.4511579Z ##[group]Run sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+2026-07-30T01:11:06.4512155Z [36;1msudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0[0m
+2026-07-30T01:11:06.4552031Z shell: /usr/bin/bash -e {0}
+2026-07-30T01:11:06.4552297Z env:
+2026-07-30T01:11:06.4552584Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4553049Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-30T01:11:06.4553523Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4553926Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4554327Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4554734Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-30T01:11:06.4555127Z   PG_HOST: aws-0-ca-central-1.pooler.supabase.com
+2026-07-30T01:11:06.4555457Z   PG_PORT: 5432
+2026-07-30T01:11:06.4555685Z   PG_DATABASE: postgres
+2026-07-30T01:11:06.4556270Z   PG_USER: postgres.gcnatfpacuhsytcbaszi
+2026-07-30T01:11:06.4556669Z   PG_PASSWORD: ***
+2026-07-30T01:11:06.4556911Z   PGSSLMODE: verify-full
+2026-07-30T01:11:06.4557310Z   PGSSLROOTCERT: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-30T01:11:06.4557749Z ##[endgroup]
+2026-07-30T01:11:06.4681003Z kernel.apparmor_restrict_unprivileged_userns = 0
+2026-07-30T01:11:06.4716855Z ##[group]Run node scripts/check-chain-running.js deep_scrapes >> "$GITHUB_OUTPUT"
+2026-07-30T01:11:06.4717468Z [36;1mnode scripts/check-chain-running.js deep_scrapes >> "$GITHUB_OUTPUT"[0m
+2026-07-30T01:11:06.4757566Z shell: /usr/bin/bash -e {0}
+2026-07-30T01:11:06.4757831Z env:
+2026-07-30T01:11:06.4758120Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4758592Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+2026-07-30T01:11:06.4759045Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4759443Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4759838Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+2026-07-30T01:11:06.4760243Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+2026-07-30T01:11:06.4760643Z   PG_HOST: aws-0-ca-central-1.pooler.supabase.com
+2026-07-30T01:11:06.4760968Z   PG_PORT: 5432
+2026-07-30T01:11:06.4761222Z   PG_DATABASE: postgres
+2026-07-30T01:11:06.4761484Z   PG_USER: postgres.gcnatfpacuhsytcbaszi
+2026-07-30T01:11:06.4761861Z   PG_PASSWORD: ***
+2026-07-30T01:11:06.4762096Z   PGSSLMODE: verify-full
+2026-07-30T01:11:06.4762476Z   PGSSLROOTCERT: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-30T01:11:06.4762920Z   PIPELINE_CHAIN: chain-deep-scrapes
+2026-07-30T01:11:06.4763691Z   SUPABASE_DATABASE_URL: ***
+2026-07-30T01:11:06.4764107Z   SUPABASE_CA_CERT_PATH: /home/runner/work/buildo/buildo/scripts/certs/supabase-ca.pem
+2026-07-30T01:11:06.4764547Z ##[endgroup]
+2026-07-30T01:11:07.3313199Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-30T01:11:07.3314662Z Post job cleanup.
+2026-07-30T01:11:07.4359775Z (node:3006) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-30T01:11:07.4361377Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-30T01:11:07.4482621Z [warning]Path Validation Error: Path(s) specified in the action for caching do(es) not exist, hence no cache is being saved.
+2026-07-30T01:11:07.4611109Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-30T01:11:07.4612395Z Post job cleanup.
+2026-07-30T01:11:07.5835698Z (node:3020) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-30T01:11:07.5837906Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-30T01:11:07.6030245Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-30T01:11:07.6032522Z Post job cleanup.
+2026-07-30T01:11:07.7283377Z (node:3028) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-30T01:11:07.7284361Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-30T01:11:07.7287846Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-6987bb44270f40c13a4b3583ec610787da795ec84d2a03377a85bcc1e2f6b527, not saving cache.
+2026-07-30T01:11:07.7415663Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-30T01:11:07.7417279Z Post job cleanup.
+2026-07-30T01:11:07.8248837Z [command]/usr/bin/git version
+2026-07-30T01:11:07.8291658Z git version 2.54.0
+2026-07-30T01:11:07.8331865Z Temporarily overriding HOME='/home/runner/work/_temp/c68406d7-f3fa-49f8-b0e3-5a1dcc28f895' before making global git config changes
+2026-07-30T01:11:07.8333737Z Adding repository directory to the temporary git global config as a safe directory
+2026-07-30T01:11:07.8338907Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/buildo/buildo
+2026-07-30T01:11:07.8377551Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-07-30T01:11:07.8414595Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-07-30T01:11:07.8707383Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-07-30T01:11:07.8746879Z http.https://github.com/.extraheader
+2026-07-30T01:11:07.8757078Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-07-30T01:11:07.8802678Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-07-30T01:11:07.9058845Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-07-30T01:11:07.9104685Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-07-30T01:11:07.9495465Z Cleaning up orphan processes
+2026-07-30T01:11:07.9893546Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4, actions/checkout@v4, actions/setup-node@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
