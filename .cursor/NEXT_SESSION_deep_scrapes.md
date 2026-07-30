@@ -163,6 +163,33 @@ tuning (not_found_rate / latency — already filed) · any change to Stalled/rea
 **Retirement note:** 'Inspections Complete' stops being scraper-written. If wanted later, it
 can be derived honestly from feed status ('Pending Closed'/'Closed') in the permits chain.
 
+---
+
+## Bytes investigation (2026-07-30, operator + Decodo hourly table)
+
+Probes cost ~3-10 MB each despite a ~5 KB/permit data chain. Cause verified against the
+recovered v2 source (`git show 47d82cd5^:scripts/poc-aic-scraper-v2.js:495-514`): **v2
+installed its resource filter BEFORE any navigation**, so the warm-up page and `setup.do`
+loaded as HTML+scripts skeletons (map tiles are images → aborted; CSS/fonts → aborted) and it
+navigated with `waitUntil: 'commit'`. The nodriver path loads every page at FULL weight
+(entry page 2-5 MB + portal incl. the map stack + noise visits, cold-cache every batch)
+because L4 is deliberately not yet landed. **L4 spec sharpened: the CDP interceptor must be
+active from the FIRST navigation (entry + setup.do included), matching v2's ordering — not
+wrapped only around the data chain.** Decodo baseline pasted in-session (yesterday's incident
+= the 01:00-02:00 rows, 1.8 GB/$6.82; today's four probes ≈ 14 MB total).
+
+**Measurement run 30574728762 (12 permits, 2 batches) — MEASURED (Decodo hourly, operator):**
+the 19:00 bucket (10.35 MB / 87 req) covers probe #9 + the whole 12-permit run ⇒ the run cost
+~5-6 MB (~0.5 MB/permit), roughly the SAME as a 1-permit probe — cost is bootstrap-dominated
+(2 full page-load bootstraps/run), permits are ~5-20 KB each. Today's entire 5-run campaign:
+~37 MB / $0.14 vs yesterday's 1.8 GB / $6.82 incident. Scrape result: 7/12 permits → 15 new
+stage rows, 5 legit no_stages, batch-2 **rotated exit IP with browser retained** (proven at
+scale), proxy_errors=0. Run red ONLY on the not_found_rate gate (41.7% — counts no-stages-yet
+as misses; gate re-derivation filed). **L4 BUILT on operator authorization** ("if L4 is a
+restore we are going to use it regardless") — CDP Fetch interception before first navigation,
+allow-set verbatim from v2, `script` fence locked, relay byte accounting + filter counters in
+telemetry, `SCRAPER_RESOURCE_BLOCKING` default OFF / workflow ON. See the ladder table.
+
 ## The one open defect — ~~start here~~ FIXED above; kept for the eliminated-layers table
 
 `page.evaluate()` raises/returns a nodriver `ExceptionDetails` object, and our calling code

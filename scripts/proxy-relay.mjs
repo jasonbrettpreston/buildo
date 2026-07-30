@@ -86,6 +86,11 @@ function isAllowed(hostname) {
 
 let blocked = 0;
 let allowed = 0;
+// Metered-byte accounting (L4): cumulative bytes over the UPSTREAM sockets —
+// exactly what Decodo bills. Blocked requests never open an upstream
+// connection, so they correctly count zero here.
+let bytesUp = 0;
+let bytesDown = 0;
 
 const server = new Server({
   port: Number(portArg) || 0,
@@ -105,6 +110,16 @@ const server = new Server({
   },
 });
 
+server.on('connectionClosed', ({ stats }) => {
+  // proxy-chain reports per-connection socket byte counts at close. The line
+  // is CUMULATIVE so the scraper can keep the latest value and lose nothing
+  // if earlier lines are missed.
+  if (!stats) return;
+  bytesUp += stats.trgTxBytes || 0;
+  bytesDown += stats.trgRxBytes || 0;
+  process.stderr.write(`proxy-relay: BYTES up=${bytesUp} down=${bytesDown}\n`);
+});
+
 server.on('requestFailed', ({ request, error }) => {
   // Never echo the upstream URL — it carries credentials.
   process.stderr.write(
@@ -113,7 +128,10 @@ server.on('requestFailed', ({ request, error }) => {
 });
 
 async function shutdown(code = 0) {
-  process.stderr.write(`proxy-relay: shutting down (allowed=${allowed} blocked=${blocked})\n`);
+  process.stderr.write(
+    `proxy-relay: shutting down (allowed=${allowed} blocked=${blocked} ` +
+    `bytes_up=${bytesUp} bytes_down=${bytesDown})\n`
+  );
   try {
     await server.close(true);
   } catch {

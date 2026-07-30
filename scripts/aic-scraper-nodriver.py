@@ -524,6 +524,78 @@ def _log_step1_body(raw, reason, year_seq=None):
     })
 
 # ---------------------------------------------------------------------------
+# C8 / L4 (WF2 restore) — CDP resource blocking: the ~375x byte lever.
+#
+# Restores the deleted Playwright v2 filter (poc-aic-scraper-v2.js:497-500),
+# the mechanism behind the ~4 KB/permit economics the 3 GB/month budget was
+# built on. Ported VERBATIM — allow document/xhr/fetch/script, abort all else
+# — nothing "improved". v2 installed it BEFORE any navigation, so the warm-up
+# page and setup.do loaded as HTML+script skeletons (map tiles are images →
+# aborted); this port preserves that ordering.
+#
+# ⚠ THE FENCE (d138bb04, 2026-03-15): blocking `script` PERMANENTLY
+# shadow-banned sessions — WAFs run JS challenges to verify the browser isn't
+# headless. `Script` MUST stay in the allow set. v2's own comment:
+#   "Block images/css/fonts but allow scripts — WAFs run JS challenges to
+#    verify the browser isn't headless. Blocking scripts causes permanent
+#    shadow-ban."
+# ---------------------------------------------------------------------------
+ALLOWED_RESOURCE_TYPES = frozenset({'Document', 'XHR', 'Fetch', 'Script'})
+
+# Observability: makes "the filter is on and doing work" a measured fact in
+# the run summary rather than a claim.
+_resource_filter_stats = {'allowed': 0, 'blocked': 0}
+
+
+def resource_blocking_enabled():
+    """Gated OFF by default: bytes are free on the operator's own line, and the
+    attested local path must stay byte-for-byte unchanged. The workflow pins it
+    ON — cloud bytes are metered."""
+    return os.environ.get('SCRAPER_RESOURCE_BLOCKING', '') == '1'
+
+
+def should_allow_resource(resource_type_name):
+    """Pure type-based decision, URL-agnostic. The four /jaxrs/ data calls are
+    resource type Fetch/XHR and navigations are Document — always allowed."""
+    return resource_type_name in ALLOWED_RESOURCE_TYPES
+
+
+def _resource_filter_handler(tab):
+    """Build the Fetch.requestPaused responder bound to this tab."""
+    async def _on_request_paused(event, connection=None):
+        conn = connection or tab
+        try:
+            if should_allow_resource(event.resource_type.value):
+                _resource_filter_stats['allowed'] += 1
+                await conn.send(uc.cdp.fetch.continue_request(request_id=event.request_id))
+            else:
+                _resource_filter_stats['blocked'] += 1
+                await conn.send(uc.cdp.fetch.fail_request(
+                    request_id=event.request_id,
+                    error_reason=uc.cdp.network.ErrorReason.ABORTED))
+        except Exception as err:  # noqa: BLE001
+            # A paused request can vanish before we answer (navigation tore it
+            # down). Log, never raise — the filter must not kill a scrape.
+            log('WARN', '[scraper]', f'Resource filter could not answer a paused request: {err}',
+                {'event': 'resource_filter_error'})
+    return _on_request_paused
+
+
+async def enable_resource_blocking(tab):
+    """Install the v2 allow-set filter on the scraping tab via CDP Fetch.
+
+    Fetch.enable with request-stage interception, not Network.setBlockedURLs —
+    that is URL-pattern based and cannot express "allow all scripts". MUST be
+    called before the first navigation (v2 ordering): the entry page and
+    setup.do are the heaviest loads and must be skeletonised too.
+    """
+    tab.add_handler(uc.cdp.fetch.RequestPaused, _resource_filter_handler(tab))
+    await tab.send(uc.cdp.fetch.enable())
+    log('INFO', '[scraper]', 'CDP resource blocking ON (allow: document/xhr/fetch/script)',
+        {'event': 'resource_blocking_enabled'})
+
+
+# ---------------------------------------------------------------------------
 # K7b (WF2 restore) — Chrome identity diagnostics.
 #
 # Which browser binary actually ran is not guessable and matters: resolving the CI
@@ -764,10 +836,12 @@ def start_proxy_relay(session_id, worker_id=None, timeout=30):
 
 def _relay_summary():
     """Aggregate every worker's relay stderr counters for the run summary."""
-    total = {'blocked': 0, 'lines': 0, 'samples': []}
+    total = {'blocked': 0, 'lines': 0, 'samples': [], 'bytes_up': 0, 'bytes_down': 0}
     for counts in _relay_block_counts.values():
         total['blocked'] += counts.get('blocked', 0)
         total['lines'] += counts.get('lines', 0)
+        total['bytes_up'] += counts.get('bytes_up', 0)
+        total['bytes_down'] += counts.get('bytes_down', 0)
         for sample in counts.get('samples', []):
             if len(total['samples']) < RELAY_STDERR_SAMPLES:
                 total['samples'].append(sample)
@@ -785,13 +859,21 @@ def _drain_relay_stderr(proc, worker_id=None):
     nobody read. A wrongly-blocked host is otherwise invisible.
     """
     counts = _relay_block_counts.setdefault(
-        worker_id, {'blocked': 0, 'lines': 0, 'samples': []})
+        worker_id, {'blocked': 0, 'lines': 0, 'samples': [], 'bytes_up': 0, 'bytes_down': 0})
 
     def _pump():
         try:
             for line in proc.stderr:
                 counts['lines'] += 1
                 text = line.strip()
+                # L4 byte accounting: cumulative counters, latest line wins.
+                # Parsed silently — one line per closed connection would
+                # otherwise flood the bounded sample buffer.
+                m = re.match(r'^proxy-relay: BYTES up=(\d+) down=(\d+)$', text)
+                if m:
+                    counts['bytes_up'] = int(m.group(1))
+                    counts['bytes_down'] = int(m.group(2))
+                    continue
                 if 'BLOCKED' in text:
                     counts['blocked'] += 1
                 # Keep a bounded sample of what the relay actually said. A
@@ -1398,6 +1480,11 @@ async def bootstrap_session(worker_id=None, relay_url=None):
         )
     try:
         page = await browser.get('about:blank')
+
+        # C8: BEFORE the first navigation, matching v2's ordering — the entry
+        # page and setup.do must load as skeletons, not full pages.
+        if resource_blocking_enabled():
+            await enable_resource_blocking(page)
 
         # Fix headless screen dimensions to match viewport (nodriver#2242)
         await inject_screen_overrides(page, profile)
@@ -2179,6 +2266,13 @@ def compute_summary(tel, start_ms):
                 'relay_blocked': _relay_summary()['blocked'],
                 'relay_stderr_lines': _relay_summary()['lines'],
                 'relay_stderr_samples': _relay_summary()['samples'],
+                # L4: metered upstream bytes (what Decodo bills) + what the
+                # resource filter did. bytes/permit is derivable from these.
+                'relay_bytes_up': _relay_summary()['bytes_up'],
+                'relay_bytes_down': _relay_summary()['bytes_down'],
+                'resource_blocking': resource_blocking_enabled(),
+                'resources_allowed': _resource_filter_stats['allowed'],
+                'resources_blocked': _resource_filter_stats['blocked'],
                 'proxy_host': PROXY_HOST if proxy_enabled() else None,
                 'preflight_passed': tel.get('preflight_passed', True),
                 'max_permits_cap': MAX_PERMITS,

@@ -236,6 +236,13 @@ jobs:
           # billed ~1.76 GB (~$6.60), 99.9% of it Chrome talking to Google.
           SCRAPER_BANDWIDTH_GUARD: '1'
           SCRAPER_MAX_BROWSER_LAUNCHES: '12'   # 116 launches was the incident
+          # C8/L4 — CDP resource blocking, the ~375x byte lever (v2's filter,
+          # ported verbatim). Allow document/xhr/fetch/script, abort the rest;
+          # `script` MUST stay allowed (d138bb04: blocking it shadow-bans
+          # permanently). Measured 2026-07-30 WITHOUT it: ~10 MB per probe for
+          # a ~5 KB/permit data chain — full toronto.ca pages, the portal's
+          # map stack, cold-cache every batch.
+          SCRAPER_RESOURCE_BLOCKING: '1'
           #
           # Akamai-tuned constants. The module DEFAULTS (20 / 2000) are correct for
           # the attested unproxied local path and measurably WRONG here: this portal
