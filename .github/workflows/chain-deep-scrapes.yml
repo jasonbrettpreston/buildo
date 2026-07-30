@@ -243,6 +243,15 @@ jobs:
           # a ~5 KB/permit data chain — full toronto.ca pages, the portal's
           # map stack, cold-cache every batch.
           SCRAPER_RESOURCE_BLOCKING: '1'
+          # Mid-session noise visits OFF in cloud. MEASURED 2026-07-30 (run
+          # 30581163413, per-host relay accounting): www.toronto.ca accounted
+          # for 3,439,422 of 6,315,971 metered bytes — 54.5% of the bill — for
+          # warm-up and noise pages, while the permit data itself is ~5.3 KB.
+          # Behavioural noise is what you feed a JS sensor; this portal sets no
+          # cookies and gates on cumulative per-IP REQUEST reputation, so each
+          # noise event (2 navigations) spends the exact budget it claims to
+          # protect. The one scraper that ever produced rows had none.
+          SCRAPER_NOISE_VISITS: '0'
           #
           # Akamai-tuned constants. The module DEFAULTS (20 / 2000) are correct for
           # the attested unproxied local path and measurably WRONG here: this portal

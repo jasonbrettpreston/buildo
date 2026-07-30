@@ -156,13 +156,30 @@ def assert_proxy_config_coherent():
 # Stealth — randomize fingerprint to look like organic human traffic
 # ---------------------------------------------------------------------------
 # Warm bootstrap entry URLs — vary referrer chain per session
+# Warm-up entry. MEASURED 2026-07-30 (run 30581163413, per-host relay
+# accounting): www.toronto.ca was 3,439,422 of 6,315,971 metered bytes — 54.5%
+# of the entire bill — for pages we load only to shape a referrer chain.
+#
+# The header that matters (`Referer` + `Sec-Fetch-Site: same-origin`) comes free
+# from the PAGE ORIGIN on every page.evaluate(fetch(...)) call; a separate deep
+# navigation adds nothing to it, and under the portal's cumulative per-IP
+# request-reputation model each one spends budget we are trying to conserve.
+# Pinned to the bare root — the exact value the only code that ever produced
+# rows used (poc-aic-scraper-v2.js:506); the five DEEP pages were drift.
 ENTRY_URLS = [
     'https://www.toronto.ca',
-    'https://www.toronto.ca/services-payments/',
-    'https://www.toronto.ca/city-government/planning-development/',
-    'https://www.toronto.ca/311/',
-    'https://www.toronto.ca/city-government/data-research-maps/',
 ]
+
+# Mid-session noise visits. Default ON so the attested local path is unchanged;
+# the workflow turns them OFF. Rationale (2026-07-30, measured + researched):
+# behavioural noise is what you feed a JS SENSOR — mouse movement, scroll,
+# dwell. This portal sets no cookies and runs no sensor challenge on us; its
+# control is CUMULATIVE PER-IP REQUEST REPUTATION, so every noise navigation
+# spends the exact budget it claims to protect, at 2 navigations per event.
+# The productive v2 scraper had no noise visits at all.
+def noise_visits_enabled():
+    return os.environ.get('SCRAPER_NOISE_VISITS', '1') != '0'
+
 
 # Mid-session noise URLs — break the API-only request pattern
 NOISE_URLS = [
@@ -624,6 +641,16 @@ async def enable_resource_blocking(tab):
     """
     tab.add_handler(uc.cdp.fetch.RequestPaused, _resource_filter_handler(tab))
     await tab.send(uc.cdp.fetch.enable())
+    # Request interception is a documented cache-killer: Puppeteer pairs
+    # setRequestInterception with Network.setCacheDisabled(true), which makes
+    # every navigation re-download the portal's whole script stack. nodriver
+    # drives raw CDP so it may never set it — assert the state we want rather
+    # than assume it, since the failure mode is silent and expensive.
+    try:
+        await tab.send(uc.cdp.network.set_cache_disabled(cache_disabled=False))
+    except Exception as err:  # noqa: BLE001
+        log('WARN', '[scraper]', f'Could not re-enable the HTTP cache: {err}',
+            {'event': 'cache_enable_failed'})
     log('INFO', '[scraper]', 'CDP resource blocking ON (allow: document/xhr/fetch/script)',
         {'event': 'resource_blocking_enabled'})
 
@@ -2305,7 +2332,8 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
             await page.sleep(random.uniform(1.0, 3.5))
 
         # Mid-session noise: visit a benign page every 3-5 permits to break API-only pattern
-        if i > 0 and i % random.randint(3, 5) == 0 and i < len(year_seqs) - 1:
+        if (noise_visits_enabled() and i > 0
+                and i % random.randint(3, 5) == 0 and i < len(year_seqs) - 1):
             try:
                 noise_url = random.choice(NOISE_URLS)
                 page = await browser.get(noise_url, new_tab=False)
@@ -2317,8 +2345,15 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
                 if profile:
                     await inject_screen_overrides(page, profile)
                 await page.sleep(random.uniform(0.5, 1.5))
-            except Exception:
-                pass  # noise visit failed — non-fatal
+                tel['noise_visits'] = tel.get('noise_visits', 0) + 1
+                # Countable at last: this block logged NOTHING and swallowed its
+                # own failures, so the most expensive per-permit behaviour in the
+                # scraper was invisible in every run report ever produced.
+                log('INFO', worker_tag, 'Noise visit (2 navigations)',
+                    {'event': 'noise_visit', 'url': noise_url})
+            except Exception as err:  # noqa: BLE001
+                log('WARN', worker_tag, f'Noise visit failed: {err}',
+                    {'event': 'noise_visit_failed'})
 
         # Early abort on sustained ANOMALOUS misses (permit unknown to the
         # portal). Benign empties (no stage passed yet) are honest answers and
@@ -2457,10 +2492,23 @@ async def main():
             # failure that escapes main() produces a silent, uncounted dead worker.
             relay_url = start_proxy_relay(
                 build_proxy_session_id(tel['_worker_id']), worker_id=tel['_worker_id'])
-        browser, page, bootstrap_attempts, profile = await bootstrap_with_retry(
-            worker_id=tel['_worker_id'], relay_url=relay_url)
-        tel['session_bootstraps'] = bootstrap_attempts
-        log('INFO', worker_tag, 'WAF session established (no WebDriver)')
+        # R1: db-queue + proxy used to bootstrap a FULL session here — entry
+        # page, setup.do, preflight, egress check — and then throw it away
+        # unused before claiming any work (the browser is retained across
+        # batches since 15c7417b, so nothing needed a pre-loop session). It
+        # cost a complete page-weight load per run and 2 of every run's
+        # `session_bootstraps`. The loop below bootstraps on its first batch.
+        defer_bootstrap = args['mode'] == 'db-queue' and proxy_enabled()
+        page = None
+        profile = None
+        if defer_bootstrap:
+            log('INFO', worker_tag, 'Deferring bootstrap to the first batch (db-queue + proxy)',
+                {'event': 'bootstrap_deferred'})
+        else:
+            browser, page, bootstrap_attempts, profile = await bootstrap_with_retry(
+                worker_id=tel['_worker_id'], relay_url=relay_url)
+            tel['session_bootstraps'] = bootstrap_attempts
+            log('INFO', worker_tag, 'WAF session established (no WebDriver)')
 
         if args['mode'] == 'single':
             conn = get_db_connection()
@@ -2498,12 +2546,11 @@ async def main():
             # and a fresh proxy URL (new sticky session), fresh Chrome.
             worker_id = args['worker_id'] or 'standalone'
             batch_num = 0
-
-            # In db-queue mode, the outer bootstrap is only for non-proxy runs.
-            # For proxy runs, each batch builds its own session. Kill the initial browser.
-            if browser and proxy_enabled():
-                await stop_and_terminate(browser, worker_id)
-                browser = None
+            # NOTE: no browser teardown here any more. The old code killed the
+            # outer browser on the proxied path with the comment "each batch
+            # builds its own session" — stale since 15c7417b made batches rotate
+            # the EXIT IP while retaining Chrome. R1 stops building that session
+            # in the first place (see `defer_bootstrap` in main).
 
             while True:
                 # Cap check: stop claiming if we've hit the max permits limit

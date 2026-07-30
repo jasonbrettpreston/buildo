@@ -102,7 +102,11 @@ class TestInstall:
         tab = FakeTab()
         asyncio.run(scraper.enable_resource_blocking(tab))
         assert len(tab.handlers) == 1
-        assert len(tab.sent) == 1  # cdp.fetch.enable()
+        # fetch.enable() + network.setCacheDisabled(false). The second is not
+        # decoration: request interception is a documented cache-killer
+        # (Puppeteer pairs it with setCacheDisabled(true)), and a disabled cache
+        # makes every navigation re-download the portal's whole script stack.
+        assert len(tab.sent) == 2
 
 
 class TestRelayByteAccounting:

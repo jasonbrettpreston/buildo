@@ -71,12 +71,27 @@ const DEFAULT_BLOCK = [
   'accounts.google.com',
   'mtalk.google.com',
   'connectivitycheck.gstatic.com',
+  // Pure analytics, MEASURED 2026-07-30 (run 30581163413 per-host accounting):
+  // 148,214 metered bytes of Oracle Infinity telemetry across three subdomains.
+  // Trackers, not bot management — universally blocked by ordinary ad blockers,
+  // so refusing them is not an anomalous client signal. Deliberately NOT adding
+  // the portal's functional map/script CDNs (js.arcgis.com, code.jquery.com,
+  // maps.googleapis.com): those are what the page expects to load, and this is
+  // the one lever that can cost WAF reputation (d138bb04).
+  'oracleinfinity.io',
 ];
-const blockSuffixes = (process.env.SCRAPER_PROXY_BLOCKLIST || '')
+// EXTENDS the defaults, never replaces them. Setting this to a custom list
+// used to silently drop all 16 cost-blocked hosts — the single env var
+// standing between a run and the $6.60 gvt1.com exposure. Prefix an entry
+// with '-' to remove a default (escape hatch for a wrongly-blocked host).
+const extraSuffixes = (process.env.SCRAPER_PROXY_BLOCKLIST || '')
   .split(',')
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
-const BLOCK = blockSuffixes.length ? blockSuffixes : DEFAULT_BLOCK;
+const removals = new Set(
+  extraSuffixes.filter((s) => s.startsWith('-')).map((s) => s.slice(1)));
+const BLOCK = [...new Set([...DEFAULT_BLOCK, ...extraSuffixes.filter((s) => !s.startsWith('-'))])]
+  .filter((s) => !removals.has(s));
 
 function isAllowed(hostname) {
   if (!hostname) return false;
