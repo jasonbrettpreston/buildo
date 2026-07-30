@@ -193,7 +193,10 @@ jobs:
           PROXY_PASS: ${{ secrets.DECODO_PROXY_PASS }}
           SCRAPER_WORKERS: ${{ vars.SCRAPER_WORKERS }}
           SCRAPE_BATCH_SIZE: ${{ vars.SCRAPE_BATCH_SIZE }}
-          SCRAPE_MAX_PERMITS: ${{ vars.SCRAPE_MAX_PERMITS }}
+          # NOTE: SCRAPE_MAX_PERMITS is set explicitly in the gate block below, not
+          # from vars — a repo variable of 0 (unlimited) turned a "first validation"
+          # into an unbounded production run. Duplicate YAML keys are last-wins and
+          # silent, so this one is deliberately removed rather than left to shadow.
           SCRAPE_PERMIT_TYPE: ${{ vars.SCRAPE_PERMIT_TYPE }}
 
           # --- Cloud gate block (WF2 restore, C-W) ---------------------------
@@ -213,12 +216,25 @@ jobs:
           SCRAPER_BANDWIDTH_GUARD: '1'
           SCRAPER_MAX_BROWSER_LAUNCHES: '12'   # 116 launches was the incident
           #
-          # DELIBERATELY NOT SET: SCRAPER_WAF_TRAP_THRESHOLD, SCRAPER_RETRY_BASE_MS.
-          # Nobody has measured the correct cloud values. The recon that produced
-          # 90s/3 was taken through a proxy, from a runner, against an Akamai edge
-          # ALREADY in a reputation block — a context that is not this one. The
-          # module defaults (20 / 2000) apply until a measurement run sets them,
-          # and the cron stays disabled until they are.
+          # Akamai-tuned constants. The module DEFAULTS (20 / 2000) are correct for
+          # the attested unproxied local path and measurably WRONG here: this portal
+          # blocks at ~12 requests / ~10 min per client and clears after ~5 min idle,
+          # so a 2s retry ladder fires entirely INSIDE the recovery window and
+          # deepens the block, and a threshold of 20 spends 20 requests against an
+          # edge that has already stopped answering. The last genuinely-proxied cloud
+          # run under these values produced 654 requests, 0 rows and 102 WAF traps.
+          #
+          # These are the recon's MEASURED values, not guesses, and they are the same
+          # properties scripts/tests/test_scraper_config.py::TestAkamaiTunedBackoff
+          # asserts. Plan ruling P4 makes setting them a precondition of dispatching.
+          SCRAPER_WAF_TRAP_THRESHOLD: '3'
+          SCRAPER_RETRY_BASE_MS: '90000'
+          # HARD CAP for validation dispatches. Without it a "first validation" is an
+          # unbounded production run against ~11k queued items, and at ~3 permits per
+          # 10 minutes per exit IP it would simply burn the 90-minute window
+          # reproducing a block. A small cap makes the result attributable and bounds
+          # what finding out costs. Raise deliberately, never by default.
+          SCRAPE_MAX_PERMITS: '20'
 
       - name: Verdict check — deep_scrapes (orchestrator exit-0 masking guard)
         # aic-orchestrator.py exits 0 on a scrape-level failure by design

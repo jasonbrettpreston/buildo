@@ -878,22 +878,48 @@ describe('Stealth hardening', () => {
   });
 });
 
-describe('Proxy auth via MV3 extension', () => {
+describe('Proxy auth: relay, not the retired MV3 extension', () => {
   const scraperSource = fs.readFileSync(
     path.resolve(__dirname, '../../scripts/aic-scraper-nodriver.py'), 'utf-8'
   );
 
-  it('uses MV3 extension for proxy auth, not create_context', () => {
-    // create_context(proxy_server=url) does NOT handle authenticated proxies (407 error).
-    // Must use MV3 Chrome extension with webRequest.onAuthRequired instead.
-    expect(scraperSource).toContain('build_proxy_extension');
-    expect(scraperSource).toContain('onAuthRequired');
-    expect(scraperSource).toContain('--load-extension');
+  // These assertions were INVERTED by the 2026-07-30 WF2 restore. They previously
+  // required the MV3 proxy-auth extension to be present. It is retired, because it
+  // failed silently in two independent ways: branded Chrome >=137 drops
+  // `--load-extension` entirely, and an idle MV3 service worker is evicted while
+  // `chrome.proxy` settings persist — so the browser keeps routing through the proxy
+  // while unable to authenticate, and a 407 renders as "site can't be reached".
+  //
+  // A local unauthenticated relay replaces it: it holds the credentials, Chrome gets
+  // a plain --proxy-server, and the exit IP can rotate without recycling the browser.
+
+  it('does not reintroduce the MV3 extension', () => {
+    expect(scraperSource).not.toContain('build_proxy_extension');
+    expect(scraperSource).not.toContain('cleanup_proxy_extension');
+    // Comments explaining the retirement are fine; a live launch flag is not.
+    const codeLines = scraperSource
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('#'));
+    expect(codeLines.join('\n')).not.toContain('--load-extension=');
+  });
+
+  it('routes Chrome through the local relay', () => {
+    expect(scraperSource).toContain('--proxy-server=');
+    expect(scraperSource).toContain('start_proxy_relay');
+    // Chrome bypasses proxies for loopback by default; without this the egress
+    // probe would go direct and an unproxied run would look proxied.
+    expect(scraperSource).toContain('--proxy-bypass-list=<-loopback>');
+  });
+
+  it('still avoids create_context, which cannot authenticate a proxy', () => {
     expect(scraperSource).not.toContain('create_context');
   });
 
-  it('cleans up proxy extension directory on completion', () => {
-    expect(scraperSource).toContain('cleanup_proxy_extension');
+  it('proves egress rather than assuming it', () => {
+    // "Is the proxy configured?" is not "is it working?" — four months of runs
+    // recorded proxy_configured=true while scraping direct.
+    expect(scraperSource).toContain('verify_proxied_egress');
+    expect(scraperSource).not.toContain("bool(os.environ.get('PROXY_HOST'))");
   });
 });
 

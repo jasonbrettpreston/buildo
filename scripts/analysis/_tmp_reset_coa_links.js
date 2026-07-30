@@ -1,0 +1,15 @@
+'use strict';
+require('dotenv/config');
+const { Pool } = require('pg');
+const pool = new Pool({ host: process.env.PG_HOST||'localhost', port: Number(process.env.PG_PORT||'5432'), database: process.env.PG_DATABASE||'buildo', user: process.env.PG_USER||'postgres', password: process.env.PG_PASSWORD });
+(async () => {
+  // Reset parcel_linked_at on CoAs that have NO lead_parcels link so link_coa_to_parcels reprocesses
+  // them (now that street_name_normalized is backfilled, they can match via the Spec 54 bridge).
+  const r = await pool.query(`
+    UPDATE coa_applications ca
+       SET parcel_linked_at = NULL
+     WHERE ca.lead_id IS NOT NULL
+       AND NOT EXISTS (SELECT 1 FROM lead_parcels lp WHERE lp.lead_id = ca.lead_id AND lp.lead_id LIKE 'coa:%')`);
+  console.log(`reset parcel_linked_at on ${r.rowCount} unlinked CoAs`);
+  await pool.end();
+})().catch(e=>{console.error(e);process.exitCode=1});

@@ -67,6 +67,12 @@ if SCRAPE_PERMIT_TYPE:
 else:
     TARGET_TYPES = ALL_TARGET_TYPES
 
+# Proxying is a DECLARED state, mirroring aic-scraper-nodriver.py. Never inferred
+# from PROXY_HOST being present: the workflow sets those credentials on every run
+# regardless of mode, so credential presence says nothing about whether traffic
+# actually left through the proxy.
+PROXY_MODE = (os.environ.get('SCRAPER_PROXY_MODE') or 'none').strip().lower()
+
 SCRIPT_DIR = Path(__file__).parent
 WORKER_SCRIPT = SCRIPT_DIR / 'aic-scraper-nodriver.py'
 
@@ -479,8 +485,17 @@ async def main():
                 'status_changes': agg['status_changes'],
                 'error_categories': {},
                 'last_error': None,
-                'proxy_configured': bool(os.environ.get('PROXY_HOST')),
-                'proxy_host': os.environ.get('PROXY_HOST'),
+                # Derived from the RESOLVED proxy MODE, never from credential
+                # presence. This is the summary that actually reaches pipeline_runs,
+                # assert-network-health.js and the dashboard, so it is the one that
+                # must not lie. The workflow sets PROXY_HOST from secrets on EVERY
+                # run regardless of mode, so bool(PROXY_HOST) reported "proxied" for
+                # four months of runs that scraped direct (review_followups.md:2797).
+                # The sibling fix in aic-scraper-nodriver.py is not enough on its own:
+                # this file recomputed the same lie one layer up.
+                'proxy_configured': PROXY_MODE != 'none',
+                'proxy_mode': PROXY_MODE,
+                'proxy_host': os.environ.get('PROXY_HOST') if PROXY_MODE != 'none' else None,
                 'max_permits_cap': MAX_PERMITS,
                 'capped': MAX_PERMITS > 0 and agg['permits_attempted'] >= MAX_PERMITS,
                 'preflight_failures': agg['preflight_failures'],

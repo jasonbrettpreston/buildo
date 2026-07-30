@@ -35,6 +35,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -309,7 +310,6 @@ def build_proxy_session_id(worker_id, timestamp=None):
     """
     ts = timestamp or int(time.time())
     return f'w{worker_id}t{ts}'.replace('-', '').replace('_', '')
-
 
 
 # Decodo proxy transport facts (K1) — unwired at L0, consumed by the relay at L2.
@@ -672,53 +672,20 @@ def build_browser_args(profile, debug_port=None, profile_dir=None,
     return browser_args, use_headless
 
 
-# ---------------------------------------------------------------------------
-# C3/C5/C6/C7 (WF2 restore, rung L2) — the proxy path.
-#
-# The MV3 extension is retired (L0). The relay replaces it: a local, unauthenticated
-# forwarder that holds the Decodo credentials so Chrome only ever sees a plain
-# `--proxy-server=http://127.0.0.1:PORT`. That separation is what makes the two
-# things the extension could not do possible:
-#   * rotate the exit IP WITHOUT recycling the browser — restarting the relay on the
-#     SAME pinned local port swaps the Decodo session while Chrome keeps running.
-#     Killing Chrome per batch instead is what turned a WAF loop into 116 cold
-#     starts and ~1.76 GB of metered traffic.
-#   * enforce a host blocklist at the chokepoint, which flags alone cannot do.
-#
-# On CONNECT the relay pipes raw bytes rather than terminating TLS, so the browser's
-# JA3/ALPN fingerprint reaches the origin intact. mitmproxy must never be
-# substituted — it re-originates TLS and destroys exactly that.
-# ---------------------------------------------------------------------------
-_spawned_relays = {}
 # One local port pinned per worker, so a rotation reuses it and Chrome's
 # --proxy-server never has to change.
 _relay_ports = {}
+# Blocked-host counts per worker, so the cost blocklist is observable rather than
+# a claim (they previously died on an unread stderr pipe).
+_relay_block_counts = {}
 _host_egress_ip_cache = {'ip': None, 'at': 0.0}
 
 
-PROXY_RELAY_JS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'proxy-relay.mjs')
-
-# Relay subprocesses we spawned, per worker — same ownership discipline as
-# _spawned_browsers: kill a pid we own, never pattern-match the process table.
-_spawned_relays = {}
-
 EGRESS_ECHO_URL = os.environ.get('SCRAPER_EGRESS_ECHO_URL') or 'https://api.ipify.org?format=json'
 
-# Chrome's network-error interstitial. Distinguishing "the browser could not
-# reach the echo service" from "the browser reached it and reported an IP" is
-# load-bearing: see verify_proxied_egress for why the former is evidence FOR
-# proxying rather than a reason to refuse.
-_UNREACHABLE_MARKERS = (
-    "site can't be reached",
-    'site cannot be reached',
-    'ERR_',
-    'took too long to respond',
-    'temporarily down or moved permanently',
-)
 
 HOST_EGRESS_IP_TTL_S = float(os.environ.get('SCRAPER_HOST_IP_TTL_S') or '900')
 
-_host_egress_ip_cache = {}  # {'ip': str, 'at': float}; empty = not yet probed
 
 def build_upstream_proxy_url(session_id, worker_id=None):
     """The credentialed upstream URL handed to the relay (never to Chrome)."""
@@ -728,11 +695,6 @@ def build_upstream_proxy_url(session_id, worker_id=None):
     port = resolve_proxy_port(worker_id)
     return f'{PROXY_SCHEME}://{user}:{password}@{PROXY_HOST}:{port}'
 
-
-# Stable local port per worker. The browser gets --proxy-server=<port> at
-# LAUNCH, so rotating the upstream session must reuse the same local port —
-# otherwise the relay moves and the still-running browser points at a dead one.
-_relay_ports = {}
 
 def start_proxy_relay(session_id, worker_id=None, timeout=30):
     """Run a local unauthenticated relay that holds the upstream credentials.
@@ -749,6 +711,10 @@ def start_proxy_relay(session_id, worker_id=None, timeout=30):
     upstream = build_upstream_proxy_url(session_id, worker_id)
     # Reuse this worker's port across session rotations (see _relay_ports).
     want_port = _relay_ports.get(worker_id, 0)
+    # stderr goes to DEVNULL, not PIPE: proxy-relay.mjs writes a line per blocked
+    # host and per failed request, and nothing drains it. A full 64 KB pipe buffer
+    # blocks the relay's write, the relay stops serving, and the scraper hangs until
+    # the step timeout — the same undrained-pipe stall we refuse to allow for Chrome.
     proc = subprocess.Popen(
         ['node', PROXY_RELAY_JS, upstream, str(want_port)],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
@@ -775,12 +741,39 @@ def start_proxy_relay(session_id, worker_id=None, timeout=30):
                     'upstream_port': resolve_proxy_port(worker_id),
                     'scheme': PROXY_SCHEME,
                 })
+                _drain_relay_stderr(proc, worker_id)
                 return url
         if proc.poll() is not None:
             err = (proc.stderr.read() or '').strip()[:200]
             raise RuntimeError(f'Proxy relay exited (rc={proc.returncode}) before listening: {err}')
     terminate_spawned_relay(worker_id)
     raise RuntimeError(f'Proxy relay did not report a listening URL within {timeout}s')
+
+def _drain_relay_stderr(proc, worker_id=None):
+    """Continuously drain the relay's stderr, counting the hosts it refuses.
+
+    Two jobs, and both matter. Draining: `proxy-relay.mjs` writes a line per blocked
+    host and per failed request, and an undrained 64 KB pipe buffer blocks its writes
+    — the relay then stops serving and the scraper hangs until the step timeout, the
+    same stall we refuse to allow for Chrome. Counting: those lines are the ONLY
+    evidence of the cost blocklist doing its job, and until now they died on a pipe
+    nobody read. A wrongly-blocked host is otherwise invisible.
+    """
+    counts = _relay_block_counts.setdefault(worker_id, {'blocked': 0, 'lines': 0})
+
+    def _pump():
+        try:
+            for line in proc.stderr:
+                counts['lines'] += 1
+                if 'BLOCKED' in line:
+                    counts['blocked'] += 1
+        except (ValueError, OSError):
+            pass  # pipe closed on teardown — expected
+
+    thread = threading.Thread(target=_pump, name=f'relay-stderr-{worker_id}', daemon=True)
+    thread.start()
+    return thread
+
 
 def terminate_spawned_relay(worker_id=None, timeout=8):
     """Kill the relay we spawned for this worker. Idempotent; never raises."""
@@ -832,18 +825,6 @@ def _extract_ip(raw):
     found = re.search('(?:[0-9]{1,3}[.]){3}[0-9]{1,3}', text)
     return found.group(0) if found else None
 
-
-# Re-probe the host IP at least this often. A stale value is not merely
-# useless — verify_proxied_egress compares against it, so if the host's real
-# egress IP changed while the cache held the OLD one, an unproxied browser
-# would report an IP that differs from the stale value and PASS. That is the
-# precise silent-unproxied failure this tripwire exists to prevent, so the
-# "a runner's IP does not change mid-run" assumption is enforced with a TTL
-# rather than asserted in a comment (it holds for ephemeral CI runners; it
-# does not necessarily hold for a long-lived desktop or db-queue session).
-HOST_EGRESS_IP_TTL_S = float(os.environ.get('SCRAPER_HOST_IP_TTL_S') or '900')
-
-_host_egress_ip_cache = {}  # {'ip': str, 'at': float}; empty = not yet probed
 
 def host_egress_ip(timeout=15, refresh=False, now=None):
     """This process's own public IP — i.e. what UNPROXIED traffic looks like.
@@ -1027,37 +1008,6 @@ DEVTOOLS_READY_TIMEOUT_S = float(os.environ.get('SCRAPER_DEVTOOLS_TIMEOUT_S') or
 # also runs on the operator's own desktop).
 _spawned_browsers = {}
 
-BANDWIDTH_GUARD_FEATURES = (
-    'Translate,OptimizationHints,OptimizationGuideModelDownloading,'
-    'MediaRouter,AutofillServerCommunication,InterestFeedContentSuggestions,'
-    'CalculateNativeWinOcclusion'
-)
-
-NODRIVER_DEFAULT_ARGS = [
-    '--remote-allow-origins=*',
-    '--no-first-run',
-    '--no-service-autorun',
-    '--no-default-browser-check',
-    '--homepage=about:blank',
-    '--no-pings',
-    '--password-store=basic',
-    '--disable-infobars',
-    '--disable-breakpad',
-    '--disable-dev-shm-usage',
-    '--disable-session-crashed-bubble',
-    '--disable-search-engine-choice-screen',
-]
-
-# How long to wait for Chrome's DevTools endpoint. nodriver's own budget is a
-# hardcoded 2.25s (browser.py:425-449) which a cold profile on a CI runner
-# exceeds just creating its databases — the entire reason we launch and poll
-# ourselves. Generous by default; an unresponsive browser still fails loudly.
-DEVTOOLS_READY_TIMEOUT_S = float(os.environ.get('SCRAPER_DEVTOOLS_TIMEOUT_S') or '60')
-
-# Chrome processes we spawned, per worker — so teardown kills a pid we OWN
-# rather than pattern-matching the process table (never `pkill chrome`: this
-# also runs on the operator's own desktop).
-_spawned_browsers = {}
 
 # ---------------------------------------------------------------------------
 # C6 (rung L2) — geo enforcement.
@@ -1132,34 +1082,6 @@ def attach_mode_enabled():
     """True when we spawn Chrome and nodriver merely attaches."""
     return ATTACH_MODE
 
-
-# nodriver contributes NO flags on the attach path, so we reproduce its own
-# defaults verbatim. Dropping any of them changes the browser's observable
-# fingerprint relative to the runs this scraper was proven on.
-NODRIVER_DEFAULT_ARGS = [
-    '--remote-allow-origins=*',
-    '--no-first-run',
-    '--no-service-autorun',
-    '--no-default-browser-check',
-    '--homepage=about:blank',
-    '--no-pings',
-    '--password-store=basic',
-    '--disable-infobars',
-    '--disable-breakpad',
-    '--disable-dev-shm-usage',
-    '--disable-session-crashed-bubble',
-    '--disable-search-engine-choice-screen',
-]
-
-# How long to wait for Chrome's DevTools endpoint. nodriver's own budget is a
-# hardcoded 2.25 s, which a cold CI profile exceeds — the entire reason we poll
-# ourselves. Generous by default; an unresponsive browser still fails loudly.
-DEVTOOLS_READY_TIMEOUT_S = float(os.environ.get('SCRAPER_DEVTOOLS_TIMEOUT_S') or '60')
-
-# Chrome processes we spawned, per worker — so teardown kills a pid we OWN rather
-# than pattern-matching the process table. Never `pkill chrome`: this also runs on
-# the operator's own desktop.
-_spawned_browsers = {}
 
 # A WAF-block loop rotates the session on every trap, and each rotation costs a
 # full cold browser start over metered proxy bandwidth: one run spent ~1.76 GB
@@ -1364,20 +1286,6 @@ def dump_chrome_launch_log(worker_id, max_lines=40):
     log('ERROR', '[scraper]', 'Chrome launch log tail',
         {'event': 'chrome_launch_log', 'path': path, 'lines': lines[-max_lines:]})
 
-
-EGRESS_ECHO_URL = os.environ.get('SCRAPER_EGRESS_ECHO_URL') or 'https://api.ipify.org?format=json'
-
-# Chrome's network-error interstitial. Distinguishing "the browser could not
-# reach the echo service" from "the browser reached it and reported an IP" is
-# load-bearing: see verify_proxied_egress for why the former is evidence FOR
-# proxying rather than a reason to refuse.
-_UNREACHABLE_MARKERS = (
-    "site can't be reached",
-    'site cannot be reached',
-    'ERR_',
-    'took too long to respond',
-    'temporarily down or moved permanently',
-)
 
 async def bootstrap_session(worker_id=None, relay_url=None):
     """Launch Chrome via CDP and establish an AIC session with a warm entry.
@@ -1958,28 +1866,37 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
         elapsed = (time.time() * 1000 - start_ms) / 1000
         print(f"  {worker_tag} {i + 1} / {len(year_seqs)} ({progress_pct:.1f}%) — {elapsed:.1f}s")
 
-        # WAF trap detection — rotate proxy session on re-bootstrap
+        # WAF trap detection — rotate the EXIT IP, and on the proxied path do it
+        # WITHOUT paying for a cold browser.
         if tel['consecutive_empty'] >= WAF_TRAP_THRESHOLD:
-            log('WARN', worker_tag, f"WAF trap detected ({tel['consecutive_empty']} consecutive empty). Re-bootstrapping...")
+            log('WARN', worker_tag, f"WAF trap detected ({tel['consecutive_empty']} consecutive empty). Rotating...")
             try:
                 worker = tel.get('_worker_id')
-                await stop_and_terminate(browser, worker)
-                rotated_relay = None
                 if proxy_enabled():
-                    # ROTATE THE IP WITHOUT PAYING FOR IT TWICE. Restarting the relay
-                    # on this worker's PINNED local port swaps the Decodo session —
-                    # a new exit IP — while --proxy-server keeps pointing at the same
-                    # 127.0.0.1:PORT. The extension could only rotate by relaunching
-                    # Chrome, and each cold start re-downloads Chrome's components
-                    # through the metered proxy: 102 traps became 116 launches and
-                    # ~1.76 GB. Rotation is correct; paying for a browser to get it
-                    # is not.
+                    # Restarting the relay on this worker's PINNED local port swaps
+                    # the Decodo session — a new exit IP — while Chrome's
+                    # --proxy-server keeps pointing at the same 127.0.0.1:PORT. The
+                    # browser is NOT touched.
+                    #
+                    # This is the whole reason the relay beat the extension. The
+                    # extension could only rotate by relaunching Chrome, and every
+                    # cold start re-downloads Chrome's components through the metered
+                    # proxy: 102 traps became 116 launches and ~1.76 GB (~$6.60).
+                    # Rotation is correct; paying for a browser to get it is not.
                     terminate_spawned_relay(worker)
-                    rotated_relay = start_proxy_relay(
+                    start_proxy_relay(
                         build_proxy_session_id(worker, int(time.time())), worker_id=worker)
-                browser, page, attempts, profile = await bootstrap_with_retry(
-                    worker_id=worker, relay_url=rotated_relay)
-                tel['session_bootstraps'] += attempts
+                    # Clear the session state a trap implies without discarding the
+                    # process: a fresh document on the new exit IP.
+                    page = await browser.get('about:blank')
+                    log('INFO', worker_tag, 'Rotated exit IP without recycling the browser',
+                        {'event': 'proxy_session_rotated', 'browser_recycled': False})
+                else:
+                    # Unproxied: there is no IP to rotate, so clearing session state
+                    # means a new browser. Cold starts are free on an unmetered path.
+                    await stop_and_terminate(browser, worker)
+                    browser, page, attempts, profile = await bootstrap_with_retry(worker_id=worker)
+                    tel['session_bootstraps'] += attempts
                 tel['consecutive_empty'] = 0
             except Exception as err:
                 tel['session_failures'] += 1
@@ -2205,8 +2122,24 @@ async def main():
 
                     batch_num += 1
 
+                    if proxy_enabled() and browser is not None:
+                        # One batch = one exit IP, achieved WITHOUT a cold browser:
+                        # restart the relay on this worker's pinned local port so
+                        # Chrome's --proxy-server stays valid across the swap.
+                        terminate_spawned_relay(worker_id)
+                        relay_url = start_proxy_relay(
+                            build_proxy_session_id(worker_id, int(time.time())),
+                            worker_id=worker_id)
+                        log('INFO', worker_tag,
+                            f'Batch {batch_num}: rotated exit IP (browser retained)')
+
                     if browser is None:
-                        browser, page, attempts, profile = await bootstrap_with_retry(worker_id=worker_id)
+                        # relay_url is REQUIRED here. Without it this bootstrap
+                        # launches Chrome with no --proxy-server and the runner's
+                        # datacenter IP reaches AIC directly during the warm entry,
+                        # BEFORE the egress check can refuse it.
+                        browser, page, attempts, profile = await bootstrap_with_retry(
+                            worker_id=worker_id, relay_url=relay_url)
                         tel['session_bootstraps'] += attempts
                         log('INFO', worker_tag, f'Batch {batch_num}: browser bootstrapped')
 
@@ -2226,11 +2159,17 @@ async def main():
                                 pass
                             browser = None
 
-                    # Kill browser after each batch in proxy mode (1 batch = 1 IP),
-                    # or after BROWSER_MAX_BATCHES in non-proxy mode (memory TTL).
-                    if browser and (proxy_enabled() or batch_num % BROWSER_MAX_BATCHES == 0):
-                        if not proxy_enabled():
-                            log('INFO', worker_tag, f'Browser TTL: recycling after {BROWSER_MAX_BATCHES} batches')
+                    # Browser TTL only — NOT "1 batch = 1 IP".
+                    #
+                    # The old condition recycled Chrome after every batch whenever a
+                    # proxy was configured, which fused two independent things: the
+                    # exit IP and the browser process. Rotating the IP is correct;
+                    # buying a cold browser to do it is what turned 102 WAF traps into
+                    # 116 launches and ~1.76 GB of metered traffic. The relay rotates
+                    # the session on a pinned local port instead, so the browser now
+                    # only recycles on its memory TTL.
+                    if browser and batch_num % BROWSER_MAX_BATCHES == 0:
+                        log('INFO', worker_tag, f'Browser TTL: recycling after {BROWSER_MAX_BATCHES} batches')
                         await stop_and_terminate(browser, worker_id)
                         browser = None
                 finally:
