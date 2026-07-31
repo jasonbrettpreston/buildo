@@ -86,30 +86,24 @@ describe('migration validator', () => {
     expect(existsSync(scriptPath)).toBe(true);
   });
 
-  it('checks for both UP and DOWN blocks in migration files', () => {
-    const source = readFileSync(scriptPath, 'utf-8');
-    expect(source).toContain('UP');
-    expect(source).toContain('DOWN');
-  });
+  // BEHAVIOUR IS LOCKED IN src/tests/migration-hooks.behaviour.test.ts.
+  //
+  // Five source-string assertions used to live here and were removed in WF3
+  // (2026-07-31). One was named `it('scans only staged migration files')` and
+  // asserted `source.toContain('git diff')` — the script contained that
+  // substring while validating the WORKTREE, so an unsafe staged blob hidden
+  // behind a fixed worktree copy committed clean. A test that greps the
+  // implementation cannot notice the implementation is wrong; it can only
+  // notice the implementation changed, and it fails on every refactor that
+  // keeps the behaviour. The others pinned `while IFS= read -r FILE`,
+  // `grep -qiE` and `|| true` — all three now describe code that has been
+  // deliberately replaced (NUL-delimited read, anchored regex, explicit git
+  // exit-status check), and they would have blocked those fixes.
+  //
+  // What remains here is existence only. Anything about what the hook DOES
+  // belongs in the behavioural file, where it is asserted by running the hook.
 
-  it('scans only staged migration files', () => {
-    const source = readFileSync(scriptPath, 'utf-8');
-    expect(source).toContain('git diff');
-    expect(source).toContain('migrations/');
-  });
-
-  it('uses while read loop for space-safe file iteration', () => {
-    const source = readFileSync(scriptPath, 'utf-8');
-    expect(source).toContain('while IFS= read -r FILE');
-  });
-
-  it('uses case-insensitive tolerant regex', () => {
-    const source = readFileSync(scriptPath, 'utf-8');
-    expect(source).toContain('grep -qiE');
-  });
-
-  it('has || true on grep pipe for set -e safety', () => {
-    const source = readFileSync(scriptPath, 'utf-8');
-    expect(source).toContain('|| true');
+  it('the behavioural suite that replaced the source-string tests exists', () => {
+    expect(existsSync(join(ROOT, 'src', 'tests', 'migration-hooks.behaviour.test.ts'))).toBe(true);
   });
 });

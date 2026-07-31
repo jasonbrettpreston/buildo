@@ -160,6 +160,29 @@ async function run() {
       }
     }
     console.log(`Verify: ${missing} missing, ${drift} drift`);
+    // MISSING and DRIFT are the same exit code and opposite problems, and the
+    // runbook rule only ever described DRIFT — so the MISSING case had no
+    // documented answer and printed no next action. Say what to do.
+    if (missing > 0) {
+      console.error(
+        `\n  ${missing} migration(s) are committed but NOT APPLIED to this database.` +
+        '\n  Until they are, migrate.js --verify fails the pre-flight in the scheduled' +
+        '\n  chain workflows — nothing in CI applies migrations.' +
+        '\n\n  Apply (runbook §3 rule 2a — direct/session mode, port 5432, never the pooler):' +
+        '\n    SUPABASE_CA_CERT_PATH=supabase/prod-ca-2021.crt node -r dotenv/config \\' +
+        '\n      -e "process.env.DATABASE_URL = process.env.SUPABASE_DATABASE_URL; require(\'./scripts/migrate.js\');"' +
+        '\n  Then re-run this verify.',
+      );
+    }
+    if (drift > 0) {
+      console.error(
+        `\n  ${drift} applied migration(s) have a DIFFERENT CHECKSUM than the committed file.` +
+        '\n  Do NOT apply — investigate first: a changed file that is already applied means the' +
+        '\n  database and the repo disagree about what ran.' +
+        '\n  If this is the known line-ending class, reconcile with:' +
+        '\n    node scripts/analysis/reconcile-migration-checksums.js --target=cloud|local',
+      );
+    }
     await pool.end();
     if (missing > 0 || drift > 0) process.exit(1);
     return;

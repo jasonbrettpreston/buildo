@@ -78,8 +78,33 @@ jobs:
           ET_NOW=$(TZ='America/Toronto' date '+%Y-%m-%d %H:%M:%S %Z')
           echo "::notice title=ET drift check::Current America/Toronto time is ${ET_NOW} — this workflow's cron is a single fixed-UTC expression (Spec 115 §2.1); it never skips on DST drift, this notice is observability only."
 
-      - name: Pre-flight — migrate.js --verify (runbook rule 2)
-        run: node scripts/migrate.js --verify
+      # NON-BLOCKING HERE, unlike the chain workflows (WF3 2026-07-31).
+      #
+      # This step is copy-pasted from the chains, where hard-failing is correct
+      # containment: their steps read and write the columns a migration adds,
+      # so a stale schema throws mid-chain, possibly after partial writes.
+      #
+      # The watchdog needs neither. check-pipeline-freshness.js reads only
+      # pipeline_runs, and backup-db.js shells pg_dump — no new schema. But as
+      # a blocking step it sat AHEAD of the Spec 112 §6 backup fallback, so an
+      # unapplied migration would ① block every chain, including permits whose
+      # final step is the primary backup, ② block the safety net that exists to
+      # cover ①, and ③ redden the watchdog for a reason that is indistinguishable
+      # from the freshness alarm it exists to raise. Backups would stop entirely
+      # and the net designed to catch that would be disabled by the same
+      # condition.
+      #
+      # Kept as a WARNING because the signal is still worth having, and because
+      # this gate's only real-world firing to date was a FALSE POSITIVE (28
+      # spurious CRLF drifts, 2026-07-29 — see
+      # scripts/analysis/reconcile-migration-checksums.js).
+      - name: Pre-flight — migrate.js --verify (advisory; see comment)
+        id: watchdog_migrate_verify
+        continue-on-error: true
+        run: |
+          if ! node scripts/migrate.js --verify; then
+            echo "::warning title=Schema drift or missing migration::migrate.js --verify failed. The chains WILL be blocked by this until it is resolved (runbook §3 rule 2 / 2a). The watchdog continues so the freshness check and the backup fallback still run."
+          fi
         env: *pipeline-env
 
       - name: Install PostgreSQL 17 client (PGDG apt repo)

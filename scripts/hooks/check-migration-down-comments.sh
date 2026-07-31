@@ -18,35 +18,71 @@
 # `-- UP` and `-- DOWN` markers EXIST; this script ensures DDL under DOWN is
 # COMMENTED OUT. Different invariants, same input.
 
-# Capture staged migrations. || true prevents set -e crash on no match.
-STAGED_MIGRATIONS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^migrations/.*\.sql$' || true)
+# VALIDATES THE STAGED BLOB, NOT THE WORKTREE (WF3 2026-07-31) — and FAILS
+# CLOSED. This script used to run awk against the working-tree file. Two
+# consequences, both reproduced: an unsafe staged blob hidden behind a fixed
+# worktree copy passed; and on the `AD` case (blob staged, worktree copy
+# deleted — which `--diff-filter=ACM` does NOT exclude) awk errored, HIT came
+# back empty, BAD_REPORT stayed empty, and the hook exited 0 having validated
+# nothing. Its companion exits 1 on that same input, so the two hooks
+# disagreed about whether the commit was safe.
+# Behavioural locks: src/tests/migration-hooks.behaviour.test.ts
+
+ROOT=$(git rev-parse --show-toplevel) || {
+  echo "ERROR: not inside a git repository — cannot validate migrations." >&2
+  exit 1
+}
+cd "$ROOT" || exit 1
+
+# git failure must not masquerade as "nothing staged".
+if ! ALL_STAGED=$(git diff --cached --name-only --diff-filter=ACM); then
+  echo "ERROR: 'git diff --cached' failed — cannot determine staged migrations." >&2
+  exit 1
+fi
+
+STAGED_MIGRATIONS=$(printf '%s\n' "$ALL_STAGED" | grep -E '^migrations/.*\.sql$' || true)
 
 if [ -z "$STAGED_MIGRATIONS" ]; then
   exit 0
 fi
 
 BAD_REPORT=""
+FAILED=0
 
-# while read -r safely handles filenames with spaces (matches validate-migrations.sh).
-while IFS= read -r FILE; do
+# NUL-delimited: filenames with spaces/newlines survive, and core.quotePath
+# cannot mangle a non-ASCII path into a silent skip.
+while IFS= read -r -d '' FILE; do
+  case "$FILE" in
+    migrations/*.sql) ;;
+    *) continue ;;
+  esac
+
+  # The bytes git would COMMIT, not the bytes on disk.
+  if ! BLOB=$(git show ":$FILE" 2>/dev/null); then
+    echo "ERROR: cannot read staged content for $FILE — refusing to validate the worktree instead." >&2
+    FAILED=1
+    continue
+  fi
+
   # awk discovery — same regex used in WF5 audit (634fd1f) and the
   # batch fix verification (1da51e4). Print ONLY THE FIRST hit per file
   # for a concise error; the developer fixes one, re-runs, sees the next.
-  HIT=$(awk '
+  HIT=$(printf '%s\n' "$BLOB" | awk '
     BEGIN { in_down = 0 }
     /^-- DOWN|^-- [-=]+ DOWN/ { in_down = 1; next }
     in_down && /^[[:space:]]*(DROP|ALTER|DELETE|TRUNCATE|CREATE|INSERT|UPDATE|GRANT|REVOKE|COMMENT|REINDEX|REFRESH|RENAME)/ {
       print NR ": " $0
       exit
     }
-  ' "$FILE")
+  ')
   if [ -n "$HIT" ]; then
     BAD_REPORT="${BAD_REPORT}
   ${FILE}:${HIT}"
+    FAILED=1
   fi
-done <<< "$STAGED_MIGRATIONS"
+done < <(git diff --cached --name-only --diff-filter=ACM -z)
 
-if [ -n "$BAD_REPORT" ]; then
+if [ "$FAILED" -eq 1 ]; then
   echo ""
   echo "ERROR: Migration(s) staged with uncommented DDL under '-- DOWN':"
   echo "$BAD_REPORT"

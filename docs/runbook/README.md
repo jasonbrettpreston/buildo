@@ -82,7 +82,21 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 ## 3. Deploy-ordering rules (violate these and a run corrupts data)
 
 1. **Seed BEFORE code.** A logic-variable's seed row must land before code that reads it via a required Zod field — the config-loader throws on a missing var (`assert-coa-freshness` `coa_freshness_fail_days`, the forecast threshold pair, etc.). Migration first, then deploy the reader.
-2. **`npm run migrate -- --verify` in pre-flight.** Confirms the DB is caught up to code before any chain runs. Drift = stop. (Known-accepted drift set is documented; a NEW drift is a blocker.)
+2. **`npm run migrate -- --verify` in pre-flight.** Confirms the DB is caught up to code before any chain runs. **Both DRIFT and MISSING are blockers** — `scripts/migrate.js:164` exits non-zero on `missing > 0 || drift > 0`, and this rule previously said only "Drift = stop", which is why the MISSING case had no documented answer. (Known-accepted drift set is documented; a NEW drift is a blocker.)
+   * **MISSING = a migration is committed but not yet applied to that database.** Apply it (2a), then re-run the chain.
+   * **DRIFT = an applied file's checksum changed.** Do NOT apply — investigate. If it is the known CRLF class, use `node scripts/analysis/reconcile-migration-checksums.js --target=cloud|local`.
+   * ⚠ **Ordering:** merging a migration to `main` makes `--verify` fail in **five scheduled workflows** (`chain-coa-permits`, `chain-deep-scrapes`, `chain-entities`, `chain-sources`, `pipeline-watchdog`) until 2a is done. **Nothing in CI applies migrations.** Plan the apply to happen with the merge, not after it.
+
+2a. **Applying a migration to cloud — the procedure (Spec 113 §7: `migrate.js` is the sole schema authority).**
+   Until this section existed there was no written procedure at all; the de-facto method was an ad-hoc shell command. Use:
+   ```bash
+   SUPABASE_CA_CERT_PATH=supabase/prod-ca-2021.crt node -r dotenv/config \
+     -e "process.env.DATABASE_URL = process.env.SUPABASE_DATABASE_URL; require('./scripts/migrate.js');"
+   ```
+   * **Direct/session mode (port 5432), never the transaction pooler (6543).** `CREATE INDEX CONCURRENTLY` cannot run through Supavisor transaction pooling, and `migrate.js` routes CONCURRENTLY files outside a transaction.
+   * **Never** `supabase db push` / `db reset` / `db remote commit` — FORBIDDEN by Spec 113 §7 and locked by `src/tests/schema-authority.logic.test.ts`.
+   * A failed `CREATE INDEX CONCURRENTLY` leaves an **INVALID** index behind that `IF NOT EXISTS` will then skip forever. Check `pg_index.indisvalid` after any CONCURRENTLY apply; recover with `DROP INDEX` + rebuild, or `REINDEX INDEX CONCURRENTLY`.
+   * Verify after: `node scripts/migrate.js --verify` should report `0 missing, 0 drift`.
 3. **Detached run for >10 min chains + the dying-session chain-lock hazard.** The interactive harness kills a foreground shell at ~10 min. Launch long chains DETACHED and poll `pipeline_runs` — see `docs/runbook/scope_intensity_matrix_rekey_baseline_spike.md` for the proven pattern. Hazard: a session that dies mid-run leaves the transaction-level advisory lock held only until the connection drops; a step relying on `withAdvisoryLock` will **SKIP (not queue)** on contention, so never start a second chain that shares steps while one is still running.
 4. **`HERITAGE_ACCEPT_MASS_DELETE=1` is a one-time re-key guard.** `load-heritage.js` refuses a mass-delete re-key without it; set it (and back up `heritage_properties`) only for the deliberate register re-key — see `source_heritage_first_deploy_spike.md`.
 5. **Reset-then-drain for terminal-row reclassification.** ~87% of CoAs are terminal and never re-seen, so the incremental dirty predicate won't touch them; a corpus-wide reclassify needs a scoped, logged, backed-up `*_classified_at = NULL` reset FIRST (e.g. `wf2-reset-coa-trade-classification.js`), which also re-fires the downstream cost step.
