@@ -156,7 +156,22 @@ describe('apply-migrations workflow', () => {
       // IF NOT EXISTS silently skips it, the file records as applied, and
       // --verify (checksums only) is green forever. This query is the only
       // signal that the index is permanently broken.
-      expect(activeLines).toMatch(/pg_index WHERE NOT indisvalid/);
+      //
+      // The query string appears TWICE in the file: here (the failing gate)
+      // and in the if:failure() post-mortem (deliberately non-blocking).
+      // Asserting the bare literal would stay green if the GATE were deleted,
+      // because the post-mortem copy survives — so this lock isolates the
+      // gate STEP by name and asserts the failing control inside it.
+      const steps = activeLines.split(/^\s+- name: /m);
+      const gateStep = steps.find((s) => s.startsWith('Gate — no INVALID indexes left behind'));
+      expect(gateStep, 'the Gate step itself was removed — the post-mortem copy of the query is NOT a substitute; it never fails the run').toBeDefined();
+      // Inside the gate step only: the query, the run-failing consequence,
+      // and the apply-mode condition. The post-mortem must not satisfy these.
+      expect(gateStep).toMatch(/pg_index WHERE NOT indisvalid/);
+      expect(gateStep).toMatch(/process\.exitCode = 1/);
+      expect(gateStep).toMatch(/if: inputs\.dry_run == 'false'/);
+      // The gate must fail closed — no self-suppression like the post-mortem's.
+      expect(gateStep).not.toMatch(/\|\| true/);
     });
   });
 
