@@ -98,14 +98,21 @@ jobs:
       # this gate's only real-world firing to date was a FALSE POSITIVE (28
       # spurious CRLF drifts, 2026-07-29 — see
       # scripts/analysis/reconcile-migration-checksums.js).
-      - name: Pre-flight — migrate.js --verify (advisory; see comment)
+      # NOTE the bare `run:` — do NOT wrap this in `if ! …; then echo; fi`.
+      # That swallows the exit code, so the step renders GREEN and
+      # `continue-on-error` becomes dead configuration. Letting the step fail
+      # renders "failed (continued)", which is the stronger operator signal,
+      # while `continue-on-error` keeps the job going to the backup fallback.
+      - name: Pre-flight — migrate.js --verify (advisory; see comment above)
         id: watchdog_migrate_verify
         continue-on-error: true
-        run: |
-          if ! node scripts/migrate.js --verify; then
-            echo "::warning title=Schema drift or missing migration::migrate.js --verify failed. The chains WILL be blocked by this until it is resolved (runbook §3 rule 2 / 2a). The watchdog continues so the freshness check and the backup fallback still run."
-          fi
+        run: node scripts/migrate.js --verify
         env: *pipeline-env
+
+      - name: Annotate a failed schema pre-flight
+        if: steps.watchdog_migrate_verify.outcome == 'failure'
+        run: |
+          echo "::warning title=Schema drift or missing migration::migrate.js --verify failed. The scheduled CHAIN workflows are blocked by this until it is resolved (runbook §3 rule 2 / 2a). The watchdog deliberately continues so the freshness check and the backup fallback still run."
 
       - name: Install PostgreSQL 17 client (PGDG apt repo)
         # This workflow reaches pg_dump via the direct backup-db.js

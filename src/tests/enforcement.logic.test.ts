@@ -92,13 +92,18 @@ describe('migration validator', () => {
   // (2026-07-31). One was named `it('scans only staged migration files')` and
   // asserted `source.toContain('git diff')` — the script contained that
   // substring while validating the WORKTREE, so an unsafe staged blob hidden
-  // behind a fixed worktree copy committed clean. A test that greps the
-  // implementation cannot notice the implementation is wrong; it can only
-  // notice the implementation changed, and it fails on every refactor that
-  // keeps the behaviour. The others pinned `while IFS= read -r FILE`,
-  // `grep -qiE` and `|| true` — all three now describe code that has been
-  // deliberately replaced (NUL-delimited read, anchored regex, explicit git
-  // exit-status check), and they would have blocked those fixes.
+  // behind a fixed worktree copy committed clean. That is the case for
+  // deleting them: a test that greps the implementation cannot notice the
+  // implementation is wrong, only that it changed.
+  //
+  // ⚠ CORRECTION (Regression Guardian, same WF3): the original version of this
+  // comment claimed the other four "would have blocked the fix". That was
+  // FALSE and mechanically disprovable — four of the five substrings are still
+  // present in the rewritten hook; only `while IFS= read -r FILE` would have
+  // failed. They were removed because they assert on implementation text, not
+  // because they were in the way. Keeping the inaccurate justification would
+  // have been the same defect this WF3 is about: a comment asserting something
+  // the code does not support.
   //
   // What remains here is existence only. Anything about what the hook DOES
   // belongs in the behavioural file, where it is asserted by running the hook.

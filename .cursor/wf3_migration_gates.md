@@ -266,6 +266,44 @@ workflows and is not load-bearing for the watchdog's own work.
 - [ ] 9. Full gate (`npm run test:py`, `npm run test`, typecheck, lint), commit, push.
 - [ ] 10. Output panel on the diff.
 
+## FOLD OVERRIDE — the plan said "no temp files"; the implementation uses one
+The plan (folding Integration's PLAN-altitude advice) ruled *"do NOT use temp files … no
+`mktemp -d`, no `trap … EXIT`"*, preferring `git show ":$FILE"` piped straight to node. That part
+stands — the node call IS a pipe, no temp file. **But the FILE LIST needed one**, and the plan did
+not anticipate why: bash cannot hold NUL bytes in a variable, so `-z` output cannot be captured
+with `$(...)`, and `done < <(git diff …)` re-invokes git inside a process substitution whose exit
+status is unobservable — re-opening the A3 fail-open one layer down (Regression Guardian F4).
+A temp file is the only shape that gives ONE list, NUL-safe, with a checkable exit status.
+**Cost, stated rather than hidden:** if `mktemp` is unavailable the hook exits 1 and every commit
+touching a migration is blocked. That is the correct direction for a fail-closed gate, but it is a
+new hard dependency and is recorded here as a deliberate reversal, not a silent one.
+
+## OUTPUT PANEL — folded (Gemini · Regression Guardian · Integration)
+* **Gemini: both CRITICALs REFUTED by experiment.** "The `git show` exit-code check is
+  non-functional" — `if ! VAR=$(cmd)` propagates status; verified for failure, success, and a
+  missing blob. "printf format-string vulnerability" — the code is `printf '%s\n' "$VAR"`, which
+  prints payloads verbatim; the probe ran the genuinely unsafe form for contrast. Gemini's
+  suggested fix was what was already written. Its MEDIUM on duplicate list-building was fair and
+  is now resolved by the single-list rewrite.
+* **Regression Guardian: the 232-migration anchored-regex claim VERIFIED TRUE** (0 files regress).
+  Its F1 caught my commit message and code comment claiming four deleted tests "would have blocked
+  the fix" — **false and mechanically disprovable**; only one would have. Corrected in place.
+  F3 (quotePath fence claimed but absent — reproduced live: both hooks exited 0 on an unsafe
+  non-ASCII migration) and F4 (second `git diff` unobservable) are fixed by the single-list
+  rewrite; F2 (case-insensitivity had no behavioural lock) now has one.
+* **Integration F1 — the worst finding, and mine.** The node-guard test **never ran the hook**:
+  `PATH: '/nonexistent-bin'` made `execFileSync` fail to spawn *bash itself* (ENOENT → `status:
+  null` → my `?? 1` scored it a pass). Reverting the fix left it green — a new instance of the
+  exact false-assurance class this WF3 exists to remove, on the third attempt at the same test.
+  Now: PATH built from where bash/git actually live, bash spawned by absolute path (Windows
+  resolves the executable via the WINDOWS PATH), ENOENT asserted against, stderr content asserted,
+  and `ctx.skip()` if node cannot be excluded — **a test that cannot exercise its subject must not
+  report success. Verified by MUTATION: reverting the guard fails the test.**
+* Also folded: awk's exit status now checked (F4), `setEncoding('utf8')` before reading stdin (F6),
+  isolated missing-`-- UP` case (F5), the misleading empty DDL report on the fail-closed path, the
+  dead `continue-on-error` (the `if ! …; then` wrapper made the step always exit 0), the runbook's
+  "five scheduled workflows" (four block; the watchdog is now advisory), and Spec 115 §2.5 amended.
+
 > **PLAN LOCKED. Do you authorize this WF3 plan? (y/n)**
 > §11 note: Database Impact NO — this WF changes only *when and what* gets validated. Step 8 is
 > flagged as a separate operator ruling because it adds a credentialed workflow; steps 3-7 stand

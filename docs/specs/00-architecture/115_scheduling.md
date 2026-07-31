@@ -397,8 +397,16 @@ watchdog checks for it.
    completed backup still cannot be confirmed after the direct invocation → `exit 1`.
 
 **Workflow anatomy:** PG17-client install step (this workflow reaches `pg_dump` via the
-direct `backup-db.js` invocation, §3's mandate); `migrate.js --verify` pre-flight; the
-`SUPABASE_DATABASE_URL` non-empty guard (§3/§8's inertness note). `runs-on: ubuntu-latest`;
+direct `backup-db.js` invocation, §3's mandate); `migrate.js --verify` pre-flight
+(**AMENDED 2026-07-31 — ADVISORY here, `continue-on-error: true`, unlike the chain
+workflows.** §3's mandate is scoped to "every workflow that invokes `run-chain.js`", which
+this one does not. As a blocking step it sat AHEAD of the §6 backup fallback, so an
+unapplied migration would block every chain — including permits, whose final step is the
+primary backup — and then block the safety net that exists to cover exactly that, while
+reddening the watchdog for a reason indistinguishable from its own freshness alarm. It also
+falsified `1e405bce`'s recorded exit-code choreography, which states `freshness_recheck` is
+the ONLY step whose exit code determines the job conclusion; advisory restores that);
+the `SUPABASE_DATABASE_URL` non-empty guard (§3/§8's inertness note). `runs-on: ubuntu-latest`;
 `workflow_dispatch` active; `schedule:` block committed commented-out per §8/P3-D6 until
 Phase 4.3.
 

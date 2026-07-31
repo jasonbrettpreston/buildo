@@ -34,29 +34,40 @@ ROOT=$(git rev-parse --show-toplevel) || {
 }
 cd "$ROOT" || exit 1
 
-# git failure must not masquerade as "nothing staged".
-if ! ALL_STAGED=$(git diff --cached --name-only --diff-filter=ACM); then
+# ONE source of truth, NUL-delimited, exit status observable. Same three
+# constraints as the companion hook: git failure must not read as "nothing
+# staged"; bash cannot hold NUL in a variable so -z goes to a temp file; and a
+# second `git diff` inside a process substitution would have an unobservable
+# exit status, re-opening the fail-open one layer down. Filtering happens in
+# the loop because `core.quotePath` renders a non-ASCII path as
+# "migrations/\303\251.sql", which `grep -E '^migrations/'` does not match —
+# that silently skipped such a file entirely.
+STAGED_LIST=$(mktemp) || {
+  echo "ERROR: cannot create a temp file to list staged migrations." >&2
+  exit 1
+}
+trap 'rm -f "$STAGED_LIST"' EXIT
+
+if ! git diff --cached --name-only --diff-filter=ACM -z > "$STAGED_LIST"; then
   echo "ERROR: 'git diff --cached' failed — cannot determine staged migrations." >&2
   exit 1
 fi
 
-STAGED_MIGRATIONS=$(printf '%s\n' "$ALL_STAGED" | grep -E '^migrations/.*\.sql$' || true)
+STAGED_MIGRATIONS=()
+while IFS= read -r -d '' FILE; do
+  case "$FILE" in
+    migrations/*.sql) STAGED_MIGRATIONS+=("$FILE") ;;
+  esac
+done < "$STAGED_LIST"
 
-if [ -z "$STAGED_MIGRATIONS" ]; then
+if [ ${#STAGED_MIGRATIONS[@]} -eq 0 ]; then
   exit 0
 fi
 
 BAD_REPORT=""
 FAILED=0
 
-# NUL-delimited: filenames with spaces/newlines survive, and core.quotePath
-# cannot mangle a non-ASCII path into a silent skip.
-while IFS= read -r -d '' FILE; do
-  case "$FILE" in
-    migrations/*.sql) ;;
-    *) continue ;;
-  esac
-
+for FILE in "${STAGED_MIGRATIONS[@]}"; do
   # The bytes git would COMMIT, not the bytes on disk.
   if ! BLOB=$(git show ":$FILE" 2>/dev/null); then
     echo "ERROR: cannot read staged content for $FILE — refusing to validate the worktree instead." >&2
@@ -74,18 +85,30 @@ while IFS= read -r -d '' FILE; do
       print NR ": " $0
       exit
     }
-  ')
+  ') || {
+    # awk's exit status was previously unchecked — the same silent fail-open
+    # shape as the AD case this WF fixed, one layer down. An analyser that
+    # could not run has not cleared the file.
+    echo "ERROR: awk failed while scanning $FILE — refusing to treat that as clean." >&2
+    FAILED=1
+    continue
+  }
   if [ -n "$HIT" ]; then
     BAD_REPORT="${BAD_REPORT}
   ${FILE}:${HIT}"
     FAILED=1
   fi
-done < <(git diff --cached --name-only --diff-filter=ACM -z)
+done
 
 if [ "$FAILED" -eq 1 ]; then
   echo ""
-  echo "ERROR: Migration(s) staged with uncommented DDL under '-- DOWN':"
-  echo "$BAD_REPORT"
+  # Only print the DDL report when there IS one — FAILED can also be set by a
+  # git-show failure, and printing this header above an empty body told the
+  # operator to fix a problem the hook had not actually found.
+  if [ -n "$BAD_REPORT" ]; then
+    echo "ERROR: Migration(s) staged with uncommented DDL under '-- DOWN':"
+    echo "$BAD_REPORT"
+  fi
   echo ""
   echo "  scripts/migrate.js runs each .sql file as one transaction and"
   echo "  treats '-- DOWN' as a SQL comment, NOT a section directive."

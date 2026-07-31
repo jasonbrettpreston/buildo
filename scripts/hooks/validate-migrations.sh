@@ -26,17 +26,39 @@ ROOT=$(git rev-parse --show-toplevel) || {
 }
 cd "$ROOT" || exit 1
 
-# Separate the git call from the filter so a git failure is not swallowed by
-# command substitution. Previously an index lock or corrupt index produced an
-# empty list and the hook exited 0 having validated nothing.
-if ! ALL_STAGED=$(git diff --cached --name-only --diff-filter=ACM); then
+# ONE source of truth for the file list, NUL-delimited, with an OBSERVABLE exit
+# status. Three constraints force this shape:
+#   · git failure must not masquerade as "nothing staged" — command
+#     substitution swallows it, and an index lock then produced a clean exit 0
+#     having validated nothing;
+#   · bash cannot hold NUL bytes in a variable, so `-z` output cannot be
+#     captured with $(...) — it goes to a temp file;
+#   · `done < <(git diff …)` would run git a SECOND time inside a process
+#     substitution whose exit status is unobservable, re-opening the same
+#     fail-open one layer down. It is read from the file instead.
+STAGED_LIST=$(mktemp) || {
+  echo "ERROR: cannot create a temp file to list staged migrations." >&2
+  exit 1
+}
+trap 'rm -f "$STAGED_LIST"' EXIT
+
+if ! git diff --cached --name-only --diff-filter=ACM -z > "$STAGED_LIST"; then
   echo "ERROR: 'git diff --cached' failed — cannot determine staged migrations." >&2
   exit 1
 fi
 
-STAGED_MIGRATIONS=$(printf '%s\n' "$ALL_STAGED" | grep -E '^migrations/.*\.sql$' || true)
+# Filter in the loop, never with grep on a newline list: `core.quotePath` renders
+# a non-ASCII path as "migrations/\303\251.sql" (leading quote), which
+# `grep -E '^migrations/'` does NOT match — so a non-ASCII migration silently
+# skipped validation entirely. -z output is never quoted.
+STAGED_MIGRATIONS=()
+while IFS= read -r -d '' FILE; do
+  case "$FILE" in
+    migrations/*.sql) STAGED_MIGRATIONS+=("$FILE") ;;
+  esac
+done < "$STAGED_LIST"
 
-if [ -z "$STAGED_MIGRATIONS" ]; then
+if [ ${#STAGED_MIGRATIONS[@]} -eq 0 ]; then
   exit 0
 fi
 
@@ -52,14 +74,7 @@ fi
 
 FAILED=0
 
-# NUL-delimited so filenames with spaces or newlines survive, and so
-# core.quotePath cannot mangle a non-ASCII path into a silent skip.
-while IFS= read -r -d '' FILE; do
-  case "$FILE" in
-    migrations/*.sql) ;;
-    *) continue ;;
-  esac
-
+for FILE in "${STAGED_MIGRATIONS[@]}"; do
   # The bytes git would COMMIT, not the bytes on disk.
   if ! BLOB=$(git show ":$FILE" 2>/dev/null); then
     echo "ERROR: cannot read staged content for $FILE — refusing to validate the worktree instead." >&2
@@ -84,6 +99,12 @@ while IFS= read -r -d '' FILE; do
   # (validate-migration.js:164), so passing content on stdin loses nothing.
   if ! printf '%s\n' "$BLOB" | node -e '
     const { validateMigration } = require("./scripts/validate-migration.js");
+    // setEncoding BEFORE reading: without it each Buffer chunk is stringified
+    // separately, so a multi-byte UTF-8 character split across a 64 KB pipe
+    // boundary is corrupted. The old fs.readFileSync(file, "utf8") decoded the
+    // whole buffer at once. Inert today (largest migration is ~48 KB) and live
+    // the moment one exceeds the pipe chunk size.
+    process.stdin.setEncoding("utf8");
     let content = "";
     process.stdin.on("data", (d) => { content += d; });
     process.stdin.on("end", () => {
@@ -95,7 +116,7 @@ while IFS= read -r -d '' FILE; do
   ' "$FILE"; then
     FAILED=1
   fi
-done < <(git diff --cached --name-only --diff-filter=ACM -z)
+done
 
 if [ "$FAILED" -eq 1 ]; then
   echo ""

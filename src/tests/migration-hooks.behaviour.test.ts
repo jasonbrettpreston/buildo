@@ -133,7 +133,7 @@ describe('the hooks fail CLOSED, never open', () => {
     expect(runHook('check-migration-down-comments.sh')).toBe(1);
   });
 
-  it('validate-migrations.sh rejects when the node validator cannot run', () => {
+  it('validate-migrations.sh rejects when the node validator cannot run', (ctx) => {
     // `if command -v node` made the DROP guards, the NOT-NULL-DEFAULT check
     // and the CONCURRENTLY check OPTIONAL — the last is what catches an
     // ACCESS EXCLUSIVE lock on a large table. An unavailable validator is not
@@ -151,18 +151,81 @@ describe('the hooks fail CLOSED, never open', () => {
     // Sanity: with node available this same input is accepted.
     expect(runHook('validate-migrations.sh')).toBe(0);
 
-    const stripped = { ...process.env, PATH: '/nonexistent-bin', MSYS_NO_PATHCONV: '1' };
-    let code = 0;
+    // Build a PATH that still has bash AND git but NOT node. Getting this
+    // wrong is how this test has already failed twice: a PATH without bash
+    // means execFileSync cannot spawn bash itself (ENOENT, status null), and a
+    // `?? 1` fallback scored that as a pass while the hook never ran. If node
+    // cannot actually be excluded on this platform, SKIP loudly — a test that
+    // cannot exercise its subject must not report success.
+    const dirOf = (cmd: string): string | null => {
+      try {
+        const p = execFileSync('bash', ['-lc', `command -v ${cmd}`], { stdio: 'pipe' })
+          .toString().trim();
+        return p ? p.replace(/\/[^/]+$/, '') : null;
+      } catch {
+        return null;
+      }
+    };
+    const bashDir = dirOf('bash');
+    const gitDir = dirOf('git');
+    if (!bashDir || !gitDir) {
+      ctx.skip();
+      return;
+    }
+    const leanPath = [bashDir, gitDir].join(':');
+    let nodeStillFound = true;
     try {
-      execFileSync('bash', [join(ROOT, 'scripts', 'hooks', 'validate-migrations.sh')], {
+      execFileSync('bash', ['-c', 'command -v node'], {
+        stdio: 'pipe',
+        env: { ...process.env, PATH: leanPath },
+      });
+    } catch {
+      nodeStillFound = false;
+    }
+    if (nodeStillFound) {
+      ctx.skip(); // cannot exclude node here; refuse to fake a pass
+      return;
+    }
+
+    // Spawn bash by ABSOLUTE path. On Windows, Node resolves the executable
+    // through the WINDOWS PATH, so handing it a POSIX PATH breaks the spawn
+    // rather than the hook — the failure mode this test keeps hitting.
+    let bashExe: string;
+    try {
+      bashExe = execFileSync('bash', ['-lc', 'cygpath -w "$(command -v bash)" 2>/dev/null || command -v bash'], {
+        stdio: 'pipe',
+      }).toString().trim();
+    } catch {
+      ctx.skip();
+      return;
+    }
+    if (!bashExe) {
+      ctx.skip();
+      return;
+    }
+
+    const stripped = { ...process.env, PATH: leanPath, MSYS_NO_PATHCONV: '1' };
+    let code = 0;
+    let stderr = '';
+    let spawnCode: string | undefined;
+    try {
+      execFileSync(bashExe, [join(ROOT, 'scripts', 'hooks', 'validate-migrations.sh')], {
         cwd: repo,
         stdio: 'pipe',
         env: stripped,
       });
     } catch (err) {
-      code = (err as { status?: number }).status ?? 1;
+      const e = err as { status?: number | null; code?: string; stderr?: Buffer };
+      spawnCode = e.code;
+      code = typeof e.status === 'number' ? e.status : -1;
+      stderr = e.stderr?.toString() ?? '';
     }
+
+    // If bash could not be spawned, this test proves nothing — say so loudly
+    // rather than passing.
+    expect(spawnCode, 'bash itself failed to spawn — the hook never ran').not.toBe('ENOENT');
     expect(code).toBe(1);
+    expect(stderr).toContain('node is required');
   });
 });
 
@@ -182,6 +245,67 @@ describe('the hooks keep passing what they should pass', () => {
 
     expect(runHook('validate-migrations.sh')).toBe(0);
     expect(runHook('check-migration-down-comments.sh')).toBe(0);
+  });
+
+  it('marker matching stays case-insensitive and whitespace-tolerant', () => {
+    // `grep -qiE` and the `[[:space:]]*` allowances were a deliberate choice
+    // (fe5080c3) pinned ONLY by a deleted source-string test. The behavioural
+    // suite used exclusively uppercase `-- UP`, so dropping -i would have gone
+    // unnoticed — the one marker property this WF actually touched (anchoring)
+    // was the one with no behavioural lock.
+    const file = join(repo, 'migrations', '907_probe.sql');
+    writeFileSync(file, '  --   up\nSELECT 1;\n\n\t-- Down\n--   DROP TABLE x;\n');
+    git(['add', 'migrations/907_probe.sql']);
+
+    expect(runHook('validate-migrations.sh')).toBe(0);
+  });
+
+  it('anchored markers still reject a near-miss like -- UPDATE / -- DOWNGRADE', () => {
+    // The anchoring this WF added: these words must NOT satisfy the markers.
+    const file = join(repo, 'migrations', '908_probe.sql');
+    writeFileSync(file, '-- UPDATE the widgets\nSELECT 1;\n-- DOWNGRADE notes\n');
+    git(['add', 'migrations/908_probe.sql']);
+
+    expect(runHook('validate-migrations.sh')).toBe(1);
+  });
+
+  it('catches INDENTED DDL under DOWN, and a hyphen-banner DOWN marker', () => {
+    // Both hardenings came from an adversarial review (e5a9a67e) and were
+    // verified only by a manual integration test — never locked.
+    const indented = join(repo, 'migrations', '909_probe.sql');
+    writeFileSync(indented, '-- UP\nSELECT 1;\n\n-- DOWN\n    DROP TABLE permits;\n');
+    git(['add', 'migrations/909_probe.sql']);
+    expect(runHook('check-migration-down-comments.sh')).toBe(1);
+
+    const banner = join(repo, 'migrations', '910_probe.sql');
+    writeFileSync(banner, '-- UP\nSELECT 1;\n\n-- ==== DOWN ====\nDROP TABLE permits;\n');
+    git(['add', 'migrations/910_probe.sql']);
+    expect(runHook('check-migration-down-comments.sh')).toBe(1);
+  });
+
+  it('a NON-ASCII filename cannot skip validation (core.quotePath)', () => {
+    // Reproduced by the Regression Guardian: git renders a non-ASCII path as
+    // "migrations/\303\251probe.sql" in non -z output, `grep -E '^migrations/'`
+    // misses the leading quote, the early-exit guard saw an empty list, and
+    // BOTH hooks exited 0 on an unsafe migration. The comment claimed this was
+    // closed while only the loop was NUL-safe — a stated-but-absent fence,
+    // which is the exact defect class this WF exists to remove.
+    const file = join(repo, 'migrations', '911_éprobe.sql');
+    writeFileSync(file, UNSAFE);
+    git(['add', 'migrations/911_éprobe.sql']);
+
+    expect(runHook('validate-migrations.sh')).toBe(1);
+  });
+
+  it('rejects a missing -- UP marker IN ISOLATION', () => {
+    // The UNSAFE fixture trips the node validator at the same time, so the
+    // marker check was never exercised on its own. This content is otherwise
+    // valid: only the UP marker is absent.
+    const file = join(repo, 'migrations', '912_probe.sql');
+    writeFileSync(file, 'SELECT 1;\n\n-- DOWN\n--   SELECT 2;\n');
+    git(['add', 'migrations/912_probe.sql']);
+
+    expect(runHook('validate-migrations.sh')).toBe(1);
   });
 
   it('a filename containing a space is still validated', () => {
