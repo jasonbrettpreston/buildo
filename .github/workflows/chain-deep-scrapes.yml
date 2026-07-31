@@ -274,6 +274,20 @@ jobs:
           # These are the recon's MEASURED values, not guesses, and they are the same
           # properties scripts/tests/test_scraper_config.py::TestAkamaiTunedBackoff
           # asserts. Plan ruling P4 makes setting them a precondition of dispatching.
+          #
+          # MEASUREMENT CITATION (the C-W merge gate requires these values be
+          # tied to the runs that justify them, not merely asserted):
+          #   30577993600 — 12 permits, browser transport, threshold 3 / base 90s:
+          #     proxy_errors 0, consecutive_empty_max 1, no WAF trap fired.
+          #   30581163413 — 60 permits, same constants: consecutive_empty_max 1
+          #     across 8 batches, 0 proxy errors, 31 permits scraped.
+          #   30589243948 — 60 permits, HTTP transport: 0 proxy errors, 34 found,
+          #     85 rows, 10 rotations, no trap.
+          # No run under these values has produced a WAF block, so threshold 3 has
+          # never actually fired in anger — it is bounded-safe rather than
+          # empirically tuned. The retry base is unexercised for the same reason.
+          # Re-derive both from a run that DOES get blocked before the cron is
+          # re-enabled; until then they are conservative, not proven.
           SCRAPER_WAF_TRAP_THRESHOLD: '3'
           SCRAPER_RETRY_BASE_MS: '90000'
           # HARD CAP for validation dispatches. Without it a "first validation" is an

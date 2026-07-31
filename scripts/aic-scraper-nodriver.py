@@ -2829,10 +2829,14 @@ def compute_summary(tel, start_ms):
                 # countable in the run report, not only in stdout.
                 'noise_visits': tel.get('noise_visits', 0),
                 # Which transport actually ran, and what it cost. The relay's
-                # own counters can miss a short HTTP run entirely (its periodic
-                # reporter may never fire before teardown), so the transport
-                # counts its own bytes and they are the authoritative figure
-                # for this path.
+                # own counters land AFTER this summary is emitted on the HTTP
+                # path (the relay is torn down in main's finally), so they read
+                # 0 here. These transport counters are the available figure —
+                # but they are NOT the billed one: `len(resp.content)` counts
+                # DECOMPRESSED response bodies and excludes request bytes,
+                # headers, TLS and CONNECT overhead. For metered cost use the
+                # relay's per-host wire bytes from a completed run's log
+                # (run 30589243948: 396,836 B for 60 permits).
                 'transport': tel.get('transport', TRANSPORT_BROWSER),
                 'http_requests': tel.get('http_requests', 0),
                 'http_bytes_down': tel.get('http_bytes_down', 0),

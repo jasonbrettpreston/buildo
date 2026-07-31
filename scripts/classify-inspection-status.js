@@ -41,11 +41,24 @@ pipeline.run('classify-inspection-status', async (pool) => {
     // Excludes scraped_at (pipeline metadata, refreshed nightly — not business data)
     // and last_seen_at (refreshed by nightly permit scraper — grants false immunity).
     const stalledResult = await client.query(
+      // FEED-STATUS GUARD (2026-07-30). Retiring the stage-derived
+      // 'Inspections Complete' means an all-passed permit now lands in
+      // 'Active Inspection' — which is exactly what this step targets. Without
+      // this guard every FINISHED permit drifts to 'Stalled' once its last
+      // inspection ages past staleDays, and populate_queue never re-queues
+      // 'Stalled', so the state is sticky. The portal can no longer tell us a
+      // permit is done (it lists only PASSED stages), but the CKAN feed can:
+      // permits.status carries the city's own lifecycle word. A permit the
+      // feed calls closed is not stalled, whatever its stage dates say.
       `UPDATE permits p
        SET enriched_status = 'Stalled',
            last_seen_at = $2::timestamptz
        WHERE p.enriched_status = 'Active Inspection'
          AND p.revision_num = '00'
+         AND COALESCE(p.status, '') NOT IN (
+           'Pending Closed', 'Closed', 'Completed', 'Permit Closed',
+           'Cancelled', 'Pending Cancellation', 'Revoked', 'Withdrawn'
+         )
          AND GREATEST(
            (SELECT MAX(pi.inspection_date)
             FROM permit_inspections pi

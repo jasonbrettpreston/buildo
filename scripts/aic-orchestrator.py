@@ -280,6 +280,22 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
                 worker_tel['permits_attempted'] += sc_tel.get('permits_attempted', 0)
                 worker_tel['permits_found'] += sc_tel.get('permits_found', 0)
                 worker_tel['permits_scraped'] += sc_tel.get('permits_scraped', 0)
+                # Transport/cost fields. run-chain.js keeps the LAST
+                # PIPELINE_SUMMARY (this file's aggregate), so anything the
+                # worker emits and we do not carry never reaches pipeline_runs
+                # — the whole bandwidth campaign and the http/browser switch
+                # would be visible only in raw GH job logs, and a silent
+                # regression to the browser transport would be undetectable
+                # from the DB.
+                worker_tel['transport'] = sc_tel.get('transport', worker_tel.get('transport'))
+                for field in ('http_requests', 'http_bytes_down', 'relay_bytes_up',
+                              'relay_bytes_down', 'relay_blocked', 'noise_visits',
+                              'resources_allowed', 'resources_blocked'):
+                    worker_tel[field] = worker_tel.get(field, 0) + (sc_tel.get(field) or 0)
+                for host, n in (sc_tel.get('relay_bytes_by_host') or {}).items():
+                    worker_tel.setdefault('relay_bytes_by_host', {})
+                    worker_tel['relay_bytes_by_host'][host] = \
+                        worker_tel['relay_bytes_by_host'].get(host, 0) + n
                 worker_tel['not_found_count'] += sc_tel.get('not_found_count', 0)
                 for outcome, n in (sc_tel.get('not_found_breakdown') or {}).items():
                     worker_tel['not_found_breakdown'][outcome] = \
@@ -337,6 +353,14 @@ def aggregate_telemetry(worker_results):
         agg['permits_attempted'] += w.get('permits_attempted', 0)
         agg['permits_found'] += w.get('permits_found', 0)
         agg['permits_scraped'] += w.get('permits_scraped', 0)
+        agg['transport'] = w.get('transport', agg.get('transport'))
+        for field in ('http_requests', 'http_bytes_down', 'relay_bytes_up',
+                      'relay_bytes_down', 'relay_blocked', 'noise_visits',
+                      'resources_allowed', 'resources_blocked'):
+            agg[field] = agg.get(field, 0) + (w.get(field) or 0)
+        for host, n in (w.get('relay_bytes_by_host') or {}).items():
+            agg.setdefault('relay_bytes_by_host', {})
+            agg['relay_bytes_by_host'][host] = agg['relay_bytes_by_host'].get(host, 0) + n
         agg['not_found_count'] += w.get('not_found_count', 0)
         for outcome, n in (w.get('not_found_breakdown') or {}).items():
             agg['not_found_breakdown'][outcome] = agg['not_found_breakdown'].get(outcome, 0) + n
@@ -491,6 +515,16 @@ async def main():
                 'permits_scraped': agg['permits_scraped'],
                 'not_found_count': agg['not_found_count'],
                 'not_found_breakdown': agg.get('not_found_breakdown', {}),
+                # Carried from the worker so the DB, not just the job log,
+                # records which transport ran and what it cost.
+                'transport': agg.get('transport'),
+                'http_requests': agg.get('http_requests', 0),
+                'http_bytes_down': agg.get('http_bytes_down', 0),
+                'relay_bytes_up': agg.get('relay_bytes_up', 0),
+                'relay_bytes_down': agg.get('relay_bytes_down', 0),
+                'relay_bytes_by_host': agg.get('relay_bytes_by_host', {}),
+                'relay_blocked': agg.get('relay_blocked', 0),
+                'noise_visits': agg.get('noise_visits', 0),
                 'enriched_updates': agg['enriched_updates'],
                 'proxy_errors': agg['proxy_errors'],
                 'consecutive_empty_max': agg['consecutive_empty_max'],
