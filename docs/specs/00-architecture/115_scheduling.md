@@ -415,6 +415,42 @@ Phase 4.3.
 freshness block reading the same `pipeline_runs` facts this workflow checks — an operator
 looking at the dashboard sees the same freshness picture the watchdog alerts on, not a
 second, independently-derived one.
+
+### 2.6 `apply-migrations.yml` — operator-dispatched migration apply (WF3 2026-07-31)
+
+`.github/workflows/apply-migrations.yml` is the first **audited cloud migration-apply
+path** (runbook §3 rule 2a's preferred vehicle, replacing the laptop-`.env` ad-hoc
+command, which remains the documented fallback). It is **not a chain**: it never invokes
+`run-chain.js` and writes no `pipeline_runs` row — its audit record is the GitHub run log
+itself (dispatched ref + `git log -1 -- migrations/` + actor, echoed at job start).
+
+Contract (shape-locked by `src/tests/apply-migrations-workflow.infra.test.ts`):
+
+- **`workflow_dispatch` ONLY** — never any automated trigger (push/pull_request/schedule);
+  the `1e405bce` fence generalizes here because the dispatch + environment approval IS the
+  authorization model. `permissions: contents: read`; `timeout-minutes: 15`; the F8
+  `${{ github.workflow }}` concurrency group with `cancel-in-progress: false`.
+- **Environment-gated:** the single job runs under `environment: production-db`
+  (operator-configured: required reviewer + deployment-branch policy "any branch";
+  `can_admins_bypass` default true matches the single-operator intent).
+- **`dry_run` input defaults `'true'`:** the default run verifies, gates on drift, and
+  prints the real `migrate.js --dry-run` would-apply listing — no writes. Only
+  `dry_run=false` reaches the apply, post-apply verify, and INVALID-index gate steps.
+- **Drift-abort:** the pre-state `migrate.js --verify` is advisory
+  (bare-`run:` + `continue-on-error: true`, §2.5's watchdog pattern), and a following
+  gate parses its `Verify: N missing, M drift` line — `drift > 0` hard-aborts (apply mode
+  silently SKIPS drifted files with a WARN, so applying past drift records a partial
+  truth); MISSING-only proceeds, that being the workflow's purpose.
+- **Port guard:** refuses a `SUPABASE_DATABASE_URL` targeting `:6543` (Supavisor
+  transaction pooler — CONCURRENTLY-unsafe) without echoing the value.
+- **Post-apply INVALID-index gate:** `SELECT indexrelid::regclass FROM pg_index WHERE NOT
+  indisvalid` fails the run naming any row — the killed-`CREATE INDEX CONCURRENTLY` blind
+  spot `--verify` (checksums only) can never see. An `if: failure()` post-mortem re-runs
+  `--verify` and prints the `schema_migrations` tail + the same INVALID-index query.
+- Shares §3's env anatomy (`SUPABASE_DATABASE_URL` secret, committed CA at
+  `scripts/certs/supabase-ca.pem`, empty-secret guard). Note the per-statement 2-min
+  cluster `statement_timeout` cap applies to `migrate.js`'s raw Pool (the fa9e984c unbind
+  is `pipeline.js`-only) — documented in runbook §3 rule 2a.
 </architecture>
 
 ---

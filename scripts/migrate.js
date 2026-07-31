@@ -167,9 +167,10 @@ async function run() {
       console.error(
         `\n  ${missing} migration(s) are committed but NOT APPLIED to this database.` +
         '\n  Until they are, migrate.js --verify fails the pre-flight in the scheduled' +
-        '\n  chain workflows — nothing in CI applies migrations.' +
-        '\n\n  Apply (runbook §3 rule 2a — direct/session mode, port 5432, never the pooler):' +
-        '\n    SUPABASE_CA_CERT_PATH=supabase/prod-ca-2021.crt node -r dotenv/config \\' +
+        '\n  chain workflows — nothing applies migrations automatically.' +
+        '\n\n  Apply: dispatch apply-migrations.yml (dry_run=false) — see runbook §3 rule 2a.' +
+        '\n  Laptop fallback (direct/session mode, port 5432, never the pooler):' +
+        '\n    SUPABASE_CA_CERT_PATH=scripts/certs/supabase-ca.pem node -r dotenv/config \\' +
         '\n      -e "process.env.DATABASE_URL = process.env.SUPABASE_DATABASE_URL; require(\'./scripts/migrate.js\');"' +
         '\n  Then re-run this verify.',
       );

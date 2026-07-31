@@ -261,8 +261,12 @@ workflows and is not load-bearing for the watchdog's own work.
       worktree-good, **assert exit 1 from BOTH hooks**, plus the `AD` staged-only case.
 - [ ] 7. **B3 messages** — MISSING vs DRIFT distinct; MISSING prints the apply command + runbook
       anchor (meaningful only after step 3 exists).
-- [ ] 8. *(Operator ruling needed)* `apply-migrations.yml`, `workflow_dispatch`-only, behind a
-      GitHub Environment with a required reviewer. **Not** auto-apply. First audited apply path.
+- [x] 8. **DONE by the child WF3 (2026-07-31)** — `.cursor/wf3_apply_migrations_workflow.md`
+      (operator ruled "WF3 on 1"): `apply-migrations.yml`, `workflow_dispatch`-only, behind the
+      `production-db` Environment with a required reviewer. **Not** auto-apply. First audited
+      apply path. Shape-locked by `src/tests/apply-migrations-workflow.infra.test.ts`.
+      Residual operator step: create the environment + reviewer + "any branch" policy
+      (that plan's step 8).
 - [ ] 9. Full gate (`npm run test:py`, `npm run test`, typecheck, lint), commit, push.
 - [ ] 10. Output panel on the diff.
 

@@ -1,0 +1,248 @@
+# apply-migrations.yml — the first audited cloud migration-apply path.
+#
+# CONTRACT (Spec 115 §2.6; runbook §3 rule 2a; PLAN .cursor/wf3_apply_migrations_workflow.md):
+#   · workflow_dispatch ONLY — NEVER add push/pull_request/schedule triggers.
+#     The 1e405bce fence forbids pull_request-family triggers on credentialed
+#     workflows; here EVERY automated trigger is forbidden, because the
+#     dispatch + `production-db` environment approval IS the authorization
+#     model (required reviewer + deployment-branch policy "any branch" are
+#     operator-configured on the environment, not in this file).
+#   · dry_run defaults 'true': the default run verifies, gates on drift, and
+#     lists what WOULD apply (migrate.js --dry-run) — it mutates nothing.
+#   · Drift ABORTS before apply: migrate.js apply mode silently SKIPS drifted
+#     files with a WARN, so applying past drift would record a partial truth
+#     as a clean apply. MISSING-only proceeds — applying missing files is the
+#     point of this workflow.
+#   · Post-apply INVALID-index gate: a killed CREATE INDEX CONCURRENTLY
+#     leaves an INVALID index that IF NOT EXISTS then skips forever while
+#     --verify (checksums only) stays green — pg_index.indisvalid is the
+#     only signal that the index is permanently broken.
+#   · statement_timeout cap: migrate.js builds its own raw Pool (the
+#     fa9e984c unbind is pipeline.js-only), so cloud DDL runs under the
+#     cluster-default 2-minute statement_timeout PER STATEMENT. A migration
+#     expecting any single statement to exceed ~2 min needs its own plan —
+#     do not dispatch it here.
+#   · Annotations (::error/::notice) go to the job log; this workflow writes
+#     nothing to $GITHUB_OUTPUT (the watchdog stdout-swallowing lesson —
+#     review_followups 2026-07-31: outputs and annotations stay separate).
+#
+# SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.6
+# SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §4, §7
+# SPEC LINK: docs/runbook/README.md §3 rule 2a
+# SHAPE LOCK: src/tests/apply-migrations-workflow.infra.test.ts
+
+name: apply-migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        type: choice
+        default: 'true'
+        options:
+          - 'true'
+          - 'false'
+        description: >-
+          true = verify + list what WOULD apply (no writes); false = APPLY
+          for real (gated by production-db environment approval)
+
+# Fold D4: this workflow needs nothing beyond reading the repo contents it
+# checked out — DB authority comes from the SUPABASE_DATABASE_URL secret,
+# never from the GITHUB_TOKEN.
+permissions:
+  contents: read
+
+jobs:
+  apply-migrations:
+    runs-on: ubuntu-latest
+    environment: production-db   # required reviewer gates the job start (operator-configured; P1/G1)
+    timeout-minutes: 15
+    concurrency:
+      group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name so a
+      cancel-in-progress: false       # future rename can't drift the concurrency group out of
+                                      # sync (queue, never cancel a DDL run mid-flight)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history — the audit step below prints the last migrations/ commit
+
+      - name: Audit — dispatched ref + last migrations/ commit
+        # An audit record in the log, not a pre-approval gate (plan D6 rejection):
+        # which ref ran, which commit last touched migrations/, who dispatched.
+        run: |
+          echo "ref=${{ github.ref }} sha=${{ github.sha }} actor=${{ github.actor }} dry_run=${{ inputs.dry_run }}"
+          echo "--- last commit touching migrations/ ---"
+          git log -1 -- migrations/
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Guard — environment (SUPABASE_DATABASE_URL + CA cert)
+        id: env_guard
+        env: &pipeline-env
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+        run: |
+          # A missing GitHub secret interpolates to an empty string and does
+          # NOT, on its own, fail a workflow (Spec 115 §3/§8/G9). This guard
+          # protects a dispatch from silently no-op-ing against an empty
+          # connection string.
+          if [ -z "$SUPABASE_DATABASE_URL" ]; then
+            echo "::error::SUPABASE_DATABASE_URL is empty — refusing to proceed (Spec 115 §3/§4 item 3 fail-safe-loud posture)."
+            exit 1
+          fi
+          # CA-pinned verify-full TLS (Spec 113 §4) requires the committed CA
+          # PEM to actually be present in the checked-out workspace.
+          if [ ! -f "$SUPABASE_CA_CERT_PATH" ]; then
+            echo "::error::CA cert not found at SUPABASE_CA_CERT_PATH=$SUPABASE_CA_CERT_PATH — every non-loopback connection in this workflow requires it (Spec 113 §4.2/§4.3)."
+            exit 1
+          fi
+
+      - name: Guard — refuse the 6543 transaction pooler (Fold D2)
+        shell: bash
+        env: *pipeline-env
+        run: |
+          # CREATE INDEX CONCURRENTLY cannot run through Supavisor transaction
+          # pooling, and migrate.js routes CONCURRENTLY files outside a
+          # transaction. Apply must use session mode (port 5432) — runbook §3
+          # rule 2a. The URL value itself is never echoed.
+          case "$SUPABASE_DATABASE_URL" in
+            *:6543*)
+              echo "::error::SUPABASE_DATABASE_URL targets port 6543 (Supavisor transaction pooler) — migrations must use session mode, port 5432 (runbook §3 rule 2a). The value is not printed."
+              exit 1
+              ;;
+          esac
+          echo "Port guard OK — not the transaction pooler."
+
+      # NOTE the bare `run:` — do NOT wrap this in `if ! …; then echo; fi`.
+      # That swallows the exit code, so the step renders GREEN and
+      # `continue-on-error` becomes dead configuration. Letting the step fail
+      # renders "failed (continued)", the stronger operator signal, while
+      # `continue-on-error` keeps the job going so the drift gate below can
+      # adjudicate WHY it failed (pipeline-watchdog.yml:101-115 pattern).
+      # `shell: bash` gives pipefail, so migrate.js's exit code survives tee.
+      - name: Pre-state — migrate.js --verify (advisory; drift gate adjudicates below)
+        id: pre_verify
+        continue-on-error: true
+        shell: bash
+        run: node scripts/migrate.js --verify 2>&1 | tee migrate-verify-pre.log
+        env: *pipeline-env
+
+      - name: Gate — drift aborts, missing proceeds (Fold G3)
+        shell: bash
+        run: |
+          # Apply mode silently SKIPS drifted files with a WARN (migrate.js
+          # drift branch), so drift MUST abort here — the pre-verify step is
+          # the only thing standing between a drifted file and a "clean" apply
+          # that quietly excluded it. MISSING-only is the normal case: those
+          # are exactly the files this workflow exists to apply.
+          line=$(grep -E '^Verify: [0-9]+ missing, [0-9]+ drift$' migrate-verify-pre.log | tail -1 || true)
+          if [ -z "$line" ]; then
+            echo "::error::Pre-state verify produced no parseable summary line (expected: Verify: N missing, M drift) — refusing to proceed blind. See the pre_verify step log."
+            exit 1
+          fi
+          missing=$(echo "$line" | sed -E 's/^Verify: ([0-9]+) missing, ([0-9]+) drift$/\1/')
+          drift=$(echo "$line" | sed -E 's/^Verify: ([0-9]+) missing, ([0-9]+) drift$/\2/')
+          echo "Pre-state: missing=$missing drift=$drift"
+          if [ "$drift" -gt 0 ]; then
+            echo "::error::$drift DRIFT migration(s) detected — ABORTING before apply. Apply mode silently SKIPS drifted files, which would record a partial truth as a clean apply. Investigate first (runbook §3 rule 2); known CRLF class: node scripts/analysis/reconcile-migration-checksums.js --target=cloud"
+            exit 1
+          fi
+          if [ "$missing" -gt 0 ]; then
+            echo "::notice::$missing MISSING migration(s) would be applied by an apply run:"
+            grep -E '^ *MISSING:' migrate-verify-pre.log || true
+          else
+            echo "::notice::No MISSING migrations — an apply run would be a no-op (pre-state verify green)."
+          fi
+
+      - name: Dry-run — the real would-apply listing (Fold I1)
+        run: node scripts/migrate.js --dry-run
+        env: *pipeline-env
+
+      # ---- Everything below runs ONLY on dry_run=false (the REAL apply). ----
+
+      - name: Apply migrations (REAL — stops at first failure; seeds logic variables after)
+        if: inputs.dry_run == 'false'
+        run: node scripts/migrate.js
+        env: *pipeline-env
+
+      - name: Post-apply verify — must be green
+        # NOT continue-on-error — this verify's exit code must redden the job.
+        if: inputs.dry_run == 'false'
+        run: node scripts/migrate.js --verify
+        env: *pipeline-env
+
+      - name: Gate — no INVALID indexes left behind (Fold RC-a)
+        # Failure trace this closes: a killed CREATE INDEX CONCURRENTLY leaves
+        # an INVALID index; the file stays MISSING (no bookkeeping row); on
+        # retry IF NOT EXISTS silently skips the broken index, the file
+        # records as applied, and --verify (checksums only) is green FOREVER.
+        # This query is the only thing that would ever see it.
+        if: inputs.dry_run == 'false'
+        shell: bash
+        env: *pipeline-env
+        run: |
+          node -e '
+            const { Pool } = require("pg");
+            const { resolveSslConfig, stripSslParams } = require("./scripts/lib/ssl-config");
+            const connStr = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
+            const pool = new Pool({
+              connectionString: stripSslParams(connStr),
+              ssl: resolveSslConfig({ connectionString: connStr }),
+            });
+            pool
+              .query("SELECT indexrelid::regclass AS idx FROM pg_index WHERE NOT indisvalid")
+              .then((res) => {
+                if (res.rows.length > 0) {
+                  for (const r of res.rows) {
+                    console.log("::error::INVALID index left behind: " + r.idx + " — a killed CREATE INDEX CONCURRENTLY leaves a broken index that IF NOT EXISTS silently skips on retry while --verify stays green. Recover with DROP INDEX + rebuild, or REINDEX INDEX CONCURRENTLY (runbook §3 rule 2a).");
+                  }
+                  process.exitCode = 1;
+                } else {
+                  console.log("INVALID-index gate: clean — zero pg_index rows with indisvalid = false.");
+                }
+                return pool.end();
+              })
+              .catch((err) => {
+                console.log("::error::INVALID-index gate query failed: " + err.message);
+                process.exitCode = 1;
+                return pool.end().catch(() => {});
+              });
+          '
+
+      - name: Post-mortem — state snapshot (only on failure, Fold D3)
+        # So the operator sees exactly which migrations committed and whether
+        # a broken index was left behind, without a laptop round-trip.
+        if: failure()
+        shell: bash
+        env: *pipeline-env
+        run: |
+          echo "=== migrate.js --verify (post-failure state) ==="
+          node scripts/migrate.js --verify || true
+          echo "=== schema_migrations tail + INVALID indexes ==="
+          node -e '
+            const { Pool } = require("pg");
+            const { resolveSslConfig, stripSslParams } = require("./scripts/lib/ssl-config");
+            const connStr = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
+            const pool = new Pool({
+              connectionString: stripSslParams(connStr),
+              ssl: resolveSslConfig({ connectionString: connStr }),
+            });
+            (async () => {
+              const tail = await pool.query("SELECT filename, applied_at, duration_ms FROM schema_migrations ORDER BY applied_at DESC LIMIT 10");
+              console.log("schema_migrations tail (latest 10):");
+              for (const r of tail.rows) {
+                console.log("  " + r.filename + "  " + r.applied_at.toISOString() + "  " + r.duration_ms + "ms");
+              }
+              const invalid = await pool.query("SELECT indexrelid::regclass AS idx FROM pg_index WHERE NOT indisvalid");
+              console.log("INVALID indexes: " + (invalid.rows.length === 0 ? "none" : invalid.rows.map((r) => String(r.idx)).join(", ")));
+              await pool.end();
+            })().catch((err) => {
+              console.log("post-mortem query failed: " + err.message);
+              return pool.end().catch(() => {});
+            });
+          ' || true
