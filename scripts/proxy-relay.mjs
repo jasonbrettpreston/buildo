@@ -198,10 +198,24 @@ function reportBytes() {
 const bytesReporter = setInterval(reportBytes, 5000);
 bytesReporter.unref();
 
+/** Strip `user:pass@` from any URL embedded in a string. */
+function redactCredentials(text) {
+  return String(text ?? '').replace(/\/\/[^/@\s]*@/g, '//***@');
+}
+
 server.on('requestFailed', ({ request, error }) => {
-  // Never echo the upstream URL — it carries credentials.
+  // The old comment here said "Never echo the upstream URL — it carries
+  // credentials", and that was true of request.url and FALSE of error.message
+  // on the very same line: proxy-chain interpolates the FULL credentialed
+  // upstream URL into its throw messages (dist/server.js:407,410 — it has a
+  // redactUrl() helper and uses it for its own logging, but not there). That
+  // message then flowed to stderr -> the scraper's sampler ->
+  // relay_stderr_samples -> records_meta -> pipeline_runs -> the admin UI.
+  // Deterministically triggerable: an unvalidated PROXY_SCHEME, or whitespace
+  // in PROXY_HOST, makes new URL() throw on the first request. Redact BOTH.
   process.stderr.write(
-    `proxy-relay: request failed for ${request && request.url}: ${error && error.message}\n`
+    `proxy-relay: request failed for ${redactCredentials(request && request.url)}: ` +
+    `${redactCredentials(error && error.message)}\n`
   );
 });
 

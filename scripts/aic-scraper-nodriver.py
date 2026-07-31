@@ -894,6 +894,21 @@ def start_proxy_relay(session_id, worker_id=None, timeout=30):
     terminate_spawned_relay(worker_id)
     raise RuntimeError(f'Proxy relay did not report a listening URL within {timeout}s')
 
+_CREDENTIAL_IN_URL = re.compile(r'//[^/@\s]*@')
+
+
+def redact_credentials(text):
+    """Strip `user:pass@` from any URL embedded in a string.
+
+    The relay's upstream URL carries the Decodo password, and proxy-chain
+    interpolates that full URL into its throw messages. Anything derived from
+    relay stderr is persisted into records_meta -> pipeline_runs and rendered
+    by the admin pipeline-history API, so an unredacted message is a durable,
+    UI-visible credential leak.
+    """
+    return _CREDENTIAL_IN_URL.sub('//***@', str(text if text is not None else ''))
+
+
 def _relay_summary():
     """Aggregate every worker's relay stderr counters for the run summary."""
     total = {'blocked': 0, 'lines': 0, 'samples': [], 'bytes_up': 0, 'bytes_down': 0,
@@ -959,9 +974,16 @@ def _drain_relay_stderr(proc, worker_id=None):
                 # `TypeError` in the page tells you a request failed; only the
                 # relay can tell you WHY it failed, and until now those lines died
                 # on a pipe nobody read.
-                if text and len(counts['samples']) < RELAY_STDERR_SAMPLES:
-                    counts['samples'].append(text[:200])
-                    log('WARN', '[scraper]', f'relay: {text[:200]}',
+                # Redact here TOO, not only at the relay. These samples are
+                # persisted into records_meta -> pipeline_runs and rendered by
+                # the admin pipeline-history API, so this is the last gate
+                # before a credential becomes durable and visible. Defence in
+                # depth: the relay redacts what it writes, and we never trust
+                # that an upstream we do not own kept its promise.
+                safe = redact_credentials(text)[:200]
+                if safe and len(counts['samples']) < RELAY_STDERR_SAMPLES:
+                    counts['samples'].append(safe)
+                    log('WARN', '[scraper]', f'relay: {safe}',
                         {'event': 'proxy_relay_stderr', 'worker_id': worker_id})
         except (ValueError, OSError):
             pass  # pipe closed on teardown — expected
