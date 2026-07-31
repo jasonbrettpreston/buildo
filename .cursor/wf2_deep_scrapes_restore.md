@@ -24,6 +24,81 @@ Nine rulings lived only in the adjudication log and two body sections still asse
 7. **`scripts/proxy-relay.mjs:17-25`** — the file's own header still says "WHY THE ALLOWLIST … Deny-by-default," contradicting its line 46. Add it to Step 8's named edits, or F-REL's phantom CRITICAL regenerates from source on the next review.
 8. **Wording discipline** — the title, Goal and C-X row 1 still say "proven"; C-X's one "Proven" row is mislabelled on both axes (the attested combination is nodriver-launch + **no extension** + headed + **unproxied**).
 
+## QUEUED WORK — operator-directed 2026-07-31, in order
+> Ruling: *"1 doesn't need a WF3 — fix directly. 2–3 if they need to be fixed now are a WF3 to be
+> added as the next fix in the active task. Holding scrape outcomes in the database is a WF2.
+> Follow the workflows."* Each item below carries the panel evidence that produced it, so the
+> implementing session starts from measurements rather than re-deriving them.
+
+### ✅ 1 — Proxy-credential redaction — DONE, direct fix `d295188b` (no WF3, per ruling)
+Security-reviewer finding, live since `65f953ad`. proxy-chain interpolates the full credentialed
+upstream URL into its throw messages (`dist/server.js:407,410`); `proxy-relay.mjs` wrote
+`error.message` to stderr beneath a comment claiming it never echoes credentials — true of
+`request.url`, false of `error.message`, same line; the sampler carried it to
+`relay_stderr_samples` → `records_meta` → `pipeline_runs` → the admin history API. Redacted at
+both ends; locks in `scripts/tests/test_relay_credential_redaction.py`.
+
+### ⬜ 2 — **WF3 (NEXT): migration merge-ordering reds every scheduled chain**
+**Evidence (Schema-Fidelity F4, verified):** `node scripts/migrate.js --verify` is the pre-flight
+in **six** workflows — `chain-coa-permits.yml:67`, `chain-deep-scrapes.yml:146`,
+`chain-entities.yml:53`, `chain-sources.yml:53`, `chain-wsib.yml:66`, `pipeline-watchdog.yml:82` —
+and exits non-zero on **MISSING** as well as DRIFT (`migrate.js:154-164`). **Nothing in CI applies
+migrations**, and all 5 cron schedules have been live since 2026-07-29. So any migration merged to
+main fails every scheduled run's pre-flight until an operator applies it by hand.
+**Scope:** make the constraint enforced or impossible to forget — a documented pre-merge operator
+step (runbook rule 2, `docs/runbook/README.md:85`), and/or CI applying migrations, and/or a
+merge-gate check. Also record: apply on a **direct/session** connection, never the Supavisor
+pooler, because `CREATE INDEX CONCURRENTLY` is unsafe through transaction pooling.
+**Not urgent while no migration is pending** — but it blocks the WF2 in item 4.
+
+### ⬜ 3 — **WF3: pre-commit hooks validate the working tree, not the staged blob**
+**Evidence (Schema-Fidelity F1, reproduced):** during the reverted work, `git status` showed the
+migration as `AM` — the staged blob was the pre-hardening version (no `CONCURRENTLY`, missing an
+index value) while the worktree file was correct. Both hooks read the **worktree path**:
+`scripts/hooks/validate-migrations.sh:17` (`grep … "$FILE"`) and `:38`
+(`node scripts/validate-migration.js $STAGED_MIGRATIONS`). A plain `git commit` would have passed
+validation while committing a file that takes an `ACCESS EXCLUSIVE` lock on an 891 MB table, and
+produced a checksum disagreeing with the one already recorded.
+**Scope:** validate `git show :$FILE` (the staged blob), not the worktree. Applies to every hook
+that lints staged content. **General defect — not specific to this branch.**
+
+### ⬜ 4 — **WF2: hold per-permit scrape outcomes in the database** (the operator's original ask)
+v1 was implemented before it was planned, unanimously rejected by a 9-reviewer plan panel, and
+reverted 2026-07-31 (working tree + dev DB, verified `0 missing, 0 drift`). **The full adjudication
+is `.cursor/wf2_scrape_outcome_persistence.md` — read it before re-attempting; it contains
+reproduced measurements, not opinions.** Ten binding design corrections, condensed:
+1. **Append-only history table**, not columns on `permits`. Latest-only cannot answer "failed 9
+   times for 3 reasons", which IS the requirement. **~1.46 M rows/yr** (28,004 permits @ 7-day
+   cadence) ⇒ retention/rollup is a day-one input.
+2. **Never share the transaction with the stage upserts.** *Reproduced:* a failed outcome write
+   aborts the transaction, COMMIT is silently converted to ROLLBACK, and `PIPELINE_SUMMARY`
+   reported `scraped: 1, upserted: 1` against `committed stage writes: 0`. Use SAVEPOINT or a
+   dedicated connection.
+3. **Do not stamp `last_scraped_at` on failure outcomes** — it is the 7-day queue cooldown, so
+   stamping `waf_blocked` empties the pending queue under a systemic block and
+   `zero_attempted_with_pending_queue` PASSes at `pending == 0`: a total outage becomes a week of
+   green zero-work runs.
+4. **Never collapse transport errors into `waf_blocked`** (regression against K7a and `5dc577f2`).
+5. **Constrained vocabulary (CHECK)** — only after (2), plus an infra test asserting DB vocabulary
+   == the set the code emits.
+6. **`hollow_stages`: evidence it or drop it.** "The portal's documented anti-scraper response"
+   appears nowhere in specs/lessons/evidence; measured recon (G8) says the real signature is a
+   ~430 B HTML page. If kept: WARN-only until observed, and fix the false positive (a
+   scheduled-but-not-yet-inspected row currently classifies as an attack).
+7. **Audit row belongs in the ORCHESTRATOR** — `run-chain.js` keeps the LAST summary, so the
+   worker's audit table is discarded.
+8. **`emit_meta` must declare the writes** (Spec 47 §R11) or the columns are invisible to lineage.
+9. **Replace the `LIKE '<year> <sequence>%'` lookup** — measured 69 ms / 118,087 buffers per call;
+   use `populate_queue`'s SUBSTRING derivation for an exact match.
+10. **Count swallowed write failures**, or a total write outage looks identical to a healthy run.
+**Blocked on item 2** (any migration reds the crons until that is settled).
+
+### ⬜ 5 — Also filed, not yet scheduled
+`populate_queue` re-queues finished permits forever — permits with Occupancy passed keep feed
+status `Inspection`, so they sit in `Active Inspection` and are re-scraped every 7 days.
+Reality-Check confirmed it is **already the observed outcome for 2 of 2** permits scraped under
+the new code. Belongs with the lifecycle-engine work (Task #1).
+
 ## Operator rulings (2026-07-30)
 * **P1 RULED — annotated git tag, no on-disk copy.** `deep-scrapes-cloud-attempt-2026-07-30` **created**, pointing at `539468b5`. Recover with `git show deep-scrapes-cloud-attempt-2026-07-30:scripts/aic-scraper-nodriver.py`. Zero rot, zero search pollution, permanent. (Also moots Integration's finding that the on-disk copy's stated mitigations were no-ops.)
 * **P2 RULED (Gemini, adopted):** attach mode kept as the gated cloud path; no monkeypatch.
