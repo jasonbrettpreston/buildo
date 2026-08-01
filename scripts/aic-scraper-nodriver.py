@@ -1866,6 +1866,8 @@ def classify_chain_failure(token):
     token = str(token or '')
     if token == CHAIN_FAILURE_TRANSPORT:
         return CHAIN_FAILURE_TRANSPORT, None
+    if token.startswith('transport_error:'):
+        return CHAIN_FAILURE_TRANSPORT, token
     if token.startswith('fetch_error:'):
         return CHAIN_FAILURE_TRANSPORT, token
     if token == CHAIN_FAILURE_WAF:
@@ -2237,7 +2239,10 @@ class HttpTransport:
         except Exception as err:  # noqa: BLE001
             log('WARN', '[scraper]', f'HTTP transport error on {url}: {err}',
                 {'event': 'http_transport_error'})
-            return 'transport_error', None
+            # Class-carrying token, mirroring the browser fetch_error:* shape —
+            # a bare literal left detail NULL for every ledger row on the
+            # production transport (DNS failure == connection reset == timeout).
+            return f'transport_error:{type(err).__name__}', None
         self.bytes_down += len(resp.content or b'')
         text = resp.text or ''
         if resp.status_code == 403 or 'Access Denied' in text:

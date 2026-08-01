@@ -191,6 +191,29 @@ class TestClassifyChainFailure:
         assert kind == 'waf_blocked'
         assert detail == token
 
+    def test_http_transport_error_token_keeps_its_detail(self, scraper):
+        """Output-panel fold: HTTP is the production transport; a detail-less
+        transport_error makes a DNS failure, a connection reset and a proxy
+        timeout indistinguishable in the ledger. The class-carrying token must
+        classify as transport_error WITH the token as detail — the same parity
+        the browser path already has via fetch_error:*."""
+        kind, detail = scraper.classify_chain_failure('transport_error:OSError')
+        assert kind == 'transport_error'
+        assert detail == 'transport_error:OSError'
+
+
+class TestHttpTransportErrorDetailParity:
+    def test_call_carries_the_exception_class(self, scraper):
+        """The except branch must emit transport_error:<ExceptionClass>, not the
+        bare literal — FlakySession with no canned responses raises OSError."""
+        transport = make_transport(scraper)
+        kind, resp = transport.call('POST', 'https://example.invalid/x', {})
+        assert resp is None
+        assert kind == 'transport_error:OSError'
+        classified, detail = scraper.classify_chain_failure(kind)
+        assert classified == 'transport_error'
+        assert detail == 'transport_error:OSError'
+
 
 # ---------------------------------------------------------------------------
 # Classification threading — HTTP chain sites
