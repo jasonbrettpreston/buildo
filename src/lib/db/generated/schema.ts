@@ -1,4 +1,4 @@
-import { pgTable, pgSchema, foreignKey, pgPolicy, uuid, boolean, timestamp, index, unique, check, serial, varchar, date, text, numeric, bigint, integer, smallint, jsonb, doublePrecision, uniqueIndex, bigserial, geometry, primaryKey, pgMaterializedView, pgView, pgEnum } from "drizzle-orm/pg-core"
+import { pgTable, pgSchema, index, check, bigint, varchar, text, timestamp, foreignKey, pgPolicy, uuid, boolean, unique, serial, date, numeric, integer, smallint, jsonb, doublePrecision, uniqueIndex, bigserial, geometry, primaryKey, pgView, pgMaterializedView, pgEnum } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 // MANUAL PATCH (re-apply after every `npm run db:generate`): drizzle-kit
@@ -17,6 +17,24 @@ export const entityTypeEnum = pgEnum("entity_type_enum", ['Corporation', 'Indivi
 export const permitTypeClass = pgEnum("permit_type_class", ['construction', 'signage', 'administrative', 'safety_upgrade', 'unclassified'])
 export const projectRoleEnum = pgEnum("project_role_enum", ['Builder', 'Architect', 'Applicant', 'Owner', 'Agent', 'Engineer'])
 
+
+export const permitScrapeOutcomes = pgTable("permit_scrape_outcomes", {
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity({ name: "permit_scrape_outcomes_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
+	permitNum: varchar("permit_num", { length: 30 }),
+	yearSeq: varchar("year_seq", { length: 30 }),
+	outcome: text().notNull(),
+	detail: varchar({ length: 500 }),
+	transport: text().notNull(),
+	runId: text("run_id"),
+	observedAt: timestamp("observed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_permit_scrape_outcomes_observed").using("btree", table.observedAt.asc().nullsLast().op("timestamptz_ops")),
+	index("idx_permit_scrape_outcomes_permit").using("btree", table.permitNum.asc().nullsLast().op("text_ops"), table.observedAt.desc().nullsFirst().op("text_ops")),
+	check("chk_permit_scrape_outcomes_outcome", sql`outcome = ANY (ARRAY['scraped'::text, 'no_stages'::text, 'no_inspection_link'::text, 'no_target_folders'::text, 'address_not_found'::text, 'waf_blocked'::text, 'transport_error'::text, 'retry_exhausted'::text])`),
+	check("chk_permit_scrape_outcomes_subject", sql`num_nonnulls(permit_num, year_seq) >= 1`),
+	check("chk_permit_scrape_outcomes_transport", sql`transport = ANY (ARRAY['http'::text, 'browser'::text])`),
+]);
 
 export const profiles = pgTable("profiles", {
 	id: uuid().primaryKey().notNull(),
@@ -1582,6 +1600,7 @@ export const userProfiles = pgTable("user_profiles", {
 	notificationSchedule: text("notification_schedule").default('anytime').notNull(),
 	stripeCancelFailedAt: timestamp("stripe_cancel_failed_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
+	index("idx_user_profiles_account_deleted").using("btree", table.accountDeletedAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(account_deleted_at IS NOT NULL)`),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [users.id],
@@ -1812,6 +1831,23 @@ export const adminAuditLog = pgTable("admin_audit_log", {
   WHERE ((profiles.id = auth.uid()) AND (profiles.is_admin = true))))` }),
 ]);
 
+export const adminBackupCodes = pgTable("admin_backup_codes", {
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity({ name: "admin_backup_codes_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
+	userId: uuid("user_id").notNull(),
+	codeHash: text("code_hash").notNull(),
+	codeSalt: text("code_salt").notNull(),
+	usedAt: timestamp("used_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_admin_backup_codes_user_unused").using("btree", table.userId.asc().nullsLast().op("uuid_ops")).where(sql`(used_at IS NULL)`),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "admin_backup_codes_user_id_fkey"
+		}).onDelete("cascade"),
+]);
+
 export const addressPoints = pgTable("address_points", {
 	addressPointId: integer("address_point_id").primaryKey().notNull(),
 	latitude: numeric({ precision: 10, scale:  7 }).notNull(),
@@ -1980,6 +2016,18 @@ export const leadParcels = pgTable("lead_parcels", {
 	primaryKey({ columns: [table.leadId, table.parcelId], name: "lead_parcels_pkey"}),
 	check("lead_parcels_confidence_check", sql`(confidence >= (0)::numeric) AND (confidence <= (1)::numeric)`),
 	check("lead_parcels_lead_id_check", sql`lead_id ~ '^(permit|coa):.+$'::text`),
+]);
+
+export const permitScrapeOutcomeRollup = pgTable("permit_scrape_outcome_rollup", {
+	permitNum: varchar("permit_num", { length: 30 }).notNull(),
+	outcome: text().notNull(),
+	transport: text().notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	occurrences: bigint({ mode: "number" }).default(0).notNull(),
+	firstAt: timestamp("first_at", { withTimezone: true, mode: 'string' }).notNull(),
+	lastAt: timestamp("last_at", { withTimezone: true, mode: 'string' }).notNull(),
+}, (table) => [
+	primaryKey({ columns: [table.permitNum, table.outcome, table.transport], name: "permit_scrape_outcome_rollup_pkey"}),
 ]);
 
 export const permitProducts = pgTable("permit_products", {
@@ -2267,14 +2315,14 @@ export const permits = pgTable("permits", {
 	check("permits_heritage_designation_type_check", sql`(heritage_designation_type IS NULL) OR (heritage_designation_type = ANY (ARRAY['part_iv_individual'::text, 'part_v_hcd'::text]))`),
 	check("permits_zoning_dom_method_chk", sql`zoning_dominant_parcel_method = 'max_area'::text`),
 ]);
+export const leadIdOrphanAudit = pgView("lead_id_orphan_audit", {	sourceTable: text("source_table"),
+	leadId: text("lead_id"),
+	sourceRowId: text("source_row_id"),
+}).as(sql`SELECT 'lead_trades'::text AS source_table, lt.lead_id, lt.id::text AS source_row_id FROM lead_trades lt LEFT JOIN permits p ON lt.lead_id = p.lead_id LEFT JOIN coa_applications c ON lt.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'lead_parcels'::text AS source_table, lp.lead_id, (lp.lead_id || '|'::text) || lp.parcel_id::text AS source_row_id FROM lead_parcels lp LEFT JOIN permits p ON lp.lead_id = p.lead_id LEFT JOIN coa_applications c ON lp.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'lifecycle_transitions'::text AS source_table, lt.lead_id, lt.id::text AS source_row_id FROM lifecycle_transitions lt LEFT JOIN permits p ON lt.lead_id = p.lead_id LEFT JOIN coa_applications c ON lt.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'lifecycle_status_history'::text AS source_table, lsh.lead_id, lsh.id::text AS source_row_id FROM lifecycle_status_history lsh LEFT JOIN permits p ON lsh.lead_id = p.lead_id LEFT JOIN coa_applications c ON lsh.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'cost_estimates'::text AS source_table, ce.lead_id, COALESCE(ce.lead_id, (ce.permit_num::text || ':'::text) || ce.revision_num::text) AS source_row_id FROM cost_estimates ce LEFT JOIN permits p ON ce.lead_id = p.lead_id LEFT JOIN coa_applications c ON ce.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'trade_forecasts'::text AS source_table, tf.lead_id, (((tf.permit_num::text || ':'::text) || tf.revision_num::text) || ':'::text) || tf.trade_slug::text AS source_row_id FROM trade_forecasts tf LEFT JOIN permits p ON tf.lead_id = p.lead_id LEFT JOIN coa_applications c ON tf.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'tracked_projects'::text AS source_table, tp.lead_id, tp.id::text AS source_row_id FROM tracked_projects tp LEFT JOIN permits p ON tp.lead_id = p.lead_id LEFT JOIN coa_applications c ON tp.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'lead_analytics'::text AS source_table, la.lead_id, la.lead_key AS source_row_id FROM lead_analytics la LEFT JOIN permits p ON la.lead_id = p.lead_id LEFT JOIN coa_applications c ON la.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL`);
+
 export const mvMonthlyPermitStats = pgMaterializedView("mv_monthly_permit_stats", {	month: date(),
 	permitType: varchar("permit_type", { length: 100 }),
 	permitCount: integer("permit_count"),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	totalValue: bigint("total_value", { mode: "number" }),
 }).as(sql`SELECT date_trunc('month'::text, issued_date::timestamp with time zone)::date AS month, permit_type, count(*)::integer AS permit_count, COALESCE(sum(est_const_cost), 0::numeric)::bigint AS total_value FROM permits WHERE issued_date IS NOT NULL GROUP BY (date_trunc('month'::text, issued_date::timestamp with time zone)), permit_type`);
-
-export const leadIdOrphanAudit = pgView("lead_id_orphan_audit", {	sourceTable: text("source_table"),
-	leadId: text("lead_id"),
-	sourceRowId: text("source_row_id"),
-}).as(sql`SELECT 'lead_trades'::text AS source_table, lt.lead_id, lt.id::text AS source_row_id FROM lead_trades lt LEFT JOIN permits p ON lt.lead_id = p.lead_id LEFT JOIN coa_applications c ON lt.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'lead_parcels'::text AS source_table, lp.lead_id, (lp.lead_id || '|'::text) || lp.parcel_id::text AS source_row_id FROM lead_parcels lp LEFT JOIN permits p ON lp.lead_id = p.lead_id LEFT JOIN coa_applications c ON lp.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'lifecycle_transitions'::text AS source_table, lt.lead_id, lt.id::text AS source_row_id FROM lifecycle_transitions lt LEFT JOIN permits p ON lt.lead_id = p.lead_id LEFT JOIN coa_applications c ON lt.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'lifecycle_status_history'::text AS source_table, lsh.lead_id, lsh.id::text AS source_row_id FROM lifecycle_status_history lsh LEFT JOIN permits p ON lsh.lead_id = p.lead_id LEFT JOIN coa_applications c ON lsh.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'cost_estimates'::text AS source_table, ce.lead_id, COALESCE(ce.lead_id, (ce.permit_num::text || ':'::text) || ce.revision_num::text) AS source_row_id FROM cost_estimates ce LEFT JOIN permits p ON ce.lead_id = p.lead_id LEFT JOIN coa_applications c ON ce.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'trade_forecasts'::text AS source_table, tf.lead_id, (((tf.permit_num::text || ':'::text) || tf.revision_num::text) || ':'::text) || tf.trade_slug::text AS source_row_id FROM trade_forecasts tf LEFT JOIN permits p ON tf.lead_id = p.lead_id LEFT JOIN coa_applications c ON tf.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'tracked_projects'::text AS source_table, tp.lead_id, tp.id::text AS source_row_id FROM tracked_projects tp LEFT JOIN permits p ON tp.lead_id = p.lead_id LEFT JOIN coa_applications c ON tp.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL UNION ALL SELECT 'lead_analytics'::text AS source_table, la.lead_id, la.lead_key AS source_row_id FROM lead_analytics la LEFT JOIN permits p ON la.lead_id = p.lead_id LEFT JOIN coa_applications c ON la.lead_id = c.lead_id WHERE p.lead_id IS NULL AND c.lead_id IS NULL`);

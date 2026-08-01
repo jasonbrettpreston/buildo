@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { usersInAuth, profiles, permits, costEstimates, entities, entityContacts, entityProjects, productGroups, leadProducts, trades, leadTrades, neighbourhoods, neighbourhoodBuildNorms, neighbourhoodStoreyNorms, buildingFootprints, parcelBuildings, parcels, permitHistory, syncRuns, permitParcels, permitPhaseTransitions, permitTrades, tradeMappingRules, wsibRegistry, userProfiles, leadViews, subscribeNonces, deviceTokens, trackedProjects, notifications, notificationDispatches, adminWatchlist, adminAuditLog, addressPoints, parcelAddressPoints, supplierProducts, suppliers, supplierTrades, tradeProducts, universalStreamCatalog, universalStreamTradeSignals, leadViewEvents, leadParcels, permitProducts, entitlements } from "./schema";
+import { usersInAuth, profiles, permits, costEstimates, entities, entityContacts, entityProjects, productGroups, leadProducts, trades, leadTrades, neighbourhoods, neighbourhoodBuildNorms, neighbourhoodStoreyNorms, buildingFootprints, parcelBuildings, parcels, permitHistory, syncRuns, permitParcels, permitPhaseTransitions, permitTrades, tradeMappingRules, wsibRegistry, userProfiles, leadViews, subscribeNonces, deviceTokens, trackedProjects, notifications, notificationDispatches, adminWatchlist, adminAuditLog, adminBackupCodes, addressPoints, parcelAddressPoints, supplierProducts, suppliers, supplierTrades, tradeProducts, universalStreamCatalog, universalStreamTradeSignals, leadViewEvents, leadParcels, permitProducts, entitlements } from "./schema";
 
 export const profilesRelations = relations(profiles, ({one}) => ({
 	usersInAuth: one(usersInAuth, {
@@ -19,6 +19,7 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	notificationDispatches: many(notificationDispatches),
 	adminWatchlists: many(adminWatchlist),
 	adminAuditLogs: many(adminAuditLog),
+	adminBackupCodes: many(adminBackupCodes),
 	leadViewEvents: many(leadViewEvents),
 	entitlements: many(entitlements),
 }));
@@ -273,6 +274,13 @@ export const adminWatchlistRelations = relations(adminWatchlist, ({one}) => ({
 export const adminAuditLogRelations = relations(adminAuditLog, ({one}) => ({
 	usersInAuth: one(usersInAuth, {
 		fields: [adminAuditLog.adminUid],
+		references: [usersInAuth.id]
+	}),
+}));
+
+export const adminBackupCodesRelations = relations(adminBackupCodes, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [adminBackupCodes.userId],
 		references: [usersInAuth.id]
 	}),
 }));

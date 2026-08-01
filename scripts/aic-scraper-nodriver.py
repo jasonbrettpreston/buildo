@@ -39,6 +39,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path
 
 import nodriver as uc
@@ -1903,6 +1904,241 @@ class ChainFailure(Exception):
 
 
 # ---------------------------------------------------------------------------
+# Outcome ledger — permit_scrape_outcomes (WF2 2026-07-31, Spec 44 §3)
+#
+# Per-permit, append-only, diagnosable after the run ends, identical from
+# both transports. The v1 attempt shared the scrape connection and its
+# swallowed INSERT error silently rolled back real stage upserts while the
+# summary reported them committed — the writer below exists on the other
+# side of that lesson: its OWN autocommit connection (operator ruling D2),
+# lazily opened, closed at teardown, recovering with bounded backoff, and
+# constitutionally unable to raise into the scrape path.
+# ---------------------------------------------------------------------------
+# The 8-outcome vocabulary. LITERAL frozenset by design: the single source of
+# truth is docs/specs/_contracts.json schema.scrape_outcomes, and
+# src/tests/contracts.infra.test.ts grep-pins this literal AND migration
+# 236's chk_permit_scrape_outcomes_outcome CHECK against it (the mig-228
+# entitlement_products mechanism) — drift between contract, CHECK and this
+# set is a CI failure, not a runtime discovery.
+OUTCOME_VOCABULARY = frozenset({
+    'scraped', 'no_stages', 'no_inspection_link', 'no_target_folders',
+    'address_not_found', 'waf_blocked', 'transport_error', 'retry_exhausted',
+})
+
+# Outcomes that must NEVER stamp permits.last_scraped_at (C3 + Gemini fold):
+# the stamp is the 7-day queue cooldown, and stamping a failure empties the
+# queue during an outage — a total block would become a week of green runs.
+# `address_not_found` is failure-class here: a permit deleted from source
+# must stay visible to staleness monitoring. Documentary constant — the
+# stamping code (`scrape_year_sequence`, de2e4b75) is untouched and never
+# stamped these paths; the pytest locks pin that behavior.
+NO_STAMP_OUTCOMES = frozenset({
+    'waf_blocked', 'transport_error', 'retry_exhausted', 'address_not_found',
+})
+
+OUTCOME_DETAIL_MAX_LEN = 500
+
+# Known-safe detail shapes: our own classifier tokens and the browser fetch
+# sentinel (`fetch_error:<ExceptionClass>`). Anything else is reduced to a
+# bare class-name-shaped token or dropped — defense-in-depth OVER the
+# d295188b relay redaction, never instead of it.
+OUTCOME_DETAIL_SAFE_PREFIXES = (
+    'fetch_error:', 'non_string_result:', 'html_or_empty', 'json_decode_error',
+    'unparseable', 'transport_error', 'waf_blocked',
+)
+
+# Reconnect backoff ladder (seconds) after a failed ledger write. First rung
+# is ZERO on purpose: the writer must recover on the very next insert after
+# a transient failure (DeepSeek HIGH); repeated failures back off so a dead
+# DB is not hammered once per permit.
+OUTCOME_WRITE_BACKOFF_S = (0.0, 2.0, 10.0, 30.0)
+
+
+def sanitize_outcome_detail(detail):
+    """Reduce a failure detail to a provably-safe string (Gemini HIGH).
+
+    Allowlisted classifier prefixes pass through (capped); exceptions are
+    reduced to their class name; unknown free text is reduced to its leading
+    class-name-shaped token or the literal 'redacted' — raw exception text
+    can carry proxy URLs with live credentials.
+    """
+    if detail is None:
+        return None
+    if isinstance(detail, BaseException):
+        return type(detail).__name__[:OUTCOME_DETAIL_MAX_LEN]
+    text = str(detail).strip()
+    if not text:
+        return None
+    for prefix in OUTCOME_DETAIL_SAFE_PREFIXES:
+        if text.startswith(prefix):
+            return text[:OUTCOME_DETAIL_MAX_LEN]
+    token = re.split(r'[\s:(]', text, maxsplit=1)[0]
+    if re.fullmatch(r'[A-Za-z_][A-Za-z0-9_.-]{0,120}', token):
+        return token[:OUTCOME_DETAIL_MAX_LEN]
+    return 'redacted'
+
+
+class OutcomeWriter:
+    """Best-effort writer for the permit_scrape_outcomes ledger.
+
+    Contract:
+      * dedicated psycopg2 connection, autocommit, lazily opened, stored on
+        the worker and closed at teardown (never the scrape connection —
+        the reproduced v1 defect);
+      * NEVER raises into the scrape path — every failure is swallowed,
+        counted in tel['outcome_write_failures'], and logged once per
+        failure kind;
+      * on failure the connection is closed and lazily reopened with the
+        bounded OUTCOME_WRITE_BACKOFF_S ladder — recovery on the next
+        insert, not death for the worker's life;
+      * batch-grain outcomes resolve year_seq -> DISTINCT permit_nums once
+        per claimed batch (C9); zero resolution still writes the row with
+        permit_num NULL + the raw year_seq and counts
+        tel['outcome_resolution_failures'].
+    """
+
+    def __init__(self, transport=None, run_id=None):
+        self.transport = transport
+        if run_id is None:
+            # Orchestrator-run workers inherit SCRAPER_RUN_ID; standalone
+            # runs stamp their own so rows are still correlatable.
+            run_id = (os.environ.get('SCRAPER_RUN_ID')
+                      or os.environ.get('GITHUB_RUN_ID')
+                      or uuid.uuid4().hex)
+        self.run_id = run_id
+        self._conn = None
+        self._resolution = {}
+        self._fail_streak = 0
+        self._retry_at = 0.0
+        self._logged_kinds = set()
+
+    def _connect(self):
+        conn = get_db_connection()
+        conn.autocommit = True
+        return conn
+
+    def record(self, tel, outcome, permit_num=None, year_seq=None, detail=None):
+        """Append one outcome row. Returns True on success; NEVER raises."""
+        if permit_num is None and year_seq is None:
+            self._count_failure(tel, 'ValueError')
+            return False
+        if self._conn is None and time.monotonic() < self._retry_at:
+            # Backoff window open: skip-and-count, do not extend the window.
+            self._count_failure(tel, 'backoff_skip')
+            return False
+        try:
+            if self._conn is None:
+                self._conn = self._connect()
+            cur = self._conn.cursor()
+            try:
+                cur.execute(
+                    'INSERT INTO permit_scrape_outcomes'
+                    ' (permit_num, year_seq, outcome, detail, transport, run_id)'
+                    ' VALUES (%s, %s, %s, %s, %s, %s)',
+                    (permit_num, year_seq, outcome, sanitize_outcome_detail(detail),
+                     self.transport or transport_mode(), self.run_id))
+            finally:
+                cur.close()
+            self._fail_streak = 0
+            return True
+        except Exception as err:  # noqa: BLE001
+            self._on_failure(tel, err)
+            return False
+
+    def resolve_batch(self, conn, year_seqs):
+        """Resolve year_seq -> DISTINCT permit_nums, once per claimed batch.
+
+        Mirrors the populate_queue SUBSTRING derivation
+        (aic-orchestrator.py:154) — the same expression that put the
+        year_seq in the queue — restricted to the eligible TARGET_TYPES
+        population. Runs on the caller's batch connection (one query per
+        batch); a failure leaves the map empty, which the zero-resolution
+        fallback in record_for_year_seq absorbs.
+        """
+        self._resolution = {}
+        if not year_seqs:
+            return
+        try:
+            cur = conn.cursor()
+            try:
+                cur.execute("""
+                    SELECT DISTINCT
+                        SUBSTRING(p.permit_num FROM '^[0-9]{2} [0-9]+') AS year_seq,
+                        p.permit_num
+                    FROM permits p
+                    WHERE SUBSTRING(p.permit_num FROM '^[0-9]{2} [0-9]+') = ANY(%s)
+                      AND p.permit_type = ANY(%s)
+                """, (list(year_seqs), TARGET_TYPES))
+                for year_seq, permit_num in cur.fetchall():
+                    bucket = self._resolution.setdefault(year_seq, [])
+                    if permit_num not in bucket:
+                        bucket.append(permit_num)
+            finally:
+                cur.close()
+        except Exception as err:  # noqa: BLE001
+            try:
+                conn.rollback()
+            except Exception:  # noqa: BLE001
+                pass
+            self._count_failure(tel=None, kind=type(err).__name__)
+
+    def record_for_year_seq(self, tel, outcome, year_seq, detail=None):
+        """Write a batch-grain outcome for every permit the year_seq resolves
+        to; permit_num NULL + raw year_seq when it resolves to none."""
+        permit_nums = self._resolution.get(year_seq) or []
+        if not permit_nums:
+            if tel is not None:
+                tel['outcome_resolution_failures'] = (
+                    tel.get('outcome_resolution_failures', 0) + 1)
+            return self.record(tel, outcome, permit_num=None, year_seq=year_seq,
+                               detail=detail)
+        ok = True
+        for permit_num in permit_nums:
+            ok = self.record(tel, outcome, permit_num=permit_num,
+                             year_seq=year_seq, detail=detail) and ok
+        return ok
+
+    def close(self):
+        """Teardown: release the dedicated connection (Gemini fold)."""
+        if self._conn is not None:
+            try:
+                self._conn.close()
+            except Exception:  # noqa: BLE001
+                pass
+            self._conn = None
+
+    def _on_failure(self, tel, err):
+        try:
+            if self._conn is not None:
+                try:
+                    self._conn.close()
+                except Exception:  # noqa: BLE001
+                    pass
+                self._conn = None
+            backoff = OUTCOME_WRITE_BACKOFF_S[
+                min(self._fail_streak, len(OUTCOME_WRITE_BACKOFF_S) - 1)]
+            self._fail_streak += 1
+            self._retry_at = time.monotonic() + backoff
+            self._count_failure(tel, type(err).__name__)
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _count_failure(self, tel, kind):
+        try:
+            if tel is not None:
+                tel['outcome_write_failures'] = tel.get('outcome_write_failures', 0) + 1
+            if kind not in self._logged_kinds:
+                # Once per failure kind — a dead DB must not turn the log
+                # into one line per permit.
+                self._logged_kinds.add(kind)
+                log('WARN', '[scraper]',
+                    f'Outcome ledger write failed ({kind}) - scrape unaffected',
+                    {'event': 'outcome_write_failed', 'kind': kind})
+        except Exception:  # noqa: BLE001
+            pass
+
+
+# ---------------------------------------------------------------------------
 # Transport — HTTP (default) with the browser retained as a live fallback
 #
 # PROVEN 2026-07-30: a Chrome-TLS-impersonating HTTP client walks the same four
@@ -2493,7 +2729,7 @@ async def scrape_year_sequence(ctx, year_seq, conn, tel=None, outcomes=None):
     }
 
 
-async def run_http_mode(args, transport, tel, start_ms, worker_tag):
+async def run_http_mode(args, transport, tel, start_ms, worker_tag, outcomes=None):
     """Drive the HTTP transport through whichever mode was requested.
 
     Mirrors main()'s browser branches, minus everything that existed only to
@@ -2507,8 +2743,11 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag):
     if args['mode'] == 'single':
         conn = get_db_connection()
         try:
+            if outcomes is not None:
+                outcomes.resolve_batch(conn, [args['single_permit']])
             req_start = time.time() * 1000
-            result = await scrape_with_retry(transport, args['single_permit'], conn)
+            result = await scrape_with_retry(transport, args['single_permit'], conn,
+                                             tel=tel, outcomes=outcomes)
             tel['latencies'].append(time.time() * 1000 - req_start)
             accumulate_result(tel, result)
         finally:
@@ -2523,7 +2762,8 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag):
             with open(args['batch_file'], 'r') as fh:
                 year_seqs = json.load(fh)
             transport = await http_scrape_loop(
-                transport, year_seqs, conn, tel, start_ms, worker_tag)
+                transport, year_seqs, conn, tel, start_ms, worker_tag,
+                outcomes=outcomes)
         finally:
             conn.close()
         return transport
@@ -2557,7 +2797,8 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag):
             log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
             try:
                 transport = await http_scrape_loop(
-                    transport, year_seqs, conn, tel, start_ms, worker_tag)
+                    transport, year_seqs, conn, tel, start_ms, worker_tag,
+                    outcomes=outcomes)
                 complete_batch_in_queue(conn, year_seqs, worker_id)
                 log('INFO', worker_tag, f'Batch {batch_num}: complete')
             except Exception as err:
@@ -2568,13 +2809,17 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag):
     return transport
 
 
-async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag='[scraper]'):
+async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag='[scraper]',
+                           outcomes=None):
     """Scrape loop for the HTTP transport — no browser, no page, no navigation.
 
     Deliberately simpler than scrape_loop(): with no page weight there is no
     bootstrap to amortise, so batch size stops being a byte knob and rotation
     is free. The WAF-trap response is therefore a pure session rotation.
     """
+    if outcomes is not None:
+        # C9: one resolution query per claimed batch.
+        outcomes.resolve_batch(conn, year_seqs)
     for i, year_seq in enumerate(year_seqs):
         elapsed = (time.time() * 1000 - start_ms) / 1000
         print(f"  {worker_tag} {i + 1} / {len(year_seqs)} "
@@ -2600,7 +2845,8 @@ async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag
             tel['consecutive_empty'] = 0
 
         req_start = time.time() * 1000
-        result = await scrape_with_retry(transport, year_seq, conn)
+        result = await scrape_with_retry(transport, year_seq, conn,
+                                         tel=tel, outcomes=outcomes)
         tel['latencies'].append(time.time() * 1000 - req_start)
         accumulate_result(tel, result)
 
@@ -2793,11 +3039,17 @@ def anomalous_miss_count(tel):
                if outcome not in BENIGN_EMPTY_OUTCOMES)
 
 
-async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]', profile=None):
+async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]',
+                      profile=None, outcomes=None):
     """Core scrape loop for a list of year_seq combos. Mutates tel in place."""
 
     def accumulate(result):
         accumulate_result(tel, result)
+
+    if outcomes is not None:
+        # C9: one resolution query per claimed batch (shared with the HTTP
+        # loop — the ledger is transport-agnostic by construction).
+        outcomes.resolve_batch(conn, year_seqs)
 
     for i, year_seq in enumerate(year_seqs):
         progress_pct = (i + 1) / len(year_seqs) * 100
@@ -2860,7 +3112,8 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
                 log('ERROR', worker_tag, str(err), {'event': 'session_refresh_failed'})
 
         req_start = time.time() * 1000
-        result = await scrape_with_retry(page, year_seq, conn)
+        result = await scrape_with_retry(page, year_seq, conn,
+                                         tel=tel, outcomes=outcomes)
         tel['latencies'].append(time.time() * 1000 - req_start)
         accumulate(result)
 
@@ -2912,6 +3165,7 @@ def make_telemetry():
         'session_bootstraps': 0, 'session_failures': 0,
         'schema_drift': [], 'status_changes': 0, 'total_upserted': 0,
         'error_categories': {}, 'last_error': None, 'latencies': [],
+        'outcome_write_failures': 0, 'outcome_resolution_failures': 0,
         'preflight_passed': True, '_worker_id': 'standalone',
     }
 
@@ -2947,6 +3201,12 @@ def compute_summary(tel, start_ms):
                 'session_failures': tel['session_failures'],
                 'schema_drift': tel['schema_drift'],
                 'status_changes': tel['status_changes'],
+                # Outcome-ledger health (Spec 44 §3): swallowed ledger-write
+                # failures and year_seq resolutions that matched no permit.
+                # Carried per-worker so the orchestrator can aggregate and
+                # gate on them (C7/C10).
+                'outcome_write_failures': tel.get('outcome_write_failures', 0),
+                'outcome_resolution_failures': tel.get('outcome_resolution_failures', 0),
                 'error_categories': tel['error_categories'],
                 'last_error': tel['last_error'],
                 # Derived from the RESOLVED MODE, never from credential presence.
@@ -3066,7 +3326,12 @@ async def main():
 
     browser = None
     relay_url = None
+    outcomes = None
     try:
+        # The per-worker outcome ledger writer (Spec 44 §3): its OWN lazy
+        # autocommit connection, closed in the finally below. Created inside
+        # the try so a bad SCRAPER_TRANSPORT still lands in the summary.
+        outcomes = OutcomeWriter(transport=transport_mode())
         if proxy_enabled():
             # C3 (rung L2): the relay holds the credentials so Chrome never sees
             # them. Started INSIDE the try so a relay failure is caught, reported
@@ -3094,7 +3359,8 @@ async def main():
             try:
                 # Rebind: rotation inside run_http_mode replaces the object.
                 transport = await run_http_mode(
-                    args, transport, tel, start_ms, worker_tag) or transport
+                    args, transport, tel, start_ms, worker_tag,
+                    outcomes=outcomes) or transport
             finally:
                 tel['transport'] = TRANSPORT_HTTP
                 # Fold the FINAL generation; earlier ones were banked at each
@@ -3131,8 +3397,11 @@ async def main():
             conn = get_db_connection()
             try:
                 log('INFO', worker_tag, f'Single permit mode: {args["single_permit"]}')
+                if outcomes is not None:
+                    outcomes.resolve_batch(conn, [args['single_permit']])
                 req_start = time.time() * 1000
-                result = await scrape_with_retry(page, args['single_permit'], conn)
+                result = await scrape_with_retry(page, args['single_permit'], conn,
+                                                 tel=tel, outcomes=outcomes)
                 tel['latencies'].append(time.time() * 1000 - req_start)
                 tel['permits_attempted'] += 1
                 if result.get('scraped', 0) > 0:
@@ -3153,7 +3422,7 @@ async def main():
                 with open(args['batch_file'], 'r') as f:
                     year_seqs = json.load(f)
                 log('INFO', worker_tag, f'Worker mode: {len(year_seqs)} year_seqs from {args["batch_file"]}')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, profile=profile)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, profile=profile, outcomes=outcomes)
             finally:
                 conn.close()
 
@@ -3214,7 +3483,7 @@ async def main():
 
                     log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
                     try:
-                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, profile=profile)
+                        browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, profile=profile, outcomes=outcomes)
                         complete_batch_in_queue(conn, year_seqs, worker_id)
                         log('INFO', worker_tag, f'Batch {batch_num}: complete')
                     except Exception as err:
@@ -3273,7 +3542,7 @@ async def main():
                 year_seqs = [r['year_seq'] for r in rows]
                 random.shuffle(year_seqs)
                 log('INFO', worker_tag, f'Batch mode: {len(year_seqs)} year+sequence combos to scrape (shuffled)')
-                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, profile=profile)
+                browser, page = await scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag, profile=profile, outcomes=outcomes)
             finally:
                 conn.close()
 
@@ -3283,6 +3552,9 @@ async def main():
         log('ERROR', worker_tag, f'Fatal: {err}')
 
     finally:
+        if outcomes is not None:
+            # Teardown of the ledger writer's dedicated connection (D2).
+            outcomes.close()
         if proxy_enabled():
             # The relay's argv carries live credentials — it must never outlive us.
             terminate_spawned_relay(tel.get('_worker_id'))
