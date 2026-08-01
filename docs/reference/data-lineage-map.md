@@ -12,7 +12,7 @@ resolves the runtime-computed `emitMeta` column lists a static parse cannot.
 
 **Cross-refs:** Spec 30 §2 (`docs/specs/01-pipeline/30_pipeline_architecture.md`, archetypes / emitMeta reads-writes contract) · Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, §R11 PIPELINE_META).
 
-Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
+Coverage: **1128** columns across **78** tables, from **66** in-chain steps.
 
 ---
 
@@ -449,7 +449,7 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `street_name` | `coa` | `create_pre_permits` |
 | `street_name_normalized` | `coa` | `link_coa`, `link_coa_to_parcels` |
 | `street_num` | `coa` | `create_pre_permits`, `link_coa`, `link_coa_to_parcels` |
-| `structure_type` | `classify_coa_scope` | `compute_coa_cost_estimates` |
+| `structure_type` | `classify_coa_scope` | `classify_coa_trades`, `compute_coa_cost_estimates` |
 | `sub_type` | `coa` | — |
 | `trade_classified_at` | `classify_coa_trades` | `classify_coa_trades`, `compute_coa_cost_estimates` |
 | `unmapped_decision` | `classify_lifecycle_phase` | — |
@@ -585,6 +585,7 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 
 | Column | Produced by | Consumed by |
 |--------|-------------|-------------|
+| `attachment_basis` | `classify_coa_trades` | `compute_trade_forecasts` |
 | `classified_at` | `classify_coa_trades` | — |
 | `confidence` | `classify_coa_trades` | — |
 | `is_active` | `classify_coa_trades` | `compute_coa_cost_estimates`, `compute_trade_forecasts` |
@@ -593,6 +594,18 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `phase` | `classify_coa_trades` | — |
 | `tier` | `classify_coa_trades` | — |
 | `trade_id` | `classify_coa_trades` | `compute_coa_cost_estimates`, `compute_trade_forecasts` |
+
+## `lead_views`
+
+| Column | Produced by | Consumed by |
+|--------|-------------|-------------|
+| `lead_key` | — | `update_tracked_projects` |
+| `lead_type` | — | `update_tracked_projects` |
+| `permit_num` | — | `classify_lifecycle_phase`, `update_tracked_projects` |
+| `revision_num` | — | `classify_lifecycle_phase`, `update_tracked_projects` |
+| `saved` | — | `classify_lifecycle_phase`, `update_tracked_projects` |
+| `trade_slug` | — | `classify_lifecycle_phase`, `update_tracked_projects` |
+| `user_id` | — | `classify_lifecycle_phase`, `update_tracked_projects` |
 
 ## `lifecycle_status_history`
 
@@ -637,6 +650,7 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `cost_escalation_index` | — | `compute_parcel_cost_estimates` |
 | `cost_index_stale_months` | — | `compute_parcel_cost_estimates` |
 | `cost_rates_stale_months` | — | `compute_parcel_cost_estimates` |
+| `notifications_dispatch_enabled` | — | `dispatch_notifications` |
 | `updated_at` | — | `compute_parcel_cost_estimates` |
 | `variable_key` | — | `compute_parcel_cost_estimates`, `compute_trade_forecasts` |
 | `variable_value` | — | `compute_parcel_cost_estimates` |
@@ -710,13 +724,14 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 
 | Column | Produced by | Consumed by |
 |--------|-------------|-------------|
-| `body` | `update_tracked_projects` | — |
-| `created_at` | `update_tracked_projects` | — |
-| `permit_num` | `update_tracked_projects` | — |
-| `title` | `update_tracked_projects` | — |
-| `trade_slug` | `update_tracked_projects` | — |
-| `type` | `update_tracked_projects` | — |
-| `user_id` | `update_tracked_projects` | — |
+| `body` | `classify_lifecycle_phase`, `update_tracked_projects` | — |
+| `created_at` | `classify_lifecycle_phase`, `update_tracked_projects` | — |
+| `lead_id` | `classify_lifecycle_phase`, `update_tracked_projects` | — |
+| `permit_num` | `classify_lifecycle_phase`, `update_tracked_projects` | — |
+| `title` | `classify_lifecycle_phase`, `update_tracked_projects` | — |
+| `trade_slug` | `classify_lifecycle_phase`, `update_tracked_projects` | — |
+| `type` | `classify_lifecycle_phase`, `update_tracked_projects` | — |
+| `user_id` | `classify_lifecycle_phase`, `update_tracked_projects` | — |
 
 ## `parcel_address_points`
 
@@ -901,8 +916,8 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | Column | Produced by | Consumed by |
 |--------|-------------|-------------|
 | `*` | — | `assert_data_bounds`, `refresh_snapshot` |
-| `inspection_date` | `inspections` | `classify_lifecycle_phase`, `compute_timing_calibration_v2`, `compute_trade_forecasts` |
-| `permit_num` | `inspections` | `assert_staleness`, `classify_lifecycle_phase`, `compute_timing_calibration_v2`, `compute_trade_forecasts` |
+| `inspection_date` | `inspections` | `classify_inspection_status`, `classify_lifecycle_phase`, `compute_timing_calibration_v2`, `compute_trade_forecasts` |
+| `permit_num` | `inspections` | `assert_staleness`, `classify_inspection_status`, `classify_lifecycle_phase`, `compute_timing_calibration_v2`, `compute_trade_forecasts` |
 | `scraped_at` | `inspections` | `assert_staleness` |
 | `stage_name` | `inspections` | `classify_lifecycle_phase`, `compute_timing_calibration_v2` |
 | `status` | `inspections` | `classify_lifecycle_phase`, `compute_timing_calibration_v2`, `compute_trade_forecasts` |
@@ -943,11 +958,24 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `product_slug` | `classify_permits` | — |
 | `revision_num` | `classify_permits` | — |
 
+## `permit_scrape_outcomes`
+
+| Column | Produced by | Consumed by |
+|--------|-------------|-------------|
+| `detail` | `inspections` | — |
+| `observed_at` | `inspections` | — |
+| `outcome` | `inspections` | — |
+| `permit_num` | `inspections` | — |
+| `run_id` | `inspections` | — |
+| `transport` | `inspections` | — |
+| `year_seq` | `inspections` | — |
+
 ## `permit_trades`
 
 | Column | Produced by | Consumed by |
 |--------|-------------|-------------|
 | `*` | — | `refresh_snapshot` |
+| `attachment_basis` | `classify_permits` | `compute_trade_forecasts` |
 | `classified_at` | `backfill_realtor_permit_trades`, `classify_permits` | — |
 | `confidence` | `backfill_realtor_permit_trades`, `classify_permits` | — |
 | `is_active` | `backfill_realtor_permit_trades`, `classify_permits` | `compute_trade_forecasts` |
@@ -973,7 +1001,7 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `*` | — | `assert_data_bounds`, `refresh_snapshot` |
 | `abuts_laneway` | `enrich_permits` | — |
 | `applicable_bylaws` | `enrich_permits` | — |
-| `application_date` | `create_pre_permits`, `permits` | `compute_trade_forecasts`, `link_coa` |
+| `application_date` | `create_pre_permits`, `permits` | `classify_inspection_status`, `compute_trade_forecasts`, `link_coa` |
 | `assembly_sqm` | `permits` | — |
 | `builder_name` | `permits` | `builders` |
 | `building_type` | `permits` | — |
@@ -1017,7 +1045,7 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `description` | `create_pre_permits`, `permits` | `classify_permits`, `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `compute_build_norms`, `compute_storey_norms`, `link_coa` |
 | `dwelling_units_created` | `permits` | `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `compute_cost_estimates` |
 | `dwelling_units_lost` | `permits` | — |
-| `enriched_status` | `classify_permit_phase` | `assert_lifecycle_phase_distribution`, `classify_lifecycle_phase`, `classify_permit_phase` |
+| `enriched_status` | `classify_inspection_status`, `classify_permit_phase`, `inspections` | `assert_lifecycle_phase_distribution`, `classify_inspection_status`, `classify_lifecycle_phase`, `classify_permit_phase`, `inspections` |
 | `envelope_constrained` | `enrich_permits` | — |
 | `envelope_constraint_reason` | `enrich_permits` | — |
 | `est_const_cost` | `permits` | `classify_permits`, `compute_cost_estimates` |
@@ -1050,8 +1078,9 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `is_heritage_designated` | `enrich_permits` | — |
 | `is_in_ravine_protection_area` | `enrich_permits` | — |
 | `is_through_lot` | `enrich_permits` | — |
-| `issued_date` | `permits` | `classify_lifecycle_phase`, `classify_permit_phase`, `classify_permits`, `compute_build_norms`, `compute_timing_calibration_v2`, `compute_trade_forecasts`, `enrich_parcels`, `link_coa` |
-| `last_seen_at` | `classify_permit_phase`, `create_pre_permits`, `link_coa` | `assert_entity_tracing`, `classify_lifecycle_phase`, `classify_permit_phase`, `classify_permits`, `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `close_stale_permits` |
+| `issued_date` | `permits` | `classify_inspection_status`, `classify_lifecycle_phase`, `classify_permit_phase`, `classify_permits`, `compute_build_norms`, `compute_timing_calibration_v2`, `compute_trade_forecasts`, `enrich_parcels`, `link_coa` |
+| `last_scraped_at` | `inspections` | — |
+| `last_seen_at` | `classify_inspection_status`, `classify_permit_phase`, `create_pre_permits`, `link_coa` | `assert_entity_tracing`, `classify_inspection_status`, `classify_lifecycle_phase`, `classify_permit_phase`, `classify_permits`, `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `close_stale_permits` |
 | `latitude` | `geocode_permits` | `geocode_permits`, `link_coa`, `link_neighbourhoods`, `link_parcels` |
 | `lead_id` | — | `update_tracked_projects` |
 | `lifecycle_classified_at` | `classify_lifecycle_phase` | `assert_lifecycle_phase_distribution`, `classify_lifecycle_phase` |
@@ -1098,7 +1127,7 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `opt_suite_type` | `enrich_permits` | — |
 | `overlay_summary` | `enrich_permits` | — |
 | `owner` | `permits` | — |
-| `permit_num` | `create_pre_permits`, `permits` | `assert_entity_tracing`, `assert_staleness`, `backfill_realtor_permit_trades`, `classify_lifecycle_phase`, `classify_permits`, `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `compute_cost_estimates`, `compute_storey_norms`, `compute_timing_calibration_v2`, `compute_trade_forecasts`, `enrich_permits`, `geocode_permits`, `inspections`, `link_coa`, `link_neighbourhoods`, `link_parcels`, `link_similar`, `permits`, `update_tracked_projects` |
+| `permit_num` | `create_pre_permits`, `permits` | `assert_entity_tracing`, `assert_staleness`, `backfill_realtor_permit_trades`, `classify_inspection_status`, `classify_lifecycle_phase`, `classify_permits`, `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `compute_cost_estimates`, `compute_storey_norms`, `compute_timing_calibration_v2`, `compute_trade_forecasts`, `enrich_permits`, `geocode_permits`, `inspections`, `link_coa`, `link_neighbourhoods`, `link_parcels`, `link_similar`, `permits`, `update_tracked_projects` |
 | `permit_type` | `create_pre_permits`, `permits` | `assert_staleness`, `backfill_realtor_permit_trades`, `classify_permits`, `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `compute_cost_estimates`, `compute_storey_norms`, `compute_timing_calibration_v2`, `compute_trade_forecasts`, `enrich_permits`, `inspections`, `link_similar` |
 | `phase_started_at` | `classify_lifecycle_phase` | `compute_trade_forecasts` |
 | `postal` | `permits` | — |
@@ -1111,7 +1140,7 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `rear_suite_permission` | `enrich_permits` | — |
 | `rear_suite_type` | `enrich_permits` | — |
 | `residential_sqm` | `permits` | `compute_build_norms`, `compute_cost_estimates`, `enrich_parcels` |
-| `revision_num` | `create_pre_permits`, `permits` | `assert_entity_tracing`, `backfill_realtor_permit_trades`, `classify_lifecycle_phase`, `classify_permit_phase`, `classify_permits`, `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `compute_build_norms`, `compute_cost_estimates`, `compute_storey_norms`, `compute_trade_forecasts`, `enrich_permits`, `geocode_permits`, `link_coa`, `link_neighbourhoods`, `link_parcels`, `link_similar`, `permits`, `update_tracked_projects` |
+| `revision_num` | `create_pre_permits`, `permits` | `assert_entity_tracing`, `backfill_realtor_permit_trades`, `classify_inspection_status`, `classify_lifecycle_phase`, `classify_permit_phase`, `classify_permits`, `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `compute_build_norms`, `compute_cost_estimates`, `compute_storey_norms`, `compute_trade_forecasts`, `enrich_permits`, `geocode_permits`, `link_coa`, `link_neighbourhoods`, `link_parcels`, `link_similar`, `permits`, `update_tracked_projects` |
 | `scope_classified_at` | `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `link_similar` | `classify_scope`, `classify_scope_class`, `classify_scope_tags` |
 | `scope_source` | `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `link_similar` | — |
 | `scope_tags` | `classify_scope`, `classify_scope_class`, `classify_scope_tags`, `link_similar` | `backfill_realtor_permit_trades`, `classify_permits`, `compute_cost_estimates`, `link_similar` |
@@ -1211,6 +1240,17 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `permit_type` | — | `compute_coa_cost_estimates`, `compute_cost_estimates` |
 | `structure_type` | — | `compute_coa_cost_estimates`, `compute_cost_estimates` |
 
+## `scraper_queue`
+
+| Column | Produced by | Consumed by |
+|--------|-------------|-------------|
+| `claimed_at` | `inspections` | — |
+| `claimed_by` | `inspections` | `inspections` |
+| `completed_at` | `inspections` | — |
+| `error_msg` | `inspections` | — |
+| `status` | `inspections` | `inspections` |
+| `year_seq` | `inspections` | `inspections` |
+
 ## `sync_runs`
 
 | Column | Produced by | Consumed by |
@@ -1246,17 +1286,18 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 
 | Column | Produced by | Consumed by |
 |--------|-------------|-------------|
+| `claimed_at` | `update_tracked_projects` | — |
 | `id` | — | `update_tracked_projects` |
 | `last_notified_stalled` | `update_tracked_projects` | `update_tracked_projects` |
 | `last_notified_urgency` | `update_tracked_projects` | `update_tracked_projects` |
-| `lead_id` | — | `update_tracked_projects` |
+| `lead_id` | `update_tracked_projects` | `update_tracked_projects` |
 | `notified_decision_rendered` | `update_tracked_projects` | `update_tracked_projects` |
-| `permit_num` | — | `update_tracked_projects` |
-| `revision_num` | — | `update_tracked_projects` |
+| `permit_num` | `update_tracked_projects` | `update_tracked_projects` |
+| `revision_num` | `update_tracked_projects` | `update_tracked_projects` |
 | `status` | `update_tracked_projects` | `update_tracked_projects` |
-| `trade_slug` | — | `update_tracked_projects` |
+| `trade_slug` | `update_tracked_projects` | `update_tracked_projects` |
 | `updated_at` | `update_tracked_projects` | — |
-| `user_id` | — | `update_tracked_projects` |
+| `user_id` | `update_tracked_projects` | `update_tracked_projects` |
 
 ## `trade_configurations`
 
@@ -1281,9 +1322,9 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `opportunity_score` | `compute_opportunity_scores` | `assert_entity_tracing`, `refresh_snapshot` |
 | `p25_days` | `compute_trade_forecasts` | — |
 | `p75_days` | `compute_trade_forecasts` | — |
-| `permit_num` | `compute_trade_forecasts` | `assert_entity_tracing`, `compute_opportunity_scores`, `update_tracked_projects` |
-| `predicted_start` | `compute_trade_forecasts` | `update_tracked_projects` |
-| `revision_num` | `compute_trade_forecasts` | `assert_entity_tracing`, `compute_opportunity_scores`, `update_tracked_projects` |
+| `permit_num` | `compute_trade_forecasts` | `assert_entity_tracing`, `classify_lifecycle_phase`, `compute_opportunity_scores`, `update_tracked_projects` |
+| `predicted_start` | `compute_trade_forecasts` | `classify_lifecycle_phase`, `update_tracked_projects` |
+| `revision_num` | `compute_trade_forecasts` | `assert_entity_tracing`, `classify_lifecycle_phase`, `compute_opportunity_scores`, `update_tracked_projects` |
 | `sample_size` | `compute_trade_forecasts` | — |
 | `target_window` | — | `compute_opportunity_scores` |
 | `trade_slug` | `compute_trade_forecasts` | `compute_opportunity_scores`, `update_tracked_projects` |
@@ -1502,10 +1543,11 @@ Coverage: **1102** columns across **75** tables, from **64** in-chain steps.
 | `address_points` | `scripts/one-time/backfill-address-points-geom.js` | `scripts/one-time/backfill-address-points-geom.js` |
 | `building_footprints` | `scripts/one-time/backfill-building-footprints-geom.js` | `scripts/one-time/backfill-building-footprints-geom.js` |
 | `coa_applications` | `scripts/one-time/backfill-coa-street-name-normalized.js`, `scripts/one-time/backfill-coa-structure-type.js` | `scripts/one-time/backfill-coa-products.js`, `scripts/one-time/backfill-coa-street-name-normalized.js`, `scripts/one-time/backfill-coa-structure-type.js` |
+| `cost_estimates` | — | `scripts/one-time/wf2-p13-null-legacy-cost-tail.js` |
 | `lead_products` | `scripts/one-time/backfill-coa-products.js` | — |
 | `permits` | — | `scripts/backfill/backfill-permits-location.js` |
 | `product_groups` | — | `scripts/one-time/backfill-coa-products.js` |
 
 ---
 
-*Snapshot: 87 in-chain steps scanned. DB pipeline_runs.records_meta.pipeline_meta (latest per chain:step) + static emitMeta parse of one-time/backfill scripts. Refresh with `npm run lineage-docs -- --refresh`.*
+*Snapshot: 89 in-chain steps scanned. DB pipeline_runs.records_meta.pipeline_meta (latest per chain:step) + static emitMeta parse of one-time/backfill scripts. Refresh with `npm run lineage-docs -- --refresh`.*

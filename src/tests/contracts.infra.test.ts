@@ -50,6 +50,8 @@ interface Contracts {
     // uid columns are uuid FKs now — no max-width concept survives.
     entitlement_products: string[];
     entitlement_statuses: string[];
+    // Spec 44 §3 (WF2 2026-07-31): the 8-outcome scrape-outcome vocabulary.
+    scrape_outcomes: string[];
     trade_slug_max: number;
     permit_num_max: number;
     revision_num_max: number;
@@ -563,6 +565,42 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
   it('schema.entitlement_statuses → src/lib/entitlements ENTITLEMENT_STATUSES constant', async () => {
     const mod = await import('../lib/entitlements');
     expect([...mod.ENTITLEMENT_STATUSES]).toEqual(contracts.schema.entitlement_statuses);
+  });
+
+  // ---- scrape-outcome vocabulary (Spec 44 §3, WF2 2026-07-31) ----
+  // Triple agreement: _contracts.json <-> migration 236's named CHECK <->
+  // the scraper's literal frozenset (first Python-side consumer — the
+  // fs-read+regex mechanism handles .py exactly as it handles .sql). The
+  // LIVE constraint is additionally pinned against the contract by
+  // src/tests/db/236_permit_scrape_outcomes.db.test.ts, and the python
+  // frozenset against the contract by scripts/tests/
+  // test_scrape_outcome_persistence.py — an outcome addition cannot drift
+  // between contract, CHECK, and writer.
+  it('schema.scrape_outcomes → migration 236 chk_permit_scrape_outcomes_outcome CHECK', () => {
+    const sql = fs.readFileSync(
+      path.join(REPO_ROOT, 'migrations/236_permit_scrape_outcomes.sql'),
+      'utf8',
+    );
+    const pattern = new RegExp(
+      `chk_permit_scrape_outcomes_outcome CHECK \\(\\s*outcome IN \\(\\s*${quotedList(contracts.schema.scrape_outcomes)}\\s*\\)`,
+    );
+    expect(sql).toMatch(pattern);
+  });
+
+  it('schema.scrape_outcomes → aic-scraper-nodriver.py OUTCOME_VOCABULARY frozenset', () => {
+    const py = fs.readFileSync(
+      path.join(REPO_ROOT, 'scripts/aic-scraper-nodriver.py'),
+      'utf8',
+    );
+    const pattern = new RegExp(
+      `OUTCOME_VOCABULARY = frozenset\\(\\{\\s*${quotedList(contracts.schema.scrape_outcomes)},\\s*\\}\\)`,
+    );
+    expect(py).toMatch(pattern);
+  });
+
+  it('schema.scrape_outcomes carries exactly 8 distinct outcomes', () => {
+    expect(contracts.schema.scrape_outcomes).toHaveLength(8);
+    expect(new Set(contracts.schema.scrape_outcomes).size).toBe(8);
   });
 
   // ADR existence check: every accepted ADR in the docs/adr/ index must

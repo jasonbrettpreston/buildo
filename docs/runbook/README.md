@@ -22,6 +22,7 @@ file for the full procedure; this index is the map.
 | `db_rebuild_post_p2.md` | DB `--force` rebuild after Spec 80 v-next Phase 2 |
 | `F1_baseline_quiet_period.md` | Phase F.1 baseline quiet-period operator procedure |
 | `I1_first_deploy_spike.md` | `lifecycle_status_history` first-deploy spike |
+| `scrape_outcomes_first_deploy.md` | `permit_scrape_outcomes` ledger first deploy (Spec 44 §3, migs 236/237) |
 | `lead_products_coa_first_deploy.md` | CoA `lead_products` first deploy (Spec 80 §5.B, mig 184) |
 | `max_build_envelope_first_deploy.md` | Max-build envelope first deploy (Spec 65 §4, migs 185/186) |
 | `permit_occupancy_first_deploy.md` | Spec 78 Phase 1 permit-occupancy + build-norms first-deploy spike |

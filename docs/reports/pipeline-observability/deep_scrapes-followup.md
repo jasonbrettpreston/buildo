@@ -29,3 +29,33 @@ Chain **deep_scrapes** run #3084 **failed** due to severe data quality and engin
 > **WF3** Investigate `assert_staleness`: 6,514 records older than 30 days indicating a missing or broken data retention / ingestion pipeline.
 
 ---
+
+## deep_scrapes — 2026-08-01 01:45 UTC  (run_id: 1601)
+
+**Chain status:** completed_with_warnings | **Duration:** 26.8s
+
+### Step Verdicts
+| Step | Verdict | Duration | Records | vs 7-day Baseline |
+|------|---------|----------|---------|-------------------|
+| inspections | ✅ PASS | 10.0s | 2 | no baseline |
+| classify\_inspection\_status | ✅ PASS | 0.5s | 3 | no baseline |
+| assert\_network\_health | ⚠️ WARN | 0.3s | 0 | no baseline |
+| refresh\_snapshot | ✅ PASS | 14.5s | 1 | no baseline |
+| assert\_data\_bounds | ✅ PASS | 0.4s | 0 | no baseline |
+| assert\_engine\_health | ✅ PASS | 0.5s | 89 | no baseline |
+| assert\_staleness | ⚠️ WARN | 0.5s | 0 | no baseline |
+
+### Summary
+Chain completed with warnings: network latency exceeded threshold and staleness coverage is critically low. Multiple slow queries (>1s) indicate potential performance bottlenecks.
+
+### Anomalies & Warnings
+- **assert_network_health**: avg_latency_ms=3640 exceeds 2000ms threshold (WARN) — potential network bottleneck
+- **assert_staleness**: coverage_pct=0.1% (threshold ≥10%), max_days_stale=140 days (threshold ≤60), stale_over_30d=59 (WARN) — data freshness severely degraded
+- **Slow queries**: 4 queries >1s (9357ms, 1339ms, 1144ms, 1015ms) — performance risk; top query is 9.3s aggregation
+
+### Critical Issues — WF3 Prompts
+> **WF3** Fix stale data coverage — coverage_pct dropped to 0.1% (threshold ≥10%), max_days_stale at 140 days; investigate scraper queue fill and refresh_snapshot efficiency.
+
+> **WF3** Optimize slow aggregation query (9.3s) on permits_with_trades — likely missing index on (permit_num, revision_num); add composite index to reduce execution time.
+
+---

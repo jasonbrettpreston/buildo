@@ -197,7 +197,8 @@ authoritative): `permits`, `parcels`, `coa_applications`, `building_footprints`,
 `sync_runs`, `scraper_queue`, `wsib_registry`, `neighbourhoods`, `address_points`,
 `inspection_stage_map`, `trade_configurations`, `trade_mapping_rules`, `trade_sqft_rates`,
 `trades`, `product_groups`, `logic_variables`, `scope_intensity_matrix`, `permit_history`,
-`permit_inspections`, `permit_phase_transitions`, `lead_analytics`, `schema_migrations`.
+`permit_inspections`, `permit_phase_transitions`, `lead_analytics`, `schema_migrations`,
+`permit_scrape_outcomes`, `permit_scrape_outcome_rollup`.
 
 **Who this deny does *not* apply to, and why that's correct (Decision D1):** Postgres RLS applies
 only to roles that are neither the table's **owner** nor a **superuser**, unless the table is

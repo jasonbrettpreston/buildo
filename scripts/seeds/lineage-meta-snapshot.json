@@ -1,6 +1,6 @@
 {
   "_generated": "DB pipeline_runs.records_meta.pipeline_meta (latest per chain:step) + static emitMeta parse of one-time/backfill scripts. Refresh with `npm run lineage-docs -- --refresh`.",
-  "_runs_scanned": 87,
+  "_runs_scanned": 89,
   "inchain": {
     "assert_coa_freshness": {
       "chains": [
@@ -216,6 +216,7 @@
           "scope_tags",
           "coa_type_class",
           "project_type",
+          "structure_type",
           "scope_classified_at",
           "trade_classified_at"
         ]
@@ -229,6 +230,7 @@
           "is_active",
           "phase",
           "lead_score",
+          "attachment_basis",
           "classified_at"
         ],
         "lead_products": [
@@ -260,6 +262,18 @@
           "lifecycle_classified_at",
           "matched_status",
           "lifecycle_seq"
+        ],
+        "lead_views": [
+          "user_id",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
+        "trade_forecasts": [
+          "permit_num",
+          "revision_num",
+          "predicted_start"
         ],
         "coa_applications": [
           "id",
@@ -304,6 +318,16 @@
           "matched_status",
           "matched_rule",
           "unmapped_status"
+        ],
+        "notifications": [
+          "user_id",
+          "type",
+          "permit_num",
+          "trade_slug",
+          "title",
+          "body",
+          "lead_id",
+          "created_at"
         ],
         "coa_applications": [
           "lifecycle_phase",
@@ -1026,6 +1050,33 @@
       "writes": {},
       "external": []
     },
+    "classify_inspection_status": {
+      "chains": [
+        "deep_scrapes"
+      ],
+      "script": "scripts/classify-inspection-status.js",
+      "reads": {
+        "permits": [
+          "permit_num",
+          "revision_num",
+          "enriched_status",
+          "issued_date",
+          "application_date",
+          "last_seen_at"
+        ],
+        "permit_inspections": [
+          "permit_num",
+          "inspection_date"
+        ]
+      },
+      "writes": {
+        "permits": [
+          "enriched_status",
+          "last_seen_at"
+        ]
+      },
+      "external": []
+    },
     "inspections": {
       "chains": [
         "deep_scrapes",
@@ -1036,16 +1087,43 @@
         "permits": [
           "permit_num",
           "status",
+          "enriched_status",
           "permit_type"
+        ],
+        "scraper_queue": [
+          "year_seq",
+          "status",
+          "claimed_by"
         ]
       },
       "writes": {
+        "permits": [
+          "enriched_status",
+          "last_scraped_at"
+        ],
+        "scraper_queue": [
+          "year_seq",
+          "status",
+          "claimed_at",
+          "completed_at",
+          "claimed_by",
+          "error_msg"
+        ],
         "permit_inspections": [
           "permit_num",
           "stage_name",
           "status",
           "inspection_date",
           "scraped_at"
+        ],
+        "permit_scrape_outcomes": [
+          "permit_num",
+          "year_seq",
+          "outcome",
+          "detail",
+          "transport",
+          "run_id",
+          "observed_at"
         ]
       },
       "external": [
@@ -1282,6 +1360,7 @@
           "is_active",
           "phase",
           "lead_score",
+          "attachment_basis",
           "classified_at"
         ],
         "permit_products": [
@@ -1701,13 +1780,15 @@
         "lead_trades": [
           "lead_id",
           "trade_id",
-          "is_active"
+          "is_active",
+          "attachment_basis"
         ],
         "permit_trades": [
           "permit_num",
           "revision_num",
           "trade_id",
-          "is_active"
+          "is_active",
+          "attachment_basis"
         ],
         "pipeline_runs": [
           "pipeline",
@@ -1778,6 +1859,19 @@
           "computed_at"
         ]
       },
+      "external": []
+    },
+    "dispatch_notifications": {
+      "chains": [
+        "permits"
+      ],
+      "script": "scripts/dispatch-notifications.js",
+      "reads": {
+        "logic_variables": [
+          "notifications_dispatch_enabled"
+        ]
+      },
+      "writes": {},
       "external": []
     },
     "enrich_permits": {
@@ -2330,6 +2424,15 @@
           "lifecycle_phase",
           "lifecycle_stalled"
         ],
+        "lead_views": [
+          "user_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "saved"
+        ],
         "pipeline_runs": [
           "pipeline",
           "started_at"
@@ -2380,7 +2483,8 @@
           "trade_slug",
           "title",
           "body",
-          "created_at"
+          "created_at",
+          "lead_id"
         ],
         "lead_analytics": [
           "lead_key",
@@ -2389,6 +2493,12 @@
           "updated_at"
         ],
         "tracked_projects": [
+          "user_id",
+          "permit_num",
+          "revision_num",
+          "trade_slug",
+          "lead_id",
+          "claimed_at",
           "status",
           "last_notified_urgency",
           "last_notified_stalled",
@@ -3505,6 +3615,16 @@
           "structure_type"
         ]
       }
+    },
+    "scripts/one-time/wf2-p13-null-legacy-cost-tail.js": {
+      "script": "scripts/one-time/wf2-p13-null-legacy-cost-tail.js",
+      "reads": {
+        "cost_estimates": [
+          "estimated_cost",
+          "modeled_gfa_sqm"
+        ]
+      },
+      "writes": {}
     },
     "scripts/backfill/backfill-permits-location.js": {
       "script": "scripts/backfill/backfill-permits-location.js",

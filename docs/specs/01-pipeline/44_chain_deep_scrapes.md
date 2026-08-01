@@ -101,7 +101,67 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
 - `permit_inspections` table: stage-level status records per permit
 - `permits.enriched_status`: derived lifecycle status
 - `scraper_queue` table: batch status tracking (pending/claimed/completed/failed)
-- Telemetry in `records_meta`: permits_attempted, permits_found, latency p50/p95, proxy errors
+- `permit_scrape_outcomes` table: per-permit outcome ledger (see the persistence contract below)
+- Telemetry in `records_meta`: permits_attempted, permits_found, latency p50/p95, proxy errors,
+  outcome_write_failures / outcome_resolution_failures (ledger health)
+
+### Scrape-Outcome Persistence Contract (WF2 2026-07-31, migrations 236/237)
+
+**Operator goal:** *"understand why the inspections data failed for a permit — so we could take
+corrective action — we need to hold the data in the database."* Aggregate telemetry answers "how
+did the RUN go"; this ledger answers "why did THIS permit yield nothing" after the run ends.
+
+**Shape:** `permit_scrape_outcomes` — append-only, permit_num-grain (revision-grain ambiguity
+accepted knowingly), identical rows from both transports per terminal branch. Every row carries
+`outcome`, sanitized `detail`, `transport` (http|browser, NOT NULL), `run_id`
+(`SCRAPER_RUN_ID` = `GITHUB_RUN_ID` or a generated uuid; standalone runs stamp their own) and
+`observed_at`. The vocabulary is the 8-value contract in `docs/specs/_contracts.json`
+`schema.scrape_outcomes`, triple-pinned (contract ↔ migration CHECK ↔ scraper frozenset) by
+`contracts.infra.test.ts` + the live-DB test.
+
+**Taxonomy (threading semantics — the classification SURVIVES to the ledger):**
+
+| Outcome | Grain | Meaning | Stamps `last_scraped_at`? |
+|---|---|---|---|
+| `scraped` | permit | Real stages upserted (row flushed only AFTER the stage commit) | YES (existing stamping, untouched) |
+| `no_stages` | permit | Portal answered honestly: no stage passed yet | YES (the DB must remember the portal answered) |
+| `no_inspection_link` | permit | `no_processes` / `showStatus=false` → Permit Issued path | YES (existing behavior) |
+| `no_target_folders` | year_seq | Address exists, no BLD folder | NO |
+| `address_not_found` | year_seq | Our feed believes in a permit the portal does not — a data defect worth chasing | **NO** (a permit deleted from source must stay visible to staleness monitoring) |
+| `waf_blocked` | year_seq (per attempt) | The portal answered with the block signature: 403/HTML body, or the Akamai-hollow family (`unparseable`, `html_or_empty`, `json_decode_error`, `non_string_result:*` as `detail`) | **NO** |
+| `transport_error` | year_seq (per attempt) | The request never completed — curl transport error, browser `fetch_error:<Class>` (kept as `detail`). **Never collapsed into `waf_blocked`** — the chain-result-layer lock pins this | **NO** |
+| `retry_exhausted` | year_seq | All `SCRAPER_MAX_RETRIES` attempts failed; `detail` carries the last classified detail (or the exception class for unclassified errors — a DB error is never laundered into a portal outcome) | **NO** |
+
+The no-stamp rule is load-bearing: `last_scraped_at` is the 7-day queue cooldown, and stamping
+failures would empty the pending queue during a total outage — a week of green zero-work runs.
+
+**Batch-grain resolution (C9):** year_seq-grain outcomes resolve to `DISTINCT permit_num`s once
+per claimed batch via the `populate_queue` SUBSTRING derivation restricted to the eligible
+TARGET_TYPES population. A year_seq resolving to ZERO permits still writes the row —
+`permit_num NULL` + the raw `year_seq` — and counts `outcome_resolution_failures`; the anomalous
+outcome this feature exists for must never vanish.
+
+**Writer isolation (operator ruling D2):** dedicated per-worker autocommit connection, lazily
+opened, closed at teardown; on failure it closes + lazily reopens through a bounded backoff
+ladder whose first rung is zero (recovery on the next insert). It can NEVER raise into or roll
+back the scrape path (the reproduced v1 defect: a swallowed ledger INSERT error on the shared
+connection silently rolled back real stage upserts while telemetry reported them committed).
+Every swallow increments `outcome_write_failures` and logs once per failure kind. `detail` is
+allowlist-sanitized (classifier tokens + `fetch_error:*`; anything else reduced to a class-name
+token; hard 500-char cap) — defense-in-depth over the `d295188b` relay redaction.
+
+**Observability:** the orchestrator aggregate carries both counters and gates on them —
+`FAIL` iff `permits_attempted > 0 AND outcome_write_failures >= permits_attempted`, `WARN` iff
+`>= 1`, zero-attempted its own non-FAIL case — plus a per-outcome breakdown INFO row. All three
+`emit_meta` sites declare `permit_scrape_outcomes` (and the previously-omitted `permits` /
+`scraper_queue` writes).
+
+**Retention (operator ruling D1):** 90-day raw horizon; the daily `permit_scrape_outcomes_prune`
+pg_cron job (migration 237, Spec 115 §5) atomically folds expired rows into
+`permit_scrape_outcome_rollup` keyed `(permit_num, outcome, transport)` with
+`occurrences`/`first_at`/`last_at`; permit_num-NULL rows fold under their `year_seq`. Retention
+length is re-evaluated when the `populate_queue` re-queue-forever defect is fixed (filed in
+`docs/reports/review_followups.md`).
 
 ### Edge Cases
 - **Portal lists only PASSED stages (observed 2026-07-30)** — `stages: []` is the NORMAL
@@ -168,6 +228,17 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
 <!-- TEST_INJECT_END -->
 
 **Python (`scripts/tests/`, pytest — added 2026-07-29, `1271bf17`).** `scripts/` had zero Python coverage (vitest is JS/TS-only, eslint ignores `scripts/`), so every scraper logic defect was discoverable only by dispatching a ~6-minute GitHub Actions run — four in a row proved the gap. Run with `npm run test:py`; CI runs it as the Pytest job in `.github/workflows/pipeline-lint.yml`. The chains install `requirements.txt` only, so the harness (`requirements-dev.txt`) can never reach a production run. Covers the pure seams: `clear_stale_profile_locks`, `build_browser_args` (extracted as a pure function precisely so launch flags are testable without a browser), the launch/readiness/teardown path, `build_proxy_username` / `resolve_proxy_port`, the egress tripwire's parsing and fail-loud branches, module-level env parsing, `safe_json_parse`, and the orchestrator's `preflight_failures` aggregation. Any new scraper logic must land with locks here rather than be validated by dispatch.
+
+**Outcome-persistence locks (WF2 2026-07-31):** `scripts/tests/test_scrape_outcome_persistence.py`
+— classification threading (all 8 chain failure sites, both transports), the chain-result-layer
+lock that a `transport_error` kind must NOT surface as `waf_blocked` (the lock `5dc577f2` never
+got), `retry_exhausted` explicit end-to-end, the WAF-trap `+THRESHOLD` forcing as a separate
+top-level `if` (mutation-style), writer recovery/swallow-and-count/teardown, detail-sanitizer
+allowlist + cap, DISTINCT batch resolution + `year_seq` zero-resolution fallback, no-stamp rules,
+transport-identical rows, vocabulary agreement with `_contracts.json`, and the orchestrator
+counter merge + guarded audit row. Live-DB proof: `src/tests/db/236_permit_scrape_outcomes.db.test.ts`
+(CHECKs, RLS, contract equality) + `src/tests/db/237_scrape_outcome_prune.db.test.ts`
+(prune atomicity/idempotency/LEAST-GREATEST/rollup keys).
 </testing>
 
 ---
@@ -179,6 +250,8 @@ The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/P
 - `scripts/manifest.json` (deep_scrapes chain array)
 - `scripts/aic-scraper-nodriver.py` — nodriver CDP scraper
 - `scripts/aic-orchestrator.py` — multi-worker orchestrator
+- `migrations/236_permit_scrape_outcomes.sql` / `migrations/237_scrape_outcome_prune.sql` — the outcome ledger + its retention prune (drift fence: schema changes to the ledger go through this spec)
+- `scripts/tests/test_scrape_outcome_persistence.py` — outcome-persistence + classification-threading locks
 - `scripts/proxy-relay.mjs` — local unauthenticated proxy relay (shared with Spec 115 §2.4, which owns its runner contract)
 - `scripts/requirements.txt` / `scripts/requirements-dev.txt` — runtime + test deps (`nodriver` is EXACT-pinned; see §3)
 - `scripts/tests/` — pytest harness for the Python pipeline scripts

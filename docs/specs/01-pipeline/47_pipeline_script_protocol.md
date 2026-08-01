@@ -620,7 +620,7 @@ below classifies every write target and dictates whether SAVEPOINT is permitted.
 |------|-------------|-----------|------------------------------|
 | **Tier 1 — Core data** | Algorithm-critical primary outputs; downstream computation reads these as source-of-truth | **FORBIDDEN** | `permits`, `coa_applications`, `permit_trades`, `permit_parcels`, `lead_trades`, `lead_parcels`, `cost_estimates`, `trade_forecasts`, `tracked_projects`, `lead_views` |
 | **Tier 2 — Derived data** | Computed from Tier 1; read by other pipeline scripts for further computation | **FORBIDDEN by default** | `phase_calibration`, `lifecycle_transitions`, `permit_phase_transitions`, `lead_analytics`<sup>†</sup> |
-| **Tier 3 — Audit / ledger** | Consumed only by observers, audits, reports — never by computation | **PERMITTED** | `lifecycle_status_history`, `pipeline_runs`, `engine_health_snapshots` |
+| **Tier 3 — Audit / ledger** | Consumed only by observers, audits, reports — never by computation | **PERMITTED** | `lifecycle_status_history`, `pipeline_runs`, `engine_health_snapshots`, `permit_scrape_outcomes` (Spec 44 §3 — the Python writer uses a dedicated autocommit connection rather than SAVEPOINT, same isolation guarantee) |
 
 <sup>†</sup> `lead_analytics` is borderline Tier 1/Tier 2. It is read by `compute-opportunity-scores.js` for score
 derivation but only as a LEFT JOIN competition-discount enrichment — opportunity scores degrade gracefully on
