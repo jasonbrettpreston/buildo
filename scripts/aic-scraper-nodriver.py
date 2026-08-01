@@ -1834,6 +1834,75 @@ def safe_json_parse(raw, step_label=''):
 
 
 # ---------------------------------------------------------------------------
+# Failure classification threading (WF2 2026-07-31, Spec 44 §3)
+#
+# The transport_error/waf_blocked distinction used to exist ONLY inside
+# HttpTransport.call: every chain-level failure site collapsed it to a bare
+# {'waf_blocked': True}, scrape_year_sequence erased it again with an untyped
+# raise, and scrape_with_retry saw nothing but "blocked". A proxy blip was
+# therefore indistinguishable from a portal ban — and once outcomes persist,
+# that misclassification would have become a durable DB fact. The kind (and
+# its detail) now survives the whole chain: chain result -> typed exception ->
+# retry wrapper -> outcome ledger.
+# ---------------------------------------------------------------------------
+CHAIN_FAILURE_TRANSPORT = 'transport_error'
+CHAIN_FAILURE_WAF = 'waf_blocked'
+
+
+def classify_chain_failure(token):
+    """Map a transport/parse error token to (failure_kind, detail).
+
+    Kinds:
+      - transport_error: the request never completed — curl transport error,
+        or the browser fetch sentinel (`fetch_error:<ExceptionClass>`, kept
+        as detail).
+      - waf_blocked: the portal answered with the block signature — 403/HTML
+        where JSON belongs, or a hollow/unparseable body (the Akamai hollow
+        signature is unparseable's known cause; browser html_or_empty /
+        json_decode_error / non_string_result:* map here for the same
+        reason).
+    """
+    token = str(token or '')
+    if token == CHAIN_FAILURE_TRANSPORT:
+        return CHAIN_FAILURE_TRANSPORT, None
+    if token.startswith('fetch_error:'):
+        return CHAIN_FAILURE_TRANSPORT, token
+    if token == CHAIN_FAILURE_WAF:
+        return CHAIN_FAILURE_WAF, None
+    return CHAIN_FAILURE_WAF, token or None
+
+
+def _chain_failure_result(token, properties=None, results=None):
+    """Build the failure-shaped chain result both transports return.
+
+    `waf_blocked` is kept for consumers of the legacy shape, but is now TRUE
+    ONLY for the waf kind — a transport error no longer wears a WAF block's
+    clothes.
+    """
+    kind, detail = classify_chain_failure(token)
+    return {
+        'failure_kind': kind,
+        'detail': detail,
+        'waf_blocked': kind == CHAIN_FAILURE_WAF,
+        'properties': properties or [],
+        'results': results or [],
+    }
+
+
+class ChainFailure(Exception):
+    """A typed chain failure whose classification survives to the caller."""
+
+    def __init__(self, year_seq, failure_kind, detail=None):
+        self.year_seq = year_seq
+        self.failure_kind = failure_kind
+        self.detail = detail
+        message = f'{failure_kind} for {year_seq}'
+        if detail:
+            message += f' ({detail})'
+        super().__init__(message)
+
+
+# ---------------------------------------------------------------------------
 # Transport — HTTP (default) with the browser retained as a live fallback
 #
 # PROVEN 2026-07-30: a Chrome-TLS-impersonating HTTP client walks the same four
@@ -2018,7 +2087,7 @@ async def fetch_permit_chain_http(transport, year, sequence):
     kind, props = transport.call('POST', f'{AIC_BASE}/jaxrs/search/properties', body())
     if kind != 'ok':
         _log_step1_body(f'http:{kind}', 'parse_failed', f'{year}-{sequence}')
-        return {'waf_blocked': True, 'properties': [], 'results': []}
+        return _chain_failure_result(kind)
     if not props:
         _log_step1_body('[]', 'empty_result', f'{year}-{sequence}')
         return {'properties': [], 'results': []}
@@ -2029,7 +2098,10 @@ async def fetch_permit_chain_http(transport, year, sequence):
     kind, folders = transport.call('POST', f'{AIC_BASE}/jaxrs/search/folders',
                                    body(property_rsn))
     if kind != 'ok' or folders is None:
-        return {'waf_blocked': True, 'properties': props, 'results': []}
+        # A null body on an 'ok' parse is the hollow signature — classify it
+        # as unparseable, not as a transport failure.
+        return _chain_failure_result(kind if kind != 'ok' else 'unparseable',
+                                     properties=props)
     target_folders = [f for f in folders if f.get('folderSection') in TARGET_SECTIONS]
 
     results = []
@@ -2040,7 +2112,8 @@ async def fetch_permit_chain_http(transport, year, sequence):
 
         kind, detail = transport.call('GET', f'{AIC_BASE}/jaxrs/search/detail/{folder_rsn}')
         if kind != 'ok' or not isinstance(detail, dict):
-            return {'waf_blocked': True, 'properties': props, 'results': results}
+            return _chain_failure_result(kind if kind != 'ok' else 'unparseable',
+                                         properties=props, results=results)
         processes = detail.get('inspectionProcesses') or []
         if not processes:
             results.append({'permit_num': permit_num, 'error': 'no_processes'})
@@ -2054,7 +2127,8 @@ async def fetch_permit_chain_http(transport, year, sequence):
             kind, status_data = transport.call(
                 'GET', f'{AIC_BASE}/jaxrs/search/status/{folder_rsn}/{proc.get("processRsn")}')
             if kind != 'ok' or not isinstance(status_data, dict):
-                return {'waf_blocked': True, 'properties': props, 'results': results}
+                return _chain_failure_result(kind if kind != 'ok' else 'unparseable',
+                                             properties=props, results=results)
             # SHAPE validation, not status codes: this portal's anti-scraper
             # mode is a 200 with hollow fields, so a stage counts only when its
             # fields are really present.
@@ -2112,7 +2186,7 @@ async def fetch_permit_chain(page, year, sequence):
     if err:
         # K7a: an unparseable body is the Akamai "Access Denied" page, not a miss.
         _log_step1_body(step1, 'parse_failed', f'{year}-{sequence}')
-        return {'waf_blocked': True, 'properties': [], 'results': []}
+        return _chain_failure_result(err)
     if not props:
         # K7a: valid JSON, empty list -- the portal genuinely has no such permit.
         # Sampling both branches is what makes "empty" stop being ambiguous.
@@ -2151,7 +2225,7 @@ async def fetch_permit_chain(page, year, sequence):
 
     folders, err = safe_json_parse(step2, 'step2:folders')
     if err:
-        return {'waf_blocked': True, 'properties': props, 'results': []}
+        return _chain_failure_result(err, properties=props)
     target_folders = [f for f in folders if f.get('folderSection') in TARGET_SECTIONS]
 
     results = []
@@ -2178,7 +2252,7 @@ async def fetch_permit_chain(page, year, sequence):
 
         detail, err = safe_json_parse(step3, f'step3:detail/{folder_rsn}')
         if err:
-            return {'waf_blocked': True, 'properties': props, 'results': results}
+            return _chain_failure_result(err, properties=props, results=results)
         processes = detail.get('inspectionProcesses') or []
 
         if not processes:
@@ -2209,7 +2283,7 @@ async def fetch_permit_chain(page, year, sequence):
 
             status_data, err = safe_json_parse(step4, f'step4:status/{folder_rsn}/{process_rsn}')
             if err:
-                return {'waf_blocked': True, 'properties': props, 'results': results}
+                return _chain_failure_result(err, properties=props, results=results)
             # Shape validation applies to BOTH transports — it is a fact about
             # the portal, not about how we call it. Without it a hollow-field
             # 200 (this portal's documented anti-scraper response) counts as a
@@ -2225,13 +2299,21 @@ async def fetch_permit_chain(page, year, sequence):
     return {'properties': props, 'folders': folders, 'results': results}
 
 
-async def scrape_year_sequence(ctx, year_seq, conn):
+async def scrape_year_sequence(ctx, year_seq, conn, tel=None, outcomes=None):
     """Scrape one year+sequence and write results to DB.
 
     `ctx` is the transport — an HttpTransport, or the browser page. Everything
     below this dispatch (DB writes, the outcome taxonomy, enriched_status, the
     queue) is transport-agnostic by design, so adding a transport changed no
     consumer.
+
+    `outcomes` is the per-worker outcome ledger writer (Spec 44 §3). It is
+    best-effort by contract: it writes on its OWN autocommit connection and
+    can never raise into — or roll back — this function's stage writes (the
+    reproduced v1 defect). Per-permit terminal rows are flushed AFTER the
+    stage transaction commits so the ledger never claims rows a rollback
+    erased. Failure outcomes never stamp last_scraped_at: a blocked or
+    unreachable permit must stay visible to staleness monitoring (C3).
     """
     year, sequence = year_seq.split(' ')
     if isinstance(ctx, HttpTransport):
@@ -2239,12 +2321,18 @@ async def scrape_year_sequence(ctx, year_seq, conn):
     else:
         chain_result = await fetch_permit_chain(ctx, year, sequence)
 
-    if chain_result.get('waf_blocked'):
-        raise Exception(f'WAF blocked request for {year_seq}')
+    failure_kind = chain_result.get('failure_kind')
+    if failure_kind is None and chain_result.get('waf_blocked'):
+        # Legacy shape guard: a bare waf_blocked flag keeps raising, classified.
+        failure_kind = CHAIN_FAILURE_WAF
+    if failure_kind:
+        raise ChainFailure(year_seq, failure_kind, chain_result.get('detail'))
 
     props = chain_result.get('properties', [])
     if not props:
         log('INFO', '[scraper]', f'No property found for {year_seq}')
+        if outcomes is not None:
+            outcomes.record_for_year_seq(tel, 'address_not_found', year_seq)
         return {'searched': 1, 'scraped': 0, 'upserted': 0, 'outcome': 'address_not_found'}
 
     results = chain_result.get('results', [])
@@ -2253,6 +2341,8 @@ async def scrape_year_sequence(ctx, year_seq, conn):
 
     if not target_folders:
         log('INFO', '[scraper]', f'{year_seq}: no target folders found')
+        if outcomes is not None:
+            outcomes.record_for_year_seq(tel, 'no_target_folders', year_seq)
         return {'searched': 1, 'scraped': 0, 'upserted': 0, 'outcome': 'no_target_folders'}
 
     log('INFO', '[scraper]', f'{year_seq}: {len(folders)} folders, {len(target_folders)} target permits', {
@@ -2265,6 +2355,17 @@ async def scrape_year_sequence(ctx, year_seq, conn):
     status_changes = 0
     saw_no_stages = False
     saw_no_link = False
+    # Per-permit terminal outcomes, collected during the transaction and
+    # flushed to the ledger only after conn.commit() succeeds — the ledger
+    # must never report a row the commit later rolled back (v1 CRITICAL).
+    pending_outcome_rows = []
+    seen_outcome_rows = set()
+
+    def queue_outcome(outcome_name, permit_num):
+        key = (outcome_name, permit_num)
+        if key not in seen_outcome_rows:
+            seen_outcome_rows.add(key)
+            pending_outcome_rows.append(key)
 
     cur = conn.cursor()
     try:
@@ -2274,6 +2375,7 @@ async def scrape_year_sequence(ctx, year_seq, conn):
                 # Permits with no_processes/no_status_link — set Permit Issued
                 if result['error'] in ('no_processes', 'no_status_link'):
                     saw_no_link = True
+                    queue_outcome('no_inspection_link', result['permit_num'])
                     cur.execute(
                         "UPDATE permits SET enriched_status = 'Permit Issued', last_scraped_at = NOW() "
                         "WHERE permit_num = %s AND enriched_status IS DISTINCT FROM 'Permit Issued'",
@@ -2288,6 +2390,7 @@ async def scrape_year_sequence(ctx, year_seq, conn):
                         )
                 elif result['error'] == 'no_stages':
                     saw_no_stages = True
+                    queue_outcome('no_stages', result['permit_num'])
                     # The portal ANSWERED: the permit exists and no stage has
                     # been passed yet (the page lists only passed stages).
                     # Stamp last_scraped_at so the DB remembers we asked —
@@ -2358,6 +2461,7 @@ async def scrape_year_sequence(ctx, year_seq, conn):
                 )
 
             scraped += 1
+            queue_outcome('scraped', result['permit_num'])
             log('INFO', '[scraper]', f"Scraped {len(result['stages'])} stages for {result['permit_num']}", {
                 'stages': [f"{s['desc']}: {s['status']}" for s in result['stages']],
                 'enrichedStatus': enriched,
@@ -2369,6 +2473,10 @@ async def scrape_year_sequence(ctx, year_seq, conn):
         raise
     finally:
         cur.close()
+
+    if outcomes is not None:
+        for outcome_name, permit_num in pending_outcome_rows:
+            outcomes.record(tel, outcome_name, permit_num=permit_num, year_seq=year_seq)
 
     if scraped > 0:
         outcome = 'scraped'
@@ -2507,20 +2615,39 @@ async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag
     return transport
 
 
-async def scrape_with_retry(page, year_seq, conn):
-    """Retry wrapper with exponential backoff."""
-    last_error = None
+async def scrape_with_retry(page, year_seq, conn, tel=None, outcomes=None):
+    """Retry wrapper with exponential backoff.
+
+    The failure CLASSIFICATION survives the retries (WF2 2026-07-31): each
+    classified failed attempt is recorded in the outcome ledger as itself
+    (waf_blocked / transport_error, with detail), and exhaustion returns —
+    and records — an explicit `retry_exhausted` outcome carrying the last
+    detail. An UNCLASSIFIED exception (a DB error, a code defect) is
+    deliberately never recorded as a portal outcome: laundering a DB error
+    into a WAF block is the exact defect 5dc577f2 was written to eliminate.
+    """
+    last_detail = None
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            return await scrape_year_sequence(page, year_seq, conn)
-        except Exception as err:
-            last_error = err
+            return await scrape_year_sequence(page, year_seq, conn,
+                                              tel=tel, outcomes=outcomes)
+        except ChainFailure as err:
             log('ERROR', '[scraper]', str(err), {'yearSeq': year_seq, 'attempt': attempt})
-            if attempt == MAX_RETRIES:
-                log('ERROR', '[scraper]', f'All retries exhausted for {year_seq}, skipping')
-                return {'searched': 1, 'scraped': 0, 'upserted': 0, 'retry_exhausted': True}
-            await asyncio.sleep(RETRY_BASE_MS / 1000 * (2 ** (attempt - 1)))
-    return {'searched': 1, 'scraped': 0, 'upserted': 0, 'retry_exhausted': True}
+            if outcomes is not None:
+                outcomes.record_for_year_seq(tel, err.failure_kind, year_seq,
+                                             detail=err.detail)
+            last_detail = err.detail or err.failure_kind
+        except Exception as err:  # noqa: BLE001
+            log('ERROR', '[scraper]', str(err), {'yearSeq': year_seq, 'attempt': attempt})
+            last_detail = err
+        if attempt == MAX_RETRIES:
+            log('ERROR', '[scraper]', f'All retries exhausted for {year_seq}, skipping')
+            break
+        await asyncio.sleep(RETRY_BASE_MS / 1000 * (2 ** (attempt - 1)))
+    if outcomes is not None:
+        outcomes.record_for_year_seq(tel, 'retry_exhausted', year_seq, detail=last_detail)
+    return {'searched': 1, 'scraped': 0, 'upserted': 0,
+            'retry_exhausted': True, 'outcome': 'retry_exhausted'}
 
 
 # ---------------------------------------------------------------------------
@@ -2639,6 +2766,11 @@ def accumulate_result(tel, result):
         tel['consecutive_empty'] = 0
     elif result.get('searched', 0) > 0 and result.get('scraped', 0) == 0:
         tel['not_found_count'] += 1
+        # F6c (WF2 2026-07-31): scrape_with_retry now returns an explicit
+        # `outcome: 'retry_exhausted'`, so exhaustion is filed under its own
+        # name here instead of the address_not_found default — the ledger and
+        # this breakdown must give the same event the same name. It counts as
+        # anomalous (not in BENIGN_EMPTY_OUTCOMES), same as before.
         outcome = result.get('outcome', 'address_not_found')
         breakdown = tel.setdefault('not_found_breakdown', {})
         breakdown[outcome] = breakdown.get(outcome, 0) + 1
