@@ -3369,9 +3369,20 @@ async def main():
                 transport.close()
             emit_summary(compute_summary(tel, start_ms))
             emit_meta(
-                {'permits': ['permit_num', 'status', 'enriched_status', 'permit_type']},
+                {'permits': ['permit_num', 'status', 'enriched_status', 'permit_type'],
+                 'scraper_queue': ['year_seq', 'status']},
+                # Truth-up (C8): permits stamping + queue transitions were
+                # never declared here (Spec 47 §R11); the outcome ledger is
+                # new. Keep in lockstep with the browser-path emit_meta and
+                # the orchestrator aggregate.
                 {'permit_inspections': ['permit_num', 'stage_name', 'status',
-                                        'inspection_date', 'scraped_at']},
+                                        'inspection_date', 'scraped_at'],
+                 'permits': ['enriched_status', 'last_scraped_at'],
+                 'scraper_queue': ['status', 'claimed_at', 'completed_at',
+                                   'claimed_by', 'error_msg'],
+                 'permit_scrape_outcomes': ['permit_num', 'year_seq', 'outcome',
+                                            'detail', 'transport', 'run_id',
+                                            'observed_at']},
                 ['AIC Portal REST API (secure.toronto.ca/ApplicationStatus/jaxrs)'])
             return
 
@@ -3612,8 +3623,17 @@ async def main():
     emit_summary(summary)
 
     emit_meta(
-        {'permits': ['permit_num', 'status', 'enriched_status', 'permit_type']},
-        {'permit_inspections': ['permit_num', 'stage_name', 'status', 'inspection_date', 'scraped_at']},
+        {'permits': ['permit_num', 'status', 'enriched_status', 'permit_type'],
+         'scraper_queue': ['year_seq', 'status']},
+        # Truth-up (C8): permits stamping + queue transitions were never
+        # declared here (Spec 47 §R11); the outcome ledger is new. Keep in
+        # lockstep with the HTTP-path emit_meta and the orchestrator
+        # aggregate.
+        {'permit_inspections': ['permit_num', 'stage_name', 'status', 'inspection_date', 'scraped_at'],
+         'permits': ['enriched_status', 'last_scraped_at'],
+         'scraper_queue': ['status', 'claimed_at', 'completed_at', 'claimed_by', 'error_msg'],
+         'permit_scrape_outcomes': ['permit_num', 'year_seq', 'outcome', 'detail',
+                                    'transport', 'run_id', 'observed_at']},
         ['AIC Portal REST API (secure.toronto.ca/ApplicationStatus/jaxrs)']
     )
 

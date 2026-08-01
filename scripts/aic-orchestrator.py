@@ -29,6 +29,7 @@ import re
 import signal
 import sys
 import time
+import uuid
 from pathlib import Path
 
 import psycopg2
@@ -199,6 +200,7 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
         'session_failures': 0, 'total_upserted': 0, 'status_changes': 0,
         'enriched_updates': 0, 'preflight_passed': True, 'latencies': [],
         'workers_completed': 0, 'consecutive_empty_max': 0,
+        'outcome_write_failures': 0, 'outcome_resolution_failures': 0,
     }
 
     # Check abort before even spawning
@@ -288,9 +290,13 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
                 # regression to the browser transport would be undetectable
                 # from the DB.
                 worker_tel['transport'] = sc_tel.get('transport', worker_tel.get('transport'))
+                # C10: outcome-ledger counters ride BOTH hand-maintained
+                # lists — this worker merge AND aggregate_telemetry() — or a
+                # swallowed ledger failure silently defeats the audit row.
                 for field in ('http_requests', 'http_bytes_down', 'relay_bytes_up',
                               'relay_bytes_down', 'relay_blocked', 'noise_visits',
-                              'resources_allowed', 'resources_blocked'):
+                              'resources_allowed', 'resources_blocked',
+                              'outcome_write_failures', 'outcome_resolution_failures'):
                     worker_tel[field] = worker_tel.get(field, 0) + (sc_tel.get(field) or 0)
                 for host, n in (sc_tel.get('relay_bytes_by_host') or {}).items():
                     worker_tel.setdefault('relay_bytes_by_host', {})
@@ -346,6 +352,7 @@ def aggregate_telemetry(worker_results):
         'workers_total': len(worker_results),
         'workers_completed': 0,
         'consecutive_empty_max': 0,
+        'outcome_write_failures': 0, 'outcome_resolution_failures': 0,
         'latencies': [],
     }
 
@@ -354,9 +361,11 @@ def aggregate_telemetry(worker_results):
         agg['permits_found'] += w.get('permits_found', 0)
         agg['permits_scraped'] += w.get('permits_scraped', 0)
         agg['transport'] = w.get('transport', agg.get('transport'))
+        # C10: keep in lockstep with the run_worker merge list above.
         for field in ('http_requests', 'http_bytes_down', 'relay_bytes_up',
                       'relay_bytes_down', 'relay_blocked', 'noise_visits',
-                      'resources_allowed', 'resources_blocked'):
+                      'resources_allowed', 'resources_blocked',
+                      'outcome_write_failures', 'outcome_resolution_failures'):
             agg[field] = agg.get(field, 0) + (w.get(field) or 0)
         for host, n in (w.get('relay_bytes_by_host') or {}).items():
             agg.setdefault('relay_bytes_by_host', {})
@@ -379,6 +388,31 @@ def aggregate_telemetry(worker_results):
     return agg
 
 
+def outcome_write_audit_row(permits_attempted, outcome_write_failures):
+    """The C7 outcome-ledger tripwire (Spec 44 §3, WF2 2026-07-31).
+
+    Same-denominator rule: both counters are counted per expected outcome
+    row. FAIL iff permits_attempted > 0 AND failures >= attempted (a total
+    ledger outage — the feature is silently dead); WARN iff >= 1;
+    permits_attempted == 0 is its own non-FAIL case (the
+    zero_attempted_with_pending_queue gate owns that failure mode — a
+    zero-guard convergence of 3 reviewers, precedent in the two gates
+    above this row).
+    """
+    if permits_attempted > 0 and outcome_write_failures >= permits_attempted:
+        status = 'FAIL'
+    elif outcome_write_failures >= 1:
+        status = 'WARN'
+    else:
+        status = 'PASS'
+    return {
+        'metric': 'outcome_write_failures',
+        'value': f'failures={outcome_write_failures} attempted={permits_attempted}',
+        'threshold': 'FAIL iff attempted > 0 and failures >= attempted; WARN iff failures >= 1',
+        'status': status,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -388,6 +422,16 @@ async def main():
 
     log('INFO', '[orchestrator]', f'Starting with {NUM_WORKERS} workers, batch size {BATCH_SIZE}')
     log('INFO', '[orchestrator]', f'Target types: {TARGET_TYPES}')
+
+    # Run correlation for the outcome ledger (Spec 44 §3): every worker
+    # stamps permit_scrape_outcomes.run_id with this value. GITHUB_RUN_ID on
+    # CI, a generated uuid elsewhere; exported via os.environ so the worker
+    # subprocess env ({**os.environ, ...}) inherits it.
+    run_id = (os.environ.get('SCRAPER_RUN_ID')
+              or os.environ.get('GITHUB_RUN_ID')
+              or uuid.uuid4().hex)
+    os.environ['SCRAPER_RUN_ID'] = run_id
+    log('INFO', '[orchestrator]', f'Outcome ledger run_id: {run_id}')
     if MAX_PERMITS > 0:
         log('INFO', '[orchestrator]', f'Max permits cap: {MAX_PERMITS} total ({MAX_PERMITS // max(NUM_WORKERS, 1)} per worker)')
 
@@ -530,6 +574,12 @@ async def main():
                 'consecutive_empty_max': agg['consecutive_empty_max'],
                 'session_bootstraps': agg['session_bootstraps'],
                 'session_failures': agg['session_failures'],
+                # Outcome-ledger health (Spec 44 §3) — this aggregate is the
+                # summary production lineage keeps, so the counters must
+                # survive to here or the audit row below gates on zeros.
+                'outcome_write_failures': agg.get('outcome_write_failures', 0),
+                'outcome_resolution_failures': agg.get('outcome_resolution_failures', 0),
+                'scrape_outcome_run_id': run_id,
                 'schema_drift': [],
                 'status_changes': agg['status_changes'],
                 'error_categories': {},
@@ -584,6 +634,11 @@ async def main():
                     {'metric': 'no_stages_yet', 'value': breakdown.get('no_stages', 0), 'threshold': None, 'status': 'INFO'},
                     {'metric': 'no_inspection_link', 'value': breakdown.get('no_inspection_link', 0), 'threshold': None, 'status': 'INFO'},
                     {'metric': 'anomalous_miss_rate', 'value': f'{miss_rate:.1f}%', 'threshold': '< 20%', 'status': miss_status},
+                    # Spec 44 §3 outcome-ledger tripwire (C7) + per-outcome
+                    # breakdown so a run's outcome mix is readable from the DB.
+                    outcome_write_audit_row(agg['permits_attempted'], agg.get('outcome_write_failures', 0)),
+                    {'metric': 'outcome_resolution_failures', 'value': agg.get('outcome_resolution_failures', 0), 'threshold': None, 'status': 'INFO'},
+                    {'metric': 'scrape_outcome_breakdown', 'value': json.dumps({**breakdown, 'scraped': agg['permits_found']}, sort_keys=True), 'threshold': None, 'status': 'INFO'},
                     {'metric': 'records_inserted', 'value': agg['total_upserted'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'records_updated', 'value': agg['status_changes'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'duration_ms', 'value': duration_ms, 'threshold': None, 'status': 'INFO'},
@@ -610,7 +665,12 @@ async def main():
         },
         {
             'permit_inspections': ['permit_num', 'stage_name', 'status', 'inspection_date', 'scraped_at'],
-            'scraper_queue': ['year_seq', 'status', 'claimed_at', 'completed_at', 'claimed_by'],
+            # Truth-up (C8): the workers write these through this chain step;
+            # they were never declared, so the columns whose purpose is
+            # diagnosis were invisible to the lineage map (Spec 47 §R11).
+            'permits': ['enriched_status', 'last_scraped_at'],
+            'scraper_queue': ['year_seq', 'status', 'claimed_at', 'completed_at', 'claimed_by', 'error_msg'],
+            'permit_scrape_outcomes': ['permit_num', 'year_seq', 'outcome', 'detail', 'transport', 'run_id', 'observed_at'],
         },
         ['AIC Portal REST API (secure.toronto.ca/ApplicationStatus/jaxrs)'],
     )
