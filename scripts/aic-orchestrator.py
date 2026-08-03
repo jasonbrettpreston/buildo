@@ -201,6 +201,7 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
         'enriched_updates': 0, 'preflight_passed': True, 'latencies': [],
         'workers_completed': 0, 'consecutive_empty_max': 0,
         'outcome_write_failures': 0, 'outcome_resolution_failures': 0,
+        'early_abort': False,  # P6: OR-merged from the worker's summary below
     }
 
     # Check abort before even spawning
@@ -316,6 +317,11 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
                     worker_tel['consecutive_empty_max'],
                     sc_tel.get('consecutive_empty_max', 0),
                 )
+                # P6: an early-aborted worker marks the whole worker_tel — the
+                # aggregated miss-rate gate must keep its wipeout FAIL path.
+                worker_tel['early_abort'] = (
+                    worker_tel.get('early_abort', False)
+                    or bool(sc_tel.get('early_abort', False)))
 
                 if not sc_tel.get('preflight_passed', True):
                     worker_tel['preflight_passed'] = False
@@ -342,6 +348,52 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
 # ---------------------------------------------------------------------------
 # Telemetry aggregation
 # ---------------------------------------------------------------------------
+# Miss-rate gate constants (Pipeline Rehab P6, 2026-08-03). MIRROR of
+# aic-scraper-nodriver.py's classify_miss_rate — keep the two byte-identical
+# (locked by test_scraper_outcomes.py::TestMissRateGate parity test).
+MISS_RATE_FAIL_PCT = 20.0
+MISS_RATE_MIN_N_FOR_FAIL = 30
+MISS_RATE_WIPEOUT_ABS = 10
+MISS_RATE_WIPEOUT_PCT = 90.0  # the early-abort threshold — near-total wipeout
+
+
+def classify_miss_rate(anomalous, permits_attempted, *, early_abort=False, capped=False):
+    """Classify the anomalous-miss-rate gate: (status, miss_rate_pct, threshold_str).
+
+    Small-n statistics (P6): at the ASSUMED 10% anomalous baseline (a
+    pre-ledger assumption — re-measure from the outcome ledger once P7
+    accumulates real runs), the binomial false-FAIL probability of the <20%
+    gate is 27.1% at n=3 (the probe dispatch default) vs 7.3% at n=30. FAIL
+    is therefore only statistically meaningful at n >= 30; below that the
+    gate WARNs — EXCEPT the wipeout class (the false-PASS `de3ff6dd` closed;
+    this softening must NOT reopen it), which stays FAIL at ANY n:
+      - the 90%-anomalous early abort fired (sustained wipeout — small n is
+        BECAUSE the run aborted, not probe noise), or
+      - the run was NOT capped (production-shaped: a full run that only
+        attempted a few permits and missed them is a wipeout), or
+      - the absolute anomalous count is wipeout-shaped
+        (>= MISS_RATE_WIPEOUT_ABS — implausible as noise at any baseline), or
+      - the miss rate itself is >= MISS_RATE_WIPEOUT_PCT (the early-abort
+        threshold shape — a near-total wipeout is signal at ANY n).
+    """
+    miss_rate = (anomalous / permits_attempted * 100) if permits_attempted > 0 else 0
+    threshold = (
+        f'< {MISS_RATE_FAIL_PCT:.0f}% (FAIL-eligible at n >= {MISS_RATE_MIN_N_FOR_FAIL}; '
+        f'below that WARN — binomial false-FAIL 27.1% at n=3 vs 7.3% at n=30 on the '
+        f'assumed 10% baseline (pre-ledger; re-measure post-P7) — EXCEPT wipeout shapes '
+        f'(early-abort fired / uncapped run / anomalous >= {MISS_RATE_WIPEOUT_ABS} / '
+        f'rate >= {MISS_RATE_WIPEOUT_PCT:.0f}%), which FAIL at any n)'
+    )
+    if miss_rate < MISS_RATE_FAIL_PCT:
+        return 'PASS', miss_rate, threshold
+    if permits_attempted >= MISS_RATE_MIN_N_FOR_FAIL:
+        return 'FAIL', miss_rate, threshold
+    if (early_abort or not capped or anomalous >= MISS_RATE_WIPEOUT_ABS
+            or miss_rate >= MISS_RATE_WIPEOUT_PCT):
+        return 'FAIL', miss_rate, threshold
+    return 'WARN', miss_rate, threshold
+
+
 def aggregate_telemetry(worker_results):
     """Aggregate telemetry from all workers into a single dict."""
     agg = {
@@ -354,6 +406,9 @@ def aggregate_telemetry(worker_results):
         'consecutive_empty_max': 0,
         'outcome_write_failures': 0, 'outcome_resolution_failures': 0,
         'latencies': [],
+        # P6: any worker's early abort marks the aggregate — the miss-rate
+        # gate's wipeout FAIL-eligibility must survive aggregation.
+        'early_abort': False,
     }
 
     for w in worker_results:
@@ -381,6 +436,7 @@ def aggregate_telemetry(worker_results):
         agg['enriched_updates'] += w.get('enriched_updates', 0)
         agg['workers_completed'] += w.get('workers_completed', 0)
         agg['consecutive_empty_max'] = max(agg['consecutive_empty_max'], w.get('consecutive_empty_max', 0))
+        agg['early_abort'] = agg['early_abort'] or bool(w.get('early_abort', False))
         if not w.get('preflight_passed', True):
             agg['preflight_failures'] += 1
         agg['latencies'].extend(w.get('latencies', []))
@@ -531,8 +587,12 @@ async def main():
     breakdown = agg.get('not_found_breakdown', {})
     anomalous = sum(n for outcome, n in breakdown.items()
                     if outcome not in ('no_stages', 'no_inspection_link'))
-    miss_rate = (anomalous / agg['permits_attempted'] * 100) if agg['permits_attempted'] > 0 else 0
-    miss_status = 'FAIL' if miss_rate >= 20 else 'PASS'
+    # P6 (2026-08-03): FAIL-eligible only at n >= 30; small capped probes WARN
+    # instead (binomial noise), wipeout shapes stay FAIL — see classify_miss_rate.
+    miss_status, miss_rate, miss_threshold = classify_miss_rate(
+        anomalous, agg['permits_attempted'],
+        early_abort=agg.get('early_abort', False),
+        capped=MAX_PERMITS > 0)
 
     # Queue stats — fresh connection since the populate connection was closed hours ago
     stats_conn = get_db_connection()
@@ -597,6 +657,9 @@ async def main():
                 'proxy_host': os.environ.get('PROXY_HOST') if PROXY_MODE != 'none' else None,
                 'max_permits_cap': MAX_PERMITS,
                 'capped': MAX_PERMITS > 0 and agg['permits_attempted'] >= MAX_PERMITS,
+                # P6: any-worker early abort, so the DB records why a small-n
+                # run stayed FAIL-eligible on the miss-rate gate.
+                'early_abort': agg.get('early_abort', False),
                 'preflight_failures': agg['preflight_failures'],
                 'workers': agg['workers_total'],
                 'workers_completed': agg['workers_completed'],
@@ -633,7 +696,7 @@ async def main():
                     {'metric': 'enriched_updates', 'value': agg['enriched_updates'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'no_stages_yet', 'value': breakdown.get('no_stages', 0), 'threshold': None, 'status': 'INFO'},
                     {'metric': 'no_inspection_link', 'value': breakdown.get('no_inspection_link', 0), 'threshold': None, 'status': 'INFO'},
-                    {'metric': 'anomalous_miss_rate', 'value': f'{miss_rate:.1f}%', 'threshold': '< 20%', 'status': miss_status},
+                    {'metric': 'anomalous_miss_rate', 'value': f'{miss_rate:.1f}%', 'threshold': miss_threshold, 'status': miss_status},
                     # Spec 44 §3 outcome-ledger tripwire (C7) + per-outcome
                     # breakdown so a run's outcome mix is readable from the DB.
                     outcome_write_audit_row(agg['permits_attempted'], agg.get('outcome_write_failures', 0)),

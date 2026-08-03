@@ -2859,6 +2859,7 @@ async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag
             await asyncio.sleep(random.uniform(1.0, 3.5))
 
         if i >= 9 and (i + 1) % 10 == 0 and anomalous_miss_count(tel) / tel['permits_attempted'] >= 0.9:
+            tel['early_abort'] = True  # P6: keeps the small-n gate FAIL-eligible
             log('WARN', worker_tag,
                 f"Early abort: {anomalous_miss_count(tel)}/{tel['permits_attempted']} anomalous misses")
             break
@@ -3044,6 +3045,52 @@ def anomalous_miss_count(tel):
                if outcome not in BENIGN_EMPTY_OUTCOMES)
 
 
+# Miss-rate gate constants (Pipeline Rehab P6, 2026-08-03). MIRRORED in
+# aic-orchestrator.py's classify_miss_rate — keep the two byte-identical
+# (locked by test_scraper_outcomes.py::TestMissRateGate parity test).
+MISS_RATE_FAIL_PCT = 20.0
+MISS_RATE_MIN_N_FOR_FAIL = 30
+MISS_RATE_WIPEOUT_ABS = 10
+MISS_RATE_WIPEOUT_PCT = 90.0  # the early-abort threshold — near-total wipeout
+
+
+def classify_miss_rate(anomalous, permits_attempted, *, early_abort=False, capped=False):
+    """Classify the anomalous-miss-rate gate: (status, miss_rate_pct, threshold_str).
+
+    Small-n statistics (P6): at the ASSUMED 10% anomalous baseline (a
+    pre-ledger assumption — re-measure from the outcome ledger once P7
+    accumulates real runs), the binomial false-FAIL probability of the <20%
+    gate is 27.1% at n=3 (the probe dispatch default) vs 7.3% at n=30. FAIL
+    is therefore only statistically meaningful at n >= 30; below that the
+    gate WARNs — EXCEPT the wipeout class (the false-PASS `de3ff6dd` closed;
+    this softening must NOT reopen it), which stays FAIL at ANY n:
+      - the 90%-anomalous early abort fired (sustained wipeout — small n is
+        BECAUSE the run aborted, not probe noise), or
+      - the run was NOT capped (production-shaped: a full run that only
+        attempted a few permits and missed them is a wipeout), or
+      - the absolute anomalous count is wipeout-shaped
+        (>= MISS_RATE_WIPEOUT_ABS — implausible as noise at any baseline), or
+      - the miss rate itself is >= MISS_RATE_WIPEOUT_PCT (the early-abort
+        threshold shape — a near-total wipeout is signal at ANY n).
+    """
+    miss_rate = (anomalous / permits_attempted * 100) if permits_attempted > 0 else 0
+    threshold = (
+        f'< {MISS_RATE_FAIL_PCT:.0f}% (FAIL-eligible at n >= {MISS_RATE_MIN_N_FOR_FAIL}; '
+        f'below that WARN — binomial false-FAIL 27.1% at n=3 vs 7.3% at n=30 on the '
+        f'assumed 10% baseline (pre-ledger; re-measure post-P7) — EXCEPT wipeout shapes '
+        f'(early-abort fired / uncapped run / anomalous >= {MISS_RATE_WIPEOUT_ABS} / '
+        f'rate >= {MISS_RATE_WIPEOUT_PCT:.0f}%), which FAIL at any n)'
+    )
+    if miss_rate < MISS_RATE_FAIL_PCT:
+        return 'PASS', miss_rate, threshold
+    if permits_attempted >= MISS_RATE_MIN_N_FOR_FAIL:
+        return 'FAIL', miss_rate, threshold
+    if (early_abort or not capped or anomalous >= MISS_RATE_WIPEOUT_ABS
+            or miss_rate >= MISS_RATE_WIPEOUT_PCT):
+        return 'FAIL', miss_rate, threshold
+    return 'WARN', miss_rate, threshold
+
+
 async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag='[scraper]',
                       profile=None, outcomes=None):
     """Core scrape loop for a list of year_seq combos. Mutates tel in place."""
@@ -3155,6 +3202,7 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
         # must not abort a healthy run — post the passed-only portal change
         # they are roughly half of all in-flight permits.
         if i >= 9 and (i + 1) % 10 == 0 and anomalous_miss_count(tel) / tel['permits_attempted'] >= 0.9:
+            tel['early_abort'] = True  # P6: keeps the small-n gate FAIL-eligible
             log('WARN', worker_tag, f"Early abort: {anomalous_miss_count(tel)}/{tel['permits_attempted']} anomalous misses")
             break
 
@@ -3172,6 +3220,9 @@ def make_telemetry():
         'error_categories': {}, 'last_error': None, 'latencies': [],
         'outcome_write_failures': 0, 'outcome_resolution_failures': 0,
         'preflight_passed': True, '_worker_id': 'standalone',
+        # P6: set True when the 90%-anomalous early abort fires — keeps the
+        # small-n miss-rate gate FAIL-eligible (wipeout class) on such runs.
+        'early_abort': False,
     }
 
 
@@ -3184,9 +3235,13 @@ def compute_summary(tel, start_ms):
     # Gate on ANOMALOUS misses only (permit unknown to the portal). Benign
     # empties — no stage passed yet, no inspection link — are the portal's own
     # answers and gated them at 41.7%/50% "FAIL" on healthy runs.
+    # P6 (2026-08-03): FAIL-eligible only at n >= 30; small capped probes WARN
+    # instead (binomial noise), wipeout shapes stay FAIL — see classify_miss_rate.
     anomalous = anomalous_miss_count(tel)
-    miss_rate = (anomalous / tel['permits_attempted'] * 100) if tel['permits_attempted'] > 0 else 0
-    miss_status = 'FAIL' if miss_rate >= 20 else 'PASS'
+    miss_status, miss_rate, miss_threshold = classify_miss_rate(
+        anomalous, tel['permits_attempted'],
+        early_abort=tel.get('early_abort', False),
+        capped=MAX_PERMITS > 0)
 
     summary = {
         'records_total': tel['permits_attempted'],
@@ -3261,6 +3316,9 @@ def compute_summary(tel, start_ms):
                 'http_bytes_down': tel.get('http_bytes_down', 0),
                 'proxy_host': PROXY_HOST if proxy_enabled() else None,
                 'preflight_passed': tel.get('preflight_passed', True),
+                # P6: crosses the worker->orchestrator boundary so the
+                # aggregated miss-rate gate keeps its wipeout FAIL-eligibility.
+                'early_abort': tel.get('early_abort', False),
                 'max_permits_cap': MAX_PERMITS,
                 'capped': MAX_PERMITS > 0 and tel['permits_attempted'] >= MAX_PERMITS,
                 'latency': {'p50': int(p50), 'p95': int(p95), 'max': int(latencies[-1])},
@@ -3290,7 +3348,7 @@ def compute_summary(tel, start_ms):
                     {'metric': 'not_found_count', 'value': tel['not_found_count'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'no_stages_yet', 'value': tel.get('not_found_breakdown', {}).get('no_stages', 0), 'threshold': None, 'status': 'INFO'},
                     {'metric': 'no_inspection_link', 'value': tel.get('not_found_breakdown', {}).get('no_inspection_link', 0), 'threshold': None, 'status': 'INFO'},
-                    {'metric': 'anomalous_miss_rate', 'value': f'{miss_rate:.1f}%', 'threshold': '< 20%', 'status': miss_status},
+                    {'metric': 'anomalous_miss_rate', 'value': f'{miss_rate:.1f}%', 'threshold': miss_threshold, 'status': miss_status},
                     {'metric': 'records_inserted', 'value': tel['total_upserted'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'records_updated', 'value': tel['status_changes'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'duration_ms', 'value': duration_ms, 'threshold': None, 'status': 'INFO'},

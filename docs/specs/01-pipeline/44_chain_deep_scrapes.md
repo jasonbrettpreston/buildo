@@ -11,7 +11,7 @@ As a tradesperson, I want real-time inspection statuses (Pass/Fail/Outstanding) 
 ## 2. Chain Definition
 
 **Trigger:** `node scripts/run-chain.js deep_scrapes` or `POST /api/admin/pipelines/chain_deep_scrapes`
-**Schedule:** `0 15,18,21 * * 1-5` UTC — 3×/day, weekdays only, via `.github/workflows/chain-deep-scrapes.yml` (live since 2026-07-29, `f7993025`; Spec 115 §2 + §2.4 own the cadence). Also on-demand via `workflow_dispatch` / the admin trigger.
+**Schedule:** `0 15,18,21 * * 1-5` UTC — 3×/day, weekdays only, via `.github/workflows/chain-deep-scrapes.yml` — **currently DISABLED (the `schedule:` block is committed commented-out; was live 2026-07-29 `f7993025`, re-disabled pending the throughput WF — re-enablement is Pipeline Rehab P7's entry-gated change; Spec 115 §2 + §2.4 own the cadence).** On-demand via `workflow_dispatch` / the admin trigger remains live.
 **Steps:** 7 (sequential, stop-on-failure)
 **Gate:** None
 
@@ -172,10 +172,21 @@ length is re-evaluated when the `populate_queue` re-queue-forever defect is fixe
   exists); `no_stages` / `no_inspection_link` are the portal answering honestly. The audit
   gate is `anomalous_miss_rate < 20%` — computed over the anomalous class only — with
   `not_found_count` + the benign counts emitted as INFO rows and the full
-  `not_found_breakdown` in `scraper_telemetry`. Only anomalous misses feed the
-  `consecutive_empty` WAF-trap counter and the 90% early-abort. A `no_stages` permit gets
-  `last_scraped_at` stamped (the DB must remember the portal answered, or the staleness
-  monitor counts it never-scraped forever and the queue re-buys the same empty answer)
+  `not_found_breakdown` in `scraper_telemetry`. **Small-n statistics (Pipeline Rehab P6,
+  2026-08-03 — `classify_miss_rate`, mirrored byte-identically in `aic-orchestrator.py`
+  and `aic-scraper-nodriver.py`, parity pytest-locked):** the gate is FAIL-eligible only
+  at `permits_attempted >= 30`; at the ASSUMED 10% anomalous baseline (a pre-ledger
+  assumption — re-measure from the outcome ledger once P7 accumulates real runs) the
+  binomial false-FAIL probability is 27.1% at n=3 (the probe dispatch default) vs 7.3% at
+  n=30, so a small capped probe over the threshold emits **WARN**, not FAIL. The WIPEOUT
+  class stays FAIL at ANY n (the `de3ff6dd` false-PASS must not reopen): the 90%-anomalous
+  early abort fired (`early_abort` rides telemetry across the worker→orchestrator
+  boundary), the run was UNCAPPED (production-shaped), the absolute anomalous count is
+  ≥ 10, or the rate itself is ≥ 90%. The row's threshold string self-documents this whole
+  regime. Only anomalous misses feed the `consecutive_empty` WAF-trap counter and the 90%
+  early-abort. A `no_stages` permit gets `last_scraped_at` stamped (the DB must remember
+  the portal answered, or the staleness monitor counts it never-scraped forever and the
+  queue re-buys the same empty answer)
 - AIC returns HTML instead of JSON → WAF block detected, proxy rotated
 - Permit has `status = 'Revision Issued'` on AIC → no inspections data (only rev 00 has them)
 - `showStatus = false` on permit detail → no inspection link available, set `enriched_status = 'Permit Issued'`
@@ -239,6 +250,14 @@ transport-identical rows, vocabulary agreement with `_contracts.json`, and the o
 counter merge + guarded audit row. Live-DB proof: `src/tests/db/236_permit_scrape_outcomes.db.test.ts`
 (CHECKs, RLS, contract equality) + `src/tests/db/237_scrape_outcome_prune.db.test.ts`
 (prune atomicity/idempotency/LEAST-GREATEST/rollup keys).
+
+**Miss-rate gate statistics locks (Pipeline Rehab P6, 2026-08-03):**
+`scripts/tests/test_scraper_outcomes.py::TestMissRateGate` — small-n capped probe over
+threshold → WARN not FAIL (n=3, 1 anomalous); n=30 at 23.3% → FAIL; sub-threshold PASS at
+any n; the four wipeout shapes each stay FAIL at small n (early-abort fired / uncapped
+run / anomalous ≥ 10 / rate ≥ 90%); orchestrator/scraper `classify_miss_rate` parity;
+`early_abort` recorded in `make_telemetry()`; `compute_summary` wiring (row status WARN +
+self-documenting threshold string + row-derived WARN verdict on a small probe miss).
 </testing>
 
 ---
