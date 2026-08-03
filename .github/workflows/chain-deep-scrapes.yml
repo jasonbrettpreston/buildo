@@ -76,10 +76,15 @@ jobs:
   deep-scrapes:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
     # Fixed, not derived: GitHub Actions expressions have no arithmetic operators,
-    # so this cannot be "chain timeout + setup headroom". Generous enough to cover
-    # setup plus the largest chain timeout a dispatch is likely to ask for; the
-    # chain step carries its own, tighter, input-driven limit.
-    timeout-minutes: 45
+    # so this cannot be "chain timeout + setup headroom". Sized from the stage-1
+    # throughput proving run (P7 stage 2 prep, 2026-08-03 — run 30843114683:
+    # 100 permits / 12.6 min = 7.5s/permit, miss-rate 5.0%, zero WAF blocks,
+    # ledger 0 write failures): a 150-min chain timeout ≈ 1,200 permits at that
+    # rate; 170 = 150 largest-expected chain timeout + setup headroom. Slots are
+    # 3h apart, so 150 keeps a run inside its slot before the concurrency guard
+    # would skip the next. The chain step carries its own, tighter, input-driven
+    # limit. (Was 45 — probe-shaped; it would kill any full-throughput run.)
+    timeout-minutes: 170
     concurrency:
       group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name so a
       cancel-in-progress: false       # future rename can't drift the concurrency group out of sync

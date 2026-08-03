@@ -72,6 +72,18 @@ describe('chain-deep-scrapes workflow', () => {
     });
   });
 
+  describe('job ceiling (P7 stage 2 prep, 2026-08-03)', () => {
+    it('job timeout-minutes is 170 — sized from the stage-1 throughput proving run', () => {
+      // Stage-1 proving run 30843114683: 100 permits / 12.6 min = 7.5s/permit,
+      // miss-rate 5.0%, zero WAF blocks. A 150-min chain timeout ≈ 1,200
+      // permits at that rate; 170 = 150 largest-expected chain timeout +
+      // setup headroom. Slots are 3h apart, so 150 keeps a run inside its
+      // slot before the concurrency guard would skip the next. The old 45
+      // was probe-shaped and would kill any full-throughput stage-2 run.
+      expect(activeLines).toMatch(/^\s*timeout-minutes:\s*170\s*$/m);
+    });
+  });
+
   describe('failure detection', () => {
     it('reads the DB-recorded verdict separately from the process exit code', () => {
       // aic-orchestrator.py exits 0 on a scrape-level failure BY DESIGN, so a job
