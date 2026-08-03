@@ -26,8 +26,15 @@ const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
 const SQM_TO_SQFT = 10.7639;
 const STORY_HEIGHT_M = 3.0;
 
+// CKAN resource ids ROTATE when the city re-uploads the file (the dataset id
+// is stable, the resource id is not) — the previous id 404'd on 2026-08-03
+// (run 30842232783, 86 min into the chain) after a re-registration; the
+// filename part was unchanged. Local caches mask this: the data/ skip below
+// (extractDir/zip existsSync guards) means only a clean CI checkout ever hits
+// this URL. Durable fix (filed in review_followups 2026-08-03): resolve the
+// newest resource at runtime via CKAN package_show instead of hardcoding.
 const ZIP_URL =
-  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/c57a333a-dc6c-416e-8dd0-7b7964161720/download/3dmassingshapefile_2025_wgs84.zip';
+  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/667237d6-4d3c-4cf3-8cb7-e91c48d59375/download/3dmassingshapefile_2025_wgs84.zip';
 
 // ---------------------------------------------------------------------------
 // Helpers (inline to avoid module resolution issues in standalone scripts)
