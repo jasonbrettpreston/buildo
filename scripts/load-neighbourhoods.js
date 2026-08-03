@@ -51,6 +51,11 @@ const CONSTRUCTION_PERIODS = [
 // ---------------------------------------------------------------------------
 function downloadFile(url, destPath) {
   return new Promise((resolve, reject) => {
+    // Pipeline Rehab P2 (2026-08-03): the gitignored data/ dir does not exist
+    // on a fresh checkout (every GitHub Actions runner) — create the
+    // destination directory before opening the write stream (idempotent;
+    // covers BOTH call sites, :640 boundaries + :652 profiles, in one place).
+    fs.mkdirSync(path.dirname(destPath), { recursive: true });
     const file = fs.createWriteStream(destPath);
     const get = url.startsWith('https') ? https.get : http.get;
     get(url, (response) => {

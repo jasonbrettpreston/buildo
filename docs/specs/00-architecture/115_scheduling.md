@@ -168,7 +168,11 @@ guard + `env: *pipeline-env` pattern as the `permits` step above. Per-chain step
 exists yet, so the verdict-check step's duration tripwire `::warning`s at >80% of the
 budget, fed the same value via `CHAIN_DURATION_BUDGET_MINUTES` so yml and tripwire cannot
 drift), `sources` 180 (raised 2026-07-25 — the chain runs ~2h; the yml led the spec here,
-drift reconciled), `entities` 90 (unchanged).
+drift reconciled), `entities` 90 (unchanged). `chain-sources.yml` additionally carries a
+`mkdir -p data` step before its chain step (Pipeline Rehab P2, 2026-08-03): the gitignored
+`data/` dir is absent on every fresh checkout and four sources loaders download into it —
+the loaders' `downloadFile()` helpers now mkdir it themselves (the load-bearing fix, which
+also covers local fresh clones); the workflow step is belt-and-suspenders.
 
 ### 2.3 `backup_db` — no extra workflow step
 

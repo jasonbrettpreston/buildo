@@ -53,6 +53,14 @@ jobs:
         run: node scripts/migrate.js --verify
         env: *pipeline-env
 
+      - name: Ensure data/ exists (gitignored — absent on every fresh checkout)
+        # Pipeline Rehab P2 (2026-08-03): belt to the loaders' own in-code
+        # mkdir (downloadFile() now mkdirs the destination dir itself — the
+        # in-code fix is the real one, required for local fresh clones too).
+        # Four loaders wrote into data/ without creating it, so every
+        # scheduled run of this chain ENOENT'd on the first loader step.
+        run: mkdir -p data
+
       - name: Guard — sources concurrency check
         id: sources_guard
         run: node scripts/check-chain-running.js sources >> "$GITHUB_OUTPUT"
