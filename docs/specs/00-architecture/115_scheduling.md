@@ -92,7 +92,7 @@ loop into GitHub Actions step semantics:
 jobs:
   coa-then-permits:
     runs-on: ubuntu-latest   # RESOLVED Phase 3.2 (2026-07-20): GitHub-hosted for ALL workflows — Spec 113 §8.2 option 3 ruled (restrictions off + strong auth); deep_scrapes also GH-hosted (§2.4)
-    timeout-minutes: 210     # 90 (coa) + 90 (permits) + checkout/setup/report headroom
+    timeout-minutes: 240     # 90 (coa) + 120 (permits) + checkout/setup/report headroom (permits 90→120: Pipeline Rehab P1, 2026-08-03)
     concurrency:
       group: chain-coa-permits
       cancel-in-progress: false   # queue, never cancel a run mid-flight
@@ -124,7 +124,7 @@ jobs:
       - name: Run permits chain
         id: permits
         if: always() && steps.permits_guard.outputs.skip != 'true'
-        timeout-minutes: 90            # NOT continue-on-error — this is the primary
+        timeout-minutes: 120           # NOT continue-on-error — this is the primary
         run: node scripts/run-chain.js permits   # pipeline; its failure MUST redden the job
         env: *pipeline-env
 
@@ -161,7 +161,14 @@ top of it, not a replacement.
 
 `chain-sources.yml` and `chain-entities.yml` are single-chain, single-step workflows (no
 serialization, no `continue-on-error` split needed) using the same `check-chain-running.js`
-guard + `timeout-minutes: 90` + `env: *pipeline-env` pattern as the `permits` step above.
+guard + `env: *pipeline-env` pattern as the `permits` step above. Per-chain step ceilings
+(reconciled 2026-08-03, Pipeline Rehab P1): `coa` 90 (unchanged — deliberate), `permits`
+120 (raised from 90 after the chain crept to 78+ min and was step-timeout-killed on
+08-02/08-03; **120 is an estimate, not validated headroom** — no completed run >90 min
+exists yet, so the verdict-check step's duration tripwire `::warning`s at >80% of the
+budget, fed the same value via `CHAIN_DURATION_BUDGET_MINUTES` so yml and tripwire cannot
+drift), `sources` 180 (raised 2026-07-25 — the chain runs ~2h; the yml led the spec here,
+drift reconciled), `entities` 90 (unchanged).
 
 ### 2.3 `backup_db` — no extra workflow step
 
@@ -347,10 +354,15 @@ scripts/run-chain.js deep_scrapes`, separately query `pipeline_runs` for that ru
 step that reads the real DB-recorded outcome and reddens the job itself, rather than
 trusting the child process's own exit code.
 
-**Shared anatomy:** the same `check-chain-running.js` guard + `timeout-minutes: 90` +
+**Shared anatomy:** the same `check-chain-running.js` guard +
 `env: *pipeline-env` (§3) pattern as `chain-sources.yml`/`chain-entities.yml`, plus the
 PG17-client and `migrate.js --verify` steps §3 mandates for every workflow reaching
-`pg_dump` or `run-chain.js`.
+`pg_dump` or `run-chain.js`. Timeouts (reconciled 2026-08-03 to the shipped yml — the
+spec's earlier `timeout-minutes: 90` here was pre-existing drift): the JOB carries
+`timeout-minutes: 45` (fixed, not derived — GH expressions have no arithmetic) and the
+chain STEP carries an input-driven limit (`chain_timeout_minutes` dispatch input,
+probe-shaped default). Raising the job ceiling for full-throughput production runs is
+P7's entry-scoped change, not a value this section fixes.
 
 ### 2.5 `pipeline-watchdog.yml` — freshness watchdog (restores the dropped program mandate, P3-D9)
 
@@ -482,7 +494,8 @@ env:
   endpoint (Spec 113 §8.1), not the scheduled GitHub Actions path, which authenticates via
   the `SUPABASE_DATABASE_URL` secret itself (Postgres auth), not an application-level
   shared secret.
-- **`timeout-minutes: 90`** per chain-invocation step is GitHub Actions' **native** step
+- **`timeout-minutes`** per chain-invocation step (per-chain values — §2.2's reconciled
+  list: coa 90 / permits 120 / sources 180 / entities 90) is GitHub Actions' **native** step
   timeout, replacing `local-cron.js`'s manual `setTimeout` + `child.kill('SIGKILL')`
   (`local-cron.js` L28-34, L127-138). GitHub Actions sends `SIGTERM` first, then force-kills
   after a short grace period — this is *more* forgiving than `local-cron.js`'s immediate
@@ -796,7 +809,8 @@ no file):**
 3. `npm run local-cron` stays as the invocation entrypoint; no rename required by this
    spec.
 4. **Timeout escalation becomes SIGTERM-then-SIGKILL-after-grace** (prod parity, Gemini
-   MED): the existing hard `CHAIN_TIMEOUT_MS` (90 min) timeout now sends `SIGTERM` first,
+   MED): the existing hard `CHAIN_TIMEOUT_MS` (120 min — raised from 90 with the permits
+   step ceiling, Pipeline Rehab P1 2026-08-03) timeout now sends `SIGTERM` first,
    logs CRITICAL, and only escalates to `SIGKILL` if the child has not exited after a grace
    period — mirroring §3's note that GitHub Actions itself sends `SIGTERM` before a force
    kill, rather than `local-cron.js`'s previous immediate `SIGKILL`. The pinned test

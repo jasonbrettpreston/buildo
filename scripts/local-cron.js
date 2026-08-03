@@ -35,11 +35,14 @@ const RUN_CHAIN_SCRIPT = path.resolve(__dirname, 'run-chain.js');
 // Hard per-chain timeout (WF2 P8 hardening, Gemini P11-pass + adversarial
 // amendment). A chain that HANGS (never exits) would otherwise block every
 // subsequent chain in the serialized coa→permits job forever — the primary
-// pipeline (permits) would silently never run. 90 min is comfortably above the
-// ~55 min measured combined coa+permits runtime, so a healthy chain never trips
-// it; a hung one is escalated SIGTERM-then-SIGKILL (below) and the job
-// continues to the next chain regardless of whether the child has exited yet.
-const CHAIN_TIMEOUT_MS = 90 * 60 * 1000;
+// pipeline (permits) would silently never run. Raised 90→120 min with the
+// production permits step ceiling (Pipeline Rehab P1, 2026-08-03 — permits
+// crept to 78+ min and the 90-min ceiling killed it mid-chain on 08-02/08-03;
+// prod parity with chain-coa-permits.yml's PERMITS_STEP_TIMEOUT_MINUTES). A
+// healthy chain never trips it; a hung one is escalated SIGTERM-then-SIGKILL
+// (below) and the job continues to the next chain regardless of whether the
+// child has exited yet.
+const CHAIN_TIMEOUT_MS = 120 * 60 * 1000;
 
 // SIGTERM-then-SIGKILL-after-grace (Spec 115 §7 item 4, prod parity — GitHub
 // Actions itself sends SIGTERM before a force kill, §3) — replaces the

@@ -13,6 +13,10 @@ import { describe, it, expect } from 'vitest';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const checkChainVerdict = require('../../scripts/check-chain-verdict.js') as {
   classifyVerdict: (row: { id?: number; status: string; records_meta: Record<string, unknown> | null } | undefined) => { ok: boolean; reason: string };
+  checkDurationTripwire: (
+    row: { id?: number; status: string; records_meta: Record<string, unknown> | null; started_at?: string | Date | null; completed_at?: string | Date | null } | undefined,
+    budgetMinutes: number,
+  ) => { durationMinutes: number; budgetMinutes: number; thresholdMinutes: number; message: string } | null;
   FAIL_STATUSES: Set<string>;
 };
 
@@ -87,6 +91,65 @@ describe('check-chain-verdict.js — classifyVerdict', () => {
 
   it('FAIL_STATUSES contains exactly failed and completed_with_errors', () => {
     expect([...checkChainVerdict.FAIL_STATUSES].sort()).toEqual(['completed_with_errors', 'failed']);
+  });
+});
+
+describe('check-chain-verdict.js — duration tripwire (P1, Pipeline Rehab 2026-08-03)', () => {
+  // The 120-min permits step ceiling is UNVALIDATED headroom (no completed run
+  // >90 min exists) — the tripwire warns at >80% of the budget so duration
+  // creep is visible BEFORE the next step-timeout kill, instead of after it.
+  const row = (startedAt: string, completedAt: string) => ({
+    id: 9,
+    status: 'completed',
+    records_meta: null,
+    started_at: startedAt,
+    completed_at: completedAt,
+  });
+
+  it('fires when chain duration exceeds 80% of the budget (100 of 120 min)', () => {
+    const res = checkChainVerdict.checkDurationTripwire(
+      row('2026-08-03T00:00:00Z', '2026-08-03T01:40:00Z'),
+      120,
+    );
+    expect(res).not.toBeNull();
+    expect(res!.durationMinutes).toBeCloseTo(100, 5);
+    expect(res!.budgetMinutes).toBe(120);
+    expect(res!.thresholdMinutes).toBeCloseTo(96, 5);
+    // Self-documenting: the message names the live duration, the budget, and
+    // the 80% threshold so the annotation is actionable without reading code.
+    expect(res!.message).toContain('100');
+    expect(res!.message).toContain('120');
+    expect(res!.message).toContain('96');
+  });
+
+  it('stays silent at or below 80% of the budget (90 of 120 min)', () => {
+    const res = checkChainVerdict.checkDurationTripwire(
+      row('2026-08-03T00:00:00Z', '2026-08-03T01:30:00Z'),
+      120,
+    );
+    expect(res).toBeNull();
+  });
+
+  it('stays silent when the budget is missing/invalid or timestamps are absent', () => {
+    expect(checkChainVerdict.checkDurationTripwire(row('2026-08-03T00:00:00Z', '2026-08-03T01:40:00Z'), NaN)).toBeNull();
+    expect(checkChainVerdict.checkDurationTripwire(row('2026-08-03T00:00:00Z', '2026-08-03T01:40:00Z'), 0)).toBeNull();
+    expect(
+      checkChainVerdict.checkDurationTripwire(
+        { id: 9, status: 'completed', records_meta: null, started_at: '2026-08-03T00:00:00Z', completed_at: null },
+        120,
+      ),
+    ).toBeNull();
+    expect(checkChainVerdict.checkDurationTripwire(undefined, 120)).toBeNull();
+  });
+
+  it('run() wires the tripwire: budget from CHAIN_DURATION_BUDGET_MINUTES env, emitted as a ::warning annotation (never a failure)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    const src = fs.readFileSync(path.resolve(__dirname, '../../scripts/check-chain-verdict.js'), 'utf-8');
+    expect(src).toMatch(/CHAIN_DURATION_BUDGET_MINUTES/);
+    expect(src).toMatch(/::warning title=Chain duration tripwire::/);
   });
 });
 

@@ -413,8 +413,10 @@ describe('Chain Orchestrator Script', () => {
   it('a hung chain is escalated SIGTERM-then-SIGKILL-after-grace on a hard timeout and the job continues (hang isolation, prod parity)', () => {
     const scriptPath = path.resolve(__dirname, '../../scripts/local-cron.js');
     const content = fs.readFileSync(scriptPath, 'utf-8');
-    // Hard timeout constant present and above the ~55min measured combined runtime.
-    expect(content).toMatch(/const CHAIN_TIMEOUT_MS = 90 \* 60 \* 1000;/);
+    // Hard timeout constant present and above the measured runtime — raised
+    // 90→120 with the permits step ceiling (Pipeline Rehab P1, 2026-08-03:
+    // permits crept to 78+ min and was step-timeout-killed at 90 on 08-02/08-03).
+    expect(content).toMatch(/const CHAIN_TIMEOUT_MS = 120 \* 60 \* 1000;/);
     // Grace period constant for the SIGTERM-then-SIGKILL escalation.
     expect(content).toMatch(/const KILL_GRACE_MS = 10 \* 1000;/);
     // The hard timeout sends SIGTERM first and logs CRITICAL.

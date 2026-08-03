@@ -19,7 +19,18 @@ on:
 jobs:
   coa-then-permits:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
-    timeout-minutes: 210     # 90 (coa) + 90 (permits) + checkout/setup/PG17-client/migrate-verify headroom
+    timeout-minutes: 240     # 90 (coa) + 120 (permits) + checkout/setup/PG17-client/migrate-verify headroom
+    env:
+      # Pipeline Rehab P1 (2026-08-03): SINGLE SOURCE for the permits step
+      # ceiling — consumed by BOTH the permits step's `timeout-minutes` and the
+      # permits verdict check's duration tripwire (warns at >80% of budget), so
+      # the two values can never drift apart. Raised 90→120 after the permits
+      # chain crept to 78+ min and was step-timeout-killed mid
+      # compute_trade_forecasts on 08-02/08-03 (killing the nightly backup_db
+      # final step with it). KNOWN LIMIT: 120 is an estimate, not validated
+      # headroom — no completed permits run >90 min exists yet; the tripwire is
+      # the early signal for the next revisit.
+      PERMITS_STEP_TIMEOUT_MINUTES: '120'
     concurrency:
       group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name rather
       cancel-in-progress: false       # than a hand-copied literal, so a future rename can't drift
@@ -122,8 +133,11 @@ jobs:
       - name: Run permits chain
         id: permits
         if: always() && steps.permits_guard.outputs.skip != 'true'
-        timeout-minutes: 90            # NOT continue-on-error — this is the primary
-        run: node scripts/run-chain.js permits   # pipeline; its failure MUST redden the job
+        # NOT continue-on-error — this is the primary pipeline; its failure
+        # MUST redden the job. Value sourced from PERMITS_STEP_TIMEOUT_MINUTES
+        # (job env above) — no second hardcode (Pipeline Rehab P1).
+        timeout-minutes: ${{ fromJSON(env.PERMITS_STEP_TIMEOUT_MINUTES) }}
+        run: node scripts/run-chain.js permits
         env: *pipeline-env
 
       - name: Verdict check — permits (F8 fold 2026-07-20)
@@ -134,7 +148,16 @@ jobs:
         id: permits_verdict
         if: always() && steps.permits_guard.outputs.skip != 'true'
         run: node scripts/check-chain-verdict.js permits
-        env: *pipeline-env
+        # Inline env (not *pipeline-env): this step ADDITIONALLY carries the
+        # duration-tripwire budget, fed from the SAME job-env value the permits
+        # step's timeout-minutes reads (Pipeline Rehab P1 — no second
+        # hardcode). YAML aliases can't be extended without merge keys, hence
+        # the three shared vars are repeated here verbatim.
+        env:
+          PIPELINE_CHAIN: ${{ github.workflow }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+          CHAIN_DURATION_BUDGET_MINUTES: ${{ env.PERMITS_STEP_TIMEOUT_MINUTES }}
 
       - name: Surface coa failure for alerting
         if: always() && (steps.coa.outcome == 'failure' || steps.coa_verdict.outcome == 'failure')

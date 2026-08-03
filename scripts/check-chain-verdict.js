@@ -39,6 +39,16 @@
  * Exits 0 otherwise — including `completed_with_warnings`, which is a WARN
  * verdict, not a chain-workflow failure.
  *
+ * Duration tripwire (Pipeline Rehab P1, 2026-08-03): when
+ * `CHAIN_DURATION_BUDGET_MINUTES` is set (the workflow passes the SAME value
+ * it uses for the chain step's `timeout-minutes` — single source, no second
+ * hardcode), a run whose wall-clock duration exceeds 80% of that budget emits
+ * a `::warning` annotation. Observability only — it NEVER affects the exit
+ * code. Rationale: the permits chain crept from ~55 to 78+ min and was
+ * step-timeout-killed at 90 min on 2026-08-02/03 with zero warning; the
+ * raised 120-min ceiling is UNVALIDATED headroom, so creep must be visible
+ * BEFORE the next kill, not after it.
+ *
  * SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.4
  */
 'use strict';
@@ -74,6 +84,33 @@ function classifyVerdict(row) {
   return { ok: true, reason: `status=${row.status}` };
 }
 
+/**
+ * Duration tripwire — pure helper. Returns a warning payload when the run's
+ * wall-clock duration exceeds 80% of the step budget, else null. Null also
+ * for any unusable input (no row, missing timestamps, invalid budget): the
+ * tripwire is observability-only and must never invent a warning from bad
+ * data. `new Date()` here is elapsed-time arithmetic on DB-provided
+ * timestamps, not a DB-written timestamp (scripts/CLAUDE.md rule).
+ *
+ * @param {{ started_at?: string | Date | null, completed_at?: string | Date | null } | undefined} row
+ * @param {number} budgetMinutes
+ * @returns {{ durationMinutes: number, budgetMinutes: number, thresholdMinutes: number, message: string } | null}
+ */
+function checkDurationTripwire(row, budgetMinutes) {
+  if (!row || !Number.isFinite(budgetMinutes) || budgetMinutes <= 0) return null;
+  if (!row.started_at || !row.completed_at) return null;
+  const durationMs = new Date(row.completed_at).getTime() - new Date(row.started_at).getTime();
+  if (!Number.isFinite(durationMs) || durationMs < 0) return null;
+  const durationMinutes = durationMs / 60000;
+  const thresholdMinutes = budgetMinutes * 0.8;
+  if (durationMinutes <= thresholdMinutes) return null;
+  const message =
+    `chain duration ${durationMinutes.toFixed(1)} min exceeded 80% of the ` +
+    `${budgetMinutes}-min step budget (threshold ${thresholdMinutes.toFixed(1)} min) — ` +
+    'duration creep; raise the budget or shrink the chain BEFORE the step-timeout kill recurs.';
+  return { durationMinutes, budgetMinutes, thresholdMinutes, message };
+}
+
 async function run() {
   const chainId = process.argv[2];
   if (!chainId) {
@@ -97,12 +134,21 @@ async function run() {
   const chainSlug = `chain_${chainId}`;
   try {
     const res = await pool.query(
-      `SELECT id, status, records_meta FROM pipeline_runs
+      `SELECT id, status, records_meta, started_at, completed_at FROM pipeline_runs
         WHERE pipeline = $1
         ORDER BY started_at DESC
         LIMIT 1`,
       [chainSlug]
     );
+
+    // Duration tripwire (header contract) — observability only, evaluated
+    // BEFORE the verdict so a run that both crept and failed still shows the
+    // creep annotation alongside the failure.
+    const budgetMinutes = Number(process.env.CHAIN_DURATION_BUDGET_MINUTES);
+    const tripwire = checkDurationTripwire(res.rows[0], budgetMinutes);
+    if (tripwire) {
+      console.log(`::warning title=Chain duration tripwire::${chainSlug} ${tripwire.message}`);
+    }
 
     const { ok, reason } = classifyVerdict(res.rows[0]);
     if (!ok) {
@@ -128,4 +174,4 @@ if (require.main === module) {
   run();
 }
 
-module.exports = { run, classifyVerdict, FAIL_STATUSES };
+module.exports = { run, classifyVerdict, checkDurationTripwire, FAIL_STATUSES };
