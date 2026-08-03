@@ -224,7 +224,14 @@ pipeline.run('assert-entity-tracing', async (pool) => {
       acceptanceMetric: 'permits_opportunity_score_gate_accepted',
       baseline: '79.9-80.0% on 2026-08-03 (accepted; persistently near-threshold since the gate landed — review_followups :2554 basis-aware re-derivation deferred)',
     });
-    const osStatus = osCoverage >= osThreshold ? 'PASS' : osAcceptance ? 'WARN' : 'FAIL';
+    // OUTPUT-panel fold (2026-08-03): decide the status on the SAME ROUNDED
+    // operand the acceptance helper compares (osPct), never the raw fraction.
+    // Raw ∈ [0.7995, 0.80) rounds to 80.0: the acceptance would self-retire
+    // (null) while a raw comparison still read "below threshold" — the two
+    // disagreeing left a FAIL hole exactly on the live knife-edge band.
+    // Matches the sibling gate's internally-consistent rounded semantics
+    // (assert-global-coverage coverageRow gates on its rounded pct).
+    const osStatus = osPct >= osThreshold * 100 ? 'PASS' : osAcceptance ? 'WARN' : 'FAIL';
     if (osStatus === 'FAIL') {
       failures.push(
         `opportunity_score: ${(osCoverage * 100).toFixed(1)}% of forecast rows scored > 0 ` +

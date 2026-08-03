@@ -90,6 +90,41 @@ describe('gate wiring — producer-side acceptance (source-scan)', () => {
     expect(src).toMatch(/auditRows\.some\(\s*\(?r\)?\s*=>\s*r\.status === 'WARN'\)/);
   });
 
+  // OUTPUT-panel BUG fold (2026-08-03, Schema-Fidelity + Integration converged):
+  // osStatus was decided on RAW `osCoverage >= osThreshold` while the acceptance
+  // self-retire compares the ROUNDED osPct (inside acceptedBaselineRows). In the
+  // live-occupied band raw ∈ [0.7995, 0.80), osPct rounds to 80.0 → acceptance
+  // retires (null) → osStatus fell through to FAIL → completed_with_errors →
+  // red workflow. Gate and acceptance MUST compare the same rounded operand.
+  it('entity-tracing gate verdict and acceptance retire compare the SAME rounded operand (knife-edge band raw 0.7995-0.80)', () => {
+    const src = read('scripts/quality/assert-entity-tracing.js');
+    // The status decision must use the rounded osPct — the operand the
+    // acceptance helper sees — never the raw fraction.
+    expect(src).toMatch(/osPct >= osThreshold \* 100 \? 'PASS'/);
+    expect(src).not.toMatch(/osCoverage >= osThreshold \? 'PASS'/);
+  });
+
+  it('band arithmetic: raw 0.7996 rounds to 80.0 → acceptance retired (rounded gate reads PASS, FAIL impossible); raw 0.7994 → 79.9 accepted-WARN pair', () => {
+    const round = (raw: number) => Math.round(raw * 1000) / 10; // the gates' shared rounding
+    const argsFor = (raw: number) => ({
+      valuePct: round(raw),
+      strictPct: 80,
+      acceptanceMetric: 'permits_opportunity_score_gate_accepted',
+      baseline: 'band pin',
+    });
+    // raw 0.7996 → osPct 80.0: helper self-retires; a gate deciding on the
+    // SAME rounded operand reads 80.0 >= 80 → PASS. No FAIL path exists.
+    expect(round(0.7996)).toBe(80);
+    expect(acceptedBaselineRows(argsFor(0.7996))).toBeNull();
+    // raw 0.7994 → osPct 79.9: below strict — accepted-WARN pair present,
+    // rounded gate reads WARN (never FAIL while the pair exists).
+    expect(round(0.7994)).toBe(79.9);
+    const rows = acceptedBaselineRows(argsFor(0.7994));
+    expect(rows).not.toBeNull();
+    expect(rows![0]!.status).toBe('WARN');
+    expect(rows![1]!.status).toBe('INFO');
+  });
+
   it('neither gate reuses the RESERVED coa_audit_gate_warn_accepted metric name (Spec 85 / mig 211 collision hazard)', () => {
     expect(read('scripts/quality/assert-global-coverage.js')).not.toContain('coa_audit_gate_warn_accepted');
     expect(read('scripts/quality/assert-entity-tracing.js')).not.toContain('coa_audit_gate_warn_accepted');
