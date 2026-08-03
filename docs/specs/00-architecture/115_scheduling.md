@@ -420,6 +420,12 @@ watchdog checks for it.
    safety-net role, merged into this single workflow rather than a separate one —
    cross-reference Spec 112 §6, which now points back here for the trigger mechanism. If a
    completed backup still cannot be confirmed after the direct invocation → `exit 1`.
+   INCIDENT NOTE (2026-08-03, Pipeline Rehab P5): the shipped yml had additionally gated
+   this fallback on `chains_fresh == 'true'` — a term this spec never asked for — which
+   suppressed the safety net during the exact outage it exists for (permits step-timeout-
+   killed before its `backup_db` final step; backups 50.7h stale vs the 25h SLA while the
+   fallback sat disabled). The term is removed; the trigger is backup-staleness + the
+   `permits_running` race guard ONLY, restoring conformance with the text above.
 
 **Workflow anatomy:** PG17-client install step (this workflow reaches `pg_dump` via the
 direct `backup-db.js` invocation, §3's mandate); `migrate.js --verify` pre-flight

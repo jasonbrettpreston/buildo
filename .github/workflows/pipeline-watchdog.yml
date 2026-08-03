@@ -157,17 +157,32 @@ jobs:
       #      missing after the optional fallback attempt, THIS step exits 1
       #      and reddens the job (Spec 115 §2.5's "still missing after the
       #      direct invocation -> exit 1").
+      # NO `>> "$GITHUB_OUTPUT"` redirect on either freshness step (Pipeline
+      # Rehab P5, 2026-08-03): check-pipeline-freshness.js SELF-WRITES its
+      # outputs via writeOutput() (:112-119), so the redirect was redundant —
+      # and actively harmful: it swallowed ALL stdout, including the ::error
+      # annotations naming WHICH chain is stale (the 2026-07-31 red run
+      # required log-elimination archaeology; review_followups ~:2833).
       - name: Check pipeline freshness (initial)
         id: freshness_check
         continue-on-error: true   # a red result here may still be resolved by the fallback step below — the FINAL recheck is the step that actually reddens the job
-        run: node scripts/check-pipeline-freshness.js >> "$GITHUB_OUTPUT"
+        run: node scripts/check-pipeline-freshness.js
         env: *pipeline-env
 
+      # DECOUPLED from chains_fresh (Pipeline Rehab P5, 2026-08-03 — Spec 112
+      # §6 conformance; the spec already describes the decoupled behavior, the
+      # previous `chains_fresh == 'true'` term was the yml deviating): a STALE
+      # chain is precisely when the backup safety net matters most — the live
+      # 2026-08-03 incident (permits step-timeout-killed before its backup_db
+      # final step, backups 50.7h stale vs the 25h SLA) was suppressing this
+      # exact fallback via that term. The permits_running race guard is
+      # load-bearing and RETAINED: an in-flight permits chain may complete its
+      # own backup_db moments later, and a concurrent direct backup-db.js
+      # would double-run it.
       - name: Fallback — run backup-db.js directly (Spec 112 §6 safety net)
         id: backup_fallback
         if: >-
           steps.freshness_check.outputs.backup_fresh != 'true' &&
-          steps.freshness_check.outputs.chains_fresh == 'true' &&
           steps.freshness_check.outputs.permits_running != 'true'
         run: node scripts/backup-db.js
         env: *pipeline-env
@@ -175,5 +190,5 @@ jobs:
       - name: Check pipeline freshness (final)
         id: freshness_recheck
         if: always()   # NOT continue-on-error — this step's exit code is the job's verdict
-        run: node scripts/check-pipeline-freshness.js >> "$GITHUB_OUTPUT"
+        run: node scripts/check-pipeline-freshness.js
         env: *pipeline-env
