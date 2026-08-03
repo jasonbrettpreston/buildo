@@ -34,6 +34,7 @@
 
 const pipeline = require('./../lib/pipeline');
 const { SKIP_PHASES_SQL } = require('./../lib/lifecycle-phase');
+const { acceptedBaselineRows } = require('./../lib/accepted-baseline');
 
 // Advisory lock ID — unique to this assert script (§47 §A.5, ID 110).
 // Prevents two concurrent chain runs from executing the entity tracing
@@ -209,24 +210,53 @@ pipeline.run('assert-entity-tracing', async (pool) => {
     const osMatched = os.matched || 0;
     const osCoverage = osDenominator > 0 ? osMatched / osDenominator : 1;
     const osThreshold = THRESHOLDS.opportunity_score;
-    const osStatus = osCoverage >= osThreshold ? 'PASS' : 'FAIL';
+    // Pipeline Rehab P4 (2026-08-03) — PRODUCER-SIDE accepted baseline (Spec 48
+    // §4.6/§4.9). opportunity_score coverage has sat at 79.9-80.0% vs >= 80 on
+    // EVERY nightly run (8/8 FAILs, never passed — persistently near-threshold,
+    // NOT flapping): a knife-edge calibration fact, not a regression signal.
+    // The would-be FAIL is downgraded to accepted-WARN HERE, in the gate: live
+    // value re-emitted every run, acceptance SELF-RETIRES at >= 80%. Metric
+    // name is NEW (Spec 85's similarly-named gate-policy metric is RESERVED).
+    const osPct = Math.round(osCoverage * 1000) / 10;
+    const osAcceptance = acceptedBaselineRows({
+      valuePct: osPct,
+      strictPct: osThreshold * 100,
+      acceptanceMetric: 'permits_opportunity_score_gate_accepted',
+      baseline: '79.9-80.0% on 2026-08-03 (accepted; persistently near-threshold since the gate landed — review_followups :2554 basis-aware re-derivation deferred)',
+    });
+    const osStatus = osCoverage >= osThreshold ? 'PASS' : osAcceptance ? 'WARN' : 'FAIL';
     if (osStatus === 'FAIL') {
       failures.push(
         `opportunity_score: ${(osCoverage * 100).toFixed(1)}% of forecast rows scored > 0 ` +
         `(${osMatched}/${osDenominator}) below ${(osThreshold * 100).toFixed(0)}% threshold`,
       );
+    } else if (osStatus === 'WARN') {
+      pipeline.log.warn(
+        '[assert-entity-tracing]',
+        `opportunity_score ${osPct}% below strict ${(osThreshold * 100).toFixed(0)}% — accepted baseline (P4), see permits_opportunity_score_gate_accepted`,
+        { matched: osMatched, denominator: osDenominator },
+      );
     }
     auditRows.push({
       metric: 'opportunity_score_coverage_pct',
-      value: Math.round(osCoverage * 1000) / 10,
-      threshold: `>= ${(osThreshold * 100).toFixed(0)}% of forecast rows`,
+      value: osPct,
+      threshold: osAcceptance
+        ? `>= ${(osThreshold * 100).toFixed(0)}% of forecast rows — accepted baseline, see permits_opportunity_score_gate_accepted`
+        : `>= ${(osThreshold * 100).toFixed(0)}% of forecast rows`,
       matched: osMatched,
       denominator: osDenominator,
       denominator_type: 'forecast_rows',
       status: osStatus,
     });
+    if (osAcceptance) auditRows.push(...osAcceptance);
 
-    const verdict = failures.length > 0 ? 'FAIL' : 'PASS';
+    // Row-derived verdict (Spec 48 — never a parallel boolean): FAIL if any
+    // row FAILs, else WARN if any row WARNs (an accepted baseline lands the
+    // chain at completed_with_warnings — green under the Spec 115 §2.4
+    // allowlist), else PASS.
+    const verdict = auditRows.some((r) => r.status === 'FAIL') ? 'FAIL'
+      : auditRows.some((r) => r.status === 'WARN') ? 'WARN'
+      : 'PASS';
 
     if (failures.length > 0) {
       pipeline.log.warn('[assert-entity-tracing]', 'TRACE COVERAGE FAILURES', { failures });

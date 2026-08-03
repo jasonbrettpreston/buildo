@@ -303,6 +303,7 @@ verdict logic:
 | `calibratedRow(step, field, pop, denom, fieldPassPct, fieldWarnPct)` | Per-field explicit thresholds (e.g. zoning 80/75) | Fields whose achievable ceiling differs from the global gate. Params are deliberately **named** `fieldPassPct`/`fieldWarnPct` (not the outer `passPct`/`warnPct`) so a caller that forgets to pass thresholds fails loudly instead of silently inheriting the global gate. |
 | `infoRow(step, field, value)` | none — always `INFO` | Structural sparsity / count-only metrics, no traffic light. |
 | `vocabRow(step, col, present, vocabSize)` / `profileVocabTriple(t)` | PASS ≥ `vocabPassPct`%, WARN ≥ `vocabWarnPct`% | Value/vocabulary dimension (distinct values present vs the defining vocabulary). Backs the SDK `cov_*` primitive (§4.3) via the shared `resolveAndCountTriple`; an **unresolved** triple (bad identifier / missing column / type mismatch / timeout) becomes a VISIBLE `WARN` row, never a silent INFO-skip. |
+| `acceptedBaselineRows({valuePct, strictPct, acceptanceMetric, baseline})` (`scripts/lib/accepted-baseline.js`, _NEW 2026-08-03 Pipeline Rehab P4_) | WARN while `valuePct < strictPct`; **null (self-retired) at ≥ `strictPct`** | Producer-side accepted baseline for a persistently-red gate whose gap is structural and owned by a named fix epic (§4.6 — the acceptance lives IN the gate, never a checker-side allowlist). Returns the §4.9 pair: an accepted-WARN row under a **NEW metric name** (never reuse an existing metric — Spec 85's gate-policy metric name is reserved) carrying the LIVE value every run + a self-documenting acceptance string, and a `<metric>_retighten` INFO companion stating the machine-observable re-tighten condition. The caller also downgrades its own would-be-FAIL field row to WARN with a pointer annotation. |
 
 ### 4.6 Denominator honesty — batch- vs subset- vs corpus-scoped coverage _(NEW 2026-07)_
 
@@ -351,6 +352,21 @@ relaxed values are in effect, and flips to FAIL-advice once a companion INFO row
 and permanent-by-choice-only. The CoA gate's `coa_audit_gate_warn_accepted` WARN row is the
 same shape — a sanctioned bypass made as loud as the failure it suppresses (cf. §3.7's
 first-deploy spike runbook posture).
+
+Two further exemplars landed 2026-08-03 (Pipeline Rehab P4, via the §4.5
+`acceptedBaselineRows` builder — both self-retire automatically, no operator revert
+needed):
+
+- **`coa_cost_coverage_gate_accepted`** (coa `assert_global_coverage`, coa chain ONLY —
+  the permits-chain cost profile is untouched): `coa_applications.estimated_cost` sits at
+  61.1-61.2% vs the 90/70 rail, a structural gap owned by the Spec 80 Phase 4
+  forecast/cost reconciliation epic. The field row emits WARN (not FAIL) with a pointer
+  annotation; the acceptance pair re-emits the live value every run and self-retires at
+  ≥ 90%.
+- **`permits_opportunity_score_gate_accepted`** (permits `assert_entity_tracing`):
+  `opportunity_score` coverage has sat at 79.9-80.0% vs ≥ 80 on every nightly run (never
+  passed — knife-edge after the P16 denominator growth, not flapping). Same pair shape,
+  self-retires at ≥ 80%.
 
 ### 4.10 `records_total` honesty on Mutator steps _(NEW 2026-07)_
 

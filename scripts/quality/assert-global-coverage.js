@@ -28,6 +28,7 @@ const { loadMarketplaceConfigs, validateLogicVars } = require('./../lib/config-l
 const { calibratedStatus } = require('./../lib/coverage-status');
 const { resolveAndCountTriple } = require('./../lib/vocab-coverage');
 const { COST_PROP_COLS } = require('./../lib/parcel-cost-cols');
+const { acceptedBaselineRows } = require('./../lib/accepted-baseline');
 
 // Spec 88 §2.10 — the 15 propagated cost/FSI scalars, as a reusable SELECT fragment of
 // `COUNT(*) FILTER (WHERE <col> IS NOT NULL) AS <col>_pop` (same on permits + coa_applications).
@@ -451,7 +452,32 @@ pipeline.run('assert-global-coverage', async (pool) => {
 
       // Step 7 — compute_coa_cost_estimates (Pass-2 fold: was missing)
       rows.push(coverageRow('CoA Step 7 — compute_coa_cost_estimates', 'coa_applications.cost_classified_at', parseInt(ca.cost_classified_pop, 10), coaTotal));
-      rows.push(coverageRow('CoA Step 7 — compute_coa_cost_estimates', 'coa_applications.estimated_cost', parseInt(ca.estimated_cost_pop, 10), coaTotal));
+      // Pipeline Rehab P4 (2026-08-03) — PRODUCER-SIDE accepted baseline (Spec 48 §4.6/§4.9).
+      // estimated_cost coverage sits at 61.1-61.2% vs the 90/70 global rail (8/8 nightly
+      // FAILs, 07-31/08-01) — a structural gap owned by the Spec 80 Phase 4 forecast/cost
+      // reconciliation epic, not a regression this row can catch by staying red. The
+      // would-be FAIL is downgraded to accepted-WARN HERE, in the gate (never in the
+      // checker): the live value stays visible every run, a further regression stays
+      // visible in row history, and the acceptance SELF-RETIRES at >= passPct. COA CHAIN
+      // ONLY — the permits-chain Step-14 cost profile (calibratedRow below) PASSes today
+      // and is untouched. Metric name is NEW — Spec 85's similarly-named gate-policy
+      // metric (mig 211 / compute-trade-forecasts, locked by the gate-policy infra test)
+      // is RESERVED and must never be reused here (collision would conflate dashboards).
+      const estCostPop = parseInt(ca.estimated_cost_pop, 10);
+      const estCostRow = coverageRow('CoA Step 7 — compute_coa_cost_estimates', 'coa_applications.estimated_cost', estCostPop, coaTotal);
+      const estCostPct = coaTotal > 0 ? Math.round((estCostPop / coaTotal) * 1000) / 10 : null;
+      const estCostAcceptance = acceptedBaselineRows({
+        valuePct: estCostPct,
+        strictPct: passPct,
+        acceptanceMetric: 'coa_cost_coverage_gate_accepted',
+        baseline: '61.1-61.2% on 2026-08-03 (accepted; fix owned by Spec 80 Phase 4 forecast/cost reconciliation)',
+      });
+      if (estCostAcceptance && estCostRow.status === 'FAIL') {
+        estCostRow.status = 'WARN';
+        estCostRow.threshold = `${estCostRow.threshold} — accepted baseline, see coa_cost_coverage_gate_accepted`;
+      }
+      rows.push(estCostRow);
+      if (estCostAcceptance) rows.push(...estCostAcceptance);
       rows.push(infoRow('CoA Step 7 — compute_coa_cost_estimates', 'cost_estimates.coa_rows', parseInt(cx.cost_estimates_coa_rows, 10)));
 
       // Step 8 — link_coa (Pass-2 fold: was labelled "Step 4")

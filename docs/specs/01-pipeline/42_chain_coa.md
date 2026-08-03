@@ -184,7 +184,7 @@ After this work ships, these gates must hold on a steady-state daily run:
 | `coa_applications.coa_type_class IS NOT NULL` | 0% | ≥ 95% | same |
 | `coa_applications.project_type IS NOT NULL` | 0% | ≥ 90% | same |
 | `coa_applications.structure_type IS NOT NULL` | 0% | ≥ 45% (recalibrated 2026-06-20 — description-only ceiling ~52% measured; the original ≥80% assumed a parcel_buildings copy that proved vocabulary-incompatible) | same |
-| `coa_applications.estimated_cost IS NOT NULL` | 0% | ≥ 80% of active CoAs | same |
+| `coa_applications.estimated_cost IS NOT NULL` | 0% | ≥ 80% of active CoAs (implemented gate: `coaTotal` on the global 90/70 rail — see Spec 49; live 61.1-61.2% runs as an ACCEPTED BASELINE accepted-WARN since 2026-08-03, Pipeline Rehab P4, self-retiring at ≥ 90% — fix owned by Spec 80 Phase 4) | same |
 | `lead_parcels` rows for CoA leads / active CoAs | 0% | ≥ 75% (parcel-match confidence ≥ 0.50) | new metric in parcel-linker audit_table |
 | `lead_trades` rows for CoA leads / active CoAs | 0% | ≥ 90% (≥ 1 trade tagged per CoA, may include default fallback) | new metric, filtered to `lead_id LIKE 'coa:%'` |
 | `trade_forecasts` rows for CoA-stage leads (`lead_id LIKE 'coa:%'`) | 0 | ≥ 80% of active CoAs × active trade | extension to `compute-trade-forecasts.js` audit_table |

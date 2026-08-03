@@ -196,7 +196,7 @@ for the round-trip correctness gate.
 | cost_estimates coverage | `cost_estimates` (joined to new permits) | ≥ 90% | FAIL (non-halting) |
 | trade_forecasts coverage | `trade_forecasts` (joined to the `eligible_permits` denominator) | ≥ 85% (WF2 P6.5 restore from rebuild-era 0.30; denominator is permit-scoped) | FAIL (non-halting) |
 | lifecycle_phase populated | `permits.lifecycle_phase IS NOT NULL` | ≥ 95% of new permits | FAIL (non-halting) |
-| opportunity_score scored | `trade_forecasts.opportunity_score > 0` rate | ≥ 80% of forecast rows | FAIL (non-halting) |
+| opportunity_score scored | `trade_forecasts.opportunity_score > 0` rate | ≥ 80% of forecast rows — **ACCEPTED BASELINE (Pipeline Rehab P4, 2026-08-03):** live value sits persistently at 79.9-80.0% (knife-edge, never passed since the gate landed — P16 denominator growth, see review_followups P16-16F residual (1)); below-threshold emits accepted-WARN with the `permits_opportunity_score_gate_accepted` row pair (Spec 48 §4.5/§4.9), self-retiring at ≥ 80% | WARN while accepted (was FAIL, non-halting) |
 
 > **New permits window:** permits with `last_seen_at > NOW() - INTERVAL '26 hours'` (consistent with assert_data_bounds). The 26-hour window tolerates timing drift in daily chain scheduling.
 </quality>
