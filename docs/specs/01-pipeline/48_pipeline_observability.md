@@ -13,7 +13,9 @@ As a developer, after any pipeline chain completes, I want an AI agent to automa
 > reaped at job teardown, and the report file lands on the ephemeral runner filesystem with
 > no artifact upload. Production chain-health observability is instead the
 > `check-chain-verdict.js` step in every chain workflow (gates the run RED on a
-> verdict-only FAIL that run-chain.js exits 0 on) + GitHub notification alerting, and the
+> verdict-only FAIL that run-chain.js exits 0 on; since 2026-08-03 it passes only on the
+> green allowlist `completed`/`completed_with_warnings` — Spec 115 §2.4) + GitHub
+> notification alerting, and the
 > admin dispatch surface of Spec 115 §7a. OPEN DECISION (not ruled): keep observe-chain
 > local-only, or make it real on CI (DEEPSEEK secret + synchronous run + upload-artifact) —
 > a future WF2.

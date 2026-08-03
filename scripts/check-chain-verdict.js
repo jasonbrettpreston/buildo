@@ -26,18 +26,39 @@
  *
  * Reads the MOST RECENT pipeline_runs row for chain_<chainId> — the row the
  * just-completed `node scripts/run-chain.js <chainId>` invocation wrote —
- * and exits 1 if:
- *   - `status` is 'failed' or 'completed_with_errors', OR
- *   - `records_meta.step_verdicts` contains any 'FAIL' (belt-and-suspenders:
+ * and applies a GREEN ALLOWLIST (Pipeline Rehab P3, 2026-08-03 — inverted
+ * from the original denylist). Exits 0 ONLY if:
+ *   - `status` is 'completed' or 'completed_with_warnings' (a WARN verdict
+ *     is not a chain-workflow failure), AND
+ *   - `records_meta.step_verdicts` contains no 'FAIL' (belt-and-suspenders:
  *     run-chain.js already folds a step FAIL verdict into the
  *     `completed_with_errors` chain status itself, run-chain.js L580-589 —
  *     this is a second read of the same fact via a different field, not a
- *     new signal), OR
- *   - no row is found at all (an invocation should always leave a row; a
- *     missing row means run-chain.js itself never wrote one, which is its
- *     own outage signal, not a pass).
- * Exits 0 otherwise — including `completed_with_warnings`, which is a WARN
- * verdict, not a chain-workflow failure.
+ *     new signal).
+ * EVERYTHING ELSE exits 1: 'failed', 'completed_with_errors', 'cancelled',
+ * 'running' (an orphaned row from a killed run — see fence note below),
+ * any unknown/novel status, and a missing row entirely (an invocation
+ * should always leave a row; a missing row means run-chain.js never wrote
+ * one, which is its own outage signal, not a pass).
+ *
+ * Why allowlist, not denylist: `pipeline_runs.status` is unconstrained TEXT
+ * (mig 033 — no CHECK), so a denylist can never be proven complete. The
+ * original FAIL_STATUSES denylist classified three LIVE orphaned
+ * `status='running'` rows (ids 1756/2045/2097, left behind by GH
+ * step-timeout kills) as green — the 2026-08-03 verdict check PASSED
+ * against a dead chain.
+ *
+ * FENCE (first line of defense is NOT this script): run-chain.js's own
+ * SIGINT/SIGTERM handler (run-chain.js:28-79) is supposed to mark the row
+ * 'failed' on a kill. On the GH step-timeout kills above it never landed
+ * its UPDATE (likely SIGKILL beat the async write — filed as latent), which
+ * is exactly why this check must be belt-and-suspenders on the RAW status
+ * rather than trusting the handler to have normalized it.
+ *
+ * KNOWING behavior (test-pinned): "most recent row by started_at" means a
+ * CONCURRENT manual dispatch's `running` row reddens a scheduled run's
+ * check. Accepted — a red that makes an operator look is strictly better
+ * than the false-green it replaces.
  *
  * Duration tripwire (Pipeline Rehab P1, 2026-08-03): when
  * `CHAIN_DURATION_BUDGET_MINUTES` is set (the workflow passes the SAME value
@@ -61,7 +82,11 @@ if (!process.env.GITHUB_ACTIONS) require('dotenv').config();
 const { Pool } = require('pg');
 const { resolveSslConfig } = require('./lib/ssl-config');
 
-const FAIL_STATUSES = new Set(['failed', 'completed_with_errors']);
+// GREEN ALLOWLIST (P3, 2026-08-03) — the ONLY statuses that can pass. See
+// header: status is unconstrained TEXT, so a denylist is unprovable; every
+// status outside this set (failed, completed_with_errors, cancelled,
+// running, anything novel) is a FAIL.
+const OK_STATUSES = new Set(['completed', 'completed_with_warnings']);
 
 /**
  * Pure classification — takes the latest pipeline_runs row (or undefined)
@@ -77,9 +102,12 @@ function classifyVerdict(row) {
   }
   const stepVerdicts = (row.records_meta && row.records_meta.step_verdicts) || {};
   const hasFailVerdict = Object.values(stepVerdicts).includes('FAIL');
-  if (FAIL_STATUSES.has(row.status) || hasFailVerdict) {
+  if (!OK_STATUSES.has(row.status) || hasFailVerdict) {
+    const statusPart = OK_STATUSES.has(row.status)
+      ? `status=${row.status}`
+      : `status=${row.status} not in green allowlist [${[...OK_STATUSES].join(', ')}]`;
     const suffix = hasFailVerdict ? `, step_verdicts=${JSON.stringify(stepVerdicts)}` : '';
-    return { ok: false, reason: `status=${row.status}${suffix}` };
+    return { ok: false, reason: `${statusPart}${suffix}` };
   }
   return { ok: true, reason: `status=${row.status}` };
 }
@@ -174,4 +202,4 @@ if (require.main === module) {
   run();
 }
 
-module.exports = { run, classifyVerdict, checkDurationTripwire, FAIL_STATUSES };
+module.exports = { run, classifyVerdict, checkDurationTripwire, OK_STATUSES };

@@ -353,10 +353,16 @@ solely on the `run-chain.js` process exit code would therefore report GREEN on a
 that fully failed — the opposite of what this whole migration exists to fix (§7's "missed
 run visibility" gap). `chain-deep-scrapes.yml` MUST, after invoking `node
 scripts/run-chain.js deep_scrapes`, separately query `pipeline_runs` for that run's
-`status`/verdict and `exit 1` if the status is `completed_with_errors` (or any step's
-`records_meta.audit_table.verdict` is `FAIL`) — generalizing §2.2's coa red-flip pattern: a
-step that reads the real DB-recorded outcome and reddens the job itself, rather than
-trusting the child process's own exit code.
+`status`/verdict and exit 0 ONLY on a **green allowlist** (rewritten 2026-08-03, Pipeline
+Rehab P3 — previously a `completed_with_errors`-shaped denylist): `status` must be
+`completed` or `completed_with_warnings` AND no step verdict in
+`records_meta.step_verdicts` may be `FAIL`; every other status — `failed`,
+`completed_with_errors`, `cancelled`, `running` (an orphaned row from a killed run), any
+novel value, or no row at all — exits 1. `pipeline_runs.status` is unconstrained TEXT
+(mig 033), so a denylist is unprovable: the denylist form classified three live orphaned
+`running` rows (ids 1756/2045/2097, GH step-timeout kills) as green on 2026-08-03. This
+generalizes §2.2's coa red-flip pattern: a step that reads the real DB-recorded outcome
+and reddens the job itself, rather than trusting the child process's own exit code.
 
 **Shared anatomy:** the same `check-chain-running.js` guard +
 `env: *pipeline-env` (§3) pattern as `chain-sources.yml`/`chain-entities.yml`, plus the
@@ -393,7 +399,10 @@ watchdog checks for it.
    ABSENCE detection only; pass/fail visibility now comes from
    `scripts/check-chain-verdict.js`'s per-run verdict-check steps in each chain workflow,
    which generalize the exit-0-masking guard §2.4 already required for `deep_scrapes` to
-   all 5 chains). Missing any applicable chain → `exit 1` (the job goes red, firing GitHub's
+   all 5 chains and, as of 2026-08-03 (Pipeline Rehab P3), pass ONLY on §2.4's green
+   allowlist — `completed`/`completed_with_warnings` with no FAIL step verdict; note the
+   two lists differ deliberately: `completed_with_errors` counts as "ran" for absence
+   detection here but is a FAIL for the per-run verdict check). Missing any applicable chain → `exit 1` (the job goes red, firing GitHub's
    run-failure notification per §3). This closes the gap GitHub's own per-workflow
    notifications structurally cannot: a scheduled workflow that never fires at all (a
    platform outage, a `schedule:` block that silently stopped triggering) produces no run
@@ -931,8 +940,10 @@ is needed (option 1's would-be pg_cron-inappropriate concern is moot).
   A workflow that gated only on the `run-chain.js` process exit code would show GREEN on a
   fully-failed scrape. Guard: §2.4's failure-detection contract requires
   `chain-deep-scrapes.yml` to separately read the chain's `pipeline_runs` status/verdict
-  after the run and `exit 1` on `completed_with_errors`/FAIL — this is why the workflow
-  cannot simply trust `node scripts/run-chain.js deep_scrapes`'s own exit code.
+  after the run and pass ONLY on the green allowlist (`completed`/
+  `completed_with_warnings` with no FAIL step verdict — rewritten from the earlier
+  `completed_with_errors` denylist, Pipeline Rehab P3 2026-08-03) — this is why the
+  workflow cannot simply trust `node scripts/run-chain.js deep_scrapes`'s own exit code.
 - **Concurrent workflow runs racing `isChainRunning`** — a manual `workflow_dispatch`
   trigger overlapping a scheduled run creates a narrow TOCTOU window between
   `check-chain-running.js`'s read and `run-chain.js`'s own advisory-lock acquisition (§4).
@@ -946,7 +957,10 @@ is needed (option 1's would-be pg_cron-inappropriate concern is moot).
   the row still stops blocking (correctness intact) but an operator has no signal that a
   run died abnormally short of noticing a gap in `pipeline_runs` history manually. This is
   the exact "missed run visibility" gap D8 named as motivating this whole migration —
-  treat §4 item 5 as non-optional, not a nice-to-have.
+  treat §4 item 5 as non-optional, not a nice-to-have. PARTIALLY MITIGATED 2026-08-03
+  (Pipeline Rehab P3): `check-chain-verdict.js`'s green allowlist now reddens the NEXT
+  verdict check whose latest row is `running`, so an orphaned row produces a red run
+  rather than silence — but only when/where a verdict-check step actually runs.
 - **`SIGTERM` handler omitted from `run-chain.js`** — if §4 item 6 is skipped, a
   `timeout-minutes`-triggered kill (or, on the demoted `local-cron.js` path, its existing
   `SIGKILL`, §7) leaves the row `running` for up to 12h before it merely *stops blocking* —
@@ -966,6 +980,13 @@ is needed (option 1's would-be pg_cron-inappropriate concern is moot).
   `UPDATE pipeline_runs SET status='failed' … WHERE id = <the id the guard now names>`.
   Candidate fix: a reaper that marks rows `failed` when their run is no longer live, or an
   age-scaled annotation that fires *inside* the 12h window rather than after it.
+  STATUS UPDATE 2026-08-03 (Pipeline Rehab P0/P3): this fired for real — GH step-timeout
+  kills stranded THREE `running` rows (ids 1756/2045/2097; `run-chain.js`'s signal handler
+  never landed its UPDATE, likely SIGKILL beating the async write — filed as latent), and
+  the then-denylist verdict check read them as GREEN. P0 recovered them via the manual
+  UPDATE above; P3's allowlist means such rows now redden the next verdict check instead
+  of passing it. Still true: no reaper exists, and the 12h blocking window itself remains
+  signal-free between verdict checks.
 - **`if: … outputs.skip != 'true'` treats an ABSENT output as "proceed".** Every chain workflow
   gates its run step on `steps.<guard>.outputs.skip != 'true'` (e.g.
   `chain-deep-scrapes.yml:172`, `:203`). GitHub evaluates a missing output as the empty string,
@@ -1000,6 +1021,10 @@ is needed (option 1's would-be pg_cron-inappropriate concern is moot).
 - `.github/workflows/pipeline-watchdog.yml` (new — §2.5; also the file that implements
   Spec 112 §6's backup safety-net role, merged in rather than a separate workflow)
 - `scripts/check-chain-running.js` (new — the `isChainRunning` re-implementation, §4)
+- `scripts/check-chain-verdict.js` (the §2.4 post-run verdict reader used by every chain
+  workflow's verdict-check step — green-allowlist classification + duration tripwire;
+  added to Target Files 2026-08-03, Pipeline Rehab P1/P3, having previously been governed
+  by this spec without being listed here)
 - `scripts/lib/chain-concurrency.js` (new — shared query helper imported by both
   `check-chain-running.js` and the demoted `local-cron.js`, §4/§7)
 - `scripts/run-chain.js` (`SIGINT`+`SIGTERM` handler addition, §4 item 6 — the only

@@ -17,7 +17,7 @@ const checkChainVerdict = require('../../scripts/check-chain-verdict.js') as {
     row: { id?: number; status: string; records_meta: Record<string, unknown> | null; started_at?: string | Date | null; completed_at?: string | Date | null } | undefined,
     budgetMinutes: number,
   ) => { durationMinutes: number; budgetMinutes: number; thresholdMinutes: number; message: string } | null;
-  FAIL_STATUSES: Set<string>;
+  OK_STATUSES: Set<string>;
 };
 
 describe('check-chain-verdict.js — script presence', () => {
@@ -26,9 +26,13 @@ describe('check-chain-verdict.js — script presence', () => {
     expect(scriptPath).toMatch(/check-chain-verdict\.js$/);
   });
 
-  it('exports classifyVerdict, FAIL_STATUSES, and run', () => {
+  it('exports classifyVerdict, OK_STATUSES, and run', () => {
+    // Deliberate lock RETIREMENT (Pipeline Rehab P3, 2026-08-03): the
+    // FAIL_STATUSES denylist export is gone — `pipeline_runs.status` is
+    // unconstrained TEXT (mig 033, no CHECK), so a denylist is unprovable;
+    // the script now exports the green ALLOWLIST instead.
     expect(typeof checkChainVerdict.classifyVerdict).toBe('function');
-    expect(checkChainVerdict.FAIL_STATUSES instanceof Set).toBe(true);
+    expect(checkChainVerdict.OK_STATUSES instanceof Set).toBe(true);
   });
 });
 
@@ -89,8 +93,65 @@ describe('check-chain-verdict.js — classifyVerdict', () => {
     expect(reason).toBe('no pipeline_runs row found');
   });
 
-  it('FAIL_STATUSES contains exactly failed and completed_with_errors', () => {
-    expect([...checkChainVerdict.FAIL_STATUSES].sort()).toEqual(['completed_with_errors', 'failed']);
+  // Deliberate lock RETIREMENT (Pipeline Rehab P3, 2026-08-03): the previous
+  // lock here pinned FAIL_STATUSES = {failed, completed_with_errors} — a
+  // denylist that classified THREE live orphaned `running` rows (ids
+  // 1756/2045/2097, GH step-timeout kills) as green. The allowlist below is
+  // the replacement contract.
+  it('OK_STATUSES contains exactly completed and completed_with_warnings (green allowlist)', () => {
+    expect([...checkChainVerdict.OK_STATUSES].sort()).toEqual(['completed', 'completed_with_warnings']);
+  });
+
+  it('fails status="running" — an orphaned row from a killed chain must never read green (live false-GREEN, 2026-08-03)', () => {
+    const { ok, reason } = checkChainVerdict.classifyVerdict({
+      id: 2097,
+      status: 'running',
+      records_meta: null,
+    });
+    expect(ok).toBe(false);
+    expect(reason).toContain('running');
+  });
+
+  it('fails status="cancelled" — a cancelled run is not a pass (second denylist hole)', () => {
+    const { ok, reason } = checkChainVerdict.classifyVerdict({
+      id: 6,
+      status: 'cancelled',
+      records_meta: null,
+    });
+    expect(ok).toBe(false);
+    expect(reason).toContain('cancelled');
+  });
+
+  it('fails an unknown/novel status — status is unconstrained TEXT (mig 033), only the allowlist is provable', () => {
+    const { ok } = checkChainVerdict.classifyVerdict({
+      id: 7,
+      status: 'some_future_status',
+      records_meta: null,
+    });
+    expect(ok).toBe(false);
+  });
+
+  it('fails "completed_with_errors" even when step_verdicts is ABSENT entirely (records_meta contract: keys may be missing)', () => {
+    const { ok, reason } = checkChainVerdict.classifyVerdict({
+      id: 8,
+      status: 'completed_with_errors',
+      records_meta: {},
+    });
+    expect(ok).toBe(false);
+    expect(reason).toContain('completed_with_errors');
+  });
+
+  // KNOWING, test-pinned behavior (P3): the script reads the latest row by
+  // started_at — a concurrent manual dispatch's `running` row therefore
+  // reddens a scheduled run's verdict check. Accepted: a red that makes an
+  // operator look is strictly better than the false-green it replaces.
+  it('pins the knowing behavior: a concurrent run\'s "running" row reddens the check (latest-row-by-started_at)', () => {
+    const { ok } = checkChainVerdict.classifyVerdict({
+      id: 9,
+      status: 'running',
+      records_meta: { step_verdicts: {} },
+    });
+    expect(ok).toBe(false);
   });
 });
 
