@@ -53,6 +53,23 @@ if env_path.exists():
 NUM_WORKERS = int(os.environ.get('SCRAPER_WORKERS') or '1')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)
 BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE') or '10')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)
 MAX_PERMITS = int(os.environ.get('SCRAPE_MAX_PERMITS') or '0')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)  # 0 = unlimited
+# F1 soft time-budget self-stop (2026-08-04): inherited by every worker
+# subprocess via {**os.environ, ...} — the workers' claim loops stop claiming
+# at the budget and finalize clean (run 30854595411 was SIGKILLed mid-scrape
+# instead). The orchestrator reads it only for the aggregate audit row.
+# 0/absent = disabled; the GH step timeout stays the hard backstop.
+TIME_BUDGET_MINUTES = int(os.environ.get('SCRAPER_TIME_BUDGET_MINUTES') or '0')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)  # 0 = disabled
+# F2 stuck-claim self-heal TTL (mechanism VERIFIED pre-existing, 2026-08-04
+# Integration panel): the reclaim below (populate_queue) runs at EVERY
+# orchestrator startup, before any worker spawns — so it can never steal the
+# CURRENT run's in-flight claims, no matter how long a healthy worker holds
+# one (there is no mid-run reclaim, and the concurrency group + the
+# check-chain-running guard prevent a second orchestrator running alongside).
+# 30 min therefore only ever matches claims stranded by a PREVIOUS killed run
+# (cron slots are 3h apart). The 9 rows stranded after run 30854595411 stayed
+# stuck because NO subsequent run occurred before ops released them — the
+# mechanism was never missing, it just had nothing scheduled to run it.
+# Locked by test_scraper_outcomes.py::TestStaleClaimReclaim.
 STALE_CLAIM_MINUTES = 30
 MAX_PREFLIGHT_FAILURES = 2
 
@@ -174,7 +191,11 @@ def populate_queue(conn):
         cur.execute("SELECT COUNT(*) FROM scraper_queue WHERE status = 'pending'")
         total_pending = cur.fetchone()[0]
 
-        return queued_rows, total_pending
+        # Spec 79 C4 (panel fold 2026-08-04): the reclaim count is RETURNED,
+        # not just logged, so main() emits it as the stale_claims_reclaimed
+        # audit row — a self-heal must be DB-visible, not log archaeology.
+        # NOTE: change the call-site unpack in lockstep (main(), single caller).
+        return queued_rows, total_pending, stale_reset
     finally:
         cur.close()
 
@@ -202,6 +223,7 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
         'workers_completed': 0, 'consecutive_empty_max': 0,
         'outcome_write_failures': 0, 'outcome_resolution_failures': 0,
         'early_abort': False,  # P6: OR-merged from the worker's summary below
+        'time_budget_stop': False,  # F1: OR-merged from the worker's summary below
     }
 
     # Check abort before even spawning
@@ -322,6 +344,11 @@ async def run_worker(worker_id, abort_event, preflight_fail_counter):
                 worker_tel['early_abort'] = (
                     worker_tel.get('early_abort', False)
                     or bool(sc_tel.get('early_abort', False)))
+                # F1: a budget-stopped worker marks the whole worker_tel so
+                # the aggregate time_budget_stop INFO row can fire.
+                worker_tel['time_budget_stop'] = (
+                    worker_tel.get('time_budget_stop', False)
+                    or bool(sc_tel.get('time_budget_stop', False)))
 
                 if not sc_tel.get('preflight_passed', True):
                     worker_tel['preflight_passed'] = False
@@ -409,6 +436,9 @@ def aggregate_telemetry(worker_results):
         # P6: any worker's early abort marks the aggregate — the miss-rate
         # gate's wipeout FAIL-eligibility must survive aggregation.
         'early_abort': False,
+        # F1: any worker's budget stop marks the aggregate — the
+        # time_budget_stop INFO row fires when any slice-stop occurred.
+        'time_budget_stop': False,
     }
 
     for w in worker_results:
@@ -437,6 +467,7 @@ def aggregate_telemetry(worker_results):
         agg['workers_completed'] += w.get('workers_completed', 0)
         agg['consecutive_empty_max'] = max(agg['consecutive_empty_max'], w.get('consecutive_empty_max', 0))
         agg['early_abort'] = agg['early_abort'] or bool(w.get('early_abort', False))
+        agg['time_budget_stop'] = agg['time_budget_stop'] or bool(w.get('time_budget_stop', False))
         if not w.get('preflight_passed', True):
             agg['preflight_failures'] += 1
         agg['latencies'].extend(w.get('latencies', []))
@@ -506,7 +537,7 @@ async def main():
     # with psycopg2.OperationalError when fetching final stats.
     conn = get_db_connection()
     try:
-        queued_rows, total_pending = populate_queue(conn)
+        queued_rows, total_pending, stale_reclaimed = populate_queue(conn)
     finally:
         conn.close()
 
@@ -518,7 +549,18 @@ async def main():
             'records_total': 0, 'records_new': 0, 'records_updated': 0,
             'records_meta': {
                 'scraper_telemetry': {'permits_attempted': 0},
-                'audit_table': {'phase': 1, 'name': 'Data Ingestion', 'verdict': 'PASS', 'rows': []},
+                # The two every-run INFO rows (Spec 48 §3.6) ride the early
+                # path too: no budget stop can have fired (no workers ran),
+                # and stale_reclaimed is necessarily 0 here (reclaimed rows
+                # become pending, so pending==0 implies none) — emitted
+                # anyway so the row contract is uniform across paths.
+                'audit_table': {'phase': 1, 'name': 'Data Ingestion', 'verdict': 'PASS', 'rows': [
+                    {'metric': 'time_budget_stop', 'value': 0,
+                     'threshold': f'INFO; 1 = claims stopped at the soft budget ({TIME_BUDGET_MINUTES} min; 0 = disabled)',
+                     'status': 'INFO'},
+                    {'metric': 'stale_claims_reclaimed', 'value': stale_reclaimed,
+                     'threshold': None, 'status': 'INFO'},
+                ]},
             },
         })
         emit_meta(
@@ -660,6 +702,9 @@ async def main():
                 # P6: any-worker early abort, so the DB records why a small-n
                 # run stayed FAIL-eligible on the miss-rate gate.
                 'early_abort': agg.get('early_abort', False),
+                # F1: any-worker soft budget stop — a budget-stopped slice is
+                # distinguishable from a drained queue in the DB, not just logs.
+                'time_budget_stop': agg.get('time_budget_stop', False),
                 'preflight_failures': agg['preflight_failures'],
                 'workers': agg['workers_total'],
                 'workers_completed': agg['workers_completed'],
@@ -717,6 +762,23 @@ async def main():
     # Row-derived verdict cascade (Observability rule — a status row that FAILs
     # must be able to redden the verdict without a hand-maintained boolean).
     _audit = summary_payload['records_meta']['audit_table']
+    # F1: emitted EVERY run (Spec 48 §3.6 zero-row preservation, panel fold
+    # 2026-08-04) — value 1 when any worker's soft stop fired, 0 otherwise,
+    # so "budget never fired" stays distinguishable from "budget plumbing
+    # silently unwired". INFO, never a failure: stopping on budget is the
+    # designed clean ending of a slice (vs run 30854595411's SIGKILL ending).
+    _audit['rows'].append({
+        'metric': 'time_budget_stop',
+        'value': 1 if agg.get('time_budget_stop') else 0,
+        'threshold': f'INFO; 1 = claims stopped at the soft budget — {duration_ms / 60000:.1f} min elapsed vs {TIME_BUDGET_MINUTES} min budget (0 = disabled)',
+        'status': 'INFO'})
+    # F2 (Spec 79 C4): the startup stale-claim reclaim count, emitted EVERY
+    # run (0 = clean start) — a self-heal after a killed slice must be
+    # DB-visible, not a log-archaeology fact.
+    _audit['rows'].append({
+        'metric': 'stale_claims_reclaimed',
+        'value': stale_reclaimed,
+        'threshold': None, 'status': 'INFO'})
     _statuses = [r['status'] for r in _audit['rows']]
     _audit['verdict'] = 'FAIL' if 'FAIL' in _statuses else ('WARN' if 'WARN' in _statuses else 'PASS')
     emit_summary(summary_payload)

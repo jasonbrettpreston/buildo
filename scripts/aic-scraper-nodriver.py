@@ -95,6 +95,14 @@ TARGET_SECTIONS = ['BLD']
 
 BATCH_SIZE = int(os.environ.get('SCRAPE_BATCH_SIZE') or '10')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)
 MAX_PERMITS = int(os.environ.get('SCRAPE_MAX_PERMITS') or '0')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)  # 0 = unlimited
+# Soft time-budget self-stop (F1, 2026-08-04): a time-bounded drain slice must
+# FINALIZE (summary + ledger + queue release + exit 0), never be hard-killed by
+# the GH step timeout mid-scrape (run 30854595411 — healthy, SIGKILLed at batch
+# 173: orphaned pipeline_runs rows + stuck claimed queue rows + red verdict).
+# When elapsed >= budget the claim loops stop claiming, in-flight work finishes,
+# and the NORMAL finalization path runs. 0/absent = disabled (GH timeout stays
+# the hard backstop). MIRRORED semantics in aic-orchestrator.py.
+TIME_BUDGET_MINUTES = int(os.environ.get('SCRAPER_TIME_BUDGET_MINUTES') or '0')  # `or`: GH Actions interpolates undefined vars as EMPTY STRING, defeating .get()'s default (2026-07-29 first-cron crash)  # 0 = disabled
 
 # Proxy configuration (Decodo residential rotating proxy)
 PROXY_HOST = os.environ.get('PROXY_HOST', '')
@@ -2777,6 +2785,16 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag, outcomes=Non
     worker_id = args['worker_id'] or 'standalone'
     batch_num = 0
     while True:
+        # F1 soft self-stop — checked BEFORE claiming another batch, so the
+        # slice finalizes clean instead of being GH-step-timeout-killed
+        # mid-scrape (run 30854595411).
+        if time_budget_exceeded(start_ms):
+            tel['time_budget_stop'] = True
+            elapsed_min = (time.time() * 1000 - start_ms) / 60000
+            log('INFO', worker_tag,
+                f'Time budget reached ({elapsed_min:.1f} of {TIME_BUDGET_MINUTES} min) — '
+                'stopping claims; finalizing clean')
+            break
         if MAX_PERMITS > 0 and tel['permits_attempted'] >= MAX_PERMITS:
             log('INFO', worker_tag, f"Max permits cap reached ({tel['permits_attempted']}/{MAX_PERMITS})")
             break
@@ -3045,6 +3063,19 @@ def anomalous_miss_count(tel):
                if outcome not in BENIGN_EMPTY_OUTCOMES)
 
 
+def time_budget_exceeded(start_ms):
+    """F1 soft self-stop: True once elapsed >= SCRAPER_TIME_BUDGET_MINUTES.
+
+    Checked at the TOP of each batch-claim iteration (both the HTTP and the
+    browser claim loops): on budget the worker stops claiming, lets in-flight
+    work finish, and runs the normal finalization path — the run lands
+    completed/completed_with_warnings, not killed. 0/absent = disabled.
+    """
+    if TIME_BUDGET_MINUTES <= 0:
+        return False
+    return (time.time() * 1000 - start_ms) / 60000 >= TIME_BUDGET_MINUTES
+
+
 # Miss-rate gate constants (Pipeline Rehab P6, 2026-08-03). MIRRORED in
 # aic-orchestrator.py's classify_miss_rate — keep the two byte-identical
 # (locked by test_scraper_outcomes.py::TestMissRateGate parity test).
@@ -3223,6 +3254,9 @@ def make_telemetry():
         # P6: set True when the 90%-anomalous early abort fires — keeps the
         # small-n miss-rate gate FAIL-eligible (wipeout class) on such runs.
         'early_abort': False,
+        # F1: set True when the soft time-budget stop fires — a budget-stopped
+        # slice must be observable and distinguishable from a drained queue.
+        'time_budget_stop': False,
     }
 
 
@@ -3319,6 +3353,9 @@ def compute_summary(tel, start_ms):
                 # P6: crosses the worker->orchestrator boundary so the
                 # aggregated miss-rate gate keeps its wipeout FAIL-eligibility.
                 'early_abort': tel.get('early_abort', False),
+                # F1: crosses the same boundary so the orchestrator's aggregate
+                # can emit the time_budget_stop INFO row when any worker fired.
+                'time_budget_stop': tel.get('time_budget_stop', False),
                 'max_permits_cap': MAX_PERMITS,
                 'capped': MAX_PERMITS > 0 and tel['permits_attempted'] >= MAX_PERMITS,
                 'latency': {'p50': int(p50), 'p95': int(p95), 'max': int(latencies[-1])},
@@ -3358,6 +3395,17 @@ def compute_summary(tel, start_ms):
             },
         },
     }
+
+    # F1: emitted EVERY run (Spec 48 §3.6 zero-row preservation, panel fold
+    # 2026-08-04) — value 1 when the soft stop fired, 0 otherwise, so "budget
+    # never fired" stays distinguishable from "budget plumbing silently
+    # unwired". INFO, never a failure: stopping on budget is the designed
+    # clean ending of a slice (vs run 30854595411's SIGKILL ending).
+    summary['records_meta']['audit_table']['rows'].append({
+        'metric': 'time_budget_stop',
+        'value': 1 if tel.get('time_budget_stop') else 0,
+        'threshold': f'INFO; 1 = claims stopped at the soft budget — {duration_ms / 60000:.1f} min elapsed vs {TIME_BUDGET_MINUTES} min budget (0 = disabled)',
+        'status': 'INFO'})
 
     # Spec 47 §8.2 cascade: FAIL beats WARN beats PASS, read off the rows
     # themselves so a row can never be added without affecting the verdict.
@@ -3513,6 +3561,17 @@ async def main():
             # in the first place (see `defer_bootstrap` in main).
 
             while True:
+                # F1 soft self-stop — checked BEFORE claiming another batch,
+                # so the slice finalizes clean instead of being GH-step-
+                # timeout-killed mid-scrape (run 30854595411). Mirror of the
+                # HTTP claim loop's check.
+                if time_budget_exceeded(start_ms):
+                    tel['time_budget_stop'] = True
+                    elapsed_min = (time.time() * 1000 - start_ms) / 60000
+                    log('INFO', worker_tag,
+                        f'Time budget reached ({elapsed_min:.1f} of {TIME_BUDGET_MINUTES} min) — '
+                        'stopping claims; finalizing clean')
+                    break
                 # Cap check: stop claiming if we've hit the max permits limit
                 if MAX_PERMITS > 0 and tel['permits_attempted'] >= MAX_PERMITS:
                     log('INFO', worker_tag, f"Max permits cap reached ({tel['permits_attempted']}/{MAX_PERMITS})")

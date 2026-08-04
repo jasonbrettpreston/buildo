@@ -202,7 +202,23 @@ jobs:
         # so $DISPLAY is present in the environment run-chain.js spawns its
         # python3 child with (run-chain.js's stepEnv = {...process.env, ...} —
         # it inherits whatever xvfb-run set on this shell).
-        run: xvfb-run -a node scripts/run-chain.js deep_scrapes
+        #
+        # Soft time-budget self-stop (F1, 2026-08-04): the scraper stops
+        # claiming batches 10 min before this step's GH hard kill and
+        # finalizes clean (summary + ledger + queue release + exit 0) — run
+        # 30854595411 was healthy yet SIGKILLed mid-scrape, leaving orphaned
+        # pipeline_runs rows + stuck claims + a red verdict. GH expressions
+        # have NO arithmetic operators, so the -10 is computed in this shell
+        # from the SAME `inputs.chain_timeout_minutes || '12'` expression the
+        # step timeout uses; clamped at 0 (= disabled) so a tiny probe
+        # timeout falls back to the GH backstop rather than a negative budget.
+        # The step timeout-minutes above STAYS as the hard backstop.
+        run: |
+          BUDGET=$(( ${{ fromJSON(inputs.chain_timeout_minutes || '12') }} - 10 ))
+          if [ "$BUDGET" -lt 0 ]; then BUDGET=0; fi
+          export SCRAPER_TIME_BUDGET_MINUTES=$BUDGET
+          echo "Soft time budget: ${SCRAPER_TIME_BUDGET_MINUTES} min (0 = disabled; GH step timeout is the backstop)"
+          xvfb-run -a node scripts/run-chain.js deep_scrapes
         # NOTE: GitHub Actions supports plain YAML anchors/aliases (GA since
         # 2025-09-18) but explicitly does NOT support merge keys (`<<:`) — a
         # merge key here would be a workflow-parse error, not silently

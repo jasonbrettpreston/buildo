@@ -84,6 +84,21 @@ describe('chain-deep-scrapes workflow', () => {
     });
   });
 
+  describe('soft time-budget self-stop (F1, 2026-08-04)', () => {
+    it('exports SCRAPER_TIME_BUDGET_MINUTES as the chain timeout minus 10, shell-computed', () => {
+      // Stage-2 drain run 30854595411: a healthy time-bounded drain was
+      // hard-killed by the GH step timeout mid-scrape — orphaned
+      // pipeline_runs rows, stuck claimed queue rows, red verdict every
+      // slice. The scraper stops claiming 10 min before the hard kill and
+      // finalizes clean; the step timeout-minutes stays as the backstop.
+      // GH expressions have no arithmetic, so the -10 lives in the run
+      // shell, fed by the same `inputs.chain_timeout_minutes || '12'`
+      // expression family the step timeout uses.
+      expect(activeLines).toMatch(/SCRAPER_TIME_BUDGET_MINUTES/);
+      expect(activeLines).toMatch(/chain_timeout_minutes \|\| '12'[^\n]*\}\}\s*-\s*10/);
+    });
+  });
+
   describe('failure detection', () => {
     it('reads the DB-recorded verdict separately from the process exit code', () => {
       // aic-orchestrator.py exits 0 on a scrape-level failure BY DESIGN, so a job

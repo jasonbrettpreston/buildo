@@ -129,6 +129,164 @@ class TestMissRateGate:
         assert summary['records_meta']['audit_table']['verdict'] == 'WARN'
 
 
+class TestTimeBudget:
+    """P7 soft self-stop (2026-08-03) — a time-bounded drain slice must
+    FINALIZE, not be killed. Stage-2 drain run 30854595411: healthy (zero
+    blocks, batch 173) yet hard-killed by the GH step timeout mid-scrape ->
+    orphaned pipeline_runs rows + stuck claimed queue rows + red verdict
+    EVERY slice. With SCRAPER_TIME_BUDGET_MINUTES set, the claim loop stops
+    claiming at the budget, in-flight work finishes, and the NORMAL
+    finalization path runs (summary + ledger + queue release + exit 0)."""
+
+    def test_disabled_budget_never_stops(self, scraper, monkeypatch):
+        monkeypatch.setattr(scraper, 'TIME_BUDGET_MINUTES', 0)
+        # An hour elapsed, budget disabled -> keep claiming.
+        assert scraper.time_budget_exceeded(time.time() * 1000 - 60 * 60000) is False
+
+    def test_budget_not_reached_keeps_claiming(self, scraper, monkeypatch):
+        monkeypatch.setattr(scraper, 'TIME_BUDGET_MINUTES', 140)
+        assert scraper.time_budget_exceeded(time.time() * 1000 - 5 * 60000) is False
+
+    def test_budget_exceeded_stops_claiming(self, scraper, monkeypatch):
+        monkeypatch.setattr(scraper, 'TIME_BUDGET_MINUTES', 2)
+        assert scraper.time_budget_exceeded(time.time() * 1000 - 3 * 60000) is True
+
+    def test_telemetry_records_the_stop_flag(self, scraper):
+        assert scraper.make_telemetry()['time_budget_stop'] is False
+
+    def test_both_claim_loops_check_the_budget_at_the_top(self, scraper):
+        import pathlib
+        src = pathlib.Path(scraper.__file__).read_text(encoding='utf-8')
+        # HTTP db-queue/standalone loop + browser db-queue loop — both must
+        # consult the budget before claiming another batch.
+        assert src.count('if time_budget_exceeded(start_ms)') >= 2
+
+    def test_time_budget_row_emits_every_run_and_its_value_flips(self, scraper, monkeypatch):
+        # Spec 48 §3.6 zero-row preservation: the row must exist on EVERY run
+        # (value 0) so "budget never fired" is distinguishable from "budget
+        # plumbing silently unwired" — only-when-fired would erase that line.
+        monkeypatch.setattr(scraper, 'TIME_BUDGET_MINUTES', 140)
+        tel = scraper.make_telemetry()
+        tel['permits_attempted'] = 5
+        tel['time_budget_stop'] = True
+        rows = scraper.compute_summary(tel, time.time() * 1000)['records_meta']['audit_table']['rows']
+        row = next(r for r in rows if r['metric'] == 'time_budget_stop')
+        assert row['status'] == 'INFO'
+        assert row['value'] == 1
+        assert 'min budget' in str(row['threshold'])  # elapsed vs budget, observable
+        # Not fired -> row STILL present, value 0.
+        tel2 = scraper.make_telemetry()
+        tel2['permits_attempted'] = 5
+        rows2 = scraper.compute_summary(tel2, time.time() * 1000)['records_meta']['audit_table']['rows']
+        row2 = next(r for r in rows2 if r['metric'] == 'time_budget_stop')
+        assert row2['status'] == 'INFO'
+        assert row2['value'] == 0
+
+    def test_budget_stop_is_not_a_failure(self, scraper, monkeypatch):
+        # The run must land completed/completed_with_warnings, never FAIL,
+        # purely because the budget stopped it.
+        monkeypatch.setattr(scraper, 'TIME_BUDGET_MINUTES', 140)
+        monkeypatch.setattr(scraper, 'MAX_PERMITS', 0)
+        tel = scraper.make_telemetry()
+        tel['permits_attempted'] = 100
+        tel['permits_found'] = 95
+        tel['time_budget_stop'] = True
+        summary = scraper.compute_summary(tel, time.time() * 1000)
+        assert summary['records_meta']['audit_table']['verdict'] == 'PASS'
+
+    def test_orchestrator_parity_env_and_aggregation(self, orchestrator):
+        # The orchestrator parses the same env (or-default form) and ORs the
+        # stop flag across workers so the aggregate audit row can fire.
+        assert hasattr(orchestrator, 'TIME_BUDGET_MINUTES')
+        agg = orchestrator.aggregate_telemetry([
+            {'permits_attempted': 10, 'time_budget_stop': False},
+            {'permits_attempted': 12, 'time_budget_stop': True},
+        ])
+        assert agg['time_budget_stop'] is True
+        agg_none = orchestrator.aggregate_telemetry([{'permits_attempted': 10}])
+        assert agg_none['time_budget_stop'] is False
+
+
+class _QueueCursor:
+    """Fake cursor for populate_queue: scripted rowcounts + pending count."""
+
+    def __init__(self, rowcounts, pending=0):
+        self.executed = []
+        self._rowcounts = list(rowcounts)
+        self.rowcount = 0
+        self._pending = pending
+
+    def execute(self, sql, params=None):
+        self.executed.append((' '.join(sql.split()), params))
+        self.rowcount = self._rowcounts.pop(0) if self._rowcounts else 0
+
+    def fetchone(self):
+        return (self._pending,)
+
+    def close(self):
+        pass
+
+
+class _QueueConn:
+    def __init__(self, cur):
+        self._cur = cur
+
+    def cursor(self):
+        return self._cur
+
+    def commit(self):
+        pass
+
+
+class TestStaleClaimReclaim:
+    """F2 (2026-08-04, Integration-corrected scope) — REGRESSION LOCK, not a
+    new mechanism. The startup reclaim already exists (populate_queue: first
+    statement, every orchestrator run) and was never missing: the 9 rows
+    stranded after SIGKILLed run 30854595411 stayed stuck only because no
+    subsequent run occurred before ops released them. These locks pin the
+    behavior so it cannot silently regress; they are green-on-arrival by
+    design (the red-first protocol applies to the F1 seams, not to a lock on
+    verified pre-existing behavior)."""
+
+    def test_startup_reclaims_stale_claims_with_the_ttl_predicate(self, orchestrator):
+        cur = _QueueCursor(rowcounts=[9, 120], pending=120)
+        # Spec 79 C4 (panel fold 2026-08-04): the reclaim count is RETURNED so
+        # main() can emit the stale_claims_reclaimed audit row — a log line
+        # alone is not observability.
+        queued, pending, stale = orchestrator.populate_queue(_QueueConn(cur))
+        assert queued == 120
+        assert pending == 120
+        assert stale == 9
+        # The reclaim must be the FIRST statement of every startup.
+        reclaim_sql, reclaim_params = cur.executed[0]
+        assert "UPDATE scraper_queue" in reclaim_sql
+        assert "SET status = 'pending'" in reclaim_sql
+        # Stale claims only: status='claimed' AND older than the TTL — a
+        # fresh claim (young claimed_at) never matches the predicate, which
+        # is the whole "fresh claim untouched" guarantee.
+        assert "status = 'claimed'" in reclaim_sql
+        assert "claimed_at < NOW() - INTERVAL '1 minute' *" in reclaim_sql
+        assert reclaim_params == (orchestrator.STALE_CLAIM_MINUTES,)
+
+    def test_ttl_is_startup_scoped_and_safe_for_150_min_slices(self, orchestrator):
+        # Safe vs a live slice's legitimate claims BY CONSTRUCTION, not by TTL
+        # size: the reclaim runs only at startup, BEFORE any worker spawns, so
+        # no reclaim can ever run concurrently with this run's claims — and
+        # the concurrency group + check-chain-running guard prevent a second
+        # orchestrator. A healthy worker may hold a claim as long as it likes;
+        # nothing reclaims mid-run. 30 min therefore only ever matches claims
+        # stranded by a PREVIOUS killed run (cron slots are 3h apart).
+        assert orchestrator.STALE_CLAIM_MINUTES == 30
+
+    def test_reclaim_count_reaches_the_audit_table(self, orchestrator):
+        # Spec 79 C4: emitted EVERY run (0 when nothing was reclaimed) so a
+        # self-heal is DB-visible and "never fired" is distinguishable from
+        # "row plumbing silently unwired" (Spec 48 §3.6).
+        import pathlib
+        src = pathlib.Path(orchestrator.__file__).read_text(encoding='utf-8')
+        assert "'metric': 'stale_claims_reclaimed'" in src
+
+
 class FakeCursor:
     def __init__(self):
         self.executed = []
