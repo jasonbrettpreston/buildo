@@ -106,6 +106,50 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 
 ---
 
+## 3b. Closing an orphaned `running` pipeline_runs row (stale-run recovery)
+
+**When:** a chain died to a `SIGKILL`-class end (GH `timeout-minutes` expiry, force-cancel, runner
+eviction) and left `pipeline_runs.status = 'running'` behind. Spec 115 §4 item 6's SIGINT/SIGTERM
+handler is supposed to terminalize the row and has now failed to do so across two incidents
+(5 rows) — assume it may not have fired.
+
+**Why it matters even though the row does not block:** `isChainRunning` carries a 12h TTL
+(`scripts/lib/chain-concurrency.js:32-42`), so a row older than that has stopped blocking
+dispatches. What remains is a *dashboard lie* — `/api/admin/pipelines/status` reports the chain as
+actively running with no age filter — plus a poisoned "last run" read.
+
+**Do NOT wait for a reaper.** There is no scheduled one. `src/app/api/admin/stats/route.ts:188-199`
+opportunistically fails rows older than 2h, but only when a human loads the admin dashboard, so it
+may not fire for weeks (rows 2158/2179 sat 42h). It also has a filed defect: its 2h threshold is
+shorter than a legitimate `chain_deep_scrapes` slice (~150 min).
+
+**Procedure** — identify, then close with a guarded UPDATE. Use `SUPABASE_DATABASE_URL` explicitly;
+a bare `createPool()` targets the LOCAL Docker DB (three wrong-DB incidents, `tasks/lessons.md`).
+
+```sql
+-- 1. Identify. REPO-WIDE, not per chain: findStaleRunningRow matches `chain_<id>` exactly, so
+--    step-level rows (e.g. 'sources:enrich_parcels') are invisible to the §4 item 5 alert.
+SELECT id, pipeline, started_at, completed_at, error_message
+  FROM pipeline_runs WHERE status = 'running' ORDER BY id;
+
+-- 2. Close. Guard on BOTH the id list and status='running' so a re-run is a no-op and a
+--    legitimately-live row can never be caught. completed_at is REQUIRED: every non-running row
+--    in the table has one, and a NULL silently widens observe-chain.js's step window and disables
+--    check-chain-verdict.js's duration tripwire, permanently (nothing backfills it).
+UPDATE pipeline_runs
+   SET status = 'failed', completed_at = NOW(),
+       error_message = 'ops close <date>: <run id/url>, <what killed it>. completed_at is OPS TIME, not kill time — exclude from duration trends.'
+ WHERE id IN (<ids>) AND status = 'running';
+```
+
+**Acceptance: the UPDATE reports the exact row count you expect** — not "zero running rows
+remain". The opportunistic cleanup above can close them first, in which case your guarded UPDATE
+matches 0 and the ops provenance is lost; that is a different outcome and must be recorded as such.
+Re-run to confirm 0 rows. Then append the incident to Spec 115 §9's stranding log.
+
+**Precedent:** ids 1756/2045/2097 (2026-08-03, Pipeline Rehab P0), 2156/2157 (2026-08-04),
+2158/2179 (2026-08-05, chain-sources run 30861473506 at its 180-min step timeout).
+
 ## 4. pgTAP RLS suite (release-gating, Spec 114 §10)
 
 **What:** `supabase/tests/rls_class_a.test.sql` / `rls_class_b.test.sql` /
