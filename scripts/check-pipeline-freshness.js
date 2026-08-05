@@ -125,9 +125,21 @@ function writeOutput(key, value) {
  * date-aware rather than a fixed-hour constant (F8 fold 2026-07-20):
  *   - Sat/Sun: the check does not apply at all (no run is ever expected —
  *     this is NOT the same as "stale", it is "not applicable today").
- *   - Monday: 72h window (reaches back through the weekend to Friday's
- *     last ~21:00 UTC slot).
- *   - Tue-Fri: 26h window (analogous to chain_entities' daily-cadence
+ *   - Monday: 80h window (reaches back through the weekend to Friday's
+ *     only slot).
+ *   - Tue-Fri: 30h window (analogous to chain_entities' daily-cadence
+ *
+ * WIDENED 2026-08-05 (F3 cadence change, 72->80 / 26->30). The original
+ * numbers were sized for THREE slots a weekday, whose last was ~21:00 UTC.
+ * The cadence is now a SINGLE 15:00 UTC slot, so the newest completion moved
+ * ~6h earlier (~17:35 for a full 150-min slice). Against a watchdog that
+ * fires at 15:30 UTC and has been observed 1-2h late, the old Monday 72h left
+ * ~6 minutes of margin and Tue-Fri 26h left ~2h — both false-red generators.
+ * These windows are ABSENCE detection ("did a slice land at all"), so slack
+ * costs nothing: a genuinely skipped slice still breaches by a wide margin.
+ * If the cadence changes again, THESE MOVE WITH IT — that coupling is the
+ * whole point of this comment.
+ *   (original Tue-Fri rationale retained:) analogous to chain_entities' daily-cadence
  *     buffer; NOT byte-identical to src/app/api/admin/stats/route.ts's 24h
  *     dashboard threshold — the two are independently-derived checks over
  *     the same underlying facts, see DataQualityDashboard.tsx's comment).
@@ -136,8 +148,8 @@ function writeOutput(key, value) {
  */
 function deepScrapesWindow(utcDay) {
   if (utcDay === 0 || utcDay === 6) return { applies: false, windowHours: null };
-  if (utcDay === 1) return { applies: true, windowHours: 72 };
-  return { applies: true, windowHours: 26 };
+  if (utcDay === 1) return { applies: true, windowHours: 80 };
+  return { applies: true, windowHours: 30 };
 }
 
 /**

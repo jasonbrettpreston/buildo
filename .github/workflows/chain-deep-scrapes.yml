@@ -34,25 +34,37 @@
 name: chain-deep-scrapes
 
 on:
-  # SCHEDULE DISABLED (WF2 restore, rung L0 — 2026-07-30). Operator-ruled.
+  # SCHEDULE RE-ENABLED 2026-08-05 (F3 — Phase A step 8). Disabled 2026-07-30
+  # (WF2 restore, rung L0) under a NAMED precondition: a dispatch probe must
+  # first demonstrate a non-zero row count under the cloud constants in the env
+  # block below, with those constants cited to its run id. That precondition is
+  # now MET by the F1 proving slice — run 31009693871, 2026-08-05, dispatched
+  # production-shaped (max_permits=0, max_retries=2, chain_timeout_minutes=150):
+  #   1,151 year_seqs attempted · 1,086 queue rows retired (9,463 -> 8,377)
+  #   anomalous miss-rate 3.7% (gate < 20%) · outcome-write failures 0/1,151
+  #   zero WAF blocks · soft budget-stop at 141.0 min vs the 140-min budget
+  #   chain completed_with_warnings, no FAIL step verdict, zero orphaned
+  #   `running` rows, zero stuck `claimed` rows.
+  # The two WARNs were assert_network_health (avg latency 2,600 ms vs a 2,000 ms
+  # threshold — portal-side) and assert_staleness (coverage 2.6%, the backlog
+  # this schedule exists to drain). Neither is a defect.
   #
   # The scraper's MODULE defaults (MAX_RETRIES=3, RETRY_BASE_MS=2000,
-  # WAF_TRAP_THRESHOLD=20) are correct for the attested unproxied local path and
-  # measurably wrong against this edge, which blocks at ~12 requests / ~10 min and
-  # clears only after ~5 min idle. The env block below therefore sets the recon's
-  # MEASURED cloud values; shipping the defaults here is what produced a run of 654
-  # requests, 0 rows and 102 WAF traps.
+  # WAF_TRAP_THRESHOLD=20) remain correct for the attested unproxied local path
+  # and measurably wrong against this edge; the env block below sets the recon's
+  # MEASURED cloud values. Shipping the module defaults here is what produced a
+  # run of 654 requests, 0 rows and 102 WAF traps — do not "simplify" them away.
   #
-  # RE-ENABLING THIS BLOCK IS NOT A ONE-LINE CHANGE. Scheduled runs are unattended,
-  # so before uncommenting: a dispatch probe must have demonstrated a non-zero row
-  # count, and the constants below must be the values that probe used, cited to its
-  # run id. Cadence and caps below are probe-shaped by default and must be raised
-  # deliberately for production.
-  #
-  # Cadence when restored (Spec 115 §2 row 4, §2.1 — unchanged, only disabled):
-  #     cron: '0 15,18,21 * * 1-5'   # weekdays, business hours across both DST regimes
-  # schedule:
-  #   - cron: '0 15,18,21 * * 1-5'
+  # CADENCE — ONE slot per weekday (operator ruling 2026-08-05), deliberately NOT
+  # the 3 the disabled block carried. Measured drain is ~1,086 queue rows per
+  # 150-min slice, so 5 slices/week ~= 5,400 permits/week and the ~10K target
+  # lands in about two weeks — the cadence the operator chose over draining
+  # faster. One slot/day also removes adjacent-slot contention entirely: a slice
+  # runs 150 min + ~10 min setup against a 24h gap, so the concurrency guard can
+  # never see a live run from the previous slot (Spec 115 §2 row 4, §2.1 — single
+  # fixed-UTC expression, never skips on DST drift).
+  schedule:
+    - cron: '0 15 * * 1-5'   # 11:00 ET (EDT) / 10:00 ET (EST) — mid-morning, attended
   workflow_dispatch:
     # A validation probe must fail FAST. With a 90s retry base, one blocked permit
     # costs 90+180+360s on retries alone, so an unparameterised dispatch sits near
@@ -197,7 +209,7 @@ jobs:
       - name: Run deep_scrapes chain
         id: deep_scrapes
         if: steps.deep_scrapes_guard.outputs.skip != 'true'
-        timeout-minutes: ${{ fromJSON(inputs.chain_timeout_minutes || '12') }}
+        timeout-minutes: ${{ fromJSON(inputs.chain_timeout_minutes || '150') }}
         # Wraps the node PARENT (run-chain.js), not the python child directly,
         # so $DISPLAY is present in the environment run-chain.js spawns its
         # python3 child with (run-chain.js's stepEnv = {...process.env, ...} —
@@ -209,12 +221,20 @@ jobs:
         # 30854595411 was healthy yet SIGKILLed mid-scrape, leaving orphaned
         # pipeline_runs rows + stuck claims + a red verdict. GH expressions
         # have NO arithmetic operators, so the -10 is computed in this shell
-        # from the SAME `inputs.chain_timeout_minutes || '12'` expression the
+        # from the SAME `inputs.chain_timeout_minutes || '150'` expression the
         # step timeout uses; clamped at 0 (= disabled) so a tiny probe
         # timeout falls back to the GH backstop rather than a negative budget.
         # The step timeout-minutes above STAYS as the hard backstop.
+        #
+        # F3 fold of the step-5 Integration DEFER: the `|| '150'` fallback fires
+        # ONLY on the schedule path (a workflow_dispatch always populates inputs
+        # from their declared defaults). A default-input PROBE dispatch is 12 min
+        # -> a live 2-min budget, which is intentional and harmless: probes are
+        # capped at 3 permits (~5s each) and a 2-min budget-stop finalizes
+        # cleanly, which is the whole point of F1. Raise chain_timeout_minutes on
+        # the dispatch if a probe needs a longer runway.
         run: |
-          BUDGET=$(( ${{ fromJSON(inputs.chain_timeout_minutes || '12') }} - 10 ))
+          BUDGET=$(( ${{ fromJSON(inputs.chain_timeout_minutes || '150') }} - 10 ))
           if [ "$BUDGET" -lt 0 ]; then BUDGET=0; fi
           export SCRAPER_TIME_BUDGET_MINUTES=$BUDGET
           echo "Soft time budget: ${SCRAPER_TIME_BUDGET_MINUTES} min (0 = disabled; GH step timeout is the backstop)"
@@ -304,22 +324,44 @@ jobs:
           #     across 8 batches, 0 proxy errors, 31 permits scraped.
           #   30589243948 — 60 permits, HTTP transport: 0 proxy errors, 34 found,
           #     85 rows, 10 rotations, no trap.
+          #   30843114683 — 100 permits, HTTP transport: 7.5s/permit, miss-rate 5.0%,
+          #     zero WAF blocks, ledger 0 write failures (F1 stage-1).
+          #   30854595411 — unlimited drain, 150 min: 1,346 year_seqs, ~2,700
+          #     session requests, zero WAF blocks (F1 stage-2).
+          #   31009693871 — unlimited drain, 141 min (F1 proving slice, the run
+          #     this schedule is cited to): 1,151 year_seqs, zero WAF blocks.
           # No run under these values has produced a WAF block, so threshold 3 has
           # never actually fired in anger — it is bounded-safe rather than
           # empirically tuned. The retry base is unexercised for the same reason.
-          # Re-derive both from a run that DOES get blocked before the cron is
-          # re-enabled; until then they are conservative, not proven.
+          #
+          # OPERATOR RULING 2026-08-03 — re-derive-from-a-blocked-run is WAIVED as
+          # a precondition of re-enabling the cron. Across 509 + ~2,700 + this
+          # slice's requests the edge has never blocked us, so there is no blocked
+          # run to derive from and waiting for one would hold the drain hostage to
+          # an event we are trying not to cause. The constants stay CONSERVATIVE
+          # (threshold 3 / 90s base) rather than proven. If a block ever occurs,
+          # re-derive both from that run — that trigger survives this waiver.
           SCRAPER_WAF_TRAP_THRESHOLD: '3'
           SCRAPER_RETRY_BASE_MS: '90000'
           # HARD CAP for validation dispatches. Without it a "first validation" is an
           # unbounded production run against ~11k queued items, and at ~3 permits per
           # 10 minutes per exit IP it would simply burn the 90-minute window
           # reproducing a block. A small cap makes the result attributable and bounds
-          # what finding out costs. Raise deliberately, never by default.
-          SCRAPE_MAX_PERMITS: ${{ inputs.max_permits || '3' }}
-          # Fail fast on a probe. Each retry waits SCRAPER_RETRY_BASE_MS (90s)
-          # doubling, so 3 retries on one blocked permit is ~10 minutes of sleep.
-          SCRAPER_MAX_RETRIES: ${{ inputs.max_retries || '1' }}
+          # what finding out costs. The DISPATCH default stays 3 (probe-shaped, see
+          # the inputs block); the FALLBACK below is the SCHEDULE path only, where
+          # inputs are absent — 0 = unlimited, bounded by the soft time budget
+          # rather than a permit count (F3, cited to run 31009693871).
+          SCRAPE_MAX_PERMITS: ${{ inputs.max_permits || '0' }}
+          # Fail fast on a probe (dispatch default 1). Each retry waits
+          # SCRAPER_RETRY_BASE_MS (90s) doubling, so 3 retries on one blocked permit
+          # is ~10 minutes of sleep. The SCHEDULE path uses 2: unattended slices
+          # should absorb a transient transport error rather than discard the permit,
+          # but must not spend 10 minutes on a single block. Retries cover
+          # request-level failures only (waf_blocked / transport_error ->
+          # retry_exhausted); the portal's substantive answers are never retried, so
+          # this buys resilience, not yield — zero retries fired in 30854595411 or
+          # 31009693871, both of which recorded no waf_blocked/transport_error rows.
+          SCRAPER_MAX_RETRIES: ${{ inputs.max_retries || '2' }}
 
       - name: Verdict check — deep_scrapes (orchestrator exit-0 masking guard)
         # aic-orchestrator.py exits 0 on a scrape-level failure by design

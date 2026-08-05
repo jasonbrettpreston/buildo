@@ -58,17 +58,37 @@ describe('chain-deep-scrapes workflow', () => {
     });
   });
 
-  describe('schedule safety', () => {
-    it('has no active cron schedule', () => {
-      // Disabled until the cloud retry/WAF constants are measured. The restored
-      // defaults are correct for the attested unproxied local path and known-wrong
-      // for a hostile Akamai edge; guessing them produced a 1.76 GB / ~$6.60 run.
-      expect(activeLines).not.toMatch(/^\s*schedule:/m);
-      expect(activeLines).not.toMatch(/^\s*-\s*cron:/m);
+  describe('schedule (F3 re-enable, 2026-08-05)', () => {
+    it('runs on the Spec 115 §2 row 4 cadence', () => {
+      // RETIRED LOCK, deliberately: this block previously asserted NO active
+      // schedule. That lock's condition — "a dispatch probe must have
+      // demonstrated a non-zero row count under these constants, cited to its
+      // run id" — was met by the F1 proving slice 31009693871 (2026-08-05):
+      // 1,151 year_seqs attempted, 1,086 queue rows retired, anomalous miss
+      // rate 3.7%, zero WAF blocks, zero outcome-write failures, budget-stop
+      // at 141 min, chain completed_with_warnings with no FAIL verdict.
+      // Re-disabling is a one-line comment-out; this assertion is what makes
+      // an ACCIDENTAL disable visible.
+      // Cadence is ONE slot/weekday (operator ruling 2026-08-05), NOT the 3 the
+      // disabled comment block carried: measured drain is ~1,086 queue rows per
+      // 150-min slice, so 5 slices/week ~= 5,400/week and ~10K lands in two weeks.
+      expect(activeLines).toMatch(/^\s*schedule:/m);
+      expect(activeLines).toMatch(/^\s*-\s*cron:\s*'0 15 \* \* 1-5'/m);
     });
 
     it('is still reachable on demand', () => {
       expect(activeLines).toMatch(/workflow_dispatch:/);
+    });
+
+    it('resolves the schedule path to production values, not probe values', () => {
+      // The `inputs.X || 'Y'` fallbacks fire ONLY on the schedule path — a
+      // workflow_dispatch always populates inputs from their declared
+      // defaults, so the probe defaults ('3'/'1'/'12') stay probe-shaped for
+      // humans. Before F3 the fallbacks were the probe values too, so every
+      // scheduled slice would have scraped 3 permits on a 12-minute timeout.
+      expect(activeLines).toMatch(/inputs\.max_permits \|\| '0'/);
+      expect(activeLines).toMatch(/inputs\.max_retries \|\| '2'/);
+      expect(activeLines).toMatch(/inputs\.chain_timeout_minutes \|\| '150'/);
     });
   });
 
@@ -95,7 +115,9 @@ describe('chain-deep-scrapes workflow', () => {
       // shell, fed by the same `inputs.chain_timeout_minutes || '12'`
       // expression family the step timeout uses.
       expect(activeLines).toMatch(/SCRAPER_TIME_BUDGET_MINUTES/);
-      expect(activeLines).toMatch(/chain_timeout_minutes \|\| '12'[^\n]*\}\}\s*-\s*10/);
+      // The fallback moved 12 -> 150 with F3 (schedule path = production
+      // values); the -10 arithmetic and its shell location are unchanged.
+      expect(activeLines).toMatch(/chain_timeout_minutes \|\| '150'[^\n]*\}\}\s*-\s*10/);
     });
   });
 
