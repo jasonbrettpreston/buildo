@@ -111,12 +111,12 @@ The audit `verdict` (PASS/WARN/FAIL) is **advisory** — `run-chain.js` halts on
 
 | Audit row | Source | WARN at | FAIL at | Notes |
 |---|---|---|---|---|
-| `default_calibration_pct` | share on `calibration_method='default'` | ≥ `forecast_default_calibration_warn_pct` (70) | ≥ `forecast_default_calibration_fail_pct` (85) | Was HARDCODED 20/50 (D2a externalized it). Relaxed while the post-rebuild calibration corpus is cold (~60% default). |
+| `default_calibration_pct` | share on `calibration_method='default'` | ≥ `forecast_default_calibration_warn_pct` (20) | ≥ `forecast_default_calibration_fail_pct` (50) | Was HARDCODED 20/50 (D2a externalized it). Relaxed to 70/85 on 2026-07-07 while the post-rebuild calibration corpus was cold; **STRICT pair restored 2026-08-05 by migration 238** once the relaxation's own revert condition was met (cohort fill 88.7%, default 11.3%). |
 | `expired_urgency_pct` | share on `urgency='expired'` | ≥ 30% | ≥ 60% | Values HARDCODED, unchanged by D2a. |
 | `unmapped_trades` | rows on a slug with no `trade_configurations` | > 0 → WARN | — | Acceptance `== 0` after Spec 80 P4 (§1). |
 | `excluded_rows` / `excluded_trade_slugs` | non-forecastable rows (§1) | INFO | — | Outside `records_total`; loud, never silent. |
-| `calibration_thresholds_relaxed` | active vs strict (20/50) pair | WARN whenever looser than strict | — | **GRD-F1 mechanical re-tightening guard** — emitted on EVERY run while relaxed; the loosening is permanent-by-choice-only. Value carries the active pair. |
-| `calibration_cohort_fill_pct` | `100 − default_calibration_pct` | INFO | — | Recovery signal: once it passes the strict-PASS point (> 80% ⇒ default < 20%), restore strict 20/50. |
+| `calibration_thresholds_relaxed` | active vs strict (20/50) pair | relaxed AND cohorts still cold (`default_calibration_pct ≥ 20`) | relaxed AND cohorts RECOVERED past the strict-PASS point (`default_calibration_pct < 20`) | **GRD-F1 mechanical re-tightening guard, THREE-STATE** (`scripts/lib/calibration-guard.js:36-40`): **PASS** when the strict pair is active · WARN while a justified relaxation is still justified · **FAIL** once it is not — config drift demanding a return to strict, not a warning. Emitted on EVERY run (PASS included) so it can never go silently unwired. Value carries the active pair. |
+| `calibration_cohort_fill_pct` | `100 − default_calibration_pct` | INFO | — | Recovery signal: once it passes the strict-PASS point (> 80% ⇒ default < 20%), restore strict 20/50. **This fired for real on 2026-08-05** — fill 88.7% while the pair was still 70/85, escalating the guard above to FAIL; resolved by migration 238. |
 
 **CoA audit-verdict gate** (`compute-trade-forecasts.js` §Phase F.1) — the CoA forecast branch is gated on the most-recent permits-chain `compute_phase_calibration` `pipeline_runs` verdict within `coa_gate_calibration_window_days` (7). Policy is declarative via `logic_variables.coa_gate_policy`:
 
@@ -127,7 +127,7 @@ Three bypass rows make every non-strict activation as loud as the others (overri
 
 | Bypass row | Fires when | Status |
 |---|---|---|
-| `coa_audit_gate_warn_accepted` | a WARN verdict activated the branch under `pass_or_warn` | WARN when 1 |
+| `coa_audit_gate_warn_accepted` | a WARN verdict activated the branch under `pass_or_warn` | **THREE-STATE** (`calibration-guard.js:65-69`): **INFO** at baseline (`pass_only`, or no bypass active) · WARN while a WARN verdict is being accepted · **FAIL** once the calibration verdict recovers to a clean PASS while the policy is still `pass_or_warn` (the loose policy is no longer needed — revert to `pass_only`). Note the baseline is INFO, **not** PASS. |
 | `coa_audit_gate_grace_bypass` | cold-start grace (no `pipeline_runs` ≥ 7d old) activated it | WARN when 1 |
 | `coa_audit_gate_force_active` | operator set `coa_gate_force_active=1` | WARN when 1 |
 

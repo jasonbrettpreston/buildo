@@ -97,10 +97,16 @@ describe('compute-trade-forecasts.js — D3a CoA gate policy (pass_or_warn)', ()
 });
 
 describe('seeds + migration content — D2a/D3a', () => {
-  it('logic_variables.json seeds the two numeric thresholds at 70/85', () => {
+  it('logic_variables.json seeds the two numeric thresholds at the STRICT pair 20/50', () => {
+    // Restored 2026-08-05 (migration 238) from the 70/85 relaxation seeded
+    // 2026-07-07 (c6310d65). The relaxation's own stated revert condition —
+    // "restore 20 once calibration_cohort_fill_pct recovers past 80%" — was met:
+    // fill reached 88.7% (default_calibration_pct 11.3%) once compute_timing
+    // _calibration_v2 cohorts grew 32 -> 76 on the Phase A inspection drain.
+    // Exact-equality by design: any future re-relaxation must come here first.
     const json = JSON.parse(read('scripts/seeds/logic_variables.json')) as Record<string, { default: number }>;
-    expect(json.forecast_default_calibration_warn_pct?.default).toBe(70);
-    expect(json.forecast_default_calibration_fail_pct?.default).toBe(85);
+    expect(json.forecast_default_calibration_warn_pct?.default).toBe(20);
+    expect(json.forecast_default_calibration_fail_pct?.default).toBe(50);
   });
 
   it('coa_gate_policy is NOT in seeds JSON (migration-only, like income_premium_tiers)', () => {
