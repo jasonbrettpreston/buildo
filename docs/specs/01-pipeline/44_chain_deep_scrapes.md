@@ -11,7 +11,11 @@ As a tradesperson, I want real-time inspection statuses (Pass/Fail/Outstanding) 
 ## 2. Chain Definition
 
 **Trigger:** `node scripts/run-chain.js deep_scrapes` or `POST /api/admin/pipelines/chain_deep_scrapes`
-**Schedule:** `0 15,18,21 * * 1-5` UTC — 3×/day, weekdays only, via `.github/workflows/chain-deep-scrapes.yml` — **currently DISABLED (the `schedule:` block is committed commented-out; was live 2026-07-29 `f7993025`, re-disabled pending the throughput WF — re-enablement is Pipeline Rehab P7's entry-gated change; Spec 115 §2 + §2.4 own the cadence).** On-demand via `workflow_dispatch` / the admin trigger remains live.
+**Schedule:** `0 15 * * 1-5` UTC — **once per weekday** (11:00 ET in EDT / 10:00 in EST), via `.github/workflows/chain-deep-scrapes.yml` — **LIVE since 2026-08-05 `2fa3b2e7`** (Pipeline Rehab P7's entry-gated re-enablement; Spec 115 §2 + §2.4 own the cadence). On-demand via `workflow_dispatch` / the admin trigger remains live.
+
+The gate that held this disabled — "a dispatch probe must demonstrate a non-zero row count under the cloud constants, cited to its run id" — was met by the F1 proving slice **31009693871** (2026-08-05, dispatched production-shaped `max_permits=0` / `max_retries=2` / `chain_timeout_minutes=150`): 1,151 year_seqs attempted, 1,086 queue rows retired, anomalous miss-rate 3.7%, zero WAF blocks, soft budget-stop at 141.0 min vs the 140-min budget, chain `completed_with_warnings` with no FAIL step verdict, zero orphaned rows, zero stuck claims.
+
+**Cadence is one slot, not the three this line previously described** (operator ruling 2026-08-05): measured drain is ~1,086 queue rows per 150-min slice, so 5 slices/week ≈ 5,400 permits/week and the ~10K target lands in about two weeks — the deliberate pace, chosen over draining faster. One slot/day also removes adjacent-slot contention entirely (150 min + ~10 min setup against a 24h gap).
 **Steps:** 7 (sequential, stop-on-failure)
 **Gate:** None
 
@@ -172,7 +176,16 @@ length is re-evaluated when the `populate_queue` re-queue-forever defect is fixe
   exists); `no_stages` / `no_inspection_link` are the portal answering honestly. The audit
   gate is `anomalous_miss_rate < 20%` — computed over the anomalous class only — with
   `not_found_count` + the benign counts emitted as INFO rows and the full
-  `not_found_breakdown` in `scraper_telemetry`. **Small-n statistics (Pipeline Rehab P6,
+  `not_found_breakdown` in `scraper_telemetry`.
+  **COMPUTE THIS RATE IN THE GATE'S OWN UNIT — attempts, not ledger rows** (2026-08-05, WF3
+  post-Phase-A residuals). `classify_miss_rate` divides by `permits_attempted`, which counts
+  one **search** per `year_seq`. But `no_target_folders` is a *year_seq-grain* outcome that
+  the ledger fans out to **one row per queued permit sharing that year_seq** — a single failed
+  search on `21 157190` wrote 48 `permit_scrape_outcomes` rows. Computing the rate over ledger
+  rows during the 2026-08-05 proving slice read **36.7% anomalous** and looked like an
+  imminent gate failure; the same sample computed over distinct `year_seq` — what the gate
+  actually divides by — was **14.2%**, and it finished at 3.7%. Any ad-hoc query over
+  `permit_scrape_outcomes` that is meant to predict this gate must `COUNT(DISTINCT year_seq)`. **Small-n statistics (Pipeline Rehab P6,
   2026-08-03 — `classify_miss_rate`, mirrored byte-identically in `aic-orchestrator.py`
   and `aic-scraper-nodriver.py`, parity pytest-locked):** the gate is FAIL-eligible only
   at `permits_attempted >= 30`; at the ASSUMED 10% anomalous baseline (a pre-ledger

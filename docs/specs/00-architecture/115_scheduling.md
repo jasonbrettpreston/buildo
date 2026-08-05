@@ -44,7 +44,7 @@ runner (Spec 113 §8.1 — no Vercel function ever hosts a chain).
 | 1 | `.github/workflows/chain-coa-permits.yml` | `coa` → `permits`, **serialized in one workflow** | ~6 AM ET, EVERY night (×7) | `0 11 * * *` |
 | 2 | `.github/workflows/chain-sources.yml` | `sources` | WEEKLY, ~8 AM ET Sunday | `0 13 * * 0` |
 | 3 | `.github/workflows/chain-entities.yml` | `entities` | 3 AM ET daily (unchanged) | `0 8 * * *` |
-| 4 | `.github/workflows/chain-deep-scrapes.yml` | `deep_scrapes` (§2.4) | 3×/day, **WEEKDAYS ONLY, business hours** (~10 AM/1 PM/4 PM EST · 11/2/5 EDT) | `0 15,18,21 * * 1-5` |
+| 4 | `.github/workflows/chain-deep-scrapes.yml` | `deep_scrapes` (§2.4) | **1×/day, WEEKDAYS ONLY, business hours** (10 AM EST · 11 AM EDT) — LIVE since 2026-08-05 `2fa3b2e7`; was 3×/day on paper while the schedule sat disabled | `0 15 * * 1-5` |
 
 The deep_scrapes slots deliberately start at 15:00 UTC — clearing the 11:00 UTC nightly
 coa→permits window plus its ~3h worst case, because `deep_scrapes` SHARES
@@ -392,8 +392,14 @@ watchdog checks for it.
    - `chain_entities` — 26h (daily cadence + buffer).
    - `chain_sources` — 204h (8 days + 12h slack — weekly Sunday cadence).
    - `chain_deep_scrapes` — weekday-aware, since it never runs Sat/Sun (§2.4): the check does
-     not apply at all on Sat/Sun (no run is expected — not the same as "stale"), 72h on
-     Monday (reaches back through the weekend to Friday's last slot), 26h Tue-Fri.
+     not apply at all on Sat/Sun (no run is expected — not the same as "stale"), **80h on
+     Monday** (reaches back through the weekend to Friday's only slot), **30h Tue-Fri**.
+     Widened from 72h/26h on 2026-08-05 (`2fa3b2e7`) WITH the cadence change: the old numbers
+     were sized for a Friday last slot of ~21:00 UTC, and a single 15:00 slot completes ~17:35,
+     which left the Monday window ~6 minutes of margin against a watchdog that fires at 15:30
+     UTC and has been observed 1-2h late. **These windows are COUPLED to the cadence — if the
+     cadence changes again, they move in the same commit** (a genuinely skipped slice still
+     breaches by hours, so the slack costs nothing).
    A "completed" run means `pipeline_runs.status` is one of `completed` /
    `completed_with_warnings` / `completed_with_errors` (F8 fold — this check is
    ABSENCE detection only; pass/fail visibility now comes from
@@ -667,7 +673,7 @@ current HEAD as of this spec).
 |---|---|---|---|
 | `mv_monthly_permit_stats_refresh` | Nightly, `30 14 * * *` UTC — **AMENDED 2026-07-20**: re-timed to land AFTER the amended nightly window (coa→permits now runs `0 11 * * *` UTC every night, §2, plus its ~3h worst case) | `REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_permit_stats;` | **Net-new** — no automated refresh exists in the codebase today (`034_mv_monthly_permit_stats.sql` created it; nothing schedules its refresh). A missed refresh leaves yesterday's snapshot visible one more day; the dashboard consuming it (`docs/specs/02-web-admin/26_admin_dashboard.md`) already tolerates staleness by design. `CONCURRENTLY` requires the matview's own unique index — **VERIFIED** (`idx_mv_monthly_month_type`, live-checked; the earlier "verify at implementation" hedge is closed). *Pre-existing oddity fixed by this amendment: the original `30 9 * * *` UTC comment claimed to run "after" an `0 11 * * *`-equivalent workflow while actually preceding it by 1.5h — the new `30 14 * * *` slot is genuinely after, not just nominally.* |
 | `lead_views_retention_purge` | Daily, `0 9 * * *` UTC | `DELETE FROM lead_views WHERE viewed_at < NOW() - make_interval(days => (SELECT COALESCE(variable_value::int, 90) FROM logic_variables WHERE variable_key = 'lead_view_retention_days'));` — **AMENDED (Schema-Fidelity F5):** `logic_variables.variable_value` is `NUMERIC`, not an interval-multipliable type; `make_interval(days => ...)` is the correct cast, replacing the earlier `... * INTERVAL '1 day'` shape which does not type-check against a `NUMERIC` operand the same way. | Pure retention housekeeping (Spec 70 §Database Schema, PIPEDA 90-day SLA). A day's delay in purging past-window rows is not a data-integrity incident — it is the *same* risk profile the old `purge-lead-views.js` "task 1" half already carried as a manually-scheduled script (§6). Reads the tunable retention window from `logic_variables` rather than hardcoding 90, preserving the admin-configurable behavior the JS script had. |
-| `permit_scrape_outcomes_prune` | Daily, `0 8 * * *` UTC (clear of the 09:00/10:00/14:30 jobs and the 15/18/21 UTC deep-scrapes windows) | `SELECT * FROM public.prune_permit_scrape_outcomes();` (migration 237, 235-hardened shape: SECURITY DEFINER `search_path = pg_catalog`, durable `pipeline_runs` summary row on success AND failure, REVOKE from client roles). One atomic data-modifying CTE: `DELETE FROM permit_scrape_outcomes WHERE observed_at < now() - 90 days RETURNING` folded into `permit_scrape_outcome_rollup` via `ON CONFLICT (permit_num, outcome, transport) DO UPDATE occurrences + excluded, first_at = LEAST, last_at = GREATEST`; permit_num-NULL rows fold under `COALESCE(permit_num, year_seq)`. Idempotent; concurrency-safe vs live inserts (cutoff predicate). Locked by `src/tests/db/237_scrape_outcome_prune.db.test.ts`. | **Never-must-succeed by construction** (Spec 44 §3, WF2 2026-07-31 D1 ruling): a missed prune leaves raw diagnostic rows past their 90-day horizon one more day — a storage nuisance, not a correctness incident; the next run folds the same rows identically (atomic + idempotent, cannot double-count). Steady-state raw volume ~150K rows; rollup bound ~93K (RC-corrected numbers). Retention length re-evaluated when the `populate_queue` re-queue-forever defect (lifecycle epic item 5) lands — filed in `docs/reports/review_followups.md`. |
+| `permit_scrape_outcomes_prune` | Daily, `0 8 * * *` UTC (clear of the 09:00/10:00/14:30 jobs and the 15:00 UTC deep-scrapes window) | `SELECT * FROM public.prune_permit_scrape_outcomes();` (migration 237, 235-hardened shape: SECURITY DEFINER `search_path = pg_catalog`, durable `pipeline_runs` summary row on success AND failure, REVOKE from client roles). One atomic data-modifying CTE: `DELETE FROM permit_scrape_outcomes WHERE observed_at < now() - 90 days RETURNING` folded into `permit_scrape_outcome_rollup` via `ON CONFLICT (permit_num, outcome, transport) DO UPDATE occurrences + excluded, first_at = LEAST, last_at = GREATEST`; permit_num-NULL rows fold under `COALESCE(permit_num, year_seq)`. Idempotent; concurrency-safe vs live inserts (cutoff predicate). Locked by `src/tests/db/237_scrape_outcome_prune.db.test.ts`. | **Never-must-succeed by construction** (Spec 44 §3, WF2 2026-07-31 D1 ruling): a missed prune leaves raw diagnostic rows past their 90-day horizon one more day — a storage nuisance, not a correctness incident; the next run folds the same rows identically (atomic + idempotent, cannot double-count). Steady-state raw volume ~150K rows; rollup bound ~93K (RC-corrected numbers). Retention length re-evaluated when the `populate_queue` re-queue-forever defect (lifecycle epic item 5) lands — filed in `docs/reports/review_followups.md`. |
 | `offboarding_sweep_30day` | Daily, `0 10 * * *` UTC | **AMENDED (Schema-Fidelity F3/F4) — predicate + execution shape rewritten to reality:** the sweep no longer targets `auth.users.raw_user_meta_data` (no such mirrored column exists — see caveat resolution below); it reads `user_profiles.account_deleted_at` (mig 114:32, live-verified as the ONLY location this timestamp lives). Because `admin_audit_log.admin_uid` is `ON DELETE RESTRICT` (mig 229:96-106, a **deliberate fence** — an audit trail must survive the account that authored it), a single batch `DELETE FROM auth.users WHERE ...` aborts ENTIRELY the moment it hits any swept user who ever authored an audit-log row, blocking every OTHER eligible user's deletion too. The job therefore runs **PER-USER**, in a `DO` block loop over `user_profiles WHERE account_deleted_at < NOW() - INTERVAL '30 days'`, with **per-row exception handling**: a `DELETE FROM auth.users WHERE id = <row>` wrapped so a `foreign_key_violation` on that specific row is caught, `RAISE WARNING`'d (surfaced in `cron.job_run_details`, visible to an operator without a separate alert channel) and skipped rather than aborting the whole sweep — the skipped, audit-authoring user is left for manual RTBF scrub (the same pattern the P24 work already established). Non-audit-authoring users still delete normally via `auth.users`'s CASCADE network onto the 10-table D6 inventory. A partial index `CREATE INDEX ... ON user_profiles (account_deleted_at) WHERE account_deleted_at IS NOT NULL` rides the same catalog migration (Gemini MED — cheap insurance for what would otherwise be a full-table scan every run). | **Net-new** — Spec 97 §3.2 **(L504, corrected from an earlier L502 mis-cite)** documents this sweep as a "TODO: Phase 2" Cloud Function that was **never built** (mobile settings spec, offboarding flow). Zero regression risk: today, nothing purges past-30-day self-deleted accounts at all. |
 
 This table is **extensible without a spec amendment**: a new pg_cron job may be added
@@ -772,7 +778,7 @@ of these rows need per-chain scoping; noted for any future per-chain-scoped sche
 | `permits` | `Daily` | `0 11 * * *` |
 | `sources` | `Weekly` | `0 13 * * 0` |
 | `entities` | `Daily` | `0 8 * * *` |
-| `deep_scrapes` | `Weekdays (3x Daily)` | `0 15,18,21 * * 1-5` |
+| `deep_scrapes` | `Weekdays (1x Daily)` | `0 15 * * 1-5` |
 
 **Cadence enum extension (same change as the seed script — P3-G11):** the admin PUT
 handler's cadence validator (`src/app/api/admin/pipelines/schedules/route.ts:34`,
@@ -975,11 +981,21 @@ is needed (option 1's would-be pg_cron-inappropriate concern is moot).
   up to half a day. This is a real, currently-unfixed gap in the codebase as of this spec
   (§4 item 6) — not a hypothetical regression risk.
 - **A CANCELLED GitHub run strands a `running` row that blocks its chain for 12h, and nothing
-  reaps it (open as of 2026-07-30).** §4 item 6's `SIGINT`/`SIGTERM` handler covers an orderly
+  reaps it AUTOMATICALLY (open as of 2026-07-30; scope corrected 2026-08-05).** §4 item 6's
+  `SIGINT`/`SIGTERM` handler covers an orderly
   cancellation, but a `SIGKILL`-class death — a force-cancelled run, a runner eviction, OOM —
   leaves `pipeline_runs.status = 'running'` behind. `check-chain-running.js` then correctly
   reports `skip=true` for every subsequent dispatch until the 12h TTL expires, so the chain
-  quietly does not run for up to half a day. There is **no reaper**: item 5 only emits a warning
+  quietly does not run for up to half a day. There is **no SCHEDULED reaper**. An
+  **opportunistic, request-triggered** cleanup does exist and this spec previously denied it:
+  `src/app/api/admin/stats/route.ts:188-199` fails any row `running` for more than 2h, but only
+  when a human loads the admin dashboard — it fires on no schedule, so it cannot be relied on
+  for the blocking window (it last fired 2026-07-28, which is why rows 2158/2179 sat `running`
+  for 42h). **It also carries its own defect: the 2h threshold predates the deep-scrapes cadence
+  restore, and a `chain_deep_scrapes` slice legitimately runs ~150 min** — a dashboard load
+  mid-slice would mark a healthy, actively-scraping run `failed`. Filed in
+  `docs/reports/review_followups.md` (2026-08-05, HIGH) for its own WF3.
+  Beyond that, item 5 only emits a warning
   annotation *after* the row has already aged past 12h (i.e. after it has stopped blocking), so
   the blocking window itself has no signal at all beyond the guard's own skip line (which is
   only readable at all since `27e39948` — see §4 item 7). Recovery today is a manual
@@ -991,8 +1007,21 @@ is needed (option 1's would-be pg_cron-inappropriate concern is moot).
   never landed its UPDATE, likely SIGKILL beating the async write — filed as latent), and
   the then-denylist verdict check read them as GREEN. P0 recovered them via the manual
   UPDATE above; P3's allowlist means such rows now redden the next verdict check instead
-  of passing it. Still true: no reaper exists, and the 12h blocking window itself remains
+  of passing it. Still true: no SCHEDULED reaper exists (see the correction above — the
+  `admin/stats` cleanup is request-triggered only), and the 12h blocking window itself remains
   signal-free between verdict checks.
+  STATUS UPDATE 2026-08-05 (WF3 post-Phase-A residuals, F1): **it fired again, and the §4
+  item 6 handler again failed to land.** chain-sources dispatch `30861473506` hit the
+  step-level `timeout-minutes: 180` (`chain-sources.yml:72`) after 3h01m and stranded TWO more
+  rows — `2158 chain_sources` and `2179 sources:enrich_parcels` — both `completed_at`/
+  `error_message` NULL, for 42h. Closed 2026-08-05 by the manual UPDATE above (2 rows,
+  `completed_at` = ops time, `error_message` marks them ops-patched — exclude from duration
+  trends). Two structural gaps this exposed, both open: (a) the item-6 handler has now failed
+  to terminalize on **five** rows across two incidents, so "likely SIGKILL beating the async
+  write" is no longer a one-off hypothesis; (b) `findStaleRunningRow` matches
+  `pipeline = 'chain_<id>'` EXACTLY, so **step-level rows like `2179` are invisible to item 5's
+  alert entirely** — nothing at all observed that row. Both belong with the sources
+  incremental-architecture WF (Phase B B9/B9b).
 - **`if: … outputs.skip != 'true'` treats an ABSENT output as "proceed".** Every chain workflow
   gates its run step on `steps.<guard>.outputs.skip != 'true'` (e.g.
   `chain-deep-scrapes.yml:172`, `:203`). GitHub evaluates a missing output as the empty string,

@@ -36,7 +36,18 @@ export const PUT = withApiEnvelope(async function PUT(request: NextRequest) {
     // un-extended enum would make this PUT silently reject those two
     // pipelines' cadence the moment an operator touches them through the
     // admin dashboard.
-    const validCadences = ['Daily', 'Weekly', 'Weekdays (3x Daily)', 'Quarterly', 'Annual'];
+    // 'Weekdays (1x Daily)' added 2026-08-05: deep_scrapes' cadence was cut from 3 slots to 1
+    // (`2fa3b2e7`). '(3x Daily)' is RETAINED, not replaced — an existing pipeline_schedules row
+    // may still carry it, and rejecting a value already in the table would break the PUT for a
+    // row an operator is merely trying to correct (the failure mode this comment block warns of).
+    const validCadences = [
+      'Daily',
+      'Weekly',
+      'Weekdays (1x Daily)',
+      'Weekdays (3x Daily)',
+      'Quarterly',
+      'Annual',
+    ];
     if (!validCadences.includes(cadence)) {
       return NextResponse.json({ error: `cadence must be one of: ${validCadences.join(', ')}` }, { status: 400 });
     }

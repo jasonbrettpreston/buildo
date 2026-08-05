@@ -38,7 +38,9 @@ const SCHEDULES = [
   { pipeline: 'permits', cadence: 'Daily', cron_expression: '0 11 * * *' },
   { pipeline: 'sources', cadence: 'Weekly', cron_expression: '0 13 * * 0' },
   { pipeline: 'entities', cadence: 'Daily', cron_expression: '0 8 * * *' },
-  { pipeline: 'deep_scrapes', cadence: 'Weekdays (3x Daily)', cron_expression: '0 15,18,21 * * 1-5' },
+  // Cadence cut 3 slots -> 1 on 2026-08-05 (`2fa3b2e7`) when the schedule was re-enabled;
+  // must stay byte-equal to .github/workflows/chain-deep-scrapes.yml's live cron (Spec 115 §6).
+  { pipeline: 'deep_scrapes', cadence: 'Weekdays (1x Daily)', cron_expression: '0 15 * * 1-5' },
 ];
 
 async function main() {
