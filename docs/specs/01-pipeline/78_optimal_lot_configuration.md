@@ -204,7 +204,19 @@ It therefore **streams** eligible parcels (`pipeline.streamQuery`), maps each ro
 **batch-UPDATEs** (`UPDATE … FROM (VALUES …)`, ~500/batch). It runs **AFTER the SQL passes COMMIT** —
 `streamQuery` uses a separate connection, so it reads the just-committed max-build envelope (a same-txn
 read would be invisible). Eligibility: `max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0`;
-`--full` recomputes all, incremental does only `opt_config_confidence IS NULL`.
+`--full` recomputes all. **Incremental (WF3 D-D staleness amendment):** selects `opt_config_confidence
+IS NULL` **OR** stored `optimal_config→'as_of_right'→'main_footprint_sqm' IS DISTINCT FROM
+`max_buildable_footprint_sqm` — a parcel whose envelope moved after configuration is stale and MUST
+recompute (the engine always writes `main_footprint_sqm` = the streamed footprint, `NUMERIC(12,2)`/
+round2 identity, so the comparison is byte-level convergent: steady-state re-runs select 0 rows; a
+NULL `optimal_config` with non-NULL confidence also fires). **Ineligibility reset (extended):** before
+streaming, `opt_*` are NULLed for in-scope rows with `opt_config_confidence IS NOT NULL` that the
+stream can never select — `max_buildable_footprint_sqm IS NULL` **OR `(lot_size_sqm > 0) IS NOT TRUE`**
+(three-valued logic: `NOT (lot > 0)` silently drops NULL lots; `IS NOT TRUE` catches NULL and ≤ 0,
+exactly complementing the stream's `lot_size_sqm > 0`). **Engine-side twin:** `buildTier` never falls
+back to the ravine-blind `coverageCapFrac × lotSizeSqm` footprint for a ravine parcel with a NULL
+envelope footprint (the D-C constrained class had its envelope deliberately withheld) — it emits a
+NULL tier; non-ravine NULL-footprint callers keep the fallback.
 
 ### P3A.2 — Inputs (parcels + neighbourhood_build_norms, citywide fallback)
 The streaming SELECT joins `neighbourhood_build_norms` on `neighbourhood_id` with a **citywide-fallback
@@ -264,6 +276,10 @@ footprint + committed permits/coa).
    parcels — a parcels-driven scan with a per-row CoA LATERAL was a >90s plan; this is ~11s.
 2. **Per subject** (residential parcel with a max-build envelope, scoped at SOURCE + incremental on
    `comp_count IS NULL`): a LATERAL **GiST kNN over-fetch** of the 50 nearest candidates → **post-filter**
+   *Standing limitation (WF3 D-D note): the `comp_count IS NULL` incremental predicate never revisits a
+   parcel whose envelope later changed — comp evidence can go stale between `--full` runs. The
+   operational heal is the full comps pass every `--full` re-run; a staleness predicate here is out of
+   scope (filed in `docs/reports/review_followups.md`).*
    same `zoning_class` + lot/frontage within **±20%** → keep the **10 most similar** (`|Δlot| +
    |Δfrontage|·10`) → `jsonb_agg` nearest-first.
 

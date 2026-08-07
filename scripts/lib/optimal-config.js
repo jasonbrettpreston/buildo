@@ -184,6 +184,18 @@ function round2(n) { return n == null ? n : Math.round(n * 100) / 100; }
  * @param allowSuite  whether a rear suite may be added (gated off for holding zones)
  */
 function buildTier(p, storeys, allowSuite) {
+  // WF3 D-D twin (R3-M1): a RAVINE parcel with a NULL footprint had its envelope deliberately
+  // withheld (the D-C constrained class) — the coverage×lot fallback below is ravine-blind and would
+  // re-create the deleted envelope one layer down. NULL tier, never a coverage-derived footprint.
+  // In-pipeline these parcels are never streamed (footprint gate) and their opt_* are reset; this
+  // gate is defense-in-depth for future/out-of-pipeline callers of the pure engine.
+  if (p.maxBuildableFootprintSqm == null && p.isRavine) {
+    return {
+      main_footprint_sqm: null, main_storeys: null, main_gfa_sqm: null, main_gfa_binding: null,
+      suite: null, suite_binding: allowSuite ? null : 'holding',
+      garage: { fits: false, footprintSqm: 0 }, total_gfa_sqm: null,
+    };
+  }
   // Main build: footprint = coverage cap (lot × coverage_cap_frac, or the validated max-build footprint).
   const coverageFootprint = p.maxBuildableFootprintSqm != null
     ? p.maxBuildableFootprintSqm
@@ -286,7 +298,9 @@ function computeOptimalConfig(parcel) {
     opt_suite_fits_full: asOfRight.suite != null,
     opt_suite_type: asOfRight.suite ? asOfRight.suite.type : null,
     opt_suite_adds_value: suiteAddsValue,
-    opt_coa_gfa_uplift_sqm: round2(coaUpside.main_gfa_sqm - asOfRight.main_gfa_sqm),
+    // NULL-tier guard (ravine gate above): null − null is NaN — emit null, not NaN.
+    opt_coa_gfa_uplift_sqm: coaUpside.main_gfa_sqm != null && asOfRight.main_gfa_sqm != null
+      ? round2(coaUpside.main_gfa_sqm - asOfRight.main_gfa_sqm) : null,
   };
 }
 

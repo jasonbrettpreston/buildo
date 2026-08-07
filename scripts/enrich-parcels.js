@@ -1090,7 +1090,13 @@ function numOrNull(v) {
 /** The streaming read: eligible parcels + the max-build/zoning inputs + the nbhd norms (per-nbhd with a
  *  citywide-fallback CROSS JOIN). `full` recomputes all eligible; incremental does only the not-yet-configured. */
 function buildOptConfigSelectSql({ full = false, scopeWhere = 'TRUE' } = {}) {
-  const incrWhere = full ? '' : 'AND p.opt_config_confidence IS NULL';
+  // WF3 D-D: incremental selects never-configured parcels AND stale ones — a parcel whose stored
+  // optimal_config→as_of_right→main_footprint_sqm diverged from the live envelope footprint (the
+  // engine always writes main_footprint_sqm = the streamed footprint, NUMERIC(12,2)/round2 identity,
+  // so the comparison is byte-level convergent: steady-state re-runs select 0 rows). A NULL
+  // optimal_config with a non-NULL confidence (malformed/partial write) also fires via IS DISTINCT FROM.
+  const incrWhere = full ? '' : `AND (p.opt_config_confidence IS NULL
+        OR (p.optimal_config->'as_of_right'->>'main_footprint_sqm')::numeric IS DISTINCT FROM p.max_buildable_footprint_sqm)`;
   return `
     SELECT p.id, p.lot_size_sqm, p.frontage_m, p.depth_m, p.max_buildable_footprint_sqm,
            p.max_buildable_gfa_sqm, p.max_buildable_gfa_basis,  -- WF3: envelope-storey derive for heritage (col is NULL there)
@@ -1265,13 +1271,19 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE' } =
     throw new Error(`${TAG} optimal-config: no citywide (NULL,'all') neighbourhood_build_norms backstop — run compute_build_norms (permits chain) first`);
   }
   // WF3: RESET stale opt_* on parcels that LOST eligibility — the stream gates on
-  // max_buildable_footprint_sqm IS NOT NULL, so a parcel whose footprint became NULL (e.g. a
-  // heritage-mislink freeze nulled it) would otherwise keep a stale opt_aor forever, and the cost
-  // model's COALESCE(opt_aor, max_buildable_gfa) would still price it. Null-out is scope-bounded.
+  // max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0, so a parcel whose footprint became
+  // NULL (e.g. a heritage-mislink freeze nulled it) OR whose lot is NULL/0 (D-D limbo class — the
+  // stream can never select it) would otherwise keep a stale opt_aor forever, and the cost model's
+  // COALESCE(opt_aor, max_buildable_gfa) would still price it. Null-out is scope-bounded.
+  // Three-valued logic spelled out: `NOT (lot > 0)` silently DROPS NULL lots (NULL > 0 is NULL, NOT
+  // NULL is NULL → row filtered out) — `(lot > 0) IS NOT TRUE` is the predicate that catches both
+  // NULL and <= 0, exactly complementing the stream's `lot_size_sqm > 0`.
   const resetCols = OPTCFG_WRITE_COLS.map((c) => `${c} = NULL`).join(', ');
   const reset = await pool.query(
     `UPDATE parcels p SET ${resetCols}
-       WHERE (${scopeWhere}) AND p.max_buildable_footprint_sqm IS NULL AND p.opt_config_confidence IS NOT NULL`);
+       WHERE (${scopeWhere})
+         AND (p.max_buildable_footprint_sqm IS NULL OR (p.lot_size_sqm > 0) IS NOT TRUE)
+         AND p.opt_config_confidence IS NOT NULL`);
   const stats = { updated: 0, reset_ineligible: reset.rowCount || 0, envelope_capped: 0, suite_fits: 0, conf_high: 0, conf_medium: 0, conf_low: 0, citywide: 0, errors: 0 };
   let batch = [];
   for await (const r of pipeline.streamQuery(pool, buildOptConfigSelectSql({ full, scopeWhere }), [], { batchSize: 200 })) {

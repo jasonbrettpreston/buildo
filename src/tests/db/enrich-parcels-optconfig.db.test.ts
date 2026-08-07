@@ -111,7 +111,13 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-3A enrich-parcels optimal-confi
     await insNorm(pool, NB);
     await insNorm(pool, null);
     await insParcel(pool, P(1), NB);
-    await insParcel(pool, P(2), NB, { opt_config_confidence: 'high' }); // already configured
+    // Already configured — WF3 D-D: a configured parcel must carry a CONVERGENT optimal_config
+    // (stored as_of_right.main_footprint_sqm == live footprint), else the staleness predicate
+    // deliberately re-selects it (that is the D-D heal, not a regression).
+    await insParcel(pool, P(2), NB, {
+      opt_config_confidence: 'high',
+      optimal_config: '{"as_of_right":{"main_footprint_sqm":140}}',
+    });
 
     const stats = await ep.enrichOptimalConfig(pool, { full: false, scopeWhere: SCOPE });
     expect(stats.updated).toBe(1);                                     // only P(1)
