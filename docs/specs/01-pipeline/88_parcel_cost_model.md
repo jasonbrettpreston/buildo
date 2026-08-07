@@ -33,6 +33,8 @@ The buildable **footprint is capped** at the max-build as-of-right coverage. The
 | # | Line | area field | rate $/ft² | notes |
 |---|---|---|---|---|
 | 1 | Max build (new build) | `COALESCE(opt_aor_gfa_sqm, max_buildable_gfa_sqm)` | 450 | WF3: prices the **as-of-right** optimal config (not the max-build envelope) so `new_build ≤ coa_build`; envelope fallback when `opt_aor` NULL, counted `new_build_fallback_count` |
+
+> **Constrained-envelope suppression contract (WF3 Phase 1 D-C).** On a `ravine_constrained` parcel (Spec 65 MB-3: sub-floor ravine residual — envelope + `opt_*` all NULL), the ENVELOPE-DERIVED cost lines (max build / CoA build / SOLAR — every `COALESCE` input NULL) suppress **automatically**: the Mutator full-streams the class and rewrites the stored values to NULL under `IS DISTINCT FROM`. Existing-structure lines (kitchen/bath/basement/underpin/gut/addition) survive on their `cur_*` drivers — the menu is reduced, never deleted. The permit-level Spec 83 ladder degrades T3→T4 holding coverage while values shift. Regression tripwire: the sanity audit's `ravine_constrained_carries_priced_cost` invariant (gate:true, zero-baseline).
 | 2 | CoA build | `opt_coa_gfa_sqm` (R2 detached-grounded) | 450 | GFA-driven; `opt_coa ≥ opt_aor` invariant → coherent ladder |
 | 3 | Solar — max | `max_buildable_footprint_sqm` (roof) | ~35/ft²·roof | ×0.75 adj |
 | 4 | Solar — CoA | = #3 | = #3 | footprint capped |

@@ -69,6 +69,10 @@
     "laneway_abuts_min_m": 3.5,
     "garage_car_footprint_sqm": 18.5
   },
+  "max_build": {
+    "$comment": "Spec 65 §4 MB-3 (WF3 Phase 1 D-C) — the max-build viability floor. SEED-MIGRATION LITERAL LOCK (CF-2): the value crosses seed JSON ↔ migration 239 ↔ the max-build.js code default (the missing-variable-window fallback), so a divergence gives dev and cloud two different floors → two different envelopes → two different cost menus with no CI catch. Runtime-tunable via logic_variables (the lock governs the seed/default literals, not runtime values). Consumers: migrations/239_seed_max_build_min_dimension.sql, scripts/seeds/logic_variables.json, scripts/lib/max-build.js (all pinned by contracts.infra.test.ts; the audit literal is pinned by logic-var-parity.logic.test.ts).",
+    "min_dimension_m": 3
+  },
   "parcel_cost_model": {
     "$comment": "Spec 88 — parcel renovation cost model. SEED-MIGRATION LITERAL LOCK: every rate here is the canonical external-industry $/m² ($/ft² × 10.764) documented in Spec 88 §3 and SEEDED by migrations/205_archetype_cost_rates.sql. The lock pins the migration seed literal against this JSON so a re-seed can't silently diverge from the §3 design table. These are admin-TUNABLE at runtime (archetype_cost_rates table, Spec 86) — the lock governs the seed, not runtime values. solar_adj_factor = SOLAR cost_adjustment_factor (usable-roof fraction, §2). Consumer for all rows: migrations/205_archetype_cost_rates.sql (pinned by contracts.infra.test.ts).",
     "rate_fb_sqm": 4844,

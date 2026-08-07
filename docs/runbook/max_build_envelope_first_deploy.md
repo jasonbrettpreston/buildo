@@ -29,9 +29,14 @@ expected first-deploy transition, not a drop.
   Spike data: ~98% of frontage×depth within 15% of `ST_Area(geom)`, so `high`+`medium` dominates.
 - `max_buildable_footprint_count` ≈ parcels with `lot_size_confidence ∈ {high,medium}` and a buildable buffer.
 - `max_buildable_gfa_basis_fsi_count` ≪ `..._coverage_box_count` (FSI sparse — expected, not a gap).
+- `max_buildable_gfa_basis_coverage_only_count` — WF3 Phase 1 D-C: parcels whose width/length fell
+  below the `max_build_min_dimension_m` floor (default 3 m); dims NULL, envelope = coverage cap only
+  (the degenerate box + buffer are excluded). `ravine_constrained_count` is the ravine sub-floor
+  residual: the WHOLE envelope withheld (no coverage fallback — it is ravine-blind).
+  `max_build_box_excluded_count` counts emitted parcels where the clamp NULLed a positive raw dim.
 - `max_build_confidence_{high,medium,low}_count` — `high` requires real `bylaw_standard_setback_m`
   + (FSI or real height); most parcels land `medium` (zone-default setback).
-- `envelope_constrained_count` — ravine + heritage + lot_too_narrow + setback_exceeds_lot lots.
+- `envelope_constrained_count` — ravine (+ ravine_constrained) + heritage + lot_too_narrow + setback_exceeds_lot lots.
 
 ## Pre-deploy estimate query
 ```sql

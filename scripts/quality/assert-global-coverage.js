@@ -250,6 +250,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE max_buildable_gfa_sqm IS NOT NULL)                       AS max_gfa_pop,
           COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'fsi')                         AS max_gfa_fsi_pop,
           COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'coverage_box')                AS max_gfa_cov_pop,
+          COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'coverage_only')               AS max_gfa_cov_only_pop,
           COUNT(*) FILTER (WHERE max_build_confidence = 'high')                           AS mb_conf_high_pop,
           COUNT(*) FILTER (WHERE max_build_confidence = 'medium')                         AS mb_conf_medium_pop,
           COUNT(*) FILTER (WHERE max_build_confidence = 'low')                            AS mb_conf_low_pop,
@@ -391,6 +392,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_buildable_gfa_sqm',       parseInt(ca.max_gfa_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_buildable_gfa_basis_fsi', parseInt(ca.max_gfa_fsi_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_buildable_gfa_basis_coverage_box', parseInt(ca.max_gfa_cov_pop, 10)));
+      // WF3 Phase 1 D-C: below-floor coverage-only envelopes (box excluded as degenerate).
+      rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_buildable_gfa_basis_coverage_only', parseInt(ca.max_gfa_cov_only_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_build_confidence_high',   parseInt(ca.mb_conf_high_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_build_confidence_medium', parseInt(ca.mb_conf_medium_pop, 10)));
       rows.push(infoRow('CoA Step 4b — enrich_coa_zoning', 'coa_applications.max_build_confidence_low',    parseInt(ca.mb_conf_low_pop, 10)));
@@ -725,6 +728,7 @@ pipeline.run('assert-global-coverage', async (pool) => {
           COUNT(*) FILTER (WHERE max_buildable_gfa_sqm IS NOT NULL)           AS max_gfa_pop,
           COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'fsi')             AS max_gfa_fsi_pop,
           COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'coverage_box')    AS max_gfa_cov_pop,
+          COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'coverage_only')   AS max_gfa_cov_only_pop,
           COUNT(*) FILTER (WHERE max_build_confidence = 'high')               AS mb_conf_high_pop,
           COUNT(*) FILTER (WHERE max_build_confidence = 'medium')             AS mb_conf_medium_pop,
           COUNT(*) FILTER (WHERE max_build_confidence = 'low')                AS mb_conf_low_pop,
@@ -1132,6 +1136,8 @@ pipeline.run('assert-global-coverage', async (pool) => {
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_buildable_gfa_sqm',       parseInt(pa.max_gfa_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_buildable_gfa_basis_fsi', parseInt(pa.max_gfa_fsi_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_buildable_gfa_basis_coverage_box', parseInt(pa.max_gfa_cov_pop, 10)));
+      // WF3 Phase 1 D-C: below-floor coverage-only envelopes (box excluded as degenerate).
+      rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_buildable_gfa_basis_coverage_only', parseInt(pa.max_gfa_cov_only_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_build_confidence_high',   parseInt(pa.mb_conf_high_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_build_confidence_medium', parseInt(pa.mb_conf_medium_pop, 10)));
       rows.push(infoRow('Step 9b — enrich_permits', 'permits.max_build_confidence_low',    parseInt(pa.mb_conf_low_pop, 10)));

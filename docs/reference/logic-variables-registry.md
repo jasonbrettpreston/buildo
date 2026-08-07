@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (411) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (412) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **417** logic variables (411 numeric, 6 JSONB).
+Total: **418** logic variables (412 numeric, 6 JSONB).
 
 ---
 
@@ -384,6 +384,7 @@ Total: **417** logic variables (411 numeric, 6 JSONB).
 | `massing_garage_max_sqm` | numeric | 60 | 1 – 500 | `scripts/link-massing.js` | seed | Maximum building footprint area (m²) for a secondary structure to be classified as a garage in link-massing |
 | `massing_nearest_max_distance_m` | numeric | 50 | 1 – 500 | `scripts/link-massing.js` | seed | Maximum haversine distance (metres) for the nearest-building fallback in link-massing when no polygon match is found |
 | `massing_shed_threshold_sqm` | numeric | 20 | 1 – 200 | `scripts/link-massing.js` | seed | Building footprint area (m²) below which a secondary structure is classified as a shed in link-massing |
+| `max_build_min_dimension_m` | numeric | 3 | 0 – 10 | `scripts/enrich-parcels.js` | seed | Spec 65 §4 MB-3 (WF3 Phase 1 D-C): minimum viable build dimension (m). A max-build width/length below this floor is NULLed — the setback box is excluded as degenerate; non-ravine envelopes fall back to the coverage cap only (max_buildable_gfa_basis='coverage_only'); ravine sub-floor parcels are 'ravine_constrained' with the whole envelope withheld (no coverage fallback). CONSUMED by enrich-parcels.js. Operator-tunable. |
 | `min_comp_count` | numeric | 3 | — (migration-seeded) | — | migration 205 | Spec 88 §2 / Spec 78 R4: min family-filtered comps before kNN falls back to zoning-only. |
 | `min_soft_landscaping_pct` | numeric | 0.3 | 0.05 – 0.9 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — share of the lot that must remain soft landscaping; an accessory pushing greenspace below this is buildable only via a CoA minor variance (drives garage_permission / rear_suite_permission). CONSUMED by enrich-parcels.js (max-build pass). |
 | `mislink_footprint_lot_tol` | numeric | 0.05 | 0 – 1 | `scripts/enrich-parcels.js` | seed | Spec 65 §5 (WF3-A) — mislink guard tolerance: existing_footprint > lot_size_sqm × (1 + this) means the WRONG building was linked (block/neighbour attribution); the whole existing structure is NULLed + existing_data_quality_flag='footprint_exceeds_lot'. CONSUMED by enrich-parcels.js. Operator-tunable. |
@@ -439,4 +440,4 @@ Total: **417** logic variables (411 numeric, 6 JSONB).
 
 ---
 
-*Generated from 398 seed vars + 19 migration-only vars + 101 consumer-mapped keys across 2 script dirs.*
+*Generated from 399 seed vars + 19 migration-only vars + 102 consumer-mapped keys across 2 script dirs.*

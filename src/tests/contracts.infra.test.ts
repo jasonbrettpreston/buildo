@@ -70,6 +70,9 @@ interface Contracts {
     fsi_plausibility_max: number;
     storeys_plausibility_max: number;
   };
+  max_build: {
+    min_dimension_m: number;
+  };
   optimal_config: {
     garden_footprint_rear_frac: number;
     garden_footprint_max_sqm: number;
@@ -239,6 +242,25 @@ const rules: Rule[] = [
     value: contracts.schema.trade_slug_max,
     file: 'src/lib/admin/control-panel.ts',
     pattern: new RegExp(`tradeSlug.*max\\(${contracts.schema.trade_slug_max}\\)`),
+  },
+  // ---- max-build viability floor (Spec 65 §4 MB-3, WF3 Phase 1 D-C) ----
+  {
+    name: 'max_build.min_dimension_m → MAX_BUILD_MIN_DIMENSION_M_DEFAULT code default',
+    value: contracts.max_build.min_dimension_m,
+    file: 'scripts/lib/max-build.js',
+    pattern: new RegExp(`MAX_BUILD_MIN_DIMENSION_M_DEFAULT\\s*=\\s*${contracts.max_build.min_dimension_m}(\\.0+)?\\b`),
+  },
+  {
+    name: 'max_build.min_dimension_m → migration 239 seed literal',
+    value: contracts.max_build.min_dimension_m,
+    file: 'migrations/239_seed_max_build_min_dimension.sql',
+    pattern: new RegExp(`'max_build_min_dimension_m',\\s*${contracts.max_build.min_dimension_m}\\b`),
+  },
+  {
+    name: 'max_build.min_dimension_m → seed JSON default',
+    value: contracts.max_build.min_dimension_m,
+    file: 'scripts/seeds/logic_variables.json',
+    pattern: new RegExp(`"max_build_min_dimension_m":[\\s\\S]{0,30}"default":\\s*${contracts.max_build.min_dimension_m}\\b`),
   },
   // ---- zoning ambiguity threshold (Spec 65 enrich-parcels) ----
   {

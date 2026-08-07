@@ -22,6 +22,7 @@ const LOGIC_VARS_SCHEMA = z.object({
   reno_kitchen_gfa_pct: z.coerce.number().finite().min(0.01).max(1),
   reno_bath_gfa_pct: z.coerce.number().finite().min(0.01).max(1),
   mislink_footprint_lot_tol: z.coerce.number().finite().min(0).max(1),  // WF3-A mislink guard tolerance
+  max_build_min_dimension_m: z.coerce.number().finite().min(0).max(10), // D-C viability floor (bounds mirror seed JSON)
   storey_height_m: z.coerce.number().finite().min(2).max(6),
   // Phase 3 accessory + externalized garden-suite by-law constants (bounds mirror logic_variables.json).
   garage_min_lot_sqm: z.coerce.number().finite().min(100).max(2000),
@@ -386,7 +387,7 @@ async function enrichParcels(client, opts = {}) {
 // (protects the 36-col regression lock + idempotency fences). Runs in the SAME transaction
 // AFTER enrichParcels, so parcel_zoning_enrich (ON COMMIT DROP) is still visible for scoping.
 // ---------------------------------------------------------------------------
-function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {}, mislinkTol = mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT }) {
+function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {}, mislinkTol = mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT, minDim = mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT }) {
   // SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only.
   // Incremental: first-time (lot_size_confidence NULL) OR a parcel whose zoning was re-enriched
   // this run (present in parcel_zoning_enrich). --full recomputes all (use after a massing/lot reload).
@@ -413,6 +414,9 @@ function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight = mb
   const gardenStoreys = N(acc.gardenStoreys, mb.GARDEN_SUITE_STOREYS);
   // WF3: mislink tolerance for the heritage freeze — SAME logic-var as the existing-structure pass.
   const mislinkTolNum = N(mislinkTol, mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT);
+  // D-C viability floor (logic-var max_build_min_dimension_m; default from max-build.js — the
+  // missing-variable window falls back here, it never throws). Number()-coerced before interpolation.
+  const minDimNum = N(minDim, mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT);
   return `
 CREATE TEMP TABLE parcel_max_build ON COMMIT DROP AS
 WITH scope AS (
@@ -515,9 +519,13 @@ box AS (
 ),
 geo AS (
   SELECT box.*,
-    NULLIF(width_raw, 0) AS width_m,
-    NULLIF(length_raw, 0) AS length_m,
-    CASE WHEN width_raw > 0 AND length_raw > 0 THEN round(width_raw * length_raw, 2) END AS box_area,
+    -- WF3 Phase 1 D-C: a dimension below the viability floor (max_build_min_dimension_m, default
+    -- 3.0 m) is NULLed — it is evidence the zone-default setbacks do not describe this lot, not a
+    -- geometry to price. Exact-zero rows (the old NULLIF(·,0)) join the same contract: no
+    -- "0.0 m gets coverage, 0.29 m gets NULL" split. box_area follows the clamped dims.
+    CASE WHEN width_raw >= ${minDimNum} THEN width_raw END AS width_m,
+    CASE WHEN length_raw >= ${minDimNum} THEN length_raw END AS length_m,
+    CASE WHEN width_raw >= ${minDimNum} AND length_raw >= ${minDimNum} THEN round(width_raw * length_raw, 2) END AS box_area,
     -- uniform negative buffer (shape-aware, dir-blind): side setback (party-wall-scaled, WF3-B) + ravine. Empty (lot < 2×inset) → NULL.
     NULLIF(round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2), 0) AS buffer_area,
     -- WF3: coverage cap ALWAYS applied — a zone-class DEFAULT (empirical median) fills a NULL bylaw
@@ -535,8 +543,19 @@ geo AS (
 ),
 env AS (
   SELECT geo.*,
-    -- LEAST ignores NULLs → footprint = min of whatever measures exist (buffer ⋂ box ⋂ coverage cap).
-    LEAST(buffer_area, box_area, coverage_cap) AS footprint_calc,
+    -- WF3 Phase 1 D-C class flags. ravine_sub_floor: the envelope is deliberately WITHHELD (all
+    -- NULL) — a coverage×lot fallback is ravine-blind and would re-price deleted protection.
+    -- Heritage is excluded (freeze path owns it; heritage∧ravine∧sub-floor pop 0 keeps the freeze).
+    (is_in_ravine_protection_area AND NOT is_heritage_designated
+       AND (width_m IS NULL OR length_m IS NULL)) AS ravine_sub_floor,
+    -- D-C footprint routing: ravine sub-floor → NULL; non-ravine sub-floor → COVERAGE-ONLY (the
+    -- degenerate box AND buffer are both excluded — nothing models depth loss, flagged
+    -- max_buildable_gfa_basis='coverage_only'); else the normal LEAST (NULL-skipping by design).
+    CASE
+      WHEN is_in_ravine_protection_area AND NOT is_heritage_designated
+           AND (width_m IS NULL OR length_m IS NULL) THEN NULL
+      WHEN width_m IS NULL OR length_m IS NULL THEN coverage_cap
+      ELSE LEAST(buffer_area, box_area, coverage_cap) END AS footprint_calc,
     is_heritage_designated AS heritage,
     -- WF3: "no TRUSTWORTHY massing" — the heritage freeze copies the primary-massing footprint, but a
     -- footprint exceeding the lot means the WRONG building was linked (mislink). The existing-structure
@@ -600,14 +619,15 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
        WHEN heritage THEN existing_footprint_sqm
        ELSE footprint_calc END AS max_buildable_footprint_sqm,
-  CASE WHEN emit AND NOT heritage THEN width_m END AS max_build_width_m,
-  CASE WHEN emit AND NOT heritage THEN length_m END AS max_build_length_m,
-  CASE WHEN emit AND NOT heritage THEN bylaw_max_height_m END AS max_build_height_m,
+  CASE WHEN emit AND NOT heritage AND NOT ravine_sub_floor THEN width_m END AS max_build_width_m,
+  CASE WHEN emit AND NOT heritage AND NOT ravine_sub_floor THEN length_m END AS max_build_length_m,
+  -- D-C: the ravine_constrained class NULLs every envelope dim (height/stories/basis included).
+  CASE WHEN emit AND NOT heritage AND NOT ravine_sub_floor THEN bylaw_max_height_m END AS max_build_height_m,
   -- WF3: heritage storeys use the bounded stories_calc (bylaw→pocket p50→derived), NOT the retired
   -- tree-contaminated massing estimated_stories. Footprint stays frozen to the existing structure.
-  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+  CASE WHEN NOT emit OR heritage_no_massing OR ravine_sub_floor THEN NULL
        ELSE stories_calc END AS max_build_stories,
-  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+  CASE WHEN NOT emit OR heritage_no_massing OR ravine_sub_floor THEN NULL
        WHEN bylaw_max_stories IS NOT NULL THEN 'bylaw'
        WHEN pocket_p50 IS NOT NULL THEN 'pocket'
        WHEN bylaw_max_height_m IS NOT NULL AND bylaw_max_height_m > 0 THEN 'derived'
@@ -617,16 +637,21 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
   COALESCE(emit AND NOT heritage AND pocket_p90 IS NOT NULL AND height_implied IS NOT NULL AND pocket_p90 > height_implied, false) AS market_exceeds_bylaw,
   neighbourhood_id,
   round((${mb.buildPremiumCase('nbhd_income')})::numeric, 2) AS neighbourhood_cost_premium,
-  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+  CASE WHEN NOT emit OR heritage_no_massing OR ravine_sub_floor THEN NULL
        WHEN heritage THEN 'heritage_existing' ELSE 'rect_approx' END AS max_build_basis,
   -- WF3: heritage GFA = frozen existing footprint x bounded stories_calc (was x the contaminated
   -- massing storeys). No FSI cap: footprint is real+frozen and stories_calc is bounded, so FSI
   -- self-bounds; capping would understate a legitimately grandfathered heritage structure.
-  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+  -- D-C: ravine_sub_floor MUST be explicit here — LEAST skips NULLs, so a NULL gfa_box would
+  -- otherwise leak fsi_cap (lot × FSI) as the GFA for a parcel whose envelope was withheld.
+  CASE WHEN NOT emit OR heritage_no_massing OR ravine_sub_floor THEN NULL
        WHEN heritage THEN round(existing_footprint_sqm * stories_calc, 2)
        ELSE LEAST(gfa_box, fsi_cap) END AS max_buildable_gfa_sqm,
-  CASE WHEN NOT emit OR heritage_no_massing THEN NULL
+  CASE WHEN NOT emit OR heritage_no_massing OR ravine_sub_floor THEN NULL
        WHEN heritage THEN 'heritage_existing'
+       -- D-C: below-floor non-ravine = the box was excluded as degenerate; the envelope is
+       -- coverage-only and nothing models depth loss (MB-3 amendment).
+       WHEN width_m IS NULL OR length_m IS NULL THEN 'coverage_only'
        WHEN fsi_cap IS NOT NULL AND fsi_cap <= COALESCE(gfa_box, 'infinity'::numeric) THEN 'fsi'
        ELSE 'coverage_box' END AS max_buildable_gfa_basis,
   CASE WHEN NOT emit OR heritage_no_massing THEN NULL
@@ -649,6 +674,9 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
     WHEN NOT emit THEN 'low_lot_confidence'
     WHEN heritage_no_massing THEN (CASE WHEN heritage_footprint_mislink THEN 'heritage_footprint_exceeds_lot' ELSE 'heritage_no_massing' END)
     WHEN heritage THEN 'heritage'
+    -- D-C (R3-M8 explicit CASE diff): the sub-floor ravine residual gets 'ravine_constrained';
+    -- ordered ABOVE the unconditional 'ravine' branch, which the above-floor majority keeps.
+    WHEN is_in_ravine_protection_area AND (width_m IS NULL OR length_m IS NULL) THEN 'ravine_constrained'
     WHEN is_in_ravine_protection_area THEN 'ravine'
     WHEN buffer_area IS NULL AND box_area IS NULL THEN 'setback_exceeds_lot'
     WHEN width_m IS NULL OR length_m IS NULL THEN 'lot_too_narrow'
@@ -679,7 +707,10 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
             >= ${minSoftPct} * lot_size_sqm THEN 'as_of_right' ELSE 'coa_required' END AS rear_suite_permission,
   -- WF3 telemetry — stats-only passthrough into parcel_max_build for the audit counts. Deliberately
   -- NOT in MAX_BUILD_COLS (buildMaxBuildUpdateSql would UPDATE nonexistent cols).
-  coverage_cap, box_area, buffer_area, coverage_defaulted, heritage_footprint_mislink
+  -- D-C adds width_raw/length_raw + ravine_sub_floor + emit for the box-excluded / constrained counts
+  -- (the raws are CTE-internal — counting here avoids duplicating the setback SQL in the audit).
+  coverage_cap, box_area, buffer_area, coverage_defaulted, heritage_footprint_mislink,
+  width_raw, length_raw, ravine_sub_floor, emit
 FROM accessory2;
 `;
 }
@@ -699,9 +730,10 @@ WHERE p.parcel_id = e.parcel_id
 }
 
 async function enrichMaxBuild(client, opts = {}) {
-  const { scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {}, mislinkTol = mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT } = opts;
+  const { scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {}, mislinkTol = mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT, minDim = mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT } = opts;
+  const minDimNum = Number(minDim ?? mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT);
   await client.query('DROP TABLE IF EXISTS parcel_max_build');
-  await client.query(buildMaxBuildSql({ scopeWhere, full, storeyHeight, acc, mislinkTol }));
+  await client.query(buildMaxBuildSql({ scopeWhere, full, storeyHeight, acc, mislinkTol, minDim: minDimNum }));
   const stats = await client.query(`
     SELECT
       COUNT(*)::int AS scoped,
@@ -742,7 +774,13 @@ async function enrichMaxBuild(client, opts = {}) {
                          AND (buffer_area IS NULL OR coverage_cap <= buffer_area)
                          AND (box_area   IS NULL OR coverage_cap <= box_area))::int AS coverage_binding_cnt,
       -- WF3: heritage parcels nulled because the primary-massing footprint exceeds the lot (mislink).
-      COUNT(*) FILTER (WHERE heritage_footprint_mislink)::int AS heritage_mislink_cnt
+      COUNT(*) FILTER (WHERE heritage_footprint_mislink)::int AS heritage_mislink_cnt,
+      -- D-C: the sub-floor classes. box_excluded = emitted parcels where the clamp NULLed a
+      -- POSITIVE raw dimension (the pre-clamp residual's only signal — raws are CTE-internal).
+      COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'coverage_only')::int AS gfa_coverage_only,
+      COUNT(*) FILTER (WHERE envelope_constraint_reason = 'ravine_constrained')::int AS ravine_constrained_cnt,
+      COUNT(*) FILTER (WHERE emit AND ((width_raw > 0 AND width_raw < ${minDimNum})
+                                    OR (length_raw > 0 AND length_raw < ${minDimNum})))::int AS box_excluded_cnt
     FROM parcel_max_build`);
   const upd = await client.query(buildMaxBuildUpdateSql());
   return { ...stats.rows[0], updated: upd.rowCount };
@@ -1345,6 +1383,7 @@ async function main(pool) {
       reno_kitchen_gfa_pct: Number(logicVars?.reno_kitchen_gfa_pct ?? mb.RENO_KITCHEN_GFA_PCT_DEFAULT),
       reno_bath_gfa_pct: Number(logicVars?.reno_bath_gfa_pct ?? mb.RENO_BATH_GFA_PCT_DEFAULT),
       mislink_footprint_lot_tol: Number(logicVars?.mislink_footprint_lot_tol ?? mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT),
+      max_build_min_dimension_m: Number(logicVars?.max_build_min_dimension_m ?? mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT),
       storey_height_m: Number(logicVars?.storey_height_m ?? mb.RESIDENTIAL_STOREY_HEIGHT_M),
       // Phase 3 accessory + externalized garden-suite (defaults from max-build.js).
       garage_min_lot_sqm: Number(logicVars?.garage_min_lot_sqm ?? mb.GARAGE_MIN_LOT_SQM),
@@ -1408,7 +1447,7 @@ async function main(pool) {
       result = await enrichParcels(client, { scopeWhere: 'TRUE', full, roadDist, runAt, staleOverlays });
       // Second pass — max-build envelope (Spec 65 §). Same txn: parcel_zoning_enrich (ON COMMIT
       // DROP) is still visible for incremental scoping; reads the zoning feed just written above.
-      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight, acc, mislinkTol: reno.mislinkTol });
+      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight, acc, mislinkTol: reno.mislinkTol, minDim: resolvedVars.max_build_min_dimension_m });
       // Third pass — existing structure (Spec 65 Phase 1) + reno/build scenarios (Phase 2). Same txn:
       // parcel_max_build (ON COMMIT DROP) visible for scoping; reads the PRIMARY building (massing)
       // + the max-build cols written above; computes SCENARIO_COLS via a sibling UPDATE.
@@ -1463,6 +1502,12 @@ async function main(pool) {
     auditRows.push({ metric: 'max_build_box_count', value: mbResult.with_box, status: 'INFO' });
     auditRows.push({ metric: 'max_buildable_gfa_basis_fsi_count', value: mbResult.gfa_fsi, status: 'INFO' });
     auditRows.push({ metric: 'max_buildable_gfa_basis_coverage_box_count', value: mbResult.gfa_coverage, status: 'INFO' });
+    // D-C: below-floor classes — coverage-only envelopes (box+buffer excluded as degenerate), the
+    // ravine_constrained all-NULL residual, and the box-excluded count (pre-clamp residual signal).
+    auditRows.push({ metric: 'max_buildable_gfa_basis_coverage_only_count', value: mbResult.gfa_coverage_only, status: 'INFO' });
+    auditRows.push({ metric: 'ravine_constrained_count', value: mbResult.ravine_constrained_cnt, status: 'INFO' });
+    auditRows.push({ metric: 'max_build_box_excluded_count', value: mbResult.box_excluded_cnt, status: 'INFO' });
+    auditRows.push({ metric: 'max_build_min_dimension_m_applied', value: resolvedVars.max_build_min_dimension_m, status: 'INFO' });
     // WF3: zone-default coverage applied (no bylaw coverage) + how many footprints it actually REDUCED
     // (coverage was the binding LEAST term — the real blast radius, ≪ defaulted). "Don't hide a cap."
     auditRows.push({ metric: 'max_build_coverage_defaulted_count', value: mbResult.coverage_defaulted_cnt, status: 'INFO' });

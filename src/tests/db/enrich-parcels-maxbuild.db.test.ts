@@ -256,8 +256,12 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
     const c = await pool.connect();
     try {
       await c.query('BEGIN');
+      // WF3 Phase 1 D-C fixture edit: the old 22.24 m depth was length-SUB-FLOOR (22.24−6−7.5−10 =
+      // −1.26) so post-clamp it belongs to 'ravine_constrained', not 'ravine'. Depth 40 keeps both
+      // dims above the 3 m floor (width 10.44, length 16.5) — the above-floor 'ravine' majority this
+      // test locks. The sub-floor residual is locked by enrich-parcels-clamp.db.test.ts.
       await insMb(c, TEST_PARCEL + 5, sq(0, 0, 0.0002), {
-        lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24, zoning_class: 'RD',
+        lot_size_sqm: 495, frontage_m: 22.24, depth_m: 40, zoning_class: 'RD',
         bylaw_max_height_m: 10, bylaw_max_stories: 3, bylaw_max_fsi: 1.0,
         bylaw_max_coverage_pct: 45, bylaw_standard_setback_m: 6, is_in_ravine_protection_area: true,
       });

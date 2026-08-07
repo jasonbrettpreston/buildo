@@ -41,6 +41,11 @@ const ZC = `CASE WHEN upper(zoning_class) LIKE 'RD%' THEN 'RD' WHEN upper(zoning
    WHEN upper(zoning_class) LIKE 'RT%' THEN 'RT' WHEN upper(zoning_class) LIKE 'RM%' THEN 'RM'
    WHEN upper(zoning_class) LIKE 'RA%' THEN 'RA' ELSE 'R' END`;
 const LOWRISE = `upper(zoning_class) LIKE 'RD%' OR upper(zoning_class) LIKE 'RS%' OR upper(zoning_class) LIKE 'RT%'`;
+// WF3 Phase 1 D-C — the max-build viability floor. This audit is a sync-require CLI with no config
+// path (CF-3/SF-F5), so the logic_variable max_build_min_dimension_m is PINNED here as a literal and
+// parity-locked against the seed JSON + migration 239 + max-build.js default by
+// src/tests/logic-var-parity.logic.test.ts — the audit and the engine can never silently disagree.
+const MAX_BUILD_MIN_DIMENSION_M = 3.0;
 
 // ── P12-A2: magnitude accepted-by-id exception lists ────────────────────────
 // A CHECK may carry `accept: [id,…]` — the CURRENT population of a magnitude
@@ -236,7 +241,7 @@ async function runAudit() {
   }
 }
 
-module.exports = { CHECKS, DIST_FIELDS, RES, ZC, LOWRISE, runSanity, statusFor, verdictCascade, makeCliPool };
+module.exports = { CHECKS, DIST_FIELDS, RES, ZC, LOWRISE, MAX_BUILD_MIN_DIMENSION_M, runSanity, statusFor, verdictCascade, makeCliPool };
 
 if (require.main === module) {
   runAudit().catch((e) => { console.error(e); process.exit(1); });

@@ -79,6 +79,12 @@ function computeCurGfaRange(footprintSqm, maxBuildStories) {
 // Fixed TRCA top-of-bank setback (m) — Toronto Ch.658 stable-slope default. NOT scaled by
 // ravine_distance_m (Spec 59 L2: distance is signed proximity, not a gradient multiplier).
 const RAVINE_SETBACK_M = 10.0;
+// WF3 Phase 1 D-C — minimum viable build dimension (m). A width/length below this is not a geometry
+// we believe (the zone-default setbacks do not describe the lot): both dims NULL; non-ravine
+// envelopes go coverage-only (basis 'coverage_only'); ravine sub-floor goes 'ravine_constrained'
+// all-NULL (no ravine-blind coverage fallback). DEFAULT for the externalized logic_variable
+// max_build_min_dimension_m (seed JSON + migration 239 + _contracts.json, parity-locked).
+const MAX_BUILD_MIN_DIMENSION_M_DEFAULT = 3.0;
 // Garden-suite (rear-yard) eligibility floor: min lot area + min usable rear yard (m / m²).
 // These three are the DEFAULTS for the externalized logic_variables of the same name (Phase 3,
 // Spec 65 §7) — buildMaxBuildSql takes them as params (like storeyHeight); kept here as the
@@ -322,6 +328,7 @@ const RENO_BATH_GFA_PCT_DEFAULT = 0.07;
 
 module.exports = {
   LOT_TOLERANCE, LOT_MIN_SQM, LOT_MAX_SQM, STOREY_HEIGHT_M, RAVINE_SETBACK_M,
+  MAX_BUILD_MIN_DIMENSION_M_DEFAULT,
   GARDEN_SUITE_MIN_LOT_SQM, GARDEN_SUITE_MIN_REAR_YARD_M, GARDEN_SUITE_MAX_GFA_SQM,
   SETBACK_DEFAULTS, SETBACK_DIMS, lookupSetback, buildSetbackCase, lookupSideCount, buildSideCountCase,
   COVERAGE_DEFAULTS, lookupCoverage, buildCoverageCase,
