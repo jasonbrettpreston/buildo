@@ -38,6 +38,37 @@ expected first-deploy transition, not a drop.
   + (FSI or real height); most parcels land `medium` (zone-default setback).
 - `envelope_constrained_count` — ravine (+ ravine_constrained) + heritage + lot_too_narrow + setback_exceeds_lot lots.
 
+## Phase 1 rollback / cloud-abort (WF3 2026-08, D-A/D-C/D-D geometry fixes — DS-5)
+
+Written BEFORE any cloud action, per the Phase 1 plan.
+
+- **Rollback anchor:** `b4351297` (pre-Phase-1). Every envelope/optconfig/cost value is fully DERIVED
+  — rolling back is `git checkout <anchor> -- scripts/ && node scripts/enrich-parcels.js --full &&
+  node scripts/compute-parcel-cost-estimates.js` (then the step-10 propagation trio). No data is
+  lost by either direction; the write path is `IS DISTINCT FROM`-guarded and idempotent.
+- **Migration 239 rollback:** manual only (DOWN is all-comments per the migration-runner lesson):
+  `DELETE FROM logic_variables WHERE variable_key = 'max_build_min_dimension_m';` AND revert the
+  seed-JSON entry + `EXPECTED_LOGIC_VAR_KEYS` row in the same change, or a fresh DB will disagree.
+  With the row absent, enrich falls back to the code default (3.0) — deleting the row alone does
+  NOT disable the clamp; that requires the code rollback above.
+- **Cloud apply order:** 238 rides first if still pending, then 239 — both are guarded/idempotent;
+  `migrate.js` halting on 238 prevents 239 (expected, safe). A re-apply changes 0 rows.
+- **Cloud abort mid-re-run:** an interrupted `--full` leaves a MIXED old/new envelope state (the txn
+  boundary is per-pass, and optconfig streams post-commit). Recovery is ALWAYS re-running from the
+  top (idempotent) — never partial manual patching. Between abort and re-run, the D-E
+  `ravine_constrained_carries_priced_cost` gate stays quiet (the class doesn't exist until the
+  enrich pass writes it) and `max_build_dim_below_floor` may show the old residual — expected.
+- **Docker-buildo ledger drift (Schema-Fidelity flag, 2026-08-07):** the legacy Docker `buildo` data
+  DB carries migration 239's EFFECTS (seed row present, applied via direct UP) but its
+  `schema_migrations` ledger stops at 225 — it cannot run Supabase-era migrations (226+ need the
+  `auth` schema). Any tooling diffing "applied vs directory" against Docker will report 226–239
+  unapplied; do NOT "fix" it by replaying those migrations there. 239 itself is re-apply-safe
+  (`ON CONFLICT DO NOTHING`).
+- **Interleaving pins (R3-M7):** `chain-sources` stays `disabled_manually` until the step-14 verify
+  completes (remember: re-enabling needs the GitHub UI toggle AND the cron text — repo-invisible
+  state); nothing lands between the WF6 push and the cloud apply; no cloud incremental enrich runs
+  in the window.
+
 ## Pre-deploy estimate query
 ```sql
 -- parcels eligible for an envelope (have geom + at least one lot-area source):

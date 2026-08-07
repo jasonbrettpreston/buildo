@@ -86,6 +86,11 @@ const CHECKS = [
   // INFO-first: 212 standing violators measured (p99 2.37, max 6.62); promote per Spec 48 §3.6 once
   // the population cleans. Lowrise-specific split deferred (measurement timed out — do not pin unmeasured).
   { fam: 'BOUND', id: 'comp_fsi_p50_gt_4', why: 'RC bound; INFO-first (212 standing), promote per §3.6', applies: `comp_fsi_p50 IS NOT NULL`, bad: `comp_fsi_p50 > 4.0`, sev: 'INFO' },
+  // OUTPUT-panel RC finding A (2026-08-07): above-floor ravine parcels whose buffer-clipped footprint
+  // drives a micro new-build menu while the persisted width/length still show the pre-buffer rect
+  // (1,820 standing, $394M summed — individually small menus). Low-side twin of lowrise_cost_fb_gt_15m;
+  // INFO-first per §3.6; the geometry redesign is the ravine-directionality WF (review_followups).
+  { fam: 'BOUND', id: 'priced_newbuild_lt_30sqm', why: 'RC-A: micro-envelope (<30 m² opt_aor) carrying a priced new-build menu', applies: `cost_fb_total IS NOT NULL AND opt_aor_gfa_sqm IS NOT NULL`, bad: `opt_aor_gfa_sqm < 30`, sev: 'INFO' },
   // D-C clamp contract: the below-floor emitted range is structurally VACUOUS post-fix — this check's
   // population goes 0 and the inert detector (D-E 4) reports it INFO 'inert'; any member is a regression.
   { fam: 'BOUND', id: 'max_build_dim_below_floor', why: 'D-C clamp: no emitted dim below the viability floor (inert-INFO expected post-fix)', applies: `(max_build_width_m IS NOT NULL AND max_build_width_m < ${MAX_BUILD_MIN_DIMENSION_M}) OR (max_build_length_m IS NOT NULL AND max_build_length_m < ${MAX_BUILD_MIN_DIMENSION_M})`, bad: `TRUE`, sev: 'HIGH', gate: true },
