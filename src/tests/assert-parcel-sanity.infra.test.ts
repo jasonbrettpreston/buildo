@@ -44,9 +44,11 @@ describe('assert-parcel-sanity.js — observer contract', () => {
 });
 
 describe('parcel-sanity-audit.js — data-driven gate mapping (Spec 48 §3.6)', () => {
-  it('statusFor derives FAIL/WARN/INFO/PASS purely from gate + sev + count (no per-check-id branching)', () => {
+  it('statusFor derives FAIL/WARN/INFO/PASS purely from gate + sev + count + pop (no per-check-id branching)', () => {
     const a = audit();
-    expect(a).toMatch(/function statusFor\(check, viol\)/);
+    // WF3 Phase 1 D-E 4: signature gains `pop` — an empty population is inert-INFO, never a green PASS.
+    expect(a).toMatch(/function statusFor\(check, viol, pop\)/);
+    expect(a).toMatch(/if \(pop === 0\) return 'INFO'/);
     // the exact data-driven mapping — gate first, then INFO, then WARN, else PASS
     expect(a).toMatch(/check\.gate && viol > 0 \? 'FAIL'\s*:\s*check\.sev === 'INFO' \? 'INFO'\s*:\s*viol > 0 \? 'WARN' : 'PASS'/);
     // no `check.id ===` branching anywhere near the status logic (would be a parallel boolean)
@@ -60,12 +62,15 @@ describe('parcel-sanity-audit.js — data-driven gate mapping (Spec 48 §3.6)', 
   it('the gated (zero-baseline) invariants carry gate:true', () => {
     const a = audit();
     for (const id of ['bylaw_height_per_storey_impossible', 'maxbuild_stories_basis_existing_retired',
-      'opt_aor_gfa_gt_opt_coa_gfa', 'new_build_cost_gt_coa_build_cost', 'footprint_gt_lot_x105']) {
-      const re = new RegExp(`id: '${id}'[^}]*gate: true`);
+      'opt_aor_gfa_gt_opt_coa_gfa', 'new_build_cost_gt_coa_build_cost', 'footprint_gt_lot_x105',
+      // WF3 Phase 1 D-E: the high-side lot bound + the D-C withheld-envelope tripwire + below-floor vacancy.
+      'max_build_dim_exceeds_lot_dim', 'ravine_constrained_carries_priced_cost', 'max_build_dim_below_floor']) {
+      // Line-scoped (every CHECK is a one-liner): `[^}]*` would stop at a `${…}` interpolation brace.
+      const re = new RegExp(`id: '${id}'[^\\n]*gate: true`);
       expect(a).toMatch(re);
     }
     // a KNOWN non-zero residual must NOT be gated (would wrongly RED the chain)
-    expect(a).not.toMatch(/id: 'footprint_coverage_gt_65pct'[^}]*gate: true/);
+    expect(a).not.toMatch(/id: 'footprint_coverage_gt_65pct'[^\n]*gate: true/);
   });
 });
 
@@ -84,6 +89,12 @@ describe('parcel-sanity-audit.js — statusFor / verdictCascade behaviour (unit)
   });
   it('an INFO check → INFO regardless of count (visibility, never verdict-driving)', () => {
     expect(statusFor({ sev: 'INFO' }, 3260)).toBe('INFO');
+  });
+  it('D-E 4: an EMPTY population is inert-INFO, never a green PASS — even on a gated check', () => {
+    expect(statusFor({ gate: true, sev: 'HIGH' }, 0, 0)).toBe('INFO');
+    expect(statusFor({ sev: 'MED' }, 0, 0)).toBe('INFO');
+    // pop undefined (population unknown, unit-altitude call) keeps the historic mapping
+    expect(statusFor({ gate: true, sev: 'HIGH' }, 0)).toBe('PASS');
   });
   it('verdictCascade is row-derived: FAIL > WARN > PASS', () => {
     expect(verdictCascade([{ status: 'PASS' }, { status: 'WARN' }, { status: 'FAIL' }])).toBe('FAIL');

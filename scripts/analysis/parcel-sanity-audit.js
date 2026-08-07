@@ -70,12 +70,25 @@ const COST_ADDITION_GT50M_LEGIT = [1096,3021,15436,41830,48643,81364,105495,1055
 //   gate? (true = a ZERO-BASELINE invariant; a non-zero count FAIL-gates the pipeline chain) }
 const CHECKS = [
   // ---- BOUNDS (zone-aware) ----
-  // Scoped to BUILDABLE parcels: an implausible lot is only a BUG if it leaked into a build. The 3,260
-  // out-of-range parcels are all real COMMON/CONDO (tiny slivers / oversized parks) with an accurate
-  // lot_size (= geom) that the pipeline ALREADY gates (LOT_MIN/MAX → low confidence → no envelope/cost).
-  { fam: 'BOUND', id: 'lot_size_out_of_range_on_buildable', why: 'physical (bad lot leaked into a build)', applies: `lot_size_sqm IS NOT NULL AND max_buildable_footprint_sqm IS NOT NULL`, bad: `lot_size_sqm < 40 OR lot_size_sqm > 100000`, sev: 'HIGH' },
+  // D-E 5 (WF3 Phase 1, Comp B-4): the 2026-07-02 Option-A ruling (bound only BUILDABLE parcels) is
+  // knowingly RETIRED — the bound now covers out-of-range lots regardless of emit state. `applies`
+  // still excludes the known-legit COMMON/CONDO feature classes (slivers/parks with an accurate
+  // lot = geom): excluded BY DESIGN and INFO-counted by the companion row below.
+  { fam: 'BOUND', id: 'lot_size_out_of_range', why: 'physical (out-of-range lot, any emit state; Option A retired WF3 Phase 1)', applies: `lot_size_sqm IS NOT NULL AND feature_type IS DISTINCT FROM 'COMMON' AND feature_type IS DISTINCT FROM 'CONDO'`, bad: `lot_size_sqm < 40 OR lot_size_sqm > 100000`, sev: 'HIGH' },
+  { fam: 'BOUND', id: 'lot_size_out_of_range_common_condo', why: 'visibility: COMMON/CONDO out-of-range lots — excluded from the bound by design', applies: `lot_size_sqm IS NOT NULL AND (feature_type = 'COMMON' OR feature_type = 'CONDO')`, bad: `lot_size_sqm < 40 OR lot_size_sqm > 100000`, sev: 'INFO' },
   // Visibility (INFO, don't-hide): implausible lots the pipeline CORRECTLY excluded from the cost model.
   { fam: 'BOUND', id: 'lot_implausible_correctly_excluded', why: 'visibility: implausible lot → gated, no cost (not a bug)', applies: `lot_size_sqm IS NOT NULL AND (lot_size_sqm < 40 OR lot_size_sqm > 100000)`, bad: `max_buildable_footprint_sqm IS NULL`, sev: 'INFO' },
+  // ---- D-E 3 (WF3 Phase 1, bounds MEASURED by round-3 RC on cloud) ----
+  { fam: 'BOUND', id: 'max_build_width_gt_30m', why: 'RC bound (p995 27.2, max obs 42.66)', applies: `max_build_width_m IS NOT NULL`, bad: `max_build_width_m > 30`, sev: 'MED' },
+  { fam: 'BOUND', id: 'max_build_length_gt_100m', why: 'RC bound (p995 58.9, max obs 316.23)', applies: `max_build_length_m IS NOT NULL`, bad: `max_build_length_m > 100`, sev: 'HIGH' },
+  { fam: 'BOUND', id: 'lowrise_opt_aor_gfa_gt_2500', why: 'RC bound (lowrise max obs 1,998.9)', applies: `(${LOWRISE}) AND opt_aor_gfa_sqm IS NOT NULL`, bad: `opt_aor_gfa_sqm > 2500`, sev: 'HIGH' },
+  { fam: 'BOUND', id: 'nonlowrise_opt_aor_gfa_gt_3500', why: 'RC bound (catches the 3,843 m² NON-lowrise outlier a lowrise-only bound misses)', applies: `NOT (${LOWRISE}) AND opt_aor_gfa_sqm IS NOT NULL`, bad: `opt_aor_gfa_sqm > 3500`, sev: 'HIGH' },
+  // INFO-first: 212 standing violators measured (p99 2.37, max 6.62); promote per Spec 48 §3.6 once
+  // the population cleans. Lowrise-specific split deferred (measurement timed out — do not pin unmeasured).
+  { fam: 'BOUND', id: 'comp_fsi_p50_gt_4', why: 'RC bound; INFO-first (212 standing), promote per §3.6', applies: `comp_fsi_p50 IS NOT NULL`, bad: `comp_fsi_p50 > 4.0`, sev: 'INFO' },
+  // D-C clamp contract: the below-floor emitted range is structurally VACUOUS post-fix — this check's
+  // population goes 0 and the inert detector (D-E 4) reports it INFO 'inert'; any member is a regression.
+  { fam: 'BOUND', id: 'max_build_dim_below_floor', why: 'D-C clamp: no emitted dim below the viability floor (inert-INFO expected post-fix)', applies: `(max_build_width_m IS NOT NULL AND max_build_width_m < ${MAX_BUILD_MIN_DIMENSION_M}) OR (max_build_length_m IS NOT NULL AND max_build_length_m < ${MAX_BUILD_MIN_DIMENSION_M})`, bad: `TRUE`, sev: 'HIGH', gate: true },
   { fam: 'BOUND', id: 'lowrise_bylaw_fsi_gt_1_5', why: 'FSI-borrow bug (RD sliver→2.0)', applies: `(${LOWRISE}) AND bylaw_max_fsi IS NOT NULL`, bad: `bylaw_max_fsi > 1.5`, sev: 'HIGH' },
   { fam: 'BOUND', id: 'residential_bylaw_fsi_gt_8', why: 'corrupt source (FSI 15)', applies: `bylaw_max_fsi IS NOT NULL`, bad: `bylaw_max_fsi > 8`, sev: 'HIGH' },
   // LOWRISE-only: RA/RM apartment zones legitimately reach 80% coverage (was a false positive on RA).
@@ -116,6 +129,14 @@ const CHECKS = [
   { fam: 'BOUND', id: 'lowrise_cost_fb_gt_15m', why: 'A2: new lowrise >$15M max-build (mislink/poison if not a big lot)', applies: `(${LOWRISE}) AND cost_fb_total IS NOT NULL`, bad: `cost_fb_total > 15000000`, sev: 'MED', accept: COST_FB_GT15M_LEGIT },
   { fam: 'BOUND', id: 'cost_addition_gt_50m', why: 'A2: new >$50M addition line (huge-lot artifact; watch for new members)', applies: `cost_addition_total IS NOT NULL`, bad: `cost_addition_total > 50000000`, sev: 'MED', accept: COST_ADDITION_GT50M_LEGIT },
   // ---- INVARIANTS (cross-field) — the zero-baseline coherence laws are GATED ----
+  // D-E 1 (WF3 Phase 1, R3-M6 — the strongest single check): an emitted build dimension can NEVER
+  // exceed its lot dimension. Kills the opposite-sign axis error class permanently (D-A's corner bug
+  // charged the front setback against the WIDTH; the next wrong-axis bug trips this at the source).
+  { fam: 'INVARIANT', id: 'max_build_dim_exceeds_lot_dim', why: 'high-side lot bound: width ≤ frontage, length ≤ depth (wrong-axis error class)', applies: `(max_build_width_m IS NOT NULL AND frontage_m IS NOT NULL) OR (max_build_length_m IS NOT NULL AND depth_m IS NOT NULL)`, bad: `(max_build_width_m IS NOT NULL AND frontage_m IS NOT NULL AND max_build_width_m > frontage_m + 0.01) OR (max_build_length_m IS NOT NULL AND depth_m IS NOT NULL AND max_build_length_m > depth_m + 0.01)`, sev: 'HIGH', gate: true },
+  // D-E 2 (WF3 Phase 1, RC 1e — the R3-M1 regression tripwire): a parcel whose envelope was WITHHELD
+  // (ravine_constrained) must never carry priced cost or opt_* — if the coverage fallback ever
+  // re-appears (in the engine, the stream, or a new consumer), this FAILs the chain at the data layer.
+  { fam: 'INVARIANT', id: 'ravine_constrained_carries_priced_cost', why: 'D-C withheld envelope must not be priced (R3-M1 tripwire)', applies: `envelope_constraint_reason = 'ravine_constrained'`, bad: `cost_fb_total IS NOT NULL OR cost_solar_total IS NOT NULL OR opt_aor_gfa_sqm IS NOT NULL OR opt_coa_gfa_sqm IS NOT NULL`, sev: 'HIGH', gate: true },
   { fam: 'INVARIANT', id: 'opt_aor_gfa_gt_opt_coa_gfa', why: 'CoA ≥ as-of-right (coherence)', applies: `opt_aor_gfa_sqm IS NOT NULL AND opt_coa_gfa_sqm IS NOT NULL`, bad: `opt_aor_gfa_sqm > opt_coa_gfa_sqm + 0.5`, sev: 'HIGH', gate: true },
   { fam: 'INVARIANT', id: 'opt_aor_storeys_gt_opt_coa_storeys', why: 'CoA storeys ≥ as-of-right', applies: `opt_aor_storeys IS NOT NULL AND opt_coa_storeys IS NOT NULL`, bad: `opt_aor_storeys > opt_coa_storeys`, sev: 'MED' },
   { fam: 'INVARIANT', id: 'new_build_cost_gt_coa_build_cost', why: 'THE headline bug (new_build > coa_build)', applies: `cost_fb_total IS NOT NULL AND cost_coa_total IS NOT NULL`, bad: `cost_fb_total > cost_coa_total + 1`, sev: 'HIGH', gate: true },
@@ -149,8 +170,12 @@ const DIST_FIELDS = [
 ];
 
 // sev/gate → audit-row status (Spec 48 §3.6, data-driven — NO per-check-id branching):
-//   gated + violated → FAIL · INFO check → INFO (visibility) · violated → WARN · else PASS.
-function statusFor(check, viol) {
+//   inert (pop === 0) → INFO · gated + violated → FAIL · INFO check → INFO · violated → WARN · else PASS.
+// D-E 4 (WF3 Phase 1): a check whose POPULATION is empty proves nothing — it reads INFO 'inert', never
+// a green PASS (day-one customers: the vacated below-floor range, ravine_constrained pre-re-run).
+// `pop` is optional (undefined = population unknown, e.g. the unit-altitude calls) — only an explicit 0 is inert.
+function statusFor(check, viol, pop) {
+  if (pop === 0) return 'INFO';
   return check.gate && viol > 0 ? 'FAIL' : check.sev === 'INFO' ? 'INFO' : viol > 0 ? 'WARN' : 'PASS';
 }
 
@@ -186,7 +211,7 @@ async function runSanity(pool, { samples = false } = {}) {
   const total = row.total;
   const results = CHECKS.map((c) => {
     const viol = row[`v_${c.id}`], pop = row[`p_${c.id}`];
-    return { ...c, pop, viol, pct: pop ? (100 * viol / pop) : 0, samples: row[`s_${c.id}`] || [], status: statusFor(c, viol) };
+    return { ...c, pop, viol, pct: pop ? (100 * viol / pop) : 0, samples: row[`s_${c.id}`] || [], status: statusFor(c, viol, pop), inert: pop === 0 };
   });
 
   const distQ = (f) => `
