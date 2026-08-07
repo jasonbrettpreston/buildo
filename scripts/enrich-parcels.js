@@ -527,7 +527,14 @@ geo AS (
     CASE WHEN length_raw >= ${minDimNum} THEN length_raw END AS length_m,
     CASE WHEN width_raw >= ${minDimNum} AND length_raw >= ${minDimNum} THEN round(width_raw * length_raw, 2) END AS box_area,
     -- uniform negative buffer (shape-aware, dir-blind): side setback (party-wall-scaled, WF3-B) + ravine. Empty (lot < 2×inset) → NULL.
-    NULLIF(round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2), 0) AS buffer_area,
+    -- D-C (step-8 gate catch): a buffer SLIVER below minDim² (can't seat a minDim×minDim square) is
+    -- the same degenerate-geometry evidence as a sub-floor box dim — excluded from the LEAST, else a
+    -- long-skinny ravine lot's −10 m inset collapses to ~0.01 m² and prices a physically absurd
+    -- envelope (602 such rows caught by the (0,10)-GFA gate on the first full re-run).
+    CASE WHEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2)
+              >= ${minDimNum * minDimNum}
+         THEN round(ST_Area(ST_Buffer(geom::geography, -(side_setback * side_count / 2.0 + ravine_red)))::numeric, 2)
+         END AS buffer_area,
     -- WF3: coverage cap ALWAYS applied — a zone-class DEFAULT (empirical median) fills a NULL bylaw
     -- coverage (~37% of parcels), else LEAST drops the term and the footprint balloons to the setback
     -- box (~67% coverage). COALESCE fills NULL only. coverage_cap stays NULL only when lot_size_sqm is NULL.

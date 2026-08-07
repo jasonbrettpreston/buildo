@@ -176,6 +176,35 @@ describe.skipIf(!dbAvailable())('WF3 D-C below-floor clamp — live DB', () => {
     } finally { c.release(); }
   });
 
+  // Step-8 gate catch (F-new): a long-skinny ravine lot whose −10 m buffer collapses to a sliver
+  // (< minDim² = 9 m²) while the rect box clears the floor — the buffer must be EXCLUDED from the
+  // LEAST (same viability-floor rationale: an area that can't seat a 3×3 m square is not a geometry
+  // we believe), so the footprint falls to LEAST(box, coverage), never the 0.01 m² sliver.
+  it('buffer-degenerate ravine lot (box above floor) → buffer excluded; footprint = LEAST(box, coverage)', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      // Long skinny strip: 4.45 m × 111 m ≈ 494 m². frontage 4.45 → width_raw 4.45−1.8−10 <0? NO —
+      // ravine also hits width. Use a shape where BOTH rect dims clear but the buffer collapses:
+      // 24 m × 24 m lot rotated? Simpler: real geometry small square (22.2 m side) with a −10.9 m
+      // inset → buffer ≈ 0.4×0.4 → ~0.16 m² (degenerate); frontage 24, depth 40 (stated dims drive
+      // the box: width 24−1.8−10=12.2, length 40−6−7.5−10=16.5 — both clear). lot = 960 (f×d) so
+      // confidence emits via pair_lf.
+      await insMb(c, TEST_PARCEL + 9, sq(0, 0, 0.0002), {
+        lot_size_sqm: 960, frontage_m: 24, depth_m: 40, zoning_class: 'RD',
+        bylaw_max_height_m: 10, bylaw_max_stories: 2, bylaw_max_coverage_pct: 33,
+        bylaw_standard_setback_m: 6, is_in_ravine_protection_area: true,
+      });
+      await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+      const p = await getParcel(c, TEST_PARCEL + 9);
+      expect(p.envelope_constraint_reason).toBe('ravine');            // above-floor box → NOT constrained
+      // footprint = LEAST(box 12.2×16.5=201.3, coverage 960×0.33=316.8) = 201.3 — NEVER the ~0.16 m² buffer.
+      expect(Number(p.max_buildable_footprint_sqm)).toBeCloseTo(201.3, 0); // RED pre-fix: ~0.16
+      expect(Number(p.max_buildable_gfa_sqm)).toBeGreaterThan(10);
+      await c.query('ROLLBACK');
+    } finally { c.release(); }
+  });
+
   it('control: a normal parcel is value-stable (envelope/basis/confidence/dims unchanged by D-C)', async () => {
     const c = await pool.connect();
     try {
