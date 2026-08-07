@@ -501,7 +501,11 @@ box AS (
   SELECT tier.*,
     COALESCE(lot_size_confidence IN ('high', 'medium'), false) AS emit,
     CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END AS ravine_red,
-    GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - front_setback - flankage_setback
+    -- WF3 Phase 1 D-A: the corner branch charged the FRONT setback against the WIDTH (wrong axis —
+    -- front setback is a DEPTH loss; 13.49 m frontages read width 2.99 m on ~6,961 corners). A corner
+    -- loses its flankage side + at most ONE interior side setback, side_count-aware (MIN(side_count,1))
+    -- so attached corner units (RS/RT) don't double-inset — the D-B intersection. Length is untouched.
+    GREATEST(0, (CASE WHEN is_corner_lot THEN frontage_m - LEAST(side_count, 1) * side_setback - flankage_setback
                       ELSE frontage_m - side_count * side_setback END)  -- WF3-B: party-wall side_count (was 2×)
                 - (CASE WHEN is_in_ravine_protection_area THEN ${RAVINE_SETBACK_M} ELSE 0 END)) AS width_raw,
     GREATEST(0, (CASE WHEN is_through_lot THEN depth_m - 2 * front_setback
