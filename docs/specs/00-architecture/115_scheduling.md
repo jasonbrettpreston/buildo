@@ -92,7 +92,7 @@ loop into GitHub Actions step semantics:
 jobs:
   coa-then-permits:
     runs-on: ubuntu-latest   # RESOLVED Phase 3.2 (2026-07-20): GitHub-hosted for ALL workflows — Spec 113 §8.2 option 3 ruled (restrictions off + strong auth); deep_scrapes also GH-hosted (§2.4)
-    timeout-minutes: 240     # 90 (coa) + 120 (permits) + checkout/setup/report headroom (permits 90→120: Pipeline Rehab P1, 2026-08-03)
+    timeout-minutes: 300     # 120 (coa) + 150 (permits) + checkout/setup/report headroom (re-sized 2026-08-09 chain-budget WF3)
     concurrency:
       group: chain-coa-permits
       cancel-in-progress: false   # queue, never cancel a run mid-flight
@@ -111,8 +111,12 @@ jobs:
         id: coa
         if: steps.coa_guard.outputs.skip != 'true'
         continue-on-error: true      # isolation: a coa failure must not skip permits
-        timeout-minutes: 90
-        run: node scripts/run-chain.js coa
+        timeout-minutes: ${{ fromJSON(env.COA_STEP_TIMEOUT_MINUTES) }}   # 120 (2026-08-09)
+        run: |                       # soft budget = ceiling − 10, shell-computed (§2.2)
+          BUDGET=$(( ${{ fromJSON(env.COA_STEP_TIMEOUT_MINUTES) }} - 10 ))
+          if [ "$BUDGET" -lt 0 ]; then BUDGET=0; fi
+          export CHAIN_TIME_BUDGET_MINUTES=$BUDGET
+          node scripts/run-chain.js coa
         env: *pipeline-env
 
       - name: Guard — permits concurrency check
@@ -124,8 +128,12 @@ jobs:
       - name: Run permits chain
         id: permits
         if: always() && steps.permits_guard.outputs.skip != 'true'
-        timeout-minutes: 120           # NOT continue-on-error — this is the primary
-        run: node scripts/run-chain.js permits   # pipeline; its failure MUST redden the job
+        timeout-minutes: ${{ fromJSON(env.PERMITS_STEP_TIMEOUT_MINUTES) }}  # 150; NOT continue-on-error —
+        run: |                         # the primary pipeline; its failure MUST redden the job
+          BUDGET=$(( ${{ fromJSON(env.PERMITS_STEP_TIMEOUT_MINUTES) }} - 10 ))
+          if [ "$BUDGET" -lt 0 ]; then BUDGET=0; fi
+          export CHAIN_TIME_BUDGET_MINUTES=$BUDGET
+          node scripts/run-chain.js permits
         env: *pipeline-env
 
       - name: Surface coa failure for alerting
@@ -437,8 +445,8 @@ watchdog checks for it.
    completed run catches that.
 2. **Backup freshness + safety-net trigger.** A completed backup within the last 25h,
    matching BOTH row shapes `backup_db` can be written under (P3-G6): the scoped-slug
-   `permits:backup_db` step row (the scoped-slug INSERT at `run-chain.js:379` + completion
-   UPDATE at `:508` — S3 fold 2026-07-22, corrected from a stale `:362` citation which lands
+   `permits:backup_db` step row (the scoped-slug INSERT at `run-chain.js:413` + completion
+   UPDATE at `:542` — S3 fold 2026-07-22 (re-corrected 2026-08-09, chain-budget WF3 insertion drift), corrected from a stale `:362` citation which lands
    on a closing brace) and a standalone `backup_db` slug row
    (a direct, non-chain invocation). If no such row exists within 25h AND the `permits`
    chain is not CURRENTLY running (a race guard — a permits chain in flight may complete
@@ -552,7 +560,7 @@ env:
   the `SUPABASE_DATABASE_URL` secret itself (Postgres auth), not an application-level
   shared secret.
 - **`timeout-minutes`** per chain-invocation step (per-chain values — §2.2's reconciled
-  list: coa 90 / permits 120 / sources 180 / entities 90) is GitHub Actions' **native** step
+  list: coa 120 / permits 150 / sources 180 / entities 90, 2026-08-09) is GitHub Actions' **native** step
   timeout, replacing `local-cron.js`'s manual `setTimeout` + `child.kill('SIGKILL')`
   (`local-cron.js` L28-34, L127-138). GitHub Actions sends `SIGTERM` first, then force-kills
   after a short grace period — this is *more* forgiving than `local-cron.js`'s immediate

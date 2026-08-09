@@ -49,10 +49,20 @@ describe('run-chain.js — soft time-budget self-stop (Spec 115 §2.2)', () => {
 
   it('the budget check NEVER sets failedStep (exit stays 0 — the deep-scrapes exit-semantics fence)', () => {
     // The cancel path sets failedStep (deliberate exit-1); the budget path must not. Lock: within
-    // the budget-break block there is no failedStep assignment.
-    const m = SRC.match(/CHAIN_TIME_BUDGET[\s\S]{0,1500}?break;/);
+    // the budget-break block (anchored on the budget conditional) there is no failedStep assignment.
+    const m = SRC.match(/chainBudgetMinutes > 0[\s\S]{0,1200}?break;/);
     expect(m, 'budget check block with break must exist').not.toBeNull();
     expect(m![0]).not.toMatch(/failedStep\s*=/);
+  });
+
+  it('cancel PRECEDES budget in the step loop (an explicit human cancellation must win)', () => {
+    // Guardian 2026-08-09: if both hold in one iteration, the chain must finalize 'cancelled',
+    // not completed_with_warnings — so the cancel poll runs first.
+    const cancelIdx = SRC.indexOf("status === 'cancelled'");
+    const budgetIdx = SRC.indexOf('chainBudgetMinutes > 0 &&');
+    expect(cancelIdx).toBeGreaterThan(-1);
+    expect(budgetIdx).toBeGreaterThan(-1);
+    expect(cancelIdx).toBeLessThan(budgetIdx);
   });
 
   it('the budget check sits OUTSIDE the if (chainRunId) cancel guard (works when tracking-row INSERT failed)', () => {

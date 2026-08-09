@@ -296,7 +296,26 @@ async function run() {
     const slug = steps[i];
     const stepLabel = `[${i + 1}/${steps.length}] ${slug}`;
 
-    // Budget check FIRST (pure arithmetic — deliberately OUTSIDE the if(chainRunId) cancel guard
+    // Check if chain was cancelled between steps. PRECEDENCE (Guardian 2026-08-09): the cancel
+    // check runs BEFORE the budget check — an explicit human cancellation must win over a
+    // budget-stop when both hold in the same iteration (else the chain would finalize
+    // completed_with_warnings instead of 'cancelled').
+    if (chainRunId) {
+      try {
+        const statusCheck = await pool.query(
+          `SELECT status FROM pipeline_runs WHERE id = $1`,
+          [chainRunId]
+        );
+        if (statusCheck.rows[0]?.status === 'cancelled') {
+          console.log(`\nChain cancelled by user — stopping before ${slug}`);
+          failedStep = slug;
+          wasCancelled = true;
+          break;
+        }
+      } catch (err) { pipeline.log.warn('[run-chain]', `Cancel check failed: ${err.message}`); }
+    }
+
+    // Budget check (pure arithmetic — deliberately OUTSIDE the if(chainRunId) cancel guard above,
     // so it works even when the tracking-row INSERT failed). Never sets failedStep: exit stays 0.
     const elapsedBudgetMin = (Date.now() - chainStart) / 60000;
     if (chainBudgetMinutes > 0 && elapsedBudgetMin >= chainBudgetMinutes) {
@@ -316,22 +335,6 @@ async function run() {
         }
       }
       break;
-    }
-
-    // Check if chain was cancelled between steps
-    if (chainRunId) {
-      try {
-        const statusCheck = await pool.query(
-          `SELECT status FROM pipeline_runs WHERE id = $1`,
-          [chainRunId]
-        );
-        if (statusCheck.rows[0]?.status === 'cancelled') {
-          console.log(`\nChain cancelled by user — stopping before ${slug}`);
-          failedStep = slug;
-          wasCancelled = true;
-          break;
-        }
-      } catch (err) { pipeline.log.warn('[run-chain]', `Cancel check failed: ${err.message}`); }
     }
 
     // Skip disabled steps

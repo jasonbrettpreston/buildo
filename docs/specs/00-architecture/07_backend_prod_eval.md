@@ -509,7 +509,7 @@ psql "$SUPABASE_DATABASE_URL" -c \
 - **Pass:** a row exists, `completed_at` within the last 25h (daily schedule). The
   `pipeline` column matches EITHER the scoped-slug `permits:backup_db` shape
   (written when the permits chain runs `backup_db` as its own final step — the scoped-slug
-  INSERT at `run-chain.js:379` + completion UPDATE at `:508`; S3 fold 2026-07-22, corrected
+  INSERT at `run-chain.js:413` + completion UPDATE at `:542`; S3 fold 2026-07-22 + 2026-08-09 re-correction (chain-budget WF3 insertion drift — this citation class has now drifted twice), corrected
   from a stale `:362` citation which lands on a closing brace) or the
   standalone `backup_db` slug (written when
   `pipeline-watchdog.yml`'s safety net invokes `scripts/backup-db.js`
