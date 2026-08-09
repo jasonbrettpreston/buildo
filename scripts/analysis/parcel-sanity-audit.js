@@ -156,7 +156,10 @@ const CHECKS = [
   { fam: 'INVARIANT', id: 'stale_cost_fsi_without_gfa', why: 'stale cost (needs compute-parcel-cost re-run)', applies: `max_build_fsi IS NOT NULL`, bad: `max_buildable_gfa_sqm IS NULL`, sev: 'MED' },
   { fam: 'INVARIANT', id: 'cost_fb_on_footprint_gt_lot', why: 'garbage cost on a mislink not yet cleared', applies: `cost_fb_total IS NOT NULL AND max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm IS NOT NULL`, bad: `max_buildable_footprint_sqm > lot_size_sqm * 1.05`, sev: 'HIGH', gate: true },
   { fam: 'INVARIANT', id: 'greenspace_out_of_range', why: '0 ≤ greenspace ≤ lot', applies: `existing_greenspace_sqm IS NOT NULL AND lot_size_sqm IS NOT NULL`, bad: `existing_greenspace_sqm < 0 OR existing_greenspace_sqm > lot_size_sqm + 0.5`, sev: 'MED' },
-  { fam: 'INVARIANT', id: 'opt_aor_gfa_gt_max_buildable_gfa', why: 'as-of-right ≤ lot-validated envelope', applies: `opt_aor_gfa_sqm IS NOT NULL AND max_buildable_gfa_sqm IS NOT NULL`, bad: `opt_aor_gfa_sqm > max_buildable_gfa_sqm + 0.5`, sev: 'MED' },
+  // F2 PROMOTION (Phase 1 step 15, 2026-08-08): gated only AFTER the cloud count measured 0
+  // post-fix (CF-8 sequencing honored — arming it earlier would have reddened the chain on the
+  // 461-row pre-fix residual). A recurrence now means the D-D staleness heal regressed.
+  { fam: 'INVARIANT', id: 'opt_aor_gfa_gt_max_buildable_gfa', why: 'as-of-right ≤ lot-validated envelope (F2-promoted; dev+cloud measured 0)', applies: `opt_aor_gfa_sqm IS NOT NULL AND max_buildable_gfa_sqm IS NOT NULL`, bad: `opt_aor_gfa_sqm > max_buildable_gfa_sqm + 0.5`, sev: 'HIGH', gate: true },
   { fam: 'INVARIANT', id: 'realized_fsi_p90_out_of_range', why: 'realized FSI ∈ [0.1, 6]', applies: `realized_fsi_p90 IS NOT NULL`, bad: `realized_fsi_p90 < 0.1 OR realized_fsi_p90 > 6`, sev: 'MED' },
 ];
 

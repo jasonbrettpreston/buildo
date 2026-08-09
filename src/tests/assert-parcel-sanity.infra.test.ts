@@ -63,6 +63,8 @@ describe('parcel-sanity-audit.js — data-driven gate mapping (Spec 48 §3.6)', 
     const a = audit();
     for (const id of ['bylaw_height_per_storey_impossible', 'maxbuild_stories_basis_existing_retired',
       'opt_aor_gfa_gt_opt_coa_gfa', 'new_build_cost_gt_coa_build_cost', 'footprint_gt_lot_x105',
+      // F2 promotion (Phase 1 step 15): armed after dev+cloud measured 0 post-fix.
+      'opt_aor_gfa_gt_max_buildable_gfa',
       // WF3 Phase 1 D-E: the high-side lot bound + the D-C withheld-envelope tripwire + below-floor vacancy.
       'max_build_dim_exceeds_lot_dim', 'ravine_constrained_carries_priced_cost', 'max_build_dim_below_floor']) {
       // Line-scoped (every CHECK is a one-liner): `[^}]*` would stop at a `${…}` interpolation brace.
