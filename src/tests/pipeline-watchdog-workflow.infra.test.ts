@@ -72,3 +72,36 @@ describe('pipeline-watchdog.yml — backup fallback decoupled from chain freshne
     expect(cond).toContain("outputs.backup_fresh != 'true'");
   });
 });
+
+describe('pipeline-watchdog.yml — missing-migration ESCALATION (WF3 2026-08-09, Spec 115 §2.5)', () => {
+  // The 238 outage: the fleet's chain pre-flights failed for 49h while the watchdog stayed GREEN
+  // for ~25h (its migrate-verify was advisory-::warning; only freshness eventually reddened it,
+  // unlabeled). Escalation: the EXISTING annotation goes ::error and ONE end-of-job gate reds the
+  // job immediately — while the P5 fence (verify stays continue-on-error, backup_fallback still
+  // executes, freshness choreography untouched) holds byte-for-byte.
+  const src = workflow();
+  const active = src.split('\n').filter((l: string) => !l.trim().startsWith('#')).join('\n');
+
+  it('the schema pre-flight annotation is ::error (was ::warning) and keeps the runbook pointer', () => {
+    expect(active).toMatch(/::error[^\n]*(migration|Schema)/i);
+    expect(active).toMatch(/runbook/);
+  });
+
+  it('the verify step KEEPS continue-on-error: true (the P5 fence — never blocks the backup fallback)', () => {
+    const verifyBlock = src.slice(src.indexOf('watchdog_migrate_verify'));
+    expect(verifyBlock.slice(0, 400)).toMatch(/continue-on-error:\s*true/);
+  });
+
+  it('an end-of-job gate reds the job on verify failure, AFTER freshness_recheck, gated if: always()', () => {
+    // The annotate step carries the SAME outcome condition earlier in the file — the GATE is the
+    // LAST occurrence, and it must sit after the LAST freshness_recheck reference.
+    const gateIdx = active.lastIndexOf("watchdog_migrate_verify.outcome == 'failure'");
+    const recheckIdx = active.lastIndexOf('freshness_recheck');
+    expect(gateIdx).toBeGreaterThan(-1);
+    expect(recheckIdx).toBeGreaterThan(-1);
+    expect(gateIdx).toBeGreaterThan(recheckIdx); // additive-after, never ahead of the choreography
+    const gateBlock = active.slice(gateIdx - 200, gateIdx + 300);
+    expect(gateBlock).toMatch(/always\(\)/);
+    expect(gateBlock).toMatch(/exit 1/);
+  });
+});

@@ -110,9 +110,16 @@ jobs:
         env: *pipeline-env
 
       - name: Annotate a failed schema pre-flight
+        # WF3 2026-08-09: ::warning → ::error (the 238 outage: this stayed an
+        # advisory warning while the fleet's chain pre-flights failed for 49h —
+        # the watchdog itself was GREEN for ~25h until freshness breached,
+        # unlabeled). The step ordering + continue-on-error posture are
+        # UNCHANGED (the P5 fence above); the job is reddened by the
+        # missing-migration GATE step at the END of the job, after the backup
+        # fallback and freshness_recheck have run.
         if: steps.watchdog_migrate_verify.outcome == 'failure'
         run: |
-          echo "::warning title=Schema drift or missing migration::migrate.js --verify failed. The scheduled CHAIN workflows are blocked by this until it is resolved (runbook §3 rule 2 / 2a). The watchdog deliberately continues so the freshness check and the backup fallback still run."
+          echo "::error title=Missing migration or schema drift — fleet chain pre-flights are failing::migrate.js --verify failed. Every scheduled CHAIN workflow is blocked by this until it is resolved — approve/dispatch apply-migrations.yml (runbook §3 rule 2 / 2a). The watchdog deliberately continues so the freshness check and the backup fallback still run; the job is failed by the end-of-job gate."
 
       - name: Install PostgreSQL 17 client (PGDG apt repo)
         # This workflow reaches pg_dump via the direct backup-db.js
@@ -192,3 +199,15 @@ jobs:
         if: always()   # NOT continue-on-error — this step's exit code is the job's verdict
         run: node scripts/check-pipeline-freshness.js
         env: *pipeline-env
+
+      - name: Gate — missing-migration escalation (WF3 2026-08-09, Spec 115 §2.5)
+        # ADDITIVE-AFTER the exit-code choreography, never ahead of it: the
+        # advisory verify + backup fallback + freshness recheck have ALL run by
+        # this point (P5 fence preserved byte-for-byte). This gate makes a
+        # missing migration red the watchdog IMMEDIATELY (with the ::error
+        # annotation above naming cause + remedy) instead of ~25h later via an
+        # unlabeled freshness breach — the 238-outage gap.
+        if: always() && steps.watchdog_migrate_verify.outcome == 'failure'
+        run: |
+          echo "Missing migration detected by the pre-flight — failing the watchdog (see the ::error annotation)."
+          exit 1
