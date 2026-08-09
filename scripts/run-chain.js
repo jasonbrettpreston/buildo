@@ -281,9 +281,42 @@ async function run() {
     pipeline.log.warn('[run-chain]', 'Pre-flight bloat WARNING: dead tuple ratio exceeds 50% on some tables. Consider running VACUUM.', { preFlightRows });
   }
 
+  // Soft time-budget self-stop (Spec 115 §2.2, WF3 2026-08-09) — generalizes the deep-scrapes
+  // d6eb9f31 ruling: the platform timeout is the BACKSTOP, never the mechanism. 2026-08-08: an
+  // ungated coa (102 min) outran its 90-min GH step timeout — the kill never reached the node
+  // process (it ran 12 more minutes concurrently with permits), and permits then died dirty at its
+  // own ceiling (orphaned rows). Absent/0 → inert. Checked BETWEEN steps only (a step must
+  // finalize, not be killed); the workflow computes ceiling−10 in its run shell.
+  const chainBudgetMinutes = Number(process.env.CHAIN_TIME_BUDGET_MINUTES || 0);
+  let budgetStopped = false;
+  let budgetStopElapsedMin = 0;
+  let budgetSkippedSteps = [];
+
   for (let i = 0; i < steps.length; i++) {
     const slug = steps[i];
     const stepLabel = `[${i + 1}/${steps.length}] ${slug}`;
+
+    // Budget check FIRST (pure arithmetic — deliberately OUTSIDE the if(chainRunId) cancel guard
+    // so it works even when the tracking-row INSERT failed). Never sets failedStep: exit stays 0.
+    const elapsedBudgetMin = (Date.now() - chainStart) / 60000;
+    if (chainBudgetMinutes > 0 && elapsedBudgetMin >= chainBudgetMinutes) {
+      budgetStopped = true;
+      budgetStopElapsedMin = Math.round(elapsedBudgetMin * 10) / 10;
+      budgetSkippedSteps = steps.slice(i);
+      console.log(`\n=== Soft time budget reached (${budgetStopElapsedMin}m >= ${chainBudgetMinutes}m) — stopping before ${slug}; ${budgetSkippedSteps.length} step(s) skipped ===`);
+      for (const s of budgetSkippedSteps) {
+        try {
+          await pool.query(
+            `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status, duration_ms, error_message)
+             VALUES ($1, NOW(), NOW(), 'skipped', 0, $2)`,
+            [`${chainId}:${s}`, `skipped: chain time budget reached (${budgetStopElapsedMin}m >= ${chainBudgetMinutes}m)`]
+          );
+        } catch (err) {
+          pipeline.log.warn('[run-chain]', `Budget-skip tracking insert failed: ${err.message}`);
+        }
+      }
+      break;
+    }
 
     // Check if chain was cancelled between steps
     if (chainRunId) {
@@ -598,19 +631,33 @@ async function run() {
   if (wasCancelled) chainStatus = 'cancelled';
   else if (failedStep) chainStatus = 'failed';
   else if (hasVerdictFails) chainStatus = 'completed_with_errors';
+  // WF3 2026-08-09: an all-PASS budget-stopped chain must NOT read plain 'completed' — the WARN
+  // status is the honest signal and the green allowlist admits it. FAIL verdicts still win above.
+  else if (budgetStopped) chainStatus = 'completed_with_warnings';
   else if (hasVerdictWarns) chainStatus = 'completed_with_warnings';
   else chainStatus = 'completed';
 
+  // budgetStopped chainError: this string is what FreshnessTimeline renders — meta alone is
+  // invisible, and a third of coa runs are already WARN for other reasons (status can't distinguish).
   const chainError = failedStep
     ? `Stopped at step: ${failedStep}`
-    : gateSkipped
-      ? '0 new records — downstream steps skipped'
-      : null;
+    : budgetStopped
+      ? `Soft time budget reached (${budgetStopElapsedMin}m >= ${chainBudgetMinutes}m) — ${budgetSkippedSteps.length} downstream step(s) skipped`
+      : gateSkipped
+        ? '0 new records — downstream steps skipped'
+        : null;
 
   // Include step verdicts + pre-flight audit in chain records_meta for drill-down
   const metaObj = {};
   if (Object.keys(stepVerdicts).length > 0) metaObj.step_verdicts = stepVerdicts;
   if (preFlightRows.length > 0) metaObj.pre_flight_audit = preFlightAudit;
+  if (budgetStopped) {
+    metaObj.budget_stopped = {
+      elapsed_min: budgetStopElapsedMin,
+      budget_min: chainBudgetMinutes,
+      steps_skipped: budgetSkippedSteps,
+    };
+  }
   const chainMeta = Object.keys(metaObj).length > 0 ? JSON.stringify(metaObj) : null;
 
   if (chainRunId) {

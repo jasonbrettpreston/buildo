@@ -19,18 +19,27 @@ on:
 jobs:
   coa-then-permits:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
-    timeout-minutes: 240     # 90 (coa) + 120 (permits) + checkout/setup/PG17-client/migrate-verify headroom
+    timeout-minutes: 300     # 120 (coa) + 150 (permits) + checkout/setup/PG17-client/migrate-verify headroom
     env:
-      # Pipeline Rehab P1 (2026-08-03): SINGLE SOURCE for the permits step
-      # ceiling — consumed by BOTH the permits step's `timeout-minutes` and the
-      # permits verdict check's duration tripwire (warns at >80% of budget), so
-      # the two values can never drift apart. Raised 90→120 after the permits
-      # chain crept to 78+ min and was step-timeout-killed mid
-      # compute_trade_forecasts on 08-02/08-03 (killing the nightly backup_db
-      # final step with it). KNOWN LIMIT: 120 is an estimate, not validated
-      # headroom — no completed permits run >90 min exists yet; the tripwire is
-      # the early signal for the next revisit.
-      PERMITS_STEP_TIMEOUT_MINUTES: '120'
+      # Pipeline Rehab P1 (2026-08-03): SINGLE SOURCE per step ceiling —
+      # consumed by the step's `timeout-minutes`, its verdict check's duration
+      # tripwire (warns at >80%), AND (WF3 2026-08-09) the step's shell-computed
+      # soft budget (ceiling − 10 → CHAIN_TIME_BUDGET_MINUTES, run-chain's
+      # self-stop — the GH timeout is the BACKSTOP, never the mechanism; the
+      # 2026-08-08 kill left orphaned rows + a 12-min zombie coa process).
+      # PERMITS raised 120→150 (WF3 2026-08-09): the P1 note "no completed
+      # permits run >90 min exists yet" was falsified 2026-08-05 — run id 2258
+      # completed all 33 steps CLEAN in 118.5 min (nightlies run UNGATED 6/6,
+      # 78–118.5 min, rising trend). Budget 140 clears the observed max by 21.5.
+      # COA raised 90→120 (was "90 deliberate", Spec 115 §2.2 — re-litigated in
+      # place on its own measured-overrun terms: the 2026-08-08 ungated
+      # backlog-recovery run measured 102 min; that recovery case is exactly the
+      # run that must COMPLETE). Budget 110 > 102 observed.
+      # NB: CHAIN_TIME_BUDGET_MINUTES (self-stop, ceiling−10, exported in each
+      # step's run shell) vs CHAIN_DURATION_BUDGET_MINUTES (verdict tripwire,
+      # = ceiling, env on the verdict steps) — deliberately distinct names.
+      PERMITS_STEP_TIMEOUT_MINUTES: '150'
+      COA_STEP_TIMEOUT_MINUTES: '120'
     concurrency:
       group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name rather
       cancel-in-progress: false       # than a hand-copied literal, so a future rename can't drift
@@ -104,8 +113,14 @@ jobs:
         id: coa
         if: steps.coa_guard.outputs.skip != 'true'
         continue-on-error: true      # isolation: a coa failure must not skip permits (Spec 115 §2.2)
-        timeout-minutes: 90
-        run: node scripts/run-chain.js coa
+        timeout-minutes: ${{ fromJSON(env.COA_STEP_TIMEOUT_MINUTES) }}
+        # Soft budget = ceiling − 10, shell-computed (GH expressions have no
+        # arithmetic — chain-deep-scrapes.yml precedent), clamped at 0 (= disabled).
+        run: |
+          BUDGET=$(( ${{ fromJSON(env.COA_STEP_TIMEOUT_MINUTES) }} - 10 ))
+          if [ "$BUDGET" -lt 0 ]; then BUDGET=0; fi
+          export CHAIN_TIME_BUDGET_MINUTES=$BUDGET
+          node scripts/run-chain.js coa
         env: *pipeline-env
 
       - name: Verdict check — coa (F8 fold 2026-07-20)
@@ -122,7 +137,16 @@ jobs:
         if: always() && steps.coa_guard.outputs.skip != 'true'
         continue-on-error: true
         run: node scripts/check-chain-verdict.js coa
-        env: *pipeline-env
+        # Inline env (not *pipeline-env): WF3 2026-08-09 — coa previously had NO
+        # duration tripwire; fed from the SAME job-env value the coa step's
+        # timeout-minutes reads (P1 no-second-hardcode). Aliases can't be
+        # extended, hence the three shared vars repeated verbatim (see
+        # permits_verdict below, same pattern).
+        env:
+          PIPELINE_CHAIN: ${{ github.workflow }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+          CHAIN_DURATION_BUDGET_MINUTES: ${{ env.COA_STEP_TIMEOUT_MINUTES }}
 
       - name: Guard — permits concurrency check
         id: permits_guard
@@ -137,7 +161,12 @@ jobs:
         # MUST redden the job. Value sourced from PERMITS_STEP_TIMEOUT_MINUTES
         # (job env above) — no second hardcode (Pipeline Rehab P1).
         timeout-minutes: ${{ fromJSON(env.PERMITS_STEP_TIMEOUT_MINUTES) }}
-        run: node scripts/run-chain.js permits
+        # Soft budget = ceiling − 10, shell-computed + clamped (see coa step).
+        run: |
+          BUDGET=$(( ${{ fromJSON(env.PERMITS_STEP_TIMEOUT_MINUTES) }} - 10 ))
+          if [ "$BUDGET" -lt 0 ]; then BUDGET=0; fi
+          export CHAIN_TIME_BUDGET_MINUTES=$BUDGET
+          node scripts/run-chain.js permits
         env: *pipeline-env
 
       - name: Verdict check — permits (F8 fold 2026-07-20)

@@ -162,13 +162,34 @@ top of it, not a replacement.
 `chain-sources.yml` and `chain-entities.yml` are single-chain, single-step workflows (no
 serialization, no `continue-on-error` split needed) using the same `check-chain-running.js`
 guard + `env: *pipeline-env` pattern as the `permits` step above. Per-chain step ceilings
-(reconciled 2026-08-03, Pipeline Rehab P1): `coa` 90 (unchanged — deliberate), `permits`
-120 (raised from 90 after the chain crept to 78+ min and was step-timeout-killed on
-08-02/08-03; **120 is an estimate, not validated headroom** — no completed run >90 min
-exists yet, so the verdict-check step's duration tripwire `::warning`s at >80% of the
-budget, fed the same value via `CHAIN_DURATION_BUDGET_MINUTES` so yml and tripwire cannot
-drift), `sources` 180 (raised 2026-07-25 — the chain runs ~2h; the yml led the spec here,
-drift reconciled), `entities` 90 (unchanged). `chain-sources.yml` additionally carries a
+(re-reconciled 2026-08-09, chain-budget WF3): `coa` **120** (raised from 90 — the "90
+unchanged — deliberate" P1 ruling is re-litigated in place on its own measured-overrun
+terms: the 2026-08-08 ungated backlog-recovery run measured 102 min, outran the 90-min GH
+step timeout, and the kill never reached the node process, which ran 12 more minutes
+CONCURRENTLY with the permits chain; the backlog-recovery case is exactly the run that must
+complete), `permits` **150** (raised from 120 — P1's "no completed run >90 min exists yet"
+was falsified 2026-08-05 by a CLEAN all-33-step run at 118.5 min; nightlies run UNGATED
+6/6 recently, 78–118.5 min, rising trend), `sources` 180 (unchanged here; Phase B owns its
+re-size — the pinned `--full` enrich alone measured 112 min on cloud), `entities` 90
+(unchanged). Both coa-permits verdict-check steps carry the duration tripwire
+(`CHAIN_DURATION_BUDGET_MINUTES` = the SAME job-env ceiling value; coa gained its tripwire
+in the 2026-08-09 WF3 — it previously had none).
+
+**Soft time-budget self-stop (2026-08-09 WF3 — generalizes the deep-scrapes `d6eb9f31`
+ruling to chain orchestration): the platform timeout is the BACKSTOP, never the
+mechanism.** `run-chain.js` reads `CHAIN_TIME_BUDGET_MINUTES` (absent/0 → inert; each
+chain step computes ceiling − 10 in its run shell, clamped ≥ 0 — GH expressions have no
+arithmetic). Checked BETWEEN steps only (an in-flight step must finalize, not be killed),
+at the same trusted poll point as admin cancellation. On breach: remaining steps are
+recorded `skipped` with `error_message = 'skipped: chain time budget reached (…)'`
+(cause-distinguishable, unlike disabled/gate skips), the chain finalizes through its
+NORMAL terminal path as `completed_with_warnings` (an explicit status-ladder branch — FAIL
+verdicts still win) with a human-readable `error_message` + `records_meta.budget_stopped =
+{elapsed_min, budget_min, steps_skipped}`, and the process exits 0 (the §2.4-class
+DB-verdict split remains the failure-detection contract; `completed_with_warnings` is
+green-allowlisted). Adopted by `chain-coa-permits.yml` only so far; other chain workflows
+adopt with their own measured budgets (the mechanism is generic and inert without the
+env). `chain-sources.yml` additionally carries a
 `mkdir -p data` step before its chain step (Pipeline Rehab P2, 2026-08-03): the gitignored
 `data/` dir is absent on every fresh checkout and four sources loaders download into it —
 the loaders' `downloadFile()` helpers now mkdir it themselves (the load-bearing fix, which
@@ -442,7 +463,18 @@ unapplied migration would block every chain — including permits, whose final s
 primary backup — and then block the safety net that exists to cover exactly that, while
 reddening the watchdog for a reason indistinguishable from its own freshness alarm. It also
 falsified `1e405bce`'s recorded exit-code choreography, which states `freshness_recheck` is
-the ONLY step whose exit code determines the job conclusion; advisory restores that);
+the ONLY step whose exit code determines the job conclusion; advisory restores that.
+**AMENDED 2026-08-09 (chain-budget WF3 — missing-migration ESCALATION):** during the
+238 outage the fleet's chain pre-flights failed for 49 h while this advisory posture left
+the watchdog GREEN for ~25 h (until freshness breached, unlabeled). The verify step's
+POSITION and `continue-on-error: true` are unchanged (the fence above holds byte-for-byte
+— backup fallback + freshness choreography always run), its annotation is upgraded
+`::warning` → `::error` naming cause + remedy (approve/dispatch `apply-migrations.yml`,
+runbook §3 rule 2a), and ONE additive end-of-job gate step — `if: always()` on the verify
+outcome, ordered AFTER `freshness_recheck` — reds the job immediately. The choreography
+rule is therefore amended: `freshness_recheck`'s exit code is the job's verdict, EXCEPT
+that a failed schema pre-flight also fails the job via the trailing gate — never by
+blocking earlier steps);
 the `SUPABASE_DATABASE_URL` non-empty guard (§3/§8's inertness note). `runs-on: ubuntu-latest`;
 `workflow_dispatch` active; `schedule:` block committed commented-out per §8/P3-D6 until
 Phase 4.3.
