@@ -34,6 +34,7 @@ const shapefile = require('shapefile');
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs } = require('./lib/config-loader');
 const { safeParseIntOrNull } = require('./lib/safe-math');
+const sourceVersion = require('./lib/source-version'); // Phase B B1 — shared gate semantics
 const { z } = require('zod');
 
 const ADVISORY_LOCK_ID = 63; // L4 re-derived: spec's 65 collides with enrich-parcels (live LOCK_ID_REGISTRY); 63 free.
@@ -243,15 +244,15 @@ function datasetAgeStatus(ageDays, thresholdDays) {
   return ageDays > thresholdDays ? 'WARN' : 'INFO';
 }
 
-/** L9 skip-check. Skip iff a prior version exists AND a cache validator matches. */
+/** L9 skip-check. Skip iff a prior version exists AND a cache validator matches.
+ *  Delegates to the shared source-version lib (Phase B B1) with centreline-style
+ *  options: contentHash IS a validator in the no-validators bail (the daily-regen
+ *  CKAN file can churn Last-Modified with identical bytes). */
 function skipCheckDecision({ lastModified, etag = null, contentHash = null, prior }) {
-  const pm = prior && prior.centreline_load ? prior.centreline_load : null;
-  if (!pm) return { skip: false, reason: 'no_prior_run' };
-  if (!lastModified && !etag && !contentHash) return { skip: false, reason: 'no_validators' };
-  if (lastModified && pm.last_modified && lastModified === pm.last_modified) return { skip: true, reason: 'unchanged_last_modified' };
-  if (etag && pm.etag && etag === pm.etag) return { skip: true, reason: 'unchanged_etag' };
-  if (contentHash && pm.content_hash && contentHash === pm.content_hash) return { skip: true, reason: 'unchanged_content_hash' };
-  return { skip: false, reason: 'changed' };
+  return sourceVersion.skipCheckDecision(
+    { lastModified, etag, contentHash, priorMeta: prior && prior.centreline_load ? prior.centreline_load : null },
+    { style: sourceVersion.STYLE_VALIDATOR_EQUALITY, contentHashInNoValidatorsBail: true },
+  );
 }
 
 function round3(n) {
@@ -294,9 +295,11 @@ async function downloadZipOnce(url, destPath, timeoutMs) {
   }
 }
 
-/** MD5 of a local file (CENTRELINE_LOCAL_ZIP override path; one-off read is fine). */
-function md5OfFileSync(filePath) {
-  return crypto.createHash('md5').update(fs.readFileSync(filePath)).digest('hex');
+/** MD5 of a local file (CENTRELINE_LOCAL_ZIP override path). STREAMED via the shared lib
+ *  (Phase B B1 / D3 §9.5) — the override takes the same no-whole-file-buffering rule as the
+ *  download path; md5 is pinned to stay comparable to prior `content_hash` baselines. */
+function md5OfFile(filePath) {
+  return sourceVersion.streamFileHash(filePath, 'md5');
 }
 
 /** Retry the download on transient socket resets ("terminated" / ECONNRESET) — CKAN/CDN drops
@@ -409,10 +412,9 @@ async function main(pool) {
     const acceptDrift = process.env.CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT === '1';
     if (acceptDrift) push('centreline_override_feature_count_drift_present', true, 'WARN');
 
-    // Prior run (chain-scoped name).
-    const prior = await pool
-      .query(`SELECT records_meta FROM pipeline_runs WHERE pipeline = $1 AND status = 'completed' ORDER BY started_at DESC LIMIT 1`, [PIPELINE_NAME])
-      .then((r) => (r.rows[0] ? r.rows[0].records_meta : null))
+    // Prior run (chain-scoped name; started_at DESC standardized in the lib — Phase B B1).
+    const prior = await sourceVersion
+      .readPriorRunMeta(pool, PIPELINE_NAME)
       .catch((err) => { pipeline.log.warn('[load-centreline]', `prior-run query failed (no baseline): ${err.message}`); return null; });
     const priorFeatureCount = prior && prior.centreline_load ? safeParseIntOrNull(prior.centreline_load.feature_count_filtered) : null;
     const hasPriorRun = !!(prior && prior.centreline_load);
@@ -444,7 +446,13 @@ async function main(pool) {
     const skip = skipCheckDecision({ lastModified: headInfo && headInfo.lastModified, etag: headInfo && headInfo.etag, prior });
     if (skip.skip) {
       push('centreline_load_skipped', skip.reason, 'INFO');
-      emitSummary(auditRows, { ...skeletonLoadMeta(), ...(prior.centreline_load || {}), spec_version: SPEC_VERSION });
+      // spec_version pinned AFTER the prior spread (BUG-2 rule — pins go last in the
+      // helper); the skip STILL lands a COMPLETED row re-stamping the prior meta (DS4).
+      emitSummary(auditRows, sourceVersion.buildSkipReEmitMeta({
+        skeleton: skeletonLoadMeta(),
+        priorMeta: prior.centreline_load || {},
+        pins: { spec_version: SPEC_VERSION },
+      }));
       emitCentrelineMeta();
       return { skipped: true };
     }
@@ -455,18 +463,25 @@ async function main(pool) {
     let counters = null;
     let contentHash = null;
     let downloadValidators = {};
+    let tier2 = { skip: false, reason: null };
     try {
       const dl = LOCAL_ZIP
-        ? { zipPath: LOCAL_ZIP, contentHash: md5OfFileSync(LOCAL_ZIP), lastModified: null, etag: null }
+        ? { zipPath: LOCAL_ZIP, contentHash: await md5OfFile(LOCAL_ZIP), lastModified: null, etag: null }
         : await downloadZipWithRetry(CKAN_DOWNLOAD_URL, path.join(tmpRoot, 'centreline.zip'), config.centrelineDownloadTimeoutMs);
       contentHash = dl.contentHash;
       downloadValidators = { lastModified: dl.lastModified || (headInfo && headInfo.lastModified), etag: dl.etag || (headInfo && headInfo.etag) };
-      const extractDir = path.join(tmpRoot, 'ext');
-      await extractZip(dl.zipPath, extractDir);
-      const { shpPath, dbfPath } = locateShapefile(extractDir);
-      const parsed = await parseShapefile(shpPath, dbfPath);
-      features = parsed.features;
-      counters = parsed.counters;
+      // TIER-2 (Phase B B1 / D3): centreline is the loader the architecture report names as
+      // regenerating DAILY on CKAN — tier-1 reports "changed" nearly every run while the bytes
+      // are identical. This is the tier that eats that class. Skip handled after try/finally.
+      tier2 = sourceVersion.contentHashDecision({ contentHash, priorMeta: prior && prior.centreline_load });
+      if (!tier2.skip) {
+        const extractDir = path.join(tmpRoot, 'ext');
+        await extractZip(dl.zipPath, extractDir);
+        const { shpPath, dbfPath } = locateShapefile(extractDir);
+        const parsed = await parseShapefile(shpPath, dbfPath);
+        features = parsed.features;
+        counters = parsed.counters;
+      }
     } catch (err) {
       push('centreline_acquisition_error', String(err.message), 'FAIL'); // §3.9 download/zip/parse failure → FAIL, no writes
       emitSummary(auditRows, skeletonLoadMeta());
@@ -474,6 +489,20 @@ async function main(pool) {
       return { failed: true };
     } finally {
       fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+
+    // TIER-2 skip — same COMPLETED-row contract as the tier-1 skip above (DS4). Note this
+    // one matters most: enrich-permits' assertCentrelineEnriched HALT gate reads a completed
+    // sources:load_centreline row, so a byte-identical source must still land one.
+    if (tier2.skip) {
+      push('centreline_load_skipped', tier2.reason, 'INFO');
+      emitSummary(auditRows, sourceVersion.buildSkipReEmitMeta({
+        skeleton: skeletonLoadMeta(),
+        priorMeta: (prior && prior.centreline_load) || {},
+        pins: { spec_version: SPEC_VERSION },
+      }));
+      emitCentrelineMeta();
+      return { skipped: true };
     }
 
     push('centreline_feature_count_raw', counters.raw, 'INFO');
