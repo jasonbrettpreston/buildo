@@ -25,6 +25,7 @@
 const https = require('https');
 
 const pipeline = require('./lib/pipeline');
+const sourceVersion = require('./lib/source-version'); // Phase B B1 — shared gate semantics
 const { checkAttrDrift } = require('./lib/zoning-attr-drift');
 const {
   POLYGON,
@@ -323,17 +324,16 @@ function priorMetricValue(prior, metric) {
 
 /**
  * R2-11 + F-M4: skip-check. Force reload when no prior version, no validators,
- * or cache older than 2× cadence; else skip iff unchanged.
+ * or cache older than 2× cadence; else skip iff unchanged. Delegates to the
+ * shared source-version lib (Phase B B1) with zoning-style options: CKAN
+ * `package_show` metadata equality + the max-age force-reload window as an
+ * explicit parameter.
  */
 function skipCheckDecision({ lastModified, etag = null, storedVersion, nowMs }) {
-  if (!storedVersion) return { skip: false, reason: 'no_prior_version' };
-  if (!lastModified && !etag) return { skip: false, reason: 'no_validators' };
-  const storedMs = Date.parse(storedVersion);
-  if (!Number.isNaN(storedMs) && nowMs - storedMs > FORCE_RELOAD_STALE_DAYS * 86400000) {
-    return { skip: false, reason: 'cache_stale_force_reload' };
-  }
-  if (lastModified && Date.parse(lastModified) === storedMs) return { skip: true, reason: 'unchanged' };
-  return { skip: false, reason: 'changed' };
+  return sourceVersion.skipCheckDecision(
+    { lastModified, etag, storedVersion, nowMs },
+    { style: sourceVersion.STYLE_CKAN_METADATA, forceReloadMaxAgeDays: FORCE_RELOAD_STALE_DAYS },
+  );
 }
 
 // ===========================================================================
@@ -576,13 +576,14 @@ async function main(pool) {
     const auditRows = [];
     auditRows.push({ metric: 'dataset_source_license', value: LICENSE_URL, status: 'INFO' }); // §6
 
-    const prior = await pool.query(
-      `SELECT records_meta FROM pipeline_runs WHERE pipeline = $1 AND status = 'completed' ORDER BY started_at DESC LIMIT 1`,
-      [PIPELINE_NAME]
-    ).then((r) => r.rows[0] || null).catch((err) => {
+    // Prior run (started_at DESC standardized in the lib — Phase B B1). Downstream
+    // reads (storedVersion / priorMetricValue) expect the row shape { records_meta },
+    // so re-wrap the lib's meta-only return.
+    const priorMetaOnly = await sourceVersion.readPriorRunMeta(pool, PIPELINE_NAME).catch((err) => {
       pipeline.log.warn('[load-zoning]', `prior-run query failed (treating as no baseline): ${err.message}`);
       return null;
     });
+    const prior = priorMetaOnly ? { records_meta: priorMetaOnly } : null;
     const storedVersion = prior && prior.records_meta ? prior.records_meta.source_dataset_version : null;
     const storedLayerVersions = (prior && prior.records_meta && prior.records_meta.zoning_layer_versions) || {};
 

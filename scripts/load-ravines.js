@@ -21,12 +21,15 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
+const { Readable } = require('stream');
+const { pipeline: streamPipeline } = require('stream/promises');
 const StreamZip = require('node-stream-zip');
 const shapefile = require('shapefile');
 
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs } = require('./lib/config-loader');
 const { safeParseIntOrNull } = require('./lib/safe-math');
+const sourceVersion = require('./lib/source-version'); // Phase B B1 — shared gate semantics
 const { z } = require('zod');
 
 const ADVISORY_LOCK_ID = 59; // L4 (verified unassigned)
@@ -158,16 +161,15 @@ function datasetAgeStatus(ageDays, thresholdYears) {
 
 /**
  * L9 skip-check. Skip iff a prior version exists AND a cache validator matches.
- * First run / no validators → proceed (full load).
+ * First run / no validators → proceed (full load). Delegates to the shared
+ * source-version lib (Phase B B1) with ravines-style options: validator
+ * equality, contentHash NOT part of the no-validators bail.
  */
 function skipCheckDecision({ lastModified, etag = null, contentHash = null, prior }) {
-  const pm = prior && prior.ravine_load ? prior.ravine_load : null;
-  if (!pm) return { skip: false, reason: 'no_prior_run' };
-  if (!lastModified && !etag) return { skip: false, reason: 'no_validators' };
-  if (lastModified && pm.last_modified && lastModified === pm.last_modified) return { skip: true, reason: 'unchanged_last_modified' };
-  if (etag && pm.etag && etag === pm.etag) return { skip: true, reason: 'unchanged_etag' };
-  if (contentHash && pm.content_hash && contentHash === pm.content_hash) return { skip: true, reason: 'unchanged_content_hash' };
-  return { skip: false, reason: 'changed' };
+  return sourceVersion.skipCheckDecision(
+    { lastModified, etag, contentHash, priorMeta: prior && prior.ravine_load ? prior.ravine_load : null },
+    { style: sourceVersion.STYLE_VALIDATOR_EQUALITY, contentHashInNoValidatorsBail: false },
+  );
 }
 
 /** Coerce OBJECTID → positive integer source_id, else null (counted as skip, never fabricated). */
@@ -194,17 +196,23 @@ async function headValidators(url, timeoutMs) {
   }
 }
 
-/** Download the zip to a temp file; return { zipPath, contentHash, lastModified, etag }. */
+/** Download the zip to a temp file; return { zipPath, contentHash, lastModified, etag }.
+ *  STREAMED hash-through-to-disk (Phase B B1 / D3 §9.5): the bytes are hashed as they
+ *  land, never buffered whole into memory (was `Buffer.from(await res.arrayBuffer())`).
+ *  md5 is pinned — the hash is compared against prior runs' `content_hash` baselines. */
 async function downloadZip(url, destPath, timeoutMs) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, { redirect: 'follow', signal: ctrl.signal });
     if (!res.ok) throw new Error(`GET ${res.status} ${res.statusText}`);
-    const buf = Buffer.from(await res.arrayBuffer());
-    fs.writeFileSync(destPath, buf);
-    const contentHash = crypto.createHash('md5').update(buf).digest('hex');
-    return { zipPath: destPath, contentHash, lastModified: res.headers.get('last-modified'), etag: res.headers.get('etag') };
+    const hash = crypto.createHash('md5');
+    await streamPipeline(
+      Readable.fromWeb(res.body),
+      async function* hashThrough(source) { for await (const chunk of source) { hash.update(chunk); yield chunk; } },
+      fs.createWriteStream(destPath),
+    );
+    return { zipPath: destPath, contentHash: hash.digest('hex'), lastModified: res.headers.get('last-modified'), etag: res.headers.get('etag') };
   } finally {
     clearTimeout(t);
   }
@@ -277,13 +285,9 @@ async function main(pool) {
     if (acceptDrift) push('ravine_override_feature_count_drift_present', true, 'WARN');
     if (acceptMassDelete) push('ravine_override_mass_delete_present', true, 'WARN');
 
-    // Prior run (chain-scoped name; started_at DESC mirrors load-zoning).
-    const prior = await pool
-      .query(
-        `SELECT records_meta FROM pipeline_runs WHERE pipeline = $1 AND status = 'completed' ORDER BY started_at DESC LIMIT 1`,
-        [PIPELINE_NAME],
-      )
-      .then((r) => (r.rows[0] ? r.rows[0].records_meta : null))
+    // Prior run (chain-scoped name; started_at DESC standardized in the lib — Phase B B1).
+    const prior = await sourceVersion
+      .readPriorRunMeta(pool, PIPELINE_NAME)
       .catch((err) => {
         pipeline.log.warn('[load-ravines]', `prior-run query failed (treating as no baseline): ${err.message}`);
         return null;
@@ -318,8 +322,13 @@ async function main(pool) {
         records_meta: {
           audit_table: auditTable(auditRows),
           // spec_version pinned to current AFTER the prior spread so a future version bump
-          // can't emit a stale version on a SKIP run (Code Reviewer BUG-2).
-          ravine_load: { ...skeletonLoadMeta(), ...(prior.ravine_load || {}), spec_version: SPEC_VERSION, skipped_reason: skip.reason },
+          // can't emit a stale version on a SKIP run (Code Reviewer BUG-2) — pins go last
+          // in buildSkipReEmitMeta. The skip STILL lands a COMPLETED row (DS4).
+          ravine_load: sourceVersion.buildSkipReEmitMeta({
+            skeleton: skeletonLoadMeta(),
+            priorMeta: prior.ravine_load || {},
+            pins: { spec_version: SPEC_VERSION, skipped_reason: skip.reason },
+          }),
         },
       });
       emitRavineMeta();
@@ -333,17 +342,25 @@ async function main(pool) {
     let nullGeometry = 0;
     let contentHash = null;
     let downloadValidators = {};
+    let tier2 = { skip: false, reason: null };
     try {
       const dl = await downloadZip(CKAN_DOWNLOAD_URL, path.join(tmpRoot, 'ravines.zip'), config.ravineDownloadTimeoutMs);
       contentHash = dl.contentHash;
       downloadValidators = { lastModified: dl.lastModified || headInfo.lastModified, etag: dl.etag || headInfo.etag };
-      const extractDir = path.join(tmpRoot, 'ext');
-      await extractZip(dl.zipPath, extractDir);
-      const { shpPath, dbfPath } = locateShapefile(extractDir);
-      const parsed = await parseShapefile(shpPath, dbfPath);
-      features = parsed.features;
-      badSourceId = parsed.badSourceId;
-      nullGeometry = parsed.nullGeometry;
+      // TIER-2 (Phase B B1 / D3): tier-1 compared metadata and said "changed"; the bytes
+      // may still be identical (CKAN re-stamps last_modified on unchanged files). Skip the
+      // extract/parse/upsert when the hash matches the prior run's baseline. Handled AFTER
+      // the try/finally so the summary emit is never mistaken for an acquisition error.
+      tier2 = sourceVersion.contentHashDecision({ contentHash, priorMeta: prior && prior.ravine_load });
+      if (!tier2.skip) {
+        const extractDir = path.join(tmpRoot, 'ext');
+        await extractZip(dl.zipPath, extractDir);
+        const { shpPath, dbfPath } = locateShapefile(extractDir);
+        const parsed = await parseShapefile(shpPath, dbfPath);
+        features = parsed.features;
+        badSourceId = parsed.badSourceId;
+        nullGeometry = parsed.nullGeometry;
+      }
     } catch (err) {
       push('ravine_acquisition_error', String(err.message), 'FAIL'); // §3.10 download/zip/parse failure → FAIL, no writes
       pipeline.emitSummary({
@@ -354,6 +371,24 @@ async function main(pool) {
       return { failed: true };
     } finally {
       fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+    // TIER-2 skip — same COMPLETED-row contract as the tier-1 skip above (DS4): downstream
+    // HALT gates read completed rows, so a byte-identical source must still land one.
+    if (tier2.skip) {
+      push('ravine_load_skipped', tier2.reason, 'INFO');
+      pipeline.emitSummary({
+        records_total: null, records_new: null, records_updated: null,
+        records_meta: {
+          audit_table: auditTable(auditRows),
+          ravine_load: sourceVersion.buildSkipReEmitMeta({
+            skeleton: skeletonLoadMeta(),
+            priorMeta: (prior && prior.ravine_load) || {},
+            pins: { spec_version: SPEC_VERSION, skipped_reason: tier2.reason },
+          }),
+        },
+      });
+      emitRavineMeta();
+      return { skipped: true };
     }
     if (badSourceId > 0) push('ravine_bad_objectid_count', badSourceId, 'WARN'); // §3.10 CKAN schema drift
     if (nullGeometry > 0) push('ravine_null_geometry_count', nullGeometry, 'WARN');

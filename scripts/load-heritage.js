@@ -22,12 +22,15 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
+const { Readable } = require('stream');
+const { pipeline: streamPipeline } = require('stream/promises');
 const StreamZip = require('node-stream-zip');
 const shapefile = require('shapefile');
 
 const pipeline = require('./lib/pipeline');
 const { loadMarketplaceConfigs } = require('./lib/config-loader');
 const { safeParseIntOrNull } = require('./lib/safe-math');
+const sourceVersion = require('./lib/source-version'); // Phase B B1 — shared gate semantics
 const { z } = require('zod');
 
 const ADVISORY_LOCK_ID = 61; // DEC-A: lock = spec number (load-ravines=59, load-zoning=58); spec L4=62 stale
@@ -182,14 +185,15 @@ function datasetAgeStatus(ageDays, thresholdYears) {
 /**
  * L9 skip-check for ONE dataset. Skip iff a prior sub-block exists AND a cache
  * validator matches. No prior sub-block → cannot skip (DEC-K first-run guard).
+ * Delegates to the shared source-version lib (Phase B B1) with heritage-style
+ * options: validator equality, contentHash NOT part of the no-validators bail;
+ * the per-dataset sub-block is passed directly as priorMeta.
  */
 function skipCheckDecision({ lastModified, etag = null, contentHash = null, priorSub }) {
-  if (!priorSub) return { skip: false, reason: 'no_prior_run' };
-  if (!lastModified && !etag) return { skip: false, reason: 'no_validators' };
-  if (lastModified && priorSub.last_modified && lastModified === priorSub.last_modified) return { skip: true, reason: 'unchanged_last_modified' };
-  if (etag && priorSub.etag && etag === priorSub.etag) return { skip: true, reason: 'unchanged_etag' };
-  if (contentHash && priorSub.content_hash && contentHash === priorSub.content_hash) return { skip: true, reason: 'unchanged_content_hash' };
-  return { skip: false, reason: 'changed' };
+  return sourceVersion.skipCheckDecision(
+    { lastModified, etag, contentHash, priorMeta: priorSub || null },
+    { style: sourceVersion.STYLE_VALIDATOR_EQUALITY, contentHashInNoValidatorsBail: false },
+  );
 }
 
 /** Coerce OBJECTID/HCD_NO → positive integer source_id, else null (counted as skip). */
@@ -258,16 +262,22 @@ async function headValidators(url, timeoutMs) {
   }
 }
 
+/** STREAMED hash-through-to-disk (Phase B B1 / D3 §9.5): bytes are hashed as they land,
+ *  never buffered whole into memory. md5 is pinned — the hash is compared against prior
+ *  runs' per-dataset `content_hash` baselines. */
 async function downloadZip(url, destPath, timeoutMs) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, { redirect: 'follow', signal: ctrl.signal });
     if (!res.ok) throw new Error(`GET ${res.status} ${res.statusText}`);
-    const buf = Buffer.from(await res.arrayBuffer());
-    fs.writeFileSync(destPath, buf);
-    const contentHash = crypto.createHash('md5').update(buf).digest('hex');
-    return { zipPath: destPath, contentHash, lastModified: res.headers.get('last-modified'), etag: res.headers.get('etag') };
+    const hash = crypto.createHash('md5');
+    await streamPipeline(
+      Readable.fromWeb(res.body),
+      async function* hashThrough(source) { for await (const chunk of source) { hash.update(chunk); yield chunk; } },
+      fs.createWriteStream(destPath),
+    );
+    return { zipPath: destPath, contentHash: hash.digest('hex'), lastModified: res.headers.get('last-modified'), etag: res.headers.get('etag') };
   } finally {
     clearTimeout(t);
   }
@@ -477,6 +487,9 @@ async function loadDataset(pool, ds, config, priorSub, runAt, nowMs) {
       // spec_version pinned to current AFTER the prior spread so a future version bump can't
       // emit a stale per-dataset version on a SKIP run (load-ravines BUG-2 precedent). DEC-K:
       // drift_check_passed is carried from priorSub (never reset to false).
+      // NOTE: kept as an explicit spread — load-heritage.infra.test.ts:91-93 pins this exact
+      // ordering textually. buildSkipReEmitMeta (used by the tier-2 branch below) is the same
+      // merge; converting this line is a deliberate lock edit, not a B1 tidy-up.
       sub: { ...skeletonSub(), ...(priorSub || {}), spec_version: SPEC_VERSION, features_inserted: 0, features_updated: 0, features_deleted: 0, skipped_reason: skip.reason },
     };
   }
@@ -486,18 +499,36 @@ async function loadDataset(pool, ds, config, priorSub, runAt, nowMs) {
   let parsed;
   let contentHash = null;
   let validators = {};
+  let tier2 = { skip: false, reason: null };
   try {
     const dl = await downloadZip(ds.url, path.join(tmpRoot, 'src.zip'), config.heritageDownloadTimeoutMs);
     contentHash = dl.contentHash;
     validators = { lastModified: dl.lastModified || headInfo.lastModified, etag: dl.etag || headInfo.etag };
-    const extractDir = path.join(tmpRoot, 'ext');
-    await extractZip(dl.zipPath, extractDir);
-    const { shpPath, dbfPath } = locateShapefile(extractDir);
-    parsed = await ds.parse(shpPath, dbfPath);
+    // TIER-2 (Phase B B1 / D3): tier-1 said "changed" on metadata; the bytes may still be
+    // identical. Per-dataset, like every other heritage decision. Returned after the finally.
+    tier2 = sourceVersion.contentHashDecision({ contentHash, priorMeta: priorSub });
+    if (!tier2.skip) {
+      const extractDir = path.join(tmpRoot, 'ext');
+      await extractZip(dl.zipPath, extractDir);
+      const { shpPath, dbfPath } = locateShapefile(extractDir);
+      parsed = await ds.parse(shpPath, dbfPath);
+    }
   } catch (err) {
     return { outcome: 'failed', failReason: `acquire:${err.message}`, sub: skeletonSub(), ageDays };
   } finally {
     fs.rmSync(tmpRoot, { recursive: true, force: true });
+  }
+
+  // TIER-2 skip — identical contract to the tier-1 skip above (DEC-K carries, deltas zeroed).
+  if (tier2.skip) {
+    return {
+      outcome: 'skipped', skipReason: tier2.reason, ageDays,
+      sub: sourceVersion.buildSkipReEmitMeta({
+        skeleton: skeletonSub(),
+        priorMeta: priorSub || {},
+        pins: { spec_version: SPEC_VERSION, features_inserted: 0, features_updated: 0, features_deleted: 0, skipped_reason: tier2.reason },
+      }),
+    };
   }
 
   const { kept, duplicateCount } = dedupeBySourceId(parsed.rows);
@@ -648,10 +679,10 @@ async function main(pool) {
     if (acceptDrift) push('heritage_override_feature_count_drift_present', true, 'WARN');
     if (acceptMassDelete) push('heritage_override_mass_delete_present', true, 'WARN');
 
-    // Prior run (chain-scoped name; per-dataset sub-blocks under heritage_load).
-    const prior = await pool
-      .query(`SELECT records_meta FROM pipeline_runs WHERE pipeline = $1 AND status = 'completed' ORDER BY started_at DESC LIMIT 1`, [PIPELINE_NAME])
-      .then((r) => (r.rows[0] ? r.rows[0].records_meta : null))
+    // Prior run (chain-scoped name; per-dataset sub-blocks under heritage_load;
+    // started_at DESC standardized in the lib — Phase B B1).
+    const prior = await sourceVersion
+      .readPriorRunMeta(pool, PIPELINE_NAME)
       .catch((err) => {
         pipeline.log.warn('[load-heritage]', `prior-run query failed (treating as no baseline): ${err.message}`);
         return null;
