@@ -110,6 +110,41 @@ if (NORMALIZED_DEAD_DECISIONS_ARRAY.length === 0) {
   throw new Error('NORMALIZED_DEAD_DECISIONS_ARRAY is empty — refusing to run');
 }
 
+/**
+ * C1/D1 — the halting rule, as a pure function.
+ *
+ * Which failure classes may KILL THE CHAIN. Exactly two:
+ *   - E.5 per-seq band violations (any kind), counted by `seqBandsFailing`. These
+ *     only reach a non-zero count when the matching promote-to-FAIL posture flag is
+ *     armed; WARN-posture violations never halt.
+ *   - `unclassified_count` over its hard limit — the classifier could not classify,
+ *     i.e. "I could not check", which is not safe to continue past.
+ *
+ * The three `cross_check_*` classes are deliberately ABSENT. They mean "the data
+ * disagrees with itself", which is a real FAIL (and stays one, via the verdict) but
+ * is not a reason to skip the 10 downstream steps that follow this one.
+ *
+ * Pure — no I/O, no config reads. Exported for the four-quadrant unit lock.
+ *
+ * @param {object} args
+ * @param {number} args.unclassifiedCount
+ * @param {number} args.unclassifiedMax
+ * @param {number} args.seqBandsFailing
+ * @returns {{ shouldHalt: boolean, reasons: string[] }}
+ */
+function classifyHaltDecision({ unclassifiedCount, unclassifiedMax, seqBandsFailing }) {
+  const reasons = [];
+  if (Number(seqBandsFailing) > 0) reasons.push('seq_band_violation');
+  if (Number(unclassifiedCount) > Number(unclassifiedMax)) reasons.push('unclassified_hard_limit');
+  return { shouldHalt: reasons.length > 0, reasons };
+}
+
+module.exports = { classifyHaltDecision };
+
+// §R1 — the script body runs ONLY as a CLI entrypoint. Without this guard, a test
+// requiring the module for `classifyHaltDecision` would execute the whole pipeline
+// run as an import side effect. Precedent: scripts/quality/audit-fk-orphans.js:307.
+if (require.main === module) {
 pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     // §4: config reads MUST execute inside the lock callback.
@@ -333,6 +368,15 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     // per-kind branch routing can push to them inside the per-seq loop.
     const auditRows = [];
     const failures = [];
+    // C1/D1 (WF3 2026-08-11) — per-FAILURE halt classification. `failures` keeps its
+    // original meaning: every entry drives the FAIL verdict at :794, unchanged, so a
+    // cross-check failure is still red for check-chain-verdict.js. `haltingFailures`
+    // is the strict subset that may KILL THE CHAIN — E.5 band violations + the
+    // unclassified_count hard limit. The three cross_check_* sites push to `failures`
+    // ONLY: they are data-drift signals, not "I could not check" signals, and a
+    // class-blind throw on them skipped 10 downstream steps including backup_db
+    // (28h backup-SLA breach, 2026-08-10/11).
+    const haltingFailures = [];
     const warnings = [];
 
     for (const seq of catalogSeqs) {
@@ -382,7 +426,9 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
         });
         if (promoteToFail_band_violation) {
           seqBandsFailing++;
-          failures.push(`${renderPrefix('band_violation')} seq ${seq}: ${actual} outside expected band [${band.min}, ${band.max ?? '∞'}]`);
+          const msg = `${renderPrefix('band_violation')} seq ${seq}: ${actual} outside expected band [${band.min}, ${band.max ?? '∞'}]`;
+          failures.push(msg);
+          haltingFailures.push(msg); // E.5 band contract — HALTING (C1)
         } else {
           seqBandsWarn++;
         }
@@ -407,7 +453,9 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
         });
         if (promoteToFail_no_band_configured) {
           seqBandsFailing++;
-          failures.push(`${renderPrefix('no_band_configured')} seq ${seq}: ${actual} rows but NO BAND configured`);
+          const msg = `${renderPrefix('no_band_configured')} seq ${seq}: ${actual} rows but NO BAND configured`;
+          failures.push(msg);
+          haltingFailures.push(msg); // E.5 band contract — HALTING (C1)
         } else {
           seqBandsWarn++;
         }
@@ -436,7 +484,9 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
           });
           if (promoteToFail_expected_data_missing) {
             seqBandsFailing++;
-            failures.push(`${renderPrefix('expected_data_missing')} seq ${seq}: 0 rows observed (band expects min=${band.min}) — verify classifier coverage, source freshness, or catalog vs production data drift`);
+            const msg = `${renderPrefix('expected_data_missing')} seq ${seq}: 0 rows observed (band expects min=${band.min}) — verify classifier coverage, source freshness, or catalog vs production data drift`;
+            failures.push(msg);
+            haltingFailures.push(msg); // E.5 band contract — HALTING (C1)
           } else {
             seqBandsWarn++;
           }
@@ -546,7 +596,9 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
       status: unclassifiedCount <= unclassifiedMax ? 'PASS' : 'FAIL',
     });
     if (unclassifiedCount > unclassifiedMax) {
-      failures.push(`unclassified_count ${unclassifiedCount} exceeds hard limit ${unclassifiedMax}`);
+      const msg = `unclassified_count ${unclassifiedCount} exceeds hard limit ${unclassifiedMax}`;
+      failures.push(msg);
+      haltingFailures.push(msg); // hard limit — HALTING (C1)
     }
 
     // ─── WF2 P3 — drain-lag breakout audit rows [OB-F4] ──────────────
@@ -833,8 +885,26 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
       {},
     );
 
-    if (failures.length > 0) {
-      throw new Error(`Distribution sanity check FAILED (${failures.length} failures):\n${failures.join('\n')}`);
+    // C1/D1 — HALT only on the halting classes. The decision comes from the pure,
+    // exported classifier (one source of truth, unit-tested across its four
+    // quadrants); `haltingFailures` carries the operator-facing message text. The two
+    // agree by construction: haltingFailures is non-empty exactly when
+    // seqBandsFailing > 0 or unclassifiedCount > unclassifiedMax.
+    //
+    // NOT a behaviour change for the verdict: `:794` still reads `failures`, so all 7
+    // classes remain FAIL and check-chain-verdict.js stays red on a cross-check
+    // failure — the chain now reaches `completed_with_errors` instead of dying at
+    // step 25/33 and skipping backup_db.
+    const haltDecision = classifyHaltDecision({
+      unclassifiedCount,
+      unclassifiedMax,
+      seqBandsFailing,
+    });
+    if (haltDecision.shouldHalt) {
+      throw new Error(
+        `Distribution sanity check FAILED (${haltingFailures.length} halting failures ` +
+        `of ${failures.length} total):\n${haltingFailures.join('\n')}`,
+      );
     }
   }, { skipEmit: false }); // end withAdvisoryLock
 
@@ -857,3 +927,4 @@ pipeline.run('assert-lifecycle-phase-distribution', async (pool) => {
     return;
   }
 });
+} // require.main === module

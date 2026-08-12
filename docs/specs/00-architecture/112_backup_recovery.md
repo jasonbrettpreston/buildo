@@ -445,6 +445,22 @@ the fix isn't independently rediscovered as a second bug. No file under
 <failure_modes>
 ## 9. Known Failure Modes
 
+- **An upstream chain HALT beats both backup paths at once (observed 2026-08-10/11,
+  28.58h vs the 25h SLA).** `backup_db` is a late step of `chain_permits`, and the
+  watchdog's `backup-db.js` fallback is deliberately suppressed while permits is
+  running (`pipeline-watchdog.yml:191-193` — the race guard, which is CORRECT and must
+  not be weakened: two concurrent `pg_dump`s of the same database is the failure it
+  prevents). Those two facts are safe individually and lethal together: permits *was*
+  running, so the fallback stood down; then permits **died at step 25/33** on a
+  class-blind assert throw, so the in-chain backup never ran. Neither path executed and
+  nothing alarmed on the backup specifically — the chain failure was the only signal.
+  **The general shape: a fallback gated on "the primary is in progress" fails silently
+  whenever the primary can die AFTER the gate closes but BEFORE the work it guards.**
+  Root cause fixed at the source (Spec 84 KFM-1: per-failure halt classification, so a
+  data-drift FAIL no longer skips 10 steps). Residual to watch: the guard still has this
+  shape for any *other* way permits can die between the gate and `backup_db` — the
+  25h freshness check is the only backstop, and it is a lagging one by design.
+
 - **`pg_restore` exit-0-past-errors default.** Plain `pg_restore`, invoked without
   `--exit-on-error`, can complete with exit code 0 while individual statements inside the dump
   failed (permission errors, already-exists conflicts, etc.), surfacing only stderr warnings a

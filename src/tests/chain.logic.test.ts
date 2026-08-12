@@ -1607,8 +1607,13 @@ describe('Entity Tracing + Phase Distribution Wiring', () => {
     const content = qSrc('assert-entity-tracing.js');
     // Must explicitly document its non-halting contract inline.
     expect(content).toContain('Non-halting');
-    // Unlike assert-lifecycle-phase-distribution.js, must not throw after
-    // accumulating failures — FAILs go to audit_table only.
+    // Must not throw after accumulating failures — FAILs go to audit_table only.
+    // (Historical note: this comment used to cite assert-lifecycle-phase-distribution.js
+    // as the always-halts counter-example. Since C1/D1, 2026-08-11, that script halts
+    // only on its HALTING classes — E.5 band violations + the unclassified_count hard
+    // limit — and is non-halting for its cross_check_* failures. It is no longer a
+    // clean contrast. This test does not read that script; the citation was the only
+    // dependency, and it was comment-only.)
     const afterSummary = content.split('pipeline.emitSummary').at(-1)!;
     expect(afterSummary).not.toMatch(/throw new Error/);
   });

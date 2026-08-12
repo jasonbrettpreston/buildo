@@ -222,9 +222,16 @@ async function run() {
        ORDER BY started_at DESC LIMIT 1`,
       [chainSlug, chainRunId]
     );
-    if (prevRun.rows[0]?.status === 'failed') {
+    // AD1 (C1, 2026-08-11): `completed_with_errors` counts as a failed predecessor.
+    // Before C1 a red audit always terminalized the chain as 'failed', so keying on
+    // that alone was complete. C1 makes a non-halting FAIL land as
+    // 'completed_with_errors' instead — the chain finishes, but its work is just as
+    // unfinished. Without this, the next run would re-enable gate-skip and quietly
+    // skip the backlog the red run left behind. Sole consumer: :565.
+    const prevStatus = prevRun.rows[0]?.status;
+    if (prevStatus === 'failed' || prevStatus === 'completed_with_errors') {
       prevChainFailed = true;
-      pipeline.log.info('[run-chain]', 'Previous chain run failed — gate-skip disabled to process unfinished work');
+      pipeline.log.info('[run-chain]', `Previous chain run ${prevStatus} — gate-skip disabled to process unfinished work`);
     }
   } catch (err) {
     pipeline.log.warn('[run-chain]', `Previous run check failed: ${err.message}`);

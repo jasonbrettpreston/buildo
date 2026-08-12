@@ -409,6 +409,17 @@ P7's entry-scoped change, not a value this section fixes.
 its ~3h worst case, so the same night's permits/backup run has had time to land before the
 watchdog checks for it.
 
+> **RAN-status semantics after C1/D1 (2026-08-11) — a deliberate blind spot.** A chain
+> whose only failures are non-halting now terminalizes `completed_with_errors`, which is
+> in `RAN_STATUSES`. The watchdog therefore reports it as **having run**, because it did:
+> every step executed, including `backup_db`. The red lives on the per-chain verdict step
+> (`check-chain-verdict.js`, whose `OK_STATUSES` excludes `completed_with_errors`), not
+> here. This is the intended division of labour — the watchdog is an ABSENCE check
+> ("did anything land at all"), not a quality gate — but it means **the watchdog is
+> silent on this condition by design and the verdict step is the single channel for it.**
+> Accepted knowingly; recorded so a future "the watchdog was green" is not read as
+> "the data was fine". See Spec 84 KFM-1 and Spec 112 §9.
+
 **Checks against `pipeline_runs` (both required — neither substitutes for the other):**
 
 1. **Chain freshness — ALL FIVE scheduled chains (AMENDED, F8 fold 2026-07-20).** The
