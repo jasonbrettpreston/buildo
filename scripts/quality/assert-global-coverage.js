@@ -1345,6 +1345,56 @@ pipeline.run('assert-global-coverage', async (pool) => {
         threshold: '0 (lead_id must be unique across permits)',
         status: dupeGroups > 0 ? 'FAIL' : 'PASS',
       });
+
+      // ── C3: enriched_status status-scope drift — the §4.9 SELF-ANNOUNCING PAIR ──
+      // Spec 44 §3: enriched_status is a per-row refinement of that row's own
+      // status. C3 clears the historical residue — but the population REGENERATES
+      // with no enriched_status write at all: load-permits.js's
+      // `ON CONFLICT DO UPDATE SET status = EXCLUDED.status` (:340,:357) moves a
+      // permit past 'Inspection' while its legitimately-written enriched_status
+      // stays. enriched_status is DELIBERATELY excluded from that upsert list
+      // (classify-permit-phase.js:10-12) and NOTHING invalidates it when status
+      // moves — that missing rule is the real defect (filed in review_followups).
+      //
+      // WHY WARN + A RETIGHTEN COMPANION, NOT C6's FAIL-ON-NONZERO: this metric is
+      // expected to be non-zero every night until the loader-invalidation rule
+      // lands. A FAIL row on a permanently-non-zero population is a standing red
+      // operators learn to ignore — the exact noise class C1 shipped to eliminate.
+      // Spec 48 §4.9: "a relaxation must never be a silent, forgettable bypass",
+      // so the WARN carries the LIVE value every run and a companion states the
+      // machine-observable retighten condition. Shape modelled on
+      // acceptedBaselineRows (scripts/lib/accepted-baseline.js:44-61) rather than
+      // calling it: that helper takes a PERCENTAGE and self-retires UPWARD
+      // (valuePct >= strictPct), while this is a COUNT retiring DOWNWARD to zero.
+      // Same pattern C5 specifies for step_completeness.
+      // SELF-RETIRES: at zero, neither row is emitted and the plain gate resumes.
+      const { rows: scopeDrift } = await pool.query(`
+        SELECT COUNT(*)::int AS n FROM permits
+         WHERE enriched_status IS NOT NULL AND status IS DISTINCT FROM 'Inspection'
+      `);
+      const driftRows = safeParseIntOrNull(scopeDrift[0].n) ?? 0;
+      if (driftRows > 0) {
+        rows.push({
+          metric: 'enriched_status_status_scope_drift',
+          value: driftRows,
+          threshold:
+            'accepted-WARN while > 0 — rows whose enriched_status outlived the status that ' +
+            'justified it. Regenerates nightly via load-permits ON CONFLICT status=EXCLUDED.status; ' +
+            'C3 (backfill-smeared-enriched-status.js) clears the residue on demand. ' +
+            'Owning fix: the missing loader status-change invalidation rule (review_followups). ' +
+            'SELF-RETIRES at 0 — both rows disappear and the plain gate resumes. Spec 48 §4.9.',
+          status: 'WARN',
+        });
+        rows.push({
+          metric: 'enriched_status_status_scope_drift_retighten',
+          value: driftRows,
+          threshold:
+            're-tighten condition (machine-observable): live value = 0 across a full cycle of ' +
+            'chain_permits + chain_deep_scrapes, which is only durable once the loader ' +
+            'invalidation rule lands — until then C3 must be re-run.',
+          status: 'INFO',
+        });
+      }
     }
 
     // ── Vocabulary coverage (Spec 49 §3 value/vocabulary dimension) ─────────

@@ -1805,6 +1805,7 @@ and registry-vs-code agreement.
 | Lock ID | Script | Wave | Writes Timestamps? |
 |---------|--------|------|--------------------|
 | **2** | `scripts/load-permits.js` | 4 — Load/Ingest | YES — `last_seen_at` |
+| **44** | `scripts/backfill/backfill-smeared-enriched-status.js` | n/a — one-off backfill, not a chain step (this table's header scopes it to the 40 chain scripts; C3 is a deliberate widening and `Wave` has no natural value) | YES — `last_seen_at` (deliberate: `enriched_status` is not a dirty key for `classify-lifecycle-phase.js`, so the bump is what makes the reclassifier re-derive) |
 | **5** | `scripts/geocode-permits.js` | 4 — Load/Ingest | YES — `geocoded_at` |
 | **11** | `scripts/extract-builders.js` | 4 — Load/Ingest | YES — `last_seen_at` |
 | **30** | `scripts/link-similar.js` | 2 — Link | YES — `scope_classified_at` |

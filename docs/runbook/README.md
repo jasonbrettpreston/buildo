@@ -59,13 +59,14 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 | `backfill-parcels-zoning-index.js` | 65 §2 | Build the parcels zoning index (`CREATE INDEX CONCURRENTLY`) |
 | `backfill-permits-coa-zoning-index.js` | 66 §2 | Build the permits/coa zoning index (`CREATE INDEX CONCURRENTLY`) |
 
-### `scripts/backfill/` — historical backfills (3)
+### `scripts/backfill/` — historical backfills (4)
 
 | Script | Job |
 |--------|-----|
 | `backfill-permits-location.js` | Write `permits.location` from lat/lng for ~219K historical rows |
 | `migrate-entities.js` | Migrate legacy entity rows |
 | `seed-pipeline-runs.js` | Seed `pipeline_runs` history |
+| `backfill-smeared-enriched-status.js` | Clear `enriched_status` from rows whose own `status` is not `'Inspection'` (Spec 44 §3). `--confirm` to write; default is a DRY RUN that counts and reports only. **RE-RUNNABLE BY DESIGN** — the population regenerates nightly (see §3 rule 6). Backs up to a **dated** `_backup_smeared_enriched_status_<YYYYMMDD>` and prints the restore UPDATE. |
 
 ### Root + analysis one-offs
 
@@ -103,6 +104,7 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 3. **Detached run for >10 min chains + the dying-session chain-lock hazard.** The interactive harness kills a foreground shell at ~10 min. Launch long chains DETACHED and poll `pipeline_runs` — see `docs/runbook/scope_intensity_matrix_rekey_baseline_spike.md` for the proven pattern. Hazard: a session that dies mid-run leaves the transaction-level advisory lock held only until the connection drops; a step relying on `withAdvisoryLock` will **SKIP (not queue)** on contention, so never start a second chain that shares steps while one is still running.
 4. **`HERITAGE_ACCEPT_MASS_DELETE=1` is a one-time re-key guard.** `load-heritage.js` refuses a mass-delete re-key without it; set it (and back up `heritage_properties`) only for the deliberate register re-key — see `source_heritage_first_deploy_spike.md`.
 5. **Reset-then-drain for terminal-row reclassification.** ~87% of CoAs are terminal and never re-seen, so the incremental dirty predicate won't touch them; a corpus-wide reclassify needs a scoped, logged, backed-up `*_classified_at = NULL` reset FIRST (e.g. `wf2-reset-coa-trade-classification.js`), which also re-fires the downstream cost step.
+6. **`C2 → C3 → verify` — and C3 is NOT a rule-5 case.** Run the backfill `backfill-smeared-enriched-status.js` **only after** the status-scoped writer (`eff28a7e`) is live on `main`; backfill-first is simply re-smeared by the next `chain_deep_scrapes` slot. **Note the inversion vs rule 5:** rule 5 nulls a `*_classified_at` column *precisely so the dirty predicate RE-FIRES*. C3 nulls `enriched_status`, which is **not** a dirty key — it re-fires nothing, which is why the script bumps `last_seen_at` itself so `classify_lifecycle_phase` re-derives. C3 is re-runnable: `load-permits.js`'s `ON CONFLICT DO UPDATE SET status = EXCLUDED.status` moves permits past `'Inspection'` while their `enriched_status` stays, so the population regenerates until the loader status-change invalidation rule lands (filed in `review_followups.md`). The standing `enriched_status_status_scope_drift` WARN row in `assert-global-coverage.js` reports the live count every run.
 
 ---
 
