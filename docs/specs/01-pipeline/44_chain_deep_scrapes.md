@@ -48,6 +48,51 @@ assert_staleness
 - Permits with `status = 'Inspection'` and `permit_type` in target types
 - `scraper_queue` table for db-queue worker mode
 
+### Write Grain — TWO grains, deliberately (C2/D2a, rewritten 2026-08-12)
+
+AIC answers per `permit_num`; `permits` is keyed `(permit_num, revision_num)`. Every permit-grain
+write must therefore choose a grain, and the two columns this chain writes choose **differently**.
+This is not an inconsistency to tidy up.
+
+| Column | Grain | Why |
+|---|---|---|
+| `enriched_status` | **ONLY rows whose own `status` is `'Inspection'`** | It is a **per-row refinement of that row's own `status`**, never a per-`permit_num` projection. Every consumer is row-grained: `lifecycle-phase.js` derives `lifecycle_phase` per row, and all three cross-checks in `assert-lifecycle-phase-distribution.js` count **ROWS**. Writing to every revision row overwrites each non-Inspection row's own CKAN status (`"Revision Issued"` → P8), pushing it outside the allowed set. Scoping to the row's own status makes the **writer use the same predicate as the queue that selected it** (`aic-orchestrator.py:175`). |
+| `last_scraped_at` | **EVERY ROW, unscoped by anything** | `aic-orchestrator.py:181` evaluates the 7-day cooldown **per row**, before `DISTINCT year_seq`. Scoping this — by revision *or* by status — would leave non-Inspection rows permanently "never scraped", so the queue would re-buy the same `year_seq`s forever. This is a NEGATIVE rule — pinned by `scripts/tests/test_scraper_enriched_status_scoping.py`. |
+
+**Measured on cloud 2026-08-12**, of the 4,183 rows carrying `enriched_status`: **2,833** have
+`status='Inspection'` (kept) and **1,350** do not (dropped) — and those 1,350 **are the smear**
+(`Revision Issued`+`Active Inspection` 654 · `Revision Issued`+`Permit Issued` 453 ·
+`Pending Closed` 98 · `Examiner's Notice Sent` 43).
+
+**Administrative fee stubs: MEASURED CLEAN, NOT STRUCTURALLY ENFORCED.** **0 of 21,827**
+`status='Inspection'` rows in the write population are `class='administrative'` — but **the write
+predicate contains no `permit_type` term**. The exclusion comes entirely from `TARGET_TYPES`
+(`aic-orchestrator.py:76-86` — three construction types) gating the **queue**, not the write. Because
+`permit_type` varies **across revision rows of one `permit_num`** (`02 156062 BLD`: `'00'` is
+`Multiple Use Permit`/administrative, `'01'` is construction), a queued `permit_num` whose
+administrative sibling carried `status='Inspection'` **would** be written. Nothing pins this today —
+no predicate, no test, no audit row — and **widening `TARGET_TYPES` would silently break it.**
+Stated as a measurement, deliberately not as a guarantee.
+
+**A permit with NO `status='Inspection'` row gets NO `enriched_status` write, by design.** Measured:
+97 of 4,416 scraped permits, and they are `Pending Closed`/`Closed` — they closed *after* being
+scraped, so writing an inspection status onto them is precisely the smear this rule prevents.
+
+**REJECTED ALTERNATIVE — `MIN(revision_num)` ("the canonical/base row").** It picks a
+non-`Inspection` row **6,205 times**, including `DCs DeferredFees` administrative stubs, and for the
+53 permits whose base row is `Closed`/`Pending Cancellation` it would **resurrect a closed permit as
+"under active inspection"**. A canonical-row rule cannot satisfy a row-grained invariant — it only
+moves *which* row is wrong. Pinned as a negative assertion in the test file so it cannot return.
+
+> **RETRACTED 2026-08-12 — two claims that stood here were FALSE and are recorded so they are not re-introduced:**
+> 1. ~~"397 permits spell their base revision `'0'` and have no `'00'` row"~~ — the *count* was right, the *inference* wrong. **100% of `revision_num='0'` rows are `DCs DeferredFees`, `class='administrative'` fee stubs**; no permit's base revision is spelled `'0'`, and `classify-inspection-status.js` was never dropping a real permit (measured `lost 0, gained 0`).
+> 2. ~~"The portal has no revision dimension."~~ — **unsourced and contradicted by this repo's own measured research**: `docs/reports/2026-07-30-scraper-research-digest.md:44` records a live curl in which the folders response carries **`folderRevision`**, which `aic-scraper-nodriver.py:2393`/`:2517` discard. Whether it maps to `permits.revision_num` is **UNMEASURED** — one logged response body would settle it. Filed, not assumed.
+> 3. The "one shared fragment cannot cross Python↔JS, so use deliberate parallel constants" claim is also **false**: `scripts/lib/status_mapping.json` is loaded by both `aic-scraper-nodriver.py:242-247` (`json.load`) and `src/lib/inspections/parser.ts:2-7` (`require`). No parallel-constant pair is needed here because the rule is now a single predicate in one language.
+
+**Do NOT harmonize `permit_scrape_outcomes` to this rule.** Its permit_num-grain
+(revision-grain ambiguity accepted) is a *knowing* decision recorded below — it is a ledger of
+what the portal said about a permit, not a projection onto permit rows.
+
 ### Scraper Architecture (nodriver CDP)
 The scraper uses Python `nodriver` (Chrome DevTools Protocol) — not Selenium/Playwright — because the AIC WAF blocks WebDriver automation. All data requests use `page.evaluate(fetch(...))` which executes native browser `fetch()` calls from Chrome's network stack.
 
@@ -201,7 +246,7 @@ length is re-evaluated when the `populate_queue` re-queue-forever defect is fixe
   the portal answered, or the staleness monitor counts it never-scraped forever and the
   queue re-buys the same empty answer)
 - AIC returns HTML instead of JSON → WAF block detected, proxy rotated
-- Permit has `status = 'Revision Issued'` on AIC → no inspections data (only rev 00 has them)
+- Permit row has `status = 'Revision Issued'` → **it receives NO `enriched_status` write** (the Write Grain rule above). ~~"only rev 00 has inspections"~~ **CORRECTED 2026-08-12:** that claim is false — 448 permits carry 2–4 *concurrent* `status='Inspection'` rows on different revisions (e.g. `01 180337 BLD`, `'00'` and `'01'` both live). Inspection-relevant rows are not confined to revision `'00'`; the rule is the row's own `status`, never its revision. See also the RETRACTED block in §3 — whether the portal exposes a revision dimension at all is **UNMEASURED**.
 - `showStatus = false` on permit detail → no inspection link available, set `enriched_status = 'Permit Issued'`
 - All retries exhausted for a permit → skip and continue, mark as failed in queue
 - Portal DOM restructure → scraper breaks immediately (relies on REST API, not DOM selectors)
@@ -284,6 +329,7 @@ self-documenting threshold string + row-derived WARN verdict on a small probe mi
 - `scripts/aic-orchestrator.py` — multi-worker orchestrator
 - `migrations/236_permit_scrape_outcomes.sql` / `migrations/237_scrape_outcome_prune.sql` — the outcome ledger + its retention prune (drift fence: schema changes to the ledger go through this spec)
 - `scripts/tests/test_scrape_outcome_persistence.py` — outcome-persistence + classification-threading locks
+- `scripts/tests/test_scraper_enriched_status_scoping.py` — the two-grain locks (status-scoped `enriched_status`; row-wide `last_scraped_at`)
 - `scripts/proxy-relay.mjs` — local unauthenticated proxy relay (shared with Spec 115 §2.4, which owns its runner contract)
 - `scripts/requirements.txt` / `scripts/requirements-dev.txt` — runtime + test deps (`nodriver` is EXACT-pinned; see §3)
 - `scripts/tests/` — pytest harness for the Python pipeline scripts

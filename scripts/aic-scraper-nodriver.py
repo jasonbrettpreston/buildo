@@ -253,6 +253,53 @@ def normalize_status(raw):
     return _STATUS_NORM.get(s)
 
 
+# ---------------------------------------------------------------------------
+# C2/D2a — enriched_status is scoped by the row's OWN status (Spec 44 §3)
+# ---------------------------------------------------------------------------
+# The portal answers per permit_num, while `permits` is keyed
+# (permit_num, revision_num). An unscoped permit-grain UPDATE therefore smears one
+# scraped answer across every revision row, overwriting each non-base row's own
+# CKAN status ("Revision Issued" -> P8) and putting it outside the allowed set.
+#
+# THE RULE IS `status = 'Inspection'`, NOT a "canonical row".
+# enriched_status is a PER-ROW REFINEMENT of that row's own `status` — every
+# consumer is row-grained (lifecycle-phase.js derives phase per row; all three
+# cross-checks in assert-lifecycle-phase-distribution.js count ROWS). A
+# canonical-row rule cannot satisfy a row-grained invariant: it only moves WHICH
+# row is wrong. Scoping to the row's own status makes the writer use the same
+# predicate as the queue that selected it (aic-orchestrator.py:175).
+#
+# Measured on cloud 2026-08-12, of the 4,183 rows carrying enriched_status:
+# 2,833 have status='Inspection' (kept) and 1,350 do not (dropped) — and those
+# 1,350 ARE the smear (Revision Issued+Active Inspection 654, Revision
+# Issued+Permit Issued 453, Pending Closed 98, Examiner's Notice Sent 43).
+# Administrative fee stubs: MEASURED CLEAN, NOT ENFORCED. 0 of 21,827
+# status='Inspection' rows in the write population are class='administrative' — but
+# this predicate has NO permit_type term. The exclusion comes from TARGET_TYPES
+# gating the QUEUE (aic-orchestrator.py:76-86), not from the write. permit_type
+# varies ACROSS revision rows of one permit_num, so a queued permit whose
+# administrative sibling carried status='Inspection' WOULD be written. Nothing pins
+# this — widening TARGET_TYPES would silently break it.
+#
+# WHY NOT MIN(revision_num) — the rejected alternative: it picks a non-Inspection
+# row 6,205 times, including 'DCs DeferredFees' administrative stubs, and for the
+# 53 permits whose base row is Closed/Pending Cancellation it would resurrect a
+# closed permit as "under active inspection".
+#
+# TWO GRAINS, deliberately:
+#   enriched_status -> rows whose own status is 'Inspection' (this predicate)
+#   last_scraped_at -> EVERY row, unscoped. aic-orchestrator.py:181 evaluates the
+#                      7-day cooldown per row before `DISTINCT year_seq`; scoping
+#                      it would strand non-base rows as never-scraped and make the
+#                      queue re-buy the same year_seqs forever.
+#
+# Permits with NO status='Inspection' row get NO enriched_status write, by design.
+# Measured: 97 of 4,416 scraped permits, and they are 'Pending Closed'/'Closed' —
+# they closed AFTER being scraped, so writing an inspection status onto them is
+# precisely the smear this predicate exists to prevent.
+INSPECTION_STATUS_SCOPE = "status = 'Inspection'"
+
+
 def compute_enriched_status(stages):
     """Compute enriched_status from scraped inspection stages.
 
@@ -2601,6 +2648,13 @@ async def scrape_year_sequence(ctx, year_seq, conn, tel=None, outcomes=None):
     scraped = 0
     upserted = 0
     enriched_updates = 0
+    # C2/F4: Q3's ruling — "write nothing" must be a DEFINED, COUNTED outcome,
+    # never a silent fallthrough. Counts permits the portal answered about that
+    # have no status='Inspection' row to receive the answer (measured: 97 of
+    # 4,416 scraped permits, all 'Pending Closed'/'Closed' — they closed AFTER
+    # being scraped). Growth here means the queue is buying permits whose CKAN
+    # status moved on, and it is otherwise INVISIBLE.
+    no_inspection_row = 0
     status_changes = 0
     saw_no_stages = False
     saw_no_link = False
@@ -2625,18 +2679,27 @@ async def scrape_year_sequence(ctx, year_seq, conn, tel=None, outcomes=None):
                 if result['error'] in ('no_processes', 'no_status_link'):
                     saw_no_link = True
                     queue_outcome('no_inspection_link', result['permit_num'])
+                    # C2: enriched_status → ROWS WHOSE OWN status IS 'Inspection'.
                     cur.execute(
-                        "UPDATE permits SET enriched_status = 'Permit Issued', last_scraped_at = NOW() "
-                        "WHERE permit_num = %s AND enriched_status IS DISTINCT FROM 'Permit Issued'",
+                        "UPDATE permits SET enriched_status = 'Permit Issued' "
+                        f"WHERE permit_num = %s AND {INSPECTION_STATUS_SCOPE} "
+                        "AND enriched_status IS DISTINCT FROM 'Permit Issued'",
                         (result['permit_num'],)
                     )
                     if cur.rowcount > 0:
                         enriched_updates += 1
-                    else:
-                        cur.execute(
-                            "UPDATE permits SET last_scraped_at = NOW() WHERE permit_num = %s",
-                            (result['permit_num'],)
-                        )
+                    elif cur.rowcount == 0:
+                        no_inspection_row += 1
+                        log('WARN', '[scraper]',
+                            f"{result['permit_num']}: no status='Inspection' row — enriched_status not written")
+                    # C2: last_scraped_at → EVERY row, unconditionally. This used to
+                    # be an `else` branch off the combined write; it is unconditional
+                    # now because the two grains are separate statements. The cooldown
+                    # must be stamped whether or not the status changed.
+                    cur.execute(
+                        "UPDATE permits SET last_scraped_at = NOW() WHERE permit_num = %s",
+                        (result['permit_num'],)
+                    )
                 elif result['error'] == 'no_stages':
                     saw_no_stages = True
                     queue_outcome('no_stages', result['permit_num'])
@@ -2695,19 +2758,26 @@ async def scrape_year_sequence(ctx, year_seq, conn, tel=None, outcomes=None):
 
             # Compute and write enriched_status + touch last_scraped_at
             enriched = compute_enriched_status(result['stages'])
+            # C2: enriched_status → ROWS WHOSE OWN status IS 'Inspection'.
             cur.execute(
-                "UPDATE permits SET enriched_status = %s, last_scraped_at = NOW() "
-                "WHERE permit_num = %s AND enriched_status IS DISTINCT FROM %s",
+                "UPDATE permits SET enriched_status = %s "
+                f"WHERE permit_num = %s AND {INSPECTION_STATUS_SCOPE} "
+                "AND enriched_status IS DISTINCT FROM %s",
                 (enriched, result['permit_num'], enriched)
             )
             if cur.rowcount > 0:
                 enriched_updates += 1
-            else:
-                # enriched_status unchanged — still touch last_scraped_at for cooldown
-                cur.execute(
-                    "UPDATE permits SET last_scraped_at = NOW() WHERE permit_num = %s",
-                    (result['permit_num'],)
-                )
+            elif cur.rowcount == 0:
+                no_inspection_row += 1
+                log('WARN', '[scraper]',
+                    f"{result['permit_num']}: no status='Inspection' row — enriched_status not written")
+            # C2: last_scraped_at → EVERY row, unconditionally (was the `else` branch
+            # off the combined write). The cooldown must be stamped whether or not the
+            # status changed — aic-orchestrator.py:181 filters it per row.
+            cur.execute(
+                "UPDATE permits SET last_scraped_at = NOW() WHERE permit_num = %s",
+                (result['permit_num'],)
+            )
 
             scraped += 1
             queue_outcome('scraped', result['permit_num'])
@@ -2737,7 +2807,8 @@ async def scrape_year_sequence(ctx, year_seq, conn, tel=None, outcomes=None):
         outcome = 'no_target_folders'
     return {
         'searched': 1, 'scraped': scraped, 'upserted': upserted,
-        'enriched_updates': enriched_updates, 'status_changes': status_changes,
+        'enriched_updates': enriched_updates, 'no_inspection_row': no_inspection_row,
+        'status_changes': status_changes,
         'outcome': outcome,
     }
 
@@ -3049,6 +3120,7 @@ def accumulate_result(tel, result):
             tel['consecutive_empty_max'] = max(tel['consecutive_empty_max'], tel['consecutive_empty'])
     tel['total_upserted'] += result.get('upserted', 0)
     tel['enriched_updates'] += result.get('enriched_updates', 0)
+    tel['no_inspection_row'] += result.get('no_inspection_row', 0)
     tel['status_changes'] += result.get('status_changes', 0)
     if result.get('retry_exhausted'):
         tel['proxy_errors'] += 1
@@ -3244,7 +3316,7 @@ def make_telemetry():
     """Create a fresh telemetry dict."""
     return {
         'permits_attempted': 0, 'permits_found': 0, 'permits_scraped': 0,
-        'not_found_count': 0, 'not_found_breakdown': {}, 'enriched_updates': 0, 'proxy_errors': 0,
+        'not_found_count': 0, 'not_found_breakdown': {}, 'enriched_updates': 0, 'no_inspection_row': 0, 'proxy_errors': 0,
         'consecutive_empty': 0, 'consecutive_empty_max': 0,
         'session_bootstraps': 0, 'session_failures': 0,
         'schema_drift': [], 'status_changes': 0, 'total_upserted': 0,
@@ -3382,6 +3454,8 @@ def compute_summary(tel, start_ms):
                     {'metric': 'permits_attempted', 'value': tel['permits_attempted'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'permits_found', 'value': tel['permits_found'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'enriched_updates', 'value': tel['enriched_updates'], 'threshold': None, 'status': 'INFO'},
+                    # C2/F4 (Q3): 'write nothing' is a DEFINED outcome — counted, not silent.
+                    {'metric': 'no_inspection_row', 'value': tel['no_inspection_row'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'not_found_count', 'value': tel['not_found_count'], 'threshold': None, 'status': 'INFO'},
                     {'metric': 'no_stages_yet', 'value': tel.get('not_found_breakdown', {}).get('no_stages', 0), 'threshold': None, 'status': 'INFO'},
                     {'metric': 'no_inspection_link', 'value': tel.get('not_found_breakdown', {}).get('no_inspection_link', 0), 'threshold': None, 'status': 'INFO'},
@@ -3531,6 +3605,7 @@ async def main():
                     tel['permits_scraped'] += result['scraped']
                 tel['total_upserted'] += result.get('upserted', 0)
                 tel['enriched_updates'] += result.get('enriched_updates', 0)
+                tel['no_inspection_row'] += result.get('no_inspection_row', 0)
                 tel['status_changes'] += result.get('status_changes', 0)
             finally:
                 conn.close()
