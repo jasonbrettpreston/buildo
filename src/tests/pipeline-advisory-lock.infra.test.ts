@@ -93,6 +93,12 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/one-time/backfill-coa-structure-type.js':          119,
   'scripts/one-time/backfill-coa-products.js':                120,
   'scripts/one-time/backfill-building-footprints-geom.js':    121,
+  // C3 (2026-08-12) — first `scripts/backfill/` entry in this registry.
+  // Registration is CONVENTION here, not test-enforced: the ":291" coverage test
+  // filters to manifest scripts and this is a one-off. Only UNIQUENESS is enforced
+  // for scripts/backfill (via EXTRA_LOCK_DIRS). But the :303 agreement test IS
+  // bidirectional, so this entry and the Spec 47 §A.5 row are both-or-neither.
+  'scripts/backfill/backfill-smeared-enriched-status.js':     44,
   // §A.5 record — scripts/one-time/backfill-parcels-zoning-index.js (Spec 65) +
   //   scripts/one-time/backfill-permits-coa-zoning-index.js (Spec 66):
   //   NO advisory lock (idempotent CREATE INDEX CONCURRENTLY IF NOT EXISTS,

@@ -60,9 +60,18 @@ This is not an inconsistency to tidy up.
 | `last_scraped_at` | **EVERY ROW, unscoped by anything** | `aic-orchestrator.py:181` evaluates the 7-day cooldown **per row**, before `DISTINCT year_seq`. Scoping this — by revision *or* by status — would leave non-Inspection rows permanently "never scraped", so the queue would re-buy the same `year_seq`s forever. This is a NEGATIVE rule — pinned by `scripts/tests/test_scraper_enriched_status_scoping.py`. |
 
 **Measured on cloud 2026-08-12**, of the 4,183 rows carrying `enriched_status`: **2,833** have
-`status='Inspection'` (kept) and **1,350** do not (dropped) — and those 1,350 **are the smear**
+`status='Inspection'` (kept) and **1,350** do not (dropped)
 (`Revision Issued`+`Active Inspection` 654 · `Revision Issued`+`Permit Issued` 453 ·
-`Pending Closed` 98 · `Examiner's Notice Sent` 43).
+`Pending Closed` 102 · `Examiner's Notice Sent` 43 · tail).
+
+> **Do NOT say "those 1,350 ARE the smear" — that is a count stated as an inference.** Two distinct
+> mechanisms produce identical-looking rows: (i) the genuine smear (a permit-grain write that landed on
+> a row it was never about), and (ii) an ordinary lifecycle transition on a row whose `enriched_status`
+> was written legitimately and then outlived the `status` that justified it. `Revision Issued` +
+> `Active Inspection` (654) is fully explainable by (ii) alone. The write rule and the backfill are
+> correct for BOTH — but they are separable at run time (a smear row has a sibling `status='Inspection'`
+> row for the same `permit_num`; a transition row does not) and conflating them is what produced the
+> false "this is a one-time cleanup" conclusion.
 
 **Administrative fee stubs: MEASURED CLEAN, NOT STRUCTURALLY ENFORCED.** **0 of 21,827**
 `status='Inspection'` rows in the write population are `class='administrative'` — but **the write
@@ -88,6 +97,26 @@ moves *which* row is wrong. Pinned as a negative assertion in the test file so i
 > 1. ~~"397 permits spell their base revision `'0'` and have no `'00'` row"~~ — the *count* was right, the *inference* wrong. **100% of `revision_num='0'` rows are `DCs DeferredFees`, `class='administrative'` fee stubs**; no permit's base revision is spelled `'0'`, and `classify-inspection-status.js` was never dropping a real permit (measured `lost 0, gained 0`).
 > 2. ~~"The portal has no revision dimension."~~ — **unsourced and contradicted by this repo's own measured research**: `docs/reports/2026-07-30-scraper-research-digest.md:44` records a live curl in which the folders response carries **`folderRevision`**, which `aic-scraper-nodriver.py:2393`/`:2517` discard. Whether it maps to `permits.revision_num` is **UNMEASURED** — one logged response body would settle it. Filed, not assumed.
 > 3. The "one shared fragment cannot cross Python↔JS, so use deliberate parallel constants" claim is also **false**: `scripts/lib/status_mapping.json` is loaded by both `aic-scraper-nodriver.py:242-247` (`json.load`) and `src/lib/inspections/parser.ts:2-7` (`require`). No parallel-constant pair is needed here because the rule is now a single predicate in one language.
+
+**THE POPULATION REGENERATES — this rule needs a standing guard, not a one-time clear (C3, 2026-08-12).**
+No *writer* can re-create the smear: all three `enriched_status` producers are status-scoped
+(`aic-scraper-nodriver.py`, `classify-inspection-status.js`, `classify-permit-phase.js`). **But the class
+re-forms with no `enriched_status` write at all** — `load-permits.js`'s
+`ON CONFLICT DO UPDATE SET status = EXCLUDED.status` (`:340`, `:357`) moves a permit past `'Inspection'`
+while its legitimately-written `enriched_status` stays. `enriched_status` is *deliberately* excluded from
+that upsert list (`classify-permit-phase.js:10-12`: *"so the permits loader upsert won't conflict"*) — and
+**nothing invalidates it when `status` moves out from under it. That missing rule is the real defect**;
+the backfill clears the symptom. Measured evidence: the 97 scraped permits that were `Pending Closed`/
+`Closed` — they closed *after* being scraped.
+
+* **Clear on demand:** `scripts/backfill/backfill-smeared-enriched-status.js` — `--confirm` to write
+  (default DRY RUN), advisory lock 44, **REPEATABLE READ** so its dated backup provably contains exactly
+  the rows it nulls, and it bumps `last_seen_at` because `enriched_status` is **not** a dirty key for
+  `classify-lifecycle-phase.js:1005-1007`.
+* **Standing guard:** the §4.9 self-announcing pair `enriched_status_status_scope_drift` (+ `_retighten`)
+  in `assert-global-coverage.js` — **WARN, not FAIL**, because the population is expected non-zero until
+  the loader invalidation rule lands; a permanent FAIL is a standing red operators learn to ignore.
+  **Self-retires at 0.**
 
 **Do NOT harmonize `permit_scrape_outcomes` to this rule.** Its permit_num-grain
 (revision-grain ambiguity accepted) is a *knowing* decision recorded below — it is a ledger of
@@ -329,6 +358,8 @@ self-documenting threshold string + row-derived WARN verdict on a small probe mi
 - `scripts/aic-orchestrator.py` — multi-worker orchestrator
 - `migrations/236_permit_scrape_outcomes.sql` / `migrations/237_scrape_outcome_prune.sql` — the outcome ledger + its retention prune (drift fence: schema changes to the ledger go through this spec)
 - `scripts/tests/test_scrape_outcome_persistence.py` — outcome-persistence + classification-threading locks
+- `scripts/backfill/backfill-smeared-enriched-status.js` — the on-demand clear (advisory lock 44); paired with the standing `enriched_status_status_scope_drift` WARN row in `assert-global-coverage.js`
+- `src/tests/db/backfill-smeared-enriched-status.db.test.ts` — the backfill's selection contract + `last_scraped_at` negative lock
 - `scripts/tests/test_scraper_enriched_status_scoping.py` — the two-grain locks (status-scoped `enriched_status`; row-wide `last_scraped_at`)
 - `scripts/proxy-relay.mjs` — local unauthenticated proxy relay (shared with Spec 115 §2.4, which owns its runner contract)
 - `scripts/requirements.txt` / `scripts/requirements-dev.txt` — runtime + test deps (`nodriver` is EXACT-pinned; see §3)
