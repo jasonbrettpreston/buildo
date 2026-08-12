@@ -981,11 +981,29 @@ describe('classify-inspection-status.js SQL correctness', () => {
     expect(greatestBlock![0]).not.toMatch(/last_seen_at/);
   });
 
-  // Bug 4: Cross-Revision Bleed — must scope to revision_num = '00'
-  it('scopes stalling to revision_num 00 only (cross-revision bleed)', () => {
-    // permits PK = (permit_num, revision_num). Inspections only exist for rev 00.
-    // Without scoping, all revisions get the same status from the base permit's inspections
-    expect(scriptSource).toMatch(/revision_num\s*=\s*'00'/);
+  // Bug 4: Cross-Revision Bleed — must scope to the row's OWN status
+  it('scopes stalling to status=Inspection rows only (cross-revision bleed)', () => {
+    // FENCE PRESERVED, SPELLING RETIRED (C2/D2a, 2026-08-12).
+    //
+    // Origin: d290f0c9 (2026-04-02) "10 temporal/systems bugs", item 4 HIGH —
+    // "Scope to revision_num='00' (only base permits have inspections)". The
+    // INTENT — never let one permit's inspection-derived status bleed across its
+    // revision rows — is load-bearing and is kept: the assertion below is
+    // STRICTLY NARROWER than the literal it replaces.
+    //
+    // The literal's stated premise is FALSE, measured 2026-08-12: 448 permits
+    // carry 2-4 CONCURRENT status='Inspection' rows on different revisions
+    // (01 180337 BLD has '00' and '01' both live). Worse, for the 53 permits
+    // whose Inspection row is '01' while a valid '00' exists, the literal misses
+    // them entirely once the scraper writes enriched_status only to the
+    // Inspection row — the stall sweep would never reach them.
+    //
+    // Both writers of enriched_status in the deep_scrapes chain (the Python
+    // scraper at step 1, this script at step 2) now enforce the same rule. A rule
+    // adopted by only one re-creates the smear from the other.
+    expect(scriptSource).toMatch(/p\.status\s*=\s*'Inspection'/);
+    // The specific wrong spelling must NOT return:
+    expect(scriptSource).not.toMatch(/revision_num\s*=\s*'00'/);
   });
 
   // Bug 5: Silent State Mutation — must bump temporal tracker for CDC

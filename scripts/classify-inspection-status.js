@@ -24,6 +24,31 @@ const LOGIC_VARS_SCHEMA = z.object({
   inspection_stall_days: z.coerce.number().finite().positive().int(),
 }).passthrough();
 
+// C2/D2a (2026-08-12) — enriched_status is scoped by the row's OWN status.
+// Spec 44 §3 "Write Grain".
+//
+// FENCE PRESERVED, SPELLING RETIRED. The original literal-zero-zero revision
+// predicate (commit d290f0c9, 2026-04-02, "10 temporal/systems bugs" item 4 HIGH)
+// — deliberately NOT written out verbatim here, because the regression lock in
+// inspections.logic.test.ts asserts that spelling is ABSENT from this file and a
+// comment quoting it would red the suite (a trap this repo has hit before) — existed to
+// stop one permit's inspection-derived status bleeding across its revision rows.
+// That intent is load-bearing and is KEPT — the scope below is strictly narrower
+// than the literal it replaces.
+//
+// The literal's stated premise — "only rev 00 has inspections" — is FALSE:
+// 448 permits carry 2-4 CONCURRENT status='Inspection' rows on different revisions
+// (e.g. 01 180337 BLD, '00' and '01' both live). And for the 53 permits whose
+// Inspection row is '01' while a valid '00' exists, the literal would miss them
+// entirely once the scraper (correctly) writes enriched_status only to the
+// Inspection row — the stall sweep would never reach them.
+//
+// This is the SAME rule the scraper enforces (aic-scraper-nodriver.py
+// INSPECTION_STATUS_SCOPE). Both are writers of enriched_status in the SAME chain
+// (deep_scrapes steps 1 and 2); a rule adopted by only one of them re-creates the
+// smear from the other. Change one, change the other.
+const INSPECTION_STATUS_SCOPE = "p.status = 'Inspection'";
+
 pipeline.run('classify-inspection-status', async (pool) => {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const RUN_AT = await pipeline.getDbTimestamp(pool);
@@ -35,7 +60,10 @@ pipeline.run('classify-inspection-status', async (pool) => {
 
   const { stalledCount, reactivatedCount } = await pipeline.withTransaction(pool, async (client) => {
     // Step 1: Mark Active Inspection permits as Stalled if no activity in 300+ days
-    // Scoped to revision_num = '00' because only base permits have inspections.
+    // Scoped by the row's OWN status (INSPECTION_STATUS_SCOPE) — see the block
+    // above. The former revision-literal scope rested on "only base permits have
+    // inspections", which is measurably false (448 permits carry concurrent
+    // Inspection rows on different revisions).
     // Uses GREATEST (not COALESCE) across all temporal indicators so the DB always
     // picks the absolute most recent sign of life.
     // Excludes scraped_at (pipeline metadata, refreshed nightly — not business data)
@@ -54,7 +82,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
        SET enriched_status = 'Stalled',
            last_seen_at = $2::timestamptz
        WHERE p.enriched_status = 'Active Inspection'
-         AND p.revision_num = '00'
+         AND ${INSPECTION_STATUS_SCOPE}
          AND COALESCE(p.status, '') NOT IN (
            'Pending Closed', 'Closed', 'Completed', 'Permit Closed',
            'Cancelled', 'Pending Cancellation', 'Revoked', 'Withdrawn'
@@ -80,7 +108,7 @@ pipeline.run('classify-inspection-status', async (pool) => {
        SET enriched_status = 'Active Inspection',
            last_seen_at = $2::timestamptz
        WHERE p.enriched_status = 'Stalled'
-         AND p.revision_num = '00'
+         AND ${INSPECTION_STATUS_SCOPE}
          -- SAFETY: redundant guard — WHERE already constrains to 'Stalled',
          -- but protects against future refactors that widen the WHERE scope
          AND p.enriched_status NOT IN ('Inspections Complete', 'Not Passed')
