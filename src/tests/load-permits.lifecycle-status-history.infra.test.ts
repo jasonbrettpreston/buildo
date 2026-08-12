@@ -23,9 +23,25 @@ describe('load-permits.js — lifecycle_status_history ledger writer (Phase I.1)
     expect(src).toMatch(/JOIN UNNEST\(\$1::text\[\], \$2::text\[\]\)/);
   });
 
-  it('constructs lead_id via String(...).padStart(2, \'0\') — NOT SQL LPAD', () => {
-    // v2.3 Gemini v2.2 CRIT 1 fold — LPAD in JS context would crash at runtime.
-    expect(src).toMatch(/String\(b\.revision_num\)\.padStart\(2, '0'\)/);
+  it('constructs lead_id via the shared JS deriver — NOT SQL LPAD', () => {
+    // FENCE PRESERVED, SPELLING RETIRED (C6, 2026-08-12).
+    //
+    // The original lock asserted the literal `String(b.revision_num).padStart(2,'0')`.
+    // Its INTENT — established by the "v2.3 Gemini v2.2 CRIT 1" fold — is that the
+    // ledger's lead_id must be built in JS, never by calling SQL `LPAD(...)` from a
+    // JS expression context, which is undefined at runtime and would crash. That
+    // intent is load-bearing and is kept below by the unchanged negative assertion.
+    //
+    // The IMPLEMENTATION was subtly wrong: `padStart(2,'0')` leaves an over-width
+    // revision intact ('100' -> '100'), while PostgreSQL LPAD — and therefore
+    // permits.lead_id, written by the mig 132/138_a trigger — TRUNCATES it
+    // ('100' -> '10'). Divergent keys silently break every
+    // lifecycle_status_history -> permits join. `deriveLeadId` reproduces PG LPAD
+    // byte-for-byte (scripts/lib/leads/lead-id.js:66-77) and is still pure JS, so
+    // the fence holds while the divergence closes. Inert today (max observed
+    // revision length is 2) — this is a latent-correctness fix, not a live one.
+    expect(src).toMatch(/deriveLeadId\(\{\s*permit_num: b\.permit_num,\s*revision_num: b\.revision_num\s*\}\)/);
+    // THE ACTUAL FENCE — unchanged:
     expect(src).not.toMatch(/LPAD\(b\.revision_num/);
   });
 

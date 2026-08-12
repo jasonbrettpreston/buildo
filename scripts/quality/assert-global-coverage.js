@@ -23,6 +23,7 @@
 
 const { z } = require('zod');
 const pipeline = require('./../lib/pipeline');
+const { safeParseIntOrNull } = require('./../lib/safe-math');
 const { SKIP_PHASES_SQL } = require('./../lib/lifecycle-phase');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./../lib/config-loader');
 const { calibratedStatus } = require('./../lib/coverage-status');
@@ -1306,6 +1307,44 @@ pipeline.run('assert-global-coverage', async (pool) => {
       `);
       const etVerdict = etRuns[0]?.records_meta?.audit_table?.verdict ?? 'NO_RUN';
       rows.push(infoRow('Step 26 — assert_entity_tracing', 'entity_tracing.last_verdict', etVerdict === 'PASS' ? 1 : 0));
+
+      // ── C6: lead_id integrity — the STANDING enforcement of migration 138_a ──
+      // 138_a carried an apply-time DO-block assertion, passed it, and then went
+      // silently false for months: its trigger was scoped
+      // `UPDATE OF permit_num, revision_num`, so a permit reclassified into an
+      // administrative type on CKAN re-ingest never re-fired it. By 2026-08-12 all
+      // 1,190 administrative rows carried a lead_id and 171 duplicate lead_id groups
+      // were live. Migration 241 re-scoped the trigger and repaired the data — but a
+      // trigger of ANY scope is blind to the other drift path: reclassifying a row in
+      // `permit_type_classifications` performs no `permits` UPDATE at all.
+      // These two rows are what makes that path visible. FAIL, not INFO: both are
+      // invariants, not coverage ratios — any non-zero value is corruption of the
+      // lead_id join key feeding cost_estimates / trade_forecasts / tracked_projects.
+      const { rows: leadIntegrity } = await pool.query(`
+        SELECT
+          (SELECT COUNT(*)
+             FROM permits p
+             JOIN permit_type_classifications ptc ON ptc.permit_type = p.permit_type
+            WHERE ptc.class = 'administrative' AND p.lead_id IS NOT NULL) AS admin_drift,
+          (SELECT COUNT(*) FROM (
+             SELECT lead_id FROM permits
+              WHERE lead_id IS NOT NULL
+              GROUP BY lead_id HAVING COUNT(*) > 1) d)                    AS dupe_groups
+      `);
+      const adminDrift = safeParseIntOrNull(leadIntegrity[0].admin_drift) ?? 0;
+      const dupeGroups = safeParseIntOrNull(leadIntegrity[0].dupe_groups) ?? 0;
+      rows.push({
+        metric: 'lead_id_administrative_drift',
+        value: adminDrift,
+        threshold: '0 (mig 138_a + 241 invariant)',
+        status: adminDrift > 0 ? 'FAIL' : 'PASS',
+      });
+      rows.push({
+        metric: 'lead_id_duplicate_groups',
+        value: dupeGroups,
+        threshold: '0 (lead_id must be unique across permits)',
+        status: dupeGroups > 0 ? 'FAIL' : 'PASS',
+      });
     }
 
     // ── Vocabulary coverage (Spec 49 §3 value/vocabulary dimension) ─────────
