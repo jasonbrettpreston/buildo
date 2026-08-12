@@ -38,6 +38,9 @@ const {
   NORMALIZED_DEAD_DECISIONS_ARRAY,
 } = require('./lib/lifecycle-phase');
 const { computeIsOrphan } = require('./lib/orphan-detection');
+// C6: shared deriver, not a hand-rolled padStart — see load-permits.js for the
+// over-width divergence this closes ('100' -> '100' vs PG LPAD's '10').
+const { deriveLeadId } = require('./lib/leads/lead-id');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 
 // ─────────────────────────────────────────────────────────────────
@@ -908,7 +911,7 @@ pipeline.run('classify-lifecycle-phase', async (pool) => {
              ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
              DO NOTHING`,
             [
-              ledgerRows.map((r) => 'permit:' + r.permit_num + ':' + String(r.revision_num).padStart(2, '0')),
+              ledgerRows.map((r) => deriveLeadId({ permit_num: r.permit_num, revision_num: r.revision_num })),
               ledgerRows.map((r) => r.old_matched_status ?? null),
               ledgerRows.map((r) => r.matched_status),
               ledgerRows.map((r) => r.old_lifecycle_seq ?? null),

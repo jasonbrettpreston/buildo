@@ -20,6 +20,11 @@
 const pipeline = require('./lib/pipeline');
 const { normalizeStreetName } = require('./lib/address');
 const { safeParseIntOrNull } = require('./lib/safe-math');
+// C6: the ledger's lead_id MUST come from the shared deriver, not a hand-rolled
+// padStart — `padStart(2,'0')` leaves an over-width revision intact ('100' -> '100')
+// while PostgreSQL LPAD (and therefore permits.lead_id) truncates it ('100' -> '10').
+// Divergent keys silently break every lifecycle_status_history -> permits join.
+const { deriveLeadId } = require('./lib/leads/lead-id');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -420,7 +425,7 @@ async function insertBatch(client, batch, RUN_AT) {
       const dateColumn = STATUS_TO_DATE_COLUMN[statusKey];
       const eventDate = dateColumn ? (b[dateColumn] ?? null) : null;
       ledgerRows.push({
-        lead_id: 'permit:' + b.permit_num + ':' + String(b.revision_num).padStart(2, '0'),
+        lead_id: deriveLeadId({ permit_num: b.permit_num, revision_num: b.revision_num }),
         from_status: prevStatus ?? null,
         to_status: b.status,
         permit_type: b.permit_type ?? null,
