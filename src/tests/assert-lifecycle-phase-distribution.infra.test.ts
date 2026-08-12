@@ -454,18 +454,28 @@ describe('Phase E.5 v4 — per-kind posture flag promotion gate', () => {
     expect(SRC).toMatch(/seqBandsWarn\s*>\s*0[\s\S]{0,80}anyPromotePostureActive[\s\S]{0,80}seqBandsFailing\s*>\s*0/);
   });
 
-  it('emitSummary call appears BEFORE the failures-throw check in the source', () => {
-    // The script has TWO `if (failures.length > 0)` blocks:
-    //   1. LOG block (pipeline.log.error) — fires regardless of emit ordering
-    //   2. THROW block (throw new Error) — MUST be after emitSummary so the
-    //      audit_table is persisted to pipeline_runs even on FAIL runs.
-    // The test specifically targets the THROW block via the `throw new Error` pattern.
-    const emitIdx = SRC.search(/pipeline\.emitSummary\(/);
-    const throwIdx = SRC.search(/if\s*\(\s*failures\.length\s*>\s*0\s*\)\s*\{[\s\S]{0,120}throw\s+new\s+Error/);
-    expect(emitIdx).toBeGreaterThan(0);
-    expect(throwIdx).toBeGreaterThan(0);
-    expect(emitIdx).toBeLessThan(throwIdx);
-  });
+  // RETIRED by C1/D1 (WF3, 2026-08-11) — 'emitSummary call appears BEFORE the
+  // failures-throw check in the source'.
+  //
+  // DELETED, not amended, deliberately. Its regex pinned the SOURCE SHAPE
+  // `if (failures.length > 0) { ... throw new Error }`. C1 changes the halt to a
+  // per-failure decision, so the regex is *meant* to stop matching — and amending it
+  // would have meant preserving a dead code shape purely to keep a test green, which
+  // is how the original bug would have been silently reinstated.
+  //
+  // FENCE (Regression Guardian, 2026-08-11): the block asserted three things.
+  //   1. `emitSummary(` exists                     → covered behaviourally below*
+  //   2. the `failures.length > 0` throw SHAPE     → KNOWINGLY RETIRED (see above)
+  //   3. emit precedes throw — THE load-bearing one, origin Phase E.5 finding
+  //      `v2-Obs-E-seq` (Observability HIGH, 2026-05-16; review_followups.md:209
+  //      "REAL BUG FIX"): if the throw fires first, the observer sees a FAILED step
+  //      with no PIPELINE_SUMMARY and therefore no audit rows to extract.
+  //
+  // *(1) and (3) are now defended at RUNTIME by
+  // src/tests/db/assert-lifecycle-phase-distribution-halt.db.test.ts Case B, which
+  // asserts a PIPELINE_SUMMARY line is present on an actually-HALTING child process.
+  // Strictly stronger than the retired regex: comparing text offsets would be fooled
+  // by an async emit; spawning the real script cannot be.
 
   // ─── Reachability of seqBandsFailing under per-kind posture ──────────
 

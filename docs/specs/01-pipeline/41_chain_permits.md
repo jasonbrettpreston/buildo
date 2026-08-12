@@ -182,14 +182,25 @@ for the round-trip correctness gate.
 | Sequential scan dominance | `pg_stat_user_tables` | > 80% on 10K+ tables | WARN |
 | Update ping-pong | `n_tup_upd / n_tup_ins` | > 2x | WARN |
 
-### Phase distribution (assert_lifecycle_phase_distribution, step 22)
+### Phase distribution (assert_lifecycle_phase_distribution, step 25)
+**Halting posture is PER-FAILURE, not per-script (C1/D1, 2026-08-11).** Two classes may stop the
+chain: E.5 per-seq band violations (only when the matching promote-to-FAIL posture flag is armed)
+and the `unclassified_count` hard limit — the "I could not check" signals. The three `cross_check_*`
+classes are **non-halting**: they are real FAILs and still drive the audit verdict (so
+`check-chain-verdict.js` stays red and the chain terminalizes `completed_with_errors`), but they no
+longer skip the downstream steps. A class-blind throw on a cross-check failure killed the chain at
+step 25/33 on 2026-08-10/11, skipping 10 steps including `backup_db` — a 28h backup-SLA breach.
+The decision lives in one pure exported function, `classifyHaltDecision()`.
+
 | Check | Source | Threshold | Level |
 |-------|--------|-----------|-------|
 | Each phase count vs expected band | `permits.lifecycle_phase`, `coa_applications.lifecycle_phase` | ±10% band (±30% for <1000 rows) | FAIL (halting) |
 | `unclassified_count` | live SQL | ≤ `lifecycle_unclassified_max` from logic_variables | FAIL (halting) |
-| Cross-check: enriched_status=Stalled vs lifecycle_stalled=false | SQL | < 1000 = WARN, ≥ 1000 = FAIL | FAIL (halting) |
+| Cross-check: enriched_status=Stalled vs lifecycle_stalled=false | SQL | < `lifecycle_cross_stalled_threshold` = WARN, ≥ = FAIL | FAIL (**non-halting**) |
+| Cross-check: enriched_status=Active Inspection not in P9-P18/O1-O3 | SQL | < `lifecycle_cross_active_inspection_threshold` = WARN, ≥ = FAIL | FAIL (**non-halting**) |
+| Cross-check: enriched_status=Permit Issued not in P7a-d/P8/P18/O1-O3 | SQL | < `lifecycle_cross_issued_threshold` = WARN, ≥ = FAIL | FAIL (**non-halting**) |
 
-### Entity tracing (assert_entity_tracing, step 30)
+### Entity tracing (assert_entity_tracing, step 31)
 | Check | Table/Column | Threshold | Level |
 |-------|-------------|-----------|-------|
 | permit_trades coverage | `permit_trades` (joined to new permits) | ≥ 95% | FAIL (non-halting) |

@@ -318,7 +318,7 @@ Source field: `coa_applications.status` (CoA portal feed). The Committee of Adju
 
 ### §2.5.d `permit_inspections.stage_name` — 35 distinct values
 
-Source field: `permit_inspections.stage_name` (raw CCO inspection feed). Read by `mapInspectionStageToPhase()` in `scripts/lib/lifecycle-phase.js:160-213`. Matched via lowercase substring `.includes()` against ordered patterns — first match wins. Only consumed when `permit_inspections.status = 'Passed'`.
+Source field: `permit_inspections.stage_name` (raw CCO inspection feed). Read by `mapInspectionStageToPhase()` in `scripts/lib/lifecycle-phase.js:342` (pointer corrected 2026-08-11 — the function had moved; `:160-213` was stale). Matched via lowercase substring `.includes()` against ordered patterns — first match wins. Only consumed when `permit_inspections.status = 'Passed'`.
 
 **Unified row numbering:** Rows are numbered **100–134** (35 stages) within the shared §2.5 namespace. Row 135 is reserved as a forward-looking slot. Predecessor blocks: permits.status 1–53 (§2.5.a), gap 54–69, coa_applications.status 70–91 (§2.5.c), gap 92–99.
 
@@ -1165,7 +1165,19 @@ Operationally: O-phase permits are filtered out of `compute-trade-forecasts.js` 
 
 ---
 
+<a id="3-4"></a>
 ### 8. Distribution Health Bands (CQA Tier 3)
+
+> **`§3.4` IS AN ALIAS FOR THIS SECTION.** There is no heading numbered 3.4 in this spec and
+> there never was, but **20+ live citations across ≥6 files point at it** — including
+> `migrations/119`, `148`, `150` (×8), `151`, `scripts/seeds/logic_variables.json`
+> (`:2744`, `:2751`, `:2758`), and — most importantly —
+> `scripts/quality/assert-lifecycle-phase-distribution.js:732/738/744`, which render
+> "§3.4" into **operator-visible audit-row `threshold` strings** at runtime. Those strings
+> have been pointing an operator at a nonexistent section every run. The `id="3-4"` anchor
+> above makes every one of those citations resolve here rather than nowhere. Do not
+> renumber this section without updating them; do not "fix" the citations to §8 piecemeal,
+> because the audit-row strings are the ones a human actually follows.
 
 > **DEPRECATED IN PHASE A (WF1 #coa-pipeline-parity-phase-a, 2026-05-13):** The 36-key P-code band namespace documented in this section is being replaced by the granular **seq-level band namespace** in Spec 86 §1 (`lifecycle_band_seq_<seq>_min/max`, ×110 pairs + `lifecycle_band_seq_<seq>_sample_size_threshold` tier selector). The new authoritative gate validates per-seq distributions with sample-size-aware tuning. Block-level aggregation was rejected because outcome-diverse blocks like B2.C (containing both "Refused" and "Final and Binding" with opposite semantics) cannot be safely conflated. See active task §A.1.7 + Spec 42 §6.7 step 4 for the implementation contract. Legacy P-code bands remain populated through Phase H of WF2 #coa-pipeline-parity for backward compatibility with `compute-trade-forecasts.js` P-code routing; dropped in Phase H cleanup.
 
@@ -1906,3 +1918,53 @@ Cost output: `cost_estimates` rekeyed on `lead_id` (Option C — single unified 
 **`lifecycle_stalled` interaction (G1).** Draining these rows projects ≤ 2 new stalls and **0 un-stalls** (all rows go NULL→phase; no currently-stalled row is touched). Because old phase was NULL for all 578, `phase_started_at` is stamped fresh (`= RUN_AT`) on the NULL→phase change — no old anchors, no past-dated forecast wave. Far under the 5,000-flip STOP threshold. Baseline stalled = 34,465.
 
 **CoA `lifecycle_seq` (DS6, verified 2026-07-07):** 100% on active CoAs (2,899/2,899) and overall (33,280/33,280) — ≥ 95%, no backfill needed.
+
+---
+
+## Known Failure Modes
+
+*(Added 2026-08-11 by C1/D1. Spec 05 §5 requires this section; this spec had none.)*
+
+### KFM-1 — A class-blind halt turns a data-drift signal into a chain outage
+**Severity: CRITICAL. Observed 2026-08-10/11 in production.**
+
+`assert-lifecycle-phase-distribution.js` accumulated every failure into one `failures[]`
+array and threw on `failures.length > 0`. Three of its seven failure sites are
+`cross_check_*` drift checks — "the legacy `enriched_status` column disagrees with the
+lifecycle columns" — which say nothing about whether the assert could do its job. The
+other four are E.5 band violations and the `unclassified_count` hard limit, which mean
+"I could not verify this data".
+
+A cross-check breach therefore killed `chain_permits` at step 25/33 (and `chain_coa` at
+14/16), skipping **10 downstream steps including `backup_db`**. It compounded with the
+watchdog's backup-fallback race guard (`pipeline-watchdog.yml:191-193`, which correctly
+suppresses the fallback while permits is *running*): permits **was** running, then died
+at step 25, so neither the in-chain backup nor the fallback ran. Backup age reached
+**28.58h against a 25h SLA** and was still climbing when the fix was authored.
+
+**The generalizable rule — an assert must distinguish "the data is wrong" from "I could
+not check".** Only the second is grounds for stopping a chain. The first is what the
+audit verdict is for.
+
+**Fix (C1/D1).** Halting is now a per-FAILURE decision made by one pure exported
+function, `classifyHaltDecision({unclassifiedCount, unclassifiedMax, seqBandsFailing})`.
+`cross_check_*` failures remain FAIL in the verdict — `check-chain-verdict.js` still
+reds the chain, which terminalizes `completed_with_errors` — but no longer halt.
+
+**Locks.** `src/tests/db/assert-lifecycle-phase-distribution-halt.db.test.ts` spawns the
+real script: Case A (cross-check-only → must exit 0 while the verdict stays FAIL),
+Case B (`unclassified_count` over the hard limit → must still halt), Case C (armed E.5
+band violation → must still halt). Cases B and C are the guard against a future
+"simplification" that drops the throw entirely and silently retires the hard limit.
+Four-quadrant unit lock in `src/tests/assert-lifecycle-phase-distribution.logic.test.ts`.
+
+**Consequence to remember:** post-fix, the aggregate watchdog goes silent on this
+condition by design, because `completed_with_errors ∈ RAN_STATUSES`. The per-chain
+verdict step is the single remaining channel. Accepted knowingly.
+
+### KFM-2 — The `§3.4` phantom section
+20+ citations across ≥6 files (migrations 119/148/150/151, `seeds/logic_variables.json`,
+and three **operator-visible audit-row `threshold` strings** in the assert script itself)
+point at a `§3.4` that never existed in this spec. An operator following one landed
+nowhere. Mitigated by the `id="3-4"` anchor on §8 rather than by editing 20 citations —
+see the note there before renumbering anything.
