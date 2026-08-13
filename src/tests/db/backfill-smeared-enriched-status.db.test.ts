@@ -100,7 +100,9 @@ describe.skipIf(!dbAvailable())('C3 — backfill smeared enriched_status', () =>
 
   it('2. dry run (no --confirm) writes NOTHING', async () => {
     const before = await enriched('A');
-    const res = await runBackfill(pool, { confirm: false });
+    // Non-null: fresh container, sole caller — the only null/undefined return is the
+    // advisory-lock-not-acquired path, unreachable here.
+    const res = (await runBackfill(pool, { confirm: false }))!;
     expect(res.evaluated).toBeGreaterThanOrEqual(2);
     expect(res.corrected).toBe(0);
     expect(res.backupTable).toBeNull();
@@ -108,7 +110,7 @@ describe.skipIf(!dbAvailable())('C3 — backfill smeared enriched_status', () =>
   });
 
   it('3. corrects the smear and SPARES the status=Inspection row', async () => {
-    const res = await runBackfill(pool, { confirm: true });
+    const res = (await runBackfill(pool, { confirm: true }))!;
     expect(res.corrected).toBeGreaterThanOrEqual(2);
     expect((await enriched('A')).enriched_status).toBeNull();
     expect((await enriched('C')).enriched_status).toBeNull();
@@ -134,7 +136,7 @@ describe.skipIf(!dbAvailable())('C3 — backfill smeared enriched_status', () =>
   });
 
   it('6. backup captures exactly what was nulled, and RESTORES', async () => {
-    const res = await runBackfill(pool, { confirm: true });
+    const res = (await runBackfill(pool, { confirm: true }))!;
     const t = res.backupTable;
     expect(t).toBe(backupTableName(new Date().toISOString()));
     const { rows: bak } = await pool.query(`SELECT count(*)::int AS n FROM ${t}`);
@@ -148,7 +150,7 @@ describe.skipIf(!dbAvailable())('C3 — backfill smeared enriched_status', () =>
 
   it('7. replay is idempotent — second run corrects 0 (ISOLATED DB ONLY)', async () => {
     await runBackfill(pool, { confirm: true });
-    const second = await runBackfill(pool, { confirm: true });
+    const second = (await runBackfill(pool, { confirm: true }))!;
     expect(second.corrected).toBe(0);
     expect(second.evaluated).toBe(0);
     expect(second.backupTable).toBeNull(); // early return leaves no empty dated table
