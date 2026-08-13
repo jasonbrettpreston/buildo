@@ -105,7 +105,7 @@ describe('chain-deep-scrapes workflow', () => {
   });
 
   describe('soft time-budget self-stop (F1, 2026-08-04)', () => {
-    it('exports SCRAPER_TIME_BUDGET_MINUTES as the chain timeout minus 10, shell-computed', () => {
+    it('exports SCRAPER_TIME_BUDGET_MINUTES as the chain timeout minus the tail, shell-computed', () => {
       // Stage-2 drain run 30854595411: a healthy time-bounded drain was
       // hard-killed by the GH step timeout mid-scrape — orphaned
       // pipeline_runs rows, stuck claimed queue rows, red verdict every
@@ -116,8 +116,12 @@ describe('chain-deep-scrapes workflow', () => {
       // expression family the step timeout uses.
       expect(activeLines).toMatch(/SCRAPER_TIME_BUDGET_MINUTES/);
       // The fallback moved 12 -> 150 with F3 (schedule path = production
-      // values); the -10 arithmetic and its shell location are unchanged.
-      expect(activeLines).toMatch(/chain_timeout_minutes \|\| '150'[^\n]*\}\}\s*-\s*10/);
+      // values). FENCE AMENDED KNOWINGLY (WF3 2026-08-13): this lock defends the
+      // MECHANISM (shell-computed budget from the same timeout expression) — the
+      // -10 SIZING it also pinned was disproven by the 2026-08-12 step-timeout
+      // kill (tail too small for the 6 post-scraper steps). The tail value is
+      // now owned by the >= 25 lock below; this assertion pins mechanism only.
+      expect(activeLines).toMatch(/chain_timeout_minutes \|\| '150'[^\n]*\}\}\s*-\s*\d+/);
     });
   });
 
@@ -132,6 +136,26 @@ describe('chain-deep-scrapes workflow', () => {
 
     it('runs the verdict check even when the chain step failed', () => {
       expect(activeLines).toMatch(/if:\s*always\(\)/);
+    });
+  });
+
+  describe('scraper soft-budget tail (WF3 2026-08-13, envelope re-budget)', () => {
+    it('leaves >= 25 min between the scraper budget and the step timeout', () => {
+      // The 2026-08-12 slot was axed by the STEP timeout with post-scraper steps
+      // still running: BUDGET = timeout - 10 left a 10-min tail for 6 steps, while
+      // the last successful run needed ~19 min. The subtrahend IS the tail. The
+      // "slots are 3h apart" sizing rationale predates the 1x/weekday cadence —
+      // this lock pins the re-budget so a future edit cannot silently shrink the
+      // tail below what the post-scraper steps measurably need.
+      // CEILING: source-level — YAML has no behavioral harness; this cannot catch
+      // a tail consumed by slower future steps, only the subtrahend regressing.
+      // (First draft used \S+ for the timeout expression — which contains spaces
+      // (${{ ... }}), so the regex NEVER matched and the "red" was the not-found
+      // branch: red-for-the-wrong-reason, caught when the fix failed to green it.
+      // [^\n]* + tail-anchored capture is the correct shape.)
+      const m = activeLines.match(/BUDGET=\$\(\([^\n]*-\s*(\d+)\s*\)\)/);
+      expect(m, 'BUDGET=$(( <timeout expr> - N )) line not found').toBeTruthy();
+      expect(Number(m![1])).toBeGreaterThanOrEqual(25);
     });
   });
 });
