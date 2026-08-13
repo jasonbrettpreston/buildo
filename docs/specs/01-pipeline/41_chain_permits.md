@@ -138,7 +138,7 @@ for the round-trip correctness gate.
 12. **CoA linking** — 3-tier cascade: exact address (0.95), fuzzy address+ward (0.60), description FTS (0.30-0.50).
 13. **Pre-permits** — Approved CoA applications without linked permits become predictive leads.
 14. **Snapshot refresh** — Aggregates all metrics into `data_quality_snapshots` for dashboard.
-15. **Quality assertions** — Data bounds + engine health checks. Any FAIL verdict is logged but does not halt (CQA is observational, not blocking).
+15. **Quality assertions** — Data bounds + engine health checks. Any FAIL verdict is logged but does not halt (CQA is observational, not blocking) — except each assert's defined FATAL subset (exception-derived failures), which throws and halts; see Spec 30 §5.4.1.
 
 ### Outputs
 - `permits` table: 237K+ rows with scope, phase, coordinates, neighbourhood, enriched_status
