@@ -291,8 +291,8 @@ length is re-evaluated when the `populate_queue` re-queue-forever defect is fixe
 ### Network health (assert_network_health)
 | Check | Threshold | Level |
 |-------|-----------|-------|
-| Last successful scrape | within 24h | WARN |
-| Proxy error rate | > 50% | FAIL |
+| Proxy error rate | ≥ `scraper_error_rate_warn_pct` (default 5%) | FAIL |
+| Consecutive empty max | ≥ `scraper_empty_streak_warn` (default 20, WAF trap) | WARN |
 
 > **Known gap (2026-07-30, open):** this check reads `proxy_configured` nowhere and has no notion of *"was egress actually proxied"* — a fully DIRECT run reports `proxy_errors = 0` and PASSES. That is precisely why four months of unproxied scraping went unnoticed (see the historical note in §3). The fix is to feed the `verify_proxied_egress()` result into `scraper_telemetry` and gate on it; filed in `docs/reports/review_followups.md`.
 
@@ -303,7 +303,6 @@ length is re-evaluated when the `populate_queue` re-queue-forever defect is fixe
 | Permits with stale `scraped_at` (>`scrape_stale_days`) | 1..`staleness_max_stale_over_30d` (inclusive) | WARN |
 | Coverage (scraped/total) | < `staleness_min_coverage_pct` | WARN (informational) |
 | Single-permit `max_days_stale` | > `staleness_max_days_stale` | WARN (informational) |
-| Consecutive empty max | > WAF_TRAP_THRESHOLD (20) | WARN |
 
 > **Operator-tunable (mig 121, WF3 2026-05-08):** all three `staleness_*` thresholds are operator-tunable via `/admin/control-panel` per Spec 86 §1. Defaults absorb the 2026-05-08 snapshot (6,514 stale → WARN, not FAIL); tighten to <2000 once scrape coverage ≥50% per Spec 38.
 

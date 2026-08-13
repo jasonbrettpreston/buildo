@@ -13,11 +13,12 @@
  *   5. session_failures == 0
  *
  * Usage: node scripts/quality/assert-network-health.js
- * Exit 0 = pass, Exit 1 = fail
+ * Exit 0 on pass AND on threshold failures (non-halting per Spec 30 §5.4.1 —
+ * the FAIL audit row is the red channel, consumed by check-chain-verdict).
+ * Exit 1 only on exception-class failures ("I could not check", e.g. the
+ * logicVars validation throw below).
  *
- * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
- * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md §4 (Network health)
  */
 const { z } = require('zod');
 const pipeline = require('../lib/pipeline');
@@ -175,7 +176,11 @@ pipeline.run('assert-network-health', async (pool) => {
     {}
   );
 
-  if (errors.length > 0) throw new Error(`Network health check failed: ${errors.join('; ')}`);
+  // Spec 30 §5.4.1: the proxy_error_rate breach is threshold-derived and no longer
+  // halts — the FAIL audit row above is the red channel (check-chain-verdict reds on
+  // it). ACCEPTED COST, stated per the C4 criterion-(1) ruling: the 4 downstream
+  // steps this no longer strands will report on data the scrape failed to collect.
+  // The :36 logicVars throw stays fatal (exception class — "I could not check").
   }); // withAdvisoryLock
 
   if (!lockResult.acquired) return;

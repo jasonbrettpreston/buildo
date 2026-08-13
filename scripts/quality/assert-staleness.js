@@ -18,9 +18,6 @@
  * Usage: node scripts/quality/assert-staleness.js
  * Exit 0 = pass, Exit 1 = fail
  *
- * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
- * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
- * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
  * SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md §4 (Staleness)
  * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §1
  */

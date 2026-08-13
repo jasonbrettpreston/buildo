@@ -4,7 +4,7 @@
 
 > **Status (verified 2026-07-07):** foundational doc; chain inventory + scheduling reconciled against
 > `scripts/manifest.json` and `scripts/local-cron.js`. See §2.3 (chain inventory & scheduling) and §5.4
-> (verdict semantics — a FAIL verdict does NOT halt a chain).
+> (verdict semantics — a FAIL verdict from a step that exited 0 does NOT halt a chain; see §5.4/§5.4.1).
 
 <requirements>
 ## 1. Goal & User Story
@@ -274,7 +274,50 @@ cancelled — a `FAIL` verdict from a step that exited 0 does NOT stop the chain
 aggregated at chain completion (`hasVerdictFails`) into chain-level health and logged, and the Phase-0
 bloat gate is warn-only (§4.1). Consequence for authors: an `assert_*` step reporting FAIL still lets
 downstream steps run — do not rely on a FAIL to protect a downstream consumer from bad data; guard the
-consumer itself.
+consumer itself. Some quality asserts additionally throw on a defined FATAL subset of their failure
+sites — exception-derived failures ("I could not check"), which are excluded from this non-halting
+posture by design; see §5.4.1.
+
+### 5.4.1 Quality-assert halting posture — the per-site gate (WF2 C4, 2026-08-13)
+
+A quality-assert failure site (an `errors.push`/throw) may be made **non-halting** — i.e. reported as a
+verdict rather than thrown as a process-killing exception — only if **all four** of the following hold:
+
+> **(1) Threshold-derived** — a breach means *"the data is wrong"*, not *"I could not check"*. A breach
+> meaning the CHECKER could not run (missing table, transport failure, absent telemetry) is NOT
+> threshold-derived even when expressed as a number.
+> **(2) Represented** — on every chain where the site can fire, its row lands in the table
+> `records_meta.audit_table` actually emits, emitted unconditionally whenever the site can fire.
+> Conditional emission is allowed ONLY where the emission condition is logically implied by the push
+> condition — state the implication per site. A site with NO row is ineligible: add the row or keep it
+> fatal.
+> **(3) AGREEING** — the row's FAIL condition is **IDENTICAL** to the push condition, not merely
+> FAIL-capable. Any band where one is true and the other false is a silent failure.
+> **(4) Reachable** — the bound is attainable by data the pipeline can produce. Record the last measured
+> value beside the bound.
+
+**Repair branches for a failing site** — never auto-"make the row FAIL":
+* **(a)** align the ROW up to the push
+* **(b)** align the PUSH up to the row
+* **(c)** demote to `warnings.push` because the breach was never actionable
+
+**Whichever threshold was set by a commit that NAMED it a false positive is the one that stays** — and
+the durable guard from the A1 post-mortem: *any correction that changes an existing threshold expression
+must cite `git log -L` on that line and state the intent of the commit that set it.*
+
+**Standing decisions, recorded here:**
+* **`assert-schema.js` STAYS HALTING.** It is step 1 of every chain — fail fast before any write.
+* **`assert-engine-health.js` is EXCLUDED because its sole `errors.push` (`:180`) is exception-derived**
+  (criterion 1) — **NOT** because its verdict can never reach FAIL. That claim is false: on deep_scrapes
+  and coa its audit_table can reach FAIL.
+* **`assert-staleness.js` is audited-clean and deliberately NOT converted.** Its terminal position
+  (step 7/7 of deep_scrapes — the only chain it runs in) means it strands nothing; converting it would silence its watchdog channel
+  for zero steps saved; and its mig-121 operator-tunable 3-tier halt is a documented fence — recorded
+  intent is "TUNE the halt", never "REMOVE the halt".
+
+**Lesson routing (Spec 05 §2):** the lesson *"a hard gate stated per-script gets applied per-script —
+state it per-site"* lives HERE, not in `tasks/lessons.md` — the per-site gate above and its test coverage
+(Case C, `assert-data-bounds` regression lock) are the strongest destination for it.
 </behavior>
 
 ---

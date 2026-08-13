@@ -3,6 +3,7 @@
  * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
  * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
  * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
+ * SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md §4 (Data bounds)
  *
  * CQA Tier 2: Post-Ingestion Data Bounds Validation
  *
@@ -99,6 +100,11 @@ pipeline.run('assert-data-bounds', async (pool) => {
 
   const warnings = [];
   const errors = [];
+  // Spec 30 §5.4.1 per-site gate: errors[] stays FULL (it feeds pipeline_runs.error_message
+  // via errorMsg below); fatalErrors[] holds ONLY exception-derived failures ("I could not
+  // check") and is the sole throw gate. Threshold-derived failures red the audit verdict
+  // without halting the chain — the per-chain verdict step is the red channel.
+  const fatalErrors = [];
   let inspectionAuditTable = null;
   let coaAuditTable = null;
   let permitsAuditTable = null;
@@ -115,11 +121,16 @@ pipeline.run('assert-data-bounds', async (pool) => {
         [costOutlierCeiling]
       );
       const costOutliers = parseInt(costOutliersRes.rows[0].count, 10);
-      if (costOutliers > 0) {
-        errors.push(`${costOutliers} permits with cost out of bounds (negative or > ${costOutlierCeiling.toLocaleString()})`);
-        console.log(`  FAIL: ${costOutliers} permits with cost outliers`);
+      // >= 20, WARN, aligned with the audit row below — NOT > 0. f238b814 (2026-03-27)
+      // deliberately set the < 20 band: "16 permits with bad source data from Toronto
+      // Open Data is a known baseline, not actionable". Re-escalating this site was
+      // reviewed and rejected (C4 panel A1, 2026-08-13); any change here must cite
+      // git log -L on this line per Spec 30 §5.4.1.
+      if (costOutliers >= 20) {
+        warnings.push(`${costOutliers} permits with cost out of bounds (negative or > ${costOutlierCeiling.toLocaleString()})`);
+        console.log(`  WARN: ${costOutliers} permits with cost outliers`);
       } else {
-        console.log('  OK: Cost bounds — no outliers');
+        console.log('  OK: Cost bounds — within the known baseline');
       }
 
       // 2. Null-rate thresholds (recent batch — last 24h by last_seen_at)
@@ -677,6 +688,7 @@ pipeline.run('assert-data-bounds', async (pool) => {
           console.log('  SKIP: wsib_registry table does not exist');
         } else {
           errors.push(wsibErr.message);
+          fatalErrors.push(wsibErr.message);
           console.error(`  ERROR: ${wsibErr.message}`);
         }
       }
@@ -808,6 +820,7 @@ pipeline.run('assert-data-bounds', async (pool) => {
           console.log('  SKIP: permit_inspections table does not exist');
         } else {
           errors.push(inspErr.message);
+          fatalErrors.push(inspErr.message);
           console.error(`  ERROR: ${inspErr.message}`);
         }
       }
@@ -939,11 +952,16 @@ pipeline.run('assert-data-bounds', async (pool) => {
 
   } catch (err) {
     errors.push(err.message);
+    fatalErrors.push(err.message);
     console.error(`  ERROR: ${err.message}`);
   }
 
   const durationMs = Date.now() - startMs;
   const hasErrors = errors.length > 0;
+  // status stays keyed on the FULL errors[] — the only DB-visible signal on the
+  // standalone path. Accepted incoherence (stated in the C4 plan): a standalone
+  // threshold failure writes status='failed' AND exits 0 — the same status/exit
+  // divergence C1 introduced at chain level.
   const status = hasErrors ? 'failed' : 'completed';
   const allMessages = [...errors, ...warnings.map((w) => `WARN: ${w}`)];
   const errorMsg = allMessages.length > 0 ? allMessages.join('; ') : null;
@@ -995,7 +1013,10 @@ pipeline.run('assert-data-bounds', async (pool) => {
 
   console.log(`\n=== Data Bounds: ${status.toUpperCase()} (${(durationMs / 1000).toFixed(1)}s) ===\n`);
 
-  if (hasErrors) throw new Error('Data bounds validation failed');
+  // Spec 30 §5.4.1: only exception-derived failures halt ("I could not check").
+  // Threshold-derived failures already redded the audit verdict above; halting on
+  // them strands up to 11 downstream steps incl. backup_db (the C1 outage class).
+  if (fatalErrors.length > 0) throw new Error('Data bounds validation failed');
   }); // withAdvisoryLock
 
   if (!lockResult.acquired) return;

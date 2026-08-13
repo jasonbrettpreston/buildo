@@ -66,7 +66,7 @@ These are **not** chain steps (not in `scripts/manifest.json` / no 6 AM cron). R
 | `backfill-permits-location.js` | Write `permits.location` from lat/lng for ~219K historical rows |
 | `migrate-entities.js` | Migrate legacy entity rows |
 | `seed-pipeline-runs.js` | Seed `pipeline_runs` history |
-| `backfill-smeared-enriched-status.js` | Clear `enriched_status` from rows whose own `status` is not `'Inspection'` (Spec 44 §3). `--confirm` to write; default is a DRY RUN that counts and reports only. **RE-RUNNABLE BY DESIGN** — the population regenerates nightly (see §3 rule 6). Backs up to a **dated** `_backup_smeared_enriched_status_<YYYYMMDD>` and prints the restore UPDATE. |
+| `backfill-smeared-enriched-status.js` | Clear `enriched_status` from rows whose own `status` is not `'Inspection'` (Spec 44 §3). `--confirm` to write; default is a DRY RUN that counts and reports only. **RE-RUNNABLE BY DESIGN** — the population regenerates nightly (see §3 rule 6). Backs up to a **dated** `_backup_smeared_enriched_status_<YYYYMMDD>` and prints the restore UPDATE. **⚠ TARGET-DB: the script loads no dotenv — a bare `node …` hits the LOCAL Docker DB via `createPool()`'s localhost default (lessons `:83`; burned a session 2026-08-13, two dry runs reported dev's counts as cloud). Cloud invocation: `PG_HOST= node -r dotenv/config scripts/backfill/backfill-smeared-enriched-status.js [--confirm]` — and check the reported scope against the nightly `enriched_status_status_scope_drift` WARN row before confirming.** |
 
 ### Root + analysis one-offs
 
