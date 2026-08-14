@@ -355,6 +355,12 @@ async function insertBatch(client, batch, RUN_AT) {
       issued_date = EXCLUDED.issued_date,
       completed_date = EXCLUDED.completed_date,
       status = EXCLUDED.status,
+      -- C7 (Spec 44 §3): derived state is scoped by the row's own status. When the
+      -- incoming status moves a row off 'Inspection', its enriched_status basis is
+      -- gone — clear it in the same write. Staying-Inspection preserves byte-for-byte
+      -- (the classify-permit-phase.js:10 never-clobber fence, both halves deliberate).
+      -- IS DISTINCT FROM, never <>: incoming NULL status must also clear.
+      enriched_status = CASE WHEN EXCLUDED.status IS DISTINCT FROM 'Inspection' THEN NULL ELSE permits.enriched_status END,
       description = EXCLUDED.description,
       est_const_cost = EXCLUDED.est_const_cost,
       builder_name = EXCLUDED.builder_name,
@@ -707,7 +713,7 @@ if (require.main === module) pipeline.run('load-permits', async (pool) => {
       "permits": ["permit_num", "revision_num", "status"],
     },
     {
-      "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_name_normalized", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "residential_sqm", "interior_alterations_sqm", "assembly_sqm", "institutional_sqm", "mercantile_sqm", "industrial_sqm", "business_personal_services_sqm", "data_hash", "raw_json"],
+      "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_name_normalized", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "residential_sqm", "interior_alterations_sqm", "assembly_sqm", "institutional_sqm", "mercantile_sqm", "industrial_sqm", "business_personal_services_sqm", "data_hash", "raw_json", "enriched_status"],
       // Phase I.1: lifecycle_status_history ledger writes (Tier 3 per Spec 47 §R9).
       "lifecycle_status_history": ["lead_id", "from_status", "to_status", "transitioned_at", "detected_by", "permit_type", "event_date"],
     }

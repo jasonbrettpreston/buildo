@@ -98,25 +98,34 @@ moves *which* row is wrong. Pinned as a negative assertion in the test file so i
 > 2. ~~"The portal has no revision dimension."~~ — **unsourced and contradicted by this repo's own measured research**: `docs/reports/2026-07-30-scraper-research-digest.md:44` records a live curl in which the folders response carries **`folderRevision`**, which `aic-scraper-nodriver.py:2393`/`:2517` discard. Whether it maps to `permits.revision_num` is **UNMEASURED** — one logged response body would settle it. Filed, not assumed.
 > 3. The "one shared fragment cannot cross Python↔JS, so use deliberate parallel constants" claim is also **false**: `scripts/lib/status_mapping.json` is loaded by both `aic-scraper-nodriver.py:242-247` (`json.load`) and `src/lib/inspections/parser.ts:2-7` (`require`). No parallel-constant pair is needed here because the rule is now a single predicate in one language.
 
-**THE POPULATION REGENERATES — this rule needs a standing guard, not a one-time clear (C3, 2026-08-12).**
-No *writer* can re-create the smear: all three `enriched_status` producers are status-scoped
-(`aic-scraper-nodriver.py`, `classify-inspection-status.js`, `classify-permit-phase.js`). **But the class
-re-forms with no `enriched_status` write at all** — `load-permits.js`'s
-`ON CONFLICT DO UPDATE SET status = EXCLUDED.status` (`:340`, `:357`) moves a permit past `'Inspection'`
-while its legitimately-written `enriched_status` stays. `enriched_status` is *deliberately* excluded from
-that upsert list (`classify-permit-phase.js:10-12`: *"so the permits loader upsert won't conflict"*) — and
-**nothing invalidates it when `status` moves out from under it. That missing rule is the real defect**;
-the backfill clears the symptom. Measured evidence: the 97 scraped permits that were `Pending Closed`/
-`Closed` — they closed *after* being scraped.
+**THE POPULATION REGENERATES — every `permits.status` writer clears `enriched_status` when the new
+status is not `'Inspection'` (C7, 2026-08-13).**
+Four sites write `permits.status`, and each clears `enriched_status` in the SAME write when the row
+moves off `'Inspection'`: `load-permits.js:357`'s upsert (`SET status = EXCLUDED.status` gains a `CASE`
+term — `enriched_status = CASE WHEN EXCLUDED.status IS DISTINCT FROM 'Inspection' THEN NULL ELSE
+permits.enriched_status END`), `close-stale-permits.js:128` (`→ Pending Closed`) and `:146` (`→ Closed`,
+defense-in-depth), and `src/lib/sync/process.ts`'s UPDATE (the legacy sync tool's changed-permit branch,
+reachable from `/api/sync` and `/api/admin/sync`). `enriched_status` is *deliberately* excluded from the
+loader's SET list on the staying-`'Inspection'` branch (`classify-permit-phase.js:10-12`: *"so the
+permits loader upsert won't conflict"*) — clobber is structurally impossible there, while every other
+branch now clears. Measured evidence: the 97 scraped permits that were `Pending Closed`/`Closed` — they
+closed *after* being scraped.
+
+**Clears on status MOVE, not continuously.** The loader's `CASE` executes only when the row's
+`data_hash` guard passes (`:357`) — it does NOT retro-heal hash-unchanged residue; a row that moved
+status before this rule landed and has not moved again stays smeared until an emergency clear. The
+§4.9 WARN pair below watches residuals from any future (fifth) writer.
 
 * **Clear on demand:** `scripts/backfill/backfill-smeared-enriched-status.js` — `--confirm` to write
   (default DRY RUN), advisory lock 44, **REPEATABLE READ** so its dated backup provably contains exactly
   the rows it nulls, and it bumps `last_seen_at` because `enriched_status` is **not** a dirty key for
-  `classify-lifecycle-phase.js:1005-1007`.
+  `classify-lifecycle-phase.js:1005-1007`. C3 is the emergency clear for residuals, with ONE final
+  routine run at C7 deploy (next UTC day after landing — a same-UTC-day re-run fails closed by design
+  on the dated-backup name collision).
 * **Standing guard:** the §4.9 self-announcing pair `enriched_status_status_scope_drift` (+ `_retighten`)
-  in `assert-global-coverage.js` — **WARN, not FAIL**, because the population is expected non-zero until
-  the loader invalidation rule lands; a permanent FAIL is a standing red operators learn to ignore.
-  **Self-retires at 0.**
+  in `assert-global-coverage.js` — **WARN, not FAIL**. Post-C7 + the final routine C3 run, this pair
+  reads 0 on EVERY `chain_permits` run; a nonzero reading thereafter is a regression signal, not
+  expected noise. **Self-retires at 0.**
 
 **Do NOT harmonize `permit_scrape_outcomes` to this rule.** Its permit_num-grain
 (revision-grain ambiguity accepted) is a *knowing* decision recorded below — it is a ledger of

@@ -9,7 +9,13 @@
  *
  * This step writes to enriched_status (not raw status) so the permits loader
  * upsert won't conflict — raw CKAN status is preserved, and enriched_status
- * reflects our derived classification.
+ * reflects our derived classification. That is only HALF the contract: the
+ * loader's upsert never clobbers enriched_status while status stays
+ * 'Inspection' (this fence) — and, since C7 (2026-08-13), every writer of
+ * permits.status (load-permits.js's upsert CASE, both close-stale-permits.js
+ * sites, and src/lib/sync/process.ts's UPDATE) CLEARS enriched_status in the
+ * same write when the new status is not 'Inspection'. Both halves are now
+ * deliberate (Spec 44 §3).
  *
  * Scoped to revision_num = '00' because sub-revisions (01, 02, etc.) inherit
  * lifecycle state from the base permit and should not be independently classified.

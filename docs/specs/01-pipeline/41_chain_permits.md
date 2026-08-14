@@ -126,7 +126,7 @@ for the round-trip correctness gate.
 ### Core Logic
 1. **Schema validation** — CKAN metadata is checked for expected columns before fetching data. If columns are missing, the chain halts to prevent silent corruption of 237K+ rows.
 2. **Permit ingestion** — Streaming JSON parser fetches from CKAN in 10K-row pages. Upserts via `ON CONFLICT (permit_num, revision_num) DO UPDATE` with SHA-256 hash-based change detection.
-3. **Stale permit closure** — Permits not seen in 30+ days get `enriched_status` updated.
+3. **Stale permit closure** — Permits not seen since the last successful load move to `'Pending Closed'`, then to `'Closed'` after the grace period; post-C7, `enriched_status` is cleared in the same UPDATE (the status-grain rule, Spec 44 §3).
 4. **Phase classification** — Assigns construction phase based on status + months since issued.
 5. **Scope classification** — Dual-path (§7.2): `classifyScope()` in both `scope.ts` (TS API) and `classify-scope.js` (batch script). Produces `project_type` + `scope_tags[]`. **NEW consumer (WF2 2026-07-06, Spec 83 §3-ARCHETYPE):** the archetype cost mapper reads `project_type` + `scope_tags` + `structure_type` AT COST TIME to select the Spec-88 archetype line that prices the project — no change to this step's outputs or vocabulary was needed; tag additions/renames now also affect cost mapping (the mapper's live-vocab unit test catches drift).
 6. **Entity extraction** — Parses `builder_name` field into normalized entities. Groups "Smith & Co" / "SMITH COMPANY INC" into one entity.

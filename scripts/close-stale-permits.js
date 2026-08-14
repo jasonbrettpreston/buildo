@@ -73,7 +73,7 @@ pipeline.run('close-stale-permits', async (pool) => {
     });
     pipeline.emitMeta(
       { "permits": ["status", "last_seen_at", "completed_date"], "pipeline_runs": ["pipeline", "status", "started_at"] },
-      { "permits": ["status", "completed_date"] }
+      { "permits": ["status", "enriched_status", "completed_date"] }
     );
     return;
   }
@@ -116,7 +116,7 @@ pipeline.run('close-stale-permits', async (pool) => {
     });
     pipeline.emitMeta(
       { "permits": ["status", "last_seen_at", "completed_date"], "pipeline_runs": ["pipeline", "status", "started_at"] },
-      { "permits": ["status", "completed_date"] }
+      { "permits": ["status", "enriched_status", "completed_date"] }
     );
     return;
   }
@@ -126,6 +126,7 @@ pipeline.run('close-stale-permits', async (pool) => {
     return client.query(
       `UPDATE permits
        SET status = 'Pending Closed',
+           enriched_status = NULL,
            completed_date = COALESCE(completed_date, CURRENT_DATE)
        WHERE status NOT IN ('Pending Closed', 'Closed')
          AND last_seen_at < $1
@@ -143,7 +144,8 @@ pipeline.run('close-stale-permits', async (pool) => {
   const closedResult = await pipeline.withTransaction(pool, async (client) => {
     return client.query(
       `UPDATE permits
-       SET status = 'Closed'
+       SET status = 'Closed',
+           enriched_status = NULL
        WHERE status = 'Pending Closed'
          AND completed_date < NOW() - $1 * INTERVAL '1 day'
        RETURNING permit_num`,
@@ -205,7 +207,7 @@ pipeline.run('close-stale-permits', async (pool) => {
   });
   pipeline.emitMeta(
     { "permits": ["status", "last_seen_at", "completed_date"], "pipeline_runs": ["pipeline", "status", "started_at"] },
-    { "permits": ["status", "completed_date"] }
+    { "permits": ["status", "enriched_status", "completed_date"] }
   );
   }); // withAdvisoryLock
 
