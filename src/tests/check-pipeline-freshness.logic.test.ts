@@ -51,9 +51,17 @@ describe('check-pipeline-freshness.js — constants (Spec 115 §2.5 / Spec 112 �
     );
   });
 
-  it('RAN_STATUSES is the three-status "chain landed data" set — excludes failed/cancelled', () => {
+  // ⑦d (Phase B B0 item 7, v6.1 CORRECTIONS X-5 — "same class as ⑦d"): RAN_STATUSES
+  // must absorb the new `deferred_to_full` chain status (D2′ — a deferring chain
+  // still landed fresh data through its completed steps; check-pipeline-freshness.js
+  // does absence detection only, and a defer is not an absence). Edited HERE per the
+  // B0 item 7 case table's own instruction ("edit check-pipeline-freshness.logic.test.ts
+  // :54-58 instead if that's the canonical lock") rather than duplicated in
+  // run-chain-defer.logic.test.ts — this IS the canonical RAN_STATUSES lock. RED TODAY:
+  // the source export is still the 3-element set.
+  it('RAN_STATUSES is the FOUR-status "chain landed data" set — excludes failed/cancelled (✓red — 4th element not yet added)', () => {
     expect(checkPipelineFreshness.RAN_STATUSES.sort()).toEqual(
-      ['completed', 'completed_with_errors', 'completed_with_warnings'].sort()
+      ['completed', 'completed_with_errors', 'completed_with_warnings', 'deferred_to_full'].sort()
     );
   });
 

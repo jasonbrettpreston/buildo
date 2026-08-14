@@ -39,6 +39,8 @@ const LOGIC_VARS_SCHEMA = z.object({
   garden_suite_min_lot_sqm: z.coerce.number().finite().min(100).max(2000),
   garden_suite_min_rear_yard_m: z.coerce.number().finite().min(2).max(30),
   garden_suite_max_gfa_sqm: z.coerce.number().finite().min(10).max(200),
+  // B2 (D2′ R3-B8) — pre-transaction defer threshold. Bounds mirror scripts/seeds/logic_variables.json.
+  enrich_parcels_defer_threshold_rows: z.coerce.number().finite().min(1000).max(500000),
 }).strict();
 const {
   PRECEDENCE_RULES,
@@ -55,6 +57,9 @@ const ADVISORY_LOCK_ID = 65;
 const PIPELINE_NAME = 'sources:enrich_parcels'; // chain-prefixed (matches manifest)
 const PRODUCER_NAME = 'sources:load_zoning';    // Spec 58 producer we consume (§9)
 const TAG = '[enrich-parcels]';
+// B2 (D2′ R3-B8) — default mirrors scripts/seeds/logic_variables.json's enrich_parcels_defer_threshold_rows.
+const DEFER_THRESHOLD_ROWS_DEFAULT = 50000;
+const DEFER_STEP_SLUG = 'enrich_parcels'; // manifest slug — the marker names ITS OWN step
 
 // Parcel column -> base-table (zoning_bylaw_areas) source column. These 20 are the
 // dominant / MIN / MAX columns (rule lives in PRECEDENCE_RULES).
@@ -168,6 +173,20 @@ async function readZoningContract(pool) {
 }
 
 // ---------------------------------------------------------------------------
+// Pass-1 (zoning) incremental scope predicate — SHARED by buildEnrichmentSql's own incremental
+// WHERE below and computeDeferScope's B-1 pre-transaction count (D2′/R3-B8), so the two can never
+// drift apart silently (a hand-duplicated copy is exactly how a defer bound stops being conservative
+// without anyone noticing — Regression Guardian). Alias `p` = parcels; --full ignores the watermark.
+// ---------------------------------------------------------------------------
+function buildPass1ScopeWhere({ full = false } = {}) {
+  if (full) return 'TRUE';
+  return `(p.zoning_enriched_at IS NULL OR EXISTS (
+         SELECT 1 FROM zoning_bylaw_areas zv
+         WHERE zv.geom && p.geom AND ST_Intersects(p.geom, zv.geom)
+           AND zv.source_dataset_version > p.zoning_enriched_at))`;
+}
+
+// ---------------------------------------------------------------------------
 // SQL builder (DEC-3 — pure set-based; decomposed temp-table → trivial UPDATE).
 // scopeWhere is a trusted internal/test predicate over alias `p`. roadDist is $1.
 // ---------------------------------------------------------------------------
@@ -175,12 +194,7 @@ function buildEnrichmentSql({ scopeWhere = 'TRUE', full = false, staleOverlays =
   // SECURITY — scopeWhere is interpolated verbatim into the SQL. It MUST come from
   // trusted code only (main() passes the literal 'TRUE'; tests pass literal predicates).
   // NEVER pass user/request-derived input here — it would be a SQL-injection vector.
-  const incremental = full
-    ? 'TRUE'
-    : `(p.zoning_enriched_at IS NULL OR EXISTS (
-         SELECT 1 FROM zoning_bylaw_areas zv
-         WHERE zv.geom && p.geom AND ST_Intersects(p.geom, zv.geom)
-           AND zv.source_dataset_version > p.zoning_enriched_at))`;
+  const incremental = buildPass1ScopeWhere({ full });
 
   const baseAgg = Object.entries(BASE_SRC)
     .map(([col, src]) => `      ${sqlAggregate(col, src)} AS ${col}`)
@@ -340,6 +354,39 @@ WHERE p.parcel_id = e.parcel_id
 }
 
 // ---------------------------------------------------------------------------
+// D1′ — massing-driven incremental scope predicate (Phase B B2, migration 240). Alias `p` = parcels.
+// `massing_enriched_at IS NULL` catches never-enriched parcels (incl. new INSERTs, which land with a
+// NULL stamp by default — no DEFAULT clause); the EXISTS arm catches a parcel whose massing linkage
+// moved (a NEWER parcel_buildings.linked_at than our last enrichment stamp) since we last ran.
+// ---------------------------------------------------------------------------
+function buildMassingScopeWhere({ full = false } = {}) {
+  if (full) return 'TRUE';
+  return `(p.massing_enriched_at IS NULL OR EXISTS (
+    SELECT 1 FROM parcel_buildings pb
+    WHERE pb.parcel_id = p.id AND pb.linked_at > p.massing_enriched_at
+  ))`;
+}
+
+// ---------------------------------------------------------------------------
+// D4′ — comps (Phase 3C) decision scope, keyed on the CoA LINK event (parcel_linked_at), never on
+// decision_date directly: a decision_date can be backfilled/corrected long after the row was already
+// linked and comp-eligible, and re-keying on it would either miss the late correction (if we only
+// ever look at the linked-at snapshot) or falsely re-scope every parcel whose decision_date was ever
+// touched. linked_at is the one-way, append-only signal of "this parcel gained a NEW comp candidate
+// this run" — exactly what the comps pass (enrichComparableBuilds) needs to know it must re-run.
+// Alias `p` = parcels; --full ignores the watermark entirely.
+// ---------------------------------------------------------------------------
+function buildDecisionScopeWhere({ full = false } = {}) {
+  if (full) return 'TRUE';
+  return `EXISTS (
+    SELECT 1 FROM coa_applications ca
+    WHERE ca.zoning_dominant_parcel_id = p.id
+      AND ca.parcel_linked_at IS NOT NULL
+      AND ca.parcel_linked_at > COALESCE(p.massing_enriched_at, p.zoning_enriched_at, 'epoch'::timestamptz)
+  )`;
+}
+
+// ---------------------------------------------------------------------------
 // Engine — runs on a single `client` (caller owns the transaction). Returns counts.
 // ---------------------------------------------------------------------------
 async function enrichParcels(client, opts = {}) {
@@ -390,10 +437,12 @@ async function enrichParcels(client, opts = {}) {
 function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {}, mislinkTol = mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT, minDim = mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT }) {
   // SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only.
   // Incremental: first-time (lot_size_confidence NULL) OR a parcel whose zoning was re-enriched
-  // this run (present in parcel_zoning_enrich). --full recomputes all (use after a massing/lot reload).
+  // this run (present in parcel_zoning_enrich) OR a parcel whose massing linkage moved since we last
+  // stamped it (D1′, migration 240 — buildMassingScopeWhere). --full recomputes all (use after a
+  // massing/lot reload).
   const incremental = full
     ? 'TRUE'
-    : `(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id))`;
+    : `(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id) OR ${buildMassingScopeWhere({ full: false })})`;
   const { LOT_TOLERANCE: tol, LOT_MIN_SQM, LOT_MAX_SQM, RAVINE_SETBACK_M } = mb;
   // Phase-3 accessory + (now externalized) garden-suite by-law constants — values from logic_variables
   // (resolved in main()), defaults from max-build.js. Interpolated as numeric literals (Number()).
@@ -717,7 +766,11 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
   -- D-C adds width_raw/length_raw + ravine_sub_floor + emit for the box-excluded / constrained counts
   -- (the raws are CTE-internal — counting here avoids duplicating the setback SQL in the audit).
   coverage_cap, box_area, buffer_area, coverage_defaulted, heritage_footprint_mislink,
-  width_raw, length_raw, ravine_sub_floor, emit
+  width_raw, length_raw, ravine_sub_floor, emit,
+  -- D1′ telemetry passthrough (NOT in MAX_BUILD_COLS — stats-only, mirrors the box-excluded pattern
+  -- above): existing_total_footprint_sqm IS NULL means this scoped parcel has ZERO parcel_buildings
+  -- rows at all — the massing_zero_link_ghost WARN row's population.
+  existing_total_footprint_sqm
 FROM accessory2;
 `;
 }
@@ -736,8 +789,20 @@ WHERE p.parcel_id = e.parcel_id
   );`;
 }
 
+// D1′ — stamp massing_enriched_at for every parcel this pass SCOPED (parcel_max_build's `scope` CTE
+// selects one row per in-scope parcel regardless of whether it had a massing match — the LEFT JOIN to
+// `massing`), UNCONDITIONALLY (like zoning_enriched_at — outside any IS DISTINCT FROM guard, so a
+// steady-state re-run touches 0 NEW rows but the watermark is always fresh). Written in the SAME
+// transaction as the max-build work it represents (Phase B Idempotency ruling — never before).
+function buildMassingStampSql() {
+  return `
+UPDATE parcels p SET massing_enriched_at = $1
+FROM parcel_max_build e
+WHERE p.parcel_id = e.parcel_id;`;
+}
+
 async function enrichMaxBuild(client, opts = {}) {
-  const { scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {}, mislinkTol = mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT, minDim = mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT } = opts;
+  const { scopeWhere = 'TRUE', full = false, storeyHeight = mb.RESIDENTIAL_STOREY_HEIGHT_M, acc = {}, mislinkTol = mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT, minDim = mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT, runAt = null } = opts;
   const minDimNum = Number(minDim ?? mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT);
   await client.query('DROP TABLE IF EXISTS parcel_max_build');
   await client.query(buildMaxBuildSql({ scopeWhere, full, storeyHeight, acc, mislinkTol, minDim: minDimNum }));
@@ -787,9 +852,17 @@ async function enrichMaxBuild(client, opts = {}) {
       COUNT(*) FILTER (WHERE max_buildable_gfa_basis = 'coverage_only')::int AS gfa_coverage_only,
       COUNT(*) FILTER (WHERE envelope_constraint_reason = 'ravine_constrained')::int AS ravine_constrained_cnt,
       COUNT(*) FILTER (WHERE emit AND ((width_raw > 0 AND width_raw < ${minDimNum})
-                                    OR (length_raw > 0 AND length_raw < ${minDimNum})))::int AS box_excluded_cnt
+                                    OR (length_raw > 0 AND length_raw < ${minDimNum})))::int AS box_excluded_cnt,
+      -- D1′ — scoped parcels with ZERO parcel_buildings rows (no massing link at all). Measured 0 on
+      -- day one (backfill ruling); forward-looking WARN so a future citywide-massing regression that
+      -- silently orphans links is visible.
+      COUNT(*) FILTER (WHERE existing_total_footprint_sqm IS NULL)::int AS zero_link_ghost_cnt
     FROM parcel_max_build`);
   const upd = await client.query(buildMaxBuildUpdateSql());
+  // D1′ — stamp massing_enriched_at for every scoped parcel, in the SAME transaction as the work
+  // above (Idempotency ruling: written WITH the work it represents, never before).
+  const stamp = runAt || (await pipeline.getDbTimestamp(client));
+  await client.query(buildMassingStampSql(), [stamp]);
   return { ...stats.rows[0], updated: upd.rowCount };
 }
 
@@ -1091,10 +1164,17 @@ async function enrichComparableBuilds(client, { full = false, scopeWhere = 'TRUE
   // WF3: RESET stale comp_* on parcels that LOST eligibility (footprint → NULL, e.g. a heritage-mislink
   // freeze) — the eligible-only reset below skips them, leaving a stale comp_fsi_p50 forever (same gated-pass
   // gap the optconfig reset fixes). Always-on (not just --full).
+  // B2 (B0 item 7 fold, D-D mirror gap) — ALSO reset on a NULL/≤0 lot (the optconfig reset at
+  // enrichOptimalConfig gained this half already; comps never did — 2,583 parcels measured keeping a
+  // live stale comp_count/comp_fsi_p50 forever). `(p.lot_size_sqm > 0) IS NOT TRUE` mirrors that
+  // gate exactly: NULL > 0 is NULL, NOT NULL is NULL (three-valued logic silently drops NULL lots),
+  // so the explicit IS NOT TRUE form is required to catch both NULL and <= 0.
   const resetIneligible = await client.query(
     `UPDATE parcels p SET comparable_builds = NULL, comp_count = NULL, comp_dominant_build = NULL,
        comp_build_ratio_p50 = NULL, comp_fsi_p50 = NULL
-     WHERE (${scopeWhere}) AND p.max_buildable_footprint_sqm IS NULL AND p.comp_count IS NOT NULL`);
+     WHERE (${scopeWhere})
+       AND (p.max_buildable_footprint_sqm IS NULL OR (p.lot_size_sqm > 0) IS NOT TRUE)
+       AND p.comp_count IS NOT NULL`);
   // FULL re-run: clear stale comp data for the scope first, so a parcel whose comps disappeared resets.
   if (full) {
     await client.query(`UPDATE parcels SET comparable_builds = NULL, comp_count = NULL, comp_dominant_build = NULL,
@@ -1311,7 +1391,57 @@ async function flushOptConfigBatch(pool, batch) {
   return res.rowCount || 0;
 }
 
-async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE' } = {}) {
+// D4′ — crash-safe scope hand-off recovery (migration 240, RULING per v6.1 S-2/X-5). Handles ONLY
+// PRIOR runs' unconsumed enrich_parcels_pass3_scope rows (run_id <> the current run) — THIS run's
+// own rows are flipped separately in ONE set-based UPDATE (see enrichOptimalConfig below); walking
+// them here too would re-introduce the founding O(N) serial-requery class on a --full run touching
+// ~437K parcels (Regression Guardian, output panel). The per-parcel path below is therefore bounded
+// by the crash backlog, not the citywide scope. S-2: work-before-stamp — consumed_at is flipped only
+// AFTER the corresponding per-parcel attempt SUCCEEDED, never before, and never on a failed attempt
+// (Guardian item A: an engine throw must count into stats.errors AND leave consumed_at NULL so the
+// NEXT recovery pass retries it — "attempted" is not "done", and flipping it anyway would erase the
+// crash-recovery trail for a parcel nobody actually finished). A parcel that no longer qualifies for
+// optimal-config (footprint/lot lost eligibility since pass 3 scoped it) is still marked consumed —
+// it was successfully examined (found not-applicable) this run; if it becomes eligible again, a
+// LATER run's pass 3 re-adds it to a fresh scope row.
+//
+// @param {import('pg').Pool} pool
+// @param {number} runId - the CURRENT run's scopeRunId; excluded from recovery (its own rows are
+//   handled by the caller's bulk UPDATE). -1 (no real scopeRunId is ever negative) recovers all.
+// @param {{ errors: number }} stats - mutated in place so a recovery-path engine error is visible to
+//   the SAME opt_config_engine_errors FAIL gate that counts main-stream errors.
+async function consumePendingScope(pool, runId = -1, stats = { errors: 0 }, runAt = null) {
+  // §47 R3.5 — DB clock, never the SQL now-function in mutation statements.
+  const stamp = runAt || (await pipeline.getDbTimestamp(pool));
+  const pending = await pool.query(
+    `SELECT DISTINCT parcel_id FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL AND run_id <> $1`,
+    [runId],
+  );
+  let recovered = 0;
+  for (const { parcel_id: pid } of pending.rows) {
+    let succeeded = true;
+    try {
+      const { rows } = await pool.query(buildOptConfigSelectSql({ full: true, scopeWhere: 'p.id = $1' }), [pid]);
+      if (rows.length) {
+        const row = computeOptConfigRow(rows[0]);
+        recovered += await flushOptConfigBatch(pool, [row]);
+      }
+    } catch (err) {
+      succeeded = false;
+      stats.errors += 1;
+      pipeline.log.warn(TAG, `D4' recovery: optimal-config engine error on parcel ${pid}: ${err.message}`);
+    }
+    if (succeeded) {
+      await pool.query(
+        `UPDATE enrich_parcels_pass3_scope SET consumed_at = $2 WHERE parcel_id = $1 AND consumed_at IS NULL`,
+        [pid, stamp],
+      );
+    }
+  }
+  return recovered;
+}
+
+async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', runId = null } = {}) {
   // Precondition: the citywide (NULL,'all') backstop row MUST exist — the SELECT's cwa CROSS JOIN is
   // filtered to structure_family='all', so without it the whole pass yields 0 rows → silent no-op
   // (review C1). compute-build-norms writes the 'all' backstop UNCONDITIONALLY (P2).
@@ -1362,7 +1492,68 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE' } =
     if (batch.length >= OPTCFG_BATCH) { stats.updated += await flushOptConfigBatch(pool, batch); batch = []; }
   }
   if (batch.length) stats.updated += await flushOptConfigBatch(pool, batch);
+  // D4′/S-2 — flip THIS run's own scope rows in ONE set-based UPDATE now that the stream above has
+  // attempted every row it covers (work-before-stamp; never per-parcel — that is the founding O(N)
+  // serial-requery class on a --full run touching ~437K parcels). A scope row whose parcel the
+  // stream's OWN incremental SELECT skipped (already up to date) is correctly consumed too — nothing
+  // was owed for it. Then recover ONLY prior runs' leftover (Guardian: per-parcel, bounded by the
+  // crash backlog, never the current run's own citywide scope).
+  if (runId != null) {
+    // §47 R3.5 — DB clock, never the SQL now-function in mutation statements.
+    const flipStamp = await pipeline.getDbTimestamp(pool);
+    await pool.query(
+      `UPDATE enrich_parcels_pass3_scope SET consumed_at = $2 WHERE run_id = $1 AND consumed_at IS NULL`,
+      [runId, flipStamp],
+    );
+  }
+  stats.updated += await consumePendingScope(pool, runId ?? -1, stats);
   return stats;
+}
+
+// ---------------------------------------------------------------------------
+// B-1 (BLOCKING, v6.1 CORRECTIONS) — pre-transaction defer scope count. Every defer decision is made
+// BEFORE withTransaction, from upfront-computable predicates: pass-1 stale-zoning (buildPass1ScopeWhere,
+// SHARED with buildEnrichmentSql — Guardian item D) + D1′ massing + D4′ decision-scope. Passes 2-4's
+// own scope is a subset of (pass-1 ∪ massing) by construction (they each OR the same predicates into
+// their own incremental WHERE — see buildMaxBuildSql), so this combined count conservatively bounds
+// the whole run's fresh work. A single pool query per predicate (no temp table, no transaction) —
+// cheap enough to run on every incremental invocation.
+//
+// N-5 (v6.1, Guardian item B): the count ALSO includes the unconsumed pass-5 backlog — parcels a
+// PRIOR (possibly crashed) run scoped for pass 5 but never got to consume. That backlog is real
+// pending work exactly like a fresh pass-1/massing/decision hit; a crashed run's leftover (which
+// could be the full citywide scope) must trip the defer on the NEXT run rather than being ground
+// through serially by consumePendingScope's per-parcel recovery path.
+// ---------------------------------------------------------------------------
+async function countScopeRows(pool, whereSql) {
+  const { rows } = await pool.query(`SELECT count(*)::int AS n FROM parcels p WHERE p.geom IS NOT NULL AND (${whereSql})`);
+  return rows[0].n;
+}
+
+async function countUnconsumedBacklog(pool) {
+  const { rows } = await pool.query(
+    `SELECT count(DISTINCT parcel_id)::int AS n FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL`,
+  );
+  return rows[0].n;
+}
+
+async function computeDeferScope(pool, threshold) {
+  const pass1Where = buildPass1ScopeWhere({ full: false });
+  const massingWhere = buildMassingScopeWhere({ full: false });
+  const decisionWhere = buildDecisionScopeWhere({ full: false });
+  const [pass1, massing, decision, combined, backlog] = await Promise.all([
+    countScopeRows(pool, pass1Where),
+    countScopeRows(pool, massingWhere),
+    countScopeRows(pool, decisionWhere),
+    countScopeRows(pool, `(${pass1Where}) OR (${massingWhere}) OR (${decisionWhere})`),
+    countUnconsumedBacklog(pool),
+  ]);
+  // N-5: additive, not unioned with `combined` — a backlog parcel that ALSO matches pass1/massing/
+  // decision is double-counted, which only makes the bound MORE conservative (never less), and
+  // avoids a second, more expensive combined query just to dedupe two small counts.
+  const scopeCount = combined + backlog;
+  const ratio = threshold > 0 ? Math.round((scopeCount / threshold) * 100) / 100 : null;
+  return { scope_count: scopeCount, threshold, ratio, perPass: { pass1, massing, decision, backlog } };
 }
 
 // ---------------------------------------------------------------------------
@@ -1375,7 +1566,10 @@ function verdictCascade(rows) {
 
 async function main(pool) {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
-    const full = process.argv.includes('--full');
+    // D2′/R3-B4 — per-script force-full env, OR'd directly into THIS script's own argv check
+    // (never into pipeline.isFullMode(), which other scripts like link_parcels also call — doing
+    // so there would flip them to --full too). Supervised-force-full escalation channel (RULING 2).
+    const full = process.argv.includes('--full') || process.env.ENRICH_PARCELS_FORCE_FULL === '1';
     const t0 = Date.now();
     const { logicVars } = await loadMarketplaceConfigs(pool, 'enrich_parcels').catch((err) => {
       pipeline.log.warn(TAG, `config load failed, using defaults: ${err.message}`);
@@ -1407,6 +1601,7 @@ async function main(pool) {
       garden_suite_min_lot_sqm: Number(logicVars?.garden_suite_min_lot_sqm ?? mb.GARDEN_SUITE_MIN_LOT_SQM),
       garden_suite_min_rear_yard_m: Number(logicVars?.garden_suite_min_rear_yard_m ?? mb.GARDEN_SUITE_MIN_REAR_YARD_M),
       garden_suite_max_gfa_sqm: Number(logicVars?.garden_suite_max_gfa_sqm ?? mb.GARDEN_SUITE_MAX_GFA_SQM),
+      enrich_parcels_defer_threshold_rows: Number(logicVars?.enrich_parcels_defer_threshold_rows ?? DEFER_THRESHOLD_ROWS_DEFAULT),
     };
     const vparse = LOGIC_VARS_SCHEMA.safeParse(resolvedVars);
     if (!vparse.success) {
@@ -1444,30 +1639,133 @@ async function main(pool) {
       auditRows.push({ metric: `${key}_overlay_stale`, value: true, status: 'WARN' });
     }
 
+    // B-1 (BLOCKING) — pre-transaction defer decision (D2′/R3-B8). Computed BEFORE any transaction so
+    // a deferring run makes ZERO writes: passes 2-4's scope is a subset of pass-1 ∪ massing ∪
+    // decision-scope, so committing pass 1's zoning watermark and THEN deferring before pass 2 would
+    // permanently hide those parcels from passes 2-4 — the founding silent-staleness class this
+    // mechanism exists to kill. Skipped entirely under --full (a full run has no "over threshold" —
+    // it IS the supervised remedy the defer streak escalates to).
+    const deferThreshold = resolvedVars.enrich_parcels_defer_threshold_rows;
+    if (!full) {
+      const scope = await computeDeferScope(pool, deferThreshold);
+      const ratioStatus = (n) => (deferThreshold > 0 && n / deferThreshold >= 0.8 ? 'WARN' : 'INFO');
+      // Every run emits scope_count/threshold/ratio per pass + WARN at >=80% (D2′) — post-hoc
+      // telemetry, never itself the defer trigger (the COMBINED count below is).
+      // Metric names deliberately avoid the substring "scope_count" (unlike the defer MARKER's own
+      // scope_count field below) — these are always-emitted, low-value telemetry rows, and a name
+      // collision with the marker's own field would let a downstream string-search false-positive on
+      // "a defer happened" from ordinary per-pass telemetry alone.
+      const perPassRows = [
+        { metric: 'enrich_parcels_pass1_scope_rows', value: scope.perPass.pass1, threshold: String(deferThreshold), status: ratioStatus(scope.perPass.pass1) },
+        { metric: 'enrich_parcels_massing_scope_rows', value: scope.perPass.massing, threshold: String(deferThreshold), status: ratioStatus(scope.perPass.massing) },
+        { metric: 'enrich_parcels_decision_scope_rows', value: scope.perPass.decision, threshold: String(deferThreshold), status: ratioStatus(scope.perPass.decision) },
+        // N-5 — the unconsumed pass-5 backlog folded additively into scope_count above; reported
+        // separately so an operator can see WHY a defer tripped when fresh work alone was under
+        // threshold (a crashed prior run's leftover, not a citywide event).
+        { metric: 'enrich_parcels_pass3_backlog_rows', value: scope.perPass.backlog, threshold: String(deferThreshold), status: ratioStatus(scope.perPass.backlog) },
+      ];
+      if (scope.scope_count >= deferThreshold) {
+        pipeline.log.warn(TAG, `deferring to full — combined scope ${scope.scope_count} >= threshold ${deferThreshold} (ratio ${scope.ratio})`);
+        const deferRows = [
+          ...auditRows,
+          ...perPassRows,
+          {
+            metric: 'enrich_parcels_deferred_to_full', value: true,
+            threshold: `combined scope < ${deferThreshold}`, status: 'WARN',
+          },
+        ];
+        pipeline.emitSummary({
+          // Truthful Mutator zero (Spec 47 §8.7 landed example) — a defer makes ZERO writes, so the
+          // counts are 0, never null (null reads as "not applicable"; a deferred step WAS applicable,
+          // it just deferred).
+          records_total: 0,
+          records_new: 0,
+          records_updated: 0,
+          records_meta: {
+            // B2 defer marker (RULING 1/2) — parsed by run-chain.js's parseDeferMarker.
+            deferred: { step: DEFER_STEP_SLUG, scope_count: scope.scope_count, threshold: deferThreshold, ratio: scope.ratio },
+            audit_table: {
+              phase: ADVISORY_LOCK_ID,
+              name: 'Parcel zoning enrichment',
+              // Row-derived cascade (Spec 47 §8.2), same as the normal-completion path — NEVER a
+              // hardcoded 'WARN'. Carries forward any pre-defer WARN rows (e.g. a producer-contract
+              // degradation) so a defer never hides an unrelated FAIL/WARN signal.
+              verdict: verdictCascade(deferRows),
+              rows: deferRows,
+            },
+          },
+        });
+        // B-1 — a deferring run reads inputs but performs ZERO writes; emitMeta must still fire so
+        // the reads-only truth is on record for a zero-write run (Spec 47 §R11 applies to a no-op
+        // just as much as a normal run — the alternative is an undocumented read surface).
+        pipeline.emitMeta(
+          {
+            parcels: ['id', 'geom', 'zoning_enriched_at', 'massing_enriched_at'],
+            zoning_bylaw_areas: ['geom', 'source_dataset_version'],
+            parcel_buildings: ['parcel_id', 'linked_at'],
+            coa_applications: ['zoning_dominant_parcel_id', 'parcel_linked_at'],
+            enrich_parcels_pass3_scope: ['parcel_id', 'consumed_at'],
+          },
+          {},
+        );
+        pipeline.log.info(TAG, `deferred to full — 0 writes made (combined scope ${scope.scope_count} >= threshold ${deferThreshold})`);
+        return { ok: true, deferred: true };
+      }
+      auditRows.push(...perPassRows);
+    }
+
     let result;
     let mbResult;
     let exResult;
     let compResult;
+    let scopeRunId = null;
+    // R3-B8/B7 prerequisite — per-pass duration audit rows (thresholds are a labeled projection
+    // until B7 measures real per-pass durations against them; this is the measurement instrument).
+    const passDurationsMs = {};
     await pipeline.withTransaction(pool, async (client) => {
       await assertPreconditions(client);
       const runAt = await pipeline.getDbTimestamp(client);
+      // D4′ — synthetic run_id for enrich_parcels_pass3_scope (run_id, parcel_id): the table is
+      // deliberately FK-free (migration 240 — pipeline_runs rows are prunable) and this script never
+      // knows the chain step's own pipeline_runs.id (that row belongs to run-chain.js, the parent
+      // process). Unix-seconds of the shared RUN_AT is unique enough for its purpose (crash-recovery
+      // bookkeeping, not a foreign key) — ON CONFLICT DO NOTHING guards the rare same-second collision.
+      scopeRunId = Math.floor(runAt.getTime() / 1000);
+      let passT = Date.now();
       result = await enrichParcels(client, { scopeWhere: 'TRUE', full, roadDist, runAt, staleOverlays });
+      passDurationsMs.pass1 = Date.now() - passT; passT = Date.now();
       // Second pass — max-build envelope (Spec 65 §). Same txn: parcel_zoning_enrich (ON COMMIT
       // DROP) is still visible for incremental scoping; reads the zoning feed just written above.
-      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight, acc, mislinkTol: reno.mislinkTol, minDim: resolvedVars.max_build_min_dimension_m });
+      mbResult = await enrichMaxBuild(client, { scopeWhere: 'TRUE', full, storeyHeight, acc, mislinkTol: reno.mislinkTol, minDim: resolvedVars.max_build_min_dimension_m, runAt });
+      passDurationsMs.pass2 = Date.now() - passT; passT = Date.now();
       // Third pass — existing structure (Spec 65 Phase 1) + reno/build scenarios (Phase 2). Same txn:
       // parcel_max_build (ON COMMIT DROP) visible for scoping; reads the PRIMARY building (massing)
       // + the max-build cols written above; computes SCENARIO_COLS via a sibling UPDATE.
       exResult = await enrichExistingStructure(client, { scopeWhere: 'TRUE', full, reno });
+      passDurationsMs.pass3 = Date.now() - passT; passT = Date.now();
       // Fourth pass — comparable builds (Spec 78 Phase 3C). Same txn: reads the max-build envelope +
       // imagery_roof footprint just written + committed permits/coa; writes the disjoint comp_* columns.
       compResult = await enrichComparableBuilds(client, { scopeWhere: 'TRUE', full });
+      passDurationsMs.pass4 = Date.now() - passT;
+      // D4′ — hand the eligible max-build scope to pass 5 (enrichOptimalConfig), which runs AFTER
+      // this txn commits on a SEPARATE connection. Written IN-TXN with the work above so a crash
+      // between commit and pass 5's read leaves a recoverable trail (enrichOptimalConfig unions any
+      // prior run's UNCONSUMED rows, regardless of run_id).
+      await client.query(
+        `INSERT INTO enrich_parcels_pass3_scope (run_id, parcel_id)
+         SELECT $1, e.pid FROM parcel_max_build e
+         WHERE e.max_buildable_footprint_sqm IS NOT NULL
+         ON CONFLICT (run_id, parcel_id) DO NOTHING`,
+        [scopeRunId],
+      );
     });
 
     // Fifth pass — optimal config (Spec 78 Phase 3A). Runs AFTER the txn COMMITS: it is a JS-streaming
     // pass (consumes the per-row engine optimal-config.js) and reads the just-committed max-build
     // envelope on a separate connection. Cross-chain read of neighbourhood_build_norms (permits chain).
-    const ocResult = await enrichOptimalConfig(pool, { full });
+    const pass5T = Date.now();
+    const ocResult = await enrichOptimalConfig(pool, { full, runId: scopeRunId });
+    passDurationsMs.pass5 = Date.now() - pass5T;
 
     const totalParcels = await pool
       .query('SELECT COUNT(*)::int AS n FROM parcels WHERE geom IS NOT NULL')
@@ -1499,6 +1797,13 @@ async function main(pool) {
     auditRows.push({ metric: 'bylaw_max_height_m_null_pct', value: result.heightNullPct, status: 'INFO' });
     // --- Max-build envelope (Spec 65 §) — all INFO, never gated (sparse-by-design, FSI ~5%). ---
     auditRows.push({ metric: 'max_build_enriched_count', value: mbResult.updated, status: 'INFO' });
+    // D1′ — scoped parcels with ZERO parcel_buildings links at all. Measured day-one value 0
+    // (backfill ruling) — WARN, forward-looking (a future citywide-massing regression that silently
+    // orphans links must be visible, not just a permanently-green 0).
+    auditRows.push({
+      metric: 'massing_zero_link_ghost', value: mbResult.zero_link_ghost_cnt,
+      threshold: '== 0 (forward-looking)', status: mbResult.zero_link_ghost_cnt > 0 ? 'WARN' : 'INFO',
+    });
     // lot_size_confidence tier distribution (operator trust signal — INFO, not a WARN gate).
     auditRows.push({ metric: 'lot_size_confidence_high_count', value: mbResult.lot_high, status: 'INFO' });
     auditRows.push({ metric: 'lot_size_confidence_medium_count', value: mbResult.lot_medium, status: 'INFO' });
@@ -1595,6 +1900,27 @@ async function main(pool) {
     auditRows.push({ metric: 'opt_config_confidence_low_count', value: ocResult.conf_low, status: 'INFO' });
     auditRows.push({ metric: 'opt_config_citywide_fallback_count', value: ocResult.citywide, status: 'INFO' });
     auditRows.push({ metric: 'opt_config_engine_errors', value: ocResult.errors, threshold: '== 0', status: ocResult.errors > 0 ? 'FAIL' : 'INFO' });
+    // B0 item 4's companion check (measured 0/437,305 on ratification) — a zero-baseline audit row,
+    // gated FAIL: opt_aor_gfa_sqm populated with NO max_buildable_gfa_sqm to have derived it from is
+    // vacuous-zero territory the ravine_constrained_carries_priced_cost invariant does NOT cover
+    // (that invariant applies only when max_buildable is non-NULL). Covers the 13,746 non-ravine
+    // NULL-envelope parcels the class-scoped invariant is blind to.
+    const optAorWithoutMaxGfa = await pool.query(
+      `SELECT count(*)::int AS n FROM parcels
+        WHERE opt_aor_gfa_sqm IS NOT NULL
+          AND max_buildable_gfa_sqm IS NULL`,
+    );
+    auditRows.push({
+      metric: 'opt_aor_without_max_gfa', value: optAorWithoutMaxGfa.rows[0].n,
+      threshold: '== 0', status: optAorWithoutMaxGfa.rows[0].n > 0 ? 'FAIL' : 'PASS',
+    });
+    // R3-B8/B7 prerequisite — per-pass duration audit rows (today one timer covered all five passes;
+    // thresholds are a labeled projection until B7 measures real per-pass durations against them).
+    auditRows.push({ metric: 'enrich_parcels_pass1_duration_ms', value: passDurationsMs.pass1, status: 'INFO' });
+    auditRows.push({ metric: 'enrich_parcels_pass2_duration_ms', value: passDurationsMs.pass2, status: 'INFO' });
+    auditRows.push({ metric: 'enrich_parcels_pass3_duration_ms', value: passDurationsMs.pass3, status: 'INFO' });
+    auditRows.push({ metric: 'enrich_parcels_pass4_duration_ms', value: passDurationsMs.pass4, status: 'INFO' });
+    auditRows.push({ metric: 'enrich_parcels_pass5_duration_ms', value: passDurationsMs.pass5, status: 'INFO' });
     auditRows.push({ metric: 'enrich_parcels_duration_ms', value: Date.now() - t0, status: 'INFO' });
 
     pipeline.emitSummary({
@@ -1625,16 +1951,17 @@ async function main(pool) {
         zoning_priority_retail_overlay: ['source_id', 'geom', 'source_dataset_version'],
         zoning_queenstw_eat_overlay: ['source_id', 'geom', 'source_dataset_version'],
         // parcels: zoning identity/stamp (pass 1) + the max-build pass-2 read columns (lot dims +
-        // already-written zoning feed + ravine/heritage/centreline flags it consumes).
-        parcels: ['id', 'parcel_id', 'geom', 'zoning_enriched_at', 'lot_size_sqm', 'frontage_m', 'depth_m',
+        // already-written zoning feed + ravine/heritage/centreline flags it consumes) + D1′ massing
+        // watermark (buildMassingScopeWhere reads it; pass 2 stamps it).
+        parcels: ['id', 'parcel_id', 'geom', 'zoning_enriched_at', 'massing_enriched_at', 'lot_size_sqm', 'frontage_m', 'depth_m',
           'bylaw_max_height_m', 'bylaw_max_stories', 'bylaw_max_fsi', 'bylaw_max_coverage_pct', 'bylaw_standard_setback_m',
           'zoning_class', 'zoning_is_ambiguous', 'is_corner_lot', 'is_through_lot',
           'is_in_ravine_protection_area', 'is_heritage_designated', 'lot_size_confidence', 'abuts_laneway',
           // Phase 2 scenario pass + Phase 3C comp pass read these max-build/imagery outputs (same txn).
           'max_buildable_gfa_sqm', 'max_build_stories', 'max_buildable_footprint_sqm', 'imagery_roof_footprint_sqm'],
-        // Massing join — heritage freeze (max-build pass) + existing-structure pass (Phase 1):
-        // existing pass also reads pb.confidence + bf.geom/max_height_m.
-        parcel_buildings: ['parcel_id', 'building_id', 'is_primary', 'confidence'],
+        // Massing join — heritage freeze (max-build pass) + existing-structure pass (Phase 1) + D1′'s
+        // own scope predicate (linked_at, buildMassingScopeWhere).
+        parcel_buildings: ['parcel_id', 'building_id', 'is_primary', 'confidence', 'linked_at'],
         building_footprints: ['id', 'footprint_area_sqm', 'estimated_stories', 'max_height_m', 'geom'],
         // Optimal-config pass (Spec 78 Phase 3A) — cross-chain read of the neighbourhood build-norms
         // (id read for the used_citywide flag). neighbourhoods.avg_household_income +
@@ -1642,11 +1969,19 @@ async function main(pool) {
         neighbourhood_build_norms: ['id', 'neighbourhood_id', 'structure_family', 'storeys_p50', 'storeys_p90', 'new_builds_5yr', 'additions_5yr', 'renos_5yr', 'suites_5yr', 'demos_5yr', 'realized_fsi_p50', 'realized_fsi_p90', 'build_ratio_p50', 'existing_build_ratio_p25', 'existing_build_ratio_p50', 'coa_approved', 'coa_refused', 'coa_approval_rate', 'window_start', 'window_end', 'sample_n'],
         neighbourhood_storey_norms: ['neighbourhood_id', 'storeys_p50', 'storeys_p90'],
         neighbourhoods: ['id', 'name', 'avg_household_income'],
-        // Comparable-builds pass (Spec 78 Phase 3C) — the permitted-parcel candidate set + CoA decision.
+        // Comparable-builds pass (Spec 78 Phase 3C) — the permitted-parcel candidate set + CoA
+        // decision. parcel_linked_at feeds D4′'s decision-scope predicate (buildDecisionScopeWhere).
         permits: ['zoning_dominant_parcel_id', 'project_type', 'issued_date', 'street_num', 'street_name', 'residential_sqm', 'storeys', 'structure_type'],
-        coa_applications: ['zoning_dominant_parcel_id', 'decision', 'decision_date', 'hearing_date'],
+        coa_applications: ['zoning_dominant_parcel_id', 'decision', 'decision_date', 'hearing_date', 'parcel_linked_at'],
+        // D4′ crash-safe scope hand-off (migration 240) — pass 5 reads unconsumed prior-run rows.
+        enrich_parcels_pass3_scope: ['run_id', 'parcel_id', 'consumed_at'],
       },
-      { parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, ...mb.EXISTING_COLS, ...mb.SCENARIO_COLS, ...COMP_WRITE_COLS, ...OPTCFG_WRITE_COLS, 'zoning_enriched_at'] },
+      {
+        parcels: [...ALL_WRITE_COLS, ...mb.MAX_BUILD_COLS, ...mb.EXISTING_COLS, ...mb.SCENARIO_COLS, ...COMP_WRITE_COLS, ...OPTCFG_WRITE_COLS, 'zoning_enriched_at', 'massing_enriched_at'],
+        // D4′ — pass 3 INSERTs the scope hand-off; pass 5 UPDATEs consumed_at (both this run's own
+        // rows via the bulk set-based flip and prior runs' leftover via consumePendingScope).
+        enrich_parcels_pass3_scope: ['run_id', 'parcel_id', 'consumed_at'],
+      },
     );
 
     pipeline.log.info(TAG, `enriched ${result.updated} parcels (zone_class ${zonePct}%, gaps ${result.gaps}, ambiguous ${result.ambiguous}, conflicts ${result.conflicts})`);
@@ -1671,7 +2006,13 @@ module.exports = {
   enrichParcels,
   buildMaxBuildSql,
   buildMaxBuildUpdateSql,
+  buildMassingStampSql,
   enrichMaxBuild,
+  // D1′/D4′ — Phase B B2 scope predicates + defer/scope-recovery helpers.
+  buildMassingScopeWhere,
+  buildDecisionScopeWhere,
+  computeDeferScope,
+  consumePendingScope,
   buildExistingStructureSql,
   buildExistingStructureUpdateSql,
   buildScenarioUpdateSql,

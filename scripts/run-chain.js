@@ -78,6 +78,61 @@ async function handleTerminationSignal(signal) {
 process.on('SIGINT', () => { handleTerminationSignal('SIGINT'); });
 process.on('SIGTERM', () => { handleTerminationSignal('SIGTERM'); });
 
+// ---------------------------------------------------------------------------
+// B2 — defer mechanism pure helpers (Spec 40 §3.1.2, Spec 47 §8.7, Spec 115 §2.5)
+// ---------------------------------------------------------------------------
+
+/**
+ * Pure — detects a step's `records_meta.deferred` marker
+ * (`{ step, scope_count, threshold, ratio }`), emitted by a gated pipeline script that
+ * computed its own scope BEFORE doing any work and found it over threshold (B-1: the
+ * decision is made pre-transaction, so a deferring run makes ZERO writes). Returns the
+ * shape-validated marker or null. Separated from run() so it is unit-testable without a
+ * live DB or child process.
+ *
+ * @param {Record<string, unknown> | null | undefined} recordsMeta
+ * @returns {{ step: string, scope_count: number, threshold: number, ratio: number | null } | null}
+ */
+function parseDeferMarker(recordsMeta) {
+  if (!recordsMeta || typeof recordsMeta !== 'object') return null;
+  const marker = recordsMeta.deferred;
+  if (!marker || typeof marker !== 'object') return null;
+  const { step, scope_count: scopeCount, threshold } = marker;
+  if (typeof step !== 'string' || !step) return null;
+  if (typeof scopeCount !== 'number' || !Number.isFinite(scopeCount)) return null;
+  if (typeof threshold !== 'number' || !Number.isFinite(threshold)) return null;
+  const ratio = typeof marker.ratio === 'number' && Number.isFinite(marker.ratio)
+    ? marker.ratio
+    : (threshold > 0 ? Math.round((scopeCount / threshold) * 100) / 100 : null);
+  return { step, scope_count: scopeCount, threshold, ratio };
+}
+
+/**
+ * Pure — mirrors the chain-level terminal-status ladder below (RULING 1 precedence: cancel >
+ * failed > verdict-FAIL > defer > budget-stop > verdict-WARN > completed). cancel/budget are
+ * pre-step checks and defer is a post-step-boundary break, so control flow already makes the
+ * three mutually exclusive at runtime — this function exists for external unit-testability
+ * (run-chain.js is never `require()`-d directly by a test in a live process, see
+ * run-chain-defer.logic.test.ts's file header) and is kept in sync BY HAND with the inline
+ * `chainStatus` ladder in run() below, which stays a literal ladder (not a call to this
+ * function) so the run-chain-budget.logic.test.ts / chain-cascade.integration.test.ts source-scan
+ * locks pinning the exact `chainStatus = '...'` literals keep matching. Any change to one ladder
+ * must be mirrored in the other.
+ *
+ * @param {{ wasCancelled: boolean, failedStep: string | null, hasVerdictFails: boolean,
+ *           deferredStep: string | null, budgetStopped: boolean, hasVerdictWarns: boolean }} facts
+ * @returns {'cancelled'|'failed'|'completed_with_errors'|'deferred_to_full'|'completed_with_warnings'|'completed'}
+ */
+function resolveChainStatus({ wasCancelled, failedStep, hasVerdictFails, deferredStep, budgetStopped, hasVerdictWarns }) {
+  if (wasCancelled) return 'cancelled';
+  if (failedStep) return 'failed';
+  if (hasVerdictFails) return 'completed_with_errors';
+  if (deferredStep) return 'deferred_to_full';
+  if (budgetStopped) return 'completed_with_warnings';
+  if (hasVerdictWarns) return 'completed_with_warnings';
+  return 'completed';
+}
+
 async function run() {
   const pool = pipeline.createPool();
   _pool = pool;
@@ -210,7 +265,19 @@ async function run() {
   let failedStep = null;
   let gateSkipped = false;
   let wasCancelled = false;
+  // B2 — set when a step emits a records_meta.deferred marker. A THIRD, distinct break variable:
+  // NEVER failedStep (which terminalizes the chain 'failed', exit 1) — a defer is a clean, designed
+  // stop at the current step boundary (RULING 1/2).
+  let deferredStep = null;
+  let deferMarkerInfo = null; // { step, scope_count, threshold, ratio } — for the chainError text
   const stepVerdicts = {}; // slug → 'PASS' | 'WARN' | 'FAIL'
+  // C5 (Spec 48 §3.9) — step_completeness bookkeeping. executedSteps excludes a died/failed step
+  // (died_at names it separately) but INCLUDES a deferred step (its own row is rewritten, not
+  // missing). skippedGateSteps folds gate-skip + disabled + coming_soon placeholders — all three are
+  // "administratively skipped, not a failure" at chain-completeness altitude; skippedBudgetSteps
+  // reuses the existing budgetSkippedSteps array declared below.
+  const executedSteps = [];
+  const skippedGateSteps = [];
 
   // Check if previous chain run failed — if so, disable gate-skip to ensure
   // unprocessed records from the failed run get enriched downstream.
@@ -227,9 +294,16 @@ async function run() {
     // that alone was complete. C1 makes a non-halting FAIL land as
     // 'completed_with_errors' instead — the chain finishes, but its work is just as
     // unfinished. Without this, the next run would re-enable gate-skip and quietly
-    // skip the backlog the red run left behind. Sole consumer: :565.
+    // skip the backlog the red run left behind. Sole consumer: :675 (the gate-skip
+    // guard's `!forceMode && !prevChainFailed` — this line number drifts with every edit
+    // above it in the file; re-verify with `grep -n` rather than trusting the digit).
+    // B2 (RULING 1, B0 item 7): `deferred_to_full` counts too — without it, AD1 would
+    // gate-skip the very step carrying the deferred backlog on the NEXT run and starve
+    // the defer-streak detector. Dormant for 'sources' today (manifest.chain_gates has
+    // no 'sources' entry, so prevChainFailed never reaches the gate-skip guard for this
+    // chain) — a re-ruling is only forced if 'sources' ever gains a gate.
     const prevStatus = prevRun.rows[0]?.status;
-    if (prevStatus === 'failed' || prevStatus === 'completed_with_errors') {
+    if (prevStatus === 'failed' || prevStatus === 'completed_with_errors' || prevStatus === 'deferred_to_full') {
       prevChainFailed = true;
       pipeline.log.info('[run-chain]', `Previous chain run ${prevStatus} — gate-skip disabled to process unfinished work`);
     }
@@ -347,6 +421,7 @@ async function run() {
     // Skip disabled steps
     if (disabledSlugs.has(slug)) {
       console.log(`${stepLabel} — SKIPPED (disabled)`);
+      skippedGateSteps.push(slug);
       const scopedSlug = `${chainId}:${slug}`;
       try {
         await pool.query(
@@ -378,15 +453,14 @@ async function run() {
       || slug === 'backup_db';
     if (gateSkipped && !isInfraStep) {
       console.log(`${stepLabel} — SKIPPED (gate: 0 new records)`);
-      const scopedSlug = `${chainId}:${slug}`;
+      skippedGateSteps.push(slug);
       try {
         await pool.query(
-          `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status, duration_ms)
-           VALUES ($1, NOW(), NOW(), 'skipped', 0)`,
-          [scopedSlug]
+          `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status, duration_ms) VALUES ($1, NOW(), NOW(), 'skipped', 0)`,
+          [`${chainId}:${slug}`]
         );
       } catch (err) {
-        pipeline.log.warn('[run-chain]', `Gate-skip tracking insert failed: ${err.message}`);
+        pipeline.log.warn('[run-chain]', `Gate-skip insert failed: ${err.message}`);
       }
       continue;
     }
@@ -394,6 +468,7 @@ async function run() {
     // Skip coming_soon placeholders (file: null) to prevent path.resolve crash
     if (manifest.scripts[slug]?.coming_soon) {
       console.log(`${stepLabel} — SKIPPED (coming soon)`);
+      skippedGateSteps.push(slug);
       continue;
     }
 
@@ -544,6 +619,34 @@ async function run() {
       }
 
       const durationMs = Date.now() - stepStart;
+
+      // B2 defer mechanism (RULING 1/2): a step signals it deferred its own scope to a future
+      // --full run via records_meta.deferred = {step, scope_count, threshold, ratio}. Diverts the
+      // unconditional 'completed' UPDATE below to 'deferred_to_full', sets deferredStep (NEVER
+      // failedStep), and breaks the loop. Downstream steps get NO rows — a deliberate divergence
+      // from the budget-stop path's 'skipped' rows: a defer is a clean stop at the CURRENT step
+      // boundary, not a pre-decided skip of steps the chain already committed to running.
+      const deferMarker = parseDeferMarker(recordsMeta);
+      if (deferMarker) {
+        console.log(`${stepLabel} — deferred to full (scope ${deferMarker.scope_count} >= threshold ${deferMarker.threshold})\n`);
+        if (stepRunId) {
+          await pool.query(
+            `UPDATE pipeline_runs
+             SET completed_at = NOW(), status = 'deferred_to_full', duration_ms = $1,
+                 records_total = COALESCE($3, records_total),
+                 records_new = COALESCE($4, records_new),
+                 records_updated = COALESCE($5, records_updated),
+                 records_meta = COALESCE($6::jsonb, records_meta)
+             WHERE id = $2`,
+            [durationMs, stepRunId, recordsTotal, recordsNew, recordsUpdated, recordsMeta ? JSON.stringify(recordsMeta) : null]
+          );
+        }
+        deferredStep = slug;
+        deferMarkerInfo = deferMarker;
+        executedSteps.push(slug); // C5 — the deferring step's OWN row exists (rewritten, not missing)
+        break;
+      }
+
       console.log(`${stepLabel} — completed (${(durationMs / 1000).toFixed(1)}s)\n`);
 
       if (stepRunId) {
@@ -560,6 +663,7 @@ async function run() {
         // No .catch() — DB failures on step completion must halt the chain
         // (masked disconnects would silently cascade into the next step)
       }
+      executedSteps.push(slug); // C5 — this step's row exists as 'completed' this run
 
       // When the primary ingest step produced zero changes, set gateSkipped
       // so non-essential downstream steps are skipped. Quality/infrastructure
@@ -641,21 +745,30 @@ async function run() {
   if (wasCancelled) chainStatus = 'cancelled';
   else if (failedStep) chainStatus = 'failed';
   else if (hasVerdictFails) chainStatus = 'completed_with_errors';
+  // B2 (RULING 1): defer sits between verdict-FAIL and budget-stop — a red audit still reds the
+  // chain even if a later step also deferred, but a clean defer must not be swallowed by a WARN.
+  else if (deferredStep) chainStatus = 'deferred_to_full';
   // WF3 2026-08-09: an all-PASS budget-stopped chain must NOT read plain 'completed' — the WARN
   // status is the honest signal and the green allowlist admits it. FAIL verdicts still win above.
   else if (budgetStopped) chainStatus = 'completed_with_warnings';
   else if (hasVerdictWarns) chainStatus = 'completed_with_warnings';
   else chainStatus = 'completed';
+  // resolveChainStatus() above mirrors this ladder for external unit-testability — kept in sync by
+  // hand (see its own doc comment for why it isn't called here directly).
 
   // budgetStopped chainError: this string is what FreshnessTimeline renders — meta alone is
   // invisible, and a third of coa runs are already WARN for other reasons (status can't distinguish).
+  // B2 (N-6 folded): the defer arm gets the same treatment — meta alone is invisible until B6 wires
+  // admin surfaces, so the human-readable string carries the step + scope + threshold.
   const chainError = failedStep
     ? `Stopped at step: ${failedStep}`
-    : budgetStopped
-      ? `Soft time budget reached (${budgetStopElapsedMin}m >= ${chainBudgetMinutes}m) — ${budgetSkippedSteps.length} downstream step(s) skipped`
-      : gateSkipped
-        ? '0 new records — downstream steps skipped'
-        : null;
+    : deferredStep
+      ? `Deferred to full at step ${deferredStep} (scope ${deferMarkerInfo?.scope_count} >= threshold ${deferMarkerInfo?.threshold})`
+      : budgetStopped
+        ? `Soft time budget reached (${budgetStopElapsedMin}m >= ${chainBudgetMinutes}m) — ${budgetSkippedSteps.length} downstream step(s) skipped`
+        : gateSkipped
+          ? '0 new records — downstream steps skipped'
+          : null;
 
   // Include step verdicts + pre-flight audit in chain records_meta for drill-down
   const metaObj = {};
@@ -668,6 +781,25 @@ async function run() {
       steps_skipped: budgetSkippedSteps,
     };
   }
+  // C5/B2 — ONE CONTRACT (RULING 2): records_meta.step_completeness = {expected, executed, died_at,
+  // skipped_gate, skipped_budget, deferred_at}. `deferred_to_full` is a legitimate executed<expected
+  // (steps at-or-after deferred_at are missing BY DESIGN, not silently). Written every run (not
+  // length-gated) so "absent" unambiguously means "a row written before this deploy" (Spec 48 §4.9
+  // annotate window), never "this run chose not to write it".
+  metaObj.step_completeness = {
+    expected: steps,
+    executed: executedSteps,
+    died_at: wasCancelled ? null : failedStep,
+    skipped_gate: skippedGateSteps,
+    skipped_budget: budgetSkippedSteps,
+    deferred_at: deferredStep || undefined,
+    // Informational passthrough of the deferring step's OWN marker (never consumed by
+    // classifyStepCompleteness, which only reads expected/executed/died_at/skipped_*/deferred_at) —
+    // lets check-chain-verdict.js's ::warning name the scope/threshold, not just the step slug.
+    ...(deferredStep && deferMarkerInfo
+      ? { scope_count: deferMarkerInfo.scope_count, threshold: deferMarkerInfo.threshold, ratio: deferMarkerInfo.ratio }
+      : {}),
+  };
   const chainMeta = Object.keys(metaObj).length > 0 ? JSON.stringify(metaObj) : null;
 
   if (chainRunId) {
@@ -736,9 +868,16 @@ async function run() {
   if (failedStep) process.exit(1);
 }
 
-run().catch(async (err) => {
-  pipeline.log.error('[run-chain]', err, { phase: 'fatal' });
-  // Close pool to prevent orphaned TCP connections on the database server
-  if (_pool) { try { await _pool.end(); } catch { /* best effort */ } }
-  setTimeout(() => process.exit(1), 500);
-});
+// B2 (C1 precedent, assert-lifecycle-phase-distribution.js:307) — guard the CLI body so this module
+// is safe to `require()` from a test process: without it, requiring run-chain.js would immediately
+// try to create a real DB pool and call run(), same class of risk C1 closed for the assert script.
+if (require.main === module) {
+  run().catch(async (err) => {
+    pipeline.log.error('[run-chain]', err, { phase: 'fatal' });
+    // Close pool to prevent orphaned TCP connections on the database server
+    if (_pool) { try { await _pool.end(); } catch { /* best effort */ } }
+    setTimeout(() => process.exit(1), 500);
+  });
+}
+
+module.exports = { resolveChainStatus, parseDeferMarker };

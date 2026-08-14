@@ -78,6 +78,9 @@ describe('run-chain.js — soft time-budget self-stop (Spec 115 §2.2)', () => {
 describe('check-chain-verdict.js — budget-stopped chains are green-allowlisted (assert, not assume)', () => {
   it('completed_with_warnings is in OK_STATUSES', () => {
     const src = readFileSync(join(process.cwd(), 'scripts/check-chain-verdict.js'), 'utf8');
-    expect(src).toMatch(/OK_STATUSES\s*=\s*new Set\(\[\s*'completed',\s*'completed_with_warnings'\s*\]\)/);
+    // B2: OK_STATUSES gained 'deferred_to_full' (RULING 2/3) — the append breaks this regex's tail
+    // (documented in .cursor/phase_b_active_task_INPROGRESS.md "B0 ITEM 7"), so it is updated in the
+    // SAME change as the OK_STATUSES edit itself.
+    expect(src).toMatch(/OK_STATUSES\s*=\s*new Set\(\[\s*'completed',\s*'completed_with_warnings',\s*'deferred_to_full'\s*\]\)/);
   });
 });

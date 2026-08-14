@@ -124,6 +124,71 @@ node scripts/run-chain.js <chain_id> [run_id] [--force]
 
 The orchestrator's disabled-steps query is `SELECT pipeline FROM pipeline_schedules WHERE enabled = FALSE AND (chain_id IS NULL OR chain_id = $1)` with the current chain bound to `$1`. Uniqueness is enforced by the named index `idx_pipeline_schedules_scope ON (pipeline, COALESCE(chain_id, '__ALL__'))` so a pipeline can have one global row plus one row per chain. The admin UI currently writes only NULL rows (global); per-chain scoping is planned UI work.
 
+### 3.1.2 Terminal Status Vocabulary _(NEW 2026-08-14 — Phase B B2 fold, `pipeline_runs.status`)_
+
+Both step-scoped and chain-scoped `pipeline_runs` rows share one status vocabulary. A chain
+row's terminal status is a ladder over its steps' outcomes (`run-chain.js`'s `chainStatus`
+assignment), consumed by `check-chain-verdict.js`'s `OK_STATUSES` (green-class allowlist) and
+`check-pipeline-freshness.js`'s `RAN_STATUSES` (ran-at-all allowlist):
+
+| Status | Meaning | `OK_STATUSES` (verdict-green) | `RAN_STATUSES` (freshness) |
+|---|---|---|---|
+| `running` | In-flight, not yet terminal | — | — |
+| `completed` | Every step ran, no WARN/FAIL step verdict, no budget-stop | ✓ | ✓ |
+| `completed_with_warnings` | Every step ran, but a step verdict was WARN and/or the chain hit its soft time-budget stop (Spec 115 §2.2) | ✓ | ✓ |
+| `completed_with_errors` | The chain finished without crashing, but a step's `audit_table` verdict was FAIL (C1, 2026-08-11 — non-halting-FAIL classification): the run completed, its DATA did not pass | ✗ | ✓ |
+| `deferred_to_full` | **NEW (Phase B B2).** A gated step's PRE-TRANSACTION scope count exceeded its defer threshold; the chain stopped CLEANLY at that step's boundary — not a crash, not a data FAIL | ✓ (green + `::warning`) | ✓ |
+| `failed` | A step threw or exited 1; the chain halted before its next step | ✗ | ✗ |
+| `cancelled` | Operator-cancelled mid-run | ✗ | ✗ |
+
+#### `deferred_to_full`
+
+A **gated step** (today: `enrich_parcels`'s multi-pass engine, Spec 65 — the only step wired
+to a defer threshold) computes its work scope from upfront-computable predicates BEFORE
+opening its transaction (Spec 47 §8.7 — the PRE-TRANSACTION rule; an in-transaction defer
+decision is disallowed by construction). If that scope exceeds the step's threshold
+(`logic_variables.enrich_parcels_defer_threshold_rows`, default 50,000 — Spec 86 Control
+Panel), the step does NONE of its normal work this run, emits a `records_meta.deferred`
+marker (Spec 47 §8.7) with a `records_meta.step_completeness.deferred_at` STEP SLUG — the
+manifest slug that deferred (e.g. `'enrich_parcels'`), not a timestamp despite the field name
+(Spec 48 §3.9) — and exits 0. `run-chain.js` parses the marker, rewrites the step's own `pipeline_runs`
+row to `deferred_to_full` (diverting the step loop's unconditional `'completed'` write), and
+breaks the loop via its own state variable — **no downstream step gets a row this run** (a
+deliberate divergence from the soft-budget stop, which leaves `'skipped'` rows for the
+remainder of the manifest; the reader distinguishes "the chain chose to stop here" from "the
+chain ran out of wall time mid-list" by this shape alone). The chain's own `pipeline_runs`
+row terminalizes `deferred_to_full` too.
+
+**Consumer classification, all four hops (Spec 40/47/48/115 compose here):**
+1. `check-chain-verdict.js` — `deferred_to_full` sits **inside `OK_STATUSES`** (green) but
+   the verdict step still emits a `::warning` GitHub annotation naming the deferring step
+   and its `scope_count`/`threshold`/`ratio` — never silently green, never a red the
+   operator has to chase down.
+2. `check-pipeline-freshness.js` — `deferred_to_full` sits **inside `RAN_STATUSES`**: the
+   chain attempted and made a scoped decision, which counts as "ran" for absence detection
+   (Spec 115 §2.5). It does NOT mean the deferred step's DATA is fresh — see the streak rule
+   below and Spec 115 §2.5's "a defer does not reset a step's work-age" note.
+3. Admin renderers (`FreshnessTimeline.tsx`, `DataQualityDashboard.tsx`, `stats/route.ts` —
+   Phase B B6 scope) render `deferred_to_full` as its own distinct status, never falling
+   through to a generic/default style.
+4. **Producer-completed gates never treat a `deferred_to_full` step row as satisfying "this
+   step's data is current."** Any gate keyed on `status = 'completed'` (e.g.
+   `source-version.js`'s tier gates) structurally excludes `deferred_to_full` — a step that
+   deferred did NO enrichment work this run, so nothing downstream may treat its watermark
+   as advanced.
+
+**Escalation — the defer-streak rule (Spec 40/43).** Two CONSECUTIVE `deferred_to_full`
+outcomes on the SAME step — keyed on `records_meta.step_completeness.deferred_at` being
+present on the row, not on `status` alone, so a run that deferred a step AND separately
+FAILed a different step's audit verdict (`completed_with_errors`, which outranks a defer on
+the status ladder) still counts toward the streak (Spec 48 §3.9's `status ⟺ deferred_at`
+tripwire is explicitly scoped to `OK_STATUSES` rows for this reason) — makes the verdict
+step exit 1 with **"supervised force-full required"** instead of its usual
+green/warning/red classification. This is the loop breaker: an unbounded string of clean
+defers would otherwise never surface as an operator action item. See Spec 43 for the
+chain-level lifecycle (first defer warns, second reds, the supervised force-full path) and
+the quarterly `LINK_MASSING_FORCE_FULL=1` interaction.
+
 ### 3.2 Gate-Skip Logic
 
 The `chain_gates` manifest key maps chains to their primary ingest step:

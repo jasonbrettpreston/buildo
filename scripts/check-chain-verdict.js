@@ -28,8 +28,10 @@
  * just-completed `node scripts/run-chain.js <chainId>` invocation wrote —
  * and applies a GREEN ALLOWLIST (Pipeline Rehab P3, 2026-08-03 — inverted
  * from the original denylist). Exits 0 ONLY if:
- *   - `status` is 'completed' or 'completed_with_warnings' (a WARN verdict
- *     is not a chain-workflow failure), AND
+ *   - `status` is 'completed', 'completed_with_warnings', or
+ *     'deferred_to_full' (a WARN verdict is not a chain-workflow failure;
+ *     a defer is a clean, designed stop at a step boundary — B2, Spec 40
+ *     §3.1.2), AND
  *   - `records_meta.step_verdicts` contains no 'FAIL' (belt-and-suspenders:
  *     run-chain.js already folds a step FAIL verdict into the
  *     `completed_with_errors` chain status itself, run-chain.js L580-589 —
@@ -86,7 +88,7 @@ const { resolveSslConfig } = require('./lib/ssl-config');
 // header: status is unconstrained TEXT, so a denylist is unprovable; every
 // status outside this set (failed, completed_with_errors, cancelled,
 // running, anything novel) is a FAIL.
-const OK_STATUSES = new Set(['completed', 'completed_with_warnings']);
+const OK_STATUSES = new Set(['completed', 'completed_with_warnings', 'deferred_to_full']);
 
 /**
  * Pure classification — takes the latest pipeline_runs row (or undefined)
@@ -139,6 +141,143 @@ function checkDurationTripwire(row, budgetMinutes) {
   return { durationMinutes, budgetMinutes, thresholdMinutes, message };
 }
 
+/**
+ * Pure — B2/C5 (Spec 48 §3.9): classifies a chain row's `records_meta.step_completeness`
+ * (`{ expected, executed, died_at, skipped_gate, skipped_budget, deferred_at }`) against its own
+ * `status`. Consulted ONLY on rows already inside OK_STATUSES — everything else is already red via
+ * classifyVerdict, and step_completeness has no jurisdiction there (v6.1 X-2: a defer-then-FAIL run
+ * legally carries `deferred_at` under `completed_with_errors`, which classifyVerdict reds first).
+ *
+ * Contract (active_task.md §C5, RULING 2, v6.1 X-2):
+ *   - `died_at` set is ALWAYS a contradiction on an OK-status row (the step recorded as died, yet
+ *     the chain reads green) — not ok, regardless of anything else.
+ *   - `deferred_to_full ⟺ deferred_at` (OK-scoped ⟺): the status and the field must agree in both
+ *     directions.
+ *   - Per-slug reconciliation of `expected` vs `executed`: a missing step is legitimate iff it is
+ *     named in `skipped_gate` or `skipped_budget`, OR (under a defer) it sits at-or-after
+ *     `deferred_at`'s position in `expected` (manifest order) — an unexplained gap is not ok.
+ *   - Absent `step_completeness` (legacy rows, pre-deploy) is a DELIBERATE, time-boxed relaxation
+ *     (Spec 48 §4.9) — {ok:true, annotate:true}, never a silent pass indistinguishable from a fully
+ *     populated row.
+ *
+ * @param {{ expected: string[], executed: string[], died_at: string | null, skipped_gate: string[],
+ *           skipped_budget: string[], deferred_at?: string | null } | null | undefined} sc
+ * @param {string} status
+ * @returns {{ ok: boolean, reason: string, annotate?: boolean }}
+ */
+function classifyStepCompleteness(sc, status) {
+  if (sc === null || sc === undefined) {
+    return {
+      ok: true,
+      annotate: true,
+      reason: 'step_completeness absent (legacy row, pre-deploy — Spec 48 §4.9 annotate window)',
+    };
+  }
+
+  const expected = Array.isArray(sc.expected) ? sc.expected : [];
+  const executed = Array.isArray(sc.executed) ? sc.executed : [];
+  const skippedGate = Array.isArray(sc.skipped_gate) ? sc.skipped_gate : [];
+  const skippedBudget = Array.isArray(sc.skipped_budget) ? sc.skipped_budget : [];
+  const diedAt = sc.died_at ?? null;
+  const deferredAt = sc.deferred_at ?? null;
+
+  if (diedAt) {
+    return { ok: false, reason: `died_at (${diedAt}) is set on an OK-status (${status}) row — contradiction` };
+  }
+
+  const isDeferredStatus = status === 'deferred_to_full';
+  if (isDeferredStatus && !deferredAt) {
+    return { ok: false, reason: `status=deferred_to_full but step_completeness.deferred_at is absent` };
+  }
+  if (!isDeferredStatus && deferredAt) {
+    return { ok: false, reason: `step_completeness.deferred_at (${deferredAt}) present on a non-deferred OK status (${status})` };
+  }
+
+  const executedSet = new Set(executed);
+  const gateSet = new Set(skippedGate);
+  const budgetSet = new Set(skippedBudget);
+  const deferredIdx = deferredAt ? expected.indexOf(deferredAt) : -1;
+
+  for (let i = 0; i < expected.length; i++) {
+    const slug = expected[i];
+    if (executedSet.has(slug)) continue;
+    if (gateSet.has(slug)) continue;
+    if (budgetSet.has(slug)) continue;
+    if (deferredIdx >= 0 && i >= deferredIdx) continue; // legit-incomplete: at/after the defer boundary
+    return {
+      ok: false,
+      reason: `step "${slug}" is expected but missing from executed/skipped_gate/skipped_budget and not covered by the defer boundary`,
+    };
+  }
+
+  return { ok: true, reason: 'step_completeness reconciled — no unexplained gap' };
+}
+
+/**
+ * Pure — B2 defer-streak breaker (RULING 2, Adv F3, v6.1 X-2): 2 CONSECUTIVE runs carrying
+ * `records_meta.step_completeness.deferred_at` for the SAME step means the defer is not
+ * self-healing; escalate to a red verdict naming the supervised force-full remedy. Keyed on
+ * `deferred_at` PRESENCE ALONE — NOT on `status === 'deferred_to_full'` (X-2: the
+ * `deferred_to_full ⟺ deferred_at` tripwire in classifyStepCompleteness is scoped to OK_STATUSES
+ * only; a defer-that-also-FAILed legally carries `deferred_at` under `completed_with_errors`, which
+ * is OUTSIDE OK_STATUSES — and that run STILL counts toward the streak, deliberately: hiding a real
+ * defer behind its own FAIL would starve the escalation the streak breaker exists to trigger). A
+ * mixed pair (in either order) or two defers on DIFFERENT steps resets/never starts the streak.
+ * Takes the last 2 chain rows, most-recent first. Never a v5-style chain-meta `deferred_step` key
+ * (RETIRED per RULING 2) — `step_completeness.deferred_at` is the ONE CONTRACT.
+ *
+ * @param {Array<{ status: string, records_meta: Record<string, unknown> | null }>} rows
+ * @returns {{ ok: boolean, reason: string }}
+ */
+function classifyDeferStreak(rows) {
+  if (!Array.isArray(rows) || rows.length < 2) {
+    return { ok: true, reason: 'fewer than 2 rows — no streak possible' };
+  }
+  const deferredAtOf = (row) => {
+    const sc = row?.records_meta?.step_completeness;
+    return sc && typeof sc === 'object' ? sc.deferred_at ?? null : null;
+  };
+  const a = deferredAtOf(rows[0]);
+  const b = deferredAtOf(rows[1]);
+  if (a && b && a === b) {
+    return {
+      ok: false,
+      reason: `2 consecutive runs carry deferred_at="${a}" for the same step — supervised force-full required (defer-streak breaker)`,
+    };
+  }
+  return { ok: true, reason: 'no same-step defer streak' };
+}
+
+// §4.9 companion (S-3) — the five chains this annotate window is gated on re-enabling/completing a
+// full cycle of. `chain_sources` is `disabled_manually` as of this writing (B6 re-enables it).
+const SCHEDULED_CHAIN_SLUGS = ['chain_permits', 'chain_coa', 'chain_sources', 'chain_entities', 'chain_deep_scrapes'];
+
+/**
+ * §4.9 live absent count (S-3): the number of the 5 scheduled chains whose LATEST row (never a
+ * lookback window — a stale absent row that already rotated out of "latest" must not hold the count
+ * nonzero forever) carries no `records_meta.step_completeness` at all. 0 is the machine-observable
+ * re-tighten condition. Best-effort: a query failure returns null (never fabricates a count), and the
+ * caller must not let it block the real verdict — this is observability layered on an already-decided
+ * green result.
+ *
+ * @param {import('pg').Pool} pool
+ * @returns {Promise<number | null>}
+ */
+async function countAbsentStepCompleteness(pool) {
+  try {
+    const { rows } = await pool.query(
+      `SELECT DISTINCT ON (pipeline) pipeline, records_meta
+         FROM pipeline_runs
+        WHERE pipeline = ANY($1)
+        ORDER BY pipeline, started_at DESC`,
+      [SCHEDULED_CHAIN_SLUGS],
+    );
+    return rows.filter((r) => r.records_meta == null || r.records_meta.step_completeness == null).length;
+  } catch {
+    return null;
+  }
+}
+
 async function run() {
   const chainId = process.argv[2];
   if (!chainId) {
@@ -161,24 +300,27 @@ async function run() {
 
   const chainSlug = `chain_${chainId}`;
   try {
+    // B2 (RULING 2): the defer-streak breaker needs the last TWO rows (was LIMIT 1) — 2 consecutive
+    // deferred_to_full on the same step is not self-healing.
     const res = await pool.query(
       `SELECT id, status, records_meta, started_at, completed_at FROM pipeline_runs
         WHERE pipeline = $1
         ORDER BY started_at DESC
-        LIMIT 1`,
+        LIMIT 2`,
       [chainSlug]
     );
+    const latest = res.rows[0];
 
     // Duration tripwire (header contract) — observability only, evaluated
     // BEFORE the verdict so a run that both crept and failed still shows the
     // creep annotation alongside the failure.
     const budgetMinutes = Number(process.env.CHAIN_DURATION_BUDGET_MINUTES);
-    const tripwire = checkDurationTripwire(res.rows[0], budgetMinutes);
+    const tripwire = checkDurationTripwire(latest, budgetMinutes);
     if (tripwire) {
       console.log(`::warning title=Chain duration tripwire::${chainSlug} ${tripwire.message}`);
     }
 
-    const { ok, reason } = classifyVerdict(res.rows[0]);
+    const { ok, reason } = classifyVerdict(latest);
     if (!ok) {
       console.error(
         `::error title=Chain verdict check::${chainSlug} verdict is a FAIL (${reason}) — orchestrator ` +
@@ -187,6 +329,63 @@ async function run() {
       );
       process.exitCode = 1;
       return;
+    }
+
+    // B2 defer-streak breaker (RULING 2, Adv F3) — evaluated only once the latest row itself
+    // reads green above; a 2nd consecutive same-step defer escalates to red.
+    const streak = classifyDeferStreak(res.rows);
+    if (!streak.ok) {
+      console.error(`::error title=Chain verdict check::${chainSlug} ${streak.reason}`);
+      process.exitCode = 1;
+      return;
+    }
+
+    // B2/C5 (Spec 48 §3.9) — consulted ONLY here, on a row already inside OK_STATUSES; every other
+    // status already reds above via classifyVerdict.
+    const stepCompleteness = latest?.records_meta?.step_completeness;
+    const completeness = classifyStepCompleteness(stepCompleteness, latest?.status);
+    if (!completeness.ok) {
+      console.error(`::error title=Chain verdict check::${chainSlug} step_completeness FAIL — ${completeness.reason}`);
+      process.exitCode = 1;
+      return;
+    }
+    if (completeness.annotate) {
+      // §4.9 self-announcing pair (S-3, modelled on scripts/lib/accepted-baseline.js's
+      // acceptedBaselineRows). Live absent count: DISTINCT ON latest-row-per-chain across all 5
+      // scheduled chains (never a lookback window — a legacy row that already rotated out of
+      // "latest" must not hold the count nonzero forever).
+      const absentCount = await countAbsentStepCompleteness(pool);
+      const absentText = absentCount == null ? 'unknown (live count query failed)' : String(absentCount);
+      console.log(
+        `::warning title=Chain verdict check::${chainSlug} step_completeness ${completeness.reason} ` +
+          `— annotate window (Spec 48 §4.9); live absent count across the 5 scheduled chains (latest ` +
+          `row per chain) = ${absentText}; fails closed once the window closes.`
+      );
+      // The flip condition itself (zero step_completeness-absent rows across a FULL CYCLE OF ALL
+      // FIVE scheduled chains) is STRUCTURALLY unmeasurable from a single chain's verdict step alone
+      // — it is cross-chain AND gated on B6 re-enabling chain-sources (currently disabled_manually;
+      // a chain that never runs can never rotate its absent row out of "latest") — so this names both
+      // dependencies rather than fabricating a single-chain approximation of a cross-chain fact.
+      console.log(
+        `::notice title=Chain verdict check::${chainSlug} step_completeness_absent_retighten — ` +
+          're-tightens (annotate → fail-on-absent) once the live absent count above reaches 0 across ' +
+          'a full cycle of all 5 scheduled chains (chain_permits, chain_coa, chain_sources, ' +
+          'chain_entities, chain_deep_scrapes), pinned to the LATEST row per chain — gated on B6 ' +
+          're-enabling chain_sources (Spec 48 §4.9; docs/reports/review_followups.md).'
+      );
+    }
+
+    // B2 (RULING 2/3): green + a ::warning annotation for a deferred chain — the operator sees the
+    // backlog (step + scope + threshold) without the run itself reading red.
+    if (latest?.status === 'deferred_to_full') {
+      const deferredAt = stepCompleteness && typeof stepCompleteness === 'object' ? stepCompleteness.deferred_at : null;
+      const scopeCount = stepCompleteness && typeof stepCompleteness === 'object' ? stepCompleteness.scope_count : null;
+      const threshold = stepCompleteness && typeof stepCompleteness === 'object' ? stepCompleteness.threshold : null;
+      const scopeText = scopeCount != null && threshold != null ? ` (scope ${scopeCount} >= threshold ${threshold})` : '';
+      console.log(
+        `::warning title=Chain verdict check::${chainSlug} deferred to full at step ${deferredAt || '(unknown)'}${scopeText} ` +
+          '— scope exceeded threshold; a repeat defer on the same step will escalate to red.'
+      );
     }
 
     console.log(`[check-chain-verdict] ${chainSlug} verdict OK (${reason})`);
@@ -202,4 +401,11 @@ if (require.main === module) {
   run();
 }
 
-module.exports = { run, classifyVerdict, checkDurationTripwire, OK_STATUSES };
+module.exports = {
+  run,
+  classifyVerdict,
+  checkDurationTripwire,
+  classifyStepCompleteness,
+  classifyDeferStreak,
+  OK_STATUSES,
+};

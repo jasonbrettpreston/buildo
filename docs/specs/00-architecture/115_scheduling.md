@@ -420,6 +420,24 @@ watchdog checks for it.
 > Accepted knowingly; recorded so a future "the watchdog was green" is not read as
 > "the data was fine". See Spec 84 KFM-1 and Spec 112 §9.
 
+> **`deferred_to_full` RAN-status semantics (Phase B B2, 2026-08-14) — counts as RAN, and is
+> ALSO verdict-green, unlike `completed_with_errors` above.** A chain that stops cleanly at a
+> gated step's pre-transaction scope boundary is not a quality problem — it is a scoped,
+> deliberate decision (Spec 40 §3.1.2). `RAN_STATUSES` includes `deferred_to_full` (the chain
+> attempted and made real progress up to the defer point), and `check-chain-verdict.js`'s
+> `OK_STATUSES` does too — but the GitHub Actions job may still carry a `::warning`
+> annotation naming the deferring step, so a defer is never silently indistinguishable from a
+> fully-clean `completed` run in the workflow's own UI, only in the watchdog's binary
+> RAN/absent signal. **A defer does NOT reset a step's work-age** — the deferred step
+> attempted and did NO enrichment work this run, so whatever data it was supposed to refresh
+> is exactly as stale after the defer as before it. The watchdog's absence check alone cannot
+> see this (it only asks "did the chain run"); Phase B **B6.5**'s per-step expected-cadence
+> staleness assert (a WARN-at-2×/FAIL-at-4× workflow step reading `logic_variables`, run
+> after the chain step — Spec 43) is the designed backstop that DOES see it, and the
+> defer-streak escalation (Spec 40 §3.1.2 — 2 consecutive defers on the same step → verdict
+> exit 1 "supervised force-full required") is the loop breaker that keeps an unbounded string
+> of clean defers from running forever without an operator ever being forced to look.
+
 **Checks against `pipeline_runs` (both required — neither substitutes for the other):**
 
 1. **Chain freshness — ALL FIVE scheduled chains (AMENDED, F8 fold 2026-07-20).** The
@@ -441,14 +459,17 @@ watchdog checks for it.
      cadence changes again, they move in the same commit** (a genuinely skipped slice still
      breaches by hours, so the slack costs nothing).
    A "completed" run means `pipeline_runs.status` is one of `completed` /
-   `completed_with_warnings` / `completed_with_errors` (F8 fold — this check is
+   `completed_with_warnings` / `completed_with_errors` / `deferred_to_full` (F8 fold,
+   `deferred_to_full` added by Phase B B2, 2026-08-14 — this check is
    ABSENCE detection only; pass/fail visibility now comes from
    `scripts/check-chain-verdict.js`'s per-run verdict-check steps in each chain workflow,
    which generalize the exit-0-masking guard §2.4 already required for `deep_scrapes` to
    all 5 chains and, as of 2026-08-03 (Pipeline Rehab P3), pass ONLY on §2.4's green
-   allowlist — `completed`/`completed_with_warnings` with no FAIL step verdict; note the
-   two lists differ deliberately: `completed_with_errors` counts as "ran" for absence
-   detection here but is a FAIL for the per-run verdict check). Missing any applicable chain → `exit 1` (the job goes red, firing GitHub's
+   allowlist — `completed`/`completed_with_warnings`/`deferred_to_full` with no FAIL step
+   verdict; note the two lists differ deliberately: `completed_with_errors` counts as "ran"
+   for absence detection here but is a FAIL for the per-run verdict check, while
+   `deferred_to_full` counts as ran AND green on both — see the RAN-status semantics
+   blockquote above). Missing any applicable chain → `exit 1` (the job goes red, firing GitHub's
    run-failure notification per §3). This closes the gap GitHub's own per-workflow
    notifications structurally cannot: a scheduled workflow that never fires at all (a
    platform outage, a `schedule:` block that silently stopped triggering) produces no run

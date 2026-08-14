@@ -21,15 +21,17 @@
  *        (GitHub's own per-workflow notifications structurally cannot
  *        detect a workflow that never triggered at all).
  *   (ii) Backup freshness — a completed row under EITHER the scoped-slug
- *        `permits:backup_db` shape (`run-chain.js:362`, written when the
- *        permits chain runs `backup_db` as its own final step) OR the
+ *        `permits:backup_db` shape (`${chainId}:${slug}` in run-chain.js's step-tracking
+ *        insert, written when the permits chain runs `backup_db` as its own final step) OR the
  *        standalone `backup_db` slug (written when this workflow invokes
  *        `scripts/backup-db.js` directly as the Spec 112 §6 safety net),
  *        within the last 25h.
  *
  * A "completed" run, for both checks, means a `pipeline_runs.status` in
- * RAN_STATUSES below — 'completed', 'completed_with_warnings', or
- * 'completed_with_errors' (F8 fold 2026-07-20: this script now does
+ * RAN_STATUSES below — 'completed', 'completed_with_warnings',
+ * 'completed_with_errors', or 'deferred_to_full' (B2, Spec 40 §3.1.2 — a
+ * deferring chain still landed fresh data through its completed steps; a
+ * defer is not an absence) (F8 fold 2026-07-20: this script now does
  * ABSENCE detection only — did a chain land fresh data recently, at all —
  * not pass/fail; pass/fail visibility comes from check-chain-verdict.js's
  * per-run verdict-check steps in the chain workflows themselves, which
@@ -78,10 +80,11 @@ const { Pool } = require('pg');
 const { resolveSslConfig } = require('./lib/ssl-config');
 const { isChainRunning } = require('./lib/chain-concurrency');
 
-// Terminal "ran" statuses per run-chain.js's chainStatus assignment
-// (run-chain.js:584-589) — see file header for the absence-detection
+// Terminal "ran" statuses per run-chain.js's chainStatus assignment (the `let chainStatus;`
+// ladder near the bottom of run() — grep for it rather than trusting a line number, which
+// drifts on every edit above it) — see file header for the absence-detection
 // rationale (F8 fold 2026-07-20).
-const RAN_STATUSES = ['completed', 'completed_with_warnings', 'completed_with_errors'];
+const RAN_STATUSES = ['completed', 'completed_with_warnings', 'completed_with_errors', 'deferred_to_full'];
 
 // Spec 07 §OP4 / Spec 115 §2.5 — the standing "backup/chain within 25h"
 // daily-schedule SLA (nightly cadence + headroom). Used for chain_coa,
@@ -241,7 +244,7 @@ async function run() {
     }
     if (!backupFresh) {
       console.log(
-        `::notice title=Pipeline freshness::No completed backup row (pipeline IN (${BACKUP_SLUGS.map((s) => `'${s}'`).join(', ')})) ` +
+        `::error title=Pipeline freshness::No completed backup row (pipeline IN (${BACKUP_SLUGS.map((s) => `'${s}'`).join(', ')})) ` +
           `within ${FRESHNESS_WINDOW_HOURS}h yet — the workflow may attempt the backup-db.js fallback if permits is not currently running.`
       );
     }

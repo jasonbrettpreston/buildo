@@ -2789,5 +2789,12 @@
     "min": 0,
     "max": 1,
     "description": "Spec 80 §5.C / P16-16E [Gemini MEDIUM pinned] — provenance weight for INFERENCE-basis trade attachments in compute-trade-forecasts.js input aggregation: an inference row's calibration sample is scaled by this factor before classifyConfidence banding (needs 1/weight x the evidence sample for the same confidence band). Ranking/serving authority stays attachment_basis (D5) — this weights, never gates. Panel-adjustable; 0.5 = the pinned default so re-activated inference never re-creates P13-3 full-weight inflation. CONSUMED by scripts/compute-trade-forecasts.js."
+  },
+  "enrich_parcels_defer_threshold_rows": {
+    "default": 50000,
+    "type": "number",
+    "min": 1000,
+    "max": 500000,
+    "description": "Phase B B2 (R3-B8, Spec 40 §3.1.2 / Spec 47 §8.7) — row-count threshold that trips enrich-parcels.js's clean scope-defer (chain terminalizes deferred_to_full instead of attempting the pass) when a gated pass's PRE-TRANSACTION scope count exceeds it. Default 50,000 = 10-15x measured-normal decision scope (~3,461/14d) and ~9x under measured-escalated full 5-pass citywide runtime (46.5-53 min); sized against the 08-03 CKAN re-export citywide event (485,567 rows) as the designed defer trigger, not the common case. Every run emits scope_count/threshold/ratio audit rows and WARNs at >=80% of this value (code-side, not a var) so the operator sees the cliff coming before a defer fires. Two CONSECUTIVE defers on the same step escalate to a red verdict (Spec 40 §3.1.2 defer-streak rule) requiring a supervised force-full (ENRICH_PARCELS_FORCE_FULL=1). Threshold is a labeled projection until Phase B B7 measures real per-pass durations against it. CONSUMED by scripts/enrich-parcels.js."
   }
 }

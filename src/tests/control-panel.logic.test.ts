@@ -60,6 +60,7 @@ describe('deltaExceeds50pct — Delta Guard utility', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const EXPECTED_LOGIC_VAR_KEYS = [
+  'enrich_parcels_defer_threshold_rows', // Spec 43/47 §8.7 — B2 per-pass scope-defer threshold (R3-B8)
   'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate
   'road_overlay_distance_m', // Spec 58 — seeded for WF2 enrich-parcels (F-C2)
   'reno_coa_uplift_pct', // Spec 65 §6 SC-3 — new-build CoA uplift over max-build GFA

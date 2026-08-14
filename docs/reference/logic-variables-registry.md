@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (412) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (413) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **418** logic variables (412 numeric, 6 JSONB).
+Total: **419** logic variables (413 numeric, 6 JSONB).
 
 ---
 
@@ -81,6 +81,7 @@ Total: **418** logic variables (412 numeric, 6 JSONB).
 | `cost_t4_matrix_miss_fail_pct` | numeric | 80 | 0 – 100 | — | seed | WF2 archetype (Spec 83 §3): matrix-miss FAIL threshold over the T4 population — catches a T4-only regression (e.g. matrix vocabulary drift) that the demoted full-population metric can no longer see. |
 | `cost_t4_matrix_miss_warn_pct` | numeric | 60 | 0 – 100 | — | seed | WF2 archetype (Spec 83 §3): matrix-miss WARN threshold over the T4 population ONLY (leads on the legacy path: non-residential + mapper-null residential). The T4 denominator keeps the gate meaningful after T1-T3 bypass the matrix — a full-population gate would always pass (Observability plan-review item 1). |
 | `desc_null_rate_warn_pct` | numeric | 5 | 1 – 100 | `scripts/quality/assert-data-bounds.js` | seed | Maximum acceptable percentage of recent permits (last 24h) with a NULL description before a data-quality warning is emitted |
+| `enrich_parcels_defer_threshold_rows` | numeric | 50000 | 1000 – 500000 | `scripts/enrich-parcels.js` | seed | Phase B B2 (R3-B8, Spec 40 §3.1.2 / Spec 47 §8.7) — row-count threshold that trips enrich-parcels.js's clean scope-defer (chain terminalizes deferred_to_full instead of attempting the pass) when a gated pass's PRE-TRANSACTION scope count exceeds it. Default 50,000 = 10-15x measured-normal decision scope (~3,461/14d) and ~9x under measured-escalated full 5-pass citywide runtime (46.5-53 min); sized against the 08-03 CKAN re-export citywide event (485,567 rows) as the designed defer trigger, not the common case. Every run emits scope_count/threshold/ratio audit rows and WARNs at >=80% of this value (code-side, not a var) so the operator sees the cliff coming before a defer fires. Two CONSECUTIVE defers on the same step escalate to a red verdict (Spec 40 §3.1.2 defer-streak rule) requiring a supervised force-full (ENRICH_PARCELS_FORCE_FULL=1). Threshold is a labeled projection until Phase B B7 measures real per-pass durations against it. CONSUMED by scripts/enrich-parcels.js. |
 | `expired_threshold_days` | numeric | -90 | -730 – -1 | `scripts/compute-trade-forecasts.js` | seed | Negative offset (days) used to classify a permit as expired; permits older than this are excluded from leads |
 | `fallback_range_pct` | numeric | 0.40 | — (migration-seeded) | — | migration 156 | CoA geometric cost-model fallback range when the primary model declines (insufficient confidence). Default 0.40 = ±40% — wider than primary range to reflect lower confidence. Operator-tunable via Spec 86 Control Panel. |
 | `forecast_default_calibration_fail_pct` | numeric | 50 | 0 – 100 | `scripts/compute-trade-forecasts.js` | seed | WF2 D2a (Spec 85 §3.6): compute-trade-forecasts.js default_calibration_pct FAIL threshold. At or above this share on calibration_method='default', the verdict FAILs (blocks nothing — verdict-only, run-chain.js halts on crashes not FAIL verdicts). STRICT baseline, restored 2026-08-05 by migration 238 alongside its warn twin, after the 2026-07-07 relaxation to 85 (c6310d65) was retired. The strict pair is 20/50, mirrored as STRICT_CALIB_WARN_PCT/STRICT_CALIB_FAIL_PCT in compute-trade-forecasts.js; the calibration_thresholds_relaxed guard makes any loosening loud + permanent-by-choice-only. |
@@ -440,4 +441,4 @@ Total: **418** logic variables (412 numeric, 6 JSONB).
 
 ---
 
-*Generated from 399 seed vars + 19 migration-only vars + 102 consumer-mapped keys across 2 script dirs.*
+*Generated from 400 seed vars + 19 migration-only vars + 103 consumer-mapped keys across 2 script dirs.*
