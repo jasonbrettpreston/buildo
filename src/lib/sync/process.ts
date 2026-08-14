@@ -216,7 +216,9 @@ async function processBatch(
             street_name=$5, street_type=$6, street_direction=$7, city=$8,
             postal=$9, geo_id=$10, building_type=$11, category=$12,
             application_date=$13, issued_date=$14, completed_date=$15,
-            status=$16, description=$17, est_const_cost=$18,
+            status=$16,
+            enriched_status = CASE WHEN $32 IS DISTINCT FROM 'Inspection' THEN NULL ELSE enriched_status END,
+            description=$17, est_const_cost=$18,
             builder_name=$19, owner=$20, dwelling_units_created=$21,
             dwelling_units_lost=$22, ward=$23, council_district=$24,
             current_use=$25, proposed_use=$26, housing_units=$27,
@@ -234,6 +236,10 @@ async function processBatch(
             mapped.current_use, mapped.proposed_use, mapped.housing_units,
             mapped.storeys, hash,
             permitNum, revisionNum,
+            // $32 — mapped.status AGAIN, deliberately: reusing $16 in the CASE makes
+            // pg deduce conflicting types (varchar from the SET assignment, text from
+            // IS DISTINCT FROM) and reject the statement. Proven by Case C2's red.
+            mapped.status,
           ]
         );
 

@@ -1348,18 +1348,21 @@ pipeline.run('assert-global-coverage', async (pool) => {
 
       // ── C3: enriched_status status-scope drift — the §4.9 SELF-ANNOUNCING PAIR ──
       // Spec 44 §3: enriched_status is a per-row refinement of that row's own
-      // status. C3 clears the historical residue — but the population REGENERATES
-      // with no enriched_status write at all: load-permits.js's
-      // `ON CONFLICT DO UPDATE SET status = EXCLUDED.status` (:340,:357) moves a
-      // permit past 'Inspection' while its legitimately-written enriched_status
-      // stays. enriched_status is DELIBERATELY excluded from that upsert list
-      // (classify-permit-phase.js:10-12) and NOTHING invalidates it when status
-      // moves — that missing rule is the real defect (filed in review_followups).
+      // status. C3 clears the historical residue; C7 (2026-08-13) closed the
+      // regeneration path by making every permits.status writer clear
+      // enriched_status in the same write when the new status is not
+      // 'Inspection' — four sites: load-permits.js:357 (upsert CASE),
+      // close-stale-permits.js:128 and :146, and src/lib/sync/process.ts's
+      // UPDATE. enriched_status is DELIBERATELY excluded from the loader's SET
+      // list only on the staying-'Inspection' branch (classify-permit-phase.js:
+      // 10-12) — clobber is structurally impossible there, while every other
+      // branch now clears.
       //
-      // WHY WARN + A RETIGHTEN COMPANION, NOT C6's FAIL-ON-NONZERO: this metric is
-      // expected to be non-zero every night until the loader-invalidation rule
-      // lands. A FAIL row on a permanently-non-zero population is a standing red
-      // operators learn to ignore — the exact noise class C1 shipped to eliminate.
+      // WHY WARN + A RETIGHTEN COMPANION, NOT C6's FAIL-ON-NONZERO: post-C7 +
+      // the final routine C3 run, this metric is expected to read 0 on EVERY
+      // chain_permits run — a single nonzero reading thereafter is a
+      // regression signal, not noise — but the WARN shape stays so a future
+      // (fifth) writer reddens the count instead of failing silently.
       // Spec 48 §4.9: "a relaxation must never be a silent, forgettable bypass",
       // so the WARN carries the LIVE value every run and a companion states the
       // machine-observable retighten condition. Shape modelled on
@@ -1379,10 +1382,12 @@ pipeline.run('assert-global-coverage', async (pool) => {
           value: driftRows,
           threshold:
             'accepted-WARN while > 0 — rows whose enriched_status outlived the status that ' +
-            'justified it. Regenerates nightly via load-permits ON CONFLICT status=EXCLUDED.status; ' +
-            'C3 (backfill-smeared-enriched-status.js) clears the residue on demand. ' +
-            'Owning fix: the missing loader status-change invalidation rule (review_followups). ' +
-            'SELF-RETIRES at 0 — both rows disappear and the plain gate resumes. Spec 48 §4.9.',
+            'justified it. C7 (2026-08-13) closed the regeneration path at all four ' +
+            'permits.status writer sites (load-permits.js:357, close-stale-permits.js:128/:146, ' +
+            'src/lib/sync/process.ts). Post-C7 + the final routine C3 run, expected steady-state ' +
+            'is 0 on EVERY chain_permits run — a single nonzero reading is a regression signal, ' +
+            'not noise. C3 (backfill-smeared-enriched-status.js) remains the emergency clear for ' +
+            'residuals. SELF-RETIRES at 0 — both rows disappear and the plain gate resumes. Spec 48 §4.9.',
           status: 'WARN',
         });
         rows.push({
@@ -1390,8 +1395,9 @@ pipeline.run('assert-global-coverage', async (pool) => {
           value: driftRows,
           threshold:
             're-tighten condition (machine-observable): live value = 0 across a full cycle of ' +
-            'chain_permits + chain_deep_scrapes, which is only durable once the loader ' +
-            'invalidation rule lands — until then C3 must be re-run.',
+            'chain_permits + chain_deep_scrapes — durable post-C7 (all four writer sites clear ' +
+            'enriched_status on status move) + the final routine C3 run; C3 remains available as ' +
+            'an emergency clear for any future residual.',
           status: 'INFO',
         });
       }

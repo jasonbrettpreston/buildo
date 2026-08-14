@@ -10,18 +10,25 @@
  * This clears the historical residue. C2 (the writer fix) MUST be live first —
  * backfill-first is simply re-smeared.
  *
- * ── C3 IS RE-RUNNABLE BY DESIGN. THIS IS NOT A ONE-OFF. ────────────────────
- * The population REGENERATES with no `enriched_status` write involved at all:
- * `load-permits.js`'s `ON CONFLICT DO UPDATE SET status = EXCLUDED.status`
- * (:340,:357) moves a permit past 'Inspection' while its legitimately-written
- * `enriched_status` stays. Measured evidence: the 97 scraped permits that were
- * 'Pending Closed'/'Closed' — they closed AFTER being scraped.
- * `enriched_status` is DELIBERATELY excluded from that upsert list
+ * ── C7 (2026-08-13) CLOSED THE REGENERATION PATH. C3 IS NOW THE EMERGENCY
+ *    CLEAR, NOT THE ROUTINE ONE — ONE FINAL RUN AT C7 DEPLOY. ─────────────────
+ * Before C7, the population REGENERATED with no `enriched_status` write
+ * involved at all: `load-permits.js:357`'s `ON CONFLICT DO UPDATE SET status =
+ * EXCLUDED.status` moved a permit past 'Inspection' while its
+ * legitimately-written `enriched_status` stayed. Measured evidence: the 97
+ * scraped permits that were 'Pending Closed'/'Closed' — they closed AFTER
+ * being scraped. `enriched_status` is DELIBERATELY excluded from that upsert
+ * list on the staying-'Inspection' branch
  * (classify-permit-phase.js:10-12: "so the permits loader upsert won't conflict")
- * — someone answered exactly half the question and never wrote the other half:
- * what invalidates `enriched_status` when `status` moves out from under it.
- * That missing rule is the real defect; this script clears the symptom.
- * Filed in review_followups.md. Until it lands, this script is re-run.
+ * — that fence answered exactly half the question; C7 wrote the other half at
+ * all FOUR sites that write `permits.status`: `load-permits.js:357` (upsert
+ * CASE), `close-stale-permits.js:128` and `:146`, and `src/lib/sync/process.ts`'s
+ * UPDATE — each now clears `enriched_status` in the same write when the new
+ * status is not 'Inspection'. Run this script ONE FINAL ROUTINE TIME the next
+ * UTC day after C7 lands on `main` (a same-UTC-day re-run fails closed on the
+ * dated-backup name collision — expected); after that it is an EMERGENCY tool
+ * for residuals only (e.g. a fifth, unaudited writer — watched by the
+ * `enriched_status_status_scope_drift` WARN row in `assert-global-coverage.js`).
  * ⇒ THE BACKUP TABLE IS DATED so each run keeps its OWN rollback. The
  *   `wf2-p13` precedent's fixed name + DROP-then-CREATE would silently destroy
  *   the previous run's rollback on the second run. Precedent for the dated form:
