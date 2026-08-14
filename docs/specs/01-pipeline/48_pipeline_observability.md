@@ -222,6 +222,59 @@ a `failed`/absent run or coverage below `centreline_propagation_coverage_min`.
 
 Per-step §3.6 dual-pattern + §3.7 first-deploy spike compliance is validated per Spec 79 §2 checklist items C2, C3, C4, C6 plus C12 tripwires (per-risk-class profile per Spec 79 §10). Validation records under `docs/reports/pipeline-validation/{permits,coa}/` show actual `pipeline_runs.records_meta` JSON and audit_table.rows shape — never asserted compliance without the actual JSON.
 
+### 3.9 `records_meta.step_completeness` — producer/consumer contract _(NEW 2026-08-14 — Phase B B2 + C5, ONE combined commit)_
+
+**Shape:** `records_meta.step_completeness = {expected, executed, died_at, skipped_gate,
+skipped_budget, deferred_at}`, written by `run-chain.js` onto the CHAIN-level `pipeline_runs`
+row (the existing `budget_stopped` jsonb-merge shape is the precedent — no schema change).
+
+| Field | Meaning | Decision-relevant? |
+|---|---|---|
+| `expected` | The manifest's step slug list for this chain, in declared order | Yes — paired with `died_at` |
+| `executed` | Step slugs that actually got a `pipeline_runs` row this run | Informational only |
+| `died_at` | `wasCancelled ? null : failedStep` — the slug a genuine step FAILURE stopped at, or `null` | Yes — the only failure signal this field carries |
+| `skipped_gate` | Step slugs skipped by gate-skip (§3.2 of Spec 40, primary ingest had 0 new records) | Informational only |
+| `skipped_budget` | Step slugs left with no row because the soft time-budget stopped the chain (Spec 115 §2.2) | Informational only |
+| `deferred_at` | The manifest STEP SLUG (e.g. `'enrich_parcels'`) that deferred this run — from the defer marker's `step` field (Spec 47 §8.7), NOT a timestamp despite the field name (named for symmetry with `died_at`); absent otherwise | Yes — the defer-streak signal (Spec 40 §3.1.2) |
+
+**Producer:** `run-chain.js`.
+
+**Consumer:** a third exported pure helper on `check-chain-verdict.js`,
+`classifyStepCompleteness(sc, status)` — `status` is the row's own `pipeline_runs.status`,
+needed to enforce the `⟺` tripwire below (scoped to `OK_STATUSES`) and the defer-arm's
+manifest-order reconciliation. **Consulted ONLY on rows already inside `OK_STATUSES`**
+(today `['completed', 'completed_with_warnings']`; Phase B B2 adds `'deferred_to_full'` to
+this set, Spec 40 §3.1.2) — every other status is already red via `classifyVerdict`, so
+completeness classification there would be redundant. **Only `expected` and `died_at` are
+decision-relevant** — `executed`/`skipped_gate`/`skipped_budget` are informational; a verdict
+function that instead compares `executed.length !== expected.length` misclassifies every
+legitimate gate-skip or budget-stop as an incomplete chain.
+
+**Absent ≠ pass.** For one deploy cycle after this field ships, an absent `step_completeness`
+(legacy rows, pre-deploy) is ANNOTATED (`{ok: true, annotate: true}`), never failed — this is
+one instance of §4.9's self-announcing relaxation pair, detailed there.
+
+**The `⟺` tripwire, scoped to `OK_STATUSES` rows (v6.1 X-2 correction).**
+`status === 'deferred_to_full' ⟺ deferred_at is present` holds ONLY within `OK_STATUSES`
+rows. It does NOT hold chain-wide: the status ladder ranks a FAIL-verdict
+(`completed_with_errors`) ABOVE a defer, so a run that both deferred a step AND separately
+FAILed a different step's audit verdict legitimately terminalizes `completed_with_errors`
+while still carrying `deferred_at` — a "defer-then-FAIL" run. **This is a deliberate
+semantic choice, not a bug:** streak detection (Spec 40 §3.1.2) keys on `deferred_at`
+regardless of the row's final status, so a defer-that-also-FAILed still counts toward the
+2-consecutive escalation. Hiding a real defer behind its own red would starve the
+loop-breaker of the exact signal it exists to catch.
+
+**Missing step rows are legitimate iff at-or-after `deferred_at` in manifest order.** A
+`deferred_to_full` chain leaves no `pipeline_runs` row for any step at-or-after the
+deferring step in the manifest's declared order (Spec 47 §8.7) — rows for steps BEFORE the
+defer point are ordinary `completed` rows and must not be flagged as "missing" by
+`classifyStepCompleteness`.
+
+**`died_at` derivation:** `died_at = wasCancelled ? null : failedStep` — a cancelled run's
+`failedStep` may be non-null incidentally (the cancel check runs between steps), so the
+helper reads `wasCancelled` first to avoid misreading a cancellation as a genuine failure.
+
 </behavior>
 
 ---
@@ -367,6 +420,23 @@ needed):
   `opportunity_score` coverage has sat at 79.9-80.0% vs ≥ 80 on every nightly run (never
   passed — knife-edge after the P16 denominator growth, not flapping). Same pair shape,
   self-retires at ≥ 80%.
+- **`step_completeness` absent-field annotate → `_retighten` pair** (Phase B B2+C5, ONE
+  combined commit — `run-chain.js`/`check-chain-verdict.js`, §3.9 above): the relaxation
+  window opens the moment that commit deploys — legacy chain rows written before it carry
+  no `step_completeness` field at all, so `classifyStepCompleteness` ANNOTATES
+  (`{ok: true, annotate: true}`) an absent field for one deploy cycle rather than failing
+  it. The companion `step_completeness_retighten` INFO row carries the machine-observable
+  flip condition: **zero absent-field rows across one full cycle of all five scheduled
+  chains** (`chain_coa`, `chain_permits`, `chain_sources`, `chain_entities`,
+  `chain_deep_scrapes`). The absent-count query is PINNED to the **latest row per chain** —
+  a naive lookback-window count would hold legacy rows in scope indefinitely and never reach
+  zero, which is exactly the silent-relaxation drift this section exists to prevent.
+  **Named dependency (v6.1 S-3):** the flip is STRUCTURALLY UNREACHABLE before
+  `chain_sources` is re-enabled (Phase B B6) — `chain_sources`'s workflow is
+  `disabled_manually` as of this writing (2026-08-14), so its "latest row" never advances
+  and the cycle can never close until B6 lands. The flip itself is the same one-line
+  operator-triggered follow-up commit as the other exemplars above — filed to
+  `docs/reports/review_followups.md` in the landing commit, not self-executing.
 
 ### 4.10 `records_total` honesty on Mutator steps _(NEW 2026-07)_
 

@@ -60,7 +60,7 @@ refresh_snapshot → assert_data_bounds → assert_engine_health
 ### Chain-Specific Arguments
 The chain runner (`scripts/run-chain.js`) injects extra CLI args ONLY from a script's per-script `chain_args[chainId]` array — there is NO blanket "full mode" applied to `supports_full` steps, and NO top-level `chain_args`. In the sources chain exactly **two** scripts carry a `chain_args.sources = ["--full"]` override in `manifest.json`:
 - `link_massing` — full parcel↔building re-link. **WF2 P11-2:** `--full` now *permits* a full relink; the script's gate (`scripts/lib/massing-full-gate.js`) does one only when the `building_footprints` count or `LINK_MASSING_CODE_VERSION` changed (else incremental), retiring the always-on ~21.9-min cost. `LINK_MASSING_FORCE_FULL=1` forces it.
-- `enrich_parcels` — full envelope/opt-config re-enrich; cascades a full `compute_parcel_cost_estimates` recompute (added WF2 2026-07-07). Safe because sources runs quarterly, not on the daily 6 AM job. **Not gated** (out of P11 scope — the dominant residual runtime).
+- `enrich_parcels` — full envelope/opt-config re-enrich; cascades a full `compute_parcel_cost_estimates` recompute (added WF2 2026-07-07). Safe because sources runs quarterly, not on the daily 6 AM job. **Not gated at the P11 "skip the whole step" level** (out of P11 scope — the dominant residual runtime). **Phase B B2 adds a separate, narrower per-pass scope-defer check INSIDE the script** (Spec 40 §3.1.2 / Spec 47 §8.7) — this does not skip the `--full` run itself, it can cause the run to stop cleanly partway through if a pass's pre-transaction scope exceeds `logic_variables.enrich_parcels_defer_threshold_rows`. `ENRICH_PARCELS_FORCE_FULL=1` (env var, step-scoped `env:` on the chain step only — Spec 40 §3.1.2 defer-streak recovery path) forces the run past the check for a supervised force-full, mirroring `LINK_MASSING_FORCE_FULL` above but for a different mechanism (defer threshold, not version-skip gate).
 
 **Runtime (WF2 P11):** on a genuinely-unchanged quarterly re-run the centreline (P11-1) + link_massing (P11-2) gates cut the chain from ~181.9 min (P6.7-D baseline, WITH `enrich_parcels --full`) to a projected **~61 min** — `enrich_parcels --full` (~46-53 min) is then the dominant residual. Measured (2026-07-08 acceptance run, `docs/reports/pipeline-validation/2026-07-08-p11-sources-version-gate-skips.md`): the massing gate fired live (`link_massing` 8.5 s vs 21.9 min); the centreline source happened to republish so its gate correctly ran full (87.1 min) — total 147.0 min for a changed-source run; the unchanged centreline path measured 11.2 s standalone. A real quarterly run with geometry churn recomputes only the churned centreline parcels (minutes, not 92) + a full link_massing only if the footprint corpus changed.
 
@@ -107,6 +107,24 @@ Every other step (including `link_parcels`, `link_neighbourhoods`, `link_wsib`, 
 - Neighbourhood boundary changes (rare, ~annual) → old permits may shift neighbourhoods
 - WSIB CSV absent in chain context (the normal scheduled-runner case) → `load_wsib` SKIPs with PASS + instructions row; a truncated operator-supplied CSV could still drop previously matched builders (no rollback protection)
 - `link_neighbourhoods` + `compute_centroids` N+1 patterns → performance hot spots (documented, not yet batched); the `--full` `enrich_parcels` + cascaded cost recompute is the dominant runtime contributor (~18 min enrich on a ~105 min chain)
+- **`enrich_parcels` scope-defer, chain-level lifecycle (Phase B B2, Spec 40 §3.1.2 / Spec 47
+  §8.7).** A citywide-scale change (the founding case: a one-time upstream re-export that
+  jittered every parcel geometry, tripping `IS DISTINCT FROM` citywide) makes `enrich_parcels`'
+  pre-transaction scope count exceed its defer threshold. First occurrence: the chain stops
+  cleanly at `enrich_parcels`, terminalizes `deferred_to_full` (green + `::warning`, Spec 40
+  §3.1.2) — a normal, expected outcome, not an incident. Second CONSECUTIVE occurrence on the
+  same step: the verdict step exits 1, "supervised force-full required" — the operator
+  dispatches `chain-sources.yml` via `workflow_dispatch` with `ENRICH_PARCELS_FORCE_FULL=1` set
+  on the `enrich_parcels` step only (bypassing the scope check for that one run; Spec 43 §Chain-
+  Specific Arguments), never as a standing env var. **The quarterly SCHEDULED dispatch of this
+  chain independently sets `LINK_MASSING_FORCE_FULL=1`** (Operator ruling D1′) regardless of
+  whether a defer is in progress — that force-full covers `link_massing`'s own heights-only
+  staleness bound and is unconditional on the defer lifecycle, not a response to it. Absent an
+  operator-dispatched supervised force-full, an unresolved defer streak leaves `enrich_parcels`
+  (and everything downstream of it: `compute_parcel_cost_estimates`, all three assert steps)
+  un-refreshed — Phase B **B6.5**'s per-step staleness assert (Spec 115 §2.5) is the backstop
+  that surfaces this even though the watchdog's absence check alone cannot (a defer counts as
+  "ran").
 </behavior>
 
 ---

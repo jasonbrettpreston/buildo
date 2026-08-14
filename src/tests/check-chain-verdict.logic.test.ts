@@ -98,8 +98,10 @@ describe('check-chain-verdict.js — classifyVerdict', () => {
   // denylist that classified THREE live orphaned `running` rows (ids
   // 1756/2045/2097, GH step-timeout kills) as green. The allowlist below is
   // the replacement contract.
-  it('OK_STATUSES contains exactly completed and completed_with_warnings (green allowlist)', () => {
-    expect([...checkChainVerdict.OK_STATUSES].sort()).toEqual(['completed', 'completed_with_warnings']);
+  it('OK_STATUSES contains exactly completed, completed_with_warnings, and deferred_to_full (green allowlist, B2)', () => {
+    expect([...checkChainVerdict.OK_STATUSES].sort()).toEqual(
+      ['completed', 'completed_with_warnings', 'deferred_to_full'].sort(),
+    );
   });
 
   it('fails status="running" — an orphaned row from a killed chain must never read green (live false-GREEN, 2026-08-03)', () => {

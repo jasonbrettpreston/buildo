@@ -300,9 +300,15 @@ export const GET = withApiEnvelope(async function GET() {
     // excluded — a crashed run should not count as "fresh data landed").
     // VERIFIED (F8 fold, 2026-07-20): the 3-status set below —
     // 'completed' | 'completed_with_warnings' | 'completed_with_errors' —
-    // was checked against run-chain.js's chainStatus assignment
-    // (run-chain.js:584-589, all three ARE real, live-written statuses, not
-    // a stale/fictional one) and against check-pipeline-freshness.js's own
+    // was checked against run-chain.js's chainStatus assignment (the
+    // `let chainStatus;` ladder near the bottom of run() — grep for it rather
+    // than trusting a line number, which drifts on every edit above it; all
+    // three ARE real, live-written statuses, not a stale/fictional one) —
+    // NOTE (Phase B B2, 2026-08-14): that ladder now ALSO emits a 4th status,
+    // 'deferred_to_full' (Spec 40 §3.1.2) — this 3-status IN-list is a KNOWN,
+    // documented gap (a deferred chain reads invisible here) filed to Phase B
+    // B6 (`stats/route.ts` hard IN-list), not fixed in this comment-only pass —
+    // and against check-pipeline-freshness.js's own
     // RAN_STATUSES constant, which was aligned to this same 3-status set in
     // the same fold. This is an independently-computed query, not a shared
     // one — see DataQualityDashboard.tsx's ChainFreshnessRow comment.

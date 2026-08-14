@@ -857,6 +857,82 @@ pipeline.log.warn('[script-slug]', 'Non-finite multiplier — using default', {
 It MUST NOT contain full row objects, address fields, entity name fields, or any field
 whose PII status is unknown.
 
+### 8.7 The third step ending: defer marker protocol _(NEW 2026-08-14 — Phase B B2)_
+
+A step ends one of three ways: **success** (`emitSummary` + exit 0 → chain reads `completed`),
+**failure** (uncaught throw + exit 1 → `failed`), or now **defer** (a bounded-scope refusal +
+exit 0 → `deferred_to_full`, Spec 40 §3.1.2). Defer exists for gated multi-pass steps whose
+natural work size can spike by orders of magnitude on a legitimate but rare upstream event —
+Phase B's founding case: a one-time CKAN toolchain re-export that changed every parcel
+geometry by sub-millimetre coordinate jitter, correctly failing every `IS DISTINCT FROM`
+comparator citywide (485,567 rows) — the exact shape that used to run ~180 minutes before
+getting SIGTERM-killed mid-transaction. A step that would otherwise attempt work far past its
+normal envelope instead stops CLEANLY at ITS OWN boundary and says so, rather than crashing
+or silently doing partial work.
+
+**The PRE-TRANSACTION rule (v6.1 B-1 — BLOCKING).** A defer decision MUST be computable
+BEFORE `pipeline.withTransaction` opens, from predicates knowable up front (e.g. a
+`COUNT(*)` over the step's own stale/decision scope). **A step MUST NEVER commit partial
+work and then defer** — that reintroduces the exact silent-staleness class this mechanism
+exists to kill: a watermark stamped for rows the run never actually processed, permanently
+hiding them from future runs. If a step's true scope can only be known mid-transaction (e.g.
+a temp table built inside the transaction), that scope MUST NOT drive the defer decision —
+either bound the decision conservatively from a pre-transaction predicate, or accept that
+this step cannot defer at all. **Any code path that would only discover it should defer
+after `withTransaction` has begun MUST throw and let the transaction roll back — never
+commit-then-defer.** This is Rule #1 of §1 ("never leave the DB in partial state") applied to
+the defer path specifically. A deferring run writes ZERO watermark stamps and ZERO
+scope-table rows this run; a red-first test proving deferral asserts both, not just the
+marker.
+
+**Marker contract.** A deferring script still calls `pipeline.emitSummary(...)` (§8.1) exactly
+once — `records_total`/`records_new`/`records_updated` describe the (zero) work actually
+done — and adds to `records_meta`:
+
+```js
+pipeline.emitSummary({
+  records_total: 0,
+  records_new: 0,
+  records_updated: 0,
+  records_meta: {
+    deferred: {
+      step: 'enrich_parcels',     // the manifest slug this run deferred, self-identifying
+      scope_count: 485567,        // the pre-transaction COUNT(*) that tripped the defer
+      threshold: 50000,           // logic_variables.enrich_parcels_defer_threshold_rows at read time
+      ratio: 9.71,                // scope_count / threshold — feeds the WARN-at-80% trend line
+    },
+    // step_completeness.deferred_at (Spec 48 §3.9) is written by run-chain.js from this
+    // marker's `step` field (the manifest slug, e.g. 'enrich_parcels') — NOT a timestamp
+    // despite the field name — and NOT by the deferring script itself.
+  },
+});
+```
+
+then **exits 0**. The script does not throw, does not partially run, and does not write any
+of its normal output tables this run.
+
+**Consumer (`run-chain.js`).** The orchestrator parses `records_meta.deferred` off the
+step's summary. If present, it rewrites that step's `pipeline_runs` row from the loop's
+unconditional `'completed'` write to `'deferred_to_full'`, stamps
+`records_meta.step_completeness.deferred_at` on the CHAIN row (Spec 48 §3.9), and breaks the
+step loop via its OWN state variable — distinct from `failedStep` (which maps to chain
+`'failed'`) and from the soft-budget-stop variable (which leaves `'skipped'` rows for the
+remainder of the manifest). A deferred chain leaves NO `pipeline_runs` row at all for any
+step after the deferring one — a deliberate divergence from the budget-stop shape, so an
+operator can tell "the chain chose to stop scope here" apart from "the chain ran out of wall
+time mid-list" from the row set alone. The chain's own `pipeline_runs` row terminalizes
+`'deferred_to_full'` too (Spec 40 §3.1.2).
+
+**Every-run telemetry (independent of whether this run defers).** A gated step emits its
+`scope_count`/`threshold`/`ratio` as ordinary `audit_table` (§8.2) INFO rows on EVERY run,
+WARNing at ≥80% of threshold — so a defer is never the operator's first signal that scope is
+climbing toward it.
+
+**Cross-ref:** Spec 40 §3.1.2 (the `deferred_to_full` status + the defer-streak escalation)
+· Spec 48 §3.9/§4.9 (`step_completeness.deferred_at`, the producer/consumer contract) ·
+Spec 115 §2.5 (RAN/watchdog semantics) · Spec 43 (the chain-level lifecycle for
+`chain_sources`, currently the only chain hosting a gated deferrable step).
+
 ---
 
 ## 9. Dual Code Path (§7)
