@@ -133,15 +133,112 @@ function resolveChainStatus({ wasCancelled, failedStep, hasVerdictFails, deferre
   return 'completed';
 }
 
+// ---------------------------------------------------------------------------
+// WF3 F2 (2026-08-15, Spec 118 §3/§7.2) — Layer 3: per-step ceilings.
+// ---------------------------------------------------------------------------
+
+/**
+ * Spawns a step's child process, streaming stdout to console and buffering
+ * PIPELINE_SUMMARY/PIPELINE_META lines — the exact behaviour the inline
+ * executor had before this fold, extracted so it is unit-testable with a real
+ * child process and no manifest/chain/DB.
+ *
+ * Layer 3 of the stop-mechanism hierarchy (Spec 118 §3): the missing "a
+ * pathological step must die in minutes at run-chain's hands, not at the
+ * platform's" layer. `timeoutMinutes` is manifest-configurable per step
+ * (`manifest.scripts[slug].step_timeout_minutes`); absent/0 is INERT — no
+ * timer is armed, matching layers 1/2's convention. When the ceiling elapses
+ * with the child still running, it is killed (SIGTERM) and the returned
+ * promise rejects with an Error carrying `err.stepTimedOut = true` and
+ * `err.summaryLines` (whatever PIPELINE_SUMMARY/META lines were buffered
+ * before the kill) — the caller's existing failure path (the :680-735-class
+ * catch below) reads both to build a `step_timeout` reason into failMeta.
+ *
+ * DESIGN DECISION (WF3 JOINT FOLD-VALIDATION, W5): a ceiling kill is HALTING,
+ * not the non-halting cross-check posture C1 gave quality-assert scripts. Per
+ * Spec 30 §5.4.1 criterion 1, a ceiling kill means "I could not run this
+ * step" — exception-class, not threshold-derived data-quality signal — so it
+ * flows through the SAME failedStep path any other step failure does. No
+ * ladder edit; no new chain-status branch.
+ *
+ * @param {{ runtime: string, scriptPath: string, args: string[], env: NodeJS.ProcessEnv, timeoutMinutes: number }} opts
+ * @returns {Promise<string>} buffered PIPELINE_SUMMARY/PIPELINE_META lines
+ */
+function spawnStepChild({ runtime, scriptPath, args, env, timeoutMinutes }) {
+  return new Promise((resolveSpawn, rejectSpawn) => {
+    const child = spawn(runtime, [scriptPath, ...args], {
+      env,
+      stdio: ['inherit', 'pipe', 'inherit'],
+    });
+
+    let timedOut = false;
+    let killTimer = null;
+    if (timeoutMinutes > 0) {
+      killTimer = setTimeout(() => {
+        timedOut = true;
+        child.kill('SIGTERM');
+      }, timeoutMinutes * 60000);
+      // Never keep the parent process alive on this timer alone (matters for
+      // the pure unit test, which spawns real children with no chain/DB
+      // around it and must exit promptly once its own assertions finish).
+      if (typeof killTimer.unref === 'function') killTimer.unref();
+    }
+
+    const decoder = new StringDecoder('utf8');
+    let lineBuffer = '';
+    let summaryLines = '';
+    child.stdout.on('data', (data) => {
+      const chunk = decoder.write(data);
+      process.stdout.write(chunk); // Tee to console immediately
+      lineBuffer += chunk;
+      const lines = lineBuffer.split('\n');
+      lineBuffer = lines.pop();
+      for (const line of lines) {
+        if (line.includes('PIPELINE_SUMMARY:') || line.includes('PIPELINE_META:')) {
+          summaryLines += line + '\n';
+        }
+      }
+    });
+
+    child.on('close', (code) => {
+      if (killTimer) clearTimeout(killTimer);
+      const remaining = decoder.end();
+      if (remaining) lineBuffer += remaining;
+      if (lineBuffer && (lineBuffer.includes('PIPELINE_SUMMARY:') || lineBuffer.includes('PIPELINE_META:'))) {
+        summaryLines += lineBuffer + '\n';
+      }
+      if (timedOut) {
+        const err = new Error(`Step timeout: ${runtime} ${scriptPath} exceeded ${timeoutMinutes}m ceiling (killed)`);
+        err.stepTimedOut = true;
+        err.summaryLines = summaryLines;
+        rejectSpawn(err);
+        return;
+      }
+      if (code === 0) resolveSpawn(summaryLines);
+      else rejectSpawn(new Error(`Command failed: ${runtime} ${scriptPath}`));
+    });
+    child.on('error', (err) => {
+      if (killTimer) clearTimeout(killTimer);
+      rejectSpawn(err);
+    });
+  });
+}
+
 async function run() {
   const pool = pipeline.createPool();
   _pool = pool;
 
   // Parse manifest inside run() so errors are caught by the global try/catch
-  // and logged via pipeline.log (instead of crashing with raw stderr on boot)
-  const manifest = JSON.parse(
-    fs.readFileSync(path.resolve(__dirname, 'manifest.json'), 'utf-8')
-  );
+  // and logged via pipeline.log (instead of crashing with raw stderr on boot).
+  // WF3 F2 (2026-08-15) — `--manifest=<path>` is a TEST-ONLY override (never set
+  // by any workflow yml or the local-cron caller): it lets a db test spin up its
+  // own tiny fixture chain (a step_timeout_minutes-bearing sleep stub) without
+  // touching the real manifest.json, whose `chains` list stays production-only.
+  const manifestArg = process.argv.find((a) => a.startsWith('--manifest='));
+  const manifestPath = manifestArg
+    ? path.resolve(manifestArg.slice('--manifest='.length))
+    : path.resolve(__dirname, 'manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
   const CHAINS = manifest.chains;
   const PIPELINE_SCRIPTS = {};
   for (const [slug, entry] of Object.entries(manifest.scripts)) {
@@ -522,52 +619,21 @@ async function run() {
     // summaryLines is declared outside try/catch so the catch block can parse
     // PIPELINE_SUMMARY on failure (scrapers emit telemetry even when exiting non-zero).
     let summaryLines = '';
+    // WF3 F2 — read once per step from manifest.scripts[slug]; absent/0 is inert.
+    const stepTimeoutMinutes = Number(scriptEntry.step_timeout_minutes || 0);
 
     try {
       // Merge step-specific env vars and chain-specific args from manifest
       const stepEnv = { ...process.env, PIPELINE_CHAIN: chainId, ...(scriptEntry.env || {}) };
       const extraArgs = [...(scriptEntry.chain_args?.[chainId] || [])];
+      const runtime = scriptPath.endsWith('.py')
+        ? (process.platform === 'win32' ? 'python' : 'python3')
+        : 'node';
       // Spawn child process with streaming stdout — prevents ENOBUFS on long scripts.
-      const output = await new Promise((resolveSpawn, rejectSpawn) => {
-        const runtime = scriptPath.endsWith('.py')
-          ? (process.platform === 'win32' ? 'python' : 'python3')
-          : 'node';
-        const child = spawn(runtime, [scriptPath, ...extraArgs], {
-          env: stepEnv,
-          stdio: ['inherit', 'pipe', 'inherit'],
-        });
-
-        // StringDecoder correctly buffers split multibyte UTF-8 characters
-        // across chunk boundaries (OS fragments at ~8KB). Without it,
-        // Buffer.toString('utf-8') can corrupt characters split mid-sequence.
-        const decoder = new StringDecoder('utf8');
-        let lineBuffer = '';
-        child.stdout.on('data', (data) => {
-          const chunk = decoder.write(data);
-          process.stdout.write(chunk); // Tee to console immediately
-          lineBuffer += chunk;
-          const lines = lineBuffer.split('\n');
-          // Last element is incomplete (no trailing \n) — retain for next chunk
-          lineBuffer = lines.pop();
-          for (const line of lines) {
-            if (line.includes('PIPELINE_SUMMARY:') || line.includes('PIPELINE_META:')) {
-              summaryLines += line + '\n';
-            }
-          }
-        });
-
-        child.on('close', (code) => {
-          // Flush remaining decoder bytes + line buffer
-          const remaining = decoder.end();
-          if (remaining) lineBuffer += remaining;
-          if (lineBuffer && (lineBuffer.includes('PIPELINE_SUMMARY:') || lineBuffer.includes('PIPELINE_META:'))) {
-            summaryLines += lineBuffer + '\n';
-          }
-          if (code === 0) resolveSpawn(summaryLines);
-          else rejectSpawn(new Error(`Command failed: ${runtime} ${scriptPath}`));
-        });
-        child.on('error', rejectSpawn);
-      });
+      // WF3 F2 (Spec 118 §3 Layer 3): a killed-on-ceiling child rejects with
+      // err.stepTimedOut — caught below, same as any other step failure.
+      const output = await spawnStepChild({ runtime, scriptPath, args: extraArgs, env: stepEnv, timeoutMinutes: stepTimeoutMinutes });
+      summaryLines = output;
 
       // Parse PIPELINE_SUMMARY line for record counts + records_meta
       let recordsTotal = null;
@@ -683,6 +749,12 @@ async function run() {
       const errorMsg = (err.message || String(err)).slice(0, 4000);
       pipeline.log.error('[run-chain]', `${stepLabel} — FAILED (${(durationMs / 1000).toFixed(1)}s)`, { error: errorMsg.slice(0, 200) });
 
+      // WF3 F2 — spawnStepChild's buffered summary lives on the rejection (its
+      // own local variable, not this outer placeholder); pull it across before
+      // parsing so a ceiling-killed step's partial telemetry survives the kill
+      // exactly like any other mid-run failure's does.
+      if (err && typeof err.summaryLines === 'string') summaryLines = err.summaryLines;
+
       // Parse PIPELINE_SUMMARY + PIPELINE_META from stdout even on failure —
       // scrapers emit telemetry (audit_table, scraper_telemetry) before exiting non-zero.
       let failMeta = null;
@@ -718,6 +790,14 @@ async function run() {
           const telemetry = await pipeline.diffTelemetry(pool, telemetryTables, preTelemetry);
           failMeta = { ...(failMeta || {}), telemetry };
         } catch (telErr) { pipeline.log.warn('[run-chain]', `Failure-path telemetry capture failed for ${slug}: ${telErr.message}`); }
+      }
+
+      // WF3 F2 (Spec 118 §3 Layer 3) — a ceiling kill names its own cause: the
+      // step didn't fail on its own merits, run-chain axed it. HALTING (see
+      // spawnStepChild's doc comment) — failedStep is set unconditionally below,
+      // same as any other step failure.
+      if (err && err.stepTimedOut === true) {
+        failMeta = { ...(failMeta || {}), reason: 'step_timeout', step_timeout_minutes: stepTimeoutMinutes };
       }
 
       if (stepRunId) {
@@ -880,4 +960,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { resolveChainStatus, parseDeferMarker };
+module.exports = { resolveChainStatus, parseDeferMarker, spawnStepChild };
