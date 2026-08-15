@@ -91,8 +91,11 @@ describe('run-chain.js — spawnStepChild() (real child process, no manifest/cha
         scriptPath: '-e',
         args: ['setTimeout(() => {}, 10000)'],
         env: process.env,
-        // 0.001 min = 60ms — the child must be dead well before its own 10s sleep ends.
-        timeoutMinutes: 0.001,
+        // 0.01 min = 600ms — the child must be dead well before its own 10s sleep
+        // ends. Wide enough to absorb `node -e` cold-start (module load + V8 init,
+        // observed flaky at 60ms under full-suite load) without losing the "near
+        // the ceiling, not after the 10s sleep" proof below.
+        timeoutMinutes: 0.01,
       }),
     ).rejects.toMatchObject({ stepTimedOut: true });
     // The kill fired near the ceiling, not after the child's own 10s sleep.
@@ -126,7 +129,8 @@ describe('run-chain.js — spawnStepChild() (real child process, no manifest/cha
           'setTimeout(() => {}, 10000);',
         ],
         env: process.env,
-        timeoutMinutes: 0.001,
+        // Same 600ms margin as the sibling test above (cold-start safety).
+        timeoutMinutes: 0.01,
       });
       throw new Error('expected rejection');
     } catch (err: unknown) {
