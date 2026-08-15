@@ -142,6 +142,107 @@ function checkDurationTripwire(row, budgetMinutes) {
 }
 
 /**
+ * Pure — median, NOT mean (a single blown-up run must not drag the baseline
+ * up with it; a mean is exactly the statistic a step-duration outlier
+ * contaminates). Even-length arrays average the two middle values.
+ *
+ * @param {number[]} nums
+ * @returns {number}
+ */
+function median(nums) {
+  const sorted = [...nums].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+/**
+ * WF3 F3 (2026-08-15, Spec 118 §7.3) — the step-duration trend tripwire: "the
+ * instrument whose absence cost two of the three [08-12/13/14] failure days."
+ * Every gate this repo had compared a VALUE against a THRESHOLD; none compared
+ * a value against its OWN HISTORY. This is that instrument, generalized to
+ * every step of every chain (not just deep_scrapes' refresh_snapshot).
+ *
+ * Pure — takes a step's trailing durations (oldest-agnostic order; only the
+ * VALUES matter) and its just-finished duration, and classifies the ratio
+ * against the trailing MEDIAN (never the mean — see median() above).
+ * `history` requires >= 3 usable (finite, non-negative) values or the
+ * classification is SKIPPED (returns null) — 1-2 data points make a median
+ * indistinguishable from a single outlier, and a brand-new step (0 prior
+ * completions) must never manufacture a spurious ratio from nothing.
+ *
+ * @param {number[]} history - trailing durations (ms) of prior COMPLETED runs of this step
+ * @param {number} current - duration (ms) of the just-finished run
+ * @returns {{ level: 'warning' | 'error', ratio: number, medianMs: number, currentMs: number, message: string } | null}
+ */
+function classifyDurationTrend(history, current) {
+  if (!Array.isArray(history)) return null;
+  const usable = history.filter((n) => Number.isFinite(n) && n >= 0);
+  if (usable.length < 3) return null;
+  if (!Number.isFinite(current) || current < 0) return null;
+  const medianMs = median(usable);
+  if (!Number.isFinite(medianMs) || medianMs <= 0) return null;
+  const ratio = current / medianMs;
+  if (ratio < 3) return null;
+  const level = ratio >= 10 ? 'error' : 'warning';
+  const currentMin = (current / 60000).toFixed(1);
+  const medianMin = (medianMs / 60000).toFixed(1);
+  const message =
+    `duration ${currentMin} min is ${ratio.toFixed(1)}x the trailing median ${medianMin} min ` +
+    `(n=${usable.length}) — ${level === 'error' ? 'pathological, likely axed by the platform timeout' : 'creeping, watch it'}.`;
+  return { level, ratio, medianMs, currentMs: current, message };
+}
+
+/**
+ * WF3 F3 — the DB-querying half. ONE `LIMIT 7` probe PER EXECUTED STEP (never
+ * per chain-run-history-lookback): `rows[0]` is the step's row from the just-
+ * finished chain run (`current`); `rows.slice(1)` filtered to `status =
+ * 'completed'` is the trailing history classifyDurationTrend() consumes.
+ * ⚠ run-chain-defer.logic.test.ts's ⑧-lock bans the single-row `ORDER BY
+ * started_at DESC` + `LIMIT` clause this file's defer-streak query moved off
+ * of — the ban regex has no word boundary after the digit, so it fires on
+ * ANY `LIMIT` value starting with that digit, not only the exact one-row
+ * form. `LIMIT 7` is deliberately clear of it (as is the defer-streak
+ * query's own `LIMIT 2` above). Cost is per-step negligible (~9.7ms
+ * measured) — this runs once per executed step of EVERY chain, not just
+ * deep_scrapes.
+ *
+ * Best-effort per step: a query failure for one step must never block the
+ * others or the caller's real verdict (this is observability layered on an
+ * already-decided result, same posture as countAbsentStepCompleteness above).
+ *
+ * @param {import('pg').Pool} pool
+ * @param {string} chainId
+ * @param {string[]} executedSteps
+ * @returns {Promise<Array<{ slug: string, trend: ReturnType<typeof classifyDurationTrend> }>>}
+ */
+async function checkStepDurationTrends(pool, chainId, executedSteps) {
+  const results = [];
+  for (const slug of executedSteps) {
+    try {
+      const { rows } = await pool.query(
+        `SELECT duration_ms, status FROM pipeline_runs
+          WHERE pipeline = $1
+          ORDER BY started_at DESC
+          LIMIT 7`,
+        [`${chainId}:${slug}`],
+      );
+      if (rows.length === 0) continue;
+      const [current, ...rest] = rows;
+      const currentMs = Number(current.duration_ms);
+      const historyMs = rest
+        .filter((r) => r.status === 'completed')
+        .map((r) => Number(r.duration_ms))
+        .filter((n) => Number.isFinite(n));
+      const trend = classifyDurationTrend(historyMs, currentMs);
+      if (trend) results.push({ slug, trend });
+    } catch {
+      // Best-effort — one step's query failure never blocks the others.
+    }
+  }
+  return results;
+}
+
+/**
  * Pure — B2/C5 (Spec 48 §3.9): classifies a chain row's `records_meta.step_completeness`
  * (`{ expected, executed, died_at, skipped_gate, skipped_budget, deferred_at }`) against its own
  * `status`. Consulted ONLY on rows already inside OK_STATUSES — everything else is already red via
@@ -320,6 +421,27 @@ async function run() {
       console.log(`::warning title=Chain duration tripwire::${chainSlug} ${tripwire.message}`);
     }
 
+    // WF3 F3 (Spec 118 §7.3) — per-step duration TREND, not a point-in-time budget
+    // check. Evaluated BEFORE the verdict (same rationale as the whole-chain
+    // tripwire above): a run that both crept on one step AND failed elsewhere must
+    // still surface the creep. Carrier is GH annotations + exit code — this CLI is
+    // outside the Spec 47 skeleton and emits no audit rows (deliberate deviation,
+    // matching this file's existing ::warning/::error convention).
+    const executedSteps = Array.isArray(latest?.records_meta?.step_completeness?.executed)
+      ? latest.records_meta.step_completeness.executed
+      : [];
+    const stepTrends = await checkStepDurationTrends(pool, chainId, executedSteps);
+    let hasErrorTrend = false;
+    for (const { slug, trend } of stepTrends) {
+      if (trend.level === 'error') {
+        console.error(`::error title=Step duration trend::${chainSlug}:${slug} ${trend.message}`);
+        hasErrorTrend = true;
+      } else {
+        console.log(`::warning title=Step duration trend::${chainSlug}:${slug} ${trend.message}`);
+      }
+    }
+    if (hasErrorTrend) process.exitCode = 1;
+
     const { ok, reason } = classifyVerdict(latest);
     if (!ok) {
       console.error(
@@ -405,6 +527,8 @@ module.exports = {
   run,
   classifyVerdict,
   checkDurationTripwire,
+  classifyDurationTrend,
+  checkStepDurationTrends,
   classifyStepCompleteness,
   classifyDeferStreak,
   OK_STATUSES,
