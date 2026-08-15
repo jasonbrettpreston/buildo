@@ -2845,7 +2845,7 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag, outcomes=Non
         try:
             with open(args['batch_file'], 'r') as fh:
                 year_seqs = json.load(fh)
-            transport = await http_scrape_loop(
+            transport, _attempted = await http_scrape_loop(
                 transport, year_seqs, conn, tel, start_ms, worker_tag,
                 outcomes=outcomes)
         finally:
@@ -2890,16 +2890,47 @@ async def run_http_mode(args, transport, tel, start_ms, worker_tag, outcomes=Non
                 log('INFO', worker_tag, f'Batch {batch_num}: rotated exit IP (no browser)')
             log('INFO', worker_tag, f'Batch {batch_num}: claimed {len(year_seqs)} year_seqs')
             try:
-                transport = await http_scrape_loop(
+                transport, attempted = await http_scrape_loop(
                     transport, year_seqs, conn, tel, start_ms, worker_tag,
                     outcomes=outcomes)
-                complete_batch_in_queue(conn, year_seqs, worker_id)
+                # WF3 F6 (2026-08-15, Spec 118 §7.6) — the C2-era filed defect,
+                # line-confirmed: an early_abort break (:2950-2954, well inside
+                # the batch) used to fall through to the SAME unconditional
+                # complete_batch_in_queue(conn, year_seqs, worker_id) call a
+                # clean full-batch finish does, marking every claimed year_seq
+                # 'completed' — including the ones the break skipped entirely,
+                # which were never attempted at all. `attempted` is the prefix
+                # http_scrape_loop actually processed (order-preserving, since
+                # it iterates year_seqs in order and only ever breaks early,
+                # never skips ahead); anything past it is UNTOUCHED and must be
+                # released back to 'pending', not marked done.
+                untouched = set(year_seqs) - set(attempted)
+                complete_batch_in_queue(conn, year_seqs, worker_id, untouched=untouched)
+                if untouched:
+                    log('WARN', worker_tag,
+                        f'Batch {batch_num}: early_abort left {len(untouched)}/{len(year_seqs)} '
+                        'year_seqs unattempted — released back to pending, not marked completed')
                 log('INFO', worker_tag, f'Batch {batch_num}: complete')
             except Exception as err:
                 log('ERROR', worker_tag, f'Batch {batch_num} failed: {err}')
                 complete_batch_in_queue(conn, year_seqs, worker_id, failed=set(year_seqs))
         finally:
             conn.close()
+
+        # WF3 F6 (2026-08-15, Spec 118 §7.6) — early_abort means STOP CLAIMING,
+        # not "skip the rest of this batch and try another one". The trigger
+        # (:2950: >=90% anomalous misses over the last >=10 permits) is a
+        # session-wide signal — the portal, the exit IP, or the queue's own
+        # data is broken for this run — and claiming a FRESH batch under the
+        # same broken session would just abort again, burning more of the
+        # queue and more WAF-trap budget for the same zero-yield outcome.
+        # Checked AFTER this batch's queue accounting (above) so the
+        # untouched-release still runs before the loop stops.
+        if tel.get('early_abort'):
+            log('INFO', worker_tag,
+                'Early abort — stopping claims for this run (repeated anomalous misses; '
+                'the next scheduled run gets a clean session instead of compounding this one)')
+            break
     return transport
 
 
@@ -2910,7 +2941,16 @@ async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag
     Deliberately simpler than scrape_loop(): with no page weight there is no
     bootstrap to amortise, so batch size stops being a byte knob and rotation
     is free. The WAF-trap response is therefore a pure session rotation.
+
+    Returns (transport, attempted) — WF3 F6 (2026-08-15, Spec 118 §7.6):
+    `attempted` is the (order-preserving) prefix of `year_seqs` this call
+    actually reached scrape_with_retry for. On a clean full pass it equals
+    `year_seqs`; on an early_abort break it is strictly shorter, and the
+    caller (run_http_mode's db-queue branch) uses the gap to release the
+    never-attempted remainder back to 'pending' instead of over-marking it
+    'completed' — the C2-era filed defect this closes.
     """
+    attempted = []
     if outcomes is not None:
         # C9: one resolution query per claimed batch.
         outcomes.resolve_batch(conn, year_seqs)
@@ -2943,6 +2983,7 @@ async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag
                                          tel=tel, outcomes=outcomes)
         tel['latencies'].append(time.time() * 1000 - req_start)
         accumulate_result(tel, result)
+        attempted.append(year_seq)  # WF3 F6 — genuinely attempted regardless of outcome
 
         if i < len(year_seqs) - 1:
             await asyncio.sleep(random.uniform(1.0, 3.5))
@@ -2953,7 +2994,7 @@ async def http_scrape_loop(transport, year_seqs, conn, tel, start_ms, worker_tag
                 f"Early abort: {anomalous_miss_count(tel)}/{tel['permits_attempted']} anomalous misses")
             break
 
-    return transport
+    return transport, attempted
 
 
 async def scrape_with_retry(page, year_seq, conn, tel=None, outcomes=None):
@@ -3051,12 +3092,25 @@ def claim_batch_from_queue(conn, worker_id, batch_size):
         cur.close()
 
 
-def complete_batch_in_queue(conn, year_seqs, worker_id, failed=None):
-    """Mark year_seqs as completed (or failed) in scraper_queue."""
+def complete_batch_in_queue(conn, year_seqs, worker_id, failed=None, untouched=None):
+    """Mark year_seqs as completed (or failed) in scraper_queue.
+
+    `untouched` (WF3 F6, 2026-08-15, Spec 118 §7.6) — year_seqs that were
+    CLAIMED as part of this batch but never actually reached scrape_with_retry
+    (an early_abort break stops the loop partway through, :2981-2985). The
+    C2-era filed defect this closes: these used to fall through to the same
+    unconditional 'completed' UPDATE as the genuinely-scraped items, silently
+    recording a scrape that never happened. They are released back to
+    'pending' (claim cleared) instead — a normal future batch picks them up
+    again, rather than either lying about them as done or leaving them stuck
+    'claimed' forever with no reclaim until the next orchestrator startup's
+    stale-claim sweep (aic-orchestrator.py's populate_queue).
+    """
     failed = failed or set()
+    untouched = untouched or set()
     cur = conn.cursor()
     try:
-        completed = [ys for ys in year_seqs if ys not in failed]
+        completed = [ys for ys in year_seqs if ys not in failed and ys not in untouched]
         if completed:
             cur.execute("""
                 UPDATE scraper_queue
@@ -3069,6 +3123,12 @@ def complete_batch_in_queue(conn, year_seqs, worker_id, failed=None):
                 SET status = 'failed', completed_at = NOW(), error_msg = 'Scrape failed'
                 WHERE year_seq = %s AND claimed_by = %s
             """, (ys, f'worker-{worker_id}'))
+        if untouched:
+            cur.execute("""
+                UPDATE scraper_queue
+                SET status = 'pending', claimed_at = NULL, claimed_by = NULL
+                WHERE year_seq = ANY(%s) AND claimed_by = %s AND status = 'claimed'
+            """, (list(untouched), f'worker-{worker_id}'))
         conn.commit()
     except Exception as err:
         log('WARN', f'[worker-{worker_id}]', f'Failed to update queue: {err}')
@@ -3304,6 +3364,14 @@ async def scrape_loop(page, browser, year_seqs, conn, tel, start_ms, worker_tag=
         # portal). Benign empties (no stage passed yet) are honest answers and
         # must not abort a healthy run — post the passed-only portal change
         # they are roughly half of all in-flight permits.
+        #
+        # KNOWN GAP (WF3 F6, 2026-08-15, filed in review_followups.md): unlike
+        # http_scrape_loop's sibling break, this one does NOT track which
+        # year_seqs were actually attempted, and its caller's outer claim loop
+        # (:3690-3809) does not stop on tel['early_abort'] either — the exact
+        # pair of defects F6 closed on the HTTP path. NOT fixed here: this
+        # transport is dormant (SCRAPER_TRANSPORT: http runs in production);
+        # fix before ever flipping the env var back to 'browser'.
         if i >= 9 and (i + 1) % 10 == 0 and anomalous_miss_count(tel) / tel['permits_attempted'] >= 0.9:
             tel['early_abort'] = True  # P6: keeps the small-n gate FAIL-eligible
             log('WARN', worker_tag, f"Early abort: {anomalous_miss_count(tel)}/{tel['permits_attempted']} anomalous misses")
