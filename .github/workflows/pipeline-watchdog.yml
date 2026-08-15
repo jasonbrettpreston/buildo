@@ -8,10 +8,13 @@
 # SPEC LINK: docs/specs/00-architecture/112_backup_recovery.md §6, §7
 # SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §4, §8
 #
-# Inertness (P3-D6, Spec 115 §3): the `schedule:` block below is committed
-# COMMENTED OUT. Phase 4.3 activation is a single PR that uncomments it.
-# `workflow_dispatch` stays active for manual testing before and after
-# activation.
+# Phase 4.3 ACTIVE (P3-D6, Spec 115 §3): the `schedule:` block below is a LIVE
+# cron, not inert — an earlier header comment here claimed the opposite (that
+# the block was disabled pending a one-line uncomment), which went stale the
+# moment Phase 4.3 activation actually landed and was never corrected (WF3 F5
+# fold, 2026-08-15, caught while re-deriving the freshness windows below for
+# this same commit's cron move). `workflow_dispatch` stays active for manual
+# testing alongside the schedule.
 #
 # Checks (BOTH required — neither substitutes for the other, Spec 115 §2.5):
 #   (i)  chain freshness  — a completed chain_permits AND chain_coa run,
@@ -29,9 +32,21 @@
 name: pipeline-watchdog
 
 on:
-  # Phase 4.3 activation — uncomment (Spec 115 §3)
+  # WF3 F5 (2026-08-15, Spec 118 §2 "the two-red geometry"): moved 15:30 -> 18:45
+  # UTC. The OLD time fired ~25-30 min after the SAME DAY's deep_scrapes slot
+  # STARTS (15:00Z) but ~2.5-3h before it TYPICALLY COMPLETES (~18:15Z) — so
+  # any single-day deep_scrapes failure produced TWO reds: the failure itself,
+  # and the NEXT morning's watchdog (the newest completed run was still the
+  # PRIOR day's, because the recovery run hadn't finished by 15:30Z). 18:45Z
+  # sits AFTER the typical ~18:15Z completion (Spec 118 §2 table: scraper
+  # self-stops ~17:45, tail runs ~17:46-18:20), so a recovered day now reads
+  # green THE SAME DAY instead of red-then-green. Still comfortably after the
+  # 11:00 UTC nightly coa->permits window too (unchanged rationale for that
+  # part). The freshness windows below are re-derived in THIS SAME COMMIT
+  # (lessons:100 — an observer-clock change re-derives every window sized
+  # against it, exactly like a cadence change would).
   schedule:
-    - cron: '30 15 * * *'   # daily, after the 11:00 UTC nightly coa->permits window + ~3h worst case (Spec 115 §2.5)
+    - cron: '45 18 * * *'
   workflow_dispatch: {}
 
 jobs:
