@@ -158,4 +158,30 @@ describe('chain-deep-scrapes workflow', () => {
       expect(Number(m![1])).toBeGreaterThanOrEqual(25);
     });
   });
+
+  describe('chain soft time-budget — Layer 2 (WF3 F4, Spec 118 §3, 2026-08-15)', () => {
+    it('sets CHAIN_TIME_BUDGET_MINUTES >= 120 — deep_scrapes was the one scheduled chain missing this layer entirely', () => {
+      // Spec 118 §3's stop-mechanism hierarchy table: coa=120, permits=150 already
+      // carried this layer; deep_scrapes carried NOTHING between the scraper's own
+      // soft stop (Layer 1) and the platform step timeout (Layer 4). run-chain.js
+      // checks this BETWEEN steps only — it is boundary-stop coverage, not a
+      // substitute for F2's per-step ceiling (Layer 3), which is what actually
+      // would have caught the 08-14 mid-refresh_snapshot pathology.
+      const m = activeLines.match(/CHAIN_TIME_BUDGET_MINUTES:\s*'?(\d+)'?/);
+      expect(m, 'CHAIN_TIME_BUDGET_MINUTES env line not found').toBeTruthy();
+      expect(Number(m![1])).toBeGreaterThanOrEqual(120);
+    });
+
+    it('sits inside the "Run deep_scrapes chain" step\'s own env block, not the shared &pipeline-env anchor', () => {
+      // The shared anchor also feeds the migrate --verify / PG_* derivation / guard
+      // steps, none of which spawn run-chain.js — CHAIN_TIME_BUDGET_MINUTES is only
+      // meaningful to the process that reads it.
+      const chainStepIdx = yaml.indexOf('name: Run deep_scrapes chain');
+      const budgetIdx = yaml.indexOf('CHAIN_TIME_BUDGET_MINUTES');
+      const verdictStepIdx = yaml.indexOf('name: Verdict check');
+      expect(chainStepIdx).toBeGreaterThan(-1);
+      expect(budgetIdx).toBeGreaterThan(chainStepIdx);
+      expect(budgetIdx).toBeLessThan(verdictStepIdx);
+    });
+  });
 });

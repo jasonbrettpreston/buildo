@@ -254,6 +254,16 @@ jobs:
           PIPELINE_CHAIN: ${{ github.workflow }}
           SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
           SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+          # WF3 F4 (Spec 118 §3 Layer 2, 2026-08-15): chain soft time-budget —
+          # run-chain.js checks this BETWEEN steps only (it cannot preempt a step
+          # already running; that gap is F2's Layer-3 per-step ceiling). deep_scrapes
+          # was the one scheduled chain without this layer set at all (coa=120,
+          # permits=150 already had it) — useful boundary-stop coverage even though
+          # it could not, by itself, have prevented the 08-14 mid-refresh_snapshot
+          # kill. 140 = the 150-min production step ceiling minus a 10-min margin,
+          # matching the sizing convention chain-coa-permits.yml uses for its own
+          # CHAIN_TIME_BUDGET_MINUTES (ceiling - 10).
+          CHAIN_TIME_BUDGET_MINUTES: '140'
           PROXY_HOST: ${{ secrets.DECODO_PROXY_HOST }}
           PROXY_PORT: ${{ secrets.DECODO_PROXY_PORT }}
           PROXY_USER: ${{ secrets.DECODO_PROXY_USER }}
