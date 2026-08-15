@@ -81,22 +81,23 @@ describe('check-pipeline-freshness.js — deepScrapesWindow (F8 fold 2026-07-20,
     expect(checkPipelineFreshness.deepScrapesWindow(6)).toEqual({ applies: false, windowHours: null });
   });
 
-  it('applies with an 80h window on Monday (1) — reaches back through the weekend', () => {
-    // WIDENED 72 -> 80 with the F3 cadence change (2026-08-05). The 72h was
-    // sized for a Friday LAST slot of ~21:00 UTC; the cadence is now a single
-    // 15:00 UTC slot, so Friday's completion moved ~6h earlier (~17:35 for a
-    // full 150-min slice). Against a watchdog that fires at 15:30 UTC and has
-    // itself been observed 1-2h late, 72h left ~6 minutes of margin — a
-    // Monday-morning false red waiting to happen.
-    expect(checkPipelineFreshness.deepScrapesWindow(1)).toEqual({ applies: true, windowHours: 80 });
+  it('applies with an 83h window on Monday (1) — reaches back through the weekend', () => {
+    // RE-DERIVED 80 -> 83 (WF3 F5, 2026-08-15): pipeline-watchdog.yml's own cron
+    // moved 15:30 -> 18:45 UTC in the SAME commit (closes the "two-red geometry",
+    // Spec 118 §2 — the old check fired BEFORE that day's slot typically
+    // completed, so a recovered day always read red-then-green). The watchdog's
+    // clock moved later by exactly 18:45 - 15:30 = 3h15m, so the gap from
+    // "yesterday's earliest plausible completion" to "today's check" grew by
+    // that same 3h15m — additive re-derivation preserves the EXACT prior margin:
+    // 80h + 3h15m = 83h15m, rounded DOWN to 83h (never overstates the margin).
+    expect(checkPipelineFreshness.deepScrapesWindow(1)).toEqual({ applies: true, windowHours: 83 });
   });
 
-  it('applies with a 30h window Tuesday(2) through Friday(5)', () => {
-    // WIDENED 26 -> 30 for the same reason: previous-day completion ~17:35 vs a
-    // 15:30 watchdog is 21.9h, but a 2h-late watchdog makes it 23.9h — 2.1h of
-    // margin under the old 26h. 30h restores a full slice's worth of slack.
+  it('applies with a 33h window Tuesday(2) through Friday(5)', () => {
+    // RE-DERIVED 30 -> 33 for the identical reason: 30h + 3h15m = 33h15m,
+    // rounded down to 33h.
     for (const day of [2, 3, 4, 5]) {
-      expect(checkPipelineFreshness.deepScrapesWindow(day)).toEqual({ applies: true, windowHours: 30 });
+      expect(checkPipelineFreshness.deepScrapesWindow(day)).toEqual({ applies: true, windowHours: 33 });
     }
   });
 });

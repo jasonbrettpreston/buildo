@@ -98,7 +98,11 @@ const FRESHNESS_WINDOW_HOURS = 25;
 const CHAIN_WINDOWS_HOURS = {
   chain_coa: FRESHNESS_WINDOW_HOURS,
   chain_permits: FRESHNESS_WINDOW_HOURS,
-  chain_sources: 204, // 8 days + 12h slack (Spec 115 §2 table row 2: weekly Sunday cadence)
+  // 8 days + 12h slack (Spec 115 §2 table row 2: weekly Sunday cadence). NOT
+  // re-derived by WF3 F5's watchdog-cron move (15:30 -> 18:45Z) — chain_sources
+  // is `disabled_manually` (Phase B, B6 re-enables it) and the 204h slack
+  // already dwarfs a 3h15m clock shift; left for B6's own re-derivation pass.
+  chain_sources: 204,
   chain_entities: 26,
 };
 
@@ -128,31 +132,49 @@ function writeOutput(key, value) {
  * date-aware rather than a fixed-hour constant (F8 fold 2026-07-20):
  *   - Sat/Sun: the check does not apply at all (no run is ever expected —
  *     this is NOT the same as "stale", it is "not applicable today").
- *   - Monday: 80h window (reaches back through the weekend to Friday's
+ *   - Monday: 83h window (reaches back through the weekend to Friday's
  *     only slot).
- *   - Tue-Fri: 30h window (analogous to chain_entities' daily-cadence
- *
- * WIDENED 2026-08-05 (F3 cadence change, 72->80 / 26->30). The original
- * numbers were sized for THREE slots a weekday, whose last was ~21:00 UTC.
- * The cadence is now a SINGLE 15:00 UTC slot, so the newest completion moved
- * ~6h earlier (~17:35 for a full 150-min slice). Against a watchdog that
- * fires at 15:30 UTC and has been observed 1-2h late, the old Monday 72h left
- * ~6 minutes of margin and Tue-Fri 26h left ~2h — both false-red generators.
- * These windows are ABSENCE detection ("did a slice land at all"), so slack
- * costs nothing: a genuinely skipped slice still breaches by a wide margin.
- * If the cadence changes again, THESE MOVE WITH IT — that coupling is the
- * whole point of this comment.
- *   (original Tue-Fri rationale retained:) analogous to chain_entities' daily-cadence
+ *   - Tue-Fri: 33h window (analogous to chain_entities' daily-cadence
  *     buffer; NOT byte-identical to src/app/api/admin/stats/route.ts's 24h
  *     dashboard threshold — the two are independently-derived checks over
  *     the same underlying facts, see DataQualityDashboard.tsx's comment).
+ *
+ * RE-DERIVED 2026-08-15 (WF3 F5, Spec 118 §2 "the two-red geometry" +
+ * lessons:100 — an OBSERVER-clock change re-derives every window sized
+ * against it, same as a cadence change would). pipeline-watchdog.yml's own
+ * cron moved 15:30 -> 18:45 UTC in THIS SAME COMMIT (closes the two-red
+ * geometry: the old check fired ~2.5-3h BEFORE that day's slot typically
+ * completes, so it could only ever see yesterday's run; 18:45Z sits AFTER
+ * the typical ~18:15Z completion, so a healthy day is usually judged on ITS
+ * OWN run, not yesterday's).
+ *
+ * The window still has to tolerate the FALLBACK case — today's run hasn't
+ * landed by check time (jitter, a slow tail, or a genuine miss) and the
+ * freshest row is still YESTERDAY's. That fallback's minimum safe window is
+ * driven ENTIRELY by how far the check moved, not by anything about the
+ * chain's own schedule (which is unchanged): the watchdog's own clock moved
+ * later by exactly 18:45 - 15:30 = 3h15m, so the gap from "yesterday's
+ * earliest plausible completion" to "today's check" grew by that same
+ * 3h15m — the PREVIOUS margin (whatever it was, sized 2026-08-05 for the
+ * 72->80 / 26->30 widening) is preserved exactly by adding the SAME 3h15m to
+ * both existing windows, not by re-deriving each floor from scratch (a
+ * looser, error-prone exercise this file's own earlier draft got wrong in
+ * the first place — an earlier version of this comment proposed 27h for
+ * Tue-Fri by mixing an "earliest completion" anchor for the old system with
+ * a "typical completion" anchor for the new one; the additive form below
+ * needs no completion-time anchor at all and cannot make that mistake):
+ *   Tue-Fri: 30h + 3h15m = 33h15m -> 33h (rounds DOWN, so the true margin is
+ *     preserved to within 15 minutes, never overstated).
+ *   Monday:  80h + 3h15m = 83h15m -> 83h (same rounding direction).
+ * If the cadence changes again, THESE MOVE WITH IT — that coupling is the
+ * whole point of this comment (and lessons:100).
  * @param {number} utcDay - Date#getUTCDay() result, 0=Sun..6=Sat
  * @returns {{ applies: boolean, windowHours: number | null }}
  */
 function deepScrapesWindow(utcDay) {
   if (utcDay === 0 || utcDay === 6) return { applies: false, windowHours: null };
-  if (utcDay === 1) return { applies: true, windowHours: 80 };
-  return { applies: true, windowHours: 30 };
+  if (utcDay === 1) return { applies: true, windowHours: 83 };
+  return { applies: true, windowHours: 33 };
 }
 
 /**

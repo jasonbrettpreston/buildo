@@ -28,6 +28,39 @@ const path = require('path') as typeof import('path');
 const workflow = () =>
   fs.readFileSync(path.resolve(__dirname, '../../.github/workflows/pipeline-watchdog.yml'), 'utf-8');
 
+describe('pipeline-watchdog.yml — cron moved past typical same-day completion (WF3 F5, Spec 118 §2, 2026-08-15)', () => {
+  // The "two-red geometry": the OLD 15:30 UTC cron fired BEFORE that day's
+  // deep_scrapes slot typically completes (~18:15Z), so a recovered day always
+  // read red-then-green (the failure itself, then the next MORNING's watchdog,
+  // because the recovery run hadn't finished by 15:30Z). >= 18:30Z keeps the
+  // check comfortably after the typical ~18:15Z completion without requiring
+  // an exact string match on the literal minute chosen (18:45).
+  it('the schedule cron fires at or after 18:30 UTC', () => {
+    const src = workflow();
+    const m = src.match(/^\s*-\s*cron:\s*'(\d{1,2}) (\d{1,2}) \* \* \*'/m);
+    expect(m, 'schedule cron line not found').toBeTruthy();
+    const [, minuteStr, hourStr] = m!;
+    const totalMinutes = Number(hourStr) * 60 + Number(minuteStr);
+    expect(totalMinutes).toBeGreaterThanOrEqual(18 * 60 + 30);
+  });
+
+  it('the stale claim that the schedule block "is committed" + "COMMENTED OUT" is gone — the header must say the block is LIVE', () => {
+    // Strip each line's leading `# ` comment marker and join before matching —
+    // the stale claim spanned two comment LINES ("...is committed\n#
+    // COMMENTED OUT..."), so a plain multi-line regex on the raw file (with
+    // the marker still in the way) would silently never match either
+    // direction of this lock. Same self-ban-blind-spot class as F3's
+    // check-chain-verdict.js LIMIT-1 lock, which had the identical failure
+    // mode for the identical reason.
+    const flattened = workflow()
+      .split(/\r?\n/)
+      .map((l) => l.replace(/^\s*#\s?/, ''))
+      .join(' ');
+    expect(flattened).not.toMatch(/is committed\s+COMMENTED OUT/);
+    expect(flattened).toMatch(/schedule.{0,40}(is a LIVE cron|live cron)/i);
+  });
+});
+
 describe('pipeline-watchdog.yml — un-muted freshness alarm (P5)', () => {
   it('neither check-pipeline-freshness.js invocation redirects stdout into $GITHUB_OUTPUT (the script self-writes outputs; the redirect swallowed the ::error naming the stale chain)', () => {
     const src = workflow();
