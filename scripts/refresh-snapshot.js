@@ -18,7 +18,172 @@ const LOGIC_VARS_SCHEMA = z.object({
 
 const ADVISORY_LOCK_ID = 40;
 
-pipeline.run('refresh-snapshot', async (pool) => {
+// WF3 F1 (2026-08-15, Spec 118 §1/§7.1): the single source of truth for "an active
+// permit" across every consolidated query below. Was repeated as a literal IN-list in
+// 9 separate query strings pre-fix — one shared constant so the definition can never
+// drift between them.
+const ACTIVE_PERMIT_STATUSES = ['Permit Issued', 'Revision Issued', 'Under Review', 'Inspection', 'Examination'];
+const CORE_SCOPE_TAGS = new Set(['residential', 'commercial', 'mixed-use']);
+
+// ---------------------------------------------------------------------------
+// WF3 F1 — the refresh_snapshot pathology fix (Spec 118 §1, §7.1; measured
+// 2026-08-14: this script's stats queries index-fetched 187,187 rows = 73% of
+// permits via idx_permits_status, 3min -> 64min once the week's mass-UPDATE
+// traffic destroyed the heap's physical correlation with status order).
+//
+// THE DECISION RESTS ON THE OBSERVED I/O PATTERN, NOT THE PLANNER'S COST ESTIMATE:
+// the planner costs the index-fetch plan CHEAPEST under a stale correlation
+// statistic (0.586, live-measured) — it looks like the right plan right up until
+// the heap's physical order stops matching `status`. The fix is
+// not "make the query faster" but "make the query's SHAPE immune to that
+// statistic": a single no-WHERE pass forces a deterministic Parallel Seq Scan
+// (EXPLAIN cost 153,220) regardless of what pg_stats.correlation says today.
+//
+// Grounded 2026-08-15 (WF3 GROUNDING FOLDED): candidate shapes were MEASURED,
+// not guessed — a hashed-subplan rewrite was REFUTED (cost 10.2e9) and a
+// single-column covering index collapses daily under this table's write
+// pattern. The winner is a THREE-PART battery covering all 9 pathological
+// status-scoped queries (+1 already-FILTER-shaped query folded in for free):
+//   ① buildPermitsScalarQuery  — 10 scalar permits aggregates -> ONE no-WHERE
+//      FILTER pass (permitsRes, permitsBuilderRes, nhoodRes, geoRes, scopeRes,
+//      scopeTagsRes, detailedTagsRes, freshRes, nullsRes, violationsRes).
+//   ② buildTagBreakdownQuery  — the 2 GROUP BY scope_tags queries (topTagsRes,
+//      scopeBreakdownRes) -> ONE pass; `(status = ANY($1)) IS TRUE` defeats the
+//      planner's ability to satisfy the boolean-wrapped predicate via an index
+//      scan the way a bare IN-list/= ANY() invites.
+//   ③ tradeByTypeRes keeps its existing JOIN shape (a rewrite risked wrong
+//      answers on the DISTINCT aggregates) but runs under session-scoped
+//      `SET enable_indexscan = off` on the script's own pinned REPEATABLE READ
+//      client, forcing a correlation-immune Bitmap Heap plan; `RESET` restores
+//      normal planning for every query after it on the same connection.
+//
+// Exported so src/tests/refresh-snapshot-query-consolidation.logic.test.ts can
+// pin the adopted shape and src/tests/db/refresh-snapshot-consolidation.db.test.ts
+// can prove old-vs-new VALUE EQUIVALENCE on a seeded fixture — the numbers into
+// data_quality_snapshots must be identical, only the query shape changed.
+// ---------------------------------------------------------------------------
+
+/**
+ * ① Consolidates the 10 scalar (non-GROUP-BY) permits.status-scoped aggregate
+ * queries into a single no-WHERE pass. Every status-scoped metric embeds
+ * `status = ANY($1)` in its OWN FILTER clause (mirroring each original query's
+ * WHERE) rather than at the top level — the missing top-level WHERE is what
+ * removes the planner's incentive to satisfy the query via idx_permits_status.
+ * @returns {{ sql: string, params: [string[]] }}
+ */
+function buildPermitsScalarQuery() {
+  return {
+    sql: `SELECT
+        COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE status = ANY($1)) AS active,
+        COUNT(*) FILTER (WHERE builder_name IS NOT NULL AND builder_name != '') AS permits_with_builder,
+        COUNT(*) FILTER (WHERE neighbourhood_id IS NOT NULL AND neighbourhood_id != -1 AND status = ANY($1)) AS neighbourhood_count,
+        COUNT(*) FILTER (WHERE latitude IS NOT NULL AND longitude IS NOT NULL) AS geocoded_count,
+        COUNT(*) FILTER (WHERE ('residential' = ANY(scope_tags) OR 'commercial' = ANY(scope_tags) OR 'mixed-use' = ANY(scope_tags))
+          AND status = ANY($1)) AS scope_count,
+        COUNT(*) FILTER (WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0 AND status = ANY($1)) AS scope_tags_count,
+        COUNT(*) FILTER (WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0 AND status = ANY($1)
+          AND EXISTS (SELECT 1 FROM unnest(scope_tags) AS t WHERE t NOT IN ('residential', 'commercial', 'mixed-use'))) AS detailed_tags_count,
+        COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '24 hours') AS updated_24h,
+        COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '7 days') AS updated_7d,
+        COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '30 days') AS updated_30d,
+        COUNT(*) FILTER (WHERE (description IS NULL OR description = '') AND status = ANY($1)) AS null_description,
+        COUNT(*) FILTER (WHERE (builder_name IS NULL OR builder_name = '') AND status = ANY($1)) AS null_builder_name,
+        COUNT(*) FILTER (WHERE est_const_cost IS NULL AND status = ANY($1)) AS null_est_const_cost,
+        COUNT(*) FILTER (WHERE (street_num IS NULL OR street_num = '') AND status = ANY($1)) AS null_street_num,
+        COUNT(*) FILTER (WHERE (street_name IS NULL OR street_name = '') AND status = ANY($1)) AS null_street_name,
+        COUNT(*) FILTER (WHERE (geo_id IS NULL OR geo_id = '') AND status = ANY($1)) AS null_geo_id,
+        COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < 100 OR est_const_cost > 1000000000)
+          AND status = ANY($1)) AS cost_oor,
+        COUNT(*) FILTER (WHERE issued_date > NOW() AND status = ANY($1)) AS future_issued,
+        COUNT(*) FILTER (WHERE (status IS NULL OR status = '') AND status = ANY($1)) AS missing_status
+      FROM permits`,
+    params: [ACTIVE_PERMIT_STATUSES],
+  };
+}
+
+/**
+ * ② Consolidates the 2 GROUP BY scope_tags queries (top non-core tags,
+ * core-3 breakdown) into a single pass over one CTE. `(status = ANY($1)) IS
+ * TRUE` — not a bare `= ANY()` — is the index-defeat idiom: a boolean
+ * expression wrapped in `IS TRUE` cannot be satisfied by a plain btree scan
+ * on `status` the way an unwrapped predicate can, and it stays NULL-safe.
+ * @returns {{ sql: string, params: [string[]] }}
+ */
+function buildTagBreakdownQuery() {
+  return {
+    sql: `WITH tagged AS (
+        SELECT unnest(scope_tags) AS tag
+        FROM permits
+        WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
+          AND (status = ANY($1)) IS TRUE
+      )
+      SELECT tag, COUNT(*) AS count
+      FROM tagged
+      GROUP BY tag
+      ORDER BY count DESC`,
+    params: [ACTIVE_PERMIT_STATUSES],
+  };
+}
+
+/**
+ * ③ tradeByTypeRes — SAME join shape as before (a rewrite risked wrong answers
+ * on its DISTINCT-permit aggregates); the fix is executing it under
+ * `enable_indexscan = off` (caller's responsibility — see snapClient usage
+ * below), not the query text.
+ * @returns {{ sql: string, params: [string[]] }}
+ */
+function buildTradeByTypeQuery() {
+  return {
+    sql: `SELECT
+        COUNT(DISTINCT p.permit_num) FILTER (
+          WHERE 'residential' = ANY(p.scope_tags) AND pt.permit_num IS NOT NULL
+        ) as res_classified,
+        COUNT(DISTINCT p.permit_num) FILTER (
+          WHERE 'residential' = ANY(p.scope_tags)
+        ) as res_total,
+        COUNT(DISTINCT p.permit_num) FILTER (
+          WHERE ('commercial' = ANY(p.scope_tags) OR 'mixed-use' = ANY(p.scope_tags))
+            AND pt.permit_num IS NOT NULL
+        ) as com_classified,
+        COUNT(DISTINCT p.permit_num) FILTER (
+          WHERE ('commercial' = ANY(p.scope_tags) OR 'mixed-use' = ANY(p.scope_tags))
+        ) as com_total
+      FROM permits p
+      LEFT JOIN (SELECT DISTINCT permit_num FROM permit_trades) pt
+        ON pt.permit_num = p.permit_num
+      WHERE p.status = ANY($1)`,
+    params: [ACTIVE_PERMIT_STATUSES],
+  };
+}
+
+/**
+ * Splits buildTagBreakdownQuery()'s merged rows back into the two shapes the
+ * rest of the script (and the data_quality_snapshots columns) expect: the
+ * core-3 `scope_project_type_breakdown` map (unordered, all present-or-absent)
+ * and the top-10 non-core `scope_tags_top` map, in the SAME count-DESC order
+ * the old separate `ORDER BY count DESC LIMIT 10` query produced (sorting a
+ * superset by one key preserves the relative order of any subset).
+ * @param {Array<{ tag: string, count: string|number }>} rows
+ * @returns {{ breakdown: Record<string, number>, tagsTop: Record<string, number> }}
+ */
+function splitTagBreakdown(rows) {
+  const breakdown = {};
+  const tagsTop = {};
+  let topCount = 0;
+  for (const r of rows) {
+    const cnt = safeParsePositiveInt(r.count, 'count');
+    if (CORE_SCOPE_TAGS.has(r.tag)) {
+      breakdown[r.tag] = cnt;
+    } else if (topCount < 10) {
+      tagsTop[r.tag] = cnt;
+      topCount++;
+    }
+  }
+  return { breakdown, tagsTop };
+}
+
+async function runRefreshSnapshot(pool) {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
   const t0 = Date.now();
   pipeline.log.info(TAG, 'Recapturing data quality snapshot...');
@@ -36,16 +201,15 @@ pipeline.run('refresh-snapshot', async (pool) => {
   await snapClient.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
 
   // Declare query results in outer scope so they're accessible after the try/finally
-  let permitsRes, tradesRes, tradeByTypeRes, buildersRes, permitsBuilderRes, parcelsRes, nhoodRes, geoRes;
-  let coaRes, scopeRes, scopeTagsRes, detailedTagsRes, topTagsRes, scopeBreakdownRes;
-  let freshRes, syncRes, nullsRes, violationsRes;
+  let permitsScalarRes, tradesRes, tradeByTypeRes, buildersRes, parcelsRes;
+  let coaRes, tagBreakdownRes, syncRes;
 
   try {
-    permitsRes = await snapClient.query(
-      `SELECT COUNT(*) as total,
-              COUNT(*) FILTER (WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')) as active
-       FROM permits`
-    );
+    // WF3 F1 ① — 10 scalar permits aggregates, ONE no-WHERE pass (see the block
+    // comment above buildPermitsScalarQuery for why the missing WHERE is the fix).
+    const permitsScalarQuery = buildPermitsScalarQuery();
+    permitsScalarRes = await snapClient.query(permitsScalarQuery.sql, permitsScalarQuery.params);
+
     tradesRes = await snapClient.query(
       `SELECT COUNT(DISTINCT (permit_num, revision_num)) as permits_with_trades,
               COUNT(*) as total_matches,
@@ -55,26 +219,20 @@ pipeline.run('refresh-snapshot', async (pool) => {
               COUNT(*) FILTER (WHERE tier = 3) as tier3
        FROM permit_trades`
     );
-    tradeByTypeRes = await snapClient.query(
-      `SELECT
-         COUNT(DISTINCT p.permit_num) FILTER (
-           WHERE 'residential' = ANY(p.scope_tags) AND pt.permit_num IS NOT NULL
-         ) as res_classified,
-         COUNT(DISTINCT p.permit_num) FILTER (
-           WHERE 'residential' = ANY(p.scope_tags)
-         ) as res_total,
-         COUNT(DISTINCT p.permit_num) FILTER (
-           WHERE ('commercial' = ANY(p.scope_tags) OR 'mixed-use' = ANY(p.scope_tags))
-             AND pt.permit_num IS NOT NULL
-         ) as com_classified,
-         COUNT(DISTINCT p.permit_num) FILTER (
-           WHERE ('commercial' = ANY(p.scope_tags) OR 'mixed-use' = ANY(p.scope_tags))
-         ) as com_total
-       FROM permits p
-       LEFT JOIN (SELECT DISTINCT permit_num FROM permit_trades) pt
-         ON pt.permit_num = p.permit_num
-       WHERE p.status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    );
+
+    // WF3 F1 ③ — same join shape, executed under enable_indexscan=off on this
+    // pinned client so the plan can't fall back to a status-index fetch on the
+    // permits side of the join; RESET immediately after so every other query on
+    // this connection (there are none left this run, but the guard is cheap and
+    // future-proof) plans normally.
+    const tradeByTypeQuery = buildTradeByTypeQuery();
+    await snapClient.query('SET enable_indexscan = off');
+    try {
+      tradeByTypeRes = await snapClient.query(tradeByTypeQuery.sql, tradeByTypeQuery.params);
+    } finally {
+      await snapClient.query('RESET enable_indexscan');
+    }
+
     buildersRes = await snapClient.query(
       `SELECT COUNT(*) as total,
               COUNT(*) FILTER (WHERE last_enriched_at IS NOT NULL) as enriched,
@@ -84,9 +242,6 @@ pipeline.run('refresh-snapshot', async (pool) => {
               COUNT(*) FILTER (WHERE google_place_id IS NOT NULL) as with_google,
               COUNT(*) FILTER (WHERE is_wsib_registered = true) as with_wsib
        FROM entities`
-    );
-    permitsBuilderRes = await snapClient.query(
-      `SELECT COUNT(*) as count FROM permits WHERE builder_name IS NOT NULL AND builder_name != ''`
     );
     // WF1 #parcel-address-bridge Phase 2f.3 (2026-05-23) — exact_matches
     // FILTER expanded to roll up BOTH legacy 'exact_address' AND new
@@ -102,14 +257,6 @@ pipeline.run('refresh-snapshot', async (pool) => {
               AVG(confidence)::NUMERIC(4,3) as avg_confidence
        FROM permit_parcels`
     );
-    nhoodRes = await snapClient.query(
-      `SELECT COUNT(*) as count FROM permits
-       WHERE neighbourhood_id IS NOT NULL AND neighbourhood_id != -1
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    );
-    geoRes = await snapClient.query(
-      `SELECT COUNT(*) as count FROM permits WHERE latitude IS NOT NULL AND longitude IS NOT NULL`
-    );
     coaRes = await snapClient.query(
       `SELECT COUNT(*) as total,
               COUNT(*) FILTER (WHERE linked_permit_num IS NOT NULL) as linked,
@@ -119,65 +266,13 @@ pipeline.run('refresh-snapshot', async (pool) => {
        FROM coa_applications`,
       [snapshotCoaConfHigh, coaConfMedium]
     );
-    scopeRes = await snapClient.query(
-      `SELECT COUNT(*) as count FROM permits
-       WHERE ('residential' = ANY(scope_tags) OR 'commercial' = ANY(scope_tags) OR 'mixed-use' = ANY(scope_tags))
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    );
-    scopeTagsRes = await snapClient.query(
-      `SELECT COUNT(*) as count FROM permits
-       WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    );
-    detailedTagsRes = await snapClient.query(
-      `SELECT COUNT(*) as count FROM permits
-       WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-         AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')
-         AND EXISTS (SELECT 1 FROM unnest(scope_tags) AS t WHERE t NOT IN ('residential', 'commercial', 'mixed-use'))`
-    );
-    topTagsRes = await snapClient.query(
-      `SELECT tag, COUNT(*) as count
-       FROM (SELECT unnest(scope_tags) as tag FROM permits
-             WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-               AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')) sub
-       WHERE tag NOT IN ('residential', 'commercial', 'mixed-use')
-       GROUP BY tag ORDER BY count DESC LIMIT 10`
-    );
-    scopeBreakdownRes = await snapClient.query(
-      `SELECT tag, COUNT(*) as count
-       FROM (SELECT unnest(scope_tags) as tag FROM permits
-             WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0
-               AND status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')) sub
-       WHERE tag IN ('residential', 'commercial', 'mixed-use')
-       GROUP BY tag`
-    );
-    freshRes = await snapClient.query(
-      `SELECT COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '24 hours') as updated_24h,
-              COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '7 days') as updated_7d,
-              COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '30 days') as updated_30d
-       FROM permits`
-    );
+
+    // WF3 F1 ② — the 2 GROUP BY scope_tags queries, ONE pass.
+    const tagBreakdownQuery = buildTagBreakdownQuery();
+    tagBreakdownRes = await snapClient.query(tagBreakdownQuery.sql, tagBreakdownQuery.params);
+
     syncRes = await snapClient.query(
       `SELECT started_at, status FROM sync_runs ORDER BY started_at DESC LIMIT 1`
-    );
-    nullsRes = await snapClient.query(
-      `SELECT
-         COUNT(*) FILTER (WHERE description IS NULL OR description = '') as null_description,
-         COUNT(*) FILTER (WHERE builder_name IS NULL OR builder_name = '') as null_builder_name,
-         COUNT(*) FILTER (WHERE est_const_cost IS NULL) as null_est_const_cost,
-         COUNT(*) FILTER (WHERE street_num IS NULL OR street_num = '') as null_street_num,
-         COUNT(*) FILTER (WHERE street_name IS NULL OR street_name = '') as null_street_name,
-         COUNT(*) FILTER (WHERE geo_id IS NULL OR geo_id = '') as null_geo_id
-       FROM permits
-       WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
-    );
-    violationsRes = await snapClient.query(
-      `SELECT
-         COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < 100 OR est_const_cost > 1000000000)) as cost_oor,
-         COUNT(*) FILTER (WHERE issued_date > NOW()) as future_issued,
-         COUNT(*) FILTER (WHERE status IS NULL OR status = '') as missing_status
-       FROM permits
-       WHERE status IN ('Permit Issued','Revision Issued','Under Review','Inspection','Examination')`
     );
 
     await snapClient.query('COMMIT');
@@ -186,8 +281,9 @@ pipeline.run('refresh-snapshot', async (pool) => {
   }
 
   // Extract results — declared in outer scope so pipeline.withTransaction can access them
-  const total_permits = safeParsePositiveInt(permitsRes.rows[0].total, 'total');
-  const active_permits = safeParsePositiveInt(permitsRes.rows[0].active, 'active');
+  const s = permitsScalarRes.rows[0];
+  const total_permits = safeParsePositiveInt(s.total, 'total');
+  const active_permits = safeParsePositiveInt(s.active, 'active');
   pipeline.log.info(TAG, `Permits: ${total_permits} total, ${active_permits} active`);
 
   const t = tradesRes.rows[0];
@@ -197,25 +293,27 @@ pipeline.run('refresh-snapshot', async (pool) => {
 
   const p = parcelsRes.rows[0];
 
-  const neighbourhood_count = safeParsePositiveInt(nhoodRes.rows[0].count, 'count');
+  const neighbourhood_count = safeParsePositiveInt(s.neighbourhood_count, 'neighbourhood_count');
   pipeline.log.info(TAG, `Neighbourhoods (active): ${neighbourhood_count} / ${active_permits} = ${active_permits > 0 ? (neighbourhood_count/active_permits*100).toFixed(1) : '0.0'}%`);
 
   const c = coaRes.rows[0];
   const coaTotal = safeParsePositiveInt(c.total, 'total');
   pipeline.log.info(TAG, `CoA: ${c.total} total, ${c.linked} linked = ${coaTotal > 0 ? (safeParsePositiveInt(c.linked, 'linked')/coaTotal*100).toFixed(1) : '0.0'}%`);
 
-  const breakdown = {};
-  for (const r of scopeBreakdownRes.rows) breakdown[r.tag] = safeParsePositiveInt(r.count, 'count');
-
-  const tagsTop = {};
-  for (const r of topTagsRes.rows) tagsTop[r.tag] = safeParsePositiveInt(r.count, 'count');
-  pipeline.log.info(TAG, `Scope tags: ${scopeTagsRes.rows[0].count} total, ${detailedTagsRes.rows[0].count} detailed`);
+  const { breakdown, tagsTop } = splitTagBreakdown(tagBreakdownRes.rows);
+  const scopeTagsCount = safeParsePositiveInt(s.scope_tags_count, 'scope_tags_count');
+  const detailedTagsCount = safeParsePositiveInt(s.detailed_tags_count, 'detailed_tags_count');
+  pipeline.log.info(TAG, `Scope tags: ${scopeTagsCount} total, ${detailedTagsCount} detailed`);
   pipeline.log.info(TAG, `Top tags: ${Object.entries(tagsTop).slice(0,5).map(([k,v])=>k+':'+v).join(', ')}`);
 
-  const n = nullsRes.rows[0];
+  const n = {
+    null_description: s.null_description, null_builder_name: s.null_builder_name,
+    null_est_const_cost: s.null_est_const_cost, null_street_num: s.null_street_num,
+    null_street_name: s.null_street_name, null_geo_id: s.null_geo_id,
+  };
   pipeline.log.info(TAG, `Nulls: desc=${n.null_description}, builder=${n.null_builder_name}, cost=${n.null_est_const_cost}`);
 
-  const v = violationsRes.rows[0];
+  const v = { cost_oor: s.cost_oor, future_issued: s.future_issued, missing_status: s.missing_status };
   const violations_total = safeParsePositiveInt(v.cost_oor, 'cost_oor') + safeParsePositiveInt(v.future_issued, 'future_issued') + safeParsePositiveInt(v.missing_status, 'missing_status');
   pipeline.log.info(TAG, `Violations: cost_oor=${v.cost_oor}, future_issued=${v.future_issued}, missing_status=${v.missing_status}, total=${violations_total}`);
 
@@ -500,21 +598,21 @@ pipeline.run('refresh-snapshot', async (pool) => {
         safeParsePositiveInt(t.tier1, 'tier1'), safeParsePositiveInt(t.tier2, 'tier2'), safeParsePositiveInt(t.tier3, 'tier3'),
         safeParsePositiveInt(tt.res_classified, 'res_classified'), safeParsePositiveInt(tt.res_total, 'res_total'),
         safeParsePositiveInt(tt.com_classified, 'com_classified'), safeParsePositiveInt(tt.com_total, 'com_total'),
-        safeParsePositiveInt(permitsBuilderRes.rows[0].count, 'count'), safeParsePositiveInt(b.total, 'total'),
+        safeParsePositiveInt(s.permits_with_builder, 'permits_with_builder'), safeParsePositiveInt(b.total, 'total'),
         safeParsePositiveInt(b.enriched, 'enriched'), safeParsePositiveInt(b.with_phone, 'with_phone'), safeParsePositiveInt(b.with_email, 'with_email'),
         safeParsePositiveInt(b.with_website, 'with_website'), safeParsePositiveInt(b.with_google, 'with_google'), safeParsePositiveInt(b.with_wsib, 'with_wsib'),
         safeParsePositiveInt(p.permits_with_parcel, 'permits_with_parcel'), safeParsePositiveInt(p.exact_matches, 'exact_matches'),
         safeParsePositiveInt(p.name_matches, 'name_matches'), safeParsePositiveInt(p.spatial_matches, 'spatial_matches'),
         p.avg_confidence ? safeParseFloat(p.avg_confidence, 'avg_confidence') : null,
         neighbourhood_count,
-        safeParsePositiveInt(geoRes.rows[0].count, 'count'),
+        safeParsePositiveInt(s.geocoded_count, 'geocoded_count'),
         safeParsePositiveInt(c.total, 'total'), safeParsePositiveInt(c.linked, 'linked'),
         c.avg_confidence ? safeParseFloat(c.avg_confidence, 'avg_confidence') : null,
         safeParsePositiveInt(c.high_confidence, 'high_confidence'), safeParsePositiveInt(c.low_confidence, 'low_confidence'),
-        safeParsePositiveInt(scopeRes.rows[0].count, 'count'), JSON.stringify(breakdown),
-        safeParsePositiveInt(scopeTagsRes.rows[0].count, 'count'), safeParsePositiveInt(detailedTagsRes.rows[0].count, 'count'), JSON.stringify(tagsTop),
-        safeParsePositiveInt(freshRes.rows[0].updated_24h, 'updated_24h'), safeParsePositiveInt(freshRes.rows[0].updated_7d, 'updated_7d'),
-        safeParsePositiveInt(freshRes.rows[0].updated_30d, 'updated_30d'),
+        safeParsePositiveInt(s.scope_count, 'scope_count'), JSON.stringify(breakdown),
+        scopeTagsCount, detailedTagsCount, JSON.stringify(tagsTop),
+        safeParsePositiveInt(s.updated_24h, 'updated_24h'), safeParsePositiveInt(s.updated_7d, 'updated_7d'),
+        safeParsePositiveInt(s.updated_30d, 'updated_30d'),
         syncRes.rows[0]?.started_at || null, syncRes.rows[0]?.status || null,
         massing.footprints_total, massing.parcels_with_buildings,
         safeParsePositiveInt(n.null_description, 'null_description'), safeParsePositiveInt(n.null_builder_name, 'null_builder_name'), safeParsePositiveInt(n.null_est_const_cost, 'null_est_const_cost'),
@@ -570,4 +668,20 @@ pipeline.run('refresh-snapshot', async (pool) => {
   }); // withAdvisoryLock
 
   if (!lockResult.acquired) return;
-});
+}
+
+// WF3 F1 (2026-08-15) — guard the CLI body so this module is safe to `require()`
+// from a test process (C1 precedent, assert-lifecycle-phase-distribution.js):
+// without it, requiring refresh-snapshot.js to reach the exported query builders
+// below would immediately try to create a real DB pool and run the script.
+if (require.main === module) {
+  pipeline.run('refresh-snapshot', runRefreshSnapshot);
+}
+
+module.exports = {
+  ACTIVE_PERMIT_STATUSES,
+  buildPermitsScalarQuery,
+  buildTagBreakdownQuery,
+  buildTradeByTypeQuery,
+  splitTagBreakdown,
+};
