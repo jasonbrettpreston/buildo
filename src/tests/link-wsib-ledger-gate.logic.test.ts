@@ -30,6 +30,8 @@ const linkWsib = require('../../scripts/link-wsib.js') as {
   ADVISORY_LOCK_ID: number;
   OWN_SLUGS: string[];
   UPSTREAM_SLUGS: string[];
+  hasThresholdChanged: (ownLastRecordsMeta: Record<string, unknown> | null, versionSignal: { thresholdUpdatedAt: string | null }) => boolean;
+  readThresholdVersionSignal: (pool: unknown) => Promise<{ thresholdUpdatedAt: string | null }>;
 };
 
 describe('I1 — link-wsib.js is safely require()-able (guard + exports)', () => {
@@ -61,6 +63,59 @@ describe('W1 — link_wsib OWN_SLUGS: dual-chain (sources + permits), never enti
     expect(manifest.chains.permits).toContain('link_wsib');
     expect(manifest.chains.sources).toContain('link_wsib');
     expect(manifest.chains.entities).not.toContain('link_wsib');
+  });
+});
+
+// Commit A (B3 output-panel remediation) — gate placement (A1/A2/A3).
+// SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+// SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.2
+describe('Commit A — link-wsib.js gate placement', () => {
+  it('A1 — loadMarketplaceConfigs/validateLogicVars are hoisted ABOVE the advisory lock + gate (unconditional fail-fast)', () => {
+    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
+    const configIdx = src.indexOf('loadMarketplaceConfigs(pool');
+    const lockIdx = src.indexOf('withAdvisoryLock(pool, ADVISORY_LOCK_ID');
+    expect(configIdx, 'loadMarketplaceConfigs call not found').toBeGreaterThan(-1);
+    expect(lockIdx, 'withAdvisoryLock call not found').toBeGreaterThan(-1);
+    expect(configIdx).toBeLessThan(lockIdx);
+  });
+
+  it('A2 — --dry-run is parsed BEFORE the gate + bypassGate = dryRun (mirrors compute-parcel-cost-estimates.js)', () => {
+    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
+    const dryRunIdx = src.indexOf("dryRun = args.includes('--dry-run')");
+    const gateIdx = src.indexOf('runLedgerGateDecision(pool');
+    expect(dryRunIdx).toBeGreaterThan(-1);
+    expect(gateIdx).toBeGreaterThan(-1);
+    expect(dryRunIdx).toBeLessThan(gateIdx);
+    expect(src).toMatch(/bypassGate\s*=\s*dryRun/);
+  });
+
+  it('A3 — hasThresholdChanged: no prior meta → CHANGED (fail-safe); matching ISO → unchanged; differing ISO → changed', () => {
+    expect(linkWsib.hasThresholdChanged(null, { thresholdUpdatedAt: '2026-08-01T00:00:00.000Z' })).toBe(true);
+    expect(linkWsib.hasThresholdChanged(
+      { threshold_updated_at: '2026-08-01T00:00:00.000Z' },
+      { thresholdUpdatedAt: '2026-08-01T00:00:00.000Z' },
+    )).toBe(false);
+    expect(linkWsib.hasThresholdChanged(
+      { threshold_updated_at: '2026-08-01T00:00:00.000Z' },
+      { thresholdUpdatedAt: '2026-08-02T00:00:00.000Z' },
+    )).toBe(true);
+    // malformed prior meta (non-object) is treated as absent — fail-safe CHANGED.
+    expect(linkWsib.hasThresholdChanged('garbage' as unknown as null, { thresholdUpdatedAt: 'x' })).toBe(true);
+  });
+
+  it('exports readThresholdVersionSignal + hasThresholdChanged', () => {
+    expect(typeof linkWsib.readThresholdVersionSignal).toBe('function');
+    expect(typeof linkWsib.hasThresholdChanged).toBe('function');
+  });
+
+  it('fence note — the commit body must cite 647d0935f (the fix(35_wsib_registry) landed inside the branch A1 made unreachable)', () => {
+    // Documented here as a source-lock reminder for the commit body; the git-log
+    // citation itself is verified at commit time (this test pins that the gate
+    // placement bug the fix addresses stays fixed).
+    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
+    const configIdx = src.indexOf('loadMarketplaceConfigs(pool');
+    const gateReturnIdx = src.indexOf("if (gate && gate.skip");
+    expect(configIdx).toBeLessThan(gateReturnIdx);
   });
 });
 

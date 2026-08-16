@@ -34,6 +34,7 @@ const linkWsib = require('../../../scripts/link-wsib.js') as {
   main: (pool: Pool) => Promise<void>;
   OWN_SLUGS: string[];
   UPSTREAM_SLUGS: string[];
+  readThresholdVersionSignal: (pool: Pool) => Promise<{ thresholdUpdatedAt: string | null }>;
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const linkParcelAddresses = require('../../../scripts/link-parcel-addresses.js') as {
@@ -102,6 +103,77 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
     expect(rows.some((r) => r.metric === 'reason' && r.value === 'no_upstream_changes')).toBe(true);
     expect(sawMeta).toBe(true);
   });
+
+  // ---------------------------------------------------------------------
+  // Commit A — link-wsib.js gate placement (A-R1/A-R2/A-R3).
+  // ---------------------------------------------------------------------
+  it('A-R1: SKIP-eligible gate + --dry-run → the tier simulation runs, summary is NOT the SKIPPED shape', async () => {
+    await pool.query(
+      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
+       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
+      [linkWsib.OWN_SLUGS[0]],
+    );
+    const originalArgv = process.argv;
+    process.argv = [...originalArgv, '--dry-run'];
+    try {
+      const { summary } = await captureEmitted(() => linkWsib.main(pool));
+      // The SKIP shape names its audit_table 'Link WSIB' with a 'status'/'SKIPPED' row;
+      // the real (incl. dry-run) path names it 'WSIB Registry Matching' with tier rows.
+      const auditTable = (summary?.records_meta as { audit_table?: { name?: string; rows?: Array<{ metric: string; value: unknown }> } })
+        ?.audit_table;
+      expect(auditTable?.name).toBe('WSIB Registry Matching');
+      expect(auditTable?.rows?.some((r) => r.metric === 'tier_1_trade_matches')).toBe(true);
+      expect(auditTable?.rows?.some((r) => r.metric === 'status' && r.value === 'SKIPPED')).toBe(false);
+    } finally {
+      process.argv = originalArgv;
+    }
+  }, 30000);
+
+  it('A-R2: an invalid wsib_fuzzy_match_threshold throws even when the gate is SKIP-eligible (validation is not bypassable)', async () => {
+    await pool.query(
+      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
+       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
+      [linkWsib.OWN_SLUGS[0]],
+    );
+    const { rows: prior } = await pool.query(
+      `SELECT variable_value FROM logic_variables WHERE variable_key = 'wsib_fuzzy_match_threshold'`,
+    );
+    await pool.query(
+      `INSERT INTO logic_variables (variable_key, variable_value)
+       VALUES ('wsib_fuzzy_match_threshold', 5)
+       ON CONFLICT (variable_key) DO UPDATE SET variable_value = 5, updated_at = NOW()`,
+    );
+    try {
+      await expect(linkWsib.main(pool)).rejects.toThrow(/logicVars validation failed/);
+    } finally {
+      if (prior.length > 0) {
+        await pool.query(
+          `UPDATE logic_variables SET variable_value = $1 WHERE variable_key = 'wsib_fuzzy_match_threshold'`,
+          [prior[0].variable_value],
+        );
+      } else {
+        await pool.query(`DELETE FROM logic_variables WHERE variable_key = 'wsib_fuzzy_match_threshold'`);
+      }
+    }
+  }, 30000);
+
+  it('A-R3: wsib_fuzzy_match_threshold.updated_at moving forward forces RUN even though the ledger gate itself would SKIP', async () => {
+    const live = await linkWsib.readThresholdVersionSignal(pool);
+    await pool.query(
+      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
+       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
+      [linkWsib.OWN_SLUGS[0], JSON.stringify({ threshold_updated_at: '2000-01-01T00:00:00.000Z' })],
+    );
+    // Bump the threshold's updated_at forward (value unchanged) so ONLY the version
+    // signal — not the ledger gate's upstream-activity check — forces the run.
+    await pool.query(
+      `UPDATE logic_variables SET updated_at = NOW() WHERE variable_key = 'wsib_fuzzy_match_threshold'`,
+    );
+    const { summary } = await captureEmitted(() => linkWsib.main(pool));
+    const auditTable = (summary?.records_meta as { audit_table?: { name?: string } })?.audit_table;
+    expect(auditTable?.name).toBe('WSIB Registry Matching');
+    expect(live.thresholdUpdatedAt === null || typeof live.thresholdUpdatedAt === 'string').toBe(true);
+  }, 30000);
 
   // ---------------------------------------------------------------------
   // G5 — link-parcel-addresses.js
