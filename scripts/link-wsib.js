@@ -57,8 +57,59 @@ const UPSTREAM_SLUGS = [
   'permits:builders', 'builders', 'extract-builders',
 ];
 
+/**
+ * Commit A (B3 output-panel remediation) — link_wsib's OWN dataset-version signal
+ * for wsib_fuzzy_match_threshold: this logic_variables row has NO pipeline_runs
+ * producer of its own (operator-edited via the admin panel, never a pipeline
+ * script), so runLedgerGateDecision's upstream-slug mechanism can't see it move.
+ * Mirrors compute-parcel-cost-estimates.js's readCostVersionSignals/
+ * hasRateOrIndexChanged (C1/C2) pattern — read the raw updated_at as a canonical
+ * ISO string and diff it against what OUR OWN last completed run stamped.
+ * @param {import('pg').Pool} pool
+ * @returns {Promise<{thresholdUpdatedAt: string|null}>}
+ */
+async function readThresholdVersionSignal(pool) {
+  const res = await pool.query(
+    `SELECT updated_at FROM logic_variables WHERE variable_key = 'wsib_fuzzy_match_threshold'`,
+  );
+  const row = res.rows[0];
+  return { thresholdUpdatedAt: row && row.updated_at ? new Date(row.updated_at).toISOString() : null };
+}
+
+/**
+ * Pure comparison (C2-style): did wsib_fuzzy_match_threshold's live ISO signal
+ * move since OUR OWN last completed run stamped it into records_meta? Absent
+ * prior meta (no prior completed run, or a pre-Commit-A row with no key) counts
+ * as CHANGED — fail-safe, matching runLedgerGateDecision's own no-baseline rule.
+ * @param {object|null} ownLastRecordsMeta
+ * @param {{thresholdUpdatedAt: string|null}} versionSignal
+ * @returns {boolean}
+ */
+function hasThresholdChanged(ownLastRecordsMeta, versionSignal) {
+  const prior = ownLastRecordsMeta && typeof ownLastRecordsMeta === 'object' ? ownLastRecordsMeta : null;
+  if (!prior) return true;
+  return prior.threshold_updated_at !== versionSignal.thresholdUpdatedAt;
+}
+
 /** @param {import('pg').Pool} pool */
 async function main(pool) {
+  // Commit A (A1 fix) — hoisted ABOVE the advisory lock + the gate: restores the
+  // pre-B3 unconditional fail-fast. A SKIP-eligible gate must never let an invalid
+  // wsib_fuzzy_match_threshold (or a broken control-panel read) hide behind a
+  // green SKIPPED summary — validation is not bypassable (A-R2).
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'link-wsib');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-wsib');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  const wsibFuzzyMatchThreshold = logicVars.wsib_fuzzy_match_threshold;
+
+  // Commit A (A2 fix) — --dry-run parsed BEFORE the gate. Mirrors
+  // compute-parcel-cost-estimates.js:534's bypassGate = dryRun: a --dry-run
+  // invocation is always an explicit operator debug run (never the scheduled
+  // chain path), so it must always execute the tier simulation, never SKIP.
+  const args = process.argv.slice(2);
+  const dryRun = args.includes('--dry-run');
+  const bypassGate = dryRun;
+
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const RUN_AT = await pipeline.getDbTimestamp(pool);
 
@@ -67,21 +118,36 @@ async function main(pool) {
     // accounted for? If not, skip the whole matching cascade below. Still emits
     // a COMPLETED pipeline_runs summary (DS4) so the next evaluation's own-last
     // anchor advances instead of comparing against a stale started_at forever.
-    const gate = await sourceVersion.runLedgerGateDecision(pool, {
-      ownSlugs: OWN_SLUGS,
-      upstreamSlugs: UPSTREAM_SLUGS,
-      now: RUN_AT,
-    });
-    if (gate.skip) {
+    let gate = null;
+    let thresholdChanged = false;
+    let thresholdSignal = { thresholdUpdatedAt: null };
+    if (!bypassGate) {
+      gate = await sourceVersion.runLedgerGateDecision(pool, {
+        ownSlugs: OWN_SLUGS,
+        upstreamSlugs: UPSTREAM_SLUGS,
+        now: RUN_AT,
+      });
+      // Commit A (A3 fix) — fold wsib_fuzzy_match_threshold's own version signal
+      // into the skip predicate: an upstream-silent gate must still RUN when the
+      // threshold itself moved (C1/C2 precedent), else a threshold edit would be
+      // invisible behind a SKIP forever.
+      thresholdSignal = await readThresholdVersionSignal(pool);
+      thresholdChanged = hasThresholdChanged(gate.ownLastRecordsMeta, thresholdSignal);
+    }
+    if (gate && gate.skip && !thresholdChanged) {
       pipeline.log.info(
         '[link-wsib]',
-        `Run-ledger gate: SKIP (${gate.reason}) — no upstream wsib_registry/entities activity since own last completed run.`,
+        `Run-ledger gate: SKIP (${gate.reason}) — no upstream wsib_registry/entities activity and no threshold bump since own last completed run.`,
       );
       pipeline.emitSummary({
         records_total: 0, records_new: 0, records_updated: 0,
         records_meta: {
+          // Commit A — canonical ISO version key, re-stamped on the skip path too
+          // (the NEXT evaluation's threshold-changed diff must compare against
+          // what was true as-of THIS run, not a stale earlier one).
+          threshold_updated_at: thresholdSignal.thresholdUpdatedAt,
           audit_table: {
-            phase: (process.env.PIPELINE_CHAIN === 'sources') ? 12 : 7,
+            phase: (process.env.PIPELINE_CHAIN === 'sources') ? 19 : 7,
             name: 'Link WSIB',
             verdict: 'PASS',
             rows: [
@@ -100,13 +166,6 @@ async function main(pool) {
       return;
     }
 
-    const { logicVars } = await loadMarketplaceConfigs(pool, 'link-wsib');
-  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-wsib');
-  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
-  const wsibFuzzyMatchThreshold = logicVars.wsib_fuzzy_match_threshold;
-
-  const args = process.argv.slice(2);
-  const dryRun = args.includes('--dry-run');
   const startTime = Date.now();
 
   pipeline.log.info('[link-wsib]', `Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
@@ -123,7 +182,11 @@ async function main(pool) {
       records_total: 0, records_new: 0, records_updated: 0,
       records_meta: {
         audit_table: {
-          phase: (process.env.PIPELINE_CHAIN === 'sources') ? 12 : 7,
+          // F1 — phase ordinals reconciled to the specs: permits chain step 7
+          // (Spec 41 §Step Breakdown row 7), sources chain step 19 (Spec 43
+          // §Step Breakdown row 19). The sources value was 12 (enrich_heritage's
+          // slot) before this fix.
+          phase: (process.env.PIPELINE_CHAIN === 'sources') ? 19 : 7,
           name: 'Link WSIB',
           verdict: 'PASS',
           rows: [
@@ -443,8 +506,15 @@ async function main(pool) {
       matches_tier_2_legal: tier2,
       matches_tier_3_fuzzy: tier3,
       no_match_count: noMatch,
+      // Commit A — canonical ISO version key, re-stamped on every real run so the
+      // NEXT evaluation's threshold-changed diff (hasThresholdChanged) compares
+      // against what was true as-of THIS run.
+      threshold_updated_at: thresholdSignal.thresholdUpdatedAt,
       audit_table: {
-        phase: (process.env.PIPELINE_CHAIN === 'sources') ? 12 : 5,
+        // F1 — phase ordinals reconciled to the specs (see the SKIP-path comment
+        // above for the citation); sources was 12 (enrich_heritage's slot), permits
+        // was 5, before this fix.
+        phase: (process.env.PIPELINE_CHAIN === 'sources') ? 19 : 7,
         name: 'WSIB Registry Matching',
         verdict: linkRate < 5 ? 'WARN' : 'PASS',
         rows: wsibAuditRows,
@@ -465,4 +535,4 @@ if (require.main === module) {
   pipeline.run('link-wsib', main);
 }
 
-module.exports = { main, ADVISORY_LOCK_ID, OWN_SLUGS, UPSTREAM_SLUGS };
+module.exports = { main, ADVISORY_LOCK_ID, OWN_SLUGS, UPSTREAM_SLUGS, readThresholdVersionSignal, hasThresholdChanged };

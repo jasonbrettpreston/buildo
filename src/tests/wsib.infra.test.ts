@@ -88,6 +88,15 @@ describe('WSIB Registry Infrastructure', () => {
       const content = fs.readFileSync(path.resolve(__dirname, '../../scripts/link-wsib.js'), 'utf-8');
       expect(content).toContain('--dry-run');
     });
+
+    // Commit A (B3 output-panel remediation, A-R1) — this source-string check stayed
+    // green through the whole B3 gate-placement regression (the gate returned before
+    // --dry-run was even parsed, so a SKIP-eligible gate silently swallowed --dry-run).
+    // The BEHAVIORAL lock lives in src/tests/db/ledger-gate-callers.db.test.ts
+    // ('A-R1: SKIP-eligible gate + --dry-run → the tier simulation runs, summary is
+    // NOT the SKIPPED shape') — it actually invokes main(pool) against a real DB and
+    // asserts the emitted summary, which this string check cannot do. Left in place
+    // per the WF3 instruction (leave the old one).
   });
 
   describe('Chain Orchestrator', () => {
