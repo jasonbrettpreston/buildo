@@ -56,7 +56,13 @@ describe('enrich-heritage.js — source contract (Spec 61 §8d/§9)', () => {
 
   it('Enrich archetype + emitMeta writes all 4 parcels heritage columns', () => {
     expect(SCRIPT).toMatch(/records_total:\s*null/);
-    expect(SCRIPT).toMatch(/records_updated:\s*result\.updated/);
+    // Phase B B3 — the emit block moved into the shared emitHeritageResults(pool,
+    // { ..., updated, ... }) helper (called from BOTH the #418 skip path and the
+    // recompute path), so the emitted value is the `updated` PARAMETER now, not
+    // the local `result.updated` main() used to read directly (deliberate
+    // same-commit lock edit — the underlying fact, "the real updated count is
+    // what gets emitted", is unchanged; only the variable's name/scope moved).
+    expect(SCRIPT).toMatch(/records_updated:\s*updated/);
     expect(SCRIPT).toMatch(/parcels:\s*\[[^\]]*is_heritage_designated[^\]]*heritage_dataset_version_when_enriched/);
   });
 

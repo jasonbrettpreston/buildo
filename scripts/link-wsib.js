@@ -21,6 +21,7 @@ const pipeline = require('./lib/pipeline');
 const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 const { safeParsePositiveInt } = require('./lib/safe-math');
+const sourceVersion = require('./lib/source-version'); // Phase B B3 — run-ledger gate
 
 const LOGIC_VARS_SCHEMA = z.object({
   wsib_fuzzy_match_threshold: z.coerce.number().finite().positive().max(1),
@@ -28,9 +29,77 @@ const LOGIC_VARS_SCHEMA = z.object({
 
 const ADVISORY_LOCK_ID = 94;
 
-pipeline.run('link-wsib', async (pool) => {
+// Phase B B3 — run-ledger gate slug sets (T2: always caller-supplied parameters,
+// never hardcoded inside source-version.js — the massing-full-gate.js IN-list
+// precedent). link_wsib runs in TWO chains (manifest.json :78 permits, :104
+// sources) — NEVER in 'entities' (v5:60's "entities" was refuted; zero
+// entities:link_wsib rows have ever existed). Own-completion is anchored across
+// every form the pipeline_runs.pipeline column can carry for this script: the
+// two chain-scoped forms run-chain.js writes (`${chainId}:link_wsib`) plus the
+// bare manifest slug plus this script's own `pipeline.run('link-wsib', ...)`
+// name for a standalone/manual invocation.
+const OWN_SLUGS = ['sources:link_wsib', 'permits:link_wsib', 'link_wsib', 'link-wsib'];
+// Upstream producers of the two inputs link_wsib matches: wsib_registry (built
+// by load_wsib, sources-chain only) and entities' name_normalized (built by
+// extract-builders.js's 'builders' step, permits-chain only). Either changing
+// can produce new matches, so both are in scope regardless of which chain
+// triggered this run — the gate's own-last anchor is global, not per-chain.
+//
+// W3 — MONOTONE invalidation (B3 grounding fold): load-wsib.js's UPSERT never
+// touches wsib_registry.linked_entity_id (verified: its `DO UPDATE SET` clause
+// lists trade_name/legal_name/predominant_class/... but never linked_entity_id),
+// so a load_wsib refresh can only ADD newly-unlinked rows, never silently
+// un-link a row this script already matched. The gate therefore never has to
+// distinguish "upstream added rows" from "upstream un-linked rows that need
+// re-matching" — the second case cannot happen.
+const UPSTREAM_SLUGS = [
+  'sources:load_wsib', 'load_wsib', 'load-wsib',
+  'permits:builders', 'builders', 'extract-builders',
+];
+
+/** @param {import('pg').Pool} pool */
+async function main(pool) {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const RUN_AT = await pipeline.getDbTimestamp(pool);
+
+    // Phase B B3 — run-ledger gate. Cheapest possible check first: has anything
+    // happened upstream since link_wsib's own last completed run that it hasn't
+    // accounted for? If not, skip the whole matching cascade below. Still emits
+    // a COMPLETED pipeline_runs summary (DS4) so the next evaluation's own-last
+    // anchor advances instead of comparing against a stale started_at forever.
+    const gate = await sourceVersion.runLedgerGateDecision(pool, {
+      ownSlugs: OWN_SLUGS,
+      upstreamSlugs: UPSTREAM_SLUGS,
+      now: RUN_AT,
+    });
+    if (gate.skip) {
+      pipeline.log.info(
+        '[link-wsib]',
+        `Run-ledger gate: SKIP (${gate.reason}) — no upstream wsib_registry/entities activity since own last completed run.`,
+      );
+      pipeline.emitSummary({
+        records_total: 0, records_new: 0, records_updated: 0,
+        records_meta: {
+          audit_table: {
+            phase: (process.env.PIPELINE_CHAIN === 'sources') ? 12 : 7,
+            name: 'Link WSIB',
+            verdict: 'PASS',
+            rows: [
+              { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+              { metric: 'reason', value: gate.reason, threshold: null, status: 'INFO' },
+              { metric: 'non_completed_upstream', value: gate.nonCompleted, threshold: null, status: 'INFO' },
+              { metric: 'completed_with_changes_upstream', value: gate.completedWithChanges, threshold: null, status: 'INFO' },
+            ],
+          },
+        },
+      });
+      pipeline.emitMeta(
+        { "wsib_registry": ["id", "trade_name_normalized", "legal_name_normalized", "linked_entity_id"], "entities": ["id", "name_normalized", "permit_count"] },
+        { "wsib_registry": ["linked_entity_id", "match_confidence", "matched_at"], "entities": ["is_wsib_registered", "primary_phone", "primary_email", "website"] }
+      );
+      return;
+    }
+
     const { logicVars } = await loadMarketplaceConfigs(pool, 'link-wsib');
   const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'link-wsib');
   if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
@@ -388,4 +457,12 @@ pipeline.run('link-wsib', async (pool) => {
   );
   });
   if (!lockResult.acquired) return;
-});
+}
+
+// I1 — link-wsib.js formerly ran pipeline.run(...) unconditionally at module
+// scope (real DB pool on require()). Guarded + exported (C1 precedent).
+if (require.main === module) {
+  pipeline.run('link-wsib', main);
+}
+
+module.exports = { main, ADVISORY_LOCK_ID, OWN_SLUGS, UPSTREAM_SLUGS };

@@ -279,16 +279,13 @@ describe('⑤ — force-full env plumbing', () => {
   );
 
   it(
-    '(c) ⓔ — the new cost gate does not yet honor its own force-full var. Exact name UNDETERMINED pre-impl ' +
-      '(D2′ only says "the new cost gate honors its own var", not which one) — this checks for the absence ' +
-      'of ANY *_FORCE_FULL pattern in compute-parcel-cost-estimates.js as the diagnostic, and is commented ' +
-      'as a guess (COMPUTE_PARCEL_COST_FORCE_FULL) rather than a locked name.',
+    '(c) Phase B B3 (C3) — the cost gate now honors its own force-full var, ' +
+      'COMPUTE_PARCEL_COST_FORCE_FULL — the exact name this suite guessed pre-impl, ' +
+      'confirmed at implementation (readCostVersionSignals docblock + FORCE_FULL_ENV export ' +
+      'in compute-parcel-cost-estimates.js).',
     () => {
       const src = readFileSync(COST_ESTIMATES_PATH, 'utf8');
-      expect(src).not.toMatch(/_FORCE_FULL/);
-      // Documents the guessed name so a future maintainer can grep for intent,
-      // without pretending this is a locked contract:
-      expect('COMPUTE_PARCEL_COST_FORCE_FULL').toMatch(/_FORCE_FULL$/);
+      expect(src).toMatch(/COMPUTE_PARCEL_COST_FORCE_FULL/);
     },
   );
 });
