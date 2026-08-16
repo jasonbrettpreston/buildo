@@ -552,26 +552,26 @@ async function main(pool, opts = {}) {
           '[compute-parcel-cost-estimates]',
           `Run-ledger gate: SKIP (${gate.reason}) — no upstream enrich_parcels activity and no rate/index bump since own last completed run.`,
         );
+        // Commit B (B3 output-panel remediation) — the skip re-emits its own
+        // null_geom_basis_count/engine_error_count FAIL gate + line_coverage/
+        // area_confidence rows (emitHeritageResults precedent), never a bare
+        // hardcoded 'PASS'. buildSkipReEmitMeta's priorMeta spread also carries
+        // the top-level line_coverage/area_confidence objects forward.
+        const skipRecordsMeta = sourceVersion.buildSkipGateRecordsMeta({
+          gate,
+          runAt: RUN_AT,
+          auditMeta: { phase: 88, name: 'Parcel Cost Estimation' },
+          carryMetricNames: ['null_geom_basis_count', 'engine_error_count'],
+          carryMetricPrefixes: ['line_coverage_', 'area_confidence_'],
+        });
+        // C1 — canonical ISO version keys, re-stamped on the skip path too
+        // (DS4-style: the NEXT evaluation's rate-changed diff must compare
+        // against what was true as-of THIS run, not a stale earlier one).
+        skipRecordsMeta.rates_as_of = versionSignals.ratesAsOf;
+        skipRecordsMeta.index_updated_at = versionSignals.indexUpdatedAt;
         pipeline.emitSummary({
           records_total: 0, records_new: 0, records_updated: 0,
-          records_meta: {
-            // C1 — canonical ISO version keys, re-stamped on the skip path too
-            // (DS4-style: the NEXT evaluation's rate-changed diff must compare
-            // against what was true as-of THIS run, not a stale earlier one).
-            rates_as_of: versionSignals.ratesAsOf,
-            index_updated_at: versionSignals.indexUpdatedAt,
-            audit_table: {
-              phase: 88,
-              name: 'Parcel Cost Estimation',
-              verdict: 'PASS',
-              rows: [
-                { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
-                { metric: 'reason', value: gate.reason, threshold: null, status: 'INFO' },
-                { metric: 'non_completed_upstream', value: gate.nonCompleted, threshold: null, status: 'INFO' },
-                { metric: 'completed_with_changes_upstream', value: gate.completedWithChanges, threshold: null, status: 'INFO' },
-              ],
-            },
-          },
+          records_meta: skipRecordsMeta,
         });
         pipeline.emitMeta(
           {

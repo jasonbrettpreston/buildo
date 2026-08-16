@@ -54,6 +54,15 @@ export const GET = withApiEnvelope(async function GET() {
            WHERE status = 'completed' AND duration_ms IS NOT NULL
              AND pipeline NOT LIKE '%classify_scope_class%'
              AND pipeline NOT LIKE '%classify_scope_tags%'
+             -- B5 (B3 output-panel remediation) — exclude run-ledger-gate SKIP
+             -- rows (scripts/lib/source-version.js#buildSkipGateRecordsMeta
+             -- stamps records_meta.gated_skip:true). A gate skip measures a
+             -- real, non-zero duration (274-320ms observed) that the
+             -- detectDurationAnomalies' d > 0 filter cannot distinguish from a
+             -- genuinely fast run; left in, a run of consecutive skips collapses
+             -- a pipeline's rolling average until the next REAL run trips a
+             -- false-positive anomaly (measured: ratio 664.5 after seven).
+             AND COALESCE((records_meta->>'gated_skip')::boolean, false) = false
          ) sub
          WHERE rn <= 8
          ORDER BY base_pipeline, rn`

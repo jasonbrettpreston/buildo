@@ -34,8 +34,13 @@ describe('C1 — canonical ISO version keys stamped on both the run and skip pat
   it('the run-path emitSummary records_meta carries rates_as_of / index_updated_at', () => {
     const src = readFileSync(SCRIPT_PATH, 'utf8');
     // Two occurrences expected: once in the SKIP branch, once in the real-run branch.
-    const rateKeyMatches = src.match(/rates_as_of:\s*versionSignals\.ratesAsOf/g) ?? [];
-    const indexKeyMatches = src.match(/index_updated_at:\s*versionSignals\.indexUpdatedAt/g) ?? [];
+    // Commit B (B3 output-panel remediation) — the SKIP branch now assigns onto
+    // skipRecordsMeta (skipRecordsMeta.rates_as_of = ...) rather than an inline
+    // object-literal key, since its records_meta is built via
+    // sourceVersion.buildSkipGateRecordsMeta(); the real-run branch is unchanged
+    // (still the object-literal form). Both forms stamp the same canonical key.
+    const rateKeyMatches = src.match(/rates_as_of\s*[:=]\s*versionSignals\.ratesAsOf/g) ?? [];
+    const indexKeyMatches = src.match(/index_updated_at\s*[:=]\s*versionSignals\.indexUpdatedAt/g) ?? [];
     expect(rateKeyMatches.length).toBe(2);
     expect(indexKeyMatches.length).toBe(2);
   });

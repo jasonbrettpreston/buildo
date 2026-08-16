@@ -269,16 +269,20 @@ function buildSkipReEmitMeta({ skeleton = {}, priorMeta = null, pins = {} } = {}
  *   never hardcoded in this file (T2: slug sets are always parameters).
  * @param {string[]} input.upstreamSlugs REQUIRED, non-empty. The producer(s) this
  *   script depends on, same slug-set convention.
- * @param {Date|string} [input.now] — RUN_AT (Spec 47 §R3.5 DB clock), carried
- *   through to the returned decision for the caller's own audit-row stamping.
- *   Not consulted by the predicate itself (the window is anchored on own's
- *   last completed run, not wall-clock "now").
+ * @param {Date|string} [input.now] — RUN_AT (Spec 47 §R3.5 DB clock). Not
+ *   consulted by the predicate itself (the window is anchored on own's last
+ *   completed run, not wall-clock "now"); callers pass their own RUN_AT
+ *   directly into their own audit-row stamping (Commit B — the `evaluatedAt`
+ *   field that used to carry it back out of this function was deleted: it was
+ *   RUN_AT ≈ now, duplicating pipeline_runs.started_at, with zero consumers).
  * @returns {Promise<{
  *   skip: boolean, reason: string,
  *   ownStarted: Date|null, ownCompleted: Date|null, ownLastRecordsMeta: object|null,
- *   nonCompleted: number, completedWithChanges: number, evaluatedAt: Date|string|null,
+ *   nonCompleted: number, completedWithChanges: number,
  * }>}
  */
+// `now` is accepted for caller-side compatibility (every caller still passes its
+// RUN_AT) but is no longer echoed back — Commit B deleted the unused evaluatedAt field.
 async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null } = {}) {
   if (!Array.isArray(ownSlugs) || ownSlugs.length === 0) {
     throw new Error('[source-version] runLedgerGateDecision requires a non-empty ownSlugs array (T2: slug sets are always parameters)');
@@ -328,7 +332,10 @@ async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null
   const nonCompleted = Number(row.non_completed ?? 0);
   const completedWithChanges = Number(row.completed_with_changes ?? 0);
 
-  const base = { ownStarted, ownCompleted, ownLastRecordsMeta, nonCompleted, completedWithChanges, evaluatedAt: now };
+  // Commit B — evaluatedAt (== `now`, i.e. RUN_AT) deleted: it duplicated
+  // pipeline_runs.started_at and had zero consumers (two independent WF3
+  // review seats ruled it should go, not gain one).
+  const base = { ownStarted, ownCompleted, ownLastRecordsMeta, nonCompleted, completedWithChanges };
 
   // No-completed-run-ever arm — fail-safe RUN (never skip on an absent baseline).
   if (!ownCompleted) {
@@ -347,6 +354,95 @@ async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null
   return { skip: false, reason: 'upstream_changed', ...base };
 }
 
+// ---------------------------------------------------------------------------
+// 7. Skip-path records_meta builder for the run-ledger gate (Commit B, B3
+//    output-panel remediation) — see docs/specs/01-pipeline/48_pipeline_observability.md §3.7.
+// ---------------------------------------------------------------------------
+/**
+ * Build a run-ledger-gate SKIP's records_meta. The remedy pattern is
+ * enrich-heritage.js's emitHeritageResults(): a skip must keep its FAIL/WARN
+ * coverage gates and a REAL row-derived verdict, never a bare hardcoded PASS —
+ * a gate that goes green just because it didn't look is worse than no gate.
+ *
+ * - Carries forward the named audit rows from the own-last completed run's
+ *   audit_table (so a WARN/FAIL coverage row the skip is masking stays
+ *   visible on the SKIP's own verdict cascade).
+ * - Stamps own_started (this run's RUN_AT) + a carried-forward last_full_run_at
+ *   (the prior meta's own last_full_run_at if it had one — i.e. this run was
+ *   ALSO a skip — else the own-last run's completed_at, i.e. that run WAS the
+ *   last full run). An operator can reconstruct "days since last real
+ *   execution" from last_full_run_at alone (B-R2).
+ * - Tracks consecutive_skips: reset to 1 when the own-last run was itself a
+ *   REAL run, incremented when the own-last run was itself a skip (detected
+ *   via its carried 'status'/'SKIPPED' row) — free from the same read.
+ * - Stamps gated_skip:true so duration-anomaly baselines (src/lib/quality/types.ts
+ *   detectDurationAnomalies via the /api/quality route) can exclude a gate
+ *   skip's near-zero duration from a pipeline's historical average (B5) — a
+ *   `d > 0` filter alone cannot distinguish a genuine fast run from a gate
+ *   skip; both measure non-zero milliseconds.
+ * - verdict is ROW-DERIVED (never a hardcoded 'PASS') so a carried FAIL/WARN
+ *   row, or consecutive_skips crossing its own WARN threshold, propagates.
+ *
+ * @param {object} args
+ * @param {{reason:string, nonCompleted:number, completedWithChanges:number, ownCompleted:Date|string|null, ownLastRecordsMeta:object|null}} args.gate
+ * @param {Date|string} args.runAt — this run's RUN_AT (Spec 47 §R3.5 DB clock)
+ * @param {{phase:number, name:string}} args.auditMeta
+ * @param {string[]} [args.carryMetricNames] — exact audit-row metric names to carry forward
+ * @param {string[]} [args.carryMetricPrefixes] — prefix-matched metric names to carry forward
+ * @param {number} [args.consecutiveSkipsWarnAt=4] — WARN threshold for consecutive_skips
+ * @returns {object} records_meta ready for pipeline.emitSummary
+ */
+function buildSkipGateRecordsMeta({
+  gate,
+  runAt,
+  auditMeta,
+  carryMetricNames = [],
+  carryMetricPrefixes = [],
+  consecutiveSkipsWarnAt = 4,
+}) {
+  const priorMeta = gate.ownLastRecordsMeta && typeof gate.ownLastRecordsMeta === 'object' ? gate.ownLastRecordsMeta : null;
+  const priorAuditTable = priorMeta && priorMeta.audit_table && typeof priorMeta.audit_table === 'object' ? priorMeta.audit_table : null;
+  const priorRows = Array.isArray(priorAuditTable?.rows) ? priorAuditTable.rows : [];
+  const priorWasSkip = priorRows.some((r) => r.metric === 'status' && r.value === 'SKIPPED');
+  const priorConsecutiveSkips = Number(priorMeta?.consecutive_skips ?? 0);
+  const consecutiveSkips = priorWasSkip && Number.isFinite(priorConsecutiveSkips) && priorConsecutiveSkips > 0
+    ? priorConsecutiveSkips + 1
+    : 1;
+  const carriedRows = priorRows.filter(
+    (r) => carryMetricNames.includes(r.metric) || carryMetricPrefixes.some((p) => String(r.metric).startsWith(p)),
+  );
+  const rows = [
+    { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+    { metric: 'reason', value: gate.reason, threshold: null, status: 'INFO' },
+    { metric: 'non_completed_upstream', value: gate.nonCompleted, threshold: null, status: 'INFO' },
+    { metric: 'completed_with_changes_upstream', value: gate.completedWithChanges, threshold: null, status: 'INFO' },
+    {
+      metric: 'consecutive_skips',
+      value: consecutiveSkips,
+      threshold: `< ${consecutiveSkipsWarnAt}`,
+      status: consecutiveSkips >= consecutiveSkipsWarnAt ? 'WARN' : 'INFO',
+    },
+    ...carriedRows,
+  ];
+  const verdict = rows.some((r) => r.status === 'FAIL') ? 'FAIL' : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+  // last_full_run_at: carried forward from a prior SKIP's own last_full_run_at
+  // (this run is skipping too, so the last REAL execution hasn't moved), else
+  // the own-last completed run's completed_at (that run WAS the last full run).
+  const lastFullRunAt = priorMeta?.last_full_run_at ?? gate.ownCompleted;
+
+  return buildSkipReEmitMeta({
+    skeleton: {},
+    priorMeta,
+    pins: {
+      own_started: runAt,
+      last_full_run_at: lastFullRunAt,
+      consecutive_skips: consecutiveSkips,
+      gated_skip: true,
+      audit_table: { phase: auditMeta.phase, name: auditMeta.name, verdict, rows },
+    },
+  });
+}
+
 module.exports = {
   OUTCOME_SKIP_UNCHANGED,
   OUTCOME_LOAD_CHANGED,
@@ -360,4 +456,5 @@ module.exports = {
   streamFileHash,
   buildSkipReEmitMeta,
   runLedgerGateDecision,
+  buildSkipGateRecordsMeta,
 };
