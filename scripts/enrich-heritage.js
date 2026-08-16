@@ -82,6 +82,47 @@ async function readHeritageContract(pool) {
   return { datasetVersion };
 }
 
+// L14 — never run against an empty heritage source (would reset every parcel's
+// enrichment). Shared by assertPreconditions (Layer-2 recompute path) AND the
+// #418 pre-skip path in main() so the invariant holds on BOTH branches — a
+// wiped heritage_properties/heritage_districts table must HALT even when
+// matching version stamps would otherwise satisfy the #418 skip below
+// (enrich-ravines.js precedent, Gemini finding carried over verbatim).
+async function assertHeritageSourceNonEmpty(db) {
+  const hp = await db.query('SELECT COUNT(*)::int AS n FROM heritage_properties');
+  const hd = await db.query('SELECT COUNT(*)::int AS n FROM heritage_districts');
+  if (hp.rows[0].n === 0) throw new Error(`${TAG} heritage_properties is empty — aborting (L14)`);
+  if (hd.rows[0].n === 0) throw new Error(`${TAG} heritage_districts is empty — aborting (L14)`);
+}
+
+// Phase B B3 — #418 Layer-1 (ported from enrich-ravines.js's countStale): cheap
+// full-table COUNT (no spatial join) of ELIGIBLE geom-bearing parcels not yet
+// enriched against this exact heritage dataset version. 0 ⇒ every eligible
+// parcel is current ⇒ the spatial join is a guaranteed no-op ⇒ SKIP.
+//
+// ⛔ THE WEDGE-OPEN TRAP (B3 grounding fold, live-grounded): ENRICH_SQL's
+// parcel_c CTE (:143 below) excludes invalid/empty geometries — 16 parcels,
+// live-measured — that can therefore NEVER be stamped by the UPDATE. A naive
+// port of ravines' `WHERE geom IS NOT NULL` probe would count those 16 as
+// permanently stale FOREVER, so staleCount would NEVER reach 0 and this skip
+// branch would be dead code behind a green suite (every hand-built fixture
+// happens to use valid geometry, so the trap never fires in tests unless a
+// fixture deliberately includes an invalid one). The fix: this probe MIRRORS
+// ENRICH_SQL's full eligibility predicate (NOT ST_IsEmpty + ST_IsValid) so the
+// 16 excluded parcels are excluded from the denominator here exactly as they
+// are excluded from the UPDATE itself — they can neither force a stale count
+// nor silently satisfy one; they are simply out of scope for this gate, same
+// as they are out of scope for the enrichment.
+async function countStale(db, datasetVersion) {
+  const res = await db.query(
+    `SELECT COUNT(*)::int AS n FROM parcels
+      WHERE geom IS NOT NULL AND NOT ST_IsEmpty(geom) AND ST_IsValid(geom)
+        AND heritage_dataset_version_when_enriched IS DISTINCT FROM $1`,
+    [datasetVersion],
+  );
+  return res.rows[0].n;
+}
+
 // ---------------------------------------------------------------------------
 // Preconditions (DEC-F) — non-viable spatial join without these.
 // ---------------------------------------------------------------------------
@@ -114,11 +155,8 @@ async function assertPreconditions(client) {
   if (Number(srid.rows[0].srid) !== 4326) {
     throw new Error(`${TAG} parcels.geom SRID is ${srid.rows[0].srid}, expected 4326`);
   }
-  // L14 — never run against an empty heritage source (would reset every parcel's enrichment).
-  const hp = await client.query('SELECT COUNT(*)::int AS n FROM heritage_properties');
-  const hd = await client.query('SELECT COUNT(*)::int AS n FROM heritage_districts');
-  if (hp.rows[0].n === 0) throw new Error(`${TAG} heritage_properties is empty — aborting (L14)`);
-  if (hd.rows[0].n === 0) throw new Error(`${TAG} heritage_districts is empty — aborting (L14)`);
+  // L14 empty-heritage-source guard (shared with the main() pre-skip path).
+  await assertHeritageSourceNonEmpty(client);
 }
 
 // §11.1 set-based UPDATE — CONTAINMENT match (live-validation finding, 2026-06-04).
@@ -209,6 +247,90 @@ function verdictCascade(rows) {
     : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
 }
 
+// Coverage stats + audit-row emit — shared by BOTH the #418 skip path and the
+// recompute path so the dashboard step always reports (never UNKNOWN) and the
+// producer/consumer column contract holds on a skip (Integration BUG, ported
+// from enrich-ravines.js's emitResults). Coverage is RE-QUERIED live on every
+// call so a pre-existing partial-coverage hole stays visible even when this
+// run skips (Regression Guardian).
+async function emitHeritageResults(pool, { datasetVersion, updated, skipped, t0, config }) {
+  const cov = await pool.query(`
+    SELECT
+      COUNT(*) FILTER (WHERE is_heritage_designated)                                  AS designated,
+      COUNT(*) FILTER (WHERE heritage_designation_type = 'part_iv_individual')        AS part_iv,
+      COUNT(*) FILTER (WHERE heritage_designation_type = 'part_v_hcd')                AS part_v,
+      COUNT(*) FILTER (WHERE geom IS NOT NULL AND NOT ST_IsValid(geom))               AS invalid_geom,
+      (SELECT COUNT(*) FROM heritage_properties WHERE status = 'part_iv')             AS part_iv_source
+    FROM parcels`);
+  const c = cov.rows[0];
+  const designated = Number(c.designated);
+  const partIv = Number(c.part_iv);
+  const partV = Number(c.part_v);
+  const invalidGeom = Number(c.invalid_geom);
+  const partIvSource = Number(c.part_iv_source);
+
+  // L21: Part IV source points NOT contained by any (valid-geom) parcel — the containment
+  // limitation made observable. ST_Intersects binds idx_parcels_geom_gist (index-bound).
+  const unl = await pool.query(`
+    SELECT COUNT(*)::int AS n FROM heritage_properties hp
+     WHERE hp.status = 'part_iv'
+       AND NOT EXISTS (SELECT 1 FROM parcels p WHERE p.geom IS NOT NULL AND ST_IsValid(p.geom) AND ST_Intersects(p.geom, hp.geom))`);
+  const unmatchedPoints = Number(unl.rows[0].n);
+  const unmatchedFrac = partIvSource > 0 ? unmatchedPoints / partIvSource : 0;
+
+  const auditRows = [];
+  // Broken-join FAIL gate: a hard zero means the spatial join matched NOTHING (wrong SRID /
+  // unbound GIST / Option-C bug) — distinct from a legitimately-small heritage subset (DEC-H / Obs).
+  auditRows.push({ metric: 'parcels_heritage_designated_count', value: designated, status: designated === 0 ? 'FAIL' : 'INFO' });
+  // Part IV broken-while-Part-V-works visibility: WARN when 0 matched but source has Part IV points.
+  auditRows.push({ metric: 'parcels_part_iv_count', value: partIv, status: (partIv === 0 && partIvSource > 0) ? 'WARN' : 'INFO' });
+  auditRows.push({ metric: 'parcels_part_v_hcd_count', value: partV, status: 'INFO' });
+  auditRows.push({ metric: 'heritage_part_iv_source_count', value: partIvSource, status: 'INFO' });
+  // L21 — % of Part IV source points with no containing parcel (containment limitation; calibrated thresholds).
+  auditRows.push({
+    metric: 'heritage_points_no_parcel_match',
+    value: Math.round(unmatchedFrac * 1000) / 10,
+    status: unmatchedFrac > config.heritageUnlinkedPointFailPct ? 'FAIL'
+      : unmatchedFrac > config.heritageUnlinkedPointWarnPct ? 'WARN' : 'INFO',
+  });
+  // INFO (not WARN): invalid-geom parcels are excluded from the join (parcel_c WHERE ST_IsValid),
+  // so they don't corrupt enrichment — this is a steady-state parcels-loader data-quality fact, not a
+  // per-run alert. WARN-on->0 would force a perpetual-WARN verdict (alert fatigue). Mirrors enrich-ravines.
+  auditRows.push({ metric: 'parcels_invalid_geom_count', value: invalidGeom, status: 'INFO' });
+  auditRows.push({ metric: 'parcels_enriched_count', value: updated, status: 'INFO' });
+  // #418 — whether this run took the Layer-1 skip (steady state) or recomputed (post-refresh).
+  auditRows.push({ metric: 'parcels_heritage_enrich_skipped', value: skipped, status: 'INFO' });
+  auditRows.push({ metric: 'heritage_source_dataset_version', value: datasetVersion, status: 'INFO' });
+  auditRows.push({ metric: 'enrich_heritage_duration_ms', value: Date.now() - t0, status: 'INFO' });
+
+  pipeline.emitSummary({
+    records_total: null, // Enrich archetype — does not create rows (Spec 47 §11)
+    records_new: null,
+    records_updated: updated,
+    records_meta: {
+      audit_table: {
+        phase: ADVISORY_LOCK_ID,
+        name: 'Parcel heritage enrichment',
+        verdict: verdictCascade(auditRows),
+        rows: auditRows,
+      },
+    },
+  });
+
+  pipeline.emitMeta(
+    {
+      heritage_properties: ['geom', 'status', 'address_text', 'designated_date'],
+      heritage_districts: ['geom', 'designated_date'],
+      parcels: ['id', 'geom', 'addr_num_normalized', 'street_name_normalized', 'street_type_normalized'],
+    },
+    { parcels: ['is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date', 'heritage_dataset_version_when_enriched'] },
+  );
+
+  pipeline.log.info(TAG, skipped
+    ? `skip — all eligible geom-bearing parcels already enriched at heritage version ${datasetVersion} (designated ${designated}: part_iv ${partIv}/${partIvSource}, part_v ${partV})`
+    : `enriched ${updated} parcels (designated ${designated}: part_iv ${partIv}/${partIvSource}, part_v ${partV})`);
+}
+
 async function main(pool) {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const t0 = Date.now();
@@ -217,6 +339,22 @@ async function main(pool) {
 
     // §9/L23 consumer protocol — HALTs on missing/failed/stale producer.
     const { datasetVersion } = await readHeritageContract(pool);
+
+    // L14 holds on BOTH paths (ravines precedent) — a wiped heritage source
+    // must HALT even when matching stamps would otherwise satisfy the #418
+    // skip below.
+    await assertHeritageSourceNonEmpty(pool);
+
+    // #418 Layer-1 (ported) — see countStale's docblock for the invalid-geom
+    // wedge-open trap and how the probe is scoped to avoid it. The skip path
+    // STILL emits coverage + summary + meta (shared emitHeritageResults) so
+    // the dashboard step is never UNKNOWN and the producer/consumer column
+    // contract holds (Integration BUG).
+    const staleCount = await countStale(pool, datasetVersion);
+    if (staleCount === 0) {
+      await emitHeritageResults(pool, { datasetVersion, updated: 0, skipped: true, t0, config });
+      return { ok: true };
+    }
 
     let result;
     await pipeline.withTransaction(pool, async (client) => {
@@ -227,78 +365,7 @@ async function main(pool) {
       });
     });
 
-    // Coverage stats (DEC-H — counts, not a coverage %).
-    const cov = await pool.query(`
-      SELECT
-        COUNT(*) FILTER (WHERE is_heritage_designated)                                  AS designated,
-        COUNT(*) FILTER (WHERE heritage_designation_type = 'part_iv_individual')        AS part_iv,
-        COUNT(*) FILTER (WHERE heritage_designation_type = 'part_v_hcd')                AS part_v,
-        COUNT(*) FILTER (WHERE geom IS NOT NULL AND NOT ST_IsValid(geom))               AS invalid_geom,
-        (SELECT COUNT(*) FROM heritage_properties WHERE status = 'part_iv')             AS part_iv_source
-      FROM parcels`);
-    const c = cov.rows[0];
-    const designated = Number(c.designated);
-    const partIv = Number(c.part_iv);
-    const partV = Number(c.part_v);
-    const invalidGeom = Number(c.invalid_geom);
-    const partIvSource = Number(c.part_iv_source);
-
-    // L21: Part IV source points NOT contained by any (valid-geom) parcel — the containment
-    // limitation made observable. ST_Intersects binds idx_parcels_geom_gist (index-bound).
-    const unl = await pool.query(`
-      SELECT COUNT(*)::int AS n FROM heritage_properties hp
-       WHERE hp.status = 'part_iv'
-         AND NOT EXISTS (SELECT 1 FROM parcels p WHERE p.geom IS NOT NULL AND ST_IsValid(p.geom) AND ST_Intersects(p.geom, hp.geom))`);
-    const unmatchedPoints = Number(unl.rows[0].n);
-    const unmatchedFrac = partIvSource > 0 ? unmatchedPoints / partIvSource : 0;
-
-    const auditRows = [];
-    // Broken-join FAIL gate: a hard zero means the spatial join matched NOTHING (wrong SRID /
-    // unbound GIST / Option-C bug) — distinct from a legitimately-small heritage subset (DEC-H / Obs).
-    auditRows.push({ metric: 'parcels_heritage_designated_count', value: designated, status: designated === 0 ? 'FAIL' : 'INFO' });
-    // Part IV broken-while-Part-V-works visibility: WARN when 0 matched but source has Part IV points.
-    auditRows.push({ metric: 'parcels_part_iv_count', value: partIv, status: (partIv === 0 && partIvSource > 0) ? 'WARN' : 'INFO' });
-    auditRows.push({ metric: 'parcels_part_v_hcd_count', value: partV, status: 'INFO' });
-    auditRows.push({ metric: 'heritage_part_iv_source_count', value: partIvSource, status: 'INFO' });
-    // L21 — % of Part IV source points with no containing parcel (containment limitation; calibrated thresholds).
-    auditRows.push({
-      metric: 'heritage_points_no_parcel_match',
-      value: Math.round(unmatchedFrac * 1000) / 10,
-      status: unmatchedFrac > config.heritageUnlinkedPointFailPct ? 'FAIL'
-        : unmatchedFrac > config.heritageUnlinkedPointWarnPct ? 'WARN' : 'INFO',
-    });
-    // INFO (not WARN): invalid-geom parcels are excluded from the join (parcel_c WHERE ST_IsValid),
-    // so they don't corrupt enrichment — this is a steady-state parcels-loader data-quality fact, not a
-    // per-run alert. WARN-on->0 would force a perpetual-WARN verdict (alert fatigue). Mirrors enrich-ravines.
-    auditRows.push({ metric: 'parcels_invalid_geom_count', value: invalidGeom, status: 'INFO' });
-    auditRows.push({ metric: 'parcels_enriched_count', value: result.updated, status: 'INFO' });
-    auditRows.push({ metric: 'heritage_source_dataset_version', value: datasetVersion, status: 'INFO' });
-    auditRows.push({ metric: 'enrich_heritage_duration_ms', value: Date.now() - t0, status: 'INFO' });
-
-    pipeline.emitSummary({
-      records_total: null, // Enrich archetype — does not create rows (Spec 47 §11)
-      records_new: null,
-      records_updated: result.updated,
-      records_meta: {
-        audit_table: {
-          phase: ADVISORY_LOCK_ID,
-          name: 'Parcel heritage enrichment',
-          verdict: verdictCascade(auditRows),
-          rows: auditRows,
-        },
-      },
-    });
-
-    pipeline.emitMeta(
-      {
-        heritage_properties: ['geom', 'status', 'address_text', 'designated_date'],
-        heritage_districts: ['geom', 'designated_date'],
-        parcels: ['id', 'geom', 'addr_num_normalized', 'street_name_normalized', 'street_type_normalized'],
-      },
-      { parcels: ['is_heritage_designated', 'heritage_designation_type', 'heritage_designation_date', 'heritage_dataset_version_when_enriched'] },
-    );
-
-    pipeline.log.info(TAG, `enriched ${result.updated} parcels (designated ${designated}: part_iv ${partIv}/${partIvSource}, part_v ${partV})`);
+    await emitHeritageResults(pool, { datasetVersion, updated: result.updated, skipped: false, t0, config });
     return { ok: true };
   });
 
@@ -316,6 +383,9 @@ module.exports = {
   ENRICH_SQL,
   readHeritageContract,
   assertPreconditions,
+  assertHeritageSourceNonEmpty,
+  countStale,
   enrichHeritage,
+  emitHeritageResults,
   verdictCascade,
 };

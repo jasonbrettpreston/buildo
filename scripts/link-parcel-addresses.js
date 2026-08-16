@@ -42,6 +42,7 @@
 
 const pipeline = require('./lib/pipeline');
 const { safeParseIntOrNull } = require('./lib/safe-math');
+const sourceVersion = require('./lib/source-version'); // Phase B B3 — run-ledger gate
 
 const TAG = '[link-parcel-addresses]';
 
@@ -49,7 +50,21 @@ const ADVISORY_LOCK_ID = 115;
 
 const BATCH_SIZE = 1000;
 
-pipeline.run('link-parcel-addresses', async (pool) => {
+// Phase B B3 — run-ledger gate slug sets (T2: caller-supplied, never hardcoded
+// in source-version.js). link_parcel_addresses runs in the 'sources' chain
+// ONLY (manifest.json :102) — not permits, not entities.
+const OWN_SLUGS = ['sources:link_parcel_addresses', 'link_parcel_addresses', 'link-parcel-addresses'];
+// Upstream producers of the two geometry columns this bridge joins: parcels.geom
+// (load-parcels.js) and address_points.geom (load-address-points.js) — both
+// sources-chain-only steps that run BEFORE link_parcel_addresses (manifest.json
+// chain order: address_points → parcels → ... → link_parcel_addresses).
+const UPSTREAM_SLUGS = [
+  'sources:address_points', 'address_points', 'load-address-points',
+  'sources:parcels', 'parcels', 'load-parcels',
+];
+
+/** @param {import('pg').Pool} pool */
+async function main(pool) {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const t0 = Date.now();
     // Spec 47 §R3.5 / §14.2 — capture RUN_AT once at startup. Every
@@ -58,6 +73,45 @@ pipeline.run('link-parcel-addresses', async (pool) => {
     // calendar dates. In-SQL clock calls in batch INSERTs are BANNED
     // per §14.2.
     const RUN_AT = await pipeline.getDbTimestamp(pool);
+
+    // Phase B B3 — run-ledger gate. Cheapest check first: has parcels or
+    // address_points changed since link_parcel_addresses' own last completed
+    // run? If not, the spatial join is a guaranteed no-op — skip it entirely.
+    // Still emits a COMPLETED pipeline_runs summary (DS4) so the next
+    // evaluation's own-last anchor advances.
+    const gate = await sourceVersion.runLedgerGateDecision(pool, {
+      ownSlugs: OWN_SLUGS,
+      upstreamSlugs: UPSTREAM_SLUGS,
+      now: RUN_AT,
+    });
+    if (gate.skip) {
+      pipeline.log.info(
+        TAG,
+        `Run-ledger gate: SKIP (${gate.reason}) — no upstream parcels/address_points activity since own last completed run.`,
+      );
+      pipeline.emitSummary({
+        records_total: 0, records_new: 0, records_updated: 0,
+        records_meta: {
+          audit_table: {
+            phase: 54,
+            name: 'Parcel ↔ Address Points spatial bridge',
+            verdict: 'PASS',
+            rows: [
+              { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+              { metric: 'reason', value: gate.reason, threshold: null, status: 'INFO' },
+              { metric: 'non_completed_upstream', value: gate.nonCompleted, threshold: null, status: 'INFO' },
+              { metric: 'completed_with_changes_upstream', value: gate.completedWithChanges, threshold: null, status: 'INFO' },
+            ],
+          },
+        },
+      });
+      pipeline.emitMeta(
+        { parcels: ['id', 'geom'], address_points: ['address_point_id', 'geom'] },
+        { parcel_address_points: ['parcel_id', 'address_point_id', 'computed_at'] },
+      );
+      return;
+    }
+
     pipeline.log.info(TAG, 'Starting parcel ↔ address_points spatial bridge populate');
 
     const { rows: pre } = await pool.query(
@@ -322,4 +376,12 @@ pipeline.run('link-parcel-addresses', async (pool) => {
   });
 
   if (!lockResult.acquired) return;
-});
+}
+
+// I1 — link-parcel-addresses.js formerly ran pipeline.run(...) unconditionally
+// at module scope (real DB pool on require()). Guarded + exported (C1 precedent).
+if (require.main === module) {
+  pipeline.run('link-parcel-addresses', main);
+}
+
+module.exports = { main, ADVISORY_LOCK_ID, OWN_SLUGS, UPSTREAM_SLUGS };

@@ -60,6 +60,47 @@
  *    applied LAST so spec_version is pinned to CURRENT after the prior spread
  *    (the load-ravines BUG-2 rule — a future version bump must never re-emit a
  *    stale spec_version on a skip).
+ *
+ * 6. runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now }) — Phase B B3.
+ *    A CONSUMER-side gate (own script deciding whether to run at all, not a
+ *    version-string comparison) for scripts with no dataset-version signal of
+ *    their own: "has anything happened upstream since MY OWN last completed
+ *    run that I haven't accounted for?" This is the THIRD completed_at-DESC
+ *    reader in the codebase (joining massing-full-gate.js and enrich-permits.js
+ *    assertCentrelineEnriched, named in item 1 above) — it lives inside this
+ *    file (not a fourth loader-style call site) because B3's three callers
+ *    (link-wsib, link-parcel-addresses, compute-parcel-cost-estimates) share
+ *    the identical any-status-since-own-last-completed-run shape.
+ *
+ *    Own-last anchor: the most recently COMPLETED run across ownSlugs (a
+ *    slug SET, always caller-supplied — massing-full-gate.js IN-list
+ *    precedent — never hardcoded here; callers own their own chain-scoped /
+ *    unscoped slug variants). No completed own run ever → fail-safe RUN
+ *    (reason 'no_prior_completed_run' — a scoped run has never landed, so
+ *    there is nothing to compare against).
+ *
+ *    Upstream window: every pipeline_runs row across upstreamSlugs whose
+ *    COALESCE(completed_at, 'infinity') > own's last-completed run's
+ *    started_at — i.e. everything that finished (or is still running/failed/
+ *    deferred, hence never finished) AFTER own last started. ANY non-'completed'
+ *    status in that window (running / failed / cancelled / skipped /
+ *    deferred_to_full — deliberately inclusive, a fail-safe: an upstream run
+ *    whose outcome we cannot positively confirm as "completed, no changes"
+ *    must never be read as "safe to skip") forces RUN. `deferred_to_full` is
+ *    excluded from ever counting as a completed-with-changes row purely by
+ *    virtue of not being 'completed' — it still forces RUN via the
+ *    non-completed count, which is correct: a deferred upstream backlog is
+ *    exactly the kind of unresolved state this gate exists to never hide.
+ *
+ *    SKIP fires iff: own has completed at least once, AND zero non-completed
+ *    upstream rows in the window, AND zero completed-with-changes upstream
+ *    rows in the window (records_new + records_updated both 0 on every
+ *    completed row since own_started). Otherwise RUN.
+ *
+ *    Callers MUST still emit a COMPLETED pipeline_runs summary on the skip
+ *    path (DS4 — the same rule as buildSkipReEmitMeta above) so the NEXT
+ *    evaluation's own-last anchor advances forward instead of re-comparing
+ *    against a stale started_at forever.
  */
 
 const crypto = require('crypto');
@@ -217,6 +258,95 @@ function buildSkipReEmitMeta({ skeleton = {}, priorMeta = null, pins = {} } = {}
   return { ...skeleton, ...pm, ...pins };
 }
 
+// ---------------------------------------------------------------------------
+// 6. Run-ledger gate (Phase B B3) — see header item 6 for the full contract.
+// ---------------------------------------------------------------------------
+/**
+ * @param {import('pg').Pool | {query: Function}} pool
+ * @param {object} input
+ * @param {string[]} input.ownSlugs      REQUIRED, non-empty. Caller-owned slug set
+ *   (e.g. ['sources:link_wsib','permits:link_wsib','link_wsib','link-wsib']) —
+ *   never hardcoded in this file (T2: slug sets are always parameters).
+ * @param {string[]} input.upstreamSlugs REQUIRED, non-empty. The producer(s) this
+ *   script depends on, same slug-set convention.
+ * @param {Date|string} [input.now] — RUN_AT (Spec 47 §R3.5 DB clock), carried
+ *   through to the returned decision for the caller's own audit-row stamping.
+ *   Not consulted by the predicate itself (the window is anchored on own's
+ *   last completed run, not wall-clock "now").
+ * @returns {Promise<{
+ *   skip: boolean, reason: string,
+ *   ownStarted: Date|null, ownCompleted: Date|null, ownLastRecordsMeta: object|null,
+ *   nonCompleted: number, completedWithChanges: number, evaluatedAt: Date|string|null,
+ * }>}
+ */
+async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null } = {}) {
+  if (!Array.isArray(ownSlugs) || ownSlugs.length === 0) {
+    throw new Error('[source-version] runLedgerGateDecision requires a non-empty ownSlugs array (T2: slug sets are always parameters)');
+  }
+  if (!Array.isArray(upstreamSlugs) || upstreamSlugs.length === 0) {
+    throw new Error('[source-version] runLedgerGateDecision requires a non-empty upstreamSlugs array (T2: slug sets are always parameters)');
+  }
+
+  const res = await pool.query(
+    `WITH own_last AS (
+       SELECT started_at, completed_at, records_meta
+         FROM pipeline_runs
+        WHERE pipeline = ANY($1::text[])
+          AND status = 'completed'
+        ORDER BY completed_at DESC
+        LIMIT 1
+     ),
+     -- 'skipped' rows ⇒ RUN, deliberately: ANY status other than 'completed'
+     -- in the upstream window counts toward non_completed, including a
+     -- literal status='skipped' row (a lock-contention self-skip, or a
+     -- legacy pre-DS4 skip that never re-stamped 'completed'). We cannot
+     -- positively confirm such a row changed nothing, so the fail-safe is
+     -- RUN — "the first post-scoped-run never skips" (header item 6).
+     upstream_since AS (
+       SELECT
+         COUNT(*) FILTER (WHERE p.status <> 'completed')                                            AS non_completed,
+         COUNT(*) FILTER (WHERE p.status = 'completed'
+                             AND (COALESCE(p.records_new, 0) + COALESCE(p.records_updated, 0)) > 0)  AS completed_with_changes
+         FROM pipeline_runs p
+         CROSS JOIN own_last o
+        WHERE p.pipeline = ANY($2::text[])
+          AND COALESCE(p.completed_at, 'infinity'::timestamptz) > o.started_at
+     )
+     SELECT
+       (SELECT started_at    FROM own_last)              AS own_started,
+       (SELECT completed_at  FROM own_last)               AS own_completed,
+       (SELECT records_meta  FROM own_last)               AS own_last_records_meta,
+       (SELECT non_completed FROM upstream_since)          AS non_completed,
+       (SELECT completed_with_changes FROM upstream_since) AS completed_with_changes`,
+    [ownSlugs, upstreamSlugs],
+  );
+
+  const row = res.rows[0] || {};
+  const ownStarted = row.own_started ?? null;
+  const ownCompleted = row.own_completed ?? null;
+  const ownLastRecordsMeta = row.own_last_records_meta ?? null;
+  const nonCompleted = Number(row.non_completed ?? 0);
+  const completedWithChanges = Number(row.completed_with_changes ?? 0);
+
+  const base = { ownStarted, ownCompleted, ownLastRecordsMeta, nonCompleted, completedWithChanges, evaluatedAt: now };
+
+  // No-completed-run-ever arm — fail-safe RUN (never skip on an absent baseline).
+  if (!ownCompleted) {
+    return { skip: false, reason: 'no_prior_completed_run', ...base };
+  }
+  // ANY non-completed upstream activity since own last ran (running / failed /
+  // cancelled / skipped / deferred_to_full) → RUN. deferred_to_full is excluded
+  // structurally from ever satisfying the skip (it is not 'completed').
+  if (nonCompleted > 0) {
+    return { skip: false, reason: 'upstream_activity_since_last_run', ...base };
+  }
+  // Every completed upstream run in the window reported zero changes → SKIP.
+  if (completedWithChanges === 0) {
+    return { skip: true, reason: 'no_upstream_changes', ...base };
+  }
+  return { skip: false, reason: 'upstream_changed', ...base };
+}
+
 module.exports = {
   OUTCOME_SKIP_UNCHANGED,
   OUTCOME_LOAD_CHANGED,
@@ -229,4 +359,5 @@ module.exports = {
   classifyOutcome,
   streamFileHash,
   buildSkipReEmitMeta,
+  runLedgerGateDecision,
 };

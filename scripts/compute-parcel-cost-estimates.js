@@ -36,6 +36,7 @@ const { safeParsePositiveInt } = require('./lib/safe-math');
 const { buildParcelCostMenu, PARCEL_COST_LINES } = require('./lib/parcel-cost');
 const { parcelFamilyFromZoning } = require('./lib/build-norms'); // Spec 78 P2 R2 — detached-only norm_basis
 const { COST_SCALAR_COLS, FSI_SCALAR_COLS } = require('./lib/parcel-cost-cols');
+const sourceVersion = require('./lib/source-version'); // Phase B B3 — run-ledger gate
 
 // §R2 — advisory lock. The owning Spec is 88, but lock 88 is taken by classify-permits.js
 // (predates the spec-number convention). Per the compute-phase-calibration / backfill-realtor
@@ -65,6 +66,60 @@ const ConfigSchema = z
 // The 12 headline scalar columns (§2.5) + 3 FSI scalars (single-sourced in parcel-cost-cols.js,
 // shared with enrich-permits.js's §4D propagation), in the order the UPDATE writes them.
 const ALL_SCALAR_COLS = [...COST_SCALAR_COLS, ...FSI_SCALAR_COLS];
+
+// Phase B B3 — run-ledger gate slug sets (T2: caller-supplied, never hardcoded
+// in source-version.js). compute_parcel_cost_estimates runs in the 'sources'
+// chain ONLY (manifest.json :105).
+const OWN_SLUGS = ['sources:compute_parcel_cost_estimates', 'compute_parcel_cost_estimates', 'compute-parcel-cost-estimates'];
+// Upstream producer of the parcel envelope fields this step prices (max_buildable_*,
+// opt_aor_gfa_sqm, etc.) — enrich-parcels.js, sources-chain-only.
+const UPSTREAM_SLUGS = ['sources:enrich_parcels', 'enrich_parcels', 'enrich-parcels'];
+// Escape hatch (D2′/R3-B4 precedent — LINK_MASSING_FORCE_FULL): forces a real
+// recompute even when the ledger gate + rate/index signals agree nothing changed.
+const FORCE_FULL_ENV = 'COMPUTE_PARCEL_COST_FORCE_FULL';
+
+/**
+ * Phase B B3 (C1) — the cost step's OWN dataset-version signal. archetype_cost_rates
+ * + the cost_escalation_index logic_variables row have NO pipeline_runs producer of
+ * their own (rates are seeded via migration/admin panel, never a pipeline script), so
+ * runLedgerGateDecision's upstream-slug mechanism can't see them change. Read their
+ * raw values as CANONICAL ISO strings — today's only version signal was an ad hoc
+ * `Date.toString()` blob buried in the audit rows, not a comparable meta key — and
+ * stamp them into records_meta on every run so the NEXT run's ownLastRecordsMeta
+ * (returned by runLedgerGateDecision) can diff against the live DB values (C2).
+ * @param {import('pg').Pool} pool
+ * @returns {Promise<{ratesAsOf: string|null, indexUpdatedAt: string|null}>}
+ */
+async function readCostVersionSignals(pool) {
+  const res = await pool.query(
+    `SELECT
+       (SELECT MAX(as_of_date) FROM archetype_cost_rates)::text AS rates_as_of,
+       (SELECT updated_at FROM logic_variables WHERE variable_key = 'cost_escalation_index') AS index_updated_at`,
+  );
+  const row = res.rows[0] || {};
+  return {
+    ratesAsOf: row.rates_as_of ?? null,
+    indexUpdatedAt: row.index_updated_at ? new Date(row.index_updated_at).toISOString() : null,
+  };
+}
+
+/**
+ * Phase B B3 (C2) — pure comparison: did the live rates/index ISO signals move
+ * since OUR OWN last completed run stamped them into records_meta? Extracted
+ * from the gate call site so the rate-bump-forces-RUN rule is independently
+ * unit-lockable without a live DB. `ownLastRecordsMeta` absent/null (no prior
+ * completed run, or a pre-C1 row that never carried these keys) counts as
+ * CHANGED — fail-safe, matching runLedgerGateDecision's own no-baseline rule.
+ * @param {object|null} ownLastRecordsMeta
+ * @param {{ratesAsOf: string|null, indexUpdatedAt: string|null}} versionSignals
+ * @returns {boolean}
+ */
+function hasRateOrIndexChanged(ownLastRecordsMeta, versionSignals) {
+  const prior = ownLastRecordsMeta && typeof ownLastRecordsMeta === 'object' ? ownLastRecordsMeta : null;
+  if (!prior) return true;
+  return prior.rates_as_of !== versionSignals.ratesAsOf
+    || prior.index_updated_at !== versionSignals.indexUpdatedAt;
+}
 
 /**
  * Testable core. Loads the rate table, streams residential parcels, writes the cost
@@ -424,15 +479,20 @@ async function computeParcelCostEstimates(pool, opts = {}) {
   };
 }
 
-function main() {
-  // ── CLI flags ────────────────────────────────────────────────────────────
-  const args = process.argv.slice(2);
-  const dryRun = args.includes('--dry-run');
-  const limitMatch = args.find((a) => /^--limit=\d+$/.test(a));
-  const rowLimit = limitMatch ? safeParsePositiveInt(limitMatch.split('=')[1], 'limit') : null;
+/**
+ * Phase B B3 — takes `pool` as a parameter (not created internally) so tests
+ * can invoke the REAL gate + engine code path directly against a testcontainer
+ * pool, same convention as link-wsib.js / link-parcel-addresses.js / enrich-heritage.js's
+ * `main(pool)`. The CLI entrypoint at the bottom of this file wraps this in
+ * `pipeline.run(...)` for the pool lifecycle.
+ * @param {import('pg').Pool} pool
+ * @param {{dryRun?: boolean, rowLimit?: number|null}} [opts]
+ */
+async function main(pool, opts = {}) {
+  const dryRun = Boolean(opts.dryRun);
+  const rowLimit = opts.rowLimit ?? null;
 
-  pipeline.run('compute-parcel-cost-estimates', async (pool) => {
-    // §R5 — load + validate logic_variables BEFORE lock contention.
+  // §R5 — load + validate logic_variables BEFORE lock contention.
     const { logicVars } = await loadMarketplaceConfigs(pool, 'compute-parcel-cost-estimates');
     const validation = validateLogicVars(logicVars, ConfigSchema, 'compute-parcel-cost-estimates');
     if (!validation.valid) {
@@ -459,6 +519,71 @@ function main() {
     }
 
     const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+      const RUN_AT = await pipeline.getDbTimestamp(pool);
+
+      // Phase B B3 — cost step's own version signals, read up front so both the
+      // gate's rate-bump check (C2) and the eventual records_meta stamp (C1) use
+      // the same live values.
+      const versionSignals = await readCostVersionSignals(pool);
+
+      // Phase B B3 — run-ledger gate. --dry-run / --limit=N are explicit operator
+      // debug invocations (never the scheduled chain path — chain_args carries
+      // neither for this step) and always bypass the gate, same as the env
+      // escape hatch; a scheduled run bypasses only via the env var.
+      const forceFull = process.env[FORCE_FULL_ENV] === '1';
+      const bypassGate = dryRun || rowLimit != null || forceFull;
+      let gate = null;
+      let rateChanged = false;
+      if (!bypassGate) {
+        gate = await sourceVersion.runLedgerGateDecision(pool, {
+          ownSlugs: OWN_SLUGS,
+          upstreamSlugs: UPSTREAM_SLUGS,
+          now: RUN_AT,
+        });
+        // C2 — archetype_cost_rates / cost_escalation_index have no pipeline_runs
+        // producer of their own (see readCostVersionSignals docblock), so a rate
+        // or index bump can ONLY be detected by diffing the live ISO values
+        // against what OUR OWN last completed run stamped into records_meta.
+        rateChanged = hasRateOrIndexChanged(gate.ownLastRecordsMeta, versionSignals);
+      }
+
+      if (gate && gate.skip && !rateChanged) {
+        pipeline.log.info(
+          '[compute-parcel-cost-estimates]',
+          `Run-ledger gate: SKIP (${gate.reason}) — no upstream enrich_parcels activity and no rate/index bump since own last completed run.`,
+        );
+        pipeline.emitSummary({
+          records_total: 0, records_new: 0, records_updated: 0,
+          records_meta: {
+            // C1 — canonical ISO version keys, re-stamped on the skip path too
+            // (DS4-style: the NEXT evaluation's rate-changed diff must compare
+            // against what was true as-of THIS run, not a stale earlier one).
+            rates_as_of: versionSignals.ratesAsOf,
+            index_updated_at: versionSignals.indexUpdatedAt,
+            audit_table: {
+              phase: 88,
+              name: 'Parcel Cost Estimation',
+              verdict: 'PASS',
+              rows: [
+                { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
+                { metric: 'reason', value: gate.reason, threshold: null, status: 'INFO' },
+                { metric: 'non_completed_upstream', value: gate.nonCompleted, threshold: null, status: 'INFO' },
+                { metric: 'completed_with_changes_upstream', value: gate.completedWithChanges, threshold: null, status: 'INFO' },
+              ],
+            },
+          },
+        });
+        pipeline.emitMeta(
+          {
+            archetype_cost_rates: ['archetype', 'as_of_date'],
+            logic_variables: ['variable_key', 'updated_at'],
+            parcels: ['id', 'zoning_class'],
+          },
+          { parcels: ['parcel_cost_menu', ...ALL_SCALAR_COLS] },
+        );
+        return;
+      }
+
       const s = await computeParcelCostEstimates(pool, { dryRun, rowLimit, config });
 
       pipeline.emitSummary({
@@ -481,6 +606,10 @@ function main() {
           cost_index_age_months: s.indexAgeMonths,
           dry_run: s.dryRun,
           row_limit: s.rowLimit,
+          // C1 — canonical ISO version keys (replaces the old Date.toString() blob
+          // as the only version signal): consumed by the NEXT run's C2 rate-bump check.
+          rates_as_of: versionSignals.ratesAsOf,
+          index_updated_at: versionSignals.indexUpdatedAt,
           audit_table: {
             phase: 88,
             name: 'Parcel Cost Estimation',
@@ -532,18 +661,32 @@ function main() {
       });
     });
 
-    // §R12 — SKIP guard.
-    if (!lockResult.acquired) return;
-  });
+  // §R12 — SKIP guard.
+  if (!lockResult.acquired) return;
+}
+
+/** CLI entrypoint — parses argv, wraps main(pool) in pipeline.run() for the pool lifecycle. */
+function cli() {
+  const args = process.argv.slice(2);
+  const dryRun = args.includes('--dry-run');
+  const limitMatch = args.find((a) => /^--limit=\d+$/.test(a));
+  const rowLimit = limitMatch ? safeParsePositiveInt(limitMatch.split('=')[1], 'limit') : null;
+  pipeline.run('compute-parcel-cost-estimates', (pool) => main(pool, { dryRun, rowLimit }));
 }
 
 module.exports = {
+  main,
   computeParcelCostEstimates,
+  readCostVersionSignals,
+  hasRateOrIndexChanged,
   ADVISORY_LOCK_ID,
+  OWN_SLUGS,
+  UPSTREAM_SLUGS,
+  FORCE_FULL_ENV,
   PARCEL_COST_LINES,
   COST_SCALAR_COLS,
   FSI_SCALAR_COLS,
   ALL_SCALAR_COLS,
 };
 
-if (require.main === module) main();
+if (require.main === module) cli();
