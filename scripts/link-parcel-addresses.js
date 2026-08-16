@@ -89,21 +89,18 @@ async function main(pool) {
         TAG,
         `Run-ledger gate: SKIP (${gate.reason}) — no upstream parcels/address_points activity since own last completed run.`,
       );
+      // Commit B (B3 output-panel remediation) — the skip re-emits its own
+      // address_points_with_no_parcel_pct WARN gate + errors FAIL gate
+      // (emitHeritageResults precedent), never a bare hardcoded 'PASS'.
+      const skipRecordsMeta = sourceVersion.buildSkipGateRecordsMeta({
+        gate,
+        runAt: RUN_AT,
+        auditMeta: { phase: 54, name: 'Parcel ↔ Address Points spatial bridge' },
+        carryMetricNames: ['address_points_with_no_parcel_pct', 'errors'],
+      });
       pipeline.emitSummary({
         records_total: 0, records_new: 0, records_updated: 0,
-        records_meta: {
-          audit_table: {
-            phase: 54,
-            name: 'Parcel ↔ Address Points spatial bridge',
-            verdict: 'PASS',
-            rows: [
-              { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
-              { metric: 'reason', value: gate.reason, threshold: null, status: 'INFO' },
-              { metric: 'non_completed_upstream', value: gate.nonCompleted, threshold: null, status: 'INFO' },
-              { metric: 'completed_with_changes_upstream', value: gate.completedWithChanges, threshold: null, status: 'INFO' },
-            ],
-          },
-        },
+        records_meta: skipRecordsMeta,
       });
       pipeline.emitMeta(
         { parcels: ['id', 'geom'], address_points: ['address_point_id', 'geom'] },

@@ -333,6 +333,128 @@ describe('readPriorRunMeta — started_at DESC standardization', () => {
   });
 });
 
+// ── 7. buildSkipGateRecordsMeta — Commit B (B3 output-panel remediation) ───
+// SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.7
+describe('buildSkipGateRecordsMeta — skip re-emits its own coverage/threshold rows, never a bare PASS', () => {
+  const baseGate = (overrides: Partial<{ reason: string; nonCompleted: number; completedWithChanges: number; ownCompleted: string | null; ownLastRecordsMeta: object | null }> = {}) => ({
+    reason: 'no_upstream_changes',
+    nonCompleted: 0,
+    completedWithChanges: 0,
+    ownCompleted: '2026-08-01T00:00:00.000Z',
+    ownLastRecordsMeta: null,
+    ...overrides,
+  });
+
+  it('B-R1: carries forward a named metric row (e.g. link_rate) from priorMeta.audit_table.rows', () => {
+    const priorMeta = {
+      audit_table: {
+        rows: [
+          { metric: 'link_rate', value: '11.5%', threshold: '>= 5%', status: 'PASS' },
+          { metric: 'unrelated_metric', value: 42, threshold: null, status: 'INFO' },
+        ],
+      },
+    };
+    const meta = sv.buildSkipGateRecordsMeta({
+      gate: baseGate({ ownLastRecordsMeta: priorMeta }),
+      runAt: '2026-08-16T00:00:00.000Z',
+      auditMeta: { phase: 7, name: 'Link WSIB' },
+      carryMetricNames: ['link_rate'],
+    });
+    const rows = meta.audit_table.rows as Array<{ metric: string }>;
+    expect(rows.some((r) => r.metric === 'link_rate')).toBe(true);
+    expect(rows.some((r) => r.metric === 'unrelated_metric')).toBe(false);
+  });
+
+  it('B-R2: stamps own_started + a carried-forward last_full_run_at reconstructable as "days since last real execution"', () => {
+    // First skip after a REAL run: last_full_run_at = that run's ownCompleted.
+    const meta1 = sv.buildSkipGateRecordsMeta({
+      gate: baseGate({ ownCompleted: '2026-07-08T00:00:00.000Z', ownLastRecordsMeta: { duration_ms: 300 } }),
+      runAt: '2026-08-16T00:00:00.000Z',
+      auditMeta: { phase: 7, name: 'Link WSIB' },
+    });
+    expect(meta1.own_started).toBe('2026-08-16T00:00:00.000Z');
+    expect(meta1.last_full_run_at).toBe('2026-07-08T00:00:00.000Z');
+    // A SECOND consecutive skip: last_full_run_at is carried forward unchanged
+    // (NOT bumped to the second skip's own_started — the last REAL run hasn't moved).
+    const meta2 = sv.buildSkipGateRecordsMeta({
+      gate: baseGate({ ownCompleted: '2026-08-16T00:00:00.000Z', ownLastRecordsMeta: meta1 }),
+      runAt: '2026-08-17T00:00:00.000Z',
+      auditMeta: { phase: 7, name: 'Link WSIB' },
+    });
+    expect(meta2.last_full_run_at).toBe('2026-07-08T00:00:00.000Z');
+  });
+
+  it('B-R3: consecutive_skips increments across a chain of skips; the WARN threshold fires and the cascade propagates', () => {
+    let priorMeta: Record<string, unknown> | null = null;
+    let lastVerdict = 'PASS';
+    for (let i = 1; i <= 5; i++) {
+      const meta: Record<string, unknown> = sv.buildSkipGateRecordsMeta({
+        gate: baseGate({ ownLastRecordsMeta: priorMeta }),
+        runAt: `2026-08-${10 + i}T00:00:00.000Z`,
+        auditMeta: { phase: 7, name: 'Link WSIB' },
+        consecutiveSkipsWarnAt: 4,
+      });
+      expect(meta.consecutive_skips).toBe(i);
+      const auditTable = meta.audit_table as { verdict: string; rows: Array<{ metric: string; status: string }> };
+      const consecutiveRow = auditTable.rows.find((r) => r.metric === 'consecutive_skips');
+      expect(consecutiveRow?.status).toBe(i >= 4 ? 'WARN' : 'INFO');
+      lastVerdict = auditTable.verdict;
+      priorMeta = meta;
+    }
+    // Proves the cascade fix is load-bearing: verdict is ROW-DERIVED, not a
+    // hardcoded 'PASS' — the 5th skip's WARN row propagates to the verdict.
+    expect(lastVerdict).toBe('WARN');
+  });
+
+  it('a carried FAIL row propagates to the skip verdict (the whole point of the row-derived cascade)', () => {
+    const priorMeta = {
+      audit_table: { rows: [{ metric: 'errors', value: 3, threshold: '== 0', status: 'FAIL' }] },
+    };
+    const meta = sv.buildSkipGateRecordsMeta({
+      gate: baseGate({ ownLastRecordsMeta: priorMeta }),
+      runAt: '2026-08-16T00:00:00.000Z',
+      auditMeta: { phase: 54, name: 'Parcel ↔ Address Points spatial bridge' },
+      carryMetricNames: ['errors'],
+    });
+    expect((meta.audit_table as { verdict: string }).verdict).toBe('FAIL');
+  });
+
+  it('B-R4 (stamping half): stamps gated_skip:true so the duration-anomaly baseline query can exclude this row', () => {
+    const meta = sv.buildSkipGateRecordsMeta({
+      gate: baseGate(),
+      runAt: '2026-08-16T00:00:00.000Z',
+      auditMeta: { phase: 88, name: 'Parcel Cost Estimation' },
+    });
+    expect(meta.gated_skip).toBe(true);
+  });
+
+  it('consecutive_skips resets to 1 when the own-last run was a REAL run (no carried SKIPPED status row)', () => {
+    const realRunMeta = { audit_table: { rows: [{ metric: 'residential_parcels_examined', value: 100, status: 'PASS' }] } };
+    const meta = sv.buildSkipGateRecordsMeta({
+      gate: baseGate({ ownLastRecordsMeta: realRunMeta }),
+      runAt: '2026-08-16T00:00:00.000Z',
+      auditMeta: { phase: 88, name: 'Parcel Cost Estimation' },
+    });
+    expect(meta.consecutive_skips).toBe(1);
+  });
+
+  it('adoption-lock: all three B3 callers wire the run-ledger-gate skip path through buildSkipGateRecordsMeta (not a hardcoded verdict)', () => {
+    for (const f of ['link-wsib.js', 'link-parcel-addresses.js', 'compute-parcel-cost-estimates.js']) {
+      const src = fs.readFileSync(path.resolve(__dirname, '../../scripts', f), 'utf8');
+      expect(src, `${f} must call buildSkipGateRecordsMeta`).toContain('buildSkipGateRecordsMeta(');
+      // The gate.skip branch itself must build its records_meta via the helper,
+      // not a literal { ..., verdict: 'PASS', ... } object — scoped to the
+      // `if (gate...skip...)` block, since link-wsib.js's UNRELATED
+      // "nothing to link" vacuous-skip branch legitimately hardcodes PASS.
+      const gateSkipIdx = src.indexOf('gate.skip');
+      expect(gateSkipIdx, `${f} must have a gate.skip branch`).toBeGreaterThan(-1);
+      const gateSkipBlock = src.slice(gateSkipIdx, gateSkipIdx + 800);
+      expect(gateSkipBlock, `${f} gate.skip branch must not hardcode verdict: 'PASS'`).not.toMatch(/verdict:\s*'PASS'/);
+      expect(gateSkipBlock, `${f} gate.skip branch must call buildSkipGateRecordsMeta`).toContain('buildSkipGateRecordsMeta(');
+    }
+  });
+});
+
 // ── 6. buildSkipReEmitMeta — the DS4 skip-emits-completed-row merge ────────
 describe('buildSkipReEmitMeta — skip re-stamps the prior version meta (DS4)', () => {
   it('merges skeleton ← prior ← pins, pins winning (spec_version pinned AFTER the prior spread — BUG-2)', () => {

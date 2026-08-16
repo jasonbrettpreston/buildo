@@ -28,6 +28,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+import { detectDurationAnomalies } from '@/lib/quality/types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const linkWsib = require('../../../scripts/link-wsib.js') as {
@@ -76,6 +77,23 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
     await pool.query('DELETE FROM pipeline_runs WHERE pipeline = ANY($1::text[])', [slugs]);
   }
 
+  // Commit A tests (A-R1/A-R3) need the run to actually REACH the tier-matching
+  // code past the (unrelated) `totalUnlinked === 0` vacuous-skip short-circuit —
+  // the testcontainer DB's wsib_registry starts empty (it's pipeline-ingested
+  // data, not migration-seeded), so a fixture row is required.
+  const FX_WSIB_LEGAL_NORM = 'FX B3 COMMIT A TEST CO';
+  async function seedUnlinkedWsibRow() {
+    await pool.query(
+      `INSERT INTO wsib_registry (legal_name, legal_name_normalized, predominant_class, mailing_address)
+       VALUES ('FX B3 Commit A Test Co', $1, 'G1', 'FX-B3-ADDR')
+       ON CONFLICT (legal_name_normalized, mailing_address) DO UPDATE SET linked_entity_id = NULL`,
+      [FX_WSIB_LEGAL_NORM],
+    );
+  }
+  async function cleanupUnlinkedWsibRow() {
+    await pool.query(`DELETE FROM wsib_registry WHERE legal_name_normalized = $1`, [FX_WSIB_LEGAL_NORM]);
+  }
+
   beforeAll(() => {
     pool = getTestPool() as Pool;
   });
@@ -84,16 +102,22 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
     await cleanup(linkWsib.OWN_SLUGS);
     await cleanup(linkParcelAddresses.OWN_SLUGS);
     await cleanup(costEstimates.OWN_SLUGS);
+    await cleanupUnlinkedWsibRow();
   });
 
   // ---------------------------------------------------------------------
   // G5 — link-wsib.js
   // ---------------------------------------------------------------------
   it('G5 (link-wsib): vacuous SKIP (own completed, zero upstream activity) emits a COMPLETED-shaped summary (DS4)', async () => {
+    // Commit A's threshold-version signal is a SECOND, independent skip
+    // condition — this fixture must also match the LIVE wsib_fuzzy_match_threshold
+    // updated_at (like the cost-estimates G5 test already does for rates_as_of/
+    // index_updated_at) so the vacuous-SKIP scenario isn't confounded by it.
+    const liveThreshold = await linkWsib.readThresholdVersionSignal(pool);
     await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
-      [linkWsib.OWN_SLUGS[0]],
+      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
+       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
+      [linkWsib.OWN_SLUGS[0], JSON.stringify({ threshold_updated_at: liveThreshold.thresholdUpdatedAt })],
     );
     const { summary, sawMeta } = await captureEmitted(() => linkWsib.main(pool));
     expect(summary).toMatchObject({ records_total: 0, records_new: 0, records_updated: 0 });
@@ -108,6 +132,7 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
   // Commit A — link-wsib.js gate placement (A-R1/A-R2/A-R3).
   // ---------------------------------------------------------------------
   it('A-R1: SKIP-eligible gate + --dry-run → the tier simulation runs, summary is NOT the SKIPPED shape', async () => {
+    await seedUnlinkedWsibRow();
     await pool.query(
       `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
        VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
@@ -158,6 +183,7 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
   }, 30000);
 
   it('A-R3: wsib_fuzzy_match_threshold.updated_at moving forward forces RUN even though the ledger gate itself would SKIP', async () => {
+    await seedUnlinkedWsibRow();
     const live = await linkWsib.readThresholdVersionSignal(pool);
     await pool.query(
       `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
@@ -176,6 +202,30 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
   }, 30000);
 
   // ---------------------------------------------------------------------
+  // Commit B — link-wsib.js skip-path audit rows (B-R1/B-R2/B-R3).
+  // ---------------------------------------------------------------------
+  it('B-R1 (link-wsib): the skip row carries link_rate from the prior real run, and stamps own_started/last_full_run_at/consecutive_skips', async () => {
+    // Match the LIVE threshold signal (same reasoning as the G5 fixture above)
+    // so the ledger gate's SKIP isn't overridden by Commit A's threshold check.
+    const liveThreshold = await linkWsib.readThresholdVersionSignal(pool);
+    const priorMeta = {
+      threshold_updated_at: liveThreshold.thresholdUpdatedAt,
+      audit_table: { rows: [{ metric: 'link_rate', value: '11.5%', threshold: '>= 5%', status: 'PASS' }] },
+    };
+    await pool.query(
+      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
+       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
+      [linkWsib.OWN_SLUGS[0], JSON.stringify(priorMeta)],
+    );
+    const { summary } = await captureEmitted(() => linkWsib.main(pool));
+    const meta = summary?.records_meta as { own_started?: string; last_full_run_at?: string; consecutive_skips?: number; audit_table?: { rows?: Array<{ metric: string }> } };
+    expect(meta.audit_table?.rows?.some((r) => r.metric === 'link_rate')).toBe(true);
+    expect(meta.own_started).toBeTruthy();
+    expect(meta.last_full_run_at).toBeTruthy();
+    expect(meta.consecutive_skips).toBe(1);
+  }, 30000);
+
+  // ---------------------------------------------------------------------
   // G5 — link-parcel-addresses.js
   // ---------------------------------------------------------------------
   it('G5 (link-parcel-addresses): vacuous SKIP emits a COMPLETED-shaped summary (DS4)', async () => {
@@ -191,6 +241,31 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
     expect(rows.some((r) => r.metric === 'status' && r.value === 'SKIPPED')).toBe(true);
     expect(sawMeta).toBe(true);
   });
+
+  // ---------------------------------------------------------------------
+  // Commit B — link-parcel-addresses.js skip-path audit rows (B-R1).
+  // ---------------------------------------------------------------------
+  it('B-R1 (link-parcel-addresses): the skip row carries address_points_with_no_parcel_pct + a FAIL errors gate, and the verdict cascades to FAIL', async () => {
+    const priorMeta = {
+      audit_table: {
+        rows: [
+          { metric: 'address_points_with_no_parcel_pct', value: '2.1%', threshold: '< 5%', status: 'PASS' },
+          { metric: 'errors', value: 1, threshold: '== 0', status: 'FAIL' },
+        ],
+      },
+    };
+    await pool.query(
+      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
+       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
+      [linkParcelAddresses.OWN_SLUGS[0], JSON.stringify(priorMeta)],
+    );
+    const { summary } = await captureEmitted(() => linkParcelAddresses.main(pool));
+    const meta = summary?.records_meta as { audit_table?: { verdict?: string; rows?: Array<{ metric: string }> } };
+    expect(meta.audit_table?.rows?.some((r) => r.metric === 'address_points_with_no_parcel_pct')).toBe(true);
+    expect(meta.audit_table?.rows?.some((r) => r.metric === 'errors')).toBe(true);
+    // the carried FAIL row must propagate — never a bare hardcoded PASS.
+    expect(meta.audit_table?.verdict).toBe('FAIL');
+  }, 30000);
 
   // ---------------------------------------------------------------------
   // G5 + C1 — compute-parcel-cost-estimates.js (needs matching rate/index
@@ -213,6 +288,36 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
     expect(rows.some((r) => r.metric === 'reason' && r.value === 'no_upstream_changes')).toBe(true);
     expect(sawMeta).toBe(true);
   });
+
+  // ---------------------------------------------------------------------
+  // Commit B — compute-parcel-cost-estimates.js skip-path audit rows (B-R1).
+  // ---------------------------------------------------------------------
+  it('B-R1 (compute-parcel-cost-estimates): the skip row carries null_geom_basis_count/engine_error_count + line_coverage/area_confidence top-level keys', async () => {
+    const live = await costEstimates.readCostVersionSignals(pool);
+    const priorMeta = {
+      rates_as_of: live.ratesAsOf,
+      index_updated_at: live.indexUpdatedAt,
+      line_coverage: { new_build: 500 },
+      area_confidence: { high: 300, medium: 150, low: 50 },
+      audit_table: {
+        rows: [
+          { metric: 'null_geom_basis_count', value: 0, threshold: null, status: 'INFO' },
+          { metric: 'engine_error_count', value: 0, threshold: '== 0', status: 'PASS' },
+        ],
+      },
+    };
+    await pool.query(
+      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
+       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
+      [costEstimates.OWN_SLUGS[0], JSON.stringify(priorMeta)],
+    );
+    const { summary } = await captureEmitted(() => costEstimates.main(pool));
+    const meta = summary?.records_meta as { line_coverage?: unknown; area_confidence?: unknown; audit_table?: { rows?: Array<{ metric: string }> } };
+    expect(meta.line_coverage).toEqual({ new_build: 500 });
+    expect(meta.area_confidence).toEqual({ high: 300, medium: 150, low: 50 });
+    expect(meta.audit_table?.rows?.some((r) => r.metric === 'null_geom_basis_count')).toBe(true);
+    expect(meta.audit_table?.rows?.some((r) => r.metric === 'engine_error_count')).toBe(true);
+  }, 30000);
 
   // ---------------------------------------------------------------------
   // C2 (behavioral half) — a rate bump forces RUN even though the ledger
@@ -266,5 +371,81 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
     );
     expect(rows.length).toBe(1);
     expect(rows[0].indexdef).toMatch(/linked_entity_id IS NULL/);
+  });
+
+  // ---------------------------------------------------------------------
+  // B-R4 — a gated-skip row does not collapse the duration-anomaly baseline
+  // (src/app/api/quality/route.ts's records_meta.gated_skip exclusion, feeding
+  // src/lib/quality/types.ts#detectDurationAnomalies). Mirrors route.ts's SQL
+  // predicate directly against a real DB — the pure function itself cannot
+  // distinguish a gate skip from a genuinely fast run once given raw numbers.
+  // ---------------------------------------------------------------------
+  describe('B-R4 — gated-skip duration exclusion (route.ts query + detectDurationAnomalies)', () => {
+    const FX_SLUG = 'FX_B3_duration_baseline';
+
+    afterEach(async () => {
+      await pool.query(`DELETE FROM pipeline_runs WHERE pipeline = $1`, [FX_SLUG]);
+    });
+
+    async function fetchDurations(): Promise<number[]> {
+      const { rows } = await pool.query(
+        `SELECT duration_ms FROM (
+           SELECT duration_ms, ROW_NUMBER() OVER (ORDER BY started_at DESC) AS rn
+           FROM pipeline_runs
+           WHERE pipeline = $1 AND status = 'completed' AND duration_ms IS NOT NULL
+             AND COALESCE((records_meta->>'gated_skip')::boolean, false) = false
+         ) sub WHERE rn <= 8 ORDER BY rn`,
+        [FX_SLUG],
+      );
+      return rows.map((r: { duration_ms: number }) => Number(r.duration_ms));
+    }
+
+    it('excludes gated_skip:true rows from the fetched duration history entirely', async () => {
+      // 6 real runs at ~50000ms, then a burst of gated skips at ~300ms each.
+      for (let i = 0; i < 6; i++) {
+        await pool.query(
+          `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, duration_ms, records_meta)
+           VALUES ($1, 'completed', NOW() - ($2 || ' minutes')::interval, NOW() - ($2 || ' minutes')::interval, 50000, NULL)`,
+          [FX_SLUG, String(100 + i * 10)],
+        );
+      }
+      for (let i = 0; i < 5; i++) {
+        await pool.query(
+          `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, duration_ms, records_meta)
+           VALUES ($1, 'completed', NOW() - ($2 || ' minutes')::interval, NOW() - ($2 || ' minutes')::interval, 300, $3::jsonb)`,
+          [FX_SLUG, String(10 + i), JSON.stringify({ gated_skip: true })],
+        );
+      }
+      const durations = await fetchDurations();
+      expect(durations.every((d) => d === 50000)).toBe(true);
+      expect(durations.length).toBe(6);
+    }, 30000);
+
+    it('a burst of gated skips followed by a normal-duration run does NOT trip a false-positive anomaly', async () => {
+      for (let i = 0; i < 6; i++) {
+        await pool.query(
+          `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, duration_ms, records_meta)
+           VALUES ($1, 'completed', NOW() - ($2 || ' minutes')::interval, NOW() - ($2 || ' minutes')::interval, 50000, NULL)`,
+          [FX_SLUG, String(200 + i * 10)],
+        );
+      }
+      for (let i = 0; i < 7; i++) {
+        await pool.query(
+          `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, duration_ms, records_meta)
+           VALUES ($1, 'completed', NOW() - ($2 || ' minutes')::interval, NOW() - ($2 || ' minutes')::interval, 300, $3::jsonb)`,
+          [FX_SLUG, String(20 + i), JSON.stringify({ gated_skip: true })],
+        );
+      }
+      // The next run is genuinely normal (50000ms, same as the real baseline) —
+      // must NOT be flagged, because the gated-skip burst was excluded upstream.
+      await pool.query(
+        `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, duration_ms, records_meta)
+         VALUES ($1, 'completed', NOW() - interval '1 minute', NOW() - interval '1 minute', 50000, NULL)`,
+        [FX_SLUG],
+      );
+      const durations = await fetchDurations();
+      const anomalies = detectDurationAnomalies({ [FX_SLUG]: durations });
+      expect(anomalies).toEqual([]);
+    }, 30000);
   });
 });

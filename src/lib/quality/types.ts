@@ -418,6 +418,14 @@ export function detectDurationAnomalies(
 
     const current = durations[0];
     if (current === undefined) continue;
+    // B5 (B3 output-panel remediation): `d > 0` only catches run-chain's
+    // hardcoded 0ms skip inserts — a run-ledger-gate SKIP measures a real,
+    // non-zero duration (274-320ms observed) and is NOT excluded by this
+    // filter alone. The actual gate-skip exclusion lives upstream, at the
+    // query that builds `runs` (src/app/api/quality/route.ts filters
+    // records_meta.gated_skip=true before rows ever reach this pure function —
+    // duration_ms carries no metadata this function could use to tell a gate
+    // skip apart from a genuinely fast run).
     const historical = durations.slice(1, 8).filter(d => d > 0); // exclude 0ms skipped/gated runs
     if (historical.length === 0) continue;
 

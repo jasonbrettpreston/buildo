@@ -139,25 +139,19 @@ async function main(pool) {
         '[link-wsib]',
         `Run-ledger gate: SKIP (${gate.reason}) — no upstream wsib_registry/entities activity and no threshold bump since own last completed run.`,
       );
+      // Commit B (B3 output-panel remediation) — the skip re-emits its own
+      // link_rate WARN gate + carried version keys (emitHeritageResults
+      // precedent), never a bare hardcoded 'PASS'.
+      const skipRecordsMeta = sourceVersion.buildSkipGateRecordsMeta({
+        gate,
+        runAt: RUN_AT,
+        auditMeta: { phase: (process.env.PIPELINE_CHAIN === 'sources') ? 19 : 7, name: 'Link WSIB' },
+        carryMetricNames: ['link_rate'],
+      });
+      skipRecordsMeta.threshold_updated_at = thresholdSignal.thresholdUpdatedAt;
       pipeline.emitSummary({
         records_total: 0, records_new: 0, records_updated: 0,
-        records_meta: {
-          // Commit A — canonical ISO version key, re-stamped on the skip path too
-          // (the NEXT evaluation's threshold-changed diff must compare against
-          // what was true as-of THIS run, not a stale earlier one).
-          threshold_updated_at: thresholdSignal.thresholdUpdatedAt,
-          audit_table: {
-            phase: (process.env.PIPELINE_CHAIN === 'sources') ? 19 : 7,
-            name: 'Link WSIB',
-            verdict: 'PASS',
-            rows: [
-              { metric: 'status', value: 'SKIPPED', threshold: null, status: 'INFO' },
-              { metric: 'reason', value: gate.reason, threshold: null, status: 'INFO' },
-              { metric: 'non_completed_upstream', value: gate.nonCompleted, threshold: null, status: 'INFO' },
-              { metric: 'completed_with_changes_upstream', value: gate.completedWithChanges, threshold: null, status: 'INFO' },
-            ],
-          },
-        },
+        records_meta: skipRecordsMeta,
       });
       pipeline.emitMeta(
         { "wsib_registry": ["id", "trade_name_normalized", "legal_name_normalized", "linked_entity_id"], "entities": ["id", "name_normalized", "permit_count"] },
