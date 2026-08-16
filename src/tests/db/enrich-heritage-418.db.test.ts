@@ -29,6 +29,8 @@ import { dbAvailable, getTestPool } from './setup-testcontainer';
 const eh = require('../../../scripts/enrich-heritage.js') as {
   ENRICH_SQL: string;
   countStale: (db: Pool | PoolClient, datasetVersion: string) => Promise<number>;
+  assertVersionColumn: (db: Pool | PoolClient) => Promise<void>;
+  assertPreconditions: (db: Pool | PoolClient) => Promise<void>;
   emitHeritageResults: (
     pool: Pool,
     args: { datasetVersion: string; updated: number; skipped: boolean; t0: number; config: { heritageUnlinkedPointWarnPct: number; heritageUnlinkedPointFailPct: number } },
@@ -147,5 +149,34 @@ describe.skipIf(!dbAvailable())('enrich-heritage.js — #418 incremental skip, p
     expect(rows.find((r) => r.metric === 'parcels_heritage_enrich_skipped')?.value).toBe(true);
     expect(rows.find((r) => r.metric === 'heritage_source_dataset_version')?.value).toBe('v1-test-skip');
     expect(lines.some((l) => l.startsWith('PIPELINE_META:'))).toBe(true);
+  });
+
+  // Commit C (B3 output-panel remediation) — mirrors enrich-ravines.skip.db.test.ts's
+  // 'assertVersionColumn passes (DEC-E) and countStale runs against the live table'.
+  it('C-R1 (positive half): assertVersionColumn resolves against the live migrated schema (migration 171 applied)', async () => {
+    await expect(eh.assertVersionColumn(pool)).resolves.toBeUndefined();
+  });
+
+  // assertPreconditions (now hoisted onto the skip path — Commit C) needs
+  // heritage_properties/heritage_districts non-empty (L14), which this
+  // container's global fixtures don't seed — proven with its own rows,
+  // isolated in a rolled-back transaction like the H1/H2 cases above.
+  it('C — assertPreconditions (hoisted onto the skip path) resolves once the heritage source tables are non-empty', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      await c.query(
+        `INSERT INTO heritage_properties (source_id, status, address_text, geom, designated_date, source_dataset_version)
+         VALUES (999900001, 'part_iv', 'B3C Test Addr', ST_GeomFromText('POINT(-79.40 43.70)', 4326), '2020-01-01', 'b3c-test')`,
+      );
+      await c.query(
+        `INSERT INTO heritage_districts (source_id, name, hcd_type, geom, designated_date, source_dataset_version)
+         VALUES (999900001, 'B3C Test HCD', 'designated_district', ST_Multi(${VALID_BOX}), '2020-01-01', 'b3c-test')`,
+      );
+      await expect(eh.assertPreconditions(c)).resolves.toBeUndefined();
+    } finally {
+      await c.query('ROLLBACK');
+      c.release();
+    }
   });
 });

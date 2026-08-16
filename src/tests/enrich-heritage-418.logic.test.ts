@@ -19,6 +19,7 @@ const enrichHeritageSrc = () => readFileSync(ENRICH_HERITAGE_PATH, 'utf8');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const eh = require('../../scripts/enrich-heritage.js') as {
   assertHeritageSourceNonEmpty: (db: { query: (sql: string) => Promise<{ rows: Array<{ n: number }> }> }) => Promise<void>;
+  assertVersionColumn: (db: { query: (sql: string) => Promise<{ rows: unknown[] }> }) => Promise<void>;
   countStale: unknown;
   ENRICH_SQL: string;
 };
@@ -48,19 +49,54 @@ describe('H4 — assertHeritageSourceNonEmpty (L14, ported from enrich-ravines.j
   });
 
   it(
-    'g/b — main() calls assertHeritageSourceNonEmpty BEFORE countStale (L14 must hold on the skip branch too, ' +
-      'ravines precedent: "a wiped ravines table must HALT even when matching stamps would otherwise satisfy the #418 skip")',
+    'g/b — main() calls assertPreconditions(pool) BEFORE countStale (L14 must hold on the skip branch too, ' +
+      'ravines precedent: "a wiped ravines table must HALT even when matching stamps would otherwise satisfy the #418 skip"). ' +
+      'Commit C (B3 output-panel remediation): L14 now holds via assertPreconditions(pool) — which calls ' +
+      'assertHeritageSourceNonEmpty internally — hoisted onto the skip path alongside the PostGIS/index/SRID checks.',
     () => {
       const src = enrichHeritageSrc();
       const mainBody = src.match(/async function main\(pool\)[\s\S]*?\n}\n/);
       expect(mainBody, 'main(pool) function body not found').not.toBeNull();
-      const nonEmptyIdx = mainBody![0].indexOf('assertHeritageSourceNonEmpty(pool)');
+      const preconditionsIdx = mainBody![0].indexOf('assertPreconditions(pool)');
       const countStaleIdx = mainBody![0].indexOf('countStale(pool');
-      expect(nonEmptyIdx).toBeGreaterThan(-1);
+      expect(preconditionsIdx).toBeGreaterThan(-1);
       expect(countStaleIdx).toBeGreaterThan(-1);
-      expect(nonEmptyIdx).toBeLessThan(countStaleIdx);
+      expect(preconditionsIdx).toBeLessThan(countStaleIdx);
     },
   );
+});
+
+// Commit C (B3 output-panel remediation) — assertVersionColumn (mirrors
+// enrich-ravines.js:82's DEC-E) + the skip-path PostGIS/index/SRID hoist.
+describe('Commit C — assertVersionColumn + skip-path precondition hoist', () => {
+  it('C-R1: a missing lineage column throws a CLEAR diagnostic naming migration 171, not a raw 42703', async () => {
+    const missingColumnDb = { query: async () => ({ rows: [] }) };
+    await expect(eh.assertVersionColumn(missingColumnDb)).rejects.toThrow(
+      /heritage_dataset_version_when_enriched missing — migration 171 not applied/,
+    );
+  });
+
+  it('resolves when the column is present', async () => {
+    const presentDb = { query: async () => ({ rows: [{ '?column?': 1 }] }) };
+    await expect(eh.assertVersionColumn(presentDb)).resolves.toBeUndefined();
+  });
+
+  it('g/b — main() calls assertVersionColumn(pool) BEFORE countStale (countStale reads the column this guards)', () => {
+    const src = enrichHeritageSrc();
+    const mainBody = src.match(/async function main\(pool\)[\s\S]*?\n}\n/);
+    expect(mainBody, 'main(pool) function body not found').not.toBeNull();
+    const versionColIdx = mainBody![0].indexOf('assertVersionColumn(pool)');
+    const countStaleIdx = mainBody![0].indexOf('countStale(pool');
+    expect(versionColIdx).toBeGreaterThan(-1);
+    expect(countStaleIdx).toBeGreaterThan(-1);
+    expect(versionColIdx).toBeLessThan(countStaleIdx);
+  });
+
+  it('correction lock: the commit body must NOT claim this mechanism was ported "verbatim" from enrich-ravines.js — ' +
+     'enrich-ravines.js HAS assertVersionColumn; enrich-heritage.js did not, until this commit', () => {
+    const src = enrichHeritageSrc();
+    expect(src).toContain('was NOT: enrich-ravines.js HAS this');
+  });
 });
 
 describe('H1 (textual mirror-lock, pre-behavioral) — countStale probe mirrors ENRICH_SQL eligibility', () => {

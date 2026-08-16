@@ -95,6 +95,25 @@ async function assertHeritageSourceNonEmpty(db) {
   if (hd.rows[0].n === 0) throw new Error(`${TAG} heritage_districts is empty — aborting (L14)`);
 }
 
+// Commit C (B3 output-panel remediation) — fail clearly if migration 171's
+// lineage column is absent, instead of a cryptic 42703 from the #418
+// countStale query below. enrich-ravines.js:82 (assertVersionColumn, DEC-E)
+// added exactly this guard BECAUSE countStale moves a column read ahead of
+// assertPreconditions — without it, a missing column throws a raw pg 42703
+// ("column ... does not exist") instead of a clear "migration N not applied"
+// message. The 74653a8f commit body claimed this mechanism was "ported
+// verbatim from enrich-ravines.js" — it was NOT: enrich-ravines.js HAS this
+// guard and enrich-heritage.js (until this commit) did not.
+async function assertVersionColumn(db) {
+  const res = await db.query(
+    `SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'parcels' AND column_name = 'heritage_dataset_version_when_enriched'`,
+  );
+  if (res.rows.length === 0) {
+    throw new Error(`${TAG} parcels.heritage_dataset_version_when_enriched missing — migration 171 not applied`);
+  }
+}
+
 // Phase B B3 — #418 Layer-1 (ported from enrich-ravines.js's countStale): cheap
 // full-table COUNT (no spatial join) of ELIGIBLE geom-bearing parcels not yet
 // enriched against this exact heritage dataset version. 0 ⇒ every eligible
@@ -340,10 +359,20 @@ async function main(pool) {
     // §9/L23 consumer protocol — HALTs on missing/failed/stale producer.
     const { datasetVersion } = await readHeritageContract(pool);
 
-    // L14 holds on BOTH paths (ravines precedent) — a wiped heritage source
-    // must HALT even when matching stamps would otherwise satisfy the #418
-    // skip below.
-    await assertHeritageSourceNonEmpty(pool);
+    // Commit C — the lineage-column guard BEFORE countStale reads it (mirrors
+    // enrich-ravines.js's ordering exactly; see assertVersionColumn's docblock).
+    await assertVersionColumn(pool);
+
+    // Commit C — the skip path (#418 Layer-1 below) never used to call
+    // assertPreconditions (only the recompute path did, in-txn), so PostGIS/
+    // the three GIST indexes/SRID went unvalidated on a skip — a dropped
+    // extension or index would be silently masked behind a green SKIP just as
+    // readily as a stale dataset version. assertPreconditions's checks are all
+    // cheap catalog/metadata lookups (no spatial join), so it is hoisted here
+    // to run on BOTH paths — it also calls assertHeritageSourceNonEmpty
+    // internally (L14, ravines precedent: a wiped heritage source must HALT
+    // even when matching stamps would otherwise satisfy the #418 skip below).
+    await assertPreconditions(pool);
 
     // #418 Layer-1 (ported) — see countStale's docblock for the invalid-geom
     // wedge-open trap and how the probe is scoped to avoid it. The skip path
@@ -384,6 +413,7 @@ module.exports = {
   readHeritageContract,
   assertPreconditions,
   assertHeritageSourceNonEmpty,
+  assertVersionColumn,
   countStale,
   enrichHeritage,
   emitHeritageResults,
