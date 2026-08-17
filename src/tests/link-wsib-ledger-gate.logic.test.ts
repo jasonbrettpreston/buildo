@@ -132,3 +132,57 @@ describe('W3 — wsib link monotonicity (load-wsib.js never re-nulls linked_enti
     expect(src).toMatch(/MONOTONE/);
   });
 });
+
+// Commit F (B3 output-panel remediation) — discrete corrections.
+describe('F1 — link-wsib.js phase ordinals reconciled to Spec 41/43 (landed inside Commit A — same lines)', () => {
+  it('every audit_table.phase site uses 7 (permits, Spec 41 §Step Breakdown row 7) / 19 (sources, Spec 43 §Step Breakdown row 19)', () => {
+    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
+    const phaseSites = [...src.matchAll(/phase:\s*\(process\.env\.PIPELINE_CHAIN === 'sources'\)\s*\?\s*(\d+)\s*:\s*(\d+)/g)];
+    expect(phaseSites.length).toBeGreaterThanOrEqual(3); // SKIP / "nothing to link" / real-run
+    for (const m of phaseSites) {
+      expect(m[1]).toBe('19'); // sources
+      expect(m[2]).toBe('7');  // permits
+    }
+  });
+});
+
+describe('F2 — the bare/hyphenated OWN_SLUGS rationale is corrected (pipeline.run() never writes pipeline_runs)', () => {
+  it('the comment no longer claims the bare slugs are "for a standalone/manual invocation" that advances an anchor', () => {
+    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
+    expect(src).not.toMatch(/name for a standalone\/manual invocation/);
+    expect(src).toMatch(/pipeline\.run\(\)[\s\S]{0,80}never writes a pipeline_runs row/);
+  });
+
+  it('g/b — pipeline.run (scripts/lib/pipeline.js) genuinely never INSERTs into pipeline_runs (the claim this comment now makes)', () => {
+    const pipelineSrc = readFileSync(join(process.cwd(), 'scripts/lib/pipeline.js'), 'utf8');
+    const startIdx = pipelineSrc.indexOf('async function run(name, fn)');
+    expect(startIdx, 'pipeline.run function not found').toBeGreaterThan(-1);
+    // The next top-level export/section boundary bounds the function body —
+    // generous enough to cover run()'s real length without a brace-matching parser.
+    const endIdx = pipelineSrc.indexOf('\n// ---', startIdx);
+    const runFnBody = pipelineSrc.slice(startIdx, endIdx > -1 ? endIdx : startIdx + 1500);
+    expect(runFnBody).not.toMatch(/INSERT INTO pipeline_runs/);
+  });
+});
+
+describe('F3 — link_wsib matching algorithm is pg_trgm trigram, not Levenshtein', () => {
+  it('link-wsib.js Tier 3 actually uses pg_trgm similarity(), not levenshtein()', () => {
+    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
+    expect(src).toMatch(/similarity\(/);
+    expect(src).toMatch(/pg_trgm/);
+    expect(src).not.toMatch(/levenshtein\(/);
+  });
+
+  it('Spec 43 §Step Breakdown and Spec 41 §Core Logic no longer misdescribe link_wsib as Levenshtein', () => {
+    const spec43 = readFileSync(join(process.cwd(), 'docs/specs/01-pipeline/43_chain_sources.md'), 'utf8');
+    const spec41 = readFileSync(join(process.cwd(), 'docs/specs/01-pipeline/41_chain_permits.md'), 'utf8');
+    const wsibLine43 = spec43.split('\n').find((l) => l.includes('link_wsib') && l.includes('fuzzy'));
+    const wsibLine41 = spec41.split('\n').find((l) => l.includes('WSIB linking'));
+    expect(wsibLine43, 'Spec 43 WSIB linking line not found').toBeTruthy();
+    expect(wsibLine41, 'Spec 41 WSIB linking line not found').toBeTruthy();
+    expect(wsibLine43).not.toMatch(/\(Levenshtein fuzzy match\)/);
+    expect(wsibLine41).not.toMatch(/Fuzzy string match \(Levenshtein\)/);
+    expect(wsibLine43).toMatch(/pg_trgm/);
+    expect(wsibLine41).toMatch(/pg_trgm/);
+  });
+});

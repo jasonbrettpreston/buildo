@@ -130,7 +130,7 @@ for the round-trip correctness gate.
 4. **Phase classification** — Assigns construction phase based on status + months since issued.
 5. **Scope classification** — Dual-path (§7.2): `classifyScope()` in both `scope.ts` (TS API) and `classify-scope.js` (batch script). Produces `project_type` + `scope_tags[]`. **NEW consumer (WF2 2026-07-06, Spec 83 §3-ARCHETYPE):** the archetype cost mapper reads `project_type` + `scope_tags` + `structure_type` AT COST TIME to select the Spec-88 archetype line that prices the project — no change to this step's outputs or vocabulary was needed; tag additions/renames now also affect cost mapping (the mapper's live-vocab unit test catches drift).
 6. **Entity extraction** — Parses `builder_name` field into normalized entities. Groups "Smith & Co" / "SMITH COMPANY INC" into one entity.
-7. **WSIB linking** — Fuzzy string match (Levenshtein) against Ontario WSIB registry for insurance verification.
+7. **WSIB linking** — Exact trade/legal name match (Tier 1/2), falling back to Tier 3 fuzzy match via `pg_trgm` trigram `similarity()` — **not** Levenshtein (F3 correction, B3 output-panel remediation; same defect as Spec 43 §Step Breakdown row 8, fixed there in the same commit) — against Ontario WSIB registry for insurance verification.
 8. **Geocoding** — Matches addresses against `address_points` table first (free, fast). Falls back to Google Maps API for unresolved addresses.
 9. **Spatial linking** — Point-in-polygon for parcels, neighbourhoods. Nearest-neighbour for massing.
 10. **Similar linking** — BLD permits propagate scope tags to companion permits (HVA, PLB, etc.) at same address.
