@@ -73,7 +73,16 @@ const ALL_SCALAR_COLS = [...COST_SCALAR_COLS, ...FSI_SCALAR_COLS];
 const OWN_SLUGS = ['sources:compute_parcel_cost_estimates', 'compute_parcel_cost_estimates', 'compute-parcel-cost-estimates'];
 // Upstream producer of the parcel envelope fields this step prices (max_buildable_*,
 // opt_aor_gfa_sqm, etc.) — enrich-parcels.js, sources-chain-only.
-const UPSTREAM_SLUGS = ['sources:enrich_parcels', 'enrich_parcels', 'enrich-parcels'];
+// D#6 (B3 output-panel remediation) — sources:parcels/load-parcels.js added:
+// lot_size_sqm is a DIRECT cost-engine input (see computeParcelCostEstimates's
+// SELECT below) written by load-parcels.js, not enrich-parcels.js.
+// docs/reference/data-lineage-map.md (generated, `npm run lineage-docs`) already
+// listed compute_parcel_cost_estimates as a consumer of the `parcels`-produced
+// lot_size_sqm column — this hand-maintained array simply hadn't been kept in
+// sync with it (exactly how the gap was missed). The lineage map is the
+// generated source of truth to re-check whenever this slug set changes; a
+// fully lineage-map-derived slug list is a followup, not done here.
+const UPSTREAM_SLUGS = ['sources:enrich_parcels', 'enrich_parcels', 'enrich-parcels', 'sources:parcels', 'parcels', 'load-parcels'];
 // Escape hatch (D2′/R3-B4 precedent — LINK_MASSING_FORCE_FULL): forces a real
 // recompute even when the ledger gate + rate/index signals agree nothing changed.
 const FORCE_FULL_ENV = 'COMPUTE_PARCEL_COST_FORCE_FULL';
@@ -87,19 +96,42 @@ const FORCE_FULL_ENV = 'COMPUTE_PARCEL_COST_FORCE_FULL';
  * `Date.toString()` blob buried in the audit rows, not a comparable meta key — and
  * stamp them into records_meta on every run so the NEXT run's ownLastRecordsMeta
  * (returned by runLedgerGateDecision) can diff against the live DB values (C2).
+ *
+ * D#2 (B3 output-panel remediation) — rates_as_of reads MAX(updated_at), NOT
+ * MAX(as_of_date). as_of_date is a BUSINESS date (the industry-source pricing
+ * date) that an operator's cost_per_sqm correction never moves — all 12 seed
+ * rows share as_of_date = 2026-06-30, so a value edit was invisible to this
+ * signal under the old query. updated_at is the row-edit clock (already the
+ * convention for the sibling cost_escalation_index staleness signal below).
+ * as_of_date is UNCHANGED as the business-staleness clock the freshness check
+ * inside computeParcelCostEstimates() reads — that is a distinct concept
+ * ("how old is this industry rate DATA") from "did the row change" (this signal).
+ *
+ * D#3 — indexValue is read in this SAME query as indexUpdatedAt (both from the
+ * same logic_variables row, one round-trip) so the VALUE actually fed into the
+ * pricing engine and the VERSION stamped into records_meta for the gate's C2
+ * comparison can never tear apart under a concurrent admin-panel edit. Before
+ * this fix, the value was read once via loadMarketplaceConfigs OUTSIDE the
+ * advisory lock (main()'s §R5 pre-lock section) while the version was read
+ * separately INSIDE the lock — a torn read let a concurrent edit land between
+ * the two reads, pricing parcels with a value that didn't match the version
+ * records_meta stamped as "current".
  * @param {import('pg').Pool} pool
- * @returns {Promise<{ratesAsOf: string|null, indexUpdatedAt: string|null}>}
+ * @returns {Promise<{ratesAsOf: string|null, indexUpdatedAt: string|null, indexValue: number|null}>}
  */
 async function readCostVersionSignals(pool) {
   const res = await pool.query(
     `SELECT
-       (SELECT MAX(as_of_date) FROM archetype_cost_rates)::text AS rates_as_of,
-       (SELECT updated_at FROM logic_variables WHERE variable_key = 'cost_escalation_index') AS index_updated_at`,
+       (SELECT MAX(updated_at) FROM archetype_cost_rates) AS rates_as_of,
+       (SELECT updated_at FROM logic_variables WHERE variable_key = 'cost_escalation_index') AS index_updated_at,
+       (SELECT variable_value FROM logic_variables WHERE variable_key = 'cost_escalation_index') AS index_value`,
   );
   const row = res.rows[0] || {};
+  const indexValue = row.index_value != null ? Number(row.index_value) : null;
   return {
-    ratesAsOf: row.rates_as_of ?? null,
+    ratesAsOf: row.rates_as_of ? new Date(row.rates_as_of).toISOString() : null,
     indexUpdatedAt: row.index_updated_at ? new Date(row.index_updated_at).toISOString() : null,
+    indexValue: Number.isFinite(indexValue) ? indexValue : null,
   };
 }
 
@@ -526,6 +558,24 @@ async function main(pool, opts = {}) {
       // the same live values.
       const versionSignals = await readCostVersionSignals(pool);
 
+      // D#3 — the index VALUE actually fed into the pricing engine is the one
+      // read INSIDE the lock, atomically with its own version (indexUpdatedAt),
+      // NOT the §R5 pre-lock read (which only fed the early WARN log + Zod
+      // validation). This closes the torn-read window: without it, a concurrent
+      // admin-panel edit landing between the pre-lock read and this lock could
+      // price parcels with a value that no longer matches the version this run
+      // stamps as "current".
+      const lockedIndexNow = versionSignals.indexValue;
+      const lockedIndexMissing = lockedIndexNow == null || !Number.isFinite(lockedIndexNow) || lockedIndexNow <= 0;
+      config.indexNow = lockedIndexNow;
+      config.indexMissing = lockedIndexMissing;
+      if (lockedIndexMissing && !indexMissing) {
+        pipeline.log.warn(
+          '[compute-parcel-cost-estimates]',
+          'cost_escalation_index missing/invalid on the locked re-read — escalation multiplier defaults to 1.0',
+        );
+      }
+
       // Phase B B3 — run-ledger gate. --dry-run / --limit=N are explicit operator
       // debug invocations (never the scheduled chain path — chain_args carries
       // neither for this step) and always bypass the gate, same as the env
@@ -575,8 +625,9 @@ async function main(pool, opts = {}) {
         });
         pipeline.emitMeta(
           {
-            archetype_cost_rates: ['archetype', 'as_of_date'],
-            logic_variables: ['variable_key', 'updated_at'],
+            // D#2 — updated_at (not just as_of_date) is now a real read: it feeds rates_as_of.
+            archetype_cost_rates: ['archetype', 'as_of_date', 'updated_at'],
+            logic_variables: ['variable_key', 'variable_value', 'updated_at'],
             parcels: ['id', 'zoning_class'],
           },
           { parcels: ['parcel_cost_menu', ...ALL_SCALAR_COLS] },
@@ -622,7 +673,8 @@ async function main(pool, opts = {}) {
       pipeline.emitMeta(
         {
           // Reads — enumerated by name (Spec 47 §R11).
-          archetype_cost_rates: ['archetype', 'cost_per_sqm', 'cost_adjustment_factor', 'escalation_index_base', 'as_of_date'],
+          // D#2 — updated_at added: it feeds rates_as_of (readCostVersionSignals).
+          archetype_cost_rates: ['archetype', 'cost_per_sqm', 'cost_adjustment_factor', 'escalation_index_base', 'as_of_date', 'updated_at'],
           parcels: [
             'id',
             'zoning_class',

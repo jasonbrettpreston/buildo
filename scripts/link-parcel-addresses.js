@@ -63,6 +63,12 @@ const UPSTREAM_SLUGS = [
   'sources:parcels', 'parcels', 'load-parcels',
 ];
 
+// D#4 (B3 output-panel remediation) — escape hatch (LINK_MASSING_FORCE_FULL /
+// COMPUTE_PARCEL_COST_FORCE_FULL precedent): forces a real run past the
+// run-ledger gate even when it would otherwise SKIP. Before this commit,
+// link-parcel-addresses.js had no operator override if the gate misfired.
+const FORCE_FULL_ENV = 'LINK_PARCEL_ADDRESSES_FORCE_FULL';
+
 /** @param {import('pg').Pool} pool */
 async function main(pool) {
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
@@ -79,12 +85,15 @@ async function main(pool) {
     // run? If not, the spatial join is a guaranteed no-op — skip it entirely.
     // Still emits a COMPLETED pipeline_runs summary (DS4) so the next
     // evaluation's own-last anchor advances.
-    const gate = await sourceVersion.runLedgerGateDecision(pool, {
-      ownSlugs: OWN_SLUGS,
-      upstreamSlugs: UPSTREAM_SLUGS,
-      now: RUN_AT,
-    });
-    if (gate.skip) {
+    const bypassGate = process.env[FORCE_FULL_ENV] === '1';
+    const gate = bypassGate
+      ? null
+      : await sourceVersion.runLedgerGateDecision(pool, {
+          ownSlugs: OWN_SLUGS,
+          upstreamSlugs: UPSTREAM_SLUGS,
+          now: RUN_AT,
+        });
+    if (gate && gate.skip) {
       pipeline.log.info(
         TAG,
         `Run-ledger gate: SKIP (${gate.reason}) — no upstream parcels/address_points activity since own last completed run.`,
@@ -381,4 +390,4 @@ if (require.main === module) {
   pipeline.run('link-parcel-addresses', main);
 }
 
-module.exports = { main, ADVISORY_LOCK_ID, OWN_SLUGS, UPSTREAM_SLUGS };
+module.exports = { main, ADVISORY_LOCK_ID, OWN_SLUGS, UPSTREAM_SLUGS, FORCE_FULL_ENV };

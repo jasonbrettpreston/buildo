@@ -157,3 +157,84 @@ describe('optconfig SQL shape', () => {
     expect(ep.buildOptConfigSelectSql({ full: true })).not.toContain('opt_config_confidence IS NULL');
   });
 });
+
+// D#5 (B3 output-panel remediation) — OPTCFG_GENUINE_COLS + computeAggregateRecordsUpdated.
+describe('D#5 — OPTCFG_GENUINE_COLS (nearby_builds_summary excluded from the genuine-change guard)', () => {
+  it('is the 9 flat opt_* columns + optimal_config (10 total), NOT nearby_builds_summary', () => {
+    expect(ep.OPTCFG_GENUINE_COLS).toHaveLength(10);
+    expect(ep.OPTCFG_GENUINE_COLS).toContain('optimal_config');
+    expect(ep.OPTCFG_GENUINE_COLS).not.toContain('nearby_builds_summary');
+  });
+
+  it('is derived from OPTCFG_WRITE_COLS by exclusion (stays in sync if a column is ever added)', () => {
+    const expected = ep.OPTCFG_WRITE_COLS.filter((c: string) => c !== 'nearby_builds_summary');
+    expect(ep.OPTCFG_GENUINE_COLS).toEqual(expected);
+  });
+});
+
+describe('D#5 — computeAggregateRecordsUpdated (distinct-parcels-touched, NOT a naive sum)', () => {
+  it('is a union, not a sum: overlapping ids across passes count ONCE', () => {
+    const n = ep.computeAggregateRecordsUpdated({
+      zoningIds: [1, 2, 3],
+      maxBuildIds: [2, 3, 4], // overlaps zoning on 2,3
+      existingIds: [3, 4, 5], // overlaps maxBuild on 3,4
+      scenarioIds: [5],       // overlaps existing on 5
+      optConfigGenuineIds: [1, 6], // overlaps zoning on 1
+    });
+    // distinct ids: 1,2,3,4,5,6 = 6 — a naive sum would be 3+3+3+1+2 = 12 (2×)
+    expect(n).toBe(6);
+  });
+
+  it('handles a Set for optConfigGenuineIds (the real call site passes a Set, not an array)', () => {
+    const n = ep.computeAggregateRecordsUpdated({
+      zoningIds: [], maxBuildIds: [], existingIds: [], scenarioIds: [],
+      optConfigGenuineIds: new Set([10, 20, 20]), // Set already de-dupes
+    });
+    expect(n).toBe(2);
+  });
+
+  it('all-empty → 0 (the honest floor: a steady-state re-run reports 0, not 802,075)', () => {
+    expect(ep.computeAggregateRecordsUpdated({
+      zoningIds: [], maxBuildIds: [], existingIds: [], scenarioIds: [], optConfigGenuineIds: [],
+    })).toBe(0);
+  });
+
+  it('tolerates missing/undefined arrays (defensive — a pass result shape changing must not throw)', () => {
+    expect(ep.computeAggregateRecordsUpdated({})).toBe(0);
+  });
+
+  it('comparable_builds is NOT one of the inputs (deliberately excluded — see the function docblock)', () => {
+    const src = ep.computeAggregateRecordsUpdated.toString();
+    expect(src).not.toMatch(/comp(Result|arableBuilds)Ids/);
+  });
+});
+
+describe('D#5 — main() wires the aggregate into records_updated (source-scan)', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const src = fs.readFileSync(path.join(process.cwd(), 'scripts/enrich-parcels.js'), 'utf8');
+
+  it('main() calls computeAggregateRecordsUpdated with all four SQL-pass id sets + the optconfig genuine set', () => {
+    // The FUNCTION DEFINITION (module scope) appears earlier in the file than
+    // its call site inside main() — search from AFTER main()'s declaration.
+    const mainIdx = src.indexOf('async function main(pool)');
+    expect(mainIdx).toBeGreaterThan(-1);
+    const callIdx = src.indexOf('computeAggregateRecordsUpdated({', mainIdx);
+    expect(callIdx).toBeGreaterThan(-1);
+    const callBlock = src.slice(callIdx, callIdx + 400);
+    expect(callBlock).toContain('zoningIds: result.updatedIds');
+    expect(callBlock).toContain('maxBuildIds: mbResult.updatedIds');
+    expect(callBlock).toContain('existingIds: exResult.updatedIds');
+    expect(callBlock).toContain('scenarioIds: exResult.scenarioUpdatedIds');
+    expect(callBlock).toContain('optConfigGenuineIds: ocResult.genuineIds');
+  });
+
+  it('emitSummary uses the aggregate, not the pass-1-only result.updated', () => {
+    expect(src).toMatch(/records_updated:\s*recordsUpdatedAggregate/);
+    expect(src).not.toMatch(/records_updated:\s*result\.updated/);
+  });
+
+  it('an audit row surfaces the aggregate for operator visibility', () => {
+    expect(src).toContain('records_updated_aggregate_distinct_parcels');
+  });
+});

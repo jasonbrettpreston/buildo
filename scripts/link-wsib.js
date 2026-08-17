@@ -29,6 +29,12 @@ const LOGIC_VARS_SCHEMA = z.object({
 
 const ADVISORY_LOCK_ID = 94;
 
+// D#4 (B3 output-panel remediation) — escape hatch (LINK_MASSING_FORCE_FULL /
+// COMPUTE_PARCEL_COST_FORCE_FULL precedent): forces a real run past the
+// run-ledger gate even when it would otherwise SKIP. Before this commit,
+// link-wsib.js had no operator override if the gate misfired.
+const FORCE_FULL_ENV = 'LINK_WSIB_FORCE_FULL';
+
 // Phase B B3 — run-ledger gate slug sets (T2: always caller-supplied parameters,
 // never hardcoded inside source-version.js — the massing-full-gate.js IN-list
 // precedent). link_wsib runs in TWO chains (manifest.json :78 permits, :104
@@ -108,7 +114,8 @@ async function main(pool) {
   // chain path), so it must always execute the tier simulation, never SKIP.
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const bypassGate = dryRun;
+  const forceFull = process.env[FORCE_FULL_ENV] === '1';
+  const bypassGate = dryRun || forceFull;
 
   const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
     const RUN_AT = await pipeline.getDbTimestamp(pool);
@@ -529,4 +536,4 @@ if (require.main === module) {
   pipeline.run('link-wsib', main);
 }
 
-module.exports = { main, ADVISORY_LOCK_ID, OWN_SLUGS, UPSTREAM_SLUGS, readThresholdVersionSignal, hasThresholdChanged };
+module.exports = { main, ADVISORY_LOCK_ID, OWN_SLUGS, UPSTREAM_SLUGS, readThresholdVersionSignal, hasThresholdChanged, FORCE_FULL_ENV };

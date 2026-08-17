@@ -350,7 +350,8 @@ FROM parcel_zoning_enrich e
 WHERE p.parcel_id = e.parcel_id
   AND (
       ${guard}
-  );`;
+  )
+RETURNING p.id;`; // D#5 — ids feed the run's honest aggregate records_updated (distinct-parcels-touched)
 }
 
 // ---------------------------------------------------------------------------
@@ -415,6 +416,7 @@ async function enrichParcels(client, opts = {}) {
   return {
     scoped: Number(s.scoped),
     updated: upd.rowCount,
+    updatedIds: upd.rows.map((r) => r.id), // D#5 — feeds the run's honest aggregate
     gaps: Number(s.gaps),
     ambiguous: Number(s.ambiguous),
     multiZone: Number(s.multi_zone),
@@ -786,7 +788,8 @@ FROM parcel_max_build e
 WHERE p.parcel_id = e.parcel_id
   AND (
       ${guard}
-  );`;
+  )
+RETURNING p.id;`; // D#5 — ids feed the run's honest aggregate records_updated
 }
 
 // D1′ — stamp massing_enriched_at for every parcel this pass SCOPED (parcel_max_build's `scope` CTE
@@ -863,7 +866,7 @@ async function enrichMaxBuild(client, opts = {}) {
   // above (Idempotency ruling: written WITH the work it represents, never before).
   const stamp = runAt || (await pipeline.getDbTimestamp(client));
   await client.query(buildMassingStampSql(), [stamp]);
-  return { ...stats.rows[0], updated: upd.rowCount };
+  return { ...stats.rows[0], updated: upd.rowCount, updatedIds: upd.rows.map((r) => r.id) };
 }
 
 // ---------------------------------------------------------------------------
@@ -988,7 +991,8 @@ FROM parcel_existing_struct e
 WHERE p.parcel_id = e.parcel_id
   AND (
       ${guard}
-  );`;
+  )
+RETURNING p.id;`; // D#5 — ids feed the run's honest aggregate records_updated
 }
 
 // Sibling UPDATE for the Phase-2 scenario GFAs — reads the SAME parcel_existing_struct temp table
@@ -1005,7 +1009,8 @@ FROM parcel_existing_struct e
 WHERE p.parcel_id = e.parcel_id
   AND (
       ${guard}
-  );`;
+  )
+RETURNING p.id;`; // D#5 — ids feed the run's honest aggregate records_updated
 }
 
 async function enrichExistingStructure(client, opts = {}) {
@@ -1033,7 +1038,13 @@ async function enrichExistingStructure(client, opts = {}) {
     FROM parcel_existing_struct`);
   const upd = await client.query(buildExistingStructureUpdateSql());
   const updScenario = await client.query(buildScenarioUpdateSql());
-  return { ...stats.rows[0], updated: upd.rowCount, scenarioUpdated: updScenario.rowCount };
+  return {
+    ...stats.rows[0],
+    updated: upd.rowCount,
+    updatedIds: upd.rows.map((r) => r.id), // D#5 — feeds the run's honest aggregate
+    scenarioUpdated: updScenario.rowCount,
+    scenarioUpdatedIds: updScenario.rows.map((r) => r.id), // D#5
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1360,8 +1371,25 @@ function computeOptConfigRow(r) {
   ];
 }
 
-/** Batched UPDATE … FROM (VALUES …). 12 params/row (11 cols + id); ~500 rows/batch. */
-async function flushOptConfigBatch(pool, batch) {
+// D#5 (B3 output-panel remediation) — the 9 flat opt_* columns + optimal_config
+// are the "genuine envelope change" surface: measured 0/88,575 diffs on an
+// immediate re-run. nearby_builds_summary is EXCLUDED from this list on
+// purpose — it is a rolling 5-year window sourced from
+// neighbourhood_build_norms (compute-build-norms.js) and measured
+// 88,575/88,575 diffs EVERY run; a guard spanning all 11 columns fires on
+// ~100% of rows and rescues nothing. nearby_builds_summary keeps writing
+// unconditionally (below); only the 10 genuine columns feed the
+// records_updated aggregate.
+const OPTCFG_GENUINE_COLS = OPTCFG_WRITE_COLS.filter((c) => c !== 'nearby_builds_summary');
+
+/**
+ * Batched UPDATE … FROM (VALUES …). 12 params/row (11 cols + id); ~500 rows/batch.
+ * @param {import('pg').Pool} pool
+ * @param {Array} batch
+ * @param {Set<number>} [genuineIds] — mutated in place: ids whose genuine
+ *   (non-nearby_builds_summary) columns actually changed (D#5 aggregate feed).
+ */
+async function flushOptConfigBatch(pool, batch, genuineIds = new Set()) {
   if (!batch.length) return 0;
   const cols = OPTCFG_WRITE_COLS;
   const perRow = cols.length + 1; // + id
@@ -1375,19 +1403,39 @@ async function flushOptConfigBatch(pool, batch) {
     const row = batch[i];
     params.push(row[11], row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10]);
   }
+  // D#5 — the "genuine" flag (10 cols, nearby_builds_summary excluded) MUST be
+  // computed against the PRE-update row: RETURNING on an UPDATE reads the
+  // TARGET table's post-SET (new) values, so `p.col IS DISTINCT FROM v.col`
+  // inside RETURNING would always be false (p.col already equals v.col by
+  // then) — a naive port of the WHERE-clause guard into RETURNING is wrong.
+  // The `diffed` CTE below joins the incoming values against `parcels` BEFORE
+  // this statement's own UPDATE runs (CTEs see the pre-statement snapshot),
+  // so `diffed.genuine` is a value computed once and carried through — safe
+  // to both gate the WHERE and echo via RETURNING.
+  const incomingCols = cols.join(', ');
+  const genuineGuard = OPTCFG_GENUINE_COLS.map((c) => `p.${c} IS DISTINCT FROM i.${c}`).join('\n        OR ');
+  const setList = cols.map((c) => `${c} = d.${c}`).join(', ');
   const sql = `
+    WITH incoming(id, ${incomingCols}) AS (
+      VALUES ${tuples.join(',')}
+    ),
+    diffed AS (
+      SELECT i.*,
+        (${genuineGuard}) AS genuine,
+        (p.nearby_builds_summary IS DISTINCT FROM i.nearby_builds_summary) AS nearby_changed
+      FROM incoming i
+      JOIN parcels p ON p.id = i.id
+    )
     UPDATE parcels p SET
-      opt_aor_storeys = v.opt_aor_storeys, opt_aor_gfa_sqm = v.opt_aor_gfa_sqm, opt_aor_units = v.opt_aor_units,
-      opt_coa_storeys = v.opt_coa_storeys, opt_coa_gfa_sqm = v.opt_coa_gfa_sqm,
-      opt_suite_type = v.opt_suite_type, opt_suite_fits_full = v.opt_suite_fits_full,
-      opt_binding_constraint = v.opt_binding_constraint, opt_config_confidence = v.opt_config_confidence,
-      optimal_config = v.optimal_config, nearby_builds_summary = v.nearby_builds_summary
-    FROM (VALUES ${tuples.join(',')})
-      AS v(id, opt_aor_storeys, opt_aor_gfa_sqm, opt_aor_units, opt_coa_storeys, opt_coa_gfa_sqm,
-           opt_suite_type, opt_suite_fits_full, opt_binding_constraint, opt_config_confidence,
-           optimal_config, nearby_builds_summary)
-    WHERE p.id = v.id`;
+      ${setList}
+    FROM diffed d
+    WHERE p.id = d.id
+      AND (d.genuine OR d.nearby_changed)
+    RETURNING p.id, d.genuine`;
   const res = await pool.query(sql, params);
+  for (const row of res.rows) {
+    if (row.genuine) genuineIds.add(row.id);
+  }
   return res.rowCount || 0;
 }
 
@@ -1410,7 +1458,8 @@ async function flushOptConfigBatch(pool, batch) {
 //   handled by the caller's bulk UPDATE). -1 (no real scopeRunId is ever negative) recovers all.
 // @param {{ errors: number }} stats - mutated in place so a recovery-path engine error is visible to
 //   the SAME opt_config_engine_errors FAIL gate that counts main-stream errors.
-async function consumePendingScope(pool, runId = -1, stats = { errors: 0 }, runAt = null) {
+// @param {Set<number>} [genuineIds] - D#5: mutated in place, same contract as enrichOptimalConfig's.
+async function consumePendingScope(pool, runId = -1, stats = { errors: 0 }, runAt = null, genuineIds = new Set()) {
   // §47 R3.5 — DB clock, never the SQL now-function in mutation statements.
   const stamp = runAt || (await pipeline.getDbTimestamp(pool));
   const pending = await pool.query(
@@ -1424,7 +1473,7 @@ async function consumePendingScope(pool, runId = -1, stats = { errors: 0 }, runA
       const { rows } = await pool.query(buildOptConfigSelectSql({ full: true, scopeWhere: 'p.id = $1' }), [pid]);
       if (rows.length) {
         const row = computeOptConfigRow(rows[0]);
-        recovered += await flushOptConfigBatch(pool, [row]);
+        recovered += await flushOptConfigBatch(pool, [row], genuineIds);
       }
     } catch (err) {
       succeeded = false;
@@ -1464,6 +1513,13 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', ru
          AND (p.max_buildable_footprint_sqm IS NULL OR (p.lot_size_sqm > 0) IS NOT TRUE)
          AND p.opt_config_confidence IS NOT NULL`);
   const stats = { updated: 0, reset_ineligible: reset.rowCount || 0, envelope_capped: 0, suite_fits: 0, conf_high: 0, conf_medium: 0, conf_low: 0, citywide: 0, errors: 0 };
+  // D#5 — distinct parcel ids whose GENUINE (non-nearby_builds_summary) columns
+  // actually changed, across every flushOptConfigBatch call this run makes
+  // (main stream below + the D4′ crash-recovery path). Feeds main()'s honest
+  // records_updated aggregate; `stats.updated` (unconditional write count,
+  // including nearby-only refreshes) stays the diagnostic
+  // optimal_config_enriched_count audit row, unchanged in meaning.
+  stats.genuineIds = new Set();
   let batch = [];
   for await (const r of pipeline.streamQuery(pool, buildOptConfigSelectSql({ full, scopeWhere }), [], { batchSize: 200 })) {
     let row;
@@ -1489,9 +1545,9 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', ru
           : null);
     if (effMbs != null && rawP50 != null && rawP50 > effMbs) stats.envelope_capped += 1;
     batch.push(row);
-    if (batch.length >= OPTCFG_BATCH) { stats.updated += await flushOptConfigBatch(pool, batch); batch = []; }
+    if (batch.length >= OPTCFG_BATCH) { stats.updated += await flushOptConfigBatch(pool, batch, stats.genuineIds); batch = []; }
   }
-  if (batch.length) stats.updated += await flushOptConfigBatch(pool, batch);
+  if (batch.length) stats.updated += await flushOptConfigBatch(pool, batch, stats.genuineIds);
   // D4′/S-2 — flip THIS run's own scope rows in ONE set-based UPDATE now that the stream above has
   // attempted every row it covers (work-before-stamp; never per-parcel — that is the founding O(N)
   // serial-requery class on a --full run touching ~437K parcels). A scope row whose parcel the
@@ -1506,7 +1562,7 @@ async function enrichOptimalConfig(pool, { full = false, scopeWhere = 'TRUE', ru
       [runId, flipStamp],
     );
   }
-  stats.updated += await consumePendingScope(pool, runId ?? -1, stats);
+  stats.updated += await consumePendingScope(pool, runId ?? -1, stats, null, stats.genuineIds);
   return stats;
 }
 
@@ -1562,6 +1618,46 @@ async function computeDeferScope(pool, threshold) {
 function verdictCascade(rows) {
   return rows.some((r) => r.status === 'FAIL') ? 'FAIL'
     : rows.some((r) => r.status === 'WARN') ? 'WARN' : 'PASS';
+}
+
+// ---------------------------------------------------------------------------
+// D#5 (B3 output-panel remediation) — the honest aggregate records_updated.
+//
+// PRE-D#5: emitSummary reported `result.updated` (pass-1/zoning rowcount
+// ONLY). Every other pass — max-build, existing-structure/scenario,
+// optimal-config, comparable-builds — writes UNCOUNTED. Replaying a real
+// run's ledger shape through runLedgerGateDecision with those undercounted
+// numbers made the cost-step's upstream gate conclude "no changes" for a run
+// that genuinely updated hundreds of parcels (D#5's grounding proof).
+//
+// NOT a naive sum of the five passes' rowcounts either — that yields
+// 802,075 against a ~486,530-row table (1.65×) because the passes' row sets
+// overlap near-totally (the SAME parcel gets touched by zoning AND max-build
+// AND existing-structure in one run). This is DISTINCT-parcels-touched: the
+// union of every pass's genuinely-changed id set.
+//
+// comparable_builds (Spec 78 Phase 3C) is DELIBERATELY EXCLUDED: its own
+// UPDATE (buildComparableBuildsUpdateSql) is unconditional/blanket — no
+// IS DISTINCT FROM guard, ~352K rows touched every run — and
+// compute-parcel-cost-estimates.js (the consumer this counter exists to
+// inform) reads ZERO of its columns (comparable_builds/comp_count/
+// comp_dominant_build/comp_build_ratio_p50/comp_fsi_p50 are absent from its
+// emitMeta read-list). Including it would readmit the same "counts things
+// the consumer never reads" defect the fix exists to close, at a MUCH larger
+// scale than the zoning-only undercounting it replaces. Its own
+// comparable_builds_enriched_count audit row remains the diagnostic for it.
+//
+// @param {{ zoningIds: number[], maxBuildIds: number[], existingIds: number[],
+//   scenarioIds: number[], optConfigGenuineIds: Iterable<number> }} sets
+// @returns {number} distinct parcel count
+function computeAggregateRecordsUpdated({ zoningIds, maxBuildIds, existingIds, scenarioIds, optConfigGenuineIds }) {
+  const touched = new Set();
+  for (const id of zoningIds || []) touched.add(id);
+  for (const id of maxBuildIds || []) touched.add(id);
+  for (const id of existingIds || []) touched.add(id);
+  for (const id of scenarioIds || []) touched.add(id);
+  for (const id of optConfigGenuineIds || []) touched.add(id);
+  return touched.size;
 }
 
 async function main(pool) {
@@ -1923,10 +2019,30 @@ async function main(pool) {
     auditRows.push({ metric: 'enrich_parcels_pass5_duration_ms', value: passDurationsMs.pass5, status: 'INFO' });
     auditRows.push({ metric: 'enrich_parcels_duration_ms', value: Date.now() - t0, status: 'INFO' });
 
+    // D#5 (B3 output-panel remediation) — the honest aggregate: distinct
+    // parcels touched by a GENUINE change across zoning + max-build +
+    // existing-structure + scenario + optimal-config (comparable_builds
+    // deliberately excluded — see computeAggregateRecordsUpdated's docblock).
+    // NOT a naive sum of the five passes (that overcounts ~1.65× on measured
+    // data because the same parcel is touched by multiple passes per run).
+    const recordsUpdatedAggregate = computeAggregateRecordsUpdated({
+      zoningIds: result.updatedIds,
+      maxBuildIds: mbResult.updatedIds,
+      existingIds: exResult.updatedIds,
+      scenarioIds: exResult.scenarioUpdatedIds,
+      optConfigGenuineIds: ocResult.genuineIds,
+    });
+    auditRows.push({
+      metric: 'records_updated_aggregate_distinct_parcels',
+      value: recordsUpdatedAggregate,
+      threshold: null,
+      status: 'INFO',
+    });
+
     pipeline.emitSummary({
       records_total: null, // Enrich archetype — does not create rows (Spec 47 §11)
       records_new: null,
-      records_updated: result.updated,
+      records_updated: recordsUpdatedAggregate,
       records_meta: {
         audit_table: {
           phase: ADVISORY_LOCK_ID,
@@ -2024,10 +2140,14 @@ module.exports = {
   enrichComparableBuilds,
   // Spec 78 Phase 3A — optimal-config pass.
   OPTCFG_WRITE_COLS,
+  OPTCFG_GENUINE_COLS,
   buildOptConfigSelectSql,
   mapRowToEngineInput,
   buildNearbyBuildsSummary,
   computeOptConfigRow,
+  flushOptConfigBatch,
   enrichOptimalConfig,
   verdictCascade,
+  // D#5 (B3 output-panel remediation) — the honest records_updated aggregate.
+  computeAggregateRecordsUpdated,
 };
