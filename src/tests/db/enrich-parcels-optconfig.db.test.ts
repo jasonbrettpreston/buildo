@@ -180,4 +180,47 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-3A enrich-parcels optimal-confi
     const twn = (await pool.query(`SELECT opt_aor_gfa_sqm, opt_coa_gfa_sqm FROM parcels WHERE id = $1`, [P(21)])).rows[0];
     expect(Number(twn.opt_coa_gfa_sqm)).toBeCloseTo(200, 0);   // NOT lifted to 420 — by-law FSI kept
   }, 90_000);
+
+  // D#5 (B3 output-panel remediation) — the acceptance test named in the plan
+  // itself (the founding commit 7e130bff's own standard): run twice, assert
+  // the second run updates 0. Proves flushOptConfigBatch's genuine-change
+  // guard actually closes the "blanket UPDATE reports records_updated=1 while
+  // touching 450K rows" defect, not just on paper.
+  it('D-R3: two-run idempotency — an immediate second enrichOptimalConfig run genuinely-changes 0 parcels', async () => {
+    await insNbhd(pool, NB, 'TEST-OC-NBHD');
+    await insNorm(pool, NB);
+    await insNorm(pool, null);
+    await insParcel(pool, P(50), NB);
+    await insParcel(pool, P(51), NB, { is_through_lot: true });
+
+    const run1 = await ep.enrichOptimalConfig(pool, { full: true, scopeWhere: SCOPE });
+    expect(run1.updated).toBe(2);
+    expect(run1.genuineIds.size).toBe(2); // first write: every column moved from NULL
+
+    const run2 = await ep.enrichOptimalConfig(pool, { full: true, scopeWhere: SCOPE });
+    expect(run2.updated).toBe(0); // nothing genuinely OR nearby-changed the second time
+    expect(run2.genuineIds.size).toBe(0);
+  }, 90_000);
+
+  // The pure guard-only proof, isolated from the streaming engine: call
+  // flushOptConfigBatch directly with the IDENTICAL row twice and confirm the
+  // second call touches 0 rows / reports 0 genuine ids.
+  it('D-R3 (isolated): flushOptConfigBatch called twice with an IDENTICAL row updates 0 the second time', async () => {
+    await insParcel(pool, P(52), null);
+    const row = [
+      2, 300, 2, 3, 450, 'garden', true, 'none', 'high',
+      JSON.stringify({ bylaw_version: 'x', as_of_right: { main_storeys: 2, main_gfa_sqm: 300 } }),
+      null, // nearby_builds_summary NULL — stable across both calls
+      P(52),
+    ];
+    const genuineIds1 = new Set<number>();
+    const n1 = await ep.flushOptConfigBatch(pool, [row], genuineIds1);
+    expect(n1).toBe(1);
+    expect(genuineIds1.has(P(52))).toBe(true);
+
+    const genuineIds2 = new Set<number>();
+    const n2 = await ep.flushOptConfigBatch(pool, [row], genuineIds2);
+    expect(n2).toBe(0);
+    expect(genuineIds2.size).toBe(0);
+  });
 });

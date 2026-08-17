@@ -99,6 +99,28 @@ describe('Commit C — assertVersionColumn + skip-path precondition hoist', () =
   });
 });
 
+// D#4 (B3 output-panel remediation) — ENRICH_HERITAGE_FORCE_FULL escape hatch.
+// Structural (source-scan), not a live-DB E2E: ENRICH_SQL's parcel_c CTE has no
+// scope filter (it spatial-joins the WHOLE parcels table), so exercising main()
+// end-to-end here would mutate heritage designation state on every parcel in
+// the shared testcontainer DB — too invasive for this fixture. The forceFull
+// -> staleCount=1 -> "if (staleCount === 0)" skip-branch-never-taken wiring is
+// unconditional JS logic (no DB round-trip in the branch itself), so the
+// source-scan proves the same thing a live run would.
+describe('D#4 — ENRICH_HERITAGE_FORCE_FULL escape hatch', () => {
+  const eh2 = require('../../scripts/enrich-heritage.js') as { FORCE_FULL_ENV: string };
+
+  it('exports FORCE_FULL_ENV = ENRICH_HERITAGE_FORCE_FULL', () => {
+    expect(eh2.FORCE_FULL_ENV).toBe('ENRICH_HERITAGE_FORCE_FULL');
+  });
+
+  it('forceFull short-circuits staleCount to a non-zero value, bypassing the #418 skip unconditionally', () => {
+    const src = enrichHeritageSrc();
+    expect(src).toMatch(/const forceFull = process\.env\[FORCE_FULL_ENV\] === '1';/);
+    expect(src).toMatch(/const staleCount = forceFull \? 1 : await countStale\(pool, datasetVersion\);/);
+  });
+});
+
 describe('H1 (textual mirror-lock, pre-behavioral) — countStale probe mirrors ENRICH_SQL eligibility', () => {
   it(
     'ENRICH_SQL excludes invalid/empty geometry from parcel_c (the wedge-open trap source)',

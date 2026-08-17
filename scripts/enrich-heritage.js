@@ -29,6 +29,12 @@ const PRODUCER_NAME = 'sources:load_heritage';    // §8c chain-scoped slug (DEC
 const SPEC_VERSION = '1.1'; // L10 — consumer pins on the §8c producer's spec_version
 const TAG = '[enrich-heritage]';
 
+// D#4 (B3 output-panel remediation) — escape hatch (LINK_MASSING_FORCE_FULL /
+// COMPUTE_PARCEL_COST_FORCE_FULL precedent): forces a real recompute past the
+// #418 Layer-1 staleCount skip even when it would otherwise SKIP. Before this
+// commit, enrich-heritage.js had no operator override if the skip misfired.
+const FORCE_FULL_ENV = 'ENRICH_HERITAGE_FORCE_FULL';
+
 const ConfigSchema = z.object({
   // heritage_point_match_radius_m (spec §12.3a) intentionally NOT consumed: the live-validation
   // finding switched Part IV from a radius match to containment (ST_Intersects), so there is no
@@ -379,7 +385,8 @@ async function main(pool) {
     // STILL emits coverage + summary + meta (shared emitHeritageResults) so
     // the dashboard step is never UNKNOWN and the producer/consumer column
     // contract holds (Integration BUG).
-    const staleCount = await countStale(pool, datasetVersion);
+    const forceFull = process.env[FORCE_FULL_ENV] === '1';
+    const staleCount = forceFull ? 1 : await countStale(pool, datasetVersion);
     if (staleCount === 0) {
       await emitHeritageResults(pool, { datasetVersion, updated: 0, skipped: true, t0, config });
       return { ok: true };
@@ -409,6 +416,7 @@ module.exports = {
   ADVISORY_LOCK_ID,
   PRODUCER_NAME,
   PIPELINE_NAME,
+  FORCE_FULL_ENV,
   ENRICH_SQL,
   readHeritageContract,
   assertPreconditions,

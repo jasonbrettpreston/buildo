@@ -45,12 +45,40 @@ describe('C1 — canonical ISO version keys stamped on both the run and skip pat
     expect(indexKeyMatches.length).toBe(2);
   });
 
-  it('readCostVersionSignals casts rates_as_of via ::text (ISO date), never a bare JS Date → String() blob', () => {
+  it('readCostVersionSignals formats rates_as_of via toISOString() (canonical ISO string), never a bare JS Date → String() blob', () => {
     const src = readFileSync(SCRIPT_PATH, 'utf8');
     const fnBody = src.match(/async function readCostVersionSignals\(pool\)[\s\S]*?\n}\n/);
     expect(fnBody, 'readCostVersionSignals function body not found').not.toBeNull();
-    expect(fnBody![0]).toMatch(/::text AS rates_as_of/);
-    expect(fnBody![0]).toMatch(/\.toISOString\(\)/);
+    // D#2 (B3 output-panel remediation) — rates_as_of now reads MAX(updated_at),
+    // not MAX(as_of_date) (a business date that an operator's cost_per_sqm
+    // correction never moves — see the function's own docblock). Both
+    // rates_as_of and index_updated_at are node-postgres-parsed Date objects
+    // (no SQL-side ::text cast) formatted identically via .toISOString().
+    expect(fnBody![0]).toMatch(/MAX\(updated_at\) FROM archetype_cost_rates/);
+    expect(fnBody![0]).not.toMatch(/MAX\(as_of_date\)/);
+    const isoCalls = fnBody![0].match(/\.toISOString\(\)/g) ?? [];
+    expect(isoCalls.length).toBe(2); // rates_as_of AND index_updated_at
+  });
+
+  it('D#3: readCostVersionSignals reads the escalation index VALUE in the SAME query as its VERSION (one round-trip, no torn read)', () => {
+    const src = readFileSync(SCRIPT_PATH, 'utf8');
+    const fnBody = src.match(/async function readCostVersionSignals\(pool\)[\s\S]*?\n}\n/);
+    expect(fnBody, 'readCostVersionSignals function body not found').not.toBeNull();
+    expect(fnBody![0]).toMatch(/AS index_value/);
+    // Only ONE pool.query call in the function — value + version in one round-trip.
+    const queryCalls = fnBody![0].match(/pool\.query\(/g) ?? [];
+    expect(queryCalls.length).toBe(1);
+  });
+
+  it('D#3: main() rebuilds config.indexNow/indexMissing from the LOCKED read (versionSignals.indexValue), not the pre-lock §R5 read', () => {
+    const src = readFileSync(SCRIPT_PATH, 'utf8');
+    const lockedIdx = src.indexOf('const lockedIndexNow = versionSignals.indexValue;');
+    const versionSignalsIdx = src.indexOf('const versionSignals = await readCostVersionSignals(pool);');
+    expect(lockedIdx).toBeGreaterThan(-1);
+    expect(versionSignalsIdx).toBeGreaterThan(-1);
+    expect(versionSignalsIdx).toBeLessThan(lockedIdx); // read version signals, THEN rebuild config from them
+    expect(src).toMatch(/config\.indexNow = lockedIndexNow;/);
+    expect(src).toMatch(/config\.indexMissing = lockedIndexMissing;/);
   });
 });
 

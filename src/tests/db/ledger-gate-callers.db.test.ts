@@ -36,17 +36,19 @@ const linkWsib = require('../../../scripts/link-wsib.js') as {
   OWN_SLUGS: string[];
   UPSTREAM_SLUGS: string[];
   readThresholdVersionSignal: (pool: Pool) => Promise<{ thresholdUpdatedAt: string | null }>;
+  FORCE_FULL_ENV: string;
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const linkParcelAddresses = require('../../../scripts/link-parcel-addresses.js') as {
   main: (pool: Pool) => Promise<void>;
   OWN_SLUGS: string[];
   UPSTREAM_SLUGS: string[];
+  FORCE_FULL_ENV: string;
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const costEstimates = require('../../../scripts/compute-parcel-cost-estimates.js') as {
   main: (pool: Pool, opts?: { dryRun?: boolean; rowLimit?: number | null }) => Promise<void>;
-  readCostVersionSignals: (pool: Pool) => Promise<{ ratesAsOf: string | null; indexUpdatedAt: string | null }>;
+  readCostVersionSignals: (pool: Pool) => Promise<{ ratesAsOf: string | null; indexUpdatedAt: string | null; indexValue: number | null }>;
   hasRateOrIndexChanged: (meta: Record<string, unknown> | null, signals: { ratesAsOf: string | null; indexUpdatedAt: string | null }) => boolean;
   OWN_SLUGS: string[];
   UPSTREAM_SLUGS: string[];
@@ -360,6 +362,93 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
     } finally {
       await pool.query(`DELETE FROM archetype_cost_rates WHERE archetype = '__fx_b3_c1__'`);
     }
+  });
+
+  // ---------------------------------------------------------------------
+  // Commit D — version signals (D#2/D#3/D-R1/D-R2/D#6).
+  // ---------------------------------------------------------------------
+  it('D#2 / D-R1: an archetype cost_per_sqm EDIT (with updated_at bumped, as_of_date UNCHANGED) forces RUN — the business date alone cannot see it', async () => {
+    await pool.query(
+      `INSERT INTO archetype_cost_rates (archetype, cost_per_sqm, cost_adjustment_factor, escalation_index_base, as_of_date)
+       VALUES ('__fx_b3_d2__', 1000, 1.0, 1.0, '2026-06-30')
+       ON CONFLICT (archetype) DO UPDATE SET cost_per_sqm = 1000, as_of_date = '2026-06-30'`,
+    );
+    try {
+      const before = await costEstimates.readCostVersionSignals(pool);
+      // Seed the gate as SKIP-eligible with the OWN-last run stamped to the PRE-edit signal.
+      await pool.query(
+        `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
+         VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
+        [costEstimates.OWN_SLUGS[0], JSON.stringify({ rates_as_of: before.ratesAsOf, index_updated_at: before.indexUpdatedAt })],
+      );
+      // A real correction: cost_per_sqm changes, updated_at bumps, as_of_date STAYS 2026-06-30
+      // (the business date a genuinely business-date-anchored signal would miss).
+      await pool.query(
+        `UPDATE archetype_cost_rates SET cost_per_sqm = 1234.56, updated_at = NOW() WHERE archetype = '__fx_b3_d2__'`,
+      );
+      const after = await costEstimates.readCostVersionSignals(pool);
+      expect(after.ratesAsOf).not.toBe(before.ratesAsOf); // MAX(updated_at) moved
+      const { summary } = await captureEmitted(() => costEstimates.main(pool));
+      const rows = (summary?.records_meta as { audit_table?: { rows?: Array<{ metric: string }> } })?.audit_table?.rows ?? [];
+      // A real (non-skip) run reports residential_parcels_examined — the SKIP shape never has it.
+      expect(rows.some((r) => r.metric === 'residential_parcels_examined')).toBe(true);
+    } finally {
+      await pool.query(`DELETE FROM archetype_cost_rates WHERE archetype = '__fx_b3_d2__'`);
+    }
+  }, 60000);
+
+  it('D#3: readCostVersionSignals reads the escalation index VALUE atomically with its VERSION (one query, both fields present)', async () => {
+    const signals = await costEstimates.readCostVersionSignals(pool);
+    expect('indexValue' in signals).toBe(true);
+    if (signals.indexValue != null) {
+      expect(Number.isFinite(signals.indexValue)).toBe(true);
+    }
+  });
+
+  it('D#4: LINK_WSIB_FORCE_FULL bypasses the gate even when SKIP-eligible', async () => {
+    await seedUnlinkedWsibRow();
+    await pool.query(
+      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
+       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
+      [linkWsib.OWN_SLUGS[0]],
+    );
+    const original = process.env[linkWsib.FORCE_FULL_ENV];
+    process.env[linkWsib.FORCE_FULL_ENV] = '1';
+    try {
+      const { summary } = await captureEmitted(() => linkWsib.main(pool));
+      const auditTable = (summary?.records_meta as { audit_table?: { name?: string } })?.audit_table;
+      expect(auditTable?.name).toBe('WSIB Registry Matching'); // the REAL run's name, not the SKIP shape's 'Link WSIB'
+    } finally {
+      if (original === undefined) delete process.env[linkWsib.FORCE_FULL_ENV];
+      else process.env[linkWsib.FORCE_FULL_ENV] = original;
+    }
+  }, 30000);
+
+  it('D#4: LINK_PARCEL_ADDRESSES_FORCE_FULL bypasses the gate even when SKIP-eligible', async () => {
+    await pool.query(
+      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
+       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
+      [linkParcelAddresses.OWN_SLUGS[0]],
+    );
+    const original = process.env[linkParcelAddresses.FORCE_FULL_ENV];
+    process.env[linkParcelAddresses.FORCE_FULL_ENV] = '1';
+    try {
+      const { summary } = await captureEmitted(() => linkParcelAddresses.main(pool));
+      const rows = (summary?.records_meta as { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } })
+        ?.audit_table?.rows ?? [];
+      // The SKIP shape's first row is status:'SKIPPED' — a real run never emits it.
+      expect(rows.some((r) => r.metric === 'status' && r.value === 'SKIPPED')).toBe(false);
+      expect(rows.some((r) => r.metric === 'parcel_link_rate_pct')).toBe(true); // real-run-only metric
+    } finally {
+      if (original === undefined) delete process.env[linkParcelAddresses.FORCE_FULL_ENV];
+      else process.env[linkParcelAddresses.FORCE_FULL_ENV] = original;
+    }
+  }, 60000);
+
+  it('D#6: UPSTREAM_SLUGS for compute-parcel-cost-estimates includes sources:parcels/load-parcels (lot_size_sqm is a direct cost-engine input)', () => {
+    expect(costEstimates.UPSTREAM_SLUGS).toEqual(
+      expect.arrayContaining(['sources:parcels', 'parcels', 'load-parcels']),
+    );
   });
 
   // ---------------------------------------------------------------------
