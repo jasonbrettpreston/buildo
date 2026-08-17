@@ -85,6 +85,36 @@ describe.skipIf(!dbAvailable())('runLedgerGateDecision — Phase B B3 live-DB ca
     expect(d.nonCompleted).toBe(1);
   });
 
+  // Commit E (B3 output-panel remediation, E-R2) — a STRANDED (stale-past-TTL)
+  // running row must STILL force RUN, exactly like a fresh one (G2 above). The
+  // staleRunningUpstream field is VISIBILITY ONLY (chain-concurrency.js's 12h
+  // TTL convention) — it must never flip the skip/run direction.
+  it('E-R2: a running row STRANDED past the 12h TTL still forces RUN (fail-safe pinned — a future "optimization" must not skip past it)', async () => {
+    await insertRun(pool, { pipeline: OWN[0], status: 'completed', startedAt: minutesAgo(anchor, 60), completedAt: minutesAgo(anchor, 59) });
+    // 13 hours ago — past chain-concurrency.js's 12h TTL, and still "since own
+    // last completed run" (own last completed only 60 minutes ago is AFTER
+    // the stranded row's start... wait: the window is COALESCE(completed_at,
+    // 'infinity') > own.started_at — a running row's completed_at is NULL,
+    // COALESCEd to 'infinity', which is always > own.started_at regardless of
+    // how long ago it started. A stranded row from BEFORE own's last run even
+    // started still counts — that is the wedge this commit fixes.
+    await insertRun(pool, { pipeline: UPSTREAM[0], status: 'running', startedAt: minutesAgo(anchor, 13 * 60) });
+    const d = await runLedgerGateDecision(pool, { ownSlugs: OWN, upstreamSlugs: UPSTREAM, now: anchor });
+    expect(d.skip).toBe(false);
+    expect(d.reason).toBe('upstream_activity_since_last_run');
+    expect(d.nonCompleted).toBe(1);
+    expect(d.staleRunningUpstream).toBe(1); // visibility: this non-completed row IS the stale one
+  });
+
+  it('a FRESH (< 12h) running row does not count as stale (staleRunningUpstream stays 0) even though it still forces RUN', async () => {
+    await insertRun(pool, { pipeline: OWN[0], status: 'completed', startedAt: minutesAgo(anchor, 60), completedAt: minutesAgo(anchor, 59) });
+    await insertRun(pool, { pipeline: UPSTREAM[0], status: 'running', startedAt: minutesAgo(anchor, 10) });
+    const d = await runLedgerGateDecision(pool, { ownSlugs: OWN, upstreamSlugs: UPSTREAM, now: anchor });
+    expect(d.skip).toBe(false);
+    expect(d.nonCompleted).toBe(1);
+    expect(d.staleRunningUpstream).toBe(0);
+  });
+
   it('G2b: an upstream "failed" row since own last completed → RUN (same fail-safe class as running)', async () => {
     await insertRun(pool, { pipeline: OWN[0], status: 'completed', startedAt: minutesAgo(anchor, 60), completedAt: minutesAgo(anchor, 59) });
     await insertRun(pool, { pipeline: UPSTREAM[1], status: 'failed', startedAt: minutesAgo(anchor, 20), completedAt: minutesAgo(anchor, 19) });
