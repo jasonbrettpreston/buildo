@@ -153,6 +153,22 @@ pipeline.run('load-wsib', async (pool) => {
     }
   }
 
+  // Commit E (B3 output-panel remediation, E#1) — the pipeline_runs 'running'
+  // row INSERTed above had NO try/finally: any throw between here and the old
+  // happy-path-only finalize (below) left the row wedged at status='running'
+  // forever. Since link-wsib.js's UPSTREAM_SLUGS includes load_wsib, a
+  // stranded row satisfies COALESCE(completed_at,'infinity') > anchor
+  // PERMANENTLY, forcing link_wsib to RUN on every future evaluation and
+  // silently disabling the B3 gate's savings for that consumer — invisible
+  // unless a human loads the admin dashboard (the reaper at
+  // src/app/api/admin/stats/route.ts:188-199 only fires on a page load, never
+  // under unattended cron). Reproduced by real fault injection; the wedge
+  // persisted across 5 simulated later runs (measured 19 real occurrences,
+  // masked by that same reaper — Phase B B6.6).
+  let finalizeStatus = 'failed'; // pessimistic default — flipped to 'completed' only after real success
+  let finalizeTotal = 0;
+  let finalizeNew = 0;
+  try {
   // Parse CSV and collect Class G rows, de-duplicated.
   // Uses batch-flush pattern (B4): the dedup key Set stays in memory (small strings),
   // but row data is flushed to DB every DEDUP_FLUSH_SIZE rows to cap peak memory.
@@ -387,14 +403,33 @@ pipeline.run('load-wsib', async (pool) => {
     },
   });
 
-  if (runId) {
-    await pool.query(
-      `UPDATE pipeline_runs
-       SET completed_at = NOW(), status = $1, duration_ms = $2,
-           records_total = $3, records_new = $4
-       WHERE id = $5`,
-      [status, durationMs, inserted + updated, inserted, runId]
-    ).catch(() => {});
+  // Commit E — real success reached this line: flip the pessimistic default
+  // so the finally block below finalizes to 'completed', not 'failed'.
+  finalizeStatus = status;
+  finalizeTotal = inserted + updated;
+  finalizeNew = inserted;
+  } finally {
+    // Commit E — this ALWAYS runs, success or throw, so the 'running' row
+    // INSERTed above can never be left wedged. Stop swallowing the finalize
+    // error too: the old `.catch(() => {})` hid exactly the failure class
+    // that would leave a SECOND orphaned row (the finalize UPDATE itself
+    // failing) with zero operator visibility.
+    if (runId) {
+      try {
+        await pool.query(
+          `UPDATE pipeline_runs
+           SET completed_at = NOW(), status = $1, duration_ms = $2,
+               records_total = $3, records_new = $4
+           WHERE id = $5`,
+          [finalizeStatus, Date.now() - startMs, finalizeTotal, finalizeNew, runId],
+        );
+      } catch (finalizeErr) {
+        pipeline.log.error('[load-wsib]', finalizeErr, {
+          context: 'finalize pipeline_runs row (Commit E — was previously swallowed by .catch(() => {}))',
+          runId, finalizeStatus,
+        });
+      }
+    }
   }
   }); // withAdvisoryLock
 

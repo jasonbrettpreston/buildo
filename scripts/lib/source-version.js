@@ -279,7 +279,14 @@ function buildSkipReEmitMeta({ skeleton = {}, priorMeta = null, pins = {} } = {}
  *   skip: boolean, reason: string,
  *   ownStarted: Date|null, ownCompleted: Date|null, ownLastRecordsMeta: object|null,
  *   nonCompleted: number, completedWithChanges: number,
- * }>}
+ *   staleRunningUpstream: number,
+ * }>} staleRunningUpstream (Commit E) — VISIBILITY ONLY, a subset already
+ *   counted inside nonCompleted (chain-concurrency.js's 12h TTL convention):
+ *   how many of the non-completed upstream rows are a 'running' status whose
+ *   started_at is already past the TTL — almost certainly an orphaned row a
+ *   crashed producer never finalized, not genuine in-flight work. Does NOT
+ *   change the skip/run decision (a stranded row still forces RUN, fail-safe —
+ *   E-R2).
  */
 // `now` is accepted for caller-side compatibility (every caller still passes its
 // RUN_AT) but is no longer echoed back — Commit B deleted the unused evaluatedAt field.
@@ -310,7 +317,21 @@ async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null
        SELECT
          COUNT(*) FILTER (WHERE p.status <> 'completed')                                            AS non_completed,
          COUNT(*) FILTER (WHERE p.status = 'completed'
-                             AND (COALESCE(p.records_new, 0) + COALESCE(p.records_updated, 0)) > 0)  AS completed_with_changes
+                             AND (COALESCE(p.records_new, 0) + COALESCE(p.records_updated, 0)) > 0)  AS completed_with_changes,
+         -- Commit E (B3 output-panel remediation) — defence-in-depth VISIBILITY
+         -- only (chain-concurrency.js:36's 12h TTL convention, same class of
+         -- staleness): an upstream 'running' row whose started_at is already
+         -- past the TTL is almost certainly an orphan (a crashed/killed
+         -- producer that never reached its finalize step — the load-wsib.js
+         -- E#1 defect this commit also fixes). It STILL counts toward
+         -- non_completed above (E-R2: a stranded running row must keep
+         -- forcing RUN — fail-safe, pinned so a future "optimization" cannot
+         -- quietly start treating a stale running row as safe-to-skip-past).
+         -- This count exists ONLY so a caller/operator can tell "genuinely
+         -- busy upstream" apart from "an orphaned row nobody ever finalized"
+         -- without changing the skip/run decision itself.
+         COUNT(*) FILTER (WHERE p.status = 'running'
+                             AND p.started_at <= NOW() - INTERVAL '12 hours')                        AS stale_running
          FROM pipeline_runs p
          CROSS JOIN own_last o
         WHERE p.pipeline = ANY($2::text[])
@@ -321,7 +342,8 @@ async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null
        (SELECT completed_at  FROM own_last)               AS own_completed,
        (SELECT records_meta  FROM own_last)               AS own_last_records_meta,
        (SELECT non_completed FROM upstream_since)          AS non_completed,
-       (SELECT completed_with_changes FROM upstream_since) AS completed_with_changes`,
+       (SELECT completed_with_changes FROM upstream_since) AS completed_with_changes,
+       (SELECT stale_running FROM upstream_since)          AS stale_running`,
     [ownSlugs, upstreamSlugs],
   );
 
@@ -331,11 +353,12 @@ async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null
   const ownLastRecordsMeta = row.own_last_records_meta ?? null;
   const nonCompleted = Number(row.non_completed ?? 0);
   const completedWithChanges = Number(row.completed_with_changes ?? 0);
+  const staleRunningUpstream = Number(row.stale_running ?? 0);
 
   // Commit B — evaluatedAt (== `now`, i.e. RUN_AT) deleted: it duplicated
   // pipeline_runs.started_at and had zero consumers (two independent WF3
   // review seats ruled it should go, not gain one).
-  const base = { ownStarted, ownCompleted, ownLastRecordsMeta, nonCompleted, completedWithChanges };
+  const base = { ownStarted, ownCompleted, ownLastRecordsMeta, nonCompleted, completedWithChanges, staleRunningUpstream };
 
   // No-completed-run-ever arm — fail-safe RUN (never skip on an absent baseline).
   if (!ownCompleted) {
