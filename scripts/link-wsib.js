@@ -43,7 +43,15 @@ const FORCE_FULL_ENV = 'LINK_WSIB_FORCE_FULL';
 // every form the pipeline_runs.pipeline column can carry for this script: the
 // two chain-scoped forms run-chain.js writes (`${chainId}:link_wsib`) plus the
 // bare manifest slug plus this script's own `pipeline.run('link-wsib', ...)`
-// name for a standalone/manual invocation.
+// name.
+// F2 (B3 output-panel remediation) — CORRECTED: the bare/hyphenated forms are
+// NOT "for a standalone/manual invocation" advancing any anchor — pipeline.run()
+// (scripts/lib/pipeline.js) never writes a pipeline_runs row at all; only
+// run-chain.js (the chain orchestrator, parsing a child's PIPELINE_SUMMARY
+// stdout) does. A bare `node scripts/link-wsib.js` run therefore creates NO
+// pipeline_runs row and cannot advance this (or any) gate's own-last anchor.
+// The bare/hyphenated slugs remain in this set harmlessly — they cost nothing
+// to carry and cover a future caller that DOES write under those names.
 const OWN_SLUGS = ['sources:link_wsib', 'permits:link_wsib', 'link_wsib', 'link-wsib'];
 // Upstream producers of the two inputs link_wsib matches: wsib_registry (built
 // by load_wsib, sources-chain only) and entities' name_normalized (built by
