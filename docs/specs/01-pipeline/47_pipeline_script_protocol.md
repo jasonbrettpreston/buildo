@@ -281,6 +281,30 @@ produce race conditions on DELETE/UPSERT, double-fired alerts, and non-determini
 > Supavisor session pooler DROPS startup params (`options` and the `statement_timeout`
 > startup param — all verified live). Scripts MUST NOT assume a server-side per-statement
 > cap exists, nor re-SET it themselves.
+>
+> **AMENDED 2026-08-19 (WF3 P0) — the rule is "one authority per connection factory", not
+> "JS only".** The sentence above was written when `createPool()` was the only factory, and
+> read literally it FORBADE the two python entry points from fixing themselves. They do not
+> and cannot use `createPool()`: `scripts/aic-orchestrator.py` and `scripts/aic-scraper-nodriver.py`
+> call `psycopg2.connect()` directly, so **they inherited the 2min cap for a year** — which
+> killed `deep_scrapes` at step 1 on 2026-08-19 (GH run 32270233708, `populate_queue`
+> cancelled at 144.8s, SQLSTATE 57014). Restated:
+>
+> * **A connection FACTORY is the authority for its own connections** and MUST issue the
+>   session `SET` — `createPool()` for Node, `get_db_connection()` for each python entry point.
+> * **Every other script MUST NOT** assume a cap exists, nor re-SET it — unchanged.
+> * Both languages honour the SAME env var (`PIPELINE_STATEMENT_TIMEOUT_MS`) and the SAME
+>   default (`0`), drift-guarded by `scripts/tests/test_pg_statement_timeout.py::test_D1_*`.
+> * **One deliberate divergence:** python treats an EMPTY STRING as unset; Node throws on it.
+>   GH Actions interpolates an undefined variable to `''` (the `86868387` first-cron crash),
+>   and `fa9e984c` (11:06) predates that lesson (`86868387`, 15:30 the same day) by ~4h and
+>   was never revisited. Mirroring the JS faithfully would import a bug. Asserted by
+>   `test_D2_the_empty_string_divergence_from_node_still_exists`, which reds if the JS ever
+>   closes the gap. **The Node side has the same latent gap — filed to `review_followups`.**
+> * The python factories additionally need a forced-autocommit window around the `SET`
+>   (a bare `SET` leaves the connection INTRANS, breaking `OutcomeWriter`, and reverts on
+>   `rollback()`) and must CLOSE the connection if the `SET` fails (`psycopg2.connect()` is
+>   otherwise atomic). Node gets both for free via the pool's `release(setErr)`.
 
 ### 5.2 Lock ID convention
 

@@ -96,3 +96,49 @@ def reload_scraper(monkeypatch):
         return module
 
     return _reload
+
+
+@pytest.fixture
+def live_db(orchestrator):
+    """Real-DB tier (Spec 119 §2 "Live-DB smoke"). Returns a psycopg2 DSN dict.
+
+    FUNCTION-scoped deliberately: a session-scoped fixture cannot request
+    `monkeypatch` (pytest raises ScopeMismatch), and every live case here
+    monkeypatches PGOPTIONS / PIPELINE_STATEMENT_TIMEOUT_MS.
+
+    Resolves its DSN EXACTLY as get_db_connection() does — by depending on the
+    module fixture, whose import performs the `.env` load — rather than probing
+    an instance of its own choosing. WF3 P0 fold-validation (2026-08-19) found
+    `.env` carrying a DUPLICATE PG_* block: python's loader is first-wins and
+    Node's dotenv is last-wins, so the two runtimes silently resolved to
+    DIFFERENT databases. The duplicate is now removed, but this fixture stays
+    bound to the module's own resolution so it can never drift again.
+
+    Skips loudly (never fails) when no DB is reachable: pipeline-lint.yml runs
+    this harness with no postgres service.
+    """
+    psycopg2 = pytest.importorskip('psycopg2')
+    dsn = {
+        'host': os.environ.get('PG_HOST', 'localhost'),
+        'port': int(os.environ.get('PG_PORT') or '5432'),
+        'dbname': os.environ.get('PG_DATABASE', 'buildo'),
+        'user': os.environ.get('PG_USER', 'postgres'),
+        'password': os.environ.get('PG_PASSWORD', 'postgres'),
+    }
+    try:
+        probe = psycopg2.connect(connect_timeout=5, **dsn)
+    except Exception as err:  # noqa: BLE001 - skip on ANY connect failure, by design
+        pytest.skip(f"real-DB tier: no Postgres at {dsn['host']}:{dsn['port']} ({err})")
+    try:
+        cur = probe.cursor()
+        # Assert the resolved target's schema, not just its reachability — a
+        # reachable-but-stale instance is the trap Adversary 1 identified.
+        cur.execute("SELECT to_regclass('public.pipeline_runs'),"
+                    "       to_regclass('public.permit_scrape_outcomes')")
+        runs, outcomes = cur.fetchone()
+        if runs is None or outcomes is None:
+            pytest.skip(f"real-DB tier: schema not current on {dsn['dbname']} "
+                        f"(pipeline_runs={runs}, permit_scrape_outcomes={outcomes})")
+    finally:
+        probe.close()
+    return dsn
