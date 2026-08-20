@@ -369,14 +369,84 @@ def log(level, tag, msg, context=None):
 # ---------------------------------------------------------------------------
 # Database
 # ---------------------------------------------------------------------------
+# Message held as a constant so the raises below stay short (ruff TRY003).
+BAD_STATEMENT_TIMEOUT = 'PIPELINE_STATEMENT_TIMEOUT_MS must be a non-negative integer (ms), got: %r'
+
+
+def _statement_timeout_ms():
+    """Python authority for Spec 47 §5.1's per-statement cap.
+
+    Mirrors scripts/lib/pipeline.js's withPipelineStatementTimeout(): same env
+    var, same default of 0 (chains are batch jobs — their outer bound is the
+    workflow step `timeout-minutes`, not a per-statement cap).
+
+    DELIBERATELY STRICTER than that JS on one point: an empty string is UNSET,
+    not an error. GH Actions interpolates an undefined variable to '' — the
+    2026-07-29 first-cron crash (86868387). pipeline.js (fa9e984c, 11:06)
+    predates that lesson (86868387, 15:30 the SAME DAY) by ~4h and was never
+    revisited, so mirroring it faithfully would import a bug.
+    NB: `os.environ.get(...) or '0'` would be a silent no-op — the explicit
+    empty-string check below is the point.
+
+    No UPPER bound by design: the server is the authority on this parameter's
+    range (it rejects > 2147483647 with InvalidParameterValue/22023). Python
+    validates only what python can know.
+    """
+    raw = os.environ.get('PIPELINE_STATEMENT_TIMEOUT_MS')
+    if raw is None or raw == '':
+        return 0
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        raise ValueError(BAD_STATEMENT_TIMEOUT % (raw,)) from None
+    if value < 0:
+        raise ValueError(BAD_STATEMENT_TIMEOUT % (raw,))
+    return value
+
+
 def get_db_connection():
-    return psycopg2.connect(
+    """Connect, then lift the server's session statement_timeout (Spec 47 §5.1).
+
+    The Supabase cloud session default is 2min and the Supavisor pooler DROPS
+    startup params, so the cap can only be cleared by a session SET on the
+    established connection.
+
+    FENCE (autocommit window) — load-bearing HERE on two counts:
+      1. A bare SET leaves the connection INTRANS, and OutcomeWriter._connect()
+         (below) then assigns conn.autocommit = True, which psycopg2 rejects
+         with ProgrammingError — i.e. the naive fix takes the scrape-outcome
+         ledger down.
+      2. A plain SET inside an implicit transaction REVERTS on conn.rollback(),
+         and this module rolls back at :2205, :2859, :3157, :3204 — so without
+         the window the cap would silently re-apply mid-scrape.
+         (Line numbers re-derived POST-insertion: this docstring's first draft
+         cited pre-diff positions, off by the +68 lines this change itself adds.)
+
+    FENCE (close on failure): psycopg2.connect() is atomic; connect-then-configure
+    is not. On a failed SET the connection is closed before re-raising, mirroring
+    pipeline.js's client.release(setErr) — this matters most here, where
+    OutcomeWriter._connect() runs lazily on every record() retry. The restore is
+    on the SUCCESS path ONLY — a `finally` would assign autocommit on an
+    already-closed connection and mask the real error with InterfaceError.
+    """
+    conn = psycopg2.connect(
         host=os.environ.get('PG_HOST', 'localhost'),
         port=int(os.environ.get('PG_PORT') or '5432'),  # `or`: empty-string-safe, same as module-level env reads
         dbname=os.environ.get('PG_DATABASE', 'buildo'),
         user=os.environ.get('PG_USER', 'postgres'),
         password=os.environ.get('PG_PASSWORD', 'postgres'),
     )
+    timeout_ms = _statement_timeout_ms()
+    prev_autocommit = conn.autocommit
+    conn.autocommit = True
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f'SET statement_timeout TO {int(timeout_ms)}')
+        conn.autocommit = prev_autocommit
+    except Exception:
+        conn.close()
+        raise
+    return conn
 
 
 # ---------------------------------------------------------------------------

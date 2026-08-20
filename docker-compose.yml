@@ -1,6 +1,16 @@
-# Buildo local Postgres (PostGIS) — the canonical dev database.
+# Buildo local Postgres (PostGIS) — the COLD SPARE, not the canonical dev database.
 #
-# Connects to localhost:5432/buildo (matches .env: PG_HOST/PG_PORT/PG_DATABASE/PG_USER).
+# DEMOTED 2026-07-18 by the Supabase cutover (Spec 113 §Cutover-moment; program-plan D13):
+# the canonical dev DB is now local Supabase at 127.0.0.1:54322/postgres. This compose stack
+# and its `buildo_pgdata` volume are RETAINED as the offline emergency-restore target through
+# Phase 5.2, then decommissioned in that phase's documentation sweep — demoted, not deleted.
+#
+# Connects to localhost:5432/buildo, addressed in .env by the PREFIXED keys
+# LEGACY_DOCKER_PG_HOST / _PG_PORT / _PG_DATABASE / _PG_USER / _PG_PASSWORD.
+# The prefix was added 2026-08-19 (WF3 P0): these keys previously duplicated the authoritative
+# PG_* names, and because python's .env loader is FIRST-wins while Node's dotenv is LAST-wins,
+# the two runtimes silently resolved to DIFFERENT databases — the AIC python scripts had been
+# running against this cold spare on every local invocation since the cutover.
 # Uses a NAMED volume (buildo_pgdata) rather than an anonymous one: anonymous volumes get
 # orphaned whenever the container is recreated (Docker update, image bump, `down`) and are
 # silently deleted by `docker volume prune` — the most likely cause of the 2026-06-10 data

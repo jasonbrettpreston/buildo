@@ -32,6 +32,8 @@ npm-debug.log*
 # env files
 .env
 .env*.local
+# WF3 P0 2026-08-19: .env backups carry live credentials
+.env.backup-*
 
 # secrets (service account keys, API credentials — NEVER commit)
 /secrets/
