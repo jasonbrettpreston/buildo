@@ -58,7 +58,7 @@ These were put to the operator as the three questions the spec could not answer 
 
 > ### One shape · one menu · one compute
 >
-> **Every step in the estate is the same step, except for its compute.** It declares **17 categories**; those declarations answer **43 concerns**; every answer is chosen from a **closed menu**, and `"none"` is always a legal answer that must be written down. The library does everything else — identically, 64 times.
+> **Every step in the estate is the same step, except for its compute.** It declares **17 categories**; those declarations answer **49 concerns**; every answer is chosen from a **closed menu**, and `"none"` is always a legal answer that must be written down. The library does everything else — identically, 64 times.
 >
 > **Three machines, and a step author touches only the first:**
 >
@@ -68,7 +68,7 @@ These were put to the operator as the three questions the spec could not answer 
 > | **2** | **DELEGATE** | nobody — the library | `pipeline.step(descriptor, compute)` runs the lifecycle |
 > | **3** | **VERIFY** | nobody — generated | the validator, the checks, the ledger, the differential |
 >
-> **The compute is the only thing anyone writes twice.** That is the whole design, and §1.4's Concern Index is the proof: 42 of 43 concerns resolve to a menu, a runner behaviour, or an explicit `"none"`. Concern 40 is the compute. There is no fourth thing.
+> **The compute is the only thing anyone writes twice.** That is the whole design, and §1.8's Concern Index is the proof: 48 of 49 concerns resolve to a menu, a runner behaviour, or an explicit `"none"`. Concern 40 is the compute. There is no fourth thing.
 
 ### 1.0 THE BLOCK — the whole standard on one page
 
@@ -118,7 +118,7 @@ These were put to the operator as the three questions the spec could not answer 
 
 ---
 
-### 1.0 Where each machine lives — and the three questions this answers
+### 1.1 Where each machine lives — and the three questions this answers
 
 Three questions get asked of this design repeatedly. Here they are, answered once.
 
@@ -128,7 +128,7 @@ Three questions get asked of this design repeatedly. Here they are, answered onc
 
 | Part | Where | What it does |
 |---|---|---|
-| **DECLARE the shape** | `outputs.write_discipline.class` | one of **13 measured classes** (§1.2). ⛔ Class **D** (insert-only, no retraction) and **H** (set-based, unscoped) are **banned for new steps** |
+| **DECLARE the shape** | `outputs.write_discipline.class` | one of **13 measured classes** (§1.4). ⛔ Class **D** (insert-only, no retraction) and **H** (set-based, unscoped) are **banned for new steps** |
 | **GENERATE the SQL** | the library | ⚠️ **`class` selects the statement.** The runner emits the upsert, the departure delete and the retraction *from the class* — a hand-written `INSERT … ON CONFLICT` in a compute **fails lint** (claim #57, the 525K-row silent outage) |
 | **GUARD every column** | `write_discipline.guard` | `IS DISTINCT FROM` over **all declared columns**; opting out needs a `why` (claim #58). ⚠️ An unguarded `ON CONFLICT DO UPDATE` still writes a **new tuple version** when nothing changed — the heap-churn mechanism Spec 118 §1 identifies |
 | **PROVE it** | `write_discipline.idempotent_rerun` + a check | `zero_writes` is **asserted, not asserted-to**: run twice, assert the second run updates 0 — the founding commit's own acceptance standard (`7e130bff`, Severity HIGH, `lessons.md:28`). Plus `expected_change_ratio` measured every run from `rows_scanned` / `rows_changed` |
@@ -163,7 +163,7 @@ Three questions get asked of this design repeatedly. Here they are, answered onc
 
 #### ⓸ And the archetype decides which of the 17 you must answer
 
-`identity.archetype` is not a label — **it drives the required-field profile** (§1.6). Measured across `sources`: ING 9 · ENR 6 · AST 5 · LNK 3 · MAT 1 · MCH 1 · BKF 1 · REC 1 = **27**.
+`identity.archetype` is not a label — **it drives the required-field profile** (§1.10). Measured across `sources`: ING 9 · ENR 6 · AST 5 · LNK 3 · MAT 1 · MCH 1 · BKF 1 · REC 1 = **27**.
 
 | Archetype | Forces |
 |---|---|
@@ -176,7 +176,7 @@ Three questions get asked of this design repeatedly. Here they are, answered onc
 
 ---
 
-### 1.1b ⚠️ THE FROZEN CONTRACT — 17 categories, set in stone
+### 1.2 ⚠️ THE CONTRACT — 17 categories, set in stone
 
 > **This is the load-bearing rule of the whole programme.** The category list and the allowed responses are decided **once, for all 64 steps**. Extending a `!` vocabulary is a **runner change reviewed once**, never a per-step invention. A step that needs a value the menu lacks does not add one — it escalates (§7.3's kill criteria).
 >
@@ -192,7 +192,7 @@ node scripts/violations/extract-vocab.mjs docs/reports/generated/122-vocabulary.
 
 ⚠️ **It found 6 fields declared twice with differing values, independently reproducing the 3 that Spec 121 §12.1a already named** — `identity.archetype` (`INGESTOR|…` vs `ING|…`) · `identity.lock` (uniqueness scope) · `guards.schema_drift` (**one variant carries `warn`, the other does not — both contain `propagate`; the differing tokens are `warn` · `severity` · `blocking`, and a generator cannot choose**) — plus 3 borderline (`outputs.replay` bans `append_unsafe` two different ways; `staleness.pending`; `guards.empty_source`). **All six are S1 deliverables. The contract cannot be frozen until they are resolved in Spec 120 §3.2.**
 
-### 1.1 The 17 categories
+### 1.3 The 17 categories
 
 | # | Category | Declares | Vocabulary |
 |---|---|---|---|
@@ -228,7 +228,7 @@ node scripts/violations/extract-vocab.mjs docs/reports/generated/122-vocabulary.
 
 > ⚠️ **This spends Spec 120 §13's complexity budget.** §12.12 **B2** caps declaration categories at 13 — *"already 2 o'clock on the Configuration Complexity Clock"* — and requires a named deletion for growth. **Going to 17 is a recorded decision, not drift.** The justification is that each addition *removes* a class of per-step invention rather than adding one.
 
-### 1.2 ⚠️ `outputs.write_discipline` — update, never rewrite
+### 1.4 ⚠️ `outputs.write_discipline` — update, never rewrite
 
 **This is the defect class that made `enrich_parcels` the chain's largest cost, and it was not standardized anywhere.**
 
@@ -270,14 +270,50 @@ Spec 120 has `outputs.replay` (`idempotent_upsert` · `full_replace` · ⛔ `app
 **The full declaration:**
 
 ```jsonc
-"write_discipline": {
-  "class": "guarded_upsert",          // ! one of the 13 above; D and H banned for new steps
-  "guard": "is_distinct_from",        // ! is_distinct_from · none(+why)
-  "guard_columns": "all_declared",    // all_declared · <subset>(+why)
-  "expected_change_ratio": "<= 0.05", // rows_changed / rows_scanned, per run
-  "idempotent_rerun": "zero_writes"   // ! zero_writes · bounded(+why) · not_idempotent(+why)
+// ⚠️ RESHAPED 2026-08-23 — `write_discipline` is PER WRITE TARGET, not per step.
+// The scalar form was refuted: >=9 of 27 steps perform two or more disciplines,
+// several to the SAME table in sequence. `load-neighbourhoods` was labelled
+// class A while doing 6 unguarded set-based UPDATEs -- a class-A label hiding
+// banned class H. A scalar cannot say "the retraction is step-scoped and the
+// rebuild is batch-scoped", which is the chain's largest partial-fill exposure.
+"outputs": {
+  "writes": [
+    { "table": "neighbourhoods", "key": "area_short_code",
+      "columns": ["name", "geom"],
+      "write_discipline": {
+        "class": "guarded_upsert",         // ! one of the 13
+        "guard": "is_distinct_from",       // ! is_distinct_from · none(+why)
+        "guard_columns": "all_declared",
+        "expected_change_ratio": "<= 0.05",
+        "idempotent_rerun": "zero_writes", // ! run twice, second run updates 0
+        "txn_scope": "batch"               // ! per-target, NOT per-step
+      } },
+
+    // The SAME table, a SECOND discipline, declared separately and in order.
+    // Today this is 6 unguarded UPDATEs the class-A label concealed.
+    { "table": "neighbourhoods", "key": "area_short_code",
+      "columns": ["profile_pop", "profile_income"],
+      "write_discipline": {
+        "class": "set_based_scoped",       // G, not the banned H — because it is SCOPED
+        "guard": "is_distinct_from",
+        "guard_columns": "all_declared",
+        "expected_change_ratio": "<= 1.0", // a profile refresh legitimately rewrites
+        "idempotent_rerun": "zero_writes",
+        "txn_scope": "step"
+      } }
+  ]
 }
 ```
+
+**Three rules the per-target form makes enforceable, and the scalar form could not:**
+
+| Rule | What it retires |
+|---|---|
+| **Every write target declares its own class, guard and `txn_scope`** | the class-A label over 6 unguarded UPDATEs; `link_massing`'s step-scoped DELETE followed by ~870 batch-scoped inserts |
+| ⚠️ **A target this step does not own is a `cascade`, never a `write`** | `load-massing.js:208,222` DELETEs from `parcel_buildings` (step 15's table) while `emitMeta:480-483` declares only `building_footprints` — the undeclared-telemetry class (orphan #234) |
+| **Order is declared and the runner executes it in order** | "retract then rebuild" becomes a sequence the runner owns, not an ordering convention in prose |
+
+⚠️ **Two of the 13 ported classes are wrong at the source and must be re-derived, not copied.** Evidence base §3f mislabels **5 steps**: `load_heritage` (A→A+B, and its `Del` column says 0 while it deletes at `:602`) · `load_zoning` (A→A+B+C, same `Del=0` error) · `neighbourhoods` (A→A+H) · `link_wsib` (K→E+G+K) · `refresh_snapshot` (M `snapshot_append` → a **daily-keyed upsert**, `:593` `ON CONFLICT (snapshot_date) DO UPDATE`). **§1.2 previously said "port, do not invent." That was right about the source and wrong about its accuracy — the port must be verified per step, not trusted.**
 
 ⚠️ **`class` is not decoration — it selects the generated SQL.** The runner emits the upsert, the departure delete and the retraction *from the class*, so class D's missing retraction and class H's missing scope become **unexpressible for a new step** rather than a breach discovered later.
 
@@ -288,7 +324,67 @@ Spec 120 has `outputs.replay` (`idempotent_upsert` · `full_replace` · ⛔ `app
 
 > **`full_replace` and `not_idempotent` remain legal — they require a `why`.** `load-centreline`'s staging-table full-replace is spec-sanctioned (Spec 62 **L26**, 47K rows, HEAD/ETag-gated) and must stay expressible. **The rule is not "never rewrite" — it is "never rewrite silently."**
 
-### 1.3 ⚠️ `sharing` — the second classification axis, and it is where the estate actually bites
+### 1.5 ⚠️ `staleness` RESHAPED — `pending` was three axes wearing one name
+
+**The scalar `pending` was refuted.** It cannot express the eight measured gate mechanisms because four of them do not declare *which rows* at all — they declare *whether to act* or *in which mode*.
+
+| Axis | Question it answers | Menu |
+|---|---|---|
+| **`scope`** | **which rows** are eligible | `<sql predicate>` · `all` · `none` |
+| **`trigger`** | what makes the step **eligible to act** | `source_validator` (HEAD/ETag, pre-fetch) · `content_hash` (post-fetch) · `upstream_ledger` · `code_version` · `interval` · `always` · `none` |
+| **`mode_select`** | what the trigger **chooses** | `skip` · `incremental` · `full` · `defer` · `tri_state` |
+
+```jsonc
+"staleness": {
+  "scope":       "heritage_dataset_version_when_enriched IS DISTINCT FROM :version",
+  "trigger":     ["upstream_ledger", "code_version"],   // ! a SET, not a scalar
+  "mode_select": "tri_state",                            // full | incremental | skip
+  "checkpoint":  "none",
+  "interval":    "none",
+  "fingerprint": "~",                 // always on
+  "fingerprint_inputs": ["scripts/lib/massing-full-gate.js"],  // ⚠️ NEW — see below
+  "logic_version": "none",
+  "on_fingerprint_change": "queue"
+}
+```
+
+**Why each axis had to be separated — one measured mechanism per row:**
+
+| Mechanism | The axis the scalar could not hold |
+|---|---|
+| **Run-ledger gate** (`source-version.js:293-380`) | a **4-arm** decision over `pipeline_runs`, fail-safe biased to RUN. `trigger: upstream_ledger` names it; the arms are runner-owned |
+| **Two-tier metadata→hash** (`:161-188` pre-download, `:207` post-download) | ⚠️ **two gates at two lifecycle positions** — because tier-1 gives false negatives (*"CKAN re-stamps `last_modified` on files whose content never changed"*). `trigger` is a **set**, ordered by lifecycle position |
+| **Massing code+data veto** (`massing-full-gate.js:36-58`) | the output is a **mode**, not a skip. `on_fingerprint_change` offered only `queue · run` — never *"run in full mode"* |
+| **Scope-defer** (`enrich-parcels.js:1763`) | the **inverse** of a staleness gate: *too much* changed, so refuse. `mode_select: defer` |
+| **`decideCentrelineMode`** (`enrich-centreline.js:420-424`) | returns **`full \| incremental \| skip`** from two inputs. `mode_select: tri_state` |
+| ⚠️ **The 9th mechanism nobody counted** | four loaders short-circuit acquisition on `fs.existsSync` alone (`load-parcels.js:231-237`, ~327 MB; `load-massing.js:145-165`). **A step declaring `trigger: source_validator` while its acquisition short-circuits on a cached file is declaring a fiction** — and `load-massing.js:28-36` records the 86-minute production failure this caused. **This is why `acquisition` is a P0 missing category, not a `staleness` value** |
+
+⚠️ **`fingerprint_inputs` is new and it closes a contradiction.** Spec 120 §4.1a ② rules that *"an unenumerated external input is a declaration defect"* — but `fingerprint` is marked `~ derived, do not declare`, so **there was no field to enumerate them in**. `LINK_MASSING_CODE_VERSION` lives in `scripts/lib/`, not in the step, and it triggers a full destructive rebuild. Claim **#52b** is an orphan today for exactly this reason.
+
+### 1.6 ⚠️ `execution.on_row_error` RESHAPED — 3 values for 14 behaviours
+
+**Measured: 14 distinct behaviours across 58 catch sites. Ten had no legal value.** The menu was row-scoped; the behaviours are not.
+
+```jsonc
+"execution": {
+  "on_row_error":   "quarantine(max_pct: 0.01)",  // ! fail_fast · quarantine · skip
+  "on_batch_error": "fail_step",                  // ⚠️ NEW — ! fail_step · drop_batch(+why) · retry
+  "on_check_error": "fail_step",                  // ⚠️ NEW — ! fail_step · warn_row · omit_row(+why)
+  "on_degrade":     "none"                        // ⚠️ NEW — ! none · prior_values(+why) · zeroes(+why)
+}
+```
+
+| New field | The behaviour it names | Measured at |
+|---|---|---|
+| **`on_batch_error`** | a **whole batch** swallowed and discarded, counted as one row error | `load-address-points.js:374-378` · `load-parcels.js:550-554` · `load-massing.js:378-382`. The comment concedes *"lost rows inflate this count slightly"* |
+| **`on_check_error`** | the **check query itself** errors — today the row is silently *omitted*, so a dropped table is indistinguishable from a healthy one | `assert-data-bounds.js:607-610` · `assert-schema.js:445-449` |
+| ⚠️ **`on_degrade`** | on failure, **substitute prior-run values or zeroes and present them as current** | `refresh-snapshot.js:342-346,359-363,372-376,399-405` — reuses the last snapshot's numbers, **no audit row**, verdict still hardcoded `'PASS'` at `:651` |
+
+> ⚠️ **`on_degrade` is the one that matters.** Nothing in the contract could express *"on failure, serve stale data as if it were fresh"* — and it is live in four places in one step, behind a PASS. **Declaring it does not make it acceptable; it makes it visible, and `+why` makes it adjudicated.**
+
+**Four true silent swallows have no legal value under any of the four fields and must be fixed, not declared:** `link-massing.js:557-559` (invalid geometry → parcel silently reclassified as no-match, **no counter**) · `assert-engine-health.js:200,234` (`.catch(() => ({rows: []}))` → the ping-pong ratio computes 0 and **silently passes**) · plus the two `refresh-snapshot` zero-substitutions.
+
+### 1.7 ⚠️ `sharing` — the second classification axis, and it is where the estate actually bites
 
 **Archetype answers *what kind of step is this*. Sharing answers *how many chains does it have to be correct in at once*.** They are independent, and the second is the one C4 exists for.
 
@@ -337,7 +433,7 @@ The 4 estate-only extras are `permits ∩ coa`: `link_coa` · `classify_lifecycl
 
 > **A shared step's differential must be green in EVERY chain it appears in — up to 4.** Converting `refresh_snapshot` against `sources` alone proves a quarter of it. That is C4's whole reason for existing, and `sharing.chains` is what makes the gate enumerable instead of remembered.
 
-### 1.4 THE CONCERN INDEX — 43 concerns, each with exactly one home
+### 1.8 THE CONCERN INDEX — 49 concerns, each with exactly one home
 
 #### How a concern differs from a category — and why this is not a second list
 
@@ -347,7 +443,7 @@ They are not parallel lists, and the Concern Index **adds no declaration surface
 
 | Home | Meaning | Count |
 |---|---:|---:|
-| one of the **17 categories** | the step declares it | **38** |
+| one of the **17 categories** | the step declares it | **44** |
 | **RUNNER** | the library owns it; **nothing is declared per step, and a step cannot opt out** | **4** |
 | **OPEN** | the compute | **1** |
 
@@ -389,10 +485,16 @@ Hard-fails on: a concern with **no** home · a concern with **two** homes · a h
 | # | Concern | Declared in | Allowed responses |
 |---|---|---|---|
 | 1 | **Row errors** | `execution.on_row_error` | `fail_fast` · `quarantine(max_pct)` · `skip(max_pct)` |
+| 1b | ⚠️ **Batch errors** | `execution.on_batch_error` | `fail_step` · `drop_batch(+why)` · `retry` — **NEW: a whole batch swallowed, counted as one row error** |
+| 1c | ⚠️ **Check-query errors** | `execution.on_check_error` | `fail_step` · `warn_row` · `omit_row(+why)` — **NEW: today a dropped table is indistinguishable from a healthy one** |
+| 1d | ⚠️ **Degraded mode** | `execution.on_degrade` | `none` · `prior_values(+why)` · `zeroes(+why)` — **NEW: serving stale data as current, live in 4 places behind a PASS** |
 | 2 | **Step errors / throws** | **RUNNER** | nothing declared — the library owns `try/finally`, `step_error`, and error class |
 | 3 | **Crashes (SIGKILL, OOM, ceiling)** | **RUNNER** + `execution.partial_fill` | `atomic` · `batched` · `staged` · `none` · `mixed` — ⚠️ what a crash *leaves behind* |
 | 4 | **Reconcile the previous run** | **RUNNER** (A3: a `reconcile` step at chain head) | nothing declared |
 | 5 | **Gating / skip** | `staleness.pending` | `<sql predicate>` · `all` · `source_changed` · `none` — ⚠️ must express all **8 measured mechanisms** |
+| 5b | ⚠️ **Eligibility trigger** | `staleness.trigger` | `source_validator` · `content_hash` · `upstream_ledger` · `code_version` · `interval` · `always` · `none` — **a SET, ordered by lifecycle position** |
+| 5c | ⚠️ **Mode selection** | `staleness.mode_select` | `skip` · `incremental` · `full` · `defer` · `tri_state` — **what the trigger CHOOSES** |
+| 14b | ⚠️ **External fingerprint inputs** | `staleness.fingerprint_inputs` | path list · `none` — **NEW: §4.1a ② demands enumeration and there was no field for it (orphan #52b)** |
 | 6 | **Lock contention** | `sharing.on_contention` | `self_skip` · `wait` · `fail` |
 | 7 | **Time budget** | `execution.budget` | duration · `none` |
 | 8 | **Statement timeout** | `execution.statement_timeout` | duration · `none` |
@@ -459,7 +561,7 @@ Same shape for concern 9: `step_timeout_minutes` is manifest-only and **1 of 67 
 >
 > ⚠️ **This is concern 15 of 40, and it was found by writing the table rather than by review.** That is the argument for the table.
 
-### 1.5 What is NOT a canned response
+### 1.9 What is NOT a canned response
 
 **15 of 17 categories are fully closed menus.** Two are deliberately not, and the boundary matters:
 
@@ -470,7 +572,7 @@ Same shape for concern 9: `step_timeout_minutes` is manifest-only and **1 of 67 
 
 > ⚠️ **No vocabulary could supply that `WARD` is text in the CoA *Active* resource and `WARD_NUMBER` is int4 in *Closed*.** That is what `checks[].expect` is for. Claiming 100% canned oversells it — the honest claim is: **the shape, the machinery and the verdict are canned; the domain facts and the interpretation are authored.**
 
-### 1.6 ⚠️ `identity.archetype` becomes load-bearing — it drives required fields
+### 1.10 ⚠️ `identity.archetype` becomes load-bearing — it drives required fields
 
 **No 17th category is needed for "type of step" — `archetype` already is it**, and Spec 120 §6b already uses it (*"`reset` generated per archetype"*, 6 archetype resets). **This makes it enforce rather than describe.**
 
@@ -694,7 +796,7 @@ Spec 120 §14.2's 4-tuple, unchanged: **rows** (full state, ordered by PK) · **
 
 ### 5.4 The lock-test convention ⚠️ initially missed, verified
 
-`:297` passes (§1.2). But the **same file** carries three further per-script loops that assert *source text* `[READ]`:
+`:297` passes (§1.4). But the **same file** carries three further per-script loops that assert *source text* `[READ]`:
 
 | Site | Asserts |
 |---|---|
@@ -1027,6 +1129,57 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 2. **The step file is executable**, so every descriptor-consuming tool depends on A1 holding. If A1 is overridden, re-read §5 entirely.
 
 ---
+
+## 12. ⛔ OUTSTANDING BEFORE VERIFICATION — the ratification checklist
+
+> **This spec is NOT verifiable until every row below is closed.** Two of its own generators exit non-zero today and are deliberately left that way: tuning a checker until it stops firing is the laundering the tool exists to prevent.
+
+### 12.1 Blocking — a generator says no
+
+| # | Item | Signal | Why it blocks |
+|---|---|---|---|
+| **B1** | **6 unresolved vocabulary conflicts** in Spec 120 §3.2 | `extract-vocab.mjs` **exits 1** | Three are genuine value disagreements a generator **cannot arbitrate**: `identity.archetype` (`INGESTOR\|…` vs `ING\|…`) · `identity.lock` (uniqueness scope) · `guards.schema_drift`. **A frozen contract cannot be emitted over an unresolved conflict** |
+| **B2** | **54 unadjudicated orphan claims** | `map-categories.mjs` **exits 1** | Each is a concern the contract may not be able to express. Was 62; the F1 fix **raised** it by removing a truncation — the count moved in the direction of honesty |
+| **B3** | ⚠️ **`extract-vocab.mjs` covers 8 of 17 categories** | — | `identity · inputs · outputs · staleness · guards · execution · checks · recovery` only. **Nine have no machine-extracted menu**, including all four this spec adds. *"The vocabulary is GENERATED, never transcribed"* is currently true of **less than half of it** |
+
+### 12.2 Missing categories — P0, each present in 2+ steps
+
+| Category | The behaviour it would declare |
+|---|---|
+| ⚠️ **`acquisition`** | Four loaders use `fs.existsSync` as their **entire** freshness policy — a 9th, undeclared gate that **defeats `staleness.trigger`**. `load-massing.js:28-36` records the 86-minute production failure it caused |
+| **`terminals`** | 10 exit paths in one step, each with a hand-written `records_meta`. **The source of the 7 hardcoded skip-path `'PASS'`es** this spec sets out to retire |
+| **`maintenance`** | `VACUUM ANALYZE` on 4 tables across 3 steps. It **constrains `txn_scope`** (VACUUM cannot run in a transaction), is unbudgeted, targets tables the issuing step does not own — and an ASSERT does it while `outputs` is forced `"none"` |
+| **`plan_shape`** | The physical query plan as a contract. `refresh-snapshot.js:29-42`: *"the fix is not 'make the query faster' but 'make the query's SHAPE immune to that statistic'"*. `guards.requires.indexes` says an index must **exist**, not that a statement must **bind** it |
+| **`source_key_policy`** | Non-unique source keys, tie-breaks, and key-space migration (`load-massing.js:239-247` — *"Identical geometries produce duplicate hashes … Last write wins"*) |
+| **`guards.requires.on_missing`** | ⚠️ **6 steps use a missing extension as an ALGORITHM SELECTOR, not a failure** — which makes `outputs.columns` a fiction on the degraded branch |
+
+### 12.3 Missing fields inside categories that otherwise absorb their claims
+
+| Field | Homes | Evidence |
+|---|---|---|
+| ⚠️ **`outputs.columns[].vocabulary`** | #202, #237 | A frozen **value domain** per column. `emits` declares **keys**; nothing declares **values** — which is why `ADDRESS_STATUS` read `'None'` for **525,346 of 525,346** rows and passed |
+| **`checks[].accept_until`** | #99, #228 | Baseline acceptance and threshold expiry have **no declared surface**, and #228 already assumes it exists. Largest of the four |
+| **`outputs.write_inventory`** | #236 | *"the runtime write count must equal the declared one"* needs a declared statement count |
+| **`why` liveness** | #239 | Every category carries a `why`; nothing makes one **falsifiable** when its external dependent disappears |
+| **redaction** (`execution.network.redact` or `secrets`) | #276 | Nowhere to declare a value must be scrubbed **before persistence** |
+
+### 12.4 Tool debt — in this order, because order matters
+
+1. ✅ **F1 CLOSED** — the violation column is header-named, not last. It was a **laundering bug**: A.18/A.21 are `# | Class | Occurrences | The test | Status`, so the last cell is the **adjudication**. 33 claims read a truncated haystack; #263/#265/#270 were homed to RUNNER on the words *"eslint … already bans"* while the spec's own verdict on those rows is *"the architecture does NOT close it"* — **and they never surfaced as orphans, so nothing flagged them.**
+2. **Four spelling relaxations** — `empty.source` · `audit.row` · `pipeline.name` · `records_meta`. **Pure defects**: the rules were written in code spelling, the claims use prose spelling.
+3. ⚠️ **Add the `COMPUTE` bucket to `map-categories.mjs`** — §1.8 has **three** homes (categories · RUNNER · **OPEN**); the mapper implements two. **That hole is what let F1's laundering hide.**
+4. Remaining keywords — **only after 1–3**, so the rule set is sized against honest input.
+5. Extend `extract-vocab.mjs` to the nine unextracted categories (B3).
+
+### 12.5 Refuted claims that must not be re-asserted
+
+| Claim | Status |
+|---|---|
+| *"An ASSERT forces `counters: null`"* | ⛔ **REFUTED — 0 of 5** ASSERTs emit null. They emit `0, 0, 1, 1, tableResults.length` |
+| *"Declaring `archetype` retires `run-chain.js:544-550`"* | ⛔ **REFUTED** — `isInfraStep` spans **four archetypes plus name-specific exceptions**; not derivable from an 8-value enum. Needs a separate `gate_exempt` field |
+| *"`checks[].kind` has 12 named types"* | ⛔ **9.** The 12 is Spec 120 §5.0's list of **generators** — a different list |
+| *"Port the 13 update classes, do not invent"* | ⚠️ **Right about the source, wrong about its accuracy** — evidence base §3f mislabels **5 steps**, two with `Del=0` while they delete. **Verify per step; do not trust** |
+| **17 menu values have ZERO instances** | `publish: pointer` · `when: pre` · `quarantine` · `checkpoint` · `interval` · all three `schema_drift`. Aspirational is legitimate for a target state but **must not read as descriptive**. ⚠️ **`severity: PASS` is impossible** — a runtime outcome, never a declarable escalation target |
 
 ## Operating Boundaries
 

@@ -76,6 +76,7 @@ export function parseRegister(markdown) {
   const seen = new Set();
   let section = null;
   let inAppendixA = false;
+  let violationCol = -1;   // index of the column the HEADER names as the violation
 
   for (const line of lines) {
     const h2 = /^##\s+(.*)$/.exec(line);
@@ -89,12 +90,20 @@ export function parseRegister(markdown) {
     const h3 = /^###\s+(A\.\d+)\s+(.*)$/.exec(line);
     if (h3) {
       section = { id: h3[1], title: h3[2].replace(/[*`]/g, '').trim() };
+      violationCol = -1;
       continue;
     }
     if (!section) continue;
 
     const cells = splitRow(line);
     if (!cells || isSeparator(cells)) continue;
+
+    // A header row names its columns. `The violation` (A.1-A.17) and `The test`
+    // (A.18/A.21) are the same thing under two names; `Status` is not.
+    if (/^#$/.test(cells[0].replace(/[*`\s]/g, ''))) {
+      violationCol = cells.findIndex((c) => /the violation|the test/i.test(c));
+      continue;
+    }
 
     const raw = cells[0].replace(/[*`⚠️\s]/g, '');
     const m = ID_CELL.exec(raw);
@@ -106,7 +115,19 @@ export function parseRegister(markdown) {
     // there, not a shape code. Spec 121 records the inconsistency; this respects it.
     const rawShape = cells.length >= 4 ? (cells[2] ?? '').replace(/[*`\s]/g, '') : '';
     const shape = /^[PBRW]$/.test(rawShape) ? rawShape : '';
-    const violation = cells[cells.length - 1] ?? '';
+
+    // ⚠️ The violation column is named by the HEADER, never taken from the end.
+    // Reading cells[last] was a laundering bug: A.18/A.21 are 5-column tables
+    // (`# | Class | Occurrences | The test | Status`), so the last cell is the
+    // ADJUDICATION. Claims #263/#265/#270 were then homed to RUNNER purely because
+    // their adjudication text says "eslint … already bans" — while the spec's own
+    // verdict on those rows is "the architecture does NOT close it". They never
+    // surfaced as orphans, so nothing flagged them. 33 claims read a truncated
+    // haystack this way.
+    const vIdx = violationCol >= 0 && violationCol < cells.length
+      ? violationCol
+      : cells.length - 1;
+    const violation = cells[vIdx] ?? '';
 
     const push = (id) => {
       if (seen.has(id)) return;
@@ -354,10 +375,10 @@ const FIXTURE = [
   '| 52h | suffixed id, LATE letter | P | the [a-e] regex bug |',
   '| 109–111 | an en-dash range row | P | do a thing |',
   '| notanid | must be ignored | P | x |',
-  '### A.18 Incident replay (five columns)',
-  '| # | Claim | Shape | Extra | The violation |',
+  '### A.18 Incident replay (five columns, violation NOT last)',
+  '| # | Class | Occurrences | The test | Status |',
   '|---|---|---|---|---|',
-  '| 200 | five col claim | B | extra col | the real violation |',
+  '| 200 | five col claim | B | the real violation | ADJUDICATION — must NOT be read |',
   '## Appendix B — defects, NOT the register',
   '| 999 | must not be captured | P | x |',
 ].join('\n');
@@ -375,7 +396,7 @@ function selfTest({ quiet = false } = {}) {
 
   const five = got.find((c) => c.id === '200');
   if (!five) fail.push('5-column section produced no claim');
-  else if (five.violation !== 'the real violation') fail.push(`5-column section: violation read from the wrong column (got "${five.violation}")`);
+  else if (five.violation !== 'the real violation') fail.push(`5-column section: violation read from the wrong column (got "${five.violation}") - the laundering bug`);
   else if (five.section !== 'A.18') fail.push('5-column section mis-attributed');
 
   // A.1 yields 1, 52a, 52h, 109, 110, 111 (=6); A.18 yields 200 (=1).

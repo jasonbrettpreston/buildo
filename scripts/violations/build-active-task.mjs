@@ -46,7 +46,7 @@ const TASK = path.join(ROOT, '.cursor/active_task_programme.md');
 const SPEC_122 = path.join(ROOT, 'docs/specs/01-pipeline/122_pipeline_step_optimization.md');
 
 /** Stage ids, in execution order. A stage id means ONE thing. */
-const STAGE_ORDER = ['P0', 'P0b', 'P0c', 'P1', 'P2', 'P3', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6',
+const STAGE_ORDER = ['P0', 'P0b', 'P0c', 'P1', 'P2', 'P3', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6',
   'C1', 'C2', 'C3', 'C4', 'C5', 'C6'];
 
 // ---------------------------------------------------------------------------
@@ -129,7 +129,10 @@ export function totality({ stages, checklist, claims, planText, specText }) {
   // NB widened 2026-08-23: the first cut matched only `**N categories**` and MISSED
   // `16-category contract` in the very plan it was checking. A drift check that
   // matches one spelling of the thing it guards is not a drift check.
-  const planCat = [...planText.matchAll(/(\d+)[-\s]categor(?:y|ies)/gi)].map((m) => m[1]);
+  //  guard added 2026-08-23: without it, "six missing **P0 categories**" matched
+  // the 0 in P0 and reported a phantom "17 vs 0" disagreement. A drift check that
+  // reads a stage id as a count is worse than no drift check.
+  const planCat = [...planText.matchAll(/(?:^|[^\w])(\d+)[-\s]categor(?:y|ies)/gi)].map((m) => m[1]);
   const specCat = [...specText.matchAll(/(\d+) categories, set in stone/g)].map((m) => m[1]);
   const all = new Set([...planCat, ...specCat]);
   if (all.size > 1) f.push(`category count disagrees across plan/spec: ${[...all].join(' vs ')}`);
