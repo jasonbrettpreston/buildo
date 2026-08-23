@@ -10,6 +10,8 @@
 **Spec 121 is the method and GOVERNS this document.** 123 does not restate 121; it **instantiates** it for one job — converting a pipeline step in place. Where they differ, 121 wins and 123 is wrong.
 **Spec 122** is the target architecture. **Spec 119** owns backend verification doctrine and governs over both.
 
+> ⚠️ **TWO `P` NAMESPACES — disambiguated 2026-08-23.** A grounding audit found `P1` carrying **three incompatible meanings** across four documents. They are now distinct: **`PH-0`…`PH-8`** are Spec 121 §3's **assessment phases** (archaeology, structure, risk class…), used inside this spec. **`P0`…`P3`** are the **programme stages** in `.cursor/queued_task_step_opt_programme.md` (audit instrument · centroid · Phase B · envelope + green run). ⚠️ **A reader who takes the programme's `P1` as satisfying Spec 122 §10's S-gate silently deletes the green-cloud-run precondition** that §11 failure-mode 7 exists to enforce.
+
 **Grounding tiers.** `[READ file:line]` · `[MEASURED <date>]` command recorded · `[generated]` emitted by a committed tool · `[DESIGN]` reasoned, **unverified**.
 
 ---
@@ -26,7 +28,7 @@ That is this document. It is a **procedure run 27 times**, and its success test 
 
 > ⚠️ **A conversion commit never contains a behaviour change** (Spec 121 §4.3). Refactor and behaviour-change are two hats and are never worn at once.
 
-Everything downstream follows from this. It is why the differential gate can be zero-diff, why a defect gets pinned in its wrong form first, and why the plan has a `P1` stage that fixes the centroid bug **before** the programme starts rather than during it.
+Everything downstream follows from this. It is why the differential gate can be zero-diff, why a defect gets pinned in its wrong form first, and why the plan has a **programme stage P1** that fixes the centroid bug **before** the programme starts rather than during it.
 
 ### 1.2 What is generated, and what is authored
 
@@ -45,25 +47,25 @@ Both generators **self-test against a known-bad fixture and refuse to emit if th
 
 ## 2. The assessment — Spec 121 §3, split into batch and per-step
 
-⚠️ **P1, P2 and P4 are mechanical and must NOT be run per step.** Script them once over all 27 and produce one table. Running them per step is how a 0.5-day job becomes a 27-day job.
+⚠️ **PH-1, PH-2 and PH-4 are mechanical and must NOT be run per step.** Script them once over all 27 and produce one table. Running them per step is how a 0.5-day job becomes a 27-day job.
 
 | Phase | Scope | Output | Gate |
 |---|---|---|---|
-| **P1** archaeology — relative churn · fix density · **fence density** · 20% change coupling | **BATCH, once** | one row per step | G1 |
-| **P2** structure — churn × complexity, four quadrants | **BATCH, once** | the top-right quadrant, named | G2 |
-| **P4** risk class A/B/C → test intensity ••• / •• / • | **BATCH, once** | class per step | G4 |
-| **P0** boundary freeze — tables/columns written, audit rows, exit codes, stdout | **PER STEP** | I/O surface doc | G0 |
-| **P3** intent ledger — `git log -S` every non-obvious constant | **PER STEP**, and ⚠️ **only for the top-right quadrant + anything with fence density > 0** | ledger + evidence | G3 |
-| **P5** seam map — DB, clock, network, argv/env | **PER STEP** | seam list | G5 |
+| **PH-1** archaeology — relative churn · fix density · **fence density** · 20% change coupling | **BATCH, once** | one row per step | G1 |
+| **PH-2** structure — churn × complexity, four quadrants | **BATCH, once** | the top-right quadrant, named | G2 |
+| **PH-4** risk class A/B/C → test intensity ••• / •• / • | **BATCH, once** | class per step | G4 |
+| **PH-0** boundary freeze — tables/columns written, audit rows, exit codes, stdout | **PER STEP** | I/O surface doc | G0 |
+| **PH-3** intent ledger — `git log -S` every non-obvious constant | **PER STEP**, and ⚠️ **only for the top-right quadrant + anything with fence density > 0** | ledger + evidence | G3 |
+| **PH-5** seam map — DB, clock, network, argv/env | **PER STEP** | seam list | G5 |
 | **P6** behaviour classification — CONTRACT / INCIDENTAL / DEFECT | **PER STEP** | classification | G6 |
-| **P7** test design, then **prove red** | **PER STEP** | tests | G7 |
-| **P8** score and exit | **PER STEP** | gate score | G8 |
+| **PH-7** test design, then **prove red** | **PER STEP** | tests | G7 |
+| **PH-8** score and exit | **PER STEP** | gate score | G8 |
 
-**The P3 restriction is what makes archaeology affordable at 64 steps.** Do not relax it to "be thorough" — that is the failure mode it exists to prevent.
+**The PH-3 restriction is what makes archaeology affordable at 64 steps.** Do not relax it to "be thorough" — that is the failure mode it exists to prevent.
 
 ### 2.1 Risk class drives intensity, and the multipliers are ours
 
-Spec 121 §3 P4, verbatim: **Risk = chance × impact**, chance = churn + fix density + fence density, impact = blast radius.
+Spec 121 §3 PH-4, verbatim: **Risk = chance × impact**, chance = churn + fix density + fence density, impact = blast radius.
 
 **Impact multipliers to hard-code**, each drawn from a real defect in this repo:
 
@@ -236,7 +238,7 @@ The house idiom is **per-file hand-seeding with a sentinel-prefixed fixture key 
 | a sibling explicitly disclaiming the role — *"This is NOT the red-first proof and must not be mistaken for it"* | `assert-lifecycle-phase-distribution.logic.test.ts:7` |
 | export-absence AS the diagnostic | `check-chain-verdict-duration-trend.logic.test.ts:30` |
 
-**Binding for this programme:** every P1/P0 fix and every class-A behaviour carries a red-first proof in this shape, including the `⛔ TRAP` note where a naive version would false-green.
+**Binding for this programme:** every programme-stage P0/P1 fix and every class-A behaviour carries a red-first proof in this shape, including the `⛔ TRAP` note where a naive version would false-green.
 
 ### 4.8 ⚠️ Two CI holes that make this spec unenforceable — fix at P0
 
@@ -283,7 +285,7 @@ Full per-claim table: `docs/reports/generated/123-claim-plan.md`.
 
 > **Gate:** all 55 present and **proven red** before that conversion's Gate 4d passes. A per-step claim with no test is not a deferral; it is an incomplete conversion.
 
-⚠️ **These 55 are step-specific by nature.** They cover `notes.json` interpretation (A.3), the conversion gates (A.12), step-level testing (A.13) and load-bearing intent (A.15) — the four sections whose content is *about this step*, not about the library. **Expect the count to grow per step**, because P3's Intent Ledger and P6's classification will surface fences that become additional locks. That growth is the procedure working, not scope creep.
+⚠️ **These 55 are step-specific by nature.** They cover `notes.json` interpretation (A.3), the conversion gates (A.12), step-level testing (A.13) and load-bearing intent (A.15) — the four sections whose content is *about this step*, not about the library. **Expect the count to grow per step**, because PH-3's Intent Ledger and P6's classification will surface fences that become additional locks. That growth is the procedure working, not scope creep.
 
 ---
 
@@ -326,12 +328,12 @@ Assessment is DONE for a chain when **all three** hold:
 
 | # | Phase | Gate | Class A | Class C |
 |---|---|---|---|---|
-| 1 | **P0** boundary freeze | G0 | 1 h | 20 m |
-| 2 | **P3** intent ledger — **a human adjudicates** (Spec 121 §12.5) | G3 | 4 h | **skip** unless top-right or fence>0 |
-| 3 | **P5** seam map | G5 | 30 m | 15 m |
-| 4 | **P6** classification | G6 | 2 h | 30 m |
+| 1 | **PH-0** boundary freeze | G0 | 1 h | 20 m |
+| 2 | **PH-3** intent ledger — **a human adjudicates** (Spec 121 §12.5) | G3 | 4 h | **skip** unless top-right or fence>0 |
+| 3 | **PH-5** seam map | G5 | 30 m | 15 m |
+| 4 | **PH-6** classification | G6 | 2 h | 30 m |
 | 5 | **Golden master** — 4-tuple: rows ordered by PK · telemetry · ledger+audit · verdict. **Non-determinism inventory declared BEFORE the first diff** | G1′ | 2 h | 1 h |
-| 6 | **P7** test design + **prove red** | G7 | 4 h | 1 h |
+| 6 | **PH-7** test design + **prove red** | G7 | 4 h | 1 h |
 | 7 | **Descriptor + compute verbatim** — ⚠️ **must be a genuine no-op diff** | G2′ | 1–2 d | 2 h |
 | 8 | **Peel** — one policy concern per commit: gating → verdict/audit → thresholds/checks | green diff after **every** peel | | |
 | 9 | **Differential + cutover** | G8, G4d, G-shape | 3 h | 1 h |
@@ -359,7 +361,7 @@ Assessment is DONE for a chain when **all three** hold:
 | 1 | ⚠️ **A checker reports green because it never looked** | §4.4 — eleven measured instances. Every checker ships a fixture and CI asserts it fires |
 | 2 | **Over-pinning** — asserting INCIDENTAL detail | §3 question 1. Symptom: false failures during conversion, then rubber-stamping |
 | 3 | **A DEFECT gets fixed during conversion** | §1.1. Symptom: a differential with diffs you adjudicate by hand — *"how migrations quietly ship two bugs"* |
-| 4 | **P1/P2/P4 run per-step** | §2. Turns 0.5 days into 27 |
+| 4 | **PH-1/PH-2/PH-4 run per-step** | §2. Turns 0.5 days into 27 |
 | 5 | **P3 relaxed to "be thorough"** | §2. It is affordable only because it is restricted |
 | 6 | ⚠️ **An agent both discovers and retires a fence** | §7.1 |
 | 7 | **A per-step claim quietly deferred** | §5.2 — an incomplete conversion, not a deferral |

@@ -107,17 +107,22 @@ Console banner text · check ordering within a chain · `(durationMs/1000).toFix
  */
 'use strict';
 
-const pipeline = require('../lib/pipeline');
+const pipeline   = require('../lib/pipeline');
 const descriptor = require('./assert-schema.descriptor.json');
-const compute = require('../lib/compute/assert-schema');
+const compute    = require('../lib/compute/assert-schema');
 
-// Kept textually so pipeline-advisory-lock.infra.test.ts:241/:284 stay green.
+// Literal only. Kept textually so pipeline-advisory-lock.infra.test.ts's three
+// source-text loops (:248, :259-260, :289-292) stay green. The conformance suite
+// asserts descriptor.identity.lock === this constant -- it is NOT spliced in at
+// runtime, so the JSON and the constant cannot drift apart.
 const ADVISORY_LOCK_ID = 102;
 
-module.exports = pipeline.step({ ...descriptor, identity: { ...descriptor.identity, lock: ADVISORY_LOCK_ID } }, compute);
+module.exports = pipeline.step(descriptor, compute);
+module.exports.descriptor = descriptor;   // #163 compute-swap test
+module.exports.compute    = compute;
 ```
 
-**That is the entire step file.** Everything else is either declaration or compute.
+**That is the entire step file — 7 executable lines, and the only legal shape (§5.1).** Everything else is either declaration or compute.
 
 ### 2. `scripts/quality/assert-schema.descriptor.json` — the declaration
 
