@@ -6,6 +6,9 @@
 //  - buildNearbyBuildsSummary: headline + basis (neighbourhood vs citywide_fallback), NULL on no norms
 //  - the write-column list + the select SQL shape (scopeWhere, citywide CROSS JOIN, eligibility gate)
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -210,9 +213,11 @@ describe('D#5 — computeAggregateRecordsUpdated (distinct-parcels-touched, NOT 
 });
 
 describe('D#5 — main() wires the aggregate into records_updated (source-scan)', () => {
-  const fs = require('fs');
-  const path = require('path');
-  const src = fs.readFileSync(path.join(process.cwd(), 'scripts/enrich-parcels.js'), 'utf8');
+  // P0b (2026-08-23): these were inline `require('fs')`/`require('path')`,
+  // which tripped @typescript-eslint/no-require-imports and made `npm run
+  // verify` exit before the test phase. Node builtins, so a plain ESM import
+  // at the top of the file is the direct replacement.
+  const src = readFileSync(join(process.cwd(), 'scripts/enrich-parcels.js'), 'utf8');
 
   it('main() calls computeAggregateRecordsUpdated with all four SQL-pass id sets + the optconfig genuine set', () => {
     // The FUNCTION DEFINITION (module scope) appears earlier in the file than
