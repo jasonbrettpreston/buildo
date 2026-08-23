@@ -221,6 +221,41 @@ Claim counts are `[generated]`. Full per-claim table: `docs/reports/generated/12
 
 ---
 
+## ⛔ OUTSTANDING BEFORE THE PROGRAMME CAN START
+
+**Spec 122 §12 is the ratification checklist and governs.** These are the items that gate *this plan*, in order.
+
+#### S0 — tool debt, before any vocabulary work (order matters)
+
+- [x] **F1 CLOSED** — `extract-claims.mjs` read the violation column from the END; A.18/A.21 are 5-column tables whose last cell is the **adjudication**. ⚠️ A **laundering bug inside the anti-laundering tool** — 33 claims read a truncated haystack and the affected ones **never surfaced as orphans**. Orphans 62 → **54** after the fix: the count moved toward honesty, not comfort.
+- [ ] Four **spelling relaxations** in `map-categories.mjs` — `empty.source` · `audit.row` · `pipeline.name` · `records_meta`. **Pure defects**, 4 orphans.
+- [ ] ⚠️ Add the **`COMPUTE` bucket** — Spec 122 §1.8 has three homes (categories · RUNNER · **OPEN**); the mapper implements two. **That hole is what let F1 hide.**
+- [ ] Remaining keywords — **only after the above**, so the rule set is sized against honest input.
+- [ ] Extend `extract-vocab.mjs` to the **nine unextracted categories** (it covers 8 of 17).
+
+#### S1 additions — the contract cannot freeze until these close
+
+- [ ] **Resolve the 6 vocabulary conflicts** — `extract-vocab.mjs` exits 1. Three are genuine and a generator **cannot arbitrate** them.
+- [ ] **Adjudicate the 54 orphans** — `map-categories.mjs` exits 1.
+- [ ] **Six missing P0 categories**: `acquisition` · `terminals` · `maintenance` · `plan_shape` · `source_key_policy` · `guards.requires.on_missing` (Spec 122 §12.2).
+- [ ] **Five missing fields**: `outputs.columns[].vocabulary` · `checks[].accept_until` · `outputs.write_inventory` · `why` liveness · redaction (§12.3).
+- [ ] ⚠️ **Re-derive the 13 update classes per step** — evidence base §3f mislabels **5**, two with `Del=0` while they delete.
+
+#### S6 — test design, before C1
+
+- [ ] Add the **K-axis** to `plan-claims.mjs`: **227 PER_STEP · 50 MIXED · 13 FLEET**. Today `SCOPES` has two values and nothing checks that a claim's stage is ≥ the stage it can first be true.
+- [ ] ⚠️ **The 55-item per-step checklist is unsatisfiable at conversion #1** — 11 cannot be discharged there (6 FLEET + 5 MIXED). **Honest max is 44 of 55.** Split into 55-A (44, hard gate) / 55-B (5, partial now) / 55-C (6, deferred **with its k named**).
+- [ ] ⚠️ **S6 is scheduled BEFORE C1** and files 13 corpus-equality claims there — guaranteed red until k=27, then skipped or weakened. Add a totality check: **`stage >= arming_stage`**.
+- [ ] **Every FLEET claim must carry a monotone partial** (`⊆` not `==`, "≥1 reader" not "the census closes") or the generator hard-fails. Otherwise it is 27 conversions of zero operator signal.
+- [ ] **Vacuity is DECLARED, never grepped** — `load_zoning` scores `ST_ = 0` in-file but is fully spatial via `lib/geometry-validator.js:46`. A false VACUOUS is silently-dropped coverage.
+- [ ] `nock` **is not installed** — claims 177/178/179 are unimplementable as written.
+- [ ] `supports_full` is **50% false** (7 of 14 declare and do not honour); **nothing reads either flag**. The census catches all 14 at **k=0** — run it before S1, not at S6.
+
+#### P0 — not started
+
+- [ ] **P0's `resolve-db.js`** — the 24-file wrong-database class. Still the highest-value hour available; nothing measured against the data is trustworthy until it lands.
+- [ ] **Map the 49 concerns to stages** — claims are mapped, concerns are not. Generated, not typed.
+
 ## Standards Compliance
 
 * **Try-Catch Boundary:** P0's four scripts must **fail loud** on a missing `DATABASE_URL` — a silent fallback is the defect.
