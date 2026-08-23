@@ -94,10 +94,13 @@ function parseEmitMetaStatic(src) {
 
 // ── Refresh path: read the live DB, build + persist the snapshot ─────────────
 async function refresh() {
-  // Reuse the pipeline SDK pool factory (PG_* env, dev-default localhost/buildo)
-  // — same connection contract as every chain step; avoids a bespoke new Pool().
-  const { createPool } = await import('./lib/pipeline.js');
-  const pool = createPool();
+  // Spec 122 §P0 (WF3 2026-08-23) — was `pipeline.createPool()`, whose
+  // "dev-default localhost/buildo" (the old comment said so plainly) meant this
+  // generator would happily document the PRE-CUTOVER schema as if it were the
+  // live lineage. Generated docs asserting the wrong database is the same
+  // lying-instrument defect as the audits. Now fail-loud + floor-asserted.
+  const { createResolvedPool } = await import('./lib/resolve-db.js');
+  const pool = createResolvedPool({ label: 'generate-lineage-docs' });
 
   const { rows } = await pool.query(`
     SELECT DISTINCT ON (pipeline) pipeline, started_at,

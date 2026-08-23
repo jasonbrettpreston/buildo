@@ -73,11 +73,22 @@
  *                                 or SECRET_KEY (sb_secret_... form) value.
  *                                 No default is hardcoded here on purpose —
  *                                 this file must not carry key material.
- *   DATABASE_URL / PG_*         (optional) — same contract as
- *                                 scripts/migrate.js; defaults to the local
- *                                 stack's DB (127.0.0.1:54322) so this
- *                                 script always writes to whichever
- *                                 Postgres migrate.js just applied 226 to.
+ *   DATABASE_URL / PG_*         (REQUIRED) — same contract as
+ *                                 scripts/migrate.js. **No default.** This
+ *                                 previously read "(optional) — defaults to
+ *                                 the local stack's DB (127.0.0.1:54322)".
+ *                                 That default already pointed at the
+ *                                 AUTHORITATIVE stack, so retiring it is an
+ *                                 ADDITIONAL loss beyond the P0 defect
+ *                                 (Spec 122 §P0, 2026-08-23): the zero-config
+ *                                 convenience is gone. Deliberate trade-off —
+ *                                 one resolver with one rule beats a
+ *                                 per-script allow-list of "which defaults
+ *                                 happen to be correct today", which is
+ *                                 exactly the state that let 24 scripts drift
+ *                                 onto the pre-cutover DB unnoticed. Run with
+ *                                 `node -r dotenv/config` (the repo .env
+ *                                 carries the target) to restore it.
  *   BOOTSTRAP_ALLOW_REMOTE=1    — required to proceed if SUPABASE_URL does
  *                                 not resolve to localhost/127.0.0.1. Not
  *                                 set by default — the script refuses a
@@ -86,8 +97,8 @@
 'use strict';
 
 const { createClient } = require('@supabase/supabase-js');
-const { Pool } = require('pg');
-const { resolveSslConfig } = require('./lib/ssl-config');
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('./lib/resolve-db');
 
 const LOCAL_SUPABASE_URL = 'http://127.0.0.1:54321';
 
@@ -140,21 +151,7 @@ function resolveConfig(env) {
  * @returns {import('pg').Pool}
  */
 function createDbPool() {
-  return new Pool(
-    process.env.DATABASE_URL
-      ? {
-          connectionString: process.env.DATABASE_URL,
-          ssl: resolveSslConfig({ connectionString: process.env.DATABASE_URL }),
-        }
-      : {
-          host: process.env.PG_HOST || '127.0.0.1',
-          port: parseInt(process.env.PG_PORT || '54322', 10),
-          database: process.env.PG_DATABASE || 'postgres',
-          user: process.env.PG_USER || 'postgres',
-          password: process.env.PG_PASSWORD || 'postgres',
-          ssl: resolveSslConfig({ host: process.env.PG_HOST || '127.0.0.1' }),
-        },
-  );
+  return createResolvedPool({ label: 'bootstrap-first-admin' });
 }
 
 async function main() {

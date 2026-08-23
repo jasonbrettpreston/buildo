@@ -53,15 +53,23 @@
  *                                 alone.
  *
  * Env vars:
- *   DATABASE_URL / PG_*          same contract as scripts/migrate.js;
- *                                defaults to the local stack.
+ *   DATABASE_URL / PG_*          (REQUIRED) same contract as scripts/migrate.js.
+ *                                **No default.** This previously read
+ *                                "defaults to the local stack" — i.e.
+ *                                127.0.0.1:54322/postgres, a default that
+ *                                already pointed at the AUTHORITATIVE DB, so
+ *                                its retirement is ADDITIONAL to the P0 defect
+ *                                (Spec 122 §P0, 2026-08-23). Deliberate
+ *                                trade-off: one resolver with one rule, rather
+ *                                than a per-script allow-list of defaults that
+ *                                happen to be right today. Run with
+ *                                `node -r dotenv/config` to restore zero-config.
  *   WIPE_ALLOW_REMOTE=1          required to proceed if the resolved DB
  *                                host does not look local.
  */
 'use strict';
 
-const { Pool } = require('pg');
-const { resolveSslConfig } = require('./lib/ssl-config');
+const { createResolvedPool } = require('./lib/resolve-db');
 
 const ADMIN_AUDIT_LOG_RESTRICT_SQLSTATE = '23503'; // foreign_key_violation
 
@@ -101,21 +109,7 @@ function safeHostFromConnectionString(connectionString) {
  * @returns {import('pg').Pool}
  */
 function createDbPool() {
-  return new Pool(
-    process.env.DATABASE_URL
-      ? {
-          connectionString: process.env.DATABASE_URL,
-          ssl: resolveSslConfig({ connectionString: process.env.DATABASE_URL }),
-        }
-      : {
-          host: process.env.PG_HOST || '127.0.0.1',
-          port: parseInt(process.env.PG_PORT || '54322', 10),
-          database: process.env.PG_DATABASE || 'postgres',
-          user: process.env.PG_USER || 'postgres',
-          password: process.env.PG_PASSWORD || 'postgres',
-          ssl: resolveSslConfig({ host: process.env.PG_HOST || '127.0.0.1' }),
-        },
-  );
+  return createResolvedPool({ label: 'wipe-supabase-auth-state' });
 }
 
 async function tableExists(pool, tableName) {

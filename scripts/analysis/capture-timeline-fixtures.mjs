@@ -33,16 +33,12 @@ for (const line of env.split('\n')) {
   }
 }
 
-const { Pool } = require('pg');
-// Use the same PG_ prefix scheme as scripts/lib/pipeline.js — `new Pool()`
-// without args looks at PGHOST/PGUSER which this codebase does not set.
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db.js');
+// The manual .env parse above populates DATABASE_URL / PG_*, which is what the
+// resolver reads. It no longer DEFAULTS anything: if .env names no target the
+// resolver refuses rather than capturing fixtures from the pre-cutover DB.
+const pool = createResolvedPool({ label: 'capture-timeline-fixtures' });
 const FIXTURES_DIR = path.resolve(__dirname, '..', '..', 'src', 'tests', 'fixtures');
 if (!fs.existsSync(FIXTURES_DIR)) fs.mkdirSync(FIXTURES_DIR, { recursive: true });
 

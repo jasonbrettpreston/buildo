@@ -11,11 +11,11 @@
  */
 'use strict';
 
-const { createPool } = require('../lib/pipeline');
+const { createResolvedPool } = require('../lib/resolve-db');
 const fs = require('fs');
 const path = require('path');
 
-const pool = createPool();
+const pool = createResolvedPool({ label: 'wf1-reno-build-pattern-investigation' });
 const lines = [];
 
 function out(s) { lines.push(s); }

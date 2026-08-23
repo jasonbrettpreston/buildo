@@ -13,7 +13,8 @@
  */
 'use strict';
 
-const { Client } = require('pg');
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db');
 const { ARCHETYPE_BUNDLES, deriveArchetypes } = require('../lib/archetypes');
 const { mapToLines, complementTradesFor } = require('../../src/features/leads/lib/archetype-cost-map');
 const crypto = require('crypto');
@@ -77,8 +78,14 @@ function setOf(arr) { return new Set(arr); }
 function inter(a, b) { let n = 0; for (const x of a) if (b.has(x)) n++; return n; }
 
 async function main() {
-  const c = new Client({ host: 'localhost', user: 'postgres', password: 'postgres', database: 'buildo' });
-  await c.connect();
+  // Spec 122 §P0: was a hardcoded `new Client({host:'localhost',…database:'buildo'})`
+  // with no env escape at all — it could ONLY ever grade the pre-cutover DB.
+  // Client → Pool, so the explicit `await c.connect()` is DROPPED: on a Pool it
+  // checks out a client that is never released, and `c.end()` below would then
+  // block forever waiting for it. Every call site here uses `c.query()`, which
+  // checks out and releases its own client (and triggers the target assertion
+  // on the first one).
+  const c = createResolvedPool({ label: 'p14-trade-attachment-evaluation' });
 
   const trades = (await c.query('SELECT id, slug FROM trades')).rows;
   const idToSlug = new Map(trades.map((r) => [r.id, r.slug]));

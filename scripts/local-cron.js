@@ -26,9 +26,12 @@ const cron = require('node-cron');
 const { spawn } = require('child_process');
 const path = require('path');
 const pipeline = require('./lib/pipeline');
+const { createResolvedPool } = require('./lib/resolve-db');
 const chainConcurrency = require('./lib/chain-concurrency');
 
-const pool = pipeline.createPool();
+// Spec 122 §P0 — local-cron's OWN pool (its chain children still get their
+// pool from pipeline.createPool via run-chain.js, unchanged).
+const pool = createResolvedPool({ label: 'local-cron' });
 
 const RUN_CHAIN_SCRIPT = path.resolve(__dirname, 'run-chain.js');
 

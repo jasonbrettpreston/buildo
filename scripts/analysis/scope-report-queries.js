@@ -3,14 +3,9 @@
  * Run all queries for scope classification accuracy report.
  * Usage: node scripts/scope-report-queries.js
  */
-const { Pool } = require('pg');
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db');
+const pool = createResolvedPool({ label: 'scope-report-queries' });
 
 // BLD permit types that get scope tags directly (not companions)
 const BLD_TYPES = [

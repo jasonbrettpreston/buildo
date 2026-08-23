@@ -3,14 +3,15 @@
 // re-enriched by wf3-cost-coherence-sanity.js; this only reads + re-computes the menu in-process.
 // Usage: node scripts/analysis/wf3-sample-full-dump.js
 'use strict';
-const { Pool } = require('pg');
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db');
 const { buildParcelCostMenu } = require('../lib/parcel-cost.js');
 const { parcelFamilyFromZoning } = require('../lib/build-norms.js');
 
 const IDS = [1455, 1786, 1842, 1886, 1940, 3435, 3679, 3684, 3690, 4437, 10003, 10011, 8455, 7281];
 
 (async () => {
-  const pool = new Pool({ host: 'localhost', port: 5432, user: 'postgres', password: 'postgres', database: 'buildo' });
+  const pool = createResolvedPool({ label: 'wf3-sample-full-dump' });
   const rates = {};
   for (const r of (await pool.query(`SELECT * FROM archetype_cost_rates`)).rows) rates[r.archetype] = r;
   const idxRow = (await pool.query(`SELECT variable_value FROM logic_variables WHERE variable_key='cost_escalation_index'`)).rows[0];

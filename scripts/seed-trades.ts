@@ -1,19 +1,13 @@
-import { Pool } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+// scripts/lib/resolve-db.js is CommonJS; Node's ESM loader resolves named
+// imports from CJS via cjs-module-lexer, so no default-import shim is needed.
+import { createResolvedPool } from './lib/resolve-db';
+
 async function seedTrades() {
-  const pool = new Pool(
-    process.env.DATABASE_URL
-      ? { connectionString: process.env.DATABASE_URL }
-      : {
-          host: process.env.PG_HOST || 'localhost',
-          port: parseInt(process.env.PG_PORT || '5432', 10),
-          database: process.env.PG_DATABASE || 'buildo',
-          user: process.env.PG_USER || 'postgres',
-          password: process.env.PG_PASSWORD || '',
-        }
-  );
+  const pool = createResolvedPool({ label: 'seed-trades' });
 
   try {
     console.log('Running trade seed data...');

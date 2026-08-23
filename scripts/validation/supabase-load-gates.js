@@ -40,6 +40,9 @@
 
 const { Pool } = require('pg');
 const { resolveSslConfig, isLocalMode } = require('../lib/ssl-config');
+// Spec 122 §P0 — resolveDbConfig only (no pool assertion, no floor): see the
+// fence on resolveSourcePool for why this site takes half the contract.
+const { resolveDbConfig } = require('../lib/resolve-db');
 
 // ---------------------------------------------------------------------------
 // Constants — G10 pinned baseline (live dev DB, 2026-07-18 Reality-Check)
@@ -415,17 +418,24 @@ async function getRavineSampleForIds(pool, ids) {
 // Connection resolution — shared by the CLI entry and restore-db.js
 // ---------------------------------------------------------------------------
 
-/** Source is the PG_*-addressed dev DB (post-D13 cutover: the local Supabase stack at 54322; originally the Docker dev DB), per the `.env` contract. */
+/**
+ * Source is the PG_*-addressed dev DB (post-D13 cutover: the local Supabase
+ * stack at 54322; originally the Docker dev DB), per the `.env` contract.
+ *
+ * Spec 122 §P0 (WF3 2026-08-23) — the `|| 'localhost'` / `|| '5432'` /
+ * `|| 'buildo'` defaults here were stale PRE-cutover leftovers: the docblock
+ * said "the local Supabase stack at 54322" while the code, with PG_* unset,
+ * silently compared gates against the 222-migration pre-cutover DB. Same
+ * half-contract as restore-db.js's pg_dump SOURCE, and for the same reason:
+ *   ✓ no silent default — resolveDbConfig throws unless PG_HOST/PG_PORT/
+ *     PG_DATABASE are all explicitly set.
+ *   ✗ no migration floor — a restore SOURCE may legitimately sit below it.
+ * `envVars: []` forces the discrete PG_* path so DATABASE_URL (which addresses
+ * the restore TARGET) can never capture the source.
+ */
 function resolveSourcePool() {
-  const host = process.env.PG_HOST || 'localhost';
-  return new Pool({
-    host,
-    port: parseInt(process.env.PG_PORT || '5432', 10),
-    database: process.env.PG_DATABASE || 'buildo',
-    user: process.env.PG_USER || 'postgres',
-    password: process.env.PG_PASSWORD || 'postgres',
-    ssl: resolveSslConfig({ host }),
-  });
+  const cfg = resolveDbConfig({ label: 'load-gates:source', envVars: [] }).poolConfig;
+  return new Pool(cfg);
 }
 
 /**

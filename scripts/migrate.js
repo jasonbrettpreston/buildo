@@ -32,11 +32,13 @@
 // by the Docker dev DB's permissive auth, exposed by the Supabase local
 // stack requiring a real password (SASL error).
 require('dotenv').config();
-const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { resolveSslConfig, stripSslParams } = require('./lib/ssl-config');
+// Spec 122 §P0 — the single database-target resolver. Replaces the inline
+// `DATABASE_URL || PG_* || localhost:5432/buildo` chain (which silently applied
+// migrations to the pre-cutover DB when nothing was set).
+const { createResolvedPool } = require('./lib/resolve-db');
 
 const TRACKING_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -88,31 +90,29 @@ async function run() {
   const dryRun = process.argv.includes('--dry-run');
   const verifyOnly = process.argv.includes('--verify');
 
-  // Spec 113 §4.1 — resolveSslConfig is the only place an `ssl` config is
-  // constructed; the branch taken here (connectionString vs discrete PG_*
-  // options) is unchanged — only the `ssl` key is added to each.
-  // Spec 113 §3 (D14): SUPABASE_DATABASE_URL is the fallback connection
-  // string — GitHub Actions chain workflows (Spec 115 §4) inject only that
-  // var for the `--verify` pre-flight. DATABASE_URL (local stack) wins when
-  // both are set so local runs stay local.
-  const connStr = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL;
-  const pool = new Pool(
-    connStr
-      ? {
-          // stripSslParams (F1g root-cause class): sslmode= in the URL
-          // would make pg discard the pinned-CA `ssl` object below.
-          connectionString: stripSslParams(connStr),
-          ssl: resolveSslConfig({ connectionString: connStr }),
-        }
-      : {
-          host: process.env.PG_HOST || 'localhost',
-          port: parseInt(process.env.PG_PORT || '5432', 10),
-          database: process.env.PG_DATABASE || 'buildo',
-          user: process.env.PG_USER || 'postgres',
-          password: process.env.PG_PASSWORD || '',
-          ssl: resolveSslConfig({ host: process.env.PG_HOST || 'localhost' }),
-        }
-  );
+  // Spec 122 §P0 (WF3 2026-08-23) — the target now comes from the ONE shared
+  // resolver. Behaviour PRESERVED: the env precedence is unchanged
+  // (DATABASE_URL wins, then SUPABASE_DATABASE_URL, then discrete PG_*), and
+  // Spec 113 §4.1 still holds — resolve-db.js builds `ssl` via resolveSslConfig
+  // and strips sslmode= from the URL (F1g), exactly as this block did.
+  // Spec 113 §3 (D14): SUPABASE_DATABASE_URL is the fallback connection string —
+  // GitHub Actions chain workflows (Spec 115 §4) inject only that var for the
+  // `--verify` pre-flight; DATABASE_URL (local stack) wins when both are set so
+  // local runs stay local.
+  //
+  // BEHAVIOUR CHANGED, deliberately: with NO target set at all this used to
+  // fall back to localhost:5432/buildo — the PRE-CUTOVER database — and apply
+  // migrations there without a word. A migration applier that can silently
+  // target the wrong DB is the worst instance of the P0 class. It now refuses.
+  //
+  // ⚠️ minMigration: null — THE ONE SANCTIONED FLOOR EXEMPTION in the estate.
+  // migrate.js is the tool that RAISES a database over the migration floor, so
+  // it cannot also be gated on it: a fresh database has zero migrations, the
+  // resolver would refuse, and the migrations that would lift it above the
+  // floor could never be applied. The rest of the contract still applies —
+  // an explicit target is required, and current_database() is asserted and
+  // logged on the first connection. No other caller may pass null.
+  const pool = createResolvedPool({ label: 'migrate', minMigration: null });
 
   await ensureTrackingTable(pool);
   const applied = await getAppliedMap(pool);
