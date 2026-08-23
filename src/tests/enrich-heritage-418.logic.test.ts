@@ -22,6 +22,11 @@ const eh = require('../../scripts/enrich-heritage.js') as {
   assertVersionColumn: (db: { query: (sql: string) => Promise<{ rows: unknown[] }> }) => Promise<void>;
   countStale: unknown;
   ENRICH_SQL: string;
+  // D#4's export, folded into the ONE module handle below (P0b, 2026-08-23):
+  // this file used to re-`require` the same module inside the D#4 describe,
+  // which tripped @typescript-eslint/no-require-imports and made `npm run
+  // verify` exit before the test phase ever ran.
+  FORCE_FULL_ENV: string;
 };
 
 /** Fake pg-shaped client: first query = heritage_properties count, second = heritage_districts count. */
@@ -108,10 +113,8 @@ describe('Commit C — assertVersionColumn + skip-path precondition hoist', () =
 // unconditional JS logic (no DB round-trip in the branch itself), so the
 // source-scan proves the same thing a live run would.
 describe('D#4 — ENRICH_HERITAGE_FORCE_FULL escape hatch', () => {
-  const eh2 = require('../../scripts/enrich-heritage.js') as { FORCE_FULL_ENV: string };
-
   it('exports FORCE_FULL_ENV = ENRICH_HERITAGE_FORCE_FULL', () => {
-    expect(eh2.FORCE_FULL_ENV).toBe('ENRICH_HERITAGE_FORCE_FULL');
+    expect(eh.FORCE_FULL_ENV).toBe('ENRICH_HERITAGE_FORCE_FULL');
   });
 
   it('forceFull short-circuits staleCount to a non-zero value, bypassing the #418 skip unconditionally', () => {
