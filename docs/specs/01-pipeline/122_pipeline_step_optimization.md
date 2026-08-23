@@ -28,7 +28,155 @@ These were put to the operator as the three questions the spec could not answer 
 
 ---
 
-## 1. ⚠️ THE FROZEN CONTRACT — 17 categories, set in stone
+## 1. THE STANDARD STEP
+
+> ## ⛔ NOT FREEZABLE YET — the coverage audit REFUTED the central claim (2026-08-23)
+>
+> **The claim under test was: *17 categories with closed menus express every behaviour in the 27 steps.* It does not.** A vocabulary-coverage sweep over the corpus found **three menus that fail STRUCTURALLY** — not by a missing enum value, but because the declared shape is wrong for the behaviour:
+>
+> | Menu | Why it fails structurally |
+> |---|---|
+> | `outputs.write_discipline.class` | declared as a **step-level scalar**; **≥9 of 27 steps perform two or more disciplines**, several to the same table. ⚠️ And the ported §3f taxonomy is **wrong for 5 steps** — `load-neighbourhoods` is labelled class A while doing **6 unguarded set-based UPDATEs** (`:474,487,507,544,564,604`, only **2** `IS DISTINCT FROM` in the file): **a class-A label hiding banned class H** |
+> | `execution.on_row_error` | **3 values for 14 measured behaviours** across 58 catch sites. **10 have no legal value** — batch-level swallow (3 steps), loop-abort, prior-snapshot substitution (`refresh-snapshot.js:342-346`), 4 true silent swallows |
+> | `staleness.pending` | conflates **three axes**: *scope* (which rows), *trigger* (what makes the step eligible), *mode-select* (skip / incremental / full / defer). Cannot express the ledger gate's 4 arms, the two-tier pre/post-download split, the tri-state `decideCentrelineMode`, or scope-defer |
+>
+> **Six further P0 categories are missing**, each present in 2+ steps: **`acquisition`** (⚠️ four loaders use `fs.existsSync` as their entire freshness policy — a 9th, undeclared gate that *defeats* `pending: source_changed`; `load-massing.js:28-36` records the 86-minute production failure it caused) · **`terminals`** (10 exit paths in one step, each with a hand-written `records_meta` — the source of the 7 hardcoded skip-path `'PASS'`es) · **`maintenance`** (VACUUM on 4 tables in 3 steps; it *constrains* `txn_scope` and an ASSERT does it while `outputs` is forced `"none"`) · **`plan_shape`** · **`source_key_policy`** · **`guards.requires.on_missing`** (6 steps use a missing extension as an **algorithm selector**, which makes `outputs.columns` a fiction).
+>
+> **Three defects in this spec's own instruments:**
+> 1. ⚠️ **`extract-vocab.mjs` covers 8 of 17 categories** — `identity · inputs · outputs · staleness · guards · execution · checks · recovery` only. **Nine have no machine-extracted menu**, including all four this spec adds. *"The vocabulary is GENERATED, never transcribed" is true of less than half of it.*
+> 2. ⚠️ **`checks[].kind` was cited as 12; it is 9.** The 12 is Spec 120 §5.0's separate list of *generators*. Corrected throughout.
+> 3. **`outputs.write_discipline` is absent from the generated vocabulary entirely** — hand-ported from evidence base §3f, and that source is itself wrong for 5 steps.
+>
+> **17 menu values have ZERO instances in the corpus** — all of `publish: pointer`, `when: pre`, `quarantine`, `checkpoint`, `interval`, `on_fingerprint_change`, and all three `schema_drift` values. They are aspirational, which is legitimate for a target state but must not read as descriptive. ⚠️ **`severity: PASS` is impossible** — `PASS` is a runtime outcome, never a declarable escalation target; the menu conflates the result vocabulary with the declaration vocabulary.
+>
+> **Two §1.6 promises are refuted by the corpus:** `ASSERT ⇒ counters: null` (**0 of 5** ASSERTs emit null — they emit `0,0,1,1,tableResults.length`), and *"declaring `archetype` retires `run-chain.js:544-550`'s prefix dispatch"* (`isInfraStep` spans **four archetypes plus name-specific exceptions**; it is not derivable from an 8-value enum).
+>
+> ⚠️ **The unifying pattern across every P0 gap is one shape: the descriptor would say one thing and the code would do another.** `pending: source_changed` defeated by `existsSync`. `outputs: "none"` on a step that VACUUMs. `retract: departed` on a step migrating a key space. **That is concern 15's exact failure — which is the strongest argument that the Concern Index was worth writing, and that it is not finished.**
+>
+> **The design below stands. The vocabularies do not. Do not freeze until S1 closes the six extractor conflicts, extends the extractor to the nine unextracted categories, and adjudicates the 62 orphans.**
+
+
+> ### One shape · one menu · one compute
+>
+> **Every step in the estate is the same step, except for its compute.** It declares **17 categories**; those declarations answer **43 concerns**; every answer is chosen from a **closed menu**, and `"none"` is always a legal answer that must be written down. The library does everything else — identically, 64 times.
+>
+> **Three machines, and a step author touches only the first:**
+>
+> | | Machine | Who writes it | What it is |
+> |---|---|---|---|
+> | **1** | **DECLARE** | the step author | `<slug>.descriptor.json` — 17 categories, closed menus |
+> | **2** | **DELEGATE** | nobody — the library | `pipeline.step(descriptor, compute)` runs the lifecycle |
+> | **3** | **VERIFY** | nobody — generated | the validator, the checks, the ledger, the differential |
+>
+> **The compute is the only thing anyone writes twice.** That is the whole design, and §1.4's Concern Index is the proof: 42 of 43 concerns resolve to a menu, a runner behaviour, or an explicit `"none"`. Concern 40 is the compute. There is no fourth thing.
+
+### 1.0 THE BLOCK — the whole standard on one page
+
+**Read left to right: what you declare · what the menu allows · who writes it · which concerns it closes.**
+**`"none"` is a legal answer everywhere and must be written.** ⬦ = open, the only two.
+
+| # | Category | Declares | Menu | Written by | Concerns |
+|---|---|---|---|---|---|
+| 1 | `identity` | name · display_name · owner · lock (+`why_lock`) · spec · archetype · contract_version | closed | author | 13, 41 |
+| 2 | `inputs` | producer steps · tables · externals · version pins · expect_nonempty · on_missing | closed | author | 12 |
+| 3 | `outputs` | table · key · columns · **write_discipline** · retract · replay · publish · invalidates | closed | author | **17**, 18, 19, 20 |
+| 4 | `staleness` | pending · checkpoint · interval · fingerprint~ · logic_version | closed | author | 5, 14, 21 |
+| 5 | `guards` | extensions · indexes · functions · columns · srid · **database** · empty_source · schema_drift | closed | author | 27, 28, 29 |
+| 6 | `execution` | budget · txn_scope · chunked · statement_timeout · step_timeout · batch · on_row_error · criticality · needs_disk_mb · network · **invocation** · partial_fill | closed | author | 1, 3, 7–11, **15**, 30, 31 |
+| 7 | `checks` | ⚠️ **never `"none"`** — the validator | **half** ⬦ | author | 24, 25, 26, **38 ⬦** |
+| 8 | `override` | force env var | closed | author | 16 |
+| 9 | `emits` | extra `records_meta` keys | closed | author | — |
+| 10 | `deviations` | `{from, why, adjudicated_by, date}` | closed shape | author | 36 |
+| 11 | `limitations` | `{what, measured, check_id}` | closed shape | author | 37 |
+| 12 | `interpretation` | → `notes.json`, capped at 12 | ⬦ **prose** | author | **39 ⬦** |
+| 13 | `recovery` | reset · resume · force · rollback · verify_clean · cascades~ | closed | author | 35 |
+| 14 | `database` | class · min_migration · assert_current_database | closed | author | 32 |
+| 15 | `counters` | what feeds `records_total` / `_new` / `_updated` | closed | author | 22 |
+| 16 | `config` | logic_variables consumed + bounds + validation posture | closed | author | 33 |
+| 17 | `sharing` | chains~ · slug_forms~ · varies_by_chain · on_contention | closed | author | 6, 34 |
+| — | **THE RUNNER** | ledger · verdict · audit rows · reconcile · WAP · error class · skip_reason · step_error · budget + duration tripwires · OpenLineage | — | **nobody** | 2, 4, 23 |
+| — | ⬦ **COMPUTE** | the domain logic | **OPEN** | author | **40 ⬦** |
+
+**Three machines. An author touches one.**
+
+| | Machine | Artifact | Who |
+|---|---|---|---|
+| **1** | **DECLARE** | `<slug>.descriptor.json` — 17 categories | the author |
+| **2** | **DELEGATE** | `pipeline.step(descriptor, compute)` | nobody — the library |
+| **3** | **VERIFY** | validator · checks · ledger · differential | nobody — generated |
+
+**The four questions, answered in one line each:**
+
+| Question | Answer |
+|---|---|
+| **How is UPDATE mandated over rewrite?** | `outputs.write_discipline` — **declare** the class (13 measured, D and H banned) → the runner **generates** the SQL from it → `IS DISTINCT FROM` guards every declared column → **`idempotent_rerun: zero_writes` is asserted**: run twice, second run updates 0 |
+| **Where does VERIFICATION live?** | **the runner, always.** Verdict row-derived, ledger in a `finally`, counters scoped by `writes.key`. A step declares nothing about it and cannot opt out |
+| **Where does VALIDATION live?** | **`checks`** — the one category that may never be `"none"`. Shape closed (`kind`·`limit`·`severity`⊥`blocking`·`when`), subject open (`expect`·`why`) |
+| **What does the ARCHETYPE do?** | decides **which of the 17 you must answer**. ASSERT forces 6 to `"none"`; ENRICHER makes a missing invalidator *unexpressible* |
+
+> **The one-sentence standard:** *everything but the compute is declared from a closed menu, generated by the library, and proven by a check — and the archetype decides which declarations are live.*
+
+---
+
+### 1.0 Where each machine lives — and the three questions this answers
+
+Three questions get asked of this design repeatedly. Here they are, answered once.
+
+#### ⓵ "How do we mandate UPDATE and never a rewrite?" — §1.2, and it is declared, generated and proven
+
+**This is the concern that made `enrich_parcels` the chain's largest cost, and it is standardized in four moving parts. None of them is discretion.**
+
+| Part | Where | What it does |
+|---|---|---|
+| **DECLARE the shape** | `outputs.write_discipline.class` | one of **13 measured classes** (§1.2). ⛔ Class **D** (insert-only, no retraction) and **H** (set-based, unscoped) are **banned for new steps** |
+| **GENERATE the SQL** | the library | ⚠️ **`class` selects the statement.** The runner emits the upsert, the departure delete and the retraction *from the class* — a hand-written `INSERT … ON CONFLICT` in a compute **fails lint** (claim #57, the 525K-row silent outage) |
+| **GUARD every column** | `write_discipline.guard` | `IS DISTINCT FROM` over **all declared columns**; opting out needs a `why` (claim #58). ⚠️ An unguarded `ON CONFLICT DO UPDATE` still writes a **new tuple version** when nothing changed — the heap-churn mechanism Spec 118 §1 identifies |
+| **PROVE it** | `write_discipline.idempotent_rerun` + a check | `zero_writes` is **asserted, not asserted-to**: run twice, assert the second run updates 0 — the founding commit's own acceptance standard (`7e130bff`, Severity HIGH, `lessons.md:28`). Plus `expected_change_ratio` measured every run from `rows_scanned` / `rows_changed` |
+
+> ⚠️ **The rule is not "never rewrite." It is "never rewrite silently."** `full_replace` stays legal — `load-centreline`'s staging replace is spec-sanctioned (Spec 62 **L26**, 47K rows, HEAD/ETag-gated) — but it must be **declared as class C**, and a class-C step that quietly becomes a class-A step is a schema change, reviewed once for all 64.
+>
+> **What this retires, measured:** comps rewriting **426,732 parcels every run** with no change detection · a manifest `chain_args` pin forcing `--full` past a working incremental path (now concern 15) · **≥9** incomplete-IDF-guard incidents, one of which would have NULL-overwritten a 427K column every quarterly reload.
+
+#### ⓶ "Where does VERIFICATION live?" — in the library, never in a step
+
+**Verification asks *did this run do what it said*.** It is entirely runner-owned; a step declares nothing about it and cannot opt out.
+
+| What | Where |
+|---|---|
+| the verdict | **row-derived, always** — never a parallel boolean. Retires `hasFails ? 'FAIL' : 'PASS'` (3 scripts structurally cannot emit WARN) and 7 hardcoded skip-path `'PASS'`es |
+| audit rows | emitted from `checks`, co-located with the write |
+| the ledger row | written at start, finalized in a `finally`, `crashed` distinct from `failed` |
+| counters | from `counters`, scoped by `writes.key` — retires **9 distinct semantics** for `records_total` |
+| the differential | old vs new, same file at two commits, same invocation (§8) |
+
+#### ⓷ "Where does VALIDATION live?" — in `checks`, and it is the one category that may never be `"none"`
+
+**Validation asks *is the data right*.** It is the only half-open category: the **shape** is closed, the **subject** is yours.
+
+| Closed — pick from the menu | Open — domain knowledge |
+|---|---|
+| `kind` (**9** named types) · `limit` · `severity` ⊥ `blocking` · `when` | `expect` (the columns, the bounds) · `why` |
+
+⚠️ **`checks` may never be `"none"`** (claim #7), and `pipeline.step()` validates the descriptor **before compute runs** — so a step **cannot execute without declaring checks**, and cannot run them anywhere but through the validator.
+
+> **No vocabulary could supply that `WARD` is text in the CoA *Active* resource and `WARD_NUMBER` is int4 in *Closed*.** That is what `expect` is for. **The machinery is canned; the domain facts are not.** Anyone claiming 100% canned is overselling it.
+
+#### ⓸ And the archetype decides which of the 17 you must answer
+
+`identity.archetype` is not a label — **it drives the required-field profile** (§1.6). Measured across `sources`: ING 9 · ENR 6 · AST 5 · LNK 3 · MAT 1 · MCH 1 · BKF 1 · REC 1 = **27**.
+
+| Archetype | Forces |
+|---|---|
+| `ASSERT` | `outputs` **must** be `"none"`; `counters` `null`; `checks` ≥ 1 |
+| `ENRICHER` | ⚠️ `pending` on a lineage column **⇒ a declared invalidator** — the centroid defect made *unexpressible* |
+| `INGESTOR` | `write_discipline` + `retract` + `replay` + `empty_source` all required |
+| `LINK` / `MATCHER` | `invalidates` required; counters scoped by `writes.key` |
+
+**For an ASSERT, 6 of 17 categories collapse to `"none"`.** That is the archetype earning its place: it tells you which categories are live, and forces the rest to be *explicit* rather than *forgotten*.
+
+---
+
+### 1.1b ⚠️ THE FROZEN CONTRACT — 17 categories, set in stone
 
 > **This is the load-bearing rule of the whole programme.** The category list and the allowed responses are decided **once, for all 64 steps**. Extending a `!` vocabulary is a **runner change reviewed once**, never a per-step invention. A step that needs a value the menu lacks does not add one — it escalates (§7.3's kill criteria).
 >
@@ -189,11 +337,54 @@ The 4 estate-only extras are `permits ∩ coa`: `link_coa` · `classify_lifecycl
 
 > **A shared step's differential must be green in EVERY chain it appears in — up to 4.** Converting `refresh_snapshot` against `sources` alone proves a quarter of it. That is C4's whole reason for existing, and `sharing.chains` is what makes the gate enumerable instead of remembered.
 
-### 1.4 ⚠️ THE CONCERN INDEX — every Spec 120 concern, its home, its allowed responses
+### 1.4 THE CONCERN INDEX — 43 concerns, each with exactly one home
 
-> **This is the McDonald's table.** Every operational concern Spec 120 raises appears here exactly once, with a home and a closed menu. **`"none"` is always a legal answer and must be written explicitly.** Two fields are deliberately open, marked ⬦.
+#### How a concern differs from a category — and why this is not a second list
+
+**A category is a place you WRITE something. A concern is a question that must be ANSWERED.**
+
+They are not parallel lists, and the Concern Index **adds no declaration surface**. Every concern resolves to exactly one of three homes:
+
+| Home | Meaning | Count |
+|---|---:|---:|
+| one of the **17 categories** | the step declares it | **38** |
+| **RUNNER** | the library owns it; **nothing is declared per step, and a step cannot opt out** | **4** |
+| **OPEN** | the compute | **1** |
+
+> **So the index is a lookup, not an inventory.** Ask *"where does timeout behaviour live?"* → concern 8 → `execution.statement_timeout`. Ask *"who owns the verdict?"* → concern 23 → **the runner, and you may not touch it.**
+
+#### ⚠️ The four RUNNER concerns — the boundary between the step and the library
+
+**These are the ones a step author cannot influence, and that is deliberate.** They are the behaviours that were divergent in every script before this contract existed:
+
+| # | Concern | Why the runner owns it — measured |
+|---|---|---|
+| **2** | Step errors / throws | **8 distinct catch behaviours** across 27 scripts, incl. 4 silent swallows. `logError` is 0/27 |
+| **3** | Crashes (SIGKILL / OOM / ceiling) | 3 steps strand a `running` row; one strand ran **39 days**. The ledger belongs in a `finally` nobody writes |
+| **4** | Reconcile the previous run | there is no external supervisor — the runner is the thing that dies (A3) |
+| **23** | **Verdict** | **9–11 distinct cascades**; 3 scripts structurally cannot emit WARN, 3 cannot emit FAIL, 7 hardcode `'PASS'` on the skip path. ⚠️ **Row-derived, always — never a parallel boolean** |
+
+> ⚠️ **A step declares `checks`; the runner derives the verdict FROM them.** That is the single most important seam in the contract: the step says *what is true*, the library decides *what that means*. Collapsing the two is how `hasFails ? 'FAIL' : 'PASS'` became live in three scripts.
+
+#### The 1:1 property is PROVEN, not asserted
+
+```
+node scripts/violations/map-concerns.mjs docs/reports/generated/122-concern-homes.md
+```
+
+Hard-fails on: a concern with **no** home · a concern with **two** homes · a home that is not a category/RUNNER/OPEN · **a category that is nobody's home** · a duplicate concern number.
+
+⚠️ **Writing that check found three defects in this very section, which is why it exists:**
+
+| Found | Fix |
+|---|---|
+| **concern 21 had TWO homes** — `staleness.checkpoint` *and* `recovery.resume` | split into **21** (checkpoint) and **21b** (resume). *This is exactly the overlap the index claimed could not happen* |
+| ⚠️ **`emits` was nobody's home** — a declaration category no concern asked for | added as **9b** |
+| the mapper's own id regex was digits-only and **silently dropped `9b`/`21b`** | widened. Same shape as the `[a-e]` bug that lost claims 52f–h — it reported a clean 41 and looked right |
+
+> **`"none"` is always a legal answer and must be written explicitly.** Two fields are deliberately open, marked ⬦ — plus the compute.
 >
-> ⚠️ **How this section came to exist is the point.** Four categories were found *reactively* — the operator noticed a gap. That is the same failure Spec 121 §12.9 made: a coverage matrix that mapped ID *spaces*, looked complete, and hid 162 uncited claims. **The fix is `scripts/violations/map-categories.mjs`**, which maps every one of the 290 claims to a home and **hard-fails on an orphan**. Gaps are now found by a tool, not by noticing.
+> ⚠️ **How this section came to exist is also the point.** Four categories were found *reactively*: the operator noticed a gap. That is the failure Spec 121 §12.9 made — a coverage matrix that mapped ID *spaces*, looked complete, and hid 162 uncited claims. Two tools now close it: `map-concerns.mjs` proves concern↔home is 1:1, and **`map-categories.mjs`** maps all 290 claims to a home and **hard-fails on an orphan**. Gaps are found by a tool, not by noticing.
 
 | # | Concern | Declared in | Allowed responses |
 |---|---|---|---|
@@ -206,6 +397,7 @@ The 4 estate-only extras are `permits ∩ coa`: `link_coa` · `classify_lifecycl
 | 7 | **Time budget** | `execution.budget` | duration · `none` |
 | 8 | **Statement timeout** | `execution.statement_timeout` | duration · `none` |
 | 9 | **Step ceiling** | `execution.step_timeout` | duration · `none` — ⚠️ **today this lives in the manifest and 1 of 67 declares it** |
+| 9b | ⚠️ **Extra `records_meta` keys** | `emits` | key list · `none` — **NEW: `emits` was the one category no concern asked for** |
 | 10 | **Transaction budget** | `execution.txn_budget` + `chunked` | duration · `none`; `chunked` **required `true`** where budget is exceeded by design |
 | 11 | **Duration trend** | `checks[] {kind:"trend"}` | `{warn: 3x, fail: 10x}` vs trailing median · `none` |
 | 12 | **Producer version pin** | `inputs.version_pin` | `exact` · `gte` · `none` |
@@ -217,7 +409,8 @@ The 4 estate-only extras are `permits ∩ coa`: `link_coa` · `classify_lifecycl
 | 18 | **Retraction** | `outputs.retract` | `none` · `departed` · `all` |
 | 19 | **Invalidation** | `outputs.invalidates` | `[{table, column, when}]` · `none` — ⚠️ **required when `pending` keys on a lineage column** (#54) |
 | 20 | **Publish / WAP** | `outputs.publish` | `direct` · `pointer` |
-| 21 | **Checkpoint / resume** | `staleness.checkpoint` + `recovery.resume` | `none` · `{cursor, ordered}`; ⚠️ `ordered:false` **cannot** resume |
+| 21 | **Checkpoint** — can this step record where it got to? | `staleness.checkpoint` | `none` · `{cursor, ordered}`; ⚠️ `ordered:false` **cannot** resume |
+| 21b | **Resume** — will it use that checkpoint after a crash? | `recovery.resume` | `checkpoint` · `none` |
 | 22 | **Counters** | `counters` | which variable feeds `records_total` / `_new` / `_updated` · `null` for observers |
 | 23 | **Verdict** | **RUNNER** | nothing declared — **row-derived, never a parallel boolean** |
 | 24 | **Audit rows** | `checks` | co-located with the write; the runner emits them |
@@ -453,7 +646,25 @@ Spec 120 §12.6 calls *"no per-step escape hatches"* the single most important r
 
 > **Rule (A2, mandatory):** an ast-grep rule over every file in `manifest.chains[*].file` asserting the module's top level is exactly
 > `module.exports = pipeline.step(<descriptor>, <function identifier>)`
-> plus `require` calls, and **nothing else executable**. `pipeline.run(` is banned outright in those files.
+> plus `require` calls, `const` declarations of **literals only**, and the two named re-exports below — and **nothing else executable**. `pipeline.run(` is banned outright in those files.
+
+> ⚠️ **CORRECTED 2026-08-23 — three MANDATORY rules were mutually incompatible, and the only worked example violated all three.**
+>
+> §5.1 said *"nothing else executable"*; §5.2 requires **named exports** `descriptor` and `compute` (claim #163, the compute-swap test); §5.4 requires keeping **`const ADVISORY_LOCK_ID = 102;` textually** so three source-text loops stay green. A file cannot satisfy all three as they were written. **The frozen shape resolves it — this is the whole file, and it is the ONLY legal shape:**
+>
+> ```js
+> const pipeline  = require('../lib/pipeline');
+> const descriptor = require('./assert-schema.descriptor.json');
+> const compute    = require('../lib/compute/assert-schema');
+> const ADVISORY_LOCK_ID = 102;          // literal only — §5.4's source-text loops
+> module.exports = pipeline.step(descriptor, compute);
+> module.exports.descriptor = descriptor; // §5.2 / #163 compute-swap
+> module.exports.compute    = compute;
+> ```
+>
+> **What the ast-grep rule permits, exhaustively:** `require(...)` bindings · `const <ID> = <literal>` · exactly one `module.exports = pipeline.step(<identifier>, <identifier>)` · the two named re-exports. **Anything else is a build failure.**
+>
+> ⚠️ **Two consequences, stated because they were previously wrong:** the earlier example passed a **spread expression** `{ ...descriptor, identity: {...} }` where the rule demands an identifier — **illegal, and it also silently forked the descriptor** so the on-disk JSON was no longer what ran. And `identity.lock` is now **asserted against** the textual `ADVISORY_LOCK_ID` by the conformance suite rather than spliced into the object at runtime, so the JSON and the constant cannot drift apart.
 
 Ships with its own known-bad fixture per Spec 120 §12b.6 (claims #134–#136). Built on the repo's existing DSL — `scripts/ast-grep-rules/*.yml`, driven from `.husky/pre-commit`. ⚠️ **ast-grep lints *code* natively; this is a case where islands are cheaper than the runner, which would have needed a new JSON-rule mechanism.**
 
@@ -765,23 +976,38 @@ Spec 120 §9.4's four, with one correction: *"step file > 20 lines"* is meaningl
 
 ---
 
-## 10. Sequence
+## 10. Sequence — NOT restated here
 
-| Stage | What | Entry criterion |
+> ⚠️ **CORRECTED 2026-08-23.** This section previously carried its own stage table, and it **disagreed with the plan**: it used `P1` for *"envelope repair + one clean cloud run"* while the programme plan uses `P1` for the **centroid invalidator** and `P3` for the envelope. A grounding audit found **`P1` carrying three incompatible meanings across four documents**, and this table was one of the three.
+>
+> **A reader who took this table's `P1` would satisfy the S-gate by fixing a centroid — silently deleting the green-cloud-run precondition that §11 failure-mode 7 exists to enforce.**
+
+**The sequence has exactly one source of record: `.cursor/queued_task_step_opt_programme.md`**, and the active task is **generated** from it:
+
+```
+node scripts/violations/build-active-task.mjs --write    # -> .cursor/active_task_programme.md
+node scripts/violations/build-active-task.mjs --check    # exits 1 on drift
+```
+
+The generator hard-fails on a stage id defined twice, on a claim count that disagrees with `plan-claims.mjs`, and on a category count that disagrees with this spec — which is what stops this divergence recurring.
+
+### 10.1 What this spec DOES own about sequencing
+
+Two entry criteria belong to the architecture, not the plan, and they bind wherever the plan places them:
+
+| Criterion | Why it is architectural |
+|---|---|
+| ⚠️ **No step converts before one clean `chain_sources` run in the cloud** | converting while the chain cannot complete makes a conversion regression **indistinguishable** from the pre-existing envelope failure (§11 KFM 7) |
+| ⚠️ **Phase B lands, and the golden master is captured AFTER it** | capturing earlier freezes pre-Phase-B behaviour, and the conversion then **silently reverts Phase B behind a green differential** |
+
+### 10.2 The two namespaces, disambiguated
+
+| Namespace | Used for | Where |
 |---|---|---|
-| **P0** | ⚠️ **Fix the four DB-default scripts; re-baseline the audit** (§2.3) | none — do this first, ~1 hour |
-| **P1** | **Envelope repair + one clean cloud run** (§1.4) | P0 |
-| **S** | Descriptor schema · `pipeline.step()` · conformance suite · ast-grep shape rule · ledger generator | ⚠️ **P1 green.** Not before |
-| **C1** | Pilot 3 — simplest, median, `enrich-parcels` | S green; template unfrozen |
-| **C2** | Kill criteria evaluated | C1 complete |
-| **C3** | Freeze template; publish smallest + largest as exemplars | **C2 clean** |
-| **C4–C6** | Shared steps (**10 steps, 28 slots, up to 4 chains** `[MEASURED]`) → rest of `sources` → the other 5 chains | C3 |
+| **`PH-0` … `PH-8`** | Spec 121 §3's **assessment phases** — boundary freeze, archaeology, structure, intent, seams, classification, test design, score | Spec 123 |
+| **`P0` … `P3`** | **programme stages** — audit instrument · centroid · Phase B · envelope + green run | the plan |
 
-**Estate: 86 slots, 64 distinct steps** `[MEASURED]`.
-
-⚠️ **Cost is NOT estimated here.** Spec 121 §12.18d records that 20 of 49 stages carried no estimate, and §12.6's *"~32 weeks"* covered setup only. **122 does not repeat that.** Setup (S) is the only stage this spec sizes, and it is deliberately gated behind a green run so the estimate is taken against a working chain.
-
----
+**A `P` token without its namespace is ambiguous. Do not write one.**
 
 ## 11. Known Failure Modes
 

@@ -41,9 +41,26 @@ Four scripts default to the **pre-cutover database** when `DATABASE_URL` is unse
 
 That check's own text reads *"inert-INFO expected post-fix"* — someone fixed it, verified against a database where the defect could not appear, and closed it. **This is the mechanism behind "every fix produced a surprise": the feedback loop was corrupted, not the reasoning.**
 
-- [ ] Make `DATABASE_URL` **required** in all four — fail loud, no silent fallback. Red-first: a test asserting the scripts refuse when unset.
+⚠️ **CORRECTED 2026-08-23 — the prescribed fix was a NO-OP on its own worst case, and the class is 24 files, not 4.**
+
+`grep -rln "localhost:5432\|host: 'localhost'\|host: process.env.PG_HOST" scripts/` → **24 files**, in three tiers:
+
+| Tier | Files | How they resolve the target | Does "make `DATABASE_URL` required" help? |
+|---|---:|---|---|
+| **1 — no env escape at all** | **3** | fully hardcoded pool: `p14-trade-attachment-evaluation.js:80` · `wf3-cost-coherence-sanity.js:32` · `wf3-sample-full-dump.js:13` | ⛔ **no** — they cannot be pointed anywhere |
+| **2 — `PG_*` only, never reads `DATABASE_URL`** | **11** | `PG_HOST \|\| 'localhost'` / `PG_DATABASE \|\| 'buildo'`. ⚠️ **includes `cost-estimates-sanity-audit.js`, which P0 named** — `grep -c DATABASE_URL` → **0** | ⛔ **no — setting the var changes nothing** |
+| **3 — reads `DATABASE_URL`** | **10** | incl. `parcel-sanity-audit.js` (6 refs), `migrate.js` (5) | ✅ yes |
+
+> ⚠️ **So the bug P0 exists to close was hiding inside P0's own remediation.** Set `DATABASE_URL=…54322`, re-run `cost-estimates-sanity-audit.js`, and it still silently grades the 222-migration database.
+
+**The correct fix is one shared resolver, not a per-file flag** — and it is *the same mechanism as concern 32* (`guards.requires.database`), applied to tooling instead of steps:
+
+- [ ] `scripts/lib/resolve-db.js` — **one** resolver. Fails loud when no target is given; **asserts `current_database()` and a `min_migration` floor** before returning a pool. A tool pointed at a 222-migration database **refuses**, it does not report `0 — PASS`.
+- [ ] Convert all **24**: tier 3 first (cheap), then tier 2 (the real fix), then tier 1 (which currently cannot be redirected at all).
+- [ ] Red-first: a test asserting each refuses with no target, and refuses against a below-floor database.
 - [ ] Re-run both Reality-Check instruments against `54322`. **This is the first true defect inventory.**
-- [ ] Re-verify every bug whose closure was certified against the stale DB. `max_build_dim_below_floor` is one; the `why` text suggests more.
+- [ ] Re-verify every bug whose closure was certified against the stale DB. `max_build_dim_below_floor` is one (`0 — PASS` vs **27,984 — GATE→FAIL**); the *"inert-INFO expected post-fix"* wording suggests others.
+- [ ] ⚠️ **`migrate.js` is in this class.** A migration applier that can silently target the wrong database is a strictly worse instance of the same defect — treat it as tier 3's first conversion, not last.
 - [ ] File anything the re-baseline surfaces.
 
 > **Nothing downstream is measurable until this lands.** 6 register claims (§A.20) discharge here.
