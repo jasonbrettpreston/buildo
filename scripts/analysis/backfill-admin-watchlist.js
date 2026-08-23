@@ -24,7 +24,8 @@
 // ([PF8] — the list renders the snapshot without a per-row display JOIN).
 
 require('dotenv/config');
-const { Pool } = require('pg');
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db');
 
 const CONFIRM = process.argv.includes('--confirm');
 
@@ -36,13 +37,7 @@ function parseAdminUids(raw) {
     .filter(Boolean);
 }
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: Number(process.env.PG_PORT || '5432'),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
+const pool = createResolvedPool({ label: 'backfill-admin-watchlist' });
 
 const SELECT_SQL = `
   SELECT DISTINCT ON (lv.user_id, lv.lead_key)

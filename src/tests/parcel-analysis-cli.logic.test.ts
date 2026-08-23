@@ -18,26 +18,50 @@ const auditSource = () => fs.readFileSync(AUDIT_PATH, 'utf-8');
 const dumpSource = () => fs.readFileSync(DUMP_PATH, 'utf-8');
 
 describe('parcel-sanity-audit.js — C6 CLI pool (DATABASE_URL-aware, target always logged)', () => {
-  it('exports makeCliPool and honors process.env.DATABASE_URL with ssl-config TLS', () => {
+  // ── WHY THESE THREE CHANGED (WF3 2026-08-23, Spec 122 §P0) ────────────────
+  // The C6 fold (P4-F0, Reality-Check) put three properties on makeCliPool:
+  // DATABASE_URL-aware with ssl-config TLS · logs its target on BOTH branches ·
+  // redacts the password. All three are PRESERVED — makeCliPool now delegates
+  // to scripts/lib/resolve-db.js, which does each one for every caller — so the
+  // assertions follow the behaviour to its new home instead of being deleted.
+  //
+  // The ONE property knowingly retired is C6's second branch: "grading the
+  // default local dev DB (localhost:5432/buildo)". C6 fixed the SILENCE but
+  // kept the wrong DEFAULT, so this audit still graded the 222-migration
+  // pre-cutover DB whenever DATABASE_URL was unset — it just announced it
+  // while doing so. Measured 2026-08-23: 2,394 HIGH/MED violations on that DB
+  // vs 30,288 on the authoritative one, and max_build_dim_below_floor read
+  // 0 — PASS instead of 27,984 — GATE→FAIL. Announcing a wrong answer is not
+  // transparency. There is now no second branch to log.
+  const resolverSource = () =>
+    fs.readFileSync(path.resolve(__dirname, '../../scripts/lib/resolve-db.js'), 'utf-8');
+
+  it('exports makeCliPool, which resolves DATABASE_URL with ssl-config TLS via the shared resolver', () => {
     const source = auditSource();
     expect(source).toMatch(/function makeCliPool/);
-    expect(source).toMatch(/process\.env\.DATABASE_URL/);
-    expect(source).toMatch(/resolveSslConfig\(\{\s*connectionString\s*\}\)/);
+    expect(source).toMatch(/createResolvedPool\(\{\s*label\s*\}\)/);
     expect(source).toMatch(/module\.exports\s*=\s*\{[^}]*makeCliPool/);
+    const resolver = resolverSource();
+    expect(resolver).toMatch(/DATABASE_URL/);
+    expect(resolver).toMatch(/resolveSslConfig\(\{\s*connectionString\s*\}\)/);
   });
 
-  it('logs which DB it is grading on BOTH branches — the silence was the blind spot', () => {
-    const source = auditSource();
-    const fnBody = source.slice(source.indexOf('function makeCliPool'), source.indexOf('function makeCliPool') + 1200);
-    expect(fnBody).toMatch(/grading DATABASE_URL target/);
-    expect(fnBody).toMatch(/grading the default local dev DB/);
+  it('still logs which DB it is grading — and now REFUSES rather than defaulting', () => {
+    const resolver = resolverSource();
+    // The log is unconditional, not per-branch: every resolution prints the
+    // database, user and migration depth actually connected to.
+    expect(resolver).toMatch(/\$\{label\}\] target: \$\{description\} → database=/);
+    // The retired branch must not come back.
+    expect(auditSource()).not.toMatch(/grading the default local dev DB/);
+    expect(resolver).toMatch(/no explicit database target/);
   });
 
   it('redacts the connection-string password before logging it', () => {
-    const source = auditSource();
-    expect(source).toMatch(/\.replace\(.*\*\*\*/);
+    const resolver = resolverSource();
+    expect(resolver).toMatch(/\.replace\(.*\*\*\*/);
     // no branch logs the raw connectionString variable directly
-    expect(source).not.toMatch(/console\.log\(`?.*\$\{connectionString\}/);
+    expect(resolver).not.toMatch(/console\.log\(`?.*\$\{connectionString\}/);
+    expect(auditSource()).not.toMatch(/console\.log\(`?.*\$\{connectionString\}/);
   });
 
   it('runAudit uses makeCliPool — the hardcoded localhost Pool literal is gone from the entrypoint', () => {

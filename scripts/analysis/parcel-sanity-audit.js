@@ -14,8 +14,8 @@
 // CHECK carries `gate: true` iff it is a ZERO-BASELINE physical-impossibility/mislink/retired invariant
 // whose reappearance is a definite regression → the step FAIL-gates the chain on it (Spec 48 §3.6).
 'use strict';
-const { Pool } = require('pg');
-const { resolveSslConfig } = require('../lib/ssl-config');
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db');
 
 // CLI pool factory (P4-F0 fold C6, Reality-Check): the entrypoints used a
 // HARDCODED localhost:5432 dev-DB pool — pointed "at cloud" they silently
@@ -25,14 +25,13 @@ const { resolveSslConfig } = require('../lib/ssl-config');
 // the historical Docker dev-DB default, and ALWAYS logs which DB it is
 // grading — the silence was the bug, not just the target.
 function makeCliPool(label) {
-  const connectionString = process.env.DATABASE_URL;
-  if (connectionString && connectionString.trim()) {
-    const redacted = connectionString.replace(/:\/\/([^:@/]+):[^@]+@/, '://$1:***@');
-    console.log(`[${label}] grading DATABASE_URL target: ${redacted}`);
-    return new Pool({ connectionString, ssl: resolveSslConfig({ connectionString }) });
-  }
-  console.log(`[${label}] DATABASE_URL not set — grading the default local dev DB (localhost:5432/buildo)`);
-  return new Pool({ host: 'localhost', port: 5432, user: 'postgres', password: 'postgres', database: 'buildo' });
+  // Spec 122 §P0 (WF3 2026-08-23). This factory ALREADY logged its target —
+  // and still graded the wrong DB, because with DATABASE_URL unset it fell
+  // back to localhost:5432/buildo and announced that as normal. Announcing the
+  // wrong answer is not transparency. It now refuses: no target => throw, and
+  // a below-floor database (the 222-migration pre-cutover DB) is rejected on
+  // the first connection rather than graded.
+  return createResolvedPool({ label });
 }
 
 // Residential scope + a zone-class bucket used by the zone-aware checks.

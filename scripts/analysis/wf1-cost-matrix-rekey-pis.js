@@ -7,9 +7,9 @@
  */
 'use strict';
 
-const { createPool } = require('../lib/pipeline');
+const { createResolvedPool } = require('../lib/resolve-db');
 
-const pool = createPool();
+const pool = createResolvedPool({ label: 'wf1-cost-matrix-rekey-pis' });
 
 async function safeQuery(label, sql, params) {
   try {
@@ -180,7 +180,11 @@ async function matrixSnapshot() {
 async function main() {
   console.log('WF1 PI investigation - scope_intensity_matrix production-vocab re-key');
   console.log('Date: ' + new Date().toISOString());
-  console.log('DB: ' + (process.env.PG_DATABASE || 'buildo') + '@' + (process.env.PG_HOST || 'localhost'));
+  // Spec 122 §P0: this line USED to print `buildo@localhost` from the same
+  // defaults the pool used — a confident, wrong answer. The resolver stamps the
+  // real target (database, user, migration depth) on its first connection, so
+  // print what was actually resolved instead of re-deriving it from env.
+  console.log('DB: ' + pool.buildoTarget.description + ` (via ${pool.buildoTarget.source})`);
   try {
     await matrixSnapshot();
     await pi1();

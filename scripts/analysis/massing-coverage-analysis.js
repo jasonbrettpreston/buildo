@@ -5,15 +5,10 @@
  *
  * Chain: permit -> permit_parcels -> parcels (centroid) -> parcel_buildings -> building_footprints
  */
-const { Pool } = require('pg');
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db');
 
-const pool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
-  database: process.env.PG_DATABASE || 'buildo',
-  user: process.env.PG_USER || 'postgres',
-  password: process.env.PG_PASSWORD || 'postgres',
-});
+const pool = createResolvedPool({ label: 'massing-coverage-analysis' });
 
 async function safeQuery(label, sql) {
   try {

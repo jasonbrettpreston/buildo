@@ -27,8 +27,8 @@
 'use strict';
 
 require('dotenv').config();
-const { Pool } = require('pg');
-const { resolveSslConfig } = require('./lib/ssl-config');
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('./lib/resolve-db');
 
 // Values per Spec 115 §2 (chain cadences) / §6 (this table's row inventory).
 // All rows are global (chain_id = NULL) — none of these five pipelines need
@@ -44,21 +44,7 @@ const SCHEDULES = [
 ];
 
 async function main() {
-  const pool = new Pool(
-    process.env.DATABASE_URL
-      ? {
-          connectionString: process.env.DATABASE_URL,
-          ssl: resolveSslConfig({ connectionString: process.env.DATABASE_URL }),
-        }
-      : {
-          host: process.env.PG_HOST || 'localhost',
-          port: parseInt(process.env.PG_PORT || '5432', 10),
-          database: process.env.PG_DATABASE || 'buildo',
-          user: process.env.PG_USER || 'postgres',
-          password: process.env.PG_PASSWORD || '',
-          ssl: resolveSslConfig({ host: process.env.PG_HOST || 'localhost' }),
-        }
-  );
+  const pool = createResolvedPool({ label: 'seed-pipeline-schedules' });
 
   console.log('=== Seeding pipeline_schedules (Spec 115 §6) ===\n');
 

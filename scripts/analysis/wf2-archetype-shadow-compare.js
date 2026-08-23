@@ -4,8 +4,9 @@
 // Usage: node -r dotenv/config scripts/analysis/wf2-archetype-shadow-compare.js
 'use strict';
 require('dotenv').config();
-const { Pool } = require('pg');
-const pool = new Pool({ host: process.env.PG_HOST||'localhost', port: process.env.PG_PORT||5432, database: process.env.PG_DATABASE||'buildo', user: process.env.PG_USER||'postgres', password: process.env.PG_PASSWORD });
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db');
+const pool = createResolvedPool({ label: 'wf2-archetype-shadow-compare' });
 
 const fmt = (n) => n == null ? '—' : Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
 

@@ -21,9 +21,14 @@ const DB_START = '<!-- DB_SCHEMA_START -->';
 const DB_END = '<!-- DB_SCHEMA_END -->';
 
 async function main() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:@localhost:5432/buildo',
-  });
+  // Spec 122 §P0 (WF3 2026-08-23) — the hardcoded fallback here spelled the
+  // pre-cutover database out in full. `npm run db:docs` with DATABASE_URL unset
+  // therefore REGENERATED docs/specs/00-architecture/01_database_schema.md from
+  // a 222-migration schema and committed it as the current one. Generated
+  // schema docs are read as ground truth, so this defaulted straight into the
+  // spec corpus. Now fail-loud + floor-asserted.
+  const { createResolvedPool } = await import('./lib/resolve-db.js');
+  const pool = createResolvedPool({ label: 'generate-db-docs' });
 
   try {
     // ── Tables ──────────────────────────────────────────────────────────────

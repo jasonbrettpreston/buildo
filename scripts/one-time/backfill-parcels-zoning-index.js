@@ -14,7 +14,7 @@
  */
 'use strict';
 
-const { createPool } = require('../lib/pipeline');
+const { createResolvedPool } = require('../lib/resolve-db');
 
 // CONCURRENTLY must run outside a transaction block → each via pool.query (autocommit).
 const INDEXES = [
@@ -42,7 +42,7 @@ const INDEXES = [
 ];
 
 async function main() {
-  const pool = createPool();
+  const pool = createResolvedPool({ label: 'backfill-parcels-zoning-index' });
   try {
     for (const sql of INDEXES) {
       const name = (sql.match(/idx_[a-z_]+/) || ['?'])[0];

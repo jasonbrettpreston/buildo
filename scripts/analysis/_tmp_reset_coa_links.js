@@ -1,7 +1,8 @@
 'use strict';
 require('dotenv/config');
-const { Pool } = require('pg');
-const pool = new Pool({ host: process.env.PG_HOST||'localhost', port: Number(process.env.PG_PORT||'5432'), database: process.env.PG_DATABASE||'buildo', user: process.env.PG_USER||'postgres', password: process.env.PG_PASSWORD });
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db');
+const pool = createResolvedPool({ label: '_tmp_reset_coa_links' });
 (async () => {
   // Reset parcel_linked_at on CoAs that have NO lead_parcels link so link_coa_to_parcels reprocesses
   // them (now that street_name_normalized is backfilled, they can match via the Spec 54 bridge).

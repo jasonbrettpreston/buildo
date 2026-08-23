@@ -25,7 +25,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createPool, getDbTimestamp } = require('../lib/pipeline');
+const { getDbTimestamp } = require('../lib/pipeline');
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db');
 const { loadMarketplaceConfigs } = require('../lib/config-loader');
 const {
   estimateCostShared,
@@ -36,7 +38,7 @@ const {
 const { mapToLines, isLowRiseResidential } = require('../../src/features/leads/lib/archetype-cost-map');
 const { buildCoaConfig, buildCoaArchetypeInput, mapCoaRowToBrainInput } = require('../lib/coa-cost-model');
 
-const pool = createPool();
+const pool = createResolvedPool({ label: 'wf2-priceable-none-taxonomy' });
 
 // The exact §4D-propagated cost/area column list the two Muscles fetch.
 // Parameterized by the base-table alias (p=permits, ca=coa) so the bare

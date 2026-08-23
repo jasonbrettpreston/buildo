@@ -6,7 +6,8 @@
 // Dev DB (postgres/postgres@localhost:5432/buildo). Read-only except the scoped re-enrich UPDATE.
 // Usage: node scripts/analysis/wf3-cost-coherence-sanity.js
 'use strict';
-const { Pool } = require('pg');
+// Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
+const { createResolvedPool } = require('../lib/resolve-db');
 const ep = require('../enrich-parcels.js');
 const mb = require('../lib/max-build.js');
 const { buildParcelCostMenu } = require('../lib/parcel-cost.js');
@@ -29,7 +30,7 @@ const acc = {
 };
 
 (async () => {
-  const pool = new Pool({ host: 'localhost', port: 5432, user: 'postgres', password: 'postgres', database: 'buildo' });
+  const pool = createResolvedPool({ label: 'wf3-cost-coherence-sanity' });
 
   // Build the sample: flagged 11 + up to 25 borrowed-FSI suspects (RD/RS with fsi≥1.5 today)
   // + up to 12 diverse across other residential zones. Deterministic (ORDER BY id).

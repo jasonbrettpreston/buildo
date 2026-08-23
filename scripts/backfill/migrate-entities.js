@@ -12,7 +12,7 @@
  * failure (e.g. step 3 throws) rolls back steps 1–N-1, preventing orphaned
  * entity rows without entity_projects join rows.
  */
-const { Pool } = require('pg');
+const { createResolvedPool } = require('../lib/resolve-db');
 const pipeline = require('../lib/pipeline');
 
 /**
@@ -21,17 +21,7 @@ const pipeline = require('../lib/pipeline');
  *   uses the production pipeline SDK.
  */
 async function run(opts) {
-  const pool = opts && opts.pool ? opts.pool : new Pool(
-    process.env.DATABASE_URL
-      ? { connectionString: process.env.DATABASE_URL }
-      : {
-          host: process.env.PG_HOST || 'localhost',
-          port: parseInt(process.env.PG_PORT || '5432', 10),
-          database: process.env.PG_DATABASE || 'buildo',
-          user: process.env.PG_USER || 'postgres',
-          password: process.env.PG_PASSWORD || '',
-        }
-  );
+  const pool = opts && opts.pool ? opts.pool : createResolvedPool({ label: 'migrate-entities' });
   const pl = (opts && opts._pipeline) ? opts._pipeline : pipeline;
 
   const tag = '[migrate-entities]';

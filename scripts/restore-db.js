@@ -70,6 +70,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { isLocalMode } = require('./lib/ssl-config');
+// Spec 122 §P0 — resolveDbConfig only (no pool, no floor): see the SOURCE
+// fence at the pg_dump call site for why this one takes half the contract.
+const { resolveDbConfig } = require('./lib/resolve-db');
 const gates = require('./validation/supabase-load-gates');
 
 // Client-tool minimum major version (Spec 112 §5) — the pg_dump/pg_restore
@@ -701,12 +704,31 @@ async function run() {
           dumpPath = path.join(dumpTempDir, 'source.dump');
         }
 
+        // Spec 122 §P0 (WF3 2026-08-23) — CHESTERTON'S FENCE, READ BEFORE CHANGING.
+        // This is the one place in the estate where a loopback pre-cutover-shaped
+        // database can be the CORRECT target: it is the pg_dump SOURCE, and the
+        // `.env` contract says the source is the PG_*-addressed dev DB. So this
+        // site takes only HALF the P0 contract:
+        //   ✓ no silent default — resolveDbConfig throws if PG_HOST/PG_PORT/
+        //     PG_DATABASE are not all set, instead of quietly dumping from
+        //     localhost:5432/buildo and calling it "the dev DB".
+        //   ✗ NO migration floor — a restore SOURCE may legitimately sit below
+        //     it (that is the whole reason it is being restored FROM), and this
+        //     is a pg_dump argument set, not a pool: there is no connection here
+        //     for the resolver to assert on. The loopback guard below is the
+        //     safety property that actually matters, and it is unchanged.
+        // `envVars: []` forces the discrete PG_* path — DATABASE_URL must NOT
+        // win here, or the source would silently follow the restore TARGET.
+        const sourceCfg = resolveDbConfig({ label: 'restore-db:source', envVars: [] }).poolConfig;
         const sourceConn = {
-          host: process.env.PG_HOST || 'localhost',
-          port: parseInt(process.env.PG_PORT || '5432', 10),
-          user: process.env.PG_USER || 'postgres',
-          database: process.env.PG_DATABASE || 'buildo',
+          host: sourceCfg.host,
+          port: sourceCfg.port,
+          user: sourceCfg.user,
+          database: sourceCfg.database,
         };
+        console.log(
+          `[restore-db] SOURCE resolved from PG_*: ${sourceConn.user}@${sourceConn.host}:${sourceConn.port}/${sourceConn.database}`,
+        );
         // Spec 112 §4.2 — pg_dump/pg_restore don't go through ssl-config.js's
         // pg-Pool-shaped return value; TLS is negotiated via PGSSLMODE/PGSSLROOTCERT
         // env vars passed to the spawned process. Source here is always the

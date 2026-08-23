@@ -46,19 +46,9 @@ module.exports = applyLogicVariables;
 
 // ── Standalone invocation ────────────────────────────────────────────────────
 if (require.main === module) {
-  const { Pool } = require('pg');
+  const { createResolvedPool } = require('../lib/resolve-db');
 
-  const pool = new Pool(
-    process.env.DATABASE_URL
-      ? { connectionString: process.env.DATABASE_URL }
-      : {
-          host: process.env.PG_HOST || 'localhost',
-          port: parseInt(process.env.PG_PORT || '5432', 10),
-          database: process.env.PG_DATABASE || 'buildo',
-          user: process.env.PG_USER || 'postgres',
-          password: process.env.PG_PASSWORD || '',
-        },
-  );
+  const pool = createResolvedPool({ label: 'apply-logic-variables' });
 
   applyLogicVariables(pool)
     .then(() => pool.end())
