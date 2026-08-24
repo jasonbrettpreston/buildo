@@ -102,6 +102,7 @@
   "lot_size_sqft",
   "lot_size_sqm",
   "market_exceeds_bylaw",
+  "massing_enriched_at",
   "max_build_basis",
   "max_build_confidence",
   "max_build_fsi",

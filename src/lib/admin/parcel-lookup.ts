@@ -89,6 +89,9 @@ export const T3_GROUPS: Record<GroupKey, readonly string[]> = {
     'envelope_constrained', 'envelope_constraint_reason', 'max_build_stories_basis',
     'max_build_stories_aggressive', 'market_exceeds_bylaw', 'max_build_fsi', 'coa_fsi',
     'realized_fsi_p90',
+    // Migration 240 (Phase B B2 / D1'): the massing-enrichment watermark. Grouped with max_build
+    // because it gates the massing/max-build pass, mirroring zoning_enriched_at in `zoning`.
+    'massing_enriched_at',
   ],
   scenarios: [
     'cur_basement_gfa_sqm', 'cur_storey_gfa_sqm', 'cur_interior_reno_gfa_sqm',
