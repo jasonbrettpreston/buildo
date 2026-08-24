@@ -43,6 +43,8 @@ Everything downstream follows from this. It is why the differential gate can be 
 
 Both generators **self-test against a known-bad fixture and refuse to emit if the check does not fire** (Spec 121 §12b.6). `plan-claims.mjs` additionally **hard-fails on a single unassigned claim** — there is no default bucket, because a planner that silently defaults reports coverage it has not earned.
 
+> ⚠️ **R2 corollary (Spec 122, ratified 2026-08-23):** the certified artifact migrates off prose as machinery lands — `step.schema.json` is the canonical vocabulary from S1, and once the Violation Suite exists (S6) the **test manifest becomes the claim register**. The prose appendix stops being the thing certified.
+
 ---
 
 ## 2. The assessment — Spec 121 §3, split into batch and per-step
@@ -54,7 +56,7 @@ Both generators **self-test against a known-bad fixture and refuse to emit if th
 | **PH-1** archaeology — relative churn · fix density · **fence density** · 20% change coupling | **BATCH, once** | one row per step | G1 |
 | **PH-2** structure — churn × complexity, four quadrants | **BATCH, once** | the top-right quadrant, named | G2 |
 | **PH-4** risk class A/B/C → test intensity ••• / •• / • | **BATCH, once** | class per step | G4 |
-| **PH-0** boundary freeze — tables/columns written, audit rows, exit codes, stdout | **PER STEP** | I/O surface doc | G0 |
+| **PH-0** boundary freeze — tables/columns written, audit rows, exit codes, stdout · ⚠️ **plus re-derive the step's `write_discipline` classes from the code (Spec 122 R5 — evidence base §3f mislabels 5 steps; verify per step, never trust the port)** | **PER STEP** | I/O surface doc | G0 |
 | **PH-3** intent ledger — `git log -S` every non-obvious constant | **PER STEP**, and ⚠️ **only for the top-right quadrant + anything with fence density > 0** | ledger + evidence | G3 |
 | **PH-5** seam map — DB, clock, network, argv/env | **PER STEP** | seam list | G5 |
 | **P6** behaviour classification — CONTRACT / INCIDENTAL / DEFECT | **PER STEP** | classification | G6 |
