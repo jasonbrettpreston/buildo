@@ -19,6 +19,7 @@
 const { z } = require('zod');
 const pipeline = require('../lib/pipeline');
 const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
+const { finalizeStrandedRun } = require('../lib/ledger-window');
 
 const LOGIC_VARS_SCHEMA = z.object({
   cost_outlier_ceiling_cad:        z.coerce.number().finite().positive(),
@@ -76,6 +77,12 @@ pipeline.run('assert-data-bounds', async (pool) => {
 
   const startMs = Date.now();
   let runId = null;
+  // ── LEDGER STRAND WINDOW (P3, 2026-08-24) ──────────────────────────────
+  // Declared BEFORE the INSERT so nothing throwable sits between the INSERT and
+  // the `try {`. See scripts/lib/ledger-window.js for the corrected premise and
+  // for what a `finally` cannot protect (process kills).
+  let ledgerFinalized = false;
+  let windowError = null;
 
   // Skip own pipeline_runs tracking when run from a chain
   if (!CHAIN_ID) {
@@ -90,6 +97,10 @@ pipeline.run('assert-data-bounds', async (pool) => {
       pipeline.log.warn('[assert-data-bounds]', `Could not insert pipeline_runs row: ${err.message}`);
     }
   }
+
+  // Window OPEN. Body deliberately not re-indented — same convention this file
+  // already uses for the withAdvisoryLock callback, so the diff stays reviewable.
+  try {
 
   // Determine which checks to run based on chain context.
   // Each chain only validates data relevant to its own sources.
@@ -994,7 +1005,9 @@ pipeline.run('assert-data-bounds', async (pool) => {
            records_meta = $5
        WHERE id = $4`,
       [status, durationMs, errorMsg, runId, meta]
-    ).catch((err) => pipeline.log.warn('[assert-data-bounds]', `pipeline_runs UPDATE failed: ${err.message}`));
+    )
+      .then(() => { ledgerFinalized = true; })
+      .catch((err) => pipeline.log.warn('[assert-data-bounds]', `pipeline_runs UPDATE failed: ${err.message}`));
   }
 
   // Always emit PIPELINE_SUMMARY so chain orchestrator can capture records_meta
@@ -1016,7 +1029,26 @@ pipeline.run('assert-data-bounds', async (pool) => {
   // Spec 30 §5.4.1: only exception-derived failures halt ("I could not check").
   // Threshold-derived failures already redded the audit verdict above; halting on
   // them strands up to 11 downstream steps incl. backup_db (the C1 outage class).
+  // NOTE: fires AFTER the finalize UPDATE above, so the row already carries the
+  // real status/errors — the window sees ledgerFinalized=true and does not
+  // relabel it. Load-bearing ordering; do not move the throw up.
   if (fatalErrors.length > 0) throw new Error('Data bounds validation failed');
+
+  } catch (err) {
+    // Capture-and-rethrow: the §5.4.1 exception-class halt must still propagate.
+    windowError = err;
+    throw err;
+  } finally {
+    // Window CLOSE. Closes a THROWN error only — process kills bypass this.
+    await finalizeStrandedRun(pool, {
+      runId,
+      finalized: ledgerFinalized,
+      slug: 'assert-data-bounds',
+      durationMs: Date.now() - startMs,
+      error: windowError,
+      log: pipeline.log,
+    });
+  }
   }); // withAdvisoryLock
 
   if (!lockResult.acquired) return;

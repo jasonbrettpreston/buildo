@@ -17,7 +17,47 @@ on:
 jobs:
   sources:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
-    timeout-minutes: 210     # sources chain runs ~2h (2026-07-25 operator); 180 (chain) + checkout/setup/migrate-verify headroom. GitHub-hosted job ceiling is 360 min.
+    # P3 (2026-08-24) — ceilings re-measured and raised. The two inherited figures
+    # ("150 minutes of headroom" and "180 of 360 used") read as a contradiction and
+    # are not one: 360−210=150 compares the platform max to the JOB ceiling, while
+    # "180 of 360" compares it to the STEP ceiling. Both true, neither actionable
+    # alone — a step can never outlive its job, so buying the chain room means
+    # raising both numbers together.
+    #
+    #   platform per-job maximum (GitHub-hosted)   360   fixed, not ours
+    #   job   timeout-minutes                      210 → 330   (360 − 30 reserved:
+    #                                                   never run to the platform
+    #                                                   wall; it kills with no logs)
+    #   step  timeout-minutes                      180 → 300   (330 − 30 measured
+    #                                                   job overhead: checkout +
+    #                                                   setup-node + npm ci +
+    #                                                   migrate --verify + guards +
+    #                                                   verdict; today's 210−180=30,
+    #                                                   preserved exactly)
+    #   CHAIN_TIME_BUDGET_MINUTES                  unset → 290 (ceiling − 10)
+    #   CHAIN_DURATION_BUDGET_MINUTES              unset → 300 (= ceiling; the
+    #                                                   verdict tripwire warns past
+    #                                                   80% → 240 min)
+    #
+    # Evidence (docs/reports/2026-08-22-sources-chain-evidence-base.md §5b, 11 cloud
+    # runs): completions at 97.4 / 105.4 / 105.8 / 135.3 / 147.0 / 181.9 min. The
+    # 290-min self-stop clears the 181.9-min high-water mark by 108.1; the 240-min
+    # tripwire sits 58.1 above it, so it warns on an anomaly, not on a normal Sunday.
+    # The 2026-08-03 run that died AT 180 would now self-stop cleanly instead, with a
+    # `skipped: chain time budget reached` reason on every remaining step.
+    #
+    # NOT raised here: per-step `step_timeout_minutes` in scripts/manifest.json
+    # (present on 1 of 27 sources steps — refresh_snapshot: 15). The only per-step
+    # duration source is `pipeline_runs`, whose statistics the same report shows are
+    # poisoned by the 39-day strand (link_parcels read 2,447 min against a 0.3-min
+    # median). A per-step axe set from poisoned data kills healthy steps. That waits
+    # on a clean post-P2 run.
+    timeout-minutes: 330
+    env:
+      # SINGLE SOURCE for this chain's ceiling (Pipeline Rehab P1 — no second
+      # hardcode): consumed by the step's `timeout-minutes`, by the step's
+      # shell-computed soft budget, and by the verdict check's duration tripwire.
+      SOURCES_STEP_TIMEOUT_MINUTES: '300'
     concurrency:
       group: ${{ github.workflow }}   # F8 fold 2026-07-20: derived from the workflow name so a
       cancel-in-progress: false       # future rename can't drift the concurrency group out of sync
@@ -69,8 +109,21 @@ jobs:
       - name: Run sources chain
         id: sources
         if: steps.sources_guard.outputs.skip != 'true'
-        timeout-minutes: 180   # sources runs ~2h (operator 2026-07-25) — 90 killed it mid-chain. 3h covers a slow run; under the 360-min GitHub-hosted job ceiling.
-        run: node scripts/run-chain.js sources
+        # Sourced from the job env above (P1 no-second-hardcode). This is the
+        # BACKSTOP, never the mechanism — the soft budget below is what should
+        # actually stop the chain, finalizing through run-chain's normal terminal
+        # path with a recorded reason on every skipped step (Spec 115 §2.2).
+        timeout-minutes: ${{ fromJSON(env.SOURCES_STEP_TIMEOUT_MINUTES) }}
+        # Soft budget = ceiling − 10, shell-computed (GH expressions have no
+        # arithmetic — chain-deep-scrapes.yml precedent), clamped at 0 (= disabled).
+        # Before this, BOTH budget env vars were unset for this workflow, so
+        # run-chain.js:468 read 0 and the self-stop was inert — which is why the
+        # 2026-08-03 run died at the hard ceiling with no prior warning.
+        run: |
+          BUDGET=$(( ${{ fromJSON(env.SOURCES_STEP_TIMEOUT_MINUTES) }} - 10 ))
+          if [ "$BUDGET" -lt 0 ]; then BUDGET=0; fi
+          export CHAIN_TIME_BUDGET_MINUTES=$BUDGET
+          node scripts/run-chain.js sources
         env: *pipeline-env
 
       - name: Verdict check — sources (F8 fold 2026-07-20)
@@ -83,4 +136,16 @@ jobs:
         id: sources_verdict
         if: always() && steps.sources_guard.outputs.skip != 'true'
         run: node scripts/check-chain-verdict.js sources
-        env: *pipeline-env
+        # Inline env (not *pipeline-env): this step ADDITIONALLY carries the
+        # duration-tripwire budget, fed from the SAME job-env value the chain
+        # step's timeout-minutes reads (P1 — no second hardcode). YAML aliases
+        # can't be extended without merge keys, hence the three shared vars are
+        # repeated verbatim. Mirrors chain-coa-permits.yml's two verdict steps.
+        # ⚠️ Distinct from CHAIN_TIME_BUDGET_MINUTES: that one is run-chain's
+        # self-stop (ceiling − 10); this one is check-chain-verdict's tripwire
+        # (= ceiling, warns past 80% → 240 min). Deliberately different names.
+        env:
+          PIPELINE_CHAIN: ${{ github.workflow }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+          CHAIN_DURATION_BUDGET_MINUTES: ${{ env.SOURCES_STEP_TIMEOUT_MINUTES }}

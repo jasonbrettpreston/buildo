@@ -760,7 +760,18 @@ describe('run-chain.js captures stdout and parses PIPELINE_SUMMARY', () => {
   it('gate-skip continues non-essential steps with SKIPPED status', () => {
     const source = chainSource();
     // When gateSkipped is true, non-essential steps must be skipped (continue)
-    expect(source).toMatch(/gateSkipped[\s\S]{0,500}continue/);
+    // ⚠️ WINDOW WIDENED 500 → 1200 (P3, 2026-08-24). The FENCE this pins is
+    // "a gate-skip CONTINUES, it never breaks or fails the chain" — that
+    // behaviour is unchanged. Only the textual distance grew: the gate-skip's
+    // ledger INSERT now writes a non-null `error_message` reason (it was one of
+    // the two of three skip sites recording nothing — Spec 120 §6c), which adds
+    // the reason literal plus its rationale comment between the two anchors.
+    // Measured after the change: 1,027 characters (LF, as committed/CI reads
+    // it; 1,044 on a CRLF Windows checkout — P0b's cross-platform line-ending
+    // gap, not a second regression). Do NOT widen this further without
+    // re-reading the fence — past ~1200 the proximity guarantee stops
+    // meaning "the SAME gateSkipped block continues".
+    expect(source).toMatch(/gateSkipped[\s\S]{0,1200}continue/);
     // Must log gate-skipped steps
     expect(source).toMatch(/SKIPPED.*gate|gate.*skip/i);
   });
