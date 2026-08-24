@@ -1,0 +1,235 @@
+{
+  "identity": {
+    "name": "fixture_grandfathered_snapshot",
+    "display_name": "Fixture - Grandfathered Unguarded Snapshot",
+    "owner": "data",
+    "description": "Synthetic RECORDER fixture. Writes one row per calendar day into a snapshot table with a keyed upsert and NO change guard, which is refresh_snapshot.js:535 exactly; it exists to prove that shape is declarable under V7.",
+    "lock": 9902,
+    "why_lock": {
+      "text": "Deliberately outside the real registry range: this is a schema fixture, never a runnable step, so its lock must be unable to collide with manifest, one-time/ or backfill/ (ruling V2).",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/step-schema.logic.test.ts"
+      }
+    },
+    "spec": "122",
+    "spec_version": "1.0",
+    "archetype": "RECORDER",
+    "contract_version": 1,
+    "gate_exempt": true
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [
+        {
+          "table": "permits",
+          "columns": [
+            "id",
+            "status"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "pipeline_snapshots",
+        "key": "snapshot_date",
+        "columns": [
+          {
+            "name": "total_permits",
+            "vocabulary": "none"
+          },
+          {
+            "name": "active_permits",
+            "vocabulary": "none"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "none",
+          "guard_why": {
+            "text": "refresh-snapshot.js:535 is ON CONFLICT (snapshot_date) DO UPDATE with no change guard, so a same-day re-run overwrites the row in place. Declared under V7 rather than mislabelled as class A (which asserts a guard) or class M (which asserts append-only).",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/refresh-snapshot.js"
+            }
+          },
+          "guard_columns": "all_declared",
+          "scope": "snapshot_date = CURRENT_DATE",
+          "expected_change_ratio": "<= 1.0",
+          "idempotent_rerun": "declared_drift",
+          "idempotent_rerun_why": {
+            "text": "A same-day re-run rewrites that day row by design; zero_writes is unachievable while the guard is absent, and claiming it would be the false declaration V7 exists to prevent.",
+            "liveness": {
+              "kind": "check",
+              "ref": "snapshot_row_present"
+            }
+          },
+          "txn_scope": "statement"
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "last_write_wins",
+          "on_collision_why": {
+            "text": "The key is the calendar date, so a second run on the same day is the intended collision; the later run is the current truth.",
+            "liveness": {
+              "kind": "table",
+              "ref": "pipeline_snapshots"
+            }
+          },
+          "key_space_migration": "none"
+        }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 1
+    }
+  },
+  "staleness": {
+    "scope": "snapshot_date = CURRENT_DATE",
+    "trigger": [
+      {
+        "signal": "interval",
+        "position": "pre_compute"
+      }
+    ],
+    "mode_select": "full",
+    "checkpoint": "none",
+    "interval": {
+      "column": "snapshot_date",
+      "grain": "day"
+    },
+    "fingerprint": "derived",
+    "fingerprint_inputs": "none",
+    "logic_version": "none",
+    "on_fingerprint_change": "queue"
+  },
+  "guards": {
+    "requires": [],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "budget": "5m",
+    "txn_scope": "statement",
+    "txn_budget": "none",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "none",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "snapshot_row_present",
+      "kind": "freshness",
+      "expect": {
+        "table": "pipeline_snapshots",
+        "column": "snapshot_date",
+        "equals": "CURRENT_DATE"
+      },
+      "limit": "pop >= 1",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "A snapshot step that silently writes nothing looks identical to one that ran, which is how a degraded snapshot passed behind a hardcoded PASS.",
+        "liveness": {
+          "kind": "table",
+          "ref": "pipeline_snapshots"
+        }
+      }
+    }
+  ],
+  "override": "none",
+  "emits": "none",
+  "deviations": "none",
+  "limitations": "none",
+  "interpretation": "none",
+  "recovery": {
+    "reset": "generated",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived"
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 241,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "snapshotRows",
+      "scoped_by": "snapshot_date"
+    },
+    "records_new": "none",
+    "records_updated": {
+      "source": "rewrittenRows",
+      "scoped_by": "snapshot_date"
+    }
+  },
+  "config": "none",
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 25
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      }
+    },
+    {
+      "id": "snapshot_written",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": "runner_default"
+    }
+  ]
+}

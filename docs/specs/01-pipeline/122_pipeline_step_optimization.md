@@ -50,7 +50,8 @@ Encoded in `step.schema.json` per R2. Spec 120 §3.2 is annotated, not re-litiga
 | **V3** | `guards.schema_drift` | **`none \| propagate \| pause`** — `warn` dropped | a drift response is an *action*; warn-ness belongs to the orthogonal `severity ⊥ blocking` axes. Same conflation class as the impossible `severity: PASS` (§12.5) |
 | **V4** | `outputs.replay` | **`append_unsafe` stays in the enum, ⛔ banned for new steps** | same grandfathering mechanism as write-discipline classes D/H — an existing step must be able to declare its truth |
 | **V5** | `staleness.pending` | **dissolved by the §1.5 reshape** — `scope: <sql predicate> \| all \| none`; `source_changed` is not a scope, it is `trigger: source_validator \| content_hash` | the conflict existed because one name carried three axes |
-| **V6** | `guards.empty_source` | **typed form `<table> \| none`** | notation ruling; prose variant retired |
+| **V6** | `guards.empty_source` | **typed form `<table> \| [<table>, …] \| none`** — *amended 2026-08-24: the array form was a schema-authoring generalization (multi-source ENRICHERs need it), surfaced by review and ratified rather than left as silent drift* | notation ruling; prose variant retired |
+| **V7** | `outputs.writes[].write_discipline` | **mechanic ⊥ guard ⊥ scope ⊥ retract — decoupled axes** *(ruled 2026-08-24)*: `class` = mechanic only; guardedness = `guard` (`none` requires `why`, grandfathered-only for new steps); `scope` a required field; D/H bans restated as predicate rules (`no_retraction`, `unscoped_set_based`, `unguarded_write`) | resolves S1's menu-completeness BLOCKING gap — the §3f enum fused mechanic with guard, leaving 7 measured sites inexpressible |
 
 Notation-only duplicates (`identity.contract_version` · `inputs.expect_nonempty` · `outputs.retract` · `staleness.checkpoint`): **the schema's typed form is canonical** wherever prose and notation differ.
 

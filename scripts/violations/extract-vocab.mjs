@@ -22,8 +22,13 @@
  * using a fixture that carries a deliberate genuine conflict, plus a negative
  * control asserting a clean table reports none.
  *
+ * ⛔ SUPERSEDED BY RULING R2 (2026-08-23) — one-time migration tool. The schema
+ * is canonical and schema-to-vocab.mjs generates the artifact; every invocation
+ * here now requires --force so a stray re-run cannot clobber it. --self-test is
+ * exempt and stays green.
+ *
  * Usage:
- *   node scripts/violations/extract-vocab.mjs                 # print + conflict report
+ *   node scripts/violations/extract-vocab.mjs --force         # print + conflict report
  *   node scripts/violations/extract-vocab.mjs out.md
  *   node scripts/violations/extract-vocab.mjs --json
  *   node scripts/violations/extract-vocab.mjs --self-test
@@ -249,6 +254,23 @@ function render(rows, conflicts) {
 
 function main(argv) {
   if (argv.includes('--self-test')) return selfTest() ? 0 : 1;
+
+  // ⛔ SUPERSEDED BY OPERATOR RULING R2 (2026-08-23). The canonical vocabulary is
+  // scripts/steps/_schema/step.schema.json, and docs/reports/generated/122-vocabulary.md
+  // is now generated FROM it by schema-to-vocab.mjs. This extractor is a one-time
+  // migration tool: its conflict list seeded rulings V1-V6 and its job is done.
+  // It kept the SAME default output path, so a stray re-run would silently clobber
+  // the schema-generated artifact with an 8-of-18-category prose extract — a
+  // downgrade that would look like a successful regeneration.
+  if (!argv.includes('--force')) {
+    console.error('extract-vocab.mjs is SUPERSEDED by scripts/violations/schema-to-vocab.mjs (ruling R2).');
+    console.error('The canonical vocabulary is scripts/steps/_schema/step.schema.json; this tool extracts');
+    console.error('8 of 18 categories from Spec 120 prose and would CLOBBER the generated artifact.');
+    console.error('  Regenerate properly: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md');
+    console.error('  Historical re-run:   node scripts/violations/extract-vocab.mjs --force [out.md]');
+    return 1;
+  }
+
   if (!selfTest()) { console.error('Refusing to emit from an unproven extractor.'); return 1; }
 
   const rows = parseVocab(fs.readFileSync(SPEC_120, 'utf8'));

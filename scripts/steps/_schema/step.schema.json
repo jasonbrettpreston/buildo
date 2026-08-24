@@ -1,0 +1,1307 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://buildo.local/schemas/step.schema.json",
+  "title": "Buildo pipeline step descriptor",
+  "description": "THE CANONICAL VOCABULARY (Spec 122 ruling R2). This file — not prose — is the single source of truth for the step contract. docs/reports/generated/122-vocabulary.md and Spec 122's menu tables are GENERATED FROM THIS FILE by scripts/violations/schema-to-vocab.mjs. Encodes operator rulings V1-V6 and R6 (2026-08-23). Omission is a build failure; \"none\" is a legal value that must be written down, per field, not per category. Contract status: v0 — FREEZES AT C3 (after the eighth archetype pilot), never at S1 exit.",
+  "x-contract-version": 1,
+  "x-contract-status": "v0-unfrozen-until-C3",
+  "x-spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+  "x-categories": [
+    "identity",
+    "inputs",
+    "outputs",
+    "staleness",
+    "guards",
+    "execution",
+    "checks",
+    "override",
+    "emits",
+    "deviations",
+    "limitations",
+    "interpretation",
+    "recovery",
+    "database",
+    "counters",
+    "config",
+    "sharing",
+    "terminals"
+  ],
+  "x-rulings": {
+    "V1": "identity.archetype uses FULL WORDS; the ING|MAT|... forms are display shorthand only and are not legal values.",
+    "V2": "identity.lock is unique across manifest UNION one-time/ UNION backfill/ — the wider universe, not the generated registry alone. Cross-file uniqueness is a validator-side check (S2); JSON Schema cannot express it.",
+    "V3": "guards.schema_drift is none|propagate|pause. 'warn' is DROPPED — a drift response is an action; warn-ness belongs to the orthogonal severity/blocking axes.",
+    "V4": "outputs.writes[].replay keeps append_unsafe in the enum but BANNED FOR NEW STEPS via x-banned-for-new, so an existing step can still declare its truth.",
+    "V5": "staleness.pending is DISSOLVED into three axes: scope (which rows) / trigger (what makes the step eligible) / mode_select (what the trigger chooses), plus fingerprint_inputs.",
+    "V6": "guards.empty_source is the typed form <table> | [<table>,...] | none — AS AMENDED 2026-08-24. The original ruling typed the scalar form only; the array form is a ratified amendment recorded in Spec 122's V-table, needed because a step may guard on more than one source table (enrich_heritage guards on heritage_properties AND heritage_districts, Spec 120 §3.3). Recorded as an amendment rather than restated silently.",
+    "R6-acquisition": "NOT a category. Absorbed as staleness.trigger[].position (the acquisition lifecycle position) + inputs.reads.externals[].cache.",
+    "R6-maintenance": "NOT a category. Absorbed as execution.maintenance — declares targets and CONSTRAINS txn_scope (VACUUM cannot run inside a transaction).",
+    "R6-terminals": "A NEW CATEGORY (the 18th). Declared exit paths, each with its records_meta shape. Retires the hand-written per-terminal 'PASS'.",
+    "R6-plan_shape": "NOT a category. A checks[].kind value.",
+    "R6-source_key_policy": "NOT a category. A per-target field: outputs.writes[].source_key_policy.",
+    "R6-on_missing": "guards.requires[].on_missing is fail|degrade; degrade requires why AND algorithm, because a degraded branch makes outputs.columns a fiction.",
+    "V7": "DECOUPLE MECHANIC FROM GUARD (operator ruling, 2026-08-24, closing the S1 menu-completeness gap). write_discipline.class names the write MECHANIC only; guardedness is `guard` (is_distinct_from|none, none requires a why and is grandfathered-only), scope is `scope`, retraction is `retract`. The D and H bans are restated as VALIDATOR RULES over those axes — banned-for-new = (insert-only mechanic AND retract:none) and (set-based mechanic AND scope:none) — not as fused class identities.",
+    "R6-schema_drift-conditional": "guards.schema_drift may be a SCALAR or a CONDITIONAL PER-LAYER ARRAY (the load-zoning.js:405-407 shape: base layers FAIL/pause, non-base WARN/propagate). A scalar cannot express it."
+  },
+  "x-banned-for-new": {
+    "values": {
+      "outputs.writes[].replay": ["append_unsafe"],
+      "outputs.writes[].write_discipline.guard": ["none"],
+      "execution.criticality": ["best_effort"]
+    },
+    "rules": [
+      {
+        "id": "no_retraction",
+        "was": "class D (insert_only_no_retraction) as a fused identity",
+        "banned_when": "write_discipline.class is an insert-only mechanic AND retract == \"none\"",
+        "why": "A W3 retraction breach. Under V7 the ban is a predicate over the mechanic and the retraction axis, so a step that inserts only but DOES retract elsewhere is no longer mislabelled as breaching."
+      },
+      {
+        "id": "unscoped_set_based",
+        "was": "class H (set_based_unscoped) as a fused identity",
+        "banned_when": "write_discipline.class is a set-based mechanic AND write_discipline.scope == \"none\"",
+        "why": "An unscoped set-based UPDATE rewrites rows it never examined. Scope is now its own declared axis, so the ban is evaluable instead of being carried inside a class name."
+      },
+      {
+        "id": "unguarded_write",
+        "was": "not previously expressible at all — the source of GAP-1 and GAP-2",
+        "banned_when": "write_discipline.guard == \"none\"",
+        "why": "V7 decoupling: guardedness left the class name and became the `guard` axis, so an unguarded write is now DECLARABLE (with a why) rather than unlabellable. Grandfathered only — banned for new steps."
+      }
+    ]
+  },
+  "x-mechanic-notes": {
+    "V7": "write_discipline.class names the write MECHANIC ONLY. Guardedness lives in `guard`, scope in `scope`, retraction in `retract`. Three of the 13 names still read as fused because the names are ported and frozen — read them as mechanics:",
+    "guarded_upsert": "MECHANIC: keyed upsert (INSERT ... ON CONFLICT DO UPDATE). The word 'guarded' is historical — whether it is guarded is read from `guard`, never from this name.",
+    "insert_only_no_retraction": "MECHANIC: insert-only (ON CONFLICT DO NOTHING). Whether it retracts is read from `retract`; the ban is the rule no_retraction, not this name.",
+    "set_based_scoped": "MECHANIC: set-based UPDATE. Whether it is scoped is read from `scope`, not from this name.",
+    "set_based_unscoped": "MECHANIC: set-based UPDATE — the same mechanic as set_based_scoped. Retained as a distinct value only so existing descriptors keep their ported label; the ban is the rule unscoped_set_based, evaluated over `scope`."
+  },
+  "x-menu-completeness": {
+    "status": "RESOLVED-BY-V7 — per-file verification still owed",
+    "measured": "2026-08-24 (S1, ruling R5); gaps closed by operator ruling V7 the same day",
+    "method": "The 5 known evidence-base §3f mislabels were re-derived FROM THE SQL, not from the ported labels, so the 13-class enum is not authored against known-bad data.",
+    "corrections": {
+      "load_heritage": "A -> B. :602 is a literal `DELETE FROM <t> WHERE source_id <> ALL($1::BIGINT[])` departure delete against its own table, behind an empty-set guard (:598). The base's Del=0 is factually wrong.",
+      "load_zoning": "A -> B (x11 layer tables). The departure delete at :526-528 is a NOT EXISTS anti-join against a keys-only TEMP table. The suspected class C is REFUTED: the temp table holds keys only and is never the source of an INSERT...SELECT, so it is a mechanic of B, not a full replace.",
+      "load_neighbourhoods": "A -> A + 6 INEXPRESSIBLE. Confirmed: exactly 2 IS DISTINCT FROM in the whole file (:153, :154), both in the upsert. The 6 profile UPDATEs (:473, :486, :506, :543, :563, :603) have NO guard at all. Also VACUUM ANALYZE at :680 -> execution.maintenance.",
+      "link_wsib": "K -> E + G. Three targets: wsib_registry link-columns are E (WHERE linked_entity_id IS NULL), entities.is_wsib_registered is G (guarded + scoped by match_confidence), entities contact columns are E in blank-or-null form. There is no derived_recompute anywhere in the file; K is simply absent.",
+      "refresh_snapshot": "M -> INEXPRESSIBLE. :535 is `ON CONFLICT (snapshot_date) DO UPDATE SET ... created_at=NOW()` with no change guard — a same-day re-run overwrites all columns of that day's row in place. It is not append-only."
+    },
+    "gaps": [
+      {
+        "id": "GAP-1",
+        "pattern": "unguarded set-based UPDATE — no IS DISTINCT FROM at all",
+        "sites": "load-neighbourhoods.js:473,486,506,543,563,603",
+        "why_inexpressible": "Under the FUSED enum: G required guard AND scope; H required a guard WITHOUT scope; E required an IS NULL predicate; I required a temp table; J required multi-pass + defer; K did not cover source-loaded non-derived columns (avg/median household income, period_of_construction). Every available value would have recorded a guard the SQL does not contain.",
+        "now_expressible_as": "class: set_based_scoped (MECHANIC) + guard: \"none\" (+guard_why) + scope: the profile-refresh predicate, or scope: \"none\" (+why) where the refresh genuinely spans the table.",
+        "status": "EXPRESSIBLE — the per-site declaration is owed at the INGESTOR pilot's PH-0."
+      },
+      {
+        "id": "GAP-2",
+        "pattern": "unguarded keyed upsert — ON CONFLICT ... DO UPDATE with no change guard",
+        "sites": "refresh-snapshot.js:535",
+        "why_inexpressible": "Under the FUSED enum: A meant GUARDED upsert; D covered DO NOTHING; M meant append-only INSERT. All three misstated an in-place same-day overwrite.",
+        "now_expressible_as": "class: guarded_upsert (MECHANIC: keyed upsert) + guard: \"none\" (+guard_why) + scope: \"snapshot_date = CURRENT_DATE\".",
+        "status": "EXPRESSIBLE — the declaration is owed at the RECORDER pilot's PH-0."
+      }
+    ],
+    "root_cause": "The enum FUSED the write mechanic with the change guard, so every write that lacked a guard fell off the menu.",
+    "resolution": "CLOSED BY OPERATOR RULING V7 (2026-08-24): mechanic, guard, scope and retraction are four declared axes; `guard: none` makes an unguarded write DECLARABLE (with a why) instead of unlabellable, and the D/H bans became validator rules over the axes. No enum value was invented. ⚠️ WHAT IS NOT CLOSED: the seven sites above are expressible, not yet declared — each owning pilot must verify its own writes at PH-0 and produce the declaration. The contract is still v0 and freezes at C3.",
+    "wording_ambiguities": [
+      "Class B is written as the literal `DELETE ... WHERE key <> ALL($1)`, but load-zoning expresses the identical departure delete as a NOT EXISTS anti-join. B must be read BY INTENT, not by literal syntax, or load_zoning becomes a third gap.",
+      "Classes C and I both presuppose a temp table used for full-replace / update-from; load-zoning uses one purely to scope a delete. Harmless under the per-target rule only if that rule is stated explicitly: an ON COMMIT DROP scratch table is not a write target."
+    ]
+  },
+  "x-refuted": {
+    "checks[].severity": "PASS is IMPOSSIBLE as a declared severity — it is a runtime outcome, never a declarable escalation target (Spec 122 §12.5). The declarable menu is INFO|WARN|FAIL.",
+    "identity.gate_exempt": "The claim 'declaring archetype retires run-chain.js:544-550' is REFUTED — isInfraStep spans four archetypes plus name-specific exceptions. gate_exempt is the explicit field the retirement needs.",
+    "counters-null-for-ASSERT": "'An ASSERT emits counters: null' is REFUTED AS DESCRIPTION (0 of 5 ASSERTs do today). It is retained as a NORMATIVE requirement per §1.10's required-field profile: the descriptor must declare counters: \"none\"."
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "identity",
+    "inputs",
+    "outputs",
+    "staleness",
+    "guards",
+    "execution",
+    "checks",
+    "override",
+    "emits",
+    "deviations",
+    "limitations",
+    "interpretation",
+    "recovery",
+    "database",
+    "counters",
+    "config",
+    "sharing",
+    "terminals"
+  ],
+
+  "definitions": {
+    "why": {
+      "description": "A justification WITH a liveness handle (Spec 122 §12.3, claim #239). A why that cannot be falsified when its external dependent disappears is decoration.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "liveness"],
+      "properties": {
+        "text": { "type": "string", "minLength": 8 },
+        "liveness": {
+          "description": "What would make this why FALSE. \"none\" is legal but means the why can never be retired automatically.",
+          "anyOf": [
+            { "const": "none" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "ref"],
+              "properties": {
+                "kind": { "enum": ["check", "file", "table", "column", "external", "spec"], "x-frozen": true },
+                "ref": { "type": "string", "minLength": 1 }
+              }
+            }
+          ]
+        }
+      }
+    },
+
+    "slug": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "tableName": { "type": "string", "pattern": "^[a-z_][a-z0-9_]*$" },
+    "columnName": { "type": "string", "pattern": "^[a-z_][a-z0-9_]*$" },
+    "envVar": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+    "duration": { "type": "string", "pattern": "^([0-9]+(ms|s|m|h))$|^none$" },
+    "isoDate": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+
+    "vocabulary": {
+      "description": "Spec 122 §12.3 — a frozen VALUE domain for a column. emits declares keys; nothing declared values, which is why ADDRESS_STATUS read 'None' for 525,346 of 525,346 rows and passed.",
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["values", "on_unknown"],
+          "properties": {
+            "values": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "on_unknown": { "enum": ["fail", "quarantine", "warn"], "x-frozen": true },
+            "source": { "type": "string" }
+          }
+        }
+      ]
+    },
+
+    "writeDiscipline": {
+      "description": "Spec 122 §1.4 — PER WRITE TARGET, never per step. The class SELECTS THE GENERATED SQL; a hand-written INSERT ... ON CONFLICT in a compute fails lint.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "guard", "guard_columns", "scope", "expected_change_ratio", "idempotent_rerun", "txn_scope"],
+      "properties": {
+        "class": {
+          "description": "V7 (2026-08-24): the write MECHANIC ONLY. The 13 MEASURED classes stand as mechanics; guardedness moved out to `guard`, scope to `scope`, retraction to `retract`. Three names still READ as fused (guarded_upsert, insert_only_no_retraction, set_based_scoped/unscoped) because the ported labels are frozen — see x-mechanic-notes; never infer a guard or a scope from a class name. Re-derived per step at PH-0: the ported labels are wrong for 5 steps.",
+          "enum": [
+            "guarded_upsert",
+            "upsert_scoped_departure_delete",
+            "staging_full_replace",
+            "insert_only_no_retraction",
+            "write_once_backfill",
+            "link_full_retraction",
+            "set_based_scoped",
+            "set_based_unscoped",
+            "temp_materialize",
+            "multi_pass_defer",
+            "derived_recompute",
+            "verdict_only",
+            "snapshot_append"
+          ],
+          "x-frozen": true,
+          "x-required": true,
+          "x-class-letters": {
+            "guarded_upsert": "A",
+            "upsert_scoped_departure_delete": "B",
+            "staging_full_replace": "C",
+            "insert_only_no_retraction": "D",
+            "write_once_backfill": "E",
+            "link_full_retraction": "F",
+            "set_based_scoped": "G",
+            "set_based_unscoped": "H",
+            "temp_materialize": "I",
+            "multi_pass_defer": "J",
+            "derived_recompute": "K",
+            "verdict_only": "L",
+            "snapshot_append": "M"
+          }
+        },
+        "guard": {
+          "description": "V7 — THE GUARD AXIS, decoupled from the mechanic. This field alone says whether the write is change-guarded; a class name never does. `none` is DECLARABLE (it is what makes GAP-1's six unguarded UPDATEs and GAP-2's unguarded keyed upsert expressible at all) but requires a why and is grandfathered — banned for new steps.",
+          "enum": ["is_distinct_from", "none"],
+          "x-frozen": true,
+          "x-banned": ["none"]
+        },
+        "guard_why": { "$ref": "#/definitions/why" },
+        "scope": {
+          "description": "V7 — THE SCOPE AXIS, decoupled from the mechanic. The predicate narrowing WHICH ROWS this target writes, beyond matching the key. `none` means the write touches the whole table; combined with a set-based mechanic that is the banned unscoped_set_based configuration. A key-equality join is NOT a scope.",
+          "anyOf": [{ "const": "none" }, { "type": "string", "minLength": 5 }]
+        },
+        "guard_columns": {
+          "anyOf": [
+            { "const": "all_declared" },
+            { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/columnName" } }
+          ]
+        },
+        "expected_change_ratio": {
+          "description": "Measured every run from rows_scanned / rows_changed and CHECKED against this bound.",
+          "anyOf": [
+            { "const": "none" },
+            { "type": "string", "pattern": "^(<=|>=|==) ?[0-9]*\\.?[0-9]+$" }
+          ]
+        },
+        "idempotent_rerun": {
+          "description": "zero_writes is ASSERTED, not asserted-to: run twice, the second run updates 0 (founding commit 7e130bff, lessons.md:28).",
+          "enum": ["zero_writes", "declared_drift", "not_idempotent"],
+          "x-frozen": true
+        },
+        "idempotent_rerun_why": { "$ref": "#/definitions/why" },
+        "txn_scope": { "enum": ["statement", "batch", "step", "none"], "x-frozen": true },
+        "why": { "$ref": "#/definitions/why" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "guard": { "const": "none" } }, "required": ["guard"] },
+          "then": { "required": ["guard_why"] }
+        },
+        {
+          "if": {
+            "properties": { "idempotent_rerun": { "enum": ["declared_drift", "not_idempotent"] } },
+            "required": ["idempotent_rerun"]
+          },
+          "then": { "required": ["idempotent_rerun_why"] }
+        },
+        {
+          "x-rule": "full_replace must be declared, never silent (load-centreline's staging replace is spec-sanctioned, Spec 62 L26).",
+          "if": { "properties": { "class": { "const": "staging_full_replace" } }, "required": ["class"] },
+          "then": { "required": ["why"] }
+        },
+        {
+          "x-rule": "V7 ban unscoped_set_based, evaluated over the decoupled axes rather than a fused class identity. An existing unscoped set-based write must still say why.",
+          "if": {
+            "properties": {
+              "class": { "enum": ["set_based_scoped", "set_based_unscoped"] },
+              "scope": { "const": "none" }
+            },
+            "required": ["class", "scope"]
+          },
+          "then": { "required": ["why"] }
+        }
+      ]
+    },
+
+    "sourceKeyPolicy": {
+      "description": "R6 ruling — a per-target field, not a category. load-massing.js:239-247: 'Identical geometries produce duplicate hashes ... Last write wins.'",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unique", "on_collision", "key_space_migration"],
+      "properties": {
+        "unique": { "type": "boolean" },
+        "on_collision": {
+          "enum": ["not_applicable", "fail", "last_write_wins", "first_write_wins", "dedupe_upstream"],
+          "x-frozen": true
+        },
+        "on_collision_why": { "$ref": "#/definitions/why" },
+        "key_space_migration": {
+          "anyOf": [
+            { "const": "none" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["from", "to", "why"],
+              "properties": {
+                "from": { "type": "string" },
+                "to": { "type": "string" },
+                "why": { "$ref": "#/definitions/why" }
+              }
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "on_collision": { "enum": ["last_write_wins", "first_write_wins"] } },
+            "required": ["on_collision"]
+          },
+          "then": { "required": ["on_collision_why"] }
+        }
+      ]
+    },
+
+    "write": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["table", "key", "columns", "write_discipline", "retract", "replay", "source_key_policy"],
+      "properties": {
+        "table": { "$ref": "#/definitions/tableName" },
+        "key": {
+          "anyOf": [
+            { "$ref": "#/definitions/columnName" },
+            { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/columnName" } }
+          ]
+        },
+        "columns": {
+          "description": "OBJECT form only. The string-array form shown illustratively in Spec 122 §1.4 cannot carry §12.3's vocabulary field; the schema is canonical (R2).",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "vocabulary"],
+            "properties": {
+              "name": { "$ref": "#/definitions/columnName" },
+              "vocabulary": { "$ref": "#/definitions/vocabulary" }
+            }
+          }
+        },
+        "write_discipline": { "$ref": "#/definitions/writeDiscipline" },
+        "retract": { "enum": ["none", "departed", "all"], "x-frozen": true },
+        "replay": {
+          "enum": ["idempotent_upsert", "full_replace", "append_unsafe"],
+          "x-frozen": true,
+          "x-banned": ["append_unsafe"]
+        },
+        "replay_why": { "$ref": "#/definitions/why" },
+        "source_key_policy": { "$ref": "#/definitions/sourceKeyPolicy" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "replay": { "enum": ["full_replace", "append_unsafe"] } }, "required": ["replay"] },
+          "then": { "required": ["replay_why"] }
+        },
+        {
+          "x-rule": "V7 ban no_retraction, evaluated over the mechanic AND the retraction axis (which are siblings here, not inside write_discipline). An insert-only mechanic that DOES retract is no longer mislabelled as a W3 breach; one that does not must say why.",
+          "if": {
+            "properties": {
+              "write_discipline": { "type": "object", "properties": { "class": { "const": "insert_only_no_retraction" } }, "required": ["class"] },
+              "retract": { "const": "none" }
+            },
+            "required": ["write_discipline", "retract"]
+          },
+          "then": { "properties": { "write_discipline": { "required": ["why"] } } }
+        }
+      ]
+    },
+
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "expect", "limit", "severity", "blocking", "when", "chains", "accept_until", "why"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "kind": {
+          "description": "9 named types (Spec 122 §12.5 corrects the '12', which was Spec 120 §5.0's list of GENERATORS) + plan_shape, ruled in by R6 as a check kind rather than a category.",
+          "enum": [
+            "field_coverage",
+            "vocab_coverage",
+            "bound",
+            "invariant",
+            "distribution",
+            "trend",
+            "orphan",
+            "schema",
+            "freshness",
+            "plan_shape"
+          ],
+          "x-frozen": true
+        },
+        "expect": {
+          "description": "OPEN — domain knowledge. No vocabulary could supply that WARD is text in the CoA Active resource and WARD_NUMBER is int4 in Closed."
+        },
+        "limit": {
+          "anyOf": [
+            { "type": "string", "pattern": "^(viol (==|<=) [0-9]+|pct <= [0-9]*\\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\\.?[0-9]+ x median)$" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["warn", "fail"],
+              "properties": { "warn": { "type": "number" }, "fail": { "type": "number" } }
+            }
+          ],
+          "x-frozen": true
+        },
+        "severity": {
+          "enum": ["INFO", "WARN", "FAIL"],
+          "x-frozen": true,
+          "description": "Orthogonal to blocking. PASS is NOT declarable (§12.5) — it is a runtime outcome."
+        },
+        "blocking": { "type": "boolean", "description": "Orthogonal to severity: FAIL severity + blocking:false is 'report loudly, do not halt'." },
+        "when": { "enum": ["pre", "post"], "x-frozen": true },
+        "chains": {
+          "description": "Per-chain check selection. assert_schema is shared x3: permits validates permit columns, sources validates source archives, parcels is validated by all three.",
+          "anyOf": [
+            { "const": "all" },
+            { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/slug" } }
+          ]
+        },
+        "accept_until": {
+          "description": "Spec 122 §12.3 — baseline acceptance and threshold EXPIRY. Claim #228 already assumes this field exists.",
+          "anyOf": [
+            { "const": "none" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["date", "baseline", "why"],
+              "properties": {
+                "date": { "$ref": "#/definitions/isoDate" },
+                "baseline": {},
+                "why": { "$ref": "#/definitions/why" }
+              }
+            }
+          ]
+        },
+        "why": { "$ref": "#/definitions/why" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "blocking": { "const": true } }, "required": ["blocking"] },
+          "then": { "properties": { "when": { "const": "pre" } } }
+        }
+      ]
+    },
+
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "on_missing"],
+      "properties": {
+        "kind": { "enum": ["extension", "index", "function", "column"], "x-frozen": true },
+        "name": { "type": "string", "minLength": 1 },
+        "on_missing": {
+          "description": "R6 ruling. 6 steps use a missing extension as an ALGORITHM SELECTOR, not a failure — which makes outputs.columns a fiction on the degraded branch.",
+          "enum": ["fail", "degrade"],
+          "x-frozen": true
+        },
+        "algorithm": { "type": "string", "minLength": 1, "description": "Required when on_missing=degrade: which algorithm the degraded branch uses." },
+        "why": { "$ref": "#/definitions/why" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "on_missing": { "const": "degrade" } }, "required": ["on_missing"] },
+          "then": { "required": ["algorithm", "why"] }
+        }
+      ]
+    },
+
+    "schemaDriftArm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["match", "response", "severity"],
+      "properties": {
+        "match": { "type": "string", "minLength": 1, "description": "A selector over the drifting layer/resource, or the literal \"default\"." },
+        "response": { "enum": ["none", "propagate", "pause"], "x-frozen": true },
+        "severity": { "enum": ["INFO", "WARN", "FAIL"], "x-frozen": true },
+        "why": { "$ref": "#/definitions/why" }
+      }
+    },
+
+    "counter": {
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "scoped_by"],
+          "properties": {
+            "source": { "type": "string", "minLength": 1, "description": "Which compute variable feeds this counter. Retires the 9 distinct semantics measured for records_total." },
+            "scoped_by": {
+              "description": "The outputs.writes[].key this counter counts, or \"step\" for a whole-step count. §11 counter scoping.",
+              "anyOf": [{ "const": "step" }, { "$ref": "#/definitions/columnName" }, { "type": "array", "items": { "$ref": "#/definitions/columnName" } }]
+            }
+          }
+        }
+      ]
+    },
+
+    "terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "status", "records_meta"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "kind": {
+          "enum": [
+            "success",
+            "no_op",
+            "skip_gated",
+            "skip_lock_contention",
+            "skip_empty_source",
+            "defer",
+            "fail_check",
+            "fail_error",
+            "crash"
+          ],
+          "x-frozen": true
+        },
+        "status": {
+          "description": "Spec 120 §3.2b run-status vocabulary, minus 'running' which is not terminal.",
+          "enum": [
+            "completed",
+            "completed_with_warnings",
+            "completed_with_errors",
+            "failed",
+            "crashed",
+            "skipped",
+            "self_skipped",
+            "deferred_to_full",
+            "cancelled"
+          ],
+          "x-frozen": true
+        },
+        "records_meta": {
+          "description": "The records_meta SHAPE this exit path emits. NOTE: no verdict key is permitted anywhere in a terminal — the verdict is runner-owned and row-derived, which is exactly what retires the 7 hardcoded skip-path 'PASS'es.",
+          "anyOf": [
+            { "const": "runner_default" },
+            {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": { "enum": ["string", "int", "number", "bool", "object", "array", "null"] }
+            }
+          ]
+        },
+        "why": { "$ref": "#/definitions/why" }
+      }
+    }
+  },
+
+  "properties": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "display_name", "owner", "description", "lock", "why_lock", "spec", "spec_version", "archetype", "contract_version", "gate_exempt"],
+      "properties": {
+        "name": { "$ref": "#/definitions/slug", "description": "Slug matching a manifest.chains key.", "x-required": true },
+        "display_name": { "type": "string", "minLength": 1, "description": "The human-readable name emitted in records_meta.audit_table.name." },
+        "owner": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 8 },
+        "lock": { "type": "integer", "minimum": 1, "description": "V2: unique across manifest UNION one-time/ UNION backfill/ (the wider universe). Cross-file uniqueness is enforced by the validator, not by this schema." },
+        "why_lock": {
+          "description": "Required in substance iff lock != spec number; \"none\" must still be written. The lock-vs-spec comparison is validator-side.",
+          "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/why" }]
+        },
+        "spec": { "type": "string", "minLength": 1 },
+        "spec_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$" },
+        "archetype": {
+          "description": "V1: FULL WORDS. Drives the required-field profile (§1.10) — this field is load-bearing, not a label.",
+          "enum": ["INGESTOR", "MATERIALIZER", "LINK", "MATCHER", "ENRICHER", "BACKFILL", "ASSERT", "RECORDER"],
+          "x-frozen": true
+        },
+        "contract_version": { "type": "integer", "minimum": 1, "description": "Runner supports N and N-1." },
+        "gate_exempt": {
+          "type": "boolean",
+          "description": "Explicit replacement for run-chain.js:544-550's NAME-PREFIX dispatch. isInfraStep spans four archetypes plus name-specific exceptions, so archetype alone cannot derive it (§12.5)."
+        }
+      }
+    },
+
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reads", "expect_nonempty", "on_missing"],
+      "properties": {
+        "reads": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["steps", "tables", "externals"],
+          "properties": {
+            "steps": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["step", "version_pin"],
+                "properties": {
+                  "step": { "$ref": "#/definitions/slug" },
+                  "version_pin": { "enum": ["exact", "gte", "none"], "x-frozen": true },
+                  "assert_health": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            },
+            "tables": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["table"],
+                "properties": {
+                  "table": { "$ref": "#/definitions/tableName" },
+                  "columns": { "type": "array", "items": { "$ref": "#/definitions/columnName" } }
+                }
+              }
+            },
+            "externals": {
+              "description": "R6: the acquisition category folds in HERE plus staleness.trigger[].position. Four loaders use fs.existsSync as their ENTIRE freshness policy — a 9th, undeclared gate that defeats staleness.trigger. load-massing.js:28-36 records the 86-minute production failure it caused.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "kind", "cache"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1 },
+                  "kind": { "enum": ["http_api", "http_file", "s3", "filesystem", "service"], "x-frozen": true },
+                  "url": { "type": "string" },
+                  "cache": {
+                    "description": "The acquisition policy. reuse_if_present IS the existsSync class — declaring it makes the fiction visible and forces a why.",
+                    "enum": ["none", "revalidate", "reuse_if_fresh", "reuse_if_present"],
+                    "x-frozen": true
+                  },
+                  "cache_why": { "$ref": "#/definitions/why" },
+                  "cache_ttl": { "$ref": "#/definitions/duration" }
+                },
+                "allOf": [
+                  {
+                    "if": { "properties": { "cache": { "enum": ["reuse_if_present", "reuse_if_fresh"] } }, "required": ["cache"] },
+                    "then": { "required": ["cache_why"] }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "expect_nonempty": { "type": "boolean" },
+        "on_missing": { "enum": ["halt", "warn", "run"], "x-frozen": true }
+      }
+    },
+
+    "outputs": {
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["writes", "cascades", "invalidates", "publish", "write_inventory"],
+          "properties": {
+            "writes": {
+              "description": "ORDER IS DECLARED and the runner executes it in order — 'retract then rebuild' stops being a prose convention.",
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/definitions/write" }
+            },
+            "cascades": {
+              "description": "A target this step does not OWN is a cascade, never a write. load-massing.js:208,222 DELETEs from parcel_buildings (step 15's table) while emitMeta declares only building_footprints — the undeclared-telemetry class (orphan #234).",
+              "anyOf": [
+                { "const": "none" },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["table", "owned_by", "operation", "why"],
+                    "properties": {
+                      "table": { "$ref": "#/definitions/tableName" },
+                      "owned_by": { "$ref": "#/definitions/slug" },
+                      "operation": { "enum": ["delete", "update", "insert"], "x-frozen": true },
+                      "why": { "$ref": "#/definitions/why" }
+                    }
+                  }
+                }
+              ]
+            },
+            "invalidates": {
+              "description": "list of {table, column, when} — the declared invalidator. An ENRICHER whose staleness.scope is a lineage predicate CANNOT omit it (claim #54); a write_once_backfill class-E target cannot either (§5.4a).",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["table", "column", "when"],
+                "properties": {
+                  "table": { "$ref": "#/definitions/tableName" },
+                  "column": { "$ref": "#/definitions/columnName" },
+                  "when": { "type": "string", "minLength": 1 }
+                }
+              }
+            },
+            "publish": { "enum": ["direct", "pointer", "none"], "x-frozen": true },
+            "write_inventory": {
+              "description": "Spec 122 §12.3 claim #236 — the RUNTIME write-statement count must equal the declared one.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["statements"],
+              "properties": {
+                "statements": { "type": "integer", "minimum": 0 },
+                "why": { "$ref": "#/definitions/why" }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "writes": {
+                    "contains": {
+                      "type": "object",
+                      "properties": { "write_discipline": { "type": "object", "properties": { "class": { "const": "write_once_backfill" } }, "required": ["class"] } },
+                      "required": ["write_discipline"]
+                    }
+                  }
+                },
+                "required": ["writes"]
+              },
+              "then": { "properties": { "invalidates": { "minItems": 1 } } }
+            }
+          ]
+        }
+      ]
+    },
+
+    "staleness": {
+      "description": "V5 — RESHAPED into three axes. The scalar `pending` conflated which-rows, whether-to-act and in-which-mode, and could express none of the run-ledger gate's 4 arms, the two-tier pre/post-download split, decideCentrelineMode's tri-state, or scope-defer.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "trigger", "mode_select", "checkpoint", "interval", "fingerprint", "fingerprint_inputs", "logic_version", "on_fingerprint_change"],
+      "properties": {
+        "scope": {
+          "description": "WHICH ROWS are eligible: an SQL predicate, all, or none.",
+          "anyOf": [{ "const": "all" }, { "const": "none" }, { "type": "string", "minLength": 5 }]
+        },
+        "trigger": {
+          "description": "What makes the step ELIGIBLE TO ACT. A SET, ordered by lifecycle position — two-tier metadata->hash is two gates at two positions.",
+          "anyOf": [
+            { "const": "none" },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["signal", "position"],
+                "properties": {
+                  "signal": {
+                    "enum": ["source_validator", "content_hash", "cached_artifact", "upstream_ledger", "code_version", "interval", "always"],
+                    "x-frozen": true
+                  },
+                  "position": {
+                    "description": "R6: the ACQUISITION LIFECYCLE POSITION. pre_acquisition = HEAD/ETag before download; acquisition = the existsSync short-circuit; post_acquisition = content hash after download; pre_compute = ledger/code/interval gates.",
+                    "enum": ["pre_acquisition", "acquisition", "post_acquisition", "pre_compute"],
+                    "x-frozen": true
+                  },
+                  "external": { "type": "string", "description": "The inputs.reads.externals[].id this trigger reads, where applicable." }
+                }
+              }
+            }
+          ]
+        },
+        "mode_select": {
+          "description": "What the trigger CHOOSES. The massing code+data veto outputs a MODE, not a skip; scope-defer is the inverse of a staleness gate (too much changed, so refuse).",
+          "enum": ["skip", "incremental", "full", "defer", "tri_state", "none"],
+          "x-frozen": true
+        },
+        "checkpoint": {
+          "anyOf": [
+            { "const": "none" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["cursor", "ordered"],
+              "properties": {
+                "cursor": { "type": "string", "minLength": 1 },
+                "ordered": { "type": "boolean", "description": "ordered:false CANNOT resume (the Meltano trap)." }
+              }
+            }
+          ]
+        },
+        "interval": {
+          "anyOf": [
+            { "const": "none" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["column", "grain"],
+              "properties": {
+                "column": { "$ref": "#/definitions/columnName" },
+                "grain": { "enum": ["hour", "day", "week", "month", "quarter", "year"], "x-frozen": true }
+              }
+            }
+          ]
+        },
+        "fingerprint": {
+          "const": "derived",
+          "x-derived": true,
+          "description": "ALWAYS ON, never declared. Normalized hash over compute + outputs/staleness/guards/execution + the ENUMERATED external inputs below. Never over identity/why/notes/deviations."
+        },
+        "fingerprint_inputs": {
+          "description": "NEW (§1.5). Closes the contradiction that §4.1a rules an unenumerated external input a declaration defect while fingerprint is marked derived-do-not-declare. LINK_MASSING_CODE_VERSION lives in scripts/lib/, not in the step, and triggers a full destructive rebuild (claim #52b).",
+          "anyOf": [
+            { "const": "none" },
+            { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          ]
+        },
+        "logic_version": { "anyOf": [{ "const": "none" }, { "type": "string", "minLength": 1 }] },
+        "on_fingerprint_change": { "enum": ["queue", "run", "none"], "x-frozen": true }
+      }
+    },
+
+    "guards": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requires", "srid", "empty_source", "schema_drift"],
+      "properties": {
+        "requires": { "type": "array", "items": { "$ref": "#/definitions/requirement" } },
+        "srid": { "anyOf": [{ "const": "none" }, { "type": "integer" }] },
+        "empty_source": {
+          "description": "V6 — the typed form.",
+          "anyOf": [
+            { "const": "none" },
+            { "$ref": "#/definitions/tableName" },
+            { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/tableName" } }
+          ]
+        },
+        "schema_drift": {
+          "description": "V3: none|propagate|pause ('warn' dropped — a drift response is an ACTION). R6: a scalar OR a CONDITIONAL PER-LAYER ARRAY, because load-zoning.js:405-407 responds differently per layer in ONE step (base FAIL/pause, non-base WARN/propagate). The array must carry a \"default\" arm; the exactly-one-default rule is validator-side.",
+          "anyOf": [
+            { "enum": ["none", "propagate", "pause"], "x-frozen": true },
+            {
+              "type": "array",
+              "minItems": 2,
+              "items": { "$ref": "#/definitions/schemaDriftArm" },
+              "contains": {
+                "type": "object",
+                "properties": { "match": { "const": "default" } },
+                "required": ["match"]
+              }
+            }
+          ]
+        }
+      }
+    },
+
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["budget", "txn_scope", "txn_budget", "chunked", "statement_timeout", "step_timeout", "batch", "needs_disk_mb", "partial_fill", "on_row_error", "on_batch_error", "on_check_error", "on_degrade", "criticality", "network", "invocation", "maintenance"],
+      "properties": {
+        "budget": { "$ref": "#/definitions/duration" },
+        "txn_scope": { "enum": ["statement", "batch", "step", "none"], "x-frozen": true },
+        "txn_budget": { "$ref": "#/definitions/duration" },
+        "chunked": { "type": "boolean" },
+        "statement_timeout": { "$ref": "#/definitions/duration" },
+        "step_timeout": { "$ref": "#/definitions/duration" },
+        "batch": { "anyOf": [{ "const": "none" }, { "type": "integer", "minimum": 1 }] },
+        "needs_disk_mb": { "anyOf": [{ "const": "none" }, { "type": "integer", "minimum": 1 }] },
+        "partial_fill": {
+          "description": "The 5 measured classes (§3g). Only ONE step has a real recovery ledger; for the other twelve batched steps nothing in the database can answer 'is this table half-loaded?'.",
+          "enum": ["atomic", "batched", "staged", "mixed", "none"],
+          "x-frozen": true
+        },
+        "on_row_error": { "enum": ["fail_fast", "quarantine", "skip"], "x-frozen": true },
+        "on_row_error_max_pct": { "anyOf": [{ "const": "none" }, { "type": "number", "minimum": 0, "maximum": 1 }] },
+        "on_batch_error": {
+          "description": "NEW (§1.6). A WHOLE BATCH swallowed and discarded, counted as one row error — load-address-points.js:374-378, load-parcels.js:550-554, load-massing.js:378-382.",
+          "enum": ["fail_step", "drop_batch", "retry"],
+          "x-frozen": true
+        },
+        "on_batch_error_why": { "$ref": "#/definitions/why" },
+        "on_check_error": {
+          "description": "NEW (§1.6). The CHECK QUERY ITSELF errors — today the row is silently omitted, so a dropped table is indistinguishable from a healthy one (assert-data-bounds.js:607-610, assert-schema.js:445-449).",
+          "enum": ["fail_step", "warn_row", "omit_row"],
+          "x-frozen": true
+        },
+        "on_check_error_why": { "$ref": "#/definitions/why" },
+        "on_degrade": {
+          "description": "NEW (§1.6) and the one that matters. 'On failure, substitute prior-run values or zeroes and present them as current' — live in four places in refresh-snapshot.js behind a hardcoded PASS. Declaring it does not make it acceptable; it makes it visible, and +why makes it adjudicated.",
+          "enum": ["none", "prior_values", "zeroes"],
+          "x-frozen": true
+        },
+        "on_degrade_why": { "$ref": "#/definitions/why" },
+        "criticality": { "enum": ["required", "best_effort"], "x-frozen": true, "x-banned": ["best_effort"] },
+        "network": {
+          "anyOf": [
+            { "const": "none" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["egress", "timeout", "retries", "redact"],
+              "properties": {
+                "egress": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+                "timeout": { "$ref": "#/definitions/duration" },
+                "retries": { "type": "integer", "minimum": 0 },
+                "redact": {
+                  "description": "Spec 122 §12.3 claim #276 — values that MUST be scrubbed before persistence. Nowhere else in the contract can say this.",
+                  "anyOf": [
+                    { "const": "none" },
+                    { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "invocation": {
+          "description": "PER CHAIN argv/env, so manifest<->descriptor drift is a CHECKABLE difference rather than a convention. The manifest chain_args --full pin that killed enrich_parcels' incremental path is exactly this class (concern 15).",
+          "anyOf": [
+            { "const": "none" },
+            {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["argv", "env"],
+                "properties": {
+                  "argv": { "type": "array", "items": { "type": "string" } },
+                  "env": { "type": "object", "additionalProperties": { "type": "string" } }
+                }
+              }
+            }
+          ]
+        },
+        "maintenance": {
+          "description": "R6: NOT a category — a field. VACUUM ANALYZE on 4 tables across 3 steps; it CONSTRAINS txn_scope (VACUUM cannot run inside a transaction) and targets tables the issuing step does not own, while an ASSERT does it with outputs forced to \"none\".",
+          "anyOf": [
+            { "const": "none" },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["operation", "table", "owned_by", "why"],
+                "properties": {
+                  "operation": { "enum": ["vacuum", "analyze", "vacuum_analyze", "reindex"], "x-frozen": true },
+                  "table": { "$ref": "#/definitions/tableName" },
+                  "owned_by": { "anyOf": [{ "const": "self" }, { "$ref": "#/definitions/slug" }] },
+                  "why": { "$ref": "#/definitions/why" }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "on_row_error": { "enum": ["quarantine", "skip"] } }, "required": ["on_row_error"] },
+          "then": { "properties": { "on_row_error_max_pct": { "type": "number" } } }
+        },
+        {
+          "if": { "properties": { "on_batch_error": { "const": "drop_batch" } }, "required": ["on_batch_error"] },
+          "then": { "required": ["on_batch_error_why"] }
+        },
+        {
+          "if": { "properties": { "on_check_error": { "const": "omit_row" } }, "required": ["on_check_error"] },
+          "then": { "required": ["on_check_error_why"] }
+        },
+        {
+          "if": { "properties": { "on_degrade": { "enum": ["prior_values", "zeroes"] } }, "required": ["on_degrade"] },
+          "then": { "required": ["on_degrade_why"] }
+        },
+        {
+          "if": { "properties": { "maintenance": { "type": "array" } }, "required": ["maintenance"] },
+          "then": {
+            "properties": { "txn_scope": { "enum": ["statement", "batch", "none"] } },
+            "description": "A step-scoped transaction cannot contain a VACUUM."
+          }
+        }
+      ]
+    },
+
+    "checks": {
+      "description": "THE ONE CATEGORY THAT MAY NEVER BE \"none\" (claim #7). pipeline.step() validates the descriptor BEFORE compute runs, so a step cannot execute without declaring checks.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/check" }
+    },
+
+    "override": {
+      "description": "The force env vars. 6 *_FORCE_FULL hatches exist today, all ad hoc — this makes the name a declared field instead of an invention.",
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["force_full", "force_run", "dry_run"],
+          "properties": {
+            "force_full": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] },
+            "force_run": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] },
+            "dry_run": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] }
+          }
+        }
+      ]
+    },
+
+    "emits": {
+      "description": "Additional records_meta keys BEYOND runner defaults. Q1 warns 13 top-level keys are already taken.",
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "type", "consumers"],
+            "properties": {
+              "key": { "type": "string", "minLength": 1 },
+              "type": { "enum": ["string", "int", "number", "bool", "object", "array", "null"], "x-frozen": true },
+              "consumers": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      ]
+    },
+
+    "deviations": {
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "why", "adjudicated_by", "date"],
+            "properties": {
+              "from": { "type": "string", "minLength": 1 },
+              "why": { "$ref": "#/definitions/why" },
+              "adjudicated_by": { "type": "string", "minLength": 1 },
+              "date": { "$ref": "#/definitions/isoDate" }
+            }
+          }
+        }
+      ]
+    },
+
+    "limitations": {
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["what", "measured", "check_id"],
+            "properties": {
+              "what": { "type": "string", "minLength": 1 },
+              "measured": { "type": "string", "minLength": 1 },
+              "check_id": { "anyOf": [{ "const": "none" }, { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }] }
+            }
+          }
+        }
+      ]
+    },
+
+    "interpretation": {
+      "description": "Prose lives in <slug>.notes.json, capped at 12 entries. Checks are uncapped; prose is capped — the cheapest way to keep knowledge is to make it measurable. May reference a check id but may NEVER quote a number.",
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "entries"],
+          "properties": {
+            "file": { "type": "string", "pattern": "^[a-z0-9_\\-]+\\.notes\\.json$" },
+            "entries": { "type": "integer", "minimum": 1, "maximum": 12 }
+          }
+        }
+      ]
+    },
+
+    "recovery": {
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reset", "resume", "force", "rollback", "verify_clean", "cascades"],
+          "properties": {
+            "reset": { "anyOf": [{ "enum": ["generated", "none"], "x-frozen": true }, { "type": "string", "minLength": 8 }] },
+            "resume": { "enum": ["checkpoint", "none"], "x-frozen": true },
+            "force": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] },
+            "rollback": { "enum": ["pointer", "none"], "x-frozen": true },
+            "verify_clean": { "enum": ["generated", "none"], "x-frozen": true },
+            "cascades": { "const": "derived", "x-derived": true, "description": "Derived from outputs.invalidates. Never declared." }
+          }
+        }
+      ]
+    },
+
+    "database": {
+      "description": "Retires the defect class where 4 analysis scripts defaulted to the PRE-CUTOVER database: same audit, same commit, 2,394 violations / 0 FAIL gates versus 30,288 / 1. A step pointed at a 222-migration database REFUSES.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "min_migration", "assert_current_database"],
+      "properties": {
+        "class": { "enum": ["primary", "replica", "none"], "x-frozen": true },
+        "min_migration": { "anyOf": [{ "const": "none" }, { "type": "integer", "minimum": 0 }] },
+        "assert_current_database": { "anyOf": [{ "const": "none" }, { "type": "string", "minLength": 1 }] }
+      }
+    },
+
+    "counters": {
+      "description": "Which variable feeds records_total / _new / _updated. Retires 9 distinct measured semantics for records_total (3 scripts emit 1 for 'one audit pass', 2 emit 0 for the same thing) and >=13 counter-scoping incidents.",
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["records_total", "records_new", "records_updated"],
+          "properties": {
+            "records_total": { "$ref": "#/definitions/counter" },
+            "records_new": { "$ref": "#/definitions/counter" },
+            "records_updated": { "$ref": "#/definitions/counter" }
+          }
+        }
+      ]
+    },
+
+    "config": {
+      "description": "5 of 12 steps calling loadMarketplaceConfigs declare NO schema. 400 logic-variable entries carry 798 bounds with ZERO bound-readers.",
+      "anyOf": [
+        { "const": "none" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["logic_variables", "validation", "hoisted_above_gate"],
+          "properties": {
+            "logic_variables": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "min", "max", "on_invalid"],
+                "properties": {
+                  "name": { "type": "string", "minLength": 1 },
+                  "min": { "anyOf": [{ "const": "none" }, { "type": "number" }] },
+                  "max": { "anyOf": [{ "const": "none" }, { "type": "number" }] },
+                  "on_invalid": { "enum": ["fail", "default", "clamp"], "x-frozen": true }
+                }
+              }
+            },
+            "validation": { "enum": ["strict", "passthrough"], "x-frozen": true },
+            "validation_why": { "$ref": "#/definitions/why" },
+            "hoisted_above_gate": {
+              "type": "boolean",
+              "description": "link-wsib's A1/A2 fence: a SKIP-eligible step must never let an invalid threshold hide behind a green SKIPPED summary, so config validation runs ABOVE the lock and the gate."
+            }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "validation": { "const": "passthrough" } }, "required": ["validation"] },
+              "then": { "required": ["validation_why"] }
+            }
+          ]
+        }
+      ]
+    },
+
+    "sharing": {
+      "description": "The SECOND classification axis. Archetype answers what kind of step this is; sharing answers how many chains it must be correct in AT ONCE — 14 shared steps across 36 slots estate-wide, 10 across 28 touching sources.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chains", "shared", "slug_forms", "varies_by_chain", "on_contention"],
+      "properties": {
+        "chains": { "const": "derived", "x-derived": true, "description": "From manifest.chains. NEVER declared, or it drifts — link-wsib.js:55 hand-maintains four spellings, one of them refuted in-file." },
+        "shared": { "const": "derived", "x-derived": true },
+        "slug_forms": { "const": "derived", "x-derived": true },
+        "varies_by_chain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["checks", "phase", "audit_table", "scope"],
+          "properties": {
+            "checks": { "enum": ["none", "per_chain"], "x-frozen": true },
+            "phase": {
+              "description": "An EXPLICIT MAP, never a ternary. link_parcels computes chainId === 'sources' ? 6 : 9 at :186 and PIPELINE_CHAIN === 'sources' ? 6 : 7 at :660 — the same axis, in one file, disagreeing on the non-sources value. A map cannot disagree with itself.",
+              "anyOf": [
+                { "const": "none" },
+                { "type": "object", "minProperties": 1, "additionalProperties": { "type": "integer", "minimum": 0 } }
+              ]
+            },
+            "audit_table": { "enum": ["one", "per_chain"], "x-frozen": true },
+            "scope": { "enum": ["none", "per_chain"], "x-frozen": true }
+          }
+        },
+        "on_contention": {
+          "description": "self_skip is today's default, not a decision anyone made. Contention IS already observable (pipeline.js:906/:932) — the field survives on the narrower premise that two chains can run concurrently.",
+          "enum": ["self_skip", "wait", "fail"],
+          "x-frozen": true
+        }
+      }
+    },
+
+    "terminals": {
+      "description": "R6 — THE 18TH CATEGORY. 10 exit paths in one step, each with a hand-written records_meta: the source of the 7 hardcoded skip-path 'PASS'es this contract exists to retire. No terminal may declare a verdict; the verdict is runner-owned and row-derived.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/terminal" }
+    }
+  },
+
+  "allOf": [
+    {
+      "x-profile": "ASSERT — 3 categories collapse to \"none\" (§1.10). counters is normative here, not descriptive: 0 of 5 ASSERTs comply today.",
+      "if": { "properties": { "identity": { "properties": { "archetype": { "const": "ASSERT" } }, "required": ["archetype"] } }, "required": ["identity"] },
+      "then": {
+        "properties": {
+          "outputs": { "const": "none" },
+          "recovery": { "const": "none" },
+          "counters": { "const": "none" }
+        }
+      }
+    },
+    {
+      "x-profile": "INGESTOR — write_discipline + retract + replay + empty_source all required (write_discipline/retract/replay are required on every write globally; what the profile adds is that outputs may not be \"none\").",
+      "if": { "properties": { "identity": { "properties": { "archetype": { "const": "INGESTOR" } }, "required": ["archetype"] } }, "required": ["identity"] },
+      "then": { "properties": { "outputs": { "type": "object" } } }
+    },
+    {
+      "x-profile": "LINK / MATCHER — invalidates required (non-empty) and counters scoped by writes.key.",
+      "if": {
+        "properties": { "identity": { "properties": { "archetype": { "enum": ["LINK", "MATCHER"] } }, "required": ["archetype"] } },
+        "required": ["identity"]
+      },
+      "then": {
+        "properties": {
+          "outputs": { "type": "object", "properties": { "invalidates": { "minItems": 1 } } },
+          "counters": { "type": "object" }
+        }
+      }
+    },
+    {
+      "x-profile": "ENRICHER — claim #54: a staleness.scope on a lineage column IMPLIES a declared invalidator. This is the centroid defect made UNEXPRESSIBLE rather than merely visible.",
+      "if": { "properties": { "identity": { "properties": { "archetype": { "const": "ENRICHER" } }, "required": ["archetype"] } }, "required": ["identity"] },
+      "then": {
+        "properties": { "outputs": { "type": "object" } },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "staleness": { "properties": { "scope": { "not": { "enum": ["all", "none"] } } }, "required": ["scope"] } },
+              "required": ["staleness"]
+            },
+            "then": {
+              "properties": { "outputs": { "type": "object", "properties": { "invalidates": { "minItems": 1 } } } }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "x-profile": "MATERIALIZER / BACKFILL — replay declared (global) plus recovery.reset may not be \"none\".",
+      "if": {
+        "properties": { "identity": { "properties": { "archetype": { "enum": ["MATERIALIZER", "BACKFILL"] } }, "required": ["archetype"] } },
+        "required": ["identity"]
+      },
+      "then": {
+        "properties": {
+          "outputs": { "type": "object" },
+          "recovery": { "type": "object", "properties": { "reset": { "not": { "const": "none" } } } }
+        }
+      }
+    },
+    {
+      "x-profile": "RECORDER — outputs.publish required, and it may not be \"none\".",
+      "if": { "properties": { "identity": { "properties": { "archetype": { "const": "RECORDER" } }, "required": ["archetype"] } }, "required": ["identity"] },
+      "then": {
+        "properties": {
+          "outputs": { "type": "object", "properties": { "publish": { "enum": ["direct", "pointer"] } } }
+        }
+      }
+    }
+  ]
+}
