@@ -22,9 +22,12 @@
 // `max-based floor` case below is the lock on that.
 
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
+
+import { floorExemptionCallSites } from './script-source-scan';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const resolveDb = require('../../scripts/lib/resolve-db.js') as {
@@ -405,22 +408,19 @@ describe('migrate.js is the ONE sanctioned floor exemption', () => {
   });
 
   it('scripts/migrate.js is the only file in scripts/ that passes minMigration: null', () => {
-    // `git grep` exits 1 on NO match — that is a real failure here (migrate.js
-    // must carry the exemption), so surface it as an empty list rather than an
-    // exception, and let the assertion name what is wrong.
-    let raw = '';
-    try {
-      raw = execFileSync('git', ['grep', '-l', '--', 'minMigration: null', 'scripts/'], {
-        cwd: ROOT,
-        stdio: 'pipe',
-      }).toString();
-    } catch {
-      raw = '';
-    }
-    const out = raw
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    expect(out).toEqual(['scripts/migrate.js']);
+    // Was a raw `git grep 'minMigration: null'`, which read DOCUMENTATION as a
+    // call site: resolve-db.js's own header explains the exemption at length,
+    // so once it became a TRACKED file the grep returned two paths and this
+    // lock went red. It now scans comment-stripped CODE of every tracked
+    // script — prose about the sentinel is free, passing it is not.
+    expect(floorExemptionCallSites()).toEqual(['scripts/migrate.js']);
+  });
+
+  it('the resolver DOCUMENTS the exemption without counting as a call site', () => {
+    // The complement — proves the fix discriminates rather than just excluding
+    // resolve-db.js by name. The explanation must survive; the call must not.
+    const raw = readFileSync(join(ROOT, 'scripts', 'lib', 'resolve-db.js'), 'utf8');
+    expect(raw).toMatch(/minMigration: null/); // documented in the header
+    expect(floorExemptionCallSites()).not.toContain('scripts/lib/resolve-db.js');
   });
 });
