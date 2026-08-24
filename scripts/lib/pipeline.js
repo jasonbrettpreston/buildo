@@ -962,6 +962,20 @@ async function withAdvisoryLock(pool, lockId, fn, opts) {
 // ---------------------------------------------------------------------------
 
 module.exports = {
+  /**
+   * Spec 122 §4.2 — `pipeline.step(descriptor, compute)`, the step factory.
+   *
+   * ⚠️ Delegated, not defined here (SH2): the lifecycle library lives in
+   * `./step/`, which requires THIS module. The require is deliberately deferred
+   * into the call so the two modules never form a load-time cycle, and so the
+   * AJV compile is not paid by the 27 scripts that do not call it yet.
+   *
+   * @param {object} descriptor
+   * @param {Function} compute
+   */
+  step(descriptor, compute) {
+    return require('./step').step(descriptor, compute);
+  },
   createPool,
   classifyError,
   log,

@@ -1,0 +1,549 @@
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §4.2, §4.3, §7.1 (S2-min)
+// SPEC LINK: docs/specs/01-pipeline/120_pipeline_step_runner.md §3.2b, §4.1
+// SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.6, §3.7
+//
+// S2-min — `pipeline.step(descriptor, compute)`, the minimal lifecycle library
+// the `assert_schema` pilot needs. The real proof of this library is the C1
+// pilot's golden-master differential; what is provable HERE is the set of
+// properties that must hold before a pilot is worth running at all:
+//
+//   1. it is a FACTORY (claim #86) — requiring/constructing opens no pool.
+//      Proven in a CHILD PROCESS with a patched `pg.Pool`, because an in-process
+//      module-registry patch under vitest cannot promise it patched the same
+//      module object `scripts/lib/pipeline.js` destructured from.
+//   2. an invalid descriptor THROWS at construction — that throw IS the loader
+//      property Spec 122 §4.2 claims is stronger than a build-time loader.
+//   3. the verdict is ROW-DERIVED, {PASS, WARN, FAIL} all reachable, and — the
+//      load-bearing half — a check the library could not evaluate NEVER reads
+//      as PASS (Spec 121 §12b.6's "green because it never looked").
+//   4. `checks[].chains` selects per chain; `assert_schema` is shared ×3 and a
+//      pilot that ran permit checks under `sources` would be a false green.
+//   5. `crashed` is not writable in-process — it belongs to the A3 reaper.
+import { describe, expect, it, vi } from 'vitest';
+import { execFileSync } from 'child_process';
+import { join } from 'node:path';
+
+/* eslint-disable @typescript-eslint/no-require-imports -- exercising the real CJS libraries */
+const stepLib = require(join(process.cwd(), 'scripts/lib/step'));
+const verdictLib = require(join(process.cwd(), 'scripts/lib/step/verdict.js'));
+const ledgerLib = require(join(process.cwd(), 'scripts/lib/step/ledger.js'));
+const pipeline = require(join(process.cwd(), 'scripts/lib/pipeline.js'));
+
+const FIXTURES = join(process.cwd(), 'scripts/steps/_schema/fixtures');
+const ASSERT_SCHEMA = require(join(FIXTURES, 'valid/assert_schema.descriptor.json'));
+/* eslint-enable @typescript-eslint/no-require-imports */
+
+const clone = <T>(o: T): T => JSON.parse(JSON.stringify(o));
+const noop = async () => {};
+
+type Row = { metric: string; value: unknown; threshold: unknown; status: string };
+
+// ---------------------------------------------------------------------------
+// 1. The factory property (claim #86)
+// ---------------------------------------------------------------------------
+
+describe('pipeline.step is a FACTORY — requiring a step opens no pool (claim #86)', () => {
+  it('constructs zero pg.Pools on require + construct', () => {
+    const probe = `
+      const pg = require('pg');
+      let pools = 0;
+      const Real = pg.Pool;
+      pg.Pool = class extends Real { constructor(...a) { super(...a); pools++; } };
+      const pipeline = require('./scripts/lib/pipeline');
+      const descriptor = require('./scripts/steps/_schema/fixtures/valid/assert_schema.descriptor.json');
+      const runnable = pipeline.step(descriptor, async () => {});
+      console.log('PROBE:' + JSON.stringify({
+        pools,
+        run: typeof runnable.run,
+        compute: typeof runnable.compute,
+        name: runnable.descriptor.identity.name,
+      }));
+    `;
+    const out = execFileSync('node', ['-e', probe], { cwd: process.cwd(), encoding: 'utf8' });
+    const result = JSON.parse((out.split('PROBE:')[1] ?? '').trim());
+    expect(result.pools, 'requiring + constructing a step must open no pool').toBe(0);
+    // ...and the thing returned is runnable, not run.
+    expect(result.run).toBe('function');
+    expect(result.compute).toBe('function');
+    expect(result.name).toBe('assert_schema');
+  });
+
+  it('exposes descriptor and compute for the compute-swap test (§5.2 / #163)', () => {
+    const compute = async () => {};
+    const runnable = pipeline.step(ASSERT_SCHEMA, compute);
+    expect(runnable.descriptor).toBe(ASSERT_SCHEMA);
+    expect(runnable.compute).toBe(compute);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 2. Descriptor validation at construction
+// ---------------------------------------------------------------------------
+
+describe('the descriptor is AJV-validated at CONSTRUCTION, and it throws (§4.2)', () => {
+  const INVALID: Array<{ file: string; rule: string; mentions: string }> = [
+    { file: 'checks-none.json', rule: 'claim #7 — checks may never be "none"', mentions: '/checks' },
+    { file: 'missing-category.json', rule: 'omission is a build failure', mentions: 'terminals' },
+    { file: 'banned-value-severity-pass.json', rule: '§12.5 — severity PASS is not declarable', mentions: '/checks/0/severity' },
+    { file: 'assert-with-outputs.json', rule: '§1.10 — an ASSERT declares outputs "none"', mentions: '/outputs' },
+    { file: 'unknown-key.json', rule: 'the schema is CLOSED', mentions: '/identity' },
+  ];
+
+  for (const fx of INVALID) {
+    it(`${fx.file} — ${fx.rule}`, () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- fixture load
+      const bad = require(join(FIXTURES, 'invalid', fx.file));
+      expect(() => pipeline.step(bad, noop)).toThrow(/does not satisfy step\.schema\.json/);
+      try {
+        pipeline.step(bad, noop);
+      } catch (err) {
+        expect((err as Error).message, 'the throw must name WHERE, or it is undiagnosable').toContain(fx.mentions);
+      }
+    });
+  }
+
+  it('a valid descriptor with a non-function compute also throws', () => {
+    expect(() => pipeline.step(ASSERT_SCHEMA, 'not a function' as never)).toThrow(/must be a function/);
+  });
+
+  it('a non-object descriptor throws before AJV ever sees it', () => {
+    expect(() => pipeline.step(null as never, noop)).toThrow(/descriptor must be an object/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 3. The verdict matrix — row-derived, all three reachable, never green-by-blindness
+// ---------------------------------------------------------------------------
+
+/** A minimal descriptor carrying exactly the checks a case needs. */
+function withChecks(checks: Array<Record<string, unknown>>, onCheckError = 'fail_step') {
+  const d = clone(ASSERT_SCHEMA);
+  d.execution.on_check_error = onCheckError;
+  if (onCheckError !== 'omit_row') delete d.execution.on_check_error_why;
+  d.checks = checks.map((c, i) => ({
+    id: `c${i}`,
+    kind: 'schema',
+    expect: [],
+    limit: 'viol == 0',
+    severity: 'FAIL',
+    blocking: false,
+    when: 'post',
+    chains: 'all',
+    accept_until: 'none',
+    why: { text: 'a synthetic check for the verdict matrix', liveness: 'none' },
+    ...c,
+  }));
+  return d;
+}
+
+describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1, claim #28)', () => {
+  const build = (d: Record<string, unknown>, obs: Record<string, unknown>) =>
+    verdictLib.buildAuditTable(d, null, obs);
+
+  it('PASS — every check inside its limit', () => {
+    const d = withChecks([{}, { severity: 'WARN' }]);
+    const built = build(d, { c0: { violations: 0 }, c1: { violations: 0 } });
+    expect(built.audit_table.verdict).toBe('PASS');
+    expect(built.rows.map((r: Row) => r.status)).toEqual(['PASS', 'PASS']);
+    expect(built.blockingFailures).toEqual([]);
+  });
+
+  it('WARN — a WARN-severity check is violated', () => {
+    const built = build(withChecks([{}, { severity: 'WARN' }]), { c0: { violations: 0 }, c1: { violations: 3 } });
+    expect(built.audit_table.verdict).toBe('WARN');
+  });
+
+  it('FAIL — a FAIL-severity check is violated, and a blocking one is named', () => {
+    const built = build(withChecks([{ blocking: true, when: 'pre' }]), { c0: { violations: 1 } });
+    expect(built.audit_table.verdict).toBe('FAIL');
+    expect(built.blockingFailures).toEqual(['c0']);
+  });
+
+  it('the verdict is computed FROM the rows, not alongside them', () => {
+    const built = build(withChecks([{ severity: 'WARN' }]), { c0: { violations: 9 } });
+    expect(built.audit_table.verdict).toBe(verdictLib.deriveVerdict(built.audit_table.rows));
+    // Mutate a row and re-derive: the cascade tracks the rows, so a parallel
+    // boolean would be visible here as a frozen verdict.
+    const mutated = [...built.audit_table.rows, { metric: 'x', value: 1, threshold: null, status: 'FAIL' }];
+    expect(verdictLib.deriveVerdict(mutated)).toBe('FAIL');
+  });
+
+  it('INFO severity is orthogonal — it can never drive a verdict', () => {
+    const built = build(withChecks([{ severity: 'INFO' }]), { c0: { violations: 99 } });
+    expect(built.rows[0].status).toBe('INFO');
+    expect(built.audit_table.verdict).toBe('PASS');
+  });
+
+  it('⚠️ a check compute NEVER REPORTED reads as its severity, never PASS', () => {
+    const built = build(withChecks([{}]), {});
+    expect(built.rows[0].value).toMatch(/not reported/);
+    expect(built.rows[0].status).toBe('FAIL');
+    expect(built.audit_table.verdict).toBe('FAIL');
+  });
+
+  it('⚠️ a limit form S2-min cannot evaluate reads as its severity, never PASS', () => {
+    const built = build(withChecks([{ limit: 'pct <= 0.5', severity: 'WARN' }]), { c0: { violations: 0 } });
+    expect(built.rows[0].value).toMatch(/unevaluable/);
+    expect(built.rows[0].status).toBe('WARN');
+  });
+
+  it('the {warn, fail} limit object escalates independently of the declared severity', () => {
+    const d = withChecks([{ limit: { warn: 5, fail: 10 }, severity: 'FAIL' }]);
+    expect(build(d, { c0: { violations: 4 } }).audit_table.verdict).toBe('PASS');
+    expect(build(d, { c0: { violations: 5 } }).audit_table.verdict).toBe('WARN');
+    expect(build(d, { c0: { violations: 10 } }).audit_table.verdict).toBe('FAIL');
+  });
+
+  it('`viol <= N` and `viol == N` are distinct bounds', () => {
+    expect(verdictLib.evaluateLimit('viol <= 2', { violations: 2 })).toEqual({ ok: true });
+    expect(verdictLib.evaluateLimit('viol == 2', { violations: 1 })).toEqual({ ok: false });
+    expect(verdictLib.evaluateLimit('viol == 0', { violations: 0 })).toEqual({ ok: true });
+  });
+
+  it('execution.on_check_error governs an errored check — and omit_row is the DECLARED fiction', () => {
+    const errored = { c0: { error: new Error('CKAN unreachable') } };
+    expect(build(withChecks([{}], 'omit_row'), errored).rows).toHaveLength(0);
+    expect(build(withChecks([{}], 'warn_row'), errored).rows[0].status).toBe('WARN');
+    expect(build(withChecks([{ severity: 'FAIL' }], 'fail_step'), errored).rows[0].status).toBe('FAIL');
+  });
+
+  it('the SKIP path verdict is row-derived too — no hardcoded PASS', () => {
+    const meta = stepLib.skipRecordsMeta(ASSERT_SCHEMA, 'advisory_lock_held_elsewhere');
+    expect(meta.audit_table.name).toBe(ASSERT_SCHEMA.identity.display_name);
+    expect(meta.audit_table.rows.length).toBeGreaterThan(0);
+    expect(meta.audit_table.verdict).toBe(verdictLib.deriveVerdict(meta.audit_table.rows));
+    expect(meta.reason).toBe('advisory_lock_held_elsewhere');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 4. Per-chain check selection — assert_schema is shared ×3
+// ---------------------------------------------------------------------------
+
+describe('checks[].chains selects per chain (§1.7, sharing.varies_by_chain.checks)', () => {
+  const ids = (chainId: string | null) =>
+    verdictLib.selectChecks(ASSERT_SCHEMA, chainId).map((c: { id: string }) => c.id);
+
+  it('permits runs only the permit checks', () => {
+    expect(ids('permits')).toEqual(['permit_columns', 'permit_cost_type_sample']);
+  });
+
+  it('coa runs only the CoA check', () => {
+    expect(ids('coa')).toEqual(['coa_columns']);
+  });
+
+  it('sources runs the six source checks — and no permit check leaks in', () => {
+    const selected = ids('sources');
+    expect(selected).toHaveLength(6);
+    expect(selected).not.toContain('permit_columns');
+    expect(selected).toContain('zoning_resource_columns');
+  });
+
+  it('the three chain sets partition the declared checks with no overlap', () => {
+    const all = [...ids('permits'), ...ids('coa'), ...ids('sources')];
+    expect(new Set(all).size).toBe(all.length);
+    expect(all).toHaveLength(ASSERT_SCHEMA.checks.length);
+  });
+
+  it('a STANDALONE run runs everything — a chain filter must not narrow a manual run', () => {
+    expect(ids(null)).toHaveLength(ASSERT_SCHEMA.checks.length);
+  });
+
+  it('varies_by_chain.checks = "none" makes the per-check chains field inert', () => {
+    const d = clone(ASSERT_SCHEMA);
+    d.sharing.varies_by_chain.checks = 'none';
+    expect(verdictLib.selectChecks(d, 'permits')).toHaveLength(d.checks.length);
+  });
+
+  it('audit_table.phase comes from the explicit map, never a ternary', () => {
+    const d = clone(ASSERT_SCHEMA);
+    d.sharing.varies_by_chain.phase = { permits: 1, coa: 4, sources: 6 };
+    expect(verdictLib.resolvePhase(d, 'coa')).toBe(4);
+    expect(verdictLib.resolvePhase(d, 'sources')).toBe(6);
+    // Standalone is only unambiguous when every chain agrees.
+    expect(verdictLib.resolvePhase(d, null)).toBe(0);
+    expect(verdictLib.resolvePhase(ASSERT_SCHEMA, null)).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5. The ledger — crashed ≠ failed, and ownership
+// ---------------------------------------------------------------------------
+
+describe('the ledger row (§4.1 ①㉝, Spec 120 §3.2b)', () => {
+  it('the library owns the row STANDALONE only — in-chain it is run-chain.js:591', () => {
+    expect(ledgerLib.ownsLedgerRow(null)).toBe(true);
+    expect(ledgerLib.ownsLedgerRow('sources')).toBe(false);
+  });
+
+  it('⚠️ finalize REFUSES to write `crashed` — nothing judged is the reaper\'s verdict, not a finally\'s', async () => {
+    await expect(
+      ledgerLib.finalizeLedgerRow({ query: async () => ({ rows: [] }) }, 1, {
+        slug: 'assert_schema',
+        status: ledgerLib.RUN_STATUS.CRASHED,
+        durationMs: 1,
+      }),
+    ).rejects.toThrow(/refuses to write 'crashed'/);
+  });
+
+  it('⚠️ the finalize UPDATE assigns the counters DIRECTLY — a COALESCE regression is a NULL→0 lie', async () => {
+    // `pipeline_runs.records_total/_new/_updated` DEFAULT to 0, so
+    // `COALESCE($5, records_total)` would silently persist 0 for a step that
+    // declares `counters: "none"` — stdout says null, the ledger says 0, and
+    // the `counters` category's whole purpose (one declared meaning per
+    // counter) is defeated one layer below where it was declared.
+    let sql = '';
+    let params: unknown[] = [];
+    await ledgerLib.finalizeLedgerRow(
+      { query: async (text: string, values: unknown[]) => { sql = text; params = values; return { rows: [] }; } },
+      99,
+      { slug: 'assert_schema', status: 'completed', durationMs: 12, recordsMeta: { a: 1 } },
+    );
+    expect(sql).toMatch(/records_total = \$5/);
+    expect(sql).toMatch(/records_new = \$6/);
+    expect(sql).toMatch(/records_updated = \$7/);
+    expect(sql, 'no COALESCE may wrap a counter — it resolves a deliberate NULL to the column default 0')
+      .not.toMatch(/COALESCE\(\$[567]/);
+    // ...while records_meta KEEPS its COALESCE: null there means "this path
+    // produced no meta", and blanking it would destroy already-written rows.
+    expect(sql).toMatch(/records_meta = COALESCE\(\$8::jsonb, records_meta\)/);
+    expect(params.slice(4, 7), 'a counters:"none" step must persist NULL, not 0').toEqual([null, null, null]);
+  });
+
+  it('carries the full Spec 120 §3.2b status vocabulary', () => {
+    expect(Object.values(ledgerLib.RUN_STATUS)).toEqual(
+      expect.arrayContaining([
+        'running', 'completed', 'completed_with_warnings', 'completed_with_errors',
+        'failed', 'crashed', 'skipped', 'self_skipped', 'deferred_to_full', 'cancelled',
+      ]),
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 6. The lifecycle, end to end, against a fake pool (no DB)
+// ---------------------------------------------------------------------------
+
+type FakePoolOpts = { lockAcquired?: boolean; migrations?: number; database?: string };
+
+function fakePool(opts: FakePoolOpts = {}) {
+  const sql: string[] = [];
+  const params: unknown[][] = [];
+  const answer = (text: string) => {
+    if (text.includes('current_database()')) {
+      return { rows: [{ database: opts.database ?? 'postgres', db_user: 'postgres', has_tracking: true }] };
+    }
+    if (text.includes('FROM public.schema_migrations')) return { rows: [{ n: opts.migrations ?? 999 }] };
+    if (text.includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired: opts.lockAcquired !== false }] };
+    if (text.startsWith('INSERT INTO pipeline_runs')) return { rows: [{ id: 4242 }] };
+    return { rows: [] };
+  };
+  const record = async (text: string, values?: unknown[]) => {
+    sql.push(text);
+    params.push(values ?? []);
+    return answer(text);
+  };
+  return {
+    sql,
+    params,
+    query: record,
+    connect: async () => ({ query: record, release: () => {} }),
+  };
+}
+
+/** The bound parameters of the single statement matching `match` — asserting there is exactly one. */
+function paramsOf(pool: ReturnType<typeof fakePool>, match: (sql: string) => boolean): unknown[] {
+  const idx = pool.sql.findIndex(match);
+  expect(idx, 'expected exactly one matching statement').toBeGreaterThan(-1);
+  return pool.params[idx] ?? [];
+}
+
+/** Capture PIPELINE_SUMMARY / PIPELINE_META without letting them reach the reporter. */
+function captureEmissions() {
+  const lines: string[] = [];
+  const spy = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+    lines.push(args.map(String).join(' '));
+  });
+  return {
+    restore: () => spy.mockRestore(),
+    summary: () => JSON.parse(lines.filter((l) => l.startsWith('PIPELINE_SUMMARY:')).pop()!.slice('PIPELINE_SUMMARY:'.length)),
+    meta: () => JSON.parse(lines.filter((l) => l.startsWith('PIPELINE_META:')).pop()!.slice('PIPELINE_META:'.length)),
+    lines,
+  };
+}
+
+/** Report `violations: 0` for every check the chain selected. */
+const allClean = async (ctx: { descriptor: Record<string, unknown>; chainId: string | null }) => {
+  for (const c of verdictLib.selectChecks(ctx.descriptor, ctx.chainId)) {
+    (ctx as unknown as { report: (id: string, o: unknown) => void }).report(c.id, { violations: 0 });
+  }
+};
+
+describe('run(ctx) — the lifecycle, against a fake pool', () => {
+  it('a clean sources run: PASS verdict, audit_table named from identity.display_name', async () => {
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      const out = await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: 'sources' });
+      expect(out.status).toBe('completed');
+      const summary = cap.summary();
+      expect(summary.records_meta.audit_table.verdict).toBe('PASS');
+      expect(summary.records_meta.audit_table.name).toBe('Schema Validation');
+      expect(summary.records_meta.checks_passed).toBe('all');
+      expect(summary.records_meta.checks_failed).toBe(0);
+      // ASSERT profile: counters "none" — records_new/updated stay null, not 0.
+      expect(summary.records_new).toBeNull();
+      expect(summary.records_updated).toBeNull();
+      // Six source checks + the two sys_* rows emitSummary always injects.
+      const metrics = summary.records_meta.audit_table.rows.map((r: Row) => r.metric);
+      expect(metrics).toContain('parcel_columns');
+      expect(metrics).not.toContain('permit_columns');
+      expect(metrics).toContain('sys_duration_ms');
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('PIPELINE_META is derived from the descriptor, not hand-maintained', async () => {
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: 'sources' });
+      const meta = cap.meta();
+      expect(meta.writes, 'outputs "none" means it writes nothing').toEqual({});
+      expect(meta.external).toContain('ckan_datastore_api');
+      expect(meta.external).toHaveLength(ASSERT_SCHEMA.inputs.reads.externals.length);
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('a blocking FAIL rejects — but the audit rows are emitted FIRST (WAP, §7.2)', async () => {
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      const drift = async (ctx: { descriptor: Record<string, unknown>; chainId: string | null }) => {
+        for (const c of verdictLib.selectChecks(ctx.descriptor, ctx.chainId)) {
+          (ctx as unknown as { report: (id: string, o: unknown) => void })
+            .report(c.id, { violations: c.id === 'parcel_columns' ? 1 : 0 });
+        }
+      };
+      await expect(pipeline.step(ASSERT_SCHEMA, drift).run({ pool, chainId: 'sources' }))
+        .rejects.toThrow(/blocking checks failed: parcel_columns/);
+      const summary = cap.summary();
+      expect(summary.records_meta.audit_table.verdict).toBe('FAIL');
+      expect(summary.records_meta.errors).toEqual(expect.arrayContaining([expect.stringContaining('parcel_columns')]));
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('lock held elsewhere: self_skipped, with a row-derived verdict, and compute never runs', async () => {
+    const pool = fakePool({ lockAcquired: false });
+    const cap = captureEmissions();
+    let computeRan = false;
+    try {
+      const out = await pipeline
+        .step(ASSERT_SCHEMA, async () => { computeRan = true; })
+        .run({ pool, chainId: 'sources' });
+      expect(computeRan).toBe(false);
+      expect(out.status).toBe('self_skipped');
+      const summary = cap.summary();
+      expect(summary.records_meta.skipped).toBe(true);
+      expect(summary.records_meta.audit_table.verdict).toBe('PASS');
+      expect(summary.records_meta.audit_table.rows.some((r: Row) => r.metric === 'reason')).toBe(true);
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('STANDALONE opens and finalizes its own ledger row; IN-CHAIN writes none', async () => {
+    const standalone = fakePool();
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool: standalone, chainId: null });
+    } finally {
+      cap.restore();
+    }
+    const inserts = standalone.sql.filter((s) => s.startsWith('INSERT INTO pipeline_runs'));
+    const updates = standalone.sql.filter((s) => s.trim().startsWith('UPDATE pipeline_runs'));
+    expect(inserts).toHaveLength(1);
+    expect(updates).toHaveLength(1);
+    expect(paramsOf(standalone, (s) => s.trim().startsWith('UPDATE pipeline_runs'))[0]).toBe('completed');
+    // Nothing SELECTs a prior run: reconcile (A3) is not implemented and is not assumed.
+    expect(standalone.sql.some((s) => /SELECT[\s\S]*FROM pipeline_runs/i.test(s))).toBe(false);
+
+    const inChain = fakePool();
+    const cap2 = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool: inChain, chainId: 'sources' });
+    } finally {
+      cap2.restore();
+    }
+    expect(inChain.sql.some((s) => s.includes('pipeline_runs')), 'run-chain.js:591 owns the in-chain row').toBe(false);
+  });
+
+  it('the ledger is finalized `failed` — never `crashed` — when compute throws', async () => {
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await expect(
+        pipeline.step(ASSERT_SCHEMA, async () => { throw new Error('compute exploded'); })
+          .run({ pool, chainId: null }),
+      ).rejects.toThrow('compute exploded');
+    } finally {
+      cap.restore();
+    }
+    const update = paramsOf(pool, (s) => s.trim().startsWith('UPDATE pipeline_runs'));
+    expect(update[0]).toBe('failed');
+    expect(update[2]).toBe('compute exploded');
+  });
+
+  it('⚠️ DECLARED GAP — a raw compute throw emits ZERO audit rows, only the ledger error_message', async () => {
+    // Pinned so the gap is a known property rather than a discovery. `assert-
+    // schema.js:318-443` wraps each source fetch individually, so one dead
+    // archive reddens ONE row; a converted compute that lets a fetch escape to
+    // the top level trades nine audit rows for one error string. Library-side
+    // per-check boundaries are the validator growth wave — see index.js's catch.
+    const pool = fakePool();
+    const cap = captureEmissions();
+    let lines: string[] = [];
+    try {
+      await expect(
+        pipeline.step(ASSERT_SCHEMA, async () => { throw new Error('CKAN unreachable'); })
+          .run({ pool, chainId: null }),
+      ).rejects.toThrow('CKAN unreachable');
+      lines = [...cap.lines];
+    } finally {
+      cap.restore();
+    }
+    expect(lines.filter((l) => l.startsWith('PIPELINE_SUMMARY:')), 'no summary is emitted at all').toHaveLength(0);
+    expect(lines.filter((l) => l.startsWith('PIPELINE_META:'))).toHaveLength(0);
+    // The ONLY surviving signal is the ledger row — status + error_message.
+    const update = paramsOf(pool, (s) => s.trim().startsWith('UPDATE pipeline_runs'));
+    expect(update[0]).toBe('failed');
+    expect(update[2]).toBe('CKAN unreachable');
+    expect(update[7], 'records_meta is null — there are no audit rows to write').toBeNull();
+  });
+
+  it('⚠️ a below-floor database REFUSES before the lock is ever taken (§4.1 ③④)', async () => {
+    const pool = fakePool({ migrations: 222 });
+    await expect(pipeline.step(ASSERT_SCHEMA, noop).run({ pool, chainId: 'sources' }))
+      .rejects.toThrow(/below-floor database/);
+    expect(pool.sql.some((s) => s.includes('pg_try_advisory_xact_lock'))).toBe(false);
+  });
+
+  it('compute may not report a check the descriptor does not declare', async () => {
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await expect(
+        pipeline.step(ASSERT_SCHEMA, async (ctx: { report: (id: string, o: unknown) => void }) => {
+          ctx.report('a_check_nobody_declared', { violations: 0 });
+        }).run({ pool, chainId: 'sources' }),
+      ).rejects.toThrow(/does not declare/);
+    } finally {
+      cap.restore();
+    }
+  });
+});

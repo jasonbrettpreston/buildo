@@ -126,6 +126,12 @@ const HealthBanner = React.memo(function HealthBanner({
     if (info.status === 'failed') return { label: 'FAIL', cls: 'text-red-700 bg-red-50 border-red-200' };
     if (info.status === 'completed_with_errors') return { label: 'FAIL', cls: 'text-red-700 bg-red-50 border-red-200' };
     if (info.status === 'completed_with_warnings') return { label: 'WARN', cls: 'text-yellow-700 bg-yellow-50 border-yellow-200' };
+    // Spec 122 S2 — `self_skipped` reaches this CHAIN chip via the
+    // `chainInfo ?? rootInfo` fallback below: with no chain_* row the ROOT STEP's
+    // row is rendered, so a root step that declined on lock contention would
+    // otherwise fall through to a green PASS chip for work that never ran.
+    // Must stay ABOVE the PASS fallthrough. Neutral, not PASS — nothing judged.
+    if (info.status === 'self_skipped') return { label: 'SKIP', cls: 'text-gray-600 bg-gray-50 border-gray-200' };
     return { label: 'PASS', cls: 'text-green-700 bg-green-50 border-green-200' };
   }
 
