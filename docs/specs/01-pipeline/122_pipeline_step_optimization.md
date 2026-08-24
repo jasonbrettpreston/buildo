@@ -26,6 +26,34 @@ These were put to the operator as the three questions the spec could not answer 
 | **A2** | The escape-hatch ban (claim #128) is enforced by a **mandatory ast-grep shape rule** | rely on review — under which a step need not opt out, it can simply never call in, which is today's situation | §4.1. **Without it, §4 is aspirational and this spec is a style guide** |
 | **A3** | Step-0 reconcile becomes a **`reconcile` step at the head of `manifest.chains.sources`** | a `run-chain.js` preamble | §6.4 |
 
+## Six programme rulings — ✅ OPERATOR-RATIFIED 2026-08-23 (round 2)
+
+Reviewed and accepted by the operator 2026-08-23. **These amend the sections named; where older text in this spec or the plan conflicts, these govern.**
+
+| # | Ruling | Amends |
+|---|---|---|
+| **R1** | **This is a re-architecture of the entire non-compute lifecycle, delivered incrementally — budget it as that, never as a per-step cleanup pass.** The §1 coverage audit is the evidence: 3 structurally failed menus · 6 missing P0 categories · an extractor covering 8/17 · §3f write-class labels wrong for 5 of 27 steps (2 of the 13 classes wrong at source) · 54 unadjudicated orphans | framing throughout |
+| **R2** | **The schema is the canonical vocabulary, not the prose.** `scripts/steps/_schema/step.schema.json` is authored directly, encoding the V1–V6 conflict rulings below plus the reshaped menus (per-target `write_discipline`, 3-axis `staleness`, the four `on_*_error` fields). `122-vocabulary.md` and this spec's menu tables are **generated FROM the schema**. `extract-vocab.mjs` is demoted to a one-time migration tool; §12.1 **B3 dissolves** — the nine categories are born in the schema, never extracted from prose. Downstream corollary: once the Violation Suite exists, the **test manifest becomes the claim register** and the prose appendix stops being the certified artifact | §1.2 · §12.1 B1/B3 · §12.4.5 · Spec 123 §1.2/§5 |
+| **R3** | **The P-track and S-track run in PARALLEL.** §10.1's green-cloud-run criterion gates **C1 (first conversion)**, not S1 — building the library, schema, ledger and conformance suite converts nothing. The one real coupling stands: **no golden master until Phase B (P2) lands** | §10.1 · the plan's stage table |
+| **R4** | **S2 is a vertical slice, not a monolith.** Build the minimal `pipeline.step()` the `assert_schema` pilot needs, convert it, and grow the library pilot-by-pilot. Consistent with §7.2's *"freeze the template after the eighth, never the first"* — a fully-finished S2 before C1 buys less than it costs | §9 S2 · the plan |
+| **R5** | **Per-step re-verification folds into PH-0** (the boundary freeze reads every write anyway): the 5 mislabeled write classes are re-derived per step there, not in an upfront S1 sweep. The **54 orphans are adjudicated in triage batches** (contract-must-express / runner-owned / defer-with-reason), pilot-archetype-touching first — not as a monolithic freeze gate | §12.1 B2 · §12.5 · Spec 123 §2 |
+| **R6** | **The six missing P0 categories go through a categories-vs-fields adjudication before any lands as a category.** `acquisition` is arguably `staleness.trigger`'s missing lifecycle position plus an `inputs.externals` cache policy; `maintenance` arguably `execution.maintenance`; `terminals` and `plan_shape` look genuinely new. 17→23 is real complexity-clock spend (§12.12 B2) and is decided deliberately, not by default | §12.2 |
+
+### The six vocabulary-conflict rulings — ✅ ADJUDICATED 2026-08-23 (operator-delegated)
+
+Encoded in `step.schema.json` per R2. Spec 120 §3.2 is annotated, not re-litigated.
+
+| # | Field | Ruling | Why |
+|---|---|---|---|
+| **V1** | `identity.archetype` | **full words** — `INGESTOR\|MATERIALIZER\|LINK\|MATCHER\|ENRICHER\|BACKFILL\|ASSERT\|RECORDER` | descriptors optimize for human/LLM legibility; the `ING|…` forms are display shorthand only |
+| **V2** | `identity.lock` | **unique across manifest ∪ `one-time/` ∪ `backfill/`** (the wider universe); the generated registry *derives* from it | registry-only uniqueness readmits collisions from scripts outside the registry |
+| **V3** | `guards.schema_drift` | **`none \| propagate \| pause`** — `warn` dropped | a drift response is an *action*; warn-ness belongs to the orthogonal `severity ⊥ blocking` axes. Same conflation class as the impossible `severity: PASS` (§12.5) |
+| **V4** | `outputs.replay` | **`append_unsafe` stays in the enum, ⛔ banned for new steps** | same grandfathering mechanism as write-discipline classes D/H — an existing step must be able to declare its truth |
+| **V5** | `staleness.pending` | **dissolved by the §1.5 reshape** — `scope: <sql predicate> \| all \| none`; `source_changed` is not a scope, it is `trigger: source_validator \| content_hash` | the conflict existed because one name carried three axes |
+| **V6** | `guards.empty_source` | **typed form `<table> \| none`** | notation ruling; prose variant retired |
+
+Notation-only duplicates (`identity.contract_version` · `inputs.expect_nonempty` · `outputs.retract` · `staleness.checkpoint`): **the schema's typed form is canonical** wherever prose and notation differ.
+
 ---
 
 ## 1. THE STANDARD STEP
@@ -53,7 +81,7 @@ These were put to the operator as the three questions the spec could not answer 
 >
 > ⚠️ **The unifying pattern across every P0 gap is one shape: the descriptor would say one thing and the code would do another.** `pending: source_changed` defeated by `existsSync`. `outputs: "none"` on a step that VACUUMs. `retract: departed` on a step migrating a key space. **That is concern 15's exact failure — which is the strongest argument that the Concern Index was worth writing, and that it is not finished.**
 >
-> **The design below stands. The vocabularies do not. Do not freeze until S1 closes the six extractor conflicts, extends the extractor to the nine unextracted categories, and adjudicates the 62 orphans.**
+> **The design below stands. The vocabularies do not. Closure path amended by R2/R5 (ratified 2026-08-23):** the six conflicts are closed by the V1–V6 operator rulings encoded directly in `step.schema.json` — the canonical vocabulary, from which the menu tables are generated (**no extractor extension is needed; B3 dissolves**) — and the 54 orphans (post-F1) are triaged in batches per R5, pilot-archetype-touching first.
 
 
 > ### One shape · one menu · one compute
@@ -182,7 +210,9 @@ Three questions get asked of this design repeatedly. Here they are, answered onc
 >
 > ⚠️ **Omission is a build failure; `"none"` is a valid value — and it applies PER FIELD, not per category.** A category present with fields missing is the same *"we forgot something again"* the design exists to answer.
 
-**The vocabulary is GENERATED from Spec 120 §3.2, never transcribed:**
+> ⚠️ **SUPERSEDED BY R2 (2026-08-23).** The canonical vocabulary is now **`scripts/steps/_schema/step.schema.json`, authored directly** (encoding rulings V1–V6 + the reshaped menus); `122-vocabulary.md` and this spec's menu tables are generated FROM the schema. `extract-vocab.mjs` is a **one-time migration tool** whose conflict list seeded the rulings — it is not extended and not re-run as a gate. The paragraph below is retained as the record of how the conflicts were found.
+
+**The vocabulary was originally extracted from Spec 120 §3.2:**
 
 ```
 node scripts/violations/extract-vocab.mjs docs/reports/generated/122-vocabulary.md
@@ -190,7 +220,7 @@ node scripts/violations/extract-vocab.mjs docs/reports/generated/122-vocabulary.
 
 `[generated 2026-08-23 — 56 field rows]`. The extractor **emits the vocabulary and then exits 1** over an unresolved conflict — `fs.writeFileSync` runs before the conflict check (`extract-vocab.mjs:267` writes, `:271-274` reports and returns 1 unless `--allow-conflicts`), so the artifact is always produced and the *exit code* is the gate. It does refuse outright on only one condition: an unproven parser (`:252`).
 
-⚠️ **It found 6 fields declared twice with differing values, independently reproducing the 3 that Spec 121 §12.1a already named** — `identity.archetype` (`INGESTOR|…` vs `ING|…`) · `identity.lock` (uniqueness scope) · `guards.schema_drift` (**one variant carries `warn`, the other does not — both contain `propagate`; the differing tokens are `warn` · `severity` · `blocking`, and a generator cannot choose**) — plus 3 borderline (`outputs.replay` bans `append_unsafe` two different ways; `staleness.pending`; `guards.empty_source`). **All six are S1 deliverables. The contract cannot be frozen until they are resolved in Spec 120 §3.2.**
+⚠️ **It found 6 fields declared twice with differing values, independently reproducing the 3 that Spec 121 §12.1a already named** — `identity.archetype` (`INGESTOR|…` vs `ING|…`) · `identity.lock` (uniqueness scope) · `guards.schema_drift` (**one variant carries `warn`, the other does not — both contain `propagate`; the differing tokens are `warn` · `severity` · `blocking`, and a generator cannot choose**) — plus 3 borderline (`outputs.replay` bans `append_unsafe` two different ways; `staleness.pending`; `guards.empty_source`). ✅ **All six RESOLVED 2026-08-23 by operator rulings V1–V6 (see the round-2 ratification block), encoded in `step.schema.json` per R2.**
 
 ### 1.3 The 17 categories
 
@@ -1084,7 +1114,7 @@ Spec 120 §9.4's four, with one correction: *"step file > 20 lines"* is meaningl
 >
 > **A reader who took this table's `P1` would satisfy the S-gate by fixing a centroid — silently deleting the green-cloud-run precondition that §11 failure-mode 7 exists to enforce.**
 
-**The sequence has exactly one source of record: `.cursor/queued_task_step_opt_programme.md`**, and the active task is **generated** from it:
+**The sequence has exactly one source of record: `.cursor/active_task.md`** (promoted from `.cursor/queued_task_step_opt_programme.md` 2026-08-23, which is now a pointer). ⚠️ `build-active-task.mjs` still targets the old path — retargeting or retiring it is an S0 item; until then do not run it:
 
 ```
 node scripts/violations/build-active-task.mjs --write    # -> .cursor/active_task_programme.md
@@ -1099,7 +1129,7 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 
 | Criterion | Why it is architectural |
 |---|---|
-| ⚠️ **No step converts before one clean `chain_sources` run in the cloud** | converting while the chain cannot complete makes a conversion regression **indistinguishable** from the pre-existing envelope failure (§11 KFM 7) |
+| ⚠️ **No step converts before one clean `chain_sources` run in the cloud** — **gates C1, NOT the S-stages (R3):** library/schema/ledger/conformance work converts nothing and proceeds in parallel | converting while the chain cannot complete makes a conversion regression **indistinguishable** from the pre-existing envelope failure (§11 KFM 7) |
 | ⚠️ **Phase B lands, and the golden master is captured AFTER it** | capturing earlier freezes pre-Phase-B behaviour, and the conversion then **silently reverts Phase B behind a green differential** |
 
 ### 10.2 The two namespaces, disambiguated
@@ -1136,6 +1166,8 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 
 ### 12.1 Blocking — a generator says no
 
+> ⚠️ **CLOSURE PATHS AMENDED BY R2/R5 (2026-08-23):** **B1 is CLOSED** — the six conflicts are adjudicated by operator rulings V1–V6, encoded in `step.schema.json` (the canonical vocabulary per R2); `extract-vocab.mjs`'s exit 1 is now historical record, not a gate. **B3 DISSOLVES** — no extractor extension; the nine categories are born in the schema. **B2 is re-scoped** — the 54 orphans are triaged in batches per R5 (contract-must-express / runner-owned / defer-with-reason), pilot-archetype-touching first, not held as a monolithic freeze gate.
+
 | # | Item | Signal | Why it blocks |
 |---|---|---|---|
 | **B1** | **6 unresolved vocabulary conflicts** in Spec 120 §3.2 | `extract-vocab.mjs` **exits 1** | Three are genuine value disagreements a generator **cannot arbitrate**: `identity.archetype` (`INGESTOR\|…` vs `ING\|…`) · `identity.lock` (uniqueness scope) · `guards.schema_drift`. **A frozen contract cannot be emitted over an unresolved conflict** |
@@ -1143,6 +1175,8 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 | **B3** | ⚠️ **`extract-vocab.mjs` covers 8 of 17 categories** | — | `identity · inputs · outputs · staleness · guards · execution · checks · recovery` only. **Nine have no machine-extracted menu**, including all four this spec adds. *"The vocabulary is GENERATED, never transcribed"* is currently true of **less than half of it** |
 
 ### 12.2 Missing categories — P0, each present in 2+ steps
+
+> ⚠️ **R6 (2026-08-23):** each row below goes through a **categories-vs-fields adjudication** before landing as a category — `acquisition` and `maintenance` are candidate *fields* of existing categories (`staleness`/`inputs.externals`, `execution`); `terminals` and `plan_shape` look genuinely new. The gap is P0 either way; the *shape* of the fix is the adjudication.
 
 | Category | The behaviour it would declare |
 |---|---|
@@ -1169,7 +1203,7 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 2. **Four spelling relaxations** — `empty.source` · `audit.row` · `pipeline.name` · `records_meta`. **Pure defects**: the rules were written in code spelling, the claims use prose spelling.
 3. ⚠️ **Add the `COMPUTE` bucket to `map-categories.mjs`** — §1.8 has **three** homes (categories · RUNNER · **OPEN**); the mapper implements two. **That hole is what let F1's laundering hide.**
 4. Remaining keywords — **only after 1–3**, so the rule set is sized against honest input.
-5. Extend `extract-vocab.mjs` to the nine unextracted categories (B3).
+5. ~~Extend `extract-vocab.mjs` to the nine unextracted categories (B3).~~ ⛔ **RETIRED BY R2** — the schema is canonical; the nine categories are authored there and never extracted.
 
 ### 12.5 Refuted claims that must not be re-asserted
 
