@@ -67,21 +67,35 @@ const SHAPE_TEST = {
 
 const SCOPES = ['UNIVERSAL', 'PER_STEP'];
 
-/** Stages of the implementation plan. Order is execution order. */
+/**
+ * Stages of the implementation plan. Order is execution order.
+ *
+ * ⚠️ THIS TABLE IS HAND-MAINTAINED AND IT IS THE ONE THING HERE THAT CAN ROT.
+ * Everything else on this page is derived from the register, so "regenerate and
+ * assert zero drift" catches it — but these strings are BAKED INTO the generator,
+ * so a regeneration re-emits the stale text and the drift check passes. Measured:
+ * a 2026-08-23 grounding pass found `123-claim-plan.md` still emitting
+ * "P2 — 20 commits" and "C1 — Pilot 3, simplest / median / enrich-parcels", both
+ * superseded by the v2 plan, with every generator green.
+ *
+ * SOURCE OF RECORD: `.cursor/active_task.md` (Spec 122 §10). When a stage's
+ * meaning changes there, change it HERE — no tool will tell you.
+ * Last reconciled against the v2 plan (rulings R1-R6 / V1-V6): 2026-08-23.
+ */
 const STAGES = [
-  ['P0', 'Audit instrument — make DATABASE_URL required in the 4 defaulting scripts; re-baseline'],
-  ['P1', 'Centroid invalidator — the HIGH followup; pinned first per Spec 121 §4.3'],
-  ['P2', 'Phase B lands — 20 commits, migrations 240/242/243/244'],
-  ['P3', 'Envelope + ONE GREEN CLOUD RUN — the launch gate'],
-  ['S1', 'Descriptor schema + controlled vocabularies (generated from one source)'],
-  ['S2', 'pipeline.step() library core + the validator'],
+  ['P0', 'Audit instrument — one `resolve-db.js`; 24 grep-visible + 13 `createPool()` tooling files; re-baseline'],
+  ['P1', 'Centroid invalidator — a DECLARED DEVIATION from Spec 121 §4.3 (the defect is upstream of the differential)'],
+  ['P2', 'Phase B lands — the 17-commit unit, in dependency order; migrations 240/242/243/244 pending CLOUD-side only'],
+  ['P3', 'Envelope + ONE GREEN CLOUD RUN — gates C1, not the S-stages (R3)'],
+  ['S1', 'Descriptor contract, SCHEMA-CANONICAL (R2) — `step.schema.json` is the vocabulary; prose is generated from it'],
+  ['S2', 'pipeline.step() library core + the validator — a VERTICAL SLICE (R4); grows pilot by pilot'],
   ['S3', 'Conformance suite + ast-grep shape rule'],
   ['S4', 'State tables (migrations 245-248) + DB CHECKs'],
   ['S5', 'Cross-step ledger generator + drift guard'],
   ['S6', 'Violation suite: register, ratchet, reversion harness, census, incident replays'],
-  ['C1', 'Pilot 3 — simplest / median / enrich-parcels'],
+  ['C1', 'Pilot BY ARCHETYPE — 8 pilots (R4), `assert_schema` first; each pilot grows the library'],
   ['C2', 'Kill criteria evaluated'],
-  ['C3', 'Freeze template'],
+  ['C3', 'Freeze the contract + template — AFTER THE EIGHTH PILOT (R4/R5), never the first'],
   ['C4', 'Shared steps (10 steps, 28 slots)'],
   ['C*', 'EVERY conversion (C1, C4, C5, C6) — the per-step checklist'],
   ['C5', 'Rest of sources'],

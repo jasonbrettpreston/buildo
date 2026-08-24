@@ -5,27 +5,28 @@
 | Home | Claims | Meaning |
 |---|---:|---|
 | `identity` | 30 | declared in `identity` |
-| `inputs` | 6 | declared in `inputs` |
-| `outputs` | 13 | declared in `outputs` |
+| `inputs` | 7 | declared in `inputs` |
+| `outputs` | 14 | declared in `outputs` |
 | `staleness` | 11 | declared in `staleness` |
-| `guards` | 10 | declared in `guards` |
+| `guards` | 11 | declared in `guards` |
 | `execution` | 15 | declared in `execution` |
-| `checks` | 53 | declared in `checks` |
-| `override` | 5 | declared in `override` |
-| `emits` | 1 | declared in `emits` |
+| `checks` | 59 | declared in `checks` |
+| `override` | 6 | declared in `override` |
+| `emits` | 2 | declared in `emits` |
 | `deviations` | 2 | declared in `deviations` |
 | `limitations` | 1 | declared in `limitations` |
 | `interpretation` | 4 | declared in `interpretation` |
-| `recovery` | 7 | declared in `recovery` |
+| `recovery` | 8 | declared in `recovery` |
 | `database` | 5 | declared in `database` |
 | `counters` | 6 | declared in `counters` |
 | `config` | 4 | declared in `config` |
-| `sharing` | 1 | declared in `sharing` |
-| RUNNER | 51 | library owns it; nothing declared per step |
+| `sharing` | 2 | declared in `sharing` |
+| RUNNER | 49 | library owns it; nothing declared per step |
+| COMPUTE | 1 | §1.8 **OPEN** (concern 40) — the domain logic; the one artifact not standardized |
 | METHOD | 3 | Spec 121 method claim; no step-level surface |
-| **ORPHAN** | **62** | ⚠️ **no home — a concern the contract cannot express** |
+| **ORPHAN** | **50** | ⚠️ **no home — a concern the contract cannot express** |
 
-> **174 claims are DECLARED** across the 17 categories · **51 are RUNNER-owned** · **3 are METHOD**.
+> **187 claims are DECLARED** across the 17 categories · **49 are RUNNER-owned** · **1 is COMPUTE** (§1.8's third home, OPEN) · **3 are METHOD**. 187 + 49 + 1 + 3 + 50 = **290**.
 
 ## ⚠️ ORPHANS — candidate categories or fields
 
@@ -34,8 +35,6 @@
 | 2 | A.1 | JSON, not YAML |
 | 5 | A.1 | `"none"` is a valid value, not an omission |
 | 12 | A.1 | `tier` is derived, never declared |
-| 21 | A.1 | The file exports `compute`; it is not a config key |
-| 47 | A.4 | Empty-source guard on both paths |
 | 52b | A.4 | **External inputs are enumerated and hashed** |
 | 78 | A.5 | No reference to a runtime-only value in a declaration |
 | 79 | A.5 | A step that declines to act reports `skipped`; **the graph never changes shape** |
@@ -48,6 +47,7 @@
 | 122 | A.8 | The admin loader refuses T2 fences and T3 pins |
 | 131 | A.10 | `amnesty.json`'s shape — per-rule `permanent[]`/`temporary[]` with a written reason |
 | 138 | A.10 | `amnesty.json` is the conversion ledger and shrinks |
+| 141 | A.11 | Deprecation lifecycle `active\ |
 | 143 | A.11 | Step IDs are stable and never renamed |
 | 145 | A.11 | The DAG is **derived** from `writes`, never declared |
 | 151 | A.12 | The non-determinism inventory is declared **before** the first diff |
@@ -65,7 +65,6 @@
 | 189 | A.14 | Exactly **one** model-based suite; zero for computes |
 | 202 | A.15 | The `tier_1_exact_address` name freeze |
 | 204 | A.15 | `RUN_AT` captured once — the midnight-cross fence |
-| 206 | A.15 | `records_meta` merge collisions are detected |
 | 209 | A.16 | **A conversion commit never contains a behaviour change** |
 | 210 | A.16 | Every DEFECT carries a Defect Ledger ID |
 | 211 | A.16 | A golden master is never the sole gate on a value-bearing field |
@@ -73,24 +72,14 @@
 | 215 | A.16 | A learning lands at level 4 only with a written reason it cannot sit at 1–3 |
 | 220 | A.16 | Resolved items are physically separated from open |
 | 224 | A.16 | `UNPROVEN.txt` may only shrink relative to the merge-base |
-| 226 | A.18 | **Pipeline-name drift** — the spec froze `source-ravines` while `run-chain.js:522` records `sources:load_ravines` |
-| 227 | A.18 | **Zero-work run emitting PASS** |
 | 230 | A.18 | **IDF guard missing on a quarterly reload** — one instance would have NULL-overwritten a **427K-row column** |
-| 231 | A.18 | **A gate-on-X pass never revisits a row that loses X** (`lessons.md:31`) |
-| 232 | A.18 | **Unbounded contributing term** — 602 ravine slivers passed through step 11's output (`lessons.md:103`) |
 | 234 | A.18 | **Declared telemetry omits tables DELETED from** (`lessons.md` L13, step 14) |
 | 236 | A.18 | **"A single UPDATE is inherently atomic" — it wasn't; there were two** (WF3-S2, step 3) |
-| 237 | A.18 | **Sentinel strings that are not null** — `ADDRESS_STATUS` literally `'None'` for **525,346 of 525,346** rows |
-| 238 | A.18 | **77 minutes enriching zero rows** (#418, step 11 → 1.9 s after the two-layer skip) |
 | 239 | A.18 | **A justification outliving the thing it justifies** (`lessons.md` L9) |
-| 241 | A.18 | **Pre-pin the expected number** (`lessons.md:104`) |
-| 242 | A.18 | Over/under-matching spatial predicates — 50 m radius over-matched **4×** (#424); `ST_Intersects` matched **0.05%** (#431) |
 | 245 | A.18 | Stranded `running` rows |
-| 246 | A.18 | Hand-built SQL param templates |
-| 248 | A.18 | Audit-row omissions |
 | 258 | A.20 | **Target is declared, never inferred from an env default** |
-| 261 | A.21 | **`MIN`/`LEAST` silently skip NULLs — coverage halves** |
-| 271 | A.21 | **Bare `Date` comparison / non-UTC handling** |
+| 263 | A.21 | **Unguarded `parseInt`/`parseFloat` → NaN propagation** |
+| 268 | A.21 | **Un-transacted multi-statement writes leave partial state** |
 | 274 | A.21 | `4c5009ca` **HIGH** |
 | 276 | A.21 | `d295188b` |
 
@@ -100,37 +89,37 @@
 
 8, 9, 15, 16, 24, 36, 40, 45, 116, 129, 130, 140, 147, 152, 155, 156, 157, 167, 177, 192, 193, 198, 201, 203, 205, 213, 219, 235, 243, 264
 
-### inputs — 6
+### inputs — 7
 
-51, 53, 61, 88, 252, 269
+51, 53, 61, 88, 227, 252, 269
 
-### outputs — 13
+### outputs — 14
 
-6, 10, 54, 57, 58, 63, 107, 108, 117, 123, 137, 176, 190
+6, 10, 54, 57, 58, 63, 107, 108, 117, 123, 137, 176, 190, 231
 
 ### staleness — 11
 
 11, 13, 50, 52, 52a, 52d, 52e, 73, 75, 146, 229
 
-### guards — 10
+### guards — 11
 
-22, 46, 48, 49, 52f, 80, 218, 225, 267, 272
+22, 46, 47, 48, 49, 52f, 80, 218, 225, 267, 272
 
 ### execution — 15
 
-14, 52g, 52h, 56, 60, 68, 69, 72, 76, 105, 223, 262, 266, 268, 277
+14, 52g, 52h, 56, 60, 68, 69, 72, 76, 105, 223, 238, 262, 266, 277
 
-### checks — 53
+### checks — 59
 
-3, 4, 7, 17, 18, 20, 25, 28, 30, 33, 64, 65, 70, 82, 86, 93, 94, 94a, 95, 97, 100, 103, 121, 125, 126, 127, 132, 133, 134, 135, 136, 141, 142, 6b, 160, 165, 178, 181, 182, 186, 187, 188, 197, 199, 216, 228, 240, 244, 251, 253, 259, 273, 275
+3, 4, 7, 17, 18, 20, 25, 27, 28, 30, 33, 64, 65, 70, 82, 86, 93, 94, 94a, 95, 97, 100, 103, 121, 125, 126, 127, 132, 133, 134, 135, 136, 142, 6b, 160, 165, 178, 181, 182, 186, 187, 188, 197, 199, 216, 228, 237, 240, 241, 242, 244, 246, 248, 251, 253, 259, 261, 273, 275
 
-### override — 5
+### override — 6
 
-55, 66, 84, 128, 260
+55, 66, 84, 128, 260, 265
 
-### emits — 1
+### emits — 2
 
-71
+71, 206
 
 ### deviations — 2
 
@@ -144,9 +133,9 @@
 
 35, 37, 38, 83
 
-### recovery — 7
+### recovery — 8
 
-62, 74, 92, 118, 120, 191, 254
+62, 74, 92, 118, 120, 191, 232, 254
 
 ### database — 5
 
@@ -160,13 +149,17 @@
 
 43, 44, 247, 249
 
-### sharing — 1
+### sharing — 2
 
-87
+87, 226
 
-### RUNNER — 51
+### RUNNER — 49
 
-1, 19, 23, 26, 27, 29, 31, 32, 39, 67, 77, 81, 85, 89, 90, 96, 98, 109, 110, 111, 112, 113, 114, 115, 124, 139, 144, 149, 150, 6a, 163, 164, 168, 169, 172, 173, 174, 175, 180, 184, 185, 194, 195, 208, 214, 221, 255, 263, 265, 270, 278
+1, 19, 23, 26, 29, 31, 32, 39, 67, 77, 81, 85, 89, 90, 96, 98, 109, 110, 111, 112, 113, 114, 115, 124, 139, 144, 149, 150, 6a, 163, 164, 168, 169, 172, 173, 174, 175, 180, 184, 185, 194, 195, 208, 214, 221, 255, 270, 271, 278
+
+### COMPUTE — 1
+
+21
 
 ### METHOD — 3
 

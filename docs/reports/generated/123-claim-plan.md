@@ -30,19 +30,19 @@
 
 | Stage | What | Claims | Test shapes |
 |---|---|---:|---|
-| **P0** | Audit instrument — make DATABASE_URL required in the 4 defaulting scripts; re-baseline | 6 | — |
-| **P1** | Centroid invalidator — the HIGH followup; pinned first per Spec 121 §4.3 | · | — |
-| **P2** | Phase B lands — 20 commits, migrations 240/242/243/244 | · | — |
-| **P3** | Envelope + ONE GREEN CLOUD RUN — the launch gate | · | — |
-| **S1** | Descriptor schema + controlled vocabularies (generated from one source) | 22 | B P |
-| **S2** | pipeline.step() library core + the validator | 63 | B P |
+| **P0** | Audit instrument — one `resolve-db.js`; 24 grep-visible + 13 `createPool()` tooling files; re-baseline | 6 | — |
+| **P1** | Centroid invalidator — a DECLARED DEVIATION from Spec 121 §4.3 (the defect is upstream of the differential) | · | — |
+| **P2** | Phase B lands — the 17-commit unit, in dependency order; migrations 240/242/243/244 pending CLOUD-side only | · | — |
+| **P3** | Envelope + ONE GREEN CLOUD RUN — gates C1, not the S-stages (R3) | · | — |
+| **S1** | Descriptor contract, SCHEMA-CANONICAL (R2) — `step.schema.json` is the vocabulary; prose is generated from it | 22 | B P |
+| **S2** | pipeline.step() library core + the validator — a VERTICAL SLICE (R4); grows pilot by pilot | 63 | B P |
 | **S3** | Conformance suite + ast-grep shape rule | 26 | B P |
 | **S4** | State tables (migrations 245-248) + DB CHECKs | 18 | B P |
 | **S5** | Cross-step ledger generator + drift guard | 19 | B P |
 | **S6** | Violation suite: register, ratchet, reversion harness, census, incident replays | 81 | B P R |
-| **C1** | Pilot 3 — simplest / median / enrich-parcels | · | — |
+| **C1** | Pilot BY ARCHETYPE — 8 pilots (R4), `assert_schema` first; each pilot grows the library | · | — |
 | **C2** | Kill criteria evaluated | · | — |
-| **C3** | Freeze template | · | — |
+| **C3** | Freeze the contract + template — AFTER THE EIGHTH PILOT (R4/R5), never the first | · | — |
 | **C4** | Shared steps (10 steps, 28 slots) | · | — |
 | **C*** | EVERY conversion (C1, C4, C5, C6) — the per-step checklist | 55 | B P |
 | **C5** | Rest of sources | · | — |
@@ -60,7 +60,7 @@
 
 ## Full assignment — every claim, its stage, its test
 
-### P0 — Audit instrument — make DATABASE_URL required in the 4 defaulting scripts; re-baseline (6)
+### P0 — Audit instrument — one `resolve-db.js`; 24 grep-visible + 13 `createPool()` tooling files; re-baseline (6)
 
 | # | § | Tier | Scope | Test ID | Test artifact | Claim |
 |---|---|---|---|---|---|---|
@@ -71,7 +71,7 @@
 | 259 | A.20 | 2 lint | UNIVERSAL | `R-259` | `scripts/ast-grep-rules/*.yml + eslint.config.mjs` | **Every emitted artifact carries its database identity** — audit rows, reports, analysis o |
 | 260 | A.20 | 2 lint | UNIVERSAL | `R-260` | `scripts/ast-grep-rules/*.yml + eslint.config.mjs` | **Read-only enforcement for the analysis class** |
 
-### S1 — Descriptor schema + controlled vocabularies (generated from one source) (22)
+### S1 — Descriptor contract, SCHEMA-CANONICAL (R2) — `step.schema.json` is the vocabulary; prose is generated from it (22)
 
 | # | § | Tier | Scope | Test ID | Test artifact | Claim |
 |---|---|---|---|---|---|---|
@@ -98,7 +98,7 @@
 | 24 | A.2 | 1 db-constraint | UNIVERSAL | `R-024` | `migrations 245-248 (CHECK / NOT NULL)` | Lock contention lands as `self_skipped`, never `completed` |
 | 25 | A.2 | 1 db-constraint | UNIVERSAL | `R-025` | `migrations 245-248 (CHECK / NOT NULL)` | `crashed` ≠ `failed` |
 
-### S2 — pipeline.step() library core + the validator (63)
+### S2 — pipeline.step() library core + the validator — a VERTICAL SLICE (R4); grows pilot by pilot (63)
 
 | # | § | Tier | Scope | Test ID | Test artifact | Claim |
 |---|---|---|---|---|---|---|
