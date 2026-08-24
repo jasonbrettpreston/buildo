@@ -795,7 +795,7 @@ Spec 120 §12.6 calls *"no per-step escape hatches"* the single most important r
 > module.exports.compute    = compute;
 > ```
 >
-> **What the ast-grep rule permits, exhaustively:** `require(...)` bindings · `const <ID> = <literal>` · exactly one `module.exports = pipeline.step(<identifier>, <identifier>)` · the two named re-exports. **Anything else is a build failure.**
+> **What the ast-grep rule permits, exhaustively:** `require(...)` bindings · `const <ID> = <literal>` · exactly one `module.exports = pipeline.step(<identifier>, <identifier>)` · the two named re-exports · **the `'use strict'` directive prologue** *(ratified addition 2026-08-24 — banning it would silently switch converted steps to sloppy mode, a semantic change this list never intended)*. **Anything else is a build failure.**
 >
 > ⚠️ **Two consequences, stated because they were previously wrong:** the earlier example passed a **spread expression** `{ ...descriptor, identity: {...} }` where the rule demands an identifier — **illegal, and it also silently forked the descriptor** so the on-disk JSON was no longer what ran. And `identity.lock` is now **asserted against** the textual `ADVISORY_LOCK_ID` by the conformance suite rather than spliced into the object at runtime, so the JSON and the constant cannot drift apart.
 

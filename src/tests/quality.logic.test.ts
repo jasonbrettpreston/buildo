@@ -516,7 +516,9 @@ describe('Pipeline Registry', () => {
     // +1 compute_parcel_cost_estimates added (Spec 88 P1 2026-06-30)
     // +1 assert_global_coverage / +1 assert_parcel_sanity (WF Spec 49 parcels observability 2026-07)
     // +1 dispatch_notifications (P25 25A, permits chain after update_tracked_projects; gated OFF)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(67);
+    // +1 reconcile (Spec 122 §7.4 / A3, S3 2026-08-24) — the Step-0 reaper at the
+    // head of chain_sources; the only writer of pipeline_runs.status = 'crashed'.
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(68);
   });
 
   it('groups are correct: 14 ingest, 22 link, 17 classify, 2 snapshot, 10 quality', () => {
@@ -544,7 +546,7 @@ describe('Pipeline Registry', () => {
     expect(groups.filter((g) => g === 'link')).toHaveLength(22);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(18); // +dispatch_notifications (P25 25A, group 'classify')
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
-    expect(groups.filter((g) => g === 'quality')).toHaveLength(11); // +assert_parcel_sanity (WF2)
+    expect(groups.filter((g) => g === 'quality')).toHaveLength(12); // +assert_parcel_sanity (WF2); +reconcile (Spec 122 §7.4 / A3, S3 2026-08-24)
   });
 
   it('every pipeline has a non-empty human-readable name', () => {
@@ -646,7 +648,13 @@ describe('Pipeline Chains', () => {
     expect(sources.steps.some((s) => s.slug === 'compute_centroids')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'load_wsib')).toBe(true);
     expect(sources.steps.some((s) => s.slug === 'link_wsib')).toBe(true);
-    expect(sources!.steps[0]!.slug).toBe('assert_schema');
+    // Spec 122 §7.4 (A3, S3 2026-08-24) — `reconcile` is now the HEAD of the chain,
+    // ahead of assert_schema. It is Step 0 by design: no step may read the ledger
+    // before rows a dead process left in `running` have been reaped to `crashed`.
+    // The assertion is kept as a positional lock (not relaxed to `.some(...)`)
+    // because "reconcile runs first" is the whole content of the A3 ruling.
+    expect(sources!.steps[0]!.slug).toBe('reconcile');
+    expect(sources!.steps[1]!.slug).toBe('assert_schema');
     expect(sources!.steps[sources.steps.length - 1]!.slug).toBe('assert_engine_health');
   });
 

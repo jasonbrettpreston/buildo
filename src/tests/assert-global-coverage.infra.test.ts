@@ -217,7 +217,11 @@ describe('manifest.json — chain wiring', () => {
     const covIdx = sourcesChain.indexOf('assert_global_coverage');
     expect(sourcesChain[covIdx - 1]).toBe('compute_parcel_cost_estimates');
     expect(sourcesChain[covIdx + 1]).toBe('assert_parcel_sanity'); // WF2 sanity gate inserted after coverage
-    expect(sourcesChain).toHaveLength(27); // +assert_global_coverage (WF3) +assert_parcel_sanity (WF2)
+    // +assert_global_coverage (WF3) +assert_parcel_sanity (WF2)
+    // +reconcile (Spec 122 §7.4 / A3, S3 2026-08-24): the Step-0 reaper prepended to
+    // the chain HEAD. The adjacency assertions above are unaffected — they are
+    // indexOf-relative — but this is an absolute length, so it moves 27 → 28.
+    expect(sourcesChain).toHaveLength(28);
   });
 
   it('assert_global_coverage comes after assert_entity_tracing in permits chain', () => {

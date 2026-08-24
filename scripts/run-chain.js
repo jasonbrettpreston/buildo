@@ -550,7 +550,9 @@ async function run() {
       || slug === 'refresh_snapshot'
       || slug === 'close_stale_permits'
       || slug === 'update_tracked_projects'
-      || slug === 'backup_db';
+      || slug === 'backup_db'
+      // Spec 122 §7.4 — reconcile is Step 0; a zero-ingest day still has rows to reap.
+      || slug === 'reconcile';
     if (gateSkipped && !isInfraStep) {
       console.log(`${stepLabel} — SKIPPED (gate: 0 new records)`);
       skippedGateSteps.push(slug);

@@ -223,11 +223,27 @@ done < <(
   || true
 )
 
+# ---------------------------------------------------------------------------
+# 12. step-shape (A2, Spec 122 §5.1): the frozen file shape for CONVERTED steps.
+#     Two modes in one driver — BLOCKING over scripts/steps/_schema/converted.json
+#     (empty until the first C1 pilot lands, and each pilot appends one entry),
+#     REPORT-ONLY over the rest of the manifest step corpus. The report-only half
+#     is the prove-red and is informational by construction: today all 61 manifest
+#     step files violate the shape, which is the expected pre-conversion state.
+#     Exit 2 = bad setup (missing converted.json, stray path, missing binary) and
+#     IS a failure — a scope that cannot be read is a gate that cannot fire.
+# ---------------------------------------------------------------------------
+node scripts/hooks/check-step-shape.mjs
+step_shape_rc=$?
+if [ $step_shape_rc -ne 0 ]; then
+  fail=1
+fi
+
 if [ $fail -ne 0 ]; then
   echo
   echo "❌ Footgun gate failed. See messages above. To suppress a single line, add \`// ast-grep-disable-next-line <rule-id>\` with a justification."
   exit 1
 fi
 
-echo "✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now, loop-query, unbounded-push-in-stream)"
+echo "✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now, loop-query, unbounded-push-in-stream, step-shape)"
 exit 0
