@@ -1,0 +1,262 @@
+{
+  "identity": {
+    "name": "enrich_heritage",
+    "display_name": "Heritage Enrichment",
+    "owner": "data",
+    "description": "Stamps heritage designation onto parcels from the loaded heritage register and conservation districts.",
+    "lock": 62,
+    "why_lock": {
+      "text": "Sibling of load_heritage=61; the spec L4b number 63 is stale, so the next-free registry value was taken.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "61",
+    "spec_version": "1.1",
+    "archetype": "ENRICHER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "load_heritage",
+          "version_pin": "exact",
+          "assert_health": [
+            "feature_count",
+            "drift_check_passed"
+          ]
+        }
+      ],
+      "tables": [
+        {
+          "table": "parcels",
+          "columns": [
+            "id",
+            "geom"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcels",
+        "key": "id",
+        "columns": [
+          {
+            "name": "is_heritage_designated",
+            "vocabulary": "none"
+          },
+          {
+            "name": "heritage_designation_type",
+            "vocabulary": {
+              "values": [
+                "REGISTER",
+                "HCD",
+                "BOTH"
+              ],
+              "on_unknown": "fail"
+            }
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": "all_declared",
+          "scope": "heritage_dataset_version_when_enriched IS DISTINCT FROM :version",
+          "expected_change_ratio": "<= 0.05",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step"
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "not_applicable",
+          "key_space_migration": "none"
+        }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [
+      {
+        "table": "parcels",
+        "column": "heritage_dataset_version_when_enriched",
+        "when": "heritage_properties.geom changes"
+      }
+    ],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 1
+    }
+  },
+  "staleness": {
+    "scope": "heritage_dataset_version_when_enriched IS DISTINCT FROM :version",
+    "trigger": [
+      {
+        "signal": "upstream_ledger",
+        "position": "pre_compute"
+      },
+      {
+        "signal": "code_version",
+        "position": "pre_compute"
+      }
+    ],
+    "mode_select": "tri_state",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": "none",
+    "logic_version": "none",
+    "on_fingerprint_change": "queue"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "extension",
+        "name": "postgis",
+        "on_missing": "fail"
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcels_geom_gist",
+        "on_missing": "fail"
+      }
+    ],
+    "srid": 4326,
+    "empty_source": [
+      "heritage_properties",
+      "heritage_districts"
+    ],
+    "schema_drift": "pause"
+  },
+  "execution": {
+    "budget": "20m",
+    "txn_scope": "step",
+    "txn_budget": "none",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "none",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "designated_zero",
+      "kind": "invariant",
+      "expect": "NOT EXISTS (SELECT 1 FROM parcels WHERE is_heritage_designated)",
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Zero designated parcels means a broken join — a wrong SRID or an unbound GIST index, not an empty city.",
+        "liveness": {
+          "kind": "table",
+          "ref": "heritage_properties"
+        }
+      }
+    }
+  ],
+  "override": {
+    "force_full": "ENRICH_HERITAGE_FORCE_FULL",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": "none",
+  "deviations": "none",
+  "limitations": "none",
+  "interpretation": "none",
+  "recovery": {
+    "reset": "generated",
+    "resume": "none",
+    "force": "ENRICH_HERITAGE_FORCE_FULL",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived"
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 241,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "candidateParcels",
+      "scoped_by": "id"
+    },
+    "records_new": "none",
+    "records_updated": {
+      "source": "stampedParcels",
+      "scoped_by": "id"
+    }
+  },
+  "config": "none",
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 12
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      }
+    },
+    {
+      "id": "gated_skip",
+      "kind": "skip_gated",
+      "status": "skipped",
+      "records_meta": {
+        "gated_skip": "bool",
+        "skip_reason": "string"
+      }
+    },
+    {
+      "id": "enriched",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": "runner_default"
+    }
+  ]
+}
