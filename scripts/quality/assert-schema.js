@@ -18,6 +18,7 @@
  */
 const pipeline = require('../lib/pipeline');
 const { hasCoordinateSource } = require('../lib/address-points-csv-drift');
+const { finalizeStrandedRun } = require('../lib/ledger-window');
 
 const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
 
@@ -261,6 +262,12 @@ pipeline.run('assert-schema', async (pool) => {
 
   const startMs = Date.now();
   let runId = null;
+  // ── LEDGER STRAND WINDOW (P3, 2026-08-24) ──────────────────────────────
+  // Declared BEFORE the INSERT so nothing throwable sits between the INSERT
+  // and the `try {` that opens the window. See scripts/lib/ledger-window.js
+  // for the corrected premise and for what a `finally` cannot protect (kills).
+  let ledgerFinalized = false;
+  let windowError = null;
 
   // Skip own pipeline_runs tracking when run from a chain — the chain
   // orchestrator inserts chain-scoped rows (e.g. permits:assert_schema).
@@ -276,6 +283,11 @@ pipeline.run('assert-schema', async (pool) => {
       pipeline.log.warn('[assert-schema]', `Could not insert pipeline_runs row: ${err.message}`);
     }
   }
+
+  // Window OPEN. Body deliberately not re-indented — same convention this file
+  // already uses for the withAdvisoryLock callback above (:259-260), so the diff
+  // stays reviewable and `git blame` keeps pointing at the real authors.
+  try {
 
   let allPassed = true;
   const errors = [];
@@ -550,7 +562,9 @@ pipeline.run('assert-schema', async (pool) => {
            records_meta = $5
        WHERE id = $4`,
       [status, durationMs, errorMsg, runId, meta]
-    ).catch((err) => pipeline.log.warn('[assert-schema]', `pipeline_runs UPDATE failed: ${err.message}`));
+    )
+      .then(() => { ledgerFinalized = true; })
+      .catch((err) => pipeline.log.warn('[assert-schema]', `pipeline_runs UPDATE failed: ${err.message}`));
   }
 
   // Always emit PIPELINE_SUMMARY so chain orchestrator can capture records_meta
@@ -564,7 +578,28 @@ pipeline.run('assert-schema', async (pool) => {
 
   // Schema drift must halt the chain — allowing downstream scripts to run
   // with malformed data would silently corrupt 240K+ permit records.
+  // NOTE: this fires AFTER the finalize UPDATE above, so the row is already
+  // 'failed' with the real errors — the window below sees ledgerFinalized=true
+  // and does not relabel it. This ordering is the reason the "strand on any
+  // throw" premise was refuted; it is load-bearing, do not move the throw up.
   if (!allPassed) throw new Error('Schema validation failed — schema drift detected');
+
+  } catch (err) {
+    // Capture-and-rethrow: the halt must still propagate. Swallowing here would
+    // let a chain proceed past a step that failed.
+    windowError = err;
+    throw err;
+  } finally {
+    // Window CLOSE. Closes a THROWN error only — process kills bypass this.
+    await finalizeStrandedRun(pool, {
+      runId,
+      finalized: ledgerFinalized,
+      slug: 'assert-schema',
+      durationMs: Date.now() - startMs,
+      error: windowError,
+      log: pipeline.log,
+    });
+  }
   }); // withAdvisoryLock
 
   if (!lockResult.acquired) return;

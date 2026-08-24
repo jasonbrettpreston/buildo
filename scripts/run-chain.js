@@ -521,10 +521,13 @@ async function run() {
       skippedGateSteps.push(slug);
       const scopedSlug = `${chainId}:${slug}`;
       try {
+        // P3 (2026-08-24): this row used to carry NO reason. A skipped row with a
+        // null cause is the "silent green" class — the step looks accounted for
+        // and nothing in the DB can say what happened (the 2026-08-07 sources run).
         await pool.query(
-          `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status, duration_ms)
-           VALUES ($1, NOW(), NOW(), 'skipped', 0)`,
-          [scopedSlug]
+          `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status, duration_ms, error_message)
+           VALUES ($1, NOW(), NOW(), 'skipped', 0, $2)`,
+          [scopedSlug, `skipped: step is disabled in pipeline_schedules (enabled=FALSE for chain ${chainId} or globally)`]
         );
       } catch (err) {
         pipeline.log.warn('[run-chain]', `Skip tracking insert failed: ${err.message}`);
@@ -552,9 +555,15 @@ async function run() {
       console.log(`${stepLabel} — SKIPPED (gate: 0 new records)`);
       skippedGateSteps.push(slug);
       try {
+        // P3 (2026-08-24): this is the site that produced the 2026-08-07 sources
+        // run's wall of null-reason 'skipped' rows. The reason names the gate's
+        // OWN cause (primary ingest returned 0 new records) and the fact that
+        // this step is not on the infra allow-list above — "skipped by a gate"
+        // alone would still leave an operator guessing which gate and why.
         await pool.query(
-          `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status, duration_ms) VALUES ($1, NOW(), NOW(), 'skipped', 0)`,
-          [`${chainId}:${slug}`]
+          `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status, duration_ms, error_message)
+           VALUES ($1, NOW(), NOW(), 'skipped', 0, $2)`,
+          [`${chainId}:${slug}`, `skipped: gate — primary ingest produced 0 new records and ${slug} is not an infra step (stale data, not a failure)`]
         );
       } catch (err) {
         pipeline.log.warn('[run-chain]', `Gate-skip insert failed: ${err.message}`);

@@ -19,6 +19,7 @@
  * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
  */
 const pipeline = require('../lib/pipeline');
+const { finalizeStrandedRun } = require('../lib/ledger-window');
 
 const SLUG = 'assert_engine_health';
 const ADVISORY_LOCK_ID = 104;
@@ -37,6 +38,12 @@ pipeline.run('assert-engine-health', async (pool) => {
 
   const startMs = Date.now();
   let runId = null;
+  // ── LEDGER STRAND WINDOW (P3, 2026-08-24) ──────────────────────────────
+  // Declared BEFORE the INSERT so nothing throwable sits between the INSERT and
+  // the `try {`. See scripts/lib/ledger-window.js for the corrected premise and
+  // for what a `finally` cannot protect (process kills).
+  let ledgerFinalized = false;
+  let windowError = null;
 
   if (!CHAIN_ID) {
     try {
@@ -50,6 +57,10 @@ pipeline.run('assert-engine-health', async (pool) => {
       pipeline.log.warn('[assert-engine-health]', `Could not insert pipeline_runs row: ${err.message}`);
     }
   }
+
+  // Window OPEN. Body deliberately not re-indented — same convention this file
+  // already uses for the withAdvisoryLock callback, so the diff stays reviewable.
+  try {
 
   const warnings = [];
   const errors = [];
@@ -290,7 +301,9 @@ pipeline.run('assert-engine-health', async (pool) => {
            records_meta = $5
        WHERE id = $4`,
       [status, durationMs, errorMsg, runId, meta]
-    ).catch((err) => pipeline.log.warn('[assert-engine-health]', `pipeline_runs UPDATE failed: ${err.message}`));
+    )
+      .then(() => { ledgerFinalized = true; })
+      .catch((err) => pipeline.log.warn('[assert-engine-health]', `pipeline_runs UPDATE failed: ${err.message}`));
   }
 
   pipeline.emitSummary({ records_total: tableResults.length, records_new: null, records_updated: recordsUpdated, records_meta: JSON.parse(meta) });
@@ -308,7 +321,26 @@ pipeline.run('assert-engine-health', async (pool) => {
 
   console.log(`\n=== Engine Health: ${status.toUpperCase()} (${(durationMs / 1000).toFixed(1)}s) ===\n`);
 
+  // NOTE: fires AFTER the finalize UPDATE above, so the row already carries the
+  // real status/errors — the window sees ledgerFinalized=true and does not
+  // relabel it. Load-bearing ordering; do not move the throw up.
   if (hasErrors) throw new Error('Engine health check failed');
+
+  } catch (err) {
+    // Capture-and-rethrow: the halt must still propagate.
+    windowError = err;
+    throw err;
+  } finally {
+    // Window CLOSE. Closes a THROWN error only — process kills bypass this.
+    await finalizeStrandedRun(pool, {
+      runId,
+      finalized: ledgerFinalized,
+      slug: 'assert-engine-health',
+      durationMs: Date.now() - startMs,
+      error: windowError,
+      log: pipeline.log,
+    });
+  }
   }); // withAdvisoryLock
 
   if (!lockResult.acquired) return;
