@@ -1,0 +1,161 @@
+id: step-shape
+language: JavaScript
+severity: error
+message: |
+  Illegal top-level statement in a converted step file. Spec 122 §5.1 freezes the
+  ENTIRE file shape, and this statement is not one of the permitted forms:
+
+      const pipeline   = require('../lib/pipeline');
+      const descriptor = require('./<slug>.descriptor.json');
+      const compute    = require('../lib/compute/<slug>');
+      const ADVISORY_LOCK_ID = 102;             // literal only — §5.4 source-text loops
+      module.exports = pipeline.step(descriptor, compute);
+      module.exports.descriptor = descriptor;   // §5.2 / claim #163 compute-swap
+      module.exports.compute    = compute;
+
+  Permitted, exhaustively: `require(...)` bindings · `const <ID> = <literal>` ·
+  exactly one `module.exports = pipeline.step(<identifier>, <identifier>)` · the two
+  named re-exports · the `'use strict'` directive prologue. ANYTHING ELSE IS A BUILD
+  FAILURE — that is the whole point: under islands a step needs no override key, it
+  can simply not call pipeline.step(), and "the moment one step gets a special case,
+  there are 27".
+
+  This rule also carries claim #86's second half: only ast-grep catches a top-level
+  fs.readFileSync, a dotenv load, or an env assertion that throws. A pg.Pool
+  construction spy catches the pool and nothing else.
+
+  ⚠️ `pipeline.step(<spread>, ...)` is illegal BY THE IDENTIFIER REQUIREMENT: a
+  `{ ...descriptor, identity: {...} }` argument silently forks the descriptor so the
+  on-disk JSON is no longer what ran (Spec 122 §5.1, "two consequences").
+
+  SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1
+note: |
+  ⚠️ SCOPE. This rule cannot be run over manifest.chains[*].file — zero steps are
+  converted, so all 27 would fire. Enforcement scope is the committed
+  scripts/steps/_schema/converted.json list, which each C-track pilot appends to.
+  scripts/hooks/check-step-shape.mjs drives both modes: BLOCKING over the converted
+  list, REPORT-ONLY over the full manifest set (the prove-red).
+
+  DEVIATION ON RECORD — the `'use strict'` directive prologue is permitted, and §5.1's
+  exhaustive list does not name it. Reason: every CommonJS file in scripts/ carries it
+  (scripts/CLAUDE.md §R skeleton), and banning it would silently switch every converted
+  step to sloppy mode — a semantic change §5.1 did not intend to make. It is a
+  directive, not an executable statement.
+files:
+  # ⚠️ SCOPE GUARD, measured 2026-08-24. sgconfig.yml `ruleDirs` auto-loads every
+  # rule in this directory into `ast-grep scan <path>`, and section 1 of
+  # scripts/hooks/ast-grep-leads.sh scans src/features/leads — which contains two
+  # plain .js files. Without this glob the shape rule fired 35 times there and
+  # reddened an unrelated pre-commit gate. The A2 corpus is scripts/ only; the
+  # driver passes explicit paths inside it.
+  - 'scripts/**/*.js'
+utils:
+  # A literal VALUE — the `const ADVISORY_LOCK_ID = <n>` form, and nothing that
+  # can call, read a file, or touch the environment.
+  literal-value:
+    any:
+      - kind: number
+      - kind: string
+      - kind: 'true'
+      - kind: 'false'
+      - kind: 'null'
+      - kind: undefined
+      # -1 / +1 — a unary over a literal is still a literal for this purpose.
+      - kind: unary_expression
+  # Every statement kind that can appear at a module's top level. Enumerated
+  # rather than "any node" so the rule matches STATEMENTS, never their sub-nodes.
+  top-level-statement:
+    any:
+      - kind: expression_statement
+      - kind: lexical_declaration
+      - kind: variable_declaration
+      - kind: function_declaration
+      - kind: generator_function_declaration
+      - kind: class_declaration
+      - kind: if_statement
+      - kind: for_statement
+      - kind: for_in_statement
+      - kind: while_statement
+      - kind: do_statement
+      - kind: try_statement
+      - kind: switch_statement
+      - kind: throw_statement
+      - kind: return_statement
+      - kind: labeled_statement
+      - kind: with_statement
+      - kind: debugger_statement
+      - kind: empty_statement
+      - kind: import_statement
+      - kind: export_statement
+  permitted-form:
+    any:
+      # `const x = require('...')` — the three requires.
+      - pattern: const $A = require($$$B)
+      # `const { a } = require('...')` — destructured binding, same class.
+      - pattern: const $$$A = require($$$B)
+      # `const ADVISORY_LOCK_ID = 102;` — literal only.
+      - all:
+          - kind: lexical_declaration
+          - has:
+              kind: variable_declarator
+              has:
+                field: value
+                matches: literal-value
+      # The ONE call site. Both arguments must be bare identifiers, asserted
+      # POSITIVELY by nthChild — which is what makes the `{ ...descriptor }`
+      # spread illegal. (`nthChild` indexes NAMED children; the negative form
+      # `has: { not: { kind: identifier } }` was measured wrong here — `has`
+      # also visits the unnamed `(` `,` `)` tokens, so it matched everything.)
+      - all:
+          - pattern: "module.exports = pipeline.step($DESC, $COMPUTE);"
+          - has:
+              stopBy: end
+              kind: arguments
+              all:
+                - has: { nthChild: 1, kind: identifier }
+                - has: { nthChild: 2, kind: identifier }
+      # The two named re-exports (§5.2 / claim #163).
+      - pattern: "module.exports.descriptor = $A;"
+      - pattern: "module.exports.compute = $A;"
+      # The `'use strict'` directive prologue — see the DEVIATION note above.
+      - all:
+          - kind: expression_statement
+          - has:
+              kind: string
+rule:
+  all:
+    - matches: top-level-statement
+    - inside:
+        kind: program
+        stopBy: neighbor
+    - not:
+        matches: permitted-form
+
+---
+
+id: step-no-pipeline-run
+language: JavaScript
+severity: error
+message: |
+  `pipeline.run(` is banned outright in a converted step file (Spec 122 §5.1).
+
+  The whole lifecycle moved into `pipeline.step(descriptor, compute)`: the library
+  runs BEFORE compute does, AJV-validates the descriptor and throws (§4.2). A step
+  that still calls `pipeline.run()` has kept its island — it opens its own pool,
+  owns its own ledger row, and answers to no descriptor. That is the situation this
+  programme exists to end, and its failure mode is silent.
+
+  SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1
+note: |
+  Enforcement scope is scripts/steps/_schema/converted.json — see step-shape's note.
+  In report-only mode this is the assertion that fires on all 27 unconverted files.
+files:
+  # ⚠️ SCOPE GUARD, measured 2026-08-24. sgconfig.yml `ruleDirs` auto-loads every
+  # rule in this directory into `ast-grep scan <path>`, and section 1 of
+  # scripts/hooks/ast-grep-leads.sh scans src/features/leads — which contains two
+  # plain .js files. Without this glob the shape rule fired 35 times there and
+  # reddened an unrelated pre-commit gate. The A2 corpus is scripts/ only; the
+  # driver passes explicit paths inside it.
+  - 'scripts/**/*.js'
+rule:
+  pattern: pipeline.run($$$)

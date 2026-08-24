@@ -594,6 +594,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   // Snapshot
   refresh_snapshot:     { summary: 'Captures current data quality metrics to daily snapshot table', table: 'data_quality_snapshots' },
   // Quality (CQA)
+  reconcile:            { summary: 'Step 0 (Spec 122 §7.4): reaps pipeline_runs rows a dead process left in `running` to `crashed` — the only writer of that status', table: 'pipeline_runs' },
   assert_schema:        { summary: 'Validates upstream CKAN/CSV column headers before ingestion', table: 'pipeline_runs' },
   assert_data_bounds:   { summary: 'Post-ingestion SQL checks for cost outliers, null rates, referential integrity', table: 'pipeline_runs' },
   assert_engine_health:  { summary: 'Engine health checks: dead tuples, index usage, update ping-pong detection', table: 'engine_health_snapshots' },
@@ -844,6 +845,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   compute_timing_calibration_v2: 'phase_calibration',
   compute_phase_calibration: 'phase_stay_calibration',
   refresh_snapshot: 'data_quality_snapshots', assert_schema: 'pipeline_runs',
+  reconcile: 'pipeline_runs',
   assert_data_bounds: 'pipeline_runs', assert_engine_health: 'engine_health_snapshots',
   assert_network_health: 'pipeline_runs', assert_staleness: 'pipeline_runs',
   assert_coa_freshness: 'pipeline_runs',

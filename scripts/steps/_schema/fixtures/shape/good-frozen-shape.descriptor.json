@@ -1,0 +1,343 @@
+{
+  "identity": {
+    "name": "assert_schema",
+    "display_name": "Schema Validation",
+    "owner": "data",
+    "description": "CQA Tier 1 pre-ingestion schema validation: CKAN field sets for permits/CoA/zoning, CSV headers for address points and parcels, GeoJSON property keys for neighbourhoods, and URL reachability for the shapefile archives.",
+    "lock": 102,
+    "why_lock": {
+      "text": "Shared across specs 41/42/43, so no single spec number identifies it; 102 was assigned from the Spec 47 §A.5 next-free registry.",
+      "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" }
+    },
+    "spec": "43",
+    "spec_version": "1.0",
+    "archetype": "ASSERT",
+    "contract_version": 1,
+    "gate_exempt": true
+  },
+
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [],
+      "externals": [
+        { "id": "ckan_datastore_api", "kind": "http_api", "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search", "cache": "none" },
+        { "id": "address_points_csv", "kind": "http_file", "cache": "none" },
+        { "id": "parcels_csv", "kind": "http_file", "cache": "none" },
+        { "id": "massing_zip", "kind": "http_file", "cache": "none" },
+        { "id": "ravine_zip", "kind": "http_file", "cache": "none" },
+        { "id": "heritage_register_zip", "kind": "http_file", "cache": "none" },
+        { "id": "heritage_hcd_zip", "kind": "http_file", "cache": "none" },
+        { "id": "centreline_zip", "kind": "http_file", "cache": "none" },
+        { "id": "neighbourhoods_geojson", "kind": "http_file", "cache": "none" }
+      ]
+    },
+    "expect_nonempty": false,
+    "on_missing": "halt"
+  },
+
+  "outputs": "none",
+
+  "staleness": {
+    "scope": "none",
+    "trigger": [{ "signal": "always", "position": "pre_compute" }],
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/address-points-csv-drift.js"],
+    "logic_version": "none",
+    "on_fingerprint_change": "queue"
+  },
+
+  "guards": {
+    "requires": [],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "pause"
+  },
+
+  "execution": {
+    "budget": "10m",
+    "txn_scope": "none",
+    "txn_budget": "none",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "none",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "omit_row",
+    "on_check_error_why": {
+      "text": "validateTypeSample returns true on a non-OK HTTP response and on an empty record set, so an unreachable CKAN datastore is indistinguishable from a healthy one. Declared, not endorsed: this is the on_check_error class the contract exists to surface.",
+      "liveness": { "kind": "check", "ref": "permit_cost_type_sample" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": {
+      "egress": ["ckan0.cf.opendata.inter.prod-toronto.ca"],
+      "timeout": "30s",
+      "retries": 0,
+      "redact": "none"
+    },
+    "invocation": {
+      "permits": { "argv": [], "env": { "PIPELINE_CHAIN": "permits" } },
+      "coa": { "argv": [], "env": { "PIPELINE_CHAIN": "coa" } },
+      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "permit_columns",
+      "kind": "schema",
+      "expect": ["PERMIT_NUM", "REVISION_NUM", "PERMIT_TYPE", "STATUS", "DESCRIPTION", "EST_CONST_COST", "STREET_NUM", "STREET_NAME", "BUILDER_NAME", "ISSUED_DATE", "APPLICATION_DATE"],
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": ["permits"],
+      "accept_until": "none",
+      "why": {
+        "text": "Allowing downstream scripts to run against a drifted permit schema would silently corrupt 240K+ permit records.",
+        "liveness": { "kind": "external", "ref": "ckan:6d0229af-bc54-46de-9c2b-26759b01dd05" }
+      }
+    },
+    {
+      "id": "permit_cost_type_sample",
+      "kind": "schema",
+      "expect": { "column": "EST_CONST_COST", "parseable_as": "number", "sample": 20, "ignore": ["DO NOT UPDATE", "DO NOT DELETE"] },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": ["permits"],
+      "accept_until": "none",
+      "why": {
+        "text": "CKAN injects sentinel rows and comma-formatted numbers; a type flip to unparseable text would zero out every cost estimate downstream.",
+        "liveness": { "kind": "file", "ref": "scripts/load-permits.js" }
+      }
+    },
+    {
+      "id": "coa_columns",
+      "kind": "schema",
+      "expect": ["REFERENCE_FILE#", "IN_DATE", "STATUSDESC", "STREET_NUM", "STREET_NAME", "STREET_TYPE", "C_OF_A_DESCISION", "HEARING_DATE", "WARD", "DESCRIPTION", "SUB_TYPE"],
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": ["coa"],
+      "accept_until": "none",
+      "why": {
+        "text": "WARD is text in the CoA Active resource and WARD_NUMBER is int4 in Closed; only the Active set is validated here because only Active is fetched pre-ingestion.",
+        "liveness": { "kind": "file", "ref": "scripts/load-coa.js" }
+      }
+    },
+    {
+      "id": "address_point_columns",
+      "kind": "schema",
+      "expect": ["ADDRESS_POINT_ID", "ADDRESS_NUMBER", "LINEAR_NAME_FULL", "ADDRESS_FULL", "LO_NUM", "HI_NUM", "MAINT_STAGE", "ADDRESS_STATUS", "ADDRESS_CLASS_DESC", "CLASS_FAMILY_DESC", "PLACE_NAME"],
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Address Points became the canonical source for ADDRESS_NUMBER and LINEAR_NAME_FULL when Toronto stripped them from the Property Boundaries CSV on 2026-05-20.",
+        "liveness": { "kind": "table", "ref": "address_points" }
+      }
+    },
+    {
+      "id": "address_point_coordinate_source",
+      "kind": "invariant",
+      "expect": { "one_of": ["geometry", ["LATITUDE", "LONGITUDE"]] },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "An OR-contract, not a flat column requirement: the live CSV ships a geometry GeoJSON column and LAT/LONG are the fallback. The real loss mode is neither being present, which yields a 0-row spatial bridge.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/address-points-csv-drift.js" }
+      }
+    },
+    {
+      "id": "parcel_columns",
+      "kind": "schema",
+      "expect": ["PARCELID", "FEATURE_TYPE", "STATEDAREA", "geometry"],
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Parcels feeds all three chains (link_parcels in permits, link_coa_to_parcels in coa, and the sources loaders), so its drift rows are emitted into every chain's audit table per Spec 79 CRIT-3a.",
+        "liveness": { "kind": "table", "ref": "parcels" }
+      }
+    },
+    {
+      "id": "source_archives_reachable",
+      "kind": "schema",
+      "expect": { "http_head_ok": ["massing_zip", "ravine_zip", "heritage_register_zip", "heritage_hcd_zip", "centreline_zip"] },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "These resources have datastore_active=false, so no field-set check is possible pre-download; attribute presence is validated post-download inside each loader. Reachability is the only pre-flight signal available.",
+        "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/62_chain_centreline.md" }
+      }
+    },
+    {
+      "id": "neighbourhood_id_property",
+      "kind": "schema",
+      "expect": { "one_of": ["AREA_SHORT_CODE", "AREA_ID"] },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "The neighbourhoods GeoJSON upsert key is the ID property; losing both spellings would key every neighbourhood to null.",
+        "liveness": { "kind": "table", "ref": "neighbourhoods" }
+      }
+    },
+    {
+      "id": "zoning_resource_columns",
+      "kind": "schema",
+      "expect": { "resources": 10, "base_required": ["_id", "geometry", "ZN_ZONE", "ZN_STRING", "COVERAGE", "FSI_TOTAL"], "overlay_required": ["_id", "geometry"] },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": ["sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "Pre-flight reachability plus upsert-key and geometry presence over 10 DataStore resources; full attribute drift is enforced at load time by zoning-attr-drift.js.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/zoning-attr-drift.js" }
+      }
+    }
+  ],
+
+  "override": "none",
+
+  "emits": [
+    { "key": "checks_passed", "type": "string", "consumers": [] },
+    { "key": "checks_failed", "type": "int", "consumers": ["src/components/FreshnessTimeline.tsx"] },
+    { "key": "errors", "type": "array", "consumers": [] }
+  ],
+
+  "deviations": [
+    {
+      "from": "Spec 122 §8.2's pilot table, which assigns assert_schema write class L (verdict_only)",
+      "why": {
+        "text": "The standalone pipeline_runs INSERT and UPDATE are the RUNNER's ledger row, not a step output; claim #39 consolidates ledger ownership into the library, so post-conversion this step writes nothing and outputs is \"none\" as the ASSERT profile requires.",
+        "liveness": { "kind": "file", "ref": "scripts/run-chain.js" }
+      },
+      "adjudicated_by": "Spec 122 §1.10 required-field profile",
+      "date": "2026-08-24"
+    },
+    {
+      "from": "the live emission records_total: 0 at assert-schema.js:557",
+      "why": {
+        "text": "§1.10 forces an ASSERT to declare counters \"none\". Spec 122 §12.5 records that 0 of 5 ASSERTs comply today, so this profile is NORMATIVE, not descriptive; the differential at conversion must show the counter emission moving to the runner rather than changing value silently.",
+        "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/122_pipeline_step_optimization.md" }
+      },
+      "adjudicated_by": "operator ruling R2 / §1.10",
+      "date": "2026-08-24"
+    }
+  ],
+
+  "limitations": [
+    {
+      "what": "A non-OK HTTP response inside validateTypeSample returns true, so the permit cost-type check cannot distinguish 'verified' from 'never ran'.",
+      "measured": "assert-schema.js:162 — `if (!res.ok) return true; // non-fatal`",
+      "check_id": "permit_cost_type_sample"
+    },
+    {
+      "what": "Shapefile and ZIP sources are checked for reachability only; their attribute contracts are enforced post-download inside each loader, so a reachable-but-drifted archive passes this step.",
+      "measured": "assert-schema.js:351-397 — five checkUrlAccessible calls, no attribute inspection",
+      "check_id": "source_archives_reachable"
+    },
+    {
+      "what": "checks_passed and errors have NO reader anywhere in the estate, and checks_failed's one reader is effectively dead: FreshnessTimeline.tsx renders it only on the branch where records_meta carries no audit_table, which the step library always populates. They are emitted for continuity with the pre-conversion payload, not because anything consumes them — the earlier consumer list naming run-chain.js and /api/quality was false.",
+      "measured": "grep -rn 'checks_passed|checks_failed' over src/ and scripts/run-chain.js, 2026-08-24 — zero matches in run-chain.js and src/app/api/quality/; one match at src/components/FreshnessTimeline.tsx:1073",
+      "check_id": "none"
+    }
+  ],
+
+  "interpretation": "none",
+
+  "recovery": "none",
+
+  "database": {
+    "class": "primary",
+    "min_migration": 241,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": "none",
+
+  "config": "none",
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "per_chain",
+      "phase": { "permits": 1, "coa": 1, "sources": 1 },
+      "audit_table": "per_chain",
+      "scope": "per_chain"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": {
+        "text": "pipeline.js emits PIPELINE_SUMMARY with records_meta {skipped:true, reason:'advisory_lock_held_elsewhere'} because assert-schema passes no opts to withAdvisoryLock. Contention IS observable today; what was missing is a declared policy.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/pipeline.js" }
+      }
+    },
+    {
+      "id": "all_checks_passed",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": { "checks_passed": "string", "checks_failed": "int", "audit_table": "object" }
+    },
+    {
+      "id": "schema_drift_detected",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "checks_failed": "int", "errors": "array", "audit_table": "object" },
+      "why": {
+        "text": "Schema drift must halt the chain — the step throws after emitting, so the audit table is recorded before the failure propagates.",
+        "liveness": { "kind": "check", "ref": "permit_columns" }
+      }
+    },
+    {
+      "id": "fetch_error",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "checks_failed": "int", "errors": "array", "audit_table": "object" },
+      "why": {
+        "text": "A CKAN metadata fetch or CSV range request that throws is caught per-source, reddens the audit row and then fails the step; it is a distinct exit path from a clean drift detection.",
+        "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
+      }
+    }
+  ]
+}

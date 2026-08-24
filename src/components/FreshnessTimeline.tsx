@@ -99,6 +99,11 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   assert_parcel_sanity:       { name: 'Parcel Sanity Profile',     group: 'quality' },
   // Maintenance (1) — logical backup after all data + CQA passes
   backup_db:                  { name: 'Database Backup',           group: 'snapshot' },
+  // Spec 122 §7.4 (A3) — Step-0 reconcile at the head of chain_sources. The ONE
+  // writer of `crashed`: reaps pipeline_runs rows a dead process left in
+  // `running`, which otherwise wedge the Phase B run-ledger gates under
+  // unattended cron. Replaces needing an admin page-load (stats/route.ts:188).
+  reconcile:                  { name: 'Run Reconciliation',        group: 'quality', description: 'Spec 122 §7.4 — reaps stranded `running` rows to `crashed` before any step runs.' },
 };
 
 // ---------------------------------------------------------------------------
@@ -183,6 +188,9 @@ export const PIPELINE_CHAINS: PipelineChain[] = CHAIN_META.map((meta) => ({
 // ---------------------------------------------------------------------------
 
 export const NON_TOGGLEABLE_SLUGS = new Set([
+  // Spec 122 §7.4 — reconcile is Step 0: it must run before anything else can
+  // read the ledger, so it is not an operator toggle.
+  'reconcile',
   'assert_schema',
   'assert_data_bounds',
   'assert_engine_health',

@@ -1,0 +1,21 @@
+{
+  "$comment": [
+    "THE ENFORCEMENT SCOPE FOR THE A2 SHAPE RULE (Spec 122 §5.1).",
+    "",
+    "Zero steps are converted today, so the shape rule CANNOT be enforced over",
+    "manifest.chains[*].file — every one of those 27 files would fail. This list is",
+    "the blocking scope: a file appears here only once its conversion has landed, and",
+    "each C-track pilot appends exactly one entry as its final commit.",
+    "",
+    "The unconverted remainder is still SCANNED, in report-only mode, by",
+    "scripts/hooks/check-step-shape.sh --report-only. That report is the prove-red:",
+    "src/tests/step-conformance.infra.test.ts asserts the rule fires on every",
+    "manifest sources file NOT in this list, so an empty list is never a vacuous pass.",
+    "",
+    "Paths are repo-root-relative and MUST each be a manifest.chains[*] step file.",
+    "The conformance suite enforces converted ⊆ manifest files, no duplicates, and",
+    "loaded.length === converted.length (the silent-import-death guard, Spec 122 §5.2)."
+  ],
+  "contract_version": 1,
+  "converted": []
+}

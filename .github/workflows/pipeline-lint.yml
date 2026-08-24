@@ -62,6 +62,31 @@ jobs:
       - run: pip install -r scripts/requirements.txt -r scripts/requirements-dev.txt
       - run: python -m pytest scripts/tests
 
+  step-shape:
+    # A2 (Spec 122 §5.1) — the frozen step-file shape. Under islands a step needs
+    # no override key to escape the standard: it can simply not call
+    # pipeline.step(). Without this gate §4 is a style guide.
+    #
+    # Two modes, one driver. The BLOCKING half enforces over the committed
+    # scripts/steps/_schema/converted.json list (empty today — each C1 pilot
+    # appends one entry as its final commit, so the gate arms one step at a time).
+    # The REPORT-ONLY half sweeps the rest of the manifest corpus and prints the
+    # prove-red; it is informational and never fails the job.
+    #
+    # .husky/pre-commit reaches the same driver through
+    # scripts/hooks/ast-grep-leads.sh; this job is the non-skippable equivalent
+    # (pre-commit is bypassable with --no-verify).
+    name: Step Shape (Spec 122 §5.1)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run step-shape
+
   validate-migrations:
     # Regression-lock for the mig-118 antipattern (active SQL after `-- DOWN`
     # crashes scripts/migrate.js because the runner doesn't parse markers).

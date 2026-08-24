@@ -118,6 +118,8 @@ describe('manifest.json — assert_parcel_sanity wiring', () => {
     const i = chain.indexOf('assert_parcel_sanity');
     expect(chain[i - 1]).toBe('assert_global_coverage');
     expect(chain[i + 1]).toBe('refresh_snapshot');
-    expect(chain).toHaveLength(27); // +assert_parcel_sanity (WF2 value-sanity gate)
+    // +assert_parcel_sanity (WF2 value-sanity gate)
+    // +reconcile (Spec 122 §7.4 / A3, S3 2026-08-24): Step-0 reaper at the chain HEAD.
+    expect(chain).toHaveLength(28);
   });
 });

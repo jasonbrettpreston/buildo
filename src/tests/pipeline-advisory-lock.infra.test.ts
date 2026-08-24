@@ -156,6 +156,11 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // Wave 7 — Maintenance / Backup
   'scripts/backup-db.js':                       112,
   'scripts/observe-chain.js':                   113,
+  // Spec 122 §7.4 (A3, S3) — the Step-0 reconcile at the head of chain_sources.
+  // Owning-spec lock 122 is taken by scripts/one-time/wf2-p13-null-legacy-cost-
+  // tail.js and 123 by dispatch-notifications.js, so 124 is next-free per the
+  // compute-phase-calibration precedent.
+  'scripts/reconcile-runs.js':                  124,
 };
 
 // ---------------------------------------------------------------------------
