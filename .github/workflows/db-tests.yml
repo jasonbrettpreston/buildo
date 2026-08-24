@@ -12,7 +12,7 @@ on:
       - 'src/features/leads/lib/**'
       - 'src/lib/db/**'
       - 'src/tests/db/**'
-      - 'scripts/migrate.js'
+      - 'scripts/**'
       - '.github/workflows/db-tests.yml'
   push:
     branches: [main]

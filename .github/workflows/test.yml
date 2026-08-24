@@ -1,0 +1,47 @@
+name: Test Suite
+
+# The main vitest suite (8,739 tests as of 2026-08-23) had no CI runner —
+# only .husky/pre-commit enforced typecheck+lint+test, and pre-commit is
+# bypassable with `--no-verify` or an out-of-band push. This workflow is
+# the non-skippable equivalent of that gate.
+#
+# See .cursor/active_task.md P0c (Spec 122 step-optimization programme,
+# "Two CI holes").
+#
+# No path filter, unlike the scripts/-scoped workflows (pipeline-lint.yml,
+# db-tests.yml): the suite spans the whole repo (src/, and scripts/ callers
+# of shared src/ libs), so it runs on every PR and every push to main.
+# DB-backed tests self-skip here (globalSetup no-ops without DATABASE_URL /
+# BUILDO_TEST_DB=1) — db-tests.yml is the dedicated real-Postgres tier.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Typecheck + Lint + Vitest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Vitest
+        run: npm run test
