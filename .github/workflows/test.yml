@@ -11,8 +11,25 @@ name: Test Suite
 # No path filter, unlike the scripts/-scoped workflows (pipeline-lint.yml,
 # db-tests.yml): the suite spans the whole repo (src/, and scripts/ callers
 # of shared src/ libs), so it runs on every PR and every push to main.
-# DB-backed tests self-skip here (globalSetup no-ops without DATABASE_URL /
-# BUILDO_TEST_DB=1) — db-tests.yml is the dedicated real-Postgres tier.
+#
+# Two exclusions on the Vitest step, both first-run findings (push 64ad272a):
+#   - src/tests/db/**: db.test.ts files self-skip via
+#     src/tests/db/setup-testcontainer.ts's dbAvailable()/pool guard ONLY
+#     when no CI provisions a DB at all. GitHub Actions sets `CI=true` on
+#     every job (this one included), and the guard reads that as "an
+#     opted-in run with no pool is a false-green, throw" — a design that
+#     predates this job existing. db-tests.yml is this tier's owner: it
+#     provisions the real Postgres service and runs it on the same
+#     pull_request/push triggers, so excluding here loses no coverage.
+#   - src/tests/admin-lead-schemas.contract.test.ts: dynamically imports
+#     mobile/src/lib/schemas.ts, which pulls in mobile/tsconfig.json
+#     ("extends": "expo/tsconfig.base") — unresolvable without
+#     mobile/node_modules. Installing the mobile tree here (47 deps,
+#     ~17K-line lockfile) on every PR just for one contract test costs
+#     more than mobile-ci.yml's own install, which is at least gated to
+#     mobile/** changes. This file runs locally via .husky/pre-commit's
+#     `npm run test` (developers have mobile/node_modules installed) —
+#     it is not otherwise covered in CI.
 
 on:
   pull_request:
@@ -44,4 +61,6 @@ jobs:
         run: npm run lint
 
       - name: Vitest
-        run: npm run test
+        run: >-
+          npm run test -- --exclude "src/tests/db/**"
+          --exclude "src/tests/admin-lead-schemas.contract.test.ts"
