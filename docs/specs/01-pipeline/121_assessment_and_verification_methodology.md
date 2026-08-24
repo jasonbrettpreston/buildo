@@ -1686,7 +1686,7 @@ Sections are Spec 120 unless prefixed `121:`.
 | 66 | Machine-readable `skip_reason` with a count | P | force a skip → both non-null (2 of 3 sites write nothing today) |
 | 67 | Errors persisted to `step_error` | B | throw → row exists with all declared columns |
 | 68 | Budget tripwire at 80% | B | run to 85% of budget → fires |
-| 69 | Duration tripwire ×3 WARN / ×10 FAIL vs trailing median | B | inject a 3× then a 10× duration → WARN then FAIL |
+| 69 | Duration tripwire ×3 WARN / ×10 FAIL vs trailing median — FAIL additionally requires the step not to have completed cleanly (outcome-gated, 2026-08-24 — see run 32753034613's six false pathological FAILs) | B | inject a 3× → WARN; a 10× on a **non-completed** step → FAIL; a 10× on a **completed** step → WARN |
 | 70 | `declaration_tiers` + `dcl_tier0_count` emitted | B | run → present; `dcl_tier0_count > 0` is **WARN**, zero is INFO |
 | 71 | OpenLineage run events emitted | P | run → POST body **schema-validates against the OpenLineage spec** (moves this off the prose-only list) |
 

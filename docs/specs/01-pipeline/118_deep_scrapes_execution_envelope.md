@@ -106,6 +106,7 @@ PG_HOST= node -r dotenv/config scripts/refresh-snapshot.js
 1. **The `refresh_snapshot` stats query** must not index-fetch 73% of permits: rewrite toward a seq-scan-friendly shape or split per-status aggregates; alternatively restore physical correlation on a maintenance window (`CLUSTER`/repack) — but the QUERY fix is durable, the heap fix decays again under write traffic.
 2. **Layer 3: per-step ceilings in run-chain** (statement_timeout or spawn-timeout per step, manifest-configurable) — the missing hierarchy layer; a pathological step must die in minutes at run-chain's hands, not at the platform's.
 3. **Step-duration trend tripwire** — an audit row comparing each step's duration to its trailing median; WARN at ×3, FAIL at ×10. This is the instrument whose absence cost two of the three failure days.
+   * FAIL additionally requires the step not to have completed cleanly (outcome-gated, 2026-08-24 — see run 32753034613's six false pathological FAILs).
 4. **Layer 2 for deep_scrapes**: set `CHAIN_TIME_BUDGET_MINUTES` (140) — useful boundary-stop coverage even though it cannot preempt mid-step.
 5. **Watchdog cron shift** to ~18:45Z (§2, the two-red geometry).
 6. **`early_abort=true` on 08-14's scraper telemetry** — fired alongside the budget stop; the abort path's connection/commit hygiene was flagged in the C2-era filings and never audited. Verify it cannot leave idle-in-transaction backends.

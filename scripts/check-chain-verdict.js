@@ -156,6 +156,36 @@ function median(nums) {
 }
 
 /**
+ * WF3 (2026-08-24) — the step-level terminal states that PROVE the step's own run
+ * reached a clean end and wrote its own `duration_ms` (run-chain.js:712 / :732 for
+ * `deferred_to_full` / `completed`; `completed_with_warnings` is the chain-level
+ * form, accepted here so the helper behaves if ever pointed at a chain row).
+ * Everything else — `failed` (incl. run-chain's own ceiling kill, which stamps
+ * `records_meta.reason = 'step_timeout'`, run-chain.js:811), a stranded `running`
+ * row (the platform-SIGKILL shape), `skipped`, or an absent/unknown status — is
+ * NOT a proven clean completion and stays eligible for the pathological verdict.
+ */
+const COMPLETED_STEP_STATUSES = new Set(['completed', 'completed_with_warnings', 'deferred_to_full']);
+
+/**
+ * WF3 (2026-08-24) — the trailing-median FLOOR for the trend ratio.
+ *
+ * DECISION (and why 1 minute): a sub-minute step duration is dominated by fixed
+ * startup cost — child spawn, pool connect, advisory lock, config load — not by
+ * the work. Against a 0.1-min median EVERY normal-looking minute reads as "10x",
+ * which is exactly how cloud run 32753034613 turned a 5.4-min `compute_centroids`
+ * that had just refilled 9,976 centroids into a 40.8x "pathological" FAIL. The
+ * floor is applied as `max(median, FLOOR)` for the RATIO ONLY — deliberately NOT
+ * as a "skip steps whose median is under a minute" gate, which would blind the
+ * tripwire to precisely the steps that creep fastest in relative terms. A step
+ * going 6s -> 60s consumes 54s of a 150-min envelope and cannot threaten it; a
+ * step going 6s -> 60 min still reads 60x and still fires. The fence Spec 118 §7.3
+ * names (see the creep BEFORE the ceiling kills it) is preserved in both
+ * directions; only the arithmetic noise off a starved baseline is removed.
+ */
+const TREND_MEDIAN_FLOOR_MS = 60_000;
+
+/**
  * WF3 F3 (2026-08-15, Spec 118 §7.3) — the step-duration trend tripwire: "the
  * instrument whose absence cost two of the three [08-12/13/14] failure days."
  * Every gate this repo had compared a VALUE against a THRESHOLD; none compared
@@ -163,33 +193,71 @@ function median(nums) {
  * every step of every chain (not just deep_scrapes' refresh_snapshot).
  *
  * Pure — takes a step's trailing durations (oldest-agnostic order; only the
- * VALUES matter) and its just-finished duration, and classifies the ratio
- * against the trailing MEDIAN (never the mean — see median() above).
+ * VALUES matter), its just-finished duration, and that run's STATUS, and
+ * classifies the ratio against the trailing MEDIAN (never the mean — see
+ * median() above), floored per TREND_MEDIAN_FLOOR_MS.
  * `history` requires >= 3 usable (finite, non-negative) values or the
  * classification is SKIPPED (returns null) — 1-2 data points make a median
  * indistinguishable from a single outlier, and a brand-new step (0 prior
  * completions) must never manufacture a spurious ratio from nothing.
  *
+ * SEVERITY CONSULTS THE OUTCOME, NOT THE RATIO ALONE (WF3 2026-08-24). The
+ * ERROR level's own message names the axed shape ("likely axed by the platform
+ * timeout") — and a step that COMPLETED cleanly, writing its own duration and
+ * its own record counts, cannot have been axed. Cloud run 32753034613 emitted 6
+ * such FAILs and drove exit 1 on a chain where every flagged step had finished
+ * with real records. So: a proven clean completion caps at 'warning' (creep —
+ * still annotated, still visible, never silenced); 'error' is reserved for the
+ * shape it names, a run that did NOT complete cleanly (failed, ceiling-killed,
+ * stranded `running`, or an outcome we cannot prove). An absent/unknown status
+ * fails CLOSED — an unproven outcome must never buy a downgrade.
+ *
  * @param {number[]} history - trailing durations (ms) of prior COMPLETED runs of this step
  * @param {number} current - duration (ms) of the just-finished run
- * @returns {{ level: 'warning' | 'error', ratio: number, medianMs: number, currentMs: number, message: string } | null}
+ * @param {string | null | undefined} currentStatus - `pipeline_runs.status` of the just-finished run
+ * @returns {{ level: 'warning' | 'error', ratio: number, medianMs: number, effectiveMedianMs: number,
+ *             currentMs: number, completed: boolean, status: string | null, message: string } | null}
  */
-function classifyDurationTrend(history, current) {
+function classifyDurationTrend(history, current, currentStatus) {
   if (!Array.isArray(history)) return null;
   const usable = history.filter((n) => Number.isFinite(n) && n >= 0);
   if (usable.length < 3) return null;
   if (!Number.isFinite(current) || current < 0) return null;
   const medianMs = median(usable);
+  // A zero/negative median is still a SKIP — the floor exists to damp a starved
+  // baseline, NEVER to manufacture a baseline where the history has none.
   if (!Number.isFinite(medianMs) || medianMs <= 0) return null;
-  const ratio = current / medianMs;
+  const effectiveMedianMs = Math.max(medianMs, TREND_MEDIAN_FLOOR_MS);
+  const ratio = current / effectiveMedianMs;
   if (ratio < 3) return null;
-  const level = ratio >= 10 ? 'error' : 'warning';
+  const status = typeof currentStatus === 'string' ? currentStatus : null;
+  const completed = status !== null && COMPLETED_STEP_STATUSES.has(status);
+  const level = ratio >= 10 && !completed ? 'error' : 'warning';
   const currentMin = (current / 60000).toFixed(1);
   const medianMin = (medianMs / 60000).toFixed(1);
+  // Disclose the floor only when it actually moved the denominator — an operator
+  // reading a 30x must be able to tell whether it was measured against the real
+  // baseline or against the floor.
+  const floorNote =
+    effectiveMedianMs > medianMs
+      ? ` (floored to ${(effectiveMedianMs / 60000).toFixed(1)} min for the ratio — a sub-minute baseline is startup cost, not work)`
+      : '';
+  let tail;
+  if (level === 'error') {
+    tail =
+      `pathological: the step did not complete cleanly (status=${status ?? 'unknown'}) — ` +
+      'the shape a run-chain ceiling kill or a platform timeout leaves.';
+  } else if (completed) {
+    tail =
+      `creeping: the step completed (status=${status}) and wrote its own duration — real growth, ` +
+      'not a timeout kill — watch it BEFORE it grows into the ceiling.';
+  } else {
+    tail = 'creeping, watch it BEFORE it grows into the ceiling.';
+  }
   const message =
-    `duration ${currentMin} min is ${ratio.toFixed(1)}x the trailing median ${medianMin} min ` +
-    `(n=${usable.length}) — ${level === 'error' ? 'pathological, likely axed by the platform timeout' : 'creeping, watch it'}.`;
-  return { level, ratio, medianMs, currentMs: current, message };
+    `duration ${currentMin} min is ${ratio.toFixed(1)}x the trailing median ${medianMin} min${floorNote} ` +
+    `(n=${usable.length}) — ${tail}`;
+  return { level, ratio, medianMs, effectiveMedianMs, currentMs: current, completed, status, message };
 }
 
 /**
@@ -229,11 +297,16 @@ async function checkStepDurationTrends(pool, chainId, executedSteps) {
       if (rows.length === 0) continue;
       const [current, ...rest] = rows;
       const currentMs = Number(current.duration_ms);
+      // History stays STRICTLY `completed` (not COMPLETED_STEP_STATUSES): a
+      // `deferred_to_full` run stops early by design and its short duration must
+      // not depress the baseline the next full run is measured against.
       const historyMs = rest
         .filter((r) => r.status === 'completed')
         .map((r) => Number(r.duration_ms))
         .filter((n) => Number.isFinite(n));
-      const trend = classifyDurationTrend(historyMs, currentMs);
+      // WF3 (2026-08-24) — the current run's OUTCOME is the severity input, not
+      // just the ratio; see classifyDurationTrend's contract.
+      const trend = classifyDurationTrend(historyMs, currentMs, current.status);
       if (trend) results.push({ slug, trend });
     } catch {
       // Best-effort — one step's query failure never blocks the others.
@@ -532,4 +605,6 @@ module.exports = {
   classifyStepCompleteness,
   classifyDeferStreak,
   OK_STATUSES,
+  COMPLETED_STEP_STATUSES,
+  TREND_MEDIAN_FLOOR_MS,
 };
