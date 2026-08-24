@@ -78,7 +78,8 @@ describe('schema-drift guard — ALWAYS-RUN via the committed column snapshot (S
   // update BOTH the snapshot (regenerate from the live DB) AND the mapping — visible at commit time,
   // not first in CI. The db test (parcel-lookup.db.test.ts) validates the SNAPSHOT against the live
   // DB, closing the loop (a stale snapshot fails there).
-  it('mapping ∪ exclusions == the committed parcels column snapshot (157 cols)', () => {
+  // 159 cols as of migration 240 (Phase B B2) adding parcels.massing_enriched_at.
+  it('mapping ∪ exclusions == the committed parcels column snapshot (159 cols)', () => {
     const mapped = [...allMappedColumns(), ...EXCLUDED_COLS].sort();
     const snapshot = [...(parcelsColumnsSnapshot as string[])].sort();
     expect(mapped).toEqual(snapshot);
