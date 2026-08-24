@@ -12,7 +12,6 @@
 // must produce, and the #54 enricher lock is proven in BOTH directions — the
 // positive control differs from the negative by exactly one populated array.
 import { describe, it, expect } from 'vitest';
-import Ajv from 'ajv';
 import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -41,8 +40,13 @@ function errPath(e: AjvErrorLike): string {
 const readJson = (p: string): Record<string, unknown> => JSON.parse(fs.readFileSync(p, 'utf8'));
 
 const schema = readJson(SCHEMA_PATH);
-const ajv = new Ajv({ allErrors: true });
-const validate = ajv.compile(schema);
+// S2 (2026-08-24): ONE compiler. `ajv` became a real dependency at v8 (it had
+// been resolving transitively to ajv 6 via eslint), and the library's
+// compileStepSchema is what `pipeline.step()` itself validates with — so this
+// tier-0 gate and production cannot drift into two different AJV configurations.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+const { compileStepSchema } = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js'));
+const validate = compileStepSchema(schema);
 
 function errorsFor(fixture: string): AjvErrorLike[] {
   const ok = validate(readJson(path.join(FIXTURES, 'invalid', fixture)));

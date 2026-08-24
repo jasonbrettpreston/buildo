@@ -3,6 +3,16 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## Spec 122 §S2-min — `pipeline.step()` output-review DEFER (2026-08-24)
+
+Source: S2-min review panel (`scripts/lib/step/`). One item, and it BLOCKS a specific future decision rather than the current slice.
+
+| Severity | Source | Item | Disposition |
+|----------|--------|------|-------------|
+| **MED** | S2-min output panel, observability lens | **An in-chain non-blocking FAIL-severity check is invisible to `/api/quality`.** The schema makes `severity` and `blocking` orthogonal on purpose (`blocking: false` = "report loudly, do not halt"), and `assert_schema` already declares one such check (`permit_cost_type_sample`: `severity: FAIL`, `blocking: false`). But a non-blocking FAIL does not throw, so the step exits 0, and `run-chain.js:718-731` writes the literal `'completed'` to that step's `pipeline_runs` row. The FAIL survives **only** inside `records_meta.audit_table.verdict` (JSONB). `/api/quality` selects on `WHERE status = 'failed'`, so the row is never seen — the loud report is silent at exactly the consumer built to surface it. In-chain the library cannot fix this alone: run-chain owns the status literal (ledger consolidation is claim #39). Standalone, the library already writes `completed_with_warnings`/`failed` correctly from the row-derived verdict. | DEFER — **must be resolved BEFORE any pilot declares a non-blocking FAIL check**, i.e. before `assert_schema`'s C1 conversion promotes `permit_cost_type_sample` to the library. Two candidate closes: (a) `/api/quality` also reads `records_meta.audit_table.verdict`, matching `FreshnessTimeline.tsx:329-336`'s existing override, or (b) run-chain derives its status literal from the emitted verdict — which is claim #39's ledger consolidation, and the wider fix. Until then a non-blocking FAIL is a declaration the estate cannot honour. |
+
+---
+
 ## Spec 122 §P0 — silent pre-cutover DB defaults: residuals after the resolver landed (2026-08-23)
 
 Source: WF3 P0 (`scripts/lib/resolve-db.js` + 37 conversions). Closed this session: the 24-file census plus 13 more the census grep could not see. Items below were deliberately NOT converted, each with a stated fence.

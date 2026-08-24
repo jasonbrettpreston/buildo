@@ -119,3 +119,57 @@ describe('ColumnarAuditTable rowKey generation logic (spec 26)', () => {
     expect(new Set(keys).size).toBe(4);
   });
 });
+
+// ── `self_skipped` consumer tripwire (Spec 120 §3.2b / Spec 122 S2) ─────────
+//
+// Same class as the `deferred_to_full` lock at check-pipeline-freshness.logic
+// .test.ts:55-64: a status the pipeline WRITES but no consumer RENDERS is not a
+// new state, it is a silent misrender. `self_skipped` is written by
+// scripts/lib/step/ (a step that declined its own work because the advisory lock
+// was held elsewhere) and it is distinct from `skipped`, which the chain decided
+// FOR the step. Before the step library that outcome landed as 'completed' —
+// run-chain.js writes the literal and never reads records_meta.skipped — i.e. a
+// GREEN tile for a step that did nothing.
+//
+// Both branches must be neutral, never PASS. These are source-shape assertions
+// because both functions are module-private.
+describe('`self_skipped` renders in both admin consumers — never as PASS', () => {
+  it('the step library is the producer of this status', () => {
+    expect(read('scripts/lib/step/ledger.js')).toMatch(/SELF_SKIPPED:\s*'self_skipped'/);
+    expect(read('scripts/lib/step/index.js')).toMatch(/RUN_STATUS\.SELF_SKIPPED/);
+  });
+
+  it('FreshnessTimeline.getStatusDot has a self_skipped branch, neutral and labelled', () => {
+    const src = read('src/components/FreshnessTimeline.tsx');
+    const dot = src.match(/function getStatusDot[\s\S]*?\n}/)?.[0];
+    expect(dot, 'getStatusDot not found').toBeTruthy();
+    expect(dot!).toMatch(/info\.status === 'self_skipped'/);
+    expect(dot!).toMatch(/label: 'Self-skipped \(lock\)'/);
+    // Neutral, matching `skipped`'s own treatment — not green, not red, not amber.
+    const branch = dot!.match(/info\.status === 'self_skipped'\)\s*return\s*\{([^}]*)\}/)?.[1] ?? '';
+    expect(branch).toContain('bg-gray-50');
+  });
+
+  it('DataQualityDashboard.getChainVerdict has a self_skipped branch ABOVE its PASS fallthrough', () => {
+    const src = read('src/components/DataQualityDashboard.tsx');
+    const fn = src.match(/function getChainVerdict[\s\S]*?\n  }/)?.[0];
+    expect(fn, 'getChainVerdict not found').toBeTruthy();
+    expect(fn!).toMatch(/info\.status === 'self_skipped'/);
+    // It reaches this CHAIN chip via the `chainInfo ?? rootInfo` fallback, so it
+    // must be handled BEFORE the unconditional PASS return, or a root step that
+    // declined on lock contention renders green.
+    expect(fn!.indexOf("'self_skipped'")).toBeLessThan(fn!.indexOf("label: 'PASS'"));
+    expect(fn!).not.toMatch(/self_skipped[\s\S]{0,120}bg-green/);
+  });
+
+  it('chain-level allowlists are NOT affected — self_skipped is a STEP status only', () => {
+    // Verified 2026-08-24 rather than assumed: check-pipeline-freshness's
+    // RAN_STATUSES and admin/stats/route.ts's IN-list are both scoped to the
+    // `chain_*` slugs, and run-chain.js's chainStatus ladder never emits
+    // self_skipped. Adding it to either would make a step's skip read as a
+    // chain having landed data.
+    expect(read('scripts/run-chain.js')).not.toMatch(/chainStatus\s*=\s*'self_skipped'/);
+    const stats = read('src/app/api/admin/stats/route.ts');
+    expect(stats).toMatch(/CHAIN_SLUGS = \['chain_coa'/);
+  });
+});

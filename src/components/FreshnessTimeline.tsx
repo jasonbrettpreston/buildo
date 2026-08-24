@@ -334,6 +334,17 @@ function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { 
     if (verdict?.verdict === 'WARN') return { color: 'bg-amber-50', label: 'Warnings' };
     return { color: 'bg-green-50', label: 'Completed' };
   }
+  // Spec 122 S2 — a STEP that declined its own work (advisory lock held
+  // elsewhere), distinct from `skipped`, which the chain decided FOR it.
+  // Neutral like `skipped`: nothing ran, so nothing passed and nothing failed.
+  // ⚠️ PLACED BELOW `completed` ON PURPOSE — the branches are mutually exclusive
+  // equality checks, so order is semantically free, and two pre-existing locks
+  // slice FIXED byte windows from `function getStatusDot` (800 chars at
+  // admin.ui.test.tsx:2511, 1500 at :2185). Both had <60 chars of headroom, so
+  // any new branch added ABOVE would push their assertions out of the window and
+  // break them for no behavioural reason. Rationale + tripwire live in
+  // FreshnessTimeline.ui.test.tsx.
+  if (info.status === 'self_skipped') return { color: 'bg-gray-50', label: 'Self-skipped (lock)' };
   return { color: '', label: info.status ?? 'Unknown' };
 }
 

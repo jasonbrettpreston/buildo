@@ -231,9 +231,9 @@
   "override": "none",
 
   "emits": [
-    { "key": "checks_passed", "type": "string", "consumers": ["run-chain.js", "src/app/api/quality/route.ts"] },
-    { "key": "checks_failed", "type": "int", "consumers": ["run-chain.js", "src/app/api/quality/route.ts"] },
-    { "key": "errors", "type": "array", "consumers": ["run-chain.js"] }
+    { "key": "checks_passed", "type": "string", "consumers": [] },
+    { "key": "checks_failed", "type": "int", "consumers": ["src/components/FreshnessTimeline.tsx"] },
+    { "key": "errors", "type": "array", "consumers": [] }
   ],
 
   "deviations": [
@@ -267,6 +267,11 @@
       "what": "Shapefile and ZIP sources are checked for reachability only; their attribute contracts are enforced post-download inside each loader, so a reachable-but-drifted archive passes this step.",
       "measured": "assert-schema.js:351-397 — five checkUrlAccessible calls, no attribute inspection",
       "check_id": "source_archives_reachable"
+    },
+    {
+      "what": "checks_passed and errors have NO reader anywhere in the estate, and checks_failed's one reader is effectively dead: FreshnessTimeline.tsx renders it only on the branch where records_meta carries no audit_table, which the step library always populates. They are emitted for continuity with the pre-conversion payload, not because anything consumes them — the earlier consumer list naming run-chain.js and /api/quality was false.",
+      "measured": "grep -rn 'checks_passed|checks_failed' over src/ and scripts/run-chain.js, 2026-08-24 — zero matches in run-chain.js and src/app/api/quality/; one match at src/components/FreshnessTimeline.tsx:1073",
+      "check_id": "none"
     }
   ],
 
