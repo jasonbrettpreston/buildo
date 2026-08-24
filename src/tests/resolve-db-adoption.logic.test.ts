@@ -19,53 +19,21 @@
 // standing audit row." A one-shot conversion proves a state; only a recurring
 // check defends it. Without this file, file #25 lands next month.
 
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-const ROOT = process.cwd();
-
-/** The three census patterns, applied to CODE only. */
-const SILENT_DEFAULT_PATTERNS: Array<{ id: string; re: RegExp }> = [
-  { id: 'literal pre-cutover target', re: /localhost:5432/ },
-  { id: "hardcoded host: 'localhost'", re: /host:\s*['"]localhost['"]/ },
-  { id: 'defaulted PG_* target var', re: /process\.env\.PG_(HOST|PORT|DATABASE)\s*\|\|/ },
-];
-
-/**
- * Strip block comments and line comments so a docblock that must keep naming
- * `localhost:5432/buildo` (this file, resolve-db.js, the audit headers) does not
- * read as a violation. Deliberately crude: it over-strips a `//` inside a string
- * literal, which can only ever cause a FALSE PASS on a line that also has no
- * other signal — and every real violation here is bare code.
- */
-function stripComments(src: string): string {
-  return src
-    // Preserve the LINE COUNT so reported line numbers match the real file —
-    // collapsing a block comment to '' shifts every number after it.
-    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ''))
-    .split(/\r?\n/)
-    .map((line) => line.replace(/(^|[^:])\/\/.*$/, '$1').replace(/^\s*\*.*$/, ''))
-    .join('\n');
-}
-
-/**
- * The ONLY files allowed to keep a defaulted PG_* target, each with a stated
- * fence. An entry here is a promise that the exclusion was reasoned about, not
- * a place to park a violation.
- */
-const FENCED: Record<string, string> = {
-  // Coordinator boundary (WF3 2026-08-23): createPool's default feeds all 27
-  // manifest steps + run-chain + the cloud cron. Changing it is a separate,
-  // measured commit — filed in docs/reports/review_followups.md.
-  'scripts/lib/pipeline.js': "createPool's default — blast radius is every pipeline step; separate measured commit",
-  // The pre-flight checker REPORTS the target; it must mirror whatever
-  // createPool actually does, or it reports a target nothing uses. It moves
-  // WITH pipeline.js, never before it. (It opens no pool of its own.)
-  'scripts/ai-env-check.mjs': 'diagnostic that mirrors createPool default by design; moves with pipeline.js',
-};
+import {
+  FENCED,
+  KNOWN_BAD,
+  ROOT,
+  SILENT_DEFAULT_PATTERNS,
+  census,
+  codeOf,
+  stripComments,
+  trackedScriptFiles,
+} from './script-source-scan';
 
 /**
  * Files whose OLD default already pointed at the AUTHORITATIVE stack
@@ -84,28 +52,6 @@ const RETIRED_ZERO_CONFIG: Record<string, string> = {
   'scripts/wipe-supabase-auth-state.js': 'defaulted to 127.0.0.1:54322 — the right DB; now requires an explicit target',
 };
 
-function scriptFiles(): string[] {
-  return execFileSync('git', ['ls-files', '--', 'scripts/'], { cwd: ROOT, stdio: 'pipe' })
-    .toString()
-    .split('\n')
-    .map((s) => s.trim())
-    .filter((f) => /\.(js|mjs|cjs|ts)$/.test(f))
-    .filter((f) => !(f in FENCED));
-}
-
-function census(): Array<{ file: string; line: number; text: string; pattern: string }> {
-  const hits: Array<{ file: string; line: number; text: string; pattern: string }> = [];
-  for (const file of scriptFiles()) {
-    const src = stripComments(readFileSync(join(ROOT, file), 'utf8'));
-    src.split(/\r?\n/).forEach((text, i) => {
-      for (const { id, re } of SILENT_DEFAULT_PATTERNS) {
-        if (re.test(text)) hits.push({ file, line: i + 1, text: text.trim(), pattern: id });
-      }
-    });
-  }
-  return hits;
-}
-
 describe('no script under scripts/ silently defaults to the pre-cutover database', () => {
   it('the P0 census is EMPTY in code', () => {
     const hits = census();
@@ -118,13 +64,8 @@ describe('no script under scripts/ silently defaults to the pre-cutover database
     // clean census forever. Prove each pattern still fires on the exact code
     // it was written against (Spec 121 §12b.6 — every checker ships a
     // known-bad fixture and CI asserts it FIRES).
-    const knownBad = [
-      "  const pool = new Pool({ connectionString: process.env.DATABASE_URL || 'postgresql://postgres:@localhost:5432/buildo' });",
-      "  const c = new Client({ host: 'localhost', user: 'postgres', database: 'buildo' });",
-      "    host: process.env.PG_HOST || 'localhost',",
-    ];
-    expect(knownBad).toHaveLength(SILENT_DEFAULT_PATTERNS.length);
-    knownBad.forEach((line, i) => {
+    expect(KNOWN_BAD).toHaveLength(SILENT_DEFAULT_PATTERNS.length);
+    KNOWN_BAD.forEach((line, i) => {
       const pattern = SILENT_DEFAULT_PATTERNS[i];
       expect(pattern, `no pattern at index ${i}`).toBeDefined();
       expect(
@@ -132,6 +73,33 @@ describe('no script under scripts/ silently defaults to the pre-cutover database
         `pattern "${pattern!.id}" no longer matches its fixture`,
       ).toBe(true);
     });
+  });
+
+  it('the census actually COVERS the resolver itself (the untracked-file blind spot)', () => {
+    // ROOT-CAUSE LOCK, 2026-08-23. Both P0 locks were green through all of
+    // development and went red the instant the work was committed. Not the
+    // working diff — TRACKED-NESS: `git ls-files` sees only tracked files, and
+    // scripts/lib/resolve-db.js was untracked (`??`) the whole time it was
+    // written, so the census silently skipped the one file it most needs to
+    // cover. Committing it merely REVEALED two bugs that were latent from the
+    // first run. A scan that cannot see a brand-new file is a scan that passes
+    // hardest exactly when new code is landing.
+    const scanned = trackedScriptFiles();
+    expect(scanned).toContain('scripts/lib/resolve-db.js');
+    expect(scanned).toContain('scripts/migrate.js');
+    // and the census is reading real content, not an empty set
+    expect(scanned.length).toBeGreaterThan(50);
+  });
+
+  it('the resolver may NAME the pre-cutover DB in its error text without tripping the census', () => {
+    // The complement of the fix. resolve-db.js's error messages exist to tell
+    // an operator exactly which database was refused — "localhost:5432/buildo,
+    // 222 migrations". The old bare /localhost:5432/ pattern read that as a
+    // violation, which would have forced the resolver to stop explaining
+    // itself. Prose mentioning the target is fine; a connection URL is not.
+    const code = codeOf('scripts/lib/resolve-db.js');
+    expect(code).toMatch(/localhost:5432\/buildo/); // still says it, in code (template literals)
+    expect(census().filter((h) => h.file === 'scripts/lib/resolve-db.js')).toEqual([]);
   });
 
   it('stripComments does not blind the scan to real code', () => {
@@ -151,12 +119,7 @@ describe('no script under scripts/ silently defaults to the pre-cutover database
 
 describe('the fenced exclusions stay small and stay explained', () => {
   it('every fenced file names a reason and still exists', () => {
-    const tracked = new Set(
-      execFileSync('git', ['ls-files', '--', 'scripts/'], { cwd: ROOT, stdio: 'pipe' })
-        .toString()
-        .split('\n')
-        .map((s) => s.trim()),
-    );
+    const tracked = new Set(trackedScriptFiles({ includeFenced: true }));
     for (const [file, reason] of Object.entries(FENCED)) {
       expect(tracked.has(file), `${file} is fenced but no longer tracked`).toBe(true);
       expect(reason.length, `${file} needs a real reason`).toBeGreaterThan(20);
@@ -181,7 +144,7 @@ describe('the fenced exclusions stay small and stay explained', () => {
   it('both files are converted and still censused — RETIRED_ZERO_CONFIG is not an exemption', () => {
     for (const file of Object.keys(RETIRED_ZERO_CONFIG)) {
       expect(file in FENCED, `${file} must NOT be fenced out of the census`).toBe(false);
-      expect(scriptFiles()).toContain(file);
+      expect(trackedScriptFiles()).toContain(file);
     }
   });
 
