@@ -1065,7 +1065,11 @@ describe('Pipeline SDK', () => {
     }
 
     // §3.5 — CQA scripts must use records_new: null (not 0) to signal "not applicable"
-    const CQA_SCRIPTS = ['quality/assert-schema.js', 'quality/assert-data-bounds.js'];
+    // RE-HOMED (pilot 1, Spec 122 §5.1): a converted step declares `counters: "none"`
+    // and never spells a counter itself — scripts/lib/step/index.js emits
+    // `records_new: null` on its behalf (deriveCounters + the SKIP summary). The CQA
+    // exemption is unchanged; the file that spells it moved.
+    const CQA_SCRIPTS = ['lib/step/index.js', 'quality/assert-data-bounds.js'];
     for (const script of CQA_SCRIPTS) {
       it(`${script} emits records_new: null (not 0) for CQA exemption`, () => {
         const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
@@ -1252,9 +1256,17 @@ describe('Pipeline SDK', () => {
         expect(content).toContain("require('../lib/pipeline')");
       });
 
-      it(`${script} uses pipeline.run()`, () => {
+      it(`${script} uses the pipeline SDK lifecycle (pipeline.run or pipeline.step)`, () => {
         const content = fs.readFileSync(path.join(scriptDir, script), 'utf-8');
-        expect(content).toContain('pipeline.run');
+        // Spec 122 §5.1 widening: a converted step's lifecycle entry point is
+        // `pipeline.step(descriptor, compute)`, which calls pipeline.run() itself
+        // inside scripts/lib/step/index.js. The banned thing — a script standing up
+        // its own pool and lifecycle — is still banned by the `new Pool()` assertion
+        // below; this one is about USING the SDK, and both forms do.
+        expect(
+          content.includes('pipeline.run') || content.includes('pipeline.step('),
+          `${script} must enter the SDK lifecycle via pipeline.run() or pipeline.step()`,
+        ).toBe(true);
       });
 
       it(`${script} has no bare new Pool() instantiation`, () => {

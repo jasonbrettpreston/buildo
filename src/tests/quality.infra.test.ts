@@ -818,25 +818,39 @@ describe('assert-lifecycle-phase-distribution.js — advisory lock delegation (s
 // because no audit row tracked Parcels mismatches — they only landed in
 // records_meta.errors[]. This regression-lock asserts the cascade now covers
 // the Parcels failure modes per Spec 47 §R10 + Spec 48 §8.2.
-describe('assert-schema.js — Parcels audit cascade completeness (Spec 79 CRIT-3a)', () => {
-  const assertSchemaSrc = fs.readFileSync(
-    path.resolve(__dirname, '../../scripts/quality/assert-schema.js'),
+// RE-HOMED (pilot 1, Spec 122 §5.1). The metric names this lock read are runner-generated
+// now: scripts/lib/step/verdict.js builds one audit row per SELECTED check, keyed by the
+// check id, so `parcels_schema_mismatch_count` / `parcels_other_errors` no longer appear in
+// any source file. The BEHAVIOUR they protected — parcels drift reaches the audit-table
+// cascade of BOTH ingest chains, not just records_meta.errors[] — is now carried by the
+// descriptor's `parcel_columns.chains`, which is the thing that would have to be narrowed
+// to re-open the Spec 79 CRIT-3a hole. The assertions follow it there.
+describe('assert-schema — Parcels audit cascade completeness (Spec 79 CRIT-3a)', () => {
+  const descriptor = JSON.parse(fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/quality/assert-schema.descriptor.json'),
+    'utf-8',
+  )) as { checks: Array<{ id: string; chains: string[] | 'all'; severity: string }> };
+  const computeSrc = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/lib/compute/assert-schema.js'),
     'utf-8',
   );
 
-  it('audit_table.rows includes parcels_schema_mismatch_count + parcels_other_errors in BOTH chains', () => {
-    // Each metric should appear at least twice in the source — once per chain's
-    // audit-table construction (permitAuditRows + coaAuditRows).
-    const schemaMatches = assertSchemaSrc.match(/parcels_schema_mismatch_count/g) || [];
-    expect(schemaMatches.length).toBeGreaterThanOrEqual(2);
-    const otherMatches = assertSchemaSrc.match(/parcels_other_errors/g) || [];
-    expect(otherMatches.length).toBeGreaterThanOrEqual(2);
+  it('audit_table.rows includes the parcels check in BOTH chains', () => {
+    // The row is emitted once per chain that SELECTS the check, so "at least twice in
+    // the source" becomes "declared in at least the permits and coa chains".
+    const parcels = descriptor.checks.find((c) => c.id === 'parcel_columns');
+    expect(parcels, 'descriptor declares no parcel_columns check').toBeDefined();
+    const chains = parcels!.chains === 'all' ? ['permits', 'coa', 'sources'] : parcels!.chains;
+    expect(chains).toContain('permits');
+    expect(chains).toContain('coa');
+    expect(parcels!.severity).toBe('FAIL');
   });
 
   it('does NOT use the misleading parcels_api_errors metric name', () => {
     // DeepSeek LOW #1 fold: parcels_api_errors over-promises; renamed to
-    // parcels_other_errors which is honest about scope.
-    expect(assertSchemaSrc).not.toMatch(/parcels_api_errors/);
+    // parcels_other_errors which is honest about scope. Neither may come back.
+    expect(computeSrc).not.toMatch(/parcels_api_errors/);
+    expect(JSON.stringify(descriptor)).not.toMatch(/parcels_api_errors/);
   });
 });
 

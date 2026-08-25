@@ -49,6 +49,7 @@ const { assertDbTarget } = require('../resolve-db');
 const { validateDescriptor } = require('./validate');
 const { buildAuditTable, deriveVerdict } = require('./verdict');
 const { RUN_STATUS, ownsLedgerRow, openLedgerRow, finalizeLedgerRow } = require('./ledger');
+const { finalizeStrandedRun } = require('../ledger-window');
 
 /** `PIPELINE_META` reads/writes/externals, derived from the descriptor — never hand-maintained. */
 function deriveMeta(descriptor) {
@@ -126,6 +127,29 @@ async function runWithPool(runnable, pool, ctx) {
   let counters = { records_total: null, records_new: null, records_updated: null };
   let errorMessage = null;
 
+  // ── LEDGER STRAND WINDOW (P3, ported into the library at pilot 1) ──────────
+  // Declared BEFORE the try so nothing throwable sits between them. Semantics
+  // are the ones the pre-conversion step carried at its :594-601: the `finally`
+  // closes a THROWN error only — process kills bypass it entirely, and that is
+  // reaper work, not this. `ledgerFinalized` exists because the normal finalize
+  // swallows its own UPDATE failure; without the flag the window would either
+  // double-write the happy path or leave a `running` row behind a log line.
+  let ledgerFinalized = false;
+  let windowError = null;
+
+  // ⚠️ DECLARED AUDIT GAP, S2-min. A compute that throws BEFORE any
+  // `ctx.report()` emits ZERO audit rows — the failure survives only as the
+  // ledger row's `error_message`. The pre-conversion assert-schema avoided this
+  // by wrapping EACH source fetch in its own try/catch, so one unreachable
+  // archive reddens one row instead of erasing the whole table.
+  //
+  // That per-check granularity is a PROPERTY OF THE COMPUTE, not of the
+  // library, and every conversion must preserve it at PH-0: a compute that
+  // lets a fetch escape to the top level trades nine audit rows for one error
+  // string. Library-side protection — running each check in its own boundary
+  // and synthesizing an errored observation — is the validator growth wave,
+  // where `on_check_error` becomes the runner's to apply rather than the
+  // compute's to honour. Pinned by a test so it cannot regress unnoticed.
   try {
     await assertDatabaseTarget(pool, descriptor);
     if (owns) runId = await openLedgerRow(pool, slug);
@@ -191,28 +215,17 @@ async function runWithPool(runnable, pool, ctx) {
       pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null, records_meta: recordsMeta });
     }
     return { status, recordsMeta, runId, acquired: lockResult.acquired };
+  // `failed`, never `crashed`: this code ran and reached a verdict. The capture-
+  // and-rethrow is the strand window's: the halt must still propagate, because
+  // swallowing here would let a chain proceed past a step that failed.
   } catch (err) {
-    // ⚠️ DECLARED AUDIT GAP, S2-min. A compute that throws BEFORE any
-    // `ctx.report()` emits ZERO audit rows — the failure survives only as the
-    // ledger row's `error_message`. Today `assert-schema.js:318-443` avoids this
-    // by wrapping EACH source fetch in its own try/catch, so one unreachable
-    // archive reddens one row instead of erasing the whole table.
-    //
-    // That per-check granularity is a PROPERTY OF THE COMPUTE, not of the
-    // library, and every conversion must preserve it at PH-0: a compute that
-    // lets a fetch escape to the top level trades nine audit rows for one error
-    // string. Library-side protection — running each check in its own boundary
-    // and synthesizing an errored observation — is the validator growth wave,
-    // where `on_check_error` becomes the runner's to apply rather than the
-    // compute's to honour. Pinned by a test so it cannot regress unnoticed.
-    //
-    // `failed`, never `crashed`: this code ran and reached a verdict.
-    status = RUN_STATUS.FAILED;
     errorMessage = errorMessage || (err && err.message ? err.message : String(err));
+    status = RUN_STATUS.FAILED;
+    windowError = err;
     throw err;
   } finally {
     if (owns) {
-      await finalizeLedgerRow(pool, runId, {
+      if (await finalizeLedgerRow(pool, runId, {
         slug,
         status,
         durationMs: Date.now() - startMs,
@@ -221,7 +234,18 @@ async function runWithPool(runnable, pool, ctx) {
         recordsTotal: counters.records_total,
         recordsNew: counters.records_new,
         recordsUpdated: counters.records_updated,
+      })) ledgerFinalized = true;
+      await finalizeStrandedRun(pool, {
+        runId,
+        finalized: ledgerFinalized,
+        slug,
+        durationMs: Date.now() - startMs,
+        error: windowError,
+        log: pipeline.log,
       });
+      // Window CLOSE, above. Inert unless the normal finalize did NOT land: the
+      // helper's own `AND status = 'running'` predicate makes it a no-op on a row
+      // some other path already closed, and it never throws out of a `finally`.
     }
   }
 }

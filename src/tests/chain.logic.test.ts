@@ -861,7 +861,11 @@ describe('PIPELINE_META convention', () => {
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
     'refresh-snapshot.js',
     'enrich-web-search.js',
-    'quality/assert-schema.js',
+    // RE-HOMED (pilot 1, Spec 122 §5.1): assert_schema is a converted step, so its
+    // PIPELINE_META line is emitted by the step LIBRARY from `descriptor.inputs`/
+    // `outputs` (deriveMeta), not spelled in the step file. The assertion follows the
+    // emitter — the guarantee "this step emits PIPELINE_META" is unchanged.
+    'lib/step/index.js',
     'quality/assert-data-bounds.js',
   ];
 
