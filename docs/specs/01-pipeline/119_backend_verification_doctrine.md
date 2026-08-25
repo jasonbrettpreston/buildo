@@ -92,6 +92,30 @@ No review process, however grounded, catches everything before ship. The doctrin
 
 The escape-rate LEDGER that measures whether this bounding is actually improving over time is §5.1 below — this section states the standard it is measured against; §5 states how the number gets tracked and fed back.
 
+### 4.6 GENERATED-AND-DRIFT-GUARDED beats DOCUMENTED — the strongest rule in this spec (added 2026-08-16, Phase B B3 output panel)
+
+**A contract that is written down but not enforced will be re-derived by hand, and the hand will get it wrong.** This is not a hypothesis. The B3 output panel produced ~20 findings on one commit, and **the two most consequential were already written down**:
+
+- **Spec 47 `:685` + §11.1** already mandate that `records_updated` sum `rowCount` from every UPDATE against the primary entity. `enrich-parcels.js:1929` has emitted the pass-1 (zoning) count only since it was written — 4 of 5 passes uncounted. A gate built on that number provably SKIPPED runs that updated 190 parcels and reported PASS. **A pre-existing spec violation, shipped, unnoticed, and then depended upon.**
+- **`docs/reference/data-lineage-map.md:856`** already states `lot_size_sqm` is produced by `parcels` and consumed by `compute_parcel_cost_estimates`. B3 hand-wrote `UPSTREAM_SLUGS` from human reasoning and omitted it. A grounding agent then rediscovered by code-reading a fact that `npm run lineage-docs` emits automatically.
+
+The control case is in the same repo: **nobody hand-maintains column lineage**, because `data-lineage-map.infra.test.ts` fails CI when the generated artifact drifts. The mechanism — *derive from the DB, commit the artifact, fail CI on drift* — is proven here and is the only thing that has reliably stopped re-derivation.
+
+**The rule.** For any cross-step contract — what a step produces and consumes, what its counters MEAN, which statuses it can emit — the ladder is:
+1. **Generated from the system itself** (DB, `emitMeta`, migrations) — the only tier that cannot rot silently.
+2. **Drift-guarded in CI** — the artifact is committed and a test fails when code and artifact disagree.
+3. **Consumed by the code that depends on it** — a gate derives its upstream set from the generated lineage; it does not hand-maintain a slug array beside it.
+
+A contract that stops at "documented in a spec" is at tier 0 and should be treated as **unverified** in any review. **Do not accept "the spec says so" as grounding** — check that something enforces it. Corollary for plans: a step introducing a NEW cross-step dependency must state which tier its contract sits at, and a tier-0 answer is a finding.
+
+Currently at tier 1–2: column lineage (`data-lineage-map.md`), logic variables (`logic-variables-registry.md`), DB schema (`db:docs`). Currently at tier 0 and therefore the live re-derivation surface: **counter semantics** (Spec 47 §11.1 — written, unenforced, violated), **status/skip vocabulary** (`deferred_to_full` / `skipped` / run-chain's `duration_ms = 0` convention / in-script gate skips — four classes discovered separately by four different reviewers in one session), and **upstream dependency sets** (hand-maintained slug arrays). Closing those is a WF1, filed — not a review-process change.
+
+### 4.7 An inherited fact is not a grounded fact
+
+§11.1's "no unexecuted executable claim" has a corollary the B3 panel established the hard way: **a fact repeated from another agent's report carries none of that agent's grounding.** In one session, five DB facts propagated as settled and were wrong — a seat asserted migration 243 unapplied with high-water 225 (both false); a seat transposed a step's last-real-run date by a month; per-pass counts of 95/217 were cited from a summary and traced to 0/0 in the actual run; the orchestrator repeated "no cloud access" from an agent whose session lacked it while its own `.env` had the credentials, and repeated the transposed date twice more.
+
+None of these took more than one query to check. All were repeated because they arrived pre-packaged as conclusions. **Treat another agent's factual claim exactly as you would a CLI's (§9 of Spec 08): as a lead requiring adjudication, not as evidence.** Where two agents disagree about the same table, the disagreement is settled by querying it — not by preferring the more confident report.
+
 ---
 
 ## 5. The improvement loop — how the process improves itself
@@ -114,6 +138,19 @@ Spec 05 §2 ranks five durable destinations by enforcement strength — test (au
 Every rule in §1–§4 above carries the incident that forced it — not because incident-citation is decoration, but because a rule without one is a guess about what the next failure will look like, and guesses decay the moment reality diverges from them (the C2 premise — a true count, a guessed inference — is the same failure shape at the level of a SQL query as an uncited protocol rule is at the level of process). Any future amendment to this doctrine, or to Spec 08 §11, must cite the specific run/commit/date that exposed the gap it closes. A rule that cannot point at the incident it prevents is a candidate for deletion, not for enforcement.
 
 ---
+
+### 5.6 Proportionality — the apparatus must not outgrow the change (added 2026-08-16)
+
+The B3 output panel consumed **thirteen agents on one commit**: six seats, three re-runs after a substrate defect, two grounding passes, two more grounding agents. Each addition had a real justification at the moment it was made. The aggregate was thrash, and the operator said so before the process noticed on its own.
+
+The retrospective signal is sharp and worth encoding, because it predicts which rounds are worth their cost:
+
+- **The cheap rounds collapsed uncertainty.** A fence check (one agent, ~8 min) settled the trigger question by `pg_trigger` query, the origin question by `git log -L`, and the consumer question by grep — and found the governing Spec 47 clause that reframed the whole fix from "risky design change" to "spec-compliance restoration". A Reality-Check measured 88,575 rows and reduced "should we guard this write path?" to a single scoping decision.
+- **The expensive round generated work.** The six-seat panel produced findings that then required grounding rounds to become actionable, and three of its seats could not execute at all.
+
+**The differentiator is not agent count, effort tier, or seniority — it is whether the question has a mechanical answer.** "Does a trigger fire on this UPDATE?" "What does `git blame` say?" "How many rows actually differ?" "Which spec clause governs this counter?" — these are cheap, decisive, and cannot be hallucinated. "Is this design sound?" is none of those.
+
+**The rule:** before spawning a panel, extract every question with a mechanical answer and answer it first. Panel the remainder. A panel convened over questions that a query would have settled will return confident prose instead of facts, and each such finding then costs a grounding round to convert. Escalating review depth is the correct response to *unresolved judgment*; it is the wrong response to *unqueried state*, and mistaking the second for the first is how a process becomes ritual (§5.5's amendment bar exists to stop exactly this).
 
 ## 6. Domain boundaries
 
