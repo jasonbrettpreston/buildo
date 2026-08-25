@@ -25,7 +25,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const OpenAI = require('openai');
-const { splitTemplate, substitutePlaceholders } = require('./lib/review-template');
+const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock } = require('./lib/review-template');
 
 const MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-reasoner';
 const BASE_URL = 'https://api.deepseek.com';
@@ -120,6 +120,12 @@ End with a 1-paragraph overall verdict.`;
   let prompt = `## File: ${filePath}\n\n\`\`\`\n${code}\n\`\`\``;
   if (context) {
     prompt += `\n\n## Additional context: ${contextPath}\n\n\`\`\`\n${context}\n\`\`\``;
+  }
+  // Spec 120 §3.4 — a sibling <stem>.notes.json ships its review_notes automatically.
+  const notes = loadReviewNotesBlock(filePath);
+  if (notes) {
+    prompt += notes.block;
+    console.log(`📝 Included review_notes from sibling .notes.json: ${notes.notesPath}\n`);
   }
   prompt += '\n\nReview this code adversarially. Find what the author missed.';
 

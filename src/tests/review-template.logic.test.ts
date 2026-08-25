@@ -138,3 +138,52 @@ describe('substitutePlaceholders — placeholder replacement', () => {
     expect(result).toBe('Plan: $1 $2 ${SHELL} \\n literal');
   });
 });
+
+describe('loadReviewNotesBlock — sibling <stem>.notes.json → prompt block (Spec 120 §3.4)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { loadReviewNotesBlock } = require('../../scripts/lib/review-template');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require('fs');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const os = require('os');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const path = require('path');
+
+  function fixtureDir(): string {
+    return fs.mkdtempSync(path.join(os.tmpdir(), 'review-notes-'));
+  }
+
+  it('returns null (never throws) when no sibling notes file exists', () => {
+    const dir = fixtureDir();
+    const step = path.join(dir, 'step.js');
+    fs.writeFileSync(step, '// step');
+    expect(loadReviewNotesBlock(step)).toBeNull();
+  });
+
+  it('returns null for malformed JSON or a notes file without review_notes', () => {
+    const dir = fixtureDir();
+    fs.writeFileSync(path.join(dir, 'a.js'), '');
+    fs.writeFileSync(path.join(dir, 'a.notes.json'), '{ not json');
+    expect(loadReviewNotesBlock(path.join(dir, 'a.js'))).toBeNull();
+    fs.writeFileSync(path.join(dir, 'b.js'), '');
+    fs.writeFileSync(path.join(dir, 'b.notes.json'), JSON.stringify({ expected: ['x'] }));
+    expect(loadReviewNotesBlock(path.join(dir, 'b.js'))).toBeNull();
+  });
+
+  it('renders review_notes (strings and objects) in a delimited block naming the notes path', () => {
+    const dir = fixtureDir();
+    const step = path.join(dir, 'assert-schema.js');
+    fs.writeFileSync(step, '');
+    fs.writeFileSync(
+      path.join(dir, 'assert-schema.notes.json'),
+      JSON.stringify({ review_notes: ['Check the omit path.', { what: 'HEAD only', why: 'no body' }] }),
+    );
+    const result = loadReviewNotesBlock(step);
+    expect(result).not.toBeNull();
+    expect(result.notesPath.endsWith('assert-schema.notes.json')).toBe(true);
+    expect(result.block).toContain(`## Review notes (from ${result.notesPath})`);
+    expect(result.block).toContain('- Check the omit path.');
+    expect(result.block).toContain('"what":"HEAD only"');
+    expect(result.block).toContain('<!-- end review notes -->');
+  });
+});

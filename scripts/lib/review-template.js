@@ -15,6 +15,12 @@
  */
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+
+/** Sibling suffix for a step's prose notes file (Spec 120 §3.4). */
+const NOTES_SUFFIX = '.notes.json';
+
 /**
  * Split a template into systemInstruction + user prompt template.
  *
@@ -72,4 +78,35 @@ function substitutePlaceholders(userTemplate, { plan, specs, dataContext = '' })
     .replace(/\{\{DATA_CONTEXT\}\}/g, dataContext);
 }
 
-module.exports = { splitTemplate, substitutePlaceholders };
+/**
+ * Locate the sibling `<stem>.notes.json` of a reviewed file and render its
+ * `review_notes` block (Spec 120 §3.4 — the prose that must reach the
+ * reviewer automatically). Pure lookup: never throws — a missing, unreadable
+ * or malformed notes file, or one with no `review_notes`, yields `null`.
+ *
+ * @param {string} filePath - the file under review (relative or absolute).
+ * @returns {{ notesPath: string, block: string } | null}
+ *   `block` is a delimited markdown section ready to append to the prompt.
+ */
+function loadReviewNotesBlock(filePath) {
+  const abs = path.resolve(filePath);
+  const stem = path.basename(abs, path.extname(abs));
+  const notesPath = path.join(path.dirname(abs), `${stem}${NOTES_SUFFIX}`);
+  if (!fs.existsSync(notesPath)) return null;
+  let notes;
+  try {
+    notes = JSON.parse(fs.readFileSync(notesPath, 'utf8'));
+  } catch {
+    return null;
+  }
+  const reviewNotes = notes && typeof notes === 'object' ? notes.review_notes : undefined;
+  if (!Array.isArray(reviewNotes) || reviewNotes.length === 0) return null;
+  const rel = path.relative(process.cwd(), notesPath).split(path.sep).join('/');
+  const body = reviewNotes
+    .map((n) => (typeof n === 'string' ? `- ${n}` : `- ${JSON.stringify(n)}`))
+    .join('\n');
+  const block = `\n\n## Review notes (from ${rel})\n\n${body}\n\n<!-- end review notes -->`;
+  return { notesPath: rel, block };
+}
+
+module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX };

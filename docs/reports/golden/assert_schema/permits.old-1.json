@@ -1,0 +1,175 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "C:/Users/User/Buildo/.claude/worktrees/wt-old-3e0b6636/scripts/quality/assert-schema.js",
+  "chain": "permits",
+  "git_head": "3e0b66365af4a1e0cacad064828e6172dae90917",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": null,
+    "records_updated": null,
+    "records_meta": {
+      "checks_passed": "all",
+      "checks_failed": 0,
+      "audit_table": {
+        "phase": 1,
+        "name": "Schema Validation",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "permit_columns_checked",
+            "value": 11,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "schema_mismatch_count",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels_schema_mismatch_count",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels_other_errors",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "api_errors",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 1104,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "CKAN API": [
+          "metadata"
+        ]
+      },
+      "writes": {
+        "pipeline_runs": [
+          "checks_passed",
+          "checks_failed"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "\n=== CQA Tier 1: Schema Validation ===\n\n  Fetching metadata for Building Permits...\n  OK: Building Permits — all 11 expected columns present (32 total)\n  OK: Building Permits — EST_CONST_COST type coercion verified\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"checks_passed\":\"all\",\"checks_failed\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"permit_columns_checked\",\"value\":11,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"schema_mismatch_count\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"parcels_schema_mismatch_count\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"parcels_other_errors\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"api_errors\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1104,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"CKAN API\":[\"metadata\"]},\"writes\":{\"pipeline_runs\":[\"checks_passed\",\"checks_failed\"]}}\n\n=== Schema Validation: COMPLETED (1.0s) ===\n\n\n[assert-schema] completed in 1.1s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1650,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "C:/Users/User/Buildo/.claude/worktrees/wt-old-3e0b6636/scripts/quality/assert-schema.js",
+    "chain": "permits",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Schema Validation",
+          "phase": 1,
+          "rows": [
+            {
+              "metric": "permit_columns_checked",
+              "status": "INFO",
+              "threshold": null,
+              "value": 11
+            },
+            {
+              "metric": "schema_mismatch_count",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "parcels_schema_mismatch_count",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "parcels_other_errors",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "api_errors",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "checks_failed": 0,
+        "checks_passed": "all"
+      },
+      "records_new": null,
+      "records_total": 0,
+      "records_updated": null
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "CKAN API": [
+            "metadata"
+          ]
+        },
+        "writes": {
+          "pipeline_runs": [
+            "checks_passed",
+            "checks_failed"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "=== CQA Tier 1: Schema Validation ===",
+      "  Fetching metadata for Building Permits...",
+      "  OK: Building Permits — all 11 expected columns present (32 total)",
+      "  OK: Building Permits — EST_CONST_COST type coercion verified",
+      "=== Schema Validation: COMPLETED (<DUR>) ===",
+      "[assert-schema] completed in <DUR>"
+    ]
+  }
+}
