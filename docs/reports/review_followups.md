@@ -3,6 +3,17 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## `chain_sources` WARN classification — two check-calibration defects (2026-08-25)
+
+Source: cloud `chain_sources` run 3463 (started 2026-08-24T21:22Z, `completed_with_warnings`) WARN classification sweep across all 8 WARN-verdict steps. Six traced to known/persistent data tails (footprint-coverage, geocode/link-rate backlogs, centreline feed tail, etc. — no action); two are newly-identified defects in the CHECKS themselves, filed here.
+
+| Severity | Source | Item | Disposition |
+|----------|--------|------|--------------|
+| MED | WARN classification sweep, 2026-08-25 | **`parcels_null_address_pct` gate is permanently unsatisfiable by design.** `scripts/lib/parcels-csv-drift.js:27-35` documents that `ADDRESS_NUMBER` was deliberately dropped from the source CSV's `REQUIRED_CSV_COLUMNS` ("the 3 removed columns are kept as LEGACY... address lookup routes through address_points... going forward"), and `load-parcels.js:508-525` confirms `record.ADDRESS_NUMBER` is now always empty, so every ingested row increments `nullAddressCount`. Live cloud value is 100.0% against the `< 10%` threshold (`sources:parcels` run 3468, 2026-08-24), and every run since the column was dropped reads the same. The threshold measures a structural fact the pipeline itself created, not a data-quality regression — it can never again pass. | **ACT** — WF3: retire the check, or rebase it onto `address_points`/`parcel_address_points` bridge coverage (the column's documented replacement), so the gate reflects the current architecture instead of WARNing forever. |
+| MED | WARN classification sweep, 2026-08-25 | **`massing_zero_link_ghost`'s founding comment claims a "measured day-one value 0" that no cloud observation supports.** `enrich-parcels.js:1896-1901` states "Measured day-one value 0 (backfill ruling) — WARN, forward-looking," but both cloud rows recorded for this metric (`sources:enrich_parcels` runs 3456 and 3485, both 2026-08-24 — no earlier row exists) read 1395, not 0. Either the day-one claim was verified against a different (non-cloud) DB and never held on cloud, or a regression predates the metric shipping and was never caught for lack of an earlier baseline to compare against. | **ACT** — WF3: measure whether 1395 represents real orphaned massing links (fix the ghosts) or a false claim in the comment (correct it); either way the comment must stop asserting a value that has never actually been observed. |
+
+---
+
 ## Spec 122 §S2-min — `pipeline.step()` output-review DEFER (2026-08-24)
 
 Source: S2-min review panel (`scripts/lib/step/`). One item, and it BLOCKS a specific future decision rather than the current slice.
