@@ -259,10 +259,15 @@ describe('Pipeline Advisory Lock Compliance (§47 §R2)', () => {
     for (const file of uniqueJsFiles) {
       it(`${path.basename(file)} (${file})`, () => {
         const source = readScript(file);
+        // Spec 122 §5.4 widening: a step converted to the §5.1 frozen shape does not
+        // spell the lock itself — `pipeline.step(descriptor, compute)` acquires it from
+        // `descriptor.identity.lock` inside scripts/lib/step/index.js, which is the ONE
+        // withAdvisoryLock call site for every converted step. The intent is unchanged
+        // (no script may hand-roll pg_try_advisory_lock); only the delegation form is new.
         expect(
-          source,
-          `${file} must call pipeline.withAdvisoryLock(...)`,
-        ).toContain('withAdvisoryLock');
+          source.includes('withAdvisoryLock') || source.includes('pipeline.step('),
+          `${file} must call pipeline.withAdvisoryLock(...) — or delegate it to pipeline.step() (Spec 122 §5.1)`,
+        ).toBe(true);
       });
     }
   });

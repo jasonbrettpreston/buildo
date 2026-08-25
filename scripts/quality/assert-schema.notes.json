@@ -1,0 +1,149 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/quality/assert-schema.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations. This file carries 10, and",
+    "descriptor.interpretation.entries must equal that number. There are exactly two",
+    "legal resolutions when a 13th wants in: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "`fences` and `counts` are RECORD blocks, not prose — they are not counted against",
+    "the cap. `fences` lives here because the descriptor schema's root is",
+    "additionalProperties:false and has no fences category (Spec 120 §14.0)."
+  ],
+
+  "expected_shape": [
+    {
+      "what": "A healthy run reports one observation per SELECTED check and nothing else; the audit table therefore has exactly as many rows as the chain selects — permits 3, coa 2, sources 6, standalone 9.",
+      "measured": {
+        "value": { "permits": 3, "coa": 2, "sources": 6, "standalone": 9 },
+        "date": "2026-08-25",
+        "query": "node -e \"const {selectChecks}=require('./scripts/lib/step/verdict.js');const d=require('./scripts/quality/assert-schema.descriptor.json');for(const c of ['permits','coa','sources',null])console.log(c,selectChecks(d,c).length)\""
+      }
+    }
+  ],
+
+  "read_this_way": [
+    {
+      "what": "Every row value is a VIOLATION COUNT against `viol == 0`, not a population. `permit_columns: 0` means zero expected columns were missing, not that zero columns were checked; the population lives in the check's `expect` array.",
+      "measured": {
+        "value": { "permit_columns_expect": 11, "coa_columns_expect": 11, "address_point_columns_expect": 11, "parcel_columns_expect": 4, "zoning_resources": 10 },
+        "date": "2026-08-25",
+        "query": "node -e \"const d=require('./scripts/quality/assert-schema.descriptor.json');for(const c of d.checks)console.log(c.id, Array.isArray(c.expect)?c.expect.length:JSON.stringify(Object.keys(c.expect)))\""
+      }
+    }
+  ],
+
+  "suspicious_if": [
+    {
+      "signal": "permit_cost_type_sample reports 0 violations on a run where the CKAN datastore was unreachable — the check returns true on a non-OK sample response, so 'verified' and 'never ran' are the same row.",
+      "check": "permit_cost_type_sample",
+      "measured": {
+        "value": "1 omit path (`if (!res.ok) return true`)",
+        "date": "2026-08-25",
+        "query": "grep -n \"non-fatal\" scripts/lib/compute/assert-schema.js"
+      }
+    },
+    {
+      "signal": "A sources run completes in under a second. The step issues 18 network requests on the sources chain with no timeout and no retry; sub-second completion means something answered from a cache or a proxy, not that the archives are reachable.",
+      "check": "none",
+      "measured": {
+        "value": { "sources_requests": 18, "standalone_requests": 21, "timeout": "none", "retries": 0 },
+        "date": "2026-08-25",
+        "query": "grep -c \"await fetch(\" scripts/lib/compute/assert-schema.js && node -e \"const d=require('./scripts/quality/assert-schema.descriptor.json');console.log(d.execution.network)\""
+      }
+    }
+  ],
+
+  "blind_spots": [
+    {
+      "what": "The five archive checks are HTTP HEAD only. A reachable ZIP whose .dbf attributes have drifted passes this step and fails later, inside the loader that downloads it.",
+      "detected_by": "source_archives_reachable",
+      "measured": {
+        "value": 5,
+        "date": "2026-08-25",
+        "query": "node -e \"const d=require('./scripts/quality/assert-schema.descriptor.json');console.log(d.checks.find(c=>c.id==='source_archives_reachable').expect.http_head_ok.length)\""
+      }
+    },
+    {
+      "what": "The zoning pre-flight asserts the upsert key and geometry (plus HT_LABEL and PRCNT_CVER on the two overlays that carry them) and nothing else; the remaining attribute drift is only caught at load time by zoning-attr-drift.js.",
+      "detected_by": "zoning_resource_columns",
+      "measured": {
+        "value": { "resources": 10, "distinct_required_sets": 3, "columns_asserted_on_base": 6 },
+        "date": "2026-08-25",
+        "query": "node -e \"const d=require('./scripts/quality/assert-schema.descriptor.json');const r=d.checks.find(c=>c.id==='zoning_resource_columns').expect.resources;console.log(Object.keys(r).length, new Set(Object.values(r).map(v=>v.join(','))).size)\""
+      }
+    },
+    {
+      "what": "Nothing here observes a process kill. The ledger strand window closes THROWN errors only; a SIGKILL, an OOM or a runner cancel inside the 21-request network window leaves the pipeline_runs row 'running' and no check can see it.",
+      "detected_by": "none",
+      "measured": {
+        "value": "0 checks cover process death; the window is a `finally`",
+        "date": "2026-08-25",
+        "query": "grep -n \"finalizeStrandedRun\" scripts/lib/step/index.js"
+      }
+    }
+  ],
+
+  "decisions": [
+    {
+      "what": "permit_cost_type_sample is declared blocking:true, matching what the code does today, rather than the draft's blocking:false.",
+      "why": "A non-blocking FAIL is invisible to /api/quality (run-chain writes the literal status 'completed'), and the review followup requires that to be resolved BEFORE any pilot declares one. Declaring blocking:false would also have smuggled a real behaviour change into a commit whose whole claim is that it changes nothing.",
+      "adjudicated": "operator, 2026-08-25 (option (a): defer + correct the descriptor)"
+    },
+    {
+      "what": "The four fences are carried in the OPEN — descriptor fields and one declared check — never hidden inside compute.",
+      "why": "58914fa8 becomes zoning_resource_columns.expect.resources; 1ceebd17 and f6047e89 become inputs.reads.externals entries and subjects of source_archives_reachable; 646ea5a7 becomes its own declared check, address_point_coordinate_source, whose OR-rule is stated in the check's why and in limitations because no limit form can express it.",
+      "adjudicated": "operator fence ruling, 2026-08-25"
+    }
+  ],
+
+  "known_normal": [
+    {
+      "what": "parcel_columns reporting 0 violations on the permits and coa chains is normal and is NOT evidence the parcels CSV was fetched. The source block is chain-gated, so on those two chains the compute reports a constant zero — exactly what the pre-conversion step did with its parcels_schema_mismatch_count rows.",
+      "measured": {
+        "value": { "chains": ["permits", "coa", "sources"], "actually_fetched_on": ["sources"] },
+        "date": "2026-08-25",
+        "query": "node -e \"const d=require('./scripts/quality/assert-schema.descriptor.json');console.log(d.checks.find(c=>c.id==='parcel_columns').chains)\""
+      }
+    }
+  ],
+
+  "fences": [
+    {
+      "const": "hasCoordinateSource() over the Address Points header, with LATITUDE/LONGITUDE/geometry kept OUT of the flat expect list",
+      "value": "geometry OR (LATITUDE AND LONGITUDE)",
+      "incident": "WF3 2026-05-30 — the flat LATITUDE/LONGITUDE requirement was dead on arrival: the live CSV ships a geometry GeoJSON column, so the flat form false-failed while the real loss mode (no coordinate source at all → a 0-row spatial bridge) went unchecked.",
+      "commit": "646ea5a7",
+      "lock_test": "src/tests/steps/assert_schema/violations.test.ts"
+    },
+    {
+      "const": "ZONING_RESOURCES — 10 CKAN DataStore resource ids with THREE distinct required column sets",
+      "value": "base 6 (_id, geometry, ZN_ZONE, ZN_STRING, COVERAGE, FSI_TOTAL) · height overlay adds HT_LABEL · lot-coverage overlay adds PRCNT_CVER · seven overlays require _id + geometry only",
+      "incident": "Spec 58 zoning enrichment — CRITICAL+HIGH: an overlay silently dropped from the pre-flight set, or a required attribute collapsed to the generic overlay pair, lets a zoning load run against a resource that no longer carries the column the enricher reads.",
+      "commit": "58914fa8",
+      "lock_test": "src/tests/steps/assert_schema/violations.test.ts"
+    },
+    {
+      "const": "RAVINE_URL in the archive-reachability set",
+      "value": "ravine-natural-feature-protection-area-wgs84.zip",
+      "incident": "Spec 59 §8c — datastore_active=false for the ravine layer, so reachability is the ONLY pre-flight signal; without it a vanished archive is first noticed by load-ravines.js after the chain has already started writing.",
+      "commit": "1ceebd17",
+      "lock_test": "src/tests/steps/assert_schema/violations.test.ts"
+    },
+    {
+      "const": "CENTRELINE_URL in the archive-reachability set",
+      "value": "centreline-version-2-4326.zip",
+      "incident": "Spec 62 §8c — same class as the ravine fence: the 40-column attribute and FEATURE_CODE_DESC/JURISDICTION value checks only run post-download, so losing the reachability HEAD removes every pre-flight signal the centreline load has.",
+      "commit": "f6047e89",
+      "lock_test": "src/tests/steps/assert_schema/violations.test.ts"
+    }
+  ],
+
+  "counts": {
+    "open_blind_spots": 1,
+    "unpromoted_suspicious_if": 1
+  }
+}

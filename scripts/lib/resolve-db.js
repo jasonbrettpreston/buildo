@@ -29,25 +29,33 @@
  *
  * ⚠️ THE FLOOR IS A COUNT, NOT A MAX. `schema_migrations` is keyed by
  * **`filename`** (`'244_fix_wsib_unlinked_index_comment.sql'`), not by a
- * numeric `version` column, and every one of these databases has GAPS. Measured
- * live 2026-08-23:
+ * numeric `version` column, and every one of these databases has GAPS.
+ *
+ * Measured 2026-08-25 (the 2026-08-23 row for the cloud DB is superseded — P2
+ * landed the pending migrations there, so its "237" no longer describes it):
  *
  *   | database                            | COUNT(*) | MAX(filename)  |
  *   |-------------------------------------|---------:|----------------|
  *   | localhost:5432/buildo (pre-cutover) |      222 | 225_…          |
- *   | cloud Supabase (postgres)           |      237 | 241_…          |
- *   | 127.0.0.1:54322/postgres (local)    |      241 | 244_…          |
+ *   | cloud Supabase (postgres)           |    (P2)  | 245_…          |
+ *   | 127.0.0.1:54322/postgres (local)    |      242 | 245_…          |
+ *
+ * The local DB has **242 rows** and carries migrations through **245**; per the
+ * P2 record the cloud DB has now had migrations through **245** applied too, so
+ * it is no longer the laggard the 223 floor was calibrated around.
  *
  * Parsing the leading integer out of MAX(filename) would give the pre-cutover
  * DB a **225** — ABOVE a 223 floor — and it would sail through. Only COUNT(*)
  * separates the three. Hence `migration_count`, and hence this note.
  *
  * ⚠️ FLOOR CALIBRATION CONSTRAINT. The floor must exclude the 222-migration
- * pre-cutover DB while NOT refusing the cloud DB, which has not yet received
- * migrations 240/242/243/244 (local-only until programme stage P2). That pins
- * the default to **223**: 222 < 223 ≤ 237. Callers whose script genuinely
- * requires a later schema may pass a HIGHER `minMigration`; nothing may pass a
- * floor above 237 until P2 lands, or cloud runs start refusing.
+ * pre-cutover DB while refusing nothing that is legitimately current. Before P2
+ * the cloud DB was the binding upper constraint (it lagged local by several
+ * migrations), which pinned the default to **223**. P2 has since brought cloud
+ * up to the same 245-series head as local, so 223 now clears both by a wide
+ * margin and is kept as a conservative floor rather than a tight one. Callers
+ * whose script genuinely requires a later schema may pass a HIGHER
+ * `minMigration`; raising the DEFAULT is a separate, measured decision.
  *
  * ⚠️ THE ONE SANCTIONED FLOOR EXEMPTION IS `scripts/migrate.js`. A floor check
  * there deadlocks the tool: a fresh database has ZERO migrations, the resolver

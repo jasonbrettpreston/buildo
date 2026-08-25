@@ -671,7 +671,7 @@ describe('Pipeline Chains', () => {
 
 describe('assert-schema.js EXPECTED_COA_COLUMNS sync with load-coa.js', () => {
   const schemaSource = fs.readFileSync(
-    path.join(__dirname, '../../scripts/quality/assert-schema.js'), 'utf-8'
+    path.join(__dirname, '../../scripts/lib/compute/assert-schema.js'), 'utf-8'
   );
   const coaSource = fs.readFileSync(
     path.join(__dirname, '../../scripts/load-coa.js'), 'utf-8'
@@ -708,7 +708,7 @@ describe('assert-schema.js EXPECTED_COA_COLUMNS sync with load-coa.js', () => {
 
 describe('assert-schema.js NEIGHBOURHOOD_ID_PROPS sync with load-neighbourhoods.js', () => {
   const schemaSource = fs.readFileSync(
-    path.join(__dirname, '../../scripts/quality/assert-schema.js'), 'utf-8'
+    path.join(__dirname, '../../scripts/lib/compute/assert-schema.js'), 'utf-8'
   );
 
   it('does not reference non-existent AREA_S_CD property', () => {
@@ -737,9 +737,12 @@ describe('assert-schema.js NEIGHBOURHOOD_ID_PROPS sync with load-neighbourhoods.
 // ── WF5 Audit Fix: CQA scripts write records_meta ────────────────────
 
 describe('CQA scripts write records_meta to pipeline_runs', () => {
-  it('assert-schema.js writes records_meta with checks_passed and checks_failed', () => {
+  // RE-HOMED (pilot 1, Spec 122 §5.1): assert_schema is a converted step, so its
+  // records_meta is assembled by the step library, not by the step file. Same keys,
+  // same guarantee; the file that writes them moved.
+  it('the step library writes records_meta with checks_passed and checks_failed', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-schema.js'), 'utf-8'
+      path.join(__dirname, '../../scripts/lib/step/index.js'), 'utf-8'
     );
     expect(source).toContain('records_meta');
     expect(source).toContain('checks_passed');
@@ -756,11 +759,14 @@ describe('CQA scripts write records_meta to pipeline_runs', () => {
     expect(source).toContain('checks_warned');
   });
 
-  it('assert-schema.js emits PIPELINE_SUMMARY with records_meta for chain orchestrator', () => {
+  // RE-HOMED (pilot 1, Spec 122 §5.1): the converted step's PIPELINE_SUMMARY is emitted
+  // by the library via pipeline.emitSummary(), which is the function that prints the
+  // literal `PIPELINE_SUMMARY:` marker run-chain.js parses. Same line on stdout.
+  it('the step library emits PIPELINE_SUMMARY with records_meta for chain orchestrator', () => {
     const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/quality/assert-schema.js'), 'utf-8'
+      path.join(__dirname, '../../scripts/lib/step/index.js'), 'utf-8'
     );
-    expect(source).toContain('PIPELINE_SUMMARY');
+    expect(source).toMatch(/PIPELINE_SUMMARY|emitSummary\(/);
     expect(source).toContain('records_meta');
   });
 
@@ -2143,7 +2149,7 @@ describe('assert-data-bounds.js cost/timing validation', () => {
 
 describe('assert-schema.js EST_CONST_COST type validation resilience', () => {
   const schemaSource = fs.readFileSync(
-    path.join(__dirname, '../../scripts/quality/assert-schema.js'), 'utf-8'
+    path.join(__dirname, '../../scripts/lib/compute/assert-schema.js'), 'utf-8'
   );
 
   it('filters out CKAN sentinel rows before type checking', () => {

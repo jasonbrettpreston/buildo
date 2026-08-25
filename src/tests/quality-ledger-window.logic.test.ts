@@ -192,8 +192,12 @@ describe('ledger-window — finalizeStrandedRun (the write)', () => {
 // not that a live throw traverses it (see the .db test for that), and they
 // cannot prove anything at all about SIGKILL.
 // ---------------------------------------------------------------------------
+// ⚠️ RE-HOMED, NOT RETIRED (pilot 1, Spec 122 §5.1). `assert-schema` used to sit in this
+// list. Its conversion to the frozen 7-line shape makes an in-file window unsatisfiable —
+// there is no INSERT and no `finally` left in the step file to assert on — so the library
+// gained the window instead and the five source locks below follow it onto
+// scripts/lib/step/index.js. Every assertion is preserved; only the file it reads moved.
 const SCRIPTS: Array<[string, string]> = [
-  ['assert-schema', 'scripts/quality/assert-schema.js'],
   ['assert-data-bounds', 'scripts/quality/assert-data-bounds.js'],
   ['assert-engine-health', 'scripts/quality/assert-engine-health.js'],
 ];
@@ -240,5 +244,50 @@ describe.each(SCRIPTS)('%s — the INSERT→finalize window is wrapped', (slug, 
       .filter((l) => !/^[})\];]+$/.test(l));
     const disallowed = code.filter((l) => !/^(pipeline\.log\.warn|\} catch|\})/.test(l));
     expect(disallowed, `throwable statements between INSERT and try: ${JSON.stringify(disallowed)}`).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The same five source locks, re-homed onto the step LIBRARY (pilot 1, commit 7).
+//
+// A step converted to the Spec 122 §5.1 frozen shape has no INSERT, no `finally`
+// and no error handling of its own — `pipeline.step(descriptor, compute)` owns the
+// whole lifecycle. The window therefore lives in scripts/lib/step/index.js, once,
+// for every converted step, instead of being copy-pasted per script. Stated ceiling
+// is unchanged: these are STATIC. They prove the shape is present, not that a live
+// throw traverses it, and they cannot prove anything at all about SIGKILL.
+// ---------------------------------------------------------------------------
+describe('scripts/lib/step/index.js — the INSERT→finalize window is wrapped (converted steps)', () => {
+  const src = readFileSync(join(process.cwd(), 'scripts/lib/step/index.js'), 'utf8').replace(/\r\n/g, '\n');
+
+  it('requires the shared ledger-window helper (one implementation, not three)', () => {
+    expect(src).toMatch(/require\(['"].*ledger-window['"]\)/);
+    expect(src).toMatch(/finalizeStrandedRun/);
+  });
+
+  it('the strand finalize runs in a `finally`, not on a happy path', () => {
+    expect(src).toMatch(/finally\s*\{[\s\S]{0,400}finalizeStrandedRun/);
+  });
+
+  it('tracks whether the NORMAL finalize landed (a bare finally would double-write)', () => {
+    expect(src).toMatch(/ledgerFinalized\s*=\s*false/);
+    expect(src).toMatch(/ledgerFinalized\s*=\s*true/);
+  });
+
+  it('captures the thrown error and RE-THROWS it (the window must not swallow a halt)', () => {
+    expect(src).toMatch(/catch\s*\(\s*\w+\s*\)\s*\{[\s\S]{0,300}windowError\s*=\s*\w+;[\s\S]{0,120}throw\s+\w+;/);
+  });
+
+  it('the window opens BEFORE the ledger row is INSERTed — the gap the hand-rolled form had cannot exist here', () => {
+    // The hand-rolled scripts open their window AFTER the INSERT, so the assertion
+    // there is "nothing throwable in between". The library opens the try FIRST and
+    // calls openLedgerRow() inside it, which is strictly stronger: there is no
+    // between. This asserts that ordering, which is the property the gap check was
+    // protecting all along.
+    const tryAt = src.indexOf('\n  try {');
+    const openAt = src.indexOf('openLedgerRow(pool');
+    expect(tryAt, 'no top-level try in runWithPool').toBeGreaterThan(-1);
+    expect(openAt, 'no openLedgerRow call').toBeGreaterThan(-1);
+    expect(tryAt, 'the ledger row is opened OUTSIDE the window').toBeLessThan(openAt);
   });
 });

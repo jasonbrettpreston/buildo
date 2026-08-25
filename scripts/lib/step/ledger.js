@@ -77,9 +77,12 @@ async function openLedgerRow(pool, slug) {
  * @param {import('pg').Pool} pool
  * @param {number|null} runId
  * @param {{slug:string, status:string, durationMs:number, errorMessage?:string|null, recordsMeta?:object|null, recordsTotal?:number|null, recordsNew?:number|null, recordsUpdated?:number|null}} outcome
+ * @returns {Promise<boolean>} true only when the UPDATE actually landed. The
+ *   caller needs this: a swallowed UPDATE failure leaves the row 'running', and
+ *   the ledger strand window (scripts/lib/ledger-window.js) is what closes it.
  */
 async function finalizeLedgerRow(pool, runId, outcome) {
-  if (!runId) return;
+  if (!runId) return false;
   if (outcome.status === RUN_STATUS.CRASHED) {
     // Structural, not defensive: see the file header. Reaching here would mean
     // a caller decided in-process that nothing judged, which is a contradiction.
@@ -120,8 +123,10 @@ async function finalizeLedgerRow(pool, runId, outcome) {
         outcome.recordsMeta ? JSON.stringify(outcome.recordsMeta) : null,
       ],
     );
+    return true;
   } catch (err) {
     pipeline.log.warn(`[${outcome.slug}]`, `pipeline_runs UPDATE failed: ${err.message}`);
+    return false;
   }
 }
 
