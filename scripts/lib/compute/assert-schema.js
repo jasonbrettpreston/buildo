@@ -291,6 +291,20 @@ async function checkUrlAccessible(url, label) {
 /**
  * The nine declared checks, reported as observations.
  *
+ * ⚠️ PEEL 8b — ERRORS ARE ATTRIBUTED BY CHECK ID, NOT BY SUBSTRING. The
+ * pre-conversion step decided which audit row an error belonged to by matching the
+ * message text (`includes('permit')`, `includes('coa')`, and a
+ * `zoning|ravine|centreline|…` alternation at `assert-schema.js:536`) — AS-D6, and
+ * the reason AS-D1's sources verdict read a raw `sourceErrors.length` instead of the
+ * rows. Every check now owns its own try/catch and hands the library
+ * `report(<checkId>, { error })`, so `scripts/lib/step/verdict.js` `checkRow` turns
+ * it into ONE row keyed by that check id and `deriveVerdict` reads the verdict off
+ * the rows. Two consequences: adding a source no longer carries an unrecorded
+ * "add a regex token" obligation, and a check that throws no longer suppresses the
+ * checks after it — the outer catch that used to swallow the whole run into one
+ * `ERROR:` line is gone, so an unexpected throw reaches the library and fails the
+ * step loudly instead of leaving eight checks silently unreported.
+ *
  * ⚠️ PEEL 8a — THE COMPUTE NO LONGER KNOWS WHAT A CHAIN IS. `stepCtx.checks` is
  * the SELECTED check-id list, derived by the library from
  * `sharing.varies_by_chain.checks` + `checks[].chains`
@@ -309,127 +323,134 @@ async function compute(stepCtx) {
 
   console.log('\n=== CQA Tier 1: Schema Validation ===\n');
 
-  try {
-    // Check permits resource
-    if (runs('permit_columns')) {
+  // Check permits resource
+  if (runs('permit_columns')) {
+    try {
       const permitFields = await fetchFieldNames(PERMITS_RESOURCE_ID, 'Building Permits');
       const permitColumnsOk = checkColumns(permitFields, EXPECTED_PERMIT_COLUMNS, 'Building Permits');
       stepCtx.report('permit_columns', { violations: permitColumnsOk ? 0 : 1 });
+    } catch (err) {
+      console.error(`  FAIL: Building Permits — ${err.message}`);
+      stepCtx.report('permit_columns', { error: err });
     }
+  }
 
-    if (runs('permit_cost_type_sample')) {
+  if (runs('permit_cost_type_sample')) {
+    try {
       const permitTypeOk = await validateTypeSample(PERMITS_RESOURCE_ID, 'Building Permits');
       stepCtx.report('permit_cost_type_sample', { violations: permitTypeOk ? 0 : 1 });
+    } catch (err) {
+      console.error(`  FAIL: Building Permits (cost type sample) — ${err.message}`);
+      stepCtx.report('permit_cost_type_sample', { error: err });
     }
+  }
 
-    // Check CoA active resource
-    if (runs('coa_columns')) {
+  // Check CoA active resource
+  if (runs('coa_columns')) {
+    try {
       const coaFields = await fetchFieldNames(COA_ACTIVE_RESOURCE_ID, 'CoA Active');
       const coaColumnsOk = checkColumns(coaFields, EXPECTED_COA_COLUMNS, 'CoA Active');
       stepCtx.report('coa_columns', { violations: coaColumnsOk ? 0 : 1 });
+    } catch (err) {
+      console.error(`  FAIL: CoA Active — ${err.message}`);
+      stepCtx.report('coa_columns', { error: err });
     }
+  }
 
-    // ------------------------------------------------------------------
-    // Source data validation
-    // ------------------------------------------------------------------
+  // ------------------------------------------------------------------
+  // Source data validation
+  // ------------------------------------------------------------------
 
-    // Address Points CSV — one fetch, two declared checks over the same header row.
-    if (runs('address_point_columns') || runs('address_point_coordinate_source')) {
+  // Address Points CSV — one fetch, two declared checks over the same header row.
+  if (runs('address_point_columns') || runs('address_point_coordinate_source')) {
+    try {
+      const apHeaders = await fetchCsvHeaders(ADDRESS_POINTS_URL, 'Address Points');
+      if (runs('address_point_columns')) {
+        const apColumnsOk = checkColumns(apHeaders, EXPECTED_ADDRESS_POINT_COLUMNS, 'Address Points');
+        stepCtx.report('address_point_columns', { violations: apColumnsOk ? 0 : 1 });
+      }
+      if (runs('address_point_coordinate_source')) {
+        // Coordinate-source contract (WF3 2026-05-30): geometry OR LATITUDE+LONGITUDE.
+        // The live CSV ships `geometry`; LAT/LONG are an accepted fallback. FAIL only
+        // if NEITHER is present (the real "0-row spatial bridge" loss mode).
+        const coordinateOk = hasCoordinateSource(new Set(apHeaders));
+        if (!coordinateOk) {
+          console.error('  FAIL: Address Points — no coordinate source column present');
+        }
+        stepCtx.report('address_point_coordinate_source', { violations: coordinateOk ? 0 : 1 });
+      }
+    } catch (err) {
+      console.error(`  FAIL: Address Points — ${err.message}`);
+      if (runs('address_point_columns')) stepCtx.report('address_point_columns', { error: err });
+      if (runs('address_point_coordinate_source')) stepCtx.report('address_point_coordinate_source', { error: err });
+    }
+  }
+
+  // Parcels CSV. Selected in permits, coa AND sources (Spec 79 CRIT-3a): peel 8a
+  // retires the constant `{violations: 0}` the permits/coa audit tables carried,
+  // so the row now says "we looked" wherever it appears.
+  if (runs('parcel_columns')) {
+    try {
+      const parcelHeaders = await fetchCsvHeaders(PARCELS_URL, 'Parcels');
+      const parcelColumnsOk = checkColumns(parcelHeaders, EXPECTED_PARCEL_COLUMNS, 'Parcels');
+      stepCtx.report('parcel_columns', { violations: parcelColumnsOk ? 0 : 1 });
+    } catch (err) {
+      console.error(`  FAIL: Parcels — ${err.message}`);
+      stepCtx.report('parcel_columns', { error: err });
+    }
+  }
+
+  // Massing / Ravine / Heritage x2 / Centreline shapefile ZIPs — accessibility
+  // check only. datastore_active=false for each, so no field-set check is
+  // possible pre-download; the attribute contracts are validated post-download
+  // inside load-ravines.js (Spec 59 §8c), load-heritage.js (Spec 61 §8c) and
+  // load-centreline.js (Spec 62 §8c). One try per archive, exactly as before:
+  // one unreachable archive must not hide the other four.
+  if (runs('source_archives_reachable')) {
+    let archiveFailures = 0;
+    for (const archive of SOURCE_ARCHIVES) {
       try {
-        const apHeaders = await fetchCsvHeaders(ADDRESS_POINTS_URL, 'Address Points');
-        if (runs('address_point_columns')) {
-          const apColumnsOk = checkColumns(apHeaders, EXPECTED_ADDRESS_POINT_COLUMNS, 'Address Points');
-          stepCtx.report('address_point_columns', { violations: apColumnsOk ? 0 : 1 });
-        }
-        if (runs('address_point_coordinate_source')) {
-          // Coordinate-source contract (WF3 2026-05-30): geometry OR LATITUDE+LONGITUDE.
-          // The live CSV ships `geometry`; LAT/LONG are an accepted fallback. FAIL only
-          // if NEITHER is present (the real "0-row spatial bridge" loss mode).
-          const coordinateOk = hasCoordinateSource(new Set(apHeaders));
-          if (!coordinateOk) {
-            console.error('  FAIL: Address Points — no coordinate source column present');
-          }
-          stepCtx.report('address_point_coordinate_source', { violations: coordinateOk ? 0 : 1 });
-        }
+        await checkUrlAccessible(archive.url, archive.label);
       } catch (err) {
-        console.error(`  FAIL: Address Points — ${err.message}`);
-        if (runs('address_point_columns')) stepCtx.report('address_point_columns', { error: err });
-        if (runs('address_point_coordinate_source')) stepCtx.report('address_point_coordinate_source', { error: err });
+        archiveFailures += 1;
+        console.error(`  FAIL: ${archive.label} — ${err.message}`);
       }
     }
+    stepCtx.report('source_archives_reachable', { violations: archiveFailures });
+  }
 
-    // Parcels CSV. Selected in permits, coa AND sources (Spec 79 CRIT-3a): peel 8a
-    // retires the constant `{violations: 0}` the permits/coa audit tables carried,
-    // so the row now says "we looked" wherever it appears.
-    if (runs('parcel_columns')) {
+  // Neighbourhoods GeoJSON — property key validation
+  if (runs('neighbourhood_id_property')) {
+    try {
+      const nhoodKeys = await fetchGeoJsonPropertyKeys(NEIGHBOURHOODS_URL, 'Neighbourhoods');
+      const hasIdProp = NEIGHBOURHOOD_ID_PROPS.some((p) => nhoodKeys.includes(p));
+      if (!hasIdProp) {
+        console.error(`  FAIL: Neighbourhoods — no ID property found in: ${nhoodKeys.join(', ')}`);
+      } else {
+        console.log(`  OK: Neighbourhoods — ID property found (${nhoodKeys.length} total properties)`);
+      }
+      stepCtx.report('neighbourhood_id_property', { violations: hasIdProp ? 0 : 1 });
+    } catch (err) {
+      console.error(`  FAIL: Neighbourhoods — ${err.message}`);
+      stepCtx.report('neighbourhood_id_property', { error: err });
+    }
+  }
+
+  // Toronto Zoning By-law — 10 CKAN DataStore resources (Spec 58).
+  if (runs('zoning_resource_columns')) {
+    let zoningFailures = 0;
+    for (const zr of ZONING_RESOURCES) {
       try {
-        const parcelHeaders = await fetchCsvHeaders(PARCELS_URL, 'Parcels');
-        const parcelColumnsOk = checkColumns(parcelHeaders, EXPECTED_PARCEL_COLUMNS, 'Parcels');
-        stepCtx.report('parcel_columns', { violations: parcelColumnsOk ? 0 : 1 });
-      } catch (err) {
-        console.error(`  FAIL: Parcels — ${err.message}`);
-        stepCtx.report('parcel_columns', { error: err });
-      }
-    }
-
-    // Massing / Ravine / Heritage x2 / Centreline shapefile ZIPs — accessibility
-    // check only. datastore_active=false for each, so no field-set check is
-    // possible pre-download; the attribute contracts are validated post-download
-    // inside load-ravines.js (Spec 59 §8c), load-heritage.js (Spec 61 §8c) and
-    // load-centreline.js (Spec 62 §8c). One try per archive, exactly as before:
-    // one unreachable archive must not hide the other four.
-    if (runs('source_archives_reachable')) {
-      let archiveFailures = 0;
-      for (const archive of SOURCE_ARCHIVES) {
-        try {
-          await checkUrlAccessible(archive.url, archive.label);
-        } catch (err) {
-          archiveFailures += 1;
-          console.error(`  FAIL: ${archive.label} — ${err.message}`);
-        }
-      }
-      stepCtx.report('source_archives_reachable', { violations: archiveFailures });
-    }
-
-    // Neighbourhoods GeoJSON — property key validation
-    if (runs('neighbourhood_id_property')) {
-      try {
-        const nhoodKeys = await fetchGeoJsonPropertyKeys(NEIGHBOURHOODS_URL, 'Neighbourhoods');
-        const hasIdProp = NEIGHBOURHOOD_ID_PROPS.some((p) => nhoodKeys.includes(p));
-        if (!hasIdProp) {
-          console.error(`  FAIL: Neighbourhoods — no ID property found in: ${nhoodKeys.join(', ')}`);
-        } else {
-          console.log(`  OK: Neighbourhoods — ID property found (${nhoodKeys.length} total properties)`);
-        }
-        stepCtx.report('neighbourhood_id_property', { violations: hasIdProp ? 0 : 1 });
-      } catch (err) {
-        console.error(`  FAIL: Neighbourhoods — ${err.message}`);
-        stepCtx.report('neighbourhood_id_property', { error: err });
-      }
-    }
-
-    // Toronto Zoning By-law — 10 CKAN DataStore resources (Spec 58).
-    if (runs('zoning_resource_columns')) {
-      let zoningFailures = 0;
-      for (const zr of ZONING_RESOURCES) {
-        try {
-          const fields = await fetchFieldNames(zr.id, zr.label);
-          if (!checkColumns(fields, zr.required, zr.label)) {
-            zoningFailures += 1;
-          }
-        } catch (err) {
+        const fields = await fetchFieldNames(zr.id, zr.label);
+        if (!checkColumns(fields, zr.required, zr.label)) {
           zoningFailures += 1;
-          console.error(`  FAIL: ${zr.label} — ${err.message}`);
         }
+      } catch (err) {
+        zoningFailures += 1;
+        console.error(`  FAIL: ${zr.label} — ${err.message}`);
       }
-      stepCtx.report('zoning_resource_columns', { violations: zoningFailures });
     }
-  } catch (err) {
-    // The pre-conversion outer catch (assert-schema.js:457-461). It sets no flag
-    // here because it needs none: a check this catch skipped was never reported,
-    // and an unreported check resolves to its DECLARED severity in
-    // scripts/lib/step/verdict.js — it can never read PASS.
-    console.error(`  ERROR: ${err.message}`);
+    stepCtx.report('zoning_resource_columns', { violations: zoningFailures });
   }
 }
 

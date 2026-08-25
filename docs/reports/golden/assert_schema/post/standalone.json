@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/quality/assert-schema.js",
   "chain": "none",
-  "git_head": "a7de95201ca9b08f47cd570c6db64a48e47c0bd3",
+  "git_head": "f25e64c15abd4327a9ab3b8de434e75447e808e1",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -80,7 +80,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 3067,
+            "value": 3376,
             "threshold": null,
             "status": "INFO"
           }
@@ -111,16 +111,16 @@
   "ledger_status": [
     "completed"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=242 (floor 33)\"}\n\n=== CQA Tier 1: Schema Validation ===\n\n  Fetching metadata for Building Permits...\n  OK: Building Permits — all 11 expected columns present (32 total)\n  OK: Building Permits — EST_CONST_COST type coercion verified\n  Fetching metadata for CoA Active...\n  OK: CoA Active — all 11 expected columns present (30 total)\n  Fetching CSV headers for Address Points...\n  OK: Address Points — all 11 expected columns present (38 total)\n  Fetching CSV headers for Parcels...\n  OK: Parcels — all 4 expected columns present (6 total)\n  Checking URL accessibility for 3D Massing...\n  OK: 3D Massing — URL accessible (200)\n  Checking URL accessibility for Ravine Protection...\n  OK: Ravine Protection — URL accessible (200)\n  Checking URL accessibility for Heritage Register...\n  OK: Heritage Register — URL accessible (200)\n  Checking URL accessibility for Heritage Conservation Districts...\n  OK: Heritage Conservation Districts — URL accessible (200)\n  Checking URL accessibility for Toronto Centreline...\n  OK: Toronto Centreline — URL accessible (200)\n  Fetching GeoJSON properties for Neighbourhoods...\n  OK: Neighbourhoods — ID property found (11 total properties)\n  Fetching metadata for Zoning Area (base)...\n  OK: Zoning Area (base) — all 6 expected columns present (25 total)\n  Fetching metadata for Zoning Height Overlay...\n  OK: Zoning Height Overlay — all 3 expected columns present (5 total)\n  Fetching metadata for Zoning Lot Coverage Overlay...\n  OK: Zoning Lot Coverage Overlay — all 3 expected columns present (3 total)\n  Fetching metadata for Zoning Building Setback Overlay...\n  OK: Zoning Building Setback Overlay — all 2 expected columns present (6 total)\n  Fetching metadata for Zoning Policy Area Overlay...\n  OK: Zoning Policy Area Overlay — all 2 expected columns present (5 total)\n  Fetching metadata for Zoning Policy Road Overlay...\n  OK: Zoning Policy Road Overlay — all 2 expected columns present (3 total)\n  Fetching metadata for Zoning Rooming House Overlay...\n  OK: Zoning Rooming House Overlay — all 2 expected columns present (6 total)\n  Fetching metadata for Zoning Parking Zone Overlay...\n  OK: Zoning Parking Zone Overlay — all 2 expected columns present (4 total)\n  Fetching metadata for Zoning Priority Retail Street Overlay...\n  OK: Zoning Priority Retail Street Overlay — all 2 expected columns present (7 total)\n  Fetching metadata for Zoning QueenStW Eat Community Overlay...\n  OK: Zoning QueenStW Eat Community Overlay — all 2 expected columns present (6 total)\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"checks_passed\":\"all\",\"checks_failed\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"permit_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"permit_cost_type_sample\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"coa_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"address_point_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"address_point_coordinate_source\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"source_archives_reachable\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"neighbourhood_id_property\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"zoning_resource_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":3067,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{},\"external\":[\"ckan_datastore_api\",\"address_points_csv\",\"parcels_csv\",\"massing_zip\",\"ravine_zip\",\"heritage_register_zip\",\"heritage_hcd_zip\",\"centreline_zip\",\"neighbourhoods_geojson\"]}\n\n[assert_schema] completed in 3.1s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=242 (floor 33)\"}\n\n=== CQA Tier 1: Schema Validation ===\n\n  Fetching metadata for Building Permits...\n  OK: Building Permits — all 11 expected columns present (32 total)\n  OK: Building Permits — EST_CONST_COST type coercion verified\n  Fetching metadata for CoA Active...\n  OK: CoA Active — all 11 expected columns present (30 total)\n  Fetching CSV headers for Address Points...\n  OK: Address Points — all 11 expected columns present (38 total)\n  Fetching CSV headers for Parcels...\n  OK: Parcels — all 4 expected columns present (6 total)\n  Checking URL accessibility for 3D Massing...\n  OK: 3D Massing — URL accessible (200)\n  Checking URL accessibility for Ravine Protection...\n  OK: Ravine Protection — URL accessible (200)\n  Checking URL accessibility for Heritage Register...\n  OK: Heritage Register — URL accessible (200)\n  Checking URL accessibility for Heritage Conservation Districts...\n  OK: Heritage Conservation Districts — URL accessible (200)\n  Checking URL accessibility for Toronto Centreline...\n  OK: Toronto Centreline — URL accessible (200)\n  Fetching GeoJSON properties for Neighbourhoods...\n  OK: Neighbourhoods — ID property found (11 total properties)\n  Fetching metadata for Zoning Area (base)...\n  OK: Zoning Area (base) — all 6 expected columns present (25 total)\n  Fetching metadata for Zoning Height Overlay...\n  OK: Zoning Height Overlay — all 3 expected columns present (5 total)\n  Fetching metadata for Zoning Lot Coverage Overlay...\n  OK: Zoning Lot Coverage Overlay — all 3 expected columns present (3 total)\n  Fetching metadata for Zoning Building Setback Overlay...\n  OK: Zoning Building Setback Overlay — all 2 expected columns present (6 total)\n  Fetching metadata for Zoning Policy Area Overlay...\n  OK: Zoning Policy Area Overlay — all 2 expected columns present (5 total)\n  Fetching metadata for Zoning Policy Road Overlay...\n  OK: Zoning Policy Road Overlay — all 2 expected columns present (3 total)\n  Fetching metadata for Zoning Rooming House Overlay...\n  OK: Zoning Rooming House Overlay — all 2 expected columns present (6 total)\n  Fetching metadata for Zoning Parking Zone Overlay...\n  OK: Zoning Parking Zone Overlay — all 2 expected columns present (4 total)\n  Fetching metadata for Zoning Priority Retail Street Overlay...\n  OK: Zoning Priority Retail Street Overlay — all 2 expected columns present (7 total)\n  Fetching metadata for Zoning QueenStW Eat Community Overlay...\n  OK: Zoning QueenStW Eat Community Overlay — all 2 expected columns present (6 total)\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"checks_passed\":\"all\",\"checks_failed\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"permit_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"permit_cost_type_sample\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"coa_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"address_point_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"address_point_coordinate_source\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"source_archives_reachable\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"neighbourhood_id_property\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"zoning_resource_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":3376,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{},\"external\":[\"ckan_datastore_api\",\"address_points_csv\",\"parcels_csv\",\"massing_zip\",\"ravine_zip\",\"heritage_register_zip\",\"heritage_hcd_zip\",\"centreline_zip\",\"neighbourhoods_geojson\"]}\n\n[assert_schema] completed in 3.4s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 1654,
+      "id": 1655,
       "pipeline": "assert_schema",
       "status": "completed",
-      "started_at": "2026-08-25T17:59:08.225Z",
-      "completed_at": "2026-08-25T17:59:11.247Z",
-      "duration_ms": 3069,
+      "started_at": "2026-08-25T18:03:51.244Z",
+      "completed_at": "2026-08-25T18:03:54.564Z",
+      "duration_ms": 3376,
       "records_total": null,
       "records_new": null,
       "records_updated": null,
@@ -189,7 +189,7 @@
               "threshold": null
             },
             {
-              "value": 3067,
+              "value": 3376,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -204,7 +204,7 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 1653,
+  "pipeline_runs_max_id_before": 1654,
   "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
