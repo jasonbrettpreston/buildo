@@ -87,13 +87,13 @@ Notation-only duplicates (`identity.contract_version` · `inputs.expect_nonempty
 
 > ### One shape · one menu · one compute
 >
-> **Every step in the estate is the same step, except for its compute.** It declares **17 categories**; those declarations answer **49 concerns**; every answer is chosen from a **closed menu**, and `"none"` is always a legal answer that must be written down. The library does everything else — identically, 64 times.
+> **Every step in the estate is the same step, except for its compute.** It declares **18 categories** (schema-canonical, §1.3 amendment); those declarations answer the schema's leaf-field concerns; every answer is chosen from a **closed menu**, and `"none"` is always a legal answer that must be written down. The library does everything else — identically, 64 times.
 >
 > **Three machines, and a step author touches only the first:**
 >
 > | | Machine | Who writes it | What it is |
 > |---|---|---|---|
-> | **1** | **DECLARE** | the step author | `<slug>.descriptor.json` — 17 categories, closed menus |
+> | **1** | **DECLARE** | the step author | `<file-stem>.descriptor.json` — 18 categories, closed menus |
 > | **2** | **DELEGATE** | nobody — the library | `pipeline.step(descriptor, compute)` runs the lifecycle |
 > | **3** | **VERIFY** | nobody — generated | the validator, the checks, the ledger, the differential |
 >
@@ -123,6 +123,7 @@ Notation-only duplicates (`identity.contract_version` · `inputs.expect_nonempty
 | 15 | `counters` | what feeds `records_total` / `_new` / `_updated` | closed | author | 22 |
 | 16 | `config` | logic_variables consumed + bounds + validation posture | closed | author | 33 |
 | 17 | `sharing` | chains~ · slug_forms~ · varies_by_chain · on_contention | closed | author | 6, 34 |
+| 18 | `terminals` | every exit path (array, `minItems: 1`, `$ref terminal`) — no terminal may declare a verdict; verdict is runner-owned, row-derived (R6, landed at S1) | closed | author | — |
 | — | **THE RUNNER** | ledger · verdict · audit rows · reconcile · WAP · error class · skip_reason · step_error · budget + duration tripwires · OpenLineage | — | **nobody** | 2, 4, 23 |
 | — | ⬦ **COMPUTE** | the domain logic | **OPEN** | author | **40 ⬦** |
 
@@ -130,7 +131,7 @@ Notation-only duplicates (`identity.contract_version` · `inputs.expect_nonempty
 
 | | Machine | Artifact | Who |
 |---|---|---|---|
-| **1** | **DECLARE** | `<slug>.descriptor.json` — 17 categories | the author |
+| **1** | **DECLARE** | `<file-stem>.descriptor.json` — 18 categories | the author |
 | **2** | **DELEGATE** | `pipeline.step(descriptor, compute)` | nobody — the library |
 | **3** | **VERIFY** | validator · checks · ledger · differential | nobody — generated |
 
@@ -201,11 +202,11 @@ Three questions get asked of this design repeatedly. Here they are, answered onc
 | `INGESTOR` | `write_discipline` + `retract` + `replay` + `empty_source` all required |
 | `LINK` / `MATCHER` | `invalidates` required; counters scoped by `writes.key` |
 
-**For an ASSERT, 6 of 17 categories collapse to `"none"`.** That is the archetype earning its place: it tells you which categories are live, and forces the rest to be *explicit* rather than *forgotten*.
+**For an ASSERT, most of the 18 categories collapse to `"none"`** (the draft `assert_schema` descriptor is the measured instance). That is the archetype earning its place: it tells you which categories are live, and forces the rest to be *explicit* rather than *forgotten*.
 
 ---
 
-### 1.2 ⚠️ THE CONTRACT — 17 categories, set in stone
+### 1.2 ⚠️ THE CONTRACT — 18 categories, set in stone (schema-canonical)
 
 > **This is the load-bearing rule of the whole programme.** The category list and the allowed responses are decided **once, for all 64 steps**. Extending a `!` vocabulary is a **runner change reviewed once**, never a per-step invention. A step that needs a value the menu lacks does not add one — it escalates (§7.3's kill criteria).
 >
@@ -223,7 +224,9 @@ node scripts/violations/extract-vocab.mjs docs/reports/generated/122-vocabulary.
 
 ⚠️ **It found 6 fields declared twice with differing values, independently reproducing the 3 that Spec 121 §12.1a already named** — `identity.archetype` (`INGESTOR|…` vs `ING|…`) · `identity.lock` (uniqueness scope) · `guards.schema_drift` (**one variant carries `warn`, the other does not — both contain `propagate`; the differing tokens are `warn` · `severity` · `blocking`, and a generator cannot choose**) — plus 3 borderline (`outputs.replay` bans `append_unsafe` two different ways; `staleness.pending`; `guards.empty_source`). ✅ **All six RESOLVED 2026-08-23 by operator rulings V1–V6 (see the round-2 ratification block), encoded in `step.schema.json` per R2.**
 
-### 1.3 The 17 categories
+### 1.3 The 18 categories
+
+> ⚠️ **Amended 2026-08-25 (Pilot 1 plan review):** the count is **18** — `step.schema.json.required` measured by `node -e "require('./scripts/steps/_schema/step.schema.json').required.length"` → 18; `terminals` landed as the 18th via R6 at S1. Under R2 the schema is canonical: any prose count in this spec that disagrees with the schema is stale, not authoritative. The **concerns** are the schema's leaf fields and are *generated*, not fixed here (walk measured 2026-08-25: 73 leaf fields, 58 top-level fields across the 18 categories). Prior prose said "17 categories / 49 concerns".
 
 | # | Category | Declares | Vocabulary |
 |---|---|---|---|
@@ -474,7 +477,7 @@ They are not parallel lists, and the Concern Index **adds no declaration surface
 
 | Home | Meaning | Count |
 |---|---:|---:|
-| one of the **17 categories** | the step declares it | **44** |
+| one of the **18 categories** | the step declares it | **44** |
 | **RUNNER** | the library owns it; **nothing is declared per step, and a step cannot opt out** | **4** |
 | **OPEN** | the compute | **1** |
 
@@ -594,7 +597,7 @@ Same shape for concern 9: `step_timeout_minutes` is manifest-only and **1 of 67 
 
 ### 1.9 What is NOT a canned response
 
-**15 of 17 categories are fully closed menus.** Two are deliberately not, and the boundary matters:
+**16 of 18 categories are fully closed menus** (18 per §1.3 amendment; `terminals` is closed via `$ref terminal`). Two are deliberately not, and the boundary matters:
 
 | Category | Closed part | Open part |
 |---|---|---|
@@ -744,12 +747,12 @@ That check's own description reads *"inert-INFO expected post-fix"* — a fix wa
 
 | File | Content | Executable? |
 |---|---|---|
-| `scripts/<slug>.js` | the call site: 3 lines | yes — but only `require` + one `pipeline.step()` |
-| `scripts/<slug>.descriptor.json` | Spec 120 §3's 13 categories | **no — data only** (A1) |
-| `scripts/<slug>.notes.json` | Spec 120 §3.4's interpretation, capped at 12 prose entries | no |
+| `scripts/<dir>/<file-stem>.js` (path unchanged from today) | the call site: the §5.1 frozen shape | yes — but only `require` + one `pipeline.step()` |
+| `scripts/<dir>/<file-stem>.descriptor.json` — sibling of the step file, same hyphenated stem (e.g. `scripts/quality/assert-schema.descriptor.json`; `step-conformance.infra.test.ts` derives it as `<file>.slice(0,-3)+'.descriptor.json'`) | the 18 categories of `step.schema.json` (§1.3) | **no — data only** (A1) |
+| `scripts/<dir>/<file-stem>.notes.json` | Spec 120 §3.4's interpretation, capped at 12 prose entries | no |
 | `scripts/lib/compute/<slug>.js` | the domain logic, exporting `compute` | yes |
 
-**The declaration is inherited wholesale from Spec 120 §3** — the 13 categories, the controlled vocabularies, the `†`/`~`/`!` markers, `severity ⊥ blocking`, the status enum, `notes.json` and its cap, and the rule that interpretive text may reference a check id but never quote a number. **122 changes none of it.** Do not re-specify it here; §3 of Spec 120 is the text.
+**The declaration is inherited from Spec 120 §3, extended to the schema's 18 categories (§1.3 amendment)** — the controlled vocabularies, the `†`/`~`/`!` markers, `severity ⊥ blocking`, the status enum, `notes.json` and its cap, and the rule that interpretive text may reference a check id but never quote a number. **122 changes none of it.** Do not re-specify it here; §3 of Spec 120 is the text.
 
 ### 4.2 `pipeline.step(descriptor, compute)`
 
@@ -837,7 +840,7 @@ Spec 120 §14.2's 4-tuple, unchanged: **rows** (full state, ordered by PK) · **
 
 **All three red on conversion #1** if the lock moves into `identity.lock` and `withAdvisoryLock` moves into the library.
 
-> **Convention:** keep `const ADVISORY_LOCK_ID = 55;` textually in the step file and pass it as `identity.lock`. One line per step, reversible. `:259-260` needs a one-line widening to accept `pipeline.step`. **Do not discover this on conversion #1.**
+> **Convention:** keep `const ADVISORY_LOCK_ID = 55;` textually in the step file and pass it as `identity.lock`. One line per step, reversible. the `toContain('withAdvisoryLock')` source-text assertion needs a one-line widening to accept `pipeline.step` (was cited as `:259-260`; measured at `:264-265` on 2026-08-25 — cite by anchor, line numbers rot). **Do not discover this on conversion #1.**
 
 ---
 
@@ -1040,7 +1043,7 @@ Migrations **245–248 are free** — 244 is the highest `[MEASURED]`. Sequencin
 
 **Spec 120 §14.1 proposes simplest / median / worst. That is the wrong axis for validating this contract, and the `assert_schema` audit proved it:**
 
-> An **ASSERT forces 6 of 17 categories to `"none"`** — `outputs`, `recovery`, `override`, `emits`, `config`, plus `counters: null` — and two more to a single value (`write_discipline: verdict_only`, `partial_fill: none`). **It exercises the least of the contract that any archetype can.** Picking by size would have frozen the template against the thinnest possible test.
+> An **ASSERT forces 6 of 18 categories to `"none"`** — `outputs`, `recovery`, `override`, `emits`, `config`, plus `counters: null` — and two more to a single value (`write_discipline: verdict_only`, `partial_fill: none`). **It exercises the least of the contract that any archetype can.** Picking by size would have frozen the template against the thinnest possible test.
 
 **Because `identity.archetype` drives the required-field profile (§3.0d), contract coverage is an archetype property, not a size property.** One representative per archetype, and **four are forced — they have exactly one member each** `[MEASURED]`:
 
@@ -1220,7 +1223,7 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 
 **Target files:** `scripts/lib/step/**` · `scripts/lib/compute/<slug>.js` · `scripts/<slug>.descriptor.json` · `scripts/<slug>.notes.json` · `scripts/ast-grep-rules/step-shape.yml` · `src/tests/step-conformance.infra.test.ts` · `scripts/violations/**` · migrations 245–248.
 
-**Out-of-scope files:** `scripts/manifest.json` — unchanged · `src/tests/pipeline-advisory-lock.infra.test.ts` — one regex widening at `:259-260` only (§5.4) · `scripts/lib/pipeline.js` — extended by export; **not** the home of the step runner (SH2) · `scripts/run-chain.js` — ⚠️ **one change is required, contrary to the original framing:** ledger-row ownership must consolidate into the library (claim #39), since `run-chain.js:716-732` writes the row for in-chain steps while standalone runs write their own and 11 of 27 branch on `PIPELINE_CHAIN`. That is inside Spec 120 §2's own *"~25–30 lines at three sites"* budget.
+**Out-of-scope files:** `scripts/manifest.json` — unchanged · `src/tests/pipeline-advisory-lock.infra.test.ts` — one regex widening at the `withAdvisoryLock` source-text assertion only (§5.4) · `scripts/lib/pipeline.js` — extended by export; **not** the home of the step runner (SH2) · `scripts/run-chain.js` — ⚠️ **one change is required, contrary to the original framing:** ledger-row ownership must consolidate into the library (claim #39), since `run-chain.js:716-732` writes the row for in-chain steps while standalone runs write their own and 11 of 27 branch on `PIPELINE_CHAIN`. That is inside Spec 120 §2's own *"~25–30 lines at three sites"* budget.
 
 **Cross-spec dependencies:** 47 (script protocol — §R1–R12 becomes the library's contract, not each script's) · 48 (§3.6/§3.7 observability) · 49 (coverage) · 79 · 113 (§5 pooler) · 115 (§2.5 staleness) · 118 (envelope, F2/F3) · 119 (**governs on conflict**) · 120 (design) · 121 (method).
 

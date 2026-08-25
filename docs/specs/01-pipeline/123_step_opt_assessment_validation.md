@@ -312,7 +312,7 @@ Full per-claim table: `docs/reports/generated/123-claim-plan.md`.
 | Gate | Criterion |
 |---|---|
 | **G4d** | every fence found in P3 has a **both-directions** lock test. *A both-directions lock test IS a violation test with its reversion patch* — recording it is a line in a file, not new work |
-| **G-shape** | the converted file passes the ast-grep shape rule (Spec 122 §4.1) and `pipeline.run(` no longer appears in it |
+| **G-shape** | the converted file passes the ast-grep shape rule (Spec 122 §5.1) and `pipeline.run(` no longer appears in it |
 
 ### 6.2 Stopping rule — and it must be able to fire
 
