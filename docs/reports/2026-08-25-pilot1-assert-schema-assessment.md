@@ -3,7 +3,7 @@
 **Target:** `scripts/quality/assert-schema.js` — **606 lines** (`wc -l`), lock 102, HEAD `8b857169`, last touched by `f32b1485` (2026-08-24, P3 strand window).
 **Plan:** `.cursor/active_task.md` (Pilot 1, folds A+B). **Governing:** Spec 123 §6 / §6.1 / §6.2 / §7 / §7.1; Spec 122 §5.1.
 **Supersedes:** `docs/reports/2026-08-23-assess-step01-assert-schema.md` (written at 571 lines; its *classifications* are inherited, its *numbers* are not — every figure below was re-measured this session per the operator ruling).
-**Status:** ASSESSMENT ONLY. No `src/`/`scripts/` code changed. PH-3 dispositions are **PROPOSALS — AWAITING OPERATOR ADJUDICATION (§7.1)**.
+**Status:** ASSESSMENT ONLY. No `src/`/`scripts/` code changed. PH-3 dispositions are **ADJUDICATED (operator, 2026-08-25)** under §7.1 — see §2.3 for the ruling and §2.5 for the Intent Ledger (commit 2 → G3).
 
 > Every count carries the command that produced it. Where the stale report's number differed, the difference is called out inline (`⚠ stale said …`).
 
@@ -107,6 +107,14 @@ $ grep -n "SPEC LINK"          → 3   :3 (41) :4 (42) :5 (43)
 5 call sites → **21 requests** in a standalone run, one host (`CKAN_BASE` `:23`; all 8 URLs `:47-65` share it):
 permits = `fetchFieldNames` `:304` + `validateTypeSample` `:309` = **2**; coa = `fetchFieldNames` `:317` = **1**; sources = 2 CSV (`:331` `:352`) + **5** HEAD (`:365` `:376` `:387` `:394` `:404`) + 1 GeoJSON (`:413`) + 10 zoning (`:445` ×10) = **18**. Total 2+1+18 = **21**. ⚠ stale said "CKAN ×2 · HEADs ×6" — the partition was wrong (CKAN datastore calls are 3 incl. the sample; HEADs are 5), the total 21 was right. No timeout, no retry, no `AbortSignal` (grep 0) → **AS-D8**.
 
+### 1.7 Boundary freeze — tables touched (machine-readable, Appendix H row counts)
+
+`pipeline_runs` is the only table (§1.2); the descriptor's `inputs.reads.tables` is `[]` (§1.2 "DB reads: NONE"). Row count measured this session: `SELECT COUNT(*) FROM pipeline_runs` on the local dev DB (`DATABASE_URL`, 2026-08-25).
+
+| Table | Rows | Access | Statements |
+|---|---|---|---|
+| `pipeline_runs` | 1644 | write (bookkeeping only; standalone path) | INSERT `:277` · UPDATE `:560` · strand UPDATE via `ledger-window.js:103` |
+
 ---
 
 ## 2. PH-3 — Intent ledger (commit 2 → G3)
@@ -133,9 +141,11 @@ $ ls scripts/analysis   → _rc_q.js audit-scope-accuracy.js backfill-admin-watc
 ```
 The top-right quadrant cannot be named; G3 is nonetheless **mandatory** because fence density 4 > 0 (§7 row 2). Instrument is an S6b item (plan decision 2).
 
-### 2.3 The four fences — evidence and PROPOSED dispositions
+### 2.3 The four fences — evidence and ADJUDICATED dispositions
 
-> **AWAITING OPERATOR ADJUDICATION §7.1.** This pass discovered; it may not retire. Each row gives (a) what the fence guards, (b) the construct(s) in the current file that encode it, (c) the reversion patch that a both-directions lock (G4d) must apply to go red, (d) a PROPOSED disposition.
+> **ADJUDICATED (operator, 2026-08-25) — §7.1.** The agent pass (commit 4 `d8a4d1ad`) discovered and proposed; the operator dispositioned. Each row gives (a) what the fence guards, (b) the construct(s) in the current file that encode it, (c) the reversion patch that a both-directions lock (G4d, `src/tests/steps/assert_schema/violations.test.ts`) applies to go red, (d) the ADJUDICATED disposition in the Spec 120 §14.3 closed vocabulary.
+>
+> **Operator ruling §7.1 (verbatim policy):** *"nothing is hidden — standardize wherever possible — always observable and intelligible."* Applied: 3 of the 4 fences become **DECLARED DATA** in the descriptor — `58914fa8` zoning 3 required-sets → `checks[].zoning_resource_columns.expect.resources`; `1ceebd17` ravine and `f6047e89` centreline → `inputs.reads.externals` + subjects of check `source_archives_reachable`. The coordinate OR-contract `646ea5a7` becomes a NAMED audit-emitting check `address_points_has_coordinate_source` — its logic in compute, its rule declared in `checks[].why` + `limitations`. Each still gets a both-directions lock (G4d). The attribution regex tokens (`:536`) stay for now and retire at peel 8b (replacement = check-id attribution, more observable). The strand window `f32b1485` → library (`scripts/lib/step/index.js` `finally`) per Fold A.
 
 A note on what the footers cover: for `58914fa8`, `1ceebd17`, `f6047e89` the `Severity:` line describes defects in the *sibling loader* (DataStore rewrite, L7c mass-delete, lock collision) — the `assert-schema.js` hunk in each is chain wiring. They are fences by CLAUDE.md's definition (a `Severity:` footer commit that touched this file); the intent recovered below is the intent of the hunk, not of the loader fix.
 
@@ -143,31 +153,78 @@ A note on what the footers cover: for `58914fa8`, `1ceebd17`, `f6047e89` the `Se
 - **Guards:** the sources chain must not HARD-FAIL on a column the loader does not consume. The flat `LATITUDE`/`LONGITUDE`/`geometry` requirement (added 2026-05-23) was *dead on arrival* — the live CSV ships `geometry`, not lat/lng. Replaced by an OR-contract: coordinate source present = `geometry` OR (`LATITUDE`+`LONGITUDE`), via a helper shared with the loader's WARN drift check. `git show --stat`: 4 files, `assert-schema.js` 27 lines (+17/−10).
 - **Constructs today:** import `:20`; rationale comment `:76-83`; `EXPECTED_ADDRESS_POINT_COLUMNS` `:84-96` **without** any coordinate column; the check block `:336-343` (`if (!hasCoordinateSource(new Set(apHeaders)))` → `allPassed=false` + `'Address Points: no coordinate source (geometry or LATITUDE+LONGITUDE)'`).
 - **Reversion patch (lock must go red on either):** (i) append `'LATITUDE','LONGITUDE','geometry'` to `EXPECTED_ADDRESS_POINT_COLUMNS`; (ii) delete `:339-343`. Fixture: headers = 11 expected + `geometry` ⇒ must PASS; headers = 11 + nothing ⇒ must FAIL; headers = 11 + `LATITUDE`+`LONGITUDE` ⇒ must PASS.
-- **PROPOSED: preserve-in-compute** — the helper already lives in `scripts/lib/address-points-csv-drift.js` (extracted by this very commit "so it can be unit-tested"); compute keeps the call as check `address_points_has_coordinate_source`; the expected-column list stays coordinate-free in the descriptor `expect`.
+- **ADJUDICATED (operator, 2026-08-25): `preserved-in-compute`** — with the declared-check note: the helper already lives in `scripts/lib/address-points-csv-drift.js` (extracted by this very commit "so it can be unit-tested"); compute keeps the call as the NAMED, audit-emitting check `address_points_has_coordinate_source` (one audit row per run, never silent); the OR-rule is declared in the descriptor at `checks[].why` + `limitations`, and the expected-column list stays coordinate-free in the descriptor `expect`. Logic in compute, rule observable in data.
 
 #### G-F2 — `58914fa8` `feat(58_source_zoning_bylaw)` — Severity **CRITICAL+HIGH** (loader-side)
 - **Guards:** the 10 Zoning By-law layers are ingested from the CKAN **DataStore** (the `_id` upsert key exists only in `datastore_search`), so pre-flight must assert each resource is reachable *as a DataStore resource* and carries `_id` + `geometry` (+ the per-layer regulatory columns the enricher reads). `git show --stat`: 22 files; `assert-schema.js` 33 lines (+31/−2).
 - **Constructs today:** `ZONING_RESOURCES` `:431-442` — 10 resource IDs with **three distinct `required` sets** (base 6 cols; height `HT_LABEL`; lot-coverage `PRCNT_CVER`; 7 × `['_id','geometry']`); loop `:443-455` calling `fetchFieldNames`; regex token `zoning` `:536`; `sources_checked` 4→14 (now 18) `:539`.
 - **Reversion patch:** (i) delete the `ZONING_RESOURCES` block + loop; (ii) drop `HT_LABEL`/`PRCNT_CVER` from their sets (the Fold A #2 collapse to 2 sets); (iii) drop `zoning` from the `:536` regex (a zoning drift then no longer reaches `schema_errors` → verdict PASS on drift, the exact AS-D1/AS-D6 shape).
-- **PROPOSED: preserve-in-compute** for (i)/(ii) — descriptor check `zoning_resource_columns` with the per-resource `expect` map (Fold A #2); **retire** (iii) at peel 8b when attribution moves from substring to check-id (the token becomes structurally unnecessary; its lock migrates to "a zoning FAIL row drives the verdict").
+- **ADJUDICATED (operator, 2026-08-25): `encoded-as-descriptor-field`** for (i)/(ii) — the three required sets become declared data at `checks[].zoning_resource_columns.expect.resources` (map resource id → required columns; Fold A #2), not code. (iii) the `zoning` regex token: **`knowingly-retired` at peel 8b** — it stays until attribution moves from substring to check-id (the token becomes structurally unnecessary; its lock migrates to "a zoning FAIL row drives the verdict").
 
 #### G-F3 — `1ceebd17` `feat(59_source_ravines)` — Severity **HIGH** (loader-side L7c)
 - **Guards:** the ravine ZIP must be reachable before `load_ravines` runs; `datastore_active=false` so no field-set check is possible pre-download — HEAD only, attributes validated in the loader. `git show --stat`: 19 files; `assert-schema.js` 17 lines (+15/−2).
 - **Constructs today:** `RAVINE_URL` `:52-53`; HEAD block `:372-381`; token `ravine` `:536`; `sources_checked` 14→15.
 - **Reversion patch:** delete `:375-381` (or the URL). Fixture: HEAD 404 on the ravine URL ⇒ must FAIL; 200 ⇒ PASS.
-- **PROPOSED: preserve-in-compute** — one subject of check `source_archives_reachable`; regex token retires with G-F2(iii).
+- **ADJUDICATED (operator, 2026-08-25): `encoded-as-descriptor-field`** — the ravine ZIP is declared at `inputs.reads.externals` and is one subject of check `source_archives_reachable`; the `ravine` regex token is `knowingly-retired` at peel 8b with G-F2(iii).
 
 #### G-F4 — `f6047e89` `feat(62_source_centreline)` — Severity **HIGH** (lock collision, loader-side)
 - **Guards:** the centreline ZIP must be reachable before `load_centreline`; the 40-col / `FEATURE_CODE_DESC`+`JURISDICTION` validation runs post-download. `git show --stat`: 12 files; `assert-schema.js` 18 lines (+16/−2).
 - **Constructs today:** `CENTRELINE_URL` `:60-63`; HEAD block `:401-409`; token `centreline` `:536`; `sources_checked` 17→18 `:539` (the literal's last increment).
 - **Reversion patch:** delete `:403-409`. Fixture as G-F3.
-- **PROPOSED: preserve-in-compute** — subject of `source_archives_reachable`; token retires with G-F2(iii).
+- **ADJUDICATED (operator, 2026-08-25): `encoded-as-descriptor-field`** — the centreline ZIP is declared at `inputs.reads.externals` and is a subject of `source_archives_reachable`; the `centreline` regex token is `knowingly-retired` at peel 8b with G-F2(iii).
 
-**Not counted as a fence (no `Severity:` footer) but 1 day old and load-bearing:** `f32b1485` P3 strand window (`:265-270`, `:290`, `:587-602`) and the throw-after-finalize ordering `:581-585`. Fold A already rules the library gains the window; its lock (`quality-ledger-window.logic.test.ts:196`) re-homes onto `scripts/lib/step/index.js`.
+**Not counted as a fence (no `Severity:` footer) but 1 day old and load-bearing:** `f32b1485` P3 strand window (`:265-270`, `:290`, `:587-602`) and the throw-after-finalize ordering `:581-585`. Fold A already rules the library gains the window; its lock (`quality-ledger-window.logic.test.ts:196`) re-homes onto `scripts/lib/step/index.js`. **ADJUDICATED (operator, 2026-08-25): `preserved-in-runner`** — the window and the finalize-before-throw ordering live in `scripts/lib/step/index.js` (`finally`), once, for every converted step.
 
 ### 2.4 Constants with no recovered why (G3 completeness)
 
-`INTENT-UNKNOWN`: the two `Range` windows `bytes=0-2048` `:205` / `bytes=0-8192` `:224`, the `limit=20` sample size `:161` (raised 5→20 by `aeb6e6c2`, rationale recorded), the `"Feature"` scan `:230` (`0f8d5912` — CRS-block skip, recorded). Of the 32 top-level constants the stale report counted, the 4 URLs + 2 Range windows + 3 regexes originating in `b4e3d56e` (empty body) remain INTENT-UNKNOWN. All 4 fence constructs have a recovered why → G3 satisfiable at adjudication.
+`INTENT-UNKNOWN`: the two `Range` windows `bytes=0-2048` `:205` / `bytes=0-8192` `:224`, the `limit=20` sample size `:161` (raised 5→20 by `aeb6e6c2`, rationale recorded), the `"Feature"` scan `:230` (`0f8d5912` — CRS-block skip, recorded). Of the 32 top-level constants the stale report counted, the 4 URLs + 2 Range windows + 3 regexes originating in `b4e3d56e` (empty body) remain INTENT-UNKNOWN. All 4 fence constructs have a recovered why. The INTENT-UNKNOWN constants are dispositioned in §2.5 under the same ruling (nothing hidden: the 4 URLs become `inputs.reads.externals`; the Range windows, the `limit=20` sample and the `"Feature"` scan stay in compute with their values declared in `limitations`; the 3 header/GeoJSON parsing regexes stay in compute as parsing mechanics) → G3 satisfied at commit 2.
+
+### 2.5 Intent Ledger (Spec 120 §14.3 — machine-readable; G3)
+
+Closed vocabulary: `preserved-in-runner | preserved-in-validator | preserved-in-compute | encoded-as-descriptor-field | encoded-as-deviation | knowingly-retired`. Discoverer ≠ adjudicator on every row (§7.1: the pass that discovers may not retire). Locks: `src/tests/steps/assert_schema/violations.test.ts` (G4d, both directions).
+
+| Construct | Origin | Discovered by | Disposition | Adjudicated by | Where it lands |
+|---|---|---|---|---|---|
+| Coordinate-source OR-contract (`hasCoordinateSource`, `:20`, `:76-83`, `:339-343`; coordinate-free `EXPECTED_ADDRESS_POINT_COLUMNS` `:84-96`) | fence `646ea5a7` fix(54) HIGH | agent pass, commit 4 `d8a4d1ad` (Claude) | `preserved-in-compute` — as the NAMED audit-emitting check `address_points_has_coordinate_source`; rule declared in `checks[].why` + `limitations` | operator (Brett), 2026-08-25, §7.1 | `scripts/lib/compute/assert-schema.js` + descriptor `checks[]` |
+| Zoning DataStore pre-flight — 10 resource ids, three distinct `required` sets (`ZONING_RESOURCES` `:431-442`, loop `:443-455`) | fence `58914fa8` feat(58) CRITICAL+HIGH | agent pass, commit 4 `d8a4d1ad` (Claude) | `encoded-as-descriptor-field` — `checks[].zoning_resource_columns.expect.resources` | operator (Brett), 2026-08-25, §7.1 | descriptor |
+| Ravine ZIP reachability (`RAVINE_URL` `:52-53`, HEAD `:375-381`) | fence `1ceebd17` feat(59) HIGH | agent pass, commit 4 `d8a4d1ad` (Claude) | `encoded-as-descriptor-field` — `inputs.reads.externals` + subject of check `source_archives_reachable` | operator (Brett), 2026-08-25, §7.1 | descriptor |
+| Centreline ZIP reachability (`CENTRELINE_URL` `:60-63`, HEAD `:403-409`) | fence `f6047e89` feat(62) HIGH | agent pass, commit 4 `d8a4d1ad` (Claude) | `encoded-as-descriptor-field` — `inputs.reads.externals` + subject of check `source_archives_reachable` | operator (Brett), 2026-08-25, §7.1 | descriptor |
+| Attribution regex tokens `zoning` / `ravine` / `centreline` in the sources alternation (`:536`) + `includes('permit'/'coa'/'ckan')` (`:473-483`, `:503-504`) | `58914fa8` (iii), `1ceebd17`, `f6047e89`, `d2036181` | agent pass, commit 4 `d8a4d1ad` (Claude) | `knowingly-retired` — at peel 8b, when attribution moves to check-id (`stepCtx.report(checkId, …)`); stays until then, lock migrates to "a zoning/ravine/centreline FAIL row drives the verdict" | operator (Brett), 2026-08-25, §7.1 | AS-D6 closes at 8b |
+| Ledger strand window + finalize-before-throw ordering (`:265-270`, `:290`, `:558-568` then `:585`, `:587-602`) | `f32b1485` P3 (no `Severity:` footer; load-bearing) | agent pass, commit 4 `d8a4d1ad` (Claude) | `preserved-in-runner` — `scripts/lib/step/index.js` `finally`, per Fold A; lock re-homes from `quality-ledger-window.logic.test.ts:196` | operator (Brett), 2026-08-25, §7.1 + Fold A | library |
+| `Range: bytes=0-2048` CSV header window (`:205`) | `b4e3d56e` (empty body) — INTENT-UNKNOWN | agent pass, commit 4 `d8a4d1ad` (Claude) | `preserved-in-compute` — value declared in descriptor `limitations` (nothing hidden) | operator (Brett), 2026-08-25, §7.1 | compute + `limitations` |
+| `Range: bytes=0-8192` GeoJSON window (`:224`) | `b4e3d56e` (empty body) — INTENT-UNKNOWN | agent pass, commit 4 `d8a4d1ad` (Claude) | `preserved-in-compute` — value declared in descriptor `limitations` | operator (Brett), 2026-08-25, §7.1 | compute + `limitations` |
+| `limit=20` type-sample size (`:161`) | `aeb6e6c2` (5→20, rationale recorded) | agent pass, commit 4 `d8a4d1ad` (Claude) | `preserved-in-compute` — sample size declared in `limitations` of check `permit_cost_type_sample` | operator (Brett), 2026-08-25, §7.1 | compute + `limitations` |
+| `"Feature"` scan before the properties regex (`:230-231`) | `0f8d5912` (CRS-block skip, recorded) | agent pass, commit 4 `d8a4d1ad` (Claude) | `preserved-in-compute` — parsing mechanic; noted in `limitations` | operator (Brett), 2026-08-25, §7.1 | compute |
+| 4 download URLs `ADDRESS_POINTS_URL` `PARCELS_URL` `MASSING_URL` `NEIGHBOURHOODS_URL` (`:46-51`, `:64-65`) | `b4e3d56e` (empty body) — INTENT-UNKNOWN | agent pass, commit 4 `d8a4d1ad` (Claude) | `encoded-as-descriptor-field` — `inputs.reads.externals` (with `HERITAGE_*` `:56-59`, Spec 61) | operator (Brett), 2026-08-25, §7.1 | descriptor |
+| 3 parsing regexes: CSV quote-strip (`:216`), `"properties"` block (`:233`), key pattern (`:239`) | `b4e3d56e` (empty body) — INTENT-UNKNOWN | agent pass, commit 4 `d8a4d1ad` (Claude) | `preserved-in-compute` — parsing mechanics of `fetchCsvHeaders` / `fetchGeoJsonPropertyKeys`; not behaviour | operator (Brett), 2026-08-25, §7.1 | compute |
+
+No row is `unknown`; 100% dispositioned. The `knowingly-retired` row names a human approver (operator) and a retirement point (peel 8b), and is not retired by this pass.
+
+### 2.6 Line accounting (Spec 120 §14.5 Gate 4c — 606 lines, 100%, no overlap)
+
+Categories: `runner-owned | validator-owned | descriptor-encoded | compute | dead (proved) | duplicate`. Measured against `git show HEAD:scripts/quality/assert-schema.js` (606 lines; the working tree already carries the uncommitted commit-7 frozen shape). No range is claimed `dead (proved)` — nothing was instrumented this session, and reading is not proof (Gate 4f). Blank lines are folded into the adjacent range.
+
+| Lines | Category | Evidence |
+|---|---|---|
+| 1-18 | descriptor-encoded | header: SPEC LINKs `:3-5` → `identity` / spec refs; usage + exit contract `:10-17` → `description`, `checks[].blocking` |
+| 19 | runner-owned | `require('../lib/pipeline')` — pool/lock/emits move to `scripts/lib/step/` |
+| 20 | compute | `require hasCoordinateSource` — fence `646ea5a7`, kept by the compute |
+| 21-22 | runner-owned | `require finalizeStrandedRun` — window becomes `scripts/lib/step/index.js` `finally` (Fold A) |
+| 23-65 | descriptor-encoded | `CKAN_BASE`, resource ids, `EXPECTED_PERMIT_COLUMNS`, `EXPECTED_COA_COLUMNS`, 8 URLs → `inputs.reads.externals` + `checks[].expect` |
+| 66-104 | descriptor-encoded | coordinate rationale comment `:76-83` → `checks[].why`; `EXPECTED_ADDRESS_POINT_COLUMNS`, `EXPECTED_PARCEL_COLUMNS`, `NEIGHBOURHOOD_ID_PROPS` → `checks[].expect` |
+| 105-107 | descriptor-encoded | `SLUG`, `ADVISORY_LOCK_ID` → `identity.name`, `identity.lock` (§5.4 source-text constant survives in the frozen file) |
+| 108-113 | runner-owned | `CHAIN_ID = process.env.PIPELINE_CHAIN` — chain context is read by the library |
+| 114-257 | compute | `fetchFieldNames`, `checkColumns`, `isSentinelValue`, `parseCost`, `validateTypeSample`, `fetchCsvHeaders`, `fetchGeoJsonPropertyKeys`, `checkUrlAccessible` — pure network/parse logic, exported from `scripts/lib/compute/assert-schema.js` |
+| 258-290 | runner-owned | `pipeline.run` `:259`, `withAdvisoryLock` `:260`, `startMs`, window declarations `:265-270`, ledger INSERT `:274-285`, window open `:290` |
+| 291-299 | descriptor-encoded | `runPermitChecks` / `runCoaChecks` / `runSourceChecks` → `checks[].chains` |
+| 300-461 | compute | the 9 checks: permits/coa fields + type sample, address points + OR-contract, parcels, 5 HEADs, neighbourhoods, `ZONING_RESOURCES` loop; `ZONING_RESOURCES` `:431-442` itself → `checks[].zoning_resource_columns.expect.resources` |
+| 462-499 | runner-owned | error attribution `:473-483` (AS-D6, retires 8b) + permits audit rows/verdict `:484-498` → library `verdict.js buildAuditTable` (row-derived) |
+| 500-521 | duplicate | coa audit block mirrors `:480-498` line-for-line (rows `:506-512` = `:485-489` with `coa_` prefix; `:508-509` comment restates `:464-470`); one descriptor `checks[]` list serves both chains |
+| 522-556 | runner-owned | `durationMs`, `status`, `errorMsg`, `records_meta` assembly incl. the sources IIFE `:531-555` (AS-D1 `:546`, AS-D5 `:539`) → library `verdict.js` + `ledger.js` |
+| 557-578 | runner-owned | finalize UPDATE `:558-568`, `emitSummary` `:571`, `emitMeta` `:572-575`, banner `:577` |
+| 579-606 | runner-owned | halt-on-drift throw `:585` (blocking checks → library throws), window catch/rethrow `:587-591`, `finally` strand close `:592-602`, lock close `:603`, contention `return;` `:605` (AS-D9) |
+
+Coverage: 18 ranges, 1-606 contiguous, sum 606, no line assigned twice (asserted by `#155`).
 
 ---
 
@@ -247,3 +304,52 @@ Fleet register: `docs/reports/defect-ledger.md` (this pilot's rows are its first
 ### 4.5 G6 statement
 
 Every behaviour in §1 is classified above (11 CONTRACT · 7 INCIDENTAL groups · 11 DEFECT rows), and every DEFECT carries a ledger ID present in `docs/reports/defect-ledger.md`. G6 is claimable at commit 4 **subject to** the §2.3 dispositions being adjudicated by the operator (§7.1) — the two are separate gates but the same commit pair.
+
+---
+
+## 5. Non-determinism inventory (commit 5 → G1′; Spec 120 §14.2, claim #151/#151a)
+
+Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden.js` (`VOLATILE_KEYS` ×11, `VOLATILE_METRIC_PREFIXES` `sys_`, `VOLATILE_PATTERNS` ×7) and the 7 keys the 4 pre captures actually stripped (`docs/reports/golden/assert_schema/pre/{permits,coa,sources,standalone}.json` → `nondeterminism[]`). Closed vocabulary: `must-match-exactly | normalize-then-match | excluded-with-reason`.
+
+| Key | Disposition | Reason / how |
+|---|---|---|
+| `key:pipeline_runs[0].id` | `excluded-with-reason` | serial PK — observed (standalone) |
+| `key:pipeline_runs[0].started_at` | `excluded-with-reason` | wall clock `NOW()` — observed (standalone) |
+| `key:pipeline_runs[0].completed_at` | `excluded-with-reason` | wall clock `NOW()` — observed (standalone) |
+| `key:pipeline_runs[0].duration_ms` | `excluded-with-reason` | elapsed — observed (standalone) |
+| `row:sys_duration_ms` | `excluded-with-reason` | `VOLATILE_METRIC_PREFIXES` `sys_` — observed (all 4) |
+| `row:sys_velocity_rows_sec` | `excluded-with-reason` | `VOLATILE_METRIC_PREFIXES` `sys_` — observed (all 4) |
+| `pattern:duration_literal` | `normalize-then-match` | `(3.0s)` banner / `completed in 3.1s` → `<DUR>` — observed (all 4) |
+| `pattern:iso_timestamp` | `normalize-then-match` | → `<TS>` (harness; not hit by this step) |
+| `pattern:pg_timestamp` | `normalize-then-match` | → `<TS>` (harness; not hit) |
+| `pattern:rows_per_sec` | `normalize-then-match` | → `<RATE>` (harness; not hit) |
+| `pattern:run_id_literal` | `normalize-then-match` | → `<RUN_ID>` (harness; not hit) |
+| `pattern:pipeline_runs_id_literal` | `normalize-then-match` | → `pipeline_runs <ID>` (harness; not hit) |
+| `pattern:pid_literal` | `normalize-then-match` | → `pid=<PID>` (harness; not hit) |
+| `key:id` · `key:run_id` · `key:timestamp` · `key:elapsed_ms` · `key:elapsed_s` · `key:generated_at` · `key:checked_at` · `key:captured_at` | `excluded-with-reason` | `VOLATILE_KEYS` (harness) — none observed for this step beyond the four `pipeline_runs[0].*` above |
+| `exit_code` · `signal` · `verdict` · `summary_count` · `parse_errors` | `must-match-exactly` | the step's contract (§4.1 C1) |
+| `summary.records_meta.audit_table.{phase,name,verdict,rows[!sys_]}` | `must-match-exactly` | C3 / C11; `rows` compared after the `sys_` strip, order preserved |
+| `meta.reads` · `meta.writes` | `must-match-exactly` | declared-diff at commit 7 is recorded in the post capture, not normalised away |
+| `ledger_status` | `must-match-exactly` | `[]` in-chain, `['completed']` standalone |
+| `stdout` (after patterns) · `stderr` | `must-match-exactly` | per-check `OK:`/`FAIL:` lines are INCIDENTAL (§4.2) but stable; a diff here is reviewed, not masked |
+
+---
+
+## 6. Commit ledger (§12.16 — every commit names its done-test)
+
+| Commit | Hash | Content | Done-test |
+|---|---|---|---|
+| 0 | `899a6385` | 18 categories schema-canonical; descriptor path by file-stem; anchors not line numbers | `npx vitest run src/tests/steps/` (conformance suite green on the vocabulary) |
+| folds | `8b857169` | plan folds A+B (PLAN panel ×4 + fold-validation) | `.cursor/active_task.md` fold IDs A1-A7/B1-B3 re-read before each phase; grounder re-executed every claim |
+| 1 | `d8a4d1ad` | PH-0 boundary freeze re-derived at 606 lines (§1) | `#6a` boundary-freeze table has `pipeline_runs` with an integer row count |
+| 2 | pending (this commit) | PH-3 Intent Ledger adjudicated (§2.3, §2.5), line accounting (§2.6), inventory (§5), commit ledger (§6) | `#152` `#153` `#162` `#155` `#157` `#6b` in `violations.test.ts` |
+| 3 | `d8a4d1ad` | PH-5 seam map (§3) | `#6a` (tables) + descriptor `execution.network.timeout: "none"` asserted by the descriptor test |
+| 4 | `d8a4d1ad` | PH-6 classification + AS-D1..D10 in `defect-ledger.md` (§4) | `grep -c "^| AS-D" docs/reports/defect-ledger.md` = 11 |
+| 5 | `75a0aca6` | golden-master capture ×3 chains + standalone (`docs/reports/golden/assert_schema/pre/`) | `node scripts/analysis/capture-step-golden.js --self-test`; `#150` two OLD captures normalise identical |
+| 6 | `3e0b6636` | PH-7 test design — 44 55-A + 5 partials + 4 G4d locks, proven red | `npx vitest run src/tests/steps/assert_schema/` → 57 red / 5 green at commit 6 |
+| 7 | pending | descriptor + compute + notes.json; frozen §5.1 step file | `#156` `#165` + "descriptor exists, validates" + "compute exports `compute`, opens no pool" |
+| 8a | pending | peel: gating | `#154` (peel commit contains only that peel) |
+| 8b | pending | peel: verdict/audit (AS-D1, AS-D6; regex tokens retired) | `#154` + G4d F2-F4 locks stay green after the token removal |
+| 8c | pending | peel: thresholds/checks (AS-D5) | `#154` + `#165` must-fail fixtures per declared check |
+| 9 | pending | `converted.json` registers the step; post golden capture | `#158` + "converted.json registers the step"; post capture zero-diff vs pre after §5 normalisation |
+
