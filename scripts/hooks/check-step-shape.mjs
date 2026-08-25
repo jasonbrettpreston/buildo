@@ -15,6 +15,14 @@
  *                  asserts the rule fires on every unconverted file, so the empty
  *                  converted list can never read as a clean bill of health.
  *
+ * A THIRD, ALWAYS-BLOCKING corpus was added at pilot 1 peel 8c: every module in
+ * scripts/lib/compute/ is scanned against scripts/ast-grep-rules/compute-shape.yml
+ * (Spec 122 §5.5 — PROPOSED, ratify at C3). It needs no converted.json entry
+ * because the directory IS the scope: a compute module exists only because a
+ * conversion produced it. Its prove-red is a known-bad fixture, not a report-only
+ * half — scripts/steps/_schema/fixtures/compute/bad-compute-shape.js, asserted to
+ * fire all five rule ids by the conformance suite.
+ *
  * Node, not bash (the house style for scripts/hooks/), because the conformance
  * suite shells out to it with `--json` on Windows too. `.husky/pre-commit` reaches
  * it through scripts/hooks/ast-grep-leads.sh; CI calls it directly.
@@ -24,13 +32,14 @@
  *   node scripts/hooks/check-step-shape.mjs --report-only   # never exits non-zero
  *   node scripts/hooks/check-step-shape.mjs --json          # machine-readable, no gating
  *
- * Exit codes: 0 = clean · 1 = a converted file violates the shape · 2 = bad setup.
+ * Exit codes: 0 = clean · 1 = a converted step file violates the frozen shape, or a
+ * compute module violates the compute shape · 2 = bad setup.
  *
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1
  * SPEC LINK: docs/specs/01-pipeline/121_*.md §12b.6 (known-bad fixtures must FIRE)
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,6 +47,11 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 // Repo-relative, POSIX-separated on every platform: these strings are printed in
 // operator messages and compared against manifest `file` values, which are POSIX.
 const RULE = 'scripts/ast-grep-rules/step-shape.yml';
+// A2's sibling gate (Spec 122 §5.5, PROPOSED at pilot 1 peel 8c). Scope is the
+// compute DIRECTORY, not converted.json: a compute module exists only because a
+// conversion produced it, so the corpus is self-arming and never report-only.
+const COMPUTE_RULE = 'scripts/ast-grep-rules/compute-shape.yml';
+const COMPUTE_DIR = 'scripts/lib/compute';
 const CONVERTED = 'scripts/steps/_schema/converted.json';
 const MANIFEST = 'scripts/manifest.json';
 
@@ -88,12 +102,21 @@ function astGrepBinary() {
   return found;
 }
 
+/** Every compute module — the §5.5 corpus. Absent directory = empty corpus, not a failure. */
+function readComputeFiles() {
+  const abs = path.join(REPO_ROOT, COMPUTE_DIR);
+  if (!existsSync(abs)) return [];
+  return readdirSync(abs)
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => `${COMPUTE_DIR}/${f}`);
+}
+
 /**
- * Run the two shape rules over `files` and return one record per file.
+ * Run one rule FILE (all its rules) over `files` and return one record per file.
  * ast-grep is invoked ONCE for the whole batch — 27 process spawns per commit
  * would be the kind of hook nobody keeps.
  */
-function scan(files) {
+function scan(files, rule = RULE) {
   const byFile = new Map(files.map((f) => [f, []]));
   if (files.length === 0) return byFile;
   // ⚠️ `--report-style=short`, NOT `--json`. Measured 2026-08-24: the JSON
@@ -102,7 +125,7 @@ function scan(files) {
   // style is one greppable line per match — ~1 MB for the same sweep.
   const res = spawnSync(
     astGrepBinary(),
-    ['scan', '--rule', RULE, '--report-style=short', '--color=never', ...files],
+    ['scan', '--rule', rule, '--report-style=short', '--color=never', ...files],
     { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
   );
   if (res.error) throw res.error;
@@ -139,6 +162,8 @@ function main() {
   const unconverted = manifestFiles.filter((f) => !converted.includes(f));
   const blockingResults = scan(converted);
   const reportResults = scan(unconverted);
+  const computeFiles = readComputeFiles();
+  const computeResults = scan(computeFiles, COMPUTE_RULE);
 
   if (AS_JSON) {
     const shape = (map) => [...map.entries()].map(([file, violations]) => ({ file, violations }));
@@ -148,6 +173,8 @@ function main() {
         converted,
         blocking: shape(blockingResults),
         report_only: shape(reportResults),
+        compute_rule: COMPUTE_RULE,
+        compute: shape(computeResults),
       }),
     );
     return;
@@ -185,7 +212,10 @@ function main() {
     console.error('\n❌ Step-shape gate failed. Run `npx ast-grep scan --rule scripts/ast-grep-rules/step-shape.yml <file>` for the full message.');
     process.exit(1);
   }
-  console.log(`✅ Step-shape gate clean (${converted.length} converted step file(s) enforced).`);
+  console.log(
+    `✅ Step-shape gate clean (${converted.length} converted step file(s) enforced; ` +
+      `${computeFiles.length} compute module(s) enforced against ${COMPUTE_RULE}).`,
+  );
 }
 
 try {

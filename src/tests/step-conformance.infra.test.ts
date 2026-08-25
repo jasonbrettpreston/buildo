@@ -389,7 +389,7 @@ describe('the per-step battery is armed (canary fixtures, Spec 121 §12b.6)', ()
 });
 
 /** Run the A2 rules over explicit paths and return the flat violation list. */
-function runShapeRule(files: string[]): Array<{ file: string; rule: string; line: number }> {
+function runShapeRule(files: string[], rule = 'scripts/ast-grep-rules/step-shape.yml'): Array<{ file: string; rule: string; line: number }> {
   const bin =
     process.platform === 'win32'
       ? path.join(REPO_ROOT, 'node_modules/@ast-grep/cli-win32-x64-msvc/ast-grep.exe')
@@ -398,7 +398,7 @@ function runShapeRule(files: string[]): Array<{ file: string; rule: string; line
   try {
     stdout = execFileSync(
       bin,
-      ['scan', '--rule', 'scripts/ast-grep-rules/step-shape.yml', '--report-style=short', '--color=never', ...files],
+      ['scan', '--rule', rule, '--report-style=short', '--color=never', ...files],
       // stderr ignored: ast-grep prints "N error(s) found in code" there on every
       // match, which is the EXPECTED path for the red canaries and would otherwise
       // spray the reporter output.
@@ -418,7 +418,105 @@ function runShapeRule(files: string[]): Array<{ file: string; rule: string; line
 }
 
 // ---------------------------------------------------------------------------
-// 5. The real loop — empty today, one entry per landed pilot
+// 5. §5.5 — the COMPUTE shape (PROPOSED 2026-08-25, pilot 1 peel 8c; ratify at C3)
+// ---------------------------------------------------------------------------
+//
+// Scope is the compute DIRECTORY, not converted.json: a module under
+// scripts/lib/compute/ exists only because a conversion produced it, so the corpus
+// is self-arming. The descriptor for `scripts/lib/compute/<base>.js` is found by
+// BASENAME against the manifest step files (§4.1 "three files, one slug"), which is
+// also the pairing scripts/hooks/step-require-probe.cjs and the sibling-descriptor
+// rule use.
+
+const COMPUTE_DIR = 'scripts/lib/compute';
+const COMPUTE_RULE = 'scripts/ast-grep-rules/compute-shape.yml';
+const BAD_COMPUTE_FIXTURE = 'scripts/steps/_schema/fixtures/compute/bad-compute-shape.js';
+const COMPUTE_RULE_IDS = [
+  'compute-no-console',
+  'compute-no-bare-fetch',
+  'compute-no-wall-clock',
+  'compute-no-process-env',
+  'compute-forbidden-require',
+];
+
+interface ComputePair {
+  compute: string;
+  step: string;
+  descriptor: string;
+}
+
+/** Every compute module paired with the manifest step file (and descriptor) of the same basename. */
+function computePairs(): ComputePair[] {
+  const dir = path.join(REPO_ROOT, COMPUTE_DIR);
+  if (!fs.existsSync(dir)) return [];
+  const out: ComputePair[] = [];
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.js'))) {
+    const step = ALL_STEP_FILES.find((s) => path.basename(s) === f);
+    if (!step) continue;
+    out.push({ compute: `${COMPUTE_DIR}/${f}`, step, descriptor: `${step.slice(0, -3)}.descriptor.json` });
+  }
+  return out;
+}
+
+const COMPUTE_PAIRS = computePairs();
+
+describe('§5.5 compute shape — dispatch table ≡ declared checks', () => {
+  it('the compute corpus is not empty (a vacuous loop proves nothing)', () => {
+    const modules = fs.existsSync(path.join(REPO_ROOT, COMPUTE_DIR))
+      ? fs.readdirSync(path.join(REPO_ROOT, COMPUTE_DIR)).filter((f) => f.endsWith('.js'))
+      : [];
+    expect(modules.length, `${COMPUTE_DIR} holds no compute modules`).toBeGreaterThan(0);
+    expect(
+      COMPUTE_PAIRS.length,
+      `${modules.length} compute module(s) but ${COMPUTE_PAIRS.length} paired to a manifest step file by basename`,
+    ).toBe(modules.length);
+  });
+
+  for (const pair of COMPUTE_PAIRS) {
+    it(`${pair.compute} — dispatch keys are exactly the descriptor's check ids, in order`, () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS compute
+      const mod = require(path.join(REPO_ROOT, pair.compute)) as { checks?: Record<string, unknown> };
+      expect(typeof mod.checks, `${pair.compute} exports no \`checks\` dispatch table (§5.5 (1))`).toBe('object');
+      const dispatch = Object.keys(mod.checks as Record<string, unknown>);
+      const declared = (
+        JSON.parse(fs.readFileSync(path.join(REPO_ROOT, pair.descriptor), 'utf8')) as { checks: Array<{ id: string }> }
+      ).checks.map((c) => c.id);
+
+      // BOTH directions, plus order: a set comparison would let a compute silently
+      // carry a function for a check the descriptor retired, or vice versa.
+      expect(dispatch.filter((k) => !declared.includes(k)), 'dispatch entries with no declared check').toEqual([]);
+      expect(declared.filter((k) => !dispatch.includes(k)), 'declared checks with no dispatch entry').toEqual([]);
+      expect(dispatch, '§5.5 (4) — dispatch order must be descriptor order').toEqual(declared);
+
+      // (1) name === check id: a renamed function is a renamed audit row.
+      for (const [id, fn] of Object.entries(mod.checks as Record<string, unknown>)) {
+        expect(typeof fn, `dispatch entry ${id} is not a function`).toBe('function');
+        expect((fn as { name: string }).name, `dispatch entry ${id} is a function named "${(fn as { name: string }).name}"`).toBe(id);
+      }
+    });
+
+    it(`${pair.compute} — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)`, () => {
+      expect(runShapeRule([pair.compute], COMPUTE_RULE)).toEqual([]);
+    });
+  }
+
+  it('RED — every compute-shape rule FIRES on the known-bad fixture (Spec 121 §12b.6)', () => {
+    const fired = new Set(runShapeRule([BAD_COMPUTE_FIXTURE], COMPUTE_RULE).map((v) => v.rule));
+    expect([...fired].sort(), `${BAD_COMPUTE_FIXTURE} did not trip every rule`).toEqual([...COMPUTE_RULE_IDS].sort());
+  });
+
+  it('the driver enforces the compute corpus in its blocking half', () => {
+    const report = JSON.parse(
+      execFileSync('node', [SHAPE_DRIVER, '--json'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 }),
+    ) as { compute_rule?: string; compute?: Array<{ file: string; violations: unknown[] }> };
+    expect(report.compute_rule).toBe(COMPUTE_RULE);
+    expect((report.compute ?? []).map((f) => f.file).sort()).toEqual(COMPUTE_PAIRS.map((p) => p.compute).sort());
+    expect((report.compute ?? []).filter((f) => f.violations.length > 0)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 6. The real loop — empty today, one entry per landed pilot
 // ---------------------------------------------------------------------------
 
 describe('§5.2 conformance — every converted step', () => {

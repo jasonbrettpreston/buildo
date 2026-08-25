@@ -1,0 +1,114 @@
+id: compute-no-console
+language: JavaScript
+severity: error
+message: |
+  `console.*` in a compute module (Spec 122 §5.5 (3), PROPOSED 2026-08-25).
+
+  A compute narrates through the INJECTED seam `ctx.log` — `ctx.log.info(tag, msg)`
+  / `.warn` / `.error` — so a caller can silence it, capture it, or assert on it.
+  A bare `console.*` writes to the process's stdout no matter who is calling, which
+  is why a step test that wanted quiet had to monkey-patch the global.
+
+  Observations do NOT go through the log at all: they go through
+  `ctx.report(<checkId>, …)`, which is what the audit table is built from.
+
+  SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5
+note: |
+  ⚠️ SCOPE. `files:` below is the whole enforcement scope for these rules —
+  sgconfig.yml `ruleDirs` auto-loads every rule in this directory into
+  `ast-grep scan <path>`, so a rule without a `files:` glob fires across the repo.
+  The compute corpus is scripts/lib/compute/**; the fixture directory is included so
+  the prove-red canary in src/tests/step-conformance.infra.test.ts can be scanned.
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  pattern: console.$METHOD($$$)
+
+---
+
+id: compute-no-bare-fetch
+language: JavaScript
+severity: error
+message: |
+  Bare `fetch(...)` in a compute module (Spec 122 §5.5 (3), PROPOSED 2026-08-25).
+
+  Network I/O goes through `ctx.fetch`, which `scripts/lib/step/index.js` defaults to
+  `globalThis.fetch`. The seam is what lets a step test drive the compute by passing
+  a ctx instead of assigning to `globalThis.fetch` and hoping every path is restored.
+
+  `ctx.fetch(url)` / `stepCtx.fetch(url, init)` are member calls and do NOT match.
+
+  SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  pattern: fetch($$$)
+
+---
+
+id: compute-no-wall-clock
+language: JavaScript
+severity: error
+message: |
+  `Date.now()` / `new Date()` in a compute module (Spec 122 §5.5 (3), PROPOSED
+  2026-08-25).
+
+  The clock is the seam `ctx.clock` (defaulted to `Date.now` by
+  `scripts/lib/step/index.js`). A compute that reads the wall clock directly cannot
+  be pinned by a test, and — per Spec 47 §R3.5 — must never be the source of a
+  timestamp written to the database.
+
+  SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - pattern: Date.now($$$)
+    - pattern: new Date($$$)
+
+---
+
+id: compute-no-process-env
+language: JavaScript
+severity: error
+message: |
+  `process.env` in a compute module (Spec 122 §5.5 (3), PROPOSED 2026-08-25).
+
+  Environment is a RUNNER concern. `PIPELINE_CHAIN` in particular reaches a compute
+  as `ctx.checks` — the selected check ids the library derived from the descriptor's
+  `sharing` / `checks[].chains` — never as an env read, so the descriptor stays the
+  single place a chain is named. Peel 8a removed the last one of these.
+
+  SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  pattern: process.env
+
+---
+
+id: compute-forbidden-require
+language: JavaScript
+severity: error
+message: |
+  Forbidden `require()` in a compute module (Spec 122 §5.5 (3), PROPOSED 2026-08-25).
+
+  A compute may not reach the database (`pg`, `../resolve-db`), the environment
+  (`dotenv`), the filesystem (`fs`), the process table (`child_process`) or the
+  runner itself (`../pipeline`, `../step`). Everything it is allowed to touch is
+  handed to it on `ctx`: `pool` (which an ASSERT must not use at all), `log`,
+  `fetch`, `clock`, `report`. Pure domain libraries under `scripts/lib/` are fine.
+
+  SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  pattern: require($MOD)
+constraints:
+  MOD:
+    regex: '^.(pg|dotenv|fs|node:fs|child_process|node:child_process|\.\./pipeline|\.\./step|\.\./resolve-db).$'
