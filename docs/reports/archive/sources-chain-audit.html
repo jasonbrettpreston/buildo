@@ -1,0 +1,327 @@
+<title>Sources Chain Audit</title>
+<style>
+  :root{
+    --ground:#F7F8FA; --panel:#FFFFFF; --ink:#1A1F27; --ink-soft:#525C6B; --ink-faint:#7C8797;
+    --rule:#DDE2E9; --rule-soft:#EAEEF3;
+    --accent:#0E7C86; --accent-soft:#E2F1F2;
+    --signal:#B4690E; --signal-soft:#FBF0DF;
+    --crit:#A33A34; --crit-soft:#FBE9E7;
+    --ok:#2F6E4F; --ok-soft:#E4F0E9;
+    --code-bg:#F0F3F6;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#11151B; --panel:#171C24; --ink:#E3E8EF; --ink-soft:#A3AEBD; --ink-faint:#78838f;
+      --rule:#2A323C; --rule-soft:#222A33;
+      --accent:#4FB6BE; --accent-soft:#14323A;
+      --signal:#E0A040; --signal-soft:#33270F;
+      --crit:#E08078; --crit-soft:#331B19;
+      --ok:#6FBE93; --ok-soft:#14291F;
+      --code-bg:#1D242D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#11151B; --panel:#171C24; --ink:#E3E8EF; --ink-soft:#A3AEBD; --ink-faint:#78838f;
+    --rule:#2A323C; --rule-soft:#222A33;
+    --accent:#4FB6BE; --accent-soft:#14323A;
+    --signal:#E0A040; --signal-soft:#33270F;
+    --crit:#E08078; --crit-soft:#331B19;
+    --ok:#6FBE93; --ok-soft:#14291F;
+    --code-bg:#1D242D;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:16px; line-height:1.62; margin:0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:56px 28px 96px}
+  .col{max-width:68ch}
+  h1,h2,h3{font-family:ui-serif,Georgia,"Times New Roman",serif;text-wrap:balance;line-height:1.22;margin:0}
+  h1{font-size:2.45rem;font-weight:600;letter-spacing:-.012em}
+  h2{font-size:1.5rem;font-weight:600;margin:0 0 14px}
+  h3{font-size:1.09rem;font-weight:600;margin:0 0 8px}
+  p{margin:0 0 14px}
+  a{color:var(--accent)}
+  strong{font-weight:650}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.875em}
+  code{background:var(--code-bg);padding:.12em .38em;border-radius:3px}
+  pre{background:var(--code-bg);border:1px solid var(--rule-soft);border-radius:6px;padding:14px 16px;overflow-x:auto;margin:0 0 16px}
+  pre code{background:none;padding:0;font-size:.83rem;line-height:1.6}
+
+  header.mast{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:14px}
+  .eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.7rem;letter-spacing:.15em;
+    text-transform:uppercase;color:var(--accent);margin:0 0 12px;font-weight:600}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:18px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.76rem;color:var(--ink-soft)}
+  .meta b{color:var(--ink);font-weight:600}
+
+  section{margin-top:44px;scroll-margin-top:20px}
+  .snum{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.74rem;color:var(--ink-faint);
+    letter-spacing:.08em;display:block;margin-bottom:5px}
+
+  .lede{font-size:1.12rem;line-height:1.6;color:var(--ink);border-left:3px solid var(--accent);
+    padding:2px 0 2px 20px;margin:0 0 8px}
+
+  .callout{border:1px solid var(--rule);border-left:4px solid var(--signal);background:var(--signal-soft);
+    border-radius:0 6px 6px 0;padding:16px 20px;margin:0 0 20px}
+  .callout.crit{border-left-color:var(--crit);background:var(--crit-soft)}
+  .callout .tag{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.13em;
+    text-transform:uppercase;font-weight:700;color:var(--signal);display:block;margin-bottom:7px}
+  .callout.crit .tag{color:var(--crit)}
+  .callout p:last-child{margin-bottom:0}
+
+  .scroll{overflow-x:auto;margin:0 0 20px;border:1px solid var(--rule);border-radius:6px;background:var(--panel)}
+  table{border-collapse:collapse;width:100%;font-size:.855rem}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+  th{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-soft);font-weight:600;background:var(--rule-soft);white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+  td.num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+  td.was{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-faint);text-decoration:line-through;white-space:nowrap}
+  td.step{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;white-space:nowrap}
+  td.ix{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-faint);text-align:right;width:1%}
+  .f{text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;width:1%;white-space:nowrap}
+  .yes{color:var(--ok);font-weight:700}
+  .no{color:var(--ink-faint)}
+  .warn{color:var(--crit);font-weight:700}
+  .pin{color:var(--signal);font-weight:700}
+
+  .chip{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.66rem;
+    letter-spacing:.06em;text-transform:uppercase;font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap}
+  .c-hi{background:var(--ok-soft);color:var(--ok)}
+  .c-md{background:var(--accent-soft);color:var(--accent)}
+  .c-lo{background:var(--signal-soft);color:var(--signal)}
+  .c-inh{background:var(--crit-soft);color:var(--crit)}
+
+  ul{margin:0 0 16px;padding-left:20px}
+  li{margin-bottom:7px}
+  hr{border:none;border-top:1px solid var(--rule);margin:44px 0 0}
+  footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--rule);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.74rem;color:var(--ink-faint);line-height:1.7}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media(max-width:640px){.wrap{padding:32px 16px 64px}h1{font-size:1.9rem}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">Pipeline Audit · Buildo</p>
+  <h1>Sources Chain Audit</h1>
+  <div class="meta">
+    <span><b>27</b> steps</span>
+    <span><b>9</b> loaders</span>
+    <span><b>2026-08-21</b></span>
+    <span>method: <b>executed, not inferred</b></span>
+  </div>
+</header>
+
+<div class="col">
+  <p class="lede">Phase B's objective — “after first load, only insert new or update changed” — is <strong>already met by 10 of 11 loaders</strong>. The chain's architecture is sound and uniformly applied. The cost problem is not shape: gating is patchy, and one manifest pin disables an incremental path that already exists in the code.</p>
+</div>
+
+<section>
+  <span class="snum">§ 02</span>
+  <h2>Where the time actually goes</h2>
+  <div class="col">
+    <div class="callout">
+      <span class="tag">Correction</span>
+      <p>An earlier draft reported <strong>averages over all rows, including failed runs</strong> — inflated by up to 8,000×. Figures below are <strong>medians over completed runs only</strong>.</p>
+    </div>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Step</th><th>Median min</th><th>Max (completed)</th><th>Was reported</th><th>What inflated it</th></tr></thead>
+      <tbody>
+        <tr><td class="step">enrich_parcels</td><td class="num"><strong>46.5</strong></td><td class="num">111.7</td><td class="was">387.2</td><td>one <code>failed</code> row at 2,478 min</td></tr>
+        <tr><td class="step">enrich_centreline</td><td class="num">~52</td><td class="num">93.4</td><td class="num">52.6</td><td>broadly holds</td></tr>
+        <tr><td class="step">link_massing</td><td class="num"><strong>13.7</strong></td><td class="num">21.9</td><td class="was">41.2</td><td>three <code>failed</code> rows (78 / 131 / 395)</td></tr>
+        <tr><td class="step">link_parcels</td><td class="num"><strong>0.3</strong></td><td class="num">71.5</td><td class="was">2447.7</td><td>one <code>failed</code> row at <strong>56,212 min</strong> (39 days)</td></tr>
+        <tr><td class="step">parcels (load)</td><td class="num">~2.4</td><td class="num">15.4</td><td class="num">2.4</td><td>—</td></tr>
+        <tr><td class="step">massing (load)</td><td class="num">~1.5</td><td class="num">6.2</td><td class="num">1.5</td><td>—</td></tr>
+        <tr><td class="step">load_centreline</td><td class="num"><strong>0.3</strong></td><td class="num">0.9</td><td class="num">0.3</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <p><strong>Survives the correction:</strong> <code>enrich_parcels</code> is still the largest step, and the loaders are still trivial — all three load in under 5 minutes combined for ~495K / ~428K / ~47K rows. The cost is the joins over 486K parcels, not the loading.</p>
+    <p><strong>Does not survive:</strong> the claim that <code>enrich_parcels</code> runs ~6.5 hours. Its completed range is 1.3 / 1.9 / 17.8 / 46.5 / 53 / 111.7 — and <strong>46.5–53 matches the Phase B plan's own measured “full 5-pass citywide 46.5-53 min” exactly</strong>. The plan was right; the average was wrong. <code>link_parcels</code> is not expensive at all.</p>
+    <p>This is itself evidence for §4.3: strands don't only wedge gates, they <strong>poison every duration statistic computed off <code>pipeline_runs</code></strong> — the table capacity planning would naturally use.</p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">§ 03</span>
+  <h2>A manifest pin disables an existing incremental path</h2>
+  <div class="col">
+    <p><code>enrich-parcels.js</code> already implements incremental mode:</p>
+    <pre><code>const incr = full ? '' : 'AND sp.comp_count IS NULL';</code></pre>
+    <p>But <code>manifest.json</code> pins it full for this chain, and the script consumes the flag as a bare OR with <strong>no gate</strong>:</p>
+    <pre><code>"enrich_parcels": { "chain_args": { "sources": ["--full"] } }
+
+const full = process.argv.includes('--full')
+          || process.env.ENRICH_PARCELS_FORCE_FULL === '1';</code></pre>
+  </div>
+  <div class="scroll" style="max-width:520px">
+    <table>
+      <thead><tr><th>Mode</th><th>Rows the comps pass touches</th></tr></thead>
+      <tbody>
+        <tr><td><code>--full</code> (what the pin forces)</td><td class="num"><strong>426,732</strong></td></tr>
+        <tr><td>incremental</td><td class="num"><strong>0</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <div class="callout">
+      <span class="tag">The nuance that changes the fix</span>
+      <p>Incremental mode selects only <code>comp_count IS NULL</code>, and every eligible parcel already has one — so it would write <strong>nothing, ever</strong>. <code>--full</code> is currently the <em>only</em> refresh mechanism; removing the pin would freeze comps permanently.</p>
+      <p>The defect is that only two behaviours exist: <strong>rewrite 426,732 every run</strong>, or <strong>never refresh</strong>.</p>
+    </div>
+    <p>An earlier draft carried “~351,899” from <code>review_followups</code>. That figure is wrong — the executed count is <strong>426,732</strong>.</p>
+    <h3>The fix is already proven in-repo, on the sibling step</h3>
+    <p><code>link_massing</code> had the identical defect. <strong>P11-2</strong> (<code>scripts/lib/massing-full-gate.js</code>) made <code>--full</code> <em>permit</em> rather than <em>force</em>, using a <strong>data signal</strong> (corpus count vs last completed run) and a <strong>code signal</strong> (<code>LINK_MASSING_CODE_VERSION</code>) — because a pure data gate would have silently skipped the <code>b16c036</code> predicate flip. <code>enrich_parcels</code> is the second of exactly two <code>--full</code> pins; the other was gated a month ago.</p>
+    <p>The obvious-looking alternative — adding an <code>IS DISTINCT FROM</code> guard to the comps write — is <strong>wrong</strong>: it suppresses writes inside a full pass that should not be running full. Fold D declined that guard correctly, but on counter-honesty grounds, and never examined the pin above it.</p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">§ 04</span>
+  <h2>Chain shape — all 27 steps</h2>
+  <div class="col">
+    <p>The Spec 47 skeleton is applied <strong>universally</strong>: advisory lock, <code>pipeline.run()</code>, <code>emitSummary</code>, <code>emitMeta</code> and audit rows are all <strong>27 / 27</strong>. Variation below the skeleton is archetype-appropriate, not drift.</p>
+    <p>Composition: 9 loaders · 6 links · 4 enrichers · 3 computes · 5 asserts. <strong>Cost concentrates entirely in the derive stage</strong> (steps 13 and 21) — the only steps that touch all 486K parcels.</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr>
+        <th></th><th>Step</th><th>Objective</th>
+        <th>Up</th><th>Gd</th><th>Del</th><th>Gate</th><th>Pin</th><th>HR</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="ix">1</td><td class="step">assert_schema</td><td>fail early if DB shape drifted from code</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f warn">⚠</td></tr>
+        <tr><td class="ix">2</td><td class="step">address_points</td><td>ingest civic address points</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">3</td><td class="step">geocode_permits</td><td>attach coordinates to permits lacking them</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">4</td><td class="step">parcels</td><td>ingest property boundaries — the spine table</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">5</td><td class="step">load_ravines</td><td>ingest ravine-protection polygons</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">6</td><td class="step">load_heritage</td><td>ingest heritage-property register</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">7</td><td class="step">load_centreline</td><td>ingest street centrelines (47K)</td><td class="f no">–</td><td class="f no">–</td><td class="f warn">full</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">8</td><td class="step">link_parcel_addresses</td><td>join address points → parcels</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">9</td><td class="step">compute_centroids</td><td>derive parcel centroids for spatial joins</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">10</td><td class="step">link_parcels</td><td>join permits → parcels</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">11</td><td class="step">enrich_ravines</td><td>stamp ravine flags onto parcels</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">12</td><td class="step">enrich_heritage</td><td>stamp heritage status onto parcels</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">13</td><td class="step">enrich_centreline</td><td>derive corner / through / frontage / laneway</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f yes">✓*</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">14</td><td class="step">massing</td><td>ingest 3D building footprints (428K)</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">15</td><td class="step">link_massing</td><td>join footprints → parcels</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f pin">✓</td><td class="f no">–</td></tr>
+        <tr><td class="ix">16</td><td class="step">neighbourhoods</td><td>ingest neighbourhood boundaries</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">17</td><td class="step">link_neighbourhoods</td><td>assign parcels to neighbourhoods</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">18</td><td class="step">load_wsib</td><td>ingest WSIB employer registry (non-CKAN)</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">†</td></tr>
+        <tr><td class="ix">19</td><td class="step">link_wsib</td><td>match builders → WSIB entities</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">20</td><td class="step">load_zoning</td><td>ingest zoning by-law layers</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">21</td><td class="step">enrich_parcels</td><td>derive zoning, max-build, scenarios, optconfig, comps</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f yes">✓</td><td class="f pin">⚠✓</td><td class="f no">–</td></tr>
+        <tr><td class="ix">22</td><td class="step">compute_parcel_cost_estimates</td><td>cost model per parcel</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">23</td><td class="step">assert_global_coverage</td><td>gate: is enrichment coverage acceptable</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">24</td><td class="step">assert_parcel_sanity</td><td>gate: are derived parcel values plausible</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">25</td><td class="step">refresh_snapshot</td><td>rebuild the admin data-quality snapshot</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td></tr>
+        <tr><td class="ix">26</td><td class="step">assert_data_bounds</td><td>gate: bounds and invariants across tables</td><td class="f no">–</td><td class="f no">–</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f warn">⚠</td></tr>
+        <tr><td class="ix">27</td><td class="step">assert_engine_health</td><td>gate: engine outputs within tolerance</td><td class="f yes">✓</td><td class="f yes">✓</td><td class="f no">–</td><td class="f no">–</td><td class="f no">–</td><td class="f warn">⚠</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <p style="font-size:.85rem;color:var(--ink-soft)">
+      <strong>Up</strong> <code>ON CONFLICT</code> · <strong>Gd</strong> <code>IS DISTINCT FROM</code> guard · <strong>Del</strong> has a delete · <strong>Gate</strong> skip mechanism · <strong>Pin</strong> <code>--full</code> pinned · <strong>HR</strong> hand-rolls its own <code>pipeline_runs</code> row.<br>
+      <span class="warn">⚠</span> strands a <code>running</code> row on throw — steps 1, 26, 27. <strong>†</strong> <code>load_wsib</code> also hand-rolls but was fixed by Commit E.<br>
+      <strong>*</strong> <code>enrich_centreline</code>'s gate is a bespoke <code>records_meta</code> version-compare — it uses no shared helper, so a name-based census misses it.
+    </p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">§ 4.3</span>
+  <h2>Three structural inconsistencies</h2>
+  <div class="col">
+    <ul>
+      <li><strong>Dual ledger rows.</strong> Four steps call <code>pipeline.run()</code> <em>and</em> hand-roll their own <code>running</code> row. Only <code>load_wsib</code> has a <code>try/finally</code>. The other three strand on any throw — this is B6.6's strand factory, and 3 of its 6 named scripts live in this chain.</li>
+      <li><strong>Gating is ad-hoc — four mechanisms, no shared interface.</strong> <code>source-version.js</code> tiers · a bespoke version-compare in <code>enrich_centreline</code> · <code>massing-full-gate.js</code> · B3's <code>runLedgerGateDecision</code>. A new step has no obvious pattern to copy.</li>
+      <li><strong>Two <code>--full</code> pins, only one gated.</strong></li>
+    </ul>
+    <p><strong>Verification</strong> is strong and layered — 5 assert steps in-chain, a workflow-level verdict check, plus the freshness watchdog. <strong>Observability</strong> is genuinely uniform at 27/27. <strong>Error handling is the weak axis</strong>: only 5 of 27 scripts carry any <code>try/finally</code>, and <code>pipeline.run()</code> protects the other 22 — which is exactly why the hand-rolled rows are dangerous. They sit outside the protection everything else depends on.</p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">§ 05</span>
+  <h2>Phase B premises refuted by grounding</h2>
+  <div class="col">
+    <p>Three premises, all carried forward v3 → v4 → v5 by reference (“As v4”, “As v3”) without re-verification.</p>
+    <h3>B4 — the “zero-intersection floor” is legitimate by design</h3>
+    <p>Spec 62 <code>:374</code> states the version signal reads “the <strong>run row</strong>, never the per-parcel column (which carries a <strong>legit-NULL</strong> zero-intersection tail)”; <code>:375</code> names “a <strong>permanent</strong> ~14.5K” tail costing “seconds, not 92 min”. It is already instrumented (L21) and its gate <strong>passes at 2.98%</strong> against a 10% WARN threshold. Stamp-with-defaults would destroy the signal the incremental design depends on.</p>
+    <p>Measured independently: 14,510 stuck parcels — p50 <strong>41.7 m</strong>, p90 112.5, p99 335.5, max <strong>2,047 m</strong>. A smooth continuous tail, so widening also fails on its own terms: 30 m converges 30.5%, <strong>50 m only 64.7%</strong>.</p>
+    <h3>B5 — scope premise false, and not a performance step</h3>
+    <p>Only <code>load-zoning.js:362</code> fetches <code>package_show</code>. Of 8 CKAN loaders, <strong>1 resolves at runtime and 7 are pinned</strong>; <code>load-neighbourhoods</code> (two pinned UUIDs) was omitted from B5's scope entirely. A version gate is <em>not</em> resource resolution — the HEAD-gated loaders check a pinned URL and would still 404 on rotation, so <strong>resolve must precede HEAD</strong>. B5 saves zero minutes; it prevents a break.</p>
+    <h3>B6.6 item (b) — superseded</h3>
+    <p>A self-expiring TTL inside the B3 gate contradicts <strong>E-R2</strong>, which pins that a stranded row must keep forcing RUN, and is locked by a db test. Items (a) and (c) stand.</p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">§ 06</span>
+  <h2>Citation rot has a predictable pattern</h2>
+  <div class="col">
+    <p>Citations decay <strong>specifically where the plan's own earlier steps edit the file</strong>. The force-full argv target went stale twice: v3 said <code>:1317</code>, a fold corrected it to <code>:1378</code>, and it is now <code>:1668</code> — because B2 added 389 lines <em>after</em> the correction landed.</p>
+    <p>Also stale: two <code>.tsx</code> files cited under <code>src/components/admin/</code> live at <code>src/components/</code>; the stats-route IN-list is <code>:326</code> not <code>:321</code>; the 192h constant is <code>:344</code> not <code>:338</code>.</p>
+    <p><strong>Mechanism:</strong> cite by greppable anchor — a function or constant name — not a line number.</p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">§ 07</span>
+  <h2>Recommended sequence</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th></th><th>Step</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr><td class="ix">1</td><td class="step">B4</td><td>doc edit + convergence-row subtraction — premise refuted, small</td></tr>
+        <tr><td class="ix">2</td><td class="step">B4.5</td><td><strong>on the critical path.</strong> <code>enrich-parcels-full-gate.js</code>, mirroring P11-2</td></tr>
+        <tr><td class="ix">3</td><td class="step">B6.6 (a)+(c)</td><td>the strand factory — 3 of its scripts are in this chain</td></tr>
+        <tr><td class="ix">4</td><td class="step">B5</td><td>7 loaders. Prevents a break; saves 0 min</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col">
+    <p>B4.5 is <strong>gated on a measurement</strong>: if comps genuinely churn every run, it closes as not-a-defect. That measurement also satisfies Spec 118 §9.1's own stated condition for re-opening its recorded negative result on enrich-parcels → heap decorrelation.</p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">§ 08</span>
+  <h2>Confidence register</h2>
+  <div class="col"><p>Stated so a reader can weight each claim — a claim carries the tier it was actually verified at.</p></div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Claim</th><th>Confidence</th><th>Why, and what would settle it</th></tr></thead>
+      <tbody>
+        <tr><td>Durations (medians, completed only)</td><td><span class="chip c-hi">High</span></td><td>Executed; matches the plan's own measured figure. <strong>But <code>enrich_parcels</code> has 6 completed runs ever</strong> — a median over 6 points is indicative, not stable.</td></tr>
+        <tr><td>Comps scope 426,732 / incremental 0</td><td><span class="chip c-hi">High</span></td><td>Executed with the pass's own subject predicate.</td></tr>
+        <tr><td>Skeleton coverage 27/27</td><td><span class="chip c-hi">High</span></td><td>Static sweep over all 27 files.</td></tr>
+        <tr><td>Archetype split (9/6/4/3/5)</td><td><span class="chip c-md">Medium</span></td><td>Classified by slug and filename, not by reading each script's behaviour.</td></tr>
+        <tr><td>“~9 of 27 steps are gated”</td><td><span class="chip c-lo">Med-Low</span></td><td>The census matches four helper <em>names</em> and provably under-counts. <strong>Treat 9 as a floor, not a count.</strong></td></tr>
+        <tr><td><code>nearby_builds_summary</code> churns every run</td><td><span class="chip c-inh">Inherited</span></td><td>Taken from <code>review_followups</code>, never executed. Not load-bearing for any recommendation here.</td></tr>
+        <tr><td><code>assert-schema.js</code> throws before its finalize</td><td><span class="chip c-inh">Inherited</span></td><td>The hand-rolled row with no <code>try/finally</code> is verified; the <em>throw ordering</em> is not. Would change severity, not direction.</td></tr>
+        <tr><td>P11-2 transfers cleanly to <code>enrich_parcels</code></td><td><span class="chip c-inh">Unverified</span></td><td><strong>The one that could move a recommendation.</strong> The massing gate needed both a data and a code signal; whether <code>enrich_parcels</code>' six passes admit an equivalent corpus signal is exactly what B4.5's Integration seat must answer.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr>
+<footer>
+  Method: cloud queries against <code>pipeline_runs</code> and <code>pg_statio_user_tables</code>; static sweeps over all 27 step scripts; direct spec reads.<br>
+  Inherited figures are marked as such rather than silently adopted. Two headline numbers in earlier drafts were wrong and are shown struck through rather than quietly replaced.<br>
+  Source: <code>docs/reports/2026-08-21-sources-chain-shape-and-phase-b-learnings.md</code>
+</footer>
+
+</div>
