@@ -177,7 +177,7 @@
       "chains": ["permits", "coa", "sources"],
       "accept_until": "none",
       "why": {
-        "text": "Parcels feeds all three chains (link_parcels in permits, link_coa_to_parcels in coa, and the sources loaders), so its drift rows are emitted into every chain's audit table per Spec 79 CRIT-3a. In permits and coa the parcels CSV is not fetched (the source block is chain-gated), so the compute reports a constant zero there — a constant row, not a check execution.",
+        "text": "Parcels feeds all three chains (link_parcels in permits, link_coa_to_parcels in coa, and the sources loaders), so its drift rows are emitted into every chain's audit table per Spec 79 CRIT-3a. Peel 8a retired the constant-zero fiction: the compute no longer reads the chain, so wherever this check is SELECTED the parcels CSV header is actually fetched and the row reports a measurement. The cost is one extra ranged GET (bytes=0-2048) on the permits and coa chains; the gain is that a permits-chain parcels drift is no longer invisible.",
         "liveness": { "kind": "table", "ref": "parcels" }
       }
     },

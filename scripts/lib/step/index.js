@@ -47,7 +47,7 @@
 const pipeline = require('../pipeline');
 const { assertDbTarget } = require('../resolve-db');
 const { validateDescriptor } = require('./validate');
-const { buildAuditTable, deriveVerdict } = require('./verdict');
+const { buildAuditTable, deriveVerdict, selectChecks } = require('./verdict');
 const { RUN_STATUS, ownsLedgerRow, openLedgerRow, finalizeLedgerRow } = require('./ledger');
 const { finalizeStrandedRun } = require('../ledger-window');
 
@@ -169,6 +169,11 @@ async function runWithPool(runnable, pool, ctx) {
         // arrives with the S4 state tables, so it is not claimed here.
         runId,
         descriptor,
+        // §1.7 — the SELECTED check ids, in declaration order. The SAME selection
+        // `buildAuditTable` scores below, handed to the compute so a compute never
+        // re-derives chain gating for itself: peel 8a removed the last
+        // `chainId === 'permits'` branch from a compute by reading this instead.
+        checks: selectChecks(descriptor, chainId).map((c) => c.id),
         log: pipeline.log,
         report(checkId, observation) {
           if (!declared.has(checkId)) {
