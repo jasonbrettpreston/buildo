@@ -1,9 +1,9 @@
 {
   "$comment": [
-    "THE ENFORCEMENT SCOPE FOR THE A2 SHAPE RULE (Spec 122 §5.1).",
+    "THE ENFORCEMENT SCOPE FOR THE A2 SHAPE RULE (Spec 122 \u00a75.1).",
     "",
     "Zero steps are converted today, so the shape rule CANNOT be enforced over",
-    "manifest.chains[*].file — every one of those 27 files would fail. This list is",
+    "manifest.chains[*].file \u2014 every one of those 27 files would fail. This list is",
     "the blocking scope: a file appears here only once its conversion has landed, and",
     "each C-track pilot appends exactly one entry as its final commit.",
     "",
@@ -13,9 +13,11 @@
     "manifest sources file NOT in this list, so an empty list is never a vacuous pass.",
     "",
     "Paths are repo-root-relative and MUST each be a manifest.chains[*] step file.",
-    "The conformance suite enforces converted ⊆ manifest files, no duplicates, and",
-    "loaded.length === converted.length (the silent-import-death guard, Spec 122 §5.2)."
+    "The conformance suite enforces converted \u2286 manifest files, no duplicates, and",
+    "loaded.length === converted.length (the silent-import-death guard, Spec 122 \u00a75.2)."
   ],
   "contract_version": 1,
-  "converted": []
+  "converted": [
+    "scripts/quality/assert-schema.js"
+  ]
 }
