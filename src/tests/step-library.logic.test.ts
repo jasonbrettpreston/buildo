@@ -546,4 +546,28 @@ describe('run(ctx) — the lifecycle, against a fake pool', () => {
       cap.restore();
     }
   });
+
+  it('§5.5 (2) — `ctx.report()` is the ONLY observation path: a returned `observations` object is NOT merged', async () => {
+    // Fold D (pilot 1 output panel). The dual path let a compute bypass the
+    // declared-check guard above by returning observations instead of reporting
+    // them. With the merge gone, a compute that only RETURNS is a compute that
+    // reported nothing: every selected check lands as "not reported" (FAIL).
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      const returned: Record<string, unknown> = {};
+      for (const c of verdictLib.selectChecks(ASSERT_SCHEMA, 'sources')) returned[c.id] = { violations: 0 };
+      await pipeline.step(ASSERT_SCHEMA, async () => ({ observations: returned }))
+        .run({ pool, chainId: 'sources' })
+        .catch(() => undefined); // blocking checks throw AFTER the emit — the summary is what is under test
+      const summary = cap.summary();
+      expect(summary.records_meta.audit_table.verdict).toBe('FAIL');
+      const parcel = summary.records_meta.audit_table.rows.find((r: Row) => r.metric === 'parcel_columns');
+      expect(parcel, 'the check row still exists — the library scores every selected check').toBeDefined();
+      expect(String(parcel.value)).toMatch(/not reported/);
+      expect(parcel.status).toBe('FAIL');
+    } finally {
+      cap.restore();
+    }
+  });
 });

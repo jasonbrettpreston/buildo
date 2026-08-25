@@ -147,7 +147,7 @@ interface GoldenDoc {
   normalised: unknown;
   file: string;
 }
-type ComputeFn = (ctx: unknown) => Promise<{ observations?: Record<string, unknown> } | void>;
+type ComputeFn = (ctx: unknown) => Promise<{ records_meta?: Record<string, unknown> } | void>;
 
 // ---------------------------------------------------------------------------
 // Artifact helpers — every claim test opens with one of these
@@ -504,8 +504,9 @@ async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<
   console.error = () => {};
   console.warn = () => {};
   try {
-    const result = await compute(ctx);
-    if (result && result.observations) Object.assign(observations, result.observations);
+    // §5.5 (2) — `ctx.report()` is the ONLY observation path; the library never
+    // merges a returned `observations` object, so neither does this mirror.
+    await compute(ctx);
   } finally {
     globalThis.fetch = realFetch;
     console.log = realLog;
@@ -518,16 +519,34 @@ async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<
   return out;
 }
 
-/** The must-fail PAIR for one check: healthy → PASS, sabotaged → FAIL. */
-async function mustFailPair(compute: ComputeFn, d: Descriptor, id: string): Promise<{ healthy: string; sabotaged: string }> {
+/** The must-fail PAIR for one check under an explicit sabotage: healthy → PASS, sabotaged → FAIL. */
+async function mustFailWith(compute: ComputeFn, d: Descriptor, id: string, sabotage: (w: World) => void): Promise<{ healthy: string; sabotaged: string }> {
   const healthy = await runCompute(compute, d, healthyWorld(d));
-  const sabotage = SABOTAGE[id];
-  expect(sabotage, `no must-fail fixture for check ${id}`).toBeDefined();
   const w = healthyWorld(d);
-  (sabotage as (w: World) => void)(w);
+  sabotage(w);
   const sabotaged = await runCompute(compute, d, w);
   return { healthy: healthy[id] ?? 'absent', sabotaged: sabotaged[id] ?? 'absent' };
 }
+
+/** The must-fail PAIR for one check, using its SABOTAGE matrix entry. */
+async function mustFailPair(compute: ComputeFn, d: Descriptor, id: string): Promise<{ healthy: string; sabotaged: string }> {
+  const sabotage = SABOTAGE[id];
+  expect(sabotage, `no must-fail fixture for check ${id}`).toBeDefined();
+  return mustFailWith(compute, d, id, sabotage as (w: World) => void);
+}
+
+/**
+ * `http_head_ok` external id → the URL fragment the fixture fetch keys HEAD
+ * status on. One entry per declared archive so a ravine- or centreline-specific
+ * reachability regression reddens its OWN pair, not only the massing one.
+ */
+const ARCHIVE_URL_FRAGMENT: Record<string, string> = {
+  massing_zip: '3dmassingshapefile',
+  ravine_zip: 'ravine-natural-feature-protection-area',
+  heritage_register_zip: 'heritage_register_address_points',
+  heritage_hcd_zip: 'heritageconservationdistrict',
+  centreline_zip: 'centreline-version',
+};
 
 // ---------------------------------------------------------------------------
 // G4d — the four fences, as pure detectors over a STRUCTURED view of the subject
@@ -983,6 +1002,21 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
+  it('#165b source_archives_reachable — the must-fail pair holds PER ARCHIVE, over every declared http_head_ok id', async () => {
+    const d = loadDescriptor();
+    const compute = loadCompute();
+    const head = checkById(d, 'source_archives_reachable').expect as { http_head_ok?: string[] };
+    const archives = head && Array.isArray(head.http_head_ok) ? head.http_head_ok : [];
+    expect(archives.length, 'the descriptor declares no archives to HEAD').toBeGreaterThan(0);
+    for (const archive of archives) {
+      const frag = ARCHIVE_URL_FRAGMENT[archive];
+      expect(frag, `archive ${archive}: no URL fragment in ARCHIVE_URL_FRAGMENT — extend the matrix`).toBeDefined();
+      const { healthy, sabotaged } = await mustFailWith(compute, d, 'source_archives_reachable', (w) => { w.headStatus[frag as string] = 404; });
+      expect(healthy, `archive ${archive}: healthy fixture should PASS`).toBe('PASS');
+      expect(sabotaged, `archive ${archive}: a 404 on it PASSES — the check never HEADed this archive`).toBe('FAIL');
+    }
+  });
+
   it('#167 Banned anti-pattern — no step test asserts ledger, lock or transaction behaviour', () => {
     loadDescriptor();
     // tokens built by concatenation so this list does not match itself
@@ -1231,8 +1265,8 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2)', () => {
     expect((d.execution.network as { timeout: string }).timeout).toBe('none');
     // 4 — on_check_error is the policy (8 of 9 checks fail the step on error)
     expect(d.execution.on_check_error).toBe('fail_step');
-    // 5 — the only table touched is pipeline_runs (migration 033)
-    expect(d.database.min_migration).toBe(33);
+    // 5 — pipeline_runs (033) + records_meta column (041) — the library writes records_meta, so 041 is the floor (Fold D)
+    expect(d.database.min_migration).toBe(41) /* Fold D: records_meta added by mig 041 */;
     // 6 — parcel_columns emits into every chain's audit table
     expect([...(checkById(d, 'parcel_columns').chains as string[])].sort()).toEqual(['coa', 'permits', 'sources']);
     // 7 — fail_check / fail_error are one throw (:585): merged terminal

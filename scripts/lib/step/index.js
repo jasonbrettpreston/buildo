@@ -149,7 +149,9 @@ async function runWithPool(runnable, pool, ctx) {
   // string. Library-side protection — running each check in its own boundary
   // and synthesizing an errored observation — is the validator growth wave,
   // where `on_check_error` becomes the runner's to apply rather than the
-  // compute's to honour. Pinned by a test so it cannot regress unnoticed.
+  // compute's to honour. Pinned by `src/tests/step-library.logic.test.ts`
+  // ("DECLARED GAP — a raw compute throw emits ZERO audit rows, only the
+  // ledger error_message") so it cannot regress unnoticed.
   try {
     await assertDatabaseTarget(pool, descriptor);
     if (owns) runId = await openLedgerRow(pool, slug);
@@ -189,8 +191,11 @@ async function runWithPool(runnable, pool, ctx) {
         },
       };
 
+      // §5.5 (2) — `ctx.report()` is the ONLY observation path. A returned
+      // `observations` object is NOT merged (fold D, pilot 1 output panel): two
+      // paths meant a compute could bypass the declared-check guard above. The
+      // return value carries `records_meta` / counters only.
       const computeResult = await runnable.compute(stepCtx);
-      if (computeResult && computeResult.observations) Object.assign(observations, computeResult.observations);
 
       const built = buildAuditTable(descriptor, chainId, observations);
       counters = deriveCounters(descriptor, computeResult);
@@ -283,7 +288,9 @@ function scheduleAutoRun(runnable) {
 
 /**
  * @param {object} descriptor - validated against step.schema.json, or this throws
- * @param {(ctx: object) => Promise<object|void>} compute
+ * @param {(ctx: object) => Promise<{records_meta?: object}|void>} compute -
+ *   reports observations ONLY via `ctx.report(checkId, observation)` (§5.5 (2));
+ *   a returned `observations` key is ignored, never merged
  * @returns {{descriptor: object, compute: Function, run: (ctx?: object) => Promise<object>}}
  */
 function step(descriptor, compute) {
