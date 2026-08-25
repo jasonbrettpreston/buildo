@@ -1068,7 +1068,7 @@ Migrations **245–248 are free** — 244 is the highest `[MEASURED]`. Sequencin
 
 **Spec 120 §14.1 proposes simplest / median / worst. That is the wrong axis for validating this contract, and the `assert_schema` audit proved it:**
 
-> An **ASSERT forces 6 of 18 categories to `"none"`** — `outputs`, `recovery`, `override`, `emits`, `config`, plus `counters: null` — and two more to a single value (`write_discipline: verdict_only`, `partial_fill: none`). **It exercises the least of the contract that any archetype can.** Picking by size would have frozen the template against the thinnest possible test.
+> An **ASSERT forces 5 of 18 categories to `"none"`** — `outputs`, `recovery`, `override`, `config`, plus `counters: null` (**amended 2026-08-25, operator ruling, Pilot 1 Fold D:** `emits` is NOT forced — the schema `allOf` forces only `outputs · recovery · counters`, §1.10 agrees, and claim #203 requires every `emits` key to name a consumer; an ASSERT that emits `checks_passed/checks_failed/errors` declares them like any other step. Nothing-hidden policy: declared, observable keys beat a forced `"none"`) — and two more to a single value (`write_discipline: verdict_only`, `partial_fill: none`). **It exercises the least of the contract that any archetype can.** Picking by size would have frozen the template against the thinnest possible test.
 
 **Because `identity.archetype` drives the required-field profile (§3.0d), contract coverage is an archetype property, not a size property.** One representative per archetype, and **four are forced — they have exactly one member each** `[MEASURED]`:
 
