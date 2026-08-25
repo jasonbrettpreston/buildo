@@ -832,9 +832,16 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     const log = git(['log', '--format=%H%x1f%s', '--', '.']).split(/\r?\n/).filter(Boolean);
     const peels = log.filter((l) => /122_step_optimization/.test(l) && /pilot 1 peel [abc]\b/i.test(l));
     expect(peels.length, 'three peel commits (8a gating · 8b verdict/audit · 8c thresholds/checks)').toBeGreaterThanOrEqual(3);
+    // Peel 8b widened this allowlist by ONE path: docs/reports/defect-ledger.md. The
+    // invariant #154 exists for is unchanged — a peel commit carries that peel's files
+    // and nothing else, and never the frozen-shape step file (asserted below). Closing
+    // an AS-D id in the fleet register IS part of the peel that closes it (Spec 123 §6
+    // G8: "every explained diff points at a Defect Ledger ID"), so leaving it out would
+    // force the ledger to drift from the commit that moved it.
     const allowed = (f: string): boolean =>
       f === COMPUTE_REL || f === DESCRIPTOR_REL || f === NOTES_REL || f.startsWith('scripts/lib/step/') ||
-      f.startsWith(STEP_DIR_REL) || f === REPORT_REL || f.startsWith(GOLDEN_DIR_REL) || f === 'docs/reports/review_followups.md';
+      f.startsWith(STEP_DIR_REL) || f === REPORT_REL || f.startsWith(GOLDEN_DIR_REL) ||
+      f === 'docs/reports/review_followups.md' || f === 'docs/reports/defect-ledger.md';
     for (const p of peels) {
       const [hash, subject] = p.split('\x1f') as [string, string];
       const files = git(['show', '--name-only', '--format=', hash]).split(/\r?\n/).filter(Boolean).map((f) => f.replace(/\\/g, '/'));

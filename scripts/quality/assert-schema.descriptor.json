@@ -280,7 +280,7 @@
     {
       "from": "the draft descriptor's two distinct failed terminals, fail_check (schema_drift_detected) and fail_error (fetch_error)",
       "why": {
-        "text": "Both are one throw in the code — the circuit breaker — so nothing observable distinguishes them and a two-terminal declaration would be a fiction. Fold B merges them at commit 7; the fetch-path liveness handle is carried onto the survivor rather than lost, and separating them is peel 8b's business once the per-check attribution exists.",
+        "text": "Both are one throw in the code — the circuit breaker — so nothing observable distinguishes them and a two-terminal declaration would be a fiction. Fold B merged them at commit 7; the fetch-path liveness handle is carried onto the survivor rather than lost. RE-EXAMINED AT PEEL 8b AND LEFT MERGED: check-id attribution now distinguishes the two CAUSES inside the audit table (an errored check renders as `check errored: <msg>` while a violated one renders its violation count), but `terminals[]` has no runtime consumer anywhere in the library — `grep -rn terminals scripts/lib/` returns 0 — so the runner selects no terminal and a second declared terminal would still be a fiction. Splitting them needs the terminal-selection wave, not another compute peel.",
         "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
       },
       "adjudicated_by": "Fold B ruling 7",
