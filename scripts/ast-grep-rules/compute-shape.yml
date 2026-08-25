@@ -112,3 +112,100 @@ rule:
 constraints:
   MOD:
     regex: '^.(pg|dotenv|fs|node:fs|child_process|node:child_process|\.\./pipeline|\.\./step|\.\./resolve-db).$'
+
+---
+
+id: compute-no-literal-url-tunable
+language: JavaScript
+severity: error
+message: |
+  A numeric `limit=`/`sample=` literal in a compute's URL (Spec 122 §1.2a P4).
+
+  P4 is a DIRECTIVE: "every threshold, sample size, byte window, timeout, retry
+  count, limit, or rate a step consumes is a registered logic variable, editable in
+  admin — never a literal in compute". A sample size baked into a query string is a
+  knob no operator can turn and no `records_meta` can show.
+
+  FIX: seed the variable in scripts/seeds/logic_variables.json, declare it in the
+  descriptor's `config.logic_variables[]` with its bounds, add it to
+  GlobalConfigCard's GROUPS, then read it as
+  `` `…&limit=${ctx.config.<name>}` `` — the library resolves and bounds-checks it
+  before this file runs (scripts/lib/step/config.js).
+
+  ALLOW-LISTED: `limit=0`. That is not a knob — it is CKAN's metadata-only sentinel
+  (fetch NO rows, return the field list), and raising it would change what the call
+  MEANS, not how much of it there is.
+
+  SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.2a P4
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - kind: string
+      regex: '(limit|sample|per_page|rows)=([1-9][0-9]*|0[0-9]+)'
+    - kind: template_string
+      regex: '(limit|sample|per_page|rows)=([1-9][0-9]*|0[0-9]+)'
+
+---
+
+id: compute-no-literal-byte-window
+language: JavaScript
+severity: error
+message: |
+  A literal HTTP Range byte window in a compute (Spec 122 §1.2a P4).
+
+  `Range: bytes=0-2048` is a tunable: how much of a remote file this step downloads
+  before giving up on finding what it came for. An operator must be able to widen it
+  when a publisher's header row or GeoJSON preamble grows, WITHOUT a code deploy.
+
+  FIX: seed + declare the variable, then
+  `` { headers: { Range: `bytes=0-${ctx.config.<name>}` } } ``.
+
+  SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.2a P4
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - kind: string
+      regex: 'bytes=[0-9]+-[0-9]+'
+    - kind: template_string
+      regex: 'bytes=[0-9]+-[0-9]+'
+
+---
+
+id: compute-no-literal-threshold
+language: JavaScript
+severity: error
+message: |
+  A numeric threshold compared against a violation/failure/error count (Spec 122 §1.2a P4).
+
+  A compute does not decide how many violations are too many — the DESCRIPTOR does,
+  via `checks[].limit` (`viol == 0`, `viol <= N`, `{warn, fail}`), which the library
+  evaluates in scripts/lib/step/verdict.js and renders as the audit row's
+  `threshold` column. A literal here is a second, invisible limit that no audit row
+  shows and no operator can move.
+
+  FIX: move the number into `checks[].limit` (declared, rendered, operator-visible)
+  or, if it is genuinely a tunable rather than a verdict bound, into `ctx.config`.
+
+  NOT MATCHED: comparisons against 0 (`if (missing.length > 0)`) — that is an
+  "is there any" test, not a threshold.
+
+  SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.2a P4, §7.1
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - pattern: $COUNT > $N
+    - pattern: $COUNT >= $N
+    - pattern: $COUNT < $N
+    - pattern: $COUNT <= $N
+constraints:
+  COUNT:
+    regex: '(?i)(violation|failure|viol\b|errors)'
+  N:
+    kind: number
+    regex: '^([1-9][0-9]*|[0-9]+\.[0-9]+)$'

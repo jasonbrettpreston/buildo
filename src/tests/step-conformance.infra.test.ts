@@ -31,7 +31,7 @@
 //      known-bad one. This is what proves the battery WORKS while the real loop
 //      is empty.
 import { describe, it, expect } from 'vitest';
-import { execFileSync } from 'child_process';
+import { execFileSync, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -439,6 +439,13 @@ const COMPUTE_RULE_IDS = [
   'compute-no-wall-clock',
   'compute-no-process-env',
   'compute-forbidden-require',
+  // §1.2a P4 (Pilot 1 remediation) — the hidden-tunable rules. The fixture carries
+  // the exact three literals assert_schema hard-coded before externalization
+  // (`&limit=20`, `Range: bytes=0-2048`) plus a bare violation threshold, so this
+  // set IS the prove-red for the retired literals.
+  'compute-no-literal-url-tunable',
+  'compute-no-literal-byte-window',
+  'compute-no-literal-threshold',
 ];
 
 interface ComputePair {
@@ -507,7 +514,25 @@ describe('§5.5 compute shape — dispatch table ≡ declared checks', () => {
     expect([...fired].sort(), `${BAD_COMPUTE_FIXTURE} did not trip every rule`).toEqual([...COMPUTE_RULE_IDS].sort());
   });
 
-  it('the driver enforces the compute corpus in its blocking half', () => {
+  it('RED — the driver EXITS 1 (no --json) when the compute corpus violates the shape (blocking half, both directions)', () => {
+    // Point the corpus at the known-bad fixture dir via the TEST-ONLY env override and run the
+    // real gating path (no --json: that branch returns before the blocking loop).
+    const run = spawnSync('node', [SHAPE_DRIVER], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      timeout: 120_000,
+      env: { ...process.env, BUILDO_COMPUTE_DIR: 'scripts/steps/_schema/fixtures/compute' },
+    });
+    expect(run.status, `driver exit code; stdout=${run.stdout}
+stderr=${run.stderr}`).toBe(1);
+    expect(`${run.stdout}${run.stderr}`).toMatch(/footgun\[compute-no-/);
+    // and the real corpus passes the same gating path
+    const clean = spawnSync('node', [SHAPE_DRIVER], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    expect(clean.status, `clean run; stdout=${clean.stdout}
+stderr=${clean.stderr}`).toBe(0);
+  });
+
+  it('the driver REPORTS the compute corpus under --json (report shape only — gating is proven above)', () => {
     const report = JSON.parse(
       execFileSync('node', [SHAPE_DRIVER, '--json'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 }),
     ) as { compute_rule?: string; compute?: Array<{ file: string; violations: unknown[] }> };
@@ -515,6 +540,177 @@ describe('§5.5 compute shape — dispatch table ≡ declared checks', () => {
     expect((report.compute ?? []).map((f) => f.file).sort()).toEqual(COMPUTE_PAIRS.map((p) => p.compute).sort());
     expect((report.compute ?? []).filter((f) => f.violations.length > 0)).toEqual([]);
   });
+});
+
+// ---------------------------------------------------------------------------
+// 5b. §1.2a P4 — every tunable is externalized, and BOTH directions are proven
+// ---------------------------------------------------------------------------
+//
+// "a hard-coded knob with `config: \"none\"` is a hidden variable = P1 violation."
+// The compute-shape rules above catch the LITERAL; this battery catches everything
+// a static literal-hunt cannot see — a declared name no registry knows, a seeded
+// variable no operator can find in the admin UI, a declaration nothing reads, and a
+// read nothing declared (which is `undefined` at runtime, i.e. `limit=undefined`).
+//
+// FOUR SURFACES, and each must agree with the others:
+//   seed JSON / migrations  →  the descriptor's `config.logic_variables[]`
+//   the descriptor          →  GlobalConfigCard GROUPS (operator visibility)
+//   the descriptor          →  the compute's `ctx.config.<name>` reads
+// The registry doc is the union surface (seed + migration-only) and is itself
+// drift-guarded by logic-vars-registry.infra.test.ts, so parsing it here cannot rot.
+
+const SEED_PATH = path.join(REPO_ROOT, 'scripts/seeds/logic_variables.json');
+const REGISTRY_DOC = path.join(REPO_ROOT, 'docs/reference/logic-variables-registry.md');
+
+const SEED = JSON.parse(fs.readFileSync(SEED_PATH, 'utf8')) as Record<string, { description?: string }>;
+
+/** Every registered logic-variable key: the seed JSON ∪ the migration-only vars. */
+function registryKeys(): Set<string> {
+  const keys = new Set(Object.keys(SEED));
+  const doc = fs.readFileSync(REGISTRY_DOC, 'utf8');
+  for (const m of doc.matchAll(/^\| `([a-z][a-z0-9_]*)` \|/gm)) keys.add(m[1]!);
+  return keys;
+}
+const REGISTRY_KEYS = registryKeys();
+
+/** The admin surface: every numeric key GlobalConfigCard actually renders. */
+function groupKeys(): Set<string> {
+  const src = fs.readFileSync(
+    path.join(REPO_ROOT, 'src/features/admin-controls/components/GlobalConfigCard.tsx'),
+    'utf8',
+  );
+  const block = /export const GROUPS[\s\S]*?\n\];/.exec(src);
+  if (!block) throw new Error('GROUPS block not found in GlobalConfigCard.tsx');
+  return new Set([...block[0]!.matchAll(/'([a-z][a-z0-9_]*)'/g)].map((m) => m[1]!));
+}
+const GROUP_KEYS = groupKeys();
+
+/** Registry keys whose seeded description TAGS them to this step (the `CONSUMED by` annotation). */
+function taggedToStep(slug: string, computeRel: string | null): string[] {
+  const needles = [slug, path.basename(computeRel ?? ''), `${slug.replace(/_/g, '-')}.js`].filter(Boolean);
+  return Object.entries(SEED)
+    .filter(([, v]) => {
+      const d = v.description ?? '';
+      const i = d.indexOf('CONSUMED by');
+      if (i === -1) return false;
+      const tail = d.slice(i);
+      return needles.some((n) => tail.includes(n));
+    })
+    .map(([k]) => k);
+}
+
+interface ConfigDescriptor {
+  identity: { name: string };
+  config: 'none' | { logic_variables: Array<{ name: string }> };
+}
+
+/** The declared config-var names for a converted step, from its sibling descriptor. */
+function declaredConfigVars(relFile: string): { slug: string; declared: string[] } {
+  const d = JSON.parse(
+    fs.readFileSync(path.join(REPO_ROOT, `${relFile.slice(0, -3)}.descriptor.json`), 'utf8'),
+  ) as ConfigDescriptor;
+  return { slug: d.identity.name, declared: d.config === 'none' ? [] : d.config.logic_variables.map((v) => v.name) };
+}
+
+/**
+ * Every §1.2a P4 finding for one step. Empty array = conformant.
+ *
+ * `declared` is a PARAMETER, not read from disk, so the canaries below can drive the
+ * exact same predicates with a var removed (the seed direction) or an unregistered
+ * name added (the registry direction) without mutating a committed file.
+ */
+function configFindings(relFile: string, slug: string, declared: string[]): string[] {
+  const findings: string[] = [];
+
+  // The paired compute, by basename (§4.1 "three files, one slug").
+  const computeRel = `${COMPUTE_DIR}/${path.basename(relFile)}`;
+  const hasCompute = fs.existsSync(path.join(REPO_ROOT, computeRel));
+  const consumed = hasCompute
+    ? [
+        ...new Set(
+          [...fs.readFileSync(path.join(REPO_ROOT, computeRel), 'utf8').matchAll(/ctx\.config\.([a-z][a-z0-9_]*)/g)]
+            .map((m) => m[1]!),
+        ),
+      ]
+    : [];
+
+  for (const name of declared) {
+    if (!REGISTRY_KEYS.has(name)) {
+      findings.push(`declared config var "${name}" is in NO registry (seed JSON or a migration) — nothing to edit`);
+    }
+    if (!GROUP_KEYS.has(name)) {
+      findings.push(`declared config var "${name}" is absent from GlobalConfigCard GROUPS — invisible to operators`);
+    }
+    if (hasCompute && !consumed.includes(name)) {
+      findings.push(`declared config var "${name}" is never read as ctx.config.${name} in ${computeRel} — a dead declaration`);
+    }
+  }
+  for (const name of consumed) {
+    if (!declared.includes(name)) {
+      findings.push(`${computeRel} reads ctx.config.${name}, which the descriptor does not declare — strict projection makes it undefined at runtime`);
+    }
+  }
+  for (const name of taggedToStep(slug, hasCompute ? computeRel : null)) {
+    if (!declared.includes(name)) {
+      findings.push(`seed "${name}" is annotated CONSUMED by ${slug} but the descriptor's config does not declare it`);
+    }
+  }
+  if (declared.length === 0 && consumed.length > 0) {
+    findings.push(`config is "none" while ${computeRel} reads ${consumed.length} ctx.config value(s) — a hidden variable (§1.2a P4)`);
+  }
+  return findings;
+}
+
+describe('§1.2a P4 — every tunable is externalized (declared ≡ registry ≡ GROUPS ≡ ctx.config)', () => {
+  it('the registry and GROUPS parses are non-empty (a silent parse miss would vacuously pass everything)', () => {
+    expect(REGISTRY_KEYS.size, 'the logic-variable registry parsed empty').toBeGreaterThan(300);
+    expect(GROUP_KEYS.size, 'GlobalConfigCard GROUPS parsed empty').toBeGreaterThan(50);
+    expect([...Object.keys(SEED)].every((k) => REGISTRY_KEYS.has(k)), 'registry ⊉ seed — the doc parse missed rows').toBe(true);
+  });
+
+  it('at least one converted step actually DECLARES a config var (else every check below is vacuous)', () => {
+    const totals = CONVERTED.map((f) => declaredConfigVars(f).declared.length);
+    expect(
+      totals.reduce((a, b) => a + b, 0),
+      'no converted step declares a single logic variable — the whole battery would be a vacuous pass',
+    ).toBeGreaterThan(0);
+  });
+
+  for (const relFile of CONVERTED) {
+    it(`${relFile} — declared ⊆ registry, declared ⊆ GROUPS, consumed ≡ declared`, () => {
+      const { slug, declared } = declaredConfigVars(relFile);
+      const findings = configFindings(relFile, slug, declared);
+      expect(findings, findings.join('\n')).toEqual([]);
+    });
+  }
+
+  // ── BOTH DIRECTIONS, on the SAME predicates the green loop above runs ──────
+  const WITH_CONFIG = CONVERTED.filter((f) => declaredConfigVars(f).declared.length > 0);
+
+  for (const relFile of WITH_CONFIG) {
+    it(`RED — ${relFile}: DROPPING a declared var reddens conformance (the seed direction)`, () => {
+      const { slug, declared } = declaredConfigVars(relFile);
+      const findings = configFindings(relFile, slug, declared.slice(1));
+      expect(findings.some((f) => f.includes(`ctx.config.${declared[0]}`)), findings.join('\n')).toBe(true);
+      expect(findings.some((f) => f.includes('annotated CONSUMED by')), findings.join('\n')).toBe(true);
+    });
+
+    it(`RED — ${relFile}: declaring config "none" reddens as a HIDDEN VARIABLE`, () => {
+      const { slug } = declaredConfigVars(relFile);
+      const findings = configFindings(relFile, slug, []);
+      expect(findings.some((f) => f.includes('a hidden variable (§1.2a P4)')), findings.join('\n')).toBe(true);
+    });
+
+    it(`RED — ${relFile}: an unregistered / admin-invisible name reddens (the registry + GROUPS directions)`, () => {
+      const { slug, declared } = declaredConfigVars(relFile);
+      const ghost = 'a_var_no_registry_will_ever_have';
+      expect(REGISTRY_KEYS.has(ghost) || GROUP_KEYS.has(ghost)).toBe(false);
+      const findings = configFindings(relFile, slug, [...declared, ghost]);
+      expect(findings.some((f) => f.includes('is in NO registry')), findings.join('\n')).toBe(true);
+      expect(findings.some((f) => f.includes('absent from GlobalConfigCard GROUPS')), findings.join('\n')).toBe(true);
+      expect(findings.some((f) => f.includes('a dead declaration')), findings.join('\n')).toBe(true);
+    });
+  }
 });
 
 // ---------------------------------------------------------------------------

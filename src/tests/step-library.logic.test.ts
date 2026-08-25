@@ -324,7 +324,13 @@ describe('the ledger row (§4.1 ①㉝, Spec 120 §3.2b)', () => {
 // 6. The lifecycle, end to end, against a fake pool (no DB)
 // ---------------------------------------------------------------------------
 
-type FakePoolOpts = { lockAcquired?: boolean; migrations?: number; database?: string };
+type FakePoolOpts = {
+  lockAcquired?: boolean;
+  migrations?: number;
+  database?: string;
+  /** logic_variables rows this DB "has". Absent ⇒ zero rows ⇒ the loader's seed fallbacks. */
+  logicVars?: Record<string, unknown>;
+};
 
 function fakePool(opts: FakePoolOpts = {}) {
   const sql: string[] = [];
@@ -332,6 +338,15 @@ function fakePool(opts: FakePoolOpts = {}) {
   const answer = (text: string) => {
     if (text.includes('current_database()')) {
       return { rows: [{ database: opts.database ?? 'postgres', db_user: 'postgres', has_tracking: true }] };
+    }
+    if (text.includes('FROM logic_variables')) {
+      return {
+        rows: Object.entries(opts.logicVars ?? {}).map(([variable_key, variable_value]) => ({
+          variable_key,
+          variable_value,
+          variable_value_json: null,
+        })),
+      };
     }
     if (text.includes('FROM public.schema_migrations')) return { rows: [{ n: opts.migrations ?? 999 }] };
     if (text.includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired: opts.lockAcquired !== false }] };
@@ -547,6 +562,25 @@ describe('run(ctx) — the lifecycle, against a fake pool', () => {
     }
   });
 
+  it('config: "none" — ctx.config is an empty FROZEN object and records_meta carries NO config key', async () => {
+    const pool = fakePool();
+    const cap = captureEmissions();
+    let seen: Record<string, unknown> | undefined;
+    try {
+      await pipeline
+        .step(ASSERT_SCHEMA, async (ctx: { config: Record<string, unknown> }) => { seen = ctx.config; })
+        .run({ pool, chainId: 'sources' })
+        .catch(() => undefined);
+      expect(ASSERT_SCHEMA.config, 'the fixture is the config:"none" case').toBe('none');
+      expect(seen).toEqual({});
+      expect(Object.isFrozen(seen)).toBe(true);
+      expect('config' in cap.summary().records_meta, 'a config:"none" step must pay ZERO records_meta bytes (§1.2a P3)').toBe(false);
+      expect(pool.sql.some((s) => s.includes('FROM logic_variables')), 'no config query for a step that declares none').toBe(false);
+    } finally {
+      cap.restore();
+    }
+  });
+
   it('§5.5 (2) — `ctx.report()` is the ONLY observation path: a returned `observations` object is NOT merged', async () => {
     // Fold D (pilot 1 output panel). The dual path let a compute bypass the
     // declared-check guard above by returning observations instead of reporting
@@ -569,5 +603,163 @@ describe('run(ctx) — the lifecycle, against a fake pool', () => {
     } finally {
       cap.restore();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 7. §1.2a P4 — `ctx.config`, the ONE seam a compute reaches a tunable through
+// ---------------------------------------------------------------------------
+//
+// P4 is a DIRECTIVE ("every tunable is externalized to admin logic variables"), and
+// the four properties that make it real rather than decorative are:
+//   1. PROJECTION — `validation: "strict"` is not a checker that could be skipped,
+//      it is an object that does not contain the undeclared key.
+//   2. BOUNDS BEFORE COMPUTE — `on_invalid` decides, and it decides before any
+//      observation exists, so a bad threshold never produces a green audit row.
+//   3. HOISTING — a SKIP-eligible step resolves ABOVE the advisory lock, so an
+//      invalid value cannot hide behind a green SKIPPED summary (link-wsib's A1/A2).
+//   4. THE STAMP — the value in force is in `records_meta.config`, every run.
+
+/** ASSERT_SCHEMA with a `config` block, so the fixture's own `config:"none"` case stays intact. */
+function withConfig(
+  vars: Array<{ name: string; min?: number | 'none'; max?: number | 'none'; on_invalid?: 'fail' | 'default' | 'clamp' }>,
+  hoisted = true,
+) {
+  const d = clone(ASSERT_SCHEMA);
+  d.config = {
+    logic_variables: vars.map((v) => ({
+      name: v.name,
+      min: v.min === undefined ? 'none' : v.min,
+      max: v.max === undefined ? 'none' : v.max,
+      on_invalid: v.on_invalid ?? 'fail',
+    })),
+    validation: 'strict',
+    hoisted_above_gate: hoisted,
+  };
+  return d;
+}
+
+/** Run a descriptor against a fake pool; return ctx.config as compute saw it, the throw, the summary. */
+async function runWithConfig(d: Record<string, unknown>, opts: FakePoolOpts = {}) {
+  const pool = fakePool(opts);
+  const cap = captureEmissions();
+  let seen: Record<string, unknown> | undefined;
+  let error: Error | null = null;
+  let summary: { records_meta: Record<string, unknown> } | null = null;
+  try {
+    const compute = async (ctx: { config: Record<string, unknown>; descriptor: Record<string, unknown>; chainId: string | null }) => {
+      seen = ctx.config;
+      await allClean(ctx);
+    };
+    await pipeline.step(d, compute).run({ pool, chainId: 'sources' });
+    summary = cap.summary();
+  } catch (err) {
+    error = err as Error;
+  } finally {
+    cap.restore();
+  }
+  return { pool, seen, error, summary };
+}
+
+// Seed default 20, bounds [1, 1000] — the var Pilot 1 externalized (`&limit=20`).
+const SEED_SAMPLE_ROWS = 'assert_schema_type_sample_rows';
+
+describe('§1.2a P4 — ctx.config: resolved, bounds-checked, projected, stamped', () => {
+  it('resolves the DECLARED names from the DB and stamps them into records_meta.config', async () => {
+    const d = withConfig([{ name: SEED_SAMPLE_ROWS, min: 1, max: 1000 }]);
+    const { seen, error, summary } = await runWithConfig(d, { logicVars: { [SEED_SAMPLE_ROWS]: '37' } });
+    expect(error).toBeNull();
+    expect(seen).toEqual({ [SEED_SAMPLE_ROWS]: 37 });
+    // The stamp is the whole point: "the value in force is observable in the run's
+    // records_meta". An operator edit that changed behaviour is visible in the ledger.
+    expect(summary?.records_meta.config).toEqual({ [SEED_SAMPLE_ROWS]: 37 });
+  });
+
+  it('the projection is FROZEN and contains ONLY the declared names (validation: "strict")', async () => {
+    const d = withConfig([{ name: SEED_SAMPLE_ROWS, min: 1, max: 1000 }]);
+    const { seen } = await runWithConfig(d, { logicVars: { [SEED_SAMPLE_ROWS]: '20', los_base_divisor: '4' } });
+    expect(Object.isFrozen(seen)).toBe(true);
+    expect(Object.keys(seen as object)).toEqual([SEED_SAMPLE_ROWS]);
+    expect(
+      (seen as Record<string, unknown>).los_base_divisor,
+      'an undeclared name is UNREACHABLE, not merely unvalidated',
+    ).toBeUndefined();
+  });
+
+  it('a declared name in NO registry throws BEFORE compute — a name no operator can edit is a hidden literal', async () => {
+    const { error, seen } = await runWithConfig(withConfig([{ name: 'a_var_no_seed_and_no_db_has' }]));
+    expect(error?.message).toMatch(/exists in NO registry/);
+    expect(seen, 'compute never ran').toBeUndefined();
+  });
+
+  it('on_invalid "fail" REFUSES an out-of-bounds value; "default" falls back to the seed; "clamp" clamps', async () => {
+    const failed = await runWithConfig(
+      withConfig([{ name: SEED_SAMPLE_ROWS, min: 1, max: 1000, on_invalid: 'fail' }]),
+      { logicVars: { [SEED_SAMPLE_ROWS]: '9999' } },
+    );
+    expect(failed.error?.message).toMatch(/above_max/);
+    expect(failed.seen, 'compute never ran on the bad value').toBeUndefined();
+
+    const defaulted = await runWithConfig(
+      withConfig([{ name: SEED_SAMPLE_ROWS, min: 1, max: 1000, on_invalid: 'default' }]),
+      { logicVars: { [SEED_SAMPLE_ROWS]: '0' } },
+    );
+    expect(defaulted.error).toBeNull();
+    expect(defaulted.seen, 'the seed default IS the pre-externalization literal').toEqual({ [SEED_SAMPLE_ROWS]: 20 });
+    expect(defaulted.summary?.records_meta.config).toEqual({ [SEED_SAMPLE_ROWS]: 20 });
+
+    const clamped = await runWithConfig(
+      withConfig([{ name: SEED_SAMPLE_ROWS, min: 1, max: 1000, on_invalid: 'clamp' }]),
+      { logicVars: { [SEED_SAMPLE_ROWS]: '5000' } },
+    );
+    expect(clamped.error).toBeNull();
+    expect(clamped.seen).toEqual({ [SEED_SAMPLE_ROWS]: 1000 });
+  });
+
+  it('"default" with a seed default that ALSO violates the bounds throws — it never proceeds on nothing', async () => {
+    const { error, seen } = await runWithConfig(
+      withConfig([{ name: SEED_SAMPLE_ROWS, min: 5000, max: 9000, on_invalid: 'default' }]),
+      { logicVars: { [SEED_SAMPLE_ROWS]: '1' } },
+    );
+    expect(error?.message).toMatch(/nothing to fall back to/);
+    expect(seen).toBeUndefined();
+  });
+
+  it('⚠️ hoisted_above_gate: config resolves ABOVE the lock — an invalid value cannot hide behind a green SKIP', async () => {
+    // The lock is held elsewhere. WITHOUT hoisting this run emits a green
+    // self_skipped summary and nobody ever learns the threshold was garbage.
+    const { error, pool } = await runWithConfig(
+      withConfig([{ name: SEED_SAMPLE_ROWS, min: 1, max: 1000, on_invalid: 'fail' }], true),
+      { lockAcquired: false, logicVars: { [SEED_SAMPLE_ROWS]: '9999' } },
+    );
+    expect(error?.message, 'a contended run must still REFUSE an out-of-bounds threshold').toMatch(/above_max/);
+    const cfgAt = pool.sql.findIndex((s: string) => s.includes('FROM logic_variables'));
+    const lockAt = pool.sql.findIndex((s: string) => s.includes('pg_try_advisory_xact_lock'));
+    expect(cfgAt, 'the config query must have run').toBeGreaterThan(-1);
+    expect(lockAt === -1 || cfgAt < lockAt, 'config resolved before the lock was attempted').toBe(true);
+  });
+
+  it('NOT hoisted: a contended run self-skips and pays no config query at all', async () => {
+    const { error, pool } = await runWithConfig(
+      withConfig([{ name: SEED_SAMPLE_ROWS, min: 1, max: 1000, on_invalid: 'fail' }], false),
+      { lockAcquired: false, logicVars: { [SEED_SAMPLE_ROWS]: '9999' } },
+    );
+    expect(error, 'the un-hoisted step skips before it ever looks at config').toBeNull();
+    expect(pool.sql.some((s: string) => s.includes('FROM logic_variables'))).toBe(false);
+  });
+
+  it('a config failure lands as a `failed` ledger row carrying the error_message, not a silent no-op', async () => {
+    const d = withConfig([{ name: SEED_SAMPLE_ROWS, min: 1, max: 1000, on_invalid: 'fail' }]);
+    const standalone = fakePool({ logicVars: { [SEED_SAMPLE_ROWS]: '9999' } });
+    const cap = captureEmissions();
+    try {
+      await expect(pipeline.step(d, allClean).run({ pool: standalone, chainId: null })).rejects.toThrow(/above_max/);
+    } finally {
+      cap.restore();
+    }
+    const update = paramsOf(standalone, (s) => s.trim().startsWith('UPDATE pipeline_runs'));
+    expect(update[0]).toBe('failed');
+    expect(String(update[2])).toMatch(/above_max/);
+    expect(update[7], 'no audit rows exist — the failure predates every observation').toBeNull();
   });
 });

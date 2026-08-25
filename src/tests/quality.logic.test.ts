@@ -2168,8 +2168,11 @@ describe('assert-schema.js EST_CONST_COST type validation resilience', () => {
     expect(schemaSource).toContain("replace(/[^0-9.\\-]/g, '')");
   });
 
-  it('samples 20 rows instead of 5 to reduce all-junk risk', () => {
-    expect(schemaSource).toContain('limit=20');
+  it('samples the externalized row count (§1.2a P4: assert_schema_type_sample_rows, seed default 20) instead of a literal', () => {
+    // The 20-value intent is pinned by assert-schema-config-parity.logic.test.ts (seed default ≡ old literal);
+    // compute must read it through ctx.config, never hard-code it (P4 remediation, 2026-08-25).
+    expect(schemaSource).toContain('limit=${ctx.config.assert_schema_type_sample_rows}');
+    expect(schemaSource).not.toContain('limit=20');
     expect(schemaSource).not.toContain('limit=5');
   });
 

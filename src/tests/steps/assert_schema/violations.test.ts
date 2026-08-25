@@ -125,6 +125,7 @@ interface Descriptor {
   interpretation: { file: string; entries: number } | 'none';
   database: { min_migration: number | 'none' };
   counters: unknown;
+  config: 'none' | { logic_variables: Array<{ name: string; min: number | 'none'; max: number | 'none'; on_invalid: string }> };
   sharing: { varies_by_chain: { checks: string } };
   terminals: Array<{ id: string; kind: string; status: string; records_meta: Record<string, string> | string }>;
 }
@@ -470,6 +471,21 @@ function fetchFor(w: World): (url: string, init?: { method?: string }) => Promis
   };
 }
 
+/**
+ * The `ctx.config` the library would hand this compute on a freshly seeded DB:
+ * the DECLARED names projected out of the seed JSON, frozen. Derived from the
+ * descriptor + seed rather than restated, so adding a fourth variable needs no edit
+ * here and REMOVING one from either side reddens the compute instead of this mirror.
+ */
+function configProjection(d: Descriptor): Readonly<Record<string, number>> {
+  if (d.config === 'none') return Object.freeze({});
+  const seed = JSON.parse(fs.readFileSync(abs('scripts/seeds/logic_variables.json'), 'utf8')) as
+    Record<string, { default: number }>;
+  const out: Record<string, number> = {};
+  for (const v of d.config.logic_variables) out[v.name] = seed[v.name]!.default;
+  return Object.freeze(out);
+}
+
 /** Run a compute against a world; return the row status per check (standalone → every check selected). */
 async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<Record<string, string>> {
   const observations: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
@@ -489,6 +505,14 @@ async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<
     // reintroduces a bare `fetch(`, this test must not silently hit the network.
     fetch: fetchFor(w),
     clock: () => Date.parse(`${FIXTURE_REVIEWED}T00:00:00Z`),
+    // §1.2a P4 (Pilot 1 P4 remediation, 2026-08-25) — the compute's three tunables
+    // (`&limit=N`, the two `Range: bytes=0-N` windows) are now logic variables read
+    // through `ctx.config`. The library resolves them from logic_variables and
+    // bounds-checks them BEFORE compute; this mirror does the same projection from
+    // the DESCRIPTOR + the seed defaults, so the fixture world exercises exactly the
+    // values a fresh DB would run on. Nothing here pins the literal 20/2048/8192 —
+    // that parity belongs to src/tests/assert-schema-config-parity.logic.test.ts.
+    config: configProjection(d),
     log: { info: () => {}, warn: () => {}, error: () => {} },
     report(checkId: string, observation: unknown) {
       if (!declared.has(checkId)) throw new Error(`compute reported undeclared check "${checkId}"`);

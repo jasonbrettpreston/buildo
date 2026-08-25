@@ -25,6 +25,12 @@
  *   4. EVERY I/O CALL GOES THROUGH AN INJECTED SEAM — `ctx.fetch` (never bare
  *      `fetch(`), `ctx.clock` (never `Date.now()`). No `process.env`, no `pg`, no
  *      `fs`: a compute that can reach those is a compute a test cannot pin.
+ *      EVERY TUNABLE GOES THROUGH `ctx.config` (§1.2a P4) — the sample size and the
+ *      two ranged-read windows below are operator-editable logic variables, resolved
+ *      and bounds-checked by scripts/lib/step/config.js BEFORE this file runs. The
+ *      one surviving numeric in a URL is `limit=0`, which is CKAN's metadata-only
+ *      sentinel (fetch NO rows, return the field list) — structural, not a knob, and
+ *      allow-listed as such by the compute-shape rule.
  *   5. Check functions appear in DESCRIPTOR ORDER; everything reusable lives below
  *      the `// ---- helpers ----` marker; policy text lives in the descriptor's
  *      `checks[].why`, not in a comment here.
@@ -287,7 +293,7 @@ function parseCost(v) {
 }
 
 async function validateTypeSample(ctx, resourceId, label) {
-  const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=20`;
+  const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=${ctx.config.assert_schema_type_sample_rows}`;
   const res = await ctx.fetch(url);
   if (!res.ok) return true; // non-fatal — declared in the descriptor's limitations[]
 
@@ -324,7 +330,7 @@ async function validateTypeSample(ctx, resourceId, label) {
 /** Fetch the first chunk of a CSV file and extract the header row column names. */
 async function fetchCsvHeaders(ctx, url, label) {
   ctx.log.info(tag(ctx), `Fetching CSV headers for ${label}...`);
-  const res = await ctx.fetch(url, { headers: { Range: 'bytes=0-2048' } });
+  const res = await ctx.fetch(url, { headers: { Range: `bytes=0-${ctx.config.assert_schema_csv_header_bytes}` } });
   // Some servers ignore Range and return 200 with full body — that's fine
   if (!res.ok && res.status !== 206) {
     throw new Error(`CSV fetch failed for ${label}: ${res.status} ${res.statusText}`);
@@ -340,7 +346,7 @@ async function fetchCsvHeaders(ctx, url, label) {
 /** Fetch the first chunk of a GeoJSON file and extract property keys from the first feature. */
 async function fetchGeoJsonPropertyKeys(ctx, url, label) {
   ctx.log.info(tag(ctx), `Fetching GeoJSON properties for ${label}...`);
-  const res = await ctx.fetch(url, { headers: { Range: 'bytes=0-8192' } });
+  const res = await ctx.fetch(url, { headers: { Range: `bytes=0-${ctx.config.assert_schema_geojson_probe_bytes}` } });
   if (!res.ok && res.status !== 206) {
     throw new Error(`GeoJSON fetch failed for ${label}: ${res.status} ${res.statusText}`);
   }

@@ -51,7 +51,11 @@ const RULE = 'scripts/ast-grep-rules/step-shape.yml';
 // compute DIRECTORY, not converted.json: a compute module exists only because a
 // conversion produced it, so the corpus is self-arming and never report-only.
 const COMPUTE_RULE = 'scripts/ast-grep-rules/compute-shape.yml';
-const COMPUTE_DIR = 'scripts/lib/compute';
+// BUILDO_COMPUTE_DIR is a TEST-ONLY override so the conformance suite can point the
+// blocking half at the known-bad fixture and prove the driver exits 1 without --json
+// (Regression Guardian, P4 remediation 2026-08-25: a --json run returns before the
+// blocking loop, so the previous "enforces" test never exercised the gate).
+const COMPUTE_DIR = process.env.BUILDO_COMPUTE_DIR || 'scripts/lib/compute';
 const CONVERTED = 'scripts/steps/_schema/converted.json';
 const MANIFEST = 'scripts/manifest.json';
 
@@ -208,6 +212,26 @@ function main() {
       failed = true;
     }
   }
+  // ---- the compute corpus, ALSO blocking -----------------------------------
+  // ⚠️ 2026-08-25 (Pilot 1 P4): this loop was MISSING. `computeResults` was scanned,
+  // shaped into `--json`, and counted in the success line — but never gated, so the
+  // §5.5 half of the "always-blocking" corpus documented in this file's header was
+  // report-only in fact. The conformance suite's "the driver enforces the compute
+  // corpus in its blocking half" read the JSON and so could not see it. The §1.2a P4
+  // literal rules land in the same file, and a gate that does not exit non-zero
+  // gates nothing.
+  for (const [file, violations] of computeResults) {
+    for (const v of violations) {
+      console.error(
+        `footgun[${v.rule}]: ${file}:${v.line} violates the compute shape (Spec 122 §5.5 / §1.2a P4). ` +
+          `A compute is domain logic only: observations via ctx.report, narration via ctx.log, I/O via ` +
+          `ctx.fetch/ctx.clock, tunables via ctx.config. Run ` +
+          `\`npx ast-grep scan --rule ${COMPUTE_RULE} ${file}\` for the full message.`,
+      );
+      failed = true;
+    }
+  }
+
   if (failed) {
     console.error('\n❌ Step-shape gate failed. Run `npx ast-grep scan --rule scripts/ast-grep-rules/step-shape.yml <file>` for the full message.');
     process.exit(1);

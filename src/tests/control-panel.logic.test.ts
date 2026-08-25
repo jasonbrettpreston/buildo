@@ -256,6 +256,13 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // Spec 86 §1 — lifecycle_status_history ledger retention (mig 136, default 1825 = 5 years).
   // Added to seeds JSON in P20 GROUPS reconciliation (v3 CRIT-4 gap discovery).
   'lifecycle_status_history_retention_days',
+  // Spec 122 §1.2a P4 (Pilot 1 P4 remediation, 2026-08-25) — assert_schema's three
+  // externalized knobs: the CKAN cost-type sample size and the two ranged-read
+  // windows. Seeded (mig-099 seed contract, no migration), declared in the step's
+  // descriptor `config`, rendered under GROUPS "Data Quality Thresholds".
+  'assert_schema_type_sample_rows',
+  'assert_schema_csv_header_bytes',
+  'assert_schema_geojson_probe_bytes',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
