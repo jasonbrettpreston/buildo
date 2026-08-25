@@ -109,7 +109,7 @@
     {
       "id": "permit_cost_type_sample",
       "kind": "schema",
-      "expect": { "column": "EST_CONST_COST", "parseable_as": "number", "sample": 20, "ignore": ["DO NOT UPDATE", "DO NOT DELETE"] },
+      "expect": { "column": "EST_CONST_COST", "parseable_as": "number", "sample": { "logic_variable": "assert_schema_type_sample_rows" }, "ignore": ["DO NOT UPDATE", "DO NOT DELETE"] },
       "limit": "viol == 0",
       "severity": "FAIL",
       "blocking": true,
@@ -246,7 +246,8 @@
   "emits": [
     { "key": "checks_passed", "type": "string", "consumers": [] },
     { "key": "checks_failed", "type": "int", "consumers": ["src/components/FreshnessTimeline.tsx"] },
-    { "key": "errors", "type": "array", "consumers": [] }
+    { "key": "errors", "type": "array", "consumers": [] },
+    { "key": "config", "type": "object", "consumers": [] }
   ],
 
   "deviations": [
@@ -284,6 +285,15 @@
         "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
       },
       "adjudicated_by": "Fold B ruling 7",
+      "date": "2026-08-25"
+    },
+    {
+      "from": "the §1.2a P4 standard posture on_invalid: \"fail\" for a declared logic variable",
+      "why": {
+        "text": "These three vars are seeded by the mig-099 seed contract (scripts/seeds/logic_variables.json applied at the END of npm run migrate), NOT by a migration, so every DB that has not re-run the seed lacks the rows. Under \"fail\" the config resolver would REFUSE this step on those DBs — a pre-ingestion gate that halts three chains because a knob was externalized. Under \"default\" the resolver falls back to the seed default, which the parity lock pins byte-equal to the pre-externalization literal (20 / 2048 / 8192), so behaviour is IDENTICAL pre-seed and the only cost is that an out-of-bounds operator edit degrades loudly (a pipeline.log.warn naming the raw value, the bound and the substituted default) instead of halting. \"fail\" is the standard for a variable with no safe default; each of these has one, and it is the value the step ran on for its entire history. The config object admits no per-variable why field (additionalProperties:false), so the justification is recorded here.",
+        "liveness": { "kind": "file", "ref": "src/tests/assert-schema-config-parity.logic.test.ts" }
+      },
+      "adjudicated_by": "Spec 122 §1.2a P4 / Pilot 1 P4 remediation plan",
       "date": "2026-08-25"
     }
   ],
@@ -323,7 +333,15 @@
 
   "counters": "none",
 
-  "config": "none",
+  "config": {
+    "logic_variables": [
+      { "name": "assert_schema_type_sample_rows", "min": 1, "max": 1000, "on_invalid": "default" },
+      { "name": "assert_schema_csv_header_bytes", "min": 256, "max": 65536, "on_invalid": "default" },
+      { "name": "assert_schema_geojson_probe_bytes", "min": 1024, "max": 1048576, "on_invalid": "default" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
 
   "sharing": {
     "chains": "derived",
@@ -353,13 +371,13 @@
       "id": "all_checks_passed",
       "kind": "success",
       "status": "completed",
-      "records_meta": { "checks_passed": "string", "checks_failed": "int", "errors": "array", "audit_table": "object" }
+      "records_meta": { "checks_passed": "string", "checks_failed": "int", "errors": "array", "audit_table": "object", "config": "object" }
     },
     {
       "id": "schema_drift_detected",
       "kind": "fail_check",
       "status": "failed",
-      "records_meta": { "checks_failed": "int", "errors": "array", "audit_table": "object" },
+      "records_meta": { "checks_failed": "int", "errors": "array", "audit_table": "object", "config": "object" },
       "why": {
         "text": "Schema drift must halt the chain — the step throws after emitting, so the audit table is recorded before the failure propagates. Fold B merged fail_error into this terminal: a CKAN metadata fetch or CSV range request that throws is caught per-source, reddens its own audit row and reaches the SAME circuit-breaker throw, so the two exit paths are indistinguishable in the code and declaring them separately would be a fiction. The fetch path's liveness handle is carried here.",
         "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }

@@ -20,6 +20,8 @@
  *   5. `records_meta` / `PIPELINE_META`, both derived FROM the descriptor  (§4.1 ㉙)
  *   6. per-chain check selection from `checks[].chains`                    (§1.7)
  *   7. the `database` guard — floor + `current_database()`                 (§4.1 ③④)
+ *   8. `ctx.config` — the declared logic variables, resolved and bounds-checked
+ *      BEFORE compute, stamped into `records_meta.config`     (§1.2a P4, config.js)
  *
  * ⚠️ RECONCILE (A3) IS NOT IMPLEMENTED AND NOTHING HERE ASSUMES IT RAN.
  * The Step-0 reconcile that reaps stale `running` rows to `crashed` is a
@@ -49,7 +51,11 @@ const { assertDbTarget } = require('../resolve-db');
 const { validateDescriptor } = require('./validate');
 const { buildAuditTable, deriveVerdict, selectChecks } = require('./verdict');
 const { RUN_STATUS, ownsLedgerRow, openLedgerRow, finalizeLedgerRow } = require('./ledger');
+const { resolveConfig } = require('./config');
 const { finalizeStrandedRun } = require('../ledger-window');
+
+/** The `config: "none"` projection — one shared frozen empty object, never a fresh `{}` per run. */
+const EMPTY_CONFIG = Object.freeze(Object.create(null));
 
 /** `PIPELINE_META` reads/writes/externals, derived from the descriptor — never hand-maintained. */
 function deriveMeta(descriptor) {
@@ -137,6 +143,19 @@ async function runWithPool(runnable, pool, ctx) {
   let ledgerFinalized = false;
   let windowError = null;
 
+  // ── §1.2a P4 — `ctx.config`, and WHERE it is resolved ──────────────────────
+  // `hoisted_above_gate` is link-wsib's A1/A2 fence, generalized: a SKIP-eligible
+  // step must never let an invalid threshold hide behind a green SKIPPED summary,
+  // so a hoisted config is resolved ABOVE the advisory lock — the refusal happens
+  // whether or not this process wins the lock. Un-hoisted, it resolves inside the
+  // lock, immediately before compute, so a contended run pays no config query.
+  // Either way it is INSIDE the try: a config failure is a `failed` ledger row with
+  // an `error_message`, never a silent no-op.
+  const declaresConfig = descriptor.config && descriptor.config !== 'none';
+  const hoisted = declaresConfig && descriptor.config.hoisted_above_gate === true;
+  let configValues = EMPTY_CONFIG;
+  let configStamp = null;
+
   // ⚠️ DECLARED AUDIT GAP, S2-min. A compute that throws BEFORE any
   // `ctx.report()` emits ZERO audit rows — the failure survives only as the
   // ledger row's `error_message`. The pre-conversion assert-schema avoided this
@@ -155,12 +174,16 @@ async function runWithPool(runnable, pool, ctx) {
   try {
     await assertDatabaseTarget(pool, descriptor);
     if (owns) runId = await openLedgerRow(pool, slug);
+    if (hoisted) ({ values: configValues, stamp: configStamp } = await resolveConfig(pool, descriptor));
 
     // §4.1 ② — txn-scoped advisory lock on identity.lock. `skipEmit: false`
     // because the SKIP summary is the library's to emit: the SDK's built-in one
     // carries no audit_table, which is what makes a contention skip land as
     // verdict UNKNOWN today instead of a row-derived verdict.
     const lockResult = await pipeline.withAdvisoryLock(pool, descriptor.identity.lock, async () => {
+      if (declaresConfig && !hoisted) {
+        ({ values: configValues, stamp: configStamp } = await resolveConfig(pool, descriptor));
+      }
       const observations = Object.create(null);
       const declared = new Set(descriptor.checks.map((c) => c.id));
       const stepCtx = {
@@ -183,6 +206,10 @@ async function runWithPool(runnable, pool, ctx) {
         // globals outright. Defaults here, overridable by the caller's ctx.
         fetch: ctx.fetch || ((input, init) => globalThis.fetch(input, init)),
         clock: ctx.clock || (() => Date.now()),
+        // §1.2a P4 — the ONLY way a compute reaches a tunable. Frozen, and
+        // projected to the DECLARED names: `validation: "strict"` is not a checker
+        // that could be skipped, it is an object that does not have the key.
+        config: configValues,
         report(checkId, observation) {
           if (!declared.has(checkId)) {
             throw new Error(`[${slug}] compute reported check "${checkId}", which the descriptor does not declare`);
@@ -201,6 +228,10 @@ async function runWithPool(runnable, pool, ctx) {
       counters = deriveCounters(descriptor, computeResult);
       recordsMeta = {
         ...(computeResult && computeResult.records_meta ? computeResult.records_meta : {}),
+        // §1.2a P4 — "the value in force is observable in the run's records_meta".
+        // Absent entirely for a `config: "none"` step, so the byte cost is paid only
+        // by steps that actually consume a tunable (§1.2a P3).
+        ...(configStamp ? { config: configStamp } : {}),
         checks_passed: built.errors.length === 0 ? 'all' : undefined,
         checks_failed: built.errors.length,
         errors: built.errors.length > 0 ? built.errors : undefined,
@@ -226,6 +257,10 @@ async function runWithPool(runnable, pool, ctx) {
     }, { skipEmit: false });
 
     if (!lockResult.acquired) {
+      // The SKIP meta carries NO config stamp, deliberately: the terminal declares
+      // `{skipped, reason}` and nothing ran on a resolved value. What `hoisted_above_gate`
+      // buys is upstream of here — an out-of-bounds threshold has ALREADY thrown above
+      // the lock, so it can never hide behind this green SKIPPED summary.
       status = RUN_STATUS.SELF_SKIPPED;
       recordsMeta = skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere');
       pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null, records_meta: recordsMeta });

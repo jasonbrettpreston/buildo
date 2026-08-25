@@ -888,6 +888,19 @@ entry needed) and by `src/tests/step-conformance.infra.test.ts`; prove-red fixtu
    marker, the dispatch table below a `// ---- dispatch ----` one.
 5. **Policy text lives in `checks[].why`, not in comments** — a rule stated only in a comment is a rule
    the audit table cannot show and the schema cannot validate.
+6. **Every tunable goes through `ctx.config`** (§1.2a P4 addendum, Pilot 1 P4 remediation 2026-08-25).
+   `scripts/lib/step/config.js` loads the descriptor's declared `config.logic_variables[]` via
+   `loadMarketplaceConfigs(pool, slug, { quiet: true })`, PROJECTS to the declared names, applies
+   `min`/`max` + `on_invalid` (`fail` throws pre-compute · `default` takes the seed default · `clamp`
+   takes the bound), freezes, and stamps the resolved values into `records_meta.config`
+   (~30 B/var, absent entirely for `config: "none"`). `hoisted_above_gate: true` resolves ABOVE the
+   advisory lock so an invalid threshold cannot hide behind a green SKIPPED summary; a declared name in
+   no registry throws. `validation: "strict"` is the projection itself — an undeclared name is
+   *unreachable*, not merely unvalidated. Statically enforced by `compute-no-literal-url-tunable` /
+   `-byte-window` / `-threshold` (allow-listing `limit=0`, CKAN's metadata-only sentinel) and by
+   `step-conformance.infra.test.ts`'s four-surface battery: declared ⊆ registry, declared ⊆ admin
+   GROUPS, declared ≡ the compute's `ctx.config.*` reads, and seed-`CONSUMED by <slug>` ⊆ declared —
+   each proven RED by dropping a var, declaring `"none"`, and adding an unregistered name.
 
 > **Why a shape rule and not a review checklist:** the same reason as §5.1. The moment one compute gets a
 > special case there are 27, and every one of them is invisible until something breaks in production.

@@ -131,6 +131,13 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
       'cost_est_min_tiers',
       'calibration_freshness_warn_hours',
       'cost_model_coverage_warn_pct',
+      // Spec 122 §1.2a P4 (Pilot 1) — assert_schema's three externalized knobs.
+      // A seeded var absent from GROUPS is invisible to operators, which is the
+      // same hidden-knob failure P4 exists to close; step-conformance.infra.test.ts
+      // asserts every converted descriptor's declared config vars appear here.
+      'assert_schema_type_sample_rows',
+      'assert_schema_csv_header_bytes',
+      'assert_schema_geojson_probe_bytes',
     ],
   },
   {

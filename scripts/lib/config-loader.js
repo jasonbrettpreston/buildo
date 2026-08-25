@@ -70,9 +70,25 @@ const FALLBACK_LOGIC_VARS = Object.fromEntries(
  *
  * @param {import('pg').Pool} pool - PostgreSQL connection pool
  * @param {string} [tag='config-loader'] - Log tag for the calling script
+ * @param {{quiet?: boolean}} [opts] - `quiet: true` suppresses the WHOLE-TABLE
+ *   narration: the two "Loaded N …" INFO lines and the per-row warnings about
+ *   variables the caller did not ask for. It does NOT suppress the load-failure
+ *   warning — a caller whose query died must always hear about it, because every
+ *   value it then reads is a hardcoded fallback wearing a DB value's name.
+ *
+ *   Added for the Spec 122 §1.2a P4 `ctx.config` seam (`scripts/lib/step/config.js`),
+ *   which reads a DECLARED PROJECTION: it warns per declared variable itself and
+ *   stamps the resolved values into `records_meta.config`. A step that declares 3
+ *   variables narrating 33 unrelated `lifecycle_seq_band_*_max is non-finite`
+ *   lines is reporting on somebody else's config — and would show up as 33 lines
+ *   of golden-master differential on every converted step. Legacy callers (the
+ *   whole-`logicVars` consumers) pass nothing and keep every line.
  * @returns {Promise<{ tradeConfigs: Record<string, object>, logicVars: Record<string, number> }>}
  */
-async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
+async function loadMarketplaceConfigs(pool, tag = 'config-loader', opts = {}) {
+  const quiet = opts.quiet === true;
+  /** Whole-table narration — silenced for a projection caller (see `opts.quiet`). */
+  const narrate = (...args) => { if (!quiet) pipeline.log.warn(...args); };
   // WF3 B3-H2 (2026-04-23): structuredClone isolates the mutable working
   // copies from FALLBACK_TRADE_CONFIGS / FALLBACK_LOGIC_VARS. The old
   // pattern (`= FALLBACK_TRADE_CONFIGS` and `{ ...FALLBACK_LOGIC_VARS }`)
@@ -102,7 +118,7 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
       const parseTradeNum = (value, slug, field) => {
         const n = parseFloat(value);
         if (!Number.isFinite(n)) {
-          pipeline.log.warn(
+          narrate(
             `[${tag}]`,
             `trade_configurations.${field} for ${slug} is non-finite`,
             { raw: value },
@@ -110,7 +126,7 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
           return null;
         }
         if (n < 0) {
-          pipeline.log.warn(
+          narrate(
             `[${tag}]`,
             `trade_configurations.${field} for ${slug} is negative (${n})`,
           );
@@ -134,7 +150,7 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
           // skip — consumers already tolerate missing slugs.
           if (fallback) {
             dbTradeConfigs[slug] = structuredClone(fallback);
-            pipeline.log.warn(
+            narrate(
               `[${tag}]`,
               `Using hardcoded fallback for ${slug} — DB row had invalid numeric values`,
             );
@@ -165,19 +181,19 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
       const allocSum = Object.values(tradeConfigs)
         .reduce((sum, tc) => sum + tc.allocation_pct, 0);
       if (!Number.isFinite(allocSum) || allocSum <= 0) {
-        pipeline.log.warn(
+        narrate(
           `[${tag}]`,
           `allocation_pct sum is non-finite or zero (${allocSum}) — reverting to hardcoded fallback`,
         );
         tradeConfigs = structuredClone(FALLBACK_TRADE_CONFIGS);
       } else if (Math.abs(allocSum - 1.0) > 0.001) {
-        pipeline.log.warn(`[${tag}]`, `allocation_pct sum is ${allocSum.toFixed(4)} (expected 1.0) — normalizing`);
+        narrate(`[${tag}]`, `allocation_pct sum is ${allocSum.toFixed(4)} (expected 1.0) — normalizing`);
         for (const tc of Object.values(tradeConfigs)) {
           tc.allocation_pct = tc.allocation_pct / allocSum;
         }
       }
 
-      pipeline.log.info(`[${tag}]`, `Loaded ${Object.keys(tradeConfigs).length} trade configs from control panel`);
+      if (!quiet) pipeline.log.info(`[${tag}]`, `Loaded ${Object.keys(tradeConfigs).length} trade configs from control panel`);
     }
 
     // ── Logic variables ──────────────────────────────────────
@@ -223,15 +239,15 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
         }
         const parsed = parseFloat(variable_value);
         if (!Number.isFinite(parsed)) {
-          pipeline.log.warn(`[${tag}]`, `logic_variables.${variable_key} is non-finite — keeping fallback`, { raw: variable_value });
+          narrate(`[${tag}]`, `logic_variables.${variable_key} is non-finite — keeping fallback`, { raw: variable_value });
           continue;
         }
         if (parsed === 0 && ZERO_IS_INVALID.has(variable_key)) {
-          pipeline.log.warn(`[${tag}]`, `logic_variables.${variable_key} is 0 (invalid) — keeping fallback`);
+          narrate(`[${tag}]`, `logic_variables.${variable_key} is 0 (invalid) — keeping fallback`);
           continue;
         }
         if (parsed < 0 && NEGATIVE_IS_INVALID.has(variable_key)) {
-          pipeline.log.warn(
+          narrate(
             `[${tag}]`,
             `logic_variables.${variable_key} is negative (${parsed}) — keeping fallback`,
           );
@@ -239,7 +255,7 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader') {
         }
         logicVars[variable_key] = parsed;
       }
-      pipeline.log.info(`[${tag}]`, `Loaded ${lvRows.length} logic variables from control panel`);
+      if (!quiet) pipeline.log.info(`[${tag}]`, `Loaded ${lvRows.length} logic variables from control panel`);
     }
   } catch (err) {
     pipeline.log.warn(`[${tag}]`, 'Control panel query failed — using hardcoded defaults', {

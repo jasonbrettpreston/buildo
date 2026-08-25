@@ -2796,5 +2796,26 @@
     "min": 1000,
     "max": 500000,
     "description": "Phase B B2 (R3-B8, Spec 40 §3.1.2 / Spec 47 §8.7) — row-count threshold that trips enrich-parcels.js's clean scope-defer (chain terminalizes deferred_to_full instead of attempting the pass) when a gated pass's PRE-TRANSACTION scope count exceeds it. Default 50,000 = 10-15x measured-normal decision scope (~3,461/14d) and ~9x under measured-escalated full 5-pass citywide runtime (46.5-53 min); sized against the 08-03 CKAN re-export citywide event (485,567 rows) as the designed defer trigger, not the common case. Every run emits scope_count/threshold/ratio audit rows and WARNs at >=80% of this value (code-side, not a var) so the operator sees the cliff coming before a defer fires. Two CONSECUTIVE defers on the same step escalate to a red verdict (Spec 40 §3.1.2 defer-streak rule) requiring a supervised force-full (ENRICH_PARCELS_FORCE_FULL=1). Threshold is a labeled projection until Phase B B7 measures real per-pass durations against it. CONSUMED by scripts/enrich-parcels.js."
+  },
+  "assert_schema_type_sample_rows": {
+    "default": 20,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "Spec 122 §1.2a P4 (Pilot 1 remediation) — how many CKAN DataStore rows the permit_cost_type_sample check pulls (`&limit=N`) to prove EST_CONST_COST still parses as a number. 20 = the pre-externalization literal; raise it when CKAN sentinel density ('DO NOT UPDATE'/'DO NOT DELETE' rows) makes 20 rows too thin to contain a single parseable cost, lower it only to cut CKAN load. Bounds are CKAN's own: below 1 the check samples nothing and reads green-by-blindness, above 1000 the DataStore page is slower than the whole step's budget. CONSUMED by assert_schema (scripts/lib/compute/assert-schema.js validateTypeSample, via ctx.config)."
+  },
+  "assert_schema_csv_header_bytes": {
+    "default": 2048,
+    "type": "number",
+    "min": 256,
+    "max": 65536,
+    "description": "Spec 122 §1.2a P4 (Pilot 1 remediation) — the ranged-read window (`Range: bytes=0-N`) assert_schema uses to pull just the HEADER row of the address-points and parcels CSVs instead of the whole multi-hundred-MB file. 2048 = the pre-externalization literal. Raise it if either publisher's header row grows past the window (the check would then FAIL on a truncated first line, not silently pass); it is never a correctness knob, only a how-much-do-we-download one. CONSUMED by assert_schema (scripts/lib/compute/assert-schema.js fetchCsvHeaders, via ctx.config)."
+  },
+  "assert_schema_geojson_probe_bytes": {
+    "default": 8192,
+    "type": "number",
+    "min": 1024,
+    "max": 1048576,
+    "description": "Spec 122 §1.2a P4 (Pilot 1 remediation) — the ranged-read window (`Range: bytes=0-N`) assert_schema uses to reach the FIRST Feature of the neighbourhoods GeoJSON and read its property keys. 8192 = the pre-externalization literal; it must stay large enough to clear the CRS block plus one full `\"properties\":{…}` object, or neighbourhood_id_property throws 'Could not find properties' on a healthy file. Larger than the CSV window because a GeoJSON preamble is. CONSUMED by assert_schema (scripts/lib/compute/assert-schema.js fetchGeoJsonPropertyKeys, via ctx.config)."
   }
 }

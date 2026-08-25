@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (413) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (416) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **419** logic variables (413 numeric, 6 JSONB).
+Total: **422** logic variables (416 numeric, 6 JSONB).
 
 ---
 
@@ -29,6 +29,9 @@ Total: **419** logic variables (413 numeric, 6 JSONB).
 | `archetype_t2_build_line_min` | numeric | 200000 | 0 – 10000000 | — | seed | WF2 archetype T2 plausibility floor for BUILD lines: a new-build total below this (sliver-parcel envelopes, Reality-Check found 17 rows <$5K) is not a credible build -> fallthrough, counted. |
 | `archetype_t2_reno_line_cap` | numeric | 10000000 | 100000 – 1000000000 | — | seed | WF2 archetype T2 plausibility cap for RENO lines (gut/addition/kitchen/bath/basement/underpin/garage/suites) on low-rise residential: a propagated line total above this indicates parcel-side data poison (Reality-Check: live $105M gut scalars from a NULL-lot massing mislink) -> fall to T3-if-priceable else T4, counted per line. Don't-hide: the rejection count is an audit row. |
 | `archetype_t3_total_cap` | numeric | 15000000 | 1000000 – 1000000000 | — | seed | WF3 archetype T3 (rate-table) absolute cap per DWELLING UNIT: a T3 price (rate x own area x premium) above cap x max(1, dwelling_units_created) falls to T4, counted (Reality-Check WF3 2026-07-06: T3 shipped uncapped; 19 rows >$20M, max $159.9M, from oversized/mislinked parent-parcel own-area inflation). $15M/unit is a judgment cut on a continuous corrupted-area curve (not a statistical elbow); the per-unit divisor protects ~60 legitimate 8-222-unit developments. CoA has no dwelling_units_created -> effectively flat $15M for CoA (intended). |
+| `assert_schema_csv_header_bytes` | numeric | 2048 | 256 – 65536 | — | seed | Spec 122 §1.2a P4 (Pilot 1 remediation) — the ranged-read window (`Range: bytes=0-N`) assert_schema uses to pull just the HEADER row of the address-points and parcels CSVs instead of the whole multi-hundred-MB file. 2048 = the pre-externalization literal. Raise it if either publisher's header row grows past the window (the check would then FAIL on a truncated first line, not silently pass); it is never a correctness knob, only a how-much-do-we-download one. CONSUMED by assert_schema (scripts/lib/compute/assert-schema.js fetchCsvHeaders, via ctx.config). |
+| `assert_schema_geojson_probe_bytes` | numeric | 8192 | 1024 – 1048576 | — | seed | Spec 122 §1.2a P4 (Pilot 1 remediation) — the ranged-read window (`Range: bytes=0-N`) assert_schema uses to reach the FIRST Feature of the neighbourhoods GeoJSON and read its property keys. 8192 = the pre-externalization literal; it must stay large enough to clear the CRS block plus one full `"properties":{…}` object, or neighbourhood_id_property throws 'Could not find properties' on a healthy file. Larger than the CSV window because a GeoJSON preamble is. CONSUMED by assert_schema (scripts/lib/compute/assert-schema.js fetchGeoJsonPropertyKeys, via ctx.config). |
+| `assert_schema_type_sample_rows` | numeric | 20 | 1 – 1000 | — | seed | Spec 122 §1.2a P4 (Pilot 1 remediation) — how many CKAN DataStore rows the permit_cost_type_sample check pulls (`&limit=N`) to prove EST_CONST_COST still parses as a number. 20 = the pre-externalization literal; raise it when CKAN sentinel density ('DO NOT UPDATE'/'DO NOT DELETE' rows) makes 20 rows too thin to contain a single parseable cost, lower it only to cut CKAN load. Bounds are CKAN's own: below 1 the check samples nothing and reads green-by-blindness, above 1000 the DataStore page is slower than the whole step's budget. CONSUMED by assert_schema (scripts/lib/compute/assert-schema.js validateTypeSample, via ctx.config). |
 | `builder_null_rate_warn_pct` | numeric | 95 | 1 – 100 | `scripts/quality/assert-data-bounds.js` | seed | Maximum acceptable percentage of recent permits (last 24h) with a NULL builder_name before a data-quality warning is emitted |
 | `calibration_default_median_days` | numeric | 30 | 1 – 365 | `scripts/compute-trade-forecasts.js` | seed | Fallback median days used by compute-trade-forecasts when no calibration data exists for a phase transition (level-5 default) |
 | `calibration_default_p25_days` | numeric | 15 | 1 – 365 | `scripts/compute-trade-forecasts.js` | seed | Fallback p25 (25th-percentile days) used by compute-trade-forecasts when no calibration data exists for a phase transition (level-5 default) |
@@ -441,4 +444,4 @@ Total: **419** logic variables (413 numeric, 6 JSONB).
 
 ---
 
-*Generated from 400 seed vars + 19 migration-only vars + 103 consumer-mapped keys across 2 script dirs.*
+*Generated from 403 seed vars + 19 migration-only vars + 103 consumer-mapped keys across 2 script dirs.*
