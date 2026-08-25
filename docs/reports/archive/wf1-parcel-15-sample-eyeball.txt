@@ -1,0 +1,167 @@
+
+==============================================================================================================
+PARCEL 8809  R  lot=111.43  ⚠ FLAGS: max_build_fsi_gt_5, coa_fsi_gt_5, new_build_cost_gt_coa_build_cost, stale_cost_fsi_without_gfa
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=R  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=null  bylaw_max_height_m=13.00  bylaw_max_stories=null  bylaw_max_units=null  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=111.43  lot_size_confidence=high  is_heritage_designated=true  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=true
+  maxbuild   max_buildable_footprint_sqm=null  max_buildable_gfa_sqm=null  max_buildable_gfa_basis=null  max_build_stories=null  max_build_stories_basis=null  max_build_height_m=null  max_build_width_m=null  max_build_length_m=null  max_build_confidence=null  max_build_fsi=20.466
+  existing   cur_floor_gfa_sqm=null  cur_pot_2story_gfa_sqm=null  existing_stories=null  existing_height_m=null  existing_width_m=null  existing_length_m=null  existing_greenspace_sqm=null  existing_other_structures_sqm=null  existing_structure_confidence=low  existing_data_quality_flag=footprint_exceeds_lot
+  optconfig  opt_aor_gfa_sqm=null  opt_aor_storeys=null  opt_coa_gfa_sqm=null  opt_coa_storeys=null  opt_suite_type=null  opt_binding_constraint=null  opt_config_confidence=null  coa_fsi=12.280  realized_fsi_p90=null  comp_fsi_p50=null
+  accessory  max_garden_suite_gfa_sqm=null  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=null  max_garage_gfa_sqm=null  rear_suite_permission=not_permitted  garage_permission=not_permitted
+  cost       neighbourhood_cost_premium=1.35  cost_fb_total=14913428.67  cost_coa_total=8948057.20  cost_gut_total=null  cost_addition_total=null  cost_garden_suite_total=null  cost_garage_total=null  cost_kitchen_per_sqm=null  cost_basement_per_sqm=null
+
+==============================================================================================================
+PARCEL 428548  RD  lot=111.21  ⚠ FLAGS: footprint_coverage_gt_65pct, lowrise_maxbuild_stories_gt_4, newbuild_cost_per_sqm_out_of_band, new_build_cost_gt_coa_build_cost, footprint_gt_lot_x105, heritage_basis_footprint_gt_lot, cost_fb_on_footprint_gt_lot
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RD  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=null  bylaw_max_height_m=11.00  bylaw_max_stories=null  bylaw_max_units=null  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=111.21  lot_size_confidence=high  is_heritage_designated=true  is_in_ravine_protection_area=true  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=3993.98  max_buildable_gfa_sqm=115825.42  max_buildable_gfa_basis=heritage_existing  max_build_stories=29  max_build_stories_basis=existing  max_build_height_m=null  max_build_width_m=null  max_build_length_m=null  max_build_confidence=high  max_build_fsi=null
+  existing   cur_floor_gfa_sqm=null  cur_pot_2story_gfa_sqm=null  existing_stories=null  existing_height_m=null  existing_width_m=null  existing_length_m=null  existing_greenspace_sqm=null  existing_other_structures_sqm=null  existing_structure_confidence=low  existing_data_quality_flag=footprint_exceeds_lot
+  optconfig  opt_aor_gfa_sqm=7987.96  opt_aor_storeys=2  opt_coa_gfa_sqm=11981.94  opt_coa_storeys=3  opt_suite_type=none  opt_binding_constraint=heritage  opt_config_confidence=medium  coa_fsi=null  realized_fsi_p90=null  comp_fsi_p50=null
+  accessory  max_garden_suite_gfa_sqm=null  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=null  max_garage_gfa_sqm=null  rear_suite_permission=not_permitted  garage_permission=not_permitted
+  cost       neighbourhood_cost_premium=1.85  cost_fb_total=1037957918.79  cost_coa_total=107374957.12  cost_gut_total=null  cost_addition_total=null  cost_garden_suite_total=null  cost_garage_total=null  cost_kitchen_per_sqm=null  cost_basement_per_sqm=null
+
+==============================================================================================================
+PARCEL 13991  RD  lot=405.93  ⚠ FLAGS: lowrise_bylaw_fsi_gt_1_5
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RD  zoning_is_ambiguous=false  bylaw_max_fsi=2.000  bylaw_max_coverage_pct=35.00  bylaw_max_height_m=8.50  bylaw_max_stories=null  bylaw_max_units=null  bylaw_standard_setback_m=3.00
+  lot        lot_size_sqm=405.93  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=142.08  max_buildable_gfa_sqm=284.16  max_buildable_gfa_basis=coverage_box  max_build_stories=2  max_build_stories_basis=pocket  max_build_height_m=8.50  max_build_width_m=8.85  max_build_length_m=27.62  max_build_confidence=high  max_build_fsi=0.700
+  existing   cur_floor_gfa_sqm=95.78  cur_pot_2story_gfa_sqm=191.56  existing_stories=null  existing_height_m=null  existing_width_m=7.03  existing_length_m=15.28  existing_greenspace_sqm=310.15  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=284.16  opt_aor_storeys=2  opt_coa_gfa_sqm=284.16  opt_coa_storeys=2  opt_suite_type=garden  opt_binding_constraint=coverage  opt_config_confidence=high  coa_fsi=0.700  realized_fsi_p90=null  comp_fsi_p50=0.06
+  accessory  max_garden_suite_gfa_sqm=60.00  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=60.00  max_garage_gfa_sqm=44.60  rear_suite_permission=as_of_right  garage_permission=as_of_right
+  cost       neighbourhood_cost_premium=1.85  cost_fb_total=2546471.42  cost_coa_total=2546471.42  cost_gut_total=1144312.39  cost_addition_total=762993.06  cost_garden_suite_total=597402.00  cost_garage_total=159904.38  cost_kitchen_per_sqm=6471.30  cost_basement_per_sqm=1393.05
+
+==============================================================================================================
+PARCEL 28382  RM  lot=887.32  ⚠ FLAGS: residential_bylaw_fsi_gt_8
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RM  zoning_is_ambiguous=false  bylaw_max_fsi=24.000  bylaw_max_coverage_pct=null  bylaw_max_height_m=14.00  bylaw_max_stories=null  bylaw_max_units=4  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=887.32  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=513.08  max_buildable_gfa_sqm=1026.16  max_buildable_gfa_basis=coverage_box  max_build_stories=2  max_build_stories_basis=pocket  max_build_height_m=14.00  max_build_width_m=18.61  max_build_length_m=27.57  max_build_confidence=medium  max_build_fsi=1.156
+  existing   cur_floor_gfa_sqm=216.51  cur_pot_2story_gfa_sqm=433.02  existing_stories=null  existing_height_m=null  existing_width_m=12.32  existing_length_m=17.57  existing_greenspace_sqm=670.81  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=1026.16  opt_aor_storeys=2  opt_coa_gfa_sqm=1026.16  opt_coa_storeys=2  opt_suite_type=garden  opt_binding_constraint=coverage  opt_config_confidence=high  coa_fsi=1.156  realized_fsi_p90=null  comp_fsi_p50=null
+  accessory  max_garden_suite_gfa_sqm=60.00  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=60.00  max_garage_gfa_sqm=60.00  rear_suite_permission=as_of_right  garage_permission=as_of_right
+  cost       neighbourhood_cost_premium=1.35  cost_fb_total=6710470.70  cost_coa_total=6710470.70  cost_gut_total=1887599.13  cost_addition_total=1258594.28  cost_garden_suite_total=435942.00  cost_garage_total=156978.00  cost_kitchen_per_sqm=4722.30  cost_basement_per_sqm=1016.55
+
+==============================================================================================================
+PARCEL 1768  RD  lot=558.64  ⚠ FLAGS: footprint_coverage_gt_65pct, new_build_cost_gt_coa_build_cost
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RD  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=null  bylaw_max_height_m=11.00  bylaw_max_stories=3  bylaw_max_units=null  bylaw_standard_setback_m=2.00
+  lot        lot_size_sqm=558.64  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=377.31  max_buildable_gfa_sqm=1131.93  max_buildable_gfa_basis=coverage_box  max_build_stories=3  max_build_stories_basis=bylaw  max_build_height_m=11.00  max_build_width_m=10.36  max_build_length_m=36.42  max_build_confidence=high  max_build_fsi=2.000
+  existing   cur_floor_gfa_sqm=95.45  cur_pot_2story_gfa_sqm=190.90  existing_stories=null  existing_height_m=null  existing_width_m=7.30  existing_length_m=13.30  existing_greenspace_sqm=463.19  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=754.62  opt_aor_storeys=2  opt_coa_gfa_sqm=754.62  opt_coa_storeys=2  opt_suite_type=garden  opt_binding_constraint=coverage  opt_config_confidence=medium  coa_fsi=1.351  realized_fsi_p90=null  comp_fsi_p50=0.55
+  accessory  max_garden_suite_gfa_sqm=60.00  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=60.00  max_garage_gfa_sqm=60.00  rear_suite_permission=as_of_right  garage_permission=as_of_right
+  cost       neighbourhood_cost_premium=1.15  cost_fb_total=6223919.97  cost_coa_total=4203686.17  cost_gut_total=708878.52  cost_addition_total=472658.86  cost_garden_suite_total=371358.00  cost_garage_total=133722.00  cost_kitchen_per_sqm=4022.70  cost_basement_per_sqm=865.95
+
+==============================================================================================================
+PARCEL 1786  RD  lot=655.56  ⚠ FLAGS: newbuild_cost_per_sqm_out_of_band, new_build_cost_gt_coa_build_cost
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RD  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=null  bylaw_max_height_m=11.00  bylaw_max_stories=3  bylaw_max_units=null  bylaw_standard_setback_m=2.00
+  lot        lot_size_sqm=655.56  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=216.33  max_buildable_gfa_sqm=648.99  max_buildable_gfa_basis=coverage_box  max_build_stories=3  max_build_stories_basis=bylaw  max_build_height_m=11.00  max_build_width_m=14.96  max_build_length_m=29.61  max_build_confidence=high  max_build_fsi=2.000
+  existing   cur_floor_gfa_sqm=203.94  cur_pot_2story_gfa_sqm=407.88  existing_stories=null  existing_height_m=null  existing_width_m=12.98  existing_length_m=21.39  existing_greenspace_sqm=451.62  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=432.66  opt_aor_storeys=2  opt_coa_gfa_sqm=648.99  opt_coa_storeys=3  opt_suite_type=garden  opt_binding_constraint=coverage  opt_config_confidence=medium  coa_fsi=1.351  realized_fsi_p90=null  comp_fsi_p50=0.09
+  accessory  max_garden_suite_gfa_sqm=60.00  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=60.00  max_garage_gfa_sqm=60.00  rear_suite_permission=as_of_right  garage_permission=as_of_right
+  cost       neighbourhood_cost_premium=1.15  cost_fb_total=7303725.07  cost_coa_total=4935217.36  cost_gut_total=1514601.20  cost_addition_total=1009890.49  cost_garden_suite_total=371358.00  cost_garage_total=133722.00  cost_kitchen_per_sqm=4022.70  cost_basement_per_sqm=865.95
+
+==============================================================================================================
+PARCEL 11921  RA  lot=557.27  ⚠ FLAGS: max_build_fsi_gt_5, newbuild_cost_per_sqm_out_of_band, new_build_cost_gt_coa_build_cost
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RA  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=80.00  bylaw_max_height_m=39.00  bylaw_max_stories=10  bylaw_max_units=null  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=557.27  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=310.31  max_buildable_gfa_sqm=3103.10  max_buildable_gfa_basis=coverage_box  max_build_stories=10  max_build_stories_basis=bylaw  max_build_height_m=39.00  max_build_width_m=13.41  max_build_length_m=23.14  max_build_confidence=medium  max_build_fsi=5.568
+  existing   cur_floor_gfa_sqm=120.99  cur_pot_2story_gfa_sqm=241.98  existing_stories=null  existing_height_m=null  existing_width_m=8.63  existing_length_m=14.69  existing_greenspace_sqm=436.28  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=620.62  opt_aor_storeys=2  opt_coa_gfa_sqm=930.93  opt_coa_storeys=3  opt_suite_type=garden  opt_binding_constraint=coverage  opt_config_confidence=medium  coa_fsi=1.671  realized_fsi_p90=null  comp_fsi_p50=null
+  accessory  max_garden_suite_gfa_sqm=60.00  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=60.00  max_garage_gfa_sqm=56.80  rear_suite_permission=as_of_right  garage_permission=as_of_right
+  cost       neighbourhood_cost_premium=1.35  cost_fb_total=20292412.14  cost_coa_total=6087723.64  cost_gut_total=1054827.12  cost_addition_total=703326.97  cost_garden_suite_total=435942.00  cost_garage_total=148605.84  cost_kitchen_per_sqm=4722.30  cost_basement_per_sqm=1016.55
+
+==============================================================================================================
+PARCEL 21210  RT  lot=246.01  ⚠ FLAGS: lowrise_height_gt_15m, lowrise_maxbuild_height_gt_15m
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RT  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=33.00  bylaw_max_height_m=54.00  bylaw_max_stories=null  bylaw_max_units=null  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=246.01  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=81.18  max_buildable_gfa_sqm=162.36  max_buildable_gfa_basis=coverage_box  max_build_stories=2  max_build_stories_basis=pocket  max_build_height_m=54.00  max_build_width_m=5.45  max_build_length_m=31.63  max_build_confidence=medium  max_build_fsi=0.660
+  existing   cur_floor_gfa_sqm=null  cur_pot_2story_gfa_sqm=null  existing_stories=null  existing_height_m=null  existing_width_m=null  existing_length_m=null  existing_greenspace_sqm=null  existing_other_structures_sqm=null  existing_structure_confidence=low  existing_data_quality_flag=footprint_exceeds_lot
+  optconfig  opt_aor_gfa_sqm=162.36  opt_aor_storeys=2  opt_coa_gfa_sqm=162.36  opt_coa_storeys=2  opt_suite_type=none  opt_binding_constraint=depth  opt_config_confidence=medium  coa_fsi=0.660  realized_fsi_p90=null  comp_fsi_p50=null
+  accessory  max_garden_suite_gfa_sqm=null  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=null  max_garage_gfa_sqm=null  rear_suite_permission=not_permitted  garage_permission=not_permitted
+  cost       neighbourhood_cost_premium=1.35  cost_fb_total=1061736.98  cost_coa_total=1061736.98  cost_gut_total=null  cost_addition_total=null  cost_garden_suite_total=null  cost_garage_total=null  cost_kitchen_per_sqm=null  cost_basement_per_sqm=null
+
+==============================================================================================================
+PARCEL 10018  RD  lot=1201.02  ✓ CLEAN (trips no check)
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RD  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=30.00  bylaw_max_height_m=10.00  bylaw_max_stories=2  bylaw_max_units=null  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=1201.02  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=true  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=33.69  max_buildable_gfa_sqm=67.38  max_buildable_gfa_basis=coverage_box  max_build_stories=2  max_build_stories_basis=bylaw  max_build_height_m=10.00  max_build_width_m=13.10  max_build_length_m=24.73  max_build_confidence=medium  max_build_fsi=0.056
+  existing   cur_floor_gfa_sqm=312.09  cur_pot_2story_gfa_sqm=624.18  existing_stories=null  existing_height_m=null  existing_width_m=16.11  existing_length_m=21.67  existing_greenspace_sqm=888.93  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=67.38  opt_aor_storeys=2  opt_coa_gfa_sqm=67.38  opt_coa_storeys=2  opt_suite_type=garden  opt_binding_constraint=ravine  opt_config_confidence=medium  coa_fsi=0.056  realized_fsi_p90=null  comp_fsi_p50=null
+  accessory  max_garden_suite_gfa_sqm=null  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=null  max_garage_gfa_sqm=null  rear_suite_permission=not_permitted  garage_permission=not_permitted
+  cost       neighbourhood_cost_premium=1.35  cost_fb_total=440624.77  cost_coa_total=440624.77  cost_gut_total=2720894.25  cost_addition_total=1814210.38  cost_garden_suite_total=null  cost_garage_total=null  cost_kitchen_per_sqm=4722.30  cost_basement_per_sqm=1016.55
+
+==============================================================================================================
+PARCEL 7281  RT  lot=255.38  ✓ CLEAN (trips no check)
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RT  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=30.00  bylaw_max_height_m=10.50  bylaw_max_stories=3  bylaw_max_units=null  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=255.38  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=76.61  max_buildable_gfa_sqm=229.83  max_buildable_gfa_basis=coverage_box  max_build_stories=3  max_build_stories_basis=bylaw  max_build_height_m=10.50  max_build_width_m=7.86  max_build_length_m=18.98  max_build_confidence=medium  max_build_fsi=0.900
+  existing   cur_floor_gfa_sqm=88.49  cur_pot_2story_gfa_sqm=176.98  existing_stories=null  existing_height_m=null  existing_width_m=6.29  existing_length_m=15.60  existing_greenspace_sqm=166.89  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=153.22  opt_aor_storeys=2  opt_coa_gfa_sqm=229.83  opt_coa_storeys=3  opt_suite_type=garden  opt_binding_constraint=coverage  opt_config_confidence=medium  coa_fsi=0.900  realized_fsi_p90=null  comp_fsi_p50=null
+  accessory  max_garden_suite_gfa_sqm=null  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=null  max_garage_gfa_sqm=null  rear_suite_permission=not_permitted  garage_permission=not_permitted
+  cost       neighbourhood_cost_premium=1.15  cost_fb_total=1280291.00  cost_coa_total=1280291.00  cost_gut_total=657188.68  cost_addition_total=438193.63  cost_garden_suite_total=null  cost_garage_total=null  cost_kitchen_per_sqm=4022.70  cost_basement_per_sqm=865.95
+
+==============================================================================================================
+PARCEL 1842  RD  lot=1013.41  ✓ CLEAN (trips no check)
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RD  zoning_is_ambiguous=false  bylaw_max_fsi=0.450  bylaw_max_coverage_pct=33.00  bylaw_max_height_m=9.50  bylaw_max_stories=null  bylaw_max_units=4  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=1013.41  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=334.43  max_buildable_gfa_sqm=456.03  max_buildable_gfa_basis=fsi  max_build_stories=2  max_build_stories_basis=pocket  max_build_height_m=9.50  max_build_width_m=11.20  max_build_length_m=64.43  max_build_confidence=medium  max_build_fsi=0.450
+  existing   cur_floor_gfa_sqm=272.64  cur_pot_2story_gfa_sqm=545.28  existing_stories=null  existing_height_m=null  existing_width_m=11.91  existing_length_m=25.13  existing_greenspace_sqm=740.77  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=456.03  opt_aor_storeys=2  opt_coa_gfa_sqm=668.86  opt_coa_storeys=2  opt_suite_type=garden  opt_binding_constraint=fsi  opt_config_confidence=high  coa_fsi=0.660  realized_fsi_p90=null  comp_fsi_p50=null
+  accessory  max_garden_suite_gfa_sqm=60.00  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=60.00  max_garage_gfa_sqm=60.00  rear_suite_permission=as_of_right  garage_permission=as_of_right
+  cost       neighbourhood_cost_premium=1.15  cost_fb_total=2540360.72  cost_coa_total=3725951.52  cost_gut_total=2024815.49  cost_addition_total=1350086.02  cost_garden_suite_total=371358.00  cost_garage_total=133722.00  cost_kitchen_per_sqm=4022.70  cost_basement_per_sqm=865.95
+
+==============================================================================================================
+PARCEL 422446  R  lot=234.80  ✓ CLEAN (trips no check)
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=R  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=null  bylaw_max_height_m=11.00  bylaw_max_stories=null  bylaw_max_units=null  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=234.80  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=true
+  maxbuild   max_buildable_footprint_sqm=107.40  max_buildable_gfa_sqm=322.20  max_buildable_gfa_basis=coverage_box  max_build_stories=3  max_build_stories_basis=pocket  max_build_height_m=11.00  max_build_width_m=4.38  max_build_length_m=24.52  max_build_confidence=medium  max_build_fsi=1.372
+  existing   cur_floor_gfa_sqm=95.14  cur_pot_2story_gfa_sqm=190.28  existing_stories=null  existing_height_m=null  existing_width_m=4.95  existing_length_m=20.38  existing_greenspace_sqm=139.66  existing_other_structures_sqm=0.00  existing_structure_confidence=low  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=322.2  opt_aor_storeys=3  opt_coa_gfa_sqm=322.2  opt_coa_storeys=3  opt_suite_type=laneway  opt_binding_constraint=coverage  opt_config_confidence=medium  coa_fsi=1.372  realized_fsi_p90=null  comp_fsi_p50=0.26
+  accessory  max_garden_suite_gfa_sqm=null  max_laneway_suite_gfa_sqm=120.00  max_rear_suite_gfa_sqm=120.00  max_garage_gfa_sqm=null  rear_suite_permission=as_of_right  garage_permission=not_permitted
+  cost       neighbourhood_cost_premium=1.35  cost_fb_total=2106994.68  cost_coa_total=2106994.68  cost_gut_total=829459.06  cost_addition_total=553058.33  cost_garden_suite_total=null  cost_garage_total=null  cost_kitchen_per_sqm=4722.30  cost_basement_per_sqm=1016.55
+
+==============================================================================================================
+PARCEL 265828  RD  lot=388.09  ✓ CLEAN (trips no check)
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=RD  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=35.00  bylaw_max_height_m=10.00  bylaw_max_stories=2  bylaw_max_units=null  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=388.09  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=false
+  maxbuild   max_buildable_footprint_sqm=135.83  max_buildable_gfa_sqm=271.66  max_buildable_gfa_basis=coverage_box  max_build_stories=2  max_build_stories_basis=bylaw  max_build_height_m=10.00  max_build_width_m=7.32  max_build_length_m=29.05  max_build_confidence=medium  max_build_fsi=0.700
+  existing   cur_floor_gfa_sqm=107.86  cur_pot_2story_gfa_sqm=215.72  existing_stories=null  existing_height_m=null  existing_width_m=7.52  existing_length_m=14.85  existing_greenspace_sqm=280.23  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=271.66  opt_aor_storeys=2  opt_coa_gfa_sqm=271.66  opt_coa_storeys=2  opt_suite_type=garden  opt_binding_constraint=coverage  opt_config_confidence=medium  coa_fsi=0.700  realized_fsi_p90=null  comp_fsi_p50=0.15
+  accessory  max_garden_suite_gfa_sqm=60.00  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=60.00  max_garage_gfa_sqm=31.44  rear_suite_permission=as_of_right  garage_permission=as_of_right
+  cost       neighbourhood_cost_premium=1.85  cost_fb_total=2434453.92  cost_coa_total=2434453.92  cost_gut_total=1288635.78  cost_addition_total=859223.55  cost_garden_suite_total=597402.00  cost_garage_total=112721.83  cost_kitchen_per_sqm=6471.30  cost_basement_per_sqm=1393.05
+
+==============================================================================================================
+PARCEL 124172  R  lot=296.01  ✓ CLEAN (trips no check)
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=R  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=null  bylaw_max_height_m=11.00  bylaw_max_stories=null  bylaw_max_units=null  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=296.01  lot_size_confidence=high  is_heritage_designated=false  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=true
+  maxbuild   max_buildable_footprint_sqm=147.57  max_buildable_gfa_sqm=442.71  max_buildable_gfa_basis=coverage_box  max_build_stories=3  max_build_stories_basis=pocket  max_build_height_m=11.00  max_build_width_m=5.81  max_build_length_m=25.40  max_build_confidence=medium  max_build_fsi=1.496
+  existing   cur_floor_gfa_sqm=83.02  cur_pot_2story_gfa_sqm=166.04  existing_stories=null  existing_height_m=null  existing_width_m=6.27  existing_length_m=14.90  existing_greenspace_sqm=212.99  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=442.71  opt_aor_storeys=3  opt_coa_gfa_sqm=442.71  opt_coa_storeys=3  opt_suite_type=laneway  opt_binding_constraint=coverage  opt_config_confidence=medium  coa_fsi=1.496  realized_fsi_p90=null  comp_fsi_p50=0.05
+  accessory  max_garden_suite_gfa_sqm=60.00  max_laneway_suite_gfa_sqm=120.00  max_rear_suite_gfa_sqm=120.00  max_garage_gfa_sqm=19.37  rear_suite_permission=as_of_right  garage_permission=as_of_right
+  cost       neighbourhood_cost_premium=1.35  cost_fb_total=2895057.77  cost_coa_total=2895057.77  cost_gut_total=723793.27  cost_addition_total=482603.56  cost_garden_suite_total=435942.00  cost_garage_total=50677.73  cost_kitchen_per_sqm=4722.30  cost_basement_per_sqm=1016.55
+
+==============================================================================================================
+PARCEL 9174  R  lot=208.71  ⚠ FLAGS: footprint_coverage_gt_65pct
+--------------------------------------------------------------------------------------------------------------
+  zoning     zoning_class=R  zoning_is_ambiguous=false  bylaw_max_fsi=null  bylaw_max_coverage_pct=null  bylaw_max_height_m=13.00  bylaw_max_stories=null  bylaw_max_units=null  bylaw_standard_setback_m=null
+  lot        lot_size_sqm=208.71  lot_size_confidence=high  is_heritage_designated=true  is_in_ravine_protection_area=false  is_corner_lot=false  abuts_laneway=true
+  maxbuild   max_buildable_footprint_sqm=212.98  max_buildable_gfa_sqm=638.94  max_buildable_gfa_basis=heritage_existing  max_build_stories=3  max_build_stories_basis=existing  max_build_height_m=null  max_build_width_m=null  max_build_length_m=null  max_build_confidence=high  max_build_fsi=3.061
+  existing   cur_floor_gfa_sqm=212.98  cur_pot_2story_gfa_sqm=425.96  existing_stories=null  existing_height_m=null  existing_width_m=10.55  existing_length_m=23.09  existing_greenspace_sqm=0.00  existing_other_structures_sqm=0.00  existing_structure_confidence=high  existing_data_quality_flag=null
+  optconfig  opt_aor_gfa_sqm=425.96  opt_aor_storeys=2  opt_coa_gfa_sqm=638.94  opt_coa_storeys=3  opt_suite_type=none  opt_binding_constraint=heritage  opt_config_confidence=medium  coa_fsi=3.061  realized_fsi_p90=null  comp_fsi_p50=0.37
+  accessory  max_garden_suite_gfa_sqm=null  max_laneway_suite_gfa_sqm=null  max_rear_suite_gfa_sqm=null  max_garage_gfa_sqm=null  rear_suite_permission=not_permitted  garage_permission=not_permitted
+  cost       neighbourhood_cost_premium=1.15  cost_fb_total=3559279.16  cost_coa_total=3559279.16  cost_gut_total=1581738.57  cost_addition_total=1054655.66  cost_garden_suite_total=null  cost_garage_total=null  cost_kitchen_per_sqm=4022.70  cost_basement_per_sqm=865.95
+
+(15 parcels: 15 shown. Eyeball each — any implausible value on a ✓ CLEAN parcel is an audit MISS.)
