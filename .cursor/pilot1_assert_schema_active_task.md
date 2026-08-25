@@ -1,9 +1,7 @@
 # Active Task: Pilot 1 — convert `assert_schema` to the Spec 122 step standard
 **Status:** Planning
 
-> ⚠️ **This file does not arm the god-mode hook.** `scripts/hooks/check-active-task.mjs:49` resolves
-> `.cursor/active_task.md` and nothing else. Promote/copy this file to `.cursor/active_task.md` (and set
-> Status: Implementation) before any write to `src/` or `scripts/`.
+> `scripts/hooks/check-active-task.mjs` resolves `.cursor/active_task.md` only; the promoted copy carries `**Status:** Implementation`, so `src/`/`scripts/` writes are unlocked (Integration seat, verified).
 
 ## Context
 
@@ -49,10 +47,26 @@
 * **Modified:** `scripts/quality/assert-schema.js` (→ 7 lines + `'use strict'`) ·
   `scripts/steps/_schema/converted.json` (append one entry, final commit) ·
   `src/tests/pipeline-advisory-lock.infra.test.ts` (one regex widening) ·
-  the 7 test files carrying source-text assertions (re-homed onto the compute module).
+  the **6** test files carrying the 13 source-text assertion sites (Fold A: Integration + Ground-truth both measured 6, not 7). Per-site disposition at commit 7 — SURVIVE frozen shape: `quality.infra:280` (existsSync), `pipeline-advisory-lock.infra:145` (lock-ID map), `pipeline-sdk.logic:2325` (SPEC LINK in first 30 lines — the 7-line file MUST keep the SPEC LINK header). GO RED → re-home onto `scripts/lib/compute/assert-schema.js`: `chain.logic:864`, `pipeline-sdk.logic:1068`, `:1248`, `quality.infra:823`, `quality.logic:674/:711/:742/:761/:2146`; **`quality-ledger-window.logic:196` re-homes onto `scripts/lib/step/index.js` (library `finally`), NOT compute** (Fold B); plus the `:264` `toContain('withAdvisoryLock')` widening.
 * **Database Impact:** **NO.** `grep -n "INSERT INTO\|UPDATE pipeline_runs\|DELETE FROM"` on the step returns
   `:277` (INSERT `pipeline_runs`) and `:560` (UPDATE `pipeline_runs`) only — bookkeeping, and only when
   `!CHAIN_ID` (`:112`). Zero domain tables, zero DB reads. No migration.
+
+### Fold B (fold-validation 2026-08-25: grounder 0 mismatches; Cross-read Adversary 10 collisions folded — see Declared-diffs rows, commit 7 row, descriptor #6/#7 rulings)
+
+### Fold A (PLAN panel 2026-08-25: Integration · Ground-truth · Descriptor-vs-schema · DB Schema-Fidelity)
+
+* **Compute contract (Integration, `scripts/lib/step/index.js` `computeResult = await runnable.compute(stepCtx)`):** `compute(stepCtx)` → `{observations?, records_meta?}`; `stepCtx.report(checkId, obs)` **throws on any checkId not declared in `checks[]`**. Commit 7's "verbatim" extraction must map the 9 check outcomes onto the declared IDs or the library throws at runtime. Status is row-derived from `audit_table.verdict` (`index.js` `built.audit_table.verdict === 'FAIL' ? RUN_STATUS.FAILED …`) — no parallel boolean.
+* **Strand-window fence (Integration + Ground-truth, `quality-ledger-window.logic.test.ts:196`):** that lock requires `require(...ledger-window)` + `finalizeStrandedRun` in a `finally` **inside the step file** — unsatisfiable by the frozen 7-line shape. **Decision: the library gains the window** (`scripts/lib/step/` calls `finalizeStrandedRun` in its `finally`, lock re-homed onto the library) — retiring the fence is not on the table (P3 fence `f32b1485`, 1 day old). This is a library-growth item of commit 7 (R4: the library grows per pilot).
+* **Descriptor corrections before promotion (Descriptor-vs-schema seat; `validateDescriptor` passes as-is, but):**
+  1. `permit_cost_type_sample`: `blocking:true` **and `when:"pre"`** — schema `allOf` enforces `blocking:true ⇒ when:"pre"`; flipping `blocking` alone THROWS (verified).
+  2. `zoning_resource_columns.expect`: per-resource map — height `["_id","geometry","HT_LABEL"]`, lot_coverage `["_id","geometry","PRCNT_CVER"]`, 7 others `["_id","geometry"]` (code `:432-441` has 3 distinct required sets; draft has 2).
+  3. `execution.network.timeout`: draft says 30s; code has **no** fetch timeout (5 bare `fetch(`). PIN not FIX → `"none"` at commit 7; adding `AbortSignal.timeout` is a peel candidate (8c) with its own lock.
+  4. `execution.on_check_error`: `"fail_step"` (8 of 9 checks fail the step on error); the `:163` omit is a per-check limitation, not the policy.
+  5. `database.min_migration`: 241 has no basis (it is `fix_lead_id_trigger_column_scope`; the only table touched is `pipeline_runs`, mig 033). Set to `33` with a `why`. (Dissolves the DB seat's cloud advisory; that seat's "cloud = 237" came from a stale `resolve-db.js` header — P2's record verified 245 applied on cloud. Fix the header text in passing.)
+  6. `parcel_columns.chains`: `["sources"]` contradicts its own `why` ("emitted into every chain") and the code (`:487-488`, `:510-511` emit `parcels_schema_mismatch_count` rows into permits AND coa audit tables). **Fold B ruling: widen to `["permits","coa","sources"]`** — the `sharing` option is unexpressible: `verdict.js` `buildAuditTable` builds rows only `for (const check of selected)` and `index.js` passes no `extraRows`; a `report()` for an unselected check is accepted but silently dropped. In permits/coa the parcels check does not execute (`runSourceChecks` gate `:328`) — compute reports a constant `violations: 0`, declared as a diff (constant row, not a check execution). Partition becomes **permits:3 / coa:2 / sources:6** (11 selections of 9 checks); standalone still runs all 9.
+  7. `terminals`: `fail_check` and `fail_error` are indistinguishable in code (one throw at `:585` serves both). **Fold B ruling: merge at commit 7** (drop `fetch_error`, carry its `why.liveness external` onto the survivor and record the loss); separating them is peel 8b. No 55-A claim demands distinct terminals (generator: only #179, k=FLEET, 55-C). Stale cites: `:1073→:1092`, `:351-397→:365-404`.
+* **DB Schema-Fidelity (live `127.0.0.1:54322/postgres`, 242 migrations): 0 FAIL.** All columns/types/nullability/defaults used by the old step, `ledger.js`, `index.js`, `run-chain.js` exist; `pipeline_runs.status` has **no CHECK/enum** — vocabulary is enforced only by `step.schema.json` + `RUN_STATUS`. `self_skipped`/`crashed` have never been written (live distinct: completed 1416, skipped 103, failed 101, completed_with_errors 15, completed_with_warnings 6, cancelled 2).
 
 ## Gate ledger — G0–G8 + G4d + G-shape
 
@@ -69,7 +83,7 @@ Requirement text is quoted from Spec 123 §6 / §6.1 (grep anchors given, not li
 | **G6** | §6 `Classification` — *"every behaviour CONTRACT / INCIDENTAL / DEFECT; **every DEFECT has a ledger ID**"* | `grep -rn "AS-D1\|AS-D9\|Defect Ledger" docs/ src/ scripts/` | ⚠️ **PARTIAL — the ledger IDs have no register.** The assessment classifies 6 CONTRACT (C1–C6), 4 INCIDENTAL, and 10 DEFECTs `AS-D1, AS-D1b, AS-D2, AS-D3, AS-D4, AS-D5, AS-D6, AS-D7, AS-D8, AS-D9, AS-D10` — but there is **no Defect Ledger file** anywhere in the repo. G6 cannot be "full" until one exists, and §6 says *"Any zero in G6–G8 is a hard stop."* Re-verified live: D1 (`:546` `sourceErrors.length > 0 ? 'FAIL' : 'PASS'` — raw array, not `sourceAuditRows`), D7 (`:527` `checks_passed: … ? 'all' : undefined`), D9 (`:605` `if (!lockResult.acquired) return;` — no emit) **all still present.** |
 | **G7** | §6 `Test adequacy` — *"class-A: **mutation ≥80% on covered code**; every class-A behaviour **proven red**"* | `npx vitest run src/tests/steps/assert_schema/violations.test.ts` · `grep -n "mutate\|break" stryker.config.mjs` | ⛔ **RED, and the mutation clause is unsatisfiable as written.** Measured: `stryker.config.mjs` `mutate:` lists **3 files, all `src/features/leads/lib/*.ts`**, `break: 75`. `scripts/*.js` is outside `src/` and unreachable; there is no line/branch coverage tooling. Spec 123 §4.8 already says this (*"a NEW dependency, not existing capability"*). **Prove-red half:** `src/tests/steps/` does not exist — 0 of the 44 55-A claims are red or green today. |
 | **G8** | §6 `Differential` — *"zero unexplained diffs; every explained diff points at a Defect Ledger ID"* | per chain: `PIPELINE_CHAIN=<c> node scripts/quality/assert-schema.js` before/after, 4-tuple diff | ⛔ **NOT MEASURABLE IN THE PLANNING SESSION.** DB probe was permission-denied, so no capture was taken. Also **no golden-master harness exists**: `grep -rln "golden.master\|golden-master\|goldenMaster" scripts src/tests` returns only prose mentions in `scripts/violations/extract-claims.mjs` and `src/tests/step-library.logic.test.ts`. Commit 5 must build it. |
-| **G4d** | §6.1 — *"every fence found in P3 has a **both-directions** lock test. A both-directions lock test IS a violation test with its reversion patch"* | `git log --format=%B -- scripts/quality/assert-schema.js \| grep -ci "^Severity:"` then one lock test per fence | ⛔ **RED: 4 fences, 0 both-directions locks.** No `*.regression.test.ts` covers this file. The nearest existing locks are 13 **source-text** read sites across 7 test files (`grep -rn "quality/assert-schema.js" src/tests/*.ts` → 13) — all of which go red at commit 7 and must be re-homed, not deleted. |
+| **G4d** | §6.1 — *"every fence found in P3 has a **both-directions** lock test. A both-directions lock test IS a violation test with its reversion patch"* | `git log --format=%B -- scripts/quality/assert-schema.js \| grep -ci "^Severity:"` then one lock test per fence | ⛔ **RED: 4 fences, 0 both-directions locks.** No `*.regression.test.ts` covers this file. The nearest existing locks are 13 **source-text** read sites across **6** test files (`grep -rn "quality/assert-schema.js" src/tests/*.ts` → 13; Fold A corrected 7→6) — all of which go red at commit 7 and must be re-homed, not deleted. |
 | **G-shape** | §6.1 — *"the converted file passes the ast-grep shape rule (Spec 122 §4.1) and `pipeline.run(` no longer appears in it"* | `node scripts/hooks/check-step-shape.mjs` (or `npm run step-shape`); `node scripts/hooks/check-step-shape.mjs --json` | ⛔ **RED by design, and correctly armed.** Measured output: `footgun[step-shape] (info): 62/62 unconverted manifest step files violate the frozen shape … ✅ Step-shape gate clean (0 converted step file(s) enforced).` `--json` confirms `converted: []`, `report_only` length **62**, and `scripts/quality/assert-schema.js` is in the report-only violating set. Live today: `assert-schema.js:259` `pipeline.run('assert-schema', …)`. Gate arms when the path is appended to `converted.json`. |
 
 **Score today:** G1 ✅(1) + G4 ✅(2) + G5 ✅(1) = **4/17**, with G6/G7/G8 at zero. §6 threshold: *"Ship at ≥14/17 with G6, G7 and G8 full."*
@@ -87,7 +101,7 @@ generator's output is admissible per Spec 121 §12b.6's tooling gate.
 * **K-axis (whole register):** `PER_STEP 229 · MIXED 48 · FLEET 13` (matches the S6a `[x]` item in the
   programme record).
 * **Drift:** `diff <(node scripts/violations/plan-claims.mjs) docs/reports/generated/123-claim-plan.md`
-  and the `--checklist` equivalent both produced **empty output** — committed artifacts are current.
+  and the `--checklist` equivalent are empty **after dropping the generator's leading `SELF-TEST PASSED` stdout line** (Fold A caveat: the literal diff shows that 1 extra line) — committed artifacts are current.
 * **⚠️ There is no `assert_schema` row.** The generator is claim-scoped, not step-scoped. Searching the
   generated artifacts (`grep -rn "assert_schema" docs/reports/generated/*.md`) returns exactly **one**
   hit — `123-claim-plan.md:89`, the C1 stage-table row. The "per-step checklist" is a **template** copied
@@ -130,7 +144,7 @@ Commit-message format enforced by `scripts/hooks/validate-commit-msg.sh`: `type(
 | **4** | PH-6 classification → **G6** | same report | none (doc) | `docs(122_step_optimization): C1 pilot 1 PH-6 - CONTRACT/INCIDENTAL/DEFECT, every defect ledger-IDed` |
 | **5** | Golden master (4-tuple) → **G1′** | `scripts/analysis/capture-step-golden.js` (new) + `docs/reports/.../golden/{permits,coa,sources}.json` | the harness's own self-test | `feat(122_step_optimization): C1 pilot 1 - golden-master capture x3 chains + non-determinism inventory` |
 | **6** | PH-7 test design + **prove red** → **G7** | `src/tests/steps/assert_schema/violations.test.ts`; 4 both-directions fence locks | `npx vitest run src/tests/steps/assert_schema/` — **must be RED** | `test(122_step_optimization): C1 pilot 1 PH-7 - 44 55-A violations + 5 partials + 4 fence locks (red)` |
-| **7** | Descriptor + compute **verbatim** → **G2′** | `scripts/quality/assert-schema.descriptor.json` (new) · `scripts/lib/compute/assert-schema.js` (new) · `scripts/quality/assert-schema.js` (→ frozen shape) · `src/tests/pipeline-advisory-lock.infra.test.ts` (regex widening) · the 7 source-text test files re-homed | `npx vitest run src/tests/step-conformance.infra.test.ts src/tests/pipeline-advisory-lock.infra.test.ts src/tests/quality.logic.test.ts` | `refactor(122_step_optimization): C1 pilot 1 - assert_schema to frozen shape; compute extracted verbatim` |
+| **7** | Descriptor (Fold A corrections 1–7) + compute extracted + **library growth** → **G2′** | `scripts/quality/assert-schema.descriptor.json` (new) · `scripts/lib/compute/assert-schema.js` (new) · `scripts/quality/assert-schema.js` (→ frozen shape, SPEC LINK kept) · **`scripts/lib/step/index.js`** (strand window: `require('../ledger-window')` + `finalizeStrandedRun` in `finally`) · **`scripts/lib/resolve-db.js`** (header cloud 237→ measured) · `src/tests/pipeline-advisory-lock.infra.test.ts` (regex widening) · `src/tests/quality-ledger-window.logic.test.ts` (re-home onto library) · the other 9 GO-RED sites across 5 files re-homed onto compute | `npx vitest run src/tests/step-conformance.infra.test.ts src/tests/pipeline-advisory-lock.infra.test.ts src/tests/quality.logic.test.ts` | `refactor(122_step_optimization): C1 pilot 1 - assert_schema to frozen shape; compute extracted verbatim` |
 | **8** | Peel — one policy concern per commit, green diff after **every** peel | 8a gating · 8b verdict/audit (**closes AS-D1**) · 8c thresholds/checks | full differential re-run after each peel | `refactor(122_step_optimization): C1 pilot 1 peel a/b/c - <concern>` (three commits) |
 | **9** | Differential + cutover → **G8, G4d, G-shape** | `scripts/steps/_schema/converted.json` (+1 entry) | `node scripts/hooks/check-step-shape.mjs` (must exit 0 with 1 enforced file) + differential green in all 3 chains | `feat(122_step_optimization): C1 pilot 1 cutover - assert_schema converted; shape gate armed (1/27)` |
 
@@ -148,8 +162,12 @@ Commit-message format enforced by `scripts/hooks/validate-commit-msg.sh`: `type(
 | `PIPELINE_META.writes` | `{"pipeline_runs":["checks_passed","checks_failed"]}` | `{}` | forced by `outputs: "none"` (normative for ASSERT) |
 | `records_total` | `0` (`:571`) | `null` | forced by `counters: "none"`; in-chain the ledger is unchanged (run-chain COALESCEs) |
 | log tag / banner | `pipeline.run('assert-schema', …)` (`:259`) | `pipeline.run('assert_schema', …)` — library passes `descriptor.identity.name` | INCIDENTAL; declare as a normalisation |
-| DB target refusal | none (no `assertDbTarget` in the step — grep returns 0) | refuses below migration 241 / non-`postgres` | **NEW behaviour** from `database: {min_migration: 241, assert_current_database: "postgres"}` |
-| lock-contention path | `:605` `return;` — **no emit at all** (AS-D9) | library emits a SKIP summary with a row-derived `audit_table` (`skipEmit: false`) | **FIX** — must point at `AS-D9` |
+| DB target refusal | none (no `assertDbTarget` in the step — grep returns 0) | refuses below migration **33** / non-`postgres` | **NEW behaviour** from `database: {min_migration: 33, assert_current_database: "postgres"}` (Fold B: 241→33) |
+| `on_check_error` | `:163` returns `true` silently on non-OK (omit) | descriptor `fail_step`; library `checkRow` returns a severity-status row on `{error}` | **inert at commit 7 iff compute never reports `{error}` for `permit_cost_type_sample`**; otherwise declare. Rewrite the fixture's `on_check_error_why` (describes omit_row) |
+| `parcel_columns` in permits/coa | constant `0/PASS` rows (`:487-488`, `:510-511`; check gated at `:328`) | check selected in all 3 chains, compute reports constant `violations: 0` | **declared normalisation** — constant row, not a check execution (Fold B) |
+| `permit_cost_type_sample` | blocking (`:308-311` → `:585`) | `blocking:true, when:"pre"` | **no diff — corrected descriptor** (`when` has no runtime consumer: `grep "\.when" scripts/lib/step/` → 0) |
+| `network.timeout` | none (5 bare `fetch(`) | `"none"` | **no diff — declared, inert** (not read by `index.js`/`verdict.js`) |
+| lock-contention path | `:605` `return;` — **no emit at all** (AS-D9) | library emits a SKIP summary with a row-derived `audit_table` (`skipEmit: false`) **and writes `status = 'self_skipped'` — the first-ever writer of that value** (live DB: 0 rows) | **FIX** — points at `AS-D9`. Fold B ruling: keep `self_skipped` (ratified `RUN_STATUS` vocabulary; no DB CHECK). Consumers to enumerate + verify at commit 7: `/api/quality/route.ts` (`WHERE status = 'failed'` — unaffected), admin stats reaper (`stats/route.ts` stranded-`running` logic — must not treat `self_skipped` as stranded), `run-chain.js` COALESCE path, `FreshnessTimeline.tsx`. Per `tasks/lessons.md` this IS an API change to every status reader — listed, not hidden. |
 
 ## Shared-step rule
 
@@ -162,7 +180,7 @@ chain it appears in** even at C1."* Mechanism, all three verified in code:
 
 * Selection: `scripts/lib/step/verdict.js` → `selectChecks(descriptor, chainId)` filters on
   `check.chains` **only when** `sharing.varies_by_chain.checks === 'per_chain'`. The draft descriptor sets
-  exactly that, and its 9 checks partition `permits:2 / coa:1 / sources:6`. A standalone run (no chain)
+  exactly that; after Fold B's `parcel_columns` widening the 9 checks select as `permits:3 / coa:2 / sources:6` (overlapping). A standalone run (no chain)
   runs **all 9** — deliberate, per the function's own doc comment.
 * Phase: `resolvePhase()` reads the explicit map `{"permits":1,"coa":1,"sources":1}` — never a ternary.
 * **The differential command, per chain** (there is no `--only` flag in `run-chain.js`; `--manifest=` is
@@ -179,7 +197,7 @@ chain it appears in** even at C1."* Mechanism, all three verified in code:
 ## ⚠️ Decision item for the operator — `permit_cost_type_sample`
 
 `docs/reports/review_followups.md` (§`Spec 122 §S2-min`) defers a MED: a **non-blocking FAIL** is invisible
-to `/api/quality`, because `run-chain.js:731` writes the literal `status = 'completed'` and
+to `/api/quality`, because `run-chain.js:732` (Fold A: was cited `:731`) writes the literal `status = 'completed'` and
 `src/app/api/quality/route.ts:98` selects `WHERE status = 'failed'`. Both anchors verified live. The
 followup says it *"must be resolved BEFORE any pilot declares a non-blocking FAIL check."*
 
@@ -204,8 +222,7 @@ breaker at `:585` (`if (!allPassed) throw`) and halts the chain. Shipping `block
   `scripts/lib/step/index.js`'s `try/catch/finally` in `runWithPool`; the ledger row is finalized in the
   `finally`. ⚠️ **`scripts/lib/step/` does not reference `finalizeStrandedRun` or `ledger-window`
   (grep: 0 hits)** — the P3 strand window that `f32b1485` added to this very file (`:594-601`) has **no
-  home in the library**. That is an undefended fence: either the library gains it or commit 7 keeps it in
-  compute with a lock test. Regression Guardian owns this.
+  home in the library**. Fold A decision: the library gains it at commit 7; the lock re-homes onto `index.js`. Regression Guardian verifies the `finally` semantics match `:594-601`.
 * **Unhappy Path Tests:** every declared check ships a must-fail fixture (55-A #165); the 4 fence locks are
   proven in **both** directions (G4d); the known-bad shape fixtures under
   `scripts/steps/_schema/fixtures/shape/` are already asserted to FIRE by `step-conformance.infra.test.ts`
@@ -230,7 +247,8 @@ breaker at `:585` (`if (!allPassed) throw`) and halts the chain. Shipping `block
 1. **Integration** (`general-purpose`, main tree, NO worktree) — manifest/chain wiring, `spawnStepChild`
    argv/env, `pipeline.step` export surface, the 13 source-text test sites.
 2. **Ground-truth** (grounder) — re-executes every executable claim in this plan.
-3. **Schema-Fidelity** — the draft descriptor vs `step.schema.json`'s 18 required categories.
+3. **Descriptor-vs-schema** (NOT the Spec 08 seat) — the draft descriptor vs `step.schema.json` + live code.
+3b. **Schema-Fidelity (Spec 08 §5.4, live DB)** — every `pipeline_runs`/`schema_migrations` column the old step, `ledger.js`, `index.js`, `run-chain.js` read/write.
 4. **Reality-Check** — **NOT RUN.** Trigger is *"the diff adds/changes an enriched parcel field."* Measured:
    this step writes **zero domain tables** (`grep` for INSERT/UPDATE returns only `pipeline_runs`) and
    `outputs: "none"`. **No enriched field changes.**
@@ -243,7 +261,7 @@ breaker at `:585` (`if (!allPassed) throw`) and halts the chain. Shipping `block
    row-derived (AS-D1), §11 counter scoping, `records_meta` producer/consumer contracts.
 5. Agent `general-purpose`, NO worktree — **Integration** vs the real codebase.
 6. Agent `regression-guardian`, **main tree** (fires: WF2 alters existing
-   code by definition). Anchored on the 4 `Severity:`-footer fences, the `finalizeStrandedRun` orphan, the
+   code by definition). Anchored on the 4 `Severity:`-footer fences, `finalizeStrandedRun` in `index.js` `finally` matching `:594-601` semantics, the
    13 source-text assertion sites, and `tasks/lessons.md` (script-must-be-run-live; status-vocabulary).
 7. **Reality-Check: N/A** — no enriched field changes (justified above).
 
@@ -260,7 +278,7 @@ claim in the fold, plus one Cross-read Adversary checking folded decisions pairw
 | 4 | Spec 122 §5.4 says the widening is *"one-line … at `pipeline-advisory-lock.infra.test.ts:259-260`"* | measured: `describe` at `:258`, assertion `toContain('withAdvisoryLock')` at `:264-265`; the `:246-253` and `:289-296` loops stay green | **Line drift.** The instruction is right, the coordinates are not. |
 | 5 | Draft descriptor: `permit_cost_type_sample` `blocking: false` | code: `:308-311` sets `allPassed = false` → `:585` throws | **CONFLICT — the operator decision item.** Descriptor contradicts the code it describes. |
 | 6 | Descriptor `outputs: "none"` / `counters: "none"` | code emits `emitMeta(..., {"pipeline_runs":[…]})` at `:572-575` and `records_total: 0` at `:571` | **CONFLICT resolved by the contract** (ASSERT must declare `outputs:"none"`), but it makes commit 7 **not** a byte-identical no-op. Must be a declared normalisation before capture. |
-| 7 | `finalizeStrandedRun` / `ledger-window` (P3, `f32b1485`) | `grep -rn "finalizeStrandedRun\|ledger-window" scripts/lib/step/` → **0 hits** | **GAP.** A fence added 1 day before the S2-min library has no home in it. Undefended. |
+| 7 | `finalizeStrandedRun` / `ledger-window` (P3, `f32b1485`) | `grep -rn "finalizeStrandedRun\|ledger-window" scripts/lib/step/` → **0 hits** | **RESOLVED by Fold A** — library gains the window at commit 7; lock re-homed. |
 | 8 | `identity.gate_exempt` is "an explicit schema field" replacing `run-chain.js` name-prefix dispatch | `grep -rn "gate_exempt" scripts/ src/` → only schema + fixtures, **no runtime consumer**; `run-chain.js:547` still `slug.startsWith('assert_')` | **DECLARED BUT INERT** at pilot 1. Not a pilot-1 blocker; must not be claimed as closed. |
 | 9 | S4 migration numbers | generator prints `S4 | State tables (migrations **245-248**)`; `.cursor/active_task.md` S4 says **246–249**, *"245 consumed by P1's centroid invalidator"* | **CONFLICT between the generator and the programme record.** Out of pilot-1 scope but it will re-emit on every regeneration. |
 | 10 | Stryker surface | `00_engineering_standards.md:381` — *"The 4 high-stakes pure modules (… `builder-query.ts`) … ≥ 50%"*; `stryker.config.mjs` `mutate:` = **3 files**, `break: 75`, with a comment saying `builder-query.ts` was deleted | **CONFIRMED doc drift** (Spec 123 §4.8 already flags it). G7's mutation clause is unsatisfiable for `scripts/` either way. |
@@ -276,7 +294,7 @@ claim in the fold, plus one Cross-read Adversary checking folded decisions pairw
 - [ ] **Schema Evolution:** N/A — Database Impact NO, no migration.
 - [ ] **Guardrail Test:** `src/tests/steps/assert_schema/violations.test.ts` — 44 A items + 5 B partials + 4 both-directions fence locks.
 - [ ] **Red Light:** `npx vitest run src/tests/steps/assert_schema/` must FAIL before commit 7. Record the red set.
-- [ ] **Implementation:** commits 7–8 (verbatim wrap, then three peels; green differential after each).
+- [ ] **Implementation:** commit 7 = frozen-shape wrap + library strand window + declared descriptor corrections (every non-identical output is a row in the Declared-diffs table — nothing undeclared); commit 8 = three peels; green differential after each.
 - [ ] **UI Regression Check:** N/A — no shared component modified; no `src/` component in the diff.
 - [ ] **Pre-Review Self-Checklist:** 5–10 items from Spec 122 §5.1/§5.2 walked against the ACTUAL diff, PASS/FAIL each, BEFORE running tests.
 - [ ] **Multi-Agent Review:** the 5-reviewer panel + Regression Guardian in ONE message (roster above). Reality-Check explicitly N/A — no enriched field changes.
