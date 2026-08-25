@@ -175,6 +175,12 @@ async function runWithPool(runnable, pool, ctx) {
         // `chainId === 'permits'` branch from a compute by reading this instead.
         checks: selectChecks(descriptor, chainId).map((c) => c.id),
         log: pipeline.log,
+        // §5.5 (3) — the INJECTED I/O SEAMS. A compute reaches the network and the
+        // clock only through these, so a test drives it by passing a ctx rather than
+        // monkey-patching `globalThis`, and the compute-shape rule can ban the bare
+        // globals outright. Defaults here, overridable by the caller's ctx.
+        fetch: ctx.fetch || ((input, init) => globalThis.fetch(input, init)),
+        clock: ctx.clock || (() => Date.now()),
         report(checkId, observation) {
           if (!declared.has(checkId)) {
             throw new Error(`[${slug}] compute reported check "${checkId}", which the descriptor does not declare`);

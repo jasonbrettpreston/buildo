@@ -842,8 +842,33 @@ Spec 120 §14.2's 4-tuple, unchanged: **rows** (full state, ordered by PK) · **
 
 > **Convention:** keep `const ADVISORY_LOCK_ID = 55;` textually in the step file and pass it as `identity.lock`. One line per step, reversible. the `toContain('withAdvisoryLock')` source-text assertion needs a one-line widening to accept `pipeline.step` (was cited as `:259-260`; measured at `:264-265` on 2026-08-25 — cite by anchor, line numbers rot). **Do not discover this on conversion #1.**
 
----
+### 5.5 Condition 4 — the COMPUTE shape ⚠️ **PROPOSED 2026-08-25 — pilot 1 8c; ratify at C3**
 
+§5.1 freezes the step FILE and says nothing about the module it delegates to, so a 606-line island can
+become a 7-line file plus a 606-line island one directory over. §5.5 closes that. Enforced by
+`scripts/ast-grep-rules/compute-shape.yml` over `scripts/lib/compute/**` (driver:
+`scripts/hooks/check-step-shape.mjs`, always blocking — the directory IS the scope, no `converted.json`
+entry needed) and by `src/tests/step-conformance.infra.test.ts`; prove-red fixture:
+`scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`.
+
+1. **A dispatch table, `{ [checkId]: fn }`** — one named function per declared check, **function name ===
+   check id**, exported as `module.exports.checks` so a test can call one check without running the rest.
+   `compute(ctx)` iterates `ctx.checks` (the SELECTED ids, from the library) and does nothing else; the
+   loop is the error boundary, so a throw becomes `ctx.report(<id>, { error })` on that check's own row.
+2. **Every observation goes through `ctx.report()`**, and there is **no `console.*`** — narration uses the
+   `ctx.log` seam so a caller can silence, capture or assert on it.
+3. **Every I/O call goes through an injected seam** — `ctx.fetch` (default `globalThis.fetch`), `ctx.clock`
+   (default `Date.now`). Banned outright: bare `fetch(`, `Date.now()`, `new Date(`, `process.env`, and
+   `require()` of `pg` / `dotenv` / `fs` / `child_process` / `../pipeline` / `../step` / `../resolve-db`.
+4. **File order = descriptor check order**; everything reusable lives below a `// ---- helpers ----`
+   marker, the dispatch table below a `// ---- dispatch ----` one.
+5. **Policy text lives in `checks[].why`, not in comments** — a rule stated only in a comment is a rule
+   the audit table cannot show and the schema cannot validate.
+
+> **Why a shape rule and not a review checklist:** the same reason as §5.1. The moment one compute gets a
+> special case there are 27, and every one of them is invisible until something breaks in production.
+
+---
 ## 6. The cross-step ledger
 
 > ⚠️ **CORRECTED after measurement (2026-08-23). This section originally read *"the artifact the estate has never had."* That was wrong. A cross-step ledger has already been designed three times at increasing fidelity, and one of those designs is live, working, and drift-guarded today.**

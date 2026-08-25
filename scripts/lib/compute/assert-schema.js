@@ -2,7 +2,7 @@
  * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
  * SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md
  * SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md
- * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §4.1, §5.1
+ * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §4.1, §5.1, §5.5
  *
  * CQA Tier 1: Pre-Ingestion Schema Validation — THE DOMAIN LOGIC ONLY.
  *
@@ -11,20 +11,45 @@
  * and URL accessibility for massing / ravine / heritage / centreline
  * shapefiles. Catches upstream schema drift before ingestion runs.
  *
- * ⚠️ EXTRACTED VERBATIM at pilot 1 commit 7 from scripts/quality/assert-schema.js
- * (606 lines, HEAD 8b857169). Same fetches, same required-column sets, same
- * helpers, same operator-facing messages. What is NOT here — and deliberately so
- * — is every non-compute concern the frozen shape moved into scripts/lib/step/:
- * the pool, the advisory lock, the pipeline_runs ledger row, the strand window,
- * the audit-table assembly, the PASS/WARN/FAIL cascade, PIPELINE_SUMMARY and
- * PIPELINE_META. This module reports OBSERVATIONS against the nine checks the
- * descriptor declares and nothing else; `stepCtx.report()` throws on an id the
- * descriptor does not declare, so the two files cannot silently drift apart.
+ * ⚠️ THIS FILE IS SHAPED BY §5.5 (PROPOSED at pilot 1 peel 8c, ratify at C3) and
+ * enforced by scripts/ast-grep-rules/compute-shape.yml over scripts/lib/compute/**:
  *
- * Each source is wrapped in its OWN try/catch, exactly as the pre-conversion
- * step was. That per-check granularity is a property of the COMPUTE, not of the
- * library: a fetch allowed to escape to the top level trades nine audit rows for
- * one error string (scripts/lib/step/index.js documents the same gap).
+ *   1. ONE NAMED FUNCTION PER DECLARED CHECK, name === check id, gathered in the
+ *      CHECKS dispatch table at the bottom and exported, so a test can call any
+ *      single check without running the other eight.
+ *   2. `compute(ctx)` iterates `ctx.checks` — the SELECTED check ids the library
+ *      hands it — and does nothing else. It contains no domain logic and no chain.
+ *   3. EVERY OBSERVATION GOES THROUGH `ctx.report(<checkId>, …)`. There is no
+ *      `console.*` in this file: operator narration goes through the `ctx.log`
+ *      seam, so a caller can silence or capture it.
+ *   4. EVERY I/O CALL GOES THROUGH AN INJECTED SEAM — `ctx.fetch` (never bare
+ *      `fetch(`), `ctx.clock` (never `Date.now()`). No `process.env`, no `pg`, no
+ *      `fs`: a compute that can reach those is a compute a test cannot pin.
+ *   5. Check functions appear in DESCRIPTOR ORDER; everything reusable lives below
+ *      the `// ---- helpers ----` marker; policy text lives in the descriptor's
+ *      `checks[].why`, not in a comment here.
+ *
+ * ⚠️ PEEL 8b — ERRORS ARE ATTRIBUTED BY CHECK ID, NOT BY SUBSTRING. The
+ * pre-conversion step decided which audit row an error belonged to by matching the
+ * message text (`includes('permit')`, `includes('coa')`, and a
+ * `zoning|ravine|centreline|…` alternation at `assert-schema.js:536`) — AS-D6, and
+ * the reason AS-D1's sources verdict read a raw `sourceErrors.length` instead of the
+ * rows. The dispatch loop is now the error boundary: whatever a check function
+ * throws is reported as `{ error }` under THAT check's id, so
+ * `scripts/lib/step/verdict.js` renders one row keyed by the check and
+ * `deriveVerdict` reads the verdict off the rows.
+ *
+ * ⚠️ PEEL 8a — THE COMPUTE NO LONGER KNOWS WHAT A CHAIN IS. `ctx.checks` is the
+ * SELECTED check-id list, derived by the library from
+ * `sharing.varies_by_chain.checks` + `checks[].chains`
+ * (`scripts/lib/step/verdict.js` `selectChecks`) — the same selection
+ * `buildAuditTable` scores. The descriptor is the only place a chain appears.
+ *
+ * What is NOT here — and deliberately so — is every non-compute concern the frozen
+ * shape moved into scripts/lib/step/: the pool, the advisory lock, the
+ * pipeline_runs ledger row, the strand window, the audit-table assembly, the
+ * PASS/WARN/FAIL cascade, PIPELINE_SUMMARY and PIPELINE_META. `ctx.report()` throws
+ * on an id the descriptor does not declare, so the two files cannot silently drift.
  */
 'use strict';
 
@@ -61,23 +86,17 @@ const MASSING_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/667237d6-4d3c-4cf3-8cb7-e91c48d59375/download/3dmassingshapefile_2025_wgs84.zip';
 const RAVINE_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ravine-natural-feature-protection-area/resource/bb81bb0f-f88a-4f3e-bca7-a328154ba31b/download/ravine-natural-feature-protection-area-wgs84.zip';
-// Spec 61 §8c — two Heritage shapefile ZIPs (reachability only; STATUS/HCD_TYPE +
-// OBJECTID/HCD_NO attribute presence validated post-download in load-heritage.js).
 const HERITAGE_REGISTER_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/e41da515-5ad1-4bc3-85ea-18ec9e55cd33/resource/108b1080-d048-439f-a9e8-e8d6cd81bddb/download/heritage_register_address_points_wgs84.zip';
 const HERITAGE_HCD_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/37a3c911-0813-4e87-90ed-3b9fa6156a63/resource/8e6b9347-63a8-4dac-91fb-a6491a8c1e5a/download/heritageconservationdistrict.zip';
-// Spec 62 §8c — Toronto Centreline shapefile ZIP (reachability only; the 40-col attribute /
-// FEATURE_CODE_DESC + JURISDICTION value validation runs post-download in load-centreline.js).
 const CENTRELINE_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1d079757-377b-4564-82df-eb5638583bfb/resource/d86bdca4-ab2c-470d-80fb-34647ea0e87f/download/centreline-version-2-4326.zip';
 const NEIGHBOURHOODS_URL =
   'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/fc443770-ef0a-4025-9c2c-2cb558bfab00/resource/0719053b-28b7-48ea-b863-068823a93aaa/download/neighbourhoods-4326.geojson';
 
-// The reachability set — descriptor `source_archives_reachable.expect.http_head_ok`
-// names the same five externals. Fences 1ceebd17 (ravine) and f6047e89 (centreline)
-// live in this list AND in inputs.reads.externals; removing either from one place
-// without the other is what the G4d locks detect.
+// The reachability subject set — the declared twin is
+// `source_archives_reachable.expect.http_head_ok` + `inputs.reads.externals`.
 const SOURCE_ARCHIVES = [
   { url: MASSING_URL, label: '3D Massing' },
   { url: RAVINE_URL, label: 'Ravine Protection' },
@@ -86,23 +105,9 @@ const SOURCE_ARCHIVES = [
   { url: CENTRELINE_URL, label: 'Toronto Centreline' },
 ];
 
-// Expected CSV columns for source data.
-//
-// WF1 #parcel-address-bridge (2026-05-23) — Address Points dataset is now the
-// canonical source for ADDRESS_NUMBER + LINEAR_NAME_FULL (Toronto stripped them
-// from the Property Boundaries CSV on 2026-05-20). EXPECTED_ADDRESS_POINT_COLUMNS
-// expanded to include the 10 fields Buildo now loads (per mig 162 + load-address-points
-// extension). EXPECTED_PARCEL_COLUMNS shrunk to the 4 surviving columns; the 3 removed
-// columns (ADDRESS_NUMBER, LINEAR_NAME_FULL, DATE_EFFECTIVE) are kept as LEGACY columns
-// on the parcels table but no longer required from the source CSV.
-// Coordinate columns are NOT in this flat list — they have an OR-contract checked
-// separately via hasCoordinateSource (geometry OR LATITUDE+LONGITUDE).
-// [WF3 2026-05-30] The earlier flat LATITUDE/LONGITUDE requirement was dead-on-arrival:
-// the live Address Points CSV ships a `geometry` GeoJSON column (NOT LATITUDE/LONGITUDE),
-// and load-address-points.js derives geom + lat/lng from `geometry` (primary, :285-301),
-// falling back to LATITUDE+LONGITUDE (:304) only if geometry is absent. The geom backfill
-// reads the DB latitude/longitude COLUMNS, not the CSV. So the coordinate-loss guard is
-// "no coordinate source present" (below), not "LAT/LONG present".
+// Declared twins: `address_point_columns.expect` / `parcel_columns.expect`. The
+// coordinate columns are deliberately absent from the flat list — their OR-contract
+// is the separate check `address_point_coordinate_source`.
 const EXPECTED_ADDRESS_POINT_COLUMNS = [
   'ADDRESS_POINT_ID',
   'ADDRESS_NUMBER',
@@ -122,14 +127,10 @@ const EXPECTED_PARCEL_COLUMNS = [
   'STATEDAREA',
   'geometry',
 ];
-// Neighbourhood GeoJSON: at least one of these ID properties must exist
 const NEIGHBOURHOOD_ID_PROPS = ['AREA_SHORT_CODE', 'AREA_ID'];
 
-// Toronto Zoning By-law — 10 CKAN DataStore resources (Spec 58). Pre-flight
-// reachability + upsert-key/geometry presence; full attribute drift is
-// enforced at load time by scripts/lib/zoning-attr-drift.js.
-// Fence 58914fa8: THREE distinct required sets, not two. The descriptor's
-// `zoning_resource_columns.expect.resources` map is the declared twin of this list.
+// Declared twin: `zoning_resource_columns.expect.resources` — three distinct
+// required sets over 10 CKAN DataStore resources.
 const ZONING_RESOURCES = [
   { id: '76a2620f-a6b4-495d-8e41-c0ede1f8a928', label: 'Zoning Area (base)', required: ['_id', 'geometry', 'ZN_ZONE', 'ZN_STRING', 'COVERAGE', 'FSI_TOTAL'] },
   { id: 'f0a88d06-2430-4025-b15d-362cabd00f31', label: 'Zoning Height Overlay', required: ['_id', 'geometry', 'HT_LABEL'] },
@@ -143,11 +144,113 @@ const ZONING_RESOURCES = [
   { id: '1f18bd73-bbbc-4ad6-ac27-6c9cae7385b4', label: 'Zoning QueenStW Eat Community Overlay', required: ['_id', 'geometry'] },
 ];
 
-async function fetchFieldNames(resourceId, label) {
-  const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=0`;
-  console.log(`  Fetching metadata for ${label}...`);
+// ===========================================================================
+// Checks — one function per declared check, in descriptor order, name === id
+// ===========================================================================
 
-  const res = await fetch(url);
+async function permit_columns(ctx) {
+  const fields = await fetchFieldNames(ctx, PERMITS_RESOURCE_ID, 'Building Permits');
+  const ok = checkColumns(ctx, fields, EXPECTED_PERMIT_COLUMNS, 'Building Permits');
+  ctx.report('permit_columns', { violations: ok ? 0 : 1 });
+}
+
+async function permit_cost_type_sample(ctx) {
+  const ok = await validateTypeSample(ctx, PERMITS_RESOURCE_ID, 'Building Permits');
+  ctx.report('permit_cost_type_sample', { violations: ok ? 0 : 1 });
+}
+
+async function coa_columns(ctx) {
+  const fields = await fetchFieldNames(ctx, COA_ACTIVE_RESOURCE_ID, 'CoA Active');
+  const ok = checkColumns(ctx, fields, EXPECTED_COA_COLUMNS, 'CoA Active');
+  ctx.report('coa_columns', { violations: ok ? 0 : 1 });
+}
+
+async function address_point_columns(ctx) {
+  const headers = await csvHeaders(ctx, ADDRESS_POINTS_URL, 'Address Points');
+  const ok = checkColumns(ctx, headers, EXPECTED_ADDRESS_POINT_COLUMNS, 'Address Points');
+  ctx.report('address_point_columns', { violations: ok ? 0 : 1 });
+}
+
+async function address_point_coordinate_source(ctx) {
+  const headers = await csvHeaders(ctx, ADDRESS_POINTS_URL, 'Address Points');
+  const ok = hasCoordinateSource(new Set(headers));
+  if (!ok) ctx.log.error(tag(ctx), 'FAIL: Address Points — no coordinate source column present');
+  ctx.report('address_point_coordinate_source', { violations: ok ? 0 : 1 });
+}
+
+async function parcel_columns(ctx) {
+  const headers = await csvHeaders(ctx, PARCELS_URL, 'Parcels');
+  const ok = checkColumns(ctx, headers, EXPECTED_PARCEL_COLUMNS, 'Parcels');
+  ctx.report('parcel_columns', { violations: ok ? 0 : 1 });
+}
+
+async function source_archives_reachable(ctx) {
+  // One try per archive: one unreachable archive must not hide the other four.
+  let failures = 0;
+  for (const archive of SOURCE_ARCHIVES) {
+    try {
+      await checkUrlAccessible(ctx, archive.url, archive.label);
+    } catch (err) {
+      failures += 1;
+      ctx.log.error(tag(ctx), `FAIL: ${archive.label} — ${err.message}`);
+    }
+  }
+  ctx.report('source_archives_reachable', { violations: failures });
+}
+
+async function neighbourhood_id_property(ctx) {
+  const keys = await fetchGeoJsonPropertyKeys(ctx, NEIGHBOURHOODS_URL, 'Neighbourhoods');
+  const ok = NEIGHBOURHOOD_ID_PROPS.some((p) => keys.includes(p));
+  if (!ok) ctx.log.error(tag(ctx), `FAIL: Neighbourhoods — no ID property found in: ${keys.join(', ')}`);
+  else ctx.log.info(tag(ctx), `OK: Neighbourhoods — ID property found (${keys.length} total properties)`);
+  ctx.report('neighbourhood_id_property', { violations: ok ? 0 : 1 });
+}
+
+async function zoning_resource_columns(ctx) {
+  // One try per resource, for the same reason as the archive loop.
+  let failures = 0;
+  for (const zr of ZONING_RESOURCES) {
+    try {
+      const fields = await fetchFieldNames(ctx, zr.id, zr.label);
+      if (!checkColumns(ctx, fields, zr.required, zr.label)) failures += 1;
+    } catch (err) {
+      failures += 1;
+      ctx.log.error(tag(ctx), `FAIL: ${zr.label} — ${err.message}`);
+    }
+  }
+  ctx.report('zoning_resource_columns', { violations: failures });
+}
+
+// ---- helpers ----
+
+/** The log tag, from the descriptor — never a literal, so a rename cannot desync it. */
+function tag(ctx) {
+  return `[${ctx.descriptor.identity.name}]`;
+}
+
+/**
+ * Per-invocation memo for ranged CSV header reads. `address_point_columns` and
+ * `address_point_coordinate_source` are two declared checks over ONE header row;
+ * without the memo, splitting them into two dispatch entries would double the
+ * request count. Keyed by ctx so nothing survives the run.
+ */
+const CSV_HEADER_MEMO = new WeakMap();
+
+function csvHeaders(ctx, url, label) {
+  let byUrl = CSV_HEADER_MEMO.get(ctx);
+  if (!byUrl) {
+    byUrl = new Map();
+    CSV_HEADER_MEMO.set(ctx, byUrl);
+  }
+  if (!byUrl.has(url)) byUrl.set(url, fetchCsvHeaders(ctx, url, label));
+  return byUrl.get(url);
+}
+
+async function fetchFieldNames(ctx, resourceId, label) {
+  const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=0`;
+  ctx.log.info(tag(ctx), `Fetching metadata for ${label}...`);
+
+  const res = await ctx.fetch(url);
   if (!res.ok) {
     throw new Error(`CKAN metadata fetch failed for ${label}: ${res.status} ${res.statusText}`);
   }
@@ -159,53 +262,42 @@ async function fetchFieldNames(resourceId, label) {
   return json.result.fields.map((f) => f.id);
 }
 
-function checkColumns(actualFields, expectedColumns, label) {
+function checkColumns(ctx, actualFields, expectedColumns, label) {
   const missing = expectedColumns.filter((col) => !actualFields.includes(col));
   if (missing.length > 0) {
-    console.error(`  FAIL: ${label} is missing columns: ${missing.join(', ')}`);
+    ctx.log.error(tag(ctx), `FAIL: ${label} is missing columns: ${missing.join(', ')}`);
     return false;
   }
-  console.log(`  OK: ${label} — all ${expectedColumns.length} expected columns present (${actualFields.length} total)`);
+  ctx.log.info(tag(ctx), `OK: ${label} — all ${expectedColumns.length} expected columns present (${actualFields.length} total)`);
   return true;
 }
 
-/**
- * Check if a cost string is a CKAN sentinel/junk row (not real data).
- * Mirrors the guard in load-permits.js cleanCost().
- */
+/** A CKAN sentinel/junk row (not real data). Mirrors the guard in load-permits.js cleanCost(). */
 function isSentinelValue(v) {
   if (!v || typeof v !== 'string') return false;
   const u = v.toUpperCase();
   return u.includes('DO NOT UPDATE') || u.includes('DO NOT DELETE');
 }
 
-/**
- * Parse a cost value the same way load-permits.js cleanCost() does:
- * strip non-numeric chars (commas, $, spaces) then parseFloat.
- */
+/** Parse a cost value the same way load-permits.js cleanCost() does. */
 function parseCost(v) {
   if (!v || String(v).trim() === '') return NaN;
   const s = String(v).replace(/[^0-9.\-]/g, '');
   return parseFloat(s);
 }
 
-async function validateTypeSample(resourceId, label) {
+async function validateTypeSample(ctx, resourceId, label) {
   const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=20`;
-  const res = await fetch(url);
-  if (!res.ok) return true; // non-fatal
+  const res = await ctx.fetch(url);
+  if (!res.ok) return true; // non-fatal — declared in the descriptor's limitations[]
 
   const json = await res.json();
-  const records = json?.result?.records;
+  const records = json && json.result ? json.result.records : undefined;
   if (!records || records.length === 0) {
-    console.log(`  WARN: ${label} — no records available for type check`);
+    ctx.log.warn(tag(ctx), `WARN: ${label} — no records available for type check`);
     return true;
   }
 
-  // Permits: check EST_CONST_COST is parseable as number.
-  // Filter out sentinel/junk rows that CKAN injects (e.g.
-  // "DO NOT UPDATE OR DELETE THIS INFO FIELD") and strip commas
-  // from formatted numbers (e.g. "1,000") — mirrors cleanCost()
-  // in load-permits.js.
   const costRows = records.filter(
     (r) => r.EST_CONST_COST !== undefined && r.EST_CONST_COST !== null
         && r.EST_CONST_COST !== '' && !isSentinelValue(r.EST_CONST_COST)
@@ -213,28 +305,26 @@ async function validateTypeSample(resourceId, label) {
   if (costRows.length > 0) {
     const dataRows = costRows.filter((r) => !isNaN(parseCost(r.EST_CONST_COST)));
     if (dataRows.length === 0) {
-      console.error(`  FAIL: ${label} — no sampled rows have parseable EST_CONST_COST`);
+      ctx.log.error(tag(ctx), `FAIL: ${label} — no sampled rows have parseable EST_CONST_COST`);
       return false;
     }
     const skipped = costRows.length - dataRows.length;
     if (skipped > 0) {
-      console.log(`  OK: ${label} — EST_CONST_COST verified (${dataRows.length}/${costRows.length} rows numeric, ${skipped} unparseable rows skipped)`);
+      ctx.log.info(tag(ctx), `OK: ${label} — EST_CONST_COST verified (${dataRows.length}/${costRows.length} rows numeric, ${skipped} unparseable rows skipped)`);
     } else {
-      console.log(`  OK: ${label} — EST_CONST_COST type coercion verified`);
+      ctx.log.info(tag(ctx), `OK: ${label} — EST_CONST_COST type coercion verified`);
     }
   } else {
-    console.warn(`  WARN: ${label} — all sampled rows are sentinel/empty for EST_CONST_COST, skipping type check`);
+    ctx.log.warn(tag(ctx), `WARN: ${label} — all sampled rows are sentinel/empty for EST_CONST_COST, skipping type check`);
   }
 
   return true;
 }
 
-/**
- * Fetch the first chunk of a CSV file and extract the header row column names.
- */
-async function fetchCsvHeaders(url, label) {
-  console.log(`  Fetching CSV headers for ${label}...`);
-  const res = await fetch(url, { headers: { Range: 'bytes=0-2048' } });
+/** Fetch the first chunk of a CSV file and extract the header row column names. */
+async function fetchCsvHeaders(ctx, url, label) {
+  ctx.log.info(tag(ctx), `Fetching CSV headers for ${label}...`);
+  const res = await ctx.fetch(url, { headers: { Range: 'bytes=0-2048' } });
   // Some servers ignore Range and return 200 with full body — that's fine
   if (!res.ok && res.status !== 206) {
     throw new Error(`CSV fetch failed for ${label}: ${res.status} ${res.statusText}`);
@@ -244,16 +334,13 @@ async function fetchCsvHeaders(url, label) {
   if (!firstLine) {
     throw new Error(`Empty CSV header for ${label}`);
   }
-  // Parse CSV header — handle quoted column names
   return firstLine.split(',').map((col) => col.trim().replace(/^"|"$/g, ''));
 }
 
-/**
- * Fetch the first chunk of a GeoJSON file and extract property keys from the first feature.
- */
-async function fetchGeoJsonPropertyKeys(url, label) {
-  console.log(`  Fetching GeoJSON properties for ${label}...`);
-  const res = await fetch(url, { headers: { Range: 'bytes=0-8192' } });
+/** Fetch the first chunk of a GeoJSON file and extract property keys from the first feature. */
+async function fetchGeoJsonPropertyKeys(ctx, url, label) {
+  ctx.log.info(tag(ctx), `Fetching GeoJSON properties for ${label}...`);
+  const res = await ctx.fetch(url, { headers: { Range: 'bytes=0-8192' } });
   if (!res.ok && res.status !== 206) {
     throw new Error(`GeoJSON fetch failed for ${label}: ${res.status} ${res.statusText}`);
   }
@@ -261,12 +348,10 @@ async function fetchGeoJsonPropertyKeys(url, label) {
   // Skip to first Feature to avoid matching CRS "properties":{"name":"..."} block
   const featureStart = chunk.indexOf('"Feature"');
   const searchChunk = featureStart >= 0 ? chunk.slice(featureStart) : chunk;
-  // Extract first "properties":{...} block via regex (avoids parsing incomplete JSON)
   const match = searchChunk.match(/"properties"\s*:\s*\{([^}]+)\}/);
   if (!match) {
     throw new Error(`Could not find properties in GeoJSON for ${label}`);
   }
-  // Extract key names from the properties object fragment
   const keys = [];
   const keyPattern = /"([^"]+)"\s*:/g;
   for (const m of match[1].matchAll(keyPattern)) {
@@ -275,184 +360,58 @@ async function fetchGeoJsonPropertyKeys(url, label) {
   return keys;
 }
 
-/**
- * HTTP HEAD request to check URL accessibility (for binary files like shapefiles).
- */
-async function checkUrlAccessible(url, label) {
-  console.log(`  Checking URL accessibility for ${label}...`);
-  const res = await fetch(url, { method: 'HEAD' });
+/** HTTP HEAD request to check URL accessibility (for binary files like shapefiles). */
+async function checkUrlAccessible(ctx, url, label) {
+  ctx.log.info(tag(ctx), `Checking URL accessibility for ${label}...`);
+  const res = await ctx.fetch(url, { method: 'HEAD' });
   if (!res.ok) {
     throw new Error(`URL not accessible for ${label}: ${res.status} ${res.statusText}`);
   }
-  console.log(`  OK: ${label} — URL accessible (${res.status})`);
+  ctx.log.info(tag(ctx), `OK: ${label} — URL accessible (${res.status})`);
   return true;
 }
 
+// ---- dispatch ----
+
+/** §5.5 (1) — the dispatch table. Keys are exactly the descriptor's check ids, in order. */
+const CHECKS = {
+  permit_columns,
+  permit_cost_type_sample,
+  coa_columns,
+  address_point_columns,
+  address_point_coordinate_source,
+  parcel_columns,
+  source_archives_reachable,
+  neighbourhood_id_property,
+  zoning_resource_columns,
+};
+
 /**
- * The nine declared checks, reported as observations.
+ * §5.5 (2) — run the SELECTED checks, and nothing else.
  *
- * ⚠️ PEEL 8b — ERRORS ARE ATTRIBUTED BY CHECK ID, NOT BY SUBSTRING. The
- * pre-conversion step decided which audit row an error belonged to by matching the
- * message text (`includes('permit')`, `includes('coa')`, and a
- * `zoning|ravine|centreline|…` alternation at `assert-schema.js:536`) — AS-D6, and
- * the reason AS-D1's sources verdict read a raw `sourceErrors.length` instead of the
- * rows. Every check now owns its own try/catch and hands the library
- * `report(<checkId>, { error })`, so `scripts/lib/step/verdict.js` `checkRow` turns
- * it into ONE row keyed by that check id and `deriveVerdict` reads the verdict off
- * the rows. Two consequences: adding a source no longer carries an unrecorded
- * "add a regex token" obligation, and a check that throws no longer suppresses the
- * checks after it — the outer catch that used to swallow the whole run into one
- * `ERROR:` line is gone, so an unexpected throw reaches the library and fails the
- * step loudly instead of leaving eight checks silently unreported.
+ * The loop is the error boundary (peel 8b): whatever a check throws becomes
+ * `{ error }` under that check's own id, so one failing check never suppresses the
+ * checks after it and never lands on another check's audit row.
  *
- * ⚠️ PEEL 8a — THE COMPUTE NO LONGER KNOWS WHAT A CHAIN IS. `stepCtx.checks` is
- * the SELECTED check-id list, derived by the library from
- * `sharing.varies_by_chain.checks` + `checks[].chains`
- * (`scripts/lib/step/verdict.js` `selectChecks`) — the same selection
- * `buildAuditTable` scores. What used to be three `chainId === '<chain>'` booleans
- * here is now one membership test per declared check, so the descriptor is the ONLY
- * place a chain appears and the two can no longer disagree. `process.env` is not
- * read: `PIPELINE_CHAIN` reaches this module through the library or not at all.
- *
- * @param {{checks: string[], report: (checkId: string, observation: object) => void}} stepCtx
+ * @param {{checks: string[], report: Function, log: object, fetch: Function, descriptor: object}} ctx
  * @returns {Promise<void>}
  */
-async function compute(stepCtx) {
-  const selected = new Set(stepCtx.checks);
-  const runs = (id) => selected.has(id);
-
-  console.log('\n=== CQA Tier 1: Schema Validation ===\n');
-
-  // Check permits resource
-  if (runs('permit_columns')) {
+async function compute(ctx) {
+  ctx.log.info(tag(ctx), '=== CQA Tier 1: Schema Validation ===');
+  for (const id of ctx.checks) {
+    const check = CHECKS[id];
+    if (typeof check !== 'function') {
+      throw new Error(`${tag(ctx)} descriptor declares check "${id}" with no function in the compute dispatch table`);
+    }
     try {
-      const permitFields = await fetchFieldNames(PERMITS_RESOURCE_ID, 'Building Permits');
-      const permitColumnsOk = checkColumns(permitFields, EXPECTED_PERMIT_COLUMNS, 'Building Permits');
-      stepCtx.report('permit_columns', { violations: permitColumnsOk ? 0 : 1 });
+      await check(ctx);
     } catch (err) {
-      console.error(`  FAIL: Building Permits — ${err.message}`);
-      stepCtx.report('permit_columns', { error: err });
+      ctx.log.error(tag(ctx), `FAIL: ${id} — ${err.message}`);
+      ctx.report(id, { error: err });
     }
-  }
-
-  if (runs('permit_cost_type_sample')) {
-    try {
-      const permitTypeOk = await validateTypeSample(PERMITS_RESOURCE_ID, 'Building Permits');
-      stepCtx.report('permit_cost_type_sample', { violations: permitTypeOk ? 0 : 1 });
-    } catch (err) {
-      console.error(`  FAIL: Building Permits (cost type sample) — ${err.message}`);
-      stepCtx.report('permit_cost_type_sample', { error: err });
-    }
-  }
-
-  // Check CoA active resource
-  if (runs('coa_columns')) {
-    try {
-      const coaFields = await fetchFieldNames(COA_ACTIVE_RESOURCE_ID, 'CoA Active');
-      const coaColumnsOk = checkColumns(coaFields, EXPECTED_COA_COLUMNS, 'CoA Active');
-      stepCtx.report('coa_columns', { violations: coaColumnsOk ? 0 : 1 });
-    } catch (err) {
-      console.error(`  FAIL: CoA Active — ${err.message}`);
-      stepCtx.report('coa_columns', { error: err });
-    }
-  }
-
-  // ------------------------------------------------------------------
-  // Source data validation
-  // ------------------------------------------------------------------
-
-  // Address Points CSV — one fetch, two declared checks over the same header row.
-  if (runs('address_point_columns') || runs('address_point_coordinate_source')) {
-    try {
-      const apHeaders = await fetchCsvHeaders(ADDRESS_POINTS_URL, 'Address Points');
-      if (runs('address_point_columns')) {
-        const apColumnsOk = checkColumns(apHeaders, EXPECTED_ADDRESS_POINT_COLUMNS, 'Address Points');
-        stepCtx.report('address_point_columns', { violations: apColumnsOk ? 0 : 1 });
-      }
-      if (runs('address_point_coordinate_source')) {
-        // Coordinate-source contract (WF3 2026-05-30): geometry OR LATITUDE+LONGITUDE.
-        // The live CSV ships `geometry`; LAT/LONG are an accepted fallback. FAIL only
-        // if NEITHER is present (the real "0-row spatial bridge" loss mode).
-        const coordinateOk = hasCoordinateSource(new Set(apHeaders));
-        if (!coordinateOk) {
-          console.error('  FAIL: Address Points — no coordinate source column present');
-        }
-        stepCtx.report('address_point_coordinate_source', { violations: coordinateOk ? 0 : 1 });
-      }
-    } catch (err) {
-      console.error(`  FAIL: Address Points — ${err.message}`);
-      if (runs('address_point_columns')) stepCtx.report('address_point_columns', { error: err });
-      if (runs('address_point_coordinate_source')) stepCtx.report('address_point_coordinate_source', { error: err });
-    }
-  }
-
-  // Parcels CSV. Selected in permits, coa AND sources (Spec 79 CRIT-3a): peel 8a
-  // retires the constant `{violations: 0}` the permits/coa audit tables carried,
-  // so the row now says "we looked" wherever it appears.
-  if (runs('parcel_columns')) {
-    try {
-      const parcelHeaders = await fetchCsvHeaders(PARCELS_URL, 'Parcels');
-      const parcelColumnsOk = checkColumns(parcelHeaders, EXPECTED_PARCEL_COLUMNS, 'Parcels');
-      stepCtx.report('parcel_columns', { violations: parcelColumnsOk ? 0 : 1 });
-    } catch (err) {
-      console.error(`  FAIL: Parcels — ${err.message}`);
-      stepCtx.report('parcel_columns', { error: err });
-    }
-  }
-
-  // Massing / Ravine / Heritage x2 / Centreline shapefile ZIPs — accessibility
-  // check only. datastore_active=false for each, so no field-set check is
-  // possible pre-download; the attribute contracts are validated post-download
-  // inside load-ravines.js (Spec 59 §8c), load-heritage.js (Spec 61 §8c) and
-  // load-centreline.js (Spec 62 §8c). One try per archive, exactly as before:
-  // one unreachable archive must not hide the other four.
-  if (runs('source_archives_reachable')) {
-    let archiveFailures = 0;
-    for (const archive of SOURCE_ARCHIVES) {
-      try {
-        await checkUrlAccessible(archive.url, archive.label);
-      } catch (err) {
-        archiveFailures += 1;
-        console.error(`  FAIL: ${archive.label} — ${err.message}`);
-      }
-    }
-    stepCtx.report('source_archives_reachable', { violations: archiveFailures });
-  }
-
-  // Neighbourhoods GeoJSON — property key validation
-  if (runs('neighbourhood_id_property')) {
-    try {
-      const nhoodKeys = await fetchGeoJsonPropertyKeys(NEIGHBOURHOODS_URL, 'Neighbourhoods');
-      const hasIdProp = NEIGHBOURHOOD_ID_PROPS.some((p) => nhoodKeys.includes(p));
-      if (!hasIdProp) {
-        console.error(`  FAIL: Neighbourhoods — no ID property found in: ${nhoodKeys.join(', ')}`);
-      } else {
-        console.log(`  OK: Neighbourhoods — ID property found (${nhoodKeys.length} total properties)`);
-      }
-      stepCtx.report('neighbourhood_id_property', { violations: hasIdProp ? 0 : 1 });
-    } catch (err) {
-      console.error(`  FAIL: Neighbourhoods — ${err.message}`);
-      stepCtx.report('neighbourhood_id_property', { error: err });
-    }
-  }
-
-  // Toronto Zoning By-law — 10 CKAN DataStore resources (Spec 58).
-  if (runs('zoning_resource_columns')) {
-    let zoningFailures = 0;
-    for (const zr of ZONING_RESOURCES) {
-      try {
-        const fields = await fetchFieldNames(zr.id, zr.label);
-        if (!checkColumns(fields, zr.required, zr.label)) {
-          zoningFailures += 1;
-        }
-      } catch (err) {
-        zoningFailures += 1;
-        console.error(`  FAIL: ${zr.label} — ${err.message}`);
-      }
-    }
-    stepCtx.report('zoning_resource_columns', { violations: zoningFailures });
   }
 }
 
 module.exports = compute;
 module.exports.compute = compute;
+module.exports.checks = CHECKS;
