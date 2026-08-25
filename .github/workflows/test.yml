@@ -45,6 +45,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Spec 123 §7 gates (#154 peel commits, G4d Severity: footers) read git history
 
       - uses: actions/setup-node@v4
         with:
