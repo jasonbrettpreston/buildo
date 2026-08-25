@@ -1,0 +1,172 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "C:/Users/User/Buildo/.claude/worktrees/wt-old-3e0b6636/scripts/quality/assert-schema.js",
+  "chain": "sources",
+  "git_head": "3e0b66365af4a1e0cacad064828e6172dae90917",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": null,
+    "records_updated": null,
+    "records_meta": {
+      "checks_passed": "all",
+      "checks_failed": 0,
+      "audit_table": {
+        "phase": 1,
+        "name": "Schema Validation",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "sources_checked",
+            "value": 18,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "schema_errors",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 5664,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "CKAN API": [
+          "metadata"
+        ]
+      },
+      "writes": {
+        "pipeline_runs": [
+          "checks_passed",
+          "checks_failed"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "\n=== CQA Tier 1: Schema Validation ===\n\n  Fetching CSV headers for Address Points...\n  OK: Address Points — all 11 expected columns present (38 total)\n  Fetching CSV headers for Parcels...\n  OK: Parcels — all 4 expected columns present (6 total)\n  Checking URL accessibility for 3D Massing...\n  OK: 3D Massing — URL accessible (200)\n  Checking URL accessibility for Ravine Protection...\n  OK: Ravine Protection — URL accessible (200)\n  Checking URL accessibility for Heritage Register...\n  OK: Heritage Register — URL accessible (200)\n  Checking URL accessibility for Heritage Conservation Districts...\n  OK: Heritage Conservation Districts — URL accessible (200)\n  Checking URL accessibility for Toronto Centreline...\n  OK: Toronto Centreline — URL accessible (200)\n  Fetching GeoJSON properties for Neighbourhoods...\n  OK: Neighbourhoods — ID property found (11 total properties)\n  Fetching metadata for Zoning Area (base)...\n  OK: Zoning Area (base) — all 6 expected columns present (25 total)\n  Fetching metadata for Zoning Height Overlay...\n  OK: Zoning Height Overlay — all 3 expected columns present (5 total)\n  Fetching metadata for Zoning Lot Coverage Overlay...\n  OK: Zoning Lot Coverage Overlay — all 3 expected columns present (3 total)\n  Fetching metadata for Zoning Building Setback Overlay...\n  OK: Zoning Building Setback Overlay — all 2 expected columns present (6 total)\n  Fetching metadata for Zoning Policy Area Overlay...\n  OK: Zoning Policy Area Overlay — all 2 expected columns present (5 total)\n  Fetching metadata for Zoning Policy Road Overlay...\n  OK: Zoning Policy Road Overlay — all 2 expected columns present (3 total)\n  Fetching metadata for Zoning Rooming House Overlay...\n  OK: Zoning Rooming House Overlay — all 2 expected columns present (6 total)\n  Fetching metadata for Zoning Parking Zone Overlay...\n  OK: Zoning Parking Zone Overlay — all 2 expected columns present (4 total)\n  Fetching metadata for Zoning Priority Retail Street Overlay...\n  OK: Zoning Priority Retail Street Overlay — all 2 expected columns present (7 total)\n  Fetching metadata for Zoning QueenStW Eat Community Overlay...\n  OK: Zoning QueenStW Eat Community Overlay — all 2 expected columns present (6 total)\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"checks_passed\":\"all\",\"checks_failed\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"sources_checked\",\"value\":18,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"schema_errors\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":5664,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"CKAN API\":[\"metadata\"]},\"writes\":{\"pipeline_runs\":[\"checks_passed\",\"checks_failed\"]}}\n\n=== Schema Validation: COMPLETED (5.6s) ===\n\n\n[assert-schema] completed in 5.7s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1650,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "C:/Users/User/Buildo/.claude/worktrees/wt-old-3e0b6636/scripts/quality/assert-schema.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Schema Validation",
+          "phase": 1,
+          "rows": [
+            {
+              "metric": "sources_checked",
+              "status": "INFO",
+              "threshold": null,
+              "value": 18
+            },
+            {
+              "metric": "schema_errors",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "checks_failed": 0,
+        "checks_passed": "all"
+      },
+      "records_new": null,
+      "records_total": 0,
+      "records_updated": null
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "CKAN API": [
+            "metadata"
+          ]
+        },
+        "writes": {
+          "pipeline_runs": [
+            "checks_passed",
+            "checks_failed"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "=== CQA Tier 1: Schema Validation ===",
+      "  Fetching CSV headers for Address Points...",
+      "  OK: Address Points — all 11 expected columns present (38 total)",
+      "  Fetching CSV headers for Parcels...",
+      "  OK: Parcels — all 4 expected columns present (6 total)",
+      "  Checking URL accessibility for 3D Massing...",
+      "  OK: 3D Massing — URL accessible (200)",
+      "  Checking URL accessibility for Ravine Protection...",
+      "  OK: Ravine Protection — URL accessible (200)",
+      "  Checking URL accessibility for Heritage Register...",
+      "  OK: Heritage Register — URL accessible (200)",
+      "  Checking URL accessibility for Heritage Conservation Districts...",
+      "  OK: Heritage Conservation Districts — URL accessible (200)",
+      "  Checking URL accessibility for Toronto Centreline...",
+      "  OK: Toronto Centreline — URL accessible (200)",
+      "  Fetching GeoJSON properties for Neighbourhoods...",
+      "  OK: Neighbourhoods — ID property found (11 total properties)",
+      "  Fetching metadata for Zoning Area (base)...",
+      "  OK: Zoning Area (base) — all 6 expected columns present (25 total)",
+      "  Fetching metadata for Zoning Height Overlay...",
+      "  OK: Zoning Height Overlay — all 3 expected columns present (5 total)",
+      "  Fetching metadata for Zoning Lot Coverage Overlay...",
+      "  OK: Zoning Lot Coverage Overlay — all 3 expected columns present (3 total)",
+      "  Fetching metadata for Zoning Building Setback Overlay...",
+      "  OK: Zoning Building Setback Overlay — all 2 expected columns present (6 total)",
+      "  Fetching metadata for Zoning Policy Area Overlay...",
+      "  OK: Zoning Policy Area Overlay — all 2 expected columns present (5 total)",
+      "  Fetching metadata for Zoning Policy Road Overlay...",
+      "  OK: Zoning Policy Road Overlay — all 2 expected columns present (3 total)",
+      "  Fetching metadata for Zoning Rooming House Overlay...",
+      "  OK: Zoning Rooming House Overlay — all 2 expected columns present (6 total)",
+      "  Fetching metadata for Zoning Parking Zone Overlay...",
+      "  OK: Zoning Parking Zone Overlay — all 2 expected columns present (4 total)",
+      "  Fetching metadata for Zoning Priority Retail Street Overlay...",
+      "  OK: Zoning Priority Retail Street Overlay — all 2 expected columns present (7 total)",
+      "  Fetching metadata for Zoning QueenStW Eat Community Overlay...",
+      "  OK: Zoning QueenStW Eat Community Overlay — all 2 expected columns present (6 total)",
+      "=== Schema Validation: COMPLETED (<DUR>) ===",
+      "[assert-schema] completed in <DUR>"
+    ]
+  }
+}
