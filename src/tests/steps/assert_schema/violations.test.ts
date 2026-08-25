@@ -770,7 +770,12 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     goldenDocs();
     const report = readText(REPORT_REL);
     reportTable(report, [['key', /key|field|source/], ['disposition', /disposition/]]);
-    const inventoryAt = firstCommitTime(REPORT_REL, 'Non-determinism inventory');
+    // The inventory is DECLARED where the normaliser lives (VOLATILE_KEYS/PATTERNS in the harness, committed
+    // with the first captures) and DOCUMENTED in the report; the claim is about declaration order, so the
+    // earlier of the two is the declaration point (fold decision, commit 9, 2026-08-25).
+    const harnessAt = firstCommitTime('scripts/analysis/capture-step-golden.js', 'VOLATILE_KEYS');
+    const reportAt = firstCommitTime(REPORT_REL, 'Non-determinism inventory');
+    const inventoryAt = Math.min(...[harnessAt, reportAt].filter((n) => n > 0));
     const goldenAt = firstCommitTime(GOLDEN_DIR_REL);
     expect(inventoryAt, `${REPORT_REL} has no committed "Non-determinism inventory" section`).toBeGreaterThan(0);
     expect(goldenAt, `${GOLDEN_DIR_REL} is not committed`).toBeGreaterThan(0);

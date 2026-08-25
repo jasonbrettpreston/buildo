@@ -299,13 +299,15 @@ describe('prove-red — the shape rule fires on the unconverted corpus', () => {
     ).toEqual([]);
   });
 
-  it('all 27 sources-chain step files are among them, and every one still calls pipeline.run()', () => {
+  it('every UNCONVERTED sources-chain step file is among them, and every one still calls pipeline.run() (27 minus converted.json)', () => {
     // The sources chain is the C-track corpus. `reconcile` (A3) is a 28th entry
     // in the chain but is deliberately NOT a pipeline.step() file — it is the
     // Step-0 reaper, written to the Spec 47 skeleton — so the count below is
     // asserted against the chain minus that head step.
-    const conversionCorpus = SOURCES_STEP_FILES.filter((f) => f !== 'scripts/reconcile-runs.js');
-    expect(conversionCorpus).toHaveLength(27);
+    const convertedSet = new Set((convertedRaw.converted ?? []) as string[]);
+    const conversionCorpus = SOURCES_STEP_FILES.filter((f) => f !== 'scripts/reconcile-runs.js' && !convertedSet.has(f));
+    // 27 = the C-track corpus; each landed pilot removes exactly one (Spec 122 §5.2 — the prove-red is over files NOT in converted.json).
+    expect(conversionCorpus).toHaveLength(27 - convertedSet.size);
     const byFile = new Map(report.report_only.map((f) => [f.file, f.violations]));
     for (const f of conversionCorpus) {
       const violations = byFile.get(f) ?? [];
