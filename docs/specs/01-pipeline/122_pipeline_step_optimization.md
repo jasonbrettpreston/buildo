@@ -224,6 +224,30 @@ node scripts/violations/extract-vocab.mjs docs/reports/generated/122-vocabulary.
 
 ⚠️ **It found 6 fields declared twice with differing values, independently reproducing the 3 that Spec 121 §12.1a already named** — `identity.archetype` (`INGESTOR|…` vs `ING|…`) · `identity.lock` (uniqueness scope) · `guards.schema_drift` (**one variant carries `warn`, the other does not — both contain `propagate`; the differing tokens are `warn` · `severity` · `blocking`, and a generator cannot choose**) — plus 3 borderline (`outputs.replay` bans `append_unsafe` two different ways; `staleness.pending`; `guards.empty_source`). ✅ **All six RESOLVED 2026-08-23 by operator rulings V1–V6 (see the round-2 ratification block), encoded in `step.schema.json` per R2.**
 
+### 1.2a ⚠️ OPERATING POLICY — nothing hidden (operator-ratified 2026-08-25, Pilot 1)
+
+> **Objective this programme serves:** the "McDonald's pipeline" — every step is the same step except for its compute; every one of the 18 categories answered from a closed menu; data validated and observable *within* each step; every standardized setting visible *across* all steps.
+
+**P1 — Nothing is hidden. Standardize wherever possible. Always observable and intelligible.** A behaviour that exists only in code is a policy failure. Order of preference for any guard, fence, rule or knob:
+1. **descriptor data** (an existing category/field) —
+2. **a named, declared check** that emits an audit row every run, its rule stated in `checks[].why` + `limitations` —
+3. **a shape rule on compute** (§5.5 — statically enforced, zero runtime I/O) —
+4. **a NEW standardized box** in `step.schema.json` — only when the rule is genuinely data-shaped and no existing box fits.
+"Preserve it in compute" is never a disposition on its own.
+
+**P2 — Compute is JUST compute.** Domain computation only: no gating, no ledger, no lock, no emit, no logging side-channels, no environment reads, no policy comments. If a behaviour has no home, it gets a box (P1.4) — never a side-channel. Enforced by `scripts/ast-grep-rules/compute-shape.yml` + `step-conformance.infra.test.ts` (§5.5).
+
+**P3 — Disk I/O is a balance that is ADJUDICATED with numbers, never assumed.** Every added box / declared check / audit row costs per step × per run (descriptor + notes reads, `records_meta` bytes, audit rows, golden captures). A proposal to add one carries its measured cost (bytes and rows per run × fleet × cadence) and the operator rules. Visibility wins by default; the cost is stated. Pilot 1 baseline (records_meta B / check rows / stdout B, pre→post): permits 669→515/5→3/1175→1255 · coa 665→425/5→2/1094→1088 · sources 418→796/2→6/2960→3572 · standalone 669→1036/5→9/3492→4093; ~50 KB read per invocation (step + descriptor + notes + compute). Accepted.
+
+**P4 — DIRECTIVE: every tunable is externalized to admin logic variables.** The pipelines already externalized their variables to the admin logic-variables registry; the standardization MUST preserve and ENFORCE it going forward:
+- every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable, editable in admin — never a literal in compute;
+- the descriptor's `config` category declares **every** variable the step consumes, with bounds and validation posture; `config: "none"` is legal only for a step that consumes zero tunables (a hard-coded knob with `config: "none"` is a hidden variable = P1 violation);
+- compute reads variables only through the library seam (`ctx.config`), resolved and bounds-validated BEFORE compute runs, so the value in force is observable in the run's `records_meta`;
+- a conformance check asserts both directions (declared ⊆ registry; registry-tagged-to-step ⊆ declared) and a compute rule flags numeric-literal tunables not read from `ctx.config`.
+Pilot 1 is the first known violation (`assert_schema` declared `config: "none"` while compute hard-coded `limit=20`, `Range: bytes=0-2048`, `bytes=0-8192`) — remediated as a WF3 before Pilot 2; the enforcement lands with it and gates every later pilot.
+
+**P5 — Fence dispositions follow P1.** Intent-ledger vocabulary (Spec 120 §14.3) is unchanged, but `preserved-in-compute` requires the rule to be declared (P1.2) and is otherwise a finding.
+
 ### 1.3 The 18 categories
 
 > ⚠️ **Amended 2026-08-25 (Pilot 1 plan review):** the count is **18** — `step.schema.json.required` measured by `node -e "require('./scripts/steps/_schema/step.schema.json').required.length"` → 18; `terminals` landed as the 18th via R6 at S1. Under R2 the schema is canonical: any prose count in this spec that disagrees with the schema is stale, not authoritative. The **concerns** are the schema's leaf fields and are *generated*, not fixed here (walk measured 2026-08-25: 73 leaf fields, 58 top-level fields across the 18 categories). Prior prose said "17 categories / 49 concerns".
