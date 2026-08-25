@@ -271,7 +271,7 @@
     {
       "from": "the draft descriptor's database.min_migration: 241",
       "why": {
-        "text": "241 had no basis — it is fix_lead_id_trigger_column_scope, which this step never touches. The ONLY table this step reads or writes is pipeline_runs, created by migration 033, so 33 is the real floor and anything higher would refuse a database this step can run against perfectly well. The database object admits no why field (additionalProperties:false), so the justification is recorded here.",
+        "text": "241 had no basis — it is fix_lead_id_trigger_column_scope, which this step never touches. The only table this step reads or writes is pipeline_runs (created by 033); the library writes records_meta (finalizeLedgerRow), a column added by migration 041, and pipeline.run applies no floor of its own, so 41 is the real floor (OUTPUT-panel grounder, 2026-08-25; earlier 33 under-counted). The database object admits no why field (additionalProperties:false), so the justification is recorded here",
         "liveness": { "kind": "table", "ref": "pipeline_runs" }
       },
       "adjudicated_by": "Fold A correction 5 / Fold B",
@@ -311,13 +311,13 @@
     }
   ],
 
-  "interpretation": { "file": "assert-schema.notes.json", "entries": 10 },
+  "interpretation": { "file": "assert-schema.notes.json", "entries": 9 },
 
   "recovery": "none",
 
   "database": {
     "class": "primary",
-    "min_migration": 33,
+    "min_migration": 41,
     "assert_current_database": "postgres"
   },
 

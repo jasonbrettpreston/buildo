@@ -13,29 +13,37 @@
     "the cap. `fences` lives here because the descriptor schema's root is",
     "additionalProperties:false and has no fences category (Spec 120 §14.0)."
   ],
-
   "expected_shape": [
     {
       "what": "A healthy run reports one observation per SELECTED check and nothing else; the audit table therefore has exactly as many rows as the chain selects — permits 3, coa 2, sources 6, standalone 9.",
       "measured": {
-        "value": { "permits": 3, "coa": 2, "sources": 6, "standalone": 9 },
+        "value": {
+          "permits": 3,
+          "coa": 2,
+          "sources": 6,
+          "standalone": 9
+        },
         "date": "2026-08-25",
         "query": "node -e \"const {selectChecks}=require('./scripts/lib/step/verdict.js');const d=require('./scripts/quality/assert-schema.descriptor.json');for(const c of ['permits','coa','sources',null])console.log(c,selectChecks(d,c).length)\""
       }
     }
   ],
-
   "read_this_way": [
     {
       "what": "Every row value is a VIOLATION COUNT against `viol == 0`, not a population. `permit_columns: 0` means zero expected columns were missing, not that zero columns were checked; the population lives in the check's `expect` array.",
       "measured": {
-        "value": { "permit_columns_expect": 11, "coa_columns_expect": 11, "address_point_columns_expect": 11, "parcel_columns_expect": 4, "zoning_resources": 10 },
+        "value": {
+          "permit_columns_expect": 11,
+          "coa_columns_expect": 11,
+          "address_point_columns_expect": 11,
+          "parcel_columns_expect": 4,
+          "zoning_resources": 10
+        },
         "date": "2026-08-25",
         "query": "node -e \"const d=require('./scripts/quality/assert-schema.descriptor.json');for(const c of d.checks)console.log(c.id, Array.isArray(c.expect)?c.expect.length:JSON.stringify(Object.keys(c.expect)))\""
       }
     }
   ],
-
   "suspicious_if": [
     {
       "signal": "permit_cost_type_sample reports 0 violations on a run where the CKAN datastore was unreachable — the check returns true on a non-OK sample response, so 'verified' and 'never ran' are the same row.",
@@ -50,13 +58,17 @@
       "signal": "A sources run completes in under a second. The step issues 18 network requests on the sources chain with no timeout and no retry; sub-second completion means something answered from a cache or a proxy, not that the archives are reachable.",
       "check": "none",
       "measured": {
-        "value": { "sources_requests": 18, "standalone_requests": 21, "timeout": "none", "retries": 0 },
+        "value": {
+          "sources_requests": 18,
+          "standalone_requests": 21,
+          "timeout": "none",
+          "retries": 0
+        },
         "date": "2026-08-25",
         "query": "grep -c \"await fetch(\" scripts/lib/compute/assert-schema.js && node -e \"const d=require('./scripts/quality/assert-schema.descriptor.json');console.log(d.execution.network)\""
       }
     }
   ],
-
   "blind_spots": [
     {
       "what": "The five archive checks are HTTP HEAD only. A reachable ZIP whose .dbf attributes have drifted passes this step and fails later, inside the loader that downloads it.",
@@ -71,7 +83,11 @@
       "what": "The zoning pre-flight asserts the upsert key and geometry (plus HT_LABEL and PRCNT_CVER on the two overlays that carry them) and nothing else; the remaining attribute drift is only caught at load time by zoning-attr-drift.js.",
       "detected_by": "zoning_resource_columns",
       "measured": {
-        "value": { "resources": 10, "distinct_required_sets": 3, "columns_asserted_on_base": 6 },
+        "value": {
+          "resources": 10,
+          "distinct_required_sets": 3,
+          "columns_asserted_on_base": 6
+        },
         "date": "2026-08-25",
         "query": "node -e \"const d=require('./scripts/quality/assert-schema.descriptor.json');const r=d.checks.find(c=>c.id==='zoning_resource_columns').expect.resources;console.log(Object.keys(r).length, new Set(Object.values(r).map(v=>v.join(','))).size)\""
       }
@@ -86,7 +102,6 @@
       }
     }
   ],
-
   "decisions": [
     {
       "what": "permit_cost_type_sample is declared blocking:true, matching what the code does today, rather than the draft's blocking:false.",
@@ -99,18 +114,7 @@
       "adjudicated": "operator fence ruling, 2026-08-25"
     }
   ],
-
-  "known_normal": [
-    {
-      "what": "parcel_columns reporting 0 violations on the permits and coa chains is normal and is NOT evidence the parcels CSV was fetched. The source block is chain-gated, so on those two chains the compute reports a constant zero — exactly what the pre-conversion step did with its parcels_schema_mismatch_count rows.",
-      "measured": {
-        "value": { "chains": ["permits", "coa", "sources"], "actually_fetched_on": ["sources"] },
-        "date": "2026-08-25",
-        "query": "node -e \"const d=require('./scripts/quality/assert-schema.descriptor.json');console.log(d.checks.find(c=>c.id==='parcel_columns').chains)\""
-      }
-    }
-  ],
-
+  "known_normal": [],
   "fences": [
     {
       "const": "hasCoordinateSource() over the Address Points header, with LATITUDE/LONGITUDE/geometry kept OUT of the flat expect list",
@@ -141,7 +145,6 @@
       "lock_test": "src/tests/steps/assert_schema/violations.test.ts"
     }
   ],
-
   "counts": {
     "open_blind_spots": 1,
     "unpromoted_suspicious_if": 1
