@@ -479,6 +479,10 @@ async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<
     chainId: null,
     runId: null,
     descriptor: d,
+    // Peel 8a — the library hands the compute the SELECTED check ids, never the chain.
+    // Standalone (chainId null) selects every declared check, so this mirrors
+    // `selectChecks(descriptor, null)` without importing it.
+    checks: d.checks.map((c) => c.id),
     log: { info: () => {}, warn: () => {}, error: () => {} },
     report(checkId: string, observation: unknown) {
       if (!declared.has(checkId)) throw new Error(`compute reported undeclared check "${checkId}"`);
