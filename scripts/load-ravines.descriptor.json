@@ -345,7 +345,7 @@
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "L8. Dropped polygons are protected land that stops being protected. The bound is re-checked independently by enrich-ravines.js:57, so producer and consumer must move together.",
+        "text": "L8. Dropped polygons are protected land that stops being protected. The bound is re-checked independently by enrich-ravines.js:57, so producer and consumer must move together. LR-D1: the dropped source ids travel in THIS row's observation.detail — one row, never one row per dropped feature — capped at 50 ids with the exact dropped_count and a dropped_ids_truncated flag beside them, so the audit table's row count is bounded by the check count and the reader is never misled about how much was lost.",
         "liveness": { "kind": "file", "ref": "scripts/enrich-ravines.js" }
       }
     },
@@ -525,6 +525,11 @@
       "what": "The seven records_meta.ravine_load fields enrich_ravines HALTs on — spec_version, delete_skipped_empty_guard, drift_check_passed, mass_delete_check_passed, feature_count, invalid_geometry_skipped, source_dataset_version — are a frozen producer contract. Any rename or type change halts the sources chain at the consumer, not here.",
       "measured": "scripts/enrich-ravines.js:42, :47, :50, :56, :57, :62",
       "check_id": "none"
+    },
+    {
+      "what": "LR-D1's residue: ravine_geometry_skipped_pct.detail.dropped_source_ids is CAPPED at 50 ids, so on a load that drops more the list is a prefix. dropped_count is always exact and dropped_ids_truncated says when the list is partial; recovering the full set means re-running the validation SQL, not reading the audit row. Bounding the row's SIZE is the second half of collapsing the pre-conversion one-row-per-dropped-feature shape, whose row count was bounded only by the feature count (854).",
+      "measured": "scripts/lib/compute/load-ravines.js MAX_DETAIL_KEYS = 50; live invalid_geometry_skipped = 0 on every recorded run, so the cap has never truncated anything",
+      "check_id": "ravine_geometry_skipped_pct"
     },
     {
       "what": "The pre-acquisition gate can only compare HTTP cache validators, so a publisher that re-stamps last-modified without changing bytes still costs a full download; only the post-acquisition content hash eats that cost, and it eats it after the transfer.",
