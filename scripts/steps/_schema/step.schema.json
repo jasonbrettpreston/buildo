@@ -866,8 +866,20 @@
           ]
         },
         "logic_version": { "anyOf": [{ "const": "none" }, { "type": "string", "minLength": 1 }] },
-        "on_fingerprint_change": { "enum": ["queue", "run", "none"], "x-frozen": true }
-      }
+        "on_fingerprint_change": { "enum": ["queue", "run", "none"], "x-frozen": true },
+        "on_prior_run_error": {
+          "description": "§1.6 — the DECLARED posture when the PRIOR-RUN read that feeds every trigger fails (LR-D2, peel 8a). The prior run's emit block is the baseline both gate tiers and every drift ratio compare against, so a failed read is not a neutral event: it silently downgrades the step to \"first run\", which loads unguarded with every ratio 0 BY DEFINITION rather than by measurement. fail_step = the read is load-bearing, refuse. warn_row = proceed with no baseline and say so in a `prior_run_read_failed` audit row — never silently, which is what the pre-conversion `.catch(warn => null)` did. ABSENT means fail_step: the posture may be unstated, but it may not be silent.",
+          "enum": ["fail_step", "warn_row"],
+          "x-frozen": true
+        },
+        "on_prior_run_error_why": { "$ref": "#/definitions/why" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "on_prior_run_error": { "const": "warn_row" } }, "required": ["on_prior_run_error"] },
+          "then": { "required": ["on_prior_run_error_why"] }
+        }
+      ]
     },
 
     "guards": {

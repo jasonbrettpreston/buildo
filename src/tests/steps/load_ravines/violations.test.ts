@@ -1054,8 +1054,15 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
       f === COMPUTE_REL || f === DESCRIPTOR_REL || f === NOTES_REL || f.startsWith('scripts/lib/step/') ||
       f === 'scripts/lib/source-version.js' || f === SEED_REL ||
       f.startsWith('scripts/steps/_schema/') || f.startsWith(STEP_DIR_REL) || f === REPORT_REL || f.startsWith(GOLDEN_DIR_REL) ||
+      // The GENERATED projection of step.schema.json (scripts/violations/schema-to-vocab.mjs).
+      // A peel that grows the schema drags it by construction; leaving it stale reds
+      // step-schema.logic.test.ts. Derived from an already-allowed file, never authored.
+      f === 'docs/reports/generated/122-vocabulary.md' ||
       f === 'docs/reports/review_followups.md' || f === 'docs/reports/defect-ledger.md' ||
-      /^src\/tests\/(load-ravines\.(infra|logic)|source-version\.logic|pipeline-advisory-lock\.infra|step-conformance\.infra)\.test\.ts$/.test(f) ||
+      // `step-library.logic` joined at peel 8a: the force_run arm and the
+      // `on_prior_run_error` posture are LIBRARY behaviour, so their both-directions
+      // proof lives with the library's own suite, not in this step's checklist.
+      /^src\/tests\/(load-ravines\.(infra|logic)|source-version\.logic|pipeline-advisory-lock\.infra|step-conformance\.infra|step-library\.logic)\.test\.ts$/.test(f) ||
       f === 'docs/specs/01-pipeline/122_pipeline_step_optimization.md' || f === 'docs/specs/01-pipeline/59_source_ravine_protection.md';
     for (const p of peels) {
       const [hash, subject] = p.split('\x1f') as [string, string];
