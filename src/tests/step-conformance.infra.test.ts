@@ -613,6 +613,45 @@ function declaredConfigVars(relFile: string): { slug: string; declared: string[]
 }
 
 /**
+ * Every DECLARED variable name the RUNNER consumes on the compute's behalf, read off
+ * the descriptor: any `*_from_config` field whose value names a logic variable.
+ *
+ * ⚠️ WHY THIS EXISTS (peel-8 prerequisite). `ctx.config.<name>` is not the only
+ * consumption path. Ruling A-4's `checks[].limit_from_config` is resolved by
+ * `scripts/lib/step/verdict.js resolveLimit`, and the acquisition timeout is resolved
+ * by the runner — in both cases the value in force reaches its consumer WITHOUT the
+ * compute ever spelling `ctx.config.<name>`. Counting the compute alone reads exactly
+ * those variables as DEAD declarations, i.e. it reddens a step for externalizing a
+ * threshold the right way. Matched on the `_from_config` SUFFIX rather than a fixed
+ * list of keys, so a later resolution point inherits the predicate instead of
+ * silently re-opening the hole.
+ *
+ * Scoped to that suffix on purpose: `config.logic_variables[].name` also carries the
+ * name, and counting THAT would make every declaration self-justifying — a predicate
+ * that can never fail.
+ */
+function fromConfigRefs(node: unknown, out = new Set<string>()): Set<string> {
+  if (Array.isArray(node)) {
+    for (const v of node) fromConfigRefs(v, out);
+    return out;
+  }
+  if (node && typeof node === 'object') {
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+      if (/_from_config$/.test(k) && typeof v === 'string' && v !== 'none') out.add(v);
+      fromConfigRefs(v, out);
+    }
+  }
+  return out;
+}
+
+/** The `*_from_config` references in a step's sibling descriptor, or [] when there is none. */
+function runnerConsumedVars(relFile: string): string[] {
+  const descriptorPath = path.join(REPO_ROOT, `${relFile.slice(0, -3)}.descriptor.json`);
+  if (!fs.existsSync(descriptorPath)) return [];
+  return [...fromConfigRefs(JSON.parse(fs.readFileSync(descriptorPath, 'utf8')))];
+}
+
+/**
  * Every §1.2a P4 finding for one step. Empty array = conformant.
  *
  * `declared` is a PARAMETER, not read from disk, so the canaries below can drive the
@@ -625,7 +664,7 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
   // The paired compute, by basename (§4.1 "three files, one slug").
   const computeRel = `${COMPUTE_DIR}/${path.basename(relFile)}`;
   const hasCompute = fs.existsSync(path.join(REPO_ROOT, computeRel));
-  const consumed = hasCompute
+  const computeConsumed = hasCompute
     ? [
         ...new Set(
           [...fs.readFileSync(path.join(REPO_ROOT, computeRel), 'utf8').matchAll(/ctx\.config\.([a-z][a-z0-9_]*)/g)]
@@ -633,6 +672,10 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
         ),
       ]
     : [];
+  // The two consumption paths, unioned: what the COMPUTE reads by name, and what the
+  // RUNNER resolves out of the descriptor. A variable reached by either is live.
+  const runnerConsumed = runnerConsumedVars(relFile);
+  const consumed = [...new Set([...computeConsumed, ...runnerConsumed])];
 
   for (const name of declared) {
     if (!REGISTRY_KEYS.has(name)) {
@@ -642,12 +685,17 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
       findings.push(`declared config var "${name}" is absent from GlobalConfigCard GROUPS — invisible to operators`);
     }
     if (hasCompute && !consumed.includes(name)) {
-      findings.push(`declared config var "${name}" is never read as ctx.config.${name} in ${computeRel} — a dead declaration`);
+      findings.push(`declared config var "${name}" is read neither as ctx.config.${name} in ${computeRel} nor through a *_from_config field in the descriptor — a dead declaration`);
     }
   }
-  for (const name of consumed) {
+  for (const name of computeConsumed) {
     if (!declared.includes(name)) {
       findings.push(`${computeRel} reads ctx.config.${name}, which the descriptor does not declare — strict projection makes it undefined at runtime`);
+    }
+  }
+  for (const name of runnerConsumed) {
+    if (!declared.includes(name)) {
+      findings.push(`the descriptor names "${name}" in a *_from_config field, which its config does not declare — the runner silently falls back to the literal`);
     }
   }
   for (const name of taggedToStep(slug, hasCompute ? computeRel : null)) {
@@ -656,7 +704,7 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
     }
   }
   if (declared.length === 0 && consumed.length > 0) {
-    findings.push(`config is "none" while ${computeRel} reads ${consumed.length} ctx.config value(s) — a hidden variable (§1.2a P4)`);
+    findings.push(`config is "none" while ${consumed.length} tunable(s) are consumed (${computeRel} ctx.config reads + descriptor *_from_config refs) — a hidden variable (§1.2a P4)`);
   }
   return findings;
 }
@@ -711,6 +759,64 @@ describe('§1.2a P4 — every tunable is externalized (declared ≡ registry ≡
       expect(findings.some((f) => f.includes('a dead declaration')), findings.join('\n')).toBe(true);
     });
   }
+
+  // ── THE SECOND CONSUMPTION PATH (ruling A-4) ───────────────────────────────
+  // A verdict bound is an operator knob AND the number rendered in the audit row's
+  // `threshold` column. It reaches its consumer through `checks[].limit_from_config`,
+  // resolved by scripts/lib/step/verdict.js, so the compute never spells
+  // `ctx.config.<name>` for it. Driven off load_ravines — the first descriptor to
+  // carry the field, and NOT in converted.json yet, so nothing else exercises the
+  // predicate until its cutover lands. Two directions, on the same predicate.
+  const A4_STEP = 'scripts/load-ravines.js';
+  const A4_DESCRIPTOR = path.join(REPO_ROOT, 'scripts/load-ravines.descriptor.json');
+
+  describe('a bound consumed through a *_from_config field is NOT a dead declaration (A-4)', () => {
+    it('the fixture is non-vacuous — the descriptor really carries *_from_config references', () => {
+      expect(fs.existsSync(A4_DESCRIPTOR), `${A4_DESCRIPTOR} is missing`).toBe(true);
+      const refs = runnerConsumedVars(A4_STEP);
+      expect(refs.length, 'no *_from_config reference in the descriptor — both directions below would be vacuous').toBeGreaterThan(0);
+      // At least one of them is reached ONLY this way: if the compute also read every
+      // one as ctx.config.<name>, the green direction would prove nothing new.
+      const computeSrc = fs.readFileSync(path.join(REPO_ROOT, `${COMPUTE_DIR}/load-ravines.js`), 'utf8');
+      expect(
+        refs.some((r) => !computeSrc.includes(`ctx.config.${r}`)),
+        'every *_from_config name is also a ctx.config read — the new path is untested',
+      ).toBe(true);
+    });
+
+    it('GREEN — a var reached only by limit_from_config reads as CONSUMED', () => {
+      const computeSrc = fs.readFileSync(path.join(REPO_ROOT, `${COMPUTE_DIR}/load-ravines.js`), 'utf8');
+      const onlyViaLimit = runnerConsumedVars(A4_STEP).filter((r) => !computeSrc.includes(`ctx.config.${r}`));
+      const findings = configFindings(A4_STEP, 'load_ravines', onlyViaLimit);
+      for (const name of onlyViaLimit) {
+        expect(
+          findings.some((f) => f.includes(`"${name}"`) && f.includes('a dead declaration')),
+          `${name} still reads as dead: ${findings.join('\n')}`,
+        ).toBe(false);
+      }
+    });
+
+    it('RED — a declared var referenced by NEITHER path is still dead', () => {
+      const ghost = 'a_var_no_compute_and_no_descriptor_field_names';
+      expect(runnerConsumedVars(A4_STEP)).not.toContain(ghost);
+      const findings = configFindings(A4_STEP, 'load_ravines', [ghost]);
+      expect(
+        findings.some((f) => f.includes(`"${ghost}"`) && f.includes('a dead declaration')),
+        findings.join('\n'),
+      ).toBe(true);
+    });
+
+    it('RED — a *_from_config name the config does not declare reddens (the reverse direction)', () => {
+      const refs = runnerConsumedVars(A4_STEP);
+      const findings = configFindings(A4_STEP, 'load_ravines', []);
+      for (const name of refs) {
+        expect(
+          findings.some((f) => f.includes(`"${name}"`) && f.includes('*_from_config field, which its config does not declare')),
+          findings.join('\n'),
+        ).toBe(true);
+      }
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
