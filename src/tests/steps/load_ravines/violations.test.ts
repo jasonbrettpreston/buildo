@@ -283,9 +283,18 @@ function computeSource(): string {
   return readText(COMPUTE_REL);
 }
 
+/**
+ * ⚠️ FOLD NOTE (commit 7, 2026-08-25) — CORRECTED. A compute module exports the
+ * FUNCTION (`pipeline.step()` refuses anything else, and the pilot-1 precedent
+ * `scripts/lib/compute/assert-schema.js` ends `module.exports = compute`), with the
+ * §5.5 dispatch table and the pure helpers hung off it as own properties. Rewrapping
+ * it as a bare `{ compute }` DROPPED every one of those properties, so `mod.checks`
+ * read undefined against a module that exports it correctly — a helper bug, not a
+ * finding. Spreading preserves the own enumerable properties either way.
+ */
 function loadComputeModule(): ComputeModule {
   const mod = require(artifact(COMPUTE_REL)) as ComputeModule | ComputeFn; // eslint-disable-line @typescript-eslint/no-require-imports -- the FUTURE CJS compute module
-  return (typeof mod === 'function' ? { compute: mod } : mod) as ComputeModule;
+  return (typeof mod === 'function' ? { ...mod, compute: mod } : mod) as ComputeModule;
 }
 
 function loadCompute(): ComputeFn {
@@ -398,14 +407,25 @@ function emitsOf(d: Descriptor): Array<{ key: string; type: string; consumers: s
   return d.emits as Array<{ key: string; type: string; consumers: string[] }>;
 }
 
-/** `emits[].consumers` entry → repo path (a manifest slug resolves through manifest.chains). */
+/**
+ * `emits[].consumers` entry → repo path.
+ *
+ * ⚠️ FOLD NOTE (commit 7, 2026-08-25) — CORRECTED AGAINST THE REAL MANIFEST. This
+ * helper was written against an imagined shape (`chains[*]` as objects carrying
+ * `{slug, file}`). Measured: `manifest.chains` maps a chain to an array of SLUG
+ * STRINGS, and `manifest.scripts` is the slug → `{file, …}` registry — which is why
+ * a slug resolved to itself and the assertion read as a missing consumer. The chain
+ * membership stays the liveness handle; the file comes from `scripts`.
+ */
 function consumerFile(consumer: string): string {
-  if (/\.(js|ts|mjs|cjs)$/.test(consumer)) return consumer;
-  const manifest = JSON.parse(fs.readFileSync(abs(MANIFEST_REL), 'utf8')) as { chains: Record<string, Array<{ slug?: string; name?: string; file: string }>> };
-  for (const steps of Object.values(manifest.chains)) {
-    for (const s of steps) if ((s.slug ?? s.name) === consumer) return s.file;
-  }
-  return consumer;
+  if (/\.(js|ts|mjs|cjs|py)$/.test(consumer)) return consumer;
+  const manifest = JSON.parse(fs.readFileSync(abs(MANIFEST_REL), 'utf8')) as {
+    scripts: Record<string, { file: string }>;
+    chains: Record<string, string[]>;
+  };
+  const inSomeChain = Object.values(manifest.chains).some((slugs) => slugs.includes(consumer));
+  expect(inSomeChain, `consumer slug "${consumer}" is in no manifest chain`).toBe(true);
+  return manifest.scripts[consumer]?.file ?? consumer;
 }
 
 // ---------------------------------------------------------------------------
@@ -591,10 +611,25 @@ const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
   [CONFIG_VARS.T4]: (w) => { w.acquired.invalid_geometry_skipped = 200; }, // 23% invalid geometry
   [CONFIG_VARS.T5]: (w) => { w.written.deleted = 800; }, // 93.7% mass delete
 };
+// ⚠️ FOLD NOTE (commit 7, 2026-08-25) — TWO ENTRIES ADDED to this matrix, and why.
+// The descriptor authored at commit 7 declares two WARN checks this table could not
+// sabotage, so #165's `missing` assertion would have gone red for a reason that is
+// not a defect in the step:
+//   · `ravine_no_cache_validators` — a CDN that strips BOTH HTTP cache validators
+//     disables the pre-acquisition gate entirely. Its negative direction is "no
+//     last-modified and no etag", which nothing else in this matrix produces.
+//   · the two `*_override_*_present` rows — their negative direction is a STANDING
+//     override, i.e. an env var set. The alternative was to declare both INFO, which
+//     would have silently retired the warn-on-a-standing-override behaviour the
+//     pre-conversion step had (`:285-286`) — a Chesterton's Fence, not a simplification.
+// Both sabotages flip only fields `healthyWorld()` already carries, so #182's
+// "sabotage must change something" and #163's compute-swap control still hold.
 const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
   [/age|stale|fresh/i, (w) => { w.acquired.last_modified_ms = Date.parse(`${FIXTURE_REVIEWED}T00:00:00Z`) - 30 * 365.25 * 86_400_000; }], // T1: 30 years old
   [/rows_changed|change_ratio|churn/i, (w) => { w.written.rows_changed = w.written.rows_scanned; }], // D-13: 100% churn on a byte-identical source
   [/privilege|rls|policy/i, (w) => { w.written.privilege = { bypassrls: false, policies: 0 }; }], // Fold A: silent 0-row write
+  [/override|accept/i, (w) => { w.overrides.accept_feature_count_drift = true; w.overrides.accept_mass_delete = true; }], // A-5: a standing accept-anomaly override
+  [/validator|cache/i, (w) => { w.acquired.last_modified = ''; w.acquired.last_modified_ms = 0; w.acquired.etag = null; }], // the CDN stripped both cache validators
   [/dedupe|duplicate/i, (w) => { w.acquired.feature_count = 0; }],
 ];
 
@@ -1123,8 +1158,19 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     const d = loadDescriptor();
     const stub = loadComputeStub();
     for (const c of d.checks.filter((x) => x.severity !== 'INFO')) {
-      const { healthy, sabotaged } = await mustFailPair(stub, d, c);
-      expect(healthy === 'PASS' && sabotaged === c.severity, `check ${c.id}: the must-fail pair SURVIVED a compute swap (healthy=${healthy}, sabotaged=${sabotaged})`).toBe(false);
+      // ⚠️ FOLD NOTE (commit 7, 2026-08-25): a foreign compute reports a check id
+      // THIS descriptor does not declare, and `ctx.report` throws on exactly that —
+      // §5.5 (2)'s declared-check guard. A throw is the strongest possible form of
+      // "the pair did not survive the swap", so it is caught and scored as such
+      // rather than being allowed to error the test out before it can assert.
+      let survived: boolean;
+      try {
+        const { healthy, sabotaged } = await mustFailPair(stub, d, c);
+        survived = healthy === 'PASS' && sabotaged === c.severity;
+      } catch {
+        survived = false;
+      }
+      expect(survived, `check ${c.id}: the must-fail pair SURVIVED a compute swap`).toBe(false);
     }
   });
 

@@ -345,7 +345,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | Key | Disposition | Reason / how |
 |---|---|---|
 | `key:pipeline_runs[0].id` | `excluded-with-reason` | serial PK (`VOLATILE_KEYS`) |
-| `key:pipeline_runs[0].started_at` · `completed_at` · `duration_ms` | `excluded-with-reason` | wall clock / elapsed (`VOLATILE_KEYS`) |
+| `key:pipeline_runs[0].started_at` · `key:pipeline_runs[0].completed_at` · `key:pipeline_runs[0].duration_ms` | `excluded-with-reason` | wall clock / elapsed (`VOLATILE_KEYS`). Written out in full rather than abbreviated after the first suffix: the inventory is machine-read key-by-key, and `completed_at` on its own does not declare `pipeline_runs[0].completed_at`. Observed on the STANDALONE captures only — in-chain the ledger row belongs to `run-chain`, so the step's own capture has no `pipeline_runs` rows to strip. |
 | `key:id` · `run_id` · `timestamp` · `elapsed_ms` · `elapsed_s` · `generated_at` · `checked_at` · `captured_at` | `excluded-with-reason` | `VOLATILE_KEYS` (harness) |
 | `row:sys_duration_ms` · `row:sys_velocity_rows_sec` | `excluded-with-reason` | `VOLATILE_METRIC_PREFIXES` `sys_` — observed on both baseline runs |
 | `pattern:duration_literal` | `normalize-then-match` | `completed in 3.1s` → `<DUR>` |

@@ -30,15 +30,27 @@
  * behaves identically whether or not a previous run left a row stranded — the
  * ledger open is an unconditional INSERT, never an upsert over a prior row.
  *
- * GROWTH WAVES (Spec 122 §S2, R4) — deferred here, each with its pilot:
- *   · generated write SQL from `write_discipline`            → INGESTOR pilot
- *   · staleness/gating axes + the run-ledger gate            → INGESTOR/ENRICHER
+ * GROWTH WAVES (Spec 122 §S2, R4) — each with its pilot:
+ *   ✅ generated write SQL from `write_discipline`           → INGESTOR (./write.js)
+ *   ✅ staleness/gating axes, two positions                  → INGESTOR (./staleness.js, ./acquire.js)
+ *   ✅ the acquisition seam (`ctx.acquire`, ruling A-2)      → INGESTOR (./acquire.js)
+ *   ✅ `pct <=` limits + `limit_from_config` (ruling A-4)    → INGESTOR (./verdict.js)
+ *   ✅ counters resolved FROM `counters[].source`            → INGESTOR
+ *   ✅ terminal selection + `records_meta.terminal`          → INGESTOR
+ *   · the run-ledger gate (upstream/own slugs)               → ENRICHER
  *   · invalidation + counters scoped by `writes.key`         → LINK/MATCHER
  *   · quarantine / checkpoint / partial_fill                 → BACKFILL
  *   · publish pointer / WAP                                  → RECORDER
  *   · scope-defer                                            → ENRICHER
  *   · ledger-row consolidation out of run-chain (claim #39)  → run-chain wave
- *   · `pct` / `pop` / `ratio` limit forms                    → validator wave
+ *   · `pop` / `ratio` limit forms                            → validator wave
+ *
+ * WHAT THE INGESTOR WAVE ADDED, in one sentence: for a descriptor that DECLARES an
+ * acquire→write shape (`isIngestStep`), the library now runs the whole
+ * prior-read → gate → acquire → gate → RLS preflight → validate → write pipeline
+ * and hands the compute a RESULT to observe (`ctx.acquired` / `ctx.written` /
+ * `ctx.prior` / `ctx.overrides`). Every other step reaches `compute` on exactly the
+ * path pilot 1 established — the branch is entered by declaration, never by guess.
  *
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §4, §7
  * SPEC LINK: docs/specs/01-pipeline/120_pipeline_step_runner.md §4.1
@@ -52,6 +64,9 @@ const { validateDescriptor } = require('./validate');
 const { buildAuditTable, deriveVerdict, selectChecks } = require('./verdict');
 const { RUN_STATUS, ownsLedgerRow, openLedgerRow, finalizeLedgerRow } = require('./ledger');
 const { resolveConfig } = require('./config');
+const staleness = require('./staleness');
+const acquire = require('./acquire');
+const write = require('./write');
 const { finalizeStrandedRun } = require('../ledger-window');
 
 /** The `config: "none"` projection — one shared frozen empty object, never a fresh `{}` per run. */
@@ -89,16 +104,212 @@ async function assertDatabaseTarget(pool, descriptor) {
   });
 }
 
-/** Counters: `counters: "none"` means the step declares it counts nothing (§1.10, normative for ASSERT). */
-function deriveCounters(descriptor, computeResult) {
+/**
+ * Resolve one `counters.<slot>.source` against the run's measured scope.
+ *
+ * §11's Counter Semantic Contract exists because `records_total` had NINE distinct
+ * measured meanings across the estate. The descriptor now NAMES the variable that
+ * feeds each slot — `acquired.feature_count`, `written.inserted` — and the runner
+ * resolves it. A compute never assigns a counter, so it can never disagree with the
+ * declaration; a source naming nothing measurable resolves to null, which reads as
+ * "not counted" rather than as a silent zero.
+ */
+function resolveCounterSource(slot, scope) {
+  if (!slot || slot === 'none' || typeof slot.source !== 'string') return null;
+  let node = scope;
+  for (const part of slot.source.split('.')) {
+    if (node == null || typeof node !== 'object') return null;
+    node = node[part];
+  }
+  return typeof node === 'number' && Number.isFinite(node) ? node : null;
+}
+
+/**
+ * Counters: `counters: "none"` means the step declares it counts nothing (§1.10,
+ * normative for ASSERT). Otherwise each slot's `source` is resolved against
+ * `{acquired, written, records_meta}` — the library's own measurements plus whatever
+ * the compute returned — never against a value the compute assigned by that name.
+ */
+function deriveCounters(descriptor, computeResult, scope = null) {
   if (!descriptor.counters || descriptor.counters === 'none') {
     return { records_total: null, records_new: null, records_updated: null };
   }
   const c = (computeResult && computeResult.counters) || {};
+  const resolveScope = {
+    ...(scope || {}),
+    records_meta: (computeResult && computeResult.records_meta) || {},
+  };
+  const d = descriptor.counters;
   return {
-    records_total: c.records_total ?? null,
-    records_new: c.records_new ?? null,
-    records_updated: c.records_updated ?? null,
+    records_total: c.records_total ?? resolveCounterSource(d.records_total, resolveScope),
+    records_new: c.records_new ?? resolveCounterSource(d.records_new, resolveScope),
+    records_updated: c.records_updated ?? resolveCounterSource(d.records_updated, resolveScope),
+  };
+}
+
+/** `emits: "none"` → `[]`. */
+function emitsList(descriptor) {
+  return Array.isArray(descriptor.emits) ? descriptor.emits : [];
+}
+
+/**
+ * TERMINAL SELECTION (§1.2a P1 — R6's 18th category earns its keep).
+ *
+ * `terminals[]` had no runtime consumer at pilot 1: the exit paths were declared and
+ * the runner picked none, so the declaration could drift from the code forever. The
+ * runner now selects one by OUTCOME and stamps its id into `records_meta.terminal`,
+ * which makes an undeclared exit path a visible null rather than a silent shape.
+ *
+ * Minimal on purpose: kind + status, plus a `discriminator` the terminal's id must
+ * CONTAIN — the trigger `signal` for the two gated skips, the failing check id for a
+ * `fail_check`. Mechanical containment rather than a mapping table, so a terminal
+ * that no outcome can select is visible as a never-stamped id.
+ */
+function selectTerminal(descriptor, { kind, status, discriminator }) {
+  const all = Array.isArray(descriptor.terminals) ? descriptor.terminals : [];
+  const byKind = all.filter((t) => t.kind === kind);
+  const narrowed = discriminator ? byKind.filter((t) => t.id.includes(discriminator)) : [];
+  const pool = narrowed.length > 0 ? narrowed : byKind;
+  return pool.find((t) => t.status === status) || pool[0] || null;
+}
+
+/**
+ * Is this descriptor an ACQUIRE→WRITE step the library should drive end to end?
+ *
+ * Declared, never guessed: it writes somewhere, it declares a pre-acquisition gate,
+ * and it names an external with a URL to gate against. An ASSERT (`outputs: "none"`)
+ * and every step whose triggers are all `pre_compute` take the pilot-1 path
+ * unchanged — this branch adds nothing to their run.
+ */
+function isIngestStep(descriptor) {
+  return descriptor.outputs !== 'none'
+    && Array.isArray(descriptor.outputs.writes)
+    && descriptor.outputs.writes.length > 0
+    && staleness.triggersAt(descriptor, 'pre_acquisition').length > 0
+    && ((descriptor.inputs.reads.externals || []).some((e) => typeof e.url === 'string' && e.url.length > 0));
+}
+
+/**
+ * The chain-scoped pipeline name run-chain records (`${chainId}:${slug}`). A
+ * STANDALONE run must read the SAME history an in-chain run writes, or every manual
+ * invocation looks like a first run and every drift guard degrades to "no baseline".
+ * The fallback chain is the first declared `execution.invocation` key.
+ */
+function ledgerPipelineName(descriptor, chainId) {
+  const inv = descriptor.execution.invocation;
+  const declared = inv && inv !== 'none' ? Object.keys(inv)[0] : null;
+  const chain = chainId || declared;
+  return chain ? `${chain}:${descriptor.identity.name}` : descriptor.identity.name;
+}
+
+/**
+ * The ACQUIRE → VALIDATE → WRITE phase (ruling A-1(b)).
+ *
+ * Everything here was, in every loader, ~290 lines of hand-written `main()`. It is
+ * the runner's now, driven by `inputs.reads.externals` + `staleness.trigger` +
+ * `outputs.writes` + `guards`, and it hands the compute a RESULT to observe rather
+ * than a pipeline to execute: `ctx.acquired`, `ctx.written`, `ctx.prior`,
+ * `ctx.overrides`. The compute reaches no socket, no file and no env.
+ *
+ * @returns {Promise<object>} `{skipped, reason, terminal, acquired, written, prior, overrides, emitBlock}`
+ */
+async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow }) {
+  const writeSpec = descriptor.outputs.writes[0];
+  const emit = emitsList(descriptor)[0] || null;
+  const emitKey = emit ? emit.key : null;
+  const skeleton = emit && emit.skeleton && emit.skeleton !== 'none' ? { ...emit.skeleton } : {};
+  const external = descriptor.inputs.reads.externals.find((e) => typeof e.url === 'string' && e.url.length > 0);
+  const timeoutMs = acquire.parseDuration(
+    descriptor.execution.network !== 'none' ? descriptor.execution.network.timeout : 'none',
+  );
+  const overrides = staleness.resolveOverrides(descriptor);
+  const forced = overrides.force_run === true;
+  const plan = write.buildWritePlan(writeSpec, descriptor);
+  const keyColumn = plan.keys[0];
+
+  // LR-D2 — the prior-run read is NOT swallowed. A transient failure here used to
+  // degrade every drift guard to "first run" behind a single log.warn.
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), emitKey);
+
+  // The RLS preflight runs BEFORE anything is downloaded: refusing early is cheaper
+  // than discovering after a 7 MB download that every write would affect 0 rows.
+  const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
+
+  const result = await acquire.acquireExternal({
+    ctxFetch: fetchImpl,
+    log,
+    tag,
+    slug: descriptor.identity.name,
+    external,
+    descriptor,
+    prior,
+    timeoutMs,
+    keyProperty: external.key_property,
+    keyColumn,
+    coerceKey: compute.coerceKey,
+    forced,
+    emitSkeleton: skeleton,
+    preAcquisitionGate: (head) => staleness.preAcquisitionDecision({
+      descriptor,
+      validators: { lastModified: head.lastModified, etag: head.etag },
+      prior,
+      forced,
+    }),
+  });
+
+  const gate = result.tier1.skip ? result.tier1 : result.tier2;
+  if (gate.skip) {
+    const signal = result.tier1.skip ? 'source_validator' : 'content_hash';
+    return {
+      skipped: true,
+      reason: gate.reason,
+      signal,
+      acquired: result.acquired,
+      written: null,
+      prior,
+      overrides,
+      emitKey,
+      // Built by the acquisition seam, where the gate actually fired (DS4).
+      emitBlock: result.emitBlock,
+    };
+  }
+
+  // Dedupe BEFORE the upsert: `ON CONFLICT` cannot affect the same row twice in one
+  // statement, so a duplicated source key is a hard error, not a warning, unguarded.
+  const { kept, duplicateCount } = compute.dedupeBySourceId(result.features);
+  const validated = await write.validateGeometries(pool, plan, kept, compute.validatorCounterDelta, { log, tag });
+  const runAt = clockNow;
+  const written = await write.executeWrite(pool, {
+    plan,
+    writeSpec,
+    carried: validated.carried,
+    columnValues: (row) => ({
+      ...row,
+      source_dataset_version: result.acquired.source_dataset_version,
+      updated_at: runAt,
+    }),
+    shouldSkipDelete: compute.shouldSkipDelete,
+    log,
+    tag,
+  });
+
+  return {
+    skipped: false,
+    reason: 'loaded',
+    acquired: {
+      ...result.acquired,
+      feature_count: kept.length,
+      duplicate_key_count: duplicateCount,
+      invalid_geometry_repaired: validated.repaired,
+      invalid_geometry_skipped: validated.skipped,
+      geometry_collection_extracted: validated.collectionExtracted,
+      skipped_keys: validated.skippedKeys,
+    },
+    written: { ...written, privilege: privilege[writeSpec.table] || null },
+    prior,
+    overrides,
+    emitKey,
+    emitBlock: null,
   };
 }
 
@@ -210,6 +421,14 @@ async function runWithPool(runnable, pool, ctx) {
         // projected to the DECLARED names: `validation: "strict"` is not a checker
         // that could be skipped, it is an object that does not have the key.
         config: configValues,
+        // §5.5 / ruling A-1(b) — the LIBRARY-PROVIDED RESULT the checks observe.
+        // Null for a step the library does not drive end to end (an ASSERT fetches
+        // its own subjects); populated by `runIngestPhase` for an acquire→write step.
+        acquired: null,
+        written: null,
+        prior: null,
+        overrides: null,
+        gate: null,
         report(checkId, observation) {
           if (!declared.has(checkId)) {
             throw new Error(`[${slug}] compute reported check "${checkId}", which the descriptor does not declare`);
@@ -218,30 +437,92 @@ async function runWithPool(runnable, pool, ctx) {
         },
       };
 
+      // ── ACQUIRE → VALIDATE → WRITE (ruling A-1(b), INGESTOR wave) ───────────
+      // Only for a descriptor that DECLARES the shape; every other step reaches
+      // `runnable.compute` on exactly the path pilot 1 established.
+      let ingest = null;
+      let onlyChecks = null;
+      if (isIngestStep(descriptor)) {
+        // Spec 47 §R3.5 — the DB clock, captured ONCE, inside the lock. It becomes
+        // the written rows' `updated_at`, so two rows from one run can never
+        // straddle a second (or a midnight).
+        const clockNow = await pipeline.getDbTimestamp(pool);
+        ingest = await runIngestPhase({
+          descriptor, pool, compute: runnable.compute, config: configValues,
+          fetchImpl: stepCtx.fetch, chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
+        });
+        stepCtx.acquired = ingest.acquired;
+        stepCtx.written = ingest.written;
+        stepCtx.prior = ingest.prior;
+        stepCtx.overrides = ingest.overrides;
+        stepCtx.gate = { skipped: ingest.skipped, reason: ingest.reason };
+        if (ingest.skipped) {
+          // A GATED SKIP still reports every `when: "pre"` check, so the run says
+          // WHY it was allowed to skip instead of emitting a bare SKIPPED row. The
+          // `when: "post"` checks are not scored: nothing was written, so scoring
+          // them would turn the normal, correct outcome into a table of
+          // not-reported rows at their declared severity.
+          onlyChecks = new Set(descriptor.checks.filter((c) => c.when === 'pre').map((c) => c.id));
+          stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
+        }
+      }
+
       // §5.5 (2) — `ctx.report()` is the ONLY observation path. A returned
       // `observations` object is NOT merged (fold D, pilot 1 output panel): two
       // paths meant a compute could bypass the declared-check guard above. The
       // return value carries `records_meta` / counters only.
       const computeResult = await runnable.compute(stepCtx);
 
-      const built = buildAuditTable(descriptor, chainId, observations);
-      counters = deriveCounters(descriptor, computeResult);
+      const built = buildAuditTable(descriptor, chainId, observations, [], configValues, onlyChecks);
+      counters = ingest && ingest.skipped
+        ? { records_total: null, records_new: null, records_updated: null }
+        : deriveCounters(descriptor, computeResult, ingest ? { acquired: ingest.acquired, written: ingest.written } : null);
+
+      // ── Terminal + status ───────────────────────────────────────────────────
+      // `override.accept_anomaly[]` (ruling A-5): a standing override lets an
+      // acknowledged run COMPLETE, and never suppresses the FAIL row that made it
+      // necessary. So the rows are read first, then the acceptance is applied to the
+      // STATUS only — which is exactly the fence the L7c abort encodes.
+      const failedIds = new Set(built.rows.filter((r) => r.status === 'FAIL').map((r) => r.metric));
+      const accepted = new Set(
+        staleness.acceptAnomalies(descriptor).filter((a) => a.standing).map((a) => a.check_id),
+      );
+      const unaccepted = [...failedIds].filter((id) => !accepted.has(id));
+      const verdict = built.audit_table.verdict;
+      let terminal;
+      if (ingest && ingest.skipped) {
+        status = RUN_STATUS.COMPLETED;
+        terminal = selectTerminal(descriptor, { kind: 'skip_gated', status, discriminator: ingest.signal });
+      } else if (verdict === 'FAIL' && unaccepted.length === 0 && failedIds.size > 0) {
+        status = RUN_STATUS.COMPLETED_WITH_ERRORS;
+        terminal = selectTerminal(descriptor, { kind: 'success', status });
+      } else if (verdict === 'FAIL') {
+        status = RUN_STATUS.FAILED;
+        terminal = selectTerminal(descriptor, { kind: 'fail_check', status, discriminator: unaccepted[0] });
+      } else if (verdict === 'WARN') {
+        status = RUN_STATUS.COMPLETED_WITH_WARNINGS;
+        terminal = selectTerminal(descriptor, { kind: 'success', status: RUN_STATUS.COMPLETED });
+      } else {
+        status = RUN_STATUS.COMPLETED;
+        terminal = selectTerminal(descriptor, { kind: 'success', status });
+      }
+
       recordsMeta = {
         ...(computeResult && computeResult.records_meta ? computeResult.records_meta : {}),
+        // A gated skip re-emits the PRIOR run's declared block (skeleton ← prior ←
+        // pins) so the skip still lands a `completed` row a downstream HALT gate can
+        // read (DS4) — the compute never runs on that path.
+        ...(ingest && ingest.skipped && ingest.emitKey ? { [ingest.emitKey]: ingest.emitBlock } : {}),
         // §1.2a P4 — "the value in force is observable in the run's records_meta".
         // Absent entirely for a `config: "none"` step, so the byte cost is paid only
         // by steps that actually consume a tunable (§1.2a P3).
         ...(configStamp ? { config: configStamp } : {}),
+        ...(terminal ? { terminal: terminal.id } : {}),
         checks_passed: built.errors.length === 0 ? 'all' : undefined,
         checks_failed: built.errors.length,
         errors: built.errors.length > 0 ? built.errors : undefined,
         audit_table: built.audit_table,
       };
-      status = built.audit_table.verdict === 'FAIL'
-        ? RUN_STATUS.FAILED
-        : built.audit_table.verdict === 'WARN'
-          ? RUN_STATUS.COMPLETED_WITH_WARNINGS
-          : RUN_STATUS.COMPLETED;
 
       pipeline.emitSummary({ ...counters, records_meta: recordsMeta });
       const meta = deriveMeta(descriptor);
@@ -348,4 +629,16 @@ function step(descriptor, compute) {
   return runnable;
 }
 
-module.exports = { step, deriveMeta, deriveCounters, skipRecordsMeta, assertDatabaseTarget };
+module.exports = {
+  step,
+  deriveMeta,
+  deriveCounters,
+  resolveCounterSource,
+  skipRecordsMeta,
+  assertDatabaseTarget,
+  emitsList,
+  selectTerminal,
+  isIngestStep,
+  ledgerPipelineName,
+  runIngestPhase,
+};

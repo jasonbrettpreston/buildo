@@ -181,10 +181,33 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     expect(built.audit_table.verdict).toBe('FAIL');
   });
 
-  it('⚠️ a limit form S2-min cannot evaluate reads as its severity, never PASS', () => {
-    const built = build(withChecks([{ limit: 'pct <= 0.5', severity: 'WARN' }]), { c0: { violations: 0 } });
+  it('⚠️ a limit form the library cannot evaluate reads as its severity, never PASS', () => {
+    // `pop >= N` and `ratio <= N x median` are still unimplemented; `pct <= N` LANDED
+    // at the INGESTOR pilot (LG-5) and is asserted below, so this canary moved to a
+    // form that is genuinely still missing rather than being deleted.
+    const built = build(withChecks([{ limit: 'pop >= 100', severity: 'WARN' }]), { c0: { violations: 0 } });
     expect(built.rows[0].value).toMatch(/unevaluable/);
     expect(built.rows[0].status).toBe('WARN');
+  });
+
+  it('LG-5 — `pct <= N` compares the reported RATIO, and an unreported ratio is still never PASS', () => {
+    // A pct check reports `value` (the ratio), not a violation count: the threshold
+    // column has to describe the comparison that was actually made.
+    const d = withChecks([{ limit: 'pct <= 0.5', severity: 'FAIL' }]);
+    expect(build(d, { c0: { value: 0.4 } }).rows[0].status).toBe('PASS');
+    expect(build(d, { c0: { value: 0.5 } }).rows[0].status).toBe('PASS');
+    expect(build(d, { c0: { value: 0.51 } }).rows[0].status).toBe('FAIL');
+    expect(build(d, { c0: {} }).rows[0].status).toBe('FAIL');
+    expect(build(d, { c0: {} }).rows[0].value).toMatch(/unevaluable/);
+  });
+
+  it('A-4 — `limit_from_config` renders the RESOLVED value as the row threshold, and evaluates against it', () => {
+    const d = withChecks([{ limit: 'pct <= 0.5', limit_from_config: 'tuned_bound', severity: 'FAIL' }]);
+    const tightened = verdictLib.buildAuditTable(d, null, { c0: { value: 0.4 } }, [], { tuned_bound: 0.25 });
+    expect(tightened.rows[0].threshold, 'the value IN FORCE, not the seed default').toBe('pct <= 0.25');
+    expect(tightened.rows[0].status).toBe('FAIL');
+    // No config resolved (a chain that never selected it) → the declared literal stands.
+    expect(verdictLib.buildAuditTable(d, null, { c0: { value: 0.4 } }).rows[0].threshold).toBe('pct <= 0.5');
   });
 
   it('the {warn, fail} limit object escalates independently of the declared severity', () => {

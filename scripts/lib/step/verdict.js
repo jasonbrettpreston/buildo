@@ -61,13 +61,47 @@ function resolvePhase(descriptor, chainId) {
 }
 
 const VIOL_RE = /^viol (==|<=) (\d+)$/;
+/** LG-5 — the pct form, landed at the INGESTOR pilot (Spec 122 §1.4 growth wave). */
+const PCT_RE = /^pct <= ([0-9]*\.?[0-9]+)$/;
+/** The numeric a `limit_from_config` substitution replaces: the LAST number in the form. */
+const LIMIT_NUMBER_RE = /[0-9]*\.?[0-9]+(?=\s*(?:x median)?$)/;
+
+/**
+ * Ruling A-4 — a bound that is ALSO an operator knob.
+ *
+ * `checks[].limit` carries the SEED DEFAULT so a descriptor read on its own still
+ * states a bound; `checks[].limit_from_config` names the logic variable whose
+ * RESOLVED value replaces that number at runtime. Substituting before the row is
+ * built is what makes the audit row's `threshold` column show THE VALUE IN FORCE
+ * rather than a literal that drifted from the registry — at zero extra bytes, since
+ * the same value is already stamped in `records_meta.config`.
+ *
+ * A declared name missing from the resolved config falls back to the literal rather
+ * than throwing: `scripts/lib/step/config.js` has already refused an unregistered
+ * name, so reaching here with a gap means the check was not selected for this chain.
+ *
+ * @param {object} check
+ * @param {Record<string, number>|null} config - `ctx.config`
+ */
+function resolveLimit(check, config) {
+  if (!check.limit_from_config || !config || typeof check.limit !== 'string') return check.limit;
+  const value = config[check.limit_from_config];
+  if (typeof value !== 'number' || !Number.isFinite(value)) return check.limit;
+  return check.limit.replace(LIMIT_NUMBER_RE, String(value));
+}
 
 /**
  * Evaluate one declared `limit` against a reported observation.
  *
- * S2-min implements the `viol` forms and the `{warn, fail}` object — everything
- * `assert_schema` declares. `pct`/`pop`/`ratio` are NOT silently tolerated: they
- * return `unevaluable`, which resolves to the declared severity upstream.
+ * Implemented: the `viol` forms, `pct <= <n>`, and the `{warn, fail}` object.
+ * `pop`/`ratio` are NOT silently tolerated: they return `unevaluable`, which
+ * resolves to the declared severity upstream.
+ *
+ * ⚠️ `pct` READS `observation.value`, NOT a violation count. A percentage check
+ * reports the measured ratio itself, so `violations` is left undefined and the row's
+ * rendered value is the ratio. Reporting BOTH would make the bound compare against
+ * a 0/1 flag while the row displayed a ratio — a threshold column that does not
+ * describe the comparison that was made.
  *
  * @param {string|{warn:number,fail:number}} limit
  * @param {{violations?:number, value?:number}} observation
@@ -83,6 +117,12 @@ function evaluateLimit(limit, observation) {
     if (measured >= limit.fail) return { ok: false, escalate: 'FAIL' };
     if (measured >= limit.warn) return { ok: false, escalate: 'WARN' };
     return { ok: true };
+  }
+
+  const pct = typeof limit === 'string' ? limit.match(PCT_RE) : null;
+  if (pct) {
+    if (measured === null) return { unevaluable: 'check reported no numeric ratio' };
+    return { ok: measured <= Number(pct[1]) };
   }
 
   const m = typeof limit === 'string' ? limit.match(VIOL_RE) : null;
@@ -104,10 +144,12 @@ function evaluateLimit(limit, observation) {
  * @param {object} check - a descriptor `checks[]` entry
  * @param {object|undefined} observation - `{violations?, value?, detail?, error?}`
  * @param {string} onCheckError - `fail_step` | `warn_row` | `omit_row`
+ * @param {Record<string, number>|null} [config] - `ctx.config`, for `limit_from_config`
  * @returns {{metric:string,value:*,threshold:*,status:string}|null}
  */
-function checkRow(check, observation, onCheckError) {
-  const threshold = typeof check.limit === 'string' ? check.limit : JSON.stringify(check.limit);
+function checkRow(check, observation, onCheckError, config = null) {
+  const limit = resolveLimit(check, config);
+  const threshold = typeof limit === 'string' ? limit : JSON.stringify(limit);
   const row = (value, status) => ({ metric: check.id, value, threshold, status });
 
   if (observation && observation.error !== undefined && observation.error !== null) {
@@ -122,7 +164,7 @@ function checkRow(check, observation, onCheckError) {
     return row('not reported by compute', check.severity === 'INFO' ? 'INFO' : check.severity);
   }
 
-  const verdict = evaluateLimit(check.limit, observation);
+  const verdict = evaluateLimit(limit, observation);
   if (verdict.unevaluable) {
     return row(`unevaluable: ${verdict.unevaluable}`, check.severity === 'INFO' ? 'INFO' : check.severity);
   }
@@ -151,14 +193,18 @@ function deriveVerdict(rows) {
  *
  * @returns {{audit_table:object, rows:object[], blockingFailures:string[], errors:string[]}}
  */
-function buildAuditTable(descriptor, chainId, observations, extraRows = []) {
+function buildAuditTable(descriptor, chainId, observations, extraRows = [], config = null, only = null) {
   const onCheckError = (descriptor.execution && descriptor.execution.on_check_error) || 'fail_step';
-  const selected = selectChecks(descriptor, chainId);
+  // `only` narrows the scored set to a LIFECYCLE-REACHABLE subset — a gated skip
+  // scores the `when: "pre"` checks and nothing else, because a post-write check
+  // that was never reachable must not read as "not reported by compute" at its
+  // declared severity. Null means score everything the chain selects.
+  const selected = selectChecks(descriptor, chainId).filter((c) => !only || only.has(c.id));
   const rows = [];
   const blockingFailures = [];
   const errors = [];
   for (const check of selected) {
-    const row = checkRow(check, observations ? observations[check.id] : undefined, onCheckError);
+    const row = checkRow(check, observations ? observations[check.id] : undefined, onCheckError, config);
     if (!row) continue;
     rows.push(row);
     if (row.status === 'FAIL' || row.status === 'WARN') errors.push(`${check.id}: ${row.value}`);
@@ -182,6 +228,7 @@ module.exports = {
   SEVERITY_RANK,
   selectChecks,
   resolvePhase,
+  resolveLimit,
   evaluateLimit,
   checkRow,
   deriveVerdict,

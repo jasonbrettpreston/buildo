@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 284 declarable fields
+# The step contract — 18 categories, 299 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -15,14 +15,14 @@
 | # | Category | Fields | Frozen menus | Banned values |
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
-| 2 | `inputs` | 21 | 5 | 0 |
-| 3 | `outputs` | 76 | 18 | 2 |
+| 2 | `inputs` | 23 | 5 | 0 |
+| 3 | `outputs` | 79 | 20 | 2 |
 | 4 | `staleness` | 16 | 5 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 45 | 12 | 1 |
-| 7 | `checks` | 23 | 6 | 0 |
-| 8 | `override` | 3 | 0 | 0 |
-| 9 | `emits` | 3 | 1 | 0 |
+| 7 | `checks` | 24 | 6 | 0 |
+| 8 | `override` | 11 | 1 | 0 |
+| 9 | `emits` | 4 | 1 | 0 |
 | 10 | `deviations` | 8 | 1 | 0 |
 | 11 | `limitations` | 3 | 0 | 0 |
 | 12 | `interpretation` | 2 | 0 | 0 |
@@ -158,10 +158,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.tables` | list of object {table, columns} | † |
 | `reads.tables[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `reads.tables[].columns` | list of string `^[a-z_][a-z0-9_]*$` | — |
-| `reads.externals` | list of object {id, kind, url, cache, cache_why, cache_ttl} | † |
+| `reads.externals` | list of object {id, kind, url, license, key_property, cache, cache_why, cache_ttl} | † |
 | `reads.externals[].id` | string | † |
 | `reads.externals[].kind` | `http_api` · `http_file` · `s3` · `filesystem` · `service` | † ! |
 | `reads.externals[].url` | string | — |
+| `reads.externals[].license` | string | — |
+| `reads.externals[].key_property` | string | — |
 | `reads.externals[].cache` | `none` · `revalidate` · `reuse_if_fresh` · `reuse_if_present` | † ! |
 | `reads.externals[].cache_why` | object {text, liveness} | — |
 | `reads.externals[].cache_why.text` | string | † |
@@ -176,15 +178,18 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `writes` | list (min 1) of object {table, key, columns, write_discipline, retract, replay, replay_why, source_key_policy} | † |
+| `writes` | list (min 1) of object {table, key, columns, key_sql_type, write_discipline, retract, replay, replay_why, source_key_policy} | † |
 | `writes[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].key` | string `^[a-z_][a-z0-9_]*$` \| list (min 1) of string `^[a-z_][a-z0-9_]*$` | † |
-| `writes[].columns` | list (min 1) of object {name, vocabulary} | † |
+| `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind} | † |
 | `writes[].columns[].name` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].columns[].vocabulary` | `none` \| object {values, on_unknown, source} | † |
 | `writes[].columns[].vocabulary.values` | list (min 1) of string | † |
 | `writes[].columns[].vocabulary.on_unknown` | `fail` · `quarantine` · `warn` | † ! |
 | `writes[].columns[].vocabulary.source` | string | — |
+| `writes[].columns[].written` | `step` · `db_default` | ! |
+| `writes[].columns[].bind` | `value` · `wkb_geometry` | ! |
+| `writes[].key_sql_type` | string `^[A-Z][A-Z0-9 ]*$` | — |
 | `writes[].write_discipline` | object {class, guard, guard_why, scope, guard_columns, expected_change_ratio, idempotent_rerun, idempotent_rerun_why, txn_scope, why} | † |
 | `writes[].write_discipline.class` | `guarded_upsert` · `upsert_scoped_departure_delete` · `staging_full_replace` · `insert_only_no_retraction` · `write_once_backfill` · `link_full_retraction` · `set_based_scoped` · `set_based_unscoped` · `temp_materialize` · `multi_pass_defer` · `derived_recompute` · `verdict_only` · `snapshot_append` | † ! |
 | `writes[].write_discipline.guard` | `is_distinct_from` · `none` ⛔ **banned for new:** `none` | † ! |
@@ -281,7 +286,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | Field | Menu | Markers |
 |---|---|---|
 | `requires` | list of object {kind, name, on_missing, algorithm, why} | † |
-| `requires[].kind` | `extension` · `index` · `function` · `column` | † ! |
+| `requires[].kind` | `extension` · `index` · `function` · `column` · `rls_bypass_or_policy` | † ! |
 | `requires[].name` | string | † |
 | `requires[].on_missing` | `fail` · `degrade` | † ! |
 | `requires[].algorithm` | string | — |
@@ -359,6 +364,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | Field | Menu | Markers |
 |---|---|---|
 | `[].id` | string `^[a-z][a-z0-9_]*$` | † |
+| `[].limit_from_config` | string | — |
 | `[].kind` | `field_coverage` · `vocab_coverage` · `bound` · `invariant` · `distribution` · `trend` · `orphan` · `schema` · `freshness` · `plan_shape` | † ! |
 | `[].expect` | **OPEN** — domain knowledge | † |
 | `[].limit` | string `^(viol (==|<=) [0-9]+|pct <= [0-9]*\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\.?[0-9]+ x median)$` \| object {warn, fail} | † ! |
@@ -391,6 +397,14 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `force_full` | `none` \| string `^[A-Z][A-Z0-9_]*$` | † |
 | `force_run` | `none` \| string `^[A-Z][A-Z0-9_]*$` | † |
 | `dry_run` | `none` \| string `^[A-Z][A-Z0-9_]*$` | † |
+| `accept_anomaly` | list (min 1) of object {env, check_id, why} | — |
+| `accept_anomaly[].env` | string `^[A-Z][A-Z0-9_]*$` | † |
+| `accept_anomaly[].check_id` | string `^[a-z][a-z0-9_]*$` | † |
+| `accept_anomaly[].why` | object {text, liveness} | † |
+| `accept_anomaly[].why.text` | string | † |
+| `accept_anomaly[].why.liveness` | `none` \| object {kind, ref} | † |
+| `accept_anomaly[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `accept_anomaly[].why.liveness.ref` | string | † |
 
 ### emits
 
@@ -401,6 +415,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `[].key` | string | † |
 | `[].type` | `string` · `int` · `number` · `bool` · `object` · `array` · `null` | † ! |
 | `[].consumers` | list of string | † |
+| `[].skeleton` | `none` \| object | — |
 
 ### deviations
 

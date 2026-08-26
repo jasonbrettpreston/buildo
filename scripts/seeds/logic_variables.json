@@ -2817,5 +2817,47 @@
     "min": 1024,
     "max": 1048576,
     "description": "Spec 122 §1.2a P4 (Pilot 1 remediation) — the ranged-read window (`Range: bytes=0-N`) assert_schema uses to reach the FIRST Feature of the neighbourhoods GeoJSON and read its property keys. 8192 = the pre-externalization literal; it must stay large enough to clear the CRS block plus one full `\"properties\":{…}` object, or neighbourhood_id_property throws 'Could not find properties' on a healthy file. Larger than the CSV window because a GeoJSON preamble is. CONSUMED by assert_schema (scripts/lib/compute/assert-schema.js fetchGeoJsonPropertyKeys, via ctx.config)."
+  },
+  "load_ravines_dataset_age_warn_years": {
+    "default": 20,
+    "type": "number",
+    "min": 1,
+    "max": 200,
+    "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — how many years the Ravine + Natural Feature Protection archive may sit unchanged upstream before the dataset-age audit row escalates from INFO to WARN. 20 = the pre-externalization ConfigSchema literal (ravineSkipCheckThresholdYears). The CKAN resource has been frozen at Mon, 14 Mar 2022 since publication, so at 20 the row stays INFO until 2042; lower it to make the staleness of a genuinely abandoned source visible sooner. It moves a WARN, never a write. CONSUMED by load_ravines (scripts/lib/compute/load-ravines.js ravine_dataset_age_years, via ctx.config)."
+  },
+  "load_ravines_count_drift_fail_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — L7 feature-count drift bound: |loaded − prior| / prior above this FAILs the run before any DB write. 0.5 = the pre-externalization literal (ravineDriftFeatureCountPct). Bound to check ravine_count_drift_pct through checks[].limit_from_config, so the resolved value renders as the audit row threshold. RAVINE_ACCEPT_FEATURE_COUNT_DRIFT=1 lets the run proceed but never suppresses the FAIL row. CONSUMED by load_ravines (scripts/lib/compute/load-ravines.js ravine_count_drift_pct, via ctx.config)."
+  },
+  "load_ravines_geometry_update_warn_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — L7b geometry-update drift bound: updated / prior_feature_count above this WARNs (never halts). 0.5 = the pre-externalization literal (ravineDriftGeometryUpdatePct). Bound to check ravine_geometry_update_pct through checks[].limit_from_config. A high update ratio on a source frozen since 2022 means the upstream geometry was silently re-cut — worth a human look, not a refusal. CONSUMED by load_ravines (scripts/lib/compute/load-ravines.js ravine_geometry_update_pct, via ctx.config)."
+  },
+  "load_ravines_invalid_geometry_fail_pct": {
+    "default": 0.05,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — L8 invalid-geometry bound: skipped / feature_count above this FAILs the run BEFORE the transaction opens, so no partial polygon set is ever committed. 0.05 = the pre-externalization literal (ravineInvalidGeometryFailPct) and the same 5% the downstream consumer enrich-ravines.js re-checks at :57 — move both together or producer and consumer disagree. CONSUMED by load_ravines (scripts/lib/compute/load-ravines.js ravine_geometry_skipped_pct, via ctx.config)."
+  },
+  "load_ravines_mass_delete_fail_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — L7c mass-deletion bound: deleted / prior_feature_count above this FAILs the run (fence 1ceebd17, Severity HIGH — the abort was non-functional pre-review). 0.5 = the pre-externalization literal (ravineMassDeletePct). Bound to check ravine_mass_delete_pct through checks[].limit_from_config; RAVINE_ACCEPT_MASS_DELETE=1 lets an acknowledged full reload COMPLETE but never suppresses the FAIL row. CONSUMED by load_ravines (scripts/lib/compute/load-ravines.js ravine_mass_delete_pct, via ctx.config)."
+  },
+  "load_ravines_download_timeout_ms": {
+    "default": 60000,
+    "type": "number",
+    "min": 1000,
+    "max": 600000,
+    "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — AbortController budget for BOTH CKAN calls the acquisition seam makes (the pre-acquisition HEAD and the streamed ZIP GET). 60000 = the pre-externalization literal (ravineDownloadTimeoutMs) and is mirrored into descriptor execution.network.timeout, which must AGREE. Raise it when the CKAN edge is slow rather than letting a timeout read as an acquisition FAIL. CONSUMED by load_ravines (scripts/lib/step/acquire.js headValidators + downloadArchive, via ctx.config)."
   }
 }

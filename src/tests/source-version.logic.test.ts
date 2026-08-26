@@ -29,8 +29,11 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const sv = require('../../scripts/lib/source-version.js');
+// The ravines wrapper moved into the library at the pilot-2 conversion: the
+// pre-acquisition gate is `scripts/lib/step/staleness.js` and takes the prior EMIT
+// BLOCK rather than the whole records_meta (the library unwraps `emits[0].key`).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ravines = require('../../scripts/load-ravines.js');
+const ravines = require('../../scripts/lib/step/staleness.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const heritage = require('../../scripts/load-heritage.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -42,10 +45,31 @@ const LIB_SOURCE = fs.readFileSync(
   path.resolve(__dirname, '../../scripts/lib/source-version.js'),
   'utf8',
 );
+/**
+ * The file that OWNS each loader's adoption of the shared gate semantics.
+ *
+ * ⚠️ `load-ravines.js` points at `scripts/lib/step/acquire.js`, not at the step file.
+ * At the pilot-2 conversion (Spec 122 §5.1) `scripts/load-ravines.js` became the
+ * frozen three-line shape and the tier-2 content-hash gate, the streamed
+ * hash-through-to-disk and the DS4 re-emit moved INTO the library's acquisition seam
+ * — one home, shared by every converted loader. Re-pointing the lock is mandatory:
+ * left aimed at the step file it would go green on an empty file, which is exactly
+ * how fence 0b230472 (Severity HIGH) would be silently unlocked.
+ */
+const ADOPTION_SUBJECT: Record<string, string[]> = {
+  // The acquisition seam owns the download, the streamed hash and the tier-2 gate;
+  // the staleness module owns the prior-run read and the tier-1 gate. Both files are
+  // the subject, in lifecycle order, because the constructs the locks below assert
+  // were ONE file before the conversion and are two now.
+  'load-ravines.js': ['lib/step/staleness.js', 'lib/step/acquire.js'],
+  'load-heritage.js': ['load-heritage.js'],
+  'load-centreline.js': ['load-centreline.js'],
+  'load-zoning.js': ['load-zoning.js'],
+};
 const LOADER_SOURCES: Record<string, string> = Object.fromEntries(
-  ['load-ravines.js', 'load-heritage.js', 'load-centreline.js', 'load-zoning.js'].map((f) => [
+  Object.entries(ADOPTION_SUBJECT).map(([f, subjects]) => [
     f,
-    fs.readFileSync(path.resolve(__dirname, '../../scripts', f), 'utf8'),
+    subjects.map((s) => fs.readFileSync(path.resolve(__dirname, '../../scripts', s), 'utf8')).join('\n'),
   ]),
 );
 
@@ -111,8 +135,8 @@ describe('skipCheckDecision — ravines-style (validator equality; contentHash N
       .toEqual({ skip: false, reason: 'changed' });
   });
 
-  it('load-ravines.js wrapper preserves its exact prior signature + decisions', () => {
-    const prior = { ravine_load: pm };
+  it('the re-homed ravines wrapper (scripts/lib/step/staleness.js) preserves its exact prior decisions', () => {
+    const prior = pm;
     expect(ravines.skipCheckDecision({ lastModified: 'x', prior: null })).toEqual({ skip: false, reason: 'no_prior_run' });
     expect(ravines.skipCheckDecision({ lastModified: null, etag: null, prior })).toEqual({ skip: false, reason: 'no_validators' });
     expect(ravines.skipCheckDecision({ lastModified: pm.last_modified, prior })).toEqual({ skip: true, reason: 'unchanged_last_modified' });

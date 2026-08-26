@@ -263,6 +263,18 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'assert_schema_type_sample_rows',
   'assert_schema_csv_header_bytes',
   'assert_schema_geojson_probe_bytes',
+  // Spec 122 §1.2a P4 (Pilot 2 INGESTOR conversion, 2026-08-25) — load_ravines' six
+  // knobs, every one of which was a Zod `.default()` wearing a variable's name: the
+  // ConfigSchema declared them and NOTHING registered them, so `loadMarketplaceConfigs`
+  // always fell through to the literal. Four are verdict bounds bound to a declared
+  // check via `checks[].limit_from_config`. Seeded (mig-099 seed contract, no
+  // migration), rendered under GROUPS "Source Ingestion". Closes followup #421.
+  'load_ravines_dataset_age_warn_years',
+  'load_ravines_count_drift_fail_pct',
+  'load_ravines_geometry_update_warn_pct',
+  'load_ravines_invalid_geometry_fail_pct',
+  'load_ravines_mass_delete_fail_pct',
+  'load_ravines_download_timeout_ms',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

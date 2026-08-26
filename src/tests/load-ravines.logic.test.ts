@@ -1,14 +1,30 @@
 // SPEC LINK: docs/specs/01-pipeline/59_source_ravine_protection.md §4.1
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1, §5.5 (pilot 2 conversion)
 //
-// Pure-function unit tests for load-ravines.js (Spec 59 §8c). No DB / FS / network.
+// Pure-function unit tests for load_ravines (Spec 59 §8c). No DB / FS / network.
 // Locks the drift math (L7/L7b/L7c), the F-C1 delete guard (L15), the §3.5 status
 // → counter classifier (incl. collection_extracted), the L9 skip-check, OBJECTID
-// coercion, dataset-age staleness, and the verdict cascade.
+// coercion, and dataset-age staleness.
+//
+// ⚠️ RE-HOMED AT THE PILOT-2 CONVERSION (Spec 122 §5.1). The step file is now the
+// frozen three-line shape and exports no domain functions, so every subject below
+// moved WITH ITS BEHAVIOUR INTACT rather than being deleted:
+//   · the nine pure helpers      → scripts/lib/compute/load-ravines.js
+//   · skipCheckDecision (L9)     → scripts/lib/step/staleness.js (LG-3), where the
+//                                  library evaluates the pre-acquisition trigger
+//   · verdictCascade             → KNOWINGLY RETIRED to scripts/lib/step/verdict.js
+//                                  `deriveVerdict`; the cascade is asserted there,
+//                                  in one place, instead of once per step
+// The assertions are unchanged; only the import target moved.
 
 import { describe, expect, it } from 'vitest';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ravines = require('../../scripts/load-ravines.js');
+const ravines = require('../../scripts/lib/compute/load-ravines.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const staleness = require('../../scripts/lib/step/staleness.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const verdict = require('../../scripts/lib/step/verdict.js');
 
 describe('computeCountDeltaPct (L7)', () => {
   it('returns 0 on first run (null prior) — DeepSeek null-guard', () => {
@@ -88,26 +104,57 @@ describe('coerceSourceId (OBJECTID → positive int)', () => {
   });
 });
 
-describe('skipCheckDecision (L9)', () => {
-  const prior = { ravine_load: { last_modified: 'Mon, 14 Mar 2022 15:25:09 GMT', etag: '"abc"', content_hash: 'h1' } };
+// RE-HOMED: the step's private L9 wrapper is now the library's pre-acquisition gate.
+// `prior` is the prior run's EMIT BLOCK (records_meta.ravine_load), not the whole
+// records_meta — the library unwraps `emits[0].key` before it gets here, so the block
+// is what the gate compares and what a test has to hand it.
+describe('staleness.skipCheckDecision (L9, re-homed from load-ravines.js)', () => {
+  const prior = { last_modified: 'Mon, 14 Mar 2022 15:25:09 GMT', etag: '"abc"', content_hash: 'h1' };
   it('proceeds on first run (no prior)', () => {
-    expect(ravines.skipCheckDecision({ lastModified: 'x', prior: null }).skip).toBe(false);
+    expect(staleness.skipCheckDecision({ lastModified: 'x', prior: null }).skip).toBe(false);
   });
   it('proceeds when no validators present (CDN-stripped headers)', () => {
-    expect(ravines.skipCheckDecision({ lastModified: null, etag: null, prior }).skip).toBe(false);
+    expect(staleness.skipCheckDecision({ lastModified: null, etag: null, prior }).skip).toBe(false);
   });
   it('skips when Last-Modified matches prior', () => {
-    const d = ravines.skipCheckDecision({ lastModified: 'Mon, 14 Mar 2022 15:25:09 GMT', prior });
+    const d = staleness.skipCheckDecision({ lastModified: 'Mon, 14 Mar 2022 15:25:09 GMT', prior });
     expect(d.skip).toBe(true);
     expect(d.reason).toBe('unchanged_last_modified');
   });
   it('skips on ETag fallback when Last-Modified differs/absent', () => {
-    const d = ravines.skipCheckDecision({ lastModified: null, etag: '"abc"', prior });
+    const d = staleness.skipCheckDecision({ lastModified: null, etag: '"abc"', prior });
     expect(d.skip).toBe(true);
     expect(d.reason).toBe('unchanged_etag');
   });
   it('proceeds when validators differ from prior', () => {
-    expect(ravines.skipCheckDecision({ lastModified: 'Tue, 01 Jan 2030 00:00:00 GMT', etag: '"zzz"', prior }).skip).toBe(false);
+    expect(staleness.skipCheckDecision({ lastModified: 'Tue, 01 Jan 2030 00:00:00 GMT', etag: '"zzz"', prior }).skip).toBe(false);
+  });
+});
+
+// A-3 / LG-10 — the force override the pre-conversion step did not have at all.
+describe('staleness force_run (A-3, RAVINE_FORCE_RELOAD)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const descriptor = require('../../scripts/load-ravines.descriptor.json');
+  it('reads the DECLARED env var name, and only the exact value "1"', () => {
+    expect(staleness.forceRunEnv(descriptor)).toBe('RAVINE_FORCE_RELOAD');
+    expect(staleness.forceRunRequested(descriptor, {})).toBe(false);
+    expect(staleness.forceRunRequested(descriptor, { RAVINE_FORCE_RELOAD: 'true' })).toBe(false);
+    expect(staleness.forceRunRequested(descriptor, { RAVINE_FORCE_RELOAD: '1' })).toBe(true);
+  });
+  it('bypasses the pre-acquisition trigger even when the validators match the prior run', () => {
+    const prior = { last_modified: 'Mon, 14 Mar 2022 15:25:09 GMT' };
+    const validators = { lastModified: 'Mon, 14 Mar 2022 15:25:09 GMT', etag: null };
+    expect(staleness.preAcquisitionDecision({ descriptor, validators, prior, forced: false }).skip).toBe(true);
+    const forced = staleness.preAcquisitionDecision({ descriptor, validators, prior, forced: true });
+    expect(forced.skip).toBe(false);
+    expect(forced.reason).toBe('force_run');
+  });
+  it('projects override.accept_anomaly[] to the ctx.overrides keys the compute reads', () => {
+    const off = staleness.resolveOverrides(descriptor, {});
+    expect(off).toEqual({ accept_feature_count_drift: false, accept_mass_delete: false, force_run: false });
+    const on = staleness.resolveOverrides(descriptor, { RAVINE_ACCEPT_MASS_DELETE: '1' });
+    expect(on.accept_mass_delete).toBe(true);
+    expect(on.accept_feature_count_drift).toBe(false);
   });
 });
 
@@ -123,10 +170,17 @@ describe('datasetAgeStatus (L9 staleness) / ageDaysFrom', () => {
   });
 });
 
-describe('verdictCascade (Spec 47 §8.2, row-derived)', () => {
+// RE-HOMED + KNOWINGLY RETIRED: the step's own three-way cascade is gone; the same
+// behaviour is `verdict.deriveVerdict`, which the library computes ONCE from the
+// rows. The assertion is kept here as well as in the library suite because it is the
+// behaviour this step used to own, and dropping it would look like the cascade left.
+describe('deriveVerdict (Spec 47 §8.2, row-derived — retired here from verdictCascade)', () => {
   it('FAIL dominates WARN dominates PASS', () => {
-    expect(ravines.verdictCascade([{ status: 'INFO' }, { status: 'WARN' }, { status: 'FAIL' }])).toBe('FAIL');
-    expect(ravines.verdictCascade([{ status: 'INFO' }, { status: 'WARN' }])).toBe('WARN');
-    expect(ravines.verdictCascade([{ status: 'INFO' }, { status: 'PASS' }])).toBe('PASS');
+    expect(verdict.deriveVerdict([{ status: 'INFO' }, { status: 'WARN' }, { status: 'FAIL' }])).toBe('FAIL');
+    expect(verdict.deriveVerdict([{ status: 'INFO' }, { status: 'WARN' }])).toBe('WARN');
+    expect(verdict.deriveVerdict([{ status: 'INFO' }, { status: 'PASS' }])).toBe('PASS');
+  });
+  it('the step no longer carries a cascade of its own', () => {
+    expect('verdictCascade' in ravines).toBe(false);
   });
 });
