@@ -356,9 +356,24 @@
             "required": ["name", "vocabulary"],
             "properties": {
               "name": { "$ref": "#/definitions/columnName" },
-              "vocabulary": { "$ref": "#/definitions/vocabulary" }
+              "vocabulary": { "$ref": "#/definitions/vocabulary" },
+              "written": {
+                "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). Does the STEP supply this column's value, or does the DATABASE? `PIPELINE_META.writes` has always listed every column of the target — including `created_at`, which the step never writes and the DDL defaults — so the declaration and the generated INSERT column list are NOT the same list. Stating it is what lets the generator emit the right INSERT while `deriveMeta` keeps emitting the full declared set, instead of one of the two being quietly wrong. Default: \"step\".",
+                "enum": ["step", "db_default"],
+                "x-frozen": true
+              },
+              "bind": {
+                "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). How the generated statement binds this column's parameter. \"value\" is a plain `$n`; \"wkb_geometry\" wraps it as `ST_GeomFromWKB($n, <guards.srid>)`, which is the only reason a class-B generator would need to know a column is spatial. Default: \"value\".",
+                "enum": ["value", "wkb_geometry"],
+                "x-frozen": true
+              }
             }
           }
+        },
+        "key_sql_type": {
+          "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). The SQL type the scoped departure DELETE casts its key array to (`<key> <> ALL($1::<type>[])`). Only a `retract: \"departed\"` target needs it, and getting it wrong is a runtime cast error rather than a silent mis-retraction. Default: \"BIGINT\".",
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9 ]*$"
         },
         "write_discipline": { "$ref": "#/definitions/writeDiscipline" },
         "retract": { "enum": ["none", "departed", "all"], "x-frozen": true },
@@ -395,6 +410,11 @@
       "required": ["id", "kind", "expect", "limit", "severity", "blocking", "when", "chains", "accept_until", "why"],
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "limit_from_config": {
+          "description": "OPERATOR RULING A-4 (2026-08-25, INGESTOR pilot) — the P1↔P4 resolution. A verdict bound that is ALSO an operator knob names its `config.logic_variables[].name` here; scripts/lib/step/verdict.js substitutes the RESOLVED value into `limit` before evaluating, so the audit row's `threshold` column renders THE VALUE IN FORCE, not a stale literal, at zero extra bytes (the value is already stamped in records_meta.config). DECISION, documented rather than left ambiguous: `limit` STAYS REQUIRED and keeps its numeric form — it carries the SEED DEFAULT, so a descriptor read on its own still states a bound, and `limit_from_config` is the runtime override. The named variable MUST be declared in this descriptor's `config.logic_variables[]`; a name bound to no declaration, or bound to more than one check, is a validator-side finding.",
+          "type": "string",
+          "minLength": 1
+        },
         "kind": {
           "description": "9 named types (Spec 122 §12.5 corrects the '12', which was Spec 120 §5.0's list of GENERATORS) + plan_shape, ruled in by R6 as a check kind rather than a category.",
           "enum": [
@@ -471,7 +491,11 @@
       "additionalProperties": false,
       "required": ["kind", "name", "on_missing"],
       "properties": {
-        "kind": { "enum": ["extension", "index", "function", "column"], "x-frozen": true },
+        "kind": {
+          "description": "rls_bypass_or_policy (added at the INGESTOR pilot, 2026-08-25): the named table has RLS ENABLED, so the write path is only reachable when the pipeline role either bypasses RLS (pg_roles.rolbypassrls) or a policy grants it. Measured on `ravines`: relrowsecurity=true with ZERO policies — a non-bypass role UPSERTs and DELETEs 0 rows with NO error, so the write counters read 0 and the verdict reads PASS. That is indistinguishable from an unchanged source, which is why the precondition is checked BEFORE the write and fails loud.",
+          "enum": ["extension", "index", "function", "column", "rls_bypass_or_policy"],
+          "x-frozen": true
+        },
         "name": { "type": "string", "minLength": 1 },
         "on_missing": {
           "description": "R6 ruling. 6 steps use a missing extension as an ALGORITHM SELECTOR, not a failure — which makes outputs.columns a fiction on the degraded branch.",
@@ -646,6 +670,14 @@
                   "id": { "type": "string", "minLength": 1 },
                   "kind": { "enum": ["http_api", "http_file", "s3", "filesystem", "service"], "x-frozen": true },
                   "url": { "type": "string" },
+                  "license": {
+                    "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). The publisher's licence URL. It was a module constant read by exactly one audit row (`dataset_source_license`); as descriptor data the acquisition seam can hand it to the compute on the SKIP path too, where no download happened and no constant would have been reachable.",
+                    "type": "string"
+                  },
+                  "key_property": {
+                    "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). For a record-bearing external (shapefile .dbf, CSV, GeoJSON properties): the SOURCE-SIDE attribute that becomes `outputs.writes[].key`. Declaring it is what lets a generic parser run without knowing the domain — and it makes an upstream rename (the #426 class) a descriptor diff instead of an undeclared constant inside a loader.",
+                    "type": "string"
+                  },
                   "cache": {
                     "description": "The acquisition policy. reuse_if_present IS the existsSync class — declaring it makes the fiction visible and forces a why.",
                     "enum": ["none", "revalidate", "reuse_if_fresh", "reuse_if_present"],
@@ -1019,7 +1051,22 @@
           "properties": {
             "force_full": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] },
             "force_run": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] },
-            "dry_run": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] }
+            "dry_run": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] },
+            "accept_anomaly": {
+              "description": "OPERATOR RULING A-5 (2026-08-25, INGESTOR pilot) — THE FOURTH KIND OF OVERRIDE. force_full / force_run / dry_run all answer \"does the step act?\"; an accept-anomaly answers \"the step acted, a declared check FAILED, proceed anyway\". Present in >=2 loaders today as ad-hoc env reads (RAVINE_ACCEPT_FEATURE_COUNT_DRIFT, RAVINE_ACCEPT_MASS_DELETE). Declaring it makes the L7c rule STRUCTURAL rather than textual: the override lets the run COMPLETE, it NEVER suppresses the FAIL row. `check_id` must name a declared check; the runner also emits a WARN row whenever the env is standing, so an accidental prod override is visible even on a run it never had to rescue.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["env", "check_id", "why"],
+                "properties": {
+                  "env": { "$ref": "#/definitions/envVar" },
+                  "check_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+                  "why": { "$ref": "#/definitions/why" }
+                }
+              }
+            }
           }
         }
       ]
@@ -1039,7 +1086,11 @@
             "properties": {
               "key": { "type": "string", "minLength": 1 },
               "type": { "enum": ["string", "int", "number", "bool", "object", "array", "null"], "x-frozen": true },
-              "consumers": { "type": "array", "items": { "type": "string" } }
+              "consumers": { "type": "array", "items": { "type": "string" } },
+              "skeleton": {
+                "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). The FIELD SET and default values of an `object`-typed emit — the frozen producer block a consumer reads (Spec 59 §9's 18-field records_meta.ravine_load). Two runner behaviours need it and neither can be derived from `type: \"object\"`: (1) a GATED SKIP re-emits the prior run's block through sourceVersion.buildSkipReEmitMeta(skeleton <- prior <- pins), and a skeleton typed only as \"object\" gives the merge no keys; (2) a FAILURE terminal emits the skeleton with whatever is known so far. Declaring it here is P1.1 (descriptor data before code): the 7 fields the consumer HALTs on become greppable in the descriptor instead of living in a hand-written literal inside the step.",
+                "anyOf": [{ "const": "none" }, { "type": "object", "minProperties": 1 }]
+              }
             }
           }
         }

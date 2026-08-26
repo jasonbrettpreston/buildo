@@ -1,0 +1,117 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-ravines.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations. This file carries 9, and",
+    "descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "`fences` and `counts` are RECORD blocks, not prose — they are not counted against",
+    "the cap. `fences` lives here because the descriptor schema's root is",
+    "additionalProperties:false and has no fences category (Spec 120 §14.0)."
+  ],
+  "expected_shape": [
+    {
+      "what": "A healthy run of this step SKIPS. The CKAN resource has been frozen upstream since 2022 and every recorded run took the pre-acquisition gate, so the normal audit table is the five `when: \"pre\"` rows — licence, gate reason, cache validators, dataset age, and the two standing-override rows — with no write counters at all. A full load is the exception, and RAVINE_FORCE_RELOAD is how you ask for one.",
+      "measured": {
+        "value": { "recorded_runs": 8, "all_status": "completed", "last_run": "2026-07-08T13:55:44Z", "skipped_reason": "unchanged_last_modified" },
+        "date": "2026-08-25",
+        "query": "SELECT count(*), max(started_at), (records_meta->'ravine_load'->>'skipped_reason') FROM pipeline_runs WHERE pipeline = 'sources:load_ravines' GROUP BY 3"
+      }
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "Every pct row is a RATIO against the PRIOR completed run's feature_count, not against this run's. On a first run — or any run whose prior-run read found no completed row — the prior is null and all four drift ratios are 0 BY DEFINITION, not by measurement. A row of 0 on a first load means 'no baseline to compare against', never 'nothing moved'.",
+      "measured": {
+        "value": { "prior_feature_count": 854, "live_rows": 854, "distinct_source_dataset_version": 1 },
+        "date": "2026-08-25",
+        "query": "SELECT count(*), count(DISTINCT source_dataset_version) FROM ravines"
+      }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "The gate reason reads `no_prior_run` on a database that has run this step before. The prior-run read is scoped to the chain-qualified name `sources:load_ravines` (the #409 correction — the spec froze the wrong string, `source-ravines`, which is never stored), so a rename of the chain or the slug silently detaches the whole baseline and every drift guard degrades to first-run.",
+      "check": "ravine_load_skipped",
+      "measured": {
+        "value": "sources:load_ravines",
+        "date": "2026-08-25",
+        "query": "SELECT DISTINCT pipeline FROM pipeline_runs WHERE pipeline ILIKE '%ravine%'"
+      }
+    },
+    {
+      "signal": "A full load reports inserted + updated = 0 while polygons_deleted is also 0 and the content hash CHANGED. Under a role that does not bypass RLS the upsert and the delete both affect zero rows with no error, which is byte-identical to an unchanged source; the privilege row is what tells the two apart.",
+      "check": "ravine_write_privilege",
+      "measured": {
+        "value": { "relrowsecurity": true, "policies": 0, "role_bypasses_rls": true },
+        "date": "2026-08-25",
+        "query": "SELECT c.relrowsecurity, (SELECT count(*) FROM pg_policy p WHERE p.polrelid = c.oid), (SELECT rolbypassrls FROM pg_roles WHERE rolname = current_user) FROM pg_class c WHERE c.oid = 'ravines'::regclass"
+      }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "Geometry is validated for TYPE and validity, never for PLACE. A publisher that shipped the same 854 well-formed polygons translated by a kilometre would pass every check here: the count is unchanged, nothing needs repair, nothing departs. Only the downstream in-ravine rates would move, and nothing in this step reads them.",
+      "detected_by": "none",
+      "measured": {
+        "value": { "parcels_in_ravine_pct": 6.65, "permits_in_ravine_pct": 7.21, "coa_in_ravine_pct": 6.01 },
+        "date": "2026-08-25",
+        "query": "SELECT round(100.0*count(*) FILTER (WHERE is_in_ravine_protection_area)/count(*), 2) FROM parcels"
+      }
+    },
+    {
+      "what": "The pre-acquisition gate compares HTTP cache validators only, so a publisher that re-stamps last-modified without changing a byte still costs the whole download. The content-hash gate eats the parse and the write but not the transfer — it cannot, because it needs the bytes to hash them.",
+      "detected_by": "ravine_no_cache_validators",
+      "measured": {
+        "value": { "requests_on_a_skip": 1, "requests_on_a_load": 2, "archive_kb": 7640 },
+        "date": "2026-08-25",
+        "query": "SELECT pg_size_pretty(pg_total_relation_size('ravines'))"
+      }
+    },
+    {
+      "what": "Nothing here observes a process kill. The ledger strand window closes THROWN errors only; a SIGKILL or an OOM inside the download window leaves the pipeline_runs row `running` and no check can see it — and a stranded `running` row is exactly what a downstream `status = 'completed'` gate reads as absent.",
+      "detected_by": "none",
+      "measured": {
+        "value": "0 checks cover process death; the window is a `finally`",
+        "date": "2026-08-25",
+        "query": "grep -n \"finalizeStrandedRun\" scripts/lib/step/index.js"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "Geometry validation uses this step's own batched VALUES+UNNEST SQL (now scripts/lib/step/write.js GEOMETRY_VALIDATION_SQL), NOT the shared scripts/lib/geometry-validator.js.",
+      "why": "DEC-B. The shared helper cannot emit the geometry_collection_extracted counter, and Spec 59 §9 froze that counter into the producer contract — so adopting the helper would silently drop a field a consumer is entitled to read. The divergence is deliberate and has to stay visible, because 'why isn't this using the shared validator' is the first question every reviewer asks.",
+      "adjudicated": "operator fence ruling, 2026-08-25 (§7.1)"
+    },
+    {
+      "what": "SPEC_VERSION stays '1.2' even though the Spec 59 header reads v1.3.",
+      "why": "enrich-ravines.js:42 pins the value EXACTLY and HALTs the sources chain on anything else. The pin is the contract; the document's version number is documentation. Bumping it to match the header would look like tidying and would stop the chain.",
+      "adjudicated": "operator, 2026-08-25 (plan C-9)"
+    }
+  ],
+  "fences": [
+    {
+      "const": "the L7c mass-delete terminal — `deleted / prior_feature_count` over the declared bound is a FAIL row AND the run ends `failed`, unless RAVINE_ACCEPT_MASS_DELETE is standing",
+      "value": "check ravine_mass_delete_pct (limit_from_config load_ravines_mass_delete_fail_pct, default 0.5) + override.accept_anomaly[RAVINE_ACCEPT_MASS_DELETE]; the override moves the STATUS, never the row",
+      "incident": "Severity HIGH, recorded in the commit's own footer: the mass-delete abort was NON-FUNCTIONAL before review — the row was pushed but nothing gated the outcome on it, so a run that retracted most of the ravine layer completed green and enrich_ravines was protected only by its own read of mass_delete_check_passed.",
+      "commit": "1ceebd17",
+      "lock_test": "src/tests/steps/load_ravines/violations.test.ts"
+    },
+    {
+      "const": "the tier-2 content-hash gate over a STREAMED md5 hash-through-to-disk — contentHashDecision + tier2 + buildSkipReEmitMeta, and never a whole-buffer download or a whole-file read",
+      "value": "staleness.trigger[content_hash @ post_acquisition], md5 pinned; the tier-2 skip re-emits the prior block so the run still lands a `completed` row (DS4)",
+      "incident": "Severity HIGH. Two failures in one commit: the archive was buffered entirely into memory before hashing (Spec 43 §9.5 bans it — the same pattern on the 327 MB parcels CSV is an OOM), and every metadata re-stamp by CKAN forced a full re-parse and 854 no-op upserts because nothing compared the bytes. Reverting either is invisible in the outputs, which is why the lock reads the code.",
+      "commit": "0b230472",
+      "lock_test": "src/tests/steps/load_ravines/violations.test.ts"
+    }
+  ],
+  "counts": {
+    "open_blind_spots": 2,
+    "unpromoted_suspicious_if": 0
+  }
+}

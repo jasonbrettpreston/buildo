@@ -141,6 +141,23 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
     ],
   },
   {
+    // Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — load_ravines' six externalized knobs.
+    // Their own group rather than "Data Quality Thresholds": these govern whether a
+    // SOURCE ARCHIVE is downloaded at all and whether its load is allowed to stand,
+    // which is an ingestion policy, not a data-quality report. Four of them are
+    // verdict bounds bound to a declared check through checks[].limit_from_config,
+    // so the value edited here is the number the audit row's threshold column shows.
+    label: 'Source Ingestion',
+    keys: [
+      'load_ravines_dataset_age_warn_years',
+      'load_ravines_count_drift_fail_pct',
+      'load_ravines_geometry_update_warn_pct',
+      'load_ravines_invalid_geometry_fail_pct',
+      'load_ravines_mass_delete_fail_pct',
+      'load_ravines_download_timeout_ms',
+    ],
+  },
+  {
     label: 'Scraper & Network Health',
     keys: [
       'scrape_early_phase_threshold_pct',

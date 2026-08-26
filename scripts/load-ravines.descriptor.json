@@ -1,0 +1,678 @@
+{
+  "identity": {
+    "name": "load_ravines",
+    "display_name": "Ravine + Natural Feature Protection",
+    "owner": "data",
+    "description": "Loads Toronto's Ravine & Natural Feature Protection Area polygons (Chapter 658) from the CKAN zipped shapefile into the ravines table: guarded upsert on the source OBJECTID plus a scoped departure delete, in one transaction.",
+    "lock": 59,
+    "why_lock": "none",
+    "spec": "59",
+    "spec_version": "1.2",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [],
+      "externals": [
+        {
+          "id": "ckan:ravine-natural-feature-protection-area-wgs84",
+          "kind": "http_file",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ravine-natural-feature-protection-area/resource/bb81bb0f-f88a-4f3e-bca7-a328154ba31b/download/ravine-natural-feature-protection-area-wgs84.zip",
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "OBJECTID",
+          "cache": "revalidate",
+          "cache_ttl": "none"
+        }
+      ]
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+
+  "outputs": {
+    "writes": [
+      {
+        "table": "ravines",
+        "key": "source_id",
+        "key_sql_type": "BIGINT",
+        "columns": [
+          { "name": "source_id", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "geom", "vocabulary": "none", "written": "step", "bind": "wkb_geometry" },
+          { "name": "source_dataset_version", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "created_at", "vocabulary": "none", "written": "db_default", "bind": "value" },
+          { "name": "updated_at", "vocabulary": "none", "written": "step", "bind": "value" }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": ["geom", "source_dataset_version"],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "The upsert loop and the scoped departure DELETE must commit together: a committed upsert with a rolled-back delete leaves polygons the source has retracted, and the ravine layer is a legal-constraint surface read by 486,530 parcels.",
+            "liveness": { "kind": "table", "ref": "ravines" }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [
+      {
+        "table": "parcels",
+        "column": "ravine_dataset_version_when_enriched",
+        "when": "source_dataset_version changes — the lineage stamp enrich_ravines compares against, so a reload that moves the version must re-enrich or the stamp is a lie"
+      }
+    ],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 2,
+      "why": {
+        "text": "Exactly two write statements reach ravines: the batched guarded upsert and the scoped departure DELETE. The batched geometry validation is a pure PostGIS SELECT and writes nothing.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    }
+  },
+
+  "staleness": {
+    "scope": "none",
+    "trigger": [
+      {
+        "signal": "source_validator",
+        "position": "pre_acquisition",
+        "external": "ckan:ravine-natural-feature-protection-area-wgs84"
+      },
+      {
+        "signal": "content_hash",
+        "position": "post_acquisition",
+        "external": "ckan:ravine-natural-feature-protection-area-wgs84"
+      }
+    ],
+    "mode_select": "skip",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/source-version.js", "scripts/lib/step/acquire.js"],
+    "logic_version": "none",
+    "on_fingerprint_change": "run"
+  },
+
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "ravines",
+        "on_missing": "fail",
+        "why": {
+          "text": "Measured on the live catalog 2026-08-25: ravines has relrowsecurity=true with ZERO policies (migration 227 enabled RLS class-B default-deny), and the write path works only because the pipeline role has rolbypassrls=true. Under a non-bypass role the UPSERT and DELETE affect 0 rows with NO error, so the counters read 0, the verdict reads PASS and the run is indistinguishable from an unchanged source.",
+          "liveness": { "kind": "table", "ref": "ravines" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_ravines_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "The geometry GIST index every downstream ravine enrichment joins through; without it enrich_ravines degrades to a sequential scan over 486,530 parcels.",
+          "liveness": { "kind": "file", "ref": "migrations/167_create_ravines_table.sql" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_ravines_geog_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "The geography GIST index the distance-to-ravine enrichment uses; the sign law is_in_ravine_protection_area = (ravine_distance_m <= 0) is computed through it.",
+          "liveness": { "kind": "file", "ref": "migrations/167_create_ravines_table.sql" }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "none",
+    "schema_drift": "pause"
+  },
+
+  "execution": {
+    "budget": "10m",
+    "txn_scope": "step",
+    "txn_budget": "5m",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": 16383,
+    "needs_disk_mb": 64,
+    "partial_fill": "atomic",
+    "on_row_error": "skip",
+    "on_row_error_max_pct": 0.05,
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check here reads a value the library already measured, so a check that throws is a library defect, not an upstream condition — it must redden the run rather than drop its row.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-ravines.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": {
+      "egress": ["ckan0.cf.opendata.inter.prod-toronto.ca"],
+      "timeout": "60000ms",
+      "retries": 0,
+      "redact": "none"
+    },
+    "invocation": {
+      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "dataset_source_license",
+      "kind": "invariant",
+      "expect": { "license_url_present": true },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Spec 59 §9 freezes a licence row in the audit table: the ravine layer is redistributed open data and the licence in force at load time is part of the provenance record.",
+        "liveness": { "kind": "external", "ref": "https://open.toronto.ca/open-data-license/" }
+      }
+    },
+    {
+      "id": "ravine_load_skipped",
+      "kind": "freshness",
+      "expect": { "reports": "the gate decision that ended the run, or null on a full load" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The source has been frozen upstream since 2022-03-14, so the skip is the NORMAL outcome and 'skipped for the right reason, visibly' is the primary observability requirement. Without this row a skip and a no-op load look identical in the audit table.",
+        "liveness": { "kind": "check", "ref": "ravine_dataset_age_years" }
+      }
+    },
+    {
+      "id": "ravine_no_cache_validators",
+      "kind": "freshness",
+      "expect": { "one_of": ["last-modified", "etag"] },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "A CDN that strips both HTTP cache validators disables the pre-acquisition gate entirely: every run then downloads the whole archive and leans on the content hash alone. That is safe but not free, and it must be visible rather than inferred from a bandwidth bill.",
+        "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
+      }
+    },
+    {
+      "id": "ravine_dataset_age_years",
+      "kind": "freshness",
+      "expect": { "age_years_at_most": { "logic_variable": "load_ravines_dataset_age_warn_years" } },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Reported on every path past the HEAD — the skip path and every downstream failure path, not just success — so an abandoned upstream dataset is visible on the runs that do nothing, which are the only runs there are while the source stays frozen.",
+        "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
+      }
+    },
+    {
+      "id": "ravine_override_feature_count_drift_present",
+      "kind": "invariant",
+      "expect": { "standing_override": false },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "An accept-anomaly override left standing in production silently disarms a FAIL bound on every future run. The row fires whenever the env is set, including runs that never needed rescuing, so the override is discovered by reading the audit table rather than by a drift going unnoticed.",
+        "liveness": { "kind": "check", "ref": "ravine_count_drift_pct" }
+      }
+    },
+    {
+      "id": "ravine_override_mass_delete_present",
+      "kind": "invariant",
+      "expect": { "standing_override": false },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Same class as the drift override, on the fence 1ceebd17 bound. RAVINE_ACCEPT_MASS_DELETE left set turns the L7c abort into a no-op for every subsequent run, which is exactly the pre-review condition that commit fixed.",
+        "liveness": { "kind": "check", "ref": "ravine_mass_delete_pct" }
+      }
+    },
+    {
+      "id": "ravine_feature_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "the deduped polygon count the source yielded" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The denominator of every ratio in this table and the value enrich_ravines reads at :56 to compute its own invalid-geometry rate. Measured 854 on the live table.",
+        "liveness": { "kind": "table", "ref": "ravines" }
+      }
+    },
+    {
+      "id": "ravine_count_drift_pct",
+      "kind": "trend",
+      "expect": { "vs": "the prior completed run's feature_count" },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_ravines_count_drift_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "L7. A source that suddenly carries half as many polygons is a publisher error, not a legal change to the ravine boundary; failing before the write is what stops 400 protected parcels from silently becoming unprotected.",
+        "liveness": { "kind": "file", "ref": "scripts/enrich-ravines.js" }
+      }
+    },
+    {
+      "id": "ravine_geometry_repaired_pct",
+      "kind": "field_coverage",
+      "expect": { "reports": "ST_MakeValid repairs as a fraction of the feature count" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Spec 59 §9 freezes the repair rate as provenance: a boundary that had to be repaired is not byte-identical to what the city published, and the rate is how a reviewer decides whether that matters.",
+        "liveness": { "kind": "table", "ref": "ravines" }
+      }
+    },
+    {
+      "id": "ravine_geometry_collection_extracted",
+      "kind": "field_coverage",
+      "expect": { "reports": "polygons rescued out of a GeometryCollection by ST_CollectionExtract" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The counter that made this step use its own validation SQL instead of scripts/lib/geometry-validator.js (DEC-B): the shared helper cannot emit it, and Spec 59 §9 froze it into the producer contract.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    },
+    {
+      "id": "ravine_geometry_skipped_pct",
+      "kind": "bound",
+      "expect": { "of": "features dropped by the geometry validation, over the feature count" },
+      "limit": "pct <= 0.05",
+      "limit_from_config": "load_ravines_invalid_geometry_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "L8. Dropped polygons are protected land that stops being protected. The bound is re-checked independently by enrich-ravines.js:57, so producer and consumer must move together.",
+        "liveness": { "kind": "file", "ref": "scripts/enrich-ravines.js" }
+      }
+    },
+    {
+      "id": "ravine_write_privilege",
+      "kind": "invariant",
+      "expect": { "writable": "the role bypasses RLS, or a policy grants the write" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Reports the measured privilege on EVERY run, not only the failing one: a check that exists solely in the failure branch is a check nobody ever sees working. The refusal itself is the guards.requires precondition; this row is its evidence.",
+        "liveness": { "kind": "table", "ref": "ravines" }
+      }
+    },
+    {
+      "id": "ravine_rows_changed_ratio",
+      "kind": "bound",
+      "expect": { "of": "rows_changed over rows_scanned, against write_discipline.expected_change_ratio" },
+      "limit": "pct <= 0.5",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Makes idempotent_rerun: zero_writes a NUMBER instead of a claim — a re-run of a byte-identical source must change 0 of the rows it scanned. The bound mirrors write_discipline.expected_change_ratio and is descriptor data, not an operator knob: moving it changes what the write discipline asserts about itself.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    },
+    {
+      "id": "ravine_geometry_update_pct",
+      "kind": "trend",
+      "expect": { "vs": "the prior completed run's feature_count" },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_ravines_geometry_update_warn_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "L7b. Most of the boundary being re-cut in one run is a publisher event worth a human look; unlike the count drift it is not a reason to refuse the load, because the new geometry may simply be better.",
+        "liveness": { "kind": "table", "ref": "ravines" }
+      }
+    },
+    {
+      "id": "ravine_mass_delete_pct",
+      "kind": "bound",
+      "expect": { "of": "departed rows over the prior completed run's feature_count" },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_ravines_mass_delete_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "L7c, fence 1ceebd17 (Severity HIGH — the abort was NON-FUNCTIONAL before that review). The FAIL row stands whether or not RAVINE_ACCEPT_MASS_DELETE is set; the override moves the run status, never the row.",
+        "liveness": { "kind": "file", "ref": "src/tests/steps/load_ravines/violations.test.ts" }
+      }
+    },
+    {
+      "id": "ravine_delete_skipped_empty_guard",
+      "kind": "invariant",
+      "expect": { "guard_fired": false },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-C1. `key <> ALL('{}')` is true for every row, so an empty parse would retract the whole table; the guard suppresses the DELETE and this row is how the suppression reaches enrich-ravines.js:47, which HALTs on it.",
+        "liveness": { "kind": "file", "ref": "scripts/enrich-ravines.js" }
+      }
+    }
+  ],
+
+  "override": {
+    "force_full": "none",
+    "force_run": "RAVINE_FORCE_RELOAD",
+    "dry_run": "none",
+    "accept_anomaly": [
+      {
+        "env": "RAVINE_ACCEPT_FEATURE_COUNT_DRIFT",
+        "check_id": "ravine_count_drift_pct",
+        "why": {
+          "text": "When the city genuinely re-publishes the layer at a different size, an operator must be able to accept the drift for ONE run. The FAIL row survives, so the acceptance is recorded rather than erased.",
+          "liveness": { "kind": "check", "ref": "ravine_count_drift_pct" }
+        }
+      },
+      {
+        "env": "RAVINE_ACCEPT_MASS_DELETE",
+        "check_id": "ravine_mass_delete_pct",
+        "why": {
+          "text": "Fence 1ceebd17's own escape hatch: an acknowledged full reload legitimately retracts most of the table. The override lets that run COMPLETE and never suppresses the FAIL row — the property this box makes structural instead of textual.",
+          "liveness": { "kind": "check", "ref": "ravine_mass_delete_pct" }
+        }
+      }
+    ]
+  },
+
+  "emits": [
+    {
+      "key": "ravine_load",
+      "type": "object",
+      "consumers": ["enrich_ravines"],
+      "skeleton": {
+        "spec_version": "1.2",
+        "source_dataset_version": null,
+        "last_modified": null,
+        "etag": null,
+        "content_hash": null,
+        "feature_count": 0,
+        "polygons_inserted": 0,
+        "polygons_updated": 0,
+        "polygons_deleted": 0,
+        "delete_skipped_empty_guard": false,
+        "mass_delete_pct": 0,
+        "invalid_geometry_repaired": 0,
+        "invalid_geometry_skipped": 0,
+        "geometry_collection_extracted": 0,
+        "drift_check_passed": true,
+        "mass_delete_check_passed": true,
+        "geometry_update_pct": 0,
+        "skipped_reason": null
+      }
+    }
+  ],
+
+  "deviations": [
+    {
+      "from": "the §1.2a P4 standard posture on_invalid: \"fail\" for a declared logic variable",
+      "why": {
+        "text": "All six variables are seeded by the mig-099 seed contract (scripts/seeds/logic_variables.json, applied at the END of npm run migrate), not by a migration, so the cloud database has none of them until the next migrate. Under \"fail\" the config resolver would REFUSE this step on every un-seeded database — a source loader that halts the sources chain because a knob was externalized. Under \"default\" the resolver falls back to the seed default, which is byte-equal to the pre-externalization Zod literal (20 / 0.5 / 0.5 / 0.05 / 0.5 / 60000), so behaviour is IDENTICAL pre-seed and the only cost is that an out-of-bounds operator edit degrades loudly instead of halting. Revisit at the cloud seed. The config object admits no per-variable why field, so the justification is recorded here.",
+        "liveness": { "kind": "file", "ref": "scripts/seeds/logic_variables.json" }
+      },
+      "adjudicated_by": "Spec 122 §1.2a P4 / pilot 2 plan T1-T6",
+      "date": "2026-08-25"
+    },
+    {
+      "from": "promoting any FAIL check to blocking: true",
+      "why": {
+        "text": "PIN, DO NOT FIX (Spec 123 §3.1, plan D-8, LR-D3). Today every terminal of this step exits 0: pipeline.run discards the return value, run-chain records the FAIL verdict and folds it into chain status completed_with_errors, and the chain CONTINUES. blocking: true would make the library throw after the emit and halt the sources chain — a real behaviour change smuggled into a commit whose whole claim is that it changes nothing. Promoting a check is its own peel with its own lock.",
+        "liveness": { "kind": "file", "ref": "scripts/run-chain.js" }
+      },
+      "adjudicated_by": "operator ruling, plan D-8",
+      "date": "2026-08-25"
+    },
+    {
+      "from": "Spec 59's header version 1.3 and the audit-table metric ravine_geometry_skipped_source_id",
+      "why": {
+        "text": "Two documented divergences kept deliberately. (1) identity.spec_version stays \"1.2\" because enrich-ravines.js:42 pins it EXACTLY and any other value HALTs the sources chain; the Spec 59 header number is documentation, the pin is the contract. (2) The per-feature ravine_geometry_skipped_source_id WARN rows are NOT declared as a check: they were pushed once per dropped feature, so the audit table's row count was bounded only by the feature count (LR-D1). The ids now travel in the geometry-skipped check's observation detail — one row instead of hundreds.",
+        "liveness": { "kind": "file", "ref": "scripts/enrich-ravines.js" }
+      },
+      "adjudicated_by": "plan C-9 / LR-D1",
+      "date": "2026-08-25"
+    }
+  ],
+
+  "limitations": [
+    {
+      "what": "A standalone run that loses the advisory lock lands a self_skipped ledger row, and enrich_ravines filters on status = 'completed'. In-chain that is harmless (run-chain owns the row); standalone it means a contended manual run is invisible to the consumer rather than wrong.",
+      "measured": "scripts/enrich-ravines.js:33-36 — WHERE pipeline = 'sources:load_ravines' AND status = 'completed'",
+      "check_id": "none"
+    },
+    {
+      "what": "source_id is coerced through safeParseIntOrNull and re-keyed as a JS number in the validation join, so a BIGINT above 2^53 would lose precision and miss its own validation row — counted as skipped rather than loaded. Latent: the live maximum is 14,041,969.",
+      "measured": "SELECT max(source_id) FROM ravines = 14041969 (2026-08-25); Number.MAX_SAFE_INTEGER = 9007199254740991",
+      "check_id": "ravine_geometry_skipped_pct"
+    },
+    {
+      "what": "The seven records_meta.ravine_load fields enrich_ravines HALTs on — spec_version, delete_skipped_empty_guard, drift_check_passed, mass_delete_check_passed, feature_count, invalid_geometry_skipped, source_dataset_version — are a frozen producer contract. Any rename or type change halts the sources chain at the consumer, not here.",
+      "measured": "scripts/enrich-ravines.js:42, :47, :50, :56, :57, :62",
+      "check_id": "none"
+    },
+    {
+      "what": "The pre-acquisition gate can only compare HTTP cache validators, so a publisher that re-stamps last-modified without changing bytes still costs a full download; only the post-acquisition content hash eats that cost, and it eats it after the transfer.",
+      "measured": "scripts/lib/step/acquire.js — the HEAD precedes the download, contentHashSkip follows it",
+      "check_id": "ravine_no_cache_validators"
+    }
+  ],
+
+  "interpretation": { "file": "load-ravines.notes.json", "entries": 9 },
+
+  "recovery": {
+    "reset": "TRUNCATE is never correct here — re-run with RAVINE_FORCE_RELOAD=1, which bypasses both staleness triggers and rewrites the table through the same guarded upsert plus departure delete.",
+    "resume": "none",
+    "force": "RAVINE_FORCE_RELOAD",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived"
+  },
+
+  "database": {
+    "class": "primary",
+    "min_migration": 167,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": {
+    "records_total": { "source": "acquired.feature_count", "scoped_by": "source_id" },
+    "records_new": { "source": "written.inserted", "scoped_by": "source_id" },
+    "records_updated": { "source": "written.updated", "scoped_by": "source_id" }
+  },
+
+  "config": {
+    "logic_variables": [
+      { "name": "load_ravines_dataset_age_warn_years", "min": 1, "max": 200, "on_invalid": "default" },
+      { "name": "load_ravines_count_drift_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "load_ravines_geometry_update_warn_pct", "min": 0, "max": 1, "on_invalid": "default" },
+      { "name": "load_ravines_invalid_geometry_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "load_ravines_mass_delete_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "load_ravines_download_timeout_ms", "min": 1000, "max": 600000, "on_invalid": "clamp" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": { "sources": 59 },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "skipped_source_validator",
+      "kind": "skip_gated",
+      "status": "completed",
+      "records_meta": { "ravine_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "Tier 1. The HEAD's last-modified or etag equals the prior completed run's, so nothing is downloaded. This is the NORMAL outcome — the CKAN resource has not moved since 2022-03-14 — and it must land a completed row, because the downstream HALT gate reads completed rows (DS4).",
+        "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
+      }
+    },
+    {
+      "id": "skipped_content_hash",
+      "kind": "skip_gated",
+      "status": "completed",
+      "records_meta": { "ravine_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "Tier 2, fence 0b230472. The metadata said changed but the bytes are identical — CKAN re-stamps last-modified on files whose content never moved. Skipping here avoids an extract, a parse and 854 no-op upserts; the prior block is re-emitted so the completed-row contract still holds.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": { "ravine_load": "object", "audit_table": "object", "terminal": "string" }
+    },
+    {
+      "id": "loaded_anomaly_accepted",
+      "kind": "success",
+      "status": "completed_with_errors",
+      "records_meta": { "ravine_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "A declared FAIL check tripped and a matching override.accept_anomaly env was standing, so the run is allowed to complete. The FAIL row is still in the audit table and the status still says errors — the acceptance is recorded, never erased.",
+        "liveness": { "kind": "check", "ref": "ravine_mass_delete_pct" }
+      }
+    },
+    {
+      "id": "failed_ravine_count_drift_pct",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "ravine_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "L7 tripped with no standing override. Historically this aborted BEFORE any DB write; under the library the write is already committed when the checks score, so the guarantee is now carried by the FAIL verdict and the run status rather than by statement ordering.",
+        "liveness": { "kind": "check", "ref": "ravine_count_drift_pct" }
+      }
+    },
+    {
+      "id": "failed_ravine_geometry_skipped_pct",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "ravine_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "L8 tripped: more than the declared fraction of the source's polygons could not be made valid, so the loaded set under-states protected land.",
+        "liveness": { "kind": "check", "ref": "ravine_geometry_skipped_pct" }
+      }
+    },
+    {
+      "id": "failed_ravine_mass_delete_pct",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "ravine_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "L7c tripped with no standing RAVINE_ACCEPT_MASS_DELETE. Fence 1ceebd17: this terminal is the whole point of that commit, and its lock proves both directions.",
+        "liveness": { "kind": "check", "ref": "ravine_mass_delete_pct" }
+      }
+    },
+    {
+      "id": "failed_head_unreachable",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "The pre-acquisition HEAD returned 4xx/5xx or timed out. Nothing is downloaded and nothing is written; the run fails rather than treating an unreachable publisher as an unchanged one.",
+        "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
+      }
+    },
+    {
+      "id": "failed_acquisition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "The download, the unzip, the single-.shp scan or the shapefile parse threw. The temp root is removed on this path exactly as on every other, and no write has been attempted.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": {
+        "text": "Advisory lock 59 is held by another process. Pre-conversion this was a bare `return;` with no step-level emit at all (LR-D6) — the SDK's built-in SKIP carried no audit_table, so contention read as verdict UNKNOWN. The library now emits a row-derived SKIP summary.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    }
+  ]
+}
