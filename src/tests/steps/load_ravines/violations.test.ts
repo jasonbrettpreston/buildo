@@ -1855,3 +1855,124 @@ describe('LR-D1 — the dropped source ids are ONE row\'s detail, capped, count 
     expect(() => guard('ravine_geometry_skipped_source_id')).toThrow(/undeclared check/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Peel 8c — every threshold has ONE source, and the `pct <=` form really evaluates
+// ---------------------------------------------------------------------------
+
+describe('8c — thresholds: one source, no literal a knob duplicates', () => {
+  type LimitCheck = { id: string; limit: string | { warn: number; fail: number }; limit_from_config?: string; severity: string };
+
+  const seed = (): Record<string, { default: number }> =>
+    JSON.parse(fs.readFileSync(abs(SEED_REL), 'utf8')) as Record<string, { default: number }>;
+
+  /** The trailing number a `limit_from_config` substitution replaces — the same anchor verdict.js uses. */
+  const literalOf = (limit: string): number => {
+    const m = /([0-9]*\.?[0-9]+)(?=\s*(?:x median)?$)/.exec(limit);
+    expect(m, `limit "${limit}" carries no number to substitute`).not.toBeNull();
+    return Number((m as RegExpExecArray)[1]);
+  };
+
+  it('every `pct <=` limit names a DECLARED config variable, and the literal it carries IS that variable\'s seed default', () => {
+    const d = loadDescriptor();
+    const declared = new Set(d.config === 'none' ? [] : d.config.logic_variables.map((v) => v.name));
+    const S = seed();
+    const pctChecks = (d.checks as LimitCheck[]).filter((c) => typeof c.limit === 'string' && /^pct <=/.test(c.limit));
+    expect(pctChecks.length, 'no pct-shaped check — LG-5 would be untested').toBeGreaterThan(0);
+    for (const c of pctChecks) {
+      if (!c.limit_from_config) continue; // the deliberate descriptor-data case, locked below
+      expect(declared.has(c.limit_from_config), `check ${c.id}: limit_from_config "${c.limit_from_config}" is not declared in config`).toBe(true);
+      expect(S[c.limit_from_config], `seed missing ${c.limit_from_config}`).toBeDefined();
+      expect(
+        literalOf(c.limit as string),
+        `check ${c.id}: the descriptor's literal and the seed default for ${c.limit_from_config} have DRIFTED — a descriptor read on its own would state a bound nobody uses`,
+      ).toBe(S[c.limit_from_config]!.default);
+    }
+  });
+
+  it('every declared FAIL/WARN bound that has a knob is BOUND to it — no operator-tunable threshold survives as a bare literal', () => {
+    const d = loadDescriptor();
+    if (d.config === 'none') return;
+    // Every declared variable whose name reads as a bound must be reachable from a check
+    // or from a `*_from_config` field; a knob nothing resolves is a knob that does nothing.
+    const refs = new Set<string>();
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) { node.forEach(walk); return; }
+      if (node && typeof node === 'object') {
+        for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+          if (/_from_config$/.test(k) && typeof v === 'string') refs.add(v);
+          walk(v);
+        }
+      }
+    };
+    walk(d);
+    const computeSrc = computeSource();
+    for (const v of d.config.logic_variables) {
+      const reached = refs.has(v.name) || computeSrc.includes(`ctx.config.${v.name}`);
+      expect(reached, `declared tunable "${v.name}" is resolved by nothing — neither a *_from_config field nor a ctx.config read`).toBe(true);
+    }
+  });
+
+  it('the ONE deliberate non-knob bound agrees with the write discipline it mirrors (two places, locked)', () => {
+    const d = loadDescriptor();
+    const check = (d.checks as LimitCheck[]).find((c) => c.id === 'ravine_rows_changed_ratio');
+    expect(check, 'ravine_rows_changed_ratio must be declared').toBeDefined();
+    expect(check?.limit_from_config, 'it is descriptor data, NOT an operator knob').toBeUndefined();
+    const wd = (d.outputs as { writes: Array<{ write_discipline: { expected_change_ratio: string } }> }).writes[0]!.write_discipline;
+    expect(
+      literalOf(check!.limit as string),
+      'the check bound and write_discipline.expected_change_ratio are the same number in two places — they must AGREE',
+    ).toBe(literalOf(wd.expected_change_ratio));
+  });
+
+  it('the acquisition timeout has ONE source: the config value wins, the literal is the stated fallback, and they AGREE', () => {
+    const d = loadDescriptor();
+    const net = d.execution.network as { timeout: string; timeout_from_config?: string };
+    expect(net.timeout_from_config, 'execution.network.timeout_from_config must name the T6 variable').toBe(CONFIG_VARS.T6);
+    const declared = d.config === 'none' ? [] : d.config.logic_variables.map((v) => v.name);
+    expect(declared, 'and that variable must be declared').toContain(CONFIG_VARS.T6);
+    const seededDefault = seed()[CONFIG_VARS.T6]!.default;
+    const acquire = loadLib(ACQUIRE_REL) as {
+      resolveTimeoutMs: (d: unknown, c: Record<string, number> | null) => number | null;
+    };
+    // The literal is only a fallback, so it must equal the seed default or an un-seeded
+    // database would silently run on a different budget than a seeded one.
+    expect(acquire.resolveTimeoutMs(d, {}), 'the fallback literal').toBe(seededDefault);
+    expect(acquire.resolveTimeoutMs(d, null)).toBe(seededDefault);
+    // ...and the operator's value WINS, which is the half that makes it one source.
+    expect(acquire.resolveTimeoutMs(d, { [CONFIG_VARS.T6]: 12_345 })).toBe(12_345);
+    // A nonsense value falls back rather than aborting every fetch instantly.
+    expect(acquire.resolveTimeoutMs(d, { [CONFIG_VARS.T6]: 0 })).toBe(seededDefault);
+  });
+
+  it('LG-5 — the `pct <=` form really evaluates, in both directions, at the RESOLVED bound', () => {
+    const d = loadDescriptor();
+    const verdict = loadLib('scripts/lib/step/verdict.js') as {
+      evaluateLimit: (l: unknown, o: Record<string, number>) => { ok?: boolean; unevaluable?: string };
+      resolveLimit: (c: unknown, cfg: Record<string, number>) => string;
+    };
+    const S = seed();
+    const config: Record<string, number> = {};
+    if (d.config !== 'none') for (const v of d.config.logic_variables) config[v.name] = S[v.name]!.default;
+
+    for (const c of (d.checks as LimitCheck[]).filter((x) => typeof x.limit === 'string' && /^pct <=/.test(x.limit))) {
+      const resolved = verdict.resolveLimit(c, config);
+      const bound = literalOf(resolved);
+      const inside = verdict.evaluateLimit(resolved, { value: bound });
+      const outside = verdict.evaluateLimit(resolved, { value: bound + 0.01 });
+      // "unevaluable" resolves to the DECLARED severity upstream, so a pct check the
+      // library cannot read would redden (or green) every single run without looking.
+      expect(inside.unevaluable, `check ${c.id}: at the bound`).toBeUndefined();
+      expect(outside.unevaluable, `check ${c.id}: above the bound`).toBeUndefined();
+      expect(inside.ok, `check ${c.id}: <= the bound must PASS`).toBe(true);
+      expect(outside.ok, `check ${c.id}: above the bound must FAIL`).toBe(false);
+    }
+
+    // The substitution itself, proven with a value that is NOT the seed default: the
+    // threshold column has to show the number in force, not the one in the file.
+    const bound = (d.checks as LimitCheck[]).find((c) => c.limit_from_config);
+    expect(bound, 'no limit_from_config check — the substitution would be untested').toBeDefined();
+    const moved = verdict.resolveLimit(bound!, { [bound!.limit_from_config!]: 0.123 });
+    expect(moved, 'the RESOLVED value renders as the threshold').toContain('0.123');
+  });
+});

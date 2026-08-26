@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 305 declarable fields
+# The step contract — 18 categories, 306 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -19,7 +19,7 @@
 | 3 | `outputs` | 79 | 20 | 2 |
 | 4 | `staleness` | 22 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
-| 6 | `execution` | 45 | 12 | 1 |
+| 6 | `execution` | 46 | 12 | 1 |
 | 7 | `checks` | 24 | 6 | 0 |
 | 8 | `override` | 11 | 1 | 0 |
 | 9 | `emits` | 4 | 1 | 0 |
@@ -347,9 +347,10 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `on_degrade_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `on_degrade_why.liveness.ref` | string | † |
 | `criticality` | `required` · `best_effort` ⛔ **banned for new:** `best_effort` | † ! |
-| `network` | `none` \| object {egress, timeout, retries, redact} | † |
+| `network` | `none` \| object {egress, timeout, timeout_from_config, retries, redact} | † |
 | `network.egress` | list (min 1) of string | † |
 | `network.timeout` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
+| `network.timeout_from_config` | string `^[a-z][a-z0-9_]*$` | — |
 | `network.retries` | integer >= 0 | † |
 | `network.redact` | `none` \| list (min 1) of string | † |
 | `invocation` | `none` \| map of object {argv, env} | † |
