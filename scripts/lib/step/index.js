@@ -227,9 +227,19 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   const plan = write.buildWritePlan(writeSpec, descriptor);
   const keyColumn = plan.keys[0];
 
-  // LR-D2 — the prior-run read is NOT swallowed. A transient failure here used to
-  // degrade every drift guard to "first run" behind a single log.warn.
-  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), emitKey);
+  // LR-D2 — the prior-run read is NOT swallowed, and WHAT HAPPENS when it fails is
+  // DECLARED (`staleness.on_prior_run_error`) rather than decided in a catch block.
+  // The pre-conversion `.catch(warn => null)` degraded every drift guard to "first run"
+  // behind a single log.warn; the two legal postures are refuse (`fail_step`, the
+  // absent default) and proceed-and-say-so (`warn_row`, which owes the audit row
+  // below). Neither is silent.
+  const posture = staleness.priorRunErrorPosture(descriptor);
+  const { prior, error: priorError } = await staleness.readPriorEmitWithPosture(
+    pool, ledgerPipelineName(descriptor, chainId), emitKey, posture,
+  );
+  if (priorError) {
+    log.warn(tag, `prior-run read failed under posture "${posture}" — continuing with NO baseline: ${priorError.message}`);
+  }
 
   // The RLS preflight runs BEFORE anything is downloaded: refusing early is cheaper
   // than discovering after a 7 MB download that every write would affect 0 rows.
@@ -267,6 +277,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       acquired: result.acquired,
       written: null,
       prior,
+      priorError,
       overrides,
       emitKey,
       // Built by the acquisition seam, where the gate actually fired (DS4).
@@ -307,6 +318,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     },
     written: { ...written, privilege: privilege[writeSpec.table] || null },
     prior,
+    priorError,
     overrides,
     emitKey,
     emitBlock: null,
@@ -473,7 +485,13 @@ async function runWithPool(runnable, pool, ctx) {
       // return value carries `records_meta` / counters only.
       const computeResult = await runnable.compute(stepCtx);
 
-      const built = buildAuditTable(descriptor, chainId, observations, [], configValues, onlyChecks);
+      // `extraRows` carries exactly one thing and only on a failure path: the
+      // `warn_row` posture's `prior_run_read_failed` row (LR-D2). It is NOT a declared
+      // check because there is nothing for a compute to observe — the read failed
+      // before any ctx existed — and declaring it would put a row on every healthy run
+      // whose only possible value is "fine". Absent = the read succeeded.
+      const extraRows = ingest && ingest.priorError ? [staleness.priorRunErrorRow(ingest.priorError)] : [];
+      const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks);
       counters = ingest && ingest.skipped
         ? { records_total: null, records_new: null, records_updated: null }
         : deriveCounters(descriptor, computeResult, ingest ? { acquired: ingest.acquired, written: ingest.written } : null);

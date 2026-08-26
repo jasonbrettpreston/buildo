@@ -106,7 +106,12 @@
     "fingerprint": "derived",
     "fingerprint_inputs": ["scripts/lib/source-version.js", "scripts/lib/step/acquire.js"],
     "logic_version": "none",
-    "on_fingerprint_change": "run"
+    "on_fingerprint_change": "run",
+    "on_prior_run_error": "fail_step",
+    "on_prior_run_error_why": {
+      "text": "LR-D2. The prior completed run's ravine_load block is the baseline BOTH gate tiers and every drift ratio compare against, so a failed read is not a neutral event: under the pre-conversion `.catch(warn => null)` it degraded the step to \"first run\", which loads the whole layer unguarded with count-drift, geometry-update and mass-delete all reading 0 BY DEFINITION rather than by measurement — the fence-1ceebd17 abort included. For a legal-constraint surface 486,530 parcels are enriched from, refusing is correct and warn_row is not: a visible WARN row would still leave the run writing with every guard vacuously green. The alternative posture exists and is exercised both directions in src/tests/step-library.logic.test.ts.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" }
+    }
   },
 
   "guards": {

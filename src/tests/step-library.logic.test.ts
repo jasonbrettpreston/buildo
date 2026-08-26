@@ -21,6 +21,7 @@
 //   5. `crashed` is not writable in-process — it belongs to the A3 reaper.
 import { describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'child_process';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 
 /* eslint-disable @typescript-eslint/no-require-imports -- exercising the real CJS libraries */
@@ -29,8 +30,13 @@ const verdictLib = require(join(process.cwd(), 'scripts/lib/step/verdict.js'));
 const ledgerLib = require(join(process.cwd(), 'scripts/lib/step/ledger.js'));
 const pipeline = require(join(process.cwd(), 'scripts/lib/pipeline.js'));
 
+const stalenessLib = require(join(process.cwd(), 'scripts/lib/step/staleness.js'));
+const acquireLib = require(join(process.cwd(), 'scripts/lib/step/acquire.js'));
+
 const FIXTURES = join(process.cwd(), 'scripts/steps/_schema/fixtures');
 const ASSERT_SCHEMA = require(join(FIXTURES, 'valid/assert_schema.descriptor.json'));
+/** The INGESTOR descriptor: the only one declaring override.force_run + two gate tiers. */
+const LOAD_RAVINES = require(join(process.cwd(), 'scripts/load-ravines.descriptor.json'));
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const clone = <T>(o: T): T => JSON.parse(JSON.stringify(o));
@@ -784,5 +790,143 @@ describe('§1.2a P4 — ctx.config: resolved, bounds-checked, projected, stamped
     expect(update[0]).toBe('failed');
     expect(String(update[2])).toMatch(/above_max/);
     expect(update[7], 'no audit rows exist — the failure predates every observation').toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 8. The GATING peel (8a) — the force arm and the prior-run error posture
+// ---------------------------------------------------------------------------
+
+describe('override.force_run — the arm that makes a frozen source loadable (A-3 / LG-10)', () => {
+  const FROZEN = 'Mon, 14 Mar 2022 15:25:09 GMT';
+  const FORCE_ENV = 'RAVINE_FORCE_RELOAD';
+  const priorOf = (lastModified: string, contentHash: string) => ({
+    last_modified: lastModified,
+    etag: null,
+    content_hash: contentHash,
+    feature_count: 854,
+  });
+
+  it('the env var is DECLARED, read in exactly one place, and armed by "1" alone', () => {
+    expect(stalenessLib.forceRunEnv(LOAD_RAVINES)).toBe(FORCE_ENV);
+    expect(stalenessLib.forceRunRequested(LOAD_RAVINES, { [FORCE_ENV]: '1' })).toBe(true);
+    // Never truthiness: an operator who exports "true" or "0" has NOT armed a reload.
+    for (const v of ['true', 'yes', '0', '', undefined]) {
+      expect(stalenessLib.forceRunRequested(LOAD_RAVINES, { [FORCE_ENV]: v }), `env "${String(v)}"`).toBe(false);
+    }
+    // A descriptor that declares no force_run can never be forced by any env.
+    expect(stalenessLib.forceRunEnv(ASSERT_SCHEMA)).toBeNull();
+    expect(stalenessLib.forceRunRequested(ASSERT_SCHEMA, { [FORCE_ENV]: '1' })).toBe(false);
+  });
+
+  it('ctx.overrides.force_run reflects the env and is FROZEN (a compute cannot arm its own reload)', () => {
+    const armed = stalenessLib.resolveOverrides(LOAD_RAVINES, { [FORCE_ENV]: '1' });
+    expect(armed.force_run).toBe(true);
+    expect(Object.isFrozen(armed)).toBe(true);
+    expect(stalenessLib.resolveOverrides(LOAD_RAVINES, {}).force_run).toBe(false);
+  });
+
+  it('TIER 1 — unforced skips on equal validators; forced LOADS with reason "force_run" (both directions)', () => {
+    const prior = priorOf(FROZEN, 'deadbeef');
+    const validators = { lastModified: FROZEN, etag: null };
+    const unforced = stalenessLib.preAcquisitionDecision({ descriptor: LOAD_RAVINES, validators, prior, forced: false });
+    expect(unforced.skip, 'the normal outcome: the CKAN resource has not moved since 2022-03-14').toBe(true);
+    expect(unforced.reason).toBe('unchanged_last_modified');
+    const forced = stalenessLib.preAcquisitionDecision({ descriptor: LOAD_RAVINES, validators, prior, forced: true });
+    expect(forced.skip, 'forced: the gate must not short-circuit').toBe(false);
+    expect(forced.reason).toBe('force_run');
+    expect(forced.trigger.signal, 'the terminal discriminator still names the gate that was bypassed').toBe('source_validator');
+  });
+
+  it('TIER 2 — unforced skips on an identical content hash; forced walks past it into extraction', async () => {
+    const payload = Buffer.from('not-a-zip-archive');
+    const hash = createHash('md5').update(payload).digest('hex');
+    // Tier 1 must NOT fire, so the HEAD reports a DIFFERENT last-modified than the prior
+    // run: this is the CKAN re-stamp case fence 0b230472 exists for — metadata says
+    // "changed" while the bytes are byte-identical.
+    const prior = priorOf(FROZEN, hash);
+    const RESTAMPED = 'Tue, 01 Apr 2025 00:00:00 GMT';
+    const fetchImpl = async (_url: string, init?: { method?: string }) =>
+      (init && init.method === 'HEAD'
+        ? new Response(null, { headers: { 'last-modified': RESTAMPED } })
+        : new Response(new Uint8Array(payload), { headers: { 'last-modified': RESTAMPED } }));
+    const log = { info: () => {}, warn: () => {}, error: () => {} };
+    const args = (forced: boolean) => ({
+      ctxFetch: fetchImpl,
+      log,
+      tag: '[load_ravines]',
+      slug: 'load_ravines',
+      external: LOAD_RAVINES.inputs.reads.externals[0],
+      descriptor: LOAD_RAVINES,
+      prior,
+      timeoutMs: 30_000,
+      keyProperty: 'OBJECTID',
+      keyColumn: 'source_id',
+      coerceKey: (raw: unknown) => Number(raw),
+      forced,
+      emitSkeleton: {},
+      preAcquisitionGate: (head: { lastModified: string | null; etag: string | null }) =>
+        stalenessLib.preAcquisitionDecision({ descriptor: LOAD_RAVINES, validators: head, prior, forced }),
+    });
+
+    const unforced = await acquireLib.acquireExternal(args(false));
+    expect(unforced.tier1.skip, 'tier 1 must not fire — the metadata changed').toBe(false);
+    expect(unforced.tier2.skip, 'tier 2: identical bytes, nothing parsed').toBe(true);
+    expect(unforced.features).toEqual([]);
+    expect(unforced.acquired.bytes_downloaded, 'tier 2 can only decide AFTER the transfer').toBe(payload.length);
+    expect(unforced.emitBlock, 'the skip still re-emits a block, so it lands a completed row (DS4)').not.toBeNull();
+
+    // Forced: both gates are bypassed, so the payload reaches the unzip — which is
+    // where a non-archive fails. Resolving here would mean a gate had short-circuited.
+    await expect(acquireLib.acquireExternal(args(true))).rejects.toThrow();
+  });
+
+  it('the content-hash gate itself still skips — the force arm is a bypass, never a removal', () => {
+    const decision = acquireLib.contentHashSkip({
+      descriptor: LOAD_RAVINES,
+      contentHash: 'abc123',
+      prior: { content_hash: 'abc123' },
+    });
+    expect(decision.skip).toBe(true);
+    expect(acquireLib.contentHashSkip({ descriptor: LOAD_RAVINES, contentHash: 'abc123', prior: { content_hash: 'zzz' } }).skip).toBe(false);
+  });
+});
+
+describe('staleness.on_prior_run_error — the DECLARED posture for a failed baseline read (LR-D2)', () => {
+  const boom = new Error('connection terminated unexpectedly');
+  const throwingPool = { query: async () => { throw boom; } };
+
+  it('the posture is declared, and ABSENT means fail_step — unstated is allowed, silent is not', () => {
+    expect(stalenessLib.priorRunErrorPosture(LOAD_RAVINES)).toBe('fail_step');
+    expect(stalenessLib.priorRunErrorPosture(ASSERT_SCHEMA), 'a descriptor that does not declare it').toBe(stalenessLib.POSTURE_FAIL);
+  });
+
+  it('fail_step PROPAGATES — no null baseline is ever returned quietly', async () => {
+    await expect(
+      stalenessLib.readPriorEmitWithPosture(throwingPool, 'sources:load_ravines', 'ravine_load', stalenessLib.POSTURE_FAIL),
+    ).rejects.toThrow(/connection terminated/);
+  });
+
+  it('warn_row proceeds with NO baseline and OWES a row — the row is what the swallow never had', async () => {
+    const out = await stalenessLib.readPriorEmitWithPosture(
+      throwingPool, 'sources:load_ravines', 'ravine_load', stalenessLib.POSTURE_WARN_ROW,
+    );
+    expect(out.prior, 'no baseline').toBeNull();
+    expect(out.error, 'and the error is CARRIED, not discarded').toBe(boom);
+    const row = stalenessLib.priorRunErrorRow(out.error);
+    expect(row.metric).toBe(stalenessLib.PRIOR_RUN_ERROR_METRIC);
+    expect(row.status).toBe('WARN');
+    expect(String(row.value)).toMatch(/connection terminated/);
+    // The row is not decoration: it moves the row-derived verdict off PASS.
+    expect(verdictLib.deriveVerdict([{ status: 'PASS' }])).toBe('PASS');
+    expect(verdictLib.deriveVerdict([{ status: 'PASS' }, row])).toBe('WARN');
+  });
+
+  it('a SUCCESSFUL read emits no row at all under either posture (no happy-path widening)', async () => {
+    const pool = { query: async () => ({ rows: [] }) };
+    for (const posture of [stalenessLib.POSTURE_FAIL, stalenessLib.POSTURE_WARN_ROW]) {
+      const out = await stalenessLib.readPriorEmitWithPosture(pool, 'sources:load_ravines', 'ravine_load', posture);
+      expect(out.error, `posture ${posture}`).toBeNull();
+    }
   });
 });

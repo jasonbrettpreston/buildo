@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 299 declarable fields
+# The step contract — 18 categories, 305 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -17,7 +17,7 @@
 | 1 | `identity` | 15 | 2 | 0 |
 | 2 | `inputs` | 23 | 5 | 0 |
 | 3 | `outputs` | 79 | 20 | 2 |
-| 4 | `staleness` | 16 | 5 | 0 |
+| 4 | `staleness` | 22 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 45 | 12 | 1 |
 | 7 | `checks` | 24 | 6 | 0 |
@@ -280,6 +280,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `fingerprint_inputs` | `none` \| list (min 1) of string | † |
 | `logic_version` | `none` \| string | † |
 | `on_fingerprint_change` | `queue` · `run` · `none` | † ! |
+| `on_prior_run_error` | `fail_step` · `warn_row` | ! |
+| `on_prior_run_error_why` | object {text, liveness} | — |
+| `on_prior_run_error_why.text` | string | † |
+| `on_prior_run_error_why.liveness` | `none` \| object {kind, ref} | † |
+| `on_prior_run_error_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `on_prior_run_error_why.liveness.ref` | string | † |
 
 ### guards
 

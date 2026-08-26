@@ -39,6 +39,12 @@ const OVERRIDE_ON = '1';
 /** The category's null form. */
 const NONE = 'none';
 
+/** `staleness.on_prior_run_error` — the two declared postures, and the absent default. */
+const POSTURE_FAIL = 'fail_step';
+const POSTURE_WARN_ROW = 'warn_row';
+/** The audit-row metric name a `warn_row` posture emits. */
+const PRIOR_RUN_ERROR_METRIC = 'prior_run_read_failed';
+
 /**
  * The declared triggers at one lifecycle position, in declaration order.
  * `staleness.trigger: "none"` yields `[]` — an ungated step, stated rather than implied.
@@ -136,6 +142,55 @@ async function readPriorEmit(pool, pipelineName, emitKey) {
 }
 
 /**
+ * The DECLARED posture for a failed prior-run read (`staleness.on_prior_run_error`).
+ * Absent means `fail_step`: unstated is allowed, silent is not.
+ */
+function priorRunErrorPosture(descriptor) {
+  const s = descriptor.staleness;
+  return (s && s !== NONE && s.on_prior_run_error) || POSTURE_FAIL;
+}
+
+/**
+ * `readPriorEmit` under the declared posture (LR-D2, peel 8a).
+ *
+ * The pre-conversion step wrote `.catch(warn => null)` here, which is the whole defect:
+ * a transient read failure downgraded BOTH gate tiers and EVERY drift guard to "first
+ * run" — a full unguarded reload whose ratios all read 0 by definition rather than by
+ * measurement — behind one log line and no audit row. The two legal postures are the
+ * two honest ones:
+ *
+ *   · `fail_step` — the baseline is load-bearing, so refuse. The error propagates and
+ *     becomes the ledger row's `error_message`.
+ *   · `warn_row`  — proceed with no baseline and SAY SO: the caller renders
+ *     `priorRunErrorRow()` into the audit table.
+ *
+ * There is no third arm, and in particular no arm that returns null quietly.
+ *
+ * @returns {Promise<{prior: object|null, error: Error|null}>}
+ */
+async function readPriorEmitWithPosture(pool, pipelineName, emitKey, posture) {
+  try {
+    return { prior: await readPriorEmit(pool, pipelineName, emitKey), error: null };
+  } catch (err) {
+    if (posture !== POSTURE_WARN_ROW) throw err;
+    return { prior: null, error: err instanceof Error ? err : new Error(String(err)) };
+  }
+}
+
+/**
+ * The audit row a `warn_row` posture owes. Rendered by the runner into `extraRows`, so
+ * it exists ONLY on the failure path and never widens the happy-path audit table.
+ */
+function priorRunErrorRow(error) {
+  return {
+    metric: PRIOR_RUN_ERROR_METRIC,
+    value: `prior-run read failed, running with NO baseline: ${error && error.message ? error.message : String(error)}`,
+    threshold: 'the prior completed run is readable',
+    status: 'WARN',
+  };
+}
+
+/**
  * The tier-1 decision. Delegates the comparison itself to the shared
  * `source-version` lib so the four loaders that already adopted it keep ONE set of
  * semantics; what this adds is the DECLARED half — which position, and the force
@@ -182,7 +237,13 @@ function skipCheckDecision({ lastModified, etag = null, contentHash = null, prio
 
 module.exports = {
   OVERRIDE_ON,
+  POSTURE_FAIL,
+  POSTURE_WARN_ROW,
+  PRIOR_RUN_ERROR_METRIC,
   triggersAt,
+  priorRunErrorPosture,
+  readPriorEmitWithPosture,
+  priorRunErrorRow,
   forceRunEnv,
   forceRunRequested,
   acceptAnomalies,
