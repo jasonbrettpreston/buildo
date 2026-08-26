@@ -219,9 +219,10 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   const emitKey = emit ? emit.key : null;
   const skeleton = emit && emit.skeleton && emit.skeleton !== 'none' ? { ...emit.skeleton } : {};
   const external = descriptor.inputs.reads.externals.find((e) => typeof e.url === 'string' && e.url.length > 0);
-  const timeoutMs = acquire.parseDuration(
-    descriptor.execution.network !== 'none' ? descriptor.execution.network.timeout : 'none',
-  );
+  // ONE source for the timeout (peel 8c): `execution.network.timeout_from_config` names
+  // the logic variable, the resolved value wins, and the `timeout` literal is the stated
+  // fallback for an un-seeded database rather than a second source of truth.
+  const timeoutMs = acquire.resolveTimeoutMs(descriptor, config);
   const overrides = staleness.resolveOverrides(descriptor);
   const forced = overrides.force_run === true;
   const plan = write.buildWritePlan(writeSpec, descriptor);

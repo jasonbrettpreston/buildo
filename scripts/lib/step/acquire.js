@@ -70,6 +70,36 @@ function parseDuration(text) {
 }
 
 /**
+ * THE ACQUISITION TIMEOUT, FROM ONE SOURCE (peel 8c).
+ *
+ * `execution.network.timeout` and a `*_download_timeout_ms` logic variable were the same
+ * number written twice: descriptor data (P1.1 — a reader must see the bound without a
+ * database) and an operator knob (P4 — a hard-coded knob is a hidden variable). Two
+ * literals that must agree is an invitation to drift, and the drift is invisible because
+ * only one of them is ever executed.
+ *
+ * The resolution is ruling A-4's, generalized past `checks[].limit_from_config`: the
+ * DESCRIPTOR DERIVES FROM CONFIG. `timeout_from_config` names the variable, the resolved
+ * value wins, and the `timeout` literal is the STATED fallback for a database that has not
+ * been seeded yet — byte-equal to the seed default, which the step's conformance lock
+ * asserts. A step that declares no `timeout_from_config` behaves exactly as before.
+ *
+ * @param {object} descriptor
+ * @param {Record<string, number>|null} config - `ctx.config`
+ * @returns {number|null} milliseconds, or null for `network: "none"` / an unparseable literal
+ */
+function resolveTimeoutMs(descriptor, config) {
+  const net = descriptor.execution && descriptor.execution.network;
+  if (!net || net === 'none') return null;
+  const name = net.timeout_from_config;
+  if (name && name !== 'none' && config) {
+    const value = config[name];
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
+  }
+  return parseDuration(net.timeout);
+}
+
+/**
  * HEAD the external and return its cache validators, or throw on 4xx/5xx.
  * This is the ONLY network call a `pre_acquisition` trigger needs, and it is made
  * even when the gate ends up skipping — the dataset-age row is derived from it, so
@@ -311,6 +341,7 @@ module.exports = {
   DEFAULT_CONTENT_HASH_ALGORITHM,
   TMP_PREFIX,
   parseDuration,
+  resolveTimeoutMs,
   headValidators,
   downloadArchive,
   extractArchive,

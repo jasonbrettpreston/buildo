@@ -965,6 +965,11 @@
               "properties": {
                 "egress": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
                 "timeout": { "$ref": "#/definitions/duration" },
+                "timeout_from_config": {
+                  "description": "Ruling A-4, generalized past `checks[].limit_from_config` (peel 8c). A timeout is simultaneously DESCRIPTOR DATA (P1.1 — a reader must see a bound without a database) and an OPERATOR KNOB (P4 — a hard-coded knob is a hidden variable). Declaring both as literals is two sources of truth that drift silently. So `timeout` carries the SEED DEFAULT and this names the logic variable whose RESOLVED value the runner uses instead: ONE source, descriptor-derives-from-config, with the literal as the stated fallback for a database that has not been seeded. The step's own conformance lock asserts the two AGREE.",
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
                 "retries": { "type": "integer", "minimum": 0 },
                 "redact": {
                   "description": "Spec 122 §12.3 claim #276 — values that MUST be scrubbed before persistence. Nowhere else in the contract can say this.",

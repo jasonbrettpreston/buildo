@@ -2858,6 +2858,6 @@
     "type": "number",
     "min": 1000,
     "max": 600000,
-    "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — AbortController budget for BOTH CKAN calls the acquisition seam makes (the pre-acquisition HEAD and the streamed ZIP GET). 60000 = the pre-externalization literal (ravineDownloadTimeoutMs) and is mirrored into descriptor execution.network.timeout, which must AGREE. Raise it when the CKAN edge is slow rather than letting a timeout read as an acquisition FAIL. CONSUMED by load_ravines (scripts/lib/step/acquire.js headValidators + downloadArchive, via ctx.config)."
+    "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — AbortController budget for BOTH CKAN calls the acquisition seam makes (the pre-acquisition HEAD and the streamed ZIP GET). 60000 = the pre-externalization literal (ravineDownloadTimeoutMs) and is ALSO the descriptor literal execution.network.timeout, which is only the fallback for an un-seeded database: execution.network.timeout_from_config names this variable and scripts/lib/step/acquire.js resolveTimeoutMs prefers the resolved value, so there is ONE source and a conformance lock asserts the two AGREE. Raise it when the CKAN edge is slow rather than letting a timeout read as an acquisition FAIL. CONSUMED by load_ravines (scripts/lib/step/acquire.js headValidators + downloadArchive, via ctx.config)."
   }
 }

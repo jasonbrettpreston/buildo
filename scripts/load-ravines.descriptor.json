@@ -172,6 +172,7 @@
     "network": {
       "egress": ["ckan0.cf.opendata.inter.prod-toronto.ca"],
       "timeout": "60000ms",
+      "timeout_from_config": "load_ravines_download_timeout_ms",
       "retries": 0,
       "redact": "none"
     },
