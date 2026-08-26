@@ -21,6 +21,21 @@
  *   (d) a normalised form + a non-determinism inventory: every key / pattern the normaliser
  *       stripped or masked is listed under `nondeterminism`, declared BEFORE the first diff
  *       (§5.3: "Non-determinism inventory declared *before* the first diff").
+ *   (e) TABLE STATE for a WRITE-class step (Spec 120 §14.2 / pilot-2 D-14): for every table in the
+ *       step's descriptor `outputs.writes[].table` (`<step>.descriptor.json` beside the script) —
+ *       or, when no descriptor exists yet, the `--tables=` list — `{table, row_count, content_hash}`
+ *       with `content_hash = md5(string_agg(row::text, '|' ORDER BY <pk cols, else all cols>))`.
+ *       The ORDER BY is explicit and pk-anchored because `string_agg` without one is
+ *       scan-order-dependent (review_followups claim #173). Both fields are deterministic on
+ *       identical data, so they sit in the normalised form → must-match-exactly under --compare.
+ *       ROW CEILING: a table with more than `--table-row-ceiling` rows (default 100000) is NOT
+ *       hashed; it records `{table, row_count, skipped_reason: 'over_ceiling'}`. Measured cost
+ *       (local, 2026-08-25): `ravines` 854 rows / 7,640 kB → count 8 ms + hash 140 ms; `parcels`
+ *       (486,530 rows) is over the default ceiling by design so the differential never pays a
+ *       full-table text render of the parcel set.
+ *   (f) INVARIANTS: `--invariants=<file.json>` — a JSON array of `{name, sql}`; each statement
+ *       returns exactly one row with one scalar column. Recorded as `{name, value}` (value
+ *       stringified) in the normalised form → must-match-exactly.
  *
  * USAGE
  *   node -r dotenv/config scripts/analysis/capture-step-golden.js \
@@ -28,6 +43,9 @@
  *   --chain=none        run standalone (PIPELINE_CHAIN unset — a DIFFERENT ledger path)
  *   --compare=<a>,<b>   diff two captures' normalised forms; exit code 1 on ANY difference
  *   --args=a,b,c        extra argv for the child (run-chain's `chain_args`), comma-separated
+ *   --tables=t1,t2      tables to snapshot when the step has no descriptor (descriptor wins)
+ *   --table-row-ceiling=N  max rows a table may have and still be content-hashed (default 100000)
+ *   --invariants=<f>    JSON array of `{name, sql}` scalar queries captured after the child exits
  *
  * DB target: `scripts/lib/resolve-db.js` — no silent default, host+database printed before the
  * child runs (tasks/lessons.md 2026-07-30: "print the host+database you connected to").
@@ -72,12 +90,131 @@ const VOLATILE_PATTERNS = [
   { name: 'pid_literal', re: /\bpid[=: ]\s*\d+/gi, mask: 'pid=<PID>' },
 ];
 
-// ── CLI parsing (no parseInt: nothing numeric is parsed from argv) ────────────
+// ── CLI parsing ───────────────────────────────────────────────────────────────
 function parseArgs(argv) {
   const out = {};
   for (const a of argv) {
     const m = /^--([^=]+)(?:=(.*))?$/.exec(a);
     if (m) out[m[1]] = m[2] === undefined ? true : m[2];
+  }
+  return out;
+}
+
+// ── Table state (e) ───────────────────────────────────────────────────────────
+const DEFAULT_TABLE_ROW_CEILING = 100000;
+const TABLE_NAME_RE = /^[a-z_][a-z0-9_]*$/;
+
+/** Strict non-negative integer parse for `--table-row-ceiling` (no parseInt: '12abc' must throw). */
+function parseRowCeiling(raw) {
+  if (raw === undefined) return DEFAULT_TABLE_ROW_CEILING;
+  if (typeof raw !== 'string' || !/^\d+$/.test(raw)) {
+    throw new Error(`--table-row-ceiling must be a non-negative integer, got ${JSON.stringify(raw)}`);
+  }
+  return Number(raw);
+}
+
+/** Descriptor path convention: `<step>.descriptor.json` beside the script (assert-schema precedent). */
+function descriptorPathFor(step) {
+  return step.replace(/\.(js|py)$/, '') + '.descriptor.json';
+}
+
+/**
+ * Which tables to snapshot. Descriptor-driven when the descriptor declares `outputs.writes`;
+ * the `--tables=` arg is the fallback for steps that have no descriptor yet. Pure.
+ * @returns {{tables: string[], source: 'descriptor'|'arg'|'none'}}
+ */
+function resolveTables({ descriptor, tablesArg }) {
+  const writes = descriptor && descriptor.outputs && Array.isArray(descriptor.outputs.writes)
+    ? descriptor.outputs.writes : null;
+  let tables;
+  let source;
+  if (writes && writes.length > 0) {
+    tables = writes.map((w) => w.table);
+    source = 'descriptor';
+  } else if (tablesArg) {
+    tables = String(tablesArg).split(',').map((t) => t.trim()).filter(Boolean);
+    source = 'arg';
+  } else {
+    return { tables: [], source: 'none' };
+  }
+  for (const t of tables) {
+    if (!TABLE_NAME_RE.test(t)) throw new Error(`invalid table name ${JSON.stringify(t)} (expected ${TABLE_NAME_RE})`);
+  }
+  return { tables: [...new Set(tables)].sort(), source };
+}
+
+/**
+ * The ceiling decision, separated from the queries so it is lockable without a DB.
+ * @returns {{hash: boolean, record: object}} — `record` is the partial table-state entry
+ */
+function tableStateDecision({ table, row_count, ceiling }) {
+  if (row_count > ceiling) {
+    return { hash: false, record: { table, row_count, skipped_reason: 'over_ceiling', ceiling } };
+  }
+  return { hash: true, record: { table, row_count } };
+}
+
+/** Build the ORDER BY clause: pk columns when the table has a primary key, else every column. */
+function orderByClause({ pkColumns, allColumns }) {
+  const cols = pkColumns.length > 0 ? pkColumns : allColumns;
+  if (cols.length === 0) throw new Error('cannot build ORDER BY: table has no columns');
+  return cols.map((c) => `"${c.replace(/"/g, '""')}"`).join(', ');
+}
+
+const PK_SQL = `SELECT a.attname
+                  FROM pg_index i
+                  JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+                 WHERE i.indrelid = $1::regclass AND i.indisprimary
+                 ORDER BY array_position(i.indkey, a.attnum)`;
+const COLS_SQL = `SELECT column_name FROM information_schema.columns
+                   WHERE table_schema = 'public' AND table_name = $1 ORDER BY ordinal_position`;
+
+async function captureTableState(pool, table, ceiling) {
+  const q = `"${table}"`;
+  const cnt = await pool.query(`SELECT count(*)::bigint AS n FROM ${q}`);
+  const row_count = Number(cnt.rows[0].n);
+  const decision = tableStateDecision({ table, row_count, ceiling });
+  if (!decision.hash) return decision.record;
+  const [pk, cols] = await Promise.all([pool.query(PK_SQL, [table]), pool.query(COLS_SQL, [table])]);
+  const pkColumns = pk.rows.map((r) => r.attname);
+  const orderBy = orderByClause({ pkColumns, allColumns: cols.rows.map((r) => r.column_name) });
+  const h = await pool.query(`SELECT md5(string_agg(t::text, '|' ORDER BY ${orderBy})) AS h FROM ${q} t`);
+  return {
+    ...decision.record,
+    content_hash: h.rows[0].h, // null when the table is empty (string_agg over 0 rows)
+    order_by: pkColumns.length > 0 ? 'pk' : 'all_columns',
+  };
+}
+
+// ── Invariants (f) ────────────────────────────────────────────────────────────
+/** Validate an invariants document: a non-empty array of unique `{name, sql}`. Pure; returns it. */
+function validateInvariantSpec(doc) {
+  if (!Array.isArray(doc) || doc.length === 0) throw new Error('invariants file must be a non-empty JSON array');
+  const seen = new Set();
+  doc.forEach((inv, i) => {
+    if (!inv || typeof inv.name !== 'string' || !inv.name || typeof inv.sql !== 'string' || !inv.sql.trim()) {
+      throw new Error(`invariants[${i}] must be {name: string, sql: string}`);
+    }
+    if (seen.has(inv.name)) throw new Error(`duplicate invariant name ${JSON.stringify(inv.name)}`);
+    seen.add(inv.name);
+  });
+  return doc;
+}
+
+/** Shape one query result into the recorded `{name, value}` — exactly one row, one column. Pure. */
+function invariantResult(name, rows) {
+  if (rows.length !== 1) throw new Error(`invariant ${name}: expected 1 row, got ${rows.length}`);
+  const keys = Object.keys(rows[0]);
+  if (keys.length !== 1) throw new Error(`invariant ${name}: expected 1 column, got ${keys.length} (${keys.join(',')})`);
+  const v = rows[0][keys[0]];
+  return { name, value: v === null ? null : String(v) };
+}
+
+async function captureInvariants(pool, spec) {
+  const out = [];
+  for (const inv of spec) {
+    const r = await pool.query(inv.sql);
+    out.push(invariantResult(inv.name, r.rows));
   }
   return out;
 }
@@ -153,6 +290,17 @@ function scrub(value, hits, keyPath) {
   return value;
 }
 
+/** Key-sorted deep copy with NO masking — table hashes / invariant values are deterministic by construction. */
+function stableCopy(value) {
+  if (Array.isArray(value)) return value.map(stableCopy);
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const k of Object.keys(value).sort()) out[k] = stableCopy(value[k]);
+    return out;
+  }
+  return value;
+}
+
 /**
  * Normalise a raw capture into its deterministic form + a non-determinism inventory.
  * @param {object} capture - a raw capture object (see buildCapture)
@@ -186,6 +334,9 @@ function normalise(capture) {
     parse_errors: capture.parse_errors,
     pipeline_runs: scrub(capture.pipeline_runs, hits, 'pipeline_runs'),
     stdout_lines: stdoutLines,
+    // (e)/(f) — must-match-exactly: no key is stripped, no pattern masked
+    table_state: stableCopy(capture.table_state ?? []),
+    invariants: stableCopy(capture.invariants ?? []),
   };
   return { normalised, nondeterminism: [...hits].sort() };
 }
@@ -256,7 +407,7 @@ function spawnStep({ scriptPath, args, env }) {
 }
 
 // ── Capture ───────────────────────────────────────────────────────────────────
-async function capture({ step, chain, args }) {
+async function capture({ step, chain, args, tables, tablesSource, ceiling, invariantSpec, invariantsFile }) {
   const pool = createResolvedPool({ label: 'capture-step-golden' });
   // Print the target BEFORE running (lessons.md) — assertDbTarget logs database + migrations on
   // the first checkout below; this line names the host even if that first checkout fails.
@@ -278,6 +429,9 @@ async function capture({ step, chain, args }) {
          FROM pipeline_runs WHERE id > $1 ORDER BY id`,
       [maxIdBefore],
     );
+    const table_state = [];
+    for (const t of tables) table_state.push(await captureTableState(pool, t, ceiling));
+    const invariants = invariantSpec ? await captureInvariants(pool, invariantSpec) : [];
     const markers = parseMarkers(child.stdout);
     const raw = {
       step,
@@ -292,6 +446,11 @@ async function capture({ step, chain, args }) {
       stderr: child.stderr,
       ...markers,
       pipeline_runs: rowsRes.rows,
+      table_state,
+      tables_source: tablesSource,
+      table_row_ceiling: ceiling,
+      invariants,
+      invariants_file: invariantsFile ?? null,
     };
     return raw;
   } finally {
@@ -323,6 +482,12 @@ function buildCapture(raw) {
     // (c) ledger rows
     pipeline_runs: raw.pipeline_runs,
     pipeline_runs_max_id_before: raw.pipeline_runs_max_id_before,
+    // (e) table state + (f) invariants
+    table_state: raw.table_state ?? [],
+    tables_source: raw.tables_source ?? 'none',
+    table_row_ceiling: raw.table_row_ceiling ?? DEFAULT_TABLE_ROW_CEILING,
+    invariants: raw.invariants ?? [],
+    invariants_file: raw.invariants_file ?? null,
     db_target: raw.db_target,
     runtime: raw.runtime,
     args: raw.args,
@@ -369,12 +534,29 @@ async function main() {
   if (!fs.existsSync(step)) throw new Error(`step script not found: ${step}`);
   const args = opts.args ? String(opts.args).split(',').filter(Boolean) : [];
 
-  const raw = await capture({ step, chain: String(opts.chain), args });
+  const descriptorPath = descriptorPathFor(step);
+  const descriptor = fs.existsSync(descriptorPath) ? JSON.parse(fs.readFileSync(descriptorPath, 'utf8')) : null;
+  const { tables, source: tablesSource } = resolveTables({ descriptor, tablesArg: opts.tables });
+  const ceiling = parseRowCeiling(opts['table-row-ceiling']);
+  const invariantsFile = opts.invariants ? String(opts.invariants) : null;
+  const invariantSpec = invariantsFile
+    ? validateInvariantSpec(JSON.parse(fs.readFileSync(path.resolve(invariantsFile), 'utf8')))
+    : null;
+  console.log(`[capture-step-golden] tables=[${tables.join(',')}] (source ${tablesSource}; ceiling ${ceiling}) ` +
+    `invariants=${invariantSpec ? `${invariantSpec.length} from ${invariantsFile}` : '(none)'}`);
+
+  const raw = await capture({ step, chain: String(opts.chain), args, tables, tablesSource, ceiling, invariantSpec, invariantsFile });
   const doc = buildCapture(raw);
 
+  const tableLine = doc.table_state
+    .map((t) => `${t.table}:${t.row_count}/${t.skipped_reason ?? String(t.content_hash).slice(0, 8)}`)
+    .join(' ');
+  const invLine = doc.invariants.map((i) => `${i.name}=${i.value}`).join(' ');
   const line = `[capture-step-golden] ${step} chain=${doc.chain} exit=${doc.exit_code} ` +
     `verdict=${doc.verdict} ledger=[${doc.ledger_status.join(',')}] ` +
-    `summaries=${doc.summary_count} meta=${doc.meta.length} nondeterminism=${doc.nondeterminism.length}`;
+    `summaries=${doc.summary_count} meta=${doc.meta.length} nondeterminism=${doc.nondeterminism.length}` +
+    `\n[capture-step-golden] table_state: ${tableLine || '(none)'}` +
+    `\n[capture-step-golden] invariants: ${invLine || '(none)'}`;
   if (opts.out) {
     const outPath = path.resolve(String(opts.out));
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
@@ -406,4 +588,12 @@ module.exports = {
   diffNormalised,
   formatDiff,
   buildCapture,
+  DEFAULT_TABLE_ROW_CEILING,
+  parseRowCeiling,
+  descriptorPathFor,
+  resolveTables,
+  tableStateDecision,
+  orderByClause,
+  validateInvariantSpec,
+  invariantResult,
 };

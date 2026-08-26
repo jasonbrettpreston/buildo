@@ -1,0 +1,9 @@
+[
+  { "name": "ravines_count", "sql": "SELECT count(*)::int FROM ravines" },
+  { "name": "ravines_distinct_source_dataset_version", "sql": "SELECT count(DISTINCT source_dataset_version)::int FROM ravines" },
+  { "name": "ravines_area_km2", "sql": "SELECT round((sum(ST_Area(geom::geography)) / 1e6)::numeric, 3) FROM ravines" },
+  { "name": "parcels_sign_law_violations", "sql": "SELECT count(*)::int FROM parcels WHERE is_in_ravine_protection_area IS DISTINCT FROM COALESCE(ravine_distance_m <= 0, false)" },
+  { "name": "permits_sign_law_violations", "sql": "SELECT count(*)::int FROM permits WHERE is_in_ravine_protection_area IS DISTINCT FROM COALESCE(ravine_distance_m <= 0, false)" },
+  { "name": "coa_sign_law_violations", "sql": "SELECT count(*)::int FROM coa_applications WHERE is_in_ravine_protection_area IS DISTINCT FROM COALESCE(ravine_distance_m <= 0, false)" },
+  { "name": "parcels_lineage_mismatch", "sql": "SELECT count(*)::int FROM parcels p WHERE p.ravine_dataset_version_when_enriched IS DISTINCT FROM (SELECT max(source_dataset_version) FROM ravines)" }
+]
