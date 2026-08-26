@@ -1756,7 +1756,9 @@ describe('G4d fence locks', () => {
   });
 
   it('the two fences are exactly the two Severity:-footer commits on the step file', () => {
-    const footers = git(['log', '--format=%H%x1f%B%x1e', '--', STEP_REL]).split('\x1e').filter((c) => /^Severity:/m.test(c));
+    // Census scoped to PRE-conversion history (Spec 123 §6 G1): commits after the boundary freeze (commit 6, 33786d1a) are the conversion itself — commit 7's own Severity footer is not a fence.
+    const ASSESSMENT_BOUNDARY = '33786d1a';
+    const footers = git(['log', '--format=%H%x1f%B%x1e', ASSESSMENT_BOUNDARY, '--', STEP_REL]).split('\x1e').filter((c) => /^Severity:/m.test(c));
     const fenced = footers.map((c) => (c.split('\x1f')[0] ?? '').trim().slice(0, 8)).filter(Boolean);
     for (const c of FENCE_COMMITS) expect(fenced, `fence commit ${c} has no Severity: footer on ${STEP_REL}`).toContain(c);
     expect(fenced.length, 'fence density (Spec 123 §6 G1)').toBe(FENCE_COMMITS.length);
