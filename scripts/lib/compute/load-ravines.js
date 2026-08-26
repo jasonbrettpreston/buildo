@@ -51,6 +51,21 @@ const DAYS_PER_JULIAN_YEAR = 365.25;
 const MS_PER_DAY = 86400000;
 /** Display precision of the ratio values in the audit rows; never compared against anything. */
 const ROUND_SCALE = 1000;
+/**
+ * LR-D1 — how many dropped source ids ONE audit row carries in its detail.
+ *
+ * Pre-conversion the ids were pushed as one WARN row EACH (`:441`), so the audit table's
+ * row count was bounded only by the feature count: 854 dropped polygons meant 854 rows in
+ * `pipeline_runs.records_meta`. Collapsing them into one row's detail fixes the ROW count
+ * but not the row's SIZE, so the list is capped and the FULL count travels beside it —
+ * `dropped_count` is always exact, `dropped_source_ids` may be a prefix, and
+ * `dropped_ids_truncated` says which. A reader is never misled about how much was lost.
+ *
+ * Structural, not a P4 tunable (plan S5): it is a display bound, compared against nothing.
+ * The bound that decides pass/fail is `load_ravines_invalid_geometry_fail_pct`, and it is
+ * computed from `dropped_count`, never from the truncated list.
+ */
+const MAX_DETAIL_KEYS = 50;
 
 // ===========================================================================
 // Pure helpers — ported VERBATIM from the pre-conversion step's named exports.
@@ -193,13 +208,18 @@ function ravine_geometry_collection_extracted(ctx) {
 
 function ravine_geometry_skipped_pct(ctx) {
   const pct = ratioOfFeatures(ctx, ctx.acquired.invalid_geometry_skipped);
-  // LR-D1 — the dropped keys travel in ONE row's detail. Pre-conversion they were
-  // pushed as one WARN row EACH, so the audit table's row count was bounded only by
-  // the feature count.
+  // LR-D1 — the dropped keys travel in ONE row's detail, capped, with the FULL count
+  // beside them. Pre-conversion they were pushed as one WARN row EACH, so the audit
+  // table's row count was bounded only by the feature count.
   const dropped = ctx.acquired.skipped_keys || [];
   ctx.report('ravine_geometry_skipped_pct', {
     value: pct,
-    detail: dropped.length === 0 ? round3(pct) : { pct: round3(pct), dropped_source_ids: dropped },
+    detail: dropped.length === 0 ? round3(pct) : {
+      pct: round3(pct),
+      dropped_count: dropped.length,
+      dropped_source_ids: dropped.slice(0, MAX_DETAIL_KEYS),
+      dropped_ids_truncated: dropped.length > MAX_DETAIL_KEYS,
+    },
   });
 }
 
@@ -358,3 +378,5 @@ module.exports.coerceSourceId = coerceSourceId;
 // The library's generic acquisition seam asks the step how to coerce ITS key.
 module.exports.coerceKey = coerceSourceId;
 module.exports.buildLoadMeta = buildLoadMeta;
+// LR-D1's display bound, exported so its lock reads the real number rather than 50.
+module.exports.MAX_DETAIL_KEYS = MAX_DETAIL_KEYS;

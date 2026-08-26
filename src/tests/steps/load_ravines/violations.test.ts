@@ -1762,3 +1762,96 @@ describe('G4d fence locks', () => {
     expect(fenced.length, 'fence density (Spec 123 §6 G1)').toBe(FENCE_COMMITS.length);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Peel 8b — the audit-row shape (LR-D1). One row, capped detail, exact count.
+// ---------------------------------------------------------------------------
+
+describe('LR-D1 — the dropped source ids are ONE row\'s detail, capped, count exact (peel 8b)', () => {
+  interface SkipObservation {
+    value: number;
+    detail: number | { pct: number; dropped_count: number; dropped_source_ids: number[]; dropped_ids_truncated: boolean };
+  }
+
+  /** Drive the ONE check under test through the real dispatch table, counting report() calls. */
+  function reportsFor(droppedCount: number): Array<[string, SkipObservation]> {
+    const mod = loadComputeModule();
+    const check = (mod.checks ?? {})['ravine_geometry_skipped_pct'];
+    expect(typeof check, 'the descriptor declares ravine_geometry_skipped_pct — the dispatch must carry it').toBe('function');
+    const calls: Array<[string, SkipObservation]> = [];
+    check({
+      acquired: {
+        feature_count: LIVE_FEATURE_COUNT,
+        invalid_geometry_skipped: droppedCount,
+        skipped_keys: Array.from({ length: droppedCount }, (_, i) => 1_000_000 + i),
+      },
+      report: (id: string, o: SkipObservation) => { calls.push([id, o]); },
+    } as never);
+    return calls;
+  }
+
+  const CAP = (loadComputeModule().MAX_DETAIL_KEYS as number | undefined) ?? -1;
+
+  it('the cap is declared by the compute and by the descriptor (a magic 50 in one place only is not a bound)', () => {
+    expect(CAP, `${COMPUTE_REL} must export MAX_DETAIL_KEYS`).toBeGreaterThan(0);
+    const d = loadDescriptor();
+    const check = d.checks.find((c) => c.id === 'ravine_geometry_skipped_pct');
+    expect(check, 'the check must be declared').toBeDefined();
+    const why = JSON.stringify(check?.why ?? {});
+    expect(why.includes(String(CAP)), `the check's why must state the cap (${CAP})`).toBe(true);
+    const limitations = JSON.stringify(d.limitations ?? []);
+    expect(limitations.includes('dropped_source_ids'), 'a limitation must record that the id list can be a prefix').toBe(true);
+  });
+
+  it('PRESENT — 3× the cap of dropped ids still produces exactly ONE report, with the exact count', () => {
+    const n = CAP * 3;
+    const calls = reportsFor(n);
+    expect(calls.length, `${n} dropped features must not produce ${n} rows — that is the pre-conversion shape`).toBe(1);
+    expect(calls[0]![0]).toBe('ravine_geometry_skipped_pct');
+    const detail = calls[0]![1].detail as { dropped_count: number; dropped_source_ids: number[]; dropped_ids_truncated: boolean };
+    expect(detail.dropped_count, 'the COUNT is never truncated').toBe(n);
+    expect(detail.dropped_source_ids.length, 'the LIST is capped').toBe(CAP);
+    expect(detail.dropped_ids_truncated, 'and the truncation is declared, not inferred from a length').toBe(true);
+  });
+
+  it('PRESENT — under the cap the list is complete and says so', () => {
+    const n = CAP - 1;
+    const detail = reportsFor(n)[0]![1].detail as { dropped_count: number; dropped_source_ids: number[]; dropped_ids_truncated: boolean };
+    expect(detail.dropped_count).toBe(n);
+    expect(detail.dropped_source_ids.length).toBe(n);
+    expect(detail.dropped_ids_truncated).toBe(false);
+  });
+
+  it('PRESENT — nothing dropped means no id list at all (the row is a bare ratio)', () => {
+    const detail = reportsFor(0)[0]![1].detail;
+    expect(typeof detail, 'a clean load must not carry an empty ids envelope').toBe('number');
+  });
+
+  it('REVERSION IS DETECTABLE — a per-id metric cannot even be reported (the declared-check guard)', async () => {
+    const d = loadDescriptor();
+    const ids = new Set(d.checks.map((c) => c.id));
+    // The pre-conversion metric name. It is not a declared check and must never become
+    // one: `ctx.report` refuses an undeclared id, so the unbounded shape is structurally
+    // unreachable rather than merely absent from today's code.
+    expect(ids.has('ravine_geometry_skipped_source_id'), 'the unbounded per-feature metric must not be declared').toBe(false);
+    const compute = loadCompute();
+    const reported: string[] = [];
+    const guard = (id: string) => {
+      if (!ids.has(id)) throw new Error(`compute reported undeclared check "${id}"`);
+      reported.push(id);
+    };
+    // A run that drops a feature reports the RATIO check and nothing keyed by an id.
+    await compute({
+      checks: ['ravine_geometry_skipped_pct'],
+      descriptor: d,
+      acquired: { feature_count: 1, invalid_geometry_skipped: 1, skipped_keys: [7] },
+      written: null,
+      log: { info: () => {}, warn: () => {}, error: () => {} },
+      report: guard,
+    } as never);
+    expect(reported, 'one dropped feature, one row').toEqual(['ravine_geometry_skipped_pct']);
+    // ...and the guard itself bites when handed the retired per-feature id, so the
+    // pre-conversion shape cannot come back through a compute that "just reports more".
+    expect(() => guard('ravine_geometry_skipped_source_id')).toThrow(/undeclared check/);
+  });
+});

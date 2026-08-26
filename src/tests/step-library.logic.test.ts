@@ -930,3 +930,70 @@ describe('staleness.on_prior_run_error — the DECLARED posture for a failed bas
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// 9. The VERDICT/AUDIT peel (8b) — lock contention on a WRITE-CLASS step (LR-D6)
+// ---------------------------------------------------------------------------
+
+describe('LR-D6 — lock contention emits a row-derived SKIP, on a write-class step too', () => {
+  /** The six declared tunables at their seed defaults, so the hoisted resolve succeeds. */
+  function seededLogicVars(): Record<string, number> {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the committed seed registry
+    const seed = require(join(process.cwd(), 'scripts/seeds/logic_variables.json')) as Record<string, { default: number }>;
+    const out: Record<string, number> = {};
+    for (const v of LOAD_RAVINES.config.logic_variables as Array<{ name: string }>) out[v.name] = seed[v.name]!.default;
+    return out;
+  }
+
+  it('the terminal is DECLARED — a contended run has a named exit path, not an unlabelled one', () => {
+    const t = (LOAD_RAVINES.terminals as Array<{ id: string; kind: string; status: string }>)
+      .find((x) => x.kind === 'skip_lock_contention');
+    expect(t, 'no skip_lock_contention terminal is declared').toBeDefined();
+    expect(t?.status).toBe('self_skipped');
+  });
+
+  it('contention: self_skipped, audit_table present with a ROW-DERIVED verdict, and NOTHING is acquired', async () => {
+    const pool = fakePool({ lockAcquired: false, logicVars: seededLogicVars() });
+    const cap = captureEmissions();
+    let computeRan = false;
+    let fetched = false;
+    try {
+      const out = await pipeline
+        .step(LOAD_RAVINES, async () => { computeRan = true; })
+        .run({ pool, chainId: 'sources', fetch: () => { fetched = true; throw new Error('a contended run must not reach the network'); } });
+      expect(out.status).toBe('self_skipped');
+      const summary = cap.summary();
+      // Pre-conversion this path was a bare `return;`: the SDK's built-in SKIP carried no
+      // audit_table at all, so contention read as verdict UNKNOWN downstream.
+      expect(summary.records_meta.skipped).toBe(true);
+      expect(summary.records_meta.audit_table, 'the SKIP summary must carry an audit_table').toBeDefined();
+      expect(summary.records_meta.audit_table.verdict)
+        .toBe(verdictLib.deriveVerdict(summary.records_meta.audit_table.rows));
+      expect(summary.records_meta.audit_table.rows.some((r: Row) => r.metric === 'reason')).toBe(true);
+    } finally {
+      cap.restore();
+    }
+    expect(computeRan, 'the compute must not run').toBe(false);
+    expect(fetched, 'no HEAD, no download — the acquisition seam is INSIDE the lock').toBe(false);
+    // And no write reached the table: a contended loader that upserted would be the
+    // whole reason lock 59 exists.
+    expect(pool.sql.some((s: string) => /INSERT INTO ravines|DELETE FROM ravines/i.test(s))).toBe(false);
+  });
+
+  it('the counters read "not counted", not "counted zero" — a contended run measured nothing', async () => {
+    const pool = fakePool({ lockAcquired: false, logicVars: seededLogicVars() });
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(LOAD_RAVINES, async () => {}).run({ pool, chainId: 'sources' });
+      const summary = cap.summary();
+      expect(summary.records_new, 'nothing was inserted, and nothing MEASURED an insert').toBeNull();
+      expect(summary.records_updated).toBeNull();
+      // `records_total` is emitted null here too, but `pipeline.emitSummary` normalises
+      // that one slot to 0 on the way out (plan C-11) — asserted as the emitted value so
+      // the normalisation is recorded rather than read as a library disagreement.
+      expect(summary.records_total, 'emitSummary normalises records_total null -> 0').toBe(0);
+    } finally {
+      cap.restore();
+    }
+  });
+});
