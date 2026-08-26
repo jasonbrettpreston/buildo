@@ -203,3 +203,145 @@ describe('buildCapture + parseArgs', () => {
     expect(parseArgs(['--step=a.js', '--chain=none', '--compare=x,y', '--v'])).toEqual({ step: 'a.js', chain: 'none', compare: 'x,y', v: true });
   });
 });
+
+// ── (e) table state + (f) invariants — pilot-2 D-14 harness growth (no DB) ─────────────────
+const {
+  resolveTables, tableStateDecision, parseRowCeiling, orderByClause, descriptorPathFor,
+  validateInvariantSpec, invariantResult, DEFAULT_TABLE_ROW_CEILING,
+} = harness;
+
+const RAVINES_STATE = { table: 'ravines', row_count: 854, content_hash: 'd136a7e999ca4f76d8e1b03e7c14beae', order_by: 'pk' };
+const INVARIANTS = [
+  { name: 'ravines_count', value: '854' },
+  { name: 'ravines_area_km2', value: '110.995' },
+];
+
+describe('resolveTables — descriptor-driven, --tables fallback', () => {
+  it('reads outputs.writes[].table from the descriptor and ignores --tables when it does', () => {
+    const descriptor = { outputs: { writes: [{ table: 'parcels', key: 'id', columns: [] }, { table: 'ravines' }] } };
+    expect(resolveTables({ descriptor, tablesArg: 'ignored' })).toEqual({ tables: ['parcels', 'ravines'], source: 'descriptor' });
+  });
+  it('falls back to --tables (deduped, sorted) when there is no descriptor or outputs is "none"', () => {
+    expect(resolveTables({ descriptor: null, tablesArg: 'ravines, ravines,parcels' })).toEqual({ tables: ['parcels', 'ravines'], source: 'arg' });
+    expect(resolveTables({ descriptor: { outputs: 'none' }, tablesArg: 'ravines' })).toEqual({ tables: ['ravines'], source: 'arg' });
+  });
+  it('yields no tables (READ-class step) when neither is given, and rejects unsafe identifiers', () => {
+    expect(resolveTables({ descriptor: null, tablesArg: undefined })).toEqual({ tables: [], source: 'none' });
+    expect(() => resolveTables({ descriptor: null, tablesArg: 'ravines; drop table x' })).toThrow(/invalid table name/);
+    expect(() => resolveTables({ descriptor: null, tablesArg: 'Ravines' })).toThrow(/invalid table name/);
+  });
+  it('derives the descriptor path beside the step script', () => {
+    expect(descriptorPathFor('scripts/load-ravines.js')).toBe('scripts/load-ravines.descriptor.json');
+    expect(descriptorPathFor('scripts/x/y.py')).toBe('scripts/x/y.descriptor.json');
+  });
+});
+
+describe('row ceiling — parcels (486,530) must NOT be hashed by default', () => {
+  it('defaults to 100000 and parses only bare non-negative integers', () => {
+    expect(DEFAULT_TABLE_ROW_CEILING).toBe(100000);
+    expect(parseRowCeiling(undefined)).toBe(100000);
+    expect(parseRowCeiling('854')).toBe(854);
+    expect(() => parseRowCeiling('12abc')).toThrow(/non-negative integer/);
+    expect(() => parseRowCeiling('-1')).toThrow(/non-negative integer/);
+    expect(() => parseRowCeiling(true)).toThrow(/non-negative integer/); // bare `--table-row-ceiling`
+  });
+  it('skips the hash with skipped_reason=over_ceiling above the ceiling, hashes at/below it', () => {
+    expect(tableStateDecision({ table: 'parcels', row_count: 486530, ceiling: 100000 })).toEqual({
+      hash: false,
+      record: { table: 'parcels', row_count: 486530, skipped_reason: 'over_ceiling', ceiling: 100000 },
+    });
+    expect(tableStateDecision({ table: 'ravines', row_count: 854, ceiling: 100000 })).toEqual({ hash: true, record: { table: 'ravines', row_count: 854 } });
+    expect(tableStateDecision({ table: 't', row_count: 100000, ceiling: 100000 }).hash).toBe(true);
+    expect(tableStateDecision({ table: 't', row_count: 100001, ceiling: 100000 }).hash).toBe(false);
+  });
+  it('ORDER BY is explicit: pk columns first choice, all columns otherwise, identifiers quoted (claim #173)', () => {
+    expect(orderByClause({ pkColumns: ['id'], allColumns: ['id', 'geom'] })).toBe('"id"');
+    expect(orderByClause({ pkColumns: ['a', 'b'], allColumns: ['a', 'b', 'c'] })).toBe('"a", "b"');
+    expect(orderByClause({ pkColumns: [], allColumns: ['x', 'y'] })).toBe('"x", "y"');
+    expect(() => orderByClause({ pkColumns: [], allColumns: [] })).toThrow(/no columns/);
+  });
+});
+
+describe('invariants file — validation + one-scalar result shaping', () => {
+  it('accepts unique {name, sql} entries and rejects malformed / duplicate / empty documents', () => {
+    const ok = [{ name: 'a', sql: 'SELECT 1' }, { name: 'b', sql: 'SELECT 2' }];
+    expect(validateInvariantSpec(ok)).toBe(ok);
+    expect(() => validateInvariantSpec([])).toThrow(/non-empty/);
+    expect(() => validateInvariantSpec({})).toThrow(/non-empty/);
+    expect(() => validateInvariantSpec([{ name: 'a' }])).toThrow(/invariants\[0\]/);
+    expect(() => validateInvariantSpec([{ name: 'a', sql: 'SELECT 1' }, { name: 'a', sql: 'SELECT 2' }])).toThrow(/duplicate/);
+  });
+  it('stringifies the single scalar (pg numerics arrive as strings anyway) and keeps null', () => {
+    expect(invariantResult('n', [{ count: 854 }])).toEqual({ name: 'n', value: '854' });
+    expect(invariantResult('km2', [{ round: '110.995' }])).toEqual({ name: 'km2', value: '110.995' });
+    expect(invariantResult('z', [{ max: null }])).toEqual({ name: 'z', value: null });
+    expect(() => invariantResult('n', [])).toThrow(/expected 1 row/);
+    expect(() => invariantResult('n', [{ a: 1, b: 2 }])).toThrow(/expected 1 column/);
+  });
+  it('the committed load_ravines invariants file validates and names the Fold A-2 set', () => {
+    const doc = require('../../docs/reports/golden/load_ravines/invariants.json');
+    expect(validateInvariantSpec(doc).map((i: { name: string }) => i.name)).toEqual([
+      'ravines_count', 'ravines_distinct_source_dataset_version', 'ravines_area_km2',
+      'parcels_sign_law_violations', 'permits_sign_law_violations', 'coa_sign_law_violations',
+      'parcels_lineage_mismatch',
+    ]);
+    for (const inv of doc) expect(inv.sql).toMatch(/^SELECT /);
+  });
+});
+
+describe('normalise + --compare — table state and invariants are must-match-exactly', () => {
+  it('carries row_count, content_hash and invariant values into the normalised form UNMASKED and un-stripped', () => {
+    // a hash ending in "5ms" would be mangled by the duration mask if it went through scrub()
+    const state = [{ ...RAVINES_STATE, content_hash: '0123456789abcdef0123456789abc5ms' }];
+    const { normalised, nondeterminism } = normalise(rawCapture({ table_state: state, invariants: INVARIANTS }));
+    expect(normalised.table_state).toEqual([{ content_hash: '0123456789abcdef0123456789abc5ms', order_by: 'pk', row_count: 854, table: 'ravines' }]);
+    expect(normalised.invariants).toEqual([{ name: 'ravines_count', value: '854' }, { name: 'ravines_area_km2', value: '110.995' }]);
+    expect(nondeterminism.some((h: string) => h.includes('table_state') || h.includes('invariants'))).toBe(false);
+  });
+  it('an over-ceiling record survives normalisation with its skipped_reason and no hash', () => {
+    const skipped = { table: 'parcels', row_count: 486530, skipped_reason: 'over_ceiling', ceiling: 100000 };
+    const { normalised } = normalise(rawCapture({ table_state: [skipped] }));
+    expect(normalised.table_state).toEqual([{ ceiling: 100000, row_count: 486530, skipped_reason: 'over_ceiling', table: 'parcels' }]);
+    expect('content_hash' in normalised.table_state[0]).toBe(false);
+  });
+  it('defaults to empty arrays for a READ-class capture (older captures without the fields still normalise)', () => {
+    const { normalised } = normalise(rawCapture());
+    expect(normalised.table_state).toEqual([]);
+    expect(normalised.invariants).toEqual([]);
+  });
+  it('--compare: identical table state + invariants across two runs ⇒ zero diffs', () => {
+    const a = normalise(rawCapture({ table_state: [RAVINES_STATE], invariants: INVARIANTS }, { runId: 1 })).normalised;
+    const b = normalise(rawCapture({ table_state: [RAVINES_STATE], invariants: INVARIANTS }, { runId: 2, durationMs: 9 })).normalised;
+    expect(diffNormalised(a, b)).toEqual([]);
+  });
+  it('--compare: a changed hash / row count / invariant value is a pathed diff', () => {
+    const a = normalise(rawCapture({ table_state: [RAVINES_STATE], invariants: INVARIANTS })).normalised;
+    const b = normalise(rawCapture({
+      table_state: [{ ...RAVINES_STATE, row_count: 853, content_hash: 'ffffffffffffffffffffffffffffffff' }],
+      invariants: [INVARIANTS[0], { name: 'ravines_area_km2', value: '110.994' }],
+    })).normalised;
+    expect(diffNormalised(a, b).map((d: { path: string }) => d.path).sort()).toEqual([
+      'invariants[1].value',
+      'table_state[0].content_hash',
+      'table_state[0].row_count',
+    ]);
+  });
+  it('--compare: a table falling over the ceiling between runs is a diff, not a silent pass', () => {
+    const a = normalise(rawCapture({ table_state: [RAVINES_STATE] })).normalised;
+    const b = normalise(rawCapture({ table_state: [{ table: 'ravines', row_count: 854, skipped_reason: 'over_ceiling', ceiling: 10 }] })).normalised;
+    expect(diffNormalised(a, b).map((d: { path: string }) => d.path).sort()).toEqual([
+      'table_state[0].ceiling', 'table_state[0].content_hash', 'table_state[0].order_by', 'table_state[0].skipped_reason',
+    ]);
+  });
+  it('buildCapture surfaces table_state / invariants at the top level with their provenance', () => {
+    const doc = buildCapture(rawCapture({
+      table_state: [RAVINES_STATE], tables_source: 'arg', table_row_ceiling: 100000,
+      invariants: INVARIANTS, invariants_file: 'docs/reports/golden/load_ravines/invariants.json',
+    }));
+    expect(doc.table_state).toEqual([RAVINES_STATE]);
+    expect(doc.tables_source).toBe('arg');
+    expect(doc.table_row_ceiling).toBe(100000);
+    expect(doc.invariants_file).toBe('docs/reports/golden/load_ravines/invariants.json');
+    expect(doc.normalised.table_state[0].content_hash).toBe(RAVINES_STATE.content_hash);
+  });
+});
