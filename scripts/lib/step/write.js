@@ -55,11 +55,18 @@ const DEFAULT_KEY_SQL_TYPE = 'BIGINT';
  * API constant, not a knob). The four statuses are the classifier's whole domain and
  * the reason this SQL is not `scripts/lib/geometry-validator.js`: that helper cannot
  * emit the collection-extracted counter a frozen producer contract may freeze.
+ *
+ * ⚠️ IT IS A BUILDER, NOT A CONSTANT, and the parameter is the one thing in it that
+ * is not an API constant: `outputs.writes[].key_sql_type`. The literal `BIGINT[]`
+ * that used to sit here disagreed with the departure DELETE's cast twelve lines
+ * below, which reads the DECLARED type — so a step declaring `TEXT` keys would have
+ * had its keys cast to BIGINT on the way in and TEXT on the way out. Nothing in the
+ * descriptor said which one won; today one source says both.
  */
-const GEOMETRY_VALIDATION_SQL = `
+const geometryValidationSql = (keyType) => `
 WITH input AS (
   SELECT s.source_key, ST_GeomFromGeoJSON(g.geojson) AS geom
-    FROM unnest($1::BIGINT[]) WITH ORDINALITY AS s(source_key, ord)
+    FROM unnest($1::${keyType}[]) WITH ORDINALITY AS s(source_key, ord)
     JOIN unnest($2::TEXT[])   WITH ORDINALITY AS g(geojson, ord)   ON s.ord = g.ord
 ),
 validated AS (
@@ -88,6 +95,9 @@ SELECT source_key,
        ST_AsBinary(geom_final) AS geom_wkb,
        is_valid_original
   FROM validated;`;
+
+/** The default-keyed instance, for a reader (and `load-ravines.notes.json`) that wants the shape. */
+const GEOMETRY_VALIDATION_SQL = geometryValidationSql(DEFAULT_KEY_SQL_TYPE);
 
 /** RLS preflight subject — one row per declared `rls_bypass_or_policy` requirement. */
 const RLS_PROBE_SQL = `SELECT c.relrowsecurity AS rls_enabled,
@@ -122,6 +132,19 @@ function keyColumns(writeSpec) {
 function buildWritePlan(writeSpec, descriptor) {
   const table = writeSpec.table;
   const keys = keyColumns(writeSpec);
+  // ⚠️ REFUSE WHAT THIS GENERATOR CANNOT GENERATE, at plan time and by name.
+  // Every statement below indexes `keys[0]` and `geometry_columns[0]`: the departure
+  // DELETE casts ONE key array, `validateGeometries` binds ONE key column and lands the
+  // WKB under ONE geometry column. A composite key or a second geometry column does not
+  // produce a wrong statement — it produces a statement that silently ignores the extra
+  // column, which is a scoped DELETE that retracts by half a key. The support is real
+  // work (an array-of-records unnest, a per-column validation pass); until it exists the
+  // honest answer is a throw naming the columns, not a plan that looks complete.
+  if (keys.length > 1) {
+    throw new Error(`[write_discipline] ${table}: composite keys are not supported by the generated class-B write `
+      + `(declared key: ${keys.join(', ')}). The departure DELETE casts a single key array and the geometry `
+      + 'validation joins on a single key column; declare a single-column key or extend write.js first.');
+  }
   const srid = descriptor.guards && descriptor.guards.srid !== 'none' ? descriptor.guards.srid : null;
   const stepColumns = writeSpec.columns.filter((c) => (c.written || WRITTEN_BY_STEP) === WRITTEN_BY_STEP);
   const defaulted = writeSpec.columns.filter((c) => (c.written || WRITTEN_BY_STEP) !== WRITTEN_BY_STEP);
@@ -129,6 +152,12 @@ function buildWritePlan(writeSpec, descriptor) {
   const guardColumns = resolveGuardColumns(writeSpec, stepColumnNames);
   const updateColumns = stepColumnNames.filter((c) => !keys.includes(c));
   const keyType = writeSpec.key_sql_type || DEFAULT_KEY_SQL_TYPE;
+  const geometryColumns = stepColumns.filter((c) => c.bind === 'wkb_geometry').map((c) => c.name);
+  if (geometryColumns.length > 1) {
+    throw new Error(`[write_discipline] ${table}: ${geometryColumns.length} columns declare bind "wkb_geometry" `
+      + `(${geometryColumns.join(', ')}), and the validation phase writes its output under exactly one. `
+      + 'A second geometry column would be bound NULL on every row; declare one, or extend validateGeometries first.');
+  }
 
   const bindFor = (col, ordinal) => (col.bind === 'wkb_geometry'
     ? `ST_GeomFromWKB($${ordinal}, ${srid})`
@@ -157,8 +186,11 @@ function buildWritePlan(writeSpec, descriptor) {
     // names, so the row objects it produces are already keyed the way `bindRow`
     // reads them — the alternative is a hand-maintained rename between two phases,
     // which is a NOT NULL violation waiting for the first forced reload.
-    geometry_columns: stepColumns.filter((c) => c.bind === 'wkb_geometry').map((c) => c.name),
-    validation_sql: GEOMETRY_VALIDATION_SQL,
+    geometry_columns: geometryColumns,
+    // Templated from the DECLARED key type, so the cast that reads the key array agrees
+    // with the cast in `delete_sql` below instead of hard-coding a second opinion.
+    validation_sql: geometryValidationSql(keyType),
+    key_sql_type: keyType,
     // The single-row form: what the batched statement looks like at rowCount 1.
     upsert_sql: head + valuesGroup(1) + tail,
     delete_sql: `DELETE FROM ${table} WHERE ${keys[0]} <> ALL($1::${keyType}[]);`,
@@ -306,6 +338,7 @@ module.exports = {
   generateWriteSql,
   WRITTEN_BY_STEP,
   DEFAULT_KEY_SQL_TYPE,
+  geometryValidationSql,
   GEOMETRY_VALIDATION_SQL,
   RLS_PROBE_SQL,
   keyColumns,

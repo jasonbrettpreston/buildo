@@ -1232,3 +1232,246 @@ describe('LR-D9 — when:"pre_write" aborts BEFORE any write (Fold C, operator r
     })).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Fold D — the OUTPUT panel's A-class findings, each locked in the direction that
+// made it a finding: a generator that must not lie about what it supports, a
+// timeout that must not mean zero, and a terminal question asked about the run
+// that actually happened.
+// ---------------------------------------------------------------------------
+
+describe('Fold D — write.js refuses what it cannot generate, and types its casts from the descriptor', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+
+  const spec = () => clone(LOAD_RAVINES.outputs.writes[0]) as {
+    table: string; key: string | string[]; key_sql_type?: string;
+    columns: Array<{ name: string; bind?: string; written?: string }>;
+  };
+
+  it('key_sql_type is TEMPLATED into validation_sql — the same cast the departure DELETE uses', () => {
+    const bigint = writeLib.buildWritePlan(spec(), LOAD_RAVINES);
+    expect(bigint.validation_sql, 'the declared BIGINT reaches the unnest cast').toContain('unnest($1::BIGINT[])');
+    expect(bigint.delete_sql).toContain('$1::BIGINT[]');
+
+    const text = spec();
+    text.key_sql_type = 'TEXT';
+    const plan = writeLib.buildWritePlan(text, LOAD_RAVINES);
+    // The finding: the validation SQL hard-coded BIGINT[] while the DELETE read the
+    // declared type, so a TEXT-keyed step cast its keys two different ways in one plan.
+    expect(plan.validation_sql, 'a TEXT key must not be cast to BIGINT on the way in').toContain('unnest($1::TEXT[])');
+    expect(plan.validation_sql).not.toContain('BIGINT');
+    expect(plan.delete_sql).toContain('$1::TEXT[]');
+    expect(plan.key_sql_type).toBe('TEXT');
+  });
+
+  it('an ABSENT key_sql_type still falls back to the declared default, both statements agreeing', () => {
+    const s = spec();
+    delete s.key_sql_type;
+    const plan = writeLib.buildWritePlan(s, LOAD_RAVINES);
+    expect(plan.key_sql_type).toBe(writeLib.DEFAULT_KEY_SQL_TYPE);
+    expect(plan.validation_sql).toContain(`unnest($1::${writeLib.DEFAULT_KEY_SQL_TYPE}[])`);
+    expect(plan.delete_sql).toContain(`$1::${writeLib.DEFAULT_KEY_SQL_TYPE}[]`);
+  });
+
+  it('⚠️ a COMPOSITE key THROWS at plan time — a scoped DELETE that retracts by half a key is worse than none', () => {
+    const s = spec();
+    s.key = ['source_id', 'source_dataset_version'];
+    expect(() => writeLib.buildWritePlan(s, LOAD_RAVINES)).toThrow(/composite keys are not supported/i);
+    // ...and it names the columns, so the refusal is actionable without reading write.js.
+    expect(() => writeLib.buildWritePlan(s, LOAD_RAVINES)).toThrow(/source_id, source_dataset_version/);
+    // The other direction: the single-key form this step declares still builds.
+    expect(writeLib.buildWritePlan(spec(), LOAD_RAVINES).keys).toEqual(['source_id']);
+  });
+
+  it('⚠️ a SECOND wkb_geometry column THROWS — it would be bound NULL on every row, silently', () => {
+    const s = spec();
+    const geom = s.columns.find((c) => c.bind === 'wkb_geometry');
+    expect(geom, 'the ravines write declares one geometry column').toBeDefined();
+    s.columns.push({ ...geom!, name: 'geom_simplified' });
+    expect(() => writeLib.buildWritePlan(s, LOAD_RAVINES)).toThrow(/columns declare bind "wkb_geometry"/i);
+    expect(() => writeLib.buildWritePlan(s, LOAD_RAVINES)).toThrow(/geom_simplified/);
+    expect(writeLib.buildWritePlan(spec(), LOAD_RAVINES).geometry_columns, 'one is still fine').toHaveLength(1);
+  });
+});
+
+describe('Fold D — a NULL acquisition timeout means NO deadline, not a zero-millisecond one', () => {
+  it('resolveTimeoutMs really can return null — the input the guard exists for', () => {
+    expect(acquireLib.resolveTimeoutMs({ execution: { network: 'none' } }, null)).toBeNull();
+    // An unparseable duration literal: a descriptor typo, not an unreachable publisher.
+    expect(acquireLib.resolveTimeoutMs({ execution: { network: { timeout: '60 seconds' } } }, null)).toBeNull();
+    expect(acquireLib.resolveTimeoutMs(LOAD_RAVINES, null), 'the declared literal still parses').toBeGreaterThan(0);
+  });
+
+  it('⚠️ null/0 ⇒ NO timer is armed — setTimeout(fn, null) coerces to 0 and aborts on the next tick', () => {
+    for (const bad of [null, undefined, 0, -1, NaN]) {
+      const ctrl = new AbortController();
+      expect(acquireLib.abortTimer(ctrl, bad), `timeoutMs ${String(bad)} must arm no timer`).toBeNull();
+      expect(ctrl.signal.aborted).toBe(false);
+    }
+  });
+
+  it('a real deadline DOES arm a timer, and it does abort when it elapses (the other direction)', async () => {
+    const ctrl = new AbortController();
+    const t = acquireLib.abortTimer(ctrl, 5);
+    expect(t, 'a positive deadline arms a real timer').not.toBeNull();
+    await new Promise((r) => setTimeout(r, 40));
+    expect(ctrl.signal.aborted, 'the armed timer fired').toBe(true);
+    clearTimeout(t);
+  });
+
+  it('a null-timeout HEAD completes instead of failing instantly with an AbortError', async () => {
+    const seen: Array<AbortSignal | undefined> = [];
+    const res = await acquireLib.headValidators(
+      async (_url: string, init: { signal?: AbortSignal }) => {
+        seen.push(init.signal);
+        await new Promise((r) => setTimeout(r, 25)); // longer than the 0ms a null timeout used to mean
+        if (init.signal?.aborted) throw new Error('AbortError — the null timeout fired');
+        return { ok: true, status: 200, headers: { get: (h: string) => (h === 'etag' ? 'W/"x"' : null) } };
+      },
+      'https://example.invalid/x',
+      null,
+    );
+    expect(res).toEqual({ lastModified: null, etag: 'W/"x"' });
+    expect(seen[0]?.aborted, 'nothing aborted the request').toBe(false);
+  });
+});
+
+describe('Fold D — the INGESTOR drives exactly ONE write target, and says so at plan time', () => {
+  it('⚠️ two declared writes THROW before the HEAD — writes[1] would be declared, gated over and left empty', async () => {
+    const d = clone(LOAD_RAVINES);
+    d.outputs.writes.push({ ...clone(LOAD_RAVINES.outputs.writes[0]), table: 'ravines_shadow' });
+    let fetched = false;
+    await expect(stepLib.runIngestPhase({
+      descriptor: d,
+      pool: fakePool(),
+      compute: async () => {},
+      config: {},
+      fetchImpl: async () => { fetched = true; throw new Error('unreachable'); },
+      chainId: null,
+      log: { info: () => {}, warn: () => {}, error: () => {} },
+      tag: '[load_ravines]',
+      clockNow: new Date(),
+      preWriteGate: null,
+    })).rejects.toThrow(/exactly ONE write target[\s\S]*declares 2 \(ravines, ravines_shadow\)/);
+    expect(fetched, 'a mis-declared step costs no network').toBe(false);
+  });
+
+  it('isIngestStep still accepts the single-target descriptor this pilot ships', () => {
+    expect(stepLib.isIngestStep(LOAD_RAVINES)).toBe(true);
+    expect(LOAD_RAVINES.outputs.writes).toHaveLength(1);
+  });
+});
+
+describe('Fold D — terminal selection is asked about the status the run ACTUALLY reached', () => {
+  const successTerminal = (status: string) => ({
+    id: `loaded_${status}`, kind: 'success', status, records_meta: {},
+  });
+
+  it('a WARN verdict can select a completed_with_warnings terminal — unreachable while COMPLETED was passed', () => {
+    const d = clone(LOAD_RAVINES);
+    d.terminals = [successTerminal('completed'), successTerminal('completed_with_warnings')];
+    expect(stepLib.selectTerminal(d, { kind: 'success', status: 'completed_with_warnings' }).id)
+      .toBe('loaded_completed_with_warnings');
+    expect(stepLib.selectTerminal(d, { kind: 'success', status: 'completed' }).id).toBe('loaded_completed');
+  });
+
+  it('a descriptor that declares no such terminal still falls back to the first success one (no null regression)', () => {
+    // load_ravines declares `loaded` (completed) + `loaded_anomaly_accepted`; neither is
+    // completed_with_warnings, so the WARN path must still land a named terminal.
+    expect(stepLib.selectTerminal(LOAD_RAVINES, { kind: 'success', status: 'completed_with_warnings' }).id)
+      .toBe('loaded');
+  });
+
+  it('⚠️ THE CALL SITE — a WARN run stamps the completed_with_warnings terminal, end to end', async () => {
+    // The lock that goes red if the WARN arm reverts to passing RUN_STATUS.COMPLETED:
+    // this descriptor declares BOTH success terminals, so the two statuses are
+    // distinguishable in `records_meta.terminal` for the first time.
+    const d = clone(ASSERT_SCHEMA);
+    d.checks[0].severity = 'WARN';
+    d.terminals.push({
+      id: 'completed_with_warnings', kind: 'success', status: 'completed_with_warnings', records_meta: 'runner_default',
+    });
+    const warnOne = async (ctx: { descriptor: Record<string, unknown>; chainId: string | null }) => {
+      for (const c of verdictLib.selectChecks(ctx.descriptor, ctx.chainId)) {
+        (ctx as unknown as { report: (id: string, o: unknown) => void })
+          .report(c.id, { violations: c.id === d.checks[0].id ? 1 : 0 });
+      }
+    };
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      const out = await pipeline.step(d, warnOne).run({ pool, chainId: 'permits' });
+      const summary = cap.summary();
+      expect(summary.records_meta.audit_table.verdict).toBe('WARN');
+      expect(out.status).toBe('completed_with_warnings');
+      expect(summary.records_meta.terminal, 'the terminal must describe the run that happened')
+        .toBe('completed_with_warnings');
+    } finally {
+      cap.restore();
+    }
+  });
+});
+
+describe('Fold D — the three loss counters the library measures are REPORTED (plan D-4)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute
+  const ravineCompute = require(join(process.cwd(), 'scripts/lib/compute/load-ravines.js'));
+
+  const LOSS: Array<[string, string]> = [
+    ['ravine_bad_objectid_count', 'bad_key_count'],
+    ['ravine_null_geometry_count', 'null_geometry_count'],
+    ['ravine_duplicate_objectid_count', 'duplicate_key_count'],
+  ];
+
+  it('each is DECLARED at WARN/post, has an observer, and reads the counter the library actually sets', () => {
+    for (const [id, field] of LOSS) {
+      const check = (LOAD_RAVINES.checks as Array<{ id: string; severity: string; when: string }>).find((c) => c.id === id);
+      expect(check, `${id} must be declared — the counter existed and nothing reported it`).toBeDefined();
+      expect(check!.severity, 'WARN, per the pre-conversion push it restores').toBe('WARN');
+      // `post`, not `pre_write`: a pre_write check is one whose FAIL stops the write.
+      expect(check!.when).toBe('post');
+      expect(typeof ravineCompute.checks[id]).toBe('function');
+      expect(String(ravineCompute.checks[id]), `${id} must read ctx.acquired.${field}`).toContain(`acquired.${field}`);
+    }
+  });
+
+  it('the LIBRARY sets all three field names — the producer half of the contract', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- reading the sources as text
+    const fs = require('node:fs');
+    const acquireSrc = fs.readFileSync(join(process.cwd(), 'scripts/lib/step/acquire.js'), 'utf8');
+    const indexSrc = fs.readFileSync(join(process.cwd(), 'scripts/lib/step/index.js'), 'utf8');
+    expect(acquireSrc).toContain('bad_key_count: parsed.badKey');
+    expect(acquireSrc).toContain('null_geometry_count: parsed.nullGeometry');
+    expect(indexSrc).toContain('duplicate_key_count: duplicateCount');
+  });
+
+  it('zero ⇒ PASS row, non-zero ⇒ WARN row — both directions, and a healthy run is no longer SILENT', () => {
+    const acquired = {
+      feature_count: 854, bad_key_count: 0, null_geometry_count: 0, duplicate_key_count: 0,
+    };
+    const run = (over: Record<string, number>) => {
+      const observations: Record<string, unknown> = {};
+      const ctx = {
+        acquired: { ...acquired, ...over },
+        checks: LOSS.map(([id]) => id),
+        descriptor: LOAD_RAVINES,
+        log: { info: () => {}, warn: () => {}, error: () => {} },
+        report: (id: string, o: unknown) => { observations[id] = o; },
+      };
+      for (const [id] of LOSS) ravineCompute.checks[id](ctx);
+      const only = new Set(LOSS.map(([id]) => id));
+      return verdictLib.buildAuditTable(LOAD_RAVINES, null, observations, [], null, only).rows as Row[];
+    };
+
+    const healthy = run({});
+    expect(healthy.map((r) => r.status), 'the old conditional push emitted NOTHING here').toEqual(['PASS', 'PASS', 'PASS']);
+    expect(healthy.map((r) => r.value)).toEqual([0, 0, 0]);
+
+    for (const [id, field] of LOSS) {
+      const rows = run({ [field]: 7 });
+      const row = rows.find((r) => r.metric === id)!;
+      expect(row.status, `${id} must WARN once the source lost something`).toBe('WARN');
+      expect(row.value).toBe(7);
+    }
+  });
+});

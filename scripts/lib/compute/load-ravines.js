@@ -185,6 +185,43 @@ function ravine_override_mass_delete_present(ctx) {
   ctx.report('ravine_override_mass_delete_present', { violations: standing ? 1 : 0, detail: standing });
 }
 
+/**
+ * THE THREE LOSS COUNTERS (plan D-4, restored at Fold D).
+ *
+ * Each one is a count of source features that never reached `ravines`, measured by the
+ * library at a different point of the acquisition: `bad_key_count` and
+ * `null_geometry_count` in `acquire.js` `parseShapefile`, `duplicate_key_count` in
+ * `index.js` `runIngestPhase` after `dedupeBySourceId`. All three existed as numbers
+ * throughout the conversion and none of them was reported — the pre-conversion loader
+ * pushed a WARN for each (`33786d1a:scripts/load-ravines.js:393-398`) and commit 7
+ * declared no check to carry it forward.
+ *
+ * The one intentional difference from the pre-conversion semantics: those pushes were
+ * CONDITIONAL (`if (n > 0)`), so a healthy run emitted nothing and silence meant both
+ * "zero" and "nobody counted". A declared check emits a row either way — PASS at zero,
+ * WARN above it — which is the same bound with the blind spot removed.
+ *
+ * `when: "post"` and not `pre_write`: they read `ctx.acquired` only, so either position
+ * is sound, but a `pre_write` check is one whose FAIL must STOP the write (Fold C /
+ * LR-D9), and none of these is a FAIL — they are provenance about what the source lost,
+ * reported in the final table beside the counts they qualify. They are NOT scored on a
+ * gated skip, correctly: nothing was parsed, so there is nothing to have lost.
+ */
+function ravine_bad_objectid_count(ctx) {
+  const n = ctx.acquired.bad_key_count || 0;
+  ctx.report('ravine_bad_objectid_count', { violations: n, detail: n });
+}
+
+function ravine_null_geometry_count(ctx) {
+  const n = ctx.acquired.null_geometry_count || 0;
+  ctx.report('ravine_null_geometry_count', { violations: n, detail: n });
+}
+
+function ravine_duplicate_objectid_count(ctx) {
+  const n = ctx.acquired.duplicate_key_count || 0;
+  ctx.report('ravine_duplicate_objectid_count', { violations: n, detail: n });
+}
+
 function ravine_feature_count(ctx) {
   ctx.report('ravine_feature_count', { violations: 0, detail: ctx.acquired.feature_count });
 }
@@ -339,6 +376,9 @@ const CHECKS = {
   ravine_dataset_age_years,
   ravine_override_feature_count_drift_present,
   ravine_override_mass_delete_present,
+  ravine_bad_objectid_count,
+  ravine_null_geometry_count,
+  ravine_duplicate_objectid_count,
   ravine_feature_count,
   ravine_count_drift_pct,
   ravine_geometry_repaired_pct,
