@@ -703,7 +703,9 @@ describe('PIPELINE_SUMMARY convention', () => {
     'geocode-permits.js',
     'link-parcels.js',
     'link-neighbourhoods.js',
-    'link-massing.js',
+    // link-massing.js RE-HOMED (Spec 122 §5.1 conversion, pilot 3) — same treatment as
+    // assert_schema at pilot 1: a converted step spells neither emit itself, and the
+    // `lib/step/index.js` entry already in this list IS the emitter for all of them.
     'link-similar.js',
     'link-wsib.js',
     'link-coa.js',
@@ -853,7 +855,9 @@ describe('PIPELINE_META convention', () => {
     'geocode-permits.js',
     'link-parcels.js',
     'link-neighbourhoods.js',
-    'link-massing.js',
+    // link-massing.js RE-HOMED (Spec 122 §5.1 conversion, pilot 3) — same treatment as
+    // assert_schema at pilot 1: a converted step spells neither emit itself, and the
+    // `lib/step/index.js` entry already in this list IS the emitter for all of them.
     'link-similar.js',
     'link-wsib.js',
     'link-coa.js',
@@ -1541,12 +1545,24 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
   });
 
   // Sources pipeline fixes
-  it('link-massing: records_updated uses parcelsLinked (parcels), not buildingsUpserted (parcel_buildings rows)', () => {
-    const content = src('link-massing.js');
-    // Must NOT use buildingsUpserted (join-table row count) as records_updated
-    expect(content).not.toMatch(/records_updated\s*:\s*buildingsUpserted/);
-    // parcel_buildings mutation count must be visible as a named audit row
-    expect(content).toContain('parcel_buildings_written');
+  // RE-HOMED (Spec 122 §5.1 conversion, pilot 3). Both halves survive, on the declaration
+  // rather than on the source text — and the second half is why the check ID had to keep
+  // its exact name: `parcel_buildings_written` is asserted BY NAME here, so renaming the
+  // audit row during the conversion would have silently dropped the only place the
+  // junction's mutation count is visible.
+  it('link_massing: the junction mutation count is a NAMED audit row, and the counters declare their scope', () => {
+    const descriptor = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.descriptor.json'), 'utf-8'),
+    ) as { checks: Array<{ id: string; severity: string }>; counters: Record<string, { source: string; scoped_by: string[] }> };
+    const ids = descriptor.checks.map((c) => c.id);
+    expect(ids, 'the parcel_buildings mutation count must stay visible under this exact name').toContain('parcel_buildings_written');
+    // The old lock banned `records_updated: buildingsUpserted` — a junction row count posing
+    // as an undeclared entity count. The scope is now DECLARED instead of banned, which is
+    // what §11 asks for: the counter says what it counts.
+    expect(descriptor.counters.records_updated!.source).toBe('written.e2.updated');
+    expect(descriptor.counters.records_updated!.scoped_by).toEqual(['parcel_id', 'building_id']);
+    const step = src('link-massing.js');
+    expect(step).not.toMatch(/records_updated\s*:\s*buildingsUpserted/);
   });
 
   it('link-wsib: records_total uses totalUnlinked (full evaluation scope), not totalLinked (matched only)', () => {

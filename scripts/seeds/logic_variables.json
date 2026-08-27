@@ -762,6 +762,34 @@
     "min": 1,
     "max": 500
   },
+  "link_massing_link_rate_fail_pct": {
+    "default": 50,
+    "type": "number",
+    "description": "Minimum cumulative link rate (%) — linked parcels over parcels with a centroid — below which the massing link verdict FAILs. CONSUMED by link_massing via checks[].limit_from_config; the check reports the UNLINKED complement so the declared `pct <=` limit form expresses a floor. Pre-externalization this was the bare literal 50 in `massingLinkRate >= 50 ? …` PLUS a duplicated '>= 50%' render string, with zero registered variables. Live headroom is large (99.71% linked), which is itself a finding — the floor cannot fire before the damage.",
+    "min": 0,
+    "max": 100
+  },
+  "link_massing_centroid_confidence": {
+    "default": 0.95,
+    "type": "number",
+    "description": "Confidence written to parcel_buildings.confidence for a link made by the building-centroid-in-parcel predicate. CONSUMED by link_massing (scripts/lib/compute/link-massing.js classifyMatches) and read downstream by enrich-parcels as link_confidence. Pre-externalization the literal lived at two sites across two code paths that had to agree.",
+    "min": 0,
+    "max": 1
+  },
+  "link_massing_nearest_confidence": {
+    "default": 0.6,
+    "type": "number",
+    "description": "Confidence written to parcel_buildings.confidence for a link made by the bounded nearest-footprint fallback. CONSUMED by link_massing (scripts/lib/compute/link-massing.js classifyFallback). 21.3% of linked parcels carry only this value, so it is the marker of the lower-trust link population the cost model must be able to distinguish.",
+    "min": 0,
+    "max": 1
+  },
+  "link_massing_grid_degrees": {
+    "default": 0.003,
+    "type": "number",
+    "description": "RETIRED KNOB, registered so the retirement is visible rather than lost with the code. Was the in-memory grid cell size (degrees, ~333 m) of link-massing's JS fallback path, which also seeded that path's dynamic search radius. The A-8 override retired that path in favour of a fail-loud PostGIS precondition, so nothing reads this today. CONSUMED by link_massing only as a declared record; turning it changes nothing.",
+    "min": 0.0005,
+    "max": 0.05
+  },
   "wsib_fuzzy_match_threshold": {
     "default": 0.6,
     "type": "number",

@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 306 declarable fields
+# The step contract — 18 categories, 322 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -16,10 +16,10 @@
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
 | 2 | `inputs` | 23 | 5 | 0 |
-| 3 | `outputs` | 79 | 20 | 2 |
-| 4 | `staleness` | 22 | 7 | 0 |
+| 3 | `outputs` | 92 | 24 | 2 |
+| 4 | `staleness` | 24 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
-| 6 | `execution` | 46 | 12 | 1 |
+| 6 | `execution` | 47 | 13 | 1 |
 | 7 | `checks` | 24 | 6 | 0 |
 | 8 | `override` | 11 | 1 | 0 |
 | 9 | `emits` | 4 | 1 | 0 |
@@ -178,10 +178,10 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `writes` | list (min 1) of object {table, key, columns, key_sql_type, write_discipline, retract, replay, replay_why, source_key_policy} | † |
+| `writes` | list (min 1) of object {table, key, columns, key_sql_type, write_discipline, retract, retract_when, replay, replay_why, source_key_policy} | † |
 | `writes[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].key` | string `^[a-z_][a-z0-9_]*$` \| list (min 1) of string `^[a-z_][a-z0-9_]*$` | † |
-| `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind} | † |
+| `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value} | † |
 | `writes[].columns[].name` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].columns[].vocabulary` | `none` \| object {values, on_unknown, source} | † |
 | `writes[].columns[].vocabulary.values` | list (min 1) of string | † |
@@ -189,8 +189,10 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].columns[].vocabulary.source` | string | — |
 | `writes[].columns[].written` | `step` · `db_default` | ! |
 | `writes[].columns[].bind` | `value` · `wkb_geometry` | ! |
+| `writes[].columns[].source` | `compute` · `run_at` | ! |
+| `writes[].columns[].set_value` | OPEN | — |
 | `writes[].key_sql_type` | string `^[A-Z][A-Z0-9 ]*$` | — |
-| `writes[].write_discipline` | object {class, guard, guard_why, scope, guard_columns, expected_change_ratio, idempotent_rerun, idempotent_rerun_why, txn_scope, why} | † |
+| `writes[].write_discipline` | object {class, guard, guard_why, scope, guard_columns, guard_columns_why, declared_drift, expected_change_ratio, idempotent_rerun, idempotent_rerun_why, txn_scope, why} | † |
 | `writes[].write_discipline.class` | `guarded_upsert` · `upsert_scoped_departure_delete` · `staging_full_replace` · `insert_only_no_retraction` · `write_once_backfill` · `link_full_retraction` · `set_based_scoped` · `set_based_unscoped` · `temp_materialize` · `multi_pass_defer` · `derived_recompute` · `verdict_only` · `snapshot_append` | † ! |
 | `writes[].write_discipline.guard` | `is_distinct_from` · `none` ⛔ **banned for new:** `none` | † ! |
 | `writes[].write_discipline.guard_why` | object {text, liveness} | — |
@@ -200,6 +202,16 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].write_discipline.guard_why.liveness.ref` | string | † |
 | `writes[].write_discipline.scope` | `none` \| string | † |
 | `writes[].write_discipline.guard_columns` | `all_declared` \| list (min 1) of string `^[a-z_][a-z0-9_]*$` | † |
+| `writes[].write_discipline.guard_columns_why` | object {text, liveness} | — |
+| `writes[].write_discipline.guard_columns_why.text` | string | † |
+| `writes[].write_discipline.guard_columns_why.liveness` | `none` \| object {kind, ref} | † |
+| `writes[].write_discipline.guard_columns_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `writes[].write_discipline.guard_columns_why.liveness.ref` | string | † |
+| `writes[].write_discipline.declared_drift` | object {text, liveness} | — |
+| `writes[].write_discipline.declared_drift.text` | string | † |
+| `writes[].write_discipline.declared_drift.liveness` | `none` \| object {kind, ref} | † |
+| `writes[].write_discipline.declared_drift.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `writes[].write_discipline.declared_drift.liveness.ref` | string | † |
 | `writes[].write_discipline.expected_change_ratio` | `none` \| string `^(<=|>=|==) ?[0-9]*\.?[0-9]+$` | † |
 | `writes[].write_discipline.idempotent_rerun` | `zero_writes` · `declared_drift` · `not_idempotent` | † ! |
 | `writes[].write_discipline.idempotent_rerun_why` | object {text, liveness} | — |
@@ -214,6 +226,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].write_discipline.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `writes[].write_discipline.why.liveness.ref` | string | † |
 | `writes[].retract` | `none` · `departed` · `all` | † ! |
+| `writes[].retract_when` | `always` · `full_only` | ! |
 | `writes[].replay` | `idempotent_upsert` · `full_replace` · `append_unsafe` ⛔ **banned for new:** `append_unsafe` | † ! |
 | `writes[].replay_why` | object {text, liveness} | — |
 | `writes[].replay_why.text` | string | † |
@@ -265,10 +278,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | Field | Menu | Markers |
 |---|---|---|
 | `scope` | `all` \| `none` \| string | † |
-| `trigger` | `none` \| list (min 1) of object {signal, position, external} | † |
+| `trigger` | `none` \| list (min 1) of object {signal, position, external, table, emit_key} | † |
 | `trigger[].signal` | `source_validator` · `content_hash` · `cached_artifact` · `upstream_ledger` · `code_version` · `interval` · `always` | † ! |
 | `trigger[].position` | `pre_acquisition` · `acquisition` · `post_acquisition` · `pre_compute` | † ! |
 | `trigger[].external` | string | — |
+| `trigger[].table` | string `^[a-z_][a-z0-9_]*$` | — |
+| `trigger[].emit_key` | string | — |
 | `mode_select` | `skip` · `incremental` · `full` · `defer` · `tri_state` · `none` | † ! |
 | `checkpoint` | `none` \| object {cursor, ordered} | † |
 | `checkpoint.cursor` | string | † |
@@ -292,7 +307,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | Field | Menu | Markers |
 |---|---|---|
 | `requires` | list of object {kind, name, on_missing, algorithm, why} | † |
-| `requires[].kind` | `extension` · `index` · `function` · `column` · `rls_bypass_or_policy` | † ! |
+| `requires[].kind` | `extension` · `index` · `function` · `column` · `fk` · `rls_bypass_or_policy` | † ! |
 | `requires[].name` | string | † |
 | `requires[].on_missing` | `fail` · `degrade` | † ! |
 | `requires[].algorithm` | string | — |
@@ -317,6 +332,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
+| `shape` | `assert` · `ingest` · `link` | ! |
 | `budget` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
 | `txn_scope` | `statement` · `batch` · `step` · `none` | † ! |
 | `txn_budget` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |

@@ -80,7 +80,16 @@ function deriveMeta(descriptor) {
   for (const t of tables) reads[t.table] = t.columns || [];
   const writes = {};
   if (descriptor.outputs && descriptor.outputs !== 'none') {
-    for (const w of descriptor.outputs.writes) writes[w.table] = w.columns.map((c) => c.name);
+    // UNION across same-table entries (D-2). A LINK declares TWO targets on ONE table —
+    // a one-column set-based clear and a seven-column upsert — and assigning per entry
+    // let the LAST one win, so PIPELINE_META would have advertised whichever target
+    // happened to be declared second. The union is the honest answer to "which columns
+    // of this table does the step write", which is the question emitMeta asks.
+    for (const w of descriptor.outputs.writes) {
+      const seen = writes[w.table] || [];
+      for (const c of w.columns) if (!seen.includes(c.name)) seen.push(c.name);
+      writes[w.table] = seen;
+    }
   }
   const externals = (descriptor.inputs && descriptor.inputs.reads && descriptor.inputs.reads.externals) || [];
   return { reads, writes, external: externals.map((e) => e.id) };
@@ -183,11 +192,74 @@ function selectTerminal(descriptor, { kind, status, discriminator }) {
  * unchanged — this branch adds nothing to their run.
  */
 function isIngestStep(descriptor) {
+  if (descriptor.execution && descriptor.execution.shape) return descriptor.execution.shape === 'ingest';
   return descriptor.outputs !== 'none'
     && Array.isArray(descriptor.outputs.writes)
     && descriptor.outputs.writes.length > 0
     && staleness.triggersAt(descriptor, 'pre_acquisition').length > 0
     && ((descriptor.inputs.reads.externals || []).some((e) => typeof e.url === 'string' && e.url.length > 0));
+}
+
+/**
+ * Is this a LINK — read, join, write, with NO acquisition? (Ruling A-1(a).)
+ *
+ * ⚠️ DECLARED, NEVER SNIFFED, and that is the whole finding. `isIngestStep` above
+ * required an external with a URL, so a pure DB→DB join matched nothing and fell to the
+ * ASSERT path — where `compute(ctx)` iterates checks and the library writes NOTHING. A
+ * LINK's join and write therefore had no home in the library at all: the branch was
+ * decided by a predicate over unrelated fields rather than by the step saying what it
+ * is. `execution.shape` (C3 pre-pull) makes it a declaration, so a step that means
+ * "link" cannot silently be run as something else.
+ */
+function isLinkStep(descriptor) {
+  return Boolean(descriptor.execution && descriptor.execution.shape === 'link');
+}
+
+/** One requirement kind → the catalog probe that answers "is it there?". */
+const REQUIREMENT_PROBES = {
+  extension: { sql: 'SELECT 1 FROM pg_extension WHERE extname = $1', args: (r) => [r.name] },
+  index: { sql: 'SELECT 1 FROM pg_indexes WHERE indexname = $1', args: (r) => [r.name] },
+  fk: { sql: "SELECT 1 FROM pg_constraint WHERE conname = $1 AND contype = 'f'", args: (r) => [r.name] },
+  function: { sql: 'SELECT 1 FROM pg_proc WHERE proname = $1', args: (r) => [r.name] },
+  column: {
+    sql: 'SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = $2',
+    args: (r) => r.name.split('.'),
+  },
+};
+
+/**
+ * `guards.requires[]` — THE PRECONDITIONS, CHECKED BEFORE THE FIRST READ.
+ *
+ * ⚠️ B-4 IS THE REASON THIS RUNS WHERE IT RUNS. The pre-conversion step asserted its
+ * GiST index inline and threw — "refusing the building-centroid-in-parcel join (would
+ * seq-scan 486K parcels)". A missing index there is not a slower run, it is an
+ * unbounded one; a missing extension is worse, because before the A-8 override the step
+ * ANSWERED a missing extension by silently switching to a second algorithm with
+ * different confidences and no `is_primary` clear. `on_missing: "fail"` is what makes
+ * "no degraded algorithm survives" a property of the declaration rather than of a
+ * branch nobody reads.
+ *
+ * `rls_bypass_or_policy` is excluded here and owned by `write.assertWritePrivileges`,
+ * which MEASURES the privilege so a check can report it on the happy path too.
+ */
+async function assertRequirements(pool, descriptor, { log, tag }) {
+  const requires = (descriptor.guards && descriptor.guards.requires) || [];
+  const measured = {};
+  for (const r of requires) {
+    const probe = REQUIREMENT_PROBES[r.kind];
+    if (!probe) continue; // rls_bypass_or_policy — measured by the write preflight
+    const { rows } = await pool.query(probe.sql, probe.args(r));
+    const present = rows.length > 0;
+    measured[r.name] = present;
+    if (present) continue;
+    if (r.on_missing === 'fail') {
+      throw new Error(`${tag} required ${r.kind} "${r.name}" is ABSENT from this database. `
+        + 'guards.requires declares on_missing "fail": the step refuses rather than running a query plan, '
+        + 'or an algorithm, that the declaration does not describe.');
+    }
+    log.warn(tag, `required ${r.kind} "${r.name}" is absent and on_missing is "${r.on_missing}"`);
+  }
+  return measured;
 }
 
 /**
@@ -345,10 +417,10 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // opened, no upsert and no departure DELETE is issued, and the prior table state is
   // preserved exactly as the pre-conversion `return { failed: true }` preserved it.
   const gateDecision = preWriteGate
-    ? await preWriteGate({ acquired, prior, overrides })
+    ? await preWriteGate({ acquired, prior, overrides, written: null })
     : { abort: false, failed: [] };
   if (gateDecision.abort) {
-    log.error(tag, `pre_write check(s) FAILED with no standing override — the write is SKIPPED, `
+    log.error(tag, `pre_write check(s) FAILED with no standing override, the write is SKIPPED — `
       + `${plan.table} is untouched: ${gateDecision.failed.join(', ')}`);
     return {
       skipped: false,
@@ -408,6 +480,223 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
 }
 
 /**
+ * THE READ → GATE → ORDERED-WRITE PHASE (ruling A-1(a), LINK/MATCHER wave).
+ *
+ * This file's own header scheduled the wave by name — "invalidation + counters scoped by
+ * `writes.key` → LINK/MATCHER" — and pilot 3 measured why it could not wait: a LINK reads
+ * two domain tables, joins them on a spatial predicate and writes a junction, and NONE of
+ * that had a home. `isIngestStep` wanted an external URL, so `link_massing` fell to the
+ * ASSERT path where the library writes nothing; §5.5 (1) forbids the join living in the
+ * compute; so the 740-line island was the only place it could be.
+ *
+ * PHASE ORDER IS THE GUARANTEE, and every step of it is one of the 13 before/after
+ * guarantees re-derived from the step's own three specs BEFORE the archetype was chosen
+ * (tasks/lessons.md's last line — pilot 2 silently retired Spec 59 L7/L8 by reordering):
+ *
+ *   guards.requires        preconditions BEFORE the first read       (B-4: a missing GiST
+ *                                                                     index turns a 22-min
+ *                                                                     run into an unbounded one)
+ *   prior + selectMode     the gate reads the LAST COMPLETED PRIOR    (B-5, B-6: the ledger
+ *                          run and outputs a MODE, before anything     row was opened as
+ *                          is deleted                                  `running` above, so the
+ *                                                                      step cannot read itself)
+ *   RUN_AT                 the DB clock, captured ONCE, before any    (B-11: two batches must
+ *                          write                                       not straddle a second —
+ *                                                                      linked_at is a watermark)
+ *   RLS preflight          refuse a write that would affect 0 rows    (A-7)
+ *   PRE_WRITE GATE         scored BEFORE writes[0], i.e. before the   (D-20: today the FULL
+ *                          mass retraction                             DELETE has no guard at
+ *                                                                      all and would happily
+ *                                                                      empty the junction
+ *                                                                      against an empty corpus)
+ *   writes[] IN ORDER      the declared retraction, then the declared (B-7: ONE delete, before
+ *                          targets 1..N per batch                      the loop, in a txn,
+ *                                                                      scoped identically to
+ *                                                                      the parcels re-evaluated.
+ *                                                                      B-8: the primary clear
+ *                                                                      precedes the upsert or
+ *                                                                      the partial unique index
+ *                                                                      throws when a primary
+ *                                                                      moves)
+ *   post checks            over `ctx.matched` / `ctx.written`
+ *
+ * The compute never reaches the pool. It contributes exactly three pure things — the SQL
+ * TEXT of the domain join (`buildMatchSql`, ruling A-2 option 2), the row classifiers, and
+ * one observer per declared check — and the rest is descriptor data.
+ *
+ * @returns {Promise<object>} `{mode, gate, matched, cumulative, written, prior, overrides}`
+ */
+async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate }) {
+  const requirements = await assertRequirements(pool, descriptor, { log, tag });
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+  const overrides = staleness.resolveOverrides(descriptor);
+  const gate = await staleness.selectMode({ descriptor, pool, prior });
+  const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
+  log.info(tag, `mode gate: explicit_full=${gate.explicit_full} forced=${gate.forced} `
+    + `changed=${gate.changed} → ${gate.mode.toUpperCase()} (${gate.reason})`);
+
+  // The declared targets, planned up front so a mis-declared write costs no query.
+  const specs = descriptor.outputs.writes;
+  const plans = specs.map((w) => write.buildWritePlan(w, descriptor));
+  const written = {};
+  for (let i = 0; i < plans.length; i++) {
+    written[write.targetKey(i)] = { scanned: 0, inserted: 0, updated: 0, deleted: 0, retracted: 0, rows_changed: 0 };
+  }
+  written.privilege = privilege[plans[plans.length - 1].table] || null;
+  written.requirements = requirements;
+
+  const match = compute.buildMatchSql(descriptor, config, gate.mode);
+  const eligible = await pool.query(match.eligible_count_sql);
+  // ⚠️ THE RUNNER NAMES NOTHING THE STEP DID NOT DECLARE (Gate 0 / claim #149). The four
+  // counters below are the LINK vocabulary itself — rows walked, rows linked, rows that
+  // matched nothing — but the two PASS counters and the upstream corpus size are
+  // step-specific quantities, so their KEYS come from the step: the pass names from the
+  // compute's own match plan, the gate signals from the descriptor's trigger `emit_key`.
+  // Hard-coding either here would put a domain word in a generic runner, which is the
+  // "one step gets a special case, then there are 27" failure this gate exists to stop.
+  const matched = {
+    parcels_eligible: Number(eligible.rows[0].total),
+    parcels_processed: 0,
+    parcels_linked: 0,
+    no_match: 0,
+    [match.primary_counter]: 0,
+    [match.fallback_counter]: 0,
+  };
+  for (const s of gate.signals) {
+    if (s.current === null) continue;
+    matched[s.key] = Number.isNaN(Number(s.current)) ? s.current : Number(s.current);
+  }
+
+  // ── THE PRE-WRITE GATE, BEFORE writes[0] ────────────────────────────────────
+  // Everything above is a read. The next statement retracts. A `pre_write` FAIL with no
+  // standing acceptance stops the run HERE, with the junction exactly as the prior run
+  // left it — which is the guarantee an unguarded `DELETE FROM …` cannot make.
+  const decision = preWriteGate
+    ? await preWriteGate({ matched, gate, prior, overrides, written: null })
+    : { abort: false, failed: [] };
+  if (decision.abort) {
+    log.error(tag, `pre_write check(s) FAILED with no standing override — no write was issued and `
+      + `${plans[0].table} is untouched: ${decision.failed.join(', ')}`);
+    return {
+      mode: gate.mode,
+      gate,
+      matched,
+      cumulative: null,
+      written: { ...written, write_skipped_pre_write_fail: true },
+      prior,
+      overrides,
+      writeSkipped: true,
+      failedPreWrite: decision.failed,
+    };
+  }
+
+  // ── W1 — the declared retraction, ONE statement, before the loop ─────────────
+  for (let i = 0; i < plans.length; i++) {
+    const plan = plans[i];
+    if (!write.retractionFires(plan, gate.mode)) continue;
+    const removed = await pipeline.withTransaction(pool, (client) => write.executeRetraction(client, plan));
+    written[write.targetKey(i)].retracted = removed;
+    written[write.targetKey(i)].deleted = removed;
+    log.info(tag, `${plan.table}: retracted ${removed.toLocaleString()} row(s) for re-evaluation `
+      + `(retract "${plan.retract}", retract_when "${plan.retract_when}", mode ${gate.mode})`);
+  }
+
+  // ── The keyset-paginated batch loop: match, classify, then writes[] IN ORDER ──
+  const batchSize = descriptor.execution.batch === 'none' ? pipeline.BATCH_SIZE : descriptor.execution.batch;
+  let lastId = 0;
+  for (;;) {
+    const batch = await pool.query(match.eligible_batch_sql, [batchSize, lastId]);
+    if (batch.rows.length === 0) break;
+    lastId = batch.rows[batch.rows.length - 1].id;
+    const ids = batch.rows.map((r) => r.id);
+
+    const primary = await pool.query(match.primary_match_sql, [ids]);
+    const classified = compute.classifyMatches(primary.rows, config);
+    const linkedIds = new Set(classified.rows.map((r) => r[plans[0].keys[0]]));
+
+    const unmatched = ids.filter((id) => !linkedIds.has(id));
+    let fallback = { rows: [], parcels: 0 };
+    if (unmatched.length > 0 && match.fallback_match_sql) {
+      const near = await pool.query(match.fallback_match_sql, [unmatched, match.fallback_bbox_degrees, match.fallback_max_distance]);
+      fallback = compute.classifyFallback(near.rows, config);
+      for (const r of fallback.rows) linkedIds.add(r[plans[0].keys[0]]);
+    }
+
+    const rows = [...classified.rows, ...fallback.rows];
+    if (rows.length > 0) await executeOrderedWrites(pool, plans, rows, clockNow, written, specs);
+
+    matched.parcels_processed += batch.rows.length;
+    matched.parcels_linked += classified.parcels + fallback.parcels;
+    matched[match.primary_counter] += classified.matches;
+    matched[match.fallback_counter] += fallback.rows.length;
+    matched.no_match += ids.filter((id) => !linkedIds.has(id)).length;
+  }
+
+  // ONE post-write query for the cumulative rate AND the table invariants the checks
+  // assert BY COUNT. Its extra scalars are what make "the constraint exists" and "the
+  // constraint held on this run" two different claims.
+  const cumulative = await pool.query(match.cumulative_sql, match.cumulative_params || []);
+  const row = cumulative.rows[0];
+  for (const k of Object.keys(row)) {
+    if (k === 'linked' || k === 'total') continue;
+    matched[k] = Number(row[k]);
+  }
+  return {
+    mode: gate.mode,
+    gate,
+    matched,
+    cumulative: {
+      linked_parcels: Number(row.linked),
+      parcels_with_centroid: Number(row.total),
+    },
+    written,
+    prior,
+    overrides,
+    writeSkipped: false,
+  };
+}
+
+/**
+ * `outputs.writes[]` EXECUTED IN DECLARATION ORDER, in ONE transaction (§1.4: "Order is
+ * declared and the runner executes it in order").
+ *
+ * For link_massing the order IS the fence: E1's `is_primary = false` clear must land
+ * before E2's upsert, or migration 081's partial unique index throws the moment a
+ * parcel's primary structure moves to a different building (5bb31faf / B-8). Declaring
+ * the order rather than writing it makes a reordering a DIFF instead of an incident.
+ */
+async function executeOrderedWrites(pool, plans, rows, runAt, written, specs) {
+  const clockColumns = specs.map((w) => (w.columns || []).filter((c) => c.source === 'run_at').map((c) => c.name));
+  await pipeline.withTransaction(pool, async (client) => {
+    for (let i = 0; i < plans.length; i++) {
+      const plan = plans[i];
+      const key = write.targetKey(i);
+      if (plan.clear_sql) {
+        // The scope's one placeholder is the DISTINCT leading key of the rows about to be
+        // written — "the batch's parcels", derived from the data rather than named here.
+        const scoped = [...new Set(rows.map((r) => r[plan.keys[0]]))];
+        const cleared = await write.executeSetBasedClear(client, plan, [scoped]);
+        written[key].scanned += scoped.length;
+        written[key].updated += cleared;
+        written[key].rows_changed += cleared;
+        continue;
+      }
+      // The run clock is stamped by the RUNNER, from the single capture above, onto the
+      // columns that DECLARED `source: "run_at"` — so the compute never sees a clock and
+      // two batches can never straddle a second (B-11 / Spec 47 §R3.5).
+      const stamped = clockColumns[i].length === 0
+        ? rows
+        : rows.map((r) => Object.assign({}, r, Object.fromEntries(clockColumns[i].map((c) => [c, runAt]))));
+      const result = await write.executeUpsertBatch(client, plan, stamped);
+      written[key].scanned += stamped.length;
+      written[key].inserted += result.inserted;
+      written[key].updated += result.updated;
+      written[key].rows_changed += result.inserted + result.updated;
+    }
+  });
+}
+
+/**
  * THE `when: "pre_write"` GATE (LR-D9 — operator ruling §7.1, 2026-08-26).
  *
  * Returns the callback `runIngestPhase` invokes between the last read and the first
@@ -437,18 +726,20 @@ function makePreWriteGate({ descriptor, chainId, stepCtx, compute, config }) {
   const only = new Set(gated);
   const accepted = acceptedCheckIds(descriptor);
 
-  return async function preWriteGate({ acquired, prior, overrides }) {
+  // `phaseState` is whatever the driving phase has MEASURED so far and nothing else:
+  // `{acquired, prior, overrides}` from the ingest phase, `{matched, gate, prior,
+  // overrides}` from the link phase. Spread rather than destructured so one gate serves
+  // both shapes without the runner inventing keys a compute would read as undefined.
+  return async function preWriteGate(phaseState) {
     const observations = Object.create(null);
     // `written: null` is the whole point — a pre_write check that reached for it would
     // read undefined here and a real value in the final pass, which is the disagreement
     // this position exists to make impossible.
     const probeCtx = {
       ...stepCtx,
-      acquired,
-      prior,
-      overrides,
       written: null,
       gate: { skipped: false, reason: 'pre_write' },
+      ...phaseState,
       checks: gated,
       report(checkId, observation) {
         if (!only.has(checkId)) {
@@ -582,6 +873,14 @@ async function runWithPool(runnable, pool, ctx) {
         prior: null,
         overrides: null,
         gate: null,
+        // ── The LINK phase's own result surface (ruling A-1(a)) ────────────────
+        // `matched` is what the JOIN produced, `cumulative` the link-rate numerator and
+        // its denominator. Null for every other shape, exactly as `acquired` is null for
+        // a step the library does not acquire for — a compute reads a null and reports
+        // "not measured" rather than a zero it cannot tell apart from a real one.
+        matched: null,
+        cumulative: null,
+        elapsed_ms: 0,
         report(checkId, observation) {
           if (!declared.has(checkId)) {
             throw new Error(`[${slug}] compute reported check "${checkId}", which the descriptor does not declare`);
@@ -594,12 +893,36 @@ async function runWithPool(runnable, pool, ctx) {
       // Only for a descriptor that DECLARES the shape; every other step reaches
       // `runnable.compute` on exactly the path pilot 1 established.
       let ingest = null;
+      let link = null;
       let onlyChecks = null;
-      if (isIngestStep(descriptor)) {
-        // Spec 47 §R3.5 — the DB clock, captured ONCE, inside the lock. It becomes
-        // the written rows' `updated_at`, so two rows from one run can never
-        // straddle a second (or a midnight).
-        const clockNow = await pipeline.getDbTimestamp(pool);
+      const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor);
+      // Spec 47 §R3.5 / B-11 — the DB clock, captured ONCE, inside the lock, for
+      // WHICHEVER phase drives the write. One capture is not a tidiness preference: it is
+      // what makes the written timestamp a single watermark, so two batches of one run
+      // cannot straddle a second (or a midnight) and a downstream consumer scoping on
+      // `> last_stamp` cannot see half a run.
+      const clockNow = drivesWrites ? await pipeline.getDbTimestamp(pool) : null;
+      if (isLinkStep(descriptor)) {
+        link = await runLinkPhase({
+          descriptor, pool, compute: runnable.compute, config: configValues,
+          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+        });
+        stepCtx.matched = link.matched;
+        stepCtx.cumulative = link.cumulative;
+        stepCtx.written = link.written;
+        stepCtx.prior = link.prior;
+        stepCtx.overrides = link.overrides;
+        stepCtx.gate = link.gate;
+        stepCtx.elapsed_ms = Date.now() - startMs;
+        if (link.writeSkipped) {
+          // The write never happened, so the `post` checks have no subject. Scoring them
+          // would turn one honest pre_write FAIL into a table of "not reported" rows at
+          // their declared severities — the same reasoning as the gated-skip narrowing.
+          onlyChecks = new Set(descriptor.checks.filter((c) => c.when !== 'post').map((c) => c.id));
+          stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
+        }
+      } else if (isIngestStep(descriptor)) {
         ingest = await runIngestPhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
           fetchImpl: stepCtx.fetch, chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
@@ -636,9 +959,16 @@ async function runWithPool(runnable, pool, ctx) {
       // whose only possible value is "fine". Absent = the read succeeded.
       const extraRows = ingest && ingest.priorError ? [staleness.priorRunErrorRow(ingest.priorError)] : [];
       const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks);
+      // The counter SCOPE, per phase. §11's Counter Semantic Contract is a scoping
+      // contract before it is a naming one: `written.e2.inserted` is only meaningful
+      // because `written` is keyed BY DECLARED TARGET (LG-5), so "records_new" can mean
+      // the upsert's inserts and not the clear's rewrites.
+      const counterScope = link
+        ? { matched: link.matched, cumulative: link.cumulative, written: link.written, gate: link.gate }
+        : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null);
       counters = ingest && ingest.skipped
         ? { records_total: null, records_new: null, records_updated: null }
-        : deriveCounters(descriptor, computeResult, ingest ? { acquired: ingest.acquired, written: ingest.written } : null);
+        : deriveCounters(descriptor, computeResult, counterScope);
 
       // ── Terminal + status ───────────────────────────────────────────────────
       // `override.accept_anomaly[]` (ruling A-5): a standing override lets an
@@ -808,8 +1138,13 @@ module.exports = {
   emitsList,
   selectTerminal,
   isIngestStep,
+  isLinkStep,
+  assertRequirements,
+  REQUIREMENT_PROBES,
   ledgerPipelineName,
   runIngestPhase,
+  runLinkPhase,
+  executeOrderedWrites,
   acceptedCheckIds,
   makePreWriteGate,
 };

@@ -1,0 +1,169 @@
+{
+  "$comment": [
+    "Spec 120 §3.4-§3.4b — the INTERPRETATION file for link_massing, capped at 12 prose",
+    "entries. Checks are uncapped; prose is capped, because the cheapest way to keep",
+    "knowledge is to make it measurable. Every entry carries measured{value, date, query}",
+    "so it can be re-executed rather than believed, and a `decisions` entry is exempt only",
+    "because a ruling is not a measurement.",
+    "",
+    "Everything in here lived ONLY as a source comment before this conversion, and would",
+    "have been deleted with the 740 lines it was attached to."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "note": "The predicate is BUILDING-CENTROID-IN-PARCEL, and the direction is the whole point. A detached house covers roughly a third of its lot, so the LOT's centroid usually lands in the yard rather than inside the house — the pre-flip predicate (parcel centroid inside building polygon) therefore missed most single-family parcels. The building's centre of mass, by contrast, is always inside the building and almost always on the lot that owns it. Reading a low link rate on this step means the join broke, not that the city is sparsely built.",
+      "measured": {
+        "value": "parcel coverage 58% before the flip, 99.71% after",
+        "date": "2026-08-27",
+        "query": "SELECT round(100.0 * count(DISTINCT pb.parcel_id) / (SELECT count(*) FROM parcels WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL), 2) FROM parcel_buildings pb"
+      }
+    },
+    {
+      "note": "The link rate reported in the audit table is CUMULATIVE, not run-scoped, and that is deliberate rather than lazy. In incremental mode the eligible set is exactly the parcels that have never linked — a pool that is permanently unmatchable, because they were already offered every footprint within the fallback radius and matched none — so a run-scoped rate reads 0% on a perfectly healthy run and would fire the floor every time. The row answers 'what fraction of the city is linked', which is the question a consumer actually has.",
+      "measured": {
+        "value": "run-scoped rate 0% vs cumulative 99.71% on the same run",
+        "date": "2026-08-27",
+        "query": "SELECT records_meta->'audit_table'->'rows' FROM pipeline_runs WHERE pipeline LIKE '%link_massing' AND status='completed' ORDER BY completed_at DESC LIMIT 1"
+      }
+    },
+    {
+      "note": "The nearest fallback's bbox prefilter converts metres to degrees by dividing by 78000 — metres per degree of longitude at Toronto's latitude. It OVER-covers east-west on purpose: the prefilter must be a superset of the true cut, and the exact cut is the geography ST_DWithin that follows. Changing 78000 changes what '50 metres' costs to find, never how much of it is accepted. Dropping the prefilter entirely is the failure tasks/lessons.md records: the geography distance then runs a nested loop over every footprint in the table, per batch.",
+      "measured": {
+        "value": "50 m -> 0.000641 degrees of prefilter span",
+        "date": "2026-08-27",
+        "query": "SELECT 50 / 78000.0 AS deg_span"
+      }
+    }
+  ],
+  "known_normal": [
+    {
+      "note": "Every incremental run processes the SAME 1,395 parcels, matches none of them, writes nothing, and reports PASS. That is the steady state, not a stall: the incremental filter selects parcels with no link at all, so it re-walks the permanently-unmatchable tail forever. The founding comment on the downstream massing_zero_link_ghost guard claims a 'measured day-one value 0' for this tail; no cloud observation supports it and both recorded cloud rows read 1395, confirmed locally here. review_followups.md files the correction; do not treat 1,395 as a regression.",
+      "measured": {
+        "value": 1395,
+        "date": "2026-08-27",
+        "query": "SELECT count(*) FROM parcels p WHERE p.centroid_lat IS NOT NULL AND p.centroid_lng IS NOT NULL AND NOT EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = p.id)"
+      }
+    },
+    {
+      "note": "A run that writes ZERO rows while reporting hundreds of matches is correct, not broken. The upsert is guarded on the four value columns, so re-offering an identical link is a genuine no-op — that is what makes the step re-runnable. The row to read for 'did anything change' is parcel_buildings_written; the row to read for 'did the join work' is match_centroid_in_parcel.",
+      "measured": {
+        "value": "records_updated 0 on every run since 2026-07-08",
+        "date": "2026-08-27",
+        "query": "SELECT started_at, records_total, records_new, records_updated FROM pipeline_runs WHERE pipeline LIKE '%link_massing' AND status='completed' ORDER BY started_at DESC LIMIT 5"
+      }
+    }
+  ],
+  "known_bad": [
+    {
+      "note": "21.3% of linked parcels are linked ONLY by the nearest fallback at the lower confidence, and 46.9% of THOSE carry a footprint larger than their own lot — a physical impossibility that marks a mislink. The links are produced here, shipped, and NULLed one chain-step later by enrich-parcels' footprint_exceeds_lot guard, with no counter at the link. This is a data-quality class, not staleness: a forced full relink moves none of these numbers.",
+      "measured": {
+        "value": "103,530 nearest-only parcels; 48,561 of them footprint > lot; 33,184 above 2x",
+        "date": "2026-08-27",
+        "query": "SELECT pb.match_type, count(*) FILTER (WHERE bf.footprint_area_sqm > p.lot_size_sqm) AS gt_lot, count(*) AS n FROM parcel_buildings pb JOIN parcels p ON p.id=pb.parcel_id JOIN building_footprints bf ON bf.id=pb.building_id WHERE pb.is_primary GROUP BY 1"
+      }
+    },
+    {
+      "note": "LM-D13 — the nearest fallback has NO TIEBREAK. `DISTINCT ON (p.id) … ORDER BY p.id, ST_Distance(...) ASC` leaves an equidistant pair to whatever the plan emitted first, so a slice of the nearest links flips between two otherwise identical full relinks. The centroid pass has the opposite property: it sorts by area DESC then building_id ASC and is deterministic. Pinned verbatim at conversion because the one-token fix MOVES ROWS; the consequence is that a FULL-path golden table hash is unstable by pin and only the incremental captures are compared for hash identity.",
+      "measured": {
+        "value": "18,252 of 103,530 nearest links unstable across two FULL relinks",
+        "date": "2026-08-27",
+        "query": "SELECT count(*) FROM parcel_buildings WHERE match_type = 'nearest'"
+      }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "Nothing counts a footprint-exceeds-lot link AT THE LINK. The condition is caught one step downstream by enrich-parcels, which NULLs the whole existing-structure block for the affected parcel — so the bad links are produced, shipped and silently discarded, and this step's audit table reads PASS throughout. A link-stage counter by match_type lands in peel 8b; adding it here would smuggle a behaviour change into a no-op conversion.",
+      "detected_by": "none",
+      "measured": {
+        "value": "58,050 parcels flagged footprint_exceeds_lot downstream; 0 counters here",
+        "date": "2026-08-27",
+        "query": "SELECT count(*) FROM parcels WHERE existing_data_quality_flag = 'footprint_exceeds_lot'"
+      }
+    },
+    {
+      "what": "The parcel sanity harness has ZERO rules over parcel_buildings itself — its four massing rules all fire on the DERIVED parcel columns, so a mislink is caught only after it has become a cost. parcel-field-dump.js likewise shows no link-level field (match_type / confidence / is_primary / footprints-per-parcel), so an eyeball on a suspicious parcel cannot see how it was linked. Filed as a separate WF3.",
+      "detected_by": "none",
+      "measured": {
+        "value": "0 of 42 sanity rules scope parcel_buildings",
+        "date": "2026-08-27",
+        "query": "grep -c \"parcel_buildings\" scripts/analysis/parcel-sanity-audit.js"
+      }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "parcel_buildings_written is large on a run whose match counts did not move. The guard makes an unchanged link a no-op, so writes without matches means something is changing the four guarded value columns — most plausibly a confidence or threshold edit, or the run clock having reached the change guard.",
+      "check": "rows_changed_ratio",
+      "measured": {
+        "value": "0 rows written on every run since 2026-07-08",
+        "date": "2026-08-27",
+        "query": "SELECT started_at, records_updated FROM pipeline_runs WHERE pipeline LIKE '%link_massing' AND status='completed' ORDER BY started_at DESC LIMIT 10"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "note": "A-8 OVERRIDE — the JS fallback path is RETIRED, not pinned. It was a complete second implementation of this step's contract (in-memory grid, haversine, Mercator auto-detect, turf point-in-polygon, batch size 500, its own confidence literals, and NO is_primary clear before the upsert) that has never executed: every recorded run reports the PostGIS branch. Retiring it removes the §1.6 silent swallow it carried — an invalid geometry in the point-in-polygon test was caught, logged and the parcel silently reclassified as no-match with no counter — and replaces the branch with a fail-loud guards.requires precondition on the extension."
+    }
+  ],
+  "counts": {
+    "open_blind_spots": 2,
+    "unpromoted_suspicious_if": 0
+  },
+  "fences": [
+    {
+      "const": "the is_primary clear precedes the upsert, and the primary sort is area DESC then building_id ASC",
+      "value": "outputs.writes[0] (set_based_scoped) declared BEFORE outputs.writes[1] (guarded_upsert)",
+      "incident": "PostGIS argument order + deterministic primary assignment + the partial unique index. Without the clear, a parcel whose largest building changes violates idx_parcel_buildings_one_primary the moment the new primary is upserted while the old one is still flagged; without the building_id tiebreak in the sort, two equal-area buildings take turns being primary between runs. B-8.",
+      "commit": "5bb31faf",
+      "lock_test": "src/tests/steps/link_massing/violations.test.ts"
+    },
+    {
+      "const": "the upsert's IS DISTINCT FROM guard names exactly is_primary/structure_type/match_type/confidence and NEVER linked_at",
+      "value": "write_discipline.guard_columns = [is_primary, structure_type, match_type, confidence]",
+      "incident": "Before this guard the upsert re-stamped every row it touched. linked_at is in the SET list but excluded from the guard because it is the run clock: including it — or writing guard_columns \"all_declared\", which expands over it — makes every one of 520,492 rows DISTINCT on every run, and enrich-parcels re-scopes on pb.linked_at so the next enrich run goes from 1,395 parcels to 485,135. D-5.",
+      "commit": "b36d0596",
+      "lock_test": "src/tests/steps/link_massing/violations.test.ts"
+    },
+    {
+      "const": "the full-mode retraction is ONE statement, before the loop, scoped identically to the parcels being re-evaluated",
+      "value": "retract \"all\" + retract_when \"full_only\" + write_discipline.scope = the centroid base filter",
+      "incident": "The predicate flip left GHOST LINKS: rows that matched under the old parcel-centroid-in-building test and not under the new one. The cleanup must retract exactly the set the run rebuilds — a wider scope empties the junction for parcels this run never revisits, and an ungated one would retract 520,492 rows on an incremental run that rebuilds only the 1,395-parcel tail. B-7.",
+      "commit": "b16c036d",
+      "lock_test": "src/tests/steps/link_massing/violations.test.ts"
+    },
+    {
+      "const": "the nearest cap comes from massing_nearest_max_distance_m, and the ST_Expand bbox prefilter precedes the geography ST_DWithin",
+      "value": "config.massing_nearest_max_distance_m -> $3, and its /78000 degree span -> $2 in ST_Expand",
+      "incident": "The three massing heuristics were externalized out of the code. Re-literalising the cap makes it an invisible knob again; dropping or reordering the prefilter makes the geography distance a nested loop over every footprint, per batch, which is the incident tasks/lessons.md records. B-10.",
+      "commit": "d324ab27",
+      "lock_test": "src/tests/steps/link_massing/violations.test.ts"
+    },
+    {
+      "const": "the full relink is GATED on a real change, not on the --full argument alone",
+      "value": "staleness.mode_select \"tri_state\": full iff forced, or (--full permitted AND a code/corpus signal moved)",
+      "incident": "The --full chain_arg served a one-time ghost-link cleanup; leaving it always-on cost ~21.9 minutes on every quarterly sources run even when nothing had changed. The gate needs BOTH signals: a pure data gate would have silently skipped the predicate flip itself, leaving ghost links.",
+      "commit": "2f3d0e4e",
+      "lock_test": "src/tests/steps/link_massing/violations.test.ts"
+    },
+    {
+      "const": "linked_at is written on INSERT so a first-time link is never NULL",
+      "value": "columns[].source \"run_at\" on linked_at, stamped by the runner from one DB-clock capture",
+      "incident": "First-time links landed with a NULL linked_at, which made the downstream watermark comparison silently skip them forever. Spec 47 §6.1. The runner now stamps it from a single getDbTimestamp per run, so two batches cannot straddle a second either (B-11).",
+      "commit": "06320b39",
+      "lock_test": "src/tests/steps/link_massing/violations.test.ts"
+    }
+  ],
+  "review_notes": [
+    {
+      "note": "Read the two write targets as ONE ordered pair, never independently: the primary clear is only correct because the upsert follows it in the same transaction, and the upsert is only safe because the clear preceded it. A review that asks 'why is this UPDATE unguarded' in isolation gets the wrong answer.",
+      "measured": {
+        "value": "2 declared write targets, executed in declaration order",
+        "date": "2026-08-27",
+        "query": "node -e \"console.log(require('./scripts/link-massing.descriptor.json').outputs.writes.map(w=>w.write_discipline.class))\""
+      }
+    }
+  ]
+}

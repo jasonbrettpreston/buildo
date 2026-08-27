@@ -1,0 +1,47 @@
+{
+  "$comment": [
+    "THE ENFORCER FOR `x-banned-for-new` (Spec 122 §1.4 V7; Fold B item 2, LINK pilot 2026-08-27).",
+    "",
+    "Before this file, `step.schema.json`'s `x-banned-for-new` block was METADATA WITH NO",
+    "CONSUMER — `grep -rn 'x-banned-for-new' scripts/ src/` reached nothing that read it. A",
+    "banned value was therefore banned only in prose: any new descriptor could declare",
+    "`guard: \"none\"`, satisfy the schema's own `guard_why` requirement, and ship. That is the",
+    "C-12 enforcement gap.",
+    "",
+    "The rule is now conjunctive and BOTH halves are mandatory:",
+    "  1. the sibling `*_why` the schema already requires (a justification), AND",
+    "  2. an entry HERE naming the step, the exact descriptor path, the value, and the commit",
+    "     that grandfathered it (an adjudication with a date and an owner).",
+    "A descriptor carrying a banned value with no entry is REFUSED by",
+    "`scripts/lib/step/validate.js assertGrandfathered`, at pipeline.step() construction —",
+    "before compute exists, and therefore before any pool is opened (Spec 122 §4.2).",
+    "",
+    "ADDING AN ENTRY IS THE EXPENSIVE PATH ON PURPOSE. It is a committed, reviewed diff that",
+    "names a SHA; it is not something a descriptor can grant itself. Removing one is free.",
+    "",
+    "Keys are `identity.name`. `paths` maps a descriptor path to the banned value it carries."
+  ],
+  "contract_version": 1,
+  "steps": {
+    "link_massing": {
+      "paths": {
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "outputs.writes[0] (E1) is the `UPDATE parcel_buildings SET is_primary = false WHERE parcel_id = ANY($1) AND is_primary = true` that fence 5bb31faf introduced and B-8 names: it CLEARS the batch's primaries so the upsert can re-assign them without violating the partial unique index idx_parcel_buildings_one_primary (migration 081) when the primary shifts to a different building. A change guard is not merely unnecessary here, it is WRONG — `is_distinct_from` would skip exactly the rows whose primary is about to move, which is the collision the clear exists to prevent. The unguarded write is therefore the correct mechanic, and its cost is bounded and declared: `write_discipline.scope` narrows it to the batch's parcels and `idempotent_rerun: declared_drift` + `declared_drift` state that it always rewrites them.",
+      "commit": "5bb31faf",
+      "adjudicated_by": "operator ruling 2026-08-27 (pilot 3 authorization, Fold B item 2)",
+      "date": "2026-08-27",
+      "lock_test": "src/tests/steps/link_massing/violations.test.ts"
+    },
+    "fixture_grandfathered_snapshot": {
+      "paths": {
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "The schema's own exemplar for the V7 grandfathered-unguarded shape (refresh-snapshot.js:535 — ON CONFLICT (snapshot_date) DO UPDATE with no change guard, so a same-day re-run overwrites the row in place). It is a FIXTURE, never a runnable step, and it exists so src/tests/step-schema.logic.test.ts can prove the declaration is expressible. Listing it here keeps the enforcer's GREEN direction real: without an entry the fixture would be refused, and the only way to make the suite pass would be to weaken the rule.",
+      "commit": "9e2da7b1",
+      "adjudicated_by": "Spec 122 V7 (schema fixture, not a manifest step)",
+      "date": "2026-08-25",
+      "lock_test": "src/tests/step-schema.logic.test.ts"
+    }
+  }
+}

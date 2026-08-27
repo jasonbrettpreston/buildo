@@ -113,6 +113,10 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
       'massing_shed_threshold_sqm',
       'massing_garage_max_sqm',
       'massing_nearest_max_distance_m',
+      'link_massing_link_rate_fail_pct',
+      'link_massing_centroid_confidence',
+      'link_massing_nearest_confidence',
+      'link_massing_grid_degrees',
     ],
   },
   {

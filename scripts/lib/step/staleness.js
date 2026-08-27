@@ -36,6 +36,32 @@ const sourceVersion = require('../source-version');
 /** The env value that arms an override. `'1'`, exactly — never truthiness. */
 const OVERRIDE_ON = '1';
 
+/**
+ * THE ONE PLACE `--full` IS READ (LG-10, LINK pilot 2026-08-27).
+ *
+ * ⚠️ WHY THIS EXISTS AND WHY IT IS HERE. `--full` arrives from
+ * `manifest.chain_args`, and before the conversion the only reader was
+ * `pipeline.isFullMode()` — `process.argv.includes('--full')` ONE CALL FRAME ABOVE the
+ * step. The frozen file shape (§5.1) permits no such call, and §5.5 (3) forbids a
+ * compute from touching argv, so after conversion NOBODY reads it: the flag the
+ * `sources` chain passes would become inert and every sources run would silently go
+ * incremental. That is a gating change disguised as a refactor.
+ *
+ * ⚠️ AND NO LINTER CAN SEE THE OLD SHAPE (C-12). `compute-shape.yml` matches
+ * `process.env`, not `process.argv`, and an argv read one frame up is invisible to any
+ * regex over the compute. So the rule is structural instead: argv is read HERE, once,
+ * by the runner, and the value reaches the compute only as `ctx.gate.explicit_full`.
+ */
+const FULL_ARG = '--full';
+
+/**
+ * The `staleness.mode_select` value this gate implements. Asserted rather than assumed:
+ * a descriptor that declares `skip` and is driven through `selectMode` would get a
+ * full-vs-incremental answer to a skip-or-not question, which is the axis conflation
+ * §1.5 split the category apart to end.
+ */
+const MODE_SELECT_TRI_STATE = 'tri_state';
+
 /** The category's null form. */
 const NONE = 'none';
 
@@ -235,8 +261,124 @@ function skipCheckDecision({ lastModified, etag = null, contentHash = null, prio
   );
 }
 
+/** The env var name `override.force_full` declares, or null. */
+function forceFullEnv(descriptor) {
+  const o = descriptor.override;
+  if (!o || o === NONE || !o.force_full || o.force_full === NONE) return null;
+  return o.force_full;
+}
+
+/** Is the declared FULL override standing? Reads env ONCE, here (§5.5 (3)). */
+function forceFullRequested(descriptor, env) {
+  const name = forceFullEnv(descriptor);
+  if (!name) return false;
+  return (env || process.env)[name] === OVERRIDE_ON;
+}
+
+/** Did the invocation PERMIT a full run? The single `--full` argv read (LG-10). */
+function fullArgPresent(argv) {
+  return (argv || process.argv).includes(FULL_ARG);
+}
+
+/**
+ * Measure one `pre_compute` trigger against the prior completed run's declared emit.
+ *
+ * Generic by construction: `signal` says WHAT KIND of comparison, `emit_key` says which
+ * key of the prior `records_meta` holds the baseline, and `table` (for
+ * `upstream_ledger`) says what to count. Nothing here names a step, a domain table or a
+ * code-version constant — the step-specific parts are all descriptor data, which is
+ * what keeps Gate 0 (#149, "zero new bespoke runner paths") satisfiable.
+ *
+ * Comparison is by STRING, deliberately: `records_meta` is jsonb and a count that was
+ * written as `"427077"` must compare equal to a count read back as `427077`. This is the
+ * same String() coercion the pre-conversion gate used, kept byte-for-byte.
+ *
+ * @returns {Promise<{signal: string, key: string, current: string|null, prior: string|null, changed: boolean}>}
+ */
+async function measureTrigger(pool, descriptor, trigger) {
+  const key = trigger.emit_key || trigger.signal;
+  let current = null;
+  if (trigger.signal === 'code_version') {
+    const v = descriptor.staleness.logic_version;
+    current = v && v !== NONE ? String(v) : null;
+  } else if (trigger.signal === 'upstream_ledger' && trigger.table) {
+    const { rows } = await pool.query(`SELECT COUNT(*)::bigint AS n FROM ${trigger.table}`);
+    current = String(rows[0].n);
+  }
+  return { signal: trigger.signal, key, current, prior: null, changed: false };
+}
+
+/**
+ * THE MODE-SELECTING GATE (LG-7 / A-1(a), `mode_select: "tri_state"`).
+ *
+ * §1.5 named this step's gate as the mechanism that forced `staleness` into three axes:
+ * "the output is a MODE, not a skip … `on_fingerprint_change` offered only `queue · run`
+ * — never 'run in full mode'". `preAcquisitionDecision` answers "skip or not"; this
+ * answers "full or incremental", from three inputs that are each declared:
+ *
+ *   · the INVOCATION (`--full` from `manifest.chain_args`, mirrored in
+ *     `execution.invocation.<chain>.argv`) — PERMISSION to rebuild, not a decision
+ *   · the OVERRIDE (`override.force_full`) — an operator forcing it unconditionally
+ *   · the SIGNALS (`staleness.trigger[]` at `pre_compute`) — whether anything actually
+ *     changed since the prior completed run: the code that computes the links, or the
+ *     upstream corpus they are computed from
+ *
+ * ⚠️ THE TRUTH TABLE IS THE PRE-CONVERSION ONE, PORTED VERBATIM (fence 2f3d0e4e,
+ * `decideMassingFull`): full ⇔ forced ∨ (permitted ∧ changed). A pure data gate would
+ * have silently skipped a predicate FLIP (the b16c036 class), which is why the code
+ * signal exists at all; a pure code gate would miss a quarterly corpus reload.
+ *
+ * ⚠️ FAIL-SAFE DIRECTION, inherited from source-version.js: NO PRIOR RUN ⇒ changed.
+ * An unreadable baseline may never resolve to "nothing moved".
+ *
+ * @returns {Promise<{mode: 'full'|'incremental', reason: string, changed: boolean,
+ *   explicit_full: boolean, forced: boolean, signals: object[]}>}
+ */
+async function selectMode({ descriptor, pool, prior, argv, env }) {
+  const declared = descriptor.staleness && descriptor.staleness.mode_select;
+  if (declared !== MODE_SELECT_TRI_STATE) {
+    throw new Error(`[${descriptor.identity.name}] selectMode answers "full or incremental", and this descriptor `
+      + `declares staleness.mode_select "${declared}". Declare "${MODE_SELECT_TRI_STATE}" or do not route this `
+      + 'step through the mode gate — a skip-or-not gate and a mode gate are different questions (§1.5).');
+  }
+  const triggers = triggersAt(descriptor, 'pre_compute');
+  const explicitFull = fullArgPresent(argv);
+  const forced = forceFullRequested(descriptor, env);
+  const signals = [];
+  let changed = false;
+  let reason = 'unchanged';
+
+  if (!prior) {
+    changed = true;
+    reason = 'no_prior_run';
+  }
+  for (const t of triggers) {
+    const measured = await measureTrigger(pool, descriptor, t);
+    const baseline = prior && prior[measured.key] !== undefined ? String(prior[measured.key]) : null;
+    measured.prior = baseline;
+    // An ABSENT baseline is not a change: a pre-contract run recorded no such key, and
+    // the last completed run WAS a full rebuild under the current logic, so treating the
+    // gap as "changed" would force a 21.9-minute relink on every upgrade. A PRESENT
+    // baseline that differs IS a change. (Pre-conversion: `prevCode !== undefined &&`.)
+    measured.changed = baseline !== null && measured.current !== null && baseline !== measured.current;
+    signals.push(measured);
+    if (measured.changed && !changed) {
+      changed = true;
+      reason = `${measured.key}_changed(${baseline}->${measured.current})`;
+    }
+  }
+
+  const mode = forced || (explicitFull && changed) ? 'full' : 'incremental';
+  const modeReason = forced
+    ? 'force_full_env'
+    : (explicitFull && changed ? `gate:${reason}` : (explicitFull ? `incremental:gate_${reason}` : 'incremental:no_full_arg'));
+  return { mode, reason: modeReason, changed, explicit_full: explicitFull, forced, signals };
+}
+
 module.exports = {
   OVERRIDE_ON,
+  FULL_ARG,
+  MODE_SELECT_TRI_STATE,
   POSTURE_FAIL,
   POSTURE_WARN_ROW,
   PRIOR_RUN_ERROR_METRIC,
@@ -246,6 +388,11 @@ module.exports = {
   priorRunErrorRow,
   forceRunEnv,
   forceRunRequested,
+  forceFullEnv,
+  forceFullRequested,
+  fullArgPresent,
+  measureTrigger,
+  selectMode,
   acceptAnomalies,
   overrideKey,
   resolveOverrides,

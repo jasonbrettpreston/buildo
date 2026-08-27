@@ -1,0 +1,868 @@
+{
+  "identity": {
+    "name": "link_massing",
+    "display_name": "Building Footprint Linking",
+    "owner": "data",
+    "description": "Joins parcels to building_footprints on a spatial predicate (building centroid inside the parcel polygon, then a bounded nearest fallback) and writes the parcel_buildings junction: a full-mode scoped retraction, a set-based is_primary clear, then a guarded upsert on the composite key (parcel_id, building_id).",
+    "lock": 91,
+    "why_lock": {
+      "text": "Lock 91 is NOT the spec number (this step's spec is 56). It was assigned by the c1ef0b73 advisory-lock retrofit from the next-free range per Spec 47 §A.5, it is recorded in src/tests/pipeline-advisory-lock.infra.test.ts's registry, and backfill-realtor-permit-trades.infra.test.ts records a PAST COLLISION on 91 — so renumbering it to 56 is not a tidy-up, it is a chance to reintroduce a collision that has already happened once.",
+      "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" }
+    },
+    "spec": "56",
+    "spec_version": "2.0",
+    "archetype": "LINK",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "massing", "version_pin": "gte" },
+        { "step": "compute_centroids", "version_pin": "gte" }
+      ],
+      "tables": [
+        { "table": "parcels", "columns": ["id", "centroid_lat", "centroid_lng", "geom"] },
+        { "table": "building_footprints", "columns": ["id", "geom", "centroid_lat", "centroid_lng", "footprint_area_sqm"] },
+        { "table": "parcel_buildings", "columns": ["parcel_id"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcel_buildings",
+        "key": ["parcel_id", "building_id"],
+        "columns": [
+          { "name": "is_primary", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": false }
+        ],
+        "write_discipline": {
+          "class": "set_based_scoped",
+          "guard": "none",
+          "guard_why": {
+            "text": "Fence 5bb31faf / B-8. This target CLEARS is_primary for the batch's parcels so the upsert below can re-assign the primary structure without violating the partial unique index idx_parcel_buildings_one_primary (migration 081) when a parcel's largest building changes. A change guard would be WRONG, not merely redundant: `is_distinct_from` skips rows whose value already matches, which is exactly the still-primary row whose flag must come down before a DIFFERENT building takes it — the collision the clear exists to prevent. Grandfathered in scripts/steps/_schema/grandfathered.json against commit 5bb31faf; the cost is bounded by `scope` and declared by `idempotent_rerun: declared_drift`.",
+            "liveness": { "kind": "table", "ref": "parcel_buildings" }
+          },
+          "guard_columns": ["is_primary"],
+          "scope": "parcel_id = ANY($1) AND is_primary = true",
+          "expected_change_ratio": "<= 1.0",
+          "idempotent_rerun": "declared_drift",
+          "idempotent_rerun_why": {
+            "text": "zero_writes is unachievable here BY DESIGN and claiming it would be a false declaration. Every batch whose parcels already carry a primary has those rows rewritten to false and then rewritten back by E2 in the same transaction; the count is a function of the batch, not of anything having changed. The step-level idempotence claim lives on E2, where it is measurable: a re-run over an unchanged corpus must leave `written.e2.rows_changed` at 0.",
+            "liveness": { "kind": "check", "ref": "rows_changed_ratio" }
+          },
+          "declared_drift": {
+            "text": "Rows rewritten per run = the number of (parcel_id, building_id) rows in the batch that are currently is_primary = true — at most one per parcel by the partial unique index, so bounded by the batch's parcel count and never by the table's row count. On the measured incremental steady state that is 0: the 1,395-parcel tail has no links to clear. On a forced FULL relink it is at most 485,135 (one per linked parcel), all inside the same transaction as the upsert that restores them.",
+            "liveness": { "kind": "check", "ref": "rows_changed_ratio" }
+          },
+          "txn_scope": "batch"
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "not_applicable",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "parcel_buildings",
+        "key": ["parcel_id", "building_id"],
+        "columns": [
+          { "name": "parcel_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "building_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "is_primary", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          {
+            "name": "structure_type",
+            "vocabulary": { "values": ["primary", "garage", "shed", "other"], "on_unknown": "fail", "source": "scripts/lib/compute/link-massing.js classifyStructure" },
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "match_type",
+            "vocabulary": { "values": ["centroid_in_parcel", "nearest"], "on_unknown": "fail", "source": "scripts/lib/compute/link-massing.js buildMatchSql" },
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          { "name": "confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "linked_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": ["is_primary", "structure_type", "match_type", "confidence"],
+          "scope": "parcel_id IN (SELECT id FROM parcels WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL)",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "Fence b36d0596, and the single most dangerous line of this conversion (D-5). The guard names EXACTLY the four value columns and NEVER linked_at, even though linked_at IS in the SET list: linked_at is the run clock (`columns[].source: \"run_at\"`), so guarding on it would be DISTINCT FROM on every run, rewriting all 520,492 rows every run — and because enrich-parcels.js buildMassingScopeWhere re-scopes on `pb.linked_at > p.massing_enriched_at`, the next enrich_parcels run would re-enrich 485,135 parcels instead of 1,395 (~46-53 min). `guard_columns: \"all_declared\"` expands over linked_at and is therefore refused outright by scripts/lib/step/validate.js (LG-9), not merely discouraged.",
+            "liveness": { "kind": "file", "ref": "scripts/enrich-parcels.js" }
+          }
+        },
+        "retract": "all",
+        "retract_when": "full_only",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "not_applicable",
+          "key_space_migration": "none"
+        }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [
+      {
+        "table": "parcels",
+        "column": "massing_enriched_at",
+        "when": "any row of parcel_buildings gains a linked_at newer than the parcel's massing_enriched_at — enrich-parcels.js buildMassingScopeWhere IS that predicate, so this edge is the entire incremental scope of enrich_parcels and the 12 existing_* / imagery_roof_* columns derived through it"
+      }
+    ],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 3,
+      "why": {
+        "text": "Exactly three write statements reach parcel_buildings: the full-mode scoped retraction (once per run, before the loop), the set-based is_primary clear (once per batch), and the batched guarded upsert (once per batch). The two match queries and the cumulative link-rate query are pure SELECTs and write nothing.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    }
+  },
+
+  "staleness": {
+    "scope": "centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL AND NOT EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = parcels.id)",
+    "trigger": [
+      { "signal": "code_version", "position": "pre_compute", "emit_key": "code_version" },
+      { "signal": "upstream_ledger", "position": "pre_compute", "table": "building_footprints", "emit_key": "building_footprints_count" }
+    ],
+    "mode_select": "tri_state",
+    "checkpoint": { "cursor": "id", "ordered": true },
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/massing-full-gate.js", "scripts/lib/compute/link-massing.js"],
+    "logic_version": "v2-building-centroid-in-parcel",
+    "on_fingerprint_change": "run",
+    "on_prior_run_error": "fail_step"
+  },
+
+  "guards": {
+    "requires": [
+      {
+        "kind": "extension",
+        "name": "postgis",
+        "on_missing": "fail",
+        "why": {
+          "text": "A-8 OVERRIDE (operator ruling 2026-08-27). The pre-conversion step answered a missing PostGIS extension by switching to a SECOND ALGORITHM — an in-memory grid, haversine distances and @turf point-in-polygon — with a different batch size, no is_primary clear, and its own copies of the confidence literals. That branch has never run (every recorded run reports buildings_indexed = 0 and grid_cells = 'N/A (PostGIS)'), and a never-run second implementation of the same contract is a liability, not a fallback. It is knowingly retired; this precondition is what replaces it. on_missing MUST be 'fail': a 'degrade' arm here would be the same fiction with a declaration on top.",
+          "liveness": { "kind": "external", "ref": "postgis" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcels_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "B-4, and a HALT rather than a warning. The join predicate is bf.geom && p.geom; without the GiST index on parcels.geom every batch degrades to a sequential scan over 486,530 parcels, which turns a 22-minute full relink into an unbounded one. The pre-conversion step asserted this inline and threw with the same reasoning.",
+          "liveness": { "kind": "file", "ref": "migrations/039_add_postgis_geom_columns.sql" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_building_footprints_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "The other half of the spatial join. Both the bbox prefilter (bf.geom && p.geom) and the nearest fallback's ST_Expand prefilter seek this index; without it the nearest pass is a nested loop over 427,077 footprints per batch, which is the failure tasks/lessons.md records.",
+          "liveness": { "kind": "file", "ref": "migrations/039_add_postgis_geom_columns.sql" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcel_buildings_one_primary",
+        "on_missing": "fail",
+        "why": {
+          "text": "The PARTIAL UNIQUE index (parcel_id) WHERE is_primary, migration 081 — the constraint E1's clear exists to satisfy. If it is absent the clear still runs but nothing enforces one-primary-per-parcel, so a shifting primary silently produces two, and the cost model reads whichever it joins first. Live: 0 violations, and the multi_primary_parcels check asserts that BY COUNT rather than by trusting the constraint.",
+          "liveness": { "kind": "table", "ref": "parcel_buildings" }
+        }
+      },
+      {
+        "kind": "fk",
+        "name": "parcel_buildings_parcel_id_fkey",
+        "on_missing": "fail",
+        "why": {
+          "text": "parcel_id → parcels(id). The junction is only meaningful while both sides are referential; a dropped FK would let the full-mode retraction leave orphans that quality/audit-fk-orphans.js reports one chain-step later rather than here.",
+          "liveness": { "kind": "table", "ref": "parcel_buildings" }
+        }
+      },
+      {
+        "kind": "fk",
+        "name": "parcel_buildings_building_id_fkey",
+        "on_missing": "fail",
+        "why": {
+          "text": "building_id → building_footprints(id). Same class as the parcel-side FK, and the reason a load_massing reload that re-keys footprints cannot silently orphan links.",
+          "liveness": { "kind": "table", "ref": "parcel_buildings" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcel_buildings_parcel",
+        "on_missing": "fail",
+        "why": {
+          "text": "The btree the incremental filter's NOT EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = parcels.id) seeks once per eligible parcel, and the index enrich-parcels.js joins the junction through. Without it the incremental eligibility query alone is a 520,492-row scan.",
+          "liveness": { "kind": "table", "ref": "parcel_buildings" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcel_buildings_building",
+        "on_missing": "fail",
+        "why": {
+          "text": "The building-side btree. Declared in the same breath as its parcel-side twin because the boundary freeze enumerates five indexes on this table and a generated write that reorders or drops a column may not violate any of them silently.",
+          "liveness": { "kind": "table", "ref": "parcel_buildings" }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "parcel_buildings",
+        "on_missing": "fail",
+        "why": {
+          "text": "Measured on the live catalog 2026-08-27: parcel_buildings has relrowsecurity = true with ZERO policies (migration 227's class-B default-deny), and every write works only because the pipeline role has rolbypassrls. Under any other role the retraction, the clear and the upsert all affect 0 rows WITH NO ERROR — counters read 0, the verdict reads PASS, the ledger row reads completed, and the run is indistinguishable from one that had nothing to do. Identical to pilot 2's LR-D7 on `ravines`.",
+          "liveness": { "kind": "table", "ref": "parcel_buildings" }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "building_footprints",
+    "schema_drift": "pause"
+  },
+
+  "execution": {
+    "shape": "link",
+    "budget": "45m",
+    "txn_scope": "batch",
+    "txn_budget": "5m",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "60m",
+    "batch": 1000,
+    "needs_disk_mb": "none",
+    "partial_fill": "batched",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check here reads a value the library already measured — the join counters, the per-target write counters, the resolved gate — so a check that throws is a library defect rather than an upstream condition. It must redden the run, not drop its row: an omitted row is the 'green because it never looked' class this contract exists to retire.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-massing.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "sources": { "argv": ["--full"], "env": { "PIPELINE_CHAIN": "sources" } },
+      "permits": { "argv": [], "env": { "PIPELINE_CHAIN": "permits" } }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "building_footprints_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "the upstream footprint corpus size the mode gate measured this run" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The DATA half of the two-signal mode gate, and a frozen producer field: the NEXT run reads it back out of records_meta to decide whether the corpus moved. Reported as a row so the number the gate compared is visible in the audit table rather than only inside the decision. Replaces the pre-conversion `buildings_indexed` row, which counted the in-memory grid of the now-retired JS path and read 0 on every recorded run.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/massing-full-gate.js" }
+      }
+    },
+    {
+      "id": "full_mode_gate",
+      "kind": "freshness",
+      "expect": { "reports": "the resolved mode and the reason the gate resolved it" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The tri-state decision, on the record. A 21.9-minute full relink and a 7-second incremental run are the same step with the same verdict, and before this row the only way to tell which one happened was to read the duration. Fence 2f3d0e4e's decision is now an audit row rather than a log line.",
+        "liveness": { "kind": "check", "ref": "building_footprints_count" }
+      }
+    },
+    {
+      "id": "structure_thresholds",
+      "kind": "vocab_coverage",
+      "expect": { "reports": "the area thresholds classifying a linked building as shed / garage / other" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Provenance for the written structure_type vocabulary. The thresholds are operator-editable (d324ab27 externalized them), so the value in force at write time is part of what the row means — the same reason pilot 2 froze its licence row. Without it a re-classification after an operator edit is indistinguishable from a data change.",
+        "liveness": { "kind": "column", "ref": "parcel_buildings.structure_type" }
+      }
+    },
+    {
+      "id": "override_force_full_present",
+      "kind": "invariant",
+      "expect": { "standing_override": false },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "LINK_MASSING_FORCE_FULL left standing in production forces a 21.9-minute relink on EVERY subsequent run and bumps linked_at on all 520,492 rows, which re-scopes enrich_parcels from 1,395 parcels to 485,135 each time. The row fires whenever the env is set, including runs that legitimately wanted it, so a forgotten override is discovered by reading the audit table rather than by reading a bandwidth bill.",
+        "liveness": { "kind": "check", "ref": "full_mode_gate" }
+      }
+    },
+    {
+      "id": "empty_source_guard",
+      "kind": "invariant",
+      "expect": { "upstream_corpus_nonempty": true },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "D-20, and the one guarantee this step did not have. The full-mode retraction is `DELETE FROM parcel_buildings WHERE parcel_id IN (SELECT id FROM parcels WHERE <baseFilter>)` with NO guard of any kind: against an empty or truncated building_footprints it would delete all 520,492 links and rebuild nothing, leaving a junction that is empty, a verdict that is PASS, and twelve derived parcel columns that go NULL one chain-step later. Scored at `when: \"pre_write\"` — before writes[0], which IS the retraction — so an unaccepted FAIL means no statement is issued and the junction is exactly as the prior run left it.",
+        "liveness": { "kind": "table", "ref": "building_footprints" }
+      }
+    },
+    {
+      "id": "parcels_processed",
+      "kind": "field_coverage",
+      "expect": { "reports": "eligible parcels this run walked" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from the pre-conversion audit table by name. In incremental mode this is the permanently-unmatchable tail (measured 1,395), which is why it is NOT records_total any more (D-8): a run that processes 1,395 parcels and links none of them is the healthy steady state, and reporting that number as the step's record count made every run look like it had done 1,395 units of work.",
+        "liveness": { "kind": "table", "ref": "parcels" }
+      }
+    },
+    {
+      "id": "run_matched",
+      "kind": "field_coverage",
+      "expect": { "reports": "parcels that gained at least one link this run" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name. The run-scoped numerator, distinct from the CUMULATIVE link rate below — the distinction the pre-conversion file recorded in a comment and which this pair of rows now makes structural.",
+        "liveness": { "kind": "check", "ref": "link_rate" }
+      }
+    },
+    {
+      "id": "match_centroid_in_parcel",
+      "kind": "field_coverage",
+      "expect": { "reports": "links made by the building-centroid-in-parcel predicate" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name. The high-confidence half of the match_type vocabulary and fence b16c036d's own evidence: this predicate is the flipped one, and its share moving is how a re-flip would be seen.",
+        "liveness": { "kind": "column", "ref": "parcel_buildings.match_type" }
+      }
+    },
+    {
+      "id": "match_nearest_fallback",
+      "kind": "field_coverage",
+      "expect": { "reports": "links made by the bounded nearest fallback, with the distance cap in force" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name, and the population Reality-Check flagged: 103,530 of 485,135 linked parcels (21.3%) carry ONLY a nearest link at confidence 0.60, and 46.9% of those have a footprint larger than their own lot. That is a data-quality class rather than a staleness signal — a forced FULL relink moves none of it — so it is reported and NOT gated here; the link-stage footprint-exceeds-lot counter is peel 8b and the sanity-rule gap is a filed WF3.",
+        "liveness": { "kind": "column", "ref": "parcel_buildings.match_type" }
+      }
+    },
+    {
+      "id": "no_match",
+      "kind": "field_coverage",
+      "expect": { "reports": "eligible parcels that matched no building at all" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name. On an incremental run this equals parcels_processed (measured 1,395) and that is CORRECT — the incremental filter selects exactly the parcels that have never matched, so it re-walks the permanently-unmatchable tail every run. review_followups.md line 13 files the founding comment's 'measured day-one value 0' claim as unsupported; confirmed 1,395 locally on 2026-08-27.",
+        "liveness": { "kind": "file", "ref": "docs/reports/review_followups.md" }
+      }
+    },
+    {
+      "id": "parcel_buildings_written",
+      "kind": "field_coverage",
+      "expect": { "reports": "junction rows the guarded upsert actually changed" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name, and the name is load-bearing: src/tests/chain.logic.test.ts asserts this exact string appears in the step's audit surface, and it is the row that separates ALGORITHMIC matches from DB MUTATIONS. Zero on a healthy incremental run is the point — the guard made the re-run a no-op — which is why it is INFO rather than a coverage bound.",
+        "liveness": { "kind": "file", "ref": "src/tests/chain.logic.test.ts" }
+      }
+    },
+    {
+      "id": "link_rate",
+      "kind": "bound",
+      "expect": { "of": "parcels with a centroid that carry NO link, over all parcels with a centroid" },
+      "limit": "pct <= 50",
+      "limit_from_config": "link_massing_link_rate_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The step's one verdict-bound threshold, and the P4 violation this pilot closes: pre-conversion the floor was the bare literal 50 in `massingLinkRate >= 50 ? 'PASS' : …` PLUS a duplicated render string '>= 50%', with ZERO registered logic variables. Two literals collapse to one operator-editable source, and `limit_from_config` renders the value in force in the threshold column. Reported as the UNLINKED fraction because the declared limit forms are upper bounds — `pct <= 50` on the complement is exactly `link_rate >= 50`, and the readable rate travels in the row's detail. Live headroom is enormous (99.71% linked, a 49.7-point dead band), which is a finding in itself and is recorded in the notes rather than silently narrowed here.",
+        "liveness": { "kind": "table", "ref": "parcel_buildings" }
+      }
+    },
+    {
+      "id": "multi_primary_parcels",
+      "kind": "invariant",
+      "expect": { "at_most_one_primary_per_parcel": true },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Invariant (1) of the golden set, asserted BY COUNT rather than by trusting idx_parcel_buildings_one_primary. A constraint proves nothing about a run that never reached it — a write that fails the index throws, but a write that never issued the E1 clear on a path nobody exercises simply produces the wrong primary. Counting is what makes the fence's absence visible.",
+        "liveness": { "kind": "table", "ref": "parcel_buildings" }
+      }
+    },
+    {
+      "id": "confidence_vocabulary",
+      "kind": "vocab_coverage",
+      "expect": { "of": "written confidence values outside the declared two-value domain" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Invariant (4). confidence is numeric(3,2) with a DB default of 0.85 the step never writes, so the column will not reject a value the step did not mean; only a count can. The domain is the two resolved logic variables (centroid 0.95, nearest 0.60) — the pre-conversion literals lived at FOUR sites across two code paths, which is exactly the ternary-divergence class §1.7 names.",
+        "liveness": { "kind": "column", "ref": "parcel_buildings.confidence" }
+      }
+    },
+    {
+      "id": "mass_retraction_ratio",
+      "kind": "bound",
+      "expect": { "of": "rows retracted and NOT rebuilt, over rows retracted" },
+      "limit": "pct <= 0.05",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The post-write half of the D-20 guard. A legitimate full relink retracts 520,492 rows and rebuilds 520,492, so this ratio is 0; a relink that retracts everything and rebuilds a fraction is the shape of a broken predicate, a broken corpus or a half-completed run, and it must not read PASS merely because every statement returned. The pre-write guard refuses to START such a run; this one refuses to call it clean afterwards.",
+        "liveness": { "kind": "check", "ref": "empty_source_guard" }
+      }
+    },
+    {
+      "id": "rows_changed_ratio",
+      "kind": "bound",
+      "expect": { "of": "rows the upsert changed, over rows it scanned" },
+      "limit": "pct <= 0.5",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Makes `idempotent_rerun: zero_writes` a NUMBER instead of a claim, and it is the live canary for D-5: if linked_at ever reaches the change guard this ratio goes to 1.0 on every run, which is the 520,492-row rewrite made visible in the audit table the same run it starts rather than in an enrich_parcels duration a chain-step later.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    },
+    {
+      "id": "write_privilege",
+      "kind": "invariant",
+      "expect": { "writable": "the role bypasses RLS, or a policy grants the write" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Reports the MEASURED privilege on every run, not only the failing one: a check that exists solely in the failure branch is a check nobody ever sees working. The refusal itself is the guards.requires precondition; this row is its evidence, and it is what distinguishes 'the corpus was unchanged' from 'every statement silently affected 0 rows'.",
+        "liveness": { "kind": "table", "ref": "parcel_buildings" }
+      }
+    }
+  ],
+
+  "override": {
+    "force_full": "LINK_MASSING_FORCE_FULL",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+
+  "emits": [
+    { "key": "code_version", "type": "string", "consumers": ["link_massing"] },
+    { "key": "building_footprints_count", "type": "string", "consumers": ["link_massing"] },
+    { "key": "full_mode", "type": "bool", "consumers": [] },
+    { "key": "full_mode_reason", "type": "string", "consumers": [] },
+    { "key": "duration_ms", "type": "int", "consumers": [] },
+    { "key": "parcels_processed", "type": "int", "consumers": [] },
+    { "key": "parcels_linked", "type": "int", "consumers": [] },
+    { "key": "buildings_matched", "type": "int", "consumers": [] },
+    { "key": "buildings_upserted", "type": "int", "consumers": [] },
+    { "key": "matches_centroid_in_parcel", "type": "int", "consumers": [] },
+    { "key": "matches_nearest", "type": "int", "consumers": [] },
+    { "key": "no_match_count", "type": "int", "consumers": [] }
+  ],
+
+  "deviations": [
+    {
+      "from": "Spec 123 §3.1 / Known Failure Mode #3 — a DEFECT is PINNED at conversion and fixed after",
+      "why": {
+        "text": "A-8 OVERRIDE, operator ruling 2026-08-27. The JS fallback path (~36% of the 740 lines: the in-memory grid, haversine distance, the EPSG:3857 auto-detect reprojection, @turf point-in-polygon, BATCH_SIZE 500 and its own confidence literals) is KNOWINGLY RETIRED rather than pinned. Evidence U-5: every recorded run reports buildings_indexed = 0 and grid_cells = 'N/A (PostGIS)', i.e. every run took the PostGIS branch. Pinning it verbatim would have spent a third of the conversion on dead code AND carried forward the §1.6 silent swallow it contains (an invalid geometry in the point-in-polygon test is caught, logged and the parcel silently reclassified as no-match with NO counter). Retiring it removes the swallow with the branch. Its replacement is a fail-loud guards.requires postgis precondition — no second code path survives in the compute, which is what the operator's 'unable to silently fail' condition requires.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-massing.js" }
+      },
+      "adjudicated_by": "operator ruling 2026-08-27 (pilot 3 authorization, A-8 override)",
+      "date": "2026-08-27"
+    },
+    {
+      "from": "a deterministic nearest-fallback selection (LM-D13, Fold C)",
+      "why": {
+        "text": "PINNED VERBATIM, NOT FIXED. The nearest fallback is `SELECT DISTINCT ON (p.id) … ORDER BY p.id, ST_Distance(p.geom::geography, bf.geom::geography) ASC` — and that ORDER BY has NO TIEBREAK. Where two footprints are equidistant from a parcel (or equal to float precision), which one DISTINCT ON keeps is whatever the plan happened to emit first, so 18,252 of the 103,530 nearest links can flip between two otherwise identical FULL relinks. The centroid pass has the opposite property: it sorts by area DESC then building_id ASC (fence 5bb31faf) and is deterministic. Adding `, bf.id ASC` would fix it in one token and is EXACTLY the behaviour change a no-op differential may not carry — it would move rows, and the diff would be indistinguishable from a conversion defect. So the non-determinism is reproduced byte-for-byte here, declared as LM-D13, and the tiebreak lands in peel 8b with its own before/after row counts. The consequence for the differential is declared as D-22: a FULL-path table hash is UNSTABLE BY PIN and only the incremental captures are compared for hash identity.",
+        "liveness": { "kind": "check", "ref": "match_nearest_fallback" }
+      },
+      "adjudicated_by": "operator ruling 2026-08-27 (Fold C, LM-D13)",
+      "date": "2026-08-27"
+    },
+    {
+      "from": "promoting any FAIL check to blocking: true",
+      "why": {
+        "text": "PIN, DO NOT FIX (Spec 123 §3.1, pilot 2 precedent LR-D3). Today every terminal of this step exits 0: pipeline.run discards the return value, run-chain records the verdict and folds it into a chain status, and the chain CONTINUES. blocking: true would make the library throw after the emit and halt the sources chain — a real behaviour change smuggled into a commit whose whole claim is that it changes nothing. Promoting a check is its own peel with its own lock.",
+        "liveness": { "kind": "file", "ref": "scripts/run-chain.js" }
+      },
+      "adjudicated_by": "operator ruling, plan D-8",
+      "date": "2026-08-27"
+    },
+    {
+      "from": "the §1.2a P4 standard posture on_invalid: \"fail\" for a declared logic variable",
+      "why": {
+        "text": "SPLIT, and the split is the ruling. The three variables that decide what gets WRITTEN or what PASSES — link_massing_link_rate_fail_pct (the verdict bound) and the two written confidences — carry on_invalid \"fail\": a step must not compute a verdict, or stamp a confidence, on a value the operator did not mean, and hoisted_above_gate puts that refusal ABOVE the lock so it cannot hide behind a green SKIPPED summary. ⚠️ THE COST IS REAL AND IS STATED: these three are seeded by the mig-099 seed contract, applied at the END of npm run migrate, so a cloud database that has not re-seeded has none of them and this step REFUSES rather than running on the seed fallback. That refusal is loud, immediate and correct — but it must be sequenced with the cloud seed, not discovered by it. The three PRE-EXISTING massing_* variables keep their registered semantics (default/clamp: they shape a classification, not a verdict), and the retired-path grid span keeps \"default\" because nothing reads it. Revisit at the cloud seed.",
+        "liveness": { "kind": "file", "ref": "scripts/seeds/logic_variables.json" }
+      },
+      "adjudicated_by": "operator condition 2026-08-27 (every tunable externalized, nothing may silently fail)",
+      "date": "2026-08-27"
+    },
+    {
+      "from": "the pre-conversion full-gate's four-slug prior-run read ordered by completed_at",
+      "why": {
+        "text": "S11, declared rather than ported. scripts/lib/massing-full-gate.js reads `pipeline IN ('sources:link_massing','permits:link_massing','link_massing','link-massing') … ORDER BY completed_at DESC` — a hand-maintained slug array of which one form has ZERO rows. After conversion the gate reads the step's OWN chain-scoped history through staleness.readPriorEmit, which is source-version.js's STANDARDIZED producer self-history reader (ORDER BY started_at DESC, status = 'completed'). That is a real difference and it is declared: the baseline becomes per-chain rather than cross-chain. It is also the correct semantics — this is a producer reading itself, not a consumer asking whether some producer ran — and source-version.js's header excludes massing-full-gate from the standardization precisely because it was, until now, a CONSUMER-side reader. B-6 still holds: the library opens its ledger row as `running` before the gate evaluates, so the step can never read itself.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/source-version.js" }
+      },
+      "adjudicated_by": "plan S11 / Fold B",
+      "date": "2026-08-27"
+    },
+    {
+      "from": "the pre-conversion `phase: (process.env.PIPELINE_CHAIN === 'sources') ? 8 : 9` ternary",
+      "why": {
+        "text": "S12. Both values are live-verified in records_meta.audit_table.phase (8 under sources, 9 under permits), so the ternary cannot be wrong today — but it is the exact shape §1.7 cites from link_parcels, where two ternaries on the same axis in the same file disagree with each other on the non-sources value. An explicit map cannot disagree with itself, and it retires one of the step's two process.env reads.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/verdict.js" }
+      },
+      "adjudicated_by": "Spec 122 §1.7",
+      "date": "2026-08-27"
+    }
+  ],
+
+  "limitations": [
+    {
+      "what": "load_massing (unconverted) DELETEs from parcel_buildings at two sites during a source_id format-change cleanup while its own emitMeta declares only building_footprints. link_massing OWNS this table; that is an UNDECLARED CASCADE from another step, and it is the reason a row count here can move between two link_massing runs with nothing in either run's telemetry saying so. The fix rides load_massing's own conversion, where it becomes an outputs.cascades entry.",
+      "measured": "scripts/load-massing.js — 2 DELETE sites against parcel_buildings; Spec 122 §1.4 names the pair as orphan #234",
+      "check_id": "parcel_buildings_written"
+    },
+    {
+      "what": "parcels.centroid_lat/lng is an eligibility filter with NO declared invalidator (review_followups.md, HIGH, 2026-08-23). This descriptor therefore states the centroid predicate as part of staleness.scope and as the retraction scope, but claims nothing about being re-run when a centroid changes: a parcel whose centroid moves after it was linked is NOT re-evaluated by the incremental filter, because the filter asks whether a link exists, not whether it is still right. Only a full relink corrects such a parcel. The upstream gap is not fixed here.",
+      "measured": "scripts/link-massing.js baseFilter `centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL`; Spec 122 §6.4 corrects the earlier claim to 'one join plus one eligibility filter'",
+      "check_id": "none"
+    },
+    {
+      "what": "link_massing_grid_degrees (0.003 degrees, ~333 m) is REGISTERED AND DECLARED BUT NOT CONSUMED. It was the JS fallback path's grid-cell size and also seeded that path's dynamic search radius; the A-8 override retired the path, so nothing reads it. It is registered rather than dropped so the retirement is recorded in the operator-visible registry instead of disappearing with the code — but it is a dead knob, and turning it changes nothing.",
+      "measured": "scripts/link-massing.js GRID_SIZE = 0.003 (retired); 0 ctx.config reads in scripts/lib/compute/link-massing.js",
+      "check_id": "none"
+    },
+    {
+      "what": "LM-D13 — the nearest fallback picks a winner with NO TIEBREAK. `DISTINCT ON (p.id) … ORDER BY p.id, ST_Distance(...) ASC` leaves ties to the plan, so an equidistant pair resolves differently between runs and 18,252 nearest links can flip across two identical FULL relinks. Reproduced verbatim at conversion (Fold C) rather than fixed, because the fix moves rows and this commit's whole claim is that it moves none. The consequence: a FULL-path golden table hash is UNSTABLE BY PIN, and only the incremental captures are compared for hash identity (D-22).",
+      "measured": "18,252 of 103,530 nearest links flip between two FULL relinks; scripts/link-massing.js:363 ORDER BY p.id, ST_Distance(...) ASC",
+      "check_id": "match_nearest_fallback"
+    },
+    {
+      "what": "The nearest fallback's bbox prefilter span is nearest_max_distance_m / 78000.0 — metres-per-degree at Toronto's latitude, which OVER-covers east-west. It is a performance prefilter, not a bound: the exact cut is the geography ST_DWithin that follows it. Changing 78000 changes what '50 m' costs to find, never how much of it is accepted.",
+      "measured": "scripts/link-massing.js:267 nearestDegSpan; the in-file comment cites the enrich-parcels precedent and tasks/lessons.md",
+      "check_id": "match_nearest_fallback"
+    },
+    {
+      "what": "A parcel with a NULL geom is dropped by both match queries (`p.geom IS NOT NULL`) and counted as no_match with no row of its own. Live that set is empty — all 486,530 parcels carry geom — so the loss is latent rather than active, but it is a silent reclassification and it is the last one left after the JS path's point-in-polygon swallow was retired with the path.",
+      "measured": "SELECT count(*) FROM parcels WHERE geom IS NULL = 0 (2026-08-27)",
+      "check_id": "no_match"
+    },
+    {
+      "what": "The compute's PARCEL_ELIGIBILITY constant and the E2 target's write_discipline.scope must describe the SAME set of parcels — the work set and the retraction scope (B-7). They are two declarations in two files and nothing computes one from the other; what proves they agree is the F3 fence lock, which asserts the generated DELETE is scoped by the base filter and that the base filter is what the batch query selects.",
+      "measured": "scripts/lib/compute/link-massing.js PARCEL_ELIGIBILITY vs outputs.writes[1].write_discipline.scope",
+      "check_id": "mass_retraction_ratio"
+    },
+    {
+      "what": "The link-stage footprint-exceeds-lot counter is NOT declared here. Measured: 48,561 of 103,530 nearest links (46.9%) and 13,347 of 381,605 centroid links (3.5%) carry a footprint larger than their own lot, and 58,050 parcels are flagged footprint_exceeds_lot by enrich-parcels one chain-step later — so the bad links are produced, shipped, and silently NULLed downstream with nothing counting them at the link. It lands in peel 8b as a new INFO check rather than here, because adding a counter to the no-op differential is exactly the smuggling C-6 forbids.",
+      "measured": "48,561 / 33,184 (2x) nearest; 13,347 / 4,462 (2x) centroid; parcels.existing_data_quality_flag = 'footprint_exceeds_lot' on 58,050 parcels",
+      "check_id": "match_nearest_fallback"
+    },
+    {
+      "what": "66,906 buildings are is_primary for MORE THAN ONE parcel, affecting 167,443 parcels (34.5% of linked). One building cannot be the primary structure of two parcels in the sense the cost model uses it. This is a real data-quality class, not a conversion regression — a forced FULL relink moves none of it — and it is NOT gated here, because declaring it as a WARN/FAIL check would redden every production run for a condition this commit did not create. Filed to review_followups.",
+      "measured": "66,906 shared primary buildings / 167,443 affected parcels (2026-08-27)",
+      "check_id": "none"
+    }
+  ],
+
+  "interpretation": { "file": "link-massing.notes.json", "entries": 12 },
+
+  "recovery": {
+    "reset": "TRUNCATE is never correct — the junction is rebuilt, not reloaded. Re-run with LINK_MASSING_FORCE_FULL=1, which forces mode full: the scoped retraction clears every link for centroid-bearing parcels and the same batch loop rebuilds them. Budget ~22 minutes and expect the next enrich_parcels run to re-enrich every linked parcel, because the rebuild bumps linked_at on all of them.",
+    "resume": "checkpoint",
+    "force": "LINK_MASSING_FORCE_FULL",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived"
+  },
+
+  "database": {
+    "class": "primary",
+    "min_migration": 81,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": {
+    "records_total": { "source": "written.e2.scanned", "scoped_by": ["parcel_id", "building_id"] },
+    "records_new": { "source": "written.e2.inserted", "scoped_by": ["parcel_id", "building_id"] },
+    "records_updated": { "source": "written.e2.updated", "scoped_by": ["parcel_id", "building_id"] }
+  },
+
+  "config": {
+    "logic_variables": [
+      { "name": "massing_shed_threshold_sqm", "min": 1, "max": 200, "on_invalid": "default" },
+      { "name": "massing_garage_max_sqm", "min": 1, "max": 500, "on_invalid": "default" },
+      { "name": "massing_nearest_max_distance_m", "min": 1, "max": 500, "on_invalid": "clamp" },
+      { "name": "link_massing_link_rate_fail_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "link_massing_centroid_confidence", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "link_massing_nearest_confidence", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "link_massing_grid_degrees", "min": 0.0005, "max": 0.05, "on_invalid": "default" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": { "sources": 8, "permits": 9 },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "linked_incremental",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "code_version": "string",
+        "building_footprints_count": "string",
+        "full_mode": "bool",
+        "full_mode_reason": "string",
+        "duration_ms": "int",
+        "parcels_processed": "int",
+        "parcels_linked": "int",
+        "buildings_matched": "int",
+        "buildings_upserted": "int",
+        "matches_centroid_in_parcel": "int",
+        "matches_nearest": "int",
+        "no_match_count": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The NORMAL outcome, and by a wide margin: every run since 2026-07-08 took it, at 6.3-11.3 s. The gate saw no code or corpus change, so the incremental filter selected only parcels with no link at all — the 1,395-parcel permanently-unmatchable tail — matched none of them and wrote nothing. The two self-consumed gate fields are re-published so the NEXT run has a baseline.",
+        "liveness": { "kind": "check", "ref": "full_mode_gate" }
+      }
+    },
+    {
+      "id": "linked_full_relink",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "code_version": "string",
+        "building_footprints_count": "string",
+        "full_mode": "bool",
+        "full_mode_reason": "string",
+        "duration_ms": "int",
+        "parcels_processed": "int",
+        "parcels_linked": "int",
+        "buildings_matched": "int",
+        "buildings_upserted": "int",
+        "matches_centroid_in_parcel": "int",
+        "matches_nearest": "int",
+        "no_match_count": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The gate resolved FULL: the invocation permitted it (--full from manifest.chain_args.sources) and a signal moved (a bumped code_version, or a building_footprints corpus of a different size), or LINK_MASSING_FORCE_FULL was standing. Measured cost of the last genuine one: pipeline_runs.duration_ms = 1,314,440 (21.9 min), 520,492 rows retracted and rebuilt, and every linked_at bumped — which re-scopes the next enrich_parcels run from 1,395 parcels to 485,135. It is a budgeted act, not a convenience.",
+        "liveness": { "kind": "check", "ref": "full_mode_gate" }
+      }
+    },
+    {
+      "id": "linked_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "A WARN row stands — a standing force-full override, or an upsert change ratio above its bound — and nothing FAILED. The run completed and wrote; the warning is in the table.",
+        "liveness": { "kind": "check", "ref": "rows_changed_ratio" }
+      }
+    },
+    {
+      "id": "no_eligible_parcels",
+      "kind": "no_op",
+      "status": "completed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "The eligibility query returned zero parcels: in incremental mode every centroid-bearing parcel already carries a link. Distinct from a skip — the step ran, measured, and correctly did nothing — and distinct from the empty-source guard, which is about the OTHER side of the join being empty.",
+        "liveness": { "kind": "check", "ref": "parcels_processed" }
+      }
+    },
+    {
+      "id": "failed_empty_source_guard",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "D-20. building_footprints is empty, so a full-mode retraction would delete every link and rebuild nothing. Scored at when: \"pre_write\", so the run stops BEFORE writes[0] — no transaction is opened, no DELETE is issued, and the junction still holds the prior build byte for byte.",
+        "liveness": { "kind": "check", "ref": "empty_source_guard" }
+      }
+    },
+    {
+      "id": "failed_link_rate",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "The cumulative link rate fell below the operator-set floor. On a corpus where 99.71% of centroid-bearing parcels are linked, reaching this terminal means the join itself broke — a lost GiST index, a geom column that stopped being 4326, a predicate flipped back — not that the data drifted.",
+        "liveness": { "kind": "check", "ref": "link_rate" }
+      }
+    },
+    {
+      "id": "failed_mass_retraction_ratio",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "A full relink retracted rows it then failed to rebuild. The write already happened, which is why this terminal is failed rather than a pre_write refusal: the pre-write guard refuses to START a run against an empty corpus, and this one refuses to call the result clean.",
+        "liveness": { "kind": "check", "ref": "mass_retraction_ratio" }
+      }
+    },
+    {
+      "id": "failed_multi_primary_parcels",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "More than one is_primary row exists for some parcel — the condition idx_parcel_buildings_one_primary and fence 5bb31faf's clear exist to make impossible. Reaching it means the E1 clear did not run, or ran after the upsert.",
+        "liveness": { "kind": "check", "ref": "multi_primary_parcels" }
+      }
+    },
+    {
+      "id": "failed_confidence_vocabulary",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "A confidence outside the declared two-value domain reached the table — most plausibly the numeric(3,2) DB default of 0.85 adopted by an INSERT that omitted the column, which is the exact failure the exhaustive generated column list prevents.",
+        "liveness": { "kind": "check", "ref": "confidence_vocabulary" }
+      }
+    },
+    {
+      "id": "failed_write_privilege",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "RLS is enabled on parcel_buildings with zero policies and the role does not bypass it, so every statement affected 0 rows with no error. Without this the run is indistinguishable from one whose corpus had not changed.",
+        "liveness": { "kind": "check", "ref": "write_privilege" }
+      }
+    },
+    {
+      "id": "failed_missing_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "A guards.requires precondition with on_missing: \"fail\" is absent — the PostGIS extension (A-8: there is no second algorithm any more), a GiST index (B-4: the join would seq-scan 486K parcels), the partial unique index, or an FK. The step refuses before reading anything.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "A declared logic variable resolved outside its bounds under on_invalid: \"fail\", or names no registry at all. hoisted_above_gate: true puts this refusal ABOVE the advisory lock (A-5 / B-13) — the opposite of the pre-conversion order, where validation ran inside the lock and an invalid threshold could hide behind a green SKIPPED summary on a contended run.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": {
+        "text": "Advisory lock 91 is held by another process — and unlike pilots 1 and 2 this path has LIVE EVIDENCE: 6 skipped rows under permits:link_massing. Pre-conversion it was a bare `return` with no step-level emit, so the SDK's built-in SKIP carried no audit_table and contention read as verdict UNKNOWN. The library now emits a row-derived SKIP summary.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    }
+  ]
+}

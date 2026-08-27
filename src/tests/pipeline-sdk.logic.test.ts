@@ -976,7 +976,11 @@ describe('Pipeline SDK', () => {
       'geocode-permits.js',
       'link-parcels.js',
       'link-neighbourhoods.js',
-      'link-massing.js',
+      // link-massing.js RE-HOMED (Spec 122 §5.1 conversion, pilot 3): a converted step calls
+      // pipeline.step(), never pipeline.run(), and emits nothing itself — the library owns the
+      // whole lifecycle. Its successor lock is `converted steps use the SDK through
+      // pipeline.step()` below, which asserts the SAME three properties (SDK imported,
+      // lifecycle owned by the SDK, summary + meta emitted) on the new mechanism.
       'link-coa.js',
       'link-wsib.js',
       'extract-builders.js',
@@ -1048,10 +1052,14 @@ describe('Pipeline SDK', () => {
 
     // §3.5 — Linking scripts must NOT hardcode records_new: 0.
     // They report records_updated with the real linked count.
+    // RE-HOMED (pilot 3): link-massing.js spells no counter at all now. The defect this
+    // list guards — a hardcoded `records_new: 0` standing in for a measurement a guarded
+    // upsert's rowCount cannot make — is closed structurally rather than textually: the
+    // descriptor NAMES the variable feeding each slot and the runner resolves it, so a
+    // literal is unspellable. Asserted below against the descriptor.
     const LINKING_SCRIPTS = [
       'link-parcels.js',
       'link-neighbourhoods.js',
-      'link-massing.js',
       'link-coa.js',
       'link-similar.js',
     ];
@@ -1123,10 +1131,23 @@ describe('Pipeline SDK', () => {
       expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
     });
 
-    // §9.3 — link-massing.js upsert must guard against no-op updates
-    it('link-massing.js upsert has IS DISTINCT FROM guard to prevent ghost updates', () => {
-      const content = fs.readFileSync(path.join(scriptDir, 'link-massing.js'), 'utf-8');
-      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+    // §9.3 — the link_massing upsert must guard against no-op updates.
+    // RE-HOMED (pilot 3): the hand-written ON CONFLICT left the step; the guard is now
+    // GENERATED from `write_discipline.guard`/`guard_columns`. The assertion runs over the
+    // SQL write.js actually produces, which is strictly stronger — the old regex would have
+    // been satisfied by any IS DISTINCT FROM anywhere in a 740-line file, this one reads the
+    // statement that will execute AND the exact columns it guards.
+    it('the link_massing upsert has an IS DISTINCT FROM guard, over exactly the four value columns', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
+      const write = require('../../scripts/lib/step/write.js');
+      const d = JSON.parse(fs.readFileSync(path.join(scriptDir, 'link-massing.descriptor.json'), 'utf-8'));
+      const plan = write.buildWritePlan(d.outputs.writes[1], d);
+      expect(plan.upsert_sql).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+      expect(plan.guard_columns).toEqual(['is_primary', 'structure_type', 'match_type', 'confidence']);
+      // D-5: linked_at is in the SET list and NEVER in the guard — it is the run clock, so
+      // guarding on it would rewrite all 520,492 rows every run and re-scope enrich_parcels.
+      expect(plan.upsert_sql).toMatch(/linked_at = EXCLUDED\.linked_at/);
+      expect(plan.guard_columns).not.toContain('linked_at');
     });
 
     // §9.3 — link-neighbourhoods.js update must guard against no-op updates
@@ -1206,12 +1227,31 @@ describe('Pipeline SDK', () => {
       expect(content).toContain('lat.permit_num');
     });
 
-    // §11 — link-massing.js records_updated must use parcelsLinked (parcels matched),
-    // not buildingsUpserted (parcel_buildings JOIN TABLE rows).
-    it('link-massing.js emitSummary records_updated uses parcelsLinked not buildingsUpserted', () => {
-      const content = fs.readFileSync(path.join(scriptDir, 'link-massing.js'), 'utf-8');
-      expect(content).not.toContain('records_updated: buildingsUpserted');
-      expect(content).toContain('records_updated: parcelsLinked');
+    // §11 — link_massing's counters must SAY WHAT THEY COUNT.
+    // RE-HOMED, AND THE SEMANTICS ARE A DECLARED DIFF (D-8 / Fold B item 6). The old lock
+    // pinned `records_updated: parcelsLinked` because the alternative was an undeclared mix:
+    // `records_total` was `processed` (the permanently-unmatchable tail), `records_new` was a
+    // hardcoded 0, and `records_updated` was a parcel count — three different entities under
+    // one contract, none of them stated. All three now name a MEASURED source scoped by the
+    // declared write key, so the scope is readable instead of inferred. That is the property
+    // the old lock was reaching for, and it is asserted here on the declaration.
+    it('link_massing counters name a measured source, scoped by the composite write key', () => {
+      const d = JSON.parse(fs.readFileSync(path.join(scriptDir, 'link-massing.descriptor.json'), 'utf-8'));
+      expect(d.counters.records_total.source).toBe('written.e2.scanned');
+      expect(d.counters.records_new.source).toBe('written.e2.inserted');
+      expect(d.counters.records_updated.source).toBe('written.e2.updated');
+      for (const slot of ['records_total', 'records_new', 'records_updated']) {
+        expect(d.counters[slot].scoped_by, `${slot} must declare its scope`).toEqual(['parcel_id', 'building_id']);
+        expect(/^[0-9]+$/.test(d.counters[slot].source), `${slot} is a literal, not a measurement`).toBe(false);
+      }
+      // written.e1 is the is_primary clear: its rows are excluded BY DECLARATION, because a
+      // flag rewritten and immediately rewritten back is not a record the step produced.
+      // CODE, not prose: the compute's header explains WHY it assigns no counter, and a
+      // lock trippable by its own explanation pushes the explanation out of the file.
+      const compute = fs.readFileSync(path.join(scriptDir, 'lib/compute/link-massing.js'), 'utf-8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '');
+      expect(compute, 'a compute may not assign a counter the library derives').not.toMatch(/records_total|records_new|records_updated/);
     });
 
     // §11 — classify-scope.js records_total must be permit-scoped (processed only),
@@ -1542,11 +1582,28 @@ describe('Pipeline SDK', () => {
       expect(pkg.dependencies['pg-query-stream']).toBeDefined();
     });
 
-    it('link-massing.js uses streamQuery (not pool.query for full table)', () => {
+    // RE-HOMED (pilot 3). link-massing.js streamed building_footprints because the retired
+    // JS path had to hold every footprint in an in-memory grid. The PostGIS path never did:
+    // it never materialises the table at all — the join runs in the database against a GiST
+    // index, and the only rows crossing the wire are one KEYSET-PAGINATED batch of parcel ids
+    // at a time. The memory-safety guarantee is therefore stronger, and asserted as such: a
+    // bounded batch, declared, with no unbounded read anywhere in the step.
+    it('link_massing reads no unbounded result set — the join runs in the database, the batch is keyset-paginated', () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const fsStream = require('fs');
-      const content = fsStream.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.js'), 'utf-8');
-      expect(content).toContain('pipeline.streamQuery');
+      const root = path.resolve(__dirname, '../..');
+      const d = JSON.parse(fsStream.readFileSync(path.join(root, 'scripts/link-massing.descriptor.json'), 'utf-8'));
+      expect(typeof d.execution.batch, 'the batch size must be a declared number, not "none"').toBe('number');
+      expect(d.staleness.checkpoint, 'a keyset cursor, declared').toMatchObject({ cursor: 'id', ordered: true });
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const compute = require('../../scripts/lib/compute/link-massing.js');
+      const plan = compute.buildMatchSql(d, null, 'incremental');
+      expect(plan.eligible_batch_sql).toMatch(/id > \$2/);
+      expect(plan.eligible_batch_sql).toMatch(/ORDER BY id ASC/);
+      expect(plan.eligible_batch_sql).toMatch(/LIMIT \$1/);
+      // Every match query is scoped to that batch's ids — never the whole table.
+      expect(plan.primary_match_sql).toMatch(/p\.id = ANY\(\$1::int\[\]\)/);
+      expect(plan.fallback_match_sql).toMatch(/p\.id = ANY\(\$1::int\[\]\)/);
     });
   });
 
@@ -1655,17 +1712,32 @@ describe('Pipeline SDK', () => {
       expect(content).toMatch(/ST_Contains|ST_DWithin/);
     });
 
-    it('link-massing.js uses ST_Contains when PostGIS is available', () => {
-      const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-massing.js'), 'utf-8');
-      expect(content).toMatch(/ST_Contains/);
+    // RE-HOMED (pilot 3): the SQL moved to the compute's pure text builder (ruling A-2).
+    it('link_massing uses ST_Contains — from the compute that builds the statement', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const compute = require('../../scripts/lib/compute/link-massing.js');
+      const d = JSON.parse(fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-massing.descriptor.json'), 'utf-8'));
+      expect(compute.buildMatchSql(d, null, 'full').primary_match_sql).toMatch(/ST_Contains/);
     });
 
-    it('all 4 spatial scripts detect PostGIS availability (hasPostGIS pattern)', () => {
-      const scripts = ['compute-centroids.js', 'link-neighbourhoods.js', 'link-parcels.js', 'link-massing.js'];
+    it('the 3 spatial scripts still on the island path detect PostGIS availability (hasPostGIS pattern)', () => {
+      // link-massing.js RE-HOMED below. "Detects availability" was the shape of a step that
+      // SELECTS AN ALGORITHM from the probe; the converted step has no second algorithm to
+      // select, so detection became a hard precondition — a stronger property, asserted next.
+      const scripts = ['compute-centroids.js', 'link-neighbourhoods.js', 'link-parcels.js'];
       for (const script of scripts) {
         const content = fsSpatial.readFileSync(path.join(scriptDirSpatial, script), 'utf-8');
         expect(content).toMatch(/hasPostGIS|pg_extension.*postgis/i);
       }
+    });
+
+    it('link_massing REQUIRES PostGIS rather than detecting it (A-8: no degraded algorithm)', () => {
+      const d = JSON.parse(fsSpatial.readFileSync(path.join(scriptDirSpatial, 'link-massing.descriptor.json'), 'utf-8'));
+      const postgis = (d.guards.requires as Array<{ kind: string; name: string; on_missing: string; algorithm?: string }>)
+        .find((r) => r.kind === 'extension' && r.name === 'postgis');
+      expect(postgis).toBeDefined();
+      expect(postgis!.on_missing).toBe('fail');
+      expect(postgis!.algorithm, 'a degrade arm is a second code path wearing a declaration').toBeUndefined();
     });
 
     it('migration 065 adds geom column to building_footprints', () => {
@@ -1685,17 +1757,23 @@ describe('Pipeline SDK', () => {
     const fsB4 = require('fs');
     const scriptDirB4 = path.resolve(__dirname, '../../scripts');
 
-    // link-massing.js: must use streamQuery for building footprints grid build
-    it('link-massing.js uses streamQuery for building footprint loading (not pool.query)', () => {
-      const content = fsB4.readFileSync(path.join(scriptDirB4, 'link-massing.js'), 'utf-8');
-      // The grid build section must use streamQuery, not pool.query for the full table load
-      const gridSection = content.slice(
-        content.indexOf('building footprints'),
-        content.indexOf('Phase 2') > 0 ? content.indexOf('Phase 2') : content.length
-      );
-      expect(gridSection).toMatch(/streamQuery/);
-      // Must NOT load all rows into memory via pool.query for the full footprints table
-      expect(gridSection).not.toMatch(/await pool\.query\(\s*\n?\s*`SELECT id, geometry/);
+    // RE-HOMED (pilot 3). The grid build this guarded IS THE THING THAT WAS RETIRED: it
+    // existed only to hold every footprint in V8 memory for the JS point-in-polygon path,
+    // and streaming was the mitigation for a design the PostGIS join removed. The memory
+    // guarantee survives in a stronger form — the footprints table is never materialised in
+    // the process at all — so the lock asserts the ABSENCE of the load rather than the
+    // presence of the mitigation, plus the precondition that makes the absence safe.
+    it('link_massing never loads building_footprints into memory — the grid it streamed for is retired', () => {
+      const compute = fsB4.readFileSync(path.join(scriptDirB4, 'lib/compute/link-massing.js'), 'utf-8')
+        .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      // No execution surface at all: the compute holds SQL text and pure functions.
+      expect(compute).not.toMatch(/streamQuery|\.query\s*\(|withTransaction\s*\(/);
+      // And no grid to fill.
+      for (const token of ['gridKey', 'GRID_SIZE', 'gridNeighbourKeys', 'searchRadius']) {
+        expect(compute, `retired grid identifier "${token}" is back`).not.toContain(token);
+      }
+      const step = fsB4.readFileSync(path.join(scriptDirB4, 'link-massing.js'), 'utf-8');
+      expect(step).not.toMatch(/SELECT id, geometry/);
     });
 
     // enrich-wsib.js: must use streamQuery for enrichment queue

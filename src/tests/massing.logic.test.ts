@@ -397,33 +397,84 @@ describe('inferMassingUseType', () => {
 // link-massing.js performance (B13)
 // ---------------------------------------------------------------------------
 
-describe('link-massing.js performance optimization (B13)', () => {
-  const scriptSource = () =>
-    fs.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.js'), 'utf-8');
+// ── RE-HOMED at the Spec 122 §5.1 conversion (pilot 3, commit 7) ─────────────
+//
+// B13 was the incident where a per-parcel DB query inside the batch loop made a full
+// relink take 48+ minutes; the fix was an in-memory grid. THAT FIX HAS BEEN SUPERSEDED,
+// not lost: the PostGIS path replaced the grid with a GiST-indexed spatial join and the
+// grid became dead code on every recorded run. The A-8 override retires it outright.
+//
+// So the lock changes SUBJECT rather than disappearing. What B13 actually guaranteed is
+// "no per-parcel query inside the loop, and the classifier/fallback survive" — both are
+// re-asserted below against the compute and the generated SQL, plus a new half the old
+// lock could not state: the retired grid must not come BACK.
+const LM_COMPUTE = () =>
+  fs.readFileSync(path.resolve(__dirname, '../../scripts/lib/compute/link-massing.js'), 'utf-8');
+const LM_DESCRIPTOR = () =>
+  JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.descriptor.json'), 'utf-8'));
+/** The statements the compute builds, joined — what the runner actually issues. */
+function lmSql(): string {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute
+  const compute = require('../../scripts/lib/compute/link-massing.js');
+  const plan = compute.buildMatchSql(LM_DESCRIPTOR(), null, 'full');
+  return Object.values(plan).filter((v) => typeof v === 'string').join('\n');
+}
 
-  it('B13: uses in-memory grid index instead of per-parcel DB queries', () => {
-    const source = scriptSource();
-    // Must build a grid/spatial index in memory from all building footprints
-    expect(source).toMatch(/grid|gridKey|cellKey|spatialIndex/i);
-    // Must load all buildings in a single query (not inside the parcel loop)
-    expect(source).toMatch(/SELECT[\s\S]*FROM building_footprints/);
-    // Must NOT have per-parcel BBOX query inside the processing loop
-    // The old pattern: pool.query inside `for (const parcel of parcelBatch.rows)`
-    const parcelLoop = source.slice(source.indexOf('for (const parcel'));
-    expect(parcelLoop).not.toMatch(/await pool\.query\(\s*`SELECT.*FROM building_footprints/);
+describe('link_massing query shape — the B13 guarantee, re-homed to the compute', () => {
+  it('B13: the per-batch work is ONE indexed spatial join, never a query per parcel', () => {
+    const sql = lmSql();
+    // The batch is bound as an array in ONE statement — the shape that made the N+1 loop
+    // impossible to reintroduce accidentally.
+    expect(sql).toMatch(/p\.id = ANY\(\$1::int\[\]\)/);
+    expect(sql).toMatch(/FROM parcels p[\s\S]*JOIN building_footprints bf/);
+    // And the compute cannot issue a query at all — it holds SQL TEXT and nothing else.
+    expect(LM_COMPUTE()).not.toMatch(/\.query\s*\(|streamQuery\s*\(|withTransaction\s*\(/);
   });
 
-  it('B13: preserves classifyStructure and nearest-fallback logic', () => {
-    const source = scriptSource();
-    expect(source).toContain('classifyStructure');
-    expect(source).toContain('nearest');
-    expect(source).toContain('haversineDistance');
+  it('B13: classifyStructure and the nearest fallback survive the conversion', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute
+    const compute = require('../../scripts/lib/compute/link-massing.js');
+    expect(typeof compute.classifyStructure).toBe('function');
+    expect(compute.classifyStructure(300, [300, 40], 20, 60)).toBe('primary');
+    expect(compute.classifyStructure(15, [300, 15], 20, 60)).toBe('shed');
+    expect(compute.classifyStructure(45, [300, 45], 20, 60)).toBe('garage');
+    expect(lmSql(), 'the nearest fallback is still a declared pass').toMatch(/ST_DWithin/);
   });
 
-  it('B13: preserves emitSummary and emitMeta calls', () => {
-    const source = scriptSource();
-    expect(source).toContain('pipeline.emitSummary');
-    expect(source).toContain('pipeline.emitMeta');
+  it('B13: the in-memory grid and its haversine are KNOWINGLY RETIRED and may not return (A-8 override)', () => {
+    // The old lock asserted `haversineDistance` was PRESENT. It is now asserted ABSENT,
+    // deliberately and with the reason on the record: the grid path was a complete second
+    // implementation of this step's contract that never executed (every recorded run
+    // reports buildings_indexed = 0 and grid_cells = "N/A (PostGIS)"), and it carried a
+    // silent swallow — an invalid geometry in its point-in-polygon test was caught, logged
+    // and the parcel reclassified as no-match with NO counter. Its replacement is a
+    // fail-loud precondition, asserted in the same breath so this can never read as a
+    // capability simply going missing.
+    // CODE, not prose: the compute's header NAMES the retired identifiers in order to
+    // record why they are gone, and a lock that could be tripped by its own explanation
+    // would push the explanation out of the file.
+    const src = LM_COMPUTE().replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    for (const token of ['haversine', 'gridKey', 'GRID_SIZE', 'booleanPointInPolygon', '@turf/', 'mercatorToWgs84']) {
+      expect(src, `retired JS-path identifier "${token}" is back in the compute`).not.toContain(token);
+    }
+    const requires = (LM_DESCRIPTOR() as { guards: { requires: Array<{ kind: string; name: string; on_missing: string }> } }).guards.requires;
+    const postgis = requires.find((r) => r.kind === 'extension' && r.name === 'postgis');
+    expect(postgis, 'the retirement is only safe because the extension is a hard precondition').toBeDefined();
+    expect(postgis!.on_missing, 'no degraded algorithm survives').toBe('fail');
+  });
+
+  it('B13: the run still emits a summary and a meta block — now DERIVED from the descriptor', () => {
+    // emitSummary/emitMeta left the step file with everything else; the library calls
+    // both, and their CONTENT is derived rather than hand-maintained. The property that
+    // matters is that the writes block still names the junction and its seven columns.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
+    const { deriveMeta } = require('../../scripts/lib/step/index.js');
+    const meta = deriveMeta(LM_DESCRIPTOR()) as { reads: Record<string, string[]>; writes: Record<string, string[]> };
+    expect(Object.keys(meta.writes)).toEqual(['parcel_buildings']);
+    expect(meta.writes.parcel_buildings!.sort()).toEqual(
+      ['building_id', 'confidence', 'is_primary', 'linked_at', 'match_type', 'parcel_id', 'structure_type'],
+    );
+    expect(Object.keys(meta.reads).sort()).toEqual(['building_footprints', 'parcel_buildings', 'parcels']);
   });
 });
 
@@ -433,30 +484,50 @@ describe('link-massing.js performance optimization (B13)', () => {
 // the pg_extension row — otherwise crashes if 065 migration silently skipped.
 // ---------------------------------------------------------------------------
 
-describe('link-massing.js PostGIS detection guard', () => {
-  const scriptSource = () =>
-    fs.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.js'), 'utf-8');
+// ── RE-HOMED at the Spec 122 §5.1 conversion (pilot 3, commit 7) ─────────────
+//
+// The original lock (WF3-13) existed because PostGIS DETECTION was an ALGORITHM
+// SELECTOR: a compound `has_ext AND has_geom_col` probe chose between the spatial join
+// and a JS grid, and a column-blind probe crashed the run. Under the A-8 override there
+// is no second algorithm to select, so detection stops being a branch and becomes a
+// PRECONDITION — which is strictly stronger: the compound probe answered "which code
+// path", this answers "may this step run at all", and it fails loud instead of degrading.
+//
+// The three properties are re-asserted on the new mechanism: the extension is required,
+// the geom columns it needs are required (the `has_geom_col` half, now declared rather
+// than probed inline), and the absence of any degrade arm is asserted explicitly.
+describe('link_massing PostGIS precondition — the detection guard, re-homed to guards.requires', () => {
+  const requires = () =>
+    (LM_DESCRIPTOR() as { guards: { requires: Array<{ kind: string; name: string; on_missing: string; algorithm?: string }> } }).guards.requires;
 
-  it('checks information_schema.columns for geom column (not just pg_extension)', () => {
-    const source = scriptSource();
-    // Must verify the geom column actually exists, not just that PostGIS is installed
-    expect(source).toMatch(/information_schema\.columns/);
-    expect(source).toMatch(/column_name.*geom|geom.*column_name/);
+  it('the extension is a declared PRECONDITION, not a probe that selects an algorithm', () => {
+    const postgis = requires().find((r) => r.kind === 'extension' && r.name === 'postgis');
+    expect(postgis, 'guards.requires must name the postgis extension').toBeDefined();
+    expect(postgis!.on_missing).toBe('fail');
+    expect(postgis!.algorithm, 'a degrade arm would re-introduce the second code path').toBeUndefined();
+    // And the runner really probes pg_extension for it — the check is executable, not decorative.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
+    const { REQUIREMENT_PROBES } = require('../../scripts/lib/step/index.js');
+    expect(REQUIREMENT_PROBES.extension.sql).toMatch(/FROM pg_extension WHERE extname = \$1/);
   });
 
-  it('uses a compound hasPostGIS guard (has_ext AND has_geom_col)', () => {
-    const source = scriptSource();
-    // Both predicates must appear together — guards against the column-blind detection regressing
-    expect(source).toMatch(/has_ext/);
-    expect(source).toMatch(/has_geom_col/);
+  it('the geom columns the join needs are covered by required GiST indexes (was: has_geom_col)', () => {
+    // A GiST index cannot exist without its column, so requiring the index requires the
+    // column — and it also catches the case the old probe could not: the column present
+    // but UNINDEXED, which turns the join into a 486K-row sequential scan (B-4).
+    const names = requires().map((r) => r.name);
+    expect(names).toContain('idx_parcels_geom_gist');
+    expect(names).toContain('idx_building_footprints_geom_gist');
+    for (const n of ['idx_parcels_geom_gist', 'idx_building_footprints_geom_gist']) {
+      expect(requires().find((r) => r.name === n)!.on_missing, `${n} must HALT, not warn`).toBe('fail');
+    }
   });
 
-  it('emits a warning when PostGIS is installed but geom column is missing', () => {
-    const source = scriptSource();
-    // Must log a warning so operators know to run migration 098
-    // Use [\s\S] instead of . with s-flag — project targets ES2017 (s requires ES2018+)
-    expect(source).toMatch(/has_ext[\s\S]*has_geom_col|has_geom_col[\s\S]*has_ext/);
-    expect(source).toMatch(/pipeline\.log\.warn.*link-massing/);
+  it('NO requirement degrades — the compound-guard-selects-a-fallback shape is gone entirely', () => {
+    const degraded = requires().filter((r) => r.on_missing !== 'fail');
+    expect(degraded, 'a degrading precondition is a second code path wearing a declaration').toEqual([]);
+    // And the compute carries no detection at all: nothing to branch on.
+    expect(LM_COMPUTE()).not.toMatch(/hasPostGIS|has_geom_col|pg_extension|information_schema/);
   });
 });
 
@@ -467,57 +538,85 @@ describe('link-massing.js PostGIS detection guard', () => {
 // fallback. Regression-locks the fix + its mandatory companions.
 // ---------------------------------------------------------------------------
 
-describe('link-massing.js building-centroid-in-parcel (WF3 fix)', () => {
-  const scriptSource = () =>
-    fs.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.js'), 'utf-8');
-
-  it('PostGIS path tests building-centroid-in-parcel, NOT the old parcel-centroid-in-building', () => {
-    const source = scriptSource();
+// ── RE-HOMED at the Spec 122 §5.1 conversion (pilot 3, commit 7) ─────────────
+//
+// Fence b16c036d, verbatim. Every property below held over the step's SOURCE TEXT before
+// the conversion and holds over the GENERATED ARTIFACTS after it: the SQL the compute
+// builds, the write plan write.js generates from the descriptor, and the descriptor's own
+// declarations. The subject moved; the guarantee did not, and neither did the count.
+describe('link_massing building-centroid-in-parcel (WF3 fix, re-homed)', () => {
+  it('the match SQL tests building-centroid-in-parcel, NOT the old parcel-centroid-in-building', () => {
+    const sql = lmSql();
     // New (correct): the building centroid is tested inside the parcel polygon.
-    expect(source).toMatch(/ST_Contains\(\s*p\.geom,\s*ST_SetSRID\(ST_MakePoint\(bf\.centroid_lng,\s*bf\.centroid_lat\)/);
+    expect(sql).toMatch(/ST_Contains\(\s*p\.geom,\s*ST_SetSRID\(ST_MakePoint\(bf\.centroid_lng,\s*bf\.centroid_lat\)/);
     // Old (backwards) must be gone — parcel centroid tested inside the building polygon.
-    expect(source).not.toMatch(/ST_Contains\(bf\.geom,\s*ST_SetSRID\(ST_MakePoint\(v\.lng,\s*v\.lat\)/);
+    expect(sql).not.toMatch(/ST_Contains\(bf\.geom,\s*ST_SetSRID\(ST_MakePoint\(p\.centroid_lng/);
+    expect(sql).not.toMatch(/ST_Contains\(bf\.geom,\s*ST_SetSRID\(ST_MakePoint\(v\.lng,\s*v\.lat\)/);
     // bbox prefilter on the GiST index.
-    expect(source).toMatch(/bf\.geom\s*&&\s*p\.geom/);
+    expect(sql).toMatch(/bf\.geom\s*&&\s*p\.geom/);
   });
 
-  it('aligns confidence to 0.95 across both paths (no 0.90 centroid_in_parcel insert)', () => {
-    const source = scriptSource();
-    expect(source).toMatch(/'centroid_in_parcel',\s*0\.95/);
-    expect(source).not.toMatch(/'centroid_in_parcel',\s*0\.90/);
+  it('the written confidences come from ONE declared source each — no 0.95 / 0.60 literal survives in the SQL or the compute', () => {
+    // The pre-conversion file carried each confidence at TWO sites across two code paths
+    // that had to agree by hand; the old lock could only assert the value was 0.95 and not
+    // 0.90. Now the value is a registered variable, so the stronger statement is that
+    // there is no literal left to disagree with.
+    const sql = lmSql();
+    expect(sql, 'a confidence literal is back in the generated SQL').not.toMatch(/0\.95|0\.60?\b/);
+    const declared = (LM_DESCRIPTOR() as { config: { logic_variables: Array<{ name: string }> } }).config.logic_variables.map((v) => v.name);
+    expect(declared).toContain('link_massing_centroid_confidence');
+    expect(declared).toContain('link_massing_nearest_confidence');
+    expect(LM_COMPUTE()).toMatch(/config\.link_massing_centroid_confidence/);
+    expect(LM_COMPUTE()).toMatch(/config\.link_massing_nearest_confidence/);
+    const seed = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/seeds/logic_variables.json'), 'utf-8')) as Record<string, { default: number }>;
+    expect(seed.link_massing_centroid_confidence!.default, 'the seed default is the pre-externalization literal').toBe(0.95);
+    expect(seed.link_massing_nearest_confidence!.default).toBe(0.6);
   });
 
-  it('asserts a GiST index on parcels.geom before the join (precondition HALT)', () => {
-    const source = scriptSource();
-    expect(source).toMatch(/pg_indexes[\s\S]*tablename\s*=\s*'parcels'[\s\S]*gist/i);
-    expect(source).toMatch(/refusing the building-centroid-in-parcel join/);
+  it('a GiST index on parcels.geom is asserted BEFORE the join (precondition HALT)', () => {
+    const requires = (LM_DESCRIPTOR() as { guards: { requires: Array<{ kind: string; name: string; on_missing: string }> } }).guards.requires;
+    const gist = requires.find((r) => r.name === 'idx_parcels_geom_gist');
+    expect(gist, 'the index the join seeks must be a declared precondition').toBeDefined();
+    expect(gist!.kind).toBe('index');
+    expect(gist!.on_missing, 'without it the join seq-scans 486K parcels — a HALT, not a warning').toBe('fail');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
+    const { REQUIREMENT_PROBES } = require('../../scripts/lib/step/index.js');
+    expect(REQUIREMENT_PROBES.index.sql).toMatch(/FROM pg_indexes WHERE indexname = \$1/);
   });
 
-  it('PostGIS path has the FULL-mode stale-link cleanup (parity with the JS path)', () => {
-    const source = scriptSource();
-    // The PostGIS branch (before the in-memory grid `else`) must DELETE stale links in FULL mode.
-    const postgisBranch = source.slice(
-      source.indexOf('Using PostGIS building-centroid-in-parcel'),
-      source.indexOf('Phase 1 (JS fallback)'),
-    );
-    expect(postgisBranch).toMatch(/DELETE FROM parcel_buildings WHERE parcel_id IN \(SELECT id FROM parcels/);
-    expect(postgisBranch).toMatch(/FULL_MODE/);
+  it('the FULL-mode stale-link cleanup is ONE generated DELETE, scoped to the parcels being re-evaluated', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
+    const write = require('../../scripts/lib/step/write.js');
+    const d = LM_DESCRIPTOR() as { outputs: { writes: unknown[] } };
+    const plan = write.buildWritePlan(d.outputs.writes[1], d) as { delete_sql: string };
+    expect(plan.delete_sql).toMatch(/DELETE FROM parcel_buildings WHERE parcel_id IN \(SELECT id FROM parcels/);
+    expect(write.retractionFires(plan, 'full')).toBe(true);
+    expect(write.retractionFires(plan, 'incremental'), 'an incremental run must never retract').toBe(false);
   });
 
-  it('PostGIS nearest-fallback bbox-prefilters before the geography ST_DWithin (lessons.md runaway guard)', () => {
-    const source = scriptSource();
-    expect(source).toMatch(/bf\.geom\s*&&\s*ST_Expand\(p\.geom/);
-    expect(source).toMatch(/ST_DWithin\(p\.geom::geography,\s*bf\.geom::geography/);
-    expect(source).toMatch(/DISTINCT ON \(p\.id\)/);
+  it('the nearest fallback bbox-prefilters BEFORE the geography ST_DWithin (lessons.md runaway guard)', () => {
+    const sql = lmSql();
+    expect(sql).toMatch(/bf\.geom\s*&&\s*ST_Expand\(p\.geom/);
+    expect(sql).toMatch(/ST_DWithin\(p\.geom::geography,\s*bf\.geom::geography/);
+    expect(sql).toMatch(/DISTINCT ON \(p\.id\)/);
+    expect(sql.indexOf('ST_Expand'), 'the prefilter must precede the distance').toBeLessThan(sql.indexOf('ST_DWithin'));
   });
 
-  it('PostGIS path increments buildings_matched + centroid counters (honest telemetry)', () => {
-    const source = scriptSource();
-    const postgisBranch = source.slice(
-      source.indexOf('Using PostGIS building-centroid-in-parcel'),
-      source.indexOf('Phase 1 (JS fallback)'),
-    );
-    expect(postgisBranch).toMatch(/buildingsMatched\+\+/);
-    expect(postgisBranch).toMatch(/centroidInParcelMatches\+\+/);
+  it('the match counters are still incremented per matched building (honest telemetry)', () => {
+    // The counters moved from `buildingsMatched++` in the loop to the LINK phase's own
+    // per-pass tally, named by the compute so the runner spells no domain value. What the
+    // old lock asserted — that a match increments a counter — is asserted here on the
+    // classifier's own output, which is what the runner adds up.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute
+    const compute = require('../../scripts/lib/compute/link-massing.js');
+    const config = { massing_shed_threshold_sqm: 20, massing_garage_max_sqm: 60, link_massing_centroid_confidence: 0.95, link_massing_nearest_confidence: 0.6 };
+    const out = compute.classifyMatches(
+      [{ parcel_id: 1, building_id: 10, footprint_area_sqm: 300 }, { parcel_id: 1, building_id: 11, footprint_area_sqm: 15 }],
+      config,
+    ) as { rows: unknown[]; parcels: number; matches: number };
+    expect(out.matches, 'every matched building is counted, not every parcel').toBe(2);
+    expect(out.parcels).toBe(1);
+    expect(compute.buildMatchSql(LM_DESCRIPTOR(), config, 'full').primary_counter).toBe('centroid_in_parcel');
+    expect(compute.buildMatchSql(LM_DESCRIPTOR(), config, 'full').fallback_counter).toBe('nearest');
   });
 });

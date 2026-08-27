@@ -501,7 +501,16 @@ function junctionState(doc: GoldenDoc): TableState {
   const ts = (doc.table_state ?? []).find((t) => t.table === WRITE_TABLE);
   expect(ts, `${doc.file}: no table_state for ${WRITE_TABLE} — a LINK 4-tuple without the junction (D-18 / G8(b))`).toBeDefined();
   const state = ts as TableState;
-  const order = Array.isArray(state.order_by) ? state.order_by.join(',') : (state.order_by ?? '');
+  // The harness records the ordering in TWO fields (commit 5, 7340fde4): `order_by` is a
+  // SOURCE sentinel — "explicit" when --table-order supplied it, "pk" when it fell back —
+  // and `order_columns` carries the columns themselves. This reader was written against a
+  // single field; it accepts either, and still fails when NEITHER names the declared key,
+  // so the guarantee (ordered by the unique key, never the pk) is unchanged.
+  const cols = (state as { order_columns?: string[] }).order_columns;
+  const order = [
+    Array.isArray(state.order_by) ? state.order_by.join(',') : (state.order_by ?? ''),
+    Array.isArray(cols) ? cols.join(',') : '',
+  ].join(' ');
   expect(/parcel_id[\s\S]*building_id/.test(order), `${doc.file}: table_state.${WRITE_TABLE} must be ORDERED BY the declared key (parcel_id, building_id), never the pk (Fold B item 5)`).toBe(true);
   const projected = state.columns ?? state.projection;
   expect(Array.isArray(projected), `${doc.file}: table_state.${WRITE_TABLE} carries no column projection (A-4: a full-row hash renders id + linked_at)`).toBe(true);
@@ -944,12 +953,12 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
         const ts = junctionState(o);
         expect(ts.row_count, `${o.file}: parcel_buildings count (invariant 2: 520,492 exact on an incremental rerun / after a FULL relink)`).toBe(LIVE_ROWS);
         expect(typeof ts.content_hash, `${o.file}: projected + key-ordered content hash`).toBe('string');
-        expect(invariant(o, 'parcel_buildings_count')).toBe(LIVE_ROWS);
-        expect(invariant(o, 'parcel_buildings_duplicate_keys'), 'invariant 1: (parcel_id, building_id) unique BY COUNT').toBe(0);
-        expect(invariant(o, 'parcel_buildings_multi_primary_parcels'), 'invariant 1: exactly-one primary BY COUNT').toBe(0);
+        expect(invariant(o, 'pb_rows')).toBe(LIVE_ROWS);
+        expect(invariant(o, 'pb_unique_pairs_violations'), 'invariant 1: (parcel_id, building_id) unique BY COUNT').toBe(0);
+        expect(invariant(o, 'pb_multi_primary_parcels'), 'invariant 1: exactly-one primary BY COUNT').toBe(0);
         expect(invariant(o, 'parcels_with_centroid'), 'invariant 3: a stable denominator').toBe(LIVE_PARCELS_WITH_CENTROID);
         expect(invariant(o, 'link_rate_pct'), 'invariant 3: link_rate ≥ T4').toBeGreaterThanOrEqual(50);
-        expect(invariant(o, 'confidence_off_domain'), 'invariant 4: confidence ∈ {0.95, 0.60} only').toBe(0);
+        expect(String(((o.invariants ?? []).find((i) => i.name === 'confidence_values') as { value: unknown } | undefined)?.value), 'invariant 4: confidence ∈ {0.95, 0.60} only (commit-5 key)').toBe('0.60,0.95');
       }
       for (const o of old.slice(1)) {
         expect(o.normalised, `${inv.name}: ${o.file} differs from ${old[0]?.file} modulo declared normalisations`).toEqual(old[0]?.normalised);
@@ -1730,7 +1739,36 @@ function runShapeRule(files: string[]): Array<{ file: string; rule: string; line
 // ===========================================================================
 
 describe('G4d fence locks', () => {
-  const currentStep = (): string => stripComments(fs.readFileSync(abs(STEP_REL), 'utf8'));
+  /**
+   * THE REVERSION-DIRECTION SUBJECT, RE-HOMED AT COMMIT 7 (and it had to be).
+   *
+   * Each lock below runs its detector twice: once over the CONVERTED artifacts (the
+   * descriptor, the generated write plan, the compute's SQL) to prove the fence is
+   * present, and once over a REVERTED patch to prove the detector can fire at all —
+   * the Spec 121 §12b.6 property that a green checker which never looked is
+   * indistinguishable from a clean subject.
+   *
+   * The reversion half was written against `scripts/link-massing.js` as text, because
+   * at commit 6 that file still held the 740 lines the fences live in. Commit 7 empties
+   * it: the frozen §5.1 shape carries no SQL, so `orderedWritesFromSource` and its three
+   * siblings would parse nothing and the four detectors would go permanently vacuous —
+   * the exact failure they exist to prevent, arriving by way of the fix.
+   *
+   * So the subject is pinned to the PRE-CONVERSION BLOB, by SHA. That is not a
+   * workaround, it is the stronger form: the detectors are proven against the ACTUAL
+   * retired code rather than against whatever the file happens to contain later, the
+   * proof cannot rot as the step evolves, and the un-reverted assertions still fail
+   * loudly if a detector stops matching the text the fences were fixed in.
+   */
+  const PRE_CONVERSION_REF = 'fa702050';
+  const currentStep = (): string => {
+    const text = git(['show', `${PRE_CONVERSION_REF}:${STEP_REL}`]);
+    expect(
+      text.split('\n').length,
+      `the pinned pre-conversion blob ${PRE_CONVERSION_REF}:${STEP_REL} must be the frozen ${FROZEN_LINES}-line file (G0)`,
+    ).toBeGreaterThanOrEqual(FROZEN_LINES);
+    return stripComments(text);
+  };
 
   it(`F1 ${F1_COMMIT} — present in the converted step (descriptor order + generated SQL): ${F1_CONSTRUCT}`, () => {
     const d = loadDescriptor();

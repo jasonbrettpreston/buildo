@@ -193,6 +193,55 @@ describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
     expect(validate(bad)).toBe(false);
   });
 
+  // ── The x-banned-for-new ENFORCER (LINK pilot, Fold B item 2) ──────────────
+  //
+  // ⚠️ THE GAP THIS CLOSES WAS MEASURED, NOT SUSPECTED. `x-banned-for-new` sat in the
+  // schema with NO consumer — nothing anywhere read it — so "banned for new steps" was
+  // a sentence in a JSON file. Any new descriptor could carry `guard: "none"`, satisfy
+  // the schema's own `guard_why` requirement, and ship. AJV cannot express the rule
+  // (it needs a second committed file keyed by identity.name), so it lives in
+  // validateDescriptor, which `pipeline.step()` runs at construction.
+  //
+  // Both directions, on descriptors that differ by IDENTITY ALONE.
+  describe('x-banned-for-new is ENFORCED, not merely annotated', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
+    const { validateDescriptor, loadGrandfathered } = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js')) as {
+      validateDescriptor: (d: unknown) => unknown;
+      loadGrandfathered: () => { steps: Record<string, { paths: Record<string, string>; commit: string }> };
+    };
+    const ALLOWED = path.join(FIXTURES, 'valid', 'grandfathered-unguarded.descriptor.json');
+    const REFUSED = path.join(FIXTURES, 'invalid', 'guard-none-not-grandfathered.json');
+
+    it('the two fixtures differ by IDENTITY ONLY — so a difference in outcome can only be the allowlist', () => {
+      const a = readJson(ALLOWED);
+      const b = readJson(REFUSED);
+      expect(JSON.stringify(b.outputs)).toBe(JSON.stringify(a.outputs));
+      expect((b.identity as { name: string }).name).not.toBe((a.identity as { name: string }).name);
+    });
+
+    it('AJV ALONE accepts the un-allowlisted descriptor — which IS the gap', () => {
+      expect(validate(readJson(REFUSED)), 'if AJV rejected it, the enforcer below would be proving nothing').toBe(true);
+    });
+
+    it('GREEN — an allowlisted step keeps its unguarded write', () => {
+      expect(() => validateDescriptor(readJson(ALLOWED))).not.toThrow();
+      const entry = loadGrandfathered().steps[(readJson(ALLOWED).identity as { name: string }).name];
+      expect(entry, 'the green direction must be green BECAUSE of an allowlist entry').toBeDefined();
+      expect(entry?.paths['outputs.writes[].write_discipline.guard']).toBe('none');
+      expect(/^[0-9a-f]{7,40}$/.test(entry?.commit ?? ''), 'an entry must name the commit that grandfathered it').toBe(true);
+    });
+
+    it('RED — the same write, with a why, is REFUSED when the step is not on the allowlist', () => {
+      expect(() => validateDescriptor(readJson(REFUSED))).toThrow(/grandfathered/);
+    });
+
+    it('RED — removing the allowlist entry reddens the green fixture too (the rule is the allowlist, not the name)', () => {
+      const d = readJson(ALLOWED) as { identity: { name: string } };
+      d.identity = { ...d.identity, name: 'fixture_name_no_allowlist_will_ever_have' };
+      expect(() => validateDescriptor(d)).toThrow(/grandfathered/);
+    });
+  });
+
   it('the #54 lock is proven in BOTH directions', () => {
     // Same descriptor, one array populated. If the positive control also failed,
     // the negative would be firing for some unrelated reason.

@@ -1274,14 +1274,47 @@ describe('Fold D — write.js refuses what it cannot generate, and types its cas
     expect(plan.delete_sql).toContain(`$1::${writeLib.DEFAULT_KEY_SQL_TYPE}[]`);
   });
 
-  it('⚠️ a COMPOSITE key THROWS at plan time — a scoped DELETE that retracts by half a key is worse than none', () => {
+  // ── NARROWED at the LINK pilot (LG-2, 2026-08-27) — and the narrowing is the point ──
+  //
+  // The refusal used to be blanket: "composite keys are not supported by the generated
+  // class-B write". It covered THREE unrelated statements at once, and two of the three
+  // genuinely mean it — `retract: "departed"` casts ONE key array (`<key> <> ALL($1::t[])`,
+  // which cannot express a tuple) and `validateGeometries` joins its result back on ONE key
+  // column. The third, `ON CONFLICT (<keys>)`, has taken a column LIST since Postgres 9.5
+  // and needed nothing but a join.
+  //
+  // So the ban now attaches to the two statements that mean it, and the conflict target is
+  // supported — which is what lets `parcel_buildings`'s real key `(parcel_id, building_id)`
+  // be declared at all. Both directions are asserted: what still throws, and what now works.
+  it('⚠️ a COMPOSITE key still THROWS where the statement really indexes keys[0] — a scoped DELETE that retracts by half a key is worse than none', () => {
     const s = spec();
     s.key = ['source_id', 'source_dataset_version'];
-    expect(() => writeLib.buildWritePlan(s, LOAD_RAVINES)).toThrow(/composite keys are not supported/i);
+    // retract: "departed" — the departure DELETE cannot express a tuple.
+    expect(() => writeLib.buildWritePlan(s, LOAD_RAVINES)).toThrow(/retract "departed" is not supported on a composite key/i);
     // ...and it names the columns, so the refusal is actionable without reading write.js.
     expect(() => writeLib.buildWritePlan(s, LOAD_RAVINES)).toThrow(/source_id, source_dataset_version/);
+    // The geometry-validation half refuses independently: even with the departure DELETE
+    // gone, a wkb_geometry column joins its validation result back on ONE key column.
+    const geomOnly = spec();
+    geomOnly.key = ['source_id', 'source_dataset_version'];
+    (geomOnly as unknown as { retract: string }).retract = 'none';
+    expect(() => writeLib.buildWritePlan(geomOnly, LOAD_RAVINES)).toThrow(/wkb_geometry column with a composite key/i);
     // The other direction: the single-key form this step declares still builds.
     expect(writeLib.buildWritePlan(spec(), LOAD_RAVINES).keys).toEqual(['source_id']);
+  });
+
+  it('a COMPOSITE conflict target BUILDS when nothing indexes keys[0] — the LG-2 support, proven on the real junction descriptor', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real committed descriptor
+    const LINK_MASSING = require(join(process.cwd(), 'scripts/link-massing.descriptor.json'));
+    const plan = writeLib.buildWritePlan(LINK_MASSING.outputs.writes[1], LINK_MASSING);
+    expect(plan.keys).toEqual(['parcel_id', 'building_id']);
+    expect(plan.upsert_sql).toMatch(/ON CONFLICT \(parcel_id, building_id\) DO UPDATE/);
+    // No geometry column and no departure delete on this target, which is exactly why the
+    // narrowed refusal lets it through — and its retraction is the scoped `retract: "all"`
+    // form, which takes a predicate rather than a key array.
+    expect(plan.geometry_columns).toEqual([]);
+    expect(plan.delete_sql).not.toMatch(/<> ALL/);
+    expect(plan.delete_sql).toMatch(/^DELETE FROM parcel_buildings WHERE parcel_id IN \(SELECT id FROM parcels/);
   });
 
   it('⚠️ a SECOND wkb_geometry column THROWS — it would be bound NULL on every row, silently', () => {

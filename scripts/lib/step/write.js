@@ -46,6 +46,27 @@ const WRITTEN_BY_STEP = 'step';
 /** Default SQL type for the departure DELETE's key array cast. */
 const DEFAULT_KEY_SQL_TYPE = 'BIGINT';
 
+/** `write_discipline.class` values whose generated statement is a scoped set-based UPDATE. */
+const SET_BASED_CLASSES = new Set(['set_based_scoped', 'set_based_unscoped']);
+
+/** `retract_when` — the LINK-pilot qualifier on the frozen `retract` enum. Absent means "always". */
+const RETRACT_ALWAYS = 'always';
+const RETRACT_FULL_ONLY = 'full_only';
+
+/**
+ * The per-target key under which the runner files a write's counters: `written.e1`,
+ * `written.e2`, … 1-based index into `outputs.writes[]`.
+ *
+ * §11 counter scoping needs a NAME for "what the second declared target did", because a
+ * LINK writes more than one discipline to one table and `records_new` must mean the
+ * upsert's inserts, not the clear's rewrites. Positional rather than invented so the
+ * descriptor's `counters[].source` and the declared write order cannot drift: `e2` IS
+ * `outputs.writes[1]`, by construction, and moving a target renames its counters.
+ */
+function targetKey(index) {
+  return `e${index + 1}`;
+}
+
 /**
  * Batched geometry normalisation — ONE round-trip for the whole feature set.
  *
@@ -119,6 +140,41 @@ function keyColumns(writeSpec) {
 }
 
 /**
+ * A DECLARED constant (`columns[].set_value`) rendered as SQL, for the set-based
+ * mechanic's `SET <col> = <literal>`.
+ *
+ * Deliberately tiny and deliberately CLOSED: booleans, finite numbers, null. A string
+ * would be an injection surface and there is no measured need for one — a set-based
+ * target writes a flag or a zero. Anything else throws at plan time rather than
+ * producing a statement whose meaning depends on quoting.
+ */
+function sqlLiteral(value) {
+  if (value === true || value === false || value === null) return String(value);
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  throw new Error('[write_discipline] columns[].set_value must be a boolean, a finite number or null for a '
+    + `set-based mechanic (got ${JSON.stringify(value)}). A string constant is an injection surface and has `
+    + 'no measured use; declare the value the generator can render safely.');
+}
+
+/**
+ * Does this target's declared retraction fire in THIS run's mode? (`retract_when`.)
+ *
+ * The whole point of the field: `retract: "all"` + `retract_when: "full_only"` is
+ * correct in a full rebuild and catastrophic in an incremental run, where it would
+ * retract everything the scope covers and rebuild only the rows the incremental filter
+ * selected. Before this the gate was an `if (FULL_MODE)` inside a hand-written step and
+ * nothing declared it, so no differential could see it move.
+ *
+ * @param {object} plan - from buildWritePlan
+ * @param {'full'|'incremental'} mode - the resolved staleness mode
+ */
+function retractionFires(plan, mode) {
+  if (!plan.delete_sql) return false;
+  if (plan.retract_when === RETRACT_FULL_ONLY) return mode === 'full';
+  return true;
+}
+
+/**
  * THE GENERATOR. Everything the runner executes for one declared write target,
  * derived from the descriptor and nothing else.
  *
@@ -132,19 +188,11 @@ function keyColumns(writeSpec) {
 function buildWritePlan(writeSpec, descriptor) {
   const table = writeSpec.table;
   const keys = keyColumns(writeSpec);
-  // ⚠️ REFUSE WHAT THIS GENERATOR CANNOT GENERATE, at plan time and by name.
-  // Every statement below indexes `keys[0]` and `geometry_columns[0]`: the departure
-  // DELETE casts ONE key array, `validateGeometries` binds ONE key column and lands the
-  // WKB under ONE geometry column. A composite key or a second geometry column does not
-  // produce a wrong statement — it produces a statement that silently ignores the extra
-  // column, which is a scoped DELETE that retracts by half a key. The support is real
-  // work (an array-of-records unnest, a per-column validation pass); until it exists the
-  // honest answer is a throw naming the columns, not a plan that looks complete.
-  if (keys.length > 1) {
-    throw new Error(`[write_discipline] ${table}: composite keys are not supported by the generated class-B write `
-      + `(declared key: ${keys.join(', ')}). The departure DELETE casts a single key array and the geometry `
-      + 'validation joins on a single key column; declare a single-column key or extend write.js first.');
-  }
+  const retract = writeSpec.retract || 'none';
+  // `retract_when` is the LINK pilot's C3 pre-pull: the `retract` enum is x-frozen, so
+  // the qualifier is a sibling. Absent = "always", which is byte-for-byte the class-B
+  // behaviour every pre-LINK descriptor already had.
+  const retractWhen = writeSpec.retract_when || RETRACT_ALWAYS;
   const srid = descriptor.guards && descriptor.guards.srid !== 'none' ? descriptor.guards.srid : null;
   const stepColumns = writeSpec.columns.filter((c) => (c.written || WRITTEN_BY_STEP) === WRITTEN_BY_STEP);
   const defaulted = writeSpec.columns.filter((c) => (c.written || WRITTEN_BY_STEP) !== WRITTEN_BY_STEP);
@@ -152,11 +200,65 @@ function buildWritePlan(writeSpec, descriptor) {
   const guardColumns = resolveGuardColumns(writeSpec, stepColumnNames);
   const updateColumns = stepColumnNames.filter((c) => !keys.includes(c));
   const keyType = writeSpec.key_sql_type || DEFAULT_KEY_SQL_TYPE;
+  const scope = writeSpec.write_discipline.scope !== 'none' ? writeSpec.write_discipline.scope : null;
   const geometryColumns = stepColumns.filter((c) => c.bind === 'wkb_geometry').map((c) => c.name);
   if (geometryColumns.length > 1) {
     throw new Error(`[write_discipline] ${table}: ${geometryColumns.length} columns declare bind "wkb_geometry" `
       + `(${geometryColumns.join(', ')}), and the validation phase writes its output under exactly one. `
       + 'A second geometry column would be bound NULL on every row; declare one, or extend validateGeometries first.');
+  }
+  // ⚠️ COMPOSITE KEYS: SUPPORTED FOR THE CONFLICT TARGET, STILL REFUSED WHERE THE
+  // STATEMENT GENUINELY INDEXES keys[0] (LG-2, LINK pilot 2026-08-27).
+  //
+  // The blanket refusal that used to sit here read "composite keys are not supported by
+  // the generated class-B write" and covered THREE unrelated statements at once. Two of
+  // them really do index a single key — `retract: "departed"` casts ONE key array
+  // (`<key> <> ALL($1::type[])`, which cannot express a tuple) and `validateGeometries`
+  // joins the WKB back on ONE key column. The third, `ON CONFLICT (<keys>)`, has taken a
+  // column LIST since Postgres 9.5 and needed nothing but `keys.join(', ')`.
+  //
+  // Narrowing the refusal to the two statements that mean it is what lets
+  // `parcel_buildings`'s real conflict target `(parcel_id, building_id)` be declared at
+  // all. Widening it silently would be the failure the original throw guarded against:
+  // a scoped DELETE that retracts by half a key.
+  if (keys.length > 1 && retract === 'departed') {
+    throw new Error(`[write_discipline] ${table}: retract "departed" is not supported on a composite key `
+      + `(declared key: ${keys.join(', ')}). The departure DELETE casts a SINGLE key array `
+      + `(<key> <> ALL($1::${keyType}[])), which cannot express a tuple — it would retract by half a key. `
+      + 'Declare a single-column key, or retract "all" with a write_discipline.scope, or extend write.js first.');
+  }
+  if (keys.length > 1 && geometryColumns.length > 0) {
+    throw new Error(`[write_discipline] ${table}: a wkb_geometry column with a composite key `
+      + `(${keys.join(', ')}) is not supported — validateGeometries joins its result back on ONE key column, `
+      + 'so half the key would be dropped and every row would miss its own validation row.');
+  }
+  if (retract === 'all' && !scope) {
+    throw new Error(`[write_discipline] ${table}: retract "all" with write_discipline.scope "none" would `
+      + 'DELETE THE WHOLE TABLE. The scope is what makes a full retraction bounded to the rows this run '
+      + 'rebuilds; declare it, or declare retract "none".');
+  }
+
+  // ── set_based_scoped / set_based_unscoped: one UPDATE, constants only ──────
+  // No row values are bound: a set-based mechanic writes a DECLARED CONSTANT
+  // (`columns[].set_value`) over the rows its scope selects. The scope carries its own
+  // placeholders, so the caller binds those and nothing else.
+  if (SET_BASED_CLASSES.has(writeSpec.write_discipline.class)) {
+    const assignments = stepColumns.map((c) => `${c.name} = ${sqlLiteral(c.set_value)}`).join(', ');
+    return {
+      table,
+      keys,
+      srid,
+      mechanic: writeSpec.write_discipline.class,
+      step_columns: stepColumnNames,
+      update_columns: stepColumnNames,
+      guard_columns: guardColumns,
+      geometry_columns: geometryColumns,
+      key_sql_type: keyType,
+      scope,
+      retract,
+      retract_when: retractWhen,
+      clear_sql: `UPDATE ${table} SET ${assignments}${scope ? ` WHERE ${scope}` : ''};`,
+    };
   }
 
   const bindFor = (col, ordinal) => (col.bind === 'wkb_geometry'
@@ -179,6 +281,10 @@ function buildWritePlan(writeSpec, descriptor) {
     table,
     keys,
     srid,
+    mechanic: writeSpec.write_discipline.class,
+    scope,
+    retract,
+    retract_when: retractWhen,
     step_columns: stepColumnNames,
     update_columns: updateColumns,
     guard_columns: guardColumns,
@@ -193,7 +299,15 @@ function buildWritePlan(writeSpec, descriptor) {
     key_sql_type: keyType,
     // The single-row form: what the batched statement looks like at rowCount 1.
     upsert_sql: head + valuesGroup(1) + tail,
-    delete_sql: `DELETE FROM ${table} WHERE ${keys[0]} <> ALL($1::${keyType}[]);`,
+    // TWO retraction shapes, selected by the DECLARED axis and never by the class name
+    // (V7). `departed` is class B's scoped departure DELETE — every key the source no
+    // longer carries. `all` is the LINK's mass retraction — every row this run will
+    // rebuild, bounded by `write_discipline.scope`, and fired only when `retract_when`
+    // says so (`full_only` ⇒ only in full mode). `none` generates no statement at all,
+    // rather than a statement the runner remembers not to call.
+    delete_sql: retract === 'departed'
+      ? `DELETE FROM ${table} WHERE ${keys[0]} <> ALL($1::${keyType}[]);`
+      : (retract === 'all' ? `DELETE FROM ${table} WHERE ${scope};` : null),
     // Not a string, so it is never mistaken for a statement: the batched builder.
     upsertSqlFor: (rowCount) => head
       + Array.from({ length: rowCount }, (_, r) => valuesGroup(1 + r * stepColumns.length)).join(', ')
@@ -333,9 +447,59 @@ async function executeWrite(pool, {
   };
 }
 
+/**
+ * THE ORDERED MULTI-TARGET EXECUTORS (LG-3, LINK pilot).
+ *
+ * `runIngestPhase` refused more than one write target BY NAME because every line of it
+ * indexed `writes[0]` — a second declared target would have been acquired for, gated
+ * over and then NEVER WRITTEN, i.e. a table in `outputs.writes` and in PIPELINE_META,
+ * silently empty, under a green verdict. A LINK writes TWO disciplines to ONE table in
+ * a REQUIRED order (B-7/B-8: retract, then clear the primaries, then upsert), so the
+ * loop had to exist. These three primitives are what the ordered loop calls; each is
+ * one statement, takes a client so the caller owns the transaction boundary, and
+ * returns the counters that become `written.e<N>`.
+ */
+
+/** `set_based_scoped` — the declared constants over the declared scope. Returns rows touched. */
+async function executeSetBasedClear(client, plan, scopeParams) {
+  const result = await client.query(plan.clear_sql, scopeParams || []);
+  return result.rowCount || 0;
+}
+
+/**
+ * ONE batched guarded upsert. `rows` are already ordered by the caller.
+ *
+ * `RETURNING (xmax = 0)` is what separates an INSERT from an UPDATE — the same
+ * mechanism class B uses — so `records_new` becomes a MEASUREMENT rather than the
+ * hardcoded literal a `rowCount` from a guarded upsert can never distinguish (D-8).
+ */
+async function executeUpsertBatch(client, plan, rows) {
+  if (rows.length === 0) return { inserted: 0, updated: 0 };
+  const values = [];
+  for (const row of rows) values.push(...plan.bindRow(row));
+  const result = await client.query(plan.upsertSqlFor(rows.length), values);
+  const inserted = result.rows.filter((r) => r.is_insert).length;
+  return { inserted, updated: result.rows.length - inserted };
+}
+
+/** `retract: "all"` — the scoped mass retraction, fired only when `retract_when` allows it. */
+async function executeRetraction(client, plan) {
+  const result = await client.query(plan.delete_sql);
+  return result.rowCount || 0;
+}
+
 module.exports = {
   buildWritePlan,
   generateWriteSql,
+  targetKey,
+  sqlLiteral,
+  retractionFires,
+  executeSetBasedClear,
+  executeUpsertBatch,
+  executeRetraction,
+  SET_BASED_CLASSES,
+  RETRACT_ALWAYS,
+  RETRACT_FULL_ONLY,
   WRITTEN_BY_STEP,
   DEFAULT_KEY_SQL_TYPE,
   geometryValidationSql,

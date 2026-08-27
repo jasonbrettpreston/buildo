@@ -43,6 +43,8 @@
     "R6-schema_drift-conditional": "guards.schema_drift may be a SCALAR or a CONDITIONAL PER-LAYER ARRAY (the load-zoning.js:405-407 shape: base layers FAIL/pause, non-base WARN/propagate). A scalar cannot express it."
   },
   "x-banned-for-new": {
+    "allowlist": "scripts/steps/_schema/grandfathered.json",
+    "enforcer": "scripts/lib/step/validate.js assertGrandfathered — ADDED AT THE LINK PILOT (2026-08-27). Until then x-banned-for-new was METADATA WITH NO CONSUMER: nothing read it, so 'banned for new steps' was a sentence in a JSON file and any new descriptor could carry any banned value with a why. The rule is now two-part and both parts are required — a banned value needs (1) the sibling *_why the schema already demands, AND (2) an entry in the allowlist above naming the step, the exact path, the value, a why and the commit that grandfathered it. A step that is not on the list is REFUSED at pipeline.step() construction, before compute exists.",
     "values": {
       "outputs.writes[].replay": ["append_unsafe"],
       "outputs.writes[].write_discipline.guard": ["none"],
@@ -248,6 +250,14 @@
             { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/columnName" } }
           ]
         },
+        "guard_columns_why": {
+          "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull) — the LG-9 escape hatch, and the ONLY way a columns[].source \"run_at\" column may sit in the change guard. scripts/lib/step/validate.js refuses that combination outright without this why, because it is not a style preference: a run-clock column is DISTINCT FROM its stored value on every run, so guarding on it turns a no-op re-run into a full re-stamp of the table and re-scopes every downstream consumer keyed on that watermark.",
+          "$ref": "#/definitions/why"
+        },
+        "declared_drift": {
+          "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). WHAT drifts, for a target whose idempotent_rerun is declared_drift. idempotent_rerun_why says WHY zero_writes is unachievable; this says WHICH rows move and how many, so a differential can tell the DECLARED drift apart from a regression. link_massing's E1 is the worked example: the is_primary = false clear always rewrites the batch's primaries before the upsert restores them (fence 5bb31faf / B-8), so its row count is a function of the batch, not of the data changing.",
+          "$ref": "#/definitions/why"
+        },
         "expected_change_ratio": {
           "description": "Measured every run from rows_scanned / rows_changed and CHECKED against this bound.",
           "anyOf": [
@@ -366,6 +376,15 @@
                 "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). How the generated statement binds this column's parameter. \"value\" is a plain `$n`; \"wkb_geometry\" wraps it as `ST_GeomFromWKB($n, <guards.srid>)`, which is the only reason a class-B generator would need to know a column is spatial. Default: \"value\".",
                 "enum": ["value", "wkb_geometry"],
                 "x-frozen": true
+              },
+              "source": {
+                "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). WHERE this column's value comes from. \"compute\" is the default and means the step's own row builder supplied it. \"run_at\" means the value IS the run clock (pipeline.getDbTimestamp, Spec 47 R3.5), and declaring it is what makes the D-5 trap MECHANICALLY unreachable: a run-clock column is DISTINCT FROM its stored value on EVERY run, so putting it in write_discipline.guard_columns — directly, or by expanding all_declared over it — rewrites every row of the table every run. scripts/lib/step/validate.js refuses that combination unless guard_columns_why is present (LG-9). Measured blast radius on parcel_buildings: 520,492 rows rewritten per run, re-scoping enrich_parcels from 1,395 parcels to 485,135.",
+                "enum": ["compute", "run_at"],
+                "x-frozen": true
+              },
+              "set_value": {
+                "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). The CONSTANT this column is set to by a set-based mechanic, whose generated statement is UPDATE <table> SET <col> = <set_value> WHERE <write_discipline.scope> and which therefore binds no row values at all. Only a set-based target needs it; a keyed upsert reads its values from the row builder. Declaring the constant is what keeps the generator domain-free — the alternative is a false literal inside scripts/lib/step/write.js, i.e. exactly the step-specific runner path Gate 0 (claim #149) bans.",
+                "type": ["boolean", "number", "string", "null"]
               }
             }
           }
@@ -377,6 +396,11 @@
         },
         "write_discipline": { "$ref": "#/definitions/writeDiscipline" },
         "retract": { "enum": ["none", "departed", "all"], "x-frozen": true },
+        "retract_when": {
+          "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). WHEN the declared retract actually fires. The retract enum is x-frozen, so the qualifier is a SIBLING rather than a fourth enum value. \"always\" is the default and the pre-existing behaviour (a class-B departure DELETE runs every load). \"full_only\" means the retraction is issued ONLY when staleness.mode_select resolved to full mode — which is fence b16c036's whole shape: link_massing's mass DELETE of every link for centroid-bearing parcels is correct in a FULL relink and catastrophic in an incremental one, where it would retract 520,492 rows and rebuild only the 1,395-parcel unmatchable tail. Before this field that gate was an if (FULL_MODE) in a hand-written step and nothing declared it.",
+          "enum": ["always", "full_only"],
+          "x-frozen": true
+        },
         "replay": {
           "enum": ["idempotent_upsert", "full_replace", "append_unsafe"],
           "x-frozen": true,
@@ -496,8 +520,8 @@
       "required": ["kind", "name", "on_missing"],
       "properties": {
         "kind": {
-          "description": "rls_bypass_or_policy (added at the INGESTOR pilot, 2026-08-25): the named table has RLS ENABLED, so the write path is only reachable when the pipeline role either bypasses RLS (pg_roles.rolbypassrls) or a policy grants it. Measured on `ravines`: relrowsecurity=true with ZERO policies — a non-bypass role UPSERTs and DELETEs 0 rows with NO error, so the write counters read 0 and the verdict reads PASS. That is indistinguishable from an unchanged source, which is why the precondition is checked BEFORE the write and fails loud.",
-          "enum": ["extension", "index", "function", "column", "rls_bypass_or_policy"],
+          "description": "fk (added at the LINK pilot, 2026-08-27): a named FOREIGN KEY constraint, probed via pg_constraint contype = f. A junction table is only meaningful while BOTH sides stay referential, and a dropped FK is invisible to an index probe — a full-mode retraction would simply leave orphans for a later chain step to report. rls_bypass_or_policy (added at the INGESTOR pilot, 2026-08-25): the named table has RLS ENABLED, so the write path is only reachable when the pipeline role either bypasses RLS (pg_roles.rolbypassrls) or a policy grants it. Measured on `ravines`: relrowsecurity=true with ZERO policies — a non-bypass role UPSERTs and DELETEs 0 rows with NO error, so the write counters read 0 and the verdict reads PASS. That is indistinguishable from an unchanged source, which is why the precondition is checked BEFORE the write and fails loud.",
+          "enum": ["extension", "index", "function", "column", "fk", "rls_bypass_or_policy"],
           "x-frozen": true
         },
         "name": { "type": "string", "minLength": 1 },
@@ -818,7 +842,16 @@
                     "enum": ["pre_acquisition", "acquisition", "post_acquisition", "pre_compute"],
                     "x-frozen": true
                   },
-                  "external": { "type": "string", "description": "The inputs.reads.externals[].id this trigger reads, where applicable." }
+                  "external": { "type": "string", "description": "The inputs.reads.externals[].id this trigger reads, where applicable." },
+                  "table": {
+                    "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). The table an upstream_ledger signal COUNTS. Without it the runner cannot evaluate a data-side gate generically and the comparison has to live in a step-specific helper — which is what scripts/lib/massing-full-gate.js is, and why Gate 0 (claim #149) would fire if the library named it.",
+                    "$ref": "#/definitions/tableName"
+                  },
+                  "emit_key": {
+                    "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). The emits[].key in the PRIOR completed run's records_meta this signal compares THIS run's measurement against. code_version compares staleness.logic_version; upstream_ledger compares COUNT(*) over table. Naming the key in the descriptor is what lets ONE generic reader serve every code+data gate — and it is the same key the frozen producer contract already publishes, so the gate and the emit can never drift apart.",
+                    "type": "string",
+                    "minLength": 1
+                  }
                 }
               }
             }
@@ -925,6 +958,11 @@
       "additionalProperties": false,
       "required": ["budget", "txn_scope", "txn_budget", "chunked", "statement_timeout", "step_timeout", "batch", "needs_disk_mb", "partial_fill", "on_row_error", "on_batch_error", "on_check_error", "on_degrade", "criticality", "network", "invocation", "maintenance"],
       "properties": {
+        "shape": {
+          "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull) — OPERATOR RULING A-1(a). WHICH lifecycle the runner drives, DECLARED rather than sniffed. Until this field the branch was inferred: scripts/lib/step/index.js isIngestStep required an inputs.reads.externals[].url, so a pure DB-to-DB join (a LINK) silently fell to the ASSERT path and its join and write had NO HOME AT ALL. Inference is the wrong mechanism for a phase order that carries before/after guarantees (B-1..B-13): a step whose declaration says nothing gets whichever branch a predicate happens to pick. \"assert\" = compute only, the runner writes nothing. \"ingest\" = acquire, validate, pre_write gate, write (runIngestPhase). \"link\" = read, staleness/mode, RUN_AT, pre_write gate, ordered writes[], post checks (runLinkPhase). ABSENT keeps the pre-existing inference exactly, so no converted step changes behaviour.",
+          "enum": ["assert", "ingest", "link"],
+          "x-frozen": true
+        },
         "budget": { "$ref": "#/definitions/duration" },
         "txn_scope": { "enum": ["statement", "batch", "step", "none"], "x-frozen": true },
         "txn_budget": { "$ref": "#/definitions/duration" },

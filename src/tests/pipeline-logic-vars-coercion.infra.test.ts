@@ -22,7 +22,15 @@ const PIPELINE_SCRIPTS = [
   'scripts/compute-timing-calibration-v2.js',
   // Phase G (Spec 42 §6.11): scripts/create-pre-permits.js retired to DELETE shim — no logicVars.
   'scripts/link-coa.js',
-  'scripts/link-massing.js',
+  // scripts/link-massing.js RE-HOMED, not dropped (Spec 122 §5.1 conversion, pilot 3).
+  // It no longer declares a LOGIC_VARS_SCHEMA at all: the frozen file shape carries no
+  // config code, and coercion is now the LIBRARY's — scripts/lib/step/config.js resolves
+  // the DECLARED names through loadMarketplaceConfigs and bounds-checks them before the
+  // compute runs, so the z.coerce class of defect (the pg driver returning NUMERIC as a
+  // string) cannot recur in a converted step. The successor lock is the four-surface P4
+  // battery in src/tests/step-conformance.infra.test.ts plus the descriptor bounds lock
+  // in src/tests/link-massing.infra.test.ts. Every step still on the island path keeps
+  // its entry here, and the count below shrinks by exactly one per conversion.
   'scripts/link-parcels.js',
   'scripts/link-wsib.js',
   'scripts/refresh-snapshot.js',
@@ -36,8 +44,15 @@ const PIPELINE_SCRIPTS = [
 ];
 
 describe('Pipeline scripts — LOGIC_VARS_SCHEMA uses z.coerce.number() (spec 47 §4)', () => {
-  it('covers all 18 pipeline scripts in the sweep (was 20; Phase G retired 2 shims)', () => {
-    expect(PIPELINE_SCRIPTS).toHaveLength(18);
+  it('covers all 17 pipeline scripts still on the island path (was 20; Phase G retired 2 shims, the LINK pilot converted 1)', () => {
+    expect(PIPELINE_SCRIPTS).toHaveLength(17);
+    // The count is a LEDGER, not a magic number: every entry must still be an unconverted
+    // island, and a converted step left in this list would be asserting a schema that no
+    // longer exists in it. Asserted rather than commented, so the two lists cannot drift.
+    const converted = new Set(
+      (JSON.parse(read('scripts/steps/_schema/converted.json')) as { converted: string[] }).converted,
+    );
+    expect(PIPELINE_SCRIPTS.filter((s) => converted.has(s)), 'a converted step still listed here').toEqual([]);
   });
 
   for (const scriptPath of PIPELINE_SCRIPTS) {

@@ -157,6 +157,20 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'massing_shed_threshold_sqm',    // E19
   'massing_garage_max_sqm',        // E19
   'massing_nearest_max_distance_m', // E19
+  // ── Spec 122 §1.2a P4, LINK pilot (link_massing conversion, 2026-08-27) ────
+  // The step declared three tunables and registered all three; its ONE verdict-bound
+  // threshold and its two WRITTEN confidences were bare literals with zero registered
+  // variables — the link-rate floor at two sites (the comparison and a duplicated
+  // '>= 50%' render string), each confidence at two sites across two code paths that
+  // had to agree by hand. Seeded (mig-099 seed contract, no migration), rendered under
+  // GROUPS "Spatial & Massing". The link-rate floor is the verdict bound, reached
+  // through `checks[].limit_from_config`.
+  'link_massing_link_rate_fail_pct',
+  'link_massing_centroid_confidence',
+  'link_massing_nearest_confidence',
+  // Registered so a RETIREMENT stays visible: the grid cell size of the JS fallback
+  // path the A-8 override retired. Nothing reads it; turning it changes nothing.
+  'link_massing_grid_degrees',
   'wsib_fuzzy_match_threshold',       // E20
   'calibration_default_median_days',  // E21
   'calibration_default_p25_days',     // E21
