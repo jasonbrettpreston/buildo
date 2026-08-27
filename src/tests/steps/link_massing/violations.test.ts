@@ -120,6 +120,11 @@ const FORCE_FULL_ENV = 'LINK_MASSING_FORCE_FULL';
 const RLS_REQUIREMENT_KIND = 'rls_bypass_or_policy';
 const REQUIRED_NAMES = [
   'postgis',
+  // Peel 8a — fence 45906c31 carried forward under the A-8 retirement: the extension can be
+  // installed on a database whose geom columns predate migration 039, and that gap USED to
+  // select the JS path. With no second path it must be a refusal, declared per column.
+  'building_footprints.geom',
+  'parcels.geom',
   'idx_parcel_buildings_one_primary',
   'idx_parcels_geom_gist',
   'idx_building_footprints_geom_gist',

@@ -163,6 +163,24 @@
         }
       },
       {
+        "kind": "column",
+        "name": "building_footprints.geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "Fence 45906c31, carried forward under the A-8 retirement. The pre-conversion step probed for this column separately from the extension and, when PostGIS was installed but the column was absent, logged a warning and switched to the JS path — a SECOND algorithm answering a SCHEMA gap. With that path retired the gap has to be a refusal, and the extension guard alone does not cover it: postgis can be installed on a database whose building_footprints predates migration 039. Without this row the failure is a raw `column bf.geom does not exist` from inside the first batch query, after the mode gate has already resolved and (in full mode) after nothing — the pre_write guard would not have fired, because an empty corpus is a different condition from an unqueryable one.",
+          "liveness": { "kind": "column", "ref": "building_footprints.geom" }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The other side of the same join, and the one the GiST guard below cannot speak for: an index requirement is satisfied by pg_indexes alone, so a database that dropped the column and its index answers 'index absent' — the right refusal for the wrong reason — while one that kept a differently-named index answers nothing at all. The predicate ST_Contains(p.geom, …) needs the column itself, and both match queries additionally filter `p.geom IS NOT NULL`, which would silently reduce the work set to zero rather than erroring if the column existed but were empty. Declaring it makes the precondition answerable before the first read.",
+          "liveness": { "kind": "column", "ref": "parcels.geom" }
+        }
+      },
+      {
         "kind": "index",
         "name": "idx_parcels_geom_gist",
         "on_missing": "fail",
