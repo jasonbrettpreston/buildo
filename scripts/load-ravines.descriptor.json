@@ -274,6 +274,51 @@
       }
     },
     {
+      "id": "ravine_bad_objectid_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "source features whose OBJECTID would not coerce to a positive integer key" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Plan D-4, restored at Fold D. Spec 59 §3.10 CKAN SCHEMA DRIFT: a feature whose OBJECTID is absent, non-numeric or <= 0 is DROPPED by the parse and never fabricated into a row, so it is protected land that silently stops being protected. The pre-conversion loader pushed this WARN at 33786d1a:scripts/load-ravines.js:393 and the conversion counted it (acquire.js parseShapefile bad_key_count) without ever reporting it — a loss counter measured and thrown away. Declared rather than conditional, so a healthy run shows the PASS the old push could not: silence used to mean both 'zero' and 'nobody looked'.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "ravine_null_geometry_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "source features carrying no geometry at all" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Plan D-4, restored at Fold D. A shapefile record with a null geometry is dropped at parse time, BEFORE the geometry validation runs, so it is invisible to ravine_geometry_skipped_pct (L8) — which measures only what ST_MakeValid could not repair, over features that had a geometry to repair. Without this row a source that shipped 100 empty records reads as a smaller dataset, not as a lossy one. Pre-conversion push at 33786d1a:scripts/load-ravines.js:394.",
+        "liveness": { "kind": "check", "ref": "ravine_geometry_skipped_pct" }
+      }
+    },
+    {
+      "id": "ravine_duplicate_objectid_count",
+      "kind": "invariant",
+      "expect": { "unique_source_key": true },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Plan D-4, restored at Fold D. `ON CONFLICT DO UPDATE` cannot affect the same row twice in one statement, so dedupeBySourceId drops repeats to keep the batched upsert legal (DeepSeek MED, pre-conversion push at 33786d1a:scripts/load-ravines.js:398). The dedupe is a WORKAROUND for a publisher defect and the count is the only evidence it fired: a duplicated OBJECTID means two DIFFERENT polygons collapsed to whichever the parse read first, and the second boundary is gone with no row saying so.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-ravines.js" }
+      }
+    },
+    {
       "id": "ravine_feature_count",
       "kind": "field_coverage",
       "expect": { "reports": "the deduped polygon count the source yielded" },

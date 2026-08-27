@@ -236,7 +236,21 @@ function ledgerPipelineName(descriptor, chainId) {
  * @returns {Promise<object>} `{skipped, reason, terminal, acquired, written, prior, overrides, emitBlock}`
  */
 async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate }) {
-  const writeSpec = descriptor.outputs.writes[0];
+  // ⚠️ ONE WRITE TARGET, REFUSED BY NAME AT PLAN TIME. Every line below indexes
+  // `writes[0]`: the write plan, the key column, the geometry validation and the scoped
+  // departure DELETE. A second declared target would be acquired for, gated over and then
+  // NEVER WRITTEN — a table declared in `outputs.writes` and in PIPELINE_META, silently
+  // empty, with a green verdict over it. The multi-target loop is real work (one txn or
+  // several? whose keys does the departure DELETE scope by?); until it exists the throw
+  // names the tables rather than letting the descriptor claim something the runner
+  // does not do. This fires BEFORE the HEAD, so a mis-declared step costs no network.
+  const writes = descriptor.outputs.writes;
+  if (writes.length !== 1) {
+    throw new Error(`${tag} the INGESTOR archetype drives exactly ONE write target, and this descriptor declares `
+      + `${writes.length} (${writes.map((w) => w.table).join(', ') || 'none'}). Only outputs.writes[0] would be `
+      + 'written; the rest would be declared, gated over and left empty under a green verdict.');
+  }
+  const writeSpec = writes[0];
   const emit = emitsList(descriptor)[0] || null;
   const emitKey = emit ? emit.key : null;
   const skeleton = emit && emit.skeleton && emit.skeleton !== 'none' ? { ...emit.skeleton } : {};
@@ -647,7 +661,13 @@ async function runWithPool(runnable, pool, ctx) {
         terminal = selectTerminal(descriptor, { kind: 'fail_check', status, discriminator: unaccepted[0] });
       } else if (verdict === 'WARN') {
         status = RUN_STATUS.COMPLETED_WITH_WARNINGS;
-        terminal = selectTerminal(descriptor, { kind: 'success', status: RUN_STATUS.COMPLETED });
+        // The ACTUAL status, not `COMPLETED`. Passing the wrong one asked `terminals[]` a
+        // question about a run that did not happen: a descriptor declaring a
+        // `completed_with_warnings` success terminal could never have it selected, and one
+        // declaring only `completed` got a match that claimed the run was clean. Selection
+        // falls back to the first success terminal either way (§ selectTerminal), so this
+        // is the declaration becoming answerable rather than a change of outcome.
+        terminal = selectTerminal(descriptor, { kind: 'success', status });
       } else {
         status = RUN_STATUS.COMPLETED;
         terminal = selectTerminal(descriptor, { kind: 'success', status });
@@ -657,7 +677,10 @@ async function runWithPool(runnable, pool, ctx) {
         ...(computeResult && computeResult.records_meta ? computeResult.records_meta : {}),
         // A gated skip re-emits the PRIOR run's declared block (skeleton ← prior ←
         // pins) so the skip still lands a `completed` row a downstream HALT gate can
-        // read (DS4) — the compute never runs on that path.
+        // read (DS4). The compute DOES run on that path — with `ctx.checks` narrowed to
+        // the `when: "pre"` ids, which is how a skip still says WHY it was allowed to
+        // skip — but it returns `records_meta: {}` when `ctx.written` is null, so it
+        // contributes no block of its own and this one is not overwriting anything.
         ...(ingest && ingest.skipped && ingest.emitKey ? { [ingest.emitKey]: ingest.emitBlock } : {}),
         // §1.2a P4 — "the value in force is observable in the run's records_meta".
         // Absent entirely for a `config: "none"` step, so the byte cost is paid only

@@ -546,6 +546,11 @@ interface World {
     invalid_geometry_skipped: number;
     invalid_geometry_repaired: number;
     geometry_collection_extracted: number;
+    // Fold D / plan D-4 — the three loss counters the library measures and the audit
+    // table now reports: parse-time bad key, parse-time null geometry, post-dedupe repeat.
+    bad_key_count: number;
+    null_geometry_count: number;
+    duplicate_key_count: number;
     last_modified: string;
     last_modified_ms: number;
     etag: string | null;
@@ -574,6 +579,9 @@ function healthyWorld(): World {
       invalid_geometry_skipped: 0,
       invalid_geometry_repaired: 2,
       geometry_collection_extracted: 1,
+      bad_key_count: 0,
+      null_geometry_count: 0,
+      duplicate_key_count: 0,
       last_modified: LIVE_LAST_MODIFIED,
       last_modified_ms: Date.parse(LIVE_LAST_MODIFIED),
       etag: null,
@@ -625,7 +633,18 @@ const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
 //     pre-conversion step had (`:285-286`) — a Chesterton's Fence, not a simplification.
 // Both sabotages flip only fields `healthyWorld()` already carries, so #182's
 // "sabotage must change something" and #163's compute-swap control still hold.
+// ⚠️ FOLD NOTE (Fold D, 2026-08-27) — THREE ENTRIES ADDED, and they are FIRST.
+// Plan D-4's loss counters (`ravine_bad_objectid_count`, `ravine_null_geometry_count`,
+// `ravine_duplicate_objectid_count`) are WARN checks, so #165 demands a sabotage for each.
+// They are matched ahead of the generic patterns below because two of the three ids also
+// contain "objectid" and the ordering of a `.find` is the whole selection rule: an id that
+// two entries match takes the first, so a precise entry that sits second is dead.
+// Each flips ONLY the counter it names — healthy 0 → 40 — so #182 ("a sabotage must change
+// something") and #163 (the compute-swap control) both hold, and no other row moves.
 const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
+  [/bad_objectid/i, (w) => { w.acquired.bad_key_count = 40; }], // D-4: CKAN schema drift, OBJECTID unusable
+  [/null_geometry/i, (w) => { w.acquired.null_geometry_count = 40; }], // D-4: dropped BEFORE the geometry validation, so L8 cannot see it
+  [/duplicate_objectid/i, (w) => { w.acquired.duplicate_key_count = 40; }], // D-4: two polygons collapsed onto one key
   [/age|stale|fresh/i, (w) => { w.acquired.last_modified_ms = Date.parse(`${FIXTURE_REVIEWED}T00:00:00Z`) - 30 * 365.25 * 86_400_000; }], // T1: 30 years old
   [/rows_changed|change_ratio|churn/i, (w) => { w.written.rows_changed = w.written.rows_scanned; }], // D-13: 100% churn on a byte-identical source
   [/privilege|rls|policy/i, (w) => { w.written.privilege = { bypassrls: false, policies: 0 }; }], // Fold A: silent 0-row write

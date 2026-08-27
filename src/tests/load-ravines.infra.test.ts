@@ -56,7 +56,11 @@ describe('load_ravines — source contract (Spec 59 §3/§9), across the three f
   });
 
   it('validates geometry via the §3.5 batched SQL (single round-trip, L16) before the transaction', () => {
-    expect(WRITE).toMatch(/unnest\(\$1::BIGINT\[\]\)/);
+    // Fold D: the cast is TEMPLATED from `outputs.writes[].key_sql_type`, so the literal
+    // no longer appears in write.js's source — assert it on the GENERATED plan, which is
+    // the statement that actually runs and now agrees with `delete_sql` by construction.
+    expect(PLAN.validation_sql).toMatch(/unnest\(\$1::BIGINT\[\]\)/);
+    expect(PLAN.key_sql_type).toBe(descriptor.outputs.writes[0].key_sql_type);
     expect(SQL).toContain('ST_MakeValid');
     expect(SQL).toContain('ST_CollectionExtract');
     expect(SQL).toContain('collection_extracted');

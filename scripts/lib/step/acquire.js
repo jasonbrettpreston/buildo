@@ -100,6 +100,24 @@ function resolveTimeoutMs(descriptor, config) {
 }
 
 /**
+ * ⚠️ THE NULL TIMEOUT IS "NO DEADLINE", NOT "ZERO MILLISECONDS".
+ *
+ * `resolveTimeoutMs` returns null for `network: "none"` and for an unparseable
+ * `execution.network.timeout` literal — and `setTimeout(fn, null)` coerces to 0, so the
+ * abort fired on the next tick and every fetch failed instantly with an `AbortError`. The
+ * failure mode is the worst shape available: a descriptor typo in a duration string turned
+ * into "the publisher is unreachable", which the tier-1 gate reports as a HEAD failure
+ * rather than as the configuration defect it is. No timer at all is the correct reading of
+ * "no declared deadline"; a step that wants one declares a parseable duration.
+ *
+ * @returns {NodeJS.Timeout|null} null when no deadline was declared — callers must
+ *   `if (t) clearTimeout(t)`, because clearing null is a no-op that reads as an oversight.
+ */
+function abortTimer(ctrl, timeoutMs) {
+  return Number.isFinite(timeoutMs) && timeoutMs > 0 ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+}
+
+/**
  * HEAD the external and return its cache validators, or throw on 4xx/5xx.
  * This is the ONLY network call a `pre_acquisition` trigger needs, and it is made
  * even when the gate ends up skipping — the dataset-age row is derived from it, so
@@ -107,13 +125,13 @@ function resolveTimeoutMs(descriptor, config) {
  */
 async function headValidators(ctxFetch, url, timeoutMs) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  const t = abortTimer(ctrl, timeoutMs);
   try {
     const res = await ctxFetch(url, { method: 'HEAD', redirect: 'follow', signal: ctrl.signal });
     if (!res.ok) throw new Error(`HEAD ${res.status} ${res.statusText}`);
     return { lastModified: res.headers.get('last-modified'), etag: res.headers.get('etag') };
   } finally {
-    clearTimeout(t);
+    if (t) clearTimeout(t);
   }
 }
 
@@ -124,7 +142,7 @@ async function headValidators(ctxFetch, url, timeoutMs) {
  */
 async function downloadArchive(ctxFetch, url, destPath, timeoutMs, algorithm) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  const t = abortTimer(ctrl, timeoutMs);
   try {
     const res = await ctxFetch(url, { redirect: 'follow', signal: ctrl.signal });
     if (!res.ok) throw new Error(`GET ${res.status} ${res.statusText}`);
@@ -149,7 +167,7 @@ async function downloadArchive(ctxFetch, url, destPath, timeoutMs, algorithm) {
       etag: res.headers.get('etag'),
     };
   } finally {
-    clearTimeout(t);
+    if (t) clearTimeout(t);
   }
 }
 
@@ -342,6 +360,7 @@ module.exports = {
   TMP_PREFIX,
   parseDuration,
   resolveTimeoutMs,
+  abortTimer,
   headValidators,
   downloadArchive,
   extractArchive,
