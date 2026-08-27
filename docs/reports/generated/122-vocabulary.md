@@ -379,7 +379,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `[].limit.fail` | number | † |
 | `[].severity` | `INFO` · `WARN` · `FAIL` | † ! |
 | `[].blocking` | `true` · `false` | † |
-| `[].when` | `pre` · `post` | † ! |
+| `[].when` | `pre` · `pre_write` · `post` | † ! |
 | `[].chains` | `all` \| list (min 1) of string `^[a-z][a-z0-9_]*$` | † |
 | `[].accept_until` | `none` \| object {date, baseline, why} | † |
 | `[].accept_until.date` | string `^[0-9]{4}-[0-9]{2}-[0-9]{2}$` | † |

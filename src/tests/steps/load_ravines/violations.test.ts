@@ -59,7 +59,7 @@
 //     (construct · discovered by · disposition · adjudicated by), Line accounting (lines · category ·
 //     evidence), Non-determinism inventory (key · disposition), Boundary freeze (table · rows),
 //     Commit ledger (commit · done-test).
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -191,6 +191,7 @@ interface Check {
   blocking: boolean;
   when: string;
   chains: string[] | 'all';
+  why?: { text?: string; liveness?: unknown };
 }
 interface WriteSpec {
   table: string;
@@ -1781,7 +1782,7 @@ describe('LR-D1 — the dropped source ids are ONE row\'s detail, capped, count 
     const check = (mod.checks ?? {})['ravine_geometry_skipped_pct'];
     expect(typeof check, 'the descriptor declares ravine_geometry_skipped_pct — the dispatch must carry it').toBe('function');
     const calls: Array<[string, SkipObservation]> = [];
-    check({
+    check!({
       acquired: {
         feature_count: LIVE_FEATURE_COUNT,
         invalid_geometry_skipped: droppedCount,
@@ -1976,5 +1977,252 @@ describe('8c — thresholds: one source, no literal a knob duplicates', () => {
     expect(bound, 'no limit_from_config check — the substitution would be untested').toBeDefined();
     const moved = verdict.resolveLimit(bound!, { [bound!.limit_from_config!]: 0.123 });
     expect(moved, 'the RESOLVED value renders as the threshold').toContain('0.123');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fold C — F3: Spec 59 L7/L8 abort BEFORE any write (operator ruling §7.1
+// 2026-08-26; LR-D9). The pre-conversion loader carried the guarantee by
+// STATEMENT ORDER — `return { failed: true }` at 33786d1a:scripts/load-ravines.js
+// :402-417 (L7) and :443-454 (L8), both above `pool.query(VALIDATION_SQL)` /
+// `withTransaction`. The archetype's acquire → validate → write → score order
+// retired it silently. `checks[].when: "pre_write"` restores it structurally.
+//
+// Both directions, both checks: FAIL without acceptance ⇒ the write NEVER runs;
+// FAIL with a standing accept_anomaly ⇒ the write runs and the FAIL row SURVIVES.
+// The reversion half moves the two checks back to `when: "post"` and requires the
+// lock to fire.
+// ---------------------------------------------------------------------------
+
+describe('Fold C / LR-D9 — when:"pre_write" aborts BEFORE any write (Spec 59 L7/L8)', () => {
+  const PRE_WRITE_IDS = ['ravine_count_drift_pct', 'ravine_geometry_skipped_pct'];
+  const DRIFT_ENV = 'RAVINE_ACCEPT_FEATURE_COUNT_DRIFT';
+
+  interface IngestResult {
+    writeSkipped: boolean;
+    reason: string;
+    failedPreWrite?: string[];
+    acquired: Record<string, number>;
+    written: Record<string, unknown>;
+  }
+  interface StepLib {
+    runIngestPhase: (args: Record<string, unknown>) => Promise<IngestResult>;
+    makePreWriteGate: (args: Record<string, unknown>) => null | ((p: unknown) => Promise<unknown>);
+  }
+
+  function stepLib(): StepLib {
+    return require(abs('scripts/lib/step/index.js')) as StepLib; // eslint-disable-line @typescript-eslint/no-require-imports -- the real CJS library
+  }
+  function writeLib(): { executeWrite: (...a: unknown[]) => unknown } {
+    return require(abs('scripts/lib/step/write.js')) as { executeWrite: (...a: unknown[]) => unknown }; // eslint-disable-line @typescript-eslint/no-require-imports -- same
+  }
+  function acquireLib(): { acquireExternal: (...a: unknown[]) => unknown } {
+    return require(abs('scripts/lib/step/acquire.js')) as { acquireExternal: (...a: unknown[]) => unknown }; // eslint-disable-line @typescript-eslint/no-require-imports -- same
+  }
+  function stalenessLib(): { readPriorEmitWithPosture: (...a: unknown[]) => unknown } {
+    return require(abs('scripts/lib/step/staleness.js')) as { readPriorEmitWithPosture: (...a: unknown[]) => unknown }; // eslint-disable-line @typescript-eslint/no-require-imports -- same
+  }
+
+  /**
+   * A pool that ANSWERS the two read-only statements the ingest phase issues (the RLS
+   * probe and the batched geometry validation) and RECORDS every statement it is given,
+   * so "no write reached the database" is an assertion over real SQL rather than over a
+   * mock's call count. `validateGeometries` and `executeWrite` run for real against it.
+   */
+  function recordingPool(skippedKeys: Set<number>) {
+    const sql: string[] = [];
+    const answer = (text: string, values?: unknown[]) => {
+      if (text.includes('relrowsecurity')) return { rows: [{ rls_enabled: true, policies: 0, bypassrls: true }] };
+      if (text.includes('ST_MakeValid')) {
+        const keys = (values?.[0] ?? []) as number[];
+        return {
+          rows: keys.map((k) => ({
+            source_key: k,
+            status: skippedKeys.has(k) ? 'skipped_null' : 'accepted',
+            geom_wkb: Buffer.from([0]),
+            is_valid_original: true,
+          })),
+        };
+      }
+      return { rows: [], rowCount: 0 };
+    };
+    const run = async (text: string, values?: unknown[]) => { sql.push(text); return answer(text, values); };
+    return {
+      sql,
+      query: run,
+      connect: async () => ({ query: run, release: () => {} }),
+      wrote: () => sql.some((s) => /INSERT INTO ravines|DELETE FROM ravines/i.test(s)),
+    };
+  }
+
+  /**
+   * Drive the REAL ingest phase over a synthetic source of `featureCount` features, of
+   * which `skipped` fail geometry validation, against a prior run of `priorCount`.
+   * Only the two seams that reach the network / the prior-run row are stubbed.
+   */
+  async function runLoad(
+    d: Descriptor,
+    { featureCount, skipped, priorCount, env = {} }:
+    { featureCount: number; skipped: number; priorCount: number; env?: Record<string, string> },
+  ) {
+    const lib = stepLib();
+    const wlib = writeLib();
+    const config = configProjection(d);
+    const features = Array.from({ length: featureCount }, (_, i) => ({ source_id: i + 1, geojson: '{}' }));
+    const skippedSet = new Set(features.slice(0, skipped).map((f) => f.source_id));
+    const pool = recordingPool(skippedSet);
+    const prior = { feature_count: priorCount, content_hash: 'aa', last_modified: LIVE_LAST_MODIFIED };
+    const computeMod = loadComputeModule();
+    const computeFn = loadCompute();
+
+    const saved: Record<string, string | undefined> = {};
+    for (const [k, v] of Object.entries(env)) { saved[k] = process.env[k]; process.env[k] = v; }
+    const stubs = [
+      vi.spyOn(stalenessLib(), 'readPriorEmitWithPosture').mockResolvedValue({ prior, error: null }),
+      vi.spyOn(acquireLib(), 'acquireExternal').mockResolvedValue({
+        tier1: { skip: false },
+        tier2: { skip: false },
+        emitBlock: null,
+        features,
+        acquired: {
+          feature_count: featureCount,
+          last_modified: LIVE_LAST_MODIFIED,
+          last_modified_ms: Date.parse(LIVE_LAST_MODIFIED),
+          etag: null,
+          content_hash: 'bb',
+          source_dataset_version: 'bb',
+          license_url: 'https://open.toronto.ca/open-data-license/',
+        },
+      }),
+    ];
+    const executeWrite = vi.spyOn(wlib, 'executeWrite');
+    try {
+      const gate = lib.makePreWriteGate({
+        descriptor: d,
+        chainId: null,
+        stepCtx: {
+          descriptor: d,
+          checks: d.checks.map((c) => c.id),
+          config,
+          log: { info: () => {}, warn: () => {}, error: () => {} },
+          clock: () => Date.parse(`${FIXTURE_REVIEWED}T00:00:00Z`),
+          report: () => {},
+        },
+        compute: computeFn,
+        config,
+      });
+      const out = await lib.runIngestPhase({
+        descriptor: d,
+        pool,
+        compute: computeMod,
+        config,
+        fetchImpl: async () => { throw new Error('the ingest phase must not fetch here'); },
+        chainId: null,
+        log: { info: () => {}, warn: () => {}, error: () => {} },
+        tag: '[load_ravines]',
+        clockNow: new Date(`${FIXTURE_REVIEWED}T00:00:00Z`),
+        preWriteGate: gate,
+      });
+      return { out, pool, wrote: pool.wrote(), executeWriteCalls: executeWrite.mock.calls.length, gate };
+    } finally {
+      executeWrite.mockRestore();
+      for (const s of stubs) s.mockRestore();
+      for (const [k, v] of Object.entries(saved)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+    }
+  }
+
+  it('the descriptor declares both Spec 59 abort checks at when:"pre_write", with the FAIL severity that makes the gate bite', () => {
+    const d = loadDescriptor();
+    for (const id of PRE_WRITE_IDS) {
+      const c = checkById(d, id);
+      expect(c.when, `${id} carries Spec 59's "abort before the write" guarantee — it cannot be scored after it`).toBe('pre_write');
+      expect(c.severity, `${id} must be able to reach a FAIL row`).toBe('FAIL');
+      // D-8 is NOT retired by this fold: exit semantics are unchanged, the run just
+      // writes nothing.
+      expect(c.blocking, 'PIN, DO NOT FIX (plan D-8) — the gate skips the write, it does not halt the chain').toBe(false);
+    }
+    // The terminals the abort lands on exist and say `failed`.
+    for (const id of PRE_WRITE_IDS) {
+      const t = d.terminals.find((x) => x.id === `failed_${id}`);
+      expect(t, `no fail_check terminal declared for ${id}`).toBeDefined();
+      expect(t?.kind).toBe('fail_check');
+      expect(t?.status).toBe('failed');
+    }
+  });
+
+  it('(a) L7 FAIL, no override → the write NEVER runs: zero write statements, rows_changed 0, the failing id named', async () => {
+    const r = await runLoad(loadDescriptor(), { featureCount: 100, skipped: 0, priorCount: LIVE_FEATURE_COUNT });
+    expect(r.executeWriteCalls, 'write.executeWrite must not be called at all').toBe(0);
+    expect(r.wrote, 'no INSERT INTO ravines and no DELETE FROM ravines reached the pool').toBe(false);
+    expect(r.out.writeSkipped).toBe(true);
+    expect(r.out.reason).toBe('pre_write_check_failed');
+    expect(r.out.failedPreWrite).toEqual(['ravine_count_drift_pct']);
+    expect(r.out.written.rows_changed, 'an empty `written` — the remaining checks score over nothing').toBe(0);
+    expect(r.out.written).toMatchObject({ inserted: 0, updated: 0, deleted: 0, rows_scanned: 0 });
+  });
+
+  it('(b) L7 FAIL with RAVINE_ACCEPT_FEATURE_COUNT_DRIFT=1 → the write EXECUTES, and the FAIL row still stands', async () => {
+    const r = await runLoad(loadDescriptor(), {
+      featureCount: 100, skipped: 0, priorCount: LIVE_FEATURE_COUNT, env: { [DRIFT_ENV]: '1' },
+    });
+    expect(r.executeWriteCalls, 'an acknowledged drift is allowed to load').toBe(1);
+    expect(r.wrote, 'the class-B upsert reached the pool').toBe(true);
+    expect(r.out.writeSkipped).toBe(false);
+    // …and the acceptance never suppresses the row (A-5). Scored through the real
+    // dispatch over the same world the gate saw.
+    const d = loadDescriptor();
+    const accepted = healthyWorld();
+    (SABOTAGE_BY_VAR[CONFIG_VARS.T2] as (w: World) => void)(accepted);
+    const rows = await runCompute(loadCompute(), d, accepted);
+    expect(rows.ravine_count_drift_pct, 'the override moves the DECISION, never the row').toBe('FAIL');
+  });
+
+  it('(c) L8 FAIL, no override → the write NEVER runs; and L8 has no accept_anomaly that can rescue it', async () => {
+    // 20 features, 5 unusable geometry = 25% dropped, over the declared 5% bound.
+    const r = await runLoad(loadDescriptor(), { featureCount: 20, skipped: 5, priorCount: 20 });
+    expect(r.executeWriteCalls).toBe(0);
+    expect(r.wrote, 'Spec 59 §3.10: "abort BEFORE entering withTransaction; zero rows touched"').toBe(false);
+    expect(r.out.failedPreWrite).toEqual(['ravine_geometry_skipped_pct']);
+    expect(r.out.acquired.invalid_geometry_skipped, 'the validation ran — it is read-only SQL, and its counters are what L8 measures').toBe(5);
+    expect(r.out.written.rows_changed).toBe(0);
+
+    const ov = loadDescriptor().override as { accept_anomaly?: Array<{ check_id: string }> };
+    const accepts = (ov.accept_anomaly ?? []).map((a) => a.check_id);
+    expect(accepts, 'Spec 59 L8 declares no operator override — the abort is unconditional').not.toContain('ravine_geometry_skipped_pct');
+    // Setting the L7 env cannot rescue L8: acceptance is keyed by check_id.
+    const stillAborts = await runLoad(loadDescriptor(), {
+      featureCount: 20, skipped: 5, priorCount: 20, env: { [DRIFT_ENV]: '1' },
+    });
+    expect(stillAborts.executeWriteCalls, 'a different check\'s override must not open the write path').toBe(0);
+    expect(stillAborts.wrote).toBe(false);
+  });
+
+  it('(c′) a CLEAN load walks through the same gate into the write — the lock is not measuring "never writes"', async () => {
+    const r = await runLoad(loadDescriptor(), { featureCount: 20, skipped: 0, priorCount: 20 });
+    expect(r.executeWriteCalls, 'positive control').toBe(1);
+    expect(r.wrote).toBe(true);
+    expect(r.out.writeSkipped).toBe(false);
+    expect(r.out.reason).toBe('loaded');
+  });
+
+  it('REVERSION IS DETECTABLE — the two checks back at when:"post" leave NO gate and the write runs on a FAIL', async () => {
+    const reverted = JSON.parse(JSON.stringify(loadDescriptor())) as Descriptor;
+    for (const c of reverted.checks) if (c.when === 'pre_write') (c as { when: string }).when = 'post';
+    expect(reverted, 'the reversion patch must change the subject').not.toEqual(loadDescriptor());
+
+    // Half 1: the library builds no gate at all for a post-only descriptor.
+    const gate = stepLib().makePreWriteGate({
+      descriptor: reverted,
+      chainId: null,
+      stepCtx: { descriptor: reverted, checks: reverted.checks.map((c) => c.id), config: configProjection(reverted), log: {}, report: () => {} },
+      compute: loadCompute(),
+      config: configProjection(reverted),
+    });
+    expect(gate, 'a post-only descriptor gates nothing — this is exactly the retired guarantee').toBeNull();
+
+    // Half 2: driven end to end, the SAME 88%-drift world now WRITES.
+    const r = await runLoad(reverted, { featureCount: 100, skipped: 0, priorCount: LIVE_FEATURE_COUNT });
+    expect(r.executeWriteCalls, 'reverting when:"pre_write" went undetected').toBe(1);
+    expect(r.wrote, 'the upsert reached ravines despite the L7 FAIL — the pre-Fold-C defect, reproduced').toBe(true);
   });
 });

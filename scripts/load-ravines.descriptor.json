@@ -296,11 +296,11 @@
       "limit_from_config": "load_ravines_count_drift_fail_pct",
       "severity": "FAIL",
       "blocking": false,
-      "when": "post",
+      "when": "pre_write",
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "L7. A source that suddenly carries half as many polygons is a publisher error, not a legal change to the ravine boundary; failing before the write is what stops 400 protected parcels from silently becoming unprotected.",
+        "text": "L7. A source that suddenly carries half as many polygons is a publisher error, not a legal change to the ravine boundary; failing BEFORE the write is what stops 400 protected parcels from silently becoming unprotected. `when: \"pre_write\"` is what makes that sentence true again (Fold C / LR-D9): the runner scores this check between the read-only geometry validation and the first write statement, and an unaccepted FAIL means no transaction is opened at all — the pre-conversion `return { failed: true }` at 33786d1a:scripts/load-ravines.js:402-417, restored structurally. Computable from ctx.acquired.feature_count + ctx.prior alone, which is the precondition for the position.",
         "liveness": { "kind": "file", "ref": "scripts/enrich-ravines.js" }
       }
     },
@@ -342,11 +342,11 @@
       "limit_from_config": "load_ravines_invalid_geometry_fail_pct",
       "severity": "FAIL",
       "blocking": false,
-      "when": "post",
+      "when": "pre_write",
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "L8. Dropped polygons are protected land that stops being protected. The bound is re-checked independently by enrich-ravines.js:57, so producer and consumer must move together. LR-D1: the dropped source ids travel in THIS row's observation.detail — one row, never one row per dropped feature — capped at 50 ids with the exact dropped_count and a dropped_ids_truncated flag beside them, so the audit table's row count is bounded by the check count and the reader is never misled about how much was lost.",
+        "text": "L8. Dropped polygons are protected land that stops being protected. Spec 59 L8 spells the guarantee out — \"do not enter pipeline.withTransaction ... zero rows touched\" — so this check is scored at `when: \"pre_write\"` (Fold C / LR-D9): the geometry validation is read-only SQL, its counters exist before any write, and an unaccepted FAIL skips the write entirely. Unlike L7 there is NO override.accept_anomaly entry, so the abort is unconditional. The bound is re-checked independently by enrich-ravines.js:57, so producer and consumer must move together. LR-D1: the dropped source ids travel in THIS row's observation.detail — one row, never one row per dropped feature — capped at 50 ids with the exact dropped_count and a dropped_ids_truncated flag beside them, so the audit table's row count is bounded by the check count and the reader is never misled about how much was lost.",
         "liveness": { "kind": "file", "ref": "scripts/enrich-ravines.js" }
       }
     },
@@ -508,6 +508,15 @@
       },
       "adjudicated_by": "plan C-9 / LR-D1",
       "date": "2026-08-25"
+    },
+    {
+      "from": "the INGESTOR archetype's acquire -> validate -> write -> score phase order, for two checks",
+      "why": {
+        "text": "FOLD C, OPERATOR RULING 2026-08-26 (Spec 08 §7.1) — LR-D9. Spec 59 L7 and L8 are not merely FAIL checks: L8's normative text is \"do not enter pipeline.withTransaction ... zero rows touched\" and the pre-conversion loader honoured both by returning `{ failed: true }` BEFORE `pool.query(VALIDATION_SQL)` / `withTransaction` (33786d1a:scripts/load-ravines.js:402-417 and :443-454). Converting to the archetype reordered the phases so the write was already committed when the checks scored, which silently retired a guarantee the spec states in imperative form — the FAIL row and the `failed` status say the data is wrong, but the wrong data is in `ravines`. The ruling restores it IN THE LIBRARY rather than in the compute: `checks[].when` gains `pre_write`, the runner scores those checks between the read-only geometry validation and the first write statement, and an unaccepted FAIL skips the write entirely (no transaction opened, `ravines` untouched, remaining checks scored over a zeroed `written`). Acceptance is applied to the DECISION only — RAVINE_ACCEPT_FEATURE_COUNT_DRIFT lets the write proceed and NEVER suppresses the FAIL row (ruling A-5). Exit semantics are unchanged: every check stays blocking:false (D-8), so the run is `failed` and the chain continues. The lesson: an archetype ruling that reorders phases must re-derive every \"before X\" guarantee in the step's spec.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      },
+      "adjudicated_by": "operator ruling §7.1 2026-08-26 / Fold C / LR-D9",
+      "date": "2026-08-26"
     }
   ],
 
@@ -631,7 +640,7 @@
       "status": "failed",
       "records_meta": { "ravine_load": "object", "audit_table": "object", "terminal": "string" },
       "why": {
-        "text": "L7 tripped with no standing override. Historically this aborted BEFORE any DB write; under the library the write is already committed when the checks score, so the guarantee is now carried by the FAIL verdict and the run status rather than by statement ordering.",
+        "text": "L7 tripped with no standing RAVINE_ACCEPT_FEATURE_COUNT_DRIFT. The write was SKIPPED: the check is scored at `when: \"pre_write\"`, so the runner never opened a transaction and `ravines` still holds the prior load byte for byte. Counters read records_total = the acquired feature_count, records_new/updated = 0, exactly the shape the pre-conversion abort emitted. Exit code is unchanged (blocking:false, plan D-8) — the run is `failed`, the chain continues.",
         "liveness": { "kind": "check", "ref": "ravine_count_drift_pct" }
       }
     },
@@ -641,7 +650,7 @@
       "status": "failed",
       "records_meta": { "ravine_load": "object", "audit_table": "object", "terminal": "string" },
       "why": {
-        "text": "L8 tripped: more than the declared fraction of the source's polygons could not be made valid, so the loaded set under-states protected land.",
+        "text": "L8 tripped: more than the declared fraction of the source's polygons could not be made valid, so the loaded set would under-state protected land. The write was SKIPPED — `when: \"pre_write\"`, and L8 has no accept_anomaly escape hatch — so `ravines` is untouched and a re-run against a fixed source starts from the prior good state (Spec 59 §3.10: \"FAIL + abort BEFORE entering withTransaction; zero rows touched\").",
         "liveness": { "kind": "check", "ref": "ravine_geometry_skipped_pct" }
       }
     },
