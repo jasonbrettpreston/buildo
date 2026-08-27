@@ -33,6 +33,20 @@
  *       (local, 2026-08-25): `ravines` 854 rows / 7,640 kB → count 8 ms + hash 140 ms; `parcels`
  *       (486,530 rows) is over the default ceiling by design so the differential never pays a
  *       full-table text render of the parcel set.
+ *       COLUMN PROJECTION + EXPLICIT ORDER (pilot-3 A-4 / Fold B item 5 / D-18): a junction whose
+ *       rows carry a serial `id` and a RUN_AT clock (`parcel_buildings.linked_at`) changes its full-row
+ *       text on every FULL relink of an identical logical result — a guaranteed false diff. So the
+ *       hash may be PROJECTED onto the logical columns and ORDERED by the declared unique key:
+ *         `--table-columns=<table>:<col,col,…>[;<table>:…]`  hash `ROW(<cols>)::text` only
+ *         `--table-order=<table>:<col,col>[;<table>:…]`       ORDER BY these columns (not the pk)
+ *       When the step has a descriptor, both derive from `outputs.writes[]`: order = the entry's
+ *       `key` (string | string[]); projection = key ∪ `columns[].name` with `written: "db_default"`
+ *       dropped (an explicit CLI value for a table overrides the derivation). The row ceiling applies
+ *       to the UNPROJECTED count UNLESS a projection is in force for that table (then the hash is
+ *       always computed and the record carries `ceiling_bypassed: 'projected'`). Measured cost
+ *       (local, 2026-08-27): `parcel_buildings` 520,492 rows, 6-column projection ordered by
+ *       (parcel_id, building_id) — see the `hash_ms` field each capture records; the plan-altitude
+ *       measurement was 666 ms vs 922–2,879 ms for the full-row render.
  *   (f) INVARIANTS: `--invariants=<file.json>` — a JSON array of `{name, sql}`; each statement
  *       returns exactly one row with one scalar column. Recorded as `{name, value}` (value
  *       stringified) in the normalised form → must-match-exactly.
@@ -45,6 +59,8 @@
  *   --args=a,b,c        extra argv for the child (run-chain's `chain_args`), comma-separated
  *   --tables=t1,t2      tables to snapshot when the step has no descriptor (descriptor wins)
  *   --table-row-ceiling=N  max rows a table may have and still be content-hashed (default 100000)
+ *   --table-columns=t:a,b[;t2:c]  project the content hash onto these columns (bypasses the ceiling)
+ *   --table-order=t:a,b[;t2:c]    ORDER BY these columns instead of the pk
  *   --invariants=<f>    JSON array of `{name, sql}` scalar queries captured after the child exits
  *
  * DB target: `scripts/lib/resolve-db.js` — no silent default, host+database printed before the
@@ -145,20 +161,92 @@ function resolveTables({ descriptor, tablesArg }) {
 
 /**
  * The ceiling decision, separated from the queries so it is lockable without a DB.
+ * The ceiling is judged on the UNPROJECTED row count; a projection in force bypasses it (A-4).
  * @returns {{hash: boolean, record: object}} — `record` is the partial table-state entry
  */
-function tableStateDecision({ table, row_count, ceiling }) {
-  if (row_count > ceiling) {
+function tableStateDecision({ table, row_count, ceiling, projected = false }) {
+  if (row_count > ceiling && !projected) {
     return { hash: false, record: { table, row_count, skipped_reason: 'over_ceiling', ceiling } };
   }
-  return { hash: true, record: { table, row_count } };
+  const record = { table, row_count };
+  if (row_count > ceiling) record.ceiling_bypassed = 'projected';
+  return { hash: true, record };
 }
 
-/** Build the ORDER BY clause: pk columns when the table has a primary key, else every column. */
-function orderByClause({ pkColumns, allColumns }) {
-  const cols = pkColumns.length > 0 ? pkColumns : allColumns;
+const COLUMN_NAME_RE = TABLE_NAME_RE;
+function quoteIdent(c) {
+  if (!COLUMN_NAME_RE.test(c)) throw new Error(`invalid column name ${JSON.stringify(c)} (expected ${COLUMN_NAME_RE})`);
+  return `"${c}"`;
+}
+
+/**
+ * Parse `--table-columns` / `--table-order`: `t1:a,b;t2:c` → `{t1: ['a','b'], t2: ['c']}`. Pure.
+ * Identifiers are validated against the same `[a-z_][a-z0-9_]*` rule as table names (no quoting games).
+ */
+function parseTableColumnSpec(raw, flag) {
+  if (raw === undefined || raw === null) return {};
+  if (typeof raw !== 'string' || !raw.trim()) throw new Error(`${flag} needs <table>:<col,col>[;<table>:…]`);
+  const out = {};
+  for (const part of raw.split(';').map((s) => s.trim()).filter(Boolean)) {
+    const i = part.indexOf(':');
+    if (i <= 0) throw new Error(`${flag}: entry ${JSON.stringify(part)} is not <table>:<col,col>`);
+    const table = part.slice(0, i).trim();
+    if (!TABLE_NAME_RE.test(table)) throw new Error(`invalid table name ${JSON.stringify(table)} (expected ${TABLE_NAME_RE})`);
+    const cols = part.slice(i + 1).split(',').map((c) => c.trim()).filter(Boolean);
+    if (cols.length === 0) throw new Error(`${flag}: ${table} lists no columns`);
+    for (const c of cols) if (!COLUMN_NAME_RE.test(c)) throw new Error(`invalid column name ${JSON.stringify(c)} (expected ${COLUMN_NAME_RE})`);
+    if (out[table]) throw new Error(`${flag}: table ${table} given twice`);
+    out[table] = [...new Set(cols)];
+  }
+  return out;
+}
+
+/**
+ * Derive per-table projection + order from a descriptor's `outputs.writes[]` (Fold B item 5).
+ * order = the FIRST entry's `key` for that table (string | string[]); projection = key ∪ every
+ * same-table entry's `columns[].name` minus `written: "db_default"` (serial ids, DDL defaults).
+ * Returns `{columns: {table: [...]}, order: {table: [...]}}`; empty objects when nothing derives. Pure.
+ */
+function deriveTableSpecs(descriptor) {
+  const writes = descriptor && descriptor.outputs && Array.isArray(descriptor.outputs.writes)
+    ? descriptor.outputs.writes : [];
+  const columns = {};
+  const order = {};
+  for (const w of writes) {
+    if (!w || !w.table) continue;
+    const key = w.key === undefined ? [] : (Array.isArray(w.key) ? w.key : [w.key]);
+    if (key.length > 0 && !order[w.table]) order[w.table] = [...key];
+    const names = (Array.isArray(w.columns) ? w.columns : [])
+      .filter((c) => c && typeof c.name === 'string' && c.written !== 'db_default')
+      .map((c) => c.name);
+    const set = new Set([...(columns[w.table] ?? []), ...key, ...names]);
+    if (set.size > 0) columns[w.table] = [...set];
+  }
+  return { columns, order };
+}
+
+/** Resolve one table's projection + ordering: explicit CLI value wins over the descriptor derivation. Pure. */
+function resolveTableSpec({ table, argColumns, argOrder, derived }) {
+  const columns = argColumns[table] ?? derived.columns[table] ?? null;
+  const order = argOrder[table] ?? derived.order[table] ?? null;
+  return {
+    columns,
+    columns_source: argColumns[table] ? 'arg' : (derived.columns[table] ? 'descriptor' : 'none'),
+    order,
+    order_source: argOrder[table] ? 'arg' : (derived.order[table] ? 'descriptor' : 'none'),
+  };
+}
+
+/** Build the ORDER BY clause: explicit columns first, else pk columns, else every column. */
+function orderByClause({ orderColumns = null, pkColumns, allColumns }) {
+  const cols = orderColumns && orderColumns.length > 0 ? orderColumns : (pkColumns.length > 0 ? pkColumns : allColumns);
   if (cols.length === 0) throw new Error('cannot build ORDER BY: table has no columns');
   return cols.map((c) => `"${c.replace(/"/g, '""')}"`).join(', ');
+}
+
+/** The row-text expression that is hashed: the whole row, or `ROW(<projection>)`. Pure. */
+function rowTextExpr(columns) {
+  return columns && columns.length > 0 ? `ROW(${columns.map(quoteIdent).join(', ')})::text` : 't::text';
 }
 
 const PK_SQL = `SELECT a.attname
@@ -169,21 +257,33 @@ const PK_SQL = `SELECT a.attname
 const COLS_SQL = `SELECT column_name FROM information_schema.columns
                    WHERE table_schema = 'public' AND table_name = $1 ORDER BY ordinal_position`;
 
-async function captureTableState(pool, table, ceiling) {
+async function captureTableState(pool, table, ceiling, spec = { columns: null, order: null }) {
   const q = `"${table}"`;
   const cnt = await pool.query(`SELECT count(*)::bigint AS n FROM ${q}`);
   const row_count = Number(cnt.rows[0].n);
-  const decision = tableStateDecision({ table, row_count, ceiling });
-  if (!decision.hash) return decision.record;
+  const projected = Boolean(spec.columns && spec.columns.length > 0);
+  const decision = tableStateDecision({ table, row_count, ceiling, projected });
+  if (!decision.hash) return { record: decision.record, hash_ms: null };
   const [pk, cols] = await Promise.all([pool.query(PK_SQL, [table]), pool.query(COLS_SQL, [table])]);
   const pkColumns = pk.rows.map((r) => r.attname);
-  const orderBy = orderByClause({ pkColumns, allColumns: cols.rows.map((r) => r.column_name) });
-  const h = await pool.query(`SELECT md5(string_agg(t::text, '|' ORDER BY ${orderBy})) AS h FROM ${q} t`);
-  return {
+  const allColumns = cols.rows.map((r) => r.column_name);
+  for (const c of [...(spec.columns ?? []), ...(spec.order ?? [])]) {
+    if (!allColumns.includes(c)) throw new Error(`table ${table} has no column ${JSON.stringify(c)} (have ${allColumns.join(',')})`);
+  }
+  const orderBy = orderByClause({ orderColumns: spec.order, pkColumns, allColumns });
+  const t0 = Date.now();
+  const h = await pool.query(`SELECT md5(string_agg(${rowTextExpr(spec.columns)}, '|' ORDER BY ${orderBy})) AS h FROM ${q} t`);
+  const hash_ms = Date.now() - t0;
+  console.log(`[capture-step-golden] hashed ${table}: ${row_count} rows in ${hash_ms} ms ` +
+    `(columns ${projected ? spec.columns.join(',') : '<all>'}; order by ${orderBy})`);
+  const record = {
     ...decision.record,
     content_hash: h.rows[0].h, // null when the table is empty (string_agg over 0 rows)
-    order_by: pkColumns.length > 0 ? 'pk' : 'all_columns',
+    order_by: spec.order && spec.order.length > 0 ? 'explicit' : (pkColumns.length > 0 ? 'pk' : 'all_columns'),
   };
+  if (spec.order && spec.order.length > 0) record.order_columns = [...spec.order];
+  if (projected) record.columns = [...spec.columns];
+  return { record, hash_ms };
 }
 
 // ── Invariants (f) ────────────────────────────────────────────────────────────
@@ -407,7 +507,7 @@ function spawnStep({ scriptPath, args, env }) {
 }
 
 // ── Capture ───────────────────────────────────────────────────────────────────
-async function capture({ step, chain, args, tables, tablesSource, ceiling, invariantSpec, invariantsFile }) {
+async function capture({ step, chain, args, tables, tablesSource, ceiling, tableSpecs = {}, invariantSpec, invariantsFile }) {
   const pool = createResolvedPool({ label: 'capture-step-golden' });
   // Print the target BEFORE running (lessons.md) — assertDbTarget logs database + migrations on
   // the first checkout below; this line names the host even if that first checkout fails.
@@ -430,7 +530,12 @@ async function capture({ step, chain, args, tables, tablesSource, ceiling, invar
       [maxIdBefore],
     );
     const table_state = [];
-    for (const t of tables) table_state.push(await captureTableState(pool, t, ceiling));
+    const table_timing = {};
+    for (const t of tables) {
+      const { record, hash_ms } = await captureTableState(pool, t, ceiling, tableSpecs[t] ?? { columns: null, order: null });
+      table_state.push(record);
+      table_timing[t] = hash_ms;
+    }
     const invariants = invariantSpec ? await captureInvariants(pool, invariantSpec) : [];
     const markers = parseMarkers(child.stdout);
     const raw = {
@@ -447,6 +552,8 @@ async function capture({ step, chain, args, tables, tablesSource, ceiling, invar
       ...markers,
       pipeline_runs: rowsRes.rows,
       table_state,
+      table_timing, // volatile (ms) — recorded at the top level only, never in the normalised form
+      table_specs: tableSpecs,
       tables_source: tablesSource,
       table_row_ceiling: ceiling,
       invariants,
@@ -486,6 +593,8 @@ function buildCapture(raw) {
     table_state: raw.table_state ?? [],
     tables_source: raw.tables_source ?? 'none',
     table_row_ceiling: raw.table_row_ceiling ?? DEFAULT_TABLE_ROW_CEILING,
+    table_timing: raw.table_timing ?? {},
+    table_specs: raw.table_specs ?? {},
     invariants: raw.invariants ?? [],
     invariants_file: raw.invariants_file ?? null,
     db_target: raw.db_target,
@@ -538,18 +647,32 @@ async function main() {
   const descriptor = fs.existsSync(descriptorPath) ? JSON.parse(fs.readFileSync(descriptorPath, 'utf8')) : null;
   const { tables, source: tablesSource } = resolveTables({ descriptor, tablesArg: opts.tables });
   const ceiling = parseRowCeiling(opts['table-row-ceiling']);
+  const argColumns = parseTableColumnSpec(opts['table-columns'], '--table-columns');
+  const argOrder = parseTableColumnSpec(opts['table-order'], '--table-order');
+  const derived = deriveTableSpecs(descriptor);
+  const tableSpecs = {};
+  for (const t of tables) tableSpecs[t] = resolveTableSpec({ table: t, argColumns, argOrder, derived });
+  for (const t of Object.keys({ ...argColumns, ...argOrder })) {
+    if (!tables.includes(t)) throw new Error(`--table-columns/--table-order names ${t}, which is not a snapshotted table [${tables.join(',')}]`);
+  }
   const invariantsFile = opts.invariants ? String(opts.invariants) : null;
   const invariantSpec = invariantsFile
     ? validateInvariantSpec(JSON.parse(fs.readFileSync(path.resolve(invariantsFile), 'utf8')))
     : null;
   console.log(`[capture-step-golden] tables=[${tables.join(',')}] (source ${tablesSource}; ceiling ${ceiling}) ` +
     `invariants=${invariantSpec ? `${invariantSpec.length} from ${invariantsFile}` : '(none)'}`);
+  for (const t of tables) {
+    const s = tableSpecs[t];
+    console.log(`[capture-step-golden]   ${t}: columns=${s.columns ? s.columns.join(',') : '<all>'} (${s.columns_source}) ` +
+      `order=${s.order ? s.order.join(',') : '<pk>'} (${s.order_source})`);
+  }
 
-  const raw = await capture({ step, chain: String(opts.chain), args, tables, tablesSource, ceiling, invariantSpec, invariantsFile });
+  const raw = await capture({ step, chain: String(opts.chain), args, tables, tablesSource, ceiling, tableSpecs, invariantSpec, invariantsFile });
   const doc = buildCapture(raw);
 
   const tableLine = doc.table_state
-    .map((t) => `${t.table}:${t.row_count}/${t.skipped_reason ?? String(t.content_hash).slice(0, 8)}`)
+    .map((t) => `${t.table}:${t.row_count}/${t.skipped_reason ?? String(t.content_hash).slice(0, 8)}` +
+      (doc.table_timing[t.table] != null ? ` (${doc.table_timing[t.table]} ms)` : ''))
     .join(' ');
   const invLine = doc.invariants.map((i) => `${i.name}=${i.value}`).join(' ');
   const line = `[capture-step-golden] ${step} chain=${doc.chain} exit=${doc.exit_code} ` +
@@ -594,6 +717,10 @@ module.exports = {
   resolveTables,
   tableStateDecision,
   orderByClause,
+  rowTextExpr,
+  parseTableColumnSpec,
+  deriveTableSpecs,
+  resolveTableSpec,
   validateInvariantSpec,
   invariantResult,
 };

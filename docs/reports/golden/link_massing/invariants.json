@@ -1,0 +1,10 @@
+[
+  { "name": "pb_unique_pairs_violations", "sql": "SELECT count(*)::int FROM (SELECT parcel_id, building_id FROM parcel_buildings GROUP BY parcel_id, building_id HAVING count(*) > 1) d" },
+  { "name": "pb_multi_primary_parcels", "sql": "SELECT count(*)::int FROM (SELECT parcel_id FROM parcel_buildings WHERE is_primary GROUP BY parcel_id HAVING count(*) > 1) d" },
+  { "name": "pb_rows", "sql": "SELECT count(*)::int FROM parcel_buildings" },
+  { "name": "pb_distinct_parcels", "sql": "SELECT count(DISTINCT parcel_id)::int FROM parcel_buildings" },
+  { "name": "parcels_with_centroid", "sql": "SELECT count(*)::int FROM parcels WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL" },
+  { "name": "link_rate_pct", "sql": "SELECT round(100.0 * (SELECT count(DISTINCT parcel_id) FROM parcel_buildings) / NULLIF((SELECT count(*) FROM parcels WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL), 0), 2)" },
+  { "name": "confidence_values", "sql": "SELECT string_agg(c::text, ',' ORDER BY c) FROM (SELECT DISTINCT confidence AS c FROM parcel_buildings) s" },
+  { "name": "nearest_share_pct", "sql": "SELECT round(100.0 * count(*) FILTER (WHERE match_type = 'nearest') / NULLIF(count(*), 0), 2) FROM parcel_buildings" }
+]

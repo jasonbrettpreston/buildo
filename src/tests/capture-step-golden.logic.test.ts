@@ -345,3 +345,104 @@ describe('normalise + --compare — table state and invariants are must-match-ex
     expect(doc.normalised.table_state[0].content_hash).toBe(RAVINES_STATE.content_hash);
   });
 });
+
+// ── (e) column projection + explicit order — pilot-3 A-4 / Fold B item 5 / D-18 (no DB) ────────
+const { parseTableColumnSpec, deriveTableSpecs, resolveTableSpec, rowTextExpr } = harness;
+
+const PB_COLUMNS = ['parcel_id', 'building_id', 'is_primary', 'structure_type', 'match_type', 'confidence'];
+const PB_STATE = {
+  table: 'parcel_buildings', row_count: 520492, ceiling_bypassed: 'projected',
+  content_hash: '4b15b352e3bcbb0f1cd04f61a95d1a21', order_by: 'explicit',
+  order_columns: ['parcel_id', 'building_id'], columns: PB_COLUMNS,
+};
+// the commit-7 shape of the link-massing descriptor: two same-table entries, composite key, a db_default id
+const LINK_MASSING_DESCRIPTOR = {
+  outputs: {
+    writes: [
+      { table: 'parcel_buildings', key: ['parcel_id', 'building_id'], columns: [{ name: 'is_primary', vocabulary: 'x' }] },
+      {
+        table: 'parcel_buildings', key: ['parcel_id', 'building_id'],
+        columns: [
+          { name: 'id', vocabulary: 'x', written: 'db_default' },
+          { name: 'is_primary', vocabulary: 'x' }, { name: 'structure_type', vocabulary: 'x' },
+          { name: 'match_type', vocabulary: 'x' }, { name: 'confidence', vocabulary: 'x' },
+          { name: 'linked_at', vocabulary: 'x', written: 'step' },
+        ],
+      },
+    ],
+  },
+};
+
+describe('parseTableColumnSpec — --table-columns / --table-order', () => {
+  it('parses <table>:<cols>[;<table>:<cols>], deduping columns and validating identifiers', () => {
+    expect(parseTableColumnSpec('parcel_buildings:parcel_id,building_id', '--table-order')).toEqual({ parcel_buildings: ['parcel_id', 'building_id'] });
+    expect(parseTableColumnSpec('a:x,y ; b: z,z', '--table-columns')).toEqual({ a: ['x', 'y'], b: ['z'] });
+    expect(parseTableColumnSpec(undefined, '--table-columns')).toEqual({});
+  });
+  it('rejects a bare flag, a missing colon, an empty column list, a duplicate table and unsafe identifiers', () => {
+    expect(() => parseTableColumnSpec(true, '--table-columns')).toThrow(/needs <table>/);
+    expect(() => parseTableColumnSpec('parcel_buildings', '--table-columns')).toThrow(/not <table>:<col,col>/);
+    expect(() => parseTableColumnSpec('parcel_buildings:', '--table-columns')).toThrow(/lists no columns/);
+    expect(() => parseTableColumnSpec('t:a;t:b', '--table-columns')).toThrow(/given twice/);
+    expect(() => parseTableColumnSpec('t:a; drop', '--table-columns')).toThrow(/not <table>:<col,col>/);
+    expect(() => parseTableColumnSpec('t:"id"', '--table-columns')).toThrow(/invalid column name/);
+    expect(() => parseTableColumnSpec('Tbl:a', '--table-columns')).toThrow(/invalid table name/);
+  });
+});
+
+describe('deriveTableSpecs — outputs.writes[].key + columns[] (Fold B item 5)', () => {
+  it('order = the declared unique key; projection = key + step-written columns, db_default dropped, unioned across same-table entries', () => {
+    const d = deriveTableSpecs(LINK_MASSING_DESCRIPTOR);
+    expect(d.order).toEqual({ parcel_buildings: ['parcel_id', 'building_id'] });
+    expect(d.columns.parcel_buildings).toEqual(['parcel_id', 'building_id', 'is_primary', 'structure_type', 'match_type', 'confidence', 'linked_at']);
+    expect(d.columns.parcel_buildings).not.toContain('id');
+  });
+  it('accepts a string key (load-ravines shape) and yields nothing for a READ-class / missing descriptor', () => {
+    const d = deriveTableSpecs({ outputs: { writes: [{ table: 'ravines', key: 'source_id', columns: [{ name: 'geom', vocabulary: 'x' }] }] } });
+    expect(d).toEqual({ order: { ravines: ['source_id'] }, columns: { ravines: ['source_id', 'geom'] } });
+    expect(deriveTableSpecs(null)).toEqual({ columns: {}, order: {} });
+    expect(deriveTableSpecs({ outputs: 'none' })).toEqual({ columns: {}, order: {} });
+  });
+  it('an explicit CLI value overrides the derivation per table (the RUN_AT column is excluded by hand until the descriptor can mark it)', () => {
+    const derived = deriveTableSpecs(LINK_MASSING_DESCRIPTOR);
+    const spec = resolveTableSpec({ table: 'parcel_buildings', argColumns: { parcel_buildings: PB_COLUMNS }, argOrder: {}, derived });
+    expect(spec).toEqual({ columns: PB_COLUMNS, columns_source: 'arg', order: ['parcel_id', 'building_id'], order_source: 'descriptor' });
+    expect(resolveTableSpec({ table: 'other', argColumns: {}, argOrder: {}, derived })).toEqual({ columns: null, columns_source: 'none', order: null, order_source: 'none' });
+  });
+});
+
+describe('projection bypasses the ceiling on the UNPROJECTED count; ORDER BY prefers the explicit key', () => {
+  it('520,492 rows is over the ceiling unprojected, hashed when projected - and says so', () => {
+    expect(tableStateDecision({ table: 'parcel_buildings', row_count: 520492, ceiling: 100000 }).hash).toBe(false);
+    expect(tableStateDecision({ table: 'parcel_buildings', row_count: 520492, ceiling: 100000, projected: true })).toEqual({
+      hash: true, record: { table: 'parcel_buildings', row_count: 520492, ceiling_bypassed: 'projected' },
+    });
+    expect(tableStateDecision({ table: 'ravines', row_count: 854, ceiling: 100000, projected: true })).toEqual({ hash: true, record: { table: 'ravines', row_count: 854 } });
+  });
+  it('explicit order columns beat the pk (never `id` for the junction); projection renders ROW(...)::text', () => {
+    expect(orderByClause({ orderColumns: ['parcel_id', 'building_id'], pkColumns: ['id'], allColumns: ['id', 'parcel_id', 'building_id'] })).toBe('"parcel_id", "building_id"');
+    expect(orderByClause({ orderColumns: null, pkColumns: ['id'], allColumns: ['id'] })).toBe('"id"');
+    expect(rowTextExpr(PB_COLUMNS)).toBe('ROW("parcel_id", "building_id", "is_primary", "structure_type", "match_type", "confidence")::text');
+    expect(rowTextExpr(null)).toBe('t::text');
+    expect(() => rowTextExpr(['a; drop'])).toThrow(/invalid column name/);
+  });
+  it('the projected record round-trips the normaliser unmasked; hash timing stays OUT of the normalised form', () => {
+    const doc = buildCapture(rawCapture({ table_state: [PB_STATE], table_timing: { parcel_buildings: 2684 }, table_specs: { parcel_buildings: { columns: PB_COLUMNS } } }));
+    expect(doc.normalised.table_state).toEqual([{
+      ceiling_bypassed: 'projected', columns: PB_COLUMNS, content_hash: PB_STATE.content_hash, order_by: 'explicit',
+      order_columns: ['parcel_id', 'building_id'], row_count: 520492, table: 'parcel_buildings',
+    }]);
+    expect(doc.table_timing).toEqual({ parcel_buildings: 2684 });
+    expect(JSON.stringify(doc.normalised)).not.toContain('table_timing');
+    const other = normalise(rawCapture({ table_state: [{ ...PB_STATE, columns: [...PB_COLUMNS, 'linked_at'] }] })).normalised;
+    expect(diffNormalised(doc.normalised, other).map((d: { path: string }) => d.path)).toEqual(['table_state[0].columns[6]']);
+  });
+  it('the committed link_massing invariants file validates and names the Fold B item-7 set', () => {
+    const doc = require('../../docs/reports/golden/link_massing/invariants.json');
+    expect(validateInvariantSpec(doc).map((i: { name: string }) => i.name)).toEqual([
+      'pb_unique_pairs_violations', 'pb_multi_primary_parcels', 'pb_rows', 'pb_distinct_parcels',
+      'parcels_with_centroid', 'link_rate_pct', 'confidence_values', 'nearest_share_pct',
+    ]);
+    for (const inv of doc) expect(inv.sql).toMatch(/^SELECT /);
+  });
+});

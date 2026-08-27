@@ -1,0 +1,462 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/link-massing.js",
+  "chain": "sources",
+  "git_head": "6dc6c40c9c7dd99363476f56bab965c55aeecd15",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 486530,
+    "records_new": 0,
+    "records_updated": 485135,
+    "records_meta": {
+      "duration_ms": 2275145,
+      "code_version": "v2-building-centroid-in-parcel",
+      "building_footprints_count": "427077",
+      "full_mode": true,
+      "full_mode_reason": "force_full_env",
+      "parcels_processed": 486530,
+      "parcels_linked": 485135,
+      "buildings_matched": 520492,
+      "buildings_upserted": 520492,
+      "matches_centroid_in_parcel": 416962,
+      "matches_nearest": 103530,
+      "no_match_count": 1395,
+      "audit_table": {
+        "phase": 8,
+        "name": "Building Footprint Linking",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "buildings_indexed",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "grid_cells",
+            "value": "N/A (PostGIS)",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_processed",
+            "value": 486530,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "run_matched",
+            "value": 485135,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "match_centroid_in_parcel",
+            "value": 416962,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "match_nearest_fallback",
+            "value": 103530,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "link_rate",
+            "value": "99.7%",
+            "threshold": ">= 50%",
+            "status": "PASS"
+          },
+          {
+            "metric": "no_match",
+            "value": 1395,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcel_buildings_written",
+            "value": 520492,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 212.77,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 2286611,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "parcels": [
+          "id",
+          "centroid_lat",
+          "centroid_lng",
+          "geometry"
+        ],
+        "building_footprints": [
+          "id",
+          "geometry",
+          "footprint_area_sqm",
+          "centroid_lat",
+          "centroid_lng"
+        ]
+      },
+      "writes": {
+        "parcel_buildings": [
+          "parcel_id",
+          "building_id",
+          "is_primary",
+          "structure_type",
+          "match_type",
+          "confidence",
+          "linked_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link-massing]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[link-massing]\",\"msg\":\"Loaded 428 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[link-massing]\",\"msg\":\"full-gate: explicitFull=true force=true gate.changed=false (unchanged) → FULL\"}\n{\"level\":\"INFO\",\"tag\":\"[link-massing]\",\"msg\":\"Mode: FULL (rescan all parcels) [PostGIS]\"}\n{\"level\":\"INFO\",\"tag\":\"[link-massing]\",\"msg\":\"Using PostGIS building-centroid-in-parcel (fast path — no in-memory grid)\"}\n{\"level\":\"INFO\",\"tag\":\"[link-massing]\",\"msg\":\"Full mode: cleared 520,492 existing links for re-evaluation\"}\n{\"level\":\"INFO\",\"tag\":\"[link-massing]\",\"msg\":\"Parcels to process: 486,530\"}\n  [link-massing] 10,000 / 486,530 (2.1%) — 196.5s — 51 rows/s\n  [link-massing] 20,000 / 486,530 (4.1%) — 251.6s — 79 rows/s\n  [link-massing] 30,000 / 486,530 (6.2%) — 285.2s — 105 rows/s\n  [link-massing] 40,000 / 486,530 (8.2%) — 326.1s — 123 rows/s\n  [link-massing] 50,000 / 486,530 (10.3%) — 365.3s — 137 rows/s\n  [link-massing] 60,000 / 486,530 (12.3%) — 426.0s — 141 rows/s\n  [link-massing] 70,000 / 486,530 (14.4%) — 491.1s — 143 rows/s\n  [link-massing] 80,000 / 486,530 (16.4%) — 537.5s — 149 rows/s\n  [link-massing] 90,000 / 486,530 (18.5%) — 597.1s — 151 rows/s\n  [link-massing] 100,000 / 486,530 (20.6%) — 631.3s — 158 rows/s\n  [link-massing] 110,000 / 486,530 (22.6%) — 657.1s — 167 rows/s\n  [link-massing] 120,000 / 486,530 (24.7%) — 695.7s — 172 rows/s\n  [link-massing] 130,000 / 486,530 (26.7%) — 766.9s — 170 rows/s\n  [link-massing] 140,000 / 486,530 (28.8%) — 822.4s — 170 rows/s\n  [link-massing] 150,000 / 486,530 (30.8%) — 881.9s — 170 rows/s\n  [link-massing] 160,000 / 486,530 (32.9%) — 923.7s — 173 rows/s\n  [link-massing] 170,000 / 486,530 (34.9%) — 949.1s — 179 rows/s\n  [link-massing] 180,000 / 486,530 (37.0%) — 982.7s — 183 rows/s\n  [link-massing] 190,000 / 486,530 (39.1%) — 1008.1s — 188 rows/s\n  [link-massing] 200,000 / 486,530 (41.1%) — 1034.2s — 193 rows/s\n  [link-massing] 210,000 / 486,530 (43.2%) — 1105.9s — 190 rows/s\n  [link-massing] 220,000 / 486,530 (45.2%) — 1151.6s — 191 rows/s\n  [link-massing] 230,000 / 486,530 (47.3%) — 1187.1s — 194 rows/s\n  [link-massing] 240,000 / 486,530 (49.3%) — 1211.0s — 198 rows/s\n  [link-massing] 250,000 / 486,530 (51.4%) — 1242.7s — 201 rows/s\n  [link-massing] 260,000 / 486,530 (53.4%) — 1262.1s — 206 rows/s\n  [link-massing] 270,000 / 486,530 (55.5%) — 1294.4s — 209 rows/s\n  [link-massing] 280,000 / 486,530 (57.6%) — 1328.1s — 211 rows/s\n  [link-massing] 290,000 / 486,530 (59.6%) — 1366.8s — 212 rows/s\n  [link-massing] 300,000 / 486,530 (61.7%) — 1414.0s — 212 rows/s\n  [link-massing] 310,000 / 486,530 (63.7%) — 1464.0s — 212 rows/s\n  [link-massing] 320,000 / 486,530 (65.8%) — 1514.5s — 211 rows/s\n  [link-massing] 330,000 / 486,530 (67.8%) — 1540.5s — 214 rows/s\n  [link-massing] 340,000 / 486,530 (69.9%) — 1578.2s — 215 rows/s\n  [link-massing] 350,000 / 486,530 (71.9%) — 1622.3s — 216 rows/s\n  [link-massing] 360,000 / 486,530 (74.0%) — 1653.7s — 218 rows/s\n  [link-massing] 370,000 / 486,530 (76.0%) — 1680.8s — 220 rows/s\n  [link-massing] 380,000 / 486,530 (78.1%) — 1726.0s — 220 rows/s\n  [link-massing] 390,000 / 486,530 (80.2%) — 1790.3s — 218 rows/s\n  [link-massing] 400,000 / 486,530 (82.2%) — 1860.5s — 215 rows/s\n  [link-massing] 410,000 / 486,530 (84.3%) — 1919.3s — 214 rows/s\n  [link-massing] 420,000 / 486,530 (86.3%) — 1956.9s — 215 rows/s\n  [link-massing] 430,000 / 486,530 (88.4%) — 2000.3s — 215 rows/s\n  [link-massing] 440,000 / 486,530 (90.4%) — 2050.8s — 215 rows/s\n  [link-massing] 450,000 / 486,530 (92.5%) — 2086.8s — 216 rows/s\n  [link-massing] 460,000 / 486,530 (94.5%) — 2149.3s — 214 rows/s\n  [link-massing] 470,000 / 486,530 (96.6%) — 2204.8s — 213 rows/s\n  [link-massing] 480,000 / 486,530 (98.7%) — 2247.3s — 214 rows/s\n  [link-massing] 486,530 / 486,530 (100.0%) — 2275.1s — 214 rows/s\n{\"level\":\"INFO\",\"tag\":\"[link-massing]\",\"msg\":\"Linking complete\",\"context\":{\"parcels_processed\":486530,\"parcels_linked\":485135,\"buildings_matched\":520492,\"buildings_upserted\":520492,\"centroid_in_parcel\":416962,\"nearest\":103530,\"no_match\":1395,\"duration\":\"2275.1s\"}}\nPIPELINE_SUMMARY:{\"records_total\":486530,\"records_new\":0,\"records_updated\":485135,\"records_meta\":{\"duration_ms\":2275145,\"code_version\":\"v2-building-centroid-in-parcel\",\"building_footprints_count\":\"427077\",\"full_mode\":true,\"full_mode_reason\":\"force_full_env\",\"parcels_processed\":486530,\"parcels_linked\":485135,\"buildings_matched\":520492,\"buildings_upserted\":520492,\"matches_centroid_in_parcel\":416962,\"matches_nearest\":103530,\"no_match_count\":1395,\"audit_table\":{\"phase\":8,\"name\":\"Building Footprint Linking\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"buildings_indexed\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"grid_cells\",\"value\":\"N/A (PostGIS)\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcels_processed\",\"value\":486530,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"run_matched\",\"value\":485135,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"match_centroid_in_parcel\",\"value\":416962,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"match_nearest_fallback\",\"value\":103530,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"link_rate\",\"value\":\"99.7%\",\"threshold\":\">= 50%\",\"status\":\"PASS\"},{\"metric\":\"no_match\",\"value\":1395,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"parcel_buildings_written\",\"value\":520492,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":212.77,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2286611,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"centroid_lat\",\"centroid_lng\",\"geometry\"],\"building_footprints\":[\"id\",\"geometry\",\"footprint_area_sqm\",\"centroid_lat\",\"centroid_lng\"]},\"writes\":{\"parcel_buildings\":[\"parcel_id\",\"building_id\",\"is_primary\",\"structure_type\",\"match_type\",\"confidence\",\"linked_at\"]}}\n\n[link-massing] completed in 2286.6s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-massing]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1670,
+  "table_state": [
+    {
+      "table": "parcel_buildings",
+      "row_count": 520492,
+      "ceiling_bypassed": "projected",
+      "content_hash": "a0023203ab3c39d85e622ef581b485f3",
+      "order_by": "explicit",
+      "order_columns": [
+        "parcel_id",
+        "building_id"
+      ],
+      "columns": [
+        "parcel_id",
+        "building_id",
+        "is_primary",
+        "structure_type",
+        "match_type",
+        "confidence"
+      ]
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "parcel_buildings": 2014
+  },
+  "table_specs": {
+    "parcel_buildings": {
+      "columns": [
+        "parcel_id",
+        "building_id",
+        "is_primary",
+        "structure_type",
+        "match_type",
+        "confidence"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "parcel_id",
+        "building_id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [
+    {
+      "name": "pb_unique_pairs_violations",
+      "value": "0"
+    },
+    {
+      "name": "pb_multi_primary_parcels",
+      "value": "0"
+    },
+    {
+      "name": "pb_rows",
+      "value": "520492"
+    },
+    {
+      "name": "pb_distinct_parcels",
+      "value": "485135"
+    },
+    {
+      "name": "parcels_with_centroid",
+      "value": "486530"
+    },
+    {
+      "name": "link_rate_pct",
+      "value": "99.71"
+    },
+    {
+      "name": "confidence_values",
+      "value": "0.60,0.95"
+    },
+    {
+      "name": "nearest_share_pct",
+      "value": "19.89"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/link_massing/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [
+    "--full"
+  ],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "pattern:rows_per_sec",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/link-massing.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Building Footprint Linking",
+          "phase": 8,
+          "rows": [
+            {
+              "metric": "buildings_indexed",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "grid_cells",
+              "status": "INFO",
+              "threshold": null,
+              "value": "N/A (PostGIS)"
+            },
+            {
+              "metric": "parcels_processed",
+              "status": "INFO",
+              "threshold": null,
+              "value": 486530
+            },
+            {
+              "metric": "run_matched",
+              "status": "INFO",
+              "threshold": null,
+              "value": 485135
+            },
+            {
+              "metric": "match_centroid_in_parcel",
+              "status": "INFO",
+              "threshold": null,
+              "value": 416962
+            },
+            {
+              "metric": "match_nearest_fallback",
+              "status": "INFO",
+              "threshold": null,
+              "value": 103530
+            },
+            {
+              "metric": "link_rate",
+              "status": "PASS",
+              "threshold": ">= 50%",
+              "value": "99.7%"
+            },
+            {
+              "metric": "no_match",
+              "status": "INFO",
+              "threshold": null,
+              "value": 1395
+            },
+            {
+              "metric": "parcel_buildings_written",
+              "status": "INFO",
+              "threshold": null,
+              "value": 520492
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "building_footprints_count": "427077",
+        "buildings_matched": 520492,
+        "buildings_upserted": 520492,
+        "code_version": "v2-building-centroid-in-parcel",
+        "full_mode": true,
+        "full_mode_reason": "force_full_env",
+        "matches_centroid_in_parcel": 416962,
+        "matches_nearest": 103530,
+        "no_match_count": 1395,
+        "parcels_linked": 485135,
+        "parcels_processed": 486530
+      },
+      "records_new": 0,
+      "records_total": 486530,
+      "records_updated": 485135
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "building_footprints": [
+            "id",
+            "geometry",
+            "footprint_area_sqm",
+            "centroid_lat",
+            "centroid_lng"
+          ],
+          "parcels": [
+            "id",
+            "centroid_lat",
+            "centroid_lng",
+            "geometry"
+          ]
+        },
+        "writes": {
+          "parcel_buildings": [
+            "parcel_id",
+            "building_id",
+            "is_primary",
+            "structure_type",
+            "match_type",
+            "confidence",
+            "linked_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[link-massing]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 428 logic variables from control panel\",\"tag\":\"[link-massing]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"full-gate: explicitFull=true force=true gate.changed=false (unchanged) → FULL\",\"tag\":\"[link-massing]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Mode: FULL (rescan all parcels) [PostGIS]\",\"tag\":\"[link-massing]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Using PostGIS building-centroid-in-parcel (fast path — no in-memory grid)\",\"tag\":\"[link-massing]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Full mode: cleared 520,492 existing links for re-evaluation\",\"tag\":\"[link-massing]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Parcels to process: 486,530\",\"tag\":\"[link-massing]\"}",
+      "  [link-massing] 10,000 / 486,530 (2.1%) — <DUR> — <RATE>",
+      "  [link-massing] 20,000 / 486,530 (4.1%) — <DUR> — <RATE>",
+      "  [link-massing] 30,000 / 486,530 (6.2%) — <DUR> — <RATE>",
+      "  [link-massing] 40,000 / 486,530 (8.2%) — <DUR> — <RATE>",
+      "  [link-massing] 50,000 / 486,530 (10.3%) — <DUR> — <RATE>",
+      "  [link-massing] 60,000 / 486,530 (12.3%) — <DUR> — <RATE>",
+      "  [link-massing] 70,000 / 486,530 (14.4%) — <DUR> — <RATE>",
+      "  [link-massing] 80,000 / 486,530 (16.4%) — <DUR> — <RATE>",
+      "  [link-massing] 90,000 / 486,530 (18.5%) — <DUR> — <RATE>",
+      "  [link-massing] 100,000 / 486,530 (20.6%) — <DUR> — <RATE>",
+      "  [link-massing] 110,000 / 486,530 (22.6%) — <DUR> — <RATE>",
+      "  [link-massing] 120,000 / 486,530 (24.7%) — <DUR> — <RATE>",
+      "  [link-massing] 130,000 / 486,530 (26.7%) — <DUR> — <RATE>",
+      "  [link-massing] 140,000 / 486,530 (28.8%) — <DUR> — <RATE>",
+      "  [link-massing] 150,000 / 486,530 (30.8%) — <DUR> — <RATE>",
+      "  [link-massing] 160,000 / 486,530 (32.9%) — <DUR> — <RATE>",
+      "  [link-massing] 170,000 / 486,530 (34.9%) — <DUR> — <RATE>",
+      "  [link-massing] 180,000 / 486,530 (37.0%) — <DUR> — <RATE>",
+      "  [link-massing] 190,000 / 486,530 (39.1%) — <DUR> — <RATE>",
+      "  [link-massing] 200,000 / 486,530 (41.1%) — <DUR> — <RATE>",
+      "  [link-massing] 210,000 / 486,530 (43.2%) — <DUR> — <RATE>",
+      "  [link-massing] 220,000 / 486,530 (45.2%) — <DUR> — <RATE>",
+      "  [link-massing] 230,000 / 486,530 (47.3%) — <DUR> — <RATE>",
+      "  [link-massing] 240,000 / 486,530 (49.3%) — <DUR> — <RATE>",
+      "  [link-massing] 250,000 / 486,530 (51.4%) — <DUR> — <RATE>",
+      "  [link-massing] 260,000 / 486,530 (53.4%) — <DUR> — <RATE>",
+      "  [link-massing] 270,000 / 486,530 (55.5%) — <DUR> — <RATE>",
+      "  [link-massing] 280,000 / 486,530 (57.6%) — <DUR> — <RATE>",
+      "  [link-massing] 290,000 / 486,530 (59.6%) — <DUR> — <RATE>",
+      "  [link-massing] 300,000 / 486,530 (61.7%) — <DUR> — <RATE>",
+      "  [link-massing] 310,000 / 486,530 (63.7%) — <DUR> — <RATE>",
+      "  [link-massing] 320,000 / 486,530 (65.8%) — <DUR> — <RATE>",
+      "  [link-massing] 330,000 / 486,530 (67.8%) — <DUR> — <RATE>",
+      "  [link-massing] 340,000 / 486,530 (69.9%) — <DUR> — <RATE>",
+      "  [link-massing] 350,000 / 486,530 (71.9%) — <DUR> — <RATE>",
+      "  [link-massing] 360,000 / 486,530 (74.0%) — <DUR> — <RATE>",
+      "  [link-massing] 370,000 / 486,530 (76.0%) — <DUR> — <RATE>",
+      "  [link-massing] 380,000 / 486,530 (78.1%) — <DUR> — <RATE>",
+      "  [link-massing] 390,000 / 486,530 (80.2%) — <DUR> — <RATE>",
+      "  [link-massing] 400,000 / 486,530 (82.2%) — <DUR> — <RATE>",
+      "  [link-massing] 410,000 / 486,530 (84.3%) — <DUR> — <RATE>",
+      "  [link-massing] 420,000 / 486,530 (86.3%) — <DUR> — <RATE>",
+      "  [link-massing] 430,000 / 486,530 (88.4%) — <DUR> — <RATE>",
+      "  [link-massing] 440,000 / 486,530 (90.4%) — <DUR> — <RATE>",
+      "  [link-massing] 450,000 / 486,530 (92.5%) — <DUR> — <RATE>",
+      "  [link-massing] 460,000 / 486,530 (94.5%) — <DUR> — <RATE>",
+      "  [link-massing] 470,000 / 486,530 (96.6%) — <DUR> — <RATE>",
+      "  [link-massing] 480,000 / 486,530 (98.7%) — <DUR> — <RATE>",
+      "  [link-massing] 486,530 / 486,530 (100.0%) — <DUR> — <RATE>",
+      "{\"context\":{\"buildings_matched\":520492,\"buildings_upserted\":520492,\"centroid_in_parcel\":416962,\"duration\":\"<DUR>\",\"nearest\":103530,\"no_match\":1395,\"parcels_linked\":485135,\"parcels_processed\":486530},\"level\":\"INFO\",\"msg\":\"Linking complete\",\"tag\":\"[link-massing]\"}",
+      "[link-massing] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "parcel_id",
+          "building_id",
+          "is_primary",
+          "structure_type",
+          "match_type",
+          "confidence"
+        ],
+        "content_hash": "a0023203ab3c39d85e622ef581b485f3",
+        "order_by": "explicit",
+        "order_columns": [
+          "parcel_id",
+          "building_id"
+        ],
+        "row_count": 520492,
+        "table": "parcel_buildings"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "pb_unique_pairs_violations",
+        "value": "0"
+      },
+      {
+        "name": "pb_multi_primary_parcels",
+        "value": "0"
+      },
+      {
+        "name": "pb_rows",
+        "value": "520492"
+      },
+      {
+        "name": "pb_distinct_parcels",
+        "value": "485135"
+      },
+      {
+        "name": "parcels_with_centroid",
+        "value": "486530"
+      },
+      {
+        "name": "link_rate_pct",
+        "value": "99.71"
+      },
+      {
+        "name": "confidence_values",
+        "value": "0.60,0.95"
+      },
+      {
+        "name": "nearest_share_pct",
+        "value": "19.89"
+      }
+    ]
+  }
+}
