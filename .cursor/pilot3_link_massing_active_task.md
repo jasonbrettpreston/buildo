@@ -1,5 +1,5 @@
 # Active Task: Pilot 3 — convert `link_massing` to the Spec 122 step standard (LINK/MATCHER)
-**Status:** Planning
+**Status:** Implementation (authorized 2026-08-27 — operator condition: every ruling must be explicit, standardized as far as humanly possible, observable, data-quality-preserving, I/O-balanced, and unable to silently fail or be casually changed by an LLM. A-1…A-7 as recommended. **A-8 OVERRIDDEN by that condition:** the never-run JS fallback path is RETIRED (knowingly, intent ledger `knowingly-retired`, U-5 evidence), replaced by a fail-loud `guards.requires: {kind: extension, name: postgis, on_missing: fail}` — no second code path survives in compute.)
 
 > **Every number below was executed in this planning session (2026-08-27) against `127.0.0.1:54322/postgres` (242 migrations, floor 223) or against the working tree at HEAD `cd6d35d4` (Fold A landed; Fold B re-anchored).** Nothing is transcribed from pilot 1/2, from memory, or from a prior report. Anchors are greppable strings, not line numbers, wherever the plan's own commits will move the line.
 
