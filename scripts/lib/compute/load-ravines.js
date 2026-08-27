@@ -189,6 +189,14 @@ function ravine_feature_count(ctx) {
   ctx.report('ravine_feature_count', { violations: 0, detail: ctx.acquired.feature_count });
 }
 
+/**
+ * L7 — scored at `when: "pre_write"` (Fold C / LR-D9). READS `ctx.acquired` AND
+ * `ctx.prior` ONLY, and that is a contract, not a coincidence: the runner evaluates
+ * this observer once BEFORE the write (to decide whether the write happens at all)
+ * and once after, over the full selection. Reaching for `ctx.written` here would make
+ * the two passes disagree — undefined at the gate, a real number in the audit table —
+ * so the position is only sound while both inputs are write-independent.
+ */
 function ravine_count_drift_pct(ctx) {
   const pct = computeCountDeltaPct(ctx.acquired.feature_count, priorFeatureCount(ctx));
   ctx.report('ravine_count_drift_pct', { value: pct, detail: round3(pct) });
@@ -206,6 +214,13 @@ function ravine_geometry_collection_extracted(ctx) {
   });
 }
 
+/**
+ * L8 — scored at `when: "pre_write"` (Fold C / LR-D9), same contract as L7 above: the
+ * validation counters it reads (`invalid_geometry_skipped`, `skipped_keys`) are produced
+ * by `write.validateGeometries`, which is read-only PostGIS SQL and runs before the
+ * first write statement. Spec 59 L8 requires the abort to precede `withTransaction`;
+ * this observer supplies the number that decision is made on. No `ctx.written`.
+ */
 function ravine_geometry_skipped_pct(ctx) {
   const pct = ratioOfFeatures(ctx, ctx.acquired.invalid_geometry_skipped);
   // LR-D1 — the dropped keys travel in ONE row's detail, capped, with the FULL count
@@ -338,6 +353,13 @@ const CHECKS = {
 
 /**
  * §5.5 (2) — run the SELECTED checks, and nothing else.
+ *
+ * ⚠️ CALLED TWICE ON A LOAD (Fold C / LR-D9). The runner invokes this once with
+ * `ctx.checks` narrowed to the `when: "pre_write"` ids and `ctx.written === null`, to
+ * decide whether the write may happen, and once with the full selection afterwards. The
+ * loop below is already scoped to `ctx.checks`, so nothing here changes; what the second
+ * invocation relies on is that a pre_write observer is a pure function of `ctx.acquired`
+ * + `ctx.prior`, which the write does not touch, so both passes report identically.
  *
  * The loop is the error boundary: whatever a check throws becomes `{ error }` under
  * that check's own id, so one failing observer never suppresses the observers after

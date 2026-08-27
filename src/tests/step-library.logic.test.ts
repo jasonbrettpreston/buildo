@@ -997,3 +997,238 @@ describe('LR-D6 — lock contention emits a row-derived SKIP, on a write-class s
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// LR-D9 — `when: "pre_write"`: the write does not happen (Fold C, operator §7.1
+// 2026-08-26). The library half of the fence; the descriptor/compute half is
+// locked in src/tests/steps/load_ravines/violations.test.ts.
+// ---------------------------------------------------------------------------
+
+describe('LR-D9 — when:"pre_write" aborts BEFORE any write (Fold C, operator ruling §7.1 2026-08-26)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute + write modules
+  const ravineCompute = require(join(process.cwd(), 'scripts/lib/compute/load-ravines.js'));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- same
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+
+  const PRIOR_COUNT = 854;
+  const DRIFT_ENV = 'RAVINE_ACCEPT_FEATURE_COUNT_DRIFT';
+
+  function seedConfig(): Record<string, number> {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the committed seed registry
+    const seed = require(join(process.cwd(), 'scripts/seeds/logic_variables.json')) as Record<string, { default: number }>;
+    const out: Record<string, number> = {};
+    for (const v of LOAD_RAVINES.config.logic_variables as Array<{ name: string }>) out[v.name] = seed[v.name]!.default;
+    return out;
+  }
+
+  const prior = { feature_count: PRIOR_COUNT, content_hash: 'aa', last_modified: 'Mon, 14 Mar 2022 15:25:09 GMT' };
+
+  function acquiredOf(featureCount: number, skipped: number) {
+    return {
+      feature_count: featureCount,
+      invalid_geometry_skipped: skipped,
+      invalid_geometry_repaired: 0,
+      geometry_collection_extracted: 0,
+      skipped_keys: [],
+      last_modified: prior.last_modified,
+      last_modified_ms: Date.parse(prior.last_modified),
+      etag: null,
+      content_hash: 'bb',
+      source_dataset_version: 'bb',
+      license_url: 'https://open.toronto.ca/open-data-license/',
+    };
+  }
+
+  /** The ctx the runner would have built by the time the gate fires. */
+  function stepCtxFor(descriptor: Record<string, unknown>, config: Record<string, number>) {
+    return {
+      pool: null,
+      chainId: null,
+      runId: 1,
+      descriptor,
+      checks: (descriptor.checks as Array<{ id: string }>).map((c) => c.id),
+      log: { info: () => {}, warn: () => {}, error: () => {} },
+      clock: () => Date.parse('2026-08-26T00:00:00Z'),
+      config,
+      acquired: null,
+      written: null,
+      prior: null,
+      overrides: null,
+      gate: null,
+      report: () => {},
+    };
+  }
+
+  function gateFor(descriptor: Record<string, unknown>) {
+    const config = seedConfig();
+    return stepLib.makePreWriteGate({
+      descriptor,
+      chainId: null,
+      stepCtx: stepCtxFor(descriptor, config),
+      compute: ravineCompute,
+      config,
+    });
+  }
+
+  /** Build the gate and run it with `env` standing — acceptance is read off process.env. */
+  async function decide(acquired: object, env: Record<string, string> = {}) {
+    const saved: Record<string, string | undefined> = {};
+    for (const [k, v] of Object.entries(env)) { saved[k] = process.env[k]; process.env[k] = v; }
+    try {
+      const gate = gateFor(LOAD_RAVINES);
+      expect(gate, 'the descriptor declares pre_write checks, so a gate must exist').not.toBeNull();
+      return await gate({ acquired, prior, overrides: {} });
+    } finally {
+      for (const [k, v] of Object.entries(saved)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+    }
+  }
+
+  it('the two Spec 59 abort checks are declared at when:"pre_write", and they read no ctx.written', () => {
+    const ids = (LOAD_RAVINES.checks as Array<{ id: string; when: string }>)
+      .filter((c) => c.when === 'pre_write').map((c) => c.id);
+    expect(ids, 'L7 (count drift) + L8 (invalid geometry) — Spec 59 aborts BEFORE the write').toEqual(
+      ['ravine_count_drift_pct', 'ravine_geometry_skipped_pct'],
+    );
+    // The position is only sound while the observers are write-independent: the gate
+    // runs them with `ctx.written === null`, the final table runs them again after the
+    // write, and both must report the same number.
+    for (const id of ids) {
+      expect(String(ravineCompute.checks[id]), `${id} must not read ctx.written at a pre_write position`)
+        .not.toMatch(/ctx\.written/);
+    }
+  });
+
+  it('L7 over the limit, no override -> ABORT; under the limit -> proceed (both directions)', async () => {
+    expect(await decide(acquiredOf(100, 0))).toEqual({ abort: true, failed: ['ravine_count_drift_pct'] });
+    expect(await decide(acquiredOf(PRIOR_COUNT, 0)), 'a healthy load must not be gated')
+      .toEqual({ abort: false, failed: [] });
+  });
+
+  it('L7 with RAVINE_ACCEPT_FEATURE_COUNT_DRIFT=1 -> the write PROCEEDS (A-5: acceptance moves the decision, not the row)', async () => {
+    expect(await decide(acquiredOf(100, 0), { [DRIFT_ENV]: '1' })).toEqual({ abort: false, failed: [] });
+    // Truthiness is not acceptance — only the literal "1" arms an override.
+    expect((await decide(acquiredOf(100, 0), { [DRIFT_ENV]: 'true' })).abort).toBe(true);
+  });
+
+  it('L8 over the limit -> ABORT, and there is NO accept_anomaly entry that can rescue it', async () => {
+    expect(await decide(acquiredOf(PRIOR_COUNT, 200))).toEqual({
+      abort: true, failed: ['ravine_geometry_skipped_pct'],
+    });
+    const accepts = (LOAD_RAVINES.override.accept_anomaly as Array<{ check_id: string }>).map((a) => a.check_id);
+    expect(accepts, 'Spec 59 L8 declares no operator override — the abort is unconditional')
+      .not.toContain('ravine_geometry_skipped_pct');
+  });
+
+  it('REVERSION DETECTOR — moving those checks back to when:"post" leaves NO gate at all', () => {
+    const reverted = clone(LOAD_RAVINES) as { checks: Array<{ id: string; when: string }> };
+    for (const c of reverted.checks) if (c.when === 'pre_write') c.when = 'post';
+    expect(
+      gateFor(reverted as unknown as Record<string, unknown>),
+      'a post-only descriptor gates nothing — the write is unguarded again',
+    ).toBeNull();
+  });
+
+  it('runIngestPhase SKIPS executeWrite on an unaccepted pre_write FAIL — zero write statements, zeroed counters', async () => {
+    const config = seedConfig();
+    const pool = fakePool({ logicVars: config });
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior, error: null }),
+      vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
+      vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
+        tier1: { skip: false },
+        tier2: { skip: false },
+        emitBlock: null,
+        features: [{ source_id: 1, geojson: '{}' }],
+        acquired: acquiredOf(100, 0), // 88% count drift vs prior 854
+      }),
+      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({
+        carried: [{ source_id: 1, geom: Buffer.from('') }], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [],
+      }),
+      vi.spyOn(writeLib, 'executeWrite'),
+    ];
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor: LOAD_RAVINES,
+        pool,
+        compute: ravineCompute,
+        config,
+        fetchImpl: async () => { throw new Error('the gate must not fetch'); },
+        chainId: null,
+        log: { info: () => {}, warn: () => {}, error: () => {} },
+        tag: '[load_ravines]',
+        clockNow: new Date('2026-08-26T00:00:00Z'),
+        preWriteGate: gateFor(LOAD_RAVINES),
+      });
+
+      expect(writeLib.executeWrite, 'the class-B write executor must never be called').not.toHaveBeenCalled();
+      expect(
+        pool.sql.some((s: string) => /INSERT INTO ravines|DELETE FROM ravines/i.test(s)),
+        'no upsert and no departure DELETE reached the pool',
+      ).toBe(false);
+      expect(out.writeSkipped).toBe(true);
+      expect(out.reason).toBe('pre_write_check_failed');
+      expect(out.failedPreWrite).toEqual(['ravine_count_drift_pct']);
+      expect(out.written.rows_changed, 'an EMPTY written — the remaining post checks score over nothing').toBe(0);
+      expect(out.written).toMatchObject({
+        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, write_skipped_pre_write_fail: true,
+      });
+      expect(out.written.privilege, 'the MEASURED privilege survives — zeroing it manufactures a second FAIL row')
+        .toMatchObject({ bypassrls: true });
+      // `acquired` is fully populated: the FAIL row and the counters describe a real load.
+      expect(out.acquired.feature_count).toBe(1);
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  });
+
+  it('the OTHER direction — a healthy load still reaches executeWrite through the same gate', async () => {
+    const config = seedConfig();
+    const pool = fakePool({ logicVars: config });
+    const written = { inserted: 0, updated: 0, deleted: 0, rows_scanned: 1, rows_changed: 0, delete_skipped_empty_guard: false };
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: { ...prior, feature_count: 1 }, error: null }),
+      vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
+      vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
+        tier1: { skip: false },
+        tier2: { skip: false },
+        emitBlock: null,
+        features: [{ source_id: 1, geojson: '{}' }],
+        acquired: acquiredOf(1, 0),
+      }),
+      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({
+        carried: [{ source_id: 1, geom: Buffer.from('') }], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [],
+      }),
+      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue(written),
+    ];
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor: LOAD_RAVINES,
+        pool,
+        compute: ravineCompute,
+        config,
+        fetchImpl: async () => { throw new Error('unused'); },
+        chainId: null,
+        log: { info: () => {}, warn: () => {}, error: () => {} },
+        tag: '[load_ravines]',
+        clockNow: new Date('2026-08-26T00:00:00Z'),
+        preWriteGate: gateFor(LOAD_RAVINES),
+      });
+      expect(writeLib.executeWrite).toHaveBeenCalledTimes(1);
+      expect(out.writeSkipped).toBe(false);
+      expect(out.reason).toBe('loaded');
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  });
+
+  it('a descriptor with NO pre_write check gets no gate — assert_schema’s ingest path is untouched', () => {
+    expect((ASSERT_SCHEMA.checks as Array<{ when: string }>).some((c) => c.when === 'pre_write')).toBe(false);
+    expect(stepLib.makePreWriteGate({
+      descriptor: ASSERT_SCHEMA,
+      chainId: null,
+      stepCtx: stepCtxFor(ASSERT_SCHEMA, {}),
+      compute: async () => {},
+      config: {},
+    })).toBeNull();
+  });
+});

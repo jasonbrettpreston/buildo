@@ -37,6 +37,7 @@
  *   ✅ `pct <=` limits + `limit_from_config` (ruling A-4)    → INGESTOR (./verdict.js)
  *   ✅ counters resolved FROM `counters[].source`            → INGESTOR
  *   ✅ terminal selection + `records_meta.terminal`          → INGESTOR
+ *   ✅ `when: "pre_write"` — abort BEFORE any write (LR-D9) → INGESTOR (Fold C)
  *   · the run-ledger gate (upstream/own slugs)               → ENRICHER
  *   · invalidation + counters scoped by `writes.key`         → LINK/MATCHER
  *   · quarantine / checkpoint / partial_fill                 → BACKFILL
@@ -195,6 +196,17 @@ function isIngestStep(descriptor) {
  * invocation looks like a first run and every drift guard degrades to "no baseline".
  * The fallback chain is the first declared `execution.invocation` key.
  */
+/**
+ * The check ids whose FAIL is a standing, ACKNOWLEDGED anomaly (ruling A-5).
+ *
+ * One home, because the pre-write gate and the terminal/status cascade must agree on
+ * it exactly: a FAIL the gate refuses to accept but the cascade accepts (or the
+ * reverse) is a step that aborts the write and then reports `completed`.
+ */
+function acceptedCheckIds(descriptor) {
+  return new Set(staleness.acceptAnomalies(descriptor).filter((a) => a.standing).map((a) => a.check_id));
+}
+
 function ledgerPipelineName(descriptor, chainId) {
   const inv = descriptor.execution.invocation;
   const declared = inv && inv !== 'none' ? Object.keys(inv)[0] : null;
@@ -211,9 +223,19 @@ function ledgerPipelineName(descriptor, chainId) {
  * than a pipeline to execute: `ctx.acquired`, `ctx.written`, `ctx.prior`,
  * `ctx.overrides`. The compute reaches no socket, no file and no env.
  *
+ * ⚠️ PHASE ORDER IS A GUARANTEE, NOT A CONVENIENCE (Fold C, operator ruling §7.1
+ * 2026-08-26 — LR-D9). The pre-conversion loader evaluated L7 (count drift) and L8
+ * (invalid geometry) INLINE and `return`ed before `withTransaction` ever opened, so
+ * "FAIL ⇒ zero rows touched" was carried by STATEMENT ORDER. Lifting the loop into an
+ * archetype reordered it to acquire → validate → write → score, which silently retired
+ * that guarantee: the write was already committed by the time the FAIL row existed.
+ * `preWriteGate` restores it structurally — the `when: "pre_write"` checks are scored
+ * HERE, between the (read-only) geometry validation and the first write statement, and
+ * an unaccepted FAIL means `write.executeWrite` is never called at all.
+ *
  * @returns {Promise<object>} `{skipped, reason, terminal, acquired, written, prior, overrides, emitBlock}`
  */
-async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow }) {
+async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate }) {
   const writeSpec = descriptor.outputs.writes[0];
   const emit = emitsList(descriptor)[0] || null;
   const emitKey = emit ? emit.key : null;
@@ -289,7 +311,59 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // Dedupe BEFORE the upsert: `ON CONFLICT` cannot affect the same row twice in one
   // statement, so a duplicated source key is a hard error, not a warning, unguarded.
   const { kept, duplicateCount } = compute.dedupeBySourceId(result.features);
+  // Read-only SQL, and it ran before the write in the pre-conversion loader too
+  // (`pool.query(VALIDATION_SQL)` at 33786d1a:scripts/load-ravines.js:422). Its counters
+  // are what L8 measures, which is why the pre_write gate sits immediately below it.
   const validated = await write.validateGeometries(pool, plan, kept, compute.validatorCounterDelta, { log, tag });
+  const acquired = {
+    ...result.acquired,
+    feature_count: kept.length,
+    duplicate_key_count: duplicateCount,
+    invalid_geometry_repaired: validated.repaired,
+    invalid_geometry_skipped: validated.skipped,
+    geometry_collection_extracted: validated.collectionExtracted,
+    skipped_keys: validated.skippedKeys,
+  };
+
+  // ── THE PRE-WRITE GATE (LR-D9) ───────────────────────────────────────────────
+  // Everything above this line is a read. Everything below it writes. A `pre_write`
+  // check that FAILs with no standing acceptance stops the run HERE: no transaction is
+  // opened, no upsert and no departure DELETE is issued, and the prior table state is
+  // preserved exactly as the pre-conversion `return { failed: true }` preserved it.
+  const gateDecision = preWriteGate
+    ? await preWriteGate({ acquired, prior, overrides })
+    : { abort: false, failed: [] };
+  if (gateDecision.abort) {
+    log.error(tag, `pre_write check(s) FAILED with no standing override — the write is SKIPPED, `
+      + `${plan.table} is untouched: ${gateDecision.failed.join(', ')}`);
+    return {
+      skipped: false,
+      writeSkipped: true,
+      reason: 'pre_write_check_failed',
+      failedPreWrite: gateDecision.failed,
+      acquired,
+      // "An empty `written`" — every counter zero, so the remaining `post` checks score
+      // over what actually happened (nothing) rather than over a null they would read as
+      // "not reported". The MEASURED privilege is carried because it WAS measured, above
+      // the acquisition; zeroing it would manufacture a second, spurious FAIL row.
+      written: {
+        inserted: 0,
+        updated: 0,
+        deleted: 0,
+        rows_scanned: 0,
+        rows_changed: 0,
+        delete_skipped_empty_guard: false,
+        write_skipped_pre_write_fail: true,
+        privilege: privilege[writeSpec.table] || null,
+      },
+      prior,
+      priorError,
+      overrides,
+      emitKey,
+      emitBlock: null,
+    };
+  }
+
   const runAt = clockNow;
   const written = await write.executeWrite(pool, {
     plan,
@@ -307,22 +381,74 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
 
   return {
     skipped: false,
+    writeSkipped: false,
     reason: 'loaded',
-    acquired: {
-      ...result.acquired,
-      feature_count: kept.length,
-      duplicate_key_count: duplicateCount,
-      invalid_geometry_repaired: validated.repaired,
-      invalid_geometry_skipped: validated.skipped,
-      geometry_collection_extracted: validated.collectionExtracted,
-      skipped_keys: validated.skippedKeys,
-    },
+    acquired,
     written: { ...written, privilege: privilege[writeSpec.table] || null },
     prior,
     priorError,
     overrides,
     emitKey,
     emitBlock: null,
+  };
+}
+
+/**
+ * THE `when: "pre_write"` GATE (LR-D9 — operator ruling §7.1, 2026-08-26).
+ *
+ * Returns the callback `runIngestPhase` invokes between the last read and the first
+ * write, or `null` when the descriptor declares no `pre_write` check (in which case the
+ * ingest phase is byte-for-byte the pre-Fold-C one — the gate adds nothing to a step
+ * that does not ask for it).
+ *
+ * It scores those checks through THE SAME two mechanisms the final table uses — the
+ * compute's own dispatch (`ctx.checks` narrowed to the pre_write ids) and
+ * `buildAuditTable` — so the gate can never disagree with the audit row it is gating
+ * on. The rows it builds are DISCARDED: the compute is re-run over the full selection
+ * afterwards and those checks report identically, because a `pre_write` check reads
+ * only `ctx.acquired` / `ctx.prior`, which the write does not touch.
+ *
+ * Acceptance (ruling A-5) is applied to the DECISION only, never to the row: an
+ * accepted FAIL proceeds to the write and still lands its FAIL row downstream.
+ *
+ * @returns {null|((phase: {acquired: object, prior: object|null, overrides: object}) =>
+ *   Promise<{abort: boolean, failed: string[]}>)}
+ */
+function makePreWriteGate({ descriptor, chainId, stepCtx, compute, config }) {
+  const preWriteIds = selectChecks(descriptor, chainId)
+    .filter((c) => c.when === 'pre_write')
+    .map((c) => c.id);
+  const gated = preWriteIds.filter((id) => stepCtx.checks.includes(id));
+  if (gated.length === 0) return null;
+  const only = new Set(gated);
+  const accepted = acceptedCheckIds(descriptor);
+
+  return async function preWriteGate({ acquired, prior, overrides }) {
+    const observations = Object.create(null);
+    // `written: null` is the whole point — a pre_write check that reached for it would
+    // read undefined here and a real value in the final pass, which is the disagreement
+    // this position exists to make impossible.
+    const probeCtx = {
+      ...stepCtx,
+      acquired,
+      prior,
+      overrides,
+      written: null,
+      gate: { skipped: false, reason: 'pre_write' },
+      checks: gated,
+      report(checkId, observation) {
+        if (!only.has(checkId)) {
+          throw new Error(`[${descriptor.identity.name}] pre_write gate: compute reported "${checkId}", which is not a when:"pre_write" check`);
+        }
+        observations[checkId] = observation;
+      },
+    };
+    await compute(probeCtx);
+    const built = buildAuditTable(descriptor, chainId, observations, [], config, only);
+    const failed = built.rows
+      .filter((r) => r.status === 'FAIL' && !accepted.has(r.metric))
+      .map((r) => r.metric);
+    return { abort: failed.length > 0, failed };
   };
 }
 
@@ -463,6 +589,7 @@ async function runWithPool(runnable, pool, ctx) {
         ingest = await runIngestPhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
           fetchImpl: stepCtx.fetch, chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
         });
         stepCtx.acquired = ingest.acquired;
         stepCtx.written = ingest.written;
@@ -474,7 +601,9 @@ async function runWithPool(runnable, pool, ctx) {
           // WHY it was allowed to skip instead of emitting a bare SKIPPED row. The
           // `when: "post"` checks are not scored: nothing was written, so scoring
           // them would turn the normal, correct outcome into a table of
-          // not-reported rows at their declared severity.
+          // not-reported rows at their declared severity. `when: "pre_write"` is on
+          // the same footing: the gate fires AFTER acquisition, and a gated skip
+          // never acquires, so those checks have no subject to observe either.
           onlyChecks = new Set(descriptor.checks.filter((c) => c.when === 'pre').map((c) => c.id));
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
@@ -503,9 +632,7 @@ async function runWithPool(runnable, pool, ctx) {
       // necessary. So the rows are read first, then the acceptance is applied to the
       // STATUS only — which is exactly the fence the L7c abort encodes.
       const failedIds = new Set(built.rows.filter((r) => r.status === 'FAIL').map((r) => r.metric));
-      const accepted = new Set(
-        staleness.acceptAnomalies(descriptor).filter((a) => a.standing).map((a) => a.check_id),
-      );
+      const accepted = acceptedCheckIds(descriptor);
       const unaccepted = [...failedIds].filter((id) => !accepted.has(id));
       const verdict = built.audit_table.verdict;
       let terminal;
@@ -660,4 +787,6 @@ module.exports = {
   isIngestStep,
   ledgerPipelineName,
   runIngestPhase,
+  acceptedCheckIds,
+  makePreWriteGate,
 };

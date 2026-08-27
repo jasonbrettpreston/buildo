@@ -452,7 +452,11 @@
           "description": "Orthogonal to blocking. PASS is NOT declarable (§12.5) — it is a runtime outcome."
         },
         "blocking": { "type": "boolean", "description": "Orthogonal to severity: FAIL severity + blocking:false is 'report loudly, do not halt'." },
-        "when": { "enum": ["pre", "post"], "x-frozen": true },
+        "when": {
+          "description": "The LIFECYCLE POSITION at which the runner scores this check. `pre` = before acquisition (scored even on a gated skip). `pre_write` = after acquisition + read-only validation and BEFORE any write statement (OPERATOR RULING, Fold C 2026-08-26): a FAIL row here with no active `override.accept_anomaly` entry SKIPS the write entirely — no transaction is opened — which is how Spec 59 L7/L8's \"abort BEFORE any DB write\" guarantee survives the archetype's acquire-then-check phase order. `post` = after the write, over `ctx.written`. A `pre_write` check must be computable from `ctx.acquired`/`ctx.prior` alone; reading `ctx.written` there is a validator-side finding.",
+          "enum": ["pre", "pre_write", "post"],
+          "x-frozen": true
+        },
         "chains": {
           "description": "Per-chain check selection. assert_schema is shared x3: permits validates permit columns, sources validates source archives, parcels is validated by all three.",
           "anyOf": [
