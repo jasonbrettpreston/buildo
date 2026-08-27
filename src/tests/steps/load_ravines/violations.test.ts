@@ -1279,7 +1279,10 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(selects.length).toBeGreaterThan(0);
     for (const q of selects) {
       if (!/\bFROM\b/i.test(q)) continue;
-      if (/\bstring_agg\s*\(/i.test(q)) { expect(/string_agg\s*\([^)]*ORDER BY/i.test(q), `unordered content-hash aggregate: ${q.replace(/\s+/g, ' ').trim()}`).toBe(true); continue; }
+      // ⚠️ FOLD NOTE (pilot 3 commit 6, 2026-08-27): the A-4 column projection nests `rowTextExpr(spec.columns)`
+      // inside the aggregate, so a `[^)]*` regex stops at the inner paren and misreads an ORDERED hash as
+      // unordered — a helper bug, not a finding. ORDER BY must sit inside string_agg's own parentheses.
+      if (/\bstring_agg\s*\(/i.test(q)) { expect(/string_agg\s*\([\s\S]*?ORDER BY[\s\S]*?\)\)/i.test(q), `unordered content-hash aggregate: ${q.replace(/\s+/g, ' ').trim()}`).toBe(true); continue; }
       if (/\bmax\(|\bcount\(/i.test(q)) continue; // aggregates have no row order
       expect(/\bORDER BY\b/i.test(q), `unordered golden query: ${q.replace(/\s+/g, ' ').trim()}`).toBe(true);
     }
