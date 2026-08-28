@@ -407,3 +407,34 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | 8b | landed | peel: verdict/audit — **LM-D13 FIXED** (the declared nearest tiebreak `bf.footprint_area_sqm DESC, bf.id ASC`; two forced FULL relinks now hash-EQUAL, D-22 retires, `#150` rewritten to compare the POST pair); **LM-D6** `nearest_footprint_gt_lot_count` + **LM-D11** `shared_primary_buildings` INFO checks added (pin-then-add, A-6); **LM-D14 FIXED** (`resolveOverrides` never populated `ctx.overrides.force_full`, so `override_force_full_present` could not fire — found by EXECUTING the forced relink and reading `full_mode_reason: "force_full_env"` beside a PASS on that row); LM-D1/D3/D9 CONFIRMED; LM-D8 demonstrated LIVE (a capture launched against a held lock 91 self-skipped with the declared row-derived SKIP table) | `#150` (POST forced pair hash-equal, OLD pair still differing) + F5 both directions in `violations.test.ts` + `nearest-determinism.test.ts` (40 shuffled executions each way, DB) + the `force_full` both-directions lock in `step-library.logic.test.ts` + `#154` + `#165` + differential green (declared diffs D-3/D-4/D-26/D-27/D-28) |
 | 8c | landed | peel: thresholds/checks — T4 (LM-D5 CLOSED), T5/T6 registered, `limit_from_config`, `pct <=` evaluable at the resolved bound; **LM-D15 FOUND AND CLOSED** (a declared variable with no `logic_variables` row resolved silently through the seed and was stamped as operator-set — `resolveConfig` now issues a presence `SELECT … = ANY($1)` and throws with the remedy command); **T4–T6 verified already wired at 8b** (`limit_from_config: "link_massing_link_rate_fail_pct"` at descriptor `:460`, `ctx.config` reads for the two confidence bounds at `link-massing.js:461` and the shed/garage thresholds at `:370-371`); **T7 retired per A-8** (the JS-fallback path's grid-span tunable has no consumer left to read it) — **the DECLARATION itself was left behind at 8c and retired at commit 9**, after registering `link_massing.js` in `converted.json` armed the §1.2a P4 conformance gate and it caught `link_massing_grid_degrees` as a dead declaration (read by nothing) | `#154` + `#165` + the 8c threshold-source locks + the LM-D15 both-directions lock in `step-library.logic.test.ts` |
 | 9 | landed | `converted.json` +1 (→ 3/62; `pending` entry deleted); `node scripts/hooks/check-step-shape.mjs` → "3 converted step file(s) enforced", 59/59 unconverted (was 60/60); arming the §1.2a P4 conformance gate found `link_massing_grid_degrees` (T7) DECLARED but consumed nowhere — a dead declaration, ruled a FALSE AFFORDANCE (an operator-editable registry knob with zero effect, not "visible retirement" — retirement visibility lives in **LM-D7**) and retired from descriptor/seeds/GROUPS/tests; the 3 pre-pilot `massing_*` seeds, which lacked `CONSUMED by link_massing` tags, gained them; differential RE-EXECUTED against the shipping tree (never trusted from the 8c message) on **4** invocations — forced FULL (`force_full_env`), permits, sources `--full` (gated incremental), standalone — ALL **520,492 rows**, projected `parcel_buildings` hash IDENTICAL `329bbcb6` on every one, all invariants identical; exactly ONE explained diff vs the 8c baselines (`records_meta.config.link_massing_grid_degrees` `0.003` → `undefined`, the T7 retirement → **LM-D7**) | `#158`; `check-step-shape.mjs` exit 0 with 3 enforced + 3 compute modules; differential green on all four invocations, zero UNEXPLAINED diffs (G8) |
+---
+
+## §R Reflection — see rulings R-A..R-F (2026-08-28)
+
+Written 2026-08-28 after cutover `68b8e361` + output panel (Guardian PASS ×8; Observability 1 BLOCKING → LM-D16 `1768ddb3`). Every row is measured in-session, not inherited.
+
+### (a) Low-confidence items
+
+| Item | Why confidence is low (evidence) | What would raise it | Owner |
+|---|---|---|---|
+| Retirement vs declared-≡-consumed | Two 8c/commit-9 decisions collided; ruled in-session (R-A) without a prior spec rule | R-A schema + conformance landing; one more pilot exercising `config.retired[]` | library (R-A commit) |
+| `recovery` category is decorative | descriptor said `resume: checkpoint`; measured kill left 29,330/520,492 rows and the next run went incremental | R-B reader in the staleness gate; a kill-and-rerun test at pilot 4 | pilot 4 (`link_wsib`) |
+| Differential as a commit-message claim | 8c message claimed T7 retired; tree still declared it; caught only by re-executing | R-C fingerprint lockfile gate red in `npm run test` | library (R-C commit) |
+| Cloud parity untested | LM-D15 throws mid-chain on cloud until `apply-logic-variables.js` runs; 3 chains have no `assert_schema` | R-D check + cloud dry-run before cutover lands there | ops HIGH followup |
+| G7 mutation unsatisfiable | stryker `mutate` scoped to 3 `src/features/leads/lib` files; three pilots shipped on prove-red alone | R-E amendment (done) + bounded spike on `scripts/lib/compute/**` | followup spike |
+| G4d bounded close | 6 named test files verified survived; full 17-fence semantic cross-check ran in the Guardian pass, not the plan | — (closed by Guardian PASS ×8) | closed |
+
+### (b) Recurring / standard-shaping issues
+
+| Issue | First seen | Expected to recur in | Resolution |
+|---|---|---|---|
+| Object-valued check details rendered `[object Object]` in `errors[]` | pilot 3, forced FULL capture (`68b8e361`) | every archetype with object `detail` (9 sites today) | RULED · LM-D16 fixed `1768ddb3` |
+| Ledger-row ownership undeclared (`ownsLedgerRow` = !chainId) | pilot 3 output panel | every shared step | DEFERRED-TO pilot 4: stamp `records_meta.ledger_row` (owned / chain_owned) |
+| Golden harness hashes a SKIPPED run as PASS off another process’s table | pilot 3 8b | any step captured while a lock is held | FOLLOWUP (MED, filed 8b) — R-C should add `skipped` ⇒ capture failure |
+| `git_head` recorded as `unknown` when git is busy | pilot 3 forced capture | any capture during a concurrent commit | RULED · R-C hard-fail |
+| Interrupted full retraction leaves a partial table | pilot 3 (measured kill) | every `retract_when: full_only` step (LINK, INGESTOR-B, MATERIALIZER) | RULED · R-B; reader DEFERRED-TO pilot 4 as a named step |
+| Bash-tool 10-min cap vs 14–27 min forced FULL | pilot 3 | every large-table step | FOLLOWUP: detached-capture runbook line (docs/runbook) |
+| Declared-but-unconsumed tunable survives a "retirement" | pilot 3 T7 | any step retiring a code path | RULED · R-A |
+
+**Carried into the pilot 4 plan as named steps:** R-B reader + kill-and-rerun test; `records_meta.ledger_row` stamp; R-A/R-C/R-D exercised on a MATCHER; §R written before pilot 5 is planned.
+

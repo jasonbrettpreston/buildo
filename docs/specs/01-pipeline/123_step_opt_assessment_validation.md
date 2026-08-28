@@ -251,7 +251,7 @@ Both `[MEASURED 2026-08-23]`, both verified by direct grep:
 
 > **Both must close at P0.** Otherwise this programme's ~290 claims are enforced by a hook anyone can skip, and the per-step DB tests never run in CI at all.
 
-⚠️ **And G7's mutation gate is a NEW dependency, not existing capability.** Stryker is live but mutates **3 files, all under `src/features/leads/lib/`** (`stryker.config.mjs:30-36`), with `break: 75` at `:59`. **`scripts/*.js` is outside `src/` and therefore outside Stryker's reach entirely.** There is also **no line/branch coverage tooling anywhere** in the repo. So §6's G7 (*mutation ≥80% on covered code for class-A steps*) requires new tooling — size it, or drop it to class-A-only and say so. *(Doc drift noted: `00_engineering_standards.md:381` still says ≥50% and lists a deleted file; the real gate is 75 and 3 files.)*
+⚠️ **And G7's mutation gate is a NEW dependency, not existing capability.** Stryker is live but mutates **3 files, all under `src/features/leads/lib/`** (`stryker.config.mjs:30-36`), with `break: 75` at `:59`. **`scripts/*.js` is outside `src/` and therefore outside Stryker's reach entirely.** There is also **no line/branch coverage tooling anywhere** in the repo. So §6's G7 (*mutation ≥80% on covered code for class-A steps*) requires new tooling — size it, or drop it to class-A-only and say so. **RESOLVED by R-E (2026-08-28):** see §6 G7 — the mutation clause is replaced by a both-directions red-first lock requirement; mutation over `scripts/lib/compute/**` is a followup spike, not a gate. *(Doc drift noted: `00_engineering_standards.md:381` still says ≥50% and lists a deleted file; the real gate is 75 and 3 files.)*
 
 ---
 
@@ -302,10 +302,11 @@ Full per-claim table: `docs/reports/generated/123-claim-plan.md`.
 | **G4** | Risk class | A/B/C **with chance and impact factors shown**, not just the total | 2 |
 | **G5** | Seam map | DB, clock, network, argv/env each have a named seam | 1 |
 | **G6** | Classification | every behaviour CONTRACT / INCIDENTAL / DEFECT; **every DEFECT has a ledger ID** | 3 |
-| **G7** | Test adequacy | class-A: **mutation ≥80% on covered code**; every class-A behaviour **proven red** | 3 |
-| **G8** | Differential | **zero unexplained diffs**; every explained diff points at a Defect Ledger ID | 3 |
+| **G7** | Test adequacy | every class-A behaviour has a **both-directions lock** proven RED then GREEN at the designed assertion (Spec 119 tier "Behaviorally red-first"), listed in the assessment report's G7 row by test id (R-E, 2026-08-28); mutation over `scripts/lib/compute/**` is a bounded followup spike, **not a gate** | 3 |
+| **G8** | Differential | **zero unexplained diffs**; every explained diff points at a Defect Ledger ID; fingerprint gate: every capture's `source_fingerprint` matches the current step (R-C, 2026-08-28 — Spec 122 §5.3) | 3 |
+| **G9** | Reflection | `§R Reflection` section present in the assessment report (low-confidence table + recurring/standard-shaping table); every `DEFERRED` item named as a step in the next pilot's active-task plan (R-F, 2026-08-28) | binary |
 
-> **Ship at ≥14/17 with G6, G7 and G8 full. Any zero in G6–G8 is a hard stop regardless of total.**
+> **Ship at ≥14/17 with G6, G7 and G8 full. Any zero in G6–G8 is a hard stop regardless of total.** **G9 (R-F, 2026-08-28) is binary and does not add to the 17-point total** — a FAIL (Reflection section missing, or a DEFERRED item not carried into the next plan) is a hard stop per Spec 08 §11.
 
 ### 6.1 The two gates specific to this conversion
 
