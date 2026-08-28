@@ -639,7 +639,12 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   const row = cumulative.rows[0];
   for (const k of Object.keys(row)) {
     if (k === 'linked' || k === 'total') continue;
-    matched[k] = Number(row[k]);
+    // A scalar is coerced; a STRUCTURED value (a jsonb object the step's own query built —
+    // a count broken down by one of its own vocabularies) is carried through untouched.
+    // `Number({})` is NaN, so coercing everything silently destroyed any observation that
+    // was not a bare integer, and the compute would report NaN with nothing saying why.
+    const v = row[k];
+    matched[k] = v !== null && typeof v === 'object' ? v : Number(v);
   }
   return {
     mode: gate.mode,

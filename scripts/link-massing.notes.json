@@ -56,17 +56,17 @@
   ],
   "known_bad": [
     {
-      "note": "21.3% of linked parcels are linked ONLY by the nearest fallback at the lower confidence, and 46.9% of THOSE carry a footprint larger than their own lot — a physical impossibility that marks a mislink. The links are produced here, shipped, and NULLed one chain-step later by enrich-parcels' footprint_exceeds_lot guard, with no counter at the link. This is a data-quality class, not staleness: a forced full relink moves none of these numbers.",
+      "note": "21.3% of linked parcels are linked ONLY by the nearest fallback at the lower confidence, and 49.06% of THOSE carry a footprint larger than their own lot — a physical impossibility that marks a mislink. The links are produced here, shipped, and NULLed one chain-step later by enrich-parcels' footprint_exceeds_lot guard. Since peel 8b the population is COUNTED at the link (`nearest_footprint_gt_lot_count`, by match_type) instead of only downstream; it is INFO and not gated, because this is a data-quality class rather than staleness — a forced full relink moves none of it, and a WARN would redden every production run for a condition the conversion did not create. ⚠️ READ THE TREND, NOT THE LEVEL: the LM-D13 tiebreak itself moved this from 48,646 to 50,790 (+2,144) because resolving a distance tie in favour of the LARGER footprint puts more primaries above their lot line. That is a declared consequence of the rule, not a regression, and it is the reason the counter exists.",
       "measured": {
-        "value": "103,530 nearest-only parcels; 48,561 of them footprint > lot; 33,184 above 2x",
+        "value": "103,530 nearest-only parcels; 50,790 of them footprint > lot (48,646 before the tiebreak); 13,347 of 381,605 centroid_in_parcel primaries",
         "date": "2026-08-27",
         "query": "SELECT pb.match_type, count(*) FILTER (WHERE bf.footprint_area_sqm > p.lot_size_sqm) AS gt_lot, count(*) AS n FROM parcel_buildings pb JOIN parcels p ON p.id=pb.parcel_id JOIN building_footprints bf ON bf.id=pb.building_id WHERE pb.is_primary GROUP BY 1"
       }
     },
     {
-      "note": "LM-D13 — the nearest fallback has NO TIEBREAK. `DISTINCT ON (p.id) … ORDER BY p.id, ST_Distance(...) ASC` leaves an equidistant pair to whatever the plan emitted first, so a slice of the nearest links flips between two otherwise identical full relinks. The centroid pass has the opposite property: it sorts by area DESC then building_id ASC and is deterministic. Pinned verbatim at conversion because the one-token fix MOVES ROWS; the consequence is that a FULL-path golden table hash is unstable by pin and only the incremental captures are compared for hash identity.",
+      "note": "LM-D13 — the nearest fallback's SELECTION RULE, and why it is a rule rather than an accident. `DISTINCT ON (p.id)` keeps the FIRST row of the sort, so the ORDER BY *is* the answer to 'which building does this parcel get'. With distance alone an equidistant pair has no ordering between its members and the winner was whatever the plan emitted first: 18,252 of the 103,530 nearest links could flip between two otherwise identical full relinks, 17,566 of them tied at distance 0 (a footprint overlapping the lot with its centroid outside it). Since peel 8b the order is `p.id, ST_Distance(...) ASC, bf.footprint_area_sqm DESC, bf.id ASC` — distance FIRST, because a tiebreak that re-ranks is not a tiebreak; then the fence-5bb31faf order, so the fallback answers the question the same way the centroid pass has always answered it: the largest footprint wins, the lowest building_id settles the rest. The area term is what makes the choice MEAN something (on a semi or a shared driveway the larger overlapping structure is the one the cost model is asking about); bf.id is the total-order backstop.",
       "measured": {
-        "value": "18,252 of 103,530 nearest links unstable across two FULL relinks",
+        "value": "two forced FULL relinks now hash-EQUAL; before the tiebreak they read a0023203 vs 0d2ea577 with all 8 invariants identical",
         "date": "2026-08-27",
         "query": "SELECT count(*) FROM parcel_buildings WHERE match_type = 'nearest'"
       }
@@ -74,10 +74,10 @@
   ],
   "blind_spots": [
     {
-      "what": "Nothing counts a footprint-exceeds-lot link AT THE LINK. The condition is caught one step downstream by enrich-parcels, which NULLs the whole existing-structure block for the affected parcel — so the bad links are produced, shipped and silently discarded, and this step's audit table reads PASS throughout. A link-stage counter by match_type lands in peel 8b; adding it here would smuggle a behaviour change into a no-op conversion.",
-      "detected_by": "none",
+      "what": "CLOSED AT PEEL 8b, kept as the record of what was invisible: nothing counted a footprint-exceeds-lot link AT THE LINK. The condition was caught one chain-step downstream by enrich-parcels, which NULLs the whole existing-structure block for the affected parcel, so the bad links were produced, shipped and silently discarded while this step's audit table read PASS throughout. `nearest_footprint_gt_lot_count` now reports it by match_type on every run. What is still open is the CONSEQUENCE, not the count: the 58,050 downstream flags remain, and the sanity-harness gap below is a separate WF3.",
+      "detected_by": "nearest_footprint_gt_lot_count",
       "measured": {
-        "value": "58,050 parcels flagged footprint_exceeds_lot downstream; 0 counters here",
+        "value": "58,050 parcels flagged footprint_exceeds_lot downstream; 50,790 + 13,347 now counted here",
         "date": "2026-08-27",
         "query": "SELECT count(*) FROM parcels WHERE existing_data_quality_flag = 'footprint_exceeds_lot'"
       }
@@ -109,7 +109,7 @@
     }
   ],
   "counts": {
-    "open_blind_spots": 2,
+    "open_blind_spots": 1,
     "unpromoted_suspicious_if": 0
   },
   "fences": [
@@ -153,6 +153,13 @@
       "value": "columns[].source \"run_at\" on linked_at, stamped by the runner from one DB-clock capture",
       "incident": "First-time links landed with a NULL linked_at, which made the downstream watermark comparison silently skip them forever. Spec 47 §6.1. The runner now stamps it from a single getDbTimestamp per run, so two batches cannot straddle a second either (B-11).",
       "commit": "06320b39",
+      "lock_test": "src/tests/steps/link_massing/violations.test.ts"
+    },
+    {
+      "const": "the nearest fallback resolves a distance tie by a declared rule: ORDER BY p.id, ST_Distance(...) ASC, bf.footprint_area_sqm DESC, bf.id ASC",
+      "value": "distance first (the tiebreak breaks ties, it does not re-rank), then the fence-5bb31faf order: largest footprint wins, lowest building_id settles the remainder. Locked both directions as text in the lock_test (F5: every reversion shape — a dropped term, a flipped direction, a term hoisted above the distance, no ORDER BY at all) and behaviourally in src/tests/steps/link_massing/nearest-determinism.test.ts, which runs the production statement 40 times over a randomly ordered scan of a 0-distance tie and asserts one winner with the rule and BOTH winners without it",
+      "incident": "LM-D13, discovered by measurement rather than by a fix( commit — the Severity: footer census on this file is 0 and the construct was never wrong enough to be reported. `9ff540ec` is the commit that PINNED it verbatim and declared it (the conversion diff had to move zero rows); peel 8b is where the rule landed. Before it the ORDER BY carried distance alone, so DISTINCT ON kept whichever equidistant row the plan emitted first: 18,252 of 103,530 nearest links could flip between two identical full relinks (17,566 tied at distance 0), and two forced relinks hashed a0023203 vs 0d2ea577 with every invariant equal. Dropping either term, flipping its direction, or hoisting it above ST_Distance all reintroduce it.",
+      "commit": "9ff540ec",
       "lock_test": "src/tests/steps/link_massing/violations.test.ts"
     }
   ],

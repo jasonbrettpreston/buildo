@@ -32,7 +32,7 @@ const costEstimates = require('../../scripts/compute-parcel-cost-estimates.js') 
 
 describe('C1 — canonical ISO version keys stamped on both the run and skip paths', () => {
   it('the run-path emitSummary records_meta carries rates_as_of / index_updated_at', () => {
-    const src = readFileSync(SCRIPT_PATH, 'utf8');
+    const src = readFileSync(SCRIPT_PATH, 'utf8').replace(/\r\n/g, '\n') /* CRLF-tolerant: autocrlf checkouts */;
     // Two occurrences expected: once in the SKIP branch, once in the real-run branch.
     // Commit B (B3 output-panel remediation) — the SKIP branch now assigns onto
     // skipRecordsMeta (skipRecordsMeta.rates_as_of = ...) rather than an inline
@@ -46,7 +46,7 @@ describe('C1 — canonical ISO version keys stamped on both the run and skip pat
   });
 
   it('readCostVersionSignals formats rates_as_of via toISOString() (canonical ISO string), never a bare JS Date → String() blob', () => {
-    const src = readFileSync(SCRIPT_PATH, 'utf8');
+    const src = readFileSync(SCRIPT_PATH, 'utf8').replace(/\r\n/g, '\n') /* CRLF-tolerant: autocrlf checkouts */;
     const fnBody = src.match(/async function readCostVersionSignals\(pool\)[\s\S]*?\n}\n/);
     expect(fnBody, 'readCostVersionSignals function body not found').not.toBeNull();
     // D#2 (B3 output-panel remediation) — rates_as_of now reads MAX(updated_at),
@@ -61,7 +61,7 @@ describe('C1 — canonical ISO version keys stamped on both the run and skip pat
   });
 
   it('D#3: readCostVersionSignals reads the escalation index VALUE in the SAME query as its VERSION (one round-trip, no torn read)', () => {
-    const src = readFileSync(SCRIPT_PATH, 'utf8');
+    const src = readFileSync(SCRIPT_PATH, 'utf8').replace(/\r\n/g, '\n') /* CRLF-tolerant: autocrlf checkouts */;
     const fnBody = src.match(/async function readCostVersionSignals\(pool\)[\s\S]*?\n}\n/);
     expect(fnBody, 'readCostVersionSignals function body not found').not.toBeNull();
     expect(fnBody![0]).toMatch(/AS index_value/);
@@ -71,7 +71,7 @@ describe('C1 — canonical ISO version keys stamped on both the run and skip pat
   });
 
   it('D#3: main() rebuilds config.indexNow/indexMissing from the LOCKED read (versionSignals.indexValue), not the pre-lock §R5 read', () => {
-    const src = readFileSync(SCRIPT_PATH, 'utf8');
+    const src = readFileSync(SCRIPT_PATH, 'utf8').replace(/\r\n/g, '\n') /* CRLF-tolerant: autocrlf checkouts */;
     const lockedIdx = src.indexOf('const lockedIndexNow = versionSignals.indexValue;');
     const versionSignalsIdx = src.indexOf('const versionSignals = await readCostVersionSignals(pool);');
     expect(lockedIdx).toBeGreaterThan(-1);
@@ -112,7 +112,7 @@ describe('C3 — force-full env escape hatch (also locked in run-chain-defer.log
   });
 
   it('main() reads process.env[FORCE_FULL_ENV] to bypass the gate', () => {
-    const src = readFileSync(SCRIPT_PATH, 'utf8');
+    const src = readFileSync(SCRIPT_PATH, 'utf8').replace(/\r\n/g, '\n') /* CRLF-tolerant: autocrlf checkouts */;
     expect(src).toMatch(/process\.env\[FORCE_FULL_ENV\]/);
   });
 });

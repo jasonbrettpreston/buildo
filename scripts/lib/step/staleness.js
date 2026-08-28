@@ -134,14 +134,30 @@ function overrideKey(envName) {
 }
 
 /**
- * The full `ctx.overrides` object: every declared accept-anomaly flag plus
- * `force_run`. Frozen — a compute that could flip its own override is a compute
+ * The full `ctx.overrides` object: every declared accept-anomaly flag plus BOTH
+ * force flags. Frozen — a compute that could flip its own override is a compute
  * whose audit row means nothing.
+ *
+ * ⚠️ `force_full` WAS MISSING, AND ITS ABSENCE WAS INVISIBLE (peel 8b, found by
+ * executing rather than by reading). `override.force_full` was read in exactly one
+ * place — `selectMode`, which uses it to DECIDE the mode — and never surfaced on
+ * `ctx.overrides`, so a step declaring a check like `override_force_full_present`
+ * observed `ctx.overrides.force_full === undefined` and reported CLEAN on every run,
+ * including runs that were forced. Measured: pilot 3's forced FULL relink of
+ * 2026-08-27 ran with `full_mode_reason: "force_full_env"` and its
+ * `override_force_full_present` row read PASS. That check exists precisely to catch a
+ * `LINK_MASSING_FORCE_FULL` left standing in production — a 21.9-minute relink on
+ * EVERY subsequent run, plus a `linked_at` bump that re-scopes `enrich_parcels` from
+ * 1,395 parcels to 485,135 — so a version of it that cannot fire is the "green
+ * because it never looked" class this contract exists to retire. The mode decision was
+ * always correct; only the OBSERVATION was blind, which is exactly why the audit row
+ * and the decision must read the same source.
  */
 function resolveOverrides(descriptor, env) {
   const out = Object.create(null);
   for (const a of acceptAnomalies(descriptor, env)) out[a.key] = a.standing;
   out.force_run = forceRunRequested(descriptor, env);
+  out.force_full = forceFullRequested(descriptor, env);
   return Object.freeze(out);
 }
 

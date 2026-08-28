@@ -14,7 +14,9 @@ import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 
 const ENRICH_HERITAGE_PATH = join(process.cwd(), 'scripts/enrich-heritage.js');
-const enrichHeritageSrc = () => readFileSync(ENRICH_HERITAGE_PATH, 'utf8');
+// CRLF-tolerant: the textual mirror-locks below anchor on LF; an autocrlf checkout hands them CRLF,
+// and a lock that fails by environment is not a lock.
+const enrichHeritageSrc = () => readFileSync(ENRICH_HERITAGE_PATH, 'utf8').replace(/\r\n/g, '\n');
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const eh = require('../../scripts/enrich-heritage.js') as {

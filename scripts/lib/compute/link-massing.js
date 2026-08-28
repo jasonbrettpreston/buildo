@@ -129,14 +129,33 @@ const UNLINKED_ONLY = 'NOT EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.pa
  * the failure tasks/lessons.md records, and fence d324ab27 is what put the bound in a
  * logic variable rather than a literal.
  *
- * ⚠️ LM-D13, PINNED VERBATIM (Fold C). The fallback's `ORDER BY p.id, ST_Distance(...)
- * ASC` has NO TIEBREAK, so which of two equidistant footprints `DISTINCT ON` keeps is
- * whatever the plan emitted first — 18,252 of the 103,530 nearest links can flip
- * between two otherwise identical full relinks. Adding `, bf.id ASC` fixes it in one
- * token and MOVES ROWS, which is exactly what a no-op conversion diff may not do. It is
- * reproduced as-is here and lands in peel 8b with its own before/after counts. The
- * consequence for the differential is declared: a FULL-path table hash is unstable by
- * pin, and only the incremental captures are compared for hash identity.
+ * ⚠️ LM-D13 — FIXED AT PEEL 8b. THE TIEBREAK IS THE RULE, AND THE RULE IS THIS:
+ *
+ *     among footprints equidistant from a parcel, the LARGEST wins; among equal areas,
+ *     the LOWEST building_id wins.
+ *
+ * Written as `ORDER BY p.id, ST_Distance(...) ASC, bf.footprint_area_sqm DESC, bf.id ASC`
+ * — the SAME order the centroid pass has always used to pick a parcel's primary
+ * (fence 5bb31faf: area DESC, building_id ASC), so the two passes now answer "which
+ * building is this parcel's" the same way instead of two different ways. Distance stays
+ * FIRST: the tiebreak breaks TIES, it does not re-rank.
+ *
+ * Why it is not cosmetic: `DISTINCT ON` keeps whichever row the sort emitted first, and
+ * with distance alone an equidistant pair is resolved by whatever the plan happened to
+ * produce — 18,252 of the 103,530 nearest links (17,566 of them tied at distance 0,
+ * i.e. a footprint overlapping the lot with its centroid outside) could flip
+ * `building_id` between two otherwise identical full relinks. Two forced FULL relinks
+ * hashed `a0023203` and `0d2ea577` with all eight invariants identical.
+ *
+ * The area term is what makes the choice MEAN something rather than merely be stable:
+ * on a shared driveway or a semi, the larger overlapping footprint is the structure the
+ * cost model is asking about. `bf.id ASC` is the total-order backstop for the equal-area
+ * case, and it is a real case — 4,462 centroid primaries exceed their lot 2×, so equal
+ * footprints on adjacent lots are not hypothetical.
+ *
+ * Pinned VERBATIM at commit 7 (a no-op differential may not move rows) and changed here,
+ * in its own peel, with its own before/after counts and two forced FULL relinks that
+ * must now hash-EQUAL. D-22 retires with it.
  *
  * @param {object} descriptor - the validated step descriptor
  * @param {Readonly<Record<string, number>>|null} [config] - ctx.config; null yields the
@@ -180,11 +199,27 @@ function buildMatchSql(descriptor, config, mode) {
       + '    ON bf.geom && ST_Expand(p.geom, $2)\n'
       + '   AND ST_DWithin(p.geom::geography, bf.geom::geography, $3)\n'
       + ' WHERE p.id = ANY($1::int[]) AND p.geom IS NOT NULL\n'
-      + ' ORDER BY p.id, ST_Distance(p.geom::geography, bf.geom::geography) ASC;',
-    // ONE query for the link-rate pair AND the two junction invariants: the numerator
+      // LM-D13's tiebreak. Distance first (it is the match), then the fence-5bb31faf
+      // order — area DESC, building_id ASC — so a tie resolves the way the centroid
+      // pass has always resolved one, and never by plan order.
+      + ' ORDER BY p.id, ST_Distance(p.geom::geography, bf.geom::geography) ASC,'
+      + ' bf.footprint_area_sqm DESC, bf.id ASC;',
+    // ONE query for the link-rate pair AND every junction-wide observation: the numerator
     // and denominator the rate is taken over, the exactly-one-primary law counted rather
-    // than assumed from the partial unique index, and any confidence outside the two
-    // declared values. Measured ~323 ms for the four scalars.
+    // than assumed from the partial unique index, any confidence outside the two declared
+    // values, and (peel 8b) the two LINK-QUALITY populations that were previously visible
+    // only one chain-step downstream or not at all.
+    //
+    // ⚠️ EVERY ONE OF THESE IS CUMULATIVE, NOT RUN-SCOPED, and that is the whole point. On
+    // the measured steady state an incremental run walks the 1,395 permanently-unmatchable
+    // parcels and links none of them, so a run-scoped link-quality counter reports 0 on a
+    // corpus carrying 48,646 oversized primaries. `link_rate` is cumulative for exactly the
+    // same reason; these two join it rather than inventing a second convention.
+    //
+    // I/O, measured 2026-08-27 against the live 520,492-row junction (warm): 4 original
+    // scalars ~323 ms · footprint-exceeds-lot (two joins over the 485,135 primaries) 887 ms
+    // cold-cache 2.9-3.6 s · primaries-by-type 64 ms · shared-primary 322 ms. ~1.3 s added
+    // to a ~6 s incremental run, one round trip, no extra statement.
     cumulative_sql:
       'SELECT\n'
       + '  (SELECT COUNT(DISTINCT parcel_id) FROM parcel_buildings) AS linked,\n'
@@ -192,7 +227,30 @@ function buildMatchSql(descriptor, config, mode) {
       + '  (SELECT COUNT(*) FROM (\n'
       + '     SELECT parcel_id FROM parcel_buildings WHERE is_primary GROUP BY parcel_id HAVING COUNT(*) > 1\n'
       + '   ) m) AS multi_primary_parcels,\n'
-      + '  (SELECT COUNT(*) FROM parcel_buildings WHERE confidence <> $1 AND confidence <> $2) AS confidence_off_domain;',
+      + '  (SELECT COUNT(*) FROM parcel_buildings WHERE confidence <> $1 AND confidence <> $2) AS confidence_off_domain,\n'
+      // LM-D6. The PRIMARY link is the one enrich-parcels derives the existing-structure
+      // block from, so the count is scoped to primaries — the same row the downstream
+      // `footprint_exceeds_lot` flag is computed over, one chain-step earlier.
+      + '  (SELECT jsonb_build_object(\n'
+      + "     'centroid_in_parcel', COUNT(*) FILTER (WHERE pb.match_type = 'centroid_in_parcel'),\n"
+      + "     'nearest',            COUNT(*) FILTER (WHERE pb.match_type = 'nearest'))\n"
+      + '     FROM parcel_buildings pb\n'
+      + '     JOIN parcels p ON p.id = pb.parcel_id\n'
+      + '     JOIN building_footprints bf ON bf.id = pb.building_id\n'
+      + '    WHERE pb.is_primary AND bf.footprint_area_sqm > p.lot_size_sqm) AS footprint_exceeds_lot,\n'
+      // The denominator the ratio is read against, by the same vocabulary. Without it the
+      // numerator is a number nobody can size.
+      + '  (SELECT jsonb_build_object(\n'
+      + "     'centroid_in_parcel', COUNT(*) FILTER (WHERE match_type = 'centroid_in_parcel'),\n"
+      + "     'nearest',            COUNT(*) FILTER (WHERE match_type = 'nearest'))\n"
+      + '     FROM parcel_buildings WHERE is_primary) AS primary_links_by_type,\n'
+      // LM-D11. `idx_parcel_buildings_one_primary` enforces one primary PER PARCEL; nothing
+      // enforces — or counted — one parcel per primary BUILDING. `sum(n)` is the affected
+      // parcel count exactly because the index makes each parcel contribute at most one row.
+      + '  (SELECT jsonb_build_object(\n'
+      + "     'buildings', COUNT(*), 'parcels', COALESCE(SUM(n), 0))\n"
+      + '     FROM (SELECT COUNT(*) AS n FROM parcel_buildings WHERE is_primary\n'
+      + '            GROUP BY building_id HAVING COUNT(*) > 1) s) AS shared_primary;',
     cumulative_params: [centroidConfidence, nearestConfidence],
     // The names the two passes are counted under. Supplied BY THE STEP because they are
     // this step's match_type vocabulary — the runner may not spell a domain value, and a
@@ -405,6 +463,52 @@ function confidence_vocabulary(ctx) {
   });
 }
 
+/**
+ * LM-D6 — the LINK-STAGE link-quality counter, added at peel 8b (A-6 ruling, C-6
+ * pin-then-add).
+ *
+ * ⚠️ IT IS INFO, AND THAT IS A RULING, NOT TIMIDITY. 48,646 oversized primaries are a
+ * property of Toronto's parcel fabric plus this step's own nearest fallback; a forced FULL
+ * relink moves none of it. Declaring it WARN or FAIL would redden every production run for
+ * a condition this commit did not create — the shape §1.6 calls "a check that cries wolf
+ * until nobody reads the table". What it closes is the OTHER failure: until now these
+ * links were produced here, shipped, and NULLed one chain-step later by enrich-parcels'
+ * `footprint_exceeds_lot` guard, with nothing at the link counting them. The number is now
+ * on the record at the step that makes it, by `match_type`, so a change in it is
+ * attributable to the join rather than discovered as a hole in the cost model.
+ */
+function nearest_footprint_gt_lot_count(ctx) {
+  const over = ctx.matched.footprint_exceeds_lot || {};
+  const of = ctx.matched.primary_links_by_type || {};
+  ctx.report('nearest_footprint_gt_lot_count', {
+    violations: 0,
+    detail: {
+      nearest: over.nearest,
+      centroid_in_parcel: over.centroid_in_parcel,
+      of_primary_links: { nearest: of.nearest, centroid_in_parcel: of.centroid_in_parcel },
+      nearest_pct: pct(over.nearest, of.nearest),
+      centroid_in_parcel_pct: pct(over.centroid_in_parcel, of.centroid_in_parcel),
+    },
+  });
+}
+
+/**
+ * LM-D11 — one building serving as the primary structure of MORE THAN ONE parcel.
+ *
+ * The partial unique index is the other direction (one primary per parcel), so this has
+ * been neither enforced nor counted. INFO for the same reason as above: 66,807 buildings
+ * across 167,329 parcels is a standing property, and a WARN here would redden every run
+ * from the first one. The cost-model consequence is the filed `review_followups` WF3; what
+ * belongs HERE is the count, at the step that assigns the primary.
+ */
+function shared_primary_buildings(ctx) {
+  const s = ctx.matched.shared_primary || {};
+  ctx.report('shared_primary_buildings', {
+    violations: 0,
+    detail: { buildings: s.buildings, parcels_affected: s.parcels },
+  });
+}
+
 /** The post-write half of D-20: retracted and NOT rebuilt is the shape of a broken run. */
 function mass_retraction_ratio(ctx) {
   const w = upsert(ctx);
@@ -455,6 +559,16 @@ function round(n) {
 }
 
 /**
+ * A share, as a percentage, or null when the denominator is not a positive number.
+ * NULL rather than 0: "0% of nothing" and "0% of 103,530" are different claims, and a
+ * detail field that cannot tell them apart is the class this whole contract exists to
+ * retire.
+ */
+function pct(n, of) {
+  return Number.isFinite(n) && Number.isFinite(of) && of > 0 ? round((n / of) * 100) : null;
+}
+
+/**
  * The step's `records_meta` block, byte-shaped like the pre-conversion one.
  *
  * ⚠️ TWO OF THESE FIELDS ARE A SELF-CONSUMED PRODUCER CONTRACT. `code_version` and
@@ -501,6 +615,8 @@ const CHECKS = {
   link_rate,
   multi_primary_parcels,
   confidence_vocabulary,
+  nearest_footprint_gt_lot_count,
+  shared_primary_buildings,
   mass_retraction_ratio,
   rows_changed_ratio,
   write_privilege,

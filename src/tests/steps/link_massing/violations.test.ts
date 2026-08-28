@@ -192,6 +192,10 @@ const LIVE_LINKED_PARCELS = 485_135;
 const LIVE_PARCELS_WITH_CENTROID = 486_530;
 const LIVE_BUILDING_FOOTPRINTS = 427_077;
 const LIVE_TAIL = 1_395;
+/** LM-D13 (peel 8b) — the nearest-fallback population, and the 0-distance ties inside it. */
+const LIVE_NEAREST_LINKS = 103_530;
+const LM_D13_FLIPPABLE_LINKS = 18_252;
+const LM_D13_ZERO_DISTANCE_TIES = 17_566;
 const LIVE_CODE_VERSION = 'v2-building-centroid-in-parcel';
 
 // ONE compiler, the same one pipeline.step() validates with.
@@ -523,6 +527,33 @@ function junctionState(doc: GoldenDoc): TableState {
   return state;
 }
 
+/**
+ * The step's own `records_meta` out of a capture, from whichever shape holds it: an in-chain
+ * run reports through `summary`, a standalone run ALSO persists it on `pipeline_runs[0]`.
+ */
+function capturedMeta(doc: GoldenDoc): Record<string, unknown> {
+  const n = (doc.normalised ?? {}) as {
+    summary?: { records_meta?: Record<string, unknown> };
+    pipeline_runs?: Array<{ records_meta?: Record<string, unknown> }>;
+  };
+  return n.summary?.records_meta ?? n.pipeline_runs?.[0]?.records_meta ?? {};
+}
+
+/**
+ * ⚠️ A CAPTURE NAMED "forced" IS NOT EVIDENCE THAT A FORCED RUN HAPPENED, and this is not
+ * hypothetical: on 2026-08-27 a stale lock-wait loop woke up while a relink held advisory
+ * lock 91, self-skipped, and wrote its SKIP over `post/sources-full-forced-1.json` — a
+ * 2-row audit table and a mid-rebuild junction of 239,676 rows, under a filename that
+ * `isForcedFull()` happily accepted. The hash check would then have been comparing a skip.
+ * So the forced pair must PROVE it ran: not skipped, and `full_mode` true.
+ */
+function assertActuallyForcedFull(doc: GoldenDoc): void {
+  const m = capturedMeta(doc);
+  expect(m.skipped, `${doc.file}: this capture is a SKIP (${String(m.reason)}), not a forced FULL relink`).not.toBe(true);
+  expect(m.full_mode, `${doc.file}: capture is named "forced" but its own records_meta says full_mode !== true`).toBe(true);
+  expect(String(m.full_mode_reason ?? ''), `${doc.file}: a forced run's gate reason must name the override`).toContain('force_full');
+}
+
 function invariant(doc: GoldenDoc, name: string): number {
   const inv = (doc.invariants ?? []).find((i) => i.name === name);
   expect(inv, `${doc.file}: no invariant ${name} (Fold B item 7)`).toBeDefined();
@@ -562,7 +593,9 @@ interface World {
     parcels_processed: number; parcels_linked: number; centroid_in_parcel: number; nearest: number; no_match: number;
     building_footprints_count: number; invalid_geometry_count: number;
     footprint_exceeds_lot: { centroid_in_parcel: number; nearest: number };
-    shared_primary_buildings: number; confidence_off_domain: number; multi_primary_parcels: number;
+    primary_links_by_type: { centroid_in_parcel: number; nearest: number };
+    shared_primary: { buildings: number; parcels: number };
+    confidence_off_domain: number; multi_primary_parcels: number;
   };
   cumulative: { linked_parcels: number; parcels_with_centroid: number };
   written: {
@@ -581,8 +614,17 @@ function healthyWorld(): World {
     matched: {
       parcels_processed: LIVE_TAIL, parcels_linked: 0, centroid_in_parcel: 0, nearest: 0, no_match: LIVE_TAIL,
       building_footprints_count: LIVE_BUILDING_FOOTPRINTS, invalid_geometry_count: 0,
-      footprint_exceeds_lot: { centroid_in_parcel: 0, nearest: 0 },
-      shared_primary_buildings: 0, confidence_off_domain: 0, multi_primary_parcels: 0,
+      // Peel 8b — LM-D6 / LM-D11 are CUMULATIVE observations, so the "healthy" world is the
+      // measured live corpus, not zero: 50,790 of 103,530 nearest primaries exceed their lot
+      // and 65,318 buildings are primary for 166,591 parcels TODAY, on a run that wrote
+      // nothing. Seeding them at 0 would make the INFO rows read as a clean junction and the
+      // sabotage would then be proving the wrong thing. Both numbers were MOVED by the LM-D13
+      // tiebreak itself (48,646 / 66,807 before it) — preferring the larger overlapping
+      // footprint pushes primaries above their lot line and off shared structures.
+      footprint_exceeds_lot: { centroid_in_parcel: 13_347, nearest: 50_790 },
+      primary_links_by_type: { centroid_in_parcel: 381_605, nearest: LIVE_NEAREST_LINKS },
+      shared_primary: { buildings: 65_318, parcels: 166_591 },
+      confidence_off_domain: 0, multi_primary_parcels: 0,
     },
     cumulative: { linked_parcels: LIVE_LINKED_PARCELS, parcels_with_centroid: LIVE_PARCELS_WITH_CENTROID },
     written: {
@@ -602,9 +644,9 @@ const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
   [CONFIG_VARS.T4]: (w) => { w.cumulative.linked_parcels = 100_000; }, // 20.6% link rate vs the 50% floor
 };
 const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
-  [/footprint.*(exceed|gt|lot)|coverage|exceeds_lot/i, (w) => { w.matched.footprint_exceeds_lot.nearest = 60_000; w.matched.nearest = 100_000; }], // A-6 (6): the link-stage counter (peel 8b)
+  [/footprint.*(exceed|gt|lot)|coverage|exceeds_lot/i, (w) => { w.matched.footprint_exceeds_lot.nearest = 100_000; w.matched.nearest = 100_000; }], // A-6 (6): the link-stage counter (peel 8b) — 96.6% of nearest primaries oversized
   [/multi_primary|one_primary|primary_uniqueness/i, (w) => { w.matched.multi_primary_parcels = 12; }], // invariant (1)
-  [/shared_primary/i, (w) => { w.matched.shared_primary_buildings = 66_906; }],
+  [/shared_primary/i, (w) => { w.matched.shared_primary = { buildings: 200_000, parcels: 450_000 }; }],
   [/confidence|vocab/i, (w) => { w.matched.confidence_off_domain = 5; }], // invariant (4)
   [/empty|zero_footprint|footprints_count|building_footprints/i, (w) => { w.matched.building_footprints_count = 0; w.gate = { mode: 'full', reason: 'massing_count_changed(427077->0)', explicit_full: true }; }], // D-20: the unguarded W1 against an empty corpus
   [/retract|mass_delete|ghost|full_delete/i, (w) => { w.gate = { mode: 'full', reason: 'code_version_changed', explicit_full: true }; w.written.e2.retracted = LIVE_ROWS; w.written.e2.inserted = 0; w.matched.parcels_processed = LIVE_PARCELS_WITH_CENTROID; w.matched.no_match = LIVE_PARCELS_WITH_CENTROID; }],
@@ -835,6 +877,50 @@ function nearestFromSource(text: string): NearestInput {
   return { sql: m ? m[0] : '', boundSource: text };
 }
 
+/**
+ * F5 / LM-D13 — the nearest fallback's SELECTION RULE, as a detector over the ORDER BY.
+ *
+ * `DISTINCT ON` keeps the FIRST row of the sort, so the ORDER BY *is* the rule for which
+ * building a parcel gets. The declared rule (peel 8b): distance first, then the fence-5bb31faf
+ * order — larger footprint wins, lowest building_id breaks the remaining tie. Returns [] when
+ * intact; a non-empty list names what was lost.
+ */
+function orderByTerms(sql: string): string[] {
+  const at = sql.search(/ORDER BY/i);
+  if (at < 0) return [];
+  const tail = sql.slice(at + 'ORDER BY'.length).split(';')[0] ?? '';
+  const terms: string[] = [];
+  let depth = 0;
+  let cur = '';
+  for (const ch of tail) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    if (ch === ',' && depth === 0) { terms.push(cur.trim()); cur = ''; continue; }
+    cur += ch;
+  }
+  if (cur.trim()) terms.push(cur.trim().replace(/\s+/g, ' '));
+  return terms.map((t) => t.replace(/\s+/g, ' ').trim()).filter(Boolean);
+}
+
+function detectNearestTiebreakFence(sql: string): string[] {
+  const v: string[] = [];
+  if (!/DISTINCT ON \(p\.id\)/i.test(sql)) { v.push('no DISTINCT ON (p.id) nearest fallback to order'); return v; }
+  const terms = orderByTerms(sql);
+  if (terms.length === 0) { v.push('the nearest fallback has NO ORDER BY — DISTINCT ON keeps whatever row the plan emitted first'); return v; }
+  const distance = terms.findIndex((t) => /ST_Distance/i.test(t));
+  const area = terms.findIndex((t) => /footprint_area_sqm/i.test(t));
+  const id = terms.findIndex((t) => /\bbf\.id\b/i.test(t));
+  if (distance < 0) v.push('no ST_Distance term — the fallback is no longer ordered by distance at all');
+  if (area < 0) v.push('LM-D13: no footprint_area_sqm tiebreak — equidistant footprints resolve by plan order (18,252 links can flip)');
+  if (id < 0) v.push('LM-D13: no bf.id total-order backstop — equal-area equidistant footprints still resolve by plan order');
+  if (area >= 0 && !/\bDESC\b/i.test(terms[area] as string)) v.push('the area tiebreak is not DESC — the SMALLER footprint would win, which is neither fence 5bb31faf\'s order nor the structure the cost model asks about');
+  if (id >= 0 && /\bDESC\b/i.test(terms[id] as string)) v.push('the bf.id backstop is DESC — fence 5bb31faf orders building_id ASC, and two passes that disagree on the tiebreak are two answers to the same question');
+  if (distance >= 0 && area >= 0 && area < distance) v.push('the area term precedes ST_Distance — a tiebreak that RE-RANKS is not a tiebreak: a larger building further away would win');
+  if (distance >= 0 && id >= 0 && id < distance) v.push('the bf.id term precedes ST_Distance — same re-ranking failure');
+  if (area >= 0 && id >= 0 && id < area) v.push('bf.id precedes the area term — the id backstop would decide before the area rule ever applied');
+  return v;
+}
+
 // ===========================================================================
 // 55-A — the hard per-conversion gate (44)
 // ===========================================================================
@@ -948,12 +1034,22 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it('#150 Gate 1 — the old script is reproducible against itself (two OLD captures per invocation, identical normalised, incl. the projected junction state)', () => {
+  // ⚠️ REWRITTEN AT PEEL 8b, and the rewrite is the finding. The original form asked the OLD
+  // script to be reproducible against itself and it IS NOT: `pre/sources-full-forced-1.json`
+  // and `-2.json` are two forced FULL relinks of the same code over the same data, with all
+  // eight invariants identical and the projected junction hash DIFFERENT (`a0023203` vs
+  // `0d2ea577`) — LM-D13, the nearest fallback's missing tiebreak, pinned verbatim at commit 7
+  // because the fix moves rows and a no-op differential may not. So the pinned defect is
+  // asserted here as EVIDENCE (the OLD pair must still differ; if it ever stopped differing
+  // this test would be measuring nothing), and the reproducibility gate moves to the POST
+  // pair, where peel 8b's tiebreak makes it a real claim: two forced FULL relinks of the
+  // CONVERTED step must hash-EQUAL.
+  it('#150 Gate 1 — reproducible against itself: OLD non-forced captures agree; the OLD FORCED pair is the pinned LM-D13 defect (invariants equal, hash differs); the two POST FORCED FULL relinks hash-EQUAL', () => {
     const docs = goldenDocs();
     for (const inv of INVOCATIONS) artifact(`${GOLDEN_DIR_REL}/pre/${inv.name}.json`, `OLD capture for ${inv.name} (commit 5, three invocations)`);
     for (const inv of INVOCATIONS) {
       const old = docsFor(docs, inv).filter(isOld);
-      expect(old.length, `${inv.name}: need ≥2 OLD captures (run 1 + run 2), found ${old.length}`).toBeGreaterThanOrEqual(2);
+      expect(old.length, `${inv.name}: no OLD capture at all`).toBeGreaterThanOrEqual(1);
       for (const o of old) {
         const ts = junctionState(o);
         expect(ts.row_count, `${o.file}: parcel_buildings count (invariant 2: 520,492 exact on an incremental rerun / after a FULL relink)`).toBe(LIVE_ROWS);
@@ -965,10 +1061,44 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
         expect(invariant(o, 'link_rate_pct'), 'invariant 3: link_rate ≥ T4').toBeGreaterThanOrEqual(50);
         expect(String(((o.invariants ?? []).find((i) => i.name === 'confidence_values') as { value: unknown } | undefined)?.value), 'invariant 4: confidence ∈ {0.95, 0.60} only (commit-5 key)').toBe('0.60,0.95');
       }
-      for (const o of old.slice(1)) {
-        expect(o.normalised, `${inv.name}: ${o.file} differs from ${old[0]?.file} modulo declared normalisations`).toEqual(old[0]?.normalised);
-        expect(o.table_state, `${inv.name}: ${o.file} table_state differs from ${old[0]?.file}`).toEqual(old[0]?.table_state);
+      // The forced pair is EXPECTED to disagree (LM-D13, asserted below); everything else
+      // must not, and `pre/sources-full.json` is a gated-incremental run captured before the
+      // relinks, so it is compared only against other non-forced captures of its invocation.
+      const stable = old.filter((o) => !isForcedFull(o));
+      for (const o of stable.slice(1)) {
+        expect(o.normalised, `${inv.name}: ${o.file} differs from ${stable[0]?.file} modulo declared normalisations`).toEqual(stable[0]?.normalised);
+        expect(o.table_state, `${inv.name}: ${o.file} table_state differs from ${stable[0]?.file}`).toEqual(stable[0]?.table_state);
       }
+    }
+
+    const junctionInvariants = (d: GoldenDoc): Record<string, unknown> => Object.fromEntries(
+      (d.invariants ?? []).map((i) => [i.name, i.value]),
+    );
+
+    // (a) THE PINNED DEFECT, ON THE RECORD. Two forced FULL relinks of the OLD script:
+    // every invariant identical, the projected junction hash different. That is exactly the
+    // signature of an order-dependent row selection — the population is right and the
+    // ASSIGNMENT is not — and it is why a FULL-path hash was declared unstable-by-pin (D-22).
+    const oldForced = docs.filter((d) => isOld(d) && isForcedFull(d));
+    expect(oldForced.length, `commit 5 captured TWO forced FULL relinks of the OLD script (${FORCE_FULL_ENV}=1)`).toBeGreaterThanOrEqual(2);
+    for (const d of oldForced) assertActuallyForcedFull(d);
+    const oldHashes = new Set(oldForced.map((d) => junctionState(d).content_hash));
+    expect(oldHashes.size, `LM-D13: the OLD forced pair must DIFFER (${LM_D13_FLIPPABLE_LINKS.toLocaleString()} of ${LIVE_NEAREST_LINKS.toLocaleString()} nearest links can flip, ${LM_D13_ZERO_DISTANCE_TIES.toLocaleString()} of them tied at distance 0). If these ever agree, the evidence this peel is built on has evaporated and the fix is unproven, not unnecessary`).toBeGreaterThan(1);
+    for (const d of oldForced.slice(1)) {
+      expect(junctionInvariants(d), `${d.file}: the OLD forced pair must agree on EVERY invariant — the flip is an assignment change, not a population change`).toEqual(junctionInvariants(oldForced[0] as GoldenDoc));
+    }
+
+    // (b) THE FIX. Same act, converted step, tiebreak in force: identical hash, identical
+    // invariants. U-1 closes here and D-22 retires with it.
+    const newForced = docs.filter((d) => isNew(d) && isForcedFull(d));
+    expect(newForced.length, `peel 8b must capture TWO forced FULL relinks of the CONVERTED step (post/sources-full-forced-1.json, -2.json)`).toBeGreaterThanOrEqual(2);
+    for (const d of newForced) assertActuallyForcedFull(d);
+    const newHashes = [...new Set(newForced.map((d) => junctionState(d).content_hash))];
+    expect(newHashes.length, `LM-D13 FIXED: two forced FULL relinks must hash-EQUAL, got ${newHashes.join(' vs ')}`).toBe(1);
+    expect(oldHashes.has(newHashes[0] as string), 'the post-tiebreak hash is a NEW junction state — the fix MOVES ROWS, which is why it could not ride the no-op conversion diff').toBe(false);
+    for (const d of newForced) {
+      expect(junctionState(d).row_count, `${d.file}: the tiebreak changes WHICH building a tied parcel links, never HOW MANY rows exist`).toBe(LIVE_ROWS);
+      expect(junctionInvariants(d), `${d.file}: the POST forced pair must agree on every invariant`).toEqual(junctionInvariants(newForced[0] as GoldenDoc));
     }
   });
 
@@ -1055,7 +1185,17 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     computeSource();
     const log = git(['log', '--format=%H%x1f%s', '--', '.']).split(/\r?\n/).filter(Boolean);
     const peels = log.filter((l) => /122_step_optimization/.test(l) && /pilot 3 peel [abc]\b/i.test(l));
-    expect(peels.length, 'three peel commits (8a gating · 8b verdict/audit · 8c thresholds/checks)').toBeGreaterThanOrEqual(3);
+    // Stage-gated, not red-by-design (Spec 122/123 "nothing hidden"): peels 8a/8b/8c land
+    // one commit at a time, so mid-stage this legitimately sees 1 or 2 of the eventual 3.
+    // The per-commit "only that peel" scope check below still runs on every peel that
+    // DOES exist — a bound of [1,3] never waives it, it only waives the COUNT.
+    expect(peels.length, 'at least peel 8a must exist, and never more than the three declared peels (8a gating · 8b verdict/audit · 8c thresholds/checks)').toBeGreaterThanOrEqual(1);
+    expect(peels.length).toBeLessThanOrEqual(3);
+    const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[] };
+    if (converted.converted.includes(STEP_REL)) {
+      // Post-cutover (commit 9 landed): all three peels must be in by then.
+      expect(peels.length, 'commit 9 (cutover) implies all three peel commits (8a/8b/8c) already landed').toBe(3);
+    }
     const allowed = (f: string): boolean =>
       f === COMPUTE_REL || f === DESCRIPTOR_REL || f === NOTES_REL || f.startsWith('scripts/lib/step/') ||
       f === GATE_LIB_REL || f === SEED_REL ||
@@ -1111,7 +1251,10 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     const self = fs.readFileSync(abs(THIS_FILE_REL), 'utf8');
     expect(self.includes('— present in the converted step'), 'the present-direction lock').toBe(true);
     expect(self.includes('— reversion is detectable'), 'the reversion-direction lock').toBe(true);
-    for (const detect of [detectPrimaryClearFence, detectGuardFence, detectRetractionFence, detectNearestCapFence]) expect(typeof detect).toBe('function');
+    for (const detect of [detectPrimaryClearFence, detectGuardFence, detectRetractionFence, detectNearestCapFence, detectNearestTiebreakFence]) expect(typeof detect).toBe('function');
+    // F5's behavioural half is a SECOND file (it needs a database); the text half lives here, and
+    // #184 keeps both next to the step. Named so a fence whose DB lock quietly disappeared shows up.
+    expect(stepTestDirFiles(), 'the LM-D13 determinism lock must live beside the step').toContain('src/tests/steps/link_massing/nearest-determinism.test.ts');
   });
 
   it('#157 Gate 4f — dead code proved dead by instrumentation, never by reading (U-5: buildings_indexed = 0, grid_cells = "N/A (PostGIS)" on every recorded run)', () => {
@@ -1122,12 +1265,26 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it('#158 Gate 5 — the old script is deleted or dated-ticketed (same file, two commits: no pipeline.run(), path registered)', () => {
+  it('#158 Gate 5 — the old script is deleted or dated-ticketed (same file, two commits: no pipeline.run(), path registered) (pre-cutover: declared pending)', () => {
     computeSource();
     const src = fs.readFileSync(abs(STEP_REL), 'utf8');
-    expect(/pipeline\.run\s*\(/.test(src), `${STEP_REL} still carries the island (pipeline.run)`).toBe(false);
-    const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[] };
-    expect(converted.converted, `${CONVERTED_REL} does not register ${STEP_REL}`).toContain(STEP_REL);
+    const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as {
+      converted: string[];
+      pending?: Array<{ file: string }>;
+    };
+    const pendingFiles = (converted.pending ?? []).map((p) => p.file);
+    if (pendingFiles.includes(STEP_REL)) {
+      // Declared data, not a code skip (Spec 122/123 "nothing hidden"): converted.json's
+      // pending reason for STEP_REL is "shape-clean since commit 7 (frozen-shape wrap);
+      // registration is the cutover commit" — so the pre-cutover state this asserts is
+      // exactly THAT (no pipeline.run(), not yet registered), not the generic pre-shape
+      // island state. A file whose reality drifts from its declared reason is a finding.
+      expect(/pipeline\.run\s*\(/.test(src), `${STEP_REL}'s pending reason declares it shape-clean (no pipeline.run()), but reality disagrees — the pending declaration is stale`).toBe(false);
+      expect(converted.converted, `${STEP_REL} is declared pending AND already registered — mutual exclusion violated`).not.toContain(STEP_REL);
+    } else {
+      expect(/pipeline\.run\s*\(/.test(src), `${STEP_REL} still carries the island (pipeline.run)`).toBe(false);
+      expect(converted.converted, `${CONVERTED_REL} does not register ${STEP_REL}`).toContain(STEP_REL);
+    }
   });
 
   it('#159 Idempotence-successor run is a supplement, never the sole gate (old/new pair per invocation ×3, pre/post junction state, one forced FULL)', () => {
@@ -1148,6 +1305,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     // G8(c) / D-19: exactly the budgeted forced-FULL half — declared, with the 520,492-row result pinned.
     const forced = docs.filter(isForcedFull);
     expect(forced.length, `no forced-FULL capture (${FORCE_FULL_ENV}=1) — the W1 retraction + E1/E2 write path is never exercised (finding 5 / D-19)`).toBeGreaterThan(0);
+    for (const f of forced) assertActuallyForcedFull(f);
     for (const f of forced) expect(junctionState(f).row_count, `${f.file}: a forced FULL relink must rebuild exactly ${LIVE_ROWS} rows (A-6: a FULL relink moves none of the 7 numbers)`).toBe(LIVE_ROWS);
   });
 
@@ -1659,11 +1817,28 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     expect(p.has_descriptor && p.compute_type === 'function').toBe(true);
   });
 
-  it('converted.json registers the step as the 3rd entry (commit 9 arms the shape gate: 3/62)', () => {
+  it('converted.json registers the step as the 3rd entry (commit 9 arms the shape gate: 3/62) (pre-cutover: declared pending)', () => {
     computeSource();
-    const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[] };
-    expect(converted.converted).toContain(STEP_REL);
-    expect(converted.converted.length).toBe(3);
+    const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as {
+      converted: string[];
+      pending?: Array<{ file: string; registers_at: string; reason: string; declared: string }>;
+    };
+    const pendingEntries = converted.pending ?? [];
+    const mine = pendingEntries.filter((p) => p.file === STEP_REL);
+    if (mine.length > 0) {
+      // Not an `it.skip`-equivalent: the declaration itself is asserted well-formed
+      // and mutually exclusive with `converted`, per Spec 122/123 "nothing hidden".
+      expect(mine.length, `${STEP_REL} has more than one pending entry`).toBe(1);
+      const entry = mine[0]!;
+      for (const k of ['file', 'registers_at', 'reason', 'declared'] as const) {
+        expect(typeof entry[k], `pending entry for ${STEP_REL} is missing/malformed key "${k}"`).toBe('string');
+        expect(entry[k].length, `pending entry for ${STEP_REL}.${k} is empty`).toBeGreaterThan(0);
+      }
+      expect(converted.converted, `${STEP_REL} is declared pending AND already the 3rd converted entry — mutual exclusion violated`).not.toContain(STEP_REL);
+    } else {
+      expect(converted.converted).toContain(STEP_REL);
+      expect(converted.converted.length).toBe(3);
+    }
   });
 
   it('grandfathered.json lists link_massing for guard:"none" (Fold B item 2 — x-banned-for-new gains its enforcer)', () => {
@@ -1887,6 +2062,50 @@ describe('G4d fence locks', () => {
     expect(detectNearestCapFence(noPrefilter).some((f) => /no bbox prefilter/.test(f)), 'dropping the B-10 prefilter went undetected').toBe(true);
     const reordered: NearestInput = { ...current, sql: current.sql.replace(/ON bf\.geom && ST_Expand\(p\.geom, \$2\)\s*AND\s*(ST_DWithin\([^)]*\))/, 'ON $1 AND bf.geom && ST_Expand(p.geom, $2)') };
     expect(detectNearestCapFence(reordered).some((f) => /AFTER ST_DWithin/.test(f)), 'the prefilter after the distance went undetected').toBe(true);
+  });
+
+  // F5 is not a historic fence — it is a fence BEING BUILT (peel 8b, LM-D13). The old file has
+  // no tiebreak to preserve, so the "reversion" half is a mutation of the rule this peel adds.
+  it(`F5 LM-D13 — present in the converted step: the nearest fallback's ORDER BY declares distance first, then footprint_area_sqm DESC, then bf.id ASC (the fence-${F1_COMMIT} order), and the descriptor states the rule`, () => {
+    const d = loadDescriptor();
+    const mod = loadComputeModule();
+    const plan = (mod.buildMatchSql as (dd: Descriptor, c: unknown, m: string) => { fallback_match_sql: string })(d, null, 'full');
+    expect(detectNearestTiebreakFence(plan.fallback_match_sql), 'the converted compute does not encode the LM-D13 selection rule').toEqual([]);
+    // The RULE, not just the SQL: a reader of the descriptor must be able to learn which
+    // building a tied parcel gets without reading the compute.
+    const why = (checkById(d, 'match_nearest_fallback').why?.text ?? '');
+    expect(/footprint_area_sqm DESC/.test(why) && /bf\.id ASC/.test(why), 'the nearest check\'s why must state the tiebreak rule in words + the ORDER BY').toBe(true);
+    expect(/tie|equidistant/i.test(why), 'the why must say what the rule is FOR').toBe(true);
+    // And the descriptor no longer declares the pin: LM-D13 is fixed, not deviated from.
+    const declared = JSON.stringify(d.deviations ?? []) + JSON.stringify(d.limitations ?? []);
+    expect(/UNSTABLE BY PIN|PINNED VERBATIM, NOT FIXED|NO TIEBREAK/.test(declared), 'the LM-D13 pin must be RETIRED from deviations[]/limitations[] once the tiebreak lands — a stale deviation is a lie about the code').toBe(false);
+  });
+
+  it('F5 LM-D13 — reversion is detectable: dropping either tiebreak term, flipping its direction, or hoisting it above ST_Distance makes the lock fire', () => {
+    const d = loadDescriptor();
+    const mod = loadComputeModule();
+    const sql = (mod.buildMatchSql as (dd: Descriptor, c: unknown, m: string) => { fallback_match_sql: string })(d, null, 'full').fallback_match_sql;
+    expect(detectNearestTiebreakFence(sql), 'the lock fires on the un-reverted subject').toEqual([]);
+    // (1) the pre-8b text, verbatim — the state commit 7 pinned.
+    const pinned = sql.replace(/,\s*bf\.footprint_area_sqm DESC, bf\.id ASC/, '');
+    expect(pinned).not.toBe(sql);
+    expect(detectNearestTiebreakFence(pinned).some((f) => /no footprint_area_sqm tiebreak/.test(f)), 'reverting to the pinned LM-D13 text went undetected').toBe(true);
+    // (2) area only — NOT a total order: 4,462 centroid primaries exceed their lot 2×, so
+    // equal footprints on adjacent lots are a real case, not a hypothetical one.
+    const noId = sql.replace(/, bf\.id ASC/, '');
+    expect(detectNearestTiebreakFence(noId).some((f) => /no bf\.id total-order backstop/.test(f)), 'dropping the id backstop went undetected').toBe(true);
+    // (3) direction flips — a stable rule that picks the WRONG building is still a defect.
+    expect(detectNearestTiebreakFence(sql.replace('bf.footprint_area_sqm DESC', 'bf.footprint_area_sqm ASC')).some((f) => /not DESC/.test(f))).toBe(true);
+    expect(detectNearestTiebreakFence(sql.replace('bf.id ASC', 'bf.id DESC')).some((f) => /backstop is DESC/.test(f))).toBe(true);
+    // (4) hoisted above the distance — a tiebreak that re-ranks is not a tiebreak.
+    const hoisted = sql.replace(
+      /ORDER BY p\.id, ST_Distance\(p\.geom::geography, bf\.geom::geography\) ASC, bf\.footprint_area_sqm DESC, bf\.id ASC/,
+      'ORDER BY p.id, bf.footprint_area_sqm DESC, bf.id ASC, ST_Distance(p.geom::geography, bf.geom::geography) ASC',
+    );
+    expect(hoisted).not.toBe(sql);
+    expect(detectNearestTiebreakFence(hoisted).some((f) => /RE-RANKS/.test(f)), 'hoisting the tiebreak above the distance went undetected').toBe(true);
+    // (5) no ORDER BY at all.
+    expect(detectNearestTiebreakFence(sql.replace(/ ORDER BY[\s\S]*$/, ';')).some((f) => /NO ORDER BY/.test(f))).toBe(true);
   });
 
   it('the fence corpus is the fix( commits, not the Severity: footer — every locked SHA is a fix( commit on the step file and the footer census is 0', () => {

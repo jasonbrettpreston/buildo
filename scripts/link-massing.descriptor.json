@@ -418,7 +418,7 @@
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "Ported by name, and the population Reality-Check flagged: 103,530 of 485,135 linked parcels (21.3%) carry ONLY a nearest link at confidence 0.60, and 46.9% of those have a footprint larger than their own lot. That is a data-quality class rather than a staleness signal — a forced FULL relink moves none of it — so it is reported and NOT gated here; the link-stage footprint-exceeds-lot counter is peel 8b and the sanity-rule gap is a filed WF3.",
+        "text": "Ported by name, and the population Reality-Check flagged: 103,530 of 485,135 linked parcels (21.3%) carry ONLY a nearest link at confidence 0.60, and 47.0% of those have a footprint larger than their own lot. That is a data-quality class rather than a staleness signal — a forced FULL relink moves none of it — so it is reported and NOT gated here; the link-stage counter is nearest_footprint_gt_lot_count below and the sanity-rule gap is a filed WF3. ⚠️ THE SELECTION RULE, DECLARED (LM-D13, peel 8b): among footprints equidistant from a parcel the LARGEST wins, and among equal areas the LOWEST building_id wins — `ORDER BY p.id, ST_Distance(...) ASC, bf.footprint_area_sqm DESC, bf.id ASC`, with distance FIRST because the tiebreak breaks ties and does not re-rank. It is the same order fence 5bb31faf gave the centroid pass, so both passes now answer 'which building is this parcel's' identically. ⚠️ DECLARED TENSION (operator-ratified 2026-08-27): Spec 65 §MB-5 / enrich-parcels.js treats a primary footprint larger than its lot as evidence the WRONG building was linked, and this rule mechanically raises that population (+2,144, see nearest_footprint_gt_lot_count). The rule is kept because fence 5bb31faf is the ONLY declared primary-selection precedent and no prior decision (b16c036d, Spec 56 §3, Spec 60 §3, P13-2, the GFA investigation) mandates another; the greatest-overlap alternative is a NEW spatial rule owed its own WF, filed as review_followups.md '[MED · link_massing nearest tiebreak, peel 8b]'. Changing this ORDER BY changes building_id on up to 18,252 rows and MUST ride a new peel with two hash-equal forced FULL captures. Before it, DISTINCT ON kept whichever row the plan emitted first and 18,252 of the 103,530 nearest links (17,566 tied at distance 0) could flip building_id between two identical full relinks — measured as two forced relinks hashing a0023203 and 0d2ea577 with all eight invariants equal.",
         "liveness": { "kind": "column", "ref": "parcel_buildings.match_type" }
       }
     },
@@ -496,6 +496,36 @@
       "why": {
         "text": "Invariant (4). confidence is numeric(3,2) with a DB default of 0.85 the step never writes, so the column will not reject a value the step did not mean; only a count can. The domain is the two resolved logic variables (centroid 0.95, nearest 0.60) — the pre-conversion literals lived at FOUR sites across two code paths, which is exactly the ternary-divergence class §1.7 names.",
         "liveness": { "kind": "column", "ref": "parcel_buildings.confidence" }
+      }
+    },
+    {
+      "id": "nearest_footprint_gt_lot_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "primary links whose building footprint is larger than its own parcel, by match_type" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "LM-D6, added at peel 8b under the A-6 ruling and C-6's pin-then-add (a counter may not be smuggled into the no-op differential). Measured live 2026-08-27 AFTER the LM-D13 tiebreak relink: 50,790 of 103,530 nearest primaries (49.06%) and 13,347 of 381,605 centroid_in_parcel primaries (3.50%) carry a footprint larger than their own lot. ⚠️ THE TIEBREAK MOVED THIS NUMBER AND THAT IS DECLARED, NOT INCIDENTAL: before it the same count read 48,646 (47.0%). Resolving a distance tie in favour of the LARGER footprint mechanically puts +2,144 more primaries above their lot line, because a bigger overlapping structure is likelier to exceed the parcel. The rule was chosen for consistency with fence 5bb31faf (the centroid pass picks the largest building as primary) and for the cost model's question (on a semi or a shared driveway, the larger overlapping structure is the one being priced) — but the trade is real and is on the record here rather than discovered later as a cost. Whether a nearest tie should instead prefer the GREATEST OVERLAP AREA with the parcel (semantically the right question, and a spatial computation this peel does not add) is filed to review_followups for the operator; 58,050 parcels are flagged `existing_data_quality_flag = 'footprint_exceeds_lot'` by enrich-parcels ONE CHAIN-STEP LATER, where the whole existing-structure block is NULLed. So the bad links were produced here, shipped, and silently discarded downstream with nothing at the link counting them. It is INFO by ruling, not by timidity: the population is a standing property of Toronto's parcel fabric plus this step's bounded fallback, a forced FULL relink moves none of it, and a WARN would redden every production run for a condition this commit did not create. Scoped to `is_primary` because the primary link is the row enrich-parcels derives from. Cumulative, never run-scoped — on the 1,395-parcel steady state a run-scoped version reports 0 forever.",
+        "liveness": { "kind": "column", "ref": "parcels.existing_data_quality_flag" }
+      }
+    },
+    {
+      "id": "shared_primary_buildings",
+      "kind": "invariant",
+      "expect": { "reports": "buildings that are the primary structure of more than one parcel, and the parcels affected" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "LM-D11. `idx_parcel_buildings_one_primary` enforces at most one primary PER PARCEL; nothing enforces — or, until now, counted — one parcel per primary BUILDING, and one building cannot be the primary structure of two parcels in the sense the cost model uses it. Measured live 2026-08-27 after the tiebreak relink: 65,318 buildings, 166,591 parcels (34.3% of linked) — the tiebreak REDUCED this by 1,489 buildings, the mirror image of the footprint-exceeds-lot rise: preferring the larger overlapping footprint spreads primaries across fewer shared structures. ⚠️ The plan measured 66,906 / 167,443 the same day, BEFORE any forced relink, and the pre-tiebreak junction read 66,807 / 167,329 — that first drift was LM-D13's own instability (a number moving when nothing changed), which is the second reason this count belongs in the audit table rather than in a report. INFO for the same reason as the counter above: it is a standing property, and the cost-model consequence is the filed review_followups WF3, not a gate this step may impose. The affected-parcel figure is `sum(n)` over the shared buildings precisely because the partial unique index makes each parcel contribute at most one primary row.",
+        "liveness": { "kind": "table", "ref": "parcel_buildings" }
       }
     },
     {
@@ -577,15 +607,6 @@
       "date": "2026-08-27"
     },
     {
-      "from": "a deterministic nearest-fallback selection (LM-D13, Fold C)",
-      "why": {
-        "text": "PINNED VERBATIM, NOT FIXED. The nearest fallback is `SELECT DISTINCT ON (p.id) … ORDER BY p.id, ST_Distance(p.geom::geography, bf.geom::geography) ASC` — and that ORDER BY has NO TIEBREAK. Where two footprints are equidistant from a parcel (or equal to float precision), which one DISTINCT ON keeps is whatever the plan happened to emit first, so 18,252 of the 103,530 nearest links can flip between two otherwise identical FULL relinks. The centroid pass has the opposite property: it sorts by area DESC then building_id ASC (fence 5bb31faf) and is deterministic. Adding `, bf.id ASC` would fix it in one token and is EXACTLY the behaviour change a no-op differential may not carry — it would move rows, and the diff would be indistinguishable from a conversion defect. So the non-determinism is reproduced byte-for-byte here, declared as LM-D13, and the tiebreak lands in peel 8b with its own before/after row counts. The consequence for the differential is declared as D-22: a FULL-path table hash is UNSTABLE BY PIN and only the incremental captures are compared for hash identity.",
-        "liveness": { "kind": "check", "ref": "match_nearest_fallback" }
-      },
-      "adjudicated_by": "operator ruling 2026-08-27 (Fold C, LM-D13)",
-      "date": "2026-08-27"
-    },
-    {
       "from": "promoting any FAIL check to blocking: true",
       "why": {
         "text": "PIN, DO NOT FIX (Spec 123 §3.1, pilot 2 precedent LR-D3). Today every terminal of this step exits 0: pipeline.run discards the return value, run-chain records the verdict and folds it into a chain status, and the chain CONTINUES. blocking: true would make the library throw after the emit and halt the sources chain — a real behaviour change smuggled into a commit whose whole claim is that it changes nothing. Promoting a check is its own peel with its own lock.",
@@ -640,11 +661,6 @@
       "check_id": "none"
     },
     {
-      "what": "LM-D13 — the nearest fallback picks a winner with NO TIEBREAK. `DISTINCT ON (p.id) … ORDER BY p.id, ST_Distance(...) ASC` leaves ties to the plan, so an equidistant pair resolves differently between runs and 18,252 nearest links can flip across two identical FULL relinks. Reproduced verbatim at conversion (Fold C) rather than fixed, because the fix moves rows and this commit's whole claim is that it moves none. The consequence: a FULL-path golden table hash is UNSTABLE BY PIN, and only the incremental captures are compared for hash identity (D-22).",
-      "measured": "18,252 of 103,530 nearest links flip between two FULL relinks; scripts/link-massing.js:363 ORDER BY p.id, ST_Distance(...) ASC",
-      "check_id": "match_nearest_fallback"
-    },
-    {
       "what": "The nearest fallback's bbox prefilter span is nearest_max_distance_m / 78000.0 — metres-per-degree at Toronto's latitude, which OVER-covers east-west. It is a performance prefilter, not a bound: the exact cut is the geography ST_DWithin that follows it. Changing 78000 changes what '50 m' costs to find, never how much of it is accepted.",
       "measured": "scripts/link-massing.js:267 nearestDegSpan; the in-file comment cites the enrich-parcels precedent and tasks/lessons.md",
       "check_id": "match_nearest_fallback"
@@ -660,14 +676,9 @@
       "check_id": "mass_retraction_ratio"
     },
     {
-      "what": "The link-stage footprint-exceeds-lot counter is NOT declared here. Measured: 48,561 of 103,530 nearest links (46.9%) and 13,347 of 381,605 centroid links (3.5%) carry a footprint larger than their own lot, and 58,050 parcels are flagged footprint_exceeds_lot by enrich-parcels one chain-step later — so the bad links are produced, shipped, and silently NULLed downstream with nothing counting them at the link. It lands in peel 8b as a new INFO check rather than here, because adding a counter to the no-op differential is exactly the smuggling C-6 forbids.",
-      "measured": "48,561 / 33,184 (2x) nearest; 13,347 / 4,462 (2x) centroid; parcels.existing_data_quality_flag = 'footprint_exceeds_lot' on 58,050 parcels",
-      "check_id": "match_nearest_fallback"
-    },
-    {
-      "what": "66,906 buildings are is_primary for MORE THAN ONE parcel, affecting 167,443 parcels (34.5% of linked). One building cannot be the primary structure of two parcels in the sense the cost model uses it. This is a real data-quality class, not a conversion regression — a forced FULL relink moves none of it — and it is NOT gated here, because declaring it as a WARN/FAIL check would redden every production run for a condition this commit did not create. Filed to review_followups.",
-      "measured": "66,906 shared primary buildings / 167,443 affected parcels (2026-08-27)",
-      "check_id": "none"
+      "what": "The link-quality counters are REPORTED, never GATED. `nearest_footprint_gt_lot_count` and `shared_primary_buildings` are INFO: they put two standing data-quality populations on the record at the step that produces them, and neither can move the verdict. That is the ruling (A-6), not an oversight — a forced FULL relink moves neither number, so a WARN/FAIL would redden every production run for a condition this step's conversion did not create. What still has no home here is the CONSEQUENCE: 58,050 parcels are flagged `footprint_exceeds_lot` by enrich-parcels one chain-step later and have their whole existing-structure block NULLed, and `scripts/analysis/parcel-sanity-audit.js` has zero rules over parcel_buildings itself. Both are the filed review_followups WF3, not this pilot.",
+      "measured": "50,790 of 103,530 nearest primaries (49.06%) and 13,347 of 381,605 centroid_in_parcel primaries (3.50%) exceed their lot; 65,318 shared primary buildings over 166,591 parcels; 58,050 parcels flagged downstream. Pre-tiebreak the same junction read 48,646 / 47.0% and 66,807 / 167,329 (2026-08-27)",
+      "check_id": "nearest_footprint_gt_lot_count"
     }
   ],
 

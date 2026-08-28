@@ -78,10 +78,27 @@ function manifestStepFiles(chainId?: string): string[] {
 const ALL_STEP_FILES = manifestStepFiles();
 const SOURCES_STEP_FILES = manifestStepFiles('sources');
 
-const convertedRaw = JSON.parse(fs.readFileSync(CONVERTED_PATH, 'utf8')) as { converted?: unknown };
+const convertedRaw = JSON.parse(fs.readFileSync(CONVERTED_PATH, 'utf8')) as { converted?: unknown; pending?: unknown };
 const CONVERTED: string[] = Array.isArray(convertedRaw.converted)
   ? (convertedRaw.converted as unknown[]).map((f) => String(f).replace(/\\/g, '/'))
   : [];
+
+/**
+ * `pending` (Spec 123 §3.1 pin-then-add ordering): a file that has already landed
+ * the frozen shape (§5.1) but registers in `converted` only at its cutover commit.
+ * Declared data, not a code skip — "nothing hidden" (Spec 122/123 policy) means the
+ * stage gap is named in the fixture the tests read, not silently exempted in test
+ * logic. Each entry is `{file, registers_at, reason, declared}` — all strings.
+ */
+interface PendingEntry {
+  file: string;
+  registers_at: string;
+  reason: string;
+  declared: string;
+}
+const PENDING_RAW: unknown[] = Array.isArray(convertedRaw.pending) ? (convertedRaw.pending as unknown[]) : [];
+const PENDING: PendingEntry[] = PENDING_RAW as PendingEntry[];
+const PENDING_FILES: string[] = PENDING.map((p) => String(p?.file ?? '').replace(/\\/g, '/'));
 
 /**
  * The Bundle-G lock registry, parsed out of its owning test file.
@@ -243,6 +260,39 @@ describe('converted.json — the A2/§5.2 enforcement scope', () => {
 });
 
 // ---------------------------------------------------------------------------
+// 1b. `pending` — the declared stage-gap (Spec 123 §3.1 pin-then-add ordering)
+// ---------------------------------------------------------------------------
+
+describe('converted.json — `pending` (declared data, not a code skip)', () => {
+  const REQUIRED_KEYS = ['file', 'registers_at', 'reason', 'declared'] as const;
+
+  it('every pending entry is well-formed: exactly the 4 required string keys, no extras', () => {
+    for (const raw of PENDING_RAW) {
+      const entry = raw as Record<string, unknown>;
+      const keys = Object.keys(entry).sort();
+      expect(keys, `pending entry ${JSON.stringify(raw)} has an unexpected key set`).toEqual([...REQUIRED_KEYS].sort());
+      for (const k of REQUIRED_KEYS) {
+        expect(typeof entry[k], `pending entry ${JSON.stringify(raw)}.${k} must be a non-empty string`).toBe('string');
+        expect((entry[k] as string).length, `pending entry ${JSON.stringify(raw)}.${k} is empty`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('pending entries and converted are mutually exclusive (a file cannot be both staged and registered)', () => {
+    const overlap = PENDING_FILES.filter((f) => CONVERTED.includes(f));
+    expect(overlap, 'a file in both `pending` and `converted` is either a stale pending entry or a double-registration').toEqual([]);
+  });
+
+  it('every pending file is shape-clean AND not yet registered (a dirty or already-registered pending entry is a stale declaration)', () => {
+    for (const f of PENDING_FILES) {
+      expect(CONVERTED, `pending file ${f} is already in converted.json — the pending entry is stale and must be deleted`).not.toContain(f);
+      const findings = conformanceFindings(f);
+      expect(findings, `pending file ${f} is declared shape-clean but conformanceFindings() disagrees (stale pending entry)`).toEqual([]);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 2. The fleet assertion — §5.2's NEW claim (silent import death)
 // ---------------------------------------------------------------------------
 
@@ -290,24 +340,34 @@ describe('prove-red — the shape rule fires on the unconverted corpus', () => {
     expect(report.converted).toEqual(CONVERTED);
   });
 
-  it('every unconverted manifest step file violates the frozen shape', () => {
-    const clean = report.report_only.filter((f) => f.violations.length === 0).map((f) => f.file);
+  it('every unconverted manifest step file violates the frozen shape, except a DECLARED pending file (converted.json.pending)', () => {
+    // `pending` is declared data (Spec 122/123 "nothing hidden" — the exception is
+    // declared data, not a code skip): a file that already landed the frozen shape
+    // but registers in `converted` only at its cutover commit. It is carved out of
+    // the "must violate" corpus here, and pinned shape-clean-and-unregistered by
+    // the `pending` describe block above — so this exclusion cannot silently widen.
+    const clean = report.report_only.filter((f) => f.violations.length === 0 && !PENDING_FILES.includes(f.file)).map((f) => f.file);
     expect(
       clean,
-      'a shape-clean file outside converted.json means either a landed conversion nobody registered, ' +
-        'or a rule that stopped firing. Both are findings.',
+      'a shape-clean file outside converted.json AND outside pending means either a landed conversion nobody ' +
+        'registered, or a rule that stopped firing. Both are findings.',
     ).toEqual([]);
   });
 
-  it('every UNCONVERTED sources-chain step file is among them, and every one still calls pipeline.run() (27 minus converted.json)', () => {
+  it('every UNCONVERTED sources-chain step file is among them, and every one still calls pipeline.run() (27 minus converted.json, minus declared pending)', () => {
     // The sources chain is the C-track corpus. `reconcile` (A3) is a 28th entry
     // in the chain but is deliberately NOT a pipeline.step() file — it is the
     // Step-0 reaper, written to the Spec 47 skeleton — so the count below is
     // asserted against the chain minus that head step.
     const convertedSet = new Set((convertedRaw.converted ?? []) as string[]);
-    const conversionCorpus = SOURCES_STEP_FILES.filter((f) => f !== 'scripts/reconcile-runs.js' && !convertedSet.has(f));
-    // 27 = the C-track corpus; each landed pilot removes exactly one (Spec 122 §5.2 — the prove-red is over files NOT in converted.json).
-    expect(conversionCorpus).toHaveLength(27 - convertedSet.size);
+    const pendingSet = new Set(PENDING_FILES);
+    const conversionCorpus = SOURCES_STEP_FILES.filter(
+      (f) => f !== 'scripts/reconcile-runs.js' && !convertedSet.has(f) && !pendingSet.has(f),
+    );
+    // 27 = the C-track corpus; each landed pilot removes exactly one (Spec 122 §5.2 — the prove-red is
+    // over files NOT in converted.json), and each declared-pending file is staged out ahead of its cutover.
+    const pendingInScope = SOURCES_STEP_FILES.filter((f) => pendingSet.has(f) && !convertedSet.has(f)).length;
+    expect(conversionCorpus).toHaveLength(27 - convertedSet.size - pendingInScope);
     const byFile = new Map(report.report_only.map((f) => [f.file, f.violations]));
     for (const f of conversionCorpus) {
       const violations = byFile.get(f) ?? [];

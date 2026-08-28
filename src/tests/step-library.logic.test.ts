@@ -826,6 +826,33 @@ describe('override.force_run — the arm that makes a frozen source loadable (A-
     expect(stalenessLib.resolveOverrides(LOAD_RAVINES, {}).force_run).toBe(false);
   });
 
+  // Peel 8b (pilot 3) — `force_full` was read ONLY by `selectMode`, which uses it to DECIDE
+  // the mode, and never reached `ctx.overrides`. A step declaring an
+  // `override_force_full_present` WARN saw `undefined` and reported CLEAN on every run,
+  // INCLUDING forced ones: the 2026-08-27 forced relink emitted
+  // `full_mode_reason: "force_full_env"` and a PASS on that row. Locked both directions
+  // here, and on a descriptor that declares `force_full: "none"` so the flag cannot be
+  // armed by an env var it never named.
+  it('ctx.overrides.force_full reflects the env too — the DECISION and the AUDIT ROW read the same source', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
+    const LINK_MASSING = require(join(process.cwd(), 'scripts/link-massing.descriptor.json'));
+    const FULL_ENV = stalenessLib.forceFullEnv(LINK_MASSING);
+    expect(FULL_ENV, 'link_massing declares override.force_full').toBe('LINK_MASSING_FORCE_FULL');
+    const armed = stalenessLib.resolveOverrides(LINK_MASSING, { [FULL_ENV]: '1' });
+    expect(armed.force_full, 'a standing force-full env must be OBSERVABLE, not only obeyed').toBe(true);
+    expect(Object.isFrozen(armed)).toBe(true);
+    expect(stalenessLib.resolveOverrides(LINK_MASSING, {}).force_full).toBe(false);
+    // Never truthiness — same rule as force_run.
+    for (const v of ['true', 'yes', '0', '', undefined]) {
+      expect(stalenessLib.resolveOverrides(LINK_MASSING, { [FULL_ENV]: v }).force_full, `env "${String(v)}"`).toBe(false);
+    }
+    // A descriptor declaring force_full: "none" can never be armed.
+    expect(stalenessLib.forceFullEnv(LOAD_RAVINES)).toBeNull();
+    expect(stalenessLib.resolveOverrides(LOAD_RAVINES, { [FULL_ENV]: '1' }).force_full).toBe(false);
+    // And the DECISION still agrees with the row: same env, same source.
+    expect(stalenessLib.forceFullRequested(LINK_MASSING, { [FULL_ENV]: '1' })).toBe(true);
+  });
+
   it('TIER 1 — unforced skips on equal validators; forced LOADS with reason "force_run" (both directions)', () => {
     const prior = priorOf(FROZEN, 'deadbeef');
     const validators = { lastModified: FROZEN, etag: null };
