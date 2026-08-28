@@ -725,16 +725,30 @@ async function main() {
   // R-C — the LOCKFILE stamp. Computed after the run (not before): the fields it hashes
   // (step file, descriptor, notes, compute module) are exactly what could have changed
   // BETWEEN this capture and the one it will later be compared against.
-  const fp = computeSourceFingerprint({
-    step,
-    descriptorPath,
-    notesPath: notesPathFor(descriptor, descriptorPath),
-    computePath: computePathFor(step),
-  });
-  doc.source_fingerprint = fp.source_fingerprint;
-  doc.fingerprint_files = fp.fingerprint_files;
-  console.log(`[capture-step-golden] source_fingerprint=${fp.source_fingerprint} ` +
-    `over [${fp.fingerprint_files.join(', ')}]`);
+  // GAP found by executing (pilot 4, 2026-08-28): R-C's own text scopes the fingerprint
+  // check to "docs/reports/golden/<slug>/post/*.json" — a PRE capture (taken before the
+  // step's own descriptor exists, e.g. commit 5 of the Spec 123 nine-commit ledger) has no
+  // descriptor to fingerprint. Mirror the SAME existence check `descriptor` above already
+  // uses (fs.existsSync(descriptorPath) ? ... : null) rather than throwing — a capture with
+  // no descriptor yet is legitimately un-fingerprintable, not a lockfile violation.
+  let fp = null;
+  if (fs.existsSync(descriptorPath)) {
+    fp = computeSourceFingerprint({
+      step,
+      descriptorPath,
+      notesPath: notesPathFor(descriptor, descriptorPath),
+      computePath: computePathFor(step),
+    });
+    doc.source_fingerprint = fp.source_fingerprint;
+    doc.fingerprint_files = fp.fingerprint_files;
+    console.log(`[capture-step-golden] source_fingerprint=${fp.source_fingerprint} ` +
+      `over [${fp.fingerprint_files.join(', ')}]`);
+  } else {
+    doc.source_fingerprint = null;
+    doc.fingerprint_files = [];
+    doc.fingerprint_skipped_reason = 'no_descriptor_yet';
+    console.log(`[capture-step-golden] source_fingerprint SKIPPED — ${descriptorPath} does not exist yet (pre-conversion capture)`);
+  }
 
   const tableLine = doc.table_state
     .map((t) => `${t.table}:${t.row_count}/${t.skipped_reason ?? String(t.content_hash).slice(0, 8)}` +

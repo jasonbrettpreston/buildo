@@ -1,0 +1,462 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/link-wsib.js",
+  "chain": "none",
+  "git_head": "c92a9e79bb27f79bc4d843e980c07344e0098e3e",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 107151,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 93790,
+      "unlinked_start": 107151,
+      "matches_tier_1_trade": 0,
+      "matches_tier_2_legal": 0,
+      "matches_tier_3_fuzzy": 0,
+      "no_match_count": 107151,
+      "threshold_updated_at": "2026-06-10T14:01:54.545Z",
+      "audit_table": {
+        "phase": 7,
+        "name": "WSIB Registry Matching",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "unlinked_start",
+            "value": 107151,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "tier_1_trade_matches",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "tier_2_legal_matches",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "tier_3_fuzzy_matches",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "run_matched",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "link_rate",
+            "value": "11.5%",
+            "threshold": ">= 5%",
+            "status": "PASS"
+          },
+          {
+            "metric": "no_match",
+            "value": 107151,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 1141.3,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 93885,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "wsib_registry": [
+          "id",
+          "trade_name_normalized",
+          "legal_name_normalized",
+          "linked_entity_id"
+        ],
+        "entities": [
+          "id",
+          "name_normalized",
+          "permit_count"
+        ]
+      },
+      "writes": {
+        "wsib_registry": [
+          "linked_entity_id",
+          "match_confidence",
+          "matched_at"
+        ],
+        "entities": [
+          "is_wsib_registered",
+          "primary_phone",
+          "primary_email",
+          "website"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Loaded 432 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Mode: LIVE\"}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Unlinked WSIB entries: 107,151\"}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Tier 1: Exact trade name matching...\"}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Tier 1 linked: 0 (confidence 0.95)\"}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Tier 2: Exact legal name matching...\"}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Tier 2 linked: 0 (confidence 0.90)\"}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Tier 3: Fuzzy name matching (pg_trgm)...\"}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Tier 3 linked: 0 (confidence 0.60)\"}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"Linking complete\",\"context\":{\"tier1\":0,\"tier2\":0,\"tier3\":0,\"totalLinked\":0,\"noMatch\":107151,\"rate\":\"0.0%\",\"duration\":\"93.8s\"}}\n{\"level\":\"INFO\",\"tag\":\"[link-wsib]\",\"msg\":\"DB stats: 121116 total | 13965 linked (320 high, 13645 med)\"}\nPIPELINE_SUMMARY:{\"records_total\":107151,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":93790,\"unlinked_start\":107151,\"matches_tier_1_trade\":0,\"matches_tier_2_legal\":0,\"matches_tier_3_fuzzy\":0,\"no_match_count\":107151,\"threshold_updated_at\":\"2026-06-10T14:01:54.545Z\",\"audit_table\":{\"phase\":7,\"name\":\"WSIB Registry Matching\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"unlinked_start\",\"value\":107151,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"tier_1_trade_matches\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"tier_2_legal_matches\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"tier_3_fuzzy_matches\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"run_matched\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"link_rate\",\"value\":\"11.5%\",\"threshold\":\">= 5%\",\"status\":\"PASS\"},{\"metric\":\"no_match\",\"value\":107151,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1141.3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":93885,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"wsib_registry\":[\"id\",\"trade_name_normalized\",\"legal_name_normalized\",\"linked_entity_id\"],\"entities\":[\"id\",\"name_normalized\",\"permit_count\"]},\"writes\":{\"wsib_registry\":[\"linked_entity_id\",\"match_confidence\",\"matched_at\"],\"entities\":[\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]}}\n\n[link-wsib] completed in 93.9s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-wsib]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1683,
+  "table_state": [
+    {
+      "table": "entities",
+      "row_count": 3948,
+      "content_hash": "266797deb951b3bbac5d8a92e0ce755a",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "is_wsib_registered",
+        "primary_phone",
+        "primary_email",
+        "website"
+      ]
+    },
+    {
+      "table": "wsib_registry",
+      "row_count": 121116,
+      "ceiling_bypassed": "projected",
+      "content_hash": "c1be664a9e287070af15c96ba1482e1b",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "linked_entity_id",
+        "match_confidence",
+        "matched_at"
+      ]
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "entities": 13,
+    "wsib_registry": 137
+  },
+  "table_specs": {
+    "entities": {
+      "columns": [
+        "id",
+        "is_wsib_registered",
+        "primary_phone",
+        "primary_email",
+        "website"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "id"
+      ],
+      "order_source": "arg"
+    },
+    "wsib_registry": {
+      "columns": [
+        "id",
+        "linked_entity_id",
+        "match_confidence",
+        "matched_at"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [
+    {
+      "name": "wsib_tier3_current_predicate_pass_rate_pct",
+      "value": "38.1"
+    },
+    {
+      "name": "wsib_entity_fanin_max",
+      "value": "2118"
+    },
+    {
+      "name": "wsib_entity_fanin_p99",
+      "value": "208"
+    },
+    {
+      "name": "wsib_magnet_entities_fanin_ge_10",
+      "value": "171"
+    },
+    {
+      "name": "wsib_orphan_linked_entity_id",
+      "value": "0"
+    },
+    {
+      "name": "wsib_linked_confidence_matched_at_inconsistent",
+      "value": "0"
+    },
+    {
+      "name": "wsib_confidence_outside_closed_set",
+      "value": "0"
+    },
+    {
+      "name": "wsib_dead_bucket_050_060_count",
+      "value": "0"
+    },
+    {
+      "name": "wsib_registered_entities_with_zero_links",
+      "value": "0"
+    },
+    {
+      "name": "wsib_cumulative_link_rate_pct",
+      "value": "11.53"
+    },
+    {
+      "name": "wsib_registry_total_rows",
+      "value": "121116"
+    },
+    {
+      "name": "entities_wsib_registered_count",
+      "value": "938"
+    },
+    {
+      "name": "wsib_tier_confidence_split",
+      "value": "0.60:13645,0.90:245,0.95:75"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/link_wsib/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "pattern:iso_timestamp",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/link-wsib.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "WSIB Registry Matching",
+          "phase": 7,
+          "rows": [
+            {
+              "metric": "unlinked_start",
+              "status": "INFO",
+              "threshold": null,
+              "value": 107151
+            },
+            {
+              "metric": "tier_1_trade_matches",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "tier_2_legal_matches",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "tier_3_fuzzy_matches",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "run_matched",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "link_rate",
+              "status": "PASS",
+              "threshold": ">= 5%",
+              "value": "11.5%"
+            },
+            {
+              "metric": "no_match",
+              "status": "INFO",
+              "threshold": null,
+              "value": 107151
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "matches_tier_1_trade": 0,
+        "matches_tier_2_legal": 0,
+        "matches_tier_3_fuzzy": 0,
+        "no_match_count": 107151,
+        "threshold_updated_at": "<TS>",
+        "unlinked_start": 107151
+      },
+      "records_new": 0,
+      "records_total": 107151,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "entities": [
+            "id",
+            "name_normalized",
+            "permit_count"
+          ],
+          "wsib_registry": [
+            "id",
+            "trade_name_normalized",
+            "legal_name_normalized",
+            "linked_entity_id"
+          ]
+        },
+        "writes": {
+          "entities": [
+            "is_wsib_registered",
+            "primary_phone",
+            "primary_email",
+            "website"
+          ],
+          "wsib_registry": [
+            "linked_entity_id",
+            "match_confidence",
+            "matched_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[link-wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 432 logic variables from control panel\",\"tag\":\"[link-wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Mode: LIVE\",\"tag\":\"[link-wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Unlinked WSIB entries: 107,151\",\"tag\":\"[link-wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Tier 1: Exact trade name matching...\",\"tag\":\"[link-wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Tier 1 linked: 0 (confidence 0.95)\",\"tag\":\"[link-wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Tier 2: Exact legal name matching...\",\"tag\":\"[link-wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Tier 2 linked: 0 (confidence 0.90)\",\"tag\":\"[link-wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Tier 3: Fuzzy name matching (pg_trgm)...\",\"tag\":\"[link-wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Tier 3 linked: 0 (confidence 0.60)\",\"tag\":\"[link-wsib]\"}",
+      "{\"context\":{\"duration\":\"<DUR>\",\"noMatch\":107151,\"rate\":\"0.0%\",\"tier1\":0,\"tier2\":0,\"tier3\":0,\"totalLinked\":0},\"level\":\"INFO\",\"msg\":\"Linking complete\",\"tag\":\"[link-wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"DB stats: 121116 total | 13965 linked (320 high, 13645 med)\",\"tag\":\"[link-wsib]\"}",
+      "[link-wsib] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "columns": [
+          "id",
+          "is_wsib_registered",
+          "primary_phone",
+          "primary_email",
+          "website"
+        ],
+        "content_hash": "266797deb951b3bbac5d8a92e0ce755a",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "row_count": 3948,
+        "table": "entities"
+      },
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "id",
+          "linked_entity_id",
+          "match_confidence",
+          "matched_at"
+        ],
+        "content_hash": "c1be664a9e287070af15c96ba1482e1b",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "row_count": 121116,
+        "table": "wsib_registry"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "wsib_tier3_current_predicate_pass_rate_pct",
+        "value": "38.1"
+      },
+      {
+        "name": "wsib_entity_fanin_max",
+        "value": "2118"
+      },
+      {
+        "name": "wsib_entity_fanin_p99",
+        "value": "208"
+      },
+      {
+        "name": "wsib_magnet_entities_fanin_ge_10",
+        "value": "171"
+      },
+      {
+        "name": "wsib_orphan_linked_entity_id",
+        "value": "0"
+      },
+      {
+        "name": "wsib_linked_confidence_matched_at_inconsistent",
+        "value": "0"
+      },
+      {
+        "name": "wsib_confidence_outside_closed_set",
+        "value": "0"
+      },
+      {
+        "name": "wsib_dead_bucket_050_060_count",
+        "value": "0"
+      },
+      {
+        "name": "wsib_registered_entities_with_zero_links",
+        "value": "0"
+      },
+      {
+        "name": "wsib_cumulative_link_rate_pct",
+        "value": "11.53"
+      },
+      {
+        "name": "wsib_registry_total_rows",
+        "value": "121116"
+      },
+      {
+        "name": "entities_wsib_registered_count",
+        "value": "938"
+      },
+      {
+        "name": "wsib_tier_confidence_split",
+        "value": "0.60:13645,0.90:245,0.95:75"
+      }
+    ]
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}

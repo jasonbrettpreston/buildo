@@ -1,6 +1,6 @@
 # Pilot 4 — `link_wsib` (MATCHER) — Step Optimization Assessment
 
-**Status:** Commits 1-4 landed (§1 PH-0 boundary freeze; §2 PH-3 Intent Ledger, PROPOSED, 17 fences + 7 LW-D* rows opened; §3 PH-5 seam map, no PARTIAL seams remaining; §4 PH-6 classification, every candidate classified, 171-magnet exposure quantified 0-locally). §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. Sections §5 (non-determinism inventory), §6 (declared diffs), §R Reflection — NOT YET WRITTEN, land at commit 5 (golden master) / commit 7 (implementation) per the ledger.
+**Status:** Commits 1-5 landed (§1 PH-0; §2 PH-3 Intent Ledger; §3 PH-5 seam map; §4 PH-6 classification; §5 golden master — 3 live invocations, all hash-identical, harness self-test green). §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. §6 (declared diffs), §R Reflection — NOT YET WRITTEN, land at commit 7 (implementation).
 
 **Governing plan:** `.cursor/active_task.md` (Pilot 4 — link_wsib). **Governing specs (operator correction 2026-08-28 — led by the step's own governing spec, not the architecture spec):** `docs/specs/01-pipeline/46_wsib_enrichment.md` (PRIMARY), `60_shared_steps.md` (§2 Step Registry row 19, §"Link WSIB"), `52_source_wsib.md`, `41_chain_permits.md` §Step Breakdown row 7, `43_chain_sources.md` §Step Breakdown row 19, then `docs/specs/01-pipeline/122_pipeline_step_optimization.md`, `124_step_standard_policy.md`, `123_step_opt_assessment_validation.md` (packaging/procedure).
 
@@ -139,6 +139,52 @@ WHERE e.id IN (
 AND (e.primary_phone IS NOT NULL OR e.primary_email IS NOT NULL OR e.website IS NOT NULL);
 ```
 **Executed 2026-08-28: `magnet_entities_with_any_contact = 7`** (sanity check: the magnet-count sub-query independently returns 171, confirming the fan-in≥10 population matches §Fold A's measured figure). **Interpretation: these 7 are NOT attributable to `copyContacts`** — since `wsib_registry` carries zero contact values locally (confirmed above), `copyContacts` has never had anything to copy on this database; the 7 magnet entities that do carry a phone/email/website got it from a DIFFERENT source (most likely `enrich-web-search.js`'s direct Serper enrichment on `entities`, governed by Spec 45, out of this pilot's scope). **Conclusion: local exposure to A-7's copyContacts reverse-clear pass is 0 by construction, both by the general count (§1) and by this magnet-specific query — there is no locally-measurable false-positive risk to quantify further.** Per Fold C's declared cloud caveat: **this 0 is a LOCAL measurement only** — a cloud database that has run Serper enrichment (Spec 46) may carry populated `wsib_registry` contact fields, and the 171-magnet query above must be RE-RUN against cloud before any cloud FULL run, not assumed from this local result. Recorded as a `limitations[]` entry at commit 7: *"contact mis-attribution exposure is measured per-environment; the local-dev 0 (general and magnet-specific) does not bound cloud — re-run both queries against the cloud DB before the cloud FULL run."*
+
+---
+
+## §5. Golden master (commit 5, G1′) — 3 live invocations, A-4 amended to include `standalone`
+
+> **Every capture below is a REAL run of the unconverted `scripts/link-wsib.js`** (live mode, not `--dry-run`) via `scripts/analysis/capture-step-golden.js`, run SEQUENTIALLY against `172.20.0.10:5432/postgres` — never in parallel, matching the plan's explicit discipline. Each capture writes a `pipeline_runs` row (expected, per the harness's own docblock). Files: `docs/reports/golden/link_wsib/pre/{permits,sources,standalone}.json` + `docs/reports/golden/link_wsib/invariants.json`.
+
+### Tool gap found by executing — `computeSourceFingerprint` had no pre-descriptor escape hatch
+
+The FIRST capture attempt (`--chain=permits`) ran the real DB work successfully (Tier 1/2/3, the hash, the invariants — all computed) but then **threw** at the final step: `source_fingerprint: fingerprint input scripts/link-wsib.descriptor.json does not exist`. Root cause, read in `scripts/analysis/capture-step-golden.js`: `descriptorPathFor(step)` always computes the conventional path regardless of existence, and R-C's `computeSourceFingerprint` (added 2026-08-28, same day as this session — pilot 4 is its first real exercise) unconditionally requires every listed input file to exist, "a lockfile that silently skips a missing input is not a lockfile." But R-C's OWN documented scope (the code comment) is `docs/reports/golden/<slug>/post/*.json` — POST-conversion captures, where a descriptor genuinely exists. Nothing in the tool distinguished a PRE capture (this commit, before any descriptor exists) from a POST one. **This is a genuine library gap, not a link_wsib-specific question** — every future pilot's commit 5 would hit the identical throw.
+
+**Fix applied (`scripts/analysis/capture-step-golden.js`, minimal, mirrors an existing pattern already in the same function):** the fingerprint step now checks `fs.existsSync(descriptorPath)` — the SAME check the file already applies two lines earlier when resolving `descriptor` for table derivation — and when absent, writes `source_fingerprint: null`, `fingerprint_files: []`, `fingerprint_skipped_reason: 'no_descriptor_yet'` instead of throwing. `computeSourceFingerprint` itself is UNCHANGED (still throws on any listed-but-missing file when it IS called — the POST-capture lockfile contract stands). Verified: all 3 captures below now write successfully and print `source_fingerprint SKIPPED — ... (pre-conversion capture)`. This fix is scoped to the golden-capture HARNESS (`scripts/analysis/`), not to `scripts/link-wsib.js`'s own descriptor/compute/frozen-shape (none of which exist yet, per the plan's explicit "no descriptor/compute/library code before commit 6 is red" constraint) — Spec 124 §7 rung (d), a library fix every pilot benefits from.
+
+### 3 invocations — table-state hashes IDENTICAL across all three
+
+| Invocation | Chain | Tier1/2/3 matched | `entities` hash | `wsib_registry` hash | Duration |
+|---|---|---:|---|---|---:|
+| `pre/permits.json` | `permits` (phase 7) | 0/0/0 | `266797de` | `c1be664a` | 93.1s |
+| `pre/sources.json` | `sources` (phase 19) | 0/0/0 | `266797de` | `c1be664a` | 95.4s |
+| `pre/standalone.json` | `none` (phase defaults to 7, `PIPELINE_CHAIN` unset) | 0/0/0 | `266797de` | `c1be664a` | 101.1s |
+
+**All three invocations produced byte-identical table-state hashes** on both projected tables (`entities`: id,is_wsib_registered,primary_phone,primary_email,website ordered by id; `wsib_registry`: id,linked_entity_id,match_confidence,matched_at ordered by id — projection required because `wsib_registry`'s 121,116 rows exceed the harness's default 100,000-row ceiling; `entities`'s 3,948 rows are well under it but projected anyway for a stable, step-scoped hash). **Consistent with the `--dry-run` simulation's own finding (below): the remaining 107,151 unlinked `wsib_registry` rows genuinely have zero new matches available in the current 3,948-entity pool** — Tier 1/2 (exact match) find nothing because every exact-match pair was already claimed by prior runs (monotone `WHERE linked_entity_id IS NULL`); Tier 3 (fuzzy, capped `LIMIT 1000`) also finds nothing new, meaning the remaining unlinked corpus is genuinely un-matchable against today's entity pool, not merely capped by the 1000-row safety limit.
+
+### `A-4` amended: THREE invocations, not two (operator directive, this commit)
+
+The plan's own A-4 (as folded through Fold A/B) states "exactly 2 invocations (permits, sources)" for the differential. **This commit's task explicitly specified a THIRD — `standalone` (`--chain=none`)** — matching pilot 3's own precedent (`docs/reports/golden/link_massing/{pre,post}/standalone.json` both exist). Rationale, confirmed by executing: `capture-step-golden.js`'s own docblock states "the standalone (`--chain=none`) capture is the ONE that exercises the step's own ledger path" — `OWN_SLUGS` includes the bare `link_wsib` slug (1 historical completed row, 2026-03-05, "never again" — G-8/§0's own finding), and only a standalone run can ever advance that specific ledger anchor. A-4's "exactly 2" undercounted a real, distinct invocation shape. **Amendment recorded here, not silently applied** — the differential at commit 9 must therefore diff THREE captures each side (6 total), not four.
+
+### `--dry-run` timed once (Fold B item 6c)
+
+`node -r dotenv/config scripts/link-wsib.js --dry-run`, run once, standalone (no `--chain`, so `PIPELINE_CHAIN` unset): **78.6s wall time** (`duration_ms: 78549` reported in its own `PIPELINE_SUMMARY`), simulating 0/0/0 matches across 107,151 unlinked rows — matches the live captures' matched counts exactly (0/0/0), confirming the dry-run simulation and the live cascade agree on today's data. This single measurement feeds A-7's I/O budget line (real-run duration 78–101s per pass, so the ≤20-iteration convergence loop's "≤ ~20 min one-time" bound is 20× ~95s ≈ 32 min worst-case — **wider than the plan's stated "≤ ~20 min"**, flagged as a declared diff for commit 7's A-7 budget line, not resolved here: the bound should read "≤ ~35 min one-time, WARN-not-fail on exhaustion" against the measured per-pass duration).
+
+### Harness self-test (Done-test requirement)
+
+Re-ran the `standalone` capture a second time (`pre/standalone-repeat.json`) and diffed it against the first via `--compare`:
+```
+[capture-step-golden] IDENTICAL (normalised): docs/reports/golden/link_wsib/pre/standalone.json == docs/reports/golden/link_wsib/pre/standalone-repeat.json
+```
+Exit code 0. **Harness self-test PASSES** — a repeat capture under unchanged code and unchanged data produces the identical normalised form, proving the harness itself is deterministic (a precondition for trusting any future PRE-vs-POST differential).
+
+### Non-determinism inventory (declared BEFORE the first diff, Spec 124 §7 Step 4)
+
+Every capture's own `nondeterminism` field (auto-detected by the harness, not hand-curated) is IDENTICAL across all 4 captures: `key:summary.records_meta.duration_ms, pattern:duration_literal, pattern:iso_timestamp, row:sys_duration_ms, row:sys_velocity_rows_sec` — the 5 known-volatile fields (elapsed-time counters + the DB-clock-derived `threshold_updated_at` ISO string pattern-matched, not value-matched). None of these touch the pinned `table_state` hashes or the 13 `invariants.json` values, which is what the PRE-vs-POST differential (commit 9) will actually gate on.
+
+### Invariants pinned (`docs/reports/golden/link_wsib/invariants.json`, 13 entries, all 3 captures identical)
+
+`wsib_tier3_current_predicate_pass_rate_pct=38.1` · `wsib_entity_fanin_max=2118` · `wsib_entity_fanin_p99=208` (new this commit, not previously measured) · `wsib_magnet_entities_fanin_ge_10=171` · `wsib_orphan_linked_entity_id=0` · `wsib_linked_confidence_matched_at_inconsistent=0` · `wsib_confidence_outside_closed_set=0` · `wsib_dead_bucket_050_060_count=0` · `wsib_registered_entities_with_zero_links=0` · `wsib_cumulative_link_rate_pct=11.53` · `wsib_registry_total_rows=121116` · `entities_wsib_registered_count=938` · `wsib_tier_confidence_split=0.60:13645,0.90:245,0.95:75`. **Every structural invariant reads 0 (clean) — no orphan links, no confidence/matched_at inconsistency, no confidence value outside the closed {0.95,0.90,0.60} set, no dead-bucket population, no registered-with-zero-links entity.** The 5 numeric invariants exactly reproduce Fold A/B's measured figures (38.1%, 2118, 171, 11.53%, 938) with one new data point (`fanin_p99=208`) not measured this session before.
 
 ---
 
