@@ -1206,10 +1206,27 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
       f === 'src/features/admin-controls/components/GlobalConfigCard.tsx' ||
       /^src\/tests\/(link-massing\.infra|massing\.logic|massing-full-gate\.logic|pipeline-sdk\.logic|chain\.logic|pipeline-logic-vars-coercion\.infra|pipeline-advisory-lock\.infra|step-conformance\.infra|step-library\.logic|admin\.ui|control-panel\.logic)\.test\.tsx?$/.test(f) ||
       f === 'docs/specs/01-pipeline/122_pipeline_step_optimization.md' || f === 'docs/specs/01-pipeline/56_source_massing.md' || f === 'docs/specs/01-pipeline/60_shared_steps.md';
+    // DECLARED foreign touches — nothing hidden: a peel that had to reach outside its scope
+    // names the file AND the why, per commit. An entry whose file the commit did NOT touch
+    // is a stale exception and fails below. Adding a row here is a ruling, not a convenience.
+    const declaredForeign: Record<string, Record<string, string>> = {
+      '68e23678': {
+        'src/tests/load-ravines.logic.test.ts':
+          'LM-D14 is library-wide (staleness.resolveOverrides now returns force_full); load_ravines is a converted step whose lock pinned the old 3-key shape',
+        'src/tests/enrich-heritage-418.logic.test.ts':
+          'SCOPE BREACH, owned: CRLF-tolerant mirror-lock (pre-existing red on autocrlf checkouts) rode 8b to get the hook green — should have been its own fix commit',
+        'src/tests/compute-parcel-cost-ledger-gate.logic.test.ts':
+          'SCOPE BREACH, owned: same CRLF-tolerance fix as enrich-heritage-418 — should have been its own fix commit',
+      },
+    };
     for (const p of peels) {
       const [hash, subject] = p.split('\x1f') as [string, string];
       const files = git(['show', '--name-only', '--format=', hash]).split(/\r?\n/).filter(Boolean).map((f) => f.replace(/\\/g, '/'));
-      const foreign = files.filter((f) => !allowed(f));
+      const declared = declaredForeign[hash.slice(0, 8)] ?? {};
+      for (const f of Object.keys(declared)) {
+        expect(files, `${hash.slice(0, 8)} declares a foreign touch of ${f} it did not make (stale exception)`).toContain(f);
+      }
+      const foreign = files.filter((f) => !allowed(f) && !(f in declared));
       expect(foreign, `${hash.slice(0, 8)} "${subject}" touches non-peel files`).toEqual([]);
       expect(files.includes(STEP_REL), `${hash.slice(0, 8)} edits the frozen-shape step file`).toBe(false);
     }

@@ -794,6 +794,40 @@ describe('§1.2a P4 — ctx.config: resolved, bounds-checked, projected, stamped
 });
 
 // ---------------------------------------------------------------------------
+// 7b. LM-D15 — a declared variable with no `logic_variables` ROW resolves
+// silently through the seed clone and is stamped as if operator-set. Presence
+// in the LIVE TABLE, not presence in the seed-primed `logicVars` object, is
+// what makes a variable operator-editable (Spec 122 §1.2a P4).
+// ---------------------------------------------------------------------------
+
+describe('LM-D15 — a declared name absent from logic_variables is a FAILED run, not a seed fallback', () => {
+  it('(a) declared name WITH a DB row still resolves — happy path is byte-identical', async () => {
+    const d = withConfig([{ name: SEED_SAMPLE_ROWS, min: 1, max: 1000 }]);
+    const { seen, error, summary } = await runWithConfig(d, { logicVars: { [SEED_SAMPLE_ROWS]: '37' } });
+    expect(error).toBeNull();
+    expect(seen).toEqual({ [SEED_SAMPLE_ROWS]: 37 });
+    expect(summary?.records_meta.config).toEqual({ [SEED_SAMPLE_ROWS]: 37 });
+  });
+
+  it('(b) declared name with a SEED default but NO logic_variables row throws with the remedy command', async () => {
+    const d = withConfig([{ name: SEED_SAMPLE_ROWS, min: 1, max: 1000 }]);
+    const { error, seen } = await runWithConfig(d, { logicVars: {} });
+    expect(error?.message).toMatch(/no logic_variables row/);
+    expect(error?.message).toMatch(/seed default exists/);
+    expect(error?.message).toMatch(/node -r dotenv\/config scripts\/seeds\/apply-logic-variables\.js/);
+    expect(error?.message).toMatch(/Spec 122 §1\.2a P4/);
+    expect(seen, 'compute never ran').toBeUndefined();
+  });
+
+  it('(c) declared name in NEITHER registry keeps the original "exists in NO registry" message', async () => {
+    const { error, seen } = await runWithConfig(withConfig([{ name: 'a_var_no_seed_and_no_db_has' }]));
+    expect(error?.message).toMatch(/exists in NO registry/);
+    expect(error?.message).not.toMatch(/no logic_variables row/);
+    expect(seen).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 8. The GATING peel (8a) — the force arm and the prior-run error posture
 // ---------------------------------------------------------------------------
 

@@ -20,8 +20,9 @@
  *   5. `records_meta` / `PIPELINE_META`, both derived FROM the descriptor  (§4.1 ㉙)
  *   6. per-chain check selection from `checks[].chains`                    (§1.7)
  *   7. the `database` guard — floor + `current_database()`                 (§4.1 ③④)
- *   8. `ctx.config` — the declared logic variables, resolved and bounds-checked
- *      BEFORE compute, stamped into `records_meta.config`     (§1.2a P4, config.js)
+ *   8. `ctx.config` — the declared logic variables, present in the registry, resolved
+ *      and bounds-checked BEFORE compute, stamped into `records_meta.config`
+ *                                                            (§1.2a P4, config.js)
  *
  * ⚠️ RECONCILE (A3) IS NOT IMPLEMENTED AND NOTHING HERE ASSUMES IT RAN.
  * The Step-0 reconcile that reaps stale `running` rows to `crashed` is a

@@ -22,6 +22,10 @@
  *   4. bounds + `on_invalid`, per declared variable:
  *        `fail`    → THROW, before compute, before any observation exists.
  *        `default` → the SEED default (scripts/seeds/logic_variables.json), warn loudly.
+ *                    This fires ONLY for a value already sitting in a `logic_variables`
+ *                    ROW that fails its bounds (on_invalid: "default" is a per-row
+ *                    fallback). The seed file itself is BOOTSTRAP ONLY — never a
+ *                    runtime fallback for a converted step — see LM-D15 below.
  *        `clamp`   → the violated bound, warn loudly. A non-finite value has no bound
  *                    to clamp toward, so it throws under `clamp` too.
  *   5. FREEZE. A compute that mutates its own threshold mid-run is a compute whose
@@ -30,6 +34,16 @@
  * A DECLARED NAME THAT IS IN NO REGISTRY THROWS. Neither the DB nor the seed JSON
  * knows it, so there is nothing an operator could edit — it is a hidden literal
  * wearing a variable's name, which is the exact P1 failure this closes.
+ *
+ * A DECLARED NAME WITH NO `logic_variables` ROW ALSO THROWS, even when the seed
+ * JSON has a default for it (LM-D15, Spec 122 §1.2a P4). `loadMarketplaceConfigs`
+ * clones the seed defaults and overlays whatever DB rows exist — so a step whose
+ * row was never inserted resolves through the seed clone silently, and the seed
+ * value gets stamped into `records_meta.config` indistinguishable from a value an
+ * operator actually edited. A seed bootstraps a fresh DB; it is not a live
+ * registry, and it is never a substitute for one once a step is converted. Insert
+ * the row with `node -r dotenv/config scripts/seeds/apply-logic-variables.js`
+ * before the step can run.
  *
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.2a P4, §5.5
  * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §4.1, §4.2
@@ -72,6 +86,23 @@ async function resolveConfig(pool, descriptor) {
   }
 
   const { logicVars } = await loadMarketplaceConfigs(pool, slug, { quiet: true });
+
+  // LM-D15 (Spec 122 §1.2a P4): `logicVars` above is the seed clone overlaid with
+  // whatever DB rows exist — a declared name with NO row still resolves through
+  // the seed and is indistinguishable from an operator-edited value once stamped.
+  // Presence in the LIVE TABLE, not presence in `logicVars`, is what makes a
+  // variable operator-editable, so it takes its own query: one SELECT, scoped to
+  // exactly the names this step declares.
+  const declaredNames = cfg.logic_variables.map((decl) => decl.name);
+  let presentInDb = new Set();
+  if (declaredNames.length > 0) {
+    const { rows: presenceRows } = await pool.query(
+      'SELECT variable_key FROM logic_variables WHERE variable_key = ANY($1)',
+      [declaredNames],
+    );
+    presentInDb = new Set(presenceRows.map((r) => r.variable_key));
+  }
+
   const values = Object.create(null);
   const stamp = {};
 
@@ -85,6 +116,19 @@ async function resolveConfig(pool, descriptor) {
         `[${slug}] config: "${name}" is declared by the descriptor but exists in NO registry ` +
           '(neither logic_variables nor scripts/seeds/logic_variables.json). Seed it before consuming it — ' +
           'a name no operator can edit is a hidden literal (Spec 122 §1.2a P4).',
+      );
+    }
+
+    if (!presentInDb.has(name)) {
+      const hasSeed = Object.prototype.hasOwnProperty.call(FALLBACK_LOGIC_VARS, name);
+      throw new Error(
+        `[${slug}] config: "${name}" is declared by the descriptor but has no logic_variables row ` +
+          (hasSeed
+            ? '(a seed default exists in scripts/seeds/logic_variables.json, but a seed is BOOTSTRAP ONLY — ' +
+              'never a runtime fallback for a converted step). '
+            : '(no seed default exists in scripts/seeds/logic_variables.json either). ') +
+          'Run "node -r dotenv/config scripts/seeds/apply-logic-variables.js" to insert it, then re-run this step. ' +
+          'Spec 122 §1.2a P4 — a seed-only value is not operator-editable.',
       );
     }
 
