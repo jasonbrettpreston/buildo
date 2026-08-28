@@ -618,7 +618,7 @@
     {
       "from": "the §1.2a P4 standard posture on_invalid: \"fail\" for a declared logic variable",
       "why": {
-        "text": "SPLIT, and the split is the ruling. The three variables that decide what gets WRITTEN or what PASSES — link_massing_link_rate_fail_pct (the verdict bound) and the two written confidences — carry on_invalid \"fail\": a step must not compute a verdict, or stamp a confidence, on a value the operator did not mean, and hoisted_above_gate puts that refusal ABOVE the lock so it cannot hide behind a green SKIPPED summary. ⚠️ THE COST IS REAL AND IS STATED: these three are seeded by the mig-099 seed contract, applied at the END of npm run migrate, so a cloud database that has not re-seeded has none of them and this step REFUSES rather than running on the seed fallback. That refusal is loud, immediate and correct — but it must be sequenced with the cloud seed, not discovered by it. The three PRE-EXISTING massing_* variables keep their registered semantics (default/clamp: they shape a classification, not a verdict), and the retired-path grid span keeps \"default\" because nothing reads it. Revisit at the cloud seed.",
+        "text": "SPLIT, and the split is the ruling. The three variables that decide what gets WRITTEN or what PASSES — link_massing_link_rate_fail_pct (the verdict bound) and the two written confidences — carry on_invalid \"fail\": a step must not compute a verdict, or stamp a confidence, on a value the operator did not mean, and hoisted_above_gate puts that refusal ABOVE the lock so it cannot hide behind a green SKIPPED summary. ⚠️ THE COST IS REAL AND IS STATED: these three are seeded by the mig-099 seed contract, applied at the END of npm run migrate, so a cloud database that has not re-seeded has none of them and this step REFUSES rather than running on the seed fallback. That refusal is loud, immediate and correct — but it must be sequenced with the cloud seed, not discovered by it. The three PRE-EXISTING massing_* variables keep their registered semantics (default/clamp: they shape a classification, not a verdict). Revisit at the cloud seed.",
         "liveness": { "kind": "file", "ref": "scripts/seeds/logic_variables.json" }
       },
       "adjudicated_by": "operator condition 2026-08-27 (every tunable externalized, nothing may silently fail)",
@@ -653,11 +653,6 @@
     {
       "what": "parcels.centroid_lat/lng is an eligibility filter with NO declared invalidator (review_followups.md, HIGH, 2026-08-23). This descriptor therefore states the centroid predicate as part of staleness.scope and as the retraction scope, but claims nothing about being re-run when a centroid changes: a parcel whose centroid moves after it was linked is NOT re-evaluated by the incremental filter, because the filter asks whether a link exists, not whether it is still right. Only a full relink corrects such a parcel. The upstream gap is not fixed here.",
       "measured": "scripts/link-massing.js baseFilter `centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL`; Spec 122 §6.4 corrects the earlier claim to 'one join plus one eligibility filter'",
-      "check_id": "none"
-    },
-    {
-      "what": "link_massing_grid_degrees (0.003 degrees, ~333 m) is REGISTERED AND DECLARED BUT NOT CONSUMED. It was the JS fallback path's grid-cell size and also seeded that path's dynamic search radius; the A-8 override retired the path, so nothing reads it. It is registered rather than dropped so the retirement is recorded in the operator-visible registry instead of disappearing with the code — but it is a dead knob, and turning it changes nothing.",
-      "measured": "scripts/link-massing.js GRID_SIZE = 0.003 (retired); 0 ctx.config reads in scripts/lib/compute/link-massing.js",
       "check_id": "none"
     },
     {
@@ -712,8 +707,7 @@
       { "name": "massing_nearest_max_distance_m", "min": 1, "max": 500, "on_invalid": "clamp" },
       { "name": "link_massing_link_rate_fail_pct", "min": 0, "max": 100, "on_invalid": "fail" },
       { "name": "link_massing_centroid_confidence", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "link_massing_nearest_confidence", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "link_massing_grid_degrees", "min": 0.0005, "max": 0.05, "on_invalid": "default" }
+      { "name": "link_massing_nearest_confidence", "min": 0, "max": 1, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true

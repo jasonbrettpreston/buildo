@@ -1121,6 +1121,8 @@ Migrations **245–248 are free** — 244 is the highest `[MEASURED]`. Sequencin
 | **LINK** | 3 | `link_massing` | the **only** step with a code+data signal (G3), full retraction | F |
 | **ENRICHER** | 6 | `enrich_parcels` | **2,153 lines**, 5 passes, scope-defer, the clock-relative gate at `:1085` | J |
 
+> **Pilot ORDER — operator rulings (recorded as made; neither this spec nor Spec 123 pinned an order beyond 1→2→3).** 1 `assert_schema` (ASSERT, landed) · 2 `load_ravines` (INGESTOR, landed) · 3 `link_massing` (LINK, cutover commit 9, 2026-08-28) · **4 `link_wsib` (MATCHER) — ruled 2026-08-28.** Why 4: the nearest sibling to LINK (reuses `runLinkPhase`, ordered `writes[]`, `retract_when`, the tri-state gate), so it tests whether pilot 3's library growth GENERALIZES before anything new is built; it also carries the run-ledger gate, the A1/A2 config-hoist fence and a second dual-chain invocation divergence. Pilots 5–8 are ruled one at a time at each cutover; `enrich_parcels` (ENRICHER) goes LAST, when the library is most mature.
+
 ⚠️ **Coverage caveat, stated because it is not obvious:** eight archetypes do **not** cover the 13 write classes. `INGESTOR` alone spans A, B and C; `ENRICHER` spans G, H, I, J and K. **That is acceptable** — the classes are covered by the `write_discipline.class` **enum being ported from the measured taxonomy** (§3.0b), not by converting one of each. The archetype pilot validates the *required-field profile*; the enum validates the *write shapes*.
 
 **Freeze the template after the eighth, never the first** — and if any of the eight forces a contract change, the count is not the eight, it is however many it takes.

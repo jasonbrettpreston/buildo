@@ -168,9 +168,6 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_massing_link_rate_fail_pct',
   'link_massing_centroid_confidence',
   'link_massing_nearest_confidence',
-  // Registered so a RETIREMENT stays visible: the grid cell size of the JS fallback
-  // path the A-8 override retired. Nothing reads it; turning it changes nothing.
-  'link_massing_grid_degrees',
   'wsib_fuzzy_match_threshold',       // E20
   'calibration_default_median_days',  // E21
   'calibration_default_p25_days',     // E21

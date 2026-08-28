@@ -19,14 +19,8 @@
   "contract_version": 1,
   "converted": [
     "scripts/quality/assert-schema.js",
-    "scripts/load-ravines.js"
+    "scripts/load-ravines.js",
+    "scripts/link-massing.js"
   ],
-  "pending": [
-    {
-      "file": "scripts/link-massing.js",
-      "registers_at": "C1 pilot 3 commit 9 (cutover)",
-      "reason": "shape-clean since commit 7 (frozen-shape wrap); registration is the cutover commit by Spec 123 §3.1 pin-then-add ordering",
-      "declared": "2026-08-27"
-    }
-  ]
+  "pending": []
 }

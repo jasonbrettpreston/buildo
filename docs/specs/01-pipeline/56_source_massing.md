@@ -66,6 +66,7 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
 - **CODE signal:** `LINK_MASSING_CODE_VERSION` (in the gate lib) — bump it on ANY change to the matching predicate / structure classification / ghost cleanup (the b16c036-class guard; a pure data gate would have silently skipped the predicate FLIP itself, leaving ghost links). Recorded in meta, compared next run.
 - **Decision:** `FULL_MODE = LINK_MASSING_FORCE_FULL=1 || (--full && gate.changed)`. Missing pre-P11 signals are treated as UNCHANGED (the last completed sources run WAS a full relink with the current predicate, so an incremental run is correct). The `permits`-chain run (no `--full`) stays incremental regardless.
 - **Full path is preserved:** a changed data/code signal still runs the full ghost-link cleanup (the `DELETE` gated on `FULL_MODE`) + full rescan. `LINK_MASSING_FORCE_FULL=1` is the manual escape hatch.
+- **Interrupted-FULL failure mode (measured 2026-08-28):** the FULL-mode DELETE commits before the relink batch loop, so a forced FULL killed mid-rebuild leaves `parcel_buildings` partially empty (observed: 29,330 of 520,492 rows). Recovery is a forced re-run (`LINK_MASSING_FORCE_FULL=1`, ~14–27 min measured); this is documented behaviour, not a defect.
 
 ### Edge Cases
 - Shapefile URL changes → `assert_schema` (Tier 1) checks URL accessibility

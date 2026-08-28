@@ -139,7 +139,7 @@ const SELF_CONSUMER_SLUG = 'link_massing';
 /** D-4 — the INFO metric ids that must survive as declared INFO checks (chain.logic.test.ts asserts the last by name). */
 const INFO_METRIC_IDS = ['parcels_processed', 'run_matched', 'match_centroid_in_parcel', 'match_nearest_fallback', 'no_match', 'parcel_buildings_written'];
 
-/** P4 — T1–T7 by the plan's names. T4 is the verdict bound (`limit_from_config`). */
+/** P4 — T1–T6 by the plan's names. T4 is the verdict bound (`limit_from_config`). T7 (`link_massing_grid_degrees`, the retired JS-path grid literal) was declared-but-never-consumed through peel 8c and its DECLARATION was retired at commit 9 once the armed §1.2a P4 gate caught it as a dead declaration (LM-D7). */
 const CONFIG_VARS = {
   T1: 'massing_shed_threshold_sqm',
   T2: 'massing_garage_max_sqm',
@@ -147,11 +147,8 @@ const CONFIG_VARS = {
   T4: 'link_massing_link_rate_fail_pct',
   T5: 'link_massing_centroid_confidence',
   T6: 'link_massing_nearest_confidence',
-  T7: 'link_massing_grid_degrees',
 } as const;
 const LIMIT_FROM_CONFIG_VARS: string[] = [CONFIG_VARS.T4];
-/** A-8 OVERRIDE — T7 is the JS-path grid literal; with that path RETIRED it is declared and recorded, never read by the compute. */
-const RETIRED_PATH_VARS = new Set<string>([CONFIG_VARS.T7]);
 
 /** A-2 option 2 — the pure exports of the compute. */
 const PURE_HELPERS = ['buildMatchSql', 'classifyStructure'];
@@ -1660,7 +1657,7 @@ describe('55-B — monotone partials (5, k=MIXED)', () => {
 // ===========================================================================
 
 describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold B LINK library growth', () => {
-  it('descriptor exists, validates, and carries the A-1…A-8 rulings: shape:link, E1/E2 in order, composite key, T1–T7, the A-7 guards, invocation ≡ manifest, counters, geom reads, emits, terminals', () => {
+  it('descriptor exists, validates, and carries the A-1…A-8 rulings: shape:link, E1/E2 in order, composite key, T1–T6, the A-7 guards, invocation ≡ manifest, counters, geom reads, emits, terminals', () => {
     const d = loadDescriptor();
     expect(d.identity.name).toBe('link_massing');
     expect(d.identity.lock).toBe(LOCK_ID);
@@ -1675,8 +1672,8 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     expect(invocation.sources?.argv, 'sources invocation argv').toEqual(['--full']);
     expect(invocation.permits?.argv, 'permits invocation argv').toEqual([]);
     for (const chain of ['sources', 'permits']) expect(invocation[chain]?.argv, `execution.invocation.${chain}.argv ≡ manifest.chain_args`).toEqual(chainArgs[chain] ?? []);
-    // P4 — T1–T7 declared; T4 verdict-bound via limit_from_config; T3 clamps; T7 recorded (retired path)
-    expect(d.config, 'config:"none" while 3 registered + 4 proposed knobs exist').not.toBe('none');
+    // P4 — T1–T6 declared; T4 verdict-bound via limit_from_config; T3 clamps
+    expect(d.config, 'config:"none" while 3 registered + 3 proposed knobs exist').not.toBe('none');
     const cfg = d.config as { logic_variables: Array<{ name: string; on_invalid: string; min: unknown; max: unknown }>; hoisted_above_gate: boolean };
     const names = cfg.logic_variables.map((v) => v.name).sort();
     expect(names).toEqual(Object.values(CONFIG_VARS).sort());
@@ -1810,7 +1807,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     expect(sql.search(/ST_Contains/) < sql.search(/ST_DWithin/), 'B-9: the nearest fallback comes AFTER the centroid pass').toBe(true);
     expect(/0\.95|0\.60?\b/.test(sql), 'T5/T6: the written confidences are ctx.config reads, not literals in the SQL').toBe(false);
     for (const v of Object.values(CONFIG_VARS)) {
-      if (RETIRED_PATH_VARS.has(v) || LIMIT_FROM_CONFIG_VARS.includes(v)) continue;
+      if (LIMIT_FROM_CONFIG_VARS.includes(v)) continue;
       expect(src.includes(`ctx.config.${v}`) || src.includes(`config.${v}`), `${v} is not read from ctx.config by the compute`).toBe(true);
     }
     const classify = mod.classifyStructure as (area: number, all: number[], shed: number, garage: number) => string;

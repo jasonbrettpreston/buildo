@@ -116,7 +116,6 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
       'link_massing_link_rate_fail_pct',
       'link_massing_centroid_confidence',
       'link_massing_nearest_confidence',
-      'link_massing_grid_degrees',
     ],
   },
   {

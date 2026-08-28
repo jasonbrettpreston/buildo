@@ -7,13 +7,13 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (426) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (425) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 19 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **432** logic variables (426 numeric, 6 JSONB).
+Total: **431** logic variables (425 numeric, 6 JSONB).
 
 ---
 
@@ -379,7 +379,6 @@ Total: **432** logic variables (426 numeric, 6 JSONB).
 | `lifecycle_status_history_retention_days` | numeric | 1825 | 730 – 3650 | — | seed | Days to retain rows in lifecycle_status_history (default 1825 = 5 years per Spec 86 §1). Long retention supports forecast cohort segmentation by traversal pattern across the median 1,078-day CoA→permit lag. Hard floor: must be ≥ 730 to support typical CoA cohort learning. Seeded in DB by mig 136. |
 | `lifecycle_unclassified_max` | numeric | 100 | 0 – 10000 | `scripts/quality/assert-lifecycle-phase-distribution.js` | seed | Maximum number of non-terminal permits/CoAs with a NULL lifecycle_phase before assert-lifecycle-phase-distribution emits a FAIL (strongest correctness gate) |
 | `link_massing_centroid_confidence` | numeric | 0.95 | 0 – 1 | — | seed | Confidence written to parcel_buildings.confidence for a link made by the building-centroid-in-parcel predicate. CONSUMED by link_massing (scripts/lib/compute/link-massing.js classifyMatches) and read downstream by enrich-parcels as link_confidence. Pre-externalization the literal lived at two sites across two code paths that had to agree. |
-| `link_massing_grid_degrees` | numeric | 0.003 | 0.0005 – 0.05 | — | seed | RETIRED KNOB, registered so the retirement is visible rather than lost with the code. Was the in-memory grid cell size (degrees, ~333 m) of link-massing's JS fallback path, which also seeded that path's dynamic search radius. The A-8 override retired that path in favour of a fail-loud PostGIS precondition, so nothing reads this today. CONSUMED by link_massing only as a declared record; turning it changes nothing. |
 | `link_massing_link_rate_fail_pct` | numeric | 50 | 0 – 100 | — | seed | Minimum cumulative link rate (%) — linked parcels over parcels with a centroid — below which the massing link verdict FAILs. CONSUMED by link_massing via checks[].limit_from_config; the check reports the UNLINKED complement so the declared `pct <=` limit form expresses a floor. Pre-externalization this was the bare literal 50 in `massingLinkRate >= 50 ? …` PLUS a duplicated '>= 50%' render string, with zero registered variables. Live headroom is large (99.71% linked), which is itself a finding — the floor cannot fire before the damage. |
 | `link_massing_nearest_confidence` | numeric | 0.6 | 0 – 1 | — | seed | Confidence written to parcel_buildings.confidence for a link made by the bounded nearest-footprint fallback. CONSUMED by link_massing (scripts/lib/compute/link-massing.js classifyFallback). 21.3% of linked parcels carry only this value, so it is the marker of the lower-trust link population the cost model must be able to distinguish. |
 | `load_ravines_count_drift_fail_pct` | numeric | 0.5 | 0 – 1 | — | seed | Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — L7 feature-count drift bound: \|loaded − prior\| / prior above this FAILs the run before any DB write. 0.5 = the pre-externalization literal (ravineDriftFeatureCountPct). Bound to check ravine_count_drift_pct through checks[].limit_from_config, so the resolved value renders as the audit row threshold. RAVINE_ACCEPT_FEATURE_COUNT_DRIFT=1 lets the run proceed but never suppresses the FAIL row. CONSUMED by load_ravines (scripts/lib/compute/load-ravines.js ravine_count_drift_pct, via ctx.config). |
@@ -395,9 +394,9 @@ Total: **432** logic variables (426 numeric, 6 JSONB).
 | `los_multiplier_work` | numeric | 1.5 | 0.5 – 10 | `scripts/compute-opportunity-scores.js` | seed | LoS score multiplier applied when a lead is in active work phase |
 | `los_penalty_saving` | numeric | 10 | 0 – 100 | `scripts/compute-opportunity-scores.js` | seed | LoS penalty (points) deducted when a lead is saved but not acted on |
 | `los_penalty_tracking` | numeric | 50 | 0 – 100 | `scripts/compute-opportunity-scores.js` | seed | LoS penalty (points) deducted when a lead has been viewed/tracked without conversion |
-| `massing_garage_max_sqm` | numeric | 60 | 1 – 500 | — | seed | Maximum building footprint area (m²) for a secondary structure to be classified as a garage in link-massing |
-| `massing_nearest_max_distance_m` | numeric | 50 | 1 – 500 | — | seed | Maximum haversine distance (metres) for the nearest-building fallback in link-massing when no polygon match is found |
-| `massing_shed_threshold_sqm` | numeric | 20 | 1 – 200 | — | seed | Building footprint area (m²) below which a secondary structure is classified as a shed in link-massing |
+| `massing_garage_max_sqm` | numeric | 60 | 1 – 500 | — | seed | Maximum building footprint area (m²) for a secondary structure to be classified as a garage in link-massing. CONSUMED by link_massing (scripts/lib/compute/link-massing.js structure_thresholds, classifyStructure). |
+| `massing_nearest_max_distance_m` | numeric | 50 | 1 – 500 | — | seed | Maximum haversine distance (metres) for the nearest-building fallback in link-massing when no polygon match is found. CONSUMED by link_massing (scripts/lib/compute/link-massing.js match_nearest_fallback, buildMatchSql). |
+| `massing_shed_threshold_sqm` | numeric | 20 | 1 – 200 | — | seed | Building footprint area (m²) below which a secondary structure is classified as a shed in link-massing. CONSUMED by link_massing (scripts/lib/compute/link-massing.js structure_thresholds, classifyStructure). |
 | `max_build_min_dimension_m` | numeric | 3 | 0 – 10 | `scripts/enrich-parcels.js` | seed | Spec 65 §4 MB-3 (WF3 Phase 1 D-C): minimum viable build dimension (m). A max-build width/length below this floor is NULLed — the setback box is excluded as degenerate; non-ravine envelopes fall back to the coverage cap only (max_buildable_gfa_basis='coverage_only'); ravine sub-floor parcels are 'ravine_constrained' with the whole envelope withheld (no coverage fallback). CONSUMED by enrich-parcels.js. Operator-tunable. |
 | `min_comp_count` | numeric | 3 | — (migration-seeded) | — | migration 205 | Spec 88 §2 / Spec 78 R4: min family-filtered comps before kNN falls back to zoning-only. |
 | `min_soft_landscaping_pct` | numeric | 0.3 | 0.05 – 0.9 | `scripts/enrich-parcels.js` | seed | Spec 65 §7 (Phase 3) — share of the lot that must remain soft landscaping; an accessory pushing greenspace below this is buildable only via a CoA minor variance (drives garage_permission / rear_suite_permission). CONSUMED by enrich-parcels.js (max-build pass). |
@@ -454,4 +453,4 @@ Total: **432** logic variables (426 numeric, 6 JSONB).
 
 ---
 
-*Generated from 413 seed vars + 19 migration-only vars + 100 consumer-mapped keys across 2 script dirs.*
+*Generated from 412 seed vars + 19 migration-only vars + 100 consumer-mapped keys across 2 script dirs.*

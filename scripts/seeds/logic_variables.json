@@ -744,21 +744,21 @@
   "massing_shed_threshold_sqm": {
     "default": 20,
     "type": "number",
-    "description": "Building footprint area (m²) below which a secondary structure is classified as a shed in link-massing",
+    "description": "Building footprint area (m²) below which a secondary structure is classified as a shed in link-massing. CONSUMED by link_massing (scripts/lib/compute/link-massing.js structure_thresholds, classifyStructure).",
     "min": 1,
     "max": 200
   },
   "massing_garage_max_sqm": {
     "default": 60,
     "type": "number",
-    "description": "Maximum building footprint area (m²) for a secondary structure to be classified as a garage in link-massing",
+    "description": "Maximum building footprint area (m²) for a secondary structure to be classified as a garage in link-massing. CONSUMED by link_massing (scripts/lib/compute/link-massing.js structure_thresholds, classifyStructure).",
     "min": 1,
     "max": 500
   },
   "massing_nearest_max_distance_m": {
     "default": 50,
     "type": "number",
-    "description": "Maximum haversine distance (metres) for the nearest-building fallback in link-massing when no polygon match is found",
+    "description": "Maximum haversine distance (metres) for the nearest-building fallback in link-massing when no polygon match is found. CONSUMED by link_massing (scripts/lib/compute/link-massing.js match_nearest_fallback, buildMatchSql).",
     "min": 1,
     "max": 500
   },
@@ -782,13 +782,6 @@
     "description": "Confidence written to parcel_buildings.confidence for a link made by the bounded nearest-footprint fallback. CONSUMED by link_massing (scripts/lib/compute/link-massing.js classifyFallback). 21.3% of linked parcels carry only this value, so it is the marker of the lower-trust link population the cost model must be able to distinguish.",
     "min": 0,
     "max": 1
-  },
-  "link_massing_grid_degrees": {
-    "default": 0.003,
-    "type": "number",
-    "description": "RETIRED KNOB, registered so the retirement is visible rather than lost with the code. Was the in-memory grid cell size (degrees, ~333 m) of link-massing's JS fallback path, which also seeded that path's dynamic search radius. The A-8 override retired that path in favour of a fail-loud PostGIS precondition, so nothing reads this today. CONSUMED by link_massing only as a declared record; turning it changes nothing.",
-    "min": 0.0005,
-    "max": 0.05
   },
   "wsib_fuzzy_match_threshold": {
     "default": 0.6,
