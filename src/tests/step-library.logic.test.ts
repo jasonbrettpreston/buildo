@@ -1081,10 +1081,19 @@ describe('LR-D6 — lock contention emits a row-derived SKIP, on a write-class s
       const summary = cap.summary();
       expect(summary.records_new, 'nothing was inserted, and nothing MEASURED an insert').toBeNull();
       expect(summary.records_updated).toBeNull();
-      // `records_total` is emitted null here too, but `pipeline.emitSummary` normalises
-      // that one slot to 0 on the way out (plan C-11) — asserted as the emitted value so
-      // the normalisation is recorded rather than read as a library disagreement.
-      expect(summary.records_total, 'emitSummary normalises records_total null -> 0').toBe(0);
+      // LW-D12 (2026-08-28): pre-fix, `pipeline.emitSummary` normalised ONLY this one slot
+      // (`?? 0`, coercing an explicit null too) while records_new/records_updated preserved
+      // null (`!== undefined ? … : 0`) — a genuine asymmetry, not the deliberate "plan C-11"
+      // normalisation this test used to cite (C-11 is `run-chain.js`'s OWN DB-write
+      // normalisation for the pre-conversion `load_ravines` script, docs/reports/
+      // 2026-08-25-pilot2-load-ravines-assessment.md:89 — a different layer; it does not
+      // license `pipeline.js#emitSummary` doing the same thing to one of three symmetric
+      // fields). `scripts/lib/step/ledger.js#finalizeLedgerRow` deliberately carries NO
+      // COALESCE on these three columns, so a step's declared null must reach
+      // `pipeline_runs` as null — the pre-fix stdout summary (`records_total: 0`) and the
+      // SAME run's ledger row (`records_total: null`) disagreed. Fixed: all three fields are
+      // now null-symmetric (`src/tests/pipeline-sdk.logic.test.ts` "LW-D12" tests).
+      expect(summary.records_total, 'records_total is null-symmetric with records_new/records_updated (LW-D12)').toBeNull();
     } finally {
       cap.restore();
     }

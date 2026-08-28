@@ -10,9 +10,13 @@ interface PipelineRunRow {
   status: string;
   duration_ms: number | null;
   error_message: string | null;
-  records_total: number;
-  records_new: number;
-  records_updated: number;
+  // LW-D12 (2026-08-28): pipeline_runs.records_total/_new/_updated are legitimately null
+  // (Observer-archetype/gated-skip steps declare `counters: "none"` — no COALESCE in
+  // scripts/lib/step/ledger.js#finalizeLedgerRow) — this route selects the raw column, so
+  // the type must admit that, matching the sibling admin routes (history/status/stats).
+  records_total: number | null;
+  records_new: number | null;
+  records_updated: number | null;
 }
 
 /**

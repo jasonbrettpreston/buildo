@@ -320,8 +320,17 @@ let _runStartMs = Date.now();
  */
 function emitSummary(stats) {
   const payload = {
-    records_total: stats.records_total ?? 0,
-    // Preserve null — signals "not applicable" for CQA/read-only scripts (§3.5)
+    // LW-D12 (2026-08-28) — SYMMETRIC with records_new/records_updated below: `?? 0` also
+    // coerces an explicit `null` (not just `undefined`) to 0, which silently disagreed with
+    // `scripts/lib/step/ledger.js#finalizeLedgerRow` (no COALESCE on these three columns,
+    // deliberately — a declared `null` must reach `pipeline_runs` as `null`). A converted
+    // step's gated-skip counters (`scripts/lib/step/index.js`: `{records_total: null,
+    // records_new: null, records_updated: null}`) emitted `records_total: 0` on stdout while
+    // the SAME run's `pipeline_runs.records_total` stayed `null` — two different values for
+    // one run (measured: docs/reports/golden/link_wsib/post/standalone.json pre-fix,
+    // summary.records_total 0 vs pipeline_runs[0].records_total null). Preserve null —
+    // signals "not applicable" for CQA/read-only scripts (§3.5), same as records_new/updated.
+    records_total: stats.records_total !== undefined ? stats.records_total : 0,
     records_new: stats.records_new !== undefined ? stats.records_new : 0,
     records_updated: stats.records_updated !== undefined ? stats.records_updated : 0,
   };

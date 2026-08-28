@@ -246,6 +246,32 @@ describe('Pipeline SDK', () => {
       expect(parsed.records_updated).toBeNull();
     });
 
+    // LW-D12 (2026-08-28) — records_total must be SYMMETRIC with records_new/records_updated:
+    // an explicit `null` in must stay `null` out (a gated-skip's declared "not applicable"),
+    // and only a genuinely missing (`undefined`) field defaults to 0. Pre-fix, records_total
+    // used `?? 0` (coerces null AND undefined) while records_new/records_updated used
+    // `!== undefined ? … : 0` (preserves null) — the SAME run's stdout summary and its
+    // scripts/lib/step/ledger.js#finalizeLedgerRow-written pipeline_runs row disagreed (0 vs
+    // null) for one declared-null value. Both directions, both fields, in one test so a
+    // regression to `?? 0` on any of the three fails here first.
+    it('records_total is null-symmetric with records_new/records_updated: explicit null in -> null out (LW-D12)', () => {
+      pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null });
+      const output = logSpy!.mock.calls[0]![0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed.records_total, 'an explicit null must reach the summary as null, not be coerced to 0').toBeNull();
+      expect(parsed.records_new).toBeNull();
+      expect(parsed.records_updated).toBeNull();
+    });
+
+    it('records_total is null-symmetric with records_new/records_updated: missing (undefined) in -> 0 out (LW-D12)', () => {
+      pipeline.emitSummary({ records_new: 0, records_updated: 0 });
+      const output = logSpy!.mock.calls[0]![0] as string;
+      const parsed = JSON.parse(output.replace('PIPELINE_SUMMARY:', ''));
+      expect(parsed.records_total, 'a genuinely missing field still defaults to 0').toBe(0);
+      expect(parsed.records_new).toBe(0);
+      expect(parsed.records_updated).toBe(0);
+    });
+
     // --- Auto-injection tests (SDK payload upgrade) ---
 
     it('auto-injects sys_velocity_rows_sec into audit_table.rows', () => {
