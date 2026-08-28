@@ -154,6 +154,42 @@ const ZONING_RESOURCES = [
 // Checks — one function per declared check, in descriptor order, name === id
 // ===========================================================================
 
+/**
+ * RULING R-D (2026-08-28) — cloud parity is a chain-start assertion.
+ *
+ * ⚠️ THIS CHECK REACHES NO POOL AND NO FILESYSTEM. Claim #175 ("the compute issues no
+ * SQL") is a frozen, cross-step invariant — `src/tests/steps/{assert_schema,link_massing,
+ * load_ravines}/violations.test.ts` all mock `ctx.pool.query` to THROW specifically to
+ * catch a compute that tries. The presence probe therefore runs in the LIBRARY, not here:
+ * `descriptor.config.probe_presence` (the R-D addendum to §1.2a P4's `config` category)
+ * names the fleet-wide list, `scripts/lib/step/config.js resolveConfig` widens its EXISTING
+ * declared-names SELECT to declared ∪ retired ∪ probe (same mechanism R-A already
+ * established for `retired`, one query, no new path), and the runner hands the measured
+ * result to every compute as `ctx.probePresence` BEFORE compute ever runs — this function
+ * only reads that array and reports. `checks[].expect` below is the DECLARED, human-facing
+ * mirror of the same list (parity-locked against `config.probe_presence` and against
+ * `scripts/lib/declared-logic-variables.js`'s live derivation by
+ * `src/tests/steps/assert_schema/`), exactly the constant-vs-`expect` pairing every other
+ * check in this file already uses (e.g. `EXPECTED_PERMIT_COLUMNS` vs `permit_columns.expect`).
+ */
+async function declared_logic_variables_present(ctx) {
+  const probed = ctx.probePresence || [];
+  const missing = probed.filter((p) => !p.present).map((p) => p.name);
+  if (missing.length > 0) {
+    ctx.log.error(
+      tag(ctx),
+      `FAIL: declared_logic_variables_present — missing logic_variables row(s): ${missing.join(', ')}. ` +
+        'Remedy: node -r dotenv/config scripts/seeds/apply-logic-variables.js',
+    );
+  }
+  ctx.report('declared_logic_variables_present', {
+    violations: missing.length,
+    detail: missing.length > 0
+      ? { missing, remedy: 'node -r dotenv/config scripts/seeds/apply-logic-variables.js' }
+      : { missing: [] },
+  });
+}
+
 async function permit_columns(ctx) {
   const fields = await fetchFieldNames(ctx, PERMITS_RESOURCE_ID, 'Building Permits');
   const ok = checkColumns(ctx, fields, EXPECTED_PERMIT_COLUMNS, 'Building Permits');
@@ -381,6 +417,7 @@ async function checkUrlAccessible(ctx, url, label) {
 
 /** §5.5 (1) — the dispatch table. Keys are exactly the descriptor's check ids, in order. */
 const CHECKS = {
+  declared_logic_variables_present,
   permit_columns,
   permit_cost_type_sample,
   coa_columns,

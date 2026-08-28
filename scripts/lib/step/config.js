@@ -85,18 +85,21 @@ function invalidReason(raw, min, max) {
  *
  * @param {import('pg').Pool} pool
  * @param {object} descriptor - already AJV-validated by `pipeline.step()`
- * @returns {Promise<{values: Readonly<Record<string, number>>, stamp: Record<string, number>|null, retiredStatus: Array<{name: string, since: string, why: object, ledger: string, present: boolean}>}>}
+ * @returns {Promise<{values: Readonly<Record<string, number>>, stamp: Record<string, number>|null, retiredStatus: Array<{name: string, since: string, why: object, ledger: string, present: boolean}>, probeStatus: Array<{name: string, present: boolean}>}>}
  *   `values` is what becomes `ctx.config`; `stamp` is what becomes
  *   `records_meta.config` (null when the step declares `config: "none"`).
  *   `retiredStatus` (R-A) is every `cfg.retired[]` entry annotated with whether its
  *   `logic_variables` row still exists — always `[]` for a `config: "none"` step or
  *   a step that declares no `retired` entries.
+ *   `probeStatus` (R-D) is every `cfg.probe_presence[]` name annotated the same way —
+ *   a FLEET-WIDE presence probe, never a value this step consumes; always `[]` for a
+ *   `config: "none"` step or one that declares no `probe_presence` entries.
  */
 async function resolveConfig(pool, descriptor) {
   const slug = descriptor.identity.name;
   const cfg = descriptor.config;
   if (!cfg || cfg === NONE) {
-    return { values: Object.freeze(Object.create(null)), stamp: null, retiredStatus: [] };
+    return { values: Object.freeze(Object.create(null)), stamp: null, retiredStatus: [], probeStatus: [] };
   }
 
   const { logicVars } = await loadMarketplaceConfigs(pool, slug, { quiet: true });
@@ -113,10 +116,18 @@ async function resolveConfig(pool, descriptor) {
   // does something? `$1` is widened to declared ∪ retired rather than opening a
   // second SELECT, because the presence signal for either kind of name is the
   // identical predicate over the identical table.
+  //
+  // R-D (2026-08-28): a THIRD question, same widening — does a FLEET-WIDE name this
+  // step merely PROBES (never consumes as a value) have a row? assert_schema's
+  // declared_logic_variables_present check is the first consumer: `$1` becomes
+  // declared ∪ retired ∪ probe, still one query, because claim #175 ("the compute
+  // issues no SQL") means the presence read has to happen HERE, in the library, and
+  // be handed to the compute as `ctx.probePresence` — never queried by the compute.
   const declaredNames = cfg.logic_variables.map((decl) => decl.name);
   const retired = Array.isArray(cfg.retired) ? cfg.retired : [];
   const retiredNames = retired.map((r) => r.name);
-  const allNames = [...new Set([...declaredNames, ...retiredNames])];
+  const probeNames = Array.isArray(cfg.probe_presence) ? cfg.probe_presence : [];
+  const allNames = [...new Set([...declaredNames, ...retiredNames, ...probeNames])];
   let presentInDb = new Set();
   if (allNames.length > 0) {
     const { rows: presenceRows } = await pool.query(
@@ -130,6 +141,7 @@ async function resolveConfig(pool, descriptor) {
   // silence. `retiredStatus` carries the presence bit for the runner to render
   // as WARN (row still exists) / INFO (row is gone) via `retiredVarRow` below.
   const retiredStatus = retired.map((r) => ({ ...r, present: presentInDb.has(r.name) }));
+  const probeStatus = probeNames.map((name) => ({ name, present: presentInDb.has(name) }));
 
   const values = Object.create(null);
   const stamp = {};
@@ -214,7 +226,7 @@ async function resolveConfig(pool, descriptor) {
     stamp[name] = seeded;
   }
 
-  return { values: Object.freeze(values), stamp, retiredStatus };
+  return { values: Object.freeze(values), stamp, retiredStatus, probeStatus };
 }
 
 /**

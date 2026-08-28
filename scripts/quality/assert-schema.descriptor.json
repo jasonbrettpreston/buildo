@@ -19,7 +19,7 @@
   "inputs": {
     "reads": {
       "steps": [],
-      "tables": [],
+      "tables": [{ "table": "logic_variables", "columns": ["variable_key"] }],
       "externals": [
         { "id": "ckan_datastore_api", "kind": "http_api", "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search", "cache": "none" },
         { "id": "address_points_csv", "kind": "http_file", "cache": "none" },
@@ -91,6 +91,37 @@
   },
 
   "checks": [
+    {
+      "id": "declared_logic_variables_present",
+      "kind": "schema",
+      "expect": [
+        "assert_schema_csv_header_bytes",
+        "assert_schema_geojson_probe_bytes",
+        "assert_schema_type_sample_rows",
+        "link_massing_centroid_confidence",
+        "link_massing_link_rate_fail_pct",
+        "link_massing_nearest_confidence",
+        "load_ravines_count_drift_fail_pct",
+        "load_ravines_dataset_age_warn_years",
+        "load_ravines_download_timeout_ms",
+        "load_ravines_geometry_update_warn_pct",
+        "load_ravines_invalid_geometry_fail_pct",
+        "load_ravines_mass_delete_fail_pct",
+        "massing_garage_max_sqm",
+        "massing_nearest_max_distance_m",
+        "massing_shed_threshold_sqm"
+      ],
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "chains": ["permits", "coa", "sources"],
+      "accept_until": "none",
+      "why": {
+        "text": "RULING R-D (2026-08-28) — cloud parity is a chain-start assertion. A step whose descriptor declares a config.logic_variables[] name with no logic_variables ROW throws LM-D15's mid-chain error (scripts/lib/step/config.js resolveConfig) — correct, but discovered however many steps deep into the chain that step happens to sit, after every step ahead of it already ran. assert_schema is step 1 of every chain that runs it, so probing the SAME registry here turns a mid-chain throw into a minute-zero FAIL naming the exact remedy. `expect` is the STATIC union of every scripts/steps/_schema/converted.json step's config.logic_variables[].name at authoring time (Spec 122 P1/P2 — a compute may not read the filesystem, so this is DECLARED data, not scanned); the SAME list is declared as `config.probe_presence`, which is what the library actually queries (claim #175 — the compute issues no SQL, so the presence read happens in scripts/lib/step/config.js resolveConfig, not here, and the compute only observes ctx.probePresence). src/tests/steps/assert_schema/ locks `expect` === `config.probe_presence` === the live scripts/lib/declared-logic-variables.js derivation, so none of the three can drift from the other two. Narrowed (not chain-start-universal): entities/wsib/deep_scrapes run no assert_schema at all — LM-D15's mid-step throw is the sole backstop there until a WF adds assert_schema to them (followup filed).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" }
+      }
+    },
     {
       "id": "permit_columns",
       "kind": "schema",
@@ -340,7 +371,24 @@
       { "name": "assert_schema_geojson_probe_bytes", "min": 1024, "max": 1048576, "on_invalid": "default" }
     ],
     "validation": "strict",
-    "hoisted_above_gate": true
+    "hoisted_above_gate": true,
+    "probe_presence": [
+      "assert_schema_csv_header_bytes",
+      "assert_schema_geojson_probe_bytes",
+      "assert_schema_type_sample_rows",
+      "link_massing_centroid_confidence",
+      "link_massing_link_rate_fail_pct",
+      "link_massing_nearest_confidence",
+      "load_ravines_count_drift_fail_pct",
+      "load_ravines_dataset_age_warn_years",
+      "load_ravines_download_timeout_ms",
+      "load_ravines_geometry_update_warn_pct",
+      "load_ravines_invalid_geometry_fail_pct",
+      "load_ravines_mass_delete_fail_pct",
+      "massing_garage_max_sqm",
+      "massing_nearest_max_distance_m",
+      "massing_shed_threshold_sqm"
+    ]
   },
 
   "sharing": {

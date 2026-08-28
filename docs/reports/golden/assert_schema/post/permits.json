@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/quality/assert-schema.js",
   "chain": "permits",
-  "git_head": "b14e7d18e8ff19cca517b8d375705ab5828e2f49",
+  "git_head": "3f7d66459e0b8cdab0626e5bd87ae30968bdd12b",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -24,6 +24,14 @@
         "name": "Schema Validation",
         "verdict": "PASS",
         "rows": [
+          {
+            "metric": "declared_logic_variables_present",
+            "value": {
+              "missing": []
+            },
+            "threshold": "viol == 0",
+            "status": "PASS"
+          },
           {
             "metric": "permit_columns",
             "value": 0,
@@ -50,7 +58,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 3312,
+            "value": 762,
             "threshold": null,
             "status": "INFO"
           }
@@ -61,7 +69,11 @@
   "summary_count": 1,
   "meta": [
     {
-      "reads": {},
+      "reads": {
+        "logic_variables": [
+          "variable_key"
+        ]
+      },
       "writes": {},
       "external": [
         "ckan_datastore_api",
@@ -79,10 +91,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=242 (floor 41)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"=== CQA Tier 1: Schema Validation ===\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching metadata for Building Permits...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Building Permits — all 11 expected columns present (32 total)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Building Permits — EST_CONST_COST type coercion verified\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching CSV headers for Parcels...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Parcels — all 4 expected columns present (6 total)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"assert_schema_type_sample_rows\":20,\"assert_schema_csv_header_bytes\":2048,\"assert_schema_geojson_probe_bytes\":8192},\"terminal\":\"all_checks_passed\",\"checks_passed\":\"all\",\"checks_failed\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"permit_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"permit_cost_type_sample\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":3312,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{},\"external\":[\"ckan_datastore_api\",\"address_points_csv\",\"parcels_csv\",\"massing_zip\",\"ravine_zip\",\"heritage_register_zip\",\"heritage_hcd_zip\",\"centreline_zip\",\"neighbourhoods_geojson\"]}\n\n[assert_schema] completed in 3.4s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=242 (floor 41)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"=== CQA Tier 1: Schema Validation ===\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching metadata for Building Permits...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Building Permits — all 11 expected columns present (32 total)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Building Permits — EST_CONST_COST type coercion verified\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching CSV headers for Parcels...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Parcels — all 4 expected columns present (6 total)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"assert_schema_type_sample_rows\":20,\"assert_schema_csv_header_bytes\":2048,\"assert_schema_geojson_probe_bytes\":8192},\"terminal\":\"all_checks_passed\",\"checks_passed\":\"all\",\"checks_failed\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"declared_logic_variables_present\",\"value\":{\"missing\":[]},\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"permit_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"permit_cost_type_sample\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":762,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"logic_variables\":[\"variable_key\"]},\"writes\":{},\"external\":[\"ckan_datastore_api\",\"address_points_csv\",\"parcels_csv\",\"massing_zip\",\"ravine_zip\",\"heritage_register_zip\",\"heritage_hcd_zip\",\"centreline_zip\",\"neighbourhoods_geojson\"]}\n\n[assert_schema] completed in 0.8s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1678,
+  "pipeline_runs_max_id_before": 1682,
   "table_state": [],
   "tables_source": "none",
   "table_row_ceiling": 100000,
@@ -108,6 +120,14 @@
           "name": "Schema Validation",
           "phase": 1,
           "rows": [
+            {
+              "metric": "declared_logic_variables_present",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": {
+                "missing": []
+              }
+            },
             {
               "metric": "permit_columns",
               "status": "PASS",
@@ -156,7 +176,11 @@
           "centreline_zip",
           "neighbourhoods_geojson"
         ],
-        "reads": {},
+        "reads": {
+          "logic_variables": [
+            "variable_key"
+          ]
+        },
         "writes": {}
       }
     ],
@@ -175,7 +199,7 @@
     "table_state": [],
     "invariants": []
   },
-  "source_fingerprint": "d5975b13a867e70b95516c1f125970efe53e7ac35d438ad8d3165990aeec98ec",
+  "source_fingerprint": "69c1b421ecf3252e93e817b4841c73ff358991399c77fce5df2d72962083c8eb",
   "fingerprint_files": [
     "scripts/lib/compute/assert-schema.js",
     "scripts/quality/assert-schema.descriptor.json",

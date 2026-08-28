@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 337 declarable fields
+# The step contract — 18 categories, 338 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -29,7 +29,7 @@
 | 13 | `recovery` | 12 | 6 | 0 |
 | 14 | `database` | 3 | 1 | 0 |
 | 15 | `counters` | 9 | 0 | 0 |
-| 16 | `config` | 21 | 4 | 0 |
+| 16 | `config` | 22 | 4 | 0 |
 | 17 | `sharing` | 9 | 4 | 0 |
 | 18 | `terminals` | 9 | 3 | 0 |
 
@@ -540,6 +540,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `retired[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `retired[].why.liveness.ref` | string | † |
 | `retired[].ledger` | string | † |
+| `probe_presence` | list of string | — |
 
 ### sharing
 

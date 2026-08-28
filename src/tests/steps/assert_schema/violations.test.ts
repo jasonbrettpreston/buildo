@@ -125,7 +125,7 @@ interface Descriptor {
   interpretation: { file: string; entries: number } | 'none';
   database: { min_migration: number | 'none' };
   counters: unknown;
-  config: 'none' | { logic_variables: Array<{ name: string; min: number | 'none'; max: number | 'none'; on_invalid: string }> };
+  config: 'none' | { logic_variables: Array<{ name: string; min: number | 'none'; max: number | 'none'; on_invalid: string }>; probe_presence?: string[] };
   sharing: { varies_by_chain: { checks: string } };
   terminals: Array<{ id: string; kind: string; status: string; records_meta: Record<string, string> | string }>;
 }
@@ -375,6 +375,10 @@ interface World {
   parcelHeader: string[];
   headStatus: Record<string, number>; // URL fragment → status
   neighbourhoodProps: Record<string, unknown>;
+  // RULING R-D — the LIBRARY-measured presence result the compute observes as
+  // `ctx.probePresence` (claim #175: the compute issues no SQL, so this world models
+  // what `scripts/lib/step/config.js resolveConfig` would have measured, not a fetch).
+  probePresence: Array<{ name: string; present: boolean }>;
 }
 
 function checkById(d: Descriptor, id: string): Check {
@@ -415,11 +419,17 @@ function healthyWorld(d: Descriptor): World {
     parcelHeader: [...(checkById(d, 'parcel_columns').expect as string[])],
     headStatus: {},
     neighbourhoodProps: { AREA_SHORT_CODE: '001', AREA_ID: 1, AREA_NAME: 'x' },
+    // Healthy = every declared config.probe_presence name has a row, mirroring a
+    // freshly-seeded DB post `apply-logic-variables.js`.
+    probePresence: [...(checkById(d, 'declared_logic_variables_present').expect as string[])].map((name) => ({ name, present: true })),
   };
 }
 
 /** One sabotage per declared check — the must-fail fixture matrix (#165). */
 const SABOTAGE: Record<string, (w: World) => void> = {
+  declared_logic_variables_present: (w) => {
+    w.probePresence = w.probePresence.map((p, i) => (i === 0 ? { ...p, present: false } : p));
+  },
   permit_columns: (w) => { w.ckanFields[PERMITS_RESOURCE_ID] = (w.ckanFields[PERMITS_RESOURCE_ID] ?? []).slice(1); },
   permit_cost_type_sample: (w) => { w.ckanRecords = [{ EST_CONST_COST: 'not-a-number' }, { EST_CONST_COST: 'still-not' }]; },
   coa_columns: (w) => { w.ckanFields[COA_ACTIVE_RESOURCE_ID] = (w.ckanFields[COA_ACTIVE_RESOURCE_ID] ?? []).slice(1); },
@@ -513,6 +523,9 @@ async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<
     // values a fresh DB would run on. Nothing here pins the literal 20/2048/8192 —
     // that parity belongs to src/tests/assert-schema-config-parity.logic.test.ts.
     config: configProjection(d),
+    // R-D — the library-measured presence result (claim #175: the compute never
+    // touches the pool itself, so the mirror hands it the SAME shape the runner would).
+    probePresence: w.probePresence,
     log: { info: () => {}, warn: () => {}, error: () => {} },
     report(checkId: string, observation: unknown) {
       if (!declared.has(checkId)) throw new Error(`compute reported undeclared check "${checkId}"`);
@@ -1385,5 +1398,85 @@ describe('G4d fence locks', () => {
     const fenced = footers.map((c) => (c.split('\x1f')[0] ?? '').trim().slice(0, 8)).filter(Boolean);
     for (const c of FENCE_COMMITS) expect(fenced, `fence commit ${c} has no Severity: footer on ${STEP_REL}`).toContain(c);
     expect(fenced.length, 'fence density (Spec 123 §6 G1)').toBe(FENCE_COMMITS.length);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RULING R-D (2026-08-28) — declared_logic_variables_present, both directions +
+// the three-way staleness lock (checks[].expect ≡ config.probe_presence ≡ the LIVE
+// scripts/lib/declared-logic-variables.js derivation across converted.json).
+// The generic SABOTAGE/#165 matrix above already proves GREEN (healthyWorld, every
+// probe name present) and RED (one name marked absent) for this check like every
+// other declared check; this block adds the claims that matrix cannot express.
+// ---------------------------------------------------------------------------
+describe('RULING R-D — declared_logic_variables_present (cloud parity, chain-start assertion)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS helper
+  const { collectDeclaredLogicVariableNames } = require(path.join(REPO_ROOT, 'scripts/lib/declared-logic-variables.js')) as {
+    collectDeclaredLogicVariableNames: () => string[];
+  };
+
+  it('inputs.reads.tables declares logic_variables (the ONLY DB table this ASSERT step reads)', () => {
+    const d = loadDescriptor();
+    expect(d.inputs.reads.tables.map((t) => t.table)).toContain('logic_variables');
+  });
+
+  it('checks[].expect ≡ config.probe_presence ≡ the LIVE fleet derivation — none of the three may drift from the others', () => {
+    const d = loadDescriptor();
+    const expectList = [...(checkById(d, 'declared_logic_variables_present').expect as string[])].sort();
+    const cfg = d.config;
+    expect(cfg, 'assert_schema declares config "none"').not.toBe('none');
+    const probeList = [...(((cfg as { probe_presence?: string[] }).probe_presence) ?? [])].sort();
+    const live = [...collectDeclaredLogicVariableNames()].sort();
+    expect(expectList, 'checks[].expect has drifted from config.probe_presence').toEqual(probeList);
+    expect(probeList, 'config.probe_presence has drifted from the LIVE converted.json fleet derivation — a step converted (or a var added/removed) without updating this descriptor').toEqual(live);
+  });
+
+  it('GREEN — every probed name present reads violations:0 and an empty detail.missing', async () => {
+    const d = loadDescriptor();
+    const compute = loadCompute();
+    const observations: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+    const w = healthyWorld(d);
+    await compute({
+      pool: { query: () => { throw new Error('must not touch the pool'); } },
+      chainId: null, runId: null, descriptor: d,
+      checks: ['declared_logic_variables_present'],
+      fetch: fetchFor(w), clock: () => Date.parse(`${FIXTURE_REVIEWED}T00:00:00Z`),
+      config: configProjection(d), probePresence: w.probePresence,
+      log: { info: () => {}, warn: () => {}, error: () => {} },
+      report(id: string, obs: unknown) { observations[id] = obs; },
+    });
+    const obs = observations.declared_logic_variables_present as { violations: number; detail: { missing: string[] } };
+    expect(obs.violations).toBe(0);
+    expect(obs.detail.missing).toEqual([]);
+  });
+
+  it('RED — a missing name is named in detail.missing WITH the remedy command, violations counts it', async () => {
+    const d = loadDescriptor();
+    const compute = loadCompute();
+    const observations: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+    const w = healthyWorld(d);
+    w.probePresence = w.probePresence.map((p, i) => (i === 0 || i === 3 ? { ...p, present: false } : p));
+    const missingNames = w.probePresence.filter((p) => !p.present).map((p) => p.name);
+    await compute({
+      pool: { query: () => { throw new Error('must not touch the pool'); } },
+      chainId: null, runId: null, descriptor: d,
+      checks: ['declared_logic_variables_present'],
+      fetch: fetchFor(w), clock: () => Date.parse(`${FIXTURE_REVIEWED}T00:00:00Z`),
+      config: configProjection(d), probePresence: w.probePresence,
+      log: { info: () => {}, warn: () => {}, error: () => {} },
+      report(id: string, obs: unknown) { observations[id] = obs; },
+    });
+    const obs = observations.declared_logic_variables_present as { violations: number; detail: { missing: string[]; remedy?: string } };
+    expect(obs.violations).toBe(2);
+    expect([...obs.detail.missing].sort()).toEqual([...missingNames].sort());
+    expect(obs.detail.remedy).toBe('node -r dotenv/config scripts/seeds/apply-logic-variables.js');
+  });
+
+  it('the check is blocking + when:"pre" + declared on permits/coa/sources (its own invocation set)', () => {
+    const d = loadDescriptor();
+    const c = checkById(d, 'declared_logic_variables_present');
+    expect(c.blocking).toBe(true);
+    expect(c.when).toBe('pre');
+    expect(c.chains).toEqual(['permits', 'coa', 'sources']);
   });
 });

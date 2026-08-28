@@ -1316,6 +1316,11 @@
                   "ledger": { "type": "string", "minLength": 1 }
                 }
               }
+            },
+            "probe_presence": {
+              "description": "OPERATOR RULING R-D (2026-08-28). Cloud parity is a chain-start assertion: a name here is NOT this step's own tunable (that is `logic_variables[]`) and is never projected into `ctx.config` — it is a FLEET-WIDE name (typically another converted step's declared logic variable) this step ONLY probes for a `logic_variables` ROW, so a chain-start step like `assert_schema` can FAIL at minute zero, naming the remedy, instead of a downstream step throwing LM-D15's mid-chain error however many steps later it happens to sit. `scripts/lib/step/config.js resolveConfig` widens its EXISTING declared ∪ retired presence SELECT to declared ∪ retired ∪ probe (the SAME query, no new path — the mechanism R-A already established) and the runner hands the measured `{name, present}[]` to the compute as `ctx.probePresence`, never as a value — a probed name is observed, never consumed. Optional array, default `[]`.",
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
             }
           },
           "allOf": [

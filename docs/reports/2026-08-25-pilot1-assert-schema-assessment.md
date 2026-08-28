@@ -109,11 +109,12 @@ permits = `fetchFieldNames` `:304` + `validateTypeSample` `:309` = **2**; coa = 
 
 ### 1.7 Boundary freeze — tables touched (machine-readable, Appendix H row counts)
 
-`pipeline_runs` is the only table (§1.2); the descriptor's `inputs.reads.tables` is `[]` (§1.2 "DB reads: NONE"). Row count measured this session: `SELECT COUNT(*) FROM pipeline_runs` on the local dev DB (`DATABASE_URL`, 2026-08-25).
+`pipeline_runs` was the only table at pilot 1 (§1.2); the descriptor's `inputs.reads.tables` was `[]` then (§1.2 "DB reads: NONE"). Row count measured this session: `SELECT COUNT(*) FROM pipeline_runs` on the local dev DB (`DATABASE_URL`, 2026-08-25). **Ruling R-D (2026-08-28)** adds a second table: `declared_logic_variables_present` reads `logic_variables` (`inputs.reads.tables += {table: "logic_variables", columns: ["variable_key"]}`) via `scripts/lib/step/config.js resolveConfig`'s widened `declared ∪ retired ∪ probe` SELECT — the compute itself issues no SQL (claim #175); the measured presence crosses the ctx seam as `ctx.probePresence`. Row count measured `2026-08-28` (`DATABASE_URL`, local, 242 migrations).
 
 | Table | Rows | Access | Statements |
 |---|---|---|---|
 | `pipeline_runs` | 1644 | write (bookkeeping only; standalone path) | INSERT `:277` · UPDATE `:560` · strand UPDATE via `ledger-window.js:103` |
+| `logic_variables` | 432 | read (declared_logic_variables_present probe, R-D) | `SELECT variable_key FROM logic_variables WHERE variable_key = ANY($1)` — scripts/lib/step/config.js resolveConfig |
 
 ---
 

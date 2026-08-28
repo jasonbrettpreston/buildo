@@ -821,6 +821,10 @@ async function runWithPool(runnable, pool, ctx) {
   // `retired_var_row_present` audit row can be built once compute has run, exactly
   // like the LR-D2 `prior_run_read_failed` row below.
   let configRetiredStatus = [];
+  // R-D (2026-08-28) — every `config.probe_presence[]` name, annotated the same way.
+  // Handed to the compute as `ctx.probePresence` (claim #175: the compute issues no
+  // SQL, so the presence read happens here and only the RESULT crosses the seam).
+  let configProbeStatus = [];
 
   // ⚠️ DECLARED AUDIT GAP, S2-min. A compute that throws BEFORE any
   // `ctx.report()` emits ZERO audit rows — the failure survives only as the
@@ -840,7 +844,7 @@ async function runWithPool(runnable, pool, ctx) {
   try {
     await assertDatabaseTarget(pool, descriptor);
     if (owns) runId = await openLedgerRow(pool, slug);
-    if (hoisted) ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus } = await resolveConfig(pool, descriptor));
+    if (hoisted) ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus, probeStatus: configProbeStatus } = await resolveConfig(pool, descriptor));
 
     // §4.1 ② — txn-scoped advisory lock on identity.lock. `skipEmit: false`
     // because the SKIP summary is the library's to emit: the SDK's built-in one
@@ -848,7 +852,7 @@ async function runWithPool(runnable, pool, ctx) {
     // verdict UNKNOWN today instead of a row-derived verdict.
     const lockResult = await pipeline.withAdvisoryLock(pool, descriptor.identity.lock, async () => {
       if (declaresConfig && !hoisted) {
-        ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus } = await resolveConfig(pool, descriptor));
+        ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus, probeStatus: configProbeStatus } = await resolveConfig(pool, descriptor));
       }
       const observations = Object.create(null);
       const declared = new Set(descriptor.checks.map((c) => c.id));
@@ -876,6 +880,11 @@ async function runWithPool(runnable, pool, ctx) {
         // projected to the DECLARED names: `validation: "strict"` is not a checker
         // that could be skipped, it is an object that does not have the key.
         config: configValues,
+        // R-D (2026-08-28) — `config.probe_presence[]` measured BEFORE compute runs
+        // (claim #175: the compute issues no SQL), frozen, read-only. `[]` for a step
+        // that declares no probe names. Never merged into `config`: a probed name is
+        // observed for presence, never projected as a value a compute could consume.
+        probePresence: Object.freeze(configProbeStatus.map((p) => Object.freeze({ ...p }))),
         // §5.5 / ruling A-1(b) — the LIBRARY-PROVIDED RESULT the checks observe.
         // Null for a step the library does not drive end to end (an ASSERT fetches
         // its own subjects); populated by `runIngestPhase` for an acquire→write step.
