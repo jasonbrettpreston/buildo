@@ -1601,3 +1601,65 @@ describe('Fold D — the three loss counters the library measures are REPORTED (
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// LW-D10 (commit 8b, 2026-08-28) — the T7 tier-3 convergence loop's own MECHANISM,
+// unit-tested in isolation. Before this fix, runCascadePhase's mode-"full" block
+// hardcoded `{ exhausted: false, iterations: 1 }` — a converged-looking result that
+// was never actually computed. `runTierToConvergence` is the extracted loop; these
+// locks pin its two directions with a fixture "pass" function (no pool, no
+// transaction — the loop's CALLER, runCascadePhase, wires the real SQL-issuing
+// passes, proven separately by the step-conformance/violations suites' live-DB and
+// descriptor-shape coverage).
+// ---------------------------------------------------------------------------
+describe('LW-D10 — runTierToConvergence: loops while matched > 0 and iterations < the bound; exhausted only when the bound stops a still-matching pass', () => {
+  /** A fixture "pass" that returns the next canned linked count each call, and counts its own calls. */
+  function fixturePass(linkedSequence: number[]): { run: () => Promise<{ linked: number; flagged: number; contacts: number }>; calls: number[] } {
+    const calls: number[] = [];
+    let i = 0;
+    return {
+      calls,
+      run: async () => {
+        const linked = linkedSequence[Math.min(i, linkedSequence.length - 1)] ?? 0;
+        calls.push(linked);
+        i += 1;
+        return { linked, flagged: linked, contacts: linked };
+      },
+    };
+  }
+
+  it('loops === false — runs the pass EXACTLY ONCE, unconditionally (incremental mode / a tier with no declared bound — the pre-LW-D10 behaviour, byte-identical)', async () => {
+    const fx = fixturePass([1000, 1000, 320, 0]); // would keep going if loops were true
+    const result = await stepLib.runTierToConvergence(fx.run, false, 20);
+    expect(fx.calls, 'loops:false must call the pass exactly once, regardless of what it returns').toEqual([1000]);
+    expect(result).toEqual({ iterations: 1, linked_total: 1000, flagged_total: 1000, contacts_total: 1000, exhausted: false });
+  });
+
+  it('loops === true, converges naturally — 1000,1000,320,0 → 4 iterations, 2,320 relinked total, NOT exhausted (this is the ruling\'s own worked example)', async () => {
+    const fx = fixturePass([1000, 1000, 320, 0]);
+    const result = await stepLib.runTierToConvergence(fx.run, true, 20);
+    expect(fx.calls, 'must stop at the first 0-matched pass, never call a 5th time').toEqual([1000, 1000, 320, 0]);
+    expect(result).toEqual({ iterations: 4, linked_total: 2320, flagged_total: 2320, contacts_total: 2320, exhausted: false });
+  });
+
+  it('loops === true, bound hit while still matching — WARN-worthy: iterations caps at maxIterations, exhausted TRUE', async () => {
+    const fx = fixturePass([500, 500, 500, 500, 500]); // never reaches 0 within the bound
+    const result = await stepLib.runTierToConvergence(fx.run, true, 3);
+    expect(fx.calls, 'must stop at exactly maxIterations passes, never a 4th').toEqual([500, 500, 500]);
+    expect(result).toEqual({ iterations: 3, linked_total: 1500, flagged_total: 1500, contacts_total: 1500, exhausted: true });
+  });
+
+  it('loops === true, bound hit on a pass that ITSELF matched 0 — a normal converged stop, NOT exhaustion', async () => {
+    const fx = fixturePass([500, 0]);
+    const result = await stepLib.runTierToConvergence(fx.run, true, 2);
+    expect(fx.calls).toEqual([500, 0]);
+    expect(result.exhausted, 'the bound and a natural convergence landed on the same iteration — this must read as converged, not exhausted').toBe(false);
+  });
+
+  it('loops === true, first pass already 0 — 1 iteration, never exhausted (the "nothing to repair" case)', async () => {
+    const fx = fixturePass([0]);
+    const result = await stepLib.runTierToConvergence(fx.run, true, 20);
+    expect(fx.calls).toEqual([0]);
+    expect(result).toEqual({ iterations: 1, linked_total: 0, flagged_total: 0, contacts_total: 0, exhausted: false });
+  });
+});

@@ -686,6 +686,51 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
 }
 
 /**
+ * LW-D10 (commit 8b, 2026-08-28) — a cascade tier's ONE-PASS-vs-LOOP-TO-CONVERGENCE
+ * mechanism, extracted to its own function so the LOOP LOGIC is independently
+ * unit-testable without mocking `runCascadePhase`'s pool/transaction/staleness-gate
+ * machinery. `runOnePass` performs ONE pass (whatever that means for the caller — a
+ * cascade tier's wsib join-update + entities flag + entities contacts, in
+ * `runCascadePhase`'s case) and resolves the counts it produced; `linked` is what the
+ * loop condition watches.
+ *
+ * `loops === false` (a tier with no declared `max_iterations_from_config`, or any tier
+ * outside mode "full") runs the pass EXACTLY ONCE, unconditionally — the pre-LW-D10
+ * behaviour, byte-identical (S3's `LIMIT 1000` single-pass cap in incremental mode is
+ * untouched). `loops === true` repeats while the LAST pass's `linked` count was > 0 AND
+ * `iterations < maxIterations` — Fold B's ruling (`TIER3_SELECT`'s `LIMIT 1000` cap means
+ * one pass cannot relink more than 1,000 rows per invocation, so a mode-"full" repair
+ * must keep passing until nothing is left or the declared bound is hit).
+ *
+ * `exhausted` is true ONLY when the bound stopped the loop WHILE the final pass still
+ * found matches (`iterations >= maxIterations && lastLinked > 0`) — reaching the bound on
+ * a pass that itself matched 0 is a normal, converged stop, never exhaustion, and
+ * `loops === false` can never report `exhausted: true` (there is no bound to exhaust).
+ *
+ * @param {() => Promise<{linked: number, flagged: number, contacts: number}>} runOnePass
+ * @param {boolean} loops
+ * @param {number} maxIterations
+ * @returns {Promise<{iterations: number, linked_total: number, flagged_total: number, contacts_total: number, exhausted: boolean}>}
+ */
+async function runTierToConvergence(runOnePass, loops, maxIterations) {
+  let iterations = 0;
+  let linkedTotal = 0;
+  let flaggedTotal = 0;
+  let contactsTotal = 0;
+  let lastLinked = 0;
+  do {
+    const pass = await runOnePass();
+    iterations += 1;
+    linkedTotal += pass.linked;
+    flaggedTotal += pass.flagged;
+    contactsTotal += pass.contacts;
+    lastLinked = pass.linked;
+  } while (loops && lastLinked > 0 && iterations < maxIterations);
+  const exhausted = loops && iterations >= maxIterations && lastLinked > 0;
+  return { iterations, linked_total: linkedTotal, flagged_total: flaggedTotal, contacts_total: contactsTotal, exhausted };
+}
+
+/**
  * THE BULK N-TIER CASCADE PHASE (ruling A-1, SHOULD-FIX d — MATCHER pilot 2026-08-28).
  *
  * Forked from `runLinkPhase` rather than folded into it (see `isCascadeStep`'s header):
@@ -708,15 +753,19 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
  *                            retraction, which is the destructive write in this step
  *   [mode full only] LG-16    the tier-3 UPDATE-to-NULL retraction + the
  *                            entities.is_wsib_registered cascade + the copyContacts
- *                            reverse pass (A-7) — declared and wired here; NOT exercised
- *                            by this commit (A-8 keeps mode incremental absent a genuine
- *                            corpus/FORCE_FULL signal; the live repair is commit 8's
- *                            budgeted act)
+ *                            reverse pass (A-7) — declared and wired here, exercised only
+ *                            when mode resolves full (A-8 keeps mode incremental absent a
+ *                            genuine corpus/FORCE_FULL signal)
  *   tiers[], IN ORDER          for each tier: wsib_registry join-update (LG-11) → the
  *                            entities.is_wsib_registered flag → entities contacts,
  *                            EXACTLY the order G-9 names, each tier excluding rows a
  *                            higher tier already claimed (the tiers[] declaration order
- *                            IS the confidence hierarchy, G-8)
+ *                            IS the confidence hierarchy, G-8). A tier declaring
+ *                            `max_iterations_from_config` LOOPS this sequence in mode full
+ *                            (LW-D10, commit 8b) — while the pass's matched count > 0 and
+ *                            iterations < the declared bound — instead of running once;
+ *                            every other tier, and every tier in incremental mode, is
+ *                            unchanged (a single pass)
  *   post checks                over the cumulative/invariant query, run once after the
  *                            transaction commits
  *
@@ -805,13 +854,15 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
 
   const runAt = clockNow;
   await pipeline.withTransaction(pool, async (client) => {
-    // ── LG-16 — A-7's tier-3 repair, mode "full" ONLY. Declared and wired; not
-    // exercised by any commit-7 invocation (A-8 keeps mode incremental absent a genuine
-    // corpus/FORCE_FULL signal). The retracted rows' contact values are read BEFORE the
-    // retraction (provenance-by-equality needs the values the retraction is about to
-    // erase), then the retraction, then the entities cascade, then the reverse clear.
+    // ── LG-16 — A-7's tier-3 repair, mode "full" ONLY. The retracted rows' contact
+    // values are read BEFORE the retraction (provenance-by-equality needs the values the
+    // retraction is about to erase), then the retraction, then the entities cascade, then
+    // the reverse clear. LW-D10 (commit 8b, 2026-08-28): `iterations`/`exhausted` below are
+    // no longer hardcoded — the tier loop, further down, fills them in for real once the
+    // (possibly looping) tier whose `max_iterations_from_config` is declared has run.
+    const isFullRepair = gate.mode === 'full' && nullRetractPlan;
     let tier3Full = null;
-    if (gate.mode === 'full' && nullRetractPlan) {
+    if (isFullRepair) {
       const scopeParams = compute.buildRetractionScopeParams(config, tiers);
       const priorContacts = await client.query(
         'SELECT linked_entity_id, primary_phone, primary_email, website FROM wsib_registry WHERE match_confidence = $1 AND linked_entity_id IS NOT NULL',
@@ -831,36 +882,53 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
         const clearResult = await client.query(compute.buildContactsReverseClearSql(), [phones, emails, sites, affectedIds]);
         contactsCleared = clearResult.rowCount || 0;
       }
-      tier3Full = { retracted, contacts_cleared: contactsCleared, exhausted: false, iterations: 1 };
+      tier3Full = { retracted, contacts_cleared: contactsCleared };
     }
     matched.tier3_full = tier3Full;
 
     for (const tier of tiers) {
-      const sql = compute.buildTierSql(descriptor, config, tier, runAt);
-      const wsibIdx = specs.indexOf(wsibJoinPlan);
-      const linked = await write.executeSetBasedJoinUpdate(client, sql.wsib_update_sql, sql.wsib_update_params);
-      written[write.targetKey(wsibIdx)].scanned += linked;
-      written[write.targetKey(wsibIdx)].updated += linked;
-      written[write.targetKey(wsibIdx)].rows_changed += linked;
+      // LW-D10 (commit 8b, 2026-08-28) — a tier LOOPS in mode "full" iff it declares
+      // `max_iterations_from_config` (a generic, per-tier, DECLARED signal — no
+      // "tier3_fuzzy" string anywhere in this library file, per Gate 0's "zero new
+      // bespoke runner paths"). Every other tier, and every tier in incremental mode
+      // (S3's LIMIT-1000 single pass is a deliberate incremental-mode property, unchanged),
+      // runs the pass exactly once — the pre-LW-D10 behaviour, byte-identical.
+      const loopsInFullMode = isFullRepair && typeof tier.max_iterations_from_config === 'string';
+      const maxIterations = loopsInFullMode ? config[tier.max_iterations_from_config] : 1;
 
-      let flagged = 0;
-      if (entitiesFlagPlan) {
-        flagged = await write.executeSetBasedClear(client, entitiesFlagPlan, sql.entities_flag_scope_params);
-        const flagIdx = specs.indexOf(entitiesFlagSpec);
-        written[write.targetKey(flagIdx)].updated += flagged;
-        written[write.targetKey(flagIdx)].rows_changed += flagged;
+      const runOnePass = async () => {
+        const sql = compute.buildTierSql(descriptor, config, tier, runAt);
+        const wsibIdx = specs.indexOf(wsibJoinPlan);
+        const linked = await write.executeSetBasedJoinUpdate(client, sql.wsib_update_sql, sql.wsib_update_params);
+        written[write.targetKey(wsibIdx)].scanned += linked;
+        written[write.targetKey(wsibIdx)].updated += linked;
+        written[write.targetKey(wsibIdx)].rows_changed += linked;
+
+        let flagged = 0;
+        if (entitiesFlagPlan) {
+          flagged = await write.executeSetBasedClear(client, entitiesFlagPlan, sql.entities_flag_scope_params);
+          const flagIdx = specs.indexOf(entitiesFlagSpec);
+          written[write.targetKey(flagIdx)].updated += flagged;
+          written[write.targetKey(flagIdx)].rows_changed += flagged;
+        }
+
+        let contacts = 0;
+        if (entitiesContactsSpec) {
+          contacts = await write.executeSetBasedJoinUpdate(client, sql.entities_contacts_sql, sql.entities_contacts_params);
+          const contactsIdx = specs.indexOf(entitiesContactsSpec);
+          written[write.targetKey(contactsIdx)].updated += contacts;
+          written[write.targetKey(contactsIdx)].rows_changed += contacts;
+        }
+        return { linked, flagged, contacts };
+      };
+
+      const result = await runTierToConvergence(runOnePass, loopsInFullMode, maxIterations);
+      matched.tiers[tier.id] = { linked: result.linked_total, flagged: result.flagged_total, contacts: result.contacts_total };
+      if (loopsInFullMode) {
+        tier3Full = { ...tier3Full, iterations: result.iterations, relinked_total: result.linked_total, exhausted: result.exhausted };
       }
-
-      let contacts = 0;
-      if (entitiesContactsSpec) {
-        contacts = await write.executeSetBasedJoinUpdate(client, sql.entities_contacts_sql, sql.entities_contacts_params);
-        const contactsIdx = specs.indexOf(entitiesContactsSpec);
-        written[write.targetKey(contactsIdx)].updated += contacts;
-        written[write.targetKey(contactsIdx)].rows_changed += contacts;
-      }
-
-      matched.tiers[tier.id] = { linked, flagged, contacts };
     }
+    matched.tier3_full = tier3Full;
   });
 
   const cumulativeResult = await pool.query(compute.CUMULATIVE_SQL);
@@ -1431,6 +1499,7 @@ module.exports = {
   runIngestPhase,
   runLinkPhase,
   runCascadePhase,
+  runTierToConvergence,
   executeOrderedWrites,
   acceptedCheckIds,
   makePreWriteGate,

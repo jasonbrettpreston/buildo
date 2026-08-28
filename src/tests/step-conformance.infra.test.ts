@@ -34,6 +34,7 @@ import { describe, it, expect } from 'vitest';
 import { execFileSync, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { stripComments } from './script-source-scan';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const MANIFEST_PATH = path.join(REPO_ROOT, 'scripts/manifest.json');
@@ -664,6 +665,35 @@ interface ConfigDescriptor {
   config: 'none' | { logic_variables: Array<{ name: string }> };
 }
 
+/**
+ * A compute's genuine `ctx.config.<name>` read — widened at LW-D10 (commit 8b,
+ * 2026-08-28) to ALSO match a bare `config.<name>` where `config` starts a fresh
+ * identifier (not `myconfig.` or `obj.config.`), because a compute function that
+ * receives `config` as a positional parameter (link-wsib's `buildTierSql(descriptor,
+ * config, tier, runAt)` convention, documented `@param config - ctx.config`) never
+ * spells the `ctx.` prefix textually. Shared by both `configFindings` (P4 — declared
+ * ≡ consumed) and `retiredFindings` (R-A — a retired var must not still be read).
+ *
+ * ⚠️ MUST run over `stripComments`-cleaned source, not the raw file: the bare-`config.`
+ * half over-matches PROSE too easily — `scripts/lib/step/config.js` (a file-path mention)
+ * parses as `config.js`, and `descriptor.config.probe_presence` (a field-path mention)
+ * parses as `config.probe_presence`. Both are genuine comment text in
+ * `scripts/lib/compute/assert-schema.js`, found by this widening's own first run
+ * (caught immediately, not shipped) — proof the strip is load-bearing, not decorative.
+ */
+const CONFIG_READ_RE = /(?:ctx\.config|(?<![\w.])config)\.([a-z][a-z0-9_]*)/g;
+
+/** Every `ctx.config.<name>` (or bare `config.<name>`, see `CONFIG_READ_RE`) read in already-in-memory source text, comments stripped first. */
+function configReadsFromSource(src: string): string[] {
+  const stripped = stripComments(src);
+  return [...new Set([...stripped.matchAll(CONFIG_READ_RE)].map((m) => m[1]!))];
+}
+
+/** Same, from a file on disk. */
+function configReadsIn(computeAbsPath: string): string[] {
+  return configReadsFromSource(fs.readFileSync(computeAbsPath, 'utf8'));
+}
+
 /** The declared config-var names for a converted step, from its sibling descriptor. */
 function declaredConfigVars(relFile: string): { slug: string; declared: string[] } {
   const d = JSON.parse(
@@ -724,14 +754,15 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
   // The paired compute, by basename (§4.1 "three files, one slug").
   const computeRel = `${COMPUTE_DIR}/${path.basename(relFile)}`;
   const hasCompute = fs.existsSync(path.join(REPO_ROOT, computeRel));
-  const computeConsumed = hasCompute
-    ? [
-        ...new Set(
-          [...fs.readFileSync(path.join(REPO_ROOT, computeRel), 'utf8').matchAll(/ctx\.config\.([a-z][a-z0-9_]*)/g)]
-            .map((m) => m[1]!),
-        ),
-      ]
-    : [];
+  // Widened LW-D10 (commit 8b, 2026-08-28): a compute function that receives `config`
+  // as a bare positional parameter (documented `@param config - ctx.config`, link-wsib's
+  // own buildTierSql convention) never spells the `ctx.` prefix — the un-widened pattern
+  // read every one of its config reads as dead declarations the moment this file joined
+  // CONVERTED. `(?<![\w.])config\.` requires "config" to start a new identifier (not
+  // "myconfig." or "obj.config." — the latter is intentionally NOT matched, since no
+  // converted compute today accesses config through a nested property, and matching it
+  // blindly would risk crediting an unrelated object literally named "config").
+  const computeConsumed = hasCompute ? configReadsIn(path.join(REPO_ROOT, computeRel)) : [];
   // The two consumption paths, unioned: what the COMPUTE reads by name, and what the
   // RUNNER resolves out of the descriptor. A variable reached by either is live.
   const runnerConsumed = runnerConsumedVars(relFile);
@@ -880,6 +911,85 @@ describe('§1.2a P4 — every tunable is externalized (declared ≡ registry ≡
 });
 
 // ---------------------------------------------------------------------------
+// 5b. LW-D10 (commit 8b, 2026-08-28) — "consumed" means a RUNTIME READ, never a
+// text mention. T7 (link_wsib_tier3_full_max_iterations) was declared in
+// config.logic_variables[], described in checks[].why prose and in
+// link-wsib.notes.json's decisions[], and the whole §1.2a P4 battery stayed
+// green throughout commits 7/8a/8b/8c — not because T7 was genuinely consumed
+// (it was not; scripts/lib/step/index.js hardcoded iterations: 1 the entire
+// time) but because link_wsib.js is not yet in converted.json, so the battery's
+// CONVERTED loop never generated a test case for it at all. This section
+// exercises link_wsib.js's REAL descriptor/compute pair directly (the same
+// bypass-CONVERTED technique §5b's own A-4 block above already uses for
+// load-ravines.js), and proves the blind spot against the ACTUAL pre-fix
+// commit (344e9452) rather than a synthesized fixture, so "battery green" can
+// never again mean "never actually checked."
+// ---------------------------------------------------------------------------
+
+const LWD10_STEP = 'scripts/link-wsib.js';
+const LWD10_VAR = 'link_wsib_tier3_full_max_iterations';
+
+describe('LW-D10 — a declared tunable consumed ONLY via a library *_from_config field (no compute ctx.config read) is NOT a dead declaration; a tunable named ONLY in prose IS', () => {
+  it('the fixture is non-vacuous — T7 is declared, and the descriptor really carries a *_from_config reference for it that is NOT also a compute ctx.config read', () => {
+    const { declared } = declaredConfigVars(LWD10_STEP);
+    expect(declared, 'link-wsib.descriptor.json no longer declares T7 — fixture stale').toContain(LWD10_VAR);
+    const refs = runnerConsumedVars(LWD10_STEP);
+    expect(refs, 'no *_from_config reference names T7 — the tiers[].max_iterations_from_config fix regressed').toContain(LWD10_VAR);
+    const computeAbs = path.join(REPO_ROOT, `${COMPUTE_DIR}/link-wsib.js`);
+    expect(
+      configReadsIn(computeAbs).includes(LWD10_VAR),
+      'T7 is ALSO read as ctx.config in the compute — the "library-only" half of this fixture is untested',
+    ).toBe(false);
+  });
+
+  it('GREEN, on the CURRENT tree — T7 reads as CONSUMED (declared ⊆ registry, ⊆ GROUPS, consumed ≡ declared), exercised directly against link-wsib.js even though it is not yet in converted.json', () => {
+    const { slug, declared } = declaredConfigVars(LWD10_STEP);
+    const findings = configFindings(LWD10_STEP, slug, declared);
+    expect(findings, findings.join('\n')).toEqual([]);
+  });
+
+  it('RED — a text mention alone (checks[].why prose) does NOT satisfy consumption: that surface is not a scanned input of configFindings', () => {
+    // Confirms the RISK is real, not hypothetical: T7's name genuinely appears in prose
+    // today, on the CURRENT (fixed) tree — the kind of mention that could look like
+    // "documentation of consumption" to an un-grounded reviewer. (notes.json's decisions[]
+    // entry for T7 — commit 7's own — describes the loop WITHOUT quoting the variable name
+    // literally, per §3.4's own "may reference a check id but may NEVER quote a number"
+    // discipline; checks[].why prose carries no such restriction, and does quote it.)
+    const descriptorText = fs.readFileSync(path.join(REPO_ROOT, `${LWD10_STEP.slice(0, -3)}.descriptor.json`), 'utf8');
+    expect(descriptorText, 'checks[].why no longer names T7 in prose — the fixture premise (a coexisting text mention) is stale').toContain(LWD10_VAR);
+    // The actual proof: configFindings/runnerConsumedVars/configReadsIn never read
+    // checks[].why AT ALL — grep the source of THIS test file's own detectors for that
+    // field name; it does not appear, so the prose site above is structurally incapable
+    // of satisfying "consumed" on its own, which is exactly why the pre-fix RED case
+    // below is possible in the first place.
+    const thisFile = fs.readFileSync(__filename, 'utf8');
+    const detectorSpan = thisFile.slice(thisFile.indexOf('function runnerConsumedVars'), thisFile.indexOf('describe(\'§1.2a P4'));
+    expect(detectorSpan, 'the consumption detectors now read checks[].why text — re-derive this proof').not.toMatch(/checks\[\]\.why|\.why\.text/);
+    expect(detectorSpan, 'the consumption detectors now read notes.json — re-derive this proof').not.toMatch(/notes\.json|loadNotes/);
+  });
+
+  it('RED, against the ACTUAL pre-fix commit (344e9452) — T7 was declared and NOT consumed by either path: the same battery that is green today would have caught this, had it ever run', () => {
+    const oldDescriptorRaw = execFileSync('git', ['show', '344e9452:scripts/link-wsib.descriptor.json'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    const oldComputeSrc = execFileSync('git', ['show', '344e9452:scripts/lib/compute/link-wsib.js'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    const oldDescriptor = JSON.parse(oldDescriptorRaw) as { config: { logic_variables: Array<{ name: string }> } };
+    const oldDeclared = oldDescriptor.config.logic_variables.map((v) => v.name);
+    expect(oldDeclared, 'T7 was not declared on the pre-fix commit — wrong commit for this fixture').toContain(LWD10_VAR);
+
+    const oldRunnerConsumed = [...fromConfigRefs(oldDescriptor)];
+    expect(oldRunnerConsumed, 'T7 was already *_from_config-reachable on the pre-fix commit — nothing to prove').not.toContain(LWD10_VAR);
+
+    const oldComputeConsumed = configReadsFromSource(oldComputeSrc);
+    expect(oldComputeConsumed, 'T7 was already a compute ctx.config read on the pre-fix commit — nothing to prove').not.toContain(LWD10_VAR);
+
+    // Reproduce configFindings' own predicate inline (it reads live files by path;
+    // the pre-fix source lives only in git history for this one test) — same rule:
+    // declared, consumed by neither path ⇒ dead declaration.
+    const consumed = new Set([...oldComputeConsumed, ...oldRunnerConsumed]);
+    expect(consumed.has(LWD10_VAR), 'T7 was consumed on the pre-fix commit by some path this test missed').toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 5c. R-A (2026-08-28, ADVERSARY DELTA) — retirement of a tunable is a
 // declaration, never a live registry row: retired ∩ logic_variables = ∅, and a
 // retired name is absent from the seed, GlobalConfigCard GROUPS, and any
@@ -918,14 +1028,7 @@ function retiredFindings(relFile: string, declared: string[], retired: string[])
 
   const computeRel = `${COMPUTE_DIR}/${path.basename(relFile)}`;
   const hasCompute = fs.existsSync(path.join(REPO_ROOT, computeRel));
-  const computeConsumed = hasCompute
-    ? [
-        ...new Set(
-          [...fs.readFileSync(path.join(REPO_ROOT, computeRel), 'utf8').matchAll(/ctx\.config\.([a-z][a-z0-9_]*)/g)]
-            .map((m) => m[1]!),
-        ),
-      ]
-    : [];
+  const computeConsumed = hasCompute ? configReadsIn(path.join(REPO_ROOT, computeRel)) : [];
 
   for (const name of retired) {
     if (Object.prototype.hasOwnProperty.call(SEED, name)) {

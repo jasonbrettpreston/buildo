@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 342 declarable fields
+# The step contract — 18 categories, 343 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -19,7 +19,7 @@
 | 3 | `outputs` | 92 | 24 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
-| 6 | `execution` | 50 | 13 | 1 |
+| 6 | `execution` | 51 | 13 | 1 |
 | 7 | `checks` | 24 | 6 | 0 |
 | 8 | `override` | 11 | 1 | 0 |
 | 9 | `emits` | 4 | 1 | 0 |
@@ -334,9 +334,10 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | Field | Menu | Markers |
 |---|---|---|
 | `shape` | `assert` · `ingest` · `link` · `cascade` | ! |
-| `tiers` | `none` \| list (min 1) of object {id, confidence_config} | — |
+| `tiers` | `none` \| list (min 1) of object {id, confidence_from_config, max_iterations_from_config} | — |
 | `tiers[].id` | string `^[a-z][a-z0-9_]*$` | † |
-| `tiers[].confidence_config` | string | † |
+| `tiers[].confidence_from_config` | string | † |
+| `tiers[].max_iterations_from_config` | string | — |
 | `budget` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
 | `txn_scope` | `statement` · `batch` · `step` · `none` | † ! |
 | `txn_budget` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |

@@ -984,10 +984,11 @@
               "items": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["id", "confidence_config"],
+                "required": ["id", "confidence_from_config"],
                 "properties": {
                   "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
-                  "confidence_config": { "type": "string", "minLength": 1, "description": "The config.logic_variables[].name whose resolved value this tier stamps as the write's confidence column." }
+                  "confidence_from_config": { "type": "string", "minLength": 1, "description": "The config.logic_variables[].name whose resolved value this tier stamps as the write's confidence column. Named with the *_from_config suffix (§1.2a P4) so the generic conformance battery's fromConfigRefs scan counts this as a genuine consumption path — a bare `confidence_config` name does not match that suffix and reads as a dead declaration the moment the compute reaches it only by indirection (LW-D10's blind spot)." },
+                  "max_iterations_from_config": { "type": "string", "minLength": 1, "description": "OPTIONAL. Present ONLY on a tier whose mode-\"full\" pass must loop to convergence rather than run once (LG-16/T7, LW-D10) — names the config.logic_variables[].name bounding the iteration count. Its PRESENCE is what the runner (runCascadePhase) uses to decide which tier(s) loop in mode full; absence means the tier always runs its single-pass write, in every mode. Declared, never inferred from a tier id string (Gate 0 — the library carries no link_wsib-specific branch)." }
                 }
               }
             }

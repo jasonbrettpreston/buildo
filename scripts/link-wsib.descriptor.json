@@ -227,9 +227,9 @@
   "execution": {
     "shape": "cascade",
     "tiers": [
-      { "id": "tier1_exact_trade", "confidence_config": "link_wsib_tier1_confidence" },
-      { "id": "tier2_exact_legal", "confidence_config": "link_wsib_tier2_confidence" },
-      { "id": "tier3_fuzzy", "confidence_config": "link_wsib_tier3_confidence" }
+      { "id": "tier1_exact_trade", "confidence_from_config": "link_wsib_tier1_confidence" },
+      { "id": "tier2_exact_legal", "confidence_from_config": "link_wsib_tier2_confidence" },
+      { "id": "tier3_fuzzy", "confidence_from_config": "link_wsib_tier3_confidence", "max_iterations_from_config": "link_wsib_tier3_full_max_iterations" }
     ],
     "budget": "35m",
     "txn_scope": "step",
@@ -348,7 +348,13 @@
       "id": "tier3_full_not_converged", "kind": "invariant",
       "expect": { "the_mode_full_repair_loop_converges_within_the_bound": true },
       "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
-      "why": { "text": "T7 / A-7 convergence (Fold B, BLOCKING b). TIER3_SELECT is capped LIMIT 1000/invocation; a single mode-full pass repairs at most 1,000 of ~5,515 clean rows. Bounded by link_wsib_tier3_full_max_iterations (T7, default 20); exhaustion is WARN, never FAIL, per R-H. Not exercised by this commit — commit 7 wires the loop declaration and the single-pass repair; the multi-iteration convergence loop itself is commit 8's budgeted act.", "liveness": { "kind": "check", "ref": "gate_decision" } }
+      "why": { "text": "T7 / A-7 convergence (Fold B, BLOCKING b). TIER3_SELECT is capped LIMIT 1000/invocation; a single mode-full pass repairs at most 1,000 of ~5,515 clean rows. Bounded by link_wsib_tier3_full_max_iterations (T7, default 20, read via tiers[].max_iterations_from_config — LW-D10, commit 8b); exhaustion is WARN, never FAIL, per R-H (a standing non-convergence is a real operational condition to see, not a reason to redden the run). RETIGHTEN CONDITION: if this WARN fires on a live repair, the FIRST response is to re-run the repair (LINK_WSIB_FORCE_FULL=1) before considering T7's default too low — 20 iterations against a ~1,000-row-per-pass cap already covers ~20,000 candidate rows, well above any single tier-3 population measured to date (13,645). Only raise T7's default if a repeat exhaustion is measured against an unchanged corpus.", "liveness": { "kind": "check", "ref": "tier3_full_iterations" } }
+    },
+    {
+      "id": "tier3_full_iterations", "kind": "field_coverage",
+      "expect": { "reports": "the mode-full tier-3 loop's pass count and total relinked across them" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "LW-D10 (commit 8b, 2026-08-28). The convergence loop's own audit row — {iterations, relinked_total} — read from ctx.matched.tier3_full, populated by runCascadePhase's per-tier loop (scripts/lib/step/index.js), never a literal. Companion to tier3_full_not_converged (the WARN); this one is descriptive and always present, the WARN is conditional.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
     },
     {
       "id": "contacts_cleared_on_retraction", "kind": "field_coverage",

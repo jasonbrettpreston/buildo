@@ -76,12 +76,12 @@ const TIER_IDS = Object.freeze({
  *
  * @param {object} descriptor
  * @param {Readonly<Record<string, number>>} config - ctx.config
- * @param {{id: string, confidence_config: string}} tier
+ * @param {{id: string, confidence_from_config: string}} tier
  * @param {Date} runAt - the single DB-clock capture for this run (Spec 47 §R3.5)
  * @returns {{wsib_update_sql: string, wsib_update_params: unknown[], entities_flag_scope_params: unknown[], entities_contacts_sql: string, entities_contacts_params: unknown[]}}
  */
 function buildTierSql(descriptor, config, tier, runAt) {
-  const confidence = config[tier.confidence_config];
+  const confidence = config[tier.confidence_from_config];
   const entitiesContactsSql = buildContactsSql();
   if (tier.id === TIER_IDS.EXACT_TRADE) {
     return {
@@ -240,7 +240,7 @@ WHERE w_agg.linked_entity_id = e.id
  */
 function buildRetractionScopeParams(config, tiers) {
   const fuzzyTier = tiers.find((t) => t.id === TIER_IDS.FUZZY);
-  return [config[fuzzyTier.confidence_config]];
+  return [config[fuzzyTier.confidence_from_config]];
 }
 
 /**
@@ -407,11 +407,20 @@ function gate_decision(ctx) {
   });
 }
 
-/** T7's exhaustion row — WARN, never FAIL (R-H). INFO in every commit-7 invocation because mode never resolves full. */
+/** T7's exhaustion row — WARN, never FAIL (R-H). INFO (detail = the non-full placeholder text) whenever mode does not resolve full. */
 function tier3_full_not_converged(ctx) {
   const info = (ctx.matched && ctx.matched.tier3_full) || null;
   const exhausted = Boolean(info && info.exhausted);
   ctx.report('tier3_full_not_converged', { violations: exhausted ? 1 : 0, detail: info || 'not run this invocation (mode != full)' });
+}
+
+/** LW-D10 (commit 8b, 2026-08-28) — T7's own convergence audit row: how many passes the mode-full tier-3 loop took and the total relinked across them. INFO, always. */
+function tier3_full_iterations(ctx) {
+  const info = (ctx.matched && ctx.matched.tier3_full) || null;
+  const detail = info && typeof info.iterations === 'number'
+    ? { iterations: info.iterations, relinked_total: info.relinked_total }
+    : 'not run this invocation (mode != full)';
+  ctx.report('tier3_full_iterations', { violations: 0, detail });
 }
 
 /** A-7's audit row for the reverse copyContacts-clear pass — 0 by construction until commit 8's live repair. */
@@ -499,6 +508,7 @@ const CHECKS = {
   dead_bucket_count,
   registered_entities_with_zero_links,
   tier3_full_not_converged,
+  tier3_full_iterations,
   contacts_cleared_on_retraction,
   write_privilege,
 };
