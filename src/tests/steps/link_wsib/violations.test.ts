@@ -73,6 +73,8 @@ const REPORT_REL = 'docs/reports/2026-08-28-pilot4-link-wsib-assessment.md';
 const GOLDEN_DIR_REL = 'docs/reports/golden/link_wsib';
 const GOLDEN_HARNESS_REL = 'scripts/analysis/capture-step-golden.js';
 const MANIFEST_REL = 'scripts/manifest.json';
+/** Peel 8b (#165) — the registry seed file `configProjection` reads for `ctx.config`'s defaults. */
+const SEED_REL = 'scripts/seeds/logic_variables.json';
 const PROBE = path.join(REPO_ROOT, 'scripts/hooks/step-require-probe.cjs');
 const COMPUTE_STUB_REL = 'scripts/steps/_schema/fixtures/shape/_compute-stub.js';
 const REVIEW_CLIS = ['scripts/gemini-review.js', 'scripts/deepseek-review.js'];
@@ -221,6 +223,26 @@ interface GoldenDoc {
 }
 type ComputeFn = (ctx: unknown) => Promise<{ records_meta?: Record<string, unknown> } | void>;
 interface ComputeModule { compute?: ComputeFn; checks?: Record<string, (ctx: unknown) => unknown>; [k: string]: unknown }
+
+/** Peel 8b (#165) — the ctx shape scripts/lib/compute/link-wsib.js's CHECKS dispatch reads. */
+interface World {
+  matched: {
+    unlinked_start: number;
+    tiers: Record<string, { linked: number }>;
+    orphan_linked_entity_id: number;
+    confidence_outside_closed_set: number;
+    dead_bucket_050_060_count: number;
+    registered_entities_with_zero_links: number;
+    entities_count: number;
+    tier3_full: { exhausted: boolean; contacts_cleared?: number } | null;
+  };
+  cumulative: { total: number; linked: number };
+  fanin: { max: number; magnets_fanin_ge_10: number };
+  written: { privilege: { bypassrls: boolean; policies: number; rls_enabled: boolean } };
+  gate: { mode: 'incremental' | 'full'; reason: string; skipped: boolean; configVersionUpdatedAt: string };
+  overrides: { force_full: boolean };
+  elapsed_ms: number;
+}
 
 // ---------------------------------------------------------------------------
 // Artifact helpers — every claim test opens with one of these
@@ -788,16 +810,22 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/scripts\//.test(pkg.scripts.test ?? ''), 'npm test must not point at production scripts').toBe(false);
   });
 
-  // Flips at commit 8c (thresholds/checks peel): verified by executing (commit 7b) — the
-  // synthetic must-fail matrix below (healthyWorld/sabotageFor) was authored against a smaller
-  // check set than the descriptor now carries. `sabotageFor` covers only 2 of the descriptor's
-  // 3 WARN checks (link_rate_warn/T2, entity_fanin_warn/T6 — `tier3_full_not_converged` has no
-  // fixture) and 0 of its 5 FAIL checks (full_repair_empty_source_guard, orphan_linked_entity_id,
-  // confidence_outside_closed_set, registered_entities_with_zero_links, write_privilege) — 6
-  // checks with `missing` entries today. 8c is the peel that owns T1-T7/`ctx.config`/
-  // `limit_from_config` and is the natural place to extend this fixture matrix to the full
-  // 17-check descriptor.
-  it.fails('#165 Every declared check has a must-fail fixture (WARN: healthy PASS → sabotaged WARN; INFO: INFO both ways) — the LG-11 write-executor lock is written first (finding 3, LG-11)', async () => {
+  // Flipped GREEN at peel 8b (verdict/audit), 2026-08-28: two bugs, not one, kept this
+  // permanently red regardless of fixture-matrix size. (1) `runCompute`'s own `ctx.report`
+  // built a plain `rows` array with a hand-computed `status` that no CHECKS function ever
+  // set (every real observation is `{violations, detail}`, never `{status}`), then passed
+  // `{ rows }` — not a check-id-keyed dict — into the REAL `buildAuditTable`, whose
+  // `observations[check.id]` lookup was therefore always `undefined` for every check in every
+  // world; `checkRow` reads that as "not reported by compute" and renders the check's OWN
+  // declared severity regardless of whether the fixture was healthy or sabotaged, so no
+  // extension of `sabotageFor` could ever have made this claim pass. (2) the fixture matrix
+  // itself covered only 2 of the descriptor's 3 WARN checks and 0 of its 5 FAIL checks.
+  // Fixed by porting link_massing's proven `runCompute`/`configProjection`/`resolvedDescriptor`
+  // pattern (§ Must-fail fixture machinery below) and extending `sabotageFor` to all 8
+  // non-INFO checks (3 WARN: link_rate_warn/T2, entity_fanin_warn/T6, tier3_full_not_converged;
+  // 5 FAIL: full_repair_empty_source_guard, orphan_linked_entity_id,
+  // confidence_outside_closed_set, registered_entities_with_zero_links, write_privilege).
+  it('#165 Every declared check has a must-fail fixture (WARN: healthy PASS → sabotaged WARN; INFO: INFO both ways) — the LG-11 write-executor lock is written first (finding 3, LG-11)', async () => {
     const d = loadDescriptor();
     // LG-11 write-executor lock, written first per the plan's explicit instruction.
     const { wsibJoinUpdate } = writeTargets(d);
@@ -1021,33 +1049,115 @@ describe('55-B — monotone partials (5, k=MIXED)', () => {
 // sabotaged world over the 2 declared WARN checks.
 // ---------------------------------------------------------------------------
 
-function healthyWorld(): Record<string, unknown> {
+/**
+ * Peel 8b (#165) fix. The pre-8b version of this block built its own `rows` array with a
+ * hand-computed `status` (always 'INFO', since no CHECKS function in
+ * scripts/lib/compute/link-wsib.js ever sets `observation.status`) and then called the REAL
+ * `buildAuditTable(d, null, { rows })` — but `buildAuditTable` reads `observations[check.id]`,
+ * and `{ rows: [...] }` has no key matching any check id, so every row silently fell through to
+ * checkRow's "not reported by compute" branch (status === the check's OWN declared severity,
+ * for every world, healthy or sabotaged alike). That is why #165 was `.fails()`-wrapped: the
+ * harness could not have distinguished a healthy world from a sabotaged one no matter how the
+ * fixture matrix was extended. Fixed by mirroring link_massing's proven pattern
+ * (src/tests/steps/link_massing/violations.test.ts `runCompute`/`configProjection`/
+ * `resolvedDescriptor`): `ctx.report` writes directly into an `observations` dict keyed by
+ * check id, `limit_from_config` is resolved to a literal BEFORE `buildAuditTable` runs (so no
+ * live `config` argument is needed), and `buildAuditTable` receives that dict, not an array.
+ */
+function healthyWorld(): World {
   return {
-    cumulative: { total: LIVE_WSIB_TOTAL, linked: LIVE_WSIB_LINKED, linkRatePct: (LIVE_WSIB_LINKED / LIVE_WSIB_TOTAL) * 100 },
-    fanin: { max: 12 }, // healthy: below the T6 default (20)
-    config: { [CONFIG_VARS.T2]: T2_DEFAULT, [CONFIG_VARS.T6]: T6_DEFAULT },
+    matched: {
+      unlinked_start: 107_151, // measured order of magnitude, commit-5 golden captures
+      tiers: { tier1_exact_trade: { linked: 0 }, tier2_exact_legal: { linked: 0 }, tier3_fuzzy: { linked: 0 } },
+      orphan_linked_entity_id: 0,
+      confidence_outside_closed_set: 0,
+      dead_bucket_050_060_count: 0,
+      registered_entities_with_zero_links: 0,
+      entities_count: LIVE_ENTITIES_TOTAL,
+      tier3_full: null, // mode never resolves full in this fixture set — T7/A-7 is commit 8's budgeted act
+    },
+    cumulative: { total: LIVE_WSIB_TOTAL, linked: LIVE_WSIB_LINKED }, // 11.53% >= the T2 5% floor
+    fanin: { max: 12, magnets_fanin_ge_10: 0 }, // healthy: below the T6 default (20)
+    written: { privilege: { bypassrls: true, policies: 0, rls_enabled: true } },
+    gate: { mode: 'incremental', reason: 'unchanged', skipped: false, configVersionUpdatedAt: '2026-08-28T00:00:00Z' },
+    overrides: { force_full: false },
+    elapsed_ms: 8_000,
   };
 }
 
-function sabotageFor(c: Check): Record<string, unknown> | null {
-  if (c.id === 'link_rate_warn' || c.limit_from_config === CONFIG_VARS.T2) {
-    return { cumulative: { total: 1_000_000, linked: 1, linkRatePct: 0.0001 }, fanin: { max: 1 }, config: { [CONFIG_VARS.T2]: T2_DEFAULT, [CONFIG_VARS.T6]: T6_DEFAULT } };
-  }
-  if (c.id === 'entity_fanin_warn' || c.limit_from_config === CONFIG_VARS.T6) {
-    return { cumulative: { total: LIVE_WSIB_TOTAL, linked: LIVE_WSIB_LINKED, linkRatePct: 11.53 }, fanin: { max: LIVE_FANIN_MAX }, config: { [CONFIG_VARS.T2]: T2_DEFAULT, [CONFIG_VARS.T6]: T6_DEFAULT } };
-  }
-  return null;
+/** One sabotage mutator per non-INFO check — by the P4 variable first (T2/T6), then by id. */
+const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
+  [CONFIG_VARS.T2]: (w) => { w.cumulative = { total: 1_000_000, linked: 1 }; }, // ~0.0001% link rate vs the 5% floor
+  [CONFIG_VARS.T6]: (w) => { w.fanin = { max: LIVE_FANIN_MAX, magnets_fanin_ge_10: LIVE_MAGNET_COUNT }; }, // 2,118 vs the 20 default
+};
+const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
+  [/tier3_full_not_converged|convergence/i, (w) => { w.matched.tier3_full = { exhausted: true, contacts_cleared: 0 }; }], // T7 exhaustion, WARN not FAIL (R-H)
+  [/full_repair_empty_source/i, (w) => { w.gate = { ...w.gate, mode: 'full' }; w.matched.entities_count = 0; }], // D-20: mode full against an empty entities corpus
+  [/orphan_linked_entity_id/i, (w) => { w.matched.orphan_linked_entity_id = 5; }], // linked_entity_id set with a NULL confidence/matched_at pair
+  [/confidence_outside_closed_set/i, (w) => { w.matched.confidence_outside_closed_set = 3; }], // a match_confidence outside {0.95, 0.90, 0.60}
+  [/registered_entities_with_zero_links/i, (w) => { w.matched.registered_entities_with_zero_links = 7; }], // is_wsib_registered=true with no wsib_registry row pointing at it
+  [/write_privilege/i, (w) => { w.written = { privilege: { bypassrls: false, policies: 0, rls_enabled: true } }; }], // RLS enabled, 0 policies, role does not bypass
+];
+
+function sabotageFor(c: Check): ((w: World) => void) | undefined {
+  if (c.limit_from_config && SABOTAGE_BY_VAR[c.limit_from_config]) return SABOTAGE_BY_VAR[c.limit_from_config];
+  const hit = SABOTAGE_BY_ID.find(([re]) => re.test(c.id));
+  return hit ? hit[1] : undefined;
 }
 
-async function runCompute(compute: ComputeFn, d: Descriptor, world: Record<string, unknown>): Promise<Record<string, string>> {
-  const rows: AuditRow[] = [];
+/** The `ctx.config` a freshly seeded DB yields for the DECLARED names (P4: declared-but-unseeded reds by name). */
+function configProjection(d: Descriptor): Readonly<Record<string, number>> {
+  if (d.config === 'none') return Object.freeze({});
+  const seed = JSON.parse(fs.readFileSync(abs(SEED_REL), 'utf8')) as Record<string, { default: number }>;
+  const out: Record<string, number> = {};
+  for (const v of d.config.logic_variables) {
+    expect(seed[v.name], `${SEED_REL} does not seed declared variable ${v.name} (P4 — declared but in NO registry)`).toBeDefined();
+    out[v.name] = seed[v.name]!.default;
+  }
+  return Object.freeze(out);
+}
+
+/** Substitutes each `limit_from_config` check's `limit` string with its resolved config value — mirrors verdict.js's own `resolveLimit`, done once here so `buildAuditTable` needs no live `config` argument. */
+function resolvedDescriptor(d: Descriptor, config: Readonly<Record<string, number>>): Descriptor {
+  const checks = d.checks.map((c) => {
+    if (!c.limit_from_config) return c;
+    const v = config[c.limit_from_config];
+    expect(v, `check ${c.id}: limit_from_config "${c.limit_from_config}" is not in ctx.config`).toBeDefined();
+    const limit = typeof c.limit === 'string' ? c.limit.replace(/[0-9]*\.?[0-9]+(?=\s*(x median)?$)/, String(v)) : c.limit;
+    return { ...c, limit };
+  });
+  return { ...d, checks };
+}
+
+async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<Record<string, string>> {
+  const observations: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+  const declared = new Set(d.checks.map((c) => c.id));
+  const config = configProjection(d);
+  const resolved = resolvedDescriptor(d, config);
   const ctx = {
-    ...world,
-    config: world.config,
-    report: (id: string, observation: Record<string, unknown>) => { rows.push({ metric: id, value: observation.value ?? observation, threshold: observation.threshold ?? null, status: String(observation.status ?? 'INFO') }); },
+    pool: { query: () => { throw new Error('the compute must not touch the pool — reads/writes are library-owned (A-1)'); } },
+    chainId: null,
+    runId: null,
+    descriptor: resolved,
+    checks: resolved.checks.map((c) => c.id),
+    fetch: () => { throw new Error('the compute must not fetch — this step has an EMPTY network seam (G5)'); },
+    clock: () => Date.parse(`${FIXTURE_REVIEWED}T00:00:00Z`),
+    config,
+    matched: w.matched,
+    cumulative: w.cumulative,
+    fanin: w.fanin,
+    written: w.written,
+    gate: w.gate,
+    overrides: w.overrides,
+    elapsed_ms: w.elapsed_ms,
+    log: { info: () => {}, warn: () => {}, error: () => {} },
+    report(checkId: string, observation: unknown) {
+      if (!declared.has(checkId)) throw new Error(`compute reported undeclared check "${checkId}"`);
+      observations[checkId] = observation;
+    },
   };
   await compute(ctx);
-  const built = buildAuditTable(d, null, { rows });
+  const built = buildAuditTable(resolved, null, observations);
   const out: Record<string, string> = {};
   for (const r of built.rows) out[r.metric] = r.status;
   return out;
@@ -1055,9 +1165,11 @@ async function runCompute(compute: ComputeFn, d: Descriptor, world: Record<strin
 
 async function mustFailPair(compute: ComputeFn, d: Descriptor, c: Check): Promise<{ healthy: string; sabotaged: string }> {
   const healthy = await runCompute(compute, d, healthyWorld());
-  const sabWorld = sabotageFor(c);
-  expect(sabWorld, `no sabotage fixture for check ${c.id}`).not.toBeNull();
-  const sabotaged = await runCompute(compute, d, sabWorld as Record<string, unknown>);
+  const sabWorld = healthyWorld();
+  const mutate = sabotageFor(c);
+  expect(mutate, `no sabotage fixture for check ${c.id}`).toBeDefined();
+  (mutate as (w: World) => void)(sabWorld);
+  const sabotaged = await runCompute(compute, d, sabWorld);
   return { healthy: healthy[c.id] ?? 'MISSING', sabotaged: sabotaged[c.id] ?? 'MISSING' };
 }
 
