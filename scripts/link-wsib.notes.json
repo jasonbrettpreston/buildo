@@ -16,7 +16,12 @@
       }
     },
     {
-      "note": "The three tiers are a CONFIDENCE HIERARCHY, not three independent passes: each tier's matched CTE folds `WHERE linked_entity_id IS NULL`, so a row Tier 1 claims is invisible to Tier 2 and Tier 3 for the rest of the run. Reordering the tiers[] array changes which confidence a row gets, not just which tier's counter it lands in."
+      "note": "The three tiers are a CONFIDENCE HIERARCHY, not three independent passes: each tier's matched CTE folds `WHERE linked_entity_id IS NULL`, so a row Tier 1 claims is invisible to Tier 2 and Tier 3 for the rest of the run. Reordering the tiers[] array changes which confidence a row gets, not just which tier's counter it lands in.",
+      "measured": {
+        "value": "3 of 3 tiers fold their own WHERE w.linked_entity_id IS NULL into the matched CTE (compute/link-wsib.js:124,158,171) — one per tier, no shared/hoisted predicate",
+        "date": "2026-08-28",
+        "query": "grep -n \"linked_entity_id IS NULL\" scripts/lib/compute/link-wsib.js"
+      }
     }
   ],
   "known_normal": [
@@ -60,7 +65,7 @@
       "note": "LW-D8 — database.min_migration is a COUNT floor (operator ruling P0, 9e2da7b1: scripts/lib/resolve-db.js assertDbTarget compares against COUNT(*) of schema_migrations), never a filename number. descriptor:448 was mis-set to 243 — the DDL migration's FILENAME (243_wsib_unlinked_partial_index.sql) — but the migrations/ sequence carries 4 historical filename gaps (43, 49, 50, 158), so COUNT never reaches 243 and the step refused to run forever. Corrected to 240: the 1-based position of 243_wsib_unlinked_partial_index.sql in the sorted migrations/ directory listing, which equals the COUNT value at the moment that file was applied (242 files total, applied in order)."
     }
   ],
-  "counts": { "open_blind_spots": 1, "unpromoted_suspicious_if": 0 },
+  "counts": { "open_blind_spots": 0, "unpromoted_suspicious_if": 0 },
   "fences": [
     {
       "const": "d704a447's article-stripping blocking predicate — strip a leading THE/A/AN before comparing first letters",

@@ -550,7 +550,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(ids.has('no_such_check'), 'negative control').toBe(false);
   });
 
-  it.fails('#34 `detected_by:"none"` is permitted but counted', () => {
+  it('#34 `detected_by:"none"` is permitted but counted', () => {
     const notes = loadNotes();
     const blind = (notes.blind_spots as NotesEntry[] | undefined) ?? [];
     const open = blind.filter((b) => isNone(b.detected_by)).length;
@@ -559,7 +559,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(plusOne).toBe(open + 1);
   });
 
-  it.fails('#35 Every prose entry carries `measured{value,date,query}`', () => {
+  it('#35 Every prose entry carries `measured{value,date,query}`', () => {
     const notes = loadNotes();
     const entries = notesEntries(notes);
     expect(entries.length, 'a notes file with zero prose entries proves nothing').toBeGreaterThan(0);
@@ -621,6 +621,13 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
+  // Flips at commit 9 (cutover): this claim reads `${GOLDEN_DIR_REL}/post/*.json` specifically
+  // (not the commit-7b mid-conversion differential, captured to `post-7b/` per this pilot's own
+  // #159/GOLDEN_DIR_REL lock so it does NOT satisfy this claim early) — commit 9 is the declared
+  // landing point for `post/` per the header comment above and the commit ledger. Whether the POST
+  // hash equals or diverges from PRE depends on whether A-7's tier-3 repair has landed by then (a
+  // real repair moves rows, so the two must NOT match once A-7 executes) — both branches are
+  // already written into this claim's own title.
   it.fails('#150 Gate 1 — reproducible against itself: all 3 PRE captures (commit 5, no forced-FULL yet — A-7 not ruled) hash-identical; the POST triple must hash-identical too and must NOT match the PRE hash IF A-7 lands (a real repair moves rows)', () => {
     const docs = goldenDocs();
     for (const inv of INVOCATIONS) artifact(`${GOLDEN_DIR_REL}/pre/${inv.name}.json`, `PRE capture for ${inv.name} (commit 5, LANDED)`);
@@ -655,7 +662,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(inventoryAt, 'inventory committed AFTER the first golden capture').toBeLessThanOrEqual(goldenAt);
   });
 
-  it.fails('#6b Every plan item declares a done-test (§12.16) — each of the nine commits (8 = three peels) names one', () => {
+  it('#6b Every plan item declares a done-test (§12.16) — each of the nine commits (8 = three peels) names one', () => {
     const report = readText(REPORT_REL);
     const { table, col } = reportTable(report, [['commit', /commit/], ['done-test', /done.?test|test/]]);
     expect(table.rows.length, 'nine commit-ledger rows').toBeGreaterThanOrEqual(9);
@@ -781,6 +788,15 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/scripts\//.test(pkg.scripts.test ?? ''), 'npm test must not point at production scripts').toBe(false);
   });
 
+  // Flips at commit 8c (thresholds/checks peel): verified by executing (commit 7b) — the
+  // synthetic must-fail matrix below (healthyWorld/sabotageFor) was authored against a smaller
+  // check set than the descriptor now carries. `sabotageFor` covers only 2 of the descriptor's
+  // 3 WARN checks (link_rate_warn/T2, entity_fanin_warn/T6 — `tier3_full_not_converged` has no
+  // fixture) and 0 of its 5 FAIL checks (full_repair_empty_source_guard, orphan_linked_entity_id,
+  // confidence_outside_closed_set, registered_entities_with_zero_links, write_privilege) — 6
+  // checks with `missing` entries today. 8c is the peel that owns T1-T7/`ctx.config`/
+  // `limit_from_config` and is the natural place to extend this fixture matrix to the full
+  // 17-check descriptor.
   it.fails('#165 Every declared check has a must-fail fixture (WARN: healthy PASS → sabotaged WARN; INFO: INFO both ways) — the LG-11 write-executor lock is written first (finding 3, LG-11)', async () => {
     const d = loadDescriptor();
     // LG-11 write-executor lock, written first per the plan's explicit instruction.
@@ -801,8 +817,18 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#167 Banned anti-pattern — no step test asserts ledger, lock or transaction behaviour', () => {
-    const own = fs.readFileSync(__filename, 'utf8');
+  // Self-scan bug found by executing (commit 7b): the detector below must NAME its own banned
+  // substrings to look for them, which — scanned against the file's OWN raw text — matched itself,
+  // permanently red regardless of whether any OTHER line in the suite ever touched lock internals
+  // (the same "aimed at itself" class as the isLinkStep re-home above). Fix: this it()'s own line
+  // range is excluded from the scanned text before either pattern is tested.
+  const SELF_SCAN_EXCLUDE_MARK = 'this suite directly asserts';
+  it('#167 Banned anti-pattern — no step test asserts ledger, lock or transaction behaviour', () => {
+    const raw = fs.readFileSync(__filename, 'utf8');
+    const own = raw
+      .split('\n')
+      .filter((line) => !line.includes(SELF_SCAN_EXCLUDE_MARK))
+      .join('\n');
     expect(/withAdvisoryLock\s*\(/.test(own), 'this suite directly asserts advisory-lock plumbing — that belongs to the runner\'s own suite').toBe(false);
     expect(/pg_stat_activity|pg_locks/i.test(own), 'this suite directly asserts lock/transaction internals').toBe(false);
   });
@@ -816,6 +842,14 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(fs.existsSync(path.join(abs(STEP_DIR_REL), 'rung1.test.ts')), 'no rung-1 file exists (correct — N/A by subject)').toBe(false);
   });
 
+  // Flips when the assessment report documents T1-T7's rationale — verified by executing
+  // (commit 7b): only T1 (wsib_fuzzy_match_threshold) and T7 (link_wsib_tier3_full_max_iterations)
+  // are named anywhere in the report today; T2-T6 are not. The report's own §0 text (line 3) states
+  // this writeup ("§6's remaining declared-diffs content") "land[s] at commit 7", but commit 7
+  // (`69de8a13`) shipped code only and did not touch this report — genuinely owed, not yet landed.
+  // Most naturally closes alongside 8c (the peel that owns T1-T7/`ctx.config`), since that is the
+  // next commit to touch these values' declared semantics; could also land as its own doc commit
+  // before commit 9 cutover.
   it.fails('#171 An approving commit states why each value is right — T1-T7\'s values must each carry a stated rationale', () => {
     const report = readText(REPORT_REL);
     for (const name of Object.values(CONFIG_VARS)) {
@@ -1096,14 +1130,41 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCH
     expect(src.includes(NULL_RETRACT_CLASS), `write.js does not yet dispatch on "${NULL_RETRACT_CLASS}" (LG-16) — genuinely absent today`).toBe(true);
   });
 
-  it.fails('index.js — a gated-skip path exists for isLinkStep/MATCHER (LG-15, CONFIRMED genuinely new by Fold B — staleness.js\'s selectMode is strictly full|incremental today)', () => {
+  it('index.js — a gated-skip path exists for isLinkStep/MATCHER (LG-15, landed commit 7 — R-K re-home: the decision lives in runCascadePhase, not in isLinkStep\'s one-line shape predicate)', () => {
     const lib = loadLib(INDEX_REL) as Record<string, unknown>;
-    expect(typeof lib.isLinkStep, 'index.js has no isLinkStep export (this part is already true today, correctly)').toBe('function');
+    expect(typeof lib.isLinkStep, 'index.js has no isLinkStep export').toBe('function');
+    expect(typeof lib.isCascadeStep, 'index.js has no isCascadeStep export (the MATCHER sibling shape predicate)').toBe('function');
     const src = stripComments(fs.readFileSync(abs(INDEX_REL), 'utf8'));
-    // isLinkStep's own branch (:925-943 per the plan) has no skip_gated handling today — only isIngestStep does.
-    const isLinkStepBlock = /function isLinkStep[\s\S]*?\n}/.exec(src)?.[0]
-      ?? src.slice(src.indexOf('isLinkStep'), src.indexOf('isLinkStep') + 800);
-    expect(/skip_gated|gated.?skip/i.test(isLinkStepBlock), 'isLinkStep still has NO gated-skip branch (LG-15) — genuinely absent today, only isIngestStep has skip_gated').toBe(true);
+    // R-K (2026-08-28, commit 7b): the ORIGINAL claim regexed `function isLinkStep[\s\S]*?\n}` — but
+    // isLinkStep/isCascadeStep are pure one-line shape predicates (`Boolean(descriptor.execution.shape
+    // === ...)`); the gated-skip DECISION (staleness.ledgerGatedSkip / gatedSkip.skip / the
+    // `cascade ledger gate: SKIP` log line) lives in runCascadePhase, the MATCHER runner both
+    // predicates gate entry to. A regex aimed at isLinkStep's own tiny body could never find it,
+    // pre- or post-commit-7 — re-homed to the real site so this is a genuine claim, not a permanent
+    // false-negative masked green by isLinkStep never containing the logic in the first place.
+    // Brace-BALANCED extraction, not a lazy regex — runCascadePhase is ~160 lines with many
+    // nested `if`/`for` blocks, so a lazy `[\s\S]*?\n}\n` would stop at the FIRST inner block's
+    // own closing brace, not the function's. Count braces from the signature to the matching `}`.
+    const sigMatch = /async function runCascadePhase\([^)]*\)\s*\{/.exec(src);
+    let cascadePhaseBlock: string | undefined;
+    if (sigMatch) {
+      // Start counting AFTER the signature's own opening brace (depth 1) — the destructured
+      // parameter `({ descriptor, pool, ... })` has its OWN balanced `{}` pair that closes
+      // before the body ever starts, so counting from the "async function" keyword would hit
+      // depth 0 at the destructure's own closing brace and truncate to ~2 lines.
+      const bodyStart = sigMatch.index + sigMatch[0].length;
+      let depth = 1;
+      let end = -1;
+      for (let i = bodyStart; i < src.length; i++) {
+        if (src[i] === '{') depth++;
+        else if (src[i] === '}') { depth--; if (depth === 0) { end = i + 1; break; } }
+      }
+      if (end > 0) cascadePhaseBlock = src.slice(sigMatch.index, end);
+    }
+    expect(cascadePhaseBlock, 'index.js has no runCascadePhase function to inspect').toBeTruthy();
+    expect(/skip_gated|gated.?skip/i.test(cascadePhaseBlock ?? ''), 'runCascadePhase has no gated-skip branch (LG-15)').toBe(true);
+    expect(/staleness\.ledgerGatedSkip/.test(cascadePhaseBlock ?? ''), 'runCascadePhase does not call staleness.ledgerGatedSkip (LG-15\'s generalized B3 gate)').toBe(true);
+    expect(/gatedSkip\.skip/.test(cascadePhaseBlock ?? ''), 'runCascadePhase does not branch on gatedSkip.skip').toBe(true);
   });
 });
 
