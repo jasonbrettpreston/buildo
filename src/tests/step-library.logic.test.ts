@@ -243,6 +243,38 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     expect(meta.audit_table.verdict).toBe(verdictLib.deriveVerdict(meta.audit_table.rows));
     expect(meta.reason).toBe('advisory_lock_held_elsewhere');
   });
+
+  // LM-D16 — `errors[]` interpolated `row.value` directly, so an object-valued
+  // `detail` (9 sites across scripts/lib/compute/*.js report one) rendered as the
+  // literal string "[object Object]" — captured live in
+  // docs/reports/golden/link_massing/post/sources-full-forced-1.json
+  // summary.records_meta.errors, and shown verbatim to operators by
+  // FreshnessTimeline.tsx. `renderValue` must stringify deterministically
+  // (sorted keys) rather than losing the value.
+  it('LM-D16 — an object-valued check detail renders as stable sorted JSON, not [object Object]', () => {
+    const d = withChecks([{ severity: 'WARN' }]);
+    const built = build(d, { c0: { violations: 1, detail: { ratio: 1, scanned: 10, changed: 10 } } });
+    expect(built.rows[0].status).toBe('WARN');
+    // The audit row itself keeps the real object — only errors[] is a rendered string.
+    expect(built.rows[0].value).toEqual({ ratio: 1, scanned: 10, changed: 10 });
+    expect(built.errors[0]).toBe('c0: {"changed":10,"ratio":1,"scanned":10}');
+  });
+
+  it('LM-D16 — a primitive check value renders unchanged, no stringify', () => {
+    const d = withChecks([{ severity: 'WARN' }]);
+    expect(build(d, { c0: { violations: 1, detail: 42 } }).errors[0]).toBe('c0: 42');
+    expect(build(d, { c0: { violations: 1, detail: 'bypassrls=true policies=0' } }).errors[0])
+      .toBe('c0: bypassrls=true policies=0');
+  });
+
+  it('LM-D16 — a large rendered value is capped, so errors[] stays bounded', () => {
+    const d = withChecks([{ severity: 'WARN' }]);
+    const bigDetail = { items: Array.from({ length: 100 }, (_, i) => `item-${i}`) };
+    const built = build(d, { c0: { violations: 1, detail: bigDetail } });
+    const rendered = built.errors[0].slice('c0: '.length);
+    expect(rendered.length).toBeLessThanOrEqual(301);
+    expect(rendered.endsWith('…')).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------

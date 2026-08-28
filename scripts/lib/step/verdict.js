@@ -175,6 +175,51 @@ function checkRow(check, observation, onCheckError, config = null) {
   return row(observed, verdict.escalate || check.severity);
 }
 
+/** LM-D16 — `errors[]`'s cap: bounded so one large `detail` cannot make the array unbounded. */
+const RENDER_VALUE_MAX_LENGTH = 300;
+
+/**
+ * Recursively sort object keys so the same value always serializes the same way,
+ * regardless of the property insertion order at the call site that built it.
+ * Arrays keep their order (order is meaningful there); only object keys sort.
+ */
+function sortKeysDeep(value) {
+  if (Array.isArray(value)) return value.map(sortKeysDeep);
+  if (value !== null && typeof value === 'object') {
+    const sorted = {};
+    for (const key of Object.keys(value).sort()) sorted[key] = sortKeysDeep(value[key]);
+    return sorted;
+  }
+  return value;
+}
+
+/**
+ * LM-D16 — render a check row's `value` for interpolation into a human-readable
+ * message (`errors[]`, and anywhere else in this file a row value is stringified).
+ *
+ * Primitives (string/number/boolean/null/undefined) render via `String`, unchanged
+ * from before. Objects/arrays — `checkRow` (§171-173) prefers `observation.detail`
+ * as the row value, and 9 sites across `scripts/lib/compute/*.js` report an
+ * OBJECT-valued `detail` — render as JSON with keys sorted recursively (§sortKeysDeep),
+ * so the same shape always produces the same string. A naive template-literal
+ * interpolation (`${row.value}`) stringifies an object via `Object.prototype.toString`
+ * and silently loses the value as the literal text "[object Object]"; this is the
+ * one and only place that stringification happens.
+ *
+ * Capped at `RENDER_VALUE_MAX_LENGTH` so a single check with a large `detail`
+ * cannot make `errors[]` unbounded.
+ *
+ * @param {*} value
+ * @param {number} [maxLength]
+ * @returns {string}
+ */
+function renderValue(value, maxLength = RENDER_VALUE_MAX_LENGTH) {
+  const rendered = value !== null && typeof value === 'object'
+    ? JSON.stringify(sortKeysDeep(value))
+    : String(value);
+  return rendered.length > maxLength ? `${rendered.slice(0, maxLength)}…` : rendered;
+}
+
 /**
  * THE cascade. Row-derived, and the only place a verdict is ever computed.
  * `{PASS, WARN, FAIL}` are all reachable from rows alone — claim #28.
@@ -207,7 +252,7 @@ function buildAuditTable(descriptor, chainId, observations, extraRows = [], conf
     const row = checkRow(check, observations ? observations[check.id] : undefined, onCheckError, config);
     if (!row) continue;
     rows.push(row);
-    if (row.status === 'FAIL' || row.status === 'WARN') errors.push(`${check.id}: ${row.value}`);
+    if (row.status === 'FAIL' || row.status === 'WARN') errors.push(`${check.id}: ${renderValue(row.value)}`);
     if (row.status === 'FAIL' && check.blocking === true) blockingFailures.push(check.id);
   }
   rows.push(...extraRows);
@@ -233,4 +278,5 @@ module.exports = {
   checkRow,
   deriveVerdict,
   buildAuditTable,
+  renderValue,
 };
