@@ -55,6 +55,9 @@
     },
     {
       "note": "A-1 (SHOULD-FIX d) — commit 7 forks runLinkPhase into a new runCascadePhase rather than extending it with a tiers[] branch: link_wsib's bulk no-pagination 3-statement-per-tier shape would have forked runLinkPhase's own write loop internally, which the ruling names as the condition for a separate phase."
+    },
+    {
+      "note": "LW-D8 — database.min_migration is a COUNT floor (operator ruling P0, 9e2da7b1: scripts/lib/resolve-db.js assertDbTarget compares against COUNT(*) of schema_migrations), never a filename number. descriptor:448 was mis-set to 243 — the DDL migration's FILENAME (243_wsib_unlinked_partial_index.sql) — but the migrations/ sequence carries 4 historical filename gaps (43, 49, 50, 158), so COUNT never reaches 243 and the step refused to run forever. Corrected to 240: the 1-based position of 243_wsib_unlinked_partial_index.sql in the sorted migrations/ directory listing, which equals the COUNT value at the moment that file was applied (242 files total, applied in order)."
     }
   ],
   "counts": { "open_blind_spots": 1, "unpromoted_suspicious_if": 0 },

@@ -81,8 +81,17 @@ const REVIEW_CLIS = ['scripts/gemini-review.js', 'scripts/deepseek-review.js'];
 const FROZEN_LINES = 547;
 /** S1 — the step's advisory lock (Spec 47 §A.5 registry; pipeline-advisory-lock.infra.test.ts:80). */
 const LOCK_ID = 94;
-/** DB Schema-Fidelity ask — the real DDL floor: migration 243 (the unlinked-partial-index), not head 245. */
-const MIN_MIGRATION = 243;
+/**
+ * DB Schema-Fidelity ask — the real DDL dependency is migration 243
+ * (243_wsib_unlinked_partial_index.sql), not head 245. But min_migration is a
+ * COUNT floor (scripts/lib/resolve-db.js assertDbTarget, P0 9e2da7b1), never a
+ * filename number: the migrations/ sequence carries historical filename gaps
+ * (43, 49, 50, 158), so 243's position in the sorted migrations/ listing — the
+ * COUNT value at which it was applied — is 240, not 243 (LW-D8, fixed this
+ * commit; the pre-fix descriptor shipped 243 and the step refused to run
+ * forever, since COUNT(*) never reaches 243 with those gaps).
+ */
+const MIN_MIGRATION = 240;
 /** Write targets — measured 9 statement executions / 7 distinct SQL texts / 3 write groups (Fold A, Integration S1). */
 const WSIB_TABLE = 'wsib_registry';
 const ENTITIES_TABLE = 'entities';
@@ -1019,7 +1028,7 @@ async function mustFailPair(compute: ComputeFn, d: Descriptor, c: Check): Promis
 }
 
 describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCHER library growth', () => {
-  it('descriptor exists, validates, and carries the ruled shape: MATCHER archetype, ≥2 write targets (LG-11 join-update + entities flag), T1–T7, override E1/E2/E3, staleness config_version + corpus fingerprint, lock 94, min_migration 243', () => {
+  it('descriptor exists, validates, and carries the ruled shape: MATCHER archetype, ≥2 write targets (LG-11 join-update + entities flag), T1–T7, override E1/E2/E3, staleness config_version + corpus fingerprint, lock 94, min_migration 240 (COUNT floor, LW-D8)', () => {
     const d = loadDescriptor();
     expect(d.identity.lock).toBe(LOCK_ID);
     expect(d.identity.archetype, 'MATCHER shares the LINK allOf profile (Spec 122 §1.10)').toMatch(/link|matcher/i);
@@ -1031,7 +1040,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCH
     }
     for (const name of LIMIT_FROM_CONFIG_VARS) checkByVar(d, name);
     expect(d.override, 'override must declare force_full/dry_run (E1/E2)').not.toBe('none');
-    expect(d.database.min_migration, `min_migration must derive from 243 (the real DDL dependency), not head 245`).toBe(MIN_MIGRATION);
+    expect(d.database.min_migration, `min_migration is a COUNT floor (LW-D8): 240, migration 243's position in migrations/, not the filename 243 nor head 245`).toBe(MIN_MIGRATION);
     expect(d.config && (d.config as Exclude<Descriptor['config'], 'none'>).hoisted_above_gate, 'G-4: config.hoisted_above_gate must be true').toBe(true);
     expect(d.terminals.length, 'at least the gate-skip, zero-unlinked, and real-run terminals (G-12)').toBeGreaterThanOrEqual(3);
   });

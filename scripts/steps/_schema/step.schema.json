@@ -1284,7 +1284,10 @@
       "required": ["class", "min_migration", "assert_current_database"],
       "properties": {
         "class": { "enum": ["primary", "replica", "none"], "x-frozen": true },
-        "min_migration": { "anyOf": [{ "const": "none" }, { "type": "integer", "minimum": 0 }] },
+        "min_migration": {
+          "description": "COUNT floor, not a filename number: the step refuses to run unless COUNT(*) FROM schema_migrations is >= this value (scripts/lib/resolve-db.js assertDbTarget, operator ruling P0 9e2da7b1). The migrations/ filename sequence has historical gaps (e.g. 43, 49, 50, 158), so a required migration's FILENAME number is always >= its true COUNT position once gaps exist — setting min_migration to the filename (LW-D8: 243 instead of 240 for migration 243_wsib_unlinked_partial_index.sql) makes the floor unreachable forever. Set this to the 1-based position of the required migration file in the sorted migrations/ directory listing.",
+          "anyOf": [{ "const": "none" }, { "type": "integer", "minimum": 0 }]
+        },
         "assert_current_database": { "anyOf": [{ "const": "none" }, { "type": "string", "minLength": 1 }] }
       }
     },

@@ -47,7 +47,7 @@ const SHAPE_FIXTURES = 'scripts/steps/_schema/fixtures/shape';
 // itself validates with, so this suite and production cannot drift into two
 // different AJV configurations. Same require as step-schema.logic.test.ts.
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
-const { compileStepSchema } = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js'));
+const { compileStepSchema, SCHEMA_PATH } = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js'));
 const validateDescriptor = compileStepSchema() as ((d: unknown) => boolean) & {
   errors?: Array<{ instancePath?: string; message?: string }> | null;
 };
@@ -1082,6 +1082,64 @@ describe('§5.2 conformance — every converted step', () => {
     it(`${relFile}`, () => {
       const findings = conformanceFindings(relFile, { expectSlug: slugFor(relFile) });
       expect(findings, findings.join('\n')).toEqual([]);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 7. LW-D8 — database.min_migration is a COUNT floor, never a filename number
+// ---------------------------------------------------------------------------
+//
+// scripts/lib/resolve-db.js assertDbTarget compares min_migration against
+// COUNT(*) FROM schema_migrations (operator ruling P0, 9e2da7b1) — never a
+// migration file's filename number. The migrations/ sequence carries historical
+// filename gaps (43, 49, 50, 158 among them), so a min_migration written as a
+// filename is structurally >= its true COUNT position and the floor can become
+// permanently unreachable (link-wsib.descriptor.json:448 shipped exactly this:
+// 243, the filename of 243_wsib_unlinked_partial_index.sql, instead of 240, that
+// migration's position in the sorted migrations/ listing — the step refused to
+// run against a fully-migrated database forever). This is a static, no-DB check:
+// it bounds every declared min_migration by the number of *.sql files that
+// exist, which can only ever be >= the live COUNT.
+
+describe('database.min_migration — COUNT floor, never a filename number (LW-D8)', () => {
+  const MIGRATIONS_DIR = path.join(REPO_ROOT, 'migrations');
+  const MIGRATION_FILE_COUNT = fs.readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).length;
+
+  it(`sanity: migrations/ holds at least one *.sql file (found ${MIGRATION_FILE_COUNT})`, () => {
+    expect(MIGRATION_FILE_COUNT).toBeGreaterThan(0);
+  });
+
+  it('the schema declares the COUNT semantics by name, not tribal knowledge', () => {
+    const schemaObj = JSON.parse(fs.readFileSync(SCHEMA_PATH, 'utf8')) as {
+      properties?: { database?: { properties?: { min_migration?: { description?: string } } } };
+    };
+    const desc = schemaObj.properties?.database?.properties?.min_migration?.description;
+    expect(desc, 'no properties.database.properties.min_migration.description found in step.schema.json').toBeTruthy();
+    expect(desc ?? '', 'min_migration description must name the COUNT semantics').toContain('COUNT');
+  });
+
+  const IN_SCOPE = [...CONVERTED, ...PENDING_FILES];
+
+  it('at least one descriptor is in scope (else the per-file loop below is vacuous)', () => {
+    expect(IN_SCOPE.length).toBeGreaterThan(0);
+  });
+
+  for (const relFile of IN_SCOPE) {
+    it(`${relFile} — database.min_migration <= migrations/ file count (${MIGRATION_FILE_COUNT})`, () => {
+      const descriptorRel = `${relFile.slice(0, -3)}.descriptor.json`;
+      const descriptor = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, descriptorRel), 'utf8')) as {
+        database?: 'none' | { min_migration?: number | 'none' };
+      };
+      const db = descriptor.database;
+      if (db === 'none' || db === undefined) return; // no DB floor declared — nothing to check
+      const floor = db.min_migration;
+      if (floor === 'none' || floor === undefined) return;
+      expect(
+        floor,
+        `${relFile}: min_migration ${floor} exceeds the ${MIGRATION_FILE_COUNT} *.sql files in migrations/ — ` +
+          `it is a COUNT floor, not a filename number (LW-D8)`,
+      ).toBeLessThanOrEqual(MIGRATION_FILE_COUNT);
     });
   }
 });

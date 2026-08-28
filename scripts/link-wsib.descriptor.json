@@ -431,7 +431,7 @@
     }
   ],
 
-  "interpretation": { "file": "link-wsib.notes.json", "entries": 10 },
+  "interpretation": { "file": "link-wsib.notes.json", "entries": 11 },
 
   "recovery": {
     "reset": "TRUNCATE is never correct for wsib_registry (load-wsib.js owns row lifecycle) or entities. Re-run with LINK_WSIB_FORCE_FULL=1, which bypasses the ledger gate; the tier-3 repair itself is gated separately by mode resolving full (A-8's corpus signal, never schedule).",
@@ -445,7 +445,7 @@
 
   "database": {
     "class": "primary",
-    "min_migration": 243,
+    "min_migration": 240,
     "assert_current_database": "postgres"
   },
 
