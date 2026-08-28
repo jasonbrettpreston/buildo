@@ -1,6 +1,6 @@
 # Pilot 4 — `link_wsib` (MATCHER) — Step Optimization Assessment
 
-**Status:** Commits 1-6 landed (§1 PH-0; §2 PH-3 Intent Ledger; §3 PH-5 seam map; §4 PH-6 classification; §5 golden master — 3 live invocations, all hash-identical, harness self-test green; §6 PH-7 test design — 38 RED / 33 GREEN, all for designed reasons, zero crashes). This is the end of this task's authorized scope (commits 1-6 only). §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. §6's remaining declared-diffs content, §R Reflection — land at commit 7 (implementation, A-1/A-2/A-3/A-7 ruled, out of this task's scope).
+**Status:** Commits 1-6 landed, then commit 7 (`69de8a13`) + its out-of-sequence differential (commit 7b, §7) + peels 8a (`d44fb4ba`)/8b (`33ea3c0e`)/8c (this commit, §8). §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. Commit 9 (cutover — register in `converted.json`, delete the `pending` entry, retire the old script text) is OUT of this task's authorized scope (peels 8a-8c only, no A-7 repair FULL, no commit 9 registration).
 
 **Governing plan:** `.cursor/active_task.md` (Pilot 4 — link_wsib). **Governing specs (operator correction 2026-08-28 — led by the step's own governing spec, not the architecture spec):** `docs/specs/01-pipeline/46_wsib_enrichment.md` (PRIMARY), `60_shared_steps.md` (§2 Step Registry row 19, §"Link WSIB"), `52_source_wsib.md`, `41_chain_permits.md` §Step Breakdown row 7, `43_chain_sources.md` §Step Breakdown row 19, then `docs/specs/01-pipeline/122_pipeline_step_optimization.md`, `124_step_standard_policy.md`, `123_step_opt_assessment_validation.md` (packaging/procedure).
 
@@ -256,6 +256,34 @@ Three `.fails` remain genuinely deferred, each now carrying an inline "flips at"
 
 ---
 
+## §8. Peels 8a–8c (2026-08-28)
+
+Executed against the same DB (`127.0.0.1:54322/postgres`) and branch as every session above. Measured this pass: commit 7 (`69de8a13`) already landed the FULL library/descriptor/compute build for every one of 8a/8b/8c's concrete, testable requirements — this is the inverse of pilot 3's own three peels, which each moved real library code. No `scripts/lib/step/*.js` or `scripts/lib/compute/link-wsib.js` line changed across any of the three peels below; the only production-code touch is two `checks[].why` text additions (8b, R-H retighten conditions — descriptive metadata, never emitted into `records_meta`).
+
+**8a (gating/staleness) — `d44fb4ba`.** Verified, not built: `staleness.fingerprint_inputs` already names the `wsib_registry` corpus signal; LG-15's gated-skip is declared (`staleness.ledgerGatedSkip`) and its `skip_gated_no_activity` terminal is audited; the "A-8 lock — unchanged corpus never resolves full" test is green. New finding, filed rather than fixed: A-8(2)'s literal text reads as an autonomous corpus-driven full-mode trigger, but the shipped `selectMode` formula (`forced || (explicitFull && changed)`) requires an explicit `--full` argv this step's chain invocation never carries — corpus change alone can never resolve mode `full` today, only `LINK_WSIB_FORCE_FULL=1` can. Filed to `review_followups.md` ("peel 8a harvest") for an operator ruling rather than resolved unilaterally. R-F item 1 (the run-ledger gate's own crashed-row reader) confirmed still not scheduled here. Differential: IDENTICAL (normalised) against `post-7b/` on all 3 invocations — a true no-op.
+
+**8b (verdict/audit) — `33ea3c0e`.** `#165` genuinely fixed: the fixture harness (`src/tests/steps/link_wsib/violations.test.ts`) had TWO bugs, not one — `runCompute` passed a malformed `observations` shape into `buildAuditTable` (a plain array under a `rows` key, never indexed by check id), so every check's rendered status was its own declared severity regardless of the fixture, and `sabotageFor` covered only 2 of 8 non-INFO checks on top of that. Fixed by porting `link_massing`'s proven `runCompute`/`configProjection`/`resolvedDescriptor` pattern and extending the sabotage matrix to all 8 (3 WARN + 5 FAIL). Verified genuinely discriminating with a throwaway sanity break (reverted). `#165` flips `it.fails` → plain `it()`. R-H (Rule 10 addendum): `link_rate_warn` and `entity_fanin_warn` already used WARN correctly before R-H was ratified (R-F item 3 — CONFIRMED, not fixed) — added the one missing piece, an explicit retighten condition, to both checks' `why` text. Differential: IDENTICAL (normalised) against `post-8a/`.
+
+**8c (thresholds/checks) — this commit.** Every literal a MATCHER threshold could hide behind is already `ctx.config`-sourced: `buildTierSql` (`scripts/lib/compute/link-wsib.js`) reads all three tier confidences (T3/T4/T5) and the fuzzy threshold (T1) from `config[...]`, never a bare number; `link_rate_warn`/`entity_fanin_warn`/the T7 convergence bound all resolve through `limit_from_config`. The three remaining structural literals (`EXACT_LENGTH_FLOOR=3`, `FUZZY_LENGTH_FLOOR=5`, `TIER3_LIMIT=1000`) stay literals by design (S2/S3 in the plan's P4 tunable inventory — non-operator-facing safety bounds, not match-quality knobs). Seeds: `node -r dotenv/config scripts/seeds/apply-logic-variables.js` re-run — **438 → 438 rows, 0 inserted** (all 7 already present from commit 7's own seed application; idempotent, per LM-D15's presence rule). GROUPS: `GlobalConfigCard.tsx`'s `"WSIB Matching"` group already lists all 7 keys. Four-surface P4 battery (`step-conformance.infra.test.ts:772-943` — declared ⊆ registry, declared ⊆ GROUPS, consumed ≡ declared, each direction proven RED) — green.
+
+`#171` closed this peel — every T1–T7 name below is now present in this report with a stated rationale:
+
+| Var | Default · bounds | Rationale |
+|---|---|---|
+| `wsib_fuzzy_match_threshold` (T1) | 0.6 · (0.1, 1] | Tier 3's `similarity() > threshold` cutoff. Already registered + GROUPed before this pilot (714dc48e); kept verbatim — renaming would orphan the live row and the existing admin GROUP entry. |
+| `link_wsib_link_rate_warn_pct` (T2) | 5 · [0, 100] | LW-D1, the P4 violation this pilot closes: pre-conversion the floor was the bare literal `5` in `linkRate >= 5 ? PASS : WARN`. A `pct >=` floor check (verdict.js's new form, this pilot) against the CUMULATIVE link rate — reported as the rate itself, not its complement, because T2's config value IS the floor. R-H retighten condition (8b): review raising once A-7's repair closes the 4.55%-clean-vs-11.53%-cumulative contamination gap. |
+| `link_wsib_tier1_confidence` (T3) | 0.95 · [0, 1] | The confidence written to `wsib_registry.match_confidence` for an exact trade-name match — the highest-confidence tier, claims a row before Tier 2/3 ever see it (each tier's `matched` CTE folds `WHERE linked_entity_id IS NULL`). |
+| `link_wsib_tier2_confidence` (T4) | 0.90 · [0, 1] | The exact legal-name match confidence. Also coincidentally the stats query's own `>= 0.90` "high_conf" bucket boundary — a declared duplication (same number, not a shared source), not fixed this pilot (Spec 123 §3.1 PIN). |
+| `link_wsib_tier3_confidence` (T5) | 0.60 · [0, 1] | The fuzzy-match confidence — the tier carrying LW-D5's 61.9%-failing-today's-predicate contamination (A-7's whole reason to exist). |
+| `link_wsib_entity_fanin_warn` (T6) | 20 · [2, 1000] | New this pilot (Fold A, Reality-Check). Fires immediately on the known-bad population (171 magnet entities, worst MDK CONSTRUCTION 2,118) — intended, not a defect (Fold B ACCEPTED). R-H retighten condition (8b): review lowering once A-7's repair drops the magnets' fan-in. |
+| `link_wsib_tier3_full_max_iterations` (T7) | 20 · [1, 100] | New this pilot (Fold B, A-7 convergence amendment). `TIER3_SELECT`'s `LIMIT 1000`/invocation means a single mode-`full` pass repairs at most 1,000 of ~5,515 clean rows; this bounds the convergence loop (exhaustion → WARN `tier3_full_not_converged`, never FAIL, per R-H). Not exercised by any commit-7/8 invocation — A-8 keeps mode incremental absent a genuine corpus/`FORCE_FULL` signal. |
+
+Differential: IDENTICAL (normalised) against `post-8b/` on all 3 invocations — no runtime code changed this peel either.
+
+.fails inventory after 8a–8c: `#150` (commit 9, unchanged — out of this task's scope) · `#165` **CLOSED** (8b) · `#171` **CLOSED** (8c, this section).
+
+---
+
 ## Commit ledger (Spec 123 §7 — mirrors `.cursor/active_task.md`'s nine-commit table, reproduced here so the assessment report is self-contained per claim #6a/#6b)
 
 | Commit # | Phase / Gate | Content | Done-test | Status |
@@ -266,9 +294,9 @@ Three `.fails` remain genuinely deferred, each now carrying an inline "flips at"
 | 4 | PH-6 classification → G6 | §4 classification + 171-magnet exposure quantified | ~~none (doc)~~ **human review only — doc-only gate, no automated test (#6b phrasing fix, commit 7b)** | **LANDED `c92a9e79`** |
 | 5 | Golden master (3 invocations per amended A-4) → G1′ | §5 golden master; `docs/reports/golden/link_wsib/pre/{permits,sources,standalone}.json` + `invariants.json` + `--dry-run` timing | harness self-test + `--compare` exit 0 on a repeat capture | **LANDED `7e8700d4`** |
 | 6 | PH-7 test design + prove red → G7 | `src/tests/steps/link_wsib/violations.test.ts` — 44 A + 5 B partials + 5 named fence locks | `npx vitest run src/tests/steps/link_wsib/` — RED | **LANDED (this commit)** |
-| 7 | Descriptor + compute verbatim + library growth (A-1/A-2/A-3/A-7 ruled) → G2′ | descriptor, notes, compute, frozen shape, library growth, Spec Update (46/52/60/manifest corrections) | `step-conformance.infra.test.ts` green with 4 converted steps; differential zero-diff on all 3 invocations | NOT STARTED — **out of this task's scope (commits 1–6 only)** |
-| 8 | Peel — one concern per commit (8a/8b/8c) | gating/staleness · verdict/audit · thresholds/checks | full differential re-run after each | NOT STARTED |
-| 9 | Differential + cutover → G8, G4d, G-shape | `converted.json` (+1 → 4) | shape gate 4/62 enforced; differential green | NOT STARTED |
+| 7 | Descriptor + compute verbatim + library growth (A-1/A-2/A-3/A-7 ruled) → G2′ | descriptor, notes, compute, frozen shape, library growth, Spec Update (46/52/60/manifest corrections) | `step-conformance.infra.test.ts` green with 4 converted steps; differential zero-diff on all 3 invocations | **LANDED `69de8a13`** (+ commit 7b `<see §7>` for the differential this commit's own plan row promised) |
+| 8 | Peel — one concern per commit (8a/8b/8c) | gating/staleness · verdict/audit · thresholds/checks | full differential re-run after each | **LANDED** — 8a `d44fb4ba` · 8b `33ea3c0e` · 8c (this commit, §8) |
+| 9 | Differential + cutover → G8, G4d, G-shape | `converted.json` (+1 → 4) | shape gate 4/62 enforced; differential green | NOT STARTED — **out of this task's scope** |
 
 ---
 

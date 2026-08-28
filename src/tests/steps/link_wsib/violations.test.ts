@@ -870,15 +870,11 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(fs.existsSync(path.join(abs(STEP_DIR_REL), 'rung1.test.ts')), 'no rung-1 file exists (correct — N/A by subject)').toBe(false);
   });
 
-  // Flips when the assessment report documents T1-T7's rationale — verified by executing
-  // (commit 7b): only T1 (wsib_fuzzy_match_threshold) and T7 (link_wsib_tier3_full_max_iterations)
-  // are named anywhere in the report today; T2-T6 are not. The report's own §0 text (line 3) states
-  // this writeup ("§6's remaining declared-diffs content") "land[s] at commit 7", but commit 7
-  // (`69de8a13`) shipped code only and did not touch this report — genuinely owed, not yet landed.
-  // Most naturally closes alongside 8c (the peel that owns T1-T7/`ctx.config`), since that is the
-  // next commit to touch these values' declared semantics; could also land as its own doc commit
-  // before commit 9 cutover.
-  it.fails('#171 An approving commit states why each value is right — T1-T7\'s values must each carry a stated rationale', () => {
+  // Flipped GREEN at peel 8c (thresholds/checks), 2026-08-28: only T1 and T7 were named
+  // anywhere in the report before this peel (verified by executing, commit 7b). Closed by
+  // adding a "§8. Peels 8a-8c" section to the report with a T1-T7 table naming default,
+  // bounds, and a stated rationale for every one of the 7 declared config vars.
+  it('#171 An approving commit states why each value is right — T1-T7\'s values must each carry a stated rationale', () => {
     const report = readText(REPORT_REL);
     for (const name of Object.values(CONFIG_VARS)) {
       expect(report.includes(name), `${name} is not named anywhere in the assessment report with a stated rationale`).toBe(true);
