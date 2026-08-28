@@ -455,7 +455,7 @@ Total: **437** logic variables (431 numeric, 6 JSONB).
 | `urgency_upcoming_days` | numeric | 30 | 1 – 365 | `scripts/compute-trade-forecasts.js` | seed | Days until the predicted start date at or below which a trade forecast is classified as 'upcoming' rather than 'on_time' |
 | `vocab_coverage_pass_pct` | numeric | 90 | 0 – 100 | `scripts/quality/assert-global-coverage.js` | seed | assert-global-coverage vocabulary-coverage (spec 49 §3): distinct values present / defined vocabulary >= this integer pct -> PASS |
 | `vocab_coverage_warn_pct` | numeric | 70 | 0 – 100 | `scripts/quality/assert-global-coverage.js` | seed | assert-global-coverage vocabulary-coverage (spec 49 §3): >= this integer pct -> WARN; below -> FAIL |
-| `wsib_fuzzy_match_threshold` | numeric | 0.6 | 0.1 – 1 | — | seed | pg_trgm similarity threshold for Tier 3 fuzzy builder→WSIB name matching; controls both the GIN index filter and the WHERE similarity() comparison |
+| `wsib_fuzzy_match_threshold` | numeric | 0.6 | 0.1 – 1 | — | seed | pg_trgm similarity threshold for Tier 3 fuzzy builder→WSIB name matching; controls both the GIN index filter and the WHERE similarity() comparison. CONSUMED by link_wsib (scripts/lib/compute/link-wsib.js buildTierSql). Already registered and GROUPed before C1 pilot 4's conversion (714dc48e) — kept verbatim; this tag is new at commit 9 cutover, the row itself is not. |
 
 ---
 

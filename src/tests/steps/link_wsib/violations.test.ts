@@ -643,14 +643,15 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  // Flips at commit 9 (cutover): this claim reads `${GOLDEN_DIR_REL}/post/*.json` specifically
-  // (not the commit-7b mid-conversion differential, captured to `post-7b/` per this pilot's own
-  // #159/GOLDEN_DIR_REL lock so it does NOT satisfy this claim early) — commit 9 is the declared
-  // landing point for `post/` per the header comment above and the commit ledger. Whether the POST
-  // hash equals or diverges from PRE depends on whether A-7's tier-3 repair has landed by then (a
-  // real repair moves rows, so the two must NOT match once A-7 executes) — both branches are
-  // already written into this claim's own title.
-  it.fails('#150 Gate 1 — reproducible against itself: all 3 PRE captures (commit 5, no forced-FULL yet — A-7 not ruled) hash-identical; the POST triple must hash-identical too and must NOT match the PRE hash IF A-7 lands (a real repair moves rows)', () => {
+  // Flipped at commit 9 (cutover): this claim reads `${GOLDEN_DIR_REL}/post/*.json`
+  // specifically (not the commit-7b mid-conversion differential, captured to `post-7b/`
+  // per this pilot's own #159/GOLDEN_DIR_REL lock, which did NOT satisfy this claim) —
+  // commit 9 is the declared landing point for `post/` per the header comment above and
+  // the commit ledger. A-7's tier-3 repair LANDED (commit 8b + the live repair run,
+  // 2026-08-28: 8,450 contaminated tier-3 links retracted, 8,009 relinked under today's
+  // predicate, converged in 10 iterations) — a real repair moves rows, so POST must NOT
+  // hash-equal PRE (asserted below), the branch this claim's own title always allowed for.
+  it('#150 Gate 1 — reproducible against itself: all 3 PRE captures (commit 5, no forced-FULL yet — A-7 not ruled) hash-identical; the POST triple hash-identical TOO, but does NOT match the PRE hash — A-7 landed (a real repair moved rows)', () => {
     const docs = goldenDocs();
     for (const inv of INVOCATIONS) artifact(`${GOLDEN_DIR_REL}/pre/${inv.name}.json`, `PRE capture for ${inv.name} (commit 5, LANDED)`);
     const preHashes = new Set<string | null>();
@@ -667,8 +668,26 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
       }
     }
     expect(preHashes.size, 'all 3 PRE invocations must hash-identical (no rows changed across permits/sources/standalone — measured 0/0/0 matches at each)').toBe(1);
-    // POST — commit 9, not yet produced. This is the actual RED for this claim today.
-    for (const inv of INVOCATIONS) artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`, 'commit 9 differential — not yet produced (out of this pilot\'s commit 1-6 scope, by design)');
+
+    // POST — commit 9, the real cutover captures, taken AFTER the live A-7 repair.
+    for (const inv of INVOCATIONS) artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`, 'commit 9 cutover capture');
+    const postHashes = new Set<string | null>();
+    for (const inv of INVOCATIONS) {
+      const post = docsFor(docs, inv).filter(isNew).filter((d) => !d.file.includes('forced'));
+      expect(post.length, `${inv.name}: no POST capture at all`).toBeGreaterThanOrEqual(1);
+      for (const p of post) {
+        const ts = wsibTableState(p);
+        expect(ts.row_count, `${p.file}: wsib_registry row count must stay ${LIVE_WSIB_TOTAL} — A-7 retracts LINKS, never ROWS`).toBe(LIVE_WSIB_TOTAL);
+        postHashes.add(ts.content_hash);
+        expect(invariant(p, 'wsib_tier3_current_predicate_pass_rate_pct'), `${p.file}: post-repair tier3 pass rate must read 100 (the repair's whole point)`).toBe(100);
+        expect(invariant(p, 'wsib_orphan_linked_entity_id'), `${p.file}: no orphan links`).toBe(0);
+        expect(invariant(p, 'wsib_confidence_outside_closed_set'), `${p.file}: no out-of-set confidence`).toBe(0);
+      }
+    }
+    expect(postHashes.size, 'all 3 POST invocations must ALSO hash-identical to each other (the repair converged; a re-run changes 0 rows)').toBe(1);
+    const [preHash] = [...preHashes];
+    const [postHash] = [...postHashes];
+    expect(postHash, 'POST must NOT hash-equal PRE — A-7 is a real repair that moved rows (8,450 retracted, 8,009 relinked); a match would mean nothing actually ran').not.toBe(preHash);
   });
 
   it('#151 The non-determinism inventory is declared before the first diff (git order)', () => {
@@ -764,19 +783,19 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     artifact(DESCRIPTOR_REL, 'deviations[] records the N/A ruling — commit 7');
   });
 
-  it('#158 Gate 5 — the old script is deleted or dated-ticketed (same file, two commits: no pipeline.run() at module scope, path registered) (pre-cutover: declared pending)', () => {
+  it('#158 Gate 5 — the old script is deleted or dated-ticketed (same file, two commits: no pipeline.run() at module scope, path registered) (flips at commit 9)', () => {
     artifact(CONVERTED_REL, 'commit 9 registers link-wsib.js as the 4th entry');
     const converted = (JSON.parse(readText(CONVERTED_REL)) as { converted: string[] }).converted;
-    expect(converted.includes(STEP_REL), `${CONVERTED_REL} does not yet list ${STEP_REL} (expected — commit 9 has not landed)`).toBe(false);
+    expect(converted.includes(STEP_REL), `${CONVERTED_REL} does not list ${STEP_REL} — commit 9 has not landed`).toBe(true);
   });
 
-  it('#159 Idempotence-successor run is a supplement, never the sole gate (old/new pair per invocation ×3)', () => {
+  it('#159 Idempotence-successor run is a supplement, never the sole gate (old/new pair per invocation ×3) (flips at commit 9)', () => {
     const docs = goldenDocs();
     for (const inv of INVOCATIONS) {
       const pre = docsFor(docs, inv).filter(isOld);
-      const post = docsFor(docs, inv).filter(isNew);
+      const post = docsFor(docs, inv).filter(isNew).filter((d) => !d.file.includes('forced'));
       expect(pre.length, `${inv.name}: PRE capture missing`).toBeGreaterThanOrEqual(1);
-      expect(post.length, `${inv.name}: POST capture missing (commit 9) — proves this claim is not gated on run-2-zero-diff alone`).toBe(0);
+      expect(post.length, `${inv.name}: POST capture missing (commit 9 cutover) — the old/new pair this claim's own title names`).toBeGreaterThanOrEqual(1);
     }
   });
 
@@ -1213,10 +1232,10 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCH
     expect(src.split('\n').length, 'the §5.1 frozen shape is far shorter than the 547-line hand-rolled file — if this is still ~547 lines, conversion has not happened').toBeLessThan(100);
   });
 
-  it('converted.json registers the step as the 4th entry (commit 9 arms the shape gate: 4/62) (pre-cutover: declared pending)', () => {
+  it('converted.json registers the step as the 4th entry (commit 9 arms the shape gate: 4/62)', () => {
     const converted = (JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[] }).converted;
-    expect(converted.length, 'exactly 3 entries today (assert-schema, load-ravines, link-massing) — pilot 4 not yet cut over').toBe(3);
-    expect(converted.includes(STEP_REL)).toBe(false);
+    expect(converted.length, 'exactly 4 entries (assert-schema, load-ravines, link-massing, link-wsib) — pilot 4 cut over').toBe(4);
+    expect(converted.includes(STEP_REL)).toBe(true);
   });
 
   it('grandfathered.json — link_wsib needs NO grandfathered entry (this step\'s writes are all guard-eligible; unlike link_massing\'s E1, nothing here ships with guard:"none" and no IS DISTINCT FROM alternative)', () => {

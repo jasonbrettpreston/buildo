@@ -786,7 +786,7 @@
   "wsib_fuzzy_match_threshold": {
     "default": 0.6,
     "type": "number",
-    "description": "pg_trgm similarity threshold for Tier 3 fuzzy builder→WSIB name matching; controls both the GIN index filter and the WHERE similarity() comparison",
+    "description": "pg_trgm similarity threshold for Tier 3 fuzzy builder→WSIB name matching; controls both the GIN index filter and the WHERE similarity() comparison. CONSUMED by link_wsib (scripts/lib/compute/link-wsib.js buildTierSql). Already registered and GROUPed before C1 pilot 4's conversion (714dc48e) — kept verbatim; this tag is new at commit 9 cutover, the row itself is not.",
     "min": 0.1,
     "max": 1
   },

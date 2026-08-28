@@ -101,6 +101,12 @@
         "link_massing_centroid_confidence",
         "link_massing_link_rate_fail_pct",
         "link_massing_nearest_confidence",
+        "link_wsib_entity_fanin_warn",
+        "link_wsib_link_rate_warn_pct",
+        "link_wsib_tier1_confidence",
+        "link_wsib_tier2_confidence",
+        "link_wsib_tier3_confidence",
+        "link_wsib_tier3_full_max_iterations",
         "load_ravines_count_drift_fail_pct",
         "load_ravines_dataset_age_warn_years",
         "load_ravines_download_timeout_ms",
@@ -109,7 +115,8 @@
         "load_ravines_mass_delete_fail_pct",
         "massing_garage_max_sqm",
         "massing_nearest_max_distance_m",
-        "massing_shed_threshold_sqm"
+        "massing_shed_threshold_sqm",
+        "wsib_fuzzy_match_threshold"
       ],
       "limit": "viol == 0",
       "severity": "FAIL",
@@ -379,6 +386,12 @@
       "link_massing_centroid_confidence",
       "link_massing_link_rate_fail_pct",
       "link_massing_nearest_confidence",
+      "link_wsib_entity_fanin_warn",
+      "link_wsib_link_rate_warn_pct",
+      "link_wsib_tier1_confidence",
+      "link_wsib_tier2_confidence",
+      "link_wsib_tier3_confidence",
+      "link_wsib_tier3_full_max_iterations",
       "load_ravines_count_drift_fail_pct",
       "load_ravines_dataset_age_warn_years",
       "load_ravines_download_timeout_ms",
@@ -387,7 +400,8 @@
       "load_ravines_mass_delete_fail_pct",
       "massing_garage_max_sqm",
       "massing_nearest_max_distance_m",
-      "massing_shed_threshold_sqm"
+      "massing_shed_threshold_sqm",
+      "wsib_fuzzy_match_threshold"
     ]
   },
 

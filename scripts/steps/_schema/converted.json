@@ -20,14 +20,8 @@
   "converted": [
     "scripts/quality/assert-schema.js",
     "scripts/load-ravines.js",
-    "scripts/link-massing.js"
+    "scripts/link-massing.js",
+    "scripts/link-wsib.js"
   ],
-  "pending": [
-    {
-      "file": "scripts/link-wsib.js",
-      "registers_at": "C1 pilot 4 commit 9 (cutover)",
-      "reason": "R-K stage-gating (2026-08-28, orchestrator ruling): commit 7 lands the frozen shape + descriptor + compute + library growth; peels 8a-8c harden gating/verdict/thresholds before the differential. Registering early would arm the shape gate ahead of the differential proving zero collateral diff.",
-      "declared": "shape-clean, verified by conformanceFindings() returning [] this commit"
-    }
-  ]
+  "pending": []
 }

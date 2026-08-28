@@ -1854,7 +1854,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     expect(p.has_descriptor && p.compute_type === 'function').toBe(true);
   });
 
-  it('converted.json registers the step as the 3rd entry (commit 9 arms the shape gate: 3/62) (pre-cutover: declared pending)', () => {
+  it('converted.json registers the step as the 3rd entry (commit 9 arms the shape gate: 3/62) (pre-cutover: declared pending; length >= 3 once a later pilot has also cut over)', () => {
     computeSource();
     const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as {
       converted: string[];
@@ -1874,7 +1874,13 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
       expect(converted.converted, `${STEP_REL} is declared pending AND already the 3rd converted entry — mutual exclusion violated`).not.toContain(STEP_REL);
     } else {
       expect(converted.converted).toContain(STEP_REL);
-      expect(converted.converted.length).toBe(3);
+      // >= 3, not === 3: this step landed as the 3rd converted entry (pilot 3), but a
+      // LATER pilot (e.g. pilot 4, link_wsib) growing the list is expected, not a
+      // regression — this claim's own subject is link_massing's OWN membership and
+      // index, not the fleet's total count (that is `link_wsib`'s own analogous test's
+      // concern, in its own violations.test.ts, self-scoped the same way).
+      expect(converted.converted.length).toBeGreaterThanOrEqual(3);
+      expect(converted.converted.indexOf(STEP_REL), `${STEP_REL} must still be the 3rd entry (index 2) — reordering converted.json is a declared diff, not a silent shuffle`).toBe(2);
     }
   });
 
