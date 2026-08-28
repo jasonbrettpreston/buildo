@@ -90,6 +90,22 @@ const STEP_CTX_KEYS = Object.freeze([
   'cumulative', 'elapsed_ms', 'report',
 ]);
 
+/**
+ * LW-D13 (2026-08-28, pilot 3's own §R Reflection item, carried into pilot 4) — the closed
+ * enum for `records_meta.ledger_row`, a RUNNER-STAMPED (never per-step-declared) fact:
+ * whether THIS process owns the `pipeline_runs` row it is finalizing (`owned`, standalone —
+ * `ownsLedgerRow`/`!chainId`) or the row belongs to an enclosing `run-chain.js` invocation
+ * that owns it instead (`chain_owned`). Ledger ownership was already computed (`const owns =
+ * ownsLedgerRow(chainId)`, below) and used to gate `openLedgerRow`/`finalizeLedgerRow` — this
+ * makes the already-computed fact OBSERVABLE in the run's own record (§1.2a "nothing
+ * hidden") rather than leaving it inferable only from `chainId`/log lines. Stamped
+ * unconditionally, like `terminal`/`checks_passed`/`config` — a runner default, not a
+ * per-step `emits[]` entry (`step.schema.json`'s `emits` category is explicitly "records_meta
+ * keys BEYOND runner defaults"; this key, like those three, applies identically to every
+ * converted step and carries no step-specific data, so it has no per-step declaration site).
+ */
+const LEDGER_ROW_VALUES = Object.freeze(['owned', 'chain_owned']);
+
 /** `PIPELINE_META` reads/writes/externals, derived from the descriptor — never hand-maintained. */
 function deriveMeta(descriptor) {
   const reads = {};
@@ -1386,6 +1402,8 @@ async function runWithPool(runnable, pool, ctx) {
         // by steps that actually consume a tunable (§1.2a P3).
         ...(configStamp ? { config: configStamp } : {}),
         ...(terminal ? { terminal: terminal.id } : {}),
+        // LW-D13 — closed enum LEDGER_ROW_VALUES, above.
+        ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1],
         checks_passed: built.errors.length === 0 ? 'all' : undefined,
         checks_failed: built.errors.length,
         errors: built.errors.length > 0 ? built.errors : undefined,
@@ -1411,7 +1429,11 @@ async function runWithPool(runnable, pool, ctx) {
       // buys is upstream of here — an out-of-bounds threshold has ALREADY thrown above
       // the lock, so it can never hide behind this green SKIPPED summary.
       status = RUN_STATUS.SELF_SKIPPED;
-      recordsMeta = skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere');
+      // LW-D13 — ledger_row is a fact about THIS invocation's chainId, well-defined even
+      // when the advisory lock was never acquired (no ledger row was opened, but ownership
+      // of the CONTEXT is still an observable fact — never left unstamped on this path
+      // just because the happy path is the one that got built first).
+      recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1] };
       pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null, records_meta: recordsMeta });
     }
     return { status, recordsMeta, runId, acquired: lockResult.acquired };
@@ -1500,6 +1522,7 @@ function step(descriptor, compute) {
 module.exports = {
   step,
   STEP_CTX_KEYS,
+  LEDGER_ROW_VALUES,
   deriveMeta,
   deriveCounters,
   resolveCounterSource,

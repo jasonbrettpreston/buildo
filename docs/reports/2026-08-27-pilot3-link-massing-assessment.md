@@ -429,7 +429,7 @@ Written 2026-08-28 after cutover `68b8e361` + output panel (Guardian PASS ×8; O
 | Issue | First seen | Expected to recur in | Resolution |
 |---|---|---|---|
 | Object-valued check details rendered `[object Object]` in `errors[]` | pilot 3, forced FULL capture (`68b8e361`) | every archetype with object `detail` (9 sites today) | RULED · LM-D16 fixed `1768ddb3` |
-| Ledger-row ownership undeclared (`ownsLedgerRow` = !chainId) | pilot 3 output panel | every shared step | DEFERRED-TO pilot 4: stamp `records_meta.ledger_row` (owned / chain_owned) |
+| Ledger-row ownership undeclared (`ownsLedgerRow` = !chainId) | pilot 3 output panel | every shared step | **DONE · pilot 4 WF3-C (LW-D13).** `records_meta.ledger_row` ∈ `{owned, chain_owned}` now stamped unconditionally by the runner (`scripts/lib/step/index.js`, both the happy-path and the self_skipped/advisory-lock-contention emit sites), from the already-computed `ownsLedgerRow(chainId)`. Both values proven reachable live: standalone `link_wsib` capture → `owned` (`docs/reports/golden/link_wsib/post/standalone.json`), `permits`/`sources` in-chain captures → `chain_owned` |
 | Golden harness hashes a SKIPPED run as PASS off another process’s table | pilot 3 8b | any step captured while a lock is held | FOLLOWUP (MED, filed 8b) — R-C should add `skipped` ⇒ capture failure |
 | `git_head` recorded as `unknown` when git is busy | pilot 3 forced capture | any capture during a concurrent commit | RULED · R-C hard-fail |
 | Interrupted full retraction leaves a partial table | pilot 3 (measured kill) | every `retract_when: full_only` step (LINK, INGESTOR-B, MATERIALIZER) | RULED · R-B; reader DEFERRED-TO pilot 4 as a named step |

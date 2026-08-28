@@ -480,6 +480,49 @@ describe('run(ctx) — the lifecycle, against a fake pool', () => {
     }
   });
 
+  it('LW-D13 — records_meta.ledger_row is stamped from ownsLedgerRow(chainId): "chain_owned" in-chain', async () => {
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: 'sources' });
+      const summary = cap.summary();
+      expect(summary.records_meta.ledger_row, 'in-chain, run-chain.js owns the row, not this process').toBe('chain_owned');
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('LW-D13 — records_meta.ledger_row is stamped from ownsLedgerRow(chainId): "owned" standalone (chainId null)', async () => {
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: null });
+      const summary = cap.summary();
+      expect(summary.records_meta.ledger_row, 'standalone, this process itself owns the pipeline_runs row').toBe('owned');
+    } finally {
+      cap.restore();
+    }
+  });
+
+  it('LW-D13 — ledger_row is also stamped on the self_skipped (advisory-lock-contention) path, both values reachable', async () => {
+    const chainPool = fakePool({ lockAcquired: false });
+    const standalonePool = fakePool({ lockAcquired: false });
+    const cap1 = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, async () => {}).run({ pool: chainPool, chainId: 'sources' });
+      expect(cap1.summary().records_meta.ledger_row).toBe('chain_owned');
+    } finally {
+      cap1.restore();
+    }
+    const cap2 = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, async () => {}).run({ pool: standalonePool, chainId: null });
+      expect(cap2.summary().records_meta.ledger_row).toBe('owned');
+    } finally {
+      cap2.restore();
+    }
+  });
+
   it('PIPELINE_META is derived from the descriptor, not hand-maintained', async () => {
     const pool = fakePool();
     const cap = captureEmissions();
