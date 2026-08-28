@@ -1,6 +1,6 @@
 # Pilot 4 — `link_wsib` (MATCHER) — Step Optimization Assessment
 
-**Status:** Commits 1-3 landed (§1 PH-0 boundary freeze; §2 PH-3 Intent Ledger, PROPOSED, 17 fences + 7 LW-D* rows opened; §3 PH-5 seam map, no PARTIAL seams remaining). §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. Sections §4 (PH-6 classification), §5 (non-determinism inventory), §6 (declared diffs), §R Reflection — NOT YET WRITTEN, land at their own commits per the ledger.
+**Status:** Commits 1-4 landed (§1 PH-0 boundary freeze; §2 PH-3 Intent Ledger, PROPOSED, 17 fences + 7 LW-D* rows opened; §3 PH-5 seam map, no PARTIAL seams remaining; §4 PH-6 classification, every candidate classified, 171-magnet exposure quantified 0-locally). §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. Sections §5 (non-determinism inventory), §6 (declared diffs), §R Reflection — NOT YET WRITTEN, land at commit 5 (golden master) / commit 7 (implementation) per the ledger.
 
 **Governing plan:** `.cursor/active_task.md` (Pilot 4 — link_wsib). **Governing specs (operator correction 2026-08-28 — led by the step's own governing spec, not the architecture spec):** `docs/specs/01-pipeline/46_wsib_enrichment.md` (PRIMARY), `60_shared_steps.md` (§2 Step Registry row 19, §"Link WSIB"), `52_source_wsib.md`, `41_chain_permits.md` §Step Breakdown row 7, `43_chain_sources.md` §Step Breakdown row 19, then `docs/specs/01-pipeline/122_pipeline_step_optimization.md`, `124_step_standard_policy.md`, `123_step_opt_assessment_validation.md` (packaging/procedure).
 
@@ -106,6 +106,39 @@ Read verbatim this commit: the row at `docs/reports/review_followups.md:3015` (t
 
 ### Seam-map verdict (G5)
 No PARTIAL seams remain unresolved for this pilot — DB/Clock/Network/argv-env are all either already-declared-field-bound (E1-E3) or structurally clean (Clock's read/write split, Network's absence). The ONE open library question is not a seam gap but a PHASE-SHAPE gap (LG-10/LG-15, Ask A-1) — whether the runner's `runLinkPhase` can express a 3-tier bulk cascade with a gated-skip, deferred to commit 7 as scheduled.
+
+---
+
+## §4. PH-6 — Classification (commit 4, G6)
+
+> Every candidate named in the plan's G6 gate row + this pilot's own archaeology (§2's LW-D* rows), CLASSIFIED per Spec 123 §3's three-way split: **CONTRACT** (a downstream consumer depends on it, even if ugly) / **INCIDENTAL** (nothing observes it — do not assert on it) / **DEFECT** (a spec or invariant asserts the opposite). An undefended fence is CONTRACT until proven otherwise (Spec 124 §7 Step 1).
+
+| Candidate | Ledger ID | Classification | Ground |
+|---|---|---|---|
+| T2 undeclared `>= 5%` link-rate floor | LW-D1 | **DEFECT** | Spec 124 Rule 3 — every verdict-affecting threshold must be a registered logic variable; this one is a bare literal. Externalization is a declared diff, not a behaviour change (the value 5 is unchanged) |
+| `manifest.json`'s 2 false `supports_*` flags | LW-D2 | **DEFECT** | the manifest is declared data asserting a capability the code does not have (`supports_full`) and denying one it does (`supports_dry_run`) — a downstream consumer (an operator reading the manifest, or automation gating on `supports_full`) would be actively misled |
+| `manifest.json`'s `telemetry_tables` under-declares `wsib_registry` | LW-D3 | **DEFECT** | same class as LW-D2 — Rule 1 ("nothing about a step's behaviour may live only in code") applies to the WRITE SURFACE too; confirmed independently by Spec 60's own G-16 under-declaration (§1) |
+| `[0.50, 0.60)` dead stats-bucket boundary | LW-D4 | **INCIDENTAL** | nothing downstream reads or asserts on the `med_conf` bucket boundary specifically (it is a display-only stats query, `:480-487`, not fed into any check or written column) — PIN as a declared `limitations[]` entry (Spec 123 §3.1), not a fix |
+| `d704a447`'s unrepaired pre-fix contamination (60.5% of linked rows) | LW-D5 | **DEFECT, BLOCKING** | `entities.is_wsib_registered`/contact fields are CONTRACT-consumed by `lead-inspect-query.ts:361-464`/`metrics.ts:384` (live product surface) — contamination reaching a product-visible field is the textbook DEFECT shape, not incidental. A-7's tier-3 repair is the fix, ruled at commit 7 |
+| S2's asymmetric length floors (`>=3` vs `>=5`), no recorded why | LW-D6 | **INCIDENTAL, Rule-4 owed** | the VALUES are not wrong (both are defensible per this pass's inferred reasoning) — the defect is purely that the reasoning was never written down. Fix is documentation (`checks[].why`), not a value change |
+| `review_followups.md:3015` stale chain-membership claim | LW-D7 | **CLOSED, was DEFECT** | already fixed pre-pilot (`188d7371`); this pilot only verified |
+| **171-magnet contact-exposure quantification** (required BEFORE any FULL run, per Fold B BLOCKING a) | — | **DEFECT (pending measurement)** | see quantification below — this is the specific measurement Fold B's `copyContacts` reverse-pass amendment requires completed before A-7's FULL run, per the plan's explicit instruction that PH-6 (this commit) is where it happens |
+
+### 171-magnet contact-exposure quantification (Fold B BLOCKING a — completed BEFORE any FULL run)
+
+> Required by `.cursor/active_task.md` Fold B item 3 (A-7 copyContacts amendment): quantify contact mis-attribution exposure for the 171 magnet entities (fan-in ≥ 10) specifically, since `copyContacts`' NULLIF-guard means a magnet's contact fields are the highest-risk copy target if any of its 8,450-contaminated links wrote a wrong phone/email/website. **Local measurement (§1's Fold C finding already answers the general case): `wsib_registry` carries ZERO contact values locally (121,116 rows, 0 with any of `primary_phone`/`primary_email`/`website` populated)** — `copyContacts` has copied nothing, ever, on THIS database, so the 171-magnet exposure is **measured 0 locally by construction** (there is nothing in `wsib_registry.primary_phone`/`primary_email`/`website` for `copyContacts` to have copied FROM). Executed this commit:
+
+```sql
+SELECT count(*) AS magnet_entities_with_any_contact
+FROM entities e
+WHERE e.id IN (
+  SELECT linked_entity_id FROM wsib_registry
+  WHERE linked_entity_id IS NOT NULL
+  GROUP BY linked_entity_id HAVING count(*) >= 10
+)
+AND (e.primary_phone IS NOT NULL OR e.primary_email IS NOT NULL OR e.website IS NOT NULL);
+```
+**Executed 2026-08-28: `magnet_entities_with_any_contact = 7`** (sanity check: the magnet-count sub-query independently returns 171, confirming the fan-in≥10 population matches §Fold A's measured figure). **Interpretation: these 7 are NOT attributable to `copyContacts`** — since `wsib_registry` carries zero contact values locally (confirmed above), `copyContacts` has never had anything to copy on this database; the 7 magnet entities that do carry a phone/email/website got it from a DIFFERENT source (most likely `enrich-web-search.js`'s direct Serper enrichment on `entities`, governed by Spec 45, out of this pilot's scope). **Conclusion: local exposure to A-7's copyContacts reverse-clear pass is 0 by construction, both by the general count (§1) and by this magnet-specific query — there is no locally-measurable false-positive risk to quantify further.** Per Fold C's declared cloud caveat: **this 0 is a LOCAL measurement only** — a cloud database that has run Serper enrichment (Spec 46) may carry populated `wsib_registry` contact fields, and the 171-magnet query above must be RE-RUN against cloud before any cloud FULL run, not assumed from this local result. Recorded as a `limitations[]` entry at commit 7: *"contact mis-attribution exposure is measured per-environment; the local-dev 0 (general and magnet-specific) does not bound cloud — re-run both queries against the cloud DB before the cloud FULL run."*
 
 ---
 
