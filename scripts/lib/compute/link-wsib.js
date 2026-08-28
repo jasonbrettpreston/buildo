@@ -359,15 +359,24 @@ function link_rate_warn(ctx) {
  * T6 — the entity fan-in WARN, fires immediately on the known-bad population (171
  * magnets, worst 2,118, MDK CONSTRUCTION) per Fold B's ACCEPTED ruling.
  *
- * Reads `ctx.fanin` (a top-level ctx field, sibling to `ctx.cumulative` — the shape the
- * violations suite's own synthetic healthy/sabotaged fixtures use), not
- * `ctx.matched.entity_fanin_max`: `ctx.matched` carries the per-tier cascade detail,
- * `ctx.fanin` is this step's own reported plausibility bound, same split as `cumulative`.
+ * LW-D11 (2026-08-28) — reads `ctx.matched.entity_fanin_max` / `ctx.matched.
+ * magnet_entities_fanin_ge_10`, the SAME declared post-write-observation mechanism
+ * `link_rate_warn` uses (and link_massing's `runLinkPhase` precedent): `runCascadePhase`
+ * (scripts/lib/step/index.js) runs this compute's own declared `CUMULATIVE_SQL` once,
+ * post-write, and merges every non-linked/total column of its one row generically onto
+ * `ctx.matched` — no per-step branch in the runner, no compute-side query here. The
+ * step previously read a top-level `ctx.fanin`, a key the library NEVER assigns onto
+ * `stepCtx` (proven: `stepCtx`'s own literal in index.js has no `fanin` key) — only the
+ * test harness's synthetic `World` fixture carried it, so the check always evaluated
+ * `{}`/0 against the live DB (docs/reports/golden/link_wsib/post-8-forced/sources-full-
+ * forced-2.json: `entity_fanin_warn` reported 0 while the same capture's invariant
+ * `wsib_entity_fanin_max` measured 439) while the unit suite stayed green off the
+ * injected fixture. `STEP_CTX_KEYS` (index.js) now closes the harness-fidelity gap.
  */
 function entity_fanin_warn(ctx) {
-  const f = ctx.fanin || {};
-  const max = f.max || 0;
-  ctx.report('entity_fanin_warn', { violations: max, detail: { entity_fanin_max: max, magnets_fanin_ge_10: f.magnets_fanin_ge_10 } });
+  const m = ctx.matched || {};
+  const max = m.entity_fanin_max || 0;
+  ctx.report('entity_fanin_warn', { violations: max, detail: { entity_fanin_max: max, magnets_fanin_ge_10: m.magnet_entities_fanin_ge_10 } });
 }
 
 function orphan_linked_entity_id(ctx) {

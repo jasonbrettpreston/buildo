@@ -604,6 +604,116 @@ stderr=${clean.stderr}`).toBe(0);
 });
 
 // ---------------------------------------------------------------------------
+// 5a. LW-D11 — harness-fidelity lock: a ctx-builder may only set real stepCtx keys
+// ---------------------------------------------------------------------------
+//
+// scripts/lib/compute/link-wsib.js's `entity_fanin_warn` read a top-level `ctx.fanin`
+// that scripts/lib/step/index.js's `stepCtx` literal NEVER assigns — the check
+// evaluated `{}`/0 against every real run (docs/reports/golden/link_wsib/post-8-forced/
+// sources-full-forced-2.json: `entity_fanin_warn` reported 0 while the SAME capture's
+// invariant `wsib_entity_fanin_max` measured 439), while
+// src/tests/steps/link_wsib/violations.test.ts's `runCompute` ctx-builder injected
+// `fanin` directly, so the unit suite stayed green off a fixture the runtime could
+// never produce. `STEP_CTX_KEYS` (scripts/lib/step/index.js) is now the closed,
+// exported list of keys the library actually assigns; this lock statically extracts
+// every top-level key each `src/tests/steps/*/violations.test.ts` ctx-builder sets
+// and asserts it is a subset — generic, not link_wsib-specific, so the next step to
+// grow a synthetic ctx field the runner never plumbs fails here instead of shipping
+// a permanently-wrong check.
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+const { STEP_CTX_KEYS } = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js')) as { STEP_CTX_KEYS: string[] };
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- REAL AST parse, not a punctuation-fragile regex/lexer over prose-heavy source
+const ts = require('typescript') as typeof import('typescript');
+
+/**
+ * Every top-level property/method name of the FIRST `const ctx = { ... }` object-literal
+ * initializer in `source` — via the real TypeScript AST (`ts.createSourceFile`), not a
+ * hand-rolled lexer. This file's fixtures are dense with prose containing unbalanced
+ * apostrophes/braces inside string literals (e.g. "the compute must not fetch — this
+ * step's..."), which breaks any regex/brace-counting approach that does not fully
+ * tokenize strings; the compiler's own tokenizer does not have that failure mode.
+ */
+function ctxBuilderKeys(source: string): string[] {
+  const sf = ts.createSourceFile('ctx-builder.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  let found: string[] | null = null;
+  const visit = (node: import('typescript').Node): void => {
+    if (found) return;
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.name.text === 'ctx' &&
+      node.initializer &&
+      ts.isObjectLiteralExpression(node.initializer)
+    ) {
+      found = node.initializer.properties
+        .map((p) => {
+          if (ts.isIdentifier(p.name as import('typescript').PropertyName)) return (p.name as import('typescript').Identifier).text;
+          if (p.name && ts.isStringLiteral(p.name as import('typescript').PropertyName)) return (p.name as import('typescript').StringLiteral).text;
+          return null;
+        })
+        .filter((k): k is string => k !== null);
+      return;
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  if (!found) throw new Error('no "const ctx = { ... }" object-literal initializer found');
+  return found;
+}
+
+describe('LW-D11 — harness-fidelity lock: a runCompute ctx-builder may only set real stepCtx keys', () => {
+  it('RED half — the extractor FIRES on a synthetic ctx block that injects an undeclared key (proves the checker catches the class of bug it exists for)', () => {
+    const fake = `
+      function runCompute() {
+        const ctx = {
+          pool: {},
+          matched: {},
+          fanin: { max: 12 }, // NOT a real stepCtx key — this is the pre-LW-D11 bug shape
+          report(id, obs) { void id; void obs; },
+        };
+      }
+    `;
+    const keys = ctxBuilderKeys(fake);
+    expect(keys).toContain('fanin');
+    const bogus = keys.filter((k) => !STEP_CTX_KEYS.includes(k));
+    expect(bogus, 'the synthetic fixture is supposed to trip the checker').toEqual(['fanin']);
+  });
+
+  it('sanity: STEP_CTX_KEYS is non-empty and names the keys every violations.test.ts ctx-builder is known to use', () => {
+    expect(STEP_CTX_KEYS.length).toBeGreaterThan(0);
+    for (const k of ['pool', 'chainId', 'runId', 'descriptor', 'checks', 'log', 'fetch', 'clock', 'config', 'report']) {
+      expect(STEP_CTX_KEYS, `STEP_CTX_KEYS is missing "${k}"`).toContain(k);
+    }
+  });
+
+  const STEPS_DIR = path.join(REPO_ROOT, 'src/tests/steps');
+  const VIOLATION_FILES = fs.existsSync(STEPS_DIR)
+    ? fs.readdirSync(STEPS_DIR)
+        .map((d) => path.join('src/tests/steps', d, 'violations.test.ts'))
+        .filter((f) => fs.existsSync(path.join(REPO_ROOT, f)))
+    : [];
+
+  it(`the corpus is not empty (found ${VIOLATION_FILES.length} violations.test.ts file(s))`, () => {
+    expect(VIOLATION_FILES.length).toBeGreaterThan(0);
+  });
+
+  for (const relFile of VIOLATION_FILES) {
+    it(`${relFile} — ctx-builder sets only STEP_CTX_KEYS`, () => {
+      const source = fs.readFileSync(path.join(REPO_ROOT, relFile), 'utf8');
+      const keys = ctxBuilderKeys(source);
+      const bogus = keys.filter((k) => !STEP_CTX_KEYS.includes(k));
+      expect(
+        bogus,
+        `${relFile}'s ctx-builder sets key(s) [${bogus.join(', ')}] the library never assigns onto stepCtx ` +
+          `(STEP_CTX_KEYS, scripts/lib/step/index.js) — a compute reading it will always see a value the ` +
+          `real runner never provides (LW-D11)`,
+      ).toEqual([]);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 5b. §1.2a P4 — every tunable is externalized, and BOTH directions are proven
 // ---------------------------------------------------------------------------
 //

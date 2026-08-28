@@ -74,6 +74,22 @@ const { finalizeStrandedRun } = require('../ledger-window');
 /** The `config: "none"` projection — one shared frozen empty object, never a fresh `{}` per run. */
 const EMPTY_CONFIG = Object.freeze(Object.create(null));
 
+/**
+ * LW-D11 (2026-08-28) — the CLOSED list of keys the library ever assigns onto `stepCtx`
+ * (the literal below is exactly the `stepCtx = { ... }` object's own key set, `report`
+ * included). A test harness's `runCompute`/ctx-builder mirror (`src/tests/steps/*\/
+ * violations.test.ts`) may only ever SET a key from this list — a fixture that injects an
+ * extra key (e.g. `link_wsib`'s pre-LW-D11 `ctx.fanin`) can make a check pass in the test
+ * suite while the identical check reads `undefined` from the real runner forever, because
+ * the runner never plumbs anything the descriptor/library didn't declare a channel for.
+ * Enforced by `src/tests/step-conformance.infra.test.ts`'s harness-fidelity lock.
+ */
+const STEP_CTX_KEYS = Object.freeze([
+  'pool', 'chainId', 'runId', 'descriptor', 'checks', 'log', 'fetch', 'clock', 'config',
+  'probePresence', 'acquired', 'written', 'prior', 'overrides', 'gate', 'matched',
+  'cumulative', 'elapsed_ms', 'report',
+]);
+
 /** `PIPELINE_META` reads/writes/externals, derived from the descriptor — never hand-maintained. */
 function deriveMeta(descriptor) {
   const reads = {};
@@ -1483,6 +1499,7 @@ function step(descriptor, compute) {
 
 module.exports = {
   step,
+  STEP_CTX_KEYS,
   deriveMeta,
   deriveCounters,
   resolveCounterSource,

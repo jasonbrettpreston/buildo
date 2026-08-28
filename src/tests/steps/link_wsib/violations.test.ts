@@ -224,7 +224,13 @@ interface GoldenDoc {
 type ComputeFn = (ctx: unknown) => Promise<{ records_meta?: Record<string, unknown> } | void>;
 interface ComputeModule { compute?: ComputeFn; checks?: Record<string, (ctx: unknown) => unknown>; [k: string]: unknown }
 
-/** Peel 8b (#165) — the ctx shape scripts/lib/compute/link-wsib.js's CHECKS dispatch reads. */
+/**
+ * Peel 8b (#165) — the ctx shape scripts/lib/compute/link-wsib.js's CHECKS dispatch reads.
+ * LW-D11 (2026-08-28): `entity_fanin_max`/`magnet_entities_fanin_ge_10` moved from a bogus
+ * top-level `fanin` field (a key `stepCtx` never carries — STEP_CTX_KEYS, index.js) onto
+ * `matched`, mirroring the REAL runtime: `runCascadePhase` merges every non-linked/total
+ * column of the compute's own `CUMULATIVE_SQL` row onto `ctx.matched` generically.
+ */
 interface World {
   matched: {
     unlinked_start: number;
@@ -235,9 +241,10 @@ interface World {
     registered_entities_with_zero_links: number;
     entities_count: number;
     tier3_full: { exhausted: boolean; contacts_cleared?: number } | null;
+    entity_fanin_max: number;
+    magnet_entities_fanin_ge_10: number;
   };
   cumulative: { total: number; linked: number };
-  fanin: { max: number; magnets_fanin_ge_10: number };
   written: { privilege: { bypassrls: boolean; policies: number; rls_enabled: boolean } };
   gate: { mode: 'incremental' | 'full'; reason: string; skipped: boolean; configVersionUpdatedAt: string };
   overrides: { force_full: boolean };
@@ -1090,9 +1097,10 @@ function healthyWorld(): World {
       registered_entities_with_zero_links: 0,
       entities_count: LIVE_ENTITIES_TOTAL,
       tier3_full: null, // mode never resolves full in this fixture set — T7/A-7 is commit 8's budgeted act
+      entity_fanin_max: 12, // healthy: below the T6 default (20)
+      magnet_entities_fanin_ge_10: 0,
     },
     cumulative: { total: LIVE_WSIB_TOTAL, linked: LIVE_WSIB_LINKED }, // 11.53% >= the T2 5% floor
-    fanin: { max: 12, magnets_fanin_ge_10: 0 }, // healthy: below the T6 default (20)
     written: { privilege: { bypassrls: true, policies: 0, rls_enabled: true } },
     gate: { mode: 'incremental', reason: 'unchanged', skipped: false, configVersionUpdatedAt: '2026-08-28T00:00:00Z' },
     overrides: { force_full: false },
@@ -1103,7 +1111,7 @@ function healthyWorld(): World {
 /** One sabotage mutator per non-INFO check — by the P4 variable first (T2/T6), then by id. */
 const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
   [CONFIG_VARS.T2]: (w) => { w.cumulative = { total: 1_000_000, linked: 1 }; }, // ~0.0001% link rate vs the 5% floor
-  [CONFIG_VARS.T6]: (w) => { w.fanin = { max: LIVE_FANIN_MAX, magnets_fanin_ge_10: LIVE_MAGNET_COUNT }; }, // 2,118 vs the 20 default
+  [CONFIG_VARS.T6]: (w) => { w.matched = { ...w.matched, entity_fanin_max: LIVE_FANIN_MAX, magnet_entities_fanin_ge_10: LIVE_MAGNET_COUNT }; }, // 2,118 vs the 20 default
 };
 const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
   [/tier3_full_not_converged|convergence/i, (w) => { w.matched.tier3_full = { exhausted: true, contacts_cleared: 0 }; }], // T7 exhaustion, WARN not FAIL (R-H)
@@ -1160,7 +1168,6 @@ async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<
     config,
     matched: w.matched,
     cumulative: w.cumulative,
-    fanin: w.fanin,
     written: w.written,
     gate: w.gate,
     overrides: w.overrides,
