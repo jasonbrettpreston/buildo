@@ -1,6 +1,6 @@
 # Pilot 4 — `link_wsib` (MATCHER) — Step Optimization Assessment
 
-**Status:** Commits 1-5 landed (§1 PH-0; §2 PH-3 Intent Ledger; §3 PH-5 seam map; §4 PH-6 classification; §5 golden master — 3 live invocations, all hash-identical, harness self-test green). §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. §6 (declared diffs), §R Reflection — NOT YET WRITTEN, land at commit 7 (implementation).
+**Status:** Commits 1-6 landed (§1 PH-0; §2 PH-3 Intent Ledger; §3 PH-5 seam map; §4 PH-6 classification; §5 golden master — 3 live invocations, all hash-identical, harness self-test green; §6 PH-7 test design — 38 RED / 33 GREEN, all for designed reasons, zero crashes). This is the end of this task's authorized scope (commits 1-6 only). §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. §6's remaining declared-diffs content, §R Reflection — land at commit 7 (implementation, A-1/A-2/A-3/A-7 ruled, out of this task's scope).
 
 **Governing plan:** `.cursor/active_task.md` (Pilot 4 — link_wsib). **Governing specs (operator correction 2026-08-28 — led by the step's own governing spec, not the architecture spec):** `docs/specs/01-pipeline/46_wsib_enrichment.md` (PRIMARY), `60_shared_steps.md` (§2 Step Registry row 19, §"Link WSIB"), `52_source_wsib.md`, `41_chain_permits.md` §Step Breakdown row 7, `43_chain_sources.md` §Step Breakdown row 19, then `docs/specs/01-pipeline/122_pipeline_step_optimization.md`, `124_step_standard_policy.md`, `123_step_opt_assessment_validation.md` (packaging/procedure).
 
@@ -65,6 +65,8 @@ Read verbatim this commit: the row at `docs/reports/review_followups.md:3015` (t
 | `b71db6e0` | OR-join → `trade_matches`/`legal_matches`/`combined` CTE split (GIN index use) | ✓ (`:252-284`) | **preserved-in-compute** | Rule 4 already satisfied — the header comment (`:243-246`) already documents the "Nested Loop over 107K × 3.6K rows (~394M similarity calls)" rationale |
 | `bd06751d` | `records_total: totalLinked` (reverting `412927ca`'s `totalUnlinked`) | ⚠️ **SUPERSEDED** by `52ad6527` (reverted back to `totalUnlinked`, the CURRENT value) | **knowingly-retired** | see churn note below — this is the middle flip in a 3-commit back-and-forth |
 | `412927ca` (C3) | First `pipeline.emitSummary`/raw `PIPELINE_SUMMARY` console.log + `records_total: totalUnlinked` in the raw `pipeline_runs` UPDATE | ⚠️ **SUPERSEDED** by the Pipeline SDK migration (`0ef23550`, not itself in the 17-fix corpus — a `refactor(` commit) | **knowingly-retired** (the raw-console.log/raw-UPDATE mechanism); the semantic intent (`records_total` = the DENOMINATOR, not just matches) survives via `52ad6527` | the SDK's `emitSummary`/`emitMeta` triples (G-9) are the living descendant |
+
+**Approver for every `knowingly-retired` disposition above (`5baaed5a`, `bd06751d`, `412927ca`):** this pilot's PH-3 pass (agent, 2026-08-28), grounded in measured supersession by a LATER commit on the SAME step file (not an operator ruling — each is retired because a subsequent commit on this same file's own git history overwrote it, verifiable by `git log -p`) — consistent with Spec 124 §4.2's discoverer≠adjudicator split, since the disposition is PROPOSED here and stands until a human operator ratifies or overturns it at commit 7.
 
 **Churn note — `records_total`'s semantic settled after 3 flips, not on the first try:** `412927ca` (Mar 7, 12:20) set it to `totalUnlinked`; `bd06751d` (Mar 7, 20:53, same day) reverted to `totalLinked`; `52ad6527` (Apr 18) reverted AGAIN to `totalUnlinked` — the value the code carries TODAY, justified as "full evaluation scope, not matched-only." This is exactly the kind of settled-but-unwritten-down semantic Rule 4 exists for: the FINAL value is correct and matches the current file, but a reader of the file alone cannot see that it survived two reversions — the descriptor's `outputs.counters` declaration (commit 7) must carry `52ad6527`'s stated rationale forward as the field's own `why`, not just the number.
 
@@ -182,9 +184,59 @@ Exit code 0. **Harness self-test PASSES** — a repeat capture under unchanged c
 
 Every capture's own `nondeterminism` field (auto-detected by the harness, not hand-curated) is IDENTICAL across all 4 captures: `key:summary.records_meta.duration_ms, pattern:duration_literal, pattern:iso_timestamp, row:sys_duration_ms, row:sys_velocity_rows_sec` — the 5 known-volatile fields (elapsed-time counters + the DB-clock-derived `threshold_updated_at` ISO string pattern-matched, not value-matched). None of these touch the pinned `table_state` hashes or the 13 `invariants.json` values, which is what the PRE-vs-POST differential (commit 9) will actually gate on.
 
+| key | disposition |
+|---|---|
+| `summary.records_meta.duration_ms` | `excluded-with-reason` — elapsed wall time, never written to a table |
+| `sys_duration_ms` | `excluded-with-reason` — same, harness-computed |
+| `sys_velocity_rows_sec` | `excluded-with-reason` — derived from duration |
+| `pattern:duration_literal` | `normalize-then-match` — any `\d+(\.\d+)?s`-shaped duration string is masked before comparison |
+| `pattern:iso_timestamp` | `normalize-then-match` — any ISO-8601 timestamp (incl. `threshold_updated_at`) is masked before comparison |
+
+Every disposition above is drawn from the CLOSED vocabulary (`must-match-exactly` \| `normalize-then-match` \| `excluded-with-reason`) — no fourth value is used.
+
 ### Invariants pinned (`docs/reports/golden/link_wsib/invariants.json`, 13 entries, all 3 captures identical)
 
 `wsib_tier3_current_predicate_pass_rate_pct=38.1` · `wsib_entity_fanin_max=2118` · `wsib_entity_fanin_p99=208` (new this commit, not previously measured) · `wsib_magnet_entities_fanin_ge_10=171` · `wsib_orphan_linked_entity_id=0` · `wsib_linked_confidence_matched_at_inconsistent=0` · `wsib_confidence_outside_closed_set=0` · `wsib_dead_bucket_050_060_count=0` · `wsib_registered_entities_with_zero_links=0` · `wsib_cumulative_link_rate_pct=11.53` · `wsib_registry_total_rows=121116` · `entities_wsib_registered_count=938` · `wsib_tier_confidence_split=0.60:13645,0.90:245,0.95:75`. **Every structural invariant reads 0 (clean) — no orphan links, no confidence/matched_at inconsistency, no confidence value outside the closed {0.95,0.90,0.60} set, no dead-bucket population, no registered-with-zero-links entity.** The 5 numeric invariants exactly reproduce Fold A/B's measured figures (38.1%, 2118, 171, 11.53%, 938) with one new data point (`fanin_p99=208`) not measured this session before.
+
+---
+
+## §6 (partial). PH-7 — test design, prove RED (commit 6, G7)
+
+> `src/tests/steps/link_wsib/violations.test.ts` — the 44 55-A hard-gate items + 5 55-B monotone partials (generator: `node scripts/violations/plan-claims.mjs --checklist`) + the "three files, one slug" component checks + the G4d fence-lock section carrying the 5 explicitly-named locks (LG-11 write-executor, A-7 UPDATE-to-NULL-never-DELETE/LG-16, LG-15 gated-skip, A-8 unchanged-corpus, T7 convergence-loop), each proven both directions against a synthetic subject. The LG-11 write-executor lock is asserted first inside claim #165, per the plan's explicit instruction.
+
+**Genuine RED output, captured BEFORE the husky-compatibility wrap described below (`npx vitest run src/tests/steps/link_wsib/`):**
+```
+Test Files  1 failed (1)
+     Tests  38 failed | 33 passed (71)
+```
+**38 RED for the designed reason** — every failing test either (a) asserts a commit-7+ artifact (`scripts/link-wsib.descriptor.json`, `scripts/lib/compute/link-wsib.js`) does not yet exist (`MISSING ARTIFACT ... — commit 7 lands it`), or (b) asserts a specific NEW library capability is absent from an EXISTING file today — `config_version` in `staleness.js`, the `set_based_join_update`/`set_based_null_retract` class strings in `write.js`, a `skip_gated`-shaped branch inside `isLinkStep` in `index.js` — each verified by grepping the CURRENT file's source text rather than merely asserting the file loads (closing the exact "green because it never looked" failure mode claim #163 names). Zero `TypeError`/`ReferenceError`/`SyntaxError` — confirmed by grep over the full run log; every red is a genuine `AssertionError` naming what is missing.
+
+**Husky-compatibility wrap, this commit — `it.fails()`, not a suppression.** `npm run test` (`vitest run`, no exclusion for `violations.test.ts` files) exits 1 on ANY failing test, which would block the pre-commit hook and force `--no-verify` — forbidden by this task's own instructions. Empirically confirmed (`npx vitest run` over the FULL suite, unpiped so the real exit code is read, not a pipe's): **exit 1** with this file's 38 genuine failures present, despite pilot 3's own PH-7 commit (`fa702050`) landing a similarly red-by-design file through the same hook chain — no exemption mechanism for that commit was found in the repo (`vitest.config.ts` has no exclusion, `lint-staged` does not touch test files, no `PROVE_RED`/skip-gate env var exists). **Resolution: the 38 genuinely-red `it(...)` calls are wrapped `it.fails(...)`** — vitest's own built-in "expected failure" API (not a custom mechanism, not a suppression comment per the `tasks/lessons.md` footgun-gate lesson): a `.fails()` test that throws is reported as **PASSED** by vitest; a `.fails()` test that unexpectedly succeeds is reported as **FAILED** — so the wrap can never silently hide a claim that starts passing prematurely; it would flip to a suite failure instead. Verified: `npx vitest run src/tests/steps/link_wsib/violations.test.ts` now reports **71 passed (71)**, exit 0, with the SAME 38 assertion bodies unchanged — only the wrapper differs. The 33 naturally-green tests remain plain `it(...)`. **Filed for commit 7's own review: `.fails()` must be stripped back to plain `it()` one claim at a time as each is genuinely satisfied — a `.fails()` that never gets un-wrapped is the exact "green because it never looked" failure mode this pilot's own #163 claim exists to catch, applied to the test suite's own mechanics.**
+
+**33 GREEN for legitimate reasons, not vacuously:**
+- Report-content-only claims (#151, #6a, #151a, #152, #153, #162) — these read `docs/reports/2026-08-28-pilot4-link-wsib-assessment.md` (this file, already committed through commit 5) and pass because the required content is genuinely present (the Intent Ledger, the approver statement, the non-determinism table, the discoverer≠adjudicator statement).
+- N/A-by-subject claims (#169, #170, #172, #174, #180) — link_wsib does no geometry (pure trigram/exact-string matching), so the spatial-fixture rungs and shapefile-fixture claims are genuinely inapplicable, verified against the CURRENT source text (no `ST_*`/`geography`/shapefile tokens).
+- Already-true-today claims (#173, #182, #184, #205, #158, #159) — the commit-5 golden captures already carry explicit `order_by`; no fixtures directory exists yet (fixtures are inline, by design); lock 94 is uniquely held by `link-wsib.js` today; `converted.json` correctly does not yet list the step.
+- The 5 55-B monotone partials (#36, #175, #181, #183, #206) — by design, provable NOW against synthetic/today's evidence (that is what makes them partials, not gates).
+- The 5 fence locks' "reversion is detectable" halves — pure-function detectors (`detectJoinUpdateNoInsertFence`, `detectUpdateToNullNeverDeleteFence`, `detectSkipGateFence`, `detectA8UnchangedCorpusFence`, `detectConvergenceLoopFence`) proven against SYNTHETIC good/bad subjects, since none of LG-11/15/16/T7/A-8 exist as real code yet — this proves the detectors are not vacuous ahead of commit 7, matching the "reversion is detectable" half of every prior pilot's fence-lock pattern.
+
+**Tool fixes made this pass** (both caught by actually running the suite, not by reading): `scripts/steps/_schema/converted.json` and `scripts/steps/_schema/grandfathered.json` are OBJECTS (`{converted:[...], pending:[...]}` and `{steps:{...}}`), not bare arrays — an initial draft assumed arrays and threw `TypeError`s at runtime, caught and fixed. Golden `invariants.json` values are stringified by the harness (its own docblock says so) — an initial draft compared them as numbers and failed with type-mismatch assertion errors; fixed via a coercing `invariant()` helper.
+
+---
+
+## Commit ledger (Spec 123 §7 — mirrors `.cursor/active_task.md`'s nine-commit table, reproduced here so the assessment report is self-contained per claim #6a/#6b)
+
+| Commit # | Phase / Gate | Content | Done-test | Status |
+|---|---|---|---|---|
+| 1 | PH-0 boundary freeze → G0 | §1 boundary freeze + `review_followups.md:3015` verify-and-skip + 2 LOW followups | none (doc) | **LANDED `e5eff779`** |
+| 2 | PH-3 intent ledger → G3 | §2 Intent Ledger (17 fences PROPOSED) + 7 LW-D* rows | none (doc); a human adjudicates | **LANDED `a841bc71`** |
+| 3 | PH-5 seam map → G5 | §3 seam map | none (doc) | **LANDED `9a4c3845`** |
+| 4 | PH-6 classification → G6 | §4 classification + 171-magnet exposure quantified | none (doc) | **LANDED `c92a9e79`** |
+| 5 | Golden master (3 invocations per amended A-4) → G1′ | §5 golden master; `docs/reports/golden/link_wsib/pre/{permits,sources,standalone}.json` + `invariants.json` + `--dry-run` timing | harness self-test + `--compare` exit 0 on a repeat capture | **LANDED `7e8700d4`** |
+| 6 | PH-7 test design + prove red → G7 | `src/tests/steps/link_wsib/violations.test.ts` — 44 A + 5 B partials + 5 named fence locks | `npx vitest run src/tests/steps/link_wsib/` — RED | **LANDED (this commit)** |
+| 7 | Descriptor + compute verbatim + library growth (A-1/A-2/A-3/A-7 ruled) → G2′ | descriptor, notes, compute, frozen shape, library growth, Spec Update (46/52/60/manifest corrections) | `step-conformance.infra.test.ts` green with 4 converted steps; differential zero-diff on all 3 invocations | NOT STARTED — **out of this task's scope (commits 1–6 only)** |
+| 8 | Peel — one concern per commit (8a/8b/8c) | gating/staleness · verdict/audit · thresholds/checks | full differential re-run after each | NOT STARTED |
+| 9 | Differential + cutover → G8, G4d, G-shape | `converted.json` (+1 → 4) | shape gate 4/62 enforced; differential green | NOT STARTED |
 
 ---
 
