@@ -122,6 +122,12 @@ export const GROUPS: Array<{ label: string; keys: string[] }> = [
     label: 'WSIB Matching',
     keys: [
       'wsib_fuzzy_match_threshold',
+      'link_wsib_link_rate_warn_pct',
+      'link_wsib_tier1_confidence',
+      'link_wsib_tier2_confidence',
+      'link_wsib_tier3_confidence',
+      'link_wsib_entity_fanin_warn',
+      'link_wsib_tier3_full_max_iterations',
     ],
   },
   {

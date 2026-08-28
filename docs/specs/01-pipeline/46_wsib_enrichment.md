@@ -35,6 +35,32 @@ UPDATE entities SET
   website = COALESCE(entities.website, wsib.website)
 ```
 COALESCE preserves existing entity data — WSIB contacts only fill gaps.
+
+### Reverse Clear on Retraction (added 2026-08-28, C1 pilot 4, G-18)
+
+The forward fill-only flow above says nothing about what happens when a link that fed a
+contact field is later **retracted** — A-7's tier-3 repair (`link-wsib.js` Tier 3 only,
+`retract_when: full_only`) is the one mechanism that retracts an already-written link, and
+it did not exist when this section was first written.
+
+**The reverse-clear contract:** when a `wsib_registry` row's link is retracted, an
+entity's contact field is cleared **only when its current value equals a value that
+existed on the now-retracted row** (provenance-by-equality) — never a blanket clear of
+every contact field on every affected entity. This is deliberately narrower than "undo
+the fill": an entity's contact may have come from Serper enrichment (`enrich-wsib.js`) or
+a different WSIB row also linked to it, and equality-matching is what keeps those values
+untouched.
+
+**Declared limitation:** a contact value that *coincidentally* equals a retracted row's
+value is cleared and must be re-copied on relink — a false positive, never a false
+negative (a genuinely-retracted-source value is never left dangling). Measured local
+exposure is 0 (the local dev `wsib_registry` carries zero contact values, so `link-wsib.js`
+has never actually copied a contact locally) — this does **not** bound a cloud database
+that has run Serper enrichment against `wsib_registry` itself; re-measure before any cloud
+FULL run.
+
+**Audit row:** `contacts_cleared_on_retraction` (link_wsib's own declared check) counts
+entities affected per FULL run.
 </architecture>
 
 ---

@@ -652,12 +652,12 @@ describe('Incremental Processing Guards', () => {
     expect(content).toMatch(/>= 98/);
   });
 
-  it('link-wsib.js emits PIPELINE_SUMMARY with totalUnlinked as records_total', () => {
-    const scriptPath = path.resolve(__dirname, '../../scripts/link-wsib.js');
-    const content = fs.readFileSync(scriptPath, 'utf-8');
-    expect(content).toContain('pipeline.emitSummary(');
-    expect(content).toContain('totalUnlinked');
-  });
+  // link-wsib.js RE-HOMED (Spec 122 §5.1 conversion, C1 pilot 4, 2026-08-28): a converted
+  // step spells neither the emitSummary call nor totalUnlinked itself — the counter
+  // semantics are now DECLARED (descriptor.counters.records_total.source =
+  // "matched.unlinked_start") and asserted against the live descriptor in
+  // src/tests/steps/link_wsib/violations.test.ts ("#200 The §11 Counter Semantic
+  // Contract"), the same treatment link-massing.js got at pilot 3.
 });
 
 describe('Quality Pipeline Group', () => {
@@ -703,11 +703,11 @@ describe('PIPELINE_SUMMARY convention', () => {
     'geocode-permits.js',
     'link-parcels.js',
     'link-neighbourhoods.js',
-    // link-massing.js RE-HOMED (Spec 122 §5.1 conversion, pilot 3) — same treatment as
-    // assert_schema at pilot 1: a converted step spells neither emit itself, and the
-    // `lib/step/index.js` entry already in this list IS the emitter for all of them.
+    // link-massing.js / link-wsib.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4) —
+    // same treatment as assert_schema at pilot 1: a converted step spells neither emit
+    // itself, and the `lib/step/index.js` entry already in the PIPELINE_META list below
+    // IS the emitter for all of them.
     'link-similar.js',
-    'link-wsib.js',
     'link-coa.js',
     'compute-centroids.js',
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
@@ -855,11 +855,10 @@ describe('PIPELINE_META convention', () => {
     'geocode-permits.js',
     'link-parcels.js',
     'link-neighbourhoods.js',
-    // link-massing.js RE-HOMED (Spec 122 §5.1 conversion, pilot 3) — same treatment as
-    // assert_schema at pilot 1: a converted step spells neither emit itself, and the
-    // `lib/step/index.js` entry already in this list IS the emitter for all of them.
+    // link-massing.js / link-wsib.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4) —
+    // same treatment as assert_schema at pilot 1: a converted step spells neither emit
+    // itself, and the `lib/step/index.js` entry below IS the emitter for all of them.
     'link-similar.js',
-    'link-wsib.js',
     'link-coa.js',
     'compute-centroids.js',
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
@@ -1565,13 +1564,11 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
     expect(step).not.toMatch(/records_updated\s*:\s*buildingsUpserted/);
   });
 
-  it('link-wsib: records_total uses totalUnlinked (full evaluation scope), not totalLinked (matched only)', () => {
-    const content = src('link-wsib.js');
-    // Must NOT use totalLinked as records_total (only matched entries, not full scope)
-    expect(content).not.toMatch(/records_total\s*:\s*totalLinked/);
-    // unlinked_start must remain in audit_table so the scope is still visible
-    expect(content).toContain('unlinked_start');
-  });
+  // link-wsib.js RE-HOMED (Spec 122 §5.1 conversion, C1 pilot 4, 2026-08-28, G-14): the
+  // records_total = totalUnlinked semantic (churn-settled, 52ad6527) is now a DECLARED
+  // field (descriptor.counters.records_total.source = "matched.unlinked_start") rather
+  // than a source-text pattern, asserted in src/tests/steps/link_wsib/violations.test.ts
+  // ("#200 The §11 Counter Semantic Contract").
 
   it('link-parcels: records_updated uses totalLinked (permits), not dbUpserted (permit_parcels rows)', () => {
     const content = src('link-parcels.js');

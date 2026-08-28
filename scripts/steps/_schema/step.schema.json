@@ -86,7 +86,7 @@
       "load_heritage": "A -> B. :602 is a literal `DELETE FROM <t> WHERE source_id <> ALL($1::BIGINT[])` departure delete against its own table, behind an empty-set guard (:598). The base's Del=0 is factually wrong.",
       "load_zoning": "A -> B (x11 layer tables). The departure delete at :526-528 is a NOT EXISTS anti-join against a keys-only TEMP table. The suspected class C is REFUTED: the temp table holds keys only and is never the source of an INSERT...SELECT, so it is a mechanic of B, not a full replace.",
       "load_neighbourhoods": "A -> A + 6 INEXPRESSIBLE. Confirmed: exactly 2 IS DISTINCT FROM in the whole file (:153, :154), both in the upsert. The 6 profile UPDATEs (:473, :486, :506, :543, :563, :603) have NO guard at all. Also VACUUM ANALYZE at :680 -> execution.maintenance.",
-      "link_wsib": "K -> E + G. Three targets: wsib_registry link-columns are E (WHERE linked_entity_id IS NULL), entities.is_wsib_registered is G (guarded + scoped by match_confidence), entities contact columns are E in blank-or-null form. There is no derived_recompute anywhere in the file; K is simply absent.",
+      "link_wsib": "CORRECTED (C1 MATCHER pilot, 2026-08-28) — the original 'K -> E + G' guess (below, kept for the record) was ALSO wrong, refuted by measurement: the wsib_registry write's SET clause values are per-row JOIN results from a compute-authored matched CTE, which neither class E (write_once_backfill) nor G (set_based_scoped) can generate — G's codegen writes only a DECLARED CONSTANT. The measured shape is TWO NEW mechanics: set_based_join_update (LG-11, wsib_registry link-columns + entities contact columns, both computed-from-a-join) and set_based_null_retract (LG-16, the tier-3-only retraction) + set_based_scoped (G, entities.is_wsib_registered flag, a genuine constant). There is no derived_recompute anywhere in the file; K is simply absent (this much of the original guess held). Original guess: 'K -> E + G. Three targets: wsib_registry link-columns are E (WHERE linked_entity_id IS NULL), entities.is_wsib_registered is G (guarded + scoped by match_confidence), entities contact columns are E in blank-or-null form.'",
       "refresh_snapshot": "M -> INEXPRESSIBLE. :535 is `ON CONFLICT (snapshot_date) DO UPDATE SET ... created_at=NOW()` with no change guard — a same-day re-run overwrites all columns of that day's row in place. It is not append-only."
     },
     "gaps": [
@@ -213,7 +213,9 @@
             "multi_pass_defer",
             "derived_recompute",
             "verdict_only",
-            "snapshot_append"
+            "snapshot_append",
+            "set_based_join_update",
+            "set_based_null_retract"
           ],
           "x-frozen": true,
           "x-required": true,
@@ -230,8 +232,11 @@
             "multi_pass_defer": "J",
             "derived_recompute": "K",
             "verdict_only": "L",
-            "snapshot_append": "M"
-          }
+            "snapshot_append": "M",
+            "set_based_join_update": "N",
+            "set_based_null_retract": "O"
+          },
+          "x-class-letters-note": "N and O are LG-11/LG-16 (pilot 4, C1 MATCHER, 2026-08-28). N is a scoped UPDATE ... FROM (<compute-authored matched CTE>) with INSERT structurally forbidden — write.js's executeSetBasedJoinUpdate refuses any SQL text containing INSERT INTO or ON CONFLICT at execution time, not merely by convention. O is the UPDATE-to-NULL retraction shape for a target this step does not OWN (wsib_registry rows are load-wsib.js's exclusive territory) — codegen-identical to set_based_scoped/unscoped (a constant SET over a declared scope, via columns[].set_value: null) but declared under its own class so a retract_when: full_only null-retraction reads as a DISTINCT mechanic from a plain flag clear, per LG-16's fence lock (never DELETE)."
         },
         "guard": {
           "description": "V7 — THE GUARD AXIS, decoupled from the mechanic. This field alone says whether the write is change-guarded; a class name never does. `none` is DECLARABLE (it is what makes GAP-1's six unguarded UPDATEs and GAP-2's unguarded keyed upsert expressible at all) but requires a why and is grandfathered — banned for new steps.",
@@ -460,7 +465,7 @@
         },
         "limit": {
           "anyOf": [
-            { "type": "string", "pattern": "^(viol (==|<=) [0-9]+|pct <= [0-9]*\\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\\.?[0-9]+ x median)$" },
+            { "type": "string", "pattern": "^(viol (==|<=) [0-9]+|pct (<=|>=) [0-9]*\\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\\.?[0-9]+ x median)$" },
             {
               "type": "object",
               "additionalProperties": false,
@@ -834,8 +839,9 @@
                 "required": ["signal", "position"],
                 "properties": {
                   "signal": {
-                    "enum": ["source_validator", "content_hash", "cached_artifact", "upstream_ledger", "code_version", "interval", "always"],
-                    "x-frozen": true
+                    "enum": ["source_validator", "content_hash", "cached_artifact", "upstream_ledger", "code_version", "config_version", "interval", "always"],
+                    "x-frozen": true,
+                    "x-config-version-note": "ADDED AT THE MATCHER PILOT (2026-08-28, LG-12/A-3). An operator-edited logic_variables row with NO pipeline_runs producer of its own (link_wsib's wsib_fuzzy_match_threshold — readThresholdVersionSignal/hasThresholdChanged, generalized). Pairs with `variable` below."
                   },
                   "position": {
                     "description": "R6: the ACQUISITION LIFECYCLE POSITION. pre_acquisition = HEAD/ETag before download; acquisition = the existsSync short-circuit; post_acquisition = content hash after download; pre_compute = ledger/code/interval gates.",
@@ -848,7 +854,12 @@
                     "$ref": "#/definitions/tableName"
                   },
                   "emit_key": {
-                    "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). The emits[].key in the PRIOR completed run's records_meta this signal compares THIS run's measurement against. code_version compares staleness.logic_version; upstream_ledger compares COUNT(*) over table. Naming the key in the descriptor is what lets ONE generic reader serve every code+data gate — and it is the same key the frozen producer contract already publishes, so the gate and the emit can never drift apart.",
+                    "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). The emits[].key in the PRIOR completed run's records_meta this signal compares THIS run's measurement against. code_version compares staleness.logic_version; upstream_ledger compares COUNT(*) over table; config_version compares the named variable's logic_variables.updated_at. Naming the key in the descriptor is what lets ONE generic reader serve every code+data gate — and it is the same key the frozen producer contract already publishes, so the gate and the emit can never drift apart.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "variable": {
+                    "description": "ADDED AT THE MATCHER PILOT (2026-08-28, LG-12/A-3). The logic_variables.variable_key a config_version signal reads updated_at for. Required when signal is config_version.",
                     "type": "string",
                     "minLength": 1
                   }
@@ -959,9 +970,28 @@
       "required": ["budget", "txn_scope", "txn_budget", "chunked", "statement_timeout", "step_timeout", "batch", "needs_disk_mb", "partial_fill", "on_row_error", "on_batch_error", "on_check_error", "on_degrade", "criticality", "network", "invocation", "maintenance"],
       "properties": {
         "shape": {
-          "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull) — OPERATOR RULING A-1(a). WHICH lifecycle the runner drives, DECLARED rather than sniffed. Until this field the branch was inferred: scripts/lib/step/index.js isIngestStep required an inputs.reads.externals[].url, so a pure DB-to-DB join (a LINK) silently fell to the ASSERT path and its join and write had NO HOME AT ALL. Inference is the wrong mechanism for a phase order that carries before/after guarantees (B-1..B-13): a step whose declaration says nothing gets whichever branch a predicate happens to pick. \"assert\" = compute only, the runner writes nothing. \"ingest\" = acquire, validate, pre_write gate, write (runIngestPhase). \"link\" = read, staleness/mode, RUN_AT, pre_write gate, ordered writes[], post checks (runLinkPhase). ABSENT keeps the pre-existing inference exactly, so no converted step changes behaviour.",
-          "enum": ["assert", "ingest", "link"],
+          "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull) — OPERATOR RULING A-1(a). WHICH lifecycle the runner drives, DECLARED rather than sniffed. Until this field the branch was inferred: scripts/lib/step/index.js isIngestStep required an inputs.reads.externals[].url, so a pure DB-to-DB join (a LINK) silently fell to the ASSERT path and its join and write had NO HOME AT ALL. Inference is the wrong mechanism for a phase order that carries before/after guarantees (B-1..B-13): a step whose declaration says nothing gets whichever branch a predicate happens to pick. \"assert\" = compute only, the runner writes nothing. \"ingest\" = acquire, validate, pre_write gate, write (runIngestPhase). \"link\" = read, staleness/mode, RUN_AT, pre_write gate, ordered writes[], post checks (runLinkPhase). \"cascade\" = ADDED AT THE MATCHER PILOT (2026-08-28, A-1 SHOULD-FIX d) — a bulk N-tier cascade over a declared `tiers[]` array with NO batching/pagination and MORE THAN ONE write target per tier (runCascadePhase): read, gated-skip, staleness/mode, RUN_AT, pre_write gate, ordered per-tier writes[] inside ONE step-scoped transaction, post checks. Measured at commit 7 to fork `runLinkPhase`'s keyset batch loop and its flat parcels_* counters rather than fit a `tiers[]` branch inside it — link_wsib is the first and, as of this pilot, only cascade-shaped step. ABSENT keeps the pre-existing inference exactly, so no converted step changes behaviour.",
+          "enum": ["assert", "ingest", "link", "cascade"],
           "x-frozen": true
+        },
+        "tiers": {
+          "description": "ADDED AT THE MATCHER PILOT (2026-08-28, A-1). Required when shape is \"cascade\": the ORDERED N-tier match cascade, highest confidence first — a higher tier's write scope (`WHERE linked_entity_id IS NULL`-shaped) must exclude any row a prior tier already claimed, which is what makes each tier's counters and writes independent of loop order. Each tier names the confidence variable its writes stamp; the compute's buildTierSql(descriptor, config, tier, mode) is the ONLY place the tier's match predicate and write SQL are authored (Rule 2 — compute is domain logic only).",
+          "anyOf": [
+            { "const": "none" },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "confidence_config"],
+                "properties": {
+                  "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+                  "confidence_config": { "type": "string", "minLength": 1, "description": "The config.logic_variables[].name whose resolved value this tier stamps as the write's confidence column." }
+                }
+              }
+            }
+          ]
         },
         "budget": { "$ref": "#/definitions/duration" },
         "txn_scope": { "enum": ["statement", "batch", "step", "none"], "x-frozen": true },
@@ -1110,7 +1140,10 @@
           "properties": {
             "force_full": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] },
             "force_run": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] },
-            "dry_run": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] },
+            "dry_run": {
+              "description": "MOST steps' dry-run is env-var-driven; link_wsib's is ARGV-driven (`process.argv.includes('--dry-run')`, G-5) — declaring the literal flag is what lets `staleness.dryRunArgPresent` be the one place it is read (ADDED AT THE MATCHER PILOT, 2026-08-28).",
+              "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }, { "type": "string", "pattern": "^--[a-z][a-z0-9-]*$" }]
+            },
             "accept_anomaly": {
               "description": "OPERATOR RULING A-5 (2026-08-25, INGESTOR pilot) — THE FOURTH KIND OF OVERRIDE. force_full / force_run / dry_run all answer \"does the step act?\"; an accept-anomaly answers \"the step acted, a declared check FAILED, proceed anyway\". Present in >=2 loaders today as ad-hoc env reads (RAVINE_ACCEPT_FEATURE_COUNT_DRIFT, RAVINE_ACCEPT_MASS_DELETE). Declaring it makes the L7c rule STRUCTURAL rather than textual: the override lets the run COMPLETE, it NEVER suppresses the FAIL row. `check_id` must name a declared check; the runner also emits a WARN row whenever the env is standing, so an accidental prod override is visible even on a run it never had to rescue.",
               "type": "array",

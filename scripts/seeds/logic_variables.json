@@ -790,6 +790,48 @@
     "min": 0.1,
     "max": 1
   },
+  "link_wsib_link_rate_warn_pct": {
+    "default": 5,
+    "type": "number",
+    "description": "Minimum cumulative link rate (%) — linked wsib_registry rows over all rows — below which link_wsib's link_rate_warn check WARNs. CONSUMED by link_wsib via checks[].limit_from_config (a pct >= floor form). Pre-externalization this was the bare literal 5 in `linkRate >= 5 ? PASS : WARN`, with zero registered variables (LW-D1, the P4 violation C1 pilot 4 closes).",
+    "min": 0,
+    "max": 100
+  },
+  "link_wsib_tier1_confidence": {
+    "default": 0.95,
+    "type": "number",
+    "description": "Confidence written to wsib_registry.match_confidence for a link made by Tier 1's exact trade-name match. CONSUMED by link_wsib (scripts/lib/compute/link-wsib.js buildTierSql). Pre-externalization the literal lived at two sites (the UPDATE + the entities/copyContacts scope predicate).",
+    "min": 0,
+    "max": 1
+  },
+  "link_wsib_tier2_confidence": {
+    "default": 0.90,
+    "type": "number",
+    "description": "Confidence written to wsib_registry.match_confidence for a link made by Tier 2's exact legal-name match. CONSUMED by link_wsib (scripts/lib/compute/link-wsib.js buildTierSql).",
+    "min": 0,
+    "max": 1
+  },
+  "link_wsib_tier3_confidence": {
+    "default": 0.60,
+    "type": "number",
+    "description": "Confidence written to wsib_registry.match_confidence for a link made by Tier 3's pg_trgm fuzzy match. CONSUMED by link_wsib (scripts/lib/compute/link-wsib.js buildTierSql). 61.9% of tier-3 links fail today's article-stripping predicate (d704a447) — the population A-7's tier-3 repair (LG-16) exists to correct.",
+    "min": 0,
+    "max": 1
+  },
+  "link_wsib_entity_fanin_warn": {
+    "default": 20,
+    "type": "number",
+    "description": "The maximum wsib_registry rows any single entity may link to before link_wsib's entity_fanin_warn check WARNs. CONSUMED by link_wsib via checks[].limit_from_config. Fires immediately on the known-bad population (171 magnet entities, worst MDK CONSTRUCTION at 2,118) — intended, not a defect (Fold B ACCEPTED ruling, C1 pilot 4).",
+    "min": 2,
+    "max": 1000
+  },
+  "link_wsib_tier3_full_max_iterations": {
+    "default": 20,
+    "type": "number",
+    "description": "Bounds the mode-full tier-3 repair's convergence loop (A-7/LG-16): TIER3_SELECT is capped LIMIT 1000/invocation, so a single pass cannot repair the full ~5,515-row clean population. CONSUMED by link_wsib (the runCascadePhase mode-full branch, scripts/lib/step/index.js). Exhaustion is WARN (tier3_full_not_converged), never FAIL, per R-H.",
+    "min": 1,
+    "max": 100
+  },
   "snowplow_buffer_days": {
     "default": 7,
     "type": "number",

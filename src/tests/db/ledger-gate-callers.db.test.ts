@@ -1,8 +1,12 @@
 // SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.2
 // SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.9
 //
-// Phase B B3 — the run-ledger gate WIRED INTO its three callers (link-wsib.js,
-// link-parcel-addresses.js, compute-parcel-cost-estimates.js), live-DB. Case
+// Phase B B3 — the run-ledger gate WIRED INTO its two remaining hand-rolled callers
+// (link-parcel-addresses.js, compute-parcel-cost-estimates.js), live-DB. link-wsib.js's
+// portion is RE-HOMED, not deleted (A-5, C1 pilot 4 commit 7, 2026-08-28) to
+// src/tests/steps/link_wsib/ledger-gate.db.test.ts — the frozen shape has no `main(pool)`
+// export any more (pipeline.step()'s `.run({pool, chainId})` is the entry point), so the
+// direct-call pattern this file uses for its two remaining callers cannot reach it. Case
 // IDs mirror the B3 grounding fold's red-first table:
 //   G5 skip-emits-summary/DS4 (ⓔ child) — for each of the three callers, calling
 //     their exported `main(pool)` directly (no child-process spawn needed: main
@@ -30,14 +34,6 @@ import type { Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 import { detectDurationAnomalies } from '@/lib/quality/types';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const linkWsib = require('../../../scripts/link-wsib.js') as {
-  main: (pool: Pool) => Promise<void>;
-  OWN_SLUGS: string[];
-  UPSTREAM_SLUGS: string[];
-  readThresholdVersionSignal: (pool: Pool) => Promise<{ thresholdUpdatedAt: string | null }>;
-  FORCE_FULL_ENV: string;
-};
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const linkParcelAddresses = require('../../../scripts/link-parcel-addresses.js') as {
   main: (pool: Pool) => Promise<void>;
@@ -79,153 +75,14 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
     await pool.query('DELETE FROM pipeline_runs WHERE pipeline = ANY($1::text[])', [slugs]);
   }
 
-  // Commit A tests (A-R1/A-R3) need the run to actually REACH the tier-matching
-  // code past the (unrelated) `totalUnlinked === 0` vacuous-skip short-circuit —
-  // the testcontainer DB's wsib_registry starts empty (it's pipeline-ingested
-  // data, not migration-seeded), so a fixture row is required.
-  const FX_WSIB_LEGAL_NORM = 'FX B3 COMMIT A TEST CO';
-  async function seedUnlinkedWsibRow() {
-    await pool.query(
-      `INSERT INTO wsib_registry (legal_name, legal_name_normalized, predominant_class, mailing_address)
-       VALUES ('FX B3 Commit A Test Co', $1, 'G1', 'FX-B3-ADDR')
-       ON CONFLICT (legal_name_normalized, mailing_address) DO UPDATE SET linked_entity_id = NULL`,
-      [FX_WSIB_LEGAL_NORM],
-    );
-  }
-  async function cleanupUnlinkedWsibRow() {
-    await pool.query(`DELETE FROM wsib_registry WHERE legal_name_normalized = $1`, [FX_WSIB_LEGAL_NORM]);
-  }
-
   beforeAll(() => {
     pool = getTestPool() as Pool;
   });
 
   afterEach(async () => {
-    await cleanup(linkWsib.OWN_SLUGS);
     await cleanup(linkParcelAddresses.OWN_SLUGS);
     await cleanup(costEstimates.OWN_SLUGS);
-    await cleanupUnlinkedWsibRow();
   });
-
-  // ---------------------------------------------------------------------
-  // G5 — link-wsib.js
-  // ---------------------------------------------------------------------
-  it('G5 (link-wsib): vacuous SKIP (own completed, zero upstream activity) emits a COMPLETED-shaped summary (DS4)', async () => {
-    // Commit A's threshold-version signal is a SECOND, independent skip
-    // condition — this fixture must also match the LIVE wsib_fuzzy_match_threshold
-    // updated_at (like the cost-estimates G5 test already does for rates_as_of/
-    // index_updated_at) so the vacuous-SKIP scenario isn't confounded by it.
-    const liveThreshold = await linkWsib.readThresholdVersionSignal(pool);
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
-      [linkWsib.OWN_SLUGS[0], JSON.stringify({ threshold_updated_at: liveThreshold.thresholdUpdatedAt })],
-    );
-    const { summary, sawMeta } = await captureEmitted(() => linkWsib.main(pool));
-    expect(summary).toMatchObject({ records_total: 0, records_new: 0, records_updated: 0 });
-    const rows = (summary?.records_meta as { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } })
-      ?.audit_table?.rows ?? [];
-    expect(rows.some((r) => r.metric === 'status' && r.value === 'SKIPPED')).toBe(true);
-    expect(rows.some((r) => r.metric === 'reason' && r.value === 'no_upstream_changes')).toBe(true);
-    expect(sawMeta).toBe(true);
-  });
-
-  // ---------------------------------------------------------------------
-  // Commit A — link-wsib.js gate placement (A-R1/A-R2/A-R3).
-  // ---------------------------------------------------------------------
-  it('A-R1: SKIP-eligible gate + --dry-run → the tier simulation runs, summary is NOT the SKIPPED shape', async () => {
-    await seedUnlinkedWsibRow();
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
-      [linkWsib.OWN_SLUGS[0]],
-    );
-    const originalArgv = process.argv;
-    process.argv = [...originalArgv, '--dry-run'];
-    try {
-      const { summary } = await captureEmitted(() => linkWsib.main(pool));
-      // The SKIP shape names its audit_table 'Link WSIB' with a 'status'/'SKIPPED' row;
-      // the real (incl. dry-run) path names it 'WSIB Registry Matching' with tier rows.
-      const auditTable = (summary?.records_meta as { audit_table?: { name?: string; rows?: Array<{ metric: string; value: unknown }> } })
-        ?.audit_table;
-      expect(auditTable?.name).toBe('WSIB Registry Matching');
-      expect(auditTable?.rows?.some((r) => r.metric === 'tier_1_trade_matches')).toBe(true);
-      expect(auditTable?.rows?.some((r) => r.metric === 'status' && r.value === 'SKIPPED')).toBe(false);
-    } finally {
-      process.argv = originalArgv;
-    }
-  }, 30000);
-
-  it('A-R2: an invalid wsib_fuzzy_match_threshold throws even when the gate is SKIP-eligible (validation is not bypassable)', async () => {
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
-      [linkWsib.OWN_SLUGS[0]],
-    );
-    const { rows: prior } = await pool.query(
-      `SELECT variable_value FROM logic_variables WHERE variable_key = 'wsib_fuzzy_match_threshold'`,
-    );
-    await pool.query(
-      `INSERT INTO logic_variables (variable_key, variable_value)
-       VALUES ('wsib_fuzzy_match_threshold', 5)
-       ON CONFLICT (variable_key) DO UPDATE SET variable_value = 5, updated_at = NOW()`,
-    );
-    try {
-      await expect(linkWsib.main(pool)).rejects.toThrow(/logicVars validation failed/);
-    } finally {
-      if (prior.length > 0) {
-        await pool.query(
-          `UPDATE logic_variables SET variable_value = $1 WHERE variable_key = 'wsib_fuzzy_match_threshold'`,
-          [prior[0].variable_value],
-        );
-      } else {
-        await pool.query(`DELETE FROM logic_variables WHERE variable_key = 'wsib_fuzzy_match_threshold'`);
-      }
-    }
-  }, 30000);
-
-  it('A-R3: wsib_fuzzy_match_threshold.updated_at moving forward forces RUN even though the ledger gate itself would SKIP', async () => {
-    await seedUnlinkedWsibRow();
-    const live = await linkWsib.readThresholdVersionSignal(pool);
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
-      [linkWsib.OWN_SLUGS[0], JSON.stringify({ threshold_updated_at: '2000-01-01T00:00:00.000Z' })],
-    );
-    // Bump the threshold's updated_at forward (value unchanged) so ONLY the version
-    // signal — not the ledger gate's upstream-activity check — forces the run.
-    await pool.query(
-      `UPDATE logic_variables SET updated_at = NOW() WHERE variable_key = 'wsib_fuzzy_match_threshold'`,
-    );
-    const { summary } = await captureEmitted(() => linkWsib.main(pool));
-    const auditTable = (summary?.records_meta as { audit_table?: { name?: string } })?.audit_table;
-    expect(auditTable?.name).toBe('WSIB Registry Matching');
-    expect(live.thresholdUpdatedAt === null || typeof live.thresholdUpdatedAt === 'string').toBe(true);
-  }, 30000);
-
-  // ---------------------------------------------------------------------
-  // Commit B — link-wsib.js skip-path audit rows (B-R1/B-R2/B-R3).
-  // ---------------------------------------------------------------------
-  it('B-R1 (link-wsib): the skip row carries link_rate from the prior real run, and stamps own_started/last_full_run_at/consecutive_skips', async () => {
-    // Match the LIVE threshold signal (same reasoning as the G5 fixture above)
-    // so the ledger gate's SKIP isn't overridden by Commit A's threshold check.
-    const liveThreshold = await linkWsib.readThresholdVersionSignal(pool);
-    const priorMeta = {
-      threshold_updated_at: liveThreshold.thresholdUpdatedAt,
-      audit_table: { rows: [{ metric: 'link_rate', value: '11.5%', threshold: '>= 5%', status: 'PASS' }] },
-    };
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at, records_meta)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes', $2::jsonb)`,
-      [linkWsib.OWN_SLUGS[0], JSON.stringify(priorMeta)],
-    );
-    const { summary } = await captureEmitted(() => linkWsib.main(pool));
-    const meta = summary?.records_meta as { own_started?: string; last_full_run_at?: string; consecutive_skips?: number; audit_table?: { rows?: Array<{ metric: string }> } };
-    expect(meta.audit_table?.rows?.some((r) => r.metric === 'link_rate')).toBe(true);
-    expect(meta.own_started).toBeTruthy();
-    expect(meta.last_full_run_at).toBeTruthy();
-    expect(meta.consecutive_skips).toBe(1);
-  }, 30000);
 
   // ---------------------------------------------------------------------
   // G5 — link-parcel-addresses.js
@@ -405,24 +262,8 @@ describe.skipIf(!dbAvailable())('Phase B B3 — run-ledger gate callers (live DB
     }
   });
 
-  it('D#4: LINK_WSIB_FORCE_FULL bypasses the gate even when SKIP-eligible', async () => {
-    await seedUnlinkedWsibRow();
-    await pool.query(
-      `INSERT INTO pipeline_runs (pipeline, status, started_at, completed_at)
-       VALUES ($1, 'completed', NOW() - interval '10 minutes', NOW() - interval '9 minutes')`,
-      [linkWsib.OWN_SLUGS[0]],
-    );
-    const original = process.env[linkWsib.FORCE_FULL_ENV];
-    process.env[linkWsib.FORCE_FULL_ENV] = '1';
-    try {
-      const { summary } = await captureEmitted(() => linkWsib.main(pool));
-      const auditTable = (summary?.records_meta as { audit_table?: { name?: string } })?.audit_table;
-      expect(auditTable?.name).toBe('WSIB Registry Matching'); // the REAL run's name, not the SKIP shape's 'Link WSIB'
-    } finally {
-      if (original === undefined) delete process.env[linkWsib.FORCE_FULL_ENV];
-      else process.env[linkWsib.FORCE_FULL_ENV] = original;
-    }
-  }, 30000);
+  // D#4 (link-wsib): LINK_WSIB_FORCE_FULL bypass — RE-HOMED to
+  // src/tests/steps/link_wsib/ledger-gate.db.test.ts (A-5).
 
   it('D#4: LINK_PARCEL_ADDRESSES_FORCE_FULL bypasses the gate even when SKIP-eligible', async () => {
     await pool.query(

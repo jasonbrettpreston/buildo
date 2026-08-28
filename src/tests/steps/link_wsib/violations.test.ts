@@ -507,7 +507,7 @@ function detectConvergenceLoopFence(subject: { hasBoundedIterations: boolean; bo
 describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
   // ── A.3 Interpretation (§3.4–§3.4b) — the notes.json seven ──
 
-  it.fails('#30 Cap of 12 prose entries — add a 13th → build fails', () => {
+  it('#30 Cap of 12 prose entries — add a 13th → build fails', () => {
     const d = loadDescriptor();
     const notes = loadNotes();
     expect(d.interpretation, 'interpretation must be the {file, entries} object, not "none"').not.toBe('none');
@@ -518,7 +518,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(() => validateDescriptor({ ...d, interpretation: { ...interp, entries: NOTES_CAP + 1 } })).toThrow(/interpretation/);
   });
 
-  it.fails('#31 Exactly two legal resolutions — promote or delete; no overflow file', () => {
+  it('#31 Exactly two legal resolutions — promote or delete; no overflow file', () => {
     const d = loadDescriptor();
     loadNotes();
     expect((d.interpretation as { file: string }).file).toBe(path.basename(NOTES_REL));
@@ -528,7 +528,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(Object.keys(loadNotes()).some((k) => /overflow/i.test(k)), 'an overflow block inside notes.json').toBe(false);
   });
 
-  it.fails('#33 `blind_spots[].detected_by` names a check that exists', () => {
+  it('#33 `blind_spots[].detected_by` names a check that exists', () => {
     const d = loadDescriptor();
     const notes = loadNotes();
     const ids = new Set(d.checks.map((c) => c.id));
@@ -564,7 +564,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#37 Unpromoted `suspicious_if` entries are counted', () => {
+  it('#37 Unpromoted `suspicious_if` entries are counted', () => {
     const notes = loadNotes();
     const d = loadDescriptor();
     const ids = new Set(d.checks.map((c) => c.id));
@@ -575,7 +575,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(plusOne).toBe(unpromoted + 1);
   });
 
-  it.fails('#38 `review_notes` ship to the reviewer prompt automatically', () => {
+  it('#38 `review_notes` ship to the reviewer prompt automatically', () => {
     loadNotes();
     for (const cli of REVIEW_CLIS) {
       const src = stripComments(readText(cli));
@@ -586,7 +586,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
 
   // ── A.12 Conversion workflow (§14) ─────────────────────────────────────────
 
-  it.fails('#148 `deviations[]` and `fences[]` are required; empty must be an explicit `[]` — and the adjudicated fix-commits are fenced', () => {
+  it('#148 `deviations[]` and `fences[]` are required; empty must be an explicit `[]` — and the adjudicated fix-commits are fenced', () => {
     const d = loadDescriptor();
     const notes = loadNotes();
     expect(Array.isArray(d.deviations), 'descriptor.deviations must be an explicit array').toBe(true);
@@ -601,7 +601,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#149 Gate 0 — the frozen shape conversion adds zero new bespoke runner paths (no link_wsib / wsib_registry branch in scripts/lib/step or pipeline.js)', () => {
+  it('#149 Gate 0 — the frozen shape conversion adds zero new bespoke runner paths (no link_wsib / wsib_registry branch in scripts/lib/step or pipeline.js)', () => {
     computeSource();
     for (const rel of [STALENESS_REL, WRITE_REL, INDEX_REL]) artifact(rel, 'LG-11/LG-15/LG-16/LG-12 growth is generic library code, not link_wsib-specific');
     const lib = fs.readdirSync(abs('scripts/lib/step')).filter((f) => f.endsWith('.js')).map((f) => `scripts/lib/step/${f}`);
@@ -702,11 +702,11 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(retired.length, 'at least the 3 superseded commits (5baaed5a, bd06751d, 412927ca)').toBeGreaterThanOrEqual(3);
   });
 
-  it.fails('#154 Gate 3 — a peel commit contains only that peel', () => {
+  it('#154 Gate 3 — a peel commit contains only that peel', () => {
     for (const rel of [DESCRIPTOR_REL, COMPUTE_REL]) artifact(rel, 'peels 8a/8b/8c have not landed — commits 7-9 are out of this pilot\'s scope');
   });
 
-  it.fails('#155 Gate 4c — line accounting = 100% of the frozen 547 lines; an unassigned line blocks', () => {
+  it('#155 Gate 4c — line accounting = 100% of the frozen 547 lines; an unassigned line blocks', () => {
     const report = readText(REPORT_REL);
     expect(report.includes(String(FROZEN_LINES)), `${REPORT_REL} does not name the frozen line count ${FROZEN_LINES}`).toBe(true);
     artifact(DESCRIPTOR_REL, 'line-accounting table lands with the descriptor at commit 7');
@@ -720,7 +720,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     // The actual both-directions proof is this file's own "G4d fence locks" describe block below.
   });
 
-  it.fails('#157 Gate 4f — dead code proved dead by instrumentation, never by reading (the JS-fallback question: N/A — link-wsib.js has no dual code path, unlike link_massing\'s PostGIS/JS split, R-F item 4)', () => {
+  it('#157 Gate 4f — dead code proved dead by instrumentation, never by reading (the JS-fallback question: N/A — link-wsib.js has no dual code path, unlike link_massing\'s PostGIS/JS split, R-F item 4)', () => {
     const src = stripComments(fs.readFileSync(abs(STEP_REL), 'utf8'));
     expect(/haversine|gridKey|turf|rbush/.test(src), 'a JS-fallback token was found — this step has no dual path today, so none should exist').toBe(false);
     artifact(DESCRIPTOR_REL, 'deviations[] records the N/A ruling — commit 7');
@@ -747,7 +747,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/discoverer.?adjudicator|PROPOSED by this pass.{0,80}ADJUDICATION is a separate/.test(report), 'no discoverer!=adjudicator statement found for the Intent Ledger (§2)').toBe(true);
   });
 
-  it.fails('#163 Tie-breaker 1 — a step test that survives swapping its compute is a runner test in the wrong place', async () => {
+  it('#163 Tie-breaker 1 — a step test that survives swapping its compute is a runner test in the wrong place', async () => {
     const d = loadDescriptor();
     const stub = loadComputeStub();
     for (const c of d.checks.filter((x) => x.severity !== 'INFO')) {
@@ -762,7 +762,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#164 Logic tests must not run in production', () => {
+  it('#164 Logic tests must not run in production', () => {
     const compute = stripComments(computeSource());
     const step = stripComments(fs.readFileSync(abs(STEP_REL), 'utf8'));
     for (const [name, src] of [[COMPUTE_REL, compute], [STEP_REL, step]] as const) {
@@ -842,7 +842,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#176 Generator correctness is tested per branch — the join-update (LG-11), the null-retract (LG-16), and the entities flag+contact writes, over the SQL write.js generates', () => {
+  it('#176 Generator correctness is tested per branch — the join-update (LG-11), the null-retract (LG-16), and the entities flag+contact writes, over the SQL write.js generates', () => {
     artifact(WRITE_REL, 'LG-11/LG-16 executors land at commit 7');
     const d = loadDescriptor();
     const { wsibJoinUpdate, entitiesFlag, wsibNullRetract } = writeTargets(d);
@@ -871,12 +871,12 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(dir.includes(STEP_DIR_REL), 'fixtures directory is not co-located with the step\'s own test dir').toBe(true);
   });
 
-  it.fails('#199 No step defines its own `verdictCascade` — link_wsib\'s row-derived verdict must route through the shared deriveVerdict', () => {
+  it('#199 No step defines its own `verdictCascade` — link_wsib\'s row-derived verdict must route through the shared deriveVerdict', () => {
     const compute = stripComments(computeSource());
     expect(/verdictCascade|\.some\(\s*r\s*=>\s*r\.status/i.test(compute), 'the compute defines a hand-rolled cascade instead of routing through deriveVerdict').toBe(false);
   });
 
-  it.fails('#200 The §11 Counter Semantic Contract — records_total/new/updated sourced from the churn-settled semantic (52ad6527: records_total = totalUnlinked, "full evaluation scope, not matched-only")', () => {
+  it('#200 The §11 Counter Semantic Contract — records_total/new/updated sourced from the churn-settled semantic (52ad6527: records_total = totalUnlinked, "full evaluation scope, not matched-only")', () => {
     const d = loadDescriptor();
     expect(d.counters, 'counters must not be "none" for a MATCHER').not.toBe('none');
     const c = d.counters as Exclude<Descriptor['counters'], 'none'>;
@@ -884,7 +884,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/unlinked|total.?unlinked/i.test(c.records_total.source), 'records_total is not sourced from the settled totalUnlinked semantic (churn note, §2)').toBe(true);
   });
 
-  it.fails('#201 `load-wsib`\'s `ON CONFLICT` column exclusion — link_wsib\'s OWN write never touches load_wsib-owned columns (legal_name, mailing_address, is_gta)', () => {
+  it('#201 `load-wsib`\'s `ON CONFLICT` column exclusion — link_wsib\'s OWN write never touches load_wsib-owned columns (legal_name, mailing_address, is_gta)', () => {
     artifact(WRITE_REL, 'the generated SQL lands at commit 7');
     const d = loadDescriptor();
     const { wsibJoinUpdate } = writeTargets(d);
@@ -894,14 +894,14 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
   });
 
-  it.fails('#202 The name freeze — `wsib_fuzzy_match_threshold` (T1) keeps its exact registered name (already registered+GROUPed, must not be renamed)', () => {
+  it('#202 The name freeze — `wsib_fuzzy_match_threshold` (T1) keeps its exact registered name (already registered+GROUPed, must not be renamed)', () => {
     const d = loadDescriptor();
     expect(d.config, 'config must declare the tunables').not.toBe('none');
     const cfg = d.config as Exclude<Descriptor['config'], 'none'>;
     expect(cfg.logic_variables.some((v) => v.name === CONFIG_VARS.T1), `T1 (${CONFIG_VARS.T1}) was renamed — it is already registered and GROUPed, renaming orphans the live row`).toBe(true);
   });
 
-  it.fails('#203 Frozen `records_meta` producer/consumer blocks — `threshold_updated_at` (G-13, self-consumed) declared, in the success terminal, and read by link_wsib\'s OWN next run', () => {
+  it('#203 Frozen `records_meta` producer/consumer blocks — `threshold_updated_at` (G-13, self-consumed) declared, in the success terminal, and read by link_wsib\'s OWN next run', () => {
     const d = loadDescriptor();
     const emits = emitsOf(d);
     const e = emits.find((x) => x.key === 'threshold_updated_at');
@@ -909,7 +909,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(e?.consumers.includes('link_wsib'), 'threshold_updated_at is not declared self-consumed').toBe(true);
   });
 
-  it.fails('#204 `RUN_AT` captured once — the midnight-cross fence (DB clock, library-owned, before any write; zero clock reads in the compute)', () => {
+  it('#204 `RUN_AT` captured once — the midnight-cross fence (DB clock, library-owned, before any write; zero clock reads in the compute)', () => {
     const compute = stripComments(computeSource());
     expect(/new Date\(\)/.test(compute), 'compute reads the wall clock directly — RUN_AT must be library-owned').toBe(false);
     artifact(INDEX_REL, 'the pre_compute RUN_AT capture lands with runLinkPhase\'s tiers[] extension, commit 7');
@@ -1019,7 +1019,7 @@ async function mustFailPair(compute: ComputeFn, d: Descriptor, c: Check): Promis
 }
 
 describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCHER library growth', () => {
-  it.fails('descriptor exists, validates, and carries the ruled shape: MATCHER archetype, ≥2 write targets (LG-11 join-update + entities flag), T1–T7, override E1/E2/E3, staleness config_version + corpus fingerprint, lock 94, min_migration 243', () => {
+  it('descriptor exists, validates, and carries the ruled shape: MATCHER archetype, ≥2 write targets (LG-11 join-update + entities flag), T1–T7, override E1/E2/E3, staleness config_version + corpus fingerprint, lock 94, min_migration 243', () => {
     const d = loadDescriptor();
     expect(d.identity.lock).toBe(LOCK_ID);
     expect(d.identity.archetype, 'MATCHER shares the LINK allOf profile (Spec 122 §1.10)').toMatch(/link|matcher/i);
@@ -1036,13 +1036,13 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCH
     expect(d.terminals.length, 'at least the gate-skip, zero-unlinked, and real-run terminals (G-12)').toBeGreaterThanOrEqual(3);
   });
 
-  it.fails('notes.json is real (≤12 entries, fences for the 5 adjudicated fix-commits)', () => {
+  it('notes.json is real (≤12 entries, fences for the 5 adjudicated fix-commits)', () => {
     const notes = loadNotes();
     expect(Array.isArray(notes.fences), 'notes.fences missing').toBe(true);
     expect((notes.fences ?? []).length).toBeGreaterThanOrEqual(FENCE_COMMITS.length);
   });
 
-  it.fails('compute exists, exports `checks` (dispatch ≡ descriptor ids, in order); no fs/pg/pipeline/argv/env; opens no pool', () => {
+  it('compute exists, exports `checks` (dispatch ≡ descriptor ids, in order); no fs/pg/pipeline/argv/env; opens no pool', () => {
     const d = loadDescriptor();
     const mod = loadComputeModule();
     expect(typeof mod.compute).toBe('function');
@@ -1054,7 +1054,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCH
     expect(p.pools, 'requiring the compute module must open zero pg.Pool instances').toBe(0);
   });
 
-  it.fails('the step file is the §5.1 frozen shape (no pipeline.run body, no argv/env/fetch/fs in the frozen wrapper), SPEC LINK kept, lock 94 textual', () => {
+  it('the step file is the §5.1 frozen shape (no pipeline.run body, no argv/env/fetch/fs in the frozen wrapper), SPEC LINK kept, lock 94 textual', () => {
     const src = fs.readFileSync(artifact(STEP_REL), 'utf8');
     expect(src.includes('SPEC LINK'), 'the frozen shape must keep a SPEC LINK header').toBe(true);
     expect(src.includes(String(LOCK_ID)), 'lock 94 must remain textual in the frozen shape').toBe(true);
@@ -1074,13 +1074,13 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCH
     expect('link_wsib' in g.steps, 'link_wsib should need NO grandfathered entry today (no banned write-discipline value planned) — if this fires, a banned value was declared and must be justified here first').toBe(false);
   });
 
-  it.fails('staleness.js — config_version trigger (A-3/LG-12) + a wsib_registry corpus fingerprint (G-19) feed mode_select — a WEAK "the file loads" check is not enough, per #163\'s own claim', () => {
+  it('staleness.js — config_version trigger (A-3/LG-12) + a wsib_registry corpus fingerprint (G-19) feed mode_select — a WEAK "the file loads" check is not enough, per #163\'s own claim', () => {
     loadLib(STALENESS_REL);
     const src = stripComments(fs.readFileSync(abs(STALENESS_REL), 'utf8'));
     expect(/config_version/.test(src), 'staleness.js does not yet name the config_version trigger (A-3/LG-12) — genuinely absent today').toBe(true);
   });
 
-  it.fails('write.js — LG-11 (join-update, INSERT structurally forbidden) and LG-16 (UPDATE-to-NULL, never DELETE) executors exist — checked by CLASS STRING, not merely "the file requires"', () => {
+  it('write.js — LG-11 (join-update, INSERT structurally forbidden) and LG-16 (UPDATE-to-NULL, never DELETE) executors exist — checked by CLASS STRING, not merely "the file requires"', () => {
     loadLib(WRITE_REL);
     const src = stripComments(fs.readFileSync(abs(WRITE_REL), 'utf8'));
     expect(src.includes(JOIN_UPDATE_CLASS), `write.js does not yet dispatch on "${JOIN_UPDATE_CLASS}" (LG-11) — genuinely absent today`).toBe(true);
@@ -1099,7 +1099,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCH
 });
 
 describe('G4d fence locks — the 5 named locks (A-8, LG-11, LG-15, LG-16, T7 convergence)', () => {
-  it.fails('LG-11 write-executor lock — present in the converted step: the wsib_registry write target class is set_based_join_update, INSERT structurally forbidden (finding 3)', () => {
+  it('LG-11 write-executor lock — present in the converted step: the wsib_registry write target class is set_based_join_update, INSERT structurally forbidden (finding 3)', () => {
     const d = loadDescriptor();
     const { wsibJoinUpdate } = writeTargets(d);
     expect(wsibJoinUpdate.write_discipline.class).toBe(JOIN_UPDATE_CLASS);
@@ -1116,7 +1116,7 @@ describe('G4d fence locks — the 5 named locks (A-8, LG-11, LG-15, LG-16, T7 co
     expect(detectJoinUpdateNoInsertFence(noUpdate).some((f) => /no UPDATE wsib_registry/.test(f))).toBe(true);
   });
 
-  it.fails('A-7 UPDATE-to-NULL-never-DELETE lock (LG-16) — present in the converted step: the tier-3 retraction target NULLs linked_entity_id/match_confidence/matched_at, scoped to match_confidence=0.60, never DELETEs', () => {
+  it('A-7 UPDATE-to-NULL-never-DELETE lock (LG-16) — present in the converted step: the tier-3 retraction target NULLs linked_entity_id/match_confidence/matched_at, scoped to match_confidence=0.60, never DELETEs', () => {
     const d = loadDescriptor();
     const { wsibNullRetract } = writeTargets(d);
     expect(wsibNullRetract, 'A-7 is ruled ACCEPT (per the plan) — a null-retract target must exist').toBeDefined();
@@ -1137,7 +1137,7 @@ describe('G4d fence locks — the 5 named locks (A-8, LG-11, LG-15, LG-16, T7 co
     expect(detectUpdateToNullNeverDeleteFence(unscoped).some((f) => /not scoped to match_confidence = 0.60/.test(f)), 'an unscoped retraction (touches ALL tiers, not just tier 3) went undetected').toBe(true);
   });
 
-  it.fails('LG-15 gated-skip lock — present: mode_select carries a skip value (or a declared skip terminal), distinct from full|incremental (staleness.js\'s selectMode is strictly full|incremental today — CONFIRMED genuinely new by Fold B)', () => {
+  it('LG-15 gated-skip lock — present: mode_select carries a skip value (or a declared skip terminal), distinct from full|incremental (staleness.js\'s selectMode is strictly full|incremental today — CONFIRMED genuinely new by Fold B)', () => {
     const d = loadDescriptor();
     const good = { modeSelectValues: ['full', 'incremental', 'skip'], hasSkipTerminal: true };
     expect(detectSkipGateFence(good), 'the detector must accept a genuinely gated-skip declaration').toEqual([]);
@@ -1152,7 +1152,7 @@ describe('G4d fence locks — the 5 named locks (A-8, LG-11, LG-15, LG-16, T7 co
     expect(detectSkipGateFence(badValue).length, 'an out-of-vocabulary mode_select value should be flagged (best-effort — the closed set is {full,incremental,skip})').toBeGreaterThanOrEqual(0);
   });
 
-  it.fails('A-8 lock — "unchanged corpus never resolves full" — present: staleness.trigger has NO schedule/interval-based full trigger, and DOES declare a wsib_registry corpus fingerprint', () => {
+  it('A-8 lock — "unchanged corpus never resolves full" — present: staleness.trigger has NO schedule/interval-based full trigger, and DOES declare a wsib_registry corpus fingerprint', () => {
     const d = loadDescriptor();
     expect(d.staleness.fingerprint_inputs, 'staleness.fingerprint_inputs must not be "none" for a step with an A-8 annual-cadence ruling').not.toBe('none');
     const inputs = d.staleness.fingerprint_inputs as string[];
@@ -1168,7 +1168,7 @@ describe('G4d fence locks — the 5 named locks (A-8, LG-11, LG-15, LG-16, T7 co
     expect(detectA8UnchangedCorpusFence(noFingerprint).some((f) => /no wsib_registry corpus fingerprint/.test(f)), 'a missing corpus fingerprint went undetected').toBe(true);
   });
 
-  it.fails('convergence-loop lock (T7) — present: the tier-3-full re-evaluation loop is bounded by link_wsib_tier3_full_max_iterations (default 20), exhaustion is WARN not FAIL', () => {
+  it('convergence-loop lock (T7) — present: the tier-3-full re-evaluation loop is bounded by link_wsib_tier3_full_max_iterations (default 20), exhaustion is WARN not FAIL', () => {
     const d = loadDescriptor();
     const cfg = d.config as Exclude<Descriptor['config'], 'none'>;
     const t7 = cfg.logic_variables.find((v) => v.name === CONFIG_VARS.T7);

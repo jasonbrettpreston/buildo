@@ -976,13 +976,13 @@ describe('Pipeline SDK', () => {
       'geocode-permits.js',
       'link-parcels.js',
       'link-neighbourhoods.js',
-      // link-massing.js RE-HOMED (Spec 122 §5.1 conversion, pilot 3): a converted step calls
-      // pipeline.step(), never pipeline.run(), and emits nothing itself — the library owns the
-      // whole lifecycle. Its successor lock is `converted steps use the SDK through
-      // pipeline.step()` below, which asserts the SAME three properties (SDK imported,
-      // lifecycle owned by the SDK, summary + meta emitted) on the new mechanism.
+      // link-massing.js / link-wsib.js RE-HOMED (Spec 122 §5.1 conversion, pilots 3 + 4):
+      // a converted step calls pipeline.step(), never pipeline.run(), and emits nothing
+      // itself — the library owns the whole lifecycle. The successor lock is
+      // src/tests/step-conformance.infra.test.ts's §5.2 conformance battery, which asserts
+      // the SAME properties (SDK imported, lifecycle owned by the SDK, summary + meta
+      // emitted) on the new mechanism for every converted step.
       'link-coa.js',
-      'link-wsib.js',
       'extract-builders.js',
       'refresh-snapshot.js',
       'compute-centroids.js',

@@ -1,0 +1,104 @@
+{
+  "$comment": [
+    "Spec 120 §3.4-§3.4b — the INTERPRETATION file for link_wsib, capped at 12 prose",
+    "entries. Everything here lived ONLY as a source comment (or a git commit message)",
+    "before this conversion, and would have been deleted with the 547 lines it was",
+    "attached to."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "note": "The cumulative link rate (11.53%) INCLUDES 60.5% contamination from a superseded pre-d704a447 matching algorithm. Because the write scope (linked_entity_id IS NULL) is monotone, a fixed matching bug can never retroactively repair a link it already wrote wrong. The CLEAN rate — links satisfying TODAY's predicate — is 4.55%, below the T2 5% floor. Reading link_rate_warn as PASS on the raw cumulative number is the exact reading LW-D5/A-7 exist to correct.",
+      "measured": {
+        "value": "8,450 of 13,965 linked rows (60.5%) fail today's tier-3 predicate; clean rate 4.55%",
+        "date": "2026-08-28",
+        "query": "SELECT count(*) FROM wsib_registry w JOIN entities e ON e.id = w.linked_entity_id WHERE w.match_confidence = 0.60 AND NOT (w.trade_name_normalized % e.name_normalized OR w.legal_name_normalized % e.name_normalized)"
+      }
+    },
+    {
+      "note": "The three tiers are a CONFIDENCE HIERARCHY, not three independent passes: each tier's matched CTE folds `WHERE linked_entity_id IS NULL`, so a row Tier 1 claims is invisible to Tier 2 and Tier 3 for the rest of the run. Reordering the tiers[] array changes which confidence a row gets, not just which tier's counter it lands in."
+    }
+  ],
+  "known_normal": [
+    {
+      "note": "A run that changes 0 rows while reporting non-zero tier match counts is impossible by construction here (unlike link_massing) — a tier's UPDATE...FROM matched IS the count. What IS normal: repeated runs against an unchanged corpus report 0/0/0 across all three tiers, because every exact-match pair was already claimed by a prior run and the remaining ~107K unlinked rows are genuinely unmatchable against the current ~3.9K entity pool (confirmed by the --dry-run simulation, commit 5, which agreed exactly with the live captures).",
+      "measured": { "value": "0/0/0 matched across permits/sources/standalone (commit 5, three live invocations)", "date": "2026-08-28", "query": "docs/reports/golden/link_wsib/pre/{permits,sources,standalone}.json" }
+    },
+    {
+      "note": "938 of 3,948 entities (23.75%) carry is_wsib_registered=true. The sharper plausibility bound is fan-in=1: 443/3,948 (11.2%) of entities hold EXACTLY one WSIB link — the healthy long tail, distinct from the 171-magnet concentration.",
+      "measured": { "value": "443/3,948 fan-in=1; 171 magnets fan-in>=10", "date": "2026-08-28", "query": "SELECT count(*) FILTER (WHERE n=1), count(*) FILTER (WHERE n>=10) FROM (SELECT linked_entity_id, count(*) n FROM wsib_registry WHERE linked_entity_id IS NOT NULL GROUP BY linked_entity_id) f" }
+    }
+  ],
+  "known_bad": [
+    {
+      "note": "MDK CONSTRUCTION (2,118 links) and COLE CONTRACTING (1,404 links) are the two worst fan-in magnets — both tier-3 (fuzzy) contamination, both pre-date d704a447's article-stripping fix. entity_fanin_warn (T6 default 20) fires immediately and permanently until A-7's repair runs; this is intended, not a defect (Fold B ACCEPTED ruling).",
+      "measured": { "value": "MDK CONSTRUCTION 2,118; COLE CONTRACTING 1,404", "date": "2026-08-28", "query": "SELECT e.name_normalized, count(*) FROM wsib_registry w JOIN entities e ON e.id=w.linked_entity_id GROUP BY 1 ORDER BY 2 DESC LIMIT 2" }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "No sanity rule distinguishes a pre-fix-contaminated link (written under the superseded pre-d704a447 algorithm) from a clean one at read time — the column set (linked_entity_id/match_confidence/matched_at) is identical either way. Only re-evaluating the CURRENT predicate against the row (as A-7's repair does) can tell them apart; a downstream consumer reading entities.is_wsib_registered has no signal at all.",
+      "detected_by": "link_rate_warn",
+      "measured": { "value": "8,450 contaminated rows carry the SAME schema shape as the 5,515 clean ones", "date": "2026-08-28", "query": "SELECT match_confidence, linked_entity_id, matched_at FROM wsib_registry WHERE match_confidence = 0.60 LIMIT 5" }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "entities.is_wsib_registered is true for an entity with zero wsib_registry rows pointing at it. The write order (G-9: flag flip immediately follows each tier's own link write, scoped to that tier's confidence) makes this impossible by construction unless A-7's unflag cascade misses a row, or a write lands out of order.",
+      "check": "registered_entities_with_zero_links",
+      "measured": { "value": "0 today (golden invariant, commit 5)", "date": "2026-08-28", "query": "SELECT count(*) FROM entities e WHERE e.is_wsib_registered AND NOT EXISTS (SELECT 1 FROM wsib_registry w WHERE w.linked_entity_id = e.id)" }
+    }
+  ],
+  "decisions": [
+    {
+      "note": "A-8 — WSIB cadence is ANNUAL (operator ruling, 2026-08-28). Mode full is selected ONLY by the load_wsib corpus/config_version signal or LINK_WSIB_FORCE_FULL, never by schedule. A-7's tier-3 repair is a ONE-OFF budgeted FULL, not a recurring one — commit 8's act, not commit 7's."
+    },
+    {
+      "note": "A-1 (SHOULD-FIX d) — commit 7 forks runLinkPhase into a new runCascadePhase rather than extending it with a tiers[] branch: link_wsib's bulk no-pagination 3-statement-per-tier shape would have forked runLinkPhase's own write loop internally, which the ruling names as the condition for a separate phase."
+    }
+  ],
+  "counts": { "open_blind_spots": 1, "unpromoted_suspicious_if": 0 },
+  "fences": [
+    {
+      "const": "d704a447's article-stripping blocking predicate — strip a leading THE/A/AN before comparing first letters",
+      "value": "LEFT(REGEXP_REPLACE(col, '^(THE|A|AN) ', ''), 1) on both sides of every trigram JOIN, exact and fuzzy alike",
+      "incident": "Without it, \"THE ABC COMPANY\" and \"ABC COMPANY\" land in different first-letter buckets and never compare — the SINGLE most consequential fence in the 17-commit corpus, because the WHERE linked_entity_id IS NULL scope is monotone: this fix could never retroactively repair the 8,450 links (60.5%) written under the prior algorithm. Root cause of LW-D5 and A-7's whole reason to exist.",
+      "commit": "d704a447",
+      "lock_test": "src/tests/steps/link_wsib/violations.test.ts"
+    },
+    {
+      "const": "Tier 3 splits trade/legal name comparison into two UNION ALL CTEs instead of one OR-joined query",
+      "value": "trade_matches / legal_matches / combined, each independently GIN-index-backed",
+      "incident": "The OR-joined version produced a Nested Loop over 107K x 3.6K rows (~394M similarity() calls) — the query planner cannot use a GIN trigram index across an OR of two columns. The split lets each CTE seek its own index.",
+      "commit": "647d0935",
+      "lock_test": "src/tests/steps/link_wsib/violations.test.ts"
+    },
+    {
+      "const": "logicVars validation and --dry-run parsing are hoisted ABOVE the advisory lock and the run-ledger gate",
+      "value": "config.hoisted_above_gate: true",
+      "incident": "A SKIP-eligible gate must never let an invalid wsib_fuzzy_match_threshold hide behind a green SKIPPED summary — validation is not bypassable. Cited BY NAME in scripts/lib/step/index.js as the generalization source for hoisted_above_gate.",
+      "commit": "2633c1cb",
+      "lock_test": "src/tests/steps/link_wsib/violations.test.ts"
+    },
+    {
+      "const": "ADVISORY_LOCK_ID = 94, kept textually",
+      "value": "identity.lock: 94",
+      "incident": "94 is not the spec number (46) — it is what the c1ef0b73 retrofit assigned from the next-free range. Renumbering it is not a tidy-up; it is a chance to collide with whatever else claimed 46 since.",
+      "commit": "c1ef0b73",
+      "lock_test": "src/tests/pipeline-advisory-lock.infra.test.ts"
+    },
+    {
+      "const": "wsib_fuzzy_match_threshold externalized to logic_variables (T1)",
+      "value": "config.logic_variables[0].name = wsib_fuzzy_match_threshold, already registered AND already GlobalConfigCard-GROUPed before this pilot",
+      "incident": "The ONLY WSIB tunable already externalized pre-pilot; renaming it orphans the live row and the existing GROUP entry. Kept verbatim.",
+      "commit": "714dc48e",
+      "lock_test": "src/tests/steps/link_wsib/violations.test.ts"
+    }
+  ],
+  "review_notes": [
+    {
+      "note": "Read the 4 write targets as ordered PAIRS, not independently: writes[0] (wsib join-update) and writes[1] (entities flag) and writes[2] (entities contacts) execute per-tier, in that order, three times — the ordering IS G-9's guarantee. writes[3] (the null-retract) is a SEPARATE, mode-full-only action that precedes the tier loop entirely, never interleaved with it.",
+      "measured": { "value": "4 declared write targets, 3 executed per tier x 3 tiers = 9 statement executions in the steady state", "date": "2026-08-28", "query": "node -e \"console.log(require('./scripts/link-wsib.descriptor.json').outputs.writes.map(w=>w.write_discipline.class))\"" }
+    }
+  ]
+}

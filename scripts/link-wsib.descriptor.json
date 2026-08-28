@@ -1,0 +1,538 @@
+{
+  "identity": {
+    "name": "link_wsib",
+    "display_name": "WSIB Registry Matching",
+    "owner": "data",
+    "description": "Matches WSIB registry entries to builder entities via a 3-tier bulk SQL cascade (exact trade name 0.95, exact legal name 0.90, pg_trgm fuzzy 0.60) and writes wsib_registry.linked_entity_id/match_confidence/matched_at plus entities.is_wsib_registered and the fill-only contact columns, per tier, in one step-scoped transaction.",
+    "lock": 94,
+    "why_lock": {
+      "text": "Lock 94 is not the spec number (this step's primary governing spec is 46). It was assigned by the c1ef0b73 advisory-lock retrofit and is recorded in src/tests/pipeline-advisory-lock.infra.test.ts's registry ('scripts/link-wsib.js': 94) — kept textually per §5.4 so that registry stays green across the conversion.",
+      "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" }
+    },
+    "spec": "46",
+    "spec_version": "2.0",
+    "archetype": "MATCHER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "builders", "version_pin": "gte" },
+        { "step": "load_wsib", "version_pin": "gte" }
+      ],
+      "tables": [
+        { "table": "wsib_registry", "columns": ["id", "trade_name_normalized", "legal_name_normalized", "linked_entity_id", "match_confidence", "matched_at", "primary_phone", "primary_email", "website"] },
+        { "table": "entities", "columns": ["id", "name_normalized", "permit_count", "is_wsib_registered", "primary_phone", "primary_email", "website"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "warn"
+  },
+
+  "outputs": {
+    "writes": [
+      {
+        "table": "wsib_registry",
+        "key": "id",
+        "columns": [
+          { "name": "linked_entity_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          {
+            "name": "match_confidence",
+            "vocabulary": { "values": ["0.95", "0.90", "0.60"], "on_unknown": "fail", "source": "scripts/lib/compute/link-wsib.js buildTierSql (T3/T4/T5 resolved config values)" },
+            "written": "step", "bind": "value", "source": "compute"
+          },
+          { "name": "matched_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+        ],
+        "write_discipline": {
+          "class": "set_based_join_update",
+          "guard": "is_distinct_from",
+          "guard_columns": ["linked_entity_id"],
+          "guard_why": {
+            "text": "The compute-authored matched CTE (buildTierSql) folds `WHERE w.linked_entity_id IS NULL` into every tier's own predicate, so a row this UPDATE can reach is, by construction, currently NULL — the guard is genuinely enforced (write.js's set-based codegen now appends an IS DISTINCT FROM clause when declared, LG-11 sibling work) even though the scope predicate alone already makes a re-run a zero-write no-op.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-wsib.js" }
+          },
+          "scope": "linked_entity_id IS NULL (folded into the per-tier matched CTE, not a separate outer WHERE — LG-11's whole reason to exist: the SET clause's values are per-row JOIN results, not a declared constant, so this target cannot use set_based_scoped's constant-only codegen)",
+          "expected_change_ratio": "<= 1.0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "LG-11 (finding 3, Fold A/B, 2026-08-28). Neither pre-existing write.js executor fits: executeSetBasedClear only writes a DECLARED CONSTANT; executeUpsertBatch is ALWAYS INSERT-capable (ON CONFLICT ... DO UPDATE), and wsib_registry rows may only ever be CREATED by load-wsib.js — an accidental INSERT here would violate that ownership boundary worse than a missed match. write.executeSetBasedJoinUpdate refuses any statement containing INSERT INTO or ON CONFLICT at execution time (checked on the actual SQL text, not a class label).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "entities",
+        "key": "id",
+        "columns": [
+          { "name": "is_wsib_registered", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": true }
+        ],
+        "write_discipline": {
+          "class": "set_based_scoped",
+          "guard": "is_distinct_from",
+          "guard_columns": ["is_wsib_registered"],
+          "scope": "id IN (SELECT linked_entity_id FROM wsib_registry WHERE match_confidence = $1) AND is_wsib_registered = false",
+          "expected_change_ratio": "<= 1.0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "G-9: runs immediately after EACH tier's own wsib_registry UPDATE, scoped to $1 = that tier's resolved confidence (write.executeSetBasedClear's existing scopeParams binding, no write.js change needed) — not deferred to a single end-of-run pass over all confidences.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-wsib.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "entities",
+        "key": "id",
+        "columns": [
+          { "name": "primary_phone", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "primary_email", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "website", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "set_based_join_update",
+          "guard": "is_distinct_from",
+          "guard_columns": ["primary_phone", "primary_email", "website"],
+          "guard_why": {
+            "text": "647d0935's copyContacts NULLIF-guard, ported verbatim: only fills a currently-empty contact field, never overwrites (Spec 46 §2 Contact Flow, G-15). The set clause's right-hand sides are subquery-aggregated per entity, not a declared constant, so this target uses the same LG-11 executor as the wsib join-update rather than set_based_scoped's constant-only codegen.",
+            "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/46_wsib_enrichment.md" }
+          },
+          "scope": "w_agg.linked_entity_id = e.id AND wsib_registry.match_confidence = $1, aggregated per tier (fill-only via NULLIF, never overwrite)",
+          "expected_change_ratio": "<= 1.0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Once a contact field is filled, the NULLIF(...) IS NULL guard excludes the row from ever matching again — a re-run over an unchanged corpus changes 0 rows, same idempotence class as the wsib_registry join-update.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-wsib.js" }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      },
+      {
+        "table": "wsib_registry",
+        "key": "id",
+        "columns": [
+          { "name": "linked_entity_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "match_confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null },
+          { "name": "matched_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute", "set_value": null }
+        ],
+        "write_discipline": {
+          "class": "set_based_null_retract",
+          "guard": "is_distinct_from",
+          "guard_columns": ["linked_entity_id"],
+          "guard_why": {
+            "text": "Only touches a row currently non-NULL (a repeat mode-full run over an already-retracted set changes 0 rows) — genuinely enforced by write.js's set-based guard-clause codegen (LG-11 sibling growth), not merely by the scope predicate alone.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "match_confidence = $1 (the fuzzy tier's resolved confidence — tier 3 ONLY; tiers 1/2's exact matches are never retracted, LW-D5's contamination is 100% tier-3)",
+          "expected_change_ratio": "<= 1.0",
+          "idempotent_rerun": "declared_drift",
+          "idempotent_rerun_why": {
+            "text": "A genuine repair MOVES rows by design (that is the point of A-7) — zero_writes would be a false declaration on the one invocation this target exists for. The step-level idempotence claim lives on the wsib join-update target (writes[0]), which this target's own guard keeps from re-touching an already-retracted row.",
+            "liveness": { "kind": "check", "ref": "tier3_full_not_converged" }
+          },
+          "declared_drift": {
+            "text": "Rows retracted per FULL invocation = wsib_registry rows currently linked_entity_id IS NOT NULL AND match_confidence = the tier-3 confidence value — measured 13,645 total tier-3 links (8,450 of them, 61.9%, failing today's d704a447 predicate; LW-D5). Bounded by the table's tier-3 population, never by the whole table.",
+            "liveness": { "kind": "check", "ref": "tier3_full_not_converged" }
+          },
+          "txn_scope": "step",
+          "why": {
+            "text": "LG-16 (Fold B, Cross-read Adversary, A-7 mechanism amendment). write.js's only pre-existing retraction primitive is executeRetraction — a DELETE, safe for link_massing's wholly-owned parcel_buildings junction but UNSAFE here: wsib_registry ROWS are load-wsib.js's exclusive territory, and retracting a LINK must never retract the ROW. Codegen-identical to set_based_scoped/unscoped (a constant SET — always null — over a declared scope) but declared under its OWN class so a reviewer can find every place this step ever retracts by grepping the class name, and so the LG-16 fence lock can assert 'never DELETE' against the generated SQL rather than against a scope string.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          }
+        },
+        "retract": "all",
+        "retract_when": "full_only",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [
+      {
+        "table": "entities",
+        "column": "is_wsib_registered",
+        "when": "a wsib_registry row links to this entity for the first time (any tier), or A-7's tier-3 repair retracts the entity's only remaining link — enrich-web-search.js's last_enriched_at IS NULL gate is the plan's identified consumer (Cross-Layer Contract 1); whether that gate genuinely needs re-invalidation on THIS column is an open Ask this pilot does not resolve, filed to review_followups."
+      }
+    ],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 9,
+      "why": {
+        "text": "Steady-state (incremental mode): 3 tiers x 3 statements (wsib join-update, entities flag, entities contacts) = 9 statement executions / 7 distinct SQL texts (the flag statement's shape repeats identically across tiers with only its $1 binding changing) / 3 write groups on 2 tables (Fold A, Integration S1, 2026-08-28). The mode-full-only LG-16 retraction + its entities-unflag cascade + its copyContacts reverse pass add 3 MORE statement executions, but ONLY when mode resolves full — not counted in this steady-state inventory, and not exercised by this commit (A-8: mode never resolves full absent a genuine corpus/FORCE_FULL signal).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    }
+  },
+
+  "staleness": {
+    "scope": "linked_entity_id IS NULL",
+    "trigger": [
+      { "signal": "config_version", "position": "pre_compute", "emit_key": "threshold_updated_at", "variable": "wsib_fuzzy_match_threshold" },
+      { "signal": "upstream_ledger", "position": "pre_compute", "table": "wsib_registry", "emit_key": "wsib_registry_count" }
+    ],
+    "mode_select": "tri_state",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/compute/link-wsib.js", "wsib_registry:count"],
+    "logic_version": "v1-trigram-3tier-cascade",
+    "on_fingerprint_change": "run",
+    "on_prior_run_error": "warn_row",
+    "on_prior_run_error_why": {
+      "text": "A failed prior-run read degrades this step to 'no baseline' — the config_version diff and the upstream_ledger count both fail-safe to CHANGED (never SKIP) on an absent baseline, so warn_row's cost is a real run rather than a silently stale gate, unlike an ingest loader whose baseline gates a destructive departure DELETE.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" }
+    }
+  },
+
+  "guards": {
+    "requires": [
+      {
+        "kind": "extension", "name": "pg_trgm", "on_missing": "fail",
+        "why": { "text": "Tier 3's entire predicate is pg_trgm similarity() over GIN trigram indexes (measured live: v1.6, present). Without it the fuzzy tier cannot run at all — there is no second algorithm to fall back to (unlike link_massing's now-retired JS path).", "liveness": { "kind": "external", "ref": "pg_trgm" } }
+      },
+      {
+        "kind": "index", "name": "idx_wsib_trade_trgm", "on_missing": "fail",
+        "why": { "text": "The GIN trigram index Tier 3's trade_name_normalized comparison seeks. Without it the % operator degrades to a sequential scan over 121,116 rows per batch — the same class of failure tasks/lessons.md records for link_massing's spatial GiST indexes.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+      },
+      {
+        "kind": "index", "name": "idx_wsib_legal_trgm", "on_missing": "fail",
+        "why": { "text": "The GIN trigram index for legal_name_normalized — the other half of Tier 3's UNION ALL split (647d0935, avoiding the ~394M-row nested loop the OR-joined version produced).", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+      },
+      {
+        "kind": "rls_bypass_or_policy", "name": "wsib_registry", "on_missing": "fail",
+        "why": { "text": "Measured live: relrowsecurity=true, 0 policies. Under any role that does not bypass RLS every tier's UPDATE affects 0 rows with NO error — indistinguishable from an unchanged corpus.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+      },
+      {
+        "kind": "rls_bypass_or_policy", "name": "entities", "on_missing": "fail",
+        "why": { "text": "Same class, the other side of the join: entities also carries RLS enabled.", "liveness": { "kind": "table", "ref": "entities" } }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "entities",
+    "schema_drift": "pause"
+  },
+
+  "execution": {
+    "shape": "cascade",
+    "tiers": [
+      { "id": "tier1_exact_trade", "confidence_config": "link_wsib_tier1_confidence" },
+      { "id": "tier2_exact_legal", "confidence_config": "link_wsib_tier2_confidence" },
+      { "id": "tier3_fuzzy", "confidence_config": "link_wsib_tier3_confidence" }
+    ],
+    "budget": "35m",
+    "txn_scope": "step",
+    "txn_budget": "35m",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "40m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "atomic",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the library already measured — a check that throws is a library defect, not an upstream condition. It must redden the run, not drop its row.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-wsib.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "permits": { "argv": [], "env": { "PIPELINE_CHAIN": "permits" } },
+      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "gate_decision", "kind": "freshness",
+      "expect": { "reports": "the resolved mode and the ledger gated-skip decision" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "pre", "chains": "all", "accept_until": "none",
+      "why": { "text": "LG-15's gated-skip and A-8's tri-state mode, on the record — visible even on a gated skip (the same class as link_massing's full_mode_gate row).", "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" } }
+    },
+    {
+      "id": "override_force_full_present", "kind": "invariant",
+      "expect": { "standing_override": false },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "pre", "chains": "all", "accept_until": "none",
+      "why": { "text": "LINK_WSIB_FORCE_FULL left standing bypasses the ledger gate on every subsequent run. Reported (not gated) so a forgotten override is discoverable by reading the audit table.", "liveness": { "kind": "check", "ref": "gate_decision" } }
+    },
+    {
+      "id": "full_repair_empty_source_guard", "kind": "invariant",
+      "expect": { "entities_nonempty_when_mode_full": true },
+      "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "pre_write", "chains": "all", "accept_until": "none",
+      "why": { "text": "D-20-class guard for A-7's LG-16 repair: against an empty entities corpus, a mode-full run would retract every tier-3 link and repair nothing. Scored pre_write — before the retraction statement — so an unaccepted FAIL means no statement is issued. Never fires in incremental mode (entities measured 3,948, never 0).", "liveness": { "kind": "table", "ref": "entities" } }
+    },
+    {
+      "id": "unlinked_start", "kind": "field_coverage",
+      "expect": { "reports": "the pre-run unlinked wsib_registry row count" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "The evaluation scope's own denominator, measured before the cascade runs. records_total is sourced from this (churn-settled semantic, 52ad6527: 'full evaluation scope, not matched-only').", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    },
+    {
+      "id": "tier_1_trade_matches", "kind": "field_coverage",
+      "expect": { "reports": "rows linked by exact trade-name match this run" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "The highest-confidence tier (0.95). Ported by name from the pre-conversion audit table.", "liveness": { "kind": "column", "ref": "wsib_registry.match_confidence" } }
+    },
+    {
+      "id": "tier_2_legal_matches", "kind": "field_coverage",
+      "expect": { "reports": "rows linked by exact legal-name match this run" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "0.90 confidence tier. Ported by name.", "liveness": { "kind": "column", "ref": "wsib_registry.match_confidence" } }
+    },
+    {
+      "id": "tier_3_fuzzy_matches", "kind": "field_coverage",
+      "expect": { "reports": "rows linked by pg_trgm fuzzy match this run" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "0.60 confidence tier — where 61.9% of the linked population fails TODAY's article-stripping predicate (d704a447), the monotone contamination A-7 exists to repair (LW-D5).", "liveness": { "kind": "column", "ref": "wsib_registry.match_confidence" } }
+    },
+    {
+      "id": "no_match", "kind": "field_coverage",
+      "expect": { "reports": "eligible rows that matched no entity in any tier" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Ported by name. On the measured steady state the remaining ~107K unlinked rows genuinely have zero new matches available against the ~3.9K entity pool (confirmed by the --dry-run simulation, commit 5).", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    },
+    {
+      "id": "link_rate_warn", "kind": "bound",
+      "expect": { "of": "cumulative linked / total wsib_registry rows, all tiers, all time" },
+      "limit": "pct >= 5", "limit_from_config": "link_wsib_link_rate_warn_pct",
+      "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "LW-D1, the P4 violation this pilot closes: pre-conversion the floor was the bare literal 5 in `linkRate >= 5 ? PASS : WARN`. Reported as the RATE itself (not the unlinked complement, unlike link_massing's link_rate — T2's config value IS the floor, so a `pct >=` form is the correctly-shaped comparison; `pct <=` would compare the wrong direction). Cumulative, never run-scoped, for the same reason link_massing's link_rate is cumulative. Measured cumulative rate 11.53% (contaminated) / clean rate 4.55% (below floor, A-7's whole reason to exist).", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    },
+    {
+      "id": "entity_fanin_warn", "kind": "bound",
+      "expect": { "of": "the max wsib_registry rows linked to any single entity" },
+      "limit": "viol <= 20", "limit_from_config": "link_wsib_entity_fanin_warn",
+      "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "T6, new this pilot (Fold A, Reality-Check). Fires immediately on the known-bad population (171 magnet entities fan-in >= 10, worst MDK CONSTRUCTION at 2,118) — intended, not a defect (Fold B ACCEPTED ruling). A declared, machine-observable population this pilot surfaces rather than gates away.", "liveness": { "kind": "table", "ref": "entities" } }
+    },
+    {
+      "id": "orphan_linked_entity_id", "kind": "invariant",
+      "expect": { "linked_iff_confidence_iff_matched_at": true },
+      "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Invariant, pinned by the golden captures (commit 5): a linked_entity_id with a NULL match_confidence or matched_at is a partial write the cascade's own paired columns should make impossible.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    },
+    {
+      "id": "confidence_outside_closed_set", "kind": "vocab_coverage",
+      "expect": { "of": "match_confidence values outside {0.95, 0.90, 0.60}" },
+      "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "The written vocabulary is the three resolved tier confidences (T3/T4/T5) — no other value should ever reach the column.", "liveness": { "kind": "column", "ref": "wsib_registry.match_confidence" } }
+    },
+    {
+      "id": "dead_bucket_count", "kind": "field_coverage",
+      "expect": { "reports": "rows with match_confidence in [0.50, 0.60) — the stats query's own dead bucket boundary" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "LW-D4, INCIDENTAL classification (PH-6): no code path ever writes a confidence in this range, so the pre-conversion stats query's 0.50 lower bound was always dead. Reported, not fixed — a declared limitation, not a defect.", "liveness": { "kind": "column", "ref": "wsib_registry.match_confidence" } }
+    },
+    {
+      "id": "registered_entities_with_zero_links", "kind": "invariant",
+      "expect": { "is_wsib_registered_implies_a_link_exists": true },
+      "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Invariant, pinned by the golden captures. is_wsib_registered may only be true because a wsib_registry row links to this entity — a registered entity with zero links is the write ORDER breaking (G-9), or A-7's unflag cascade missing a row.", "liveness": { "kind": "table", "ref": "entities" } }
+    },
+    {
+      "id": "tier3_full_not_converged", "kind": "invariant",
+      "expect": { "the_mode_full_repair_loop_converges_within_the_bound": true },
+      "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "T7 / A-7 convergence (Fold B, BLOCKING b). TIER3_SELECT is capped LIMIT 1000/invocation; a single mode-full pass repairs at most 1,000 of ~5,515 clean rows. Bounded by link_wsib_tier3_full_max_iterations (T7, default 20); exhaustion is WARN, never FAIL, per R-H. Not exercised by this commit — commit 7 wires the loop declaration and the single-pass repair; the multi-iteration convergence loop itself is commit 8's budgeted act.", "liveness": { "kind": "check", "ref": "gate_decision" } }
+    },
+    {
+      "id": "contacts_cleared_on_retraction", "kind": "field_coverage",
+      "expect": { "reports": "entity contact fields cleared by A-7's provenance-by-equality reverse pass" },
+      "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Fold B BLOCKING a. Measured local exposure is 0 (PH-6: wsib_registry carries zero contact values on this DB, so copyContacts has copied nothing, ever, locally) — a limitations[] entry records this does NOT bound cloud.", "liveness": { "kind": "table", "ref": "entities" } }
+    },
+    {
+      "id": "write_privilege", "kind": "invariant",
+      "expect": { "writable": "the role bypasses RLS, or a policy grants the write" },
+      "limit": "viol == 0", "severity": "FAIL", "blocking": false, "when": "post", "chains": "all", "accept_until": "none",
+      "why": { "text": "Reports the MEASURED privilege on every run, not only the failing one — the guards.requires precondition's evidence.", "liveness": { "kind": "table", "ref": "wsib_registry" } }
+    }
+  ],
+
+  "override": {
+    "force_full": "LINK_WSIB_FORCE_FULL",
+    "force_run": "none",
+    "dry_run": "--dry-run"
+  },
+
+  "emits": [
+    { "key": "threshold_updated_at", "type": "string", "consumers": ["link_wsib"] }
+  ],
+
+  "deviations": [
+    {
+      "from": "Spec 122 §1.4's x-menu-completeness.corrections.link_wsib entry ('K -> E + G')",
+      "why": {
+        "text": "The schema's own drafters GUESSED a re-derivation from the OLD fused evidence-base labels without measuring. Measured this pilot (Fold A, Integration S1 + LG-11/LG-16 findings): the wsib_registry write is NOT expressible as class E (write_once_backfill) or G (set_based_scoped) — the SET clause's values are per-row JOIN results from a compute-authored matched CTE, which neither pre-existing class's codegen can generate. The correct classes are the two NEW ones this pilot adds: set_based_join_update (LG-11) and set_based_null_retract (LG-16). Spec 122 §1.4's text is stale and is corrected in the same commit (Spec Update step).",
+        "liveness": { "kind": "file", "ref": "scripts/steps/_schema/step.schema.json" }
+      },
+      "adjudicated_by": "Fold A/B Integration + Cross-read Adversary, 2026-08-28",
+      "date": "2026-08-28"
+    },
+    {
+      "from": "the pre-conversion hand-rolled B3 run-ledger gate (OWN_SLUGS/UPSTREAM_SLUGS arrays in scripts/link-wsib.js)",
+      "why": {
+        "text": "LG-15. Generalized into staleness.ledgerGatedSkip + deriveLedgerSlugs (scripts/lib/step/staleness.js), which derives own/upstream slugs from inputs.reads.steps[] + execution.invocation rather than a hand-maintained array — one of the four hand-maintained spellings in the pre-conversion file was already refuted in-file (the 'entities' chain claim, v5:60).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" }
+      },
+      "adjudicated_by": "A-1/LG-15 ruling, Fold A/B, 2026-08-28",
+      "date": "2026-08-28"
+    },
+    {
+      "from": "Spec 60 §Step Registry's write-target declaration ('entities' only) and its method description ('Levenshtein distance')",
+      "why": {
+        "text": "G-16/G-17, both measured CONFLICTS with the spec's own text (not behavior changes): the step also writes wsib_registry (G-16), and the real method is pg_trgm trigram similarity in a 3-tier exact/exact/fuzzy cascade, never Levenshtein (G-17). Both corrected in the same commit (Spec Update step) — the code was already right, only the spec prose was stale.",
+        "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/60_shared_steps.md" }
+      },
+      "adjudicated_by": "measured this pilot (§1 PH-0, boundary freeze), 2026-08-28",
+      "date": "2026-08-28"
+    },
+    {
+      "from": "Spec 122 §1.2 checks[].limit's closed form set (pct <= only)",
+      "why": {
+        "text": "A genuine library gap, closed per Spec 124 §7 rung (d): link_wsib's link_rate_warn is a config-driven PERCENTAGE FLOOR (T2 = the floor value itself, not its complement — unlike link_massing's link_rate, where the config value coincidentally equals its own complement). limit_from_config's substitution is unconditional, so no existing form (pct <=, viol <=/==, pop >=) could express 'value >= the substituted config number' for a percentage. scripts/lib/step/verdict.js gains a symmetric pct >= form (evaluateLimit, PCT_RE) — every future step with a floor-shaped percentage check benefits, not just this one.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/verdict.js" }
+      },
+      "adjudicated_by": "this pilot, commit 7, 2026-08-28",
+      "date": "2026-08-28"
+    }
+  ],
+
+  "limitations": [
+    {
+      "what": "staleness.fingerprint_inputs' wsib_registry corpus signal is COUNT(*) only (upstream_ledger). G-19's fuller reading — trade_name_normalized is rewritten on EVERY load_wsib reload even when linked_entity_id is untouched, so an unchanged row count can still sit on a stale matching predicate — is not captured by a row-count-only signal. A MAX(last_seen_at)-based signal, or reading load_wsib's own source-version fingerprint directly, would close this; not built this commit.",
+      "measured": "load-wsib.js ON CONFLICT DO UPDATE SET rewrites trade_name_normalized/last_seen_at on every reload but never linked_entity_id/match_confidence/matched_at (Fold C, confirmed by direct read, 2026-08-28)",
+      "check_id": "gate_decision"
+    },
+    {
+      "what": "A-7's copyContacts reverse-clear pass is provenance-by-equality: an entity's contact field is cleared only when its CURRENT value equals a value that existed on a now-retracted wsib row. A contact that coincidentally matches a retracted row's value is cleared and re-copied on relink (a false positive, not a false negative — no contact is ever left dangling from a genuinely retracted source).",
+      "measured": "magnet_entities_with_any_contact = 7 of 171 magnets, but wsib_registry carries ZERO contact values locally (121,116 / 0 / 0) — the local 0 exposure does NOT bound cloud, which may carry Serper-enriched wsib_registry contact fields; re-run both queries against cloud before any cloud FULL run (PH-6, commit 4)",
+      "check_id": "contacts_cleared_on_retraction"
+    },
+    {
+      "what": "The [0.50, 0.60) match_confidence stats bucket boundary (a display-only artifact of the pre-conversion final-stats query) is DEAD — no code path writes a confidence in that range, since the three tiers write exactly 0.95/0.90/0.60. PINNED (Spec 123 §3.1), not fixed: nothing downstream reads or asserts on the boundary specifically.",
+      "measured": "0 rows with match_confidence in [0.50, 0.60) (golden capture invariant wsib_dead_bucket_050_060_count = 0, commit 5)",
+      "check_id": "dead_bucket_count"
+    }
+  ],
+
+  "interpretation": { "file": "link-wsib.notes.json", "entries": 10 },
+
+  "recovery": {
+    "reset": "TRUNCATE is never correct for wsib_registry (load-wsib.js owns row lifecycle) or entities. Re-run with LINK_WSIB_FORCE_FULL=1, which bypasses the ledger gate; the tier-3 repair itself is gated separately by mode resolving full (A-8's corpus signal, never schedule).",
+    "resume": "none",
+    "force": "LINK_WSIB_FORCE_FULL",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "force_full_on_next_run"
+  },
+
+  "database": {
+    "class": "primary",
+    "min_migration": 243,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": {
+    "records_total": { "source": "matched.unlinked_start", "scoped_by": "step" },
+    "records_new": { "source": "written.e1.updated", "scoped_by": "id" },
+    "records_updated": { "source": "written.e1.updated", "scoped_by": "id" }
+  },
+
+  "config": {
+    "logic_variables": [
+      { "name": "wsib_fuzzy_match_threshold", "min": 0.1, "max": 1, "on_invalid": "fail" },
+      { "name": "link_wsib_link_rate_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "link_wsib_tier1_confidence", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "link_wsib_tier2_confidence", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "link_wsib_tier3_confidence", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "link_wsib_entity_fanin_warn", "min": 2, "max": 1000, "on_invalid": "fail" },
+      { "name": "link_wsib_tier3_full_max_iterations", "min": 1, "max": 100, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": { "permits": 7, "sources": 19 },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "linked_incremental", "kind": "success", "status": "completed",
+      "records_meta": { "threshold_updated_at": "string", "unlinked_start": "int", "run_matched": "int", "matches_tier_1_trade": "int", "matches_tier_2_legal": "int", "matches_tier_3_fuzzy": "int", "no_match_count": "int", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The normal outcome: the ledger gate did not skip, mode resolved incremental, the cascade ran.", "liveness": { "kind": "check", "ref": "gate_decision" } }
+    },
+    {
+      "id": "linked_full_repair", "kind": "success", "status": "completed",
+      "records_meta": { "threshold_updated_at": "string", "unlinked_start": "int", "run_matched": "int", "matches_tier_1_trade": "int", "matches_tier_2_legal": "int", "matches_tier_3_fuzzy": "int", "no_match_count": "int", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "Mode resolved full (A-8's corpus signal or LINK_WSIB_FORCE_FULL): LG-16's tier-3 repair ran. NOT reachable by any commit-7 invocation — commit 8's budgeted act.", "liveness": { "kind": "check", "ref": "tier3_full_not_converged" } }
+    },
+    {
+      "id": "linked_with_warnings", "kind": "success", "status": "completed_with_warnings",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A WARN row stands (link_rate_warn, entity_fanin_warn, or tier3_full_not_converged) and nothing FAILED. The run completed and wrote; the warning is in the table.", "liveness": { "kind": "check", "ref": "link_rate_warn" } }
+    },
+    {
+      "id": "skip_gated_no_activity", "kind": "skip_gated", "status": "completed",
+      "records_meta": { "threshold_updated_at": "string", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "LG-15: no upstream wsib_registry/entities activity and no config_version bump since link_wsib's own last completed run — generalizes the pre-existing B3 SKIP. Re-emits the prior run's threshold_updated_at so the NEXT run's config_version diff still has a baseline.", "liveness": { "kind": "check", "ref": "gate_decision" } }
+    },
+    {
+      "id": "vacuous_no_unlinked", "kind": "no_op", "status": "completed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "G-12: unlinked_start measured 0 — every wsib_registry row already carries a link. A genuine zero-work completion, distinct from a gated skip (the step ran and measured; nothing was eligible).", "liveness": { "kind": "check", "ref": "unlinked_start" } }
+    },
+    {
+      "id": "lock_held_elsewhere", "kind": "skip_lock_contention", "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": { "text": "Advisory lock 94 is held by another process — a row-derived SKIP summary, never a bare SDK skip with no audit_table.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_full_repair_empty_source", "kind": "fail_check", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "Mode resolved full against an empty entities corpus — the pre_write refusal, no retraction statement issued.", "liveness": { "kind": "check", "ref": "full_repair_empty_source_guard" } }
+    },
+    {
+      "id": "failed_write_privilege", "kind": "fail_check", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "RLS enabled with 0 policies and the role does not bypass — every statement would affect 0 rows with no error.", "liveness": { "kind": "check", "ref": "write_privilege" } }
+    },
+    {
+      "id": "failed_missing_precondition", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A guards.requires precondition with on_missing: \"fail\" is absent (pg_trgm, a trigram index, or an RLS policy). Refuses before reading anything.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_config_out_of_bounds", "kind": "fail_error", "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A declared logic variable (T1-T7) resolved outside its bounds under on_invalid: \"fail\". hoisted_above_gate puts this refusal ABOVE the advisory lock and the ledger gate — the opposite of the pre-conversion order (Commit A / A1 fix).", "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" } }
+    }
+  ]
+}

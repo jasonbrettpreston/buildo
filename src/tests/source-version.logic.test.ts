@@ -462,8 +462,16 @@ describe('buildSkipGateRecordsMeta — skip re-emits its own coverage/threshold 
     expect(meta.consecutive_skips).toBe(1);
   });
 
-  it('adoption-lock: all three B3 callers wire the run-ledger-gate skip path through buildSkipGateRecordsMeta (not a hardcoded verdict)', () => {
-    for (const f of ['link-wsib.js', 'link-parcel-addresses.js', 'compute-parcel-cost-estimates.js']) {
+  // A-5 (C1 pilot 4, commit 7, 2026-08-28): link-wsib.js is RE-HOMED, not dropped — the
+  // frozen shape carries no gate.skip block at all any more. The equivalent guarantee
+  // (a gated skip re-emits a row-derived summary, never a hardcoded 'PASS') is now
+  // asserted against the DESCRIPTOR/library shape in
+  // src/tests/steps/link_wsib/violations.test.ts (the LG-15 gated-skip lock,
+  // `scripts/lib/step/index.js`'s `skipRecordsMeta`/`deriveVerdict` routing) rather than
+  // by looping this file's own source text — the same treatment link-massing.js got at
+  // pilot 3 for its own run-ledger-gate-adjacent fences.
+  it('adoption-lock: the two still-unconverted B3 callers wire the run-ledger-gate skip path through buildSkipGateRecordsMeta (not a hardcoded verdict)', () => {
+    for (const f of ['link-parcel-addresses.js', 'compute-parcel-cost-estimates.js']) {
       const src = fs.readFileSync(path.resolve(__dirname, '../../scripts', f), 'utf8');
       expect(src, `${f} must call buildSkipGateRecordsMeta`).toContain('buildSkipGateRecordsMeta(');
       // The gate.skip branch itself must build its records_meta via the helper,

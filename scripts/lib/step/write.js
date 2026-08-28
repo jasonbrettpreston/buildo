@@ -46,8 +46,31 @@ const WRITTEN_BY_STEP = 'step';
 /** Default SQL type for the departure DELETE's key array cast. */
 const DEFAULT_KEY_SQL_TYPE = 'BIGINT';
 
-/** `write_discipline.class` values whose generated statement is a scoped set-based UPDATE. */
-const SET_BASED_CLASSES = new Set(['set_based_scoped', 'set_based_unscoped']);
+/**
+ * `write_discipline.class` values whose generated statement is a scoped set-based UPDATE.
+ *
+ * `set_based_null_retract` (LG-16, MATCHER pilot 2026-08-28) joins this set deliberately:
+ * codegen-identical to `set_based_scoped`/`set_based_unscoped` (a constant `SET` — here
+ * always `null` — over a declared `scope`), so it costs nothing new in `buildWritePlan`.
+ * It is declared under its OWN class, never reusing `set_based_scoped`, because a
+ * retraction that only happens to share a code shape with a flag clear is not the same
+ * MECHANIC: `set_based_scoped` never fires under `retract_when`, and a reviewer grepping
+ * for "does this step ever retract wsib_registry" must find it by class name, not by
+ * reading every `set_based_scoped` target's `scope` string.
+ */
+const SET_BASED_CLASSES = new Set(['set_based_scoped', 'set_based_unscoped', 'set_based_null_retract']);
+
+/**
+ * `write_discipline.class` value for LG-11 (MATCHER pilot 2026-08-28) — a scoped
+ * `UPDATE ... FROM (<matched CTE>) m WHERE <table>.<key> = m.<key>`, where the CTE and
+ * the SET clause's right-hand sides are AUTHORED BY THE COMPUTE (the domain join is not
+ * expressible as declared columns[] the way a guarded upsert's row values are — see
+ * `scripts/lib/compute/link-wsib.js buildTierSql`, ruling A-2 option 2, same shape as
+ * link_massing's `buildMatchSql`). `buildWritePlan` for this class returns a DESCRIPTIVE
+ * plan only (table/keys/scope/guard); the executable SQL text is handed to
+ * `executeSetBasedJoinUpdate` directly by the runner, per tier, per statement.
+ */
+const JOIN_UPDATE_CLASS = 'set_based_join_update';
 
 /** `retract_when` — the LINK-pilot qualifier on the frozen `retract` enum. Absent means "always". */
 const RETRACT_ALWAYS = 'always';
@@ -238,12 +261,31 @@ function buildWritePlan(writeSpec, descriptor) {
       + 'rebuilds; declare it, or declare retract "none".');
   }
 
-  // ── set_based_scoped / set_based_unscoped: one UPDATE, constants only ──────
+  // ── set_based_scoped / set_based_unscoped / set_based_null_retract: one UPDATE,
+  //    constants only ──────────────────────────────────────────────────────────
   // No row values are bound: a set-based mechanic writes a DECLARED CONSTANT
   // (`columns[].set_value`) over the rows its scope selects. The scope carries its own
   // placeholders, so the caller binds those and nothing else.
+  //
+  // ⚠️ GUARD SUPPORT, ADDED AT THE MATCHER PILOT (2026-08-28, LG-11/LG-16 sibling work).
+  // Before this, a set-based mechanic could only declare `guard: "none"` — nothing here
+  // ever appended an IS DISTINCT FROM clause, so every set-based target was structurally
+  // forced onto the x-banned-for-new "unguarded_write" rule (grandfathering required)
+  // even when the write is genuinely idempotent-by-construction (a write-once column
+  // whose scope already excludes a row once it is set). `guard: "is_distinct_from"` now
+  // appends `AND (<col> IS DISTINCT FROM <its declared constant>)` per `guard_columns`,
+  // which is a REAL predicate — it changes 0 rows on a second run over an unchanged
+  // scope, same as the guarded-upsert's own guard, just against a constant rather than a
+  // bound row value.
   if (SET_BASED_CLASSES.has(writeSpec.write_discipline.class)) {
     const assignments = stepColumns.map((c) => `${c.name} = ${sqlLiteral(c.set_value)}`).join(', ');
+    const guardClause = writeSpec.write_discipline.guard === 'is_distinct_from' && guardColumns.length > 0
+      ? guardColumns.map((c) => {
+        const col = stepColumns.find((sc) => sc.name === c);
+        return `${c} IS DISTINCT FROM ${col ? sqlLiteral(col.set_value) : 'NULL'}`;
+      }).join(' OR ')
+      : null;
+    const whereParts = [scope, guardClause ? `(${guardClause})` : null].filter(Boolean);
     return {
       table,
       keys,
@@ -257,7 +299,35 @@ function buildWritePlan(writeSpec, descriptor) {
       scope,
       retract,
       retract_when: retractWhen,
-      clear_sql: `UPDATE ${table} SET ${assignments}${scope ? ` WHERE ${scope}` : ''};`,
+      clear_sql: `UPDATE ${table} SET ${assignments}${whereParts.length > 0 ? ` WHERE ${whereParts.join(' AND ')}` : ''};`,
+    };
+  }
+
+  // ── set_based_join_update (LG-11, MATCHER pilot 2026-08-28) — DESCRIPTIVE ONLY.
+  // No statement is generated here: the SET clause's right-hand sides are per-row
+  // values produced by a JOIN against a compute-authored `matched` CTE (buildTierSql,
+  // ruling A-2 option 2 — the same split link_massing's `buildMatchSql` established for
+  // the domain join). What the descriptor still buys, even with no generated SQL: the
+  // declared columns/guard/scope are what the fence-lock detectors and the conformance
+  // suite check the compute's AUTHORED text against, and `buildWritePlan`'s callers
+  // (write.assertWritePrivileges, the RLS preflight) still work off `table`/`keys` alone.
+  if (writeSpec.write_discipline.class === JOIN_UPDATE_CLASS) {
+    return {
+      table,
+      keys,
+      srid,
+      mechanic: JOIN_UPDATE_CLASS,
+      step_columns: stepColumnNames,
+      update_columns: updateColumns,
+      guard_columns: guardColumns,
+      key_sql_type: keyType,
+      scope,
+      retract,
+      retract_when: retractWhen,
+      clear_sql: null,
+      upsert_sql: null,
+      delete_sql: null,
+      generated_by: 'compute',
     };
   }
 
@@ -488,6 +558,38 @@ async function executeRetraction(client, plan) {
   return result.rowCount || 0;
 }
 
+/** SQL text a `set_based_join_update` target must never contain (LG-11's structural half). */
+const JOIN_UPDATE_FORBIDDEN_RE = /\bINSERT\s+INTO\b|\bON\s+CONFLICT\b/i;
+
+/**
+ * LG-11 (MATCHER pilot 2026-08-28) — execute one `set_based_join_update` statement.
+ *
+ * ⚠️ THE ONE PLACE "INSERT STRUCTURALLY FORBIDDEN" IS ENFORCED, not merely declared.
+ * `sql` is authored by the COMPUTE (`buildTierSql`, ruling A-2 option 2) — the whole
+ * reason this executor exists is that `wsib_registry` rows may only ever be CREATED by
+ * `load-wsib.js`, and an accidental `executeUpsertBatch`-generated INSERT would violate
+ * that ownership boundary worse than a missed match. `executeUpsertBatch` is always
+ * INSERT-capable by construction (`ON CONFLICT ... DO UPDATE`); this executor refuses to
+ * run any statement that could ever create a row, checked on the ACTUAL text about to
+ * run — not on a class label a descriptor could misdeclare.
+ *
+ * @param {import('pg').ClientBase} client
+ * @param {string} sql - a complete `UPDATE ... FROM (...) m WHERE ...` statement
+ * @param {unknown[]} [params]
+ * @returns {Promise<number>} rows changed
+ */
+async function executeSetBasedJoinUpdate(client, sql, params) {
+  if (JOIN_UPDATE_FORBIDDEN_RE.test(sql)) {
+    throw new Error(
+      `[write.js] executeSetBasedJoinUpdate (set_based_join_update / LG-11): the statement contains INSERT INTO `
+      + 'or ON CONFLICT, which this executor structurally refuses — a set_based_join_update target may never '
+      + `create a row. Statement: ${sql.slice(0, 200)}${sql.length > 200 ? '…' : ''}`,
+    );
+  }
+  const result = await client.query(sql, params || []);
+  return result.rowCount || 0;
+}
+
 module.exports = {
   buildWritePlan,
   generateWriteSql,
@@ -497,6 +599,9 @@ module.exports = {
   executeSetBasedClear,
   executeUpsertBatch,
   executeRetraction,
+  executeSetBasedJoinUpdate,
+  JOIN_UPDATE_CLASS,
+  JOIN_UPDATE_FORBIDDEN_RE,
   SET_BASED_CLASSES,
   RETRACT_ALWAYS,
   RETRACT_FULL_ONLY,

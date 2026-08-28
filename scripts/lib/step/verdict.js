@@ -61,8 +61,20 @@ function resolvePhase(descriptor, chainId) {
 }
 
 const VIOL_RE = /^viol (==|<=) (\d+)$/;
-/** LG-5 — the pct form, landed at the INGESTOR pilot (Spec 122 §1.4 growth wave). */
-const PCT_RE = /^pct <= ([0-9]*\.?[0-9]+)$/;
+/**
+ * LG-5 — the pct form, landed at the INGESTOR pilot (Spec 122 §1.4 growth wave).
+ *
+ * `>=` ADDED AT THE MATCHER PILOT (2026-08-28) — a genuine library gap, closed per
+ * Spec 124 §7 rung (d): `limit_from_config`'s substitution is unconditional (the
+ * resolved config number replaces the limit string's trailing number verbatim,
+ * `resolveLimit` above), so a config-driven PERCENTAGE FLOOR (link_wsib's link-rate
+ * WARN — the metric must read >= the operator-set percentage, not <=) had no
+ * expressible form: `pct <=` compares the wrong direction, `viol <=`/`viol ==` compare
+ * a COUNT not a percentage-with-the-SAME-config-number-substituted, and `pop >=` is
+ * unimplemented (unevaluable). Symmetric with `pct <=` in every other respect —
+ * same substitution mechanism, same reported field (`observation.value`).
+ */
+const PCT_RE = /^pct (<=|>=) ([0-9]*\.?[0-9]+)$/;
 /** The numeric a `limit_from_config` substitution replaces: the LAST number in the form. */
 const LIMIT_NUMBER_RE = /[0-9]*\.?[0-9]+(?=\s*(?:x median)?$)/;
 
@@ -122,7 +134,8 @@ function evaluateLimit(limit, observation) {
   const pct = typeof limit === 'string' ? limit.match(PCT_RE) : null;
   if (pct) {
     if (measured === null) return { unevaluable: 'check reported no numeric ratio' };
-    return { ok: measured <= Number(pct[1]) };
+    const bound = Number(pct[2]);
+    return { ok: pct[1] === '>=' ? measured >= bound : measured <= bound };
   }
 
   const m = typeof limit === 'string' ? limit.match(VIOL_RE) : null;

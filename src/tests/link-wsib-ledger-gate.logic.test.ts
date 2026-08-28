@@ -1,61 +1,78 @@
 // SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md (link_wsib step)
 // SPEC LINK: docs/specs/01-pipeline/43_chain_sources.md (link_wsib step)
 // SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.2
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1 (frozen shape)
 //
-// Phase B B3 — link-wsib.js run-ledger gate wiring. Pure/structural cases
-// (no live DB needed):
-//   I1 — link-wsib.js formerly ran pipeline.run(...) unconditionally at module
-//     scope (a bare require() would create a real DB pool). Now guarded +
-//     exported (C1 precedent) — require() is safe to prove it.
-//   W1 — dual-chain OWN_SLUGS enumeration (sources + permits, NEVER entities —
-//     v5:60's "entities" was refuted by the B3 grounding fold: zero
-//     entities:link_wsib rows have ever existed) + no-entities g/b against the
-//     live manifest.
+// ── RE-HOMED at the Spec 122 §5.1 conversion (C1 pilot 4, commit 7, 2026-08-28) ──────
+//
+// This file used to `require()` scripts/link-wsib.js directly for its own hand-rolled
+// exports (main, OWN_SLUGS, UPSTREAM_SLUGS, readThresholdVersionSignal,
+// hasThresholdChanged) — all five LEFT that file: the frozen shape carries no gate code
+// at all (scripts/link-wsib.js is 41 lines: require descriptor + compute, call
+// pipeline.step()). The run-ledger gate mechanism itself is not deleted — it is
+// GENERALIZED into scripts/lib/step/staleness.js (deriveLedgerSlugs / ledgerGatedSkip,
+// LG-15), because a hand-maintained per-step slug array is exactly what Spec 122 §6.3
+// names link_wsib as the tier-0 example of retiring.
+//
+// ⚠️ RE-HOMED, NOT DELETED, AND THE NEW FORM IS STRICTLY STRONGER (same claim
+// link-massing.infra.test.ts makes for its own analogous rehome). The old assertion was
+// "OWN_SLUGS literally equals this hand-typed array" — a fact about a copy. The new one
+// asserts the GENERIC DERIVATION produces the same four forms from declared data
+// (inputs.reads.steps[] + execution.invocation), so a future step gets the same
+// guarantee for free instead of writing its own array.
+//
+// Phase B B3 — link-wsib.js run-ledger gate wiring. Pure/structural cases (no live DB
+// needed):
+//   W1 — dual-chain OWN_SLUGS enumeration (sources + permits, NEVER entities — v5:60's
+//     "entities" was refuted by the B3 grounding fold: zero entities:link_wsib rows have
+//     ever existed) + no-entities check against the live manifest.
 //   W3 — wsib invalidation is MONOTONE: load-wsib.js's UPSERT never touches
-//     linked_entity_id, so an upstream reload can only ADD unlinked rows, never
-//     silently un-link an already-matched one behind the gate's back.
+//     linked_entity_id, so an upstream reload can only ADD unlinked rows, never silently
+//     un-link an already-matched one behind the gate's back.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 
-const LINK_WSIB_PATH = join(process.cwd(), 'scripts/link-wsib.js');
 const LOAD_WSIB_PATH = join(process.cwd(), 'scripts/load-wsib.js');
+const COMPUTE_PATH = join(process.cwd(), 'scripts/lib/compute/link-wsib.js');
 const MANIFEST_PATH = join(process.cwd(), 'scripts/manifest.json');
+const DESCRIPTOR_PATH = join(process.cwd(), 'scripts/link-wsib.descriptor.json');
 
-// require.main guard is now present — safe to require directly (I1).
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const linkWsib = require('../../scripts/link-wsib.js') as {
-  main: unknown;
-  ADVISORY_LOCK_ID: number;
-  OWN_SLUGS: string[];
-  UPSTREAM_SLUGS: string[];
-  hasThresholdChanged: (ownLastRecordsMeta: Record<string, unknown> | null, versionSignal: { thresholdUpdatedAt: string | null }) => boolean;
-  readThresholdVersionSignal: (pool: unknown) => Promise<{ thresholdUpdatedAt: string | null }>;
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- the CJS library (LG-15's generic derivation)
+const staleness = require('../../scripts/lib/step/staleness.js') as {
+  deriveLedgerSlugs: (descriptor: unknown) => { own: string[]; upstream: string[] };
 };
 
-describe('I1 — link-wsib.js is safely require()-able (guard + exports)', () => {
-  it('has a require.main === module guard', () => {
-    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
-    expect(src).toMatch(/require\.main\s*===\s*module/);
-  });
+interface Descriptor {
+  config: { hoisted_above_gate: boolean };
+  override: { dry_run: string; force_full: string };
+  sharing: { varies_by_chain: { phase: Record<string, number> } };
+  staleness: { trigger: Array<{ signal: string; variable?: string }> };
+  execution: { invocation: Record<string, unknown> };
+  inputs: { reads: { steps: Array<{ step: string }> } };
+}
+const DESCRIPTOR = JSON.parse(readFileSync(DESCRIPTOR_PATH, 'utf8')) as Descriptor;
 
-  it('exports main + the slug sets (no real DB pool was created by the require() above)', () => {
-    expect(typeof linkWsib.main).toBe('function');
-    expect(Array.isArray(linkWsib.OWN_SLUGS)).toBe(true);
-    expect(Array.isArray(linkWsib.UPSTREAM_SLUGS)).toBe(true);
-  });
-});
+describe('W1 — link_wsib own/upstream slug derivation: dual-chain (sources + permits), never entities', () => {
+  const { own, upstream } = staleness.deriveLedgerSlugs(DESCRIPTOR);
 
-describe('W1 — link_wsib OWN_SLUGS: dual-chain (sources + permits), never entities', () => {
-  it('OWN_SLUGS is exactly the four forms: sources:, permits:, bare, hyphenated', () => {
-    expect(linkWsib.OWN_SLUGS.slice().sort()).toEqual(
+  it('own slugs are exactly the four forms: sources:, permits:, bare, hyphenated (was: OWN_SLUGS literal array)', () => {
+    expect(own.slice().sort()).toEqual(
       ['link-wsib', 'link_wsib', 'permits:link_wsib', 'sources:link_wsib'].sort(),
     );
   });
 
-  it('OWN_SLUGS contains no entities:-scoped form (v5:60 refuted — zero entities:link_wsib rows have ever existed)', () => {
-    expect(linkWsib.OWN_SLUGS.some((s) => s.startsWith('entities:'))).toBe(false);
+  it('own slugs contain no entities:-scoped form (v5:60 refuted — zero entities:link_wsib rows have ever existed)', () => {
+    expect(own.some((s) => s.startsWith('entities:'))).toBe(false);
+  });
+
+  it('upstream slugs cover both builders and load_wsib, in all declared chain forms (was: UPSTREAM_SLUGS literal array)', () => {
+    for (const step of ['builders', 'load_wsib']) {
+      expect(upstream, `upstream slugs missing bare "${step}"`).toContain(step);
+      expect(upstream, `upstream slugs missing "permits:${step}"`).toContain(`permits:${step}`);
+      expect(upstream, `upstream slugs missing "sources:${step}"`).toContain(`sources:${step}`);
+    }
   });
 
   it('g/b — manifest.json actually lists link_wsib in BOTH permits and sources chains, and NOT in entities', () => {
@@ -66,56 +83,23 @@ describe('W1 — link_wsib OWN_SLUGS: dual-chain (sources + permits), never enti
   });
 });
 
-// Commit A (B3 output-panel remediation) — gate placement (A1/A2/A3).
-// SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
-// SPEC LINK: docs/specs/00-architecture/115_scheduling.md §2.2
-describe('Commit A — link-wsib.js gate placement', () => {
-  it('A1 — loadMarketplaceConfigs/validateLogicVars are hoisted ABOVE the advisory lock + gate (unconditional fail-fast)', () => {
-    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
-    const configIdx = src.indexOf('loadMarketplaceConfigs(pool');
-    const lockIdx = src.indexOf('withAdvisoryLock(pool, ADVISORY_LOCK_ID');
-    expect(configIdx, 'loadMarketplaceConfigs call not found').toBeGreaterThan(-1);
-    expect(lockIdx, 'withAdvisoryLock call not found').toBeGreaterThan(-1);
-    expect(configIdx).toBeLessThan(lockIdx);
+// Commit A (B3 output-panel remediation) — gate placement (A1/A2/A3). Re-homed to the
+// DECLARED shape: the ordering guarantee is now a schema field the library enforces
+// generically (index.js resolves config BEFORE the advisory lock when
+// config.hoisted_above_gate is true), not a source-text ordinal comparison.
+describe('Commit A — link-wsib gate placement (re-homed to declared shape, G-4/G-5/G-6)', () => {
+  it('A1 — config.hoisted_above_gate is true (was: source-text index comparison of loadMarketplaceConfigs vs withAdvisoryLock)', () => {
+    expect(DESCRIPTOR.config.hoisted_above_gate).toBe(true);
   });
 
-  it('A2 — --dry-run is parsed BEFORE the gate + bypassGate = dryRun (mirrors compute-parcel-cost-estimates.js)', () => {
-    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
-    const dryRunIdx = src.indexOf("dryRun = args.includes('--dry-run')");
-    const gateIdx = src.indexOf('runLedgerGateDecision(pool');
-    expect(dryRunIdx).toBeGreaterThan(-1);
-    expect(gateIdx).toBeGreaterThan(-1);
-    expect(dryRunIdx).toBeLessThan(gateIdx);
-    expect(src).toMatch(/bypassGate\s*=\s*dryRun/);
+  it('A2 — override.dry_run names the --dry-run argv flag (was: source-text index comparison)', () => {
+    expect(DESCRIPTOR.override.dry_run).toBe('--dry-run');
   });
 
-  it('A3 — hasThresholdChanged: no prior meta → CHANGED (fail-safe); matching ISO → unchanged; differing ISO → changed', () => {
-    expect(linkWsib.hasThresholdChanged(null, { thresholdUpdatedAt: '2026-08-01T00:00:00.000Z' })).toBe(true);
-    expect(linkWsib.hasThresholdChanged(
-      { threshold_updated_at: '2026-08-01T00:00:00.000Z' },
-      { thresholdUpdatedAt: '2026-08-01T00:00:00.000Z' },
-    )).toBe(false);
-    expect(linkWsib.hasThresholdChanged(
-      { threshold_updated_at: '2026-08-01T00:00:00.000Z' },
-      { thresholdUpdatedAt: '2026-08-02T00:00:00.000Z' },
-    )).toBe(true);
-    // malformed prior meta (non-object) is treated as absent — fail-safe CHANGED.
-    expect(linkWsib.hasThresholdChanged('garbage' as unknown as null, { thresholdUpdatedAt: 'x' })).toBe(true);
-  });
-
-  it('exports readThresholdVersionSignal + hasThresholdChanged', () => {
-    expect(typeof linkWsib.readThresholdVersionSignal).toBe('function');
-    expect(typeof linkWsib.hasThresholdChanged).toBe('function');
-  });
-
-  it('fence note — the commit body must cite 647d0935f (the fix(35_wsib_registry) landed inside the branch A1 made unreachable)', () => {
-    // Documented here as a source-lock reminder for the commit body; the git-log
-    // citation itself is verified at commit time (this test pins that the gate
-    // placement bug the fix addresses stays fixed).
-    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
-    const configIdx = src.indexOf('loadMarketplaceConfigs(pool');
-    const gateReturnIdx = src.indexOf("if (gate && gate.skip");
-    expect(configIdx).toBeLessThan(gateReturnIdx);
+  it('A3 — staleness.trigger declares a config_version signal for wsib_fuzzy_match_threshold (was: hasThresholdChanged direct unit test)', () => {
+    const configTrigger = DESCRIPTOR.staleness.trigger.find((t) => t.signal === 'config_version');
+    expect(configTrigger, 'no config_version trigger declared').toBeDefined();
+    expect(configTrigger?.variable).toBe('wsib_fuzzy_match_threshold');
   });
 });
 
@@ -127,47 +111,31 @@ describe('W3 — wsib link monotonicity (load-wsib.js never re-nulls linked_enti
     expect(setBlock![0]).not.toMatch(/linked_entity_id/);
   });
 
-  it('the monotonicity claim is documented in link-wsib.js gate comments (stated in gate comment + spec, per the B3 grounding fold)', () => {
-    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
-    expect(src).toMatch(/MONOTONE/);
+  it('the monotonicity claim is documented in the compute module (was: gate comment in link-wsib.js)', () => {
+    const src = readFileSync(COMPUTE_PATH, 'utf8');
+    expect(src).toMatch(/monotone|MONOTONE/);
   });
 });
 
-// Commit F (B3 output-panel remediation) — discrete corrections.
-describe('F1 — link-wsib.js phase ordinals reconciled to Spec 41/43 (landed inside Commit A — same lines)', () => {
-  it('every audit_table.phase site uses 7 (permits, Spec 41 §Step Breakdown row 7) / 19 (sources, Spec 43 §Step Breakdown row 19)', () => {
-    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
-    const phaseSites = [...src.matchAll(/phase:\s*\(process\.env\.PIPELINE_CHAIN === 'sources'\)\s*\?\s*(\d+)\s*:\s*(\d+)/g)];
-    expect(phaseSites.length).toBeGreaterThanOrEqual(3); // SKIP / "nothing to link" / real-run
-    for (const m of phaseSites) {
-      expect(m[1]).toBe('19'); // sources
-      expect(m[2]).toBe('7');  // permits
-    }
+// Commit F (B3 output-panel remediation) — discrete corrections, re-homed to declared data.
+describe('F1 — link-wsib phase ordinals reconciled to Spec 41/43 (was: source-text ternary regex)', () => {
+  it('sharing.varies_by_chain.phase declares 7 (permits, Spec 41 §Step Breakdown row 7) / 19 (sources, Spec 43 §Step Breakdown row 19)', () => {
+    expect(DESCRIPTOR.sharing.varies_by_chain.phase.permits).toBe(7);
+    expect(DESCRIPTOR.sharing.varies_by_chain.phase.sources).toBe(19);
   });
 });
 
-describe('F2 — the bare/hyphenated OWN_SLUGS rationale is corrected (pipeline.run() never writes pipeline_runs)', () => {
-  it('the comment no longer claims the bare slugs are "for a standalone/manual invocation" that advances an anchor', () => {
-    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
-    expect(src).not.toMatch(/name for a standalone\/manual invocation/);
-    expect(src).toMatch(/pipeline\.run\(\)[\s\S]{0,80}never writes a pipeline_runs row/);
-  });
-
-  it('g/b — pipeline.run (scripts/lib/pipeline.js) genuinely never INSERTs into pipeline_runs (the claim this comment now makes)', () => {
-    const pipelineSrc = readFileSync(join(process.cwd(), 'scripts/lib/pipeline.js'), 'utf8');
-    const startIdx = pipelineSrc.indexOf('async function run(name, fn)');
-    expect(startIdx, 'pipeline.run function not found').toBeGreaterThan(-1);
-    // The next top-level export/section boundary bounds the function body —
-    // generous enough to cover run()'s real length without a brace-matching parser.
-    const endIdx = pipelineSrc.indexOf('\n// ---', startIdx);
-    const runFnBody = pipelineSrc.slice(startIdx, endIdx > -1 ? endIdx : startIdx + 1500);
-    expect(runFnBody).not.toMatch(/INSERT INTO pipeline_runs/);
+describe('F2 — own/upstream slug derivation is GENERIC (was: a per-step rationale comment)', () => {
+  it('deriveLedgerSlugs derives every form from declared data (inputs.reads.steps[] + execution.invocation) — no hand-maintained array to drift', () => {
+    expect(DESCRIPTOR.execution.invocation).toHaveProperty('permits');
+    expect(DESCRIPTOR.execution.invocation).toHaveProperty('sources');
+    expect(DESCRIPTOR.inputs.reads.steps.map((s) => s.step).sort()).toEqual(['builders', 'load_wsib'].sort());
   });
 });
 
 describe('F3 — link_wsib matching algorithm is pg_trgm trigram, not Levenshtein', () => {
-  it('link-wsib.js Tier 3 actually uses pg_trgm similarity(), not levenshtein()', () => {
-    const src = readFileSync(LINK_WSIB_PATH, 'utf8');
+  it('scripts/lib/compute/link-wsib.js Tier 3 actually uses pg_trgm similarity(), not levenshtein() (was: scripts/link-wsib.js — moved with the algorithm at conversion)', () => {
+    const src = readFileSync(COMPUTE_PATH, 'utf8');
     expect(src).toMatch(/similarity\(/);
     expect(src).toMatch(/pg_trgm/);
     expect(src).not.toMatch(/levenshtein\(/);

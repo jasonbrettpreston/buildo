@@ -16,7 +16,7 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 | `link_parcels` | `link-parcels.js` | permits, sources | permits, parcels | permit_parcels |
 | `link_neighbourhoods` | `link-neighbourhoods.js` | permits, sources | permits, neighbourhoods | permits (neighbourhood_id) |
 | `link_massing` | `link-massing.js` | permits, sources | parcels, building_footprints | parcel_buildings |
-| `link_wsib` | `link-wsib.js` | permits, sources | entities, wsib_registry | entities |
+| `link_wsib` | `link-wsib.js` | permits, sources | entities, wsib_registry | entities, wsib_registry |
 | `link_coa` | `link-coa.js` | permits, coa | coa_applications, permits | coa_applications, permits (back-ref + last_seen_at) |
 | `create_pre_permits` | `create-pre-permits.js` | permits, coa | coa_applications | permits (synthesized `PRE-` rows) |
 | `refresh_snapshot` | `refresh-snapshot.js` | all chains | 9 tables (parallel counts) | data_quality_snapshots |
@@ -86,16 +86,16 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 ---
 
 ### Link WSIB (`link-wsib.js`)
-**Method:** Fuzzy string matching (Levenshtein distance)
+**Method:** `pg_trgm` trigram similarity, a 3-tier cascade (corrected 2026-08-28, C1 pilot 4 — this section previously and incorrectly described Levenshtein distance; the real method has never been Levenshtein)
 
-1. Query entities without WSIB match (or stale)
-2. Compare `normalized_name` against `wsib_registry.legal_name_normalized`
-3. Exact match → high confidence. Fuzzy within threshold → lower confidence.
-4. Update entity with WSIB status + match timestamp
+1. Tier 1 — exact trade-name match (`wsib_registry.trade_name_normalized = entities.name_normalized`) → 0.95 confidence
+2. Tier 2 — exact legal-name match (`wsib_registry.legal_name_normalized = entities.name_normalized`) → 0.90 confidence
+3. Tier 3 — `pg_trgm` fuzzy match via `similarity()` over GIN trigram indexes, article-stripped first-letter blocking (`d704a447`) → 0.60 confidence, capped at 1,000 matches per invocation
+4. Each tier writes `wsib_registry.linked_entity_id`/`match_confidence`/`matched_at`, then `entities.is_wsib_registered` (once), then fills empty `entities` contact columns (`primary_phone`/`primary_email`/`website`) from the matched `wsib_registry` row — never overwriting an existing value
 
-**Edge Cases:** Generic names → may match wrong WSIB entry. WSIB refresh → re-run linking.
+**Edge Cases:** Generic names → may match wrong WSIB entry (see the fan-in / magnet-entity concentration named in `docs/specs/01-pipeline/122_pipeline_step_optimization.md` C1 pilot 4). WSIB refresh (`load_wsib`, annual cadence) → newly-unlinked rows are matched on the next incremental run; an already-linked row is never re-evaluated except by the operator-invoked tier-3 repair (A-7).
 
-**Testing:** `wsib.logic.test.ts`
+**Testing:** `wsib.logic.test.ts`, `src/tests/steps/link_wsib/violations.test.ts`
 
 ---
 

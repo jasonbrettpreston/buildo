@@ -328,9 +328,13 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
     expect(rule?.then.required).toEqual(expect.arrayContaining(['algorithm', 'why']));
   });
 
-  it('the 13 write-discipline classes are frozen as MECHANICS (V7)', () => {
+  it('the 15 write-discipline classes are frozen as MECHANICS (V7 + LG-11/LG-16, MATCHER pilot 2026-08-28)', () => {
     const cls = at('definitions.writeDiscipline.properties.class');
-    expect((cls.enum as string[])).toHaveLength(13);
+    // 13 V7 mechanics + set_based_join_update (LG-11) + set_based_null_retract (LG-16) —
+    // both genuinely new mechanics (a compute-authored UPDATE...FROM a matched CTE with
+    // INSERT structurally forbidden; a scoped UPDATE-to-NULL retraction for a table this
+    // step does not own), not a relabelling of an existing one.
+    expect((cls.enum as string[])).toHaveLength(15);
     expect(cls['x-frozen']).toBe(true);
     // The D/H bans moved to x-banned-for-new.rules — see the V7 tests below.
     expect(cls['x-banned']).toBeUndefined();
@@ -369,7 +373,7 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
     const cls = at('definitions.writeDiscipline.properties.class');
     // Guardedness left the class name...
     expect(cls['x-banned'], 'D and H are no longer fused class identities').toBeUndefined();
-    expect((cls.enum as string[])).toHaveLength(13);
+    expect((cls.enum as string[])).toHaveLength(15);
     expect(String(cls.description)).toMatch(/MECHANIC ONLY/);
     // ...and became its own axis, declarable-but-grandfathered.
     const guard = at('definitions.writeDiscipline.properties.guard');

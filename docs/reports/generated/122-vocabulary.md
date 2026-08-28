@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 338 declarable fields
+# The step contract — 18 categories, 342 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -17,9 +17,9 @@
 | 1 | `identity` | 15 | 2 | 0 |
 | 2 | `inputs` | 23 | 5 | 0 |
 | 3 | `outputs` | 92 | 24 | 2 |
-| 4 | `staleness` | 24 | 7 | 0 |
+| 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
-| 6 | `execution` | 47 | 13 | 1 |
+| 6 | `execution` | 50 | 13 | 1 |
 | 7 | `checks` | 24 | 6 | 0 |
 | 8 | `override` | 11 | 1 | 0 |
 | 9 | `emits` | 4 | 1 | 0 |
@@ -84,7 +84,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `load_heritage` | A -> B. :602 is a literal `DELETE FROM <t> WHERE source_id <> ALL($1::BIGINT[])` departure delete against its own table, behind an empty-set guard (:598). The base's Del=0 is factually wrong. |
 | `load_zoning` | A -> B (x11 layer tables). The departure delete at :526-528 is a NOT EXISTS anti-join against a keys-only TEMP table. The suspected class C is REFUTED: the temp table holds keys only and is never the source of an INSERT...SELECT, so it is a mechanic of B, not a full replace. |
 | `load_neighbourhoods` | A -> A + 6 INEXPRESSIBLE. Confirmed: exactly 2 IS DISTINCT FROM in the whole file (:153, :154), both in the upsert. The 6 profile UPDATEs (:473, :486, :506, :543, :563, :603) have NO guard at all. Also VACUUM ANALYZE at :680 -> execution.maintenance. |
-| `link_wsib` | K -> E + G. Three targets: wsib_registry link-columns are E (WHERE linked_entity_id IS NULL), entities.is_wsib_registered is G (guarded + scoped by match_confidence), entities contact columns are E in blank-or-null form. There is no derived_recompute anywhere in the file; K is simply absent. |
+| `link_wsib` | CORRECTED (C1 MATCHER pilot, 2026-08-28) — the original 'K -> E + G' guess (below, kept for the record) was ALSO wrong, refuted by measurement: the wsib_registry write's SET clause values are per-row JOIN results from a compute-authored matched CTE, which neither class E (write_once_backfill) nor G (set_based_scoped) can generate — G's codegen writes only a DECLARED CONSTANT. The measured shape is TWO NEW mechanics: set_based_join_update (LG-11, wsib_registry link-columns + entities contact columns, both computed-from-a-join) and set_based_null_retract (LG-16, the tier-3-only retraction) + set_based_scoped (G, entities.is_wsib_registered flag, a genuine constant). There is no derived_recompute anywhere in the file; K is simply absent (this much of the original guess held). Original guess: 'K -> E + G. Three targets: wsib_registry link-columns are E (WHERE linked_entity_id IS NULL), entities.is_wsib_registered is G (guarded + scoped by match_confidence), entities contact columns are E in blank-or-null form.' |
 | `refresh_snapshot` | M -> INEXPRESSIBLE. :535 is `ON CONFLICT (snapshot_date) DO UPDATE SET ... created_at=NOW()` with no change guard — a same-day re-run overwrites all columns of that day's row in place. It is not append-only. |
 
 | Gap | Pattern | Sites | Why no value fitted | Now declarable as | Status |
@@ -193,7 +193,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].columns[].set_value` | OPEN | — |
 | `writes[].key_sql_type` | string `^[A-Z][A-Z0-9 ]*$` | — |
 | `writes[].write_discipline` | object {class, guard, guard_why, scope, guard_columns, guard_columns_why, declared_drift, expected_change_ratio, idempotent_rerun, idempotent_rerun_why, txn_scope, why} | † |
-| `writes[].write_discipline.class` | `guarded_upsert` · `upsert_scoped_departure_delete` · `staging_full_replace` · `insert_only_no_retraction` · `write_once_backfill` · `link_full_retraction` · `set_based_scoped` · `set_based_unscoped` · `temp_materialize` · `multi_pass_defer` · `derived_recompute` · `verdict_only` · `snapshot_append` | † ! |
+| `writes[].write_discipline.class` | `guarded_upsert` · `upsert_scoped_departure_delete` · `staging_full_replace` · `insert_only_no_retraction` · `write_once_backfill` · `link_full_retraction` · `set_based_scoped` · `set_based_unscoped` · `temp_materialize` · `multi_pass_defer` · `derived_recompute` · `verdict_only` · `snapshot_append` · `set_based_join_update` · `set_based_null_retract` | † ! |
 | `writes[].write_discipline.guard` | `is_distinct_from` · `none` ⛔ **banned for new:** `none` | † ! |
 | `writes[].write_discipline.guard_why` | object {text, liveness} | — |
 | `writes[].write_discipline.guard_why.text` | string | † |
@@ -278,12 +278,13 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | Field | Menu | Markers |
 |---|---|---|
 | `scope` | `all` \| `none` \| string | † |
-| `trigger` | `none` \| list (min 1) of object {signal, position, external, table, emit_key} | † |
-| `trigger[].signal` | `source_validator` · `content_hash` · `cached_artifact` · `upstream_ledger` · `code_version` · `interval` · `always` | † ! |
+| `trigger` | `none` \| list (min 1) of object {signal, position, external, table, emit_key, variable} | † |
+| `trigger[].signal` | `source_validator` · `content_hash` · `cached_artifact` · `upstream_ledger` · `code_version` · `config_version` · `interval` · `always` | † ! |
 | `trigger[].position` | `pre_acquisition` · `acquisition` · `post_acquisition` · `pre_compute` | † ! |
 | `trigger[].external` | string | — |
 | `trigger[].table` | string `^[a-z_][a-z0-9_]*$` | — |
 | `trigger[].emit_key` | string | — |
+| `trigger[].variable` | string | — |
 | `mode_select` | `skip` · `incremental` · `full` · `defer` · `tri_state` · `none` | † ! |
 | `checkpoint` | `none` \| object {cursor, ordered} | † |
 | `checkpoint.cursor` | string | † |
@@ -332,7 +333,10 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `shape` | `assert` · `ingest` · `link` | ! |
+| `shape` | `assert` · `ingest` · `link` · `cascade` | ! |
+| `tiers` | `none` \| list (min 1) of object {id, confidence_config} | — |
+| `tiers[].id` | string `^[a-z][a-z0-9_]*$` | † |
+| `tiers[].confidence_config` | string | † |
 | `budget` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
 | `txn_scope` | `statement` · `batch` · `step` · `none` | † ! |
 | `txn_budget` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
@@ -390,7 +394,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `[].limit_from_config` | string | — |
 | `[].kind` | `field_coverage` · `vocab_coverage` · `bound` · `invariant` · `distribution` · `trend` · `orphan` · `schema` · `freshness` · `plan_shape` | † ! |
 | `[].expect` | **OPEN** — domain knowledge | † |
-| `[].limit` | string `^(viol (==|<=) [0-9]+|pct <= [0-9]*\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\.?[0-9]+ x median)$` \| object {warn, fail} | † ! |
+| `[].limit` | string `^(viol (==|<=) [0-9]+|pct (<=|>=) [0-9]*\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\.?[0-9]+ x median)$` \| object {warn, fail} | † ! |
 | `[].limit.warn` | number | † |
 | `[].limit.fail` | number | † |
 | `[].severity` | `INFO` · `WARN` · `FAIL` | † ! |
@@ -419,7 +423,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 |---|---|---|
 | `force_full` | `none` \| string `^[A-Z][A-Z0-9_]*$` | † |
 | `force_run` | `none` \| string `^[A-Z][A-Z0-9_]*$` | † |
-| `dry_run` | `none` \| string `^[A-Z][A-Z0-9_]*$` | † |
+| `dry_run` | `none` \| string `^[A-Z][A-Z0-9_]*$` \| string `^--[a-z][a-z0-9-]*$` | † |
 | `accept_anomaly` | list (min 1) of object {env, check_id, why} | — |
 | `accept_anomaly[].env` | string `^[A-Z][A-Z0-9_]*$` | † |
 | `accept_anomaly[].check_id` | string `^[a-z][a-z0-9_]*$` | † |

@@ -213,7 +213,30 @@ function isIngestStep(descriptor) {
  * "link" cannot silently be run as something else.
  */
 function isLinkStep(descriptor) {
+  // LG-15 (MATCHER pilot, 2026-08-28): a LINK/MATCHER step may ALSO declare a
+  // staleness-driven gated-skip path (staleness.ledgerGatedSkip, generalizing the B3
+  // run-ledger gate) alongside its full/incremental mode decision — this predicate
+  // stays scoped to `shape === "link"`; `isCascadeStep` below is the MATCHER sibling and
+  // shares the same gated-skip mechanism rather than re-deriving it.
   return Boolean(descriptor.execution && descriptor.execution.shape === 'link');
+}
+
+/**
+ * Is this a MATCHER — a bulk N-tier cascade over `execution.tiers[]`, with NO
+ * batching/pagination and MORE THAN ONE write target per tier? (Ruling A-1, SHOULD-FIX
+ * d, MATCHER pilot 2026-08-28.)
+ *
+ * ⚠️ FORKED FROM `isLinkStep`/`runLinkPhase`, NOT A BRANCH INSIDE THEM. Measured at
+ * commit 7: `runLinkPhase`'s keyset batch loop (`eligible_batch_sql` + a `lastId`
+ * cursor) and its flat hardcoded `parcels_*` counters do not serve a step with no
+ * pagination anywhere and THREE write statements per tier across TWO tables — extending
+ * `runLinkPhase` with a `tiers[]` branch would fork its write loop internally, which the
+ * A-1 SHOULD-FIX ruling names as the exact condition for a separate phase instead.
+ * `execution.shape` is still the ONE declared field selecting the runner branch (§4.1a);
+ * this predicate mirrors `isLinkStep`'s shape, not its mechanism.
+ */
+function isCascadeStep(descriptor) {
+  return Boolean(descriptor.execution && descriptor.execution.shape === 'cascade');
 }
 
 /** One requirement kind → the catalog probe that answers "is it there?". */
@@ -663,6 +686,205 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
 }
 
 /**
+ * THE BULK N-TIER CASCADE PHASE (ruling A-1, SHOULD-FIX d — MATCHER pilot 2026-08-28).
+ *
+ * Forked from `runLinkPhase` rather than folded into it (see `isCascadeStep`'s header):
+ * `link_wsib` is a bulk cascade over a declared `execution.tiers[]` array, no
+ * batching/pagination anywhere, THREE write statements per tier across TWO tables, all
+ * inside ONE step-scoped transaction (G-11) — not `runLinkPhase`'s keyset-paginated
+ * single-target-per-batch shape.
+ *
+ * PHASE ORDER, and the guarantee each step carries (the assessment's G-1..G-19 table):
+ *   guards.requires         preconditions before the first read
+ *   LEDGER GATED SKIP        LG-15 — generalizes this step's own pre-existing B3 SKIP
+ *                            (staleness.ledgerGatedSkip), folding the config_version
+ *                            signal (G-6/A-3) so an operator threshold edit is never
+ *                            invisible behind a green SKIP forever
+ *   tri-state mode            A-8 — mode "full" ONLY by the load_wsib corpus signal or
+ *                            LINK_WSIB_FORCE_FULL, never by schedule
+ *   RUN_AT                    the DB clock, captured once, before any write (G-7)
+ *   RLS preflight              refuse a write that would affect 0 rows
+ *   PRE_WRITE GATE             scored before writes[0] — before the mode-full-only LG-16
+ *                            retraction, which is the destructive write in this step
+ *   [mode full only] LG-16    the tier-3 UPDATE-to-NULL retraction + the
+ *                            entities.is_wsib_registered cascade + the copyContacts
+ *                            reverse pass (A-7) — declared and wired here; NOT exercised
+ *                            by this commit (A-8 keeps mode incremental absent a genuine
+ *                            corpus/FORCE_FULL signal; the live repair is commit 8's
+ *                            budgeted act)
+ *   tiers[], IN ORDER          for each tier: wsib_registry join-update (LG-11) → the
+ *                            entities.is_wsib_registered flag → entities contacts,
+ *                            EXACTLY the order G-9 names, each tier excluding rows a
+ *                            higher tier already claimed (the tiers[] declaration order
+ *                            IS the confidence hierarchy, G-8)
+ *   post checks                over the cumulative/invariant query, run once after the
+ *                            transaction commits
+ *
+ * @returns {Promise<object>} `{mode, gate, matched, cumulative, written, prior, overrides, skipped, gatedSkip}`
+ */
+async function runCascadePhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate }) {
+  const requirements = await assertRequirements(pool, descriptor, { log, tag });
+  const overrides = staleness.resolveOverrides(descriptor);
+  const dryRun = staleness.dryRunArgPresent(descriptor);
+  const bypassed = dryRun || overrides.force_full === true;
+
+  // ── LG-15 — THE LEDGER GATED SKIP, generalizing link_wsib's own pre-existing B3 gate ──
+  const gatedSkip = await staleness.ledgerGatedSkip(pool, descriptor, { now: clockNow, bypassed });
+  if (gatedSkip.skip) {
+    log.info(tag, `cascade ledger gate: SKIP (${gatedSkip.reason})`);
+    return {
+      mode: null,
+      gate: { mode: null, reason: gatedSkip.reason, skipped: true, configVersionUpdatedAt: null },
+      matched: null,
+      cumulative: null,
+      written: null,
+      prior: gatedSkip.gate ? gatedSkip.gate.ownLastRecordsMeta : null,
+      overrides,
+      skipped: true,
+      gatedSkip,
+    };
+  }
+
+  const prior = gatedSkip.gate
+    ? gatedSkip.gate.ownLastRecordsMeta
+    : await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+  const gate = await staleness.selectMode({ descriptor, pool, prior });
+  const configTrigger = staleness.triggersAt(descriptor, 'pre_compute').find((t) => t.signal === 'config_version');
+  const configVersionUpdatedAt = configTrigger ? (await staleness.measureTrigger(pool, descriptor, configTrigger)).current : null;
+  const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
+  log.info(tag, `cascade mode gate: ${gate.mode.toUpperCase()} (${gate.reason})`);
+
+  const specs = descriptor.outputs.writes;
+  const wsibJoinPlan = specs.find((w) => w.write_discipline.class === 'set_based_join_update' && w.table === 'wsib_registry');
+  const entitiesFlagSpec = specs.find((w) => w.write_discipline.class === 'set_based_scoped');
+  const entitiesContactsSpec = specs.find((w) => w.write_discipline.class === 'set_based_join_update' && w.table !== 'wsib_registry');
+  const nullRetractSpec = specs.find((w) => w.write_discipline.class === 'set_based_null_retract');
+  const entitiesFlagPlan = entitiesFlagSpec ? write.buildWritePlan(entitiesFlagSpec, descriptor) : null;
+  const nullRetractPlan = nullRetractSpec ? write.buildWritePlan(nullRetractSpec, descriptor) : null;
+
+  const written = {};
+  for (let i = 0; i < specs.length; i++) {
+    written[write.targetKey(i)] = { scanned: 0, inserted: 0, updated: 0, deleted: 0, retracted: 0, rows_changed: 0 };
+  }
+  written.privilege = privilege[specs[specs.length - 1].table] || null;
+  written.requirements = requirements;
+
+  const tiers = descriptor.execution.tiers;
+  if (!Array.isArray(tiers) || tiers.length === 0) {
+    throw new Error(`${tag} execution.shape "cascade" requires a non-empty execution.tiers[] array`);
+  }
+
+  const beforeCounts = await pool.query('SELECT '
+    + '(SELECT COUNT(*) FROM wsib_registry WHERE linked_entity_id IS NULL) AS unlinked_start, '
+    + '(SELECT COUNT(*) FROM entities) AS entities_count');
+  const matched = {
+    unlinked_start: Number(beforeCounts.rows[0].unlinked_start),
+    entities_count: Number(beforeCounts.rows[0].entities_count),
+    tiers: {},
+  };
+
+  // ── THE PRE-WRITE GATE, before the (mode-full-only) LG-16 retraction ────────
+  const decision = preWriteGate
+    ? await preWriteGate({ matched, gate, prior, overrides, written: null })
+    : { abort: false, failed: [] };
+  if (decision.abort) {
+    log.error(tag, `pre_write check(s) FAILED with no standing override — cascade write SKIPPED: ${decision.failed.join(', ')}`);
+    return {
+      mode: gate.mode,
+      gate: { ...gate, configVersionUpdatedAt },
+      matched,
+      cumulative: null,
+      written: { ...written, write_skipped_pre_write_fail: true },
+      prior,
+      overrides,
+      writeSkipped: true,
+      failedPreWrite: decision.failed,
+      gatedSkip,
+    };
+  }
+
+  const runAt = clockNow;
+  await pipeline.withTransaction(pool, async (client) => {
+    // ── LG-16 — A-7's tier-3 repair, mode "full" ONLY. Declared and wired; not
+    // exercised by any commit-7 invocation (A-8 keeps mode incremental absent a genuine
+    // corpus/FORCE_FULL signal). The retracted rows' contact values are read BEFORE the
+    // retraction (provenance-by-equality needs the values the retraction is about to
+    // erase), then the retraction, then the entities cascade, then the reverse clear.
+    let tier3Full = null;
+    if (gate.mode === 'full' && nullRetractPlan) {
+      const scopeParams = compute.buildRetractionScopeParams(config, tiers);
+      const priorContacts = await client.query(
+        'SELECT linked_entity_id, primary_phone, primary_email, website FROM wsib_registry WHERE match_confidence = $1 AND linked_entity_id IS NOT NULL',
+        scopeParams,
+      );
+      const retracted = await write.executeSetBasedClear(client, nullRetractPlan, scopeParams);
+      const nullRetractIdx = specs.indexOf(nullRetractSpec);
+      written[write.targetKey(nullRetractIdx)].retracted = retracted;
+      written[write.targetKey(nullRetractIdx)].deleted = 0;
+      await client.query(compute.buildEntitiesUnflagSql());
+      const affectedIds = [...new Set(priorContacts.rows.map((r) => r.linked_entity_id))];
+      let contactsCleared = 0;
+      if (affectedIds.length > 0) {
+        const phones = [...new Set(priorContacts.rows.map((r) => r.primary_phone).filter(Boolean))];
+        const emails = [...new Set(priorContacts.rows.map((r) => r.primary_email).filter(Boolean))];
+        const sites = [...new Set(priorContacts.rows.map((r) => r.website).filter(Boolean))];
+        const clearResult = await client.query(compute.buildContactsReverseClearSql(), [phones, emails, sites, affectedIds]);
+        contactsCleared = clearResult.rowCount || 0;
+      }
+      tier3Full = { retracted, contacts_cleared: contactsCleared, exhausted: false, iterations: 1 };
+    }
+    matched.tier3_full = tier3Full;
+
+    for (const tier of tiers) {
+      const sql = compute.buildTierSql(descriptor, config, tier, runAt);
+      const wsibIdx = specs.indexOf(wsibJoinPlan);
+      const linked = await write.executeSetBasedJoinUpdate(client, sql.wsib_update_sql, sql.wsib_update_params);
+      written[write.targetKey(wsibIdx)].scanned += linked;
+      written[write.targetKey(wsibIdx)].updated += linked;
+      written[write.targetKey(wsibIdx)].rows_changed += linked;
+
+      let flagged = 0;
+      if (entitiesFlagPlan) {
+        flagged = await write.executeSetBasedClear(client, entitiesFlagPlan, sql.entities_flag_scope_params);
+        const flagIdx = specs.indexOf(entitiesFlagSpec);
+        written[write.targetKey(flagIdx)].updated += flagged;
+        written[write.targetKey(flagIdx)].rows_changed += flagged;
+      }
+
+      let contacts = 0;
+      if (entitiesContactsSpec) {
+        contacts = await write.executeSetBasedJoinUpdate(client, sql.entities_contacts_sql, sql.entities_contacts_params);
+        const contactsIdx = specs.indexOf(entitiesContactsSpec);
+        written[write.targetKey(contactsIdx)].updated += contacts;
+        written[write.targetKey(contactsIdx)].rows_changed += contacts;
+      }
+
+      matched.tiers[tier.id] = { linked, flagged, contacts };
+    }
+  });
+
+  const cumulativeResult = await pool.query(compute.CUMULATIVE_SQL);
+  const c = cumulativeResult.rows[0];
+  for (const k of Object.keys(c)) {
+    if (k === 'linked' || k === 'total') continue;
+    const v = c[k];
+    matched[k] = v !== null && typeof v === 'object' ? v : Number(v);
+  }
+
+  return {
+    mode: gate.mode,
+    gate: { ...gate, configVersionUpdatedAt },
+    matched,
+    cumulative: { linked: Number(c.linked), total: Number(c.total) },
+    written,
+    prior,
+    overrides,
+    writeSkipped: false,
+    gatedSkip,
+  };
+}
+
+/**
  * `outputs.writes[]` EXECUTED IN DECLARATION ORDER, in ONE transaction (§1.4: "Order is
  * declared and the runner executes it in order").
  *
@@ -914,8 +1136,9 @@ async function runWithPool(runnable, pool, ctx) {
       // `runnable.compute` on exactly the path pilot 1 established.
       let ingest = null;
       let link = null;
+      let cascade = null;
       let onlyChecks = null;
-      const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor);
+      const drivesWrites = isIngestStep(descriptor) || isLinkStep(descriptor) || isCascadeStep(descriptor);
       // Spec 47 §R3.5 / B-11 — the DB clock, captured ONCE, inside the lock, for
       // WHICHEVER phase drives the write. One capture is not a tidiness preference: it is
       // what makes the written timestamp a single watermark, so two batches of one run
@@ -964,6 +1187,27 @@ async function runWithPool(runnable, pool, ctx) {
           onlyChecks = new Set(descriptor.checks.filter((c) => c.when === 'pre').map((c) => c.id));
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
+      } else if (isCascadeStep(descriptor)) {
+        cascade = await runCascadePhase({
+          descriptor, pool, compute: runnable.compute, config: configValues,
+          chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+        });
+        stepCtx.matched = cascade.matched;
+        stepCtx.cumulative = cascade.cumulative;
+        stepCtx.written = cascade.written;
+        stepCtx.prior = cascade.prior;
+        stepCtx.overrides = cascade.overrides;
+        stepCtx.gate = cascade.gate;
+        stepCtx.elapsed_ms = Date.now() - startMs;
+        if (cascade.skipped || cascade.writeSkipped) {
+          // LG-15's gated skip scores only `when: "pre"` checks (same reasoning as
+          // isIngestStep's own gated skip, above); a pre_write-fail scores everything
+          // except `post` (same reasoning as isLinkStep's writeSkipped, above).
+          const positions = cascade.skipped ? ['pre'] : ['pre', 'pre_write'];
+          onlyChecks = new Set(descriptor.checks.filter((c) => positions.includes(c.when)).map((c) => c.id));
+          stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
+        }
       }
 
       // §5.5 (2) — `ctx.report()` is the ONLY observation path. A returned
@@ -992,8 +1236,10 @@ async function runWithPool(runnable, pool, ctx) {
       // the upsert's inserts and not the clear's rewrites.
       const counterScope = link
         ? { matched: link.matched, cumulative: link.cumulative, written: link.written, gate: link.gate }
-        : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null);
-      counters = ingest && ingest.skipped
+        : (cascade
+          ? { matched: cascade.matched, cumulative: cascade.cumulative, written: cascade.written, gate: cascade.gate }
+          : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null));
+      counters = (ingest && ingest.skipped) || (cascade && cascade.skipped)
         ? { records_total: null, records_new: null, records_updated: null }
         : deriveCounters(descriptor, computeResult, counterScope);
 
@@ -1010,6 +1256,11 @@ async function runWithPool(runnable, pool, ctx) {
       if (ingest && ingest.skipped) {
         status = RUN_STATUS.COMPLETED;
         terminal = selectTerminal(descriptor, { kind: 'skip_gated', status, discriminator: ingest.signal });
+      } else if (cascade && cascade.skipped) {
+        // LG-15 — the SAME shape as an ingest gated skip: a green `completed` row a
+        // downstream HALT gate can read (DS4), never a bare SKIPPED with no audit_table.
+        status = RUN_STATUS.COMPLETED;
+        terminal = selectTerminal(descriptor, { kind: 'skip_gated', status, discriminator: 'skip' });
       } else if (verdict === 'FAIL' && unaccepted.length === 0 && failedIds.size > 0) {
         status = RUN_STATUS.COMPLETED_WITH_ERRORS;
         terminal = selectTerminal(descriptor, { kind: 'success', status });
@@ -1039,6 +1290,13 @@ async function runWithPool(runnable, pool, ctx) {
         // skip — but it returns `records_meta: {}` when `ctx.written` is null, so it
         // contributes no block of its own and this one is not overwriting anything.
         ...(ingest && ingest.skipped && ingest.emitKey ? { [ingest.emitKey]: ingest.emitBlock } : {}),
+        // LG-15 / G-13 — a gated skip re-stamps the SAME self-consumed producer field
+        // (`threshold_updated_at`-shaped: whatever the config_version trigger's emit_key
+        // names) from the prior run's own block, so the NEXT run's config_version diff
+        // still has a baseline to compare against — never silently dropped on a skip.
+        ...(cascade && cascade.skipped && cascade.prior && typeof cascade.prior === 'object'
+          ? Object.fromEntries(Object.entries(cascade.prior).filter(([k]) => /_updated_at$/.test(k)))
+          : {}),
         // §1.2a P4 — "the value in force is observable in the run's records_meta".
         // Absent entirely for a `config: "none"` step, so the byte cost is paid only
         // by steps that actually consume a tunable (§1.2a P3).
@@ -1166,11 +1424,13 @@ module.exports = {
   selectTerminal,
   isIngestStep,
   isLinkStep,
+  isCascadeStep,
   assertRequirements,
   REQUIREMENT_PROBES,
   ledgerPipelineName,
   runIngestPhase,
   runLinkPhase,
+  runCascadePhase,
   executeOrderedWrites,
   acceptedCheckIds,
   makePreWriteGate,
