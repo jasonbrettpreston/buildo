@@ -65,7 +65,7 @@ const { assertDbTarget } = require('../resolve-db');
 const { validateDescriptor } = require('./validate');
 const { buildAuditTable, deriveVerdict, selectChecks } = require('./verdict');
 const { RUN_STATUS, ownsLedgerRow, openLedgerRow, finalizeLedgerRow } = require('./ledger');
-const { resolveConfig } = require('./config');
+const { resolveConfig, retiredVarRow } = require('./config');
 const staleness = require('./staleness');
 const acquire = require('./acquire');
 const write = require('./write');
@@ -816,6 +816,11 @@ async function runWithPool(runnable, pool, ctx) {
   const hoisted = declaresConfig && descriptor.config.hoisted_above_gate === true;
   let configValues = EMPTY_CONFIG;
   let configStamp = null;
+  // R-A (2026-08-28) — every `config.retired[]` entry, annotated with whether its
+  // `logic_variables` row still exists. Carried alongside `configStamp` so the
+  // `retired_var_row_present` audit row can be built once compute has run, exactly
+  // like the LR-D2 `prior_run_read_failed` row below.
+  let configRetiredStatus = [];
 
   // ⚠️ DECLARED AUDIT GAP, S2-min. A compute that throws BEFORE any
   // `ctx.report()` emits ZERO audit rows — the failure survives only as the
@@ -835,7 +840,7 @@ async function runWithPool(runnable, pool, ctx) {
   try {
     await assertDatabaseTarget(pool, descriptor);
     if (owns) runId = await openLedgerRow(pool, slug);
-    if (hoisted) ({ values: configValues, stamp: configStamp } = await resolveConfig(pool, descriptor));
+    if (hoisted) ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus } = await resolveConfig(pool, descriptor));
 
     // §4.1 ② — txn-scoped advisory lock on identity.lock. `skipEmit: false`
     // because the SKIP summary is the library's to emit: the SDK's built-in one
@@ -843,7 +848,7 @@ async function runWithPool(runnable, pool, ctx) {
     // verdict UNKNOWN today instead of a row-derived verdict.
     const lockResult = await pipeline.withAdvisoryLock(pool, descriptor.identity.lock, async () => {
       if (declaresConfig && !hoisted) {
-        ({ values: configValues, stamp: configStamp } = await resolveConfig(pool, descriptor));
+        ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus } = await resolveConfig(pool, descriptor));
       }
       const observations = Object.create(null);
       const declared = new Set(descriptor.checks.map((c) => c.id));
@@ -963,7 +968,14 @@ async function runWithPool(runnable, pool, ctx) {
       // check because there is nothing for a compute to observe — the read failed
       // before any ctx existed — and declaring it would put a row on every healthy run
       // whose only possible value is "fine". Absent = the read succeeded.
-      const extraRows = ingest && ingest.priorError ? [staleness.priorRunErrorRow(ingest.priorError)] : [];
+      // R-A (2026-08-28) — one `retired_var_row_present` row per declared `config.retired[]`
+      // entry, on EVERY run (not gated on the row still existing): absence is the
+      // affirmative INFO signal that the retirement is complete, so the row must appear
+      // whether it reads WARN or INFO.
+      const extraRows = [
+        ...(ingest && ingest.priorError ? [staleness.priorRunErrorRow(ingest.priorError)] : []),
+        ...configRetiredStatus.map(retiredVarRow),
+      ];
       const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks);
       // The counter SCOPE, per phase. §11's Counter Semantic Contract is a scoping
       // contract before it is a naming one: `written.e2.inserted` is only meaningful

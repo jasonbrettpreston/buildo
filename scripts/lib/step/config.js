@@ -45,6 +45,17 @@
  * the row with `node -r dotenv/config scripts/seeds/apply-logic-variables.js`
  * before the step can run.
  *
+ * RULING R-A (2026-08-28, ADVERSARY DELTA): a RETIRED tunable (`descriptor.config.retired[]`)
+ * is a declaration, never a live registry row — an operator-editable knob with zero
+ * effect is a FALSE AFFORDANCE. This module reuses the SAME declared-names presence
+ * SELECT above rather than opening a second query path: `$1` is widened to declared ∪
+ * retired names, and any RETIRED name the query finds still present in `logic_variables`
+ * is returned as `retiredPresent` for the runner to stamp as a `retired_var_row_present`
+ * audit row — WARN while the row still exists, INFO once an operator has deleted it.
+ * `resolveConfig` never reads or projects a retired variable's VALUE (`values`/`stamp`
+ * only ever carry `cfg.logic_variables[]`, never `cfg.retired[]`) — presence is observed,
+ * never consumed.
+ *
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.2a P4, §5.5
  * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §4.1, §4.2
  */
@@ -74,15 +85,18 @@ function invalidReason(raw, min, max) {
  *
  * @param {import('pg').Pool} pool
  * @param {object} descriptor - already AJV-validated by `pipeline.step()`
- * @returns {Promise<{values: Readonly<Record<string, number>>, stamp: Record<string, number>|null}>}
+ * @returns {Promise<{values: Readonly<Record<string, number>>, stamp: Record<string, number>|null, retiredStatus: Array<{name: string, since: string, why: object, ledger: string, present: boolean}>}>}
  *   `values` is what becomes `ctx.config`; `stamp` is what becomes
  *   `records_meta.config` (null when the step declares `config: "none"`).
+ *   `retiredStatus` (R-A) is every `cfg.retired[]` entry annotated with whether its
+ *   `logic_variables` row still exists — always `[]` for a `config: "none"` step or
+ *   a step that declares no `retired` entries.
  */
 async function resolveConfig(pool, descriptor) {
   const slug = descriptor.identity.name;
   const cfg = descriptor.config;
   if (!cfg || cfg === NONE) {
-    return { values: Object.freeze(Object.create(null)), stamp: null };
+    return { values: Object.freeze(Object.create(null)), stamp: null, retiredStatus: [] };
   }
 
   const { logicVars } = await loadMarketplaceConfigs(pool, slug, { quiet: true });
@@ -93,15 +107,29 @@ async function resolveConfig(pool, descriptor) {
   // Presence in the LIVE TABLE, not presence in `logicVars`, is what makes a
   // variable operator-editable, so it takes its own query: one SELECT, scoped to
   // exactly the names this step declares.
+  //
+  // R-A (2026-08-28, ADVERSARY DELTA): the SAME query answers a second question —
+  // does a RETIRED name still hold a live row an operator could (wrongly) believe
+  // does something? `$1` is widened to declared ∪ retired rather than opening a
+  // second SELECT, because the presence signal for either kind of name is the
+  // identical predicate over the identical table.
   const declaredNames = cfg.logic_variables.map((decl) => decl.name);
+  const retired = Array.isArray(cfg.retired) ? cfg.retired : [];
+  const retiredNames = retired.map((r) => r.name);
+  const allNames = [...new Set([...declaredNames, ...retiredNames])];
   let presentInDb = new Set();
-  if (declaredNames.length > 0) {
+  if (allNames.length > 0) {
     const { rows: presenceRows } = await pool.query(
       'SELECT variable_key FROM logic_variables WHERE variable_key = ANY($1)',
-      [declaredNames],
+      [allNames],
     );
     presentInDb = new Set(presenceRows.map((r) => r.variable_key));
   }
+  // EVERY retired entry gets an audit signal, not only the present ones — an
+  // absent row is the AFFIRMATIVE evidence the retirement is complete, not
+  // silence. `retiredStatus` carries the presence bit for the runner to render
+  // as WARN (row still exists) / INFO (row is gone) via `retiredVarRow` below.
+  const retiredStatus = retired.map((r) => ({ ...r, present: presentInDb.has(r.name) }));
 
   const values = Object.create(null);
   const stamp = {};
@@ -186,7 +214,25 @@ async function resolveConfig(pool, descriptor) {
     stamp[name] = seeded;
   }
 
-  return { values: Object.freeze(values), stamp };
+  return { values: Object.freeze(values), stamp, retiredStatus };
 }
 
-module.exports = { resolveConfig };
+/**
+ * The `retired_var_row_present` audit row for one `config.retired[]` entry (R-A).
+ * WARN while the `logic_variables` row still exists (an operator has not deleted
+ * the false affordance yet); INFO once it is gone — absence is the affirmative
+ * evidence the retirement is complete, not silence. One row per retired entry, so
+ * multiple retirements on one step never collide in the audit table.
+ */
+function retiredVarRow(entry) {
+  return {
+    metric: `retired_var_row_present:${entry.name}`,
+    value: entry.present
+      ? `"${entry.name}" (retired ${entry.since}, ${entry.ledger}) still has a live logic_variables row — an operator-editable knob with zero effect`
+      : `"${entry.name}" (retired ${entry.since}, ${entry.ledger}) has no logic_variables row`,
+    threshold: 'no logic_variables row for a retired name',
+    status: entry.present ? 'WARN' : 'INFO',
+  };
+}
+
+module.exports = { resolveConfig, retiredVarRow };

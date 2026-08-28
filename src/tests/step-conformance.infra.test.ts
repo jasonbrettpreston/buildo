@@ -880,6 +880,194 @@ describe('§1.2a P4 — every tunable is externalized (declared ≡ registry ≡
 });
 
 // ---------------------------------------------------------------------------
+// 5c. R-A (2026-08-28, ADVERSARY DELTA) — retirement of a tunable is a
+// declaration, never a live registry row: retired ∩ logic_variables = ∅, and a
+// retired name is absent from the seed, GlobalConfigCard GROUPS, and any
+// ctx.config read in the compute.
+// ---------------------------------------------------------------------------
+
+interface RetiredConfigDescriptor {
+  identity: { name: string };
+  config: 'none' | { logic_variables: Array<{ name: string }>; retired?: Array<{ name: string }> };
+}
+
+/** The declared live + retired config-var names for a converted step. */
+function declaredRetired(relFile: string): { slug: string; declared: string[]; retired: string[] } {
+  const d = JSON.parse(
+    fs.readFileSync(path.join(REPO_ROOT, `${relFile.slice(0, -3)}.descriptor.json`), 'utf8'),
+  ) as RetiredConfigDescriptor;
+  if (d.config === 'none') return { slug: d.identity.name, declared: [], retired: [] };
+  return {
+    slug: d.identity.name,
+    declared: d.config.logic_variables.map((v) => v.name),
+    retired: (d.config.retired ?? []).map((v) => v.name),
+  };
+}
+
+/**
+ * Every R-A finding for one step. `declared`/`retired` are PARAMETERS (not read
+ * from disk) so the RED canaries below can drive the exact predicates with a
+ * synthesized overlap/leak, mirroring `configFindings` above.
+ */
+function retiredFindings(relFile: string, declared: string[], retired: string[]): string[] {
+  const findings: string[] = [];
+  const overlap = retired.filter((n) => declared.includes(n));
+  if (overlap.length > 0) {
+    findings.push(`retired ∩ logic_variables is non-empty: ${overlap.join(', ')} — a name may not be both live and retired (R-A)`);
+  }
+
+  const computeRel = `${COMPUTE_DIR}/${path.basename(relFile)}`;
+  const hasCompute = fs.existsSync(path.join(REPO_ROOT, computeRel));
+  const computeConsumed = hasCompute
+    ? [
+        ...new Set(
+          [...fs.readFileSync(path.join(REPO_ROOT, computeRel), 'utf8').matchAll(/ctx\.config\.([a-z][a-z0-9_]*)/g)]
+            .map((m) => m[1]!),
+        ),
+      ]
+    : [];
+
+  for (const name of retired) {
+    if (Object.prototype.hasOwnProperty.call(SEED, name)) {
+      findings.push(`retired var "${name}" is still present in scripts/seeds/logic_variables.json — a false affordance (R-A)`);
+    }
+    if (GROUP_KEYS.has(name)) {
+      findings.push(`retired var "${name}" is still present in GlobalConfigCard GROUPS — invisible-retirement is not the concern, VISIBLE-but-dead is (R-A)`);
+    }
+    if (computeConsumed.includes(name)) {
+      findings.push(`retired var "${name}" is still read as ctx.config.${name} in ${computeRel} — retirement is a lie (R-A)`);
+    }
+  }
+  return findings;
+}
+
+describe('R-A — retirement of a tunable is a declaration, never a live registry row', () => {
+  it('at least one converted step declares a retired var (else the whole battery is vacuous)', () => {
+    const totals = CONVERTED.map((f) => declaredRetired(f).retired.length);
+    expect(
+      totals.reduce((a, b) => a + b, 0),
+      'no converted step declares config.retired — the battery below would be a vacuous pass',
+    ).toBeGreaterThan(0);
+  });
+
+  for (const relFile of CONVERTED) {
+    it(`${relFile} — retired ∩ logic_variables = ∅; retired names absent from seed / GROUPS / ctx.config`, () => {
+      const { declared, retired } = declaredRetired(relFile);
+      const findings = retiredFindings(relFile, declared, retired);
+      expect(findings, findings.join('\n')).toEqual([]);
+    });
+  }
+
+  const WITH_RETIRED = CONVERTED.filter((f) => declaredRetired(f).retired.length > 0);
+
+  for (const relFile of WITH_RETIRED) {
+    it(`RED — ${relFile}: a name declared BOTH live and retired reddens (retired ∩ logic_variables ≠ ∅)`, () => {
+      const { declared, retired } = declaredRetired(relFile);
+      const findings = retiredFindings(relFile, [...declared, retired[0]!], retired);
+      expect(findings.some((f) => f.includes('retired ∩ logic_variables')), findings.join('\n')).toBe(true);
+    });
+
+    it(`RED — ${relFile}: a retired name still present in the seed reddens`, () => {
+      const { declared, retired } = declaredRetired(relFile);
+      const seededName = declared.find((n) => Object.prototype.hasOwnProperty.call(SEED, n));
+      expect(seededName, 'no declared var of this step is seeded — the seed-direction canary is vacuous').toBeTruthy();
+      const findings = retiredFindings(relFile, declared.filter((n) => n !== seededName), [...retired, seededName!]);
+      expect(findings.some((f) => f.includes('still present in scripts/seeds/logic_variables.json')), findings.join('\n')).toBe(true);
+    });
+
+    it(`RED — ${relFile}: a retired name still present in GlobalConfigCard GROUPS reddens`, () => {
+      const { declared, retired } = declaredRetired(relFile);
+      const groupedName = declared.find((n) => GROUP_KEYS.has(n));
+      expect(groupedName, 'no declared var of this step is admin-visible — the GROUPS-direction canary is vacuous').toBeTruthy();
+      const findings = retiredFindings(relFile, declared.filter((n) => n !== groupedName), [...retired, groupedName!]);
+      expect(findings.some((f) => f.includes('still present in GlobalConfigCard GROUPS')), findings.join('\n')).toBe(true);
+    });
+
+    it(`RED — ${relFile}: a retired name still read as ctx.config in the compute reddens`, () => {
+      const { declared, retired } = declaredRetired(relFile);
+      const computeRel = `${COMPUTE_DIR}/${path.basename(relFile)}`;
+      const computeSrc = fs.existsSync(path.join(REPO_ROOT, computeRel))
+        ? fs.readFileSync(path.join(REPO_ROOT, computeRel), 'utf8')
+        : '';
+      const readName = declared.find((n) => computeSrc.includes(`ctx.config.${n}`));
+      expect(readName, 'no declared var of this step is read as ctx.config — the compute-direction canary is vacuous').toBeTruthy();
+      const findings = retiredFindings(relFile, declared.filter((n) => n !== readName), [...retired, readName!]);
+      expect(findings.some((f) => f.includes('still read as ctx.config')), findings.join('\n')).toBe(true);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 5d. R-B (2026-08-28, ADVERSARY DELTA) — a destructive full retraction target
+// (retract_when full_only, or retract "all") REQUIRES recovery.interrupted =
+// "force_full_on_next_run": a crashed retraction on that target leaves a hole
+// no incremental run's staleness gate can see (measured 2026-08-28 —
+// link_massing forced FULL killed mid-rebuild left parcel_buildings at
+// 29,330/520,492 and the next run went incremental).
+// ---------------------------------------------------------------------------
+
+interface RecoveryDescriptor {
+  identity: { name: string };
+  outputs: 'none' | { writes: Array<{ table: string; retract: string; retract_when?: string }> };
+}
+
+/** Does at least one write target retract destructively (the R-B trigger predicate)? */
+function hasDestructiveRetraction(writes: Array<{ retract: string; retract_when?: string }>): boolean {
+  return writes.some((w) => w.retract === 'all' || w.retract_when === 'full_only');
+}
+
+/** Every R-B finding for one step. `writes`/`interrupted` are PARAMETERS for the RED canary below. */
+function interruptedFindings(relFile: string, writes: Array<{ retract: string; retract_when?: string }>, interrupted: string | undefined): string[] {
+  if (!hasDestructiveRetraction(writes)) return [];
+  if (interrupted !== 'force_full_on_next_run') {
+    return [
+      `${relFile}: a destructive retraction target (retract "all" or retract_when "full_only") requires ` +
+        `recovery.interrupted = "force_full_on_next_run" (R-B), got ${JSON.stringify(interrupted ?? null)}`,
+    ];
+  }
+  return [];
+}
+
+function recoveryFor(relFile: string): { writes: Array<{ table: string; retract: string; retract_when?: string }>; interrupted: string | undefined } {
+  const d = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, `${relFile.slice(0, -3)}.descriptor.json`), 'utf8')) as
+    RecoveryDescriptor & { recovery: 'none' | { interrupted?: string } };
+  const writes = d.outputs === 'none' ? [] : d.outputs.writes;
+  const interrupted = d.recovery === 'none' ? undefined : d.recovery.interrupted;
+  return { writes, interrupted };
+}
+
+describe('R-B — a destructive full retraction target requires a truthful crash-recovery posture', () => {
+  it('at least one converted step has a destructive retraction target (else the battery is vacuous)', () => {
+    const any = CONVERTED.some((f) => hasDestructiveRetraction(recoveryFor(f).writes));
+    expect(any, 'no converted step declares a destructive retraction target — the battery below would be vacuous').toBe(true);
+  });
+
+  for (const relFile of CONVERTED) {
+    it(`${relFile} — recovery.interrupted is truthfully declared for any destructive retraction target`, () => {
+      const { writes, interrupted } = recoveryFor(relFile);
+      const findings = interruptedFindings(relFile, writes, interrupted);
+      expect(findings, findings.join('\n')).toEqual([]);
+    });
+  }
+
+  const WITH_DESTRUCTIVE = CONVERTED.filter((f) => hasDestructiveRetraction(recoveryFor(f).writes));
+
+  for (const relFile of WITH_DESTRUCTIVE) {
+    it(`RED — ${relFile}: recovery.interrupted "none" reddens against its destructive retraction target`, () => {
+      const { writes } = recoveryFor(relFile);
+      const findings = interruptedFindings(relFile, writes, 'none');
+      expect(findings.some((f) => f.includes('requires recovery.interrupted')), findings.join('\n')).toBe(true);
+    });
+
+    it(`RED — ${relFile}: a MISSING recovery.interrupted (undefined) reddens too`, () => {
+      const { writes } = recoveryFor(relFile);
+      const findings = interruptedFindings(relFile, writes, undefined);
+      expect(findings.some((f) => f.includes('requires recovery.interrupted')), findings.join('\n')).toBe(true);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 6. The real loop — empty today, one entry per landed pilot
 // ---------------------------------------------------------------------------
 

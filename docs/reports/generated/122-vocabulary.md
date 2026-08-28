@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 18 categories, 322 declarable fields
+# The step contract — 18 categories, 337 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -26,10 +26,10 @@
 | 10 | `deviations` | 8 | 1 | 0 |
 | 11 | `limitations` | 3 | 0 | 0 |
 | 12 | `interpretation` | 2 | 0 | 0 |
-| 13 | `recovery` | 6 | 4 | 0 |
+| 13 | `recovery` | 12 | 6 | 0 |
 | 14 | `database` | 3 | 1 | 0 |
 | 15 | `counters` | 9 | 0 | 0 |
-| 16 | `config` | 12 | 3 | 0 |
+| 16 | `config` | 21 | 4 | 0 |
 | 17 | `sharing` | 9 | 4 | 0 |
 | 18 | `terminals` | 9 | 3 | 0 |
 
@@ -480,6 +480,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `rollback` | `pointer` · `none` | † ! |
 | `verify_clean` | `generated` · `none` | † ! |
 | `cascades` | `derived` | † ~ |
+| `interrupted` | `force_full_on_next_run` · `none` | † ! |
+| `interrupted_why` | object {text, liveness} | — |
+| `interrupted_why.text` | string | † |
+| `interrupted_why.liveness` | `none` \| object {kind, ref} | † |
+| `interrupted_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `interrupted_why.liveness.ref` | string | † |
 
 ### database
 
@@ -525,6 +531,15 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `validation_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `validation_why.liveness.ref` | string | † |
 | `hoisted_above_gate` | `true` · `false` | † |
+| `retired` | list of object {name, since, why, ledger} | — |
+| `retired[].name` | string | † |
+| `retired[].since` | string `^[0-9]{4}-[0-9]{2}-[0-9]{2}$` | † |
+| `retired[].why` | object {text, liveness} | † |
+| `retired[].why.text` | string | † |
+| `retired[].why.liveness` | `none` \| object {kind, ref} | † |
+| `retired[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `retired[].why.liveness.ref` | string | † |
+| `retired[].ledger` | string | † |
 
 ### sharing
 

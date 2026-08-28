@@ -681,11 +681,12 @@
 
   "recovery": {
     "reset": "TRUNCATE is never correct — the junction is rebuilt, not reloaded. Re-run with LINK_MASSING_FORCE_FULL=1, which forces mode full: the scoped retraction clears every link for centroid-bearing parcels and the same batch loop rebuilds them. Budget ~22 minutes and expect the next enrich_parcels run to re-enrich every linked parcel, because the rebuild bumps linked_at on all of them.",
-    "resume": "checkpoint",
+    "resume": "none",
     "force": "LINK_MASSING_FORCE_FULL",
     "rollback": "none",
     "verify_clean": "generated",
-    "cascades": "derived"
+    "cascades": "derived",
+    "interrupted": "force_full_on_next_run"
   },
 
   "database": {
@@ -710,7 +711,18 @@
       { "name": "link_massing_nearest_confidence", "min": 0, "max": 1, "on_invalid": "fail" }
     ],
     "validation": "strict",
-    "hoisted_above_gate": true
+    "hoisted_above_gate": true,
+    "retired": [
+      {
+        "name": "link_massing_grid_degrees",
+        "since": "2026-08-28",
+        "why": {
+          "text": "JS-fallback grid span; path retired A-8 — the 345-line JS fallback path (link-massing.js:391-660) has 0/11 audited runs since 7c75e92e and was replaced by the fail-loud guards.requires PostGIS + geom column precondition. T7's DECLARATION was retired at commit 9 after the armed §1.2a P4 conformance gate caught it as read by nothing (a dead declaration / FALSE AFFORDANCE, not the visible-retirement concern of LM-D7).",
+          "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.2a P4 R-A" }
+        },
+        "ledger": "LM-D7"
+      }
+    ]
   },
 
   "sharing": {

@@ -601,7 +601,12 @@
     "force": "RAVINE_FORCE_RELOAD",
     "rollback": "none",
     "verify_clean": "generated",
-    "cascades": "derived"
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "ADVERSARY DELTA R-B (2026-08-28): the rule (retract_when full_only or retract \"all\" REQUIRES force_full_on_next_run) does not apply here — load_ravines' only write target declares retract \"departed\", a scoped departure DELETE that always fires and is not a full destructive retraction gated on mode. A kill mid-run leaves the guarded upsert + departure delete exactly where the transaction boundary left them (write_discipline.txn_scope), never a half-cleared table an incremental gate would misread as complete — the failure mode R-B measured on link_massing's retract:\"all\" target does not exist here.",
+      "liveness": "none"
+    }
   },
 
   "database": {

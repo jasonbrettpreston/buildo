@@ -70,6 +70,7 @@
 
 const { spawn, execFileSync } = require('child_process');
 const { StringDecoder } = require('string_decoder');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { createResolvedPool } = require('../lib/resolve-db');
@@ -132,6 +133,54 @@ function parseRowCeiling(raw) {
 /** Descriptor path convention: `<step>.descriptor.json` beside the script (assert-schema precedent). */
 function descriptorPathFor(step) {
   return step.replace(/\.(js|py)$/, '') + '.descriptor.json';
+}
+
+// ── source_fingerprint (RULING R-C, 2026-08-28) ───────────────────────────────
+// "The golden capture is a LOCKFILE." Editing a converted step's compute/descriptor
+// without re-capturing must go RED, and a commit-message claim of "differential green"
+// is no longer evidence — src/tests/golden-fingerprint.infra.test.ts checks every
+// docs/reports/golden/<slug>/post/*.json's `source_fingerprint` against the CURRENT
+// tree using this same exported helper.
+
+/** `scripts/lib/compute/<basename(step)>`, or null when the step has no compute module yet. */
+function computePathFor(step) {
+  const rel = path.posix.join('scripts/lib/compute', path.basename(step));
+  return fs.existsSync(rel) ? rel : null;
+}
+
+/** The step's `<slug>.notes.json`, resolved from `descriptor.interpretation.file`, or null. */
+function notesPathFor(descriptor, descriptorPath) {
+  if (!descriptor || !descriptor.interpretation || descriptor.interpretation === 'none') return null;
+  const dir = descriptorPath.split(path.sep).join('/').split('/').slice(0, -1).join('/');
+  return dir ? `${dir}/${descriptor.interpretation.file}` : descriptor.interpretation.file;
+}
+
+/** CRLF → LF, so a checkout-line-ending difference never moves the fingerprint. */
+function normaliseEol(text) {
+  return text.replace(/\r\n/g, '\n');
+}
+
+/**
+ * sha256 over (step file, descriptor, notes, compute module) — SORTED path order, each
+ * file contributing its repo-relative path (forward slashes) then its LF-normalised
+ * content. Any listed file that does not exist THROWS: a lockfile that silently skips a
+ * missing input is not a lockfile.
+ * @param {{step: string, descriptorPath: string, notesPath: string|null, computePath: string|null}} paths
+ * @returns {{source_fingerprint: string, fingerprint_files: string[]}}
+ */
+function computeSourceFingerprint({ step, descriptorPath, notesPath, computePath }) {
+  const files = [step, descriptorPath, notesPath, computePath]
+    .filter((f) => typeof f === 'string' && f.length > 0)
+    .map((f) => f.split(path.sep).join('/'))
+    .sort();
+  const hash = crypto.createHash('sha256');
+  for (const f of files) {
+    if (!fs.existsSync(f)) throw new Error(`source_fingerprint: fingerprint input ${f} does not exist`);
+    hash.update(f);
+    hash.update('\n');
+    hash.update(normaliseEol(fs.readFileSync(f, 'utf8')));
+  }
+  return { source_fingerprint: hash.digest('hex'), fingerprint_files: files };
 }
 
 /**
@@ -606,12 +655,15 @@ function buildCapture(raw) {
   };
 }
 
+/**
+ * RULING R-C (2026-08-28): `git_head` unresolvable THROWS (the capture exits non-zero) —
+ * never "unknown". A lockfile whose provenance field can silently degrade to a string is
+ * not a lockfile: a capture with no resolvable commit records NOTHING about what code
+ * produced it, and "unknown" would have looked like a successful capture to every
+ * downstream reader (the golden-fingerprint gate included).
+ */
 function gitHead() {
-  try {
-    return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  } catch (err) {
-    return `unknown (${err.message.split('\n')[0]})`;
-  }
+  return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -670,6 +722,20 @@ async function main() {
   const raw = await capture({ step, chain: String(opts.chain), args, tables, tablesSource, ceiling, tableSpecs, invariantSpec, invariantsFile });
   const doc = buildCapture(raw);
 
+  // R-C — the LOCKFILE stamp. Computed after the run (not before): the fields it hashes
+  // (step file, descriptor, notes, compute module) are exactly what could have changed
+  // BETWEEN this capture and the one it will later be compared against.
+  const fp = computeSourceFingerprint({
+    step,
+    descriptorPath,
+    notesPath: notesPathFor(descriptor, descriptorPath),
+    computePath: computePathFor(step),
+  });
+  doc.source_fingerprint = fp.source_fingerprint;
+  doc.fingerprint_files = fp.fingerprint_files;
+  console.log(`[capture-step-golden] source_fingerprint=${fp.source_fingerprint} ` +
+    `over [${fp.fingerprint_files.join(', ')}]`);
+
   const tableLine = doc.table_state
     .map((t) => `${t.table}:${t.row_count}/${t.skipped_reason ?? String(t.content_hash).slice(0, 8)}` +
       (doc.table_timing[t.table] != null ? ` (${doc.table_timing[t.table]} ms)` : ''))
@@ -723,4 +789,8 @@ module.exports = {
   resolveTableSpec,
   validateInvariantSpec,
   invariantResult,
+  computeSourceFingerprint,
+  computePathFor,
+  notesPathFor,
+  gitHead,
 };

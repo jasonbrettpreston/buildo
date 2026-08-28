@@ -200,7 +200,9 @@
     "force": "ENRICH_HERITAGE_FORCE_FULL",
     "rollback": "none",
     "verify_clean": "generated",
-    "cascades": "derived"
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": { "text": "fixture descriptor — not a converted step; no destructive full-retraction target modeled", "liveness": "none" }
   },
   "database": {
     "class": "primary",

@@ -194,6 +194,20 @@ const LIVE_NEAREST_LINKS = 103_530;
 const LM_D13_FLIPPABLE_LINKS = 18_252;
 const LM_D13_ZERO_DISTANCE_TIES = 17_566;
 const LIVE_CODE_VERSION = 'v2-building-centroid-in-parcel';
+/**
+ * LM-D13 FIXED — the CONVERTED step's forced-FULL junction hash, proven hash-equal across
+ * TWO independent forced FULL relinks at peel 8b commit `68b8e361` (differential 4/4) and
+ * CONFIRMED a third time by the ruling R-C re-capture (`sources-full-forced-1.json`, this
+ * commit). Ruling R-C (2026-08-28): the golden capture is a LOCKFILE keyed on
+ * `source_fingerprint`, not a scenario library — a SECOND standing forced-FULL capture
+ * proves nothing a git-recorded historical hash-match does not already prove, and it
+ * doubles a ~14-27 min capture for no new evidence. `sources-full-forced-2.json` was
+ * therefore deleted (git keeps its history); this constant is what the retained SINGLE
+ * forced-FULL capture is now checked against, so the twice-run-agreement claim stays a
+ * standing, falsifiable assertion rather than becoming folklore the moment the file count
+ * dropped to one.
+ */
+const LM_D13_FIXED_HASH = '329bbcb6ccd5c32d8b8e9ffca77ff255';
 
 // ONE compiler, the same one pipeline.step() validates with.
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
@@ -1087,11 +1101,20 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
 
     // (b) THE FIX. Same act, converted step, tiebreak in force: identical hash, identical
     // invariants. U-1 closes here and D-22 retires with it.
+    //
+    // RULING R-C (2026-08-28): the golden dir retains exactly ONE forced-FULL capture per
+    // invocation now (a lockfile, not a scenario library) — the twice-run agreement this
+    // block proves was ALREADY measured (peel 8b, commit `68b8e361`, differential 4/4) and
+    // is pinned as LM_D13_FIXED_HASH rather than re-derived from a second standing file. The
+    // retained capture is still checked BOTH ways: against the pinned historical value AND
+    // against the OLD (pre-fix) forced pair, so a regression back to LM-D13's order-dependent
+    // assignment still reds this test even with only one live file to compare.
     const newForced = docs.filter((d) => isNew(d) && isForcedFull(d));
-    expect(newForced.length, `peel 8b must capture TWO forced FULL relinks of the CONVERTED step (post/sources-full-forced-1.json, -2.json)`).toBeGreaterThanOrEqual(2);
+    expect(newForced.length, `peel 8b / ruling R-C must retain at least ONE forced FULL relink of the CONVERTED step (post/sources-full-forced-1.json)`).toBeGreaterThanOrEqual(1);
     for (const d of newForced) assertActuallyForcedFull(d);
     const newHashes = [...new Set(newForced.map((d) => junctionState(d).content_hash))];
-    expect(newHashes.length, `LM-D13 FIXED: two forced FULL relinks must hash-EQUAL, got ${newHashes.join(' vs ')}`).toBe(1);
+    expect(newHashes.length, `LM-D13 FIXED: every retained forced FULL relink must hash-EQUAL each other, got ${newHashes.join(' vs ')}`).toBe(1);
+    expect(newHashes[0], `the retained forced-FULL capture must hash-equal the peel-8b/R-C pinned value (twice-run determinism, commit 68b8e361)`).toBe(LM_D13_FIXED_HASH);
     expect(oldHashes.has(newHashes[0] as string), 'the post-tiebreak hash is a NEW junction state — the fix MOVES ROWS, which is why it could not ride the no-op conversion diff').toBe(false);
     for (const d of newForced) {
       expect(junctionState(d).row_count, `${d.file}: the tiebreak changes WHICH building a tied parcel links, never HOW MANY rows exist`).toBe(LIVE_ROWS);

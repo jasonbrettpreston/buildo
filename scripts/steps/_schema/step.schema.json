@@ -1219,15 +1219,27 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["reset", "resume", "force", "rollback", "verify_clean", "cascades"],
+          "required": ["reset", "resume", "force", "rollback", "verify_clean", "cascades", "interrupted"],
           "properties": {
             "reset": { "anyOf": [{ "enum": ["generated", "none"], "x-frozen": true }, { "type": "string", "minLength": 8 }] },
             "resume": { "enum": ["checkpoint", "none"], "x-frozen": true },
             "force": { "anyOf": [{ "const": "none" }, { "$ref": "#/definitions/envVar" }] },
             "rollback": { "enum": ["pointer", "none"], "x-frozen": true },
             "verify_clean": { "enum": ["generated", "none"], "x-frozen": true },
-            "cascades": { "const": "derived", "x-derived": true, "description": "Derived from outputs.invalidates. Never declared." }
-          }
+            "cascades": { "const": "derived", "x-derived": true, "description": "Derived from outputs.invalidates. Never declared." },
+            "interrupted": {
+              "description": "OPERATOR RULING R-B (2026-08-28, ADVERSARY DELTA — measured 2026-08-28: link_massing forced FULL killed mid-rebuild left parcel_buildings at 29,330/520,492 rows; the next run's gate read \"unchanged\" and went incremental, so the hole persisted). WHAT the step's recovery posture is when a process is killed mid-write. `force_full_on_next_run` is the truthful posture until the library implements the marker-based reader (deferred to pilot 4, declared gap filed in docs/reports/review_followups.md — a crashed/stuck-running row newer than the last completed run must read as a FULL signal). `none` is legal only with `interrupted_why` and is a WARN in conformance — every `outputs.writes[]` entry with `retract_when: full_only` or `retract: \"all\"` REQUIRES `interrupted: \"force_full_on_next_run\"` (step-conformance.infra.test.ts), because a crashed retraction on that target leaves a hole no incremental run's staleness gate can see.",
+              "enum": ["force_full_on_next_run", "none"],
+              "x-frozen": true
+            },
+            "interrupted_why": { "$ref": "#/definitions/why" }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "interrupted": { "const": "none" } }, "required": ["interrupted"] },
+              "then": { "required": ["interrupted_why"] }
+            }
+          ]
         }
       ]
     },
@@ -1289,6 +1301,21 @@
             "hoisted_above_gate": {
               "type": "boolean",
               "description": "link-wsib's A1/A2 fence: a SKIP-eligible step must never let an invalid threshold hide behind a green SKIPPED summary, so config validation runs ABOVE the lock and the gate."
+            },
+            "retired": {
+              "description": "OPERATOR RULING R-A (2026-08-28). Retirement of a tunable is itself a declaration, never a live registry row: an operator-editable knob with zero effect is a FALSE AFFORDANCE. `retired ∩ logic_variables` MUST be empty (step-conformance.infra.test.ts) — a name lives in exactly one of the two arrays, never both. A retired name must appear in NO seed (scripts/seeds/logic_variables.json), NO GlobalConfigCard GROUPS entry and NO ctx.config read in the compute (same conformance suite). `scripts/lib/step/config.js resolveConfig` widens its declared-names presence SELECT to declared ∪ retired and stamps a `retired_var_row_present` audit row (WARN when the row still exists, INFO once an operator has deleted it) until the row is gone — ADVERSARY DELTA R-A.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "since", "why", "ledger"],
+                "properties": {
+                  "name": { "type": "string", "minLength": 1 },
+                  "since": { "$ref": "#/definitions/isoDate" },
+                  "why": { "$ref": "#/definitions/why" },
+                  "ledger": { "type": "string", "minLength": 1 }
+                }
+              }
             }
           },
           "allOf": [
