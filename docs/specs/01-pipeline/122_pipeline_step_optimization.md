@@ -60,7 +60,7 @@ Notation-only duplicates (`identity.contract_version` · `inputs.expect_nonempty
 
 ---
 
-## Operator rulings R-A..R-F (2026-08-28, post pilot 3 cutover `68b8e361`) — ✅ ACCEPTED
+## Operator rulings R-A..R-J (2026-08-28, post pilot 3 cutover `68b8e361`) — ✅ ACCEPTED
 
 Policy frame: §1.2a "nothing hidden" + McDonald's standardization — declare everything, fail loudly, externalize tunables, closed vocabularies, one place per concept, machine-checkable. **These amend the sections named; where older text in this spec conflicts, these govern.**
 
@@ -72,6 +72,10 @@ Policy frame: §1.2a "nothing hidden" + McDonald's standardization — declare e
 | **R-D** | **Cloud parity is a chain-start assertion — narrowed to where `assert_schema` actually runs.** `assert_schema` gains one declared check `declared_logic_variables_present`: for every converted descriptor, every `config.logic_variables[].name` has a `logic_variables` row; FAIL (chain halts) naming the remedy `node -r dotenv/config scripts/seeds/apply-logic-variables.js`. It fires in every chain that runs `assert_schema` today — **permits** and **coa** (1st step) and **sources** (2nd, after `reconcile`, the ratified §7.4 A3 head) — **it is NOT chain-start-universal**: `entities`, `wsib` and `deep_scrapes` run no `assert_schema`; LM-D15's mid-step throw remains the **sole backstop** there until a WF adds `assert_schema` to them (filed as a followup). The check declares `inputs.reads.tables: [logic_variables]` and `blocking: true` (`when: "pre"`) — a FAIL without `blocking` does not halt a chain. `scripts/seeds/apply-logic-variables.js` becomes a declared deploy-path step (runbook + §1.2a P4 addendum below). LM-D15's mid-chain throw stays as the second fence | §1.2a P4 addendum · deploy/runbook line |
 | **R-E** | **G7 mutation clause (Spec 123).** Replace the unsatisfiable "class-A: mutation ≥80% on covered code" with the enforced standard: every class-A behaviour has a both-directions lock proven RED then GREEN at the designed assertion (Spec 119 tier "Behaviorally red-first"), listed in the assessment report's G7 row by test id. Mutation testing over `scripts/lib/compute/**` is filed as a bounded followup spike (Stryker's `mutate` is currently scoped to `src/features/leads/lib/`, 3 files), **not a gate**. Claim 214 (A.16) in `scripts/violations/plan-claims.mjs` states the retired ≥80% mutation text; it is amended and `docs/reports/generated/123-claim-plan.md` regenerated in the same commit | Spec 123 §6 G7 |
 | **R-F** | **Standing Reflection gate, starting pilot 4.** Every pilot's assessment report gains a required `§R Reflection — low-confidence items and recurring issues` section, written AFTER cutover and BEFORE the next pilot's plan, with two closed tables: (a) LOW-CONFIDENCE — item · why confidence is low (measured evidence) · what would raise it · owner (pilot N+1 / library / spec / followup); (b) RECURRING/STANDARD-SHAPING — issue · first seen (pilot, commit) · expected to recur in which archetypes · resolution (`RULED (id)` / `DEFERRED-TO` pilot N+1 with a declared pending gap / `FOLLOWUP (id)`). Every DEFERRED item MUST appear in the next pilot's active-task plan as a named step, not prose. Spec 123 gains gate **G9 "Reflection"**. Pilot 3's own §R is a placeholder pointer to this block (seeded from R-A..R-E) | §8 (pilot procedure/commit ledger) · Spec 123 §6 |
+| **R-G** | **Presence vs validity split for tunables (rewrites §1.2a P4).** PRESENCE of a declared variable's `logic_variables` row is always FAIL (LM-D15, R-D); VALIDITY is per-variable via the closed `on_invalid` enum — `fail` MANDATORY for a verdict- or write-affecting variable, `default`/`clamp` allowed otherwise, each with a `why`. **Full text now lives in Spec 124 §2 Rule 3** — this row is a pointer, not the register | §1.2a P4 (moved to Spec 124 §2 — Rule 3) |
+| **R-H** | **Severity selection for a standing non-zero metric.** Spec 48 §4.9 / `tasks/lessons.md:117` stands: WARN + a declared, machine-observable retighten condition — never FAIL, never INFO-by-taste. INFO only for a purely descriptive counter no threshold could bound, declared in `checks[].why`. LM-D6/LM-D11 re-dispositioned OPEN → WARN+retighten, carried to pilot 4. **Full text: Spec 124 §2 Rule 10 addendum** | `docs/reports/defect-ledger.md` LM-D6/LM-D11 (moved to Spec 124 §2 — Rule 10 addendum) |
+| **R-I** | **Four pilot-practice promotions to standing policy.** (1) a phase-reordering ruling must re-derive every "before X" guarantee (already Spec 124 Rule 11); (2) a banned/grandfathered exception needs a dated, SHA-anchored, named-approver ledger entry (already Spec 124 Rule 9); (3) discoverer ≠ adjudicator restated as a policy rule, not just a procedure step (Spec 124 §4); (4) a document move/consolidation is verified by a line-set diff before commit (Spec 124 §4). **Full text: Spec 124 §4** | Spec 123 §7.1 (moved to Spec 124 §4) |
+| **R-J** | **Spec 124 is the standalone home of this policy.** §1.2a below becomes a pointer; Spec 124 §5 is the authoritative rulings register going forward; this table remains as history | §1.2a (whole section, see below) |
 
 ---
 
@@ -211,32 +215,31 @@ Three questions get asked of this design repeatedly. Here they are, answered onc
 
 *(Extractor conflict-discovery detail moved to `122a_step_optimization_appendix.md` §A2 — historical; resolved by V1–V6/R2.)*
 
-### 1.2a ⚠️ OPERATING POLICY — nothing hidden (operator-ratified 2026-08-25, Pilot 1)
+### 1.2a ⚠️ OPERATING POLICY — nothing hidden — MOVED TO SPEC 124 (R-J, 2026-08-28)
 
 > **Objective this programme serves:** the "McDonald's pipeline" — every step is the same step except for its compute; every one of the 18 categories answered from a closed menu; data validated and observable *within* each step; every standardized setting visible *across* all steps.
 
-**P1 — Nothing is hidden. Standardize wherever possible. Always observable and intelligible.** A behaviour that exists only in code is a policy failure. Order of preference for any guard, fence, rule or knob:
-1. **descriptor data** (an existing category/field) —
-2. **a named, declared check** that emits an audit row every run, its rule stated in `checks[].why` + `limitations` —
-3. **a shape rule on compute** (§5.5 — statically enforced, zero runtime I/O) —
-4. **a NEW standardized box** in `step.schema.json` — only when the rule is genuinely data-shaped and no existing box fits.
-"Preserve it in compute" is never a disposition on its own.
+**The P1/P2/P4/P5 rule text that used to live here has moved to Spec 124 §2 — that spec is now the standalone
+home of the durable policy; this spec cites it, it does not restate it (R-J).** Pointers:
 
-**P2 — Compute is JUST compute.** Domain computation only: no gating, no ledger, no lock, no emit, no logging side-channels, no environment reads, no policy comments. If a behaviour has no home, it gets a box (P1.4) — never a side-channel. Enforced by `scripts/ast-grep-rules/compute-shape.yml` + `step-conformance.infra.test.ts` (§5.5).
+| Was | Now |
+|---|---|
+| P1 — nothing hidden, order of preference (descriptor > check > shape rule > new field) | moved to Spec 124 §2 — Rule 1 |
+| P2 — compute is JUST compute | moved to Spec 124 §2 — Rule 2 |
+| P4 — every tunable externalized to admin logic variables (incl. the R-A/R-D addenda below, superseded by R-G's presence/validity split). **Historical record kept here on purpose** (locked by `assert-schema-config-parity.logic.test.ts`): Pilot 1 found `assert_schema` declaring `config:"none"` while compute hard-coded `limit=20`, `Range: bytes=0-2048` and `bytes=0-8192` — remediated as a WF3 before Pilot 2 | moved to Spec 124 §2 — Rule 3 |
+| P5 — fence dispositions follow P1 | moved to Spec 124 §2 — Rule 4 |
 
-**P3 — Disk I/O is a balance that is ADJUDICATED with numbers, never assumed.** Every added box / declared check / audit row costs per step × per run (descriptor + notes reads, `records_meta` bytes, audit rows, golden captures). A proposal to add one carries its measured cost (bytes and rows per run × fleet × cadence) and the operator rules. Visibility wins by default; the cost is stated. Pilot 1 baseline (records_meta B / check rows / stdout B, pre→post): permits 669→515/5→3/1175→1255 · coa 665→425/5→2/1094→1088 · sources 418→796/2→6/2960→3572 · standalone 669→1036/5→9/3492→4093; ~50 KB read per invocation (step + descriptor + notes + compute). Accepted.
+**P3 stays here** — it is programme mechanics (a conversion-proposal discipline for this effort, not a
+property of a finished step), per Spec 124 §6. **P3 — Disk I/O is a balance that is ADJUDICATED with numbers,
+never assumed.** Every added box / declared check / audit row costs per step × per run (descriptor + notes
+reads, `records_meta` bytes, audit rows, golden captures). A proposal to add one carries its measured cost
+(bytes and rows per run × fleet × cadence) and the operator rules. Visibility wins by default; the cost is
+stated. Pilot 1 baseline (records_meta B / check rows / stdout B, pre→post): permits 669→515/5→3/1175→1255 ·
+coa 665→425/5→2/1094→1088 · sources 418→796/2→6/2960→3572 · standalone 669→1036/5→9/3492→4093; ~50 KB read per
+invocation (step + descriptor + notes + compute). Accepted.
 
-**P4 — DIRECTIVE: every tunable is externalized to admin logic variables.** The pipelines already externalized their variables to the admin logic-variables registry; the standardization MUST preserve and ENFORCE it going forward:
-- every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable, editable in admin — never a literal in compute;
-- the descriptor's `config` category declares **every** variable the step consumes, with bounds and validation posture; `config: "none"` is legal only for a step that consumes zero tunables (a hard-coded knob with `config: "none"` is a hidden variable = P1 violation);
-- compute reads variables only through the library seam (`ctx.config`), resolved and bounds-validated BEFORE compute runs, so the value in force is observable in the run's `records_meta`;
-- a conformance check asserts both directions (declared ⊆ registry; registry-tagged-to-step ⊆ declared) and a compute rule flags numeric-literal tunables not read from `ctx.config`.
-- a declared variable with no `logic_variables` row is a FAILED run, never a seed fallback (LM-D15): `scripts/seeds/logic_variables.json` bootstraps a fresh DB, it is not a live registry, and `ctx.config` resolution THROWs — naming the remedy (`node -r dotenv/config scripts/seeds/apply-logic-variables.js`) — rather than silently stamping the seed value into `records_meta.config` as if an operator had edited it.
-Pilot 1 is the first known violation (`assert_schema` declared `config: "none"` while compute hard-coded `limit=20`, `Range: bytes=0-2048`, `bytes=0-8192`) — remediated as a WF3 before Pilot 2; the enforcement lands with it and gates every later pilot.
-
-> **R-A / R-D addenda (2026-08-28).** Retirement is itself a declaration — `config.retired: [{name, since, why, ledger}]`; a retired name still holding a live `logic_variables` row is a WARN (`retired_var_row_present`), reusing `config.js`'s presence query widened to declared ∪ retired — never silently accepted, never a live registry deletion by the step. Cloud parity is a chain-start assertion: `assert_schema` declares `declared_logic_variables_present` (blocking, `when: "pre"`) wherever it runs (permits, coa, sources — not yet entities/wsib/deep_scrapes, filed as a followup); `apply-logic-variables.js` is the declared remedy and a deploy-path step (runbook). See the R-A..R-F rulings block above.
-
-**P5 — Fence dispositions follow P1.** Intent-ledger vocabulary (Spec 120 §14.3) is unchanged, but `preserved-in-compute` requires the rule to be declared (P1.2) and is otherwise a finding.
+See the R-A..R-J rulings block above for R-A's retirement declaration and R-D's chain-start assertion (both
+folded into Spec 124 Rule 3 per R-G's presence/validity split).
 
 ### 1.3 The 18 categories
 
