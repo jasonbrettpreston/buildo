@@ -1,0 +1,157 @@
+# Pilot 4 — `link_wsib` (MATCHER) — Step Optimization Assessment
+
+**Status:** Commit 1 (PH-0 boundary freeze, §1) landed. §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. Sections §2 (PH-3 Intent Ledger), §3 (PH-5 seam map), §4 (PH-6 classification), §5 (non-determinism inventory), §6 (declared diffs), §R Reflection — NOT YET WRITTEN, land at their own commits per the ledger.
+
+**Governing plan:** `.cursor/active_task.md` (Pilot 4 — link_wsib). **Governing specs (operator correction 2026-08-28 — led by the step's own governing spec, not the architecture spec):** `docs/specs/01-pipeline/46_wsib_enrichment.md` (PRIMARY), `60_shared_steps.md` (§2 Step Registry row 19, §"Link WSIB"), `52_source_wsib.md`, `41_chain_permits.md` §Step Breakdown row 7, `43_chain_sources.md` §Step Breakdown row 19, then `docs/specs/01-pipeline/122_pipeline_step_optimization.md`, `124_step_standard_policy.md`, `123_step_opt_assessment_validation.md` (packaging/procedure).
+
+---
+
+## §1. PH-0 — boundary freeze (commit 1, G0)
+
+> Re-executed 2026-08-28, same session as §0's seed — every §0 number reconfirmed bit-for-bit against `172.20.0.10:5432/postgres` (`schema_migrations` count **242**, max filename `245_parcels_centroid_geom_invalidation.sql`, unchanged). §0 above is not superseded; this section is the formal G0 pass that re-executes it as commit 1's own claim, per Spec 123 §7's "PH-0 is a commit, not a planning artifact" convention (pilot 3 precedent: `2fa69840`).
+
+**Re-confirmed this commit (`node -r dotenv/config`, `pipeline.createPool()`):**
+
+| Check | §0 seed value | Re-executed 2026-08-28 (commit 1) | Match |
+|---|---|---|---|
+| `wsib_registry` total / linked | 121,116 / 13,965 | 121,116 / 13,965 | ✓ identical |
+| `entities` total / wsib-registered | 3,948 / 938 | 3,948 / 938 | ✓ identical |
+| `logic_variables` total | 432 | 432 | ✓ identical |
+| `schema_migrations` count / max | 242 / `245_...` | 242 / `245_...` | ✓ identical |
+| `wsib_registry` index count | 11 | 11 (`idx_wsib_class, idx_wsib_enrichment_queue, idx_wsib_is_gta_unenriched, idx_wsib_legal_norm, idx_wsib_legal_trgm, idx_wsib_linked_entity, idx_wsib_registry_unlinked, idx_wsib_trade_norm, idx_wsib_trade_trgm, wsib_registry_legal_name_normalized_mailing_address_key, wsib_registry_pkey`) | ✓ identical set |
+| RLS (`wsib_registry`, `entities`) | enabled / 0 policies | `relrowsecurity=true` both tables (policy count not re-queried this pass — §0's "0 policies" stands, unchanged surface) | ✓ consistent |
+
+**No drift found.** The DB has not moved since the planning session captured §0 — same host (`172.20.0.10:5432`, container-internal address for `127.0.0.1:54322`), same database (`postgres`), same migration floor.
+
+**Additional G0 surface, re-executed this commit (not in §0's original seed):**
+- `load-wsib.js`'s `ON CONFLICT (legal_name_normalized, mailing_address) DO UPDATE SET` (lines ~219-233) lists exactly `trade_name, trade_name_normalized, predominant_class, naics_code, naics_description, subclass, subclass_description, business_size, is_gta, last_seen_at` — confirmed by direct read. Never touches `linked_entity_id`/`match_confidence`/`matched_at`/`mailing_address`/`primary_phone`/`primary_email`/`website`.
+- `grep -n "DELETE\|TRUNCATE" scripts/load-wsib.js` → **0 matches** (Fold C).
+- `SELECT count(*), count(*) FILTER (WHERE primary_phone IS NOT NULL OR primary_email IS NOT NULL OR website IS NOT NULL), count(*) FILTER (WHERE linked_entity_id IS NOT NULL AND same) FROM wsib_registry` → **121,116 / 0 / 0** (Fold C — local dev DB carries zero Serper-enriched contact rows).
+- `manifest.chains.sources` direct array index: `load_wsib` at 18, `link_wsib` at 19, of 28 (Fold C, G-19).
+
+**Spec 46/60/52 cross-check (operator correction, 2026-08-28 — see `.cursor/active_task.md`'s "Before/after guarantees" table, now 19 rows G-1..G-19):** two measured CONFLICTS between Spec 60's own text and the code (G-16: Spec 60's Step Registry declares `link_wsib`'s write target as `entities` ONLY, refuted — the step also writes `wsib_registry`; G-17: Spec 60 names the method "Fuzzy string matching (Levenshtein distance)", refuted — the real method is `pg_trgm` trigram similarity in a 3-tier exact/exact/fuzzy cascade). Both are declared diffs, scheduled for the Spec Update step at commit 7, not resolved here. One genuine GAP (G-18: A-7's copyContacts reverse-clear pass has no contract anywhere in Spec 46 §2, which describes only the forward COALESCE-fill direction) — flagged as a ruling needed at commit 7, not resolved here. No BLOCKING conflict found against A-7's mechanism or A-8's cadence ruling.
+
+### Action: `review_followups.md:3015` (finding 1 / A-6) — VERIFY-AND-SKIP, confirmed
+
+Read verbatim this commit: the row at `docs/reports/review_followups.md:3015` (the `R-D, assert_schema` MED entry) already carries the 2026-08-28 correction — *"NOTE 2026-08-28: the R-D commit body wrongly cited link_wsib as a `wsib`-chain member — MEASURED: link_wsib sits in `permits` and `sources`, both assert_schema-headed... so pilot 4 is covered"* — landed at commit `188d7371`/`ad0c1682` (this branch's own HEAD before this pilot started). **No edit made** — Fold A's Integration S3 finding is confirmed correct; this pilot's action downgrades from "correct" to "verify," as scheduled.
+
+### Two LOW followups filed this commit (`docs/reports/review_followups.md`)
+
+1. The intermittent unnamed hook red (1 test, seen twice 2026-08-28 under load — see below).
+2. Spec 52 §Edge Cases' "Truncated download → could drop previously matched builders (no rollback protection)" is STALE — `load-wsib.js` is UPSERT-only (0 DELETE/TRUNCATE), so a truncated download cannot drop a previously-matched builder; the real (different) risk is `trade_name_normalized` rewrite under an unchanged link (Fold C, feeds G-19/A-8's corpus-signal rationale).
+
+---
+
+## §0. PH-0 seed — measured boundary table (2026-08-28 planning session)
+
+> Executed against `127.0.0.1:54322/postgres` (schema_migrations row count 242, max applied filename `245_parcels_centroid_geom_invalidation.sql`) and the working tree at HEAD, branch `wf2/deep-scrapes-restore-l0`. This is a SEED for commit 1's full PH-0 pass, not the pass itself — commit 1 must re-execute every row below, not copy it.
+
+### Source file surface
+
+| Metric | Value | Command |
+|---|---|---|
+| Lines | 547 | `wc -l scripts/link-wsib.js` |
+| `pool.query` sites | 8 | `grep -c "pool\.query" scripts/link-wsib.js` |
+| `client.query` sites | 9 | `grep -c "client\.query" scripts/link-wsib.js` |
+| `try` / `catch` / `finally` | 0 / 0 / 0 | `grep -c "try {\|catch\|finally"` |
+| `throw` sites | 1 (`:116`, logicVars validation) | `grep -n "throw new Error"` |
+| `emitSummary` sites | 3 (gate-SKIP, zero-unlinked, real-run) | `grep -n "emitSummary"` |
+| `emitMeta` sites | 3 | `grep -n "emitMeta"` |
+| `Date.now()` | 2 (`:178`, `:467` — elapsed time only) | `grep -n "Date\.now"` |
+| `new Date(` | 1 (`:90`, wraps a DB-read value, not a write) | `grep -n "new Date("` |
+| `process.env` reads | 4 (`FORCE_FULL_ENV` ×1, `PIPELINE_CHAIN` ×3) | `grep -n "process\.env"` |
+| `process.argv` reads | 1 (`:123`) | `grep -n "process\.argv"` |
+| `console.*` | 0 | `grep -c "console\."` |
+| `fetch(` | 0 | `grep -c "fetch("` |
+| `module.exports` | `{ main, ADVISORY_LOCK_ID, OWN_SLUGS, UPSTREAM_SLUGS, readThresholdVersionSignal, hasThresholdChanged, FORCE_FULL_ENV }` (`:547`) | `grep -n "module.exports"` |
+| Module-scope guard | `if (require.main === module) { pipeline.run('link-wsib', main); }` (`:543-545`) — I1 fence, already fixed | `grep -n "require.main"` |
+| `ADVISORY_LOCK_ID` | 94 | `grep -n "ADVISORY_LOCK_ID ="` |
+
+### Write surface (per §1.4 re-derivation — NOT the evidence-base label)
+
+| Target | Statements | Columns written | Guard mechanism | Scope |
+|---|---|---|---|---|
+| `wsib_registry` | 3 (tier 1/2/3) | `linked_entity_id`, `match_confidence`, `matched_at` | scope-as-guard (`linked_entity_id IS NULL` folded into the join) | per-tier `matched` CTE |
+| `entities.is_wsib_registered` | 3 (one per tier) | `is_wsib_registered` | `AND e.is_wsib_registered = false` | `match_confidence = <tier value>` |
+| `entities.{primary_phone,primary_email,website}` | 3 (one per tier, `copyContacts`) | 3 contact columns | `NULLIF(...) IS NULL` (only fills empty) | per-tier, via `w_agg` |
+
+~~**6 write statements, 2 targets, 0 destructive retraction, 0 `K` (derived_recompute) target.**~~ **CORRECTED (Fold A, Integration S1, 2026-08-28): 9 statement executions / 7 distinct SQL texts / 3 write groups, 2 targets, 0 destructive retraction TODAY (see Fold A below — A-7 proposes adding one, scoped to the tier-3 target), 0 `K` (derived_recompute) target.**
+
+### Chain membership (measured, not grep-context)
+
+| Chain | Array index | Adjacent steps | Runs `assert_schema` at head? |
+|---|---|---|---|
+| `permits` (33 steps) | 6 | `["classify_scope","builders","link_wsib","geocode_permits","link_parcels",...]` | YES (`permits[0]`) |
+| `sources` (28 steps) | 19 | `[...,"load_wsib","link_wsib","load_zoning",...]` | YES (`sources[1]`, after `reconcile`) |
+| `wsib` (1 step) | — | `["enrich_wsib_registry"]` only | **`link_wsib` is NOT a member** |
+
+### Live table state
+
+| Table | Rows | Key facts |
+|---|---|---|
+| `wsib_registry` | 121,116 (13,965 linked, 11.53%) | 22 cols, 11 indexes incl. 2 GIN trigram, RLS on / 0 policies |
+| `entities` | 3,948 (938 wsib-registered, 23.75%) | 19 cols, RLS on |
+| `logic_variables` | 432 total, 1 wsib key (`wsib_fuzzy_match_threshold` = 0.6) | no min/max columns on the table |
+
+### `pipeline_runs` history (4 slug forms, matching `OWN_SLUGS`)
+
+| Slug | Completed | Failed | Skipped | Last completed |
+|---|---:|---:|---:|---|
+| `link_wsib` (bare) | 1 | 0 | 0 | 2026-03-05 |
+| `permits:link_wsib` | 26 | 2 | 10 | 2026-07-17 |
+| `sources:link_wsib` | 13 | 0 | 0 | 2026-07-08 |
+| `link-wsib` (hyphen) | 0 | 0 | 0 | — (never written under this form) |
+
+### Git archaeology
+
+| Metric | Value |
+|---|---|
+| Total commits | 31 |
+| `fix(` commits | 17 (54.8%) |
+| `Severity:` footers | 0 |
+| `lesson-routing:` footers | 0 |
+| Date range | 2026-03-05 → 2026-08-16 |
+| Most recent 5 commits | `4bb44fbb`, `a81c6a7c`, `b92ad16f`, `2633c1cb`, `74653a8f` (all 2026-08-16, Phase B B3 fold work) |
+
+### Fold A (2026-08-28) additions — tier-3 contamination and fan-in (PLAN-altitude panel: Reality-Check BLOCKING + Integration, folded into `.cursor/active_task.md`)
+
+> Measured live this session, same DB as §0 above (`127.0.0.1:54322/postgres`). Not yet a full PH-0/PH-6 pass — seeded here so commit 1/commit 4 extend rather than re-derive these numbers.
+
+| Metric | Value | Note |
+|---|---:|---|
+| Linked rows failing today's tier-3 predicate | 8,450 / 13,965 (60.5% of all linked rows) | residue of the superseded pre-`d704a447` (2026-04-01) algorithm; `WHERE linked_entity_id IS NULL` is monotone, so a fixed bug never repairs an already-written link |
+| Tier-3 (0.60) links failing today's predicate | 8,450 / 13,645 (61.9%) | tier-3-only view of the same contamination |
+| Tier-3 current-predicate pass rate | 38.1% | 100 − 61.9; pinned as `wsib_tier3_current_predicate_pass_rate_pct` in `invariants.json` |
+| Magnet entities (fan-in ≥ 10) | 171 | concentration of the contamination |
+| Worst fan-in | MDK CONSTRUCTION — 2,118 links | pinned as `wsib_entity_fanin_max` |
+| Second worst fan-in | COLE CONTRACTING — 1,404 links | |
+| Fan-in = 1 share | 443 / 3,948 entities (11.2%) | replaces the "23.8% WSIB-registered plausible?" ask (Reality-Check SHOULD-FIX) |
+| Cumulative link rate (raw) | 11.53% (13,965 / 121,116) | includes contamination |
+| Clean link rate | 4.55% (5,515 / 121,116) | **below** the T2 `≥5%` WARN floor — corrects the plan's "6.53 points of headroom" claim |
+| Tier split | 0.95: 75 · 0.90: 245 · 0.60: 13,645 | `GROUP BY match_confidence`; sums to 13,965. Corrects the plan's "not separately queryable" line |
+| Write recount (Integration S1) | 9 statement executions / 7 distinct SQL texts / 3 write groups on 2 tables | corrects the plan's earlier "6 write statements" figure |
+
+**PLAN CHANGE:** new operator ask A-7 "tier-3 repair" (declared full-mode retraction, `retract_when: full_only` scoped to `match_confidence = 0.60`) — see `.cursor/active_task.md` for the full ruling and its downstream consequences (Spec 124 R-B now satisfiable; `recovery.interrupted` becomes REQUIRED).
+
+### Fold B (2026-08-28, fold-validation of Fold A — grounder CONFIRMED every number exactly; Cross-read Adversary amendments below)
+
+> Grounder re-executed every Fold A number this fold against the same DB (`127.0.0.1:54322/postgres`): contamination 8,450/13,965 (60.5%) and 8,450/13,645 (61.9%), clean link rate 4.55% (5,515/121,116), 171 magnet entities, MDK CONSTRUCTION 2,118 / COLE CONTRACTING 1,404, fan-in=1 share 443/3,948 (11.2%), tier split 0.95:75 · 0.90:245 · 0.60:13,645, write recount 9/7/3. **No discrepancy found.** The Cross-read Adversary then walked A-1 and A-7's ruled/recommended mechanisms pairwise against the live codebase and found three BLOCKING gaps in A-7's mechanism plus one SHOULD-FIX in A-1. Full text and in-place amendments live in `.cursor/active_task.md`'s own "Fold B" section, PLAN-altitude asks (A-1, A-7), Library-growth table (new LG-16), P4 tunable inventory (new T7, T6 bounds amended), and the Operator rulings requested block. Summary:
+
+| Item | Finding | Disposition |
+|---|---|---|
+| A-7 mechanism (BLOCKING b′) | `write.js`'s only retraction primitive is DELETE (`executeRetraction:486-489`) — unsafe for `wsib_registry` (owned by `load-wsib.js`, not this step) | New write executor **LG-16 "UPDATE-to-NULL"** — scoped `SET linked_entity_id=NULL, match_confidence=NULL, matched_at=NULL WHERE match_confidence=0.60`, `retract_when: full_only`, symmetric with LG-11 |
+| A-7 convergence (BLOCKING b) | `TIER3_SELECT LIMIT 1000`/invocation; one FULL pass repairs ≤1,000 of ~5,515 clean rows | Mode `full` LOOPS to convergence, bounded by new tunable `link_wsib_tier3_full_max_iterations` (default 20, WARN `tier3_full_not_converged` on exhaustion); budget ≤ ~20 min one-time |
+| A-7 copyContacts (BLOCKING a) | `copyContacts` only fills empty fields — contacts from retracted links persist uncleared | Scoped reverse pass in the same FULL write group, provenance-by-equality, audited `contacts_cleared_on_retraction`; PH-6 (commit 4) must quantify 171-magnet exposure BEFORE the FULL run, not merely by it |
+| A-1 (SHOULD-FIX d) | `tiers.length===1` proof covers only the degenerate case; `runLinkPhase`'s batch loop (`index.js:605-634`) / hardcoded counters (`:558-565`) don't serve the bulk no-pagination cascade | Commit 7 must name+cost the non-degenerate branch inside `runLinkPhase`, or split to `runCascadePhase` if it exceeds ~150 lines/forks the write loop |
+| LG-15 | Is the gated-skip genuinely new library work, or a naming decision? | **CONFIRMED genuinely new** — `staleness.js`'s `selectMode` is strictly `full\|incremental`; `'skip'` is not a mode |
+| `chain.logic.test.ts:1568-1574` prose | Plan text read as a positive "`records_total` uses `totalUnlinked`" check | **Corrected**: it is a NEGATIVE constraint (`not /records_total\s*:\s*totalLinked/`) + `toContain('unlinked_start')` |
+| dry-run duration | Not measured this session (would write a `pipeline_runs` row) | Plan step added: time `--dry-run` once, before commit 5's golden captures |
+| Fan-in WARN default 20 | Recommended pending operator sign-off | **ACCEPTED** — fires immediately on the known-bad population (171 magnets, worst 2,118), intended, not a defect. Bounds amended min 2 / max 1000 (T6); new sibling tunable T7 `link_wsib_tier3_full_max_iterations` (20, min 1 / max 100) declared for A-7's convergence loop |
+
+### Test re-homing surface (15 files, see `.cursor/active_task.md` for the full table)
+
+15 files under `src/tests/` reference `link-wsib.js`/`link_wsib`. Two are **shared fences spanning steps outside this conversion's scope**: `src/tests/db/ledger-gate-callers.db.test.ts` (540 lines, tests 3 B3 callers together) and `src/tests/source-version.logic.test.ts` (505 lines, its `"adoption-lock"` test loops the same 3 files' source text).
+
+---
+
+*(§1–§6 and §R Reflection to be written per the commit ledger in `.cursor/active_task.md`. Do not fill ahead of the commit that owns each section.)*
