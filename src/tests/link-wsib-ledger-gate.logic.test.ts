@@ -42,6 +42,10 @@ const DESCRIPTOR_PATH = join(process.cwd(), 'scripts/link-wsib.descriptor.json')
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- the CJS library (LG-15's generic derivation)
 const staleness = require('../../scripts/lib/step/staleness.js') as {
   deriveLedgerSlugs: (descriptor: unknown) => { own: string[]; upstream: string[] };
+  selectMode: (args: {
+    descriptor: unknown; pool: unknown; prior: Record<string, string> | null;
+    argv: string[]; env: Record<string, string>;
+  }) => Promise<{ mode: 'full' | 'incremental'; reason: string; changed: boolean; explicit_full: boolean; forced: boolean }>;
 };
 
 interface Descriptor {
@@ -152,5 +156,74 @@ describe('F3 — link_wsib matching algorithm is pg_trgm trigram, not Levenshtei
     expect(wsibLine41).not.toMatch(/Fuzzy string match \(Levenshtein\)/);
     expect(wsibLine43).toMatch(/pg_trgm/);
     expect(wsibLine41).toMatch(/pg_trgm/);
+  });
+});
+
+// ── R-L (commit 8, 2026-08-28) — peel-8a-harvest ambiguity, ruled ───────────────────
+//
+// A-8(2)'s literal text read as "mode full is selected... BY the... [corpus] signal" —
+// an autonomous trigger. The shipped `selectMode` formula is `forced || (explicitFull &&
+// changed)`: `changed` alone is necessary but NOT sufficient, `explicitFull` (a literal
+// `--full` in the invoking argv) must ALSO be true, and neither `manifest.json`'s
+// `chain_args` nor the descriptor's `execution.invocation.sources.argv` carried `--full`
+// — so a corpus reload alone could never resolve `full` outside `LINK_WSIB_FORCE_FULL=1`.
+// R-L declares `--full` on the `sources` chain only (mirrored in both files, the
+// `link_massing`/`enrich_parcels` pattern) — this exercises `selectMode` DIRECTLY against
+// the descriptor's real declared `execution.invocation` argv (not a hand-typed literal),
+// so a future edit to the invocation is what this lock actually watches.
+describe('R-L — sources chain declares --full; permits does not; mode resolves full IFF the corpus signal moved (not from --full alone)', () => {
+  const WSIB_COUNT_CURRENT = '121116';
+  const THRESHOLD_UPDATED_CURRENT = '2026-06-10T00:00:00.000Z';
+
+  function mockPool(count: string, thresholdUpdatedAt: string) {
+    return {
+      query: async (sql: string) => {
+        if (/FROM wsib_registry/.test(sql)) return { rows: [{ n: count }] };
+        if (/FROM logic_variables/.test(sql)) return { rows: [{ updated_at: thresholdUpdatedAt }] };
+        return { rows: [] };
+      },
+    };
+  }
+
+  const pool = mockPool(WSIB_COUNT_CURRENT, THRESHOLD_UPDATED_CURRENT);
+  const UNCHANGED_PRIOR = { wsib_registry_count: WSIB_COUNT_CURRENT, threshold_updated_at: THRESHOLD_UPDATED_CURRENT };
+  const CHANGED_PRIOR = { wsib_registry_count: '100000', threshold_updated_at: THRESHOLD_UPDATED_CURRENT };
+
+  it('sources chain argv declares --full; permits chain argv does not (the wiring R-L pins)', () => {
+    expect(DESCRIPTOR.execution.invocation.sources).toMatchObject({ argv: ['--full'] });
+    expect(DESCRIPTOR.execution.invocation.permits).toMatchObject({ argv: [] });
+  });
+
+  it('unchanged corpus + sources (--full) → incremental — the existing lock stays green, --full alone never forces a repair', async () => {
+    const argv = (DESCRIPTOR.execution.invocation.sources as { argv: string[] }).argv;
+    const result = await staleness.selectMode({ descriptor: DESCRIPTOR, pool, prior: UNCHANGED_PRIOR, argv, env: {} });
+    expect(result.explicit_full, 'sources argv must present --full').toBe(true);
+    expect(result.changed, 'unchanged fixture must not report changed').toBe(false);
+    expect(result.mode).toBe('incremental');
+  });
+
+  it('changed-corpus fixture + sources (--full) → full — the corpus signal, not the flag, is what resolves it', async () => {
+    const argv = (DESCRIPTOR.execution.invocation.sources as { argv: string[] }).argv;
+    const result = await staleness.selectMode({ descriptor: DESCRIPTOR, pool, prior: CHANGED_PRIOR, argv, env: {} });
+    expect(result.explicit_full).toBe(true);
+    expect(result.changed, 'wsib_registry_count fixture differs from current — must report changed').toBe(true);
+    expect(result.mode).toBe('full');
+  });
+
+  it('permits (no --full) never resolves full, even against the SAME changed-corpus fixture', async () => {
+    const argv = (DESCRIPTOR.execution.invocation.permits as { argv: string[] }).argv;
+    const result = await staleness.selectMode({ descriptor: DESCRIPTOR, pool, prior: CHANGED_PRIOR, argv, env: {} });
+    expect(result.explicit_full, 'permits argv must not carry --full').toBe(false);
+    expect(result.changed).toBe(true);
+    expect(result.mode, 'A-8(2): never on a chain that should not retract').toBe('incremental');
+  });
+
+  it('LINK_WSIB_FORCE_FULL=1 still bypasses both checks (unchanged by R-L) — the commit-8 bootstrap-repair path', async () => {
+    const argv = (DESCRIPTOR.execution.invocation.permits as { argv: string[] }).argv; // even on permits (no --full)
+    const result = await staleness.selectMode({
+      descriptor: DESCRIPTOR, pool, prior: UNCHANGED_PRIOR, argv, env: { LINK_WSIB_FORCE_FULL: '1' },
+    });
+    expect(result.forced).toBe(true);
+    expect(result.mode).toBe('full');
   });
 });

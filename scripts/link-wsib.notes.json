@@ -63,6 +63,9 @@
     },
     {
       "note": "LW-D8 — database.min_migration is a COUNT floor (operator ruling P0, 9e2da7b1: scripts/lib/resolve-db.js assertDbTarget compares against COUNT(*) of schema_migrations), never a filename number. descriptor:448 was mis-set to 243 — the DDL migration's FILENAME (243_wsib_unlinked_partial_index.sql) — but the migrations/ sequence carries 4 historical filename gaps (43, 49, 50, 158), so COUNT never reaches 243 and the step refused to run forever. Corrected to 240: the 1-based position of 243_wsib_unlinked_partial_index.sql in the sorted migrations/ directory listing, which equals the COUNT value at the moment that file was applied (242 files total, applied in order)."
+    },
+    {
+      "note": "R-L — closes the peel-8a-harvest ambiguity: A-8(2)'s literal text read as an AUTONOMOUS corpus-driven full-mode trigger, but selectMode's forced || (explicitFull && changed) formula needs explicitFull TOO, and nothing wired --full into this step's own invocation. RULED: manifest.json's link_wsib gains chain_args.sources = [\"--full\"] (the existing declared pattern, same shape as link_massing/enrich_parcels) and execution.invocation.sources.argv mirrors it — so on the sources chain, mode resolves full IFF the wsib_registry corpus fingerprint changed (explicitFull true by declaration, changed decided by the real signal), never by the --full literal alone. The permits chain carries no --full, so it can never resolve full even on a changed corpus (bootstrap/repair stays a sources-chain and LINK_WSIB_FORCE_FULL=1 concern, never a permits one). LINK_WSIB_FORCE_FULL=1 still bypasses both checks via forced, unchanged by this ruling."
     }
   ],
   "counts": { "open_blind_spots": 0, "unpromoted_suspicious_if": 0 },

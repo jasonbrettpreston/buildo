@@ -1,0 +1,258 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/link-wsib.js",
+  "chain": "sources",
+  "git_head": "ce0d3f5f17c070012b2e70dce4223b18b2ccd9b0",
+  "exit_code": 1,
+  "signal": null,
+  "summary": null,
+  "summary_count": 0,
+  "meta": [],
+  "parse_errors": [],
+  "verdict": null,
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=242 (floor 240)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"cascade mode gate: FULL (force_full_env)\"}\n",
+  "stderr": "{\"level\":\"ERROR\",\"tag\":\"[link_wsib]\",\"msg\":\"syntax error at or near \\\"(\\\"\",\"error_type\":\"database\",\"stack\":\"error: syntax error at or near \\\"(\\\"\\n    at C:\\\\Users\\\\User\\\\Buildo\\\\node_modules\\\\pg\\\\lib\\\\client.js:631:17\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async Object.executeSetBasedClear (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\step\\\\write.js:535:18)\\n    at async C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\step\\\\index.js:820:25\\n    at async Object.withTransaction (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\pipeline.js:235:22)\\n    at async runCascadePhase (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\step\\\\index.js:807:3)\\n    at async pipeline.withAdvisoryLock.skipEmit (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\step\\\\index.js:1191:19)\\n    at async Object.withAdvisoryLock (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\pipeline.js:944:22)\\n    at async runWithPool (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\step\\\\index.js:1075:24)\\n    at async Object.run (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\pipeline.js:475:5)\",\"context\":{\"phase\":\"fatal\"}}\n{\"level\":\"ERROR\",\"tag\":\"[link_wsib]\",\"msg\":\"syntax error at or near \\\"(\\\"\",\"error_type\":\"database\",\"stack\":\"error: syntax error at or near \\\"(\\\"\\n    at C:\\\\Users\\\\User\\\\Buildo\\\\node_modules\\\\pg\\\\lib\\\\client.js:631:17\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async Object.executeSetBasedClear (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\step\\\\write.js:535:18)\\n    at async C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\step\\\\index.js:820:25\\n    at async Object.withTransaction (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\pipeline.js:235:22)\\n    at async runCascadePhase (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\step\\\\index.js:807:3)\\n    at async pipeline.withAdvisoryLock.skipEmit (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\step\\\\index.js:1191:19)\\n    at async Object.withAdvisoryLock (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\pipeline.js:944:22)\\n    at async runWithPool (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\step\\\\index.js:1075:24)\\n    at async Object.run (C:\\\\Users\\\\User\\\\Buildo\\\\scripts\\\\lib\\\\pipeline.js:475:5)\",\"context\":{\"phase\":\"fatal\"}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1689,
+  "table_state": [
+    {
+      "table": "entities",
+      "row_count": 3948,
+      "content_hash": "266797deb951b3bbac5d8a92e0ce755a",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "is_wsib_registered",
+        "primary_phone",
+        "primary_email",
+        "website"
+      ]
+    },
+    {
+      "table": "wsib_registry",
+      "row_count": 121116,
+      "ceiling_bypassed": "projected",
+      "content_hash": "c1be664a9e287070af15c96ba1482e1b",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "linked_entity_id",
+        "match_confidence",
+        "matched_at"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "entities": 6,
+    "wsib_registry": 137
+  },
+  "table_specs": {
+    "entities": {
+      "columns": [
+        "id",
+        "is_wsib_registered",
+        "primary_phone",
+        "primary_email",
+        "website"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "id"
+      ],
+      "order_source": "arg"
+    },
+    "wsib_registry": {
+      "columns": [
+        "id",
+        "linked_entity_id",
+        "match_confidence",
+        "matched_at"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [
+    {
+      "name": "wsib_tier3_current_predicate_pass_rate_pct",
+      "value": "38.1"
+    },
+    {
+      "name": "wsib_entity_fanin_max",
+      "value": "2118"
+    },
+    {
+      "name": "wsib_entity_fanin_p99",
+      "value": "208"
+    },
+    {
+      "name": "wsib_magnet_entities_fanin_ge_10",
+      "value": "171"
+    },
+    {
+      "name": "wsib_orphan_linked_entity_id",
+      "value": "0"
+    },
+    {
+      "name": "wsib_linked_confidence_matched_at_inconsistent",
+      "value": "0"
+    },
+    {
+      "name": "wsib_confidence_outside_closed_set",
+      "value": "0"
+    },
+    {
+      "name": "wsib_dead_bucket_050_060_count",
+      "value": "0"
+    },
+    {
+      "name": "wsib_registered_entities_with_zero_links",
+      "value": "0"
+    },
+    {
+      "name": "wsib_cumulative_link_rate_pct",
+      "value": "11.53"
+    },
+    {
+      "name": "wsib_registry_total_rows",
+      "value": "121116"
+    },
+    {
+      "name": "entities_wsib_registered_count",
+      "value": "938"
+    },
+    {
+      "name": "wsib_tier_confidence_split",
+      "value": "0.60:13645,0.90:245,0.95:75"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/link_wsib/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [
+    "--full"
+  ],
+  "nondeterminism": [],
+  "normalised": {
+    "step": "scripts/link-wsib.js",
+    "chain": "sources",
+    "exit_code": 1,
+    "summary": null,
+    "summary_count": 0,
+    "meta": [],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=242 (floor 240)\",\"tag\":\"[link_wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"cascade mode gate: FULL (force_full_env)\",\"tag\":\"[link_wsib]\"}"
+    ],
+    "table_state": [
+      {
+        "columns": [
+          "id",
+          "is_wsib_registered",
+          "primary_phone",
+          "primary_email",
+          "website"
+        ],
+        "content_hash": "266797deb951b3bbac5d8a92e0ce755a",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "row_count": 3948,
+        "table": "entities"
+      },
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "id",
+          "linked_entity_id",
+          "match_confidence",
+          "matched_at"
+        ],
+        "content_hash": "c1be664a9e287070af15c96ba1482e1b",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "row_count": 121116,
+        "table": "wsib_registry"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "wsib_tier3_current_predicate_pass_rate_pct",
+        "value": "38.1"
+      },
+      {
+        "name": "wsib_entity_fanin_max",
+        "value": "2118"
+      },
+      {
+        "name": "wsib_entity_fanin_p99",
+        "value": "208"
+      },
+      {
+        "name": "wsib_magnet_entities_fanin_ge_10",
+        "value": "171"
+      },
+      {
+        "name": "wsib_orphan_linked_entity_id",
+        "value": "0"
+      },
+      {
+        "name": "wsib_linked_confidence_matched_at_inconsistent",
+        "value": "0"
+      },
+      {
+        "name": "wsib_confidence_outside_closed_set",
+        "value": "0"
+      },
+      {
+        "name": "wsib_dead_bucket_050_060_count",
+        "value": "0"
+      },
+      {
+        "name": "wsib_registered_entities_with_zero_links",
+        "value": "0"
+      },
+      {
+        "name": "wsib_cumulative_link_rate_pct",
+        "value": "11.53"
+      },
+      {
+        "name": "wsib_registry_total_rows",
+        "value": "121116"
+      },
+      {
+        "name": "entities_wsib_registered_count",
+        "value": "938"
+      },
+      {
+        "name": "wsib_tier_confidence_split",
+        "value": "0.60:13645,0.90:245,0.95:75"
+      }
+    ]
+  },
+  "source_fingerprint": "a249407db091f2c0f996de85407382834504efac64b8ba4904d22e1f3f1afd7f",
+  "fingerprint_files": [
+    "scripts/lib/compute/link-wsib.js",
+    "scripts/link-wsib.descriptor.json",
+    "scripts/link-wsib.js",
+    "scripts/link-wsib.notes.json"
+  ]
+}

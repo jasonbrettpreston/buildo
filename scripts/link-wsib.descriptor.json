@@ -135,7 +135,7 @@
             "text": "Only touches a row currently non-NULL (a repeat mode-full run over an already-retracted set changes 0 rows) — genuinely enforced by write.js's set-based guard-clause codegen (LG-11 sibling growth), not merely by the scope predicate alone.",
             "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
           },
-          "scope": "match_confidence = $1 (the fuzzy tier's resolved confidence — tier 3 ONLY; tiers 1/2's exact matches are never retracted, LW-D5's contamination is 100% tier-3)",
+          "scope": "match_confidence = $1",
           "expected_change_ratio": "<= 1.0",
           "idempotent_rerun": "declared_drift",
           "idempotent_rerun_why": {
@@ -252,7 +252,7 @@
     "network": "none",
     "invocation": {
       "permits": { "argv": [], "env": { "PIPELINE_CHAIN": "permits" } },
-      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
+      "sources": { "argv": ["--full"], "env": { "PIPELINE_CHAIN": "sources" } }
     },
     "maintenance": "none"
   },
@@ -431,7 +431,7 @@
     }
   ],
 
-  "interpretation": { "file": "link-wsib.notes.json", "entries": 11 },
+  "interpretation": { "file": "link-wsib.notes.json", "entries": 12 },
 
   "recovery": {
     "reset": "TRUNCATE is never correct for wsib_registry (load-wsib.js owns row lifecycle) or entities. Re-run with LINK_WSIB_FORCE_FULL=1, which bypasses the ledger gate; the tier-3 repair itself is gated separately by mode resolving full (A-8's corpus signal, never schedule).",
