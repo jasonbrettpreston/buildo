@@ -1,6 +1,6 @@
 # Pilot 4 — `link_wsib` (MATCHER) — Step Optimization Assessment
 
-**Status:** Commits 1-2 landed (§1 PH-0 boundary freeze; §2 PH-3 Intent Ledger, PROPOSED, 17 fences + 7 LW-D* rows opened). §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. Sections §3 (PH-5 seam map), §4 (PH-6 classification), §5 (non-determinism inventory), §6 (declared diffs), §R Reflection — NOT YET WRITTEN, land at their own commits per the ledger.
+**Status:** Commits 1-3 landed (§1 PH-0 boundary freeze; §2 PH-3 Intent Ledger, PROPOSED, 17 fences + 7 LW-D* rows opened; §3 PH-5 seam map, no PARTIAL seams remaining). §0 (seed), Fold A/B/C (2026-08-28, folded into `.cursor/active_task.md`) remain below as history. Sections §4 (PH-6 classification), §5 (non-determinism inventory), §6 (declared diffs), §R Reflection — NOT YET WRITTEN, land at their own commits per the ledger.
 
 **Governing plan:** `.cursor/active_task.md` (Pilot 4 — link_wsib). **Governing specs (operator correction 2026-08-28 — led by the step's own governing spec, not the architecture spec):** `docs/specs/01-pipeline/46_wsib_enrichment.md` (PRIMARY), `60_shared_steps.md` (§2 Step Registry row 19, §"Link WSIB"), `52_source_wsib.md`, `41_chain_permits.md` §Step Breakdown row 7, `43_chain_sources.md` §Step Breakdown row 19, then `docs/specs/01-pipeline/122_pipeline_step_optimization.md`, `124_step_standard_policy.md`, `123_step_opt_assessment_validation.md` (packaging/procedure).
 
@@ -68,7 +68,7 @@ Read verbatim this commit: the row at `docs/reports/review_followups.md:3015` (t
 
 **Churn note — `records_total`'s semantic settled after 3 flips, not on the first try:** `412927ca` (Mar 7, 12:20) set it to `totalUnlinked`; `bd06751d` (Mar 7, 20:53, same day) reverted to `totalLinked`; `52ad6527` (Apr 18) reverted AGAIN to `totalUnlinked` — the value the code carries TODAY, justified as "full evaluation scope, not matched-only." This is exactly the kind of settled-but-unwritten-down semantic Rule 4 exists for: the FINAL value is correct and matches the current file, but a reader of the file alone cannot see that it survived two reversions — the descriptor's `outputs.counters` declaration (commit 7) must carry `52ad6527`'s stated rationale forward as the field's own `why`, not just the number.
 
-**Proposed LW-D* rows opened this commit** (defect-ledger.md, adjudicated candidates — full classification at commit 4/PH-6):
+**LW-D* rows opened this commit** (defect-ledger.md, adjudicated candidates — full classification at commit 4/PH-6):
 - **LW-D1** — T2 (`>= 5%` link-rate floor) is an undeclared, verdict-bound literal — the P4 violation, parallel to `link_massing`'s T4.
 - **LW-D2** — `manifest.json`'s `link_wsib` entry carries two FALSE flags (`supports_full: true`, `supports_dry_run: false`) — both refuted by measurement (finding 5).
 - **LW-D3** — `manifest.json`'s `telemetry_tables: ["entities"]` under-declares the write surface (`wsib_registry` also written) — same class as Spec 60's own G-16 under-declaration (§1 above), a second independent confirmation of the same real defect at a different layer.
@@ -76,6 +76,36 @@ Read verbatim this commit: the row at `docs/reports/review_followups.md:3015` (t
 - **LW-D5** — `d704a447`'s article-stripping predicate fix could not retroactively repair the 8,450 links (60.5%) written under the pre-fix algorithm, because the `WHERE linked_entity_id IS NULL` guard is monotone — root cause of A-7's tier-3 repair. Not a bug in `d704a447` itself (the fix was correct going forward); the DEFECT is the absence of any repair mechanism for already-written links, which A-7 closes.
 - **LW-D6** — S2's asymmetric length floors (`>= 3` exact-match tiers vs `>= 5` fuzzy tier) have no recorded `why` anywhere in the 17-commit corpus — the semantic reasoning (exact match tolerates short strings; fuzzy on short strings produces garbage similarity) is inferred by this pass, not found in any commit message. Needs a `checks[].why` at commit 7 (S2).
 - **LW-D7** — `review_followups.md:3015`'s stale chain-membership claim (finding 1) — CLOSED this commit (verify-and-skip, §1 above; already corrected pre-pilot).
+
+---
+
+## §3. PH-5 — Seam map (commit 3, G5)
+
+> Every place `scripts/link-wsib.js` touches something outside pure computation — DB, clock, network, argv/env — with its current form and where the library seam replaces it. Re-verified this commit against the current 547-line file (all anchors re-greped, none moved since §0/§1).
+
+### DB seam
+- `pool` / `client` — supplied by `pipeline.run('link-wsib', main)` (`:544`), never a local `new Pool()` (Rule/lesson: "No `new Pool()` — use the pool provided by `pipeline.run`" already honoured).
+- **9 `client.query`** sites, all inside `pipeline.withTransaction(pool, async (client) => {...})` (`:343-462`) — the ONE transaction boundary for all 3 tiers (G-11).
+- **8 `pool.query`** sites — outside the transaction: the pre-transaction `beforeResult` unlinked-count read (`:182-184`), the dry-run simulation's 3 read-only queries (`:299-338`, its own `pool.query` calls, never `client.query` — dry-run never opens a transaction), the post-transaction final stats query (`:480-487`), and `readThresholdVersionSignal`'s `logic_variables` read (`:86-88`, called both inside and outside the gate).
+- `pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {...})` (`:128`) wraps the ENTIRE gate + tier cascade — the seam the library's runner phase must reproduce exactly (lock 94, kept textually per §5.4).
+- Session-scoped GUC: `SET pg_trgm.similarity_threshold` / `RESET pg_trgm.similarity_threshold` (`:334` dry-run, `:431`/`:445` live) — issued on the SAME client as the query that depends on it (never `pool.query`, per the Supavisor-pooler lesson `tasks/lessons.md`). This is a seam the write phase's SQL-generation layer must preserve as a paired SET/RESET on one held client, not a fire-and-forget `pool.query`.
+
+### Clock seam
+- `pipeline.getDbTimestamp(pool)` → `RUN_AT` (`:129`) — the ONE DB-clock read, captured BEFORE any write (G-7), threaded as a bound param (`$1::timestamptz`) into all 3 tier UPDATEs.
+- `new Date(` — **1 site** (`:90`, inside `readThresholdVersionSignal`), wraps a DB-READ value (`logic_variables.updated_at`) to normalize it to an ISO string — NOT a timestamp written to the DB, so the "`new Date()` banned for DB writes" rule does not apply here; this is a read-side normalization, cleanest seam split of any pilot to date (pilot 3's own seam was mixed).
+- `Date.now()` — **2 sites** (`:178`, `:467`) — both elapsed-time-only (`durationMs`), never written to the DB as a timestamp; legal per the lesson's explicit carve-out.
+
+### Network seam
+- **0 `fetch(` calls** — `link_wsib` has no external network dependency (unlike `assert_schema`'s 21 HTTP requests or `load_ravines`'s archive download). Simplest network seam of any pilot: N/A, nothing to seam.
+
+### argv/env seam
+- **5 reads, ALL already have a declared home** (E1–E3, no invisible-to-lint read exists — contrast pilot 3's `isFullMode()` one-frame-up problem):
+  - `process.argv.slice(2)` (`:123`) → `dryRun = args.includes('--dry-run')` → `override.dry_run` (E2)
+  - `process.env[FORCE_FULL_ENV]` (`:125`, `FORCE_FULL_ENV = 'LINK_WSIB_FORCE_FULL'`) → `override.force_full` (E1)
+  - `process.env.PIPELINE_CHAIN` ×3 (`:163`, `:198`, `:526`, all the SAME ternary) → `sharing.varies_by_chain.phase` (E3)
+
+### Seam-map verdict (G5)
+No PARTIAL seams remain unresolved for this pilot — DB/Clock/Network/argv-env are all either already-declared-field-bound (E1-E3) or structurally clean (Clock's read/write split, Network's absence). The ONE open library question is not a seam gap but a PHASE-SHAPE gap (LG-10/LG-15, Ask A-1) — whether the runner's `runLinkPhase` can express a 3-tier bulk cascade with a gated-skip, deferred to commit 7 as scheduled.
 
 ---
 
@@ -191,4 +221,4 @@ Read verbatim this commit: the row at `docs/reports/review_followups.md:3015` (t
 
 ---
 
-*(§1–§6 and §R Reflection to be written per the commit ledger in `.cursor/active_task.md`. Do not fill ahead of the commit that owns each section.)*
+*(§4–§6 and §R Reflection to be written per the commit ledger in `.cursor/active_task.md`. Do not fill ahead of the commit that owns each section.)*
