@@ -1891,7 +1891,7 @@ Each is an existing behaviour with no home in a controlled vocabulary. **These a
 | 211 | A golden master is never the sole gate on a value-bearing field | P | a field gated only by approval, with no invariant → red. *A golden master approves insanity as readily as sanity* |
 | 212 | An approval file is reviewed by someone who did not write it | P | same author both sides → rejects |
 | 213 | Ship requires ≥14/17 **with G6, G7, G8 full** | P | a conversion scoring 15 with G7 = 0 → **blocked** |
-| 214 | Class-A mutation score ≥ 80% on covered code | P | below → red |
+| 214 | every class-A behaviour has a both-directions lock proven red-first at the designed assertion (Spec 119 tier Behaviorally red-first; Spec 124 §5 R-E); mutation over scripts/lib/compute/** is a bounded followup spike, not a gate | P | below → red |
 | 215 | A learning lands at level 4 only with a written reason it cannot sit at 1–3 | P | file a level-4 item with no justification → rejects |
 | 216 | Hard cap of 9 checklist items per gate | P | add a 10th → red unless one is deleted or promoted |
 | 217 | A MAJOR method bump populates the re-audit queue **by name** | B | bump it → every lower-MAJOR conversion is enqueued automatically |
@@ -2416,7 +2416,7 @@ Writing the violations surfaced three problems in the claims they attack. `[READ
 | **#211** | A.16 | 4 | **S2** | A golden master is never the sole gate on a value-bearing field |
 | **#212** | A.16 | 4 | **S2** | An approval file is reviewed by someone who did not write it |
 | **#213** | A.16 | 4 | **S2** | Ship requires ≥14/17 with G6, G7, G8 full |
-| **#214** | A.16 | 4 | **S2** | Class-A mutation score ≥ 80% on covered code |
+| **#214** | A.16 | 4 | **S2** | every class-A behaviour has a both-directions lock proven red-first at the designed assertion (Spec 119 tier Behaviorally red-first; Spec 124 §5 R-E); mutation over scripts/lib/compute/** is a bounded followup spike, not a gate |
 | **#215** | A.16 | 4 | **S2** | A learning lands at level 4 only with a written reason it cannot sit at 1-3 |
 | **#216** | A.16 | 4 | **S2** | Hard cap of 9 checklist items per gate |
 | **#217** | A.16 | 4 | **S2** | A MAJOR method bump populates the re-audit queue by name |

@@ -319,7 +319,7 @@
 | 211 | A.16 | 4 census | UNIVERSAL | PER_STEP | — | `R-211` | `src/tests/violations/wiring-census.db.test.ts` | A golden master is never the sole gate on a value-bearing field |
 | 212 | A.16 | 4 census | UNIVERSAL | PER_STEP | — | `R-212` | `src/tests/violations/wiring-census.db.test.ts` | An approval file is reviewed by someone who did not write it |
 | 213 | A.16 | 4 census | UNIVERSAL | PER_STEP | — | `R-213` | `src/tests/violations/wiring-census.db.test.ts` | Ship requires ≥14/17 **with G6, G7, G8 full** |
-| 214 | A.16 | 4 census | UNIVERSAL | PER_STEP | — | `R-214` | `src/tests/violations/wiring-census.db.test.ts` | Class-A mutation score ≥ 80% on covered code |
+| 214 | A.16 | 4 census | UNIVERSAL | PER_STEP | — | `R-214` | `src/tests/violations/wiring-census.db.test.ts` | every class-A behaviour has a both-directions lock proven red-first at the designed assert |
 | 215 | A.16 | 4 census | UNIVERSAL | PER_STEP | — | `R-215` | `src/tests/violations/wiring-census.db.test.ts` | A learning lands at level 4 only with a written reason it cannot sit at 1–3 |
 | 216 | A.16 | 4 census | UNIVERSAL | PER_STEP | — | `R-216` | `src/tests/violations/wiring-census.db.test.ts` | Hard cap of 9 checklist items per gate |
 | 217 | A.16 | 4 census | UNIVERSAL | PER_STEP | — | `R-217` | `src/tests/violations/wiring-census.db.test.ts` | A MAJOR method bump populates the re-audit queue **by name** |
