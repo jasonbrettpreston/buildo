@@ -33,6 +33,7 @@
 import { describe, it, expect } from 'vitest';
 import { execFileSync, spawnSync } from 'child_process';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { stripComments } from './script-source-scan';
 
@@ -1596,4 +1597,69 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
       });
     });
   }
+});
+
+// ---------------------------------------------------------------------------
+// GAP G-1 (Spec 124 SS2 Rule 1) — a new schema field requires a declared
+// x-ruling, checked by shelling generate-schema-baseline.mjs --check (the
+// "shell the generator's own --check" pattern, Spec 123 SS4.5).
+// ---------------------------------------------------------------------------
+describe('G-1 — new schema fields require x-ruling (schema-baseline ratchet)', () => {
+  const GENERATOR = path.join(REPO_ROOT, 'scripts/steps/_schema/generate-schema-baseline.mjs');
+  const REAL_SCHEMA = path.join(REPO_ROOT, 'scripts/steps/_schema/step.schema.json');
+  const REAL_BASELINE = path.join(REPO_ROOT, 'scripts/steps/_schema/schema-baseline.json');
+
+  it('the generator\'s own self-test passes (proves the checker fires before trusting it, Spec 121 SS12b.6)', () => {
+    const run = spawnSync('node', [GENERATOR, '--self-test'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `stdout=${run.stdout} stderr=${run.stderr}`).toBe(0);
+  });
+
+  it('the REAL schema passes --check clean (every new field since the baseline carries x-ruling)', () => {
+    const run = spawnSync('node', [GENERATOR, '--check'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `G-1 violation; stdout=${run.stdout} stderr=${run.stderr}`).toBe(0);
+  });
+
+  it('RED — a new field with NO x-ruling fires (known-bad fixture, real CLI, not just the exported function)', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'g1-schema-fixture-'));
+    const schema = JSON.parse(fs.readFileSync(REAL_SCHEMA, 'utf8'));
+    // config's object branch is index 1 of its anyOf ({const:"none"} is index 0) —
+    // add a field with no x-ruling at all.
+    const configObjectBranch = schema.properties.config.anyOf.find((b: { type?: string }) => b.type === 'object');
+    configObjectBranch.properties.__g1_fixture_field_no_ruling = { type: 'string' };
+    const badSchemaPath = path.join(dir, 'bad-schema.json');
+    fs.writeFileSync(badSchemaPath, JSON.stringify(schema));
+    const run = spawnSync('node', [GENERATOR, '--check'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      timeout: 30_000,
+      env: { ...process.env, BUILDO_SCHEMA_PATH: badSchemaPath, BUILDO_SCHEMA_BASELINE_PATH: REAL_BASELINE },
+    });
+    expect(run.status, `the checker did not fire; stdout=${run.stdout}`).toBe(1);
+    expect(run.stderr + run.stdout).toContain('config.__g1_fixture_field_no_ruling');
+  });
+
+  it('GREEN — the SAME new field WITH a well-formed x-ruling passes (proves the RED case above is about the ruling, not the fixture mechanics)', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'g1-schema-fixture-'));
+    const schema = JSON.parse(fs.readFileSync(REAL_SCHEMA, 'utf8'));
+    const configObjectBranch = schema.properties.config.anyOf.find((b: { type?: string }) => b.type === 'object');
+    configObjectBranch.properties.__g1_fixture_field_ruled = {
+      type: 'string',
+      'x-ruling': { rungs_tried: ['descriptor', 'declared check'], why: 'fixture proving the GREEN path' },
+    };
+    const goodSchemaPath = path.join(dir, 'good-schema.json');
+    fs.writeFileSync(goodSchemaPath, JSON.stringify(schema));
+    const run = spawnSync('node', [GENERATOR, '--check'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      timeout: 30_000,
+      env: { ...process.env, BUILDO_SCHEMA_PATH: goodSchemaPath, BUILDO_SCHEMA_BASELINE_PATH: REAL_BASELINE },
+    });
+    expect(run.status, `stdout=${run.stdout} stderr=${run.stderr}`).toBe(0);
+  });
+
+  it('the baseline is non-empty and every entry looks like "category.field" (sanity, not a vacuous ratchet)', () => {
+    const baseline = JSON.parse(fs.readFileSync(REAL_BASELINE, 'utf8')) as { fields: string[] };
+    expect(baseline.fields.length).toBeGreaterThan(0);
+    for (const f of baseline.fields) expect(f, `malformed baseline entry: ${f}`).toMatch(/^[a-z_]+\.[a-zA-Z_]+$/);
+  });
 });

@@ -50,7 +50,8 @@
  * step, prints PROSE-ONLY (never silently "green"). Documented here because the task
  * itself requires the map to live in this file's header, not to be inferred.
  *
- *   Rule 1  (nothing hidden)        -> (i) AJV `checks` minItems + (ii) compute-shape scan clean.
+ *   Rule 1  (nothing hidden)        -> (i) AJV `checks` minItems + (ii) compute-shape scan clean +
+ *                                       G-1's schema-baseline `--check` (new fields need x-ruling).
  *   Rule 2  (compute is just compute) -> (ii) compute-shape ast-grep + describe /§5\.5.*compute shape/i,
  *                                       scoped to a title containing the step's compute path.
  *   Rule 3  (tunables externalized) -> (ii) compute-no-literal-* ast-grep rules + describes
@@ -605,6 +606,20 @@ function fastInvariants(rows, converted, pending) {
 }
 
 // ---------------------------------------------------------------------------
+// G-1 — new schema fields require x-ruling (Spec 124 §2 Rule 1). One spawn,
+// cached across the whole run (schema-wide, not per-step) — mirrors the shape
+// checkShapeBatch already uses for the same reason.
+// ---------------------------------------------------------------------------
+const SCHEMA_BASELINE_GENERATOR = path.join(REPO_ROOT, 'scripts/steps/_schema/generate-schema-baseline.mjs');
+let _schemaBaselineResult = null;
+function checkSchemaBaseline() {
+  if (_schemaBaselineResult) return _schemaBaselineResult;
+  const run = spawnSync('node', [SCHEMA_BASELINE_GENERATOR, '--check'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+  _schemaBaselineResult = { pass: run.status === 0, detail: run.status === 0 ? 'schema-baseline clean' : (run.stderr || run.stdout || '').split('\n')[0] };
+  return _schemaBaselineResult;
+}
+
+// ---------------------------------------------------------------------------
 // P3 — execution.io_budget (Spec 122 §1.2a disk-I/O cost adjudication). Closed
 // this WF1 as a new field: { declared_mb: number, why } | "none"+why. The
 // validator's role is PRESENCE + a plausibility bound against needs_disk_mb,
@@ -793,7 +808,11 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, ioBudget)
   const rows = [];
   const push = (rule, name, status, note) => rows.push({ rule, name, status, note });
 
-  push(1, 'Nothing hidden', descriptorInfo.ok ? (shape.computeClean === false ? 'enforced-red' : 'enforced-green') : 'enforced-red', '');
+  {
+    const baseline = checkSchemaBaseline();
+    const ok = descriptorInfo.ok && shape.computeClean !== false && baseline.pass;
+    push(1, 'Nothing hidden', ok ? 'enforced-green' : 'enforced-red', `G-1 schema-baseline: ${baseline.detail}`);
+  }
   {
     const m = vitestResult.ranOk ? matchTests(tests, /§5\.5.*compute shape/i, computeToken) : [];
     const shapeOk = shape.computeClean !== false;
