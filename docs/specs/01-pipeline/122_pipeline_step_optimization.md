@@ -247,6 +247,16 @@ stated. Pilot 1 baseline (records_meta B / check rows / stdout B, pre→post): p
 coa 665→425/5→2/1094→1088 · sources 418→796/2→6/2960→3572 · standalone 669→1036/5→9/3492→4093; ~50 KB read per
 invocation (step + descriptor + notes + compute). Accepted.
 
+⚠️ **Automated, 2026-08-29 (WF1 "close policy gaps").** Pilot 1's baseline table above was hand-computed once;
+`scripts/analysis/step-validate.mjs`'s `measureP3Footprint` now reports the SAME class of numbers
+(descriptor bytes, notes bytes, `checks[]` row count, and the newest golden capture's `records_meta` byte
+size) automatically, every run, for every converted step — "the cost is stated" as a standing artifact rather
+than a one-off table, without becoming a schema field or a pass/fail gate (a footprint has no "correct" size;
+the discipline stays that it is stated, so a reviewer proposing a growth can adjudicate it against the
+running number). **A first attempt at this closure invented `execution.io_budget` as a new schema field before
+re-reading this section closely — corrected the same day, cited here as the exact "infer from a name" mistake
+CLAUDE.md PD#10 exists to catch.**
+
 See the R-A..R-J rulings block above for R-A's retirement declaration and R-D's chain-start assertion (both
 folded into Spec 124 Rule 3 per R-G's presence/validity split).
 

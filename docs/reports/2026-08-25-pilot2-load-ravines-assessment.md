@@ -448,7 +448,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | 11 | Phase-order re-derive (R-B) | prose-only | R-B describe not scoped to this step |
 | 12 | Truthful crash posture (R-M + R-B reader) | prose-only | R-M/R-B-reader describes not scoped to this step |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (io_budget) | enforced-red | execution.io_budget is not declared (GAP P3 not yet closed for this step) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=41238B notes=8569B checks=19 rows records_meta=1938B (newest post/ capture) |
 
 **Enforced-green: 10/14**
 

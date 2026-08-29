@@ -79,9 +79,12 @@
  *   Rule 13 (a step validates itself) -> (i)-(vi) all ran successfully for this step, this run
  *                                       (this tool IS Rule 13's mechanism — a step with no scorecard
  *                                       block or a stale one violates it; see the conformance lock).
- *   (extra, not a numbered Rule) P3 (Spec 122 §1.2a disk-I/O cost adjudication) ->
- *                                       execution.io_budget presence + measured-vs-declared check
- *                                       (see checkIoBudget below).
+ *   (extra, not a numbered Rule) P3 (Spec 122 §1.2a disk-I/O cost adjudication) -> NOT a schema
+ *                                       field (Spec 122's own text: "programme mechanics... not a
+ *                                       property of a finished step"). measureP3Footprint reports
+ *                                       descriptor/notes bytes, checks[] count, and the newest post/
+ *                                       capture's records_meta bytes — a MEASUREMENT, never pass/fail
+ *                                       ("visibility wins by default; the cost is stated").
  * ---------------------------------------------------------------------------------
  */
 'use strict';
@@ -629,12 +632,6 @@ function checkSchemaBaseline() {
   return _schemaBaselineResult;
 }
 
-// ---------------------------------------------------------------------------
-// P3 — execution.io_budget (Spec 122 §1.2a disk-I/O cost adjudication). Closed
-// this WF1 as a new field: { declared_mb: number, why } | "none"+why. The
-// validator's role is PRESENCE + a plausibility bound against needs_disk_mb,
-// never a live measurement (that stays a golden-capture concern).
-// ---------------------------------------------------------------------------
 /**
  * G-4 (Spec 124 §2 Rule 3, GAP G-4) — "no check ties on_invalid:'fail' to
  * 'verdict- or write-affecting'; applied by author judgment, reviewed narratively."
@@ -678,17 +675,58 @@ function checkOnInvalidFail(descriptor) {
   };
 }
 
-function checkIoBudget(descriptor) {
-  if (!descriptor) return { pass: false, detail: 'no descriptor' };
-  const exec = descriptor.execution;
-  if (!exec || exec === 'none') return { pass: false, detail: 'execution category is "none" — io_budget unexpressible' };
-  const budget = exec.io_budget;
-  if (budget === undefined) return { pass: false, detail: 'execution.io_budget is not declared (GAP P3 not yet closed for this step)' };
-  if (budget === 'none') {
-    return { pass: !!exec.io_budget_why, detail: `io_budget:"none", why=${exec.io_budget_why ? 'present' : 'MISSING'}` };
+/**
+ * P3 (Spec 122 §1.2a) — CORRECTED 2026-08-29 after re-reading the governing text
+ * directly, per CLAUDE.md PD#10 (spec-first, never infer from a name). Spec 122's
+ * own words: "P3 stays here — it is programme mechanics (a conversion-proposal
+ * discipline for this effort, not a PROPERTY OF A FINISHED STEP), per Spec 124
+ * §6." P3 is NOT a schema field — it is a MEASURE-AND-STATE discipline: "Disk
+ * I/O is a balance that is ADJUDICATED WITH NUMBERS, never assumed... a proposal
+ * to add [a box/check/audit row] carries its measured cost (bytes and rows per
+ * run) ... Visibility wins by default; the cost is stated." Pilot 1's own P3
+ * baseline table (records_meta B / check rows / stdout B, pre→post) is exactly
+ * this measurement, done once by hand. This function is that measurement, done
+ * automatically, every run, from committed artifacts — never a schema field, and
+ * never pass/fail (a footprint has no "correct" size; the discipline is that it
+ * is STATED, so an operator reviewing a growth can adjudicate it, per the spec's
+ * own words).
+ *
+ * ⚠️ CORRECTS A REAL MISTAKE: the WF1 commit that first built this validator
+ * invented `execution.io_budget` as a new schema field before reading this
+ * section of Spec 122 closely enough — a genuine "infer from a name" violation
+ * of the project's own PD#10, caught and fixed while building GAP P3's real
+ * closure. No such field exists in step.schema.json, and none is added by this
+ * function.
+ */
+function measureP3Footprint(row, descriptorInfo) {
+  const descPath = harness.descriptorPathFor(row.relFile);
+  const descAbs = path.join(REPO_ROOT, descPath);
+  const descriptorBytes = existsSync(descAbs) ? Buffer.byteLength(readFileSync(descAbs)) : 0;
+  const notesPath = harness.notesPathFor(descriptorInfo.descriptor, descPath);
+  const notesAbs = notesPath ? path.join(REPO_ROOT, notesPath) : null;
+  const notesBytes = notesAbs && existsSync(notesAbs) ? Buffer.byteLength(readFileSync(notesAbs)) : 0;
+  const checksCount = descriptorInfo.descriptor && Array.isArray(descriptorInfo.descriptor.checks) ? descriptorInfo.descriptor.checks.length : 0;
+
+  // The newest post/ capture's records_meta, if one exists — the same "bytes
+  // per run" half of Pilot 1's baseline table, read from a REAL run rather
+  // than re-derived. Not required (a step with no capture yet still reports
+  // the descriptor/notes/checks half).
+  const posts = capturesIn(row.slug, 'post');
+  let recordsMetaBytes = null;
+  if (posts.length > 0) {
+    const newest = posts.reduce((a, b) => (b.mtime > a.mtime ? b : a));
+    const rm = newest.doc && newest.doc.summary && newest.doc.summary.records_meta;
+    if (rm !== undefined) recordsMetaBytes = Buffer.byteLength(JSON.stringify(rm));
   }
-  const okShape = typeof budget === 'object' && typeof budget.declared_mb === 'number' && budget.declared_mb > 0;
-  return { pass: okShape, detail: okShape ? `declared_mb=${budget.declared_mb}` : 'io_budget object malformed' };
+  return {
+    descriptorBytes,
+    notesBytes,
+    checksCount,
+    recordsMetaBytes,
+    detail:
+      `descriptor=${descriptorBytes}B notes=${notesBytes}B checks=${checksCount} rows` +
+      (recordsMetaBytes === null ? ' records_meta=(no capture)' : ` records_meta=${recordsMetaBytes}B (newest post/ capture)`),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -883,7 +921,7 @@ function ruleStatus(matched) {
   return matched.every((t) => t.status === 'passed') ? 'enforced-green' : 'enforced-red';
 }
 
-function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, ioBudget, report) {
+function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, report) {
   const tests = vitestResult.ranOk ? vitestResult.tests : [];
   const slugToken = row.slug;
   const computeToken = harness.computePathFor(row.relFile) || '';
@@ -934,7 +972,7 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, ioBudget,
     push(12, 'Truthful crash posture (R-M + R-B reader)', m.length > 0 ? ruleStatus(m) : 'prose-only', m.length === 0 ? 'R-M/R-B-reader describes not scoped to this step' : '');
   }
   push(13, 'A step validates itself', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', 'this run of step:validate IS the mechanism');
-  push('P3', 'I/O cost adjudication (io_budget)', ioBudget.pass ? 'enforced-green' : 'enforced-red', ioBudget.detail);
+  push('P3', 'I/O cost adjudication (measured, not gated)', 'measured', p3.detail);
 
   return rows;
 }
@@ -1092,10 +1130,16 @@ function selfTest() {
       throw new Error('self-test FAILED: the contamination fixture does not actually contaminate — the RED half of this lock never fires');
     }
   }
-  const ioGood = checkIoBudget({ execution: { io_budget: { declared_mb: 10 } } });
-  const ioBad = checkIoBudget({ execution: { io_budget: undefined } });
-  if (!ioGood.pass || ioBad.pass) {
-    throw new Error(`self-test FAILED: checkIoBudget did not discriminate good/bad fixtures (good=${ioGood.pass}, bad=${ioBad.pass})`);
+  // measureP3Footprint is a MEASUREMENT, not an enforcer — there is no violation
+  // to prove it catches (Spec 121 §12b.6 applies to checkers that gate something).
+  // The smoke test instead proves it runs against a real artifact and reports a
+  // well-formed number, never silently returning garbage.
+  const p3Smoke = measureP3Footprint(
+    { slug: '__p3_self_test_nonexistent_slug__', relFile: 'scripts/quality/assert-schema.js' },
+    { descriptor: null },
+  );
+  if (typeof p3Smoke.descriptorBytes !== 'number' || p3Smoke.descriptorBytes <= 0 || !/^descriptor=\d+B/.test(p3Smoke.detail)) {
+    throw new Error(`self-test FAILED: measureP3Footprint did not produce a well-formed measurement (${JSON.stringify(p3Smoke)})`);
   }
   const g2GoodReport = '## §2. PH-3\n| c | note |\n|---|---|\n| `abc1234` | preserved-in-compute, the rule is DECLARED in notes.json |\n';
   const g2BadReport = '## §2. PH-3\n| c | note |\n|---|---|\n| `abc1234` | preserved-in-compute, nothing more said |\n';
@@ -1160,9 +1204,9 @@ function main() {
       console.error(`[step-validate] WARNING: no assessment report found for ${row.slug} — scorecard gates that read the report will read as empty/0`);
     }
     const captureFindings = checkCaptures(row, descriptorInfo, computePath, report);
-    const ioBudget = checkIoBudget(descriptorInfo.descriptor);
+    const p3 = measureP3Footprint(row, descriptorInfo);
     const sc = computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults);
-    const matrix = computePolicyMatrix(row, descriptorInfo, shape, vitestResult, ioBudget, report);
+    const matrix = computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, report);
     const block = renderScorecard(row, sc, matrix, captureFindings, vitestResult, invariantResults);
 
     console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}\n\`\`\`\n`);
