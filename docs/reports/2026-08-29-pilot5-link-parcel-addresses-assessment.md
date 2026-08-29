@@ -207,6 +207,83 @@ without breaking G2's verbatim guarantee, consistent with Fold A/Integration fin
 
 ---
 
+## §4. PH-6 — Classification (commit 4, G6)
+
+> Every finding from the plan's "six findings" list + this pilot's own archaeology (§2), classified per
+> Spec 123 §3's three-way split: **CONTRACT** (a downstream consumer depends on it, even if ugly) /
+> **INCIDENTAL** (nothing observes it — do not assert on it) / **DEFECT** (a spec or invariant asserts the
+> opposite).
+
+| Candidate | Ledger ID | Classification | Ground |
+|---|---|---|---|
+| Finding 1 — class-D W3 retraction breach | LPA-D1 | **DEFECT, PIN (Spec 123 §3.1)** | opened commit 2; §2 above states the full four-question classification |
+| Finding 2 — resumability header claim | LPA-D2 | **DEFECT in the description, not the behavior** | opened commit 2; the code (idempotent) is correct, only the comment is false |
+| Finding 3 — B3 gate untested-live / chain-schedule silence | *(no LPA-D — process/ops, not a step defect)* | **INCIDENTAL to this step's correctness; a genuine ops gap, stated plainly not resolved** | the gate's `gate.skip` branch has zero live evidence of correct behavior, but nothing in `link-parcel-addresses.js` itself is wrong — the silence is either an unfired cron or an upstream scheduling question (§1's chain-schedule finding), out of this pilot's scope per the plan. Filed as a LOW followup (below) so it is not silently dropped |
+| Finding 4 — 3 undeclared literal tunables (`BATCH_SIZE`, `noAddressFraction`, `noParcelFraction`) + Fold B's 2 NEW fan-out tunables (T4/T5, replacing the dropped allow-list) | **LPA-D3** (opened this commit, below) | **DEFECT** | Spec 124 Rule 3 — every verdict-affecting threshold must be a registered logic variable; T2/T3 gate the WARN/PASS verdict directly (bare literals today), T1 gates pacing only. Same class as pilot 4's LW-D1. Externalization is a declared diff (P4 tunable inventory table), not a behavior change — every default value is UNCHANGED from its current literal |
+| Finding 5 — `manifest.json`'s 2 `supports_*` flags | *(no LPA-D)* | **CLOSED, was never a defect** | both flags are TRUE-to-the-code, re-confirmed this session (0 `process.argv`/`--full`/`--dry-run` reads) — a genuinely clean node, stated plainly rather than manufacturing a finding where none exists |
+| Finding 6 — shared test files already narrowed to 2 callers | *(no LPA-D)* | **INCIDENTAL to correctness; a re-homing work item, not a defect** | tracked in the commit 7 execution plan (narrow to the final single caller, `compute-parcel-cost-estimates.js`), no behavioral claim at stake |
+| Fold A/B's fan-out WARN (`parcel_fanout_outliers`) + G9's 4th `address_class_desc` value (`"Land Entrance"`) | *(no LPA-D — new declared checks, not fixes to an existing wrong behavior)* | **CONTRACT-adjacent, new observability** | descriptor/notes.json work at commit 7, per Fold A/B's rulings; not a defect in the current script (the script writes correctly today, it simply doesn't yet SURFACE the fan-out distribution or name the 4th tier) |
+
+### `LPA-D3` — 3 undeclared literal tunables (opened this commit)
+
+Same Rule 3 violation class as pilot 4's LW-D1. `BATCH_SIZE = 1000` (`:51`, pacing only, non-verdict-affecting)
+· `noAddressFraction >= 0.50` (`:330`, gates the `parcels_with_no_address_pct` WARN) ·
+`noParcelFraction >= 0.05` (`:339`, gates the `address_points_with_no_parcel_pct` WARN). `SELECT variable_key
+FROM logic_variables WHERE variable_key ILIKE '%link_parcel%' OR variable_key ILIKE '%batch_size%'` → **0
+rows** (re-run this commit against 439 total rows — unchanged from finding 4's original measurement).
+Resolution: rung (c), admin logic variable — the P4 tunable inventory table (T1–T5, including Fold B's two new
+fan-out tunables) at commit 7. `LPA-D3` closes at commit 7 alongside `LPA-D1`'s pin and `LPA-D2`'s descriptor
+fix.
+
+### The RANDOM/SEEDED disambiguation eyeball (Fold A item d, executed this commit — seed `20260829`)
+
+> Fold A's Reality-Check item d ruled the commit 4/5 sample MUST be random and seeded, never lowest-id (a
+> lowest-id sample is systematic, not representative). Executed live this commit against
+> `172.20.0.10:5432/postgres`: `SELECT setseed(0.20260829)` on a held client, then `ORDER BY random() LIMIT 10`
+> over the fan-out population (`parcel_address_points` grouped by `parcel_id`, `HAVING COUNT(*) > 1` —
+> 14,235 parcels with 2+ linked address points; single-link parcels have nothing to disambiguate).
+
+**Sample (10 parcels, seed `20260829`):**
+
+| `parcel_id` | fan-out `n` | `feature_type` | `lot_size_sqm` |
+|---:|---:|---|---:|
+| 195029 | 4 | COMMON | 297.4 |
+| 411946 | 2 | COMMON | 206.9 |
+| 218382 | 5 | CONDO | 3481.2 |
+| 120678 | 2 | COMMON | 278.9 |
+| 13778 | 5 | CONDO | 1058.0 |
+| 335945 | 2 | COMMON | 209.9 |
+| 463473 | 2 | COMMON | 99.7 |
+| 484095 | 2 | COMMON | 1796.7 |
+| 330483 | 2 | COMMON | 233.1 |
+| 355871 | 2 | COMMON | 434.8 |
+
+**Eyeball (each parcel's full linked address-point set, `address_class_desc` + `address_number` +
+`linear_name_full`):** all 10 parcels show a coherent pattern — every linked address shares the SAME street
+(`linear_name_full`), civic numbers are adjacent/sequential (e.g. parcel 195029: `275`/`277`/`277A`/`279`
+Augusta Ave; parcel 218382: `344`/`346`/`348`/`350`/`352` Front St W; parcel 13778: `2391`/`2393`/`2395`/
+`2401`/`2405A` Yonge St), and each parcel carries exactly ONE `Land`-class address (the parcel's own base
+civic address) plus one or more `Structure`/`Structure Entrance` addresses (subdivided units/entrances on the
+same lot) — exactly the pattern Spec 54 §3's disambiguation hierarchy (Structure > Structure Entrance > Land >
+area-ASC > id-ASC, G9) is built to resolve downstream. Parcel `463473` surfaced a live `"Structure Entrance"`
+row (`986A Dovercourt Rd`), confirming Fold A's note that the 4th `address_class_desc` value is genuinely in
+the linked population, not a theoretical edge case. **No defect found in this sample**: no cross-street
+contamination, no address-number outliers, no evidence of a spatial-join or geometry defect across CONDO
+(218382, 13778) or COMMON (the other 8) parcels — a fixed-rule plausibility eyeball per this step's MATERIALIZER
+disposition (R-O's sampled-precision/recall doctrine is N/A here — no fuzzy predicate to sample against; this
+is a spatial containment join, not a matcher).
+
+### Two LOW followups filed this commit (`docs/reports/review_followups.md`)
+
+1. Finding 3's chain-schedule silence (§1) — the `chain-sources` workflow's `schedule:` block is genuinely
+   live but only 1 of 6 total runs ever recorded is `event:schedule` (and it failed) — cause not established,
+   filed for a future investigation outside this pilot's scope.
+2. Fold A/Reality-Check item c — `scripts/analysis/parcel-sanity-audit.js` has zero bridge-table checks; this
+   bridge is health-checked only by this step's own golden harness (commit 5), not the standing estate-wide
+   audit.
+
+---
+
 ## §0. PH-0 seed — measured boundary table (2026-08-29 planning session)
 
 > Executed against the local dev DB (`current_database() = postgres`, port 5432 — **not** the
