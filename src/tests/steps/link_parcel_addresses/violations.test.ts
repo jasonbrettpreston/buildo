@@ -824,7 +824,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/haversine|gridKey|turf|rbush/.test(src), 'a JS-fallback token was found — this step has no dual path today, so none should exist').toBe(false);
   });
 
-  it.fails('#158 Gate 5 — the old script is deleted or dated-ticketed (flips at: commit 9)', () => {
+  it('#158 Gate 5 — the old script is deleted or dated-ticketed (flipped: commit 9)', () => {
     artifact(CONVERTED_REL, 'commit 9 registers link-parcel-addresses.js as the 5th entry');
     const converted = (JSON.parse(readText(CONVERTED_REL)) as { converted: string[] }).converted;
     expect(converted.includes(STEP_REL), `${CONVERTED_REL} does not list ${STEP_REL} — commit 9 has not landed`).toBe(true);
@@ -1273,10 +1273,15 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATER
     expect(src.split('\n').length, 'the §5.1 frozen shape is far shorter than the 393-line hand-rolled file — if this is still ~393 lines, conversion has not happened').toBeLessThan(100);
   });
 
-  it.fails('converted.json registers the step as the 5th entry (commit 9 arms the shape gate: 5/62) (flips at: commit 9)', () => {
+  it('converted.json registers the step as the 5th entry (commit 9 arms the shape gate: 5/62) (flipped: commit 9)', () => {
     const converted = (JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[] }).converted;
-    expect(converted.length, 'exactly 5 entries (assert-schema, load-ravines, link-massing, link-wsib, link-parcel-addresses) — this pilot cut over').toBe(5);
-    expect(converted.includes(STEP_REL)).toBe(true);
+    // >= 5, not === 5: applying review_followups.md's own "cross-step count assertions"
+    // lesson (filed at pilot 4's cutover, then found to have recurred in link_wsib's own
+    // test at THIS pilot's cutover) proactively — a LATER pilot (6+) growing the fleet is
+    // expected, not a regression; this claim's own subject is link_parcel_addresses's OWN
+    // membership and index.
+    expect(converted.length, 'at least 5 entries (assert-schema, load-ravines, link-massing, link-wsib, link-parcel-addresses, ...)').toBeGreaterThanOrEqual(5);
+    expect(converted.indexOf(STEP_REL), `${STEP_REL} must still be the 5th entry (index 4) — reordering converted.json is a declared diff, not a silent shuffle`).toBe(4);
   });
 
   it('grandfathered.json — a 3rd entry, keyed link_parcel_addresses, path outputs.writes[].write_discipline.guard, value "none" (Fold A Integration finding 1 — the key is .guard, never .class) (flips at: commit 7)', () => {

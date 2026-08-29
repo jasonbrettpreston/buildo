@@ -123,6 +123,7 @@
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": "none",
+    "batch_size_from_config": "link_parcel_addresses_batch_size",
     "needs_disk_mb": "none",
     "partial_fill": "batched",
     "on_row_error": "fail_fast",

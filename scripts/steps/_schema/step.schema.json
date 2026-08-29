@@ -1001,6 +1001,11 @@
         "statement_timeout": { "$ref": "#/definitions/duration" },
         "step_timeout": { "$ref": "#/definitions/duration" },
         "batch": { "anyOf": [{ "const": "none" }, { "type": "integer", "minimum": 1 }] },
+        "batch_size_from_config": {
+          "type": "string",
+          "minLength": 1,
+          "description": "OPTIONAL, MATERIALIZER pilot (2026-08-29, LW-D10 class). `execution.batch` (above) is frozen to a literal integer or \"none\" — it cannot express a config-driven batch size. Present ONLY on a step whose keyset-paginated batch loop reads its per-batch row count from `config.logic_variables[].name` rather than a hardcoded literal: names that logic variable, with the *_from_config suffix (§1.2a P4) so the generic conformance battery's fromConfigRefs scan counts this as a genuine consumption path — mirroring `tiers[].confidence_from_config`/`max_iterations_from_config`'s own precedent for the identical blind spot (a runner-resolved value the compute never spells `ctx.config.<name>` for)."
+        },
         "needs_disk_mb": { "anyOf": [{ "const": "none" }, { "type": "integer", "minimum": 1 }] },
         "partial_fill": {
           "description": "The 5 measured classes (§3g). Only ONE step has a real recovery ledger; for the other twelve batched steps nothing in the database can answer 'is this table half-loaded?'.",

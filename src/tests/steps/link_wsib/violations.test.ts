@@ -1247,8 +1247,15 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCH
 
   it('converted.json registers the step as the 4th entry (commit 9 arms the shape gate: 4/62)', () => {
     const converted = (JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[] }).converted;
-    expect(converted.length, 'exactly 4 entries (assert-schema, load-ravines, link-massing, link-wsib) — pilot 4 cut over').toBe(4);
-    expect(converted.includes(STEP_REL)).toBe(true);
+    // >= 4, not === 4: this step landed as the 4th converted entry (pilot 4), but a LATER
+    // pilot (pilot 5, link_parcel_addresses) growing the list is expected, not a regression
+    // — this claim's own subject is link_wsib's OWN membership and index, not the fleet's
+    // total count (review_followups.md, "cross-step count assertions" lesson, filed at
+    // pilot 4's own cutover for link_massing's analogous test — the identical class of
+    // hardcoded-count breakage recurred here because this file's own test was never
+    // revisited when that lesson was filed).
+    expect(converted.length, 'at least 4 entries (assert-schema, load-ravines, link-massing, link-wsib, ...)').toBeGreaterThanOrEqual(4);
+    expect(converted.indexOf(STEP_REL), `${STEP_REL} must still be the 4th entry (index 3) — reordering converted.json is a declared diff, not a silent shuffle`).toBe(3);
   });
 
   it('grandfathered.json — link_wsib needs NO grandfathered entry (this step\'s writes are all guard-eligible; unlike link_massing\'s E1, nothing here ships with guard:"none" and no IS DISTINCT FROM alternative)', () => {

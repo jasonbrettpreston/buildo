@@ -151,22 +151,25 @@ function buildInvariantsSql() {
 
 /**
  * The compute-authored SQL set `runMaterializePhase` (`scripts/lib/step/index.js`)
- * executes, mirroring `buildTierSql`'s split (ruling A-2 option 2). `descriptor` is
- * accepted for signature parity with every other `build*Sql(descriptor, config, ...)`
- * builder in this library (Rule 2's compute-authors-domain-SQL contract) — this step's
- * SQL text needs no descriptor-declared vocabulary today.
+ * executes, mirroring `buildTierSql`'s split (ruling A-2 option 2). `descriptor` supplies
+ * `execution.batch_size_from_config` (peel 8-cutover, LW-D10 class) — the SINGLE
+ * declared source of T1's variable name, so a static descriptor scan (§1.2a P4's
+ * `fromConfigRefs`) sees the same name this function reads, rather than a JS constant
+ * invisible to any descriptor-level check. `BATCH_SIZE_VAR` stays exported for the test
+ * harness's own fixtures, but is no longer this function's own source of truth.
  *
  * @param {object} descriptor
  * @param {Record<string, number>} config - `ctx.config`, the resolved T1/T4/T5 values
  */
 function buildMaterializeSql(descriptor, config) {
+  const batchSizeVar = (descriptor.execution && descriptor.execution.batch_size_from_config) || BATCH_SIZE_VAR;
   return {
     pre_sql: buildPreSql(),
     batch_sql: buildBatchSql(),
     post_sql: buildPostSql(),
     invariants_sql: buildInvariantsSql(),
     invariants_params: [config[FANOUT_NONCONDO_VAR], config[FANOUT_CONDO_VAR]],
-    batch_size_config_key: BATCH_SIZE_VAR,
+    batch_size_config_key: batchSizeVar,
   };
 }
 

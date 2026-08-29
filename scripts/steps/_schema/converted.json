@@ -21,14 +21,8 @@
     "scripts/quality/assert-schema.js",
     "scripts/load-ravines.js",
     "scripts/link-massing.js",
-    "scripts/link-wsib.js"
+    "scripts/link-wsib.js",
+    "scripts/link-parcel-addresses.js"
   ],
-  "pending": [
-    {
-      "file": "scripts/link-parcel-addresses.js",
-      "registers_at": "C1 pilot 5 commit 9 (cutover)",
-      "reason": "Spec 123 §3.1 pin-then-add ordering (R-K, 2026-08-29) — the frozen shape (§5.1) lands at commit 7 alongside the descriptor/compute/library growth; converted.json registration (which arms the check-step-shape.mjs blocking hook) is deferred to commit 9's differential-proven cutover, per this pilot's own commit ledger.",
-      "declared": "2026-08-29"
-    }
-  ]
+  "pending": []
 }

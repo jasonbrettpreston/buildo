@@ -940,7 +940,16 @@ describe('§1.2a P4 — every tunable is externalized (declared ≡ registry ≡
     it(`RED — ${relFile}: DROPPING a declared var reddens conformance (the seed direction)`, () => {
       const { slug, declared } = declaredConfigVars(relFile);
       const findings = configFindings(relFile, slug, declared.slice(1));
-      expect(findings.some((f) => f.includes(`ctx.config.${declared[0]}`)), findings.join('\n')).toBe(true);
+      // The dropped var reddens via ONE of two shapes depending on HOW it's consumed:
+      // a compute `ctx.config.<name>` read reads as a "dead declaration" once undeclared;
+      // a runner-only `*_from_config` reference (Ruling A-4 / LW-D10 class — no compute
+      // read at all, e.g. link_parcel_addresses's T1 batch_size_from_config, peel 8-cutover)
+      // instead reads as "the runner silently falls back to the literal". Either is a
+      // genuine red; this claim only needs SOME "no longer consumed" finding to fire.
+      expect(
+        findings.some((f) => f.includes(`ctx.config.${declared[0]}`) || (f.includes(`"${declared[0]}"`) && f.includes('which its config does not declare'))),
+        findings.join('\n'),
+      ).toBe(true);
       expect(findings.some((f) => f.includes('annotated CONSUMED by')), findings.join('\n')).toBe(true);
     });
 
